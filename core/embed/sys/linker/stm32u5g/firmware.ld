@@ -41,6 +41,8 @@ SECTIONS {
   } >FLASH AT>FLASH
 
   .flash : ALIGN(CODE_ALIGNMENT) {
+    KEEP(*(.secmon));
+    . = SECMON_MAXSIZE;
     KEEP(*(.kernel));
     . = ALIGN(COREAPP_ALIGNMENT);
     KEEP(*(.vector_table));

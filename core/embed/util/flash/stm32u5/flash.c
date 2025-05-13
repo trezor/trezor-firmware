@@ -37,10 +37,22 @@
   (FLASH_NSSR_PGSERR | FLASH_NSSR_PGAERR | FLASH_NSSR_WRPERR | FLASH_NSSR_EOP)
 
 static bool flash_sector_is_secure(uint32_t sector) {
-  // We always return true since the entire flash memory is currently secure -
-  // partially through option bytes and partially through  FLASH controller
-  // settings
+#if defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
+#ifdef SECMON
+  if (sector <= SECMON_SECTOR_END) {
+    return true;
+  } else if (sector >= STORAGE_1_SECTOR_START &&
+             sector <= STORAGE_1_SECTOR_END) {
+    return true;
+  } else if (sector >= STORAGE_2_SECTOR_START &&
+             sector <= STORAGE_2_SECTOR_END) {
+    return true;
+  }
+#else
   return true;
+#endif
+#endif
+  return false;
 }
 
 const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size) {
@@ -89,7 +101,7 @@ secbool flash_sector_erase(uint16_t sector) {
   }
 
   FLASH_EraseInitTypeDef EraseInitStruct = {
-      .TypeErase = FLASH_TYPEERASE_PAGES_NS,
+      .TypeErase = FLASH_TYPEERASE_PAGES,
       .Banks = FLASH_BANK_1,
       .Page = sector,
       .NbPages = 1,

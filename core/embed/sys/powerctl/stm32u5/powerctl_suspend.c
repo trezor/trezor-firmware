@@ -75,6 +75,7 @@ void powerctl_suspend(void) {
 
   // Deinitialize all drivers that are not required in low-power mode
   // (e.g., USB, display, touch, haptic, etc.).
+#ifdef SECURE_MODE
 #ifdef USE_STORAGE_HWKEY
   secure_aes_deinit();
 #endif
@@ -84,6 +85,10 @@ void powerctl_suspend(void) {
 #ifdef USE_OPTIGA
   optiga_deinit();
 #endif
+#else
+  // !@# implement suspend in secure monitor
+#endif
+
 #ifdef USE_USB
   usb_stop();
 #endif
@@ -171,6 +176,7 @@ void powerctl_suspend(void) {
 #ifdef USE_USB
   usb_start();
 #endif
+#ifdef SECURE_MODE
 #ifdef USE_STORAGE_HWKEY
   secure_aes_init();
 #endif
@@ -180,6 +186,10 @@ void powerctl_suspend(void) {
 #ifdef USE_TROPIC
   tropic_init();
 #endif
+#else
+  // !@# implement resume in secure monitor
+#endif
+
 #ifdef USE_BLE
   ble_resume(&ble_wakeup_params);
 #endif

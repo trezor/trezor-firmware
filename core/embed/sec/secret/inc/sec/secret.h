@@ -21,7 +21,7 @@
 
 #include <trezor_types.h>
 
-#ifdef KERNEL_MODE
+#ifdef SECURE_MODE
 
 #define SECRET_KEY_LEN 32
 
@@ -117,7 +117,7 @@ void secret_prepare_fw(secbool allow_run_with_secret,
 // This function is called by the boardloader
 void secret_init(void);
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE
 
 // Checks if bootloader is locked, that is the secret storage contains optiga
 // pairing secret on platforms where access to the secret storage cannot be

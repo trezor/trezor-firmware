@@ -27,8 +27,16 @@ def configure(
     ] = "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 "
     env.get("ENV")[
         "CPU_CCFLAGS"
-    ] = "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -mtune=cortex-m33 -mcmse "
+    ] = "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -mtune=cortex-m33 "
     env.get("ENV")["RUST_TARGET"] = "thumbv8m.main-none-eabihf"
+
+    if "secure_domain" in features_wanted:
+        env.get("ENV")["CPU_CCFLAGS"] += "-mcmse "
+
+    if "secmon_layout" in features_wanted:
+        defines += [("USE_SECMON_LAYOUT", "1")]
+        memory_layout = "memory_secmon.ld"
+        features_available.append("secmon_layout")
 
     defines += [
         mcu,

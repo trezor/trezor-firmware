@@ -27,7 +27,7 @@
 
 #include "stm32u5xx_ll_utils.h"
 
-#ifdef KERNEL_MODE
+#ifdef SECURE_MODE
 
 static uint8_t g_hw_entropy[HW_ENTROPY_LEN];
 
@@ -61,4 +61,4 @@ void entropy_init(void) {
 
 void entropy_get(uint8_t *buf) { memcpy(buf, g_hw_entropy, HW_ENTROPY_LEN); }
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE

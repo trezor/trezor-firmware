@@ -245,6 +245,13 @@ static void mpu_init_fixed_regions(void) {
   SET_REGION( 2, MAIN_RAM_START,           MAIN_RAM_SIZE,     SRAM,        YES,    NO );
   DIS_REGION( 3 );
   SET_REGION( 4, AUX1_RAM_START,           AUX1_RAM_SIZE,     SRAM,        YES,    NO );
+
+#elif defined(SECMON)
+  SET_REGION( 0, SECMON_START,             SECMON_MAXSIZE,    FLASH_CODE,   NO,    NO );
+  SET_REGION( 1, SECMON_RAM_START,         SECMON_RAM_SIZE,   SRAM,        YES,    NO );
+  SET_REGION( 2, MAIN_RAM_START,           MAIN_RAM_SIZE,     SRAM,        YES,    NO );
+  SET_REGION( 3, KERNEL_START,             KERNEL_MAXSIZE,    FLASH_DATA,  YES,    NO );
+  SET_REGION( 4, AUX1_RAM_START,           AUX1_RAM_SIZE,     SRAM,        YES,    NO );
 #else
   #error "Unknown build target"
 #endif

@@ -46,6 +46,7 @@ ble = []
 tropic = []
 powerctl = []
 translations = ["crypto"]
+secmon_layout = []
 test = [
     "backlight",
     "button",

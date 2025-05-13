@@ -1,0 +1,18 @@
+->> implement storage callback mechanism
+->> powerctl for secmon controlled peripherals
+
+- secure clocks, initialize clocks in secmon only, refactor startup_init code
+- secmon/version.h
+- linking
+
+- move tz_init into system_init???
+- kernel main.c - split drivers init for SECURE_MODE/KERNEL_MODE
+- fwutils - resolve issue with tls
+- storage - move mpu_reconfig to storage module / or unified verifiers
+- unify verifiers for kernel and secmon
+- add version to postmortem info???
+- add get_api_version function to secmon
+- move backup ram driver into secmon
+
+
+
