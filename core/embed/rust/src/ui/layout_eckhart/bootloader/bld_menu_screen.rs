@@ -6,10 +6,7 @@ use crate::ui::{
 };
 
 use super::{
-    super::{
-        cshape::ScreenBorder,
-        theme::{bootloader::button_bld_menu, BLUE, HEADER_HEIGHT},
-    },
+    super::{cshape::ScreenBorder, theme},
     bld_menu::BldMenuSelectionMsg,
     BldHeader, BldHeaderMsg, BldMenu,
 };
@@ -23,6 +20,8 @@ pub enum BldMenuMsg {
     Close = 0xAABBCCDD,
     Reboot = 0x11223344,
     FactoryReset = 0x55667788,
+    Bluetooth = 0x99AABBCC,
+    PowerOff = 0x751A5BEF,
 }
 
 pub struct BldMenuScreen {
@@ -34,22 +33,28 @@ pub struct BldMenuScreen {
 impl BldMenuScreen {
     pub fn new(firmware_present: bool) -> Self {
         let bluetooth = Button::with_text("Bluetooth".into())
-            .styled(button_bld_menu())
-            .with_text_align(Alignment::Start)
-            .initially_enabled(false);
+            .styled(theme::bootloader::button_bld_menu())
+            .with_text_align(Alignment::Start);
         let reboot = Button::with_text("Reboot Trezor".into())
-            .styled(button_bld_menu())
+            .styled(theme::bootloader::button_bld_menu())
             .with_text_align(Alignment::Start)
             .initially_enabled(firmware_present);
         let reset = Button::with_text("Factory reset".into())
-            .styled(button_bld_menu())
+            .styled(theme::bootloader::button_bld_menu())
+            .with_text_align(Alignment::Start);
+        let turnoff = Button::with_text("Turn off Trezor".into())
+            .styled(theme::bootloader::button_bld_menu())
             .with_text_align(Alignment::Start);
 
-        let menu = BldMenu::empty().item(bluetooth).item(reboot).item(reset);
+        let menu = BldMenu::empty()
+            .item(bluetooth)
+            .item(reboot)
+            .item(reset)
+            .item(turnoff);
         Self {
             header: BldHeader::new("Bootloader".into()).with_close_button(),
             menu,
-            screen_border: ScreenBorder::new(BLUE),
+            screen_border: ScreenBorder::new(theme::BLUE),
         }
     }
 }
@@ -58,7 +63,7 @@ impl Component for BldMenuScreen {
     type Msg = BldMenuMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let (header_area, menu_area) = bounds.split_top(HEADER_HEIGHT);
+        let (header_area, menu_area) = bounds.split_top(theme::HEADER_HEIGHT);
 
         self.header.place(header_area);
         self.menu.place(menu_area);
@@ -72,9 +77,10 @@ impl Component for BldMenuScreen {
 
         if let Some(BldMenuSelectionMsg::Selected(n)) = self.menu.event(ctx, event) {
             match n {
-                0 => return Some(Self::Msg::Close),
+                0 => return Some(Self::Msg::Bluetooth),
                 1 => return Some(Self::Msg::Reboot),
                 2 => return Some(Self::Msg::FactoryReset),
+                3 => return Some(Self::Msg::PowerOff),
                 _ => {}
             }
         }

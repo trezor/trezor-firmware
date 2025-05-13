@@ -23,8 +23,8 @@ use super::{
 /// - Footer / Action bar (Optional, mutually exclusive)
 pub struct BldTextScreen<'a> {
     header: Option<BldHeader<'a>>,
-    label1: Label<'a>,
-    label2: Option<Label<'a>>,
+    text_main: Label<'a>,
+    text_secondary: Option<Label<'a>>,
     action_bar: Option<BldActionBar>,
     footer: Option<Label<'a>>,
     screen_border: Option<ScreenBorder>,
@@ -45,11 +45,11 @@ pub enum BldTextScreenMsg {
 }
 
 impl<'a> BldTextScreen<'a> {
-    pub fn new(label1: Label<'a>) -> Self {
+    pub fn new(text_main: Label<'a>) -> Self {
         Self {
             header: None,
-            label1,
-            label2: None,
+            text_main,
+            text_secondary: None,
             action_bar: None,
             footer: None,
             screen_border: None,
@@ -63,8 +63,8 @@ impl<'a> BldTextScreen<'a> {
         self
     }
 
-    pub fn with_label2(mut self, label2: Label<'a>) -> Self {
-        self.label2 = Some(label2);
+    pub fn with_secondary_text(mut self, text_secondary: Label<'a>) -> Self {
+        self.text_secondary = Some(text_secondary);
         self
     }
 
@@ -102,19 +102,19 @@ impl<'a> Component for BldTextScreen<'a> {
         let (content_area, action_bar_area) = content_area.split_bottom(ACTION_BAR_HEIGHT);
 
         let content_area = content_area.inset(SIDE_INSETS);
-        let text1_height = self.label1.text_height(content_area.width());
+        let text1_height = self.text_main.text_height(content_area.width());
         let text2_height = self
-            .label2
+            .text_secondary
             .as_ref()
             .map_or(0, |t| t.text_height(content_area.width()));
-        let (text1_area, area) = content_area.split_top(text1_height);
-        let (text2_area, _) = area
+        let (text_main_area, area) = content_area.split_top(text1_height);
+        let (text_secondary_area, _) = area
             .inset(Insets::top(TEXT_VERTICAL_SPACING))
             .split_top(text2_height);
 
         self.header.place(header_area);
-        self.label1.place(text1_area);
-        self.label2.place(text2_area);
+        self.text_main.place(text_main_area);
+        self.text_secondary.place(text_secondary_area);
         self.action_bar.place(action_bar_area);
         self.footer.place(action_bar_area);
 
@@ -162,8 +162,8 @@ impl<'a> Component for BldTextScreen<'a> {
             }
         } else {
             self.header.render(target);
-            self.label1.render(target);
-            self.label2.render(target);
+            self.text_main.render(target);
+            self.text_secondary.render(target);
             self.action_bar.render(target);
             self.footer.render(target);
         }
