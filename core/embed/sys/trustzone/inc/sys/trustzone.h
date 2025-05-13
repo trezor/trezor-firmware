@@ -32,6 +32,7 @@ void tz_init_boardloader(void);
 
 // Alters configuration of GTZC in the kernel
 void tz_init_kernel(void);
+void tz_init_secmon(void);
 
 // Alignment required by MCPBB/GTZC for SRAM regions
 #define TZ_SRAM_ALIGNMENT 512
@@ -41,6 +42,8 @@ void tz_init_kernel(void);
 // 512B to cover the entire specified range.
 void tz_set_sram_unpriv(uint32_t start, uint32_t size, bool unpriv);
 
+void tz_set_sram_unsecure(uint32_t start, uint32_t size, bool unsecure);
+
 // Alignment required by GTZC for FLASH regions
 #define TZ_FLASH_ALIGNMENT 8192
 
@@ -48,6 +51,8 @@ void tz_set_sram_unpriv(uint32_t start, uint32_t size, bool unpriv);
 // MCPBB/GTZC level. The region's start and end are automatically aligned to
 // 8KB to cover the entire specified range.
 void tz_set_flash_unpriv(uint32_t start, uint32_t size, bool unpriv);
+
+void tz_set_flash_unsecure(uint32_t start, uint32_t size, bool unsecure);
 
 // Sets unprivileged access to the SAES peripheral.
 void tz_set_saes_unpriv(bool unpriv);

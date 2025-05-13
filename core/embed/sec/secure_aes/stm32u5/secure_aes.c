@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef SECURE_MODE
+
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
@@ -29,8 +31,6 @@
 
 #define SAES_DATA_SIZE_WITH_UPRIV_KEY 32
 #define AES_BLOCK_SIZE 16
-
-#ifdef KERNEL_MODE
 
 static void secure_aes_load_bhk(void) {
   TAMP->BKP0R;
@@ -408,4 +408,4 @@ void secure_aes_deinit(void) {
   HAL_RCC_OscConfig(&osc_init_def);
 }
 
-#endif
+#endif  // SECURE_MODE

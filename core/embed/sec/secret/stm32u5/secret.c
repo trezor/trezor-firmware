@@ -30,7 +30,7 @@
 #include <util/flash_utils.h>
 #include "memzero.h"
 
-#ifdef KERNEL_MODE
+#ifdef SECURE_MODE
 
 static secbool bootloader_locked = secfalse;
 
@@ -387,4 +387,4 @@ void secret_init(void) {
   secret_ensure_initialized();
 }
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE

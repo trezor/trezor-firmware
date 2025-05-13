@@ -27,6 +27,7 @@ CPPPATH_MOD += [
 ]
 CPPDEFINES_MOD += [
     'KERNEL_MODE',
+    'SECURE_MODE',
     'AES_128',
     'AES_192',
     'USE_KECCAK',

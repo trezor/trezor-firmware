@@ -1,0 +1,21 @@
+->> check MCU_SRAMx constants -- check if RAM is properly cleared in secmon (rescue..)
+->> implement storage callback mechanism
+->> tropic - setup gpios, spi for secure access only
+
+- refactor trustzone/isolate_nonsecure_world
+- implement probe_access_read/write
+- powerctl for secmon controlled peripherals
+- secure clocks, initialize clocks in secmon only, refactor startup_init code
+- secmon/version.h
+
+- kernel main.c - split drivers init for SECURE_MODE/KERNEL_MODE
+- fwutils - resolve issue with tls
+- storage - move mpu_reconfig to storage module / or unified verifiers
+- unify verifiers for kernel and secmon
+- add version to postmortem info???
+- replace `SYSCALL_DISPATCH` with `KERNEL`
+- add get_api_version function to secmon
+
+
+
+

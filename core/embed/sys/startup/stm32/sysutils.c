@@ -268,6 +268,48 @@ __attribute((naked, noreturn, no_stack_protector)) void jump_to_vectbl(
   );
 }
 
+#ifdef SECMON
+__attribute((naked, noreturn, no_stack_protector)) void jump_to_vectbl_ns(
+    uint32_t vectbl_addr) {
+  __asm__ volatile(
+      "MOV      LR, R0             \n"
+
+      "LDR      R0, =0             \n"
+      "MOV      R1, R0             \n"
+      "MOV      R2, R0             \n"
+      "MOV      R3, R0             \n"
+      "MOV      R4, R0             \n"
+      "MOV      R5, R0             \n"
+      "MOV      R6, R0             \n"
+      "MOV      R7, R0             \n"
+      "MOV      R8, R0             \n"
+      "MOV      R9, R0             \n"
+      "MOV      R10, R0            \n"
+      "MOV      R11, R0            \n"
+      "MOV      R12, R0            \n"
+
+#if defined(__ARM_ARCH_8M_MAIN__) || defined(__ARM_ARCH_8M_BASE__)
+      "MSR      MSPLIM_NS, R1      \n"  // Disable MSPLIM
+#endif
+      "LDR      R0, [LR]           \n"  // Initial MSP value
+      "MSR      MSP_NS, R0         \n"  // Set MSP
+
+      "LDR      R0, =%[_SCB_VTOR]  \n"  // Reset handler
+      "STR      LR, [R0]           \n"  // Set SCB->VTOR = vectb_addr
+
+      "LDR      LR, [LR, #4]       \n"  // Reset handler
+      "MOVS     R0, #1             \n"
+      "BICS     LR, R0             \n"  // bit0 == 0 => transition to Non-secure
+      "MOV      R0, R1             \n"  // Zero out R0
+      "BXNS     LR                 \n"  // Go to non-secure reset handler
+
+      :  // no output
+      : [_SCB_VTOR] "i"(&SCB_NS->VTOR)
+      :  // no clobber
+  );
+}
+#endif
+
 void reset_peripherals_and_interrupts(void) {
 #ifdef __HAL_RCC_DMA2D_FORCE_RESET
   __HAL_RCC_DMA2D_CLK_DISABLE();

@@ -26,21 +26,58 @@
 #include <sys/trustzone.h>
 #include <util/image.h>
 
+#if defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
+
 #define SAU_INIT_CTRL_ENABLE 1
 #define SAU_INIT_CTRL_ALLNS 0
-#define SAU_INIT_REGION(n, start, end, sec)   \
-  SAU->RNR = ((n) & SAU_RNR_REGION_Msk);      \
-  SAU->RBAR = ((start) & SAU_RBAR_BADDR_Msk); \
-  SAU->RLAR = ((end) & SAU_RLAR_LADDR_Msk) |  \
+#define SET_REGION(n, start, size, sec)                     \
+  SAU->RNR = ((n) & SAU_RNR_REGION_Msk);                    \
+  SAU->RBAR = ((start) & SAU_RBAR_BADDR_Msk);               \
+  SAU->RLAR = (((start) + (size)-1) & SAU_RLAR_LADDR_Msk) | \
               (((sec) << SAU_RLAR_NSC_Pos) & SAU_RLAR_NSC_Msk) | 1U
 
+#define DIS_REGION(n)                    \
+  SAU->RNR = ((n) & SAU_RNR_REGION_Msk); \
+  SAU->RBAR = 0;                         \
+  SAU->RLAR = 0
+
+#ifndef SECMON
 static void tz_configure_sau(void) {
-  SAU_INIT_REGION(0, 0x0BF90000, 0x0BFA8FFF, 0);  // OTP etc
+  SAU_INIT_REGION(0, 0x0BF90000, 0x00019000, 0);  // OTP etc
 
   SAU->CTRL =
       ((SAU_INIT_CTRL_ENABLE << SAU_CTRL_ENABLE_Pos) & SAU_CTRL_ENABLE_Msk) |
       ((SAU_INIT_CTRL_ALLNS << SAU_CTRL_ALLNS_Pos) & SAU_CTRL_ALLNS_Msk);
 }
+#endif
+
+#ifdef SECMON
+
+extern uint8_t _sgstubs_section_start;
+extern uint8_t _sgstubs_section_end;
+
+#define SGSTUBS_START ((uint32_t) & _sgstubs_section_start)
+#define SGSTUBS_END ((uint32_t) & _sgstubs_section_end)
+#define SGSTUBS_SIZE (SGSTUBS_END - SGSTUBS_START)
+
+static void tz_configure_sau(void) {
+  // clang-format off
+  SET_REGION(0, 0x0BFA0000,            0x800,              0); // OTP, UID, etc
+  SET_REGION(1, KERNEL_START,          KERNEL_MAXSIZE,     0);
+  SET_REGION(2, ASSETS_START,          ASSETS_MAXSIZE,     0);
+  SET_REGION(3, SGSTUBS_START,         SGSTUBS_SIZE,       1);
+  SET_REGION(4, NONSECURE_RAM_START,   NONSECURE_RAM_SIZE, 0);
+  SET_REGION(5, PERIPH_BASE_NS,        SIZE_256M,          0);
+  SET_REGION(6, GFXMMU_VIRTUAL_BUFFERS_BASE_NS, SIZE_16M,  0);
+  DIS_REGION(7);
+  // clang-format on
+
+  SAU->CTRL = SAU_CTRL_ENABLE_Msk;
+  __DSB();
+  __ISB();
+}
+
+#endif
 
 // Configure ARMCortex-M33 SCB and FPU security
 static void tz_configure_arm(void) {
@@ -153,8 +190,14 @@ void tz_init_boardloader(void) {
   NVIC_SetPriority(GTZC_IRQn, IRQ_PRI_HIGHEST);
   NVIC_EnableIRQ(GTZC_IRQn);
 }
+#endif  // __ARM_FEATURE_CMSE
 
-void tz_init_kernel(void) {
+#ifdef SECMON
+void tz_init_secmon(void) {
+  tz_configure_arm();
+
+  tz_configure_sau();
+
   // Configure SRAM security attributes
   tz_configure_sram();
 
@@ -178,6 +221,9 @@ void tz_init_kernel(void) {
   NVIC_SetPriority(GTZC_IRQn, IRQ_PRI_HIGHEST);
   NVIC_EnableIRQ(GTZC_IRQn);
 }
+#endif
+
+void tz_init_kernel(void) {}
 
 static void set_bit_array(volatile uint32_t* regs, uint32_t bit_offset,
                           uint32_t bit_count, bool value) {
@@ -274,6 +320,48 @@ void tz_set_sram_unpriv(uint32_t start, uint32_t size, bool unpriv) {
   __ISB();
 }
 
+void tz_set_sram_unsecure(uint32_t start, uint32_t size, bool unsecure) {
+  const size_t block_size = TZ_SRAM_ALIGNMENT;
+
+  ensure(sectrue * IS_ALIGNED(start, block_size), "TZ alignment");
+  ensure(sectrue * IS_ALIGNED(size, block_size), "TZ alignment");
+
+  uint32_t end = start + size;
+
+#ifdef SECMON
+  // Allow using both secure and non-secure SRAM regions
+  if (start >= SRAM1_BASE_NS && end < SRAM1_BASE_S) {
+    start += SRAM1_BASE_S - SRAM1_BASE_NS;
+    end += SRAM1_BASE_S - SRAM1_BASE_NS;
+  }
+#endif
+
+  for (int idx = 0; idx < ARRAY_LENGTH(g_sram_regions); idx++) {
+    const sram_region_t* r = &g_sram_regions[idx];
+
+    if (start >= r->end) {
+      continue;
+    }
+
+    if (end <= r->start) {
+      break;
+    }
+
+    // Clip to region bounds
+    uint32_t clipped_start = MAX(start, r->start);
+    uint32_t clipped_end = MIN(end, r->end);
+
+    // Calculate bit offsets
+    uint32_t bit_offset = (clipped_start - r->start) / block_size;
+    uint32_t bit_count = (clipped_end - clipped_start) / block_size;
+
+    // Set/reset bits corresponding to 512B blocks
+    set_bit_array(r->regs->SECCFGR, bit_offset, bit_count, !unsecure);
+  }
+
+  __ISB();
+}
+
 typedef struct {
   // Start address of the region
   uint32_t start;
@@ -281,6 +369,8 @@ typedef struct {
   size_t end;
   // PRIVBB register base
   volatile uint32_t* privbb;
+  // SECBB register base
+  volatile uint32_t* secbb;
 } flash_region_t;
 
 #if defined STM32U5A9xx
@@ -299,8 +389,10 @@ typedef struct {
 // FLASH regions must be in order of ascending start address
 // and must not overlap
 flash_region_t g_flash_regions[] = {
-    {FLASH_BANK1_BASE, FLASH_BANK1_BASE + XFLASH_BANK_SIZE, &FLASH->PRIVBB1R1},
-    {FLASH_BANK2_BASE, FLASH_BANK2_BASE + XFLASH_BANK_SIZE, &FLASH->PRIVBB2R1},
+    {FLASH_BANK1_BASE, FLASH_BANK1_BASE + XFLASH_BANK_SIZE, &FLASH->PRIVBB1R1,
+     &FLASH->SECBB1R1},
+    {FLASH_BANK2_BASE, FLASH_BANK2_BASE + XFLASH_BANK_SIZE, &FLASH->PRIVBB2R1,
+     &FLASH->SECBB2R1},
 };
 
 void tz_set_flash_unpriv(uint32_t start, uint32_t size, bool unpriv) {
@@ -332,6 +424,48 @@ void tz_set_flash_unpriv(uint32_t start, uint32_t size, bool unpriv) {
 
     // Set/reset bits corresponding to flash pages (8KB)
     set_bit_array(r->privbb, bit_offset, bit_count, !unpriv);
+  }
+
+  __ISB();
+}
+
+void tz_set_flash_unsecure(uint32_t start, uint32_t size, bool unsecure) {
+  const size_t block_size = TZ_FLASH_ALIGNMENT;
+
+  ensure(sectrue * IS_ALIGNED(start, block_size), "TZ alignment");
+  ensure(sectrue * IS_ALIGNED(size, block_size), "TZ alignment");
+
+  uint32_t end = start + size;
+
+#ifdef SECMON
+  // Allow using both secure and non-secure FLASH regions
+  if (start >= FLASH_BASE_NS && end < FLASH_BASE_S) {
+    start += FLASH_BASE_S - FLASH_BASE_NS;
+    end += FLASH_BASE_S - FLASH_BASE_NS;
+  }
+#endif
+
+  for (int idx = 0; idx < ARRAY_LENGTH(g_flash_regions); idx++) {
+    const flash_region_t* r = &g_flash_regions[idx];
+
+    if (start >= r->end) {
+      continue;
+    }
+
+    if (end <= r->start) {
+      break;
+    }
+
+    // Clip to region bounds
+    uint32_t clipped_start = MAX(start, r->start);
+    uint32_t clipped_end = MIN(end, r->end);
+
+    // Calculate bit offsets
+    uint32_t bit_offset = (clipped_start - r->start) / block_size;
+    uint32_t bit_count = (clipped_end - clipped_start) / block_size;
+
+    // Set/reset bits corresponding to flash pages (8KB)
+    set_bit_array(r->secbb, bit_offset, bit_count, !unsecure);
   }
 
   __ISB();

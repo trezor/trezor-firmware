@@ -21,14 +21,14 @@
 
 #include <trezor_types.h>
 
-#ifdef KERNEL_MODE
-
 typedef struct __attribute__((packed)) {
   uint8_t version_major;
   uint8_t version_minor;
   uint8_t version_patch;
   uint8_t version_build;
 } boardloader_version_t;
+
+#ifdef SECURE_MODE
 
 // Structure holding board capabilities.
 // Older boardloaders can have it missing or reordered.
@@ -71,11 +71,11 @@ typedef struct __attribute__((packed)) {
 // that uses the capabilities
 void parse_boardloader_capabilities();
 
+#endif  // SECURE_MODE
+
 // Gets four bytes containing characters identifying the board
 // (e.g. `T3T1` for Trezor Safe 5)
 uint32_t get_board_name();
 
 // Gets the boardloader version
-boardloader_version_t get_boardloader_version();
-
-#endif  // KERNEL_MODE
+void get_boardloader_version(boardloader_version_t* version);

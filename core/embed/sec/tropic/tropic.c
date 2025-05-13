@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef KERNEL_MODE
+#ifdef SECURE_MODE
 
 #include <trezor_rtl.h>
 #include <trezor_types.h>
@@ -206,4 +206,4 @@ bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
   return true;
 }
 
-#endif
+#endif  // SECURE_MODE

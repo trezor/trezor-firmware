@@ -35,8 +35,6 @@
 #include <io/display.h>
 #endif
 
-#ifdef KERNEL_MODE
-
 // Battery powered devices (USE_POWERCTL) should not stall
 // after showing RSOD, as it would drain the battery.
 #ifdef USE_POWERCTL
@@ -44,6 +42,8 @@
 #error "RSOD_INFINITE_LOOP is not supported on battery powered devices"
 #endif
 #endif
+
+#ifdef SECURE_MODE
 
 #ifdef STM32U5
 // Persistent variable that holds the 'command' for the next reboot.
@@ -230,6 +230,10 @@ __attribute__((noreturn)) void reboot_or_halt_after_rsod(void) {
   reboot_device();
 #endif
 }
+
+#endif  // SECURE_MODE
+
+#ifdef KERNEL_MODE
 
 static void jump_to_next_stage_phase_2(uint32_t arg1, uint32_t arg2) {
   // We are now running on a new stack. We cannot be sure about

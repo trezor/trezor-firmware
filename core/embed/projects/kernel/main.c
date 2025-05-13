@@ -111,14 +111,15 @@ void drivers_init() {
   tamper_init();
 #endif
 
+#ifdef SECURE_MODE
   random_delays_init();
+#ifdef RDI
+  random_delays_start_rdi();
+#endif
+#endif
 
 #ifdef USE_PVD
   pvd_init();
-#endif
-
-#ifdef RDI
-  random_delays_start_rdi();
 #endif
 
 #ifdef SYSTEM_VIEW
@@ -135,15 +136,14 @@ void drivers_init() {
   check_oem_keys();
 #endif
 
+#ifdef SECURE_MODE
   parse_boardloader_capabilities();
-
   unit_properties_init();
-
 #ifdef USE_STORAGE_HWKEY
   secure_aes_init();
 #endif
-
   entropy_init();
+#endif
 
 #if PRODUCTION || BOOTLOADER_QA
   check_and_replace_bootloader();
@@ -177,12 +177,13 @@ void drivers_init() {
   ble_init();
 #endif
 
+#ifdef SECURE_MODE
 #ifdef USE_OPTIGA
   optiga_init_and_configure();
 #endif
-
 #ifdef USE_TROPIC
   tropic_init();
+#endif
 #endif
 }
 

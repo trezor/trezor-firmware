@@ -17,12 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_UNIT_PROPERTIES_H
-#define TREZORHAL_UNIT_PROPERTIES_H
+#pragma once
 
 #include <trezor_types.h>
 
-#ifdef KERNEL_MODE
+#ifdef SECURE_MODE
 
 // Initializes module a detects the unit properties
 //
@@ -65,5 +64,3 @@ void unit_properties_get(unit_properties_t* props);
 
 // Gets a pointer to the static unit properties structure
 const unit_properties_t* unit_properties(void);
-
-#endif  // TREZORHAL_UNIT_PROPERTIES_H
