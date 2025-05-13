@@ -8,7 +8,7 @@ use crate::ui::{
 use super::super::{component::Button, theme::GREY_EXTRA_DARK};
 use heapless::Vec;
 
-pub const MENU_MAX_ITEMS: usize = 3;
+pub const MENU_MAX_ITEMS: usize = 4;
 
 type VerticalMenuButtons = Vec<Button, MENU_MAX_ITEMS>;
 
