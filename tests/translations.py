@@ -10,6 +10,7 @@ from trezorlib import cosi, device, models
 from trezorlib._internal import translations
 from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from . import common
 

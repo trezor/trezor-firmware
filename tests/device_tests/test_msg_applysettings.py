@@ -19,7 +19,9 @@ from pathlib import Path
 import pytest
 
 from trezorlib import btc, device, exceptions, messages, misc, models
+from trezorlib.client import ProtocolVersion
 from trezorlib.debuglink import LayoutType
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 

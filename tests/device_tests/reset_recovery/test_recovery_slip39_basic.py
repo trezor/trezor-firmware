@@ -149,8 +149,8 @@ def test_abort_between_shares(session: Session):
 
 @pytest.mark.models("eckhart")
 @pytest.mark.setup_client(uninitialized=True)
-def test_share_info_between_shares(client: Client):
-    with client:
+def test_share_info_between_shares(session: Session):
+    with session.client as client:
         IF = InputFlowSlip39BasicRecoveryShareInfoBetweenShares(
             client, MNEMONIC_SLIP39_BASIC_20_3of6
         )
