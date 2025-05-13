@@ -1,6 +1,7 @@
-import pytest
 import time
-from trezorlib.client import ProtocolV2Channel
+
+import pytest
+
 from trezorlib import messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
