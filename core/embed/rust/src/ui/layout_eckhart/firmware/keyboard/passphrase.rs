@@ -4,7 +4,7 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            swipe_detect::SwipeConfig,
+            swipe_detect::{SwipeConfig, SwipeSettings},
             text::{
                 common::TextBox,
                 layout::{LayoutFit, LineBreaking},
@@ -106,7 +106,7 @@ const KEYBOARD: [[&str; KEY_COUNT]; PAGE_COUNT] = [
 
 const MAX_LENGTH: usize = 50; // max length of the passphrase
 const MAX_SHOWN_LEN: usize = 14; // max number of icons per line
-const LAST_DIGIT_TIMEOUT_S: u32 = 1;
+const LAST_DIGIT_TIMEOUT: Duration = Duration::from_secs(1);
 
 const NEXT_BTN_WIDTH: i16 = 103;
 const NEXT_BTN_PADDING: i16 = 14;
@@ -137,7 +137,9 @@ impl PassphraseKeyboard {
             next_btn,
             keypad: Keypad::new_shown().with_keys_content(&keypad_content),
             active_layout,
-            swipe_config: SwipeConfig::new(),
+            swipe_config: SwipeConfig::new()
+                .with_swipe(Direction::Left, SwipeSettings::immediate())
+                .with_swipe(Direction::Right, SwipeSettings::immediate()),
             multi_tap: MultiTapKeyboard::new(),
         }
     }
@@ -176,11 +178,9 @@ impl PassphraseKeyboard {
         if self.multi_tap.pending_key().is_some() {
             // Clear the pending state.
             self.multi_tap.clear_pending_state(ctx);
-            self.input.marker = false;
+            self.input.display_style = DisplayStyle::LastOnly;
             // the character has been added, show it for a bit and then hide it
-            self.input
-                .last_char_timer
-                .start(ctx, Duration::from_secs(LAST_DIGIT_TIMEOUT_S));
+            self.input.last_char_timer.start(ctx, LAST_DIGIT_TIMEOUT);
         }
         // Update keys.
         self.replace_keys_contents();
@@ -200,6 +200,8 @@ impl PassphraseKeyboard {
         }
     }
 
+    /// Update the keypad state based on the current passphrase and input state
+    /// Can be used only when no key is pressed
     fn update_keypad_state(&mut self, ctx: &mut EventCtx) {
         let keypad_state = match self.input.display_style {
             DisplayStyle::Shown => {
@@ -304,11 +306,12 @@ impl Component for PassphraseKeyboard {
             }
             Event::Timer(_) if self.multi_tap.timeout_event(event) => {
                 self.multi_tap.clear_pending_state(ctx);
-                self.input
-                    .last_char_timer
-                    .start(ctx, Duration::from_secs(LAST_DIGIT_TIMEOUT_S));
-                self.input.marker = false;
-                self.update_keypad_state(ctx);
+                self.input.last_char_timer.start(ctx, LAST_DIGIT_TIMEOUT);
+                self.input.display_style = DisplayStyle::LastOnly;
+                // Disable keypad when the passphrase reached the max length
+                if self.passphrase().len() == MAX_LENGTH {
+                    self.update_keypad_state(ctx);
+                }
                 return None;
             }
 
@@ -318,7 +321,7 @@ impl Component for PassphraseKeyboard {
         if let Some(swipe) = self.page_swipe.event(ctx, event) {
             // We have detected a horizontal swipe. Change the keyboard page.
             self.on_page_change(ctx, swipe);
-            return None;
+            // Do not return, let keypad button events to be processed
         }
 
         if let Some(ButtonMsg::Clicked) = self.next_btn.event(ctx, event) {
@@ -333,16 +336,13 @@ impl Component for PassphraseKeyboard {
                     if text.len() == 1 {
                         // If the key has just one character, it is immediately applied and the last
                         // digit timer should be started
-                        self.input.marker = false;
-                        self.input
-                            .last_char_timer
-                            .start(ctx, Duration::from_secs(LAST_DIGIT_TIMEOUT_S));
+                        self.input.display_style = DisplayStyle::LastOnly;
+                        self.input.last_char_timer.start(ctx, LAST_DIGIT_TIMEOUT);
                     } else {
                         // multi tap timer is runnig, the last digit timer should be stopped
                         self.input.last_char_timer.stop();
-                        self.input.marker = true;
+                        self.input.display_style = DisplayStyle::LastWithMarker;
                     }
-                    self.input.display_style = DisplayStyle::LastOnly;
                     self.update_keypad_state(ctx);
                 }
                 return None;
@@ -433,7 +433,6 @@ struct PassphraseInput {
     area: Rect,
     textbox: TextBox,
     display_style: DisplayStyle,
-    marker: bool,
     last_char_timer: Timer,
     shown_area: Rect,
 }
@@ -451,8 +450,7 @@ impl PassphraseInput {
         Self {
             area: Rect::zero(),
             textbox: TextBox::empty(MAX_LENGTH),
-            display_style: DisplayStyle::LastOnly,
-            marker: false,
+            display_style: DisplayStyle::Hidden,
             last_char_timer: Timer::new(),
             shown_area: Rect::zero(),
         }
@@ -503,7 +501,7 @@ impl PassphraseInput {
         let hidden_area: Rect = self.area.inset(KEYBOARD_INPUT_INSETS);
         let style = theme::TEXT_MEDIUM;
         let pp_len = self.passphrase().len();
-        let last_char = self.display_style == DisplayStyle::LastOnly;
+        let last_char = self.display_style != DisplayStyle::Hidden;
 
         let mut cursor = hidden_area.left_center().ofs(Offset::x(12));
 
@@ -560,7 +558,7 @@ impl PassphraseInput {
                     .render(target);
 
                 // Paint the pending marker.
-                if self.marker {
+                if self.display_style == DisplayStyle::LastWithMarker {
                     render_pending_marker(target, cursor, last, style.text_font, style.text_color);
                 }
             }
