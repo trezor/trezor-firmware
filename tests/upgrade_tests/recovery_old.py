@@ -4,21 +4,16 @@ if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink, LayoutContent
 
 
-def _enter_word(
-    debug: "DebugLink", word: str, is_slip39: bool = False
-) -> "LayoutContent":
+def _enter_word(debug: "DebugLink", word: str, is_slip39: bool = False) -> None:
     typed_word = word[:4]
     for coords in debug.button_actions.type_word(typed_word, is_slip39=is_slip39):
-        debug.click(coords)
-        debug.read_layout(wait=False)
+        debug.click(coords, wait=False)
 
     debug.click(debug.screen_buttons.mnemonic_confirm())
-    return debug.read_layout(wait=True)
 
 
 def confirm_recovery(debug: "DebugLink") -> None:
     debug.click(debug.screen_buttons.ok())
-    debug.read_layout(wait=True)
 
 
 def select_number_of_words(
@@ -26,7 +21,6 @@ def select_number_of_words(
 ) -> None:
     if "SelectWordCount" not in debug.read_layout().all_components():
         debug.click(debug.screen_buttons.ok())
-        debug.read_layout(wait=True)
     if tag_version is None or tag_version > (2, 8, 8):
         # layout changed after adding the cancel button
         coords = debug.screen_buttons.word_count_all_word(num_of_words)
@@ -38,7 +32,6 @@ def select_number_of_words(
         )  # raises if num of words is invalid
         coords = debug.screen_buttons.grid34(index % 3, index // 3)
     debug.click(coords)
-    debug.read_layout(wait=True)
 
 
 def enter_share(debug: "DebugLink", share: str) -> "LayoutContent":
@@ -46,4 +39,4 @@ def enter_share(debug: "DebugLink", share: str) -> "LayoutContent":
     for word in share.split(" "):
         _enter_word(debug, word, is_slip39=True)
 
-    return debug.read_layout(wait=True)
+    return debug.read_layout()
