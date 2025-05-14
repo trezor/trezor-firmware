@@ -71,7 +71,9 @@ if __debug__:
                 )
 
     async def return_layout_change(
-        ctx: wire.protocol_common.Context, detect_deadlock: bool = False
+        ctx: wire.protocol_common.Context,
+        detect_deadlock: bool = False,
+        return_empty_state: bool = False,
     ) -> None:
         # set up the wait
         storage.layout_watcher = True
@@ -100,7 +102,7 @@ if __debug__:
 
         # send the message and reset the wait
         storage.layout_watcher = False
-        await ctx.write(_state())
+        await ctx.write(_state(return_empty_state))
 
     async def _layout_click(x: int, y: int, hold_ms: int = 0) -> None:
         assert isinstance(ui.CURRENT_LAYOUT, ui.Layout)
@@ -244,8 +246,11 @@ if __debug__:
         # If no exception was raised, the layout did not shut down. That means that it
         # just updated itself. The update is already live for the caller to retrieve.
 
-    def _state() -> DebugLinkState:
+    def _state(return_empty_state: bool = False) -> DebugLinkState:
         from trezor.messages import DebugLinkState
+
+        if return_empty_state:
+            return DebugLinkState()
 
         from apps.common import mnemonic, passphrase
 
@@ -268,24 +273,27 @@ if __debug__:
     async def dispatch_DebugLinkGetState(
         msg: DebugLinkGetState,
     ) -> DebugLinkState | None:
-        if msg.return_empty_state:
-            from trezor.messages import DebugLinkState
-
-            return DebugLinkState()
-
         if msg.wait_layout == DebugWaitType.IMMEDIATE:
-            return _state()
+            return _state(msg.return_empty_state)
 
         assert DEBUG_CONTEXT is not None
         if msg.wait_layout == DebugWaitType.NEXT_LAYOUT:
             layout_change_box.clear()
-            return await return_layout_change(DEBUG_CONTEXT, detect_deadlock=False)
+            return await return_layout_change(
+                DEBUG_CONTEXT,
+                detect_deadlock=False,
+                return_empty_state=msg.return_empty_state,
+            )
 
         # default behavior: msg.wait_layout == DebugWaitType.CURRENT_LAYOUT
         if not layout_is_ready():
-            return await return_layout_change(DEBUG_CONTEXT, detect_deadlock=True)
+            return await return_layout_change(
+                DEBUG_CONTEXT,
+                detect_deadlock=True,
+                return_empty_state=msg.return_empty_state,
+            )
         else:
-            return _state()
+            return _state(msg.return_empty_state)
 
     async def dispatch_DebugLinkRecordScreen(msg: DebugLinkRecordScreen) -> Success:
         if msg.target_directory:

@@ -639,11 +639,28 @@ class DebugLink:
         state = self._call(messages.DebugLinkGetState(wait_word_list=True))
         return state.reset_word
 
-    def _decision(self, decision: messages.DebugLinkDecision) -> None:
+    def _decision(
+        self, decision: messages.DebugLinkDecision, wait: bool | None = None
+    ) -> None:
         """Send a debuglink decision.
 
         If hold_ms is set, an additional 200ms is added to account for processing
         delays. (This is needed for hold-to-confirm to trigger reliably.)
+
+        If `wait` is unset, the following wait mode is used:
+
+        - `IMMEDIATE`, when in normal tests, which never deadlocks the device, but may
+          return an empty layout in case the next one didn't come up immediately. (E.g.,
+          in SignTx flow, the device is waiting for more TxRequest/TxAck exchanges
+          before showing the next UI layout.)
+        - `CURRENT_LAYOUT`, when in tests running through a `DeviceHandler`. This mode
+          returns the current layout or waits for some layout to come up if there is
+          none at the moment. The assumption is that wirelink is communicating on
+          another thread and won't be blocked by waiting on debuglink.
+
+        Force waiting for the layout by setting `wait=True`. Force not waiting by
+        setting `wait=False` -- useful when, e.g., you are causing the next layout to be
+        deliberately delayed.
         """
         if not self.allow_interactions:
             self.wait_layout()
@@ -655,12 +672,24 @@ class DebugLink:
         self._write(decision)
         if self.model is models.T1B1:
             return
+
+        if wait is True:
+            wait_type = DebugWaitType.CURRENT_LAYOUT
+        elif wait is False:
+            wait_type = DebugWaitType.IMMEDIATE
+        else:
+            wait_type = self.input_wait_type
+
         # When the call below returns, we know that `decision` has been processed in Core.
         # XXX Due to a bug, the reply may get lost at the end of a workflow.
         # We assume that no single input event takes more than 5 seconds to process,
         # and give up waiting after that.
         try:
-            self._call(messages.DebugLinkGetState(return_empty_state=True), timeout=5)
+            msg = messages.DebugLinkGetState(
+                wait_layout=wait_type,
+                return_empty_state=True,
+            )
+            self._call(msg, timeout=5)
         except Timeout as e:
             LOG.warning("timeout waiting for DebugLinkState: %s", e)
 
@@ -693,10 +722,15 @@ class DebugLink:
         """Send text input to the device. See `_decision` for more details."""
         self._decision(messages.DebugLinkDecision(input=word))
 
-    def click(self, click: Tuple[int, int], hold_ms: int | None = None) -> None:
+    def click(
+        self,
+        click: Tuple[int, int],
+        hold_ms: int | None = None,
+        wait: bool | None = None,
+    ) -> None:
         """Send a click to the device. See `_decision` for more details."""
         x, y = click
-        self._decision(messages.DebugLinkDecision(x=x, y=y, hold_ms=hold_ms))
+        self._decision(messages.DebugLinkDecision(x=x, y=y, hold_ms=hold_ms), wait=wait)
 
     def stop(self) -> None:
         self._write(messages.DebugLinkStop())
