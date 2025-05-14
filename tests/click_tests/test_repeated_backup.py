@@ -151,6 +151,9 @@ def test_repeated_backup(
 
         second_backup_2_of_3.append(" ".join(words))
 
+    # confirm backup success
+    reset.confirm_read(debug)
+
     # we are not in recovery mode anymore, because we finished the backup process!
     features = device_handler.features()
     assert features.backup_type is messages.BackupType.Slip39_Basic_Extendable
