@@ -179,6 +179,7 @@ static screen_t handle_wait_for_host(const vendor_header* vhdr,
                   break;
                 default:
                   *out_result = menu_result;  // final result
+                  next_screen = SCREEN_DONE;
                   break;
               }
             }
