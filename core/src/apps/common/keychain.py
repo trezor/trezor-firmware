@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     NodeType = TypeVar("NodeType", bound=NodeProtocol)
 
     MsgIn = TypeVar("MsgIn", bound=MessageType)
-    MsgOut = TypeVar("MsgOut", bound=MessageType)
+    MsgOut = TypeVar("MsgOut", bound=MessageType | None)
 
     Handler = Callable[[MsgIn], Awaitable[MsgOut]]
     HandlerWithKeychain = Callable[[MsgIn, "Keychain"], Awaitable[MsgOut]]

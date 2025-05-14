@@ -11,10 +11,11 @@ if TYPE_CHECKING:
 
 
 @with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
-async def get_address(msg: TezosGetAddress, keychain: Keychain) -> TezosAddress:
+async def get_address(msg: TezosGetAddress, keychain: Keychain) -> TezosAddress | None:
     from trezor.crypto import hashlib
     from trezor.messages import TezosAddress
-    from trezor.ui.layouts import show_address
+    from trezor.ui.layouts import show_address, show_continue_in_app
+    from trezor.wire import context
 
     from apps.common import paths, seed
 
@@ -29,8 +30,11 @@ async def get_address(msg: TezosGetAddress, keychain: Keychain) -> TezosAddress:
     pk = seed.remove_ed25519_prefix(node.public_key())
     pkh = hashlib.blake2b(pk, outlen=helpers.PUBLIC_KEY_HASH_SIZE).digest()
     address = helpers.base58_encode_check(pkh, helpers.TEZOS_ED25519_ADDRESS_PREFIX)
+    response = TezosAddress(address=address)
 
     if msg.show_display:
+        from trezor import TR
+
         from . import PATTERNS, SLIP44_ID
 
         await show_address(
@@ -39,5 +43,8 @@ async def get_address(msg: TezosGetAddress, keychain: Keychain) -> TezosAddress:
             account=paths.get_account_name("XTZ", address_n, PATTERNS, SLIP44_ID),
             chunkify=bool(msg.chunkify),
         )
+        await context.write(response)
+        await show_continue_in_app(TR.address__confirmed)
+        return None
 
-    return TezosAddress(address=address)
+    return response

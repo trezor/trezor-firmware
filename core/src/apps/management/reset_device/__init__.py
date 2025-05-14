@@ -171,6 +171,7 @@ async def _entropy_check(secret: bytes) -> bool:
         curve_name = req.ecdsa_curve_name or coininfo.by_name(req.coin_name).curve_name
         keychain = Keychain(seed, curve_name, [paths.AlwaysMatchingSchema])
         msg = await get_public_key(req, keychain=keychain)
+        assert msg is not None
 
 
 async def _backup_bip39(mnemonic: str) -> None:
