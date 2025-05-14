@@ -6,10 +6,11 @@ use crate::{
         button_request::{ButtonRequest, ButtonRequestCode},
         component::{
             button_request::ButtonRequestExt,
-            text::paragraphs::{
-                Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort, VecExt,
+            text::{
+                op::OpTextLayout,
+                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
             },
-            ComponentExt,
+            ComponentExt, FormattedText,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
@@ -127,7 +128,8 @@ pub fn new_continue_recovery_homepage(
     subtext: Option<TString<'static>>,
     recovery_type: RecoveryType,
     show_instructions: bool, // 1st screen of the recovery process
-    pages: Option<ParagraphVecLong<'static>>,
+    pages: Option<OpTextLayout<'static>>,
+    n_remaining_shares: Option<usize>,
 ) -> Result<SwipeFlow, error::Error> {
     let (header, confirm_btn, cancel_btn, cancel_title, cancel_intro) = match recovery_type {
         RecoveryType::Normal if show_instructions => (
@@ -147,11 +149,28 @@ pub fn new_continue_recovery_homepage(
             TR::recovery__title,
             TR::recovery__wanna_cancel_recovery,
         ),
-        _ => (
-            Header::new(TR::recovery__title_dry_run.into()).with_menu_button(),
+        // 1st screen of the recovery process
+        _ if show_instructions => (
+            Header::new(TR::reset__check_wallet_backup_title.into()).with_menu_button(),
             TR::buttons__continue,
-            TR::recovery__cancel_dry_run,
-            TR::recovery__title_dry_run,
+            TR::buttons__cancel,
+            TR::reset__check_wallet_backup_title,
+            TR::recovery__wanna_cancel_dry_run,
+        ),
+        _ => (
+            // multi-group recovery check
+            if subtext.is_none() {
+                Header::new(TR::reset__check_wallet_backup_title.into()).with_menu_button()
+            // single-group recovery check
+            } else {
+                Header::new(TR::words__title_done.into())
+                    .with_text_style(theme::label_title_confirm())
+                    .with_icon(theme::ICON_DONE, theme::GREEN_LIGHT)
+                    .with_menu_button()
+            },
+            TR::buttons__continue,
+            TR::buttons__cancel,
+            TR::reset__check_wallet_backup_title,
             TR::recovery__wanna_cancel_dry_run,
         ),
     };
@@ -165,14 +184,15 @@ pub fn new_continue_recovery_homepage(
     } else {
         pars_main.add(Paragraph::new(&theme::TEXT_REGULAR, text));
         if let Some(sub) = subtext {
-            pars_main.add(Paragraph::new(&theme::TEXT_REGULAR, sub).with_top_padding(10));
+            pars_main.add(Paragraph::new(&theme::TEXT_REGULAR, sub));
         }
     };
 
     let content_main = TextScreen::new(
         pars_main
             .into_paragraphs()
-            .with_placement(LinearPlacement::vertical()),
+            .with_placement(LinearPlacement::vertical())
+            .with_spacing(24),
     )
     .with_header(header)
     .with_action_bar(ActionBar::new_single(Button::with_text(confirm_btn.into())))
@@ -287,20 +307,16 @@ pub fn new_continue_recovery_homepage(
             _ => None,
         });
 
-        let n_remaining_shares = pages.as_ref().unwrap().len() / 2;
-        let content_remaining_shares = TextScreen::new(
-            pages
-                .unwrap()
-                .into_paragraphs()
-                .with_placement(LinearPlacement::vertical()),
-        )
+        let content_remaining_shares = TextScreen::new(FormattedText::new(
+            pages.unwrap_or(OpTextLayout::new(theme::TEXT_SMALL)),
+        ))
         .with_header(Header::new(TR::recovery__title_remaining_shares.into()).with_close_button())
         .map(|_| Some(FlowMsg::Cancelled))
         .repeated_button_request(ButtonRequest::new(
             ButtonRequestCode::Other,
             "show_shares".into(),
         ))
-        .with_pages(move |_| n_remaining_shares);
+        .with_pages(move |_| n_remaining_shares.unwrap_or(1));
 
         let mut res = SwipeFlow::new(&ContinueRecoveryBetweenSharesAdvanced::Main)?;
         res.add_page(&ContinueRecoveryBetweenSharesAdvanced::Main, content_main)?
