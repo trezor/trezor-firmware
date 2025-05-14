@@ -129,7 +129,8 @@ class Channel:
         if was_any_replaced:
             # In case a channel was replaced, close all running workflows
             workflow.close_others()
-        log.debug(__name__, "Was any channel replaced? %s", str(was_any_replaced))
+        if __debug__:
+            log.debug(__name__, "Was any channel replaced? %s", str(was_any_replaced))
 
     def is_channel_to_replace(self) -> bool:
         return is_there_a_channel_to_replace(
