@@ -691,73 +691,54 @@ Example:
 OK
 ```
 
-### pmic-charge-enable
+### pm-charge-enable
 Enables battery charging. If a charger is connected, charging starts immediately.
 
 Example:
 ```
-pmic-charge-enable
+pm-charge-enable
 # Enabling battery charging @ 180mA...
 OK
 ```
 
-### pmic-charge-disable
+### pm-charge-disable
 Disables battery charging.
 
 Example:
 ```
-pmic-charge-disable
+pm-charge-disable
 # Disabling battery charging...
 OK
 ```
 
-### pmic-charge-set-limit
-Sets the batter charging current limit.
 
-`pmic-charge-set-limit <limit>`
+### pm-report
+Starts single or continuous reporting of power manager data, including voltage, current and temperature.
 
-* `limit` - Charging limit in mA, ranging from 30 to 180.
+`pm-report`
 
-```
-pmic-charge-set-limit 100
-# Setting battery charging limit to 100 mA...
-OK
-```
-
-### pmic-buck-set-mode
-Selects of one PMIC buck converter modes.
-
-`pmic-buck-set-mode <mode>`
-
-* `pmic-buck-set-mode` - Buck converter mode (pwm, pfm or auto)
-
-Example:
-```
-pmic-buck-set-mode auto
-# Setting the buck converter mode...
-OK
-```
-
-### pmic-report
-Starts single or continuous reporting of PMIC state including voltage, current and temperature.
-
-`pmic-report [<count>] [<period>]`
-
-* `count` - Number of measurement periods
-* `period` - Duration of single measurement period in milliseconds
+Progress report contains these values in order:
+ - power state
+ - usb connected indication
+ - wireless charger connected indication
+ - battery voltage
+ - battery current
+ - battery temperature
+ - battery SOC
+ - battery SOC latched
+ - PMIC die temperature
+ - WLC voltage
+ - WLC current
+ - WLC die temperature
+ - System voltage
 
 Example:
 ```
-pmic-report 4 1000
-#       time      vbat  ibat  ntc    vsys  die    bat  buck mode
-PROGRESS 000229555 0.000 0.000 -88.117 4.692 36.414 0x08 0x0C IDLE
-PROGRESS 000230555 0.000 0.000 -88.117 4.673 37.207 0x08 0x0C IDLE
-PROGRESS 000231555 0.004 0.000 -88.117 4.673 36.414 0x08 0x0C IDLE
-PROGRESS 000232555 0.004 0.000 -88.117 4.679 36.414 0x08 0x0C IDLE
-OK
+pm-report
+PROGRESS 5 USB_connected WLC_disconnected 3.313 -188.775 30.998 6.12 6.12 57.815 0.000 0.000 0.000 4.461OK
 ```
 
-### powerctl-suspend
+### pm-suspend
 Enters low-power mode.
 
 In low-power mode, the CPU retains its state, including SRAM content.
@@ -766,7 +747,7 @@ operation from the point where it was suspended.
 
 Example:
 ```
-powerctl-suspend
+pm-suspend
 # Suspending the device to low-power mode...
 # Press the POWER button to resume.
 
@@ -776,7 +757,7 @@ powerctl-suspend
 OK
 ```
 
-### powerctl-hibernate
+### pm-hibernate
 Enters Hibernate mode.
 
 In Hibernate mode, the CPU is powered off, and only the VBAT domain remains
@@ -788,7 +769,7 @@ wireless charger.
 
 Example:
 ```
-powerctl-hibernate
+pm-hibernate
 # Hibernating the the device...
 # Device is powered externally, hibernation is not possible.
 OK
