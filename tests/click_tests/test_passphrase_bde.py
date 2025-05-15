@@ -236,7 +236,6 @@ def test_passphrase_loop_all_characters(device_handler: "BackgroundDeviceHandler
             debug.read_layout()
 
         enter_passphrase(debug)
-        debug.click(debug.screen_buttons.passphrase_confirm())
 
 
 @pytest.mark.setup_client(passphrase=True)

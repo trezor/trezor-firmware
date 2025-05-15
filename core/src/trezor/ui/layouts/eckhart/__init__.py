@@ -866,6 +866,23 @@ if not utils.BITCOIN_ONLY:
             br_name=None,
         )
 
+    def confirm_solana_recipient(
+        recipient: str,
+        title: str,
+        items: Iterable[tuple[str, str]] = (),
+        br_name: str = "confirm_solana_recipient",
+        br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
+    ) -> Awaitable[None]:
+        return confirm_value(
+            title=title,
+            value=recipient,
+            description="",
+            br_name=br_name,
+            br_code=br_code,
+            verb=TR.buttons__continue,
+            info_items=items,
+        )
+
     def confirm_solana_tx(
         amount: str,
         fee: str,
