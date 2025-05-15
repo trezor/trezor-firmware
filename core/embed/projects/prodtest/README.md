@@ -839,69 +839,6 @@ tropic-get-chip-id
 OK 00000001000000000000000000000000000000000000000000000000000000000000000001000000054400000000FFFFFFFFFFFF01F00F000544545354303103001300000B54524F50494330312D4553FFFFFFFF000100000000FFFF000100000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF13000300
 ```
 
-### wpc-init
-Reinitializes the wireless power receiver driver, restoring it to its default state.
-
-Example:
-```
-wpc-init
-# Initializing the WPC driver...
-OK
-```
-
-### wpc-enable
-Enables the wireless power receiver. When enabled, the receiver can initiate communication with the transmitter. To start battery charging, the voltage output must also be enabled (see `wpc-out-enable`).
-
-Example:
-```
-wpc-enable
-# Enabling STWLC38...
-OK
-```
-
-### wpc-disable
-Disables wireless power receiver.
-
-Example:
-```
-wpc-disable
-# Disabling STWLC38...
-OK
-```
-
-### wpc-out-enable
-Enables the voltage output of the wireless power receiver.  By default, the voltage output is enabled.
-
-Example:
-```
-wpc-out-enable
-# Enabling STWLC38 output...
-OK
-```
-
-### wpc-out-disable
-Disables the voltage output of the wireless power receiver.
-
-Example:
-```
-wpc-out-disable
-# Disabling STWLC38 output...
-OK
-```
-
-### wpc-report
-
-Example:
-```
-#       time       ready vout_ready vrect vout icur tmeas opfreq ntc
-PROGRESS 000314886 1 1 5.068 5.001 59.000 41.000 146 320.900
-PROGRESS 000315886 1 1 5.064 5.006 61.000 41.100 146 321.000
-PROGRESS 000316886 1 1 5.114 5.003 61.000 41.200 146 321.100
-PROGRESS 000317886 1 1 5.151 5.006 61.000 41.300 146 321.000
-PROGRESS 000318886 1 1 5.150 5.002 59.000 41.000 146 320.800
-OK
-```
-
 ### wpc-info
 Retrieves detailed information from the wireless power receiver, including chip identification, firmware version, configuration settings, and error status.
 
