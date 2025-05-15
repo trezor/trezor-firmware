@@ -23,6 +23,7 @@ class TransmissionLoop:
         self.transport_payload: bytes = transport_payload
         self.wait_task: loop.spawn | None = None
         self.min_retransmisson_count_achieved: bool = False
+        self.stop: bool = False
 
     async def start(
         self, max_retransmission_count: int = MAX_RETRANSMISSION_COUNT
@@ -39,17 +40,23 @@ class TransmissionLoop:
             if i == max_retransmission_count - 1:
                 break
 
+            # Got ack while we were retransmitting?
+            if self.stop:
+                break
+
             self.wait_task = loop.spawn(self._wait(i))
             try:
                 await self.wait_task
             except loop.TaskClosed:
-                self.wait_task = None
                 break
+            finally:
+                self.wait_task = None
 
     def stop_immediately(self) -> None:
         if self.wait_task is not None:
             self.wait_task.close()
         self.wait_task = None
+        self.stop = True
 
     async def _wait(self, counter: int = 0) -> None:
         timeout_ms = round(10200 - 1010000 / (counter + 100))
