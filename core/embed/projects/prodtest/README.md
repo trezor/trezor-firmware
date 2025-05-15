@@ -796,6 +796,19 @@ pm-hibernate
 OK
 ```
 
+
+### pm-set-soc-limit
+Sets the battery state of charge (SOC) limit. The SOC limit is a percentage value between 10 and 100.
+
+The command returns `OK` if the operation is successful.
+
+```
+pm-set-soc-limit 50
+# Set SOC limit to 50%
+OK
+
+```
+
 ### tamper-read
 Reads the state of the tamper detection inputs.
 Up to 8 inputs can be read, each represented by a single bit in the response.
