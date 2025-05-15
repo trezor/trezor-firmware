@@ -400,6 +400,7 @@ class TR:
     instructions__shares_start_with_1: str = "Start with share #1"
     instructions__swipe_down: str = "Swipe down"
     instructions__swipe_horizontally: str = "Swipe horizontally"
+    instructions__tap: str = "Tap"
     instructions__tap_to_confirm: str = "Tap to confirm"
     instructions__tap_to_continue: str = "Tap to continue"
     instructions__tap_to_start: str = "Tap to start"

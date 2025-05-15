@@ -1097,8 +1097,7 @@ impl FirmwareUI for UIDelizia {
         ])
         .into_paragraphs();
 
-        let frame =
-            Frame::left_aligned(title, SwipeContent::new(content)).with_swipeup_footer(action);
+        let frame = Frame::left_aligned(title, SwipeContent::new(content)).with_tap_footer(action);
 
         let frame_with_icon = if danger {
             frame.with_danger_icon()
