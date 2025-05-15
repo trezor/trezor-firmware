@@ -339,6 +339,7 @@ int main(void) {
 
 #ifdef USE_RGB_LED
     if (ticks_expired(led_start_deadline) && !g_rgbled_control_disabled) {
+      g_rgbled_control_disabled = true;
       rgb_led_set_color(0);
     }
 #endif
