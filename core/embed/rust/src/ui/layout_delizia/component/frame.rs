@@ -199,6 +199,14 @@ where
     }
 
     #[cfg(feature = "translations")]
+    pub fn with_tap_footer(self, description: Option<TString<'static>>) -> Self {
+        use crate::translations::TR;
+
+        self.with_footer(TR::instructions__tap.into(), description)
+            .with_swipe(Direction::Up, SwipeSettings::default())
+    }
+
+    #[cfg(feature = "translations")]
     pub fn with_swipeup_footer(self, description: Option<TString<'static>>) -> Self {
         use crate::translations::TR;
 

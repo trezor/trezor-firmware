@@ -1415,6 +1415,7 @@ pub enum TranslatedString {
     ethereum__approve_revoke_from = 1011,  // "Revoke from"
     words__chain = 1012,  // "Chain"
     words__token = 1013,  // "Token"
+    instructions__tap = 1014,  // "Tap"
 }
 
 impl TranslatedString {
@@ -2823,6 +2824,7 @@ impl TranslatedString {
             (Self::ethereum__approve_revoke_from, "Revoke from"),
             (Self::words__chain, "Chain"),
             (Self::words__token, "Token"),
+            (Self::instructions__tap, "Tap"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3453,6 +3455,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_instructions__shares_start_with_1, Self::instructions__shares_start_with_1),
         (Qstr::MP_QSTR_instructions__swipe_down, Self::instructions__swipe_down),
         (Qstr::MP_QSTR_instructions__swipe_horizontally, Self::instructions__swipe_horizontally),
+        (Qstr::MP_QSTR_instructions__tap, Self::instructions__tap),
         (Qstr::MP_QSTR_instructions__tap_to_confirm, Self::instructions__tap_to_confirm),
         (Qstr::MP_QSTR_instructions__tap_to_continue, Self::instructions__tap_to_continue),
         (Qstr::MP_QSTR_instructions__tap_to_start, Self::instructions__tap_to_start),
