@@ -115,10 +115,10 @@ pm_status_t pm_init(bool inherit_state) {
 
   // Enable charging by default to max current
   drv->charging_enabled = true;
-  pm_charging_set_max_current(PM_BATTERY_CHARGING_CURRENT_MAX);
 
-  // Set default SOC limit
+  // Set default SOC limit and max charging current limit
   drv->soc_limit = 100;
+  drv->charging_current_max_limit_ma = PM_BATTERY_CHARGING_CURRENT_MAX;
 
   // Poll until fuel_gauge is initialized and first PMIC & WLC measurements
   // propagates into power_monitor.

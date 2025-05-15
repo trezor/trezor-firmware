@@ -49,20 +49,10 @@ void prodtest_pm_hibernate(cli_t* cli) {
     return;
   }
 
-  if (state.usb_connected || state.wireless_connected) {
-    cli_error(
-        cli, CLI_ERROR,
-        "Exteranl power source is connected, hibernation is not possible");
-    return;
-  }
-
   if (!pm_hibernate()) {
     cli_error(cli, CLI_ERROR, "Failed to hibernate.");
     return;
   }
-
-  cli_trace(cli, "Device is powered externally, hibernation is not possible.");
-  cli_ok(cli, "");
 }
 
 void prodtest_pm_suspend(cli_t* cli) {
@@ -343,6 +333,8 @@ void prodtest_pm_precharge(cli_t* cli) {
   // fall slightly.
   float precharge_voltage_V = 3.45f;
 
+  // Disable SoC limit and enable charging
+  pm_set_soc_limit(100);
   pm_charging_enable();
 
   cli_trace(cli, "Precharging the device...");
@@ -377,8 +369,11 @@ void prodtest_pm_precharge(cli_t* cli) {
     if (report.battery_voltage_v >= precharge_voltage_V) {
       // Target achieved
       cli_trace(cli, "Battery voltage reached the target voltage.");
+      pm_charging_disable();
       break;
     }
+
+    systick_delay_ms(500);
   }
 
   cli_ok(cli, "");
