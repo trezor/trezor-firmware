@@ -2956,6 +2956,7 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
     def input_flow_eckhart(self) -> BRGeneratorType:
         br = yield
         while True:
+            # wait for homescreen to go away
             self.debug.read_layout()
             # Paginating (going as further as possible) and pressing Yes
             if br.pages is not None:
