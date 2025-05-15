@@ -384,6 +384,24 @@ void prodtest_pm_precharge(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+void prodtest_pm_set_soc_limit(cli_t* cli) {
+  uint32_t limit = 0;
+  if (!cli_arg_uint32(cli, "limit", &limit) || limit > 100 || limit < 10) {
+    cli_error_arg(cli, "Expecting value in range 10-100");
+    return;
+  }
+
+  if (cli_arg_count(cli) > 1) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  pm_set_soc_limit(limit);
+
+  cli_trace(cli, "Set SOC limit to %d%%", limit);
+  cli_ok(cli, "");
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -440,6 +458,13 @@ PRODTEST_CLI_CMD(
   .func = prodtest_pm_precharge,
   .info = "Precharge the device to specific voltage",
   .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "pm-set-soc-limit",
+  .func = prodtest_pm_set_soc_limit,
+  .info = "Set limit for the battery SOC",
+  .args = "<limit>"
 );
 
 #endif /* USE POWER_MANAGER */
