@@ -244,7 +244,13 @@ def test_apply_homescreen_jpeg(client: Client):
 
 @pytest.mark.models(skip=["legacy", "safe3"])
 def test_apply_homescreen_jpeg_single_message(client: Client):
-    with open(HERE / "test_bg.jpg", "rb") as f:
+    file_name = (
+        "test_bg_eckhart.jpg"
+        if client.layout_type is LayoutType.Eckhart
+        else "test_bg.jpg"
+    )
+
+    with open(HERE / file_name, "rb") as f:
         img = f.read()
         with client:
             _set_expected_responses(client)
