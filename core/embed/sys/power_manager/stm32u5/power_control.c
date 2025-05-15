@@ -97,7 +97,7 @@ void pm_control_suspend() {
 #ifdef USE_STORAGE_HWKEY
   secure_aes_deinit();
 #endif
-#ifdef USE_TROPIC
+#if defined(USE_TROPIC) && !defined(BOOTLOADER)
   tropic_deinit();
 #endif
 #ifdef USE_OPTIGA
@@ -216,7 +216,7 @@ void pm_control_suspend() {
   optiga_init_and_configure();
 #endif
 #endif
-#ifdef USE_TROPIC
+#if defined(USE_TROPIC) && !defined(BOOTLOADER)
   tropic_init();
 #endif
 #ifdef USE_BLE
