@@ -27,14 +27,14 @@ def _log(name: str, mlevel: int, msg: str, *args: Any) -> None:
 
         (level_name, level_style) = _leveldict[mlevel]
         if color:
-            fmt = "%d%s \x1b[35m%s\x1b[0m \x1b[" + level_style + "m%s\x1b[0m " + msg
+            fmt = "%d.%06d%s \x1b[35m%s\x1b[0m \x1b[" + level_style + "m%s\x1b[0m "
             task_id = f" \x1b[2;37m0x{id(this_task):x}\x1b[0m" if this_task else ""
         else:
-            fmt = "%d%s %s %s " + msg
+            fmt = "%d.%06d%s %s %s "
             task_id = f" 0x{id(this_task):x}" if this_task else ""
 
-        fmt_args = (utime.ticks_us(), task_id, name, level_name) + args
-        print(fmt % fmt_args)
+        fmt_args = divmod(utime.ticks_us(), 1000000) + (task_id, name, level_name)
+        print((fmt + msg) % (fmt_args + args))
 
 
 def debug(name: str, msg: str, *args: Any) -> None:
