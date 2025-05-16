@@ -677,7 +677,7 @@ jobs:
       matrix:
         model: [T2T1, T3B1, T3T1]
     env:
-      COVERAGE_THRESHOLD: ${{ matrix.model == 'T2T1' && 78 || 77 }}
+      COVERAGE_THRESHOLD: 85
     steps:
       - uses: actions/checkout@v4
         with:
