@@ -434,11 +434,14 @@ static void _librust_qstrs(void) {
   MP_QSTR_pin__mismatch;
   MP_QSTR_pin__pin_mismatch;
   MP_QSTR_pin__please_check_again;
+  MP_QSTR_pin__reenter;
   MP_QSTR_pin__reenter_new;
   MP_QSTR_pin__reenter_to_confirm;
+  MP_QSTR_pin__setup_completed;
   MP_QSTR_pin__should_be_long;
   MP_QSTR_pin__title_check_pin;
   MP_QSTR_pin__title_settings;
+  MP_QSTR_pin__title_setup;
   MP_QSTR_pin__title_wrong_pin;
   MP_QSTR_pin__tries_left;
   MP_QSTR_pin__turn_off;

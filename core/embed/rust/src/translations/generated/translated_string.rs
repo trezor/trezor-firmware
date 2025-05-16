@@ -716,7 +716,7 @@ pub enum TranslatedString {
     pin__enter = 453,  // "Enter PIN"
     pin__enter_new = 454,  // "Enter new PIN"
     pin__entered_not_valid = 455,  // "The PIN you have entered is not valid."
-    pin__info = 456,  // "PIN will be required to access this device."
+    pin__info = 456,  // {"Bolt": "PIN will be required to access this device.", "Caesar": "PIN will be required to access this device.", "Delizia": "PIN will be required to access this device.", "Eckhart": "The PIN will be required to access this device."}
     pin__invalid_pin = 457,  // "Invalid PIN"
     pin__last_attempt = 458,  // "Last attempt"
     pin__mismatch = 459,  // "Entered PINs do not match!"
@@ -1238,7 +1238,7 @@ pub enum TranslatedString {
     address__confirmed = 869,  // "Receive address confirmed"
     pin__cancel_description = 870,  // "Continue without PIN"
     pin__cancel_info = 871,  // "Without a PIN, anyone can access this device."
-    pin__cancel_setup = 872,  // "Cancel PIN setup"
+    pin__cancel_setup = 872,  // {"Bolt": "Cancel PIN setup", "Caesar": "Cancel PIN setup", "Delizia": "Cancel PIN setup", "Eckhart": "Cancel PIN setup?"}
     send__cancel_sign = 873,  // "Cancel sign"
     send__send_from = 874,  // "Send from"
     instructions__hold_to_sign = 875,  // "Hold to sign"
@@ -1440,6 +1440,9 @@ pub enum TranslatedString {
     passphrase__access_hidden_wallet = 1035,  // "Access hidden wallet"
     passphrase__hidden_wallet = 1036,  // "Hidden wallet"
     passphrase__show = 1037,  // "Show passphrase"
+    pin__reenter = 1038,  // "Re-enter PIN"
+    pin__setup_completed = 1039,  // "PIN setup completed."
+    pin__title_setup = 1040,  // "Set PIN"
 }
 
 impl TranslatedString {
@@ -2256,7 +2259,14 @@ impl TranslatedString {
             (Self::pin__enter, "Enter PIN"),
             (Self::pin__enter_new, "Enter new PIN"),
             (Self::pin__entered_not_valid, "The PIN you have entered is not valid."),
+            #[cfg(feature = "layout_bolt")]
             (Self::pin__info, "PIN will be required to access this device."),
+            #[cfg(feature = "layout_caesar")]
+            (Self::pin__info, "PIN will be required to access this device."),
+            #[cfg(feature = "layout_delizia")]
+            (Self::pin__info, "PIN will be required to access this device."),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::pin__info, "The PIN will be required to access this device."),
             (Self::pin__invalid_pin, "Invalid PIN"),
             (Self::pin__last_attempt, "Last attempt"),
             (Self::pin__mismatch, "Entered PINs do not match!"),
@@ -2834,7 +2844,14 @@ impl TranslatedString {
             (Self::address__confirmed, "Receive address confirmed"),
             (Self::pin__cancel_description, "Continue without PIN"),
             (Self::pin__cancel_info, "Without a PIN, anyone can access this device."),
+            #[cfg(feature = "layout_bolt")]
             (Self::pin__cancel_setup, "Cancel PIN setup"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::pin__cancel_setup, "Cancel PIN setup"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::pin__cancel_setup, "Cancel PIN setup"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::pin__cancel_setup, "Cancel PIN setup?"),
             (Self::send__cancel_sign, "Cancel sign"),
             (Self::send__send_from, "Send from"),
             (Self::instructions__hold_to_sign, "Hold to sign"),
@@ -3101,6 +3118,9 @@ impl TranslatedString {
             (Self::passphrase__access_hidden_wallet, "Access hidden wallet"),
             (Self::passphrase__hidden_wallet, "Hidden wallet"),
             (Self::passphrase__show, "Show passphrase"),
+            (Self::pin__reenter, "Re-enter PIN"),
+            (Self::pin__setup_completed, "PIN setup completed."),
+            (Self::pin__title_setup, "Set PIN"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3946,11 +3966,14 @@ impl TranslatedString {
         (Qstr::MP_QSTR_pin__mismatch, Self::pin__mismatch),
         (Qstr::MP_QSTR_pin__pin_mismatch, Self::pin__pin_mismatch),
         (Qstr::MP_QSTR_pin__please_check_again, Self::pin__please_check_again),
+        (Qstr::MP_QSTR_pin__reenter, Self::pin__reenter),
         (Qstr::MP_QSTR_pin__reenter_new, Self::pin__reenter_new),
         (Qstr::MP_QSTR_pin__reenter_to_confirm, Self::pin__reenter_to_confirm),
+        (Qstr::MP_QSTR_pin__setup_completed, Self::pin__setup_completed),
         (Qstr::MP_QSTR_pin__should_be_long, Self::pin__should_be_long),
         (Qstr::MP_QSTR_pin__title_check_pin, Self::pin__title_check_pin),
         (Qstr::MP_QSTR_pin__title_settings, Self::pin__title_settings),
+        (Qstr::MP_QSTR_pin__title_setup, Self::pin__title_setup),
         (Qstr::MP_QSTR_pin__title_wrong_pin, Self::pin__title_wrong_pin),
         (Qstr::MP_QSTR_pin__tries_left, Self::pin__tries_left),
         (Qstr::MP_QSTR_pin__turn_off, Self::pin__turn_off),

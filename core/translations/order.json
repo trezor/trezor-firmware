@@ -1036,5 +1036,8 @@
   "1034": "firmware_update__restart",
   "1035": "passphrase__access_hidden_wallet",
   "1036": "passphrase__hidden_wallet",
-  "1037": "passphrase__show"
+  "1037": "passphrase__show",
+  "1038": "pin__reenter",
+  "1039": "pin__setup_completed",
+  "1040": "pin__title_setup"
 }
