@@ -132,8 +132,11 @@ bool cli_init(cli_t* cli, cli_read_cb_t read, cli_write_cb_t write,
 void cli_set_commands(cli_t* cli, const cli_command_t* cmd_array,
                       size_t cmd_count);
 
-// Process the newly received characters from the console input
-void cli_process_io(cli_t* cli);
+// Process the newly received characters from the console input,
+const cli_command_t* cli_process_io(cli_t* cli);
+
+// Process CLI command
+void cli_process_command(cli_t* cli, const cli_command_t* cmd);
 
 // Returne the number of arguments in the command line
 size_t cli_arg_count(cli_t* cli);

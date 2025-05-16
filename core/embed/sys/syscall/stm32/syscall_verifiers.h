@@ -209,11 +209,13 @@ secbool ble_read__verified(uint8_t *data, size_t len);
 
 // ---------------------------------------------------------------------
 
-#ifdef USE_POWERCTL
+#ifdef USE_POWER_MANAGER
 
-#include <sys/powerctl.h>
+#include <sys/power_manager.h>
 
-bool powerctl_get_status__verified(powerctl_status_t *status);
+pm_status_t pm_get_state__verified(pm_state_t *status);
+
+bool pm_get_events__verified(pm_event_t *event);
 
 #endif
 

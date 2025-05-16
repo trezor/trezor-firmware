@@ -28,6 +28,8 @@
 #include "prodtest_ble.h"
 #endif
 
+#include "prodtest.h"
+
 #include <version.h>
 
 static void prodtest_prodtest_intro(cli_t* cli) {
@@ -70,6 +72,19 @@ static void prodtest_prodtest_wipe(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+static void prodtest_homescreen(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  prodtest_show_homescreen();
+
+  if (cli != NULL) {
+    cli_ok(cli, "");
+  }
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -90,5 +105,12 @@ PRODTEST_CLI_CMD(
   .name = "prodtest-wipe",
   .func = prodtest_prodtest_wipe,
   .info = "Wipe the production test firmware",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "prodtest-homescreen",
+  .func = prodtest_homescreen,
+  .info = "Shows prodtest homescreen",
   .args = ""
 );

@@ -17,6 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifdef KERNEL_MODE
 
 #include <sys/backup_ram.h>
 #include <sys/pmic.h>
@@ -39,12 +40,10 @@ void pm_monitor_power_sources(void) {
   if (drv->pmic_data.usb_status != 0x0) {
     if (!drv->usb_connected) {
       drv->usb_connected = true;
-      PM_SET_EVENT(drv->event_flags, PM_EVENT_USB_CONNECTED);
     }
   } else {
     if (drv->usb_connected) {
       drv->usb_connected = false;
-      PM_SET_EVENT(drv->event_flags, PM_EVENT_USB_DISCONNECTED);
     }
   }
 
@@ -52,12 +51,10 @@ void pm_monitor_power_sources(void) {
   if (drv->wireless_data.vout_ready) {
     if (!drv->wireless_connected) {
       drv->wireless_connected = true;
-      PM_SET_EVENT(drv->event_flags, PM_EVENT_WIRELESS_CONNECTED);
     }
   } else {
     if (drv->wireless_connected) {
       drv->wireless_connected = false;
-      PM_SET_EVENT(drv->event_flags, PM_EVENT_WIRELESS_DISCONNECTED);
     }
   }
 
@@ -94,7 +91,6 @@ void pm_monitor_power_sources(void) {
   uint8_t soc_ceiled_temp = (int)(drv->fuel_gauge.soc_latched * 100 + 0.999f);
   if (soc_ceiled_temp != drv->soc_ceiled) {
     drv->soc_ceiled = soc_ceiled_temp;
-    PM_SET_EVENT(drv->event_flags, PM_EVENT_SOC_UPDATED);
   }
 
   // Check battery voltage for low threshold
@@ -182,6 +178,23 @@ void pm_charging_controller(pm_driver_t* drv) {
     pmic_set_charging_limit(drv->charging_current_target_ma);
   }
 
+  if (drv->soc_limit > 0) {
+    if (drv->soc_ceiled >= drv->soc_limit) {
+      // Set charging current limit to 0
+      drv->soc_limit_reached = true;
+    } else if (drv->soc_ceiled < drv->soc_limit - PM_SOC_LIMIT_HYSTERESIS) {
+      // Clear charging current limit
+      drv->soc_limit_reached = false;
+    }
+  } else {
+    drv->soc_limit_reached = false;
+  }
+
+  if (drv->soc_limit_reached) {
+    // Set charging current limit to 0
+    drv->charging_current_target_ma = 0;
+  }
+
   if (drv->charging_current_target_ma == 0) {
     pmic_set_charging(false);
   } else {
@@ -249,3 +262,5 @@ void pm_battery_initial_soc_guess(void) {
 
   fuel_gauge_initial_guess(&drv->fuel_gauge, vbat_g, ibat_g, ntc_temp_g);
 }
+
+#endif

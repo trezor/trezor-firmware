@@ -32,8 +32,10 @@
 #define PM_BATTERY_SAMPLING_PERIOD_MS 100
 #define PM_SHUTDOWN_TIMEOUT_MS 15000
 #define PM_BATTERY_UNDERVOLT_THR_V 3.0f
-#define PM_BATTERY_UNDERVOLT_RECOVERY_THR_V 3.3f
+#define PM_BATTERY_UNDERVOLT_RECOVERY_THR_V 3.1f
+#define PM_BATTERY_UNDERVOLT_RECOVERY_WPC_THR_V 3.2f
 #define PM_BATTERY_LOW_THRESHOLD_SOC 15
+#define PM_SOC_LIMIT_HYSTERESIS 5
 
 #define PM_BATTERY_SAMPLING_BUF_SIZE 10
 
@@ -45,10 +47,16 @@
 #define PM_FUEL_GAUGE_Q_AGGRESSIVE 0.001f
 #define PM_FUEL_GAUGE_P_INIT 0.1f
 
-// Event flag manipulation macros
-#define PM_SET_EVENT(flags, event) ((flags) |= (event))
-#define PM_CLEAR_EVENT(flags, event) ((flags) &= ~(event))
-#define PM_CLEAR_ALL_EVENTS(flags) ((flags) = 0)
+/* Power manager states */
+#define PM_STATE_LIST(STATE) \
+  STATE(HIBERNATE)           \
+  STATE(CHARGING)            \
+  STATE(STARTUP_REJECTED)    \
+  STATE(SUSPEND)             \
+  STATE(ULTRA_POWER_SAVE)    \
+  STATE(SHUTTING_DOWN)       \
+  STATE(POWER_SAVE)          \
+  STATE(ACTIVE)
 
 // Power manager battery sampling data structure
 typedef struct {
@@ -62,7 +70,6 @@ typedef struct {
   bool initialized;
   bool state_machine_stabilized;
   pm_internal_state_t state;
-  pm_event_t event_flags;
 
   // Fuel gauge
   fuel_gauge_state_t fuel_gauge;
@@ -71,6 +78,8 @@ typedef struct {
   uint8_t bat_sampling_buf_tail_idx;
   uint8_t bat_sampling_buf_head_idx;
   uint8_t soc_ceiled;
+  uint8_t soc_limit;
+  bool soc_limit_reached;
 
   // Battery charging state
   bool charging_enabled;

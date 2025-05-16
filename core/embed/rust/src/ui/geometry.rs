@@ -278,6 +278,10 @@ impl Rect {
         let top_left = Point::new(p0.x - size.x, p0.y);
         Self::from_top_left_and_size(top_left, size)
     }
+    pub const fn from_top_center_and_size(p0: Point, size: Offset) -> Self {
+        let top_left = Point::new(p0.x - size.x / 2, p0.y);
+        Self::from_top_left_and_size(top_left, size)
+    }
 
     pub const fn from_bottom_left_and_size(p0: Point, size: Offset) -> Self {
         let top_left = Point::new(p0.x, p0.y - size.y);

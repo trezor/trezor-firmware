@@ -30,6 +30,8 @@
 
 #include <stdlib.h>
 
+#include "prodtest.h"
+
 void prodtest_pm_hibernate(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -237,6 +239,8 @@ void prodtest_pm_report(cli_t* cli) {
       (int)report.system_voltage_v,
       (int)(report.system_voltage_v * 1000) % 1000);
 
+  prodtest_show_homescreen();
+
   cli_ok(cli, "");
 }
 
@@ -266,47 +270,47 @@ void prodtest_pm_event_monitor(cli_t* cli) {
       cli_error(cli, CLI_ERROR, "Failed to get power manager events");
     }
 
-    if (event_flag & PM_EVENT_USB_CONNECTED) {
+    if (event_flag.flags.usb_connected) {
       cli_trace(cli, "USB connected");
     }
 
-    if (event_flag & PM_EVENT_USB_DISCONNECTED) {
+    if (event_flag.flags.usb_disconnected) {
       cli_trace(cli, "USB disconnected");
     }
 
-    if (event_flag & PM_EVENT_WIRELESS_CONNECTED) {
+    if (event_flag.flags.wireless_connected) {
       cli_trace(cli, "WLC connected");
     }
 
-    if (event_flag & PM_EVENT_WIRELESS_DISCONNECTED) {
+    if (event_flag.flags.wireless_disconnected) {
       cli_trace(cli, "WLC disconnected");
     }
 
-    if (event_flag & PM_EVENT_ENTERED_MODE_ACTIVE) {
+    if (event_flag.flags.entered_mode_active) {
       cli_trace(cli, "Power manager entered active mode");
     }
 
-    if (event_flag & PM_EVENT_ENTERED_MODE_POWER_SAVE) {
+    if (event_flag.flags.entered_mode_power_save) {
       cli_trace(cli, "Power manager entered power save mode");
     }
 
-    if (event_flag & PM_EVENT_ENTERED_MODE_SHUTTING_DOWN) {
+    if (event_flag.flags.entered_mode_shutting_down) {
       cli_trace(cli, "Power manager entered shutting down mode");
     }
 
-    if (event_flag & PM_EVENT_ENTERED_MODE_SUSPEND) {
+    if (event_flag.flags.entered_mode_suspend) {
       cli_trace(cli, "Power manager entered suspend mode");
     }
 
-    if (event_flag & PM_EVENT_ENTERED_MODE_CHARGING) {
+    if (event_flag.flags.entered_mode_charging) {
       cli_trace(cli, "Power manager entered charging mode");
     }
 
-    if (event_flag & PM_EVENT_ENTERED_MODE_HIBERNATE) {
+    if (event_flag.flags.entered_mode_hibernate) {
       cli_trace(cli, "Power manager entered hibernate mode");
     }
 
-    if (event_flag & PM_EVENT_SOC_UPDATED) {
+    if (event_flag.flags.soc_updated) {
       status = pm_get_state(&state);
       cli_trace(cli, "Power manager SOC changed to %d %%", state.soc);
     }
@@ -336,17 +340,16 @@ void prodtest_pm_precharge(cli_t* cli) {
   // due to effect of internal resistance of the battery. So battery voltage
   // will drop a bit after the charging is stopped.
 
-  // voltage while charging is being lifted due to charging with quite high charging
-  // current. When the test terminate by reaching the given woltage. The current
-  // and
+  // voltage while charging is being lifted due to charging with quite high
+  // charging current. When the test terminate by reaching the given woltage.
+  // The current and
   float precharge_voltage_V = 3.45f;
 
   pm_charging_enable();
 
   cli_trace(cli, "Precharging the device...");
 
-  while(true){
-
+  while (true) {
     pm_report_t report;
     pm_status_t status = pm_get_report(&report);
 
@@ -365,11 +368,10 @@ void prodtest_pm_precharge(cli_t* cli) {
               (int)(report.battery_voltage_v * 1000) % 1000,
               (int)precharge_voltage_V,
               (int)(precharge_voltage_V * 1000) % 1000);
-    cli_progress(cli,"%d.%03d %d.%03d",
-                (int)report.battery_voltage_v,
-                (int)(report.battery_voltage_v * 1000) % 1000,
-                (int)precharge_voltage_V,
-                (int)(precharge_voltage_V * 1000) % 1000);
+    cli_progress(cli, "%d.%03d %d.%03d", (int)report.battery_voltage_v,
+                 (int)(report.battery_voltage_v * 1000) % 1000,
+                 (int)precharge_voltage_V,
+                 (int)(precharge_voltage_V * 1000) % 1000);
 
     if (cli_aborted(cli)) {
       cli_trace(cli, "aborted");
@@ -377,7 +379,7 @@ void prodtest_pm_precharge(cli_t* cli) {
     }
 
     // Check if the battery voltage is above the precharge voltag
-    if(report.battery_voltage_v >= precharge_voltage_V){
+    if (report.battery_voltage_v >= precharge_voltage_V) {
       // Target achieved
       cli_trace(cli, "Battery voltage reached the target voltage.");
       break;
@@ -387,6 +389,23 @@ void prodtest_pm_precharge(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+void prodtest_pm_set_soc_limit(cli_t* cli) {
+  uint32_t limit = 0;
+  if (!cli_arg_uint32(cli, "limit", &limit) || limit > 100 || limit < 10) {
+    cli_error_arg(cli, "Expecting value in range 10-100");
+    return;
+  }
+
+  if (cli_arg_count(cli) > 1) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  pm_set_soc_limit(limit);
+
+  cli_trace(cli, "Set SOC limit to %d%%", limit);
+  cli_ok(cli, "");
+}
 
 // clang-format off
 
@@ -444,6 +463,13 @@ PRODTEST_CLI_CMD(
   .func = prodtest_pm_precharge,
   .info = "Precharge the device to specific voltage",
   .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "pm-set-soc-limit",
+  .func = prodtest_pm_set_soc_limit,
+  .info = "Set limit for the battery SOC",
+  .args = "<limit>"
 );
 
 #endif /* USE POWER_MANAGER */

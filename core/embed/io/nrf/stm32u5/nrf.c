@@ -800,9 +800,9 @@ void NRF_EXTI_INTERRUPT_HANDLER(void) {
 
   nrf_driver_t *drv = &g_nrf_driver;
 
-#ifdef USE_POWERCTL
+#ifdef USE_POWER_MANAGER
   if (drv->wakeup) {
-    // Inform the powerctl module about nrf/ble wakeup
+    // Inform the power manager module about nrf/ble wakeup
     pm_wakeup_flags_set(PM_WAKEUP_FLAG_BLE);
     drv->wakeup = false;
   }

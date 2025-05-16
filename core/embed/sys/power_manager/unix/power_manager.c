@@ -17,11 +17,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <trezor_rtl.h>
 
-#include "rust_types.h"
+#include <sys/power_manager.h>
 
-// Disable automatic control of RGB LED in prodtest main loop
-void prodtest_disable_rgbled_control(void);
+#include <SDL.h>
 
-void prodtest_show_homescreen(void);
+pm_status_t pm_init(bool inherit_state) { return PM_OK; }
+
+void pm_deinit(void) {}
+
+pm_status_t pm_hibernate(void) {
+  exit(1);
+  return PM_OK;
+}
+pm_status_t pm_turn_on(void) { return PM_OK; }
+pm_status_t pm_charging_enable(void) { return PM_OK; }
+pm_status_t pm_charging_disable(void) { return PM_OK; }
+
+bool pm_get_events(pm_event_t* event_flags) {
+  memset(event_flags, 0, sizeof(pm_event_t));
+  return false;
+}
+
+pm_status_t pm_get_state(pm_state_t* state) {
+  state->usb_connected = true;
+  state->wireless_connected = false;
+  state->charging_status = PM_BATTERY_IDLE;
+  state->power_state = PM_STATE_ACTIVE;
+  state->soc = 100;
+  return PM_OK;
+}
