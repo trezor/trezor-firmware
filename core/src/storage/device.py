@@ -36,8 +36,8 @@ _SAFETY_CHECK_LEVEL        = const(0x14)  # int
 _EXPERIMENTAL_FEATURES     = const(0x15)  # bool (0x01 or empty)
 _HIDE_PASSPHRASE_FROM_HOST = const(0x16)  # bool (0x01 or empty)
 if utils.USE_THP:
-    _DEVICE_SECRET         = const(0x17)  # bytes
-    _CRED_AUTH_KEY_COUNTER = const(0x18)  # bytes
+    DEVICE_SECRET         = const(0x17)  # bytes
+    CRED_AUTH_KEY_COUNTER = const(0x18)  # bytes
 # unused from python:
 # _BRIGHTNESS                = const(0x19)  # int
 _DISABLE_HAPTIC_FEEDBACK   = const(0x20)  # bool (0x01 or empty)
@@ -364,21 +364,21 @@ if utils.USE_THP:
         """
         Device secret is used to derive keys that are independent of the seed.
         """
-        device_secret = common.get(_NAMESPACE, _DEVICE_SECRET)
+        device_secret = common.get(_NAMESPACE, DEVICE_SECRET)
         if not device_secret:
             from trezor.crypto import random
 
             device_secret = random.bytes(16, True)
-            common.set(_NAMESPACE, _DEVICE_SECRET, device_secret)
+            common.set(_NAMESPACE, DEVICE_SECRET, device_secret)
         return device_secret
 
     def get_cred_auth_key_counter() -> bytes:
-        return common.get(_NAMESPACE, _CRED_AUTH_KEY_COUNTER) or bytes(4)
+        return common.get(_NAMESPACE, CRED_AUTH_KEY_COUNTER) or bytes(4)
 
     def increment_cred_auth_key_counter() -> None:
         counter = int.from_bytes(get_cred_auth_key_counter(), "big")
         utils.ensure(counter < 0xFFFFFFFF, "Overflow of cred_auth_key_counter")
-        common.set(_NAMESPACE, _CRED_AUTH_KEY_COUNTER, (counter + 1).to_bytes(4, "big"))
+        common.set(_NAMESPACE, CRED_AUTH_KEY_COUNTER, (counter + 1).to_bytes(4, "big"))
 
 
 def set_haptic_feedback(enable: bool) -> None:
