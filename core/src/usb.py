@@ -27,7 +27,7 @@ _iface_iter = iter(range(5))
 
 ENABLE_IFACE_DEBUG = __debug__
 ENABLE_IFACE_WEBAUTHN = not utils.BITCOIN_ONLY
-ENABLE_IFACE_VCP = __debug__
+ENABLE_IFACE_VCP = __debug__ and not utils.EMULATOR
 
 # interface used for trezor wire protocol
 id_wire = next(_iface_iter)
