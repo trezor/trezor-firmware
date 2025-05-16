@@ -10,6 +10,7 @@ from dominate.tags import a, i, img, span, table, td, th, tr
 
 from ..common import UI_TESTS_DIR
 
+_COLLAPSE_UNCHANGED_THRESHOLD = 10
 _IMAGE_DIR = UI_TESTS_DIR / "images"
 
 
@@ -107,9 +108,8 @@ def diff_row(
 
 def collapsible_rows(rows, cur_dir):
     collapse = len(rows) > 0
-    color = "yellow" if collapse else "white"
     for left, right in rows:
-        diff_row(left, right, cur_dir, color, collapse)
+        diff_row(left, right, cur_dir, "white", collapse)
     if collapse:
         with tr(bgcolor="yellow"):
             with td(colspan=3, _class="showLink"):
@@ -118,14 +118,10 @@ def collapsible_rows(rows, cur_dir):
 
 
 def diff_table(diff: Iterable[tuple[str | None, str | None]], cur_dir: Path) -> None:
-    has_diff = False
-    rows = []
-    for l, r in diff:
-        if l != r:
-            has_diff = True
-        rows.append((l, r))
+    rows = list(diff)
+    has_diff = any(l != r for l, r in rows)
 
-    if not has_diff or len(rows) <= 10:  # show all without collapsing
+    if not has_diff or len(rows) <= _COLLAPSE_UNCHANGED_THRESHOLD:  # show all without collapsing
         for left, right in rows:
             color = "red" if left != right else "white"
             diff_row(left, right, cur_dir, color)
