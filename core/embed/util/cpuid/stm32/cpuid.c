@@ -17,32 +17,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <trezor_bsp.h>  // required by #ifdef STM32U5 below (see #4306 issue)
+#ifdef KERNEL_MODE
+
+#include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
-#include <rtl/cli.h>
+#include <sys/mpu.h>
 #include <util/cpuid.h>
 
-static void prodtest_get_cpuid(cli_t* cli) {
-  if (cli_arg_count(cli) > 0) {
-    cli_error_arg_count(cli);
-    return;
-  }
+#ifdef STM32U5
+#include "stm32u5xx_ll_utils.h"
+#else
+#include "stm32f4xx_ll_utils.h"
+#endif
 
-  cpuid_t cpuid = {0};
-
-  cpuid_get(&cpuid);
-
-  cli_ok_hexdata(cli, &cpuid.id, sizeof(cpuid.id));
+void cpuid_get(cpuid_t* cpuid) {
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_OTP);
+  cpuid->id[0] = LL_GetUID_Word0();
+  cpuid->id[1] = LL_GetUID_Word1();
+  cpuid->id[2] = LL_GetUID_Word2();
+  mpu_restore(mpu_mode);
 }
 
-// clang-format off
-
-PRODTEST_CLI_CMD(
-  .name = "get-cpuid",
-  .func = prodtest_get_cpuid,
-  .info = "Retrieve unique CPU ID",
-  .args = ""
-);
-
-
+#endif
