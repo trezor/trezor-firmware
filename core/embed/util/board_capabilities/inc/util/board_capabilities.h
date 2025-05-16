@@ -65,7 +65,7 @@ typedef struct __attribute__((packed)) {
   uint8_t terminator_length;
 } board_capabilities_t;
 
-// Parses capabiilites from boardloader into RAM
+// Parses capabilities from boardloader into RAM
 //
 // This function must be called before any other function
 // that uses the capabilities
