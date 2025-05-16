@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Optional, TextIO
 
 import click
-import requests
 
 from .. import definitions, messages, solana, tools
 from . import with_client
