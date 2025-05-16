@@ -46,6 +46,7 @@ def unix_common_files(env, defines, sources, paths):
         "embed/sys/task/unix/systask.c",
         "embed/sys/time/unix/systick.c",
         "embed/sys/time/unix/systimer.c",
+        "embed/util/board_capabilities/unix/board_capabilities.c",
         "embed/util/cpuid/unix/cpuid.c",
         "embed/util/flash/unix/flash.c",
         "embed/util/flash/unix/flash_otp.c",
