@@ -55,6 +55,60 @@ pub fn format_i64(num: i64, buffer: &mut [u8]) -> Option<&str> {
     }
 }
 
+/// Selects the correct plural form from a template string based on a count.
+///
+/// The `template` is a `&str` containing 2 or 3 variants separated by `|`:
+/// - 2 forms: "singular|plural" (e.g., `"day|days"`)
+/// - 3 forms: "singular|few|many" (e.g., `"den|dny|dnů"` for Czech)
+///
+/// # Arguments
+/// * `template` - A pipe-separated string with plural forms.
+/// * `count` - The numeric count to select the correct plural form.
+///
+/// # Returns
+/// A `ShortString` containing the correct plural form.
+///
+/// # Panics
+/// Panics if:
+/// - The `template` has fewer than two forms.
+/// - Conversion to `ShortString` fails (via `unwrap!`).
+pub fn plural_form(template: &str, count: u32) -> ShortString {
+    // Split the template by '|' into components
+    let mut parts = template.split('|');
+
+    // First form (singular), must exist
+    let first = unwrap!(parts.next().ok_or(()));
+    // Second form (plural or few), must exist
+    let second = unwrap!(parts.next().ok_or(()));
+    // Third form (many), optional
+    let third = parts.next();
+
+    // Choose appropriate form based on `count`
+    let selected = match third {
+        Some(many) => {
+            // Czech-style: 1 → singular, 2–4 → few, 0 or ≥5 → many
+            if count == 1 {
+                first
+            } else if (2..=4).contains(&count) {
+                second
+            } else {
+                many
+            }
+        }
+        None => {
+            // Simple fallback: 1 → singular, all others → plural
+            if count == 1 {
+                first
+            } else {
+                second
+            }
+        }
+    };
+
+    // Convert the selected form into ShortString, panicking if it fails
+    unwrap!(ShortString::try_from(selected))
+}
+
 #[derive(Copy, Clone)]
 pub enum TString<'a> {
     #[cfg(feature = "micropython")]
@@ -220,5 +274,18 @@ impl ufmt::uDebug for TString<'_> {
             }
         }
         Ok(())
+    }
+}
+
+mod tests {
+
+    #[test]
+    fn test_plural_form() {
+        use super::plural_form;
+        assert_eq!(plural_form("day|days", 1).as_str(), "day");
+        assert_eq!(plural_form("day|days", 3).as_str(), "days");
+        assert_eq!(plural_form("den|dny|dní", 1).as_str(), "den");
+        assert_eq!(plural_form("den|dny|dní", 3).as_str(), "dny");
+        assert_eq!(plural_form("den|dny|dní", 5).as_str(), "dní");
     }
 }

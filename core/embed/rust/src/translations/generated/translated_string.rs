@@ -27,7 +27,7 @@ pub enum TranslatedString {
     authenticate__confirm_template = 13,  // "Allow connected computer to confirm your {0} is genuine?"
     authenticate__header = 14,  // "Authenticate device"
     auto_lock__change_template = 15,  // "Auto-lock Trezor after {0} of inactivity?"
-    auto_lock__title = 16,  // "Auto-lock delay"
+    auto_lock__title = 16,  // {"Bolt": "Auto-lock delay", "Caesar": "Auto-lock delay", "Delizia": "Auto-lock delay", "Eckhart": "Auto-lock"}
     backup__can_back_up_anytime = 17,  // "You can back up your Trezor once, at any time."
     backup__it_should_be_backed_up = 18,  // {"Bolt": "You should back up your new wallet right now.", "Caesar": "You should back up your new wallet right now.", "Delizia": "You should back up your new wallet right now.", "Eckhart": "Back up your new wallet now."}
     backup__it_should_be_backed_up_now = 19,  // "It should be backed up now!"
@@ -756,7 +756,7 @@ pub enum TranslatedString {
     reboot_to_bootloader__title = 493,  // "Go to bootloader"
     reboot_to_bootloader__version_by_template = 494,  // "Firmware version {0}\nby {1}"
     recovery__cancel_dry_run = 495,  // "Cancel backup check"
-    recovery__check_dry_run = 496,  // "Check your backup?"
+    recovery__check_dry_run = 496,  // {"Bolt": "Check your backup?", "Caesar": "Check your backup?", "Delizia": "Check your backup?", "Eckhart": "Let's do a wallet backup check."}
     recovery__cursor_will_change = 497,  // "Position of the cursor will change between entries for enhanced security."
     recovery__dry_run_bip39_valid_match = 498,  // "The entered wallet backup is valid and matches the one in this device."
     recovery__dry_run_bip39_valid_mismatch = 499,  // "The entered wallet backup is valid but does not match the one in the device."
@@ -770,11 +770,11 @@ pub enum TranslatedString {
     recovery__group_threshold_reached = 507,  // "Group threshold reached."
     recovery__invalid_wallet_backup_entered = 508,  // "Invalid wallet backup entered."
     recovery__invalid_share_entered = 509,  // "Invalid recovery share entered."
-    recovery__more_shares_needed = 510,  // "More shares needed"
+    recovery__more_shares_needed = 510,  // {"Bolt": "More shares needed", "Caesar": "More shares needed", "Delizia": "More shares needed", "Eckhart": "More shares needed."}
     recovery__num_of_words = 511,  // "Select the number of words in your backup."
     recovery__only_first_n_letters = 512,  // "You'll only have to select the first 2-4 letters of each word."
     recovery__progress_will_be_lost = 513,  // "All progress will be lost."
-    recovery__share_already_entered = 515,  // "Share already entered"
+    recovery__share_already_entered = 515,  // {"Bolt": "Share already entered", "Caesar": "Share already entered", "Delizia": "Share already entered", "Eckhart": "Share already entered."}
     recovery__share_from_another_multi_share_backup = 516,  // "You have entered a share from a different backup."
     recovery__share_num_template = 517,  // "Share {0}"
     recovery__title = 518,  // "Recover wallet"
@@ -789,8 +789,8 @@ pub enum TranslatedString {
     recovery__wanna_cancel_recovery = 527,  // "Are you sure you want to cancel the recovery process?"
     recovery__word_count_template = 528,  // "({0} words)"
     recovery__word_x_of_y_template = 529,  // "Word {0} of {1}"
-    recovery__x_more_items_starting_template_plural = 530,  // "{count} more {plural} starting"
-    recovery__x_more_shares_needed_template_plural = 531,  // "{count} more {plural} needed"
+    recovery__x_more_items_starting_template_plural = 530,  // {"Bolt": "{count} more {plural} starting", "Caesar": "{count} more {plural} starting", "Delizia": "{count} more {plural} starting", "Eckhart": "You need {count} more {plural} starting"}
+    recovery__x_more_shares_needed_template_plural = 531,  // {"Bolt": "{count} more {plural} needed", "Caesar": "{count} more {plural} needed", "Delizia": "{count} more {plural} needed", "Eckhart": "{count} more {plural} needed."}
     recovery__x_of_y_entered_template = 532,  // {"Bolt": "{0} of {1} shares entered", "Caesar": "{0} of {1} shares entered", "Delizia": "{0} of {1} shares entered", "Eckhart": "{0} of {1} shares entered."}
     recovery__you_have_entered = 533,  // "You have entered"
     reset__advanced_group_threshold_info = 534,  // "The group threshold specifies the number of groups required to recover your wallet."
@@ -1409,6 +1409,9 @@ pub enum TranslatedString {
     ethereum__deploy_contract = 1013,  // "Deploy contract"
     #[cfg(feature = "universal_fw")]
     ethereum__title_all_input_data_template = 1014,  // "All input data ({0} bytes)"
+    auto_lock__description = 1015,  // "Set the time before your Trezor locks automatically."
+    plurals__lock_after_x_days = 1016,  // "day|days"
+    recovery__share_from_group_entered_template = 1017,  // "Share #{0} from Group #{1} entered."
 }
 
 impl TranslatedString {
@@ -1429,7 +1432,14 @@ impl TranslatedString {
             (Self::authenticate__confirm_template, "Allow connected computer to confirm your {0} is genuine?"),
             (Self::authenticate__header, "Authenticate device"),
             (Self::auto_lock__change_template, "Auto-lock Trezor after {0} of inactivity?"),
+            #[cfg(feature = "layout_bolt")]
             (Self::auto_lock__title, "Auto-lock delay"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::auto_lock__title, "Auto-lock delay"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::auto_lock__title, "Auto-lock delay"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::auto_lock__title, "Auto-lock"),
             (Self::backup__can_back_up_anytime, "You can back up your Trezor once, at any time."),
             #[cfg(feature = "layout_bolt")]
             (Self::backup__it_should_be_backed_up, "You should back up your new wallet right now."),
@@ -2195,7 +2205,14 @@ impl TranslatedString {
             (Self::reboot_to_bootloader__title, "Go to bootloader"),
             (Self::reboot_to_bootloader__version_by_template, "Firmware version {0}\nby {1}"),
             (Self::recovery__cancel_dry_run, "Cancel backup check"),
+            #[cfg(feature = "layout_bolt")]
             (Self::recovery__check_dry_run, "Check your backup?"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::recovery__check_dry_run, "Check your backup?"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::recovery__check_dry_run, "Check your backup?"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::recovery__check_dry_run, "Let's do a wallet backup check."),
             (Self::recovery__cursor_will_change, "Position of the cursor will change between entries for enhanced security."),
             (Self::recovery__dry_run_bip39_valid_match, "The entered wallet backup is valid and matches the one in this device."),
             (Self::recovery__dry_run_bip39_valid_mismatch, "The entered wallet backup is valid but does not match the one in the device."),
@@ -2209,11 +2226,25 @@ impl TranslatedString {
             (Self::recovery__group_threshold_reached, "Group threshold reached."),
             (Self::recovery__invalid_wallet_backup_entered, "Invalid wallet backup entered."),
             (Self::recovery__invalid_share_entered, "Invalid recovery share entered."),
+            #[cfg(feature = "layout_bolt")]
             (Self::recovery__more_shares_needed, "More shares needed"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::recovery__more_shares_needed, "More shares needed"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::recovery__more_shares_needed, "More shares needed"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::recovery__more_shares_needed, "More shares needed."),
             (Self::recovery__num_of_words, "Select the number of words in your backup."),
             (Self::recovery__only_first_n_letters, "You'll only have to select the first 2-4 letters of each word."),
             (Self::recovery__progress_will_be_lost, "All progress will be lost."),
+            #[cfg(feature = "layout_bolt")]
             (Self::recovery__share_already_entered, "Share already entered"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::recovery__share_already_entered, "Share already entered"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::recovery__share_already_entered, "Share already entered"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::recovery__share_already_entered, "Share already entered."),
             (Self::recovery__share_from_another_multi_share_backup, "You have entered a share from a different backup."),
             (Self::recovery__share_num_template, "Share {0}"),
             (Self::recovery__title, "Recover wallet"),
@@ -2235,8 +2266,22 @@ impl TranslatedString {
             (Self::recovery__wanna_cancel_recovery, "Are you sure you want to cancel the recovery process?"),
             (Self::recovery__word_count_template, "({0} words)"),
             (Self::recovery__word_x_of_y_template, "Word {0} of {1}"),
+            #[cfg(feature = "layout_bolt")]
             (Self::recovery__x_more_items_starting_template_plural, "{count} more {plural} starting"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::recovery__x_more_items_starting_template_plural, "{count} more {plural} starting"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::recovery__x_more_items_starting_template_plural, "{count} more {plural} starting"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::recovery__x_more_items_starting_template_plural, "You need {count} more {plural} starting"),
+            #[cfg(feature = "layout_bolt")]
             (Self::recovery__x_more_shares_needed_template_plural, "{count} more {plural} needed"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::recovery__x_more_shares_needed_template_plural, "{count} more {plural} needed"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::recovery__x_more_shares_needed_template_plural, "{count} more {plural} needed"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::recovery__x_more_shares_needed_template_plural, "{count} more {plural} needed."),
             #[cfg(feature = "layout_bolt")]
             (Self::recovery__x_of_y_entered_template, "{0} of {1} shares entered"),
             #[cfg(feature = "layout_caesar")]
@@ -2979,6 +3024,9 @@ impl TranslatedString {
             (Self::ethereum__deploy_contract, "Deploy contract"),
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__title_all_input_data_template, "All input data ({0} bytes)"),
+            (Self::auto_lock__description, "Set the time before your Trezor locks automatically."),
+            (Self::plurals__lock_after_x_days, "day|days"),
+            (Self::recovery__share_from_group_entered_template, "Share #{0} from Group #{1} entered."),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3007,6 +3055,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_authenticate__confirm_template, Self::authenticate__confirm_template),
         (Qstr::MP_QSTR_authenticate__header, Self::authenticate__header),
         (Qstr::MP_QSTR_auto_lock__change_template, Self::auto_lock__change_template),
+        (Qstr::MP_QSTR_auto_lock__description, Self::auto_lock__description),
         (Qstr::MP_QSTR_auto_lock__title, Self::auto_lock__title),
         (Qstr::MP_QSTR_auto_lock__turned_on, Self::auto_lock__turned_on),
         (Qstr::MP_QSTR_backup__can_back_up_anytime, Self::backup__can_back_up_anytime),
@@ -3809,6 +3858,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_pin__turn_on, Self::pin__turn_on),
         (Qstr::MP_QSTR_pin__wrong_pin, Self::pin__wrong_pin),
         (Qstr::MP_QSTR_plurals__contains_x_keys, Self::plurals__contains_x_keys),
+        (Qstr::MP_QSTR_plurals__lock_after_x_days, Self::plurals__lock_after_x_days),
         (Qstr::MP_QSTR_plurals__lock_after_x_hours, Self::plurals__lock_after_x_hours),
         (Qstr::MP_QSTR_plurals__lock_after_x_milliseconds, Self::plurals__lock_after_x_milliseconds),
         (Qstr::MP_QSTR_plurals__lock_after_x_minutes, Self::plurals__lock_after_x_minutes),
@@ -3860,6 +3910,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_recovery__share_already_entered, Self::recovery__share_already_entered),
         (Qstr::MP_QSTR_recovery__share_does_not_match, Self::recovery__share_does_not_match),
         (Qstr::MP_QSTR_recovery__share_from_another_multi_share_backup, Self::recovery__share_from_another_multi_share_backup),
+        (Qstr::MP_QSTR_recovery__share_from_group_entered_template, Self::recovery__share_from_group_entered_template),
         (Qstr::MP_QSTR_recovery__share_num_template, Self::recovery__share_num_template),
         (Qstr::MP_QSTR_recovery__title, Self::recovery__title),
         (Qstr::MP_QSTR_recovery__title_cancel_dry_run, Self::recovery__title_cancel_dry_run),

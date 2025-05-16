@@ -5,14 +5,14 @@ use crate::{
     io::BinaryData,
     micropython::{gc::Gc, iter::IterBuf, list::List, obj::Obj, util},
     strutil::TString,
+    time::Duration,
     translations::TR,
     ui::{
         component::{
             text::{
                 op::OpTextLayout,
                 paragraphs::{
-                    Checklist, Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort,
-                    Paragraphs, VecExt,
+                    Checklist, Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt,
                 },
                 TextStyle,
             },
@@ -33,9 +33,10 @@ use crate::{
 use super::{
     component::Button,
     firmware::{
-        ActionBar, Bip39Input, ConfirmHomescreen, DeviceMenuScreen, Header, HeaderMsg, Hint,
-        Homescreen, MnemonicKeyboard, PinKeyboard, ProgressScreen, SelectWordCountScreen,
-        SelectWordScreen, SetBrightnessScreen, Slip39Input, TextScreen,
+        ActionBar, Bip39Input, ConfirmHomescreen, DeviceMenuScreen, DurationInput, Header,
+        HeaderMsg, Hint, Homescreen, MnemonicKeyboard, PinKeyboard, ProgressScreen,
+        SelectWordCountScreen, SelectWordScreen, SetBrightnessScreen, Slip39Input, TextScreen,
+        ValueInputScreen,
     },
     flow, fonts, theme, UIEckhart,
 };
@@ -509,16 +510,31 @@ impl FirmwareUI for UIEckhart {
         show_instructions: bool,
         remaining_shares: Option<Obj>,
     ) -> Result<Gc<LayoutObj>, Error> {
-        let pages_vec = if let Some(pages_obj) = remaining_shares {
-            let mut vec = ParagraphVecLong::new();
-            for page in IterBuf::new().try_iterate(pages_obj)? {
+        let (pages_layout, n_pages) = if let Some(pages_obj) = remaining_shares {
+            let mut op_layout = OpTextLayout::new(theme::TEXT_SMALL);
+            let mut iter_buf = IterBuf::new();
+            let mut pages = iter_buf.try_iterate(pages_obj)?.peekable();
+            let mut n_pages = 0;
+
+            while let Some(page) = pages.next() {
                 let [title, description]: [TString; 2] = util::iter_into_array(page)?;
-                vec.add(Paragraph::new(&theme::TEXT_REGULAR, title))
-                    .add(Paragraph::new(&theme::TEXT_MONO_LIGHT, description).break_after());
+                n_pages += 1;
+                op_layout = op_layout
+                    .color(theme::GREY_EXTRA_LIGHT)
+                    .text(title, fonts::FONT_SATOSHI_MEDIUM_26)
+                    .newline()
+                    .offset(Offset::y(24))
+                    .color(theme::GREY_LIGHT)
+                    .text(description, fonts::FONT_MONO_MEDIUM_38);
+
+                if pages.peek().is_some() {
+                    op_layout = op_layout.next_page();
+                }
             }
-            Some(vec)
+
+            (Some(op_layout), Some(n_pages))
         } else {
-            None
+            (None, None)
         };
 
         let flow = flow::continue_recovery_homepage::new_continue_recovery_homepage(
@@ -526,7 +542,8 @@ impl FirmwareUI for UIEckhart {
             subtext,
             recovery_type,
             show_instructions,
-            pages_vec,
+            pages_layout,
+            n_pages,
         )?;
         LayoutObj::new_root(flow)
     }
@@ -767,7 +784,6 @@ impl FirmwareUI for UIEckhart {
         more_info_callback: Option<impl Fn(u32) -> TString<'static> + 'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let description = description.unwrap_or(TString::empty());
-
         let flow = flow::request_number::new_request_number(
             title,
             count,
@@ -777,6 +793,29 @@ impl FirmwareUI for UIEckhart {
             unwrap!(more_info_callback),
         )?;
         Ok(flow)
+    }
+
+    fn request_duration(
+        title: TString<'static>,
+        duration_ms: u32,
+        min_ms: u32,
+        max_ms: u32,
+        description: Option<TString<'static>>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let description = description.unwrap_or(TString::empty());
+        let component = ValueInputScreen::new(
+            DurationInput::new(
+                Duration::from_millis(min_ms),
+                Duration::from_millis(max_ms),
+                Duration::from_millis(duration_ms),
+            ),
+            description,
+        )
+        .with_header(Header::new(title));
+
+        let layout = RootComponent::new(component);
+
+        Ok(layout)
     }
 
     fn request_pin(
@@ -979,6 +1018,7 @@ impl FirmwareUI for UIEckhart {
         firmware_version: TString<'static>,
         device_name: TString<'static>,
         paired_devices: Vec<TString<'static>, 1>,
+        auto_lock_delay: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let layout = RootComponent::new(DeviceMenuScreen::new(
             failed_backup,
@@ -986,6 +1026,7 @@ impl FirmwareUI for UIEckhart {
             firmware_version,
             device_name,
             paired_devices,
+            auto_lock_delay,
         )?);
         Ok(layout)
     }
