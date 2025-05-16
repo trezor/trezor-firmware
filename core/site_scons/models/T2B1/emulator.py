@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .. import get_hw_model_as_number
+from ..unix_common import unix_common_files
 
 
 def configure(
@@ -16,6 +17,8 @@ def configure(
     hw_model = get_hw_model_as_number("T2B1")
     hw_revision = 0
     mcu = "STM32F427xx"
+
+    unix_common_files(env, defines, sources, paths)
 
     defines += [
         "FRAMEBUFFER",
