@@ -17,8 +17,8 @@
 import re
 from typing import TYPE_CHECKING, Any, AnyStr, Dict, List, Optional, Tuple
 
-from . import definitions, exceptions, messages
-from .tools import prepare_message_bytes, session, unharden
+from . import exceptions, messages
+from .tools import prepare_message_bytes, session
 
 if TYPE_CHECKING:
     from .client import TrezorClient
