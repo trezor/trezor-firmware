@@ -51,12 +51,13 @@ impl<'a> PinKeyboard<'a> {
     ) -> Self {
         Self {
             allow_cancel,
-            major_prompt: Label::left_aligned(major_prompt, theme::TEXT_SMALL)
+            major_prompt: Label::left_aligned(major_prompt, theme::firmware::TEXT_SMALL)
                 .vertically_centered(),
-            minor_prompt: Label::right_aligned(minor_prompt, theme::TEXT_SMALL)
+            minor_prompt: Label::right_aligned(minor_prompt, theme::firmware::TEXT_SMALL)
                 .vertically_centered(),
-            major_warning: major_warning
-                .map(|text| Label::left_aligned(text, theme::TEXT_SMALL).vertically_centered()),
+            major_warning: major_warning.map(|text| {
+                Label::left_aligned(text, theme::firmware::TEXT_SMALL).vertically_centered()
+            }),
             input: PinInput::new(),
             keypad: Keypad::new_numeric(true),
             warning_timer: Timer::new(),
@@ -141,7 +142,7 @@ impl Component for PinKeyboard<'_> {
             .place(input_touch_area.inset(KEYBOARD_INPUT_INSETS));
         self.major_warning
             .as_mut()
-            .map(|c| c.place(input_touch_area));
+            .map(|c| c.place(input_touch_area.inset(KEYBOARD_INPUT_INSETS)));
 
         // Keypad placement
         self.keypad.place(keypad_area);

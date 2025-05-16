@@ -12,7 +12,9 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow,
         },
         geometry::{Direction, LinearPlacement},
-        layout_eckhart::firmware::TextScreenMsg,
+        layout_eckhart::firmware::{
+            ShortMenuVec, TextScreenMsg, VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
+        },
     },
 };
 
@@ -25,7 +27,8 @@ use super::super::{
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum SetNewPin {
     Intro,
-    CancelPin,
+    Menu,
+    Cancel,
 }
 
 impl FlowController for SetNewPin {
@@ -40,10 +43,12 @@ impl FlowController for SetNewPin {
 
     fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
-            (Self::Intro, FlowMsg::Cancelled) => Self::CancelPin.goto(),
+            (Self::Intro, FlowMsg::Info) => Self::Menu.goto(),
             (Self::Intro, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
-            (Self::CancelPin, FlowMsg::Cancelled) => Self::Intro.goto(),
-            (Self::CancelPin, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Menu, FlowMsg::Choice(0)) => Self::Cancel.goto(),
+            (Self::Menu, FlowMsg::Cancelled) => Self::Intro.goto(),
+            (Self::Cancel, FlowMsg::Cancelled) => Self::Intro.goto(),
+            (Self::Cancel, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
             _ => self.do_nothing(),
         }
     }
@@ -56,29 +61,43 @@ pub fn new_set_new_pin(
     let paragraphs = Paragraphs::new(Paragraph::new(&theme::firmware::TEXT_REGULAR, description))
         .with_placement(LinearPlacement::vertical());
     let content_intro = TextScreen::new(paragraphs)
-        .with_header(Header::new(title))
-        .with_action_bar(ActionBar::new_cancel_confirm())
+        .with_header(Header::new(title).with_menu_button())
+        .with_action_bar(ActionBar::new_single(Button::with_text(
+            TR::buttons__continue.into(),
+        )))
         .map(|msg| match msg {
-            TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
+            TextScreenMsg::Menu => Some(FlowMsg::Info),
             TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
             _ => None,
         });
 
+    let content_menu = VerticalMenuScreen::new(VerticalMenu::<ShortMenuVec>::empty().with_item(
+        Button::new_menu_item(TR::buttons__cancel.into(), theme::menu_item_title_orange()),
+    ))
+    .with_header(Header::new(title).with_close_button())
+    .map(|msg| match msg {
+        VerticalMenuScreenMsg::Close => Some(FlowMsg::Cancelled),
+        VerticalMenuScreenMsg::Selected(i) => Some(FlowMsg::Choice(i)),
+        _ => None,
+    });
+
     let paragraphs_cancel_intro = ParagraphVecShort::from_iter([
-        Paragraph::new(
-            &theme::firmware::TEXT_REGULAR_WARNING,
-            TR::words__not_recommended,
-        ),
+        Paragraph::new(&theme::firmware::TEXT_REGULAR, TR::pin__cancel_setup),
         Paragraph::new(&theme::firmware::TEXT_REGULAR, TR::pin__cancel_info),
     ])
     .into_paragraphs()
-    .with_placement(LinearPlacement::vertical());
+    .with_placement(LinearPlacement::vertical())
+    .with_spacing(24);
 
-    let content_cancel_pin = TextScreen::new(paragraphs_cancel_intro)
-        .with_header(Header::new(title))
+    let content_cancel = TextScreen::new(paragraphs_cancel_intro)
+        .with_header(
+            Header::new(TR::words__important.into())
+                .with_text_style(theme::label_title_danger())
+                .with_icon(theme::ICON_WARNING, theme::ORANGE),
+        )
         .with_action_bar(ActionBar::new_double(
             Button::with_icon(theme::ICON_CHEVRON_LEFT),
-            Button::with_text(TR::buttons__continue.into()),
+            Button::with_text(TR::buttons__continue.into()).styled(theme::button_cancel_gradient()),
         ))
         .map(|msg| match msg {
             TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
@@ -88,6 +107,7 @@ pub fn new_set_new_pin(
 
     let mut res = SwipeFlow::new(&SetNewPin::Intro)?;
     res.add_page(&SetNewPin::Intro, content_intro)?
-        .add_page(&SetNewPin::CancelPin, content_cancel_pin)?;
+        .add_page(&SetNewPin::Menu, content_menu)?
+        .add_page(&SetNewPin::Cancel, content_cancel)?;
     Ok(res)
 }

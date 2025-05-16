@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 async def change_pin(msg: ChangePin) -> Success:
     from storage.device import is_initialized
     from trezor.messages import Success
-    from trezor.ui.layouts import show_success
+    from trezor.ui.layouts import success_pin_change
 
     from apps.common.request_pin import (
         error_pin_invalid,
@@ -49,39 +49,37 @@ async def change_pin(msg: ChangePin) -> Success:
 
     if newpin:
         if curpin:
-            msg_screen = TR.pin__changed
             msg_wire = "PIN changed"
         else:
-            msg_screen = TR.pin__enabled
             msg_wire = "PIN enabled"
     else:
-        msg_screen = TR.pin__disabled
         msg_wire = "PIN removed"
 
-    await show_success("success_pin", msg_screen)
+    await success_pin_change(curpin, newpin)
     return Success(message=msg_wire)
 
 
 def _require_confirm_change_pin(msg: ChangePin) -> Awaitable[None]:
-    from trezor.ui.layouts import confirm_action, confirm_set_new_pin
+    from trezor.ui.layouts import (
+        confirm_change_pin,
+        confirm_remove_pin,
+        confirm_set_new_pin,
+    )
 
     has_pin = config.has_pin()
 
     if msg.remove and has_pin:  # removing pin
-        return confirm_action(
+        return confirm_remove_pin(
             "disable_pin",
             TR.pin__title_settings,
             description=TR.pin__turn_off,
-            verb=TR.buttons__turn_off,
         )
 
     if not msg.remove and has_pin:  # changing pin
-        return confirm_action(
+        return confirm_change_pin(
             "change_pin",
             TR.pin__title_settings,
             description=TR.pin__change,
-            verb=TR.buttons__change,
-            prompt_screen=False,
         )
 
     if not msg.remove and not has_pin:  # setting new pin
