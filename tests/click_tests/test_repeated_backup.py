@@ -79,8 +79,6 @@ def test_repeated_backup(
     reset.confirm_read(debug)
     # confirm backup done
     reset.confirm_read(debug)
-    # Your backup is done
-    go_next(debug)
 
     # retrieve the result to check that it does not raise a failure
     device_handler.result()

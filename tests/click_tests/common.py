@@ -47,7 +47,7 @@ def get_char_category(char: str) -> PassphraseCategory:
 
 
 def go_next(debug: "DebugLink") -> LayoutContent:
-    if debug.layout_type is LayoutType.Bolt:
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
         debug.click(debug.screen_buttons.ok())
     elif debug.layout_type is LayoutType.Caesar:
         debug.press_right()
@@ -59,7 +59,7 @@ def go_next(debug: "DebugLink") -> LayoutContent:
 
 
 def go_back(debug: "DebugLink", r_middle: bool = False) -> LayoutContent:
-    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
         debug.click(debug.screen_buttons.cancel())
     elif debug.layout_type is LayoutType.Caesar:
         if r_middle:
@@ -114,7 +114,7 @@ def _carousel_steps(current_index: int, wanted_index: int, length: int) -> int:
 
 
 def unlock_gesture(debug: "DebugLink") -> LayoutContent:
-    if debug.layout_type is LayoutType.Bolt:
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
         debug.click(debug.screen_buttons.ok())
     elif debug.layout_type is LayoutType.Caesar:
         debug.press_right()

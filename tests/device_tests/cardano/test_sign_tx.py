@@ -24,11 +24,7 @@ from trezorlib.exceptions import TrezorFailure
 from ...common import parametrize_using_common_fixtures
 from ...input_flows import InputFlowConfirmAllWarnings
 
-pytestmark = [
-    pytest.mark.altcoin,
-    pytest.mark.cardano,
-    pytest.mark.models("core"),
-]
+pytestmark = [pytest.mark.altcoin, pytest.mark.cardano, pytest.mark.models("core")]
 
 
 def show_details_input_flow(client: Client):
@@ -40,7 +36,7 @@ def show_details_input_flow(client: Client):
     elif client.layout_type is LayoutType.Caesar:
         # Caesar - right button for "Show all"
         client.debug.press_yes()
-    elif client.layout_type is LayoutType.Delizia:
+    elif client.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
         # Delizia - "Show all" button from context menu
         client.debug.click(client.debug.screen_buttons.menu())
         client.debug.click(client.debug.screen_buttons.vertical_menu_items()[0])

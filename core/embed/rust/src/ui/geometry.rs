@@ -30,6 +30,10 @@ const fn clamp(x: i16, min: i16, max: i16) -> i16 {
 /// Relative offset in 2D space, used for representing translation and
 /// dimensions of objects. Absolute positions on the screen are represented by
 /// the `Point` type.
+///
+/// Coordinate system orientation:
+/// * x-axis: negative values go left, positive values go right
+/// * y-axis: negative values go up, positive values go down
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Offset {
     pub x: i16,
@@ -674,6 +678,10 @@ impl Grid {
         let from = self.row_col(cells.from.0, cells.from.1);
         let to = self.row_col(cells.to.0, cells.to.1);
         from.union(to)
+    }
+
+    pub const fn cell_count(&self) -> usize {
+        self.rows * self.cols
     }
 }
 

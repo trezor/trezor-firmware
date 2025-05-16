@@ -3,7 +3,8 @@ from typing import Coroutine
 import storage
 import storage.cache
 import storage.device
-from trezor import config, wire
+import trezorui_api
+from trezor import config, utils, wire
 from trezor.enums import MessageType
 from trezor.ui.layouts.homescreen import Busyscreen, Homescreen, Lockscreen
 
@@ -53,10 +54,15 @@ async def homescreen() -> None:
         hold_to_lock=config.has_pin(),
     )
     try:
-        await obj.get_result()
+        res = await obj.get_result()
     finally:
         obj.__del__()
 
+    if utils.INTERNAL_MODEL == "T3W1":
+        if res is trezorui_api.INFO:
+            from .device_menu import handle_device_menu
+
+            return await handle_device_menu()
     lock_device()
 
 

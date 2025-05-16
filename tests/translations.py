@@ -75,6 +75,18 @@ def set_language(client: Client, lang: str, *, force: bool = False):
             device.change_language(client, language_data)  # type: ignore
     _CURRENT_TRANSLATION.LAYOUT = client.layout_type
     _CURRENT_TRANSLATION.TR = TRANSLATIONS[lang]
+    _CURRENT_TRANSLATION.LAYOUT = client.layout_type
+
+
+def get_language(client: Client) -> str:
+    for lang in LANGUAGES:
+        if _CURRENT_TRANSLATION.TR == TRANSLATIONS[lang]:
+            return lang
+    return "en"
+
+
+def set_layout(client: Client):
+    _CURRENT_TRANSLATION.LAYOUT = client.layout_type
 
 
 def get_lang_json(lang: str) -> translations.JsonDef:

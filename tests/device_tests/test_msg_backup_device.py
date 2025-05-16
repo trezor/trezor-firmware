@@ -97,7 +97,10 @@ def test_backup_slip39_single(client: Client):
 
     with client:
         IF = InputFlowBip39Backup(
-            client, confirm_success=(client.layout_type is not LayoutType.Delizia)
+            client,
+            confirm_success=(
+                client.layout_type not in (LayoutType.Delizia, LayoutType.Eckhart)
+            ),
         )
         client.set_input_flow(IF.get())
         device.backup(client)
