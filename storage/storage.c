@@ -494,7 +494,7 @@ static secbool ui_progress(void) {
   ui_next_update = now + MIN_PROGRESS_UPDATE_MS;
   uint32_t ui_elapsed = now - ui_begin;
 
-  // Prevent overflow.
+  // Prevent overflow when the total time is underestimated.
   int32_t diff = (int32_t)ui_total - (int32_t)ui_elapsed;
   if (diff < 0) diff = 0;
   // Round the remaining time to the nearest second.
