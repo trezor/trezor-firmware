@@ -716,7 +716,7 @@ pub enum TranslatedString {
     pin__enter = 453,  // "Enter PIN"
     pin__enter_new = 454,  // "Enter new PIN"
     pin__entered_not_valid = 455,  // "The PIN you have entered is not valid."
-    pin__info = 456,  // "PIN will be required to access this device."
+    pin__info = 456,  // {"Bolt": "PIN will be required to access this device.", "Caesar": "PIN will be required to access this device.", "Delizia": "PIN will be required to access this device.", "Eckhart": "The PIN will be required to access this device."}
     pin__invalid_pin = 457,  // "Invalid PIN"
     pin__last_attempt = 458,  // "Last attempt"
     pin__mismatch = 459,  // "Entered PINs do not match!"
@@ -1435,6 +1435,7 @@ pub enum TranslatedString {
     ethereum__title_all_input_data_template = 1029,  // "All input data ({0} bytes)"
     auto_lock__description = 1030,  // "Set the time before your Trezor locks automatically."
     plurals__lock_after_x_days = 1031,  // "day|days"
+    pin__setup_completed = 1032,  // "PIN setup completed."
 }
 
 impl TranslatedString {
@@ -2188,7 +2189,14 @@ impl TranslatedString {
             (Self::pin__enter, "Enter PIN"),
             (Self::pin__enter_new, "Enter new PIN"),
             (Self::pin__entered_not_valid, "The PIN you have entered is not valid."),
+            #[cfg(feature = "layout_bolt")]
             (Self::pin__info, "PIN will be required to access this device."),
+            #[cfg(feature = "layout_caesar")]
+            (Self::pin__info, "PIN will be required to access this device."),
+            #[cfg(feature = "layout_delizia")]
+            (Self::pin__info, "PIN will be required to access this device."),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::pin__info, "The PIN will be required to access this device."),
             (Self::pin__invalid_pin, "Invalid PIN"),
             (Self::pin__last_attempt, "Last attempt"),
             (Self::pin__mismatch, "Entered PINs do not match!"),
@@ -3038,6 +3046,7 @@ impl TranslatedString {
             (Self::ethereum__title_all_input_data_template, "All input data ({0} bytes)"),
             (Self::auto_lock__description, "Set the time before your Trezor locks automatically."),
             (Self::plurals__lock_after_x_days, "day|days"),
+            (Self::pin__setup_completed, "PIN setup completed."),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3883,6 +3892,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_pin__please_check_again, Self::pin__please_check_again),
         (Qstr::MP_QSTR_pin__reenter_new, Self::pin__reenter_new),
         (Qstr::MP_QSTR_pin__reenter_to_confirm, Self::pin__reenter_to_confirm),
+        (Qstr::MP_QSTR_pin__setup_completed, Self::pin__setup_completed),
         (Qstr::MP_QSTR_pin__should_be_long, Self::pin__should_be_long),
         (Qstr::MP_QSTR_pin__title_check_pin, Self::pin__title_check_pin),
         (Qstr::MP_QSTR_pin__title_settings, Self::pin__title_settings),

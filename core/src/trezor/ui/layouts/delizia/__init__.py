@@ -1392,6 +1392,18 @@ def confirm_set_new_pin(
     )
 
 
+async def success_pin_change(curpin: str | None, newpin: str | None) -> None:
+    if newpin:
+        if curpin:
+            msg_screen = TR.pin__changed
+        else:
+            msg_screen = TR.pin__enabled
+    else:
+        msg_screen = TR.pin__disabled
+
+    await show_success("success_pin", msg_screen)
+
+
 def confirm_firmware_update(description: str, fingerprint: str) -> Awaitable[None]:
     return raise_if_not_confirmed(
         trezorui_api.confirm_firmware_update(

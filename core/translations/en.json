@@ -599,10 +599,17 @@
     "pin__diff_from_wipe_code": "The new PIN must be different from your wipe code.",
     "pin__disabled": "PIN protection\nturned off.",
     "pin__enabled": "PIN protection\nturned on.",
+    "pin__setup_completed": "PIN setup completed.",
     "pin__enter": "Enter PIN",
     "pin__enter_new": "Enter new PIN",
     "pin__entered_not_valid": "The PIN you have entered is not valid.",
-    "pin__info": "PIN will be required to access this device.",
+    "pin__info": {
+      "Bolt": "PIN will be required to access this device.",
+      "Caesar": "PIN will be required to access this device.",
+      "Delizia": "PIN will be required to access this device.",
+      "Eckhart": "The PIN will be required to access this device."
+
+    },
     "pin__invalid_pin": "Invalid PIN",
     "pin__last_attempt": "Last attempt",
     "pin__mismatch": "Entered PINs do not match!",

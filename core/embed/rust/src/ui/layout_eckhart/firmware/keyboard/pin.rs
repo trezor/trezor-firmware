@@ -141,7 +141,7 @@ impl Component for PinKeyboard<'_> {
             .place(input_touch_area.inset(KEYBOARD_INPUT_INSETS));
         self.major_warning
             .as_mut()
-            .map(|c| c.place(input_touch_area));
+            .map(|c| c.place(input_touch_area.inset(KEYBOARD_INPUT_INSETS)));
 
         // Keypad placement
         self.keypad.place(keypad_area);

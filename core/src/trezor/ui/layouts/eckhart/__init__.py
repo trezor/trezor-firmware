@@ -1374,15 +1374,15 @@ async def confirm_reenter_pin(is_wipe_code: bool = False) -> None:
 
 
 def pin_mismatch_popup(is_wipe_code: bool = False) -> Awaitable[ui.UiResult]:
-    title = TR.wipe_code__mismatch if is_wipe_code else TR.pin__mismatch
-    description = TR.wipe_code__enter_new if is_wipe_code else TR.pin__reenter_new
+    description = TR.wipe_code__mismatch if is_wipe_code else TR.pin__mismatch
+    button = TR.wipe_code__enter_new if is_wipe_code else TR.pin__reenter_new
     br_name = "wipe_code_mismatch" if is_wipe_code else "pin_mismatch"
 
     return interact(
         error_popup(
-            title,
+            TR.words__important,
             description,
-            button=TR.buttons__try_again,
+            button=button,
         ),
         br_name,
         BR_CODE_OTHER,
@@ -1409,10 +1409,22 @@ def confirm_set_new_pin(
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
     return raise_if_not_confirmed(
-        trezorui_api.flow_confirm_set_new_pin(title=title, description=description),
+        trezorui_api.flow_confirm_set_new_pin(title=title, description=information),
         br_name,
         br_code,
     )
+
+
+async def success_pin_change(curpin: str | None, newpin: str | None) -> None:
+    if newpin:
+        if curpin:
+            msg_screen = TR.pin__changed
+        else:
+            msg_screen = TR.pin__setup_completed
+    else:
+        msg_screen = TR.pin__disabled
+
+    await show_success("success_pin", msg_screen)
 
 
 def confirm_firmware_update(description: str, fingerprint: str) -> Awaitable[None]:

@@ -543,6 +543,7 @@ class TR:
     pin__please_check_again: str = "Please check again."
     pin__reenter_new: str = "Re-enter new PIN"
     pin__reenter_to_confirm: str = "Please re-enter PIN to confirm."
+    pin__setup_completed: str = "PIN setup completed."
     pin__should_be_long: str = "PIN should be 4-50 digits long."
     pin__title_check_pin: str = "Check PIN"
     pin__title_settings: str = "PIN settings"

@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 async def change_pin(msg: ChangePin) -> Success:
     from storage.device import is_initialized
     from trezor.messages import Success
-    from trezor.ui.layouts import show_success
+    from trezor.ui.layouts import success_pin_change
 
     from apps.common.request_pin import (
         error_pin_invalid,
@@ -49,16 +49,13 @@ async def change_pin(msg: ChangePin) -> Success:
 
     if newpin:
         if curpin:
-            msg_screen = TR.pin__changed
             msg_wire = "PIN changed"
         else:
-            msg_screen = TR.pin__enabled
             msg_wire = "PIN enabled"
     else:
-        msg_screen = TR.pin__disabled
         msg_wire = "PIN removed"
 
-    await show_success("success_pin", msg_screen)
+    await success_pin_change(curpin, newpin)
     return Success(message=msg_wire)
 
 
