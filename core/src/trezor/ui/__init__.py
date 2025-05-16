@@ -479,7 +479,7 @@ class ProgressLayout:
         self.layout = layout
         self.transition_out = None
         self.value = 0
-        self.progress_step = 10
+        self.progress_step = 20
 
     def is_layout_attached(self) -> bool:
         return True
