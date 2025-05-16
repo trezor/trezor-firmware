@@ -33,7 +33,7 @@ pytestmark = pytest.mark.models("core")
 
 
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
-def test_repeated_backup(client: Client):
+def test_repeated_backup_via_host(client: Client):
     assert client.features.backup_availability == messages.BackupAvailability.Required
     assert client.features.recovery_status == messages.RecoveryStatus.Nothing
 
@@ -83,7 +83,7 @@ def test_repeated_backup(client: Client):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_SINGLE_EXT_20)
-def test_repeated_backup_upgrade_single(client: Client):
+def test_repeated_backup_via_host_upgrade_single(client: Client):
     assert (
         client.features.backup_availability == messages.BackupAvailability.NotAvailable
     )
@@ -120,7 +120,7 @@ def test_repeated_backup_upgrade_single(client: Client):
 
 
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
-def test_repeated_backup_cancel(client: Client):
+def test_repeated_backup_via_host_cancel(client: Client):
     assert client.features.backup_availability == messages.BackupAvailability.Required
     assert client.features.recovery_status == messages.RecoveryStatus.Nothing
 
@@ -174,7 +174,7 @@ def test_repeated_backup_cancel(client: Client):
 
 
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
-def test_repeated_backup_send_disallowed_message(client: Client):
+def test_repeated_backup_via_host_send_disallowed_message(client: Client):
     assert client.features.backup_availability == messages.BackupAvailability.Required
     assert client.features.recovery_status == messages.RecoveryStatus.Nothing
 
