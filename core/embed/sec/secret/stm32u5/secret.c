@@ -364,7 +364,7 @@ secbool secret_tropic_present(void) {
 
   secbool res2 = secret_key_present(SECRET_TROPIC_TRO_PUBKEY_OFFSET);
 
-  return secbool_or(res1, res2);
+  return secbool_and(res1, res2);
 }
 
 secbool secret_tropic_writable(void) {
@@ -372,7 +372,7 @@ secbool secret_tropic_writable(void) {
 
   secbool res2 = secret_key_writable(SECRET_TROPIC_TRO_PUBKEY_OFFSET);
 
-  return secbool_and(res1, res2);
+  return secbool_or(res1, res2);
 }
 
 void secret_tropic_erase(void) {
@@ -428,32 +428,32 @@ secbool secret_se_present(void) {
 #ifdef USE_OPTIGA
   secbool res1 = secret_optiga_present();
 #else
-  secbool res1 = secfalse;
+  secbool res1 = sectrue;
 #endif
 
 #ifdef USE_TROPIC
   secbool res2 = secret_tropic_present();
 #else
-  secbool res2 = secfalse;
+  secbool res2 = sectrue;
 #endif
 
-  return secbool_or(res1, res2);
+  return secbool_and(res1, res2);
 }
 
 secbool secret_se_writable(void) {
 #ifdef USE_OPTIGA
   secbool res1 = secret_optiga_writable();
 #else
-  secbool res1 = sectrue;
+  secbool res1 = secfalse;
 #endif
 
 #ifdef USE_TROPIC
-  secbool res2 = secret_optiga_writable();
+  secbool res2 = secret_tropic_writable();
 #else
-  secbool res2 = sectrue;
+  secbool res2 = secfalse;
 #endif
 
-  return secbool_and(res1, res2);
+  return secbool_or(res1, res2);
 }
 
 secbool secret_bootloader_locked(void) {
