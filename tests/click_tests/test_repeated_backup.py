@@ -32,7 +32,7 @@ pytestmark = pytest.mark.models("core")
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_repeated_backup(
+def test_repeated_backup_via_device(
     device_handler: "BackgroundDeviceHandler",
 ):
     features = device_handler.features()
