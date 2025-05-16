@@ -38,7 +38,6 @@
   - [Reproducible builds](common/reproducible-build.md)
   - [Message Workflows](common/message-workflows.md)
   - [External definitions](common/external-definitions.md)
-  - [Solana definitions](common/solana-definitions.md)
 - [Storage](storage/index.md)
 - [Tests](tests/index.md)
   - [Device Tests](tests/device-tests.md)
