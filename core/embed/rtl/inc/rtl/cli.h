@@ -66,12 +66,23 @@ typedef struct {
 #define CONCAT_INDIRECT(x, y) x##y
 #define CONCAT(x, y) CONCAT_INDIRECT(x, y)
 
+#ifdef TREZOR_EMULATOR
+#define PRODTEST_CLI_CMD(...) PRODTEST_CLI_CMD_IMPL(__COUNTER__, __VA_ARGS__)
+#define PRODTEST_CLI_CMD_IMPL(cnt, ...)                                     \
+  extern void register_cli_command(const cli_command_t* cmd);               \
+  static const cli_command_t CONCAT(_cli_cmd_handler, cnt) = {__VA_ARGS__}; \
+  __attribute__((constructor)) static void CONCAT(                          \
+      __register, CONCAT(_cli_cmd_handler, cnt))(void) {                    \
+    register_cli_command(&CONCAT(_cli_cmd_handler, cnt));                   \
+  }
+#else
 // Registers a command handler by placing its registration structure
 // into a specially designated linker script section
 #define PRODTEST_CLI_CMD(...)                                              \
   __attribute__((used,                                                     \
                  section(".prodtest_cli_cmd"))) static const cli_command_t \
       CONCAT(_cli_cmd_handler, __COUNTER__) = {__VA_ARGS__};
+#endif
 
 // Callback for writing characters to console output
 typedef size_t (*cli_write_cb_t)(void* ctx, const char* buf, size_t len);
