@@ -23,16 +23,18 @@ color = True
 
 def _log(name: str, mlevel: int, msg: str, *args: Any) -> None:
     if __debug__ and mlevel >= level:
+        from trezor.loop import this_task
+
+        (level_name, level_style) = _leveldict[mlevel]
         if color:
-            fmt = (
-                "%d \x1b[35m%s\x1b[0m \x1b["
-                + _leveldict[mlevel][1]
-                + "m%s\x1b[0m "
-                + msg
-            )
+            fmt = "%d%s \x1b[35m%s\x1b[0m \x1b[" + level_style + "m%s\x1b[0m " + msg
+            task_id = f" \x1b[2;37m0x{id(this_task):x}\x1b[0m" if this_task else ""
         else:
-            fmt = "%d %s %s " + msg
-        print(fmt % ((utime.ticks_us(), name, _leveldict[mlevel][0]) + args))
+            fmt = "%d%s %s %s " + msg
+            task_id = f" 0x{id(this_task):x}" if this_task else ""
+
+        fmt_args = (utime.ticks_us(), task_id, name, level_name) + args
+        print(fmt % fmt_args)
 
 
 def debug(name: str, msg: str, *args: Any) -> None:
