@@ -195,6 +195,8 @@ def test_recovery_multiple_resets(core_emulator: Emulator):
             layout = recovery.enter_share(debug, share)
             remaining -= 1
             expected_text = "You have entered"
+            if debug.layout_type is LayoutType.Eckhart:
+                expected_text = "entered"
             debug = _restart(device_handler, core_emulator)
 
         assert "Wallet recovery completed" in layout.text_content()
