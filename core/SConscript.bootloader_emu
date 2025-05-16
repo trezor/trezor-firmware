@@ -117,26 +117,6 @@ SOURCE_BOOTLOADER = [
     'embed/projects/bootloader/emulator.c',
 ]
 
-SOURCE_TREZORHAL = [
-    'embed/io/display/unix/display_driver.c',
-    'embed/io/usb/unix/usb.c',
-    'embed/sec/monoctr/unix/monoctr.c',
-    'embed/sec/random_delays/unix/random_delays.c',
-    'embed/sec/rng/unix/rng.c',
-    'embed/sec/secret/unix/secret.c',
-    'embed/sys/mpu/unix/mpu.c',
-    'embed/sys/startup/unix/bootutils.c',
-    'embed/sys/task/sysevent.c',
-    'embed/sys/task/unix/sdl_event.c',
-    'embed/sys/task/unix/system.c',
-    'embed/sys/task/unix/systask.c',
-    'embed/sys/time/unix/systick.c',
-    'embed/sys/time/unix/systimer.c',
-    'embed/util/flash/unix/flash.c',
-    'embed/util/flash/unix/flash_otp.c',
-    'embed/util/unit_properties/unix/unit_properties.c',
-]
-
 SOURCE_UNIX = [
     'embed/projects/unix/profile.c',
 ]
@@ -181,25 +161,10 @@ ALLPATHS = ['embed/rust',
            'embed/projects/unix',
            'embed/upymod/modtrezorui',
            'embed/gfx/inc',
-           'embed/io/display/inc',
-           'embed/io/usb/inc',
-           'embed/sec/entropy/inc',
-           'embed/sec/monoctr/inc',
-           'embed/sec/random_delays/inc',
-           'embed/sec/rng/inc',
-           'embed/sec/secret/inc',
-           'embed/sys/bsp/inc',
-           'embed/sys/irq/inc',
-           'embed/sys/mpu/inc',
-           'embed/sys/startup/inc',
-           'embed/sys/task/inc',
-           'embed/sys/time/inc',
-           'embed/util/flash/inc',
            'embed/util/image/inc',
            'embed/util/rsod/inc',
            'embed/util/scm_revision/inc',
            'embed/util/translations/inc',
-           'embed/util/unit_properties/inc',
            'vendor/nanopb',
        ] + CPPPATH_MOD + PATH_HAL
 
@@ -237,7 +202,7 @@ except OSError:
 
 
 env.Replace(
-    ALLSOURCES=SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_BOOTLOADER + SOURCE_NANOPB + SOURCE_TREZORHAL + SOURCE_UNIX,
+    ALLSOURCES=SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_BOOTLOADER + SOURCE_NANOPB + SOURCE_UNIX,
     ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES']))
 
 cmake_gen = env.Command(
@@ -281,7 +246,6 @@ obj_program += env.Object(source=SOURCE_MOD)
 obj_program += env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-auto-var-init=zero')
 obj_program += env.Object(source=SOURCE_BOOTLOADER)
 obj_program += env.Object(source=SOURCE_NANOPB)
-obj_program += env.Object(source=SOURCE_TREZORHAL)
 obj_program += env.Object(source=SOURCE_UNIX)
 
 program_elf = env.Command(
