@@ -86,9 +86,11 @@ west flash
 ```
 
 
-### Build MCUBoot bootloader
+### Build MCUBoot bootloader, debug, prod, default
 ```sh
-west build ./trezor-ble -b t3w1_revA_nrf52832 --sysbuild --domain mcuboot -- -DOVERLAY_CONFIG=debug.conf
+west build ./trezor-ble -b t3w1_revA_nrf52832 --sysbuild --domain mcuboot -- -Dmcuboot_EXTRA_CONF_FILE="$PWD/trezor-ble/sysbuild/mcuboot.conf;$PWD/trezor-ble/sysbuild/mcuboot_debug.conf"
+west build ./trezor-ble -b t3w1_revA_nrf52832 --sysbuild --domain mcuboot -- -Dmcuboot_EXTRA_CONF_FILE="$PWD/trezor-ble/sysbuild/mcuboot.conf;$PWD/trezor-ble/sysbuild/prod.conf"
+west build ./trezor-ble -b t3w1_revA_nrf52832 --sysbuild --domain mcuboot
 ```
 
 ### Build Application
