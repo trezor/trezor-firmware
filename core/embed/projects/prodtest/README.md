@@ -564,12 +564,12 @@ OK 1 2 3 5 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 
 ### prodtest-version
 Retrieves the version of the prodtest firmware.
-The command returns `OK` followed by the version in the format `<major>.<minor>.<patch>`.
+The command returns `OK` followed by the version in the format `<major>.<minor>.<patch>.<build>`.
 
 Example:
 ```
 prodtest-version
-OK 0.2.6
+OK 0.2.6.1
 ```
 
 ### prodtest-wipe
