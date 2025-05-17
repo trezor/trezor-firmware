@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import TYPE_CHECKING, Optional, TextIO
 
 import click
 
-from .. import messages, solana, tools
+from .. import definitions, messages, solana, tools
 from . import with_client
 
 if TYPE_CHECKING:
@@ -50,47 +51,72 @@ def get_address(
     return solana.get_address(client, address_n, show_display, chunkify)
 
 
+def _get_token(token: str | None) -> bytes | None:
+    if token is None:
+        return None
+    token_file = Path(token)
+    if token_file.is_file():
+        return token_file.read_bytes()
+    try:
+        return bytes.fromhex(token)
+    except ValueError:
+        source = definitions.UrlSource()
+        return source.get_solana_token(token)
+
+
 @cli.command()
 @click.argument("serialized_tx", type=str)
 @click.option("-n", "--address", default=DEFAULT_PATH, help=PATH_HELP)
-@click.option("-a", "--additional-information-file", type=click.File("r"))
-@click.option("-t", "--token", "encoded_token_hex", type=str)
+@click.option("-a", "--additional-info", type=click.File("r"))
+@click.option("-t", "--token", type=str)
 @with_client
 def sign_tx(
     client: "TrezorClient",
     address: str,
     serialized_tx: str,
-    additional_information_file: Optional[TextIO],
-    encoded_token_hex: str | None,
-) -> bytes:
-    """Sign Solana transaction."""
+    additional_info: Optional[TextIO],
+    token: str | None,
+) -> str:
+    """Sign Solana transaction.
+
+    The transaction is specified as a hex string.
+
+    The `--token` option can be used to provide a signed token definition. One of the
+    following can be provided:
+
+    \b
+    - path to a local file with a signed token definition
+    - token definition encoded as a hex string
+    - base58-encoded token mint account, which will be fetched from the data.trezor.io
+
+    Alternately, the token can be included in the additional information as a hex string.
+    """
     address_n = tools.parse_path(address)
 
-    additional_information = None
-    if additional_information_file:
-        raw_additional_information = json.load(additional_information_file)
+    token_account_infos_json = ()
+    if additional_info:
+        decoded = json.load(additional_info)
+        token_account_infos_json = decoded.get("token_accounts_infos", ())
+        if token is None:
+            token = decoded.get("token")
 
-        if not encoded_token_hex:
-            encoded_token_hex = raw_additional_information.get("token")
+    additional_info_msg = messages.SolanaTxAdditionalInfo(
+        token_accounts_infos=[
+            messages.SolanaTxTokenAccountInfo(
+                base_address=token_account["base_address"],
+                token_program=token_account["token_program"],
+                token_mint=token_account["token_mint"],
+                token_account=token_account["token_account"],
+            )
+            for token_account in token_account_infos_json
+        ],
+        encoded_token=_get_token(token),
+    )
 
-        additional_information = messages.SolanaTxAdditionalInfo(
-            token_accounts_infos=[
-                messages.SolanaTxTokenAccountInfo(
-                    base_address=token_account["base_address"],
-                    token_program=token_account["token_program"],
-                    token_mint=token_account["token_mint"],
-                    token_account=token_account["token_account"],
-                )
-                for token_account in raw_additional_information["token_accounts_infos"]
-            ],
-            encoded_token=(
-                bytes.fromhex(encoded_token_hex) if encoded_token_hex else None
-            ),
-        )
-
-    return solana.sign_tx(
+    signature = solana.sign_tx(
         client,
         address_n,
         bytes.fromhex(serialized_tx),
-        additional_information,
+        additional_info_msg,
     )
+    return signature.hex()
