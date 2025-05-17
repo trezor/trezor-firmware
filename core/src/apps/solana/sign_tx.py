@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from core.src.apps.solana.transaction.instruction import Instruction
+from core.src.trezor.messages import SolanaInstruction, SolanaTxAdditionalInfo
 from trezor.wire import DataError
 
 from apps.common.keychain import with_slip44_keychain
@@ -37,6 +39,8 @@ async def sign_tx(
     signer_public_key = seed.remove_ed25519_prefix(node.public_key())
 
     try:
+        # TODO: This will no longer have, or populate the instructions field in Transaction.
+        # If will need to be sent separately.
         transaction: Transaction = Transaction(serialized_tx)
     except Exception:
         raise DataError("Invalid transaction")
@@ -63,6 +67,11 @@ async def sign_tx(
         msg.additional_info
     )
 
+    single_instruction = get_single_instruction(msg.additional_info)
+
+    # We won't be reading the transactions from the raw data.
+    transaction.instructions = []
+
     if not await try_confirm_predefined_transaction(
         transaction,
         fee,
@@ -72,7 +81,7 @@ async def sign_tx(
         additional_tx_info,
     ):
         await confirm_instructions(
-            address_n, signer_public_key, transaction, additional_tx_info
+            address_n, signer_public_key, transaction, additional_tx_info, single_instruction
         )
         await confirm_transaction(
             transaction.blockhash, fee, _has_unsupported_instructions(transaction)
@@ -82,6 +91,10 @@ async def sign_tx(
 
     return SolanaTxSignature(signature=signature)
 
+def get_single_instruction(
+    additional_info: SolanaTxAdditionalInfo | None,
+) -> Instruction | None:
+    solanaInstruction = additional_info.instruction if additional_info else None
 
 def _has_unsupported_instructions(transaction: Transaction) -> bool:
     visible_instructions = transaction.get_visible_instructions()
@@ -98,38 +111,50 @@ async def confirm_instructions(
     signer_public_key: bytes,
     transaction: Transaction,
     additional_info: AdditionalTxInfo,
+    single_instruction: SolanaInstruction | None = None,
 ) -> None:
-    visible_instructions = transaction.get_visible_instructions()
-    instructions_count = len(visible_instructions)
-    for instruction_index, instruction in enumerate(visible_instructions, 1):
-        if not instruction.is_program_supported:
-            from .layout import confirm_unsupported_program_confirm
+    
+    from .layout import confirm_instruction_from_message
+    await confirm_instruction_from_message(
+        single_instruction,
+        1,
+        0,
+        signer_path,
+        signer_public_key,
+        additional_info.definitions, # TODO: the idea is to not send this. Rewrite this function and remove all its references.
+    )
+    
+    # visible_instructions = transaction.get_visible_instructions()
+    # instructions_count = len(visible_instructions)
+    # for instruction_index, instruction in enumerate(visible_instructions, 1):
+    #     if not instruction.is_program_supported:
+    #         from .layout import confirm_unsupported_program_confirm
 
-            await confirm_unsupported_program_confirm(
-                instruction,
-                instructions_count,
-                instruction_index,
-                signer_path,
-                signer_public_key,
-            )
-        elif not instruction.is_instruction_supported:
-            from .layout import confirm_unsupported_instruction_confirm
+    #         await confirm_unsupported_program_confirm(
+    #             instruction,
+    #             instructions_count,
+    #             instruction_index,
+    #             signer_path,
+    #             signer_public_key,
+    #         )
+    #     elif not instruction.is_instruction_supported:
+    #         from .layout import confirm_unsupported_instruction_confirm
 
-            await confirm_unsupported_instruction_confirm(
-                instruction,
-                instructions_count,
-                instruction_index,
-                signer_path,
-                signer_public_key,
-            )
-        else:
-            from .layout import confirm_instruction
+    #         await confirm_unsupported_instruction_confirm(
+    #             instruction,
+    #             instructions_count,
+    #             instruction_index,
+    #             signer_path,
+    #             signer_public_key,
+    #         )
+    #     else:
+    #         from .layout import confirm_instruction
 
-            await confirm_instruction(
-                instruction,
-                instructions_count,
-                instruction_index,
-                signer_path,
-                signer_public_key,
-                additional_info.definitions,
-            )
+    #         await confirm_instruction(
+    #             instruction,
+    #             instructions_count,
+    #             instruction_index,
+    #             signer_path,
+    #             signer_public_key,
+    #             additional_info.definitions,
+    #         )
