@@ -32,7 +32,7 @@ pytestmark = pytest.mark.models("core")
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_repeated_backup(
+def test_repeated_backup_via_device(
     device_handler: "BackgroundDeviceHandler",
 ):
     features = device_handler.features()
@@ -150,6 +150,9 @@ def test_repeated_backup(
         reset.confirm_read(debug)
 
         second_backup_2_of_3.append(" ".join(words))
+
+    # confirm backup success
+    reset.confirm_read(debug)
 
     # we are not in recovery mode anymore, because we finished the backup process!
     features = device_handler.features()
