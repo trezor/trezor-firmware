@@ -17,32 +17,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <trezor_bsp.h>  // required by #ifdef STM32U5 below (see #4306 issue)
+#include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
-#include <rtl/cli.h>
-#include <util/cpuid.h>
+#include <util/board_capabilities.h>
 
-static void prodtest_get_cpuid(cli_t* cli) {
-  if (cli_arg_count(cli) > 0) {
-    cli_error_arg_count(cli);
-    return;
-  }
+void parse_boardloader_capabilities() {}
 
-  cpuid_t cpuid = {0};
+uint32_t get_board_name() { return HW_MODEL; }
 
-  cpuid_get(&cpuid);
+// Gets the boardloader version
+boardloader_version_t get_boardloader_version() {
+  boardloader_version_t version = {.version_major = 0,
+                                   .version_minor = 0,
+                                   .version_patch = 0,
+                                   .version_build = 0};
 
-  cli_ok_hexdata(cli, &cpuid.id, sizeof(cpuid.id));
+  return version;
 }
-
-// clang-format off
-
-PRODTEST_CLI_CMD(
-  .name = "get-cpuid",
-  .func = prodtest_get_cpuid,
-  .info = "Retrieve unique CPU ID",
-  .args = ""
-);
-
-
