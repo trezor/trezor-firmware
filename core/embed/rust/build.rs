@@ -328,6 +328,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("flash_init")
         // storage
         .allowlist_var("EXTERNAL_SALT_SIZE")
+        .allowlist_type("storage_pin_t")
         .allowlist_function("storage_init")
         .allowlist_function("storage_wipe")
         .allowlist_function("storage_is_unlocked")

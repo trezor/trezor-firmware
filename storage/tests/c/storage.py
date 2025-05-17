@@ -13,6 +13,23 @@ EXTERNAL_SALT_LEN = 32
 sectrue = -1431655766  # 0xAAAAAAAAA
 
 
+class storage_pin_t(c.Structure):
+    _fields_ = [
+        ("text", c.POINTER(c.c_uint8)),
+        ("len", c.c_size_t),
+    ]
+
+    def __init__(self, pin: str):
+        pin_bytes = pin.encode("utf-8")
+        buf_type = c.c_uint8 * len(pin_bytes)
+        self._pin_buf = buf_type(*pin_bytes)
+        self.text = self._pin_buf
+        self.len = len(pin_bytes)
+
+    def ptr(self) -> c.c_void_p:
+        return c.byref(self)
+
+
 class Storage:
     def __init__(self, lib_name) -> None:
         lib_path = os.path.join(os.path.dirname(__file__), lib_name)
@@ -32,7 +49,7 @@ class Storage:
     def unlock(self, pin: str, ext_salt: bytes = None) -> bool:
         if ext_salt is not None and len(ext_salt) != EXTERNAL_SALT_LEN:
             raise ValueError
-        return sectrue == self.lib.storage_unlock(pin.encode(), len(pin), ext_salt)
+        return sectrue == self.lib.storage_unlock(storage_pin_t(pin).ptr(), ext_salt)
 
     def lock(self) -> None:
         self.lib.storage_lock()
@@ -55,10 +72,8 @@ class Storage:
         if new_ext_salt is not None and len(new_ext_salt) != EXTERNAL_SALT_LEN:
             raise ValueError
         return sectrue == self.lib.storage_change_pin(
-            oldpin.encode(),
-            len(oldpin),
-            newpin.encode(),
-            len(newpin),
+            storage_pin_t(oldpin).ptr(),
+            storage_pin_t(newpin).ptr(),
             old_ext_salt,
             new_ext_salt,
         )

@@ -545,9 +545,13 @@ access_violation:
   apptask_access_violation();
 }
 
-secbool storage_unlock__verified(const uint8_t *pin, size_t pin_len,
+secbool storage_unlock__verified(const storage_pin_t *pin,
                                  const uint8_t *ext_salt) {
-  if (!probe_read_access(pin, pin_len)) {
+  if (!probe_read_access(pin, sizeof(*pin))) {
+    goto access_violation;
+  }
+
+  if (!probe_read_access(pin->text, pin->len)) {
     goto access_violation;
   }
 
@@ -555,22 +559,30 @@ secbool storage_unlock__verified(const uint8_t *pin, size_t pin_len,
     goto access_violation;
   }
 
-  return storage_unlock(pin, pin_len, ext_salt);
+  return storage_unlock(pin, ext_salt);
 
 access_violation:
   apptask_access_violation();
   return secfalse;
 }
 
-secbool storage_change_pin__verified(const uint8_t *oldpin, size_t oldpin_len,
-                                     const uint8_t *newpin, size_t newpin_len,
+secbool storage_change_pin__verified(const storage_pin_t *oldpin,
+                                     const storage_pin_t *newpin,
                                      const uint8_t *old_ext_salt,
                                      const uint8_t *new_ext_salt) {
-  if (!probe_read_access(oldpin, oldpin_len)) {
+  if (!probe_read_access(oldpin, sizeof(*oldpin))) {
     goto access_violation;
   }
 
-  if (!probe_read_access(newpin, newpin_len)) {
+  if (!probe_read_access(oldpin->text, oldpin->len)) {
+    goto access_violation;
+  }
+
+  if (!probe_read_access(newpin, sizeof(*newpin))) {
+    goto access_violation;
+  }
+
+  if (!probe_read_access(newpin->text, newpin->len)) {
     goto access_violation;
   }
 
@@ -582,32 +594,37 @@ secbool storage_change_pin__verified(const uint8_t *oldpin, size_t oldpin_len,
     goto access_violation;
   }
 
-  return storage_change_pin(oldpin, oldpin_len, newpin, newpin_len,
-                            old_ext_salt, new_ext_salt);
+  return storage_change_pin(oldpin, newpin, old_ext_salt, new_ext_salt);
 
 access_violation:
   apptask_access_violation();
   return secfalse;
 }
 
-void storage_ensure_not_wipe_code__verified(const uint8_t *pin,
-                                            size_t pin_len) {
-  if (!probe_read_access(pin, pin_len)) {
+void storage_ensure_not_wipe_code__verified(const storage_pin_t *pin) {
+  if (!probe_read_access(pin, sizeof(*pin))) {
     goto access_violation;
   }
 
-  storage_ensure_not_wipe_code(pin, pin_len);
+  if (!probe_read_access(pin->text, pin->len)) {
+    goto access_violation;
+  }
+
+  storage_ensure_not_wipe_code(pin);
   return;
 
 access_violation:
   apptask_access_violation();
 }
 
-secbool storage_change_wipe_code__verified(const uint8_t *pin, size_t pin_len,
+secbool storage_change_wipe_code__verified(const storage_pin_t *pin,
                                            const uint8_t *ext_salt,
-                                           const uint8_t *wipe_code,
-                                           size_t wipe_code_len) {
-  if (!probe_read_access(pin, pin_len)) {
+                                           const storage_pin_t *wipe_code) {
+  if (!probe_read_access(pin, sizeof(*pin))) {
+    goto access_violation;
+  }
+
+  if (!probe_read_access(pin->text, pin->len)) {
     goto access_violation;
   }
 
@@ -615,12 +632,15 @@ secbool storage_change_wipe_code__verified(const uint8_t *pin, size_t pin_len,
     goto access_violation;
   }
 
-  if (!probe_read_access(wipe_code, wipe_code_len)) {
+  if (!probe_read_access(wipe_code, sizeof(*wipe_code))) {
     goto access_violation;
   }
 
-  return storage_change_wipe_code(pin, pin_len, ext_salt, wipe_code,
-                                  wipe_code_len);
+  if (!probe_read_access(wipe_code->text, wipe_code->len)) {
+    goto access_violation;
+  }
+
+  return storage_change_wipe_code(pin, ext_salt, wipe_code);
 
 access_violation:
   apptask_access_violation();

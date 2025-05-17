@@ -511,9 +511,8 @@ secbool storage_is_unlocked(void) {
 
 void storage_lock(void) { syscall_invoke0(SYSCALL_STORAGE_LOCK); }
 
-secbool storage_unlock(const uint8_t *pin, size_t pin_len,
-                       const uint8_t *ext_salt) {
-  return (secbool)syscall_invoke3((uint32_t)pin, pin_len, (uint32_t)ext_salt,
+secbool storage_unlock(const storage_pin_t *pin, const uint8_t *ext_salt) {
+  return (secbool)syscall_invoke2((uint32_t)pin, (uint32_t)ext_salt,
                                   SYSCALL_STORAGE_UNLOCK);
 }
 
@@ -528,30 +527,28 @@ uint32_t storage_get_pin_rem(void) {
   return syscall_invoke0(SYSCALL_STORAGE_GET_PIN_REM);
 }
 
-secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
-                           const uint8_t *newpin, size_t newpin_len,
+secbool storage_change_pin(const storage_pin_t *oldpin,
+                           const storage_pin_t *newpin,
                            const uint8_t *old_ext_salt,
                            const uint8_t *new_ext_salt) {
-  return (secbool)syscall_invoke6(
-      (uint32_t)oldpin, oldpin_len, (uint32_t)newpin, newpin_len,
-      (uint32_t)old_ext_salt, (uint32_t)new_ext_salt,
-      SYSCALL_STORAGE_CHANGE_PIN);
+  return (secbool)syscall_invoke4(
+      (uint32_t)oldpin, (uint32_t)newpin, (uint32_t)old_ext_salt,
+      (uint32_t)new_ext_salt, SYSCALL_STORAGE_CHANGE_PIN);
 }
 
-void storage_ensure_not_wipe_code(const uint8_t *pin, size_t pin_len) {
-  syscall_invoke2((uint32_t)pin, pin_len, SYSCALL_STORAGE_ENSURE_NOT_WIPE_CODE);
+void storage_ensure_not_wipe_code(const storage_pin_t *pin) {
+  syscall_invoke1((uint32_t)pin, SYSCALL_STORAGE_ENSURE_NOT_WIPE_CODE);
 }
 
 secbool storage_has_wipe_code(void) {
   return (secbool)syscall_invoke0(SYSCALL_STORAGE_HAS_WIPE_CODE);
 }
 
-secbool storage_change_wipe_code(const uint8_t *pin, size_t pin_len,
+secbool storage_change_wipe_code(const storage_pin_t *pin,
                                  const uint8_t *ext_salt,
-                                 const uint8_t *wipe_code,
-                                 size_t wipe_code_len) {
-  return (secbool)syscall_invoke5((uint32_t)pin, pin_len, (uint32_t)ext_salt,
-                                  (uint32_t)wipe_code, wipe_code_len,
+                                 const storage_pin_t *wipe_code) {
+  return (secbool)syscall_invoke3((uint32_t)pin, (uint32_t)ext_salt,
+                                  (uint32_t)wipe_code,
                                   SYSCALL_STORAGE_CHANGE_WIPE_CODE);
 }
 
