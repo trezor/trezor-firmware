@@ -28,26 +28,25 @@ FEATURES_WANTED = ["input", "rgb_led", "display", "tropic"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
-CPPDEFINES_HAL = []
-PATH_HAL = []
-CPPDEFINES_MOD = []
+CPPDEFINES_MOD = [
+    'KERNEL_MODE',
+    'AES_128',
+    'USE_INSECURE_PRNG',
+]
 SOURCE_MOD = []
 SOURCE_MOD_CRYPTO = []
+CPPDEFINES_HAL = []
+SOURCE_HAL = []
+PATH_HAL = []
 RUST_UI_FEATURES = []
 
 # modtrezorcrypto
-CCFLAGS_MOD += '-Wno-sequence-point '
 CPPPATH_MOD += [
     'vendor/trezor-crypto',
     'vendor/trezor-storage',
 ]
-CPPDEFINES_MOD += [
-    'KERNEL_MODE',
-    'AES_128',
-    'AES_192',
-    'USE_KECCAK',
-    'ED25519_NO_PRECOMP',
-    'FANCY_FATAL_ERROR'
+SOURCE_MOD += [
+    'vendor/trezor-storage/flash_area.c',
 ]
 SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/aes/aes_modes.c',
@@ -102,7 +101,7 @@ if FEATURE_FLAGS["AES_GCM"]:
 
 # modtrezorui
 CPPPATH_MOD += [
-        'vendor/micropython/lib/uzlib',
+        'vendor/micropython/lib/uzlib'
 ]
 
 SOURCE_MOD += [
@@ -127,6 +126,17 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
+
+ui.init_ui(TREZOR_MODEL, "prodtest", RUST_UI_FEATURES)
+
+env = Environment(
+    ENV=os.environ,
+    CFLAGS=ARGUMENTS.get('CFLAGS', '') + f" -DCONFIDENTIAL= -DPRODUCTION={ARGUMENTS.get('PRODUCTION', '0')}",
+    CPPDEFPREFIX="-D'",
+    CPPDEFSUFFIX="'",
+)
+
+FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
 SOURCE_PRODTEST = [
     'embed/projects/prodtest/main.c',
@@ -158,34 +168,21 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/cmd/prodtest_sbu.c',
     'embed/projects/prodtest/cmd/prodtest_touch.c',
     'embed/projects/prodtest/cmd/prodtest_tropic.c',
-    'embed/projects/prodtest/cmd/prodtest_wpc.c',
+    'embed/projects/prodtest/cmd/prodtest_wpc',
     'embed/projects/prodtest/emulator.c',
-    'vendor/trezor-storage/flash_area.c',
 ]
 
-SOURCE_UNIX = [
+SOURCE_HAL += [
     'embed/projects/unix/profile.c',
 ]
 
-ui.init_ui(TREZOR_MODEL, "prodtest", RUST_UI_FEATURES)
-
-env = Environment(
-    ENV=os.environ,
-    CFLAGS=ARGUMENTS.get('CFLAGS', '') + f" -DCONFIDENTIAL= -DPRODUCTION={ARGUMENTS.get('PRODUCTION', '0')}",
-    CPPDEFPREFIX="-D'",
-    CPPDEFSUFFIX="'",
-)
-
-FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_UNIX, PATH_HAL)
-
-
 env.Replace(
+    CAT='cat',
     CP='cp',
     AS='as',
     AR='ar',
     CC='gcc',
     LINK='ld',
-
     SIZE='size',
     STRIP='strip',
     OBJCOPY='objcopy',
@@ -199,13 +196,11 @@ ALLPATHS = ['embed/rust',
            'embed/rtl/inc',
            'embed/models',
            'embed/projects/unix',
-           'embed/upymod/modtrezorui',
            'embed/gfx/inc',
            'embed/util/image/inc',
            'embed/util/rsod/inc',
            'embed/util/scm_revision/inc',
            'embed/util/translations/inc',
-           'vendor/nanopb',
        ] + CPPPATH_MOD + PATH_HAL
 
 env.Replace(
@@ -221,7 +216,7 @@ env.Replace(
     LINKFLAGS='',
     CPPPATH=ALLPATHS,
     CPPDEFINES=[
-        'PRODTEST',
+        'TREZOR_PRODTEST',
         'TREZOR_EMULATOR',
         'TREZOR_MODEL_'+TREZOR_MODEL,
     ] + CPPDEFINES_MOD + CPPDEFINES_HAL,
@@ -239,7 +234,7 @@ except OSError:
 
 
 env.Replace(
-    ALLSOURCES=SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_PRODTEST + SOURCE_UNIX,
+    ALLSOURCES=SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_PRODTEST + SOURCE_HAL,
     ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES']))
 
 cmake_gen = env.Command(
@@ -260,7 +255,7 @@ else:
 
 rust = tools.add_rust_lib(
     env=env,
-    build='bootloader_emu',
+    build='prodtest_emu',
     profile=profile,
     features=features,
     all_paths=ALLPATHS,
@@ -282,7 +277,7 @@ obj_program = []
 obj_program += env.Object(source=SOURCE_MOD)
 obj_program += env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-auto-var-init=zero')
 obj_program += env.Object(source=SOURCE_PRODTEST)
-obj_program += env.Object(source=SOURCE_UNIX)
+obj_program += env.Object(source=SOURCE_HAL)
 
 program_elf = env.Command(
     target='prodtest.elf',
