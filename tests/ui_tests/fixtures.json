@@ -9914,8 +9914,8 @@
 "T3B1_cs_test_reset_slip39_advanced.py::test_reset_slip39_advanced[2of2]": "857232a395ee3aa30b9498311f90b894be9de146d044317b949198442807b65a",
 "T3B1_cs_test_reset_slip39_basic.py::test_reset_slip39_basic[16of16]": "c654412b728b1235b0d1d8056b8619987e26a8261edc7844b0d9e93376f5ae7c",
 "T3B1_cs_test_reset_slip39_basic.py::test_reset_slip39_basic[1of1]": "5215fa46156d48bac496da09a0f733768beca0df215cc608ee88d85543a39d76",
-"T3B1_cs_test_tutorial_caesar.py::test_tutorial_again_and_skip": "7cb28c2d74f7251380ee2fe895888afffcfe5659f73c8ee32dbeda2d120be15f",
-"T3B1_cs_test_tutorial_caesar.py::test_tutorial_finish": "6e9e9b9234dc7c9457aa2b1b78d8638661e655eef97bf0b13e360ffc78f2a5a3",
+"T3B1_cs_test_tutorial_caesar.py::test_tutorial_again_and_skip": "0a2fe70157142f35ece3b3aaf886efea617eebe29e07cb7b29f550c8c48143a1",
+"T3B1_cs_test_tutorial_caesar.py::test_tutorial_finish": "6a15a18dbfbbae6c3b3c1bc5fd230235e6981df4329d1a2fde346a72de4b001e",
 "T3B1_cs_test_tutorial_caesar.py::test_tutorial_skip": "ac88c5abeccf12c62c1c9d210ef41948a01fe82b026e54565cd8464b27a561ed",
 "T3B1_de_test_autolock.py::test_autolock_does_not_interrupt_preauthorized": "3ca62d8d2d9a8841fe8059c7b38793f5c8ea8748e4de299561aeaefc24e5fcda",
 "T3B1_de_test_autolock.py::test_autolock_does_not_interrupt_signing": "e888f60aded4d9efb0206426cf4a724801bc926ffb6dbe6d6c2dd42c3163b5f1",
@@ -10161,8 +10161,8 @@
 "T3B1_pt_test_reset_slip39_advanced.py::test_reset_slip39_advanced[2of2]": "4a9a86ce0e3d2c9134ef73beb2fdc654f6ba97c3fed57208a7fc977ddcf7189d",
 "T3B1_pt_test_reset_slip39_basic.py::test_reset_slip39_basic[16of16]": "d46e0ad680eb98ac2689a15e265e8461a8b02525b40ffa4e34b74f4b12c426ff",
 "T3B1_pt_test_reset_slip39_basic.py::test_reset_slip39_basic[1of1]": "3742a5e6609fd7e3062fc017fc3f0569365394ef2c6e6d1cfad82801615659f7",
-"T3B1_pt_test_tutorial_caesar.py::test_tutorial_again_and_skip": "66ad72ccdba260a952de575fbeea7694250a5e3abdc28c88ea652fc5ad02ed09",
-"T3B1_pt_test_tutorial_caesar.py::test_tutorial_finish": "fc5b1c9c8edc34d5ed7bb43efae0b25250a13f27686cae28f3766c46b564b6e6",
+"T3B1_pt_test_tutorial_caesar.py::test_tutorial_again_and_skip": "85713a6bc4d258bb8097d70e681605cb624844338cb51f7e611a549576d46f2f",
+"T3B1_pt_test_tutorial_caesar.py::test_tutorial_finish": "5ee50eac2fa8a94bd26fce5ae60ba89f6d7dd7e1b336dbd6aaef223d18427e5f",
 "T3B1_pt_test_tutorial_caesar.py::test_tutorial_skip": "0399d3c5ea99203085584cc25c814debf50c41474403507ba3a1d01f45b863e1"
 },
 "device_tests": {

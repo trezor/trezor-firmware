@@ -292,6 +292,8 @@ impl TextLayout {
                 sink.prev_page_ellipsis(*cursor, self);
                 cursor.x += self.style.prev_page_ellipsis_width();
             }
+            // Ignore leading '\r' character if the above ellipsis has been drawn
+            remaining_text = remaining_text.strip_prefix('\r').unwrap_or(remaining_text);
         }
 
         while !remaining_text.is_empty() {
