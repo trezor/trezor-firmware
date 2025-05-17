@@ -427,23 +427,29 @@ impl FirmwareUI for UIBolt {
     }
 
     fn confirm_summary(
-        amount: TString<'static>,
-        amount_label: TString<'static>,
+        amount: Option<TString<'static>>,
+        amount_label: Option<TString<'static>>,
         fee: TString<'static>,
         fee_label: TString<'static>,
         title: Option<TString<'static>>,
         account_items: Option<Obj>,
+        _account_title: Option<TString<'static>>,
         extra_items: Option<Obj>,
         _extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let info_button: bool = account_items.is_some() || extra_items.is_some();
-        let paragraphs = ParagraphVecShort::from_iter([
-            Paragraph::new(&theme::TEXT_NORMAL, amount_label).no_break(),
-            Paragraph::new(&theme::TEXT_MONO, amount),
-            Paragraph::new(&theme::TEXT_NORMAL, fee_label).no_break(),
-            Paragraph::new(&theme::TEXT_MONO, fee),
-        ]);
+        let mut paragraphs = ParagraphVecShort::new();
+        if let Some(amount) = amount {
+            if let Some(amount_label) = amount_label {
+                paragraphs
+                    .add(Paragraph::new(&theme::TEXT_NORMAL, amount_label).no_break())
+                    .add(Paragraph::new(&theme::TEXT_MONO, amount));
+            }
+        }
+        paragraphs
+            .add(Paragraph::new(&theme::TEXT_NORMAL, fee_label).no_break())
+            .add(Paragraph::new(&theme::TEXT_MONO, fee));
 
         let mut page = ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
             .with_hold()?

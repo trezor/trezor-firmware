@@ -44,16 +44,23 @@ def make_defs(parameters: dict) -> messages.EthereumDefinitions:
     # With removal of most built-in defs from firmware, we have test vectors
     # that no longer run. Because this is not the place to test the definitions,
     # we generate fake entries so that we can check the signing results.
-    address_n = parse_path(parameters["path"])
-    slip44 = unharden(address_n[1])
-    network = encode_eth_network(chain_id=parameters["chain_id"], slip44=slip44)
+    # However, we have the option to not generate the fake definitions,
+    # in case what we want to test is signing a tx for an unknown chain
+    # (which should be, well... not defined)!
+    if parameters.get("fake_defs", True):
+        address_n = parse_path(parameters["path"])
+        slip44 = unharden(address_n[1])
+        network = encode_eth_network(chain_id=parameters["chain_id"], slip44=slip44)
 
-    return messages.EthereumDefinitions(encoded_network=network)
+        return messages.EthereumDefinitions(encoded_network=network)
+    else:
+        return messages.EthereumDefinitions()
 
 
 @parametrize_using_common_fixtures(
     "ethereum/sign_tx.json",
     "ethereum/sign_tx_eip155.json",
+    "ethereum/sign_tx_erc20.json",
 )
 @pytest.mark.parametrize("chunkify", (True, False))
 def test_signtx(client: Client, chunkify: bool, parameters: dict, result: dict):

@@ -752,13 +752,13 @@ pub const TEXT_MONO_GREY_LIGHT: TextStyle = TextStyle {
 };
 /// Makes sure that the displayed text (usually address) will get divided into
 /// smaller chunks.
-pub const TEXT_MONO_ADDRESS_CHUNKS: TextStyle = TEXT_MONO_GREY_LIGHT
+pub const TEXT_MONO_ADDRESS_CHUNKS: TextStyle = TEXT_MONO
     .with_chunks(Chunks::new(4, 9))
     .with_line_spacing(5);
 /// Smaller horizontal chunk offset, used e.g. for long Cardano addresses.
 /// Also moving the next page ellipsis to the left (as there is a space on the
 /// left). Last but not least, maximum number of rows is 4 in this case.
-pub const TEXT_MONO_ADDRESS_CHUNKS_SMALLER_X_OFFSET: TextStyle = TEXT_MONO_GREY_LIGHT
+pub const TEXT_MONO_ADDRESS_CHUNKS_SMALLER_X_OFFSET: TextStyle = TEXT_MONO
     .with_chunks(Chunks::new(4, 7).with_max_rows(4))
     .with_line_spacing(5)
     .with_ellipsis_icon(ICON_PAGE_NEXT, -12);
