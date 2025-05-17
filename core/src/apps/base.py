@@ -244,7 +244,9 @@ async def handle_GetFeatures(msg: GetFeatures) -> Features:
 
 
 async def handle_Cancel(msg: Cancel) -> Success:
-    workflow.close_others()
+    # Prevent homescreen flickering on Cancel
+    workflow.close_others(close_default=False)
+
     raise wire.ActionCancelled
 
 
