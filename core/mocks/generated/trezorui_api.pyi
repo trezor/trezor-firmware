@@ -626,6 +626,7 @@ def show_progress(
     description: str,
     indeterminate: bool = False,
     title: str | None = None,
+    danger: bool = False,
 ) -> LayoutObj[UiResult]:
     """Show progress loader. Please note that the number of lines reserved on screen for
     description is determined at construction time. If you want multiline descriptions
