@@ -26,14 +26,22 @@ def allow_all_loader_messages() -> None:
     _ignore_loader_messages = False
 
 
-def render_empty_loader(message: config.StorageMessage, description: str = "") -> None:
-    """Render empty loader to prevent the screen appear to be frozen."""
+def render_empty_loader(
+    message: config.StorageMessage, description: str = "", danger: bool = False
+) -> None:
+    """Render empty loader to prevent the screen from appearing frozen.
+
+    Args:
+        message (config.StorageMessage): The message to display in the loader.
+        description (str, optional): Additional description to display. Defaults to an empty string.
+        danger (bool, optional): If True, renders the loader in a 'danger' style to indicate a critical operation (e.g. wipe device). Defaults to False.
+    """
     from trezor.ui.layouts.progress import pin_progress
 
     global _progress_layout
     global _started_with_empty_loader
 
-    _progress_layout = pin_progress(message, description)
+    _progress_layout = pin_progress(message, description, danger)
     _progress_layout.report(0, None)
 
     _started_with_empty_loader = True

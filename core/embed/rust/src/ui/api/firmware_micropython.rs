@@ -951,8 +951,9 @@ extern "C" fn new_show_progress(n_args: usize, args: *const Obj, kwargs: *mut Ma
             .get(Qstr::MP_QSTR_title)
             .and_then(Obj::try_into_option)
             .unwrap_or(None);
+        let danger: bool = kwargs.get_or(Qstr::MP_QSTR_danger, false)?;
 
-        let layout = ModelUI::show_progress(description, indeterminate, title)?;
+        let layout = ModelUI::show_progress(description, indeterminate, title, danger)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1739,6 +1740,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     description: str,
     ///     indeterminate: bool = False,
     ///     title: str | None = None,
+    ///     danger: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Show progress loader. Please note that the number of lines reserved on screen for
     ///     description is determined at construction time. If you want multiline descriptions
