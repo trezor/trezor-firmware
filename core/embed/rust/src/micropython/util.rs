@@ -148,3 +148,9 @@ where
     }
     Ok(vec)
 }
+
+pub fn modulo_format(format: Obj, args: &[Obj]) -> Result<Obj, Error> {
+    catch_exception(|| unsafe {
+        ffi::str_modulo_format(format, args.len(), args.as_ptr(), Obj::const_none())
+    })
+}

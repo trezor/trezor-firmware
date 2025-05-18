@@ -742,8 +742,6 @@ Q(trezor.enums.DebugButton)
 Q(trezor.enums.DebugPhysicalButton)
 Q(trezor.enums.DebugSwipeDirection)
 Q(trezor.enums.DebugWaitType)
-Q(trezor.wire.wire_log)
-Q(wire_log)
 #endif
 
 // generate full alphabet

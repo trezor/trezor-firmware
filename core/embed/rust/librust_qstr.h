@@ -249,6 +249,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_danger;
   MP_QSTR_data_hash;
   MP_QSTR_data_len;
+  MP_QSTR_debug;
   MP_QSTR_decode;
   MP_QSTR_deinit;
   MP_QSTR_description;
@@ -265,6 +266,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_entropy__title_confirm;
   MP_QSTR_erase;
   MP_QSTR_erase_bonds;
+  MP_QSTR_error;
   MP_QSTR_experimental_mode__enable;
   MP_QSTR_experimental_mode__only_for_dev;
   MP_QSTR_experimental_mode__title;
@@ -309,6 +311,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_homescreen__title_set;
   MP_QSTR_horizontal;
   MP_QSTR_icon_name;
+  MP_QSTR_iface;
   MP_QSTR_iface_num;
   MP_QSTR_image;
   MP_QSTR_indeterminate;
@@ -757,6 +760,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_touch_event;
   MP_QSTR_trace;
   MP_QSTR_trezorble;
+  MP_QSTR_trezorlog;
   MP_QSTR_trezorproto;
   MP_QSTR_trezorui_api;
   MP_QSTR_tutorial;
@@ -798,6 +802,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_verb_info;
   MP_QSTR_verify;
   MP_QSTR_version;
+  MP_QSTR_warning;
   MP_QSTR_warning_footer;
   MP_QSTR_wipe__info;
   MP_QSTR_wipe__title;
