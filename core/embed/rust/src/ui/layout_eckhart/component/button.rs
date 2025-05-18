@@ -43,6 +43,7 @@ pub struct Button {
     radius_or_gradient: RadiusOrGradient,
     state: State,
     long_press: ShortDuration, // long press requires non-zero duration
+    long_press_danger: bool,
     long_timer: Timer,
     haptic: bool,
 }
@@ -77,6 +78,7 @@ impl Button {
             radius_or_gradient: RadiusOrGradient::None,
             state: State::Initial,
             long_press: ShortDuration::ZERO,
+            long_press_danger: false,
             long_timer: Timer::new(),
             haptic: true,
         }
@@ -174,6 +176,11 @@ impl Button {
         self
     }
 
+    pub fn with_long_press_danger(mut self, danger: bool) -> Self {
+        self.long_press_danger = danger;
+        self
+    }
+
     pub fn with_radius(mut self, radius: u8) -> Self {
         self.radius_or_gradient = RadiusOrGradient::Radius(radius);
         self
@@ -223,9 +230,9 @@ impl Button {
         matches!(self.state, State::Pressed)
     }
 
-    pub fn long_press(&self) -> Option<Duration> {
+    pub fn long_press(&self) -> Option<(Duration, bool)> {
         if self.long_press != ShortDuration::ZERO {
-            Some(self.long_press.into())
+            Some((self.long_press.into(), self.long_press_danger))
         } else {
             None
         }
@@ -583,7 +590,7 @@ impl Component for Button {
                                 play(HapticEffect::ButtonPress);
                             }
                             self.set(ctx, State::Pressed);
-                            if let Some(duration) = self.long_press() {
+                            if let Some((duration, _danger)) = self.long_press() {
                                 self.long_timer.start(ctx, duration);
                             }
                             return Some(ButtonMsg::Pressed);

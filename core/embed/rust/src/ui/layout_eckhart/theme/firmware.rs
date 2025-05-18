@@ -247,7 +247,7 @@ pub const fn button_cancel_gradient() -> ButtonStyleSheet {
     }
 }
 
-pub const fn button_default_actionbar_right() -> ButtonStyleSheet {
+pub const fn button_actionbar_right_default() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
@@ -273,20 +273,20 @@ pub const fn button_default_actionbar_right() -> ButtonStyleSheet {
     }
 }
 
-pub const fn button_warning_high() -> ButtonStyleSheet {
+pub const fn button_actionbar_danger() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: ORANGE,
-            button_color: BG,
+            button_color: ORANGE_SUPER_DARK,
             icon_color: ORANGE,
             background_color: BG,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: ORANGE,
-            button_color: GREY_SUPER_DARK,
-            icon_color: GREEN,
+            button_color: ORANGE_DARK,
+            icon_color: ORANGE,
             background_color: BG,
         },
         disabled: &ButtonStyle {

@@ -53,7 +53,7 @@ impl FirmwareUI for UIEckhart {
         verb: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
         hold: bool,
-        _hold_danger: bool,
+        hold_danger: bool,
         reverse: bool,
         _prompt_screen: bool,
         _prompt_title: Option<TString<'static>>,
@@ -78,9 +78,15 @@ impl FirmwareUI for UIEckhart {
 
         let right_button = if hold {
             let verb = verb.unwrap_or(TR::buttons__hold_to_confirm.into());
+            let style = if hold_danger {
+                theme::firmware::button_actionbar_danger()
+            } else {
+                theme::firmware::button_confirm()
+            };
             Button::with_text(verb)
                 .with_long_press(theme::CONFIRM_HOLD_DURATION)
-                .styled(theme::firmware::button_confirm())
+                .with_long_press_danger(hold_danger)
+                .styled(style)
         } else if let Some(verb) = verb {
             Button::with_text(verb)
         } else {
