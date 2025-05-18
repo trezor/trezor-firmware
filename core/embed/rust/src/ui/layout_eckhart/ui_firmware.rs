@@ -53,7 +53,7 @@ impl FirmwareUI for UIEckhart {
         verb: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
         hold: bool,
-        _hold_danger: bool,
+        hold_danger: bool,
         reverse: bool,
         _prompt_screen: bool,
         _prompt_title: Option<TString<'static>>,
@@ -77,9 +77,16 @@ impl FirmwareUI for UIEckhart {
         };
 
         let verb = verb.unwrap_or(TR::buttons__confirm.into());
-        let mut right_button = Button::with_text(verb).styled(theme::firmware::button_confirm());
+        let right_button_style = if hold_danger {
+            theme::firmware::button_warning_high()
+        } else {
+            theme::firmware::button_confirm()
+        };
+        let mut right_button = Button::with_text(verb).styled(right_button_style);
         if hold {
-            right_button = right_button.with_long_press(theme::CONFIRM_HOLD_DURATION);
+            right_button = right_button
+                .with_long_press(theme::CONFIRM_HOLD_DURATION)
+                .with_long_press_danger(hold_danger);
         }
 
         let mut screen = TextScreen::new(paragraphs)
