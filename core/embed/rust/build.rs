@@ -281,6 +281,7 @@ fn generate_micropython_bindings() {
         .allowlist_function("mp_hal_delay_ms")
         // debug
         .allowlist_function("mp_print_strn")
+        .allowlist_function("str_modulo_format")
         .allowlist_var("mp_plat_print")
         // typ
         .allowlist_var("mp_type_type")
