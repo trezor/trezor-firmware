@@ -37,7 +37,7 @@ from .message_handler import failure
 from .errors import *  # isort:skip # noqa: F401,F403
 
 if __debug__:
-    from . import wire_log as log
+    from trezor import log
 
 if TYPE_CHECKING:
     from trezorio import WireInterface
@@ -111,7 +111,7 @@ async def handle_session(iface: WireInterface) -> None:
                     msg = await ctx.read_from_wire()
                 except protocol_common.WireError as exc:
                     if __debug__:
-                        log.exception(__name__, iface, exc)
+                        log.exception(__name__, exc, iface=iface)
                     await ctx.write(failure(exc))
                     continue
 
@@ -134,7 +134,7 @@ async def handle_session(iface: WireInterface) -> None:
                 # Log and ignore. The session handler can only exit explicitly in the
                 # following finally block.
                 if __debug__:
-                    log.exception(__name__, iface, exc)
+                    log.exception(__name__, exc, iface=iface)
             finally:
                 # Unload modules imported by the workflow. Should not raise.
                 utils.unimport_end(modules)
@@ -148,4 +148,4 @@ async def handle_session(iface: WireInterface) -> None:
             # Log and try again. The session handler can only exit explicitly via
             # loop.clear() above.
             if __debug__:
-                log.exception(__name__, iface, exc)
+                log.exception(__name__, exc, iface=iface)
