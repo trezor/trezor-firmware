@@ -218,7 +218,7 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
     # get address
     device_handler.run(common.get_test_address)  # type: ignore
 
-    assert "PassphraseKeyboard" in debug.read_layout().all_components()
+    debug.synchronize_at("PassphraseKeyboard")
 
     if debug.layout_type is LayoutType.Caesar:
         # Going into the selected character category
@@ -255,7 +255,7 @@ def test_autolock_interrupts_passphrase(device_handler: "BackgroundDeviceHandler
     # get address
     device_handler.run(common.get_test_address)  # type: ignore
 
-    assert "PassphraseKeyboard" in debug.read_layout().all_components()
+    debug.synchronize_at("PassphraseKeyboard")
 
     if debug.layout_type is LayoutType.Caesar:
         # Going into the selected character category
