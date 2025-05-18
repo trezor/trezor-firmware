@@ -25,6 +25,7 @@ def progress(
     description: str | None = None,
     title: str | None = None,
     indeterminate: bool = False,
+    danger: bool = False,
 ) -> ui.ProgressLayout:
     if description is None:
         description = TR.progress__please_wait  # def_arg
@@ -34,6 +35,7 @@ def progress(
             description=description,
             title=title,
             indeterminate=indeterminate,
+            danger=danger,
         )
     )
 
@@ -48,8 +50,12 @@ def coinjoin_progress(message: str) -> ui.ProgressLayout:
     )
 
 
-def pin_progress(title: config.StorageMessage, description: str) -> ui.ProgressLayout:
-    return progress(description=description, title=_storage_message_to_str(title))
+def pin_progress(
+    title: config.StorageMessage, description: str, danger: bool = False
+) -> ui.ProgressLayout:
+    return progress(
+        description=description, title=_storage_message_to_str(title), danger=danger
+    )
 
 
 if not utils.BITCOIN_ONLY:

@@ -1116,6 +1116,7 @@ impl FirmwareUI for UIEckhart {
         description: TString<'static>,
         indeterminate: bool,
         title: Option<TString<'static>>,
+        danger: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let (title, description) = if let Some(title) = title {
             (title, description)
@@ -1127,6 +1128,7 @@ impl FirmwareUI for UIEckhart {
             title,
             indeterminate,
             description,
+            danger,
         ));
         Ok(layout)
     }
