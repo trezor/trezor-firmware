@@ -61,6 +61,7 @@ impl Homescreen {
         notification: Option<(TString<'static>, u8)>,
     ) -> Result<Self, Error> {
         let image = get_homescreen_image();
+        let shadow = image.is_some();
 
         // Notification
         // TODO: better notification handling
@@ -117,7 +118,7 @@ impl Homescreen {
         };
 
         Ok(Self {
-            label: HomeLabel::new(label),
+            label: HomeLabel::new(label, shadow),
             hint,
             action_bar: ActionBar::new_single(button),
             image,
@@ -227,7 +228,8 @@ impl Component for Homescreen {
 /// Helper component to render a label with a shadow.
 struct HomeLabel {
     label: Label<'static>,
-    label_shadow: Label<'static>,
+    /// Label shadow, only rendered when custom homescreen image is set
+    label_shadow: Option<Label<'static>>,
 }
 
 impl HomeLabel {
@@ -241,9 +243,10 @@ impl HomeLabel {
         theme::BLACK,
     );
 
-    fn new(label: TString<'static>) -> Self {
+    fn new(label: TString<'static>, shadow: bool) -> Self {
         let label_primary = Label::left_aligned(label, Self::LABEL_TEXT_STYLE).top_aligned();
-        let label_shadow = Label::left_aligned(label, Self::LABEL_SHADOW_TEXT_STYLE).top_aligned();
+        let label_shadow = shadow
+            .then_some(Label::left_aligned(label, Self::LABEL_SHADOW_TEXT_STYLE).top_aligned());
         Self {
             label: label_primary,
             label_shadow,
