@@ -16,7 +16,6 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow,
         },
         geometry::{Direction, LinearPlacement},
-        layout::util::StrOrBytes,
     },
 };
 
@@ -333,10 +332,7 @@ pub fn new_confirm_output(
             Paragraph::new(&theme::TEXT_SMALL_LIGHT, TR::words__amount).no_break(),
             Paragraph::new(
                 &theme::TEXT_MONO_MEDIUM_LIGHT,
-                amount
-                    .try_into()
-                    .unwrap_or(StrOrBytes::Str("".into()))
-                    .as_str_offset(0),
+                amount.try_into().unwrap_or(TString::empty()),
             ),
         ]);
 
