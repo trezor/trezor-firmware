@@ -143,36 +143,31 @@ _Static_assert(NORCOW_SECTOR_SIZE == STORAGE_2_MAXSIZE, "norcow misconfigured");
 
 #ifdef KERNEL
 
-#ifdef KERNEL_FLASH_U_START
+extern uint32_t _codelen;
+#define KERNEL_SIZE (uint32_t) & _codelen
+#define KERNEL_FLASH_START KERNEL_START
+
+#if NORCOW_MIN_VERSION <= 5
 extern uint8_t _uflash_start;
 extern uint8_t _uflash_end;
 #define KERNEL_FLASH_U_START (uint32_t) & _uflash_start
 #define KERNEL_FLASH_U_SIZE ((uint32_t) & _uflash_end - KERNEL_FLASH_U_START)
 
-extern uint32_t _codelen;
-#define KERNEL_SIZE (uint32_t) & _codelen
-
-#define KERNEL_FLASH_START KERNEL_START
 #define KERNEL_FLASH_SIZE (KERNEL_SIZE - KERNEL_FLASH_U_SIZE)
 
 #define COREAPP_FLASH_START \
   (COREAPP_CODE_ALIGN(KERNEL_FLASH_START + KERNEL_SIZE) - KERNEL_FLASH_U_SIZE)
-#define COREAPP_FLASH_SIZE \
-  (FIRMWARE_MAXSIZE - (COREAPP_FLASH_START - FIRMWARE_START))
 
 #else
 
-extern uint32_t _codelen;
-#define KERNEL_SIZE (uint32_t) & _codelen
-
-#define KERNEL_FLASH_START KERNEL_START
 #define KERNEL_FLASH_SIZE KERNEL_SIZE
 
 #define COREAPP_FLASH_START \
   (COREAPP_CODE_ALIGN(KERNEL_FLASH_START + KERNEL_SIZE))
-#define COREAPP_FLASH_SIZE \
-  (FIRMWARE_MAXSIZE - (COREAPP_FLASH_START - KERNEL_FLASH_START))
 #endif
+
+#define COREAPP_FLASH_SIZE \
+  (FIRMWARE_MAXSIZE - (COREAPP_FLASH_START - FIRMWARE_START))
 
 #endif
 
