@@ -328,17 +328,15 @@ void prodtest_pm_precharge(cli_t* cli) {
     return;
   }
 
-  // This test consider that the device is connected with USB and placed in
-  // ambient temperature. Battery will be charged with constanst current
-  // and precharge voltage is statically taken from the battery chaging curve
-  //
-  // It is expected that battery voltage during the charging is being lifted
-  // due to effect of internal resistance of the battery. So battery voltage
-  // will drop a bit after the charging is stopped.
+  // This test considers that the device is connected via USB and placed at
+  // ambient temperature. The battery will be charged with constant current,
+  // and the precharge voltage is statically derived from the battery charging
+  // curve.
 
-  // voltage while charging is being lifted due to charging with quite high
-  // charging current. When the test terminate by reaching the given woltage.
-  // The current and
+  // During charging, the voltage rises because of the relatively high charging
+  // current. When the test ends upon reaching the specified precharge voltage,
+  // the charging current is cut off, which can cause the battery voltage to
+  // fall slightly.
   float precharge_voltage_V = 3.45f;
 
   pm_charging_enable();
@@ -359,15 +357,12 @@ void prodtest_pm_precharge(cli_t* cli) {
       return;
     }
 
-    cli_trace(cli, "Battery voltage: %d.%03d V -> taret %d.%03d V",
-              (int)report.battery_voltage_v,
-              (int)(report.battery_voltage_v * 1000) % 1000,
+    cli_trace(cli, "Precharging the device to %d.%03d V",
               (int)precharge_voltage_V,
               (int)(precharge_voltage_V * 1000) % 1000);
-    cli_progress(cli, "%d.%03d %d.%03d", (int)report.battery_voltage_v,
-                 (int)(report.battery_voltage_v * 1000) % 1000,
-                 (int)precharge_voltage_V,
-                 (int)(precharge_voltage_V * 1000) % 1000);
+
+    // Print power manager report.
+    prodtest_pm_report(cli);
 
     if (cli_aborted(cli)) {
       cli_trace(cli, "aborted");
