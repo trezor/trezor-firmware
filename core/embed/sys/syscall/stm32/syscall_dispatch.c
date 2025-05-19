@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef SYSCALL_DISPATCH
+#ifdef KERNEL
 
 #include <trezor_rtl.h>
 
@@ -881,4 +881,4 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
   }
 }
 
-#endif  // SYSCALL_DISPATCH
+#endif  // KERNEL

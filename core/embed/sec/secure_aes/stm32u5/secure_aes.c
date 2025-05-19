@@ -69,7 +69,7 @@ static secbool is_key_supported(secure_aes_keysel_t key) {
 }
 
 #if NORCOW_MIN_VERSION <= 5
-#ifdef SYSCALL_DISPATCH
+#ifdef KERNEL
 
 #include <sys/mpu.h>
 #include <sys/syscall.h>
@@ -227,7 +227,7 @@ secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
 secbool secure_aes_ecb_encrypt_hw(const uint8_t* input, size_t size,
                                   uint8_t* output, secure_aes_keysel_t key) {
 #if NORCOW_MIN_VERSION <= 5
-#ifdef SYSCALL_DISPATCH
+#ifdef KERNEL
   if (key == SECURE_AES_KEY_XORK_SN) {
     return unpriv_encrypt(input, size, output, key);
   }
