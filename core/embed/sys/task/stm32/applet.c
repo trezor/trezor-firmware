@@ -30,7 +30,7 @@
 #include <sys/trustzone.h>
 #endif
 
-#ifdef SYSCALL_DISPATCH
+#ifdef KERNEL
 
 void applet_init(applet_t* applet, applet_header_t* header,
                  applet_layout_t* layout, applet_privileges_t* privileges) {
@@ -126,4 +126,4 @@ applet_t* applet_active(void) {
   return (applet_t*)task->applet;
 }
 
-#endif  // SYSCALL_DISPATCH
+#endif  // KERNEL

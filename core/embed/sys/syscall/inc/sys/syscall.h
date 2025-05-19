@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_SYSCALL_H
+#pragma once
 
 // Reserved SVC numbers
 #define SVC_SYSCALL 0
@@ -74,5 +74,3 @@ syscall_return_from_callback(uint32_t retval) {
                    : [svid] "i"(SVC_CALLBACK_RETURN), "r"(r0)
                    : "memory");
 }
-
-#endif  // TREZORHAL_SYSCALL_H

@@ -27,7 +27,7 @@
 
 #include "syscall_probe.h"
 
-#ifdef SYSCALL_DISPATCH
+#ifdef KERNEL
 
 static inline bool inside_area(const void *addr, size_t len,
                                const applet_memory_t *area) {
@@ -118,4 +118,4 @@ bool probe_write_access(void *addr, size_t len) {
   return false;
 }
 
-#endif  // SYSCALL_DISPATCH
+#endif  // KERNEL

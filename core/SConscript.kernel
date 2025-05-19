@@ -69,7 +69,6 @@ CPPPATH_MOD += [
 ]
 CPPDEFINES_MOD += [
     'KERNEL_MODE',
-    'SYSCALL_DISPATCH',
     'AES_128',
     'AES_192',
     ('USE_BIP32_CACHE', '0'),
