@@ -20,6 +20,7 @@ def configure(
         "FRAMEBUFFER",
         ("DISPLAY_RESX", "128"),
         ("DISPLAY_RESY", "64"),
+        ("LOCKABLE_BOOTLOADER", "1"),
     ]
     features_available.append("framebuffer")
     features_available.append("display_mono")

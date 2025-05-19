@@ -117,9 +117,16 @@ void secret_prepare_fw(secbool allow_run_with_secret,
 // This function is called by the boardloader
 void secret_init(void);
 
+#ifdef LOCKABLE_BOOTLOADER
+// Unlocks the bootloader, all neccessary keys are erased
+void secret_unlock_bootloader(void);
+#endif
+
 #endif  // KERNEL_MODE
 
+#ifdef LOCKABLE_BOOTLOADER
 // Checks if bootloader is locked, that is the secret storage contains optiga
 // pairing secret on platforms where access to the secret storage cannot be
 // restricted for unofficial firmware
 secbool secret_bootloader_locked(void);
+#endif

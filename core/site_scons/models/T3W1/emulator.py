@@ -24,6 +24,7 @@ def configure(
         "UI_COLOR_32BIT",
         ("DISPLAY_RESX", "380"),
         ("DISPLAY_RESY", "520"),
+        ("LOCKABLE_BOOTLOADER", "1"),
     ]
     features_available.append("framebuffer")
     features_available.append("display_rgba8888")

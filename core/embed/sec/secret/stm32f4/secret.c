@@ -50,6 +50,7 @@ secbool secret_verify_header(void) {
   return bootloader_locked;
 }
 
+#ifdef LOCKABLE_BOOTLOADER
 secbool secret_bootloader_locked(void) {
   if (bootloader_locked_set != sectrue) {
     // Set bootloader_locked.
@@ -58,6 +59,9 @@ secbool secret_bootloader_locked(void) {
 
   return bootloader_locked;
 }
+
+void secret_unlock_bootloader(void) { secret_optiga_erase(); }
+#endif
 
 void secret_write_header(void) {
   uint8_t header[SECRET_HEADER_LEN] = {0};
