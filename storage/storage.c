@@ -160,7 +160,7 @@ static const uint32_t FALSE_WORD = 0x3CA5965A;
 static void __handle_fault(const char *msg, const char *file, int line);
 #define handle_fault(msg) (__handle_fault(msg, __FILE_NAME__, __LINE__))
 
-#if NORCOW_MIN_VERSION < 2
+#if NORCOW_MIN_VERSION <= 2
 static uint32_t pin_to_int(const uint8_t *pin, size_t pin_len);
 #endif
 static secbool storage_upgrade(void);
@@ -1081,11 +1081,13 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
   }
 #endif
 
+#if NORCOW_MIN_VERSION <= 5
   // In case of an upgrade from version 5 or earlier bump the total time of UI
   // progress to account for the set_pin() call in storage_upgrade_unlocked().
   if (get_lock_version() <= 5) {
     ui_progress_add(ui_estimate_time_ms(STORAGE_PIN_OP_SET));
   }
+#endif
 
   // Now we can check for wipe code.
   ensure_not_wipe_code(unlock_pin, unlock_pin_len);
@@ -1854,9 +1856,11 @@ static secbool storage_upgrade_unlocked(const uint8_t *pin, size_t pin_len,
   secbool ret = sectrue;
 #if NORCOW_MIN_VERSION <= 5
   if (version <= 5) {
-    // Versions 1 and 2: Upgrade EDEK_PVC_KEY from the uint32 PIN scheme
-    // Versions 3 and 4: variable-length PIN scheme to the unified PIN
-    // Version 5: unprivilged to privilged BHK key
+    // Upgrade EDEK_PVC_KEY from:
+    // - version 1 or 2 (uint32 PIN scheme)
+    // - version 3 or 4 (variable-length PIN scheme)
+    // - version 5 (unified PIN scheme with unprivileged BHK)
+    // to unified PIN scheme with privileged BHK.
     if (sectrue != set_pin(pin, pin_len, ext_salt)) {
       return secfalse;
     }
