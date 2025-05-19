@@ -584,60 +584,11 @@ static void derive_kek_v4(const uint8_t *pin, size_t pin_len,
 #endif
 #endif
 
-#if NORCOW_MIN_VERSION <= 5
-static void stretch_pin_v4(const uint8_t *pin, size_t pin_len,
-                           const uint8_t storage_salt[STORAGE_SALT_SIZE],
-                           const uint8_t *ext_salt,
-                           uint8_t stretched_pin[SHA256_DIGEST_LENGTH]) {
-  // Combining the PIN with the storage salt aims to ensure that if the
-  // MCU-Optiga communication is compromised, then a user with a low-entropy PIN
-  // remains protected against an attacker who is not able to read the contents
-  // of the MCU storage. Stretching the PIN with PBKDF2 ensures that even if
-  // Optiga itself is completely compromised, it will not reduce the security
-  // of the device below that of earlier Trezor models which also use PBKDF2
-  // with the same number of iterations.
-
-  uint8_t salt[HARDWARE_SALT_SIZE + STORAGE_SALT_SIZE + EXTERNAL_SALT_SIZE] = {
-      0};
-  size_t salt_len = 0;
-
-  memcpy(salt + salt_len, hardware_salt, HARDWARE_SALT_SIZE);
-  salt_len += HARDWARE_SALT_SIZE;
-
-  memcpy(salt + salt_len, storage_salt, STORAGE_SALT_SIZE);
-  salt_len += STORAGE_SALT_SIZE;
-
-  if (ext_salt != NULL) {
-    memcpy(salt + salt_len, ext_salt, EXTERNAL_SALT_SIZE);
-    salt_len += EXTERNAL_SALT_SIZE;
-  }
-
-  PBKDF2_HMAC_SHA256_CTX ctx = {0};
-  pbkdf2_hmac_sha256_Init(&ctx, pin, pin_len, salt, salt_len, 1);
-  memzero(&salt, sizeof(salt));
-
-  for (int i = 1; i <= 10; i++) {
-    pbkdf2_hmac_sha256_Update(&ctx, PIN_ITER_COUNT / 10);
-    ui_progress();
-  }
-#ifdef USE_STORAGE_HWKEY
-  uint8_t stretched_pin_tmp[SHA256_DIGEST_LENGTH] = {0};
-  pbkdf2_hmac_sha256_Final(&ctx, stretched_pin_tmp);
-  ensure(secure_aes_ecb_encrypt_hw(stretched_pin_tmp, SHA256_DIGEST_LENGTH,
-                                   stretched_pin, SECURE_AES_KEY_XORK_SN),
-         "secure_aes pin stretch failed");
-  memzero(stretched_pin_tmp, sizeof(stretched_pin_tmp));
-#else
-  pbkdf2_hmac_sha256_Final(&ctx, stretched_pin);
-#endif
-  memzero(&ctx, sizeof(ctx));
-}
-#endif
-
 static void stretch_pin(const uint8_t *pin, size_t pin_len,
                         const uint8_t storage_salt[STORAGE_SALT_SIZE],
                         const uint8_t *ext_salt,
-                        uint8_t stretched_pin[SHA256_DIGEST_LENGTH]) {
+                        uint8_t stretched_pin[SHA256_DIGEST_LENGTH],
+                        bool privileged_bhk) {
   // Combining the PIN with the storage salt aims to ensure that if the
   // MCU-Optiga communication is compromised, then a user with a low-entropy PIN
   // remains protected against an attacker who is not able to read the contents
@@ -672,8 +623,9 @@ static void stretch_pin(const uint8_t *pin, size_t pin_len,
 #ifdef USE_STORAGE_HWKEY
   uint8_t stretched_pin_tmp[SHA256_DIGEST_LENGTH] = {0};
   pbkdf2_hmac_sha256_Final(&ctx, stretched_pin_tmp);
-  ensure(secure_aes_ecb_encrypt_hw(stretched_pin_tmp, SHA256_DIGEST_LENGTH,
-                                   stretched_pin, SECURE_AES_KEY_XORK_SP),
+  ensure(secure_aes_ecb_encrypt_hw(
+             stretched_pin_tmp, SHA256_DIGEST_LENGTH, stretched_pin,
+             privileged_bhk ? SECURE_AES_KEY_XORK_SP : SECURE_AES_KEY_XORK_SN),
          "secure_aes pin stretch failed");
   memzero(stretched_pin_tmp, sizeof(stretched_pin_tmp));
 #else
@@ -707,7 +659,7 @@ static void derive_kek_optiga_v4(
 static secbool __wur derive_kek_set(
     const uint8_t *pin, size_t pin_len, const uint8_t *storage_salt,
     const uint8_t *ext_salt, uint8_t stretched_pin[SHA256_DIGEST_LENGTH]) {
-  stretch_pin(pin, pin_len, storage_salt, ext_salt, stretched_pin);
+  stretch_pin(pin, pin_len, storage_salt, ext_salt, stretched_pin, true);
 #if USE_OPTIGA
   if (!optiga_pin_set(ui_progress, stretched_pin)) {
     memzero(stretched_pin, SHA256_DIGEST_LENGTH);
@@ -727,7 +679,7 @@ static secbool __wur derive_kek_unlock_v4(const uint8_t *pin, size_t pin_len,
 #if USE_OPTIGA
   uint8_t optiga_secret[OPTIGA_PIN_SECRET_SIZE] = {0};
   uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE] = {0};
-  stretch_pin_v4(pin, pin_len, storage_salt, ext_salt, stretched_pin);
+  stretch_pin(pin, pin_len, storage_salt, ext_salt, stretched_pin, false);
   optiga_pin_result ret =
       optiga_pin_verify_v4(ui_progress, stretched_pin, optiga_secret);
   memzero(stretched_pin, sizeof(stretched_pin));
@@ -751,34 +703,12 @@ static secbool __wur derive_kek_unlock_v4(const uint8_t *pin, size_t pin_len,
 }
 #endif
 
-#if NORCOW_MIN_VERSION <= 5
-static secbool __wur derive_kek_unlock_v5(
-    const uint8_t *pin, size_t pin_len, const uint8_t *storage_salt,
-    const uint8_t *ext_salt, uint8_t stretched_pin[SHA256_DIGEST_LENGTH]) {
-  stretch_pin_v4(pin, pin_len, storage_salt, ext_salt, stretched_pin);
-#if USE_OPTIGA
-  optiga_pin_result ret = optiga_pin_verify(ui_progress, stretched_pin);
-  if (ret != OPTIGA_PIN_SUCCESS) {
-    memzero(stretched_pin, SHA256_DIGEST_LENGTH);
-
-    if (ret == OPTIGA_PIN_COUNTER_EXCEEDED) {
-      // Unreachable code. Wipe should have already been triggered in unlock().
-      storage_wipe();
-      show_pin_too_many_screen();
-    }
-    ensure(ret == OPTIGA_PIN_INVALID ? sectrue : secfalse,
-           "optiga_pin_verify failed");
-    return secfalse;
-  }
-#endif
-  return sectrue;
-}
-#endif
-
 static secbool __wur derive_kek_unlock(
     const uint8_t *pin, size_t pin_len, const uint8_t *storage_salt,
-    const uint8_t *ext_salt, uint8_t stretched_pin[SHA256_DIGEST_LENGTH]) {
-  stretch_pin(pin, pin_len, storage_salt, ext_salt, stretched_pin);
+    const uint8_t *ext_salt, uint8_t stretched_pin[SHA256_DIGEST_LENGTH],
+    bool privileged_bhk) {
+  stretch_pin(pin, pin_len, storage_salt, ext_salt, stretched_pin,
+              privileged_bhk);
 #if USE_OPTIGA
   optiga_pin_result ret = optiga_pin_verify(ui_progress, stretched_pin);
   if (ret != OPTIGA_PIN_SUCCESS) {
@@ -1010,14 +940,14 @@ static secbool __wur decrypt_dek(const uint8_t *pin, size_t pin_len,
   uint32_t lock_version = get_lock_version();
   if (lock_version >= 6) {
     if (sectrue !=
-        derive_kek_unlock(pin, pin_len, storage_salt, ext_salt, kek)) {
+        derive_kek_unlock(pin, pin_len, storage_salt, ext_salt, kek, true)) {
       return secfalse;
     }
   }
 #if NORCOW_MIN_VERSION <= 5
   else if (lock_version == 5) {
     if (sectrue !=
-        derive_kek_unlock_v5(pin, pin_len, storage_salt, ext_salt, kek)) {
+        derive_kek_unlock(pin, pin_len, storage_salt, ext_salt, kek, false)) {
       return secfalse;
     }
   }
