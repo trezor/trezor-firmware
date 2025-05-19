@@ -300,7 +300,7 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
         is_ilu = sectrue;
       }
 
-#if defined LOCKABLE_BOOTLOADAR
+#if defined LOCKABLE_BOOTLOADER
       if (secfalse != secret_bootloader_locked() &&
           ((vhdr.vtrust & VTRUST_SECRET_MASK) != VTRUST_SECRET_ALLOW)) {
         send_msg_failure(iface, FailureType_Failure_ProcessError,
