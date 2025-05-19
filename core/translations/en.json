@@ -657,7 +657,6 @@
       "Caesar": "PIN will be required to access this device.",
       "Delizia": "PIN will be required to access this device.",
       "Eckhart": "The PIN will be required to access this device."
-
     },
     "pin__invalid_pin": "Invalid PIN",
     "pin__last_attempt": "Last attempt",
@@ -701,7 +700,12 @@
     "reboot_to_bootloader__title": "Go to bootloader",
     "reboot_to_bootloader__version_by_template": "Firmware version {0}\nby {1}",
     "recovery__cancel_dry_run": "Cancel backup check",
-    "recovery__check_dry_run": "Check your backup?",
+    "recovery__check_dry_run": {
+      "Bolt": "Check your backup?",
+      "Caesar": "Check your backup?",
+      "Delizia": "Check your backup?",
+      "Eckhart": "Let's do a wallet backup check."
+    },
     "recovery__cursor_will_change": "Position of the cursor will change between entries for enhanced security.",
     "recovery__dry_run_backup_not_on_this_device": "Wallet backup not on this device",
     "recovery__dry_run_bip39_valid_match": "The entered wallet backup is valid and matches the one in this device.",
@@ -709,7 +713,12 @@
     "recovery__dry_run_invalid_backup_entered": "Invalid wallet backup entered",
     "recovery__dry_run_slip39_valid_all_shares": "All shares are valid and belong to the backup in this device",
     "recovery__dry_run_slip39_valid_match": "The entered recovery shares are valid and match what is currently in the device.",
-    "recovery__dry_run_slip39_valid_mismatch": "The entered recovery shares are valid but do not match what is currently in the device.",
+    "recovery__dry_run_slip39_valid_mismatch": {
+      "Bolt": "The entered recovery shares are valid but do not match what is currently in the device.",
+      "Caesar": "The entered recovery shares are valid but do not match what is currently in the device.",
+      "Delizia": "The entered wallet backup is valid but doesn't match the one on this device.",
+      "Eckhart": "The entered wallet backup is valid but doesn't match the one on this device."
+    },
     "recovery__dry_run_slip39_valid_share": "Entered share is valid and belongs to the backup in the device",
     "recovery__dry_run_verify_remaining_shares": "Verify remaining recovery shares?",
     "recovery__enter_any_share": "Enter any share",
@@ -727,11 +736,21 @@
     "recovery__info_about_disconnect": "It's safe to disconnect your Trezor while recovering your wallet and continue later.",
     "recovery__invalid_share_entered": "Invalid recovery share entered.",
     "recovery__invalid_wallet_backup_entered": "Invalid wallet backup entered.",
-    "recovery__more_shares_needed": "More shares needed",
+    "recovery__more_shares_needed": {
+      "Bolt": "More shares needed",
+      "Caesar": "More shares needed",
+      "Delizia": "More shares needed",
+      "Eckhart": "More shares needed."
+    },
     "recovery__num_of_words": "Select the number of words in your backup.",
     "recovery__only_first_n_letters": "You'll only have to select the first 2-4 letters of each word.",
     "recovery__progress_will_be_lost": "All progress will be lost.",
-    "recovery__share_already_entered": "Share already entered",
+    "recovery__share_already_entered": {
+      "Bolt": "Share already entered",
+      "Caesar": "Share already entered",
+      "Delizia": "Share already entered",
+      "Eckhart": "Share already entered."
+    },
     "recovery__share_does_not_match": "Share doesn't match",
     "recovery__share_from_another_multi_share_backup": "You have entered a share from a different backup.",
     "recovery__share_num_template": {
@@ -760,8 +779,19 @@
     "recovery__wanna_cancel_recovery": "Are you sure you want to cancel the recovery process?",
     "recovery__word_count_template": "({0} words)",
     "recovery__word_x_of_y_template": "Word {0} of {1}",
-    "recovery__x_more_items_starting_template_plural": "{count} more {plural} starting",
-    "recovery__x_more_shares_needed_template_plural": "{count} more {plural} needed",
+    "recovery__x_more_items_starting_template_plural": {
+      "Bolt": "{count} more {plural} starting",
+      "Caesar": "{count} more {plural} starting",
+      "Delizia": "{count} more {plural} starting",
+      "Eckhart": "You need {count} more {plural} starting"
+    },
+    "recovery__x_more_shares_needed_template_plural": {
+      "Bolt": "{count} more {plural} needed",
+      "Caesar": "{count} more {plural} needed",
+      "Delizia": "{count} more {plural} needed",
+      "Eckhart": "{count} more {plural} needed."
+    },
+    "recovery__share_from_group_entered_template": "Share #{0} from Group #{1} entered.",
     "recovery__x_of_y_entered_template": {
       "Bolt": "{0} of {1} shares entered",
       "Caesar": "{0} of {1} shares entered",

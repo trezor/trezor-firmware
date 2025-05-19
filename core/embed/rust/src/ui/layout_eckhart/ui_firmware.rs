@@ -12,8 +12,7 @@ use crate::{
             text::{
                 op::OpTextLayout,
                 paragraphs::{
-                    Checklist, Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort,
-                    Paragraphs, VecExt,
+                    Checklist, Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt,
                 },
                 TextStyle,
             },
@@ -535,14 +534,28 @@ impl FirmwareUI for UIEckhart {
         show_instructions: bool,
         remaining_shares: Option<Obj>,
     ) -> Result<Gc<LayoutObj>, Error> {
-        let pages_vec = if let Some(pages_obj) = remaining_shares {
-            let mut vec = ParagraphVecLong::new();
-            for page in IterBuf::new().try_iterate(pages_obj)? {
+        let shares_layout = if let Some(pages_obj) = remaining_shares {
+            let mut op_layout = OpTextLayout::new(theme::TEXT_SMALL);
+            let mut iter_buf = IterBuf::new();
+            let mut n_pages = 0;
+            for page in iter_buf.try_iterate(pages_obj)? {
+                if n_pages > 0 {
+                    op_layout.add_next_page();
+                }
+                n_pages += 1;
                 let [title, description]: [TString; 2] = util::iter_into_array(page)?;
-                vec.add(Paragraph::new(&theme::TEXT_REGULAR, title))
-                    .add(Paragraph::new(&theme::TEXT_MONO_LIGHT, description).break_after());
+                op_layout
+                    .add_line_spacing(3)
+                    .add_color(theme::GREY_EXTRA_LIGHT)
+                    .add_text(title, fonts::FONT_SATOSHI_MEDIUM_26)
+                    .add_newline()
+                    .add_offset(Offset::y(24))
+                    .add_color(theme::GREY_LIGHT)
+                    .add_line_spacing(16)
+                    .add_text(description, fonts::FONT_MONO_MEDIUM_38);
             }
-            Some(vec)
+
+            Some((op_layout, n_pages))
         } else {
             None
         };
@@ -552,7 +565,7 @@ impl FirmwareUI for UIEckhart {
             subtext,
             recovery_type,
             show_instructions,
-            pages_vec,
+            shares_layout,
         )?;
         LayoutObj::new_root(flow)
     }
@@ -860,12 +873,18 @@ impl FirmwareUI for UIEckhart {
 
     fn select_word_count(recovery_type: RecoveryType) -> Result<impl LayoutMaybeTrace, Error> {
         let description = TR::recovery__num_of_words.into();
+        let title = match recovery_type {
+            RecoveryType::DryRun => TR::reset__check_wallet_backup_title,
+            RecoveryType::Normal | RecoveryType::UnlockRepeatedBackup => {
+                TR::recovery__title_recover
+            }
+        };
         let content = if matches!(recovery_type, RecoveryType::UnlockRepeatedBackup) {
             SelectWordCountScreen::new_multi_share(description)
         } else {
             SelectWordCountScreen::new_single_share(description)
         }
-        .with_header(Header::new(TR::recovery__title_recover.into()));
+        .with_header(Header::new(title.into()));
         let layout = RootComponent::new(content);
         Ok(layout)
     }

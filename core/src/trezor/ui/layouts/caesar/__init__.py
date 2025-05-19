@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 import trezorui_api
 from trezor import TR, ui, utils
-from trezor.enums import ButtonRequestType
+from trezor.enums import ButtonRequestType, RecoveryType
 from trezor.wire import ActionCancelled
 
 from ..common import draw_simple, interact, raise_if_not_confirmed
@@ -115,6 +115,22 @@ def confirm_reset_device(
         trezorui_api.confirm_reset_device(recovery=recovery),
         "recover_device" if recovery else "setup_device",
         ButtonRequestType.ProtectCall if recovery else ButtonRequestType.ResetDevice,
+    )
+
+
+async def prompt_recovery_check(recovery_type: RecoveryType) -> None:
+    assert recovery_type in (RecoveryType.DryRun, RecoveryType.UnlockRepeatedBackup)
+    title = (
+        TR.recovery__title_dry_run
+        if recovery_type == RecoveryType.DryRun
+        else TR.recovery__title_unlock_repeated_backup
+    )
+    await confirm_action(
+        "confirm_seedcheck",
+        title,
+        description=TR.recovery__check_dry_run,
+        br_code=ButtonRequestType.ProtectCall,
+        verb=TR.buttons__check,
     )
 
 

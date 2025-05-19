@@ -6,10 +6,11 @@ use crate::{
         button_request::{ButtonRequest, ButtonRequestCode},
         component::{
             button_request::ButtonRequestExt,
-            text::paragraphs::{
-                Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort, VecExt,
+            text::{
+                op::OpTextLayout,
+                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
             },
-            ComponentExt,
+            ComponentExt, FormattedText, MsgMap, SendButtonRequest,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
@@ -127,9 +128,10 @@ pub fn new_continue_recovery_homepage(
     subtext: Option<TString<'static>>,
     recovery_type: RecoveryType,
     show_instructions: bool, // 1st screen of the recovery process
-    pages: Option<ParagraphVecLong<'static>>,
+    remaining_shares: Option<(OpTextLayout<'static>, usize)>,
 ) -> Result<SwipeFlow, error::Error> {
-    let (header, confirm_btn, cancel_btn, cancel_title, cancel_intro) = match recovery_type {
+    let is_multigroup_check = subtext.is_none();
+    let (header, verb, cancel_btn, cancel_title, cancel_intro) = match recovery_type {
         RecoveryType::Normal if show_instructions => (
             Header::new(TR::recovery__title.into()).with_menu_button(),
             TR::buttons__continue,
@@ -147,11 +149,28 @@ pub fn new_continue_recovery_homepage(
             TR::recovery__title,
             TR::recovery__wanna_cancel_recovery,
         ),
-        _ => (
-            Header::new(TR::recovery__title_dry_run.into()).with_menu_button(),
+        // 1st screen of the recovery process
+        _ if show_instructions => (
+            Header::new(TR::reset__check_wallet_backup_title.into()).with_menu_button(),
             TR::buttons__continue,
-            TR::recovery__cancel_dry_run,
-            TR::recovery__title_dry_run,
+            TR::buttons__cancel,
+            TR::reset__check_wallet_backup_title,
+            TR::recovery__wanna_cancel_dry_run,
+        ),
+        _ => (
+            // multi-group recovery check
+            if is_multigroup_check {
+                Header::new(TR::reset__check_wallet_backup_title.into()).with_menu_button()
+            // single-group recovery check
+            } else {
+                Header::new(TR::words__title_done.into())
+                    .with_text_style(theme::label_title_confirm())
+                    .with_icon(theme::ICON_DONE, theme::GREEN_LIGHT)
+                    .with_menu_button()
+            },
+            TR::buttons__continue,
+            TR::buttons__cancel,
+            TR::reset__check_wallet_backup_title,
             TR::recovery__wanna_cancel_dry_run,
         ),
     };
@@ -165,17 +184,18 @@ pub fn new_continue_recovery_homepage(
     } else {
         pars_main.add(Paragraph::new(&theme::TEXT_REGULAR, text));
         if let Some(sub) = subtext {
-            pars_main.add(Paragraph::new(&theme::TEXT_REGULAR, sub).with_top_padding(10));
+            pars_main.add(Paragraph::new(&theme::TEXT_REGULAR, sub));
         }
     };
 
     let content_main = TextScreen::new(
         pars_main
             .into_paragraphs()
-            .with_placement(LinearPlacement::vertical()),
+            .with_placement(LinearPlacement::vertical())
+            .with_spacing(24),
     )
     .with_header(header)
-    .with_action_bar(ActionBar::new_single(Button::with_text(confirm_btn.into())))
+    .with_action_bar(ActionBar::new_single(Button::with_text(verb.into())))
     .repeated_button_request(ButtonRequest::new(
         ButtonRequestCode::RecoveryHomepage,
         "recovery".into(),
@@ -206,94 +226,131 @@ pub fn new_continue_recovery_homepage(
             "abort_recovery".into(),
         ));
 
-    let res = if show_instructions {
-        let content_menu =
-            VerticalMenuScreen::new(VerticalMenu::<ShortMenuVec>::empty().with_item(
-                Button::new_menu_item(cancel_btn.into(), theme::menu_item_title_orange()),
+    match (show_instructions, remaining_shares) {
+        (true, _) => flow_before_shares(content_main, cancel_btn.into()),
+        (false, None) => flow_between_shares_simple(content_main, content_cancel),
+        (false, Some((pages, n))) => {
+            flow_between_shares_advanced(content_main, content_cancel, pages, n, cancel_btn.into())
+        }
+    }
+}
+
+fn flow_before_shares(
+    content_main: MsgMap<
+        SendButtonRequest<TextScreen<Paragraphs<ParagraphVecShort<'static>>>>,
+        impl Fn(TextScreenMsg) -> Option<FlowMsg> + 'static,
+    >,
+    cancel_btn: TString<'static>,
+) -> Result<SwipeFlow, error::Error> {
+    let content_menu = VerticalMenuScreen::new(VerticalMenu::<ShortMenuVec>::empty().with_item(
+        Button::new_menu_item(cancel_btn, theme::menu_item_title_orange()),
+    ))
+    .with_header(Header::new(TString::empty()).with_close_button())
+    .map(|msg| match msg {
+        VerticalMenuScreenMsg::Selected(i) => Some(FlowMsg::Choice(i)),
+        VerticalMenuScreenMsg::Close => Some(FlowMsg::Cancelled),
+        _ => None,
+    });
+
+    let mut res = SwipeFlow::new(&ContinueRecoveryBeforeShares::Main)?;
+    res.add_page(&ContinueRecoveryBeforeShares::Main, content_main)?
+        .add_page(&ContinueRecoveryBeforeShares::Menu, content_menu)?;
+    Ok(res)
+}
+
+fn flow_between_shares_simple(
+    content_main: MsgMap<
+        SendButtonRequest<TextScreen<Paragraphs<ParagraphVecShort<'static>>>>,
+        impl Fn(TextScreenMsg) -> Option<FlowMsg> + 'static,
+    >,
+    content_cancel: SendButtonRequest<
+        MsgMap<
+            TextScreen<Paragraphs<Paragraph<'static>>>,
+            impl Fn(TextScreenMsg) -> Option<FlowMsg> + 'static,
+        >,
+    >,
+) -> Result<SwipeFlow, error::Error> {
+    let content_menu = VerticalMenuScreen::new(
+        VerticalMenu::<ShortMenuVec>::empty()
+            .with_item(Button::new_menu_item_with_subtext(
+                TR::words__recovery_share.into(),
+                theme::menu_item_title(),
+                TR::buttons__more_info.into(),
+                None,
             ))
-            .with_header(Header::new(TString::empty()).with_close_button())
-            .map(|msg| match msg {
-                VerticalMenuScreenMsg::Selected(i) => Some(FlowMsg::Choice(i)),
-                VerticalMenuScreenMsg::Close => Some(FlowMsg::Cancelled),
-                _ => None,
-            });
+            .with_item(Button::new_menu_item(
+                TR::buttons__cancel.into(),
+                theme::menu_item_title_orange(),
+            )),
+    )
+    .with_header(Header::new(TR::recovery__title.into()).with_close_button())
+    .map(|msg| match msg {
+        VerticalMenuScreenMsg::Selected(i) => Some(FlowMsg::Choice(i)),
+        VerticalMenuScreenMsg::Close => Some(FlowMsg::Cancelled),
+        _ => None,
+    });
 
-        let mut res = SwipeFlow::new(&ContinueRecoveryBeforeShares::Main)?;
-        res.add_page(&ContinueRecoveryBeforeShares::Main, content_main)?
-            .add_page(&ContinueRecoveryBeforeShares::Menu, content_menu)?;
-        res
-    } else if pages.is_none() {
-        let content_menu = VerticalMenuScreen::new(
-            VerticalMenu::<ShortMenuVec>::empty()
-                .with_item(Button::new_menu_item_with_subtext(
-                    TR::words__recovery_share.into(),
-                    theme::menu_item_title(),
-                    TR::buttons__more_info.into(),
-                    None,
-                ))
-                .with_item(Button::new_menu_item(
-                    cancel_btn.into(),
-                    theme::menu_item_title_orange(),
-                )),
-        )
-        .with_header(Header::new(TR::recovery__title.into()).with_close_button())
-        .map(|msg| match msg {
-            VerticalMenuScreenMsg::Selected(i) => Some(FlowMsg::Choice(i)),
-            VerticalMenuScreenMsg::Close => Some(FlowMsg::Cancelled),
-            _ => None,
-        });
+    let paragraphs_recovery_share = ParagraphVecShort::from_iter([
+        Paragraph::new(&theme::TEXT_REGULAR, TR::reset__recovery_share_description)
+            .with_bottom_padding(10),
+        Paragraph::new(&theme::TEXT_REGULAR, TR::reset__recovery_share_number),
+    ])
+    .into_paragraphs()
+    .with_placement(LinearPlacement::vertical());
 
-        let paragraphs_recovery_share = ParagraphVecShort::from_iter([
-            Paragraph::new(&theme::TEXT_REGULAR, TR::reset__recovery_share_description)
-                .with_bottom_padding(10),
-            Paragraph::new(&theme::TEXT_REGULAR, TR::reset__recovery_share_number),
-        ])
-        .into_paragraphs()
-        .with_placement(LinearPlacement::vertical());
+    let content_recovery_share = TextScreen::new(paragraphs_recovery_share)
+        .with_header(Header::new(TR::words__recovery_share.into()).with_close_button())
+        .map(|_| Some(FlowMsg::Cancelled))
+        .repeated_button_request(ButtonRequest::new(
+            ButtonRequestCode::Other,
+            "recovery_share".into(),
+        ));
 
-        let content_recovery_share = TextScreen::new(paragraphs_recovery_share)
-            .with_header(Header::new(TR::words__recovery_share.into()).with_close_button())
-            .map(|_| Some(FlowMsg::Cancelled))
-            .repeated_button_request(ButtonRequest::new(
-                ButtonRequestCode::Other,
-                "recovery_share".into(),
-            ));
+    let mut res = SwipeFlow::new(&ContinueRecoveryBetweenShares::Main)?;
+    res.add_page(&ContinueRecoveryBetweenShares::Main, content_main)?
+        .add_page(&ContinueRecoveryBetweenShares::Menu, content_menu)?
+        .add_page(&ContinueRecoveryBetweenShares::Cancel, content_cancel)?
+        .add_page(
+            &ContinueRecoveryBetweenShares::RecoveryShare,
+            content_recovery_share,
+        )?;
+    Ok(res)
+}
 
-        let mut res = SwipeFlow::new(&ContinueRecoveryBetweenShares::Main)?;
-        res.add_page(&ContinueRecoveryBetweenShares::Main, content_main)?
-            .add_page(&ContinueRecoveryBetweenShares::Menu, content_menu)?
-            .add_page(&ContinueRecoveryBetweenShares::Cancel, content_cancel)?
-            .add_page(
-                &ContinueRecoveryBetweenShares::RecoveryShare,
-                content_recovery_share,
-            )?;
-        res
-    } else {
-        let content_menu = VerticalMenuScreen::new(
-            VerticalMenu::<ShortMenuVec>::empty()
-                .with_item(Button::new_menu_item(
-                    TR::recovery__title_remaining_shares.into(),
-                    theme::menu_item_title(),
-                ))
-                .with_item(Button::new_menu_item(
-                    cancel_btn.into(),
-                    theme::menu_item_title_orange(),
-                )),
-        )
-        .with_header(Header::new(TString::empty()).with_close_button())
-        .map(|msg| match msg {
-            VerticalMenuScreenMsg::Selected(i) => Some(FlowMsg::Choice(i)),
-            VerticalMenuScreenMsg::Close => Some(FlowMsg::Cancelled),
-            _ => None,
-        });
+fn flow_between_shares_advanced(
+    content_main: MsgMap<
+        SendButtonRequest<TextScreen<Paragraphs<ParagraphVecShort<'static>>>>,
+        impl Fn(TextScreenMsg) -> Option<FlowMsg> + 'static,
+    >,
+    content_cancel: SendButtonRequest<
+        MsgMap<
+            TextScreen<Paragraphs<Paragraph<'static>>>,
+            impl Fn(TextScreenMsg) -> Option<FlowMsg> + 'static,
+        >,
+    >,
+    pages: OpTextLayout<'static>,
+    n_remaining_shares: usize,
+    cancel_btn: TString<'static>,
+) -> Result<SwipeFlow, error::Error> {
+    let content_menu = VerticalMenuScreen::new(
+        VerticalMenu::<ShortMenuVec>::empty()
+            .with_item(Button::new_menu_item(
+                TR::recovery__title_remaining_shares.into(),
+                theme::menu_item_title(),
+            ))
+            .with_item(Button::new_menu_item(
+                cancel_btn,
+                theme::menu_item_title_orange(),
+            )),
+    )
+    .with_header(Header::new(TString::empty()).with_close_button())
+    .map(|msg| match msg {
+        VerticalMenuScreenMsg::Selected(i) => Some(FlowMsg::Choice(i)),
+        VerticalMenuScreenMsg::Close => Some(FlowMsg::Cancelled),
+        _ => None,
+    });
 
-        let n_remaining_shares = pages.as_ref().unwrap().len() / 2;
-        let content_remaining_shares = TextScreen::new(
-            pages
-                .unwrap()
-                .into_paragraphs()
-                .with_placement(LinearPlacement::vertical()),
-        )
+    let content_remaining_shares = TextScreen::new(FormattedText::new(pages))
         .with_header(Header::new(TR::recovery__title_remaining_shares.into()).with_close_button())
         .map(|_| Some(FlowMsg::Cancelled))
         .repeated_button_request(ButtonRequest::new(
@@ -302,18 +359,16 @@ pub fn new_continue_recovery_homepage(
         ))
         .with_pages(move |_| n_remaining_shares);
 
-        let mut res = SwipeFlow::new(&ContinueRecoveryBetweenSharesAdvanced::Main)?;
-        res.add_page(&ContinueRecoveryBetweenSharesAdvanced::Main, content_main)?
-            .add_page(&ContinueRecoveryBetweenSharesAdvanced::Menu, content_menu)?
-            .add_page(
-                &ContinueRecoveryBetweenSharesAdvanced::Cancel,
-                content_cancel,
-            )?
-            .add_page(
-                &ContinueRecoveryBetweenSharesAdvanced::RemainingShares,
-                content_remaining_shares,
-            )?;
-        res
-    };
+    let mut res = SwipeFlow::new(&ContinueRecoveryBetweenSharesAdvanced::Main)?;
+    res.add_page(&ContinueRecoveryBetweenSharesAdvanced::Main, content_main)?
+        .add_page(&ContinueRecoveryBetweenSharesAdvanced::Menu, content_menu)?
+        .add_page(
+            &ContinueRecoveryBetweenSharesAdvanced::Cancel,
+            content_cancel,
+        )?
+        .add_page(
+            &ContinueRecoveryBetweenSharesAdvanced::RemainingShares,
+            content_remaining_shares,
+        )?;
     Ok(res)
 }

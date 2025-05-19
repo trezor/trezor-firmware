@@ -611,6 +611,7 @@ class TR:
     recovery__share_already_entered: str = "Share already entered"
     recovery__share_does_not_match: str = "Share doesn't match"
     recovery__share_from_another_multi_share_backup: str = "You have entered a share from a different backup."
+    recovery__share_from_group_entered_template: str = "Share #{0} from Group #{1} entered."
     recovery__share_num_template: str = "Share {0}"
     recovery__title: str = "Recover wallet"
     recovery__title_cancel_dry_run: str = "Cancel backup check"
