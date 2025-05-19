@@ -1042,5 +1042,6 @@
   "1040": "pin__title_setup",
   "1041": "instructions__shares_start_with_x_template",
   "1042": "reset__check_share_backup_template",
-  "1043": "reset__select_word_from_share_template"
+  "1043": "reset__select_word_from_share_template",
+  "1044": "recovery__share_from_group_entered_template"
 }

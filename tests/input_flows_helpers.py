@@ -271,7 +271,12 @@ class RecoveryFlow:
 
     def success_share_group_entered(self) -> BRGeneratorType:
         assert (yield).name == "share_success"
-        assert TR.recovery__you_have_entered in self._text_content()
+        if self.client.layout_type is LayoutType.Eckhart:
+            assert TR.regexp("recovery__share_from_group_entered_template").search(
+                self._text_content()
+            )
+        else:
+            assert TR.recovery__you_have_entered in self._text_content()
         self.debug.press_yes()
 
     def success_wallet_recovered(self) -> BRGeneratorType:

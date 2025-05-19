@@ -330,8 +330,16 @@ def finalize(debug: "DebugLink") -> None:
 
 
 def cancel_recovery(debug: "DebugLink", recovery_type: str = "dry_run") -> None:
-    title = TR.translate(f"recovery__title_{recovery_type}")
-    cancel_title = TR.translate(f"recovery__title_cancel_{recovery_type}")
+    if recovery_type == "dry_run" and debug.layout_type is LayoutType.Eckhart:
+        # Dry run recovery on Eckhart has a different title
+        title = TR.translate("reset__check_wallet_backup_title")
+        cancel_title = TR.translate("buttons__cancel")
+    elif debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
+        title = TR.translate(f"recovery__title_{recovery_type}")
+        cancel_title = TR.translate(f"recovery__cancel_{recovery_type}")
+    else:
+        title = TR.translate(f"recovery__title_{recovery_type}")
+        cancel_title = TR.translate(f"recovery__title_cancel_{recovery_type}")
 
     layout = debug.read_layout()
     assert title in layout.title()
@@ -348,12 +356,13 @@ def cancel_recovery(debug: "DebugLink", recovery_type: str = "dry_run") -> None:
         for _ in range(layout.page_count()):
             debug.press_right()
     elif debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
+
+        TR.translate(f"recovery__cancel_{recovery_type}")
+
         # go to menu
         debug.click(debug.screen_buttons.menu())
         layout = debug.read_layout()
-        assert (
-            TR.translate(f"recovery__cancel_{recovery_type}") in layout.text_content()
-        )
+        assert cancel_title in layout.text_content()
         debug.click(debug.screen_buttons.vertical_menu_items()[0])
     else:
         raise ValueError("Unknown model")

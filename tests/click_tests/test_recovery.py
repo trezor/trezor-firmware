@@ -21,7 +21,7 @@ import pytest
 
 from trezorlib import device, exceptions, messages
 
-from ..common import MNEMONIC12, MNEMONIC_SLIP39_BASIC_20_3of6
+from ..common import MNEMONIC12, LayoutType, MNEMONIC_SLIP39_BASIC_20_3of6
 from . import recovery
 
 if TYPE_CHECKING:
@@ -114,7 +114,12 @@ def test_recovery_cancel_issue4613(device_handler: "BackgroundDeviceHandler"):
 
     # initiate and confirm the recovery
     device_handler.run(device.recover, type=messages.RecoveryType.DryRun)
-    recovery.confirm_recovery(debug, title="recovery__title_dry_run")
+    title = (
+        "reset__check_wallet_backup_title"
+        if device_handler.debuglink().layout_type is LayoutType.Eckhart
+        else "recovery__title_dry_run"
+    )
+    recovery.confirm_recovery(debug, title=title)
     # select number of words
     recovery.select_number_of_words(debug, num_of_words=12)
     # abort the process running the recovery from host
