@@ -572,18 +572,13 @@ impl FirmwareUI for UIEckhart {
         };
         unwrap!(main_paragraphs.push(Paragraph::new(
             font,
-            message
-                .try_into()
-                .unwrap_or(StrOrBytes::Str("".into()))
-                .as_str_offset(0),
+            message.try_into().unwrap_or(TString::empty()),
         )));
 
         let (address_title, address_paragraph) = if let Some((title, item)) = address_item {
             let paragraph = Paragraph::new(
                 &theme::TEXT_MONO_ADDRESS_CHUNKS,
-                item.try_into()
-                    .unwrap_or(StrOrBytes::Str("".into()))
-                    .as_str_offset(0),
+                item.try_into().unwrap_or(TString::empty()),
             );
             (Some(title), Some(paragraph))
         } else {
@@ -647,9 +642,7 @@ impl FirmwareUI for UIEckhart {
         let (extra_title, extra_paragraph) = if let Some((title, item)) = extra_item {
             let paragraph = Paragraph::new(
                 &theme::TEXT_MONO_ADDRESS,
-                item.try_into()
-                    .unwrap_or(StrOrBytes::Str("".into()))
-                    .as_str_offset(0),
+                item.try_into().unwrap_or(TString::empty()),
             );
             (Some(title), Some(paragraph))
         } else {
