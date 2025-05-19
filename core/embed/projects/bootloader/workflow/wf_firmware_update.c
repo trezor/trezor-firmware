@@ -25,7 +25,7 @@
 #include <util/flash.h>
 #include <util/flash_utils.h>
 
-#if USE_OPTIGA || USE_STORAGE_HWKEY
+#if defined(LOCKABLE_BOOTLOADER) || USE_STORAGE_HWKEY
 #include <sec/secret.h>
 #endif
 
@@ -300,8 +300,8 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
         is_ilu = sectrue;
       }
 
-#if defined USE_OPTIGA
-      if (secfalse != secret_optiga_present() &&
+#if defined LOCKABLE_BOOTLOADER
+      if (secfalse != secret_bootloader_locked() &&
           ((vhdr.vtrust & VTRUST_SECRET_MASK) != VTRUST_SECRET_ALLOW)) {
         send_msg_failure(iface, FailureType_Failure_ProcessError,
                          "Install restricted");

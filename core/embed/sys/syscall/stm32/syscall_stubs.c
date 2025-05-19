@@ -361,11 +361,13 @@ void unit_properties_get(unit_properties_t *props) {
 // secret.h
 // =============================================================================
 
+#ifdef LOCKABLE_BOOTLOADER
 #include <sec/secret.h>
 
 secbool secret_bootloader_locked(void) {
   return (secbool)syscall_invoke0(SYSCALL_SECRET_BOOTLOADER_LOCKED);
 }
+#endif
 
 // =============================================================================
 // button.h

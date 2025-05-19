@@ -37,8 +37,6 @@
 #define REG_TROPIC_TRZ_PRIVKEY_OFFSET 16
 #define REG_TROPIC_TRO_PUBKEY_OFFSET 24
 
-static secbool bootloader_locked = secfalse;
-
 secbool secret_verify_header(void) {
   uint8_t *addr = (uint8_t *)flash_area_get_address(
       &SECRET_AREA, 0, sizeof(SECRET_HEADER_MAGIC));
@@ -49,14 +47,14 @@ secbool secret_verify_header(void) {
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
 
-  bootloader_locked =
+  secbool header_present =
       memcmp(addr, SECRET_HEADER_MAGIC, sizeof(SECRET_HEADER_MAGIC)) == 0
           ? sectrue
           : secfalse;
 
   mpu_restore(mpu_mode);
 
-  return bootloader_locked;
+  return header_present;
 }
 
 static secbool secret_ensure_initialized(void) {
@@ -367,6 +365,14 @@ secbool secret_tropic_present(void) {
   return secbool_and(res1, res2);
 }
 
+secbool secret_tropic_present_any(void) {
+  secbool res1 = secret_key_present(SECRET_TROPIC_TRZ_PRIVKEY_OFFSET);
+
+  secbool res2 = secret_key_present(SECRET_TROPIC_TRO_PUBKEY_OFFSET);
+
+  return secbool_or(res1, res2);
+}
+
 secbool secret_tropic_writable(void) {
   secbool res1 = secret_key_writable(SECRET_TROPIC_TRZ_PRIVKEY_OFFSET);
 
@@ -440,6 +446,22 @@ static secbool secret_se_present(void) {
   return secbool_and(res1, res2);
 }
 
+__attribute__((unused)) static secbool secret_se_present_any(void) {
+#ifdef USE_OPTIGA
+  secbool res1 = secret_optiga_present();
+#else
+  secbool res1 = secfalse;
+#endif
+
+#ifdef USE_TROPIC
+  secbool res2 = secret_tropic_present_any();
+#else
+  secbool res2 = secfalse;
+#endif
+
+  return secbool_or(res1, res2);
+}
+
 static secbool secret_se_writable(void) {
 #ifdef USE_OPTIGA
   secbool res1 = secret_optiga_writable();
@@ -456,12 +478,13 @@ static secbool secret_se_writable(void) {
   return secbool_or(res1, res2);
 }
 
+#ifdef LOCKABLE_BOOTLOADER
 secbool secret_bootloader_locked(void) {
 #if defined BOOTLOADER || defined BOARDLOADER
-  return secret_se_present();
+  return secret_se_present_any();
 #else
   const volatile uint32_t *reg1 = &TAMP->BKP8R;
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 24; i++) {
     if (reg1[i] != 0) {
       return sectrue;
     }
@@ -469,6 +492,17 @@ secbool secret_bootloader_locked(void) {
   return secfalse;
 #endif
 }
+
+void secret_unlock_bootloader(void) {
+#ifdef USE_OPTIGA
+  secret_optiga_erase();
+#endif
+#ifdef USE_TROPIC
+  secret_tropic_erase();
+#endif
+}
+
+#endif
 
 void secret_prepare_fw(secbool allow_run_with_secret,
                        secbool allow_provisioning_access) {
