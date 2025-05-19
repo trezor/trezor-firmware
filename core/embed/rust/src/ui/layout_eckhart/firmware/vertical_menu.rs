@@ -107,8 +107,7 @@ pub enum VerticalMenuMsg {
 
 impl<T: MenuItems> VerticalMenu<T> {
     const SIDE_INSETS: Insets = Insets::sides(12);
-    const DEFAULT_PADDING: i16 = 28;
-    const MIN_PADDING: i16 = 2;
+    const MENU_ITEM_CONTENT_PADDING: i16 = 32;
 
     fn new(buttons: T) -> Self {
         Self {
@@ -301,7 +300,7 @@ impl<T: MenuItems> Component for VerticalMenu<T> {
 
         // Place each button (might overflow the menu bounds)
         for button in self.buttons.iter_mut() {
-            let button_height = button.content_height() + 2 * Self::DEFAULT_PADDING;
+            let button_height = button.content_height() + 2 * Self::MENU_ITEM_CONTENT_PADDING;
             let button_bounds =
                 Rect::from_top_left_and_size(top_left, Offset::new(button_width, button_height));
 
