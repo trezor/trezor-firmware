@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef SYSCALL_DISPATCH
+#ifdef KERNEL
 
 #include <sys/mpu.h>
 
@@ -165,4 +165,4 @@ uint32_t invoke_unpriv(void *func) {
   return retval;
 }
 
-#endif  // SYSCALL_DISPATCH
+#endif  // KERNEL

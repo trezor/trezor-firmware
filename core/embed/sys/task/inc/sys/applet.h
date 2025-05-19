@@ -22,7 +22,7 @@
 
 #include <trezor_types.h>
 
-#ifdef SYSCALL_DISPATCH
+#ifdef KERNEL
 
 #include <sys/systask.h>
 
@@ -101,6 +101,6 @@ bool applet_is_alive(applet_t* applet);
 // Returns `NULL` if no applet is currently active.
 applet_t* applet_active(void);
 
-#endif  // SYSCALL_DISPATCH
+#endif  // KERNEL
 
 #endif  // TREZORHAL_APPLET_H

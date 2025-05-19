@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_SYSCALL_INTERNAL_H
-#define TREZORHAL_SYSCALL_INTERNAL_H
+#pragma once
 
 #include <trezor_types.h>
 
@@ -170,5 +169,3 @@ syscall_invoke6(uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4,
 }
 
 #endif  // KERNEL_MODE
-
-#endif  // TREZORHAL_SYSCALL_INTERNAL_H

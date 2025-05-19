@@ -533,7 +533,7 @@ __attribute__((no_stack_protector, used)) static uint32_t svc_handler(
 
   uint8_t svc_number = ((uint8_t*)stack[6])[-2];
 
-#ifdef SYSCALL_DISPATCH
+#ifdef KERNEL
   uint32_t args[6] = {stack[0], stack[1], stack[2], stack[3], r4, r5};
 #endif
 
@@ -544,7 +544,7 @@ __attribute__((no_stack_protector, used)) static uint32_t svc_handler(
       // Yield to the waiting task
       systask_yield();
       break;
-#ifdef SYSCALL_DISPATCH
+#ifdef KERNEL
     case SVC_SYSCALL:
       syscall_handler(args, r6);
       stack[0] = args[0];
