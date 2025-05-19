@@ -266,6 +266,15 @@ impl FontInfo {
         self.visible_text_height("Ay")
     }
 
+    /// Calculates the height of text containing only uppercase characters.
+    ///
+    /// This function computes the height of a string using only an uppercase
+    /// character to determine the height required for uppercase text rendering
+    /// in the given font.
+    pub fn uppercase_text_height(&'static self) -> i16 {
+        self.visible_text_height("A")
+    }
+
     /// Returning the x-bearing (offset) of the first character.
     /// Useful to enforce that the text is positioned correctly (e.g. centered).
     pub fn start_x_bearing(&'static self, text: &str) -> i16 {

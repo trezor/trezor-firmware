@@ -244,17 +244,17 @@ impl Button {
     pub fn content_height(&self) -> i16 {
         match &self.content {
             ButtonContent::Empty => 0,
-            ButtonContent::Text(_) => self.style().font.allcase_text_height(),
+            ButtonContent::Text(_) => self.style().font.uppercase_text_height(),
             ButtonContent::Icon(icon) => icon.toif.height(),
             ButtonContent::IconAndText(child) => {
-                let text_height = self.style().font.allcase_text_height();
+                let text_height = self.style().font.uppercase_text_height();
                 let icon_height = child.icon.toif.height();
                 text_height.max(icon_height)
             }
             ButtonContent::TextAndSubtext { subtext_style, .. } => {
-                self.style().font.allcase_text_height()
+                self.style().font.uppercase_text_height()
                     + Self::LINE_SPACING
-                    + subtext_style.text_font.allcase_text_height()
+                    + subtext_style.text_font.uppercase_text_height()
             }
             #[cfg(feature = "micropython")]
             ButtonContent::HomeBar(_) => theme::ACTION_BAR_HEIGHT,
@@ -392,7 +392,7 @@ impl Button {
                 subtext_style,
             } => {
                 let text_y_offset =
-                    Offset::y(self.content_height() / 2 - stylesheet.font.allcase_text_height());
+                    Offset::y(self.content_height() / 2 - stylesheet.font.uppercase_text_height());
                 let subtext_y_offset = Offset::y(self.content_height() / 2);
                 let start_of_baseline = match self.text_align {
                     Alignment::Start => self.area.left_center() + self.content_offset,
