@@ -1,5 +1,3 @@
-INCLUDE "./embed/sys/linker/stm32u5g/memory.ld";
-
 ENTRY(reset_handler)
 
 MEMORY {

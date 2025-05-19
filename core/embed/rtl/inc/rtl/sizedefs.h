@@ -33,6 +33,7 @@
 #define SIZE_320K (320 * 1024)
 #define SIZE_768K (768 * 1024)
 #define SIZE_2496K (2496 * 1024)
+#define SIZE_3008K (3008 * 1024)
 #define SIZE_3712K ((4096 - 384) * 1024)
 #define SIZE_3776K ((4096 - 320) * 1024)
 #define SIZE_3904K ((4096 - 192) * 1024)
