@@ -9,8 +9,11 @@ use crate::{
 
 use super::{
     super::{constant::SCREEN, fonts, theme},
-    BldActionBar, BldHeader, BldHeaderMsg,
+    BldActionBar, BldHeader,
 };
+
+#[cfg(feature = "powerctl")]
+use super::BldHeaderMsg;
 
 // TODO: adjust the origin
 const TEXT_ORIGIN: Point = Point::new(24, 205);

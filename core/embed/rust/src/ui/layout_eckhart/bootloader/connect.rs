@@ -9,8 +9,11 @@ use crate::{
 
 use super::{
     super::{constant::SCREEN, cshape::ScreenBorder, theme},
-    BldActionBar, BldActionBarMsg, BldHeader, BldHeaderMsg,
+    BldActionBar, BldActionBarMsg, BldHeader,
 };
+
+#[cfg(feature = "powerctl")]
+use super::BldHeaderMsg;
 
 #[repr(u32)]
 #[derive(Copy, Clone, ToPrimitive)]
