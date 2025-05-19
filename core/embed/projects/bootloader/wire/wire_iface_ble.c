@@ -82,8 +82,8 @@ static int ble_read_(uint8_t* buffer, size_t buffer_size) {
 }
 
 static void ble_error(void) {
-  error_shutdown_ex("BLE ERROR",
-                    "Error reading from BLE. Try different BLE cable.", NULL);
+  error_shutdown_ex("Connection Error",
+                    "Move your Trezor closer to your computer/phone.", NULL);
 }
 
 wire_iface_t* ble_iface_init(void) {
