@@ -20,6 +20,9 @@
 
 #pragma once
 
+#include <trezor_bsp.h>
+#include <rtl/sizedefs.h>
+
 // symbols defined in the linker script
 extern uint8_t _stack_section_start;
 extern uint8_t _stack_section_end;
@@ -46,17 +49,47 @@ typedef struct {
   memregion_block_t block[MEMREGION_MAX_BLOCKS];
 } memregion_t;
 
-#define MEMREGION_ALL_ACCESSIBLE_RAM                                      \
-  ({                                                                      \
-    extern uint8_t _accessible_ram_0_start;                               \
-    extern uint8_t _accessible_ram_0_end;                                 \
-    extern uint8_t _accessible_ram_1_start;                               \
-    extern uint8_t _accessible_ram_1_end;                                 \
-    (memregion_t){.block = {                                              \
-                      {&_accessible_ram_0_start, &_accessible_ram_0_end}, \
-                      {&_accessible_ram_1_start, &_accessible_ram_1_end}, \
-                  }};                                                     \
+#define MEMBLOCK(start, size) \
+  { (void*)(start), (void*)((uint8_t*)(start) + (size)) }
+
+
+#if defined(STM32F4)
+#define MEMREGION_ALL_ACCESSIBLE_RAM                 \
+  ({                                                 \
+    (memregion_t){                                   \
+        .block =                                     \
+            {                                        \
+                MEMBLOCK(CCMDATARAM_BASE, SIZE_64K), \
+                MEMBLOCK(SRAM_BASE, SIZE_192K),      \
+            },                                       \
+    };                                               \
   })
+#elif defined(STM32U585xx)
+#define MEMREGION_ALL_ACCESSIBLE_RAM              \
+  ({                                              \
+    (memregion_t){                                \
+        .block =                                  \
+            {                                     \
+                MEMBLOCK(SRAM1_BASE, SIZE_3008K), \
+                MEMBLOCK(SRAM4_BASE, SIZE_16K),   \
+            },                                    \
+    };                                            \
+  })
+#elif defined(STM32U5G9xx)
+#define MEMREGION_ALL_ACCESSIBLE_RAM             \
+  ({                                             \
+    (memregion_t){                               \
+        .block =                                 \
+            {                                    \
+                MEMBLOCK(SRAM1_BASE, SIZE_768K), \
+                MEMBLOCK(SRAM4_BASE, SIZE_16K),  \
+            },                                   \
+    };                                           \
+  })
+#else
+#error "Unknown STM32 family"
+#endif
+
 
 // Adds a new address range to the memory region.
 //
