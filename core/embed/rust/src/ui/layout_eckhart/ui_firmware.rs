@@ -12,8 +12,7 @@ use crate::{
             text::{
                 op::OpTextLayout,
                 paragraphs::{
-                    Checklist, Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort,
-                    Paragraphs, VecExt,
+                    Checklist, Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt,
                 },
                 TextStyle,
             },
@@ -76,11 +75,16 @@ impl FirmwareUI for UIEckhart {
             )
         };
 
-        let verb = verb.unwrap_or(TR::buttons__confirm.into());
-        let mut right_button = Button::with_text(verb).styled(theme::firmware::button_confirm());
-        if hold {
-            right_button = right_button.with_long_press(theme::CONFIRM_HOLD_DURATION);
-        }
+        let right_button = if hold {
+            let verb = verb.unwrap_or(TR::buttons__hold_to_confirm.into());
+            Button::with_text(verb)
+                .with_long_press(theme::CONFIRM_HOLD_DURATION)
+                .styled(theme::firmware::button_confirm())
+        } else if let Some(verb) = verb {
+            Button::with_text(verb)
+        } else {
+            Button::with_text(TR::buttons__confirm.into()).styled(theme::firmware::button_confirm())
+        };
 
         let mut screen = TextScreen::new(paragraphs)
             .with_header(Header::new(title))
@@ -513,16 +517,31 @@ impl FirmwareUI for UIEckhart {
         show_instructions: bool,
         remaining_shares: Option<Obj>,
     ) -> Result<Gc<LayoutObj>, Error> {
-        let pages_vec = if let Some(pages_obj) = remaining_shares {
-            let mut vec = ParagraphVecLong::new();
-            for page in IterBuf::new().try_iterate(pages_obj)? {
+        let (pages_layout, n_pages) = if let Some(pages_obj) = remaining_shares {
+            let mut op_layout = OpTextLayout::new(theme::TEXT_SMALL);
+            let mut iter_buf = IterBuf::new();
+            let mut pages = iter_buf.try_iterate(pages_obj)?.peekable();
+            let mut n_pages = 0;
+
+            while let Some(page) = pages.next() {
                 let [title, description]: [TString; 2] = util::iter_into_array(page)?;
-                vec.add(Paragraph::new(&theme::TEXT_REGULAR, title))
-                    .add(Paragraph::new(&theme::TEXT_MONO_LIGHT, description).break_after());
+                n_pages += 1;
+                op_layout = op_layout
+                    .color(theme::GREY_EXTRA_LIGHT)
+                    .text(title, fonts::FONT_SATOSHI_MEDIUM_26)
+                    .newline()
+                    .offset(Offset::y(24))
+                    .color(theme::GREY_LIGHT)
+                    .text(description, fonts::FONT_MONO_MEDIUM_38);
+
+                if pages.peek().is_some() {
+                    op_layout = op_layout.next_page();
+                }
             }
-            Some(vec)
+
+            (Some(op_layout), Some(n_pages))
         } else {
-            None
+            (None, None)
         };
 
         let flow = flow::continue_recovery_homepage::new_continue_recovery_homepage(
@@ -530,7 +549,8 @@ impl FirmwareUI for UIEckhart {
             subtext,
             recovery_type,
             show_instructions,
-            pages_vec,
+            pages_layout,
+            n_pages,
         )?;
         LayoutObj::new_root(flow)
     }

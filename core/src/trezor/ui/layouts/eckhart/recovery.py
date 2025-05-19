@@ -72,7 +72,8 @@ def format_remaining_shares_info(
                 remaining,
                 TR.plurals__x_shares_needed,
             )
-            words = "\n".join(group)
+            words = "\n".join(f"{i + 1}. {word}" for i, word in enumerate(group))
+            words += f"\n{len(group) + 1}. ..."
             pages.append((title, words))
         elif remaining == MAX_SHARE_COUNT and completed_groups < group_threshold:
             groups_remaining = group_threshold - completed_groups
@@ -81,7 +82,8 @@ def format_remaining_shares_info(
                 groups_remaining,
                 TR.plurals__x_groups_needed,
             )
-            words = "\n".join(group)
+            words = "\n".join(f"{i + 1}. {word}" for i, word in enumerate(group))
+            words += f"\n{len(group) + 1}. ..."
             pages.append((title, words))
 
     return pages
@@ -91,7 +93,7 @@ async def show_group_share_success(share_index: int, group_index: int) -> None:
     await raise_if_not_confirmed(
         trezorui_api.show_group_share_success(
             lines=[
-                f"{TR.recovery__you_have_entered} {TR.recovery__share_num_template.format(share_index + 1)} {TR.words__from} {TR.recovery__group_num_template.format(group_index + 1)}.",
+                f"{TR.recovery__share_from_group_entered_template.format(share_index + 1, group_index + 1)}",
                 "",
                 "",
                 "",
@@ -135,33 +137,28 @@ async def show_invalid_mnemonic(word_count: int) -> None:
         await show_recovery_warning(
             "warning_invalid_share",
             TR.recovery__invalid_share_entered,
-            TR.words__important,
-            TR.words__try_again,
+            button=TR.buttons__try_again,
         )
     else:
         await show_recovery_warning(
             "warning_invalid_seed",
             TR.recovery__invalid_wallet_backup_entered,
-            TR.words__important,
-            TR.buttons__continue,
         )
 
 
 async def show_identifier_mismatch() -> None:
     await show_recovery_warning(
         "warning_mismatched_share",
-        TR.recovery__share_from_another_multi_share_backup,
-        TR.words__important,
-        TR.buttons__continue,
+        f"{TR.recovery__share_does_not_match}. {TR.recovery__share_from_another_multi_share_backup}",
+        button=TR.buttons__try_again,
     )
 
 
 async def show_already_added() -> None:
     await show_recovery_warning(
         "warning_known_share",
-        f"{TR.recovery__share_already_entered}. {TR.recovery__enter_different_share}",
-        TR.words__important,
-        TR.buttons__continue,
+        TR.recovery__share_already_entered,
+        button=TR.buttons__try_again,
     )
 
 
@@ -169,8 +166,6 @@ async def show_group_thresholod() -> None:
     await show_recovery_warning(
         "warning_group_threshold",
         f"{TR.recovery__group_threshold_reached} {TR.recovery__enter_share_from_diff_group}",
-        TR.words__important,
-        TR.buttons__continue,
     )
 
 
@@ -207,7 +202,7 @@ async def show_dry_run_result(result: bool, is_slip39: bool) -> None:
             "success_dry_recovery",
             text,
             subheader=TR.words__title_done,
-            button=TR.buttons__continue,
+            button=TR.buttons__close,
         )
     else:
         if is_slip39:
@@ -218,5 +213,5 @@ async def show_dry_run_result(result: bool, is_slip39: bool) -> None:
             "warning_dry_recovery",
             content=text,
             subheader="",
-            button=TR.buttons__continue,
+            button=TR.buttons__try_again,
         )
