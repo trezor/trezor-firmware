@@ -382,6 +382,7 @@ mod tests {
         assert!(!sw.is_running_within(Duration::from_millis(10000)));
     }
 
+    #[test]
     fn test_crop_to_largest_unit() {
         assert_eq!(
             Duration::from_secs(59).crop_to_largest_unit(),
@@ -405,6 +406,7 @@ mod tests {
         );
     }
 
+    #[test]
     fn test_increment_decrement_unit() {
         // Increment
         assert_eq!(
