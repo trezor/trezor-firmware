@@ -1,5 +1,3 @@
-INCLUDE "./embed/sys/linker/stm32f4/memory.ld";
-
 ENTRY(reset_handler)
 
 MEMORY {
@@ -24,11 +22,6 @@ _bss_section_end = ADDR(.bss) + SIZEOF(.bss);
 _confidential_section_loadaddr = 0;
 _confidential_section_start = 0;
 _confidential_section_end = 0;
-
-_accessible_ram_0_start = MCU_CCMRAM;
-_accessible_ram_0_end = MCU_CCMRAM + MCU_CCMRAM_SIZE;
-_accessible_ram_1_start = MCU_SRAM;
-_accessible_ram_1_end = MCU_SRAM + MCU_SRAM_SIZE;
 
 _bootargs_ram_start = BOOTARGS_START;
 _bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
