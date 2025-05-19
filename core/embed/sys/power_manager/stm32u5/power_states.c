@@ -67,29 +67,37 @@ static const pm_state_handler_t state_handlers[] = {
 
 void pm_process_state_machine(void) {
   pm_driver_t* drv = &g_pm;
-  pm_internal_state_t old_state = drv->state;
+  pm_internal_state_t old_state;
+  pm_internal_state_t new_state;
 
-  // Get next state from current state's handler
-  pm_internal_state_t new_state = state_handlers[old_state].handle(drv);
+  // Loop until state machine converge to a stable state
+  while (true) {
+    // Get current state
+    old_state = drv->state;
 
-  // Handle state transition if needed
-  if (new_state != old_state) {
-    // Exit old state
-    if (state_handlers[old_state].exit != NULL) {
-      state_handlers[old_state].exit(drv);
+    // Call state handler to process the current state
+    new_state = state_handlers[old_state].handle(drv);
+
+    // Check if the state has changed
+    if (new_state != old_state) {
+      // Exit old state
+      if (state_handlers[old_state].exit != NULL) {
+        state_handlers[old_state].exit(drv);
+      }
+
+      // Update state
+      drv->state = new_state;
+      PM_SET_EVENT(drv->event_flags, PM_EVENT_STATE_CHANGED);
+
+      // Enter new state
+      if (state_handlers[new_state].enter != NULL) {
+        state_handlers[new_state].enter(drv);
+      }
+
+    } else {
+      // State has not changed, exit the loop
+      break;
     }
-
-    // Update state
-    drv->state = new_state;
-    PM_SET_EVENT(drv->event_flags, PM_EVENT_STATE_CHANGED);
-
-    // Enter new state
-    if (state_handlers[new_state].enter != NULL) {
-      state_handlers[new_state].enter(drv);
-    }
-
-    // Process state machine again as new state might trigger another transition
-    pm_process_state_machine();
   }
 }
 
