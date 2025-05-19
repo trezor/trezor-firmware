@@ -4,6 +4,8 @@ pub mod base;
 pub mod obj;
 
 #[cfg(feature = "micropython")]
+pub mod device_menu_result;
+#[cfg(feature = "micropython")]
 pub mod result;
 
 pub mod simplified;

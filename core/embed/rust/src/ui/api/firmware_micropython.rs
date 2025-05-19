@@ -17,6 +17,7 @@ use crate::{
         component::Empty,
         layout::{
             base::LAYOUT_STATE,
+            device_menu_result::DEVICE_MENU_RESULT,
             obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ},
             result::{CANCELLED, CONFIRMED, INFO},
             util::{upy_disable_animation, RecoveryType},
@@ -1663,7 +1664,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     device_name: str,
     ///     paired_devices: Iterable[str],
     ///     auto_lock_delay: str,
-    /// ) -> LayoutObj[UiResult]:
+    /// ) -> LayoutObj[UiResult | DeviceMenuResult | tuple[DeviceMenuResult, int]]:
     ///     """Show the device menu."""
     Qstr::MP_QSTR_show_device_menu => obj_fn_kw!(0, new_show_device_menu).as_obj(),
 
@@ -1832,4 +1833,14 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     DONE: "ClassVar[LayoutState]"
     Qstr::MP_QSTR_LayoutState => LAYOUT_STATE.as_obj(),
 
+    /// class DeviceMenuResult:
+    ///     """Result of a device menu operation."""
+    ///     BackupFailed: ClassVar[DeviceMenuResult]
+    ///     DevicePair: ClassVar[DeviceMenuResult]
+    ///     DeviceDisconnect: ClassVar[DeviceMenuResult]
+    ///     CheckBackup: ClassVar[DeviceMenuResult]
+    ///     WipeDevice: ClassVar[DeviceMenuResult]
+    ///     ScreenBrightness: ClassVar[DeviceMenuResult]
+    ///     AutoLockDelay: ClassVar[DeviceMenuResult]
+    Qstr::MP_QSTR_DeviceMenuResult => DEVICE_MENU_RESULT.as_obj(),
 };

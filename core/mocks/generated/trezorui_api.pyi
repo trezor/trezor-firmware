@@ -555,7 +555,7 @@ def show_device_menu(
     device_name: str,
     paired_devices: Iterable[str],
     auto_lock_delay: str,
-) -> LayoutObj[UiResult]:
+) -> LayoutObj[UiResult | DeviceMenuResult | tuple[DeviceMenuResult, int]]:
     """Show the device menu."""
 
 
@@ -739,3 +739,15 @@ class LayoutState:
     ATTACHED: "ClassVar[LayoutState]"
     TRANSITIONING: "ClassVar[LayoutState]"
     DONE: "ClassVar[LayoutState]"
+
+
+# rust/src/ui/api/firmware_micropython.rs
+class DeviceMenuResult:
+    """Result of a device menu operation."""
+    BackupFailed: ClassVar[DeviceMenuResult]
+    DevicePair: ClassVar[DeviceMenuResult]
+    DeviceDisconnect: ClassVar[DeviceMenuResult]
+    CheckBackup: ClassVar[DeviceMenuResult]
+    WipeDevice: ClassVar[DeviceMenuResult]
+    ScreenBrightness: ClassVar[DeviceMenuResult]
+    AutoLockDelay: ClassVar[DeviceMenuResult]
