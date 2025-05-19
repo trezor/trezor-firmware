@@ -1,4 +1,4 @@
-use core::ops::DerefMut;
+use core::ops::{Deref, DerefMut};
 
 use crate::{
     error::Error,
@@ -131,6 +131,16 @@ enum Subscreen {
     AboutScreen,
 }
 
+// Used to preallocate memory for the largest enum variant
+#[allow(clippy::large_enum_variant)]
+enum ActiveScreen<'a> {
+    Menu(VerticalMenuScreen<ShortMenuVec>),
+    About(TextScreen<Paragraphs<[Paragraph<'a>; 2]>>),
+
+    // used only during `DeviceMenuScreen::new`
+    Empty,
+}
+
 pub struct DeviceMenuScreen<'a> {
     bounds: Rect,
 
@@ -140,10 +150,8 @@ pub struct DeviceMenuScreen<'a> {
     // These correspond to the currently active subscreen,
     // which is one of the possible kinds of subscreens
     // as defined by `enum Subscreen` (DeviceScreen is still a VerticalMenuScreen!)
-    // The active one will be Some(...) and the other one will be None.
     // This way we only need to keep one screen at any time in memory.
-    menu_screen: GcBox<Option<VerticalMenuScreen<ShortMenuVec>>>,
-    about_screen: GcBox<Option<TextScreen<Paragraphs<[Paragraph<'a>; 2]>>>>,
+    active_screen: GcBox<ActiveScreen<'a>>,
 
     // Information needed to construct any subscreen on demand
     submenus: GcBox<Vec<Submenu, MAX_SUBMENUS>>,
@@ -174,8 +182,7 @@ impl<'a> DeviceMenuScreen<'a> {
             bounds: Rect::zero(),
             battery_percentage,
             firmware_version,
-            menu_screen: GcBox::new(None)?,
-            about_screen: GcBox::new(None)?,
+            active_screen: GcBox::new(ActiveScreen::Empty)?,
             active_subscreen: 0,
             submenus: GcBox::new(Vec::new())?,
             subscreens: Vec::new(),
@@ -367,7 +374,6 @@ impl<'a> DeviceMenuScreen<'a> {
         match self.subscreens[self.active_subscreen] {
             Subscreen::Submenu(ref mut submenu_index) => {
                 let submenu = &self.submenus[*submenu_index];
-                *self.about_screen.deref_mut() = None;
                 let mut menu = VerticalMenu::<ShortMenuVec>::empty().with_separators();
                 for item in &submenu.items {
                     let button = if let Some((subtext, subtext_style)) = item.subtext {
@@ -398,18 +404,17 @@ impl<'a> DeviceMenuScreen<'a> {
                         HeaderMsg::Back,
                     );
                 }
-                *self.menu_screen.deref_mut() =
-                    Some(VerticalMenuScreen::new(menu).with_header(header));
+                *self.active_screen.deref_mut() =
+                    ActiveScreen::Menu(VerticalMenuScreen::new(menu).with_header(header));
             }
             Subscreen::DeviceScreen(device, _) => {
-                *self.about_screen.deref_mut() = None;
                 let mut menu = VerticalMenu::empty().with_separators();
                 menu.item(Button::new_menu_item(device, theme::menu_item_title()));
                 menu.item(Button::new_menu_item(
                     "Disconnect".into(),
                     theme::menu_item_title_red(),
                 ));
-                *self.menu_screen.deref_mut() = Some(
+                *self.active_screen.deref_mut() = ActiveScreen::Menu(
                     VerticalMenuScreen::new(menu).with_header(
                         Header::new("Manage".into())
                             .with_close_button()
@@ -421,13 +426,12 @@ impl<'a> DeviceMenuScreen<'a> {
                 );
             }
             Subscreen::AboutScreen => {
-                *self.menu_screen.deref_mut() = None;
                 let about_content = Paragraphs::new([
                     Paragraph::new(&theme::firmware::TEXT_REGULAR, "Firmware version"),
                     Paragraph::new(&theme::firmware::TEXT_REGULAR, self.firmware_version),
                 ]);
 
-                *self.about_screen.deref_mut() = Some(
+                *self.active_screen.deref_mut() = ActiveScreen::About(
                     TextScreen::new(about_content)
                         .with_header(Header::new("About".into()).with_close_button()),
                 );
@@ -443,7 +447,7 @@ impl<'a> DeviceMenuScreen<'a> {
                         unwrap!(self.parent_subscreens.push(self.active_subscreen));
                         self.set_active_subscreen(menu);
                         self.place(self.bounds);
-                        if let Some(screen) = self.menu_screen.as_mut() {
+                        if let ActiveScreen::Menu(screen) = self.active_screen.deref_mut() {
                             screen.initialize_screen(ctx);
                         }
                         return None;
@@ -464,7 +468,7 @@ impl<'a> DeviceMenuScreen<'a> {
         if let Some(parent) = self.parent_subscreens.pop() {
             self.set_active_subscreen(parent);
             self.place(self.bounds);
-            if let Some(screen) = self.menu_screen.as_mut() {
+            if let ActiveScreen::Menu(screen) = self.active_screen.deref_mut() {
                 screen.initialize_screen(ctx);
             }
             None
@@ -484,9 +488,14 @@ impl<'a> Component for DeviceMenuScreen<'a> {
 
         self.bounds = bounds;
 
-        match self.subscreens[self.active_subscreen] {
-            Subscreen::Submenu(..) | Subscreen::DeviceScreen(..) => self.menu_screen.place(bounds),
-            Subscreen::AboutScreen => self.about_screen.place(bounds),
+        match self.active_screen.deref_mut() {
+            ActiveScreen::Menu(menu) => {
+                menu.place(bounds);
+            }
+            ActiveScreen::About(about) => {
+                about.place(bounds);
+            }
+            ActiveScreen::Empty => {}
         };
 
         bounds
@@ -495,9 +504,9 @@ impl<'a> Component for DeviceMenuScreen<'a> {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         // Handle the event for the active menu
         let subscreen = &self.subscreens[self.active_subscreen];
-        match subscreen {
-            Subscreen::Submenu(..) | Subscreen::DeviceScreen(..) => {
-                match self.menu_screen.event(ctx, event) {
+        match (subscreen, self.active_screen.deref_mut()) {
+            (Subscreen::Submenu(..) | Subscreen::DeviceScreen(..), ActiveScreen::Menu(menu)) => {
+                match menu.event(ctx, event) {
                     Some(VerticalMenuScreenMsg::Selected(index)) => {
                         if let Subscreen::DeviceScreen(_, i) = subscreen {
                             if index == DISCONNECT_DEVICE_MENU_INDEX {
@@ -516,21 +525,23 @@ impl<'a> Component for DeviceMenuScreen<'a> {
                     _ => {}
                 }
             }
-            Subscreen::AboutScreen => {
-                if let Some(TextScreenMsg::Cancelled) = self.about_screen.event(ctx, event) {
+            (Subscreen::AboutScreen, ActiveScreen::About(about)) => {
+                if let Some(TextScreenMsg::Cancelled) = about.event(ctx, event) {
                     return self.go_back(ctx);
                 }
             }
+            _ => {}
         }
 
         None
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        match &self.subscreens[self.active_subscreen] {
-            Subscreen::Submenu(..) | Subscreen::DeviceScreen(..) => self.menu_screen.render(target),
-            Subscreen::AboutScreen => self.about_screen.render(target),
-        }
+        match self.active_screen.deref() {
+            ActiveScreen::Menu(menu) => menu.render(target),
+            ActiveScreen::About(about) => about.render(target),
+            ActiveScreen::Empty => {}
+        };
     }
 }
 
