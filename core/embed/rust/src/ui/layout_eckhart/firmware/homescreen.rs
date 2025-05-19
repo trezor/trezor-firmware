@@ -61,7 +61,7 @@ impl Homescreen {
         notification: Option<(TString<'static>, u8)>,
     ) -> Result<Self, Error> {
         let image = get_homescreen_image();
-        let default_hs = image.is_none();
+        let shadow = image.is_some();
 
         // Notification
         // TODO: better notification handling
@@ -118,7 +118,7 @@ impl Homescreen {
         };
 
         Ok(Self {
-            label: HomeLabel::new(label, default_hs),
+            label: HomeLabel::new(label, shadow),
             hint,
             action_bar: ActionBar::new_single(button),
             image,
@@ -245,7 +245,7 @@ impl HomeLabel {
 
     fn new(label: TString<'static>, shadow: bool) -> Self {
         let label_primary = Label::left_aligned(label, Self::LABEL_TEXT_STYLE).top_aligned();
-        let label_shadow = (!shadow)
+        let label_shadow = shadow
             .then_some(Label::left_aligned(label, Self::LABEL_SHADOW_TEXT_STYLE).top_aligned());
         Self {
             label: label_primary,
