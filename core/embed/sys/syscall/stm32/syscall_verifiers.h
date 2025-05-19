@@ -19,7 +19,7 @@
 
 #pragma once
 
-#ifdef SYSCALL_DISPATCH
+#ifdef KERNEL
 
 // ---------------------------------------------------------------------
 #include <sys/sysevent.h>
@@ -289,4 +289,4 @@ bool tropic_ecc_sign__verified(uint16_t key_slot_index, const uint8_t *dig,
 
 #endif
 
-#endif  // SYSCALL_DISPATCH
+#endif  // KERNEL
