@@ -33,7 +33,7 @@ workflow_result_t workflow_unlock_bootloader(protob_io_t *iface) {
     send_user_abort(iface, "Bootloader unlock cancelled");
     return WF_CANCELLED;
   }
-  secret_optiga_erase();
+  secret_unlock_bootloader();
   send_msg_success(iface, NULL);
 
   screen_unlock_bootloader_success();

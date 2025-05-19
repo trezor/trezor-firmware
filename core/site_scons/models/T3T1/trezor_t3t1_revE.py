@@ -24,6 +24,7 @@ def configure(
         ("USE_RGB_COLORS", "1"),
         ("DISPLAY_RESX", "240"),
         ("DISPLAY_RESY", "240"),
+        ("LOCKABLE_BOOTLOADER", "1"),
     ]
 
     mcu = "STM32U585xx"

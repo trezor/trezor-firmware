@@ -71,7 +71,7 @@ bool ui_get_initial_setup(void);
 
 void ui_screen_boot_stage_1(bool fading);
 
-#ifdef USE_OPTIGA
+#ifdef LOCKABLE_BOOTLOADER
 uint32_t ui_screen_unlock_bootloader_confirm(void);
 #endif
 

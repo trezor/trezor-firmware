@@ -34,6 +34,7 @@ def configure(
         ("MCU_TYPE", mcu),
         ("FLASH_BIT_ACCESS", "1"),
         ("FLASH_BLOCK_WORDS", "1"),
+        ("LOCKABLE_BOOTLOADER", "1"),
     ]
 
     if "sbu" in features_wanted:

@@ -26,7 +26,7 @@
 #include <util/image.h>
 #include <util/unit_properties.h>
 
-#if USE_OPTIGA
+#if LOCKABLE_BOOTLOADER
 #include <sec/secret.h>
 #endif
 
@@ -130,7 +130,7 @@ secbool send_msg_features(protob_io_t *iface, const vendor_header *const vhdr,
     MSG_SEND_ASSIGN_VALUE(unit_btconly, unit_properties()->btconly);
   }
 
-#if USE_OPTIGA
+#if LOCKABLE_BOOTLOADER
   MSG_SEND_ASSIGN_VALUE(bootloader_locked,
                         (secret_bootloader_locked() == sectrue));
 #endif

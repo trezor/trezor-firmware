@@ -123,7 +123,7 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
         }
         goto exit_host_control;
         break;
-#if defined USE_OPTIGA
+#if defined LOCKABLE_BOOTLOADER
       case MessageType_MessageType_UnlockBootloader:
         result = workflow_unlock_bootloader(active_iface);
         goto exit_host_control;

@@ -421,9 +421,11 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       unit_properties_get__verified(props);
     } break;
 
+#ifdef LOCKABLE_BOOTLOADER
     case SYSCALL_SECRET_BOOTLOADER_LOCKED: {
       args[0] = secret_bootloader_locked();
     } break;
+#endif
 
 #ifdef USE_BUTTON
     case SYSCALL_BUTTON_GET_EVENT: {
