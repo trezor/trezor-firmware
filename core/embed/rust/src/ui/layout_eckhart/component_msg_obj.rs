@@ -1,12 +1,13 @@
 use crate::{
     error::Error,
-    micropython::obj::Obj,
+    micropython::{obj::Obj, util::new_tuple},
     ui::{
         component::{
             text::paragraphs::{ParagraphSource, Paragraphs},
             Component, Timeout,
         },
         layout::{
+            device_menu_result::*,
             obj::ComponentMsgObj,
             result::{CANCELLED, CONFIRMED, INFO},
         },
@@ -148,13 +149,15 @@ impl ComponentMsgObj for SetBrightnessScreen {
 impl<'a> ComponentMsgObj for DeviceMenuScreen<'a> {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
-            DeviceMenuMsg::BackupFailed => "BackupFailed".try_into(),
-            DeviceMenuMsg::DevicePair => "DevicePair".try_into(),
-            DeviceMenuMsg::DeviceDisconnect(_) => "DeviceDisconnect".try_into(),
-            DeviceMenuMsg::CheckBackup => "CheckBackup".try_into(),
-            DeviceMenuMsg::WipeDevice => "WipeDevice".try_into(),
-            DeviceMenuMsg::ScreenBrightness => "ScreenBrightness".try_into(),
-            DeviceMenuMsg::AutoLockDelay => "AutoLockDelay".try_into(),
+            DeviceMenuMsg::BackupFailed => Ok(BACKUP_FAILED.as_obj()),
+            DeviceMenuMsg::DevicePair => Ok(DEVICE_PAIR.as_obj()),
+            DeviceMenuMsg::DeviceDisconnect(index) => {
+                Ok(new_tuple(&[DEVICE_DISCONNECT.as_obj(), index.try_into()?])?)
+            }
+            DeviceMenuMsg::CheckBackup => Ok(CHECK_BACKUP.as_obj()),
+            DeviceMenuMsg::WipeDevice => Ok(WIPE_DEVICE.as_obj()),
+            DeviceMenuMsg::ScreenBrightness => Ok(SCREEN_BRIGHTNESS.as_obj()),
+            DeviceMenuMsg::AutoLockDelay => Ok(AUTO_LOCK_DELAY.as_obj()),
             DeviceMenuMsg::Close => Ok(CANCELLED.as_obj()),
         }
     }
