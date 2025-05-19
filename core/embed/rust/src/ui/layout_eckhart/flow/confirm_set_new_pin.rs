@@ -46,7 +46,8 @@ impl FlowController for SetNewPin {
             (Self::Intro, FlowMsg::Info) => Self::Menu.goto(),
             (Self::Intro, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
             (Self::Menu, FlowMsg::Choice(0)) => Self::Cancel.goto(),
-            (Self::Cancel, FlowMsg::Cancelled) => Self::Menu.goto(),
+            (Self::Menu, FlowMsg::Cancelled) => Self::Intro.goto(),
+            (Self::Cancel, FlowMsg::Cancelled) => Self::Intro.goto(),
             (Self::Cancel, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
             _ => self.do_nothing(),
         }
@@ -81,19 +82,17 @@ pub fn new_set_new_pin(
     });
 
     let paragraphs_cancel_intro = ParagraphVecShort::from_iter([
-        Paragraph::new(
-            &theme::firmware::TEXT_REGULAR_WARNING,
-            TR::words__not_recommended,
-        ),
+        Paragraph::new(&theme::firmware::TEXT_REGULAR, TR::pin__cancel_setup),
         Paragraph::new(&theme::firmware::TEXT_REGULAR, TR::pin__cancel_info),
     ])
     .into_paragraphs()
-    .with_placement(LinearPlacement::vertical());
+    .with_placement(LinearPlacement::vertical())
+    .with_spacing(24);
 
     let content_cancel = TextScreen::new(paragraphs_cancel_intro)
         .with_header(
             Header::new(TR::words__important.into())
-                .with_text_style(theme::label_title_warning())
+                .with_text_style(theme::label_title_danger())
                 .with_icon(theme::ICON_WARNING, theme::ORANGE),
         )
         .with_action_bar(ActionBar::new_double(

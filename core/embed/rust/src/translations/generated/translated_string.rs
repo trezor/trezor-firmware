@@ -1239,7 +1239,7 @@ pub enum TranslatedString {
     address__confirmed = 869,  // "Receive address confirmed"
     pin__cancel_description = 870,  // "Continue without PIN"
     pin__cancel_info = 871,  // "Without a PIN, anyone can access this device."
-    pin__cancel_setup = 872,  // "Cancel PIN setup"
+    pin__cancel_setup = 872,  // {"Bolt": "Cancel PIN setup", "Caesar": "Cancel PIN setup", "Delizia": "Cancel PIN setup", "Eckhart": "Cancel PIN setup?"}
     send__cancel_sign = 873,  // "Cancel sign"
     send__send_from = 874,  // "Send from"
     instructions__hold_to_sign = 875,  // "Hold to sign"
@@ -1436,6 +1436,8 @@ pub enum TranslatedString {
     auto_lock__description = 1030,  // "Set the time before your Trezor locks automatically."
     plurals__lock_after_x_days = 1031,  // "day|days"
     pin__setup_completed = 1032,  // "PIN setup completed."
+    pin__reenter = 1033,  // "Re-enter PIN"
+    pin__title_setup = 1034,  // "Set PIN"
 }
 
 impl TranslatedString {
@@ -2775,7 +2777,14 @@ impl TranslatedString {
             (Self::address__confirmed, "Receive address confirmed"),
             (Self::pin__cancel_description, "Continue without PIN"),
             (Self::pin__cancel_info, "Without a PIN, anyone can access this device."),
+            #[cfg(feature = "layout_bolt")]
             (Self::pin__cancel_setup, "Cancel PIN setup"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::pin__cancel_setup, "Cancel PIN setup"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::pin__cancel_setup, "Cancel PIN setup"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::pin__cancel_setup, "Cancel PIN setup?"),
             (Self::send__cancel_sign, "Cancel sign"),
             (Self::send__send_from, "Send from"),
             (Self::instructions__hold_to_sign, "Hold to sign"),
@@ -3047,6 +3056,8 @@ impl TranslatedString {
             (Self::auto_lock__description, "Set the time before your Trezor locks automatically."),
             (Self::plurals__lock_after_x_days, "day|days"),
             (Self::pin__setup_completed, "PIN setup completed."),
+            (Self::pin__reenter, "Re-enter PIN"),
+            (Self::pin__title_setup, "Set PIN"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3890,12 +3901,14 @@ impl TranslatedString {
         (Qstr::MP_QSTR_pin__mismatch, Self::pin__mismatch),
         (Qstr::MP_QSTR_pin__pin_mismatch, Self::pin__pin_mismatch),
         (Qstr::MP_QSTR_pin__please_check_again, Self::pin__please_check_again),
+        (Qstr::MP_QSTR_pin__reenter, Self::pin__reenter),
         (Qstr::MP_QSTR_pin__reenter_new, Self::pin__reenter_new),
         (Qstr::MP_QSTR_pin__reenter_to_confirm, Self::pin__reenter_to_confirm),
         (Qstr::MP_QSTR_pin__setup_completed, Self::pin__setup_completed),
         (Qstr::MP_QSTR_pin__should_be_long, Self::pin__should_be_long),
         (Qstr::MP_QSTR_pin__title_check_pin, Self::pin__title_check_pin),
         (Qstr::MP_QSTR_pin__title_settings, Self::pin__title_settings),
+        (Qstr::MP_QSTR_pin__title_setup, Self::pin__title_setup),
         (Qstr::MP_QSTR_pin__title_wrong_pin, Self::pin__title_wrong_pin),
         (Qstr::MP_QSTR_pin__tries_left, Self::pin__tries_left),
         (Qstr::MP_QSTR_pin__turn_off, Self::pin__turn_off),

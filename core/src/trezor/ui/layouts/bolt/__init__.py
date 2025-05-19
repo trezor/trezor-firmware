@@ -1534,6 +1534,33 @@ def confirm_set_new_pin(
     )
 
 
+def confirm_change_pin(
+    br_name: str,
+    title: str,
+    description: str,
+) -> Awaitable[None]:
+    return confirm_action(
+        br_name,
+        title,
+        description,
+        verb=TR.buttons__change,
+        prompt_screen=False,
+    )
+
+
+def confirm_remove_pin(
+    br_name: str,
+    title: str,
+    description: str,
+) -> Awaitable[None]:
+    return confirm_action(
+        br_name,
+        title,
+        description,
+        verb=TR.buttons__turn_off,
+    )
+
+
 async def success_pin_change(curpin: str | None, newpin: str | None) -> None:
     if newpin:
         if curpin:

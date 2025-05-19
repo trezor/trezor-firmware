@@ -461,7 +461,7 @@ async def confirm_unstake_transaction(
         account_path=address_n_to_str(signer_path),
         vote_account="",
         stake_item=None,
-        amount_item=(fee_title, fee_str),
+        amount_item=None,
         fee_item=(fee_title, fee_str),
         fee_details=fee_items,
         blockhash_item=(TR.words__blockhash, base58.encode(blockhash)),

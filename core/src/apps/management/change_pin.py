@@ -60,25 +60,26 @@ async def change_pin(msg: ChangePin) -> Success:
 
 
 def _require_confirm_change_pin(msg: ChangePin) -> Awaitable[None]:
-    from trezor.ui.layouts import confirm_action, confirm_set_new_pin
+    from trezor.ui.layouts import (
+        confirm_change_pin,
+        confirm_remove_pin,
+        confirm_set_new_pin,
+    )
 
     has_pin = config.has_pin()
 
     if msg.remove and has_pin:  # removing pin
-        return confirm_action(
+        return confirm_remove_pin(
             "disable_pin",
             TR.pin__title_settings,
             description=TR.pin__turn_off,
-            verb=TR.buttons__turn_off,
         )
 
     if not msg.remove and has_pin:  # changing pin
-        return confirm_action(
+        return confirm_change_pin(
             "change_pin",
             TR.pin__title_settings,
             description=TR.pin__change,
-            verb=TR.buttons__change,
-            prompt_screen=False,
         )
 
     if not msg.remove and not has_pin:  # setting new pin
