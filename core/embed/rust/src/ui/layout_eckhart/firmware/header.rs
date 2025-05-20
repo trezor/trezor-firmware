@@ -128,7 +128,8 @@ impl Header {
         if let Some(b) = &self.left_button {
             match b.content() {
                 ButtonContent::Icon(icon) => icon.toif.width() + margin_right,
-                _ => 0,
+                // We do not expect any other ButtonContent as the left button of the Header
+                _ => unreachable!(),
             }
         } else if let Some(icon) = self.icon {
             icon.toif.width() + margin_right
