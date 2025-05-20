@@ -22,13 +22,11 @@ jobs:
     name: Device tests
     runs-on:
       - self-hosted
-      - ${{ matrix.model == 'T2B1' && 'runner3' || 'hw-t2t1' }}
-      # runner4 does not work at the moment
-      # - ${{ matrix.model == 'T2B1' && 'hw-t2b1' || 'hw-t2t1' }}
+      - ${{ matrix.model == 'T2B1' && 'hw-t2b1' || matrix.model == 'T3T1' && 'hw-t3t1' || 'hw-t2t1' }}
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T2B1]
+        model: [T2T1, T2B1, T3T1]
         coins: [universal, btconly]
     env:
       TREZOR_MODEL: ${{ matrix.model }}
@@ -37,7 +35,7 @@ jobs:
       PYOPT: 0
       DISABLE_OPTIGA: 1
       STORAGE_INSECURE_TESTING_MODE: 1
-      BOOTLOADER_DEVEL: ${{ matrix.model == 'T2B1' && '1' || '0' }}
+      BOOTLOADER_DEVEL: ${{ matrix.model == 'T2T1' && '0' || '1' }}
       # TODO: enable SD-related tests after fixing #4924
       TESTOPTS: "-m 'not sd_card' -k 'not authenticate' --durations=50 --session-timeout 19800"  # 5.5h pytest global timeout
       TT_UHUB_PORT: 1
@@ -71,19 +69,17 @@ jobs:
     name: Monero tests
     runs-on:
       - self-hosted
-      - ${{ matrix.model == 'T2B1' && 'runner3' || 'hw-t2t1' }}
-      # runner4 does not work at the moment
-      # - ${{ matrix.model == 'T2B1' && 'hw-t2b1' || 'hw-t2t1' }}
+      - ${{ matrix.model == 'T2B1' && 'hw-t2b1' || matrix.model == 'T3T1' && 'hw-t3t1' || 'hw-t2t1' }}
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T2B1]
+        model: [T2T1, T2B1, T3T1]
     env:
       TREZOR_MODEL: ${{ matrix.model }}
       PYTEST_TIMEOUT: 1200
       PYOPT: 0
       DISABLE_OPTIGA: 1
-      BOOTLOADER_DEVEL: ${{ matrix.model == 'T2B1' && '1' || '0' }}
+      BOOTLOADER_DEVEL: ${{ matrix.model == 'T2T1' && '0' || '1' }}
       TT_UHUB_PORT: 1
     steps:
       - uses: actions/checkout@v4
