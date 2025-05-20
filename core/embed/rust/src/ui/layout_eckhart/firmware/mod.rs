@@ -42,7 +42,7 @@ pub use qr_screen::{QrMsg, QrScreen};
 pub use select_word_screen::{SelectWordMsg, SelectWordScreen};
 pub use share_words::{ShareWordsScreen, ShareWordsScreenMsg};
 pub use text_screen::{AllowedTextContent, TextScreen, TextScreenMsg};
-pub use updatable_info_screen::UpdatableInfoScreen;
+pub use updatable_info_screen::{UpdatableInfoScreen, UpdatableInfoScreenMsg};
 pub use value_input_screen::{
     DurationInput, NumberInput, ValueInput, ValueInputScreen, ValueInputScreenMsg,
 };
