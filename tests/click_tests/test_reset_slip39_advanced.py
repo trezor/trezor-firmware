@@ -21,7 +21,7 @@ import pytest
 from trezorlib import device, messages
 
 from .. import translations as TR
-from ..common import EXTERNAL_ENTROPY, MOCK_GET_ENTROPY, generate_entropy
+from ..common import EXTERNAL_ENTROPY, MOCK_GET_ENTROPY, LayoutType, generate_entropy
 from . import reset
 
 if TYPE_CHECKING:
@@ -164,7 +164,8 @@ def test_reset_slip39_advanced(
     for _ in range(group_count):
         for _ in range(share_count):
             # read words
-            words = reset.read_words(debug, do_htc=False)
+            do_htc = True if debug.layout_type == LayoutType.Eckhart else False
+            words = reset.read_words(debug, do_htc=do_htc)
 
             # confirm words
             reset.confirm_words(debug, words)

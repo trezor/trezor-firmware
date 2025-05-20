@@ -82,6 +82,7 @@ pub fn new_show_share_words(
     instructions_paragraphs: ParagraphVecShort<'static>,
     text_footer: Option<TString<'static>>,
     text_confirm: TString<'static>,
+    text_check: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
     let nwords = share_words_vec.len();
     let paragraphs_spacing = 8;
@@ -126,7 +127,7 @@ pub fn new_show_share_words(
         TR::reset__check_wallet_backup_title.into(),
         SwipeContent::new(Paragraphs::new(Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
-            TR::reset__check_backup_instructions,
+            text_check,
         ))),
     )
     .with_swipeup_footer(None)
