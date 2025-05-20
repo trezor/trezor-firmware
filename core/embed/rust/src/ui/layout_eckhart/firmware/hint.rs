@@ -81,7 +81,7 @@ impl<'a> Hint<'a> {
         Self::from_content(HintContent::Instruction(instruction_component))
     }
 
-    pub fn new_warning_severe<T: Into<TString<'static>>>(text: T) -> Self {
+    pub fn new_warning_danger<T: Into<TString<'static>>>(text: T) -> Self {
         let instruction_component = Instruction::new(
             text.into(),
             theme::RED,

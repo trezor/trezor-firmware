@@ -72,7 +72,7 @@ impl Homescreen {
             notification_level = level;
             if notification_level == 0 {
                 led_color = Some(theme::RED);
-                hint = Some(Hint::new_warning_severe(text));
+                hint = Some(Hint::new_warning_danger(text));
             } else {
                 led_color = Some(theme::YELLOW);
                 hint = Some(Hint::new_instruction(text, Some(theme::ICON_INFO)));
