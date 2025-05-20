@@ -464,6 +464,7 @@
     "instructions__hold_to_sign": "Hold to sign",
     "instructions__learn_more": "Learn more",
     "instructions__shares_continue_with_x_template": "Continue with Share #{0}",
+    "instructions__shares_start_with_x_template": "Start with Share #{0}",
     "instructions__shares_start_with_1": "Start with share #1",
     "instructions__swipe_down": "Swipe down",
     "instructions__swipe_horizontally": "Swipe horizontally",
@@ -716,7 +717,12 @@
     "recovery__enter_different_share": "Enter a different share.",
     "recovery__enter_each_word": "Enter each word of your wallet backup in order.",
     "recovery__enter_share_from_diff_group": "Enter share from a different group.",
-    "recovery__group_num_template": "Group {0}",
+    "recovery__group_num_template": {
+      "Bolt": "Group {0}",
+      "Caesar": "Group {0}",
+      "Delizia": "Group {0}",
+      "Eckhart": "Group #{0}"
+    },
     "recovery__group_threshold_reached": "Group threshold reached.",
     "recovery__info_about_disconnect": "It's safe to disconnect your Trezor while recovering your wallet and continue later.",
     "recovery__invalid_share_entered": "Invalid recovery share entered.",
@@ -728,7 +734,12 @@
     "recovery__share_already_entered": "Share already entered",
     "recovery__share_does_not_match": "Share doesn't match",
     "recovery__share_from_another_multi_share_backup": "You have entered a share from a different backup.",
-    "recovery__share_num_template": "Share {0}",
+    "recovery__share_num_template": {
+      "Bolt": "Share {0}",
+      "Caesar": "Share {0}",
+      "Delizia": "Share {0}",
+      "Eckhart": "Share #{0}"
+    },
     "recovery__title": "Recover wallet",
     "recovery__title_cancel_dry_run": "Cancel backup check",
     "recovery__title_cancel_recovery": "Cancel recovery",
@@ -771,6 +782,7 @@
     },
     "reset__cancel_create_wallet": "Cancel create wallet",
     "reset__check_backup_instructions": "Let's do a quick check of your backup.",
+    "reset__check_share_backup_template": "Let's do a quick check of Share #{0}.",
     "reset__check_backup_title": "Check backup",
     "reset__check_group_share_title_template": "Check g{0} - share {1}",
     "reset__check_share_title_template": "Check share #{0}",
@@ -784,7 +796,12 @@
     "reset__group_description": "A group is made up of recovery shares.",
     "reset__group_info": "Each group has a set number of shares and its own threshold. In the next steps you will set the numbers of shares and the thresholds.",
     "reset__group_share_checked_successfully_template": "Group {0} - Share {1} checked successfully.",
-    "reset__group_share_title_template": "Group {0} - share {1}",
+    "reset__group_share_title_template": {
+      "Bolt": "Group {0} - share {1}",
+      "Caesar": "Group {0} - share {1}",
+      "Delizia": "Group {0} - share {1}",
+      "Eckhart": "Group #{0} - Share #{1}"
+    },
     "reset__incorrect_word_selected": {
       "Bolt": "Incorrect word selected",
       "Caesar": "Incorrect word selected",
@@ -802,7 +819,12 @@
     "reset__num_of_shares_advanced_info_template": "Each recovery share is a sequence of {0} words. Next you will choose the threshold number of shares needed to form Group {1}.",
     "reset__num_of_shares_basic_info_template": "Each recovery share is a sequence of {0} words. Next you will choose how many shares you need to recover your wallet.",
     "reset__num_of_shares_how_many": "How many wallet backup shares do you want to create?",
-    "reset__num_of_shares_long_info_template": "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet.",
+    "reset__num_of_shares_long_info_template": {
+      "Bolt": "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet.",
+      "Caesar": "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet.",
+      "Delizia": "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet.",
+      "Eckhart": "Each backup share is a sequence of {0} words.\nStore each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet."
+    },
     "reset__num_shares_for_group_template": "The required number of shares to form Group {0}.",
     "reset__number_of_shares_info": "= total number of unique word lists used for wallet backup.",
     "reset__one_share": "1 share",
@@ -821,6 +843,7 @@
       "Delizia": "Select {0} word",
       "Eckhart": "Select word #{0} from your wallet backup"
     },
+    "reset__select_word_from_share_template": "Select word #{0} from\nShare #{1}",
     "reset__select_word_x_of_y_template": "Select word {0} of {1}:",
     "reset__set_it_to_count_template": "Set it to {0} and you will need ",
     "reset__share_checked_successfully_template": "Share #{0} checked successfully.",

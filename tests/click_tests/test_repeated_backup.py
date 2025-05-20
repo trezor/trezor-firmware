@@ -20,7 +20,7 @@ import pytest
 
 from trezorlib import device, exceptions, messages
 
-from ..common import MOCK_GET_ENTROPY
+from ..common import MOCK_GET_ENTROPY, LayoutType
 from . import recovery, reset
 from .common import go_next
 
@@ -137,9 +137,11 @@ def test_repeated_backup_via_device(
     reset.confirm_read(debug, middle_r=True)
 
     second_backup_2_of_3: list[str] = []
-    for _ in range(3):
+    for share in range(3):
         # read words
-        words = reset.read_words(debug, do_htc=False)
+        eckahrt = debug.layout_type is LayoutType.Eckhart
+        confirm_instruction = not eckahrt or share == 0
+        words = reset.read_words(debug, confirm_instruction=confirm_instruction)
 
         # confirm words
         reset.confirm_words(debug, words)
