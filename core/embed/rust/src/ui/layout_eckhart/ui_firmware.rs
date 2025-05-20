@@ -925,7 +925,7 @@ impl FirmwareUI for UIEckhart {
             TextScreen::new(checklist_content)
                 .with_header(Header::new(title))
                 .with_action_bar(ActionBar::new_double(
-                    Button::with_icon(theme::ICON_CROSS).styled(theme::button_cancel()),
+                    Button::with_icon(theme::ICON_CROSS),
                     Button::with_text(button),
                 )),
         );
@@ -1212,9 +1212,11 @@ impl FirmwareUI for UIEckhart {
         words: heapless::Vec<TString<'static>, 33>,
         subtitle: Option<TString<'static>>,
         instructions: Obj,
+        instructions_verb: Option<TString<'static>>,
         // Irrelevant for Eckhart because the footer is dynamic
         _text_footer: Option<TString<'static>>,
         text_confirm: TString<'static>,
+        text_check: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut instructions_paragraphs = ParagraphVecShort::new();
         for item in IterBuf::new().try_iterate(instructions)? {
@@ -1226,7 +1228,9 @@ impl FirmwareUI for UIEckhart {
             words,
             subtitle.unwrap_or(TString::empty()),
             instructions_paragraphs,
+            instructions_verb,
             text_confirm,
+            text_check,
         )?;
         Ok(flow)
     }

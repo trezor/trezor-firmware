@@ -1036,5 +1036,8 @@
   "1034": "firmware_update__restart",
   "1035": "passphrase__access_hidden_wallet",
   "1036": "passphrase__hidden_wallet",
-  "1037": "passphrase__show"
+  "1037": "passphrase__show",
+  "1038": "instructions__shares_start_with_x_template",
+  "1039": "reset__check_share_backup_template",
+  "1040": "reset__select_word_from_share_template"
 }
