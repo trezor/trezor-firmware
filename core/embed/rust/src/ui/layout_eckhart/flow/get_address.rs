@@ -132,7 +132,6 @@ pub fn new_get_address(
     .map(|_| Some(FlowMsg::Confirmed));
 
     // Menu
-
     let content_menu = VerticalMenuScreen::new(
         VerticalMenu::<ShortMenuVec>::empty()
             .with_item(Button::new_menu_item(
