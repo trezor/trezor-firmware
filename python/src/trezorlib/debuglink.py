@@ -680,10 +680,8 @@ class DebugLink:
 
         if wait is True:
             wait_type = DebugWaitType.CURRENT_LAYOUT
-        elif wait is False:
-            wait_type = DebugWaitType.IMMEDIATE
         else:
-            wait_type = self.input_wait_type
+            wait_type = DebugWaitType.IMMEDIATE
 
         # When the call below returns, we know that `decision` has been processed in Core.
         # XXX Due to a bug, the reply may get lost at the end of a workflow.
