@@ -42,8 +42,10 @@ def show_share_words(
             words=share_words,
             subtitle=subtitle,
             instructions=instructions,
+            instructions_verb=None,
             text_footer=description,
             text_confirm=text_confirm,
+            text_check=TR.reset__check_backup_instructions,
         ),
         None,
     )

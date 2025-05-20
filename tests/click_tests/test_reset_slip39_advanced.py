@@ -163,11 +163,16 @@ def test_reset_slip39_advanced(
     all_words: list[str] = []
     for _ in range(group_count):
         for _ in range(share_count):
-            # read words
-            words = reset.read_words(debug, do_htc=False)
+            # In 16-of-16 scenario, skip 1500 ms HTC after each word set
+            # to avoid long test durations
+            is_16_of_16 = group_count == 16 and group_threshold == 16
+            do_htc = not is_16_of_16
+            skip_intro = is_16_of_16
+
+            words = reset.read_words(debug, do_htc=do_htc)
 
             # confirm words
-            reset.confirm_words(debug, words)
+            reset.confirm_words(debug, words, skip_intro=skip_intro)
 
             # confirm share checked
             reset.confirm_read(debug)

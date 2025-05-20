@@ -93,9 +93,11 @@ def test_backup_slip39_custom(
     reset.confirm_read(debug, middle_r=True)
 
     all_words: list[str] = []
-    for _ in range(share_count):
+    for share in range(share_count):
         # read words
-        words = reset.read_words(debug)
+        eckahrt = debug.layout_type is LayoutType.Eckhart
+        confirm_instruction = not eckahrt or share == 0
+        words = reset.read_words(debug, confirm_instruction=confirm_instruction)
 
         # confirm words
         reset.confirm_words(debug, words)

@@ -113,15 +113,21 @@ def set_selection(debug: "DebugLink", diff: int) -> None:
         raise RuntimeError("Unknown model")
 
 
-def read_words(debug: "DebugLink", do_htc: bool = True) -> list[str]:
+def read_words(
+    debug: "DebugLink", do_htc: bool = True, confirm_instruction: bool = True
+) -> list[str]:
     words: list[str] = []
 
+    # introductory screen
     if debug.layout_type is LayoutType.Caesar:
         debug.press_right()
     elif debug.layout_type is LayoutType.Delizia:
         debug.swipe_up()
-    elif debug.layout_type is LayoutType.Eckhart:
+    elif debug.layout_type is LayoutType.Eckhart and confirm_instruction:
+        # In SLIP39, the screen is present only before the 1st share
+        assert "ShareWordsInner" not in debug.read_layout().all_components()
         debug.click(debug.screen_buttons.ok())
+        assert "ShareWordsInner" in debug.read_layout().all_components()
 
     # Swiping through all the pages and loading the words
     layout = debug.read_layout()
@@ -158,15 +164,14 @@ def read_words(debug: "DebugLink", do_htc: bool = True) -> list[str]:
     return words
 
 
-def confirm_words(debug: "DebugLink", words: list[str]) -> None:
+def confirm_words(debug: "DebugLink", words: list[str], skip_intro=False) -> None:
     if debug.layout_type is LayoutType.Delizia:
         debug.swipe_up()
-    elif debug.layout_type is LayoutType.Eckhart:
-        # Press ok if the select word screen is not yet present
-        if not TR.regexp("reset__select_word_template").match(
-            debug.read_layout().subtitle()
-        ):
-            debug.click(debug.screen_buttons.ok())
+    elif debug.layout_type is LayoutType.Eckhart and not skip_intro:
+        # In 16-of-16 scenario, the intro screen is skipped
+        assert "SelectWordScreen" not in debug.read_layout().all_components()
+        debug.click(debug.screen_buttons.ok())
+        assert "SelectWordScreen" in debug.read_layout().all_components()
 
     layout = debug.read_layout()
     if debug.layout_type is LayoutType.Bolt:
@@ -223,14 +228,19 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
             debug.click(debug.screen_buttons.word_check_words()[button_pos])
             layout = debug.read_layout()
     elif debug.layout_type is LayoutType.Eckhart:
-        assert TR.regexp("reset__select_word_template").match(
-            debug.read_layout().subtitle()
+        subtitle = debug.read_layout().subtitle().strip()
+        assert any(
+            TR.regexp(template).match(subtitle)
+            for template in [
+                "reset__select_word_template",
+                "reset__select_word_from_share_template",
+            ]
         )
 
         for _ in range(3):
-            # "Select word 3 of 20"
-            #             ^
-            word_pos_match = re.search(r"\d+", debug.read_layout().subtitle())
+            # Select word #3 from Share 2
+            # "Select word 3 of your backup"
+            word_pos_match = re.search(r"\d+", debug.read_layout().subtitle().strip())
             assert word_pos_match is not None
             word_pos = int(word_pos_match.group(0))
             # Unifying both the buttons and words to lowercase

@@ -334,6 +334,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_instructions__learn_more;
   MP_QSTR_instructions__shares_continue_with_x_template;
   MP_QSTR_instructions__shares_start_with_1;
+  MP_QSTR_instructions__shares_start_with_x_template;
   MP_QSTR_instructions__swipe_down;
   MP_QSTR_instructions__swipe_horizontally;
   MP_QSTR_instructions__tap;
@@ -341,6 +342,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_instructions__tap_to_continue;
   MP_QSTR_instructions__tap_to_start;
   MP_QSTR_instructions__view_all_data;
+  MP_QSTR_instructions_verb;
   MP_QSTR_interface;
   MP_QSTR_is_connected;
   MP_QSTR_is_data;
@@ -549,6 +551,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__check_backup_instructions;
   MP_QSTR_reset__check_backup_title;
   MP_QSTR_reset__check_group_share_title_template;
+  MP_QSTR_reset__check_share_backup_template;
   MP_QSTR_reset__check_share_title_template;
   MP_QSTR_reset__check_wallet_backup_title;
   MP_QSTR_reset__continue_with_next_share;
@@ -586,6 +589,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__required_number_of_groups;
   MP_QSTR_reset__select_correct_word;
   MP_QSTR_reset__select_threshold;
+  MP_QSTR_reset__select_word_from_share_template;
   MP_QSTR_reset__select_word_template;
   MP_QSTR_reset__select_word_x_of_y_template;
   MP_QSTR_reset__set_it_to_count_template;
@@ -741,6 +745,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_summary_items;
   MP_QSTR_summary_title;
   MP_QSTR_text;
+  MP_QSTR_text_check;
   MP_QSTR_text_confirm;
   MP_QSTR_text_footer;
   MP_QSTR_text_mono;

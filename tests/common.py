@@ -286,10 +286,14 @@ def read_mnemonic_from_screen_eckhart(
     br = yield
     assert br.pages is not None
 
-    debug.read_layout()
-    debug.click(debug.screen_buttons.ok())
+    # There is an intro screen
+    if br.pages != debug.read_layout().page_count() + 1:
+        debug.click(debug.screen_buttons.ok())
 
-    for _ in range(br.pages - 2):
+    nwords = debug.read_layout().page_count()
+    assert nwords > 1
+
+    for _ in range(nwords):
         words = debug.read_layout().seed_words()
         mnemonic.extend(words)
         debug.click(debug.screen_buttons.ok())

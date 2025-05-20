@@ -31,10 +31,9 @@ pub enum SelectWordMsg {
 }
 
 impl SelectWordScreen {
-    const DESCRIPTION_HEIGHT: i16 = 58;
-    const MENU_HEIGHT: i16 = 360;
-    const DESCRIPTION_PADDING: i16 = 24;
-    const MENU_PADDING: i16 = 12;
+    const DESCRIPTION_HEIGHT: i16 = 76;
+    const MENU_HEIGHT: i16 = 330;
+    const MENU_INSETS: Insets = Insets::sides(12);
     pub fn new(
         share_words_vec: [TString<'static>; MAX_WORD_QUIZ_ITEMS],
         description: TString<'static>,
@@ -65,11 +64,9 @@ impl Component for SelectWordScreen {
         let (description_area, rest) = rest.split_top(Self::DESCRIPTION_HEIGHT);
         let (menu_area, _) = rest.split_top(Self::MENU_HEIGHT);
 
-        let description_area = description_area.inset(Insets::sides(Self::DESCRIPTION_PADDING));
-        let menu_area = menu_area.inset(Insets::sides(Self::MENU_PADDING));
-
-        self.menu.place(menu_area);
-        self.description.place(description_area);
+        self.menu.place(menu_area.inset(Self::MENU_INSETS));
+        self.description
+            .place(description_area.inset(theme::SIDE_INSETS));
         self.header.place(header_area);
 
         bounds
@@ -188,9 +185,9 @@ mod tests {
     #[test]
     fn test_component_heights_fit_screen() {
         assert!(
-            SelectWordScreen::DESCRIPTION_HEIGHT
+            Header::HEADER_HEIGHT
+                + SelectWordScreen::DESCRIPTION_HEIGHT
                 + SelectWordScreen::MENU_HEIGHT
-                + Header::HEADER_HEIGHT
                 <= SCREEN.height(),
             "Components overflow the screen height",
         );

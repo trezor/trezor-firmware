@@ -1218,8 +1218,10 @@ impl FirmwareUI for UICaesar {
         _words: heapless::Vec<TString<'static>, 33>,
         _subtitle: Option<TString<'static>>,
         _instructions: Obj,
+        _instructions_verb: Option<TString<'static>>,
         _text_footer: Option<TString<'static>>,
         _text_confirm: TString<'static>,
+        _text_check: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
