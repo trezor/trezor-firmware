@@ -55,6 +55,23 @@ pub fn format_i64(num: i64, buffer: &mut [u8]) -> Option<&str> {
     }
 }
 
+/// Format the BLE pairing code with zero-padding so that it always has a width
+/// of 6 digits.
+pub fn format_pairing_code(code: u32) -> ShortString {
+    let mut buf = [0; 20];
+    let code_str = unwrap!(format_i64(code as _, &mut buf));
+
+    let width: usize = 6;
+    let mut formatted_code = ShortString::new();
+    // Add leading zeros
+    for _ in 0..width.saturating_sub(code_str.len()) {
+        unwrap!(formatted_code.push('0'));
+    }
+    // Add the actual digits
+    unwrap!(formatted_code.push_str(code_str));
+    formatted_code
+}
+
 /// Selects the correct plural form from a template string based on a count.
 ///
 /// The `template` is a `&str` containing 2 or 3 variants separated by `|`:
@@ -277,7 +294,35 @@ impl ufmt::uDebug for TString<'_> {
     }
 }
 
+#[cfg(test)]
 mod tests {
+
+    #[test]
+    fn test_format_code() {
+        use super::format_pairing_code;
+        // Test normal cases with different digit counts
+        assert_eq!(format_pairing_code(123).as_str(), "000123");
+        assert_eq!(format_pairing_code(7).as_str(), "000007");
+        assert_eq!(format_pairing_code(123456).as_str(), "123456");
+
+        // Test boundary cases
+        assert_eq!(format_pairing_code(0).as_str(), "000000");
+        assert_eq!(format_pairing_code(999999).as_str(), "999999");
+        assert_eq!(format_pairing_code(1000000).as_str(), "1000000"); // Exceeds 6 digits
+
+        // Test with maximum u32 value
+        assert_eq!(format_pairing_code(u32::MAX).as_str(), "4294967295");
+
+        // Test with values having exactly 6 digits
+        assert_eq!(format_pairing_code(100000).as_str(), "100000");
+        assert_eq!(format_pairing_code(999999).as_str(), "999999");
+
+        // Verify behavior with sequential values around boundaries
+        assert_eq!(format_pairing_code(9999).as_str(), "009999");
+        assert_eq!(format_pairing_code(10000).as_str(), "010000");
+        assert_eq!(format_pairing_code(99999).as_str(), "099999");
+        assert_eq!(format_pairing_code(100000).as_str(), "100000");
+    }
 
     #[test]
     fn test_plural_form() {
