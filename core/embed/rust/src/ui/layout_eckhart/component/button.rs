@@ -171,7 +171,7 @@ impl Button {
     }
 
     pub fn with_gradient(mut self) -> Self {
-        // Both radius and gradient not supported
+        // Using gradient with radius is not supported
         debug_assert!(self.radius.is_none());
         self.gradient = true;
         self
