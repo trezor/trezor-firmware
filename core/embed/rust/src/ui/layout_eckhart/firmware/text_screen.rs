@@ -141,8 +141,6 @@ where
                 Self::SUBTITLE_HEIGHT
             };
 
-            dbg_println!("Subtitle height: {:?}", subtitle_height);
-
             let (subtitle_area, rest) = rest.split_top(subtitle_height);
             subtitle.place(subtitle_area.inset(SIDE_INSETS));
             rest
