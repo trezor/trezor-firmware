@@ -17,6 +17,6 @@ manifest:
       import: true
     - name: mcuboot
       url: https://github.com/trezor/mcuboot
-      revision: tychovrahe/sig/test
+      revision: tychovrahe/sig/cosi
       path: bootloader/mcuboot
 

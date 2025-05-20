@@ -20,8 +20,24 @@ def _make_dev_keys(*key_bytes: bytes) -> Sequence[bytes]:
     "digest",
     help="Digest to be signed.",
 )
+@click.option(
+    "-s",
+    "--getsig",
+    "getsig",
+    is_flag=True,
+    help="Print out signature",
+)
+@click.option(
+    "-m",
+    "--getmask",
+    "getmask",
+    is_flag=True,
+    help="Print out sigmask",
+)
 def main(
-    digest
+    digest,
+    getsig,
+    getmask
 ):
 
     DEV_KEYS = _make_dev_keys(b"\x44", b"\x45")
@@ -29,14 +45,16 @@ def main(
     privkeys = DEV_KEYS
     sigmask = (1 << len(privkeys)) - 1
 
-    print("Signing with local private keys...")
+    #print("Signing with local private keys...")
 
-    print(bytes.fromhex(digest))
+    #print(bytes.fromhex(digest))
 
     signature = cosi.sign_with_privkeys(bytes.fromhex(digest), privkeys)
 
-    print(f'SIG: 0x{signature.hex()}')
-    print(f"SIGMASK: {sigmask:#06x}")
+    if getsig:
+        print(f'0x{signature.hex()}')
+    if getmask:
+        print(f"{sigmask:#06x}")
 
 
 if __name__ == "__main__":
