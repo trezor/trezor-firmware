@@ -84,12 +84,15 @@ impl MenuItem {
         }
     }
 
-    pub fn with_subtext(mut self, subtext: Option<(TString<'static>, Option<TextStyle>)>) -> Self {
+    pub fn with_subtext(
+        &mut self,
+        subtext: Option<(TString<'static>, Option<TextStyle>)>,
+    ) -> &mut Self {
         self.subtext = subtext;
         self
     }
 
-    pub fn with_stylesheet(mut self, stylesheet: ButtonStyleSheet) -> Self {
+    pub fn with_stylesheet(&mut self, stylesheet: ButtonStyleSheet) -> &mut Self {
         self.stylesheet = stylesheet;
         self
     }
@@ -221,12 +224,13 @@ impl<'a> DeviceMenuScreen<'a> {
     ) -> usize {
         let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
         for (device, idx) in paired_devices.iter().zip(paired_device_indices) {
-            unwrap!(items.push(
-                MenuItem::new(*device, Some(Action::GoTo(idx))).with_subtext(Some((
-                    "Connected".into(),
-                    Some(Button::SUBTEXT_STYLE_GREEN)
-                ))) // TODO: this should be a boolean feature of the device
-            ));
+            let mut item_device = MenuItem::new(*device, Some(Action::GoTo(idx)));
+            // TODO: this should be a boolean feature of the device
+            item_device.with_subtext(Some((
+                "Connected".into(),
+                Some(Button::SUBTEXT_STYLE_GREEN),
+            )));
+            unwrap!(items.push(item_device));
         }
 
         let submenu_index = self.add_submenu(Submenu::new("Manage paired devices".into(), items));
@@ -235,16 +239,15 @@ impl<'a> DeviceMenuScreen<'a> {
 
     fn add_pair_and_connect_menu(&mut self, manage_devices_index: usize) -> usize {
         let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
-        unwrap!(items.push(
-            MenuItem::new(
-                "Manage paired devices".into(),
-                Some(Action::GoTo(manage_devices_index)),
-            )
-            .with_subtext(Some((
-                "1 device connected".into(),
-                Some(Button::SUBTEXT_STYLE_GREEN)
-            )))
-        ));
+        let mut manage_paired_item = MenuItem::new(
+            "Manage paired devices".into(),
+            Some(Action::GoTo(manage_devices_index)),
+        );
+        manage_paired_item.with_subtext(Some((
+            "1 device connected".into(),
+            Some(Button::SUBTEXT_STYLE_GREEN),
+        )));
+        unwrap!(items.push(manage_paired_item));
         unwrap!(items.push(MenuItem::new(
             "Pair new device".into(),
             Some(Action::Return(DeviceMenuMsg::DevicePair)),
@@ -291,22 +294,21 @@ impl<'a> DeviceMenuScreen<'a> {
         auto_lock_delay: TString<'static>,
     ) -> usize {
         let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
-        unwrap!(
-            items.push(MenuItem::new("Name".into(), None).with_subtext(Some((device_name, None))))
-        );
+        let mut item_device_name = MenuItem::new("Name".into(), None);
+        item_device_name.with_subtext(Some((device_name, None)));
+        unwrap!(items.push(item_device_name));
         unwrap!(items.push(MenuItem::new(
             "Screen brightness".into(),
             Some(Action::Return(DeviceMenuMsg::ScreenBrightness)),
         )));
 
         if has_pin() {
-            unwrap!(items.push(
-                MenuItem::new(
-                    "Auto-lock delay".into(),
-                    Some(Action::Return(DeviceMenuMsg::AutoLockDelay)),
-                )
-                .with_subtext(Some((auto_lock_delay, None)))
-            ));
+            let mut autolock_delay_item = MenuItem::new(
+                "Auto-lock delay".into(),
+                Some(Action::Return(DeviceMenuMsg::AutoLockDelay)),
+            );
+            autolock_delay_item.with_subtext(Some((auto_lock_delay, None)));
+            unwrap!(items.push(autolock_delay_item));
         }
 
         unwrap!(items.push(MenuItem::new(
@@ -326,25 +328,23 @@ impl<'a> DeviceMenuScreen<'a> {
     ) -> usize {
         let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
         if failed_backup {
-            unwrap!(items.push(
-                MenuItem::new(
-                    "Backup failed".into(),
-                    Some(Action::Return(DeviceMenuMsg::BackupFailed)),
-                )
-                .with_subtext(Some(("Review".into(), None)))
-                .with_stylesheet(theme::menu_item_title_red()),
-            ));
+            let mut item_backup_failed = MenuItem::new(
+                "Backup failed".into(),
+                Some(Action::Return(DeviceMenuMsg::BackupFailed)),
+            );
+            item_backup_failed.with_subtext(Some(("Review".into(), None)));
+            item_backup_failed.with_stylesheet(theme::menu_item_title_red());
+            unwrap!(items.push(item_backup_failed));
         }
-        unwrap!(items.push(
-            MenuItem::new(
-                "Pair & connect".into(),
-                Some(Action::GoTo(pair_and_connect_index)),
-            )
-            .with_subtext(Some((
-                "1 device connected".into(),
-                Some(Button::SUBTEXT_STYLE_GREEN)
-            )))
-        ));
+        let mut item_pair_and_connect = MenuItem::new(
+            "Pair & connect".into(),
+            Some(Action::GoTo(pair_and_connect_index)),
+        );
+        item_pair_and_connect.with_subtext(Some((
+            "1 device connected".into(),
+            Some(Button::SUBTEXT_STYLE_GREEN),
+        )));
+        unwrap!(items.push(item_pair_and_connect));
         unwrap!(items.push(MenuItem::new(
             "Settings".into(),
             Some(Action::GoTo(settings_index)),
