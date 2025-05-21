@@ -1190,7 +1190,7 @@ class TrezorClientDebugLink(TrezorClient):
         self.in_with_statement = True
         return self
 
-    def __exit__(self, exc_type: Any, value: Any, traceback: Any) -> None:
+    def __exit__(self, exc_type: Any, value: Any, _traceback: Any) -> None:
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
 
         # copy expected/actual responses before clearing them
@@ -1213,7 +1213,7 @@ class TrezorClientDebugLink(TrezorClient):
         elif isinstance(input_flow, Generator):
             # Propagate the exception through the input flow, so that we see in
             # traceback where it is stuck.
-            input_flow.throw(exc_type, value, traceback)
+            input_flow.throw(value)
 
     def set_expected_responses(
         self,
