@@ -1336,7 +1336,7 @@ pub enum TranslatedString {
     address__public_key_confirmed = 966,  // "Public key confirmed"
     words__continue_anyway = 967,  // "Continue anyway"
     #[cfg(feature = "universal_fw")]
-    ethereum__unknown_contract_address = 968,  // "Unknown contract address. Continue only if you know what you are doing."
+    ethereum__unknown_contract_address = 968,  // "Unknown contract address"
     #[cfg(feature = "universal_fw")]
     ethereum__token_contract = 969,  // "Token contract"
     buttons__view_all_data = 970,  // "View all data"
@@ -1344,8 +1344,6 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__interaction_contract = 972,  // "Interaction contract"
     misc__enable_labeling = 973,  // "Enable labeling?"
-    #[cfg(feature = "universal_fw")]
-    ethereum__unknown_contract_address_short = 974,  // "Unknown contract address."
     #[cfg(feature = "universal_fw")]
     solana__base_fee = 975,  // "Base fee"
     #[cfg(feature = "universal_fw")]
@@ -2745,7 +2743,7 @@ impl TranslatedString {
             (Self::address__public_key_confirmed, "Public key confirmed"),
             (Self::words__continue_anyway, "Continue anyway"),
             #[cfg(feature = "universal_fw")]
-            (Self::ethereum__unknown_contract_address, "Unknown contract address. Continue only if you know what you are doing."),
+            (Self::ethereum__unknown_contract_address, "Unknown contract address"),
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__token_contract, "Token contract"),
             (Self::buttons__view_all_data, "View all data"),
@@ -2753,8 +2751,6 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__interaction_contract, "Interaction contract"),
             (Self::misc__enable_labeling, "Enable labeling?"),
-            #[cfg(feature = "universal_fw")]
-            (Self::ethereum__unknown_contract_address_short, "Unknown contract address."),
             #[cfg(feature = "universal_fw")]
             (Self::solana__base_fee, "Base fee"),
             #[cfg(feature = "universal_fw")]
@@ -3355,8 +3351,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__units_template, Self::ethereum__units_template),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__unknown_contract_address, Self::ethereum__unknown_contract_address),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_ethereum__unknown_contract_address_short, Self::ethereum__unknown_contract_address_short),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__unknown_token, Self::ethereum__unknown_token),
         #[cfg(feature = "universal_fw")]

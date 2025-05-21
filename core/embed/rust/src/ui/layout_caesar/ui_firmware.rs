@@ -989,12 +989,33 @@ impl FirmwareUI for UICaesar {
     }
 
     fn show_danger(
-        _title: TString<'static>,
-        _description: TString<'static>,
+        title: TString<'static>,
+        description: TString<'static>,
         _value: TString<'static>,
         _verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+        let get_page = move |page_index| {
+            assert!(page_index == 0);
+
+            let btn_layout = ButtonLayout::cancel_none_text(TR::buttons__continue.into());
+            let btn_actions = ButtonActions::cancel_none_confirm();
+            let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
+            ops = ops.alignment(geometry::Alignment::Center);
+            if !title.is_empty() {
+                ops = ops.text(title, fonts::FONT_BOLD_UPPER);
+                if !description.is_empty() {
+                    ops = ops.newline();
+                }
+            }
+            if !description.is_empty() {
+                ops = ops.text(description, fonts::FONT_NORMAL);
+            }
+            let formatted = FormattedText::new(ops).vertically_centered();
+            Page::new(btn_layout, btn_actions, formatted)
+        };
+        let pages = FlowPages::new(get_page, 1);
+        let layout = RootComponent::new(Flow::new(pages));
+        Ok(layout)
     }
 
     fn show_error(
