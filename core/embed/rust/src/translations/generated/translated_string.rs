@@ -52,7 +52,7 @@ pub enum TranslatedString {
     bitcoin__title_confirm_details = 50,  // "Confirm details"
     bitcoin__title_finalize_transaction = 51,  // "Finalize transaction"
     bitcoin__title_high_mining_fee = 52,  // "High mining fee"
-    bitcoin__title_meld_transaction = 53,  // "Meld transactions"
+    bitcoin__title_meld_transaction = 53,  // "Meld transaction"
     bitcoin__title_modify_amount = 54,  // "Modify amount"
     bitcoin__title_payjoin = 55,  // "Payjoin"
     bitcoin__title_proof_of_ownership = 56,  // "Proof of ownership"
@@ -543,17 +543,17 @@ pub enum TranslatedString {
     misc__decrypt_value = 349,  // "Decrypt value"
     misc__encrypt_value = 350,  // "Encrypt value"
     misc__title_suite_labeling = 351,  // "Suite labeling"
-    modify_amount__decrease_amount = 352,  // "Decrease amount by:"
-    modify_amount__increase_amount = 353,  // "Increase amount by:"
-    modify_amount__new_amount = 354,  // "New amount:"
+    modify_amount__decrease_amount = 352,  // {"Bolt": "Decrease amount by:", "Caesar": "Decrease amount by:", "Delizia": "Decrease amount by:", "Eckhart": "Decrease amount by"}
+    modify_amount__increase_amount = 353,  // {"Bolt": "Increase amount by:", "Caesar": "Increase amount by:", "Delizia": "Increase amount by:", "Eckhart": "Increase amount by"}
+    modify_amount__new_amount = 354,  // {"Bolt": "New amount:", "Caesar": "New amount:", "Delizia": "New amount:", "Eckhart": "New amount"}
     modify_amount__title = 355,  // "Modify amount"
-    modify_fee__decrease_fee = 356,  // "Decrease fee by:"
+    modify_fee__decrease_fee = 356,  // {"Bolt": "Decrease fee by:", "Caesar": "Decrease fee by:", "Delizia": "Decrease fee by:", "Eckhart": "Decrease fee by"}
     modify_fee__fee_rate = 357,  // "Fee rate:"
-    modify_fee__increase_fee = 358,  // "Increase fee by:"
-    modify_fee__new_transaction_fee = 359,  // "New transaction fee:"
-    modify_fee__no_change = 360,  // "Fee did not change.\n"
+    modify_fee__increase_fee = 358,  // {"Bolt": "Increase fee by:", "Caesar": "Increase fee by:", "Delizia": "Increase fee by:", "Eckhart": "Increase fee by"}
+    modify_fee__new_transaction_fee = 359,  // {"Bolt": "New transaction fee:", "Caesar": "New transaction fee:", "Delizia": "New transaction fee:", "Eckhart": "New transaction fee"}
+    modify_fee__no_change = 360,  // {"Bolt": "Fee did not change.\n", "Caesar": "Fee did not change.\n", "Delizia": "Fee did not change.\n", "Eckhart": "Fee did not change"}
     modify_fee__title = 361,  // "Modify fee"
-    modify_fee__transaction_fee = 362,  // "Transaction fee:"
+    modify_fee__transaction_fee = 362,  // {"Bolt": "Transaction fee:", "Caesar": "Transaction fee:", "Delizia": "Transaction fee:", "Eckhart": "Transaction fee"}
     #[cfg(feature = "universal_fw")]
     monero__confirm_export = 363,  // "Confirm export"
     #[cfg(feature = "universal_fw")]
@@ -1499,7 +1499,7 @@ impl TranslatedString {
             (Self::bitcoin__title_confirm_details, "Confirm details"),
             (Self::bitcoin__title_finalize_transaction, "Finalize transaction"),
             (Self::bitcoin__title_high_mining_fee, "High mining fee"),
-            (Self::bitcoin__title_meld_transaction, "Meld transactions"),
+            (Self::bitcoin__title_meld_transaction, "Meld transaction"),
             (Self::bitcoin__title_modify_amount, "Modify amount"),
             (Self::bitcoin__title_payjoin, "Payjoin"),
             (Self::bitcoin__title_proof_of_ownership, "Proof of ownership"),
@@ -2020,17 +2020,73 @@ impl TranslatedString {
             (Self::misc__decrypt_value, "Decrypt value"),
             (Self::misc__encrypt_value, "Encrypt value"),
             (Self::misc__title_suite_labeling, "Suite labeling"),
+            #[cfg(feature = "layout_bolt")]
             (Self::modify_amount__decrease_amount, "Decrease amount by:"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::modify_amount__decrease_amount, "Decrease amount by:"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::modify_amount__decrease_amount, "Decrease amount by:"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::modify_amount__decrease_amount, "Decrease amount by"),
+            #[cfg(feature = "layout_bolt")]
             (Self::modify_amount__increase_amount, "Increase amount by:"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::modify_amount__increase_amount, "Increase amount by:"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::modify_amount__increase_amount, "Increase amount by:"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::modify_amount__increase_amount, "Increase amount by"),
+            #[cfg(feature = "layout_bolt")]
             (Self::modify_amount__new_amount, "New amount:"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::modify_amount__new_amount, "New amount:"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::modify_amount__new_amount, "New amount:"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::modify_amount__new_amount, "New amount"),
             (Self::modify_amount__title, "Modify amount"),
+            #[cfg(feature = "layout_bolt")]
             (Self::modify_fee__decrease_fee, "Decrease fee by:"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::modify_fee__decrease_fee, "Decrease fee by:"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::modify_fee__decrease_fee, "Decrease fee by:"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::modify_fee__decrease_fee, "Decrease fee by"),
             (Self::modify_fee__fee_rate, "Fee rate:"),
+            #[cfg(feature = "layout_bolt")]
             (Self::modify_fee__increase_fee, "Increase fee by:"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::modify_fee__increase_fee, "Increase fee by:"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::modify_fee__increase_fee, "Increase fee by:"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::modify_fee__increase_fee, "Increase fee by"),
+            #[cfg(feature = "layout_bolt")]
             (Self::modify_fee__new_transaction_fee, "New transaction fee:"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::modify_fee__new_transaction_fee, "New transaction fee:"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::modify_fee__new_transaction_fee, "New transaction fee:"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::modify_fee__new_transaction_fee, "New transaction fee"),
+            #[cfg(feature = "layout_bolt")]
             (Self::modify_fee__no_change, "Fee did not change.\n"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::modify_fee__no_change, "Fee did not change.\n"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::modify_fee__no_change, "Fee did not change.\n"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::modify_fee__no_change, "Fee did not change"),
             (Self::modify_fee__title, "Modify fee"),
+            #[cfg(feature = "layout_bolt")]
             (Self::modify_fee__transaction_fee, "Transaction fee:"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::modify_fee__transaction_fee, "Transaction fee:"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::modify_fee__transaction_fee, "Transaction fee:"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::modify_fee__transaction_fee, "Transaction fee"),
             #[cfg(feature = "universal_fw")]
             (Self::monero__confirm_export, "Confirm export"),
             #[cfg(feature = "universal_fw")]

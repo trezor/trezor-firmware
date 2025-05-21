@@ -16,7 +16,7 @@ use crate::{
 use super::super::{
     component::Button,
     firmware::{
-        ActionBar, AllowedTextContent, Header, ShortMenuVec, TextScreen, TextScreenMsg,
+        ActionBar, AllowedTextContent, Header, Hint, ShortMenuVec, TextScreen, TextScreenMsg,
         VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
     },
     theme,
@@ -57,6 +57,7 @@ pub fn new_confirm_with_menu<T: AllowedTextContent + MaybeTrace + 'static>(
     title: TString<'static>,
     subtitle: Option<TString<'static>>,
     content: T,
+    hint: Option<TString<'static>>,
     confirm_label: Option<TString<'static>>,
     hold: bool,
     extra_menu_label: Option<TString<'static>>,
@@ -68,21 +69,26 @@ pub fn new_confirm_with_menu<T: AllowedTextContent + MaybeTrace + 'static>(
     let confirm_button = if hold {
         let confirm_label = confirm_label.unwrap_or(TR::buttons__hold_to_confirm.into());
         Button::with_text(confirm_label)
-            .styled(theme::button_confirm())
-            .with_long_press(theme::LOCK_HOLD_DURATION)
+            .with_long_press(theme::CONFIRM_HOLD_DURATION)
+            .styled(theme::firmware::button_confirm())
+    } else if let Some(confirm_label) = confirm_label {
+        Button::with_text(confirm_label)
     } else {
-        let confirm_label = confirm_label.unwrap_or(TR::buttons__confirm.into());
-        Button::with_text(confirm_label).styled(theme::button_default())
+        Button::with_text(TR::buttons__confirm.into()).styled(theme::firmware::button_confirm())
     };
-    let content_value = TextScreen::new(content)
+
+    let mut value_screen = TextScreen::new(content)
         .with_header(Header::new(title).with_menu_button())
         .with_action_bar(ActionBar::new_single(confirm_button))
-        .with_subtitle(subtitle.unwrap_or(TString::empty()))
-        .map(|msg| match msg {
-            TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
-            TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
-            TextScreenMsg::Menu => Some(FlowMsg::Info),
-        });
+        .with_subtitle(subtitle.unwrap_or(TString::empty()));
+    if let Some(hint) = hint {
+        value_screen = value_screen.with_hint(Hint::new_instruction(hint, Some(theme::ICON_INFO)));
+    }
+    let content_value = value_screen.map(|msg| match msg {
+        TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
+        TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
+        TextScreenMsg::Menu => Some(FlowMsg::Info),
+    });
 
     let mut menu_items = VerticalMenu::<ShortMenuVec>::empty();
 

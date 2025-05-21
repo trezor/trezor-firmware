@@ -1143,7 +1143,7 @@ def confirm_replacement(title: str, txid: str) -> Awaitable[None]:
         "confirm_replacement",
         title,
         txid,
-        TR.send__transaction_id,
+        subtitle=TR.send__transaction_id,
         verb=TR.buttons__continue,
         info=False,
         br_code=ButtonRequestType.SignTx,
@@ -1158,10 +1158,12 @@ async def confirm_modify_output(
 ) -> None:
     address_layout = trezorui_api.confirm_value(
         title=TR.modify_amount__title,
+        subtitle=TR.words__address,
         value=address,
         verb=TR.buttons__continue,
-        description=f"{TR.words__address}:",
         cancel=True,
+        is_data=True,
+        description=None,
     )
     modify_layout = trezorui_api.confirm_modify_output(
         sign=sign,
@@ -1257,7 +1259,7 @@ async def confirm_signverify(
     address_layout = trezorui_api.confirm_value(
         title=address_title,
         value=address,
-        description="",
+        description=None,
         is_data=True,
         verb=TR.buttons__continue,
         info=True,

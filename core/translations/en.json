@@ -86,7 +86,7 @@
     "bitcoin__title_confirm_details": "Confirm details",
     "bitcoin__title_finalize_transaction": "Finalize transaction",
     "bitcoin__title_high_mining_fee": "High mining fee",
-    "bitcoin__title_meld_transaction": "Meld transactions",
+    "bitcoin__title_meld_transaction": "Meld transaction",
     "bitcoin__title_modify_amount": "Modify amount",
     "bitcoin__title_payjoin": "Payjoin",
     "bitcoin__title_proof_of_ownership": "Proof of ownership",
@@ -487,17 +487,57 @@
     "misc__enable_labeling": "Enable labeling?",
     "misc__encrypt_value": "Encrypt value",
     "misc__title_suite_labeling": "Suite labeling",
-    "modify_amount__decrease_amount": "Decrease amount by:",
-    "modify_amount__increase_amount": "Increase amount by:",
-    "modify_amount__new_amount": "New amount:",
+    "modify_amount__decrease_amount": {
+      "Bolt": "Decrease amount by:",
+      "Caesar": "Decrease amount by:",
+      "Delizia": "Decrease amount by:",
+      "Eckhart": "Decrease amount by"
+    },
+    "modify_amount__increase_amount": {
+      "Bolt": "Increase amount by:",
+      "Caesar": "Increase amount by:",
+      "Delizia": "Increase amount by:",
+      "Eckhart": "Increase amount by"
+    },
+    "modify_amount__new_amount": {
+      "Bolt": "New amount:",
+      "Caesar": "New amount:",
+      "Delizia": "New amount:",
+      "Eckhart": "New amount"
+    },
     "modify_amount__title": "Modify amount",
-    "modify_fee__decrease_fee": "Decrease fee by:",
+    "modify_fee__decrease_fee": {
+      "Bolt": "Decrease fee by:",
+      "Caesar": "Decrease fee by:",
+      "Delizia": "Decrease fee by:",
+      "Eckhart": "Decrease fee by"
+    },
     "modify_fee__fee_rate": "Fee rate:",
-    "modify_fee__increase_fee": "Increase fee by:",
-    "modify_fee__new_transaction_fee": "New transaction fee:",
-    "modify_fee__no_change": "Fee did not change.\n",
+    "modify_fee__increase_fee": {
+      "Bolt": "Increase fee by:",
+      "Caesar": "Increase fee by:",
+      "Delizia": "Increase fee by:",
+      "Eckhart": "Increase fee by"
+    },
+    "modify_fee__new_transaction_fee": {
+      "Bolt": "New transaction fee:",
+      "Caesar": "New transaction fee:",
+      "Delizia": "New transaction fee:",
+      "Eckhart": "New transaction fee"
+    },
+    "modify_fee__no_change": {
+      "Bolt": "Fee did not change.\n",
+      "Caesar": "Fee did not change.\n",
+      "Delizia": "Fee did not change.\n",
+      "Eckhart": "Fee did not change"
+    },
     "modify_fee__title": "Modify fee",
-    "modify_fee__transaction_fee": "Transaction fee:",
+    "modify_fee__transaction_fee": {
+      "Bolt": "Transaction fee:",
+      "Caesar": "Transaction fee:",
+      "Delizia": "Transaction fee:",
+      "Eckhart": "Transaction fee"
+    },
     "monero__confirm_export": "Confirm export",
     "monero__confirm_ki_sync": "Confirm ki sync",
     "monero__confirm_refresh": "Confirm refresh",
