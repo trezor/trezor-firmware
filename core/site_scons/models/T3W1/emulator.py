@@ -102,6 +102,14 @@ def configure(
         features_available.append("button")
         defines += [("USE_BUTTON", "1")]
 
+    if "haptic" in features_wanted:
+        sources += [
+            "embed/io/haptic/unix/haptic_driver.c",
+        ]
+        paths += ["embed/io/haptic/inc"]
+        features_available.append("haptic")
+        defines += [("USE_HAPTIC", "1")]
+
     if "ble" in features_wanted:
         sources += ["embed/io/ble/unix/ble.c"]
         paths += ["embed/io/ble/inc"]
