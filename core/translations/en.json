@@ -776,7 +776,7 @@
       "Delizia": "Select {0} word",
       "Eckhart": "Select word #{0} from your wallet backup"
     },
-    "reset__select_word_from_share_template": "Select word #{0} from\nShare #{1}.",
+    "reset__select_word_from_share_template": "Select word #{0} from\nShare #{1}",
     "reset__select_word_x_of_y_template": "Select word {0} of {1}:",
     "reset__set_it_to_count_template": "Set it to {0} and you will need ",
     "reset__share_checked_successfully_template": "Share #{0} checked successfully.",

@@ -1437,7 +1437,7 @@ pub enum TranslatedString {
     plurals__lock_after_x_days = 1031,  // "day|days"
     instructions__shares_start_with_x_template = 1032,  // "Start with Share #{0}"
     reset__check_share_backup_template = 1033,  // "Let's do a quick check of Share #{0}."
-    reset__select_word_from_share_template = 1034,  // "Select word #{0} from\nShare #{1}."
+    reset__select_word_from_share_template = 1034,  // "Select word #{0} from\nShare #{1}"
 }
 
 impl TranslatedString {
@@ -3057,7 +3057,7 @@ impl TranslatedString {
             (Self::plurals__lock_after_x_days, "day|days"),
             (Self::instructions__shares_start_with_x_template, "Start with Share #{0}"),
             (Self::reset__check_share_backup_template, "Let's do a quick check of Share #{0}."),
-            (Self::reset__select_word_from_share_template, "Select word #{0} from\nShare #{1}."),
+            (Self::reset__select_word_from_share_template, "Select word #{0} from\nShare #{1}"),
     ];
 
     #[cfg(feature = "micropython")]
