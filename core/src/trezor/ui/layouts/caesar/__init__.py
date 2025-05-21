@@ -17,6 +17,7 @@ CONFIRMED = trezorui_api.CONFIRMED
 CANCELLED = trezorui_api.CANCELLED
 INFO = trezorui_api.INFO
 
+DOWN_ARROW = "V"
 BR_CODE_OTHER = ButtonRequestType.Other  # global_import_cache
 
 
@@ -931,7 +932,7 @@ if not utils.BITCOIN_ONLY:
                 TR.ethereum__token_contract + " | " + TR.words__address,
                 token_address,
                 None,
-                verb="V",
+                verb=DOWN_ARROW,
                 hold=False,
                 br_name="confirm_ethereum_approve",
                 chunkify=chunkify,
@@ -943,7 +944,7 @@ if not utils.BITCOIN_ONLY:
                 TR.ethereum__approve_chain_id,
                 chain_id,
                 None,
-                verb="V",
+                verb=DOWN_ARROW,
                 hold=False,
                 br_name="confirm_ethereum_approve",
             )
