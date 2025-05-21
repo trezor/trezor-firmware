@@ -17,8 +17,8 @@ CORE_DIR = HERE.parent.parent
 if len(sys.argv) > 1:
     BIN_TO_ANALYZE = sys.argv[1]
 else:
-    BIN_TO_ANALYZE = CORE_DIR / "build/firmware/firmware.elf"  # type: ignore
-FILE_TO_SAVE = HERE / "size_binary_firmware_elf_results.txt"
+    BIN_TO_ANALYZE = CORE_DIR / "build/boardloader/boardloader.elf"  # type: ignore
+FILE_TO_SAVE = HERE / "size_binary_boardloader_elf_results.txt"
 
 
 def _categories_func(row: DataRow) -> str | None:
@@ -65,8 +65,8 @@ def show_only_one_category(
 
 
 def show_raw_bloaty_data() -> None:
-    BinarySize().load_file(BIN_TO_ANALYZE, sections=(".flash", ".flash2")).show(
-        HERE / "size_binary_firmware_elf_results_no_aggregation.txt"
+    BinarySize().load_file(BIN_TO_ANALYZE, sections=(".flash")).show(
+        HERE / "size_binary_boardloader_elf_results_no_aggregation.txt"
     )
 
 
@@ -75,9 +75,10 @@ if __name__ == "__main__":
 
     BS = (
         BinarySize()
-        .load_file(BIN_TO_ANALYZE, sections=(".flash", ".flash2"))
+        .load_file(BIN_TO_ANALYZE, sections=(".flash"))
         .use_map_file(
-            CORE_DIR / "build/firmware/firmware.map", sections=(".flash", ".flash2")
+            CORE_DIR / "build/boardloader/boardloader.map",
+            sections=(".flash",),
         )
         .add_basic_info()
         .aggregate()
@@ -88,4 +89,6 @@ if __name__ == "__main__":
 
     show_categories_statistics(STATS, include_categories_func=True)
     show_data_with_categories(STATS, FILE_TO_SAVE)
-    show_only_one_category(BS, None, HERE / "size_binary_firmware_elf_results_None.txt")
+    show_only_one_category(
+        BS, None, HERE / "size_binary_boardloader_elf_results_None.txt"
+    )
