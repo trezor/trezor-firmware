@@ -1032,7 +1032,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__token_contract;
   MP_QSTR_ethereum__units_template;
   MP_QSTR_ethereum__unknown_contract_address;
-  MP_QSTR_ethereum__unknown_contract_address_short;
   MP_QSTR_ethereum__unknown_token;
   MP_QSTR_ethereum__valid_signature;
   MP_QSTR_fido__already_registered;

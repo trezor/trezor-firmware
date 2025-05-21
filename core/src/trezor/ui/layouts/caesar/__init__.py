@@ -416,18 +416,19 @@ def show_warning(
 def show_danger(
     br_name: str,
     content: str,
-    value: str | None = None,
     title: str | None = None,
     verb_cancel: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
-) -> Awaitable[ui.UiResult]:
+) -> Awaitable[None]:
     title = title or TR.words__warning
-    return show_warning(
+    verb_cancel = verb_cancel or TR.buttons__cancel
+    return raise_if_not_confirmed(
+        trezorui_api.show_danger(
+            title=title,
+            description=content,
+        ),
         br_name,
-        title,
-        content,
-        TR.words__continue_anyway,
-        br_code=br_code,
+        br_code,
     )
 
 
@@ -875,9 +876,11 @@ def confirm_total(
 
 if not utils.BITCOIN_ONLY:
 
-    def confirm_ethereum_unknown_contract_warning() -> Awaitable[ui.UiResult]:
+    def confirm_ethereum_unknown_contract_warning() -> Awaitable[None]:
         return show_danger(
-            "unknown_contract_warning", TR.ethereum__unknown_contract_address_short
+            "unknown_contract_warning",
+            TR.words__know_what_your_doing,
+            title=TR.ethereum__unknown_contract_address,
         )
 
     async def confirm_ethereum_approve(

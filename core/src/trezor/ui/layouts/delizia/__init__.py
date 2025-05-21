@@ -752,6 +752,7 @@ if not utils.BITCOIN_ONLY:
         return show_danger(
             "unknown_contract_warning",
             TR.ethereum__unknown_contract_address,
+            TR.words__know_what_your_doing,
             verb_cancel=TR.send__cancel_sign,
         )
 
