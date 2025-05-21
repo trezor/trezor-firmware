@@ -256,7 +256,7 @@ async def _handle_erc20(
 
             # arg0: address, Address, 20 bytes (left padded with zeroes)
             # arg1: value, uint256, 32 bytes
-            if data_reader.remaining_count() < SC_FUNC_SIG_BYTES * 2:
+            if data_reader.remaining_count() < SC_ARGUMENT_BYTES * 2:
                 return token, token_address, None, recipient, value
             arg0 = data_reader.read_memoryview(SC_ARGUMENT_BYTES)
             assert all(

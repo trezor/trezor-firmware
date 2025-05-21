@@ -19,6 +19,8 @@ CONFIRMED = trezorui_api.CONFIRMED
 CANCELLED = trezorui_api.CANCELLED
 INFO = trezorui_api.INFO
 
+DOWN_ARROW = "V"
+
 
 def confirm_action(
     br_name: str,
@@ -552,7 +554,7 @@ async def _confirm_ask_pagination(
             [(description, False), (data, True)],
             br_name=br_name,
             br_code=br_code,
-            confirm="V" if extra_confirmation_if_not_read else None,
+            confirm=DOWN_ARROW if extra_confirmation_if_not_read else None,
         ):
             if extra_confirmation_if_not_read:
                 try:
