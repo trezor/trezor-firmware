@@ -44,7 +44,7 @@ pm_status_t pm_get_state(pm_state_t* state) {
   state->usb_connected = true;
   state->wireless_connected = false;
   state->charging_status = PM_BATTERY_IDLE;
-  state->power_state = PM_STATE_ACTIVE;
+  state->power_status = PM_STATE_ACTIVE;
   state->soc = 100;
   return PM_OK;
 }

@@ -240,14 +240,15 @@ void prodtest_pm_event_monitor(cli_t* cli) {
     return;
   }
 
-  pm_status_t status;
   pm_event_t event_flag;
   pm_state_t state;
 
-  status = pm_get_state(&state);
-
   // Clear leftover events
   pm_get_events(&event_flag);
+  sysevents_t awaited_events = {0};
+  awaited_events.read_ready = 1 << SYSHANDLE_POWER_MANAGER;
+  sysevents_t signalled_events = {0};
+  sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(0));
 
   while (true) {
     if (cli_aborted(cli)) {
@@ -255,63 +256,44 @@ void prodtest_pm_event_monitor(cli_t* cli) {
       break;
     }
 
-    status = pm_get_events(&event_flag);
-    if (status != PM_OK) {
+    sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(10));
+
+    if ((signalled_events.read_ready & 1 << SYSHANDLE_POWER_MANAGER) == 0) {
+      continue;
+    }
+
+    if (!pm_get_events(&event_flag)) {
       cli_error(cli, CLI_ERROR, "Failed to get power manager events");
+      continue;
     }
 
-    if (event_flag.flags.usb_connected) {
-      cli_trace(cli, "USB connected");
+    if (event_flag.flags.usb_connected_changed) {
+      cli_trace(cli, "USB connected changed");
     }
 
-    if (event_flag.flags.usb_disconnected) {
-      cli_trace(cli, "USB disconnected");
+    if (event_flag.flags.wireless_connected_changed) {
+      cli_trace(cli, "WLC connected changed");
     }
 
-    if (event_flag.flags.wireless_connected) {
-      cli_trace(cli, "WLC connected");
+    if (event_flag.flags.power_status_changed) {
+      cli_trace(cli, "Power manager state changed");
     }
 
-    if (event_flag.flags.wireless_disconnected) {
-      cli_trace(cli, "WLC disconnected");
-    }
-
-    if (event_flag.flags.entered_mode_active) {
-      cli_trace(cli, "Power manager entered active mode");
-    }
-
-    if (event_flag.flags.entered_mode_power_save) {
-      cli_trace(cli, "Power manager entered power save mode");
-    }
-
-    if (event_flag.flags.entered_mode_shutting_down) {
-      cli_trace(cli, "Power manager entered shutting down mode");
-    }
-
-    if (event_flag.flags.entered_mode_suspend) {
-      cli_trace(cli, "Power manager entered suspend mode");
-    }
-
-    if (event_flag.flags.entered_mode_charging) {
-      cli_trace(cli, "Power manager entered charging mode");
-    }
-
-    if (event_flag.flags.entered_mode_hibernate) {
-      cli_trace(cli, "Power manager entered hibernate mode");
+    if (event_flag.flags.charging_status_changed) {
+      cli_trace(cli, "Charging status changed");
     }
 
     if (event_flag.flags.soc_updated) {
-      status = pm_get_state(&state);
+      pm_get_state(&state);
       cli_trace(cli, "Power manager SOC changed to %d %%", state.soc);
     }
-
-    systick_delay_ms(50);
   }
 
+  pm_get_state(&state);
   cli_progress(cli, "%s %s %d %d %d",
                state.usb_connected ? "USB_connected" : "USB_disconnected",
                state.wireless_connected ? "WLC_connected" : "WLC_disconnected",
-               state.charging_status, state.power_state, state.soc);
+               state.charging_status, state.power_status, state.soc);
 
   cli_ok(cli, "");
 }
