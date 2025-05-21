@@ -36,8 +36,6 @@ enum Mode {
 impl BldActionBar {
     pub const ACTION_BAR_HEIGHT: i16 = 90; // [px]
     const SPACER_WIDTH: i16 = 4; // [px]
-    /// TODO: use this offset
-    /// offset for button content to move it towards center
     const BUTTON_CONTENT_OFFSET: Offset = Offset::x(12); // [px]
     const BUTTON_EXPAND_TOUCH: Insets = Insets::top(Self::ACTION_BAR_HEIGHT);
 
@@ -54,8 +52,13 @@ impl BldActionBar {
     pub fn new_double(left: Button, right: Button) -> Self {
         Self::new(
             Mode::Double,
-            Some(left.with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)),
-            right.with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH),
+            Some(
+                left.with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)
+                    .with_content_offset(Self::BUTTON_CONTENT_OFFSET),
+            ),
+            right
+                .with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)
+                .with_content_offset(Self::BUTTON_CONTENT_OFFSET.neg()),
         )
     }
 
