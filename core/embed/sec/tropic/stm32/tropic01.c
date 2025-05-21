@@ -27,27 +27,6 @@
 #include <sec/tropic.h>
 #include <sys/systick.h>
 
-#define TROPIC01_PWR_PORT GPIOB
-#define TROPIC01_PWR_PIN GPIO_PIN_11
-#define TROPIC01_PWR_CLK_EN __HAL_RCC_GPIOB_CLK_ENABLE
-
-#define TROPIC01_INT_PORT GPIOB
-#define TROPIC01_INT_PIN GPIO_PIN_11
-#define TROPIC01_INT_CLK_EN __HAL_RCC_GPIOB_CLK_ENABLE
-
-#define TROPIC01_SPI_SCK_PORT GPIOB
-#define TROPIC01_SPI_SCK_PIN GPIO_PIN_13
-#define TROPIC01_SPI_SCK_EN __HAL_RCC_GPIOB_CLK_ENABLE
-#define TROPIC01_SPI_MISO_PORT GPIOB
-#define TROPIC01_SPI_MISO_PIN GPIO_PIN_14
-#define TROPIC01_SPI_MISO_EN __HAL_RCC_GPIOB_CLK_ENABLE
-#define TROPIC01_SPI_MOSI_PORT GPIOB
-#define TROPIC01_SPI_MOSI_PIN GPIO_PIN_15
-#define TROPIC01_SPI_MOSI_EN __HAL_RCC_GPIOB_CLK_ENABLE
-#define TROPIC01_SPI_NSS_PORT GPIOI
-#define TROPIC01_SPI_NSS_PIN GPIO_PIN_0
-#define TROPIC01_SPI_NSS_EN __HAL_RCC_GPIOI_CLK_ENABLE
-
 typedef struct {
   bool initialized;
   SPI_HandleTypeDef spi;
@@ -107,7 +86,7 @@ bool tropic_hal_init(void) {
   GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStructure.Alternate = GPIO_AF5_SPI2;
+  GPIO_InitStructure.Alternate = TROPIC01_SPI_PIN_AF;
   GPIO_InitStructure.Pin = TROPIC01_SPI_SCK_PIN;
   HAL_GPIO_Init(TROPIC01_SPI_SCK_PORT, &GPIO_InitStructure);
 
@@ -118,11 +97,11 @@ bool tropic_hal_init(void) {
   GPIO_InitStructure.Pin = TROPIC01_SPI_MOSI_PIN;
   HAL_GPIO_Init(TROPIC01_SPI_MOSI_PORT, &GPIO_InitStructure);
 
-  __HAL_RCC_SPI2_CLK_ENABLE();
-  __HAL_RCC_SPI2_FORCE_RESET();
-  __HAL_RCC_SPI2_RELEASE_RESET();
+  TROPIC01_SPI_CLK_EN();
+  TROPIC01_SPI_FORCE_RESET();
+  TROPIC01_SPI_RELEASE_RESET();
 
-  drv->spi.Instance = SPI2;
+  drv->spi.Instance = TROPIC01_SPI;
   drv->spi.Init.Mode = SPI_MODE_MASTER;
   drv->spi.Init.Direction = SPI_DIRECTION_2LINES;
   drv->spi.Init.DataSize = SPI_DATASIZE_8BIT;
@@ -149,9 +128,9 @@ void tropic_hal_deinit(void) {
     HAL_SPI_DeInit(&drv->spi);
   }
 
-  __HAL_RCC_SPI2_FORCE_RESET();
-  __HAL_RCC_SPI2_RELEASE_RESET();
-  __HAL_RCC_SPI2_CLK_DISABLE();
+  TROPIC01_SPI_FORCE_RESET();
+  TROPIC01_SPI_RELEASE_RESET();
+  TROPIC01_SPI_CLK_DIS();
 
   HAL_GPIO_DeInit(TROPIC01_INT_PORT, TROPIC01_INT_PIN);
   HAL_GPIO_DeInit(TROPIC01_PWR_PORT, TROPIC01_PWR_PIN);
