@@ -41,7 +41,12 @@
     "addr_mismatch__support_url": "trezor.io/support",
     "addr_mismatch__wrong_derivation_path": "Chybná derivační cesta pro vybraný účet.",
     "addr_mismatch__xpub_mismatch": "Neshoduje se XPUB?",
-    "address__cancel_contact_support": "Pokud se adresa příjemce neshoduje, obraťte se na Trezor podporu na adrese trezor.io/support.",
+    "address__cancel_contact_support": {
+      "Bolt": "Pokud se adresa příjemce neshoduje, obraťte se na Trezor podporu na adrese trezor.io/support.",
+      "Caesar": "Pokud se adresa příjemce neshoduje, obraťte se na Trezor podporu na adrese trezor.io/support.",
+      "Delizia": "Pokud se adresa příjemce neshoduje, obraťte se na Trezor podporu na adrese trezor.io/support.",
+      "Eckhart": "Pokud se adresa neshoduje, obraťte se na Trezor podporu na trezor.io/support."
+    },
     "address__cancel_receive": "Zrušit příjem",
     "address__confirmed": "Adresa příjemce potvrzena",
     "address__public_key": "Veřejný klíč",

@@ -41,7 +41,12 @@
     "addr_mismatch__support_url": "trezor.io/support",
     "addr_mismatch__wrong_derivation_path": "Chemin dériv. incorrect du compte sélectionné.",
     "addr_mismatch__xpub_mismatch": "Err. clé publ. (XPUB) ?",
-    "address__cancel_contact_support": "Si l'adresse de réception ne correspond pas, contactez l'assistance Trezor sur trezor.io/support.",
+    "address__cancel_contact_support": {
+      "Bolt": "Si l'adresse de réception ne correspond pas, contactez l'assistance Trezor sur trezor.io/support.",
+      "Caesar": "Si l'adresse de réception ne correspond pas, contactez l'assistance Trezor sur trezor.io/support.",
+      "Delizia": "Si l'adresse de réception ne correspond pas, contactez l'assistance Trezor sur trezor.io/support.",
+      "Eckhart": "Si l'adresse ne correspond pas, contactez le support Trezor sur trezor.io/support."
+    },
     "address__cancel_receive": "Annuler réception",
     "address__confirmed": "Adresse de réception confirmée",
     "address__public_key": "Clé publique",
