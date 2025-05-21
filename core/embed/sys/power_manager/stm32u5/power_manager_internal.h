@@ -39,9 +39,10 @@
 #define PM_BATTERY_CHARGING_CURRENT_MAX PMIC_CHARGING_LIMIT_MAX
 #define PM_BATTERY_CHARGING_CURRENT_MIN PMIC_CHARGING_LIMIT_MIN
 #define PM_BATTERY_SAMPLING_BUF_SIZE 10
-
 #define PM_WPC_CHARGE_CURR_STEP_MA 50
 #define PM_WPC_CHARGE_CURR_STEP_TIMEOUT_MS 1000
+
+// Fuel gauge extended kalman filter parameters
 #define PM_FUEL_GAUGE_R 100.0f
 #define PM_FUEL_GAUGE_Q 0.0001f
 #define PM_FUEL_GAUGE_R_AGGRESSIVE 10.0f
@@ -115,18 +116,38 @@ typedef struct {
 // Shared global driver instance
 extern pm_driver_t g_pm;
 
-// Internal function declarations
+// Power manager monitoring function called periodically to process data from
+// PMIC and WLC, run fuel gauge, run charging controller and stimulates
+// internal state machine.
 void pm_monitor_power_sources(void);
+
+// Power manager state machine automat driving internal state machine
+// transitions.
 void pm_process_state_machine(void);
+
+// PMIC callback function called when PMIC measurement acquisition is ready.
 void pm_pmic_data_ready(void* context, pmic_report_t* report);
+
+// Power manager charging controller function called periodically from
+// pm_monitor_power_sources() to control the charging current and state.
 void pm_charging_controller(pm_driver_t* drv);
+
+// Battery sampling function. Captures battery measurements into the FIFO buffer
+// during the battery initialization phase. Buffer content is then used by
+// pm_battery_initial_soc_guess() to guess the initial state of charge.
 void pm_battery_sampling(float vbat, float ibat, float ntc_temp);
+
+// Battery initial state of charge guess function. This function use the sampled
+// battery data to guess the initial state of charge in case its unknown.
 void pm_battery_initial_soc_guess(void);
+
+// Power manager control function which reboots the device into hibernate mode.
 pm_status_t pm_control_hibernate(void);
-void pm_control_suspend(void);
+
+// Power manager control function which puts device into suspend mode.
 void pm_control_suspend(void);
 
-// State handlers
+// Power manager internal state machine handlers and entry/exit funtions
 pm_internal_state_t pm_handle_state_active(pm_driver_t* drv);
 pm_internal_state_t pm_handle_state_power_save(pm_driver_t* drv);
 pm_internal_state_t pm_handle_state_ultra_power_save(pm_driver_t* drv);

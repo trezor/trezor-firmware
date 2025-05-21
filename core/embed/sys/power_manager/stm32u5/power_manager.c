@@ -38,8 +38,6 @@ pm_driver_t g_pm = {
 static void pm_monitoring_timer_handler(void* context);
 static void pm_shutdown_timer_handler(void* context);
 
-// API Implementation
-
 pm_status_t pm_init(bool inherit_state) {
   pm_driver_t* drv = &g_pm;
 
