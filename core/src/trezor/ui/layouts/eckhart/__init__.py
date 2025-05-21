@@ -1124,10 +1124,11 @@ async def confirm_modify_output(
 ) -> None:
     address_layout = trezorui_api.confirm_value(
         title=TR.modify_amount__title,
+        subtitle=TR.words__address,
         value=address,
         verb=TR.buttons__continue,
-        description=f"{TR.words__address}:",
         cancel=True,
+        is_data=True,
     )
     modify_layout = trezorui_api.confirm_modify_output(
         sign=sign,
