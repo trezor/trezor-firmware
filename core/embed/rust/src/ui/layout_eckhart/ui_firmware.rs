@@ -199,40 +199,52 @@ impl FirmwareUI for UIEckhart {
         total_fee_new: TString<'static>,
         _fee_rate_amount: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let (description, change, total_label) = match sign {
+        let (description, change, total_label, info_hint) = match sign {
             s if s < 0 => (
-                TR::modify_fee__decrease_fee,
+                Some(TR::modify_fee__decrease_fee),
                 user_fee_change,
                 TR::modify_fee__new_transaction_fee,
+                None,
             ),
             s if s > 0 => (
-                TR::modify_fee__increase_fee,
+                Some(TR::modify_fee__increase_fee),
                 user_fee_change,
                 TR::modify_fee__new_transaction_fee,
+                None,
             ),
             _ => (
-                TR::modify_fee__no_change,
-                "".into(),
+                None,
+                TString::empty(),
                 TR::modify_fee__transaction_fee,
+                Some(TR::modify_fee__no_change.into()),
             ),
         };
 
-        let paragraphs = ParagraphVecShort::from_iter([
-            Paragraph::new(&theme::TEXT_SMALL_LIGHT, description),
-            Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, change),
-            Paragraph::new(&theme::TEXT_SMALL_LIGHT, total_label),
-            Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, total_fee_new),
-        ]);
+        let mut paragraphs = ParagraphVecShort::new();
+        if let Some(description) = description {
+            paragraphs.add(
+                Paragraph::new(&theme::TEXT_SMALL_LIGHT, description)
+                    .with_bottom_padding(theme::PARAGRAPHS_SPACING),
+            );
+            paragraphs
+                .add(Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, change).with_bottom_padding(16));
+        }
+        paragraphs.add(
+            Paragraph::new(&theme::TEXT_SMALL_LIGHT, total_label)
+                .with_bottom_padding(theme::PARAGRAPHS_SPACING),
+        );
+        paragraphs.add(Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, total_fee_new));
 
         let flow = flow::new_confirm_with_menu(
             title,
             None,
-            paragraphs.into_paragraphs().with_placement(
-                LinearPlacement::vertical().with_spacing(theme::PARAGRAPHS_SPACING),
-            ),
+            paragraphs
+                .into_paragraphs()
+                .with_placement(LinearPlacement::vertical()),
+            info_hint,
             None,
             false,
-            Some(TR::words__title_information.into()),
+            Some(TR::confirm_total__title_fee.into()),
             None,
         )?;
         Ok(flow)
@@ -353,6 +365,7 @@ impl FirmwareUI for UIEckhart {
             paragraphs.into_paragraphs().with_placement(
                 LinearPlacement::vertical().with_spacing(theme::PARAGRAPHS_SPACING),
             ),
+            None,
             None,
             hold,
             None,
@@ -493,6 +506,7 @@ impl FirmwareUI for UIEckhart {
                 .into_paragraphs()
                 .with_placement(LinearPlacement::vertical())
                 .with_spacing(12),
+            None,
             Some(verb),
             false,
             Some(verb_info),
