@@ -1,4 +1,3 @@
-
 /*
  * This file is part of the Trezor project, https://trezor.io/
  *
@@ -20,6 +19,7 @@
 #ifdef KERNEL_MODE
 
 #include <sys/backup_ram.h>
+#include <sys/irq.h>
 #include <sys/pmic.h>
 #include <sys/systick.h>
 #include <trezor_rtl.h>
@@ -27,6 +27,8 @@
 #include "../fuel_gauge/fuel_gauge.h"
 #include "../stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
+
+static void pm_battery_sampling(float vbat, float ibat, float ntc_temp);
 
 void pm_monitor_power_sources(void) {
   pm_driver_t* drv = &g_pm;
@@ -150,7 +152,6 @@ void pm_charging_controller(pm_driver_t* drv) {
     // Charging is disabled
     if (drv->charging_current_target_ma != 0) {
       drv->charging_current_target_ma = 0;
-      drv->charging_target_timestamp = systick_ms();
     } else {
       // No action required
       return;
@@ -160,16 +161,17 @@ void pm_charging_controller(pm_driver_t* drv) {
     drv->charging_current_target_ma = drv->charging_current_max_limit_ma;
 
   } else if (drv->wireless_connected) {
-    // Gradually increase charging current to the maximum
-    if (drv->charging_current_target_ma == drv->charging_current_max_limit_ma) {
-      // No action required
-    } else if (drv->charging_current_target_ma == 0) {
-      drv->charging_current_target_ma = drv->charging_current_max_limit_ma;
-      drv->charging_target_timestamp = systick_ms();
-    } else if (systick_ms() - drv->charging_target_timestamp >
-               PM_WPC_CHARGE_CURR_STEP_TIMEOUT_MS) {
-      drv->charging_current_target_ma += PM_WPC_CHARGE_CURR_STEP_MA;
-      drv->charging_target_timestamp = systick_ms();
+    // Wireless charger is sensitive to large current steps, so we need to
+    // controll the charging current in steps.
+    if (ticks_expired(drv->charging_step_timeout_ms)) {
+      if (drv->charging_current_target_ma <
+          drv->charging_current_max_limit_ma) {
+        drv->charging_current_target_ma += PM_WPC_CHARGE_CURR_STEP_MA;
+      }
+
+      // Reset charging step timeout
+      drv->charging_step_timeout_ms =
+          ticks_timeout(PM_WPC_CHARGE_CURR_STEP_TIMEOUT_MS);
     }
 
   } else {
@@ -206,7 +208,7 @@ void pm_charging_controller(pm_driver_t* drv) {
   }
 }
 
-void pm_battery_sampling(float vbat, float ibat, float ntc_temp) {
+static void pm_battery_sampling(float vbat, float ibat, float ntc_temp) {
   pm_driver_t* drv = &g_pm;
 
   // Store battery data in the buffer
@@ -232,6 +234,8 @@ void pm_battery_sampling(float vbat, float ibat, float ntc_temp) {
 
 void pm_battery_initial_soc_guess(void) {
   pm_driver_t* drv = &g_pm;
+
+  irq_key_t irq_key = irq_lock();
 
   // Check if the buffer is full
   if (drv->bat_sampling_buf_head_idx == drv->bat_sampling_buf_tail_idx) {
@@ -265,6 +269,8 @@ void pm_battery_initial_soc_guess(void) {
   ntc_temp_g /= samples_count;
 
   fuel_gauge_initial_guess(&drv->fuel_gauge, vbat_g, ibat_g, ntc_temp_g);
+
+  irq_unlock(irq_key);
 }
 
 #endif

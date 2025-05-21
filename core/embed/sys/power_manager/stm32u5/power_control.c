@@ -128,14 +128,9 @@ void pm_control_suspend() {
   // is required or the user needs to be notified.
 
   pm_wakeup_flags_t wakeup_flags = 0;
+  pm_wakeup_flags_get(&wakeup_flags);
 
-  while (true) {
-    pm_wakeup_flags_get(&wakeup_flags);
-    if (wakeup_flags != 0) {
-      // If any wakeup flag is set, exit the loop.
-      break;
-    }
-
+  while (wakeup_flags == 0) {
     // Notify state machines running in the interrupt context about the
     // impending low-power mode. They should complete any pending operations
     // and avoid starting new ones.
@@ -154,13 +149,7 @@ void pm_control_suspend() {
 
     } while (!pm_background_tasks_suspended() && (wakeup_flags == 0));
 
-    if (true) {
-      pm_wakeup_flags_get(&wakeup_flags);
-      if (wakeup_flags != 0) {
-        // If any wakeup flag is set, exit the loop.
-        break;
-      }
-
+    if (wakeup_flags == 0) {
       // Disable interrupts by setting PRIMASK to 1.
       //
       // The system can wake up, but interrupts will not be processed until
@@ -185,6 +174,7 @@ void pm_control_suspend() {
 
       // At this point, all pending interrupts are processed.
       // Some of them may set wakeup flags.
+      pm_wakeup_flags_get(&wakeup_flags);
     }
 
     // Resume state machines running in the interrupt context

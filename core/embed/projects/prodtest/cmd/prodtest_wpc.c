@@ -40,7 +40,10 @@ static void prodtest_wpc_info(cli_t* cli) {
   // Deinit power manager to not interfere with STWLC38
   pm_deinit();
 
-  stwlc38_init();
+  if (!stwlc38_init()) {
+    cli_error(cli, CLI_ERROR, "Failed to initialize STWLC38.");
+    return;
+  }
 
   cli_trace(cli, "Reading STWLC38 info...");
   if (!stwlc38_read_chip_info(&chip_info)) {
@@ -77,13 +80,6 @@ static void prodtest_wpc_info(cli_t* cli) {
 
   stwlc38_deinit();
 
-  // initlize power manager again
-  status_pm = pm_init(true);
-  if (status_pm != PM_OK) {
-    cli_error(cli, CLI_ERROR, "Failed to reinitialize power manager.");
-    return;
-  }
-
   cli_ok(cli, "");
 
 cleanup:
@@ -107,7 +103,10 @@ static void prodtest_wpc_update(cli_t* cli) {
   // Deinit power manager to not interfere with STWLC38
   pm_deinit();
 
-  stwlc38_init();
+  if (!stwlc38_init()) {
+    cli_error(cli, CLI_ERROR, "Failed to initialize STWLC38.");
+    return;
+  }
 
   cli_trace(cli, "Updating STWLC38...");
 
@@ -139,13 +138,6 @@ static void prodtest_wpc_update(cli_t* cli) {
   cli_trace(cli, "WPC update completed {%d ms}", update_time);
 
   stwlc38_deinit();
-
-  // initlize power manager again
-  status_pm = pm_init(true);
-  if (status_pm != PM_OK) {
-    cli_error(cli, CLI_ERROR, "Failed to reinitialize power manager.");
-    return;
-  }
 
   cli_ok(cli, "");
 

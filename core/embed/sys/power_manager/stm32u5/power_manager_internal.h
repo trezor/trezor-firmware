@@ -39,9 +39,10 @@
 #define PM_BATTERY_CHARGING_CURRENT_MAX PMIC_CHARGING_LIMIT_MAX
 #define PM_BATTERY_CHARGING_CURRENT_MIN PMIC_CHARGING_LIMIT_MIN
 #define PM_BATTERY_SAMPLING_BUF_SIZE 10
-
-#define PM_WPC_CHARGE_CURR_STEP_MA 50
+#define PM_WPC_CHARGE_CURR_STEP_MA 20
 #define PM_WPC_CHARGE_CURR_STEP_TIMEOUT_MS 1000
+
+// Fuel gauge extended kalman filter parameters
 #define PM_FUEL_GAUGE_R 100.0f
 #define PM_FUEL_GAUGE_Q 0.0001f
 #define PM_FUEL_GAUGE_R_AGGRESSIVE 10.0f
@@ -59,7 +60,7 @@ typedef struct {
 typedef struct {
   bool initialized;
   bool state_machine_stabilized;
-  pm_internal_state_t state;
+  pm_power_status_t state;
 
   // Fuel gauge
   fuel_gauge_state_t fuel_gauge;
@@ -75,7 +76,7 @@ typedef struct {
   bool charging_enabled;
   uint16_t charging_current_target_ma;
   uint16_t charging_current_max_limit_ma;
-  uint32_t charging_target_timestamp;
+  uint32_t charging_step_timeout_ms;
 
   // Power source hardware state
   pmic_report_t pmic_data;
@@ -92,6 +93,7 @@ typedef struct {
 
   // Power mode request flags
   bool request_suspend;
+  bool request_exit_suspend;
   bool request_hibernate;
   bool request_turn_on;
   bool shutdown_timer_elapsed;
@@ -108,38 +110,35 @@ typedef struct {
 // State handler function definition
 typedef struct {
   void (*enter)(pm_driver_t* drv);
-  pm_internal_state_t (*handle)(pm_driver_t* drv);
+  pm_power_status_t (*handle)(pm_driver_t* drv);
   void (*exit)(pm_driver_t* drv);
 } pm_state_handler_t;
 
 // Shared global driver instance
 extern pm_driver_t g_pm;
 
-// Internal function declarations
+// Power manager monitoring function called periodically to process data from
+// PMIC and WLC, run fuel gauge, run charging controller and stimulates
+// internal state machine.
 void pm_monitor_power_sources(void);
+
+// Power manager state machine automat driving internal state machine
+// transitions.
 void pm_process_state_machine(void);
+
+// PMIC callback function called when PMIC measurement acquisition is ready.
 void pm_pmic_data_ready(void* context, pmic_report_t* report);
+
+// Power manager charging controller function called periodically from
+// pm_monitor_power_sources() to control the charging current and state.
 void pm_charging_controller(pm_driver_t* drv);
-void pm_battery_sampling(float vbat, float ibat, float ntc_temp);
+
+// Battery initial state of charge guess function. This function use the sampled
+// battery data to guess the initial state of charge in case its unknown.
 void pm_battery_initial_soc_guess(void);
+
+// Power manager control function which reboots the device into hibernate mode.
 pm_status_t pm_control_hibernate(void);
-void pm_control_suspend(void);
-void pm_control_suspend(void);
 
-// State handlers
-pm_internal_state_t pm_handle_state_active(pm_driver_t* drv);
-pm_internal_state_t pm_handle_state_power_save(pm_driver_t* drv);
-pm_internal_state_t pm_handle_state_ultra_power_save(pm_driver_t* drv);
-pm_internal_state_t pm_handle_state_shutting_down(pm_driver_t* drv);
-pm_internal_state_t pm_handle_state_suspend(pm_driver_t* drv);
-pm_internal_state_t pm_handle_state_startup_rejected(pm_driver_t* drv);
-pm_internal_state_t pm_handle_state_charging(pm_driver_t* drv);
-pm_internal_state_t pm_handle_state_hibernate(pm_driver_t* drv);
-
-void pm_enter_hibernate(pm_driver_t* drv);
-void pm_enter_charging(pm_driver_t* drv);
-void pm_enter_suspend(pm_driver_t* drv);
-void pm_enter_shutting_down(pm_driver_t* drv);
-void pm_enter_power_save(pm_driver_t* drv);
-void pm_enter_active(pm_driver_t* drv);
-void pm_exit_shutting_down(pm_driver_t* drv);
+// Power manager control function which puts device into suspend mode.
+void pm_control_suspend(void);

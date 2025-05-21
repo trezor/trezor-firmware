@@ -68,7 +68,7 @@ impl Component for Welcome {
             if e.soc_updated {
                 _ctx.request_paint();
             }
-            if e.state_changed {
+            if e.charging_status_changed {
                 _ctx.request_paint();
             }
         }

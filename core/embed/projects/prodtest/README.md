@@ -703,35 +703,44 @@ optiga-counter-read
 OK 0E
 ```
 
-### pmic-init
-Reinitializes the PMIC driver, restoring it to its default state.
+### pm-set-soc-limit
+Sets the battery state of charge (SOC) limit. The SOC limit is a percentage value between 10 and 100.
+
+The command returns `OK` if the operation is successful.
+
+```
+pm-set-soc-limit 50
+# Set SOC limit to 50%
+OK
+
+```
+
+### pm-precharge
+Enables the battery charging and precharge the battery to the 3.45V. Then it disables charging and terminates.
+During the precharge, command will print out power manager report into the console. CTRL+C will terminate the precharge.
 
 Example:
 ```
-# Initializing the NPM1300 driver...
+pm-precharge
+# Precharging the device ...
+# Precharging the device to 3.450 V
+# Power manager report:
+# Power state 5
+#   USB connected
+#   WLC disconnected
+#   Battery voltage: 3.435 V
+#   Battery current: -191.700 mA
+#   Battery temperature: 31.541 C
+#   Battery SoC: 68.92
+#   Battery SoC latched: 69.00
+#   PMIC die temperature: 49.096 C
+#   WLC voltage: 0.000 V
+#   WLC current: 0.000 mA
+#   WLC die temperature: 0.000 C
+#   System voltage: 4.449 V
+PROGRESS 5 USB_connected WLC_disconnected 3.435 -191.700 31.541 68.92 69.00 49.096 0.000 0.000 0.000 4.449
 OK
 ```
-
-### pm-charge-enable
-Enables battery charging. If a charger is connected, charging starts immediately.
-
-Example:
-```
-pm-charge-enable
-# Enabling battery charging @ 180mA...
-OK
-```
-
-### pm-charge-disable
-Disables battery charging.
-
-Example:
-```
-pm-charge-disable
-# Disabling battery charging...
-OK
-```
-
 
 ### pm-report
 Starts single or continuous reporting of power manager data, including voltage, current and temperature.
@@ -756,7 +765,59 @@ Progress report contains these values in order:
 Example:
 ```
 pm-report
-PROGRESS 5 USB_connected WLC_disconnected 3.313 -188.775 30.998 6.12 6.12 57.815 0.000 0.000 0.000 4.461OK
+# Power manager report:
+# Power state 5
+#   USB connected
+#   WLC disconnected
+#   Battery voltage: 3.465 V
+#   Battery current: -192.150 mA
+#   Battery temperature: 32.416 C
+#   Battery SoC: 72.11
+#   Battery SoC latched: 72.11
+#   PMIC die temperature: 58.607 C
+#   WLC voltage: 0.000 V
+#   WLC current: 0.000 mA
+#   WLC die temperature: 0.000 C
+#   System voltage: 4.449 V
+PROGRESS 5 USB_connected WLC_disconnected 3.465 -192.150 32.416 72.11 72.11 58.607 0.000 0.000 0.000 4.449
+OK
+```
+
+### pm-fuel-gauge-monitor
+Runs continous monitor of the battery measurements and fuel gauge state of charge (vbat, ibat, ntc_temp, soc) and
+prints them on display and into console. Monitor is stoped with CTRL+C.
+
+Example:
+```
+pm-fuel-gauge-monitor
+PROGRESS 3.465 -191.475 32.636 73.27
+PROGRESS 3.465 -191.925 32.747 73.27
+PROGRESS 3.465 -192.150 32.636 73.28
+PROGRESS 3.460 -191.925 32.636 73.29
+PROGRESS 3.465 -192.600 32.636 73.29
+PROGRESS 3.465 -191.925 32.636 73.30
+# aborted
+OK
+```
+
+### pm-charge-enable
+Enables battery charging. If a charger is connected, charging starts immediately.
+
+Example:
+```
+pm-charge-enable
+# Enabling battery charging @ 180mA...
+OK
+```
+
+### pm-charge-disable
+Disables battery charging.
+
+Example:
+```
+pm-charge-disable
+# Disabling battery charging...
+OK
 ```
 
 ### pm-suspend
@@ -794,19 +855,6 @@ pm-hibernate
 # Hibernating the the device...
 # Device is powered externally, hibernation is not possible.
 OK
-```
-
-
-### pm-set-soc-limit
-Sets the battery state of charge (SOC) limit. The SOC limit is a percentage value between 10 and 100.
-
-The command returns `OK` if the operation is successful.
-
-```
-pm-set-soc-limit 50
-# Set SOC limit to 50%
-OK
-
 ```
 
 ### tamper-read
