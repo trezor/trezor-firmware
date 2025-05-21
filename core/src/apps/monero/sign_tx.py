@@ -5,16 +5,21 @@ from apps.monero.layout import MoneroTransactionProgress
 
 if TYPE_CHECKING:
     from trezor.messages import MoneroTransactionFinalAck
+    from trezor.wire import EarlyResponse
 
     from apps.common.keychain import Keychain
     from apps.monero.signing.state import State
 
 
 @auto_keychain(__name__)
-async def sign_tx(received_msg, keychain: Keychain) -> MoneroTransactionFinalAck:
+async def sign_tx(
+    received_msg, keychain: Keychain
+) -> EarlyResponse[MoneroTransactionFinalAck]:
     import gc
 
-    from trezor import log, utils
+    from trezor import TR, log, utils
+    from trezor.ui.layouts import show_continue_in_app
+    from trezor.wire import early_response
     from trezor.wire.context import get_context
 
     from apps.monero.signing.state import State
@@ -45,7 +50,9 @@ async def sign_tx(received_msg, keychain: Keychain) -> MoneroTransactionFinalAck
         received_msg = await ctx.read(accept_msgs)
 
     utils.unimport_end(mods)
-    return result_msg
+    return await early_response(
+        result_msg, show_continue_in_app(TR.send__transaction_signed)
+    )
 
 
 async def _sign_tx_dispatch(

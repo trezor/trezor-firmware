@@ -17,6 +17,7 @@ if TYPE_CHECKING:
         TxAckPrevOutput,
         TxRequest,
     )
+    from trezor.wire import EarlyResponse
 
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
@@ -51,9 +52,12 @@ async def sign_tx(
     keychain: Keychain,
     coin: CoinInfo,
     authorization: CoinJoinAuthorization | None = None,
-) -> TxRequest:
+) -> EarlyResponse[TxRequest]:
+    from trezor import TR
     from trezor.enums import RequestType
     from trezor.messages import TxRequest
+    from trezor.ui.layouts import show_continue_in_app
+    from trezor.wire import early_response
     from trezor.wire.context import call
 
     from ..common import BITCOIN_NAMES
@@ -93,7 +97,9 @@ async def sign_tx(
             request_class, req = req
             assert TxRequest.is_type_of(req)
             if req.request_type == RequestType.TXFINISHED:
-                return req
+                return await early_response(
+                    req, show_continue_in_app(TR.send__transaction_signed)
+                )
             res = await call(req, request_class)
         elif isinstance(req, helpers.UiConfirm):
             res = await req.confirm_dialog()
