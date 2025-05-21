@@ -71,6 +71,14 @@ def configure(
         features_available.append("touch")
         defines += [("USE_TOUCH", "1")]
 
+    if "haptic" in features_wanted:
+        sources += [
+            "embed/io/haptic/unix/haptic_driver.c",
+        ]
+        paths += ["embed/io/haptic/inc"]
+        features_available.append("haptic")
+        defines += [("USE_HAPTIC", "1")]
+
     features_available.append("backlight")
     defines += [("USE_BACKLIGHT", "1")]
 

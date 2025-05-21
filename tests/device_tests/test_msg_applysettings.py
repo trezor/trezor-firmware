@@ -542,3 +542,42 @@ def test_set_brightness_cancel(session: Session):
         IF = InputFlowCancelBrightness(client)
         client.set_input_flow(IF.get())
         device.set_brightness(session, None)
+
+
+@pytest.mark.models(
+    skip=["legacy", "safe3"],
+    reason="legacy and TS3 do not have haptic feedback feature",
+)
+@pytest.mark.setup_client(uninitialized=True)
+def test_set_haptic_feedback(client: Client):
+
+    # Haptic feedback is by default supported on uninitialized devices
+    assert client.features.haptic_feedback is True
+
+    # Changing haptic feedback setting is not supported on uninitialized devices
+    with pytest.raises(exceptions.TrezorFailure), client:
+        client.set_expected_responses([messages.Failure])
+        device.apply_settings(client, haptic_feedback=False)
+
+    # Changing haptic feedback setting is not supported on initialized devices without pin
+    with pytest.raises(exceptions.TrezorFailure), client:
+        # remove pin protection
+        device.setup(client, no_backup=True)
+        device.change_pin(client, remove=True)
+        assert client.features.pin_protection is False
+        client.set_expected_responses([messages.Failure])
+        device.apply_settings(client, haptic_feedback=False)
+
+    # Disable and enable haptic feedback on initialized device with pin
+    with client:
+        # re-init device
+        device.wipe(client)
+        client.use_pin_sequence([PIN4, PIN4])
+        device.setup(client, no_backup=True, pin_protection=True)
+        assert client.features.pin_protection is True
+
+        assert client.features.haptic_feedback is True
+        device.apply_settings(client, haptic_feedback=False)
+        assert client.features.haptic_feedback is False
+        device.apply_settings(client, haptic_feedback=True)
+        assert client.features.haptic_feedback is True

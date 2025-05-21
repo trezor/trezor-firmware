@@ -27,6 +27,7 @@
 #include <sys/systick.h>
 
 #ifdef TREZOR_EMULATOR
+#include <io/display.h>
 #include <sys/unix/sdl_event.h>
 #endif
 
@@ -188,6 +189,8 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
 #ifdef TREZOR_EMULATOR
     // Poll SDL events and dispatch them
     sdl_events_poll();
+    // Refresh display to catch the end of the haptic feedback
+    display_refresh();
 #endif
 
     syshandle_mask_t handles_to_read = 0;
