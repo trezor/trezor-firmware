@@ -138,8 +138,8 @@ impl PassphraseKeyboard {
             keypad: Keypad::new_shown().with_keys_content(&keypad_content),
             active_layout,
             swipe_config: SwipeConfig::new()
-                .with_swipe(Direction::Left, SwipeSettings::immediate())
-                .with_swipe(Direction::Right, SwipeSettings::immediate()),
+                .with_swipe(Direction::Left, SwipeSettings::default())
+                .with_swipe(Direction::Right, SwipeSettings::default()),
             multi_tap: MultiTapKeyboard::new(),
         }
     }
