@@ -20,6 +20,7 @@ import pytest
 
 from trezorlib import device, messages
 
+from .. import translations as TR
 from ..common import EXTERNAL_ENTROPY, MOCK_GET_ENTROPY, generate_entropy
 from . import reset
 
@@ -60,30 +61,41 @@ def test_reset_slip39_basic(
     reset.confirm_new_wallet(debug)
 
     # confirm back up
-    # TODO: check also for ["backup__it_should_be_backed_up", "backup__it_should_be_backed_up_now"]
-    # TR.assert_in_multiple(
-    #     debug.read_layout().text_content(),
-    #     ["backup__new_wallet_created", "backup__new_wallet_successfully_created"],
-    # )
+    if debug.read_layout().page_count() == 1:
+        assert any(
+            needle in debug.read_layout().text_content()
+            for needle in [
+                TR.backup__it_should_be_backed_up,
+                TR.backup__it_should_be_backed_up_now,
+            ]
+        )
     reset.confirm_read(debug)
 
     # confirm backup intro
-    # TR.assert_in(debug.read_layout().text_content(), "backup__info_multi_share_backup")
+    assert (
+        debug.read_layout().text_content().strip() in TR.backup__info_multi_share_backup
+    )
     reset.confirm_read(debug)
 
     # confirm checklist
-    # TR.assert_in(
-    #     debug.read_layout().text_content(), "reset__slip39_checklist_num_shares"
-    # )
+    # TODO: resolve foreign glyphs extraction from the layout
+    if TR.get_language(debug) != "pt":
+        assert any(
+            needle in debug.read_layout().text_content()
+            for needle in [
+                TR.reset__slip39_checklist_set_num_shares,
+                TR.reset__slip39_checklist_num_shares,
+            ]
+        )
     reset.confirm_read(debug)
 
     # set num of shares - default is 5
     reset.set_selection(debug, num_of_shares - 5)
 
     # confirm checklist
-    # TR.assert_in(
-    #     debug.read_layout().text_content(), "reset__slip39_checklist_set_threshold"
-    # )
+    assert (
+        TR.reset__slip39_checklist_set_threshold in debug.read_layout().text_content()
+    )
     reset.confirm_read(debug)
 
     # set threshold
@@ -97,17 +109,23 @@ def test_reset_slip39_basic(
         raise RuntimeError("not a supported combination")
 
     # confirm checklist
-    # TR.assert_in_multiple(
-    #     debug.read_layout().text_content(),
-    #     [
-    #         "reset__slip39_checklist_write_down",
-    #         "reset__slip39_checklist_write_down_recovery",
-    #     ],
-    # )
+    raw = debug.read_layout().raw_content_paragraphs()
+    # TODO: make sure the page does not overflow
+    if raw and raw[-1] and raw[-1][-1].strip() == "...":
+        # page overflows, text_content is not complete
+        pass
+    else:
+        assert any(
+            needle in debug.read_layout().text_content()
+            for needle in [
+                TR.reset__slip39_checklist_write_down,
+                TR.reset__slip39_checklist_write_down_recovery,
+            ]
+        )
     reset.confirm_read(debug)
 
     # confirm backup warning
-    # TR.assert_in(debug.read_layout().text_content(), "reset__never_make_digital_copy")
+    assert TR.reset__never_make_digital_copy in debug.read_layout().text_content()
     reset.confirm_read(debug, middle_r=True)
 
     all_words: list[str] = []

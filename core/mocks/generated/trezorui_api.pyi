@@ -141,6 +141,7 @@ def confirm_value(
     page_counter: bool = False,
     prompt_screen: bool = False,
     cancel: bool = False,
+    warning_footer: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Confirm a generic piece of information on the screen.
     The value can either be human readable text (`is_data=False`)
@@ -419,6 +420,18 @@ def request_number(
 
 
 # rust/src/ui/api/firmware_micropython.rs
+def request_duration(
+    *,
+    title: str,
+    duration_ms: int,
+    min_ms: int,
+    max_ms: int,
+    description: str | None = None,
+) -> LayoutObj[tuple[UiResult, int]]:
+    """Duration input with + and - buttons, optional static description. """
+
+
+# rust/src/ui/api/firmware_micropython.rs
 def request_pin(
     *,
     prompt: str,
@@ -495,6 +508,7 @@ def show_danger(
     title: str,
     description: str,
     value: str = "",
+    menu_title: str | None = None,
     verb_cancel: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Warning modal that makes it easier to cancel than to continue."""
@@ -530,6 +544,35 @@ def show_homescreen(
     skip_first_paint: bool,
 ) -> LayoutObj[UiResult]:
     """Idle homescreen."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def show_device_menu(
+    *,
+    failed_backup: bool,
+    battery_percentage: int,
+    firmware_version: str,
+    device_name: str,
+    paired_devices: Iterable[str],
+    auto_lock_delay: str,
+) -> LayoutObj[UiResult | DeviceMenuResult | tuple[DeviceMenuResult, int]]:
+    """Show the device menu."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def show_pairing_device_name(
+    *,
+    device_name: str,
+) -> LayoutObj[UiResult]:
+    """Pairing device: first screen (device name)."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def show_pairing_code(
+    *,
+    code: str,
+) -> LayoutObj[UiResult]:
+    """Pairing device: second screen (pairing code)."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
@@ -612,7 +655,7 @@ def show_share_words(
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def show_share_words_delizia(
+def show_share_words_extended(
     *,
     words: Iterable[str],
     subtitle: str | None,
@@ -640,7 +683,7 @@ def show_success(
     title: str,
     button: str,
     description: str = "",
-    allow_cancel: bool = True,
+    allow_cancel: bool = False,
     time_ms: int = 0,
 ) -> LayoutObj[UiResult]:
     """Success modal. No buttons shown when `button` is empty string."""
@@ -696,3 +739,15 @@ class LayoutState:
     ATTACHED: "ClassVar[LayoutState]"
     TRANSITIONING: "ClassVar[LayoutState]"
     DONE: "ClassVar[LayoutState]"
+
+
+# rust/src/ui/api/firmware_micropython.rs
+class DeviceMenuResult:
+    """Result of a device menu operation."""
+    BackupFailed: ClassVar[DeviceMenuResult]
+    DevicePair: ClassVar[DeviceMenuResult]
+    DeviceDisconnect: ClassVar[DeviceMenuResult]
+    CheckBackup: ClassVar[DeviceMenuResult]
+    WipeDevice: ClassVar[DeviceMenuResult]
+    ScreenBrightness: ClassVar[DeviceMenuResult]
+    AutoLockDelay: ClassVar[DeviceMenuResult]

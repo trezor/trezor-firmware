@@ -7,7 +7,7 @@ use crate::ui::{
 
 const ELLIPSIS: &str = "...";
 
-#[derive(Copy, Clone)]
+#[derive(PartialEq, Eq, Copy, Clone)]
 pub enum LineBreaking {
     /// Break line only at whitespace, if possible. If we don't find any
     /// whitespace, break words.
@@ -19,7 +19,7 @@ pub enum LineBreaking {
     BreakWordsNoHyphen,
 }
 
-#[derive(Copy, Clone)]
+#[derive(PartialEq, Eq, Copy, Clone)]
 pub enum PageBreaking {
     /// Stop after hitting the bottom-right edge of the bounds.
     Cut,
@@ -54,7 +54,7 @@ pub struct TextLayout {
 }
 
 /// Configuration for chunkifying the text into smaller parts.
-#[derive(Copy, Clone)]
+#[derive(PartialEq, Eq, Copy, Clone)]
 pub struct Chunks {
     /// How many characters will be grouped in one chunk.
     pub chunk_size: usize,
@@ -79,7 +79,7 @@ impl Chunks {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(PartialEq, Eq, Copy, Clone)]
 pub struct TextStyle {
     /// Text font ID.
     pub text_font: Font,

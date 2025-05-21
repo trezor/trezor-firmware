@@ -19,6 +19,7 @@ from pathlib import Path
 import pytest
 
 from trezorlib import btc, device, exceptions, messages, misc, models
+from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
@@ -224,7 +225,12 @@ def test_apply_homescreen_toif(client: Client):
 
 @pytest.mark.models(skip=["legacy", "safe3"])
 def test_apply_homescreen_jpeg(client: Client):
-    with open(HERE / "test_bg.jpg", "rb") as f:
+    file_name = (
+        "test_bg_eckhart.jpg"
+        if client.debug.layout_type is LayoutType.Eckhart
+        else "test_bg.jpg"
+    )
+    with open(HERE / file_name, "rb") as f:
         img = f.read()
         with client:
             _set_expected_responses(client, homescreen=img)
@@ -238,7 +244,13 @@ def test_apply_homescreen_jpeg(client: Client):
 
 @pytest.mark.models(skip=["legacy", "safe3"])
 def test_apply_homescreen_jpeg_single_message(client: Client):
-    with open(HERE / "test_bg.jpg", "rb") as f:
+    file_name = (
+        "test_bg_eckhart.jpg"
+        if client.layout_type is LayoutType.Eckhart
+        else "test_bg.jpg"
+    )
+
+    with open(HERE / file_name, "rb") as f:
         img = f.read()
         with client:
             _set_expected_responses(client)
@@ -458,7 +470,7 @@ def test_label_too_long(client: Client):
         device.apply_settings(client, label="A" * 33)
 
 
-@pytest.mark.models(skip=["legacy", "safe3"])
+@pytest.mark.models(skip=["legacy", "safe3", "eckhart"])
 @pytest.mark.setup_client(pin=None)
 def test_set_brightness(client: Client):
     device.set_brightness(client, None)

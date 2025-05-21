@@ -22,11 +22,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ...common import parametrize_using_common_fixtures
 
-pytestmark = [
-    pytest.mark.altcoin,
-    pytest.mark.cardano,
-    pytest.mark.models("core"),
-]
+pytestmark = [pytest.mark.altcoin, pytest.mark.cardano, pytest.mark.models("core")]
 
 
 @parametrize_using_common_fixtures(

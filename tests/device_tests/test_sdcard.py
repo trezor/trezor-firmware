@@ -23,7 +23,7 @@ from trezorlib.messages import SdProtectOperationType as Op
 
 from .. import translations as TR
 
-pytestmark = pytest.mark.models("core", skip="safe3")
+pytestmark = pytest.mark.models("core", skip=["safe3", "eckhart"])
 
 
 @pytest.mark.sd_card(formatted=False)

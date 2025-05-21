@@ -27,9 +27,9 @@ pub enum TranslatedString {
     authenticate__confirm_template = 13,  // "Allow connected computer to confirm your {0} is genuine?"
     authenticate__header = 14,  // "Authenticate device"
     auto_lock__change_template = 15,  // "Auto-lock Trezor after {0} of inactivity?"
-    auto_lock__title = 16,  // "Auto-lock delay"
+    auto_lock__title = 16,  // {"Bolt": "Auto-lock delay", "Caesar": "Auto-lock delay", "Delizia": "Auto-lock delay", "Eckhart": "Auto-lock"}
     backup__can_back_up_anytime = 17,  // "You can back up your Trezor once, at any time."
-    backup__it_should_be_backed_up = 18,  // "You should back up your new wallet right now."
+    backup__it_should_be_backed_up = 18,  // {"Bolt": "You should back up your new wallet right now.", "Caesar": "You should back up your new wallet right now.", "Delizia": "You should back up your new wallet right now.", "Eckhart": "Back up your new wallet now."}
     backup__it_should_be_backed_up_now = 19,  // "It should be backed up now!"
     backup__new_wallet_created = 20,  // "Wallet created.\n"
     backup__new_wallet_successfully_created = 21,  // "Wallet created successfully."
@@ -420,7 +420,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__amount_sent = 271,  // "Amount sent:"
     #[cfg(feature = "universal_fw")]
-    ethereum__contract = 272,  // "Contract:"
+    ethereum__contract = 272,  // {"Bolt": "Contract", "Caesar": "Contract", "Delizia": "Contract", "Eckhart": "Call contract"}
     #[cfg(feature = "universal_fw")]
     ethereum__data_size_template = 273,  // "Size: {0} bytes"
     #[cfg(feature = "universal_fw")]
@@ -477,9 +477,9 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     fido__device_not_registered = 301,  // "This device is not registered with this application."
     #[cfg(feature = "universal_fw")]
-    fido__does_not_belong = 302,  // "The credential you are trying to import does\nnot belong to this authenticator."
+    fido__does_not_belong = 302,  // {"Bolt": "The credential you are trying to import does\nnot belong to this authenticator.", "Caesar": "The credential you are trying to import does\nnot belong to this authenticator.", "Delizia": "The credential you are trying to import does\nnot belong to this authenticator.", "Eckhart": "The credential you are trying to import does not belong to this authenticator."}
     #[cfg(feature = "universal_fw")]
-    fido__erase_credentials = 303,  // "erase all credentials?"
+    fido__erase_credentials = 303,  // {"Bolt": "erase all credentials?", "Caesar": "erase all credentials?", "Delizia": "erase all credentials?", "Eckhart": "Delete all of the saved credentials?"}
     #[cfg(feature = "universal_fw")]
     fido__export_credentials = 304,  // "Export information about the credentials stored on this device?"
     #[cfg(feature = "universal_fw")]
@@ -784,21 +784,21 @@ pub enum TranslatedString {
     recovery__title_recover = 522,  // "Recover wallet"
     recovery__title_remaining_shares = 523,  // "Remaining shares"
     recovery__type_word_x_of_y_template = 524,  // "Type word {0} of {1}"
-    recovery__wallet_recovered = 525,  // "Wallet recovery completed"
+    recovery__wallet_recovered = 525,  // {"Bolt": "Wallet recovery completed", "Caesar": "Wallet recovery completed", "Delizia": "Wallet recovery completed", "Eckhart": "Wallet recovery completed."}
     recovery__wanna_cancel_dry_run = 526,  // "Are you sure you want to cancel the backup check?"
     recovery__wanna_cancel_recovery = 527,  // "Are you sure you want to cancel the recovery process?"
     recovery__word_count_template = 528,  // "({0} words)"
     recovery__word_x_of_y_template = 529,  // "Word {0} of {1}"
     recovery__x_more_items_starting_template_plural = 530,  // "{count} more {plural} starting"
     recovery__x_more_shares_needed_template_plural = 531,  // "{count} more {plural} needed"
-    recovery__x_of_y_entered_template = 532,  // "{0} of {1} shares entered"
+    recovery__x_of_y_entered_template = 532,  // {"Bolt": "{0} of {1} shares entered", "Caesar": "{0} of {1} shares entered", "Delizia": "{0} of {1} shares entered", "Eckhart": "{0} of {1} shares entered."}
     recovery__you_have_entered = 533,  // "You have entered"
     reset__advanced_group_threshold_info = 534,  // "The group threshold specifies the number of groups required to recover your wallet."
     reset__all_x_of_y_template = 535,  // "all {0} of {1} shares"
     reset__any_x_of_y_template = 536,  // "any {0} of {1} shares"
     reset__button_create = 537,  // "Create wallet"
     reset__button_recover = 538,  // "Recover wallet"
-    reset__by_continuing = 539,  // "By continuing you agree to Trezor Company's terms and conditions."
+    reset__by_continuing = 539,  // {"Bolt": "By continuing you agree to Trezor Company's terms and conditions.", "Caesar": "By continuing you agree to Trezor Company's terms and conditions.", "Delizia": "By continuing you agree to Trezor Company's terms and conditions.", "Eckhart": "By continuing, you agree to Trezor Company's Terms of Use."}
     reset__check_backup_title = 540,  // "Check backup"
     reset__check_group_share_title_template = 541,  // "Check g{0} - share {1}"
     reset__check_wallet_backup_title = 542,  // "Check wallet backup"
@@ -829,7 +829,7 @@ pub enum TranslatedString {
     reset__recovery_share_title_template = 567,  // "Recovery share #{0}"
     reset__required_number_of_groups = 568,  // "The required number of groups for recovery."
     reset__select_correct_word = 569,  // "Select the correct word for each position."
-    reset__select_word_template = 570,  // "Select {0} word"
+    reset__select_word_template = 570,  // {"Bolt": "Select {0} word", "Caesar": "Select {0} word", "Delizia": "Select {0} word", "Eckhart": "Select word #{0} from your wallet backup"}
     reset__select_word_x_of_y_template = 571,  // "Select word {0} of {1}:"
     reset__set_it_to_count_template = 572,  // "Set it to {0} and you will need "
     reset__share_checked_successfully_template = 573,  // "Share #{0} checked successfully."
@@ -840,7 +840,7 @@ pub enum TranslatedString {
     reset__slip39_checklist_set_num_shares = 578,  // "Set number of shares"
     reset__slip39_checklist_set_sizes = 579,  // "Set sizes and thresholds"
     reset__slip39_checklist_set_sizes_longer = 580,  // "Set size and threshold for each group"
-    reset__slip39_checklist_set_threshold = 581,  // "Set threshold"
+    reset__slip39_checklist_set_threshold = 581,  // {"Bolt": "Set threshold", "Caesar": "Set threshold", "Delizia": "Set threshold", "Eckhart": "Set recovery threshold"}
     reset__slip39_checklist_title = 582,  // "Backup checklist"
     reset__slip39_checklist_write_down = 583,  // "Write down and check all shares"
     reset__slip39_checklist_write_down_recovery = 584,  // "Write down & check all wallet backup shares"
@@ -856,7 +856,7 @@ pub enum TranslatedString {
     reset__title_set_number_of_shares = 595,  // "Set number of shares"
     reset__title_set_threshold = 596,  // "Set threshold"
     reset__to_form_group_template = 597,  // "to form Group {0}."
-    reset__tos_link = 598,  // "trezor.io/tos"
+    reset__tos_link = 598,  // {"Bolt": "trezor.io/tos", "Caesar": "trezor.io/tos", "Delizia": "trezor.io/tos", "Eckhart": "More at trezor.io/tos"}
     reset__total_number_of_shares_in_group_template = 599,  // "Set the total number of shares in Group {0}."
     reset__use_your_backup = 600,  // "Use your backup when you need to recover your wallet."
     reset__write_down_words_template = 601,  // "Write the following {0} words in order on your wallet backup card."
@@ -1225,13 +1225,13 @@ pub enum TranslatedString {
     instructions__hold_to_confirm = 855,  // "Hold to confirm"
     words__important = 856,  // "Important"
     reset__words_written_down_template = 857,  // "I wrote down all {0} words in order."
-    backup__create_backup_to_prevent_loss = 858,  // "Create a backup to avoid losing access to your funds"
+    backup__create_backup_to_prevent_loss = 858,  // {"Bolt": "Create a backup to avoid losing access to your funds", "Caesar": "Create a backup to avoid losing access to your funds", "Delizia": "Create a backup to avoid losing access to your funds", "Eckhart": "Create a wallet backup to avoid losing access to your funds."}
     reset__check_backup_instructions = 859,  // "Let's do a quick check of your backup."
     words__instructions = 860,  // "Instructions"
     words__not_recommended = 861,  // "Not recommended!"
     address_details__account_info = 862,  // "Account info"
     address__cancel_contact_support = 863,  // "If receive address doesn't match, contact Trezor Support at trezor.io/support."
-    address__cancel_receive = 864,  // "Cancel receive"
+    address__cancel_receive = 864,  // {"Bolt": "Cancel receive", "Caesar": "Cancel receive", "Delizia": "Cancel receive", "Eckhart": "Cancel receive?"}
     address__qr_code = 865,  // "QR code"
     address_details__derivation_path = 866,  // "Derivation path"
     instructions__continue_in_app = 867,  // "Continue in the app"
@@ -1249,13 +1249,13 @@ pub enum TranslatedString {
     auto_lock__turned_on = 879,  // "Auto-lock turned on"
     backup__info_multi_share_backup = 880,  // "Your wallet backup contains multiple lists of words in a specific order (shares)."
     backup__info_single_share_backup = 881,  // "Your wallet backup contains {0} words in a specific order."
-    backup__title_backup_completed = 882,  // "Wallet backup completed"
+    backup__title_backup_completed = 882,  // {"Bolt": "Wallet backup completed", "Caesar": "Wallet backup completed", "Delizia": "Wallet backup completed", "Eckhart": "Wallet backup completed."}
     backup__title_create_wallet_backup = 883,  // "Create wallet backup"
     haptic_feedback__disable = 884,  // "Disable haptic feedback?"
     haptic_feedback__enable = 885,  // "Enable haptic feedback?"
     haptic_feedback__subtitle = 886,  // "Setting"
     haptic_feedback__title = 887,  // "Haptic feedback"
-    instructions__continue_holding = 888,  // "Continue\nholding"
+    instructions__continue_holding = 888,  // {"Bolt": "", "Caesar": "", "Delizia": "Continue\nholding", "Eckhart": "Keep holding"}
     instructions__enter_next_share = 889,  // "Enter next share"
     instructions__hold_to_continue = 890,  // "Hold to continue"
     instructions__hold_to_exit_tutorial = 891,  // "Hold to exit tutorial"
@@ -1273,7 +1273,7 @@ pub enum TranslatedString {
     recovery__info_about_disconnect = 904,  // "It's safe to disconnect your Trezor while recovering your wallet and continue later."
     recovery__share_does_not_match = 905,  // "Share doesn't match"
     reset__cancel_create_wallet = 906,  // "Cancel create wallet"
-    reset__incorrect_word_selected = 907,  // "Incorrect word selected"
+    reset__incorrect_word_selected = 907,  // {"Bolt": "Incorrect word selected", "Caesar": "Incorrect word selected", "Delizia": "Incorrect word selected", "Eckhart": "Incorrect word selected."}
     reset__more_at = 908,  // "More at"
     reset__num_of_shares_how_many = 909,  // "How many wallet backup shares do you want to create?"
     reset__num_of_shares_long_info_template = 910,  // "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet."
@@ -1292,7 +1292,7 @@ pub enum TranslatedString {
     words__good_to_know = 927,  // "Good to know"
     words__operation_cancelled = 928,  // "Operation cancelled"
     words__settings = 929,  // "Settings"
-    words__try_again = 930,  // "Try again."
+    words__try_again = 930,  // {"Bolt": "Try again.", "Caesar": "Try again.", "Delizia": "Try again.", "Eckhart": "Try again"}
     reset__slip39_checklist_num_groups_x_template = 931,  // "Number of groups: {0}"
     brightness__title = 932,  // "Display brightness"
     recovery__title_unlock_repeated_backup = 933,  // "Multi-share backup"
@@ -1303,7 +1303,7 @@ pub enum TranslatedString {
     reset__repeat_for_all_shares = 938,  // "Repeat for all shares."
     homescreen__settings_subtitle = 939,  // "Settings"
     homescreen__settings_title = 940,  // "Homescreen"
-    reset__the_word_is_repeated = 941,  // "The word is repeated"
+    reset__the_word_is_repeated = 941,  // {"Bolt": "The word is repeated", "Caesar": "The word is repeated", "Delizia": "The word is repeated", "Eckhart": "The word appears multiple times in the backup."}
     tutorial__title_lets_begin = 942,  // "Let's begin"
     tutorial__did_you_know = 943,  // "Did you know?"
     tutorial__first_wallet = 944,  // "The Trezor Model One, created in 2013,\nwas the world's first hardware wallet."
@@ -1336,16 +1336,16 @@ pub enum TranslatedString {
     address__public_key_confirmed = 966,  // "Public key confirmed"
     words__continue_anyway = 967,  // "Continue anyway"
     #[cfg(feature = "universal_fw")]
-    ethereum__unknown_contract_address = 968,  // "Unknown contract address. Continue only if you know what you are doing."
+    ethereum__unknown_contract_address = 968,  // {"Bolt": "Unknown contract address. Continue only if you know what you are doing.", "Caesar": "Unknown contract address. Continue only if you know what you are doing.", "Delizia": "Unknown contract address. Continue only if you know what you are doing.", "Eckhart": "Unknown token contract address. Continue only if you know what you are doing."}
     #[cfg(feature = "universal_fw")]
-    ethereum__token_contract = 969,  // "Token contract"
+    ethereum__token_contract = 969,  // {"Bolt": "Token contract", "Caesar": "Token contract", "Delizia": "Token contract", "Eckhart": "Token contract address"}
     buttons__view_all_data = 970,  // "View all data"
     instructions__view_all_data = 971,  // "View all data in the menu."
     #[cfg(feature = "universal_fw")]
-    ethereum__interaction_contract = 972,  // "Interaction contract"
+    ethereum__interaction_contract = 972,  // {"Bolt": "Interaction contract", "Caesar": "Interaction contract", "Delizia": "Interaction contract", "Eckhart": "Interaction contract address"}
     misc__enable_labeling = 973,  // "Enable labeling?"
     #[cfg(feature = "universal_fw")]
-    ethereum__unknown_contract_address_short = 974,  // "Unknown contract address."
+    ethereum__unknown_contract_address_short = 974,  // {"Bolt": "Unknown contract address.", "Caesar": "Unknown contract address.", "Delizia": "Unknown contract address.", "Eckhart": "Unknown token contract address."}
     #[cfg(feature = "universal_fw")]
     solana__base_fee = 975,  // "Base fee"
     #[cfg(feature = "universal_fw")]
@@ -1416,6 +1416,25 @@ pub enum TranslatedString {
     words__chain = 1012,  // "Chain"
     words__token = 1013,  // "Token"
     instructions__tap = 1014,  // "Tap"
+    reset__share_words_first = 1015,  // "Write down the first word from the backup."
+    backup__not_recommend = 1016,  // "We don't recommend to skip wallet backup creation."
+    words__pay_attention = 1017,  // "Pay attention"
+    address__check_with_source = 1018,  // "Check the address with source."
+    words__receive = 1019,  // "Receive"
+    reset__recovery_share_description = 1020,  // "A recovery share is a list of words you wrote down when setting up your Trezor."
+    reset__recovery_share_number = 1021,  // "Your wallet backup consists of 1 to 16 shares."
+    words__recovery_share = 1022,  // "Recovery share"
+    send__send_in_the_app = 1023,  // "After signing, send the transaction in the app."
+    send__sign_cancelled = 1024,  // "Sign cancelled."
+    words__send = 1025,  // "Send"
+    words__wallet = 1026,  // "Wallet"
+    words__authenticate = 1027,  // "Authenticate"
+    #[cfg(feature = "universal_fw")]
+    ethereum__deploy_contract = 1028,  // "Deploy contract"
+    #[cfg(feature = "universal_fw")]
+    ethereum__title_all_input_data_template = 1029,  // "All input data ({0} bytes)"
+    auto_lock__description = 1030,  // "Set the time before your Trezor locks automatically."
+    plurals__lock_after_x_days = 1031,  // "day|days"
 }
 
 impl TranslatedString {
@@ -1436,9 +1455,23 @@ impl TranslatedString {
             (Self::authenticate__confirm_template, "Allow connected computer to confirm your {0} is genuine?"),
             (Self::authenticate__header, "Authenticate device"),
             (Self::auto_lock__change_template, "Auto-lock Trezor after {0} of inactivity?"),
+            #[cfg(feature = "layout_bolt")]
             (Self::auto_lock__title, "Auto-lock delay"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::auto_lock__title, "Auto-lock delay"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::auto_lock__title, "Auto-lock delay"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::auto_lock__title, "Auto-lock"),
             (Self::backup__can_back_up_anytime, "You can back up your Trezor once, at any time."),
+            #[cfg(feature = "layout_bolt")]
             (Self::backup__it_should_be_backed_up, "You should back up your new wallet right now."),
+            #[cfg(feature = "layout_caesar")]
+            (Self::backup__it_should_be_backed_up, "You should back up your new wallet right now."),
+            #[cfg(feature = "layout_delizia")]
+            (Self::backup__it_should_be_backed_up, "You should back up your new wallet right now."),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::backup__it_should_be_backed_up, "Back up your new wallet now."),
             (Self::backup__it_should_be_backed_up_now, "It should be backed up now!"),
             (Self::backup__new_wallet_created, "Wallet created.\n"),
             (Self::backup__new_wallet_successfully_created, "Wallet created successfully."),
@@ -1829,7 +1862,17 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__amount_sent, "Amount sent:"),
             #[cfg(feature = "universal_fw")]
-            (Self::ethereum__contract, "Contract:"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ethereum__contract, "Contract"),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::ethereum__contract, "Contract"),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::ethereum__contract, "Contract"),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::ethereum__contract, "Call contract"),
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__data_size_template, "Size: {0} bytes"),
             #[cfg(feature = "universal_fw")]
@@ -1886,9 +1929,29 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             (Self::fido__device_not_registered, "This device is not registered with this application."),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::fido__does_not_belong, "The credential you are trying to import does\nnot belong to this authenticator."),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::fido__does_not_belong, "The credential you are trying to import does\nnot belong to this authenticator."),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::fido__does_not_belong, "The credential you are trying to import does\nnot belong to this authenticator."),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::fido__does_not_belong, "The credential you are trying to import does not belong to this authenticator."),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::fido__erase_credentials, "erase all credentials?"),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::fido__erase_credentials, "erase all credentials?"),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::fido__erase_credentials, "erase all credentials?"),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::fido__erase_credentials, "Delete all of the saved credentials?"),
             #[cfg(feature = "universal_fw")]
             (Self::fido__export_credentials, "Export information about the credentials stored on this device?"),
             #[cfg(feature = "universal_fw")]
@@ -2193,21 +2256,42 @@ impl TranslatedString {
             (Self::recovery__title_recover, "Recover wallet"),
             (Self::recovery__title_remaining_shares, "Remaining shares"),
             (Self::recovery__type_word_x_of_y_template, "Type word {0} of {1}"),
+            #[cfg(feature = "layout_bolt")]
             (Self::recovery__wallet_recovered, "Wallet recovery completed"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::recovery__wallet_recovered, "Wallet recovery completed"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::recovery__wallet_recovered, "Wallet recovery completed"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::recovery__wallet_recovered, "Wallet recovery completed."),
             (Self::recovery__wanna_cancel_dry_run, "Are you sure you want to cancel the backup check?"),
             (Self::recovery__wanna_cancel_recovery, "Are you sure you want to cancel the recovery process?"),
             (Self::recovery__word_count_template, "({0} words)"),
             (Self::recovery__word_x_of_y_template, "Word {0} of {1}"),
             (Self::recovery__x_more_items_starting_template_plural, "{count} more {plural} starting"),
             (Self::recovery__x_more_shares_needed_template_plural, "{count} more {plural} needed"),
+            #[cfg(feature = "layout_bolt")]
             (Self::recovery__x_of_y_entered_template, "{0} of {1} shares entered"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::recovery__x_of_y_entered_template, "{0} of {1} shares entered"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::recovery__x_of_y_entered_template, "{0} of {1} shares entered"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::recovery__x_of_y_entered_template, "{0} of {1} shares entered."),
             (Self::recovery__you_have_entered, "You have entered"),
             (Self::reset__advanced_group_threshold_info, "The group threshold specifies the number of groups required to recover your wallet."),
             (Self::reset__all_x_of_y_template, "all {0} of {1} shares"),
             (Self::reset__any_x_of_y_template, "any {0} of {1} shares"),
             (Self::reset__button_create, "Create wallet"),
             (Self::reset__button_recover, "Recover wallet"),
+            #[cfg(feature = "layout_bolt")]
             (Self::reset__by_continuing, "By continuing you agree to Trezor Company's terms and conditions."),
+            #[cfg(feature = "layout_caesar")]
+            (Self::reset__by_continuing, "By continuing you agree to Trezor Company's terms and conditions."),
+            #[cfg(feature = "layout_delizia")]
+            (Self::reset__by_continuing, "By continuing you agree to Trezor Company's terms and conditions."),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::reset__by_continuing, "By continuing, you agree to Trezor Company's Terms of Use."),
             (Self::reset__check_backup_title, "Check backup"),
             (Self::reset__check_group_share_title_template, "Check g{0} - share {1}"),
             (Self::reset__check_wallet_backup_title, "Check wallet backup"),
@@ -2238,7 +2322,14 @@ impl TranslatedString {
             (Self::reset__recovery_share_title_template, "Recovery share #{0}"),
             (Self::reset__required_number_of_groups, "The required number of groups for recovery."),
             (Self::reset__select_correct_word, "Select the correct word for each position."),
+            #[cfg(feature = "layout_bolt")]
             (Self::reset__select_word_template, "Select {0} word"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::reset__select_word_template, "Select {0} word"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::reset__select_word_template, "Select {0} word"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::reset__select_word_template, "Select word #{0} from your wallet backup"),
             (Self::reset__select_word_x_of_y_template, "Select word {0} of {1}:"),
             (Self::reset__set_it_to_count_template, "Set it to {0} and you will need "),
             (Self::reset__share_checked_successfully_template, "Share #{0} checked successfully."),
@@ -2249,7 +2340,14 @@ impl TranslatedString {
             (Self::reset__slip39_checklist_set_num_shares, "Set number of shares"),
             (Self::reset__slip39_checklist_set_sizes, "Set sizes and thresholds"),
             (Self::reset__slip39_checklist_set_sizes_longer, "Set size and threshold for each group"),
+            #[cfg(feature = "layout_bolt")]
             (Self::reset__slip39_checklist_set_threshold, "Set threshold"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::reset__slip39_checklist_set_threshold, "Set threshold"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::reset__slip39_checklist_set_threshold, "Set threshold"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::reset__slip39_checklist_set_threshold, "Set recovery threshold"),
             (Self::reset__slip39_checklist_title, "Backup checklist"),
             (Self::reset__slip39_checklist_write_down, "Write down and check all shares"),
             (Self::reset__slip39_checklist_write_down_recovery, "Write down & check all wallet backup shares"),
@@ -2265,7 +2363,14 @@ impl TranslatedString {
             (Self::reset__title_set_number_of_shares, "Set number of shares"),
             (Self::reset__title_set_threshold, "Set threshold"),
             (Self::reset__to_form_group_template, "to form Group {0}."),
+            #[cfg(feature = "layout_bolt")]
             (Self::reset__tos_link, "trezor.io/tos"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::reset__tos_link, "trezor.io/tos"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::reset__tos_link, "trezor.io/tos"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::reset__tos_link, "More at trezor.io/tos"),
             (Self::reset__total_number_of_shares_in_group_template, "Set the total number of shares in Group {0}."),
             (Self::reset__use_your_backup, "Use your backup when you need to recover your wallet."),
             (Self::reset__write_down_words_template, "Write the following {0} words in order on your wallet backup card."),
@@ -2634,13 +2739,27 @@ impl TranslatedString {
             (Self::instructions__hold_to_confirm, "Hold to confirm"),
             (Self::words__important, "Important"),
             (Self::reset__words_written_down_template, "I wrote down all {0} words in order."),
+            #[cfg(feature = "layout_bolt")]
             (Self::backup__create_backup_to_prevent_loss, "Create a backup to avoid losing access to your funds"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::backup__create_backup_to_prevent_loss, "Create a backup to avoid losing access to your funds"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::backup__create_backup_to_prevent_loss, "Create a backup to avoid losing access to your funds"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::backup__create_backup_to_prevent_loss, "Create a wallet backup to avoid losing access to your funds."),
             (Self::reset__check_backup_instructions, "Let's do a quick check of your backup."),
             (Self::words__instructions, "Instructions"),
             (Self::words__not_recommended, "Not recommended!"),
             (Self::address_details__account_info, "Account info"),
             (Self::address__cancel_contact_support, "If receive address doesn't match, contact Trezor Support at trezor.io/support."),
+            #[cfg(feature = "layout_bolt")]
             (Self::address__cancel_receive, "Cancel receive"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::address__cancel_receive, "Cancel receive"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::address__cancel_receive, "Cancel receive"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::address__cancel_receive, "Cancel receive?"),
             (Self::address__qr_code, "QR code"),
             (Self::address_details__derivation_path, "Derivation path"),
             (Self::instructions__continue_in_app, "Continue in the app"),
@@ -2658,13 +2777,27 @@ impl TranslatedString {
             (Self::auto_lock__turned_on, "Auto-lock turned on"),
             (Self::backup__info_multi_share_backup, "Your wallet backup contains multiple lists of words in a specific order (shares)."),
             (Self::backup__info_single_share_backup, "Your wallet backup contains {0} words in a specific order."),
+            #[cfg(feature = "layout_bolt")]
             (Self::backup__title_backup_completed, "Wallet backup completed"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::backup__title_backup_completed, "Wallet backup completed"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::backup__title_backup_completed, "Wallet backup completed"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::backup__title_backup_completed, "Wallet backup completed."),
             (Self::backup__title_create_wallet_backup, "Create wallet backup"),
             (Self::haptic_feedback__disable, "Disable haptic feedback?"),
             (Self::haptic_feedback__enable, "Enable haptic feedback?"),
             (Self::haptic_feedback__subtitle, "Setting"),
             (Self::haptic_feedback__title, "Haptic feedback"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::instructions__continue_holding, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::instructions__continue_holding, ""),
+            #[cfg(feature = "layout_delizia")]
             (Self::instructions__continue_holding, "Continue\nholding"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::instructions__continue_holding, "Keep holding"),
             (Self::instructions__enter_next_share, "Enter next share"),
             (Self::instructions__hold_to_continue, "Hold to continue"),
             (Self::instructions__hold_to_exit_tutorial, "Hold to exit tutorial"),
@@ -2682,7 +2815,14 @@ impl TranslatedString {
             (Self::recovery__info_about_disconnect, "It's safe to disconnect your Trezor while recovering your wallet and continue later."),
             (Self::recovery__share_does_not_match, "Share doesn't match"),
             (Self::reset__cancel_create_wallet, "Cancel create wallet"),
+            #[cfg(feature = "layout_bolt")]
             (Self::reset__incorrect_word_selected, "Incorrect word selected"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::reset__incorrect_word_selected, "Incorrect word selected"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::reset__incorrect_word_selected, "Incorrect word selected"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::reset__incorrect_word_selected, "Incorrect word selected."),
             (Self::reset__more_at, "More at"),
             (Self::reset__num_of_shares_how_many, "How many wallet backup shares do you want to create?"),
             (Self::reset__num_of_shares_long_info_template, "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet."),
@@ -2701,7 +2841,14 @@ impl TranslatedString {
             (Self::words__good_to_know, "Good to know"),
             (Self::words__operation_cancelled, "Operation cancelled"),
             (Self::words__settings, "Settings"),
+            #[cfg(feature = "layout_bolt")]
             (Self::words__try_again, "Try again."),
+            #[cfg(feature = "layout_caesar")]
+            (Self::words__try_again, "Try again."),
+            #[cfg(feature = "layout_delizia")]
+            (Self::words__try_again, "Try again."),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::words__try_again, "Try again"),
             (Self::reset__slip39_checklist_num_groups_x_template, "Number of groups: {0}"),
             (Self::brightness__title, "Display brightness"),
             (Self::recovery__title_unlock_repeated_backup, "Multi-share backup"),
@@ -2712,7 +2859,14 @@ impl TranslatedString {
             (Self::reset__repeat_for_all_shares, "Repeat for all shares."),
             (Self::homescreen__settings_subtitle, "Settings"),
             (Self::homescreen__settings_title, "Homescreen"),
+            #[cfg(feature = "layout_bolt")]
             (Self::reset__the_word_is_repeated, "The word is repeated"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::reset__the_word_is_repeated, "The word is repeated"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::reset__the_word_is_repeated, "The word is repeated"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::reset__the_word_is_repeated, "The word appears multiple times in the backup."),
             (Self::tutorial__title_lets_begin, "Let's begin"),
             (Self::tutorial__did_you_know, "Did you know?"),
             (Self::tutorial__first_wallet, "The Trezor Model One, created in 2013,\nwas the world's first hardware wallet."),
@@ -2745,16 +2899,56 @@ impl TranslatedString {
             (Self::address__public_key_confirmed, "Public key confirmed"),
             (Self::words__continue_anyway, "Continue anyway"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::ethereum__unknown_contract_address, "Unknown contract address. Continue only if you know what you are doing."),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::ethereum__unknown_contract_address, "Unknown contract address. Continue only if you know what you are doing."),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::ethereum__unknown_contract_address, "Unknown contract address. Continue only if you know what you are doing."),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::ethereum__unknown_contract_address, "Unknown token contract address. Continue only if you know what you are doing."),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::ethereum__token_contract, "Token contract"),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::ethereum__token_contract, "Token contract"),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::ethereum__token_contract, "Token contract"),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::ethereum__token_contract, "Token contract address"),
             (Self::buttons__view_all_data, "View all data"),
             (Self::instructions__view_all_data, "View all data in the menu."),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::ethereum__interaction_contract, "Interaction contract"),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::ethereum__interaction_contract, "Interaction contract"),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::ethereum__interaction_contract, "Interaction contract"),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::ethereum__interaction_contract, "Interaction contract address"),
             (Self::misc__enable_labeling, "Enable labeling?"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::ethereum__unknown_contract_address_short, "Unknown contract address."),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::ethereum__unknown_contract_address_short, "Unknown contract address."),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::ethereum__unknown_contract_address_short, "Unknown contract address."),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::ethereum__unknown_contract_address_short, "Unknown token contract address."),
             #[cfg(feature = "universal_fw")]
             (Self::solana__base_fee, "Base fee"),
             #[cfg(feature = "universal_fw")]
@@ -2825,6 +3019,25 @@ impl TranslatedString {
             (Self::words__chain, "Chain"),
             (Self::words__token, "Token"),
             (Self::instructions__tap, "Tap"),
+            (Self::reset__share_words_first, "Write down the first word from the backup."),
+            (Self::backup__not_recommend, "We don't recommend to skip wallet backup creation."),
+            (Self::words__pay_attention, "Pay attention"),
+            (Self::address__check_with_source, "Check the address with source."),
+            (Self::words__receive, "Receive"),
+            (Self::reset__recovery_share_description, "A recovery share is a list of words you wrote down when setting up your Trezor."),
+            (Self::reset__recovery_share_number, "Your wallet backup consists of 1 to 16 shares."),
+            (Self::words__recovery_share, "Recovery share"),
+            (Self::send__send_in_the_app, "After signing, send the transaction in the app."),
+            (Self::send__sign_cancelled, "Sign cancelled."),
+            (Self::words__send, "Send"),
+            (Self::words__wallet, "Wallet"),
+            (Self::words__authenticate, "Authenticate"),
+            #[cfg(feature = "universal_fw")]
+            (Self::ethereum__deploy_contract, "Deploy contract"),
+            #[cfg(feature = "universal_fw")]
+            (Self::ethereum__title_all_input_data_template, "All input data ({0} bytes)"),
+            (Self::auto_lock__description, "Set the time before your Trezor locks automatically."),
+            (Self::plurals__lock_after_x_days, "day|days"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -2837,6 +3050,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_addr_mismatch__xpub_mismatch, Self::addr_mismatch__xpub_mismatch),
         (Qstr::MP_QSTR_address__cancel_contact_support, Self::address__cancel_contact_support),
         (Qstr::MP_QSTR_address__cancel_receive, Self::address__cancel_receive),
+        (Qstr::MP_QSTR_address__check_with_source, Self::address__check_with_source),
         (Qstr::MP_QSTR_address__confirmed, Self::address__confirmed),
         (Qstr::MP_QSTR_address__public_key, Self::address__public_key),
         (Qstr::MP_QSTR_address__public_key_confirmed, Self::address__public_key_confirmed),
@@ -2852,6 +3066,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_authenticate__confirm_template, Self::authenticate__confirm_template),
         (Qstr::MP_QSTR_authenticate__header, Self::authenticate__header),
         (Qstr::MP_QSTR_auto_lock__change_template, Self::auto_lock__change_template),
+        (Qstr::MP_QSTR_auto_lock__description, Self::auto_lock__description),
         (Qstr::MP_QSTR_auto_lock__title, Self::auto_lock__title),
         (Qstr::MP_QSTR_auto_lock__turned_on, Self::auto_lock__turned_on),
         (Qstr::MP_QSTR_backup__can_back_up_anytime, Self::backup__can_back_up_anytime),
@@ -2862,6 +3077,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_backup__it_should_be_backed_up_now, Self::backup__it_should_be_backed_up_now),
         (Qstr::MP_QSTR_backup__new_wallet_created, Self::backup__new_wallet_created),
         (Qstr::MP_QSTR_backup__new_wallet_successfully_created, Self::backup__new_wallet_successfully_created),
+        (Qstr::MP_QSTR_backup__not_recommend, Self::backup__not_recommend),
         (Qstr::MP_QSTR_backup__recover_anytime, Self::backup__recover_anytime),
         (Qstr::MP_QSTR_backup__title_backup_completed, Self::backup__title_backup_completed),
         (Qstr::MP_QSTR_backup__title_backup_wallet, Self::backup__title_backup_wallet),
@@ -3296,6 +3512,8 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__data_size_template, Self::ethereum__data_size_template),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__deploy_contract, Self::ethereum__deploy_contract),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__gas_limit, Self::ethereum__gas_limit),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__gas_price, Self::ethereum__gas_price),
@@ -3337,6 +3555,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__staking_unstake, Self::ethereum__staking_unstake),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__staking_unstake_intro, Self::ethereum__staking_unstake_intro),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__title_all_input_data_template, Self::ethereum__title_all_input_data_template),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__title_confirm_domain, Self::ethereum__title_confirm_domain),
         #[cfg(feature = "universal_fw")]
@@ -3672,6 +3892,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_pin__turn_on, Self::pin__turn_on),
         (Qstr::MP_QSTR_pin__wrong_pin, Self::pin__wrong_pin),
         (Qstr::MP_QSTR_plurals__contains_x_keys, Self::plurals__contains_x_keys),
+        (Qstr::MP_QSTR_plurals__lock_after_x_days, Self::plurals__lock_after_x_days),
         (Qstr::MP_QSTR_plurals__lock_after_x_hours, Self::plurals__lock_after_x_hours),
         (Qstr::MP_QSTR_plurals__lock_after_x_milliseconds, Self::plurals__lock_after_x_milliseconds),
         (Qstr::MP_QSTR_plurals__lock_after_x_minutes, Self::plurals__lock_after_x_minutes),
@@ -3782,6 +4003,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_reset__number_of_shares_info, Self::reset__number_of_shares_info),
         (Qstr::MP_QSTR_reset__one_share, Self::reset__one_share),
         (Qstr::MP_QSTR_reset__only_one_share_will_be_created, Self::reset__only_one_share_will_be_created),
+        (Qstr::MP_QSTR_reset__recovery_share_description, Self::reset__recovery_share_description),
+        (Qstr::MP_QSTR_reset__recovery_share_number, Self::reset__recovery_share_number),
         (Qstr::MP_QSTR_reset__recovery_share_title_template, Self::reset__recovery_share_title_template),
         (Qstr::MP_QSTR_reset__recovery_wallet_backup_title, Self::reset__recovery_wallet_backup_title),
         (Qstr::MP_QSTR_reset__repeat_for_all_shares, Self::reset__repeat_for_all_shares),
@@ -3793,6 +4016,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_reset__set_it_to_count_template, Self::reset__set_it_to_count_template),
         (Qstr::MP_QSTR_reset__share_checked_successfully_template, Self::reset__share_checked_successfully_template),
         (Qstr::MP_QSTR_reset__share_completed_template, Self::reset__share_completed_template),
+        (Qstr::MP_QSTR_reset__share_words_first, Self::reset__share_words_first),
         (Qstr::MP_QSTR_reset__share_words_title, Self::reset__share_words_title),
         (Qstr::MP_QSTR_reset__slip39_checklist_more_info_threshold, Self::reset__slip39_checklist_more_info_threshold),
         (Qstr::MP_QSTR_reset__slip39_checklist_more_info_threshold_example_template, Self::reset__slip39_checklist_more_info_threshold_example_template),
@@ -3878,6 +4102,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_send__maximum_fee, Self::send__maximum_fee),
         (Qstr::MP_QSTR_send__receiving_to_multisig, Self::send__receiving_to_multisig),
         (Qstr::MP_QSTR_send__send_from, Self::send__send_from),
+        (Qstr::MP_QSTR_send__send_in_the_app, Self::send__send_in_the_app),
+        (Qstr::MP_QSTR_send__sign_cancelled, Self::send__sign_cancelled),
         (Qstr::MP_QSTR_send__sign_transaction, Self::send__sign_transaction),
         (Qstr::MP_QSTR_send__title_confirm_sending, Self::send__title_confirm_sending),
         (Qstr::MP_QSTR_send__title_joint_transaction, Self::send__title_joint_transaction),
@@ -4186,6 +4412,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__amount, Self::words__amount),
         (Qstr::MP_QSTR_words__are_you_sure, Self::words__are_you_sure),
         (Qstr::MP_QSTR_words__array_of, Self::words__array_of),
+        (Qstr::MP_QSTR_words__authenticate, Self::words__authenticate),
         (Qstr::MP_QSTR_words__blockhash, Self::words__blockhash),
         (Qstr::MP_QSTR_words__buying, Self::words__buying),
         (Qstr::MP_QSTR_words__cancel_and_exit, Self::words__cancel_and_exit),
@@ -4209,10 +4436,14 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__not_recommended, Self::words__not_recommended),
         (Qstr::MP_QSTR_words__operation_cancelled, Self::words__operation_cancelled),
         (Qstr::MP_QSTR_words__outputs, Self::words__outputs),
+        (Qstr::MP_QSTR_words__pay_attention, Self::words__pay_attention),
         (Qstr::MP_QSTR_words__please_check_again, Self::words__please_check_again),
         (Qstr::MP_QSTR_words__please_try_again, Self::words__please_try_again),
         (Qstr::MP_QSTR_words__really_wanna, Self::words__really_wanna),
+        (Qstr::MP_QSTR_words__receive, Self::words__receive),
         (Qstr::MP_QSTR_words__recipient, Self::words__recipient),
+        (Qstr::MP_QSTR_words__recovery_share, Self::words__recovery_share),
+        (Qstr::MP_QSTR_words__send, Self::words__send),
         (Qstr::MP_QSTR_words__settings, Self::words__settings),
         (Qstr::MP_QSTR_words__sign, Self::words__sign),
         (Qstr::MP_QSTR_words__signer, Self::words__signer),
@@ -4231,6 +4462,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__unknown, Self::words__unknown),
         (Qstr::MP_QSTR_words__unlimited, Self::words__unlimited),
         (Qstr::MP_QSTR_words__unlocked, Self::words__unlocked),
+        (Qstr::MP_QSTR_words__wallet, Self::words__wallet),
         (Qstr::MP_QSTR_words__warning, Self::words__warning),
         (Qstr::MP_QSTR_words__writable, Self::words__writable),
         (Qstr::MP_QSTR_words__yes, Self::words__yes),

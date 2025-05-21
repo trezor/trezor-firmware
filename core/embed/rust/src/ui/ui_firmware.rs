@@ -58,6 +58,7 @@ pub trait FirmwareUI {
         page_counter: bool,
         prompt_screen: bool,
         cancel: bool,
+        warning_footer: Option<TString<'static>>,
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
     fn confirm_value_intro(
@@ -238,6 +239,14 @@ pub trait FirmwareUI {
         more_info_callback: Option<impl Fn(u32) -> TString<'static> + 'static>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
+    fn request_duration(
+        title: TString<'static>,
+        duration_ms: u32,
+        min_ms: u32,
+        max_ms: u32,
+        description: Option<TString<'static>>,
+    ) -> Result<impl LayoutMaybeTrace, Error>;
+
     fn request_pin(
         prompt: TString<'static>,
         subprompt: TString<'static>,
@@ -281,6 +290,7 @@ pub trait FirmwareUI {
         title: TString<'static>,
         description: TString<'static>,
         value: TString<'static>,
+        menu_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
@@ -302,6 +312,21 @@ pub trait FirmwareUI {
         notification: Option<TString<'static>>,
         notification_level: u8,
     ) -> Result<impl LayoutMaybeTrace, Error>;
+
+    fn show_device_menu(
+        failed_backup: bool,
+        battery_percentage: u8,
+        firmware_version: TString<'static>,
+        device_name: TString<'static>,
+        paired_devices: Vec<TString<'static>, 1>,
+        auto_lock_delay: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error>;
+
+    fn show_pairing_device_name(
+        device_name: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error>;
+
+    fn show_pairing_code(code: TString<'static>) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_info(
         title: TString<'static>,
@@ -348,8 +373,8 @@ pub trait FirmwareUI {
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     // TODO: merge with `show_share_words` instead of having specific version for
-    // Delizia UI
-    fn show_share_words_delizia(
+    // Delizia/Eckhart UI
+    fn show_share_words_extended(
         words: Vec<TString<'static>, 33>,
         subtitle: Option<TString<'static>>,
         instructions: Obj,                     // TODO: replace Obj
