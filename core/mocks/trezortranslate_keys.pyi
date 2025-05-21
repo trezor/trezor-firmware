@@ -59,7 +59,7 @@ class TR:
     bitcoin__title_confirm_details: str = "Confirm details"
     bitcoin__title_finalize_transaction: str = "Finalize transaction"
     bitcoin__title_high_mining_fee: str = "High mining fee"
-    bitcoin__title_meld_transaction: str = "Meld transactions"
+    bitcoin__title_meld_transaction: str = "Meld transaction"
     bitcoin__title_modify_amount: str = "Modify amount"
     bitcoin__title_payjoin: str = "Payjoin"
     bitcoin__title_proof_of_ownership: str = "Proof of ownership"
