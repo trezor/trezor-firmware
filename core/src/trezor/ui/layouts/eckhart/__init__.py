@@ -1425,7 +1425,7 @@ def confirm_change_pin(
     return confirm_action(
         br_name,
         title,
-        description,
+        description=description,
         verb=TR.buttons__continue,
     )
 
@@ -1438,7 +1438,7 @@ def confirm_remove_pin(
     return confirm_action(
         br_name,
         title,
-        description,
+        description=description,
         verb=TR.buttons__continue,
     )
 
