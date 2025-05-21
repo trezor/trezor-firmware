@@ -376,10 +376,10 @@
     },
     "ethereum__units_template": "{0} units",
     "ethereum__unknown_contract_address": {
-      "Bolt": "Unknown contract address. Continue only if you know what you are doing.",
-      "Caesar": "Unknown contract address. Continue only if you know what you are doing.",
-      "Delizia": "Unknown contract address. Continue only if you know what you are doing.",
-      "Eckhart": "Unknown token contract address. Continue only if you know what you are doing."
+      "Bolt": "Unknown contract address",
+      "Caesar": "Unknown contract address",
+      "Delizia": "Unknown contract address",
+      "Eckhart": "Unknown token contract address."
     },
     "ethereum__unknown_token": "Unknown token",
     "ethereum__valid_signature": "The signature is valid.",

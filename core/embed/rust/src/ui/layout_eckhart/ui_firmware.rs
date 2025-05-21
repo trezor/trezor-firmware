@@ -337,6 +337,7 @@ impl FirmwareUI for UIEckhart {
 
     fn confirm_properties(
         title: TString<'static>,
+        _subtitle: Option<TString<'static>>,
         items: Obj,
         hold: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
@@ -693,7 +694,6 @@ impl FirmwareUI for UIEckhart {
         account: Option<TString<'static>>,
         path: Option<TString<'static>>,
         xpubs: Obj,
-        title_success: TString<'static>,
         br_code: u16,
         br_name: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
@@ -708,7 +708,6 @@ impl FirmwareUI for UIEckhart {
             account,
             path,
             xpubs,
-            title_success,
             br_code,
             br_name,
         )?;

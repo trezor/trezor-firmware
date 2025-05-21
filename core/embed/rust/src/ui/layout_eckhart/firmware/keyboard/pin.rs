@@ -352,7 +352,7 @@ impl PinInput {
         TextLayout::new(Self::SHOWN_STYLE)
             .with_bounds(self.shown_area.inset(Insets::uniform(Self::SHOWN_PADDING)))
             .with_align(Alignment::Start)
-            .render_text(self.pin(), target);
+            .render_text(self.pin(), target, true);
     }
 
     fn render_hidden<'s>(&self, target: &mut impl Renderer<'s>) {

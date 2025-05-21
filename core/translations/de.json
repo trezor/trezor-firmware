@@ -41,7 +41,12 @@
     "addr_mismatch__support_url": "trezor.io/support",
     "addr_mismatch__wrong_derivation_path": "Ableitungspfad für gewähltes Konto falsch.",
     "addr_mismatch__xpub_mismatch": "XPUB passt nicht?",
-    "address__cancel_contact_support": "Wenn die Empfängeradresse nicht übereinstimmt, dann wende dich bitte unter trezor.io/support an den Trezor Support.",
+    "address__cancel_contact_support": {
+      "Bolt": "Wenn die Empfängeradresse nicht übereinstimmt, dann wende dich bitte unter trezor.io/support an den Trezor Support.",
+      "Caesar": "Wenn die Empfängeradresse nicht übereinstimmt, dann wende dich bitte unter trezor.io/support an den Trezor Support.",
+      "Delizia": "Wenn die Empfängeradresse nicht übereinstimmt, dann wende dich bitte unter trezor.io/support an den Trezor Support.",
+      "Eckhart": "Wenn die Empfängeradresse nicht stimmt, kontaktiere Trezor unter trezor.io/support."
+    },
     "address__cancel_receive": "Empfang abbrechen",
     "address__confirmed": "Empfängeradresse bestätigt",
     "address__public_key": "Public Key",
