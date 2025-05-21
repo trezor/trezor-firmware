@@ -1018,6 +1018,7 @@ impl FirmwareUI for UIBolt {
         description: TString<'static>,
         indeterminate: bool,
         title: Option<TString<'static>>,
+        _danger: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let (title, description) = if let Some(title) = title {
             (title, description)

@@ -178,9 +178,14 @@ impl ActionBar {
             right_button
                 .long_press()
                 .filter(|_| !animation_disabled())
-                .map(|dur| {
+                .map(|(dur, danger)| {
                     HoldToConfirmAnim::new()
                         .with_duration(dur)
+                        .with_color(if danger {
+                            theme::ORANGE
+                        } else {
+                            theme::GREEN_LIME
+                        })
                         .with_header_overlay(TR::instructions__continue_holding.into())
                 })
         } else {

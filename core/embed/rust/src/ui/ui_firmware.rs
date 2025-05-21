@@ -353,6 +353,7 @@ pub trait FirmwareUI {
         description: TString<'static>,
         indeterminate: bool,
         title: Option<TString<'static>>,
+        danger: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_progress_coinjoin(
