@@ -1129,6 +1129,7 @@ async def confirm_modify_output(
         verb=TR.buttons__continue,
         cancel=True,
         is_data=True,
+        description=None,
     )
     modify_layout = trezorui_api.confirm_modify_output(
         sign=sign,
