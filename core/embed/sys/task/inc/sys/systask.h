@@ -173,6 +173,17 @@ void systask_pop_data(systask_t* task, size_t size);
 bool systask_push_call(systask_t* task, void* fn, uint32_t arg1, uint32_t arg2,
                        uint32_t arg3);
 
+// Invokes the callback function in the context of the given task
+//   uint32_t callback(uint32_t arg1, uint32_t arg2, uint32_t arg3);
+uint32_t systask_invoke_callback(systask_t* task, uint32_t arg1, uint32_t arg2,
+                                 uint32_t arg3, void* callback);
+
+// Sets R0 and R1 registers of the suspended task
+void systask_set_r0r1(systask_t* task, uint32_t r0, uint32_t r1);
+
+// Gets R0 register value of the suspended task
+uint32_t systask_get_r0(systask_t* task);
+
 // Gets the ID (zero-based index up SYSTASK_MAX_TASKS - 1) of the given task.
 systask_id_t systask_id(const systask_t* task);
 

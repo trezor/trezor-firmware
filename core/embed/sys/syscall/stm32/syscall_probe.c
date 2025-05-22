@@ -36,7 +36,7 @@ static inline bool inside_area(const void *addr, size_t len,
 }
 
 bool probe_read_access(const void *addr, size_t len) {
-  applet_t *applet = applet_active();
+  applet_t *applet = syscall_get_context();
 
   if (applet == NULL) {
     return false;
@@ -86,7 +86,7 @@ bool probe_read_access(const void *addr, size_t len) {
 }
 
 bool probe_write_access(void *addr, size_t len) {
-  applet_t *applet = applet_active();
+  applet_t *applet = syscall_get_context();
 
   if (applet == NULL) {
     return false;

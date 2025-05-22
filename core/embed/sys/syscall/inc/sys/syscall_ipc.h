@@ -19,28 +19,28 @@
 
 #pragma once
 
-#include <trezor_types.h>
-
-#include <sys/applet.h>
-#include <sys/system.h>
-
-#include "syscall_context.h"
-
 #ifdef KERNEL
 
-// Checks if the current application task has read access to the
-// given memory range.
-bool probe_read_access(const void *addr, size_t len);
+#include <trezor_types.h>
 
-// Checks if the current application task has write access to the
-// given memory range.
-bool probe_write_access(void *addr, size_t len);
+#include <sys/syscall_numbers.h>
 
-// Exits the current application task with an fatal error
-// with the message "Access violation".
-#define apptask_access_violation()                             \
-  do {                                                         \
-    system_exit_fatal("Access violation", __FILE__, __LINE__); \
-  } while (0)
+// Initializes IPC for syscalls
+bool syscall_ipc_init(void);
+
+// Enqueues a syscall for processing in the kernel event loop
+//
+// Queued syscalls are signalled to the kernel task by
+// asserting SYSEVENT_SYSCALL.
+//
+// The function may be called only from kernel handler mode
+// (respecively from SVCall handler).
+void syscall_ipc_enqueue(uint32_t* args, syscall_number_t syscall);
+
+// Dequeues and processed a syscall
+//
+// Removes the syscall from the queue and executes it. This
+// function is intended to be called from the kernel event loop.
+void syscall_ipc_dequeue(void);
 
 #endif  // KERNEL

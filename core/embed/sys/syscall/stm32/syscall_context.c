@@ -17,30 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include <trezor_types.h>
-
-#include <sys/applet.h>
-#include <sys/system.h>
-
 #include "syscall_context.h"
 
 #ifdef KERNEL
 
-// Checks if the current application task has read access to the
-// given memory range.
-bool probe_read_access(const void *addr, size_t len);
+applet_t* g_syscall_context;
 
-// Checks if the current application task has write access to the
-// given memory range.
-bool probe_write_access(void *addr, size_t len);
+void syscall_set_context(applet_t* applet) { g_syscall_context = applet; }
 
-// Exits the current application task with an fatal error
-// with the message "Access violation".
-#define apptask_access_violation()                             \
-  do {                                                         \
-    system_exit_fatal("Access violation", __FILE__, __LINE__); \
-  } while (0)
+applet_t* syscall_get_context(void) { return g_syscall_context; }
 
 #endif  // KERNEL

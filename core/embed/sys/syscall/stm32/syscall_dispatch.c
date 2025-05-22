@@ -77,6 +77,7 @@
 #include <io/touch.h>
 #endif
 
+#include "syscall_context.h"
 #include "syscall_internal.h"
 #include "syscall_verifiers.h"
 
@@ -86,18 +87,28 @@ static PIN_UI_WAIT_CALLBACK storage_init_callback = NULL;
 
 static secbool storage_init_callback_wrapper(
     uint32_t wait, uint32_t progress, enum storage_ui_message_t message) {
-  return secfalse;  // TODO: remove`
-
   secbool result;
   g_in_app_callback = true;
-  result = invoke_app_callback(wait, progress, message, storage_init_callback);
+  applet_t *applet = syscall_get_context();
+  result = systask_invoke_callback(&applet->task, wait, progress, message,
+                                   storage_init_callback);
   g_in_app_callback = false;
   return result;
 }
 
 __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
-                                                       uint32_t syscall) {
+                                                       uint32_t syscall,
+                                                       void *applet) {
+  syscall_set_context((applet_t *)applet);
+
   switch (syscall) {
+    case SYSCALL_RETURN_FROM_CALLBACK: {
+      if (g_in_app_callback) {
+        systask_yield_to(systask_kernel());
+      }
+      break;
+    }
+
     case SYSCALL_SYSTEM_EXIT: {
       int exit_code = (int)args[0];
       system_exit__verified(exit_code);

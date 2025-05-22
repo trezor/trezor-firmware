@@ -36,20 +36,12 @@
 //
 // Return values must be copied to `args[0]` and
 // `args[1]` (if returning a 64-bit value).
-void syscall_handler(uint32_t* args, uint32_t syscall);
-
-// Invokes the application callback from the syscall handler.
-//
-// This is a *temporary* helper function used to invoke application callbacks
-// from the syscall handler. It will be removed once all callback arguments
-// are eliminated from syscalls.
-uint32_t invoke_app_callback(uint32_t args1, uint32_t arg2, uint32_t arg3,
-                             void* callback);
+void syscall_handler(uint32_t* args, uint32_t syscall, void* applet);
 
 // Internal function for returning from an application callback.
 // This function is called from an unprivileged app via an SVC call. It restores
 // the stack pointer and returns control to the privileged caller.
-void return_from_app_callback(uint32_t retval, uint32_t* msp);
+void return_from_unpriv(uint32_t retval, uint32_t* msp);
 
 // Invokes an unprivileged function from privileged mode.
 //
@@ -58,8 +50,6 @@ void return_from_app_callback(uint32_t retval, uint32_t* msp);
 // different hardware keys being used in privileged and unprivileged modes).
 uint32_t invoke_unpriv(void* func);
 
-#endif  // KERNEL_MODE
-
 // Returns from an unprivileged callback.
 //
 // Same as `invoke_unpriv`, this function should be removed once
@@ -67,10 +57,12 @@ uint32_t invoke_unpriv(void* func);
 // unprivileged mode.
 
 static void inline __attribute__((no_stack_protector))
-syscall_return_from_callback(uint32_t retval) {
+svc_return_from_unpriv(uint32_t retval) {
   register uint32_t r0 __asm__("r0") = retval;
   __asm__ volatile("svc %[svid]\n"
                    :
                    : [svid] "i"(SVC_CALLBACK_RETURN), "r"(r0)
                    : "memory");
 }
+
+#endif  // KERNEL_MODE
