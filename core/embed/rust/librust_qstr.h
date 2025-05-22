@@ -292,6 +292,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_homescreen__title_set;
   MP_QSTR_horizontal;
   MP_QSTR_icon_name;
+  MP_QSTR_iface;
   MP_QSTR_iface_num;
   MP_QSTR_image;
   MP_QSTR_indeterminate;
