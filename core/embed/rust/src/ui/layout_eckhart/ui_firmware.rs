@@ -318,6 +318,7 @@ impl FirmwareUI for UIEckhart {
         extra_items: Option<Obj>,
         extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
+        suite_sign: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         // collect available info
         let account_paragraphs = if let Some(items) = account_items {
@@ -356,6 +357,7 @@ impl FirmwareUI for UIEckhart {
             extra_title,
             extra_paragraphs,
             verb_cancel,
+            suite_sign,
         )?;
         Ok(flow)
     }
@@ -365,6 +367,7 @@ impl FirmwareUI for UIEckhart {
         items: Obj,
         _subtitle: Option<TString<'static>>,
         hold: bool,
+        verb: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = PropsList::new(
             items,
@@ -380,7 +383,7 @@ impl FirmwareUI for UIEckhart {
                 LinearPlacement::vertical().with_spacing(theme::PARAGRAPHS_SPACING),
             ),
             None,
-            None,
+            verb,
             hold,
             None,
             None,
@@ -502,7 +505,7 @@ impl FirmwareUI for UIEckhart {
             let [text, is_data]: [Obj; 2] = util::iter_into_array(para)?;
             let is_data = is_data.try_into()?;
             let style: &TextStyle = if is_data {
-                &theme::TEXT_MONO_MEDIUM_LIGHT
+                &theme::TEXT_MONO_LIGHT
             } else {
                 &theme::TEXT_SMALL_LIGHT
             };

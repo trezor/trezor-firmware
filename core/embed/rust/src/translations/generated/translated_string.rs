@@ -1399,7 +1399,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__approve_to = 1005,  // "Approve to"
     #[cfg(feature = "universal_fw")]
-    ethereum__approve_unlimited_template = 1006,  // "Approving unlimited amount of {0}"
+    ethereum__approve_unlimited_template = 1006,  // {"Bolt": "Approving unlimited amount of {0}", "Caesar": "Approving unlimited amount of {0}", "Delizia": "Approving unlimited amount of {0}", "Eckhart": "Approve unlimited amount of {0}"}
     words__unlimited = 1007,  // "Unlimited"
     #[cfg(feature = "universal_fw")]
     ethereum__approve_intro_revoke = 1008,  // "Review details to revoke token approval."
@@ -1445,6 +1445,8 @@ pub enum TranslatedString {
     recovery__share_from_group_entered_template = 1044,  // "Share #{0} from Group #{1} entered."
     send__cancel_transaction = 1045,  // "Cancel transaction"
     send__multisig_different_paths = 1046,  // "Using different paths for different XPUBs."
+    #[cfg(feature = "universal_fw")]
+    ethereum__contract_address = 1047,  // "Provider contract address"
 }
 
 impl TranslatedString {
@@ -3149,7 +3151,17 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__approve_to, "Approve to"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::ethereum__approve_unlimited_template, "Approving unlimited amount of {0}"),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::ethereum__approve_unlimited_template, "Approving unlimited amount of {0}"),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::ethereum__approve_unlimited_template, "Approving unlimited amount of {0}"),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::ethereum__approve_unlimited_template, "Approve unlimited amount of {0}"),
             (Self::words__unlimited, "Unlimited"),
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__approve_intro_revoke, "Review details to revoke token approval."),
@@ -3195,6 +3207,8 @@ impl TranslatedString {
             (Self::recovery__share_from_group_entered_template, "Share #{0} from Group #{1} entered."),
             (Self::send__cancel_transaction, "Cancel transaction"),
             (Self::send__multisig_different_paths, "Using different paths for different XPUBs."),
+            #[cfg(feature = "universal_fw")]
+            (Self::ethereum__contract_address, "Provider contract address"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3665,6 +3679,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__approve_unlimited_template, Self::ethereum__approve_unlimited_template),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__contract, Self::ethereum__contract),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__contract_address, Self::ethereum__contract_address),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__data_size_template, Self::ethereum__data_size_template),
         #[cfg(feature = "universal_fw")]

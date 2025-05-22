@@ -325,7 +325,12 @@
     "ethereum__approve_revoke": "Revoke",
     "ethereum__approve_revoke_from": "Revoke from",
     "ethereum__approve_to": "Approve to",
-    "ethereum__approve_unlimited_template": "Approving unlimited amount of {0}",
+    "ethereum__approve_unlimited_template": {
+      "Bolt": "Approving unlimited amount of {0}",
+      "Caesar": "Approving unlimited amount of {0}",
+      "Delizia": "Approving unlimited amount of {0}",
+      "Eckhart": "Approve unlimited amount of {0}"
+    },
     "ethereum__contract": {
       "Bolt": "Contract",
       "Caesar": "Contract",
@@ -372,6 +377,7 @@
       "Delizia": "Token contract",
       "Eckhart": "Token contract address"
     },
+    "ethereum__contract_address": "Provider contract address",
     "ethereum__units_template": "{0} units",
     "ethereum__unknown_contract_address": {
       "Bolt": "Unknown contract address",
