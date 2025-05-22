@@ -186,10 +186,12 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn confirm_firmware_update(
-        _description: TString<'static>,
-        _fingerprint: TString<'static>,
+        description: TString<'static>,
+        fingerprint: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let flow =
+            flow::confirm_firmware_update::new_confirm_firmware_update(description, fingerprint)?;
+        Ok(flow)
     }
 
     fn confirm_modify_fee(
