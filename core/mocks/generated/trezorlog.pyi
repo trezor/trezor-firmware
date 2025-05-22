@@ -2,20 +2,20 @@ from typing import *
 
 
 # rust/src/micropython/logging.rs
-def debug(name: str, msg: str, *args: Any) -> None:
+def debug(name: str, msg: str, *args: Any, *, iface: WireInterface | None = None) -> None:
     ...
 
 
 # rust/src/micropython/logging.rs
-def info(name: str, msg: str, *args: Any) -> None:
+def info(name: str, msg: str, *args: Any, *, iface: WireInterface | None = None) -> None:
     ...
 
 
 # rust/src/micropython/logging.rs
-def warning(name: str, msg: str, *args: Any) -> None:
+def warning(name: str, msg: str, *args: Any, *, iface: WireInterface | None = None) -> None:
     ...
 
 
 # rust/src/micropython/logging.rs
-def error(name: str, msg: str, *args: Any) -> None:
+def error(name: str, msg: str, *args: Any, *, iface: WireInterface | None = None) -> None:
     ...

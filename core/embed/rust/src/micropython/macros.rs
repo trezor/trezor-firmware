@@ -69,13 +69,6 @@ macro_rules! obj_fn_var {
     };
 }
 
-/// Create an object for an exported function taking at least `min` args
-macro_rules! obj_fn_var_min {
-    ($min:expr, $f:expr) => {
-        crate::micropython::macros::_obj_fn_make_var!($min, 0xffff, takes_kw:0, var:$f)
-    };
-}
-
 /// Create an object for an exported function taking key-value args.
 macro_rules! obj_fn_kw {
     ($min:expr, $f:expr) => {

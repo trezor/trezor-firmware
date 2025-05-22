@@ -221,6 +221,7 @@ fn generate_micropython_bindings() {
         .allowlist_function("mp_obj_new_attrtuple")
         .allowlist_function("mp_obj_get_int_maybe")
         .allowlist_function("mp_obj_is_true")
+        .allowlist_function("mp_obj_get_type_str")
         .allowlist_function("mp_call_function_n_kw")
         .allowlist_function("trezor_obj_get_ll_checked")
         .allowlist_function("trezor_obj_str_from_rom_text")
