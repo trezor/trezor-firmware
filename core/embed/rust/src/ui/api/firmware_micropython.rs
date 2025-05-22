@@ -324,14 +324,18 @@ extern "C" fn new_confirm_more(n_args: usize, args: *const Obj, kwargs: *mut Map
 extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
         let subtitle: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_subtitle)
             .and_then(Obj::try_into_option)
             .unwrap_or(None);
+        let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
+        let verb: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_verb)
+            .and_then(Obj::try_into_option)
+            .unwrap_or(None);
 
-        let layout = ModelUI::confirm_properties(title, items, subtitle, hold)?;
+        let layout = ModelUI::confirm_properties(title, subtitle, items, hold, verb)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -404,6 +408,10 @@ extern "C" fn new_confirm_summary(n_args: usize, args: *const Obj, kwargs: *mut 
 extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let subtitle: Option<TString<'static>> = kwargs
+            .get(Qstr::MP_QSTR_subtitle)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
         let verb: TString = kwargs.get(Qstr::MP_QSTR_verb)?.try_into()?;
         let verb_info: TString = kwargs.get(Qstr::MP_QSTR_verb_info)?.try_into()?;
@@ -412,7 +420,8 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
 
-        let layout = ModelUI::confirm_with_info(title, items, verb, verb_info, verb_cancel)?;
+        let layout =
+            ModelUI::confirm_with_info(title, subtitle, items, verb, verb_info, verb_cancel)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1443,9 +1452,10 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def confirm_properties(
     ///     *,
     ///     title: str,
-    ///     items: list[tuple[str | None, str | bytes | None, bool | None]],
     ///     subtitle: str | None = None,
+    ///     items: list[tuple[str | None, str | bytes | None, bool | None]],
     ///     hold: bool = False,
+    ///     verb: str | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm list of key-value pairs. The third component in the tuple should be True if
     ///     the value is to be rendered as binary with monospace font, False otherwise."""
@@ -1474,6 +1484,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def confirm_with_info(
     ///     *,
     ///     title: str,
+    ///     subtitle: str | None = None,
     ///     items: Iterable[tuple[str | bytes, bool]],
     ///     verb: str,
     ///     verb_info: str,

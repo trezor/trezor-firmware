@@ -413,9 +413,10 @@ impl FirmwareUI for UICaesar {
 
     fn confirm_properties(
         title: TString<'static>,
-        items: Obj,
         _subtitle: Option<TString<'static>>,
+        items: Obj,
         hold: bool,
+        _verb: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecLong::new();
 
@@ -615,6 +616,7 @@ impl FirmwareUI for UICaesar {
 
     fn confirm_with_info(
         title: TString<'static>,
+        _subtitle: Option<TString<'static>>,
         items: Obj,
         verb: TString<'static>,
         _verb_info: TString<'static>,

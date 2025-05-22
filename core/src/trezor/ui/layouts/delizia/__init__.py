@@ -742,6 +742,7 @@ def confirm_properties(
     subtitle: str | None = None,
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
+    verb: str | None = None,
 ) -> Awaitable[None]:
 
     return raise_if_not_confirmed(
@@ -829,7 +830,9 @@ def _confirm_summary(
 
 if not utils.BITCOIN_ONLY:
 
-    def confirm_ethereum_unknown_contract_warning() -> Awaitable[None]:
+    def confirm_ethereum_unknown_contract_warning(
+        _title: str | None,
+    ) -> Awaitable[None]:
         return show_danger(
             "unknown_contract_warning",
             content=f"{TR.ethereum__unknown_contract_address}. {TR.words__know_what_your_doing}",
@@ -882,8 +885,13 @@ if not utils.BITCOIN_ONLY:
             None,
         )
 
+    def ethereum_address_title() -> str:
+        """Return the title for the Ethereum address confirmation."""
+        return TR.words__address
+
     async def confirm_ethereum_approve(
-        recipient: str,
+        recipient_addr: str,
+        recipient_str: str | None,
         is_unknown_token: bool,
         token_address: str,
         token_symbol: str,
@@ -916,9 +924,9 @@ if not utils.BITCOIN_ONLY:
 
         await confirm_value(
             TR.ethereum__approve_revoke_from if is_revoke else TR.ethereum__approve_to,
-            recipient,
+            recipient_str or recipient_addr,
             "",
-            chunkify=chunkify,
+            chunkify=False if recipient_str else chunkify,
             br_name="confirm_ethereum_approve",
         )
 

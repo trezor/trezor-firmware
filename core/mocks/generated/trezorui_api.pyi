@@ -260,9 +260,10 @@ def confirm_more(
 def confirm_properties(
     *,
     title: str,
-    items: list[tuple[str | None, str | bytes | None, bool | None]],
     subtitle: str | None = None,
+    items: list[tuple[str | None, str | bytes | None, bool | None]],
     hold: bool = False,
+    verb: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Confirm list of key-value pairs. The third component in the tuple should be True if
     the value is to be rendered as binary with monospace font, False otherwise."""
@@ -294,6 +295,7 @@ def confirm_summary(
 def confirm_with_info(
     *,
     title: str,
+    subtitle: str | None = None,
     items: Iterable[tuple[str | bytes, bool]],
     verb: str,
     verb_info: str,
