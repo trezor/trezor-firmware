@@ -98,6 +98,7 @@ pub fn new_confirm_summary(
     account_paragraphs: Option<ParagraphVecShort<'static>>,
     extra_title: Option<TString<'static>>,
     extra_paragraphs: Option<ParagraphVecShort<'static>>,
+    verb: Option<TString<'static>>,
     verb_cancel: Option<TString<'static>>,
 ) -> Result<SwipeFlow, error::Error> {
     // Summary
@@ -112,22 +113,30 @@ pub fn new_confirm_summary(
         .add(Paragraph::new(&theme::TEXT_SMALL_LIGHT, fee_label))
         .add(Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, fee));
 
-    let content_summary = TextScreen::new(
+    let button = if let Some(verb) = verb {
+        Button::with_text(verb)
+    } else {
+        Button::with_text(TR::instructions__hold_to_sign.into())
+            .with_long_press(theme::CONFIRM_HOLD_DURATION)
+            .styled(theme::button_confirm())
+    };
+
+    let mut screen_summary = TextScreen::new(
         summary_paragraphs
             .into_paragraphs()
             .with_placement(LinearPlacement::vertical().with_spacing(theme::PARAGRAPHS_SPACING)),
     )
     .with_header(Header::new(title).with_menu_button())
-    .with_action_bar(ActionBar::new_single(
-        Button::with_text(TR::instructions__hold_to_sign.into())
-            .with_long_press(theme::CONFIRM_HOLD_DURATION)
-            .styled(theme::button_confirm()),
-    ))
-    .with_hint(Hint::new_instruction(
-        TR::send__send_in_the_app,
-        Some(theme::ICON_INFO),
-    ))
-    .map(|msg| match msg {
+    .with_action_bar(ActionBar::new_single(button));
+
+    if verb.is_none() {
+        screen_summary = screen_summary.with_hint(Hint::new_instruction(
+            TR::send__send_in_the_app,
+            Some(theme::ICON_INFO),
+        ))
+    }
+
+    let content_summary = screen_summary.map(|msg| match msg {
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
         TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
         TextScreenMsg::Menu => Some(FlowMsg::Info),

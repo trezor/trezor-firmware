@@ -330,8 +330,12 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
             .and_then(Obj::try_into_option)
             .unwrap_or(None);
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
+        let verb: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_verb)
+            .and_then(Obj::try_into_option)
+            .unwrap_or(None);
 
-        let layout = ModelUI::confirm_properties(title, subtitle, items, hold)?;
+        let layout = ModelUI::confirm_properties(title, subtitle, items, hold, verb)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -379,6 +383,10 @@ extern "C" fn new_confirm_summary(n_args: usize, args: *const Obj, kwargs: *mut 
             .get(Qstr::MP_QSTR_extra_title)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
+        let verb: Option<TString<'static>> = kwargs
+            .get(Qstr::MP_QSTR_verb)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
         let verb_cancel: Option<TString<'static>> = kwargs
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
@@ -394,6 +402,7 @@ extern "C" fn new_confirm_summary(n_args: usize, args: *const Obj, kwargs: *mut 
             account_title,
             extra_items,
             extra_title,
+            verb,
             verb_cancel,
         )?;
         Ok(LayoutObj::new_root(layout)?.into())
@@ -1394,6 +1403,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     items: list[tuple[str | None, str | bytes | None, bool]],
     ///     subtitle: str | None = None,
     ///     hold: bool = False,
+    ///     verb: str | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm list of key-value pairs. The third component in the tuple should be True if
     ///     the value is to be rendered as binary with monospace font, False otherwise."""
@@ -1414,6 +1424,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     account_title: str | None = None,
     ///     extra_items: Iterable[tuple[str, str]] | None = None,
     ///     extra_title: str | None = None,
+    ///     verb: str | None = None,
     ///     verb_cancel: str | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm summary of a transaction."""

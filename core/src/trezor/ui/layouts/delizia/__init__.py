@@ -751,6 +751,7 @@ def _confirm_summary(
     account_items: Iterable[tuple[str, str]] | None = None,
     extra_items: Iterable[tuple[str, str]] | None = None,
     extra_title: str | None = None,
+    verb: str | None = None,
     br_name: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> Awaitable[None]:
@@ -774,7 +775,9 @@ def _confirm_summary(
 
 if not utils.BITCOIN_ONLY:
 
-    def confirm_ethereum_unknown_contract_warning() -> Awaitable[None]:
+    def confirm_ethereum_unknown_contract_warning(
+        _title: str | None,
+    ) -> Awaitable[None]:
         return show_danger(
             "unknown_contract_warning",
             content=f"{TR.ethereum__unknown_contract_address}. {TR.words__know_what_your_doing}",

@@ -761,6 +761,7 @@ def confirm_properties(
     subtitle: str | None = None,
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
+    verb: str | None = None,
 ) -> Awaitable[None]:
     from ubinascii import hexlify
 
@@ -909,7 +910,9 @@ def confirm_total(
 
 if not utils.BITCOIN_ONLY:
 
-    def confirm_ethereum_unknown_contract_warning() -> Awaitable[None]:
+    def confirm_ethereum_unknown_contract_warning(
+        _title: str | None,
+    ) -> Awaitable[None]:
         return show_danger(
             "unknown_contract_warning",
             TR.words__know_what_your_doing,

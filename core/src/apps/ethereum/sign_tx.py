@@ -281,7 +281,12 @@ async def _handle_erc20(
         token_address = address_bytes
 
         if token is tokens.UNKNOWN_TOKEN:
-            await require_confirm_unknown_token()
+            title = (
+                TR.ethereum__approve
+                if func_sig == SC_FUNC_SIG_APPROVE
+                else TR.words__send
+            )
+            await require_confirm_unknown_token(title)
             if func_sig != SC_FUNC_SIG_APPROVE:
                 # For unknown tokens we also show the token address immediately after the warning
                 # except in the case of the "approve" flow which shows the token address later on!
@@ -291,6 +296,7 @@ async def _handle_erc20(
                     TR.ethereum__token_contract,
                     TR.buttons__continue,
                     "unknown_token",
+                    f"{TR.ethereum__unknown_contract_address} {TR.words__know_what_your_doing}",
                 )
 
     return token, token_address, func_sig, recipient, value

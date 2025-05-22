@@ -695,6 +695,7 @@ def confirm_properties(
     subtitle: str | None = None,
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
+    verb: str | None = None,
 ) -> Awaitable[None]:
     # Monospace flag for values that are bytes.
     items = [(prop[0], prop[1], isinstance(prop[1], bytes)) for prop in props]
@@ -763,6 +764,7 @@ def _confirm_summary(
     account_items: Iterable[tuple[str, str]] | None = None,
     extra_items: Iterable[tuple[str, str]] | None = None,
     extra_title: str | None = None,
+    verb: str | None = None,
     br_name: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> Awaitable[None]:
@@ -778,6 +780,7 @@ def _confirm_summary(
             account_items=account_items or None,
             extra_items=extra_items or None,
             extra_title=extra_title or None,
+            verb=verb,
         ),
         br_name,
         br_code,
@@ -786,12 +789,12 @@ def _confirm_summary(
 
 if not utils.BITCOIN_ONLY:
 
-    def confirm_ethereum_unknown_contract_warning() -> Awaitable[None]:
+    def confirm_ethereum_unknown_contract_warning(title: str | None) -> Awaitable[None]:
         return show_danger(
             "unknown_contract_warning",
             f"{TR.ethereum__unknown_contract_address} {TR.words__know_what_your_doing}",
             title=TR.words__important,
-            menu_title=TR.ethereum__contract,
+            menu_title=title,
             verb_cancel=TR.send__cancel_sign,
         )
 
@@ -871,12 +874,15 @@ if not utils.BITCOIN_ONLY:
         fee_info_items: Iterable[tuple[str, str]],
         chunkify: bool = False,
     ) -> None:
+
+        title = (
+            TR.ethereum__approve_intro_title_revoke
+            if is_revoke
+            else TR.ethereum__approve_intro_title
+        )
+
         await confirm_value(
-            (
-                TR.ethereum__approve_intro_title_revoke
-                if is_revoke
-                else TR.ethereum__approve_intro_title
-            ),
+            title,
             (
                 TR.ethereum__approve_intro_revoke
                 if is_revoke
@@ -885,14 +891,22 @@ if not utils.BITCOIN_ONLY:
             "",
             is_data=False,
             br_name="confirm_ethereum_approve",
+            verb=TR.buttons__continue,
+            cancel=True,
         )
 
         await confirm_value(
-            TR.ethereum__approve_revoke_from if is_revoke else TR.ethereum__approve_to,
+            title,
             recipient,
             "",
+            subtitle=(
+                TR.ethereum__approve_revoke_from
+                if is_revoke
+                else TR.ethereum__approve_to
+            ),
             chunkify=chunkify,
             br_name="confirm_ethereum_approve",
+            verb=TR.buttons__continue,
         )
 
         if total_amount is None:
@@ -914,9 +928,9 @@ if not utils.BITCOIN_ONLY:
         if is_unknown_network:
             assert is_unknown_token
             await confirm_value(
-                TR.ethereum__approve_chain_id,
+                title,
                 chain_id,
-                "",
+                TR.ethereum__approve_chain_id,
                 br_name="confirm_ethereum_approve",
             )
 
@@ -934,10 +948,11 @@ if not utils.BITCOIN_ONLY:
             properties.append((TR.words__chain, network_name))
         await confirm_properties(
             "confirm_ethereum_approve",
-            TR.ethereum__approve_revoke if is_revoke else TR.ethereum__approve,
+            title,
             properties,
             None,
             False,
+            verb=TR.buttons__continue,
         )
 
         account_items = []
@@ -949,10 +964,11 @@ if not utils.BITCOIN_ONLY:
             None,
             maximum_fee,
             TR.send__maximum_fee,
-            TR.words__title_summary,
+            title,
             account_items,
             fee_info_items,
             TR.confirm_total__title_fee,
+            verb=TR.buttons__continue,
         )
 
     async def confirm_ethereum_staking_tx(
