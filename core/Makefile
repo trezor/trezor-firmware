@@ -276,6 +276,16 @@ translations_check: ## check that translations are up to date
 	# spits out error if the stored merkle root is not up to date
 	python ./translations/cli.py merkle-root > /dev/null
 
+translations_crowdin_push: translations  ## split translations and push to crowdin
+	## prepare source files from joint `en.json` into split `en_<layout_type>.json`
+	cd translations; python crowdin.py split
+	cd translations; crowdin push sources
+
+translations_crowdin_pull: ## pull translations from crowdin
+	cd translations; crowdin pull --skip-untranslated-strings
+	# prepare joint `<lang>.json` from split `<lang>_<layout_type>.json`
+	cd translations; python crowdin.py merge
+
 ## build commands:
 
 build: build_boardloader build_bootloader build_firmware build_prodtest build_unix ## build all
