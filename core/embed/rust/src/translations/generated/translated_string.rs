@@ -754,7 +754,7 @@ pub enum TranslatedString {
     progress__x_seconds_left_template = 491,  // "{0} seconds left"
     reboot_to_bootloader__restart = 492,  // "Trezor will restart in bootloader mode."
     reboot_to_bootloader__title = 493,  // "Go to bootloader"
-    reboot_to_bootloader__version_by_template = 494,  // "Firmware version {0}\nby {1}"
+    reboot_to_bootloader__version_by_template = 494,  // {"Bolt": "Firmware version {0}\nby {1}", "Caesar": "Firmware version {0}\nby {1}", "Delizia": "Firmware version {0}\nby {1}", "Eckhart": "Firmware version {0} by {1}"}
     recovery__cancel_dry_run = 495,  // "Cancel backup check"
     recovery__check_dry_run = 496,  // "Check your backup?"
     recovery__cursor_will_change = 497,  // "Position of the cursor will change between entries for enhanced security."
@@ -1437,6 +1437,7 @@ pub enum TranslatedString {
     ethereum__title_all_input_data_template = 1031,  // "All input data ({0} bytes)"
     auto_lock__description = 1032,  // "Set the time before your Trezor locks automatically."
     plurals__lock_after_x_days = 1033,  // "day|days"
+    firmware_update__restart = 1034,  // "Trezor will restart after update."
 }
 
 impl TranslatedString {
@@ -2228,7 +2229,14 @@ impl TranslatedString {
             (Self::progress__x_seconds_left_template, "{0} seconds left"),
             (Self::reboot_to_bootloader__restart, "Trezor will restart in bootloader mode."),
             (Self::reboot_to_bootloader__title, "Go to bootloader"),
+            #[cfg(feature = "layout_bolt")]
             (Self::reboot_to_bootloader__version_by_template, "Firmware version {0}\nby {1}"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::reboot_to_bootloader__version_by_template, "Firmware version {0}\nby {1}"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::reboot_to_bootloader__version_by_template, "Firmware version {0}\nby {1}"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::reboot_to_bootloader__version_by_template, "Firmware version {0} by {1}"),
             (Self::recovery__cancel_dry_run, "Cancel backup check"),
             (Self::recovery__check_dry_run, "Check your backup?"),
             (Self::recovery__cursor_will_change, "Position of the cursor will change between entries for enhanced security."),
@@ -3032,6 +3040,7 @@ impl TranslatedString {
             (Self::ethereum__title_all_input_data_template, "All input data ({0} bytes)"),
             (Self::auto_lock__description, "Set the time before your Trezor locks automatically."),
             (Self::plurals__lock_after_x_days, "day|days"),
+            (Self::firmware_update__restart, "Trezor will restart after update."),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3628,6 +3637,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_fido__unable_to_verify_user, Self::fido__unable_to_verify_user),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_fido__wanna_erase_credentials, Self::fido__wanna_erase_credentials),
+        (Qstr::MP_QSTR_firmware_update__restart, Self::firmware_update__restart),
         (Qstr::MP_QSTR_firmware_update__title, Self::firmware_update__title),
         (Qstr::MP_QSTR_firmware_update__title_fingerprint, Self::firmware_update__title_fingerprint),
         (Qstr::MP_QSTR_haptic_feedback__disable, Self::haptic_feedback__disable),
