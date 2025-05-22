@@ -76,11 +76,16 @@ impl FirmwareUI for UIEckhart {
             )
         };
 
-        let verb = verb.unwrap_or(TR::buttons__confirm.into());
-        let mut right_button = Button::with_text(verb).styled(theme::firmware::button_confirm());
-        if hold {
-            right_button = right_button.with_long_press(theme::CONFIRM_HOLD_DURATION);
-        }
+        let right_button = if hold {
+            let verb = verb.unwrap_or(TR::buttons__hold_to_confirm.into());
+            Button::with_text(verb)
+                .with_long_press(theme::CONFIRM_HOLD_DURATION)
+                .styled(theme::firmware::button_confirm())
+        } else if let Some(verb) = verb {
+            Button::with_text(verb)
+        } else {
+            Button::with_text(TR::buttons__confirm.into()).styled(theme::firmware::button_confirm())
+        };
 
         let mut screen = TextScreen::new(paragraphs)
             .with_header(Header::new(title))
@@ -1216,7 +1221,9 @@ impl FirmwareUI for UIEckhart {
         title: Option<TString<'static>>,
         button: Option<TString<'static>>,
     ) -> Result<Gc<LayoutObj>, Error> {
-        let paragraphs = Paragraph::new(&theme::TEXT_REGULAR, text).into_paragraphs();
+        let paragraphs = Paragraph::new(&theme::TEXT_REGULAR, text)
+            .into_paragraphs()
+            .with_placement(LinearPlacement::vertical());
 
         let mut screen = TextScreen::new(paragraphs);
         if let Some(title) = title {
