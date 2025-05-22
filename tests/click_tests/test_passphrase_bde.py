@@ -97,8 +97,17 @@ def keyboard_categories(layout_type: LayoutType) -> list[PassphraseCategory]:
         raise ValueError("Wrong layout type")
 
 
-def go_to_category(debug: "DebugLink", category: PassphraseCategory) -> None:
-    """Go to a specific category"""
+def go_to_category(
+    debug: "DebugLink", category: PassphraseCategory, verify_layout: bool = False
+) -> None:
+    """
+    Go to a specific category on the passphrase keyboard.
+
+    Navigates through the on-screen categories by swiping left or right
+    until the desired category is reached. If `verify_layout` is set to True,
+    the function will assert that the category change has been correctly applied
+    by reading and validating the current layout from the debug interface.
+    """
     global KEYBOARD_CATEGORY
     global COORDS_PREV
 
@@ -114,6 +123,22 @@ def go_to_category(debug: "DebugLink", category: PassphraseCategory) -> None:
     else:
         for _ in range(current_index - target_index):
             debug.swipe_right()
+    if verify_layout:
+        # map Rust debug string to Python enum
+        layout_map = {
+            "LettersLower": PassphraseCategory.LOWERCASE,
+            "LettersUpper": PassphraseCategory.UPPERCASE,
+            "Numeric": PassphraseCategory.DIGITS,
+            "Special": PassphraseCategory.SPECIAL,
+        }
+
+        layout = debug.read_layout().find_unique_value_by_key(
+            "active_layout", default="", only_type=str
+        )
+        # do the check if Rust debug string exists
+        if layout:
+            assert layout_map.get(layout) == category
+
     KEYBOARD_CATEGORY = category  # type: ignore
     # Category changed, reset coordinates
     COORDS_PREV = (0, 0)  # type: ignore
@@ -231,7 +256,7 @@ def test_passphrase_loop_all_characters(device_handler: "BackgroundDeviceHandler
             PassphraseCategory.UPPERCASE,
             PassphraseCategory.SPECIAL,
         ):
-            go_to_category(debug, category)
+            go_to_category(debug, category, True)
         if debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
             debug.read_layout()
 

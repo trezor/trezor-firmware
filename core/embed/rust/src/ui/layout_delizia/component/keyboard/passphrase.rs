@@ -34,6 +34,7 @@ pub enum PassphraseKeyboardMsg {
 /// number of values and the constant PAGE_COUNT in synch.
 #[repr(u32)]
 #[derive(Copy, Clone, ToPrimitive)]
+#[cfg_attr(feature = "ui_debug", derive(ufmt::derive::uDebug))]
 enum KeyboardLayout {
     LettersLower = 0,
     LettersUpper = 1,
@@ -486,7 +487,9 @@ impl crate::ui::flow::Swipable for PassphraseKeyboard {
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for PassphraseKeyboard {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        let active_layout = uformat!("{:?}", self.active_layout);
         t.component("PassphraseKeyboard");
         t.string("passphrase", self.passphrase().into());
+        t.string("active_layout", active_layout.as_str().into());
     }
 }
