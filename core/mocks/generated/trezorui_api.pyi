@@ -260,6 +260,7 @@ def confirm_properties(
     items: list[tuple[str | None, str | bytes | None, bool]],
     subtitle: str | None = None,
     hold: bool = False,
+    verb: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Confirm list of key-value pairs. The third component in the tuple should be True if
     the value is to be rendered as binary with monospace font, False otherwise."""
@@ -283,6 +284,7 @@ def confirm_summary(
     extra_items: Iterable[tuple[str, str]] | None = None,
     extra_title: str | None = None,
     verb_cancel: str | None = None,
+    suite_sign: bool = False,
 ) -> LayoutObj[UiResult]:
     """Confirm summary of a transaction."""
 
