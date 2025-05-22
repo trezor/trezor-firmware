@@ -108,10 +108,10 @@ void system_exit_fatal_ex(const char* message, size_t message_len,
 
     pminfo.reason = TASK_TERM_REASON_FATAL;
 
-    len = MIN(message_len, sizeof(pminfo.fatal.expr) - 1);
+    len = MIN(file_len, sizeof(pminfo.fatal.file) - 1);
     strncpy(pminfo.fatal.file, file, len);
 
-    len = MIN(file_len, sizeof(pminfo.fatal.file) - 1);
+    len = MIN(message_len, sizeof(pminfo.fatal.expr) - 1);
     strncpy(pminfo.fatal.expr, message, len);
 
     pminfo.fatal.line = line;
