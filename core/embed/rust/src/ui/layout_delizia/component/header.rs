@@ -185,7 +185,8 @@ impl Component for Header {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let header_area = if let Some(b) = &mut self.button {
-            let (rest, button_area) = bounds.split_right(TITLE_HEIGHT + theme::SPACING * 2);
+            let (rest, button_area) = bounds.split_right(TITLE_HEIGHT);
+            let button_area = button_area.outset(Insets::left(theme::SPACING * 2));
             let (button_area, _under_button_area) = button_area.split_top(TITLE_HEIGHT);
             b.place(button_area);
             rest
