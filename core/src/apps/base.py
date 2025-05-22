@@ -276,6 +276,13 @@ async def handle_EndSession(msg: EndSession) -> Success:
 
 
 async def handle_Ping(msg: Ping) -> Success:
+
+    from trezor.ui.layouts.eckhart import confirm_firmware_update
+
+    await confirm_firmware_update(
+        TR.reboot_to_bootloader__version_by_template.format("2.8.10", "Trezor"), "bb"
+    )
+
     if msg.button_protection:
         from trezor.enums import ButtonRequestType as B
         from trezor.ui.layouts import confirm_action

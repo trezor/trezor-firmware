@@ -278,6 +278,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_fee_label;
   MP_QSTR_fee_rate_amount;
   MP_QSTR_fingerprint;
+  MP_QSTR_firmware_update__restart;
   MP_QSTR_firmware_update__title;
   MP_QSTR_firmware_update__title_fingerprint;
   MP_QSTR_firmware_version;
