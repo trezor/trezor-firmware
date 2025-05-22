@@ -240,14 +240,15 @@ void prodtest_pm_event_monitor(cli_t* cli) {
     return;
   }
 
-  pm_status_t status;
   pm_event_t event_flag;
   pm_state_t state;
 
-  status = pm_get_state(&state);
-
   // Clear leftover events
   pm_get_events(&event_flag);
+  sysevents_t awaited_events = {0};
+  awaited_events.read_ready = 1 << SYSHANDLE_POWER_MANAGER;
+  sysevents_t signalled_events = {0};
+  sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(0));
 
   while (true) {
     if (cli_aborted(cli)) {
@@ -255,9 +256,15 @@ void prodtest_pm_event_monitor(cli_t* cli) {
       break;
     }
 
-    status = pm_get_events(&event_flag);
-    if (status != PM_OK) {
+    sysevents_poll(&awaited_events, &signalled_events, ticks_timeout(10));
+
+    if ((signalled_events.read_ready & 1 << SYSHANDLE_POWER_MANAGER) == 0) {
+      continue;
+    }
+
+    if (!pm_get_events(&event_flag)) {
       cli_error(cli, CLI_ERROR, "Failed to get power manager events");
+      continue;
     }
 
     if (event_flag.flags.usb_connected) {
@@ -301,11 +308,9 @@ void prodtest_pm_event_monitor(cli_t* cli) {
     }
 
     if (event_flag.flags.soc_updated) {
-      status = pm_get_state(&state);
+      pm_get_state(&state);
       cli_trace(cli, "Power manager SOC changed to %d %%", state.soc);
     }
-
-    systick_delay_ms(50);
   }
 
   cli_progress(cli, "%s %s %d %d %d",
