@@ -1,8 +1,8 @@
 import storage.device
 import trezorble as ble
 import trezorui_api
-from trezor import TR, config, utils
-from trezor.ui.layouts import interact, log
+from trezor import TR, config, utils, log
+from trezor.ui.layouts import interact
 from trezor.wire import ActionCancelled
 from trezorui_api import DeviceMenuResult
 
@@ -82,7 +82,6 @@ async def handle_device_menu() -> None:
         from apps.management.ble.pair_new_device import pair_new_device
 
         await pair_new_device()
-<<<<<<< HEAD
     elif menu_result is DeviceMenuResult.ScreenBrightness:
         from trezor.ui.layouts import set_brightness
 
@@ -103,19 +102,12 @@ async def handle_device_menu() -> None:
         # It's a tuple with (result_type, index)
         result_type, index = menu_result
         if result_type is DeviceMenuResult.DeviceDisconnect:
-            raise RuntimeError(
-                f"Device disconnect not implemented, device index: {index}"
-            )
+            from trezor.messages import BleUnpair
+
+            from apps.management.ble.unpair import unpair
+
+            await unpair(BleUnpair(all=False))
         else:
             raise RuntimeError(f"Unknown menu {result_type}, {index}")
-||||||| parent of f9ad200301 (feat(core): BLE pairing flow)
-=======
-    elif menu_result == "DeviceDisconnect":
-        from trezor.messages import BleUnpair
-
-        from apps.management.ble.unpair import unpair
-
-        await unpair(BleUnpair(all=False))
->>>>>>> f9ad200301 (feat(core): BLE pairing flow)
     else:
         raise RuntimeError(f"Unknown menu {menu_result}")
