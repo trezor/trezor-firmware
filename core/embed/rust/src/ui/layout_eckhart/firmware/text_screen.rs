@@ -18,9 +18,8 @@ use crate::{
 };
 
 use super::{
-    action_bar::ActionBarMsg,
     theme::{self, SIDE_INSETS},
-    ActionBar, FidoAccountName, FidoCredential, Header, HeaderMsg, Hint,
+    ActionBar, ActionBarMsg, FidoAccountName, FidoCredential, Header, HeaderMsg, Hint,
 };
 
 /// Full-screen component for rendering text.
@@ -52,7 +51,6 @@ impl<T> TextScreen<T>
 where
     T: AllowedTextContent,
 {
-    const CONTENT_INSETS: Insets = SIDE_INSETS;
     const SUBTITLE_HEIGHT: i16 = 44;
     const SUBTITLE_DOUBLE_HEIGHT: i16 = 76;
     const SUBTITLE_STYLE: TextStyle = theme::TEXT_MEDIUM_EXTRA_LIGHT;
@@ -123,10 +121,24 @@ where
     type Msg = TextScreenMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let (header_area, rest) = bounds.split_top(Header::HEADER_HEIGHT);
-        let (rest, action_bar_area) = rest.split_bottom(ActionBar::ACTION_BAR_HEIGHT);
+        let rest = if let Some(header) = &mut self.header {
+            let (header_area, rest) = bounds.split_top(Header::HEADER_HEIGHT);
+            header.place(header_area);
+            rest
+        } else {
+            bounds
+        };
+
+        let rest = if let Some(action_bar) = &mut self.action_bar {
+            let (rest, action_bar_area) = rest.split_bottom(ActionBar::ACTION_BAR_HEIGHT);
+            action_bar.place(action_bar_area);
+            rest
+        } else {
+            rest
+        };
+
         let rest = if let Some(subtitle) = &mut self.subtitle {
-            // Check if the subtitle text fits in the available space
+            // Choose appropriate height for the subtitle
             let subtitle_height = if let LayoutFit::OutOfBounds { .. } =
                 subtitle.text().map(|text| {
                     TextLayout::new(Self::SUBTITLE_STYLE)
@@ -148,16 +160,22 @@ where
             rest
         };
 
-        let content_area = if let Some(hint) = &mut self.hint {
+        let mut content_area = if let Some(hint) = &mut self.hint {
             let (rest, hint_area) = rest.split_bottom(hint.height());
             hint.place(hint_area);
             rest
         } else {
             rest
         };
-        self.header.place(header_area);
-        self.content.place(content_area.inset(Self::CONTENT_INSETS));
-        self.action_bar.place(action_bar_area);
+
+        // Introduce side insets + top padding if the header is not present
+        content_area = if self.header.is_none() {
+            content_area.inset(Insets::top(38)).inset(SIDE_INSETS)
+        } else {
+            content_area.inset(SIDE_INSETS)
+        };
+
+        self.content.place(content_area);
 
         self.update_page(0);
         bounds
