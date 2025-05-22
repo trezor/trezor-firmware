@@ -365,6 +365,7 @@ class TR:
     fido__title_verify_user: str = "FIDO2 verify user"
     fido__unable_to_verify_user: str = "Unable to verify user."
     fido__wanna_erase_credentials: str = "Do you really want to erase all credentials?"
+    firmware_update__restart: str = "Trezor will restart after update."
     firmware_update__title: str = "Update firmware"
     firmware_update__title_fingerprint: str = "FW fingerprint"
     haptic_feedback__disable: str = "Disable haptic feedback?"

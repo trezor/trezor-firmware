@@ -1436,6 +1436,7 @@ pub enum TranslatedString {
     ethereum__title_all_input_data_template = 1031,  // "All input data ({0} bytes)"
     auto_lock__description = 1032,  // "Set the time before your Trezor locks automatically."
     plurals__lock_after_x_days = 1033,  // "day|days"
+    firmware_update__restart = 1034,  // "Trezor will restart after update."
 }
 
 impl TranslatedString {
@@ -3030,6 +3031,7 @@ impl TranslatedString {
             (Self::ethereum__title_all_input_data_template, "All input data ({0} bytes)"),
             (Self::auto_lock__description, "Set the time before your Trezor locks automatically."),
             (Self::plurals__lock_after_x_days, "day|days"),
+            (Self::firmware_update__restart, "Trezor will restart after update."),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3626,6 +3628,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_fido__unable_to_verify_user, Self::fido__unable_to_verify_user),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_fido__wanna_erase_credentials, Self::fido__wanna_erase_credentials),
+        (Qstr::MP_QSTR_firmware_update__restart, Self::firmware_update__restart),
         (Qstr::MP_QSTR_firmware_update__title, Self::firmware_update__title),
         (Qstr::MP_QSTR_firmware_update__title_fingerprint, Self::firmware_update__title_fingerprint),
         (Qstr::MP_QSTR_haptic_feedback__disable, Self::haptic_feedback__disable),
