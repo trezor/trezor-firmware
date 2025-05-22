@@ -58,7 +58,7 @@ pub fn new_confirm_with_menu<T: AllowedTextContent + MaybeTrace + 'static>(
     subtitle: Option<TString<'static>>,
     content: T,
     hint: Option<TString<'static>>,
-    confirm_label: Option<TString<'static>>,
+    verb: Option<TString<'static>>,
     hold: bool,
     extra_menu_label: Option<TString<'static>>,
     cancel_menu_label: Option<TString<'static>>,
@@ -67,12 +67,12 @@ pub fn new_confirm_with_menu<T: AllowedTextContent + MaybeTrace + 'static>(
 
     // Value
     let confirm_button = if hold {
-        let confirm_label = confirm_label.unwrap_or(TR::buttons__hold_to_confirm.into());
-        Button::with_text(confirm_label)
+        let verb = verb.unwrap_or(TR::buttons__hold_to_confirm.into());
+        Button::with_text(verb)
             .with_long_press(theme::CONFIRM_HOLD_DURATION)
             .styled(theme::firmware::button_confirm())
-    } else if let Some(confirm_label) = confirm_label {
-        Button::with_text(confirm_label)
+    } else if let Some(verb) = verb {
+        Button::with_text(verb)
     } else {
         Button::with_text(TR::buttons__confirm.into()).styled(theme::firmware::button_confirm())
     };

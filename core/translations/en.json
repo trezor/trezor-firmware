@@ -379,6 +379,7 @@
       "Delizia": "Token contract",
       "Eckhart": "Token contract address"
     },
+    "ethereum__contract_address": "Provider contract address",
     "ethereum__units_template": "{0} units",
     "ethereum__unknown_contract_address": {
       "Bolt": "Unknown contract address",

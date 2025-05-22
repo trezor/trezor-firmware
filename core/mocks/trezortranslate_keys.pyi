@@ -302,6 +302,7 @@ class TR:
     ethereum__approve_to: str = "Approve to"
     ethereum__approve_unlimited_template: str = "Approving unlimited amount of {0}"
     ethereum__contract: str = "Contract"
+    ethereum__contract_address: str = "Provider contract address"
     ethereum__data_size_template: str = "Size: {0} bytes"
     ethereum__gas_limit: str = "Gas limit"
     ethereum__gas_price: str = "Gas price"
