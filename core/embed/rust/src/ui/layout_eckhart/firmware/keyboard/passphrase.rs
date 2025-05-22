@@ -4,7 +4,7 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            swipe_detect::{SwipeConfig, SwipeSettings},
+            swipe_detect::SwipeConfig,
             text::{
                 common::TextBox,
                 layout::{LayoutFit, LineBreaking},
@@ -137,9 +137,7 @@ impl PassphraseKeyboard {
             next_btn,
             keypad: Keypad::new_shown().with_keys_content(&keypad_content),
             active_layout,
-            swipe_config: SwipeConfig::new()
-                .with_swipe(Direction::Left, SwipeSettings::default())
-                .with_swipe(Direction::Right, SwipeSettings::default()),
+            swipe_config: SwipeConfig::new(),
             multi_tap: MultiTapKeyboard::new(),
         }
     }
@@ -184,6 +182,7 @@ impl PassphraseKeyboard {
         }
         // Update keys.
         self.replace_keys_contents();
+        self.update_keypad_state(ctx);
     }
 
     fn replace_keys_contents(&mut self) {
@@ -319,9 +318,14 @@ impl Component for PassphraseKeyboard {
         }
 
         if let Some(swipe) = self.page_swipe.event(ctx, event) {
-            // We have detected a horizontal swipe. Change the keyboard page.
-            self.on_page_change(ctx, swipe);
-            // Do not return, let keypad button events to be processed
+            match swipe {
+                Direction::Left | Direction::Right => {
+                    // We have detected a horizontal swipe. Change the keyboard page.
+                    self.on_page_change(ctx, swipe);
+                    return None;
+                }
+                _ => {}
+            }
         }
 
         if let Some(ButtonMsg::Clicked) = self.next_btn.event(ctx, event) {
