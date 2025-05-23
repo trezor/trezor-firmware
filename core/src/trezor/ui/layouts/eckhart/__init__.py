@@ -181,22 +181,47 @@ def confirm_change_passphrase(use: bool) -> Awaitable[None]:
 
     return confirm_action(
         "set_passphrase",
-        TR.passphrase__title_passphrase,
-        subtitle=TR.words__settings,
+        TR.passphrase__title_settings,
         description=description,
         br_code=ButtonRequestType.ProtectCall,
-        prompt_screen=True,
+        verb=TR.buttons__confirm,
     )
 
 
 def confirm_hide_passphrase_from_host() -> Awaitable[None]:
     return confirm_action(
         "set_hide_passphrase_from_host",
-        TR.passphrase__title_passphrase,
-        subtitle=TR.words__settings,
+        TR.passphrase__title_settings,
         description=TR.passphrase__hide,
         br_code=ButtonRequestType.ProtectCall,
         prompt_screen=True,
+    )
+
+
+async def confirm_hidden_passphrase_from_host() -> None:
+    await confirm_action(
+        "passphrase_host1_hidden",
+        TR.passphrase__hidden_wallet,
+        description=TR.passphrase__from_host_not_shown,
+        verb=TR.passphrase__access_hidden_wallet,
+    )
+
+
+async def show_passphrase_from_host(passphrase: str | None) -> None:
+    await confirm_action(
+        "passphrase_host1",
+        TR.passphrase__hidden_wallet,
+        description=TR.passphrase__next_screen_will_show_passphrase,
+        verb=TR.passphrase__show,
+    )
+
+    await confirm_value(
+        TR.passphrase__hidden_wallet,
+        passphrase or "",
+        description="",
+        br_name="passphrase_host2",
+        verb=TR.passphrase__title_confirm,
+        cancel=True,
     )
 
 
@@ -210,11 +235,10 @@ def confirm_change_passphrase_source(
     )
     return confirm_action(
         "set_passphrase_source",
-        TR.passphrase__title_passphrase,
-        subtitle=TR.words__settings,
+        TR.passphrase__title_settings,
         description=description,
         br_code=ButtonRequestType.ProtectCall,
-        prompt_screen=True,
+        verb=TR.buttons__confirm,
     )
 
 
@@ -636,6 +660,7 @@ def confirm_value(
     info_title: str | None = None,
     chunkify_info: bool = False,
     warning_footer: str | None = None,
+    cancel: bool = False,
 ) -> Awaitable[None]:
     """General confirmation dialog, used by many other confirm_* functions."""
 
@@ -658,7 +683,7 @@ def confirm_value(
             hold=hold,
             chunkify=chunkify,
             warning_footer=warning_footer,
-            cancel=False,
+            cancel=cancel,
         ),
         info_layout,
         br_name,
@@ -729,8 +754,8 @@ def confirm_total(
 
 
 def _confirm_summary(
-    amount: str,
-    amount_label: str,
+    amount: str | None,
+    amount_label: str | None,
     fee: str,
     fee_label: str,
     title: str | None = None,
@@ -820,6 +845,105 @@ if not utils.BITCOIN_ONLY:
                 cancel_text=TR.buttons__cancel,
             ),
             None,
+        )
+
+    async def confirm_ethereum_approve(
+        recipient: str,
+        is_unknown_token: bool,
+        token_address: str,
+        token_symbol: str,
+        is_unknown_network: bool,
+        chain_id: str,
+        network_name: str,
+        is_revoke: bool,
+        total_amount: str | None,
+        account: str | None,
+        account_path: str | None,
+        maximum_fee: str,
+        fee_info_items: Iterable[tuple[str, str]],
+        chunkify: bool = False,
+    ) -> None:
+        await confirm_value(
+            (
+                TR.ethereum__approve_intro_title_revoke
+                if is_revoke
+                else TR.ethereum__approve_intro_title
+            ),
+            (
+                TR.ethereum__approve_intro_revoke
+                if is_revoke
+                else TR.ethereum__approve_intro
+            ),
+            "",
+            is_data=False,
+            br_name="confirm_ethereum_approve",
+        )
+
+        await confirm_value(
+            TR.ethereum__approve_revoke_from if is_revoke else TR.ethereum__approve_to,
+            recipient,
+            "",
+            chunkify=chunkify,
+            br_name="confirm_ethereum_approve",
+        )
+
+        if total_amount is None:
+            await show_warning(
+                "confirm_ethereum_approve",
+                TR.ethereum__approve_unlimited_template.format(token_symbol),
+            )
+
+        if is_unknown_token:
+            await confirm_value(
+                TR.words__address,
+                token_address,
+                "",
+                subtitle=TR.ethereum__token_contract,
+                chunkify=chunkify,
+                br_name="confirm_ethereum_approve",
+            )
+
+        if is_unknown_network:
+            assert is_unknown_token
+            await confirm_value(
+                TR.ethereum__approve_chain_id,
+                chain_id,
+                "",
+                br_name="confirm_ethereum_approve",
+            )
+
+        properties = (
+            [(TR.words__token, token_symbol)]
+            if is_revoke
+            else [
+                (
+                    TR.ethereum__approve_amount_allowance,
+                    total_amount or TR.words__unlimited,
+                )
+            ]
+        )
+        if not is_unknown_network:
+            properties.append((TR.words__chain, network_name))
+        await confirm_properties(
+            "confirm_ethereum_approve",
+            TR.ethereum__approve_revoke if is_revoke else TR.ethereum__approve,
+            properties,
+            False,
+        )
+
+        account_items = []
+        if account_path:
+            account_items.append((TR.address_details__derivation_path, account_path))
+
+        await _confirm_summary(
+            None,
+            None,
+            maximum_fee,
+            TR.send__maximum_fee,
+            TR.words__title_summary,
+            account_items,
+            fee_info_items,
+            TR.confirm_total__title_fee,
         )
 
     async def confirm_ethereum_staking_tx(

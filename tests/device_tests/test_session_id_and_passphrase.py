@@ -443,7 +443,15 @@ def test_hide_passphrase_from_host(client: Client):
             client.debug.press_yes()
 
             yield
-            assert client.debug.read_layout().title() == TR.passphrase__title_confirm
+
+            title = client.debug.read_layout().title()
+            assert any(
+                needle in title
+                for needle in [
+                    TR.passphrase__hidden_wallet,
+                    TR.passphrase__title_confirm,
+                ]
+            )
             assert passphrase in client.debug.read_layout().text_content()
             client.debug.press_yes()
 
