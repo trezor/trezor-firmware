@@ -139,7 +139,7 @@ pub(crate) enum DisplayStyle {
     Hidden,
     Shown,
     LastOnly,
-    LastWithMarker
+    LastWithMarker,
 }
 
 /// The number and colors of fading icons to display.
