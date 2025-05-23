@@ -630,6 +630,7 @@ static void stretch_pin(const uint8_t *pin, size_t pin_len,
          "secure_aes pin stretch failed");
   memzero(stretched_pin_tmp, sizeof(stretched_pin_tmp));
 #else
+  (void)privileged_bhk;
   pbkdf2_hmac_sha256_Final(&ctx, stretched_pin);
 #endif
   memzero(&ctx, sizeof(ctx));
