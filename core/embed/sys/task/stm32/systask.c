@@ -154,7 +154,7 @@ bool systask_init(systask_t* task, uint32_t stack_ptr, uint32_t stack_size,
 
   memset(task, 0, sizeof(systask_t));
   task->sp = stack_ptr + stack_size;
-  task->sp_lim = stack_ptr + 256;
+  task->sp_lim = stack_size > 1024 ? stack_ptr + 256 : stack_ptr;
 #if !defined(__ARM_FEATURE_CMSE) || (__ARM_FEATURE_CMSE == 3U)
   task->exc_return = 0xFFFFFFED;  // Secure Thread mode, use PSP, pop FP context
 #else
@@ -592,10 +592,6 @@ __attribute__((no_stack_protector, used)) static uint32_t svc_handler(
         stack[0] = args[0];
         stack[1] = args[1];
       }
-      break;
-    case SVC_CALLBACK_RETURN:
-      mpu_restore(mpu_mode);
-      return_from_unpriv(args[0], msp);
       break;
 #endif
     default:

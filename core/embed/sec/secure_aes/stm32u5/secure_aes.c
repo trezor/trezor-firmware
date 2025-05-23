@@ -26,6 +26,8 @@
 #include <stm32u5xx_hal_cryp.h>
 
 #include <sec/secure_aes.h>
+#include <sys/syscall.h>
+#include <sys/systask.h>
 
 #include "memzero.h"
 
@@ -86,7 +88,7 @@ uint32_t saes_input[SAES_DATA_SIZE_WITH_UPRIV_KEY / sizeof(uint32_t)];
 __attribute__((section(".udata")))
 uint32_t saes_output[SAES_DATA_SIZE_WITH_UPRIV_KEY / sizeof(uint32_t)];
 
-__attribute__((section(".uflash"), used, naked, no_stack_protector)) uint32_t
+__attribute__((section(".uflash"), used, naked, no_stack_protector)) void
 saes_invoke(void) {
   // reset the key loaded in SAES
   MODIFY_REG(SAES->CR, AES_CR_KEYSEL, CRYP_KEYSEL_NORMAL);
@@ -143,12 +145,13 @@ saes_invoke(void) {
   // reset the key loaded in SAES
   MODIFY_REG(SAES->CR, AES_CR_KEYSEL, CRYP_KEYSEL_NORMAL);
 
-  svc_return_from_unpriv(sectrue);
-  return 0;
+  return_from_unprivileged_callback(sectrue);
 }
 
 extern uint8_t _uflash_start;
 extern uint8_t _uflash_end;
+extern uint8_t _eustack;
+extern uint8_t _sustack;
 
 secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
                        secure_aes_keysel_t key) {
@@ -159,11 +162,6 @@ secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
   if (key != SECURE_AES_KEY_XORK_SN) {
     return secfalse;
   }
-
-  uint32_t prev_svc_prio = NVIC_GetPriority(SVCall_IRQn);
-  NVIC_SetPriority(SVCall_IRQn, IRQ_PRI_HIGHEST);
-  uint32_t basepri = __get_BASEPRI();
-  __set_BASEPRI(IRQ_PRI_HIGHEST + 1);
 
 #ifdef USE_TRUSTZONE
   uint32_t unpriv_ram_start = SAES_RAM_START;
@@ -197,7 +195,15 @@ secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
   __HAL_RCC_SAES_RELEASE_RESET();
   __HAL_RCC_SAES_CLK_ENABLE();
 
-  secbool retval = invoke_unpriv(saes_invoke);
+  secbool retval = secfalse;
+
+  systask_t task;
+
+  if (systask_init(&task, (uint32_t)&_sustack, &_eustack - &_sustack, NULL)) {
+    task.mpu_mode = MPU_MODE_SAES;
+    retval = (secbool)systask_invoke_callback(&task, 0, 0, 0, saes_invoke);
+    systask_exit(&task, 0);
+  }
 
   __HAL_RCC_SAES_CLK_DISABLE();
   __HAL_RCC_SAES_FORCE_RESET();
@@ -207,7 +213,7 @@ secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
   memcpy(output, saes_output, size);
   memset((void*)SAES_RAM_START, 0, SAES_RAM_SIZE);
 
-  mpu_reconfig(mpu_mode);
+  mpu_restore(mpu_mode);
 
 #ifdef USE_TRUSTZONE
   tz_set_sram_unpriv(unpriv_ram_start, unpriv_ram_size, false);
@@ -215,9 +221,6 @@ secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
   tz_set_saes_unpriv(false);
   tz_set_tamper_unpriv(false);
 #endif  // USE_TRUSTZONE
-
-  __set_BASEPRI(basepri);
-  NVIC_SetPriority(SVCall_IRQn, prev_svc_prio);
 
   return retval;
 }

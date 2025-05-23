@@ -102,7 +102,6 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/startup/stm32u5/reset_flags.c",
         "embed/sys/startup/stm32u5/startup_init.c",
         "embed/sys/startup/stm32u5/vectortable.S",
-        "embed/sys/syscall/stm32/syscall.c",
         "embed/sys/syscall/stm32/syscall_context.c",
         "embed/sys/syscall/stm32/syscall_dispatch.c",
         "embed/sys/syscall/stm32/syscall_ipc.c",
