@@ -14,14 +14,23 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from typing import Generator
+
 import pytest
 from mnemonic import Mnemonic
+from slip10 import SLIP10
 
 from trezorlib import device, messages
+from trezorlib.btc import get_public_node
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
-from ...common import EXTERNAL_ENTROPY, generate_entropy
+from ...common import (
+    EXTERNAL_ENTROPY,
+    MOCK_GET_ENTROPY,
+    BRGeneratorType,
+    generate_entropy,
+)
 
 pytestmark = pytest.mark.models("legacy")
 
@@ -215,4 +224,131 @@ def test_already_initialized(client: Client):
             passphrase_protection=True,
             pin_protection=True,
             label="label",
+        )
+
+
+class Bip39InputFlow:
+    def __init__(self, client: Client):
+        self.client = client
+        self.mnemonic = None
+
+    def _get_mnemonic(
+        self, strength: int
+    ) -> Generator[None, messages.ButtonRequest, list[str]]:
+        mnemonic: list[str] = []
+        for _ in range(strength // 32 * 3):
+            br = yield
+            assert br.code == messages.ButtonRequestType.ConfirmWord
+            mnemonic.append(self.client.debug.read_reset_word())
+            self.client.debug.press_yes()
+        return mnemonic
+
+    def input_flow_bip39_reset_backup(self, strength: int) -> BRGeneratorType:
+        # 1. Confirm Reset
+        br = yield
+        assert br.code == messages.ButtonRequestType.ProtectCall
+        self.client.debug.press_yes()
+
+        mnemonic_write = yield from self._get_mnemonic(strength)
+        mnemonic_check = yield from self._get_mnemonic(strength)
+        assert mnemonic_write == mnemonic_check
+
+        self.mnemonic = " ".join(mnemonic_write)
+
+
+@pytest.mark.setup_client(uninitialized=True)
+def test_reset_entropy_check(client: Client):
+    strength = 256  # 24 words
+
+    with client:
+        IF = Bip39InputFlow(client)
+        client.set_input_flow(IF.input_flow_bip39_reset_backup(strength))
+        # No PIN, no passphrase
+        path_xpubs = device.setup(
+            client,
+            strength=strength,
+            passphrase_protection=False,
+            pin_protection=False,
+            label="test",
+            entropy_check_count=2,
+            backup_type=messages.BackupType.Bip39,
+            _get_entropy=MOCK_GET_ENTROPY,
+        )
+
+    # Check that the displayed mnemonic is identical to the stored one.
+    assert IF.mnemonic.encode("utf-8") == client.debug.state().mnemonic_secret
+
+    # Check that the device is properly initialized.
+    assert client.features.initialized is True
+    assert (
+        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+    )
+    assert client.features.pin_protection is False
+    assert client.features.passphrase_protection is False
+
+    seed = Mnemonic.to_seed(IF.mnemonic, passphrase="")
+    slip10 = SLIP10.from_seed(seed)
+    for path, xpub in path_xpubs:
+        # Check that the device returns the same XPUBs as those from the entropy check.
+        res = get_public_node(client, path)
+        assert res.xpub == xpub
+        # Check that the XPUBs derived from the displayed mnemonic are the same as those
+        # from the entropy check.
+        assert slip10.get_xpub_from_path(path) == xpub
+
+
+@pytest.mark.setup_client(uninitialized=True)
+def test_entropy_check(client: Client):
+    with client:
+        client.set_expected_responses(
+            [
+                messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
+                messages.EntropyRequest,
+                messages.EntropyCheckReady,
+                messages.PublicKey,
+                messages.PublicKey,
+                messages.EntropyRequest,
+                messages.EntropyCheckReady,
+                messages.PublicKey,
+                messages.PublicKey,
+                messages.EntropyRequest,
+                messages.EntropyCheckReady,
+                messages.PublicKey,
+                messages.PublicKey,
+                messages.Success,
+                messages.Features,
+            ]
+        )
+        device.setup(
+            client,
+            strength=256,
+            entropy_check_count=2,
+            backup_type=messages.BackupType.Bip39,
+            skip_backup=True,
+            pin_protection=False,
+            passphrase_protection=False,
+            _get_entropy=MOCK_GET_ENTROPY,
+        )
+
+
+@pytest.mark.setup_client(uninitialized=True)
+def test_no_entropy_check(client: Client):
+    with client:
+        client.set_expected_responses(
+            [
+                messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
+                messages.EntropyRequest,
+                messages.Success,
+                messages.Features,
+            ]
+        )
+        device.setup(
+            client,
+            strength=256,
+            entropy_check_count=0,
+            backup_type=messages.BackupType.Bip39,
+            skip_backup=True,
+            pin_protection=False,
+            passphrase_protection=False,
+            _get_entropy=MOCK_GET_ENTROPY,
         )

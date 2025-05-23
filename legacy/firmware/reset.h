@@ -25,10 +25,14 @@
 
 void reset_init(uint32_t _strength, bool passphrase_protection,
                 bool pin_protection, const char *language, const char *label,
-                uint32_t u2f_counter, bool _skip_backup, bool _no_backup);
+                uint32_t u2f_counter, bool _skip_backup, bool _no_backup,
+                bool _entropy_check);
 void reset_entropy(const uint8_t *ext_entropy, uint32_t len);
+void reset_continue(bool finish);
+const uint8_t *reset_get_seed(void);
 void reset_backup(bool separated, const char *mnemonic);
 uint32_t reset_get_int_entropy(uint8_t *entropy);
 const char *reset_get_word(void);
+void reset_abort(void);
 
 #endif

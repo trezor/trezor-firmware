@@ -30,8 +30,8 @@ BackupDevice.groups                     type:FT_IGNORE
 
 Entropy.entropy                         max_size:1024
 
-EntropyRequest.entropy_commitment       type:FT_IGNORE
-EntropyRequest.prev_entropy             type:FT_IGNORE
+EntropyRequest.entropy_commitment       max_size:32
+EntropyRequest.prev_entropy             max_size:32
 
 EntropyAck.entropy                      max_size:128
 

@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 1.13.1 [21st May 2025]
+
+### Added
+- Clear sign ETH staking transactions on Everstake pool.  [#4851]
+- Entropy check workflow in ResetDevice.
+
+### Fixed
+- Use `GWei` when formatting large ETH amounts.  [#4932]
+
 ## 1.13.0 [19th February 2025]
 
 ### Added
@@ -640,3 +649,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#4119]: https://github.com/trezor/trezor-firmware/pull/4119
 [#4324]: https://github.com/trezor/trezor-firmware/pull/4324
 [#4396]: https://github.com/trezor/trezor-firmware/pull/4396
+[#4851]: https://github.com/trezor/trezor-firmware/pull/4851
+[#4932]: https://github.com/trezor/trezor-firmware/pull/4932

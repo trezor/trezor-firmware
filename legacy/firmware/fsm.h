@@ -64,6 +64,7 @@ void fsm_msgLoadDevice(const LoadDevice *msg);
 #endif
 void fsm_msgResetDevice(const ResetDevice *msg);
 void fsm_msgEntropyAck(const EntropyAck *msg);
+void fsm_msgEntropyCheckContinue(const EntropyCheckContinue *msg);
 void fsm_msgBackupDevice(const BackupDevice *msg);
 void fsm_msgCancel(const Cancel *msg);
 void fsm_msgLockDevice(const LockDevice *msg);
