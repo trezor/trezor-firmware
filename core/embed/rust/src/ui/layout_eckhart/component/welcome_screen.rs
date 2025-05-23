@@ -36,15 +36,11 @@ impl Component for WelcomeScreen {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        // TODO: should we use `model::FULL_NAME`?
-
-        const NAME_PARTS: [&str; 3] = ["Trezor", "Safe", "5"];
-
         let font = fonts::FONT_SATOSHI_REGULAR_38;
         let mut cursor = self.area.top_left() + TEXT_OFFSET;
         let row_height = font.text_height() + TEXT_VERTICAL_SPACING;
 
-        for part in &NAME_PARTS {
+        for part in model::FULL_NAME.split(' ') {
             shape::Text::new(cursor, part, font)
                 .with_align(Alignment::Start)
                 .with_fg(GREY_LIGHT)
