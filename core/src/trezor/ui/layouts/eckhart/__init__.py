@@ -729,8 +729,8 @@ def confirm_total(
 
 
 def _confirm_summary(
-    amount: str,
-    amount_label: str,
+    amount: str | None,
+    amount_label: str | None,
     fee: str,
     fee_label: str,
     title: str | None = None,
@@ -820,6 +820,105 @@ if not utils.BITCOIN_ONLY:
                 cancel_text=TR.buttons__cancel,
             ),
             None,
+        )
+
+    async def confirm_ethereum_approve(
+        recipient: str,
+        is_unknown_token: bool,
+        token_address: str,
+        token_symbol: str,
+        is_unknown_network: bool,
+        chain_id: str,
+        network_name: str,
+        is_revoke: bool,
+        total_amount: str | None,
+        account: str | None,
+        account_path: str | None,
+        maximum_fee: str,
+        fee_info_items: Iterable[tuple[str, str]],
+        chunkify: bool = False,
+    ) -> None:
+        await confirm_value(
+            (
+                TR.ethereum__approve_intro_title_revoke
+                if is_revoke
+                else TR.ethereum__approve_intro_title
+            ),
+            (
+                TR.ethereum__approve_intro_revoke
+                if is_revoke
+                else TR.ethereum__approve_intro
+            ),
+            "",
+            is_data=False,
+            br_name="confirm_ethereum_approve",
+        )
+
+        await confirm_value(
+            TR.ethereum__approve_revoke_from if is_revoke else TR.ethereum__approve_to,
+            recipient,
+            "",
+            chunkify=chunkify,
+            br_name="confirm_ethereum_approve",
+        )
+
+        if total_amount is None:
+            await show_warning(
+                "confirm_ethereum_approve",
+                TR.ethereum__approve_unlimited_template.format(token_symbol),
+            )
+
+        if is_unknown_token:
+            await confirm_value(
+                TR.words__address,
+                token_address,
+                "",
+                subtitle=TR.ethereum__token_contract,
+                chunkify=chunkify,
+                br_name="confirm_ethereum_approve",
+            )
+
+        if is_unknown_network:
+            assert is_unknown_token
+            await confirm_value(
+                TR.ethereum__approve_chain_id,
+                chain_id,
+                "",
+                br_name="confirm_ethereum_approve",
+            )
+
+        properties = (
+            [(TR.words__token, token_symbol)]
+            if is_revoke
+            else [
+                (
+                    TR.ethereum__approve_amount_allowance,
+                    total_amount or TR.words__unlimited,
+                )
+            ]
+        )
+        if not is_unknown_network:
+            properties.append((TR.words__chain, network_name))
+        await confirm_properties(
+            "confirm_ethereum_approve",
+            TR.ethereum__approve_revoke if is_revoke else TR.ethereum__approve,
+            properties,
+            False,
+        )
+
+        account_items = []
+        if account_path:
+            account_items.append((TR.address_details__derivation_path, account_path))
+
+        await _confirm_summary(
+            None,
+            None,
+            maximum_fee,
+            TR.send__maximum_fee,
+            TR.words__title_summary,
+            account_items,
+            fee_info_items,
+            TR.confirm_total__title_fee,
         )
 
     async def confirm_ethereum_staking_tx(
@@ -1275,15 +1374,15 @@ async def confirm_reenter_pin(is_wipe_code: bool = False) -> None:
 
 
 def pin_mismatch_popup(is_wipe_code: bool = False) -> Awaitable[ui.UiResult]:
-    title = TR.wipe_code__mismatch if is_wipe_code else TR.pin__mismatch
-    description = TR.wipe_code__enter_new if is_wipe_code else TR.pin__reenter_new
+    description = TR.wipe_code__mismatch if is_wipe_code else TR.pin__mismatch
+    button = TR.wipe_code__enter_new if is_wipe_code else TR.pin__reenter
     br_name = "wipe_code_mismatch" if is_wipe_code else "pin_mismatch"
 
     return interact(
         error_popup(
-            title,
+            TR.words__important,
             description,
-            button=TR.buttons__try_again,
+            button=button,
         ),
         br_name,
         BR_CODE_OTHER,
@@ -1293,7 +1392,7 @@ def pin_mismatch_popup(is_wipe_code: bool = False) -> Awaitable[ui.UiResult]:
 def wipe_code_same_as_pin_popup() -> Awaitable[ui.UiResult]:
     return interact(
         error_popup(
-            TR.wipe_code__invalid,
+            TR.words__important,
             TR.wipe_code__diff_from_pin,
             button=TR.buttons__try_again,
         ),
@@ -1310,10 +1409,50 @@ def confirm_set_new_pin(
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
     return raise_if_not_confirmed(
-        trezorui_api.flow_confirm_set_new_pin(title=title, description=description),
+        trezorui_api.flow_confirm_set_new_pin(
+            title=TR.pin__title_setup, description=information
+        ),
         br_name,
         br_code,
     )
+
+
+def confirm_change_pin(
+    br_name: str,
+    title: str,
+    description: str,
+) -> Awaitable[None]:
+    return confirm_action(
+        br_name,
+        title,
+        description=description,
+        verb=TR.buttons__continue,
+    )
+
+
+def confirm_remove_pin(
+    br_name: str,
+    title: str,
+    description: str,
+) -> Awaitable[None]:
+    return confirm_action(
+        br_name,
+        title,
+        description=description,
+        verb=TR.buttons__continue,
+    )
+
+
+async def success_pin_change(curpin: str | None, newpin: str | None) -> None:
+    if newpin:
+        if curpin:
+            msg_screen = TR.pin__changed
+        else:
+            msg_screen = TR.pin__setup_completed
+    else:
+        msg_screen = TR.pin__disabled
+
+    await show_success("success_pin", msg_screen, button=TR.buttons__close)
 
 
 def confirm_firmware_update(description: str, fingerprint: str) -> Awaitable[None]:
