@@ -153,7 +153,10 @@ def read_words(debug: "DebugLink", do_htc: bool = True) -> list[str]:
     else:
         # It would take a very long time to test 16-of-16 with doing 1500 ms HTC after
         # each word set
-        debug.press_yes()
+        if debug.layout_type is LayoutType.Eckhart:
+            debug.click(debug.screen_buttons.ok())
+        else:
+            debug.press_yes()
 
     return words
 
@@ -162,11 +165,7 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
     if debug.layout_type is LayoutType.Delizia:
         debug.swipe_up()
     elif debug.layout_type is LayoutType.Eckhart:
-        # Press ok if the select word screen is not yet present
-        if not TR.regexp("reset__select_word_template").match(
-            debug.read_layout().subtitle()
-        ):
-            debug.click(debug.screen_buttons.ok())
+        debug.click(debug.screen_buttons.ok())
 
     layout = debug.read_layout()
     if debug.layout_type is LayoutType.Bolt:
@@ -223,14 +222,19 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
             debug.click(debug.screen_buttons.word_check_words()[button_pos])
             layout = debug.read_layout()
     elif debug.layout_type is LayoutType.Eckhart:
-        assert TR.regexp("reset__select_word_template").match(
-            debug.read_layout().subtitle()
+        subtitle = debug.read_layout().subtitle().strip()
+        assert any(
+            TR.regexp(template).match(subtitle)
+            for template in [
+                "reset__select_word_template",
+                "reset__select_word_from_share_template",
+            ]
         )
 
         for _ in range(3):
-            # "Select word 3 of 20"
-            #             ^
-            word_pos_match = re.search(r"\d+", debug.read_layout().subtitle())
+            # Select word #3 from Share 2
+            # "Select word 3 of your backup"
+            word_pos_match = re.search(r"\d+", debug.read_layout().subtitle().strip())
             assert word_pos_match is not None
             word_pos = int(word_pos_match.group(0))
             # Unifying both the buttons and words to lowercase

@@ -1046,8 +1046,10 @@ impl FirmwareUI for UIDelizia {
         words: heapless::Vec<TString<'static>, 33>,
         subtitle: Option<TString<'static>>,
         instructions: Obj,
+        _instructions_verb: Option<TString<'static>>,
         text_footer: Option<TString<'static>>,
         text_confirm: TString<'static>,
+        text_check: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut instructions_paragraphs = ParagraphVecShort::new();
         for item in IterBuf::new().try_iterate(instructions)? {
@@ -1061,6 +1063,7 @@ impl FirmwareUI for UIDelizia {
             instructions_paragraphs,
             text_footer,
             text_confirm,
+            text_check,
         )?;
         Ok(flow)
     }
