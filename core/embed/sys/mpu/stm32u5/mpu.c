@@ -224,13 +224,9 @@ static void mpu_init_fixed_regions(void) {
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
   SET_REGRUN( 0, KERNEL_FLASH_START,       KERNEL_FLASH_SIZE,  FLASH_CODE,   NO,    NO ); // Kernel Code
   SET_REGION( 1, MAIN_RAM_START,           MAIN_RAM_SIZE,      SRAM,        YES,    NO ); // Kernel RAM
-  SET_REGRUN( 2, COREAPP_FLASH_START,      COREAPP_FLASH_SIZE, FLASH_CODE,   NO,   YES ); // CoreApp Code
-  SET_REGION( 3, AUX1_RAM_START,           AUX1_RAM_SIZE,      SRAM,        YES,   YES ); // CoraApp RAM
-#ifdef STM32U585xx
-  SET_REGION( 4, AUX2_RAM_START,           AUX2_RAM_SIZE,      SRAM,        YES,   YES ); // CoraAPP RAM2
-#else
-  DIS_REGION( 4 );
-#endif
+  DIS_REGION( 2 ); // reserved for applets
+  DIS_REGION( 3 ); // reserved for applets
+  DIS_REGION( 4 ); // reserved for applets
 
 #elif defined(FIRMWARE)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
@@ -294,6 +290,49 @@ mpu_mode_t mpu_get_mode(void) {
 
   return drv->mode;
 }
+
+void mpu_set_applet(applet_layout_t* layout) {
+  mpu_driver_t* drv = &g_mpu_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
+
+  irq_key_t irq_key = irq_lock();
+
+  mpu_disable();
+
+  if (layout != NULL) {
+    if (layout->code1.start != 0 && layout->code1.size != 0) {
+      SET_REGRUN( 2, layout->code1.start, layout->code1.size, FLASH_CODE, NO, YES );
+    } else {
+      DIS_REGION( 2 );
+    }
+
+    if (layout->data1.start != 0 && layout->data1.size != 0) {
+      SET_REGRUN( 3, layout->data1.start, layout->data1.size, SRAM, YES, YES );
+    } else {
+      DIS_REGION( 3 );
+    }
+
+    if (layout->data2.start != 0 && layout->data2.size != 0) {
+      SET_REGRUN( 4, layout->data2.start, layout->data2.size, SRAM, YES, YES );
+    } else {
+      DIS_REGION( 4 );
+    }
+  } else {
+    DIS_REGION(2);
+    DIS_REGION(3);
+    DIS_REGION(4);
+  }
+
+  if (drv->mode != MPU_MODE_DISABLED) {
+    mpu_enable();
+  }
+
+  irq_unlock(irq_key);
+}
+
 
 void mpu_set_active_fb(const void* addr, size_t size) {
   mpu_driver_t* drv = &g_mpu_driver;

@@ -184,6 +184,8 @@ void drivers_init() {
 #endif  // SECURE_MODE
 }
 
+#include <sys/dbg_printf.h>
+
 // Kernel task main loop
 //
 // Returns when the coreapp task is terminated
@@ -200,6 +202,14 @@ static void kernel_loop(applet_t *coreapp) {
 
     if (signalled.read_ready & (1 << SYSHANDLE_SYSCALL)) {
       syscall_ipc_dequeue();
+    }
+
+    {
+      uint8_t input[32] = {0};
+      uint8_t output[32] = {0};
+      secbool retval = secure_aes_ecb_encrypt_hw(input, sizeof(input), output,
+                                 SECURE_AES_KEY_XORK_SN);
+      dbg_printf("%d", (int) retval);
     }
 
   } while (applet_is_alive(coreapp));
