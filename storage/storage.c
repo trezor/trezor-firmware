@@ -1733,13 +1733,16 @@ static secbool storage_upgrade(void) {
     }
   }
 
+#if NORCOW_MIN_VERSION <= 1
   // Set wipe code.
   if (norcow_active_version <= 1) {
     if (sectrue != set_wipe_code(WIPE_CODE_EMPTY, WIPE_CODE_EMPTY_LEN)) {
       return secfalse;
     }
   }
+#endif
 
+#if NORCOW_MIN_VERSION <= 2
   if (norcow_active_version <= 2) {
     // Set UNAUTH_VERSION_KEY, so that it matches VERSION_KEY.
     uint32_t version = 1;
@@ -1760,13 +1763,18 @@ static secbool storage_upgrade(void) {
       return secfalse;
     }
   }
+#endif
 
+#if NORCOW_MIN_VERSION == 0
   if (norcow_active_version == 0) {
     // Version 0 upgrades directly to the latest.
     norcow_set(STORAGE_UPGRADED_KEY, &FALSE_WORD, sizeof(FALSE_WORD));
   } else {
     norcow_set(STORAGE_UPGRADED_KEY, &TRUE_WORD, sizeof(TRUE_WORD));
   }
+#else
+  norcow_set(STORAGE_UPGRADED_KEY, &TRUE_WORD, sizeof(TRUE_WORD));
+#endif
 
   norcow_active_version = NORCOW_VERSION;
   return norcow_upgrade_finish();
