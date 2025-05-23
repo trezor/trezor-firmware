@@ -70,16 +70,17 @@ pub enum DeviceMenuMsg {
 struct MenuItem {
     text: TString<'static>,
     subtext: Option<(TString<'static>, Option<TextStyle>)>,
-    stylesheet: ButtonStyleSheet,
+    stylesheet: &'static ButtonStyleSheet,
     action: Option<Action>,
 }
+const MENU_ITEM_TITLE_STYLE_SHEET: &'static ButtonStyleSheet = &theme::menu_item_title();
 
 impl MenuItem {
     pub fn new(text: TString<'static>, action: Option<Action>) -> Self {
         Self {
             text,
             subtext: None,
-            stylesheet: theme::menu_item_title(),
+            stylesheet: MENU_ITEM_TITLE_STYLE_SHEET,
             action,
         }
     }
@@ -92,7 +93,7 @@ impl MenuItem {
         self
     }
 
-    pub fn with_stylesheet(&mut self, stylesheet: ButtonStyleSheet) -> &mut Self {
+    pub fn with_stylesheet(&mut self, stylesheet: &'static ButtonStyleSheet) -> &mut Self {
         self.stylesheet = stylesheet;
         self
     }
@@ -333,7 +334,7 @@ impl<'a> DeviceMenuScreen<'a> {
                 Some(Action::Return(DeviceMenuMsg::BackupFailed)),
             );
             item_backup_failed.with_subtext(Some(("Review".into(), None)));
-            item_backup_failed.with_stylesheet(theme::menu_item_title_red());
+            item_backup_failed.with_stylesheet(MENU_ITEM_TITLE_STYLE_SHEET);
             unwrap!(items.push(item_backup_failed));
         }
         let mut item_pair_and_connect = MenuItem::new(
@@ -379,12 +380,12 @@ impl<'a> DeviceMenuScreen<'a> {
                     let button = if let Some((subtext, subtext_style)) = item.subtext {
                         Button::new_menu_item_with_subtext(
                             item.text,
-                            item.stylesheet,
+                            *item.stylesheet,
                             subtext,
                             subtext_style,
                         )
                     } else {
-                        Button::new_menu_item(item.text, item.stylesheet)
+                        Button::new_menu_item(item.text, *item.stylesheet)
                     };
                     menu.item(button);
                 }
