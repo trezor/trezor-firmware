@@ -362,9 +362,14 @@ impl Component for Keypad {
                     self.pressed = None;
                     return Some(KeypadMsg::EraseLong);
                 }
-                // Detect press of all special buttons for rendering purposes
+                // Detect press/release of all special buttons for rendering purposes
                 Some(ButtonMsg::Pressed) => {
                     self.pressed = Some(button);
+                    return None;
+                }
+                Some(ButtonMsg::Released) => {
+                    self.pressed = None;
+                    return None;
                 }
                 _ => {}
             }
@@ -377,9 +382,14 @@ impl Component for Keypad {
                     self.pressed = None;
                     return Some(KeypadMsg::Key(idx));
                 }
-                // Detect press of all key buttons for rendering purposes
+                // Detect press/release of all key buttons for rendering purposes
                 Some(ButtonMsg::Pressed) => {
                     self.pressed = Some(KeypadButton::Key(idx));
+                    return None;
+                }
+                Some(ButtonMsg::Released) => {
+                    self.pressed = None;
+                    return None;
                 }
                 _ => {}
             }
