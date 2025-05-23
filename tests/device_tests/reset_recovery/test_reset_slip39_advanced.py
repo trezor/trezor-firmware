@@ -34,13 +34,13 @@ def test_reset_device_slip39_advanced(client: Client):
     strength = 128
     member_threshold = 3
 
-    with client:
+    session = client.get_seedless_session()
+    with session.client as client:
         IF = InputFlowSlip39AdvancedResetRecovery(client, False)
         client.set_input_flow(IF.get())
-
         # No PIN, no passphrase, don't display random
         device.setup(
-            client,
+            session,
             strength=strength,
             passphrase_protection=False,
             pin_protection=False,
@@ -57,17 +57,17 @@ def test_reset_device_slip39_advanced(client: Client):
 
     # validate that all combinations will result in the correct master secret
     validate_mnemonics(IF.mnemonics, member_threshold, secret)
-
+    session = client.get_session()
     # Check if device is properly initialized
-    assert client.features.initialized is True
-    assert client.features.backup_availability == BackupAvailability.NotAvailable
-    assert client.features.pin_protection is False
-    assert client.features.passphrase_protection is False
-    assert client.features.backup_type is BackupType.Slip39_Advanced_Extendable
+    assert session.features.initialized is True
+    assert session.features.backup_availability == BackupAvailability.NotAvailable
+    assert session.features.pin_protection is False
+    assert session.features.passphrase_protection is False
+    assert session.features.backup_type is BackupType.Slip39_Advanced_Extendable
 
     # backup attempt fails because backup was done in reset
     with pytest.raises(TrezorFailure, match="ProcessError: Seed already backed up"):
-        device.backup(client)
+        device.backup(session)
 
 
 def validate_mnemonics(

@@ -3,14 +3,14 @@ Q := @
 endif
 
 SKIPPED_MESSAGES := Cardano DebugMonero Eos Monero Ontology Ripple SdProtect Tezos WebAuthn \
-	DebugLinkRecordScreen DebugLinkEraseSdCard DebugLinkWatchLayout \
-	DebugLinkLayout DebugLinkResetDebugEvents GetNonce \
+	DebugLinkRecordScreen DebugLinkEraseSdCard DebugLinkWatchLayout DebugLinkLayout \
+	DebugLinkResetDebugEvents DebugLinkGetPairingInfo DebugLinkPairingInfo GetNonce \
 	TxAckInput TxAckOutput TxAckPrev TxAckPaymentRequest \
 	EthereumSignTypedData EthereumTypedDataStructRequest EthereumTypedDataStructAck \
 	EthereumTypedDataValueRequest EthereumTypedDataValueAck ShowDeviceTutorial \
 	UnlockBootloader AuthenticateDevice AuthenticityProof \
 	Solana StellarClaimClaimableBalanceOp \
-	ChangeLanguage DataChunkRequest DataChunkAck \
+	ChangeLanguage DataChunkRequest DataChunkAck Thp \
 	SetBrightness DebugLinkOptigaSetSecMax \
 	BenchmarkListNames BenchmarkRun BenchmarkNames BenchmarkResult \
 	NostrGetPubkey NostrPubkey NostrSignEvent NostrEventSignature \
