@@ -95,6 +95,7 @@ split-debuginfo = "off"
 debug = 2
 
 [dependencies]
+cfg-if = { version = "1.0" }
 qrcodegen = { version = "1.8.0", path = "../../vendor/QR-Code-generator/rust-no-heap" }
 spin = { version = "0.9.8", features = ["rwlock"], default-features = false }
 trezor-tjpgdec = { version = "0.1.0", path = "../../../rust/trezor-tjpgdec" }
