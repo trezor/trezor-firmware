@@ -581,6 +581,16 @@ prodtest-wipe
 OK
 ```
 
+
+### prodtest-homescreen
+Shows prodtest homescreen, which displays essential information about the device.
+
+Example:
+```
+prodtest-homescreen
+OK
+```
+
 ### optiga-id-read
 Retrieves the coprocessor UID of the Optiga chip as a 27 byte hexadecimal string.
 
@@ -682,82 +692,124 @@ optiga-counter-read
 OK 0E
 ```
 
-### pmic-init
-Reinitializes the PMIC driver, restoring it to its default state.
+### pm-set-soc-limit
+Sets the battery state of charge (SOC) limit. The SOC limit is a percentage value between 10 and 100.
+
+The command returns `OK` if the operation is successful.
+
+```
+pm-set-soc-limit 50
+# Set SOC limit to 50%
+OK
+
+```
+
+### pm-precharge
+Enables the battery charging and precharge the battery to the 3.45V. Then it disables charging and terminates.
+During the precharge, command will print out power manager report into the console. CTRL+C will terminate the precharge.
 
 Example:
 ```
-# Initializing the NPM1300 driver...
+pm-precharge
+# Precharging the device ...
+# Precharging the device to 3.450 V
+# Power manager report:
+# Power state 5
+#   USB connected
+#   WLC disconnected
+#   Battery voltage: 3.435 V
+#   Battery current: -191.700 mA
+#   Battery temperature: 31.541 C
+#   Battery SoC: 68.92
+#   Battery SoC latched: 69.00
+#   PMIC die temperature: 49.096 C
+#   WLC voltage: 0.000 V
+#   WLC current: 0.000 mA
+#   WLC die temperature: 0.000 C
+#   System voltage: 4.449 V
+PROGRESS 5 USB_connected WLC_disconnected 3.435 -191.700 31.541 68.92 69.00 49.096 0.000 0.000 0.000 4.449
 OK
 ```
 
-### pmic-charge-enable
+### pm-report
+Starts single or continuous reporting of power manager data, including voltage, current and temperature.
+
+`pm-report`
+
+Progress report contains these values in order:
+ - power state
+ - usb connected indication
+ - wireless charger connected indication
+ - battery voltage
+ - battery current
+ - battery temperature
+ - battery SOC
+ - battery SOC latched
+ - PMIC die temperature
+ - WLC voltage
+ - WLC current
+ - WLC die temperature
+ - System voltage
+
+Example:
+```
+pm-report
+# Power manager report:
+# Power state 5
+#   USB connected
+#   WLC disconnected
+#   Battery voltage: 3.465 V
+#   Battery current: -192.150 mA
+#   Battery temperature: 32.416 C
+#   Battery SoC: 72.11
+#   Battery SoC latched: 72.11
+#   PMIC die temperature: 58.607 C
+#   WLC voltage: 0.000 V
+#   WLC current: 0.000 mA
+#   WLC die temperature: 0.000 C
+#   System voltage: 4.449 V
+PROGRESS 5 USB_connected WLC_disconnected 3.465 -192.150 32.416 72.11 72.11 58.607 0.000 0.000 0.000 4.449
+OK
+```
+
+### pm-fuel-gauge-monitor
+Runs continous monitor of the battery measurements and fuel gauge state of charge (vbat, ibat, ntc_temp, soc) and
+prints them on display and into console. Monitor is stoped with CTRL+C.
+
+Example:
+```
+pm-fuel-gauge-monitor
+PROGRESS 3.465 -191.475 32.636 73.27
+PROGRESS 3.465 -191.925 32.747 73.27
+PROGRESS 3.465 -192.150 32.636 73.28
+PROGRESS 3.460 -191.925 32.636 73.29
+PROGRESS 3.465 -192.600 32.636 73.29
+PROGRESS 3.465 -191.925 32.636 73.30
+# aborted
+OK
+```
+
+### pm-charge-enable
 Enables battery charging. If a charger is connected, charging starts immediately.
 
 Example:
 ```
-pmic-charge-enable
+pm-charge-enable
 # Enabling battery charging @ 180mA...
 OK
 ```
 
-### pmic-charge-disable
+### pm-charge-disable
 Disables battery charging.
 
 Example:
 ```
-pmic-charge-disable
+pm-charge-disable
 # Disabling battery charging...
 OK
 ```
 
-### pmic-charge-set-limit
-Sets the batter charging current limit.
-
-`pmic-charge-set-limit <limit>`
-
-* `limit` - Charging limit in mA, ranging from 30 to 180.
-
-```
-pmic-charge-set-limit 100
-# Setting battery charging limit to 100 mA...
-OK
-```
-
-### pmic-buck-set-mode
-Selects of one PMIC buck converter modes.
-
-`pmic-buck-set-mode <mode>`
-
-* `pmic-buck-set-mode` - Buck converter mode (pwm, pfm or auto)
-
-Example:
-```
-pmic-buck-set-mode auto
-# Setting the buck converter mode...
-OK
-```
-
-### pmic-report
-Starts single or continuous reporting of PMIC state including voltage, current and temperature.
-
-`pmic-report [<count>] [<period>]`
-
-* `count` - Number of measurement periods
-* `period` - Duration of single measurement period in milliseconds
-
-Example:
-```
-pmic-report 4 1000
-#       time      vbat  ibat  ntc    vsys  die    bat  buck mode
-PROGRESS 000229555 0.000 0.000 -88.117 4.692 36.414 0x08 0x0C IDLE
-PROGRESS 000230555 0.000 0.000 -88.117 4.673 37.207 0x08 0x0C IDLE
-PROGRESS 000231555 0.004 0.000 -88.117 4.673 36.414 0x08 0x0C IDLE
-PROGRESS 000232555 0.004 0.000 -88.117 4.679 36.414 0x08 0x0C IDLE
-OK
-```
-
-### powerctl-suspend
+### pm-suspend
 Enters low-power mode.
 
 In low-power mode, the CPU retains its state, including SRAM content.
@@ -766,7 +818,7 @@ operation from the point where it was suspended.
 
 Example:
 ```
-powerctl-suspend
+pm-suspend
 # Suspending the device to low-power mode...
 # Press the POWER button to resume.
 
@@ -776,7 +828,7 @@ powerctl-suspend
 OK
 ```
 
-### powerctl-hibernate
+### pm-hibernate
 Enters Hibernate mode.
 
 In Hibernate mode, the CPU is powered off, and only the VBAT domain remains
@@ -788,7 +840,7 @@ wireless charger.
 
 Example:
 ```
-powerctl-hibernate
+pm-hibernate
 # Hibernating the the device...
 # Device is powered externally, hibernation is not possible.
 OK
@@ -833,69 +885,6 @@ Example:
 ```
 tropic-get-chip-id
 OK 00000001000000000000000000000000000000000000000000000000000000000000000001000000054400000000FFFFFFFFFFFF01F00F000544545354303103001300000B54524F50494330312D4553FFFFFFFF000100000000FFFF000100000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF13000300
-```
-
-### wpc-init
-Reinitializes the wireless power receiver driver, restoring it to its default state.
-
-Example:
-```
-wpc-init
-# Initializing the WPC driver...
-OK
-```
-
-### wpc-enable
-Enables the wireless power receiver. When enabled, the receiver can initiate communication with the transmitter. To start battery charging, the voltage output must also be enabled (see `wpc-out-enable`).
-
-Example:
-```
-wpc-enable
-# Enabling STWLC38...
-OK
-```
-
-### wpc-disable
-Disables wireless power receiver.
-
-Example:
-```
-wpc-disable
-# Disabling STWLC38...
-OK
-```
-
-### wpc-out-enable
-Enables the voltage output of the wireless power receiver.  By default, the voltage output is enabled.
-
-Example:
-```
-wpc-out-enable
-# Enabling STWLC38 output...
-OK
-```
-
-### wpc-out-disable
-Disables the voltage output of the wireless power receiver.
-
-Example:
-```
-wpc-out-disable
-# Disabling STWLC38 output...
-OK
-```
-
-### wpc-report
-
-Example:
-```
-#       time       ready vout_ready vrect vout icur tmeas opfreq ntc
-PROGRESS 000314886 1 1 5.068 5.001 59.000 41.000 146 320.900
-PROGRESS 000315886 1 1 5.064 5.006 61.000 41.100 146 321.000
-PROGRESS 000316886 1 1 5.114 5.003 61.000 41.200 146 321.100
-PROGRESS 000317886 1 1 5.151 5.006 61.000 41.300 146 321.000
-PROGRESS 000318886 1 1 5.150 5.002 59.000 41.000 146 320.800
-OK
 ```
 
 ### wpc-info

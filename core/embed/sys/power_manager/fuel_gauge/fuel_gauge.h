@@ -55,6 +55,13 @@ void fuel_gauge_init(fuel_gauge_state_t* state, float R, float Q,
 void fuel_gauge_reset(fuel_gauge_state_t* state);
 
 /**
+ * Set SOC directly
+ * @param state Pointer to EKF state structure
+ * @param soc State of charge (0.0 to 1.0)
+ */
+void fuel_gauge_set_soc(fuel_gauge_state_t* state, float soc, float P);
+
+/**
  * Make initial SOC guess based on OCV
  * @param state Pointer to EKF state structure
  * @param voltage_V Current battery voltage (V)
@@ -73,5 +80,5 @@ void fuel_gauge_initial_guess(fuel_gauge_state_t* state, float voltage_V,
  * @param temperature Battery temperature (°C)
  * @return Updated SOC estimate (0.0 to 1.0)
  */
-float fuel_gauge_update(fuel_gauge_state_t* state, uint32_t dt, float voltage_V,
-                        float current_mA, float temperature);
+float fuel_gauge_update(fuel_gauge_state_t* state, uint32_t dt_ms,
+                        float voltage_V, float current_mA, float temperature);

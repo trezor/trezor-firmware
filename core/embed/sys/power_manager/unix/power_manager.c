@@ -17,30 +17,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/irq.h>
-#include <sys/wakeup_flags.h>
+#include <trezor_rtl.h>
 
-#ifdef KERNEL_MODE
+#include <sys/power_manager.h>
 
-static uint16_t g_wakeup_flags = 0;
+#include <SDL.h>
 
-void wakeup_flags_set(uint16_t flags) {
-  irq_key_t irq_key = irq_lock();
-  g_wakeup_flags |= flags;
-  irq_unlock(irq_key);
+pm_status_t pm_init(bool inherit_state) { return PM_OK; }
+
+void pm_deinit(void) {}
+
+pm_status_t pm_hibernate(void) {
+  exit(1);
+  return PM_OK;
+}
+pm_status_t pm_turn_on(void) { return PM_OK; }
+pm_status_t pm_charging_enable(void) { return PM_OK; }
+pm_status_t pm_charging_disable(void) { return PM_OK; }
+
+bool pm_get_events(pm_event_t* event_flags) {
+  memset(event_flags, 0, sizeof(pm_event_t));
+  return false;
 }
 
-void wakeup_flags_reset(void) {
-  irq_key_t irq_key = irq_lock();
-  g_wakeup_flags = 0;
-  irq_unlock(irq_key);
+pm_status_t pm_get_state(pm_state_t* state) {
+  state->usb_connected = true;
+  state->wireless_connected = false;
+  state->charging_status = PM_BATTERY_IDLE;
+  state->power_state = PM_STATE_ACTIVE;
+  state->soc = 100;
+  return PM_OK;
 }
-
-uint16_t wakeup_flags_get(void) {
-  irq_key_t irq_key = irq_lock();
-  uint16_t flags = g_wakeup_flags;
-  irq_unlock(irq_key);
-  return flags;
-}
-
-#endif  // KERNEL_MODE

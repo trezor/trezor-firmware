@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+#ifdef KERNEL_MODE
 #include "fuel_gauge.h"
 #include <math.h>
 #include "battery_model.h"
@@ -27,17 +27,24 @@ void fuel_gauge_init(fuel_gauge_state_t* state, float R, float Q,
   state->Q = Q;
   state->R_aggressive = R_aggressive;
   state->Q_aggressive = Q_aggressive;
-  state->P = P_init;
 
   // Initialize state
   state->soc = 0.0f;
   state->soc_latched = 0.0f;
+  state->P = P_init;  // Initial error covariance
 }
 
 void fuel_gauge_reset(fuel_gauge_state_t* state) {
   // Reset state but keep filter parameters
   state->soc = 0.0f;
   state->soc_latched = 0.0f;
+}
+
+void fuel_gauge_set_soc(fuel_gauge_state_t* state, float soc, float P) {
+  // Set SOC directly
+  state->soc = soc;
+  state->soc_latched = soc;
+  state->P = P;  // Set error covariance
 }
 
 void fuel_gauge_initial_guess(fuel_gauge_state_t* state, float voltage_V,
@@ -53,8 +60,13 @@ void fuel_gauge_initial_guess(fuel_gauge_state_t* state, float voltage_V,
   state->soc_latched = state->soc;
 }
 
-float fuel_gauge_update(fuel_gauge_state_t* state, uint32_t dt, float voltage_V,
-                        float current_mA, float temperature) {
+float fuel_gauge_update(fuel_gauge_state_t* state, uint32_t dt_ms,
+                        float voltage_V, float current_mA, float temperature) {
+  if (current_mA == 0.0f) {
+    // No current flow, return latched SOC without updating
+    return state->soc_latched;
+  }
+
   // Determine if we're in discharge mode
   bool discharging_mode = current_mA >= 0.0f;
 
@@ -62,18 +74,24 @@ float fuel_gauge_update(fuel_gauge_state_t* state, uint32_t dt, float voltage_V,
   float R = state->R;
   float Q = state->Q;
 
+  // When in low temperature or at the edge of the charging/dischargins
+  // profile, use more agressive EKF settings to rely more on the ocv
+  // curves rather then on current model
   if (temperature < 10.0f) {
-    // Cold temperature - use more conservative values
-    R = 10.0f;
-    Q = 0.01f;
-  } else if (state->soc_latched < 0.2f) {
-    // Low SOC - use aggressive values to track more closely
     R = state->R_aggressive;
     Q = state->Q_aggressive;
+  } else {
+    if (discharging_mode && state->soc_latched < 0.2f) {
+      R = state->R_aggressive;
+      Q = state->Q_aggressive;
+    } else if (!discharging_mode && state->soc_latched > 0.8f) {
+      R = state->R_aggressive;
+      Q = state->Q_aggressive;
+    }
   }
 
   // Convert milliseconds to seconds
-  float dt_sec = dt / 1000.0f;
+  float dt_sec = dt_ms / 1000.0f;
 
   // Get total capacity at current temperature
   float total_capacity = battery_total_capacity(temperature, discharging_mode);
@@ -124,3 +142,5 @@ float fuel_gauge_update(fuel_gauge_state_t* state, uint32_t dt, float voltage_V,
 
   return state->soc_latched;
 }
+
+#endif

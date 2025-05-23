@@ -106,11 +106,11 @@ def configure(
         defines += [("USE_BLE", "1")]
 
     sources += [
-        "embed/sys/powerctl/unix/powerctl.c",
+        "embed/sys/power_manager/unix/power_manager.c",
     ]
-    defines += [("USE_POWERCTL", "1")]
-    paths += ["embed/sys/powerctl/inc"]
-    features_available.append("powerctl")
+    defines += [("USE_POWER_MANAGER", "1")]
+    paths += ["embed/sys/power_manager/inc"]
+    features_available.append("power_manager")
 
     features_available.append("backlight")
     defines += [("USE_BACKLIGHT", "1")]

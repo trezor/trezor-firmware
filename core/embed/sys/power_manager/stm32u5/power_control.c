@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifdef KERNEL_MODE
 
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
@@ -23,10 +24,14 @@
 #include <io/display.h>
 #include <io/usb.h>
 #include <sys/irq.h>
-#include <sys/wakeup_flags.h>
+#include <sys/pmic.h>
+#include <sys/systick.h>
+
+#include "power_manager_internal.h"
 
 #ifdef USE_OPTIGA
 #include <sec/optiga_config.h>
+#include <sec/optiga_hal.h>
 #include <sec/optiga_transport.h>
 #endif
 
@@ -54,31 +59,45 @@
 #include <io/ble.h>
 #endif
 
-#ifdef KERNEL_MODE
+static void pm_background_tasks_suspend(void);
+static bool pm_background_tasks_suspended(void);
+static void pm_background_tasks_resume(void);
 
-static void background_tasks_suspend(void) {
-  // stwlc38
-  // npm1300
-  // nrf52
-  // ble
-  // powerctl
+pm_status_t pm_control_hibernate() {
+  // TEMPORARY FIX:
+  // Enable Backup domain retention in VBAT mode before entering the
+  // hibernation. BREN bit can be accessed only in LDO mode.
+  __HAL_RCC_PWR_CLK_ENABLE();
+
+  // Switch to LDO regulator
+  CLEAR_BIT(PWR->CR3, PWR_CR3_REGSEL);
+  // Wait until system switch on new regulator
+  while (HAL_IS_BIT_SET(PWR->SVMSR, PWR_SVMSR_REGS))
+    ;
+  // Enable backup domain retention
+  PWR->BDCR1 |= PWR_BDCR1_BREN;
+
+  if (!pmic_enter_shipmode()) {
+    return PM_ERROR;
+  }
+
+  // Wait for the device to power off
+  // systick_delay_ms(50);
+
+  return PM_ERROR;
 }
 
-static bool background_tasks_suspended(void) { return true; }
-
-static void background_tasks_resume(void) {}
-
-void powerctl_suspend(void) {
+void pm_control_suspend() {
   // Clear all wakeup flags. From this point, any wakeup event that
   // sets a wakeup flag causes this function to return.
-  wakeup_flags_reset();
+  pm_wakeup_flags_reset();
 
-  // Deinitialize all drivers that are not required in low-power mode
-  // (e.g., USB, display, touch, haptic, etc.).
+// Deinitialize all drivers that are not required in low-power mode
+// (e.g., USB, display, touch, haptic, etc.).
 #ifdef USE_STORAGE_HWKEY
   secure_aes_deinit();
 #endif
-#ifdef USE_TROPIC
+#if defined(USE_TROPIC) && !defined(BOOTLOADER)
   tropic_deinit();
 #endif
 #ifdef USE_OPTIGA
@@ -100,7 +119,6 @@ void powerctl_suspend(void) {
   ble_wakeup_params_t ble_wakeup_params = {0};
   ble_suspend(&ble_wakeup_params);
 #endif
-
   int backlight_level = display_get_backlight();
   display_deinit(DISPLAY_RESET_CONTENT);
 
@@ -109,11 +127,19 @@ void powerctl_suspend(void) {
   // terminate only if a wakeup flag is set, indicating that user interaction
   // is required or the user needs to be notified.
 
-  while (wakeup_flags_get() == 0) {
+  pm_wakeup_flags_t wakeup_flags = 0;
+
+  while (true) {
+    pm_wakeup_flags_get(&wakeup_flags);
+    if (wakeup_flags != 0) {
+      // If any wakeup flag is set, exit the loop.
+      break;
+    }
+
     // Notify state machines running in the interrupt context about the
     // impending low-power mode. They should complete any pending operations
     // and avoid starting new ones.
-    background_tasks_suspend();
+    pm_background_tasks_suspend();
 
     // Wait until all state machines are idle and the system is ready to enter
     // low-power mode. This loop also exits if any wakeup flag is set
@@ -123,9 +149,18 @@ void powerctl_suspend(void) {
 
       // TODO: Implement a 5-second timeout to trigger a fatal error.
 
-    } while (!background_tasks_suspended() && (wakeup_flags_get() == 0));
+      // Check for wakeup flags again
+      pm_wakeup_flags_get(&wakeup_flags);
 
-    if (wakeup_flags_get() == 0) {
+    } while (!pm_background_tasks_suspended() && (wakeup_flags == 0));
+
+    if (true) {
+      pm_wakeup_flags_get(&wakeup_flags);
+      if (wakeup_flags != 0) {
+        // If any wakeup flag is set, exit the loop.
+        break;
+      }
+
       // Disable interrupts by setting PRIMASK to 1.
       //
       // The system can wake up, but interrupts will not be processed until
@@ -153,7 +188,7 @@ void powerctl_suspend(void) {
     }
 
     // Resume state machines running in the interrupt context
-    background_tasks_resume();
+    pm_background_tasks_resume();
   }
 
   // Reinitialize all drivers that were stopped earlier
@@ -175,9 +210,13 @@ void powerctl_suspend(void) {
   secure_aes_init();
 #endif
 #ifdef USE_OPTIGA
+#ifdef BOOTLOADER
+  optiga_hal_init();
+#else
   optiga_init_and_configure();
 #endif
-#ifdef USE_TROPIC
+#endif
+#if defined(USE_TROPIC) && !defined(BOOTLOADER)
   tropic_init();
 #endif
 #ifdef USE_BLE
@@ -185,4 +224,16 @@ void powerctl_suspend(void) {
 #endif
 }
 
-#endif  // KERNEL_MODE
+static void pm_background_tasks_suspend(void) {
+  // stwlc38
+  // pmic
+  // nrf52
+  // ble
+  // powerctl
+}
+
+static bool pm_background_tasks_suspended(void) { return true; }
+
+static void pm_background_tasks_resume(void) {}
+
+#endif

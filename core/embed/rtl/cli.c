@@ -535,7 +535,7 @@ static bool cli_split_args(cli_t* cli) {
   return *cstr_skip_whitespace(buf) == '\0';
 }
 
-static void cli_process_command(cli_t* cli, const cli_command_t* cmd) {
+void cli_process_command(cli_t* cli, const cli_command_t* cmd) {
   cli->current_cmd = cmd;
   cli->final_status = false;
   cli->aborted = false;
@@ -555,14 +555,20 @@ static void cli_process_command(cli_t* cli, const cli_command_t* cmd) {
     // Finalize the last command with an empty line
     cli_printf(cli, "\r\n");
   }
+
+  if (cli->interactive) {
+    // Print the prompt
+    cli_printf(cli, "> ");
+  }
+  cli_clear_line(cli);
 }
 
-void cli_process_io(cli_t* cli) {
+const cli_command_t* cli_process_io(cli_t* cli) {
   int res;
   do {
     int ch = cli_readch(cli);
     if (ch == 0) {
-      return;
+      return NULL;
     }
     res = cli_process_char(cli, ch);
   } while (res == 0);
@@ -605,15 +611,17 @@ void cli_process_io(cli_t* cli) {
   }
 
   // Find the command handler
-  const cli_command_t* cmd = cli_find_command(cli, cli->cmd_name);
+  const cli_command_t* found_cmd = cli_find_command(cli, cli->cmd_name);
 
-  if (cmd == NULL) {
+  if (found_cmd == NULL) {
     cli_error(cli, CLI_ERROR_INVALID_CMD, "Invalid command '%s', try 'help'.",
               cli->cmd_name);
     goto cleanup;
   }
 
-  cli_process_command(cli, cmd);
+  return found_cmd;
+
+  // cli_process_command(cli, cmd);
 
 cleanup:
   if (cli->interactive) {
@@ -621,6 +629,7 @@ cleanup:
     cli_printf(cli, "> ");
   }
   cli_clear_line(cli);
+  return NULL;
 }
 
 // Return position of the argument with the given name in
