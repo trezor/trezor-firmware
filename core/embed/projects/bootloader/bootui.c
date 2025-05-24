@@ -160,7 +160,7 @@ void ui_screen_boot_stage_1(bool fading) { screen_boot_stage_1(fading); }
 // error UI
 void ui_screen_fail(void) { screen_install_fail(); }
 
-#ifdef USE_OPTIGA
+#ifdef LOCKABLE_BOOTLOADER
 uint32_t ui_screen_unlock_bootloader_confirm(void) {
   return screen_unlock_bootloader_confirm();
 }

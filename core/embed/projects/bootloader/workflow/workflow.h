@@ -45,7 +45,7 @@ workflow_result_t workflow_firmware_update(protob_io_t *iface);
 
 workflow_result_t workflow_wipe_device(protob_io_t *iface);
 
-#ifdef USE_OPTIGA
+#ifdef LOCKABLE_BOOTLOADER
 workflow_result_t workflow_unlock_bootloader(protob_io_t *iface);
 #endif
 

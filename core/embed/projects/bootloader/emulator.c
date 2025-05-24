@@ -12,7 +12,7 @@
 #include <util/flash_otp.h>
 #include "bootui.h"
 
-#ifdef USE_OPTIGA
+#ifdef LOCKABLE_BOOTLOADER
 #include <sec/secret.h>
 #endif
 
@@ -45,7 +45,7 @@ void usage(void) {
   printf("  -b BITCOIN_ONLY  set bitcoin only flag\n");
   printf(
       "  -f FIRMWARE  run interaction-less update for the specified image\n");
-#ifdef USE_OPTIGA
+#ifdef LOCKABLE_BOOTLOADER
   printf("  -l  lock bootloader\n");
 #endif
   printf("  -h  show this help\n");
@@ -153,7 +153,7 @@ int main(int argc, char **argv) {
         }
         bootargs_set(BOOT_COMMAND_INSTALL_UPGRADE, hash, sizeof(hash));
       } break;
-#ifdef USE_OPTIGA
+#ifdef LOCKABLE_BOOTLOADER
       case 'l':
         // write bootloader-lock secret
         secret_write_header();
