@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <trezor_bsp.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
@@ -25,6 +26,7 @@
 
 #include <stdlib.h>
 #include "prodtest_optiga.h"
+#include "rtl/mini_printf.h"
 
 static void prodtest_otp_variant_read(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
@@ -52,6 +54,7 @@ static void prodtest_otp_variant_read(cli_t* cli) {
   cli_trace(cli, "Bytes read: %s", block_hex);
 
   char block_text[FLASH_OTP_BLOCK_SIZE * 4 + 1] = {0};
+  size_t buffer_size = sizeof(block_text);
 
   // Make a list of integers separated by spaces
   char* dst = block_text;
@@ -59,8 +62,9 @@ static void prodtest_otp_variant_read(cli_t* cli) {
     if (i != 0) {
       *dst++ = ' ';
     }
-    itoa(block[i], dst, 10);
+    mini_snprintf(dst, buffer_size, "%d", block[i]);
     dst += strlen(dst);
+    buffer_size -= strlen(dst);
   }
 
   cli_ok(cli, "%s", block_text);

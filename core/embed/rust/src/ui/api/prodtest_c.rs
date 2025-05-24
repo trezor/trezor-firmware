@@ -16,7 +16,7 @@ extern "C" fn screen_prodtest_welcome() {
 
 #[no_mangle]
 extern "C" fn screen_prodtest_info(id: *const cty::c_char, id_len: u8) {
-    let id = unwrap!(unsafe { from_c_array(id, id_len as usize) });
+    let id = unsafe { from_c_array(id, id_len as usize) }.unwrap_or("");
 
     ModelUI::screen_prodtest_info(id);
 }
