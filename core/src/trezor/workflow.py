@@ -136,14 +136,14 @@ def kill_default() -> None:
         default_task.close()
 
 
-def close_others() -> None:
+def close_others(close_default: bool = True) -> None:
     """Request workflow (and UI) exclusivity: shut down all running tasks, except
     the one that is currently executing.
 
     If this is called from outside a registered workflow, it is equivalent to "close
     all tasks". In that case, the default task will be restarted afterwards.
     """
-    if default_task is not None and not default_task.is_running():
+    if close_default and default_task is not None and not default_task.is_running():
         default_task.close()
         # if no other tasks are running, start_default will run immediately
 
@@ -153,7 +153,8 @@ def close_others() -> None:
         if not task.is_running():
             task.close()
 
-    storage_cache.homescreen_shown = None
+    if close_default:
+        storage_cache.homescreen_shown = None
 
     # if tasks were running, closing the last of them will run start_default
 
