@@ -5,7 +5,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.x509 import extensions as ext
 
 from trezorlib import device, models
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 
 from ..common import compact_size
 
@@ -35,16 +35,16 @@ ROOT_PUBLIC_KEY = {
         ),
     ),
 )
-def test_authenticate_device(client: Client, challenge: bytes) -> None:
+def test_authenticate_device(session: Session, challenge: bytes) -> None:
     # NOTE Applications must generate a random challenge for each request.
 
     # Issue an AuthenticateDevice challenge to Trezor.
-    proof = device.authenticate(client, challenge)
+    proof = device.authenticate(session, challenge)
     certs = [x509.load_der_x509_certificate(cert) for cert in proof.certificates]
 
     # Verify the last certificate in the certificate chain against trust anchor.
     root_public_key = ec.EllipticCurvePublicKey.from_encoded_point(
-        ec.SECP256R1(), ROOT_PUBLIC_KEY[client.model]
+        ec.SECP256R1(), ROOT_PUBLIC_KEY[session.model]
     )
     root_public_key.verify(
         certs[-1].signature,
@@ -78,7 +78,7 @@ def test_authenticate_device(client: Client, challenge: bytes) -> None:
 
     # Verify that the common name matches the Trezor model.
     common_name = cert.subject.get_attributes_for_oid(x509.oid.NameOID.COMMON_NAME)[0]
-    assert common_name.value.startswith(client.model.internal_name)
+    assert common_name.value.startswith(session.model.internal_name)
 
     # Verify the signature of the challenge.
     data = b"\x13AuthenticateDevice:" + compact_size(len(challenge)) + challenge

@@ -19,10 +19,10 @@ from typing import TYPE_CHECKING, Tuple
 import click
 
 from .. import misc, tools
-from . import ChoiceType, with_client
+from . import ChoiceType, with_session
 
 if TYPE_CHECKING:
-    from ..client import TrezorClient
+    from ..transport.session import Session
 
 
 PROMPT_TYPE = ChoiceType(
@@ -42,10 +42,10 @@ def cli() -> None:
 
 @cli.command()
 @click.argument("size", type=int)
-@with_client
-def get_entropy(client: "TrezorClient", size: int) -> str:
+@with_session(empty_passphrase=True)
+def get_entropy(session: "Session", size: int) -> str:
     """Get random bytes from device."""
-    return misc.get_entropy(client, size).hex()
+    return misc.get_entropy(session, size).hex()
 
 
 @cli.command()
@@ -55,9 +55,9 @@ def get_entropy(client: "TrezorClient", size: int) -> str:
 )
 @click.argument("key")
 @click.argument("value")
-@with_client
+@with_session(empty_passphrase=True)
 def encrypt_keyvalue(
-    client: "TrezorClient",
+    session: "Session",
     address: str,
     key: str,
     value: str,
@@ -75,7 +75,7 @@ def encrypt_keyvalue(
     ask_on_encrypt, ask_on_decrypt = prompt
     address_n = tools.parse_path(address)
     return misc.encrypt_keyvalue(
-        client,
+        session,
         address_n,
         key,
         value.encode(),
@@ -91,9 +91,9 @@ def encrypt_keyvalue(
 )
 @click.argument("key")
 @click.argument("value")
-@with_client
+@with_session(empty_passphrase=True)
 def decrypt_keyvalue(
-    client: "TrezorClient",
+    session: "Session",
     address: str,
     key: str,
     value: str,
@@ -112,7 +112,7 @@ def decrypt_keyvalue(
     ask_on_encrypt, ask_on_decrypt = prompt
     address_n = tools.parse_path(address)
     return misc.decrypt_keyvalue(
-        client,
+        session,
         address_n,
         key,
         bytes.fromhex(value),
