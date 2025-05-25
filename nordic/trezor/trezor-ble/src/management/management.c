@@ -25,8 +25,11 @@
 
 #include <app_version.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/storage/flash_map.h>
 #include <zephyr/sys/crc.h>
 #include <zephyr/sys/poweroff.h>
+
+#include <errno.h>
 
 #include <signals/signals.h>
 #include <trz_comm/trz_comm.h>
@@ -49,8 +52,88 @@ typedef enum {
 
 void management_init(void) { k_sem_give(&management_ok); }
 
+#define IMAGE_HASH_LEN 32
+#define IMAGE_TLV_SHA256 0x10
+
+struct image_version {
+  uint8_t iv_major;
+  uint8_t iv_minor;
+  uint16_t iv_revision;
+  uint32_t iv_build_num;
+} __packed;
+
+struct image_header {
+  uint32_t ih_magic;
+  uint32_t ih_load_addr;
+  uint16_t ih_hdr_size;         /* Size of image header (bytes). */
+  uint16_t ih_protect_tlv_size; /* Size of protected TLV area (bytes). */
+  uint32_t ih_img_size;         /* Does not include header. */
+  uint32_t ih_flags;            /* IMAGE_F_[...]. */
+  struct image_version ih_ver;
+  uint32_t _pad1;
+} __packed;
+
+/**
+ * Read the SHA-256 image hash from the TLV trailer of the given flash slot.
+ *
+ * @param area_id    FLASH_AREA_ID(image_0) or FLASH_AREA_ID(image_1)
+ * @param out_hash   Buffer of at least IMAGE_HASH_LEN bytes to receive the hash
+ * @return 0 on success, or a negative errno on failure
+ */
+static int read_image_sha256(uint8_t area_id,
+                             uint8_t out_hash[IMAGE_HASH_LEN]) {
+  const struct flash_area *fa;
+  int rc;
+
+  /* Open the flash area (slot) */
+  rc = flash_area_open(area_id, &fa);
+  if (rc < 0) {
+    return rc;
+  }
+
+  /* Read header to get image_size and hdr_size */
+  struct image_header hdr;
+  rc = flash_area_read(fa, 0, &hdr, sizeof(hdr));
+  if (rc < 0) {
+    flash_area_close(fa);
+    return rc;
+  }
+  uint32_t img_size = hdr.ih_img_size;
+  uint32_t hdr_size = hdr.ih_hdr_size;
+  uint32_t tvl1_size = hdr.ih_protect_tlv_size;
+
+  /* Compute start of TLV trailer */
+  off_t off = 0 + hdr_size + img_size + tvl1_size + 4;
+
+  /* Scan TLVs until we find the SHA-256 entry */
+  while (true) {
+    uint16_t tlv_hdr[2];
+    rc = flash_area_read(fa, off, tlv_hdr, sizeof(tlv_hdr));
+    if (rc < 0) {
+      break;
+    }
+    uint16_t type = tlv_hdr[0];
+    uint16_t len = tlv_hdr[1];
+
+    if (type == IMAGE_TLV_SHA256) {
+      if (len != IMAGE_HASH_LEN) {
+        rc = -EINVAL;
+      } else {
+        rc = flash_area_read(fa, off + sizeof(tlv_hdr), out_hash,
+                             IMAGE_HASH_LEN);
+      }
+      break;
+    }
+
+    off += sizeof(tlv_hdr) + len;
+  }
+
+  flash_area_close(fa);
+  return rc;
+}
+
 static void send_info(void) {
-  uint8_t data[9] = {0};
+  uint8_t data[9 + IMAGE_HASH_LEN] = {0};
 
   data[0] = MGMT_RESP_INFO;
   data[1] = APP_VERSION_MAJOR;
@@ -61,6 +144,8 @@ static void send_info(void) {
   data[6] = signals_is_stay_in_bootloader();
   data[7] = 0;
   data[8] = signals_out_get_reserved();
+
+  read_image_sha256(FLASH_AREA_ID(image_0), &data[9]);
 
   trz_comm_send_msg(NRF_SERVICE_MANAGEMENT, data, sizeof(data));
 }
