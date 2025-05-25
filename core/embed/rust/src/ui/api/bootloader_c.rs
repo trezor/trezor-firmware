@@ -7,9 +7,9 @@ use crate::{
     },
     ui::{
         ui_bootloader::{BootloaderLayoutType as _, BootloaderUI},
-        util::{from_c_array, from_c_str},
         ModelUI,
     },
+    util::{from_c_array, from_c_str},
 };
 
 #[no_mangle]

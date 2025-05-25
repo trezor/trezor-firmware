@@ -44,6 +44,9 @@ mod trezorhal;
 #[cfg(feature = "ui")]
 pub mod ui;
 
+
+pub mod util;
+
 #[cfg(feature = "debug")]
 #[cfg(not(test))]
 #[panic_handler]
