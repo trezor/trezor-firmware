@@ -1,13 +1,13 @@
-/// Font definitions for the Eckhart layout
-/// Allowed in Bootloader and Firmware:
-///     - FONT_SATOSHI_MEDIUM_26
-///     - FONT_SATOSHI_REGULAR_38
-/// Allowed only in Firmware:
-///     - FONT_MONO_LIGHT_30
-///     - FONT_MONO_MEDIUM_38
-///     - FONT_SATOSHI_EXTRALIGHT_46
-///     - FONT_SATOSHI_EXTRALIGHT_72
-///     - FONT_SATOSHI_REGULAR_22
+//! Font definitions for the Eckhart layout
+//! Allowed in Bootloader and Firmware:
+//!     - FONT_SATOSHI_MEDIUM_26
+//!     - FONT_SATOSHI_REGULAR_38
+//! Allowed only in Firmware:
+//!     - FONT_MONO_LIGHT_30
+//!     - FONT_MONO_MEDIUM_38
+//!     - FONT_SATOSHI_EXTRALIGHT_46
+//!     - FONT_SATOSHI_EXTRALIGHT_72
+//!     - FONT_SATOSHI_REGULAR_22
 
 #[cfg(any(feature = "prodtest", feature = "micropython"))]
 mod font_robotomono_light_30;

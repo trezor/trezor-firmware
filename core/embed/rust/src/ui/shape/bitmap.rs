@@ -41,7 +41,8 @@ pub struct Bitmap<'a> {
     /// The `Bitmap` ensures that by `wait_for_dma()`ing the buffer before
     /// dropping it or doing anything else with it.
     dma_pending: Cell<bool>,
-    ///
+    /// Marker to tie this struct to the lifetime `'a`, ensuring
+    /// the compiler knows the bitmap borrows data valid for that lifetime.
     _phantom: core::marker::PhantomData<&'a ()>,
 }
 

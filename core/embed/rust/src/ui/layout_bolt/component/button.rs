@@ -24,6 +24,17 @@ pub enum ButtonMsg {
     LongPressed,
 }
 
+/// Fn-pointer callback for CancelInfoConfirm.
+pub trait CancelInfoConfirmHandler = Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>;
+
+/// Fn-pointer callback for CancelConfirm.
+pub trait ConfirmHandler = Fn(ButtonMsg) -> Option<CancelConfirmMsg>;
+
+/// Fn-pointer callback for select_word.
+pub trait SelectHandler = Fn(ButtonMsg) -> Option<SelectWordMsg>;
+
+// ——————————————————————————————————————————————————————————————————
+
 pub struct Button {
     area: Rect,
     touch_expand: Option<Insets>,
@@ -360,10 +371,7 @@ impl Button {
         left: Button,
         right: Button,
         left_is_small: bool,
-    ) -> CancelConfirm<
-        impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
-        impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
-    > {
+    ) -> CancelConfirm<impl ConfirmHandler, impl ConfirmHandler> {
         let width = if left_is_small {
             theme::BUTTON_WIDTH
         } else {
@@ -384,10 +392,7 @@ impl Button {
     pub fn cancel_confirm_text(
         left: Option<TString<'static>>,
         right: Option<TString<'static>>,
-    ) -> CancelConfirm<
-        impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
-        impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
-    > {
+    ) -> CancelConfirm<impl ConfirmHandler, impl ConfirmHandler> {
         let left_is_small: bool;
 
         let left = if let Some(verb) = left {
@@ -413,9 +418,9 @@ impl Button {
         confirm: Button,
         verb_info: TString<'static>,
     ) -> CancelInfoConfirm<
-        impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
-        impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
-        impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
+        impl CancelInfoConfirmHandler,
+        impl CancelInfoConfirmHandler,
+        impl CancelInfoConfirmHandler,
     > {
         let right = confirm.map(|msg| {
             (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Confirmed)
@@ -440,11 +445,7 @@ impl Button {
 
     pub fn select_word(
         words: [TString<'static>; 3],
-    ) -> CancelInfoConfirm<
-        impl Fn(ButtonMsg) -> Option<SelectWordMsg>,
-        impl Fn(ButtonMsg) -> Option<SelectWordMsg>,
-        impl Fn(ButtonMsg) -> Option<SelectWordMsg>,
-    > {
+    ) -> CancelInfoConfirm<impl SelectHandler, impl SelectHandler, impl SelectHandler> {
         let btn = move |i, word| {
             Button::with_text(word)
                 .styled(theme::button_pin())
