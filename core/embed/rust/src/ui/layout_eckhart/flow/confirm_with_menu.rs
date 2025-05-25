@@ -81,7 +81,6 @@ pub fn new_confirm_with_menu<T: AllowedTextContent + MaybeTrace + 'static>(
         .with_header(Header::new(title).with_menu_button())
         .with_action_bar(ActionBar::new_single(confirm_button))
         .with_subtitle(subtitle.unwrap_or(TString::empty()))
-        .with_page_limit(1);
     if let Some(hint) = hint {
         value_screen = value_screen.with_hint(Hint::new_instruction(hint, Some(theme::ICON_INFO)));
     }
