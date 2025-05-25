@@ -125,7 +125,7 @@ impl<'a> Table<'a> {
 }
 
 struct TranslationStringsChunk<'a> {
-    strings: &'a [u8],
+    strings: &'a str,
     offsets: &'a [u16],
 }
 
@@ -139,7 +139,7 @@ impl<'a> TranslationStringsChunk<'a> {
         if !_prefix.is_empty() || !_suffix.is_empty() {
             return Err(INVALID_TRANSLATIONS_BLOB);
         }
-        let strings = reader.rest();
+        let strings = str::from_utf8(reader.rest()).map_err(|_| INVALID_TRANSLATIONS_BLOB)?;
         validate_offset_table(strings.len(), offsets.iter().copied())?;
         Ok(Self { strings, offsets })
     }
@@ -149,7 +149,7 @@ impl<'a> TranslationStringsChunk<'a> {
         self.offsets.len() - 1
     }
 
-    fn get(&self, index: usize) -> Option<&'a [u8]> {
+    fn get(&self, index: usize) -> Option<&'a str> {
         if index >= self.len() {
             return None;
         }
@@ -238,7 +238,7 @@ impl<'a> Translations<'a> {
                         // Fallback to english.
                         return None;
                     }
-                    return str::from_utf8(string).ok();
+                    return Some(string);
                 }
                 None => {
                     index -= chunk.len();
