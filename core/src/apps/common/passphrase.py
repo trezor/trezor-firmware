@@ -3,7 +3,7 @@ from micropython import const
 import storage.device as storage_device
 from trezor.wire import DataError
 
-_MAX_PASSPHRASE_LEN = const(50)
+_MAX_PASSPHRASE_LEN = const(128)
 
 
 def is_enabled() -> bool:

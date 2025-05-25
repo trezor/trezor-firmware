@@ -18,7 +18,7 @@ import random
 
 import pytest
 
-from trezorlib import device, exceptions, messages
+from trezorlib import device, exceptions, messages, models
 from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
@@ -369,14 +369,17 @@ def test_passphrase_length(client: Client):
             assert expected_result is False, "Call should have succeeded"
             assert e.code == FailureType.DataError
 
-    # 50 is ok
-    call(passphrase="A" * 50, expected_result=True)
-    # 51 is not
-    call(passphrase="A" * 51, expected_result=False)
-    # "š" has two bytes - 48x A and "š" should be fine (50 bytes)
-    call(passphrase="A" * 48 + "š", expected_result=True)
-    # "š" has two bytes - 49x A and "š" should not (51 bytes)
-    call(passphrase="A" * 49 + "š", expected_result=False)
+    max_len = 50 if client.model is models.T1B1 else 128
+
+    # N is ok
+    call(passphrase="A" * max_len, expected_result=True)
+    # N+1 is not
+    call(passphrase="A" * (max_len + 1), expected_result=False)
+
+    # "š" has two bytes - (N-2)x A and "š" should be fine (N bytes)
+    call(passphrase="A" * (max_len - 2) + "š", expected_result=True)
+    # "š" has two bytes - (N-1)x A and "š" should not (N+1 bytes)
+    call(passphrase="A" * (max_len - 1) + "š", expected_result=False)
 
 
 @pytest.mark.models("core")
