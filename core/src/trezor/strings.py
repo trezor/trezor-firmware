@@ -119,3 +119,30 @@ def format_timestamp(timestamp: int) -> str:
     # that is used internally.
     d = utime.gmtime2000(timestamp - _SECONDS_1970_TO_2000)
     return f"{d[0]}-{d[1]:02d}-{d[2]:02d} {d[3]:02d}:{d[4]:02d}:{d[5]:02d}"
+
+
+def format_autolock_duration(auto_lock_ms: int) -> str:
+    """
+    Determine appropriate unit and count for auto-lock delay.
+    """
+    from . import TR
+
+    MS = 1000
+    MIN = MS * 60
+    HOUR = MIN * 60
+    DAY = HOUR * 24
+
+    if auto_lock_ms >= DAY:
+        auto_lock_num = auto_lock_ms // DAY
+        auto_lock_label = TR.plurals__lock_after_x_days
+    elif auto_lock_ms >= HOUR:
+        auto_lock_num = auto_lock_ms // HOUR
+        auto_lock_label = TR.plurals__lock_after_x_hours
+    elif auto_lock_ms >= MIN:
+        auto_lock_num = auto_lock_ms // MIN
+        auto_lock_label = TR.plurals__lock_after_x_minutes
+    else:
+        auto_lock_num = auto_lock_ms // MS
+        auto_lock_label = TR.plurals__lock_after_x_seconds
+
+    return format_plural("{count} {plural}", auto_lock_num, auto_lock_label)
