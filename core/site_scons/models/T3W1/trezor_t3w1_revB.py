@@ -109,8 +109,11 @@ def configure(
         defines += [("USE_BLE", "1")]
         sources += ["embed/io/nrf/stm32u5/nrf.c"]
         sources += ["embed/io/nrf/stm32u5/nrf_test.c"]
+        sources += ["embed/io/nrf/stm32u5/nrf_update.c"]
         sources += ["embed/io/nrf/crc8.c"]
         paths += ["embed/io/nrf/inc"]
+        features_available.append("nrf")
+        defines += [("USE_NRF", "1")]
         sources += [
             "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_uart.c",
             "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_uart_ex.c",

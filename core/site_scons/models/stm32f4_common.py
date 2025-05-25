@@ -71,6 +71,7 @@ def stm32f4_common_files(env, defines, sources, paths):
         "embed/sec/secret/stm32f4/secret.c",
         "embed/sec/time_estimate/stm32/time_estimate.c",
         "embed/sys/dbg/stm32/dbg_printf.c",
+        "embed/sys/irq/stm32/irq.c",
         "embed/sys/linker/linker_utils.c",
         "embed/sys/mpu/stm32f4/mpu.c",
         "embed/sys/pvd/stm32/pvd.c",

@@ -46,6 +46,8 @@ backlight = []
 usb = []
 optiga = []
 ble = []
+nrf = []
+smp = []
 tropic = []
 translations = ["crypto"]
 secmon_layout = []
@@ -58,8 +60,10 @@ test = [
     "debug",
     "glob",
     "micropython",
+    "nrf",
     "optiga",
     "protobuf",
+    "smp",
     "touch",
     "translations",
     "ui",
@@ -140,6 +144,10 @@ features = ["libm", "easer"]
 version = "0.3.0"
 default-features = false
 features = ["libm"]
+
+[dependencies.minicbor]
+version = "1.0.0"
+default-features = false
 
 
 # Build dependencies

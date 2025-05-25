@@ -681,6 +681,24 @@ uint32_t ble_read(uint8_t *data, uint16_t len) {
 
 #endif
 
+#ifdef USE_NRF
+
+// =============================================================================
+// nrf.h
+// =============================================================================
+
+bool nrf_update_required(const uint8_t *data, size_t len) {
+  return (bool)syscall_invoke2((uint32_t)data, (uint32_t)len,
+                               SYSCALL_NRF_UPDATE_REQUIRED);
+}
+
+bool nrf_update(const uint8_t *data, size_t len) {
+  return (bool)syscall_invoke2((uint32_t)data, (uint32_t)len,
+                               SYSCALL_NRF_UPDATE);
+}
+
+#endif
+
 // =============================================================================
 // power_manager.h
 // =============================================================================

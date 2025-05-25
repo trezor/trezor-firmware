@@ -817,6 +817,36 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
+#ifdef USE_NRF
+
+bool nrf_update_required__verified(const uint8_t *data, size_t len) {
+  if (!probe_read_access(data, len)) {
+    goto access_violation;
+  }
+
+  return nrf_update_required(data, len);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+bool nrf_update__verified(const uint8_t *data, size_t len) {
+  if (!probe_read_access(data, len)) {
+    goto access_violation;
+  }
+
+  return nrf_update(data, len);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+#endif
+
+// ---------------------------------------------------------------------
+
 #ifdef USE_POWER_MANAGER
 
 pm_status_t pm_get_state__verified(pm_state_t *status) {

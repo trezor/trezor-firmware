@@ -45,6 +45,10 @@
 #include <io/ble.h>
 #endif
 
+#ifdef USE_NRF
+#include <io/nrf.h>
+#endif
+
 #ifdef USE_BUTTON
 #include <io/button.h>
 #endif
@@ -739,6 +743,22 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       size_t len = args[1];
       args[0] = ble_read__verified(data, len);
     } break;
+#endif
+
+#ifdef USE_NRF
+
+    case SYSCALL_NRF_UPDATE_REQUIRED: {
+      const uint8_t *data = (const uint8_t *)args[0];
+      size_t len = args[1];
+      args[0] = nrf_update_required__verified(data, len);
+    } break;
+
+    case SYSCALL_NRF_UPDATE: {
+      const uint8_t *data = (const uint8_t *)args[0];
+      size_t len = args[1];
+      args[0] = nrf_update__verified(data, len);
+    } break;
+
 #endif
 
 #ifdef USE_POWER_MANAGER

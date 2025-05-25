@@ -18,6 +18,7 @@ def unix_common_files(env, defines, sources, paths):
         "embed/sec/rng/inc",
         "embed/sec/monoctr/inc",
         "embed/sec/secret/inc",
+        "embed/sys/irq/inc",
         "embed/sys/mpu/inc",
         "embed/sys/startup/inc",
         "embed/sys/task/inc",
