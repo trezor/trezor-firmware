@@ -4,9 +4,10 @@ from storage.cache_common import InvalidSessionError
 from trezor import log, loop, protobuf, utils, workflow
 from trezor.enums import FailureType
 from trezor.messages import Failure
-from trezor.wire.context import UnexpectedMessageException, with_context
-from trezor.wire.errors import ActionCancelled, DataError, Error, UnexpectedMessage
-from trezor.wire.protocol_common import Context, Message
+
+from .context import UnexpectedMessageException, with_context
+from .errors import ActionCancelled, DataError, Error, UnexpectedMessage
+from .protocol_common import Context, Message
 
 if __debug__:
     from . import wire_log
@@ -19,6 +20,7 @@ if TYPE_CHECKING:
     HandlerFinder = Callable[[Any, Any], Handler | None]
     Filter = Callable[[int, Handler], Handler]
 
+
 # If set to False protobuf messages marked with "experimental_message" option are rejected.
 EXPERIMENTAL_ENABLED = False
 
@@ -28,7 +30,12 @@ def wrap_protobuf_load(
     expected_type: type[LoadedMessageType],
 ) -> LoadedMessageType:
     try:
-        if __debug__ and utils.EMULATOR and utils.USE_THP:
+        if (
+            __debug__
+            and utils.EMULATOR
+            and utils.USE_THP
+            and utils.ALLOW_DEBUG_MESSAGES
+        ):
             log.debug(
                 __name__,
                 "Buffer to be parsed to a LoadedMessage: %s",
@@ -41,7 +48,7 @@ def wrap_protobuf_load(
             )
         return msg
     except Exception as e:
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.exception(__name__, e)
         if e.args:
             raise DataError("Failed to decode message: " + " ".join(e.args))
@@ -65,17 +72,27 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
     """
     from . import _EARLY_RESPONSE
 
-    if __debug__:
+    if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
         try:
             msg_type = protobuf.type_for_wire(msg.type).MESSAGE_NAME
         except Exception:
             msg_type = f"{msg.type} - unknown message type"
-        wire_log.info(
-            __name__,
-            ctx.iface,
-            "received message: %s",
-            msg_type,
-        )
+        if utils.USE_THP:
+            cid = utils.get_bytes_as_str(ctx.channel_id)
+            wire_log.info(
+                __name__,
+                ctx.iface,
+                "(cid: %s) received message: %s",
+                cid,
+                msg_type,
+            )
+        else:
+            wire_log.info(
+                __name__,
+                ctx.iface,
+                "received message: %s",
+                msg_type,
+            )
 
     # We need to find a handler for this message type.
     try:
@@ -150,7 +167,7 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
         # - the message was not valid protobuf
         # - workflow raised some kind of an exception while running
         # - something canceled the workflow from the outside
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             if isinstance(exc, ActionCancelled):
                 wire_log.debug(__name__, ctx.iface, "cancelled: %s", exc.message)
             elif isinstance(exc, loop.TaskClosed):

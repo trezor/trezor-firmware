@@ -14,13 +14,13 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import os
+from __future__ import annotations
+
 import sys
-from typing import Any, Callable, Optional, Union
+import typing as t
 
 import click
 from mnemonic import Mnemonic
-from typing_extensions import Protocol
 
 from . import device, messages
 from .client import MAX_PIN_LENGTH, PASSPHRASE_ON_DEVICE
@@ -62,19 +62,11 @@ WIPE_CODE_CONFIRM = PinMatrixRequestType.WipeCodeSecond
 CAN_HANDLE_HIDDEN_INPUT = sys.stdin and sys.stdin.isatty()
 
 
-class TrezorClientUI(Protocol):
-    def button_request(self, br: messages.ButtonRequest) -> None: ...
-
-    def get_pin(self, code: Optional[PinMatrixRequestType]) -> str: ...
-
-    def get_passphrase(self, available_on_device: bool) -> Union[str, object]: ...
-
-
-def echo(*args: Any, **kwargs: Any) -> None:
+def echo(*args: t.Any, **kwargs: t.Any) -> None:
     return click.echo(*args, err=True, **kwargs)
 
 
-def prompt(text: str, *, hide_input: bool = False, **kwargs: Any) -> Any:
+def prompt(text: str, *, hide_input: bool = False, **kwargs: t.Any) -> t.Any:
     # Disallowing hidden input and warning user when it would cause issues
     if not CAN_HANDLE_HIDDEN_INPUT and hide_input:
         hide_input = False
@@ -106,7 +98,8 @@ class ClickUI:
         if not self.always_prompt:
             self.last_prompt_shown = prompt
 
-    def get_pin(self, code: Optional[PinMatrixRequestType] = None) -> str:
+    def get_pin(self, request: messages.PinMatrixRequest) -> str:
+        code = request.type
         if code == PIN_CURRENT:
             desc = "current PIN"
         elif code == PIN_NEW:
@@ -144,39 +137,6 @@ class ClickUI:
             else:
                 return pin
 
-    def get_passphrase(self, available_on_device: bool) -> Union[str, object]:
-        if available_on_device and not self.passphrase_on_host:
-            return PASSPHRASE_ON_DEVICE
-
-        env_passphrase = os.getenv("PASSPHRASE")
-        if env_passphrase is not None:
-            echo("Passphrase required. Using PASSPHRASE environment variable.")
-            return env_passphrase
-
-        while True:
-            try:
-                passphrase = prompt(
-                    "Passphrase required",
-                    hide_input=True,
-                    default="",
-                    show_default=False,
-                )
-                # In case user sees the input on the screen, we do not need confirmation
-                if not CAN_HANDLE_HIDDEN_INPUT:
-                    return passphrase
-                second = prompt(
-                    "Confirm your passphrase",
-                    hide_input=True,
-                    default="",
-                    show_default=False,
-                )
-                if passphrase == second:
-                    return passphrase
-                else:
-                    echo("Passphrase did not match. Please try again.")
-            except click.Abort:
-                raise Cancelled from None
-
 
 class ScriptUI:
     """Interface to be used by scripts, not directly by user.
@@ -191,12 +151,12 @@ class ScriptUI:
 
     @staticmethod
     def button_request(br: messages.ButtonRequest) -> None:
-        # TODO: send name={br.name} when it will be supported
         code = br.code.name if br.code else None
-        print(f"?BUTTON code={code} pages={br.pages}")
+        print(f"?BUTTON code={code} pages={br.pages} name={br.name}")
 
     @staticmethod
-    def get_pin(code: Optional[PinMatrixRequestType] = None) -> str:
+    def get_pin(request: messages.PinMatrixRequest) -> str:
+        code = request.type
         if code is None:
             print("?PIN")
         else:
@@ -208,10 +168,11 @@ class ScriptUI:
         elif not pin.startswith(":"):
             raise RuntimeError("Sent PIN must start with ':'")
         else:
-            return pin[1:]
+            pin = pin[1:]
+            return pin
 
     @staticmethod
-    def get_passphrase(available_on_device: bool) -> Union[str, object]:
+    def get_passphrase(available_on_device: bool) -> str | object:
         if available_on_device:
             print("?PASSPHRASE available_on_device")
         else:
@@ -230,7 +191,7 @@ class ScriptUI:
 
 def mnemonic_words(
     expand: bool = False, language: str = "english"
-) -> Callable[[WordRequestType], str]:
+) -> t.Callable[[WordRequestType], str]:
     if expand:
         wordlist = Mnemonic(language).wordlist
     else:

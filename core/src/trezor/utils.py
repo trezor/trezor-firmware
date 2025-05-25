@@ -37,6 +37,10 @@ from trezorutils import (  # noqa: F401
 )
 from typing import TYPE_CHECKING
 
+DISABLE_ENCRYPTION: bool = False
+
+ALLOW_DEBUG_MESSAGES: bool = True
+
 if __debug__:
     from trezorutils import LOG_STACK_USAGE, check_free_heap, check_heap_fragmentation
 

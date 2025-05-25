@@ -650,17 +650,23 @@ if FROZEN:
         ] if not EVERYTHING else []
     ))
 
+    if THP:
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/thp/*.py'))
+    if not THP or PYOPT == '0':
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/codec/*.py'))
+
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/*.py',
         exclude=[
             SOURCE_PY_DIR + 'trezor/wire/wire_log.py'
         ] if PYOPT != '0' else []
     ))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/codec/*.py'))
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'storage/*.py',
         exclude=(
             ([SOURCE_PY_DIR + 'storage/sd_salt.py'] if 'sd_card' not in FEATURES_AVAILABLE else []) +
-            ([SOURCE_PY_DIR + 'storage/debug.py'] if PYOPT != '0' else [])
+            ([SOURCE_PY_DIR + 'storage/debug.py'] if PYOPT != '0' else []) +
+            ([SOURCE_PY_DIR + 'storage/cache_codec.py'] if THP and PYOPT != '0' else []) +
+            ([SOURCE_PY_DIR + 'storage/cache_thp.py'] if not THP else [])
         )
     ))
 

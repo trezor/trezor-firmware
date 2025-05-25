@@ -52,7 +52,9 @@ def test_backup_slip39_custom(
 
     assert features.initialized is False
 
-    device_handler.run(
+    session = device_handler.client.get_seedless_session()
+    device_handler.run_with_provided_session(
+        session,
         device.setup,
         strength=128,
         backup_type=messages.BackupType.Slip39_Basic,
@@ -71,7 +73,7 @@ def test_backup_slip39_custom(
     # retrieve the result to check that it's not a TrezorFailure exception
     device_handler.result()
 
-    device_handler.run(
+    device_handler.run_with_session(
         device.backup,
         group_threshold=group_threshold,
         groups=[(share_threshold, share_count)],
