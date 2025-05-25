@@ -23,7 +23,7 @@ const MAX_TABLE_PADDING: usize = 3;
 
 const INVALID_TRANSLATIONS_BLOB: Error = value_error!(c"Invalid translations blob");
 
-#[repr(packed)]
+#[repr(C, packed)]
 struct OffsetEntry {
     pub id: u16,
     pub offset: u16,

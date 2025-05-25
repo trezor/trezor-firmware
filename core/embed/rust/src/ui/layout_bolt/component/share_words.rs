@@ -36,7 +36,7 @@ impl<'a> ShareWords<'a> {
     }
 
     fn total_page_count(&self) -> usize {
-        (self.share_words.len() + WORDS_PER_PAGE - 1) / WORDS_PER_PAGE
+        self.share_words.len().div_ceil(WORDS_PER_PAGE)
     }
 }
 

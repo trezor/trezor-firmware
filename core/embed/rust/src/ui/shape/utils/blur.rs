@@ -243,8 +243,7 @@ impl<'a> BlurAlgorithm<'a> {
 
     /// Takes an input row and calculates the same-sized vector
     /// as the floating average of n subsequent elements where n = 2 * radius +
-    /// 1. Finally, it stores it into the specifed row in the  sliding
-    /// window.
+    /// 1. Finally, it stores it into the specified row in the sliding window.
     fn average_to_row<T>(&mut self, inp: &[T], row: usize)
     where
         T: Copy + Into<Rgb<u16>>,
