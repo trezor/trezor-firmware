@@ -41,7 +41,7 @@ jobs:
       # TODO: enable SD-related tests after fixing #4924
       # 5.5h pytest global timeout
       TESTOPTS: >-
-        -m 'not sd_card' -k 'not authenticate'
+        -m 'not sd_card'
         --durations=50
         --session-timeout 19800
         --retries=5

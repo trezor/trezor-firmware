@@ -41,6 +41,9 @@ ROOT_PUBLIC_KEY = {
 def test_authenticate_device(client: Client, challenge: bytes) -> None:
     # NOTE Applications must generate a random challenge for each request.
 
+    if not client.features.bootloader_locked:
+        pytest.xfail("unlocked bootloader")
+
     # Issue an AuthenticateDevice challenge to Trezor.
     proof = device.authenticate(client, challenge)
     certs = [x509.load_der_x509_certificate(cert) for cert in proof.certificates]
