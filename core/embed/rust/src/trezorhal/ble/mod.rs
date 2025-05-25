@@ -1,7 +1,10 @@
 #[cfg(feature = "micropython")]
 mod micropython;
 
-use crate::{error::Error, ui::event::BLEEvent};
+#[cfg(feature = "ui")]
+use crate::ui::event::BLEEvent;
+
+use crate::error::Error;
 use core::mem::size_of;
 
 use super::ffi;
@@ -23,6 +26,7 @@ fn prefix_utf8_bytes(text: &str, max_len: usize) -> &[u8] {
     &text.as_bytes()[..i]
 }
 
+#[cfg(feature = "ui")]
 pub fn ble_parse_event(event: ffi::ble_event_t) -> BLEEvent {
     match event.type_ {
         ffi::ble_event_type_t_BLE_CONNECTED => BLEEvent::Connected,

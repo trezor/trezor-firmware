@@ -144,7 +144,6 @@ def add_rust_lib(*, env, build, profile, features, all_paths, build_dir):
     def cargo_build():
         lib_features = []
         lib_features.extend(features)
-        lib_features.append("ui")
 
         cargo_opts = [
             f"--target={RUST_TARGET}",
