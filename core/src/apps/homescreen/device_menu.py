@@ -30,36 +30,18 @@ async def _prompt_auto_lock_delay() -> int:
 async def handle_device_menu() -> None:
     from trezor import strings
 
+    # TODO: unify with notification handling in `apps/homescreen/__init__.py:homescreen()`
+    failed_backup = (
+        storage.device.is_initialized() and storage.device.unfinished_backup()
+    )
     # MOCK DATA
-    failed_backup = True
     battery_percentage = 22
     paired_devices = ["Trezor Suite"]
     # ###
     firmware_version = ".".join(map(str, utils.VERSION))
     device_name = storage.device.get_label() or "Trezor"
-    # Determine appropriate unit and count for auto-lock delay
     auto_lock_ms = storage.device.get_autolock_delay_ms()
-    MS = 1000
-    MIN = MS * 60
-    HOUR = MIN * 60
-    DAY = HOUR * 24
-
-    if auto_lock_ms >= DAY:
-        auto_lock_num = auto_lock_ms // DAY
-        auto_lock_label = TR.plurals__lock_after_x_days
-    elif auto_lock_ms >= HOUR:
-        auto_lock_num = auto_lock_ms // HOUR
-        auto_lock_label = TR.plurals__lock_after_x_hours
-    elif auto_lock_ms >= MIN:
-        auto_lock_num = auto_lock_ms // MIN
-        auto_lock_label = TR.plurals__lock_after_x_minutes
-    else:
-        auto_lock_num = auto_lock_ms // MS
-        auto_lock_label = TR.plurals__lock_after_x_seconds
-
-    auto_lock_str = strings.format_plural(
-        "{count} {plural}", auto_lock_num, auto_lock_label
-    )
+    auto_lock_delay = strings.format_autolock_duration(auto_lock_ms)
 
     menu_result = await interact(
         trezorui_api.show_device_menu(
@@ -68,7 +50,7 @@ async def handle_device_menu() -> None:
             paired_devices=paired_devices,
             firmware_version=firmware_version,
             device_name=device_name,
-            auto_lock_delay=auto_lock_str,
+            auto_lock_delay=auto_lock_delay,
         ),
         "device_menu",
     )
