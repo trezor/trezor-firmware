@@ -1,5 +1,6 @@
 use super::ffi;
 
+#[cfg(feature = "ui")]
 use crate::ui::event::PMEvent;
 
 pub enum ChargingState {
@@ -8,6 +9,7 @@ pub enum ChargingState {
     Idle,
 }
 
+#[cfg(feature = "ui")]
 pub fn pm_parse_event(event: ffi::pm_event_t) -> PMEvent {
     let mut pm_event = PMEvent::default();
 
