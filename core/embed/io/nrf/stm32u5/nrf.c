@@ -839,6 +839,9 @@ bool nrf_reboot_to_bootloader(void) {
 
   systick_delay_ms(100);
 
+  HAL_GPIO_WritePin(NRF_OUT_STAY_IN_BLD_PORT, NRF_OUT_STAY_IN_BLD_PIN,
+                    GPIO_PIN_RESET);
+
   return true;
 }
 
