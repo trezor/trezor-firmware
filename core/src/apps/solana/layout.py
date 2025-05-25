@@ -10,7 +10,6 @@ from trezor.ui.layouts import (
     confirm_properties,
     confirm_solana_recipient,
     confirm_solana_tx,
-    confirm_value,
     show_danger,
     show_warning,
 )
@@ -137,8 +136,8 @@ async def confirm_instruction(
             # account included in the transaction directly
             if len(account_value) == 2:
                 account_description = f"{base58.encode(account_value[0])}"
-                if definitions.has_token(account_value[0]):
-                    token = definitions.get_token(account_value[0])
+                token = definitions.get_token(account_value[0])
+                if token is not None:
                     account_description = f"{token.name}\n{account_description}"
                 elif account_value[0] == signer_public_key:
                     account_description = f"{account_description} ({TR.words__signer})"
@@ -305,6 +304,7 @@ async def confirm_token_transfer(
     destination_account: bytes,
     token_account: bytes,
     token: SolanaTokenInfo,
+    is_unknown: bool,
     amount: int,
     decimals: int,
     fee: Fee,
@@ -322,16 +322,18 @@ async def confirm_token_transfer(
         items=items,
     )
 
-    value = token.name + "\n" + base58.encode(token.mint)
+    if is_unknown:
+        from trezor.ui.layouts import confirm_solana_unknown_token_warning
 
-    await confirm_value(
-        title=TR.words__token,
-        value=value,
-        description="",
-        br_name="confirm_token_address",
-        br_code=ButtonRequestType.ConfirmOutput,
-        verb=TR.buttons__continue,
-    )
+        await confirm_solana_unknown_token_warning()
+        await confirm_address(
+            title=TR.words__address,
+            subtitle=TR.solana__unknown_token,
+            address=base58.encode(token.mint),
+            verb=TR.buttons__continue,
+            br_name="confirm_token_address",
+            br_code=ButtonRequestType.ConfirmOutput,
+        )
 
     await confirm_custom_transaction(amount, decimals, token.symbol, fee, blockhash)
 

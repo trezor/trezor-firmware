@@ -123,6 +123,7 @@ async def try_confirm_token_transfer_transaction(
     blockhash: bytes,
     additional_info: AdditionalTxInfo,
 ) -> bool:
+    from .definitions import unknown_token
     from .layout import confirm_token_transfer
     from .token_account import try_get_token_account_base_address
 
@@ -155,10 +156,14 @@ async def try_confirm_token_transfer_transaction(
     )
 
     token = additional_info.definitions.get_token(token_mint)
+    is_unknown = token is None
+    if is_unknown:
+        token = unknown_token(token_mint)
     await confirm_token_transfer(
         token_account if base_address is None else base_address,
         token_account,
         token,
+        is_unknown,
         total_token_amount,
         transfer_token_instructions[0].decimals,
         fee,

@@ -2,6 +2,8 @@ from typing import TYPE_CHECKING
 
 from trezor.strings import format_amount, format_timestamp
 
+from .definitions import unknown_token
+
 if TYPE_CHECKING:
     from .definitions import Definitions
 
@@ -24,7 +26,7 @@ def format_token_amount(
     value: int, definitions: Definitions, decimals: int, mint: bytes
 ) -> str:
     formatted = format_amount(value, decimals=decimals)
-    token = definitions.get_token(mint)
+    token = definitions.get_token(mint) or unknown_token(mint)
     return f"{formatted} {token.symbol}"
 
 

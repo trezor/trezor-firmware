@@ -25,16 +25,13 @@ class Definitions:
 
         return cls(tokens)
 
-    def has_token(self, mint: bytes) -> bool:
-        return mint in self._tokens
+    def get_token(self, mint: bytes) -> SolanaTokenInfo | None:
+        return self._tokens.get(mint)
 
-    def get_token(self, mint: bytes) -> SolanaTokenInfo:
-        token = self._tokens.get(mint)
-        if token is not None:
-            return token
 
-        return SolanaTokenInfo(
-            mint=mint,
-            symbol="[UNKN]",
-            name="Unknown token",
-        )
+def unknown_token(mint: bytes) -> SolanaTokenInfo:
+    return SolanaTokenInfo(
+        mint=mint,
+        symbol="[UNKN]",
+        name="Unknown token",
+    )

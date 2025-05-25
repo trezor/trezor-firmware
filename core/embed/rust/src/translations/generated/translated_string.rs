@@ -1414,6 +1414,10 @@ pub enum TranslatedString {
     words__chain = 1012,  // "Chain"
     words__token = 1013,  // "Token"
     instructions__tap = 1014,  // "Tap"
+    #[cfg(feature = "universal_fw")]
+    solana__unknown_token = 1015,  // "Unknown token"
+    #[cfg(feature = "universal_fw")]
+    solana__unknown_token_address = 1016,  // "Unknown token address"
 }
 
 impl TranslatedString {
@@ -2821,6 +2825,10 @@ impl TranslatedString {
             (Self::words__chain, "Chain"),
             (Self::words__token, "Token"),
             (Self::instructions__tap, "Tap"),
+            #[cfg(feature = "universal_fw")]
+            (Self::solana__unknown_token, "Unknown token"),
+            #[cfg(feature = "universal_fw")]
+            (Self::solana__unknown_token_address, "Unknown token address"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3948,6 +3956,10 @@ impl TranslatedString {
         (Qstr::MP_QSTR_solana__transaction_fee, Self::solana__transaction_fee),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__transaction_requires_x_signers_template, Self::solana__transaction_requires_x_signers_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__unknown_token, Self::solana__unknown_token),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__unknown_token_address, Self::solana__unknown_token_address),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__unstake, Self::solana__unstake),
         #[cfg(feature = "universal_fw")]

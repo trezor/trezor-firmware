@@ -1062,6 +1062,11 @@ if not utils.BITCOIN_ONLY:
             br_code=br_code,
         )
 
+    def confirm_solana_unknown_token_warning() -> Awaitable[None]:
+        return show_danger(
+            "unknown_token_warning", content=TR.solana__unknown_token_address
+        )
+
     def confirm_solana_recipient(
         recipient: str,
         title: str,

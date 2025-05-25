@@ -799,6 +799,8 @@ class TR:
     solana__transaction_contains_unknown_instructions: str = "Transaction contains unknown instructions."
     solana__transaction_fee: str = "Transaction fee"
     solana__transaction_requires_x_signers_template: str = "Transaction requires {0} signers which increases the fee."
+    solana__unknown_token: str = "Unknown token"
+    solana__unknown_token_address: str = "Unknown token address"
     solana__unstake: str = "Unstake"
     solana__unstake_question: str = "Unstake SOL from stake account?"
     solana__vote_account: str = "Vote account"

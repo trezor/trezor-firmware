@@ -1013,5 +1013,7 @@
   "1011": "ethereum__approve_revoke_from",
   "1012": "words__chain",
   "1013": "words__token",
-  "1014": "instructions__tap"
+  "1014": "instructions__tap",
+  "1015": "solana__unknown_token",
+  "1016": "solana__unknown_token_address"
 }

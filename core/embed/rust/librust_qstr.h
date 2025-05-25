@@ -1159,6 +1159,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_solana__transaction_contains_unknown_instructions;
   MP_QSTR_solana__transaction_fee;
   MP_QSTR_solana__transaction_requires_x_signers_template;
+  MP_QSTR_solana__unknown_token;
+  MP_QSTR_solana__unknown_token_address;
   MP_QSTR_solana__unstake;
   MP_QSTR_solana__unstake_question;
   MP_QSTR_solana__vote_account;
