@@ -140,7 +140,7 @@ impl Component for Slip39Input {
                 .assert_if_debugging_ui("Text buffer is too small");
         } else {
             // Paint an asterisk for each letter of input.
-            for ch in iter::repeat('*').take(self.textbox.content().len()) {
+            for ch in iter::repeat_n('*', self.textbox.content().len()) {
                 text.push(ch)
                     .assert_if_debugging_ui("Text buffer is too small");
             }

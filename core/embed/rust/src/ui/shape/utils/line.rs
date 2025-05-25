@@ -1,18 +1,18 @@
-/// Iterator providing points on a line (using bresenham's algorithm)
-///
-/// The iterator supplies coordinates of pixels relative to the
-/// line's start point.
-///
-///  constraint: `du` >= `dv`, `start_u` < `du`
-///
-///  for p in line_points(du, dv, start_u) {
-///     println!("{}, {}", p.u, p.v); // coordinates <0,radius>..<du-1, dv-1>
-///     println!("{}", p.frac); // distance from the line <0..255>
-///     println!("{}", p.first); // `v` has changed
-///     println!("{}", p.last); // next `v` will change
-///  }
-///
-///  `u` axis is the main and increments at each iteration.
+//! Iterator providing points on a line (using bresenham's algorithm)
+//!
+//! The iterator supplies coordinates of pixels relative to the
+//! line's start point.
+//!
+//!  constraint: `du` >= `dv`, `start_u` < `du`
+//!
+//!  for p in line_points(du, dv, start_u) {
+//!     println!("{}, {}", p.u, p.v); // coordinates <0,radius>..<du-1, dv-1>
+//!     println!("{}", p.frac); // distance from the line <0..255>
+//!     println!("{}", p.first); // `v` has changed
+//!     println!("{}", p.last); // next `v` will change
+//!  }
+//!
+//!  `u` axis is the main and increments at each iteration.
 
 pub fn line_points(du: i16, dv: i16, start_u: i16) -> LinePoints {
     let mut d = 2 * du - 2 * dv;

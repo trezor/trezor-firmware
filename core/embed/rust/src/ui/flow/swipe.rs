@@ -276,7 +276,7 @@ impl SwipeFlow {
         match decision {
             Decision::Transition(new_state, attach) => {
                 self.goto(ctx, new_state, attach);
-                Some(LayoutState::Attached(ctx.button_request().take()))
+                Some(LayoutState::Attached(ctx.button_request()))
             }
             Decision::Return(msg) => {
                 ctx.set_transition_out(return_transition);
@@ -286,7 +286,7 @@ impl SwipeFlow {
                 Some(LayoutState::Done)
             }
             Decision::Nothing if matches!(event, Event::Attach(_)) => {
-                Some(LayoutState::Attached(ctx.button_request().take()))
+                Some(LayoutState::Attached(ctx.button_request()))
             }
             _ => None,
         }

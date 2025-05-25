@@ -387,7 +387,7 @@ impl SwipeDetect {
                             .duration(locked)
                             .unwrap_or(Duration::from_millis(Self::DURATION_MS));
 
-                        let duration = ((duration.to_millis() as f32 * ratio) as u32).max(0);
+                        let duration = (duration.to_millis() as f32 * ratio) as u32;
                         self.final_animation = Some(Animation::new(
                             self.moved,
                             final_value,
