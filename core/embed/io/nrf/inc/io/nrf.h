@@ -23,7 +23,6 @@
 
 #include <sha2.h>
 
-
 // maximum data size allowed to be sent
 #define NRF_MAX_TX_DATA_SIZE (244)
 
@@ -121,3 +120,9 @@ bool nrf_test_gpio_reserved(void);
 bool nrf_system_off(void);
 
 void nrf_reboot(void);
+
+void nrf_send_urt_data(const uint8_t *data, uint32_t len);
+
+bool nrf_update_required(const uint8_t *data, size_t len);
+
+bool nrf_update(const uint8_t *data, size_t len);

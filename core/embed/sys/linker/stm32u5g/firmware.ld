@@ -50,6 +50,8 @@ SECTIONS {
     *(.text*);
     . = ALIGN(4);
     *(.rodata*);
+    KEEP(*(.nrf_app));
+    *(.nrf_app*);
     . = ALIGN(512);
   } >FLASH AT>FLASH
 

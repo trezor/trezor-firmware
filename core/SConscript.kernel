@@ -247,6 +247,10 @@ env = Environment(
 
 FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
+if 'nrf' in FEATURES_AVAILABLE:
+    FEATURES_AVAILABLE.append('smp')
+    CPPDEFINES_HAL.append('USE_SMP')
+
 FEATURE_FLAGS["AES_GCM"] = FEATURE_FLAGS["AES_GCM"] or "tropic" in FEATURES_AVAILABLE
 
 # AES-GCM
@@ -397,6 +401,21 @@ linkerscript_gen = env.Command(
     source=[f'embed/models/{TREZOR_MODEL}/memory.ld', env.get('ENV')['LINKER_SCRIPT'].format(target='kernel')],
     action='$CAT $SOURCES > $TARGET',
 )
+
+#
+# Rust library
+#
+features = ['kernel',] + FEATURES_AVAILABLE
+
+rust = tools.add_rust_lib(
+    env=env,
+    build='kernel',
+    profile='release',
+    features=features,
+    all_paths=ALLPATHS,
+    build_dir=str(Dir('.').abspath),
+)
+
 
 program_elf = env.Command(
     target='kernel.elf',
