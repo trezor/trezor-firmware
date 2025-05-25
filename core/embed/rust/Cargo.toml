@@ -114,12 +114,12 @@ features = ["ufmt"]
 default_features = false
 
 [dependencies.num-traits]
-version = "0.2.18"
+version = "0.2.19"
 default_features = false
 features = ["libm"]
 
 [dependencies.num-derive]
-version = "0.3.3"
+version = "0.4.2"
 
 [dependencies.static-alloc]
 version = "0.2.4"

@@ -61,7 +61,7 @@ The protocol buffer compiler `protoc` is needed to (unsurprisingly) compile prot
 
 ## Rust
 
-You will require Rust and Cargo. The currently supported version is 1.64 nightly. The
+You will require Rust and Cargo. The currently supported version is 1.88 nightly. The
 recommended way to install both is with [`rustup`](https://rustup.rs/). Make sure you
 are up to date:
 
