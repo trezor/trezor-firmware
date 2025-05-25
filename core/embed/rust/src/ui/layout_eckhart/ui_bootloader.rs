@@ -191,7 +191,7 @@ impl BootloaderUI for UIEckhart {
         .with_footer(
             Label::centered(RECONNECT_MESSAGE.into(), TEXT_SMALL_GREY).vertically_centered(),
         )
-        .with_screen_border(SCREEN_BORDER_BLUE);
+        .with_screen_border(SCREEN_BORDER_RED);
 
         show(&mut screen, true);
     }
