@@ -80,7 +80,7 @@ pub fn new_confirm_with_menu<T: AllowedTextContent + MaybeTrace + 'static>(
     let mut value_screen = TextScreen::new(content)
         .with_header(Header::new(title).with_menu_button())
         .with_action_bar(ActionBar::new_single(confirm_button))
-        .with_subtitle(subtitle.unwrap_or(TString::empty()))
+        .with_subtitle(subtitle.unwrap_or(TString::empty()));
     if let Some(hint) = hint {
         value_screen = value_screen.with_hint(Hint::new_instruction(hint, Some(theme::ICON_INFO)));
     }
