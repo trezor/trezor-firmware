@@ -40,6 +40,7 @@
 #include <util/scm_revision.h>
 #include <util/unit_properties.h>
 #include "blake2s.h"
+#include "memzero.h"
 
 #if !defined(TREZOR_EMULATOR)
 #include <sec/secret.h>
@@ -333,31 +334,69 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_enable_oom_dump_obj,
                                  mod_trezorutils_enable_oom_dump);
 #endif  // MICROPY_OOM_CALLBACK
 
+static gc_info_t current_gc_info = {0};
+
 /// if __debug__:
-///     def check_free_heap(previous: int) -> int:
+///     def clear_gc_info() -> None:
 ///         """
-///         Assert that free heap memory doesn't decrease.
-///         Returns current free heap memory (in bytes).
+///         Clear GC heap stats.
+///         """
+STATIC mp_obj_t mod_trezorutils_clear_gc_info() {
+  memzero(&current_gc_info, sizeof(current_gc_info));
+  return mp_const_none;
+}
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_clear_gc_info_obj,
+                                 mod_trezorutils_clear_gc_info);
+
+/// if __debug__:
+///     def get_gc_info() -> dict[str, int]:
+///         """
+///         Get GC heap stats, updated by `update_gc_info`.
+///         """
+STATIC mp_obj_t mod_trezorutils_get_gc_info() {
+  mp_obj_t result = mp_obj_new_dict(4);
+  mp_obj_dict_store(result, MP_OBJ_NEW_QSTR(MP_QSTR_total),
+                    mp_obj_new_int_from_uint(current_gc_info.total));
+  mp_obj_dict_store(result, MP_OBJ_NEW_QSTR(MP_QSTR_used),
+                    mp_obj_new_int_from_uint(current_gc_info.used));
+  mp_obj_dict_store(result, MP_OBJ_NEW_QSTR(MP_QSTR_free),
+                    mp_obj_new_int_from_uint(current_gc_info.free));
+  mp_obj_dict_store(result, MP_OBJ_NEW_QSTR(MP_QSTR_max_free),
+                    mp_obj_new_int_from_uint(current_gc_info.max_free *
+                                             MICROPY_BYTES_PER_GC_BLOCK));
+  return result;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_get_gc_info_obj,
+                                 mod_trezorutils_get_gc_info);
+
+/// if __debug__:
+///     def update_gc_info() -> None:
+///         """
+///         Update current GC heap statistics.
+///         On emulator, also assert that free heap memory doesn't decrease.
 ///         Enabled only for frozen debug builds.
 ///         """
-STATIC mp_obj_t mod_trezorutils_check_free_heap(mp_obj_t arg) {
-  mp_uint_t free_heap = trezor_obj_get_uint(arg);
-#if MICROPY_MODULE_FROZEN_MPY && defined(TREZOR_EMULATOR)
+STATIC mp_obj_t mod_trezorutils_update_gc_info() {
+#if MICROPY_MODULE_FROZEN_MPY
+#ifdef TREZOR_EMULATOR
+  size_t prev_free = current_gc_info.free;
+#endif
+  gc_info(&current_gc_info);
   // Currently, it may misdetect on-heap buffers' data as valid heap
   // pointers (resulting in `gc_mark_subtree` false-positives).
-  gc_info_t info;
-  gc_info(&info);
-  if (free_heap > info.free) {
+#ifdef TREZOR_EMULATOR
+  if (prev_free > current_gc_info.free) {
     gc_dump_info();
     mp_raise_msg(&mp_type_AssertionError,
                  MP_ERROR_TEXT("Free heap size decreased"));
   }
-  free_heap = info.free;  // current free heap
 #endif
-  return mp_obj_new_int_from_uint(free_heap);
+#endif
+  return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_check_free_heap_obj,
-                                 mod_trezorutils_check_free_heap);
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_update_gc_info_obj,
+                                 mod_trezorutils_update_gc_info);
 
 /// if __debug__:
 ///     def check_heap_fragmentation() -> None:
@@ -615,8 +654,12 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_enable_oom_dump),
      MP_ROM_PTR(&mod_trezorutils_enable_oom_dump_obj)},
 #endif
-    {MP_ROM_QSTR(MP_QSTR_check_free_heap),
-     MP_ROM_PTR(&mod_trezorutils_check_free_heap_obj)},
+    {MP_ROM_QSTR(MP_QSTR_clear_gc_info),
+     MP_ROM_PTR(&mod_trezorutils_clear_gc_info_obj)},
+    {MP_ROM_QSTR(MP_QSTR_get_gc_info),
+     MP_ROM_PTR(&mod_trezorutils_get_gc_info_obj)},
+    {MP_ROM_QSTR(MP_QSTR_update_gc_info),
+     MP_ROM_PTR(&mod_trezorutils_update_gc_info_obj)},
     {MP_ROM_QSTR(MP_QSTR_check_heap_fragmentation),
      MP_ROM_PTR(&mod_trezorutils_check_heap_fragmentation_obj)},
 #endif
