@@ -18,7 +18,7 @@ pub mod button;
 #[cfg(feature = "touch")]
 pub mod touch;
 
-#[cfg(feature = "hw_jpeg_decoder")]
+#[cfg(all(feature = "ui", feature = "hw_jpeg_decoder"))]
 pub mod jpegdec;
 pub mod model;
 pub mod random;
@@ -44,3 +44,9 @@ pub mod power_manager;
 
 #[cfg(any(feature = "bootloader", feature = "prodtest"))]
 pub mod layout_buf;
+
+#[cfg(feature = "nrf")]
+pub mod irq;
+
+#[cfg(feature = "nrf")]
+pub mod nrf;

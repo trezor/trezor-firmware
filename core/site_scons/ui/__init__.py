@@ -28,6 +28,7 @@ def init_ui(
 ):
     conf = models.get_model_ui_conf(model)
     get_ui_module(model, stage).init_ui(stage, conf, rust_features)
+    rust_features.append("ui")
 
 
 def get_ui_layout(model: str):
