@@ -21,6 +21,9 @@
 
 #include <trezor_types.h>
 
+#include <sha2.h>
+
+
 // maximum data size allowed to be sent
 #define NRF_MAX_TX_DATA_SIZE (244)
 
@@ -51,6 +54,8 @@ typedef struct {
   bool in_stay_in_bootloader;
   bool reserved2;
   bool out_wakeup;
+
+  uint8_t hash[SHA256_DIGEST_LENGTH];
 } nrf_info_t;
 
 typedef void (*nrf_rx_callback_t)(const uint8_t *data, uint32_t len);

@@ -164,7 +164,7 @@ void nrf_management_rx_cb(const uint8_t *data, uint32_t len) {
   switch (data[0]) {
     case MGMT_RESP_INFO:
       drv->info_valid = true;
-      memcpy(&drv->info, &data[1], sizeof(drv->info));
+      memcpy(&drv->info, &data[1], MIN(len - 1, sizeof(nrf_info_t)));
       break;
     default:
       break;
