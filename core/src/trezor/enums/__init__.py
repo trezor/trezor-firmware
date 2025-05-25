@@ -435,6 +435,9 @@ if TYPE_CHECKING:
         DebugLinkWatchLayout = 9006
         DebugLinkResetDebugEvents = 9007
         DebugLinkOptigaSetSecMax = 9008
+        DebugLinkGetGcInfo = 9009
+        DebugLinkGcInfoItem = 9010
+        DebugLinkGcInfo = 9011
         EthereumGetPublicKey = 450
         EthereumPublicKey = 451
         EthereumGetAddress = 56

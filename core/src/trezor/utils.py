@@ -38,7 +38,13 @@ from trezorutils import (  # noqa: F401
 from typing import TYPE_CHECKING
 
 if __debug__:
-    from trezorutils import LOG_STACK_USAGE, check_free_heap, check_heap_fragmentation
+    from trezorutils import get_gc_info  # noqa: F401
+    from trezorutils import (
+        LOG_STACK_USAGE,
+        check_heap_fragmentation,
+        clear_gc_info,
+        update_gc_info,
+    )
 
     if LOG_STACK_USAGE:
         from trezorutils import estimate_unused_stack, zero_unused_stack  # noqa: F401
@@ -95,8 +101,7 @@ def unimport_end(mods: set[str], collect: bool = True) -> None:
 class unimport:
     def __init__(self) -> None:
         self.mods: set[str] | None = None
-        if __debug__:
-            self.free_heap = 0
+        clear_gc_info()
 
     def __enter__(self) -> None:
         self.mods = unimport_begin()
@@ -108,11 +113,11 @@ class unimport:
         self.mods = None
         gc.collect()
 
-        # If an exception is being handled here, `check_free_heap()` will fail
-        # (since the exception survives `gc.collect()` call above).
+        # If an exception is being handled here, `update_gc_info()` internal assertion
+        #  will fail (since the exception survives `gc.collect()` call above).
         # So we prefer to skip the check, in order to preserve the exception.
         if __debug__ and exc_type is None:
-            self.free_heap = check_free_heap(self.free_heap)
+            update_gc_info()
 
 
 if __debug__:
