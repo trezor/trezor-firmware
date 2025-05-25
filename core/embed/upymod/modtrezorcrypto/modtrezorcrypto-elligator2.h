@@ -33,7 +33,7 @@ mp_obj_t mod_trezorcrypto_elligator2_map_to_curve25519(mp_obj_t input) {
   mp_buffer_info_t input_buffer_info = {0};
   mp_get_buffer_raise(input, &input_buffer_info, MP_BUFFER_READ);
   if (input_buffer_info.len != 32) {
-    mp_raise_ValueError("Invalid input length");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid input length"));
   }
 
   vstr_t output_vstr = {0};
