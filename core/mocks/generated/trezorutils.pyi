@@ -116,10 +116,20 @@ if __debug__:
         Dump GC info in case of an OOM.
         """
 if __debug__:
-    def check_free_heap(previous: int) -> int:
+    def clear_gc_info() -> None:
         """
-        Assert that free heap memory doesn't decrease.
-        Returns current free heap memory (in bytes).
+        Clear GC heap stats.
+        """
+if __debug__:
+    def get_gc_info() -> dict[str, int]:
+        """
+        Get GC heap stats, updated by `update_gc_info`.
+        """
+if __debug__:
+    def update_gc_info() -> None:
+        """
+        Update current GC heap statistics.
+        On emulator, also assert that free heap memory doesn't decrease.
         Enabled only for frozen debug builds.
         """
 if __debug__:

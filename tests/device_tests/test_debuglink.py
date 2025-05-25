@@ -92,3 +92,12 @@ def test_softlock_instability(client: Client):
     # If the device actually called config.unlock(), it would use additional randomness.
     # That is undesirable. Assert that the returned entropy is still the same.
     assert misc.get_entropy(client, 16) == entropy_after_wipe
+
+
+@pytest.mark.models("core")
+def test_gc_info(client: Client):
+    client.debug.check_gc_info()
+    gc_info = client.debug.prev_gc_info
+    assert gc_info["free"] + gc_info["used"] == gc_info["total"]
+    assert gc_info["free"] >= 0.5 * gc_info["total"]
+    assert gc_info["max_free"] >= 0.5 * gc_info["total"]
