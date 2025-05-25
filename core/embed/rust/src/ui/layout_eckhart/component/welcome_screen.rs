@@ -1,8 +1,10 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Never},
-    geometry::{Alignment, Offset, Rect},
-    shape,
-    shape::Renderer,
+use crate::{
+    trezorhal::model,
+    ui::{
+        component::{Component, Event, EventCtx, Never},
+        geometry::{Alignment, Offset, Rect},
+        shape::{self, Renderer},
+    },
 };
 
 use super::super::{
@@ -50,13 +52,10 @@ impl Component for WelcomeScreen {
     }
 }
 
-#[cfg(not(feature = "bootloader"))]
-use crate::trezorhal::model;
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for WelcomeScreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("WelcomeScreen");
-        #[cfg(not(feature = "bootloader"))]
         t.string("model", model::FULL_NAME.into());
     }
 }
