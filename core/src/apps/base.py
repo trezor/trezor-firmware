@@ -27,6 +27,17 @@ if TYPE_CHECKING:
     )
     from trezor.wire import Handler, Msg
 
+    if utils.USE_THP:
+        from trezor.messages import (
+            Failure,
+            ThpCreateNewSession,
+            ThpCredentialRequest,
+            ThpCredentialResponse,
+        )
+
+if utils.USE_THP:
+    from trezor.enums import ThpMessageType
+
 
 _SCREENSAVER_IS_ON = False
 
@@ -210,33 +221,172 @@ def get_features() -> Features:
     return f
 
 
-async def handle_Initialize(msg: Initialize) -> Features:
-    import storage.cache_codec as cache_codec
+if utils.USE_THP:
 
-    session_id = cache_codec.start_session(msg.session_id)
+    async def handle_ThpCreateNewSession(
+        message: ThpCreateNewSession,
+    ) -> Success | Failure:
+        """
+        Creates a new `ThpSession` based on the provided parameters and returns a
+        `Success` message on success.
 
-    if not utils.BITCOIN_ONLY:
-        from storage.cache_common import APP_COMMON_DERIVE_CARDANO
+        Returns an appropriate `Failure` message if session creation fails.
+        """
+        from trezor import log, loop
+        from trezor.enums import FailureType
+        from trezor.messages import Failure
+        from trezor.wire import NotInitialized
+        from trezor.wire.context import get_context
+        from trezor.wire.errors import ActionCancelled, DataError
+        from trezor.wire.thp.session_context import GenericSessionContext
+        from trezor.wire.thp.session_manager import get_new_session_context
 
-        derive_cardano = context.cache_get_bool(APP_COMMON_DERIVE_CARDANO)
-        have_seed = context.cache_is_set(APP_COMMON_SEED)
-        if (
-            have_seed
-            and msg.derive_cardano is not None
-            and msg.derive_cardano != bool(derive_cardano)
-        ):
-            # seed is already derived, and host wants to change derive_cardano setting
-            # => create a new session
-            cache_codec.end_current_session()
-            session_id = cache_codec.start_session()
-            have_seed = False
+        from apps.common.seed import derive_and_store_roots
 
-        if not have_seed:
-            context.cache_set_bool(APP_COMMON_DERIVE_CARDANO, bool(msg.derive_cardano))
+        ctx = get_context()
 
-    features = get_features()
-    features.session_id = session_id
-    return features
+        # Assert that context `ctx` is `GenericSessionContext`
+        assert isinstance(ctx, GenericSessionContext)
+
+        channel = ctx.channel
+        session_id = ctx.session_id
+
+        # Do not use `ctx` beyond this point, as it is techically
+        # allowed to change in between await statements
+
+        if not 0 <= session_id <= 255:
+            return Failure(
+                code=FailureType.DataError,
+                message="Invalid session_id for session creation.",
+            )
+
+        new_session = get_new_session_context(
+            channel_ctx=channel, session_id=session_id
+        )
+        try:
+            await unlock_device()
+            await derive_and_store_roots(new_session, message)
+        except DataError as e:
+            return Failure(code=FailureType.DataError, message=e.message)
+        except ActionCancelled as e:
+            return Failure(code=FailureType.ActionCancelled, message=e.message)
+        except NotInitialized as e:
+            return Failure(code=FailureType.NotInitialized, message=e.message)
+        # TODO handle other errors (`Exception` when "Cardano icarus secret is already set!")
+
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
+            log.debug(
+                __name__,
+                "New session with sid %d and passphrase %s created.",
+                session_id,
+                message.passphrase if message.passphrase is not None else "",
+            )
+
+        channel.sessions[new_session.session_id] = new_session
+        loop.schedule(new_session.handle())
+
+        return Success(message="New session created.")
+
+    async def handle_ThpCredentialRequest(
+        message: ThpCredentialRequest,
+    ) -> ThpCredentialResponse | Failure:
+        from trezor.messages import ThpCredentialMetadata, ThpCredentialResponse
+        from trezor.wire.context import get_context
+        from trezor.wire.thp import crypto
+        from trezor.wire.thp.session_context import GenericSessionContext
+
+        from apps.thp.credential_manager import (
+            decode_credential,
+            issue_credential,
+            validate_credential,
+        )
+
+        ctx = get_context()
+
+        # Assert that context `ctx` is `GenericSessionContext`
+        assert isinstance(ctx, GenericSessionContext)
+
+        # Check that request contains a host static pubkey
+        if message.host_static_pubkey is None:
+            return _get_autoconnect_failure(
+                "Credential request must contain a host static pubkey."
+            )
+
+        # Check that request contains valid credential
+        if message.credential is None:
+            return _get_autoconnect_failure(
+                "Credential request must contain a previously issued pairing credential."
+            )
+        credential = decode_credential(message.credential)
+        if not validate_credential(credential, message.host_static_pubkey):
+            return _get_autoconnect_failure(
+                "Credential request contains an invalid pairing credential."
+            )
+
+        autoconnect = False
+        if message.autoconnect is not None:
+            autoconnect = message.autoconnect
+
+        assert credential.cred_metadata is not None
+        cred_metadata = ThpCredentialMetadata(
+            host_name=credential.cred_metadata.host_name, autoconnect=autoconnect
+        )
+        if autoconnect:
+            from trezor.wire.thp import ui
+
+            await ui.show_autoconnect_credential_confirmation_screen(
+                ctx, cred_metadata.host_name
+            )
+        new_cred = issue_credential(
+            host_static_pubkey=message.host_static_pubkey,
+            credential_metadata=cred_metadata,
+        )
+        trezor_static_pubkey = crypto.get_trezor_static_pubkey()
+
+        return ThpCredentialResponse(
+            trezor_static_pubkey=trezor_static_pubkey, credential=new_cred
+        )
+
+    def _get_autoconnect_failure(msg: str) -> Failure:
+        from trezor.enums import FailureType
+        from trezor.messages import Failure
+
+        return Failure(
+            code=FailureType.DataError,
+            message=msg,
+        )
+
+else:
+
+    async def handle_Initialize(msg: Initialize) -> Features:
+        import storage.cache_codec as cache_codec
+
+        session_id = cache_codec.start_session(msg.session_id)
+
+        if not utils.BITCOIN_ONLY:
+            from storage.cache_common import APP_COMMON_DERIVE_CARDANO
+
+            derive_cardano = context.cache_get_bool(APP_COMMON_DERIVE_CARDANO)
+            have_seed = context.cache_is_set(APP_COMMON_SEED)
+            if (
+                have_seed
+                and msg.derive_cardano is not None
+                and msg.derive_cardano != bool(derive_cardano)
+            ):
+                # seed is already derived, and host wants to change derive_cardano setting
+                # => create a new session
+                cache_codec.end_current_session()
+                session_id = cache_codec.start_session()
+                have_seed = False
+
+            if not have_seed:
+                context.cache_set_bool(
+                    APP_COMMON_DERIVE_CARDANO, bool(msg.derive_cardano)
+                )
+
+        features = get_features()
+        features.session_id = session_id
+        return features
 
 
 async def handle_GetFeatures(msg: GetFeatures) -> Features:
@@ -470,8 +620,15 @@ def boot() -> None:
     MT = MessageType  # local_cache_global
 
     # Register workflow handlers
+    if utils.USE_THP:
+        TMT = ThpMessageType
+        workflow_handlers.register(TMT.ThpCreateNewSession, handle_ThpCreateNewSession)
+        workflow_handlers.register(
+            TMT.ThpCredentialRequest, handle_ThpCredentialRequest
+        )
+    else:
+        workflow_handlers.register(MT.Initialize, handle_Initialize)
     for msg_type, handler in [
-        (MT.Initialize, handle_Initialize),
         (MT.GetFeatures, handle_GetFeatures),
         (MT.Cancel, handle_Cancel),
         (MT.LockDevice, handle_LockDevice),

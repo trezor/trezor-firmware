@@ -19,6 +19,7 @@ import time
 import pytest
 
 from trezorlib import device, messages
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ..common import get_test_address
@@ -31,40 +32,44 @@ def test_wipe_device(client: Client):
     assert client.features.initialized is True
     assert client.features.label == "test"
     assert client.features.passphrase_protection is True
-    device_id = client.get_device_id()
+    device_id = client.features.device_id
 
-    device.wipe(client)
-
+    device.wipe(client.get_session())
+    client = client.get_new_client()
     assert client.features.initialized is False
     assert client.features.label is None
     assert client.features.passphrase_protection is False
-    assert client.get_device_id() != device_id
+    assert client.features.device_id != device_id
 
 
 @pytest.mark.setup_client(pin=PIN4)
-def test_autolock_not_retained(client: Client):
-    with client:
-        client.use_pin_sequence([PIN4])
-        device.apply_settings(client, auto_lock_delay_ms=10_000)
+def test_autolock_not_retained(session: Session):
+    client = session.client
+    client.use_pin_sequence([PIN4])
+    device.apply_settings(session, auto_lock_delay_ms=10_000)
 
-    assert client.features.auto_lock_delay_ms == 10_000
+    assert session.features.auto_lock_delay_ms == 10_000
 
-    device.wipe(client)
+    device.wipe(session)
+    client = client.get_new_client()
+    session = client.get_seedless_session()
+
     assert client.features.auto_lock_delay_ms > 10_000
 
-    with client:
-        client.use_pin_sequence([PIN4, PIN4])
-        device.setup(
-            client,
-            skip_backup=True,
-            pin_protection=True,
-            passphrase_protection=False,
-            entropy_check_count=0,
-            backup_type=messages.BackupType.Bip39,
-        )
+    client.use_pin_sequence([PIN4, PIN4])
+    device.setup(
+        session,
+        skip_backup=True,
+        pin_protection=True,
+        passphrase_protection=False,
+        entropy_check_count=0,
+        backup_type=messages.BackupType.Bip39,
+    )
 
     time.sleep(10.5)
-    with client:
+    session = client.get_session()
+
+    with session.client as client:
         # after sleeping for the pre-wipe autolock amount, Trezor must still be unlocked
         client.set_expected_responses([messages.Address])
-        get_test_address(client)
+        get_test_address(session)
