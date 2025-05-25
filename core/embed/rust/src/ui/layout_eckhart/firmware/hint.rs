@@ -19,7 +19,6 @@ use super::{super::fonts, theme};
 ///
 /// The instruction has adaptive height, depending on the text length. The
 /// PageCounter is always of minimal component height (40px).
-#[derive(Clone)]
 pub struct Hint<'a> {
     area: Rect,
     content: HintContent<'a>,
@@ -29,7 +28,6 @@ pub struct Hint<'a> {
     dir: Direction,
 }
 
-#[derive(Clone)]
 #[allow(clippy::large_enum_variant)]
 enum HintContent<'a> {
     Instruction(Instruction<'a>),
