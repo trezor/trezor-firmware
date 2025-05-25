@@ -1,20 +1,20 @@
-/// Iterator providing points for 1/8th of a circle (single octant)
-///
-/// The iterator supplies coordinates of pixels relative to the
-/// circle's center point, along with an alpha value in
-/// the range (0..255), indicating the proportion of the pixel
-/// that lies inside the circle.
-///
-///  for p in circle_points(radius) {
-///     println!("{}, {}", p.u, p.v); // coordinates <0,radius>..<see_below>
-///     println!("{}", p.frac); // distance from the circle <0..255>
-///     println!("{}", p.first); // `v` has changed
-///     println!("{}", p.last); // next `v` will change
-///  }
-///
-///  `u` axis is the main and increments at each iteration.
-///
-/// endpoint [t, t] or [t - 1, t] where t = radius * (1 / sqrt(2))
+//! Iterator providing points for 1/8th of a circle (single octant)
+//!
+//! The iterator supplies coordinates of pixels relative to the
+//! circle's center point, along with an alpha value in
+//! the range (0..255), indicating the proportion of the pixel
+//! that lies inside the circle.
+//!
+//!  for p in circle_points(radius) {
+//!     println!("{}, {}", p.u, p.v); // coordinates <0,radius>..<see_below>
+//!     println!("{}", p.frac); // distance from the circle <0..255>
+//!     println!("{}", p.first); // `v` has changed
+//!     println!("{}", p.last); // next `v` will change
+//!  }
+//!
+//!  `u` axis is the main and increments at each iteration.
+//!
+//! endpoint [t, t] or [t - 1, t] where t = radius * (1 / sqrt(2))
 
 pub fn circle_points(radius: i16) -> CirclePoints {
     CirclePoints {

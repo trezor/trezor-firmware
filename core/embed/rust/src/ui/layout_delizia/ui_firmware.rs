@@ -122,7 +122,6 @@ impl FirmwareUI for UIDelizia {
             .with_hold(hold)
             .into_flow()
             .and_then(LayoutObj::new_root)
-            .map(Into::into)
     }
 
     fn confirm_value_intro(
@@ -149,7 +148,6 @@ impl FirmwareUI for UIDelizia {
             .with_hold(hold)
             .into_flow()
             .and_then(LayoutObj::new_root)
-            .map(Into::into)
     }
 
     fn confirm_homescreen(

@@ -8,6 +8,7 @@
 #![allow(dead_code)]
 #![feature(lang_items)]
 #![feature(optimize_attribute)]
+#![feature(trait_alias)]
 
 #[macro_use]
 extern crate num_derive;
