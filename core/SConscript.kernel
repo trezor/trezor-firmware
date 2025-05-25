@@ -311,6 +311,7 @@ env.Replace(
 
 ALLPATHS = [
         '.',
+        'embed/rust',
         'embed/projects/firmware',
         'embed/rtl/inc',
         'embed/models',
@@ -332,8 +333,8 @@ env.Replace(
     '-ffreestanding '
     '-fstack-protector-all '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
-    LINKFLAGS=f'-T build/kernel/{env.get("ENV")["MEMORY_LAYOUT"]} -Wl,--gc-sections -Wl,--print-memory-usage '
-        ' -Wl,-Map=build/kernel/kernel.map -Wl,--warn-common -Wl,--undefined=__errno',
+    LINKFLAGS=[f'-Tbuild/kernel/{env.get("ENV")["MEMORY_LAYOUT"]}', '-Wl,--gc-sections', '-Wl,--print-memory-usage',
+        '-Wl,-Map=build/kernel/kernel.map', '-Wl,--warn-common', '-Wl,--undefined=__errno'],
     CPPPATH=ALLPATHS,
     CPPDEFINES=[
         'KERNEL',
@@ -430,6 +431,21 @@ linkerscript_gen = env.Command(
     action='$CAT $SOURCES > $TARGET',
 )
 
+#
+# Rust library
+#
+features = FEATURES_AVAILABLE
+
+rust = tools.add_rust_lib(
+    env=env,
+    build='kernel',
+    profile='release',
+    features=features,
+    all_paths=ALLPATHS,
+    build_dir=str(Dir('.').abspath),
+)
+
+
 if "secmon_layout" in FEATURES_AVAILABLE:
     SECMON_LIB = 'build/secmon/secmon_api.o'
 else:
@@ -444,6 +460,7 @@ program_elf = env.Command(
 )
 
 env.Depends(program_elf, linkerscript_gen)
+env.Depends(program_elf, rust)
 
 if CMAKELISTS != 0:
     env.Depends(program_elf, cmake_gen)
