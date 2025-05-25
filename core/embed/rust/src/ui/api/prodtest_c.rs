@@ -5,9 +5,9 @@ use crate::{
     },
     ui::{
         ui_prodtest::{ProdtestLayoutType, ProdtestUI},
-        util::from_c_array,
         ModelUI,
     },
+    util::from_c_array,
 };
 
 #[cfg(feature = "touch")]

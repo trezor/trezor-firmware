@@ -3,9 +3,7 @@
 
 use crate::ui::{CommonUI, ModelUI};
 
-use crate::ui::shape;
-
-use crate::ui::util::from_c_str;
+use crate::{ui::shape, util::from_c_str};
 
 #[no_mangle]
 extern "C" fn display_rsod_rust(
