@@ -57,14 +57,16 @@ pub fn format_i64(num: i64, buffer: &mut [u8]) -> Option<&str> {
 
 /// Format the BLE pairing code with zero-padding so that it always has a width
 /// of 6 digits.
+#[cfg(feature = "ble")]
 pub fn format_pairing_code(code: u32) -> ShortString {
+    use crate::trezorhal::ble::PAIRING_CODE_LEN;
+
     let mut buf = [0; 20];
     let code_str = unwrap!(format_i64(code as _, &mut buf));
 
-    let width: usize = 6;
     let mut formatted_code = ShortString::new();
     // Add leading zeros
-    for _ in 0..width.saturating_sub(code_str.len()) {
+    for _ in 0..PAIRING_CODE_LEN.saturating_sub(code_str.len()) {
         unwrap!(formatted_code.push('0'));
     }
     // Add the actual digits
@@ -300,6 +302,7 @@ impl ufmt::uDebug for TString<'_> {
 mod tests {
 
     #[test]
+    #[cfg(all(test, feature = "ble"))]
     fn test_format_code() {
         use super::format_pairing_code;
         // Test normal cases with different digit counts
