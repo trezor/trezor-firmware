@@ -161,11 +161,6 @@ def confirm_multisig_different_paths_warning() -> Awaitable[None]:
 def confirm_homescreen(
     image: bytes,
 ) -> Awaitable[None]:
-
-    from trezor import workflow
-
-    workflow.close_others()
-
     return raise_if_not_confirmed(
         trezorui_api.confirm_homescreen(
             title=TR.homescreen__title_set,
