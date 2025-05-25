@@ -479,6 +479,7 @@ impl ValueInput for DurationInput {
             (self.duration.to_days(), TR::plurals__lock_after_x_days),
             (self.duration.to_hours(), TR::plurals__lock_after_x_hours),
             (self.duration.to_mins(), TR::plurals__lock_after_x_minutes),
+            (self.duration.to_secs(), TR::plurals__lock_after_x_seconds),
         ];
 
         for &(count, tr) in &units {
@@ -489,11 +490,8 @@ impl ValueInput for DurationInput {
             }
         }
 
-        // Fallback to seconds if all are 0
-        let count = self.duration.to_secs();
-        let plural = TString::from_translation(TR::plurals__lock_after_x_seconds)
-            .map(|template| plural_form(template, count));
-        (count, Some(plural))
+        // This should never be reached unless duration is exactly 0
+        (0, None)
     }
 
     fn increment(&mut self) {

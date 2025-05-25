@@ -82,20 +82,22 @@ pub fn format_pairing_code(code: u32, width: usize) -> ShortString {
 /// * `count` - The numeric count to select the correct plural form.
 ///
 /// # Returns
-/// A `ShortString` containing the correct plural form.
-///
-/// # Panics
-/// Panics if:
-/// - The `template` has fewer than two forms.
-/// - Conversion to `ShortString` fails (via `unwrap!`).
+/// A `ShortString` containing the correct plural form, or an empty
+/// `ShortString` if the template is malformed or conversion fails.
 pub fn plural_form(template: &str, count: u32) -> ShortString {
+    // If no separator found, return the whole template (fallback behavior)
+    if !template.contains('|') {
+        return ShortString::try_from(template).unwrap_or_default();
+    }
+
     // Split the template by '|' into components
     let mut parts = template.split('|');
 
-    // First form (singular), must exist
-    let first = unwrap!(parts.next().ok_or(()));
-    // Second form (plural or few), must exist
-    let second = unwrap!(parts.next().ok_or(()));
+    // Get the required first two parts
+    let (first, second) = match (parts.next(), parts.next()) {
+        (Some(first), Some(second)) => (first, second),
+        _ => return ShortString::default(),
+    };
     // Third form (many), optional
     let third = parts.next();
 
@@ -121,8 +123,8 @@ pub fn plural_form(template: &str, count: u32) -> ShortString {
         }
     };
 
-    // Convert the selected form into ShortString, panicking if it fails
-    unwrap!(ShortString::try_from(selected))
+    // Convert safely, returning empty string on failure
+    ShortString::try_from(selected).unwrap_or_default()
 }
 
 #[derive(Copy, Clone)]
@@ -334,8 +336,12 @@ mod tests {
     #[test]
     fn test_plural_form() {
         use super::plural_form;
+        // malformed templete, returns empty string
+        assert_eq!(plural_form("day", 1).as_str(), "day");
+        // simple singular/plural
         assert_eq!(plural_form("day|days", 1).as_str(), "day");
         assert_eq!(plural_form("day|days", 3).as_str(), "days");
+        // Czech-style singular/few/many
         assert_eq!(plural_form("den|dny|dní", 1).as_str(), "den");
         assert_eq!(plural_form("den|dny|dní", 3).as_str(), "dny");
         assert_eq!(plural_form("den|dny|dní", 5).as_str(), "dní");
