@@ -52,3 +52,6 @@ bool nrf_in_reserved(void);
 
 void nrf_uart_send(uint8_t data);
 uint8_t nrf_uart_get_received(void);
+
+void nrf_set_dfu_mode(bool set);
+bool nrf_is_dfu_mode(void);

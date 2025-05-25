@@ -208,6 +208,16 @@ secbool ble_read__verified(uint8_t *data, size_t len);
 #endif
 
 // ---------------------------------------------------------------------
+#ifdef USE_NRF
+
+#include <io/nrf.h>
+
+bool nrf_update_required__verified(const uint8_t *data, size_t len);
+
+bool nrf_update__verified(const uint8_t *data, size_t len);
+
+#endif
+// ---------------------------------------------------------------------
 
 #ifdef USE_POWER_MANAGER
 

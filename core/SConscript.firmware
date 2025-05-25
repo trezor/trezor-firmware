@@ -831,6 +831,7 @@ protobuf_blobs = env.Command(
 )
 env.Depends(protobuf_blobs, qstr_generated)
 
+
 #
 # Rust library
 #
@@ -891,7 +892,14 @@ tools.embed_raw_binary(
         f'build/kernel/kernel.bin',
         )
 
-
+if 'nrf' in FEATURES_AVAILABLE:
+    tools.embed_raw_binary(
+            obj_program,
+            env,
+            'nrf_app',
+            'build/firmware/nrf_app.o',
+            f'embed/models/{TREZOR_MODEL}/trezor-ble.bin',
+            )
 
 env.Depends(obj_program, qstr_generated)
 

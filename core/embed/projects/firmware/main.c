@@ -44,6 +44,15 @@
 #include "zkp_context.h"
 #endif
 
+#ifdef USE_NRF
+#include <io/nrf.h>
+
+extern const void nrf_app_start;
+extern const void nrf_app_end;
+extern const void nrf_app_size;
+
+#endif
+
 int main_func(uint32_t cmd, void *arg) {
   if (cmd == 1) {
     systask_postmortem_t *info = (systask_postmortem_t *)arg;
@@ -51,7 +60,17 @@ int main_func(uint32_t cmd, void *arg) {
     system_exit(0);
   }
 
-  screen_boot_stage_2(DISPLAY_JUMP_BEHAVIOR == DISPLAY_RESET_CONTENT);
+  bool fading = DISPLAY_JUMP_BEHAVIOR == DISPLAY_RESET_CONTENT;
+
+#ifdef USE_NRF
+  if (nrf_update_required(&nrf_app_start, (size_t)&nrf_app_size)) {
+    screen_update();
+    nrf_update(&nrf_app_start, (size_t)&nrf_app_size);
+    fading = true;
+  }
+#endif
+
+  screen_boot_stage_2(fading);
 
 #ifdef USE_SECP256K1_ZKP
   ensure(sectrue * (zkp_context_init() == 0), NULL);

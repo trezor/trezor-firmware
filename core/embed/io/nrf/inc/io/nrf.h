@@ -23,7 +23,6 @@
 
 #include <sha2.h>
 
-
 // maximum data size allowed to be sent
 #define NRF_MAX_TX_DATA_SIZE (244)
 
@@ -58,66 +57,170 @@ typedef struct {
   uint8_t hash[SHA256_DIGEST_LENGTH];
 } nrf_info_t;
 
+/** Callback type invoked when data is received on a registered service */
 typedef void (*nrf_rx_callback_t)(const uint8_t *data, uint32_t len);
+
+/** Callback type invoked when a message transmission completes */
 typedef void (*nrf_tx_callback_t)(nrf_status_t status, void *context);
 
-// Initialize the NRF driver
+/**
+ * @brief Initialize the NRF driver.
+ */
 void nrf_init(void);
 
-// Deinitialize the NRF driver
+/**
+ * @brief Deinitialize the NRF driver.
+ */
 void nrf_deinit(void);
 
-// Suspend NRF driver
+/**
+ * @brief Suspend the NRF driver.
+ */
 void nrf_suspend(void);
 
-// Check that NRF is running
+/**
+ * @brief Check if the NRF communication is currently running.
+ *
+ * @return true if running, false otherwise
+ */
 bool nrf_is_running(void);
 
-// Register listener for a service
-// The listener will be called when a message is received for the service
-// The listener will be called from an interrupt context
-// Returns false if a listener for the service is already registered
+/**
+ * @brief Register a listener for a specific NRF service.
+ *
+ * The listener callback will be invoked from an interrupt context when a
+ * message is received for the specified service.
+ *
+ * @param service  Service identifier to register for
+ * @param callback Function to call when data arrives
+ * @return false if a listener for the service is already registered, true
+ * otherwise
+ */
 bool nrf_register_listener(nrf_service_id_t service,
                            nrf_rx_callback_t callback);
 
-// Unregister listener for a service
+/**
+ * @brief Unregister the listener for a specific NRF service.
+ *
+ * @param service  Service identifier to unregister
+ */
 void nrf_unregister_listener(nrf_service_id_t service);
 
-// Send a message to a service
-// The message will be queued and sent as soon as possible
-// If the queue is full, the message will be dropped
-// returns ID of the message if it was successfully queued, otherwise -1
+/**
+ * @brief Send a message to a specific NRF service.
+ *
+ * The message will be queued and sent as soon as possible. If the queue is
+ * full, the message will be dropped.
+ *
+ * @param service   Service identifier to send to
+ * @param data      Pointer to the data buffer to send
+ * @param len       Length of the data buffer
+ * @param callback  Function to call upon transmission completion
+ * @param context   Context pointer passed to the callback
+ * @return ID of the message if successfully queued; -1 otherwise
+ */
 int32_t nrf_send_msg(nrf_service_id_t service, const uint8_t *data,
                      uint32_t len, nrf_tx_callback_t callback, void *context);
 
-// Abort a message by ID
-// If the message is already sent or the id is not found, it does nothing and
-// returns false If the message is queued, it will be removed from the queue If
-// the message is being sent, it will be sent. The callback will not be called.
+/**
+ * @brief Abort a queued message by its ID.
+ *
+ * If the message is already sent or the ID is not found, this function does
+ * nothing and returns false. If the message is queued, it will be removed from
+ * the queue. If the message is in the process of being sent, it will complete,
+ * but its callback will not be invoked.
+ *
+ * @param id  Identifier of the message to abort
+ * @return false if the message was already sent or not found, true if aborted
+ */
 bool nrf_abort_msg(int32_t id);
 
-// Reads version and other info from NRF application.
-// Blocking function.
+/**
+ * @brief Read version and other information from the NRF application.
+ *
+ * Blocking function that fills the provided nrf_info_t structure.
+ *
+ * @param info  Pointer to an nrf_info_t structure to populate
+ * @return true on success; false on communication error
+ */
 bool nrf_get_info(nrf_info_t *info);
 
-///////////////////////////////////////////////////////////////////////////////
-// TEST only functions
-
-// Test SPI communication with NRF
-bool nrf_test_spi_comm(void);
-
-// Test UART communication with NRF
-bool nrf_test_uart_comm(void);
-
-// Test reset pin
-bool nrf_test_reset(void);
-
-// Test GPIO stay in bootloader
-bool nrf_test_gpio_stay_in_bld(void);
-
-// Test GPIO reserved
-bool nrf_test_gpio_reserved(void);
-
+/**
+ * @brief Place the NRF device into system-off (deep sleep) mode.
+ *
+ * @return true if the command was acknowledged; false otherwise
+ */
 bool nrf_system_off(void);
 
+/**
+ * @brief Reboot the NRF device immediately.
+ */
 void nrf_reboot(void);
+
+/**
+ * @brief Send raw UART data to the NRF device (for debugging purposes).
+ *
+ * @param data  Pointer to the data buffer
+ * @param len   Length of the data buffer
+ */
+void nrf_send_uart_data(const uint8_t *data, uint32_t len);
+
+/**
+ * @brief Check if an nRF device firmware update is required by comparing SHA256
+ * hashes.
+ *
+ * @param image_ptr  Pointer to the firmware image in memory
+ * @param image_len  Length of the firmware image in bytes
+ * @return true if an update is required (e.g., corrupted image detected or hash
+ * mismatch), false if the device already has the same firmware version
+ */
+bool nrf_update_required(const uint8_t *image_ptr, size_t image_len);
+
+/**
+ * @brief Perform a firmware update on the nRF device via DFU (Device Firmware
+ * Update).
+ *
+ * @param image_ptr  Pointer to the firmware image in memory
+ * @param image_len  Length of the firmware image in bytes
+ * @return true always (indicates that the update process was initiated)
+ */
+bool nrf_update(const uint8_t *image_ptr, size_t image_len);
+
+///////////////////////////////////////////////////////////////////////////////
+// TEST-only functions
+
+/**
+ * @brief Test SPI communication with the NRF device.
+ *
+ * @return true if SPI communication succeeds; false otherwise
+ */
+bool nrf_test_spi_comm(void);
+
+/**
+ * @brief Test UART communication with the NRF device.
+ *
+ * @return true if UART communication succeeds; false otherwise
+ */
+bool nrf_test_uart_comm(void);
+
+/**
+ * @brief Test the NRF reset pin functionality.
+ *
+ * @return true if reset behavior is correct; false otherwise
+ */
+bool nrf_test_reset(void);
+
+/**
+ * @brief Test the GPIO pin that forces the device to stay in bootloader.
+ *
+ * @return true if the GPIO behaves correctly; false otherwise
+ */
+bool nrf_test_gpio_stay_in_bld(void);
+
+/**
+ * @brief Test a reserved GPIO pin on the NRF device.
+ *
+ * @return true if the GPIO behavior is correct; false otherwise
+ */
+bool nrf_test_gpio_reserved(void);
+///////////////////////////////////////////////////////////////////////////////

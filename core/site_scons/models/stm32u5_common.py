@@ -91,6 +91,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/secure_aes/stm32u5/secure_aes_unpriv.c",
         "embed/sec/time_estimate/stm32/time_estimate.c",
         "embed/sys/dbg/stm32/dbg_printf.c",
+        "embed/sys/irq/stm32/irq.c",
         "embed/sys/linker/linker_utils.c",
         "embed/sys/mpu/stm32u5/mpu.c",
         "embed/sys/pvd/stm32/pvd.c",

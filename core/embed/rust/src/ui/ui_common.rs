@@ -44,6 +44,8 @@ pub trait CommonUI {
 
     fn screen_boot_stage_2(fade_in: bool);
 
+    fn screen_update();
+
     /// Renders a partially transparent overlay over the screen content
     /// using data from the `DebugOverlay` struct.
     #[cfg(feature = "ui_debug_overlay")]
