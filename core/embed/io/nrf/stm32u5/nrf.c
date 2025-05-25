@@ -897,7 +897,7 @@ bool nrf_get_info(nrf_info_t *info) {
   drv->info_valid = false;
 
   uint8_t data[1] = {MGMT_CMD_INFO};
-  if (!nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, 1, NULL, NULL)) {
+  if (nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, 1, NULL, NULL) < 0) {
     return false;
   }
 
