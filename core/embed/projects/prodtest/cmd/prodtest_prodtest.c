@@ -82,9 +82,7 @@ static void prodtest_homescreen(cli_t* cli) {
 
   prodtest_show_homescreen();
 
-  if (cli != NULL) {
-    cli_ok(cli, "");
-  }
+  cli_ok(cli, "");
 }
 
 // clang-format off
