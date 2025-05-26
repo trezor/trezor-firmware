@@ -73,7 +73,7 @@ struct MenuItem {
     stylesheet: &'static ButtonStyleSheet,
     action: Option<Action>,
 }
-const MENU_ITEM_TITLE_STYLE_SHEET: &'static ButtonStyleSheet = &theme::menu_item_title();
+const MENU_ITEM_TITLE_STYLE_SHEET: &ButtonStyleSheet = &theme::menu_item_title();
 
 impl MenuItem {
     pub fn new(text: TString<'static>, action: Option<Action>) -> Self {
