@@ -403,10 +403,7 @@ class Layout(Generic[T]):
             return
         while True:
             try:
-                br_code, br_name = await loop.race(
-                    self.context.read(()),
-                    self.button_request_box,
-                )
+                br_code, br_name = await self.button_request_box
 
                 if __debug__:
                     log.info(__name__, "ButtonRequest sent: %s", br_name)
