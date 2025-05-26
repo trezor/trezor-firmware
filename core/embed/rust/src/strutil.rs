@@ -85,8 +85,8 @@ pub fn format_pairing_code(code: u32) -> ShortString {
 /// * `count` - The numeric count to select the correct plural form.
 ///
 /// # Returns
-/// A `ShortString` containing the correct plural form, or an empty `ShortString`
-/// if the template is malformed or conversion fails.
+/// A `ShortString` containing the correct plural form, or an empty
+/// `ShortString` if the template is malformed or conversion fails.
 pub fn plural_form(template: &str, count: u32) -> ShortString {
     // If no separator found, return the whole template (fallback behavior)
     if !template.contains('|') {
