@@ -180,7 +180,7 @@ macro_rules! obj_module {
         #[allow(unused_unsafe)]
         #[allow(unused_doc_comments)]
         unsafe {
-            use $crate::micropython::ffi;
+            use $crate::micropython::{ffi, map::Map};
 
             static DICT: ffi::mp_obj_dict_t = ffi::mp_obj_dict_t {
                 base: ffi::mp_obj_base_t {
