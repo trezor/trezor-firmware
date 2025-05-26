@@ -6,6 +6,23 @@ on:
       - 'core/v*'
       - 'legacy/v*'
   workflow_dispatch:
+    inputs:
+      project:
+        type: choice
+        required: true
+        default: core
+        options:
+          - core
+          - legacy
+      version:
+        description: version string
+        type: string
+        required: true
+      models_json:
+        description: models as a JSON list
+        type: string
+        required: true
+        default: "[\"T2B1\",\"T2T1\",\"T3B1\",\"T3T1\"]"
 
 permissions:
   id-token: write       # for fetching the OIDC token
@@ -29,13 +46,16 @@ jobs:
           elif [[ $GITHUB_REF == refs/tags/legacy/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/legacy/v}
             MODELS=$(jq -cr --arg version "$VERSION" '.firmware[$version]' ./common/releases.json)
+          else
+            VERSION="${{ inputs.version }}"
+            MODELS='${{ inputs.models_json }}'
           fi
           echo "models=$MODELS" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
 
   core_emu:
-    if: startsWith(github.ref, 'refs/tags/core/v')
+    if: startsWith(github.ref, 'refs/tags/core/v') || inputs.project == 'core'
     name: Build emu
     needs: get_models
     runs-on: ubuntu-latest
@@ -85,7 +105,7 @@ jobs:
           retention-days: 7
 
   core_emu_arm:
-    if: startsWith(github.ref, 'refs/tags/core/v')
+    if: startsWith(github.ref, 'refs/tags/core/v') || inputs.project == 'core'
     name: Build core emu arm
     needs: get_models
     runs-on: ubuntu-latest-arm64
@@ -135,7 +155,7 @@ jobs:
           retention-days: 7
 
   legacy_emu:
-    if: startsWith(github.ref, 'refs/tags/legacy/v')
+    if: startsWith(github.ref, 'refs/tags/legacy/v') || inputs.project == 'legacy'
     name: Build legacy emu
     needs: get_models
     runs-on: ubuntu-latest
@@ -171,7 +191,7 @@ jobs:
 
 
   legacy_emu_arm:
-    if: startsWith(github.ref, 'refs/tags/legacy/v')
+    if: startsWith(github.ref, 'refs/tags/legacy/v') || inputs.project == 'legacy'
     name: Build legacy emu arm
     needs: get_models
     runs-on: ubuntu-latest-arm64
