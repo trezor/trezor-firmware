@@ -1336,7 +1336,7 @@ pub enum TranslatedString {
     address__public_key_confirmed = 966,  // "Public key confirmed"
     words__continue_anyway = 967,  // "Continue anyway"
     #[cfg(feature = "universal_fw")]
-    ethereum__unknown_contract_address = 968,  // "Unknown contract address."
+    ethereum__unknown_contract_address = 968,  // {"Bolt": "Unknown contract address", "Caesar": "Unknown contract address", "Delizia": "Unknown contract address", "Eckhart": "Unknown contract address."}
     #[cfg(feature = "universal_fw")]
     ethereum__token_contract = 969,  // {"Bolt": "Token contract", "Caesar": "Token contract", "Delizia": "Token contract", "Eckhart": "Token contract address"}
     buttons__view_all_data = 970,  // "View all data"
@@ -2897,6 +2897,16 @@ impl TranslatedString {
             (Self::address__public_key_confirmed, "Public key confirmed"),
             (Self::words__continue_anyway, "Continue anyway"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
+            (Self::ethereum__unknown_contract_address, "Unknown contract address"),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::ethereum__unknown_contract_address, "Unknown contract address"),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::ethereum__unknown_contract_address, "Unknown contract address"),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
             (Self::ethereum__unknown_contract_address, "Unknown contract address."),
             #[cfg(feature = "universal_fw")]
             #[cfg(feature = "layout_bolt")]
