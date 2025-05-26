@@ -141,28 +141,24 @@ pub const TEXT_CHECKLIST_INACTIVE: TextStyle = TextStyle::new(
     GREY_DARK,
 );
 
-// Macro for styles differing only in text color
-macro_rules! label_title {
-    ($color:expr) => {
-        TextStyle::new(fonts::FONT_SATOSHI_REGULAR_22, $color, BG, $color, $color)
-            .with_line_spacing(-4)
-    };
+const fn label_title(color: Color) -> TextStyle {
+    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_22, color, BG, color, color).with_line_spacing(-4)
 }
 
 pub const fn label_title_main() -> TextStyle {
-    label_title!(GREY)
+    label_title(GREY)
 }
 
 pub const fn label_title_confirm() -> TextStyle {
-    label_title!(GREEN_LIGHT)
+    label_title(GREEN_LIGHT)
 }
 
 pub const fn label_title_danger() -> TextStyle {
-    label_title!(ORANGE)
+    label_title(ORANGE)
 }
 
 pub const fn label_title_warning() -> TextStyle {
-    label_title!(YELLOW)
+    label_title(YELLOW)
 }
 
 pub const fn label_menu_item_subtitle() -> TextStyle {
