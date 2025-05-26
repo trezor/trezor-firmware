@@ -34,7 +34,6 @@ const MAX_XPUBS: usize = 3;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum GetAddress {
     Address,
-    Confirmed,
     Menu,
     QrCode,
     AccountInfo,
@@ -54,8 +53,7 @@ impl FlowController for GetAddress {
     fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
             (Self::Address, FlowMsg::Info) => Self::Menu.goto(),
-            (Self::Address, FlowMsg::Confirmed) => Self::Confirmed.goto(),
-            (Self::Confirmed, _) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Address, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
             (Self::Menu, FlowMsg::Choice(0)) => Self::QrCode.swipe_left(),
             (Self::Menu, FlowMsg::Choice(1)) => Self::AccountInfo.swipe_left(),
             (Self::Menu, FlowMsg::Choice(2)) => Self::Cancel.swipe_left(),
@@ -81,7 +79,6 @@ pub fn new_get_address(
     account: Option<TString<'static>>,
     path: Option<TString<'static>>,
     xpubs: Obj, // TODO: get rid of Obj
-    title_success: TString<'static>,
     br_code: u16,
     br_name: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
@@ -115,21 +112,6 @@ pub fn new_get_address(
         })
         .one_button_request(ButtonRequest::from_num(br_code, br_name))
         .with_pages(|address_pages| address_pages + 1);
-
-    let content_confirmed = TextScreen::new(
-        Paragraph::new(&theme::TEXT_REGULAR, title_success)
-            .into_paragraphs()
-            .with_placement(LinearPlacement::vertical()),
-    )
-    .with_header(
-        Header::new(TR::words__title_done.into())
-            .with_icon(theme::ICON_DONE, theme::GREEN_LIGHT)
-            .with_text_style(theme::label_title_confirm()),
-    )
-    .with_action_bar(ActionBar::new_single(Button::with_text(
-        TR::instructions__continue_in_app.into(),
-    )))
-    .map(|_| Some(FlowMsg::Confirmed));
 
     // Menu
     let content_menu = VerticalMenuScreen::new(
@@ -236,7 +218,6 @@ pub fn new_get_address(
 
     let mut res = SwipeFlow::new(&GetAddress::Address)?;
     res.add_page(&GetAddress::Address, content_address)?
-        .add_page(&GetAddress::Confirmed, content_confirmed)?
         .add_page(&GetAddress::Menu, content_menu)?
         .add_page(&GetAddress::QrCode, content_qr)?
         .add_page(&GetAddress::AccountInfo, content_account)?

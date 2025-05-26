@@ -239,12 +239,6 @@ async def show_address(
         )
         return result
 
-    title_success = (
-        TR.address__public_key_confirmed
-        if title in ("XPUB", TR.address__public_key)
-        else TR.address__confirmed
-    )
-
     await raise_if_not_confirmed(
         trezorui_api.flow_get_address(
             address=address,
@@ -257,7 +251,6 @@ async def show_address(
             account=account,
             path=path,
             xpubs=[(xpub_title(i), xpub) for i, xpub in enumerate(xpubs)],
-            title_success=title_success,
             br_name=br_name,
             br_code=br_code,
         ),
@@ -355,7 +348,7 @@ def show_danger(
 
 
 def show_success(
-    br_name: str,
+    br_name: str | None,
     content: str,
     subheader: str | None = None,
     button: str | None = None,
@@ -372,6 +365,15 @@ def show_success(
         ),
         br_name,
         ButtonRequestType.Success,
+    )
+
+
+def show_continue_in_app(content: str) -> Awaitable[None]:
+    return show_success(
+        content=content,
+        button=TR.instructions__continue_in_app,
+        time_ms=3200,
+        br_name=None,
     )
 
 
