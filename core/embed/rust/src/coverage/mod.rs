@@ -1,11 +1,18 @@
+/// Off-heap data structure for collecting code coverage data.
 use heapless::{Entry, FnvIndexMap};
 
 use crate::{
     error::Error,
-    micropython::{map::Map, qstr::Qstr},
+    micropython::{
+        buffer::StrBuffer,
+        list::List,
+        macros::{obj_fn_0, obj_fn_2, obj_module},
+        module::Module,
+        obj::Obj,
+        qstr::Qstr,
+        util,
+    },
 };
-
-use super::{buffer::StrBuffer, list::List, module::Module, obj::Obj, util};
 
 struct Key {
     file: StrBuffer,

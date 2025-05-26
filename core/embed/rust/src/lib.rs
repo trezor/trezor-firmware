@@ -15,6 +15,8 @@ extern crate num_derive;
 #[macro_use]
 mod macros;
 
+#[cfg(feature = "debug")]
+mod coverage;
 #[cfg(feature = "crypto")]
 mod crypto;
 #[cfg(feature = "debug")]

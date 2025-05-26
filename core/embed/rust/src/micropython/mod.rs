@@ -3,7 +3,6 @@
 pub mod macros;
 
 pub mod buffer;
-pub mod coveragedata;
 pub mod dict;
 pub mod ffi;
 pub mod func;
