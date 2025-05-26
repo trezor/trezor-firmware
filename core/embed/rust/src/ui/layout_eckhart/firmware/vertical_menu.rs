@@ -58,7 +58,7 @@ impl MenuItems for ShortMenuVec {
     }
 }
 
-impl Default for GcBox<Vec<Button, LONG_MENU_ITEMS>> {
+impl Default for LongMenuGc {
     fn default() -> Self {
         unwrap!(GcBox::new(Vec::new()))
     }
