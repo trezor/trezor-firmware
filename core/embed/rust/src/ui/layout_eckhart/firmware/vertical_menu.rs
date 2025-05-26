@@ -177,7 +177,6 @@ impl<T: MenuItems> VerticalMenu<T> {
 
     /// Scroll the menu by one item in given direction.
     /// Relevant only for testing purposes when the animations are disabled.
-    #[cfg(feature = "ui_debug")]
     pub fn scroll_item(&mut self, dir: Direction) {
         // Make sure the animations are disabled
         debug_assert!(animation_disabled());

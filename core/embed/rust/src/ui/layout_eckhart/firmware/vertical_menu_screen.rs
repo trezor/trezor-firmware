@@ -58,7 +58,6 @@ impl<T: MenuItems> VerticalMenuScreen<T> {
 
     /// Update swipe detection and buttons state based on menu size
     pub fn initialize_screen(&mut self, ctx: &mut EventCtx) {
-        #[cfg(feature = "ui_debug")]
         if animation_disabled() {
             self.swipe = Some(SwipeDetect::new());
             ctx.enable_swipe();
@@ -87,7 +86,6 @@ impl<T: MenuItems> VerticalMenuScreen<T> {
     fn handle_swipe_event(&mut self, ctx: &mut EventCtx, event: Event) {
         // Relevant only for testing when the animations are disabled
         // The menu is scrollable until the last button is visible
-        #[cfg(feature = "ui_debug")]
         if animation_disabled() {
             // Handle swipes from the standalone swipe detector or ones coming from
             // the flow. These two are mutually exclusive and should not be triggered at the
@@ -149,7 +147,6 @@ impl<T: MenuItems> VerticalMenuScreen<T> {
 
     fn render_overflow_arrow<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // Do not render the arrow if animations are disabled
-        #[cfg(feature = "ui_debug")]
         if animation_disabled() {
             return;
         }
