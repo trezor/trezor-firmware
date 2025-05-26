@@ -375,12 +375,7 @@
       "Eckhart": "Token contract address"
     },
     "ethereum__units_template": "{0} units",
-    "ethereum__unknown_contract_address": {
-      "Bolt": "Unknown contract address. Continue only if you know what you are doing.",
-      "Caesar": "Unknown contract address. Continue only if you know what you are doing.",
-      "Delizia": "Unknown contract address. Continue only if you know what you are doing.",
-      "Eckhart": "Unknown token contract address. Continue only if you know what you are doing."
-    },
+    "ethereum__unknown_contract_address": "Unknown contract address.",
     "ethereum__unknown_token": "Unknown token",
     "ethereum__valid_signature": "The signature is valid.",
     "experimental_mode__enable": "Enable experimental features?",

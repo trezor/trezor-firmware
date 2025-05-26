@@ -760,7 +760,9 @@ if not utils.BITCOIN_ONLY:
     def confirm_ethereum_unknown_contract_warning() -> Awaitable[None]:
         return show_danger(
             "unknown_contract_warning",
-            TR.ethereum__unknown_contract_address,
+            TR.ethereum__unknown_contract_address
+            + " "
+            + TR.words__know_what_your_doing,
             title=TR.words__important,
             menu_title=TR.ethereum__contract,
             verb_cancel=TR.send__cancel_sign,
