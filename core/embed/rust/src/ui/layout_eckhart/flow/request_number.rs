@@ -17,9 +17,8 @@ use core::sync::atomic::{AtomicU16, Ordering};
 use super::super::{
     component::Button,
     firmware::{
-        ActionBar, Header, NumberInput, ShortMenuVec, TextScreenMsg, UpdatableInfoScreen,
-        ValueInputScreen, ValueInputScreenMsg, VerticalMenu, VerticalMenuScreen,
-        VerticalMenuScreenMsg,
+        ActionBar, Header, NumberInput, ShortMenuVec, UpdatableInfoScreen, ValueInputScreen,
+        ValueInputScreenMsg, VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
     },
     theme,
 };
@@ -104,17 +103,16 @@ pub fn new_request_number(
         ));
 
     let content_menu = VerticalMenuScreen::new(menu_items)
-        .with_header(Header::new(TString::empty()).with_close_button())
+        .with_header(Header::new(title).with_close_button())
         .map(move |msg| match msg {
             VerticalMenuScreenMsg::Selected(i) => Some(FlowMsg::Choice(i)),
             VerticalMenuScreenMsg::Close => Some(FlowMsg::Cancelled),
             _ => None,
         });
 
-    let content_info = UpdatableInfoScreen::new(info_closure).map(|msg| match msg {
-        TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
-        _ => None,
-    });
+    let content_info = UpdatableInfoScreen::new(info_closure)
+        .with_header(Header::new(title).with_close_button())
+        .map(|_| Some(FlowMsg::Cancelled));
 
     let mut res = SwipeFlow::new(&RequestNumber::Number)?;
     res.add_page(&RequestNumber::Number, content_input)?
