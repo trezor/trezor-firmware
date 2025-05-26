@@ -77,10 +77,10 @@ void advertising_start(bool wl, uint8_t color, uint32_t device_code,
   int bonds_count = bonds_get_count();
 
   manufacturer_data[3] = color;
-  manufacturer_data[4] = (device_code >> 24) & 0xff;
-  manufacturer_data[5] = (device_code >> 16) & 0xff;
-  manufacturer_data[6] = (device_code >> 8) & 0xff;
-  manufacturer_data[7] = device_code & 0xff;
+  manufacturer_data[4] = device_code & 0xff;
+  manufacturer_data[5] = (device_code >> 8) & 0xff;
+  manufacturer_data[6] = (device_code >> 16) & 0xff;
+  manufacturer_data[7] = (device_code >> 24) & 0xff;
 
   advertising_data[0].type = BT_DATA_FLAGS;
   advertising_data[0].data_len = 1;
