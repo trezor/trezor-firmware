@@ -23,23 +23,19 @@
 
 #include <sys/power_manager.h>
 #include <sys/sysevent_source.h>
-#include <sys/systick.h>
 
 #include "power_manager_poll.h"
 
 typedef struct {
-  // Time (in ticks) when the tls was last updated
-  uint32_t update_ticks;
   // Last state
-  pm_state_t pm_state;
+  pm_state_t last_state;
   // Pending events
-  pm_event_t event;
-  bool pending_event;
+  pm_event_t events;
 
 } pm_fsm_t;
 
 // State machine for each task
-static pm_fsm_t tls[SYSTASK_MAX_TASKS] = {0};
+static pm_fsm_t g_pm_tls[SYSTASK_MAX_TASKS] = {0};
 
 // Forward declarations
 static const syshandle_vmt_t g_pm_handle_vmt;
@@ -50,63 +46,48 @@ bool pm_poll_init(void) {
 
 void pm_poll_deinit(void) { syshandle_unregister(SYSHANDLE_POWER_MANAGER); }
 
-void pm_fsm_clear(pm_fsm_t* fsm) { memset(fsm, 0, sizeof(pm_fsm_t)); }
+bool pm_get_events(pm_event_t* events) {
+  pm_fsm_t* fsm = &g_pm_tls[systask_id(systask_active())];
 
-bool pm_fsm_event_ready(pm_fsm_t* fsm, pm_state_t* new_state) {
-  bool event_detected = false;
-
-  // Remember state changes
-  fsm->update_ticks = systick_ms();
-
-  // Return true if there are any state changes
-  if (new_state->soc != fsm->pm_state.soc) {
-    fsm->event.flags.soc_updated = true;
-    event_detected = true;
-  }
-
-  if (new_state->usb_connected != fsm->pm_state.usb_connected) {
-    fsm->event.flags.usb_connected_changed = true;
-    event_detected = true;
-  }
-
-  if (new_state->wireless_connected != fsm->pm_state.wireless_connected) {
-    fsm->event.flags.wireless_connected_changed = true;
-    event_detected = true;
-  }
-
-  if (new_state->power_status != fsm->pm_state.power_status) {
-    fsm->event.flags.power_status_changed = true;
-    event_detected = true;
-  }
-
-  if (new_state->charging_status != fsm->pm_state.charging_status) {
-    fsm->event.flags.charging_status_changed = true;
-    event_detected = true;
-  }
-
-  if (event_detected) {
-    fsm->pending_event = true;
-  }
-
-  memcpy(&fsm->pm_state, new_state, sizeof(pm_state_t));
-
-  return event_detected;
-}
-
-bool pm_fsm_get_event(pm_fsm_t* fsm, pm_event_t* event) {
-  if (fsm->pending_event) {
-    memcpy(event, &fsm->event, sizeof(pm_event_t));
-    memset(&fsm->event, 0, sizeof(pm_event_t));
-    fsm->pending_event = false;
+  if (fsm->events.all != 0) {
+    *events = fsm->events;
+    memset(&fsm->events, 0, sizeof(pm_event_t));
     return true;
   }
 
   return false;
 }
 
+static bool pm_fsm_update(pm_fsm_t* fsm, pm_state_t* new_state) {
+  // Return true if there are any state changes
+  if (new_state->soc != fsm->last_state.soc) {
+    fsm->events.flags.soc_updated = true;
+  }
+
+  if (new_state->usb_connected != fsm->last_state.usb_connected) {
+    fsm->events.flags.usb_connected_changed = true;
+  }
+
+  if (new_state->wireless_connected != fsm->last_state.wireless_connected) {
+    fsm->events.flags.wireless_connected_changed = true;
+  }
+
+  if (new_state->power_status != fsm->last_state.power_status) {
+    fsm->events.flags.power_status_changed = true;
+  }
+
+  if (new_state->charging_status != fsm->last_state.charging_status) {
+    fsm->events.flags.charging_status_changed = true;
+  }
+
+  fsm->last_state = *new_state;
+
+  return fsm->events.all != 0;
+}
+
 static void on_task_created(void* context, systask_id_t task_id) {
-  pm_fsm_t* fsm = &tls[task_id];
-  pm_fsm_clear(fsm);
+  pm_fsm_t* fsm = &g_pm_tls[task_id];
+  memset(fsm, 0, sizeof(pm_fsm_t));
 }
 
 static void on_event_poll(void* context, bool read_awaited,
@@ -122,11 +103,11 @@ static void on_event_poll(void* context, bool read_awaited,
 
 static bool on_check_read_ready(void* context, systask_id_t task_id,
                                 void* param) {
-  pm_fsm_t* fsm = &tls[task_id];
+  pm_fsm_t* fsm = &g_pm_tls[task_id];
 
   pm_state_t* new_state = (pm_state_t*)param;
 
-  return pm_fsm_event_ready(fsm, new_state);
+  return pm_fsm_update(fsm, new_state);
 }
 
 static const syshandle_vmt_t g_pm_handle_vmt = {
@@ -136,11 +117,5 @@ static const syshandle_vmt_t g_pm_handle_vmt = {
     .check_write_ready = NULL,
     .poll = on_event_poll,
 };
-
-bool pm_get_events(pm_event_t* event_flags) {
-  pm_fsm_t* fsm = &tls[systask_id(systask_active())];
-
-  return pm_fsm_get_event(fsm, event_flags);
-}
 
 #endif  // KERNEL_MODE
