@@ -5,7 +5,7 @@ use crate::{
         component::{
             paginated::SinglePage,
             text::paragraphs::{Paragraph, Paragraphs},
-            Component, Event, EventCtx, Never, Pad,
+            Component, Event, EventCtx, Pad,
         },
         event::TouchEvent,
         geometry::{Alignment, Grid, Insets, Offset, Rect},
@@ -61,7 +61,9 @@ impl Component for NumberInputDialog {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.input.event(ctx, event);
+        if let Some(NumberInputDialogMsg::Changed(n)) = self.input.event(ctx, event) {
+            return Some(NumberInputDialogMsg::Changed(n));
+        }
         self.paragraphs.event(ctx, event);
 
         // Consume all touch events to prevent dialog confirmation if not clicking
@@ -124,7 +126,7 @@ impl NumberInput {
 }
 
 impl Component for NumberInput {
-    type Msg = Never;
+    type Msg = NumberInputDialogMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let grid = Grid::new(bounds, 1, 3).with_spacing(theme::KEYBOARD_SPACING);
@@ -135,14 +137,20 @@ impl Component for NumberInput {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        let mut changed = false;
         if let Some(ButtonMsg::Clicked) = self.dec.event(ctx, event) {
             self.value = self.min.max(self.value.saturating_sub(1));
-            self.update_button_states(ctx);
+            changed = true;
         };
         if let Some(ButtonMsg::Clicked) = self.inc.event(ctx, event) {
             self.value = self.max.min(self.value.saturating_add(1));
-            self.update_button_states(ctx);
+            changed = true;
         };
+
+        if changed {
+            self.update_button_states(ctx);
+            return Some(NumberInputDialogMsg::Changed(self.value));
+        }
 
         None
     }
