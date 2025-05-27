@@ -77,25 +77,34 @@
 #include <io/touch.h>
 #endif
 
+#include "syscall_context.h"
 #include "syscall_internal.h"
 #include "syscall_verifiers.h"
-
-bool g_in_app_callback = false;
 
 static PIN_UI_WAIT_CALLBACK storage_init_callback = NULL;
 
 static secbool storage_init_callback_wrapper(
     uint32_t wait, uint32_t progress, enum storage_ui_message_t message) {
   secbool result;
-  g_in_app_callback = true;
-  result = invoke_app_callback(wait, progress, message, storage_init_callback);
-  g_in_app_callback = false;
+
+  applet_t *applet = syscall_get_context();
+  result = systask_invoke_callback(&applet->task, wait, progress, message,
+                                   storage_init_callback);
   return result;
 }
 
 __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
-                                                       uint32_t syscall) {
+                                                       uint32_t syscall,
+                                                       void *applet) {
+  syscall_set_context((applet_t *)applet);
+
   switch (syscall) {
+    case SYSCALL_RETURN_FROM_CALLBACK: {
+      syscall_get_context()->task.in_callback = false;
+      systask_yield_to(systask_kernel());
+      break;
+    }
+
     case SYSCALL_SYSTEM_EXIT: {
       int exit_code = (int)args[0];
       system_exit__verified(exit_code);
@@ -148,7 +157,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       const sysevents_t *awaited = (sysevents_t *)args[0];
       sysevents_t *signalled = (sysevents_t *)args[1];
       uint32_t deadline = args[2];
-      if (!g_in_app_callback) {
+      if (!syscall_get_context()->task.in_callback) {
         sysevents_poll__verified(awaited, signalled, deadline);
       }
     } break;

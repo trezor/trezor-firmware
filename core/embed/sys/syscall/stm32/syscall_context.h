@@ -19,32 +19,14 @@
 
 #pragma once
 
-#include <trezor_types.h>
-
 #include <sys/applet.h>
-#include <sys/system.h>
-
-#include "syscall_context.h"
 
 #ifdef KERNEL
 
-// Checks if the current application task has read access to the
-// given memory range.
-bool probe_read_access(const void *addr, size_t len);
+// Sets the context (applet) for all subsequent syscall processing
+void syscall_set_context(applet_t* applet);
 
-// Checks if the current application task has write access to the
-// given memory range.
-bool probe_write_access(void *addr, size_t len);
-
-// Handles access violation by exiting the current application task
-// with a fatal error and the message "Access violation".
-void handle_access_violation(const char *file, int line);
-
-// Exits the current application task with an fatal error
-// with the message "Access violation".
-#define apptask_access_violation()               \
-  do {                                           \
-    handle_access_violation(__FILE__, __LINE__); \
-  } while (0)
+// Gets current syscall context (applet)
+applet_t* syscall_get_context(void);
 
 #endif  // KERNEL

@@ -143,7 +143,7 @@ saes_invoke(void) {
   // reset the key loaded in SAES
   MODIFY_REG(SAES->CR, AES_CR_KEYSEL, CRYP_KEYSEL_NORMAL);
 
-  syscall_return_from_callback(sectrue);
+  svc_return_from_unpriv(sectrue);
   return 0;
 }
 
