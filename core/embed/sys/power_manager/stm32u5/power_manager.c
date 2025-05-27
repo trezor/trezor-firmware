@@ -201,10 +201,8 @@ pm_status_t pm_suspend(void) {
     return PM_NOT_INITIALIZED;
   }
 
-  irq_key_t irq_key = irq_lock();
   drv->request_suspend = true;
   pm_process_state_machine();
-  irq_unlock(irq_key);
 
   return PM_OK;
 }
