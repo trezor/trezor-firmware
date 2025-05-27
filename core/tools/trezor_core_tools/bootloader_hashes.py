@@ -7,10 +7,9 @@ from hashlib import blake2s
 
 from trezorlib.firmware.core import FirmwareImage, Model
 
-ALIGNED_SIZE = 128 * 1024
+from .layout_parser import find_value
+from .common import MODELS_DIR
 
-HERE = Path(__file__).parent
-BOOTLOADERS = HERE / ".." / "embed" / "models"
 
 TEMPLATE = """\
 #ifndef BOOTLOADER_HASHES_H
@@ -32,19 +31,19 @@ PATTERN = """\
 """
 
 
-def aligned_digest(fn: Path, data: bytes, padding: bytes) -> bytes:
-    """Calculate digest of data, aligned to ALIGNED_SIZE with
+def aligned_digest(fn: Path, data: bytes, padding: bytes, aligned_size: int) -> bytes:
+    """Calculate digest of data, aligned to aligned_size with
     the specified padding.
 
     Firmware needs to check the bootloader against a digest padded either by 0xff
     (unwritten NOR-flash byte) or 0x00 (explicitly cleared byte).
     """
-    if len(data) > ALIGNED_SIZE:
+    if len(data) > aligned_size:
         raise ValueError(fn, "too big")
 
     assert len(padding) == 1
-    digest_data = data + padding * (ALIGNED_SIZE - len(data))
-    assert len(digest_data) == ALIGNED_SIZE
+    digest_data = data + padding * (aligned_size - len(data))
+    assert len(digest_data) == aligned_size
     return blake2s(digest_data).digest()
 
 
@@ -66,8 +65,11 @@ def bootloader_str(file: Path, model: str) -> str:
     data = file.read_bytes()
 
     suffix = file.stem[len("bootloader_") :].upper()
-    bytes_00 = to_uint_array(aligned_digest(file, data, b"\x00"))
-    bytes_ff = to_uint_array(aligned_digest(file, data, b"\xff"))
+
+    aligned_size = find_value(model, "BOOTLOADER_MAXSIZE")
+
+    bytes_00 = to_uint_array(aligned_digest(file, data, b"\x00", aligned_size))
+    bytes_ff = to_uint_array(aligned_digest(file, data, b"\xff", aligned_size))
 
     bl = FirmwareImage.parse(data)
     version_str = ".".join(str(x) for x in bl.header.version)
@@ -91,9 +93,9 @@ def bootloader_str(file: Path, model: str) -> str:
 
 @click.command()
 @click.option("-c", "--check", is_flag=True, help="Do not write, only check.")
-def bootloader_hashes(check):
+def main(check):
 
-    models = list(BOOTLOADERS.iterdir())
+    models = list(MODELS_DIR.iterdir())
 
     models = [model for model in models if model.is_dir()]
 
@@ -123,4 +125,4 @@ def bootloader_hashes(check):
 
 
 if __name__ == "__main__":
-    bootloader_hashes()
+    main()
