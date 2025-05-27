@@ -62,11 +62,13 @@ _EARLY_RESPONSE = EarlyResponse()
 
 
 async def early_response(response: Msg, layout: Awaitable[None]) -> EarlyResponse[Msg]:
-    from .context import get_context
+    from . import context
 
     # first, send the response back to the client
-    await get_context().write(response)
-    # then, show the success layout
+    await context.get_context().write(response)
+    # then, show the success layout without a context, to avoid
+    # `UnexpectedMessageException` during the confirmation layout.
+    context.CURRENT_CONTEXT = None
     await layout
     # return a special marker object
     return _EARLY_RESPONSE
