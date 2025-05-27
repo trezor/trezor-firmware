@@ -186,7 +186,7 @@ pm_status_t pm_get_state(pm_state_t* state) {
     state->charging_status = PM_BATTERY_IDLE;
   }
 
-  state->power_state = drv->state;
+  state->power_status = drv->state;
   state->soc = drv->soc_ceiled;
 
   irq_unlock(irq_key);

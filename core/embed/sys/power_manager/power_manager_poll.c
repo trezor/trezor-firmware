@@ -52,15 +52,6 @@ void pm_poll_deinit(void) { syshandle_unregister(SYSHANDLE_POWER_MANAGER); }
 
 void pm_fsm_clear(pm_fsm_t* fsm) { memset(fsm, 0, sizeof(pm_fsm_t)); }
 
-static void pm_clear_state_flags(pm_fsm_t* fsm) {
-  fsm->event.flags.entered_mode_active = false;
-  fsm->event.flags.entered_mode_power_save = false;
-  fsm->event.flags.entered_mode_shutting_down = false;
-  fsm->event.flags.entered_mode_charging = false;
-  fsm->event.flags.entered_mode_suspend = false;
-  fsm->event.flags.entered_mode_hibernate = false;
-}
-
 bool pm_fsm_event_ready(pm_fsm_t* fsm, pm_state_t* new_state) {
   bool event_detected = false;
 
@@ -73,66 +64,23 @@ bool pm_fsm_event_ready(pm_fsm_t* fsm, pm_state_t* new_state) {
     event_detected = true;
   }
 
-  if (new_state->usb_connected && !fsm->pm_state.usb_connected) {
-    fsm->event.flags.usb_connected = true;
-    fsm->event.flags.usb_disconnected = false;
+  if (new_state->usb_connected != fsm->pm_state.usb_connected) {
+    fsm->event.flags.usb_connected_changed = true;
+    event_detected = true;
   }
 
-  if (!new_state->usb_connected && fsm->pm_state.usb_connected) {
-    fsm->event.flags.usb_disconnected = true;
-    fsm->event.flags.usb_connected = false;
+  if (new_state->wireless_connected != fsm->pm_state.wireless_connected) {
+    fsm->event.flags.wireless_connected_changed = true;
+    event_detected = true;
   }
 
-  if (new_state->wireless_connected && !fsm->pm_state.wireless_connected) {
-    fsm->event.flags.wireless_connected = true;
-    fsm->event.flags.wireless_disconnected = false;
-  }
-
-  if (!new_state->wireless_connected && fsm->pm_state.wireless_connected) {
-    fsm->event.flags.wireless_disconnected = true;
-    fsm->event.flags.wireless_connected = false;
-  }
-
-  if (new_state->power_state == PM_STATE_ACTIVE) {
-    if (fsm->pm_state.power_state != PM_STATE_ACTIVE) {
-      pm_clear_state_flags(fsm);
-      fsm->event.flags.entered_mode_active = true;
-      event_detected = true;
-    }
-  } else if (new_state->power_state == PM_STATE_POWER_SAVE) {
-    if (fsm->pm_state.power_state != PM_STATE_POWER_SAVE) {
-      pm_clear_state_flags(fsm);
-      fsm->event.flags.entered_mode_power_save = true;
-      event_detected = true;
-    }
-  } else if (new_state->power_state == PM_STATE_SHUTTING_DOWN) {
-    if (fsm->pm_state.power_state != PM_STATE_SHUTTING_DOWN) {
-      pm_clear_state_flags(fsm);
-      fsm->event.flags.entered_mode_shutting_down = true;
-      event_detected = true;
-    }
-  } else if (new_state->power_state == PM_STATE_CHARGING) {
-    if (fsm->pm_state.power_state != PM_STATE_CHARGING) {
-      pm_clear_state_flags(fsm);
-      fsm->event.flags.entered_mode_charging = true;
-      event_detected = true;
-    }
-  } else if (new_state->power_state == PM_STATE_SUSPEND) {
-    if (fsm->pm_state.power_state != PM_STATE_SUSPEND) {
-      pm_clear_state_flags(fsm);
-      fsm->event.flags.entered_mode_suspend = true;
-      event_detected = true;
-    }
-  } else if (new_state->power_state == PM_STATE_HIBERNATE) {
-    if (fsm->pm_state.power_state != PM_STATE_HIBERNATE) {
-      pm_clear_state_flags(fsm);
-      fsm->event.flags.entered_mode_hibernate = true;
-      event_detected = true;
-    }
+  if (new_state->power_status != fsm->pm_state.power_status) {
+    fsm->event.flags.power_status_changed = true;
+    event_detected = true;
   }
 
   if (new_state->charging_status != fsm->pm_state.charging_status) {
-    fsm->event.flags.state_changed = true;
+    fsm->event.flags.charging_status_changed = true;
     event_detected = true;
   }
 

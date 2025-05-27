@@ -54,23 +54,17 @@ typedef enum {
   PM_STATE_SHUTTING_DOWN,
   PM_STATE_POWER_SAVE,
   PM_STATE_ACTIVE,
-} pm_internal_state_t;
+} pm_power_status_t;
 
 /* Power manager events */
 typedef union {
   uint32_t all;
   struct {
-    bool state_changed : 1;
-    bool usb_connected : 1;
-    bool usb_disconnected : 1;
-    bool wireless_connected : 1;
-    bool wireless_disconnected : 1;
-    bool entered_mode_hibernate : 1;
-    bool entered_mode_charging : 1;
-    bool entered_mode_suspend : 1;
-    bool entered_mode_active : 1;
-    bool entered_mode_power_save : 1;
-    bool entered_mode_shutting_down : 1;
+    bool power_status_changed : 1;
+    bool charging_status_changed : 1;
+    bool usb_connected_changed : 1;
+    bool wireless_connected_changed : 1;
+
     bool soc_updated : 1;
   } flags;
 } pm_event_t;
@@ -80,13 +74,13 @@ typedef struct {
   bool usb_connected;
   bool wireless_connected;
   pm_charging_status_t charging_status;
-  pm_internal_state_t power_state;
+  pm_power_status_t power_status;
   uint8_t soc;
 } pm_state_t;
 
 /* Power system report */
 typedef struct {
-  pm_internal_state_t power_state;
+  pm_power_status_t power_state;
   bool usb_connected;
   bool wireless_charger_connected;
   float system_voltage_v;

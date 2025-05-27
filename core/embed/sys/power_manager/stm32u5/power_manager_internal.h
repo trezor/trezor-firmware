@@ -60,7 +60,7 @@ typedef struct {
 typedef struct {
   bool initialized;
   bool state_machine_stabilized;
-  pm_internal_state_t state;
+  pm_power_status_t state;
 
   // Fuel gauge
   fuel_gauge_state_t fuel_gauge;
@@ -109,7 +109,7 @@ typedef struct {
 // State handler function definition
 typedef struct {
   void (*enter)(pm_driver_t* drv);
-  pm_internal_state_t (*handle)(pm_driver_t* drv);
+  pm_power_status_t (*handle)(pm_driver_t* drv);
   void (*exit)(pm_driver_t* drv);
 } pm_state_handler_t;
 
@@ -148,14 +148,14 @@ pm_status_t pm_control_hibernate(void);
 void pm_control_suspend(void);
 
 // Power manager internal state machine handlers and entry/exit funtions
-pm_internal_state_t pm_handle_state_active(pm_driver_t* drv);
-pm_internal_state_t pm_handle_state_power_save(pm_driver_t* drv);
-pm_internal_state_t pm_handle_state_ultra_power_save(pm_driver_t* drv);
-pm_internal_state_t pm_handle_state_shutting_down(pm_driver_t* drv);
-pm_internal_state_t pm_handle_state_suspend(pm_driver_t* drv);
-pm_internal_state_t pm_handle_state_startup_rejected(pm_driver_t* drv);
-pm_internal_state_t pm_handle_state_charging(pm_driver_t* drv);
-pm_internal_state_t pm_handle_state_hibernate(pm_driver_t* drv);
+pm_power_status_t pm_handle_state_active(pm_driver_t* drv);
+pm_power_status_t pm_handle_state_power_save(pm_driver_t* drv);
+pm_power_status_t pm_handle_state_ultra_power_save(pm_driver_t* drv);
+pm_power_status_t pm_handle_state_shutting_down(pm_driver_t* drv);
+pm_power_status_t pm_handle_state_suspend(pm_driver_t* drv);
+pm_power_status_t pm_handle_state_startup_rejected(pm_driver_t* drv);
+pm_power_status_t pm_handle_state_charging(pm_driver_t* drv);
+pm_power_status_t pm_handle_state_hibernate(pm_driver_t* drv);
 
 void pm_enter_hibernate(pm_driver_t* drv);
 void pm_enter_charging(pm_driver_t* drv);
