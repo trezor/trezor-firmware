@@ -183,6 +183,15 @@ vector_table:
   .word _stack_section_start
   .word _stack_section_size
   .word reset_handler
+#if USE_STORAGE_HWKEY
+  .word saes_unpriv_input
+  .word saes_unpriv_output
+  .word saes_unpriv_callback
+#else
+  .word 0
+  .word 0
+  .word 0
+#endif
 
 #endif
 
