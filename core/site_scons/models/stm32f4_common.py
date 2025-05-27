@@ -80,7 +80,6 @@ def stm32f4_common_files(env, defines, sources, paths):
         "embed/sys/startup/stm32f4/reset_flags.c",
         "embed/sys/startup/stm32f4/startup_init.c",
         "embed/sys/startup/stm32f4/vectortable.S",
-        "embed/sys/syscall/stm32/syscall.c",
         "embed/sys/syscall/stm32/syscall_context.c",
         "embed/sys/syscall/stm32/syscall_dispatch.c",
         "embed/sys/syscall/stm32/syscall_ipc.c",

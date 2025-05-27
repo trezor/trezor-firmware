@@ -19,10 +19,11 @@
 
 #pragma once
 
+#include <sys/syscall_numbers.h>
+
 // Reserved SVC numbers
 #define SVC_SYSCALL 0
 #define SVC_SYSTASK_YIELD 1
-#define SVC_CALLBACK_RETURN 2
 
 #ifdef KERNEL_MODE
 
@@ -38,31 +39,19 @@
 // `args[1]` (if returning a 64-bit value).
 void syscall_handler(uint32_t* args, uint32_t syscall, void* applet);
 
-// Internal function for returning from an application callback.
-// This function is called from an unprivileged app via an SVC call. It restores
-// the stack pointer and returns control to the privileged caller.
-void return_from_unpriv(uint32_t retval, uint32_t* msp);
+#endif  // KERNEL_MODE
 
-// Invokes an unprivileged function from privileged mode.
+// Returns from the unprivileged callback invoked by the kernel
 //
-// This is a *temporary* helper function used to control the STM32 SAES
-// peripheral from unprivileged mode for backward compatibility (due to
-// different hardware keys being used in privileged and unprivileged modes).
-uint32_t invoke_unpriv(void* func);
-
-// Returns from an unprivileged callback.
-//
-// Same as `invoke_unpriv`, this function should be removed once
-// we resolve the issue with `secure_aes`, which needs to jump to
-// unprivileged mode.
-
-static void inline __attribute__((no_stack_protector))
-svc_return_from_unpriv(uint32_t retval) {
+// Used for the storage callback and the unprivileged SAES hack callback.
+// Do not use for other purposes unless there is a very good reason.
+static inline void __attribute__((no_stack_protector))
+return_from_unprivileged_callback(uint32_t retval) {
   register uint32_t r0 __asm__("r0") = retval;
+  register uint32_t r6 __asm__("r6") = SYSCALL_RETURN_FROM_CALLBACK;
+
   __asm__ volatile("svc %[svid]\n"
-                   :
-                   : [svid] "i"(SVC_CALLBACK_RETURN), "r"(r0)
+                   : "=r"(r0)
+                   : [svid] "i"(SVC_SYSCALL), "r"(r0), "r"(r6)
                    : "memory");
 }
-
-#endif  // KERNEL_MODE
