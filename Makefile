@@ -139,10 +139,10 @@ vendorheader_check: ## check that vendor header is up to date
 	./core/tools/generate_vendorheader.sh --quiet --check
 
 bootloader_hashes: ## generate bootloader hashes
-	./core/tools/bootloader_hashes.py
+	bootloader_hashes
 
 bootloader_hashes_check: ## check generated bootloader hashes
-	./core/tools/bootloader_hashes.py --check
+	bootloader_hashes --check
 
 lsgen: ## generate linker scripts
 	lsgen
