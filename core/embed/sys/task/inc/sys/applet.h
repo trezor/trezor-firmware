@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_APPLET_H
-#define TREZORHAL_APPLET_H
+#pragma once
 
 #include <trezor_types.h>
 
@@ -29,31 +28,13 @@
 // Applet entry point
 typedef void (*applet_startup_t)(const char* args, uint32_t random);
 
-typedef struct {
-  uint32_t start;
-  uint32_t size;
-} applet_memory_t;
-
 // Applet header found at the beginning of the applet binary
 typedef struct {
   // Stack area
-  applet_memory_t stack;
+  mpu_area_t stack;
   // Applet entry point
   applet_startup_t startup;
 } applet_header_t;
-
-// Applet memory layout
-typedef struct {
-  // Read/write data area #1
-  applet_memory_t data1;
-  // Read/write data area #2
-  applet_memory_t data2;
-  // Read-only code area #1
-  applet_memory_t code1;
-  // Read-only code area #2
-  applet_memory_t code2;
-
-} applet_layout_t;
 
 // Applet privileges
 typedef struct {
@@ -102,5 +83,3 @@ bool applet_is_alive(applet_t* applet);
 applet_t* applet_active(void);
 
 #endif  // KERNEL
-
-#endif  // TREZORHAL_APPLET_H

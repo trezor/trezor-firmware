@@ -42,6 +42,8 @@ void applet_init(applet_t* applet, applet_header_t* header,
 }
 
 static void applet_clear_memory(applet_t* applet) {
+  mpu_set_active_applet(&applet->layout);
+
   if (applet->layout.data1.size > 0) {
     memset((void*)applet->layout.data1.start, 0, applet->layout.data1.size);
   }

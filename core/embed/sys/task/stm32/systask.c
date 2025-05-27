@@ -22,6 +22,7 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
+#include <sys/applet.h>
 #include <sys/bootutils.h>
 #include <sys/irq.h>
 #include <sys/linker_utils.h>
@@ -431,6 +432,13 @@ __attribute((no_stack_protector, used)) static uint32_t scheduler_pendsv(
 
   // Setup the MPU for the new task
   mpu_reconfig(next_task->mpu_mode);
+
+#ifdef KERNEL
+  if (next_task->applet != NULL) {
+    applet_t* applet = (applet_t*)next_task->applet;
+    mpu_set_active_applet(&applet->layout);
+  }
+#endif
 
   IRQ_LOG_EXIT();
 
