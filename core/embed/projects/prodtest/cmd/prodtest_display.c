@@ -23,6 +23,8 @@
 #include <io/display.h>
 #include <rtl/cli.h>
 
+#include "prodtest.h"
+
 static void prodtest_display_border(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -95,6 +97,7 @@ static void prodtest_display_set_backlight(cli_t* cli) {
 
   cli_trace(cli, "Updating display backlight level to %d...", level);
   display_set_backlight(level);
+  prodtest_show_homescreen();
 
   cli_ok(cli, "");
 }
