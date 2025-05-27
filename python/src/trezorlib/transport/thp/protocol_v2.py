@@ -47,9 +47,13 @@ class ProtocolV2Channel(Channel):
         transport: Transport,
         mapping: ProtobufMapping,
         credential: bytes | None = None,
+        prepare_channel_without_pairing: bool = True,
     ) -> None:
         super().__init__(transport, mapping)
-        self.trezor_state = self.prepare_channel_without_pairing(credential=credential)
+        if prepare_channel_without_pairing:
+            self.trezor_state = self.prepare_channel_without_pairing(
+                credential=credential
+            )
 
     def get_channel(self) -> ProtocolV2Channel:
         if not self._has_valid_channel:
