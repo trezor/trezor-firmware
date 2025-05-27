@@ -66,10 +66,19 @@ pm_status_t pm_init(bool inherit_state) {
 
   // Create monitoring timer
   drv->monitoring_timer = systimer_create(pm_monitoring_timer_handler, NULL);
+  if (drv->monitoring_timer == NULL) {
+    pm_deinit();
+    return PM_ERROR;
+  }
+
   systimer_set_periodic(drv->monitoring_timer, PM_BATTERY_SAMPLING_PERIOD_MS);
 
   // Create shutdown timer
   drv->shutdown_timer = systimer_create(pm_shutdown_timer_handler, NULL);
+  if (drv->shutdown_timer == NULL) {
+    pm_deinit();
+    return PM_ERROR;
+  }
 
   // Initial power source measurement
   pmic_measure(pm_pmic_data_ready, NULL);
@@ -108,15 +117,15 @@ pm_status_t pm_init(bool inherit_state) {
     drv->state = PM_STATE_HIBERNATE;
   }
 
-  // Fuel gauge SoC available, set fuel_gauge initialized.
-  drv->fuel_gauge_initialized = true;
-
   // Enable charging by default to max current
   drv->charging_enabled = true;
 
   // Set default SOC limit and max charging current limit
   drv->soc_limit = 100;
   drv->charging_current_max_limit_ma = PM_BATTERY_CHARGING_CURRENT_MAX;
+
+  // Fuel gauge SoC available, set fuel_gauge initialized.
+  drv->fuel_gauge_initialized = true;
 
   // Poll until fuel_gauge is initialized and first PMIC & WLC measurements
   // propagates into power_monitor.
@@ -192,12 +201,10 @@ pm_status_t pm_suspend(void) {
     return PM_NOT_INITIALIZED;
   }
 
+  irq_key_t irq_key = irq_lock();
   drv->request_suspend = true;
   pm_process_state_machine();
-
-  if (drv->state != PM_STATE_SUSPEND) {
-    return PM_REQUEST_REJECTED;
-  }
+  irq_unlock(irq_key);
 
   return PM_OK;
 }
@@ -209,8 +216,10 @@ pm_status_t pm_hibernate(void) {
     return PM_NOT_INITIALIZED;
   }
 
+  irq_key_t irq_key = irq_lock();
   drv->request_hibernate = true;
   pm_process_state_machine();
+  irq_unlock(irq_key);
 
   systick_delay_ms(50);
 
@@ -242,13 +251,18 @@ pm_status_t pm_turn_on(void) {
   if ((!usb_connected && !wireless_connected) &&
       (drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_RECOVERY_THR_V ||
        drv->battery_critical)) {
+    irq_key_t irq_key = irq_lock();
     drv->battery_critical = true;
     pm_store_data_to_backup_ram();
+    irq_unlock(irq_key);
+
     return PM_REQUEST_REJECTED;
   }
 
+  irq_key_t irq_key = irq_lock();
   drv->request_turn_on = true;
   pm_process_state_machine();
+  irq_unlock(irq_key);
 
   if (drv->state == PM_STATE_HIBERNATE || drv->state == PM_STATE_CHARGING) {
     return PM_REQUEST_REJECTED;
