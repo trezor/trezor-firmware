@@ -11,7 +11,7 @@ use crate::ui::{
     },
     geometry::{Alignment, Offset, Rect},
     layout::simplified::{process_frame_event, show},
-    layout_bolt::{fonts, prodtest::welcome::Welcome, theme, UIBolt},
+    layout_bolt::{fonts, prodtest::welcome::Welcome, UIBolt},
     shape,
     shape::render_on_display,
     ui_prodtest::{ProdtestLayoutType, ProdtestUI},
@@ -54,7 +54,6 @@ impl ProdtestUI for UIBolt {
         });
 
         display::refresh();
-        display::fade_backlight_duration(theme::backlight::get_backlight_normal(), 150);
     }
 
     fn screen_prodtest_border() {
@@ -68,7 +67,6 @@ impl ProdtestUI for UIBolt {
         });
 
         display::refresh();
-        display::fade_backlight_duration(theme::backlight::get_backlight_normal(), 150);
     }
 
     fn screen_prodtest_bars(colors: &str) {
@@ -105,7 +103,6 @@ impl ProdtestUI for UIBolt {
         });
 
         display::refresh();
-        display::fade_backlight_duration(theme::backlight::get_backlight_normal(), 150);
     }
 
     fn screen_prodtest_touch(area: Rect) {
@@ -118,7 +115,6 @@ impl ProdtestUI for UIBolt {
         });
 
         display::refresh();
-        display::set_backlight(theme::backlight::get_backlight_normal());
     }
 
     fn screen_prodtest_draw(events: Vec<TouchEvent, 256>) {

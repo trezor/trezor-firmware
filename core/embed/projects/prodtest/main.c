@@ -252,8 +252,6 @@ void prodtest_show_homescreen(void) {
   } else {
     screen_prodtest_welcome(&g_layout.layout, NULL, 0);
   }
-
-  display_set_backlight(150);
 }
 
 int main(void) {
@@ -287,6 +285,7 @@ int main(void) {
   rgb_led_set_color(RGBLED_GREEN);
 #endif
 
+  display_set_backlight(150);
   prodtest_show_homescreen();
 
   while (true) {
