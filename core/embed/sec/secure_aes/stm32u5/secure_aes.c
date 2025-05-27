@@ -25,9 +25,12 @@
 
 #include <sec/secure_aes.h>
 
+#if NORCOW_MIN_VERSION <= 5
+#include "secure_aes_unpriv.h"
+#endif
+
 #include "memzero.h"
 
-#define SAES_DATA_SIZE_WITH_UPRIV_KEY 32
 #define AES_BLOCK_SIZE 16
 
 #ifdef KERNEL_MODE
@@ -68,168 +71,12 @@ static secbool is_key_supported(secure_aes_keysel_t key) {
   }
 }
 
-#if NORCOW_MIN_VERSION <= 5
-#ifdef KERNEL
-
-#include <sys/mpu.h>
-#include <sys/syscall.h>
-
-#ifdef USE_TRUSTZONE
-#include <sys/trustzone.h>
-#endif
-
-#include <sys/irq.h>
-
-__attribute__((section(".udata")))
-uint32_t saes_input[SAES_DATA_SIZE_WITH_UPRIV_KEY / sizeof(uint32_t)];
-
-__attribute__((section(".udata")))
-uint32_t saes_output[SAES_DATA_SIZE_WITH_UPRIV_KEY / sizeof(uint32_t)];
-
-__attribute__((section(".uflash"), used, naked, no_stack_protector)) uint32_t
-saes_invoke(void) {
-  // reset the key loaded in SAES
-  MODIFY_REG(SAES->CR, AES_CR_KEYSEL, CRYP_KEYSEL_NORMAL);
-
-  while (HAL_IS_BIT_SET(SAES->SR, CRYP_FLAG_BUSY)) {
-  }
-  while (HAL_IS_BIT_SET(SAES->ISR, CRYP_FLAG_RNGEIF)) {
-  }
-
-  MODIFY_REG(SAES->CR,
-             AES_CR_KMOD | AES_CR_DATATYPE | AES_CR_KEYSIZE | AES_CR_CHMOD |
-                 AES_CR_KEYSEL | AES_CR_KEYPROT,
-             CRYP_KEYMODE_NORMAL | CRYP_NO_SWAP | CRYP_KEYSIZE_256B |
-                 CRYP_AES_ECB | CRYP_KEYSEL_HSW | CRYP_KEYPROT_DISABLE);
-
-  TAMP->BKP0R;
-  TAMP->BKP1R;
-  TAMP->BKP2R;
-  TAMP->BKP3R;
-  TAMP->BKP4R;
-  TAMP->BKP5R;
-  TAMP->BKP6R;
-  TAMP->BKP7R;
-
-#define CRYP_OPERATINGMODE_ENCRYPT 0x00000000U /*!< Encryption mode(Mode 1) */
-
-  /* Set the operating mode and normal key selection */
-  MODIFY_REG(SAES->CR, AES_CR_MODE | AES_CR_KMOD,
-             CRYP_OPERATINGMODE_ENCRYPT | CRYP_KEYMODE_NORMAL);
-
-  SAES->CR |= AES_CR_EN;
-
-  for (int j = 0; j < SAES_DATA_SIZE_WITH_UPRIV_KEY / AES_BLOCK_SIZE; j++) {
-    /* Write the input block in the IN FIFO */
-    SAES->DINR = saes_input[j * 4 + 0];
-    SAES->DINR = saes_input[j * 4 + 1];
-    SAES->DINR = saes_input[j * 4 + 2];
-    SAES->DINR = saes_input[j * 4 + 3];
-
-    while (HAL_IS_BIT_CLR(SAES->ISR, AES_ISR_CCF)) {
-    }
-
-    /* Clear CCF Flag */
-    SET_BIT(SAES->ICR, CRYP_CLEAR_CCF);
-
-    /* Read the output block from the output FIFO */
-    for (int i = 0U; i < 4U; i++) {
-      saes_output[j * 4 + i] = SAES->DOUTR;
-    }
-  }
-
-  SAES->CR &= ~AES_CR_EN;
-
-  // reset the key loaded in SAES
-  MODIFY_REG(SAES->CR, AES_CR_KEYSEL, CRYP_KEYSEL_NORMAL);
-
-  svc_return_from_unpriv(sectrue);
-  return 0;
-}
-
-extern uint8_t _uflash_start;
-extern uint8_t _uflash_end;
-
-secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
-                       secure_aes_keysel_t key) {
-  if (size != SAES_DATA_SIZE_WITH_UPRIV_KEY) {
-    return secfalse;
-  }
-
-  if (key != SECURE_AES_KEY_XORK_SN) {
-    return secfalse;
-  }
-
-  uint32_t prev_svc_prio = NVIC_GetPriority(SVCall_IRQn);
-  NVIC_SetPriority(SVCall_IRQn, IRQ_PRI_HIGHEST);
-  uint32_t basepri = __get_BASEPRI();
-  __set_BASEPRI(IRQ_PRI_HIGHEST + 1);
-
-#ifdef USE_TRUSTZONE
-  uint32_t unpriv_ram_start = SAES_RAM_START;
-  uint32_t unpriv_ram_size = SAES_RAM_SIZE;
-
-  // `saes_invoke()` function is too small to justify placing it in a region
-  // that is aligned to TZ_FLASH_ALIGNMENT (8KB), as doing so would result
-  // in significant wasted space. Therefore, we need to align the flash
-  // addresses to the nearest lower and the nearest higher multiple of
-  // TZ_FLASH_ALIGNMENT.
-  uint32_t unpriv_flash_start =
-      ALIGN_DOWN((uint32_t)&_uflash_start, TZ_FLASH_ALIGNMENT);
-  uint32_t unpriv_flash_size =
-      ALIGN_UP((uint32_t)&_uflash_end, TZ_FLASH_ALIGNMENT) - unpriv_flash_start;
-
-  tz_set_sram_unpriv(unpriv_ram_start, unpriv_ram_size, true);
-  tz_set_flash_unpriv(unpriv_flash_start, unpriv_flash_size, true);
-  tz_set_saes_unpriv(true);
-  tz_set_tamper_unpriv(true);
-#endif  // USE_TRUSTZONE
-
-  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SAES);
-
-  memset((void*)SAES_RAM_START, 0, SAES_RAM_SIZE);
-  memcpy(saes_input, input, size);
-
-  SAES->CR |= AES_CR_KEYSEL_0;
-
-  __HAL_RCC_SAES_CLK_DISABLE();
-  __HAL_RCC_SAES_FORCE_RESET();
-  __HAL_RCC_SAES_RELEASE_RESET();
-  __HAL_RCC_SAES_CLK_ENABLE();
-
-  secbool retval = invoke_unpriv(saes_invoke);
-
-  __HAL_RCC_SAES_CLK_DISABLE();
-  __HAL_RCC_SAES_FORCE_RESET();
-  __HAL_RCC_SAES_RELEASE_RESET();
-  __HAL_RCC_SAES_CLK_ENABLE();
-
-  memcpy(output, saes_output, size);
-  memset((void*)SAES_RAM_START, 0, SAES_RAM_SIZE);
-
-  mpu_reconfig(mpu_mode);
-
-#ifdef USE_TRUSTZONE
-  tz_set_sram_unpriv(unpriv_ram_start, unpriv_ram_size, false);
-  tz_set_flash_unpriv(unpriv_flash_start, unpriv_flash_size, false);
-  tz_set_saes_unpriv(false);
-  tz_set_tamper_unpriv(false);
-#endif  // USE_TRUSTZONE
-
-  __set_BASEPRI(basepri);
-  NVIC_SetPriority(SVCall_IRQn, prev_svc_prio);
-
-  return retval;
-}
-#endif
-#endif
-
 secbool secure_aes_ecb_encrypt_hw(const uint8_t* input, size_t size,
                                   uint8_t* output, secure_aes_keysel_t key) {
 #if NORCOW_MIN_VERSION <= 5
 #ifdef KERNEL
   if (key == SECURE_AES_KEY_XORK_SN) {
-    return unpriv_encrypt(input, size, output, key);
+    return secure_aes_unpriv_encrypt(input, size, output, key);
   }
 #endif
 #endif

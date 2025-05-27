@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <trezor_types.h>
+
 #ifndef KERNEL_MODE
 
 #include "syscall_internal.h"
@@ -495,7 +497,7 @@ static PIN_UI_WAIT_CALLBACK storage_init_callback = NULL;
 static void storage_init_callback_wrapper(uint32_t wait, uint32_t progress,
                                           enum storage_ui_message_t message) {
   secbool retval = storage_init_callback(wait, progress, message);
-  syscall_invoke1(retval, SYSCALL_RETURN_FROM_CALLBACK);
+  return_from_unprivileged_callback(retval);
 }
 
 void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,

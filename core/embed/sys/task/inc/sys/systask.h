@@ -103,6 +103,8 @@ typedef void (*systask_error_handler_t)(const systask_postmortem_t* pminfo);
 #ifdef KERNEL_MODE
 
 // Maximum number of tasks that can be created
+// 1. kernel
+// 2. coreapp
 #define SYSTASK_MAX_TASKS 2
 
 // Zero-based task ID (up SYSTASK_MAX_TASKS - 1)

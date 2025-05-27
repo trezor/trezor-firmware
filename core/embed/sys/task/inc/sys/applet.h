@@ -34,6 +34,15 @@ typedef struct {
   mpu_area_t stack;
   // Applet entry point
   applet_startup_t startup;
+  // Coreapp specific data
+  struct {
+    // Unprivileged SAES input buffer
+    void* saes_input;
+    // Unprivileged SAES output buffer
+    void* saes_output;
+    // Unprivileged SAES callback
+    void* saes_callback;
+  } coreapp;
 } applet_header_t;
 
 // Applet privileges
