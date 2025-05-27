@@ -36,12 +36,32 @@ static void prodtest_reboot(cli_t* cli) {
   reboot_device();
 }
 
+static void prodtest_reboot_to_bootloader(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  cli_ok(cli, "");
+
+  // Reboot with a delay to allow the response to be sent
+  systick_delay_ms(1000);
+  reboot_to_bootloader();
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
   .name = "reboot",
   .func = prodtest_reboot,
   .info = "Reboot the device",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "reboot-to-bootloader",
+  .func = prodtest_reboot_to_bootloader,
+  .info = "Reboot the device to bootloader",
   .args = ""
 );
 

@@ -113,6 +113,17 @@ reboot
 OK
 ```
 
+
+### reboot-to-bootloader
+This command initiates device reboot to bootlaoder.
+
+Example:
+```
+reboot-to-bootloader
+OK
+```
+
+
 ### boardloader-version
 Retrieves the version of the boardloader. The command returns `OK` followed by the version in the format `<major>.<minor>.<patch>`.
 
