@@ -164,8 +164,10 @@ impl Map {
 impl Map {
     pub fn try_clone(&self) -> Result<Self, Error> {
         let mut map = Self::with_capacity(self.len())?;
-        unsafe {
-            ptr::copy_nonoverlapping(self.table, map.table, self.len());
+        if !self.table.is_null() {
+            unsafe {
+                ptr::copy_nonoverlapping(self.table, map.table, self.len());
+            }
         }
         map.set_used(self.used());
         map.set_all_keys_are_qstrs(self.all_keys_are_qstrs());
