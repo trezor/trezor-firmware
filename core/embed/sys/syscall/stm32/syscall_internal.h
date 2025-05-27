@@ -23,8 +23,7 @@
 
 #include <sys/applet.h>
 #include <sys/syscall.h>
-
-#include "syscall_numbers.h"
+#include <sys/syscall_numbers.h>
 
 #ifndef KERNEL_MODE
 
