@@ -76,7 +76,7 @@ def _version_str(version: tuple[int, ...]) -> str:
 
 
 def make_tree_info(merkle_root: bytes) -> UnsignedInfo:
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.UTC)
     commit = (
         subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=HERE)
         .decode("ascii")
