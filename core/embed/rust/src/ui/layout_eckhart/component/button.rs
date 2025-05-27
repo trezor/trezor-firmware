@@ -36,6 +36,7 @@ pub struct Button {
     radius: Option<u8>,
     state: State,
     long_press: Option<Duration>,
+    long_press_danger: bool,
     long_timer: Timer,
     haptic: bool,
     gradient: bool,
@@ -73,6 +74,7 @@ impl Button {
             radius: None,
             state: State::Initial,
             long_press: None,
+            long_press_danger: false,
             long_timer: Timer::new(),
             haptic: true,
             gradient: false,
@@ -158,6 +160,11 @@ impl Button {
         self
     }
 
+    pub fn with_long_press_danger(mut self, danger: bool) -> Self {
+        self.long_press_danger = danger;
+        self
+    }
+
     pub fn with_radius(mut self, radius: u8) -> Self {
         // Both radius and gradient not supported
         debug_assert!(!self.gradient);
@@ -211,8 +218,9 @@ impl Button {
         matches!(self.state, State::Pressed)
     }
 
-    pub fn long_press(&self) -> Option<Duration> {
+    pub fn long_press(&self) -> Option<(Duration, bool)> {
         self.long_press
+            .map(|duration| (duration, self.long_press_danger))
     }
 
     pub fn is_disabled(&self) -> bool {
