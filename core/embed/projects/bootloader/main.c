@@ -135,9 +135,12 @@ static secbool boot_sequence(secbool manufacturing_mode) {
       (cmd == BOOT_COMMAND_INSTALL_UPGRADE || cmd == BOOT_COMMAND_REBOOT ||
        cmd == BOOT_COMMAND_SHOW_RSOD || cmd == BOOT_COMMAND_STOP_AND_WAIT);
 
-  if (sectrue == manufacturing_mode && cmd != BOOT_COMMAND_POWER_OFF &&
-      !button_is_down(BTN_POWER)) {
+  if (sectrue == manufacturing_mode && cmd != BOOT_COMMAND_POWER_OFF) {
     turn_on = true;
+  }
+
+  if (button_is_down(BTN_POWER)) {
+    turn_on = false;
   }
 
   uint32_t press_start = 0;
