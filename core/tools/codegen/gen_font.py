@@ -18,7 +18,7 @@ from mako.template import Template
 
 
 def _normalize(s: str) -> str:
-    return unicodedata.normalize("NFKC", s)
+    return unicodedata.normalize("NFC", s)
 
 
 HERE = Path(__file__).parent
