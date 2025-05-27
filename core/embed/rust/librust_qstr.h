@@ -445,7 +445,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_pin__should_be_long;
   MP_QSTR_pin__title_check_pin;
   MP_QSTR_pin__title_settings;
-  MP_QSTR_pin__title_setup;
   MP_QSTR_pin__title_wrong_pin;
   MP_QSTR_pin__tries_left;
   MP_QSTR_pin__turn_off;
@@ -923,7 +922,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_cardano__confirming_a_multisig_transaction;
   MP_QSTR_cardano__confirming_a_plutus_transaction;
   MP_QSTR_cardano__confirming_pool_registration;
-  MP_QSTR_cardano__confirming_transction;
+  MP_QSTR_cardano__confirming_transaction;
   MP_QSTR_cardano__cost;
   MP_QSTR_cardano__credential_mismatch;
   MP_QSTR_cardano__datum_hash;
@@ -1061,7 +1060,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__approve_unlimited_template;
   MP_QSTR_ethereum__contract;
   MP_QSTR_ethereum__data_size_template;
-  MP_QSTR_ethereum__deploy_contract;
   MP_QSTR_ethereum__gas_limit;
   MP_QSTR_ethereum__gas_price;
   MP_QSTR_ethereum__interaction_contract;

@@ -118,7 +118,7 @@
   "cardano__confirming_a_multisig_transaction": "text,2",
   "cardano__confirming_a_plutus_transaction": "text,2",
   "cardano__confirming_pool_registration": "text,2",
-  "cardano__confirming_transction": "text,2",
+  "cardano__confirming_transaction": "text,2",
   "cardano__cost": "text,1",
   "cardano__credential_mismatch": "text,3",
   "cardano__datum_hash": "text,1",

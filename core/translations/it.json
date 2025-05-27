@@ -173,7 +173,7 @@
     "cardano__confirming_a_multisig_transaction": "Conferma di una transazione multifirma.",
     "cardano__confirming_a_plutus_transaction": "Conferma di una transazione Plutus.",
     "cardano__confirming_pool_registration": "Conferma registrazione pool come proprietario.",
-    "cardano__confirming_transction": "Conferma di una transazione.",
+    "cardano__confirming_transaction": "Conferma di una transazione.",
     "cardano__cost": "Costo",
     "cardano__credential_mismatch": "Credenziali non corrispondenti a quelle di pagamento.",
     "cardano__datum_hash": "Hash datum:",

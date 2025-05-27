@@ -130,7 +130,7 @@
   "128": "cardano__confirming_a_multisig_transaction",
   "129": "cardano__confirming_a_plutus_transaction",
   "130": "cardano__confirming_pool_registration",
-  "131": "cardano__confirming_transction",
+  "131": "cardano__confirming_transaction",
   "132": "cardano__cost",
   "133": "cardano__credential_mismatch",
   "134": "cardano__datum_hash",
