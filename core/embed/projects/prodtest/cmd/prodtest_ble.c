@@ -19,9 +19,11 @@
 
 #ifdef USE_BLE
 
+#include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
 #include <io/ble.h>
+#include <io/usb.h>
 #include <rtl/cli.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
@@ -227,6 +229,96 @@ static void prodtest_ble_erase_bonds_cmd(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+static void prodtest_ble_radio_test_cmd(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  // Deinitialize BLE module
+  ble_deinit();
+
+  /* Enable clock for USART1 */
+  __HAL_RCC_USART3_FORCE_RESET();
+  __HAL_RCC_USART3_RELEASE_RESET();
+  __HAL_RCC_USART3_CLK_ENABLE();
+
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOG_CLK_ENABLE();
+
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  // NRF Reset pin
+  GPIO_InitStruct.Pin = GPIO_PIN_0;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+
+  // UART PINS
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+
+  GPIO_InitStruct.Pin = GPIO_PIN_5;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  GPIO_InitStruct.Pin = GPIO_PIN_10 | GPIO_PIN_1;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  GPIO_InitStruct.Pin = GPIO_PIN_11;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  UART_HandleTypeDef huart = {0};
+  huart.Init.Mode = UART_MODE_TX_RX;
+  huart.Init.BaudRate = 1000000;
+  huart.Init.HwFlowCtl = UART_HWCONTROL_RTS_CTS;
+  huart.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart.Init.Parity = UART_PARITY_NONE;
+  huart.Init.StopBits = UART_STOPBITS_1;
+  huart.Init.WordLength = UART_WORDLENGTH_8B;
+  huart.Instance = USART3;
+
+  uint8_t cmd_line_byte;
+  uint8_t nrf_byte;
+
+  // Initialize UART
+  if (HAL_UART_Init(&huart) != HAL_OK) {
+    cli_error(cli, CLI_ERROR, "Could not initialize UART.");
+    return;
+  }
+
+  // Reset NRF
+  HAL_GPIO_WritePin(GPIOG, GPIO_PIN_0, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOG, GPIO_PIN_0, GPIO_PIN_SET);
+
+  cli_trace(cli, "Note: radio test requires special firmware on the nRF chip.");
+
+  while (true) {
+    if (cli_aborted(cli)) {
+      cli_trace(cli, "Aborted.");
+      break;
+    }
+
+    // Read byte from the command line and pass it to NRF UART;
+    if (usb_vcp_read(0, &cmd_line_byte, 1) > 0) {
+      HAL_UART_Transmit(&huart, &cmd_line_byte, 1, 100);
+    }
+
+    // Read byte from the NRF UART and pass it to command line;
+    if (HAL_UART_Receive(&huart, &nrf_byte, 1, 10) == HAL_OK) {
+      cli->write(cli, (const char*)&nrf_byte, 1);
+    }
+  }
+
+  HAL_UART_DeInit(&huart);
+  __HAL_RCC_USART3_CLK_DISABLE();
+  ble_init();  // Reinitialize BLE module
+
+  cli_ok(cli, "");
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -254,6 +346,13 @@ PRODTEST_CLI_CMD(
   .name = "ble-erase-bonds",
   .func = prodtest_ble_erase_bonds_cmd,
   .info = "Erase all BLE bonds",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "ble-radio-test",
+  .func = prodtest_ble_radio_test_cmd,
+  .info = "Proxy data between the USB VCP and the nRF over UART to support the Radio Test CLI.",
   .args = ""
 );
 
