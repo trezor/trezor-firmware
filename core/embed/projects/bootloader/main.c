@@ -159,7 +159,7 @@ static secbool boot_sequence(secbool manufacturing_mode) {
       uint32_t elapsed = systick_ms() - press_start;
       if (elapsed >= 3000 && !bld_locked) {
 #ifdef USE_HAPTIC
-        haptic_play(HAPTIC_BUTTON_PRESS);
+        haptic_play(HAPTIC_BOOTLOADER_ENTRY);
 #endif
         bld_locked = true;
       } else if ((elapsed >= 1000 || manufacturing_mode == sectrue) &&
