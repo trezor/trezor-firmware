@@ -132,8 +132,7 @@ class Translation:
         raise KeyError(key)
 
     def translate(self, key: str, _stacklevel: int = 0) -> str:
-        tr = self._translate_raw(key, _stacklevel=_stacklevel + 1)
-        return tr.replace("\xa0", " ").strip()
+        return self._translate_raw(key, _stacklevel=_stacklevel + 1).strip()
 
     def as_regexp(self, key: str, _stacklevel: int = 0) -> re.Pattern:
         tr = self.translate(key, _stacklevel=_stacklevel + 1)

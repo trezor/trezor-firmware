@@ -83,15 +83,13 @@ def test_reset_slip39_advanced(
     reset.confirm_read(debug)
 
     # confirm checklist
-    # TODO: resolve foreign glyphs extraction from the layout
-    if TR.get_language() != "pt":
-        assert any(
-            needle in debug.read_layout().text_content()
-            for needle in [
-                TR.reset__slip39_checklist_set_num_groups,
-                TR.reset__slip39_checklist_num_groups,
-            ]
-        )
+    assert any(
+        needle in debug.read_layout().text_content()
+        for needle in [
+            TR.reset__slip39_checklist_set_num_groups,
+            TR.reset__slip39_checklist_num_groups,
+        ]
+    )
     reset.confirm_read(debug)
 
     # set num of groups - default is 5
@@ -107,16 +105,14 @@ def test_reset_slip39_advanced(
     reset.set_selection(debug, group_count - 5)
 
     # confirm checklist
-    # TODO: resolve foreign glyphs extraction from the layout
-    if TR.get_language() != "pt":
-        assert any(
-            needle in debug.read_layout().text_content()
-            for needle in [
-                TR.reset__slip39_checklist_set_threshold,  # basic
-                TR.reset__slip39_checklist_set_num_shares,  # advanced (UI bolt and delizia)
-                TR.reset__slip39_checklist_num_shares,  # advanced (UI caesar)
-            ]
-        )
+    assert any(
+        needle in debug.read_layout().text_content()
+        for needle in [
+            TR.reset__slip39_checklist_set_threshold,  # basic
+            TR.reset__slip39_checklist_set_num_shares,  # advanced (UI bolt and delizia)
+            TR.reset__slip39_checklist_num_shares,  # advanced (UI caesar)
+        ]
+    )
     reset.confirm_read(debug)
 
     # set group threshold
