@@ -157,7 +157,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     cardano__confirming_pool_registration = 130,  // "Confirming pool registration as owner."
     #[cfg(feature = "universal_fw")]
-    cardano__confirming_transction = 131,  // "Confirming a transaction."
+    cardano__confirming_transaction = 131,  // "Confirming a transaction."
     #[cfg(feature = "universal_fw")]
     cardano__cost = 132,  // "Cost"
     #[cfg(feature = "universal_fw")]
@@ -1430,8 +1430,6 @@ pub enum TranslatedString {
     words__wallet = 1028,  // "Wallet"
     words__authenticate = 1029,  // "Authenticate"
     #[cfg(feature = "universal_fw")]
-    ethereum__deploy_contract = 1030,  // "Deploy contract"
-    #[cfg(feature = "universal_fw")]
     ethereum__title_all_input_data_template = 1031,  // "All input data ({0} bytes)"
     auto_lock__description = 1032,  // "Set the time before your Trezor locks automatically."
     plurals__lock_after_x_days = 1033,  // "day|days"
@@ -1441,7 +1439,6 @@ pub enum TranslatedString {
     passphrase__show = 1037,  // "Show passphrase"
     pin__reenter = 1038,  // "Re-enter PIN"
     pin__setup_completed = 1039,  // "PIN setup completed."
-    pin__title_setup = 1040,  // "Set PIN"
     instructions__shares_start_with_x_template = 1041,  // "Start with Share #{0}"
     reset__check_share_backup_template = 1042,  // "Let's do a quick check of Share #{0}."
     reset__select_word_from_share_template = 1043,  // "Select word #{0} from\nShare #{1}"
@@ -1612,7 +1609,7 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             (Self::cardano__confirming_pool_registration, "Confirming pool registration as owner."),
             #[cfg(feature = "universal_fw")]
-            (Self::cardano__confirming_transction, "Confirming a transaction."),
+            (Self::cardano__confirming_transaction, "Confirming a transaction."),
             #[cfg(feature = "universal_fw")]
             (Self::cardano__cost, "Cost"),
             #[cfg(feature = "universal_fw")]
@@ -3183,8 +3180,6 @@ impl TranslatedString {
             (Self::words__wallet, "Wallet"),
             (Self::words__authenticate, "Authenticate"),
             #[cfg(feature = "universal_fw")]
-            (Self::ethereum__deploy_contract, "Deploy contract"),
-            #[cfg(feature = "universal_fw")]
             (Self::ethereum__title_all_input_data_template, "All input data ({0} bytes)"),
             (Self::auto_lock__description, "Set the time before your Trezor locks automatically."),
             (Self::plurals__lock_after_x_days, "day|days"),
@@ -3194,7 +3189,6 @@ impl TranslatedString {
             (Self::passphrase__show, "Show passphrase"),
             (Self::pin__reenter, "Re-enter PIN"),
             (Self::pin__setup_completed, "PIN setup completed."),
-            (Self::pin__title_setup, "Set PIN"),
             (Self::instructions__shares_start_with_x_template, "Start with Share #{0}"),
             (Self::reset__check_share_backup_template, "Let's do a quick check of Share #{0}."),
             (Self::reset__select_word_from_share_template, "Select word #{0} from\nShare #{1}"),
@@ -3378,7 +3372,7 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__confirming_pool_registration, Self::cardano__confirming_pool_registration),
         #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_cardano__confirming_transction, Self::cardano__confirming_transction),
+        (Qstr::MP_QSTR_cardano__confirming_transaction, Self::cardano__confirming_transaction),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__cost, Self::cardano__cost),
         #[cfg(feature = "universal_fw")]
@@ -3673,8 +3667,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__contract, Self::ethereum__contract),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__data_size_template, Self::ethereum__data_size_template),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_ethereum__deploy_contract, Self::ethereum__deploy_contract),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__gas_limit, Self::ethereum__gas_limit),
         #[cfg(feature = "universal_fw")]
@@ -4053,7 +4045,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_pin__should_be_long, Self::pin__should_be_long),
         (Qstr::MP_QSTR_pin__title_check_pin, Self::pin__title_check_pin),
         (Qstr::MP_QSTR_pin__title_settings, Self::pin__title_settings),
-        (Qstr::MP_QSTR_pin__title_setup, Self::pin__title_setup),
         (Qstr::MP_QSTR_pin__title_wrong_pin, Self::pin__title_wrong_pin),
         (Qstr::MP_QSTR_pin__tries_left, Self::pin__tries_left),
         (Qstr::MP_QSTR_pin__turn_off, Self::pin__turn_off),

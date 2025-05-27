@@ -17,7 +17,7 @@ class OrdinarySigner(Signer):
     controlled by 1852' keys, dealing with staking and minting/burning tokens.
     """
 
-    SIGNING_MODE_TITLE = TR.cardano__confirming_transction
+    SIGNING_MODE_TITLE = TR.cardano__confirming_transaction
 
     def __init__(
         self,
