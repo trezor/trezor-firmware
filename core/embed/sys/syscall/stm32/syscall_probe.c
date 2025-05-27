@@ -22,6 +22,7 @@
 #pragma GCC optimize("no-stack-protector")
 
 #include <trezor_model.h>
+#include <trezor_rtl.h>
 
 #include <sys/applet.h>
 
@@ -36,7 +37,7 @@ static inline bool inside_area(const void *addr, size_t len,
 }
 
 bool probe_read_access(const void *addr, size_t len) {
-  applet_t *applet = applet_active();
+  applet_t *applet = syscall_get_context();
 
   if (applet == NULL) {
     return false;
@@ -86,7 +87,7 @@ bool probe_read_access(const void *addr, size_t len) {
 }
 
 bool probe_write_access(void *addr, size_t len) {
-  applet_t *applet = applet_active();
+  applet_t *applet = syscall_get_context();
 
   if (applet == NULL) {
     return false;
@@ -116,6 +117,13 @@ bool probe_write_access(void *addr, size_t len) {
 #endif
 
   return false;
+}
+
+void handle_access_violation(const char *file, int line) {
+  static const char *msg = "Access violation";
+  applet_t *applet = syscall_get_context();
+  systask_t *task = applet != NULL ? &applet->task : systask_active();
+  systask_exit_fatal(task, msg, strlen(msg), file, strlen(file), line);
 }
 
 #endif  // KERNEL

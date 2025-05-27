@@ -28,6 +28,7 @@
 #include <sys/applet.h>
 #include <sys/bootutils.h>
 #include <sys/mpu.h>
+#include <sys/syscall_ipc.h>
 #include <sys/sysevent.h>
 #include <sys/system.h>
 #include <sys/systick.h>
@@ -191,10 +192,18 @@ void drivers_init() {
 // Returns when the coreapp task is terminated
 static void kernel_loop(applet_t *coreapp) {
   do {
-    sysevents_t awaited = {0};
+    sysevents_t awaited = {
+        .read_ready = 1 << SYSHANDLE_SYSCALL,
+        .write_ready = 0,
+    };
+
     sysevents_t signalled = {0};
 
     sysevents_poll(&awaited, &signalled, ticks_timeout(100));
+
+    if (signalled.read_ready & (1 << SYSHANDLE_SYSCALL)) {
+      syscall_ipc_dequeue();
+    }
 
   } while (applet_is_alive(coreapp));
 }

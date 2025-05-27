@@ -25,6 +25,7 @@
 #include <sys/linker_utils.h>
 #include <sys/mpu.h>
 #include <sys/stack_utils.h>
+#include <sys/syscall_ipc.h>
 #include <sys/systask.h>
 #include <sys/system.h>
 #include <sys/systick.h>
@@ -55,6 +56,9 @@ void system_init(systask_error_handler_t error_handler) {
   systask_scheduler_init(error_handler);
   systick_init();
   systimer_init();
+#ifdef KERNEL
+  syscall_ipc_init();
+#endif
 }
 
 void system_deinit(void) {

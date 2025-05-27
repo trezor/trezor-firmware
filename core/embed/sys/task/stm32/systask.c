@@ -28,6 +28,7 @@
 #include <sys/linker_utils.h>
 #include <sys/mpu.h>
 #include <sys/syscall.h>
+#include <sys/syscall_ipc.h>
 #include <sys/sysevent_source.h>
 #include <sys/systask.h>
 #include <sys/system.h>
@@ -243,6 +244,62 @@ bool systask_push_call(systask_t* task, void* entrypoint, uint32_t arg1,
 cleanup:
   task->sp = original_sp;
   return false;
+}
+
+uint32_t systask_invoke_callback(systask_t* task, uint32_t arg1, uint32_t arg2,
+                                 uint32_t arg3, void* callback) {
+  uint32_t original_sp = task->sp;
+  if (!systask_push_call(task, callback, arg1, arg2, arg3)) {
+    // There is not enough space on the unprivileged stack
+    error_shutdown("Callback stack low");
+  }
+
+  // This flag signals that the task is currently executing a callback.
+  // Is reset by proper return from the callback via
+  // return_from_unprivileged_callback() function.
+  task->in_callback = true;
+
+  systask_yield_to(task);
+
+  if (task->killed) {
+    // Task was killed while executing the callback
+    error_shutdown("Callback crashed");
+  }
+
+  if (task->in_callback) {
+    // Unprivileged stack pointer contains unexpected value.
+    // This is likely a sign of a unexpected task switch during the
+    // callback execution (e.g. by a system call).
+    error_shutdown("Callback invalid op");
+  }
+
+  uint32_t retval = systask_get_r0(task);
+
+  task->sp = original_sp;
+  return retval;
+}
+
+void systask_set_r0r1(systask_t* task, uint32_t r0, uint32_t r1) {
+  uint32_t* stack = (uint32_t*)task->sp;
+
+  if ((task->exc_return & 0x10) == 0) {
+    stack += 16;  // Skip the FP context S16-S32
+    stack += 8;   // Skip R4-R11
+  }
+
+  stack[STK_FRAME_R0] = r0;
+  stack[STK_FRAME_R1] = r1;
+}
+
+uint32_t systask_get_r0(systask_t* task) {
+  uint32_t* stack = (uint32_t*)task->sp;
+
+  if ((task->exc_return & 0x10) == 0) {
+    stack += 16;  // Skip the FP context S16-S32
+    stack += 8;   // Skip R4-R11
+  }
+
+  return stack[STK_FRAME_R0];
 }
 
 static void systask_kill(systask_t* task) {
@@ -554,15 +611,17 @@ __attribute__((no_stack_protector, used)) static uint32_t svc_handler(
       break;
 #ifdef KERNEL
     case SVC_SYSCALL:
-      syscall_handler(args, r6);
-      stack[0] = args[0];
-      stack[1] = args[1];
+      if ((r6 & SYSCALL_THREAD_MODE) != 0) {
+        syscall_ipc_enqueue(args, r6);
+      } else {
+        syscall_handler(args, r6, systask_active()->applet);
+        stack[0] = args[0];
+        stack[1] = args[1];
+      }
       break;
     case SVC_CALLBACK_RETURN:
-      // g_return_value = args[0]
-      // exc_return = return_from_callback;
       mpu_restore(mpu_mode);
-      return_from_app_callback(args[0], msp);
+      return_from_unpriv(args[0], msp);
       break;
 #endif
     default:
