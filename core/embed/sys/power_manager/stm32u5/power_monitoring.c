@@ -19,6 +19,7 @@
 #ifdef KERNEL_MODE
 
 #include <sys/backup_ram.h>
+#include <sys/irq.h>
 #include <sys/pmic.h>
 #include <sys/systick.h>
 #include <trezor_rtl.h>
@@ -232,6 +233,8 @@ void pm_battery_sampling(float vbat, float ibat, float ntc_temp) {
 void pm_battery_initial_soc_guess(void) {
   pm_driver_t* drv = &g_pm;
 
+  irq_key_t irq_key = irq_lock();
+
   // Check if the buffer is full
   if (drv->bat_sampling_buf_head_idx == drv->bat_sampling_buf_tail_idx) {
     // Buffer is empty, no data to process
@@ -264,6 +267,8 @@ void pm_battery_initial_soc_guess(void) {
   ntc_temp_g /= samples_count;
 
   fuel_gauge_initial_guess(&drv->fuel_gauge, vbat_g, ibat_g, ntc_temp_g);
+
+  irq_unlock(irq_key);
 }
 
 #endif

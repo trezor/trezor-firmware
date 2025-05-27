@@ -93,6 +93,7 @@ typedef struct {
 
   // Power mode request flags
   bool request_suspend;
+  bool request_exit_suspend;
   bool request_hibernate;
   bool request_turn_on;
   bool shutdown_timer_elapsed;

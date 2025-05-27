@@ -48,7 +48,7 @@ static const pm_state_handler_t state_handlers[] = {
         },
     [PM_STATE_SUSPEND] =
         {
-            .enter = pm_enter_suspend,
+            .enter = NULL,
             .handle = pm_handle_state_suspend,
             .exit = NULL,
         },
@@ -149,17 +149,9 @@ pm_power_status_t pm_handle_state_charging(pm_driver_t* drv) {
 }
 
 pm_power_status_t pm_handle_state_suspend(pm_driver_t* drv) {
-  // immediately return to power save state after wakeup
-  return PM_STATE_POWER_SAVE;
-}
-
-pm_power_status_t pm_handle_state_startup_rejected(pm_driver_t* drv) {
-  // Wait until RGB sequence is done and go back to hibernate
-  if (drv->request_hibernate) {
-    drv->request_hibernate = false;
-
-    // Device is charging, request is rejected with no action
-    return PM_STATE_HIBERNATE;
+  if (drv->request_exit_suspend) {
+    drv->request_exit_suspend = false;
+    return PM_STATE_POWER_SAVE;
   }
 
   return drv->state;
@@ -242,8 +234,6 @@ void pm_enter_hibernate(pm_driver_t* drv) {
 }
 
 void pm_enter_charging(pm_driver_t* drv) {}
-
-void pm_enter_suspend(pm_driver_t* drv) { pm_control_suspend(); }
 
 void pm_enter_shutting_down(pm_driver_t* drv) {
   // Set shutdown timer
