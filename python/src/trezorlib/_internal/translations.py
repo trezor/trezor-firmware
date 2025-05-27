@@ -68,7 +68,10 @@ def version_from_json(json_str: str) -> VersionTuple:
 
 
 def _normalize(what: str) -> str:
-    return unicodedata.normalize("NFKC", what)
+    normalized = unicodedata.normalize("NFC", what)
+    if normalized != what:
+        raise RuntimeError(f"Invalid string normalization at: '{what}'")
+    return normalized
 
 
 def offsets_seq(data: t.Iterable[bytes]) -> t.Iterator[int]:

@@ -80,15 +80,13 @@ def test_reset_slip39_basic(
     reset.confirm_read(debug)
 
     # confirm checklist
-    # TODO: resolve foreign glyphs extraction from the layout
-    if TR.get_language() != "pt":
-        assert any(
-            needle in debug.read_layout().text_content()
-            for needle in [
-                TR.reset__slip39_checklist_set_num_shares,
-                TR.reset__slip39_checklist_num_shares,
-            ]
-        )
+    assert any(
+        needle in debug.read_layout().text_content()
+        for needle in [
+            TR.reset__slip39_checklist_set_num_shares,
+            TR.reset__slip39_checklist_num_shares,
+        ]
+    )
     reset.confirm_read(debug)
 
     # set num of shares - default is 5

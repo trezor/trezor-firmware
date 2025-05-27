@@ -610,7 +610,7 @@
     "recovery__dry_run_backup_not_on_this_device": "La copia de seguridad del monedero no está en este dispositivo",
     "recovery__dry_run_bip39_valid_match": "La copia de seguridad del monedero indicada es válida y coincide con la del dispositivo.",
     "recovery__dry_run_bip39_valid_mismatch": "La semilla de recuperación es válida, pero no coincide con la del dispositivo.",
-    "recovery__dry_run_invalid_backup_entered": "Se ha introducido una copia de seguridad del monedero no válida",
+    "recovery__dry_run_invalid_backup_entered": "Se ha introducido una copia de seguridad del monedero no válida",
     "recovery__dry_run_slip39_valid_all_shares": "Todos los recursos compartidos son válidos y pertenecen a la copia de seguridad del dispositivo",
     "recovery__dry_run_slip39_valid_match": "Recursos compartidos válidos; coinciden con el dispositivo.",
     "recovery__dry_run_slip39_valid_mismatch": "Recursos compartidos válidos; no coinciden con el dispositivo.",
