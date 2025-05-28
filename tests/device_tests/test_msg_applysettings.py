@@ -61,7 +61,7 @@ def _set_expected_responses(client: Client, homescreen: bytes | None = None):
         client.set_expected_responses(
             [messages.ButtonRequest]
             + n_chunks * [messages.DataChunkRequest]
-            + [messages.ButtonRequest, messages.Success, messages.Features]
+            + [messages.ButtonRequest, messages.Success]
         )
     else:
         client.set_expected_responses(EXPECTED_RESPONSES_PIN_TT)
@@ -158,16 +158,16 @@ def test_apply_homescreen_tr_toif_good(session: Session):
 
 
 @pytest.mark.models("safe3")
-def test_apply_homescreen_tr_toif_single_message(client: Client):
-    with client:
+def test_apply_homescreen_tr_toif_single_message(session: Session):
+    with session.client as client:
         _set_expected_responses(client)
-        client.call(messages.ApplySettings(homescreen=TR_HOMESCREEN))
-        client.refresh_features()
+        session.call(messages.ApplySettings(homescreen=TR_HOMESCREEN))
+        session.refresh_features()
 
         # Revert to default settings
         client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
-        client.call(messages.ApplySettings(homescreen=b""))
-        client.refresh_features()
+        session.call(messages.ApplySettings(homescreen=b""))
+        session.refresh_features()
 
 
 @pytest.mark.models("safe3")
