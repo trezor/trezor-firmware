@@ -91,8 +91,8 @@ async def handle_received_message(
     _check_checksum(message_length, message_buffer)
 
     # Synchronization process
-    seq_bit = (ctrl_byte & 0x10) >> 4
-    ack_bit = (ctrl_byte & 0x08) >> 3
+    seq_bit = control_byte.get_seq_bit(ctrl_byte)
+    ack_bit = control_byte.get_ack_bit(ctrl_byte)
     if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
         log.debug(
             __name__,
