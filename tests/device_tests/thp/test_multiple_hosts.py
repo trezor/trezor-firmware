@@ -22,7 +22,9 @@ def _prepare_two_hosts_for_handshake(
 
     protocol_1 = client.protocol
     protocol_1._reset_sync_bits()
-    protocol_2 = ProtocolV2Channel(protocol_1.transport, protocol_1.mapping)
+    protocol_2 = ProtocolV2Channel(
+        protocol_1.transport, protocol_1.mapping, prepare_channel_without_pairing=False
+    )
     protocol_2._reset_sync_bits()
 
     nonce_1 = os.urandom(8)
@@ -61,15 +63,10 @@ def _prepare_two_hosts(client: Client) -> tuple[ProtocolV2Channel, ProtocolV2Cha
 
 
 def test_fallback_encrypted_transport(client: Client) -> None:
-    protocol_1, protocol_2 = _prepare_two_hosts(client)
-    client_1 = Client(
-        transport=client.transport, open_transport=True, protocol=protocol_1
-    )
-    client_2 = Client(
-        transport=client.transport, open_transport=True, protocol=protocol_2
-    )
-    session_1 = client_1.get_session(session_id=b"\x05")
-    session_2 = client_2.get_session(session_id=b"\x08")
+    client_1 = Client(transport=client.transport, open_transport=True)
+    client_2 = Client(transport=client.transport, open_transport=True)
+    session_1 = client_1.get_session()
+    session_2 = client_2.get_session()
     msg = messages.GetFeatures()
 
     # Sequential calls should work without any problem
@@ -85,6 +82,7 @@ def test_fallback_encrypted_transport(client: Client) -> None:
     # Zig-zag calls should invoke fallback
     session_1._write(msg)
     session_2._write(msg)
+    # BUG - sesssion 1 should be still retransmitting message
     resp = session_2._read()
     assert isinstance(resp, messages.Failure)
     assert resp.message == "FALLBACK!"

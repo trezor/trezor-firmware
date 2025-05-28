@@ -90,7 +90,7 @@ class Channel:
         self.temp_crc: int | None = None
         self.temp_crc_compare: bytearray | None = None
         self.temp_tag: bytearray | None = None
-
+        self.temp_ctrl_byte: int | None = None
         if __debug__:
             self.should_show_pairing_dialog: bool = True
 
@@ -165,6 +165,51 @@ class Channel:
                 )
             pass  # TODO ??
         if self.fallback_decrypt and self.expected_payload_length == self.bytes_read:
+
+            # TODO XXX Fix the crc check - the fallback crc computation is not correct
+            # # Check CRC
+            # assert self.temp_crc is not None
+            # crc = self.temp_crc.to_bytes(4, "big")
+            # crc2 = self.temp_crc.to_bytes(4, "little")
+            # if crc != self.temp_crc_compare:
+            #     if __debug__:
+            #         self._log("INVALID FALLBACK CRC", logger=log.warning)
+            #         self._log(
+            #             get_bytes_as_str(crc)
+            #             + ", "
+            #             + get_bytes_as_str(crc2)
+            #             + ", "
+            #             + get_bytes_as_str(self.temp_crc_compare),
+            #             logger=log.warning,
+            #         )
+            #     return None
+
+            # Check ABP seq bit
+            assert self.temp_ctrl_byte is not None
+            seq_bit = control_byte.get_seq_bit(self.temp_ctrl_byte)
+            if not ABP.has_msg_correct_seq_bit(self.channel_cache, seq_bit):
+                if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
+                    self._log(
+                        "Received message with an unexpected sequential bit!",
+                        logger=log.warning,
+                    )
+                return received_message_handler._send_ack(self, ack_bit=seq_bit)
+
+            # Check noise tag
+            assert self.busy_decoder is not None
+            assert self.temp_tag is not None
+            if not self.busy_decoder.finish_and_check_tag(self.temp_tag):
+                if __debug__:
+                    self._log("Invalid fallback noise tag", logger=log.warning)
+                raise ThpDecryptionError()
+
+            # Update nonces and seq bit
+            nonce_receive = self.channel_cache.get_int(CHANNEL_NONCE_RECEIVE)
+            assert nonce_receive is not None
+            self.channel_cache.set_int(CHANNEL_NONCE_RECEIVE, nonce_receive + 1)
+            ABP.set_expected_receive_seq_bit(self.channel_cache, 1 - seq_bit)
+
+            self._finish_message()
             self._finish_fallback()
             from trezor.enums import FailureType
             from trezor.messages import Failure
@@ -178,10 +223,7 @@ class Channel:
         if self.expected_payload_length + INIT_HEADER_LENGTH == self.bytes_read:
             self._finish_message()
             if self.fallback_decrypt:
-                # TODO Check CRC and if valid, check tag, if valid update nonces
-                self._finish_fallback()
-                # TODO self.write() failure device is busy - use channel buffer to send this failure message!!
-                return None
+                raise Exception("THIS SHOULD NOT HAPPEN!")
             return received_message_handler.handle_received_message(self, buffer)
         elif self.expected_payload_length + INIT_HEADER_LENGTH > self.bytes_read:
             self.is_cont_packet_expected = True
@@ -238,6 +280,11 @@ class Channel:
 
             try:
                 if not self._can_fallback():
+                    if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
+                        self._log(
+                            "Channel is in a state that does not support fallback.",
+                            logger=log.error,
+                        )
                     raise Exception(
                         "Channel is in a state that does not support fallback."
                     )
@@ -251,8 +298,10 @@ class Channel:
                 if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
                     from ubinascii import hexlify
 
-                    log.debug(
-                        __name__, "FAILED TO FALLBACK: %s", hexlify(packet).decode()
+                    self._log(
+                        "FAILED TO FALLBACK: ",
+                        hexlify(packet).decode(),
+                        logger=log.error,
                     )
                 return None
 
@@ -263,9 +312,12 @@ class Channel:
             # CRC CHECK
             self._handle_fallback_crc(buf)
 
+            # Store ctrl byte
+            self.temp_ctrl_byte = packet[0]
+
             # Handle ACK
-            if control_byte.is_ack(packet[0]):
-                ack_bit = (packet[0] & 0x08) >> 3
+            if control_byte.is_ack(self.temp_ctrl_byte):
+                ack_bit = (self.temp_ctrl_byte & 0x08) >> 3
                 return received_message_handler._handle_ack(self, ack_bit)
 
             # TAG CHECK
@@ -373,6 +425,7 @@ class Channel:
             buffer = memory_manager.get_existing_read_buffer(self.get_channel_id_int())
         except WireBufferError:
             self.set_channel_state(ChannelState.INVALIDATED)
+            # TODO ? self.clear() or raise Decryption error?
             pass  # TODO handle device busy, channel kaput
         self._buffer_packet_data(buffer, packet, CONT_HEADER_LENGTH)
 
@@ -412,7 +465,6 @@ class Channel:
         self.temp_crc = 0
         self.temp_crc_compare = bytearray(4)
         self.temp_tag = bytearray(16)
-        # self.bytes_read = INIT_HEADER_LENGTH
 
     def decrypt_buffer(
         self, message_length: int, offset: int = INIT_HEADER_LENGTH

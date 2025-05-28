@@ -45,6 +45,10 @@ def _has_ack_correct_sync_bit(cache: ChannelCache, sync_bit: int) -> bool:
     return is_correct
 
 
+def has_msg_correct_seq_bit(cache: ChannelCache, sync_bit: int) -> bool:
+    return sync_bit == get_expected_receive_seq_bit(cache)
+
+
 def is_sending_allowed(cache: ChannelCache) -> bool:
     """
     Checks whether sending a message in the provided channel is allowed.

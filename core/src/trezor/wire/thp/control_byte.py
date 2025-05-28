@@ -30,6 +30,14 @@ def add_ack_bit_to_ctrl_byte(ctrl_byte: int, ack_bit: int) -> int:
     raise ThpError("Unexpected acknowledgement bit")
 
 
+def get_ack_bit(ctrl_byte: int) -> int:
+    return (ctrl_byte & 0x08) >> 3
+
+
+def get_seq_bit(ctrl_byte: int) -> int:
+    return (ctrl_byte & 0x10) >> 4
+
+
 def is_ack(ctrl_byte: int) -> bool:
     return ctrl_byte & _ACK_MASK == ACK_MESSAGE
 
