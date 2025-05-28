@@ -46,7 +46,7 @@
 #define BT_UUID_TRZ_RX BT_UUID_DECLARE_128(BT_UUID_TRZ_RX_VAL)
 #define BT_UUID_TRZ_TX BT_UUID_DECLARE_128(BT_UUID_TRZ_TX_VAL)
 
-#define BLE_TX_PACKET_SIZE 64
+#define BLE_TX_PACKET_SIZE 244
 #define BLE_RX_PACKET_SIZE 244
 
 #define BLE_PAIRING_CODE_LEN 6
@@ -68,6 +68,9 @@ typedef struct {
 
   uint32_t app_version;
   uint32_t bld_version;
+
+  uint8_t connected_addr[6];  // MAC address of the connected device
+  uint8_t connected_addr_type;
 
 } event_status_msg_t;
 

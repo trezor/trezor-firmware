@@ -32,7 +32,8 @@
 #define LOG_MODULE_NAME ble_connection
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-static struct bt_conn *current_conn;
+static struct bt_conn *current_conn = NULL;
+static struct bt_conn *next_conn = NULL;
 
 void connected(struct bt_conn *conn, uint8_t err) {
   char addr[BT_ADDR_LE_STR_LEN];
@@ -45,16 +46,20 @@ void connected(struct bt_conn *conn, uint8_t err) {
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
   LOG_INF("Connected %s", addr);
 
-  current_conn = bt_conn_ref(conn);
+  if (current_conn != NULL) {
+    if (next_conn) {
+      // should not happen as we only allow two connections, but just in case
+      // deref
+      LOG_WRN("Replacing next_conn with current_conn");
+      bt_conn_unref(next_conn);
+    }
 
-  //  struct bt_le_conn_param params = BT_LE_CONN_PARAM_INIT(6,6,0,400);
-  //
-  //  bt_conn_le_param_update(conn, &params);
-
-  // err = bt_conn_le_phy_update(current_conn, BT_CONN_LE_PHY_PARAM_2M);
-  // if (err) {
-  //   LOG_ERR("Phy update request failed: %d",  err);
-  // }
+    next_conn = bt_conn_ref(conn);
+    connection_disconnect();
+  } else {
+    current_conn = bt_conn_ref(conn);
+  }
+  advertising_stop();
 
   ble_management_send_status_event();
 }
@@ -62,13 +67,23 @@ void connected(struct bt_conn *conn, uint8_t err) {
 void disconnected(struct bt_conn *conn, uint8_t reason) {
   char addr[BT_ADDR_LE_STR_LEN];
 
+  advertising_stop();
+
   pairing_reset();
 
-  if (current_conn) {
+  if (current_conn && conn == current_conn) {
     bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
     LOG_INF("Disconnected: %s (reason %u)", addr, reason);
     bt_conn_unref(current_conn);
     current_conn = NULL;
+  }
+
+  if (next_conn && current_conn == NULL) {
+    current_conn = next_conn;
+    next_conn = NULL;
+  } else if (next_conn) {
+    bt_conn_unref(next_conn);
+    next_conn = NULL;
   }
 
   ble_management_send_status_event();
@@ -99,10 +114,8 @@ bool connection_is_connected(void) { return current_conn != NULL; }
 
 void connection_disconnect(void) {
   if (current_conn) {
-    LOG_INF("Remotely disconnected");
+    LOG_INF("Internal disconnect request");
     bt_conn_disconnect(current_conn, BT_HCI_ERR_REMOTE_USER_TERM_CONN);
-    bt_conn_unref(current_conn);
-    current_conn = NULL;
   }
 }
 

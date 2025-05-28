@@ -23,7 +23,7 @@
 
 #include <trz_comm/trz_comm.h>
 
-#define SPI_TX_DATA_LEN 244
+#define SPI_TX_DATA_LEN 251
 #define MAX_UART_DATA_SIZE 64
 
 void spi_init(void);
