@@ -144,12 +144,7 @@ async def reset_device(msg: ResetDevice) -> Success:
 
 async def _entropy_check(secret: bytes) -> bool:
     """Returns True to indicate that entropy check loop should end."""
-    from trezor.messages import (
-        EntropyCheckContinue,
-        EntropyCheckReady,
-        GetPublicKey,
-        PublicKey,
-    )
+    from trezor.messages import EntropyCheckContinue, EntropyCheckReady, GetPublicKey
     from trezor.wire.context import call_any
 
     from apps.bitcoin.get_public_key import get_public_key
@@ -176,7 +171,6 @@ async def _entropy_check(secret: bytes) -> bool:
         curve_name = req.ecdsa_curve_name or coininfo.by_name(req.coin_name).curve_name
         keychain = Keychain(seed, curve_name, [paths.AlwaysMatchingSchema])
         msg = await get_public_key(req, keychain=keychain)
-        assert PublicKey.is_type_of(msg)
 
 
 async def _backup_bip39(mnemonic: str) -> None:

@@ -737,6 +737,7 @@ impl FirmwareUI for UICaesar {
         _account: Option<TString<'static>>,
         _path: Option<TString<'static>>,
         _xpubs: Obj,
+        _title_success: TString<'static>,
         _br_code: u16,
         _br_name: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
