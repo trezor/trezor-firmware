@@ -26,6 +26,21 @@
 
 #include "power_manager_internal.h"
 
+// Power manager internal state machine handlers and entry/exit funtions
+static pm_power_status_t pm_handle_state_active(pm_driver_t* drv);
+static pm_power_status_t pm_handle_state_power_save(pm_driver_t* drv);
+static pm_power_status_t pm_handle_state_shutting_down(pm_driver_t* drv);
+static pm_power_status_t pm_handle_state_suspend(pm_driver_t* drv);
+static pm_power_status_t pm_handle_state_charging(pm_driver_t* drv);
+static pm_power_status_t pm_handle_state_hibernate(pm_driver_t* drv);
+
+static void pm_enter_hibernate(pm_driver_t* drv);
+static void pm_enter_charging(pm_driver_t* drv);
+static void pm_enter_shutting_down(pm_driver_t* drv);
+static void pm_enter_power_save(pm_driver_t* drv);
+static void pm_enter_active(pm_driver_t* drv);
+static void pm_exit_shutting_down(pm_driver_t* drv);
+
 // State handler lookup table
 static const pm_state_handler_t state_handlers[] = {
     [PM_STATE_ACTIVE] =
@@ -103,7 +118,7 @@ void pm_process_state_machine(void) {
 
 // State handler implementations
 
-pm_power_status_t pm_handle_state_hibernate(pm_driver_t* drv) {
+static pm_power_status_t pm_handle_state_hibernate(pm_driver_t* drv) {
   if (drv->request_turn_on) {
     drv->request_turn_on = false;
     return PM_STATE_POWER_SAVE;
@@ -126,7 +141,7 @@ pm_power_status_t pm_handle_state_hibernate(pm_driver_t* drv) {
   return drv->state;
 }
 
-pm_power_status_t pm_handle_state_charging(pm_driver_t* drv) {
+static pm_power_status_t pm_handle_state_charging(pm_driver_t* drv) {
   if (drv->request_turn_on) {
     drv->request_turn_on = false;
     return PM_STATE_POWER_SAVE;
@@ -148,7 +163,7 @@ pm_power_status_t pm_handle_state_charging(pm_driver_t* drv) {
   return drv->state;
 }
 
-pm_power_status_t pm_handle_state_suspend(pm_driver_t* drv) {
+static pm_power_status_t pm_handle_state_suspend(pm_driver_t* drv) {
   if (drv->request_exit_suspend) {
     drv->request_exit_suspend = false;
     return PM_STATE_POWER_SAVE;
@@ -157,7 +172,7 @@ pm_power_status_t pm_handle_state_suspend(pm_driver_t* drv) {
   return drv->state;
 }
 
-pm_power_status_t pm_handle_state_shutting_down(pm_driver_t* drv) {
+static pm_power_status_t pm_handle_state_shutting_down(pm_driver_t* drv) {
   // System is shutting down, but user can still hibernate the device early.
   if (drv->request_hibernate) {
     drv->request_hibernate = false;
@@ -177,7 +192,7 @@ pm_power_status_t pm_handle_state_shutting_down(pm_driver_t* drv) {
   return drv->state;
 }
 
-pm_power_status_t pm_handle_state_power_save(pm_driver_t* drv) {
+static pm_power_status_t pm_handle_state_power_save(pm_driver_t* drv) {
   // Handle hibernate request
   if (drv->request_hibernate) {
     drv->request_hibernate = false;
@@ -203,7 +218,7 @@ pm_power_status_t pm_handle_state_power_save(pm_driver_t* drv) {
   return drv->state;
 }
 
-pm_power_status_t pm_handle_state_active(pm_driver_t* drv) {
+static pm_power_status_t pm_handle_state_active(pm_driver_t* drv) {
   // Handle hibernate request
   if (drv->request_hibernate) {
     drv->request_hibernate = false;
@@ -226,31 +241,31 @@ pm_power_status_t pm_handle_state_active(pm_driver_t* drv) {
 
 // State enter/exit actions
 
-void pm_enter_hibernate(pm_driver_t* drv) {
+static void pm_enter_hibernate(pm_driver_t* drv) {
   // Store power manager data with request to hibernate, power manager
   // will try to hibernate immediately after reboot.
   pm_store_data_to_backup_ram();
   reboot_to_off();
 }
 
-void pm_enter_charging(pm_driver_t* drv) {}
+static void pm_enter_charging(pm_driver_t* drv) {}
 
-void pm_enter_shutting_down(pm_driver_t* drv) {
+static void pm_enter_shutting_down(pm_driver_t* drv) {
   // Set shutdown timer
   systimer_set(drv->shutdown_timer, PM_SHUTDOWN_TIMEOUT_MS);
 }
 
-void pm_enter_power_save(pm_driver_t* drv) {
+static void pm_enter_power_save(pm_driver_t* drv) {
   // Limit backlight
   backlight_set_max_level(130);
 }
 
-void pm_enter_active(pm_driver_t* drv) {
+static void pm_enter_active(pm_driver_t* drv) {
   // Set unlimited backlight
   backlight_set_max_level(255);
 }
 
-void pm_exit_shutting_down(pm_driver_t* drv) {
+static void pm_exit_shutting_down(pm_driver_t* drv) {
   // Stop the shutdown timer
   systimer_unset(drv->shutdown_timer);
   drv->shutdown_timer_elapsed = false;

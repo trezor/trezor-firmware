@@ -28,6 +28,8 @@
 #include "../stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
 
+static void pm_battery_sampling(float vbat, float ibat, float ntc_temp);
+
 void pm_monitor_power_sources(void) {
   pm_driver_t* drv = &g_pm;
 
@@ -206,7 +208,7 @@ void pm_charging_controller(pm_driver_t* drv) {
   }
 }
 
-void pm_battery_sampling(float vbat, float ibat, float ntc_temp) {
+static void pm_battery_sampling(float vbat, float ibat, float ntc_temp) {
   pm_driver_t* drv = &g_pm;
 
   // Store battery data in the buffer
