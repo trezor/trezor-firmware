@@ -87,6 +87,7 @@ def test_fallback_encrypted_transport(client: Client) -> None:
     assert isinstance(resp, messages.Failure)
     assert resp.message == "FALLBACK!"
     sleep(LOCK_TIME)
+    session_1._read()  # TODO REMOVE
     session_2.call(msg)
 
 
