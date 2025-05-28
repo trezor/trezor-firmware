@@ -1073,14 +1073,13 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
   return pin_fails_reset();
 }
 
-secbool storage_unlock(const uint8_t *pin, size_t pin_len,
-                       const uint8_t *ext_salt) {
-  if (sectrue != initialized || pin == NULL) {
+secbool storage_unlock(const storage_pin_t *pin, const uint8_t *ext_salt) {
+  if (sectrue != initialized || pin == NULL || pin->text == NULL) {
     return secfalse;
   }
 
   ui_progress_init(STORAGE_PIN_OP_VERIFY);
-  if (pin_len == 0) {
+  if (pin->len == 0) {
     if (ui_message == NO_MSG) {
       ui_message = STARTING_MSG;
     } else {
@@ -1090,7 +1089,7 @@ secbool storage_unlock(const uint8_t *pin, size_t pin_len,
     ui_message = VERIFYING_PIN_MSG;
   }
 
-  secbool ret = unlock(pin, pin_len, ext_salt);
+  secbool ret = unlock(pin->text, pin->len, ext_salt);
   ui_progress_finish();
   return ret;
 }
@@ -1370,48 +1369,53 @@ uint32_t storage_get_pin_rem(void) {
   return rem_mcu;
 }
 
-secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
-                           const uint8_t *newpin, size_t newpin_len,
+secbool storage_change_pin(const storage_pin_t *oldpin,
+                           const storage_pin_t *newpin,
                            const uint8_t *old_ext_salt,
                            const uint8_t *new_ext_salt) {
-  if (sectrue != initialized || oldpin == NULL || newpin == NULL) {
+  if (sectrue != initialized || oldpin == NULL || newpin == NULL ||
+      oldpin->text == NULL || newpin->text == NULL) {
     return secfalse;
   }
 
   ui_progress_init(STORAGE_PIN_OP_CHANGE);
-  ui_message =
-      (oldpin_len != 0 && newpin_len == 0) ? VERIFYING_PIN_MSG : PROCESSING_MSG;
+  ui_message = (oldpin->len != 0 && newpin->len == 0) ? VERIFYING_PIN_MSG
+                                                      : PROCESSING_MSG;
 
-  secbool ret = unlock(oldpin, oldpin_len, old_ext_salt);
+  secbool ret = unlock(oldpin->text, oldpin->len, old_ext_salt);
   if (sectrue != ret) {
     goto end;
   }
 
   // Fail if the new PIN is the same as the wipe code.
-  ret = is_not_wipe_code(newpin, newpin_len);
+  ret = is_not_wipe_code(newpin->text, newpin->len);
   if (sectrue != ret) {
     goto end;
   }
 
-  ret = set_pin(newpin, newpin_len, new_ext_salt);
+  ret = set_pin(newpin->text, newpin->len, new_ext_salt);
 
 end:
   ui_progress_finish();
   return ret;
 }
 
-void storage_ensure_not_wipe_code(const uint8_t *pin, size_t pin_len) {
+void storage_ensure_not_wipe_code(const storage_pin_t *pin) {
   // If we are unlocking the storage during upgrade from version 2 or lower,
   // then encode the PIN to the old format.
-  uint32_t legacy_pin = 0;
+  uint32_t legacy_pin_int = 0;
+  storage_pin_t legacy_pin = {
+      .text = (const uint8_t *)&legacy_pin_int,
+      .len = sizeof(legacy_pin_int),
+  };
+
   if (get_lock_version() <= 2) {
-    legacy_pin = pin_to_int(pin, pin_len);
-    pin = (const uint8_t *)&legacy_pin;
-    pin_len = sizeof(legacy_pin);
+    legacy_pin_int = pin_to_int(pin->text, pin->len);
+    pin = &legacy_pin;
   }
 
-  ensure_not_wipe_code(pin, pin_len);
-  memzero(&legacy_pin, sizeof(legacy_pin));
+  ensure_not_wipe_code(pin->text, pin->len);
+  memzero(&legacy_pin_int, sizeof(legacy_pin_int));
 }
 
 secbool storage_has_wipe_code(void) {
@@ -1422,26 +1426,26 @@ secbool storage_has_wipe_code(void) {
   return is_not_wipe_code(WIPE_CODE_EMPTY, WIPE_CODE_EMPTY_LEN);
 }
 
-secbool storage_change_wipe_code(const uint8_t *pin, size_t pin_len,
+secbool storage_change_wipe_code(const storage_pin_t *pin,
                                  const uint8_t *ext_salt,
-                                 const uint8_t *wipe_code,
-                                 size_t wipe_code_len) {
+                                 const storage_pin_t *wipe_code) {
   if (sectrue != initialized || pin == NULL || wipe_code == NULL ||
-      (pin_len != 0 && pin_len == wipe_code_len &&
-       memcmp(pin, wipe_code, pin_len) == 0)) {
+      pin->text == NULL || wipe_code->text == NULL ||
+      (pin->len != 0 && pin->len == wipe_code->len &&
+       memcmp(pin->text, wipe_code->text, pin->len) == 0)) {
     return secfalse;
   }
 
   ui_progress_init(STORAGE_PIN_OP_VERIFY);
-  ui_message =
-      (pin_len != 0 && wipe_code_len == 0) ? VERIFYING_PIN_MSG : PROCESSING_MSG;
+  ui_message = (pin->len != 0 && wipe_code->len == 0) ? VERIFYING_PIN_MSG
+                                                      : PROCESSING_MSG;
 
-  secbool ret = unlock(pin, pin_len, ext_salt);
+  secbool ret = unlock(pin->text, pin->len, ext_salt);
   if (sectrue != ret) {
     goto end;
   }
 
-  ret = set_wipe_code(wipe_code, wipe_code_len);
+  ret = set_wipe_code(wipe_code->text, wipe_code->len);
 
 end:
   ui_progress_finish();
