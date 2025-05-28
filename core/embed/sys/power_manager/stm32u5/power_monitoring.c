@@ -152,7 +152,6 @@ void pm_charging_controller(pm_driver_t* drv) {
     // Charging is disabled
     if (drv->charging_current_target_ma != 0) {
       drv->charging_current_target_ma = 0;
-      drv->charging_target_timestamp = systick_ms();
     } else {
       // No action required
       return;
@@ -162,16 +161,17 @@ void pm_charging_controller(pm_driver_t* drv) {
     drv->charging_current_target_ma = drv->charging_current_max_limit_ma;
 
   } else if (drv->wireless_connected) {
-    // Gradually increase charging current to the maximum
-    if (drv->charging_current_target_ma == drv->charging_current_max_limit_ma) {
-      // No action required
-    } else if (drv->charging_current_target_ma == 0) {
-      drv->charging_current_target_ma = drv->charging_current_max_limit_ma;
-      drv->charging_target_timestamp = systick_ms();
-    } else if (systick_ms() - drv->charging_target_timestamp >
-               PM_WPC_CHARGE_CURR_STEP_TIMEOUT_MS) {
-      drv->charging_current_target_ma += PM_WPC_CHARGE_CURR_STEP_MA;
-      drv->charging_target_timestamp = systick_ms();
+    // Wireless charger is sensitive to large current steps, so we need to
+    // controll the charging current in steps.
+    if (ticks_expired(drv->charging_step_timeout_ms)) {
+      if (drv->charging_current_target_ma <
+          drv->charging_current_max_limit_ma) {
+        drv->charging_current_target_ma += PM_WPC_CHARGE_CURR_STEP_MA;
+      }
+
+      // Reset charging step timeout
+      drv->charging_step_timeout_ms =
+          ticks_timeout(PM_WPC_CHARGE_CURR_STEP_TIMEOUT_MS);
     }
 
   } else {
