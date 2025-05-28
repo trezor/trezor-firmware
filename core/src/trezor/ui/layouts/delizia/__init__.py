@@ -378,14 +378,16 @@ async def confirm_output(
     cancel_text: str | None = None,
     description: str | None = None,
 ) -> None:
+    amount_subtitle = None
     if address_label is not None:
         title = address_label
     elif title is not None:
         pass
     elif output_index is not None:
-        title = f"{TR.words__recipient} #{output_index + 1}"
+        title = amount_subtitle = f"{TR.words__recipient} #{output_index + 1}"
     else:
         title = TR.send__title_sending_to
+        amount_subtitle = TR.send__title_sending_to
 
     await raise_if_not_confirmed(
         trezorui_api.flow_confirm_output(
@@ -393,6 +395,7 @@ async def confirm_output(
             subtitle=title,
             message=address,
             extra=None,
+            amount_subtitle=amount_subtitle,
             amount=amount,
             chunkify=chunkify,
             text_mono=True,

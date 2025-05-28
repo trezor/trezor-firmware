@@ -565,6 +565,7 @@ impl FirmwareUI for UIBolt {
         _description: Option<TString<'static>>,
         _extra: Option<TString<'static>>,
         _message: Obj,
+        _amount_subtitle: Option<TString<'static>>,
         _amount: Option<Obj>,
         _chunkify: bool,
         _text_mono: bool,

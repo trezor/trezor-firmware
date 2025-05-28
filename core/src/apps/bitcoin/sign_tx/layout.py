@@ -111,7 +111,7 @@ async def confirm_output(
                     script_type,
                     show_account_str=show_account_str,
                 )
-                or f"{TR.send__address_path} {address_n_to_str(output.address_n)}"
+                or address_n_to_str(output.address_n)
             )
 
         layout = layouts.confirm_output(

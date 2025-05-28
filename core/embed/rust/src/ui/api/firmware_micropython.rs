@@ -451,6 +451,9 @@ extern "C" fn new_flow_confirm_output(n_args: usize, args: *const Obj, kwargs: *
         let description: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
         let message: Obj = kwargs.get(Qstr::MP_QSTR_message)?;
+        let amount_subtitle: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_amount_subtitle)?
+            .try_into_option()?;
         let amount: Option<Obj> = kwargs.get(Qstr::MP_QSTR_amount)?.try_into_option()?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
         let text_mono: bool = kwargs.get_or(Qstr::MP_QSTR_text_mono, true)?;
@@ -497,6 +500,7 @@ extern "C" fn new_flow_confirm_output(n_args: usize, args: *const Obj, kwargs: *
             description,
             extra,
             message,
+            amount_subtitle,
             amount,
             chunkify,
             text_mono,
@@ -1375,6 +1379,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     message: str,
     ///     description: str | None,
     ///     extra: str | None,
+    ///     amount_subtitle: str | None,
     ///     amount: str | None,
     ///     chunkify: bool,
     ///     text_mono: bool,
