@@ -60,7 +60,7 @@ secbool secret_bootloader_locked(void) {
   return bootloader_locked;
 }
 
-void secret_unlock_bootloader(void) { secret_optiga_erase(); }
+void secret_unlock_bootloader(void) { secret_erase(); }
 #endif
 
 void secret_write_header(void) {
@@ -144,12 +144,10 @@ secbool secret_optiga_present(void) {
 
 secbool secret_optiga_writable(void) { return secret_wiped(); }
 
-void secret_optiga_erase(void) { secret_erase(); }
-
 void secret_prepare_fw(secbool allow_run_with_secret,
                        secbool allow_provisioning_access) {
   (void)allow_provisioning_access;
-#ifdef USE_OPTIGA
+#ifdef LOCKABLE_BOOTLOADER
   if (sectrue != allow_run_with_secret && sectrue != secret_wiped()) {
     // This function does not return
     show_install_restricted_screen();

@@ -154,8 +154,6 @@ secbool secret_optiga_present(void) {
 
 secbool secret_optiga_writable(void) { return secret_wiped(); }
 
-void secret_optiga_erase(void) { secret_erase(); }
-
 secbool secret_tropic_get_trezor_privkey(uint8_t dest[SECRET_KEY_LEN]) {
   memcpy(dest, &SECRET_TROPIC_TREZOR_PRIVKEY_BYTES, SECRET_KEY_LEN);
   return sectrue;
@@ -169,7 +167,7 @@ secbool secret_tropic_get_tropic_pubkey(uint8_t dest[SECRET_KEY_LEN]) {
 void secret_prepare_fw(secbool allow_run_with_secret,
                        secbool allow_provisioning_access) {
   (void)allow_provisioning_access;
-#ifdef USE_OPTIGA
+#ifdef LOCKABLE_BOOTLOADER
   if (sectrue != allow_run_with_secret && sectrue != secret_wiped()) {
     // This function does not return
     show_install_restricted_screen();
