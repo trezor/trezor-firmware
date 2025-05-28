@@ -161,28 +161,20 @@ class Channel:
         except WireBufferError:
             if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
                 self._log(
-                    "getting read buffer failed - ", str(WireBufferError.__name__)
+                    "getting read buffer failed - ",
+                    str(WireBufferError.__name__),
+                    logger=log.warning,
                 )
             pass  # TODO ??
         if self.fallback_decrypt and self.expected_payload_length == self.bytes_read:
 
-            # TODO XXX Fix the crc check - the fallback crc computation is not correct
-            # # Check CRC
-            # assert self.temp_crc is not None
-            # crc = self.temp_crc.to_bytes(4, "big")
-            # crc2 = self.temp_crc.to_bytes(4, "little")
-            # if crc != self.temp_crc_compare:
-            #     if __debug__:
-            #         self._log("INVALID FALLBACK CRC", logger=log.warning)
-            #         self._log(
-            #             get_bytes_as_str(crc)
-            #             + ", "
-            #             + get_bytes_as_str(crc2)
-            #             + ", "
-            #             + get_bytes_as_str(self.temp_crc_compare),
-            #             logger=log.warning,
-            #         )
-            #     return None
+            # Check CRC
+            assert self.temp_crc is not None
+            crc = self.temp_crc.to_bytes(4, "big")
+            if crc != self.temp_crc_compare:
+                if __debug__:
+                    self._log("INVALID FALLBACK CRC", logger=log.warning)
+                return None
 
             # Check ABP seq bit
             assert self.temp_ctrl_byte is not None
@@ -310,6 +302,11 @@ class Channel:
             utils.memcpy(buf, 0, packet, INIT_HEADER_LENGTH)
 
             # CRC CHECK
+            # Compute crc over init header
+            self.temp_crc = checksum.compute_int(
+                memoryview(packet)[:INIT_HEADER_LENGTH]
+            )
+            # Compute crc over rest of the packet
             self._handle_fallback_crc(buf)
 
             # Store ctrl byte
@@ -662,7 +659,9 @@ class Channel:
 
         # Let the main loop be restarted and clear loop, if there is no other
         # workflow and the state is ENCRYPTED_TRANSPORT
-        if self._can_clear_loop():
+        # TODO only once is there to not clear when FALLBACK
+        # TODO missing transmission loop is active -> do not clear
+        if not only_once and self._can_clear_loop():
             if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
                 self._log("clearing loop from channel")
             pass
