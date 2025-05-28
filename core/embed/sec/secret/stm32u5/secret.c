@@ -326,7 +326,7 @@ static void secret_optiga_cache(void) {
 // Deletes the optiga pairing secret from the register
 static void secret_optiga_uncache(void) { secret_key_uncache(8); }
 
-void secret_optiga_erase(void) {
+static void secret_optiga_erase(void) {
   uint8_t value[SECRET_KEY_LEN] = {0};
   secret_write(value, SECRET_OPTIGA_KEY_OFFSET, SECRET_KEY_LEN);
 }
@@ -381,7 +381,7 @@ secbool secret_tropic_writable(void) {
   return secbool_or(res1, res2);
 }
 
-void secret_tropic_erase(void) {
+static void secret_tropic_erase(void) {
   uint8_t value[SECRET_KEY_LEN] = {0};
   secret_write(value, SECRET_TROPIC_TRZ_PRIVKEY_OFFSET, SECRET_KEY_LEN);
   secret_write(value, SECRET_TROPIC_TRO_PUBKEY_OFFSET, SECRET_KEY_LEN);

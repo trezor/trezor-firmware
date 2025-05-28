@@ -80,9 +80,6 @@ secbool secret_optiga_present(void);
 
 // Checks if the optiga pairing secret can be written to the secret storage
 secbool secret_optiga_writable(void);
-
-// Erases optiga pairing secret from the secret storage
-void secret_optiga_erase(void);
 #endif
 
 #ifdef USE_TROPIC
@@ -97,8 +94,6 @@ secbool secret_tropic_set(const uint8_t privkey[SECRET_KEY_LEN],
 secbool secret_tropic_present(void);
 
 secbool secret_tropic_writable(void);
-
-void secret_tropic_erase(void);
 
 #endif
 

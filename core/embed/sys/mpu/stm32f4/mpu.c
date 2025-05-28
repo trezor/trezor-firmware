@@ -335,8 +335,8 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       SET_REGION( 6, FLASH_BASE + 0x10C000, SIZE_16KB, 0x00, FLASH_DATA, PRIV_RW );
       break;
 
-#ifdef USE_OPTIGA
-    // with optiga, we use the secret sector, and assets area is smaller
+#ifdef LOCKABLE_BOOTLOADER
+    // with lockable bootloader, we use the secret sector, and assets area is smaller
     case MPU_MODE_SECRET:
       DIS_REGION( 5 );
       // Secret sector in Bank #2 (Privileged, Read-Write, Non-Executable)

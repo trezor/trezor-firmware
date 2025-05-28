@@ -41,7 +41,7 @@
 #include <util/unit_properties.h>
 #include "blake2s.h"
 
-#if USE_OPTIGA && !defined(TREZOR_EMULATOR)
+#if !defined(TREZOR_EMULATOR)
 #include <sec/secret.h>
 #endif
 
