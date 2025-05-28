@@ -48,7 +48,7 @@ def test_device_id_same(client: Client):
     # ID must be at least 12 characters
     assert len(id1) >= 12
 
-    # Every resulf of UUID must be the same
+    # Every result of UUID must be the same
     assert id1 == id2
 
 
