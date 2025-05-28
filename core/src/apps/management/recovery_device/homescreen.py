@@ -3,8 +3,9 @@ from typing import TYPE_CHECKING
 import storage.device as storage_device
 import storage.recovery as storage_recovery
 import storage.recovery_shares as storage_recovery_shares
-from trezor import TR, wire
+from trezor import TR, utils, wire
 from trezor.messages import Success
+from trezor.wire import message_handler
 
 from apps.common import backup_types
 from apps.management.recovery_device.recover import RecoveryAborted
@@ -39,18 +40,27 @@ async def recovery_process() -> Success:
 
     recovery_type = storage_recovery.get_type()
 
-    wire.message_handler.AVOID_RESTARTING_FOR = (
-        MessageType.Initialize,
-        MessageType.GetFeatures,
-        MessageType.EndSession,
-    )
+    if utils.USE_THP:
+        message_handler.AVOID_RESTARTING_FOR = (
+            MessageType.GetFeatures,
+            MessageType.EndSession,
+        )
+    else:
+        message_handler.AVOID_RESTARTING_FOR = (
+            MessageType.Initialize,
+            MessageType.GetFeatures,
+            MessageType.EndSession,
+        )
     try:
         return await _continue_recovery_process()
     except recover.RecoveryAborted:
         storage_recovery.end_progress()
         backup.deactivate_repeated_backup()
         if recovery_type == RecoveryType.NormalRecovery:
-            storage.wipe()
+            from trezor.wire.context import try_get_ctx_ids
+
+            storage.wipe(clear_cache=False)
+            storage.wipe_cache(excluded=try_get_ctx_ids())
         raise wire.ActionCancelled
 
 
@@ -60,11 +70,17 @@ async def _continue_repeated_backup() -> None:
     from apps.common import backup
     from apps.management.backup_device import perform_backup
 
-    wire.message_handler.AVOID_RESTARTING_FOR = (
-        MessageType.Initialize,
-        MessageType.GetFeatures,
-        MessageType.EndSession,
-    )
+    if utils.USE_THP:
+        message_handler.AVOID_RESTARTING_FOR = (
+            MessageType.GetFeatures,
+            MessageType.EndSession,
+        )
+    else:
+        message_handler.AVOID_RESTARTING_FOR = (
+            MessageType.Initialize,
+            MessageType.GetFeatures,
+            MessageType.EndSession,
+        )
 
     try:
         await perform_backup(is_repeated_backup=True)

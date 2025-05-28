@@ -21,20 +21,20 @@ from .protobuf import dict_to_proto
 from .tools import dict_from_camelcase
 
 if TYPE_CHECKING:
-    from .client import TrezorClient
     from .tools import Address
+    from .transport.session import Session
 
 REQUIRED_FIELDS = ("Fee", "Sequence", "TransactionType", "Payment")
 REQUIRED_PAYMENT_FIELDS = ("Amount", "Destination")
 
 
 def get_address(
-    client: "TrezorClient",
+    session: "Session",
     address_n: "Address",
     show_display: bool = False,
     chunkify: bool = False,
 ) -> str:
-    return client.call(
+    return session.call(
         messages.RippleGetAddress(
             address_n=address_n, show_display=show_display, chunkify=chunkify
         ),
@@ -43,14 +43,14 @@ def get_address(
 
 
 def sign_tx(
-    client: "TrezorClient",
+    session: "Session",
     address_n: "Address",
     msg: messages.RippleSignTx,
     chunkify: bool = False,
 ) -> messages.RippleSignedTx:
     msg.address_n = address_n
     msg.chunkify = chunkify
-    return client.call(msg, expect=messages.RippleSignedTx)
+    return session.call(msg, expect=messages.RippleSignedTx)
 
 
 def create_sign_tx_msg(transaction: dict) -> messages.RippleSignTx:

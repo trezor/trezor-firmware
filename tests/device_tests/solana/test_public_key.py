@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.solana import get_public_key
 from trezorlib.tools import parse_path
 
@@ -32,9 +32,9 @@ pytestmark = [
 @parametrize_using_common_fixtures(
     "solana/get_public_key.json",
 )
-def test_solana_get_public_key(client: Client, parameters, result):
+def test_solana_get_public_key(session: Session, parameters, result):
     actual_result = get_public_key(
-        client, address_n=parse_path(parameters["path"]), show_display=True
+        session, address_n=parse_path(parameters["path"]), show_display=True
     )
 
     assert actual_result.hex() == result["expected_public_key"]

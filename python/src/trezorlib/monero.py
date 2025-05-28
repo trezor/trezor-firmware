@@ -19,8 +19,8 @@ from typing import TYPE_CHECKING
 from . import messages
 
 if TYPE_CHECKING:
-    from .client import TrezorClient
     from .tools import Address
+    from .transport.session import Session
 
 
 # MAINNET = 0
@@ -30,13 +30,13 @@ if TYPE_CHECKING:
 
 
 def get_address(
-    client: "TrezorClient",
+    session: "Session",
     n: "Address",
     show_display: bool = False,
     network_type: messages.MoneroNetworkType = messages.MoneroNetworkType.MAINNET,
     chunkify: bool = False,
 ) -> bytes:
-    return client.call(
+    return session.call(
         messages.MoneroGetAddress(
             address_n=n,
             show_display=show_display,
@@ -48,11 +48,11 @@ def get_address(
 
 
 def get_watch_key(
-    client: "TrezorClient",
+    session: "Session",
     n: "Address",
     network_type: messages.MoneroNetworkType = messages.MoneroNetworkType.MAINNET,
 ) -> messages.MoneroWatchKey:
-    return client.call(
+    return session.call(
         messages.MoneroGetWatchKey(address_n=n, network_type=network_type),
         expect=messages.MoneroWatchKey,
     )
