@@ -9,6 +9,7 @@ use crate::{
     ui::{
         component::{
             connect::Connect,
+            swipe_detect::SwipeSettings,
             text::{
                 op::OpTextLayout,
                 paragraphs::{
@@ -19,7 +20,7 @@ use crate::{
             },
             Border, CachedJpeg, ComponentExt, Empty, FormattedText, Never, Timeout,
         },
-        geometry::{self, Offset},
+        geometry::{self, Direction, Offset},
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
             util::{PropsList, RecoveryType},
@@ -628,7 +629,6 @@ impl FirmwareUI for UIDelizia {
         account: Option<TString<'static>>,
         path: Option<TString<'static>>,
         xpubs: Obj,
-        title_success: TString<'static>,
         br_code: u16,
         br_name: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
@@ -643,7 +643,6 @@ impl FirmwareUI for UIDelizia {
             account,
             path,
             xpubs,
-            title_success,
             br_code,
             br_name,
         )?;
@@ -1088,24 +1087,34 @@ impl FirmwareUI for UIDelizia {
 
     fn show_success(
         title: TString<'static>,
-        _button: TString<'static>,
+        button: TString<'static>,
         description: TString<'static>,
         _allow_cancel: bool,
-        _time_ms: u32,
+        time_ms: u32,
     ) -> Result<Gc<LayoutObj>, Error> {
+        let instruction = if button.is_empty() {
+            TR::instructions__tap_to_continue.into()
+        } else {
+            button
+        };
         // description used in the Footer
         let description = if description.is_empty() {
             None
         } else {
             Some(description)
         };
-        let content = StatusScreen::new_success(title);
+        let content = if time_ms > 0 {
+            StatusScreen::new_success_timeout(title, time_ms)
+        } else {
+            StatusScreen::new_success(title)
+        };
         let layout = LayoutObj::new(SwipeUpScreen::new(
             Frame::left_aligned(
                 TR::words__title_success.into(),
                 SwipeContent::new(content).with_no_attach_anim(),
             )
-            .with_swipeup_footer(description)
+            .with_footer(instruction, description)
+            .with_swipe(Direction::Up, SwipeSettings::default())
             .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREEN_LIGHT),
         ))?;
         Ok(layout)

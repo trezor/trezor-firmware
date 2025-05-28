@@ -12,10 +12,12 @@ if TYPE_CHECKING:
 async def sign_tx(msg: StellarSignTx, keychain: Keychain) -> StellarSignedTx:
     from ubinascii import hexlify
 
+    from trezor import TR
     from trezor.crypto.curve import ed25519
     from trezor.crypto.hashlib import sha256
     from trezor.enums import StellarMemoType
     from trezor.messages import StellarSignedTx, StellarTxOpRequest
+    from trezor.ui.layouts import show_continue_in_app
     from trezor.wire import DataError, ProcessError
     from trezor.wire.context import call_any
 
@@ -114,6 +116,7 @@ async def sign_tx(msg: StellarSignTx, keychain: Keychain) -> StellarSignedTx:
     # sign
     digest = sha256(w).digest()
     signature = ed25519.sign(node.private_key(), digest)
+    show_continue_in_app(TR.send__transaction_signed)
 
     # Add the public key for verification that the right account was used for signing
     return StellarSignedTx(public_key=pubkey, signature=signature)

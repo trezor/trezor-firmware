@@ -205,7 +205,6 @@ pub trait FirmwareUI {
         account: Option<TString<'static>>,
         path: Option<TString<'static>>,
         xpubs: Obj, // TODO: replace Obj
-        title_success: TString<'static>,
         br_code: u16,
         br_name: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error>;

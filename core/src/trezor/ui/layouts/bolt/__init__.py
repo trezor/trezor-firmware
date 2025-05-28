@@ -443,6 +443,10 @@ def show_success(
     )
 
 
+def show_continue_in_app(content: str) -> None:
+    return
+
+
 async def confirm_output(
     address: str,
     amount: str,

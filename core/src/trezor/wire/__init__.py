@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING
 
 from trezor import loop, protobuf, utils
 
+from .. import workflow
 from . import message_handler, protocol_common
 from .codec.codec_context import CodecContext
 from .context import UnexpectedMessageException
@@ -118,6 +119,8 @@ async def handle_session(iface: WireInterface) -> None:
                 utils.unimport_end(modules)
 
                 if not do_not_restart:
+                    # Wait for all active workflows to finish.
+                    await workflow.join_all()
                     # Let the session be restarted from `main`.
                     loop.clear()
                     return  # pylint: disable=lost-exception

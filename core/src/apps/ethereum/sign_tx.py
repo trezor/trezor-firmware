@@ -40,6 +40,7 @@ async def sign_tx(
 ) -> EthereumTxRequest:
     from trezor import TR
     from trezor.crypto.hashlib import sha3_256
+    from trezor.ui.layouts import show_continue_in_app
     from trezor.ui.layouts.progress import progress
     from trezor.utils import HashWriter
 
@@ -111,6 +112,7 @@ async def sign_tx(
 
     progress_obj.stop()
 
+    show_continue_in_app(TR.send__transaction_signed)
     return result
 
 

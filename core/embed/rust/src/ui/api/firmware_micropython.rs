@@ -553,7 +553,6 @@ extern "C" fn new_flow_get_address(n_args: usize, args: *const Obj, kwargs: *mut
         let account: Option<TString> = kwargs.get(Qstr::MP_QSTR_account)?.try_into_option()?;
         let path: Option<TString> = kwargs.get(Qstr::MP_QSTR_path)?.try_into_option()?;
         let xpubs: Obj = kwargs.get(Qstr::MP_QSTR_xpubs)?;
-        let title_success: TString = kwargs.get(Qstr::MP_QSTR_title_success)?.try_into()?;
         let br_code: u16 = kwargs.get(Qstr::MP_QSTR_br_code)?.try_into()?;
         let br_name: TString = kwargs.get(Qstr::MP_QSTR_br_name)?.try_into()?;
 
@@ -568,7 +567,6 @@ extern "C" fn new_flow_get_address(n_args: usize, args: *const Obj, kwargs: *mut
             account,
             path,
             xpubs,
-            title_success,
             br_code,
             br_name,
         )?;
@@ -1507,7 +1505,6 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     account: str | None,
     ///     path: str | None,
     ///     xpubs: list[tuple[str, str]],
-    ///     title_success: str,
     ///     br_code: ButtonRequestType,
     ///     br_name: str,
     /// ) -> LayoutObj[UiResult]:

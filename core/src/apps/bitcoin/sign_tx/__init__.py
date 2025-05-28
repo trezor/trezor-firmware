@@ -52,8 +52,10 @@ async def sign_tx(
     coin: CoinInfo,
     authorization: CoinJoinAuthorization | None = None,
 ) -> TxRequest:
+    from trezor import TR
     from trezor.enums import RequestType
     from trezor.messages import TxRequest
+    from trezor.ui.layouts import show_continue_in_app
     from trezor.wire.context import call
 
     from ..common import BITCOIN_NAMES
@@ -93,6 +95,7 @@ async def sign_tx(
             request_class, req = req
             assert TxRequest.is_type_of(req)
             if req.request_type == RequestType.TXFINISHED:
+                show_continue_in_app(TR.send__transaction_signed)
                 return req
             res = await call(req, request_class)
         elif isinstance(req, helpers.UiConfirm):

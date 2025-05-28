@@ -1,14 +1,14 @@
 from typing import TYPE_CHECKING
 
 import trezorui_api
-from trezor import TR, ui, utils
+from trezor import TR, ui, utils, workflow
 from trezor.enums import ButtonRequestType, RecoveryType
 from trezor.wire import ActionCancelled
 
 from ..common import draw_simple, interact, raise_if_not_confirmed, with_info
 
 if TYPE_CHECKING:
-    from typing import Awaitable, Iterable, NoReturn, Sequence, TypeVar
+    from typing import Any, Awaitable, Coroutine, Iterable, NoReturn, Sequence, TypeVar
 
     from ..common import ExceptionType, PropertyType
 
@@ -297,6 +297,12 @@ async def show_address(
         None,
     )
 
+    show_continue_in_app(
+        TR.address__public_key_confirmed
+        if title in ("XPUB", TR.address__public_key)
+        else TR.address__confirmed
+    )
+
 
 def show_pubkey(
     pubkey: str,
@@ -393,7 +399,7 @@ def show_success(
     subheader: str | None = None,
     button: str | None = None,
     time_ms: int = 0,
-) -> Awaitable[None]:
+) -> Coroutine[Any, Any, None]:
     button = button or TR.buttons__continue  # def_arg
     return raise_if_not_confirmed(
         trezorui_api.show_success(
@@ -408,13 +414,14 @@ def show_success(
     )
 
 
-def show_continue_in_app(content: str) -> Awaitable[None]:
-    return show_success(
+def show_continue_in_app(content: str) -> None:
+    task = show_success(
         content=content,
         button=TR.instructions__continue_in_app,
         time_ms=3200,
         br_name=None,
     )
+    workflow.spawn(task)
 
 
 async def confirm_output(

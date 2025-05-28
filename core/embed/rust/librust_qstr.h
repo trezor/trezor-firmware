@@ -757,7 +757,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_time_ms;
   MP_QSTR_timer;
   MP_QSTR_title;
-  MP_QSTR_title_success;
   MP_QSTR_total_fee_new;
   MP_QSTR_total_len;
   MP_QSTR_touch_event;
