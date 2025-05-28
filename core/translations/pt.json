@@ -358,7 +358,7 @@
     "ethereum__title_signing_address": "End. assinatura",
     "ethereum__token_contract": "Contrato Token",
     "ethereum__units_template": "{0} unidades",
-    "ethereum__unknown_contract_address": "Endereço de contrato desconhecido",
+    "ethereum__unknown_contract_address": "Endereço de contrato desconhecido.",
     "ethereum__unknown_token": "Token desconhecido",
     "ethereum__valid_signature": "A assinatura é válida.",
     "experimental_mode__enable": "Ativar recursos experimentais?",

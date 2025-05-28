@@ -358,7 +358,7 @@
     "ethereum__title_signing_address": "Adr. de signature",
     "ethereum__token_contract": "Contrat de jeton",
     "ethereum__units_template": "{0} unités",
-    "ethereum__unknown_contract_address": "Adresse de contrat inconnue",
+    "ethereum__unknown_contract_address": "Adresse de contrat inconnue.",
     "ethereum__unknown_token": "Jeton inconnu",
     "ethereum__valid_signature": "Signature valide.",
     "experimental_mode__enable": "Activer les fonct. expérimentales ?",

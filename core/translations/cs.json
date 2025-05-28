@@ -358,7 +358,7 @@
     "ethereum__title_signing_address": "Podepisování adresy",
     "ethereum__token_contract": "Kontrakt tokenu",
     "ethereum__units_template": "Jednotky: {0}",
-    "ethereum__unknown_contract_address": "Neznámá adresa kontraktu",
+    "ethereum__unknown_contract_address": "Neznámá adresa kontraktu.",
     "ethereum__unknown_token": "Neznámý token",
     "ethereum__valid_signature": "Podpis je platný.",
     "experimental_mode__enable": "Povolit experimentální funkce?",

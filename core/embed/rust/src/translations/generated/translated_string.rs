@@ -1336,7 +1336,7 @@ pub enum TranslatedString {
     address__public_key_confirmed = 966,  // "Public key confirmed"
     words__continue_anyway = 967,  // "Continue anyway"
     #[cfg(feature = "universal_fw")]
-    ethereum__unknown_contract_address = 968,  // "Unknown contract address"
+    ethereum__unknown_contract_address = 968,  // "Unknown contract address."
     #[cfg(feature = "universal_fw")]
     ethereum__token_contract = 969,  // "Token contract"
     buttons__view_all_data = 970,  // "View all data"
@@ -2747,7 +2747,7 @@ impl TranslatedString {
             (Self::address__public_key_confirmed, "Public key confirmed"),
             (Self::words__continue_anyway, "Continue anyway"),
             #[cfg(feature = "universal_fw")]
-            (Self::ethereum__unknown_contract_address, "Unknown contract address"),
+            (Self::ethereum__unknown_contract_address, "Unknown contract address."),
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__token_contract, "Token contract"),
             (Self::buttons__view_all_data, "View all data"),
