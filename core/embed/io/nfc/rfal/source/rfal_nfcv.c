@@ -188,6 +188,53 @@ static ReturnCode rfalNfcvParseError( uint8_t err )
     }
 }
 
+/*******************************************************************************/
+ReturnCode rfalNfcvPollerToggleUntraceable() {
+  // It is assumed that
+  //   * rfalNfcvPollerTransceiveReq automatically computes the CRC of the
+  //   request
+  //   * rfalNfcvPollerTransceiveReq automatically preserves the CRC in the
+  //   response
+  //   * the field is not turned off between the two calles of
+  //   rfalNfcvPollerTransceiveReq
+  // which I'm not sure is the case
+
+  ReturnCode ret = RFAL_ERR_NONE;
+  uint16_t receivedLength = 0;
+  uint8_t response[5] = {0}; // TODO: If think this can be reduced to 3 bytes
+  uint8_t data[5] = {0};
+
+  // GetRandomNumber, see section 6.4.24 of ST25TV datasheet
+  ret = rfalNfcvPollerTransceiveReq(
+      0xB4U, RFAL_NFCV_REQ_FLAG_DEFAULT, RFAL_NFCV_ST_IC_MFG_CODE, NULL, NULL,
+      0U, response, sizeof(response), &receivedLength);
+  if (ret != RFAL_ERR_NONE) {
+    return ret;
+  }
+  if (receivedLength != 3) {
+    return RFAL_ERR_PROTO;
+  }
+
+  // ToggleUntraceable, see section 6.4.23 of ST25TV datasheet
+  // It is assumed the password is 0x00000000
+  data[0] = 0x03U;
+  data[1] = response[1];
+  data[2] = response[2];
+  data[3] = response[1];
+  data[4] = response[2];
+  ret = rfalNfcvPollerTransceiveReq(0xBAU, RFAL_NFCV_REQ_FLAG_DEFAULT,
+                                    RFAL_NFCV_ST_IC_MFG_CODE, NULL, data, 5,
+                                    response, sizeof(response), &receivedLength);
+  if (ret != RFAL_ERR_NONE) {
+    return ret;
+  }
+  if ((receivedLength != 1) || (response[0] != 0x00)) {
+    return RFAL_ERR_PROTO;
+  }
+
+  return RFAL_ERR_NONE;
+}
+
 /*
 ******************************************************************************
 * GLOBAL FUNCTIONS
@@ -214,6 +261,11 @@ ReturnCode rfalNfcvPollerCheckPresence( rfalNfcvInventoryRes *invRes )
 {
     ReturnCode ret;
     
+    ret = rfalNfcvPollerToggleUntraceable();
+    if (ret != RFAL_ERR_NONE) {
+        return ret;
+    }
+
     /* INVENTORY_REQ with 1 slot and no Mask   Activity 2.0 (Candidate) 9.2.3.32 */
     ret = rfalNfcvPollerInventory( RFAL_NFCV_NUM_SLOTS_1, 0, NULL, invRes, NULL );
     

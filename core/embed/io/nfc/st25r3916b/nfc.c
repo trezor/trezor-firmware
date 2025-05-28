@@ -33,6 +33,7 @@
 #include "rfal_isoDep.h"
 #include "rfal_nfc.h"
 #include "rfal_nfca.h"
+#include "rfal_nfcv.h"
 #include "rfal_platform.h"
 #include "rfal_rf.h"
 #include "rfal_t2t.h"
@@ -513,6 +514,133 @@ nfc_status_t nfc_transceive(const uint8_t *tx_data, uint16_t tx_data_len,
   }
 
   return NFC_OK;
+}
+
+nfc_status_t nfc_st25_write_data(uint8_t *data, size_t data_size) {
+  st25r3916b_driver_t *drv = &g_st25r3916b_driver;
+
+  if (!drv->initialized) {
+    return NFC_NOT_INITIALIZED;
+  }
+
+  const size_t block_size = 4;
+  const size_t first_block_index = 0;
+  const size_t block_count = data_size / 4;
+
+  if (data_size % block_size != 0) {
+    return NFC_ERROR;
+  }
+
+  uint8_t out_buffer[block_size + 1];
+  uint8_t in_buffer[3];
+  uint16_t received = 0;
+
+  // TODO: Check if it is posibble to write incomplete blocks
+  for (size_t i = 0; i < block_count; i++) {
+    memset(in_buffer, 0, sizeof(in_buffer));
+    out_buffer[0] = first_block_index + i;
+    memcpy(&out_buffer[1], &data[i * block_size], block_size);
+    nfc_status_t status = rfalNfcvPollerTransceiveReq(
+        RFAL_NFCV_CMD_WRITE_SINGLE_BLOCK, RFAL_NFCV_REQ_FLAG_DEFAULT,
+        RFAL_NFCV_PARAM_SKIP, NULL, out_buffer, 1 + block_size, in_buffer,
+        sizeof(in_buffer), &received);
+    if (status != NFC_OK) {
+      return status;
+    }
+    if (received != 1 || in_buffer[0] != 0x00) {
+      return NFC_ERROR;
+    }
+  }
+
+  return NFC_OK;
+}
+
+nfc_status_t nfc_st25_read_data(uint8_t *data, size_t data_size) {
+  st25r3916b_driver_t *drv = &g_st25r3916b_driver;
+
+  if (!drv->initialized) {
+    return NFC_NOT_INITIALIZED;
+  }
+
+  const size_t block_size = 4;
+  const size_t first_block_index = 0;
+  const size_t block_count = data_size / block_size;
+
+  if (block_count > 0xFF) {
+    return NFC_ERROR;
+  }
+
+  if (data_size % block_size != 0) {
+    return NFC_ERROR;
+  }
+
+  uint8_t out_buffer[2];
+  uint8_t in_buffer[1 + data_size + 2];
+  uint16_t received = 0;
+
+  memset(in_buffer, 0, sizeof(in_buffer));
+
+  out_buffer[0] = first_block_index;
+  out_buffer[1] = block_count;
+  nfc_status_t status = rfalNfcvPollerTransceiveReq(
+      RFAL_NFCV_CMD_READ_MULTIPLE_BLOCKS, RFAL_NFCV_REQ_FLAG_DEFAULT,
+      RFAL_NFCV_PARAM_SKIP, NULL, out_buffer, 2, in_buffer, sizeof(in_buffer),
+      &received);
+  (void)status;  // TODO: Find out why it returns error and only 2 bytes
+  // if (status != NFC_OK) {
+  //   return status;
+  // }
+  // if (received != block_size + 1 || in_buffer[0] != 0x00) {
+  //   return received;
+  // }
+
+  memcpy(data, &in_buffer[1], data_size);
+
+  return NFC_OK;
+}
+
+nfc_status_t nfc_wait(uint32_t timeout_ms) {
+  nfc_status_t ret = nfc_init();
+  if (ret != NFC_OK) {
+    goto cleanup;
+  }
+
+  nfc_register_tech(NFC_POLLER_TECH_V);
+  nfc_activate_stm();
+
+  nfc_event_t nfc_event;
+  uint32_t expire_time = ticks_timeout(timeout);
+
+  while (true) {
+    if (ticks_expired(expire_time)) {
+      goto cleanup;
+    }
+
+    nfc_status_t nfc_status = nfc_get_event(&nfc_event);
+
+    if (nfc_status != NFC_OK) {
+      goto cleanup;
+    }
+
+    if (nfc_event == NFC_EVENT_ACTIVATED) {
+      nfc_status_t status = nfc_st25_write_data(data, sizeof(data));
+      if (status != NFC_OK) {
+        goto cleanup;
+      }
+
+      nfc_dev_deactivate();
+      break;
+
+      systick_delay_ms(100);
+      nfc_dev_deactivate();
+    }
+
+    systick_delay_ms(1);
+  }
+
+
+cleanup:
+  nfc_deinit();
 }
 
 nfc_status_t nfc_dev_write_ndef_uri(void) {

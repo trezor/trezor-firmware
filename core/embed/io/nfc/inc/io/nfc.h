@@ -19,6 +19,9 @@
 
 #pragma once
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include <trezor_types.h>
 
 #define NFC_MAX_UID_LEN 10
@@ -97,3 +100,6 @@ nfc_status_t nfc_dev_read_info(nfc_dev_info_t *dev_info);
 
 // Write the NDEF message with the trezor.io URI to the activated NFC device.
 nfc_status_t nfc_dev_write_ndef_uri(void);
+
+nfc_status_t nfc_st25_read_data(uint8_t *data, size_t data_size);
+nfc_status_t nfc_st25_write_data(uint8_t *data, size_t data_size);
