@@ -44,6 +44,7 @@ typedef enum {
 
 typedef enum {
   BLE_MODE_OFF,
+  BLE_MODE_KEEP_CONNECTION,
   BLE_MODE_CONNECTABLE,
   BLE_MODE_PAIRING,
   BLE_MODE_DFU,
@@ -77,8 +78,10 @@ typedef enum {
   BLE_CONNECTED = 1,          // Connected to a device
   BLE_DISCONNECTED = 2,       // Disconnected from a device
   BLE_PAIRING_REQUEST = 3,    // Pairing request received
-  BLE_PAIRING_CANCELLED = 4,  // Pairing was cancelled by host
+  BLE_PAIRING_CANCELLED = 4,  // Pairing was canceled by host
   BLE_PAIRING_COMPLETED = 5,  // Pairing was completed successfully
+  BLE_CONNECTION_CHANGED =
+      6,  // Connection change (e.g. different device connected)
 } ble_event_type_t;
 
 typedef struct {
