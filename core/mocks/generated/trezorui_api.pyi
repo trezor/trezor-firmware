@@ -367,6 +367,7 @@ def flow_get_address(
     account: str | None,
     path: str | None,
     xpubs: list[tuple[str, str]],
+    title_success: str,
     br_code: ButtonRequestType,
     br_name: str,
 ) -> LayoutObj[UiResult]:

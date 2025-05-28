@@ -4,17 +4,14 @@ from . import seed
 
 if TYPE_CHECKING:
     from trezor.messages import CardanoAddress, CardanoGetAddress
-    from trezor.wire import MaybeEarlyResponse
 
 
 @seed.with_keychain
 async def get_address(
     msg: CardanoGetAddress, keychain: seed.Keychain
-) -> MaybeEarlyResponse[CardanoAddress]:
+) -> CardanoAddress:
     from trezor import log, wire
     from trezor.messages import CardanoAddress
-    from trezor.ui.layouts import show_continue_in_app
-    from trezor.wire import early_response
 
     from . import addresses
     from .helpers.credential import Credential, should_show_credentials
@@ -35,11 +32,7 @@ async def get_address(
             log.exception(__name__, e)
         raise wire.ProcessError("Deriving address failed")
 
-    response = CardanoAddress(address=address)
-
     if msg.show_display:
-        from trezor import TR
-
         # _display_address
         if should_show_credentials(address_parameters):
             await show_credentials(
@@ -49,8 +42,5 @@ async def get_address(
         await show_cardano_address(
             address_parameters, address, msg.protocol_magic, chunkify=bool(msg.chunkify)
         )
-        return await early_response(
-            response, show_continue_in_app(TR.address__confirmed)
-        )
 
-    return response
+    return CardanoAddress(address=address)

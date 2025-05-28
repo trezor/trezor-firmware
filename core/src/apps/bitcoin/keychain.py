@@ -21,7 +21,6 @@ if TYPE_CHECKING:
         VerifyMessage,
     )
     from trezor.protobuf import MessageType
-    from trezor.wire import MaybeEarlyResponse
     from typing_extensions import Protocol
 
     from apps.common import coininfo
@@ -44,7 +43,7 @@ if TYPE_CHECKING:
         script_type: InputScriptType
 
     MsgIn = TypeVar("MsgIn", bound=BitcoinMessage)
-    HandlerWithCoinInfo = Callable[..., Awaitable[MaybeEarlyResponse[MsgOut]]]
+    HandlerWithCoinInfo = Callable[..., Awaitable[MsgOut]]
 
 # BIP-45 for multisig: https://github.com/bitcoin/bips/blob/master/bip-0045.mediawiki
 PATTERN_BIP45 = "m/45'/[0-100]/change/address_index"
@@ -317,7 +316,7 @@ def with_keychain(func: HandlerWithCoinInfo[MsgOut]) -> Handler[MsgIn, MsgOut]:
     async def wrapper(
         msg: BitcoinMessage,
         auth_msg: MessageType | None = None,
-    ) -> MaybeEarlyResponse[MsgOut]:
+    ) -> MsgOut:
         coin = _get_coin_by_name(msg.coin_name)
         unlock_schemas = _get_unlock_schemas(msg, auth_msg, coin)
         keychain = await _get_keychain_for_coin(coin, unlock_schemas)

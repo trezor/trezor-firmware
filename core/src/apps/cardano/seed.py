@@ -21,7 +21,6 @@ if TYPE_CHECKING:
     from trezor import messages
     from trezor.crypto import bip32
     from trezor.enums import CardanoDerivationType
-    from trezor.wire import MaybeEarlyResponse
 
     from apps.common.keychain import Handler, MsgOut
     from apps.common.paths import Bip32Path
@@ -34,9 +33,7 @@ if TYPE_CHECKING:
     )
     MsgIn = TypeVar("MsgIn", bound=CardanoMessages)
 
-    HandlerWithKeychain = Callable[
-        [MsgIn, "Keychain"], Awaitable[MaybeEarlyResponse[MsgOut]]
-    ]
+    HandlerWithKeychain = Callable[[MsgIn, "Keychain"], Awaitable[MsgOut]]
 
 
 class Keychain:
@@ -186,7 +183,7 @@ async def _get_keychain(derivation_type: CardanoDerivationType) -> Keychain:
 
 
 def with_keychain(func: HandlerWithKeychain[MsgIn, MsgOut]) -> Handler[MsgIn, MsgOut]:
-    async def wrapper(msg: MsgIn) -> MaybeEarlyResponse[MsgOut]:
+    async def wrapper(msg: MsgIn) -> MsgOut:
         keychain = await _get_keychain(msg.derivation_type)
         return await func(msg, keychain)
 

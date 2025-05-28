@@ -9,7 +9,6 @@ if TYPE_CHECKING:
     from typing import Any, Awaitable, Callable, Iterable, TypeVar
 
     from trezor.protobuf import MessageType
-    from trezor.wire import MaybeEarlyResponse
     from typing_extensions import Protocol
 
     from .seed import Slip21Node
@@ -28,10 +27,8 @@ if TYPE_CHECKING:
     MsgIn = TypeVar("MsgIn", bound=MessageType)
     MsgOut = TypeVar("MsgOut", bound=MessageType)
 
-    Handler = Callable[[MsgIn], Awaitable[MaybeEarlyResponse[MsgOut]]]
-    HandlerWithKeychain = Callable[
-        [MsgIn, "Keychain"], Awaitable[MaybeEarlyResponse[MsgOut]]
-    ]
+    Handler = Callable[[MsgIn], Awaitable[MsgOut]]
+    HandlerWithKeychain = Callable[[MsgIn, "Keychain"], Awaitable[MsgOut]]
 
     class Deletable(Protocol):
         def __del__(self) -> None: ...
@@ -197,7 +194,7 @@ def with_slip44_keychain(
     schemas = [s.copy() for s in schemas]
 
     def decorator(func: HandlerWithKeychain[MsgIn, MsgOut]) -> Handler[MsgIn, MsgOut]:
-        async def wrapper(msg: MsgIn) -> MaybeEarlyResponse[MsgOut]:
+        async def wrapper(msg: MsgIn) -> MsgOut:
             keychain = await get_keychain(curve, schemas)
             with keychain:
                 return await func(msg, keychain)

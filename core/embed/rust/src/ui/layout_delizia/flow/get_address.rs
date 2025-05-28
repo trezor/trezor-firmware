@@ -20,7 +20,7 @@ use crate::{
 };
 
 use super::super::{
-    component::{AddressDetails, Frame, PromptScreen, SwipeContent, VerticalMenu},
+    component::{AddressDetails, Frame, PromptScreen, StatusScreen, SwipeContent, VerticalMenu},
     theme,
 };
 
@@ -30,6 +30,7 @@ const QR_BORDER: i16 = 4;
 pub enum GetAddress {
     Address,
     Tap,
+    Confirmed,
     Menu,
     QrCode,
     AccountInfo,
@@ -56,8 +57,9 @@ impl FlowController for GetAddress {
     fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
             (Self::Address, FlowMsg::Info) => Self::Menu.goto(),
-            (Self::Tap, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Tap, FlowMsg::Confirmed) => Self::Confirmed.swipe_up(),
             (Self::Tap, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Confirmed, _) => self.return_msg(FlowMsg::Confirmed),
             (Self::Menu, FlowMsg::Choice(0)) => Self::QrCode.swipe_left(),
             (Self::Menu, FlowMsg::Choice(1)) => Self::AccountInfo.swipe_left(),
             (Self::Menu, FlowMsg::Choice(2)) => Self::Cancel.swipe_left(),
@@ -84,6 +86,7 @@ pub fn new_get_address(
     account: Option<TString<'static>>,
     path: Option<TString<'static>>,
     xpubs: Obj, // TODO: get rid of Obj
+    title_success: TString<'static>,
     br_code: u16,
     br_name: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
@@ -118,6 +121,14 @@ pub fn new_get_address(
             .with_footer(TR::instructions__tap_to_confirm.into(), None)
             .with_swipe(Direction::Down, SwipeSettings::default())
             .map(super::util::map_to_confirm);
+
+    let content_confirmed = Frame::left_aligned(
+        TR::words__title_success.into(),
+        StatusScreen::new_success_timeout(title_success),
+    )
+    .with_footer(TR::instructions__continue_in_app.into(), None)
+    .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREEN_LIGHT)
+    .map(|_| Some(FlowMsg::Confirmed));
 
     // Menu
     let content_menu = Frame::left_aligned(
@@ -176,6 +187,7 @@ pub fn new_get_address(
     let mut res = SwipeFlow::new(&GetAddress::Address)?;
     res.add_page(&GetAddress::Address, content_address)?
         .add_page(&GetAddress::Tap, content_tap)?
+        .add_page(&GetAddress::Confirmed, content_confirmed)?
         .add_page(&GetAddress::Menu, content_menu)?
         .add_page(&GetAddress::QrCode, content_qr)?
         .add_page(&GetAddress::AccountInfo, content_account)?

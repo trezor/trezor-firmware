@@ -5,7 +5,6 @@ if TYPE_CHECKING:
     from trezor.enums import InputScriptType
     from trezor.messages import GetPublicKey, PublicKey
     from trezor.protobuf import MessageType
-    from trezor.wire import MaybeEarlyResponse
 
     from apps.common.keychain import Keychain
 
@@ -14,11 +13,10 @@ async def get_public_key(
     msg: GetPublicKey,
     auth_msg: MessageType | None = None,
     keychain: Keychain | None = None,
-) -> MaybeEarlyResponse[PublicKey]:
+) -> PublicKey:
     from trezor import TR, wire
     from trezor.enums import InputScriptType
     from trezor.messages import HDNodeType, PublicKey, UnlockPath
-    from trezor.wire import early_response
 
     from apps.common import coininfo, paths
     from apps.common.keychain import FORBIDDEN_KEY_PATH, get_keychain
@@ -88,19 +86,9 @@ async def get_public_key(
     descriptor = _xpub_descriptor(
         node, xpub_magic, address_n, script_type, keychain.root_fingerprint()
     )
-    response = PublicKey(
-        node=node_type,
-        xpub=node_xpub,
-        root_fingerprint=keychain.root_fingerprint(),
-        descriptor=descriptor,
-    )
 
     if msg.show_display:
-        from trezor.ui.layouts import (
-            confirm_path_warning,
-            show_continue_in_app,
-            show_pubkey,
-        )
+        from trezor.ui.layouts import confirm_path_warning, show_pubkey
 
         from apps.common.paths import address_n_to_str
 
@@ -128,11 +116,13 @@ async def get_public_key(
             mismatch_title=TR.addr_mismatch__xpub_mismatch,
             br_name="show_xpub",
         )
-        return await early_response(
-            response, show_continue_in_app(TR.address__public_key_confirmed)
-        )
-    else:
-        return response
+
+    return PublicKey(
+        node=node_type,
+        xpub=node_xpub,
+        root_fingerprint=keychain.root_fingerprint(),
+        descriptor=descriptor,
+    )
 
 
 def _xpub_descriptor(
