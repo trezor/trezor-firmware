@@ -4,24 +4,19 @@ from apps.common.keychain import auto_keychain
 
 if TYPE_CHECKING:
     from trezor.messages import StellarSignedTx, StellarSignTx
-    from trezor.wire import EarlyResponse
 
     from apps.common.keychain import Keychain
 
 
 @auto_keychain(__name__)
-async def sign_tx(
-    msg: StellarSignTx, keychain: Keychain
-) -> EarlyResponse[StellarSignedTx]:
+async def sign_tx(msg: StellarSignTx, keychain: Keychain) -> StellarSignedTx:
     from ubinascii import hexlify
 
-    from trezor import TR
     from trezor.crypto.curve import ed25519
     from trezor.crypto.hashlib import sha256
     from trezor.enums import StellarMemoType
     from trezor.messages import StellarSignedTx, StellarTxOpRequest
-    from trezor.ui.layouts import show_continue_in_app
-    from trezor.wire import DataError, ProcessError, early_response
+    from trezor.wire import DataError, ProcessError
     from trezor.wire.context import call_any
 
     from apps.common import paths, seed
@@ -121,5 +116,4 @@ async def sign_tx(
     signature = ed25519.sign(node.private_key(), digest)
 
     # Add the public key for verification that the right account was used for signing
-    resp = StellarSignedTx(public_key=pubkey, signature=signature)
-    return await early_response(resp, show_continue_in_app(TR.send__transaction_signed))
+    return StellarSignedTx(public_key=pubkey, signature=signature)

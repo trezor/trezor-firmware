@@ -19,7 +19,6 @@ if TYPE_CHECKING:
         EthereumTokenInfo,
         EthereumTxAck,
     )
-    from trezor.wire import EarlyResponse
 
     from apps.common.keychain import Keychain
 
@@ -38,13 +37,11 @@ async def sign_tx(
     msg: EthereumSignTx,
     keychain: Keychain,
     defs: Definitions,
-) -> EarlyResponse[EthereumTxRequest]:
+) -> EthereumTxRequest:
     from trezor import TR
     from trezor.crypto.hashlib import sha3_256
-    from trezor.ui.layouts import show_continue_in_app
     from trezor.ui.layouts.progress import progress
     from trezor.utils import HashWriter
-    from trezor.wire import early_response
 
     from apps.common import paths
 
@@ -114,9 +111,7 @@ async def sign_tx(
 
     progress_obj.stop()
 
-    return await early_response(
-        result, show_continue_in_app(TR.send__transaction_signed)
-    )
+    return result
 
 
 async def confirm_tx_data(
