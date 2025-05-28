@@ -23,7 +23,7 @@ async def sign_tx(
     from trezor.crypto.curve import ed25519
     from trezor.enums import ButtonRequestType
     from trezor.messages import SolanaTxSignature
-    from trezor.ui.layouts import confirm_metadata, show_warning
+    from trezor.ui.layouts import confirm_metadata, show_continue_in_app, show_warning
 
     from apps.common import seed
 
@@ -79,7 +79,7 @@ async def sign_tx(
         )
 
     signature = ed25519.sign(node.private_key(), serialized_tx)
-
+    show_continue_in_app(TR.send__transaction_signed)
     return SolanaTxSignature(signature=signature)
 
 

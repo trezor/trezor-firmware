@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import trezorui_api
-from trezor import TR, ui, utils
+from trezor import TR, ui, utils, workflow
 from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
 
@@ -230,12 +230,6 @@ async def show_address(
         )
         return result
 
-    title_success = (
-        TR.address__public_key_confirmed
-        if title in ("XPUB", TR.address__public_key)
-        else TR.address__confirmed
-    )
-
     await raise_if_not_confirmed(
         trezorui_api.flow_get_address(
             address=address,
@@ -248,11 +242,16 @@ async def show_address(
             account=account,
             path=path,
             xpubs=[(xpub_title(i), xpub) for i, xpub in enumerate(xpubs)],
-            title_success=title_success,
             br_name=br_name,
             br_code=br_code,
         ),
         None,
+    )
+
+    show_continue_in_app(
+        TR.address__public_key_confirmed
+        if title in ("XPUB", TR.address__public_key)
+        else TR.address__confirmed
     )
 
 
@@ -343,20 +342,33 @@ def show_danger(
     )
 
 
-def show_success(
-    br_name: str,
+async def show_success(
+    br_name: str | None,
     content: str,
     subheader: str | None = None,
     button: str | None = None,
-) -> Awaitable[None]:
-    return raise_if_not_confirmed(
+    time_ms: int = 0,
+) -> None:
+    return await raise_if_not_confirmed(
         trezorui_api.show_success(
             title=content,
-            button="",
-            description=subheader if subheader else "",
+            button=button or "",
+            description=subheader or "",
+            time_ms=time_ms,
         ),
         br_name,
         ButtonRequestType.Success,
+    )
+
+
+def show_continue_in_app(content: str) -> None:
+    workflow.spawn(
+        show_success(
+            content=content,
+            button=TR.instructions__continue_in_app,
+            time_ms=3200,
+            br_name=None,
+        )
     )
 
 

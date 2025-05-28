@@ -32,10 +32,12 @@ if TYPE_CHECKING:
 
 @with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
 async def sign_tx(msg: TezosSignTx, keychain: Keychain) -> TezosSignedTx:
+    from trezor import TR
     from trezor.crypto import hashlib
     from trezor.crypto.curve import ed25519
     from trezor.enums import TezosBallotType
     from trezor.messages import TezosSignedTx
+    from trezor.ui.layouts import show_continue_in_app
 
     from apps.common.paths import validate_path
 
@@ -155,6 +157,7 @@ async def sign_tx(msg: TezosSignTx, keychain: Keychain) -> TezosSignedTx:
 
     sig_prefixed = base58_encode_check(signature, helpers.TEZOS_SIGNATURE_PREFIX)
 
+    show_continue_in_app(TR.send__transaction_signed)
     return TezosSignedTx(
         signature=sig_prefixed, sig_op_contents=sig_op_contents, operation_hash=ophash
     )

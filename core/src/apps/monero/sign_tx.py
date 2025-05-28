@@ -14,7 +14,8 @@ if TYPE_CHECKING:
 async def sign_tx(received_msg, keychain: Keychain) -> MoneroTransactionFinalAck:
     import gc
 
-    from trezor import log, utils
+    from trezor import TR, log, utils
+    from trezor.ui.layouts import show_continue_in_app
     from trezor.wire.context import get_context
 
     from apps.monero.signing.state import State
@@ -45,6 +46,7 @@ async def sign_tx(received_msg, keychain: Keychain) -> MoneroTransactionFinalAck
         received_msg = await ctx.read(accept_msgs)
 
     utils.unimport_end(mods)
+    show_continue_in_app(TR.send__transaction_signed)
     return result_msg
 
 
