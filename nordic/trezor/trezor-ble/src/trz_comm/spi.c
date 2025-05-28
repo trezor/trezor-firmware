@@ -71,7 +71,7 @@ static const struct gpio_dt_spec spi_ready =
 static const struct gpio_dt_spec spi_request =
     GPIO_DT_SPEC_GET(REQUEST_NODE, gpios);
 
-#define MAX_SPI_DATA_SIZE (244)
+#define MAX_SPI_DATA_SIZE (251)
 typedef struct {
   uint8_t service_id;
   uint8_t msg_len;
