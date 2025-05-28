@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor.wire import DataError, EarlyResponse
+from trezor.wire import DataError
 
 from apps.common.keychain import with_slip44_keychain
 
@@ -18,13 +18,12 @@ if TYPE_CHECKING:
 async def sign_tx(
     msg: SolanaSignTx,
     keychain: Keychain,
-) -> EarlyResponse[SolanaTxSignature]:
+) -> SolanaTxSignature:
     from trezor import TR
     from trezor.crypto.curve import ed25519
     from trezor.enums import ButtonRequestType
     from trezor.messages import SolanaTxSignature
-    from trezor.ui.layouts import confirm_metadata, show_continue_in_app, show_warning
-    from trezor.wire import early_response
+    from trezor.ui.layouts import confirm_metadata, show_warning
 
     from apps.common import seed
 
@@ -81,8 +80,7 @@ async def sign_tx(
 
     signature = ed25519.sign(node.private_key(), serialized_tx)
 
-    resp = SolanaTxSignature(signature=signature)
-    return await early_response(resp, show_continue_in_app(TR.send__transaction_signed))
+    return SolanaTxSignature(signature=signature)
 
 
 def _has_unsupported_instructions(transaction: Transaction) -> bool:

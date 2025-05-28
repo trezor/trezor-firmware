@@ -26,20 +26,16 @@ if TYPE_CHECKING:
         TezosTransactionOp,
     )
     from trezor.utils import Writer
-    from trezor.wire import EarlyResponse
 
     from apps.common.keychain import Keychain
 
 
 @with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
-async def sign_tx(msg: TezosSignTx, keychain: Keychain) -> EarlyResponse[TezosSignedTx]:
-    from trezor import TR
+async def sign_tx(msg: TezosSignTx, keychain: Keychain) -> TezosSignedTx:
     from trezor.crypto import hashlib
     from trezor.crypto.curve import ed25519
     from trezor.enums import TezosBallotType
     from trezor.messages import TezosSignedTx
-    from trezor.ui.layouts import show_continue_in_app
-    from trezor.wire import early_response
 
     from apps.common.paths import validate_path
 
@@ -159,10 +155,9 @@ async def sign_tx(msg: TezosSignTx, keychain: Keychain) -> EarlyResponse[TezosSi
 
     sig_prefixed = base58_encode_check(signature, helpers.TEZOS_SIGNATURE_PREFIX)
 
-    resp = TezosSignedTx(
+    return TezosSignedTx(
         signature=sig_prefixed, sig_op_contents=sig_op_contents, operation_hash=ophash
     )
-    return await early_response(resp, show_continue_in_app(TR.send__transaction_signed))
 
 
 def _get_address_by_tag(address_hash: bytes) -> str:

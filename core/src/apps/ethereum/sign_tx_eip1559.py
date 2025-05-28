@@ -2,7 +2,6 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor.crypto import rlp
-from trezor.wire import EarlyResponse
 
 from .helpers import bytes_from_address
 from .keychain import with_keychain_from_chain_id
@@ -35,13 +34,11 @@ async def sign_tx_eip1559(
     msg: EthereumSignTxEIP1559,
     keychain: Keychain,
     defs: Definitions,
-) -> EarlyResponse[EthereumTxRequest]:
-    from trezor import TR, wire
+) -> EthereumTxRequest:
+    from trezor import wire
     from trezor.crypto import rlp  # local_cache_global
     from trezor.crypto.hashlib import sha3_256
-    from trezor.ui.layouts import show_continue_in_app
     from trezor.utils import HashWriter
-    from trezor.wire import early_response
 
     from apps.common import paths
 
@@ -124,9 +121,7 @@ async def sign_tx_eip1559(
     digest = sha.get_digest()
     result = _sign_digest(msg, keychain, digest)
 
-    return await early_response(
-        result, show_continue_in_app(TR.send__transaction_signed)
-    )
+    return result
 
 
 def _get_total_length(msg: EthereumSignTxEIP1559, data_total: int) -> int:

@@ -6,18 +6,15 @@ if TYPE_CHECKING:
     from typing import Type
 
     from trezor.messages import CardanoSignTxFinished, CardanoSignTxInit
-    from trezor.wire import EarlyResponse
 
 
 @seed.with_keychain
 async def sign_tx(
     msg: CardanoSignTxInit, keychain: seed.Keychain
-) -> EarlyResponse[CardanoSignTxFinished]:
-    from trezor import TR, log, wire
+) -> CardanoSignTxFinished:
+    from trezor import log, wire
     from trezor.enums import CardanoTxSigningMode
     from trezor.messages import CardanoSignTxFinished
-    from trezor.ui.layouts import show_continue_in_app
-    from trezor.wire import early_response
 
     from .signer import Signer
 
@@ -52,5 +49,4 @@ async def sign_tx(
             log.exception(__name__, e)
         raise wire.ProcessError("Signing failed")
 
-    resp = CardanoSignTxFinished()
-    return await early_response(resp, show_continue_in_app(TR.send__transaction_signed))
+    return CardanoSignTxFinished()
