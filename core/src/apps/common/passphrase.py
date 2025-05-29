@@ -30,6 +30,7 @@ async def get() -> str:
 
 
 async def _request_on_host() -> str:
+    from trezor import loop, workflow
     from trezor.messages import PassphraseAck, PassphraseRequest
     from trezor.ui.layouts import (
         confirm_hidden_passphrase_from_host,
@@ -38,11 +39,18 @@ async def _request_on_host() -> str:
     )
     from trezor.wire.context import call
 
-    request_passphrase_on_host()
+    async def _delay_request_passphrase_on_host() -> None:
+        await loop.sleep(100)
+        return request_passphrase_on_host()
 
-    request = PassphraseRequest()
-    ack = await call(request, PassphraseAck)
-    passphrase = ack.passphrase  # local_cache_attribute
+    on_host = workflow.spawn(_delay_request_passphrase_on_host())
+    try:
+        request = PassphraseRequest()
+        ack = await call(request, PassphraseAck)
+        passphrase = ack.passphrase  # local_cache_attribute
+    finally:
+        # make sure on-host passphrase prompt closed after receiving an ack
+        on_host.close()
 
     if ack.on_device:
         from trezor.ui.layouts import request_passphrase_on_device
