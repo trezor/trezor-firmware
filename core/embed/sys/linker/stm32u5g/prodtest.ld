@@ -1,7 +1,7 @@
 ENTRY(reset_handler)
 
 MEMORY {
-  FLASH  (rx)  : ORIGIN = KERNEL_START, LENGTH = KERNEL_MAXSIZE
+  FLASH  (rx)  : ORIGIN = FIRMWARE_START, LENGTH = FIRMWARE_MAXSIZE
 
   MAIN_RAM (wal) : ORIGIN = MAIN_RAM_START, LENGTH = MAIN_RAM_SIZE
   AUX1_RAM (wal) : ORIGIN = AUX1_RAM_START, LENGTH = AUX1_RAM_SIZE
@@ -28,9 +28,6 @@ _bootargs_ram_start = BOOTARGS_START;
 _bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
 
 _codelen = SIZEOF(.padding) + SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
-
-_flash_start = ORIGIN(FLASH);
-_flash_end = ORIGIN(FLASH) + LENGTH(FLASH);
 
 SECTIONS {
   .vendorheader : ALIGN(4) {

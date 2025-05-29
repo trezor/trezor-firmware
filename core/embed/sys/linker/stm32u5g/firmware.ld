@@ -21,8 +21,6 @@ _confidential_section_start = ADDR(.confidential);
 _confidential_section_end = ADDR(.confidential) + SIZEOF(.confidential);
 
 _codelen = SIZEOF(.padding) + SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
-_flash_start = ORIGIN(FLASH);
-_flash_end = ORIGIN(FLASH) + LENGTH(FLASH);
 _heap_start = ADDR(.heap);
 _heap_end = ADDR(.heap) + SIZEOF(.heap);
 

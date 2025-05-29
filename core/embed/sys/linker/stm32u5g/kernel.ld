@@ -1,7 +1,7 @@
 ENTRY(reset_handler)
 
 MEMORY {
-  FLASH  (rx)  : ORIGIN = KERNEL_START, LENGTH = KERNEL_MAXSIZE
+  FLASH  (rx)  : ORIGIN = FIRMWARE_START, LENGTH = FIRMWARE_MAXSIZE
 
   MAIN_RAM (wal) : ORIGIN = MAIN_RAM_START, LENGTH = MAIN_RAM_SIZE
   BOOT_ARGS (wal) : ORIGIN = BOOTARGS_START, LENGTH = BOOTARGS_SIZE
@@ -26,9 +26,7 @@ _confidential_section_end = ADDR(.confidential) + SIZEOF(.confidential);
 _bootargs_ram_start = BOOTARGS_START;
 _bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
 
-_codelen = SIZEOF(.vendorheader) + SIZEOF(.header) + SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
-_flash_start = ORIGIN(FLASH);
-_flash_end = ORIGIN(FLASH) + LENGTH(FLASH);
+_codelen = _kernel_flash_end - ORIGIN(FLASH);
 
 SECTIONS {
   .vendorheader : ALIGN(4) {
@@ -41,6 +39,7 @@ SECTIONS {
   } >FLASH AT>FLASH
 
   .flash : ALIGN(CODE_ALIGNMENT) {
+    _kernel_flash_start = .;
     KEEP(*(.vector_table));
     . = ALIGN(4);
     *(.text*);
@@ -91,11 +90,14 @@ SECTIONS {
     . = ALIGN(4);
   } >MAIN_RAM
 
-
   .boot_args : ALIGN(8) {
     *(.boot_command*);
     . = ALIGN(8);
     *(.boot_args*);
     . = ALIGN(8);
   } >BOOT_ARGS
+
+  .flash : ALIGN(4) {
+    _kernel_flash_end = .;
+  } >FLASH
 }
