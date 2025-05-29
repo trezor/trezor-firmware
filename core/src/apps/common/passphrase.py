@@ -30,13 +30,16 @@ async def get() -> str:
 
 
 async def _request_on_host() -> str:
-    from trezor import TR
+    from trezor import TR, loop, workflow
     from trezor.messages import PassphraseAck, PassphraseRequest
     from trezor.ui.layouts import request_passphrase_on_host
     from trezor.wire.context import call
 
-    request_passphrase_on_host()
+    async def _delay_request_passphrase_on_host() -> None:
+        await loop.sleep(500)
+        return request_passphrase_on_host()
 
+    workflow.spawn(_delay_request_passphrase_on_host())
     request = PassphraseRequest()
     ack = await call(request, PassphraseAck)
     passphrase = ack.passphrase  # local_cache_attribute
