@@ -7,7 +7,12 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 
-FEATURES_WANTED = ["sd_card", "pmic", "display", "secure_domain"]
+FEATURES_WANTED = [
+    "display",
+    "pmic",
+    "sd_card",
+    "secure_domain",
+    ]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []

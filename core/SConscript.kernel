@@ -30,7 +30,23 @@ FEATURE_FLAGS = {
     "AES_GCM": True,
 }
 
-FEATURES_WANTED = ["input", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb" ,"optiga", "haptic", "ble", "tropic", "power_manager", "power_save", "display", "applet", "secmon_layout"]
+FEATURES_WANTED = [
+    "applet",
+    "ble",
+    "consumption_mask",
+    "display",
+    "dma2d",
+    "haptic",
+    "input",
+    "optiga",
+    "power_manager",
+    "power_save",
+    "rgb_led",
+    "sd_card",
+    "secmon_layout",
+    "tropic",
+    "usb",
+    ]
 
 if DISABLE_OPTIGA:
     # TODO use PYOPT instead of PRODUCTION, same as in firmware, blocked on #4253

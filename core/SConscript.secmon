@@ -30,7 +30,14 @@ FEATURE_FLAGS = {
     "AES_GCM": True,
 }
 
-FEATURES_WANTED = ["consumption_mask", "optiga", "power_save", "tropic", "secure_domain", "secmon_layout"]
+FEATURES_WANTED = [
+    "consumption_mask",
+    "optiga",
+    "power_save",
+    "secmon_layout",
+    "secure_domain",
+    "tropic",
+    ]
 
 if DISABLE_OPTIGA:
     # TODO use PYOPT instead of PRODUCTION, same as in firmware, blocked on #4253
