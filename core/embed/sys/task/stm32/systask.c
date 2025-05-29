@@ -438,9 +438,14 @@ __attribute((used)) static void systask_exit_fault(bool privileged,
     pminfo->fault.mmfar = SCB->MMFAR;
     pminfo->fault.bfar = SCB->BFAR;
     pminfo->fault.hfsr = SCB->HFSR;
-#if defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
+#if defined(__ARM_FEATURE_CMSE)
+#if (__ARM_FEATURE_CMSE == 3U)
     pminfo->fault.sfsr = SAU->SFSR;
     pminfo->fault.sfar = SAU->SFAR;
+#else
+    pminfo->fault.sfsr = 0;
+    pminfo->fault.sfar = 0;
+#endif
 #endif
   }
 

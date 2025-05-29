@@ -141,13 +141,25 @@ _Static_assert(NORCOW_SECTOR_SIZE == STORAGE_2_MAXSIZE, "norcow misconfigured");
 
 #define OTP_AND_ID_SIZE 0x800
 
+#ifdef SECMON
+extern uint32_t _codelen;
+#define SECMON_START FIRMWARE_START_S
+#define SECMON_SIZE (uint32_t) & _codelen
+#endif
+
 #ifdef KERNEL
+extern uint32_t _kernel_flash_start;
 extern uint32_t _kernel_flash_end;
 
+#ifdef USE_SECMON_LAYOUT
+#define KERNEL_START ((uint32_t) & _kernel_flash_start)
+#else
 #define KERNEL_START FIRMWARE_START
+#endif
+
 #define KERNEL_END ((uint32_t) & _kernel_flash_end)
 #define KERNEL_SIZE (KERNEL_END - KERNEL_START)
-#endif // KERNEL
+#endif  // KERNEL
 
 typedef struct {
   // Set if the driver is initialized
@@ -218,6 +230,13 @@ static void mpu_init_fixed_regions(void) {
   SET_REGION( 1, FIRMWARE_START + 1024,    FIRMWARE_MAXSIZE - 1024, FLASH_CODE,   NO,    NO );
   SET_REGION( 2, MAIN_RAM_START,           MAIN_RAM_SIZE,     SRAM,        YES,    NO );
   DIS_REGION( 3 );
+  SET_REGION( 4, AUX1_RAM_START,           AUX1_RAM_SIZE,     SRAM,        YES,    NO );
+
+#elif defined(SECMON)
+  SET_REGRUN( 0, SECMON_START,             SECMON_SIZE,       FLASH_CODE,   NO,    NO );
+  SET_REGION( 1, SECMON_RAM_START,         SECMON_RAM_SIZE,   SRAM,        YES,    NO );
+  SET_REGION( 2, MAIN_RAM_START,           MAIN_RAM_SIZE,     SRAM,        YES,    NO );
+  SET_REGION( 3, FIRMWARE_START,           FIRMWARE_MAXSIZE,  FLASH_DATA,  YES,    NO );
   SET_REGION( 4, AUX1_RAM_START,           AUX1_RAM_SIZE,     SRAM,        YES,    NO );
 #else
   #error "Unknown build target"

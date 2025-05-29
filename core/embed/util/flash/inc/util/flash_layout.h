@@ -30,7 +30,12 @@ extern const flash_area_t SECRET_AREA;
 extern const flash_area_t BHK_AREA;
 extern const flash_area_t ASSETS_AREA;
 extern const flash_area_t BOOTLOADER_AREA;
-extern const flash_area_t FIRMWARE_AREA;
 extern const flash_area_t UNUSED_AREA;
+
+#ifdef SECMON
+extern flash_area_t FIRMWARE_AREA;
+#else
+extern const flash_area_t FIRMWARE_AREA;
+#endif
 
 #endif  // TREZORHAL_LAYOUT_H_

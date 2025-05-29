@@ -30,7 +30,7 @@
 #include <util/flash_utils.h>
 #include "memzero.h"
 
-#ifdef KERNEL_MODE
+#ifdef SECURE_MODE
 
 #define REG_BHK_OFFSET 0
 #define REG_OPTIGA_KEY_OFFSET 8
@@ -552,4 +552,4 @@ void secret_init(void) {
   secret_ensure_initialized();
 }
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE

@@ -27,7 +27,7 @@
 #include "memzero.h"
 #include "rand.h"
 
-#ifdef KERNEL_MODE
+#ifdef SECURE_MODE
 
 #define DRBG_RESEED_INTERVAL_CALLS 1000
 #define DRBG_TRNG_ENTROPY_LENGTH 50
@@ -201,4 +201,4 @@ void wait_random(void) {
 #endif
 }
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE

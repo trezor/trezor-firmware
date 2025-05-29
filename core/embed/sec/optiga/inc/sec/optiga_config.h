@@ -19,10 +19,10 @@
 
 #pragma once
 
-#ifdef KERNEL_MODE
+#ifdef SECURE_MODE
 
 // Initializes the optiga driver, establishes a secure channel by providing
 // a shared secret and finally opens the application.
 void optiga_init_and_configure(void);
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE

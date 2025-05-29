@@ -106,7 +106,7 @@ system_emergency_rescue_phase_2(uint32_t arg1, uint32_t arg2) {
   // Clear all memory except our stack.
   // NOTE: This also clear bootargs, if the model doesn't support
   // showing RSOD in the bootloader startup.
-  memregion_t region = MEMREGION_ALL_ACCESSIBLE_RAM;
+  memregion_t region = MEMREGION_ALL_RUNTIME_RAM;
   MEMREGION_DEL_SECTION(&region, _stack_section);
 #ifdef USE_BOOTARGS_RSOD
   MEMREGION_DEL_SECTION(&region, _bootargs_ram);

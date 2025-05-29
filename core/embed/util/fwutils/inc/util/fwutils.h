@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_FWUTILS_H
-#define TREZORHAL_FWUTILS_H
+#pragma once
 
 #include <trezor_types.h>
 
@@ -49,13 +48,11 @@ int firmware_hash_continue(uint8_t* hash, size_t hash_len);
 // otherwise.
 secbool firmware_get_vendor(char* buff, size_t buff_size);
 
-#ifdef KERNEL_MODE
+#ifdef SECURE_MODE
 
 // Invalidates the firmware by erasing the first 1KB of the firmware area.
 //
 // Note: only works when write access to firmware area is enabled by MPU
 void firmware_invalidate_header(void);
 
-#endif  // KERNEL_MODE
-
-#endif  // TREZORHAL_FWUTILS_H
+#endif  // SECURE_MODE

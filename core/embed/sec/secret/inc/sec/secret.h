@@ -21,7 +21,7 @@
 
 #include <trezor_types.h>
 
-#ifdef KERNEL_MODE
+#ifdef SECURE_MODE
 
 #define SECRET_KEY_LEN 32
 
@@ -117,7 +117,7 @@ void secret_init(void);
 void secret_unlock_bootloader(void);
 #endif
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE
 
 #ifdef LOCKABLE_BOOTLOADER
 // Checks if bootloader is locked, that is the secret storage contains optiga

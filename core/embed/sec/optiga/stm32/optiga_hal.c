@@ -1,10 +1,29 @@
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifdef SECURE_MODE
+
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
 #include <sec/optiga_hal.h>
 #include <sys/systick.h>
-
-#ifdef KERNEL_MODE
 
 void optiga_hal_init(void) {
   GPIO_InitTypeDef GPIO_InitStructure = {0};
@@ -64,4 +83,4 @@ void optiga_reset(void) {
   hal_delay(20);
 }
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE
