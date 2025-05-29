@@ -29,8 +29,6 @@ _bootargs_ram_start = BOOTARGS_START;
 _bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
 
 _codelen = SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
-_flash_start = ORIGIN(FLASH);
-_flash_end = ORIGIN(FLASH) + LENGTH(FLASH);
 
 SECTIONS {
   .vendorheader : ALIGN(4) {

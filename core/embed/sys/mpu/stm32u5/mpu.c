@@ -145,7 +145,7 @@ _Static_assert(NORCOW_SECTOR_SIZE == STORAGE_2_MAXSIZE, "norcow misconfigured");
 
 extern uint32_t _codelen;
 #define KERNEL_SIZE (uint32_t) & _codelen
-#define KERNEL_FLASH_START KERNEL_START
+#define KERNEL_FLASH_START FIRMWARE_START
 
 #if NORCOW_MIN_VERSION <= 5
 extern uint8_t _uflash_start;
