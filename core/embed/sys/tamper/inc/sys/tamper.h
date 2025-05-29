@@ -21,7 +21,7 @@
 
 #include <trezor_types.h>
 
-#ifdef KERNEL_MODE
+#ifdef SECURE_MODE
 
 // Tamper module enables the internal tamper detection on STM32 microcontroller
 // as well as external tamper input if it's available on the device
@@ -35,4 +35,4 @@ uint8_t tamper_external_read(void);
 // Enable external tamper inputs
 void tamper_external_enable(void);
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE

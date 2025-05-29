@@ -55,6 +55,7 @@ def configure(
         sources += ["embed/io/display/st-7789/panels/lx154a2411.c"]
         sources += ["embed/io/display/st-7789/panels/lx154a2422.c"]
         paths += ["embed/io/display/inc"]
+        defines += [("USE_DISPLAY", "1")]
 
         features_available.append("backlight")
         defines += [("USE_BACKLIGHT", "1")]

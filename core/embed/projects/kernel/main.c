@@ -100,6 +100,26 @@
 #endif
 
 void drivers_init() {
+#ifdef SECURE_MODE
+  parse_boardloader_capabilities();
+  unit_properties_init();
+#ifdef USE_STORAGE_HWKEY
+  secure_aes_init();
+#endif
+  entropy_init();
+#ifdef USE_TAMPER
+  tamper_init();
+#endif
+  random_delays_init();
+#ifdef RDI
+  random_delays_start_rdi();
+#endif
+#endif  // SECURE_MODE
+
+#ifdef USE_CONSUMPTION_MASK
+  consumption_mask_init();
+#endif
+
 #ifdef USE_BACKUP_RAM
   backup_ram_init();
 #endif
@@ -108,18 +128,8 @@ void drivers_init() {
   pm_init(true);
 #endif
 
-#ifdef USE_TAMPER
-  tamper_init();
-#endif
-
-  random_delays_init();
-
 #ifdef USE_PVD
   pvd_init();
-#endif
-
-#ifdef RDI
-  random_delays_start_rdi();
 #endif
 
 #ifdef SYSTEM_VIEW
@@ -132,22 +142,14 @@ void drivers_init() {
 
   display_init(DISPLAY_JUMP_BEHAVIOR);
 
+#ifdef SECURE_MODE
 #ifdef USE_OEM_KEYS_CHECK
   check_oem_keys();
 #endif
 
-  parse_boardloader_capabilities();
-
-  unit_properties_init();
-
-#ifdef USE_STORAGE_HWKEY
-  secure_aes_init();
-#endif
-
-  entropy_init();
-
 #if PRODUCTION || BOOTLOADER_QA
   check_and_replace_bootloader();
+#endif
 #endif
 
 #ifdef USE_BUTTON
@@ -156,10 +158,6 @@ void drivers_init() {
 
 #ifdef USE_RGB_LED
   rgb_led_init();
-#endif
-
-#ifdef USE_CONSUMPTION_MASK
-  consumption_mask_init();
 #endif
 
 #ifdef USE_TOUCH
@@ -178,13 +176,14 @@ void drivers_init() {
   ble_init();
 #endif
 
+#ifdef SECURE_MODE
 #ifdef USE_OPTIGA
   optiga_init_and_configure();
 #endif
-
 #ifdef USE_TROPIC
   tropic_init();
 #endif
+#endif  // SECURE_MODE
 }
 
 // Kernel task main loop
@@ -316,7 +315,7 @@ int main(void) {
 
 #ifdef USE_TRUSTZONE
   // Configure unprivileged access for the coreapp
-  tz_init_kernel();
+  tz_init();
 #endif
 
   // Initialize hardware drivers

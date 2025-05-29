@@ -66,7 +66,7 @@ def bootloader_str(file: Path, model: str) -> str:
 
     suffix = file.stem[len("bootloader_") :].upper()
 
-    aligned_size = find_value(model, "BOOTLOADER_MAXSIZE")
+    aligned_size = find_value(model, "BOOTLOADER_MAXSIZE", False)
 
     bytes_00 = to_uint_array(aligned_digest(file, data, b"\x00", aligned_size))
     bytes_ff = to_uint_array(aligned_digest(file, data, b"\xff", aligned_size))

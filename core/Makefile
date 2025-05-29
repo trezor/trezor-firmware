@@ -19,6 +19,7 @@ PRODTEST_BUILD_DIR    = $(BUILD_DIR)/prodtest
 PRODTEST_EMU_BUILD_DIR    = $(BUILD_DIR)/prodtest_emu
 REFLASH_BUILD_DIR     = $(BUILD_DIR)/reflash
 KERNEL_BUILD_DIR      = $(BUILD_DIR)/kernel
+SECMON_BUILD_DIR      = $(BUILD_DIR)/secmon
 FIRMWARE_BUILD_DIR    = $(BUILD_DIR)/firmware
 UNIX_BUILD_DIR        = $(BUILD_DIR)/unix
 RUST_BUILD_DIR        = $(BUILD_DIR)/rust
@@ -304,11 +305,14 @@ build_reflash: ## build reflash firmware + reflash image
 	dd if=build/boardloader/boardloader.bin of=$(REFLASH_BUILD_DIR)/sdimage.bin bs=1 seek=0
 	dd if=build/bootloader/bootloader.bin of=$(REFLASH_BUILD_DIR)/sdimage.bin bs=1 seek=49152
 
+build_secmon: ## build security monitor image
+	$(SCONS) $(SECMON_BUILD_DIR)/secmon.bin
+
 build_kernel: ## build kernel image
 	$(SCONS) $(KERNEL_BUILD_DIR)/kernel.bin
 
 build_firmware: MICROPY_ENABLE_SOURCE_LINE ?= 0
-build_firmware: templates build_cross build_kernel ## build firmware with frozen modules
+build_firmware: templates build_cross build_secmon build_kernel ## build firmware with frozen modules
 	$(SCONS) $(FIRMWARE_BUILD_DIR)/firmware.bin
 
 build_unix: MICROPY_ENABLE_SOURCE_LINE ?= 1
@@ -331,7 +335,8 @@ build_cross: ## build mpy-cross port
 
 ## clean commands:
 
-clean: clean_boardloader clean_bootloader clean_bootloader_emu clean_bootloader_ci clean_prodtest clean_reflash clean_firmware clean_unix clean_cross ## clean all
+clean: clean_boardloader clean_bootloader clean_bootloader_emu clean_bootloader_ci \
+	clean_prodtest clean_reflash clean_firmware clean_kernel clean_secmon clean_unix clean_cross ## clean all
 	rm -f ".sconsign.dblite"
 
 clean_boardloader: ## clean boardloader build
@@ -351,6 +356,9 @@ clean_prodtest: ## clean prodtest build
 
 clean_reflash: ## clean reflash build
 	rm -rf $(REFLASH_BUILD_DIR)
+
+clean_secmon: ## clean security monitor build
+	rm -rf $(SECMON_BUILD_DIR)
 
 clean_kernel: ## clean kernel build
 	rm -rf $(KERNEL_BUILD_DIR)

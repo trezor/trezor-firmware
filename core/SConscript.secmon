@@ -1,0 +1,438 @@
+# pylint: disable=E0602
+# fmt: off
+
+import os
+import tools, models
+
+BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
+PRODUCTION = ARGUMENTS.get('PRODUCTION', '0') == '1'
+BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
+BOOTLOADER_DEVEL = ARGUMENTS.get('BOOTLOADER_DEVEL', '0') == '1'
+EVERYTHING = BITCOIN_ONLY != '1'
+TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
+CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
+PYOPT = ARGUMENTS.get('PYOPT', '1')
+DISABLE_OPTIGA = ARGUMENTS.get('DISABLE_OPTIGA', '0') == '1'
+HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
+THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
+
+STORAGE_INSECURE_TESTING_MODE = ARGUMENTS.get('STORAGE_INSECURE_TESTING_MODE', '0') == '1'
+if STORAGE_INSECURE_TESTING_MODE and PRODUCTION:
+    raise RuntimeError("STORAGE_INSECURE_TESTING_MODE cannot be used in production")
+if STORAGE_INSECURE_TESTING_MODE:
+    DISABLE_OPTIGA = True
+    PYOPT = "0"
+
+FEATURE_FLAGS = {
+    "RDI": True,
+    "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
+    "SYSTEM_VIEW": False,
+    "AES_GCM": True,
+}
+
+FEATURES_WANTED = ["consumption_mask", "optiga", "power_save", "tropic", "secure_domain", "secmon_layout"]
+
+if DISABLE_OPTIGA:
+    # TODO use PYOPT instead of PRODUCTION, same as in firmware, blocked on #4253
+    if PRODUCTION:
+        raise RuntimeError("DISABLE_OPTIGA requires non-production build")
+    FEATURES_WANTED.remove("optiga")
+
+CCFLAGS_MOD = ''
+CPPPATH_MOD = []
+CPPDEFINES_MOD = []
+SOURCE_MOD = []
+SOURCE_MOD_CRYPTO = []
+CPPDEFINES_HAL = []
+SOURCE_HAL = []
+PATH_HAL = []
+
+FROZEN = True
+
+# modtrezorconfig
+CPPPATH_MOD += [
+    'embed/upymod/modtrezorconfig',
+    'vendor/trezor-storage',
+    'vendor/micropython/lib/uzlib',
+]
+SOURCE_MOD += [
+    'vendor/trezor-storage/norcow.c',
+    'vendor/trezor-storage/storage.c',
+    'vendor/trezor-storage/storage_utils.c',
+    'vendor/trezor-storage/flash_area.c',
+]
+
+# modtrezorcrypto
+CCFLAGS_MOD += '-Wno-sequence-point '
+CPPPATH_MOD += [
+    'vendor/trezor-crypto',
+]
+CPPDEFINES_MOD += [
+    'KERNEL_MODE',
+    'SECURE_MODE',
+    'AES_128',
+    'AES_192',
+    ('USE_BIP32_CACHE', '0'),
+    ('USE_KECCAK', '1'),
+    ('USE_ETHEREUM', '1' if EVERYTHING else '0'),
+    ('USE_MONERO', '1' if EVERYTHING else '0'),
+    ('USE_CARDANO', '1' if EVERYTHING else '0'),
+    ('USE_NEM', '1' if (EVERYTHING and TREZOR_MODEL == "T2T1") else '0'),
+    ('USE_EOS', '1' if (EVERYTHING and TREZOR_MODEL == "T2T1") else '0'),
+]
+SOURCE_MOD_CRYPTO += [
+    'vendor/trezor-crypto/address.c',
+    'vendor/trezor-crypto/aes/aes_modes.c',
+    'vendor/trezor-crypto/aes/aesccm.c',
+    'vendor/trezor-crypto/aes/aescrypt.c',
+    'vendor/trezor-crypto/aes/aeskey.c',
+    'vendor/trezor-crypto/aes/aestab.c',
+    'vendor/trezor-crypto/base32.c',
+    'vendor/trezor-crypto/base58.c',
+    'vendor/trezor-crypto/bignum.c',
+    'vendor/trezor-crypto/bip32.c',
+    'vendor/trezor-crypto/bip39.c',
+    'vendor/trezor-crypto/bip39_english.c',
+    'vendor/trezor-crypto/blake256.c',
+    'vendor/trezor-crypto/blake2b.c',
+    'vendor/trezor-crypto/blake2s.c',
+    'vendor/trezor-crypto/buffer.c',
+    'vendor/trezor-crypto/chacha20poly1305/chacha20poly1305.c',
+    'vendor/trezor-crypto/chacha20poly1305/chacha_merged.c',
+    'vendor/trezor-crypto/chacha20poly1305/poly1305-donna.c',
+    'vendor/trezor-crypto/chacha20poly1305/rfc7539.c',
+    'vendor/trezor-crypto/chacha_drbg.c',
+    'vendor/trezor-crypto/curves.c',
+    'vendor/trezor-crypto/der.c',
+    'vendor/trezor-crypto/ecdsa.c',
+    'vendor/trezor-crypto/ed25519-donna/curve25519-donna-32bit.c',
+    'vendor/trezor-crypto/ed25519-donna/curve25519-donna-helpers.c',
+    'vendor/trezor-crypto/ed25519-donna/curve25519-donna-scalarmult-base.c',
+    'vendor/trezor-crypto/ed25519-donna/ed25519-donna-32bit-tables.c',
+    'vendor/trezor-crypto/ed25519-donna/ed25519-donna-basepoint-table.c',
+    'vendor/trezor-crypto/ed25519-donna/ed25519-donna-impl-base.c',
+    'vendor/trezor-crypto/ed25519-donna/ed25519-keccak.c',
+    'vendor/trezor-crypto/ed25519-donna/ed25519-sha3.c',
+    'vendor/trezor-crypto/ed25519-donna/ed25519.c',
+    'vendor/trezor-crypto/ed25519-donna/modm-donna-32bit.c',
+    'vendor/trezor-crypto/groestl.c',
+    'vendor/trezor-crypto/hasher.c',
+    'vendor/trezor-crypto/hmac.c',
+    'vendor/trezor-crypto/hmac_drbg.c',
+    'vendor/trezor-crypto/memzero.c',
+    'vendor/trezor-crypto/nem.c',
+    'vendor/trezor-crypto/nist256p1.c',
+    'vendor/trezor-crypto/pbkdf2.c',
+    'vendor/trezor-crypto/rand.c',
+    'vendor/trezor-crypto/rfc6979.c',
+    'vendor/trezor-crypto/ripemd160.c',
+    'vendor/trezor-crypto/secp256k1.c',
+    'vendor/trezor-crypto/segwit_addr.c',
+    'vendor/trezor-crypto/sha2.c',
+    'vendor/trezor-crypto/sha3.c',
+    'vendor/trezor-crypto/shamir.c',
+    'vendor/trezor-crypto/slip39.c',
+    'vendor/trezor-crypto/slip39_english.c',
+    'vendor/trezor-crypto/tls_prf.c',
+]
+if EVERYTHING:
+    SOURCE_MOD_CRYPTO += [
+        'vendor/trezor-crypto/cardano.c',
+        'vendor/trezor-crypto/monero/base58.c',
+        'vendor/trezor-crypto/monero/serialize.c',
+        'vendor/trezor-crypto/monero/xmr.c',
+    ]
+
+# libsecp256k1-zkp
+if FEATURE_FLAGS["SECP256K1_ZKP"]:
+    CPPPATH_MOD += [
+        'vendor/secp256k1-zkp',
+        'vendor/secp256k1-zkp/src',
+        'vendor/secp256k1-zkp/include',
+    ]
+    CPPDEFINES_MOD += [
+        'USE_SECP256K1_ZKP',
+        'USE_SECP256K1_ZKP_ECDSA',
+        ('SECP256K1_CONTEXT_SIZE', '180'),
+        'USE_ASM_ARM',
+        'USE_EXTERNAL_ASM',
+        'USE_EXTERNAL_DEFAULT_CALLBACKS',
+        ('ECMULT_GEN_PREC_BITS', '2'),
+        ('ECMULT_WINDOW_SIZE', '2'),
+        'ENABLE_MODULE_GENERATOR',
+        'ENABLE_MODULE_RECOVERY',
+        'ENABLE_MODULE_SCHNORRSIG',
+        'ENABLE_MODULE_EXTRAKEYS',
+        'ENABLE_MODULE_ECDH',
+    ]
+    SOURCE_MOD_SECP256K1_ZKP = [
+        'vendor/secp256k1-zkp/src/secp256k1.c',
+        'vendor/secp256k1-zkp/src/precomputed_ecmult.c',
+        'vendor/secp256k1-zkp/src/precomputed_ecmult_gen.c',
+        'vendor/secp256k1-zkp/src/asm/field_10x26_arm.s'
+    ]
+    SOURCE_MOD_CRYPTO += [
+        'vendor/trezor-crypto/zkp_context.c',
+        'vendor/trezor-crypto/zkp_ecdsa.c',
+        'vendor/trezor-crypto/zkp_bip340.c',
+    ]
+
+SOURCE_MOD += [
+    'embed/util/bl_check/bl_check.c',
+    'embed/util/translations/translations.c',
+    'embed/util/image/image.c',
+    'embed/rtl/error_handling.c',
+    'embed/rtl/mini_printf.c',
+    'embed/upymod/modtrezorcrypto/rand.c',
+    'vendor/micropython/lib/uzlib/adler32.c',
+    'vendor/micropython/lib/uzlib/crc32.c',
+    'vendor/micropython/lib/uzlib/tinflate.c',
+]
+
+CPPDEFINES_MOD += [
+    'TRANSLATIONS',
+    'RSOD_IN_COREAPP',
+]
+
+if FEATURE_FLAGS["RDI"]:
+    CPPDEFINES_MOD += ['RDI']
+
+if FEATURE_FLAGS["SYSTEM_VIEW"]:
+    SOURCE_MOD += [
+        'embed/sys/systemview/stm32/config/SEGGER_SYSVIEW_Config_NoOS.c',
+        'embed/sys/systemview/stm32/segger/SEGGER_SYSVIEW.c',
+        'embed/sys/systemview/stm32/segger/SEGGER_RTT.c',
+        'embed/sys/systemview/stm32/segger/SEGGER_RTT_ASM_ARMv7M.S',
+        'embed/sys/systemview/stm32/segger/Syscalls/SEGGER_RTT_Syscalls_GCC.c',
+        'embed/sys/systemview/systemview.c',
+    ]
+    CPPPATH_MOD += [
+        'embed/sys/systemview/inc',
+        'embed/sys/systemview/stm32/config',
+        'embed/sys/systemview/stm32/segger',
+    ]
+    CPPDEFINES_MOD += ['SYSTEM_VIEW']
+    CCFLAGS_MOD += '-DSYSTEM_VIEW '
+
+TRANSLATION_DATA = [
+    "translations/en.json",
+    "translations/order.json",
+]
+
+if THP:
+    CPPDEFINES_MOD += ['USE_THP']
+    SOURCE_MOD += [
+        'vendor/trezor-crypto/elligator2.c',
+    ]
+
+if STORAGE_INSECURE_TESTING_MODE:
+    CPPDEFINES_MOD += ['STORAGE_INSECURE_TESTING_MODE']
+
+env = Environment(
+    ENV=os.environ,
+    CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DPYOPT={PYOPT} -DBOOTLOADER_QA={int(BOOTLOADER_QA)} -DBITCOIN_ONLY={BITCOIN_ONLY} -USCM_REVISION_INIT",
+    CPPDEFINES_IMPLICIT=[],
+    CPPDEFPREFIX="-D'",
+    CPPDEFSUFFIX="'",
+)
+
+if TREZOR_MODEL not in ['T3W1', 'D002']:
+    # Skipping build and creating empty secmon.bin
+    secmon_bin = env.Command(
+        target='secmon.bin',
+        source=[],
+        action=Touch('$TARGET')
+    )
+    Return()
+
+FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
+
+FEATURE_FLAGS["AES_GCM"] = FEATURE_FLAGS["AES_GCM"] or "tropic" in FEATURES_AVAILABLE
+
+# AES-GCM
+if FEATURE_FLAGS["AES_GCM"]:
+    CPPDEFINES_MOD += [
+        'USE_AES_GCM',
+        'AES_VAR',
+    ]
+    SOURCE_MOD_CRYPTO += [
+        'vendor/trezor-crypto/aes/gf128mul.c',
+        'vendor/trezor-crypto/aes/aesgcm.c',
+    ]
+
+SOURCE_FIRMWARE = [
+    'embed/projects/secmon/main.c',
+]
+
+if 'sd_card' in FEATURES_AVAILABLE:
+    SDCARD = True
+else:
+    SDCARD = False
+
+env.Replace(
+    CAT='cat',
+    DD='dd',
+    CP='cp',
+    SED='sed',
+    AS='arm-none-eabi-as',
+    AR='arm-none-eabi-ar',
+    CC='arm-none-eabi-gcc',
+    LINK='arm-none-eabi-gcc',
+    SIZE='arm-none-eabi-size',
+    STRIP='arm-none-eabi-strip',
+    OBJCOPY='arm-none-eabi-objcopy', )
+
+env.Replace(
+    TREZOR_MODEL=TREZOR_MODEL,)
+
+ALLPATHS = [
+        '.',
+        'embed/projects/firmware',
+        'embed/rtl/inc',
+        'embed/models',
+        'embed/gfx/inc',
+        'embed/sys/bsp/inc',
+        'embed/util/bl_check/inc',
+        'embed/util/image/inc',
+        'embed/util/rsod/inc',
+        'embed/util/translations/inc',
+    ] + CPPPATH_MOD + PATH_HAL
+
+env.Replace(
+    COPT=env.get('ENV').get('OPTIMIZE', '-Os'),
+    CCFLAGS='$COPT '
+    '-g3 '
+    '-nostdlib '
+    '-std=gnu11 -Wall -Werror -Wdouble-promotion -Wpointer-arith -Wno-missing-braces -fno-common '
+    '-fsingle-precision-constant -fdata-sections -ffunction-sections '
+    '-ffreestanding '
+    '-fstack-protector-all '
+    +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
+    LINKFLAGS='-T build/secmon/memory.ld -Wl,--gc-sections -Wl,--print-memory-usage '
+        ' -Wl,-Map=build/secmon/secmon.map -Wl,--warn-common -Wl,--undefined=__errno '
+        ' -Wl,-cmse-implib -Wl,--out-implib=build/secmon/secmon_api.o',
+    CPPPATH=ALLPATHS,
+    CPPDEFINES=[
+        'SECMON',
+        'TREZOR_MODEL_'+TREZOR_MODEL,
+        'USE_HAL_DRIVER',
+        'ARM_USER_MODE',
+    ] + CPPDEFINES_MOD + CPPDEFINES_HAL,
+    ASFLAGS=env.get('ENV')['CPU_ASFLAGS'],
+    ASPPFLAGS='$CFLAGS $CCFLAGS',
+    )
+
+env.Replace(
+    HEADERTOOL='headertool',
+    PYTHON='python',
+    MAKECMAKELISTS='$PYTHON tools/make_cmakelists.py',
+)
+
+
+#
+# Program objects
+#
+
+source_files = SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_FIRMWARE + SOURCE_HAL
+obj_program = []
+obj_program.extend(env.Object(source=SOURCE_MOD))
+obj_program.extend(env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-auto-var-init=zero'))
+if FEATURE_FLAGS["SECP256K1_ZKP"]:
+    obj_program.extend(env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function'))
+    source_files.extend(SOURCE_MOD_SECP256K1_ZKP)
+obj_program.extend(env.Object(source=SOURCE_FIRMWARE))
+obj_program.extend(env.Object(source=SOURCE_HAL))
+
+env.Replace(
+    ALLSOURCES=source_files,
+    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES'] + env['CPPDEFINES_IMPLICIT'] + [f"PRODUCTION={int(PRODUCTION)}", f"BOOTLOADER_QA={int(BOOTLOADER_QA)}", f"PYOPT={PYOPT}", f"BITCOIN_ONLY={BITCOIN_ONLY}"]))
+
+
+cmake_gen = env.Command(
+    target='CMakeLists.txt',
+    source='',
+    action='$MAKECMAKELISTS --sources $ALLSOURCES --dirs $CPPPATH --defs $ALLDEFS',
+)
+
+BOOTLOADER_SUFFIX = TREZOR_MODEL
+if BOOTLOADER_QA:
+    BOOTLOADER_SUFFIX += '_qa'
+
+# select vendor header
+if BOOTLOADER_QA or BOOTLOADER_DEVEL:
+    vendor = "dev_DO_NOT_SIGN_signed_dev"
+elif not PRODUCTION:
+    vendor = "unsafe_signed_prod"
+else:
+    if TREZOR_MODEL in ('T2T1',):
+        vendor = "satoshilabs_signed_prod"
+    elif BITCOIN_ONLY == '1':
+        vendor = "trezor_btconly_signed_prod"
+    else:
+        vendor = "trezor_signed_prod"
+
+VENDORHEADER = f'embed/models/{TREZOR_MODEL}/vendorheader/vendorheader_{vendor}.bin'
+
+
+obj_program.extend(
+    env.Command(
+        target='embed/projects/secmon/vendorheader.o',
+        source=VENDORHEADER,
+        action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
+        ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
+        ' $SOURCE $TARGET', ))
+
+tools.embed_compressed_binary(
+        obj_program,
+        env,
+        'bootloader',
+        'embed/projects/bootloaders/bootloader.o',
+        f'embed/models/{TREZOR_MODEL}/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
+        'secmon',
+        'bootloader',
+        )
+
+linkerscript_gen = env.Command(
+    target='memory.ld',
+    source=[f'embed/models/{TREZOR_MODEL}/memory_secmon.ld', env.get('ENV')['LINKER_SCRIPT'].format(target='secmon')],
+    action='$CAT $SOURCES > $TARGET',
+)
+
+program_elf = env.Command(
+    target='secmon.elf',
+    source=obj_program,
+    action=
+    '$LINK -o $TARGET $CCFLAGS $CFLAGS $SOURCES $LINKFLAGS -lc_nano -lm -lgcc',
+)
+
+env.Depends(program_elf, linkerscript_gen)
+
+if CMAKELISTS != 0:
+    env.Depends(program_elf, cmake_gen)
+
+BINARY_NAME = f"build/secmon/secmon-{TREZOR_MODEL}"
+if not EVERYTHING:
+    BINARY_NAME += "-btconly"
+BINARY_NAME += "-" + tools.get_version('embed/projects/secmon/version.h')
+BINARY_NAME += "-" + tools.get_git_revision_short_hash()
+BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
+BINARY_NAME += ".bin"
+
+action_bin=[
+    '$OBJCOPY -O binary -j .flash -j .data -j .confidential -j .gnu.sgstubs $SOURCE ${TARGET}',
+    '$CP $TARGET ' + BINARY_NAME,
+]
+
+if STORAGE_INSECURE_TESTING_MODE:
+    INSECURE_TESTING_MODE_STR = """
+#########################################################
+#   STORAGE_INSECURE_TESTING_MODE enabled, DO NOT USE   #
+#########################################################
+"""
+    action_bin.append(INSECURE_TESTING_MODE_STR)
+
+program_bin = env.Command(
+    target='secmon.bin',
+    source=program_elf,
+    action=action_bin,
+)

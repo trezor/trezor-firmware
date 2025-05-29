@@ -17,13 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef SECURE_MODE
+
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
 #include <sys/mpu.h>
 #include <util/board_capabilities.h>
-
-#ifdef KERNEL_MODE
 
 static uint32_t board_name = 0;
 
@@ -31,7 +31,9 @@ static boardloader_version_t boardloader_version = {0};
 
 const uint32_t get_board_name() { return board_name; }
 
-boardloader_version_t get_boardloader_version() { return boardloader_version; }
+void get_boardloader_version(boardloader_version_t *version) {
+  *version = boardloader_version;
+}
 
 void parse_boardloader_capabilities() {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOARDCAPS);
@@ -85,4 +87,4 @@ void parse_boardloader_capabilities() {
   mpu_restore(mpu_mode);
 }
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE

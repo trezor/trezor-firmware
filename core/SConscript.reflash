@@ -32,6 +32,7 @@ RUST_UI_FEATURES = []
 
 CPPDEFINES_MOD += [
     'KERNEL_MODE',
+    'SECURE_MODE',
 ]
 
 # modtrezorcrypto

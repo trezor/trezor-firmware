@@ -56,6 +56,7 @@ def configure(
         sources += ["embed/io/display/st-7789/panels/lx154a2482.c"]
         sources += ["embed/io/display/fb_queue/fb_queue.c"]
         paths += ["embed/io/display/inc"]
+        defines += [("USE_DISPLAY", "1")]
 
         features_available.append("backlight")
         defines += [("USE_BACKLIGHT", "1")]

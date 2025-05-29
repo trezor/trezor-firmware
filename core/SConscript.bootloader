@@ -11,7 +11,7 @@ PRODUCTION = 0 if BOOTLOADER_QA else ARGUMENTS.get('PRODUCTION', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 UI_DEBUG_OVERLAY = ARGUMENTS.get('UI_DEBUG_OVERLAY', '0') == '1'
 
-FEATURES_WANTED = ["input", "rgb_led", "consumption_mask", "usb", "optiga", "dma2d", "ble", "power_manager", "display", "tropic"]
+FEATURES_WANTED = ["input", "rgb_led", "consumption_mask", "usb", "optiga", "dma2d", "ble", "power_manager", "power_save", "display", "tropic", "secure_domain"]
 
 if TREZOR_MODEL in ('T3W1', ):
     FEATURES_WANTED += ["haptic"]
@@ -34,6 +34,7 @@ CPPPATH_MOD += [
 ]
 CPPDEFINES_MOD += [
     'KERNEL_MODE',
+    'SECURE_MODE',
     'AES_128',
     'AES_192',
     'USE_KECCAK',

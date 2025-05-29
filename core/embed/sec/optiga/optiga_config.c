@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef SECURE_MODE
+
 #include <trezor_rtl.h>
 
 #include <sec/optiga.h>
@@ -26,8 +28,6 @@
 #include <sys/systick.h>
 
 #include "memzero.h"
-
-#ifdef KERNEL_MODE
 
 #ifdef USE_OPTIGA_LOGGING
 #include <inttypes.h>
@@ -73,4 +73,4 @@ void optiga_init_and_configure(void) {
          "Cannot initialize optiga.");
 }
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE

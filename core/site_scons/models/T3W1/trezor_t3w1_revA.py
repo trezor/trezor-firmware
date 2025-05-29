@@ -27,8 +27,16 @@ def configure(
     ] = "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 "
     env.get("ENV")[
         "CPU_CCFLAGS"
-    ] = "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -mtune=cortex-m33 -mcmse "
+    ] = "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -mtune=cortex-m33 "
     env.get("ENV")["RUST_TARGET"] = "thumbv8m.main-none-eabihf"
+
+    if "secure_domain" in features_wanted:
+        env.get("ENV")["CPU_CCFLAGS"] += "-mcmse "
+
+    if "secmon_layout" in features_wanted:
+        defines += [("USE_SECMON_LAYOUT", "1")]
+        memory_layout = "memory_secmon.ld"
+        features_available.append("secmon_layout")
 
     defines += [
         mcu,
@@ -56,6 +64,7 @@ def configure(
             "embed/io/display/fb_queue/fb_queue.c",
         ]
         paths += ["embed/io/display/inc"]
+        defines += [("USE_DISPLAY", "1")]
 
         features_available.append("backlight")
         defines += [("USE_BACKLIGHT", "1")]
@@ -242,6 +251,11 @@ def configure(
         paths += ["embed/sys/power_manager/inc"]
         defines += ["USE_PMIC"]
         features_available.append("pmic")
+
+    if "power_save" in features_wanted:
+        sources += ["embed/sys/power_save/stm32u5/power_save.c"]
+        paths += ["embed/sys/power_save/inc"]
+        defines += [("USE_POWER_SAVE", "1")]
 
     if "power_manager" in features_wanted:
         sources += [

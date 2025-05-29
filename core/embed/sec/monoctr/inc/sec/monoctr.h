@@ -17,10 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_MONOCTR
-#define TREZORHAL_MONOCTR
+#pragma once
 
-#ifdef KERNEL_MODE
+#ifdef SECURE_MODE
 
 #include <trezor_types.h>
 
@@ -41,6 +40,4 @@ secbool monoctr_write(monoctr_type_t type, uint8_t value);
 // Read the current value of the monotonic counter
 secbool monoctr_read(monoctr_type_t type, uint8_t* value);
 
-#endif  // KERNEL_MODE
-
-#endif
+#endif  // SECURE_MODE

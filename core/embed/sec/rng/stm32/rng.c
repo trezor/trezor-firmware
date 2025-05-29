@@ -18,10 +18,11 @@
  */
 
 #include <trezor_bsp.h>
+#include <trezor_rtl.h>
 
 #include <sec/rng.h>
 
-#if KERNEL_MODE
+#if SECURE_MODE
 
 #pragma GCC optimize( \
     "no-stack-protector")  // applies to all functions in this file
@@ -59,4 +60,4 @@ uint32_t rng_get(void) {
   return current;
 }
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE

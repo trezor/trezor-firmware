@@ -87,6 +87,38 @@ static inline void irq_unlock(irq_key_t key) {
   );
 }
 
+#if defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
+
+// Disables non-secure interrupts and returns the previous interrupt state.
+//
+// see irq_lock() for more details.
+static inline irq_key_t irq_lock_ns(void) {
+  uint32_t key;
+  const uint32_t tmp = 1;
+  __asm volatile(
+      "MRS %0, PRIMASK_NS\n"
+      "MSR   PRIMASK_NS, %1\n"
+      : "=r"(key)
+      : "r"(tmp)
+      : "memory"  // Clobber memory to ensure correct memory operations
+  );
+  return key;
+}
+
+// Restores the non-secure interrupt state to what it was before `irq_lock`.
+//
+// see irq_unlock() for more details.
+static inline void irq_unlock_ns(irq_key_t key) {
+  __asm volatile(
+      "MSR PRIMASK_NS, %0\n"
+      :
+      : "r"(key)
+      : "memory"  // Clobber memory to ensure correct memory operations
+  );
+}
+
+#endif  // defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
+
 // IRQ priority levels used throughout the system
 
 // Highest priority in the system (only RESET, NMI, and

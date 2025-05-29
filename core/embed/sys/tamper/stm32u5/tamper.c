@@ -25,7 +25,7 @@
 #include <sys/systick.h>
 #include <sys/tamper.h>
 
-#ifdef KERNEL_MODE
+#ifdef SECURE_MODE
 
 // Fixes a typo in CMSIS Device library for STM32U5
 #undef TAMP_CR3_ITAMP7NOER_Msk
@@ -247,4 +247,4 @@ void TAMP_IRQHandler(void) {
 #endif
 }
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE

@@ -44,6 +44,7 @@ def configure(
             "embed/io/display/stm32f429i-disc1/ili9341_spi.c",
         ]
         paths += ["embed/io/display/inc"]
+        defines += [("USE_DISPLAY", "1")]
 
         sources += ["embed/gfx/bitblt/stm32/dma2d_bitblt.c"]
 

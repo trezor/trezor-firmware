@@ -17,19 +17,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_LAYOUT_HELPERS_H
-#define TREZORHAL_LAYOUT_HELPERS_H
+#pragma once
 
 #ifdef TREZOR_EMULATOR
-#define ENSURE_SECTOR_AT(addr, sector)
+#define ENSURE_SECTOR_AT(addr, sector, access)
 #else
 // Static assertions ensuring that the flash address coresponds
 // to the expected sector start. This macro is used in the
 // definitions below.
-#define ENSURE_SECTOR_AT(addr, sector)                             \
-  _Static_assert(FLASH_SECTOR_TO_ADDR(EVAL(sector)) == EVAL(addr), \
+#define ENSURE_SECTOR_AT(addr, sector, access)                             \
+  _Static_assert(FLASH_SECTOR_TO_ADDR(EVAL(sector), access) == EVAL(addr), \
                  "Sector address mismatch")
 #endif
+
+#define ACCESS_DEFAULT 0
+#define ACCESS_NONSECURE 1
 
 // Helper that expands to its argument
 #define EVAL(x) x
@@ -42,24 +44,24 @@
   }
 
 // Defines flash area containing 1 subarea
-#define DEFINE_SINGLE_AREA(id, prefix)                                   \
-  ENSURE_SECTOR_AT(prefix##_START, prefix##_SECTOR_START);               \
-  ENSURE_SECTOR_AT(prefix##_START + prefix##_MAXSIZE,                    \
-                   prefix##_SECTOR_END + 1);                             \
-  const flash_area_t prefix##_AREA = {                                   \
-      .num_subareas = 1,                                                 \
-      .subarea[0] = SUBAREA(prefix##_SECTOR_START, prefix##_SECTOR_END), \
+#define DEFINE_SINGLE_AREA(id, prefix, access)                                 \
+  ENSURE_SECTOR_AT(prefix##_START, prefix##_SECTOR_START, access);             \
+  ENSURE_SECTOR_AT(prefix##_START + prefix##_MAXSIZE, prefix##_SECTOR_END + 1, \
+                   access);                                                    \
+  const flash_area_t prefix##_AREA = {                                         \
+      .num_subareas = 1,                                                       \
+      .subarea[0] = SUBAREA(prefix##_SECTOR_START, prefix##_SECTOR_END),       \
   }
 
 // Defines flash area containing two subareas from two
 // different blocks giveng by their prefixes
-#define DEFINE_SPLIT2_AREA(id, prefix1, prefix2)                           \
-  ENSURE_SECTOR_AT(prefix1##_START, prefix1##_SECTOR_START);               \
+#define DEFINE_SPLIT2_AREA(id, prefix1, access1, prefix2, access2)         \
+  ENSURE_SECTOR_AT(prefix1##_START, prefix1##_SECTOR_START, access1);      \
   ENSURE_SECTOR_AT(prefix1##_START + prefix1##_MAXSIZE,                    \
-                   prefix1##_SECTOR_END + 1);                              \
-  ENSURE_SECTOR_AT(prefix2##_START, prefix2##_SECTOR_START);               \
+                   prefix1##_SECTOR_END + 1, access1);                     \
+  ENSURE_SECTOR_AT(prefix2##_START, prefix2##_SECTOR_START, access2);      \
   ENSURE_SECTOR_AT(prefix2##_START + prefix2##_MAXSIZE,                    \
-                   prefix2##_SECTOR_END + 1);                              \
+                   prefix2##_SECTOR_END + 1, access2);                     \
   const flash_area_t id = {                                                \
       .num_subareas = 2,                                                   \
       .subarea[0] = SUBAREA(prefix1##_SECTOR_START, prefix1##_SECTOR_END), \
@@ -68,13 +70,13 @@
 
 // Defines array of two flash areas from two differenc blocks
 // given by their prefixes
-#define DEFINE_ARRAY2_AREA(id, prefix1, prefix2)                               \
-  ENSURE_SECTOR_AT(prefix1##_START, prefix1##_SECTOR_START);                   \
+#define DEFINE_ARRAY2_AREA(id, prefix1, prefix2, access)                       \
+  ENSURE_SECTOR_AT(prefix1##_START, prefix1##_SECTOR_START, access);           \
   ENSURE_SECTOR_AT(prefix1##_START + prefix1##_MAXSIZE,                        \
-                   prefix1##_SECTOR_END + 1);                                  \
-  ENSURE_SECTOR_AT(prefix2##_START, prefix2##_SECTOR_START);                   \
+                   prefix1##_SECTOR_END + 1, access);                          \
+  ENSURE_SECTOR_AT(prefix2##_START, prefix2##_SECTOR_START, access);           \
   ENSURE_SECTOR_AT(prefix2##_START + prefix2##_MAXSIZE,                        \
-                   prefix2##_SECTOR_END + 1);                                  \
+                   prefix2##_SECTOR_END + 1, access);                          \
   const flash_area_t id[] = {                                                  \
       {                                                                        \
           .num_subareas = 1,                                                   \
@@ -86,5 +88,3 @@
       }}
 
 #define DEFINE_EMPTY_AREA(id) const flash_area_t id = {.num_subareas = 0}
-
-#endif  // TREZORHAL_LAYOUT_HELPERS_H
