@@ -18,7 +18,11 @@ if TREZOR_MODEL in ('D001', 'D002'):
                  action=build_reflash)
     Return()
 
-FEATURES_WANTED = ["input", "sd_card", "display"]
+FEATURES_WANTED = [
+    "display",
+    "input",
+    "sd_card",
+    ]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []

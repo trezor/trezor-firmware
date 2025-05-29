@@ -46,7 +46,21 @@ FEATURE_FLAGS = {
     "AES_GCM": BENCHMARK or THP,
 }
 
-FEATURES_WANTED = ["input", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb" ,"optiga", "haptic", "ble", "tropic", "power_manager", "display", "secmon_layout"]
+FEATURES_WANTED = [
+    "ble",
+    "consumption_mask",
+    "display",
+    "dma2d",
+    "haptic",
+    "input",
+    "optiga",
+    "power_manager",
+    "rgb_led",
+    "sd_card",
+    "secmon_layout",
+    "tropic",
+    "usb",
+    ]
 
 if DISABLE_OPTIGA:
     if PYOPT != '0':
