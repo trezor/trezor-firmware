@@ -36,11 +36,53 @@
 #define FLASH_STATUS_ALL_FLAGS \
   (FLASH_NSSR_PGSERR | FLASH_NSSR_PGAERR | FLASH_NSSR_WRPERR | FLASH_NSSR_EOP)
 
+#ifdef SECMON
+extern uint32_t _codelen;
+#define SECMON_SIZE ((uint32_t) & _codelen)
+#define KERNEL_SECTOR_START \
+  ((FIRMWARE_START_S + SECMON_SIZE - FLASH_BASE) / FLASH_PAGE_SIZE)
+
+flash_area_t FIRMWARE_AREA = {0};
+#endif  // SECMON
+
+void flash_init(void) {
+#ifdef SECMON
+  // FIRMWARE_AREA is defined here because it depends on the
+  // SECMON size which is not known at compile time.
+
+  FIRMWARE_AREA = (flash_area_t){
+      .num_subareas = 2,
+      .subarea[0] =
+          {
+              .first_sector = FIRMWARE_SECTOR_START,
+              .num_sectors = KERNEL_SECTOR_START - FIRMWARE_SECTOR_START,
+          },
+      .subarea[1] =
+          {
+              .first_sector = KERNEL_SECTOR_START,
+              .num_sectors = FIRMWARE_SECTOR_END - KERNEL_SECTOR_START - 1,
+          },
+  };
+#endif
+}
+
 static bool flash_sector_is_secure(uint32_t sector) {
-  // We always return true since the entire flash memory is currently secure -
-  // partially through option bytes and partially through  FLASH controller
-  // settings
+#if defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
+#ifdef SECMON
+  if (sector < KERNEL_SECTOR_START) {
+    return true;
+  } else if (sector >= STORAGE_1_SECTOR_START &&
+             sector <= STORAGE_1_SECTOR_END) {
+    return true;
+  } else if (sector >= STORAGE_2_SECTOR_START &&
+             sector <= STORAGE_2_SECTOR_END) {
+    return true;
+  }
+#else
   return true;
+#endif
+#endif
+  return false;
 }
 
 const void *flash_get_address(uint16_t sector, uint32_t offset, uint32_t size) {
@@ -89,7 +131,7 @@ secbool flash_sector_erase(uint16_t sector) {
   }
 
   FLASH_EraseInitTypeDef EraseInitStruct = {
-      .TypeErase = FLASH_TYPEERASE_PAGES_NS,
+      .TypeErase = FLASH_TYPEERASE_PAGES,
       .Banks = FLASH_BANK_1,
       .Page = sector,
       .NbPages = 1,

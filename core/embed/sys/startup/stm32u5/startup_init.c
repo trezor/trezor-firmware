@@ -317,18 +317,21 @@ __attribute((no_stack_protector)) void reset_handler(void) {
   // contain random values and will be rewritten in the succesive
   // code
 
+#ifdef SECURE_MODE
   // Initialize system clocks
   SystemInit();
+#endif
 
   // Clear unused part of stack
   clear_unused_stack();
 
+#ifdef SECURE_MODE
   // Initialize random number generator
   rng_init();
 
   // Clear all memory except stack.
   // Keep also bootargs in bootloader and boardloader.
-  memregion_t region = MEMREGION_ALL_ACCESSIBLE_RAM;
+  memregion_t region = MEMREGION_ALL_STARTUP_RAM;
 
   MEMREGION_DEL_SECTION(&region, _stack_section);
 #if defined BOARDLOADER || defined BOOTLOADER
@@ -339,6 +342,7 @@ __attribute((no_stack_protector)) void reset_handler(void) {
   memregion_fill(&region, rng_get());
 #endif
   memregion_fill(&region, 0);
+#endif  // SECURE_MODE
 
   // Initialize .bss, .data, ...
   init_linker_sections();

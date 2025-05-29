@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_RANDOM_DELAYS_H
-#define TREZORHAL_RANDOM_DELAYS_H
+#pragma once
 
 #include <trezor_types.h>
 
@@ -40,7 +39,7 @@ https://link.springer.com/content/pdf/10.1007%2F3-540-44499-8_20.pdf
 https://link.springer.com/content/pdf/10.1007%2F978-3-540-72354-7_3.pdf
 */
 
-#ifdef KERNEL_MODE
+#ifdef SECURE_MODE
 
 // Initializes the random number generator for `wait_random()` and the RDI
 //
@@ -55,6 +54,10 @@ void random_delays_start_rdi(void);
 // Stops the RDI
 void random_delays_stop_rdi(void);
 
+#endif  // SECURE_MODE
+
+#ifdef KERNEL_MODE
+
 // Refreshes the second random number in the floating mean distribution.
 // (see the module description above)
 void random_delays_refresh_rdi(void);
@@ -65,5 +68,3 @@ void random_delays_refresh_rdi(void);
 void wait_random(void);
 
 #endif  // KERNEL_MODE
-
-#endif  // TREZORHAL_RANDOM_DELAYS_H

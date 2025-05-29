@@ -7,6 +7,7 @@ SConscript('SConscript.boardloader', variant_dir='build/boardloader', duplicate=
 SConscript('SConscript.bootloader', variant_dir='build/bootloader', duplicate=False)
 SConscript('SConscript.bootloader_ci', variant_dir='build/bootloader_ci', duplicate=False)
 SConscript('SConscript.bootloader_emu', variant_dir='build/bootloader_emu', duplicate=False)
+SConscript('SConscript.secmon', variant_dir='build/secmon', duplicate=False)
 SConscript('SConscript.kernel', variant_dir='build/kernel', duplicate=False)
 SConscript('SConscript.firmware', variant_dir='build/firmware', duplicate=False)
 SConscript('SConscript.prodtest', variant_dir='build/prodtest', duplicate=False)

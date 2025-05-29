@@ -17,14 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <util/unit_properties.h>
+
+#ifdef SECURE_MODE
+
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
 #include <util/flash_otp.h>
-#include <util/unit_properties.h>
-
-#ifdef KERNEL_MODE
 
 // Unit properties driver structure
 typedef struct {
@@ -159,7 +160,7 @@ void unit_properties_get(unit_properties_t* props) {
   *props = drv->cache;
 }
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE
 
 const unit_properties_t* unit_properties(void) {
   static bool cache_initialized = false;

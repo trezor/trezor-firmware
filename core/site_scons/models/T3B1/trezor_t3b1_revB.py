@@ -49,6 +49,7 @@ def configure(
     if "display" in features_wanted:
         sources += ["embed/io/display/vg-2864/display_driver.c"]
         paths += ["embed/io/display/inc"]
+        defines += [("USE_DISPLAY", "1")]
 
     if "input" in features_wanted:
         sources += ["embed/io/button/stm32/button.c"]

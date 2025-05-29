@@ -70,4 +70,12 @@ void reset_peripherals_and_interrupts(void);
 // are cleared except R11, which is set to the specified value.
 __attribute((noreturn)) void jump_to_vectbl(uint32_t vectbl_addr, uint32_t r11);
 
+#ifdef SECMON
+// Jumps to the NON-SECURE binary using its vector table.
+//
+// The target binary is called with interrupts disabled, and all registers
+// cleared
+__attribute((noreturn)) void jump_to_vectbl_ns(uint32_t vectbl_addr);
+#endif
+
 #endif  // KERNEL_MODE

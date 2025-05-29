@@ -22,6 +22,8 @@
 
 #include <rtl/sizedefs.h>
 
+#include "bootloaders/bootloader_hashes.h"
+
 #define MODEL_NAME "T3W1"
 #define MODEL_FULL_NAME "Trezor T3W1"
 #define MODEL_INTERNAL_NAME "T3W1"
@@ -49,4 +51,8 @@
 #define NORCOW_SECTOR_SIZE (16 * 8 * 1024)  // 128 kB
 #define NORCOW_MIN_VERSION 0x00000006
 
+#ifdef USE_SECMON_LAYOUT
+#include "memory_secmon.h"
+#else
 #include "memory.h"
+#endif

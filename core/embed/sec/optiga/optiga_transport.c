@@ -22,6 +22,8 @@
  * https://github.com/Infineon/optiga-trust-m/blob/develop/documents/Infineon_I2C_Protocol_v2.03.pdf
  */
 
+#ifdef SECURE_MODE
+
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
@@ -32,8 +34,6 @@
 #include "aes/aesccm.h"
 #include "memzero.h"
 #include "tls_prf.h"
-
-#ifdef KERNEL_MODE
 
 // Maximum possible packet size that can be transmitted.
 #define OPTIGA_MAX_PACKET_SIZE (OPTIGA_DATA_REG_LEN - 5)
@@ -834,4 +834,4 @@ optiga_result optiga_sec_chan_handshake(const uint8_t *secret,
   return OPTIGA_SUCCESS;
 }
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE

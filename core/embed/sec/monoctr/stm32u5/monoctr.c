@@ -17,14 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef SECURE_MODE
+
 #include <trezor_model.h>
 
 #include <sec/monoctr.h>
 #include <sec/secret.h>
 #include <sys/mpu.h>
 #include "flash_area.h"
-
-#ifdef KERNEL_MODE
 
 static int32_t get_offset(monoctr_type_t type) {
   switch (type) {
@@ -133,4 +133,4 @@ secbool monoctr_read(monoctr_type_t type, uint8_t *value) {
   return sectrue;
 }
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE

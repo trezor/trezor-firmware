@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef SECURE_MODE
+
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
@@ -182,3 +184,5 @@ void check_and_replace_bootloader(void) {
   mpu_reconfig(mode);
 #endif
 }
+
+#endif

@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef SECURE_MODE
+
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
@@ -28,8 +30,6 @@
 
 #include "blake2s.h"
 #include "flash_area.h"
-
-#ifdef KERNEL_MODE
 
 #define FW_HASHING_CHUNK_SIZE 1024
 
@@ -142,4 +142,4 @@ void firmware_invalidate_header(void) {
   ensure(flash_lock_write(), NULL);
 }
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE

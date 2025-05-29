@@ -21,43 +21,10 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
-#include <io/display.h>
-#include <io/usb.h>
-#include <sys/irq.h>
 #include <sys/pmic.h>
-#include <sys/systick.h>
+#include <sys/power_save.h>
 
 #include "power_manager_internal.h"
-
-#ifdef USE_OPTIGA
-#include <sec/optiga_config.h>
-#include <sec/optiga_hal.h>
-#include <sec/optiga_transport.h>
-#endif
-
-#ifdef USE_STORAGE_HWKEY
-#include <sec/secure_aes.h>
-#endif
-
-#ifdef USE_TOUCH
-#include <io/touch.h>
-#endif
-
-#ifdef USE_HAPTIC
-#include <io/haptic.h>
-#endif
-
-#ifdef USE_RGB_LED
-#include <io/rgb_led.h>
-#endif
-
-#ifdef USE_TROPIC
-#include <sec/tropic.h>
-#endif
-
-#ifdef USE_BLE
-#include <io/ble.h>
-#endif
 
 static void pm_background_tasks_suspend(void);
 static bool pm_background_tasks_suspended(void);
@@ -92,35 +59,11 @@ void pm_control_suspend() {
   // sets a wakeup flag causes this function to return.
   pm_wakeup_flags_reset();
 
-// Deinitialize all drivers that are not required in low-power mode
-// (e.g., USB, display, touch, haptic, etc.).
-#ifdef USE_STORAGE_HWKEY
-  secure_aes_deinit();
-#endif
-#if defined(USE_TROPIC) && !defined(BOOTLOADER)
-  tropic_deinit();
-#endif
-#ifdef USE_OPTIGA
-  optiga_deinit();
-#endif
-#ifdef USE_USB
-  usb_stop();
-#endif
-#ifdef USE_HAPTIC
-  haptic_deinit();
-#endif
-#ifdef USE_RGB_LED
-  rgb_led_deinit();
-#endif
-#ifdef USE_TOUCH
-  touch_deinit();
-#endif
-#ifdef USE_BLE
-  ble_wakeup_params_t ble_wakeup_params = {0};
-  ble_suspend(&ble_wakeup_params);
-#endif
-  int backlight_level = display_get_backlight();
-  display_deinit(DISPLAY_RESET_CONTENT);
+  power_save_wakeup_params_t wakeup_params = {0};
+
+  // Deinitialize all drivers that are not required in low-power mode
+  // (e.g., USB, display, touch, haptic, etc.).
+  power_save_suspend_io(&wakeup_params);
 
   // In the following loop, the system will attempt to enter low-power mode.
   // Low-power mode may be exited for various reasons, but the loop will
@@ -150,27 +93,8 @@ void pm_control_suspend() {
     } while (!pm_background_tasks_suspended() && (wakeup_flags == 0));
 
     if (wakeup_flags == 0) {
-      // Disable interrupts by setting PRIMASK to 1.
-      //
-      // The system can wake up, but interrupts will not be processed until
-      // PRIMASK is cleared again. This is necessary to restore the system clock
-      // immediately after exiting STOP2 mode.
-      irq_key_t irq_key = irq_lock();
-
-      // The PWR clock is disabled after system initialization.
-      // Re-enable it before writing to PWR registers.
-      __HAL_RCC_PWR_CLK_ENABLE();
-
-      // Enter STOP2 low-power mode
-      HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
-
-      // Disable PWR clock after use
-      __HAL_RCC_PWR_CLK_DISABLE();
-
-      // Recover system clock
-      SystemInit();
-
-      irq_unlock(irq_key);
+      // Enter low-power mode
+      power_save_suspend_cpu();
 
       // At this point, all pending interrupts are processed.
       // Some of them may set wakeup flags.
@@ -182,48 +106,13 @@ void pm_control_suspend() {
   }
 
   // Reinitialize all drivers that were stopped earlier
-  display_init(DISPLAY_RESET_CONTENT);
-  display_set_backlight(backlight_level);
-#ifdef USE_TOUCH
-  touch_init();
-#endif
-#ifdef USE_HAPTIC
-  haptic_init();
-#endif
-#ifdef USE_RGB_LED
-  rgb_led_init();
-#endif
-#ifdef USE_USB
-  usb_start();
-#endif
-#ifdef USE_STORAGE_HWKEY
-  secure_aes_init();
-#endif
-#ifdef USE_OPTIGA
-#ifdef BOOTLOADER
-  optiga_hal_init();
-#else
-  optiga_init_and_configure();
-#endif
-#endif
-#if defined(USE_TROPIC) && !defined(BOOTLOADER)
-  tropic_init();
-#endif
-#ifdef USE_BLE
-  ble_resume(&ble_wakeup_params);
-#endif
+  power_save_resume_io(&wakeup_params);
 }
 
-static void pm_background_tasks_suspend(void) {
-  // stwlc38
-  // pmic
-  // nrf52
-  // ble
-  // powerctl
-}
+static void pm_background_tasks_suspend(void) {}
 
 static bool pm_background_tasks_suspended(void) { return true; }
 
 static void pm_background_tasks_resume(void) {}
 
-#endif
+#endif  // KERNEL_MODE

@@ -26,20 +26,85 @@
 #include <sys/trustzone.h>
 #include <util/image.h>
 
+#if defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
+
 #define SAU_INIT_CTRL_ENABLE 1
 #define SAU_INIT_CTRL_ALLNS 0
-#define SAU_INIT_REGION(n, start, end, sec)   \
-  SAU->RNR = ((n) & SAU_RNR_REGION_Msk);      \
-  SAU->RBAR = ((start) & SAU_RBAR_BADDR_Msk); \
-  SAU->RLAR = ((end) & SAU_RLAR_LADDR_Msk) |  \
+#define SET_REGION(n, start, size, sec)                     \
+  SAU->RNR = ((n) & SAU_RNR_REGION_Msk);                    \
+  SAU->RBAR = ((start) & SAU_RBAR_BADDR_Msk);               \
+  SAU->RLAR = (((start) + (size)-1) & SAU_RLAR_LADDR_Msk) | \
               (((sec) << SAU_RLAR_NSC_Pos) & SAU_RLAR_NSC_Msk) | 1U
 
+#define DIS_REGION(n)                    \
+  SAU->RNR = ((n) & SAU_RNR_REGION_Msk); \
+  SAU->RBAR = 0;                         \
+  SAU->RLAR = 0
+
+#ifndef SECMON
 static void tz_configure_sau(void) {
-  SAU_INIT_REGION(0, 0x0BF90000, 0x0BFA8FFF, 0);  // OTP etc
+  SET_REGION(0, 0x0BF90000, 0x00019000, 0);  // OTP etc
 
   SAU->CTRL =
       ((SAU_INIT_CTRL_ENABLE << SAU_CTRL_ENABLE_Pos) & SAU_CTRL_ENABLE_Msk) |
       ((SAU_INIT_CTRL_ALLNS << SAU_CTRL_ALLNS_Pos) & SAU_CTRL_ALLNS_Msk);
+}
+#endif
+
+#ifdef SECMON
+
+extern uint8_t _sgstubs_section_start;
+extern uint8_t _sgstubs_section_end;
+
+#define SGSTUBS_START ((uint32_t) & _sgstubs_section_start)
+#define SGSTUBS_END ((uint32_t) & _sgstubs_section_end)
+#define SGSTUBS_SIZE (SGSTUBS_END - SGSTUBS_START)
+
+// defined in linker script
+extern uint32_t _codelen;
+
+#define SECMON_SIZE ((uint32_t) & _codelen)
+
+#define NONSECURE_CODE_START (FIRMWARE_START + SECMON_SIZE)
+#define NONSECURE_CODE_SIZE (FIRMWARE_MAXSIZE - SECMON_SIZE)
+
+static void tz_configure_sau(void) {
+  SAU->CTRL = 0;
+  __DSB();
+  __ISB();
+
+  // clang-format off
+  SET_REGION(0, 0x0BFA0000,            0x800,               0); // OTP, UID, etc
+  SET_REGION(1, NONSECURE_CODE_START,  NONSECURE_CODE_SIZE, 0);
+  SET_REGION(2, ASSETS_START,          ASSETS_MAXSIZE,      0);
+  SET_REGION(3, SGSTUBS_START,         SGSTUBS_SIZE,        1);
+  SET_REGION(4, NONSECURE_RAM_START,   NONSECURE_RAM_SIZE,  0);
+  SET_REGION(5, PERIPH_BASE_NS,        SIZE_256M,           0);
+  SET_REGION(6, GFXMMU_VIRTUAL_BUFFERS_BASE_NS, SIZE_16M,   0);
+  DIS_REGION(7);
+  // clang-format on
+
+  SAU->CTRL = SAU_CTRL_ENABLE_Msk;
+  __DSB();
+  __ISB();
+}
+
+#endif  // SECMON
+
+static void tz_enable_gtzc(void) {
+  // Enable GTZC (Global Trust-Zone Controller) peripheral clock
+  __HAL_RCC_GTZC1_CLK_ENABLE();
+  __HAL_RCC_GTZC2_CLK_ENABLE();
+}
+
+static void tz_enable_illegal_access_interrupt(void) {
+  // Clear all illegal access flags in GTZC TZIC
+  HAL_GTZC_TZIC_ClearFlag(GTZC_PERIPH_ALL);
+  // Enable all illegal access interrupts in GTZC TZIC
+  HAL_GTZC_TZIC_EnableIT(GTZC_PERIPH_ALL);
+  // Enable GTZC secure interrupt
+  NVIC_SetPriority(GTZC_IRQn, IRQ_PRI_HIGHEST);
+  NVIC_EnableIRQ(GTZC_IRQn);
 }
 
 // Configure ARMCortex-M33 SCB and FPU security
@@ -53,6 +118,21 @@ static void tz_configure_arm(void) {
   FPU->FPCCR &= ~FPU_FPCCR_CLRONRETS_Msk;
   // FPU registers are cleared on exception return
   FPU->FPCCR |= FPU_FPCCR_CLRONRET_Msk;
+
+  uint32_t reg_value = SCB->AIRCR;
+  reg_value &= ~SCB_AIRCR_VECTKEY_Msk;
+  reg_value |= 0x5FAUL << SCB_AIRCR_VECTKEY_Pos;
+  // Prioritize secure world interrupts over non-secure world
+  reg_value |= SCB_AIRCR_PRIS_Msk;
+#if PRODUCTION
+  // Restrict SYSRESETREQ to secure world only.
+  // In development builds, this restriction is disabled to allow
+  // system resets from non-secure code (e.g., during debugging).
+  reg_value |= SCB_AIRCR_SYSRESETREQS_Msk;
+#endif
+  // NMI, BusFault, HardFault are handled in both secure and non-secure worlds
+  reg_value |= SCB_AIRCR_BFHFNMINS_Msk;
+  SCB->AIRCR = reg_value;
 }
 
 // Configure SRAM security
@@ -119,65 +199,7 @@ static void tz_configure_flash(void) {
   HAL_FLASHEx_ConfigBBAttributes(&flash_bb);
 }
 
-void tz_init_boardloader(void) {
-  // Configure ARM SCB/FBU security
-  tz_configure_arm();
-
-  // Configure SAU security attributes
-  tz_configure_sau();
-
-  // Enable GTZC (Global Trust-Zone Controller) peripheral clock
-  __HAL_RCC_GTZC1_CLK_ENABLE();
-  __HAL_RCC_GTZC2_CLK_ENABLE();
-
-  // Configure SRAM security attributes
-  tz_configure_sram();
-
-  // Configure FLASH security attributes
-  tz_configure_flash();
-
-  // Configure FSMC security attributes
-  tz_configure_fsmc();
-
-  // Make all peripherals secure & privileged
-  HAL_GTZC_TZSC_ConfigPeriphAttributes(
-      GTZC_PERIPH_ALL, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
-
-  // Clear all illegal access flags in GTZC TZIC
-  HAL_GTZC_TZIC_ClearFlag(GTZC_PERIPH_ALL);
-
-  // Enable all illegal access interrupts in GTZC TZIC
-  HAL_GTZC_TZIC_EnableIT(GTZC_PERIPH_ALL);
-
-  // Enable GTZC secure interrupt
-  NVIC_SetPriority(GTZC_IRQn, IRQ_PRI_HIGHEST);
-  NVIC_EnableIRQ(GTZC_IRQn);
-}
-
-void tz_init_kernel(void) {
-  // Configure SRAM security attributes
-  tz_configure_sram();
-
-  // Configure FLASH security attributes
-  tz_configure_flash();
-
-  // Configure FSMC security attributes
-  tz_configure_fsmc();
-
-  // Make all peripherals secure & privileged
-  HAL_GTZC_TZSC_ConfigPeriphAttributes(
-      GTZC_PERIPH_ALL, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
-
-  // Clear all illegal access flags in GTZC TZIC
-  HAL_GTZC_TZIC_ClearFlag(GTZC_PERIPH_ALL);
-
-  // Enable all illegal access interrupts in GTZC TZIC
-  HAL_GTZC_TZIC_EnableIT(GTZC_PERIPH_ALL);
-
-  // Enable GTZC secure interrupt
-  NVIC_SetPriority(GTZC_IRQn, IRQ_PRI_HIGHEST);
-  NVIC_EnableIRQ(GTZC_IRQn);
-}
+#endif  // __ARM_FEATURE_CMSE
 
 static void set_bit_array(volatile uint32_t* regs, uint32_t bit_offset,
                           uint32_t bit_count, bool value) {
@@ -274,6 +296,48 @@ void tz_set_sram_unpriv(uint32_t start, uint32_t size, bool unpriv) {
   __ISB();
 }
 
+void tz_set_sram_unsecure(uint32_t start, uint32_t size, bool unsecure) {
+  const size_t block_size = TZ_SRAM_ALIGNMENT;
+
+  ensure(sectrue * IS_ALIGNED(start, block_size), "TZ alignment");
+  ensure(sectrue * IS_ALIGNED(size, block_size), "TZ alignment");
+
+  uint32_t end = start + size;
+
+#ifdef SECMON
+  // Allow using both secure and non-secure SRAM regions
+  if (start >= SRAM1_BASE_NS && end < SRAM1_BASE_S) {
+    start += SRAM1_BASE_S - SRAM1_BASE_NS;
+    end += SRAM1_BASE_S - SRAM1_BASE_NS;
+  }
+#endif
+
+  for (int idx = 0; idx < ARRAY_LENGTH(g_sram_regions); idx++) {
+    const sram_region_t* r = &g_sram_regions[idx];
+
+    if (start >= r->end) {
+      continue;
+    }
+
+    if (end <= r->start) {
+      break;
+    }
+
+    // Clip to region bounds
+    uint32_t clipped_start = MAX(start, r->start);
+    uint32_t clipped_end = MIN(end, r->end);
+
+    // Calculate bit offsets
+    uint32_t bit_offset = (clipped_start - r->start) / block_size;
+    uint32_t bit_count = (clipped_end - clipped_start) / block_size;
+
+    // Set/reset bits corresponding to 512B blocks
+    set_bit_array(r->regs->SECCFGR, bit_offset, bit_count, !unsecure);
+  }
+
+  __ISB();
+}
+
 typedef struct {
   // Start address of the region
   uint32_t start;
@@ -281,6 +345,8 @@ typedef struct {
   size_t end;
   // PRIVBB register base
   volatile uint32_t* privbb;
+  // SECBB register base
+  volatile uint32_t* secbb;
 } flash_region_t;
 
 #if defined STM32U5A9xx
@@ -299,8 +365,10 @@ typedef struct {
 // FLASH regions must be in order of ascending start address
 // and must not overlap
 flash_region_t g_flash_regions[] = {
-    {FLASH_BANK1_BASE, FLASH_BANK1_BASE + XFLASH_BANK_SIZE, &FLASH->PRIVBB1R1},
-    {FLASH_BANK2_BASE, FLASH_BANK2_BASE + XFLASH_BANK_SIZE, &FLASH->PRIVBB2R1},
+    {FLASH_BANK1_BASE, FLASH_BANK1_BASE + XFLASH_BANK_SIZE, &FLASH->PRIVBB1R1,
+     &FLASH->SECBB1R1},
+    {FLASH_BANK2_BASE, FLASH_BANK2_BASE + XFLASH_BANK_SIZE, &FLASH->PRIVBB2R1,
+     &FLASH->SECBB2R1},
 };
 
 void tz_set_flash_unpriv(uint32_t start, uint32_t size, bool unpriv) {
@@ -337,6 +405,48 @@ void tz_set_flash_unpriv(uint32_t start, uint32_t size, bool unpriv) {
   __ISB();
 }
 
+void tz_set_flash_unsecure(uint32_t start, uint32_t size, bool unsecure) {
+  const size_t block_size = TZ_FLASH_ALIGNMENT;
+
+  ensure(sectrue * IS_ALIGNED(start, block_size), "TZ alignment");
+  ensure(sectrue * IS_ALIGNED(size, block_size), "TZ alignment");
+
+  uint32_t end = start + size;
+
+#ifdef SECMON
+  // Allow using both secure and non-secure FLASH regions
+  if (start >= FLASH_BASE_NS && end < FLASH_BASE_S) {
+    start += FLASH_BASE_S - FLASH_BASE_NS;
+    end += FLASH_BASE_S - FLASH_BASE_NS;
+  }
+#endif
+
+  for (int idx = 0; idx < ARRAY_LENGTH(g_flash_regions); idx++) {
+    const flash_region_t* r = &g_flash_regions[idx];
+
+    if (start >= r->end) {
+      continue;
+    }
+
+    if (end <= r->start) {
+      break;
+    }
+
+    // Clip to region bounds
+    uint32_t clipped_start = MAX(start, r->start);
+    uint32_t clipped_end = MIN(end, r->end);
+
+    // Calculate bit offsets
+    uint32_t bit_offset = (clipped_start - r->start) / block_size;
+    uint32_t bit_count = (clipped_end - clipped_start) / block_size;
+
+    // Set/reset bits corresponding to flash pages (8KB)
+    set_bit_array(r->secbb, bit_offset, bit_count, !unsecure);
+  }
+
+  __ISB();
+}
+
 void tz_set_saes_unpriv(bool unpriv) {
   HAL_GTZC_TZSC_ConfigPeriphAttributes(
       GTZC_PERIPH_SAES,
@@ -356,3 +466,151 @@ void tz_set_gfxmmu_unpriv(bool unpriv) {
       unpriv ? GTZC_TZSC_PERIPH_NPRIV : GTZC_TZSC_PERIPH_PRIV);
 }
 #endif
+
+#ifndef SECMON
+void tz_init(void) {
+#if defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
+  tz_configure_arm();
+  tz_configure_sau();
+  tz_enable_gtzc();
+  tz_configure_sram();
+  tz_configure_flash();
+  tz_configure_fsmc();
+
+  // Make all peripherals secure & privileged
+  HAL_GTZC_TZSC_ConfigPeriphAttributes(
+      GTZC_PERIPH_ALL, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
+
+  tz_enable_illegal_access_interrupt();
+#endif
+}
+#endif  // !SECMON
+
+#define _PASTE3(a, b, c) a##b##c
+#define CONCAT3(a, b, c) _PASTE3(a, b, c)
+#define OPTIGA_I2C(FIELD) CONCAT3(I2C_INSTANCE_, OPTIGA_I2C_INSTANCE, FIELD)
+
+#ifdef SECMON
+void tz_init(void) {
+  tz_configure_arm();
+  tz_configure_sau();
+  tz_enable_gtzc();
+  tz_configure_sram();
+  tz_configure_flash();
+  tz_configure_fsmc();
+
+  // Make part of the FLASH and SRAM regions non-secure
+  // so the kernel can access them
+  tz_set_sram_unsecure(NONSECURE_RAM_START, NONSECURE_RAM_SIZE, true);
+  tz_set_flash_unsecure(NONSECURE_CODE_START, NONSECURE_CODE_SIZE, true);
+  tz_set_flash_unsecure(ASSETS_START, ASSETS_MAXSIZE, true);
+
+#ifdef USE_BACKUP_RAM
+  // Make Backup SRAM accessible in non-secure mode
+  GTZC_TZSC1->MPCWM4ACFGR =
+      (GTZC_TZSC1->MPCWM4ACFGR & ~GTZC_TZSC_MPCWM_CFGR_SEC) |
+      (GTZC_TZSC_MPCWM_CFGR_PRIV | GTZC_TZSC_MPCWM_CFGR_SREN);
+
+  GTZC_TZSC1->MPCWM4AR =
+      (GTZC_TZSC1->MPCWM4AR &
+       (~GTZC_TZSC_MPCWMR_SUBZ_START | ~GTZC_TZSC_MPCWMR_SUBZ_LENGTH)) |
+      (0 << GTZC_TZSC_MPCWMR_SUBZ_START_Pos) |
+      ((2048 / 32) << GTZC_TZSC_MPCWMR_SUBZ_LENGTH_Pos);
+#endif  // USE_BACKUP_RAM
+
+  // Set all peripherals as non-secure & privileged by default
+  HAL_GTZC_TZSC_ConfigPeriphAttributes(
+      GTZC_PERIPH_ALL, GTZC_TZSC_PERIPH_NSEC | GTZC_TZSC_PERIPH_PRIV);
+
+  // Set RNG as secure & privileged
+  HAL_GTZC_TZSC_ConfigPeriphAttributes(
+      GTZC_PERIPH_RNG, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
+
+  // Set SAES as secure & privileged
+  HAL_GTZC_TZSC_ConfigPeriphAttributes(
+      GTZC_PERIPH_SAES, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
+
+  // Set all interrupts as non-secure
+  for (int i = 0; i < 512; i++) {
+    NVIC_SetTargetState(i);
+  }
+
+  // Set GTZC interrupt as secure
+  NVIC_ClearTargetState(GTZC_IRQn);
+
+  // Make GPDMA1 non-secure & privilege mode
+
+  __HAL_RCC_GPDMA1_CLK_ENABLE();
+  GPDMA1->SECCFGR &= ~0xFFFF;
+  GPDMA1->PRIVCFGR |= 0xFFFF;
+
+  // Enable all GPIOS and make them non-secure & privileged
+
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
+  __HAL_RCC_GPIOG_CLK_ENABLE();
+  __HAL_RCC_GPIOH_CLK_ENABLE();
+  __HAL_RCC_GPIOI_CLK_ENABLE();
+#ifdef GPIOJ
+  __HAL_RCC_GPIOJ_CLK_ENABLE();
+#endif
+
+  GPIOA->SECCFGR &= ~0xFFFF;
+  GPIOB->SECCFGR &= ~0xFFFF;
+  GPIOC->SECCFGR &= ~0xFFFF;
+  GPIOD->SECCFGR &= ~0xFFFF;
+  GPIOE->SECCFGR &= ~0xFFFF;
+  GPIOF->SECCFGR &= ~0xFFFF;
+  GPIOG->SECCFGR &= ~0xFFFF;
+  GPIOH->SECCFGR &= ~0xFFFF;
+  GPIOI->SECCFGR &= ~0xFFFF;
+#ifdef GPIOJ
+  GPIOJ->SECCFGR &= ~0xFFFF;
+#endif
+
+#ifdef USE_TAMPER
+  // Set TAMPER interrupt as secure
+  NVIC_ClearTargetState(TAMP_IRQn);
+#endif
+
+#ifdef USE_OPTIGA
+  // Set Optiga I2C secure & privileged
+  HAL_GTZC_TZSC_ConfigPeriphAttributes(
+      OPTIGA_I2C(_GTZC_PERIPH), GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
+
+  OPTIGA_RST_PORT->SECCFGR |= OPTIGA_RST_PIN;
+  OPTIGA_PWR_PORT->SECCFGR |= OPTIGA_PWR_PIN;
+
+  OPTIGA_I2C(_SCL_PORT)->SECCFGR |= OPTIGA_I2C(_SCL_PIN);
+  OPTIGA_I2C(_SDA_PORT)->SECCFGR |= OPTIGA_I2C(_SDA_PIN);
+
+  NVIC_ClearTargetState(OPTIGA_I2C(_EV_IRQn));
+  NVIC_ClearTargetState(OPTIGA_I2C(_ER_IRQn));
+#endif
+
+#ifdef USE_TROPIC
+  TROPIC01_INT_PORT->SECCFGR |= TROPIC01_INT_PIN;
+  TROPIC01_PWR_PORT->SECCFGR |= TROPIC01_PWR_PIN;
+  TROPIC01_SPI_NSS_PORT->SECCFGR |= TROPIC01_SPI_NSS_PIN;
+  TROPIC01_SPI_SCK_PORT->SECCFGR |= TROPIC01_SPI_SCK_PIN;
+  TROPIC01_SPI_MISO_PORT->SECCFGR |= TROPIC01_SPI_MISO_PIN;
+  TROPIC01_SPI_MOSI_PORT->SECCFGR |= TROPIC01_SPI_MOSI_PIN;
+
+  HAL_GTZC_TZSC_ConfigPeriphAttributes(
+      TROPIC01_SPI_GTZC_PERIPH, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
+#endif
+
+  // Set all clocks except (TODO!@#) non-secure & privileged
+
+  RCC->SECCFGR |= RCC_SECCFGR_LSESEC | RCC_SECCFGR_LSISEC;  // !@# improve
+  // todo: PLL3 - display - non-secure
+  // Access to RCC only from privileged mode
+  RCC->PRIVCFGR |= RCC_PRIVCFGR_SPRIV | RCC_PRIVCFGR_NSPRIV;
+
+  tz_enable_illegal_access_interrupt();
+}
+#endif  // SECMON

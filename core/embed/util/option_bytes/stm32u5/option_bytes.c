@@ -21,7 +21,7 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#ifdef KERNEL_MODE
+#ifdef SECURE_MODE
 
 #include <util/flash.h>
 #include <util/option_bytes.h>
@@ -263,4 +263,4 @@ secbool flash_configure_option_bytes(void) {
   return secfalse;  // notify that we DID have to change the option bytes
 }
 
-#endif  // #ifdef KERNEL_MODE
+#endif  // SECURE_MODE

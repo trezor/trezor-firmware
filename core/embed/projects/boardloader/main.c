@@ -130,7 +130,7 @@ int main(void) {
   }
 
 #ifdef USE_TRUSTZONE
-  tz_init_boardloader();
+  tz_init();
 #endif
 
   drivers_init();

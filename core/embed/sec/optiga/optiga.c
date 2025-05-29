@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef SECURE_MODE
+
 #include <trezor_rtl.h>
 
 #include <sec/optiga.h>
@@ -27,8 +29,6 @@
 #include "memzero.h"
 #include "rand.h"
 #include "storage.h"
-
-#ifdef KERNEL_MODE
 
 // Counter-protected PIN secret and reset key for OID_STRETCHED_PIN_CTR (OID
 // 0xF1D0).
@@ -978,4 +978,4 @@ bool optiga_pin_decrease_rem(uint32_t count) {
              OPTIGA_SUCCESS;
 }
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE

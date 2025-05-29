@@ -48,6 +48,7 @@ optiga = []
 ble = []
 tropic = []
 translations = ["crypto"]
+secmon_layout = []
 test = [
     "backlight",
     "button",

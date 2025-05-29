@@ -27,11 +27,10 @@ void parse_boardloader_capabilities() {}
 uint32_t get_board_name() { return HW_MODEL; }
 
 // Gets the boardloader version
-boardloader_version_t get_boardloader_version() {
-  boardloader_version_t version = {.version_major = 0,
-                                   .version_minor = 0,
-                                   .version_patch = 0,
-                                   .version_build = 0};
-
-  return version;
+void get_boardloader_version(boardloader_version_t* version) {
+  boardloader_version_t v = {.version_major = 0,
+                             .version_minor = 0,
+                             .version_patch = 0,
+                             .version_build = 0};
+  *version = v;
 }

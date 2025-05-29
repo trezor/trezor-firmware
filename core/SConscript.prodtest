@@ -14,12 +14,13 @@ FEATURE_FLAGS = {
     "AES_GCM": True,
 }
 
-FEATURES_WANTED = ["input", "sbu", "nfc", "sd_card", "rgb_led", "usb", "consumption_mask", "optiga", "haptic", "tropic", "ble", "hw_revision", "power_manager", "display"]
+FEATURES_WANTED = ["input", "sbu", "nfc", "sd_card", "rgb_led", "usb", "consumption_mask", "optiga", "haptic", "tropic", "ble", "hw_revision", "power_manager", "power_save", "display", "secure_domain"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = [
     'KERNEL_MODE',
+    'SECURE_MODE',
     'AES_128',
     'USE_INSECURE_PRNG',
 ]

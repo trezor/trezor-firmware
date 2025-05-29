@@ -39,6 +39,10 @@ SECTIONS {
   } >FLASH AT>FLASH
 
   .flash : ALIGN(CODE_ALIGNMENT) {
+    KEEP(*(.secmon));
+  } >FLASH AT>FLASH
+
+  .flash : ALIGN(CODE_ALIGNMENT) {
     _kernel_flash_start = .;
     KEEP(*(.vector_table));
     . = ALIGN(4);
