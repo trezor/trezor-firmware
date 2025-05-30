@@ -36,7 +36,7 @@ async def _request_on_host() -> str:
     from trezor.wire.context import call
 
     async def _delay_request_passphrase_on_host() -> None:
-        await loop.sleep(500)
+        await loop.sleep(100)
         return request_passphrase_on_host()
 
     workflow.spawn(_delay_request_passphrase_on_host())
