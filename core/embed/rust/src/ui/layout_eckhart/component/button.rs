@@ -42,7 +42,7 @@ pub struct Button {
 }
 
 impl Button {
-    const LINE_SPACING: i16 = 7;
+    const LINE_SPACING: i16 = 4;
     #[cfg(not(feature = "bootloader"))]
     const DEFAULT_SUBTEXT_STYLE: TextStyle = theme::label_menu_item_subtitle();
     #[cfg(feature = "bootloader")]
@@ -244,17 +244,19 @@ impl Button {
     pub fn content_height(&self) -> i16 {
         match &self.content {
             ButtonContent::Empty => 0,
-            ButtonContent::Text(_) => self.style().font.allcase_text_height(),
+            ButtonContent::Text(_) => self.style().font.height + 2 * self.style().font.baseline,
             ButtonContent::Icon(icon) => icon.toif.height(),
             ButtonContent::IconAndText(child) => {
-                let text_height = self.style().font.allcase_text_height();
+                let text_height = self.style().font.height + 2 * self.style().font.baseline;
                 let icon_height = child.icon.toif.height();
                 text_height.max(icon_height)
             }
             ButtonContent::TextAndSubtext { subtext_style, .. } => {
-                self.style().font.allcase_text_height()
+                self.style().font.height
+                    + 2 * self.style().font.baseline
                     + Self::LINE_SPACING
-                    + subtext_style.text_font.allcase_text_height()
+                    + subtext_style.text_font.height
+                    + subtext_style.text_font.baseline
             }
             #[cfg(feature = "micropython")]
             ButtonContent::HomeBar(_) => theme::ACTION_BAR_HEIGHT,
@@ -372,14 +374,16 @@ impl Button {
         match &self.content {
             ButtonContent::Empty => {}
             ButtonContent::Text(text) => {
-                let y_offset = Offset::y(self.content_height() / 2);
-                let start_of_baseline = match self.text_align {
-                    Alignment::Start => self.area.left_center() + self.content_offset,
-                    Alignment::Center => self.area.center() + self.content_offset,
-                    Alignment::End => self.area.right_center() - self.content_offset,
-                } + y_offset;
+                let render_origin = match self.text_align {
+                    Alignment::Start => self.area.left_center().ofs(self.content_offset),
+                    Alignment::Center => self.area.center().ofs(self.content_offset),
+                    Alignment::End => self.area.right_center().ofs(self.content_offset.neg()),
+                }
+                .ofs(Offset::y(
+                    (stylesheet.font.height - stylesheet.font.baseline) / 2,
+                ));
                 text.map(|text| {
-                    shape::Text::new(start_of_baseline, text, stylesheet.font)
+                    shape::Text::new(render_origin, text, stylesheet.font)
                         .with_fg(stylesheet.text_color)
                         .with_align(self.text_align)
                         .with_alpha(alpha)
@@ -391,19 +395,26 @@ impl Button {
                 subtext,
                 subtext_style,
             } => {
-                let text_y_offset =
-                    Offset::y(self.content_height() / 2 - stylesheet.font.allcase_text_height());
-                let subtext_y_offset = Offset::y(self.content_height() / 2);
-                let start_of_baseline = match self.text_align {
-                    Alignment::Start => self.area.left_center() + self.content_offset,
-                    Alignment::Center => self.area.center() + self.content_offset,
-                    Alignment::End => self.area.right_center() - self.content_offset,
+                let base = match self.text_align {
+                    Alignment::Start => self.area.left_center().ofs(self.content_offset),
+                    Alignment::Center => self.area.center().ofs(self.content_offset),
+                    Alignment::End => self.area.right_center().ofs(self.content_offset.neg()),
                 };
-                let text_baseline = start_of_baseline - text_y_offset;
-                let subtext_baseline = start_of_baseline + subtext_y_offset;
+
+                let text_render_origin = base.ofs(
+                    Offset::y(
+                        self.content_height() / 2
+                            - stylesheet.font.height
+                            - stylesheet.font.baseline,
+                    )
+                    .neg(),
+                );
+                let subtext_render_origin = base.ofs(Offset::y(
+                    self.content_height() / 2 - subtext_style.text_font.baseline,
+                ));
 
                 text.map(|t| {
-                    shape::Text::new(text_baseline, t, stylesheet.font)
+                    shape::Text::new(text_render_origin, t, stylesheet.font)
                         .with_fg(stylesheet.text_color)
                         .with_align(self.text_align)
                         .with_alpha(alpha)
@@ -411,7 +422,7 @@ impl Button {
                 });
 
                 subtext.map(|subtext| {
-                    shape::Text::new(subtext_baseline, subtext, subtext_style.text_font)
+                    shape::Text::new(subtext_render_origin, subtext, subtext_style.text_font)
                         .with_fg(subtext_style.text_color)
                         .with_align(self.text_align)
                         .with_alpha(alpha)
