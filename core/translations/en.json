@@ -424,6 +424,7 @@
     "fido__wanna_erase_credentials": "Do you really want to erase all credentials?",
     "firmware_update__title": "Update firmware",
     "firmware_update__title_fingerprint": "FW fingerprint",
+    "firmware_update__restart": "Trezor will restart after update.",
     "haptic_feedback__disable": "Disable haptic feedback?",
     "haptic_feedback__enable": "Enable haptic feedback?",
     "haptic_feedback__subtitle": "Setting",
