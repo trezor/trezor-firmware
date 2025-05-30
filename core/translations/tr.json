@@ -158,7 +158,7 @@
     "cardano__confirming_a_multisig_transaction": "Çoklu imza işlemini onaylama.",
     "cardano__confirming_a_plutus_transaction": "Bir Plutus işlemini onaylama.",
     "cardano__confirming_pool_registration": "Sahip olarak havuz kaydını onaylama.",
-    "cardano__confirming_transction": "Bir işlemi onaylama.",
+    "cardano__confirming_transaction": "Bir işlemi onaylama.",
     "cardano__cost": "Maliyet",
     "cardano__credential_mismatch": "Kimlik bilgileri, ödeme kimlik bilgileriyle uyumlu değil.",
     "cardano__datum_hash": "Veri karması:",

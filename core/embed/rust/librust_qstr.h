@@ -903,7 +903,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_cardano__confirming_a_multisig_transaction;
   MP_QSTR_cardano__confirming_a_plutus_transaction;
   MP_QSTR_cardano__confirming_pool_registration;
-  MP_QSTR_cardano__confirming_transction;
+  MP_QSTR_cardano__confirming_transaction;
   MP_QSTR_cardano__cost;
   MP_QSTR_cardano__credential_mismatch;
   MP_QSTR_cardano__datum_hash;
