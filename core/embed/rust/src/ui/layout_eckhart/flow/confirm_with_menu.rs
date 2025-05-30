@@ -70,9 +70,10 @@ pub fn new_confirm_with_menu<T: AllowedTextContent + MaybeTrace + 'static>(
         Button::with_text(confirm_label)
             .styled(theme::button_confirm())
             .with_long_press(theme::LOCK_HOLD_DURATION)
+    } else if let Some(confirm_label) = confirm_label {
+        Button::with_text(confirm_label)
     } else {
-        let confirm_label = confirm_label.unwrap_or(TR::buttons__confirm.into());
-        Button::with_text(confirm_label).styled(theme::button_default())
+        Button::with_text(TR::buttons__confirm.into()).styled(theme::button_confirm())
     };
     let content_value = TextScreen::new(content)
         .with_header(Header::new(title).with_menu_button())
