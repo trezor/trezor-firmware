@@ -1419,7 +1419,7 @@ def confirm_set_new_pin(
 ) -> Awaitable[None]:
     return raise_if_not_confirmed(
         trezorui_api.flow_confirm_set_new_pin(
-            title=TR.pin__title_setup, description=information
+            title=title, description=information
         ),
         br_name,
         br_code,
