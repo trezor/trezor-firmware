@@ -178,7 +178,7 @@
     "cardano__confirming_a_multisig_transaction": "Potvrzení transakce multisig.",
     "cardano__confirming_a_plutus_transaction": "Potvrzení transakce Plutus.",
     "cardano__confirming_pool_registration": "Potvrzení registrace poolu jako vlastník.",
-    "cardano__confirming_transction": "Potvrzení transakce.",
+    "cardano__confirming_transaction": "Potvrzení transakce.",
     "cardano__cost": "Náklady",
     "cardano__credential_mismatch": "Údaje neodpovídají platebním údajům.",
     "cardano__datum_hash": "Hash dat:",

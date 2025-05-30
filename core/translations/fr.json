@@ -178,7 +178,7 @@
     "cardano__confirming_a_multisig_transaction": "Confirmation d'une transaction multisignatures.",
     "cardano__confirming_a_plutus_transaction": "Confirmation d'une transaction Plutus.",
     "cardano__confirming_pool_registration": "Confirmation de l'enregistrement du pool en tant que propriétaire.",
-    "cardano__confirming_transction": "Confirmation d'une transaction.",
+    "cardano__confirming_transaction": "Confirmation d'une transaction.",
     "cardano__cost": "Coût",
     "cardano__credential_mismatch": "L'ID ne correspond pas à l'ID de paiement.",
     "cardano__datum_hash": "Hachage de donnée:",

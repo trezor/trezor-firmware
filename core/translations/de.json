@@ -178,7 +178,7 @@
     "cardano__confirming_a_multisig_transaction": "Multisig-Transakt. bestät.",
     "cardano__confirming_a_plutus_transaction": "Plutus-Transakt. bestät.",
     "cardano__confirming_pool_registration": "Pool-Registrierung als Besitzer bestät.",
-    "cardano__confirming_transction": "Transakt. bestät.",
+    "cardano__confirming_transaction": "Transakt. bestät.",
     "cardano__cost": "Kosten",
     "cardano__credential_mismatch": "Daten stimmen nicht mit Zahlungsdaten überein.",
     "cardano__datum_hash": "Bezugspunkt-Hash:",

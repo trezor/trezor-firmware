@@ -157,8 +157,6 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     cardano__confirming_pool_registration = 130,  // "Confirming pool registration as owner."
     #[cfg(feature = "universal_fw")]
-    cardano__confirming_transction = 131,  // "Confirming a transaction."
-    #[cfg(feature = "universal_fw")]
     cardano__cost = 132,  // "Cost"
     #[cfg(feature = "universal_fw")]
     cardano__credential_mismatch = 133,  // "Credential doesn't match payment credential."
@@ -1447,6 +1445,8 @@ pub enum TranslatedString {
     reset__check_share_backup_template = 1042,  // "Let's do a quick check of Share #{0}."
     reset__select_word_from_share_template = 1043,  // "Select word #{0} from\nShare #{1}"
     recovery__share_from_group_entered_template = 1044,  // "Share #{0} from Group #{1} entered."
+    #[cfg(feature = "universal_fw")]
+    cardano__confirming_transaction = 1045,  // "Confirming a transaction."
 }
 
 impl TranslatedString {
@@ -1610,8 +1610,6 @@ impl TranslatedString {
             (Self::cardano__confirming_a_plutus_transaction, "Confirming a Plutus transaction."),
             #[cfg(feature = "universal_fw")]
             (Self::cardano__confirming_pool_registration, "Confirming pool registration as owner."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__confirming_transction, "Confirming a transaction."),
             #[cfg(feature = "universal_fw")]
             (Self::cardano__cost, "Cost"),
             #[cfg(feature = "universal_fw")]
@@ -3199,6 +3197,8 @@ impl TranslatedString {
             (Self::reset__check_share_backup_template, "Let's do a quick check of Share #{0}."),
             (Self::reset__select_word_from_share_template, "Select word #{0} from\nShare #{1}"),
             (Self::recovery__share_from_group_entered_template, "Share #{0} from Group #{1} entered."),
+            #[cfg(feature = "universal_fw")]
+            (Self::cardano__confirming_transaction, "Confirming a transaction."),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3376,7 +3376,7 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__confirming_pool_registration, Self::cardano__confirming_pool_registration),
         #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_cardano__confirming_transction, Self::cardano__confirming_transction),
+        (Qstr::MP_QSTR_cardano__confirming_transaction, Self::cardano__confirming_transaction),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__cost, Self::cardano__cost),
         #[cfg(feature = "universal_fw")]
