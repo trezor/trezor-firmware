@@ -480,6 +480,24 @@ pm_status_t pm_set_soc_limit(uint8_t limit) {
   return PM_OK;
 }
 
+pm_status_t pm_override_soc(uint8_t soc) {
+  pm_driver_t* drv = &g_pm;
+
+  if (!drv->initialized) {
+    return PM_NOT_INITIALIZED;
+  }
+
+  if (soc > 100) {
+    return PM_ERROR;
+  }
+
+  irq_key_t irq_key = irq_lock();
+  fuel_gauge_set_soc(&drv->fuel_gauge, ((float)soc) / 100, drv->fuel_gauge.P);
+  irq_unlock(irq_key);
+
+  return PM_OK;
+}
+
 // Timer handlers
 static void pm_monitoring_timer_handler(void* context) {
   pm_monitor_power_sources();

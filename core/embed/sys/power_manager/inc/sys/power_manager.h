@@ -176,6 +176,15 @@ pm_status_t pm_charging_set_max_current(uint16_t current_ma);
 pm_status_t pm_set_soc_limit(uint8_t limit);
 
 /**
+ * @brief This function overrides the fuel gauge State of Charge (SoC) value.
+ * Setting the SoC to the incorrect value may impact the fue gauge performance
+ * for several battery cycles, so this function has to be used with caution.
+ * @param soc SoC percentage (0-100%)
+ * @return pm_status_t Status code indicating success or failure
+ */
+pm_status_t pm_override_soc(uint8_t soc);
+
+/**
  * @brief Store power manager data to backup RAM
  * @return pm_status_t Status code indicating success or failure
  */
