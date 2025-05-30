@@ -342,14 +342,14 @@ def show_danger(
     )
 
 
-async def show_success(
+def show_success(
     br_name: str | None,
     content: str,
     subheader: str | None = None,
     button: str | None = None,
     time_ms: int = 0,
-) -> None:
-    return await raise_if_not_confirmed(
+) -> Awaitable[None]:
+    return raise_if_not_confirmed(
         trezorui_api.show_success(
             title=content,
             button=button or "",
@@ -362,14 +362,15 @@ async def show_success(
 
 
 def show_continue_in_app(content: str) -> None:
-    workflow.spawn(
-        show_success(
+    async def task() -> None:
+        await show_success(
             content=content,
             button=TR.instructions__continue_in_app,
             time_ms=3200,
             br_name=None,
         )
-    )
+
+    workflow.spawn(task())
 
 
 async def confirm_output(
