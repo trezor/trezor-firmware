@@ -27,6 +27,7 @@
 #include <sys/systick.h>
 
 #include <trezor_rtl.h>
+#include "../../../sys/power_manager/fuel_gauge/battery_model.h"
 
 #include <stdlib.h>
 
@@ -299,31 +300,47 @@ void prodtest_pm_event_monitor(cli_t* cli) {
 }
 
 void prodtest_pm_precharge(cli_t* cli) {
-  if (cli_arg_count(cli) > 0) {
+  uint32_t soc_target = 0;
+
+  if (!cli_arg_uint32(cli, "soc_target", &soc_target) || soc_target > 100 ||
+      soc_target < 0) {
+    cli_error_arg(cli, "Expecting value in range 0-100");
+    return;
+  }
+
+  if (cli_arg_count(cli) > 1) {
     cli_error_arg_count(cli);
     return;
   }
 
-  // This test considers that the device is connected via USB and placed at
-  // ambient temperature. The battery will be charged with constant current,
-  // and the precharge voltage is statically derived from the battery charging
-  // curve.
+  // Start with maximal charging current and gradually decrease it to get as
+  // close to the precharge voltage target.
+  uint16_t charging_current_ma = 180;
 
-  // During charging, the voltage rises because of the relatively high charging
-  // current. When the test ends upon reaching the specified precharge voltage,
-  // the charging current is cut off, which can cause the battery voltage to
-  // fall slightly.
-  float precharge_voltage_V = 3.45f;
-
-  // Disable SoC limit and enable charging
-  pm_set_soc_limit(100);
+  pm_charging_set_max_current(charging_current_ma);
   pm_charging_enable();
 
-  cli_trace(cli, "Precharging the device...");
+  // Wait to stabilize the battery voltage
+  systick_delay_ms(1000);
+
+  pm_report_t report;
+  pm_status_t status;
+  float voltage_target_v;
+
+  status = pm_get_report(&report);
+  voltage_target_v =
+      battery_ocv(((float)soc_target) / 100, report.battery_temp_c, false);
+
+  if (voltage_target_v < report.battery_voltage_v) {
+    cli_error(cli, CLI_ERROR,
+              "Voltage target already above the batery voltage");
+    return;
+  }
+
+  char screen_text_buf[100];
 
   while (true) {
-    pm_report_t report;
-    pm_status_t status = pm_get_report(&report);
+    status = pm_get_report(&report);
 
     if (status != PM_OK) {
       cli_error(cli, CLI_ERROR, "Failed to get power manager report");
@@ -335,12 +352,39 @@ void prodtest_pm_precharge(cli_t* cli) {
       return;
     }
 
-    cli_trace(cli, "Precharging the device to %d.%03d V",
-              (int)precharge_voltage_V,
-              (int)(precharge_voltage_V * 1000) % 1000);
+    // Update the target charging voltage based on the battery charging OCV
+    // model and battery temperature.
+    voltage_target_v =
+        battery_ocv(((float)soc_target) / 100, report.battery_temp_c, false);
 
-    // Print power manager report.
-    prodtest_pm_report(cli);
+    cli_trace(cli,
+              "Target voltage: %d.%03dV (%d SoC), Battery: %d.%03dV %d.%03dmA "
+              "%d.%03d deg ",
+              (int)voltage_target_v, (int)(voltage_target_v * 1000) % 1000,
+              (int)soc_target, (int)report.battery_voltage_v,
+              (int)(report.battery_voltage_v * 1000) % 1000,
+              (int)report.battery_current_ma,
+              abs((int)(report.battery_current_ma * 1000) % 1000),
+              (int)report.battery_temp_c,
+              (int)(report.battery_temp_c * 1000) % 1000);
+
+    cli_progress(
+        cli, "%d.%03d %d.%03d %d.%03d %d.%03d", (int)voltage_target_v,
+        (int)(voltage_target_v * 1000) % 1000, (int)report.battery_voltage_v,
+        (int)(report.battery_voltage_v * 1000) % 1000,
+        (int)report.battery_current_ma,
+        abs((int)(report.battery_current_ma * 1000) % 1000),
+        (int)report.battery_temp_c, (int)(report.battery_temp_c * 1000) % 1000);
+
+    mini_snprintf(screen_text_buf, 100,
+                  "Target: %d.%03dV Bat: %d.%03dV %d.%03dmA",
+                  (int)voltage_target_v, (int)(voltage_target_v * 1000) % 1000,
+                  (int)report.battery_voltage_v,
+                  (int)(report.battery_voltage_v * 1000) % 1000,
+                  (int)report.battery_current_ma,
+                  abs((int)(report.battery_current_ma * 1000) % 1000));
+
+    screen_prodtest_show_text(screen_text_buf, strlen(screen_text_buf));
 
     if (cli_aborted(cli)) {
       cli_trace(cli, "aborted");
@@ -348,17 +392,23 @@ void prodtest_pm_precharge(cli_t* cli) {
     }
 
     // Check if the battery voltage is above the precharge voltag
-    if (report.battery_voltage_v >= precharge_voltage_V) {
-      // Target achieved
-      cli_trace(cli, "Battery voltage reached the target voltage.");
+    if (report.battery_voltage_v >= voltage_target_v) {
+      cli_trace(cli, "minimum charging current reached. precharge complete");
       pm_charging_disable();
+      pm_override_soc(soc_target);
       break;
     }
 
     systick_delay_ms(500);
   }
 
+  // Reset the charging current limit to max
+  pm_charging_set_max_current(180);
+  prodtest_show_homescreen();
+
   cli_ok(cli, "");
+
+  return;
 }
 
 void prodtest_pm_set_soc_limit(cli_t* cli) {
@@ -434,7 +484,7 @@ PRODTEST_CLI_CMD(
   .name = "pm-precharge",
   .func = prodtest_pm_precharge,
   .info = "Precharge the device to specific voltage",
-  .args = ""
+  .args = "<soc_target>",
 );
 
 PRODTEST_CLI_CMD(
