@@ -42,6 +42,8 @@ from . import translations, ui_tests
 from .device_handler import BackgroundDeviceHandler
 from .emulators import EmulatorWrapper
 
+TR = translations
+
 if t.TYPE_CHECKING:
     from _pytest.config import Config
     from _pytest.config.argparsing import Parser
@@ -258,6 +260,17 @@ def _initialize_with_retries(
     pytest.fail("Failed to communicate with Trezor")
 
 
+def _skip_async_confirmation(raw_client: Client) -> None:
+    """Skip async confirmation layout on Delizia."""
+    if raw_client.model is models.T3T1:
+        layout = raw_client.debug.read_layout()
+        if (
+            TR.words__title_success in layout.title()
+            and TR.instructions__continue_in_app in layout.footer()
+        ):
+            raw_client.debug.press_yes(wait=False)
+
+
 @pytest.fixture(scope="function")
 def client(
     request: pytest.FixtureRequest, _raw_client: Client
@@ -369,6 +382,7 @@ def client(
 
         with ui_tests.screen_recording(_raw_client, request):
             yield _raw_client
+            _skip_async_confirmation(_raw_client)
     finally:
         _raw_client.close()
 

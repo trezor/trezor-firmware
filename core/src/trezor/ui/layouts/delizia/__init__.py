@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import trezorui_api
-from trezor import TR, ui, utils
+from trezor import TR, ui, utils, workflow
 from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
 
@@ -248,6 +248,12 @@ async def show_address(
         None,
     )
 
+    show_continue_in_app(
+        TR.address__public_key_confirmed
+        if title in ("XPUB", TR.address__public_key)
+        else TR.address__confirmed
+    )
+
 
 def show_pubkey(
     pubkey: str,
@@ -355,13 +361,16 @@ def show_success(
     )
 
 
-def show_continue_in_app(content: str) -> Awaitable[None]:
-    return show_success(
-        content=content,
-        button=TR.instructions__continue_in_app,
-        time_ms=3200,
-        br_name=None,
-    )
+def show_continue_in_app(content: str) -> None:
+    async def task() -> None:
+        await show_success(
+            content=content,
+            button=TR.instructions__continue_in_app,
+            time_ms=3200,
+            br_name=None,
+        )
+
+    workflow.spawn(task())
 
 
 async def confirm_output(

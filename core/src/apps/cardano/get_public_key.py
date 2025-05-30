@@ -7,13 +7,12 @@ from . import seed
 
 if TYPE_CHECKING:
     from trezor.messages import CardanoGetPublicKey, CardanoPublicKey
-    from trezor.wire import MaybeEarlyResponse
 
 
 @seed.with_keychain
 async def get_public_key(
     msg: CardanoGetPublicKey, keychain: seed.Keychain
-) -> MaybeEarlyResponse[CardanoPublicKey]:
+) -> CardanoPublicKey:
     from trezor import log, wire
     from trezor.ui.layouts import show_pubkey
 
@@ -38,17 +37,10 @@ async def get_public_key(
         raise wire.ProcessError("Deriving public key failed")
 
     if msg.show_display:
-        from trezor.ui.layouts import show_continue_in_app
-        from trezor.wire import early_response
-
         from apps.common.paths import address_n_to_str
 
         path = address_n_to_str(address_n)
         await show_pubkey(key.xpub, TR.address__public_key, path=path)
-        return await early_response(
-            key, show_continue_in_app(TR.address__public_key_confirmed)
-        )
-
     return key
 
 

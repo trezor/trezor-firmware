@@ -84,6 +84,16 @@ def spawn(workflow: loop.Task) -> loop.spawn:
     return task
 
 
+async def join_all() -> None:
+    """Block until all workflows are over."""
+    if __debug__:
+        log.debug(__name__, "joining %d workflows", len(tasks))
+
+    # Don't iterate over `tasks` since it will be modified by its finalizers
+    while tasks:
+        await next(iter(tasks))
+
+
 def start_default() -> None:
     """Start a default workflow.
 
