@@ -212,10 +212,11 @@ class Channel:
                 fallback=True,
             )
 
-        if self.expected_payload_length + INIT_HEADER_LENGTH == self.bytes_read:
+        if (
+            not self.fallback_decrypt
+            and self.expected_payload_length + INIT_HEADER_LENGTH == self.bytes_read
+        ):
             self._finish_message()
-            if self.fallback_decrypt:
-                raise Exception("THIS SHOULD NOT HAPPEN!")
             return received_message_handler.handle_received_message(self, buffer)
         elif self.expected_payload_length + INIT_HEADER_LENGTH > self.bytes_read:
             self.is_cont_packet_expected = True
@@ -254,13 +255,6 @@ class Channel:
         self.expected_payload_length = payload_length
 
         # If the channel does not "own" the buffer lock, decrypt first packet
-        # TODO do it only when needed!
-        # TODO FIX: If "_decrypt_single_packet_payload" is implemented, it will (possibly) break "decrypt_buffer" and nonces incrementation.
-        # On the other hand, without the single packet decryption, the "advanced" buffer selection cannot be implemented
-        # in "memory_manager.select_buffer", because the session id is unknown (encrypted).
-
-        # if control_byte.is_encrypted_transport(ctrl_byte):
-        #   packet_payload = self._decrypt_single_packet_payload(packet_payload)
 
         cid = self.get_channel_id_int()
         length = payload_length + INIT_HEADER_LENGTH
@@ -268,7 +262,7 @@ class Channel:
             buffer = memory_manager.get_new_read_buffer(cid, length)
         except WireBufferError:
             self.fallback_decrypt = True
-            # TODO handle not encrypted/(short??), eg. ACK
+            # Channel does not "own" the buffer lock, decrypt first packet
 
             try:
                 if not self._can_fallback():
@@ -441,12 +435,6 @@ class Channel:
         self.busy_decoder = None
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             self._log("Finish fallback")
-
-    def _decrypt_single_packet_payload(
-        self, payload: utils.BufferType
-    ) -> utils.BufferType:
-        # crypto.decrypt(b"\x00", b"\x00", payload_buffer, INIT_DATA_OFFSET, len(payload))
-        return payload
 
     def _prepare_fallback(self) -> None:
         # prepare busy decoder
