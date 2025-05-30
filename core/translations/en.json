@@ -636,12 +636,7 @@
     "reboot_to_bootloader__just_a_moment": "Just a moment...",
     "reboot_to_bootloader__restart": "Trezor will restart in bootloader mode.",
     "reboot_to_bootloader__title": "Go to bootloader",
-    "reboot_to_bootloader__version_by_template": {
-      "Bolt": "Firmware version {0}\nby {1}",
-      "Caesar": "Firmware version {0}\nby {1}",
-      "Delizia": "Firmware version {0}\nby {1}",
-      "Eckhart": "Firmware version {0} by {1}"
-    },
+    "reboot_to_bootloader__version_by_template": "Firmware version {0}\nby {1}",
     "recovery__cancel_dry_run": "Cancel backup check",
     "recovery__check_dry_run": "Check your backup?",
     "recovery__cursor_will_change": "Position of the cursor will change between entries for enhanced security.",

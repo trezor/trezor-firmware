@@ -754,7 +754,7 @@ pub enum TranslatedString {
     progress__x_seconds_left_template = 491,  // "{0} seconds left"
     reboot_to_bootloader__restart = 492,  // "Trezor will restart in bootloader mode."
     reboot_to_bootloader__title = 493,  // "Go to bootloader"
-    reboot_to_bootloader__version_by_template = 494,  // {"Bolt": "Firmware version {0}\nby {1}", "Caesar": "Firmware version {0}\nby {1}", "Delizia": "Firmware version {0}\nby {1}", "Eckhart": "Firmware version {0} by {1}"}
+    reboot_to_bootloader__version_by_template = 494,  // "Firmware version {0}\nby {1}"
     recovery__cancel_dry_run = 495,  // "Cancel backup check"
     recovery__check_dry_run = 496,  // "Check your backup?"
     recovery__cursor_will_change = 497,  // "Position of the cursor will change between entries for enhanced security."
@@ -2229,14 +2229,7 @@ impl TranslatedString {
             (Self::progress__x_seconds_left_template, "{0} seconds left"),
             (Self::reboot_to_bootloader__restart, "Trezor will restart in bootloader mode."),
             (Self::reboot_to_bootloader__title, "Go to bootloader"),
-            #[cfg(feature = "layout_bolt")]
             (Self::reboot_to_bootloader__version_by_template, "Firmware version {0}\nby {1}"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::reboot_to_bootloader__version_by_template, "Firmware version {0}\nby {1}"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::reboot_to_bootloader__version_by_template, "Firmware version {0}\nby {1}"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::reboot_to_bootloader__version_by_template, "Firmware version {0} by {1}"),
             (Self::recovery__cancel_dry_run, "Cancel backup check"),
             (Self::recovery__check_dry_run, "Check your backup?"),
             (Self::recovery__cursor_will_change, "Position of the cursor will change between entries for enhanced security."),
