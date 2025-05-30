@@ -40,6 +40,8 @@ typedef struct {
   uint32_t app_version;
   uint32_t bld_version;
 
+  uint8_t connected_addr[6];  // MAC address of the connected device
+  uint8_t connected_addr_type;
 } event_status_msg_t;
 
 typedef enum {
