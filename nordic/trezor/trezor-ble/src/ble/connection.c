@@ -111,7 +111,7 @@ bool connection_is_connected(void) { return current_conn != NULL; }
 
 void connection_disconnect(void) {
   if (current_conn) {
-    LOG_INF("Interrnal disconnect request");
+    LOG_INF("Internal disconnect request");
     bt_conn_disconnect(current_conn, BT_HCI_ERR_REMOTE_USER_TERM_CONN);
   }
 }
