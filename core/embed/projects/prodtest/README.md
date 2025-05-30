@@ -692,18 +692,6 @@ optiga-counter-read
 OK 0E
 ```
 
-### pm-set-soc-limit
-Sets the battery state of charge (SOC) limit. The SOC limit is a percentage value between 10 and 100.
-
-The command returns `OK` if the operation is successful.
-
-```
-pm-set-soc-limit 50
-# Set SOC limit to 50%
-OK
-
-```
-
 ### pm-precharge <soc_target>
 Precharge the battery to the given SoC target.
 During the precharge, command will print out target precharge voltage and battery stats into the console. CTRL+C will terminate the precharge.

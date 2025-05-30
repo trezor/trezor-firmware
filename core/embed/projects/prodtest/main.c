@@ -194,7 +194,6 @@ static void drivers_init(void) {
 #endif
 #ifdef USE_POWER_MANAGER
   pm_init(true);
-  pm_set_soc_limit(70);
 #endif
 
   display_init(DISPLAY_RESET_CONTENT);
