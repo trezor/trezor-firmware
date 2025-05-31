@@ -121,9 +121,7 @@ impl ButtonContainer {
     /// (it can be later activated in `set()`).
     pub fn new(pos: ButtonPos, btn_details: Option<ButtonDetails>) -> Self {
         const DEFAULT_LONG_PRESS_MS: u32 = 1000;
-        let send_long_press = btn_details
-            .as_ref()
-            .map_or(false, |btn| btn.send_long_press);
+        let send_long_press = btn_details.as_ref().is_some_and(|btn| btn.send_long_press);
         Self {
             pos,
             button_type: ButtonType::from_button_details(pos, btn_details),
@@ -138,9 +136,7 @@ impl ButtonContainer {
     ///
     /// Passing `None` as `btn_details` will mark the button as inactive.
     pub fn set(&mut self, btn_details: Option<ButtonDetails>, button_area: Rect) {
-        self.send_long_press = btn_details
-            .as_ref()
-            .map_or(false, |btn| btn.send_long_press);
+        self.send_long_press = btn_details.as_ref().is_some_and(|btn| btn.send_long_press);
         self.button_type = ButtonType::from_button_details(self.pos, btn_details);
         self.button_type.place(button_area);
     }
@@ -169,7 +165,7 @@ impl ButtonContainer {
         match self.button_type {
             ButtonType::Button(_) => {
                 // Finding out whether the button was long-pressed
-                let long_press = self.pressed_since.map_or(false, |since| {
+                let long_press = self.pressed_since.is_some_and(|since| {
                     Instant::now().saturating_duration_since(since).to_millis() > self.long_press_ms
                 });
                 self.pressed_since = None;

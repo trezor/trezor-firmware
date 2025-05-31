@@ -118,12 +118,27 @@ def embed_compressed_binary(obj_program, env, section, target_, file, build, sym
 
 
 def embed_raw_binary(obj_program, env, section, target_, file):
+
+    def redefine_sym(suffix):
+        src = (
+            "_binary_"
+            + file.replace("/", "_").replace(".", "_").replace("-", "_")
+            + "_"
+            + suffix
+        )
+        dest = f"{section}_{suffix}"
+        return f" --redefine-sym {src}={dest}"
+
     obj_program.extend(
         env.Command(
             target=target_,
             source=file,
             action="$OBJCOPY -I binary -O elf32-littlearm -B arm"
-            f" --rename-section .data=.{section}" + " $SOURCE $TARGET",
+            f" --rename-section .data=.{section}"
+            + redefine_sym("start")
+            + redefine_sym("end")
+            + redefine_sym("size")
+            + " $SOURCE $TARGET",
         )
     )
 
@@ -144,7 +159,6 @@ def add_rust_lib(*, env, build, profile, features, all_paths, build_dir):
     def cargo_build():
         lib_features = []
         lib_features.extend(features)
-        lib_features.append("ui")
 
         cargo_opts = [
             f"--target={RUST_TARGET}",

@@ -3,9 +3,7 @@
 
 use crate::ui::{CommonUI, ModelUI};
 
-use crate::ui::shape;
-
-use crate::ui::util::from_c_str;
+use crate::{ui::shape, util::from_c_str};
 
 #[no_mangle]
 extern "C" fn display_rsod_rust(
@@ -31,4 +29,9 @@ extern "C" fn display_rsod_rust(
 #[no_mangle]
 extern "C" fn screen_boot_stage_2(fade_in: bool) {
     ModelUI::screen_boot_stage_2(fade_in);
+}
+
+#[no_mangle]
+extern "C" fn screen_update() {
+    ModelUI::screen_update();
 }

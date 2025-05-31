@@ -247,6 +247,10 @@ env = Environment(
 
 FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
+if 'nrf' in FEATURES_AVAILABLE:
+    FEATURES_AVAILABLE.append('smp')
+    CPPDEFINES_HAL.append('USE_SMP')
+
 FEATURE_FLAGS["AES_GCM"] = FEATURE_FLAGS["AES_GCM"] or "tropic" in FEATURES_AVAILABLE
 
 # AES-GCM
@@ -287,6 +291,7 @@ env.Replace(
 
 ALLPATHS = [
         '.',
+        'embed/rust',
         'embed/projects/firmware',
         'embed/rtl/inc',
         'embed/models',
@@ -308,8 +313,8 @@ env.Replace(
     '-ffreestanding '
     '-fstack-protector-all '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
-    LINKFLAGS='-T build/kernel/memory.ld -Wl,--gc-sections -Wl,--print-memory-usage '
-        ' -Wl,-Map=build/kernel/kernel.map -Wl,--warn-common -Wl,--undefined=__errno',
+    LINKFLAGS=['-Tbuild/kernel/memory.ld', '-Wl,--gc-sections', '-Wl,--print-memory-usage',
+        '-Wl,-Map=build/kernel/kernel.map', '-Wl,--warn-common', '-Wl,--undefined=__errno'],
     CPPPATH=ALLPATHS,
     CPPDEFINES=[
         'KERNEL',
@@ -397,6 +402,21 @@ linkerscript_gen = env.Command(
     action='$CAT $SOURCES > $TARGET',
 )
 
+#
+# Rust library
+#
+features = ['kernel',] + FEATURES_AVAILABLE
+
+rust = tools.add_rust_lib(
+    env=env,
+    build='kernel',
+    profile='release',
+    features=features,
+    all_paths=ALLPATHS,
+    build_dir=str(Dir('.').abspath),
+)
+
+
 program_elf = env.Command(
     target='kernel.elf',
     source=obj_program,
@@ -405,6 +425,7 @@ program_elf = env.Command(
 )
 
 env.Depends(program_elf, linkerscript_gen)
+env.Depends(program_elf, rust)
 
 if CMAKELISTS != 0:
     env.Depends(program_elf, cmake_gen)
