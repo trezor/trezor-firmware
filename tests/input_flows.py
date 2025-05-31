@@ -1322,7 +1322,6 @@ class InputFlowSignTxInformationCancel(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.vertical_menu_items()[2])
         self.debug.synchronize_at("TextScreen")
         self.debug.click(self.debug.screen_buttons.ok())
-        self.debug.click(self.debug.screen_buttons.ok())
 
 
 class InputFlowSignTxInformationReplacement(InputFlowBase):

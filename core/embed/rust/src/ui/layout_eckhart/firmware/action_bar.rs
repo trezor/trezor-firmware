@@ -87,7 +87,11 @@ impl ActionBar {
             Mode::Timeout,
             None,
             Some(button.initially_enabled(false)),
-            Some(Timeout::new(timeout_ms)),
+            Some(Timeout::new(if animation_disabled() {
+                0
+            } else {
+                timeout_ms
+            })),
         )
     }
 
