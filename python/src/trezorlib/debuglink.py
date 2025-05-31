@@ -481,6 +481,7 @@ class DebugLink:
         self.waiting_for_layout_change = False
 
         self.input_wait_type = DebugWaitType.IMMEDIATE
+        self.prev_gc_info: dict[str, int] = {}
 
     @property
     def legacy_ui(self) -> bool:
@@ -496,6 +497,11 @@ class DebugLink:
     def has_global_layout(self) -> bool:
         """Differences in waiting for Global Layout objects."""
         return self.version >= (2, 8, 6)
+
+    @property
+    def has_gc_info(self) -> bool:
+        """Supports DebugLinkGetGcInfo RPC."""
+        return self.version >= (2, 8, 11)
 
     @property
     def responds_to_debuglink_in_usb_tiny(self) -> bool:
@@ -844,6 +850,21 @@ class DebugLink:
         )
         im.save(img_location)
         self.t1_screenshot_counter += 1
+
+    def check_gc_info(self):
+        """Fetch GC heap information and check for leaks."""
+        if not self.has_gc_info:
+            return
+
+        resp = self._call(messages.DebugLinkGetGcInfo())
+        while not isinstance(resp, messages.DebugLinkGcInfo):
+            resp = self._read()
+
+        info = dict(sorted((item.name, item.value) for item in resp.items))
+        if self.prev_gc_info:
+            # Free heap memory should not decrease
+            assert info["free"] >= self.prev_gc_info["free"]
+        self.prev_gc_info = info
 
 
 del _make_input_func

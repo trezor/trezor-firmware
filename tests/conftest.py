@@ -313,6 +313,9 @@ def client(
         # Resetting all the debug events to not be influenced by previous test
         _raw_client.debug.reset_debug_events()
 
+        # Make sure there are no GC leaks from previous tests
+        _raw_client.debug.check_gc_info()
+
         if test_ui:
             # we need to reseed before the wipe
             _raw_client.debug.reseed(0)
@@ -370,6 +373,9 @@ def client(
         with ui_tests.screen_recording(_raw_client, request):
             yield _raw_client
     finally:
+        # Make sure there are no GC leaks from this test
+        _raw_client.debug.check_gc_info()
+
         _raw_client.close()
 
 
