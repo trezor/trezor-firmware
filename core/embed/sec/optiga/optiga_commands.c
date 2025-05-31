@@ -23,6 +23,8 @@
  * https://github.com/Infineon/optiga-trust-m/blob/develop/documents/Infineon_I2C_Protocol_v2.03.pdf
  */
 
+#ifdef SECURE_MODE
+
 #include <trezor_rtl.h>
 
 #include <sec/optiga_commands.h>
@@ -33,8 +35,6 @@
 #include "memzero.h"
 #include "nist256p1.h"
 #include "sha2.h"
-
-#ifdef KERNEL_MODE
 
 // Static buffer for commands and responses.
 static uint8_t tx_buffer[OPTIGA_MAX_APDU_SIZE] = {0};
@@ -963,4 +963,4 @@ optiga_result optiga_set_priv_key(uint16_t oid, const uint8_t priv_key[32]) {
   return process_output_fixedlen(NULL, 0);
 }
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE

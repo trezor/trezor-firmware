@@ -18,6 +18,7 @@ def configure(
 
     mcu = "STM32U5G9xx"
     linker_script = """embed/sys/linker/stm32u5g/{target}.ld"""
+    memory_layout = "memory.ld"
 
     stm32u5_common_files(env, features_wanted, defines, sources, paths)
 
@@ -26,8 +27,16 @@ def configure(
     ] = "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 "
     env.get("ENV")[
         "CPU_CCFLAGS"
-    ] = "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -mtune=cortex-m33 -mcmse "
+    ] = "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -mtune=cortex-m33 "
     env.get("ENV")["RUST_TARGET"] = "thumbv8m.main-none-eabihf"
+
+    if "secure_domain" in features_wanted:
+        env.get("ENV")["CPU_CCFLAGS"] += "-mcmse "
+
+    if "secmon_layout" in features_wanted:
+        defines += [("USE_SECMON_LAYOUT", "1")]
+        memory_layout = "memory_secmon.ld"
+        features_available.append("secmon_layout")
 
     defines += [
         mcu,
@@ -39,6 +48,7 @@ def configure(
         ("USE_LSE", "1"),
         ("FIXED_HW_DEINIT", "1"),
         ("LOCKABLE_BOOTLOADER", "1"),
+        ("USE_BOOTARGS_RSOD", "1"),
         ("TERMINAL_FONT_SCALE", "2"),
         ("TERMINAL_X_PADDING", "4"),
         ("TERMINAL_Y_PADDING", "12"),
@@ -258,5 +268,6 @@ def configure(
         features_available.append("power_manager")
 
     env.get("ENV")["LINKER_SCRIPT"] = linker_script
+    env.get("ENV")["MEMORY_LAYOUT"] = memory_layout
 
     return features_available

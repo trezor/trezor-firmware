@@ -1,9 +1,7 @@
-INCLUDE "./embed/sys/linker/stm32u5g/memory.ld";
-
 ENTRY(reset_handler)
 
 MEMORY {
-  FLASH  (rx)  : ORIGIN = KERNEL_START, LENGTH = KERNEL_MAXSIZE
+  FLASH  (rx)  : ORIGIN = FIRMWARE_START, LENGTH = FIRMWARE_MAXSIZE
 
   MAIN_RAM (wal) : ORIGIN = MAIN_RAM_START, LENGTH = MAIN_RAM_SIZE
   AUX1_RAM (wal) : ORIGIN = AUX1_RAM_START, LENGTH = AUX1_RAM_SIZE
@@ -26,18 +24,10 @@ _confidential_section_loadaddr = LOADADDR(.confidential);
 _confidential_section_start = ADDR(.confidential);
 _confidential_section_end = ADDR(.confidential) + SIZEOF(.confidential);
 
-_accessible_ram_0_start = MCU_SRAM1;
-_accessible_ram_0_end = MCU_SRAM6 + MCU_SRAM6_SIZE;
-_accessible_ram_1_start = MCU_SRAM4;
-_accessible_ram_1_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
-
 _bootargs_ram_start = BOOTARGS_START;
 _bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
 
 _codelen = SIZEOF(.padding) + SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
-
-_flash_start = ORIGIN(FLASH);
-_flash_end = ORIGIN(FLASH) + LENGTH(FLASH);
 
 SECTIONS {
   .vendorheader : ALIGN(4) {

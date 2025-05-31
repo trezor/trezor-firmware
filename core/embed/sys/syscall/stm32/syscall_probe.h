@@ -17,14 +17,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_SYSCALL_PROBE_H
-#define TREZORHAL_SYSCALL_PROBE_H
+#pragma once
 
 #include <trezor_types.h>
 
+#include <sys/applet.h>
 #include <sys/system.h>
 
-#ifdef SYSCALL_DISPATCH
+#include "syscall_context.h"
+
+#ifdef KERNEL
 
 // Checks if the current application task has read access to the
 // given memory range.
@@ -34,13 +36,15 @@ bool probe_read_access(const void *addr, size_t len);
 // given memory range.
 bool probe_write_access(void *addr, size_t len);
 
+// Handles access violation by exiting the current application task
+// with a fatal error and the message "Access violation".
+void handle_access_violation(const char *file, int line);
+
 // Exits the current application task with an fatal error
 // with the message "Access violation".
-#define apptask_access_violation()                             \
-  do {                                                         \
-    system_exit_fatal("Access violation", __FILE__, __LINE__); \
+#define apptask_access_violation()               \
+  do {                                           \
+    handle_access_violation(__FILE__, __LINE__); \
   } while (0)
 
-#endif  // SYSCALL_DISPATCH
-
-#endif  // TREZORHAL_SYSCALL_PROBE_H
+#endif  // KERNEL

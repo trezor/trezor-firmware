@@ -20,6 +20,11 @@
 
 #pragma once
 
+#include <trezor_bsp.h>
+#include <trezor_model.h>
+
+#include <rtl/sizedefs.h>
+
 // symbols defined in the linker script
 extern uint8_t _stack_section_start;
 extern uint8_t _stack_section_end;
@@ -46,17 +51,99 @@ typedef struct {
   memregion_block_t block[MEMREGION_MAX_BLOCKS];
 } memregion_t;
 
-#define MEMREGION_ALL_ACCESSIBLE_RAM                                      \
-  ({                                                                      \
-    extern uint8_t _accessible_ram_0_start;                               \
-    extern uint8_t _accessible_ram_0_end;                                 \
-    extern uint8_t _accessible_ram_1_start;                               \
-    extern uint8_t _accessible_ram_1_end;                                 \
-    (memregion_t){.block = {                                              \
-                      {&_accessible_ram_0_start, &_accessible_ram_0_end}, \
-                      {&_accessible_ram_1_start, &_accessible_ram_1_end}, \
-                  }};                                                     \
+#define MEMBLOCK(start, size) \
+  { (void*)(start), (void*)((uint8_t*)(start) + (size)) }
+
+// -------------------------------------------------------------------
+// Standard memory regions used in boardloader / bootloader
+// or in the kernel when secure monitor is not used
+// -------------------------------------------------------------------
+
+// ALL_STARTUP_RAM regions are describes all RAM accessible BEFORE
+// the system is completely initialized (including TrustZone and GTZC)
+#if defined(STM32F4)
+#define MEMREGION_ALL_STARTUP_RAM                    \
+  ({                                                 \
+    (memregion_t){                                   \
+        .block =                                     \
+            {                                        \
+                MEMBLOCK(CCMDATARAM_BASE, SIZE_64K), \
+                MEMBLOCK(SRAM_BASE, SIZE_192K),      \
+            },                                       \
+    };                                               \
   })
+#elif defined(STM32U585xx)
+#define MEMREGION_ALL_STARTUP_RAM                \
+  ({                                             \
+    (memregion_t){                               \
+        .block =                                 \
+            {                                    \
+                MEMBLOCK(SRAM1_BASE, SIZE_768K), \
+                MEMBLOCK(SRAM4_BASE, SIZE_16K),  \
+            },                                   \
+    };                                           \
+  })
+#elif defined(STM32U5G9xx)
+#define MEMREGION_ALL_STARTUP_RAM                 \
+  ({                                              \
+    (memregion_t){                                \
+        .block =                                  \
+            {                                     \
+                MEMBLOCK(SRAM1_BASE, SIZE_3008K), \
+                MEMBLOCK(SRAM4_BASE, SIZE_16K),   \
+            },                                    \
+    };                                            \
+  })
+#else
+#error "Unknown STM32 family"
+#endif
+
+// RUNTIME_RAM regions are describes all RAM accessible AFTER
+// the system is completely initialized (including TrustZone and GTZC)
+#define MEMREGION_ALL_RUNTIME_RAM MEMREGION_ALL_STARTUP_RAM
+
+// -------------------------------------------------------------------
+// Secure monitor memory regions
+// -------------------------------------------------------------------
+
+#ifdef SECMON
+#undef MEMREGION_ALL_RUNTIME_RAM
+#define MEMREGION_ALL_RUNTIME_RAM                                  \
+  ({                                                               \
+    (memregion_t){                                                 \
+        .block =                                                   \
+            {                                                      \
+                MEMBLOCK(NONSECURE_RAM_START, NONSECURE_RAM_SIZE), \
+                MEMBLOCK(BOOTARGS_START, BOOTARGS_SIZE),           \
+                MEMBLOCK(SECMON_RAM_START, SECMON_RAM_SIZE),       \
+            },                                                     \
+    };                                                             \
+  })
+#endif  // SECMON
+
+// -------------------------------------------------------------------
+// Non-secure kernel memory regions
+// -------------------------------------------------------------------
+
+#ifdef KERNEL
+#ifdef USE_SECMON_LAYOUT
+
+#undef MEMREGION_ALL_STARTUP_RAM
+#undef MEMREGION_ALL_RUNTIME_RAM
+
+#define MEMREGION_ALL_STARTUP_RAM                                  \
+  ({                                                               \
+    (memregion_t){                                                 \
+        .block =                                                   \
+            {                                                      \
+                MEMBLOCK(NONSECURE_RAM_START, NONSECURE_RAM_SIZE), \
+            },                                                     \
+    };                                                             \
+  })
+
+#define MEMREGION_ALL_RUNTIME_RAM MEMREGION_ALL_STARTUP_RAM
+#endif  // USE_SECMON_LAYOUT
+#endif  // KERNEL
 
 // Adds a new address range to the memory region.
 //

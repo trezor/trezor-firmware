@@ -79,8 +79,9 @@ def stm32f4_common_files(env, defines, sources, paths):
         "embed/sys/startup/stm32f4/reset_flags.c",
         "embed/sys/startup/stm32f4/startup_init.c",
         "embed/sys/startup/stm32f4/vectortable.S",
-        "embed/sys/syscall/stm32/syscall.c",
+        "embed/sys/syscall/stm32/syscall_context.c",
         "embed/sys/syscall/stm32/syscall_dispatch.c",
+        "embed/sys/syscall/stm32/syscall_ipc.c",
         "embed/sys/syscall/stm32/syscall_probe.c",
         "embed/sys/syscall/stm32/syscall_stubs.c",
         "embed/sys/syscall/stm32/syscall_verifiers.c",
@@ -102,3 +103,4 @@ def stm32f4_common_files(env, defines, sources, paths):
 
     env.get("ENV")["SUFFIX"] = "stm32f4"
     env.get("ENV")["LINKER_SCRIPT"] = """embed/sys/linker/stm32f4/{target}.ld"""
+    env.get("ENV")["MEMORY_LAYOUT"] = "memory.ld"

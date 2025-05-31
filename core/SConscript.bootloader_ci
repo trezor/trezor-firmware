@@ -7,7 +7,15 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 
-FEATURES_WANTED = ["input", "rgb_led", "consumption_mask", "usb", "optiga", "powerctl", "display"]
+FEATURES_WANTED = [
+    "consumption_mask",
+    "display",
+    "input",
+    "optiga",
+    "powerctl",
+    "rgb_led",
+    "usb",
+    ]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -27,6 +35,7 @@ CPPPATH_MOD += [
 ]
 CPPDEFINES_MOD += [
     'KERNEL_MODE',
+    'SECURE_MODE',
     'AES_128',
     'AES_192',
     'USE_KECCAK',

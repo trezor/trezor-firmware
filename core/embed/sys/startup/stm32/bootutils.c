@@ -35,8 +35,6 @@
 #include <io/display.h>
 #endif
 
-#ifdef KERNEL_MODE
-
 // Battery powered devices (USE_POWER_MANAGER) should not stall
 // after showing RSOD, as it would drain the battery.
 #ifdef USE_POWER_MANAGER
@@ -44,6 +42,8 @@
 #error "RSOD_INFINITE_LOOP is not supported on battery powered devices"
 #endif
 #endif
+
+#ifdef SECURE_MODE
 
 #ifdef STM32U5
 // Persistent variable that holds the 'command' for the next reboot.
@@ -79,14 +79,6 @@ void bootargs_set(boot_command_t command, const void* args, size_t args_size) {
   mpu_restore(mode);
 }
 
-boot_args_t* bootargs_ptr(void) { return &g_boot_args; }
-
-#ifdef BOOTLOADER
-// Contains the current boot command saved during bootloader startup.
-boot_command_t g_boot_command_saved;
-
-boot_command_t bootargs_get_command() { return g_boot_command_saved; }
-
 void bootargs_get_args(boot_args_t* dest) {
   mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTARGS);
 
@@ -94,6 +86,12 @@ void bootargs_get_args(boot_args_t* dest) {
 
   mpu_restore(mode);
 }
+
+#ifdef BOOTLOADER
+// Contains the current boot command saved during bootloader startup.
+boot_command_t g_boot_command_saved;
+
+boot_command_t bootargs_get_command() { return g_boot_command_saved; }
 
 void bootargs_init(uint32_t r11_register) {
 #ifdef STM32U5
@@ -120,7 +118,7 @@ static void halt_device_phase_2(uint32_t arg1, uint32_t arg2) {
   clear_unused_stack();
 
   // Clear all memory except stack and bootargs
-  memregion_t region = MEMREGION_ALL_ACCESSIBLE_RAM;
+  memregion_t region = MEMREGION_ALL_RUNTIME_RAM;
   MEMREGION_DEL_SECTION(&region, _stack_section);
   MEMREGION_DEL_SECTION(&region, _bootargs_ram);
   memregion_fill(&region, 0);
@@ -158,7 +156,7 @@ static void reboot_with_args_phase_2(uint32_t arg1, uint32_t arg2) {
   clear_unused_stack();
 
   // Clear all memory except stack and bootargs
-  memregion_t region = MEMREGION_ALL_ACCESSIBLE_RAM;
+  memregion_t region = MEMREGION_ALL_RUNTIME_RAM;
   MEMREGION_DEL_SECTION(&region, _stack_section);
   MEMREGION_DEL_SECTION(&region, _bootargs_ram);
   memregion_fill(&region, 0);
@@ -220,6 +218,12 @@ __attribute__((noreturn)) void reboot_to_off(void) {
   reboot_with_args(BOOT_COMMAND_POWER_OFF, NULL, 0);
 }
 
+__attribute__((noreturn)) void reboot_with_rsod(
+    const systask_postmortem_t* pminfo) {
+  // Set bootargs area to the new command and arguments
+  reboot_with_args(BOOT_COMMAND_SHOW_RSOD, pminfo, sizeof(*pminfo));
+}
+
 __attribute__((noreturn)) void reboot_or_halt_after_rsod(void) {
 #ifndef RSOD_INFINITE_LOOP
   systick_delay_ms(10 * 1000);
@@ -230,6 +234,10 @@ __attribute__((noreturn)) void reboot_or_halt_after_rsod(void) {
   reboot_device();
 #endif
 }
+
+#endif  // SECURE_MODE
+
+#ifdef KERNEL_MODE
 
 static void jump_to_next_stage_phase_2(uint32_t arg1, uint32_t arg2) {
   // We are now running on a new stack. We cannot be sure about
@@ -244,7 +252,7 @@ static void jump_to_next_stage_phase_2(uint32_t arg1, uint32_t arg2) {
   clear_unused_stack();
 
   // Clear all memory except stack and bootargs
-  memregion_t region = MEMREGION_ALL_ACCESSIBLE_RAM;
+  memregion_t region = MEMREGION_ALL_RUNTIME_RAM;
   MEMREGION_DEL_SECTION(&region, _stack_section);
   MEMREGION_DEL_SECTION(&region, _bootargs_ram);
   memregion_fill(&region, 0);

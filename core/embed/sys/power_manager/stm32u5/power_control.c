@@ -94,6 +94,7 @@ void pm_control_suspend() {
 
 // Deinitialize all drivers that are not required in low-power mode
 // (e.g., USB, display, touch, haptic, etc.).
+#ifdef SECURE_MODE
 #ifdef USE_STORAGE_HWKEY
   secure_aes_deinit();
 #endif
@@ -103,6 +104,10 @@ void pm_control_suspend() {
 #ifdef USE_OPTIGA
   optiga_deinit();
 #endif
+#else
+  // !@# implement suspend in secure monitor
+#endif
+
 #ifdef USE_USB
   usb_stop();
 #endif
@@ -196,6 +201,7 @@ void pm_control_suspend() {
 #ifdef USE_USB
   usb_start();
 #endif
+#ifdef SECURE_MODE
 #ifdef USE_STORAGE_HWKEY
   secure_aes_init();
 #endif
@@ -209,6 +215,10 @@ void pm_control_suspend() {
 #if defined(USE_TROPIC) && !defined(BOOTLOADER)
   tropic_init();
 #endif
+#else
+  // !@# implement resume in secure monitor
+#endif
+
 #ifdef USE_BLE
   ble_resume(&ble_wakeup_params);
 #endif

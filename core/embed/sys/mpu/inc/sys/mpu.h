@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_MPU_H
-#define TREZORHAL_MPU_H
+#pragma once
 
 #include <trezor_types.h>
 
@@ -43,9 +42,9 @@ typedef enum {
   MPU_MODE_SECRET,        // + secret area (privileged RW)
   MPU_MODE_STORAGE,       // + both storage areas (privileged RW)
   MPU_MODE_ASSETS,        // + assets (privileged RW)
-  MPU_MODE_SAES,          // + unprivileged SAES code
   MPU_MODE_UNUSED_FLASH,  // + unused flash areas (privileged RW)
-  MPU_MODE_APP,           // + unprivileged DMA2D (RW) & Assets (RO)
+  MPU_MODE_APP,           // + unprivileged app + Assets (RO)
+  MPU_MODE_APP_SAES,      // + unprivileged app + SAES/TAMPER
 } mpu_mode_t;
 
 // Initializes the MPU and sets it to MPU_MODE_DISABLED.
@@ -68,6 +67,28 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode);
 // Same as `mpu_reconfig()`, but with a more descriptive name.
 void mpu_restore(mpu_mode_t mode);
 
+typedef struct {
+  uint32_t start;
+  uint32_t size;
+} mpu_area_t;
+
+// Applet memory layout
+typedef struct {
+  // Read/write data area #1
+  mpu_area_t data1;
+  // Read/write data area #2
+  mpu_area_t data2;
+  // Read-only code area #1
+  mpu_area_t code1;
+  // Read-only code area #2
+  mpu_area_t code2;
+
+} applet_layout_t;
+
+// Sets the MPU to allow unprivileged access to the given applet
+// (just one applet at a time can be visible)
+void mpu_set_active_applet(applet_layout_t* layout);
+
 // Sets the MPU to allow access to the
 // framebuffer at the given address and size.
 //
@@ -83,5 +104,3 @@ void mpu_set_active_fb(const void* addr, size_t size);
 bool mpu_inside_active_fb(const void* addr, size_t size);
 
 #endif  // KERNEL_MODE
-
-#endif  // TREZORHAL_MPU_H

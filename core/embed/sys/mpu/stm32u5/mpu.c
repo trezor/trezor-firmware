@@ -141,35 +141,25 @@ _Static_assert(NORCOW_SECTOR_SIZE == STORAGE_2_MAXSIZE, "norcow misconfigured");
 
 #define OTP_AND_ID_SIZE 0x800
 
-#ifdef KERNEL
-
+#ifdef SECMON
 extern uint32_t _codelen;
-#define KERNEL_SIZE (uint32_t) & _codelen
-#define KERNEL_FLASH_START KERNEL_START
+#define SECMON_START FIRMWARE_START_S
+#define SECMON_SIZE (uint32_t) & _codelen
+#endif
 
-#if NORCOW_MIN_VERSION <= 5
-extern uint8_t _uflash_start;
-extern uint8_t _uflash_end;
-#define KERNEL_FLASH_U_START (uint32_t) & _uflash_start
-#define KERNEL_FLASH_U_SIZE ((uint32_t) & _uflash_end - KERNEL_FLASH_U_START)
+#ifdef KERNEL
+extern uint32_t _kernel_flash_start;
+extern uint32_t _kernel_flash_end;
 
-#define KERNEL_FLASH_SIZE (KERNEL_SIZE - KERNEL_FLASH_U_SIZE)
-
-#define COREAPP_FLASH_START \
-  (COREAPP_CODE_ALIGN(KERNEL_FLASH_START + KERNEL_SIZE) - KERNEL_FLASH_U_SIZE)
-
+#ifdef USE_SECMON_LAYOUT
+#define KERNEL_START ((uint32_t) & _kernel_flash_start)
 #else
-
-#define KERNEL_FLASH_SIZE KERNEL_SIZE
-
-#define COREAPP_FLASH_START \
-  (COREAPP_CODE_ALIGN(KERNEL_FLASH_START + KERNEL_SIZE))
+#define KERNEL_START FIRMWARE_START
 #endif
 
-#define COREAPP_FLASH_SIZE \
-  (FIRMWARE_MAXSIZE - (COREAPP_FLASH_START - FIRMWARE_START))
-
-#endif
+#define KERNEL_END ((uint32_t) & _kernel_flash_end)
+#define KERNEL_SIZE (KERNEL_END - KERNEL_START)
+#endif  // KERNEL
 
 typedef struct {
   // Set if the driver is initialized
@@ -222,15 +212,11 @@ static void mpu_init_fixed_regions(void) {
   SET_REGION( 4, AUX1_RAM_START,           AUX1_RAM_SIZE ,     SRAM,        YES,    NO );
 #elif defined(KERNEL)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
-  SET_REGRUN( 0, KERNEL_FLASH_START,       KERNEL_FLASH_SIZE,  FLASH_CODE,   NO,    NO ); // Kernel Code
+  SET_REGRUN( 0, KERNEL_START,             KERNEL_SIZE,        FLASH_CODE,   NO,    NO ); // Kernel Code
   SET_REGION( 1, MAIN_RAM_START,           MAIN_RAM_SIZE,      SRAM,        YES,    NO ); // Kernel RAM
-  SET_REGRUN( 2, COREAPP_FLASH_START,      COREAPP_FLASH_SIZE, FLASH_CODE,   NO,   YES ); // CoreApp Code
-  SET_REGION( 3, AUX1_RAM_START,           AUX1_RAM_SIZE,      SRAM,        YES,   YES ); // CoraApp RAM
-#ifdef STM32U585xx
-  SET_REGION( 4, AUX2_RAM_START,           AUX2_RAM_SIZE,      SRAM,        YES,   YES ); // CoraAPP RAM2
-#else
-  DIS_REGION( 4 );
-#endif
+  DIS_REGION( 2 ); // reserved for applets
+  DIS_REGION( 3 ); // reserved for applets
+  DIS_REGION( 4 ); // reserved for applets
 
 #elif defined(FIRMWARE)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
@@ -244,6 +230,13 @@ static void mpu_init_fixed_regions(void) {
   SET_REGION( 1, FIRMWARE_START + 1024,    FIRMWARE_MAXSIZE - 1024, FLASH_CODE,   NO,    NO );
   SET_REGION( 2, MAIN_RAM_START,           MAIN_RAM_SIZE,     SRAM,        YES,    NO );
   DIS_REGION( 3 );
+  SET_REGION( 4, AUX1_RAM_START,           AUX1_RAM_SIZE,     SRAM,        YES,    NO );
+
+#elif defined(SECMON)
+  SET_REGRUN( 0, SECMON_START,             SECMON_SIZE,       FLASH_CODE,   NO,    NO );
+  SET_REGION( 1, SECMON_RAM_START,         SECMON_RAM_SIZE,   SRAM,        YES,    NO );
+  SET_REGION( 2, MAIN_RAM_START,           MAIN_RAM_SIZE,     SRAM,        YES,    NO );
+  SET_REGION( 3, FIRMWARE_START,           FIRMWARE_MAXSIZE,  FLASH_DATA,  YES,    NO );
   SET_REGION( 4, AUX1_RAM_START,           AUX1_RAM_SIZE,     SRAM,        YES,    NO );
 #else
   #error "Unknown build target"
@@ -286,6 +279,50 @@ mpu_mode_t mpu_get_mode(void) {
   }
 
   return drv->mode;
+}
+
+void mpu_set_active_applet(applet_layout_t* layout) {
+  mpu_driver_t* drv = &g_mpu_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
+
+  irq_key_t irq_key = irq_lock();
+
+  mpu_disable();
+
+  if (layout != NULL) {
+    // clang-format off
+    if (layout->code1.start != 0 && layout->code1.size != 0) {
+      SET_REGRUN( 2, layout->code1.start, layout->code1.size, FLASH_CODE, NO, YES );
+    } else {
+      DIS_REGION( 2 );
+    }
+
+    if (layout->data1.start != 0 && layout->data1.size != 0) {
+      SET_REGRUN( 3, layout->data1.start, layout->data1.size, SRAM, YES, YES );
+    } else {
+      DIS_REGION( 3 );
+    }
+
+    if (layout->data2.start != 0 && layout->data2.size != 0) {
+      SET_REGRUN( 4, layout->data2.start, layout->data2.size, SRAM, YES, YES );
+    } else {
+      DIS_REGION( 4 );
+    }
+    // clang-format on
+  } else {
+    DIS_REGION(2);
+    DIS_REGION(3);
+    DIS_REGION(4);
+  }
+
+  if (drv->mode != MPU_MODE_DISABLED) {
+    mpu_enable();
+  }
+
+  irq_unlock(irq_key);
 }
 
 void mpu_set_active_fb(const void* addr, size_t size) {
@@ -341,10 +378,7 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
 
   // clang-format off
   switch (mode) {
-    case MPU_MODE_SAES:
-      //      REGION   ADDRESS                 SIZE                   TYPE       WRITE   UNPRIV
-      SET_REGION( 5, PERIPH_BASE_NS,           PERIPH_SIZE,           PERIPHERAL,  YES,    YES ); // Peripherals - SAES, TAMP
-      break;
+    case MPU_MODE_APP_SAES:
     case MPU_MODE_APP:
       if (drv->active_fb_addr != 0) {
         SET_REGRUN( 5, drv->active_fb_addr,    drv->active_fb_size,   SRAM,        YES,    YES ); // Frame buffer
@@ -391,6 +425,7 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
     case MPU_MODE_ASSETS:
       SET_REGION( 6, ASSETS_START,             ASSETS_MAXSIZE,     FLASH_DATA,  YES,    NO );
       break;
+    case MPU_MODE_APP_SAES:
     case MPU_MODE_APP:
       SET_REGION( 6, ASSETS_START,             ASSETS_MAXSIZE,     FLASH_DATA,   NO,   YES );
       break;
@@ -410,15 +445,13 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
   switch (mode) {
       //      REGION   ADDRESS                 SIZE                TYPE       WRITE   UNPRIV
 #ifdef KERNEL
-    case MPU_MODE_SAES:
-#ifdef SAES_RAM_START
-      SET_REGION( 7, SAES_RAM_START,           SAES_RAM_SIZE,      SRAM,        YES,   YES ); // Unprivileged kernel SRAM
-#endif
+    case MPU_MODE_APP_SAES:
+      SET_REGION( 7, PERIPH_BASE,              PERIPH_SIZE,        PERIPHERAL,  YES,    YES ); // Peripherals - SAES, TAMP
       break;
 #endif
     default:
       // All peripherals (Privileged, Read-Write, Non-Executable)
-      SET_REGION( 7, PERIPH_BASE_NS,           PERIPH_SIZE,        PERIPHERAL,  YES,    NO );
+      SET_REGION( 7, PERIPH_BASE,              PERIPH_SIZE,        PERIPHERAL,  YES,    NO );
       break;
   }
   // clang-format on

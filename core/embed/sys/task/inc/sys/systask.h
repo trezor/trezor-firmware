@@ -44,6 +44,12 @@ typedef struct {
   uint32_t mmfar;
   // Address associated with the BusFault
   uint32_t bfar;
+#if defined(__ARM_FEATURE_CMSE)
+  // Secure Fault Status Register
+  uint32_t sfsr;
+  // Address associated with the SecureFault
+  uint32_t sfar;
+#endif
   // Stack pointer at the time of the fault
   // (MSP or PSP depending on the privilege level)
   uint32_t sp;
@@ -97,6 +103,8 @@ typedef void (*systask_error_handler_t)(const systask_postmortem_t* pminfo);
 #ifdef KERNEL_MODE
 
 // Maximum number of tasks that can be created
+// 1. kernel
+// 2. coreapp
 #define SYSTASK_MAX_TASKS 2
 
 // Zero-based task ID (up SYSTASK_MAX_TASKS - 1)
@@ -124,6 +132,9 @@ typedef struct {
   systask_postmortem_t pminfo;
   // Applet bound to the task
   void* applet;
+
+  // Set if the task is processing the kernel callback
+  bool in_callback;
 
 } systask_t;
 
@@ -166,6 +177,17 @@ void systask_pop_data(systask_t* task, size_t size);
 // Return `true` in case of success, `false` otherwise
 bool systask_push_call(systask_t* task, void* fn, uint32_t arg1, uint32_t arg2,
                        uint32_t arg3);
+
+// Invokes the callback function in the context of the given task
+//   uint32_t callback(uint32_t arg1, uint32_t arg2, uint32_t arg3);
+uint32_t systask_invoke_callback(systask_t* task, uint32_t arg1, uint32_t arg2,
+                                 uint32_t arg3, void* callback);
+
+// Sets R0 and R1 registers of the suspended task
+void systask_set_r0r1(systask_t* task, uint32_t r0, uint32_t r1);
+
+// Gets R0 register value of the suspended task
+uint32_t systask_get_r0(systask_t* task);
 
 // Gets the ID (zero-based index up SYSTASK_MAX_TASKS - 1) of the given task.
 systask_id_t systask_id(const systask_t* task);

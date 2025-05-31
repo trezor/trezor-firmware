@@ -1,9 +1,7 @@
-INCLUDE "./embed/sys/linker/stm32u5g/memory.ld";
-
 ENTRY(reset_handler)
 
 MEMORY {
-  FLASH  (rx)  : ORIGIN = KERNEL_START, LENGTH = KERNEL_MAXSIZE
+  FLASH  (rx)  : ORIGIN = FIRMWARE_START, LENGTH = FIRMWARE_MAXSIZE
 
   MAIN_RAM (wal) : ORIGIN = MAIN_RAM_START, LENGTH = MAIN_RAM_SIZE
   BOOT_ARGS (wal) : ORIGIN = BOOTARGS_START, LENGTH = BOOTARGS_SIZE
@@ -25,17 +23,10 @@ _confidential_section_loadaddr = LOADADDR(.confidential);
 _confidential_section_start = ADDR(.confidential);
 _confidential_section_end = ADDR(.confidential) + SIZEOF(.confidential);
 
-_accessible_ram_0_start = MCU_SRAM1;
-_accessible_ram_0_end = MCU_SRAM6 + MCU_SRAM6_SIZE;
-_accessible_ram_1_start = MCU_SRAM4;
-_accessible_ram_1_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
-
 _bootargs_ram_start = BOOTARGS_START;
 _bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
 
-_codelen = SIZEOF(.vendorheader) + SIZEOF(.header) + SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
-_flash_start = ORIGIN(FLASH);
-_flash_end = ORIGIN(FLASH) + LENGTH(FLASH);
+_codelen = _kernel_flash_end - ORIGIN(FLASH);
 
 SECTIONS {
   .vendorheader : ALIGN(4) {
@@ -48,6 +39,11 @@ SECTIONS {
   } >FLASH AT>FLASH
 
   .flash : ALIGN(CODE_ALIGNMENT) {
+    KEEP(*(.secmon));
+  } >FLASH AT>FLASH
+
+  .flash : ALIGN(CODE_ALIGNMENT) {
+    _kernel_flash_start = .;
     KEEP(*(.vector_table));
     . = ALIGN(4);
     *(.text*);
@@ -98,11 +94,14 @@ SECTIONS {
     . = ALIGN(4);
   } >MAIN_RAM
 
-
   .boot_args : ALIGN(8) {
     *(.boot_command*);
     . = ALIGN(8);
     *(.boot_args*);
     . = ALIGN(8);
   } >BOOT_ARGS
+
+  .flash : ALIGN(4) {
+    _kernel_flash_end = .;
+  } >FLASH
 }

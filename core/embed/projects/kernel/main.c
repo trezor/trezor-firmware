@@ -28,6 +28,7 @@
 #include <sys/applet.h>
 #include <sys/bootutils.h>
 #include <sys/mpu.h>
+#include <sys/syscall_ipc.h>
 #include <sys/sysevent.h>
 #include <sys/system.h>
 #include <sys/systick.h>
@@ -99,6 +100,26 @@
 #endif
 
 void drivers_init() {
+#ifdef SECURE_MODE
+  parse_boardloader_capabilities();
+  unit_properties_init();
+#ifdef USE_STORAGE_HWKEY
+  secure_aes_init();
+#endif
+  entropy_init();
+#ifdef USE_TAMPER
+  tamper_init();
+#endif
+  random_delays_init();
+#ifdef RDI
+  random_delays_start_rdi();
+#endif
+#endif  // SECURE_MODE
+
+#ifdef USE_CONSUMPTION_MASK
+  consumption_mask_init();
+#endif
+
 #ifdef USE_BACKUP_RAM
   backup_ram_init();
 #endif
@@ -107,18 +128,8 @@ void drivers_init() {
   pm_init(true);
 #endif
 
-#ifdef USE_TAMPER
-  tamper_init();
-#endif
-
-  random_delays_init();
-
 #ifdef USE_PVD
   pvd_init();
-#endif
-
-#ifdef RDI
-  random_delays_start_rdi();
 #endif
 
 #ifdef SYSTEM_VIEW
@@ -135,16 +146,6 @@ void drivers_init() {
   check_oem_keys();
 #endif
 
-  parse_boardloader_capabilities();
-
-  unit_properties_init();
-
-#ifdef USE_STORAGE_HWKEY
-  secure_aes_init();
-#endif
-
-  entropy_init();
-
 #if PRODUCTION || BOOTLOADER_QA
   check_and_replace_bootloader();
 #endif
@@ -155,10 +156,6 @@ void drivers_init() {
 
 #ifdef USE_RGB_LED
   rgb_led_init();
-#endif
-
-#ifdef USE_CONSUMPTION_MASK
-  consumption_mask_init();
 #endif
 
 #ifdef USE_TOUCH
@@ -177,36 +174,48 @@ void drivers_init() {
   ble_init();
 #endif
 
+#ifdef SECURE_MODE
 #ifdef USE_OPTIGA
   optiga_init_and_configure();
 #endif
-
 #ifdef USE_TROPIC
   tropic_init();
 #endif
+#endif  // SECURE_MODE
 }
 
 // Kernel task main loop
 //
 // Returns when the coreapp task is terminated
 static void kernel_loop(applet_t *coreapp) {
+#if SECURE_MODE && USE_STORAGE_HWKEY
+  secure_aes_set_applet(coreapp);
+#endif
+
   do {
-    sysevents_t awaited = {0};
+    sysevents_t awaited = {
+        .read_ready = 1 << SYSHANDLE_SYSCALL,
+        .write_ready = 0,
+    };
+
     sysevents_t signalled = {0};
 
     sysevents_poll(&awaited, &signalled, ticks_timeout(100));
+
+    if (signalled.read_ready & (1 << SYSHANDLE_SYSCALL)) {
+      syscall_ipc_dequeue();
+    }
 
   } while (applet_is_alive(coreapp));
 }
 
 // defined in linker script
-extern uint32_t _codelen;
-
-#define KERNEL_SIZE (uint32_t) & _codelen
+extern uint32_t _kernel_flash_end;
+#define KERNEL_END ((uint32_t) & _kernel_flash_end)
 
 // Initializes coreapp applet
 static void coreapp_init(applet_t *applet) {
-  const uint32_t CODE1_START = COREAPP_CODE_ALIGN(KERNEL_START + KERNEL_SIZE);
+  const uint32_t CODE1_START = COREAPP_CODE_ALIGN(KERNEL_END);
 
 #ifdef FIRMWARE_P1_START
   const uint32_t CODE1_END = FIRMWARE_P1_START + FIRMWARE_P1_MAXSIZE;
@@ -237,6 +246,8 @@ static void coreapp_init(applet_t *applet) {
 
   applet_init(applet, coreapp_header, &coreapp_layout, &coreapp_privileges);
 }
+
+#ifndef USE_BOOTARGS_RSOD
 
 // Shows RSOD (Red Screen of Death)
 static void show_rsod(const systask_postmortem_t *pminfo) {
@@ -281,13 +292,19 @@ static void init_and_show_rsod(const systask_postmortem_t *pminfo) {
   reboot_or_halt_after_rsod();
 }
 
+#endif  // USE_BOOTARGS_RSOD
+
 // Kernel panic handler
 // (may be called from interrupt context)
 static void kernel_panic(const systask_postmortem_t *pminfo) {
   // Since the system state is unreliable, enter emergency mode
   // and show the RSOD.
+#ifndef USE_BOOTARGS_RSOD
   system_emergency_rescue(&init_and_show_rsod, pminfo);
-  // The previous function call never returns
+#else
+  reboot_with_rsod(pminfo);
+#endif  // USE_BOOTARGS_RSOD
+  // We never get here
 }
 
 int main(void) {
@@ -296,7 +313,7 @@ int main(void) {
 
 #ifdef USE_TRUSTZONE
   // Configure unprivileged access for the coreapp
-  tz_init_kernel();
+  tz_init();
 #endif
 
   // Initialize hardware drivers
@@ -318,11 +335,14 @@ int main(void) {
   // Release the coreapp resources
   applet_stop(&coreapp);
 
+#ifndef USE_BOOTARGS_RSOD
   // Coreapp crashed, show RSOD
   show_rsod(&coreapp.task.pminfo);
-
   // Reboots or halts (if RSOD_INFINITE_LOOP is defined)
   reboot_or_halt_after_rsod();
+#else
+  reboot_with_rsod(&coreapp.task.pminfo);
+#endif  // USE_BOOTARGS_RSOD
 
   return 0;
 }

@@ -259,7 +259,7 @@ __attribute((no_stack_protector)) void reset_handler(void) {
 
   // Clear all memory except stack.
   // Keep also bootargs in bootloader and boardloader.
-  memregion_t region = MEMREGION_ALL_ACCESSIBLE_RAM;
+  memregion_t region = MEMREGION_ALL_STARTUP_RAM;
 
   MEMREGION_DEL_SECTION(&region, _stack_section);
 #ifdef BOOTLOADER

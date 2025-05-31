@@ -1,5 +1,3 @@
-INCLUDE "./embed/sys/linker/stm32f4/memory.ld";
-
 ENTRY(reset_handler)
 
 MEMORY {

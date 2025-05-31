@@ -21,6 +21,10 @@
 
 #include <trezor_types.h>
 
+#ifdef KERNEL
+#include <sys/applet.h>
+#endif
+
 // only some of the keys are supported depending on execution environment
 typedef enum {
   SECURE_AES_KEY_DHUK_SP,  // secure-privileged
@@ -31,6 +35,12 @@ typedef enum {
 
 // Initializes secure AES module
 secbool secure_aes_init(void);
+
+// Sets the applet to be used for AES operation
+// with unprivileged key (XORK_SN).
+#ifdef KERNEL
+void secure_aes_set_applet(applet_t* applet);
+#endif
 
 // Deinitializes secure AES module
 void secure_aes_deinit(void);

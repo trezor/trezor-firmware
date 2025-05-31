@@ -32,6 +32,7 @@ typedef enum {
   SYSHANDLE_TOUCH,
   SYSHANDLE_USB,
   SYSHANDLE_BLE,
+  SYSHANDLE_SYSCALL,
   SYSHANDLE_COUNT,
 } syshandle_t;
 

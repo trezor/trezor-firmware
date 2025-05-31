@@ -30,7 +30,23 @@ FEATURE_FLAGS = {
     "AES_GCM": True,
 }
 
-FEATURES_WANTED = ["input", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb" ,"optiga", "haptic", "ble", "tropic", "power_manager", "display", "applet"]
+FEATURES_WANTED = [
+    "applet",
+    "ble",
+    "consumption_mask",
+    "display",
+    "dma2d",
+    "haptic",
+    "input",
+    "optiga",
+    "power_manager",
+    "rgb_led",
+    "sd_card",
+    "secmon_layout",
+    "tropic",
+    "usb",
+    ]
+
 if DISABLE_OPTIGA:
     # TODO use PYOPT instead of PRODUCTION, same as in firmware, blocked on #4253
     if PRODUCTION:
@@ -55,10 +71,6 @@ CPPPATH_MOD += [
     'vendor/micropython/lib/uzlib',
 ]
 SOURCE_MOD += [
-#    'embed/upymod/modtrezorconfig/modtrezorconfig.c',
-    'vendor/trezor-storage/norcow.c',
-    'vendor/trezor-storage/storage.c',
-    'vendor/trezor-storage/storage_utils.c',
     'vendor/trezor-storage/flash_area.c',
 ]
 
@@ -69,7 +81,6 @@ CPPPATH_MOD += [
 ]
 CPPDEFINES_MOD += [
     'KERNEL_MODE',
-    'SYSCALL_DISPATCH',
     'AES_128',
     'AES_192',
     ('USE_BIP32_CACHE', '0'),
@@ -80,6 +91,10 @@ CPPDEFINES_MOD += [
     ('USE_NEM', '1' if (EVERYTHING and TREZOR_MODEL == "T2T1") else '0'),
     ('USE_EOS', '1' if (EVERYTHING and TREZOR_MODEL == "T2T1") else '0'),
 ]
+
+if not TREZOR_MODEL in ['T3W1']:
+    CPPDEFINES_MOD += ['SECURE_MODE']
+
 SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/address.c',
     'vendor/trezor-crypto/aes/aes_modes.c',
@@ -249,6 +264,14 @@ FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_
 
 FEATURE_FLAGS["AES_GCM"] = FEATURE_FLAGS["AES_GCM"] or "tropic" in FEATURES_AVAILABLE
 
+if not 'secmon_layout' in FEATURES_AVAILABLE:
+    SOURCE_MOD += [
+        'vendor/trezor-storage/norcow.c',
+        'vendor/trezor-storage/storage.c',
+        'vendor/trezor-storage/storage_utils.c',
+    ]
+
+
 # AES-GCM
 if FEATURE_FLAGS["AES_GCM"]:
     CPPDEFINES_MOD += [
@@ -308,7 +331,7 @@ env.Replace(
     '-ffreestanding '
     '-fstack-protector-all '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
-    LINKFLAGS='-T build/kernel/memory.ld -Wl,--gc-sections -Wl,--print-memory-usage '
+    LINKFLAGS=f'-T build/kernel/{env.get("ENV")["MEMORY_LAYOUT"]} -Wl,--gc-sections -Wl,--print-memory-usage '
         ' -Wl,-Map=build/kernel/kernel.map -Wl,--warn-common -Wl,--undefined=__errno',
     CPPPATH=ALLPATHS,
     CPPDEFINES=[
@@ -391,17 +414,32 @@ tools.embed_compressed_binary(
         'bootloader',
         )
 
+if "secmon_layout" in FEATURES_AVAILABLE:
+    tools.embed_raw_binary(
+            obj_program,
+            env,
+            'secmon',
+            'build/secmon/secmon.o',
+            f'build/secmon/secmon.bin',
+            )
+
 linkerscript_gen = env.Command(
-    target='memory.ld',
-    source=[f'embed/models/{TREZOR_MODEL}/memory.ld', env.get('ENV')['LINKER_SCRIPT'].format(target='kernel')],
+    target=env.get("ENV")["MEMORY_LAYOUT"],
+    source=[f'embed/models/{TREZOR_MODEL}/{env.get("ENV")["MEMORY_LAYOUT"]}', env.get('ENV')['LINKER_SCRIPT'].format(target='kernel')],
     action='$CAT $SOURCES > $TARGET',
 )
+
+if "secmon_layout" in FEATURES_AVAILABLE:
+    SECMON_LIB = 'build/secmon/secmon_api.o'
+else:
+    SECMON_LIB = ''
+
 
 program_elf = env.Command(
     target='kernel.elf',
     source=obj_program,
     action=
-    '$LINK -o $TARGET $CCFLAGS $CFLAGS $SOURCES $LINKFLAGS -lc_nano -lm -lgcc',
+    f'$LINK -o $TARGET $CCFLAGS $CFLAGS $SOURCES $LINKFLAGS -lc_nano -lm -lgcc {SECMON_LIB} ',
 )
 
 env.Depends(program_elf, linkerscript_gen)
@@ -418,7 +456,7 @@ BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
 BINARY_NAME += ".bin"
 
 action_bin=[
-    '$OBJCOPY -O binary -j .flash -j .uflash  -j .data -j .confidential $SOURCE ${TARGET}',
+    '$OBJCOPY -O binary -j .flash -j .data -j .confidential $SOURCE ${TARGET}',
     '$CP $TARGET ' + BINARY_NAME,
 ]
 

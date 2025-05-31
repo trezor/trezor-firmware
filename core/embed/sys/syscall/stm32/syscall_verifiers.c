@@ -28,7 +28,7 @@
 #include "syscall_probe.h"
 #include "syscall_verifiers.h"
 
-#ifdef SYSCALL_DISPATCH
+#ifdef KERNEL
 
 // Checks if bitblt destination is accessible
 #define CHECK_BB_DST(_bb)                                       \
@@ -1179,4 +1179,4 @@ access_violation:
 }
 #endif
 
-#endif  // SYSCALL_DISPATCH
+#endif  // KERNEL

@@ -17,14 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef SECURE_MODE
+
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
 #include <sys/mpu.h>
 #include <util/flash.h>
 #include <util/flash_otp.h>
-
-#ifdef KERNEL_MODE
 
 void flash_otp_init() {
   // intentionally left empty
@@ -128,4 +128,4 @@ secbool flash_otp_is_locked(uint8_t block) {
   return is_locked;
 }
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE

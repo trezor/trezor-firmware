@@ -18,6 +18,7 @@ def configure(
 
     mcu = "STM32U5G9xx"
     linker_script = """embed/sys/linker/stm32u5g/{target}.ld"""
+    memory_layout = "memory.ld"
 
     stm32u5_common_files(env, features_wanted, defines, sources, paths)
 
@@ -108,5 +109,6 @@ def configure(
     ]
 
     env.get("ENV")["LINKER_SCRIPT"] = linker_script
+    env.get("ENV")["MEMORY_LAYOUT"] = memory_layout
 
     return features_available

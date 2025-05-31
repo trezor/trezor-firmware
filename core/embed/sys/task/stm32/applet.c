@@ -30,7 +30,7 @@
 #include <sys/trustzone.h>
 #endif
 
-#ifdef SYSCALL_DISPATCH
+#ifdef KERNEL
 
 void applet_init(applet_t* applet, applet_header_t* header,
                  applet_layout_t* layout, applet_privileges_t* privileges) {
@@ -42,6 +42,8 @@ void applet_init(applet_t* applet, applet_header_t* header,
 }
 
 static void applet_clear_memory(applet_t* applet) {
+  mpu_set_active_applet(&applet->layout);
+
   if (applet->layout.data1.size > 0) {
     memset((void*)applet->layout.data1.start, 0, applet->layout.data1.size);
   }
@@ -126,4 +128,4 @@ applet_t* applet_active(void) {
   return (applet_t*)task->applet;
 }
 
-#endif  // SYSCALL_DISPATCH
+#endif  // KERNEL
