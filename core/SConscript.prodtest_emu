@@ -1,20 +1,30 @@
 # pylint: disable=E0602
 
 import os
+import shlex
 import tools, models, ui
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
-PRODUCTION = ARGUMENTS.get('PRODUCTION', '0') == '1'
-BOOTLOADER_DEVEL = ARGUMENTS.get('BOOTLOADER_DEVEL', '0') == '1'
-HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
-UI_DEBUG_OVERLAY = ARGUMENTS.get('UI_DEBUG_OVERLAY', '0') == '1'
+HW_REVISION = 'emulator'
 
 FEATURE_FLAGS = {
     "AES_GCM": True,
 }
 
-FEATURES_WANTED = ["input", "sbu", "nfc", "sd_card", "rgb_led", "usb", "consumption_mask", "optiga", "haptic", "tropic", "ble", "hw_revision", "power_manager", "display"]
+if not models.has_emulator(TREZOR_MODEL):
+    # skip prodtest build
+    env = Environment()
+    def build_prodtest(target,source,env):
+        print(f'prodtest: nothing to build for Model {TREZOR_MODEL}')
+    program_bin = env.Command(
+                 target='prodtest.elf',
+                 source=None,
+                 action=build_prodtest
+             )
+    Return()
+
+FEATURES_WANTED = ["input", "rgb_led", "display", "tropic",  "sd_card", "usb"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -121,8 +131,7 @@ ui.init_ui(TREZOR_MODEL, "prodtest", RUST_UI_FEATURES)
 
 env = Environment(
     ENV=os.environ,
-    CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')),
-    CPPDEFINES_IMPLICIT=[],
+    CFLAGS=ARGUMENTS.get('CFLAGS', '') + f" -DCONFIDENTIAL= -DPRODUCTION={ARGUMENTS.get('PRODUCTION', '0')}",
     CPPDEFPREFIX="-D'",
     CPPDEFSUFFIX="'",
 )
@@ -130,7 +139,6 @@ env = Environment(
 FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
 SOURCE_PRODTEST = [
-    'embed/projects/prodtest/header.S',
     'embed/projects/prodtest/main.c',
     'embed/projects/prodtest/commands.c',
     'embed/projects/prodtest/cmd/prodtest_boardloader.c',
@@ -158,74 +166,74 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/cmd/prodtest_sbu.c',
     'embed/projects/prodtest/cmd/prodtest_touch.c',
     'embed/projects/prodtest/cmd/prodtest_tropic.c',
-    'embed/projects/prodtest/cmd/prodtest_unit_test.c',
-    'embed/projects/prodtest/cmd/prodtest_wpc.c',
+    'embed/projects/prodtest/cmd/prodtest_wpc',
+    'embed/projects/prodtest/emulator.c',
+]
+
+SOURCE_HAL += [
+    'embed/projects/unix/profile.c',
 ]
 
 env.Replace(
     CAT='cat',
     CP='cp',
-    AS='arm-none-eabi-as',
-    AR='arm-none-eabi-ar',
-    CC='arm-none-eabi-gcc',
-    LINK='arm-none-eabi-gcc',
-    SIZE='arm-none-eabi-size',
-    STRIP='arm-none-eabi-strip',
-    OBJCOPY='arm-none-eabi-objcopy',
+    AS='as',
+    AR='ar',
+    CC='gcc',
+    LINK='ld',
+    SIZE='size',
+    STRIP='strip',
+    OBJCOPY='objcopy',
     PYTHON='python',
-    MAKECMAKELISTS='$PYTHON tools/make_cmakelists.py',)
+    MAKECMAKELISTS='$PYTHON tools/make_cmakelists.py', )
 
-env.Replace(
-    TREZOR_MODEL=TREZOR_MODEL, )
+MODEL_AS_NUMBER = str(models.get_hw_model_as_number(TREZOR_MODEL))
 
-ALLPATHS = [
-        'embed/rust',
-        'embed/projects/prodtest',
-        'embed/rtl/inc',
-        'embed/models',
-        'embed/gfx/inc',
-        'embed/sys/bsp/inc',
-        'embed/util/image/inc',
-        'embed/util/rsod/inc',
-        'embed/util/scm_revision/inc',
-        'embed/util/translations/inc',
-        'embed/upymod/modtrezorui',
-    ]
-
-ALLPATHS += CPPPATH_MOD + PATH_HAL
-
+ALLPATHS = ['embed/rust',
+           'embed/projects/prodtest',
+           'embed/rtl/inc',
+           'embed/models',
+           'embed/projects/unix',
+           'embed/gfx/inc',
+           'embed/util/image/inc',
+           'embed/util/rsod/inc',
+           'embed/util/scm_revision/inc',
+           'embed/util/translations/inc',
+       ] + CPPPATH_MOD + PATH_HAL
 
 env.Replace(
     COPT=env.get('ENV').get('OPTIMIZE', '-Os'),
     CCFLAGS='$COPT '
-    '-g3 '
+    '-g '
     '-nostdlib '
-    '-std=gnu11 -Wall -Werror -Wdouble-promotion -Wpointer-arith -Wno-missing-braces -fno-common '
-    '-fsingle-precision-constant -fdata-sections -ffunction-sections '
+    '-std=gnu11 -Wall -Werror -Wpointer-arith -Wno-missing-braces -fno-common '
+    '-fdata-sections -ffunction-sections '
     '-ffreestanding '
     '-fstack-protector-all '
-    +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
-    CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS=['-Tbuild/prodtest/memory.ld', '-Wl,--gc-sections', '-Wl,--print-memory-usage', '-Wl,-Map=build/prodtest/prodtest.map', '-Wl,--warn-common'],
+    + CCFLAGS_MOD,
+    LINKFLAGS='',
     CPPPATH=ALLPATHS,
     CPPDEFINES=[
         'TREZOR_PRODTEST',
+        'TREZOR_EMULATOR',
         'TREZOR_MODEL_'+TREZOR_MODEL,
-        'ARM_USER_MODE',
-        'USE_HAL_DRIVER',
     ] + CPPDEFINES_MOD + CPPDEFINES_HAL,
-    ASFLAGS=env.get('ENV')['CPU_ASFLAGS'],
-    ASPPFLAGS='$CFLAGS $CCFLAGS',
-    )
+    ASPPFLAGS='$CFLAGS $CCFLAGS', )
 
-env.Replace(
-    HEADERTOOL='headertool',
-)
+try:
+    env.ParseConfig('pkg-config --cflags --libs libjpeg')
+except OSError:
+    print("libjpeg not installed, Emulator build is not possible")
+
+try:
+    env.ParseConfig('pkg-config --cflags --libs sdl2 SDL2_image')
+except OSError:
+    print("SDL2 not installed, Emulator build is not possible")
 
 
 env.Replace(
     ALLSOURCES=SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_PRODTEST + SOURCE_HAL,
-    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES'] + env['CPPDEFINES_IMPLICIT']))
+    ALLDEFS=tools.get_defs_for_cmake(env['CPPDEFINES']))
 
 cmake_gen = env.Command(
     target='CMakeLists.txt',
@@ -233,90 +241,49 @@ cmake_gen = env.Command(
     action='$MAKECMAKELISTS --sources $ALLSOURCES --dirs $CPPPATH --defs $ALLDEFS',
 )
 
+#
+# Rust library
+#
+env.get("ENV")["RUST_TARGET"] = os.popen("rustc -vV | sed -n 's/host: //p'").read().strip()
+features = ['prodtest',] + FEATURES_AVAILABLE + RUST_UI_FEATURES
+if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', '0') == '1':
+    profile = 'dev'
+else:
+    profile = 'release'
+
+rust = tools.add_rust_lib(
+    env=env,
+    build='prodtest_emu',
+    profile=profile,
+    features=features,
+    all_paths=ALLPATHS,
+    build_dir=str(Dir('.').abspath),
+)
+
+env.Append(LINKFLAGS=['-lm'])
+
+if env['PLATFORM'] == 'darwin':
+    env.Append(LINKFLAGS=['-Wl,-dead_strip'])
+else:
+    env.Append(LINKFLAGS=['-Wl,--gc-sections'])
 
 #
 # Program objects
 #
 
 obj_program = []
-obj_program.extend(env.Object(source=SOURCE_MOD))
-obj_program.extend(env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-auto-var-init=zero'))
-obj_program.extend(env.Object(source=SOURCE_PRODTEST))
-obj_program.extend(env.Object(source=SOURCE_HAL))
-
-#
-# Rust library
-#
-features = ['prodtest',] + FEATURES_AVAILABLE + RUST_UI_FEATURES
-
-if UI_DEBUG_OVERLAY:
-    features.append('ui_debug_overlay')
-
-
-rust = tools.add_rust_lib(
-    env=env,
-    build='prodtest',
-    profile='release',
-    features=features,
-    all_paths=ALLPATHS,
-    build_dir=str(Dir('.').abspath),
-)
-
-
-if (vh := ARGUMENTS.get("VENDOR_HEADER", None)):
-    VENDORHEADER = vh
-elif (vh := os.environ.get("VENDOR_HEADER", None)):
-    # TODO looking at envvars in a build script is not very nice. But justifiable in case
-    # of vendor header which does not affect reproducibility of the build. Nonetheless,
-    # we should figure out a cleaner way to pass in this argument, without having to teach
-    # the Makefile about it.
-    VENDORHEADER = f'embed/models/{TREZOR_MODEL}/vendorheader/{vh}'
-elif PRODUCTION:
-    VENDORHEADER = f'embed/models/{TREZOR_MODEL}/vendorheader/vendorheader_prodtest_signed_prod.bin'
-elif BOOTLOADER_DEVEL:
-    VENDORHEADER = f'embed/models/{TREZOR_MODEL}/vendorheader/vendorheader_dev_DO_NOT_SIGN_signed_dev.bin'
-else:
-    VENDORHEADER = f'embed/models/{TREZOR_MODEL}/vendorheader/vendorheader_unsafe_signed_prod.bin'
-
-
-tools.embed_raw_binary(
-        obj_program,
-        env,
-        'vendorheader',
-        'embed/projects/firmware/vendorheader.o',
-        VENDORHEADER,
-        )
-
-linkerscript_gen = env.Command(
-    target='memory.ld',
-    source=[f'embed/models/{TREZOR_MODEL}/memory.ld', env.get('ENV')['LINKER_SCRIPT'].format(target='prodtest')],
-    action='$CAT $SOURCES > $TARGET',
-)
+obj_program += env.Object(source=SOURCE_MOD)
+obj_program += env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-auto-var-init=zero')
+obj_program += env.Object(source=SOURCE_PRODTEST)
+obj_program += env.Object(source=SOURCE_HAL)
 
 program_elf = env.Command(
     target='prodtest.elf',
     source=obj_program,
     action=
-    '$LINK -o $TARGET $CCFLAGS $CFLAGS $SOURCES $LINKFLAGS -lc_nano -lgcc -lm',
-)
+    '$CC -o $TARGET $SOURCES $_LIBDIRFLAGS $_LIBFLAGS $LINKFLAGS')
 
-env.Depends(program_elf, linkerscript_gen)
 env.Depends(program_elf, rust)
-
-BINARY_NAME = f"build/prodtest/prodtest-{TREZOR_MODEL}"
-BINARY_NAME += "-" + tools.get_version('embed/projects/prodtest/version.h')
-BINARY_NAME += "-" + tools.get_git_revision_short_hash()
-BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
-BINARY_NAME += ".bin"
 
 if CMAKELISTS != 0:
     env.Depends(program_elf, cmake_gen)
-
-program_bin = env.Command(
-    target='prodtest.bin',
-    source=program_elf,
-    action=[
-        '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .confidential $SOURCE $TARGET',
-        '$HEADERTOOL $TARGET ' + ('-D' if ARGUMENTS.get('PRODUCTION', '0') == '0' else ''),
-        '$CP $TARGET ' + BINARY_NAME,
-    ], )

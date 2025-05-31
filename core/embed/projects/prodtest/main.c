@@ -31,6 +31,7 @@
 #include <util/rsod.h>
 #include <util/unit_properties.h>
 
+#include "commands.h"
 #include "rust_types.h"
 #include "rust_ui_prodtest.h"
 #include "sys/sysevent.h"
@@ -133,6 +134,8 @@ static void vcp_intr(void) { cli_abort(&g_cli); }
 #define VCP_PACKET_LEN 512
 #elif defined(USE_USB_FS)
 #define VCP_PACKET_LEN 64
+#elif defined(TREZOR_EMULATOR)
+#define VCP_PACKET_LEN 64
 #else
 #error "USB type not defined"
 #endif
@@ -171,9 +174,13 @@ static void usb_init_all(void) {
       .rx_intr_byte = 3,  // Ctrl-C
       .iface_num = VCP_IFACE,
       .data_iface_num = 0x01,
+#ifdef TREZOR_EMULATOR
+      .emu_port = 21424,
+#else
       .ep_cmd = 0x02,
       .ep_in = 0x01,
       .ep_out = 0x01,
+#endif
       .polling_interval = 10,
       .max_packet_len = VCP_PACKET_LEN,
   };
@@ -254,7 +261,11 @@ void prodtest_show_homescreen(void) {
   }
 }
 
+#ifndef TREZOR_EMULATOR
 int main(void) {
+#else
+int prodtest_main(void) {
+#endif
   system_init(&rsod_panic_handler);
 
   drivers_init();
@@ -263,12 +274,7 @@ int main(void) {
   // Initialize command line interface
   cli_init(&g_cli, console_read, console_write, NULL);
 
-  extern cli_command_t _prodtest_cli_cmd_section_start;
-  extern cli_command_t _prodtest_cli_cmd_section_end;
-
-  cli_set_commands(
-      &g_cli, &_prodtest_cli_cmd_section_start,
-      &_prodtest_cli_cmd_section_end - &_prodtest_cli_cmd_section_start);
+  cli_set_commands(&g_cli, commands_get_ptr(), commands_count());
 
 #ifdef USE_OPTIGA
   optiga_init();

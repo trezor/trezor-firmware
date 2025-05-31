@@ -21,6 +21,8 @@
 
 #include <rtl/cli.h>
 
+#include "commands.h"
+
 static void prodtest_help(cli_t* cli) {
   const char* prefix = cli_arg(cli, "prefix");
   size_t prefix_len = strlen(prefix);
@@ -36,12 +38,8 @@ static void prodtest_help(cli_t* cli) {
     cli_trace(cli, "Available commands (filtered):");
   }
 
-  extern cli_command_t _prodtest_cli_cmd_section_start;
-  extern cli_command_t _prodtest_cli_cmd_section_end;
-
-  cli_command_t* cmd = &_prodtest_cli_cmd_section_start;
-
-  while (cmd < &_prodtest_cli_cmd_section_end) {
+  const cli_command_t* cmd = commands_get_ptr();
+  for (int i = 0; i < commands_count(); i++) {
     if (cmd->name[0] != '$' && strncmp(cmd->name, prefix, prefix_len) == 0) {
       cli_trace(cli, " %s - %s", cmd->name, cmd->info);
     }

@@ -16,6 +16,7 @@ BOOTLOADER_BUILD_DIR  = $(BUILD_DIR)/bootloader
 BOOTLOADER_CI_BUILD_DIR   = $(BUILD_DIR)/bootloader_ci
 BOOTLOADER_EMU_BUILD_DIR  = $(BUILD_DIR)/bootloader_emu
 PRODTEST_BUILD_DIR    = $(BUILD_DIR)/prodtest
+PRODTEST_EMU_BUILD_DIR    = $(BUILD_DIR)/prodtest_emu
 REFLASH_BUILD_DIR     = $(BUILD_DIR)/reflash
 KERNEL_BUILD_DIR      = $(BUILD_DIR)/kernel
 FIRMWARE_BUILD_DIR    = $(BUILD_DIR)/firmware
@@ -294,6 +295,9 @@ build_bootloader_emu_debug: ## build the unix bootloader emulator
 
 build_prodtest: ## build production test firmware
 	$(SCONS) $(PRODTEST_BUILD_DIR)/prodtest.bin
+
+build_prodtest_emu: ## build the unix prodtest emulator
+	$(SCONS) $(PRODTEST_EMU_BUILD_DIR)/prodtest.elf
 
 build_reflash: ## build reflash firmware + reflash image
 	$(SCONS) $(REFLASH_BUILD_DIR)/reflash.bin

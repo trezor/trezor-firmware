@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .. import get_hw_model_as_number
+from ..unix_common import unix_common_files
 
 
 def configure(
@@ -16,6 +17,8 @@ def configure(
     hw_model = get_hw_model_as_number("T3W1")
     hw_revision = 0
     mcu = "STM32U5G9xx"
+
+    unix_common_files(env, defines, sources, paths)
 
     defines += [
         "FRAMEBUFFER",
@@ -61,7 +64,6 @@ def configure(
 
     if "tropic" in features_wanted:
         sources += [
-            "embed/sec/secret/unix/secret.c",
             "embed/sec/tropic/tropic.c",
             "embed/sec/tropic/unix/tropic01.c",
             "vendor/libtropic/src/libtropic.c",
