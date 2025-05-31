@@ -518,6 +518,7 @@ impl FirmwareUI for UIDelizia {
         description: Option<TString<'static>>,
         extra: Option<TString<'static>>,
         message: Obj,
+        amount_subtitle: Option<TString<'static>>,
         amount: Option<Obj>,
         chunkify: bool,
         text_mono: bool,
@@ -548,7 +549,7 @@ impl FirmwareUI for UIDelizia {
 
         let confirm_amount = amount.map(|amount| {
             ConfirmValue::new(TR::words__amount.into(), amount, None)
-                .with_subtitle(subtitle)
+                .with_subtitle(amount_subtitle)
                 .with_menu_button()
                 .with_swipeup_footer(None)
                 .with_text_mono(text_mono)

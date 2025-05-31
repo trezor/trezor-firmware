@@ -170,6 +170,7 @@ pub trait FirmwareUI {
         description: Option<TString<'static>>,
         extra: Option<TString<'static>>,
         message: Obj,        // TODO: replace Obj
+        amount_subtitle: Option<TString<'static>>,
         amount: Option<Obj>, // TODO: replace Obj
         chunkify: bool,
         text_mono: bool,
