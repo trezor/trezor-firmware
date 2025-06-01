@@ -110,8 +110,7 @@ pub fn new_get_address(
             TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
             TextScreenMsg::Menu => Some(FlowMsg::Info),
         })
-        .one_button_request(ButtonRequest::from_num(br_code, br_name))
-        .with_pages(|address_pages| address_pages + 1);
+        .one_button_request(ButtonRequest::from_num(br_code, br_name));
 
     // Menu
     let content_menu = VerticalMenuScreen::new(
