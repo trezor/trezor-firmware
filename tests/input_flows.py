@@ -921,10 +921,10 @@ class InputFlowShowXpubQRCode(InputFlowBase):
             br = yield
             layout = self.debug.read_layout()
 
-        # In case of page overflow, paginete to the last page
+        # In case of page overflow, paginate to the last page
         # The last page is the confirm page
-        if br.pages > 2:
-            for _ in range(br.pages - 2):
+        if br.pages > 1:
+            for _ in range(br.pages - 1):
                 self.debug.click(self.debug.screen_buttons.ok())
 
         assert layout.subtitle() in (TR.address__public_key, "XPUB")
