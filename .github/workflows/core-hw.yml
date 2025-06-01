@@ -39,9 +39,11 @@ jobs:
       STORAGE_INSECURE_TESTING_MODE: 1
       BOOTLOADER_DEVEL: ${{ matrix.model == 'T2B1' && '1' || '0' }}
       # TODO: enable SD-related tests after fixing #4924
+      # Disable authenticity test since it requires DISABLE_OPTIGA=0
       # 5.5h pytest global timeout
       TESTOPTS: >-
         -m 'not sd_card'
+        -k 'not test_authenticate_device'
         --durations=50
         --session-timeout 19800
         --retries=5
