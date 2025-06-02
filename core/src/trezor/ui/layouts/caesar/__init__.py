@@ -1379,7 +1379,7 @@ async def confirm_signverify(
         description=None,
         value=message,
         verb=None,
-        verb_cancel="^",
+        verb_cancel="x",
         hold=not verify,
         chunkify=chunkify,
     )
