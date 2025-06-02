@@ -32,7 +32,6 @@ env:
     |T3B1 Safe 3    |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_persistence_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_persistence_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_persistence_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_persistence_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_persistence_test/master_diff.html))||
     |T3T1 Safe 5    |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_device_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_device_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_device_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_device_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_device_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_click_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_click_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_click_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_click_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_click_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_persistence_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_persistence_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_persistence_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_persistence_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_persistence_test/master_diff.html))||
     |T3W1           |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_device_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_device_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_device_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_device_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_device_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_click_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_click_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_click_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_click_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_click_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_persistence_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_persistence_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_persistence_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_persistence_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_persistence_test/master_diff.html))||
-    |All            |<img src="https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/status.png" width="20px" height="20px" /> [main](https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/index.html)([screens](https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/master_diff.html)) ||
   TREZOR_PYTEST_LOGS_DIR: ${{ github.workspace }}/tests/
 
 jobs:
@@ -697,44 +696,6 @@ jobs:
           path: core/htmlcov
           retention-days: 7
           include-hidden-files: true
-
-  core_ui_main:
-    name: UI diff from main branch
-    runs-on: ubuntu-latest
-    needs:
-      - core_click_test
-      - core_persistence_test
-      - core_device_test
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-      - name: Initialize and update ts-tvl
-        run: |
-          git submodule update --init --recursive vendor/ts-tvl
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: ui-records-*
-          merge-multiple: true
-      - uses: ./.github/actions/environment
-      - name: Configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
-          aws-region: eu-west-1
-        continue-on-error: true
-      - run: "for F in screens_*.tar; do tar xf $F; rm $F; done || true"
-      - run: nix-shell --run "poetry run python -m tests.ui_tests.reporting master-diff T2T1 T3B1 T3T1 T3W1"
-      - run: |
-          mv tests/ui_tests/reports/master_diff .
-          if [ "${{ job.status }}" = "success" ]; then
-            cp .github/actions/ui-report/success.png master_diff/status.png
-          else
-            cp .github/actions/ui-report/failure.png master_diff/status.png
-          fi
-      - name: Upload diff from main branch
-        run: |
-          aws s3 sync --only-show-errors master_diff s3://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}
-        continue-on-error: true
 
   core_ui_comment:
     name: Post comment with UI diff URLs
