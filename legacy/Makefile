@@ -45,10 +45,10 @@ test_emu: ## run integration tests
 	./script/test $(TESTOPTS)
 
 test_emu_ui: ## run ui integration tests
-	./script/test --ui=test --ui-check-missing $(TESTOPTS)
+	./script/test --ui=test --ui-check-missing --do-master-diff $(TESTOPTS)
 
 test_emu_ui_record: ## record and hash screens for ui integration tests
-	./script/test --ui=record --ui-check-missing $(TESTOPTS)
+	./script/test --ui=record --ui-check-missing --do-master-diff $(TESTOPTS)
 
 flash_firmware_jlink:
 	JLinkExe -nogui 1 -commanderscript firmware/firmware_flash.jlink
