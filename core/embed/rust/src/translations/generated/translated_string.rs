@@ -157,8 +157,6 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     cardano__confirming_pool_registration = 130,  // "Confirming pool registration as owner."
     #[cfg(feature = "universal_fw")]
-    cardano__confirming_transction = 131,  // "Confirming a transaction."
-    #[cfg(feature = "universal_fw")]
     cardano__cost = 132,  // "Cost"
     #[cfg(feature = "universal_fw")]
     cardano__credential_mismatch = 133,  // "Credential doesn't match payment credential."
@@ -1437,6 +1435,8 @@ pub enum TranslatedString {
     ethereum__title_all_input_data_template = 1031,  // "All input data ({0} bytes)"
     auto_lock__description = 1032,  // "Set the time before your Trezor locks automatically."
     plurals__lock_after_x_days = 1033,  // "day|days"
+    #[cfg(feature = "universal_fw")]
+    cardano__confirming_transaction = 1034,  // "Confirming a transaction."
 }
 
 impl TranslatedString {
@@ -1600,8 +1600,6 @@ impl TranslatedString {
             (Self::cardano__confirming_a_plutus_transaction, "Confirming a Plutus transaction."),
             #[cfg(feature = "universal_fw")]
             (Self::cardano__confirming_pool_registration, "Confirming pool registration as owner."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__confirming_transction, "Confirming a transaction."),
             #[cfg(feature = "universal_fw")]
             (Self::cardano__cost, "Cost"),
             #[cfg(feature = "universal_fw")]
@@ -3032,6 +3030,8 @@ impl TranslatedString {
             (Self::ethereum__title_all_input_data_template, "All input data ({0} bytes)"),
             (Self::auto_lock__description, "Set the time before your Trezor locks automatically."),
             (Self::plurals__lock_after_x_days, "day|days"),
+            #[cfg(feature = "universal_fw")]
+            (Self::cardano__confirming_transaction, "Confirming a transaction."),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3209,7 +3209,7 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__confirming_pool_registration, Self::cardano__confirming_pool_registration),
         #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_cardano__confirming_transction, Self::cardano__confirming_transction),
+        (Qstr::MP_QSTR_cardano__confirming_transaction, Self::cardano__confirming_transaction),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__cost, Self::cardano__cost),
         #[cfg(feature = "universal_fw")]

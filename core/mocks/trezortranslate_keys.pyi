@@ -145,7 +145,7 @@ class TR:
     cardano__confirming_a_multisig_transaction: str = "Confirming a multisig transaction."
     cardano__confirming_a_plutus_transaction: str = "Confirming a Plutus transaction."
     cardano__confirming_pool_registration: str = "Confirming pool registration as owner."
-    cardano__confirming_transction: str = "Confirming a transaction."
+    cardano__confirming_transaction: str = "Confirming a transaction."
     cardano__cost: str = "Cost"
     cardano__credential_mismatch: str = "Credential doesn't match payment credential."
     cardano__datum_hash: str = "Datum hash:"
