@@ -517,7 +517,8 @@ static void cert_write(cli_t* cli, uint16_t oid) {
   cli_ok(cli, "");
 }
 
-static void pubkey_read(cli_t* cli, uint16_t oid) {
+static void pubkey_read(cli_t* cli, uint16_t oid,
+                        const uint8_t masking_key[ECDSA_PRIVATE_KEY_SIZE]) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
     return;
@@ -543,17 +544,41 @@ static void pubkey_read(cli_t* cli, uint16_t oid) {
       0x4f, 0xe3, 0x42, 0xe2, 0xfe, 0x1a, 0x7f, 0x9b, 0x8e, 0xe7, 0xeb, 0x4a,
       0x7c, 0x0f, 0x9e, 0x16, 0x2b, 0xce, 0x33, 0x57, 0x6b, 0x31, 0x5e, 0xce,
       0xcb, 0xb6, 0x40, 0x68, 0x37, 0xbf, 0x51, 0xf5};
-  uint8_t public_key[32] = {0};
-  size_t public_key_size = 0;
+  uint8_t public_key_x[ECDSA_COORDINATE_SIZE] = {0};
+  size_t public_key_x_size = 0;
   optiga_result ret =
       optiga_calc_ssec(OPTIGA_CURVE_P256, oid, BASE_POINT, sizeof(BASE_POINT),
-                       public_key, sizeof(public_key), &public_key_size);
+                       public_key_x, sizeof(public_key_x), &public_key_x_size);
   if (OPTIGA_SUCCESS != ret) {
     cli_error(cli, CLI_ERROR, "optiga_calc_ssec error %d.", ret);
     return;
   }
 
-  cli_ok_hexdata(cli, public_key, public_key_size);
+#ifdef SECRET_KEY_MASKING
+  if (masking_key != NULL) {
+    // Since ecdsa_unmask_public_key() needs to work with an ECC point and we
+    // only have the point's x-coordinate, we arbitrarily pick one of the two
+    // possible y-coordinates by assigning 0x02 to the first byte. After
+    // multiplying the point by the inverse of the masking key we only return
+    // the x-coordinate, which does not depend on the arbitrary choice we made
+    // for the y-coordinate here.
+    uint8_t masked_public_key[ECDSA_PUBLIC_KEY_COMPRESSED_SIZE] = {0x02};
+    if (public_key_x_size != sizeof(public_key_x)) {
+      cli_error(cli, CLI_ERROR, "unexpected public key size");
+      return;
+    }
+    memcpy(&masked_public_key[1], public_key_x, sizeof(public_key_x));
+
+    uint8_t unmasked_pub_key[ECDSA_PUBLIC_KEY_SIZE] = {0};
+    if (ecdsa_unmask_public_key(&nist256p1, masking_key, masked_public_key,
+                                unmasked_pub_key) != 0) {
+      cli_error(cli, CLI_ERROR, "key masking error");
+      return;
+    }
+    memcpy(public_key_x, &unmasked_pub_key[1], sizeof(public_key_x));
+  }
+#endif  // SECRET_KEY_MASKING
+  cli_ok_hexdata(cli, public_key_x, public_key_x_size);
 }
 
 static void prodtest_optiga_keyfido_write(cli_t* cli) {
@@ -670,6 +695,16 @@ static void prodtest_optiga_keyfido_write(cli_t* cli) {
     return;
   }
 
+#ifdef SECRET_KEY_MASKING
+  uint8_t masking_key[ECDSA_PRIVATE_KEY_SIZE] = {0};
+  if (secret_key_optiga_masking(masking_key) != sectrue ||
+      ecdsa_mask_scalar(&nist256p1, masking_key, fido_key, fido_key) != 0) {
+    memzero(fido_key, sizeof(fido_key));
+    cli_error(cli, CLI_ERROR, "key masking error.");
+    return;
+  }
+#endif  // SECRET_KEY_MASKING
+
   // Store the FIDO attestation key.
   ret = optiga_set_priv_key(OID_KEY_FIDO, fido_key);
   memzero(fido_key, sizeof(fido_key));
@@ -724,7 +759,17 @@ static void prodtest_optiga_certfido_write(cli_t* cli) {
 }
 
 static void prodtest_optiga_keyfido_read(cli_t* cli) {
-  pubkey_read(cli, OID_KEY_FIDO);
+#ifdef SECRET_KEY_MASKING
+  uint8_t masking_key[ECDSA_PRIVATE_KEY_SIZE] = {0};
+  if (secret_key_optiga_masking(masking_key) != sectrue) {
+    cli_error(cli, CLI_ERROR, "masking key not available");
+    return;
+  }
+  pubkey_read(cli, OID_KEY_FIDO, masking_key);
+  memzero(masking_key, sizeof(masking_key));
+#else
+  pubkey_read(cli, OID_KEY_FIDO, NULL);
+#endif  // SECRET_KEY_MASKING
 }
 
 // clang-format off
