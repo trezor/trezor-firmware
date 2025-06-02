@@ -739,17 +739,17 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 
     case SYSCALL_POWER_MANAGER_HIBERNATE: {
       args[0] = pm_hibernate();
-    }
+    } break;
 
     case SYSCALL_POWER_MANAGER_GET_STATE: {
       pm_state_t *status = (pm_state_t *)args[0];
       args[0] = pm_get_state__verified(status);
-    }
+    } break;
 
     case SYSCALL_POWER_MANAGER_GET_EVENTS: {
       pm_event_t *status = (pm_event_t *)args[0];
       args[0] = pm_get_events__verified(status);
-    }
+    } break;
 #endif
 
 #ifdef USE_HW_JPEG_DECODER
