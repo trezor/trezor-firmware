@@ -31,6 +31,9 @@ pub mod ui_bootloader;
 #[cfg(feature = "micropython")]
 pub mod ui_firmware;
 
+#[cfg(feature = "prodtest")]
+mod prodtest;
+
 pub struct UIEckhart;
 
 impl CommonUI for UIEckhart {
