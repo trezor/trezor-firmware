@@ -19,6 +19,7 @@
 
 #ifdef USE_OPTIGA
 
+#include <trezor_model.h>
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
@@ -164,10 +165,10 @@ static bool set_metadata(cli_t* cli, uint16_t oid,
 }
 
 void pair_optiga(cli_t* cli) {
-  uint8_t secret[SECRET_KEY_LEN] = {0};
+  uint8_t secret[32] = {0};
 
-  if (secret_optiga_get(secret) != sectrue) {
-    if (secret_optiga_writable() != sectrue) {
+  if (secret_key_get(SECRET_OPTIGA_SLOT, secret, sizeof(secret)) != sectrue) {
+    if (secret_key_writable(SECRET_OPTIGA_SLOT) != sectrue) {
       // optiga pairing secret is unwritable, so fail
       optiga_pairing_state = OPTIGA_PAIRING_ERR_WRITE_FLASH;
       return;
@@ -203,14 +204,14 @@ void pair_optiga(cli_t* cli) {
     }
 
     // Store the pairing secret in the flash memory.
-    if (sectrue != secret_optiga_set(secret)) {
+    if (sectrue != secret_key_set(SECRET_OPTIGA_SLOT, secret, sizeof(secret))) {
       optiga_pairing_state = OPTIGA_PAIRING_ERR_WRITE_FLASH;
       return;
     }
 
     // Reload the pairing secret from the flash memory.
     memzero(secret, sizeof(secret));
-    if (sectrue != secret_optiga_get(secret)) {
+    if (sectrue != secret_key_get(SECRET_OPTIGA_SLOT, secret, sizeof(secret))) {
       optiga_pairing_state = OPTIGA_PAIRING_ERR_READ_FLASH;
       return;
     }

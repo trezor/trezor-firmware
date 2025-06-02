@@ -29,11 +29,22 @@
 static int32_t get_offset(monoctr_type_t type) {
   switch (type) {
     case MONOCTR_BOOTLOADER_VERSION:
-      return SECRET_MONOTONIC_COUNTER_OFFSET;
+      return SECRET_MONOTONIC_COUNTER_0_OFFSET;
     case MONOCTR_FIRMWARE_VERSION:
-      return SECRET_MONOTONIC_COUNTER2_OFFSET;
+      return SECRET_MONOTONIC_COUNTER_1_OFFSET;
     default:
       return -1;
+  }
+}
+
+static size_t get_length(monoctr_type_t type) {
+  switch (type) {
+    case MONOCTR_BOOTLOADER_VERSION:
+      return SECRET_MONOTONIC_COUNTER_0_LEN;
+    case MONOCTR_FIRMWARE_VERSION:
+      return SECRET_MONOTONIC_COUNTER_1_LEN;
+    default:
+      return 0;
   }
 }
 
@@ -72,13 +83,14 @@ secbool monoctr_write(monoctr_type_t type, uint8_t value) {
 
 secbool monoctr_read(monoctr_type_t type, uint8_t *value) {
   int32_t offset = get_offset(type);
+  size_t length = get_length(type);
 
   if (offset < 0) {
     return secfalse;
   }
 
-  const uint8_t *counter_addr = flash_area_get_address(
-      &SECRET_AREA, offset, SECRET_MONOTONIC_COUNTER_LEN);
+  const uint8_t *counter_addr =
+      flash_area_get_address(&SECRET_AREA, offset, length);
 
   if (counter_addr == NULL) {
     return secfalse;
@@ -90,7 +102,7 @@ secbool monoctr_read(monoctr_type_t type, uint8_t *value) {
 
   int i = 0;
 
-  for (i = 0; i < SECRET_MONOTONIC_COUNTER_LEN / 16; i++) {
+  for (i = 0; i < length / 16; i++) {
     secbool not_cleared = sectrue;
     for (int j = 0; j < 16; j++) {
       if (counter_addr[i * 16 + j] != 0xFF) {
@@ -106,7 +118,7 @@ secbool monoctr_read(monoctr_type_t type, uint8_t *value) {
     }
   }
 
-  for (; i < SECRET_MONOTONIC_COUNTER_LEN / 16; i++) {
+  for (; i < length / 16; i++) {
     secbool not_cleared = sectrue;
     for (int j = 0; j < 16; j++) {
       if (counter_addr[i * 16 + j] != 0xFF) {

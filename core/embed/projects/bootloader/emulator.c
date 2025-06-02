@@ -155,8 +155,7 @@ int main(int argc, char **argv) {
       } break;
 #ifdef LOCKABLE_BOOTLOADER
       case 'l':
-        // write bootloader-lock secret
-        secret_write_header();
+        secret_lock_bootloader();
         break;
 #endif
       default:
