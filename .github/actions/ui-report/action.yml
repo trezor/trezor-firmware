@@ -31,7 +31,6 @@ runs:
         mv tests/ui_tests/fixtures.*.json $OUTDIR || true
         mv tests/trezor*.log $OUTDIR || true
         diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json || true
-        tar -cf screens_$MODELJOB.tar tests/ui_tests/screens || true
 
         if [ "${{ inputs.status }}" = "success" ]; then
           cp .github/actions/ui-report/success.png $OUTDIR/status.png
@@ -56,10 +55,3 @@ runs:
 
         echo "[UI test report](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/${{ inputs.model }}-${{ inputs.lang }}-${{ github.job }}/index.html)" >> $GITHUB_STEP_SUMMARY
       shell: sh
-    - uses: actions/upload-artifact@v4
-      with:
-        name: ui-records-${{ github.job }}-${{ strategy.job-index }}
-        path: |
-          # used by core_ui_main
-          screens_${{ inputs.model }}-${{ inputs.lang }}-${{ github.job }}.tar
-        retention-days: 1  # not useful after workflow finishes
