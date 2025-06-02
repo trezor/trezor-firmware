@@ -1164,6 +1164,10 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///         def ble_event(self, event: int, data: bytes) -> LayoutState | None:
     ///             """Receive a BLE events."""
     ///
+    ///     if utils.USE_POWER_MANAGER:
+    ///         def pm_event(self, flags: int) -> LayoutState | None:
+    ///             """Receive a power management event with packed flags."""
+    ///
     ///     def progress_event(self, value: int, description: str) -> LayoutState | None:
     ///         """Receive a progress event."""
     ///

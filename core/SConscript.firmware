@@ -776,6 +776,7 @@ if FROZEN:
         ui_layout=ui.get_ui_layout(TREZOR_MODEL),
         tropic='tropic' in FEATURES_AVAILABLE,
         thp=THP,
+        power_manager='power_manager' in FEATURES_AVAILABLE,
         )
 
     source_mpyc = env.FrozenCFile(

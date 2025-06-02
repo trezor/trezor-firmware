@@ -596,6 +596,8 @@ STATIC mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Whether the hardware supports touch screen."""
 /// USE_BUTTON: bool
 /// """Whether the hardware supports two-button input."""
+/// USE_POWER_MANAGER: bool
+/// """Whether the hardware has a battery."""
 /// MODEL: str
 /// """Model name."""
 /// MODEL_FULL_NAME: str
@@ -710,6 +712,11 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_USE_BUTTON), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_USE_BUTTON), mp_const_false},
+#endif
+#ifdef USE_POWER_MANAGER
+    {MP_ROM_QSTR(MP_QSTR_USE_POWER_MANAGER), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_POWER_MANAGER), mp_const_false},
 #endif
     {MP_ROM_QSTR(MP_QSTR_MODEL), MP_ROM_PTR(&mod_trezorutils_model_name_obj)},
     {MP_ROM_QSTR(MP_QSTR_MODEL_FULL_NAME),

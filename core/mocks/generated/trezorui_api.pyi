@@ -25,6 +25,9 @@ class LayoutObj(Generic[T]):
     if utils.USE_BLE:
         def ble_event(self, event: int, data: bytes) -> LayoutState | None:
             """Receive a BLE events."""
+    if utils.USE_POWER_MANAGER:
+        def pm_event(self, flags: int) -> LayoutState | None:
+            """Receive a power management event with packed flags."""
     def progress_event(self, value: int, description: str) -> LayoutState | None:
         """Receive a progress event."""
     def usb_event(self, connected: bool) -> LayoutState | None:
