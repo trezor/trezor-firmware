@@ -152,6 +152,8 @@ void prodtest_pm_fuel_gauge_monitor(cli_t* cli) {
   }
 
   cli_ok(cli, "");
+
+  prodtest_show_homescreen();
 }
 
 void prodtest_pm_report(cli_t* cli) {
@@ -444,4 +446,4 @@ PRODTEST_CLI_CMD(
   .args = "<limit>"
 );
 
-#endif /* USE POWER_MANAGER */
+#endif /* USE_POWER_MANAGER */
