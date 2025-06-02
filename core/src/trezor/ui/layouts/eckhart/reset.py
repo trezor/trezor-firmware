@@ -26,24 +26,36 @@ def show_share_words(
         )
     words_count = len(share_words)
 
+    # BIP39 and 1-of-1 SLIP39
     if share_index is None:
-        secondary = TR.reset__words_may_repeat
+        instructions = [
+            TR.reset__write_down_words_template.format(words_count),
+            TR.reset__words_may_repeat,
+        ]
         instructions_verb = None
         text_check = TR.reset__check_backup_instructions
-    elif share_index == 0:
-        secondary = TR.reset__repeat_for_all_shares
+    # 1st share of SLIP39 with multiple shares
+    elif share_index == 0 and group_index is None:
+        instructions = [
+            TR.reset__write_down_words_template.format(words_count),
+            TR.reset__repeat_for_all_shares,
+        ]
         instructions_verb = TR.instructions__shares_start_with_1
         text_check = TR.reset__check_share_backup_template.format(share_index + 1)
-
+    # remaining shares of SLIP39 with multiple shares
+    elif share_index > 0 and group_index is None:
+        instructions = []
+        instructions_verb = None
+        text_check = TR.reset__check_share_backup_template.format(share_index + 1)
+    # super shamir
     else:
-        secondary = TR.reset__words_may_repeat
+        instructions = [
+            TR.reset__write_down_words_template.format(words_count),
+            TR.reset__words_may_repeat,
+        ]
         instructions_verb = None
         text_check = TR.reset__check_share_backup_template.format(share_index + 1)
 
-    instructions = [
-        TR.reset__write_down_words_template.format(words_count),
-        secondary,
-    ]
     text_confirm = TR.reset__words_written_down_template.format(words_count)
 
     return raise_if_not_confirmed(

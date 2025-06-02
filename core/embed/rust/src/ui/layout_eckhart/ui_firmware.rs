@@ -1218,11 +1218,14 @@ impl FirmwareUI for UIEckhart {
         text_confirm: TString<'static>,
         text_check: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let mut instructions_paragraphs = ParagraphVecShort::new();
-        for item in IterBuf::new().try_iterate(instructions)? {
-            let text: TString = item.try_into()?;
-            instructions_paragraphs.add(Paragraph::new(&theme::TEXT_REGULAR, text));
-        }
+        let instructions_paragraphs = {
+            let mut vec = ParagraphVecShort::new();
+            for item in IterBuf::new().try_iterate(instructions)? {
+                let text: TString = item.try_into()?;
+                vec.add(Paragraph::new(&theme::TEXT_REGULAR, text));
+            }
+            vec.is_empty().then(|| None).unwrap_or_else(|| Some(vec))
+        };
 
         let flow = flow::show_share_words::new_show_share_words_flow(
             words,

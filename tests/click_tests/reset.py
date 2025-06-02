@@ -116,12 +116,15 @@ def set_selection(debug: "DebugLink", diff: int) -> None:
 def read_words(debug: "DebugLink", do_htc: bool = True) -> list[str]:
     words: list[str] = []
 
+    # introductory screen
     if debug.layout_type is LayoutType.Caesar:
         debug.press_right()
     elif debug.layout_type is LayoutType.Delizia:
         debug.swipe_up()
     elif debug.layout_type is LayoutType.Eckhart:
-        debug.click(debug.screen_buttons.ok())
+        if "ShareWordsInner" not in debug.read_layout().all_components():
+            debug.click(debug.screen_buttons.ok())
+        assert "ShareWordsInner" in debug.read_layout().all_components()
 
     # Swiping through all the pages and loading the words
     layout = debug.read_layout()

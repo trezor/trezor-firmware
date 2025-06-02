@@ -3,7 +3,7 @@ use crate::{
     strutil::TString,
     translations::TR,
     ui::{
-        button_request::ButtonRequestCode,
+        button_request::{ButtonRequest, ButtonRequestCode},
         component::{
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort},
             ButtonRequestExt, ComponentExt,
@@ -66,14 +66,24 @@ impl FlowController for ShowShareWords {
 pub fn new_show_share_words_flow(
     words: Vec<TString<'static>, 33>,
     subtitle: TString<'static>,
-    instructions_paragraphs: ParagraphVecShort<'static>,
+    instructions_paragraphs: Option<ParagraphVecShort<'static>>,
     instructions_verb: Option<TString<'static>>,
     text_confirm: TString<'static>,
     text_check: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
+    let br: ButtonRequest = ButtonRequestCode::ResetDevice.with_name("share_words");
+    // Determine whether to show the instructions or not
+    let has_intro = instructions_paragraphs.is_some();
     let nwords = words.len();
+    let initial_state = if instructions_paragraphs.is_some() {
+        &ShowShareWords::Instruction
+    } else {
+        &ShowShareWords::ShareWords
+    };
+
     let instruction = TextScreen::new(
         instructions_paragraphs
+            .unwrap_or_default()
             .into_paragraphs()
             .with_placement(LinearPlacement::vertical().with_spacing(24)),
     )
@@ -86,9 +96,7 @@ pub fn new_show_share_words_flow(
         TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
         _ => Some(FlowMsg::Cancelled),
-    })
-    .one_button_request(ButtonRequestCode::ResetDevice.with_name("share_words"))
-    .with_pages(move |_| nwords + 2);
+    });
 
     let share_words = ShareWordsScreen::new(words)
         .with_subtitle(subtitle)
@@ -141,10 +149,27 @@ pub fn new_show_share_words_flow(
         VerticalMenuScreenMsg::Close => Some(FlowMsg::Cancelled),
         _ => None,
     });
-    let mut res = SwipeFlow::new(&ShowShareWords::Instruction)?;
-    res.add_page(&ShowShareWords::Instruction, instruction)?
+    let mut res = SwipeFlow::new(initial_state)?;
+    // If there are no instructions, share words page sends the BR
+    if has_intro {
+        res.add_page(
+            &ShowShareWords::Instruction,
+            instruction
+                .one_button_request(br)
+                .with_pages(move |_| nwords + 2),
+        )?
         .add_page(&ShowShareWords::ShareWords, share_words)?
-        .add_page(&ShowShareWords::Confirm, confirm)?
+    } else {
+        res.add_page(&ShowShareWords::Instruction, instruction)?
+            .add_page(
+                &ShowShareWords::ShareWords,
+                share_words
+                    .one_button_request(br)
+                    .with_pages(move |_| nwords + 1),
+            )?
+    };
+
+    res.add_page(&ShowShareWords::Confirm, confirm)?
         .add_page(&ShowShareWords::CheckBackupIntro, check_backup_intro)?
         .add_page(&ShowShareWords::CheckBackupMenu, check_backup_menu)?;
     Ok(res)
