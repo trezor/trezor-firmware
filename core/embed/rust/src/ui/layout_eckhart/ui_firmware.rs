@@ -1222,7 +1222,9 @@ impl FirmwareUI for UIEckhart {
         title: Option<TString<'static>>,
         button: Option<TString<'static>>,
     ) -> Result<Gc<LayoutObj>, Error> {
-        let paragraphs = Paragraph::new(&theme::TEXT_REGULAR, text).into_paragraphs();
+        let paragraphs = Paragraph::new(&theme::TEXT_REGULAR, text)
+            .into_paragraphs()
+            .with_placement(LinearPlacement::vertical());
 
         let mut screen = TextScreen::new(paragraphs);
         if let Some(title) = title {

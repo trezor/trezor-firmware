@@ -696,7 +696,7 @@ pub enum TranslatedString {
     passphrase__always_on_device = 433,  // "Always enter your passphrase on Trezor?"
     passphrase__from_host_not_shown = 434,  // "Passphrase provided by host will be used but will not be displayed due to the device settings."
     passphrase__wallet = 435,  // "Passphrase wallet"
-    passphrase__hide = 436,  // "Hide passphrase coming from host?"
+    passphrase__hide = 436,  // {"Bolt": "Hide passphrase coming from host?", "Caesar": "Hide passphrase coming from host?", "Delizia": "Hide passphrase coming from host?", "Eckhart": "Hide your passphrase on Trezor entered on host device?"}
     passphrase__next_screen_will_show_passphrase = 437,  // "The next screen shows your passphrase."
     passphrase__please_enter = 438,  // "Please enter your passphrase."
     passphrase__revoke_on_device = 439,  // "Do you want to revoke the passphrase on device setting?"
@@ -1437,6 +1437,9 @@ pub enum TranslatedString {
     auto_lock__description = 1032,  // "Set the time before your Trezor locks automatically."
     plurals__lock_after_x_days = 1033,  // "day|days"
     firmware_update__restart = 1034,  // "Trezor will restart after update."
+    passphrase__access_hidden_wallet = 1035,  // "Access hidden wallet"
+    passphrase__hidden_wallet = 1036,  // "Hidden wallet"
+    passphrase__show = 1037,  // "Show passphrase"
 }
 
 impl TranslatedString {
@@ -2170,7 +2173,14 @@ impl TranslatedString {
             (Self::passphrase__always_on_device, "Always enter your passphrase on Trezor?"),
             (Self::passphrase__from_host_not_shown, "Passphrase provided by host will be used but will not be displayed due to the device settings."),
             (Self::passphrase__wallet, "Passphrase wallet"),
+            #[cfg(feature = "layout_bolt")]
             (Self::passphrase__hide, "Hide passphrase coming from host?"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::passphrase__hide, "Hide passphrase coming from host?"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::passphrase__hide, "Hide passphrase coming from host?"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::passphrase__hide, "Hide your passphrase on Trezor entered on host device?"),
             (Self::passphrase__next_screen_will_show_passphrase, "The next screen shows your passphrase."),
             (Self::passphrase__please_enter, "Please enter your passphrase."),
             (Self::passphrase__revoke_on_device, "Do you want to revoke the passphrase on device setting?"),
@@ -3032,6 +3042,9 @@ impl TranslatedString {
             (Self::auto_lock__description, "Set the time before your Trezor locks automatically."),
             (Self::plurals__lock_after_x_days, "day|days"),
             (Self::firmware_update__restart, "Trezor will restart after update."),
+            (Self::passphrase__access_hidden_wallet, "Access hidden wallet"),
+            (Self::passphrase__hidden_wallet, "Hidden wallet"),
+            (Self::passphrase__show, "Show passphrase"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3839,14 +3852,17 @@ impl TranslatedString {
         (Qstr::MP_QSTR_nem__unknown_mosaic, Self::nem__unknown_mosaic),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_nostr__event_kind_template, Self::nostr__event_kind_template),
+        (Qstr::MP_QSTR_passphrase__access_hidden_wallet, Self::passphrase__access_hidden_wallet),
         (Qstr::MP_QSTR_passphrase__access_wallet, Self::passphrase__access_wallet),
         (Qstr::MP_QSTR_passphrase__always_on_device, Self::passphrase__always_on_device),
         (Qstr::MP_QSTR_passphrase__continue_with_empty_passphrase, Self::passphrase__continue_with_empty_passphrase),
         (Qstr::MP_QSTR_passphrase__from_host_not_shown, Self::passphrase__from_host_not_shown),
+        (Qstr::MP_QSTR_passphrase__hidden_wallet, Self::passphrase__hidden_wallet),
         (Qstr::MP_QSTR_passphrase__hide, Self::passphrase__hide),
         (Qstr::MP_QSTR_passphrase__next_screen_will_show_passphrase, Self::passphrase__next_screen_will_show_passphrase),
         (Qstr::MP_QSTR_passphrase__please_enter, Self::passphrase__please_enter),
         (Qstr::MP_QSTR_passphrase__revoke_on_device, Self::passphrase__revoke_on_device),
+        (Qstr::MP_QSTR_passphrase__show, Self::passphrase__show),
         (Qstr::MP_QSTR_passphrase__title_confirm, Self::passphrase__title_confirm),
         (Qstr::MP_QSTR_passphrase__title_enter, Self::passphrase__title_enter),
         (Qstr::MP_QSTR_passphrase__title_hide, Self::passphrase__title_hide),

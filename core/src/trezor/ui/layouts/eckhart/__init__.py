@@ -176,22 +176,47 @@ def confirm_change_passphrase(use: bool) -> Awaitable[None]:
 
     return confirm_action(
         "set_passphrase",
-        TR.passphrase__title_passphrase,
-        subtitle=TR.words__settings,
+        TR.passphrase__title_settings,
         description=description,
         br_code=ButtonRequestType.ProtectCall,
-        prompt_screen=True,
+        verb=TR.buttons__confirm,
     )
 
 
 def confirm_hide_passphrase_from_host() -> Awaitable[None]:
     return confirm_action(
         "set_hide_passphrase_from_host",
-        TR.passphrase__title_passphrase,
-        subtitle=TR.words__settings,
+        TR.passphrase__title_settings,
         description=TR.passphrase__hide,
         br_code=ButtonRequestType.ProtectCall,
         prompt_screen=True,
+    )
+
+
+async def confirm_hidden_passphrase_from_host() -> None:
+    await confirm_action(
+        "passphrase_host1_hidden",
+        TR.passphrase__hidden_wallet,
+        description=TR.passphrase__from_host_not_shown,
+        verb=TR.passphrase__access_hidden_wallet,
+    )
+
+
+async def show_passphrase_from_host(passphrase: str | None) -> None:
+    await confirm_action(
+        "passphrase_host1",
+        TR.passphrase__hidden_wallet,
+        description=TR.passphrase__next_screen_will_show_passphrase,
+        verb=TR.passphrase__show,
+    )
+
+    await confirm_value(
+        TR.passphrase__hidden_wallet,
+        passphrase or "",
+        description="",
+        br_name="passphrase_host2",
+        verb=TR.passphrase__title_confirm,
+        cancel=True,
     )
 
 
@@ -205,11 +230,10 @@ def confirm_change_passphrase_source(
     )
     return confirm_action(
         "set_passphrase_source",
-        TR.passphrase__title_passphrase,
-        subtitle=TR.words__settings,
+        TR.passphrase__title_settings,
         description=description,
         br_code=ButtonRequestType.ProtectCall,
-        prompt_screen=True,
+        verb=TR.buttons__confirm,
     )
 
 

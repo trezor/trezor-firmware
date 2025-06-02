@@ -131,7 +131,7 @@ impl PassphraseKeyboard {
             input: PassphraseInput::new(),
             input_prompt: Label::left_aligned(
                 TString::from_translation(TR::passphrase__title_enter),
-                theme::TEXT_SMALL,
+                theme::firmware::TEXT_SMALL,
             )
             .vertically_centered(),
             next_btn,
