@@ -721,8 +721,8 @@ jobs:
           role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
           aws-region: eu-west-1
         continue-on-error: true
-      - run: "for F in screens_*.tar; do tar xvf $F; done || true"
-      - run: nix-shell --run "poetry run python -m tests.ui_tests.reporting master-diff TT TR"
+      - run: "for F in screens_*.tar; do tar xf $F; rm $F; done || true"
+      - run: nix-shell --run "poetry run python -m tests.ui_tests.reporting master-diff T2T1 T3B1 T3T1 T3W1"
       - run: |
           mv tests/ui_tests/reports/master_diff .
           if [ "${{ job.status }}" = "success" ]; then
