@@ -633,6 +633,7 @@ def confirm_value(
     info_title: str | None = None,
     chunkify_info: bool = False,
     warning_footer: str | None = None,
+    cancel: bool = False,
 ) -> Awaitable[None]:
     """General confirmation dialog, used by many other confirm_* functions."""
 
@@ -655,7 +656,7 @@ def confirm_value(
             hold=hold,
             chunkify=chunkify,
             warning_footer=warning_footer,
-            cancel=False,
+            cancel=cancel,
         ),
         info_layout,
         br_name,
