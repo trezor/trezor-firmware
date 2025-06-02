@@ -822,7 +822,7 @@ class DebugLink:
             self._save_screenshot_t1(state.layout)
 
     def _save_screenshot_t1(self, data: bytes) -> None:
-        if self.t1_screenshot_directory is None:
+        if self.t1_screenshot_directory is None or not self.t1_take_screenshots:
             return
 
         from PIL import Image
