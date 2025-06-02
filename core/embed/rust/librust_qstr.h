@@ -462,6 +462,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_plurals__transaction_of_x_operations;
   MP_QSTR_plurals__x_groups_needed;
   MP_QSTR_plurals__x_shares_needed;
+  MP_QSTR_pm_event;
   MP_QSTR_prefill_word;
   MP_QSTR_progress__authenticity_check;
   MP_QSTR_progress__done;

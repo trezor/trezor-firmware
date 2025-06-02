@@ -799,6 +799,7 @@ if FROZEN:
         use_touch='touch' in FEATURES_AVAILABLE,
         ui_layout=ui.get_ui_layout(TREZOR_MODEL),
         thp=THP,
+        power_manager='power_manager' in FEATURES_AVAILABLE,
         )
 
     source_mpyc = env.FrozenCFile(

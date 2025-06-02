@@ -20,6 +20,9 @@ use crate::{
     ui::event::ButtonEvent,
 };
 
+#[cfg(feature = "power_manager")]
+use crate::ui::event::PMEvent;
+
 use super::base::{Layout, LayoutState};
 use crate::{
     error::Error,
@@ -406,6 +409,7 @@ impl LayoutObj {
                 Qstr::MP_QSTR_progress_event => obj_fn_var!(3, 3, ui_layout_progress_event).as_obj(),
                 Qstr::MP_QSTR_usb_event => obj_fn_var!(2, 2, ui_layout_usb_event).as_obj(),
                 Qstr::MP_QSTR_ble_event=> obj_fn_var!(3, 3, ui_layout_ble_event).as_obj(),
+                Qstr::MP_QSTR_pm_event=> obj_fn_2!(ui_layout_pm_event).as_obj(),
                 Qstr::MP_QSTR_timer => obj_fn_2!(ui_layout_timer).as_obj(),
                 Qstr::MP_QSTR_paint => obj_fn_1!(ui_layout_paint).as_obj(),
                 Qstr::MP_QSTR_request_complete_repaint => obj_fn_1!(ui_layout_request_complete_repaint).as_obj(),
@@ -563,6 +567,25 @@ extern "C" fn ui_layout_ble_event(n_args: usize, args: *const Obj) -> Obj {
 
 #[cfg(not(feature = "ble"))]
 extern "C" fn ui_layout_ble_event(_n_args: usize, _args: *const Obj) -> Obj {
+    Obj::const_none()
+}
+
+#[cfg(feature = "power_manager")]
+extern "C" fn ui_layout_pm_event(this: Obj, flags: Obj) -> Obj {
+    let block = || {
+        let this: Gc<LayoutObj> = this.try_into()?;
+        let flags: u32 = flags.try_into()?;
+
+        let event = PMEvent::from_packed_flags(flags);
+        let msg = this.inner_mut().obj_event(Event::PM(event))?;
+        Ok(msg)
+    };
+
+    unsafe { util::try_or_raise(block) }
+}
+
+#[cfg(not(feature = "power_manager"))]
+extern "C" fn ui_layout_pm_event(_this: Obj, _flags: Obj) -> Obj {
     Obj::const_none()
 }
 

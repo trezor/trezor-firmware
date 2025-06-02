@@ -61,6 +61,7 @@ def generate(env):
         layout_delizia = env["ui_layout"] == "UI_LAYOUT_DELIZIA"
         layout_eckhart = env["ui_layout"] == "UI_LAYOUT_ECKHART"
         thp = env["thp"]
+        power_manager = env["power_manager"]
         interim = f"{target[:-4]}.i"  # replace .mpy with .i
         sed_scripts = [
             rf"-e 's/utils\.BITCOIN_ONLY/{btc_only}/g'",
@@ -75,6 +76,7 @@ def generate(env):
             rf"-e 's/utils\.USE_BUTTON/{button}/g'",
             rf"-e 's/utils\.USE_TOUCH/{touch}/g'",
             rf"-e 's/utils\.USE_THP/{thp}/g'",
+            rf"-e 's/utils\.USE_POWER_MANAGER/{power_manager}/g'",
             r"-e 's/if TYPE_CHECKING/if False/'",
             r"-e 's/import typing/# \0/'",
             r"-e '/from typing import (/,/^\s*)/ {s/^/# /; }'",
