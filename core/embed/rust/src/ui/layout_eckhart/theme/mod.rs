@@ -1,9 +1,9 @@
 pub mod backlight;
 #[cfg(feature = "bootloader")]
 pub mod bootloader;
-#[cfg(feature = "micropython")]
+#[cfg(any(feature = "prodtest", feature = "micropython"))]
 pub mod firmware;
-#[cfg(feature = "micropython")]
+#[cfg(any(feature = "prodtest", feature = "micropython"))]
 pub use firmware::*;
 
 use crate::ui::{
