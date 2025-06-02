@@ -158,7 +158,6 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/cmd/prodtest_otp_batch.c',
     'embed/projects/prodtest/cmd/prodtest_otp_variant.c',
     'embed/projects/prodtest/cmd/prodtest_ping.c',
-    'embed/projects/prodtest/cmd/prodtest_power_manager.c',
     'embed/projects/prodtest/cmd/prodtest_reboot.c',
     'embed/projects/prodtest/cmd/prodtest_rgbled.c',
     'embed/projects/prodtest/cmd/prodtest_sdcard.c',
@@ -166,7 +165,6 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/cmd/prodtest_sbu.c',
     'embed/projects/prodtest/cmd/prodtest_touch.c',
     'embed/projects/prodtest/cmd/prodtest_tropic.c',
-    'embed/projects/prodtest/cmd/prodtest_wpc',
     'embed/projects/prodtest/emulator.c',
 ]
 

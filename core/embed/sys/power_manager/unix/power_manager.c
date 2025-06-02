@@ -48,3 +48,5 @@ pm_status_t pm_get_state(pm_state_t* state) {
   state->soc = 100;
   return PM_OK;
 }
+
+pm_status_t pm_set_soc_limit(uint8_t limit) { return PM_OK; }
