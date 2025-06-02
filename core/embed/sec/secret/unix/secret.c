@@ -17,158 +17,156 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <memzero.h>
+
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
 #include <sec/secret.h>
-#include <sys/mpu.h>
-#include <util/flash.h>
 
 #ifdef KERNEL_MODE
 
-static uint8_t SECRET_TROPIC_TREZOR_PRIVKEY_BYTES[] = {
-    0xf0, 0xc4, 0xaa, 0x04, 0x8f, 0x00, 0x13, 0xa0, 0x96, 0x84, 0xdf,
-    0x05, 0xe8, 0xa2, 0x2e, 0xf7, 0x21, 0x38, 0x98, 0x28, 0x2b, 0xa9,
-    0x43, 0x12, 0xf3, 0x13, 0xdf, 0x2d, 0xce, 0x8d, 0x41, 0x64};
-
-static uint8_t SECRET_TROPIC_PUBKEY_BYTES[] = {
-    0x31, 0xE9, 0x0A, 0xF1, 0x50, 0x45, 0x10, 0xEE, 0x4E, 0xFD, 0x79,
-    0x13, 0x33, 0x41, 0x48, 0x15, 0x89, 0xA2, 0x89, 0x5C, 0xC5, 0xFB,
-    0xB1, 0x3E, 0xD5, 0x71, 0x1C, 0x1E, 0x9B, 0x81, 0x98, 0x72};
-
-static secbool bootloader_locked_set = secfalse;
-static secbool bootloader_locked = secfalse;
-
-secbool secret_verify_header(void) {
-  uint8_t* addr = (uint8_t*)flash_area_get_address(&SECRET_AREA, 0,
-                                                   sizeof(SECRET_HEADER_MAGIC));
-
-  if (addr == NULL) {
-    return secfalse;
-  }
-
-  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
-
-  bootloader_locked =
-      memcmp(addr, SECRET_HEADER_MAGIC, sizeof(SECRET_HEADER_MAGIC)) == 0
-          ? sectrue
-          : secfalse;
-
-  mpu_restore(mpu_mode);
-
-  bootloader_locked_set = sectrue;
-  return bootloader_locked;
-}
-
 #ifdef LOCKABLE_BOOTLOADER
-secbool secret_bootloader_locked(void) {
-  if (bootloader_locked_set != sectrue) {
-    // Set bootloader_locked.
-    secret_verify_header();
-  }
-
-  return bootloader_locked;
-}
-
-void secret_unlock_bootloader(void) { secret_erase(); }
+static secbool bootloader_locked = secfalse;
 #endif
 
-void secret_write_header(void) {
-  uint8_t header[SECRET_HEADER_LEN] = {0};
-  memcpy(header, SECRET_HEADER_MAGIC, 4);
-  secret_write(header, 0, SECRET_HEADER_LEN);
-}
+#ifndef SECRET_NUM_KEY_SLOTS
+#define SECRET_NUM_KEY_SLOTS 0
+#endif
 
-void secret_write(const uint8_t* data, uint32_t offset, uint32_t len) {
-  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
-  ensure(flash_unlock_write(), "secret write");
-  for (int i = 0; i < len; i++) {
-    ensure(flash_area_write_byte(&SECRET_AREA, offset + i, data[i]),
-           "secret write");
-  }
-  ensure(flash_lock_write(), "secret write");
-  mpu_restore(mpu_mode);
-}
+#ifdef SECRET_KEY_SLOT_0_LEN
+static uint8_t secret_key_slot0[SECRET_KEY_SLOT_0_LEN] = {0};
+#endif
+#ifdef SECRET_KEY_SLOT_1_LEN
+static uint8_t secret_key_slot1[SECRET_KEY_SLOT_1_LEN] = {0};
+#endif
+#ifdef SECRET_KEY_SLOT_2_LEN
+static uint8_t secret_key_slot2[SECRET_KEY_SLOT_2_LEN] = {0};
+#endif
 
-secbool secret_read(uint8_t* data, uint32_t offset, uint32_t len) {
-  if (sectrue != secret_verify_header()) {
-    return secfalse;
-  }
-
-  uint8_t* addr = (uint8_t*)flash_area_get_address(&SECRET_AREA, offset, len);
-
-  if (addr == NULL) {
-    return secfalse;
-  }
-
-  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
-  memcpy(data, addr, len);
-  mpu_restore(mpu_mode);
-
-  return sectrue;
-}
-
-secbool secret_wiped(void) {
-  uint32_t size = flash_area_get_size(&SECRET_AREA);
-  secbool wiped = sectrue;
-
-  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
-
-  for (int i = 0; i < size; i += 4) {
-    uint32_t* addr = (uint32_t*)flash_area_get_address(&SECRET_AREA, i, 4);
-    if (addr == NULL) {
-      wiped = secfalse;
+size_t secret_get_slot_len(uint8_t slot) {
+  switch (slot) {
+#ifdef SECRET_KEY_SLOT_0_LEN
+    case 0:
+      return SECRET_KEY_SLOT_0_LEN;
+#endif
+#ifdef SECRET_KEY_SLOT_1_LEN
+    case 1:
+      return SECRET_KEY_SLOT_1_LEN;
+#endif
+#ifdef SECRET_KEY_SLOT_2_LEN
+    case 2:
+      return SECRET_KEY_SLOT_2_LEN;
+#endif
+    default:
       break;
-    }
-    if (*addr != 0xFFFFFFFF) {
-      wiped = secfalse;
-      break;
-    }
   }
+  return 0;
+}
 
-  mpu_restore(mpu_mode);
-
-  return wiped;
+uint8_t* secret_get_slot_ptr(uint8_t slot) {
+  switch (slot) {
+#ifdef SECRET_KEY_SLOT_0_LEN
+    case 0:
+      return secret_key_slot0;
+#endif
+#ifdef SECRET_KEY_SLOT_1_LEN
+    case 1:
+      return secret_key_slot1;
+#endif
+#ifdef SECRET_KEY_SLOT_2_LEN
+    case 2:
+      return secret_key_slot2;
+#endif
+    default:
+      break;
+  }
+  return NULL;
 }
 
 void secret_erase(void) {
-  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
-  ensure(flash_area_erase(&SECRET_AREA, NULL), "secret erase");
-  mpu_restore(mpu_mode);
+  for (uint8_t i = 0; i < SECRET_NUM_KEY_SLOTS; i++) {
+    uint8_t* slot_ptr = secret_get_slot_ptr(i);
+    if (slot_ptr != NULL) {
+      memzero(slot_ptr, secret_get_slot_len(i));
+    }
+  }
 }
 
-secbool secret_optiga_set(const uint8_t secret[SECRET_KEY_LEN]) {
+#ifdef LOCKABLE_BOOTLOADER
+secbool secret_bootloader_locked(void) { return bootloader_locked; }
+
+void secret_unlock_bootloader(void) {
   secret_erase();
-  secret_write_header();
-  secret_write(secret, SECRET_OPTIGA_KEY_OFFSET, SECRET_KEY_LEN);
+  bootloader_locked = secfalse;
+}
+
+void secret_lock_bootloader(void) { bootloader_locked = sectrue; }
+#endif
+
+secbool secret_key_set(uint8_t slot, const uint8_t* key, size_t len) {
+  if (slot >= SECRET_NUM_KEY_SLOTS) {
+    return secfalse;
+  }
+
+  if (len != secret_get_slot_len(slot)) {
+    return secfalse;
+  }
+
+  uint8_t* slot_ptr = secret_get_slot_ptr(slot);
+  if (slot_ptr == NULL) {
+    return secfalse;
+  }
+
+  memcpy(slot_ptr, key, len);
   return sectrue;
 }
 
-secbool secret_optiga_get(uint8_t dest[SECRET_KEY_LEN]) {
-  return secret_read(dest, SECRET_OPTIGA_KEY_OFFSET, SECRET_KEY_LEN);
-}
+secbool secret_key_get(uint8_t slot, uint8_t* dest, size_t len) {
+  if (slot >= SECRET_NUM_KEY_SLOTS) {
+    return secfalse;
+  }
 
-secbool secret_optiga_present(void) {
-  return (sectrue != secret_wiped()) * sectrue;
-}
+  if (len != secret_get_slot_len(slot)) {
+    return secfalse;
+  }
 
-secbool secret_optiga_writable(void) { return secret_wiped(); }
+  uint8_t* slot_ptr = secret_get_slot_ptr(slot);
+  if (slot_ptr == NULL) {
+    return secfalse;
+  }
 
-secbool secret_tropic_get_trezor_privkey(uint8_t dest[SECRET_KEY_LEN]) {
-  memcpy(dest, &SECRET_TROPIC_TREZOR_PRIVKEY_BYTES, SECRET_KEY_LEN);
+  memcpy(dest, slot_ptr, len);
   return sectrue;
 }
 
-secbool secret_tropic_get_tropic_pubkey(uint8_t dest[SECRET_KEY_LEN]) {
-  memcpy(dest, &SECRET_TROPIC_PUBKEY_BYTES, SECRET_KEY_LEN);
-  return sectrue;
+static secbool secret_key_present(uint8_t slot) {
+  if (slot >= SECRET_NUM_KEY_SLOTS) {
+    return secfalse;
+  }
+
+  uint8_t* slot_ptr = secret_get_slot_ptr(slot);
+  if (slot_ptr == NULL) {
+    return secfalse;
+  }
+
+  for (size_t i = 0; i < secret_get_slot_len(slot); i++) {
+    if (slot_ptr[i] != 0) {
+      return sectrue;
+    }
+  }
+  return secfalse;
+}
+
+secbool secret_key_writable(uint8_t slot) {
+  return secret_key_present(slot) == secfalse;
 }
 
 void secret_prepare_fw(secbool allow_run_with_secret,
                        secbool allow_provisioning_access) {
   (void)allow_provisioning_access;
 #ifdef LOCKABLE_BOOTLOADER
-  if (sectrue != allow_run_with_secret && sectrue != secret_wiped()) {
+  if (sectrue != allow_run_with_secret && sectrue != bootloader_locked) {
     // This function does not return
     show_install_restricted_screen();
   }

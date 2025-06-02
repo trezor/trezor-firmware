@@ -23,105 +23,112 @@
 
 #ifdef SECURE_MODE
 
-#define SECRET_KEY_LEN 32
-
-// first page: static
-#define SECRET_HEADER_MAGIC "TRZS"
-#define SECRET_HEADER_LEN 16
-#define SECRET_OPTIGA_KEY_OFFSET 16
-
-#define SECRET_MONOTONIC_COUNTER_OFFSET 48
-#define SECRET_MONOTONIC_COUNTER_LEN 1024
-#define SECRET_MONOTONIC_COUNTER2_OFFSET (SECRET_MONOTONIC_COUNTER_LEN + 48)
-
-#define SECRET_TROPIC_TRZ_PRIVKEY_OFFSET \
-  (SECRET_MONOTONIC_COUNTER_LEN + SECRET_MONOTONIC_COUNTER2_OFFSET)
-#define SECRET_TROPIC_TRO_PUBKEY_OFFSET \
-  (SECRET_TROPIC_TRZ_PRIVKEY_OFFSET + SECRET_KEY_LEN)
-
-// second page: refreshed on wallet wipe
-#define SECRET_BHK_OFFSET (1024 * 8)
-
-// Writes data to the secret storage
+/**
+ * @brief Writes data to the secret storage.
+ *
+ * @param data   Pointer to the data to write.
+ * @param offset Offset in the storage to begin writing.
+ * @param len    Number of bytes to write.
+ */
 void secret_write(const uint8_t* data, uint32_t offset, uint32_t len);
 
-// Reads data from the secret storage
+/**
+ * @brief Reads data from the secret storage.
+ *
+ * @param data   Pointer to buffer where read data will be stored.
+ * @param offset Offset in the storage to begin reading.
+ * @param len    Number of bytes to read.
+ * @return secbool sectrue on successful read, secfalse otherwise.
+ */
 secbool secret_read(uint8_t* data, uint32_t offset, uint32_t len);
 
-// Checks if the secret storage has been wiped
-secbool secret_wiped(void);
+/**
+ * @brief Writes a key to the secret storage.
+ *
+ * Encrypts the secret if encryption is available on the platform.
+ *
+ * @param slot Index of the key slot.
+ * @param key  Pointer to the key data.
+ * @param len  Length of the key in bytes.
+ * @return secbool sectrue if the key was written successfully, secfalse
+ * otherwise.
+ */
+secbool secret_key_set(uint8_t slot, const uint8_t* key, size_t len);
 
-// Verifies that the secret storage has the correct header
-secbool secret_verify_header(void);
+/**
+ * @brief Reads a secret key from the storage.
+ *
+ * Decrypts the secret if encryption is available on the platform.
+ *
+ * @param slot Index of the key slot.
+ * @param dest Pointer to destination buffer for the key.
+ * @param len  Length of the dest buffer.
+ * @return secbool secrue if the key was read successfully, secfalse otherwise.
+ */
+secbool secret_key_get(uint8_t slot, uint8_t* dest, size_t len);
 
-// Erases the entire secret storage
-void secret_erase(void);
+/**
+ * @brief Checks if a secret key slot is writable.
+ *
+ * @param slot Index of the key slot.
+ * @return secbool sectrue if the key slot can be written, secfalse otherwise.
+ */
+secbool secret_key_writable(uint8_t slot);
 
-// Writes the secret header to the secret storage
-void secret_write_header(void);
-
-#ifdef USE_OPTIGA
-// OPTIGA KEYS
-// Writes optiga pairing secret to the secret storage
-// Encrypts the secret if encryption is available on the platform
-// Returns true if the secret was written successfully
-secbool secret_optiga_set(const uint8_t secret[SECRET_KEY_LEN]);
-
-// Reads optiga pairing secret
-// Decrypts the secret if encryption is available on the platform
-// Returns true if the secret was read successfully
-// Reading can fail if optiga is not paired, the pairing secret was not
-// provisioned to the firmware (by calling secret_optiga_backup), or the secret
-// was made unavailable by calling secret_optiga_hide
-secbool secret_optiga_get(uint8_t dest[SECRET_KEY_LEN]);
-
-// Checks if the optiga pairing secret is present in the secret storage
-secbool secret_optiga_present(void);
-
-// Checks if the optiga pairing secret can be written to the secret storage
-secbool secret_optiga_writable(void);
-#endif
-
-#ifdef USE_TROPIC
-// TROPIC KEYS
-secbool secret_tropic_get_trezor_privkey(uint8_t dest[SECRET_KEY_LEN]);
-
-secbool secret_tropic_get_tropic_pubkey(uint8_t dest[SECRET_KEY_LEN]);
-
-secbool secret_tropic_set(const uint8_t privkey[SECRET_KEY_LEN],
-                          const uint8_t pubkey[SECRET_KEY_LEN]);
-
-secbool secret_tropic_present(void);
-
-secbool secret_tropic_writable(void);
-
-#endif
-
-// Regenerates the BHK and writes it to the secret storage
+/**
+ * @brief Regenerates the BHK and writes it to the secret storage.
+ */
 void secret_bhk_regenerate(void);
 
-// Prepares the secret storage for running the firmware
-// Provisions secrets/keys to the firmware, depending on the trust level
-// Disables access to the secret storage until next reset, if possible
-// This function is called by the bootloader before starting the firmware
+/**
+ * @brief Prepares the secret storage for running the firmware.
+ *
+ * Provisions secrets and keys to the firmware depending on the trust level.
+ * Disables access to the secret storage until next reset, if possible.
+ * This function is called by the bootloader before starting the firmware.
+ *
+ * @param allow_run_with_secret       Allow firmware to run with secret access.
+ * @param allow_provisioning_access   Allow provisioning access to secrets.
+ */
 void secret_prepare_fw(secbool allow_run_with_secret,
                        secbool allow_provisioning_access);
 
-// Prepares the secret storage for running the boardloader and next stages
-// Ensures that secret storage access is enabled
-// This function is called by the boardloader
+/**
+ * @brief Initializes the secret storage for running the boardloader and next
+ * stages.
+ *
+ * Ensures that secret storage access is enabled.
+ * This function is called by the boardloader.
+ */
 void secret_init(void);
 
 #ifdef LOCKABLE_BOOTLOADER
-// Unlocks the bootloader, all neccessary keys are erased
+
+/**
+ * @brief Unlocks the bootloader and erases all necessary keys.
+ */
 void secret_unlock_bootloader(void);
+
+#ifdef TREZOR_EMULATOR
+
+/**
+ * @brief Locks the bootloader (emulator only).
+ */
+void secret_lock_bootloader(void);
+#endif
 #endif
 
 #endif  // SECURE_MODE
 
 #ifdef LOCKABLE_BOOTLOADER
-// Checks if bootloader is locked, that is the secret storage contains optiga
-// pairing secret on platforms where access to the secret storage cannot be
-// restricted for unofficial firmware
+
+/**
+ * @brief Checks if the bootloader is locked.
+ *
+ * On platforms where secret storage access cannot be restricted for unofficial
+ * firmware, a locked bootloader indicates presence of a non-public key.
+ *
+ * @return secbool sectrue if bootloader is locked, secfalse otherwise.
+ */
 secbool secret_bootloader_locked(void);
 #endif

@@ -21,6 +21,7 @@
 #pragma once
 
 #include <rtl/sizedefs.h>
+#include "secret_layout.h"
 
 #include "bootloaders/bootloader_hashes.h"
 
