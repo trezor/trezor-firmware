@@ -36,6 +36,7 @@ def unix_common_files(env, defines, sources, paths):
         "embed/sec/entropy/unix/entropy.c",
         "embed/sec/random_delays/unix/random_delays.c",
         "embed/sec/secret/unix/secret.c",
+        "embed/sec/secret/unix/secret_keys.c",
         "embed/sec/monoctr/unix/monoctr.c",
         "embed/sec/rng/unix/rng.c",
         "embed/sec/time_estimate/unix/time_estimate.c",

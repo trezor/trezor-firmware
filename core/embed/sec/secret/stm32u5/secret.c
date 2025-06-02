@@ -32,14 +32,75 @@
 
 #ifdef SECURE_MODE
 
-#define REG_BHK_OFFSET 0
-#define REG_OPTIGA_KEY_OFFSET 8
-#define REG_TROPIC_TRZ_PRIVKEY_OFFSET 16
-#define REG_TROPIC_TRO_PUBKEY_OFFSET 24
+#define SECRET_HEADER_MAGIC "TRZS"
+#define SECRET_HEADER_MAGIC_LEN (sizeof(SECRET_HEADER_MAGIC) - 1)
 
-secbool secret_verify_header(void) {
+#define SECRET_BHK_REG_OFFSET 0
+
+#define SECRET_NUM_MAX_SLOTS 3
+
+#ifndef SECRET_KEY_SLOT_0_OFFSET
+#define SECRET_KEY_SLOT_0_OFFSET 0
+#define SECRET_KEY_SLOT_0_LEN 0
+#endif
+
+#ifndef SECRET_KEY_SLOT_1_OFFSET
+#define SECRET_KEY_SLOT_1_OFFSET 0
+#define SECRET_KEY_SLOT_1_LEN 0
+#endif
+
+#ifndef SECRET_KEY_SLOT_2_OFFSET
+#define SECRET_KEY_SLOT_2_OFFSET 0
+#define SECRET_KEY_SLOT_2_LEN 0
+#endif
+
+#define SECRET_KEY_MAX_LEN (24 * sizeof(uint32_t))
+
+_Static_assert(SECRET_NUM_MAX_SLOTS >= SECRET_NUM_KEY_SLOTS);
+_Static_assert(SECRET_KEY_SLOT_0_LEN + SECRET_KEY_SLOT_1_LEN +
+                       SECRET_KEY_SLOT_2_LEN <=
+                   SECRET_KEY_MAX_LEN,
+               "secret key slots too large");
+_Static_assert(SECRET_KEY_SLOT_0_LEN % 16 == 0,
+               "secret key length must be multiple of 16 bytes");
+_Static_assert(SECRET_KEY_SLOT_1_LEN % 16 == 0,
+               "secret key length must be multiple of 16 bytes");
+_Static_assert(SECRET_KEY_SLOT_2_LEN % 16 == 0,
+               "secret key length must be multiple of 16 bytes");
+
+static uint32_t secret_slot_offsets[SECRET_NUM_MAX_SLOTS] = {
+    SECRET_KEY_SLOT_0_OFFSET,
+    SECRET_KEY_SLOT_1_OFFSET,
+    SECRET_KEY_SLOT_2_OFFSET,
+};
+
+static uint32_t secret_slot_lengths[SECRET_NUM_MAX_SLOTS] = {
+    SECRET_KEY_SLOT_0_LEN,
+    SECRET_KEY_SLOT_1_LEN,
+    SECRET_KEY_SLOT_2_LEN,
+};
+
+static secbool secret_slot_public[SECRET_NUM_MAX_SLOTS] = {
+#ifdef SECRET_KEY_SLOT_0_PUBLIC
+    sectrue,
+#else
+    secfalse,
+#endif
+#ifdef SECRET_KEY_SLOT_1_PUBLIC
+    sectrue,
+#else
+    secfalse,
+#endif
+#ifdef SECRET_KEY_SLOT_2_PUBLIC
+    sectrue,
+#else
+    secfalse,
+#endif
+};
+
+static secbool secret_verify_header(void) {
   uint8_t *addr = (uint8_t *)flash_area_get_address(
-      &SECRET_AREA, 0, sizeof(SECRET_HEADER_MAGIC));
+      &SECRET_AREA, SECRET_HEADER_OFFSET, SECRET_HEADER_LEN);
 
   if (addr == NULL) {
     return secfalse;
@@ -48,13 +109,25 @@ secbool secret_verify_header(void) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
 
   secbool header_present =
-      memcmp(addr, SECRET_HEADER_MAGIC, sizeof(SECRET_HEADER_MAGIC)) == 0
+      memcmp(addr, SECRET_HEADER_MAGIC, SECRET_HEADER_MAGIC_LEN) == 0
           ? sectrue
           : secfalse;
 
   mpu_restore(mpu_mode);
 
   return header_present;
+}
+
+static void secret_erase(void) {
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
+  ensure(flash_area_erase(&SECRET_AREA, NULL), "secret erase");
+  mpu_restore(mpu_mode);
+}
+
+static void secret_write_header(void) {
+  uint8_t header[SECRET_HEADER_LEN] = {0};
+  memcpy(header, SECRET_HEADER_MAGIC, SECRET_HEADER_MAGIC_LEN);
+  secret_write(header, SECRET_HEADER_OFFSET, SECRET_HEADER_LEN);
 }
 
 static secbool secret_ensure_initialized(void) {
@@ -65,12 +138,6 @@ static secbool secret_ensure_initialized(void) {
     return secfalse;
   }
   return sectrue;
-}
-
-void secret_write_header(void) {
-  uint8_t header[SECRET_HEADER_LEN] = {0};
-  memcpy(header, SECRET_HEADER_MAGIC, 4);
-  secret_write(header, 0, SECRET_HEADER_LEN);
 }
 
 void secret_write(const uint8_t *data, uint32_t offset, uint32_t len) {
@@ -119,9 +186,41 @@ static secbool secret_bhk_locked(void) {
          sectrue;
 }
 
-static secbool secret_key_present(uint32_t offset) {
+static secbool secret_is_slot_valid(uint8_t slot) {
+  return ((slot < SECRET_NUM_KEY_SLOTS) && (secret_slot_offsets[slot] != 0)) *
+         sectrue;
+}
+
+static uint32_t secret_get_slot_offset(uint8_t slot) {
+  if (slot >= SECRET_NUM_KEY_SLOTS) {
+    return 0;
+  }
+  return secret_slot_offsets[slot];
+}
+
+static uint32_t secret_get_slot_len(uint8_t slot) {
+  if (slot >= SECRET_NUM_KEY_SLOTS) {
+    return 0;
+  }
+  return secret_slot_lengths[slot];
+}
+
+static size_t secret_get_reg_offset(uint8_t slot) {
+  // SECRET_BHK_LEN is in bytes; each reg is 32 bits = 4 bytes
+  size_t cumulative = SECRET_BHK_LEN / sizeof(uint32_t);
+
+  for (uint8_t i = 0; i < slot; i++) {
+    if (sectrue == secret_is_slot_valid(i)) {
+      cumulative += (secret_slot_lengths[i] / sizeof(uint32_t));
+    }
+  }
+
+  return cumulative;
+}
+
+static secbool secret_record_present(uint32_t offset, uint32_t len) {
   uint8_t *secret =
-      (uint8_t *)flash_area_get_address(&SECRET_AREA, offset, SECRET_KEY_LEN);
+      (uint8_t *)flash_area_get_address(&SECRET_AREA, offset, len);
 
   if (secret == NULL) {
     return secfalse;
@@ -131,7 +230,7 @@ static secbool secret_key_present(uint32_t offset) {
 
   int secret_empty_bytes = 0;
 
-  for (int i = 0; i < SECRET_KEY_LEN; i++) {
+  for (int i = 0; i < len; i++) {
     // 0xFF being the default value of the flash memory (before any write)
     // 0x00 being the value of the flash memory after manual erase
     if (secret[i] == 0xFF || secret[i] == 0x00) {
@@ -141,12 +240,30 @@ static secbool secret_key_present(uint32_t offset) {
 
   mpu_restore(mpu_mode);
 
-  return sectrue * (secret_empty_bytes != SECRET_KEY_LEN);
+  return sectrue * (secret_empty_bytes != len);
 }
 
-__attribute__((unused)) static secbool secret_key_writable(uint32_t offset) {
+static secbool secret_key_present(uint8_t slot) {
+  if (sectrue != secret_is_slot_valid(slot)) {
+    return secfalse;
+  }
+
+  uint32_t offset = secret_get_slot_offset(slot);
+  uint32_t len = secret_get_slot_len(slot);
+
+  return secret_record_present(offset, len);
+}
+
+secbool secret_key_writable(uint8_t slot) {
+  if (sectrue != secret_is_slot_valid(slot)) {
+    return secfalse;
+  }
+
+  uint32_t offset = secret_get_slot_offset(slot);
+  uint32_t len = secret_get_slot_len(slot);
+
   const uint8_t *const secret =
-      (uint8_t *)flash_area_get_address(&SECRET_AREA, offset, SECRET_KEY_LEN);
+      (uint8_t *)flash_area_get_address(&SECRET_AREA, offset, len);
 
   if (secret == NULL) {
     return secfalse;
@@ -156,7 +273,7 @@ __attribute__((unused)) static secbool secret_key_writable(uint32_t offset) {
 
   int secret_empty_bytes = 0;
 
-  for (int i = 0; i < SECRET_KEY_LEN; i++) {
+  for (int i = 0; i < len; i++) {
     // 0xFF being the default value of the flash memory (before any write)
     // 0x00 being the value of the flash memory after manual erase
     if (secret[i] == 0xFF) {
@@ -166,24 +283,27 @@ __attribute__((unused)) static secbool secret_key_writable(uint32_t offset) {
 
   mpu_restore(mpu_mode);
 
-  return sectrue * (secret_empty_bytes == SECRET_KEY_LEN);
+  return sectrue * (secret_empty_bytes == len);
 }
 
-__attribute__((unused)) static void secret_key_cache(uint8_t reg_offset,
-                                                     uint32_t key_offset) {
-  uint32_t secret[SECRET_KEY_LEN / sizeof(uint32_t)] = {0};
+static void secret_key_cache(uint8_t slot) {
+  uint32_t offset = secret_get_slot_offset(slot);
+  uint32_t len = secret_get_slot_len(slot);
+  size_t reg_offset = secret_get_reg_offset(slot);
 
-  secbool ok = secret_read((uint8_t *)secret, key_offset, SECRET_KEY_LEN);
+  uint32_t secret[SECRET_KEY_MAX_LEN] = {0};
+
+  secbool ok = secret_read((uint8_t *)secret, offset, len);
 
   volatile uint32_t *reg = &TAMP->BKP0R;
   reg += reg_offset;
   if (sectrue == ok) {
-    for (int i = 0; i < (SECRET_KEY_LEN / sizeof(uint32_t)); i++) {
-      *reg = ((uint32_t *)secret)[i];
+    for (int i = 0; i < (len / sizeof(uint32_t)); i++) {
+      *reg = secret[i];
       reg++;
     }
   } else {
-    for (int i = 0; i < (SECRET_KEY_LEN / sizeof(uint32_t)); i++) {
+    for (int i = 0; i < (len / sizeof(uint32_t)); i++) {
       *reg = 0;
       reg++;
     }
@@ -191,28 +311,46 @@ __attribute__((unused)) static void secret_key_cache(uint8_t reg_offset,
   memzero(secret, sizeof(secret));
 }
 
-__attribute__((unused)) static secbool secret_key_set(
-    const uint8_t secret[SECRET_KEY_LEN], uint8_t reg_offset,
-    uint32_t key_offset) {
-  uint8_t secret_enc[SECRET_KEY_LEN] = {0};
-  if (sectrue != secure_aes_ecb_encrypt_hw(secret, sizeof(secret_enc),
-                                           secret_enc,
-                                           SECURE_AES_KEY_DHUK_SP)) {
+secbool secret_key_set(uint8_t slot, const uint8_t *key, size_t len) {
+  if (sectrue != secret_is_slot_valid(slot)) {
     return secfalse;
   }
-  secret_write(secret_enc, key_offset, SECRET_KEY_LEN);
+
+  uint32_t offset = secret_get_slot_offset(slot);
+  uint32_t slot_len = secret_get_slot_len(slot);
+
+  if (slot_len != len) {
+    return secfalse;
+  }
+
+  uint8_t secret_enc[SECRET_KEY_MAX_LEN] = {0};
+  if (sectrue !=
+      secure_aes_ecb_encrypt_hw(key, len, secret_enc, SECURE_AES_KEY_DHUK_SP)) {
+    return secfalse;
+  }
+  secret_write(secret_enc, offset, len);
   memzero(secret_enc, sizeof(secret_enc));
-  secret_key_cache(reg_offset, key_offset);
+  secret_key_cache(slot);
   return sectrue;
 }
 
-__attribute__((unused)) static secbool secret_key_get(
-    uint8_t dest[SECRET_KEY_LEN], uint8_t reg_offset) {
-  uint32_t secret[SECRET_KEY_LEN / sizeof(uint32_t)] = {0};
+secbool secret_key_get(uint8_t slot, uint8_t *dest, size_t len) {
+  if (sectrue != secret_is_slot_valid(slot)) {
+    return secfalse;
+  }
+
+  uint32_t slot_len = secret_get_slot_len(slot);
+  size_t reg_offset = secret_get_reg_offset(slot);
+
+  if (slot_len != len) {
+    return secfalse;
+  }
+
+  uint32_t secret[SECRET_KEY_MAX_LEN] = {0};
 
   bool all_zero = true;
   volatile uint32_t *reg = &TAMP->BKP0R;
-  for (int i = 0; i < (SECRET_KEY_LEN / sizeof(uint32_t)); i++) {
+  for (int i = 0; i < (len / sizeof(uint32_t)); i++) {
     secret[i] = reg[i + reg_offset];
 
     if (secret[i] != 0) {
@@ -224,19 +362,31 @@ __attribute__((unused)) static secbool secret_key_get(
     return secfalse;
   }
 
-  secbool res = secure_aes_ecb_decrypt_hw((uint8_t *)secret, SECRET_KEY_LEN,
-                                          dest, SECURE_AES_KEY_DHUK_SP);
+  secbool res = secure_aes_ecb_decrypt_hw((uint8_t *)secret, len, dest,
+                                          SECURE_AES_KEY_DHUK_SP);
 
   memzero(secret, sizeof(secret));
   return res;
 }
 
 // Deletes the secret from the register
-__attribute__((unused)) static void secret_key_uncache(uint8_t reg_offset) {
+__attribute__((unused)) static void secret_key_uncache(uint8_t slot) {
+  size_t reg_offset = secret_get_reg_offset(slot);
+  uint32_t slot_len = secret_get_slot_len(slot);
+
   volatile uint32_t *reg = &TAMP->BKP0R;
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < slot_len / sizeof(uint32_t); i++) {
     reg[i + reg_offset] = 0;
   }
+}
+
+static void secret_key_erase(uint8_t slot) {
+  uint8_t value[SECRET_KEY_MAX_LEN] = {0};
+
+  uint32_t offset = secret_get_slot_offset(slot);
+  uint32_t slot_len = secret_get_slot_len(slot);
+
+  secret_write(value, offset, slot_len);
 }
 
 // Provision the secret BHK from the secret storage to the BHK register
@@ -247,23 +397,23 @@ static void secret_bhk_load(void) {
     reboot_device();
   }
 
-  uint32_t secret[SECRET_KEY_LEN / sizeof(uint32_t)] = {0};
+  uint32_t secret[SECRET_BHK_LEN / sizeof(uint32_t)] = {0};
 
-  if (sectrue != secret_key_present(SECRET_BHK_OFFSET)) {
+  if (sectrue != secret_record_present(SECRET_BHK_OFFSET, SECRET_BHK_LEN)) {
     secret_bhk_regenerate();
   }
 
   secbool ok =
-      secret_read((uint8_t *)secret, SECRET_BHK_OFFSET, SECRET_KEY_LEN);
+      secret_read((uint8_t *)secret, SECRET_BHK_OFFSET, SECRET_BHK_LEN);
 
   volatile uint32_t *reg1 = &TAMP->BKP0R;
   if (sectrue == ok) {
-    for (int i = 0; i < (SECRET_KEY_LEN / sizeof(uint32_t)); i++) {
+    for (int i = 0; i < (SECRET_BHK_LEN / sizeof(uint32_t)); i++) {
       *reg1 = ((uint32_t *)secret)[i];
       reg1++;
     }
   } else {
-    for (int i = 0; i < (SECRET_KEY_LEN / sizeof(uint32_t)); i++) {
+    for (int i = 0; i < (SECRET_BHK_LEN / sizeof(uint32_t)); i++) {
       *reg1 = 0;
       reg1++;
     }
@@ -293,199 +443,88 @@ void secret_bhk_regenerate(void) {
   ensure(flash_lock_write(), "Failed regenerating BHK");
 }
 
-#ifdef USE_OPTIGA
-// Checks that the optiga pairing secret is present in the secret storage.
-// This functions only works when software has access to the secret storage,
-// i.e. in bootloader. Access to secret storage is restricted by calling
-// secret_hide.
-secbool secret_optiga_present(void) {
-  return secret_key_present(SECRET_OPTIGA_KEY_OFFSET);
-}
-
-secbool secret_optiga_writable(void) {
-  return secret_key_writable(SECRET_OPTIGA_KEY_OFFSET);
-}
-
-secbool secret_optiga_set(const uint8_t secret[SECRET_KEY_LEN]) {
-  return secret_key_set(secret, REG_OPTIGA_KEY_OFFSET,
-                        SECRET_OPTIGA_KEY_OFFSET);
-}
-
-secbool secret_optiga_get(uint8_t dest[SECRET_KEY_LEN]) {
-  return secret_key_get(dest, REG_OPTIGA_KEY_OFFSET);
-}
-
-// Backs up the optiga pairing secret from the secret storage to the backup
-// register
-static void secret_optiga_cache(void) {
-  if (sectrue == secret_optiga_present()) {
-    secret_key_cache(REG_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_OFFSET);
+static void secret_keys_uncache(void) {
+  for (uint8_t i = 0; i < SECRET_NUM_KEY_SLOTS; i++) {
+    if (sectrue == secret_is_slot_valid(i)) {
+      secret_key_uncache(i);
+    }
   }
 }
 
-// Deletes the optiga pairing secret from the register
-static void secret_optiga_uncache(void) { secret_key_uncache(8); }
-
-static void secret_optiga_erase(void) {
-  uint8_t value[SECRET_KEY_LEN] = {0};
-  secret_write(value, SECRET_OPTIGA_KEY_OFFSET, SECRET_KEY_LEN);
-}
-
-#endif
-
-#ifdef USE_TROPIC
-secbool secret_tropic_get_trezor_privkey(uint8_t dest[SECRET_KEY_LEN]) {
-  return secret_key_get(dest, REG_TROPIC_TRZ_PRIVKEY_OFFSET);
-}
-
-secbool secret_tropic_get_tropic_pubkey(uint8_t dest[SECRET_KEY_LEN]) {
-  return secret_key_get(dest, REG_TROPIC_TRO_PUBKEY_OFFSET);
-}
-
-secbool secret_tropic_set(const uint8_t privkey[SECRET_KEY_LEN],
-                          const uint8_t pubkey[SECRET_KEY_LEN]) {
-  secbool res1 = secret_key_set(privkey, REG_TROPIC_TRZ_PRIVKEY_OFFSET,
-                                SECRET_TROPIC_TRZ_PRIVKEY_OFFSET);
-
-  if (sectrue != res1) {
-    return secfalse;
-  }
-
-  secbool res2 = secret_key_set(pubkey, REG_TROPIC_TRO_PUBKEY_OFFSET,
-                                SECRET_TROPIC_TRO_PUBKEY_OFFSET);
-
-  return res2;
-}
-
-secbool secret_tropic_present(void) {
-  secbool res1 = secret_key_present(SECRET_TROPIC_TRZ_PRIVKEY_OFFSET);
-
-  secbool res2 = secret_key_present(SECRET_TROPIC_TRO_PUBKEY_OFFSET);
-
-  return secbool_and(res1, res2);
-}
-
-secbool secret_tropic_present_any(void) {
-  secbool res1 = secret_key_present(SECRET_TROPIC_TRZ_PRIVKEY_OFFSET);
-
-  secbool res2 = secret_key_present(SECRET_TROPIC_TRO_PUBKEY_OFFSET);
-
-  return secbool_or(res1, res2);
-}
-
-secbool secret_tropic_writable(void) {
-  secbool res1 = secret_key_writable(SECRET_TROPIC_TRZ_PRIVKEY_OFFSET);
-
-  secbool res2 = secret_key_writable(SECRET_TROPIC_TRO_PUBKEY_OFFSET);
-
-  return secbool_or(res1, res2);
-}
-
-static void secret_tropic_erase(void) {
-  uint8_t value[SECRET_KEY_LEN] = {0};
-  secret_write(value, SECRET_TROPIC_TRZ_PRIVKEY_OFFSET, SECRET_KEY_LEN);
-  secret_write(value, SECRET_TROPIC_TRO_PUBKEY_OFFSET, SECRET_KEY_LEN);
-}
-
-// Backs up the tropic pairing secret from the secret storage to the backup
-// register
-static void secret_tropic_cache(void) {
-  if (sectrue == secret_tropic_present()) {
-    secret_key_cache(REG_TROPIC_TRZ_PRIVKEY_OFFSET,
-                     SECRET_TROPIC_TRZ_PRIVKEY_OFFSET);
-    secret_key_cache(REG_TROPIC_TRO_PUBKEY_OFFSET,
-                     SECRET_TROPIC_TRO_PUBKEY_OFFSET);
+static void secret_keys_cache(void) {
+  for (uint8_t i = 0; i < SECRET_NUM_KEY_SLOTS; i++) {
+    if (sectrue == secret_is_slot_valid(i) &&
+        sectrue == secret_key_present(i)) {
+      secret_key_cache(i);
+    }
   }
 }
 
-// Deletes the tropic pairing secret from the register
-static void secret_tropic_uncache(void) {
-  secret_key_uncache(REG_TROPIC_TRZ_PRIVKEY_OFFSET);
-  secret_key_uncache(REG_TROPIC_TRO_PUBKEY_OFFSET);
+static void secret_keys_cache_public(void) {
+  for (uint8_t i = 0; i < SECRET_NUM_KEY_SLOTS; i++) {
+    if ((sectrue == secret_is_slot_valid(i)) &&
+        (sectrue == secret_key_present(i)) &&
+        (sectrue == secret_slot_public[i])) {
+      secret_key_cache(i);
+    }
+  }
 }
 
-#endif
+// return sectrue if all the key slots are valid and contain a key
+static secbool secret_keys_present(void) {
+  secbool result = sectrue;
 
-void secret_erase(void) {
-  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
-  ensure(flash_area_erase(&SECRET_AREA, NULL), "secret erase");
-  mpu_restore(mpu_mode);
+  for (uint8_t i = 0; i < SECRET_NUM_KEY_SLOTS; i++) {
+    if (sectrue == secret_is_slot_valid(i)) {
+      result = secbool_and(result, secret_key_present(i));
+    }
+  }
+
+  return result;
 }
 
-static void secret_se_uncache(void) {
-#ifdef USE_OPTIGA
-  secret_optiga_uncache();
-#endif
-#ifdef USE_TROPIC
-  secret_tropic_uncache();
-#endif
+#if defined BOOTLOADER || defined BOARDLOADER
+// return sectrue if any non-public key slot is valid and contains a key
+static secbool secret_keys_present_any(void) {
+  secbool result = secfalse;
+
+  for (uint8_t i = 0; i < SECRET_NUM_KEY_SLOTS; i++) {
+    if (sectrue == secret_is_slot_valid(i) &&
+        sectrue != secret_slot_public[i]) {
+      result = secbool_or(result, secret_key_present(i));
+    }
+  }
+
+  return result;
 }
-
-static void secret_se_cache(void) {
-#ifdef USE_OPTIGA
-  secret_optiga_cache();
-#endif
-#ifdef USE_TROPIC
-  secret_tropic_cache();
-#endif
-}
-
-static secbool secret_se_present(void) {
-#ifdef USE_OPTIGA
-  secbool res1 = secret_optiga_present();
-#else
-  secbool res1 = sectrue;
 #endif
 
-#ifdef USE_TROPIC
-  secbool res2 = secret_tropic_present();
-#else
-  secbool res2 = sectrue;
-#endif
+// return sectrue if at least one key slot is writable
+static secbool secret_keys_writable(void) {
+  secbool result = secfalse;
 
-  return secbool_and(res1, res2);
-}
+  for (uint8_t i = 0; i < SECRET_NUM_KEY_SLOTS; i++) {
+    if (sectrue == secret_is_slot_valid(i)) {
+      result = secbool_or(result, secret_key_writable(i));
+    }
+  }
 
-__attribute__((unused)) static secbool secret_se_present_any(void) {
-#ifdef USE_OPTIGA
-  secbool res1 = secret_optiga_present();
-#else
-  secbool res1 = secfalse;
-#endif
-
-#ifdef USE_TROPIC
-  secbool res2 = secret_tropic_present_any();
-#else
-  secbool res2 = secfalse;
-#endif
-
-  return secbool_or(res1, res2);
-}
-
-static secbool secret_se_writable(void) {
-#ifdef USE_OPTIGA
-  secbool res1 = secret_optiga_writable();
-#else
-  secbool res1 = secfalse;
-#endif
-
-#ifdef USE_TROPIC
-  secbool res2 = secret_tropic_writable();
-#else
-  secbool res2 = secfalse;
-#endif
-
-  return secbool_or(res1, res2);
+  return result;
 }
 
 #ifdef LOCKABLE_BOOTLOADER
 secbool secret_bootloader_locked(void) {
 #if defined BOOTLOADER || defined BOARDLOADER
-  return secret_se_present_any();
+  return secret_keys_present_any();
 #else
-  const volatile uint32_t *reg1 = &TAMP->BKP8R;
-  for (int i = 0; i < 24; i++) {
-    if (reg1[i] != 0) {
+  // in firmware, we determine bootloader state by checking if bootloader
+  //  has provided any non-public key
+  for (int i = 0; i < SECRET_NUM_KEY_SLOTS; i++) {
+    uint32_t val[SECRET_KEY_MAX_LEN] = {0};
+    size_t len = secret_get_slot_len(i);
+    if (secfalse == secret_slot_public[i] &&
+        sectrue == secret_key_get(i, (uint8_t *)val, len)) {
+      memzero(val, sizeof(val));
       return sectrue;
     }
   }
@@ -494,12 +533,12 @@ secbool secret_bootloader_locked(void) {
 }
 
 void secret_unlock_bootloader(void) {
-#ifdef USE_OPTIGA
-  secret_optiga_erase();
-#endif
-#ifdef USE_TROPIC
-  secret_tropic_erase();
-#endif
+  for (uint8_t i = 0; i < SECRET_NUM_KEY_SLOTS; i++) {
+    if (sectrue == secret_is_slot_valid(i) &&
+        sectrue != secret_slot_public[i]) {
+      secret_key_erase(i);
+    }
+  }
 }
 
 #endif
@@ -519,29 +558,35 @@ void secret_prepare_fw(secbool allow_run_with_secret,
    * all-cases.
    */
 
-  secret_bhk_load();
-  secret_bhk_lock();
-  secret_se_uncache();
-  secbool se_secret_present = secret_se_present();
-  secbool se_secret_writable = secret_se_writable();
-  if (sectrue == allow_provisioning_access && sectrue == se_secret_writable &&
-      secfalse == se_secret_present) {
-    // SE Secret is not present and the secret sector is writable.
-    // This means the U5 chip is unprovisioned.
-    // Allow trusted firmware (prodtest presumably) to access the secret sector,
-    // early return here.
-    return;
-  }
-  if (sectrue == allow_run_with_secret && sectrue == se_secret_present) {
-    // Firmware is trusted, and the SE secret is present, make it available.
-    secret_se_cache();
-  }
-  // Disable access unconditionally.
-  secret_disable_access();
-  if (sectrue != allow_run_with_secret && sectrue == se_secret_present) {
+  if (sectrue != allow_run_with_secret &&
+      secfalse != secret_bootloader_locked()) {
     // Untrusted firmware, locked bootloader. Show the restricted screen.
     show_install_restricted_screen();
   }
+
+  secret_bhk_load();
+  secret_bhk_lock();
+  secret_keys_uncache();
+  secbool secret_present = secret_keys_present();
+  secbool secret_writable = secret_keys_writable();
+  if (sectrue == allow_provisioning_access && sectrue == secret_writable &&
+      secfalse == secret_present) {
+    // Secret keys are not present and they are writable.
+    // This means the U5 chip is unprovisioned.
+    // Allow trusted firmware (prodtest presumably) to access the secret sector,
+    // early return here.
+    secret_keys_cache();
+    return;
+  }
+  if (sectrue == allow_run_with_secret && sectrue == secret_present) {
+    // Firmware is trusted, and the secret keys are present, make it available.
+    secret_keys_cache();
+  } else {
+    // Make only public keys available.
+    secret_keys_cache_public();
+  }
+  // Disable access unconditionally.
+  secret_disable_access();
 }
 
 void secret_init(void) {

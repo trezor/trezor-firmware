@@ -88,6 +88,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/random_delays/stm32/random_delays.c",
         "embed/sec/rng/stm32/rng.c",
         "embed/sec/secret/stm32u5/secret.c",
+        "embed/sec/secret/stm32u5/secret_keys.c",
         "embed/sec/secure_aes/stm32u5/secure_aes.c",
         "embed/sec/secure_aes/stm32u5/secure_aes_unpriv.c",
         "embed/sec/time_estimate/stm32/time_estimate.c",

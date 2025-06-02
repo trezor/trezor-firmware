@@ -21,6 +21,7 @@
 
 #include <rtl/sizedefs.h>
 #include "bootloaders/bootloader_hashes.h"
+#include "secret_layout.h"
 
 #define MODEL_NAME "D002"
 #define MODEL_FULL_NAME "Trezor DIY 2"
