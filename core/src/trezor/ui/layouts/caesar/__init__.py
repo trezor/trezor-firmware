@@ -214,6 +214,32 @@ def confirm_hide_passphrase_from_host() -> Awaitable[None]:
     )
 
 
+async def confirm_hidden_passphrase_from_host() -> None:
+    await confirm_action(
+        "passphrase_host1_hidden",
+        TR.passphrase__wallet,
+        description=TR.passphrase__from_host_not_shown,
+        prompt_screen=True,
+        prompt_title=TR.passphrase__access_wallet,
+    )
+
+
+async def show_passphrase_from_host(passphrase: str | None) -> None:
+    await confirm_action(
+        "passphrase_host1",
+        TR.passphrase__wallet,
+        description=TR.passphrase__next_screen_will_show_passphrase,
+        verb=TR.buttons__continue,
+    )
+
+    await confirm_blob(
+        "passphrase_host2",
+        TR.passphrase__title_confirm,
+        passphrase or "",
+        info=False,
+    )
+
+
 def confirm_change_passphrase_source(
     passphrase_always_on_device: bool,
 ) -> Awaitable[None]:
@@ -776,6 +802,7 @@ async def confirm_value(
     info_items: Iterable[tuple[str, str]] | None = None,
     chunkify: bool = False,
     chunkify_info: bool = False,
+    cancel: bool = False,
 ) -> None:
     """General confirmation dialog, used by many other confirm_* functions."""
 
@@ -794,6 +821,7 @@ async def confirm_value(
                 hold=hold,
                 is_data=is_data,
                 chunkify=chunkify,
+                cancel=cancel,
             ),
             br_name,
             br_code,

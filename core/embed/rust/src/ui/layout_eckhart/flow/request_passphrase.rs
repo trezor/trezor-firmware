@@ -3,12 +3,15 @@ use crate::{
     strutil::ShortString,
     translations::TR,
     ui::{
-        component::{text::op::OpTextLayout, ComponentExt, FormattedText},
+        component::{
+            text::paragraphs::{Paragraph, ParagraphSource},
+            ComponentExt,
+        },
         flow::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
         },
-        geometry::Direction,
+        geometry::{Direction, LinearPlacement},
     },
 };
 
@@ -17,7 +20,7 @@ use super::super::{
     firmware::{
         ActionBar, Header, PassphraseKeyboard, PassphraseKeyboardMsg, TextScreen, TextScreenMsg,
     },
-    fonts, theme,
+    theme,
 };
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -56,22 +59,24 @@ impl FlowController for RequestPassphrase {
 }
 
 pub fn new_request_passphrase() -> Result<SwipeFlow, error::Error> {
-    let op_confirm = OpTextLayout::new(theme::TEXT_NORMAL).text(
-        TR::passphrase__continue_with_empty_passphrase,
-        fonts::FONT_SATOSHI_REGULAR_38,
-    );
-
-    let content_confirm_empty = TextScreen::new(FormattedText::new(op_confirm))
-        .with_header(Header::new("".into()))
-        .with_action_bar(ActionBar::new_double(
-            Button::with_icon(theme::ICON_CROSS).styled(theme::button_cancel()),
-            Button::with_icon(theme::ICON_CHECKMARK).styled(theme::button_confirm()),
-        ))
-        .map(|msg| match msg {
-            TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
-            TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
-            _ => Some(FlowMsg::Cancelled),
-        });
+    let content_confirm_empty = TextScreen::new(
+        Paragraph::new(
+            &theme::TEXT_NORMAL,
+            TR::passphrase__continue_with_empty_passphrase,
+        )
+        .into_paragraphs()
+        .with_placement(LinearPlacement::vertical()),
+    )
+    .with_header(Header::new(TR::passphrase__title_enter.into()))
+    .with_action_bar(ActionBar::new_double(
+        Button::with_icon(theme::ICON_CHEVRON_LEFT),
+        Button::with_text(TR::buttons__confirm.into()).styled(theme::button_default()),
+    ))
+    .map(|msg| match msg {
+        TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
+        TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
+        _ => Some(FlowMsg::Cancelled),
+    });
 
     let content_keypad = PassphraseKeyboard::new().map(|msg| match msg {
         PassphraseKeyboardMsg::Confirmed(s) => Some(FlowMsg::Text(s)),
