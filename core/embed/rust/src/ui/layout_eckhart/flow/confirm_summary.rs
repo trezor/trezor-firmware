@@ -6,7 +6,7 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs},
+            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
             ComponentExt, MsgMap,
         },
         flow::{
@@ -103,13 +103,14 @@ pub fn new_confirm_summary(
     // Summary
     let mut summary_paragraphs = ParagraphVecShort::new();
     if let Some(amount_label) = amount_label {
-        unwrap!(summary_paragraphs.push(Paragraph::new(&theme::TEXT_SMALL_LIGHT, amount_label)));
+        summary_paragraphs.add(Paragraph::new(&theme::TEXT_SMALL_LIGHT, amount_label));
     }
     if let Some(amount) = amount {
-        unwrap!(summary_paragraphs.push(Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, amount)));
+        summary_paragraphs.add(Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, amount));
     }
-    unwrap!(summary_paragraphs.push(Paragraph::new(&theme::TEXT_SMALL_LIGHT, fee_label)));
-    unwrap!(summary_paragraphs.push(Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, fee)));
+    summary_paragraphs
+        .add(Paragraph::new(&theme::TEXT_SMALL_LIGHT, fee_label))
+        .add(Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, fee));
 
     let content_summary = TextScreen::new(
         summary_paragraphs
