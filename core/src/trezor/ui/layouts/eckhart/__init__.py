@@ -1445,9 +1445,7 @@ def confirm_set_new_pin(
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
     return raise_if_not_confirmed(
-        trezorui_api.flow_confirm_set_new_pin(
-            title=title, description=information
-        ),
+        trezorui_api.flow_confirm_set_new_pin(title=title, description=information),
         br_name,
         br_code,
     )
