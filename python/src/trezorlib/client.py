@@ -38,7 +38,7 @@ MT = TypeVar("MT", bound=MessageType)
 
 LOG = logging.getLogger(__name__)
 
-MAX_PASSPHRASE_LENGTH = 50
+MAX_PASSPHRASE_LENGTH = 128  # for Core devices (legacy is still limited to 50)
 MAX_PIN_LENGTH = 50
 
 PASSPHRASE_ON_DEVICE = object()
@@ -241,7 +241,8 @@ class TrezorClient(Generic[UI]):
         if not isinstance(passphrase, str):
             raise RuntimeError("Passphrase must be a str")
         passphrase = Mnemonic.normalize_string(passphrase)
-        if len(passphrase) > MAX_PASSPHRASE_LENGTH:
+        max_len = 50 if self.model is models.T1B1 else MAX_PASSPHRASE_LENGTH
+        if len(passphrase) > max_len:
             self.call_raw(messages.Cancel())
             raise ValueError("Passphrase too long")
 
