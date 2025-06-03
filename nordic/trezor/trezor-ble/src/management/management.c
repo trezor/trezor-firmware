@@ -119,7 +119,8 @@ static int read_image_sha256(uint8_t area_id,
       if (len != IMAGE_HASH_LEN) {
         rc = -EINVAL;
       } else {
-        rc = flash_area_read(fa, off + sizeof(tlv_hdr), out_hash, IMAGE_HASH_LEN);
+        rc = flash_area_read(fa, off + sizeof(tlv_hdr), out_hash,
+                             IMAGE_HASH_LEN);
       }
       break;
     }
