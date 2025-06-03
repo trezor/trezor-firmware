@@ -121,8 +121,24 @@ bool nrf_system_off(void);
 
 void nrf_reboot(void);
 
-void nrf_send_urt_data(const uint8_t *data, uint32_t len);
+void nrf_send_uart_data(const uint8_t *data, uint32_t len);
 
-bool nrf_update_required(const uint8_t *data, size_t len);
+/**
+ * @brief Check if an nRF device firmware update is required by comparing SHA256
+ * hashes.
+ *
+ * @param image_ptr Pointer to the firmware image in memory
+ * @param image_len Length of the firmware image in bytes
+ * @return true if an update is required (e.g., corrupted image detected or hash
+ * mismatch), false if the device already has the same firmware version
+ */
+bool nrf_update_required(const uint8_t *image_ptr, size_t image_len);
 
-bool nrf_update(const uint8_t *data, size_t len);
+/**
+ * @brief Perform a firmware update on the nRF device via DFU (Device Firmware Update).
+ *
+ * @param image_ptr Pointer to the firmware image in memory
+ * @param image_len Length of the firmware image in bytes
+ * @return true always (indicates that the update process was initiated)
+ */
+bool nrf_update(const uint8_t *image_ptr, size_t image_len);

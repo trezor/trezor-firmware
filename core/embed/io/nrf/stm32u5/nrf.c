@@ -978,7 +978,7 @@ bool nrf_is_dfu_mode(void) {
 }
 #endif
 
-void nrf_send_urt_data(const uint8_t *data, uint32_t len) {
+void nrf_send_uart_data(const uint8_t *data, uint32_t len) {
   nrf_driver_t *drv = &g_nrf_driver;
   if (drv->initialized) {
     while (drv->dfu_tx_pending) {

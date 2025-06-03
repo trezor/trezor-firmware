@@ -58,7 +58,7 @@ struct image_header {
  * @param out_hash   Buffer of at least IMAGE_HASH_LEN bytes to receive the hash
  * @return 0 on success, or a negative errno on failure
  */
-static int read_image_sha256(const uint8_t *binary_ptr,
+static int read_image_sha256(const uint8_t *binary_ptr, size_t binary_size,
                              uint8_t out_hash[IMAGE_HASH_LEN]) {
   int rc;
 
@@ -74,30 +74,40 @@ static int read_image_sha256(const uint8_t *binary_ptr,
 
   /* Scan TLVs until we find the SHA-256 entry */
   while (true) {
-    uint16_t tlv_hdr[4];
+    uint16_t tlv_hdr[2];
+
+    if (off + sizeof(tlv_hdr) > binary_size) {
+      rc = -1;  // Not enough data for TLV header
+      break;
+    }
 
     memcpy(tlv_hdr, binary_ptr + off, sizeof(tlv_hdr));
 
     uint16_t type = tlv_hdr[0];
     uint16_t len = tlv_hdr[1];
 
+    if (off + sizeof(tlv_hdr) + len > binary_size) {
+      rc = -1;  // Not enough data for TLV value
+      break;
+    }
+
     if (type == IMAGE_TLV_SHA256) {
       if (len != IMAGE_HASH_LEN) {
         rc = -1;
       } else {
-        memcpy(out_hash, binary_ptr + off + 4, IMAGE_HASH_LEN);
+        memcpy(out_hash, binary_ptr + off + sizeof(tlv_hdr), IMAGE_HASH_LEN);
         rc = 0;
       }
       break;
     }
 
-    off += 4 + len;
+    off += sizeof(tlv_hdr) + len;
   }
 
   return rc;
 }
 
-bool nrf_update_required(const uint8_t *data, size_t len) {
+bool nrf_update_required(const uint8_t *image_ptr, size_t image_len) {
   nrf_info_t info = {0};
 
   uint16_t try_cntr = 0;
@@ -113,20 +123,20 @@ bool nrf_update_required(const uint8_t *data, size_t len) {
 
   uint8_t expected_hash[SHA256_DIGEST_LENGTH] = {0};
 
-  read_image_sha256(data, expected_hash);
+  read_image_sha256(image_ptr, image_len, expected_hash);
 
   return memcmp(info.hash, expected_hash, SHA256_DIGEST_LENGTH) != 0;
 }
 
-bool nrf_update(const uint8_t *data, size_t len) {
+bool nrf_update(const uint8_t *image_ptr, size_t image_len) {
   nrf_reboot_to_bootloader();
   nrf_set_dfu_mode(true);
 
   uint8_t sha256[SHA256_DIGEST_LENGTH] = {0};
 
-  hash_processor_sha256_calc(data, len, sha256);
+  hash_processor_sha256_calc(image_ptr, image_len, sha256);
 
-  smp_upload_app_image(data, len, sha256, SHA256_DIGEST_LENGTH);
+  smp_upload_app_image(image_ptr, image_len, sha256, SHA256_DIGEST_LENGTH);
 
   smp_reset();
 
