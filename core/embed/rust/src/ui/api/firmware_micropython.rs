@@ -841,7 +841,6 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
 extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let failed_backup: bool = kwargs.get(Qstr::MP_QSTR_failed_backup)?.try_into()?;
-        let battery_percentage: u8 = kwargs.get_or(Qstr::MP_QSTR_battery_percentage, 0)?;
         let firmware_version: TString = kwargs.get(Qstr::MP_QSTR_firmware_version)?.try_into()?;
         let device_name: TString = kwargs.get(Qstr::MP_QSTR_device_name)?.try_into()?;
         let paired_devices: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
@@ -850,7 +849,6 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
             kwargs.get(Qstr::MP_QSTR_auto_lock_delay)?.try_into()?;
         let layout = ModelUI::show_device_menu(
             failed_backup,
-            battery_percentage,
             firmware_version,
             device_name,
             paired_devices,
@@ -1675,7 +1673,6 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def show_device_menu(
     ///     *,
     ///     failed_backup: bool,
-    ///     battery_percentage: int,
     ///     firmware_version: str,
     ///     device_name: str,
     ///     paired_devices: Iterable[str],

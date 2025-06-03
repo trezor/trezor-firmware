@@ -315,7 +315,6 @@ pub trait FirmwareUI {
 
     fn show_device_menu(
         failed_backup: bool,
-        battery_percentage: u8,
         firmware_version: TString<'static>,
         device_name: TString<'static>,
         paired_devices: Vec<TString<'static>, 1>,

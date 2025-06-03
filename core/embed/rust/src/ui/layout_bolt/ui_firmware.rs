@@ -880,7 +880,6 @@ impl FirmwareUI for UIBolt {
 
     fn show_device_menu(
         _failed_backup: bool,
-        _battery_percentage: u8,
         _firmware_version: TString<'static>,
         _device_name: TString<'static>,
         _paired_devices: heapless::Vec<TString<'static>, 1>,
