@@ -38,12 +38,17 @@ impl ProgressScreen {
         title: TString<'static>,
         indeterminate: bool,
         description: TString<'static>,
+        danger: bool,
     ) -> Self {
         Self {
             indeterminate,
             text: Self::create_paragraphs(title, description),
             value: 0,
-            border: ScreenBorder::new(theme::GREEN_LIME),
+            border: ScreenBorder::new(if danger {
+                theme::ORANGE
+            } else {
+                theme::GREEN_LIME
+            }),
             coinjoin_progress: false,
             coinjoin_do_not_disconnect: None,
         }

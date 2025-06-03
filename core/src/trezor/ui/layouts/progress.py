@@ -25,7 +25,19 @@ def progress(
     description: str | None = None,
     title: str | None = None,
     indeterminate: bool = False,
+    danger: bool = False,
 ) -> ui.ProgressLayout:
+    """
+    Displays a progress layout with optional description and title.
+
+    Args:
+        description (str | None): The description text to display. Defaults to a generic "please wait" message.
+        title (str | None): The title text to display. Defaults to None.
+        indeterminate (bool): Whether the progress is indeterminate (e.g., a spinner). Defaults to False.
+        danger (bool): Whether to apply the "danger" style to indicate a critical operation, e.g. wipe device. Defaults to False.
+    Returns:
+        ui.ProgressLayout: The configured progress layout.
+    """
     if description is None:
         description = TR.progress__please_wait  # def_arg
 
@@ -34,6 +46,7 @@ def progress(
             description=description,
             title=title,
             indeterminate=indeterminate,
+            danger=danger,
         )
     )
 
@@ -48,8 +61,12 @@ def coinjoin_progress(message: str) -> ui.ProgressLayout:
     )
 
 
-def pin_progress(title: config.StorageMessage, description: str) -> ui.ProgressLayout:
-    return progress(description=description, title=_storage_message_to_str(title))
+def pin_progress(
+    title: config.StorageMessage, description: str, danger: bool = False
+) -> ui.ProgressLayout:
+    return progress(
+        description=description, title=_storage_message_to_str(title), danger=danger
+    )
 
 
 if not utils.BITCOIN_ONLY:

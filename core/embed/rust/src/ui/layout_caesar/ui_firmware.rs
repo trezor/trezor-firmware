@@ -1164,6 +1164,7 @@ impl FirmwareUI for UICaesar {
         description: TString<'static>,
         indeterminate: bool,
         title: Option<TString<'static>>,
+        _danger: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut progress = Progress::new(indeterminate, description);
         if let Some(title) = title {
