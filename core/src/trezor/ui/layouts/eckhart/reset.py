@@ -26,7 +26,7 @@ def show_share_words(
         )
     words_count = len(share_words)
 
-    # BIP39 and 1-of-1 SLIP39
+    # BIP39
     if share_index is None:
         instructions = [
             TR.reset__write_down_words_template.format(words_count),
@@ -34,7 +34,7 @@ def show_share_words(
         ]
         instructions_verb = None
         text_check = TR.reset__check_backup_instructions
-    # 1st share of SLIP39 with multiple shares
+    # 1st share of SLIP39
     elif share_index == 0 and group_index is None:
         instructions = [
             TR.reset__write_down_words_template.format(words_count),
@@ -42,7 +42,7 @@ def show_share_words(
         ]
         instructions_verb = TR.instructions__shares_start_with_1
         text_check = TR.reset__check_share_backup_template.format(share_index + 1)
-    # remaining shares of SLIP39 with multiple shares
+    # remaining shares of SLIP39
     elif share_index > 0 and group_index is None:
         instructions = []
         instructions_verb = None

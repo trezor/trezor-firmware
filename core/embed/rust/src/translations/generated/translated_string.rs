@@ -766,7 +766,7 @@ pub enum TranslatedString {
     recovery__enter_backup = 503,  // "Enter your backup."
     recovery__enter_different_share = 504,  // "Enter a different share."
     recovery__enter_share_from_diff_group = 505,  // "Enter share from a different group."
-    recovery__group_num_template = 506,  // "Group {0}"
+    recovery__group_num_template = 506,  // {"Bolt": "Group {0}", "Caesar": "Group {0}", "Delizia": "Group {0}", "Eckhart": "Group #{0}"}
     recovery__group_threshold_reached = 507,  // "Group threshold reached."
     recovery__invalid_wallet_backup_entered = 508,  // "Invalid wallet backup entered."
     recovery__invalid_share_entered = 509,  // "Invalid recovery share entered."
@@ -811,7 +811,7 @@ pub enum TranslatedString {
     reset__group_description = 549,  // "A group is made up of recovery shares."
     reset__group_info = 550,  // "Each group has a set number of shares and its own threshold. In the next steps you will set the numbers of shares and the thresholds."
     reset__group_share_checked_successfully_template = 551,  // "Group {0} - Share {1} checked successfully."
-    reset__group_share_title_template = 552,  // "Group {0} - share {1}"
+    reset__group_share_title_template = 552,  // {"Bolt": "Group {0} - share {1}", "Caesar": "Group {0} - share {1}", "Delizia": "Group {0} - share {1}", "Eckhart": "Group #{0} - Share #{1}"}
     reset__more_info_at = 553,  // "More info at"
     reset__need_all_share_template = 554,  // "For recovery you need all {0} of the shares."
     reset__need_any_share_template = 555,  // "For recovery you need any {0} of the shares."
@@ -2309,7 +2309,14 @@ impl TranslatedString {
             (Self::recovery__enter_backup, "Enter your backup."),
             (Self::recovery__enter_different_share, "Enter a different share."),
             (Self::recovery__enter_share_from_diff_group, "Enter share from a different group."),
+            #[cfg(feature = "layout_bolt")]
             (Self::recovery__group_num_template, "Group {0}"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::recovery__group_num_template, "Group {0}"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::recovery__group_num_template, "Group {0}"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::recovery__group_num_template, "Group #{0}"),
             (Self::recovery__group_threshold_reached, "Group threshold reached."),
             (Self::recovery__invalid_wallet_backup_entered, "Invalid wallet backup entered."),
             (Self::recovery__invalid_share_entered, "Invalid recovery share entered."),
@@ -2382,7 +2389,14 @@ impl TranslatedString {
             (Self::reset__group_description, "A group is made up of recovery shares."),
             (Self::reset__group_info, "Each group has a set number of shares and its own threshold. In the next steps you will set the numbers of shares and the thresholds."),
             (Self::reset__group_share_checked_successfully_template, "Group {0} - Share {1} checked successfully."),
+            #[cfg(feature = "layout_bolt")]
             (Self::reset__group_share_title_template, "Group {0} - share {1}"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::reset__group_share_title_template, "Group {0} - share {1}"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::reset__group_share_title_template, "Group {0} - share {1}"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::reset__group_share_title_template, "Group #{0} - Share #{1}"),
             (Self::reset__more_info_at, "More info at"),
             (Self::reset__need_all_share_template, "For recovery you need all {0} of the shares."),
             (Self::reset__need_any_share_template, "For recovery you need any {0} of the shares."),

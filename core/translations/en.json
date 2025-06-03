@@ -703,7 +703,12 @@
     "recovery__enter_different_share": "Enter a different share.",
     "recovery__enter_each_word": "Enter each word of your wallet backup in order.",
     "recovery__enter_share_from_diff_group": "Enter share from a different group.",
-    "recovery__group_num_template": "Group {0}",
+    "recovery__group_num_template": {
+      "Bolt": "Group {0}",
+      "Caesar": "Group {0}",
+      "Delizia": "Group {0}",
+      "Eckhart": "Group #{0}"
+    },
     "recovery__group_threshold_reached": "Group threshold reached.",
     "recovery__info_about_disconnect": "It's safe to disconnect your Trezor while recovering your wallet and continue later.",
     "recovery__invalid_share_entered": "Invalid recovery share entered.",
@@ -777,7 +782,12 @@
     "reset__group_description": "A group is made up of recovery shares.",
     "reset__group_info": "Each group has a set number of shares and its own threshold. In the next steps you will set the numbers of shares and the thresholds.",
     "reset__group_share_checked_successfully_template": "Group {0} - Share {1} checked successfully.",
-    "reset__group_share_title_template": "Group {0} - share {1}",
+    "reset__group_share_title_template": {
+      "Bolt": "Group {0} - share {1}",
+      "Caesar": "Group {0} - share {1}",
+      "Delizia": "Group {0} - share {1}",
+      "Eckhart": "Group #{0} - Share #{1}"
+    },
     "reset__incorrect_word_selected": {
       "Bolt": "Incorrect word selected",
       "Caesar": "Incorrect word selected",
