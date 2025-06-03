@@ -87,7 +87,7 @@ static int read_image_sha256(uint8_t area_id,
 
   /* Open the flash area (slot) */
   rc = flash_area_open(area_id, &fa);
-  if (rc) {
+  if (rc < 0) {
     return rc;
   }
 
@@ -107,7 +107,7 @@ static int read_image_sha256(uint8_t area_id,
 
   /* Scan TLVs until we find the SHA-256 entry */
   while (true) {
-    uint16_t tlv_hdr[4];
+    uint16_t tlv_hdr[2];
     rc = flash_area_read(fa, off, tlv_hdr, sizeof(tlv_hdr));
     if (rc < 0) {
       break;
@@ -119,12 +119,12 @@ static int read_image_sha256(uint8_t area_id,
       if (len != IMAGE_HASH_LEN) {
         rc = -EINVAL;
       } else {
-        rc = flash_area_read(fa, off + 4, out_hash, IMAGE_HASH_LEN);
+        rc = flash_area_read(fa, off + sizeof(tlv_hdr), out_hash, IMAGE_HASH_LEN);
       }
       break;
     }
 
-    off += 4 + len;
+    off += sizeof(tlv_hdr) + len;
   }
 
   flash_area_close(fa);
