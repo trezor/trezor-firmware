@@ -214,7 +214,7 @@ secbool ble_read__verified(uint8_t *data, size_t len);
 
 bool nrf_update_required__verified(const uint8_t *data, size_t len);
 
-bool nrf_update__veridied(const uint8_t *data, size_t len);
+bool nrf_update__verified(const uint8_t *data, size_t len);
 
 #endif
 // ---------------------------------------------------------------------
