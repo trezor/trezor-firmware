@@ -61,7 +61,7 @@ where
         // to prevent that.
         unsafe {
             if IMAGE_BUFFER_LOCKED {
-                return Err(Error::AllocationFailed);
+                return Err(Error::RuntimeError(c"Image buffer locked"));
             }
 
             let bitmap =
