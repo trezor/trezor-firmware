@@ -122,6 +122,7 @@ def read_words(debug: "DebugLink", do_htc: bool = True) -> list[str]:
     elif debug.layout_type is LayoutType.Delizia:
         debug.swipe_up()
     elif debug.layout_type is LayoutType.Eckhart:
+        # In SLIP39, the screen is present only before the 1st share
         if "ShareWordsInner" not in debug.read_layout().all_components():
             debug.click(debug.screen_buttons.ok())
         assert "ShareWordsInner" in debug.read_layout().all_components()
@@ -156,10 +157,7 @@ def read_words(debug: "DebugLink", do_htc: bool = True) -> list[str]:
     else:
         # It would take a very long time to test 16-of-16 with doing 1500 ms HTC after
         # each word set
-        if debug.layout_type is LayoutType.Eckhart:
-            debug.click(debug.screen_buttons.ok())
-        else:
-            debug.press_yes()
+        debug.press_yes()
 
     return words
 
