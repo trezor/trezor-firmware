@@ -314,7 +314,10 @@ impl Layout<Result<Obj, Error>> for SwipeFlow {
     }
 
     fn paint(&mut self) -> Result<(), Error> {
+        #[cfg(feature = "ui_debug")]
         let mut overflow: bool = false;
+        #[cfg(not(feature = "ui_debug"))]
+        let overflow: bool = false;
         render_on_display(None, Some(Color::black()), |target| {
             self.render_state(self.state.index(), target);
             #[cfg(feature = "ui_debug")]
