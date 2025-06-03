@@ -15,10 +15,10 @@ use crate::{
     },
 };
 
+use super::super::theme;
+
 #[cfg(feature = "bootloader")]
 use super::super::fonts;
-
-use super::super::theme;
 
 pub enum ButtonMsg {
     Pressed,
@@ -236,9 +236,7 @@ impl Button {
     }
 
     pub fn set_content(&mut self, content: ButtonContent) {
-        if self.content != content {
-            self.content = content
-        }
+        self.content = content
     }
 
     pub fn set_expanded_touch_area(&mut self, expand: Insets) {
@@ -251,6 +249,10 @@ impl Button {
 
     pub fn content(&self) -> &ButtonContent {
         &self.content
+    }
+
+    pub fn content_mut(&mut self) -> &mut ButtonContent {
+        &mut self.content
     }
 
     pub fn content_offset(&self) -> Offset {
@@ -301,7 +303,7 @@ impl Button {
                 text.map(|t| self.text_height(t, false, width) + self.baseline_subtext_height())
             }
             #[cfg(feature = "micropython")]
-            ButtonContent::HomeBar(_) => theme::ACTION_BAR_HEIGHT,
+            ButtonContent::HomeBar(..) => theme::ACTION_BAR_HEIGHT,
         }
     }
 
@@ -407,7 +409,7 @@ impl Button {
     }
 
     fn render_content<'s>(
-        &self,
+        &'s self,
         target: &mut impl Renderer<'s>,
         stylesheet: &ButtonStyle,
         alpha: u8,
@@ -558,7 +560,7 @@ impl Button {
         }
     }
 
-    pub fn render_with_alpha<'s>(&self, target: &mut impl Renderer<'s>, alpha: u8) {
+    pub fn render_with_alpha<'s>(&'s self, target: &mut impl Renderer<'s>, alpha: u8) {
         let style = self.style();
         self.render_background(target, style, alpha);
         self.render_content(target, style, alpha);
@@ -690,7 +692,9 @@ impl crate::trace::Trace for Button {
                 t.string("text", *text);
             }
             #[cfg(feature = "micropython")]
-            ButtonContent::HomeBar(text) => t.string("text", text.unwrap_or(TString::empty())),
+            ButtonContent::HomeBar(text) => {
+                t.string("text", text.unwrap_or(TString::empty()));
+            }
         }
     }
 }
@@ -711,7 +715,7 @@ impl State {
     }
 }
 
-#[derive(PartialEq, Eq, Clone)]
+#[derive(Clone)]
 pub enum ButtonContent {
     Empty,
     Text {

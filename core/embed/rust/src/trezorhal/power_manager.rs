@@ -3,6 +3,7 @@ use super::ffi;
 #[cfg(feature = "ui")]
 use crate::ui::event::PMEvent;
 
+#[derive(PartialEq, Eq, Copy, Clone)]
 pub enum ChargingState {
     Discharging,
     Charging,

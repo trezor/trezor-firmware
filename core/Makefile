@@ -179,7 +179,7 @@ test: ## run unit tests
 test_rust: ## run rs unit tests
 	export BUILD_DIR=$(abspath $(UNIX_BUILD_DIR)) ; \
 	cd embed/rust ; cargo test $(TESTOPTS) --target=$(RUST_TARGET) \
-		--no-default-features --features $(LAYOUT_FEATURE),test \
+		--no-default-features --features $(LAYOUT_FEATURE),power_manager,test \
 		-- --test-threads=1 --nocapture
 
 test_emu: ## run selected device tests from python-trezor

@@ -116,8 +116,11 @@ include_icon!(ICON_LOGO, "layout_eckhart/res/lock_full.toif");
 include_icon!(ICON_WARNING40, "layout_eckhart/res/warning40.toif");
 
 // Battery icons
-include_icon!(ICON_BATTERY_BAR, "layout_eckhart/res/battery_bar.toif");
-include_icon!(ICON_BATTERY_ZAP, "layout_eckhart/res/battery_zap.toif");
+include_icon!(ICON_BATTERY_ZAP, "layout_eckhart/res/battery/zap.toif");
+include_icon!(ICON_BATTERY_FULL, "layout_eckhart/res/battery/full.toif");
+include_icon!(ICON_BATTERY_MID, "layout_eckhart/res/battery/mid.toif");
+include_icon!(ICON_BATTERY_LOW, "layout_eckhart/res/battery/low.toif");
+include_icon!(ICON_BATTERY_EMPTY, "layout_eckhart/res/battery/empty.toif");
 
 // Border overlay icons for bootloader screens and hold to confirm animation
 include_icon!(ICON_BORDER_BL, "layout_eckhart/res/border/BL.toif");
