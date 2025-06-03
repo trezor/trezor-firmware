@@ -424,7 +424,7 @@ impl Timer {
         self.token().0 == Timer::INVALID_TOKEN_VALUE
     }
 
-    const fn is_running(&self) -> bool {
+    pub const fn is_running(&self) -> bool {
         self.0 & Timer::IS_RUNNING_BITMASK != 0
     }
 

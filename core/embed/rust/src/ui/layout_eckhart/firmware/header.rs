@@ -9,7 +9,10 @@ use crate::{
 };
 
 use super::{
-    super::component::{Button, ButtonContent, ButtonMsg},
+    super::{
+        component::{Button, ButtonContent, ButtonMsg},
+        firmware::FuelGauge,
+    },
     constant, theme,
 };
 
@@ -31,6 +34,8 @@ pub struct Header {
     /// icon in the top-left corner (used instead of left button)
     icon: Option<Icon>,
     icon_color: Option<Color>,
+    /// Battery status indicator
+    fuel_gauge: Option<FuelGauge>,
 }
 
 #[derive(Copy, Clone)]
@@ -56,6 +61,7 @@ impl Header {
             left_button_msg: HeaderMsg::Cancelled,
             icon: None,
             icon_color: None,
+            fuel_gauge: Some(FuelGauge::on_charging_change()),
         }
     }
 
@@ -116,6 +122,11 @@ impl Header {
     }
 
     #[inline(never)]
+    pub fn with_fuel_gauge(self, fuel_gauge: Option<FuelGauge>) -> Self {
+        Self { fuel_gauge, ..self }
+    }
+
+    #[inline(never)]
     pub fn update_title(&mut self, ctx: &mut EventCtx, title: TString<'static>) {
         self.title.set_text(title);
         ctx.request_paint();
@@ -148,24 +159,31 @@ impl Component for Header {
 
         let bounds = bounds.inset(Self::HEADER_INSETS);
         let rest = if let Some(b) = &mut self.right_button {
-            let (rest, button_area) = bounds.split_right(Self::HEADER_BUTTON_WIDTH);
-            b.place(button_area);
+            let (rest, right_button_area) = bounds.split_right(Self::HEADER_BUTTON_WIDTH);
+            b.place(right_button_area);
             rest
         } else {
             bounds
         };
 
         let icon_width = self.left_icon_width();
-        let (rest, title_area) = rest.split_left(icon_width);
+        let (left_button_area, title_area) = rest.split_left(icon_width);
 
-        self.left_button.place(rest);
+        self.left_button.place(left_button_area);
         self.title.place(title_area);
+        self.fuel_gauge.place(title_area.union(left_button_area));
+        if let Some(fuel_gauge) = &mut self.fuel_gauge {
+            // Force update the fuel gauge state, so it is up-to-date
+            // necessary e.g. for the first DeviceMenu Submenu re-entry
+            fuel_gauge.update_pm_state();
+        }
+
         self.area = bounds;
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.title.event(ctx, event);
+        self.fuel_gauge.event(ctx, event);
 
         if let Some(ButtonMsg::Clicked) = self.left_button.event(ctx, event) {
             return Some(self.left_button_msg);
@@ -179,14 +197,22 @@ impl Component for Header {
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.right_button.render(target);
-        self.left_button.render(target);
-        if let Some(icon) = self.icon {
-            shape::ToifImage::new(self.area.left_center(), icon.toif)
-                .with_fg(self.icon_color.unwrap_or(theme::GREY_LIGHT))
-                .with_align(Alignment2D::CENTER_LEFT)
-                .render(target);
+        if self
+            .fuel_gauge
+            .as_ref()
+            .is_some_and(|fg| fg.should_be_shown())
+        {
+            self.fuel_gauge.render(target);
+        } else {
+            self.left_button.render(target);
+            if let Some(icon) = self.icon {
+                shape::ToifImage::new(self.area.left_center(), icon.toif)
+                    .with_fg(self.icon_color.unwrap_or(theme::GREY_LIGHT))
+                    .with_align(Alignment2D::CENTER_LEFT)
+                    .render(target);
+            }
+            self.title.render(target);
         }
-        self.title.render(target);
     }
 }
 

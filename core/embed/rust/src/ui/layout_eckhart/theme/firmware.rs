@@ -16,6 +16,8 @@ use super::{
 
 pub const CONFIRM_HOLD_DURATION: ShortDuration = ShortDuration::from_millis(1500);
 pub const ERASE_HOLD_DURATION: ShortDuration = ShortDuration::from_millis(1500);
+/// Duration for the battery status showcase on the ActionBar or Header
+pub const FUEL_GAUGE_DURATION: ShortDuration = ShortDuration::from_millis(2000);
 
 // Text styles
 /// Alias for use with copied code, might be deleted later

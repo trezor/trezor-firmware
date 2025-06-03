@@ -7,21 +7,22 @@ use crate::{
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Label, Never},
         display::{image::ImageInfo, Color},
-        geometry::{Alignment2D, Insets, Offset, Point, Rect},
+        geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
         lerp::Lerp,
         shape::{self, Renderer},
+        util::animation_disabled,
     },
 };
 
 use super::{
     super::{
-        component::{Button, ButtonMsg},
+        component::{Button, ButtonContent, ButtonMsg},
         fonts,
     },
     constant::{HEIGHT, SCREEN, WIDTH},
     theme::{self, firmware::button_homebar_style, TILES_GRID},
-    ActionBar, ActionBarMsg, Hint,
+    ActionBar, ActionBarMsg, FuelGauge, Hint,
 };
 
 const LOCK_HOLD_DURATION: ShortDuration = ShortDuration::from_millis(3000);
@@ -42,8 +43,12 @@ pub struct Homescreen {
     lockable: bool,
     /// Whether the homescreen is locked
     locked: bool,
+    /// Whether the homescreen is a boot screen
+    bootscreen: bool,
     /// Hold to lock button placed everywhere except the `action_bar`
     virtual_locking_button: Button,
+    /// Fuel gauge (battery status indicator) rendered in the `action_bar` area
+    fuel_gauge: FuelGauge,
 }
 
 pub enum HomescreenMsg {
@@ -91,29 +96,51 @@ impl Homescreen {
             led_color = None;
         }
 
-        // ActionBar button
-        let button_style = button_homebar_style(notification_level);
-        let button = if bootscreen {
-            Button::with_homebar_content(Some(TR::lockscreen__tap_to_connect.into()))
-                .styled(button_style)
-        } else if locked {
-            Button::with_homebar_content(Some(TR::lockscreen__tap_to_unlock.into()))
-                .styled(button_style)
-        } else {
-            // TODO: Battery/Connectivity button content
-            Button::with_homebar_content(None).styled(button_style)
-        };
-
         Ok(Self {
             label: HomeLabel::new(label, shadow),
             hint,
-            action_bar: ActionBar::new_single(button),
+            action_bar: ActionBar::new_single(
+                Button::new(Self::homebar_content(bootscreen, locked))
+                    .styled(button_homebar_style(notification_level)),
+            ),
             image,
             led_color,
             lockable,
             locked,
+            bootscreen,
             virtual_locking_button: Button::empty().with_long_press(LOCK_HOLD_DURATION),
+            fuel_gauge: FuelGauge::on_charging_change_or_attach()
+                .with_alignment(Alignment::Center)
+                .with_font(fonts::FONT_SATOSHI_MEDIUM_26),
         })
+    }
+
+    fn homebar_content(bootscreen: bool, locked: bool) -> ButtonContent {
+        let text = if bootscreen {
+            Some(TR::lockscreen__tap_to_connect.into())
+        } else if locked {
+            Some(TR::lockscreen__tap_to_unlock.into())
+        } else {
+            None
+        };
+        ButtonContent::HomeBar(text)
+    }
+
+    fn event_fuel_gauge(&mut self, ctx: &mut EventCtx, event: Event) {
+        if animation_disabled() {
+            return;
+        }
+
+        self.fuel_gauge.event(ctx, event);
+        let bar_content = if self.fuel_gauge.should_be_shown() {
+            ButtonContent::Empty
+        } else {
+            Self::homebar_content(self.bootscreen, self.locked)
+        };
+
+        if let Some(b) = self.action_bar.right_button_mut() {
+            b.set_content(bar_content)
+        }
     }
 
     fn event_hold(&mut self, ctx: &mut EventCtx, event: Event) -> bool {
@@ -146,6 +173,7 @@ impl Component for Homescreen {
 
         self.label.place(label_area);
         self.action_bar.place(bar_area);
+        self.fuel_gauge.place(bar_area);
         // Locking button is placed everywhere except the action bar
         let locking_area = bounds.inset(Insets::bottom(self.action_bar.touch_area().height()));
         self.virtual_locking_button.place(locking_area);
@@ -153,6 +181,7 @@ impl Component for Homescreen {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.event_fuel_gauge(ctx, event);
         if let Some(ActionBarMsg::Confirmed) = self.action_bar.event(ctx, event) {
             if self.locked {
                 return Some(HomescreenMsg::Dismissed);
@@ -178,6 +207,9 @@ impl Component for Homescreen {
         self.label.render(target);
         self.hint.render(target);
         self.action_bar.render(target);
+        if self.fuel_gauge.should_be_shown() {
+            self.fuel_gauge.render(target);
+        }
     }
 }
 

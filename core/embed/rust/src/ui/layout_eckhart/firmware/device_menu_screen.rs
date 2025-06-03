@@ -14,19 +14,21 @@ use crate::{
             Component, Event, EventCtx,
         },
         geometry::Rect,
-        layout_eckhart::{
-            component::{Button, ButtonStyleSheet},
-            constant::SCREEN,
-            firmware::{
-                Header, HeaderMsg, TextScreen, TextScreenMsg, VerticalMenu, VerticalMenuScreen,
-                VerticalMenuScreenMsg, SHORT_MENU_ITEMS,
-            },
-        },
         shape::Renderer,
     },
 };
 
-use super::{theme, ShortMenuVec};
+use super::{
+    super::{
+        component::{Button, ButtonStyleSheet},
+        constant::SCREEN,
+        firmware::{
+            FuelGauge, Header, HeaderMsg, TextScreen, TextScreenMsg, VerticalMenu,
+            VerticalMenuScreen, VerticalMenuScreenMsg, SHORT_MENU_ITEMS,
+        },
+    },
+    theme, ShortMenuVec,
+};
 use heapless::Vec;
 
 const MAX_DEPTH: usize = 3;
@@ -37,10 +39,9 @@ const DISCONNECT_DEVICE_MENU_INDEX: usize = 1;
 
 #[derive(Clone)]
 enum Action {
-    // Go to another registered subscreen
+    /// Go to another registered subscreen
     GoTo(usize),
-
-    // Return a DeviceMenuMsg to the caller
+    /// Return a DeviceMenuMsg to the caller
     Return(DeviceMenuMsg),
 }
 
@@ -381,7 +382,7 @@ impl<'a> DeviceMenuScreen<'a> {
                 }
                 let mut header = Header::new(submenu.header_text).with_close_button();
                 if submenu.show_battery {
-                    // TODO: add battery
+                    header = header.with_fuel_gauge(Some(FuelGauge::always()));
                 } else {
                     header = header.with_left_button(
                         Button::with_icon(theme::ICON_CHEVRON_LEFT),
