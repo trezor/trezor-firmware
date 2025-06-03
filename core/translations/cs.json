@@ -775,7 +775,6 @@
     "sd_card__use_different_card": "Použijte jinou kartu nebo naformátujte kartu SD na systém souborů FAT32.",
     "sd_card__wanna_format": "Opravdu chcete naformátovat kartu SD?",
     "sd_card__wrong_sd_card": "Nesprávná karta SD.",
-    "send__address_path": "cesta adresy",
     "send__cancel_sign": "Zrušit podpis",
     "send__confirm_sending": "Odesílání částky",
     "send__from_multiple_accounts": "Odesílání z více účtů.",

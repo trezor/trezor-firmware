@@ -775,7 +775,6 @@
     "sd_card__use_different_card": "Verwende eine andere Karte oder formatiere die SD-Karte mit dem FAT32-Dateisystem.",
     "sd_card__wanna_format": "Möchtest du die SD-Karte wirklich formatieren?",
     "sd_card__wrong_sd_card": "Falsche SD-Karte.",
-    "send__address_path": "Adressenpfad",
     "send__cancel_sign": "Signieren abbrechen",
     "send__confirm_sending": "Betrag senden",
     "send__from_multiple_accounts": "Von mehreren Konten gesendet.",

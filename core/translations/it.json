@@ -770,7 +770,6 @@
     "sd_card__use_different_card": "Utilizza un'altra scheda o formatta la scheda SD nel file system FAT32.",
     "sd_card__wanna_format": "Vuoi formattare la scheda SD?",
     "sd_card__wrong_sd_card": "Scheda SD errata.",
-    "send__address_path": "percorso dell'indirizzo",
     "send__cancel_sign": "Annulla firma",
     "send__confirm_sending": "Invio importo",
     "send__from_multiple_accounts": "Invio da più conti.",

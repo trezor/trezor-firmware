@@ -900,7 +900,6 @@ pub enum TranslatedString {
     sd_card__use_different_card = 637,  // "Use a different card or format the SD card to the FAT32 filesystem."
     sd_card__wanna_format = 638,  // "Do you really want to format the SD card?"
     sd_card__wrong_sd_card = 639,  // "Wrong SD card."
-    send__address_path = 640,  // "address path"
     send__confirm_sending = 641,  // "Sending amount"
     send__from_multiple_accounts = 642,  // "Sending from multiple accounts."
     send__including_fee = 643,  // "Including fee:"
@@ -2416,7 +2415,6 @@ impl TranslatedString {
             (Self::sd_card__use_different_card, "Use a different card or format the SD card to the FAT32 filesystem."),
             (Self::sd_card__wanna_format, "Do you really want to format the SD card?"),
             (Self::sd_card__wrong_sd_card, "Wrong SD card."),
-            (Self::send__address_path, "address path"),
             (Self::send__confirm_sending, "Sending amount"),
             (Self::send__from_multiple_accounts, "Sending from multiple accounts."),
             (Self::send__including_fee, "Including fee:"),
@@ -4085,7 +4083,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_sd_card__use_different_card, Self::sd_card__use_different_card),
         (Qstr::MP_QSTR_sd_card__wanna_format, Self::sd_card__wanna_format),
         (Qstr::MP_QSTR_sd_card__wrong_sd_card, Self::sd_card__wrong_sd_card),
-        (Qstr::MP_QSTR_send__address_path, Self::send__address_path),
         (Qstr::MP_QSTR_send__cancel_sign, Self::send__cancel_sign),
         (Qstr::MP_QSTR_send__confirm_sending, Self::send__confirm_sending),
         (Qstr::MP_QSTR_send__from_multiple_accounts, Self::send__from_multiple_accounts),

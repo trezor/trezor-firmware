@@ -750,7 +750,6 @@ class TR:
     sd_card__use_different_card: str = "Use a different card or format the SD card to the FAT32 filesystem."
     sd_card__wanna_format: str = "Do you really want to format the SD card?"
     sd_card__wrong_sd_card: str = "Wrong SD card."
-    send__address_path: str = "address path"
     send__cancel_sign: str = "Cancel sign"
     send__confirm_sending: str = "Sending amount"
     send__from_multiple_accounts: str = "Sending from multiple accounts."
