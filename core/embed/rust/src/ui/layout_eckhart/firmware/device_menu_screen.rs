@@ -147,23 +147,17 @@ enum ActiveScreen<'a> {
 
 pub struct DeviceMenuScreen<'a> {
     bounds: Rect,
-
-    battery_percentage: u8,
     firmware_version: TString<'static>,
-
     // These correspond to the currently active subscreen,
     // which is one of the possible kinds of subscreens
     // as defined by `enum Subscreen` (DeviceScreen is still a VerticalMenuScreen!)
     // This way we only need to keep one screen at any time in memory.
     active_screen: GcBox<ActiveScreen<'a>>,
-
     // Information needed to construct any subscreen on demand
     submenus: GcBox<Vec<Submenu, MAX_SUBMENUS>>,
     subscreens: Vec<Subscreen, MAX_SUBSCREENS>,
-
     // index of the current subscreen in the list of subscreens
     active_subscreen: usize,
-
     // stack of parents that led to the current subscreen
     parent_subscreens: Vec<usize, MAX_DEPTH>,
 }
@@ -171,20 +165,14 @@ pub struct DeviceMenuScreen<'a> {
 impl<'a> DeviceMenuScreen<'a> {
     pub fn new(
         failed_backup: bool,
-        battery_percentage: u8,
         firmware_version: TString<'static>,
         device_name: TString<'static>,
         // NB: we currently only support one device at a time.
-        // if we ever increase this size, we will need a way to return the correct
-        // device index on Disconnect back to uPy
-        // (see component_msg_obj.rs, which currently just returns "DeviceDisconnect" with no
-        // index!)
         paired_devices: Vec<TString<'static>, 1>,
         auto_lock_delay: TString<'static>,
     ) -> Result<Self, Error> {
         let mut screen = Self {
             bounds: Rect::zero(),
-            battery_percentage,
             firmware_version,
             active_screen: GcBox::new(ActiveScreen::Empty)?,
             active_subscreen: 0,
@@ -217,10 +205,6 @@ impl<'a> DeviceMenuScreen<'a> {
         screen.set_active_subscreen(root);
 
         Ok(screen)
-    }
-
-    fn is_low_battery(&self) -> bool {
-        self.battery_percentage < 20
     }
 
     fn add_paired_devices_menu(
@@ -397,14 +381,7 @@ impl<'a> DeviceMenuScreen<'a> {
                 }
                 let mut header = Header::new(submenu.header_text).with_close_button();
                 if submenu.show_battery {
-                    header = header.with_icon(
-                        theme::ICON_BATTERY_ZAP,
-                        if self.is_low_battery() {
-                            theme::YELLOW
-                        } else {
-                            theme::GREEN_LIME
-                        },
-                    );
+                    // TODO: add battery
                 } else {
                     header = header.with_left_button(
                         Button::with_icon(theme::ICON_CHEVRON_LEFT),
