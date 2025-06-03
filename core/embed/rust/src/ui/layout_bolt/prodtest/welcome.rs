@@ -1,19 +1,17 @@
-use super::super::theme::bootloader::WELCOME_COLOR;
+use super::super::{
+    fonts,
+    theme::{bootloader::WELCOME_COLOR, WHITE},
+};
 use crate::ui::{
     component::{Component, Event, EventCtx, Never, Pad, Qr},
     constant::screen,
-    geometry::{Offset, Point, Rect},
+    geometry::{Alignment, Offset, Point, Rect},
     shape::{self, Renderer},
 };
-
-#[cfg(feature = "power_manager")]
-use super::super::{fonts, theme::WHITE};
-
 #[cfg(feature = "power_manager")]
 use crate::{
     strutil::format_i64,
     trezorhal::power_manager::{charging_state, soc, ChargingState},
-    ui::geometry::Alignment,
 };
 
 pub struct Welcome {
@@ -108,15 +106,14 @@ impl Component for Welcome {
             )
             .with_align(Alignment::Center)
             .render(target);
+        }
+        self.qr.render(target);
 
-            self.qr.render(target);
-
-            if let Some(pos) = self.id_text_pos {
-                shape::Text::new(pos, unwrap!(self.id), fonts::FONT_BOLD_UPPER)
-                    .with_fg(WHITE)
-                    .with_align(Alignment::Center)
-                    .render(target);
-            }
+        if let Some(pos) = self.id_text_pos {
+            shape::Text::new(pos, unwrap!(self.id), fonts::FONT_BOLD_UPPER)
+                .with_fg(WHITE)
+                .with_align(Alignment::Center)
+                .render(target);
         }
     }
 }
