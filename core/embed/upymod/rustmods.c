@@ -36,6 +36,6 @@ MP_REGISTER_MODULE(MP_QSTR_trezortranslate, mp_module_trezortranslate);
 MP_REGISTER_MODULE(MP_QSTR_trezorble, mp_module_trezorble);
 #endif
 
-#ifdef TREZOR_EMULATOR
+#if defined(TREZOR_EMULATOR) && PYOPT == 0
 MP_REGISTER_MODULE(MP_QSTR_coveragedata, mp_module_coveragedata);
 #endif
