@@ -331,7 +331,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_instructions__hold_to_exit_tutorial;
   MP_QSTR_instructions__hold_to_sign;
   MP_QSTR_instructions__learn_more;
-  MP_QSTR_instructions__shares_continue_with_x_template;
   MP_QSTR_instructions__shares_start_with_1;
   MP_QSTR_instructions__swipe_down;
   MP_QSTR_instructions__swipe_horizontally;
@@ -562,6 +561,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__needed_to_form_a_group;
   MP_QSTR_reset__needed_to_recover_your_wallet;
   MP_QSTR_reset__never_make_digital_copy;
+  MP_QSTR_reset__next_share;
   MP_QSTR_reset__num_of_share_holders_template;
   MP_QSTR_reset__num_of_shares_advanced_info_template;
   MP_QSTR_reset__num_of_shares_basic_info_template;
