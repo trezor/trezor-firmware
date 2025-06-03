@@ -7,6 +7,8 @@
 import json
 import re
 
+from trezorlib._internal.translations import TranslatedStringsChunk
+
 TR_DIR = ROOT / "core" / "translations"
 
 order_file = TR_DIR / "order.json"
@@ -25,15 +27,13 @@ for v in en_data.values():
 # Assume all layout names appear as keys at `en.json`
 assert layout_names
 
-def encode_str(s, layout_name=None):
+def use_layout(s: str | dict[str, str], layout_name: str | None = None) -> str:
     if isinstance(s, dict) and layout_name is not None:
         s = s[layout_name]
-    return re.sub(r'\\u([0-9a-f]{4})', r'\\u{\g<1>}', json.dumps(s))
+    return s
 
-def byte_size_str(s, layout_name):
-    if isinstance(s, dict):
-        s = s[layout_name]
-    return len(s.encode())
+def encode_str(s: str) -> str:
+    return re.sub(r'\\u([0-9a-f]{4})', r'\\u{\g<1>}', json.dumps(s))
 
 def is_altcoin(name):
     return any(name.startswith(prefix + "__") for prefix in ALTCOIN_PREFIXES)
@@ -88,23 +88,21 @@ cfg_if::cfg_if! {
     ${"if" if i == 0 else "} else if"} #[cfg(feature = "layout_${layout_name.lower()}")] {
         impl TranslatedString {
         % for blob_name, predicate_fn, feature in features:
+<%
+filtered_names = [name for name in en_names if predicate_fn(name)]
+# Assume English words fit into a single chunk
+encoded, = TranslatedStringsChunk.from_items([
+    use_layout(en_data[name], layout_name)
+    for name in filtered_names
+])
+%>\
             % if feature is not None:
             #[cfg(feature = "${feature}")]
             % endif
             const ${blob_name}: StringsBlob = StringsBlob {
-                text: concat!(
-            % for name in filter(predicate_fn, en_names):
-                    ${encode_str(en_data[name], layout_name)},
-            % endfor
-                ),
-<%
-byte_offset = 0
-%>\
+                text: ${encode_str(encoded.strings.decode())},
                 offsets: &[
-            % for name in filter(predicate_fn, en_names):
-<%
-byte_offset += byte_size_str(en_data[name], layout_name)
-%>\
+            % for name, byte_offset in zip(filtered_names, encoded.offsets[1:]):
                     (Self::${name}, ${byte_offset}),
             % endfor
                 ],
