@@ -1,0 +1,262 @@
+import time
+import logging
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+from .dut import Dut
+from hardware_ctl.relay_controller import RelayController
+
+# Podmíněný import pro type hinting
+if TYPE_CHECKING:
+    from libs.prodtest_cli import prodtest_cli, ProdtestResponse
+
+# Přidání cesty k libs pro import prodtest_cli
+import sys
+from pathlib import Path
+libs_path_ctrl = Path(__file__).parent.parent / "libs"
+if str(libs_path_ctrl) not in sys.path:
+    sys.path.insert(0, str(libs_path_ctrl))
+
+# Import prodtest_cli po úpravě sys.path
+try:
+    from prodtest_cli import prodtest_cli, ProdtestResponse
+except ImportError as e:
+    logging.error(f"FATAL: Could not import prodtest_cli from {libs_path_ctrl}. Check file presence and structure.")
+    # Definujeme dummy třídy, aby zbytek mohl selhat při inicializaci
+    class ProdtestResponse: pass
+    class prodtest_cli:
+        def __init__(self, *args, **kwargs): raise ImportError("prodtest_cli not found")
+
+@dataclass
+class ProdtestPmReport:
+    """Dataclass pro uchování výsledků pm-report."""
+    power_state: str = ""
+    usb: str = ""
+    wlc: str = ""
+    battery_voltage: float = 0.0
+    battery_current: float = 0.0
+    battery_temp: float = 0.0
+    battery_soc: int = 0
+    battery_soc_latched: int = 0
+    pmic_die_temp: float = 0.0
+    wlc_voltage: float = 0.0
+    wlc_current: float = 0.0
+    wlc_die_temp: float = 0.0
+    system_voltage: float = 0.0
+
+    @classmethod
+    def from_string_list(cls, data):
+        """Parse a list of strings into a ProdtestPmReport instance."""
+        try:
+            return cls(
+                power_state=str(data[0]),
+                usb=str(data[1]),
+                wlc=str(data[2]),
+                battery_voltage=float(data[3]),
+                battery_current=float(data[4]),
+                battery_temp=float(data[5]),
+                battery_soc=int(float(data[6])),
+                battery_soc_latched=int(float(data[7])),
+                pmic_die_temp=float(data[8]),
+                wlc_voltage=float(data[9]),
+                wlc_current=float(data[10]),
+                wlc_die_temp=float(data[11]),
+                system_voltage=float(data[12]),
+            )
+        except (IndexError, ValueError, TypeError) as e:
+            logging.error(f"Failed to parse pm-report data: {data} ({e})")
+            return cls()
+
+class DutController:
+
+    """
+    Device-under-test (DUT) controller.
+    provides direct simulataneous control of configured DUTs
+    """
+    def __init__(self, duts, relay_ctl, verbose: bool = False):
+
+        self.duts = []
+        self.relay_ctl = relay_ctl
+
+        # Power off all DUTs before self test
+        for d in duts:
+            self.relay_ctl.set_relay_off(d["relay_port"])
+
+        for d in duts:
+
+            try:
+                dut = Dut(name=d["name"],
+                          cpu_id=d["cpu_id"],
+                          usb_port=d["usb_port"],
+                          relay_port=d["relay_port"],
+                          relay_ctl=self.relay_ctl,
+                          verbose=True)
+                self.duts.append(dut)
+                logging.info(f"Initialized {d["name"]} on port {d['usb_port']}")
+                logging.info(f" -- cpu_id hash : {dut.get_cpu_id_hash()}")
+                logging.info(f" -- relay port  : {dut.get_relay_port()}")
+
+            except Exception as e:
+                logging.critical(f"Failed to initialize DUT {d['name']} on port {d['usb_port']}: {e}")
+                sys.exit(1)
+
+        if len(self.duts) == 0:
+            logging.error("No DUTs initialized. Cannot proceed.")
+            raise RuntimeError("No DUTs initialized. Check port configuration.")
+
+    def power_up_all(self):
+
+        for d in self.duts:
+            d.power_up()
+
+    def power_down_all(self):
+
+        for d in self.duts:
+            d.power_down()
+
+
+    def enable_charging(self):
+        """
+        Enable charging on all DUTs.
+        """
+        for d in self.duts:
+            try:
+                d.enable_charging()
+            except Exception as e:
+                logging.error(f"Failed to enable charging on {d.name}: {e}")
+
+    def disable_charging(self):
+        """
+        Disable charging on all DUTs.
+        """
+        for d in self.duts:
+            try:
+                d.disable_charging()
+            except Exception as e:
+                logging.error(f"Failed to disable charging on {d.name}: {e}")
+
+    def set_soc_limit(self, soc_limit: int):
+        """
+        Set the state of charge (SoC) limit for all DUTs.
+        :param soc_limit: The SoC limit to set (0-100).
+        """
+        for d in self.duts:
+            try:
+                d.set_soc_limit(soc_limit)
+            except Exception as e:
+                logging.error(f"Failed to set SoC limit on {d.name}: {e}")
+
+    def all_duts_charged(self):
+
+        all_dut_charged = True
+
+        for d in self.duts:
+
+            # Read power report
+            data = d.read_report()
+
+            if data.battery_voltage >= 3.3 and abs(data.battery_current) < 0.1:
+                # Charging completed
+                d.disable_charging()
+            else:
+                all_dut_charged = False
+
+        return all_dut_charged
+
+    def all_duts_discharged(self):
+
+        all_dut_dischargerd = True
+
+        for d in self.duts:
+
+            # Read power report
+            data = d.read_report()
+
+            # Device start to shutdown, turn the power on.
+            if data.power_state == "3":
+
+                # Attach power
+                d.disable_charging()
+                d.power_up()
+
+            elif data.usb == "USB_connected":
+                # USB is connected, device already finish the discharge cycle
+                continue
+            else:
+                # Discharging not completed
+                all_dut_dischargerd = False
+
+        return all_dut_dischargerd
+
+    def any_dut_charged(self):
+
+        for d in self.duts:
+            # Read power report
+            data = d.read_report()
+
+            if data.battery_voltage >= 3.3 and abs(data.battery_current) < 0.1:
+                # Charging completed
+                return True
+
+        return False
+
+    def any_dut_discharged(self):
+
+        for d in self.duts:
+            # Read power report
+            data = d.read_report()
+
+            if data.power_state == "3":
+                # Device start to shutdown, turn the power on.
+                d.disable_charging()
+                d.power_up()
+                return True
+            elif data.usb == "USB_connected":
+                # USB is connected, device already finish the discharge cycle
+                return True
+
+        return False
+
+    def set_backlight(self, value):
+
+        for d in self.duts:
+            try:
+                d.set_backlight(value)
+            except Exception as e:
+                logging.error(f"Failed to set backlight on {d.name}: {e}")
+
+
+    def log_data(self, output_directory: Path, test_time_id, test_scenario,
+                 test_phase, temp):
+
+        # Log file name format:
+        # > <device_id_hash>.<time_identifier>.<test_scenario>.<temperarture>.csv
+        # Example: a8bf.2506091307.linear.charge.25_deg.csv
+
+        for d in self.duts:
+            d.log_data(output_directory,
+                       test_time_id,
+                       test_scenario,
+                       test_phase,
+                       temp)
+
+
+    # --- Cleanup ---
+    def close(self):
+        pass
+        # """Ukončí sériovou komunikaci."""
+        # if self.cli and hasattr(self.cli, 'vcp') and self.cli.vcp:
+        #     logging.info("Closing DUT serial connection...")
+        #     try:
+        #         self.cli.vcp.close()
+        #     except Exception as e:
+        #          logging.error(f"Error closing serial port: {e}")
+        #     self.cli = None
+        # elif self.cli:
+        #      logging.debug("DUT controller had cli object, but no active vcp to close.")
+        #      self.cli = None
+        # else:
+        #      logging.debug("DUT controller already closed or not initialized.")
+
+    def __del__(self):
+        # Zajistí zavření portu i při neočekávaném ukončení objektu
+        self.close()

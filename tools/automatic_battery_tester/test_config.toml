@@ -1,0 +1,68 @@
+
+[general]
+
+output_directory = "test_results"
+log_interval_seconds = 1
+
+################################################################################
+#  DEVICE UNDER TEST (DUT) LIST
+################################################################################
+
+[[duts]]
+name = "DUT1"
+cpu_id = "05001D000A50325557323120"
+usb_port = "/dev/ttyACM0"
+relay_port = 6
+
+[[duts]]
+name = "DUT2"
+cpu_id = "1C0023000A50325557323120"
+usb_port = "/dev/ttyACM1"
+relay_port = 8
+
+# Uncomment and edit to add more DUTs
+#[[duts]]
+#name = "DUT3"
+#usb_port = "/dev/ttyACM2"
+#relay_port = 3
+
+################################################################################
+#  RELAY BOADR (DEDITEC) SETTINGS
+################################################################################
+
+[relay]
+ip_address = "192.168.1.10" # Deditec board IP address
+
+################################################################################
+#  TEST PLAN
+################################################################################
+
+[test_plan]
+
+temperatures_celsius = [15, 20, 25, 30, 35, 40, 45] # Temp scenario lists
+cycles_per_temperature = 3
+test_modes = ["linear", "switching", "random_wonder"] # Test modes run in every cycle
+
+# Linear test mode parameters
+linear_discharge_load = 0 # could be set in range 0-255
+linear_relaxation_time_min = 60
+
+# Switching test mode parameters
+switching_discharge_switch_cycle_min = 5 # Time interval between switching load step
+switching_relaxation_time_min = 60
+
+# Random wonder test mode parameters
+random_wonder_core_test_time_min = 120
+random_wonder_relaxation_time_min = 30
+
+################################################################################
+#  NOTIFICATION SETTINGS
+################################################################################
+
+[notifications]
+notification_channel = "slack"
+
+slack_webhook_url = "https://hooks.slack.com/services/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"
+#slack_webhook_url = "https://hooks.slack.com/services/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"
+
+
