@@ -8,6 +8,7 @@
 #![allow(dead_code)]
 #![feature(lang_items)]
 #![feature(optimize_attribute)]
+#![feature(trait_alias)]
 
 #[macro_use]
 extern crate num_derive;
@@ -42,6 +43,11 @@ mod trezorhal;
 // TODO: maybe get rid of the re-export pattern :shrugs:
 #[cfg(feature = "ui")]
 pub mod ui;
+
+#[cfg(feature = "smp")]
+pub mod smp;
+
+pub mod util;
 
 #[cfg(feature = "debug")]
 #[cfg(not(test))]

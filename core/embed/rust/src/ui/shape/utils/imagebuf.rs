@@ -16,7 +16,6 @@ struct AlignedBuffer {
 }
 
 /// Raw image buffer used by `ImageBuffer` instances.
-
 static mut IMAGE_BUFFER: AlignedBuffer = AlignedBuffer {
     bytes: [0; IMAGE_BUFFER_SIZE],
 };

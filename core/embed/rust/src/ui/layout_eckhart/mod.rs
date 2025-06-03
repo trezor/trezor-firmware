@@ -1,4 +1,5 @@
 use super::{geometry::Rect, CommonUI};
+use crate::ui::layout::simplified::show;
 use theme::backlight;
 
 #[cfg(feature = "ui_debug_overlay")]
@@ -30,6 +31,8 @@ pub mod screens;
 pub mod ui_bootloader;
 #[cfg(feature = "micropython")]
 pub mod ui_firmware;
+
+use component::ErrorScreen;
 
 pub struct UIEckhart;
 
@@ -82,6 +85,15 @@ impl CommonUI for UIEckhart {
 
     fn screen_boot_stage_2(fade_in: bool) {
         screens::screen_boot_stage_2(fade_in);
+    }
+
+    fn screen_update() {
+        let mut frame = ErrorScreen::new(
+            "Update".into(),
+            "Finishing firmware update".into(),
+            "Do not turn of your trezor".into(),
+        );
+        show(&mut frame, true);
     }
 
     #[cfg(feature = "ui_debug_overlay")]

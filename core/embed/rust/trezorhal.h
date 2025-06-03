@@ -7,6 +7,7 @@
 #include <io/usb.h>
 #include <rtl/secbool.h>
 #include <sec/entropy.h>
+#include <sys/irq.h>
 #include <sys/sysevent.h>
 #include <sys/systick.h>
 #include <util/flash.h>
@@ -20,6 +21,10 @@
 
 #ifdef USE_BLE
 #include <io/ble.h>
+#endif
+
+#ifdef USE_NRF
+#include <io/nrf.h>
 #endif
 
 #ifdef USE_BUTTON

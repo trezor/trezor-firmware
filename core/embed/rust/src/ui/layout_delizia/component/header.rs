@@ -161,7 +161,6 @@ impl Header {
         self
     }
     #[inline(never)]
-
     pub fn button_styled(mut self, style: ButtonStyleSheet) -> Self {
         if self.button.is_some() {
             self.button = Some(self.button.unwrap().styled(style));

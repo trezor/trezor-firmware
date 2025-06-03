@@ -32,6 +32,7 @@
 
 #include "../crc8.h"
 #include "../nrf_internal.h"
+#include "rust_smp.h"
 
 #define MAX_SPI_DATA_SIZE (244)
 
@@ -90,6 +91,9 @@ typedef struct {
 
   systimer_t *timer;
   bool pending_spi_transaction;
+
+  bool dfu_mode;
+  bool dfu_tx_pending;
 
 } nrf_driver_t;
 
@@ -164,7 +168,7 @@ void nrf_management_rx_cb(const uint8_t *data, uint32_t len) {
   switch (data[0]) {
     case MGMT_RESP_INFO:
       drv->info_valid = true;
-      memcpy(&drv->info, &data[1], sizeof(drv->info));
+      memcpy(&drv->info, &data[1], MIN(len - 1, sizeof(nrf_info_t)));
       break;
     default:
       break;
@@ -645,6 +649,14 @@ uint8_t nrf_uart_get_received(void) {
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *urt) {
   nrf_driver_t *drv = &g_nrf_driver;
   if (drv->initialized && urt == &drv->urt) {
+#ifdef USE_SMP
+    if (nrf_is_dfu_mode()) {
+      smp_process_rx_byte(drv->urt_rx_byte);
+      HAL_UART_Receive_IT(&drv->urt, &drv->urt_rx_byte, 1);
+      return;
+    }
+#endif
+
     drv->urt_rx_complete = true;
   }
 }
@@ -652,6 +664,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *urt) {
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *urt) {
   nrf_driver_t *drv = &g_nrf_driver;
   if (drv->initialized && urt == &drv->urt) {
+    drv->dfu_tx_pending = false;
     HAL_UART_Receive_IT(&drv->urt, &drv->urt_rx_byte, 1);
   }
 }
@@ -659,6 +672,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *urt) {
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *urt) {
   nrf_driver_t *drv = &g_nrf_driver;
   if (drv->initialized && urt == &drv->urt) {
+    drv->dfu_tx_pending = false;
     drv->urt_tx_complete = true;
   }
 }
@@ -839,6 +853,9 @@ bool nrf_reboot_to_bootloader(void) {
 
   systick_delay_ms(100);
 
+  HAL_GPIO_WritePin(NRF_OUT_STAY_IN_BLD_PORT, NRF_OUT_STAY_IN_BLD_PIN,
+                    GPIO_PIN_RESET);
+
   return true;
 }
 
@@ -894,7 +911,7 @@ bool nrf_get_info(nrf_info_t *info) {
   drv->info_valid = false;
 
   uint8_t data[1] = {MGMT_CMD_INFO};
-  if (!nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, 1, NULL, NULL)) {
+  if (nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, 1, NULL, NULL) < 0) {
     return false;
   }
 
@@ -935,19 +952,19 @@ bool nrf_system_off(void) {
   return true;
 }
 
-void nrf_set_dfu_mode(void) {
+#ifdef USE_SMP
+void nrf_set_dfu_mode(bool set) {
   nrf_driver_t *drv = &g_nrf_driver;
 
   if (!drv->initialized) {
     return;
   }
 
-  // TODO
-  //  if (nrf_reboot_to_bootloader()) {
-  //    drv->mode_current = BLE_MODE_DFU;
-  //  } else {
-  //    drv->status_valid = false;
-  //  }
+  drv->dfu_mode = set;
+
+  if (set) {
+    HAL_UART_Receive_IT(&drv->urt, &drv->urt_rx_byte, 1);
+  }
 }
 
 bool nrf_is_dfu_mode(void) {
@@ -957,8 +974,27 @@ bool nrf_is_dfu_mode(void) {
     return false;
   }
 
-  return true;
-  // TODO
+  return drv->dfu_mode;
+}
+#endif
+
+void nrf_send_uart_data(const uint8_t *data, uint32_t len) {
+  nrf_driver_t *drv = &g_nrf_driver;
+  if (drv->initialized) {
+    while (drv->dfu_tx_pending) {
+      irq_key_t key = irq_lock();
+      irq_unlock(key);
+    }
+
+    drv->dfu_tx_pending = true;
+
+    HAL_UART_Transmit_IT(&drv->urt, data, len);
+
+    while (drv->dfu_tx_pending) {
+      irq_key_t key = irq_lock();
+      irq_unlock(key);
+    }
+  }
 }
 
 #endif

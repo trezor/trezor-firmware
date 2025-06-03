@@ -39,6 +39,7 @@ const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
     "-I../io/button/inc",
     "-I../io/display/inc",
     "-I../io/haptic/inc",
+    "-I../io/nrf/inc",
     "-I../io/touch/inc",
     "-I../io/rgb_led/inc",
     "-I../io/usb/inc",
@@ -46,6 +47,7 @@ const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
     "-I../sys/time/inc",
     "-I../sys/task/inc",
     "-I../sys/power_manager/inc",
+    "-I../sys/irq/inc",
     "-I../util/flash/inc",
     "-I../util/translations/inc",
     "-I../models",
@@ -56,6 +58,7 @@ const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
     "-DUSE_RGB_LED",
     "-DUSE_BLE",
     "-DUSE_POWER_MANAGER",
+    "-DUSE_NRF",
     "-DUSE_HW_JPEG_DECODER",
 ];
 
@@ -449,6 +452,11 @@ fn generate_trezorhal_bindings() {
         .allowlist_type("pm_event_t")
         .allowlist_function("pm_get_events")
         .allowlist_function("pm_get_state")
+        // irq
+        .allowlist_function("irq_lock_fn")
+        .allowlist_function("irq_unlock_fn")
+        // nrf
+        .allowlist_function("nrf_send_uart_data")
         // c_layout
         .allowlist_type("c_layout_t");
 

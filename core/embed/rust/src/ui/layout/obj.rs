@@ -139,7 +139,7 @@ where
             self.returned_value = Some(self.inner.msg_try_into_obj(msg));
             Some(LayoutState::Done)
         } else if matches!(event, Event::Attach(_)) {
-            Some(LayoutState::Attached(ctx.button_request().take()))
+            Some(LayoutState::Attached(ctx.button_request()))
         } else {
             None
         }
