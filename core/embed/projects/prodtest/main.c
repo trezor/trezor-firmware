@@ -125,7 +125,7 @@ static size_t console_read(void *context, char *buf, size_t size) {
 }
 
 static size_t console_write(void *context, const char *buf, size_t size) {
-  return usb_vcp_write_blocking(VCP_IFACE, (const uint8_t *)buf, size, -1);
+  return usb_vcp_write_blocking(VCP_IFACE, (const uint8_t *)buf, size, 100);
 }
 
 static void vcp_intr(void) { cli_abort(&g_cli); }
