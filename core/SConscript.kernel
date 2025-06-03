@@ -402,6 +402,21 @@ linkerscript_gen = env.Command(
     action='$CAT $SOURCES > $TARGET',
 )
 
+#
+# Rust library
+#
+features = FEATURES_AVAILABLE
+
+rust = tools.add_rust_lib(
+    env=env,
+    build='kernel',
+    profile='release',
+    features=features,
+    all_paths=ALLPATHS,
+    build_dir=str(Dir('.').abspath),
+)
+
+
 program_elf = env.Command(
     target='kernel.elf',
     source=obj_program,
