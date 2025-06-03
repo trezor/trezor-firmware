@@ -43,10 +43,10 @@
 #define PM_WPC_CHARGE_CURR_STEP_TIMEOUT_MS 1000
 
 // Fuel gauge extended kalman filter parameters
-#define PM_FUEL_GAUGE_R 100.0f
-#define PM_FUEL_GAUGE_Q 0.0001f
-#define PM_FUEL_GAUGE_R_AGGRESSIVE 10.0f
-#define PM_FUEL_GAUGE_Q_AGGRESSIVE 0.01f
+#define PM_FUEL_GAUGE_R 2000.0f
+#define PM_FUEL_GAUGE_Q 0.001f
+#define PM_FUEL_GAUGE_R_AGGRESSIVE 1000.0f
+#define PM_FUEL_GAUGE_Q_AGGRESSIVE 0.001f
 #define PM_FUEL_GAUGE_P_INIT 0.1f
 
 // Power manager battery sampling data structure
