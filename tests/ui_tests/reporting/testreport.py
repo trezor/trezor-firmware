@@ -275,12 +275,9 @@ def master_index() -> Path:
     doc = document(title=title)
 
     with doc:
-        h1(title)
-        hr()
-
-        h2("Differs:", style="color: grey;")
-        i("UI fixtures that have been modified:")
-        html.report_links(diff, TESTREPORT_PATH)
+        if diff:
+            i("UI fixtures that have been modified:")
+            html.report_links(diff, TESTREPORT_PATH)
 
     return html.write(TESTREPORT_PATH, doc, "master_index.html")
 

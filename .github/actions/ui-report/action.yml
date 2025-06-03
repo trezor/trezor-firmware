@@ -24,27 +24,36 @@ runs:
       shell: sh
     - run: |
         MODELJOB=${{ inputs.model }}-${{ inputs.lang }}-${{ github.job }}
-        OUTDIR=${{ github.run_id }}/$MODELJOB
+        OUTDIR=${{ github.run_id }}
         mkdir -p $OUTDIR
         nix-shell --run "poetry run python ci/prepare_ui_artifacts.py || true"
-        mv tests/ui_tests/reports/test/* $OUTDIR || true
-        mv tests/ui_tests/fixtures.*.json $OUTDIR || true
-        mv tests/trezor*.log $OUTDIR || true
-        diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json || true
+        mv -v tests/ui_tests/reports/test/* $OUTDIR
+
+        # rename all model/job-speficific report files, so they won't be overwritten during upload
+        cd $OUTDIR
+        for F in *; do
+          if [ -f "$F" ]; then
+            mv -v $F $MODELJOB-$F
+          fi
+        done
+        cd ..
 
         if [ "${{ inputs.status }}" = "success" ]; then
-          cp .github/actions/ui-report/success.png $OUTDIR/status.png
+          cp -v .github/actions/ui-report/success.png $OUTDIR/$MODELJOB-status.png
         else
-          cp .github/actions/ui-report/failure.png $OUTDIR/status.png
+          cp -v .github/actions/ui-report/failure.png $OUTDIR/$MODELJOB-status.png
         fi
       shell: sh
     - name: Upload test results
       run: |
         # Upload report
+        du -sh ${{ github.run_id }}
+        ls -l ${{ github.run_id }}
         aws s3 cp --recursive --only-show-errors ${{ github.run_id }} s3://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }} &
         PID1=$!
 
         # Upload test screen recording
+        du -sh ci/ui_test_records
         aws s3 sync --only-show-errors ci/ui_test_records s3://data.trezor.io/dev/firmware/ui_tests &
         PID2=$!
         # TODO: generate directory listing / autoindex
