@@ -247,7 +247,7 @@ impl TextLayout {
         text: &str,
         target: &mut impl Renderer<'s>,
         alpha: u8,
-        must_fit: bool,
+        _must_fit: bool,
     ) -> LayoutFit {
         let fit = self.layout_text(
             text,
@@ -256,7 +256,7 @@ impl TextLayout {
         );
 
         #[cfg(feature = "ui_debug")]
-        if must_fit && matches!(fit, LayoutFit::OutOfBounds { .. }) {
+        if _must_fit && matches!(fit, LayoutFit::OutOfBounds { .. }) {
             target.raise_overflow_exception();
         }
 

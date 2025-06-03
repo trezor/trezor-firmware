@@ -44,10 +44,13 @@ use crate::{
         },
         display::{self, Color},
         event::USBEvent,
-        shape::{render_on_display, Renderer},
+        shape::render_on_display,
         CommonUI, ModelUI,
     },
 };
+
+#[cfg(feature = "ui_debug")]
+use crate::ui::shape::Renderer;
 
 impl AttachType {
     fn to_obj(self) -> Obj {
@@ -147,6 +150,7 @@ where
     }
 
     fn paint(&mut self) -> Result<(), Error> {
+        #[cfg(feature = "ui_debug")]
         let mut overflow: bool = false;
         render_on_display(None, Some(Color::black()), |target| {
             self.inner.render(target);
