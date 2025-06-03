@@ -104,15 +104,12 @@ async def confirm_output(
             # all models that use the layout?
             show_account_str = utils.UI_LAYOUT == "CAESAR"
             script_type = CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES[output.script_type]
-            address_label = (
-                address_n_to_name(
-                    coin,
-                    output.address_n,
-                    script_type,
-                    show_account_str=show_account_str,
-                )
-                or f"{TR.send__address_path} {address_n_to_str(output.address_n)}"
-            )
+            address_label = address_n_to_name(
+                coin,
+                output.address_n,
+                script_type,
+                show_account_str=show_account_str,
+            ) or address_n_to_str(output.address_n)
 
         layout = layouts.confirm_output(
             address_short,

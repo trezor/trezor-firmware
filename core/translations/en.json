@@ -852,7 +852,6 @@
     "sd_card__use_different_card": "Use a different card or format the SD card to the FAT32 filesystem.",
     "sd_card__wanna_format": "Do you really want to format the SD card?",
     "sd_card__wrong_sd_card": "Wrong SD card.",
-    "send__address_path": "address path",
     "send__cancel_sign": "Cancel sign",
     "send__sign_cancelled": "Sign cancelled.",
     "send__confirm_sending": "Sending amount",

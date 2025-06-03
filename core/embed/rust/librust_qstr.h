@@ -661,7 +661,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_sd_card__wrong_sd_card;
   MP_QSTR_select_word;
   MP_QSTR_select_word_count;
-  MP_QSTR_send__address_path;
   MP_QSTR_send__cancel_sign;
   MP_QSTR_send__confirm_sending;
   MP_QSTR_send__from_multiple_accounts;
