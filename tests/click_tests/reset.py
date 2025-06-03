@@ -166,7 +166,11 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
     if debug.layout_type is LayoutType.Delizia:
         debug.swipe_up()
     elif debug.layout_type is LayoutType.Eckhart:
-        debug.click(debug.screen_buttons.ok())
+        # In 16-of-16 scenario, the intro screen is skipped
+        print(debug.read_layout().all_components())
+        if "SelectWordScreen" not in debug.read_layout().all_components():
+            debug.click(debug.screen_buttons.ok())
+        assert "SelectWordScreen" in debug.read_layout().all_components()
 
     layout = debug.read_layout()
     if debug.layout_type is LayoutType.Bolt:

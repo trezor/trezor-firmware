@@ -163,8 +163,12 @@ def test_reset_slip39_advanced(
     all_words: list[str] = []
     for _ in range(group_count):
         for _ in range(share_count):
-            # read words
-            do_htc = True if debug.layout_type == LayoutType.Eckhart else False
+            # In 16-of-16 UI Eckhart scenario, skip 1500 ms HTC after each word set
+            # to avoid long test durations
+            is_eckhart = debug.layout_type == LayoutType.Eckhart
+            is_16_of_16 = group_count == 16 and group_threshold == 16
+            do_htc = is_eckhart and not is_16_of_16
+
             words = reset.read_words(debug, do_htc=do_htc)
 
             # confirm words
