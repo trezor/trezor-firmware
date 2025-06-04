@@ -49,27 +49,19 @@ pub fn upload_image(image_data: &[u8], image_hash: &[u8]) -> bool {
         return false;
     }
 
-    rem_len = rem_len.saturating_sub(CHUNK_SIZE);
+    let mut offset = CHUNK_SIZE;
 
-    let mut off: usize = CHUNK_SIZE;
-
-    while rem_len > 0 {
+    for chunk in image_data.chunks(CHUNK_SIZE).skip(1) {
         let mut data = [0u8; MAX_PACKET_SIZE];
         let mut data_encoded = [0u8; MAX_PACKET_SIZE];
         let mut writer = BufferCounter::new(&mut data[8..]);
         let mut enc = Encoder::new(&mut writer);
 
-        let chunk_len = if rem_len > CHUNK_SIZE {
-            CHUNK_SIZE
-        } else {
-            rem_len
-        };
-
         unwrap!(enc.map(2));
         unwrap!(enc.str("off"));
-        unwrap!(enc.u32(off as _));
+        unwrap!(enc.u32(offset as _));
         unwrap!(enc.str("data"));
-        unwrap!(enc.bytes(&image_data[off..off + chunk_len]));
+        unwrap!(enc.bytes(chunk));
 
         let encoded_len = writer.bytes_written();
 
@@ -88,8 +80,7 @@ pub fn upload_image(image_data: &[u8], image_hash: &[u8]) -> bool {
             return false;
         }
 
-        rem_len = rem_len.saturating_sub(chunk_len);
-        off += chunk_len;
+        offset += CHUNK_SIZE;
     }
 
     true
