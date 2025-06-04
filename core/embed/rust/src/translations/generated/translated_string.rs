@@ -1445,6 +1445,7 @@ pub enum TranslatedString {
     recovery__share_from_group_entered_template = 1044,  // "Share #{0} from Group #{1} entered."
     send__cancel_transaction = 1045,  // "Cancel transaction"
     send__multisig_different_paths = 1046,  // "Using different paths for different XPUBs."
+    address__xpub = 1047,  // {"Bolt": "XPUB", "Caesar": "XPUB", "Delizia": "XPUB", "Eckhart": "Public key (XPUB)"}
 }
 
 impl TranslatedString {
@@ -3195,6 +3196,14 @@ impl TranslatedString {
             (Self::recovery__share_from_group_entered_template, "Share #{0} from Group #{1} entered."),
             (Self::send__cancel_transaction, "Cancel transaction"),
             (Self::send__multisig_different_paths, "Using different paths for different XPUBs."),
+            #[cfg(feature = "layout_bolt")]
+            (Self::address__xpub, "XPUB"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::address__xpub, "XPUB"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::address__xpub, "XPUB"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::address__xpub, "Public key (XPUB)"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3215,6 +3224,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_address__title_cosigner, Self::address__title_cosigner),
         (Qstr::MP_QSTR_address__title_receive_address, Self::address__title_receive_address),
         (Qstr::MP_QSTR_address__title_yours, Self::address__title_yours),
+        (Qstr::MP_QSTR_address__xpub, Self::address__xpub),
         (Qstr::MP_QSTR_address_details__account_info, Self::address_details__account_info),
         (Qstr::MP_QSTR_address_details__derivation_path, Self::address_details__derivation_path),
         (Qstr::MP_QSTR_address_details__derivation_path_colon, Self::address_details__derivation_path_colon),

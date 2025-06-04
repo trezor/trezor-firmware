@@ -11,6 +11,7 @@ use crate::{
             Child, Component, Event, EventCtx, Pad, Paginate, Qr,
         },
         geometry::Rect,
+        layout::util::MAX_XPUBS,
         shape::Renderer,
     },
 };
@@ -19,7 +20,6 @@ use super::{
     theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos, Frame,
 };
 
-const MAX_XPUBS: usize = 16;
 const QR_BORDER: i16 = 3;
 
 pub struct AddressDetails {

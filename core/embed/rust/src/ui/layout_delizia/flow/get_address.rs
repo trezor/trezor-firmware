@@ -15,7 +15,7 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow, SwipePage,
         },
         geometry::Direction,
-        layout::util::ConfirmValueParams,
+        layout::util::{ConfirmValueParams, MAX_XPUBS},
     },
 };
 

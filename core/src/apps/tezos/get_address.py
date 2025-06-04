@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 @with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
 async def get_address(msg: TezosGetAddress, keychain: Keychain) -> TezosAddress:
+    from trezor import TR
     from trezor.crypto import hashlib
     from trezor.messages import TezosAddress
     from trezor.ui.layouts import show_address
@@ -33,10 +34,12 @@ async def get_address(msg: TezosGetAddress, keychain: Keychain) -> TezosAddress:
     if msg.show_display:
         from . import PATTERNS, SLIP44_ID
 
+        coin = "XTZ"
         await show_address(
             address,
+            subtitle=TR.address__coin_address_template.format(coin),
             path=paths.address_n_to_str(address_n),
-            account=paths.get_account_name("XTZ", address_n, PATTERNS, SLIP44_ID),
+            account=paths.get_account_name(coin, address_n, PATTERNS, SLIP44_ID),
             chunkify=bool(msg.chunkify),
         )
 

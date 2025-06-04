@@ -274,6 +274,7 @@ async def show_address(
     address: str,
     *,
     title: str | None = None,
+    subtitle: str | None = None,
     address_qr: str | None = None,
     case_sensitive: bool = True,
     path: str | None = None,
@@ -283,6 +284,7 @@ async def show_address(
     xpubs: Sequence[str] = (),
     mismatch_title: str | None = None,
     details_title: str | None = None,
+    warning: str | None = None,
     br_name: str = "show_address",
     br_code: ButtonRequestType = ButtonRequestType.Address,
     chunkify: bool = False,
@@ -296,12 +298,15 @@ async def show_address(
         )
         return result
 
+    if warning is None and multisig_index is not None:
+        warning = TR.send__receiving_to_multisig
     await raise_if_not_confirmed(
         trezorui_api.flow_get_address(
             address=address,
-            title=title or TR.address__title_receive_address,
+            title=title or TR.words__receive,
+            subtitle=subtitle,
             description=network or "",
-            extra=None,
+            extra=warning,
             chunkify=chunkify,
             address_qr=address if address_qr is None else address_qr,
             case_sensitive=case_sensitive,
@@ -328,18 +333,20 @@ def show_pubkey(
     account: str | None = None,
     path: str | None = None,
     mismatch_title: str | None = None,
+    warning: str | None = None,
     br_name: str = "show_pubkey",
 ) -> Awaitable[None]:
-    title = title or TR.address__public_key  # def_arg
     mismatch_title = mismatch_title or TR.addr_mismatch__key_mismatch  # def_arg
     return show_address(
         address=pubkey,
-        title=title,
+        title=title or TR.address__public_key,
+        subtitle=account,
         account=account,
         path=path,
         br_name=br_name,
         br_code=ButtonRequestType.PublicKey,
         mismatch_title=mismatch_title,
+        warning=warning,
         chunkify=False,
     )
 

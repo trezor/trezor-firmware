@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 @with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
 async def get_address(msg: NEMGetAddress, keychain: Keychain) -> NEMAddress:
+    from trezor import TR
     from trezor.messages import NEMAddress
     from trezor.ui.layouts import show_address
 
@@ -32,11 +33,13 @@ async def get_address(msg: NEMGetAddress, keychain: Keychain) -> NEMAddress:
     if msg.show_display:
         from . import PATTERNS, SLIP44_ID
 
+        coin = "NEM"
         await show_address(
             address,
+            subtitle=TR.address__coin_address_template.format(coin),
             case_sensitive=False,
             path=paths.address_n_to_str(address_n),
-            account=paths.get_account_name("NEM", msg.address_n, PATTERNS, SLIP44_ID),
+            account=paths.get_account_name(coin, msg.address_n, PATTERNS, SLIP44_ID),
             network=get_network_str(network),
             chunkify=bool(msg.chunkify),
         )

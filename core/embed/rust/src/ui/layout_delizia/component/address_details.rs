@@ -14,14 +14,13 @@ use crate::{
         event::SwipeEvent,
         flow::Swipable,
         geometry::{Direction, Rect},
+        layout::util::MAX_XPUBS,
         shape::Renderer,
         util::Pager,
     },
 };
 
 use super::{theme, Frame, FrameMsg};
-
-const MAX_XPUBS: usize = 16;
 
 pub struct AddressDetails {
     details: Frame<Paragraphs<ParagraphVecShort<'static>>>,

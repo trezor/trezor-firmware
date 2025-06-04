@@ -591,6 +591,7 @@ impl FirmwareUI for UIBolt {
     fn flow_get_address(
         _address: Obj,
         _title: TString<'static>,
+        _subtitle: Option<TString<'static>>,
         _description: Option<TString<'static>>,
         _extra: Option<TString<'static>>,
         _chunkify: bool,
