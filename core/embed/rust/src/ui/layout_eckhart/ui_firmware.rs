@@ -1224,7 +1224,10 @@ impl FirmwareUI for UIEckhart {
                 let text: TString = item.try_into()?;
                 vec.add(Paragraph::new(&theme::TEXT_REGULAR, text));
             }
-            vec.is_empty().then(|| None).unwrap_or_else(|| Some(vec))
+            match vec.is_empty() {
+                true => None,
+                false => Some(vec),
+            }
         };
 
         let flow = flow::show_share_words::new_show_share_words_flow(
