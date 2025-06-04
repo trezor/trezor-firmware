@@ -141,6 +141,7 @@ FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_
 SOURCE_PRODTEST = [
     'embed/projects/prodtest/main.c',
     'embed/projects/prodtest/commands.c',
+    'embed/projects/prodtest/cmd/common.c',
     'embed/projects/prodtest/cmd/prodtest_boardloader.c',
     'embed/projects/prodtest/cmd/prodtest_ble.c',
     'embed/projects/prodtest/cmd/prodtest_bootloader.c',

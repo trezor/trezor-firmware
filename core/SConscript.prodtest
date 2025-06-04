@@ -133,6 +133,7 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/header.S',
     'embed/projects/prodtest/main.c',
     'embed/projects/prodtest/commands.c',
+    'embed/projects/prodtest/cmd/common.c',
     'embed/projects/prodtest/cmd/prodtest_boardloader.c',
     'embed/projects/prodtest/cmd/prodtest_ble.c',
     'embed/projects/prodtest/cmd/prodtest_bootloader.c',
