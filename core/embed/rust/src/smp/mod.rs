@@ -19,6 +19,18 @@ use minicbor::encode::write::Write;
 
 pub const SMP_HEADER_SIZE: usize = 8;
 
+pub const SMP_GROUP_OS: u16 = 0;
+pub const SMP_GROUP_IMAGE: u16 = 1;
+
+pub const SMP_CMD_ID_ECHO: u8 = 0;
+pub const SMP_CMD_ID_RESET: u8 = 5;
+pub const SMP_CMD_ID_IMAGE_UPLOAD: u8 = 1;
+
+pub const SMP_OP_READ: u8 = 0;
+pub const SMP_OP_READ_RSP: u8 = 1;
+pub const SMP_OP_WRITE: u8 = 2;
+pub const SMP_OP_WRITE_RSP: u8 = 3;
+
 const MSG_HEADER_SIZE: usize = 2;
 const MSG_FOOTER_SIZE: usize = 2;
 
@@ -45,26 +57,19 @@ pub enum SmpError {
 pub struct SmpHeader {
     op: u8,
     _reserved: u8,
-    len_hi: u8,
-    len_lo: u8,
-    group_id_hi: u8,
-    group_id_lo: u8,
+    len: usize,
+    group: u16,
     seq: u8,
     cmd_id: u8,
 }
 
 impl SmpHeader {
     pub fn new(op: u8, len: usize, group: u16, seq: u8, cmd_id: u8) -> Self {
-        let len_be = len.to_be_bytes(); // [hi, lo]
-        let group_be = group.to_be_bytes(); // [hi, lo]
-
         SmpHeader {
             op,
             _reserved: 0,
-            len_hi: len_be[0],
-            len_lo: len_be[1],
-            group_id_hi: group_be[0],
-            group_id_lo: group_be[1],
+            len,
+            group,
             seq,
             cmd_id,
         }
@@ -72,26 +77,30 @@ impl SmpHeader {
 
     pub fn from_bytes(b: &[u8]) -> Self {
         // we assume b.len() >= HEADER_SIZE
+
+        let len: u16 = u16::from_be_bytes([b[2], b[3]]);
+        let group: u16 = u16::from_be_bytes([b[4], b[5]]); // [hi, lo]
+
         SmpHeader {
             op: b[0],
             _reserved: b[1],
-            len_hi: b[2],
-            len_lo: b[3],
-            group_id_hi: b[4],
-            group_id_lo: b[5],
+            len: len as usize,
+            group,
             seq: b[6],
             cmd_id: b[7],
         }
     }
 
     pub fn to_bytes(&self) -> [u8; SMP_HEADER_SIZE] {
+        let len_be = (self.len as u16).to_be_bytes(); // [hi, lo]
+        let group_be = self.group.to_be_bytes(); // [hi, lo]
         [
             self.op,
             self._reserved,
-            self.len_hi,
-            self.len_lo,
-            self.group_id_hi,
-            self.group_id_lo,
+            len_be[0],
+            len_be[1],
+            group_be[0],
+            group_be[1],
             self.seq,
             self.cmd_id,
         ]
@@ -308,14 +317,14 @@ impl SmpReceiver {
         }
 
         let hdr = SmpHeader::from_bytes(&msg[..SMP_HEADER_SIZE]);
-        let group = ((hdr.group_id_hi as u16) << 8) | (hdr.group_id_lo as u16);
+        let group = hdr.group;
         let cmd_id = hdr.cmd_id;
 
         match (group, cmd_id) {
-            (0, 0) => {
+            (SMP_GROUP_OS, SMP_CMD_ID_ECHO) => {
                 self.msg_type = Some(MsgType::Echo);
             }
-            (1, 1) => {
+            (SMP_GROUP_IMAGE, SMP_CMD_ID_IMAGE_UPLOAD) => {
                 self.msg_type = Some(MsgType::ImageUploadResponse);
             }
             _ => self.msg_type = Some(MsgType::Unknown),
@@ -381,7 +390,8 @@ pub fn wait_for_response(
                 return Err(SmpError::WrongMessage);
             }
 
-            let data = &receiver.rx_msg[10..receiver.rx_msg_len - 2];
+            let data = &receiver.rx_msg
+                [MSG_HEADER_SIZE + SMP_HEADER_SIZE..receiver.rx_msg_len - MSG_FOOTER_SIZE];
             let data_len = data.len();
 
             let len = if data_len <= buf.len() {

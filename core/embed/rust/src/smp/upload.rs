@@ -1,6 +1,6 @@
 use super::{
     receiver_is_locked, receiver_lock, send_request, wait_for_response, BufferCounter, MsgType,
-    SmpHeader, SMP_HEADER_SIZE,
+    SmpHeader, SMP_CMD_ID_IMAGE_UPLOAD, SMP_GROUP_IMAGE, SMP_HEADER_SIZE, SMP_OP_WRITE,
 };
 use crate::time::Duration;
 use minicbor::Encoder;
@@ -36,7 +36,14 @@ pub fn upload_image(image_data: &[u8], image_hash: &[u8]) -> bool {
     let data_len = writer.bytes_written();
     receiver_lock();
 
-    let header = SmpHeader::new(2, data_len, 1, 0, 1).to_bytes();
+    let header = SmpHeader::new(
+        SMP_OP_WRITE,
+        data_len,
+        SMP_GROUP_IMAGE,
+        0,
+        SMP_CMD_ID_IMAGE_UPLOAD,
+    )
+    .to_bytes();
 
     data[..SMP_HEADER_SIZE].copy_from_slice(&header);
     data[SMP_HEADER_SIZE..SMP_HEADER_SIZE + data_len].copy_from_slice(&cbor_data[..data_len]);
@@ -73,7 +80,7 @@ pub fn upload_image(image_data: &[u8], image_hash: &[u8]) -> bool {
 
         receiver_lock();
 
-        let header = SmpHeader::new(2, data_len, 1, 0, 1).to_bytes();
+        let header = SmpHeader::new(SMP_OP_WRITE, data_len, SMP_GROUP_IMAGE, 0, 1).to_bytes();
 
         data[..SMP_HEADER_SIZE].copy_from_slice(&header);
         data[SMP_HEADER_SIZE..SMP_HEADER_SIZE + data_len].copy_from_slice(&cbor_data[..data_len]);

@@ -1,6 +1,6 @@
 use super::{
     receiver_is_locked, receiver_lock, send_request, wait_for_response, BufferCounter, MsgType,
-    SmpHeader, SMP_HEADER_SIZE,
+    SmpHeader, SMP_CMD_ID_ECHO, SMP_GROUP_OS, SMP_HEADER_SIZE, SMP_OP_READ,
 };
 use crate::time::Duration;
 use minicbor::{data::Type, decode, Decoder, Encoder};
@@ -24,7 +24,7 @@ pub fn send(text: &str) -> bool {
 
     let data_len = writer.bytes_written();
 
-    let header = SmpHeader::new(0, data_len, 0, 0, 0).to_bytes();
+    let header = SmpHeader::new(SMP_OP_READ, data_len, SMP_GROUP_OS, 0, SMP_CMD_ID_ECHO).to_bytes();
 
     data[..SMP_HEADER_SIZE].copy_from_slice(&header);
     data[SMP_HEADER_SIZE..SMP_HEADER_SIZE + data_len].copy_from_slice(&cbor_data[..data_len]);

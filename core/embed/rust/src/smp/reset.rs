@@ -1,6 +1,9 @@
 use minicbor::Encoder;
 
-use super::{send_request, BufferCounter, SmpHeader, SMP_HEADER_SIZE};
+use super::{
+    send_request, BufferCounter, SmpHeader, SMP_CMD_ID_RESET, SMP_GROUP_OS, SMP_HEADER_SIZE,
+    SMP_OP_READ,
+};
 
 pub fn send() {
     let mut cbor_data = [0u8; 64];
@@ -14,7 +17,8 @@ pub fn send() {
 
     let data_len = writer.bytes_written();
 
-    let header = SmpHeader::new(0, data_len, 0, 0, 5).to_bytes();
+    let header =
+        SmpHeader::new(SMP_OP_READ, data_len, SMP_GROUP_OS, 0, SMP_CMD_ID_RESET).to_bytes();
 
     data[..SMP_HEADER_SIZE].copy_from_slice(&header);
     data[SMP_HEADER_SIZE..SMP_HEADER_SIZE + data_len].copy_from_slice(&cbor_data[..data_len]);
