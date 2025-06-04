@@ -1045,5 +1045,6 @@
   "1043": "reset__select_word_from_share_template",
   "1044": "recovery__share_from_group_entered_template",
   "1045": "send__cancel_transaction",
-  "1046": "send__multisig_different_paths"
+  "1046": "send__multisig_different_paths",
+  "1047": "address__xpub"
 }

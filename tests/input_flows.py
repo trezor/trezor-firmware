@@ -763,7 +763,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
 
         yield  # show address
         layout = self.debug.read_layout()
-        assert TR.address__title_receive_address in layout.subtitle()
+        assert TR.regexp("address__coin_address_template").match(layout.subtitle())
         assert layout.text_content().replace(" ", "").strip() == self.address
 
         self.debug.click(self.debug.screen_buttons.menu())
@@ -927,7 +927,7 @@ class InputFlowShowXpubQRCode(InputFlowBase):
             for _ in range(br.pages - 1):
                 self.debug.click(self.debug.screen_buttons.ok())
 
-        assert layout.subtitle() in (TR.address__public_key, "XPUB")
+        assert TR.address__public_key in layout.title()
 
         self.debug.click(self.debug.screen_buttons.menu())
         assert "VerticalMenu" in self.all_components()

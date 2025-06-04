@@ -17,6 +17,7 @@ async def get_address(
     msg: SolanaGetAddress,
     keychain: Keychain,
 ) -> SolanaAddress:
+    from trezor import TR
     from trezor.messages import SolanaAddress
     from trezor.ui.layouts import show_address
 
@@ -30,6 +31,7 @@ async def get_address(
     if msg.show_display:
         await show_address(
             address,
+            subtitle=TR.address__coin_address_template.format("SOL"),
             path=paths.address_n_to_str(msg.address_n),
             chunkify=bool(msg.chunkify),
         )

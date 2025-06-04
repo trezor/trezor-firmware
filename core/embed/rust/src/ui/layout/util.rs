@@ -212,3 +212,7 @@ pub fn get_user_custom_image() -> Result<BinaryData<'static>, Error> {
     load_avatar(unsafe { Gc::<[u8]>::as_mut(&mut data) })?;
     Ok(data.into())
 }
+
+/// Maximum number of extended public keys (xpubs) that can be displayed in
+/// a layout or flow.
+pub const MAX_XPUBS: usize = 16;

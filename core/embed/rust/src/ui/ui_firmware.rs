@@ -197,6 +197,7 @@ pub trait FirmwareUI {
     fn flow_get_address(
         address: Obj, // TODO: replace Obj
         title: TString<'static>,
+        subtitle: Option<TString<'static>>,
         description: Option<TString<'static>>,
         extra: Option<TString<'static>>,
         chunkify: bool,

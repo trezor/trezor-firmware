@@ -16,6 +16,7 @@ async def get_address(
     keychain: Keychain,
     defs: Definitions,
 ) -> EthereumAddress:
+    from trezor import TR
     from trezor.messages import EthereumAddress
     from trezor.ui.layouts import show_address
 
@@ -33,11 +34,13 @@ async def get_address(
 
     if msg.show_display:
         slip44_id = address_n[1]  # it depends on the network (ETH vs ETC...)
+        coin = "ETH"
         await show_address(
             address,
+            subtitle=TR.address__coin_address_template.format(coin),
             path=paths.address_n_to_str(address_n),
             account=paths.get_account_name(
-                "ETH", address_n, PATTERNS_ADDRESS, slip44_id
+                coin, address_n, PATTERNS_ADDRESS, slip44_id
             ),
             chunkify=bool(msg.chunkify),
         )

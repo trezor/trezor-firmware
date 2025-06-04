@@ -82,6 +82,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_address__title_cosigner;
   MP_QSTR_address__title_receive_address;
   MP_QSTR_address__title_yours;
+  MP_QSTR_address__xpub;
   MP_QSTR_address_details__account_info;
   MP_QSTR_address_details__derivation_path;
   MP_QSTR_address_details__derivation_path_colon;

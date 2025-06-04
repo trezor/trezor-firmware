@@ -20,6 +20,12 @@
     "address__check_with_source": "Check the address with source.",
     "address__confirmed": "Receive address confirmed",
     "address__public_key": "Public key",
+    "address__xpub": {
+      "Bolt": "XPUB",
+      "Caesar": "XPUB",
+      "Delizia": "XPUB",
+      "Eckhart": "Public key (XPUB)"
+    },
     "address__public_key_confirmed": "Public key confirmed",
     "address__qr_code": "QR code",
     "address__title_cosigner": "Cosigner",

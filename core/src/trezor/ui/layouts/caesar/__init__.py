@@ -296,6 +296,7 @@ async def show_address(
     address: str,
     *,
     title: str | None = None,
+    subtitle: str | None = None,
     address_qr: str | None = None,
     case_sensitive: bool = True,
     path: str | None = None,
@@ -304,6 +305,7 @@ async def show_address(
     multisig_index: int | None = None,
     xpubs: Sequence[str] = (),
     mismatch_title: str | None = None,
+    warning: str | None = None,
     br_name: str = "show_address",
     br_code: ButtonRequestType = ButtonRequestType.Address,
     chunkify: bool = False,
@@ -384,6 +386,7 @@ def show_pubkey(
     account: str | None = None,
     path: str | None = None,
     mismatch_title: str | None = None,
+    warning: str | None = None,
     br_name: str = "show_pubkey",
 ) -> Awaitable[None]:
     title = title or TR.address__public_key  # def_arg

@@ -543,6 +543,7 @@ extern "C" fn new_flow_confirm_set_new_pin(
 extern "C" fn new_flow_get_address(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let subtitle: Option<TString> = kwargs.get(Qstr::MP_QSTR_subtitle)?.try_into_option()?;
         let description: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
         let extra: Option<TString> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;
@@ -559,6 +560,7 @@ extern "C" fn new_flow_get_address(n_args: usize, args: *const Obj, kwargs: *mut
         let layout = ModelUI::flow_get_address(
             address,
             title,
+            subtitle,
             description,
             extra,
             chunkify,
@@ -1515,6 +1517,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     address: str | bytes,
     ///     title: str,
+    ///     subtitle: str | None,
     ///     description: str | None,
     ///     extra: str | None,
     ///     chunkify: bool,
