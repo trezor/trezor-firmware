@@ -114,16 +114,49 @@ static bool get_authority_key_digest(cli_t* cli, DER_ITEM* tbs_cert,
   return true;
 }
 
+static bool verify_signature(const uint8_t* pub_key, size_t pub_key_size,
+                             const uint8_t* sig, size_t sig_size,
+                             const uint8_t* msg, size_t msg_size) {
+  // ECDSA (NIST P-256) with SHA-256
+  if (pub_key_size != 65) {
+    return false;
+  }
+
+  uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
+  sha256_Raw(msg, msg_size, digest);
+
+  uint8_t decoded_sig[64] = {0};
+  if (ecdsa_sig_from_der(sig, sig_size, decoded_sig) != 0) {
+    return false;
+  }
+
+  if (ecdsa_verify_digest(&nist256p1, pub_key, decoded_sig, digest) != 0) {
+    return false;
+  }
+
+  return true;
+}
+
 bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
-                      uint8_t sig[64], uint8_t digest[SHA256_DIGEST_LENGTH]) {
+                      const uint8_t* sig, size_t sig_size,
+                      const uint8_t challenge[CHALLENGE_SIZE]) {
   // Checks the integrity of the device certificate chain to ensure that the
   // certificate data was not corrupted in transport and that the device
-  // certificate belongs to this device. THIS IS NOT A FULL VERIFICATION OF THE
-  // CERTIFICATE CHAIN.
+  // certificate belongs to this device.
+  // The certificate chain should contain two certificates:
+  //   * the end-entity certificate (device certificate)
+  //   * the intermediate CA certificate
+  // THIS IS NOT A FULL VERIFICATION OF THE CERTIFICATE CHAIN.
 
   // This will be populated with a pointer to the key identifier data of the
   // AuthorityKeyIdentifier extension from the last certificate in the chain.
   const uint8_t* authority_key_digest = NULL;
+
+  const uint8_t* message = challenge;
+  size_t message_size = CHALLENGE_SIZE;
+
+  const uint8_t* pub_key = NULL;
+  size_t pub_key_size = 0;
 
   BUFFER_READER chain_reader = {0};
   buffer_reader_init(&chain_reader, chain, chain_size);
@@ -160,11 +193,10 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
     }
 
     // Read the public key.
-    DER_ITEM pub_key = {0};
+    DER_ITEM pub_key_val = {0};
     uint8_t unused_bits = 0;
-    const uint8_t* pub_key_bytes = NULL;
     for (int i = 0; i < 2; ++i) {
-      if (!der_read_item(&pub_key_info.buf, &pub_key)) {
+      if (!der_read_item(&pub_key_info.buf, &pub_key_val)) {
         cli_error(cli, CLI_ERROR,
                   "check_device_cert_chain, der_read_item 4, cert %d.",
                   cert_count);
@@ -172,19 +204,20 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
       }
     }
 
-    if (!buffer_get(&pub_key.buf, &unused_bits) ||
-        buffer_remaining(&pub_key.buf) != 65 ||
-        !buffer_ptr(&pub_key.buf, &pub_key_bytes)) {
+    if (!buffer_get(&pub_key_val.buf, &unused_bits) ||
+        !buffer_ptr(&pub_key_val.buf, &pub_key)) {
       cli_error(cli, CLI_ERROR,
                 "check_device_cert_chain, reading public key, cert %d.",
                 cert_count);
       return false;
     }
+    pub_key_size = buffer_remaining(&pub_key_val.buf);
 
     // Verify the previous signature.
-    if (ecdsa_verify_digest(&nist256p1, pub_key_bytes, sig, digest) != 0) {
+    if (!verify_signature(pub_key, pub_key_size, sig, sig_size, message,
+                          message_size)) {
       cli_error(cli, CLI_ERROR,
-                "check_device_cert_chain, ecdsa_verify_digest, cert %d.",
+                "check_device_cert_chain, verify_signature, cert %d.",
                 cert_count);
       return false;
     }
@@ -196,8 +229,9 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
       return false;
     }
 
-    // Prepare the hash of tbsCertificate for the next signature verification.
-    sha256_Raw(tbs_cert.buf.data, tbs_cert.buf.size, digest);
+    // Save tbsCertificate for the next signature verification.
+    message = tbs_cert.buf.data;
+    message_size = tbs_cert.buf.size;
 
     // Read the signatureAlgorithm and ensure it matches ECDSA_WITH_SHA256.
     DER_ITEM sig_alg = {0};
@@ -212,36 +246,38 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
       return false;
     }
 
-    // Read the signatureValue.
+    // Read the signature and save it for the next signature verification.
     DER_ITEM sig_val = {0};
     if (!der_read_item(&cert.buf, &sig_val) || sig_val.id != DER_BIT_STRING ||
-        !buffer_get(&sig_val.buf, &unused_bits) || unused_bits != 0) {
+        !buffer_get(&sig_val.buf, &unused_bits) || unused_bits != 0 ||
+        !buffer_ptr(&sig_val.buf, &sig)) {
       cli_error(cli, CLI_ERROR,
                 "check_device_cert_chain, reading signatureValue, cert %d.",
                 cert_count);
       return false;
     }
-
-    // Extract the signature for the next signature verification.
-    const uint8_t* sig_bytes = NULL;
-    if (!buffer_ptr(&sig_val.buf, &sig_bytes) ||
-        ecdsa_sig_from_der(sig_bytes, buffer_remaining(&sig_val.buf), sig) !=
-            0) {
-      cli_error(cli, CLI_ERROR,
-                "check_device_cert_chain, ecdsa_sig_from_der, cert %d.",
-                cert_count);
-      return false;
-    }
+    sig_size = buffer_remaining(&sig_val.buf);
   }
 
-  // Verify that the signature of the last certificate in the chain matches its
-  // own AuthorityKeyIdentifier to verify the integrity of the certificate data.
-  uint8_t pub_key[65] = {0};
-  uint8_t pub_key_digest[SHA1_DIGEST_LENGTH] = {0};
+  // Verify that the signature of the last certificate in the chain matches
+  // its own AuthorityKeyIdentifier to verify the integrity of the certificate
+  // data.
+  uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
+  sha256_Raw(message, message_size, digest);
+
+  uint8_t decoded_sig[64] = {0};
+  if (ecdsa_sig_from_der(sig, sig_size, decoded_sig) != 0) {
+    cli_error(cli, CLI_ERROR,
+              "check_device_cert_chain, ecdsa_sig_from_der root.");
+    return false;
+  }
+
   for (int recid = 0; recid < 4; ++recid) {
-    if (ecdsa_recover_pub_from_sig(&nist256p1, pub_key, sig, digest, recid) ==
-        0) {
-      sha1_Raw(pub_key, sizeof(pub_key), pub_key_digest);
+    uint8_t recovered_pub_key[65] = {0};
+    if (ecdsa_recover_pub_from_sig(&nist256p1, recovered_pub_key, decoded_sig,
+                                   digest, recid) == 0) {
+      uint8_t pub_key_digest[SHA1_DIGEST_LENGTH] = {0};
+      sha1_Raw(recovered_pub_key, sizeof(recovered_pub_key), pub_key_digest);
       if (memcmp(authority_key_digest, pub_key_digest,
                  sizeof(pub_key_digest)) == 0) {
         return true;
