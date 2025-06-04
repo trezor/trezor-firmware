@@ -168,15 +168,15 @@ pub fn send_request(data: &mut [u8], buffer: &mut [u8]) {
 }
 
 /// A simple writer that copies into a `&mut [u8]` and counts bytes written.
-pub struct BufferCounter<'a> {
+pub struct SmpBuffer<'a> {
     buf: &'a mut [u8],
     written: usize,
 }
 
-impl<'a> BufferCounter<'a> {
+impl<'a> SmpBuffer<'a> {
     /// Wrap your buffer:
     pub fn new(buf: &'a mut [u8]) -> Self {
-        BufferCounter { buf, written: 0 }
+        SmpBuffer { buf, written: 0 }
     }
 
     /// How many bytes have been written so far?
@@ -190,7 +190,7 @@ impl<'a> BufferCounter<'a> {
     }
 }
 
-impl<'a> Write for BufferCounter<'a> {
+impl<'a> Write for SmpBuffer<'a> {
     type Error = Infallible;
 
     fn write_all(&mut self, data: &[u8]) -> Result<(), Self::Error> {

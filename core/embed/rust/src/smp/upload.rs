@@ -1,5 +1,5 @@
 use super::{
-    receiver_is_locked, receiver_lock, send_request, wait_for_response, BufferCounter, MsgType,
+    receiver_is_locked, receiver_lock, send_request, wait_for_response, MsgType, SmpBuffer,
     SmpHeader, SMP_CMD_ID_IMAGE_UPLOAD, SMP_GROUP_IMAGE, SMP_HEADER_SIZE, SMP_OP_WRITE,
 };
 use crate::time::Duration;
@@ -17,7 +17,7 @@ pub fn upload_image(image_data: &[u8], image_hash: &[u8]) -> bool {
     let mut data = [0u8; MAX_PACKET_SIZE];
     let mut buffer = [0u8; MAX_PACKET_SIZE];
 
-    let mut writer = BufferCounter::new(&mut cbor_data);
+    let mut writer = SmpBuffer::new(&mut cbor_data);
 
     let mut enc = Encoder::new(&mut writer);
 
@@ -67,7 +67,7 @@ pub fn upload_image(image_data: &[u8], image_hash: &[u8]) -> bool {
         let mut cbor_data = [0u8; MAX_PACKET_SIZE];
         let mut data = [0u8; MAX_PACKET_SIZE];
         let mut buffer = [0u8; MAX_PACKET_SIZE];
-        let mut writer = BufferCounter::new(&mut cbor_data);
+        let mut writer = SmpBuffer::new(&mut cbor_data);
         let mut enc = Encoder::new(&mut writer);
 
         unwrap!(enc.map(2));

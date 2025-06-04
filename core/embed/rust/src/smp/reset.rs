@@ -1,7 +1,7 @@
 use minicbor::Encoder;
 
 use super::{
-    send_request, BufferCounter, SmpHeader, SMP_CMD_ID_RESET, SMP_GROUP_OS, SMP_HEADER_SIZE,
+    send_request, SmpBuffer, SmpHeader, SMP_CMD_ID_RESET, SMP_GROUP_OS, SMP_HEADER_SIZE,
     SMP_OP_READ,
 };
 
@@ -10,7 +10,7 @@ pub fn send() {
     let mut data = [0u8; 64];
     let mut buffer = [0u8; 64];
 
-    let mut writer = BufferCounter::new(&mut cbor_data);
+    let mut writer = SmpBuffer::new(&mut cbor_data);
 
     let mut enc = Encoder::new(&mut writer);
     unwrap!(enc.map(0));
