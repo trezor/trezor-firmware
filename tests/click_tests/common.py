@@ -28,22 +28,22 @@ class CommonPass:
 
 
 class PassphraseCategory(Enum):
-    MENU = "MENU"
-    DIGITS = "123"
-    LOWERCASE = "abc"
-    UPPERCASE = "ABC"
-    SPECIAL = "#$!"
+    Menu = "MENU"
+    Numeric = "123"
+    LettersLower = "abc"
+    LettersUpper = "ABC"
+    Special = "#$!"
 
 
 def get_char_category(char: str) -> PassphraseCategory:
     """What is the category of a character"""
     if char.isdigit():
-        return PassphraseCategory.DIGITS
+        return PassphraseCategory.Numeric
     if char.islower():
-        return PassphraseCategory.LOWERCASE
+        return PassphraseCategory.LettersLower
     if char.isupper():
-        return PassphraseCategory.UPPERCASE
-    return PassphraseCategory.SPECIAL
+        return PassphraseCategory.LettersUpper
+    return PassphraseCategory.Special
 
 
 def go_next(debug: "DebugLink") -> LayoutContent:

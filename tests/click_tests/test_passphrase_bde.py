@@ -34,22 +34,22 @@ if TYPE_CHECKING:
 pytestmark = pytest.mark.models("t2t1", "delizia", "eckhart")
 
 KEYBOARD_CATEGORIES_BOLT = [
-    PassphraseCategory.DIGITS,
-    PassphraseCategory.LOWERCASE,
-    PassphraseCategory.UPPERCASE,
-    PassphraseCategory.SPECIAL,
+    PassphraseCategory.Numeric,
+    PassphraseCategory.LettersLower,
+    PassphraseCategory.LettersUpper,
+    PassphraseCategory.Special,
 ]
 
 # Common for Delizia and Eckhart
 KEYBOARD_CATEGORIES_DE = [
-    PassphraseCategory.LOWERCASE,
-    PassphraseCategory.UPPERCASE,
-    PassphraseCategory.DIGITS,
-    PassphraseCategory.SPECIAL,
+    PassphraseCategory.LettersLower,
+    PassphraseCategory.LettersUpper,
+    PassphraseCategory.Numeric,
+    PassphraseCategory.Special,
 ]
 
 # TODO: better read this from the trace
-KEYBOARD_CATEGORY = PassphraseCategory.LOWERCASE
+KEYBOARD_CATEGORY = PassphraseCategory.LettersLower
 COORDS_PREV: tuple[int, int] = (0, 0)
 
 # Testing the maximum length is really 50
@@ -79,7 +79,7 @@ def prepare_passphrase_dialogue(
 
     # Resetting the category as it could have been changed by previous tests
     global KEYBOARD_CATEGORY
-    KEYBOARD_CATEGORY = PassphraseCategory.LOWERCASE  # type: ignore
+    KEYBOARD_CATEGORY = PassphraseCategory.LettersLower  # type: ignore
 
     yield debug
 
@@ -124,20 +124,17 @@ def go_to_category(
         for _ in range(current_index - target_index):
             debug.swipe_right()
     if verify_layout:
-        # map Rust debug string to Python enum
-        layout_map = {
-            "LettersLower": PassphraseCategory.LOWERCASE,
-            "LettersUpper": PassphraseCategory.UPPERCASE,
-            "Numeric": PassphraseCategory.DIGITS,
-            "Special": PassphraseCategory.SPECIAL,
-        }
-
         layout = debug.read_layout().find_unique_value_by_key(
             "active_layout", default="", only_type=str
         )
         # do the check if Rust debug string exists
         if layout:
-            assert layout_map.get(layout) == category
+            assert (
+                layout in PassphraseCategory.__members__
+            ), f"Unknown layout name from debug: {layout}"
+            assert (
+                PassphraseCategory[layout] == category
+            ), f"Layout mismatch: expected {category}, got {PassphraseCategory[layout]}"
 
     KEYBOARD_CATEGORY = category  # type: ignore
     # Category changed, reset coordinates
@@ -150,7 +147,7 @@ def press_char(debug: "DebugLink", char: str) -> None:
 
     # Space and couple others are a special case
     if char in " *#":
-        char_category = PassphraseCategory.LOWERCASE
+        char_category = PassphraseCategory.LettersLower
     else:
         char_category = get_char_category(char)
 
@@ -251,10 +248,10 @@ def test_passphrase_delete_all(
 def test_passphrase_loop_all_characters(device_handler: "BackgroundDeviceHandler"):
     with prepare_passphrase_dialogue(device_handler, CommonPass.EMPTY_ADDRESS) as debug:
         for category in (
-            PassphraseCategory.DIGITS,
-            PassphraseCategory.LOWERCASE,
-            PassphraseCategory.UPPERCASE,
-            PassphraseCategory.SPECIAL,
+            PassphraseCategory.Numeric,
+            PassphraseCategory.LettersLower,
+            PassphraseCategory.LettersUpper,
+            PassphraseCategory.Special,
         ):
             go_to_category(debug, category, True)
         if debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
