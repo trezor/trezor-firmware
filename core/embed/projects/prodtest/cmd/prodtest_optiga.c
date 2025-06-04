@@ -427,7 +427,11 @@ static bool check_device_cert_chain(cli_t* cli, const uint8_t* chain,
   }
 
   // Generate a P-256 signature using the device private key.
-  uint8_t digest[SHA256_DIGEST_LENGTH] = {1};
+  uint8_t challenge[CHALLENGE_SIZE] = {
+      0};  // The challenge is intentionally constant zero.
+  uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
+  sha256_Raw(challenge, sizeof(challenge), digest);
+
   uint8_t der_sig[72] = {DER_SEQUENCE};
   size_t der_sig_size = 0;
   if (optiga_calc_sign(OID_KEY_DEV, digest, sizeof(digest), &der_sig[2],
@@ -437,13 +441,8 @@ static bool check_device_cert_chain(cli_t* cli, const uint8_t* chain,
   }
   der_sig[1] = der_sig_size;
 
-  uint8_t sig[64] = {0};
-  if (ecdsa_sig_from_der(der_sig, der_sig_size + 2, sig) != 0) {
-    cli_error(cli, CLI_ERROR, "check_device_cert_chain, ecdsa_sig_from_der.");
-    return false;
-  }
-
-  if (!check_cert_chain(cli, chain, chain_size, sig, digest)) {
+  if (!check_cert_chain(cli, chain, chain_size, der_sig, der_sig_size + 2,
+                        challenge)) {
     return false;
   }
 
