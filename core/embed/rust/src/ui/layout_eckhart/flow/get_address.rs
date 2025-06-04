@@ -103,6 +103,12 @@ pub fn new_get_address(
         address.try_into().unwrap_or(TString::empty()),
     ));
 
+    let button = if extra.is_some() {
+        Button::with_text(TR::buttons__confirm.into()).styled(theme::button_cancel_gradient())
+    } else {
+        Button::with_text(TR::buttons__confirm.into()).styled(theme::button_confirm())
+    };
+
     let mut address_screen = TextScreen::new(
         paragraphs
             .into_paragraphs()
@@ -110,12 +116,9 @@ pub fn new_get_address(
     )
     .with_header(Header::new(flow_title).with_menu_button())
     .with_subtitle(title)
-    .with_action_bar(ActionBar::new_single(
-        Button::with_text(TR::buttons__confirm.into()).styled(theme::button_confirm()),
-    ));
+    .with_action_bar(ActionBar::new_single(button));
     if let Some(extra) = extra {
-        address_screen =
-            address_screen.with_hint(Hint::new_instruction(extra, Some(theme::ICON_INFO)));
+        address_screen = address_screen.with_hint(Hint::new_warning(extra));
     }
     let content_address = address_screen
         .map(|msg| match msg {

@@ -268,7 +268,9 @@ async def show_address(
             address=address,
             title=title or TR.address__title_receive_address,
             description=network or "",
-            extra=TR.address__check_with_source if title is None else None,
+            extra=(
+                TR.send__receiving_to_multisig if multisig_index is not None else None
+            ),
             chunkify=chunkify,
             address_qr=address if address_qr is None else address_qr,
             case_sensitive=case_sensitive,

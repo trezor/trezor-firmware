@@ -73,7 +73,7 @@ impl<'a> Hint<'a> {
         let instruction_component = Instruction::new(
             text.into(),
             theme::GREY,
-            Some(theme::ICON_INFO),
+            Some(theme::ICON_WARNING),
             Some(theme::ORANGE),
         );
         Self::from_content(HintContent::Instruction(instruction_component))
