@@ -257,6 +257,7 @@ async def show_address(
     address: str,
     *,
     title: str | None = None,
+    subtitle: str | None = None,
     address_qr: str | None = None,
     case_sensitive: bool = True,
     path: str | None = None,
@@ -282,9 +283,12 @@ async def show_address(
     await raise_if_not_confirmed(
         trezorui_api.flow_get_address(
             address=address,
-            title=title or TR.address__title_receive_address,
+            title=title or TR.words__receive,
+            subtitle=subtitle,
             description=network or "",
-            extra=None,
+            extra=(
+                TR.send__receiving_to_multisig if multisig_index is not None else None
+            ),
             chunkify=chunkify,
             address_qr=address if address_qr is None else address_qr,
             case_sensitive=case_sensitive,
@@ -307,11 +311,11 @@ def show_pubkey(
     mismatch_title: str | None = None,
     br_name: str = "show_pubkey",
 ) -> Awaitable[None]:
-    title = title or TR.address__public_key  # def_arg
     mismatch_title = mismatch_title or TR.addr_mismatch__key_mismatch  # def_arg
     return show_address(
         address=pubkey,
-        title=title,
+        title=title or TR.address__public_key,
+        subtitle=account,
         account=account,
         path=path,
         br_name=br_name,

@@ -113,6 +113,7 @@ async def get_address(
 
     if msg.show_display:
         path = address_n_to_str(address_n)
+        subtitle = f"{coin.coin_shortcut} {TR.words__address}"
         if multisig:
             if multisig.nodes:
                 pubnodes = multisig.nodes
@@ -146,6 +147,7 @@ async def get_address(
 
             await show_address(
                 address_short,
+                subtitle=subtitle,
                 case_sensitive=address_case_sensitive,
                 path=path,
                 multisig_index=multisig_index,
@@ -157,6 +159,7 @@ async def get_address(
             account = address_n_to_name_or_unknown(coin, address_n, script_type)
             await show_address(
                 address_short,
+                subtitle=subtitle,
                 address_qr=address,
                 case_sensitive=address_case_sensitive,
                 path=path,

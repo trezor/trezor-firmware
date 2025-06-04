@@ -35,6 +35,7 @@ async def get_address(
 
         await show_address(
             address,
+            subtitle=f"SOL {TR.words__address}",
             path=paths.address_n_to_str(msg.address_n),
             chunkify=bool(msg.chunkify),
         )

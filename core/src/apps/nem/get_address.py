@@ -39,11 +39,13 @@ async def get_address(
 
         from . import PATTERNS, SLIP44_ID
 
+        coin = "NEM"
         await show_address(
             address,
+            subtitle=f"{coin} {TR.words__address}",
             case_sensitive=False,
             path=paths.address_n_to_str(address_n),
-            account=paths.get_account_name("NEM", msg.address_n, PATTERNS, SLIP44_ID),
+            account=paths.get_account_name(coin, msg.address_n, PATTERNS, SLIP44_ID),
             network=get_network_str(network),
             chunkify=bool(msg.chunkify),
         )

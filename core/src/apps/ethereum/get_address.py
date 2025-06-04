@@ -38,11 +38,13 @@ async def get_address(
         from trezor import TR
 
         slip44_id = address_n[1]  # it depends on the network (ETH vs ETC...)
+        coin = "ETH"
         await show_address(
             address,
+            subtitle=f"{coin} {TR.words__address}",
             path=paths.address_n_to_str(address_n),
             account=paths.get_account_name(
-                "ETH", address_n, PATTERNS_ADDRESS, slip44_id
+                coin, address_n, PATTERNS_ADDRESS, slip44_id
             ),
             chunkify=bool(msg.chunkify),
         )
