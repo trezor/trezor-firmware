@@ -34,6 +34,9 @@ pub const SMP_OP_WRITE_RSP: u8 = 3;
 const MSG_HEADER_SIZE: usize = 2;
 const MSG_FOOTER_SIZE: usize = 2;
 
+const FRAME_HEADER_SIZE: usize = 2;
+const FRAME_FOOTER_SIZE: usize = 1; // newline
+
 // Frame sizing
 const BOOT_SERIAL_FRAME_MTU_BIN: usize = 93;
 const BOOT_SERIAL_FRAME_MTU: usize = 124;
@@ -141,7 +144,7 @@ pub fn send_request(data: &mut [u8], buffer: &mut [u8]) {
     //   header = 2 bytes
     //   base64 of BOOT_SERIAL_FRAME_MTU_BIN fits in BOOT_SERIAL_FRAME_MTU
     //   newline = 1 byte
-    let mut buf = [0u8; 2 + BOOT_SERIAL_FRAME_MTU + 1];
+    let mut buf = [0u8; FRAME_HEADER_SIZE + BOOT_SERIAL_FRAME_MTU + FRAME_FOOTER_SIZE];
 
     let mut init_frame = true;
     for chunk in data.chunks(BOOT_SERIAL_FRAME_MTU_BIN) {
@@ -154,14 +157,14 @@ pub fn send_request(data: &mut [u8], buffer: &mut [u8]) {
         buf[0] = b0;
         buf[1] = b1;
 
-        let enc_len = unwrap!(base64_encode(chunk, &mut buf[2..]));
+        let enc_len = unwrap!(base64_encode(chunk, &mut buf[FRAME_HEADER_SIZE..]));
 
         // 3) append newline
-        let total_len = 2 + enc_len;
+        let total_len = FRAME_HEADER_SIZE + enc_len;
         buf[total_len] = b'\n';
 
         // 4) send it out
-        send_data(&buf[..total_len + 1]);
+        send_data(&buf[..total_len + FRAME_FOOTER_SIZE]);
 
         init_frame = false;
     }
@@ -212,10 +215,10 @@ pub enum MsgType {
 
 #[derive(Copy, Clone)]
 pub struct SmpReceiver {
-    rx_frame: [u8; BOOT_SERIAL_FRAME_MTU + 3],
+    rx_frame: [u8; BOOT_SERIAL_FRAME_MTU + FRAME_HEADER_SIZE + FRAME_FOOTER_SIZE],
     rx_frame_len: usize,
-    rx_frame_dec: [u8; BOOT_SERIAL_FRAME_MTU + 3],
-    rx_msg: [u8; BOOT_SERIAL_MAX_MSG_SIZE + 1],
+    rx_frame_dec: [u8; BOOT_SERIAL_FRAME_MTU + FRAME_HEADER_SIZE + FRAME_FOOTER_SIZE],
+    rx_msg: [u8; BOOT_SERIAL_MAX_MSG_SIZE],
     rx_msg_len: usize,
     msg_type: Option<MsgType>,
 }
@@ -223,10 +226,10 @@ pub struct SmpReceiver {
 impl SmpReceiver {
     pub fn new() -> Self {
         Self {
-            rx_frame: [0; BOOT_SERIAL_FRAME_MTU + 3],
+            rx_frame: [0; BOOT_SERIAL_FRAME_MTU + FRAME_HEADER_SIZE + FRAME_FOOTER_SIZE],
             rx_frame_len: 0,
-            rx_frame_dec: [0; BOOT_SERIAL_FRAME_MTU + 3],
-            rx_msg: [0; BOOT_SERIAL_MAX_MSG_SIZE + 1],
+            rx_frame_dec: [0; BOOT_SERIAL_FRAME_MTU + FRAME_HEADER_SIZE + FRAME_FOOTER_SIZE],
+            rx_msg: [0; BOOT_SERIAL_MAX_MSG_SIZE],
             rx_msg_len: 0,
             msg_type: None,
         }
