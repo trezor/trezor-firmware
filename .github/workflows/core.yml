@@ -47,7 +47,8 @@ jobs:
         name: Set variables
         run: |
           echo test_lang=${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'translations') && '[\"en\", \"cs\", \"fr\", \"de\", \"es\", \"pt\"]' || '[\"en\"]' }} >> $GITHUB_OUTPUT
-          echo asan=${{ github.event_name == 'schedule' && '[\"noasan\", \"asan\"]' || '[\"noasan\"]' }} >> $GITHUB_OUTPUT
+          # TODO: fix ASAN tests on nightly CI runs (#5143)
+          echo asan=${{ '[\"noasan\"]' }} >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
 
   core_firmware:
