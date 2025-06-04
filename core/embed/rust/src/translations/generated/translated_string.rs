@@ -1447,6 +1447,7 @@ pub enum TranslatedString {
     reset__check_share_backup_template = 1042,  // "Let's do a quick check of Share #{0}."
     reset__select_word_from_share_template = 1043,  // "Select word #{0} from\nShare #{1}"
     recovery__share_from_group_entered_template = 1044,  // "Share #{0} from Group #{1} entered."
+    address__xpub = 1045,  // {"Bolt": "XPUB", "Caesar": "XPUB", "Delizia": "XPUB", "Eckhart": "Public key (XPUB)"}
 }
 
 impl TranslatedString {
@@ -3199,6 +3200,14 @@ impl TranslatedString {
             (Self::reset__check_share_backup_template, "Let's do a quick check of Share #{0}."),
             (Self::reset__select_word_from_share_template, "Select word #{0} from\nShare #{1}"),
             (Self::recovery__share_from_group_entered_template, "Share #{0} from Group #{1} entered."),
+            #[cfg(feature = "layout_bolt")]
+            (Self::address__xpub, "XPUB"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::address__xpub, "XPUB"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::address__xpub, "XPUB"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::address__xpub, "Public key (XPUB)"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3219,6 +3228,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_address__title_cosigner, Self::address__title_cosigner),
         (Qstr::MP_QSTR_address__title_receive_address, Self::address__title_receive_address),
         (Qstr::MP_QSTR_address__title_yours, Self::address__title_yours),
+        (Qstr::MP_QSTR_address__xpub, Self::address__xpub),
         (Qstr::MP_QSTR_address_details__account_info, Self::address_details__account_info),
         (Qstr::MP_QSTR_address_details__derivation_path, Self::address_details__derivation_path),
         (Qstr::MP_QSTR_address_details__derivation_path_colon, Self::address_details__derivation_path_colon),

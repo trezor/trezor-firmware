@@ -122,7 +122,7 @@ async def get_public_key(
             show_xpub = descriptor
         await show_pubkey(
             show_xpub,
-            "XPUB",
+            TR.address__xpub,
             account=account,
             path=path,
             mismatch_title=TR.addr_mismatch__xpub_mismatch,

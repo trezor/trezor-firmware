@@ -725,6 +725,7 @@ impl FirmwareUI for UIEckhart {
     fn flow_get_address(
         address: Obj,
         title: TString<'static>,
+        subtitle: Option<TString<'static>>,
         description: Option<TString<'static>>,
         extra: Option<TString<'static>>,
         chunkify: bool,
@@ -738,6 +739,7 @@ impl FirmwareUI for UIEckhart {
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let flow = flow::get_address::new_get_address(
             title,
+            subtitle,
             description,
             extra,
             address,

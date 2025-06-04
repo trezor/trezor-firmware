@@ -621,6 +621,7 @@ impl FirmwareUI for UIDelizia {
     fn flow_get_address(
         address: Obj,
         title: TString<'static>,
+        _subtitle: Option<TString<'static>>,
         description: Option<TString<'static>>,
         extra: Option<TString<'static>>,
         chunkify: bool,
