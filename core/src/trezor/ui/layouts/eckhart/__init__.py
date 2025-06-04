@@ -708,6 +708,7 @@ def confirm_properties(
             title=title,
             items=items,
             hold=hold,
+            verb=verb,
         ),
         br_name,
         br_code,
