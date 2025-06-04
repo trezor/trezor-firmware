@@ -13,7 +13,7 @@ use crate::{
     },
 };
 use base64::{base64_decode, base64_encode};
-use core::{convert::Infallible, ptr};
+use core::{cell::UnsafeCell, convert::Infallible};
 use crc16::crc16_itu_t;
 use minicbor::encode::write::Write;
 
@@ -48,7 +48,10 @@ const START_INIT_FRAME_BYTE_1: u8 = 9;
 const START_CONT_FRAME_BYTE_0: u8 = 4;
 const START_CONT_FRAME_BYTE_1: u8 = 20;
 
-static mut SMP_RECEIVER: Option<SmpReceiver> = None;
+struct ReceiverStorage(UnsafeCell<Option<SmpReceiver>>);
+static SMP_RECEIVER: ReceiverStorage = ReceiverStorage(UnsafeCell::new(None));
+
+unsafe impl Sync for ReceiverStorage {}
 
 #[derive(Debug)]
 pub enum SmpError {
@@ -336,27 +339,36 @@ impl SmpReceiver {
 }
 
 pub fn process_rx_byte(byte: u8) {
-    let opt = unsafe { ptr::read_volatile(&raw mut SMP_RECEIVER) };
-    if let Some(mut receiver) = opt {
-        receiver.process_byte(byte);
-        unsafe {
-            ptr::write_volatile(&raw mut SMP_RECEIVER, Some(receiver));
+    let key = irq_lock();
+
+    unsafe {
+        let opt_ref: &mut Option<SmpReceiver> = &mut *SMP_RECEIVER.0.get();
+        if let Some(receiver) = opt_ref.as_mut() {
+            receiver.process_byte(byte);
         }
     }
+
+    irq_unlock(key);
 }
 
 pub fn receiver_release() {
     let key = irq_lock();
+
     unsafe {
-        ptr::write_volatile(&raw mut SMP_RECEIVER, None);
+        let opt_ref: &mut Option<SmpReceiver> = &mut *SMP_RECEIVER.0.get();
+        *opt_ref = None;
     }
+
     irq_unlock(key);
 }
 
 pub fn receiver_acquire() -> Result<(), ()> {
     let key = irq_lock();
 
-    let already_acquired = unsafe { ptr::read_volatile(&raw mut SMP_RECEIVER).is_some() };
+    let already_acquired = unsafe {
+        let opt_ref: &Option<SmpReceiver> = &*SMP_RECEIVER.0.get();
+        opt_ref.is_some()
+    };
 
     if already_acquired {
         irq_unlock(key);
@@ -365,18 +377,46 @@ pub fn receiver_acquire() -> Result<(), ()> {
 
     let new_rcv = SmpReceiver::new();
     unsafe {
-        ptr::write_volatile(&raw mut SMP_RECEIVER, Some(new_rcv));
+        let opt_mut: &mut Option<SmpReceiver> = &mut *SMP_RECEIVER.0.get();
+        *opt_mut = Some(new_rcv);
     }
-    irq_unlock(key);
 
+    irq_unlock(key);
     Ok(())
 }
 
-pub fn receiver_read() -> SmpReceiver {
-    let key = irq_lock();
-    let receiver = unsafe { ptr::read_volatile(&raw mut SMP_RECEIVER) };
-    irq_unlock(key);
-    unwrap!(receiver, "Receiver is not initialized")
+unsafe fn receiver_read_msg_type() -> Option<MsgType> {
+    let msg_type = unsafe {
+        let opt_ref: &Option<SmpReceiver> = &*SMP_RECEIVER.0.get();
+
+        unwrap!(opt_ref.as_ref().map(|r| r.msg_type))
+    };
+
+    msg_type
+}
+
+unsafe fn received_read_msg(buf: &mut [u8]) -> Result<usize, SmpError> {
+    let receiver_ref = unsafe {
+        let opt_ref: &Option<SmpReceiver> = &*SMP_RECEIVER.0.get();
+        unwrap!(opt_ref.as_ref(), "Receiver is not initialized")
+    };
+
+    if receiver_ref.rx_msg_len == 0 {
+        return Err(SmpError::WrongMessage);
+    }
+
+    let data_start = MSG_HEADER_SIZE + SMP_HEADER_SIZE;
+    let data_end = receiver_ref.rx_msg_len - MSG_FOOTER_SIZE;
+    let data = &receiver_ref.rx_msg[data_start..data_end];
+    let data_len = data.len();
+
+    if data_len > buf.len() {
+        fatal_error!("Buffer too small");
+    }
+
+    buf[..data_len].copy_from_slice(data);
+
+    Ok(data_len)
 }
 
 pub fn wait_for_response(
@@ -386,24 +426,17 @@ pub fn wait_for_response(
 ) -> Result<usize, SmpError> {
     let start = Instant::now();
     loop {
-        let receiver = receiver_read();
-        if let Some(msg_type) = receiver.msg_type {
+        let key = irq_lock();
+        let msg_type = unsafe { receiver_read_msg_type() };
+        irq_unlock(key);
+        if let Some(msg_type) = msg_type {
             if msg_type != expected_msg_type {
                 return Err(SmpError::WrongMessage);
             }
 
-            let data = &receiver.rx_msg
-                [MSG_HEADER_SIZE + SMP_HEADER_SIZE..receiver.rx_msg_len - MSG_FOOTER_SIZE];
-            let data_len = data.len();
-
-            let len = if data_len <= buf.len() {
-                // copy only as many bytes as we have in `data`
-                buf[..data_len].copy_from_slice(data);
-                // return how many bytes we copied
-                data_len
-            } else {
-                fatal_error!("Buffer too small");
-            };
+            let key = irq_lock();
+            let len = unsafe { unwrap!(received_read_msg(buf)) };
+            irq_unlock(key);
 
             receiver_release();
 
