@@ -115,7 +115,7 @@ jobs:
         model: [T2T1, T3B1, T3T1, T3W1]
         coins: [universal, btconly]
         # type: [normal, debuglink]
-        type: [debuglink]
+        type: ${{ fromJSON(github.event_name == 'schedule' && '["normal", "debuglink"]' || '["debuglink"]') }}
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
         exclude:
           - type: normal
