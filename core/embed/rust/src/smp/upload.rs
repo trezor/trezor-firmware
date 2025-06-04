@@ -1,5 +1,6 @@
 use super::{
     receiver_is_locked, receiver_lock, send_request, wait_for_response, BufferCounter, MsgType,
+    SmpHeader, SMP_HEADER_SIZE,
 };
 use crate::time::Duration;
 use minicbor::Encoder;
@@ -12,20 +13,19 @@ pub fn upload_image(image_data: &[u8], image_hash: &[u8]) -> bool {
         return false;
     }
 
+    let mut cbor_data = [0u8; MAX_PACKET_SIZE];
     let mut data = [0u8; MAX_PACKET_SIZE];
-    let mut data_encoded = [0u8; MAX_PACKET_SIZE];
+    let mut buffer = [0u8; MAX_PACKET_SIZE];
 
-    let mut writer = BufferCounter::new(&mut data[8..]);
+    let mut writer = BufferCounter::new(&mut cbor_data);
 
     let mut enc = Encoder::new(&mut writer);
-
-    let mut rem_len = image_data.len();
 
     unwrap!(enc.map(5));
     unwrap!(enc.str("image"));
     unwrap!(enc.u8(0));
     unwrap!(enc.str("len"));
-    unwrap!(enc.u64(rem_len as _));
+    unwrap!(enc.u64(image_data.len() as _));
     unwrap!(enc.str("off"));
     unwrap!(enc.u8(0));
     unwrap!(enc.str("hash"));
@@ -33,10 +33,15 @@ pub fn upload_image(image_data: &[u8], image_hash: &[u8]) -> bool {
     unwrap!(enc.str("data"));
     unwrap!(enc.bytes(&image_data[..CHUNK_SIZE]));
 
-    let encoded_len = writer.bytes_written();
+    let data_len = writer.bytes_written();
     receiver_lock();
 
-    send_request(&mut data, encoded_len, &mut data_encoded, 2, 1, 1);
+    let header = SmpHeader::new(2, data_len, 1, 0, 1).to_bytes();
+
+    data[..SMP_HEADER_SIZE].copy_from_slice(&header);
+    data[SMP_HEADER_SIZE..SMP_HEADER_SIZE + data_len].copy_from_slice(&cbor_data[..data_len]);
+
+    send_request(&mut data[..SMP_HEADER_SIZE + data_len], &mut buffer);
 
     let mut resp_buffer = [0u8; 64];
     if wait_for_response(
@@ -52,9 +57,10 @@ pub fn upload_image(image_data: &[u8], image_hash: &[u8]) -> bool {
     let mut offset = CHUNK_SIZE;
 
     for chunk in image_data.chunks(CHUNK_SIZE).skip(1) {
+        let mut cbor_data = [0u8; MAX_PACKET_SIZE];
         let mut data = [0u8; MAX_PACKET_SIZE];
-        let mut data_encoded = [0u8; MAX_PACKET_SIZE];
-        let mut writer = BufferCounter::new(&mut data[8..]);
+        let mut buffer = [0u8; MAX_PACKET_SIZE];
+        let mut writer = BufferCounter::new(&mut cbor_data);
         let mut enc = Encoder::new(&mut writer);
 
         unwrap!(enc.map(2));
@@ -63,11 +69,16 @@ pub fn upload_image(image_data: &[u8], image_hash: &[u8]) -> bool {
         unwrap!(enc.str("data"));
         unwrap!(enc.bytes(chunk));
 
-        let encoded_len = writer.bytes_written();
+        let data_len = writer.bytes_written();
 
         receiver_lock();
 
-        send_request(&mut data, encoded_len, &mut data_encoded, 2, 1, 1);
+        let header = SmpHeader::new(2, data_len, 1, 0, 1).to_bytes();
+
+        data[..SMP_HEADER_SIZE].copy_from_slice(&header);
+        data[SMP_HEADER_SIZE..SMP_HEADER_SIZE + data_len].copy_from_slice(&cbor_data[..data_len]);
+
+        send_request(&mut data[..SMP_HEADER_SIZE + data_len], &mut buffer);
 
         let mut resp_buffer = [0u8; 64];
         if wait_for_response(

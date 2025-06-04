@@ -17,7 +17,10 @@ use core::{convert::Infallible, ptr};
 use crc16::crc16_itu_t;
 use minicbor::encode::write::Write;
 
-const HEADER_SIZE: usize = 8;
+pub const SMP_HEADER_SIZE: usize = 8;
+
+const MSG_HEADER_SIZE: usize = 2;
+const MSG_FOOTER_SIZE: usize = 2;
 
 // Frame sizing
 const BOOT_SERIAL_FRAME_MTU_BIN: usize = 93;
@@ -39,7 +42,7 @@ pub enum SmpError {
 }
 
 #[repr(C)]
-struct SmpHeader {
+pub struct SmpHeader {
     op: u8,
     _reserved: u8,
     len_hi: u8,
@@ -51,7 +54,23 @@ struct SmpHeader {
 }
 
 impl SmpHeader {
-    fn from_bytes(b: &[u8]) -> Self {
+    pub fn new(op: u8, len: usize, group: u16, seq: u8, cmd_id: u8) -> Self {
+        let len_be = len.to_be_bytes(); // [hi, lo]
+        let group_be = group.to_be_bytes(); // [hi, lo]
+
+        SmpHeader {
+            op,
+            _reserved: 0,
+            len_hi: len_be[0],
+            len_lo: len_be[1],
+            group_id_hi: group_be[0],
+            group_id_lo: group_be[1],
+            seq,
+            cmd_id,
+        }
+    }
+
+    pub fn from_bytes(b: &[u8]) -> Self {
         // we assume b.len() >= HEADER_SIZE
         SmpHeader {
             op: b[0],
@@ -63,6 +82,19 @@ impl SmpHeader {
             seq: b[6],
             cmd_id: b[7],
         }
+    }
+
+    pub fn to_bytes(&self) -> [u8; SMP_HEADER_SIZE] {
+        [
+            self.op,
+            self._reserved,
+            self.len_hi,
+            self.len_lo,
+            self.group_id_hi,
+            self.group_id_lo,
+            self.seq,
+            self.cmd_id,
+        ]
     }
 }
 
@@ -81,8 +113,7 @@ pub fn encode_request(data: &[u8], out: &mut [u8]) {
     // copy the payload
     out[2..2 + len].copy_from_slice(data);
 
-    // compute CRC (assumes you have `crc16_itu_t(seed: u16, data: &[u8]) -> u16` in
-    // scope)
+    // compute CRC
     let crc = crc16_itu_t(0, data);
 
     // append CRC hi/lo
@@ -90,19 +121,10 @@ pub fn encode_request(data: &[u8], out: &mut [u8]) {
     out[len + 3] = (crc & 0xFF) as u8;
 }
 
-pub fn send_request(
-    data: &mut [u8],
-    data_len: usize,
-    buffer: &mut [u8],
-    op: u8,
-    group: u16,
-    cmd_id: u8,
-) {
-    create_header(data, op, data_len as u16, group, 0, cmd_id);
+pub fn send_request(data: &mut [u8], buffer: &mut [u8]) {
+    encode_request(data, buffer);
 
-    encode_request(&data[..(data_len + 8)], buffer);
-
-    let total = data_len + 8 + 2 + 2;
+    let total = data.len() + MSG_HEADER_SIZE + MSG_FOOTER_SIZE;
 
     let data = &buffer[..total];
 
@@ -134,25 +156,6 @@ pub fn send_request(
 
         init_frame = false;
     }
-}
-
-pub fn create_header(buffer: &mut [u8], op: u8, len: u16, group: u16, seq: u8, cmd_id: u8) {
-    // If buffer is too small, do nothing (mirrors C behavior of no safety check)
-    if buffer.len() < 8 {
-        return;
-    }
-
-    let len_be = len.to_be_bytes(); // [hi, lo]
-    let group_be = group.to_be_bytes(); // [hi, lo]
-
-    buffer[0] = op;
-    buffer[1] = 0;
-    buffer[2] = len_be[0];
-    buffer[3] = len_be[1];
-    buffer[4] = group_be[0];
-    buffer[5] = group_be[1];
-    buffer[6] = seq;
-    buffer[7] = cmd_id;
 }
 
 /// A simple writer that copies into a `&mut [u8]` and counts bytes written.
@@ -294,17 +297,17 @@ impl SmpReceiver {
 
     fn process_msg(self: &mut SmpReceiver, msg_len: usize) {
         // hand off [2..2+msg_len] as header+payload
-        let start = 2;
+        let start = MSG_HEADER_SIZE;
         let end = start + msg_len;
 
         let msg = &self.rx_msg[start..end];
 
         // too short?
-        if msg.len() < HEADER_SIZE {
+        if msg.len() < SMP_HEADER_SIZE {
             return;
         }
 
-        let hdr = SmpHeader::from_bytes(&msg[..HEADER_SIZE]);
+        let hdr = SmpHeader::from_bytes(&msg[..SMP_HEADER_SIZE]);
         let group = ((hdr.group_id_hi as u16) << 8) | (hdr.group_id_lo as u16);
         let cmd_id = hdr.cmd_id;
 
