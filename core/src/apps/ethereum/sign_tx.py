@@ -281,11 +281,13 @@ async def _handle_erc20(
         token_address = address_bytes
 
         if token is tokens.UNKNOWN_TOKEN:
-            title = (
-                TR.ethereum__approve
-                if func_sig == SC_FUNC_SIG_APPROVE
-                else TR.words__send
-            )
+            if func_sig == SC_FUNC_SIG_APPROVE:
+                if value == 0:
+                    title = TR.ethereum__approve_intro_title_revoke
+                else:
+                    title = TR.ethereum__approve_intro_title
+            else:
+                title = TR.words__send
             await require_confirm_unknown_token(title)
             if func_sig != SC_FUNC_SIG_APPROVE:
                 # For unknown tokens we also show the token address immediately after the warning

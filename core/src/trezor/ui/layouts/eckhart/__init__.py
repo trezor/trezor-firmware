@@ -918,7 +918,7 @@ if not utils.BITCOIN_ONLY:
 
         if is_unknown_token:
             await confirm_value(
-                TR.words__address,
+                TR.words__send,
                 token_address,
                 "",
                 subtitle=TR.ethereum__token_contract,
