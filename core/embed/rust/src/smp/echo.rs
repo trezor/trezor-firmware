@@ -1,14 +1,11 @@
 use super::{
-    receiver_is_locked, receiver_lock, send_request, wait_for_response, MsgType, SmpBuffer,
-    SmpHeader, SMP_CMD_ID_ECHO, SMP_GROUP_OS, SMP_HEADER_SIZE, SMP_OP_READ,
+    receiver_acquire, send_request, wait_for_response, MsgType, SmpBuffer, SmpHeader,
+    SMP_CMD_ID_ECHO, SMP_GROUP_OS, SMP_HEADER_SIZE, SMP_OP_READ,
 };
 use crate::time::Duration;
 use minicbor::{data::Type, decode, Decoder, Encoder};
 
 pub fn send(text: &str) -> bool {
-    if receiver_is_locked() {
-        return false;
-    }
     let mut cbor_data = [0u8; 64];
     let mut data = [0u8; 64];
     let mut buffer = [0u8; 64];
@@ -20,7 +17,7 @@ pub fn send(text: &str) -> bool {
     unwrap!(enc.str("d"));
     unwrap!(enc.str(text));
 
-    receiver_lock();
+    unwrap!(receiver_acquire());
 
     let data_len = writer.bytes_written();
 

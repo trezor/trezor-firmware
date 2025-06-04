@@ -1,6 +1,6 @@
 use super::{
-    receiver_is_locked, receiver_lock, send_request, wait_for_response, MsgType, SmpBuffer,
-    SmpHeader, SMP_CMD_ID_IMAGE_UPLOAD, SMP_GROUP_IMAGE, SMP_HEADER_SIZE, SMP_OP_WRITE,
+    receiver_acquire, send_request, wait_for_response, MsgType, SmpBuffer, SmpHeader,
+    SMP_CMD_ID_IMAGE_UPLOAD, SMP_GROUP_IMAGE, SMP_HEADER_SIZE, SMP_OP_WRITE,
 };
 use crate::time::Duration;
 use minicbor::Encoder;
@@ -9,10 +9,6 @@ const CHUNK_SIZE: usize = 256;
 const MAX_PACKET_SIZE: usize = 512;
 
 pub fn upload_image(image_data: &[u8], image_hash: &[u8]) -> bool {
-    if receiver_is_locked() {
-        return false;
-    }
-
     let mut cbor_data = [0u8; MAX_PACKET_SIZE];
     let mut data = [0u8; MAX_PACKET_SIZE];
     let mut buffer = [0u8; MAX_PACKET_SIZE];
@@ -34,7 +30,7 @@ pub fn upload_image(image_data: &[u8], image_hash: &[u8]) -> bool {
     unwrap!(enc.bytes(&image_data[..CHUNK_SIZE]));
 
     let data_len = writer.bytes_written();
-    receiver_lock();
+    unwrap!(receiver_acquire());
 
     let header = SmpHeader::new(
         SMP_OP_WRITE,
@@ -78,7 +74,7 @@ pub fn upload_image(image_data: &[u8], image_hash: &[u8]) -> bool {
 
         let data_len = writer.bytes_written();
 
-        receiver_lock();
+        unwrap!(receiver_acquire());
 
         let header = SmpHeader::new(SMP_OP_WRITE, data_len, SMP_GROUP_IMAGE, 0, 1).to_bytes();
 

@@ -345,14 +345,7 @@ pub fn process_rx_byte(byte: u8) {
     }
 }
 
-pub fn receiver_is_locked() -> bool {
-    let key = irq_lock();
-    let result = unsafe { ptr::read_volatile(&raw mut SMP_RECEIVER).is_some() };
-    irq_unlock(key);
-    result
-}
-
-pub fn receiver_unlock() {
+pub fn receiver_release() {
     let key = irq_lock();
     unsafe {
         ptr::write_volatile(&raw mut SMP_RECEIVER, None);
@@ -360,24 +353,30 @@ pub fn receiver_unlock() {
     irq_unlock(key);
 }
 
-pub fn receiver_lock() {
+pub fn receiver_acquire() -> Result<(), ()> {
     let key = irq_lock();
+
+    let already_acquired = unsafe { ptr::read_volatile(&raw mut SMP_RECEIVER).is_some() };
+
+    if already_acquired {
+        irq_unlock(key);
+        return Err(());
+    }
+
     let new_rcv = SmpReceiver::new();
     unsafe {
         ptr::write_volatile(&raw mut SMP_RECEIVER, Some(new_rcv));
     }
     irq_unlock(key);
+
+    Ok(())
 }
 
 pub fn receiver_read() -> SmpReceiver {
     let key = irq_lock();
-    let opt = unsafe { ptr::read_volatile(&raw mut SMP_RECEIVER) };
+    let receiver = unsafe { ptr::read_volatile(&raw mut SMP_RECEIVER) };
     irq_unlock(key);
-    if let Some(receiver) = opt {
-        receiver
-    } else {
-        fatal_error!("Receiver is not initialized");
-    }
+    unwrap!(receiver, "Receiver is not initialized")
 }
 
 pub fn wait_for_response(
@@ -406,14 +405,14 @@ pub fn wait_for_response(
                 fatal_error!("Buffer too small");
             };
 
-            receiver_unlock();
+            receiver_release();
 
             return Ok(len);
         }
 
         if Instant::now().checked_duration_since(start) > Some(timeout) {
             // timeout reached
-            receiver_unlock();
+            receiver_release();
             return Err(SmpError::Timeout);
         }
     }
