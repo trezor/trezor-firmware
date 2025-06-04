@@ -42,11 +42,13 @@ runs:
     - name: Upload test results
       run: |
         # Upload report
-        aws s3 cp --recursive --only-show-errors ${{ github.run_id }} s3://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }} &
+        du -sh ${{ github.run_id }}
+        time aws s3 cp --recursive --only-show-errors ${{ github.run_id }} s3://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }} &
         PID1=$!
 
         # Upload test screen recording
-        aws s3 sync --only-show-errors ci/ui_test_records s3://data.trezor.io/dev/firmware/ui_tests &
+        du -sh ci/ui_test_records
+        time aws s3 sync --only-show-errors ci/ui_test_records s3://data.trezor.io/dev/firmware/ui_tests &
         PID2=$!
         # TODO: generate directory listing / autoindex
 
