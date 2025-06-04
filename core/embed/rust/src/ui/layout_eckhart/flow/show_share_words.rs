@@ -75,10 +75,9 @@ pub fn new_show_share_words_flow(
     // Determine whether to show the instructions or not
     let has_intro = instructions_paragraphs.is_some();
     let nwords = words.len();
-    let initial_state = if instructions_paragraphs.is_some() {
-        &ShowShareWords::Instruction
-    } else {
-        &ShowShareWords::ShareWords
+    let initial_state = match instructions_paragraphs {
+        Some(_) => &ShowShareWords::Instruction,
+        None => &ShowShareWords::ShareWords,
     };
 
     let instruction = TextScreen::new(
