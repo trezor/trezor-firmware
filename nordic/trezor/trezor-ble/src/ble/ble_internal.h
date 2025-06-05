@@ -103,7 +103,7 @@ typedef struct {
   uint8_t whitelist;
   uint8_t color;
   uint8_t static_addr;
-  uint32_t device_code;
+  uint8_t device_code;
   uint8_t name[BLE_ADV_NAME_LEN];
 } cmd_advertising_on_t;
 
@@ -146,7 +146,7 @@ bool bonds_erase_current(void);
 // Initialization
 void advertising_init(void);
 // Start advertising, with or without whitelist
-void advertising_start(bool wl, uint8_t color, uint32_t device_code,
+void advertising_start(bool wl, uint8_t color, uint8_t device_code,
                        bool static_addr, char *name, int name_len);
 // Stop advertising
 void advertising_stop(void);
