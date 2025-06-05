@@ -132,7 +132,15 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
 
     while (page < 2) {
       layoutXPUB(resp->xpub, page, qrcode);
-      if (protectButton(ButtonRequestType_ButtonRequest_PublicKey, false)) {
+      bool confirmed =
+          protectButton(ButtonRequestType_ButtonRequest_PublicKey, false);
+
+      if (protectAbortedByCancel || protectAbortedByInitialize) {
+        fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+        layoutHome();
+        return;
+      }
+      if (confirmed) {
         page += 1;       // advance to the next page
         qrcode = false;  // switch to XPUB text
       } else {

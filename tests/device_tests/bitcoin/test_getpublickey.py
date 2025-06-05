@@ -18,7 +18,7 @@ import pytest
 
 from trezorlib import btc, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
-from trezorlib.exceptions import TrezorFailure
+from trezorlib.exceptions import Cancelled, TrezorFailure
 from trezorlib.tools import parse_path
 
 from ... import bip32
@@ -114,6 +114,17 @@ def test_get_public_node(client: Client, coin_name, xpub_magic, path, xpub):
     res = btc.get_public_node(client, path, coin_name=coin_name)
     assert res.xpub == xpub
     assert bip32.serialize(res.node, xpub_magic) == xpub
+
+
+@pytest.mark.parametrize("coin_name, xpub_magic, path, xpub", VECTORS_BITCOIN)
+def test_get_public_node_cancel_show(client: Client, coin_name, xpub_magic, path, xpub):
+    def input_flow():
+        yield
+        client.cancel()
+
+    with pytest.raises(Cancelled), client:
+        client.set_input_flow(input_flow)
+        btc.get_public_node(client, path, coin_name=coin_name, show_display=True)
 
 
 @pytest.mark.models("core")
