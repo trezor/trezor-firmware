@@ -116,7 +116,7 @@ if __debug__:
         Dump GC info in case of an OOM.
         """
 if __debug__:
-    def clear_gc_info() -> dict[str, int]:
+    def clear_gc_info() -> None:
         """
         Clear GC heap stats.
         """

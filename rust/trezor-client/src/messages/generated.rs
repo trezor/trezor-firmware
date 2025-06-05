@@ -84,7 +84,6 @@ trezor_message_impl! {
     DebugLinkResetDebugEvents => MessageType_DebugLinkResetDebugEvents,
     DebugLinkOptigaSetSecMax => MessageType_DebugLinkOptigaSetSecMax,
     DebugLinkGetGcInfo => MessageType_DebugLinkGetGcInfo,
-    DebugLinkGcInfoItem => MessageType_DebugLinkGcInfoItem,
     DebugLinkGcInfo => MessageType_DebugLinkGcInfo,
     BenchmarkListNames => MessageType_BenchmarkListNames,
     BenchmarkNames => MessageType_BenchmarkNames,

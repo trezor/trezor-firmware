@@ -486,8 +486,7 @@ class MessageType(IntEnum):
     DebugLinkResetDebugEvents = 9007
     DebugLinkOptigaSetSecMax = 9008
     DebugLinkGetGcInfo = 9009
-    DebugLinkGcInfoItem = 9010
-    DebugLinkGcInfo = 9011
+    DebugLinkGcInfo = 9010
     EthereumGetPublicKey = 450
     EthereumPublicKey = 451
     EthereumGetAddress = 56
@@ -4101,8 +4100,22 @@ class DebugLinkGetGcInfo(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9009
 
 
-class DebugLinkGcInfoItem(protobuf.MessageType):
+class DebugLinkGcInfo(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 9010
+    FIELDS = {
+        1: protobuf.Field("items", "DebugLinkGcInfoItem", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        items: Optional[Sequence["DebugLinkGcInfoItem"]] = None,
+    ) -> None:
+        self.items: Sequence["DebugLinkGcInfoItem"] = items if items is not None else []
+
+
+class DebugLinkGcInfoItem(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("name", "string", repeated=False, required=True),
         2: protobuf.Field("value", "uint64", repeated=False, required=True),
@@ -4116,20 +4129,6 @@ class DebugLinkGcInfoItem(protobuf.MessageType):
     ) -> None:
         self.name = name
         self.value = value
-
-
-class DebugLinkGcInfo(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 9011
-    FIELDS = {
-        1: protobuf.Field("items", "DebugLinkGcInfoItem", repeated=True, required=False, default=None),
-    }
-
-    def __init__(
-        self,
-        *,
-        items: Optional[Sequence["DebugLinkGcInfoItem"]] = None,
-    ) -> None:
-        self.items: Sequence["DebugLinkGcInfoItem"] = items if items is not None else []
 
 
 class EthereumNetworkInfo(protobuf.MessageType):

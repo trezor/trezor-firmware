@@ -337,7 +337,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_enable_oom_dump_obj,
 static gc_info_t current_gc_info = {0};
 
 /// if __debug__:
-///     def clear_gc_info() -> dict[str, int]:
+///     def clear_gc_info() -> None:
 ///         """
 ///         Clear GC heap stats.
 ///         """

@@ -246,18 +246,17 @@ message DebugLinkGetGcInfo {
 }
 
 /**
- * Response: GC heap information key-value pair.
- * @end
- */
-message DebugLinkGcInfoItem {
-    required string name = 1;
-    required uint64 value = 2;
-}
-
-/**
  * Response: GC heap information details.
  * @end
  */
 message DebugLinkGcInfo {
     repeated DebugLinkGcInfoItem items = 1;
+
+    /**
+    * Key-value pair.
+    */
+    message DebugLinkGcInfoItem {
+        required string name = 1;
+        required uint64 value = 2;
+    }
 }
