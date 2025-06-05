@@ -905,19 +905,15 @@ impl FirmwareUI for UIBolt {
         code: TString<'static>,
         button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Self::confirm_action(
-            title,
-            Some(code),
-            Some(description),
-            None,
-            button.then_some(TR::buttons__confirm.into()),
-            None,
-            false,
-            false,
-            false,
-            false,
-            None,
-        )
+        assert!(!button); // no BLE on T2T1
+        let paragraphs = Paragraphs::new([
+            Paragraph::new(&theme::TEXT_NORMAL, description),
+            Paragraph::new(&theme::TEXT_DEMIBOLD, code),
+        ]);
+        let layout = RootComponent::new(
+            Frame::left_aligned(theme::label_title(), title, paragraphs).with_cancel_button(),
+        );
+        Ok(layout)
     }
 
     fn show_info(

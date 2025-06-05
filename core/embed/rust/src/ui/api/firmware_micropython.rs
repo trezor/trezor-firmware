@@ -1689,6 +1689,8 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     button: bool = True,
     /// ) -> LayoutObj[UiResult]:
     ///     """Pairing device: second screen (pairing code).
+    ///     Confirm button is shown if `button` is True - used for BLE pairing.
+    ///     For THP pairing set `button` to False - layout may still show cancel button.
     ///     Returns on BLEEvent::{PairingCanceled, Disconnected}."""
     Qstr::MP_QSTR_show_pairing_code => obj_fn_kw!(0, new_show_pairing_code).as_obj(),
 
