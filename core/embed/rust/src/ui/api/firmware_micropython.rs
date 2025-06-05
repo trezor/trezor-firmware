@@ -1010,11 +1010,16 @@ extern "C" fn new_show_share_words_extended(
             .and_then(Obj::try_into_option)
             .unwrap_or(None);
         let instructions: Obj = kwargs.get(Qstr::MP_QSTR_instructions)?;
+        let instructions_verb: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_instructions_verb)
+            .and_then(Obj::try_into_option)
+            .unwrap_or(None);
         let text_footer: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_text_footer)
             .and_then(Obj::try_into_option)
             .unwrap_or(None);
         let text_confirm: TString = kwargs.get(Qstr::MP_QSTR_text_confirm)?.try_into()?;
+        let text_check: TString = kwargs.get(Qstr::MP_QSTR_text_check)?.try_into()?;
 
         let words: Vec<TString, 33> = util::iter_into_vec(words)?;
 
@@ -1022,8 +1027,10 @@ extern "C" fn new_show_share_words_extended(
             words,
             subtitle,
             instructions,
+            instructions_verb,
             text_footer,
             text_confirm,
+            text_check,
         )?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
@@ -1768,8 +1775,10 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     words: Iterable[str],
     ///     subtitle: str | None,
     ///     instructions: Iterable[str],
+    ///     instructions_verb: str | None,
     ///     text_footer: str | None,
     ///     text_confirm: str,
+    ///     text_check: str,
     /// ) -> LayoutObj[UiResult]:
     ///     """Show mnemonic for wallet backup preceded by an instruction screen and followed by a
     ///     confirmation screen."""

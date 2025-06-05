@@ -665,8 +665,10 @@ def show_share_words_extended(
     words: Iterable[str],
     subtitle: str | None,
     instructions: Iterable[str],
+    instructions_verb: str | None,
     text_footer: str | None,
     text_confirm: str,
+    text_check: str,
 ) -> LayoutObj[UiResult]:
     """Show mnemonic for wallet backup preceded by an instruction screen and followed by a
     confirmation screen."""

@@ -19,18 +19,43 @@ def show_share_words(
     if share_index is None:
         subtitle = None
     elif group_index is None:
-        subtitle = TR.reset__recovery_share_title_template.format(share_index + 1)
+        subtitle = TR.recovery__share_num_template.format(share_index + 1)
     else:
         subtitle = TR.reset__group_share_title_template.format(
             group_index + 1, share_index + 1
         )
     words_count = len(share_words)
-    description = None
-    # Eckhart currently has only one instruction, other are shown in the hint area
-    instructions = [
-        TR.reset__write_down_words_template.format(words_count),
-        TR.reset__words_may_repeat,
-    ]
+
+    # BIP39
+    if share_index is None:
+        instructions = [
+            TR.reset__write_down_words_template.format(words_count),
+            TR.reset__words_may_repeat,
+        ]
+        instructions_verb = None
+        text_check = TR.reset__check_backup_instructions
+    # 1st share of SLIP39
+    elif share_index == 0 and group_index is None:
+        instructions = [
+            TR.reset__write_down_words_template.format(words_count),
+            TR.reset__repeat_for_all_shares,
+        ]
+        instructions_verb = TR.instructions__shares_start_with_1
+        text_check = TR.reset__check_share_backup_template.format(share_index + 1)
+    # remaining shares of SLIP39
+    elif share_index > 0 and group_index is None:
+        instructions = []
+        instructions_verb = None
+        text_check = TR.reset__check_share_backup_template.format(share_index + 1)
+    # super shamir
+    else:
+        instructions = [
+            TR.reset__write_down_words_template.format(words_count),
+            TR.reset__words_may_repeat,
+        ]
+        instructions_verb = None
+        text_check = TR.reset__check_share_backup_template.format(share_index + 1)
+
     text_confirm = TR.reset__words_written_down_template.format(words_count)
 
     return raise_if_not_confirmed(
@@ -38,8 +63,10 @@ def show_share_words(
             words=share_words,
             subtitle=subtitle,
             instructions=instructions,
-            text_footer=description,
+            instructions_verb=instructions_verb,
             text_confirm=text_confirm,
+            text_check=text_check,
+            text_footer=None,
         ),
         None,
     )
@@ -54,12 +81,17 @@ async def select_word(
 ) -> str:
     if share_index is None:
         title: str = TR.reset__check_wallet_backup_title
+        description = TR.reset__select_word_template.format(checked_index + 1)
     elif group_index is None:
-        title: str = TR.reset__check_share_title_template.format(share_index + 1)
+        title: str = TR.reset__check_wallet_backup_title
+        description = TR.reset__select_word_from_share_template.format(
+            checked_index + 1, share_index + 1
+        )
     else:
         title: str = TR.reset__check_group_share_title_template.format(
             group_index + 1, share_index + 1
         )
+        description = TR.reset__select_word_template.format(checked_index + 1)
 
     # It may happen (with a very low probability)
     # that there will be less than three unique words to choose from.
@@ -71,7 +103,7 @@ async def select_word(
     result = await interact(
         trezorui_api.select_word(
             title=title,
-            description=TR.reset__select_word_template.format(checked_index + 1),
+            description=description,
             words=(words[0], words[1], words[2]),
         ),
         None,
@@ -197,7 +229,7 @@ def slip39_prompt_threshold(
         )
 
     return _prompt_number(
-        TR.reset__title_set_threshold,
+        TR.reset__slip39_checklist_set_threshold,
         description,
         info,
         count,
@@ -283,7 +315,7 @@ async def show_intro_backup(single_share: bool, num_of_words: int | None) -> Non
 
     await interact(
         trezorui_api.show_info(
-            title=TR.backup__title_create_wallet_backup,
+            title=TR.reset__recovery_wallet_backup_title,
             description=description,
             button=TR.buttons__continue,
         ),
@@ -348,28 +380,30 @@ async def show_share_confirmation_success(
 
     # TODO: super-shamir copy not done
     if share_index == num_of_shares - 1:
-        content = TR.reset__share_completed_template.format(share_index + 1)
         if group_index is None:
-            title = TR.words__title_done
+            content = TR.reset__share_completed_template.format(share_index + 1)
         else:
-            title = TR.reset__finished_verifying_group_template.format(group_index + 1)
+            content = TR.reset__finished_verifying_group_template.format(
+                group_index + 1
+            )
+        button = TR.buttons__continue
     else:
         if group_index is None:
             content = TR.reset__share_completed_template.format(share_index + 1)
-            title = TR.instructions__shares_continue_with_x_template.format(
+            button = TR.instructions__shares_start_with_x_template.format(
                 share_index + 2
             )
         else:
-            content = TR.reset__continue_with_next_share
-            title = TR.reset__group_share_checked_successfully_template.format(
+            button = TR.reset__continue_with_next_share
+            content = TR.reset__group_share_checked_successfully_template.format(
                 group_index + 1, share_index + 1
             )
 
     await show_success(
         "success_recovery",
         content,
-        subheader=title,
-        button=TR.buttons__continue,
+        subheader=TR.words__title_done,
+        button=button,
     )
 
 

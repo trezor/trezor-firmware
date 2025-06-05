@@ -3,10 +3,11 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            swipe_detect::SwipeConfig, Component, Event, EventCtx, Never, PaginateFull, Swipe,
+            swipe_detect::SwipeConfig, text::TextStyle, Component, Event, EventCtx, Label, Never,
+            PaginateFull, Swipe,
         },
         flow::Swipable,
-        geometry::{Alignment, Direction, Offset, Rect},
+        geometry::{Alignment, Direction, Insets, Offset, Rect},
         shape::{Bar, Renderer, Text},
         util::Pager,
     },
@@ -27,6 +28,7 @@ type IndexVec = Vec<u8, MAX_WORDS>;
 /// Full-screen component for rendering ShareWords.
 pub struct ShareWordsScreen<'a> {
     header: Header,
+    subtitle: Option<Label<'static>>,
     content: ShareWords<'a>,
     hint: Hint<'static>,
     action_bar: ActionBar,
@@ -43,16 +45,20 @@ pub enum ShareWordsScreenMsg {
 
 impl<'a> ShareWordsScreen<'a> {
     const WORD_AREA_HEIGHT: i16 = 120;
-    const WORD_AREA_WIDTH: i16 = 330;
-    const WORD_Y_OFFSET: i16 = 76;
+    const SUBTITLE_HEIGHT: i16 = 44;
+    const WORD_Y_OFFSET: i16 = 80 - Self::SUBTITLE_HEIGHT; // vertical distance from the subtitle
+    const SUBTITLE_STYLE: TextStyle = theme::TEXT_MEDIUM_EXTRA_LIGHT;
 
-    pub fn new(share_words_vec: Vec<TString<'static>, 33>) -> Self {
+    pub fn new(share_words_vec: Vec<TString<'static>, 33>, show_back_button: bool) -> Self {
         let content = ShareWords::new(share_words_vec);
 
-        let mut action_bar = ActionBar::new_double(
-            Button::with_icon(theme::ICON_CHEVRON_UP),
-            Button::with_text(TR::buttons__continue.into()),
-        );
+        let right_button = Button::with_text(TR::buttons__continue.into());
+        let mut action_bar = if show_back_button {
+            ActionBar::new_double(Button::with_icon(theme::ICON_CHEVRON_UP), right_button)
+        } else {
+            ActionBar::new_single(right_button)
+        };
+
         // Set action bar page counter
         action_bar.update(content.pager());
 
@@ -62,14 +68,22 @@ impl<'a> ShareWordsScreen<'a> {
         hint.update(content.pager());
 
         Self {
-            content,
             header,
+            subtitle: None,
+            content,
             hint,
             action_bar,
             area: Rect::zero(),
             page_swipe: Swipe::vertical(),
             swipe_config: SwipeConfig::new(),
         }
+    }
+
+    pub fn with_subtitle(mut self, subtitle: TString<'static>) -> Self {
+        if !subtitle.is_empty() {
+            self.subtitle = Some(Label::left_aligned(subtitle, Self::SUBTITLE_STYLE).top_aligned());
+        }
+        self
     }
 
     fn on_page_change(&mut self, direction: Direction) {
@@ -126,20 +140,18 @@ impl<'a> Component for ShareWordsScreen<'a> {
 
         self.area = bounds;
         let (header_area, rest) = bounds.split_top(Header::HEADER_HEIGHT);
+        let (subtitle_area, rest) = rest.split_top(Self::SUBTITLE_HEIGHT);
         let (rest, action_bar_area) = rest.split_bottom(ActionBar::ACTION_BAR_HEIGHT);
-        let (content_area, hint_area) = rest.split_bottom(self.hint.height());
+        let (mut content_area, hint_area) = rest.split_bottom(self.hint.height());
 
         // Use constant y offset for the word area because the height is floating
-        let top_left = content_area.top_left().ofs(Offset::new(
-            (content_area.width() - Self::WORD_AREA_WIDTH) / 2,
-            Self::WORD_Y_OFFSET,
-        ));
-        let content_area = Rect::from_top_left_and_size(
-            top_left,
-            Offset::new(Self::WORD_AREA_WIDTH, Self::WORD_AREA_HEIGHT),
-        );
+        content_area = content_area
+            .inset(Insets::top(Self::WORD_Y_OFFSET))
+            .inset(theme::SIDE_INSETS)
+            .with_height(Self::WORD_AREA_HEIGHT);
 
         self.header.place(header_area);
+        self.subtitle.place(subtitle_area.inset(theme::SIDE_INSETS));
         self.content.place(content_area);
         self.hint.place(hint_area);
         self.action_bar.place(action_bar_area);
@@ -183,6 +195,7 @@ impl<'a> Component for ShareWordsScreen<'a> {
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.header.render(target);
+        self.subtitle.render(target);
         self.content.render(target);
         self.hint.render(target);
         self.action_bar.render(target);
@@ -321,5 +334,23 @@ impl<'a> crate::trace::Trace for ShareWords<'a> {
         let content = word.map(|w| uformat!("{}. {}\n", self.pager().current() + 1, w));
         t.string("screen_content", content.as_str().into());
         t.int("page_count", self.share_words.len() as i64)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{super::super::constant::SCREEN, *};
+
+    #[test]
+    fn test_component_heights_fit_screen() {
+        assert!(
+            Header::HEADER_HEIGHT
+                + ShareWordsScreen::SUBTITLE_HEIGHT
+                + ShareWordsScreen::WORD_Y_OFFSET
+                + ShareWords::AREA_WORD_HEIGHT
+                + Hint::HEIGHT_MAXIMAL
+                <= SCREEN.height(),
+            "Components overflow the screen height",
+        );
     }
 }

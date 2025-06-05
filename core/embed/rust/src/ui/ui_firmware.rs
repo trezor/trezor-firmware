@@ -382,9 +382,11 @@ pub trait FirmwareUI {
     fn show_share_words_extended(
         words: Vec<TString<'static>, 33>,
         subtitle: Option<TString<'static>>,
-        instructions: Obj,                     // TODO: replace Obj
+        instructions: Obj, // TODO: replace Obj
+        instructions_verb: Option<TString<'static>>,
         text_footer: Option<TString<'static>>, // footer description at instruction screen
         text_confirm: TString<'static>,
+        text_check: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_simple(
