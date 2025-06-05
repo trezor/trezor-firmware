@@ -48,9 +48,17 @@ const START_INIT_FRAME_BYTE_1: u8 = 9;
 const START_CONT_FRAME_BYTE_0: u8 = 4;
 const START_CONT_FRAME_BYTE_1: u8 = 20;
 
+/// ReceiverStorage wraps an UnsafeCell<Option<SmpReceiver>> in a static.
+/// SAFETY: We need manual synchronization (irq_lock/irq_unlock) whenever
+/// accessing this static. UnsafeCell allows interior mutability, but we must
+/// ensure only one context writes at a time.
 struct ReceiverStorage(UnsafeCell<Option<SmpReceiver>>);
 static SMP_RECEIVER: ReceiverStorage = ReceiverStorage(UnsafeCell::new(None));
 
+/// We assert that it is safe to share `ReceiverStorage` across
+/// threads/interrupt contexts because we manually lock interrupts
+/// (irq_lock/irq_unlock) around all accesses. SAFETY: If any code touches
+/// SMP_RECEIVER without locking IRQ, data races could occur.
 unsafe impl Sync for ReceiverStorage {}
 
 #[derive(Debug)]
@@ -59,7 +67,6 @@ pub enum SmpError {
     WrongMessage,
 }
 
-#[repr(C)]
 pub struct SmpHeader {
     op: u8,
     _reserved: u8,
@@ -115,25 +122,25 @@ impl SmpHeader {
 
 pub fn encode_request(data: &[u8], out: &mut [u8]) {
     let len = data.len();
-    // same check as `if (max_out_len < (length + 3)) return;`
-    if out.len() < len + 3 {
+
+    if out.len() < len + MSG_HEADER_SIZE + MSG_FOOTER_SIZE {
         return;
     }
 
     // length including CRC (2 bytes) and length field itself
-    let length_field = (len + 2) as u16;
+    let length_field = (len + MSG_HEADER_SIZE) as u16;
     out[0] = (length_field >> 8) as u8;
     out[1] = (length_field & 0xFF) as u8;
 
     // copy the payload
-    out[2..2 + len].copy_from_slice(data);
+    out[MSG_HEADER_SIZE..MSG_HEADER_SIZE + len].copy_from_slice(data);
 
     // compute CRC
     let crc = crc16_itu_t(0, data);
 
     // append CRC hi/lo
-    out[len + 2] = (crc >> 8) as u8;
-    out[len + 3] = (crc & 0xFF) as u8;
+    out[len + MSG_HEADER_SIZE] = (crc >> 8) as u8;
+    out[len + MSG_HEADER_SIZE + 1] = (crc & 0xFF) as u8;
 }
 
 pub fn send_request(data: &mut [u8], buffer: &mut [u8]) {
@@ -273,13 +280,13 @@ impl SmpReceiver {
 
     /// Handle one decoded frame chunk
     fn process_frame(&mut self) {
-        // Base64‐decode into smp_rx_frame_dec[]
+        // Base64‐decode into rx_frame_dec[]
         let decode_res =
             base64_decode(&self.rx_frame[2..self.rx_frame_len], &mut self.rx_frame_dec);
 
         if let Ok(len) = decode_res {
             if len > 0 {
-                // copy into last_msg at current offset
+                // copy into rx_msg at current offset
                 let remaining = self.rx_msg.len().saturating_sub(self.rx_msg_len);
                 let copy_len = len.min(remaining);
 
@@ -288,10 +295,10 @@ impl SmpReceiver {
 
                 let received_len = self.rx_msg_len + len;
 
-                // the first two bytes of last_msg are the length field
+                // the first two bytes of rx_msg are the length field
                 let msg_len = ((self.rx_msg[0] as u16) << 8) | (self.rx_msg[1] as u16);
 
-                // too long?
+                // too long? (received_len - 2) > msg_len
                 if received_len.saturating_sub(2) > msg_len as usize {
                     self.rx_msg_len = 0;
                     return;
@@ -338,22 +345,21 @@ impl SmpReceiver {
     }
 }
 
+/// Called from interrupt context.
 pub fn process_rx_byte(byte: u8) {
-    let key = irq_lock();
-
+    // SAFETY: Called from interrupt context so no concurrency
     unsafe {
         let opt_ref: &mut Option<SmpReceiver> = &mut *SMP_RECEIVER.0.get();
         if let Some(receiver) = opt_ref.as_mut() {
             receiver.process_byte(byte);
         }
     }
-
-    irq_unlock(key);
 }
 
 pub fn receiver_release() {
     let key = irq_lock();
 
+    // SAFETY: Protected by IRQ lock. Resets Option<SmpReceiver> → None
     unsafe {
         let opt_ref: &mut Option<SmpReceiver> = &mut *SMP_RECEIVER.0.get();
         *opt_ref = None;
@@ -365,6 +371,7 @@ pub fn receiver_release() {
 pub fn receiver_acquire() -> Result<(), ()> {
     let key = irq_lock();
 
+    // SAFETY: Protected by IRQ lock
     let already_acquired = unsafe {
         let opt_ref: &Option<SmpReceiver> = &*SMP_RECEIVER.0.get();
         opt_ref.is_some()
@@ -376,6 +383,7 @@ pub fn receiver_acquire() -> Result<(), ()> {
     }
 
     let new_rcv = SmpReceiver::new();
+    // SAFETY: Protected by IRQ lock
     unsafe {
         let opt_mut: &mut Option<SmpReceiver> = &mut *SMP_RECEIVER.0.get();
         *opt_mut = Some(new_rcv);
@@ -385,17 +393,26 @@ pub fn receiver_acquire() -> Result<(), ()> {
     Ok(())
 }
 
+/// Read message type without removing it.
+/// SAFETY: Unsafe because we access static mutable without compile-time borrow
+/// checks. Must always be called with IRQ lock held.
 unsafe fn receiver_read_msg_type() -> Option<MsgType> {
+    // SAFETY: Caller must hold lock to avoid races.
     let msg_type = unsafe {
         let opt_ref: &Option<SmpReceiver> = &*SMP_RECEIVER.0.get();
-
         unwrap!(opt_ref.as_ref().map(|r| r.msg_type))
     };
 
     msg_type
 }
 
+/// Copy received message payload (excluding header/footer) into `buf`.
+/// Returns the payload length on success.
+/// SAFETY: Caller must hold IRQ lock, and `buf` must be large enough.
+/// Also, `unwrap!` will panic if `opt_ref` is None (i.e., no receiver
+/// acquired).
 unsafe fn received_read_msg(buf: &mut [u8]) -> Result<usize, SmpError> {
+    // SAFETY: Caller held lock, so safe to read.
     let receiver_ref = unsafe {
         let opt_ref: &Option<SmpReceiver> = &*SMP_RECEIVER.0.get();
         unwrap!(opt_ref.as_ref(), "Receiver is not initialized")
@@ -427,6 +444,7 @@ pub fn wait_for_response(
     let start = Instant::now();
     loop {
         let key = irq_lock();
+        // SAFETY: IRQ locked
         let msg_type = unsafe { receiver_read_msg_type() };
         irq_unlock(key);
         if let Some(msg_type) = msg_type {
@@ -435,6 +453,7 @@ pub fn wait_for_response(
             }
 
             let key = irq_lock();
+            // SAFETY: IRQ locked, safe to read and clear receiver
             let len = unsafe { unwrap!(received_read_msg(buf)) };
             irq_unlock(key);
 
