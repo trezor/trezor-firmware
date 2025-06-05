@@ -126,13 +126,21 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
     return;
   }
 
+  bool aborted = false;
   if (msg->has_show_display && msg->show_display) {
     int page = 0;
     bool qrcode = false;
 
     while (page < 2) {
       layoutXPUB(resp->xpub, page, qrcode);
-      if (protectButton(ButtonRequestType_ButtonRequest_PublicKey, false)) {
+      bool confirmed =
+          protectButton(ButtonRequestType_ButtonRequest_PublicKey, false);
+
+      aborted = protectAbortedByCancel || protectAbortedByInitialize;
+      if (aborted) {
+        break;
+      }
+      if (confirmed) {
         page += 1;       // advance to the next page
         qrcode = false;  // switch to XPUB text
       } else {
@@ -143,6 +151,12 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
 
   resp->has_root_fingerprint = true;
   resp->root_fingerprint = root_fingerprint;
+
+  if (aborted) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    layoutHome();
+    return;
+  }
 
   msg_write(MessageType_MessageType_PublicKey, resp);
 
