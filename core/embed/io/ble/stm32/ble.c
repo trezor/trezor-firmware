@@ -19,6 +19,8 @@
 
 #ifdef KERNEL_MODE
 
+#include <trezor_bsp.h>
+#include <trezor_model.h>
 #include <trezor_rtl.h>
 
 #include <io/ble.h>
@@ -99,7 +101,7 @@ static bool ble_send_advertising_on(ble_driver_t *drv, bool whitelist) {
       .whitelist = whitelist ? 1 : 0,
       .color = props.color,
       .static_addr = drv->adv_cmd.static_mac,
-      .device_code = HW_MODEL,
+      .device_code = MODEL_BLE_CODE,
   };
 
   memcpy(data.name, drv->adv_cmd.name, BLE_ADV_NAME_LEN);

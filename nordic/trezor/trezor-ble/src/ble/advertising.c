@@ -65,7 +65,7 @@ void advertising_setup_wl(void) {
   bt_foreach_bond(BT_ID_DEFAULT, add_to_whitelist, NULL);
 }
 
-void advertising_start(bool wl, uint8_t color, uint32_t device_code,
+void advertising_start(bool wl, uint8_t color, uint8_t device_code,
                        bool static_addr, char *name, int name_len) {
   if (advertising) {
     LOG_WRN("Restarting advertising");
@@ -90,10 +90,7 @@ void advertising_start(bool wl, uint8_t color, uint32_t device_code,
   }
 
   manufacturer_data[3] = color;
-  manufacturer_data[4] = device_code & 0xff;
-  manufacturer_data[5] = (device_code >> 8) & 0xff;
-  manufacturer_data[6] = (device_code >> 16) & 0xff;
-  manufacturer_data[7] = (device_code >> 24) & 0xff;
+  manufacturer_data[4] = device_code;
 
   advertising_data[0].type = BT_DATA_FLAGS;
   advertising_data[0].data_len = 1;
