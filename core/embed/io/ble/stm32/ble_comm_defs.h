@@ -73,7 +73,7 @@ typedef struct {
   uint8_t whitelist;
   uint8_t color;
   uint8_t static_addr;
-  uint32_t device_code;
+  uint8_t device_code;
   uint8_t name[BLE_ADV_NAME_LEN];
 } cmd_advertising_on_t;
 
