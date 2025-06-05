@@ -49,13 +49,16 @@ impl<'a> ShareWordsScreen<'a> {
     const WORD_Y_OFFSET: i16 = 80 - Self::SUBTITLE_HEIGHT; // vertical distance from the subtitle
     const SUBTITLE_STYLE: TextStyle = theme::TEXT_MEDIUM_EXTRA_LIGHT;
 
-    pub fn new(share_words_vec: Vec<TString<'static>, 33>) -> Self {
+    pub fn new(share_words_vec: Vec<TString<'static>, 33>, show_back_button: bool) -> Self {
         let content = ShareWords::new(share_words_vec);
 
-        let mut action_bar = ActionBar::new_double(
-            Button::with_icon(theme::ICON_CHEVRON_UP),
-            Button::with_text(TR::buttons__continue.into()),
-        );
+        let right_button = Button::with_text(TR::buttons__continue.into());
+        let mut action_bar = if show_back_button {
+            ActionBar::new_double(Button::with_icon(theme::ICON_CHEVRON_UP), right_button)
+        } else {
+            ActionBar::new_single(right_button)
+        };
+
         // Set action bar page counter
         action_bar.update(content.pager());
 

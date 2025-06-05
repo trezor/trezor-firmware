@@ -75,10 +75,6 @@ pub fn new_show_share_words_flow(
     // Determine whether to show the instructions or not
     let has_intro = instructions_paragraphs.is_some();
     let nwords = words.len();
-    let initial_state = match instructions_paragraphs {
-        Some(_) => &ShowShareWords::Instruction,
-        None => &ShowShareWords::ShareWords,
-    };
 
     let instruction = TextScreen::new(
         instructions_paragraphs
@@ -97,7 +93,7 @@ pub fn new_show_share_words_flow(
         _ => Some(FlowMsg::Cancelled),
     });
 
-    let share_words = ShareWordsScreen::new(words)
+    let share_words = ShareWordsScreen::new(words, has_intro)
         .with_subtitle(subtitle)
         .map(|msg| match msg {
             ShareWordsScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
@@ -148,8 +144,11 @@ pub fn new_show_share_words_flow(
         VerticalMenuScreenMsg::Close => Some(FlowMsg::Cancelled),
         _ => None,
     });
-    let mut res = SwipeFlow::new(initial_state)?;
-    // If there are no instructions, share words page sends the BR
+    let mut res = if has_intro {
+        SwipeFlow::new(&ShowShareWords::Instruction)?
+    } else {
+        SwipeFlow::new(&ShowShareWords::ShareWords)?
+    };
     if has_intro {
         res.add_page(
             &ShowShareWords::Instruction,
@@ -159,13 +158,13 @@ pub fn new_show_share_words_flow(
         )?
         .add_page(&ShowShareWords::ShareWords, share_words)?
     } else {
-        res.add_page(&ShowShareWords::Instruction, instruction)?
-            .add_page(
-                &ShowShareWords::ShareWords,
-                share_words
-                    .one_button_request(br)
-                    .with_pages(move |_| nwords + 1),
-            )?
+        // If there is no introduction page, share words page sends the BR instead
+        res.add_page(
+            &ShowShareWords::ShareWords,
+            share_words
+                .one_button_request(br)
+                .with_pages(move |_| nwords + 1),
+        )?
     };
 
     res.add_page(&ShowShareWords::Confirm, confirm)?
