@@ -32,6 +32,10 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define DEVICE_NAME CONFIG_BT_DEVICE_NAME
 #define DEVICE_NAME_LEN (sizeof(DEVICE_NAME) - 1)
 
+#define ADV_FLAG_PAIRING 0x01
+#define ADV_FLAG_BOND_MEM_FULL 0x02
+#define ADV_FLAG_DEV_CONNECTED 0x04
+
 bool advertising = false;
 bool advertising_wl = false;
 
@@ -76,6 +80,15 @@ void advertising_start(bool wl, uint8_t color, uint8_t device_code,
 
   int bonds_count = bonds_get_count();
 
+  manufacturer_data[2] = 0;
+
+  if (CONFIG_BT_MAX_PAIRED == bonds_count) {
+    manufacturer_data[2] |= ADV_FLAG_BOND_MEM_FULL;
+  }
+  if (connection_is_connected()) {
+    manufacturer_data[2] |= ADV_FLAG_DEV_CONNECTED;
+  }
+
   manufacturer_data[3] = color;
   manufacturer_data[4] = device_code;
 
@@ -114,11 +127,7 @@ void advertising_start(bool wl, uint8_t color, uint8_t device_code,
   } else {
     LOG_INF("Advertising no whitelist");
 
-    if (CONFIG_BT_MAX_PAIRED == bonds_count) {
-      manufacturer_data[2] = 0x02;
-    } else {
-      manufacturer_data[2] = 0x01;
-    }
+    manufacturer_data[2] |= ADV_FLAG_PAIRING;
 
     uint32_t options = BT_LE_ADV_OPT_CONNECTABLE | BT_LE_ADV_OPT_SCANNABLE;
     if (static_addr) {
