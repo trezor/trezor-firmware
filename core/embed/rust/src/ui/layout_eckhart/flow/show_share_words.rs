@@ -159,12 +159,14 @@ pub fn new_show_share_words_flow(
         .add_page(&ShowShareWords::ShareWords, share_words)?
     } else {
         // If there is no introduction page, share words page sends the BR instead
-        res.add_page(
-            &ShowShareWords::ShareWords,
-            share_words
-                .one_button_request(br)
-                .with_pages(move |_| nwords + 1),
-        )?
+        // the instruction page is just a placeholder
+        res.add_page(&ShowShareWords::Instruction, instruction)?
+            .add_page(
+                &ShowShareWords::ShareWords,
+                share_words
+                    .one_button_request(br)
+                    .with_pages(move |_| nwords + 1),
+            )?
     };
 
     res.add_page(&ShowShareWords::Confirm, confirm)?
