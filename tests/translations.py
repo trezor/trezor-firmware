@@ -77,7 +77,7 @@ def set_language(session: Session, lang: str, *, force: bool = False):
     _CURRENT_TRANSLATION.TR = TRANSLATIONS[lang]
 
 
-def get_language(_client: Client) -> str:
+def get_language() -> str:
     for lang in LANGUAGES:
         if _CURRENT_TRANSLATION.TR == TRANSLATIONS[lang]:
             return lang

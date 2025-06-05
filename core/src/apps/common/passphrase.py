@@ -52,7 +52,7 @@ async def _handle_displaying_passphrase_from_host(passphrase: str) -> None:
     if storage_device.get_hide_passphrase_from_host():
         await confirm_hidden_passphrase_from_host()
     else:
-        await show_passphrase_from_host()
+        await show_passphrase_from_host(passphrase)
 
 
 if not utils.USE_THP:

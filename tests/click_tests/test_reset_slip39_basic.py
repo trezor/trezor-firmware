@@ -85,7 +85,7 @@ def test_reset_slip39_basic(
 
     # confirm checklist
     # TODO: resolve foreign glyphs extraction from the layout
-    if TR.get_language(debug) != "pt":
+    if TR.get_language() != "pt":
         assert any(
             needle in debug.read_layout().text_content()
             for needle in [
