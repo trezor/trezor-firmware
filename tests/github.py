@@ -6,6 +6,7 @@ Allowing for interaction with the test results, e.g. with UI tests.
 
 from __future__ import annotations
 
+from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, Iterable, Iterator
 
@@ -18,7 +19,7 @@ AnyDict = dict[Any, Any]
 HERE = Path(__file__).parent
 
 LIST_RUNS_TEMPLATE = "https://api.github.com/repos/trezor/trezor-firmware/actions/workflows/{workflow}/runs?branch={branch}"
-FIXTURES_TEMPLATE = "https://data.trezor.io/dev/firmware/ui_report/{run}/{model}-{lang}-{job}/fixtures.results.json"
+FIXTURES_TEMPLATE = "https://data.trezor.io/dev/firmware/ui_report/{run}/{job_instance}-fixtures.results.json"
 
 MODELS = [model.internal_name for model in models.TREZORS]
 CORE_LANGUAGES = ["en", "cs", "de", "es", "fr", "it", "pt"]
@@ -37,6 +38,15 @@ def get_last_run(branch_name: str, workflow: str) -> int | None:
     except IndexError:
         print(f"No workflow runs found for {workflow}")
         return None
+
+
+def download_or_none(url: str) -> AnyDict | None:
+    response = requests.get(url)
+    if response.status_code != 200:
+        print(f"Failed to get {url}: {response.status_code}")
+        return None
+
+    return response.json()
 
 
 def get_branch_ui_fixtures_results(
@@ -64,29 +74,30 @@ def get_branch_ui_fixtures_results(
             if run_id is None:
                 continue
 
-            for lang in languages:
-                for job in jobs:
-                    job_instance = f"{model}-{lang}-{job}"
+            futures: list[tuple[str, Future]] = []
+            with ThreadPoolExecutor(max_workers=8) as executor:
+                for lang in languages:
+                    for job in jobs:
+                        job_instance = f"{model}-{lang}-{job}"
 
-                    if only_jobs and all(
-                        (job not in job_instance) for job in only_jobs
-                    ):
-                        continue
-                    if exclude_jobs and any(
-                        (job in job_instance) for job in exclude_jobs
-                    ):
-                        continue
+                        if only_jobs and all(
+                            (job not in job_instance) for job in only_jobs
+                        ):
+                            continue
+                        if exclude_jobs and any(
+                            (job in job_instance) for job in exclude_jobs
+                        ):
+                            continue
 
-                    response = requests.get(
-                        FIXTURES_TEMPLATE.format(
-                            run=run_id, model=model, lang=lang, job=job
+                        url = FIXTURES_TEMPLATE.format(
+                            run=run_id, job_instance=job_instance
                         )
-                    )
-                    if response.status_code != 200:
-                        print(
-                            f"Failed to get fixtures for {job_instance}: {response.status_code}"
-                        )
-                        continue
-                    yield job_instance, response.json()
+                        future = executor.submit(download_or_none, url)
+                        futures.append((job_instance, future))
+
+                for job_instance, future in futures:
+                    result = future.result()
+                    if result is not None:
+                        yield (job_instance, result)
 
     return dict(yield_key_value())
