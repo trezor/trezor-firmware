@@ -76,7 +76,7 @@ pub fn new_confirm_value_intro(
         confirm_button_label.unwrap_or(TR::sign_message__confirm_without_review.into()),
     );
     if hold {
-        confirm_button = confirm_button.with_long_press(theme::LOCK_HOLD_DURATION);
+        confirm_button = confirm_button.with_long_press(theme::CONFIRM_HOLD_DURATION);
     }
 
     let value = if value != Obj::const_none() {
