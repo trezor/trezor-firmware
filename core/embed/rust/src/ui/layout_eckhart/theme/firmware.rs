@@ -14,7 +14,7 @@ use super::{
     *,
 };
 
-pub const LOCK_HOLD_DURATION: Duration = Duration::from_millis(1500);
+pub const LOCK_HOLD_DURATION: Duration = Duration::from_millis(3000);
 pub const CONFIRM_HOLD_DURATION: Duration = Duration::from_millis(1500);
 pub const ERASE_HOLD_DURATION: Duration = Duration::from_millis(1500);
 
