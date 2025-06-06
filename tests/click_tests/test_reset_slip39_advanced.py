@@ -51,7 +51,9 @@ def test_reset_slip39_advanced(
 
     assert features.initialized is False
 
-    device_handler.run(
+    session = device_handler.client.get_seedless_session()
+    device_handler.run_with_provided_session(
+        session,
         device.setup,
         backup_type=messages.BackupType.Slip39_Advanced,
         pin_protection=False,
@@ -82,7 +84,7 @@ def test_reset_slip39_advanced(
 
     # confirm checklist
     # TODO: resolve foreign glyphs extraction from the layout
-    if TR.get_language(debug) != "pt":
+    if TR.get_language() != "pt":
         assert any(
             needle in debug.read_layout().text_content()
             for needle in [
@@ -106,7 +108,7 @@ def test_reset_slip39_advanced(
 
     # confirm checklist
     # TODO: resolve foreign glyphs extraction from the layout
-    if TR.get_language(debug) != "pt":
+    if TR.get_language() != "pt":
         assert any(
             needle in debug.read_layout().text_content()
             for needle in [
