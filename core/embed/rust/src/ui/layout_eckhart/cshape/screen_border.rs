@@ -6,28 +6,21 @@ use crate::ui::{
 
 use super::super::{
     constant,
-    theme::{ICON_BORDER_BL, ICON_BORDER_BR, ICON_BORDER_TL, ICON_BORDER_TR},
+    theme::{ICON_BORDER_BL, ICON_BORDER_BR, ICON_BORDER_TOP},
 };
 
 /// Custom shape for a full screen border overlay, parameterizable by color.
 pub struct ScreenBorder {
     color: Color,
-    side_bars: [Rect; 4],
+    side_bars: [Rect; 3],
 }
 
 impl ScreenBorder {
     pub const WIDTH: i16 = 4;
+    pub const TOP_ARC_HEIGHT: i16 = ICON_BORDER_TOP.toif.height();
+
     pub const fn new(color: Color) -> Self {
         let screen = constant::screen();
-
-        // Top bar: from the right edge of top-left icon to the left edge of top-right
-        // icon.
-        let top_bar_rect = Rect {
-            x0: screen.x0 + ICON_BORDER_TL.toif.width(),
-            y0: screen.y0,
-            x1: screen.x1 - ICON_BORDER_TR.toif.width(),
-            y1: screen.y0 + Self::WIDTH,
-        };
 
         // Bottom bar: from the right edge of bottom-left icon to the left edge of
         // bottom-right icon.
@@ -42,7 +35,7 @@ impl ScreenBorder {
         // bottom-left icon.
         let left_bar_rect = Rect {
             x0: screen.x0,
-            y0: screen.y0 + ICON_BORDER_TL.toif.height(),
+            y0: screen.y0 + Self::TOP_ARC_HEIGHT,
             x1: screen.x0 + Self::WIDTH,
             y1: screen.y1 - ICON_BORDER_BL.toif.height(),
         };
@@ -50,18 +43,14 @@ impl ScreenBorder {
         // bottom-right icon.
         let right_bar_rect = Rect {
             x0: screen.x1 - Self::WIDTH,
-            y0: screen.y0 + ICON_BORDER_TR.toif.height(),
+            y0: screen.y0 + Self::TOP_ARC_HEIGHT,
             x1: screen.x1,
             y1: screen.y1 - ICON_BORDER_BR.toif.height(),
         };
         Self {
             color,
-            side_bars: [bottom_bar_rect, left_bar_rect, right_bar_rect, top_bar_rect],
+            side_bars: [bottom_bar_rect, left_bar_rect, right_bar_rect],
         }
-    }
-
-    pub fn bottom_width(&self) -> i16 {
-        self.side_bars[0].width()
     }
 
     pub fn render<'s>(&'s self, alpha: u8, target: &mut impl Renderer<'s>) {
@@ -78,19 +67,14 @@ impl ScreenBorder {
         // Draw the four corners.
         [
             (
+                screen.top_left(),
+                ICON_BORDER_TOP.toif,
+                Alignment2D::TOP_LEFT,
+            ),
+            (
                 screen.bottom_left(),
                 ICON_BORDER_BL.toif,
                 Alignment2D::BOTTOM_LEFT,
-            ),
-            (
-                screen.top_right(),
-                ICON_BORDER_TR.toif,
-                Alignment2D::TOP_RIGHT,
-            ),
-            (
-                screen.top_left(),
-                ICON_BORDER_TL.toif,
-                Alignment2D::TOP_LEFT,
             ),
             (
                 screen.bottom_right(),

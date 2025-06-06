@@ -229,7 +229,7 @@ impl HoldToConfirmAnim {
         );
         const TOP_GAP_FULL: Rect = Rect::from_center_and_size(
             SCREEN.top_center().ofs(Offset::y(ScreenBorder::WIDTH / 2)),
-            Offset::new(SCREEN.width(), ScreenBorder::WIDTH),
+            Offset::new(SCREEN.width(), ScreenBorder::TOP_ARC_HEIGHT),
         );
         match progress {
             // Bottom phase growing linearly
@@ -273,7 +273,7 @@ impl HoldToConfirmAnim {
                 let width = i16::lerp(SCREEN.width(), 0, eased_progress);
                 let top_gap = Rect::from_center_and_size(
                     SCREEN.top_center().ofs(Offset::y(ScreenBorder::WIDTH / 2)),
-                    Offset::new(width, ScreenBorder::WIDTH),
+                    Offset::new(width, ScreenBorder::TOP_ARC_HEIGHT),
                 );
                 (SCREEN, top_gap)
             }
