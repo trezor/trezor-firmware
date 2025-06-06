@@ -73,7 +73,7 @@ workflow_result_t workflow_empty_device(void) {
 #endif
     if (res == WF_OK_UI_ACTION && ui_result == WELCOME_MENU) {
       do {
-        res = workflow_menu(NULL, NULL, false, &ios);
+        res = workflow_menu(NULL, NULL, &ios);
       } while (res == WF_CANCELLED);
 
       if (res == WF_OK) {
