@@ -12,7 +12,7 @@ use super::{
     BldActionBar, BldHeader,
 };
 
-#[cfg(feature = "powerctl")]
+#[cfg(feature = "power_manager")]
 use super::BldHeaderMsg;
 
 // TODO: adjust the origin
@@ -69,7 +69,7 @@ impl Component for BldWelcomeScreen {
         if let Event::Button(_) = _event {
             return Some(WelcomeMsg::PairingMode);
         }
-        #[cfg(feature = "powerctl")]
+        #[cfg(feature = "power_manager")]
         if let Some(BldHeaderMsg::Menu) = self.header.event(_ctx, _event) {
             return Some(WelcomeMsg::Menu);
         };
@@ -78,7 +78,7 @@ impl Component for BldWelcomeScreen {
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.action_bar.render(target);
-        #[cfg(feature = "powerctl")]
+        #[cfg(feature = "power_manager")]
         self.header.render(target);
 
         let font = fonts::FONT_SATOSHI_REGULAR_38;
