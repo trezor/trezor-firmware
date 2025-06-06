@@ -76,9 +76,9 @@ impl From<KeyboardLayout> for ButtonContent {
     /// Used to get content for the "next keyboard" button
     fn from(kl: KeyboardLayout) -> Self {
         match kl {
-            KeyboardLayout::LettersLower => ButtonContent::Text("abc".into()),
-            KeyboardLayout::LettersUpper => ButtonContent::Text("ABC".into()),
-            KeyboardLayout::Numeric => ButtonContent::Text("123".into()),
+            KeyboardLayout::LettersLower => ButtonContent::single_line_text("abc".into()),
+            KeyboardLayout::LettersUpper => ButtonContent::single_line_text("ABC".into()),
+            KeyboardLayout::Numeric => ButtonContent::single_line_text("123".into()),
             KeyboardLayout::Special => ButtonContent::Icon(theme::ICON_ASTERISK),
         }
     }
@@ -145,7 +145,7 @@ impl PassphraseKeyboard {
 
     fn key_text(content: &ButtonContent) -> Option<TString<'static>> {
         match content {
-            ButtonContent::Text(text) => Some(*text),
+            ButtonContent::Text { text, .. } => Some(*text),
             ButtonContent::Icon(theme::ICON_SPECIAL_CHARS) => Some(" *#".into()),
             ButtonContent::Icon(_) => Some(" ".into()),
             _ => None,
@@ -155,7 +155,7 @@ impl PassphraseKeyboard {
     fn key_content(text: &'static str) -> ButtonContent {
         match text {
             " *#" => ButtonContent::Icon(theme::ICON_SPECIAL_CHARS),
-            t => ButtonContent::Text(t.into()),
+            t => ButtonContent::single_line_text(t.into()),
         }
     }
 

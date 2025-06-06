@@ -86,6 +86,14 @@ impl Button {
             .with_radius(Self::MENU_ITEM_RADIUS)
     }
 
+    pub fn new_single_line_menu_item(text: TString<'static>, stylesheet: ButtonStyleSheet) -> Self {
+        Self::with_single_line_text(text)
+            .with_text_align(Self::MENU_ITEM_ALIGNMENT)
+            .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
+            .styled(stylesheet)
+            .with_radius(Self::MENU_ITEM_RADIUS)
+    }
+
     pub fn new_menu_item_with_subtext(
         text: TString<'static>,
         stylesheet: ButtonStyleSheet,
@@ -99,8 +107,12 @@ impl Button {
             .with_radius(Self::MENU_ITEM_RADIUS)
     }
 
+    pub const fn with_single_line_text(text: TString<'static>) -> Self {
+        Self::new(ButtonContent::single_line_text(text))
+    }
+
     pub const fn with_text(text: TString<'static>) -> Self {
-        Self::new(ButtonContent::Text(text))
+        Self::new(ButtonContent::text(text))
     }
 
     pub fn with_text_and_subtext(
@@ -255,19 +267,25 @@ impl Button {
         }
     }
 
-    fn text_height(&self, text: &str, width: i16) -> i16 {
-        let (t1, t2) = split_two_lines(text, self.stylesheet.normal.font, width);
-        if t1.is_empty() || t2.is_empty() {
+    fn text_height(&self, text: &str, single_line: bool, width: i16) -> i16 {
+        if single_line {
             self.style().font.line_height()
         } else {
-            self.style().font.line_height() * 2 - constant::LINE_SPACE
+            let (t1, t2) = split_two_lines(text, self.stylesheet.normal.font, width);
+            if t1.is_empty() || t2.is_empty() {
+                self.style().font.line_height()
+            } else {
+                self.style().font.line_height() * 2 - constant::LINE_SPACE
+            }
         }
     }
 
     pub fn content_height(&self, width: i16) -> i16 {
         match &self.content {
             ButtonContent::Empty => 0,
-            ButtonContent::Text(text) => text.map(|t| self.text_height(t, width)),
+            ButtonContent::Text { text, single_line } => {
+                text.map(|t| self.text_height(t, *single_line, width))
+            }
             ButtonContent::Icon(icon) => icon.toif.height(),
             ButtonContent::IconAndText(child) => {
                 let text_height = self.style().font.line_height();
@@ -275,7 +293,7 @@ impl Button {
                 text_height.max(icon_height)
             }
             ButtonContent::TextAndSubtext { text, .. } => {
-                text.map(|t| self.text_height(t, width) + self.baseline_subtext_height())
+                text.map(|t| self.text_height(t, false, width) + self.baseline_subtext_height())
             }
             #[cfg(feature = "micropython")]
             ButtonContent::HomeBar(_) => theme::ACTION_BAR_HEIGHT,
@@ -408,26 +426,30 @@ impl Button {
 
         match &self.content {
             ButtonContent::Empty => {}
-            ButtonContent::Text(text) => {
+            ButtonContent::Text { text, single_line } => {
                 let text_baseline_height = self.baseline_text_height();
                 text.map(|t| {
-                    let (t1, t2) = split_two_lines(
-                        t,
-                        stylesheet.font,
-                        self.area.width() - 2 * self.content_offset.x,
-                    );
-
-                    if t1.is_empty() || t2.is_empty() {
+                    if *single_line {
                         show_text(t, render_origin(text_baseline_height / 2));
                     } else {
-                        show_text(
-                            t1,
-                            render_origin(-(text_baseline_height / 2 + constant::LINE_SPACE)),
+                        let (t1, t2) = split_two_lines(
+                            t,
+                            stylesheet.font,
+                            self.area.width() - 2 * self.content_offset.x,
                         );
-                        show_text(
-                            t2,
-                            render_origin(text_baseline_height + constant::LINE_SPACE * 2),
-                        );
+
+                        if t1.is_empty() || t2.is_empty() {
+                            show_text(t, render_origin(text_baseline_height / 2));
+                        } else {
+                            show_text(
+                                t1,
+                                render_origin(-(text_baseline_height / 2 + constant::LINE_SPACE)),
+                            );
+                            show_text(
+                                t2,
+                                render_origin(text_baseline_height + constant::LINE_SPACE * 2),
+                            );
+                        }
                     }
                 });
             }
@@ -654,7 +676,7 @@ impl crate::trace::Trace for Button {
         t.component("Button");
         match &self.content {
             ButtonContent::Empty => {}
-            ButtonContent::Text(text) => t.string("text", *text),
+            ButtonContent::Text { text, .. } => t.string("text", *text),
             ButtonContent::Icon(_) => t.bool("icon", true),
             ButtonContent::IconAndText(content) => {
                 t.string("text", content.text);
@@ -688,7 +710,10 @@ impl State {
 #[derive(PartialEq, Eq, Clone)]
 pub enum ButtonContent {
     Empty,
-    Text(TString<'static>),
+    Text {
+        text: TString<'static>,
+        single_line: bool,
+    },
     TextAndSubtext {
         text: TString<'static>,
         subtext: TString<'static>,
@@ -698,6 +723,22 @@ pub enum ButtonContent {
     IconAndText(IconText),
     #[cfg(feature = "micropython")]
     HomeBar(Option<TString<'static>>),
+}
+
+impl ButtonContent {
+    pub const fn text(text: TString<'static>) -> Self {
+        Self::Text {
+            text,
+            single_line: false,
+        }
+    }
+
+    pub const fn single_line_text(text: TString<'static>) -> Self {
+        Self::Text {
+            text,
+            single_line: true,
+        }
+    }
 }
 
 #[derive(PartialEq, Eq, Clone, Copy)]

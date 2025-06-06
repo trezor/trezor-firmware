@@ -45,7 +45,7 @@ where
         let prompt_visible = input.is_empty();
 
         let keypad_content: [_; MNEMONIC_KEY_COUNT] =
-            core::array::from_fn(|idx| ButtonContent::Text(T::keys()[idx].into()));
+            core::array::from_fn(|idx| ButtonContent::single_line_text(T::keys()[idx].into()));
 
         Self {
             prompt: Maybe::new(

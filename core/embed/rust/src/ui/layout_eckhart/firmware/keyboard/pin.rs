@@ -170,7 +170,7 @@ impl Component for PinKeyboard<'_> {
         match self.keypad.event(ctx, event) {
             Some(KeypadMsg::Key(idx)) => {
                 // Add new pin digit
-                if let ButtonContent::Text(text) = self.keypad.get_key_content(idx) {
+                if let ButtonContent::Text { text, .. } = self.keypad.get_key_content(idx) {
                     text.map(|text| {
                         self.input.push(text);
                     });
@@ -491,7 +491,7 @@ impl crate::trace::Trace for PinKeyboard<'_> {
 
         for idx in 0..10 {
             let btn_content = self.keypad.get_key_content(idx);
-            if let ButtonContent::Text(text) = btn_content {
+            if let ButtonContent::Text { text, .. } = btn_content {
                 text.map(|text| {
                     unwrap!(digits_order.push_str(text));
                 });
