@@ -29,17 +29,14 @@ use super::{
     },
     UIBolt,
 };
-use crate::{
-    trezorhal::secbool::secbool,
-    ui::{
-        component::{Event, Label},
-        display::{self, toif::Toif, Color, Icon, LOADER_MAX},
-        geometry::{Alignment, Alignment2D, Offset, Point, Rect},
-        layout::simplified::{process_frame_event, run, show},
-        shape::{self, render_on_display},
-        ui_bootloader::{BootloaderLayoutType, BootloaderUI},
-        CommonUI,
-    },
+use crate::ui::{
+    component::{Event, Label},
+    display::{self, toif::Toif, Color, Icon, LOADER_MAX},
+    geometry::{Alignment, Alignment2D, Offset, Point, Rect},
+    layout::simplified::{process_frame_event, run, show},
+    shape::{self, render_on_display},
+    ui_bootloader::{BootloaderLayoutType, BootloaderUI},
+    CommonUI,
 };
 use intro::Intro;
 use menu::Menu;
@@ -171,8 +168,8 @@ impl BootloaderLayoutType for BootloaderLayout {
         Self::Welcome(Welcome::new())
     }
 
-    fn init_menu(_initial_setup: bool, firmware_present: secbool) -> Self {
-        Self::Menu(Menu::new(firmware_present))
+    fn init_menu(_initial_setup: bool) -> Self {
+        Self::Menu(Menu::new())
     }
 
     fn init_connect(initial_setup: bool, auto_update: bool) -> Self {

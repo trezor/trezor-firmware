@@ -1,15 +1,12 @@
 use heapless::String;
 
-use crate::{
-    trezorhal::secbool::secbool,
-    ui::{
-        component::{Label, LineBreaking::BreakWordsNoHyphen},
-        constant::{self, HEIGHT, SCREEN},
-        display::{self, Color, Icon},
-        geometry::{Alignment2D, Offset, Point},
-        layout::simplified::{run, show, ReturnToC},
-        ui_bootloader::BootloaderLayoutType,
-    },
+use crate::ui::{
+    component::{Label, LineBreaking::BreakWordsNoHyphen},
+    constant::{self, HEIGHT, SCREEN},
+    display::{self, Color, Icon},
+    geometry::{Alignment2D, Offset, Point},
+    layout::simplified::{run, show, ReturnToC},
+    ui_bootloader::BootloaderLayoutType,
 };
 
 use super::{
@@ -121,8 +118,8 @@ impl BootloaderLayoutType for BootloaderLayout {
         Self::Welcome(Welcome::new())
     }
 
-    fn init_menu(_initial_setup: bool, firmware_present: secbool) -> Self {
-        Self::Menu(Menu::new(firmware_present))
+    fn init_menu(_initial_setup: bool) -> Self {
+        Self::Menu(Menu::new())
     }
 
     fn init_connect(_initial_setup: bool, _auto_update: bool) -> Self {
