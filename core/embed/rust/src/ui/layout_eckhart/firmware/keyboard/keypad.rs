@@ -87,7 +87,7 @@ impl Keypad {
             random::shuffle(&mut digits);
         }
         let keypad_content: [_; KEYPAD_MAX_KEYS] =
-            core::array::from_fn(|i| ButtonContent::Text(digits[i].into()));
+            core::array::from_fn(|i| ButtonContent::single_line_text(digits[i].into()));
 
         Self::new_inner(true, true, theme::button_keyboard_numeric())
             .with_keys_content(&keypad_content)
