@@ -50,6 +50,8 @@ typedef struct {
   // Address associated with the SecureFault
   uint32_t sfar;
 #endif
+  // PC (return address) at the time of the fault
+  uint32_t pc;
   // Stack pointer at the time of the fault
   // (MSP or PSP depending on the privilege level)
   uint32_t sp;
@@ -133,6 +135,11 @@ typedef struct {
   // Applet bound to the task
   void* applet;
 
+  // Original stack base
+  uint32_t stack_base;
+  // Original stack end
+  uint32_t stack_end;
+
   // Set if the task is processing the kernel callback
   bool in_callback;
 
@@ -155,7 +162,7 @@ void systask_yield_to(systask_t* task);
 // Initializes a task with the given stack pointer, stack size
 //
 // The task must be not be running when the function is called
-bool systask_init(systask_t* task, uint32_t stack_ptr, uint32_t stack_size,
+bool systask_init(systask_t* task, uint32_t stack_base, uint32_t stack_size,
                   void* context);
 
 // Returns true if the task is alive (not terminated, killed or crashed)
