@@ -33,7 +33,7 @@
 #include "../crc8.h"
 #include "../nrf_internal.h"
 
-#define MAX_SPI_DATA_SIZE (244)
+#define MAX_SPI_DATA_SIZE (251)
 
 typedef struct {
   uint8_t service_id;
