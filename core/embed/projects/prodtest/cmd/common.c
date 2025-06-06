@@ -26,6 +26,23 @@ static const uint8_t ECDSA_WITH_SHA256[] = {
     0x06, 0x08, // an OID of 8 bytes
       0x2a, 0x86, 0x48, 0xce, 0x3d, 0x04, 0x03, 0x02,
 };
+
+static const uint8_t OID_COMMON_NAME[] = {
+  0x06, 0x03, // an OID of 3 bytes
+    0x55, 0x04, 0x03, // corresponds to commonName in X.509
+};
+
+static const uint8_t SUBJECT_COMMON_NAME[] = {
+#ifdef TREZOR_MODEL_T2B1
+  'T', '2', 'B', '1', ' ', 'T', 'r', 'e', 'z', 'o', 'r', ' ', 'S', 'a', 'f', 'e', ' ', '3',
+#endif
+#ifdef TREZOR_MODEL_T3B1
+  'T', '3', 'B', '1', ' ', 'T', 'r', 'e', 'z', 'o', 'r', ' ', 'S', 'a', 'f', 'e', ' ', '3',
+#endif
+#ifdef TREZOR_MODEL_T3T1
+  'T', '3', 'T', '1', ' ', 'T', 'r', 'e', 'z', 'o', 'r', ' ', 'S', 'a', 'f', 'e', ' ', '5',
+#endif
+};
 // clang-format on
 
 static bool get_cert_extensions(DER_ITEM* tbs_cert, DER_ITEM* extensions) {
@@ -114,6 +131,46 @@ static bool get_authority_key_digest(cli_t* cli, DER_ITEM* tbs_cert,
   return true;
 }
 
+static bool get_common_name(DER_ITEM* name, const uint8_t** common_name,
+                            size_t* common_name_size) {
+  if (name->id != DER_SEQUENCE) {
+    return false;
+  }
+
+  DER_ITEM distinguished_name = {0};
+  if (!der_read_item(&name->buf, &distinguished_name) ||
+      distinguished_name.id != DER_SET) {
+    return false;
+  }
+
+  DER_ITEM attribute = {0};
+  if (!der_read_item(&distinguished_name.buf, &attribute) ||
+      attribute.id != DER_SEQUENCE) {
+    return false;
+  }
+
+  DER_ITEM attribute_type = {0};
+  if (!der_read_item(&attribute.buf, &attribute_type) ||
+      attribute_type.buf.size != sizeof(OID_COMMON_NAME) ||
+      memcmp(attribute_type.buf.data, OID_COMMON_NAME,
+             sizeof(OID_COMMON_NAME)) != 0) {
+    return false;
+  }
+
+  DER_ITEM attribute_value = {0};
+  if (!der_read_item(&attribute.buf, &attribute_value) ||
+      attribute_value.id != DER_UTF8_STRING) {
+    return false;
+  }
+
+  if (!buffer_ptr(&attribute_value.buf, common_name)) {
+    return false;
+  }
+  *common_name_size = buffer_remaining(&attribute_value.buf);
+
+  return true;
+}
+
 static bool verify_signature(const uint8_t* pub_key, size_t pub_key_size,
                              const uint8_t* sig, size_t sig_size,
                              const uint8_t* msg, size_t msg_size) {
@@ -181,15 +238,47 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
       return false;
     }
 
-    // Read the Subject Public Key Info.
-    DER_ITEM pub_key_info = {0};
-    for (int i = 0; i < 7; ++i) {
-      if (!der_read_item(&tbs_cert.buf, &pub_key_info)) {
+    // Skip the version, serialNumber, signature, issuer and validity
+    DER_ITEM der_item = {0};
+    for (int i = 0; i < 5; ++i) {
+      if (!der_read_item(&tbs_cert.buf, &der_item)) {
         cli_error(cli, CLI_ERROR,
                   "check_device_cert_chain, der_read_item 3, cert %d.",
                   cert_count);
         return false;
       }
+    }
+
+    // Read the subject.
+    DER_ITEM subject = {0};
+    if (!der_read_item(&tbs_cert.buf, &subject)) {
+      cli_error(cli, CLI_ERROR,
+                "check_device_cert_chain, der_read_item 4, cert %d.",
+                cert_count);
+      return false;
+    }
+
+    if (cert_count == 1) {
+      // Check the common name of the subject of the device certificate.
+      const uint8_t* common_name = NULL;
+      size_t common_name_size = 0;
+      if (!get_common_name(&subject, &common_name, &common_name_size) ||
+          common_name_size != sizeof(SUBJECT_COMMON_NAME) ||
+          memcmp(common_name, SUBJECT_COMMON_NAME,
+                 sizeof(SUBJECT_COMMON_NAME)) != 0) {
+        cli_error(cli, CLI_ERROR,
+                  "check_device_cert_chain, invalid common name.");
+        return false;
+      }
+    }
+
+    // Read the Subject Public Key Info.
+    DER_ITEM pub_key_info = {0};
+    if (!der_read_item(&tbs_cert.buf, &pub_key_info)) {
+      cli_error(cli, CLI_ERROR,
+                "check_device_cert_chain, der_read_item 5, cert %d.",
+                cert_count);
+      return false;
     }
 
     // Read the public key.
@@ -198,7 +287,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
     for (int i = 0; i < 2; ++i) {
       if (!der_read_item(&pub_key_info.buf, &pub_key_val)) {
         cli_error(cli, CLI_ERROR,
-                  "check_device_cert_chain, der_read_item 4, cert %d.",
+                  "check_device_cert_chain, der_read_item 6, cert %d.",
                   cert_count);
         return false;
       }
