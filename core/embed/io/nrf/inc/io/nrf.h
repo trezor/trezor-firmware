@@ -22,7 +22,7 @@
 #include <trezor_types.h>
 
 // maximum data size allowed to be sent
-#define NRF_MAX_TX_DATA_SIZE (244)
+#define NRF_MAX_TX_DATA_SIZE (251)
 
 typedef enum {
   NRF_SERVICE_BLE = 0,

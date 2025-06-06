@@ -59,7 +59,7 @@ void connected(struct bt_conn *conn, uint8_t err) {
   } else {
     current_conn = bt_conn_ref(conn);
   }
-  ble_advertising_stop();
+  advertising_stop();
 
   ble_management_send_status_event();
 }
