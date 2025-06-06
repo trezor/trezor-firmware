@@ -2,6 +2,7 @@ use crate::{
     error::Error,
     io::BinaryData,
     strutil::TString,
+    time::Duration,
     translations::TR,
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Label, Never},
@@ -10,7 +11,6 @@ use crate::{
         layout::util::get_user_custom_image,
         lerp::Lerp,
         shape::{self, Renderer},
-        util::animation_disabled,
     },
 };
 
@@ -21,8 +21,10 @@ use super::{
     },
     constant::{HEIGHT, SCREEN, WIDTH},
     theme::{self, firmware::button_homebar_style, TILES_GRID},
-    ActionBar, ActionBarMsg, Hint, HoldToConfirmAnim,
+    ActionBar, ActionBarMsg, Hint,
 };
+
+const LOCK_HOLD_DURATION: Duration = Duration::from_millis(3000);
 
 /// Full-screen component for the homescreen and lockscreen.
 pub struct Homescreen {
@@ -42,8 +44,6 @@ pub struct Homescreen {
     locked: bool,
     /// Hold to lock button placed everywhere except the `action_bar`
     virtual_locking_button: Button,
-    /// Hold to lock animation
-    htc_anim: Option<HoldToConfirmAnim>,
 }
 
 pub enum HomescreenMsg {
@@ -104,19 +104,6 @@ impl Homescreen {
             Button::with_homebar_content(None).styled(button_style)
         };
 
-        let lock_duration = theme::LOCK_HOLD_DURATION;
-
-        // Locking animation
-        let htc_anim = if lockable && !animation_disabled() {
-            Some(
-                HoldToConfirmAnim::new()
-                    .with_color(theme::GREY_LIGHT)
-                    .with_duration(lock_duration),
-            )
-        } else {
-            None
-        };
-
         Ok(Self {
             label: HomeLabel::new(label, shadow),
             hint,
@@ -125,43 +112,13 @@ impl Homescreen {
             led_color,
             lockable,
             locked,
-            virtual_locking_button: Button::empty().with_long_press(lock_duration),
-            htc_anim,
+            virtual_locking_button: Button::empty().with_long_press(LOCK_HOLD_DURATION),
         })
     }
 
     fn event_hold(&mut self, ctx: &mut EventCtx, event: Event) -> bool {
-        self.htc_anim.event(ctx, event);
-        if let Some(msg) = self.virtual_locking_button.event(ctx, event) {
-            match msg {
-                ButtonMsg::Pressed => {
-                    if let Some(htc_anim) = &mut self.htc_anim {
-                        htc_anim.start();
-                        ctx.request_anim_frame();
-                        ctx.request_paint();
-                        ctx.disable_swipe();
-                    }
-                }
-                ButtonMsg::Clicked => {
-                    if let Some(htc_anim) = &mut self.htc_anim {
-                        htc_anim.stop();
-                        ctx.request_anim_frame();
-                        ctx.request_paint();
-                        ctx.enable_swipe();
-                    }
-                }
-                ButtonMsg::Released => {
-                    if let Some(htc_anim) = &mut self.htc_anim {
-                        htc_anim.stop();
-                        ctx.request_anim_frame();
-                        ctx.request_paint();
-                        ctx.enable_swipe();
-                    }
-                }
-                ButtonMsg::LongPressed => {
-                    return true;
-                }
-            }
+        if let Some(ButtonMsg::LongPressed) = self.virtual_locking_button.event(ctx, event) {
+            return true;
         }
         false
     }
@@ -221,7 +178,6 @@ impl Component for Homescreen {
         self.label.render(target);
         self.hint.render(target);
         self.action_bar.render(target);
-        self.htc_anim.render(target);
     }
 }
 
