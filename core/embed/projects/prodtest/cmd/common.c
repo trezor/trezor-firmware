@@ -21,10 +21,12 @@
 const uint8_t OID_AUTHORITY_KEY_IDENTIFIER[] = {0x06, 0x03, 0x55, 0x1d, 0x23};
 
 // clang-format off
-static const uint8_t ECDSA_WITH_SHA256[] = {
-  0x30, 0x0a, // a sequence of 10 bytes
+static const uint8_t ECDSA_P256_WITH_SHA256[] = {
+  0x30, 0x13, // a sequence of 19 bytes
+    0x06, 0x07, // an OID of 7 bytes
+      0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01, // corresponds to ecPublicKey in X.509
     0x06, 0x08, // an OID of 8 bytes
-      0x2a, 0x86, 0x48, 0xce, 0x3d, 0x04, 0x03, 0x02,
+      0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07, // corresponds to prime256v1 in X.509
 };
 
 static const uint8_t OID_COMMON_NAME[] = {
@@ -44,6 +46,19 @@ static const uint8_t SUBJECT_COMMON_NAME[] = {
 #endif
 };
 // clang-format on
+
+typedef enum { ALG_ID_ECDSA_P256_WITH_SHA256 } alg_id_t;
+
+static bool get_algorithm(DER_ITEM* alg, alg_id_t* alg_id) {
+  if (alg->buf.size == sizeof(ECDSA_P256_WITH_SHA256) &&
+      memcmp(alg->buf.data, ECDSA_P256_WITH_SHA256,
+             sizeof(ECDSA_P256_WITH_SHA256)) == 0) {
+    *alg_id = ALG_ID_ECDSA_P256_WITH_SHA256;
+    return true;
+  }
+
+  return false;
+}
 
 static bool get_cert_extensions(DER_ITEM* tbs_cert, DER_ITEM* extensions) {
   // Find the certificate extensions in the tbsCertificate.
@@ -171,27 +186,31 @@ static bool get_common_name(DER_ITEM* name, const uint8_t** common_name,
   return true;
 }
 
-static bool verify_signature(const uint8_t* pub_key, size_t pub_key_size,
-                             const uint8_t* sig, size_t sig_size,
-                             const uint8_t* msg, size_t msg_size) {
-  // ECDSA (NIST P-256) with SHA-256
-  if (pub_key_size != 65) {
-    return false;
+static bool verify_signature(alg_id_t alg_id, const uint8_t* pub_key,
+                             size_t pub_key_size, const uint8_t* sig,
+                             size_t sig_size, const uint8_t* msg,
+                             size_t msg_size) {
+  if (alg_id == ALG_ID_ECDSA_P256_WITH_SHA256) {
+    if (pub_key_size != 65) {
+      return false;
+    }
+
+    uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
+    sha256_Raw(msg, msg_size, digest);
+
+    uint8_t decoded_sig[64] = {0};
+    if (ecdsa_sig_from_der(sig, sig_size, decoded_sig) != 0) {
+      return false;
+    }
+
+    if (ecdsa_verify_digest(&nist256p1, pub_key, decoded_sig, digest) != 0) {
+      return false;
+    }
+
+    return true;
   }
 
-  uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
-  sha256_Raw(msg, msg_size, digest);
-
-  uint8_t decoded_sig[64] = {0};
-  if (ecdsa_sig_from_der(sig, sig_size, decoded_sig) != 0) {
-    return false;
-  }
-
-  if (ecdsa_verify_digest(&nist256p1, pub_key, decoded_sig, digest) != 0) {
-    return false;
-  }
-
-  return true;
+  return false;
 }
 
 bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
@@ -214,6 +233,8 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
 
   const uint8_t* pub_key = NULL;
   size_t pub_key_size = 0;
+
+  alg_id_t alg_id = 0;
 
   BUFFER_READER chain_reader = {0};
   buffer_reader_init(&chain_reader, chain, chain_size);
@@ -281,16 +302,24 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
       return false;
     }
 
+    // Read the algorithm
+    DER_ITEM alg = {0};
+    if (!der_read_item(&pub_key_info.buf, &alg) ||
+        !get_algorithm(&alg, &alg_id)) {
+      cli_error(cli, CLI_ERROR,
+                "check_device_cert_chain, reading algorithm, cert %d.",
+                cert_count);
+      return false;
+    }
+
     // Read the public key.
     DER_ITEM pub_key_val = {0};
     uint8_t unused_bits = 0;
-    for (int i = 0; i < 2; ++i) {
-      if (!der_read_item(&pub_key_info.buf, &pub_key_val)) {
-        cli_error(cli, CLI_ERROR,
-                  "check_device_cert_chain, der_read_item 6, cert %d.",
-                  cert_count);
-        return false;
-      }
+    if (!der_read_item(&pub_key_info.buf, &pub_key_val)) {
+      cli_error(cli, CLI_ERROR,
+                "check_device_cert_chain, der_read_item 6, cert %d.",
+                cert_count);
+      return false;
     }
 
     if (!buffer_get(&pub_key_val.buf, &unused_bits) ||
@@ -303,7 +332,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
     pub_key_size = buffer_remaining(&pub_key_val.buf);
 
     // Verify the previous signature.
-    if (!verify_signature(pub_key, pub_key_size, sig, sig_size, message,
+    if (!verify_signature(alg_id, pub_key, pub_key_size, sig, sig_size, message,
                           message_size)) {
       cli_error(cli, CLI_ERROR,
                 "check_device_cert_chain, verify_signature, cert %d.",
@@ -322,15 +351,11 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
     message = tbs_cert.buf.data;
     message_size = tbs_cert.buf.size;
 
-    // Read the signatureAlgorithm and ensure it matches ECDSA_WITH_SHA256.
+    // skip the signatureAlgorithm
     DER_ITEM sig_alg = {0};
-    if (!der_read_item(&cert.buf, &sig_alg) ||
-        sig_alg.buf.size != sizeof(ECDSA_WITH_SHA256) ||
-        memcmp(ECDSA_WITH_SHA256, sig_alg.buf.data,
-               sizeof(ECDSA_WITH_SHA256)) != 0) {
+    if (!der_read_item(&cert.buf, &sig_alg)) {
       cli_error(cli, CLI_ERROR,
-                "check_device_cert_chain, checking signatureAlgorithm, cert "
-                "%d.",
+                "check_device_cert_chain, der_read_item 7, cert %d.", "%d.",
                 cert_count);
       return false;
     }
