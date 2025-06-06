@@ -517,6 +517,10 @@ void tz_init(void) {
   HAL_GTZC_TZSC_ConfigPeriphAttributes(
       GTZC_PERIPH_SAES, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
 
+  // Set IWDG as secure & privileged
+  HAL_GTZC_TZSC_ConfigPeriphAttributes(
+      GTZC_PERIPH_IWDG, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
+
   // Set all interrupts as non-secure
   for (int i = 0; i < 512; i++) {
     NVIC_SetTargetState(i);

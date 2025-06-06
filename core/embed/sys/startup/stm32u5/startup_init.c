@@ -91,7 +91,15 @@ void lsi_init(void) {
 
   uint32_t bdcr_temp = RCC->BDCR;
 
-  if (RCC_LSI_DIV1 != (bdcr_temp & RCC_BDCR_LSIPREDIV)) {
+#if LSI_VALUE == 32000
+  uint32_t lsi_div = RCC_LSI_DIV1;
+#elif LSI_VALUE == 250
+  uint32_t lsi_div = RCC_LSI_DIV128;
+#else
+#error Unsupported LSI frequency
+#endif
+
+  if (lsi_div != (bdcr_temp & RCC_BDCR_LSIPREDIV)) {
     if (((bdcr_temp & RCC_BDCR_LSIRDY) == RCC_BDCR_LSIRDY) &&
         ((bdcr_temp & RCC_BDCR_LSION) != RCC_BDCR_LSION)) {
       // If LSIRDY is set while LSION is not enabled, LSIPREDIV can't be updated
@@ -110,7 +118,7 @@ void lsi_init(void) {
     }
 
     // Set LSI division factor
-    MODIFY_REG(RCC->BDCR, RCC_BDCR_LSIPREDIV, 0);
+    MODIFY_REG(RCC->BDCR, RCC_BDCR_LSIPREDIV, lsi_div);
   }
 
   // Enable the Internal Low Speed oscillator (LSI)
@@ -254,7 +262,9 @@ void SystemInit(void) {
 
 #ifdef USE_LSE
   lse_init();
-#else
+#endif
+
+#if defined(USE_LSI) || !defined(USE_LSE)
   lsi_init();
 #endif
 

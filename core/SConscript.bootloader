@@ -24,6 +24,7 @@ FEATURES_WANTED = [
     "secure_domain",
     "tropic",
     "usb",
+    "iwdg",
     ]
 
 if TREZOR_MODEL in ('T3W1', ):
