@@ -12,7 +12,7 @@ use super::{
     BldActionBar, BldActionBarMsg, BldHeader,
 };
 
-#[cfg(feature = "powerctl")]
+#[cfg(feature = "power_manager")]
 use super::BldHeaderMsg;
 
 #[repr(u32)]
@@ -76,7 +76,7 @@ impl Component for ConnectScreen {
             return Some(ConnectMsg::PairingMode);
         }
 
-        #[cfg(feature = "powerctl")]
+        #[cfg(feature = "power_manager")]
         if let Some(BldHeaderMsg::Menu) = self.header.event(ctx, event) {
             return Some(ConnectMsg::Menu);
         }
@@ -86,7 +86,7 @@ impl Component for ConnectScreen {
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.message.render(target);
-        #[cfg(feature = "powerctl")]
+        #[cfg(feature = "power_manager")]
         self.header.render(target);
         self.action_bar.render(target);
         self.screen_border.render(u8::MAX, target);
