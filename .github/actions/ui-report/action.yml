@@ -28,6 +28,7 @@ runs:
         mkdir -p $OUTDIR
         nix-shell --run "poetry run python ci/prepare_ui_artifacts.py || true"
         mv -v tests/ui_tests/reports/test/* $OUTDIR
+        mv -v tests/ui_tests/fixtures.*.json $OUTDIR
 
         # rename all model/job-speficific report files, so they won't be overwritten during upload
         cd $OUTDIR
