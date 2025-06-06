@@ -31,14 +31,13 @@ pub struct BldMenuScreen {
 }
 
 impl BldMenuScreen {
-    pub fn new(firmware_present: bool) -> Self {
+    pub fn new() -> Self {
         let bluetooth = Button::with_text("Bluetooth".into())
             .styled(theme::bootloader::button_bld_menu())
             .with_text_align(Alignment::Start);
         let reboot = Button::with_text("Reboot Trezor".into())
             .styled(theme::bootloader::button_bld_menu())
-            .with_text_align(Alignment::Start)
-            .initially_enabled(firmware_present);
+            .with_text_align(Alignment::Start);
         let reset = Button::with_text("Factory reset".into())
             .styled(theme::bootloader::button_bld_menu())
             .with_text_align(Alignment::Start);

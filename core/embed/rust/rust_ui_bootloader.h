@@ -69,8 +69,7 @@ typedef enum {
   MENU_BLUETOOTH = 0x99AABBCC,
   MENU_POWER_OFF = 0x751A5BEF,
 } menu_result_t;
-void screen_menu(bool initial_setup, secbool firmware_present,
-                 c_layout_t* layout);
+void screen_menu(bool initial_setup, c_layout_t* layout);
 
 typedef enum {
   CONNECT_CANCEL = 1,

@@ -61,7 +61,7 @@ workflow_result_t workflow_get_features(protob_io_t *iface,
 
 workflow_result_t workflow_menu(const vendor_header *const vhdr,
                                 const image_header *const hdr,
-                                secbool firmware_present, protob_ios_t *ios);
+                                protob_ios_t *ios);
 
 workflow_result_t workflow_bootloader(const vendor_header *const vhdr,
                                       const image_header *const hdr,

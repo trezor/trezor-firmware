@@ -1,6 +1,5 @@
 use crate::{
     strutil::TString,
-    trezorhal::secbool::{secbool, sectrue},
     ui::{
         component::{Event, Label},
         display::{self, toif::Toif, Color},
@@ -124,8 +123,8 @@ impl BootloaderLayoutType for BootloaderLayout {
         Self::Welcome(screen)
     }
 
-    fn init_menu(_initial_setup: bool, firmware_present: secbool) -> Self {
-        Self::Menu(BldMenuScreen::new(firmware_present == sectrue))
+    fn init_menu(_initial_setup: bool) -> Self {
+        Self::Menu(BldMenuScreen::new())
     }
 
     fn init_connect(_initial_setup: bool, auto_update: bool) -> Self {

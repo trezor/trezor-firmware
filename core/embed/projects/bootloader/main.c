@@ -201,6 +201,8 @@ static secbool boot_sequence(secbool manufacturing_mode) {
     }
   }
 
+  rgb_led_set_color(0);
+
   while (pm_turn_on() != PM_OK) {
     rgb_led_set_color(0x400000);
     systick_delay_ms(1000);

@@ -38,11 +38,11 @@
 
 workflow_result_t workflow_menu(const vendor_header* const vhdr,
                                 const image_header* const hdr,
-                                secbool firmware_present, protob_ios_t* ios) {
+                                protob_ios_t* ios) {
   while (true) {
     c_layout_t layout;
     memset(&layout, 0, sizeof(layout));
-    screen_menu(ui_get_initial_setup(), firmware_present, &layout);
+    screen_menu(ui_get_initial_setup(), &layout);
     uint32_t ui_result = 0;
     workflow_result_t result =
         workflow_host_control(vhdr, hdr, &layout, &ui_result, ios);
@@ -112,9 +112,8 @@ static screen_t handle_intro(const vendor_header* vhdr, const image_header* hdr,
 }
 
 static screen_t handle_menu(const vendor_header* vhdr, const image_header* hdr,
-                            secbool firmware_present,
                             workflow_result_t* out_result) {
-  workflow_result_t res = workflow_menu(vhdr, hdr, firmware_present, NULL);
+  workflow_result_t res = workflow_menu(vhdr, hdr, NULL);
   switch (res) {
     case WF_OK:
       return SCREEN_INTRO;  // back to intro
@@ -128,7 +127,6 @@ static screen_t handle_menu(const vendor_header* vhdr, const image_header* hdr,
 
 static screen_t handle_wait_for_host(const vendor_header* vhdr,
                                      const image_header* hdr,
-                                     secbool firmware_present,
                                      workflow_result_t* out_result) {
   c_layout_t layout;
   memset(&layout, 0, sizeof(layout));
@@ -169,7 +167,7 @@ static screen_t handle_wait_for_host(const vendor_header* vhdr,
           case CONNECT_MENU: {
             workflow_result_t menu_result = WF_CANCELLED;
             while (menu_result == WF_CANCELLED) {
-              menu_result = workflow_menu(vhdr, hdr, firmware_present, &ios);
+              menu_result = workflow_menu(vhdr, hdr, &ios);
               switch (menu_result) {
                 case WF_OK:
                   next_screen = SCREEN_WAIT_FOR_HOST;
@@ -218,10 +216,10 @@ workflow_result_t workflow_bootloader(const vendor_header* vhdr,
         screen = handle_intro(vhdr, hdr, firmware_present, &final_res);
         break;
       case SCREEN_MENU:
-        screen = handle_menu(vhdr, hdr, firmware_present, &final_res);
+        screen = handle_menu(vhdr, hdr, &final_res);
         break;
       case SCREEN_WAIT_FOR_HOST:
-        screen = handle_wait_for_host(vhdr, hdr, firmware_present, &final_res);
+        screen = handle_wait_for_host(vhdr, hdr, &final_res);
         break;
       default:
         // shouldn’t happen

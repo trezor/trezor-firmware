@@ -2,7 +2,6 @@ use crate::{
     strutil::hexlify,
     trezorhal::{
         layout_buf::{c_layout_t, LayoutBuffer},
-        secbool::secbool,
         sysevent::{parse_event, sysevents_t},
     },
     ui::{
@@ -95,9 +94,8 @@ extern "C" fn screen_unlock_bootloader_success() {
 }
 
 #[no_mangle]
-extern "C" fn screen_menu(initial_setup: bool, firmware_present: secbool, layout: *mut c_layout_t) {
-    let mut screen =
-        <ModelUI as BootloaderUI>::CLayoutType::init_menu(initial_setup, firmware_present);
+extern "C" fn screen_menu(initial_setup: bool, layout: *mut c_layout_t) {
+    let mut screen = <ModelUI as BootloaderUI>::CLayoutType::init_menu(initial_setup);
     screen.show();
     // SAFETY: calling code is supposed to give us exclusive access to the layout
     let mut layout = unsafe { LayoutBuffer::new(layout) };

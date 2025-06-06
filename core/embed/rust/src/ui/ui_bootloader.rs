@@ -1,18 +1,15 @@
-#[cfg(feature = "bootloader")]
-use crate::trezorhal::secbool::secbool;
 use crate::ui::component::Event;
 
 pub trait BootloaderLayoutType {
     fn event(&mut self, event: Option<Event>) -> u32;
     fn show(&mut self);
     fn init_welcome() -> Self;
-    fn init_menu(initial_setup: bool, firmware_present: secbool) -> Self;
+    fn init_menu(initial_setup: bool) -> Self;
     fn init_connect(initial_setup: bool, auto_update: bool) -> Self;
     #[cfg(feature = "ble")]
     fn init_pairing_mode(initial_setup: bool) -> Self;
 }
 
-#[cfg(feature = "bootloader")]
 pub trait BootloaderUI {
     type CLayoutType: BootloaderLayoutType;
 
