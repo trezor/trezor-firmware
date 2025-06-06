@@ -3,6 +3,7 @@
 #include "buffer.h"
 #include "der.h"
 #include "ecdsa.h"
+#include "ed25519-donna/ed25519.h"
 #include "memzero.h"
 #include "nist256p1.h"
 #include "sha2.h"
@@ -29,6 +30,12 @@ static const uint8_t ECDSA_P256_WITH_SHA256[] = {
       0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07, // corresponds to prime256v1 in X.509
 };
 
+static const uint8_t EDDSA_25519[] = {
+  0x30, 0x05, // a sequence of 5 bytes
+    0x06, 0x03, // an OID of 3 bytes
+      0x2b, 0x65, 0x70, // corresponds to EdDSA 25519 in X.509
+};
+
 static const uint8_t OID_COMMON_NAME[] = {
   0x06, 0x03, // an OID of 3 bytes
     0x55, 0x04, 0x03, // corresponds to commonName in X.509
@@ -47,13 +54,19 @@ static const uint8_t SUBJECT_COMMON_NAME[] = {
 };
 // clang-format on
 
-typedef enum { ALG_ID_ECDSA_P256_WITH_SHA256 } alg_id_t;
+typedef enum { ALG_ID_ECDSA_P256_WITH_SHA256, ALG_ID_EDDSA_25519 } alg_id_t;
 
 static bool get_algorithm(DER_ITEM* alg, alg_id_t* alg_id) {
   if (alg->buf.size == sizeof(ECDSA_P256_WITH_SHA256) &&
       memcmp(alg->buf.data, ECDSA_P256_WITH_SHA256,
              sizeof(ECDSA_P256_WITH_SHA256)) == 0) {
     *alg_id = ALG_ID_ECDSA_P256_WITH_SHA256;
+    return true;
+  }
+
+  if (alg->buf.size == sizeof(EDDSA_25519) &&
+      memcmp(alg->buf.data, EDDSA_25519, sizeof(EDDSA_25519)) == 0) {
+    *alg_id = ALG_ID_EDDSA_25519;
     return true;
   }
 
@@ -204,6 +217,18 @@ static bool verify_signature(alg_id_t alg_id, const uint8_t* pub_key,
     }
 
     if (ecdsa_verify_digest(&nist256p1, pub_key, decoded_sig, digest) != 0) {
+      return false;
+    }
+
+    return true;
+  }
+
+  if (alg_id == ALG_ID_EDDSA_25519) {
+    if (pub_key_size != 32 || sig_size != 64) {
+      return false;
+    }
+
+    if (ed25519_sign_open(msg, msg_size, pub_key, sig) != 0) {
       return false;
     }
 
@@ -373,33 +398,37 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
     sig_size = buffer_remaining(&sig_val.buf);
   }
 
-  // Verify that the signature of the last certificate in the chain matches
-  // its own AuthorityKeyIdentifier to verify the integrity of the certificate
-  // data.
-  uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
-  sha256_Raw(message, message_size, digest);
+  if (alg_id == ALG_ID_ECDSA_P256_WITH_SHA256) {
+    // Verify that the signature of the last certificate in the chain matches
+    // its own AuthorityKeyIdentifier to verify the integrity of the certificate
+    // data. This is done only for ECDSA, since EdDSA does not allow to recover
+    // the public key from the signature.
+    uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
+    sha256_Raw(message, message_size, digest);
 
-  uint8_t decoded_sig[64] = {0};
-  if (ecdsa_sig_from_der(sig, sig_size, decoded_sig) != 0) {
+    uint8_t decoded_sig[64] = {0};
+    if (ecdsa_sig_from_der(sig, sig_size, decoded_sig) != 0) {
+      cli_error(cli, CLI_ERROR,
+                "check_device_cert_chain, ecdsa_sig_from_der root.");
+      return false;
+    }
+
+    for (int recid = 0; recid < 4; ++recid) {
+      uint8_t recovered_pub_key[65] = {0};
+      if (ecdsa_recover_pub_from_sig(&nist256p1, recovered_pub_key, decoded_sig,
+                                     digest, recid) == 0) {
+        uint8_t pub_key_digest[SHA1_DIGEST_LENGTH] = {0};
+        sha1_Raw(recovered_pub_key, sizeof(recovered_pub_key), pub_key_digest);
+        if (memcmp(authority_key_digest, pub_key_digest,
+                   sizeof(pub_key_digest)) == 0) {
+          return true;
+        }
+      }
+    }
     cli_error(cli, CLI_ERROR,
-              "check_device_cert_chain, ecdsa_sig_from_der root.");
+              "check_device_cert_chain, ecdsa_verify_digest root.");
     return false;
   }
 
-  for (int recid = 0; recid < 4; ++recid) {
-    uint8_t recovered_pub_key[65] = {0};
-    if (ecdsa_recover_pub_from_sig(&nist256p1, recovered_pub_key, decoded_sig,
-                                   digest, recid) == 0) {
-      uint8_t pub_key_digest[SHA1_DIGEST_LENGTH] = {0};
-      sha1_Raw(recovered_pub_key, sizeof(recovered_pub_key), pub_key_digest);
-      if (memcmp(authority_key_digest, pub_key_digest,
-                 sizeof(pub_key_digest)) == 0) {
-        return true;
-      }
-    }
-  }
-
-  cli_error(cli, CLI_ERROR,
-            "check_device_cert_chain, ecdsa_verify_digest root.");
-  return false;
+  return true;
 }
