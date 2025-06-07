@@ -6,7 +6,9 @@ use crate::{
     ui::{
         button_request::ButtonRequest,
         component::{
-            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecLong, VecExt},
+            text::paragraphs::{
+                Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort, VecExt,
+            },
             ButtonRequestExt, ComponentExt, Qr,
         },
         flow::{
@@ -70,8 +72,8 @@ impl FlowController for GetAddress {
 #[allow(clippy::too_many_arguments)]
 pub fn new_get_address(
     title: TString<'static>,
-    _description: Option<TString<'static>>,
-    _extra: Option<TString<'static>>,
+    description: Option<TString<'static>>,
+    extra: Option<TString<'static>>,
     address: Obj, // TODO: get rid of Obj
     chunkify: bool,
     address_qr: TString<'static>,
@@ -82,29 +84,43 @@ pub fn new_get_address(
     br_code: u16,
     br_name: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
-    // Address
     let flow_title: TString = TR::words__receive.into();
-
-    let test_style = if chunkify {
+    let text_style = if chunkify {
         let address: TString = address.try_into()?;
         theme::get_chunkified_text_style(address.len())
     } else {
         &theme::TEXT_MONO_ADDRESS
     };
-    let paragraphs = Paragraph::new(test_style, address.try_into().unwrap_or(TString::empty()))
-        .into_paragraphs()
-        .with_placement(LinearPlacement::vertical());
 
-    let content_address = TextScreen::new(paragraphs)
-        .with_header(Header::new(flow_title).with_menu_button())
-        .with_subtitle(title)
-        .with_action_bar(ActionBar::new_single(
-            Button::with_text(TR::buttons__confirm.into()).styled(theme::button_confirm()),
-        ))
-        .with_hint(Hint::new_instruction(
-            TR::address__check_with_source,
-            Some(theme::ICON_INFO),
-        ))
+    let mut paragraphs = ParagraphVecShort::new();
+    if let Some(description) = description {
+        paragraphs.add(
+            Paragraph::new(&theme::TEXT_SMALL_LIGHT, description).with_bottom_padding(ITEM_PADDING),
+        );
+    }
+    paragraphs.add(Paragraph::new(
+        text_style,
+        address.try_into().unwrap_or(TString::empty()),
+    ));
+
+    let button = if extra.is_some() {
+        Button::with_text(TR::buttons__confirm.into()).styled(theme::button_cancel_gradient())
+    } else {
+        Button::with_text(TR::buttons__confirm.into()).styled(theme::button_confirm())
+    };
+
+    let mut address_screen = TextScreen::new(
+        paragraphs
+            .into_paragraphs()
+            .with_placement(LinearPlacement::vertical()),
+    )
+    .with_header(Header::new(flow_title).with_menu_button())
+    .with_subtitle(title)
+    .with_action_bar(ActionBar::new_single(button));
+    if let Some(extra) = extra {
+        address_screen = address_screen.with_hint(Hint::new_warning(extra));
+    }
+    let content_address = address_screen
         .map(|msg| match msg {
             TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
             TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
