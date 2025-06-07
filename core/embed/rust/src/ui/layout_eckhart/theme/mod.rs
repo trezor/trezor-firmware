@@ -122,8 +122,7 @@ include_icon!(ICON_BATTERY_ZAP, "layout_eckhart/res/battery_zap.toif");
 // Border overlay icons for bootloader screens and hold to confirm animation
 include_icon!(ICON_BORDER_BL, "layout_eckhart/res/border/BL.toif");
 include_icon!(ICON_BORDER_BR, "layout_eckhart/res/border/BR.toif");
-include_icon!(ICON_BORDER_TL, "layout_eckhart/res/border/TL.toif");
-include_icon!(ICON_BORDER_TR, "layout_eckhart/res/border/TR.toif");
+include_icon!(ICON_BORDER_TOP, "layout_eckhart/res/border/TOP.toif");
 
 // Icons for number input screen
 include_icon!(ICON_PLUS, "layout_eckhart/res/plus.toif");

@@ -5,7 +5,10 @@ use crate::ui::{
     shape::{self, Renderer},
 };
 
-use super::{super::theme, ScreenBorder};
+use super::{
+    super::theme::{self, ICON_BORDER_BL, ICON_BORDER_BR},
+    ScreenBorder,
+};
 
 /// Renders the loader. Higher `progress` reveals the `border` from the top in
 /// clock-wise direction. Used in ProgressScreen and Bootloader. `progress` goes
@@ -119,7 +122,7 @@ fn get_progress_covers(progress_ratio: f32) -> impl Iterator<Item = Rect> {
         let width = ((1.0 - progress) * FULL_WIDTH as f32) as i16;
         Rect::snap(
             SCREEN.top_right(),
-            Offset::new(width, theme::ICON_BORDER_TR.toif.height()),
+            Offset::new(width, ScreenBorder::TOP_ARC_HEIGHT),
             Alignment2D::TOP_RIGHT,
         )
     };
@@ -132,7 +135,7 @@ fn get_progress_covers(progress_ratio: f32) -> impl Iterator<Item = Rect> {
         let height = ((1.0 - progress) * FULL_HEIGHT as f32) as i16;
         Rect::snap(
             SCREEN.bottom_right(),
-            Offset::new(theme::ICON_BORDER_BR.toif.width(), height),
+            Offset::new(ICON_BORDER_BR.toif.width(), height),
             Alignment2D::BOTTOM_RIGHT,
         )
     };
@@ -144,7 +147,7 @@ fn get_progress_covers(progress_ratio: f32) -> impl Iterator<Item = Rect> {
         let progress = ((progress_ratio - PROGRESS_START) / PROGRESS_PORTION).clamp(0.0, 1.0);
         let width = ((1.0 - progress) * FULL_WIDTH as f32) as i16;
         Rect::snap(
-            SCREEN.bottom_left() + Offset::x(theme::ICON_BORDER_BL.toif.width()),
+            SCREEN.bottom_left() + Offset::x(ICON_BORDER_BL.toif.width()),
             Offset::new(width, ScreenBorder::WIDTH),
             Alignment2D::BOTTOM_LEFT,
         )
@@ -157,8 +160,8 @@ fn get_progress_covers(progress_ratio: f32) -> impl Iterator<Item = Rect> {
         let progress = ((progress_ratio - PROGRESS_START) / PROGRESS_PORTION).clamp(0.0, 1.0);
         let height = ((1.0 - progress) * FULL_HEIGHT as f32) as i16;
         Rect::snap(
-            SCREEN.top_left() + Offset::y(theme::ICON_BORDER_TL.toif.height()),
-            Offset::new(theme::ICON_BORDER_BL.toif.width(), height),
+            SCREEN.top_left() + Offset::y(ScreenBorder::TOP_ARC_HEIGHT),
+            Offset::new(ICON_BORDER_BL.toif.width(), height),
             Alignment2D::TOP_LEFT,
         )
     };
@@ -171,7 +174,7 @@ fn get_progress_covers(progress_ratio: f32) -> impl Iterator<Item = Rect> {
         let width = ((1.0 - progress) * FULL_WIDTH as f32) as i16;
         Rect::snap(
             SCREEN.top_center(),
-            Offset::new(width, theme::ICON_BORDER_TL.toif.height()),
+            Offset::new(width, ScreenBorder::TOP_ARC_HEIGHT),
             Alignment2D::TOP_RIGHT,
         )
     };
