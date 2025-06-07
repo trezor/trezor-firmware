@@ -3,6 +3,7 @@ Q := @
 endif
 
 SKIPPED_MESSAGES := Cardano DebugMonero Eos Monero Ontology Ripple SdProtect Tezos WebAuthn \
+	DebugLinkGetGcInfo DebugLinkGcInfoItem DebugLinkGcInfo \
 	DebugLinkRecordScreen DebugLinkEraseSdCard DebugLinkWatchLayout \
 	DebugLinkLayout DebugLinkResetDebugEvents GetNonce \
 	TxAckInput TxAckOutput TxAckPrev TxAckPaymentRequest \

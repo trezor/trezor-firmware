@@ -22,6 +22,8 @@ if __debug__:
         from trezor.messages import (
             DebugLinkDecision,
             DebugLinkEraseSdCard,
+            DebugLinkGcInfo,
+            DebugLinkGetGcInfo,
             DebugLinkGetState,
             DebugLinkOptigaSetSecMax,
             DebugLinkRecordScreen,
@@ -362,6 +364,18 @@ if __debug__:
         else:
             raise wire.UnexpectedMessage("Optiga not supported")
 
+    async def dispatch_DebugLinkGetGcInfo(
+        msg: DebugLinkGetGcInfo,
+    ) -> DebugLinkGcInfo:
+        from trezor.messages import DebugLinkGcInfo, DebugLinkGcInfoItem
+
+        return DebugLinkGcInfo(
+            items=[
+                DebugLinkGcInfoItem(name=name, value=value)
+                for name, value in utils.get_gc_info().items()
+            ]
+        )
+
     async def _no_op(_msg: Any) -> Success:
         return Success()
 
@@ -439,6 +453,7 @@ if __debug__:
         MessageType.DebugLinkOptigaSetSecMax: dispatch_DebugLinkOptigaSetSecMax,
         MessageType.DebugLinkWatchLayout: _no_op,
         MessageType.DebugLinkResetDebugEvents: _no_op,
+        MessageType.DebugLinkGetGcInfo: dispatch_DebugLinkGetGcInfo,
     }
 
     def boot() -> None:

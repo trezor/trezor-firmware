@@ -2861,6 +2861,42 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkOptigaSetSecMax"]:
             return isinstance(msg, cls)
 
+    class DebugLinkGetGcInfo(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkGetGcInfo"]:
+            return isinstance(msg, cls)
+
+    class DebugLinkGcInfo(protobuf.MessageType):
+        items: "list[DebugLinkGcInfoItem]"
+
+        def __init__(
+            self,
+            *,
+            items: "list[DebugLinkGcInfoItem] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkGcInfo"]:
+            return isinstance(msg, cls)
+
+    class DebugLinkGcInfoItem(protobuf.MessageType):
+        name: "str"
+        value: "int"
+
+        def __init__(
+            self,
+            *,
+            name: "str",
+            value: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkGcInfoItem"]:
+            return isinstance(msg, cls)
+
     class EthereumNetworkInfo(protobuf.MessageType):
         chain_id: "int"
         symbol: "str"

@@ -235,3 +235,28 @@ message DebugLinkResetDebugEvents {
  */
 message DebugLinkOptigaSetSecMax {
 }
+
+
+/**
+ * Request: Get GC heap information.
+ * @start
+ * @next DebugLinkGcInfo
+ */
+message DebugLinkGetGcInfo {
+}
+
+/**
+ * Response: GC heap information details.
+ * @end
+ */
+message DebugLinkGcInfo {
+    repeated DebugLinkGcInfoItem items = 1;
+
+    /**
+    * Key-value pair.
+    */
+    message DebugLinkGcInfoItem {
+        required string name = 1;
+        required uint64 value = 2;
+    }
+}
