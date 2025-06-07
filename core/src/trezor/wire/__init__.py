@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING
 
 from trezor import loop, protobuf, utils
 
+from .. import workflow
 from . import message_handler, protocol_common
 from .codec.codec_context import CodecContext
 from .context import UnexpectedMessageException
@@ -41,35 +42,13 @@ if __debug__:
 
 if TYPE_CHECKING:
     from trezorio import WireInterface
-    from typing import Any, Awaitable, Callable, Coroutine, Generic, TypeAlias, TypeVar
+    from typing import Any, Callable, Coroutine, TypeVar
 
     Msg = TypeVar("Msg", bound=protobuf.MessageType)
     HandlerTask = Coroutine[Any, Any, protobuf.MessageType]
     Handler = Callable[[Msg], HandlerTask]
 
     LoadedMessageType = TypeVar("LoadedMessageType", bound=protobuf.MessageType)
-
-    class EarlyResponse(Generic[Msg]):
-        """Marker type (when the response is sent before the last layout is shown)."""
-
-    MaybeEarlyResponse: TypeAlias = Msg | EarlyResponse[Msg]
-
-else:
-    EarlyResponse = object
-
-
-_EARLY_RESPONSE = EarlyResponse()
-
-
-async def early_response(response: Msg, layout: Awaitable[None]) -> EarlyResponse[Msg]:
-    from .context import get_context
-
-    # first, send the response back to the client
-    await get_context().write(response)
-    # then, show the success layout
-    await layout
-    # return a special marker object
-    return _EARLY_RESPONSE
 
 
 class BufferProvider:
@@ -140,6 +119,8 @@ async def handle_session(iface: WireInterface) -> None:
                 utils.unimport_end(modules)
 
                 if not do_not_restart:
+                    # Wait for all active workflows to finish.
+                    await workflow.join_all()
                     # Let the session be restarted from `main`.
                     loop.clear()
                     return  # pylint: disable=lost-exception
