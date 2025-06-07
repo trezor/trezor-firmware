@@ -416,6 +416,7 @@ impl FirmwareUI for UICaesar {
         _subtitle: Option<TString<'static>>,
         items: Obj,
         hold: bool,
+        _verb: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecLong::new();
 
@@ -495,6 +496,7 @@ impl FirmwareUI for UICaesar {
         account_title: Option<TString<'static>>,
         extra_items: Option<Obj>,
         extra_title: Option<TString<'static>>,
+        _verb: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         // collect available info pages

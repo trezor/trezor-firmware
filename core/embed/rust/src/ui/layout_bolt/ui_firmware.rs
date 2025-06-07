@@ -380,6 +380,7 @@ impl FirmwareUI for UIBolt {
         _subtitle: Option<TString<'static>>,
         items: Obj,
         hold: bool,
+        _verb: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = PropsList::new(
             items,
@@ -438,6 +439,7 @@ impl FirmwareUI for UIBolt {
         _account_title: Option<TString<'static>>,
         extra_items: Option<Obj>,
         _extra_title: Option<TString<'static>>,
+        _verb: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let info_button: bool = account_items.is_some() || extra_items.is_some();

@@ -311,6 +311,7 @@ impl FirmwareUI for UIEckhart {
         account_title: Option<TString<'static>>,
         extra_items: Option<Obj>,
         extra_title: Option<TString<'static>>,
+        verb: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         // collect available info
@@ -349,6 +350,7 @@ impl FirmwareUI for UIEckhart {
             account_paragraphs,
             extra_title,
             extra_paragraphs,
+            verb,
             verb_cancel,
         )?;
         Ok(flow)
@@ -359,6 +361,7 @@ impl FirmwareUI for UIEckhart {
         _subtitle: Option<TString<'static>>,
         items: Obj,
         hold: bool,
+        verb: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = PropsList::new(
             items,
@@ -374,7 +377,7 @@ impl FirmwareUI for UIEckhart {
                 LinearPlacement::vertical().with_spacing(theme::PARAGRAPHS_SPACING),
             ),
             None,
-            None,
+            verb,
             hold,
             None,
             None,

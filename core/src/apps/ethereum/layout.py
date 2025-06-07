@@ -189,10 +189,10 @@ async def require_confirm_claim(
     )
 
 
-async def require_confirm_unknown_token() -> None:
+async def require_confirm_unknown_token(title: str | None) -> None:
     from trezor.ui.layouts import confirm_ethereum_unknown_contract_warning
 
-    await confirm_ethereum_unknown_contract_warning()
+    await confirm_ethereum_unknown_contract_warning(title)
 
 
 def require_confirm_address(
@@ -201,6 +201,7 @@ def require_confirm_address(
     subtitle: str | None = None,
     verb: str | None = None,
     br_name: str | None = None,
+    warning_footer: str | None = None,
 ) -> Awaitable[None]:
     from ubinascii import hexlify
 
@@ -212,6 +213,7 @@ def require_confirm_address(
         address_hex,
         subtitle=subtitle,
         verb=verb,
+        warning_footer=warning_footer,
         br_name=br_name,
         br_code=ButtonRequestType.SignTx,
     )
