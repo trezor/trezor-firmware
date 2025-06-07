@@ -123,7 +123,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_backup__title_create_wallet_backup;
   MP_QSTR_backup__title_skip;
   MP_QSTR_backup__want_to_skip;
-  MP_QSTR_battery_percentage;
   MP_QSTR_bitcoin__commitment_data;
   MP_QSTR_bitcoin__confirm_locktime;
   MP_QSTR_bitcoin__create_proof_of_ownership;
@@ -454,6 +453,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_plurals__transaction_of_x_operations;
   MP_QSTR_plurals__x_groups_needed;
   MP_QSTR_plurals__x_shares_needed;
+  MP_QSTR_pm_event;
   MP_QSTR_prefill_word;
   MP_QSTR_progress__authenticity_check;
   MP_QSTR_progress__done;

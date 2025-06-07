@@ -32,6 +32,10 @@
 #include <io/button.h>
 #endif
 
+#ifdef USE_POWER_MANAGER
+#include <sys/power_manager.h>
+#endif
+
 #include "embed/upymod/trezorobj.h"
 
 #define POLL_READ (0x0000)
@@ -209,6 +213,17 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
         tuple->items[1] = parse_ble_event_data(&event);
         ret->items[0] = MP_OBJ_NEW_SMALL_INT(SYSHANDLE_BLE);
         ret->items[1] = MP_OBJ_FROM_PTR(tuple);
+        return mp_const_true;
+      }
+    }
+#endif
+
+#ifdef USE_POWER_MANAGER
+    if (signalled.read_ready & (1 << SYSHANDLE_POWER_MANAGER)) {
+      pm_event_t pm_event = {0};
+      if (pm_get_events(&pm_event)) {
+        ret->items[0] = MP_OBJ_NEW_SMALL_INT(SYSHANDLE_POWER_MANAGER);
+        ret->items[1] = mp_obj_new_int_from_uint(pm_event.all);
         return mp_const_true;
       }
     }

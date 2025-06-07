@@ -36,7 +36,6 @@ async def handle_device_menu() -> None:
         storage.device.is_initialized() and storage.device.unfinished_backup()
     )
     # MOCK DATA
-    battery_percentage = 22
     paired_devices = ["Trezor Suite"] if ble.is_connected() else []
     # ###
     firmware_version = ".".join(map(str, utils.VERSION))
@@ -53,7 +52,6 @@ async def handle_device_menu() -> None:
     menu_result = await interact(
         trezorui_api.show_device_menu(
             failed_backup=failed_backup,
-            battery_percentage=battery_percentage,
             paired_devices=paired_devices,
             firmware_version=firmware_version,
             device_name=device_name,

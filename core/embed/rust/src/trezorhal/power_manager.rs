@@ -2,6 +2,7 @@ use super::ffi;
 
 use crate::ui::event::PMEvent;
 
+#[derive(PartialEq, Eq, Clone)]
 pub enum ChargingState {
     Discharging,
     Charging,

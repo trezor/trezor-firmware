@@ -173,6 +173,8 @@ POLL_WRITE: int  # wait until interface is writable
 BLE: int  # interface id of the BLE events
 BLE_EVENT: int # interface id for BLE events
 
+PM_EVENT: int  # interface id for power manager events
+
 TOUCH: int  # interface id of the touch events
 TOUCH_START: int  # event id of touch start event
 TOUCH_MOVE: int  # event id of touch move event

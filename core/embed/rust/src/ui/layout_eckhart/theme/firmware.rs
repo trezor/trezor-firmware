@@ -17,6 +17,8 @@ use super::{
 pub const LOCK_HOLD_DURATION: Duration = Duration::from_millis(1500);
 pub const CONFIRM_HOLD_DURATION: Duration = Duration::from_millis(1500);
 pub const ERASE_HOLD_DURATION: Duration = Duration::from_millis(1500);
+/// Duration for the battery status showcase on the ActionBar or Header
+pub const FUEL_GAUGE_DURATION: Duration = Duration::from_millis(2000);
 
 // Text styles
 /// Alias for use with copied code, might be deleted later

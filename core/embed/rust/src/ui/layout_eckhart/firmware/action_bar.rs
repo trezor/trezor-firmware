@@ -177,6 +177,21 @@ impl ActionBar {
         }
     }
 
+    pub fn left_button(&self) -> Option<&Button> {
+        self.left_button.as_ref()
+    }
+
+    pub fn left_button_mut(&mut self) -> Option<&mut Button> {
+        self.left_button.as_mut()
+    }
+    pub fn right_button(&self) -> Option<&Button> {
+        self.right_button.as_ref()
+    }
+
+    pub fn right_button_mut(&mut self) -> Option<&mut Button> {
+        self.right_button.as_mut()
+    }
+
     fn new(
         mode: Mode,
         left_button: Option<Button>,

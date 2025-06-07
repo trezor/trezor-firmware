@@ -2,6 +2,7 @@ use crate::{
     error::Error,
     io::BinaryData,
     strutil::TString,
+    time::Stopwatch,
     translations::TR,
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Label, Never},
@@ -40,6 +41,8 @@ pub struct Homescreen {
     lockable: bool,
     /// Whether the homescreen is locked
     locked: bool,
+    /// Stopwatch for the fuel gauge (battery) showcase on the `action_bar`
+    fuel_gauge_stopwatch: Stopwatch,
     /// Hold to lock button placed everywhere except the `action_bar`
     virtual_locking_button: Button,
     /// Hold to lock animation
@@ -93,20 +96,16 @@ impl Homescreen {
 
         // ActionBar button
         let button_style = button_homebar_style(notification_level);
-        let button = if bootscreen {
-            Button::with_homebar_content(Some(TR::lockscreen__tap_to_connect.into()))
-                .styled(button_style)
+        let text = if bootscreen {
+            Some(TR::lockscreen__tap_to_connect.into())
         } else if locked {
-            Button::with_homebar_content(Some(TR::lockscreen__tap_to_unlock.into()))
-                .styled(button_style)
+            Some(TR::lockscreen__tap_to_unlock.into())
         } else {
-            // TODO: Battery/Connectivity button content
-            Button::with_homebar_content(None).styled(button_style)
+            None
         };
 
-        let lock_duration = theme::LOCK_HOLD_DURATION;
-
         // Locking animation
+        let lock_duration = theme::LOCK_HOLD_DURATION;
         let htc_anim = if lockable && !animation_disabled() {
             Some(
                 HoldToConfirmAnim::new()
@@ -120,11 +119,14 @@ impl Homescreen {
         Ok(Self {
             label: HomeLabel::new(label, shadow),
             hint,
-            action_bar: ActionBar::new_single(button),
+            action_bar: ActionBar::new_single(
+                Button::with_homebar_content(text).styled(button_style),
+            ),
             image,
             led_color,
             lockable,
             locked,
+            fuel_gauge_stopwatch: Stopwatch::new_stopped(),
             virtual_locking_button: Button::empty().with_long_press(lock_duration),
             htc_anim,
         })

@@ -384,6 +384,8 @@ class Layout(Generic[T]):
         if utils.USE_BLE:
             # most layouts don't care but we don't want to keep stale events in the queue
             yield self._handle_ble_events()
+        if utils.USE_POWER_MANAGER:
+            yield self._handle_power_manager()
 
     def _handle_input_iface(
         self, iface: int, event_call: Callable[..., LayoutState | None]
@@ -452,6 +454,19 @@ class Layout(Generic[T]):
                     self._event(self.layout.ble_event, *event)
             except Shutdown:
                 return
+
+    if utils.USE_POWER_MANAGER:
+
+        def _handle_power_manager(self) -> Generator:
+            pm = loop.wait(io.PM_EVENT)
+            try:
+                while True:
+                    flags = yield pm
+                    self._event(self.layout.pm_event, flags)
+            except Exception:
+                raise
+            finally:
+                pm.close()
 
     def _task_finalizer(self, task: loop.Task, value: Any) -> None:
         if value is None:
