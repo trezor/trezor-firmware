@@ -27,6 +27,12 @@ pub enum ButtonMsg {
     LongPressed,
 }
 
+enum RadiusOrGradient {
+    Radius(u8),
+    Gradient,
+    None,
+}
+
 pub struct Button {
     area: Rect,
     touch_expand: Insets,
@@ -34,12 +40,11 @@ pub struct Button {
     content_offset: Offset,
     stylesheet: ButtonStyleSheet,
     text_align: Alignment,
-    radius: Option<u8>,
+    radius_or_gradient: RadiusOrGradient,
     state: State,
     long_press: Option<Duration>,
     long_timer: Timer,
     haptic: bool,
-    gradient: bool,
 }
 
 impl Button {
@@ -69,12 +74,11 @@ impl Button {
             touch_expand: Insets::zero(),
             stylesheet: theme::button_default(),
             text_align: Alignment::Center,
-            radius: None,
+            radius_or_gradient: RadiusOrGradient::None,
             state: State::Initial,
             long_press: None,
             long_timer: Timer::new(),
             haptic: true,
-            gradient: false,
         }
     }
 
@@ -170,9 +174,7 @@ impl Button {
     }
 
     pub fn with_radius(mut self, radius: u8) -> Self {
-        // Both radius and gradient not supported
-        debug_assert!(!self.gradient);
-        self.radius = Some(radius);
+        self.radius_or_gradient = RadiusOrGradient::Radius(radius);
         self
     }
 
@@ -182,9 +184,7 @@ impl Button {
     }
 
     pub fn with_gradient(mut self) -> Self {
-        // Using gradient with radius is not supported
-        debug_assert!(self.radius.is_none());
-        self.gradient = true;
+        self.radius_or_gradient = RadiusOrGradient::Gradient;
         self
     }
 
@@ -377,8 +377,8 @@ impl Button {
         style: &ButtonStyle,
         alpha: u8,
     ) {
-        match (self.radius, self.gradient) {
-            (Some(radius), _) => {
+        match self.radius_or_gradient {
+            RadiusOrGradient::Radius(radius) => {
                 shape::Bar::new(self.area)
                     .with_bg(style.background_color)
                     .with_radius(radius as i16)
@@ -388,7 +388,7 @@ impl Button {
                     .render(target);
             }
             // Gradient bar is rendered only in `normal` state, not `active` or `disabled`
-            (None, true) if self.state.is_normal() => {
+            RadiusOrGradient::Gradient if self.state.is_normal() => {
                 self.render_gradient_bar(target, style);
             }
             _ => {
