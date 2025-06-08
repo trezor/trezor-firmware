@@ -2,7 +2,7 @@
 use crate::trezorhal::haptic::{self, HapticEffect};
 use crate::{
     strutil::TString,
-    time::Duration,
+    time::ShortDuration,
     ui::{
         component::{
             Component, ComponentExt, Event, EventCtx, FixedHeightBar, MsgMap, Split, Timer,
@@ -41,7 +41,7 @@ pub struct Button {
     content: ButtonContent,
     styles: ButtonStyleSheet,
     state: State,
-    long_press: Duration,
+    long_press: ShortDuration, // long press requires non-zero duration
     long_timer: Timer,
     haptics: bool,
 }
@@ -58,7 +58,7 @@ impl Button {
             touch_expand: Insets::zero(),
             styles: theme::button_default(),
             state: State::Initial,
-            long_press: Duration::ZERO,
+            long_press: ShortDuration::ZERO,
             long_timer: Timer::new(),
             haptics: true,
         }
@@ -94,7 +94,8 @@ impl Button {
         self
     }
 
-    pub fn with_long_press(mut self, duration: Duration) -> Self {
+    pub fn with_long_press(mut self, duration: ShortDuration) -> Self {
+        debug_assert_ne!(duration, ShortDuration::ZERO);
         self.long_press = duration;
         self
     }
@@ -251,8 +252,8 @@ impl Component for Button {
                                 haptic::play(HapticEffect::ButtonPress);
                             }
                             self.set(ctx, State::Pressed);
-                            if self.long_press != Duration::ZERO {
-                                self.long_timer.start(ctx, self.long_press)
+                            if self.long_press != ShortDuration::ZERO {
+                                self.long_timer.start(ctx, self.long_press.into())
                             }
                             return Some(ButtonMsg::Pressed);
                         }

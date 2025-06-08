@@ -3,7 +3,7 @@ pub mod bootloader;
 pub mod backlight;
 
 use crate::{
-    time::Duration,
+    time::ShortDuration,
     ui::{
         component::{
             text::{layout::Chunks, LineBreaking, PageBreaking, TextStyle},
@@ -20,7 +20,7 @@ use super::{
     fonts,
 };
 
-pub const ERASE_HOLD_DURATION: Duration = Duration::from_millis(1500);
+pub const ERASE_HOLD_DURATION: ShortDuration = ShortDuration::from_millis(1500);
 
 // Color palette.
 pub const WHITE: Color = Color::rgb(0xFF, 0xFF, 0xFF);

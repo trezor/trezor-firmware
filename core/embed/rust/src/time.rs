@@ -10,6 +10,19 @@ const MILLIS_PER_MINUTE: u32 = MILLIS_PER_SEC * 60;
 const MILLIS_PER_HOUR: u32 = MILLIS_PER_MINUTE * 60;
 const MILLIS_PER_DAY: u32 = MILLIS_PER_HOUR * 24;
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct ShortDuration {
+    millis: u16,
+}
+
+impl ShortDuration {
+    pub const ZERO: Self = Self::from_millis(0);
+
+    pub const fn from_millis(millis: u16) -> Self {
+        Self { millis }
+    }
+}
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub struct Duration {
     millis: u32,
@@ -165,6 +178,12 @@ impl Div<Duration> for Duration {
 
     fn div(self, rhs: Self) -> Self::Output {
         self.to_millis() as f32 / rhs.to_millis() as f32
+    }
+}
+
+impl From<ShortDuration> for Duration {
+    fn from(value: ShortDuration) -> Self {
+        Self::from_millis(value.millis.into())
     }
 }
 

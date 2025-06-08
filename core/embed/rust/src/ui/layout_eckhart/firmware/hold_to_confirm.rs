@@ -57,7 +57,7 @@ impl HoldToConfirmAnim {
     pub fn new() -> Self {
         let default_color = theme::GREEN_LIME;
         Self {
-            total_duration: theme::CONFIRM_HOLD_DURATION,
+            total_duration: theme::CONFIRM_HOLD_DURATION.into(),
             color: default_color,
             border: ScreenBorder::new(default_color),
             timer: Stopwatch::default(),

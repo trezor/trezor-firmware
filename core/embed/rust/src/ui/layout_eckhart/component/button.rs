@@ -2,7 +2,7 @@
 use crate::trezorhal::haptic::{play, HapticEffect};
 use crate::{
     strutil::TString,
-    time::Duration,
+    time::{Duration, ShortDuration},
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Timer},
         constant,
@@ -42,7 +42,7 @@ pub struct Button {
     text_align: Alignment,
     radius_or_gradient: RadiusOrGradient,
     state: State,
-    long_press: Option<Duration>,
+    long_press: ShortDuration, // long press requires non-zero duration
     long_timer: Timer,
     haptic: bool,
 }
@@ -76,7 +76,7 @@ impl Button {
             text_align: Alignment::Center,
             radius_or_gradient: RadiusOrGradient::None,
             state: State::Initial,
-            long_press: None,
+            long_press: ShortDuration::ZERO,
             long_timer: Timer::new(),
             haptic: true,
         }
@@ -168,8 +168,9 @@ impl Button {
         self
     }
 
-    pub fn with_long_press(mut self, duration: Duration) -> Self {
-        self.long_press = Some(duration);
+    pub fn with_long_press(mut self, duration: ShortDuration) -> Self {
+        debug_assert_ne!(duration, ShortDuration::ZERO);
+        self.long_press = duration;
         self
     }
 
@@ -223,7 +224,11 @@ impl Button {
     }
 
     pub fn long_press(&self) -> Option<Duration> {
-        self.long_press
+        if self.long_press != ShortDuration::ZERO {
+            Some(self.long_press.into())
+        } else {
+            None
+        }
     }
 
     pub fn is_disabled(&self) -> bool {
@@ -584,7 +589,7 @@ impl Component for Button {
                                 play(HapticEffect::ButtonPress);
                             }
                             self.set(ctx, State::Pressed);
-                            if let Some(duration) = self.long_press {
+                            if let Some(duration) = self.long_press() {
                                 self.long_timer.start(ctx, duration);
                             }
                             return Some(ButtonMsg::Pressed);

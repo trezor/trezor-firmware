@@ -1,5 +1,5 @@
 use crate::{
-    time::Duration,
+    time::{Duration, ShortDuration},
     translations::TR,
     ui::{
         component::{Component, Event, EventCtx},
@@ -180,7 +180,7 @@ impl HoldToConfirm {
     pub fn new(circle_color: Color, circle_inner_color: Color) -> Self {
         let button = Button::new(ButtonContent::Empty)
             .styled(theme::button_default())
-            .with_long_press(Duration::from_millis(2200))
+            .with_long_press(ShortDuration::from_millis(2200))
             .without_haptics();
         Self {
             title: Label::new(

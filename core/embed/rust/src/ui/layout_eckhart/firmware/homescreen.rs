@@ -2,7 +2,7 @@ use crate::{
     error::Error,
     io::BinaryData,
     strutil::TString,
-    time::Duration,
+    time::ShortDuration,
     translations::TR,
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Label, Never},
@@ -24,7 +24,7 @@ use super::{
     ActionBar, ActionBarMsg, Hint,
 };
 
-const LOCK_HOLD_DURATION: Duration = Duration::from_millis(3000);
+const LOCK_HOLD_DURATION: ShortDuration = ShortDuration::from_millis(3000);
 
 /// Full-screen component for the homescreen and lockscreen.
 pub struct Homescreen {

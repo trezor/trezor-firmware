@@ -1,5 +1,5 @@
 use crate::{
-    time::Duration,
+    time::ShortDuration,
     ui::component::text::{
         layout::{Chunks, LineBreaking, PageBreaking},
         TextStyle,
@@ -14,8 +14,8 @@ use super::{
     *,
 };
 
-pub const CONFIRM_HOLD_DURATION: Duration = Duration::from_millis(1500);
-pub const ERASE_HOLD_DURATION: Duration = Duration::from_millis(1500);
+pub const CONFIRM_HOLD_DURATION: ShortDuration = ShortDuration::from_millis(1500);
+pub const ERASE_HOLD_DURATION: ShortDuration = ShortDuration::from_millis(1500);
 
 // Text styles
 /// Alias for use with copied code, might be deleted later
