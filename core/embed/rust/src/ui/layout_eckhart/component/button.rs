@@ -98,7 +98,7 @@ impl Button {
         text: TString<'static>,
         stylesheet: ButtonStyleSheet,
         subtext: TString<'static>,
-        subtext_style: Option<TextStyle>,
+        subtext_style: Option<&'static TextStyle>,
     ) -> Self {
         Self::with_text_and_subtext(text, subtext, subtext_style)
             .with_text_align(Self::MENU_ITEM_ALIGNMENT)
@@ -118,12 +118,12 @@ impl Button {
     pub fn with_text_and_subtext(
         text: TString<'static>,
         subtext: TString<'static>,
-        subtext_style: Option<TextStyle>,
+        subtext_style: Option<&'static TextStyle>,
     ) -> Self {
         Self::new(ButtonContent::TextAndSubtext {
             text,
             subtext,
-            subtext_style: subtext_style.unwrap_or(Self::DEFAULT_SUBTEXT_STYLE),
+            subtext_style: subtext_style.unwrap_or(&Self::DEFAULT_SUBTEXT_STYLE),
         })
     }
 
@@ -717,7 +717,7 @@ pub enum ButtonContent {
     TextAndSubtext {
         text: TString<'static>,
         subtext: TString<'static>,
-        subtext_style: TextStyle,
+        subtext_style: &'static TextStyle,
     },
     Icon(Icon),
     IconAndText(IconText),

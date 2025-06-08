@@ -69,7 +69,7 @@ pub enum DeviceMenuMsg {
 
 struct MenuItem {
     text: TString<'static>,
-    subtext: Option<(TString<'static>, Option<TextStyle>)>,
+    subtext: Option<(TString<'static>, Option<&'static TextStyle>)>,
     stylesheet: &'static ButtonStyleSheet,
     action: Option<Action>,
 }
@@ -87,7 +87,7 @@ impl MenuItem {
 
     pub fn with_subtext(
         &mut self,
-        subtext: Option<(TString<'static>, Option<TextStyle>)>,
+        subtext: Option<(TString<'static>, Option<&'static TextStyle>)>,
     ) -> &mut Self {
         self.subtext = subtext;
         self
@@ -234,7 +234,7 @@ impl<'a> DeviceMenuScreen<'a> {
             // TODO: this should be a boolean feature of the device
             item_device.with_subtext(Some((
                 "Connected".into(),
-                Some(Button::SUBTEXT_STYLE_GREEN),
+                Some(&Button::SUBTEXT_STYLE_GREEN),
             )));
             unwrap!(items.push(item_device));
         }
@@ -254,7 +254,7 @@ impl<'a> DeviceMenuScreen<'a> {
             Some(Action::GoTo(manage_devices_index)),
         );
         manage_paired_item
-            .with_subtext(connected_subtext.map(|t| (t, Some(Button::SUBTEXT_STYLE_GREEN))));
+            .with_subtext(connected_subtext.map(|t| (t, Some(&Button::SUBTEXT_STYLE_GREEN))));
         unwrap!(items.push(manage_paired_item));
         unwrap!(items.push(MenuItem::new(
             "Pair new device".into(),
@@ -350,7 +350,7 @@ impl<'a> DeviceMenuScreen<'a> {
             Some(Action::GoTo(pair_and_connect_index)),
         );
         item_pair_and_connect
-            .with_subtext(connected_subtext.map(|t| (t, Some(Button::SUBTEXT_STYLE_GREEN))));
+            .with_subtext(connected_subtext.map(|t| (t, Some(&Button::SUBTEXT_STYLE_GREEN))));
         unwrap!(items.push(item_pair_and_connect));
         unwrap!(items.push(MenuItem::new(
             "Settings".into(),
