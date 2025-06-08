@@ -29,7 +29,7 @@ pub enum ButtonMsg {
 
 pub struct Button {
     area: Rect,
-    touch_expand: Option<Insets>,
+    touch_expand: Insets,
     content: ButtonContent,
     content_offset: Offset,
     stylesheet: ButtonStyleSheet,
@@ -66,7 +66,7 @@ impl Button {
             content,
             content_offset: Offset::zero(),
             area: Rect::zero(),
-            touch_expand: None,
+            touch_expand: Insets::zero(),
             stylesheet: theme::button_default(),
             text_align: Alignment::Center,
             radius: None,
@@ -160,7 +160,7 @@ impl Button {
     }
 
     pub const fn with_expanded_touch_area(mut self, expand: Insets) -> Self {
-        self.touch_expand = Some(expand);
+        self.touch_expand = expand;
         self
     }
 
@@ -237,7 +237,7 @@ impl Button {
     }
 
     pub fn set_expanded_touch_area(&mut self, expand: Insets) {
-        self.touch_expand = Some(expand);
+        self.touch_expand = expand;
     }
 
     pub fn set_content_offset(&mut self, offset: Offset) {
@@ -323,8 +323,7 @@ impl Button {
     }
 
     pub fn touch_area(&self) -> Rect {
-        self.touch_expand
-            .map_or(self.area, |expand| self.area.outset(expand))
+        self.area.outset(self.touch_expand)
     }
 
     fn set(&mut self, ctx: &mut EventCtx, state: State) {

@@ -24,7 +24,7 @@ pub enum ButtonMsg {
 
 pub struct Button {
     area: Rect,
-    touch_expand: Option<Insets>,
+    touch_expand: Insets,
     content: ButtonContent,
     styles: ButtonStyleSheet,
     text_align: Alignment,
@@ -45,7 +45,7 @@ impl Button {
         Self {
             content,
             area: Rect::zero(),
-            touch_expand: None,
+            touch_expand: Insets::zero(),
             styles: theme::button_default(),
             text_align: Alignment::Start,
             radius: None,
@@ -83,7 +83,7 @@ impl Button {
     }
 
     pub const fn with_expanded_touch_area(mut self, expand: Insets) -> Self {
-        self.touch_expand = Some(expand);
+        self.touch_expand = expand;
         self
     }
 
@@ -255,11 +255,7 @@ impl Component for Button {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        let touch_area = if let Some(expand) = self.touch_expand {
-            self.area.outset(expand)
-        } else {
-            self.area
-        };
+        let touch_area = self.area.outset(self.touch_expand);
 
         match event {
             Event::Touch(TouchEvent::TouchStart(pos)) => {

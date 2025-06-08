@@ -539,6 +539,10 @@ impl Insets {
         }
     }
 
+    pub const fn zero() -> Self {
+        Self::new(0, 0, 0, 0)
+    }
+
     pub const fn uniform(d: i16) -> Self {
         Self::new(d, d, d, d)
     }
