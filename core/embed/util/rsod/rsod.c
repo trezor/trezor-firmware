@@ -142,8 +142,11 @@ void rsod_gui(const systask_postmortem_t* pminfo) {
       if (message[0] == '\0') {
         mini_snprintf(message_buf, sizeof(message_buf), "%s:%u",
                       pminfo->fatal.file, (unsigned int)pminfo->fatal.line);
-        message = message_buf;
+      } else {
+        mini_snprintf(message_buf, sizeof(message_buf), "%s\n%s:%u", message,
+                      pminfo->fatal.file, (unsigned int)pminfo->fatal.line);
       }
+      message = message_buf;
       break;
 
     case TASK_TERM_REASON_FAULT:

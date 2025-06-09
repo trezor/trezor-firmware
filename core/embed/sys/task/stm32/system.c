@@ -20,6 +20,7 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
+#include <rtl/mini_printf.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
 #include <sys/linker_utils.h>
@@ -154,41 +155,59 @@ __attribute((naked, noreturn, no_stack_protector)) void system_emergency_rescue(
 
 #ifdef STM32U5
 const char* system_fault_message(const system_fault_t* fault) {
+  static char message[48] = {0};
+  const char* fault_type = "FAULT";
   switch (fault->irqn) {
     case HardFault_IRQn:
-      return "(HF)";
+      fault_type = "HF";
+      break;
     case MemoryManagement_IRQn:
-      return "(MM)";
+      fault_type = "MM";
+      break;
     case BusFault_IRQn:
-      return "(BF)";
+      fault_type = "BF";
+      break;
     case UsageFault_IRQn:
-      return (fault->cfsr & SCB_CFSR_STKOF_Msk) ? "(SO)" : "(UF)";
+      fault_type = (fault->cfsr & SCB_CFSR_STKOF_Msk) ? "SO" : "UF";
+      break;
     case SecureFault_IRQn:
-      return "(SF)";
+      fault_type = "SF";
+      break;
     case GTZC_IRQn:
-      return "(IA)";
+      fault_type = "IA";
+      break;
     case NonMaskableInt_IRQn:
-      return "(CS)";
-    default:
-      return "(FAULT)";
+      fault_type = "CS";
+      break;
   }
+  mini_snprintf(message, sizeof(message), "%s @ 0x%08X", fault_type,
+                (unsigned int)fault->pc);
+  return message;
 }
 #else   // STM32U5
 const char* system_fault_message(const system_fault_t* fault) {
+  static char message[48] = {0};
+  const char* fault_type = "FAULT";
   switch (fault->irqn) {
     case HardFault_IRQn:
-      return "(HF)";
+      fault_type = "HF";
+      break;
     case MemoryManagement_IRQn:
-      return (fault->sp < fault->sp_lim) ? "(SO)" : "(MM)";
+      fault_type = (fault->sp < fault->sp_lim) ? "SO" : "MM";
+      break;
     case BusFault_IRQn:
-      return "(BF)";
+      fault_type = "BF";
+      break;
     case UsageFault_IRQn:
-      return "(UF)";
+      fault_type = "UF";
+      break;
     case NonMaskableInt_IRQn:
-      return "(CS)";
-    default:
-      return "(FAULT)";
+      fault_type = "CS";
+      break;
   }
+  mini_snprintf(message, sizeof(message), "%s @ 0x%08X", fault_type,
+                (unsigned int)fault->pc);
+  return message;
 }
 #endif  // STM32U5
 
