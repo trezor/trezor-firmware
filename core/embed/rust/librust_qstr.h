@@ -1227,6 +1227,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__confirm_operation;
   MP_QSTR_stellar__confirm_stellar;
   MP_QSTR_stellar__confirm_timebounds;
+  MP_QSTR_stellar__confirm_transaction_source;
   MP_QSTR_stellar__create_account;
   MP_QSTR_stellar__debited_amount;
   MP_QSTR_stellar__delete;
@@ -1234,6 +1235,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__delete_trust;
   MP_QSTR_stellar__destination;
   MP_QSTR_stellar__exchanges_require_memo;
+  MP_QSTR_stellar__extra_transaction_info;
   MP_QSTR_stellar__final_confirm;
   MP_QSTR_stellar__hash;
   MP_QSTR_stellar__high;
@@ -1247,6 +1249,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__low;
   MP_QSTR_stellar__master_weight;
   MP_QSTR_stellar__medium;
+  MP_QSTR_stellar__network;
   MP_QSTR_stellar__new_offer;
   MP_QSTR_stellar__new_passive_offer;
   MP_QSTR_stellar__no_memo_set;
@@ -1267,13 +1270,16 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__set_sequence_to_template;
   MP_QSTR_stellar__sign_tx_count_template;
   MP_QSTR_stellar__sign_tx_fee_template;
+  MP_QSTR_stellar__signing_with;
   MP_QSTR_stellar__source_account;
   MP_QSTR_stellar__testnet_network;
+  MP_QSTR_stellar__transaction_source_diff_warning;
   MP_QSTR_stellar__trusted_account;
   MP_QSTR_stellar__update;
   MP_QSTR_stellar__valid_from;
   MP_QSTR_stellar__valid_to;
   MP_QSTR_stellar__value_sha256;
+  MP_QSTR_stellar__verify_issuer;
   MP_QSTR_stellar__wanna_clean_value_key_template;
   MP_QSTR_stellar__your_account;
   MP_QSTR_tezos__baker_address;

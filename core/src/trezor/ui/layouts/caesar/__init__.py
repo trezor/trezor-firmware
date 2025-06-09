@@ -506,6 +506,7 @@ async def confirm_output(
     chunkify: bool = False,
     source_account: str | None = None,  # ignored on safe 3
     source_account_path: str | None = None,  # ignored on safe 3
+    description: str | None = None,  # ignored on safe 3
 ) -> None:
     title = title or TR.send__confirm_sending  # def_arg
     address_title = TR.words__recipient
@@ -1259,6 +1260,34 @@ if not utils.BITCOIN_ONLY:
                 break
             except ActionCancelled:
                 continue
+
+    def confirm_stellar_tx(
+        fee: str,
+        account_index: int,
+        address: str,
+        extra_items: Iterable[tuple[str, str]],
+    ) -> Awaitable[None]:
+        # On Safe 3, if an empty list is passed in,
+        # a blank screen containing only `extra_title` will appear.
+        if not extra_items:
+            extra_items = None
+        return raise_if_not_confirmed(
+            trezorui_api.confirm_summary(
+                amount=None,
+                amount_label=None,
+                fee=fee,
+                fee_label=TR.send__maximum_fee,
+                account_items=[
+                    (TR.words__account, f"Stellar #{account_index + 1}"),
+                    (TR.words__address, address),
+                ],
+                account_title=TR.stellar__signing_with,
+                extra_items=extra_items,
+                extra_title=TR.stellar__extra_transaction_info,
+            ),
+            br_name="confirm_stellar_tx",
+            br_code=ButtonRequestType.SignTx,
+        )
 
 
 def confirm_joint_total(spending_amount: str, total_amount: str) -> Awaitable[None]:

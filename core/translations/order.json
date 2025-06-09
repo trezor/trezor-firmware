@@ -1036,5 +1036,11 @@
   "1034": "firmware_update__restart",
   "1035": "passphrase__access_hidden_wallet",
   "1036": "passphrase__hidden_wallet",
-  "1037": "passphrase__show"
+  "1037": "passphrase__show",
+  "1038": "stellar__confirm_transaction_source",
+  "1039": "stellar__extra_transaction_info",
+  "1040": "stellar__network",
+  "1041": "stellar__signing_with",
+  "1042": "stellar__transaction_source_diff_warning",
+  "1043": "stellar__verify_issuer"
 }

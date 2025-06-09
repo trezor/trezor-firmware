@@ -54,16 +54,10 @@ async def sign_tx(
     writers.write_uint32(w, msg.fee)
     writers.write_uint64(w, msg.sequence_number)
 
-    # confirm init
-    await layout.require_confirm_init(
-        msg.source_account, msg.network_passphrase, accounts_match
-    )
-
-    # ---------------------------------
-    # TIMEBOUNDS
-    # ---------------------------------
-    # confirm dialog
-    await layout.require_confirm_timebounds(msg.timebounds_start, msg.timebounds_end)
+    # confirm transaction source
+    if not accounts_match:
+        # If the tx source account does not match the Trezor account, we need to confirm it.
+        await layout.require_confirm_tx_source(msg.source_account)
 
     # timebounds are sent as uint32s since that's all we can display, but they must be hashed as 64bit
     writers.write_bool(w, True)
@@ -114,7 +108,14 @@ async def sign_tx(
     # 4 null bytes representing a (currently unused) empty union
     writers.write_uint32(w, 0)
     # final confirm
-    await layout.require_confirm_final(msg.fee, num_operations)
+    account_index = paths.unharden(msg.address_n[-1])
+    await layout.require_confirm_final(
+        msg.fee,
+        (msg.timebounds_start, msg.timebounds_end),
+        msg.network_passphrase,
+        account_index,
+        address,
+    )
 
     # sign
     digest = sha256(w).digest()

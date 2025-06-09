@@ -8,9 +8,10 @@ from trezor.ui.layouts import (
     confirm_metadata,
     confirm_output,
     confirm_properties,
+    should_show_more,
 )
 from trezor.wire import DataError, ProcessError
-
+from trezor.enums import ButtonRequestType
 from ..layout import format_amount
 
 if TYPE_CHECKING:
@@ -82,13 +83,21 @@ async def confirm_change_trust_op(op: StellarChangeTrustOp) -> None:
 
 
 async def confirm_create_account_op(op: StellarCreateAccountOp) -> None:
-    await confirm_properties(
-        "op_create_account",
-        TR.stellar__create_account,
-        (
-            (TR.words__account, op.new_account),
-            (TR.stellar__initial_balance, format_amount(op.starting_balance)),
-        ),
+    # The `title` in the `confirm_output` function works on `bolt`,
+    # while the `description` works on `delizia` and `eckhart`.
+    await confirm_address(
+        TR.words__recipient,
+        op.new_account,
+        description=TR.stellar__create_account,
+        br_name="op_create_account_new_account",
+        br_code=ButtonRequestType.ConfirmOutput,
+    )
+    await confirm_amount(
+        TR.words__amount,
+        format_amount(op.starting_balance),
+        TR.stellar__initial_balance,
+        br_name="op_create_account_starting_balance",
+        br_code=ButtonRequestType.ConfirmOutput,
     )
 
 
@@ -223,11 +232,34 @@ async def confirm_path_payment_strict_send_op(
 
 
 async def confirm_payment_op(op: StellarPaymentOp) -> None:
-    await confirm_output(
+    from trezor.enums import StellarAssetType
+
+    await confirm_address(
+        TR.words__recipient,
         op.destination_account,
-        format_amount(op.amount, op.asset),
+        br_name="op_payment_destination_account",
+        br_code=ButtonRequestType.ConfirmOutput,
     )
-    await confirm_asset_issuer(op.asset)
+
+    amount = format_amount(op.amount, op.asset)
+    if op.asset.type == StellarAssetType.NATIVE:
+        await confirm_amount(
+            TR.words__amount,
+            amount,
+            br_name="op_payment_amount",
+            br_code=ButtonRequestType.ConfirmOutput,
+        )
+    else:
+        # Users can only send assets they've already trusted,
+        # so we don't display the issuer by default.
+        if await should_show_more(
+            TR.words__amount,
+            ((amount, False),),
+            TR.stellar__verify_issuer,
+            br_name="op_payment_amount",
+            br_code=ButtonRequestType.ConfirmOutput,
+        ):
+            await confirm_asset_issuer(op.asset)
 
 
 async def confirm_set_options_op(op: StellarSetOptionsOp) -> None:

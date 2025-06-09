@@ -682,6 +682,7 @@
   "stellar__confirm_operation": "text,1",
   "stellar__confirm_stellar": "text,1",
   "stellar__confirm_timebounds": "text,1",
+  "stellar__confirm_transaction_source": "text,1",
   "stellar__create_account": "text,1",
   "stellar__debited_amount": "text,1",
   "stellar__delete": "text,1",
