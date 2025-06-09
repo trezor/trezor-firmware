@@ -106,7 +106,7 @@ impl<'s> Shape<'s> for LoaderCircular {
 }
 
 impl<'s> ShapeClone<'s> for LoaderCircular {
-    fn clone_at_bump<T>(self, bump: &'s T) -> Option<&'s mut dyn Shape>
+    fn clone_at_bump<T>(self, bump: &'s T) -> Option<&'s mut dyn Shape<'s>>
     where
         T: LocalAllocLeakExt<'s>,
     {

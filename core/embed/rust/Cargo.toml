@@ -115,11 +115,11 @@ version = "0.2.2"
 [dependencies.heapless]
 version = "0.8.0"
 features = ["ufmt"]
-default_features = false
+default-features = false
 
 [dependencies.num-traits]
 version = "0.2.19"
-default_features = false
+default-features = false
 features = ["libm"]
 
 [dependencies.num-derive]
@@ -154,7 +154,7 @@ default-features = false
 
 [build-dependencies.bindgen]
 version = "0.62.0"
-default_features = false
+default-features = false
 features = ["runtime"]
 
 # Build dependencies used for linking the test binary

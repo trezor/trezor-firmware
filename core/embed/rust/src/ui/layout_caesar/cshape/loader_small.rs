@@ -78,7 +78,7 @@ impl Shape<'_> for LoaderSmall {
 }
 
 impl<'s> ShapeClone<'s> for LoaderSmall {
-    fn clone_at_bump<T>(self, bump: &'s T) -> Option<&'s mut dyn Shape>
+    fn clone_at_bump<T>(self, bump: &'s T) -> Option<&'s mut dyn Shape<'s>>
     where
         T: LocalAllocLeakExt<'s>,
     {
