@@ -1,5 +1,4 @@
 use super::{geometry::Rect, CommonUI};
-use crate::ui::layout::simplified::show;
 use theme::backlight;
 
 #[cfg(feature = "ui_debug_overlay")]
@@ -26,7 +25,7 @@ pub mod cshape;
 #[cfg(feature = "micropython")]
 pub mod flow;
 pub mod fonts;
-pub mod screens;
+
 #[cfg(feature = "bootloader")]
 pub mod ui_bootloader;
 #[cfg(feature = "micropython")]
@@ -35,7 +34,8 @@ pub mod ui_firmware;
 #[cfg(feature = "prodtest")]
 mod prodtest;
 
-use component::ErrorScreen;
+use crate::ui::layout::simplified::show;
+use component::{ErrorScreen, WelcomeScreen};
 
 pub struct UIEckhart;
 
@@ -83,11 +83,13 @@ impl CommonUI for UIEckhart {
     const SCREEN: Rect = constant::SCREEN;
 
     fn screen_fatal_error(title: &str, msg: &str, footer: &str) {
-        screens::screen_fatal_error(title, msg, footer);
+        let mut frame = ErrorScreen::new(title.into(), msg.into(), footer.into());
+        show(&mut frame, false);
     }
 
     fn screen_boot_stage_2(fade_in: bool) {
-        screens::screen_boot_stage_2(fade_in);
+        let mut frame = WelcomeScreen::new();
+        show(&mut frame, fade_in);
     }
 
     fn screen_update() {
