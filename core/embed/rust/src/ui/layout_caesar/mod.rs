@@ -1,5 +1,4 @@
 use super::{geometry::Rect, CommonUI};
-
 #[cfg(feature = "ui_debug_overlay")]
 use super::{shape, DebugOverlay};
 
@@ -16,8 +15,10 @@ pub mod component_msg_obj;
 pub mod constant;
 pub mod cshape;
 pub mod fonts;
-mod screens;
 pub mod theme;
+
+use crate::ui::layout::simplified::show;
+use component::{ErrorScreen, WelcomeScreen};
 
 pub struct UICaesar {}
 
@@ -28,11 +29,13 @@ impl CommonUI for UICaesar {
     const SCREEN: Rect = constant::SCREEN;
 
     fn screen_fatal_error(title: &str, msg: &str, footer: &str) {
-        screens::screen_fatal_error(title, msg, footer);
+        let mut frame = ErrorScreen::new(title.into(), msg.into(), footer.into());
+        show(&mut frame, false);
     }
 
     fn screen_boot_stage_2(fade_in: bool) {
-        screens::screen_boot_stage_2(fade_in);
+        let mut frame = WelcomeScreen::new(false);
+        show(&mut frame, fade_in);
     }
 
     fn screen_update() {
