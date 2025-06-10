@@ -140,6 +140,11 @@ async def handle_session(iface: WireInterface) -> None:
                 utils.unimport_end(modules)
 
                 if not do_not_restart:
+                    if __debug__:
+                        from apps import debug
+
+                        await debug.close()
+
                     # Let the session be restarted from `main`.
                     loop.clear()
                     return  # pylint: disable=lost-exception

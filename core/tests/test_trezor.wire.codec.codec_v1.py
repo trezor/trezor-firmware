@@ -4,9 +4,9 @@ from common import *  # isort:skip
 import ustruct
 
 from trezor import io
-from trezor.loop import wait
+from trezor.loop import event, race, wait
 from trezor.utils import chunks
-from trezor.wire.codec import codec_v1
+from trezor.wire.codec import Interrupt, codec_v1
 from trezor.wire.protocol_common import WireError
 
 
@@ -77,10 +77,15 @@ class TestWireCodecV1(unittest.TestCase):
         message_packet = make_header(mtype=MESSAGE_TYPE, length=0)
         buffer = bytearray(64)
 
-        gen = codec_v1.read_message(self.interface, lambda: buffer)
+        interrupt = event()
+        # interrupt is never set - should not affect `read_message`
+        gen = codec_v1.read_message(self.interface, lambda: buffer, interrupt)
 
         query = gen.send(None)
-        self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
+        self.assertTrue(isinstance(query, race))
+        child_wait, child_event = query.children
+        self.assertObjectEqual(child_wait, self.interface.wait_object(io.POLL_READ))
+        self.assertIs(child_event, interrupt)
 
         with self.assertRaises(StopIteration) as e:
             self.interface.mock_read(message_packet, gen)
@@ -102,6 +107,40 @@ class TestWireCodecV1(unittest.TestCase):
         self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
 
         with self.assertRaises(WireError):
+            self.interface.mock_read(message_packet, gen)
+
+    def test_read_interrupted_no_data(self):
+        interrupt = event()
+
+        # check interrupting `read_message()` works
+        gen = codec_v1.read_message(self.interface, lambda: None, interrupt)
+        query = gen.send(None)
+
+        self.assertTrue(isinstance(query, race))
+        child_wait, child_event = query.children
+        self.assertObjectEqual(child_wait, self.interface.wait_object(io.POLL_READ))
+        self.assertIs(child_event, interrupt)
+
+        interrupt.set()
+        with self.assertRaises(Interrupt):
+            # resume `read_message()` with no data to read
+            gen.send(None)
+
+    def test_read_interrupted_data_available(self):
+        interrupt = event()
+
+        gen = codec_v1.read_message(self.interface, lambda: None, interrupt)
+        query = gen.send(None)
+
+        self.assertTrue(isinstance(query, race))
+        child_wait, child_event = query.children
+        self.assertObjectEqual(child_wait, self.interface.wait_object(io.POLL_READ))
+        self.assertIs(child_event, interrupt)
+
+        interrupt.set()
+        with self.assertRaises(Interrupt):
+            # resume `read_message()` with some data to read
+            message_packet = make_header(mtype=MESSAGE_TYPE, length=0)
             self.interface.mock_read(message_packet, gen)
 
     def test_read_many_packets(self):
