@@ -131,12 +131,20 @@ static void mpu_set_attributes(void) {
 _Static_assert(NORCOW_SECTOR_SIZE == STORAGE_1_MAXSIZE, "norcow misconfigured");
 _Static_assert(NORCOW_SECTOR_SIZE == STORAGE_2_MAXSIZE, "norcow misconfigured");
 
+// PERIPH_SIZE covers secure peripherals only (+16MB of FMC1)
+// PERIPH_SIZE_EXT covers both secure and non-secure peripherals (+16MB of FMC1)
+// The extended size is used in a special case - MPU_MODE_OTP - when access
+// to non-secure FLASH controller registers is required.
+
 #ifdef STM32U585xx
-// Extended peripheral block to cover FMC1 that's used for display
-// 512M of periherals + 16M for FMC1 area that follows
-#define PERIPH_SIZE (SIZE_512M + SIZE_16M)
+// On STM32U585, we need to add an additional 16M for FMC1 which
+// follows the peripherals in the memory map.
+
+#define PERIPH_SIZE (SIZE_256M + SIZE_16M)
+#define PERIPH_SIZE_EXT (SIZE_512M + SIZE_16M)
 #else
-#define PERIPH_SIZE SIZE_512M
+#define PERIPH_SIZE SIZE_256M
+#define PERIPH_SIZE_EXT SIZE_512M
 #endif
 
 #define OTP_AND_ID_SIZE 0x800
@@ -449,6 +457,11 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       SET_REGION( 7, PERIPH_BASE,              PERIPH_SIZE,        PERIPHERAL,  YES,    YES ); // Peripherals - SAES, TAMP
       break;
 #endif
+    case MPU_MODE_OTP:
+      // Write to OTP requires access to non-secure FLASH controller
+      // (so we extended the peripheral region to cover it)
+      SET_REGION( 7, PERIPH_BASE_NS,           PERIPH_SIZE_EXT,    PERIPHERAL,  YES,    NO );
+      break;
     default:
       // All peripherals (Privileged, Read-Write, Non-Executable)
       SET_REGION( 7, PERIPH_BASE,              PERIPH_SIZE,        PERIPHERAL,  YES,    NO );
