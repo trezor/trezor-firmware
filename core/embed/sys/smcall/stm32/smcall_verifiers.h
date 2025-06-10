@@ -121,4 +121,14 @@ bool tropic_ecc_sign__verified(uint16_t key_slot_index, const uint8_t *dig,
 
 #endif
 
+// ---------------------------------------------------------------------
+
+#include <sys/backup_ram.h>
+
+backup_ram_status_t backup_ram_store_power_manager_data__verified(
+    const backup_ram_power_manager_data_t *pm_data);
+
+backup_ram_status_t backup_ram_read_power_manager_data__verified(
+    backup_ram_power_manager_data_t *pm_data);
+
 #endif  // SECMON

@@ -505,19 +505,6 @@ void tz_init(void) {
   tz_set_flash_unsecure(NONSECURE_CODE_START, NONSECURE_CODE_SIZE, true);
   tz_set_flash_unsecure(ASSETS_START, ASSETS_MAXSIZE, true);
 
-#ifdef USE_BACKUP_RAM
-  // Make Backup SRAM accessible in non-secure mode
-  GTZC_TZSC1->MPCWM4ACFGR =
-      (GTZC_TZSC1->MPCWM4ACFGR & ~GTZC_TZSC_MPCWM_CFGR_SEC) |
-      (GTZC_TZSC_MPCWM_CFGR_PRIV | GTZC_TZSC_MPCWM_CFGR_SREN);
-
-  GTZC_TZSC1->MPCWM4AR =
-      (GTZC_TZSC1->MPCWM4AR &
-       (~GTZC_TZSC_MPCWMR_SUBZ_START | ~GTZC_TZSC_MPCWMR_SUBZ_LENGTH)) |
-      (0 << GTZC_TZSC_MPCWMR_SUBZ_START_Pos) |
-      ((2048 / 32) << GTZC_TZSC_MPCWMR_SUBZ_LENGTH_Pos);
-#endif  // USE_BACKUP_RAM
-
   // Set all peripherals as non-secure & privileged by default
   HAL_GTZC_TZSC_ConfigPeriphAttributes(
       GTZC_PERIPH_ALL, GTZC_TZSC_PERIPH_NSEC | GTZC_TZSC_PERIPH_PRIV);

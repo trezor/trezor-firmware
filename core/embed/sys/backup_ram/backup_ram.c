@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef SECURE_MODE
+
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
@@ -316,3 +318,5 @@ static backup_ram_status_t backup_ram_verify_crc(void) {
 
   return BACKUP_RAM_OK;
 }
+
+#endif  // SECURE_MODE

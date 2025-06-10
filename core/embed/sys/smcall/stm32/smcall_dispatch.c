@@ -33,6 +33,10 @@
 #include <util/fwutils.h>
 #include <util/unit_properties.h>
 
+#ifdef USE_BACKUP_RAM
+#include <sys/backup_ram.h>
+#endif
+
 #ifdef USE_OPTIGA
 #include <sec/optiga.h>
 #endif
@@ -353,6 +357,20 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       args[0] =
           tropic_ecc_sign__verified(key_slot_index, dig, dig_len, sig, sig_len);
 
+    } break;
+#endif
+
+#ifdef USE_BACKUP_RAM
+    case SMCALL_BACKUP_RAM_READ_POWER_MANAGER_DATA: {
+      backup_ram_power_manager_data_t *data =
+          (backup_ram_power_manager_data_t *)args[0];
+      args[0] = backup_ram_read_power_manager_data__verified(data);
+    } break;
+
+    case SMCALL_BACKUP_RAM_STORE_POWER_MANAGER_DATA: {
+      const backup_ram_power_manager_data_t *data =
+          (const backup_ram_power_manager_data_t *)args[0];
+      args[0] = backup_ram_store_power_manager_data__verified(data);
     } break;
 #endif
 

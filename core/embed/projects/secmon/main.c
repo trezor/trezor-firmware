@@ -34,6 +34,10 @@
 #include <util/option_bytes.h>
 #include <util/unit_properties.h>
 
+#ifdef USE_BACKUP_RAM
+#include <sys/backup_ram.h>
+#endif
+
 #ifdef USE_OPTIGA
 #include <sec/optiga_config.h>
 #endif
@@ -80,6 +84,10 @@ static void drivers_init(void) {
 
 #ifdef USE_TROPIC
   tropic_init();
+#endif
+
+#ifdef USE_BACKUP_RAM
+  backup_ram_init();
 #endif
 }
 

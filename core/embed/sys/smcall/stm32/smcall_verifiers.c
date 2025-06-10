@@ -445,4 +445,34 @@ access_violation:
 }
 #endif
 
-#endif  // SMCALL_DISPATCH
+#ifdef USE_BACKUP_RAM
+
+backup_ram_status_t backup_ram_store_power_manager_data__verified(
+    const backup_ram_power_manager_data_t *pm_data) {
+  if (!probe_read_access(pm_data, sizeof(*pm_data))) {
+    goto access_violation;
+  }
+
+  return backup_ram_store_power_manager_data(pm_data);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+backup_ram_status_t backup_ram_read_power_manager_data__verified(
+    backup_ram_power_manager_data_t *pm_data) {
+  if (!probe_write_access(pm_data, sizeof(*pm_data))) {
+    goto access_violation;
+  }
+
+  return backup_ram_read_power_manager_data(pm_data);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+#endif  // USE_BACKUP_RAM
+
+#endif  // SECMON

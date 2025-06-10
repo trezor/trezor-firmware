@@ -114,14 +114,13 @@ void drivers_init() {
 #ifdef RDI
   random_delays_start_rdi();
 #endif
+#ifdef USE_BACKUP_RAM
+  backup_ram_init();
+#endif
 #endif  // SECURE_MODE
 
 #ifdef USE_CONSUMPTION_MASK
   consumption_mask_init();
-#endif
-
-#ifdef USE_BACKUP_RAM
-  backup_ram_init();
 #endif
 
 #ifdef USE_POWER_MANAGER
