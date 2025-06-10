@@ -16,7 +16,7 @@ use crate::{
                 },
                 TextStyle,
             },
-            ComponentExt as _, Empty, FormattedText, Timeout,
+            ComponentExt as _, Empty, FormattedText, LineBreaking, Timeout,
         },
         geometry::{Alignment, LinearPlacement, Offset},
         layout::{
@@ -360,11 +360,14 @@ impl FirmwareUI for UIEckhart {
         items: Obj,
         hold: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
+        // make sure the hyphens are not used for line breaking
+        const MONO_STYLE: TextStyle =
+            theme::TEXT_MONO_MEDIUM_LIGHT.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
         let paragraphs = PropsList::new(
             items,
             &theme::TEXT_SMALL_LIGHT,
-            &theme::TEXT_MONO_LIGHT,
-            &theme::TEXT_MONO_LIGHT,
+            &theme::TEXT_MONO_MEDIUM_LIGHT,
+            &MONO_STYLE,
         )?;
 
         let flow = flow::new_confirm_with_menu(
