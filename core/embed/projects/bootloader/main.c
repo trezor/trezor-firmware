@@ -79,7 +79,6 @@
 #include "wire/wire_iface_ble.h"
 #endif
 
-#include "antiglitch.h"
 #include "bootui.h"
 #include "version_check.h"
 #include "wire/wire_iface_usb.h"
@@ -541,7 +540,6 @@ int bootloader_main(void) {
       auto_upgrade == sectrue) {
     workflow_result_t result;
 
-    jump_reset();
     if (header_present == sectrue) {
       if (auto_upgrade == sectrue && firmware_present == sectrue) {
         result = workflow_auto_update(&vhdr, hdr);
@@ -554,18 +552,7 @@ int bootloader_main(void) {
 
     switch (result) {
       case WF_OK_FIRMWARE_INSTALLED:
-        firmware_present = sectrue;
-        firmware_present_backup = sectrue;
       case WF_OK_REBOOT_SELECTED:
-        // todo reconsider need for antiglitching
-        // see https://github.com/trezor/trezor-firmware/issues/4805
-        ensure(dont_optimize_out_true *
-                   (jump_is_allowed_1() == jump_is_allowed_2()),
-               NULL);
-
-        ensure(dont_optimize_out_true *
-                   (firmware_present == firmware_present_backup),
-               NULL);
         reboot_with_fade();
         break;
       case WF_OK_DEVICE_WIPED:
@@ -574,7 +561,7 @@ int bootloader_main(void) {
         return 0;
       case WF_ERROR:
         reboot_or_halt_after_rsod();
-        return 0;
+        break;
       case WF_ERROR_FATAL:
       default: {
         // erase storage if we saw flips randomly flip, most likely due to
@@ -584,18 +571,20 @@ int bootloader_main(void) {
 #endif
         ensure(erase_storage(NULL), NULL);
         error_shutdown("Bootloader fatal error");
+        break;
       }
     }
+  } else {
+    ensure(
+        dont_optimize_out_true * (firmware_present == firmware_present_backup),
+        NULL);
+
+    if (sectrue == firmware_present) {
+      firmware_jump_fn = real_jump_to_firmware;
+    }
+
+    firmware_jump_fn();
   }
 
-  ensure(dont_optimize_out_true * (firmware_present == firmware_present_backup),
-         NULL);
-
-  if (sectrue == firmware_present) {
-    firmware_jump_fn = real_jump_to_firmware;
-  }
-
-  firmware_jump_fn();
-
-  return 0;
+  error_shutdown("Unexpected bootloader exit");  // should never happen
 }
