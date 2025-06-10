@@ -339,4 +339,26 @@ bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
 
 #endif
 
+// =============================================================================
+// backup_ram.h
+// =============================================================================
+
+#ifdef USE_BACKUP_RAM
+
+#include <sys/backup_ram.h>
+
+backup_ram_status_t backup_ram_read_power_manager_data(
+    backup_ram_power_manager_data_t *data) {
+  return (backup_ram_status_t)smcall_invoke1(
+      (uint32_t)data, SMCALL_BACKUP_RAM_READ_POWER_MANAGER_DATA);
+}
+
+backup_ram_status_t backup_ram_store_power_manager_data(
+    const backup_ram_power_manager_data_t *data) {
+  return (backup_ram_status_t)smcall_invoke1(
+      (uint32_t)data, SMCALL_BACKUP_RAM_STORE_POWER_MANAGER_DATA);
+}
+
+#endif  // USE_BACKUP_RAM
+
 #endif  // defined(KERNEL) && defined(USE_SECMON_LAYOUT)
