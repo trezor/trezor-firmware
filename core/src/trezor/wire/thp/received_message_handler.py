@@ -104,7 +104,7 @@ async def handle_received_message(
 
     # 1: Handle ACKs
     if control_byte.is_ack(ctrl_byte):
-        await _handle_ack(ctx, ack_bit)
+        await handle_ack(ctx, ack_bit)
         return
 
     if _should_have_ctrl_byte_encrypted_transport(
@@ -177,7 +177,7 @@ def _check_checksum(message_length: int, message_buffer: utils.BufferType) -> No
         raise ThpError("Invalid checksum, ignoring message.")
 
 
-async def _handle_ack(ctx: Channel, ack_bit: int) -> None:
+async def handle_ack(ctx: Channel, ack_bit: int) -> None:
     if not ABP.is_ack_valid(ctx.channel_cache, ack_bit):
         return
     # ACK is expected and it has correct sync bit

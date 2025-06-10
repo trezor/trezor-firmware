@@ -21,11 +21,11 @@ from storage.cache_thp import (
 )
 from trezor import loop, protobuf, utils, workflow
 from trezor.wire.errors import WireBufferError
+from trezor.wire.thp.fallback import Fallback
 
 from . import ENCRYPTED, ChannelState, PacketHeader, ThpDecryptionError, ThpError
 from . import alternating_bit_protocol as ABP
 from . import (
-    checksum,
     control_byte,
     crypto,
     interface_manager,
@@ -75,8 +75,6 @@ class Channel:
 
         # Shared variables
         self.buffer: utils.BufferType = bytearray(self.iface.TX_PACKET_LEN)
-        self.fallback_decrypt: bool = False
-        self.fallback_session_id: int | None = None
         self.bytes_read: int = 0
         self.expected_payload_length: int = 0
         self.is_cont_packet_expected: bool = False
@@ -87,14 +85,11 @@ class Channel:
         self.write_task_spawn: loop.spawn | None = None
 
         # Temporary objects
+        self._fallback: Fallback | None = None
         self.handshake: crypto.Handshake | None = None
         self.credential: ThpPairingCredential | None = None
         self.connection_context: PairingContext | None = None
-        self.busy_decoder: crypto.BusyDecoder | None = None
-        self.temp_crc: int | None = None
-        self.temp_crc_compare: bytearray | None = None
-        self.temp_tag: bytearray | None = None
-        self.temp_ctrl_byte: int | None = None
+
         if __debug__:
             self.should_show_pairing_dialog: bool = True
 
@@ -174,19 +169,19 @@ class Channel:
                     logger=log.warning,
                 )
             pass  # TODO ??
-        if self.fallback_decrypt and self.expected_payload_length == self.bytes_read:
+        if (
+            self._fallback is not None
+            and self.expected_payload_length == self.bytes_read
+        ):
 
-            # Check CRC
-            assert self.temp_crc is not None
-            crc = self.temp_crc.to_bytes(4, "big")
-            if crc != self.temp_crc_compare:
+            self._fallback.finish()
+            if not self._fallback.is_crc_checksum_valid():
                 if __debug__:
                     self._log("INVALID FALLBACK CRC", logger=log.warning)
                 return None
 
             # Check ABP seq bit
-            assert self.temp_ctrl_byte is not None
-            seq_bit = control_byte.get_seq_bit(self.temp_ctrl_byte)
+            seq_bit = control_byte.get_seq_bit(self._fallback.ctrl_byte)
             if not ABP.has_msg_correct_seq_bit(self.channel_cache, seq_bit):
                 if __debug__:
                     self._log(
@@ -196,9 +191,7 @@ class Channel:
                 return received_message_handler._send_ack(self, ack_bit=seq_bit)
 
             # Check noise tag
-            assert self.busy_decoder is not None
-            assert self.temp_tag is not None
-            if not self.busy_decoder.finish_and_check_tag(self.temp_tag):
+            if not self._fallback.is_noise_tag_valid():
                 if __debug__:
                     self._log("Invalid fallback noise tag", logger=log.warning)
                 raise ThpDecryptionError()
@@ -210,18 +203,20 @@ class Channel:
             ABP.set_expected_receive_seq_bit(self.channel_cache, 1 - seq_bit)
 
             self._finish_message()
-            self._finish_fallback()
+            sid = self._fallback.session_id or 0
+            self._clear_fallback()
+
             from trezor.enums import FailureType
             from trezor.messages import Failure
 
             return self.write(
                 Failure(code=FailureType.Busy, message="FALLBACK!"),
-                session_id=self.fallback_session_id or 0,
+                session_id=sid,
                 fallback=True,
             )
 
         if (
-            not self.fallback_decrypt
+            self._fallback is None
             and self.expected_payload_length + INIT_HEADER_LENGTH == self.bytes_read
         ):
             self._finish_message()
@@ -251,8 +246,7 @@ class Channel:
         return self._handle_init_packet(packet)
 
     def _handle_init_packet(self, packet: utils.BufferType) -> Awaitable[None] | None:
-        self.fallback_decrypt = False
-        self.fallback_session_id = None
+        self._fallback = None
         self.bytes_read = 0
         self.expected_payload_length = 0
 
@@ -269,7 +263,6 @@ class Channel:
         try:
             buffer = memory_manager.get_new_read_buffer(cid, length)
         except WireBufferError:
-            self.fallback_decrypt = True
             # Channel does not "own" the buffer lock, decrypt the first packet
 
             try:
@@ -284,9 +277,10 @@ class Channel:
                     )
                 if __debug__:
                     self._log("Started fallback read")
-                self._prepare_fallback()
+                self._fallback = Fallback(self, memoryview(packet))
+
             except Exception:
-                self.fallback_decrypt = False
+                self._fallback = None
                 self.expected_payload_length = 0
                 self.bytes_read = 0
                 if __debug__:
@@ -303,27 +297,10 @@ class Channel:
             buf = memoryview(self.buffer)[:to_read_len]
             utils.memcpy(buf, 0, packet, INIT_HEADER_LENGTH)
 
-            # CRC CHECK
-            # Compute crc over init header
-            self.temp_crc = checksum.compute_int(
-                memoryview(packet)[:INIT_HEADER_LENGTH]
-            )
-            # Compute crc over rest of the packet
-            self._handle_fallback_crc(buf)
-
-            # Store ctrl byte
-            self.temp_ctrl_byte = packet[0]
-
-            # Handle ACK
-            if control_byte.is_ack(self.temp_ctrl_byte):
-                ack_bit = (self.temp_ctrl_byte & 0x08) >> 3
-                return received_message_handler._handle_ack(self, ack_bit)
-
-            # TAG CHECK
-            self._handle_fallback_decryption(buf)
-
+            # Fallback
+            fallback_task = self._fallback.read_init_packet(buf)
             self.bytes_read += to_read_len
-            return None
+            return fallback_task
 
         if __debug__:
             self._log("handle_init_packet - payload len: ", str(payload_length))
@@ -332,71 +309,6 @@ class Channel:
         self._buffer_packet_data(buffer, packet, 0)
         return None
 
-    def _handle_fallback_crc(self, buf: memoryview) -> None:
-        assert self.temp_crc is not None
-        assert self.temp_crc_compare is not None
-        if self.expected_payload_length > len(buf) + self.bytes_read + CHECKSUM_LENGTH:
-            # The CRC checksum is not in this packet, compute crc over whole buffer
-            self.temp_crc = checksum.compute_int(buf, self.temp_crc)
-        elif self.expected_payload_length >= len(buf) + self.bytes_read:
-            # At least a part of the CRC checksum is in this packet, compute CRC over
-            # the first (max(0, crc_copy_len)) bytes and add the rest of the bytes
-            # (max 4) as the checksum from message into temp_crc_compare
-            crc_copy_len = (
-                self.expected_payload_length - self.bytes_read - CHECKSUM_LENGTH
-            )
-            self.temp_crc = checksum.compute_int(buf[:crc_copy_len], self.temp_crc)
-
-            crc_checksum = buf[
-                self.expected_payload_length
-                - CHECKSUM_LENGTH
-                - len(buf)
-                - self.bytes_read :
-            ]
-            offset = CHECKSUM_LENGTH - len(buf[-CHECKSUM_LENGTH:])
-            utils.memcpy(self.temp_crc_compare, offset, crc_checksum, 0)
-        else:
-            raise Exception(
-                f"Buffer (+bytes_read) ({len(buf)}+{self.bytes_read})should not be bigger than payload{self.expected_payload_length}"
-            )
-
-    def _handle_fallback_decryption(self, buf: memoryview) -> None:
-        assert self.busy_decoder is not None
-        assert self.temp_tag is not None
-        if (
-            self.expected_payload_length
-            > len(buf) + self.bytes_read + CHECKSUM_LENGTH + TAG_LENGTH
-        ):
-            # The noise tag is not in this packet, decrypt the whole buffer
-            self.busy_decoder.decrypt_part(buf)
-        elif self.expected_payload_length >= len(buf) + self.bytes_read:
-            # At least a part of the noise tag is in this packet, decrypt
-            # the first (max(0, dec_len)) bytes and add the rest of the bytes
-            # as the noise_tag from message into temp_tag
-            dec_len = (
-                self.expected_payload_length
-                - self.bytes_read
-                - TAG_LENGTH
-                - CHECKSUM_LENGTH
-            )
-            self.busy_decoder.decrypt_part(buf[:dec_len])
-
-            noise_tag = buf[
-                self.expected_payload_length
-                - CHECKSUM_LENGTH
-                - TAG_LENGTH
-                - len(buf)
-                - self.bytes_read :
-            ]
-            offset = (
-                TAG_LENGTH + CHECKSUM_LENGTH - len(buf[-CHECKSUM_LENGTH - TAG_LENGTH :])
-            )
-            utils.memcpy(self.temp_tag, offset, noise_tag, 0)
-        else:
-            raise Exception("Buffer (+bytes_read) should not be bigger than payload")
-        if self.fallback_session_id is None:
-            self.fallback_session_id = buf[0]
-
     def _handle_cont_packet(self, packet: utils.BufferType) -> None:
         if __debug__:
             self._log("handle_cont_packet")
@@ -404,7 +316,7 @@ class Channel:
         if not self.is_cont_packet_expected:
             raise ThpError("Continuation packet is not expected, ignoring")
 
-        if self.fallback_decrypt:
+        if self._fallback is not None:
             to_read_len = min(
                 len(packet) - CONT_HEADER_LENGTH,
                 self.expected_payload_length - self.bytes_read,
@@ -412,11 +324,7 @@ class Channel:
             buf = memoryview(self.buffer)[:to_read_len]
             utils.memcpy(buf, 0, packet, CONT_HEADER_LENGTH)
 
-            # CRC CHECK
-            self._handle_fallback_crc(buf)
-
-            # TAG CHECK
-            self._handle_fallback_decryption(buf)
+            self._fallback.read_cont_packet(buf)
 
             self.bytes_read += to_read_len
             return
@@ -438,26 +346,10 @@ class Channel:
         self.expected_payload_length = 0
         self.is_cont_packet_expected = False
 
-    def _finish_fallback(self) -> None:
-        self.fallback_decrypt = False
-        self.busy_decoder = None
+    def _clear_fallback(self) -> None:
+        self._fallback = None
         if __debug__:
             self._log("Finish fallback")
-
-    def _prepare_fallback(self) -> None:
-        # prepare busy decoder
-        key_receive = self.channel_cache.get(CHANNEL_KEY_RECEIVE)
-        nonce_receive = self.channel_cache.get_int(CHANNEL_NONCE_RECEIVE)
-
-        assert key_receive is not None
-        assert nonce_receive is not None
-
-        self.busy_decoder = crypto.BusyDecoder(key_receive, nonce_receive)
-
-        # prepare temp channel values
-        self.temp_crc = 0
-        self.temp_crc_compare = bytearray(4)
-        self.temp_tag = bytearray(16)
 
     def decrypt_buffer(
         self, message_length: int, offset: int = INIT_HEADER_LENGTH
