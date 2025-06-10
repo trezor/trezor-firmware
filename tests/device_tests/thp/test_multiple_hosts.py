@@ -68,6 +68,7 @@ def test_fallback_encrypted_transport(client: Client) -> None:
     session_1 = client_1.get_session()
     session_2 = client_2.get_session()
     msg = messages.GetFeatures()
+    msg2 = messages.Ping(message="PONG")
 
     # Sequential calls should work without any problem
     _ = session_1.call(msg)
@@ -80,9 +81,10 @@ def test_fallback_encrypted_transport(client: Client) -> None:
     _ = session_2.call(msg)
 
     # Zig-zag calls should invoke fallback
-    session_1._write(msg)
+    session_1._write(msg2)
     session_2._write(msg)
     # BUG - sesssion 1 should be still retransmitting message
+    sleep(2)  # BUG 2 - without this sleep, the test fails
     resp = session_2._read()
     assert isinstance(resp, messages.Failure)
     assert resp.message == "FALLBACK!"
