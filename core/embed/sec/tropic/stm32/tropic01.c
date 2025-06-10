@@ -178,8 +178,8 @@ lt_ret_t lt_port_spi_transfer(lt_handle_t *h, uint8_t offset, uint16_t tx_len,
   if (offset + tx_len > LT_L1_LEN_MAX) {
     return LT_L1_DATA_LEN_ERROR;
   }
-  int ret = HAL_SPI_TransmitReceive(&drv->spi, h->l2_buff + offset,
-                                    h->l2_buff + offset, tx_len, timeout);
+  int ret = HAL_SPI_TransmitReceive(&drv->spi, h->l2.buff + offset,
+                                    h->l2.buff + offset, tx_len, timeout);
   if (ret != HAL_OK) {
     return LT_FAIL;
   }

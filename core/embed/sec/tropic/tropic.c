@@ -92,7 +92,7 @@ cleanup:
 void tropic_deinit(void) {
   tropic_driver_t *drv = &g_tropic_driver;
 
-  if (drv->handle.device != NULL) {
+  if (drv->handle.l2.device != NULL) {
     lt_deinit(&drv->handle);
   }
 
@@ -138,7 +138,12 @@ bool tropic_get_chip_id(uint8_t *chip_id, uint16_t max_len) {
     return false;
   }
 
-  if (LT_OK != lt_get_info_chip_id(&drv->handle, (uint8_t *)chip_id, max_len)) {
+  if (max_len < TROPIC_CHIP_ID_SIZE) {
+    return false;
+  }
+
+  if (LT_OK !=
+      lt_get_info_chip_id(&drv->handle, (struct lt_chip_id_t *)chip_id)) {
     return false;
   }
 
