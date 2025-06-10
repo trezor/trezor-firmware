@@ -130,8 +130,8 @@ static void tz_configure_arm(void) {
   // system resets from non-secure code (e.g., during debugging).
   reg_value |= SCB_AIRCR_SYSRESETREQS_Msk;
 #endif
-  // NMI, BusFault, HardFault are handled in both secure and non-secure worlds
-  reg_value |= SCB_AIRCR_BFHFNMINS_Msk;
+  // NMI, BusFault, HardFault are handled only in secure world
+  reg_value &= ~SCB_AIRCR_BFHFNMINS_Msk;
   SCB->AIRCR = reg_value;
 }
 
