@@ -27,7 +27,6 @@
 #include <sys/types.h>
 #include <util/image.h>
 
-#include "antiglitch.h"
 #include "protob/protob.h"
 #include "wire/wire_iface_usb.h"
 #include "workflow.h"
@@ -117,10 +116,6 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
         break;
       case MessageType_MessageType_FirmwareErase:
         result = workflow_firmware_update(active_iface);
-        if (result == WF_OK_FIRMWARE_INSTALLED) {
-          jump_allow_1();
-          jump_allow_2();
-        }
         goto exit_host_control;
         break;
 #if defined LOCKABLE_BOOTLOADER

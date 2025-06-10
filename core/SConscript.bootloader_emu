@@ -107,7 +107,6 @@ SOURCE_NANOPB = [
 SOURCE_BOOTLOADER = [
     'embed/projects/bootloader/bootui.c',
     'embed/projects/bootloader/main.c',
-    'embed/projects/bootloader/antiglitch.c',
     'embed/projects/bootloader/workflow/wf_firmware_update.c',
     'embed/projects/bootloader/workflow/wf_wipe_device.c',
     'embed/projects/bootloader/workflow/wf_get_features.c',
