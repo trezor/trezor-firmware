@@ -213,11 +213,11 @@ static void kernel_loop(applet_t *coreapp) {
 
 // defined in linker script
 extern uint32_t _kernel_flash_end;
-#define KERNEL_END ((uint32_t) & _kernel_flash_end)
+#define KERNEL_END COREAPP_CODE_ALIGN((uint32_t) & _kernel_flash_end)
 
 // Initializes coreapp applet
 static void coreapp_init(applet_t *applet) {
-  const uint32_t CODE1_START = COREAPP_CODE_ALIGN(KERNEL_END);
+  const uint32_t CODE1_START = KERNEL_END;
 
 #ifdef FIRMWARE_P1_START
   const uint32_t CODE1_END = FIRMWARE_P1_START + FIRMWARE_P1_MAXSIZE;
