@@ -17,7 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <antiglitch.h>
 #include <sys/bootargs.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
@@ -46,8 +45,6 @@ workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
 
   if (res == WF_OK_UI_ACTION && ui_result == CONNECT_CANCEL) {
     bootargs_set(BOOT_COMMAND_NONE, NULL, 0);
-    jump_allow_1();
-    jump_allow_2();
     workflow_ifaces_deinit(&ios);
     return WF_OK_REBOOT_SELECTED;
   }
