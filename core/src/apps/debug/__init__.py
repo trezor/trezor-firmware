@@ -16,6 +16,7 @@ if __debug__:
     from trezor.enums import DebugTouchEventType, DebugWaitType, MessageType
     from trezor.messages import Success
     from trezor.ui import display
+    from trezor.wire.codec.codec_context import CodecContext
 
     if TYPE_CHECKING:
         from typing import Any, Awaitable, Callable
@@ -42,7 +43,8 @@ if __debug__:
 
     layout_change_box = loop.mailbox()
 
-    DEBUG_CONTEXT: Context | None = None
+    DEBUG_CONTEXT: CodecContext | None = None
+    DEBUG_SESSION_TASK: loop.spawn | None = None
 
     _DEADLOCK_SLEEP_MS = const(3000)
     _DEADLOCK_DETECT_SLEEP = loop.sleep(_DEADLOCK_SLEEP_MS)
@@ -430,8 +432,7 @@ if __debug__:
 
     async def handle_session(iface: WireInterface) -> None:
         from trezor import protobuf, wire
-        from trezor.wire.codec import codec_v1
-        from trezor.wire.codec.codec_context import CodecContext
+        from trezor.wire.codec import Interrupt, codec_v1
 
         global DEBUG_CONTEXT
 
@@ -451,6 +452,9 @@ if __debug__:
                     log.exception(__name__, exc)
                     await ctx.write(wire.failure(exc))
                     continue
+                except Interrupt:
+                    log.debug(__name__, "closing debuglink session")
+                    return
 
                 req_type = None
                 try:
@@ -511,4 +515,15 @@ if __debug__:
     def boot() -> None:
         import usb
 
-        loop.schedule(handle_session(usb.iface_debug))
+        global DEBUG_SESSION_TASK
+        DEBUG_SESSION_TASK = loop.spawn(handle_session(usb.iface_debug))
+
+    async def close() -> None:
+        """Make sure DebugLink session is gracefully closed."""
+        global DEBUG_CONTEXT, DEBUG_SESSION_TASK
+        assert DEBUG_CONTEXT is not None
+        assert DEBUG_SESSION_TASK
+
+        log.debug(__name__, "interrupting debuglink session")
+        DEBUG_CONTEXT.interrupt()
+        await DEBUG_SESSION_TASK

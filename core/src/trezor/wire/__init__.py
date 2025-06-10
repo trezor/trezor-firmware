@@ -87,6 +87,12 @@ if utils.USE_THP:
         """Handle a single session and restart event loop."""
         try:
             await thp_main.thp_main_loop(iface)
+
+            if __debug__:
+                from apps import debug
+
+                await debug.close()
+
             # Wait for all active workflows to finish.
             await workflow.join_all()
         except Exception as exc:
@@ -151,6 +157,11 @@ else:
                     utils.unimport_end(modules)
 
                     if not do_not_restart:
+                        if __debug__:
+                            from apps import debug
+
+                            await debug.close()
+
                         # Wait for all active workflows to finish.
                         await workflow.join_all()
                         # Let the session be restarted from `main`.
