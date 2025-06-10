@@ -40,6 +40,9 @@ message Failure {
         Failure_WipeCodeMismatch = 13;
         Failure_InvalidSession = 14;
         Failure_Busy = 15;
+        Failure_ThpUnallocatedSession = 16;
+        Failure_InvalidProtocol = 17;
+        Failure_BufferError = 18;
         Failure_FirmwareError = 99;
     }
 }
