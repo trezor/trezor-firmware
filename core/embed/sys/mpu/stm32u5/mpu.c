@@ -157,7 +157,7 @@ extern uint32_t _kernel_flash_end;
 #define KERNEL_START FIRMWARE_START
 #endif
 
-#define KERNEL_END ((uint32_t) & _kernel_flash_end)
+#define KERNEL_END COREAPP_CODE_ALIGN((uint32_t) & _kernel_flash_end)
 #define KERNEL_SIZE (KERNEL_END - KERNEL_START)
 #endif  // KERNEL
 
