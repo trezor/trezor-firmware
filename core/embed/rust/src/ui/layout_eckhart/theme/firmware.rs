@@ -70,7 +70,7 @@ pub const TEXT_MONO_MEDIUM: TextStyle = TextStyle::new(
     GREY_EXTRA_LIGHT,
     GREY_EXTRA_LIGHT,
 )
-.with_line_breaking(LineBreaking::BreakAtWhitespace);
+.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
 
 pub const TEXT_MONO_MEDIUM_LIGHT: TextStyle = TextStyle::new(
     fonts::FONT_MONO_MEDIUM_38,
@@ -79,7 +79,7 @@ pub const TEXT_MONO_MEDIUM_LIGHT: TextStyle = TextStyle::new(
     GREY_LIGHT,
     GREY_LIGHT,
 )
-.with_line_breaking(LineBreaking::BreakAtWhitespace);
+.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
 
 /// Roboto Mono Light - 30 (Address, data)
 pub const TEXT_MONO_LIGHT: TextStyle = TextStyle::new(
