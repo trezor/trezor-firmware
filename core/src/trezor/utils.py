@@ -101,7 +101,8 @@ def unimport_end(mods: set[str], collect: bool = True) -> None:
 class unimport:
     def __init__(self) -> None:
         self.mods: set[str] | None = None
-        clear_gc_info()
+        if __debug__:
+            clear_gc_info()
 
     def __enter__(self) -> None:
         self.mods = unimport_begin()
