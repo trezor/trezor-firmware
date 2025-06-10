@@ -577,6 +577,8 @@ def show_pairing_code(
     button: bool = True,
 ) -> LayoutObj[UiResult]:
     """Pairing device: second screen (pairing code).
+    Confirm button is shown if `button` is True - used for BLE pairing.
+    For THP pairing set `button` to False - layout may still show cancel button.
     Returns on BLEEvent::{PairingCanceled, Disconnected}."""
 
 

@@ -11,7 +11,6 @@ from trezor.wire.protocol_common import Context, Message
 if __debug__:
     from .. import wire_log as log
 
-
 if TYPE_CHECKING:
     from typing import TypeVar
 
