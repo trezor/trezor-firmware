@@ -23,6 +23,9 @@ if TYPE_CHECKING:
         WipeCodeMismatch = 13
         InvalidSession = 14
         Busy = 15
+        ThpUnallocatedSession = 16
+        InvalidProtocol = 17
+        BufferError = 18
         FirmwareError = 99
 
     class ButtonRequestType(IntEnum):
