@@ -27,6 +27,16 @@
 #define TROPIC_RISCV_FW_SIZE 4
 #define TROPIC_SPECT_FW_SIZE 4
 
+#include "libtropic.h"
+
+typedef struct {
+  bool initialized;
+  bool sec_chan_established;
+  lt_handle_t handle;
+} tropic_driver_t;
+
+extern tropic_driver_t g_tropic_driver;
+
 bool tropic_init(void);
 
 void tropic_deinit(void);

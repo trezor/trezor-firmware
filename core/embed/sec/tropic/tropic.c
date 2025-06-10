@@ -33,13 +33,7 @@
 
 #define PKEY_INDEX_BYTE PAIRING_KEY_SLOT_INDEX_0
 
-typedef struct {
-  bool initialized;
-  bool sec_chan_established;
-  lt_handle_t handle;
-} tropic_driver_t;
-
-static tropic_driver_t g_tropic_driver = {0};
+tropic_driver_t g_tropic_driver = {0};
 
 bool tropic_init(void) {
   tropic_driver_t *drv = &g_tropic_driver;
