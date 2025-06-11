@@ -33,7 +33,7 @@ static const uint8_t ECDSA_P256_WITH_SHA256[] = {
 static const uint8_t EDDSA_25519[] = {
   0x30, 0x05, // a sequence of 5 bytes
     0x06, 0x03, // an OID of 3 bytes
-        0x2b, 0x65, 0x70, // corresponds to EdDSA 25519 in X.509
+      0x2b, 0x65, 0x70, // corresponds to EdDSA 25519 in X.509
 };
 
 static const uint8_t OID_COMMON_NAME[] = {
