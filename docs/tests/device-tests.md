@@ -164,3 +164,11 @@ Run the tests with coverage output.
 ```sh
 make build_unix && make coverage
 ```
+
+### GC leak check (both Emulator and Hardware)
+
+DebugLink interface supports polling the device for its current [GC-related information](https://github.com/trezor/trezor-firmware/pull/5091).
+
+On every test setup/teardown, we check for whether the free memory has decreased (indicating that the GC didn't free all allocated heap memory).
+
+By default, the test will fail if a leak is detected. In order to issue a warning instead, use `--ignore-gc-leak` CLI flag.
