@@ -1,3 +1,6 @@
+#[cfg(feature = "rgb_led")]
+use crate::trezorhal::rgb_led;
+
 use crate::{
     error::Error,
     io::BinaryData,
@@ -69,32 +72,22 @@ impl Homescreen {
         let shadow = image.is_some();
 
         // Notification
-        // TODO: better notification handling
         let mut notification_level = 4;
-        let mut hint = None;
-        let mut led_color;
-        if let Some((text, level)) = notification {
-            notification_level = level;
-            if notification_level == 0 {
-                led_color = Some(theme::RED);
-                hint = Some(Hint::new_warning_danger(text));
-            } else {
-                led_color = Some(theme::YELLOW);
-                hint = Some(Hint::new_instruction(text, Some(theme::ICON_INFO)));
+        let (led_color, hint) = match notification {
+            Some((text, level)) => {
+                notification_level = level;
+                let (led_color, hint) = Self::get_notification_display(level, text);
+                (Some(led_color), Some(hint))
             }
-        } else if locked && coinjoin_authorized {
-            led_color = Some(theme::GREEN_LIME);
-            hint = Some(Hint::new_instruction_green(
-                TR::coinjoin__do_not_disconnect,
-                Some(theme::ICON_INFO),
-            ));
-        } else {
-            led_color = Some(theme::GREY_LIGHT);
+            None if locked && coinjoin_authorized => (
+                Some(theme::GREEN_LIME),
+                Some(Hint::new_instruction_green(
+                    TR::coinjoin__do_not_disconnect,
+                    Some(theme::ICON_INFO),
+                )),
+            ),
+            None => (None, None),
         };
-
-        if locked {
-            led_color = None;
-        }
 
         Ok(Self {
             label: HomeLabel::new(label, shadow),
@@ -126,6 +119,22 @@ impl Homescreen {
         ButtonContent::HomeBar(text)
     }
 
+    fn get_notification_display(level: u8, text: TString<'static>) -> (Color, Hint<'static>) {
+        match level {
+            0 => (theme::RED, Hint::new_warning_danger(text)),
+            1 => (theme::YELLOW, Hint::new_warning_neutral(text)),
+            2 => (theme::BLUE, Hint::new_instruction(text, None)),
+            3 => (
+                theme::GREEN_LIGHT,
+                Hint::new_instruction_green(text, Some(theme::ICON_INFO)),
+            ),
+            _ => (
+                theme::GREY_LIGHT,
+                Hint::new_instruction(text, Some(theme::ICON_INFO)),
+            ),
+        }
+    }
+
     fn event_fuel_gauge(&mut self, ctx: &mut EventCtx, event: Event) {
         if animation_disabled() {
             return;
@@ -148,6 +157,14 @@ impl Homescreen {
             return true;
         }
         false
+    }
+}
+
+impl Drop for Homescreen {
+    fn drop(&mut self) {
+        // Turn off the LED when homescreen is destroyed
+        #[cfg(feature = "rgb_led")]
+        rgb_led::set_color(0);
     }
 }
 
@@ -209,6 +226,13 @@ impl Component for Homescreen {
         self.action_bar.render(target);
         if self.fuel_gauge.should_be_shown() {
             self.fuel_gauge.render(target);
+        }
+
+        #[cfg(feature = "rgb_led")]
+        if let Some(rgb_led) = self.led_color {
+            rgb_led::set_color(rgb_led.to_u32());
+        } else {
+            rgb_led::set_color(0);
         }
     }
 }

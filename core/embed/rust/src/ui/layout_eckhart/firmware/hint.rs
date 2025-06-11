@@ -1,10 +1,10 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Label, Never},
+        component::{text::TextStyle, Component, Event, EventCtx, Label, Never, Pad},
         constant::screen,
         display::{Color, Icon},
-        geometry::{Alignment, Alignment2D, Direction, Insets, Offset, Point, Rect},
+        geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         shape::{self, Renderer, Text},
         util::Pager,
     },
@@ -20,12 +20,9 @@ use super::{super::fonts, theme};
 /// The instruction has adaptive height, depending on the text length. The
 /// PageCounter is always of minimal component height (40px).
 pub struct Hint<'a> {
-    area: Rect,
+    content_area: Rect,
     content: HintContent<'a>,
-    swipe_allow_up: bool,
-    swipe_allow_down: bool,
-    progress: i16,
-    dir: Direction,
+    pad: Pad,
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -44,12 +41,9 @@ impl<'a> Hint<'a> {
 
     fn from_content(content: HintContent<'a>) -> Self {
         Self {
-            area: Rect::zero(),
+            content_area: Rect::zero(),
             content,
-            swipe_allow_down: false,
-            swipe_allow_up: false,
-            progress: 0,
-            dir: Direction::Up,
+            pad: Pad::with_background(theme::BG),
         }
     }
 
@@ -69,11 +63,21 @@ impl<'a> Hint<'a> {
         Self::from_content(HintContent::Instruction(instruction_component))
     }
 
-    pub fn new_warning<T: Into<TString<'static>>>(text: T) -> Self {
+    pub fn new_warning_neutral<T: Into<TString<'static>>>(text: T) -> Self {
+        let instruction_component = Instruction::new(
+            text.into(),
+            theme::GREY_LIGHT,
+            Some(theme::ICON_WARNING),
+            Some(theme::YELLOW),
+        );
+        Self::from_content(HintContent::Instruction(instruction_component))
+    }
+
+    pub fn new_warning_caution<T: Into<TString<'static>>>(text: T) -> Self {
         let instruction_component = Instruction::new(
             text.into(),
             theme::GREY,
-            Some(theme::ICON_INFO),
+            Some(theme::ICON_WARNING),
             Some(theme::ORANGE),
         );
         Self::from_content(HintContent::Instruction(instruction_component))
@@ -93,25 +97,9 @@ impl<'a> Hint<'a> {
         Self::from_content(HintContent::PageCounter(PageCounter::new()))
     }
 
-    pub fn with_swipe(self, swipe_direction: Direction) -> Self {
-        match swipe_direction {
-            Direction::Up => Self {
-                swipe_allow_up: true,
-                ..self
-            },
-            Direction::Down => Self {
-                swipe_allow_down: true,
-                ..self
-            },
-            _ => self,
-        }
-    }
-
     pub fn update(&mut self, pager: Pager) {
         if let HintContent::PageCounter(counter) = &mut self.content {
             counter.update(pager);
-            self.swipe_allow_down = counter.pager.is_first();
-            self.swipe_allow_up = counter.pager.is_last();
         }
     }
 
@@ -128,6 +116,12 @@ impl<'a> Component for Hint<'a> {
     fn place(&mut self, bounds: Rect) -> Rect {
         debug_assert!(bounds.width() == screen().width());
         debug_assert!(bounds.height() == self.height());
+
+        let pad_area = bounds
+            .inset(Insets::top(Self::HINT_INSETS.top))
+            .inset(Insets::bottom(Self::HINT_INSETS.bottom));
+        self.pad.place(pad_area);
+
         let bounds = bounds.inset(Self::HINT_INSETS);
 
         if let HintContent::Instruction(instruction) = &mut self.content {
@@ -137,8 +131,8 @@ impl<'a> Component for Hint<'a> {
             };
             instruction.label.place(text_area);
         }
-        self.area = bounds;
-        self.area
+        self.content_area = bounds;
+        self.content_area
     }
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
@@ -146,7 +140,8 @@ impl<'a> Component for Hint<'a> {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.content.render(self.area, target);
+        self.pad.render(target);
+        self.content.render(self.content_area, target);
     }
 }
 
@@ -183,8 +178,6 @@ struct Instruction<'a> {
 impl<'a> Instruction<'a> {
     /// default style for instruction text
     const STYLE_INSTRUCTION: &'static TextStyle = &theme::firmware::TEXT_SMALL;
-    /// margin between icon and text
-    const ICON_OFFSET: Offset = Offset::x(24); // [px]
 
     fn new(
         text: TString<'a>,
@@ -205,7 +198,7 @@ impl<'a> Instruction<'a> {
     /// Calculates the width needed for the icon
     fn icon_width(&self) -> i16 {
         self.icon
-            .map_or(0, |icon| icon.toif.width() + Self::ICON_OFFSET.x)
+            .map_or(0, |icon| icon.toif.width() + theme::PADDING)
     }
 
     /// Calculates the height needed for the Instruction text to be rendered.
