@@ -906,6 +906,8 @@ if not utils.BITCOIN_ONLY:
         fee_info_items: Iterable[tuple[str, str]],
         chunkify: bool = False,
     ) -> None:
+        br_name = "confirm_ethereum_approve"
+        br_code = ButtonRequestType.Other
         await confirm_value(
             (
                 TR.ethereum__approve_intro_title_revoke
@@ -919,20 +921,38 @@ if not utils.BITCOIN_ONLY:
             ),
             "",
             is_data=False,
-            br_name="confirm_ethereum_approve",
+            br_name=br_name,
         )
 
-        await confirm_value(
-            TR.ethereum__approve_revoke_from if is_revoke else TR.ethereum__approve_to,
-            recipient_str or recipient_addr,
-            "",
-            chunkify=False if recipient_str else chunkify,
-            br_name="confirm_ethereum_approve",
+        title = (
+            TR.ethereum__approve_revoke_from if is_revoke else TR.ethereum__approve_to
         )
+
+        if recipient_str is None:
+            await confirm_value(
+                title,
+                recipient_addr,
+                "",
+                chunkify=chunkify,
+                br_name=br_name,
+            )
+        else:
+            main_layout = trezorui_api.confirm_with_info(
+                title=title,
+                items=[(recipient_str, True)],
+                verb="",
+                verb_info=TR.ethereum__contract_address,
+            )
+            info_layout = trezorui_api.show_info_with_cancel(
+                title=TR.ethereum__contract_address,
+                items=[("", recipient_addr)],
+                chunkify=chunkify,
+            )
+            await with_info(main_layout, info_layout, br_name, br_code)
 
         if total_amount is None:
             await show_warning(
-                "confirm_ethereum_approve",
+                br_name,
                 TR.ethereum__approve_unlimited_template.format(token_symbol),
             )
 
@@ -943,7 +963,7 @@ if not utils.BITCOIN_ONLY:
                 "",
                 subtitle=TR.ethereum__token_contract,
                 chunkify=chunkify,
-                br_name="confirm_ethereum_approve",
+                br_name=br_name,
             )
 
         if is_unknown_network:
@@ -952,7 +972,7 @@ if not utils.BITCOIN_ONLY:
                 TR.ethereum__approve_chain_id,
                 chain_id,
                 "",
-                br_name="confirm_ethereum_approve",
+                br_name=br_name,
             )
 
         properties: list[PropertyType] = (
@@ -969,7 +989,7 @@ if not utils.BITCOIN_ONLY:
         if not is_unknown_network:
             properties.append((TR.words__chain, network_name, True))
         await confirm_properties(
-            "confirm_ethereum_approve",
+            br_name,
             TR.ethereum__approve_revoke if is_revoke else TR.ethereum__approve,
             properties,
             None,

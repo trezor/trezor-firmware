@@ -1448,6 +1448,8 @@ pub enum TranslatedString {
     address__xpub = 1047,  // {"Bolt": "XPUB", "Caesar": "XPUB", "Delizia": "XPUB", "Eckhart": "Public key (XPUB)"}
     words__cancel_question = 1048,  // "Cancel?"
     address__coin_address_template = 1049,  // "{0} address"
+    #[cfg(feature = "universal_fw")]
+    ethereum__contract_address = 1050,  // "Provider contract address"
 }
 
 impl TranslatedString {
@@ -3208,6 +3210,8 @@ impl TranslatedString {
             (Self::address__xpub, "Public key (XPUB)"),
             (Self::words__cancel_question, "Cancel?"),
             (Self::address__coin_address_template, "{0} address"),
+            #[cfg(feature = "universal_fw")]
+            (Self::ethereum__contract_address, "Provider contract address"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3680,6 +3684,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__approve_unlimited_template, Self::ethereum__approve_unlimited_template),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__contract, Self::ethereum__contract),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__contract_address, Self::ethereum__contract_address),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__data_size_template, Self::ethereum__data_size_template),
         #[cfg(feature = "universal_fw")]
