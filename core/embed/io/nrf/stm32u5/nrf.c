@@ -32,74 +32,10 @@
 
 #include "../crc8.h"
 #include "../nrf_internal.h"
-#include "rust_smp.h"
-
-#define MAX_SPI_DATA_SIZE (244)
-
-typedef struct {
-  uint8_t service_id;
-  uint8_t msg_len;
-  uint8_t data[MAX_SPI_DATA_SIZE];
-  uint8_t crc;
-} spi_packet_t;
-
-#define SPI_OVERHEAD_SIZE (sizeof(spi_packet_t) - MAX_SPI_DATA_SIZE)
-#define SPI_HEADER_SIZE (SPI_OVERHEAD_SIZE - 1)
-
-#define TX_QUEUE_SIZE (8)
-
-#define START_BYTE (0xA0)
 
 #define CTS_PULSE_RESEND_PERIOD_US 2000
 
-typedef struct {
-  spi_packet_t packet;
-  nrf_tx_callback_t callback;
-  void *context;
-} nrf_tx_request_t;
-
-typedef struct {
-  UART_HandleTypeDef urt;
-  DMA_HandleTypeDef urt_tx_dma;
-
-  uint8_t tx_buffers[TX_QUEUE_SIZE][sizeof(nrf_tx_request_t)];
-  tsqueue_entry_t tx_queue_entries[TX_QUEUE_SIZE];
-  tsqueue_t tx_queue;
-  nrf_tx_request_t tx_request;
-  int32_t tx_request_id;
-
-  uint8_t urt_rx_byte;
-  uint8_t urt_tx_byte;
-  bool urt_tx_complete;
-  bool urt_rx_complete;
-
-  SPI_HandleTypeDef spi;
-  DMA_HandleTypeDef spi_rx_dma;
-  DMA_HandleTypeDef spi_tx_dma;
-  spi_packet_t long_rx_buffer;
-
-  EXTI_HandleTypeDef exti;
-
-  bool comm_running;
-  bool initialized;
-  bool wakeup;
-
-  nrf_rx_callback_t service_listeners[NRF_SERVICE_CNT];
-
-  bool info_valid;
-  nrf_info_t info;
-
-  systimer_t *timer;
-  bool pending_spi_transaction;
-
-  bool dfu_mode;
-  bool dfu_tx_pending;
-
-} nrf_driver_t;
-
-static nrf_driver_t g_nrf_driver = {0};
-
-static void nrf_prepare_spi_data(nrf_driver_t *drv);
+nrf_driver_t g_nrf_driver = {0};
 
 void nrf_start(void) {
   nrf_driver_t *drv = &g_nrf_driver;
@@ -117,8 +53,7 @@ void nrf_start(void) {
   }
 }
 
-static void nrf_complete_current_request(nrf_driver_t *drv,
-                                         nrf_status_t status) {
+void nrf_complete_current_request(nrf_driver_t *drv, nrf_status_t status) {
   if (drv->tx_request_id >= 0) {
     if (drv->tx_request.callback != NULL) {
       drv->tx_request.callback(status, drv->tx_request.context);
@@ -192,9 +127,6 @@ void nrf_init(void) {
     return;
   }
 
-  __HAL_RCC_USART3_CLK_ENABLE();
-  __HAL_RCC_GPDMA1_CLK_ENABLE();
-  __HAL_RCC_SPI1_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
@@ -251,98 +183,11 @@ void nrf_init(void) {
   HAL_EXTI_SetConfigLine(&drv->exti, &EXTI_Config);
   __HAL_GPIO_EXTI_CLEAR_FLAG(NRF_EXTI_INTERRUPT_PIN);
 
-  // UART PINS
-  GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Alternate = GPIO_AF7_USART3;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+#ifdef USE_SMP
+  nrf_uart_init(drv);
+#endif
 
-  GPIO_InitStructure.Pin = GPIO_PIN_10 | GPIO_PIN_1;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
-
-  GPIO_InitStructure.Pull = GPIO_PULLUP;
-  GPIO_InitStructure.Pin = GPIO_PIN_11;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
-  GPIO_InitStructure.Pin = GPIO_PIN_5;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-  drv->urt.Init.Mode = UART_MODE_TX_RX;
-  drv->urt.Init.BaudRate = 1000000;
-  drv->urt.Init.HwFlowCtl = UART_HWCONTROL_RTS_CTS;
-  drv->urt.Init.OverSampling = UART_OVERSAMPLING_16;
-  drv->urt.Init.Parity = UART_PARITY_NONE;
-  drv->urt.Init.StopBits = UART_STOPBITS_1;
-  drv->urt.Init.WordLength = UART_WORDLENGTH_8B;
-  drv->urt.Instance = USART3;
-  HAL_UART_Init(&drv->urt);
-
-  // SPI pins
-  GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Alternate = GPIO_AF5_SPI1;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_MEDIUM;
-  GPIO_InitStructure.Pin = GPIO_PIN_1 | GPIO_PIN_4 | GPIO_PIN_6 | GPIO_PIN_7;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-  drv->spi_rx_dma.Instance = GPDMA1_Channel2;
-  drv->spi_rx_dma.Init.Direction = DMA_PERIPH_TO_MEMORY;
-  drv->spi_rx_dma.Init.Mode = DMA_NORMAL;
-  drv->spi_rx_dma.Init.Request = GPDMA1_REQUEST_SPI1_RX;
-  drv->spi_rx_dma.Init.BlkHWRequest = DMA_BREQ_SINGLE_BURST;
-  drv->spi_rx_dma.Init.SrcInc = DMA_SINC_FIXED;
-  drv->spi_rx_dma.Init.DestInc = DMA_DINC_INCREMENTED;
-  drv->spi_rx_dma.Init.SrcDataWidth = DMA_SRC_DATAWIDTH_BYTE;
-  drv->spi_rx_dma.Init.DestDataWidth = DMA_DEST_DATAWIDTH_BYTE;
-  drv->spi_rx_dma.Init.Priority = DMA_LOW_PRIORITY_HIGH_WEIGHT;
-  drv->spi_rx_dma.Init.SrcBurstLength = 1;
-  drv->spi_rx_dma.Init.DestBurstLength = 1;
-  drv->spi_rx_dma.Init.TransferAllocatedPort =
-      DMA_SRC_ALLOCATED_PORT1 | DMA_DEST_ALLOCATED_PORT0;
-  drv->spi_rx_dma.Init.TransferEventMode = DMA_TCEM_BLOCK_TRANSFER;
-  drv->spi_rx_dma.Parent = &drv->spi;
-
-  HAL_DMA_Init(&drv->spi_rx_dma);
-  HAL_DMA_ConfigChannelAttributes(
-      &drv->spi_rx_dma, DMA_CHANNEL_PRIV | DMA_CHANNEL_SEC |
-                            DMA_CHANNEL_SRC_SEC | DMA_CHANNEL_DEST_SEC);
-
-  drv->spi_tx_dma.Init.Direction = DMA_MEMORY_TO_PERIPH;
-  drv->spi_tx_dma.Init.Mode = DMA_NORMAL;
-  drv->spi_tx_dma.Instance = GPDMA1_Channel1;
-  drv->spi_tx_dma.Init.Request = GPDMA1_REQUEST_SPI1_TX;
-  drv->spi_tx_dma.Init.BlkHWRequest = DMA_BREQ_SINGLE_BURST;
-  drv->spi_tx_dma.Init.SrcInc = DMA_SINC_INCREMENTED;
-  drv->spi_tx_dma.Init.DestInc = DMA_DINC_FIXED;
-  drv->spi_tx_dma.Init.SrcDataWidth = DMA_SRC_DATAWIDTH_BYTE;
-  drv->spi_tx_dma.Init.DestDataWidth = DMA_DEST_DATAWIDTH_BYTE;
-  drv->spi_tx_dma.Init.Priority = DMA_LOW_PRIORITY_HIGH_WEIGHT;
-  drv->spi_tx_dma.Init.SrcBurstLength = 1;
-  drv->spi_tx_dma.Init.DestBurstLength = 1;
-  drv->spi_tx_dma.Init.TransferAllocatedPort =
-      DMA_SRC_ALLOCATED_PORT1 | DMA_DEST_ALLOCATED_PORT0;
-  drv->spi_tx_dma.Init.TransferEventMode = DMA_TCEM_BLOCK_TRANSFER;
-  drv->spi_tx_dma.Parent = &drv->spi;
-  HAL_DMA_Init(&drv->spi_tx_dma);
-  HAL_DMA_ConfigChannelAttributes(
-      &drv->spi_tx_dma, DMA_CHANNEL_PRIV | DMA_CHANNEL_SEC |
-                            DMA_CHANNEL_SRC_SEC | DMA_CHANNEL_DEST_SEC);
-
-  drv->spi.Instance = SPI1;
-  drv->spi.Init.Mode = SPI_MODE_SLAVE;
-  drv->spi.Init.Direction = SPI_DIRECTION_2LINES;
-  drv->spi.Init.DataSize = SPI_DATASIZE_8BIT;
-  drv->spi.Init.CLKPolarity = SPI_POLARITY_LOW;
-  drv->spi.Init.CLKPhase = SPI_PHASE_1EDGE;
-  drv->spi.Init.NSS = SPI_NSS_HARD_INPUT;
-  drv->spi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
-  drv->spi.Init.FirstBit = SPI_FIRSTBIT_MSB;
-  drv->spi.Init.TIMode = SPI_TIMODE_DISABLE;
-  drv->spi.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  drv->spi.Init.CRCPolynomial = 0;
-  drv->spi.hdmarx = &drv->spi_rx_dma;
-  drv->spi.hdmatx = &drv->spi_tx_dma;
-
-  HAL_SPI_Init(&drv->spi);
+  nrf_spi_init(drv);
 
   drv->tx_request_id = -1;
 
@@ -353,8 +198,10 @@ void nrf_init(void) {
   drv->timer = systimer_create(nrf_timer_callback, drv);
   nrf_start();
 
+#ifdef USE_SMP
   NVIC_SetPriority(USART3_IRQn, IRQ_PRI_NORMAL);
   NVIC_EnableIRQ(USART3_IRQn);
+#endif
   NVIC_SetPriority(GPDMA1_Channel1_IRQn, IRQ_PRI_NORMAL);
   NVIC_EnableIRQ(GPDMA1_Channel1_IRQn);
   NVIC_SetPriority(GPDMA1_Channel2_IRQn, IRQ_PRI_NORMAL);
@@ -377,16 +224,12 @@ void nrf_suspend(void) {
 
   systimer_delete(drv->timer);
 
+#ifdef USE_SMP
+  NVIC_DisableIRQ(USART3_IRQn);
+#endif
   NVIC_DisableIRQ(GPDMA1_Channel1_IRQn);
   NVIC_DisableIRQ(GPDMA1_Channel2_IRQn);
   NVIC_DisableIRQ(SPI1_IRQn);
-  NVIC_DisableIRQ(USART3_IRQn);
-
-  __HAL_RCC_SPI1_FORCE_RESET();
-  __HAL_RCC_SPI1_RELEASE_RESET();
-
-  __HAL_RCC_USART3_FORCE_RESET();
-  __HAL_RCC_USART3_RELEASE_RESET();
 
   HAL_GPIO_DeInit(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN);
   HAL_GPIO_DeInit(NRF_OUT_SPI_READY_PORT, NRF_OUT_SPI_READY_PIN);
@@ -394,17 +237,11 @@ void nrf_suspend(void) {
   HAL_GPIO_DeInit(NRF_IN_RESERVED_PORT, NRF_IN_RESERVED_PIN);
 
   // UART Pins
+#ifdef USE_SMP
+  nrf_uart_deinit();
+#endif
 
-  HAL_GPIO_DeInit(GPIOB, GPIO_PIN_10);
-  HAL_GPIO_DeInit(GPIOB, GPIO_PIN_1);
-  HAL_GPIO_DeInit(GPIOD, GPIO_PIN_11);
-  HAL_GPIO_DeInit(GPIOA, GPIO_PIN_5);
-
-  // SPI Pins
-  HAL_GPIO_DeInit(GPIOA, GPIO_PIN_1);
-  HAL_GPIO_DeInit(GPIOA, GPIO_PIN_4);
-  HAL_GPIO_DeInit(GPIOA, GPIO_PIN_6);
-  HAL_GPIO_DeInit(GPIOA, GPIO_PIN_7);
+  nrf_spi_deinit();
 
   drv->initialized = false;
 
@@ -460,352 +297,6 @@ void nrf_unregister_listener(nrf_service_id_t service) {
   irq_key_t key = irq_lock();
   drv->service_listeners[service] = NULL;
   irq_unlock(key);
-}
-
-static void nrf_process_msg(nrf_driver_t *drv, const uint8_t *data,
-                            uint32_t len, nrf_service_id_t service) {
-  if (drv->service_listeners[service] != NULL) {
-    drv->service_listeners[service](data, len);
-  }
-}
-
-static void nrf_prepare_spi_data(nrf_driver_t *drv) {
-  if (drv->pending_spi_transaction) {
-    return;
-  }
-  memset(&drv->long_rx_buffer, 0, sizeof(spi_packet_t));
-  if (tsqueue_dequeue(&drv->tx_queue, (uint8_t *)&drv->tx_request,
-                      sizeof(nrf_tx_request_t), NULL, &drv->tx_request_id)) {
-    HAL_SPI_TransmitReceive_DMA(&drv->spi, (uint8_t *)&drv->tx_request.packet,
-                                (uint8_t *)&drv->long_rx_buffer,
-                                sizeof(spi_packet_t));
-  } else {
-    memset(&drv->tx_request.packet, 0, sizeof(spi_packet_t));
-    HAL_SPI_TransmitReceive_DMA(&drv->spi, (uint8_t *)&drv->tx_request.packet,
-                                (uint8_t *)&drv->long_rx_buffer,
-                                sizeof(spi_packet_t));
-  }
-
-  drv->pending_spi_transaction = true;
-  nrf_signal_data_ready();
-  systick_delay_us(1);
-  nrf_signal_no_data();
-  systimer_set(drv->timer, 2000);
-}
-
-/// DFU communication
-/// ----------------------------------------------------------
-
-void nrf_dfu_comm_send(const uint8_t *data, uint32_t len) {
-  nrf_driver_t *drv = &g_nrf_driver;
-  if (!drv->initialized) {
-    return;
-  }
-
-  HAL_UART_Transmit(&drv->urt, (uint8_t *)data, len, 30);
-}
-
-uint32_t nrf_dfu_comm_receive(uint8_t *data, uint32_t len) {
-  nrf_driver_t *drv = &g_nrf_driver;
-  if (!drv->initialized) {
-    return 0;
-  }
-
-  if (__HAL_UART_GET_FLAG(&drv->urt, UART_FLAG_RXNE)) {
-    HAL_StatusTypeDef result = HAL_UART_Receive(&drv->urt, data, len, 30);
-
-    if (result == HAL_OK) {
-      return len;
-    }
-
-    if (drv->urt.RxXferCount == len) {
-      return 0;
-    }
-
-    return len - drv->urt.RxXferCount - 1;
-  }
-
-  return 0;
-}
-
-int32_t nrf_send_msg(nrf_service_id_t service, const uint8_t *data,
-                     uint32_t len, nrf_tx_callback_t callback, void *context) {
-  nrf_driver_t *drv = &g_nrf_driver;
-  if (!drv->initialized) {
-    return -1;
-  }
-
-  if (len > NRF_MAX_TX_DATA_SIZE) {
-    return -1;
-  }
-
-  if (service > NRF_SERVICE_CNT) {
-    return -1;
-  }
-
-  if (!nrf_is_running()) {
-    return -1;
-  }
-
-  if (!drv->comm_running) {
-    return -1;
-  }
-
-  int32_t id = 0;
-
-  nrf_tx_request_t tx_request = {0};
-
-  tx_request.callback = callback;
-  tx_request.context = context;
-  tx_request.packet.service_id = 0xA0 | (uint8_t)service;
-  tx_request.packet.msg_len = len;
-  memcpy(&tx_request.packet.data, data, len);
-  memset(&tx_request.packet.data[len], 0, sizeof(tx_request.packet.data) - len);
-  tx_request.packet.crc =
-      crc8((uint8_t *)&tx_request.packet, sizeof(tx_request.packet) - 1, 0x07,
-           0x00, false);
-
-  tsqueue_enqueue(&drv->tx_queue, (uint8_t *)&tx_request,
-                  sizeof(nrf_tx_request_t), &id);
-
-  irq_key_t key = irq_lock();
-  if (drv->tx_request_id <= 0 && !tsqueue_empty(&drv->tx_queue)) {
-    nrf_prepare_spi_data(drv);
-  }
-  irq_unlock(key);
-
-  return id;
-}
-
-bool nrf_abort_msg(int32_t id) {
-  nrf_driver_t *drv = &g_nrf_driver;
-  if (!drv->initialized) {
-    return false;
-  }
-
-  bool aborted = tsqueue_abort(&drv->tx_queue, id, NULL, 0, NULL);
-
-  if (aborted) {
-    return true;
-  }
-
-  irq_key_t key = irq_lock();
-  if (drv->tx_request_id == id) {
-    drv->tx_request_id = -1;
-    irq_unlock(key);
-    return true;
-  }
-
-  irq_unlock(key);
-  return false;
-}
-
-static bool nrf_is_valid_startbyte(uint8_t val) {
-  if ((val & 0xF0) != 0xA0) {
-    return false;
-  }
-
-  if ((val & 0x0F) >= NRF_SERVICE_CNT) {
-    return false;
-  }
-
-  return true;
-}
-
-/// UART communication
-/// ---------------------------------------------------------
-
-void nrf_uart_send(uint8_t data) {
-  nrf_driver_t *drv = &g_nrf_driver;
-  if (!drv->initialized) {
-    return;
-  }
-
-  drv->urt_rx_complete = false;
-  drv->urt_tx_complete = false;
-  drv->urt_rx_byte = false;
-  drv->urt_tx_byte = data;
-
-  drv->urt_tx_byte = data;
-  HAL_UART_Transmit(&drv->urt, (uint8_t *)&drv->urt_tx_byte, 1, 30);
-
-  // receive the rest of the message, or new message in any case.
-  HAL_UART_Receive_IT(&drv->urt, &drv->urt_rx_byte, 1);
-}
-
-uint8_t nrf_uart_get_received(void) {
-  nrf_driver_t *drv = &g_nrf_driver;
-  if (!drv->initialized) {
-    return 0;
-  }
-
-  if (!drv->urt_rx_complete) {
-    return 0;
-  }
-
-  return drv->urt_rx_byte;
-}
-
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *urt) {
-  nrf_driver_t *drv = &g_nrf_driver;
-  if (drv->initialized && urt == &drv->urt) {
-#ifdef USE_SMP
-    if (nrf_is_dfu_mode()) {
-      smp_process_rx_byte(drv->urt_rx_byte);
-      HAL_UART_Receive_IT(&drv->urt, &drv->urt_rx_byte, 1);
-      return;
-    }
-#endif
-
-    drv->urt_rx_complete = true;
-  }
-}
-
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *urt) {
-  nrf_driver_t *drv = &g_nrf_driver;
-  if (drv->initialized && urt == &drv->urt) {
-    drv->dfu_tx_pending = false;
-    HAL_UART_Receive_IT(&drv->urt, &drv->urt_rx_byte, 1);
-  }
-}
-
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *urt) {
-  nrf_driver_t *drv = &g_nrf_driver;
-  if (drv->initialized && urt == &drv->urt) {
-    drv->dfu_tx_pending = false;
-    drv->urt_tx_complete = true;
-  }
-}
-
-void USART3_IRQHandler(void) {
-  IRQ_LOG_ENTER();
-
-  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
-
-  nrf_driver_t *drv = &g_nrf_driver;
-  if (drv->initialized) {
-    HAL_UART_IRQHandler(&drv->urt);
-  }
-
-  mpu_restore(mpu_mode);
-
-  IRQ_LOG_EXIT();
-}
-
-/// SPI communication
-/// ----------------------------------------------------------
-
-void GPDMA1_Channel1_IRQHandler(void) {
-  IRQ_LOG_ENTER();
-
-  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
-
-  nrf_driver_t *drv = &g_nrf_driver;
-  if (drv->initialized) {
-    HAL_DMA_IRQHandler(&drv->spi_tx_dma);
-  }
-
-  mpu_restore(mpu_mode);
-
-  IRQ_LOG_EXIT();
-}
-
-void GPDMA1_Channel2_IRQHandler(void) {
-  IRQ_LOG_ENTER();
-
-  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
-
-  nrf_driver_t *drv = &g_nrf_driver;
-  if (drv->initialized) {
-    HAL_DMA_IRQHandler(&drv->spi_rx_dma);
-  }
-
-  mpu_restore(mpu_mode);
-
-  IRQ_LOG_EXIT();
-}
-
-void SPI1_IRQHandler(void) {
-  IRQ_LOG_ENTER();
-
-  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
-
-  nrf_driver_t *drv = &g_nrf_driver;
-  if (drv->initialized) {
-    HAL_SPI_IRQHandler(&drv->spi);
-  }
-
-  mpu_restore(mpu_mode);
-
-  IRQ_LOG_EXIT();
-}
-
-void nrf_spi_transfer_complete(SPI_HandleTypeDef *hspi) {
-  nrf_driver_t *drv = &g_nrf_driver;
-
-  if (!drv->initialized) {
-    return;
-  }
-
-  if (hspi != &drv->spi) {
-    return;
-  }
-
-  if (!drv->comm_running) {
-    return;
-  }
-
-  spi_packet_t packet;
-  memcpy(&packet, &drv->long_rx_buffer, sizeof(spi_packet_t));
-
-  drv->pending_spi_transaction = false;
-
-  // tx was completed
-  nrf_complete_current_request(drv, NRF_STATUS_OK);
-
-  // something to send?
-  if (!tsqueue_empty(&drv->tx_queue)) {
-    nrf_prepare_spi_data(drv);
-  }
-
-  // process received data
-  uint8_t crc = crc8((uint8_t *)&packet, MAX_SPI_DATA_SIZE + SPI_HEADER_SIZE,
-                     0x07, 0x00, false);
-
-  if (nrf_is_valid_startbyte(packet.service_id) && packet.crc == crc) {
-    nrf_process_msg(drv, packet.data, packet.msg_len, packet.service_id & 0x0F);
-  }
-}
-
-void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi) {
-  nrf_spi_transfer_complete(hspi);
-}
-
-void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi) {
-  nrf_spi_transfer_complete(hspi);
-}
-
-void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi) {
-  nrf_driver_t *drv = &g_nrf_driver;
-
-  if (!drv->initialized) {
-    return;
-  }
-
-  if (hspi != &drv->spi) {
-    return;
-  }
-
-  if (!drv->comm_running) {
-    return;
-  }
-
-  drv->pending_spi_transaction = false;
-  nrf_complete_current_request(drv, NRF_STATUS_ERROR);
-
-  if (!tsqueue_empty(&drv->tx_queue)) {
-    nrf_prepare_spi_data(drv);
-  }
 }
 
 void NRF_EXTI_INTERRUPT_HANDLER(void) {
@@ -950,51 +441,6 @@ bool nrf_system_off(void) {
   }
 
   return true;
-}
-
-#ifdef USE_SMP
-void nrf_set_dfu_mode(bool set) {
-  nrf_driver_t *drv = &g_nrf_driver;
-
-  if (!drv->initialized) {
-    return;
-  }
-
-  drv->dfu_mode = set;
-
-  if (set) {
-    HAL_UART_Receive_IT(&drv->urt, &drv->urt_rx_byte, 1);
-  }
-}
-
-bool nrf_is_dfu_mode(void) {
-  nrf_driver_t *drv = &g_nrf_driver;
-
-  if (!drv->initialized) {
-    return false;
-  }
-
-  return drv->dfu_mode;
-}
-#endif
-
-void nrf_send_uart_data(const uint8_t *data, uint32_t len) {
-  nrf_driver_t *drv = &g_nrf_driver;
-  if (drv->initialized) {
-    while (drv->dfu_tx_pending) {
-      irq_key_t key = irq_lock();
-      irq_unlock(key);
-    }
-
-    drv->dfu_tx_pending = true;
-
-    HAL_UART_Transmit_IT(&drv->urt, data, len);
-
-    while (drv->dfu_tx_pending) {
-      irq_key_t key = irq_lock();
-      irq_unlock(key);
-    }
-  }
 }
 
 #endif

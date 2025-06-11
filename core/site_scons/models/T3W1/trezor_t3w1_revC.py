@@ -108,7 +108,7 @@ def configure(
         features_available.append("ble")
         defines += [("USE_BLE", "1")]
         sources += ["embed/io/nrf/stm32u5/nrf.c"]
-        sources += ["embed/io/nrf/stm32u5/nrf_test.c"]
+        sources += ["embed/io/nrf/stm32u5/nrf_spi.c"]
         sources += ["embed/io/nrf/stm32u5/nrf_update.c"]
         sources += ["embed/io/nrf/crc8.c"]
         paths += ["embed/io/nrf/inc"]
@@ -118,6 +118,12 @@ def configure(
             "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_uart.c",
             "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_uart_ex.c",
         ]
+
+    if "ble" in features_wanted and "smp" in features_wanted:
+        sources += ["embed/io/nrf/stm32u5/nrf_uart.c"]
+        sources += ["embed/io/nrf/stm32u5/nrf_test.c"]
+        features_available.append("smp")
+        defines += [("USE_SMP", "1")]
 
     if "nfc" in features_wanted:
         sources += ["embed/io/nfc/st25r3916b/nfc.c"]
