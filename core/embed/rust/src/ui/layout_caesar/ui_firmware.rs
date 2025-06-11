@@ -1059,12 +1059,12 @@ impl FirmwareUI for UICaesar {
 
     fn show_homescreen(
         label: TString<'static>,
-        hold: bool,
         notification: Option<TString<'static>>,
         notification_level: u8,
+        lockable: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let notification = notification.map(|w| (w, notification_level));
-        let loader_description = hold.then_some("Locking the device...".into());
+        let loader_description = lockable.then_some("Locking the device...".into());
         let layout = RootComponent::new(Homescreen::new(label, notification, loader_description));
         Ok(layout)
     }

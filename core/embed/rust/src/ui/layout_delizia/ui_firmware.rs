@@ -889,12 +889,12 @@ impl FirmwareUI for UIDelizia {
 
     fn show_homescreen(
         label: TString<'static>,
-        hold: bool,
         notification: Option<TString<'static>>,
         notification_level: u8,
+        lockable: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let notification = notification.map(|w| (w, notification_level));
-        let layout = RootComponent::new(Homescreen::new(label, notification, hold)?);
+        let layout = RootComponent::new(Homescreen::new(label, notification, lockable)?);
         Ok(layout)
     }
 

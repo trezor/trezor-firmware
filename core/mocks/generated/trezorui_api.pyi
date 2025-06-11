@@ -541,9 +541,9 @@ def show_group_share_success(
 def show_homescreen(
     *,
     label: str | None,
-    hold: bool,
     notification: str | None,
     notification_level: int = 0,
+    lockable: bool,
     skip_first_paint: bool,
 ) -> LayoutObj[UiResult]:
     """Idle homescreen."""

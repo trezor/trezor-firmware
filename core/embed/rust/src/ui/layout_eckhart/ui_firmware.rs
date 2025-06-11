@@ -1016,9 +1016,9 @@ impl FirmwareUI for UIEckhart {
 
     fn show_homescreen(
         label: TString<'static>,
-        hold: bool,
         notification: Option<TString<'static>>,
         notification_level: u8,
+        lockable: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let locked = false;
         let bootscreen = false;
@@ -1026,7 +1026,7 @@ impl FirmwareUI for UIEckhart {
         let notification = notification.map(|w| (w, notification_level));
         let layout = RootComponent::new(Homescreen::new(
             label,
-            hold,
+            lockable,
             locked,
             bootscreen,
             coinjoin_authorized,
