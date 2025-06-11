@@ -427,7 +427,8 @@ static bool check_device_cert_chain(cli_t* cli, const uint8_t* chain,
   }
 
   // Generate a P-256 signature using the device private key.
-  uint8_t challenge[16] = {0};  // The challenge is intentionally constant zero.
+  uint8_t challenge[CHALLENGE_SIZE] = {
+      0};  // The challenge is intentionally constant zero.
   uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
   sha256_Raw(challenge, sizeof(challenge), digest);
 

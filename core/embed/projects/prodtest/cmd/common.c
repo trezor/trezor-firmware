@@ -240,18 +240,21 @@ static bool verify_signature(alg_id_t alg_id, const uint8_t* pub_key,
 
 bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
                       const uint8_t* sig, size_t sig_size,
-                      uint8_t challenge[16]) {
+                      const uint8_t challenge[CHALLENGE_SIZE]) {
   // Checks the integrity of the device certificate chain to ensure that the
   // certificate data was not corrupted in transport and that the device
-  // certificate belongs to this device. THIS IS NOT A FULL VERIFICATION OF THE
-  // CERTIFICATE CHAIN.
+  // certificate belongs to this device.
+  // The certificate chain should contain two certificates:
+  //   * the end-entity certificate (device certificate)
+  //   * the intermediate CA certificate
+  // THIS IS NOT A FULL VERIFICATION OF THE CERTIFICATE CHAIN.
 
   // This will be populated with a pointer to the key identifier data of the
   // AuthorityKeyIdentifier extension from the last certificate in the chain.
   const uint8_t* authority_key_digest = NULL;
 
   const uint8_t* message = challenge;
-  size_t message_size = 16;
+  size_t message_size = CHALLENGE_SIZE;
 
   const uint8_t* pub_key = NULL;
   size_t pub_key_size = 0;
@@ -395,20 +398,35 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
     sig_size = buffer_remaining(&sig_val.buf);
   }
 
-  // Verify that the signature of the last certificate in the chain matches its
-  // own AuthorityKeyIdentifier to verify the integrity of the certificate data.
-  if (!verify_signature(alg_id, pub_key, pub_key_size, sig, sig_size, message,
-                        message_size)) {
+  if (alg_id == ALG_ID_ECDSA_P256_WITH_SHA256) {
+    // Verify that the signature of the last certificate in the chain matches
+    // its own AuthorityKeyIdentifier to verify the integrity of the certificate
+    // data. This is done only for ECDSA, since EdDSA does not allow to recover
+    // the public key from the signature.
+    uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
+    sha256_Raw(message, message_size, digest);
+
+    uint8_t decoded_sig[64] = {0};
+    if (ecdsa_sig_from_der(sig, sig_size, decoded_sig) != 0) {
+      cli_error(cli, CLI_ERROR,
+                "check_device_cert_chain, ecdsa_sig_from_der root.");
+      return false;
+    }
+
+    for (int recid = 0; recid < 4; ++recid) {
+      uint8_t recovered_pub_key[65] = {0};
+      if (ecdsa_recover_pub_from_sig(&nist256p1, recovered_pub_key, decoded_sig,
+                                     digest, recid) == 0) {
+        uint8_t pub_key_digest[SHA1_DIGEST_LENGTH] = {0};
+        sha1_Raw(recovered_pub_key, sizeof(recovered_pub_key), pub_key_digest);
+        if (memcmp(authority_key_digest, pub_key_digest,
+                   sizeof(pub_key_digest)) == 0) {
+          return true;
+        }
+      }
+    }
     cli_error(cli, CLI_ERROR,
-              "check_device_cert_chain, verify signature of root cert.");
-    return false;
-  }
-  uint8_t pub_key_digest[SHA1_DIGEST_LENGTH] = {0};
-  sha1_Raw(pub_key, 65, pub_key_digest);
-  if (memcmp(authority_key_digest, pub_key_digest, sizeof(pub_key_digest)) !=
-      0) {
-    cli_error(cli, CLI_ERROR,
-              "check_device_cert_chain, verify root pubkey identifier.");
+              "check_device_cert_chain, ecdsa_verify_digest root.");
     return false;
   }
 
