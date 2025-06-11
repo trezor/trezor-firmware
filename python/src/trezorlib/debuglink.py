@@ -861,10 +861,22 @@ class DebugLink:
             resp = self._read()
 
         info = dict(sorted((item.name, item.value) for item in resp.items))
-        if self.prev_gc_info:
-            # Free heap memory should not decrease
-            assert info["free"] >= self.prev_gc_info["free"]
+        if info["total"]:
+            LOG.debug(
+                "GC info: free=%.2f%% max_free=%.2f%%",
+                100 * info["free"] / info["total"],
+                100 * info["max_free"] / info["total"],
+            )
+
+        prev_info = self.prev_gc_info
         self.prev_gc_info = info
+
+        if not prev_info:
+            return
+        # Free heap memory should not decrease
+        if info["free"] < prev_info["free"]:
+            msg = f"GC leak found: {prev_info} -> {info}"
+            raise AssertionError(msg)
 
 
 del _make_input_func
