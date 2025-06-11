@@ -361,6 +361,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_language__title;
   MP_QSTR_lines;
   MP_QSTR_load_from_flash;
+  MP_QSTR_lockable;
   MP_QSTR_lockscreen__tap_to_connect;
   MP_QSTR_lockscreen__tap_to_unlock;
   MP_QSTR_lockscreen__title_locked;

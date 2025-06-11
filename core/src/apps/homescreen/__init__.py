@@ -31,27 +31,31 @@ async def homescreen() -> None:
     # TODO: add notification that translations are out of date
 
     notification = None
-    notification_is_error = False
+    notification_level = 1  # 0 = strong warning, 1 = warning, 2 = info, 3 = success
     if is_set_any_session(MessageType.AuthorizeCoinJoin):
         notification = TR.homescreen__title_coinjoin_authorized
+        notification_level = 3
     elif storage.device.is_initialized() and storage.device.no_backup():
         notification = TR.homescreen__title_seedless
-        notification_is_error = True
+        notification_level = 0
     elif storage.device.is_initialized() and storage.device.unfinished_backup():
         notification = TR.homescreen__title_backup_failed
-        notification_is_error = True
+        notification_level = 0
     elif storage.device.is_initialized() and storage.device.needs_backup():
         notification = TR.homescreen__title_backup_needed
+        notification_level = 1
     elif storage.device.is_initialized() and not config.has_pin():
         notification = TR.homescreen__title_pin_not_set
+        notification_level = 1
     elif storage.device.get_experimental_features():
         notification = TR.homescreen__title_experimental_mode
+        notification_level = 2
 
     obj = Homescreen(
         label=label,
         notification=notification,
-        notification_is_error=notification_is_error,
-        hold_to_lock=config.has_pin(),
+        notification_level=notification_level,
+        lockable=config.has_pin(),
     )
     try:
         res = await obj.get_result()

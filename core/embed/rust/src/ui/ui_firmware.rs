@@ -308,9 +308,9 @@ pub trait FirmwareUI {
 
     fn show_homescreen(
         label: TString<'static>,
-        hold: bool,
         notification: Option<TString<'static>>,
         notification_level: u8,
+        lockable: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_device_menu(
