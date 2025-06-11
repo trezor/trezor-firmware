@@ -141,7 +141,7 @@ exit_host_control:
 
 void workflow_ifaces_init(secbool usb21_landing, protob_ios_t *ios) {
   size_t cnt = 1;
-  memset(ios, 0, sizeof(ios));
+  memset(ios, 0, sizeof(*ios));
 
   wire_iface_t *usb_iface = usb_iface_init(usb21_landing);
 
