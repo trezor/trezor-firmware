@@ -799,6 +799,7 @@ if FROZEN:
 source_files = SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_FIRMWARE + SOURCE_MICROPYTHON + SOURCE_MICROPYTHON_SPEED + SOURCE_HAL
 obj_program = []
 obj_program.extend(env.Object(source=SOURCE_MOD))
+# `-ffreestanding` is used here to decrease the resulting code size
 obj_program.extend(env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-auto-var-init=zero -ffreestanding'))
 if FEATURE_FLAGS["SECP256K1_ZKP"]:
     obj_program.extend(env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function -ffreestanding'))

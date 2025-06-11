@@ -215,7 +215,6 @@ env.Replace(
     '-nostdlib '
     '-std=gnu11 -Wall -Werror -Wpointer-arith -Wno-missing-braces -fno-common '
     '-fdata-sections -ffunction-sections '
-    '-ffreestanding '
     '-fstack-protector-all '
     + CCFLAGS_MOD,
     LINKFLAGS='',
