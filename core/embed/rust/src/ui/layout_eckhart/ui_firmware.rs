@@ -454,7 +454,7 @@ impl FirmwareUI for UIEckhart {
             screen = screen.with_hint(Hint::new_page_counter());
         }
         if let Some(warning_footer) = warning_footer {
-            screen = screen.with_hint(Hint::new_warning(warning_footer));
+            screen = screen.with_hint(Hint::new_warning_caution(warning_footer));
         }
         LayoutObj::new(screen)
     }

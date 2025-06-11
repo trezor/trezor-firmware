@@ -40,8 +40,10 @@ pub const ORANGE: Color = Color::rgb(0xFF, 0x63, 0x30);
 pub const ORANGE_DIMMED: Color = Color::rgb(0x9E, 0x57, 0x42);
 pub const ORANGE_DARK: Color = Color::rgb(0x18, 0x0C, 0x0A);
 pub const ORANGE_EXTRA_DARK: Color = Color::rgb(0x12, 0x07, 0x04);
+pub const ORANGE_SUPER_DARK: Color = Color::rgb(0x2A, 0x0A, 0x00); // Homescreen gradient
 
 pub const YELLOW: Color = Color::rgb(0xFF, 0xE4, 0x58);
+pub const YELLOW_DARK: Color = Color::rgb(0x21, 0x1E, 0x0C); // Homescreen gradient
 
 pub const BLUE: Color = Color::rgb(0x00, 0x46, 0xFF);
 
@@ -50,11 +52,11 @@ pub const FATAL_ERROR_COLOR: Color = Color::rgb(0xE7, 0x0E, 0x0E);
 pub const FATAL_ERROR_HIGHLIGHT_COLOR: Color = Color::rgb(0xFF, 0x41, 0x41);
 
 // Common constants
-pub const PADDING: i16 = 24; // px
+pub const PADDING: i16 = 24; // [px]
 pub const HEADER_HEIGHT: i16 = 96; // [px]
 pub const SIDE_INSETS: Insets = Insets::sides(PADDING);
 pub const ACTION_BAR_HEIGHT: i16 = 90; // [px]
-pub const PARAGRAPHS_SPACING: i16 = 12; // px
+pub const PARAGRAPHS_SPACING: i16 = 12; // [px]
 pub const TEXT_VERTICAL_SPACING: i16 = 24; // [px]
 
 // Tile pattern grid constants

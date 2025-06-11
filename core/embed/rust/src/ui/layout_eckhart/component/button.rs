@@ -528,7 +528,7 @@ impl Button {
             ButtonContent::HomeBar(text) => {
                 let baseline = self.area.center();
                 if let Some(text) = text {
-                    const OFFSET_Y: Offset = Offset::y(25);
+                    const OFFSET_Y: Offset = Offset::y(16);
                     text.map(|text| {
                         shape::Text::new(baseline, text, stylesheet.font)
                             .with_fg(stylesheet.text_color)
@@ -536,23 +536,14 @@ impl Button {
                             .with_alpha(alpha)
                             .render(target);
                     });
-                    shape::ToifImage::new(
-                        self.area.center() + OFFSET_Y,
-                        theme::ICON_DASH_HORIZONTAL.toif,
-                    )
-                    .with_fg(stylesheet.icon_color)
-                    .with_align(Alignment2D::CENTER)
-                    .render(target);
-                } else {
-                    // double dash icon in the middle
-                    const OFFSET_Y: Offset = Offset::y(5);
-                    shape::ToifImage::new(baseline - OFFSET_Y, theme::ICON_DASH_HORIZONTAL.toif)
-                        .with_fg(theme::GREY_LIGHT)
+                    shape::ToifImage::new(self.area.center() + OFFSET_Y, theme::ICON_MINUS.toif)
+                        .with_fg(stylesheet.icon_color)
                         .with_align(Alignment2D::CENTER)
                         .render(target);
-
-                    shape::ToifImage::new(baseline + OFFSET_Y, theme::ICON_DASH_HORIZONTAL.toif)
-                        .with_fg(theme::GREY_LIGHT)
+                } else {
+                    // Menu icon in the middle
+                    shape::ToifImage::new(baseline, theme::ICON_MENU.toif)
+                        .with_fg(stylesheet.icon_color)
                         .with_align(Alignment2D::CENTER)
                         .render(target);
                 }

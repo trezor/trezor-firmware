@@ -373,12 +373,12 @@ pub const fn menu_item_title_red() -> ButtonStyleSheet {
 }
 
 macro_rules! button_homebar_style {
-    ($text_color:expr, $icon_color:expr) => {
+    ($button_color:expr, $icon_color:expr) => {
         ButtonStyleSheet {
             normal: &ButtonStyle {
                 font: fonts::FONT_SATOSHI_MEDIUM_26,
-                text_color: $text_color,
-                button_color: BG,
+                text_color: GREY_LIGHT,
+                button_color: $button_color,
                 icon_color: $icon_color,
                 background_color: BG,
             },
@@ -389,6 +389,7 @@ macro_rules! button_homebar_style {
                 icon_color: GREY_LIGHT,
                 background_color: GREY_SUPER_DARK,
             },
+            // unused
             disabled: &ButtonStyle {
                 font: fonts::FONT_SATOSHI_MEDIUM_26,
                 text_color: GREY_LIGHT,
@@ -399,14 +400,14 @@ macro_rules! button_homebar_style {
         }
     };
 }
-pub const fn button_homebar_style(level: u8) -> ButtonStyleSheet {
+pub const fn button_homebar_style(notification_level: u8) -> ButtonStyleSheet {
     // NOTE: 0 is the highest severity.
-    match level {
-        4 => button_homebar_style!(GREY_LIGHT, GREY_LIGHT),
-        3 => button_homebar_style!(GREY_LIGHT, GREEN_LIME),
-        2 => button_homebar_style!(GREY_LIGHT, YELLOW),
-        1 => button_homebar_style!(GREY_LIGHT, YELLOW),
-        _ => button_homebar_style!(RED, RED),
+    match notification_level {
+        0 => button_homebar_style!(ORANGE_SUPER_DARK, RED),
+        1 => button_homebar_style!(YELLOW_DARK, GREY_LIGHT),
+        2 => button_homebar_style!(GREY_SUPER_DARK, GREY_LIGHT),
+        3 => button_homebar_style!(GREEN_DARK, GREY_LIGHT),
+        _ => button_homebar_style!(GREY_EXTRA_DARK, GREY_LIGHT),
     }
 }
 
