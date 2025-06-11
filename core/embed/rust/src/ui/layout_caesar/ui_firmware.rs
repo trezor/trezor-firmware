@@ -114,15 +114,15 @@ impl FirmwareUI for UICaesar {
                 // address label (for some reason it does not help to turn it off after
                 // rendering the chunks)
                 if chunkify {
-                    ops = ops.chunkify_text(None);
+                    ops.add_chunkify_text(None);
                 }
-                ops = ops.text(label, fonts::FONT_NORMAL).newline();
+                ops.add_text(label, fonts::FONT_NORMAL).add_newline();
             }
             if chunkify {
                 // Chunkifying the address into smaller pieces when requested
-                ops = ops.chunkify_text(Some((theme::MONO_CHUNKS, 2)));
+                ops.add_chunkify_text(Some((theme::MONO_CHUNKS, 2)));
             }
-            ops = ops.text(address, fonts::FONT_MONO);
+            ops.add_text(address, fonts::FONT_MONO);
             let formatted = FormattedText::new(ops).vertically_centered();
             Page::new(btn_layout, btn_actions, formatted).with_title(title)
         };
@@ -269,11 +269,11 @@ impl FirmwareUI for UICaesar {
                 )
             };
 
-            let ops = OpTextLayout::new(theme::TEXT_NORMAL)
-                .newline()
-                .text(app_name, fonts::FONT_NORMAL)
-                .newline()
-                .text(account, fonts::FONT_BOLD);
+            let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
+            ops.add_newline()
+                .add_text(app_name, fonts::FONT_NORMAL)
+                .add_newline()
+                .add_text(account, fonts::FONT_BOLD);
             let formatted = FormattedText::new(ops);
 
             Page::new(btn_layout, btn_actions, formatted)
@@ -474,12 +474,12 @@ impl FirmwareUI for UICaesar {
                 TR::reset__button_create.into(),
             )
         };
-        let ops = OpTextLayout::new(theme::TEXT_NORMAL)
-            .text(TR::reset__by_continuing, fonts::FONT_NORMAL)
-            .next_page()
-            .text(TR::reset__more_info_at, fonts::FONT_NORMAL)
-            .newline()
-            .text(TR::reset__tos_link, fonts::FONT_BOLD);
+        let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
+        ops.add_text(TR::reset__by_continuing, fonts::FONT_NORMAL)
+            .add_next_page()
+            .add_text(TR::reset__more_info_at, fonts::FONT_NORMAL)
+            .add_newline()
+            .add_text(TR::reset__tos_link, fonts::FONT_BOLD);
         let formatted = FormattedText::new(ops).vertically_centered();
 
         content_in_button_page(title, formatted, button, Some("".into()), false)
@@ -556,29 +556,27 @@ impl FirmwareUI for UICaesar {
 
                     let mut ops = OpTextLayout::new(theme::TEXT_MONO);
                     if let Some(title) = title {
-                        ops = ops.text(title, fonts::FONT_BOLD_UPPER).newline();
+                        ops.add_text(title, fonts::FONT_BOLD_UPPER).add_newline();
                     }
 
                     let mut has_amount = false;
                     if let Some(amount) = amount {
                         if let Some(amount_label) = amount_label {
                             has_amount = true;
-                            ops = ops
-                                .text(amount_label, fonts::FONT_BOLD)
-                                .newline()
-                                .text(amount, fonts::FONT_MONO);
+                            ops.add_text(amount_label, fonts::FONT_BOLD)
+                                .add_newline()
+                                .add_text(amount, fonts::FONT_MONO);
                         }
                     }
 
                     if !fee_label.is_empty() || !fee.is_empty() {
                         if has_amount {
-                            ops = ops.newline();
+                            ops.add_newline();
                         }
-                        ops = ops
-                            .newline()
-                            .text(fee_label, fonts::FONT_BOLD)
-                            .newline()
-                            .text(fee, fonts::FONT_MONO);
+                        ops.add_newline()
+                            .add_text(fee_label, fonts::FONT_BOLD)
+                            .add_newline()
+                            .add_text(fee, fonts::FONT_MONO);
                     }
 
                     let formatted = FormattedText::new(ops);
@@ -595,12 +593,11 @@ impl FirmwareUI for UICaesar {
                         let [key, value]: [Obj; 2] = unwrap!(util::iter_into_array(item));
                         if !ops.is_empty() {
                             // Each key-value pair is on its own page
-                            ops = ops.next_page();
+                            ops.add_next_page();
                         }
-                        ops = ops
-                            .text(unwrap!(TString::try_from(key)), fonts::FONT_BOLD)
-                            .newline()
-                            .text(unwrap!(TString::try_from(value)), fonts::FONT_MONO);
+                        ops.add_text(unwrap!(TString::try_from(key)), fonts::FONT_BOLD)
+                            .add_newline()
+                            .add_text(unwrap!(TString::try_from(value)), fonts::FONT_MONO);
                     }
 
                     let formatted = FormattedText::new(ops).vertically_centered();
@@ -785,7 +782,8 @@ impl FirmwareUI for UICaesar {
                 )
             };
 
-            let ops = OpTextLayout::new(theme::TEXT_NORMAL).text(text, fonts::FONT_NORMAL);
+            let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
+            ops.add_text(text, fonts::FONT_NORMAL);
             let formatted = FormattedText::new(ops).vertically_centered();
 
             Page::new(btn_layout, btn_actions, formatted)
@@ -801,10 +799,10 @@ impl FirmwareUI for UICaesar {
             0 => {
                 let btn_layout = ButtonLayout::text_none_arrow_wide(TR::buttons__skip.into());
                 let btn_actions = ButtonActions::cancel_none_next();
-                let ops = OpTextLayout::new(theme::TEXT_NORMAL)
-                    .text(TR::backup__new_wallet_created, fonts::FONT_NORMAL)
-                    .newline()
-                    .text(TR::backup__it_should_be_backed_up_now, fonts::FONT_NORMAL);
+                let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
+                ops.add_text(TR::backup__new_wallet_created, fonts::FONT_NORMAL)
+                    .add_newline()
+                    .add_text(TR::backup__it_should_be_backed_up_now, fonts::FONT_NORMAL);
                 let formatted = FormattedText::new(ops).vertically_centered();
                 Page::new(btn_layout, btn_actions, formatted)
                     .with_title(TR::words__title_success.into())
@@ -812,8 +810,8 @@ impl FirmwareUI for UICaesar {
             1 => {
                 let btn_layout = ButtonLayout::up_arrow_none_text(TR::buttons__back_up.into());
                 let btn_actions = ButtonActions::prev_none_confirm();
-                let ops = OpTextLayout::new(theme::TEXT_NORMAL)
-                    .text(TR::backup__recover_anytime, fonts::FONT_NORMAL);
+                let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
+                ops.add_text(TR::backup__recover_anytime, fonts::FONT_NORMAL);
                 let formatted = FormattedText::new(ops).vertically_centered();
                 Page::new(btn_layout, btn_actions, formatted)
                     .with_title(TR::backup__title_backup_wallet.into())
@@ -1013,15 +1011,15 @@ impl FirmwareUI for UICaesar {
             let btn_layout = ButtonLayout::cancel_none_text(TR::buttons__continue.into());
             let btn_actions = ButtonActions::cancel_none_confirm();
             let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
-            ops = ops.alignment(geometry::Alignment::Center);
+            ops.add_alignment(geometry::Alignment::Center);
             if !title.is_empty() {
-                ops = ops.text(title, fonts::FONT_BOLD_UPPER);
+                ops.add_text(title, fonts::FONT_BOLD_UPPER);
                 if !description.is_empty() {
-                    ops = ops.newline();
+                    ops.add_newline();
                 }
             }
             if !description.is_empty() {
-                ops = ops.text(description, fonts::FONT_NORMAL);
+                ops.add_text(description, fonts::FONT_NORMAL);
             }
             let formatted = FormattedText::new(ops).vertically_centered();
             Page::new(btn_layout, btn_actions, formatted)
@@ -1149,13 +1147,13 @@ impl FirmwareUI for UICaesar {
 
             let btn_layout = ButtonLayout::arrow_none_text(TR::buttons__quit.into());
             let btn_actions = ButtonActions::cancel_none_confirm();
-            let ops = OpTextLayout::new(theme::TEXT_NORMAL)
-                .text(title, fonts::FONT_BOLD_UPPER)
-                .newline()
-                .newline_half()
-                .text(TR::addr_mismatch__contact_support_at, fonts::FONT_NORMAL)
-                .newline()
-                .text(TR::addr_mismatch__support_url, fonts::FONT_BOLD);
+            let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
+            ops.add_text(title, fonts::FONT_BOLD_UPPER)
+                .add_newline()
+                .add_newline_half()
+                .add_text(TR::addr_mismatch__contact_support_at, fonts::FONT_NORMAL)
+                .add_newline()
+                .add_text(TR::addr_mismatch__support_url, fonts::FONT_BOLD);
             let formatted = FormattedText::new(ops);
             Page::new(btn_layout, btn_actions, formatted)
         };
@@ -1271,15 +1269,15 @@ impl FirmwareUI for UICaesar {
             let btn_layout = ButtonLayout::none_armed_none(button);
             let btn_actions = ButtonActions::none_confirm_none();
             let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
-            ops = ops.alignment(geometry::Alignment::Center);
+            ops.add_alignment(geometry::Alignment::Center);
             if !value.is_empty() {
-                ops = ops.text(value, fonts::FONT_BOLD_UPPER);
+                ops.add_text(value, fonts::FONT_BOLD_UPPER);
                 if !description.is_empty() {
-                    ops = ops.newline();
+                    ops.add_newline();
                 }
             }
             if !description.is_empty() {
-                ops = ops.text(description, fonts::FONT_NORMAL);
+                ops.add_text(description, fonts::FONT_NORMAL);
             }
             let formatted = FormattedText::new(ops).vertically_centered();
             Page::new(btn_layout, btn_actions, formatted)
@@ -1412,7 +1410,8 @@ fn tutorial_screen(
     btn_layout: ButtonLayout,
     btn_actions: ButtonActions,
 ) -> Page {
-    let ops = OpTextLayout::new(theme::TEXT_NORMAL).text(text, fonts::FONT_NORMAL);
+    let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
+    ops.add_text(text, fonts::FONT_NORMAL);
     let formatted = FormattedText::new(ops).vertically_centered();
     Page::new(btn_layout, btn_actions, formatted).with_title(title)
 }

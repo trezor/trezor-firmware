@@ -61,9 +61,9 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
         )
     };
 
-    let op = OpTextLayout::new(theme::TEXT_REGULAR)
-        .text(TR::reset__by_continuing, fonts::FONT_SATOSHI_REGULAR_38)
-        .alignment(Alignment::Start);
+    let mut op = OpTextLayout::new(theme::TEXT_REGULAR);
+    op.add_text(TR::reset__by_continuing, fonts::FONT_SATOSHI_REGULAR_38)
+        .add_alignment(Alignment::Start);
 
     let content_intro = TextScreen::new(FormattedText::new(op))
         .with_header(Header::new(title).with_menu_button())
