@@ -31,6 +31,7 @@ FEATURES_WANTED = [
     "secure_domain",
     "tropic",
     "usb",
+    "smp",
     ]
 
 CCFLAGS_MOD = ''
@@ -146,6 +147,7 @@ env = Environment(
 )
 
 FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
+
 
 SOURCE_PRODTEST = [
     'embed/projects/prodtest/header.S',
