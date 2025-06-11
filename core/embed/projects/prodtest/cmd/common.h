@@ -26,4 +26,4 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
                       const uint8_t* sig, size_t sig_size,
                       uint8_t challenge[16]);
 
-#endif  // __CERTIFICATES_H
+#endif  // __COMMON_H
