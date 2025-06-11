@@ -193,60 +193,60 @@ impl<'a> OpTextLayout<'a> {
 
 // Op-adding operations
 impl<'a> OpTextLayout<'a> {
-    pub fn with_new_item(mut self, item: Op<'a>) -> Self {
+    pub fn add_new_item(&mut self, item: Op<'a>) -> &mut Self {
         self.ops
             .push(item)
             .assert_if_debugging_ui("Could not push to self.ops - increase MAX_OPS.");
         self
     }
 
-    pub fn text(self, text: impl Into<TString<'a>>, font: Font) -> Self {
-        self.with_new_item(Op::Text(text.into(), font, false))
+    pub fn add_text(&mut self, text: impl Into<TString<'a>>, font: Font) -> &mut Self {
+        self.add_new_item(Op::Text(text.into(), font, false))
     }
 
-    pub fn color(self, color: Color) -> Self {
-        self.with_new_item(Op::Color(color))
+    pub fn add_color(&mut self, color: Color) -> &mut Self {
+        self.add_new_item(Op::Color(color))
     }
 
-    pub fn newline(self) -> Self {
+    pub fn add_newline(&mut self) -> &mut Self {
         let font = self.layout.style.text_font;
-        self.text("\n", font)
+        self.add_text("\n", font)
     }
 
-    pub fn newline_half(self) -> Self {
+    pub fn add_newline_half(&mut self) -> &mut Self {
         let font = self.layout.style.text_font;
-        self.text("\r", font)
+        self.add_text("\r", font)
     }
 
-    pub fn next_page(self) -> Self {
-        self.with_new_item(Op::NextPage)
+    pub fn add_next_page(&mut self) -> &mut Self {
+        self.add_new_item(Op::NextPage)
     }
 
-    pub fn offset(self, offset: Offset) -> Self {
-        self.with_new_item(Op::CursorOffset(offset))
+    pub fn add_offset(&mut self, offset: Offset) -> &mut Self {
+        self.add_new_item(Op::CursorOffset(offset))
     }
 
-    pub fn alignment(self, alignment: Alignment) -> Self {
-        self.with_new_item(Op::Alignment(alignment))
+    pub fn add_alignment(&mut self, alignment: Alignment) -> &mut Self {
+        self.add_new_item(Op::Alignment(alignment))
     }
 
-    pub fn line_breaking(self, line_breaking: LineBreaking) -> Self {
-        self.with_new_item(Op::LineBreaking(line_breaking))
+    pub fn add_line_breaking(&mut self, line_breaking: LineBreaking) -> &mut Self {
+        self.add_new_item(Op::LineBreaking(line_breaking))
     }
 
-    pub fn chunks(self, chunks: Option<Chunks>) -> Self {
-        self.with_new_item(Op::Chunkify(chunks))
+    pub fn add_chunks(&mut self, chunks: Option<Chunks>) -> &mut Self {
+        self.add_new_item(Op::Chunkify(chunks))
     }
 
-    pub fn line_spacing(self, spacing: i16) -> Self {
-        self.with_new_item(Op::LineSpacing(spacing))
+    pub fn add_line_spacing(&mut self, spacing: i16) -> &mut Self {
+        self.add_new_item(Op::LineSpacing(spacing))
     }
 
-    pub fn chunkify_text(self, chunks: Option<(Chunks, i16)>) -> Self {
-        if let Some(chunks) = chunks {
-            self.chunks(Some(chunks.0)).line_spacing(chunks.1)
+    pub fn add_chunkify_text(&mut self, chunks: Option<(Chunks, i16)>) -> &mut Self {
+        if let Some((c, spacing)) = chunks {
+            self.add_chunks(Some(c)).add_line_spacing(spacing)
         } else {
-            self.chunks(None).line_spacing(0)
+            self.add_chunks(None).add_line_spacing(0)
         }
     }
 }

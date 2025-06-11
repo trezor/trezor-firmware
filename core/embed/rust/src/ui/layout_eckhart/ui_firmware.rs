@@ -151,16 +151,16 @@ impl FirmwareUI for UIEckhart {
 
         for item in IterBuf::new().try_iterate(items)? {
             if item.is_str() {
-                ops = ops.text(TString::try_from(item)?, font)
+                ops.add_text(TString::try_from(item)?, font);
             } else {
                 let [emphasis, text]: [Obj; 2] = util::iter_into_array(item)?;
                 let text: TString = text.try_into()?;
                 if emphasis.try_into()? {
-                    ops = ops.color(theme::WHITE);
-                    ops = ops.text(text, font);
-                    ops = ops.color(text_style.text_color);
+                    ops.add_color(theme::WHITE)
+                        .add_text(text, font)
+                        .add_color(text_style.text_color);
                 } else {
-                    ops = ops.text(text, font);
+                    ops.add_text(text, font);
                 }
             }
         }
@@ -1039,11 +1039,11 @@ impl FirmwareUI for UIEckhart {
         let font = fonts::FONT_SATOSHI_REGULAR_38;
         let text_style = theme::firmware::TEXT_REGULAR;
         let mut ops = OpTextLayout::new(text_style);
-        ops = ops.color(theme::GREEN);
-        ops = ops.text(device_name, font);
-        ops = ops.color(text_style.text_color);
         let text: TString = " is your Trezor's name.".into();
-        ops = ops.text(text, font);
+        ops.add_color(theme::GREEN)
+            .add_text(device_name, font)
+            .add_color(text_style.text_color)
+            .add_text(text, font);
         let screen = TextScreen::new(FormattedText::new(ops))
             .with_header(Header::new("Pair with new device".into()).with_close_button())
             .with_action_bar(ActionBar::new_text_only("Continue on host".into()));
@@ -1060,10 +1060,12 @@ impl FirmwareUI for UIEckhart {
         button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut ops = OpTextLayout::new(theme::firmware::TEXT_REGULAR);
-        ops = ops.text(description, fonts::FONT_SATOSHI_REGULAR_38);
-        ops = ops.newline().newline().newline();
-        ops = ops.alignment(Alignment::Center);
-        ops = ops.text(code, fonts::FONT_SATOSHI_EXTRALIGHT_72);
+        ops.add_text(description, fonts::FONT_SATOSHI_REGULAR_38)
+            .add_newline()
+            .add_newline()
+            .add_newline()
+            .add_alignment(Alignment::Center)
+            .add_text(code, fonts::FONT_SATOSHI_EXTRALIGHT_72);
         let mut screen = TextScreen::new(FormattedText::new(ops)).with_header(Header::new(title));
         if button {
             screen = screen.with_action_bar(ActionBar::new_cancel_confirm());
@@ -1146,12 +1148,11 @@ impl FirmwareUI for UIEckhart {
         let button: TString = TR::buttons__quit.into();
 
         let text_style = theme::TEXT_REGULAR;
-        let ops = OpTextLayout::new(text_style)
-            .text(description, text_style.text_font)
-            .text(url, theme::TEXT_MONO_MEDIUM.text_font);
-        let text = FormattedText::new(ops);
+        let mut ops = OpTextLayout::new(text_style);
+        ops.add_text(description, text_style.text_font)
+            .add_text(url, theme::TEXT_MONO_MEDIUM.text_font);
 
-        let screen = TextScreen::new(text)
+        let screen = TextScreen::new(FormattedText::new(ops))
             .with_header(Header::new(title))
             .with_action_bar(ActionBar::new_double(
                 Button::with_icon(theme::ICON_CROSS),
