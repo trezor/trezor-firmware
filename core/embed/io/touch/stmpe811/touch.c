@@ -49,7 +49,7 @@ secbool touch_init(void) {
     return sectrue;
   }
 
-  memset(drv, 0, sizeof(drv));
+  memset(drv, 0, sizeof(*drv));
 
   drv->i2c_bus = i2c_bus_open(TOUCH_I2C_INSTANCE);
 
