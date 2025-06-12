@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 import trezorui_api
 from trezor import ui, workflow
@@ -12,7 +12,10 @@ if __debug__:
 if TYPE_CHECKING:
     from typing import Any, Awaitable, Callable, TypeVar
 
-    PropertyType = tuple[str | None, str | bytes | None]
+    PropertyType = Union[
+        tuple[str | None, str | bytes | None],  # 2-tuple
+        tuple[str | None, str | bytes | None, bool | None],  # 3-tuple with bool
+    ]
     ExceptionType = BaseException | type[BaseException]
 
     InfoFunc = Callable[[], Awaitable[None]]

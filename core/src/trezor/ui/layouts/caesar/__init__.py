@@ -762,17 +762,14 @@ def confirm_properties(
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> Awaitable[None]:
-    from ubinascii import hexlify
-
-    def handle_bytes(prop: PropertyType) -> tuple[str | None, str | None, bool]:
-        key, value = prop
-        if isinstance(value, (bytes, bytearray, memoryview)):
-            return (key, hexlify(value).decode(), True)
-        else:
-            # When there is not space in the text, taking it as data
-            # to not include hyphens
-            is_data = value and " " not in value
-            return (key, value, bool(is_data))
+    items = [
+        (
+            prop[0],
+            prop[1],
+            prop[2] if (len(prop) == 3 and prop[2] is not None) else True,
+        )
+        for prop in props
+    ]
 
     if subtitle:
         title += ": " + subtitle
@@ -780,7 +777,7 @@ def confirm_properties(
     return raise_if_not_confirmed(
         trezorui_api.confirm_properties(
             title=title,
-            items=map(handle_bytes, props),  # type: ignore [cannot be assigned to parameter "items"]
+            items=items,
             hold=hold,
         ),
         br_name,
