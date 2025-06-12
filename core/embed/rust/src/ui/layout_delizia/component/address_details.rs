@@ -2,7 +2,7 @@ use heapless::Vec;
 
 use crate::{
     error::Error,
-    micropython::{buffer::StrBuffer, gc::GcBox},
+    micropython::buffer::StrBuffer,
     strutil::TString,
     translations::TR,
     ui::{
@@ -36,7 +36,7 @@ impl AddressDetails {
         details_title: TString<'static>,
         account: Option<TString<'static>>,
         path: Option<TString<'static>>,
-    ) -> Result<GcBox<Self>, Error> {
+    ) -> Self {
         let mut para = ParagraphVecShort::new();
         if let Some(a) = account {
             para.add(Paragraph::new::<TString>(
@@ -72,7 +72,7 @@ impl AddressDetails {
             xpub_page_count: Vec::new(),
             current_page: 0,
         };
-        GcBox::new(result)
+        result
     }
 
     pub fn add_xpub(&mut self, title: StrBuffer, xpub: StrBuffer) -> Result<(), Error> {
@@ -127,7 +127,7 @@ impl PaginateFull for AddressDetails {
     }
 }
 
-impl Component for GcBox<AddressDetails> {
+impl Component for AddressDetails {
     type Msg = ();
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -175,7 +175,7 @@ impl Component for GcBox<AddressDetails> {
     }
 }
 
-impl Swipable for GcBox<AddressDetails> {
+impl Swipable for AddressDetails {
     fn get_swipe_config(&self) -> SwipeConfig {
         match self.current_page {
             0 => self.details.get_swipe_config(),
@@ -189,7 +189,7 @@ impl Swipable for GcBox<AddressDetails> {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for GcBox<AddressDetails> {
+impl crate::trace::Trace for AddressDetails {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("AddressDetails");
         match self.current_page {
