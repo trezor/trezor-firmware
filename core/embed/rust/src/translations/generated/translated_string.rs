@@ -1446,6 +1446,8 @@ pub enum TranslatedString {
     instructions__shares_start_with_x_template = 1041,  // "Start with Share #{0}"
     reset__check_share_backup_template = 1042,  // "Let's do a quick check of Share #{0}."
     reset__select_word_from_share_template = 1043,  // "Select word #{0} from\nShare #{1}"
+    #[cfg(feature = "universal_fw")]
+    ethereum__contract_address = 1044,  // "Provider contract address"
 }
 
 impl TranslatedString {
@@ -3155,6 +3157,8 @@ impl TranslatedString {
             (Self::instructions__shares_start_with_x_template, "Start with Share #{0}"),
             (Self::reset__check_share_backup_template, "Let's do a quick check of Share #{0}."),
             (Self::reset__select_word_from_share_template, "Select word #{0} from\nShare #{1}"),
+            #[cfg(feature = "universal_fw")]
+            (Self::ethereum__contract_address, "Provider contract address"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3626,6 +3630,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__approve_unlimited_template, Self::ethereum__approve_unlimited_template),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__contract, Self::ethereum__contract),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__contract_address, Self::ethereum__contract_address),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__data_size_template, Self::ethereum__data_size_template),
         #[cfg(feature = "universal_fw")]

@@ -692,6 +692,7 @@ def confirm_properties(
     subtitle: str | None = None,
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
+    verb: str | None = None,
 ) -> Awaitable[None]:
     # Monospace flag for values that are bytes.
     items = [(prop[0], prop[1], isinstance(prop[1], bytes)) for prop in props]
@@ -781,7 +782,9 @@ def _confirm_summary(
 
 if not utils.BITCOIN_ONLY:
 
-    def confirm_ethereum_unknown_contract_warning() -> Awaitable[None]:
+    def confirm_ethereum_unknown_contract_warning(
+        _title: str | None,
+    ) -> Awaitable[None]:
         return show_danger(
             "unknown_contract_warning",
             content=f"{TR.ethereum__unknown_contract_address}. {TR.words__know_what_your_doing}",
@@ -835,7 +838,8 @@ if not utils.BITCOIN_ONLY:
         )
 
     async def confirm_ethereum_approve(
-        recipient: str,
+        recipient_addr: str,
+        recipient_str: str | None,
         is_unknown_token: bool,
         token_address: str,
         token_symbol: str,
@@ -850,6 +854,8 @@ if not utils.BITCOIN_ONLY:
         fee_info_items: Iterable[tuple[str, str]],
         chunkify: bool = False,
     ) -> None:
+        br_name = "confirm_ethereum_approve"
+        br_code = ButtonRequestType.Other
         await confirm_value(
             (
                 TR.ethereum__approve_intro_title_revoke
@@ -863,20 +869,38 @@ if not utils.BITCOIN_ONLY:
             ),
             "",
             is_data=False,
-            br_name="confirm_ethereum_approve",
+            br_name=br_name,
         )
 
-        await confirm_value(
-            TR.ethereum__approve_revoke_from if is_revoke else TR.ethereum__approve_to,
-            recipient,
-            "",
-            chunkify=chunkify,
-            br_name="confirm_ethereum_approve",
+        title = (
+            TR.ethereum__approve_revoke_from if is_revoke else TR.ethereum__approve_to
         )
+
+        if recipient_str is None:
+            await confirm_value(
+                title,
+                recipient_addr,
+                "",
+                chunkify=chunkify,
+                br_name=br_name,
+            )
+        else:
+            main_layout = trezorui_api.confirm_with_info(
+                title=title,
+                items=[(recipient_str, True)],
+                verb="",
+                verb_info=TR.ethereum__contract_address,
+            )
+            info_layout = trezorui_api.show_info_with_cancel(
+                title=TR.ethereum__contract_address,
+                items=[("", recipient_addr)],
+                chunkify=chunkify,
+            )
+            await with_info(main_layout, info_layout, br_name, br_code)
 
         if total_amount is None:
             await show_warning(
-                "confirm_ethereum_approve",
+                br_name,
                 TR.ethereum__approve_unlimited_template.format(token_symbol),
             )
 
@@ -887,7 +911,7 @@ if not utils.BITCOIN_ONLY:
                 "",
                 subtitle=TR.ethereum__token_contract,
                 chunkify=chunkify,
-                br_name="confirm_ethereum_approve",
+                br_name=br_name,
             )
 
         if is_unknown_network:
@@ -896,7 +920,7 @@ if not utils.BITCOIN_ONLY:
                 TR.ethereum__approve_chain_id,
                 chain_id,
                 "",
-                br_name="confirm_ethereum_approve",
+                br_name=br_name,
             )
 
         properties = (
@@ -912,7 +936,7 @@ if not utils.BITCOIN_ONLY:
         if not is_unknown_network:
             properties.append((TR.words__chain, network_name))
         await confirm_properties(
-            "confirm_ethereum_approve",
+            br_name,
             TR.ethereum__approve_revoke if is_revoke else TR.ethereum__approve,
             properties,
             None,
