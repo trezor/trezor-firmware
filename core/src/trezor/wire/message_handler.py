@@ -60,8 +60,6 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
     the type of message is supposed to be optimized and not disrupt the running state,
     this function will return `True`.
     """
-    from . import _EARLY_RESPONSE
-
     if __debug__:
         try:
             msg_type = protobuf.type_for_wire(msg.type).MESSAGE_NAME
@@ -73,6 +71,8 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
             msg_type,
             iface=ctx.iface,
         )
+
+    res_msg: protobuf.MessageType | None = None
 
     # We need to find a handler for this message type.
     try:
@@ -156,7 +156,7 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
                 log.exception(__name__, exc, iface=ctx.iface)
         res_msg = failure(exc)
 
-    if res_msg is not _EARLY_RESPONSE:
+    if res_msg is not None:
         # perform the write outside the big try-except block, so that usb write
         # problem bubbles up
         await ctx.write(res_msg)
