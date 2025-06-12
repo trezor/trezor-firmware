@@ -360,7 +360,7 @@ impl FirmwareUI for UIEckhart {
         items: Obj,
         hold: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        // make sure the the hyphens are not used for line breaking
+        // make sure the hyphens are not used for line breaking
         const MONO_STYLE: TextStyle =
             theme::TEXT_MONO_MEDIUM_LIGHT.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
         let paragraphs = PropsList::new(
