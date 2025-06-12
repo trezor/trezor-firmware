@@ -140,6 +140,15 @@ class Translation:
         re_safe = re.escape(tr)
         return re.compile(self.FORMAT_STR_RE.sub(r".*?", re_safe))
 
+    def format(self, key: str, *args, **kwargs) -> str:
+        tr = self.translate(key)
+        try:
+            return tr.format(*args, **kwargs)
+        except (KeyError, IndexError) as e:
+            raise ValueError(
+                f"Failed to format translation '{key}' with args={args}, kwargs={kwargs}: {e}"
+            ) from e
+
 
 TRANSLATIONS = {lang: Translation(lang) for lang in LANGUAGES}
 _CURRENT_TRANSLATION.TR = TRANSLATIONS["en"]
@@ -152,6 +161,10 @@ def translate(key: str, _stacklevel: int = 0) -> str:
 
 def regexp(key: str) -> re.Pattern:
     return _CURRENT_TRANSLATION.TR.as_regexp(key, _stacklevel=1)
+
+
+def format(key: str, *args, **kwargs) -> str:
+    return _CURRENT_TRANSLATION.TR.format(key, *args, **kwargs)
 
 
 def __getattr__(key: str) -> str:
