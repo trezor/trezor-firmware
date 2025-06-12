@@ -16,13 +16,14 @@ use crate::{
                 },
                 TextStyle,
             },
-            ComponentExt as _, Empty, FormattedText, LineBreaking, Timeout,
+            ComponentExt as _, Empty, FormattedText, Timeout,
         },
         geometry::{Alignment, LinearPlacement, Offset},
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
             util::{ConfirmValueParams, PropsList, RecoveryType, StrOrBytes},
         },
+        layout_eckhart::theme::TEXT_MONO_MEDIUM_LIGHT_DATA,
         ui_firmware::{
             FirmwareUI, ERROR_NOT_IMPLEMENTED, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
             MAX_WORD_QUIZ_ITEMS,
@@ -360,14 +361,11 @@ impl FirmwareUI for UIEckhart {
         items: Obj,
         hold: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        // make sure the hyphens are not used for line breaking
-        const MONO_STYLE: TextStyle =
-            theme::TEXT_MONO_MEDIUM_LIGHT.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
         let paragraphs = PropsList::new(
             items,
             &theme::TEXT_SMALL_LIGHT,
             &theme::TEXT_MONO_MEDIUM_LIGHT,
-            &MONO_STYLE,
+            &TEXT_MONO_MEDIUM_LIGHT_DATA,
         )?;
 
         let flow = flow::new_confirm_with_menu(
