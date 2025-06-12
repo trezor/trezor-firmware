@@ -386,10 +386,12 @@ Q(workflow_handlers)
 Q(writers)
 
 #if USE_THP
+Q(ThpPairingMethod)
 Q(apps.thp)
 Q(apps.thp.credential_manager)
 Q(credential_manager)
 Q(thp)
+Q(trezor.enums.ThpPairingMethod)
 #endif
 
 #if !BITCOIN_ONLY
