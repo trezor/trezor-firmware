@@ -3,7 +3,7 @@ from common import *  # isort:skip
 from mock_wire_interface import MockHID
 from trezor import config, io, protobuf
 from trezor.crypto.curve import curve25519
-from trezor.enums import ThpMessageType
+from trezor.enums import MessageType
 from trezor.wire.errors import UnexpectedMessage
 from trezor.wire.protocol_common import Message
 
@@ -329,7 +329,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         msg_code_entry = ThpCodeEntryChallenge(challenge=b"\x12\x34")
         buffer: bytearray = bytearray(protobuf.encoded_length(msg_code_entry))
         protobuf.encode(buffer, msg_code_entry)
-        code_entry_challenge = Message(ThpMessageType.ThpCodeEntryChallenge, buffer)
+        code_entry_challenge = Message(MessageType.ThpCodeEntryChallenge, buffer)
         self.interface.mock_read(code_entry_challenge, gen)
 
         # tag_qrc = b"\x55\xdf\x6c\xba\x0b\xe9\x5e\xd1\x4b\x78\x61\xec\xfa\x07\x9b\x5d\x37\x60\xd8\x79\x9c\xd7\x89\xb4\x22\xc1\x6f\x39\xde\x8f\x3b\xc3"
@@ -348,7 +348,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         buffer: bytearray = bytearray(protobuf.encoded_length(msg))
 
         protobuf.encode(buffer, msg)
-        user_message = Message(ThpMessageType.ThpCodeEntryCpaceHost, buffer)
+        user_message = Message(MessageType.ThpCodeEntryCpaceHost, buffer)
         self.interface.mock_read(user_message, gen)
 
         tag_ent = b"\xd0\x15\xd6\x72\x7c\xa6\x9b\x2a\x07\xfa\x30\xee\x03\xf0\x2d\x04\xdc\x96\x06\x77\x0c\xbd\xb4\xaa\x77\xc7\x68\x6f\xae\xa9\xdd\x81"
@@ -357,14 +357,14 @@ class TestTrezorHostProtocol(unittest.TestCase):
         buffer: bytearray = bytearray(protobuf.encoded_length(msg))
 
         protobuf.encode(buffer, msg)
-        user_message = Message(ThpMessageType.ThpCodeEntryTag, buffer)
+        user_message = Message(MessageType.ThpCodeEntryTag, buffer)
         self.interface.mock_read(user_message, gen)
 
         host_static_pubkey = b"\x00\x11\x22\x33\x44\x55\x66\x77\x00\x11\x22\x33\x44\x55\x66\x77\x00\x11\x22\x33\x44\x55\x66\x77\x00\x11\x22\x33\x44\x55\x66\x77\x00\x11\x22\x33\x44\x55\x66\x77\x00\x11\x22\x33\x44\x55\x66\x77"
         msg = ThpCredentialRequest(host_static_pubkey=host_static_pubkey)
         buffer: bytearray = bytearray(protobuf.encoded_length(msg))
         protobuf.encode(buffer, msg)
-        credential_request = Message(ThpMessageType.ThpCredentialRequest, buffer)
+        credential_request = Message(MessageType.ThpCredentialRequest, buffer)
         self.interface.mock_read(credential_request, gen)
 
         msg = ThpEndRequest()

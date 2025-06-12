@@ -4,7 +4,7 @@ from ubinascii import hexlify
 from trezor import protobuf
 from trezor.crypto import random
 from trezor.crypto.hashlib import sha256
-from trezor.enums import ThpMessageType, ThpPairingMethod
+from trezor.enums import MessageType, ThpPairingMethod
 from trezor.messages import (
     Cancel,
     ThpCodeEntryChallenge,
@@ -389,8 +389,8 @@ async def _handle_secret_reveal(
     ctx.channel_ctx.set_channel_state(ChannelState.TC1)
     return await ctx.call_any(
         msg,
-        ThpMessageType.ThpCredentialRequest,
-        ThpMessageType.ThpEndRequest,
+        MessageType.ThpCredentialRequest,
+        MessageType.ThpEndRequest,
     )
 
 
@@ -440,8 +440,8 @@ async def _handle_credential_request(
         ThpCredentialResponse(
             trezor_static_pubkey=trezor_static_pubkey, credential=credential
         ),
-        ThpMessageType.ThpCredentialRequest,
-        ThpMessageType.ThpEndRequest,
+        MessageType.ThpCredentialRequest,
+        MessageType.ThpEndRequest,
     )
 
 
@@ -504,11 +504,11 @@ def _get_possible_pairing_methods(ctx: PairingContext) -> Tuple[int, ...]:
 
 def _get_message_type_for_method(method: int) -> int:
     if method is ThpPairingMethod.CodeEntry:
-        return ThpMessageType.ThpCodeEntryCpaceHostTag
+        return MessageType.ThpCodeEntryCpaceHostTag
     if method is ThpPairingMethod.NFC:
-        return ThpMessageType.ThpNfcTagHost
+        return MessageType.ThpNfcTagHost
     if method is ThpPairingMethod.QrCode:
-        return ThpMessageType.ThpQrCodeTag
+        return MessageType.ThpQrCodeTag
     raise ValueError("Unexpected pairing method - no message type available")
 
 

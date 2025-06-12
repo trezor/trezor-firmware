@@ -104,9 +104,7 @@ class ProtobufMapping:
         mapping = cls()
 
         message_types = getattr(module, "MessageType")
-        thp_message_types = getattr(module, "ThpMessageType")
-
-        for entry in (*message_types, *thp_message_types):
+        for entry in message_types:
             msg_class = getattr(module, entry.name, None)
             if msg_class is None:
                 raise ValueError(

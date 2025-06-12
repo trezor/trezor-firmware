@@ -394,27 +394,6 @@ class ThpPairingMethod(IntEnum):
     NFC = 4
 
 
-class ThpMessageType(IntEnum):
-    ThpCreateNewSession = 1000
-    ThpPairingRequest = 1006
-    ThpPairingRequestApproved = 1007
-    ThpSelectMethod = 1008
-    ThpPairingPreparationsFinished = 1009
-    ThpCredentialRequest = 1010
-    ThpCredentialResponse = 1011
-    ThpEndRequest = 1012
-    ThpEndResponse = 1013
-    ThpCodeEntryCommitment = 1016
-    ThpCodeEntryChallenge = 1017
-    ThpCodeEntryCpaceTrezor = 1018
-    ThpCodeEntryCpaceHostTag = 1019
-    ThpCodeEntrySecret = 1020
-    ThpQrCodeTag = 1024
-    ThpQrCodeSecret = 1025
-    ThpNfcTagHost = 1032
-    ThpNfcTagTrezor = 1033
-
-
 class MessageType(IntEnum):
     Initialize = 0
     Ping = 1

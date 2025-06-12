@@ -35,9 +35,6 @@ if TYPE_CHECKING:
             ThpCredentialResponse,
         )
 
-if utils.USE_THP:
-    from trezor.enums import ThpMessageType
-
 
 _SCREENSAVER_IS_ON = False
 
@@ -621,11 +618,8 @@ def boot() -> None:
 
     # Register workflow handlers
     if utils.USE_THP:
-        TMT = ThpMessageType
-        workflow_handlers.register(TMT.ThpCreateNewSession, handle_ThpCreateNewSession)
-        workflow_handlers.register(
-            TMT.ThpCredentialRequest, handle_ThpCredentialRequest
-        )
+        workflow_handlers.register(MT.ThpCreateNewSession, handle_ThpCreateNewSession)
+        workflow_handlers.register(MT.ThpCredentialRequest, handle_ThpCredentialRequest)
     else:
         workflow_handlers.register(MT.Initialize, handle_Initialize)
     for msg_type, handler in [
