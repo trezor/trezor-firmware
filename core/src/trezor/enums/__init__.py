@@ -337,6 +337,12 @@ if TYPE_CHECKING:
         Nay = 1
         Pass = 2
 
+    class ThpPairingMethod(IntEnum):
+        SkipPairing = 1
+        CodeEntry = 2
+        QrCode = 3
+        NFC = 4
+
     class MessageType(IntEnum):
         Initialize = 0
         Ping = 1
@@ -440,6 +446,8 @@ if TYPE_CHECKING:
         DebugLinkOptigaSetSecMax = 9008
         DebugLinkGetGcInfo = 9009
         DebugLinkGcInfo = 9010
+        DebugLinkGetPairingInfo = 9011
+        DebugLinkPairingInfo = 9012
         EthereumGetPublicKey = 450
         EthereumPublicKey = 451
         EthereumGetAddress = 56
@@ -574,6 +582,24 @@ if TYPE_CHECKING:
         SolanaAddress = 903
         SolanaSignTx = 904
         SolanaTxSignature = 905
+        ThpCreateNewSession = 1000
+        ThpPairingRequest = 1006
+        ThpPairingRequestApproved = 1007
+        ThpSelectMethod = 1008
+        ThpPairingPreparationsFinished = 1009
+        ThpCredentialRequest = 1010
+        ThpCredentialResponse = 1011
+        ThpEndRequest = 1012
+        ThpEndResponse = 1013
+        ThpCodeEntryCommitment = 1016
+        ThpCodeEntryChallenge = 1017
+        ThpCodeEntryCpaceTrezor = 1018
+        ThpCodeEntryCpaceHostTag = 1019
+        ThpCodeEntrySecret = 1020
+        ThpQrCodeTag = 1024
+        ThpQrCodeSecret = 1025
+        ThpNfcTagHost = 1032
+        ThpNfcTagTrezor = 1033
         NostrGetPubkey = 2001
         NostrPubkey = 2002
         NostrSignEvent = 2003
