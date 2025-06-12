@@ -943,18 +943,19 @@ if not utils.BITCOIN_ONLY:
                 br_name="confirm_ethereum_approve",
             )
 
-        properties = (
-            [(TR.words__token, token_symbol)]
+        properties: list[PropertyType] = (
+            [(TR.words__token, token_symbol, True)]
             if is_revoke
             else [
                 (
                     TR.ethereum__approve_amount_allowance,
                     total_amount or TR.words__unlimited,
+                    False,
                 )
             ]
         )
         if not is_unknown_network:
-            properties.append((TR.words__chain, network_name))
+            properties.append((TR.words__chain, network_name, True))
         await confirm_properties(
             "confirm_ethereum_approve",
             TR.ethereum__approve_revoke if is_revoke else TR.ethereum__approve,

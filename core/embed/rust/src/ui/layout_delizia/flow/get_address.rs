@@ -96,7 +96,7 @@ pub fn new_get_address(
             let address: TString = address.try_into()?;
             theme::get_chunkified_text_style(address.len())
         } else {
-            &theme::TEXT_MONO
+            &theme::TEXT_MONO_DATA
         },
         description_font: &theme::TEXT_NORMAL,
         extra_font: &theme::TEXT_DEMIBOLD,
