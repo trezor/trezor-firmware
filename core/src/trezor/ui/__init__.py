@@ -100,6 +100,24 @@ def set_current_layout(layout: "Layout | ProgressLayout | None") -> None:
     CURRENT_LAYOUT = layout
 
 
+if utils.USE_POWER_MANAGER:
+
+    def _handle_power_button_press() -> None:
+        """Handle power button press event during firmware operation."""
+        from trezor import config
+
+        from apps.base import lock_device
+        from apps.management.pm.suspend import suspend_device
+
+        if config.has_pin() and config.is_unlocked():
+            lock_device(interrupt_workflow=True)
+            raise Shutdown()
+        else:
+            suspend_device()
+            if CURRENT_LAYOUT is not None:
+                CURRENT_LAYOUT.layout.request_complete_repaint()
+
+
 class Layout(Generic[T]):
     """Python-side handler and runner for the Rust based layouts.
 
@@ -359,7 +377,8 @@ class Layout(Generic[T]):
         """Set up background tasks for a layout.
 
         Called from `start()`. Creates and yields a list of background tasks, typically
-        event handlers for different interfaces. Event handlers are enabled conditionally based on build options to prevent stale events in the event queue.
+        event handlers for different interfaces. Event handlers are enabled conditionally
+        based on build options to prevent stale events in the event queue.
 
         Override and then `yield from super().create_tasks()` to add more tasks."""
         if utils.USE_BUTTON:
@@ -380,6 +399,11 @@ class Layout(Generic[T]):
                 while True:
                     # Using `yield` instead of `await` to avoid allocations.
                     event = yield button
+                    if utils.USE_POWER_MANAGER:
+                        event_type, event_button = event
+                        # check for POWER_BUTTON (2), BUTTON_UP (0)
+                        if event_button == 2 and event_type == 0:
+                            _handle_power_button_press()
                     workflow.idle_timer.touch()
                     self._event(self.layout.button_event, *event)
             except Shutdown:
