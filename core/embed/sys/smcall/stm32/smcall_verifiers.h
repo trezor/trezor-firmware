@@ -125,10 +125,10 @@ bool tropic_ecc_sign__verified(uint16_t key_slot_index, const uint8_t *dig,
 
 #include <sys/backup_ram.h>
 
-backup_ram_status_t backup_ram_store_power_manager_data__verified(
-    const backup_ram_power_manager_data_t *pm_data);
+bool backup_ram_read__verified(uint16_t key, void *buffer, size_t buffer_size,
+                               size_t *data_size);
 
-backup_ram_status_t backup_ram_read_power_manager_data__verified(
-    backup_ram_power_manager_data_t *pm_data);
+bool backup_ram_write__verified(uint16_t key, const void *data,
+                                size_t data_size);
 
 #endif  // SECMON
