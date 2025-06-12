@@ -96,6 +96,35 @@ typedef struct {
   float wireless_temp_c;
 } pm_report_t;
 
+// Current version of the power management recovery data structure
+#define PM_RECOVERY_DATA_VERSION 0x0001
+
+/**
+ * @brief Structure for power management data stored in backup RAM
+ *
+ * This structure contains critical power management information that needs to
+ * persist across power cycles and resets. It stores battery state of charge
+ * (SOC), timing information, and system state data required for proper power
+ * management.
+ *
+ * If the structure is changed, the version must be incremented and
+ * proper migration logic must be implemented.
+ */
+typedef struct {
+  /** Data version */
+  uint16_t version;
+  /** Fuel gauge state of charge <0, 1> */
+  float soc;
+  /** Fuel gauge covariance */
+  float P;
+  bool bat_critical;
+  /** RTC time at which SOC was captured */
+  uint32_t last_capture_timestamp;
+  /** Power manager state at bootloader exit so it could be correctly
+  restored in the firwmare. */
+  uint32_t bootloader_exit_state;
+} pm_recovery_data_t;
+
 /**
  * @brief Initialize the power manager
  * @param inherit_state Whether to inherit previous power state from backup

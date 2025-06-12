@@ -90,7 +90,11 @@ def configure(
     paths += ["embed/io/i2c_bus/inc"]
     defines += [("USE_I2C", "1")]
 
-    sources += ["embed/sys/backup_ram/backup_ram.c"]
+    sources += [
+        "embed/sys/backup_ram/backup_ram_crc.c",
+        "embed/sys/backup_ram/stm32u5/backup_ram.c",
+    ]
+
     paths += ["embed/sys/backup_ram/inc"]
     defines += [("USE_BACKUP_RAM", "1")]
 

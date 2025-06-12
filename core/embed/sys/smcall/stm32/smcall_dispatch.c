@@ -361,16 +361,24 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
 #endif
 
 #ifdef USE_BACKUP_RAM
-    case SMCALL_BACKUP_RAM_READ_POWER_MANAGER_DATA: {
-      backup_ram_power_manager_data_t *data =
-          (backup_ram_power_manager_data_t *)args[0];
-      args[0] = backup_ram_read_power_manager_data__verified(data);
+    case SMCALL_BACKUP_RAM_SEARCH: {
+      uint16_t min_key = (uint16_t)args[0];
+      args[0] = backup_ram_search(min_key);
     } break;
 
-    case SMCALL_BACKUP_RAM_STORE_POWER_MANAGER_DATA: {
-      const backup_ram_power_manager_data_t *data =
-          (const backup_ram_power_manager_data_t *)args[0];
-      args[0] = backup_ram_store_power_manager_data__verified(data);
+    case SMCALL_BACKUP_RAM_READ: {
+      uint16_t key = (uint16_t)args[0];
+      void *buffer = (void *)args[1];
+      size_t buffer_size = (size_t)args[2];
+      size_t *data_size = (size_t *)args[3];
+      args[0] = backup_ram_read__verified(key, buffer, buffer_size, data_size);
+    } break;
+
+    case SMCALL_BACKUP_RAM_WRITE: {
+      uint16_t key = (uint16_t)args[0];
+      const void *data = (const void *)args[1];
+      size_t data_size = (size_t)args[2];
+      args[0] = backup_ram_write__verified(key, data, data_size);
     } break;
 #endif
 
