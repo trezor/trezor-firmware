@@ -278,6 +278,7 @@ impl PinInput {
     const SHOWN_STYLE: TextStyle = theme::TEXT_MEDIUM
         .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
         .with_chunks(Chunks::new(1, 8));
+    const SHOWN_TOUCH_OUTSET: Insets = Insets::bottom(200);
     const PIN_ICON: Icon = theme::ICON_DASH_VERTICAL;
     const ICON_WIDTH: i16 = Self::PIN_ICON.toif.width();
     const ICON_SPACE: i16 = 12;
@@ -438,6 +439,13 @@ impl Component for PinInput {
             return None;
         }
 
+        // Extend the pin area downward to allow touch input without the finger
+        // covering the passphrase
+        let extended_shown_area = self
+            .shown_area
+            .outset(Self::SHOWN_TOUCH_OUTSET)
+            .clamp(SCREEN);
+
         match event {
             // Return touch start if the touch is detected inside the touchable area
             Event::Touch(TouchEvent::TouchStart(pos)) if self.area.contains(pos) => {
@@ -450,14 +458,16 @@ impl Component for PinInput {
             }
             // Return touch end if the touch end is detected inside the visible area
             Event::Touch(TouchEvent::TouchEnd(pos))
-                if self.shown_area.contains(pos) && self.display_style == DisplayStyle::Shown =>
+                if extended_shown_area.contains(pos)
+                    && self.display_style == DisplayStyle::Shown =>
             {
                 self.display_style = DisplayStyle::Hidden;
                 return Some(PinInputMsg::TouchEnd);
             }
             // Return touch end if the touch moves out of the visible area
             Event::Touch(TouchEvent::TouchMove(pos))
-                if !self.shown_area.contains(pos) && self.display_style == DisplayStyle::Shown =>
+                if !extended_shown_area.contains(pos)
+                    && self.display_style == DisplayStyle::Shown =>
             {
                 self.display_style = DisplayStyle::Hidden;
                 return Some(PinInputMsg::TouchEnd);
