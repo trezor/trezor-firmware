@@ -301,6 +301,8 @@ async def _handle_code_entry_cpace(
         )  # TODO remove after testing
         raise ThpError("Unexpected Code Entry Tag")
 
+    if ctx.code_entry_secret is None:
+        raise RuntimeError
     return await _handle_secret_reveal(
         ctx,
         msg=ThpCodeEntrySecret(secret=ctx.code_entry_secret),
@@ -335,6 +337,8 @@ async def _handle_qr_code_tag(
         )  # TODO remove after testing
         raise ThpError("Unexpected QR Code Tag")
 
+    if ctx.qr_code_secret is None:
+        raise RuntimeError
     return await _handle_secret_reveal(
         ctx,
         msg=ThpQrCodeSecret(secret=ctx.qr_code_secret),
