@@ -81,7 +81,6 @@ pub const TEXT_MONO_MEDIUM_LIGHT: TextStyle = TextStyle::new(
 )
 .with_line_breaking(LineBreaking::BreakAtWhitespace);
 
-
 pub const TEXT_MONO_MEDIUM_LIGHT_DATA: TextStyle =
     TEXT_MONO_MEDIUM_LIGHT.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
 

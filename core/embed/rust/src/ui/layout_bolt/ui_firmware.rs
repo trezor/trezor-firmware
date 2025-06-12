@@ -1356,7 +1356,7 @@ impl ConfirmValue {
                 let value: TString = self.value.try_into()?;
                 theme::get_chunkified_text_style(value.len())
             } else if self.text_mono {
-                &theme::TEXT_MONO
+                &theme::TEXT_MONO_DATA
             } else {
                 &theme::TEXT_NORMAL
             },
