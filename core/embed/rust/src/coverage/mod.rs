@@ -1,5 +1,6 @@
 /// Off-heap data structure for collecting code coverage data.
 use heapless::{Entry, FnvIndexMap};
+use spin::RwLock;
 
 use crate::{
     error::Error,
@@ -41,7 +42,8 @@ impl core::cmp::PartialEq for Key {
 
 impl core::cmp::Eq for Key {}
 
-static mut COVERAGE_DATA: FnvIndexMap<Key, u64, { 1024 * 1024 }> = FnvIndexMap::new();
+static COVERAGE_DATA: RwLock<FnvIndexMap<Key, u64, { 1024 * 1024 }>> =
+    RwLock::new(FnvIndexMap::new());
 
 struct Item<'a>((&'a Key, &'a u64));
 
@@ -62,16 +64,13 @@ extern "C" fn py_add(file: Obj, line: Obj) -> Obj {
             file: file.try_into()?,
             line: line.try_into()?,
         };
-        // SAFETY: we are in single-threaded environment
-        unsafe {
-            match COVERAGE_DATA.entry(key) {
-                Entry::Occupied(e) => {
-                    *e.into_mut() += 1;
-                }
-                Entry::Vacant(e) => {
-                    e.insert(1)
-                        .map_err(|_| Error::RuntimeError(c"COVERAGE_DATA is too small"))?;
-                }
+        match COVERAGE_DATA.write().entry(key) {
+            Entry::Occupied(e) => {
+                *e.into_mut() += 1;
+            }
+            Entry::Vacant(e) => {
+                e.insert(1)
+                    .map_err(|_| Error::RuntimeError(c"COVERAGE_DATA is too small"))?;
             }
         };
         Ok(Obj::const_none())
@@ -81,8 +80,10 @@ extern "C" fn py_add(file: Obj, line: Obj) -> Obj {
 
 extern "C" fn py_get() -> Obj {
     let block = || {
-        // SAFETY: we are in single-threaded environment
-        let list = unsafe { List::from_iter(COVERAGE_DATA.iter().map(Item))? };
+        let list = {
+            let data = COVERAGE_DATA.read();
+            List::from_iter(data.iter().map(Item))?
+        };
         Ok(list.leak().into())
     };
     unsafe { util::try_or_raise(block) }
