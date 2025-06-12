@@ -71,10 +71,6 @@ void power_save_suspend_cpu(void) {
   // PRIMASK is cleared again. This is necessary to restore the system clock
   // immediately after exiting STOP2 mode.
 
-#ifdef SECMON
-  irq_key_t irq_key_ns = irq_lock_ns();
-#endif
-
   irq_key_t irq_key = irq_lock();
 
   // The PWR clock is disabled after system initialization.
@@ -91,10 +87,6 @@ void power_save_suspend_cpu(void) {
   SystemInit();
 
   irq_unlock(irq_key);
-
-#ifdef SECMON
-  irq_unlock_ns(irq_key_ns);
-#endif
 }
 
 void power_save_suspend_secure_io() {
