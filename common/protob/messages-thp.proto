@@ -25,10 +25,10 @@ enum ThpPairingMethod {
  * @embed
  */
 message ThpDeviceProperties {
-    optional string internal_model = 1;               // Internal model name e.g. "T2B1".
-    optional uint32 model_variant = 2;                // Encodes the device properties such as color.
-    optional uint32 protocol_version_major = 3;       // The major version of the communication protocol used by the firmware.
-    optional uint32 protocol_version_minor = 4;       // The minor version of the communication protocol used by the firmware.
+    required string internal_model = 1;               // Internal model name e.g. "T2B1".
+    optional uint32 model_variant = 2 [default=0];    // Encodes the device properties such as color.
+    required uint32 protocol_version_major = 3;       // The major version of the communication protocol used by the firmware.
+    required uint32 protocol_version_minor = 4;       // The minor version of the communication protocol used by the firmware.
     repeated ThpPairingMethod pairing_methods = 5;    // The pairing methods supported by the Trezor.
 }
 
@@ -46,8 +46,8 @@ message ThpHandshakeCompletionReqNoisePayload {
  */
 message ThpCreateNewSession{
     optional string passphrase = 1;
-    optional bool on_device = 2;       // User wants to enter passphrase on the device
-    optional bool derive_cardano = 3;  // If True, Cardano keys will be derived. Ignored with BTC-only
+    optional bool on_device = 2 [default=false];      // User wants to enter passphrase on the device
+    optional bool derive_cardano = 3 [default=false]; // If True, Cardano keys will be derived. Ignored with BTC-only
 }
 
 
@@ -75,7 +75,7 @@ message ThpPairingRequestApproved{
  * @next ThpCodeEntryCommitment
  */
 message ThpSelectMethod {
-    optional ThpPairingMethod selected_pairing_method = 1;
+    required ThpPairingMethod selected_pairing_method = 1;
 }
 
 /**
@@ -92,7 +92,7 @@ message ThpPairingPreparationsFinished{
  * @next ThpCodeEntryChallenge
  */
 message ThpCodeEntryCommitment {
-    optional bytes commitment = 1;     // SHA-256 of Trezor's random 32-byte secret
+    required bytes commitment = 1;     // SHA-256 of Trezor's random 32-byte secret
 }
 
 /**
@@ -100,7 +100,7 @@ message ThpCodeEntryCommitment {
  * @next ThpCodeEntryCpaceTrezor
  */
 message ThpCodeEntryChallenge {
-    optional bytes challenge = 1;      // Host's random 32-byte challenge
+    required bytes challenge = 1;      // Host's random 32-byte challenge
 }
 
 /**
@@ -108,7 +108,7 @@ message ThpCodeEntryChallenge {
  * @next ThpCodeEntryCpaceHostTag
  */
 message ThpCodeEntryCpaceTrezor {
-    optional bytes cpace_trezor_public_key = 1;  // Trezor's ephemeral CPace public key
+    required bytes cpace_trezor_public_key = 1;  // Trezor's ephemeral CPace public key
 }
 
 /**
@@ -116,8 +116,8 @@ message ThpCodeEntryCpaceTrezor {
  * @next ThpCodeEntrySecret
  */
  message ThpCodeEntryCpaceHostTag {
-    optional bytes cpace_host_public_key = 1;    // Host's ephemeral CPace public key
-    optional bytes tag = 2;                      // SHA-256 of shared secret
+    required bytes cpace_host_public_key = 1;    // Host's ephemeral CPace public key
+    required bytes tag = 2;                      // SHA-256 of shared secret
 
 }
 
@@ -127,7 +127,7 @@ message ThpCodeEntryCpaceTrezor {
  * @next ThpEndRequest
  */
 message ThpCodeEntrySecret {
-    optional bytes secret = 1;    // Trezor's secret
+    required bytes secret = 1;    // Trezor's secret
 }
 
 /**
@@ -135,7 +135,7 @@ message ThpCodeEntrySecret {
  * @next ThpQrCodeSecret
  */
 message ThpQrCodeTag {
-    optional bytes tag = 1;       // SHA-256 of shared secret
+    required bytes tag = 1;       // SHA-256 of shared secret
 }
 
 /**
@@ -144,7 +144,7 @@ message ThpQrCodeTag {
  * @next ThpEndRequest
  */
 message ThpQrCodeSecret {
-    optional bytes secret = 1;    // Trezor's secret
+    required bytes secret = 1;    // Trezor's secret
 }
 
 /**
@@ -152,7 +152,7 @@ message ThpQrCodeSecret {
  * @next ThpNfcTagTrezor
  */
 message ThpNfcTagHost {
-    optional bytes tag = 1;       // Host's tag
+    required bytes tag = 1;       // Host's tag
 }
 
 /**
@@ -161,7 +161,7 @@ message ThpNfcTagHost {
  * @next ThpEndRequest
  */
 message ThpNfcTagTrezor {
-    optional bytes tag = 1;       // Trezor's tag
+    required bytes tag = 1;       // Trezor's tag
 }
 
 /**
@@ -170,9 +170,9 @@ message ThpNfcTagTrezor {
  * @next ThpCredentialResponse
  */
 message ThpCredentialRequest {
-    optional bytes host_static_pubkey = 1;       // Host's static public key identifying the credential.
-    optional bool autoconnect = 2;               // Whether host wants to autoconnect without user confirmation
-    optional bytes credential = 3;               // Host's previous credential
+    required bytes host_static_pubkey = 1;         // Host's static public key identifying the credential.
+    optional bool autoconnect = 2 [default=false]; // Whether host wants to autoconnect without user confirmation
+    optional bytes credential = 3;                 // Host's previous credential
 }
 
 /**
@@ -181,8 +181,8 @@ message ThpCredentialRequest {
  * @next ThpEndRequest
  */
 message ThpCredentialResponse {
-    optional bytes trezor_static_pubkey = 1;     // Trezor's static public key used in the handshake.
-    optional bytes credential = 2;               // The pairing credential issued by the Trezor to the host.
+    required bytes trezor_static_pubkey = 1;     // Trezor's static public key used in the handshake.
+    required bytes credential = 2;               // The pairing credential issued by the Trezor to the host.
 }
 
 /**
@@ -214,8 +214,8 @@ message ThpEndResponse {}
  */
  message ThpPairingCredential {
     option (internal_only) = true;
-    optional ThpCredentialMetadata cred_metadata = 1; // Credential metadata
-    optional bytes mac = 2;                           // Message authentication code generated by the Trezor
+    required ThpCredentialMetadata cred_metadata = 1; // Credential metadata
+    required bytes mac = 2;                           // Message authentication code generated by the Trezor
 }
 
 /**
@@ -224,6 +224,6 @@ message ThpEndResponse {}
  */
  message ThpAuthenticatedCredentialData {
     option (internal_only) = true;
-    optional bytes host_static_pubkey = 1;            // Host's static public key used in the handshake
-    optional ThpCredentialMetadata cred_metadata = 2; // Credential metadata
+    required bytes host_static_pubkey = 1;            // Host's static public key used in the handshake
+    required ThpCredentialMetadata cred_metadata = 2; // Credential metadata
 }
