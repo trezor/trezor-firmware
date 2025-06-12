@@ -423,7 +423,7 @@ impl FirmwareUI for UIDelizia {
             items,
             &theme::TEXT_SUB_GREY_LIGHT,
             &theme::TEXT_MONO,
-            &theme::TEXT_MONO,
+            &theme::TEXT_MONO_DATA,
         )?;
 
         let flow = flow::new_confirm_action_simple(

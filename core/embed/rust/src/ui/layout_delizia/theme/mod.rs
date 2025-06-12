@@ -737,10 +737,13 @@ pub const TEXT_SUB_GREEN_LIME: TextStyle =
 pub const TEXT_WARNING: TextStyle =
     TextStyle::new(fonts::FONT_DEMIBOLD, ORANGE_LIGHT, BG, GREY, GREY);
 pub const TEXT_MONO: TextStyle = TextStyle::new(fonts::FONT_MONO, GREY_EXTRA_LIGHT, BG, GREY, GREY)
-    .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
+    .with_line_breaking(LineBreaking::BreakAtWhitespace)
     .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
     .with_ellipsis_icon(ICON_PAGE_NEXT, 0)
     .with_prev_page_icon(ICON_PAGE_PREV, 0);
+/// Mono data text does not have hyphens
+pub const TEXT_MONO_DATA: TextStyle =
+    TEXT_MONO.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
 pub const TEXT_MONO_WITH_CLASSIC_ELLIPSIS: TextStyle =
     TextStyle::new(fonts::FONT_MONO, GREY_EXTRA_LIGHT, BG, GREY, GREY)
         .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
