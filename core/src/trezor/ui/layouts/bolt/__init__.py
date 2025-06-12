@@ -794,7 +794,14 @@ def confirm_properties(
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> Awaitable[None]:
     # Monospace flag for values that are bytes.
-    items = [(prop[0], prop[1], isinstance(prop[1], bytes)) for prop in props]
+    items = [
+        (
+            prop[0],
+            prop[1],
+            prop[2] if (len(prop) == 3 and prop[2] is not None) else True,
+        )
+        for prop in props
+    ]
 
     if subtitle:
         title += ": " + subtitle
