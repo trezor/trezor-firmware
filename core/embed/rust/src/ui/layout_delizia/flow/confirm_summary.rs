@@ -1,15 +1,14 @@
 use heapless::Vec;
 
 use crate::{
-    error::{self},
-    maybe_trace::MaybeTrace,
+    error::{self, Error},
     strutil::TString,
     translations::TR,
     ui::{
-        component::{swipe_detect::SwipeSettings, Component, ComponentExt},
+        component::{swipe_detect::SwipeSettings, ComponentExt},
         flow::{
             base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, Swipable, SwipeFlow,
+            FlowController, FlowMsg, GcBoxFlowComponent, SwipeFlow,
         },
         geometry::Direction,
     },
@@ -66,8 +65,11 @@ impl FlowController for ConfirmSummary {
     }
 }
 
-fn dummy_page() -> impl Component<Msg = FlowMsg> + Swipable + MaybeTrace {
-    Frame::left_aligned(TString::empty(), VerticalMenu::empty()).map(|_| Some(FlowMsg::Cancelled))
+fn dummy_page() -> Result<GcBoxFlowComponent, Error> {
+    GcBoxFlowComponent::alloc(
+        Frame::left_aligned(TString::empty(), VerticalMenu::empty())
+            .map(|_| Some(FlowMsg::Cancelled)),
+    )
 }
 
 pub fn new_confirm_summary(
@@ -78,28 +80,32 @@ pub fn new_confirm_summary(
     verb_cancel: Option<TString<'static>>,
 ) -> Result<SwipeFlow, error::Error> {
     // Summary
-    let content_summary = summary_params
-        .into_layout()?
-        // Summary(1) + Hold(1)
-        .with_pages(|summary_pages| summary_pages + 1);
+    let content_summary = GcBoxFlowComponent::alloc(
+        summary_params
+            .into_layout()?
+            // Summary(1) + Hold(1)
+            .with_pages(|summary_pages| summary_pages + 1),
+    )?;
 
     // Hold to confirm
-    let content_hold = Frame::left_aligned(
-        TR::send__sign_transaction.into(),
-        SwipeContent::new(PromptScreen::new_hold_to_confirm()),
-    )
-    .with_menu_button()
-    .with_footer(TR::instructions__hold_to_sign.into(), None)
-    .with_swipe(Direction::Down, SwipeSettings::default())
-    .map(super::util::map_to_confirm);
+    let content_hold = GcBoxFlowComponent::alloc(
+        Frame::left_aligned(
+            TR::send__sign_transaction.into(),
+            SwipeContent::new(PromptScreen::new_hold_to_confirm()),
+        )
+        .with_menu_button()
+        .with_footer(TR::instructions__hold_to_sign.into(), None)
+        .with_swipe(Direction::Down, SwipeSettings::default())
+        .map(super::util::map_to_confirm),
+    )?;
 
     // ExtraInfo
     let content_extra = extra_params
-        .map(|params| params.into_layout())
+        .map(|params| GcBoxFlowComponent::alloc(params.into_layout()?))
         .transpose()?;
     // AccountInfo
     let content_account = account_params
-        .map(|params| params.into_layout())
+        .map(|params| GcBoxFlowComponent::alloc(params.into_layout()?))
         .transpose()?;
 
     // Menu with provided info and cancel
@@ -124,39 +130,43 @@ pub fn new_confirm_summary(
         verb_cancel.unwrap_or(TR::send__cancel_sign.into()),
     );
     unwrap!(menu_items.push(MENU_ITEM_CANCEL));
-    let content_menu = Frame::left_aligned(TString::empty(), menu)
-        .with_cancel_button()
-        .map(move |msg| match msg {
-            VerticalMenuChoiceMsg::Selected(i) => {
-                let selected_item = menu_items[i];
-                Some(FlowMsg::Choice(selected_item))
-            }
-        });
+    let content_menu = GcBoxFlowComponent::alloc(
+        Frame::left_aligned(TString::empty(), menu)
+            .with_cancel_button()
+            .map(move |msg| match msg {
+                VerticalMenuChoiceMsg::Selected(i) => {
+                    let selected_item = menu_items[i];
+                    Some(FlowMsg::Choice(selected_item))
+                }
+            }),
+    )?;
 
     // CancelTap
-    let content_cancel_tap = Frame::left_aligned(
-        TR::send__cancel_sign.into(),
-        PromptScreen::new_tap_to_cancel(),
-    )
-    .with_cancel_button()
-    .with_footer(TR::instructions__tap_to_confirm.into(), None)
-    .map(super::util::map_to_confirm);
+    let content_cancel_tap = GcBoxFlowComponent::alloc(
+        Frame::left_aligned(
+            TR::send__cancel_sign.into(),
+            PromptScreen::new_tap_to_cancel(),
+        )
+        .with_cancel_button()
+        .with_footer(TR::instructions__tap_to_confirm.into(), None)
+        .map(super::util::map_to_confirm),
+    )?;
 
     let mut res = SwipeFlow::new(&ConfirmSummary::Summary)?;
-    res.add_page(&ConfirmSummary::Summary, content_summary)?
-        .add_page(&ConfirmSummary::Hold, content_hold)?
-        .add_page(&ConfirmSummary::Menu, content_menu)?;
+    res.add_allocated_page(&ConfirmSummary::Summary, content_summary)
+        .add_allocated_page(&ConfirmSummary::Hold, content_hold)
+        .add_allocated_page(&ConfirmSummary::Menu, content_menu);
     if let Some(content_extra) = content_extra {
-        res.add_page(&ConfirmSummary::ExtraInfo, content_extra)?;
+        res.add_allocated_page(&ConfirmSummary::ExtraInfo, content_extra);
     } else {
-        res.add_page(&ConfirmSummary::ExtraInfo, dummy_page())?;
+        res.add_allocated_page(&ConfirmSummary::ExtraInfo, dummy_page()?);
     };
     if let Some(content_account) = content_account {
-        res.add_page(&ConfirmSummary::AccountInfo, content_account)?;
+        res.add_allocated_page(&ConfirmSummary::AccountInfo, content_account);
     } else {
-        res.add_page(&ConfirmSummary::AccountInfo, dummy_page())?;
+        res.add_allocated_page(&ConfirmSummary::AccountInfo, dummy_page()?);
     };
-    res.add_page(&ConfirmSummary::CancelTap, content_cancel_tap)?;
+    res.add_allocated_page(&ConfirmSummary::CancelTap, content_cancel_tap);
 
     Ok(res)
 }

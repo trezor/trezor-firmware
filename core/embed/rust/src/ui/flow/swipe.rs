@@ -86,6 +86,15 @@ impl<T> FlowComponentDynTrait for T where
 {
 }
 
+pub type GcBoxFlowComponent = GcBox<dyn FlowComponentDynTrait>;
+
+impl GcBoxFlowComponent {
+    pub fn alloc(page: impl FlowComponentDynTrait + 'static) -> Result<Self, Error> {
+        let gcbox = GcBox::new(page)?;
+        Ok(gc::coerce!(FlowComponentDynTrait, gcbox))
+    }
+}
+
 /// Swipe flow consisting of multiple screens.
 ///
 /// Implements swipe navigation between the states with animated transitions,
@@ -130,18 +139,24 @@ impl SwipeFlow {
         state: &'static dyn FlowController,
         page: impl FlowComponentDynTrait + 'static,
     ) -> Result<&mut Self, error::Error> {
-        debug_assert!(self.store.len() == state.index());
-        let alloc = GcBox::new(page)?;
-        let page = gc::coerce!(FlowComponentDynTrait, alloc);
-        unwrap!(self.store.push(page));
-        Ok(self)
+        Ok(self.add_allocated_page(state, GcBoxFlowComponent::alloc(page)?))
     }
 
-    fn current_page(&self) -> &GcBox<dyn FlowComponentDynTrait> {
+    pub fn add_allocated_page(
+        &mut self,
+        state: &'static dyn FlowController,
+        alloc: GcBoxFlowComponent,
+    ) -> &mut Self {
+        debug_assert!(self.store.len() == state.index());
+        unwrap!(self.store.push(alloc));
+        self
+    }
+
+    fn current_page(&self) -> &GcBoxFlowComponent {
         &self.store[self.state.index()]
     }
 
-    fn current_page_mut(&mut self) -> &mut GcBox<dyn FlowComponentDynTrait> {
+    fn current_page_mut(&mut self) -> &mut GcBoxFlowComponent {
         &mut self.store[self.state.index()]
     }
 

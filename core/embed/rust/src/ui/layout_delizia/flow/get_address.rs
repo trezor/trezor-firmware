@@ -12,7 +12,7 @@ use crate::{
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, SwipeFlow, SwipePage,
+            FlowController, FlowMsg, GcBoxFlowComponent, SwipeFlow, SwipePage,
         },
         geometry::Direction,
         layout::util::ConfirmValueParams,
@@ -102,7 +102,7 @@ pub fn new_get_address(
         extra_font: &theme::TEXT_DEMIBOLD,
     }
     .into_paragraphs();
-    let content_address =
+    let content_address = GcBoxFlowComponent::alloc(
         Frame::left_aligned(title, SwipeContent::new(SwipePage::vertical(paragraphs)))
             .with_menu_button()
             .with_swipeup_footer(None)
@@ -110,76 +110,86 @@ pub fn new_get_address(
             .map_to_button_msg()
             .one_button_request(ButtonRequest::from_num(br_code, br_name))
             // Count tap-to-confirm screen towards page count
-            .with_pages(|address_pages| address_pages + 1);
+            .with_pages(|address_pages| address_pages + 1),
+    )?;
 
     // Tap
-    let content_tap =
+    let content_tap = GcBoxFlowComponent::alloc(
         Frame::left_aligned(title, SwipeContent::new(PromptScreen::new_tap_to_confirm()))
             .with_footer(TR::instructions__tap_to_confirm.into(), None)
             .with_swipe(Direction::Down, SwipeSettings::default())
-            .map(super::util::map_to_confirm);
+            .map(super::util::map_to_confirm),
+    )?;
 
     // Menu
-    let content_menu = Frame::left_aligned(
-        "".into(),
-        VerticalMenu::empty()
-            .item(theme::ICON_QR_CODE, TR::address__qr_code.into())
-            .item(
-                theme::ICON_CHEVRON_RIGHT,
-                TR::address_details__account_info.into(),
-            )
-            .danger(theme::ICON_CANCEL, TR::address__cancel_receive.into()),
-    )
-    .with_cancel_button()
-    .map(super::util::map_to_choice);
+    let content_menu = GcBoxFlowComponent::alloc(
+        Frame::left_aligned(
+            "".into(),
+            VerticalMenu::empty()
+                .item(theme::ICON_QR_CODE, TR::address__qr_code.into())
+                .item(
+                    theme::ICON_CHEVRON_RIGHT,
+                    TR::address_details__account_info.into(),
+                )
+                .danger(theme::ICON_CANCEL, TR::address__cancel_receive.into()),
+        )
+        .with_cancel_button()
+        .map(super::util::map_to_choice),
+    )?;
 
     // QrCode
-    let content_qr = Frame::left_aligned(
-        title,
-        address_qr
-            .map(|s| Qr::new(s, case_sensitive))?
-            .with_border(QR_BORDER),
-    )
-    .with_cancel_button()
-    .map_to_button_msg();
+    let content_qr = GcBoxFlowComponent::alloc(
+        Frame::left_aligned(
+            title,
+            address_qr
+                .map(|s| Qr::new(s, case_sensitive))?
+                .with_border(QR_BORDER),
+        )
+        .with_cancel_button()
+        .map_to_button_msg(),
+    )?;
 
     // AccountInfo
-    let mut ad = AddressDetails::new(TR::address_details__account_info.into(), account, path)?;
+    let mut ad = AddressDetails::new(TR::address_details__account_info.into(), account, path);
     for i in IterBuf::new().try_iterate(xpubs)? {
         let [xtitle, text]: [StrBuffer; 2] = util::iter_into_array(i)?;
         ad.add_xpub(xtitle, text)?;
     }
-    let content_account = ad.map(|_| Some(FlowMsg::Cancelled));
+    let content_account = GcBoxFlowComponent::alloc(ad.map(|_| Some(FlowMsg::Cancelled)))?;
 
     // Cancel
-    let content_cancel_info = Frame::left_aligned(
-        TR::address__cancel_receive.into(),
-        SwipeContent::new(Paragraphs::new(Paragraph::new(
-            &theme::TEXT_MAIN_GREY_LIGHT,
-            TR::address__cancel_contact_support,
-        ))),
-    )
-    .with_cancel_button()
-    .with_swipeup_footer(None)
-    .map_to_button_msg();
+    let content_cancel_info = GcBoxFlowComponent::alloc(
+        Frame::left_aligned(
+            TR::address__cancel_receive.into(),
+            SwipeContent::new(Paragraphs::new(Paragraph::new(
+                &theme::TEXT_MAIN_GREY_LIGHT,
+                TR::address__cancel_contact_support,
+            ))),
+        )
+        .with_cancel_button()
+        .with_swipeup_footer(None)
+        .map_to_button_msg(),
+    )?;
 
     // CancelTap
-    let content_cancel_tap = Frame::left_aligned(
-        TR::address__cancel_receive.into(),
-        PromptScreen::new_tap_to_cancel(),
-    )
-    .with_cancel_button()
-    .with_footer(TR::instructions__tap_to_confirm.into(), None)
-    .with_swipe(Direction::Down, SwipeSettings::default())
-    .map(super::util::map_to_confirm);
+    let content_cancel_tap = GcBoxFlowComponent::alloc(
+        Frame::left_aligned(
+            TR::address__cancel_receive.into(),
+            PromptScreen::new_tap_to_cancel(),
+        )
+        .with_cancel_button()
+        .with_footer(TR::instructions__tap_to_confirm.into(), None)
+        .with_swipe(Direction::Down, SwipeSettings::default())
+        .map(super::util::map_to_confirm),
+    )?;
 
     let mut res = SwipeFlow::new(&GetAddress::Address)?;
-    res.add_page(&GetAddress::Address, content_address)?
-        .add_page(&GetAddress::Tap, content_tap)?
-        .add_page(&GetAddress::Menu, content_menu)?
-        .add_page(&GetAddress::QrCode, content_qr)?
-        .add_page(&GetAddress::AccountInfo, content_account)?
-        .add_page(&GetAddress::Cancel, content_cancel_info)?
-        .add_page(&GetAddress::CancelTap, content_cancel_tap)?;
+    res.add_allocated_page(&GetAddress::Address, content_address)
+        .add_allocated_page(&GetAddress::Tap, content_tap)
+        .add_allocated_page(&GetAddress::Menu, content_menu)
+        .add_allocated_page(&GetAddress::QrCode, content_qr)
+        .add_allocated_page(&GetAddress::AccountInfo, content_account)
+        .add_allocated_page(&GetAddress::Cancel, content_cancel_info)
+        .add_allocated_page(&GetAddress::CancelTap, content_cancel_tap);
     Ok(res)
 }
