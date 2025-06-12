@@ -67,6 +67,7 @@ extern "C" fn py_add(file: Obj, line: Obj) -> Obj {
         };
         // SAFETY: we are in single-threaded environment
         unsafe {
+            #[allow(static_mut_refs)]
             match COVERAGE_DATA.entry(key) {
                 Entry::Occupied(e) => {
                     *e.into_mut() += 1;
@@ -85,7 +86,10 @@ extern "C" fn py_add(file: Obj, line: Obj) -> Obj {
 extern "C" fn py_get() -> Obj {
     let block = || {
         // SAFETY: we are in single-threaded environment
-        let list = unsafe { List::from_iter(COVERAGE_DATA.iter().map(Item))? };
+        let list = unsafe {
+            #[allow(static_mut_refs)]
+            List::from_iter(COVERAGE_DATA.iter().map(Item))?
+        };
         Ok(list.leak().into())
     };
     unsafe { util::try_or_raise(block) }
