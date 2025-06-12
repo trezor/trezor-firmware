@@ -37,6 +37,7 @@ pm_driver_t g_pm = {
 // Forward declarations of static functions
 static void pm_monitoring_timer_handler(void* context);
 static void pm_shutdown_timer_handler(void* context);
+static bool pm_load_recovery_data(pm_recovery_data_t* recovery);
 
 pm_status_t pm_init(bool inherit_state) {
   pm_driver_t* drv = &g_pm;
@@ -83,28 +84,23 @@ pm_status_t pm_init(bool inherit_state) {
   // Initial power source measurement
   pmic_measure(pm_pmic_data_ready, NULL);
 
+  // Try to recover SoC from the backup RAM
+  pm_recovery_data_t recovery;
+  bool recovery_ok = pm_load_recovery_data(&recovery);
+
+  if (!recovery_ok) {
+    // Wait for 1s to sample battery data
+    systick_delay_ms(1000);
+  }
+
   // In this part of the code, power monitoring timer is already running, so
   // we have to prevent simultaneous access to the driver instance by locking
   // the IRQs.
   irq_key_t irq_key = irq_lock();
 
-  // Try to recover SoC from the backup RAM
-  backup_ram_power_manager_data_t pm_recovery_data;
-  backup_ram_status_t status =
-      backup_ram_read_power_manager_data(&pm_recovery_data);
-
-  if (status == BACKUP_RAM_OK) {
-    fuel_gauge_set_soc(&drv->fuel_gauge, pm_recovery_data.soc,
-                       pm_recovery_data.P);
+  if (recovery_ok) {
+    fuel_gauge_set_soc(&drv->fuel_gauge, recovery.soc, recovery.P);
   } else {
-    // Wait for 1s to sample battery data
-
-    // While data are being sampled, we have to unlock the IRQs to allow
-    // power_monitoring IRQ
-    irq_unlock(irq_key);
-    systick_delay_ms(1000);
-    irq_key = irq_lock();
-
     pm_battery_initial_soc_guess();
   }
 
@@ -112,14 +108,14 @@ pm_status_t pm_init(bool inherit_state) {
     // Inherit power manager state left in backup RAM from bootloader.
     // in case of error, start with PM_STATE_POWER_SAVE as a lowest state in
     // active mode.
-    if (status != BACKUP_RAM_OK &&
-        (pm_recovery_data.bootloader_exit_state != PM_STATE_POWER_SAVE &&
-         pm_recovery_data.bootloader_exit_state != PM_STATE_ACTIVE)) {
+    if (!recovery_ok &&
+        (recovery.bootloader_exit_state != PM_STATE_POWER_SAVE &&
+         recovery.bootloader_exit_state != PM_STATE_ACTIVE)) {
       drv->state = PM_STATE_POWER_SAVE;
 
     } else {
       // Backup RAM contain valid data
-      drv->state = pm_recovery_data.bootloader_exit_state;
+      drv->state = recovery.bootloader_exit_state;
     }
 
   } else {
@@ -395,29 +391,66 @@ pm_status_t pm_store_data_to_backup_ram() {
 
   irq_key_t irq_key = irq_lock();
 
-  backup_ram_power_manager_data_t pm_data = {0};
+  pm_recovery_data_t recovery = {.version = PM_RECOVERY_DATA_VERSION};
 
   // Fuel gauge state
   if (drv->battery_critical) {
-    pm_data.soc = 0;
+    recovery.soc = 0;
   } else {
-    pm_data.soc = drv->fuel_gauge.soc;
+    recovery.soc = drv->fuel_gauge.soc;
   }
-  pm_data.P = drv->fuel_gauge.P;
+  recovery.P = drv->fuel_gauge.P;
 
   // Power manager state
-  pm_data.bat_critical = drv->battery_critical;
-  pm_data.bootloader_exit_state = drv->state;
-
-  backup_ram_status_t status = backup_ram_store_power_manager_data(&pm_data);
+  recovery.bat_critical = drv->battery_critical;
+  recovery.bootloader_exit_state = drv->state;
 
   irq_unlock(irq_key);
 
-  if (status != BACKUP_RAM_OK) {
+  bool write_ok =
+      backup_ram_write(BACKUP_RAM_KEY_PM_RECOVERY, &recovery, sizeof(recovery));
+
+  if (!write_ok) {
     return PM_ERROR;
   }
 
   return PM_OK;
+}
+
+static bool pm_load_recovery_data(pm_recovery_data_t* recovery) {
+  union {
+    uint16_t version;
+    pm_recovery_data_t v1;  // v1 is the only version currently supported
+    // pm_recovery_data_t v2;
+  } data;
+
+  size_t data_size = 0;
+
+  memset(recovery, 0, sizeof(*recovery));
+
+  bool read_ok = backup_ram_read(BACKUP_RAM_KEY_PM_RECOVERY, &data,
+                                 sizeof(data), &data_size);
+
+  if (!read_ok) {
+    return false;
+  }
+
+  // Incremental migration logic can be added here if needed
+  // if (data.version == PM_RECOVERY_DATA_VERSION_V1) {
+  //   migrate_pm_recovery_data_v1_to_v2(&data.v1, &date_v2);
+  // }
+
+  if (data.version != PM_RECOVERY_DATA_VERSION) {
+    return false;
+  }
+
+  *recovery = data.v1;
+
+  if (recovery->soc < 0.0f || recovery->soc > 1.0f) {
+    return false;
+  }
+
+  return true;
 }
 
 pm_status_t pm_wakeup_flags_set(pm_wakeup_flags_t flags) {

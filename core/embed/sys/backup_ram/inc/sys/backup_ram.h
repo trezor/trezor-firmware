@@ -21,81 +21,81 @@
 
 #include <trezor_types.h>
 
-/**
- * @brief Status codes for backup RAM operations
- */
-typedef enum {
-  BACKUP_RAM_OK = 0,
-  BACKUP_RAM_OK_STORAGE_INITIALIZED,
-  BACKUP_RAM_ERROR,
-  BACKUP_RAM_HEADER_CHECK_ERROR,
-  BACKUP_RAM_VERSION_CHECK_ERROR,
-  BACKUP_RAM_CRC_CHECK_ERROR,
-  BACKUP_RAM_DATA_CHECK_ERROR,
-} backup_ram_status_t;
+/** Global keys for items stored in the backup RAM */
+#define BACKUP_RAM_KEY_PM_RECOVERY 0x0001  // Power management recovery data
+
+/** Maximum size of data stored under a single key in backup RAM */
+#define BACKUP_RAM_MAX_KEY_DATA_SIZE 512
 
 /**
- * @brief Structure for power management data stored in backup RAM
+ * @brief Initializes backup RAM driver
  *
- * This structure contains critical power management information that needs to
- * persist across power cycles and resets. It stores battery state of charge
- * (SOC), timing information, and system state data required for proper power
- * management. The data is stored in battery-backed RAM to ensure availability
- * after power loss.
- */
-typedef struct {
-  float soc;  // Captured fuel gauge state of charge <0, 1>
-  float P;    // Captured fuel gauge covariance
-  bool bat_critical;
-  // Captures RTC time at which SOC was captured
-  uint32_t last_capture_timestamp;
-  // Captures power manager state at bootloader exit so it could be correctly
-  // restored in the firwmare.
-  uint32_t bootloader_exit_state;
-} backup_ram_power_manager_data_t;
-
-/**
- * @brief Initialize backup RAM driver
+ * This function initializes the backup RAM driver, checks the consistency of
+ * the backup RAM storage, and initializes it if necessary.
  *
- * @return backup_ram_status_t BACKUP_RAM_OK if the operation was successful or
- *                             backup allready initialized.
+ * @return true if the operation was successful
+ *
  */
-backup_ram_status_t backup_ram_init(void);
+bool backup_ram_init(void);
 
 /**
  * @brief Deinitialize backup RAM driver
+ *
+ * The function does not erase the backup RAM, it just deinitializes
+ * the driver.
  */
 void backup_ram_deinit(void);
 
 /**
- * @brief Erase backup RAM completely.
+ * @brief Erases the backup RAM content
  *
- * @return backup_ram_status_t BACKUP_RAM_OK if the operation was successful.
+ * @return true if the operation was successful, false otherwise.
  */
-backup_ram_status_t backup_ram_erase(void);
+
+bool backup_ram_erase(void);
+
+#define BACKUP_RAM_INVALID_KEY 0xFFFF
 
 /**
- * @brief Erase unused space of the backup RAM (everything unallocated by the
- *        defined storage structure).
+ * @brief Finds the first key in backup RAM that is greater than or equal to
+ * min_key.
  *
- * @return backup_ram_status_t BACKUP_RAM_OK if the operation was successful.
+ * @param min_key Minimum key to search for
+ *
+ * @return The first key found that is greater than or equal to min_key, or
+ *         BACKUP_RAM_INVALID_KEY if no such key exists.
  */
-backup_ram_status_t backup_ram_erase_unused(void);
+uint16_t backup_ram_search(uint16_t min_key);
 
 /**
- * @brief Store power manager data in backup RAM.
+ * @brief Writes key-value data in backup RAM.
  *
- * @param fg_state Pointer to the structure containing the data to be stored
- * @return backup_ram_status_t BACKUP_RAM_OK if the operation was successful.
+ * @param key Key to identify the data
+ * @param data Pointer to the data to be stored
+ * @param data_size Size of the data in bytes. If the key does not exist, this
+ * value will be set to 0. If data_size == NULL, the size will not be retrieved.
+ *
+ * @return true if the operation was successful, false otherwise.
  */
-backup_ram_status_t backup_ram_store_power_manager_data(
-    const backup_ram_power_manager_data_t* pm_data);
+bool backup_ram_write(uint16_t key, const void* data, size_t data_size);
 
 /**
- * @brief Read power manager data from backup RAM.
+ * @brief Reads key-value data from backup RAM.
  *
- * @param fg_state Pointer to the structure where the data will be stored
- * @return backup_ram_status_t BACKUP_RAM_OK if the operation was successful.
+ * Writes key-value data in backup RAM. If the value with the give key
+ * exists, it will be overwritten with the new data. If the data_size is
+ * zero, the key will be removed from the backup RAM.
+ *
+ * @param key Key to identify the data
+ * @param buffer Pointer to the buffer where the data will be stored
+ * @param buffer_size Size of the buffer in bytes
+ * @param data_size Pointer to a variable where the size of the data
+ *
+ * If data_size is NULL, the size will not be retrieved. If buffer is NULL,
+ * the data will not be copied, but the size will still be retrieved.
+ *
+ * @return backup_ram_status_t BACKUP_RAM_OK if the operation was
+ * successful.
  */
-backup_ram_status_t backup_ram_read_power_manager_data(
-    backup_ram_power_manager_data_t* pm_data);
+bool backup_ram_read(uint16_t key, void* buffer, size_t buffer_size,
+                     size_t* data_size);
