@@ -16,7 +16,7 @@ use heapless::Vec;
 
 // So that there is only one implementation, and not multiple generic ones
 // as would be via `const N: usize` generics.
-const MAX_OPS: usize = 20;
+const MAX_OPS: usize = 30;
 
 /// To account for operations that are not made of characters
 /// but need to be accounted for somehow.
