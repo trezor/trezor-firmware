@@ -410,7 +410,8 @@ bool backup_ram_write(uint16_t key, const void* data, size_t data_size) {
     size_t free_space = BACKUP_RAM_MAX_PAYLOAD_SIZE - drv->payload_size;
 
     if (item != NULL) {
-      free_space -= ITEM_SIZE(item->data_size);
+      // Add the size of the existing item to the free space
+      free_space += ITEM_SIZE(item->data_size);
     }
 
     if (ITEM_SIZE(data_size) > free_space) {
