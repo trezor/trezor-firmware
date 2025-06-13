@@ -88,8 +88,8 @@ async def confirm_create_account_op(op: StellarCreateAccountOp) -> None:
         "op_create_account",
         TR.stellar__create_account,
         (
-            (TR.words__account, op.new_account),
-            (TR.stellar__initial_balance, format_amount(op.starting_balance)),
+            (TR.words__account, op.new_account, False),
+            (TR.stellar__initial_balance, format_amount(op.starting_balance), False),
         ),
     )
 
@@ -169,6 +169,7 @@ async def _confirm_offer(
         price: PropertyType = (
             TR.stellar__price_per_template.format(format_asset(buying_asset)),
             str(op.price_n / op.price_d),
+            False,
         )
         await confirm_properties(
             "op_offer",
@@ -188,7 +189,7 @@ async def confirm_manage_data_op(op: StellarManageDataOp) -> None:
         await confirm_properties(
             "op_data",
             TR.stellar__set_data,
-            ((TR.stellar__key, op.key), (TR.stellar__value_sha256, digest)),
+            ((TR.stellar__key, op.key, True), (TR.stellar__value_sha256, digest, True)),
         )
     else:
         await confirm_metadata(
@@ -267,16 +268,16 @@ async def confirm_set_options_op(op: StellarSetOptionsOp) -> None:
         t = _format_flags(op.set_flags)
         await confirm_text("op_set_options", TR.stellar__set_flags, data=t)
 
-    thresholds: list[tuple[str, str]] = []
+    thresholds: list[PropertyType] = []
     append = thresholds.append  # local_cache_attribute
     if op.master_weight is not None:
-        append((TR.stellar__master_weight, str(op.master_weight)))
+        append((TR.stellar__master_weight, str(op.master_weight), True))
     if op.low_threshold is not None:
-        append((TR.stellar__low, str(op.low_threshold)))
+        append((TR.stellar__low, str(op.low_threshold), True))
     if op.medium_threshold is not None:
-        append((TR.stellar__medium, str(op.medium_threshold)))
+        append((TR.stellar__medium, str(op.medium_threshold), True))
     if op.high_threshold is not None:
-        append((TR.stellar__high, str(op.high_threshold)))
+        append((TR.stellar__high, str(op.high_threshold), True))
 
     if thresholds:
         await confirm_properties(

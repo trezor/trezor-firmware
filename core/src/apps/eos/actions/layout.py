@@ -74,7 +74,7 @@ async def confirm_action_buyrambytes(msg: EosActionBuyRamBytes) -> None:
 
 
 async def confirm_action_delegate(msg: EosActionDelegate) -> None:
-    props = [
+    props: list[PropertyType] = [
         (TR.eos__sender, eos_name_to_string(msg.sender), True),
         (TR.eos__receiver, eos_name_to_string(msg.receiver), True),
         (TR.eos__cpu, eos_asset_to_string(msg.cpu_quantity), True),
@@ -245,9 +245,9 @@ async def confirm_action_unknown(action: EosActionCommon, checksum: bytes) -> No
         "confirm_unknown",
         TR.eos__arbitrary_data,
         (
-            (TR.eos__contract, eos_name_to_string(action.account)),
-            (TR.eos__action_name, eos_name_to_string(action.name)),
-            (TR.eos__checksum, checksum),
+            (TR.eos__contract, eos_name_to_string(action.account), False),
+            (TR.eos__action_name, eos_name_to_string(action.name), False),
+            (TR.eos__checksum, checksum, False),
         ),
         hold=is_last,
         br_code=ButtonRequestType.ConfirmOutput,
@@ -262,7 +262,7 @@ def authorization_fields(auth: EosAuthorization) -> list[PropertyType]:
     fields: list[PropertyType] = []
     append = fields.append  # local_cache_attribute
 
-    append((TR.eos__threshold, str(auth.threshold)))
+    append((TR.eos__threshold, str(auth.threshold), False))
 
     # NOTE: getting rid of f-strings saved almost 100 bytes
 

@@ -30,10 +30,9 @@ if TYPE_CHECKING:
     from trezor.enums import CardanoNativeScriptHashDisplayFormat
     from trezor.ui.layouts import PropertyType
 
+    from ...trezor.ui.layouts import PropertyType
     from .helpers.credential import Credential
     from .seed import Keychain
-
-    from ...trezor.ui.layouts import PropertyType
 
 
 ADDRESS_TYPE_NAMES = {

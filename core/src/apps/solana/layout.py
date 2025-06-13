@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 
     from trezor.messages import SolanaTokenInfo
 
+    from ...trezor.ui.layouts import PropertyType
     from .definitions import Definitions
     from .transaction import Fee
     from .transaction.instructions import Instruction, SystemProgramTransferInstruction
@@ -133,7 +134,7 @@ async def confirm_instruction(
             ):
                 continue
 
-            account_data: list[tuple[str, str]] = []
+            account_data: list[PropertyType] = []
             # account included in the transaction directly
             if len(account_value) == 2:
                 account_description = f"{base58.encode(account_value[0])}"
@@ -143,11 +144,15 @@ async def confirm_instruction(
                 elif account_value[0] == signer_public_key:
                     account_description = f"{account_description} ({TR.words__signer})"
 
-                account_data.append((ui_property.display_name, account_description))
+                account_data.append(
+                    (ui_property.display_name, account_description, True)
+                )
             # lookup table address reference
             elif len(account_value) == 3:
                 account_data += _get_address_reference_props(
-                    account_value, ui_property.display_name
+                    account_value,
+                    ui_property.display_name,
+                    True,
                 )
             else:
                 raise ValueError  # Invalid account value
@@ -224,7 +229,13 @@ async def confirm_unsupported_instruction_details(
         await confirm_properties(
             "instruction_data",
             title,
-            ((f"{TR.solana__instruction_data}:", bytes(instruction.instruction_data)),),
+            (
+                (
+                    f"{TR.solana__instruction_data}:",
+                    bytes(instruction.instruction_data),
+                    True,
+                ),
+            ),
         )
 
         accounts = []
