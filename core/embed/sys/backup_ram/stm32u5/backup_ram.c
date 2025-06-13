@@ -60,7 +60,7 @@ typedef struct {
   // CRC-32 of the header and payload
   uint16_t crc;
   // Reserved for future use (must be zero)
-  uint8_t reserved[2];
+  uint16_t reserved;
   // Header containing metadata about the slot
   backup_ram_payload_header_t header;
   // Payload data containing TLV-encoded data
@@ -174,7 +174,7 @@ static bool is_slot_valid(const backup_ram_slot_t* slot) {
     return false;
   }
 
-  if (slot->reserved[0] != 0 || slot->reserved[1] != 0) {
+  if (slot->reserved != 0) {
     // Reserved bytes must be zero
     return false;
   }
@@ -273,6 +273,7 @@ static bool backup_ram_commit(void) {
   }
 
   // Make slot valid again
+  slot->reserved = 0;
   slot->crc = crc;
   slot->guard = BACKUP_RAM_GUARD_OK;
 
