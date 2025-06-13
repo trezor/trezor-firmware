@@ -38,7 +38,7 @@ static int sdl_event_filter(void *userdata, SDL_Event *event) {
         case SDLK_ESCAPE:
           exit(3);
           return 0;
-        case SDLK_p:
+        case SDLK_s:
           display_save("emu");
           return 0;
       }
