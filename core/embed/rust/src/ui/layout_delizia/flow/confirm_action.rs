@@ -165,8 +165,6 @@ impl FlowController for ConfirmActionWithMenu {
 
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Action, Direction::Left) => Self::Menu.swipe(direction),
-            (Self::Menu, Direction::Right) => Self::Action.swipe(direction),
             (Self::Action, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
             _ => self.do_nothing(),
         }
@@ -199,11 +197,8 @@ impl FlowController for ConfirmActionWithMenuAndConfirmation {
 
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Action, Direction::Left) => Self::Menu.swipe(direction),
-            (Self::Menu, Direction::Right) => Self::Action.swipe(direction),
             (Self::Action, Direction::Up) => Self::Confirmation.swipe(direction),
             (Self::Confirmation, Direction::Down) => Self::Action.swipe(direction),
-            (Self::Confirmation, Direction::Left) => Self::Menu.swipe(direction),
             _ => self.do_nothing(),
         }
     }
@@ -279,9 +274,7 @@ fn new_confirm_action_uni<T: Component + PaginateFull + MaybeTrace + 'static>(
 
     match extra {
         ConfirmActionExtra::Menu { .. } => {
-            content = content
-                .with_menu_button()
-                .with_swipe(Direction::Left, SwipeSettings::default());
+            content = content.with_menu_button();
         }
         ConfirmActionExtra::Cancel => {
             content = content.with_cancel_button();
@@ -363,9 +356,7 @@ fn create_menu(
         menu = menu.danger(theme::ICON_CANCEL, menu_strings.verb_cancel);
         unwrap!(menu_items.push(MENU_ITEM_CANCEL));
 
-        let content_menu = Frame::left_aligned("".into(), menu)
-            .with_cancel_button()
-            .with_swipe(Direction::Right, SwipeSettings::immediate());
+        let content_menu = Frame::left_aligned("".into(), menu).with_cancel_button();
 
         let content_menu = content_menu.map(move |msg| match msg {
             VerticalMenuChoiceMsg::Selected(i) => {
@@ -406,8 +397,7 @@ fn create_confirm(
 
         let mut content_confirm = Frame::left_aligned(prompt_title, SwipeContent::new(prompt))
             .with_footer(prompt_action, None)
-            .with_swipe(Direction::Down, SwipeSettings::default())
-            .with_swipe(Direction::Left, SwipeSettings::default());
+            .with_swipe(Direction::Down, SwipeSettings::default());
 
         if matches!(extra, ConfirmActionExtra::Menu(_)) {
             content_confirm = content_confirm.with_menu_button();

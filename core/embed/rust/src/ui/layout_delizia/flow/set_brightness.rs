@@ -39,10 +39,8 @@ impl FlowController for SetBrightness {
 
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Menu, Direction::Right) => Self::Slider.swipe(direction),
             (Self::Slider, Direction::Up) => Self::Confirm.swipe(direction),
             (Self::Confirm, Direction::Down) => Self::Slider.swipe(direction),
-            (Self::Confirm, Direction::Left) => Self::Menu.swipe(direction),
             (Self::Confirmed, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
             _ => self.do_nothing(),
         }
@@ -108,7 +106,6 @@ pub fn new_set_brightness(brightness: Option<u8>) -> Result<SwipeFlow, Error> {
         VerticalMenu::empty().danger(theme::ICON_CANCEL, TR::buttons__cancel.into()),
     )
     .with_cancel_button()
-    .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map(super::util::map_to_choice);
 
     let content_confirm = Frame::left_aligned(
@@ -118,7 +115,6 @@ pub fn new_set_brightness(brightness: Option<u8>) -> Result<SwipeFlow, Error> {
     .with_footer(TR::instructions__tap_to_confirm.into(), None)
     .with_menu_button()
     .with_swipe(Direction::Down, SwipeSettings::default())
-    .with_swipe(Direction::Left, SwipeSettings::default())
     .map(move |msg| match msg {
         PromptMsg::Confirmed => {
             let _ = storage::set_brightness(BRIGHTNESS.load(Ordering::Relaxed));

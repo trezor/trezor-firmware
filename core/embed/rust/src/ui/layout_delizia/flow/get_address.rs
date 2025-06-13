@@ -45,17 +45,10 @@ impl FlowController for GetAddress {
 
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Address, Direction::Left) => Self::Menu.swipe(direction),
             (Self::Address, Direction::Up) => Self::Tap.swipe(direction),
             (Self::Tap, Direction::Down) => Self::Address.swipe(direction),
-            (Self::Tap, Direction::Left) => Self::Menu.swipe(direction),
-            (Self::Menu, Direction::Right) => Self::Address.swipe(direction),
-            (Self::QrCode, Direction::Right) => Self::Menu.swipe(direction),
-            (Self::AccountInfo, Direction::Right) => Self::Menu.swipe_right(),
             (Self::Cancel, Direction::Up) => Self::CancelTap.swipe(direction),
-            (Self::Cancel, Direction::Right) => Self::Menu.swipe(direction),
             (Self::CancelTap, Direction::Down) => Self::Cancel.swipe(direction),
-            (Self::CancelTap, Direction::Right) => Self::Menu.swipe(direction),
             _ => self.do_nothing(),
         }
     }
@@ -113,7 +106,6 @@ pub fn new_get_address(
         Frame::left_aligned(title, SwipeContent::new(SwipePage::vertical(paragraphs)))
             .with_menu_button()
             .with_swipeup_footer(None)
-            .with_swipe(Direction::Left, SwipeSettings::default())
             .with_vertical_pages()
             .map_to_button_msg()
             .one_button_request(ButtonRequest::from_num(br_code, br_name))
@@ -125,7 +117,6 @@ pub fn new_get_address(
         Frame::left_aligned(title, SwipeContent::new(PromptScreen::new_tap_to_confirm()))
             .with_footer(TR::instructions__tap_to_confirm.into(), None)
             .with_swipe(Direction::Down, SwipeSettings::default())
-            .with_swipe(Direction::Left, SwipeSettings::default())
             .map(super::util::map_to_confirm);
 
     // Menu
@@ -140,7 +131,6 @@ pub fn new_get_address(
             .danger(theme::ICON_CANCEL, TR::address__cancel_receive.into()),
     )
     .with_cancel_button()
-    .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map(super::util::map_to_choice);
 
     // QrCode
@@ -151,7 +141,6 @@ pub fn new_get_address(
             .with_border(QR_BORDER),
     )
     .with_cancel_button()
-    .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map_to_button_msg();
 
     // AccountInfo
@@ -172,7 +161,6 @@ pub fn new_get_address(
     )
     .with_cancel_button()
     .with_swipeup_footer(None)
-    .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map_to_button_msg();
 
     // CancelTap
@@ -183,7 +171,6 @@ pub fn new_get_address(
     .with_cancel_button()
     .with_footer(TR::instructions__tap_to_confirm.into(), None)
     .with_swipe(Direction::Down, SwipeSettings::default())
-    .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map(super::util::map_to_confirm);
 
     let mut res = SwipeFlow::new(&GetAddress::Address)?;
