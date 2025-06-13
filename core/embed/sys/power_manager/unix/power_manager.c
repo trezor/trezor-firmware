@@ -27,6 +27,41 @@ pm_status_t pm_init(bool inherit_state) { return PM_OK; }
 
 void pm_deinit(void) {}
 
+pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
+  // Mock suspend behavior for Unix/emulator
+  // Wait for 'p' key press or mouse click only
+  SDL_Event event;
+
+  while (SDL_WaitEvent(&event)) {
+    switch (event.type) {
+      case SDL_KEYDOWN:
+        if (event.key.keysym.sym == SDLK_p) {
+          if (wakeup_reason != NULL) {
+            *wakeup_reason = WAKEUP_FLAG_BUTTON;
+          }
+          return PM_OK;
+        }
+        break;
+      case SDL_MOUSEBUTTONDOWN:
+        if (wakeup_reason != NULL) {
+          *wakeup_reason = WAKEUP_FLAG_BUTTON;
+        }
+        return PM_OK;
+      case SDL_QUIT:
+        // Quit gracefully
+        exit(0);
+        break;
+      default:
+        break;
+    }
+  }
+
+  if (wakeup_reason != NULL) {
+    *wakeup_reason = 0;
+  }
+  return PM_ERROR;
+}
+
 pm_status_t pm_hibernate(void) {
   exit(1);
   return PM_OK;
