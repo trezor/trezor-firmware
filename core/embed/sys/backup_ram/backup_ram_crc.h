@@ -27,7 +27,11 @@
  * @brief Calculate CRC-16-CCITT for the backup RAM storage.
  *
  * @param data Pointer to the data to calculate CRC for.
- * @param length Length of the data in bytes.
+ * @param size Length of the data in bytes.
+ * @param initial_crc Initial CRC value to start the calculation from. Use
+ *  BACKUP_RAM_CRC16_INITIAL for a fresh calculation. Use the last calculated
+ * CRC value to continue the calculation from a previous state.
+ *
  * @return uint16_t Calculated CRC value.
  */
 uint16_t backup_ram_crc16(const void *data, size_t size, uint16_t initial_crc);

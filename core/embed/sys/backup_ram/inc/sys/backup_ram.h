@@ -32,8 +32,9 @@
  *
  * This function initializes the backup RAM driver, checks the consistency of
  * the backup RAM storage, and initializes it if necessary.
- * @return backup_ram_status_t BACKUP_RAM_OK if the operation was successful or
- *                             backup allready initialized.
+ *
+ * @return true if the operation was successful
+ *
  */
 bool backup_ram_init(void);
 
@@ -57,9 +58,9 @@ bool backup_ram_erase(void);
  * @brief Finds the first key in backup RAM that is greater than or equal to
  * min_key.
  *
- * @param min_keys Minimum key to search for
+ * @param min_key Minimum key to search for
  *
- * @return The first key found that is greater than or equal to min_keys, or
+ * @return The first key found that is greater than or equal to min_key, or
  *         0xFFFF if no such key exists.
  */
 uint16_t backup_ram_search(uint16_t min_key);
