@@ -794,7 +794,14 @@ def confirm_properties(
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> Awaitable[None]:
     # Monospace flag for values that are bytes.
-    items = [(prop[0], prop[1], isinstance(prop[1], bytes)) for prop in props]
+    items = [
+        (
+            prop[0],
+            prop[1],
+            prop[2] if (len(prop) == 3 and prop[2] is not None) else True,
+        )
+        for prop in props
+    ]
 
     if subtitle:
         title += ": " + subtitle
@@ -1024,18 +1031,19 @@ if not utils.BITCOIN_ONLY:
                 br_name="confirm_ethereum_approve",
             )
 
-        properties = (
-            [(TR.words__token, token_symbol)]
+        properties: list[PropertyType] = (
+            [(TR.words__token, token_symbol, True)]
             if is_revoke
             else [
                 (
                     f"{TR.ethereum__approve_amount_allowance}:",
                     total_amount or TR.words__unlimited,
+                    False,
                 )
             ]
         )
         if not is_unknown_network:
-            properties.append((f"{TR.words__chain}:", network_name))
+            properties.append((f"{TR.words__chain}:", network_name, True))
         await confirm_properties(
             "confirm_ethereum_approve",
             TR.ethereum__approve_revoke if is_revoke else TR.ethereum__approve,

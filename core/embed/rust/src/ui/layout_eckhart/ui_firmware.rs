@@ -23,6 +23,7 @@ use crate::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
             util::{ConfirmValueParams, PropsList, RecoveryType, StrOrBytes},
         },
+        layout_eckhart::theme::TEXT_MONO_MEDIUM_LIGHT_DATA,
         ui_firmware::{
             FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_WORD_QUIZ_ITEMS,
         },
@@ -362,8 +363,8 @@ impl FirmwareUI for UIEckhart {
         let paragraphs = PropsList::new(
             items,
             &theme::TEXT_SMALL_LIGHT,
-            &theme::TEXT_MONO_LIGHT,
-            &theme::TEXT_MONO_LIGHT,
+            &theme::TEXT_MONO_MEDIUM_LIGHT,
+            &TEXT_MONO_MEDIUM_LIGHT_DATA,
         )?;
 
         let flow = flow::new_confirm_with_menu(

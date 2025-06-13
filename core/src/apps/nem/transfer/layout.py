@@ -95,7 +95,7 @@ async def _ask_transfer_mosaic(
             await confirm_properties(
                 "confirm_mosaic_levy",
                 TR.nem__confirm_mosaic,
-                ((TR.nem__levy_fee_of, levy_msg),),
+                ((TR.nem__levy_fee_of, levy_msg, False),),
             )
 
     else:

@@ -778,17 +778,14 @@ def confirm_properties(
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> Awaitable[None]:
-    from ubinascii import hexlify
-
-    def handle_bytes(prop: PropertyType) -> tuple[str | None, str | None, bool]:
-        key, value = prop
-        if isinstance(value, (bytes, bytearray, memoryview)):
-            return (key, hexlify(value).decode(), True)
-        else:
-            # When there is not space in the text, taking it as data
-            # to not include hyphens
-            is_data = value and " " not in value
-            return (key, value, bool(is_data))
+    items = [
+        (
+            prop[0],
+            prop[1],
+            prop[2] if (len(prop) == 3 and prop[2] is not None) else True,
+        )
+        for prop in props
+    ]
 
     if subtitle:
         title += ": " + subtitle
@@ -796,7 +793,7 @@ def confirm_properties(
     return raise_if_not_confirmed(
         trezorui_api.confirm_properties(
             title=title,
-            items=map(handle_bytes, props),  # type: ignore [cannot be assigned to parameter "items"]
+            items=items,
             hold=hold,
         ),
         br_name,
@@ -1005,18 +1002,19 @@ if not utils.BITCOIN_ONLY:
                 br_name="confirm_ethereum_approve",
             )
 
-        properties = (
-            [(TR.words__token, token_symbol)]
+        properties: list[PropertyType] = (
+            [(TR.words__token, token_symbol, True)]
             if is_revoke
             else [
                 (
                     TR.ethereum__approve_amount_allowance,
                     total_amount or TR.words__unlimited,
+                    False,
                 )
             ]
         )
         if not is_unknown_network:
-            properties.append((TR.words__chain, network_name))
+            properties.append((TR.words__chain, network_name, True))
         await confirm_properties(
             "confirm_ethereum_approve",
             TR.ethereum__approve_revoke if is_revoke else TR.ethereum__approve,
@@ -1282,8 +1280,8 @@ def confirm_joint_total(spending_amount: str, total_amount: str) -> Awaitable[No
         "confirm_joint_total",
         TR.joint__title,
         [
-            (TR.joint__you_are_contributing, spending_amount),
-            (TR.joint__to_the_total_amount, total_amount),
+            (TR.joint__you_are_contributing, spending_amount, False),
+            (TR.joint__to_the_total_amount, total_amount, False),
         ],
         hold=True,
         br_code=ButtonRequestType.SignTx,
