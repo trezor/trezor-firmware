@@ -665,6 +665,7 @@ if FROZEN:
     ))
 
     SOURCE_PY_DEBUG_ENUMS = [SOURCE_PY_DIR + 'trezor/enums/Debug*.py']
+    SOURCE_PY_THP_ENUMS = [SOURCE_PY_DIR + 'trezor/enums/Thp*.py']
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/*.py',
         exclude=[
             SOURCE_PY_DIR + 'trezor/enums/Cardano*.py',
@@ -679,8 +680,12 @@ if FROZEN:
             SOURCE_PY_DIR + 'trezor/enums/Stellar*.py',
             SOURCE_PY_DIR + 'trezor/enums/Tezos*.py',
             SOURCE_PY_DIR + 'trezor/enums/Zcash*.py',
-        ] + (SOURCE_PY_DEBUG_ENUMS if PYOPT != '0' else []))
-    )
+        ] + (
+            SOURCE_PY_DEBUG_ENUMS if PYOPT != '0' else []
+        ) + (
+            SOURCE_PY_THP_ENUMS if not THP else []
+        )
+    ))
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/*.py',
