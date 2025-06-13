@@ -126,6 +126,9 @@ async def get_public_key(
             account=account,
             path=path,
             mismatch_title=TR.addr_mismatch__xpub_mismatch,
+            warning=(
+                TR.addr_mismatch__wrong_derivation_path if account is None else None
+            ),
             br_name="show_xpub",
         )
         return await early_response(
