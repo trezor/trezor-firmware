@@ -32,6 +32,8 @@ if TYPE_CHECKING:
         StellarSetOptionsOp,
     )
 
+    from ....trezor.ui.layouts import PropertyType
+
 
 async def confirm_source_account(source_account: str) -> None:
     await confirm_address(
@@ -47,8 +49,8 @@ async def confirm_allow_trust_op(op: StellarAllowTrustOp) -> None:
         "op_allow_trust",
         TR.stellar__allow_trust if op.is_authorized else TR.stellar__revoke_trust,
         (
-            (TR.stellar__asset, op.asset_code),
-            (TR.stellar__trusted_account, op.trusted_account),
+            (TR.stellar__asset, op.asset_code, True),
+            (TR.stellar__trusted_account, op.trusted_account, True),
         ),
     )
 
@@ -137,11 +139,20 @@ async def _confirm_offer(
     selling_asset = op.selling_asset  # local_cache_attribute
 
     if StellarManageBuyOfferOp.is_type_of(op):
-        buying = (TR.stellar__buying, format_amount(op.amount, buying_asset))
-        selling = (TR.stellar__selling, format_asset(selling_asset))
-        price = (
+        buying: PropertyType = (
+            TR.stellar__buying,
+            format_amount(op.amount, buying_asset),
+            False,
+        )
+        selling: PropertyType = (
+            TR.stellar__selling,
+            format_asset(selling_asset),
+            False,
+        )
+        price: PropertyType = (
             TR.stellar__price_per_template.format(format_asset(selling_asset)),
             str(op.price_n / op.price_d),
+            False,
         )
         await confirm_properties(
             "op_offer",
@@ -149,9 +160,13 @@ async def _confirm_offer(
             (buying, selling, price),
         )
     else:
-        selling = (TR.stellar__selling, format_amount(op.amount, selling_asset))
-        buying = (TR.stellar__buying, format_asset(buying_asset))
-        price = (
+        selling: PropertyType = (
+            TR.stellar__selling,
+            format_amount(op.amount, selling_asset),
+            False,
+        )
+        buying: PropertyType = (TR.stellar__buying, format_asset(buying_asset), False)
+        price: PropertyType = (
             TR.stellar__price_per_template.format(format_asset(buying_asset)),
             str(op.price_n / op.price_d),
         )

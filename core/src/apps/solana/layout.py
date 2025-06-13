@@ -162,7 +162,7 @@ async def confirm_instruction(
             raise ValueError  # Invalid ui property
 
     if instruction.multisig_signers:
-        signers: list[tuple[str, str]] = []
+        signers: list[tuple[str, str, bool]] = []
         for i, multisig_signer in enumerate(instruction.multisig_signers, 1):
             multisig_signer_public_key = multisig_signer[0]
 
@@ -174,6 +174,7 @@ async def confirm_instruction(
                 (
                     f"{TR.words__signer} {i}{path_str}:",
                     base58.encode(multisig_signer[0]),
+                    True,
                 )
             )
 

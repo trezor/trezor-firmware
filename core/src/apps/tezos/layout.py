@@ -96,8 +96,9 @@ async def require_confirm_ballot(proposal: str, ballot: str) -> None:
         "confirm_ballot",
         TR.tezos__submit_ballot,
         (
-            (TR.tezos__ballot, ballot),
-            (f"{TR.tezos__proposal}:", proposal),
+            (TR.tezos__ballot, ballot, True),
+            (f"{TR.tezos__proposal}:", proposal, True),
+
         ),
         hold=True,
         br_code=BR_SIGN_TX,
@@ -109,7 +110,7 @@ async def require_confirm_proposals(proposals: list[str]) -> None:
         "confirm_proposals",
         TR.tezos__submit_proposals if len(proposals) > 1 else TR.tezos__submit_proposal,
         [
-            (f"{TR.tezos__proposal} " + str(i), proposal)
+            (f"{TR.tezos__proposal} " + str(i), proposal, True)
             for i, proposal in enumerate(proposals, 1)
         ],
         hold=True,
