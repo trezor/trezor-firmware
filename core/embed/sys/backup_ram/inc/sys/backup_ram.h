@@ -54,6 +54,8 @@ void backup_ram_deinit(void);
 
 bool backup_ram_erase(void);
 
+#define BACKUP_RAM_INVALID_KEY 0xFFFF
+
 /**
  * @brief Finds the first key in backup RAM that is greater than or equal to
  * min_key.
@@ -61,7 +63,7 @@ bool backup_ram_erase(void);
  * @param min_key Minimum key to search for
  *
  * @return The first key found that is greater than or equal to min_key, or
- *         0xFFFF if no such key exists.
+ *         BACKUP_RAM_INVALID_KEY if no such key exists.
  */
 uint16_t backup_ram_search(uint16_t min_key);
 

@@ -334,11 +334,11 @@ uint16_t backup_ram_search(uint16_t min_key) {
   backup_ram_driver_t* drv = &g_backup_ram_driver;
 
   if (!drv->initialized) {
-    return false;
+    return BACKUP_RAM_INVALID_KEY;
   }
 
   uint32_t offset = 0;
-  uint16_t key = 0xFFFF;
+  uint16_t key = BACKUP_RAM_INVALID_KEY;
 
   while (offset + ITEM_SIZE(0) <= drv->payload_size) {
     backup_ram_item_t* item = (backup_ram_item_t*)(drv->payload + offset);

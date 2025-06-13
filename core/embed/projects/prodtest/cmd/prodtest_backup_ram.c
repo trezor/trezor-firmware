@@ -40,7 +40,7 @@ static void prodtest_backup_ram_list(cli_t* cli) {
   int key_count = 0;
   uint16_t key = 0;
 
-  while ((key = backup_ram_search(key)) < 0xFFFF) {
+  while ((key = backup_ram_search(key)) != BACKUP_RAM_INVALID_KEY) {
     size_t data_size = 0;
     if (backup_ram_read(key, NULL, 0, &data_size)) {
       cli_trace(cli, "Key #%d: %d bytes", key, data_size);
