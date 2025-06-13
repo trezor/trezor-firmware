@@ -121,16 +121,6 @@ where
         self
     }
 
-    pub fn with_swipe_left(mut self) -> Self {
-        self.swipe_left = true;
-        self
-    }
-
-    pub fn with_swipe_right(mut self) -> Self {
-        self.swipe_right = true;
-        self
-    }
-
     fn setup_swipe(&mut self) {
         self.swipe.allow_up = self.scrollbar.has_next_page();
         self.swipe.allow_down = self.scrollbar.has_previous_page();
