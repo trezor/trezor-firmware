@@ -166,7 +166,7 @@ class WebUSB:
     """Length of one USB RX packet."""
     TX_PACKET_LEN: ClassVar[int]
     """Length of one USB TX packet."""
-from . import fatfs, haptic, sdcard, ble
+from . import fatfs, haptic, sdcard, ble, pm
 POLL_READ: int  # wait until interface is readable and return read data
 POLL_WRITE: int  # wait until interface is writable
 
