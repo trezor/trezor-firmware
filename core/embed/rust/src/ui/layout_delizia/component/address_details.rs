@@ -7,7 +7,7 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            swipe_detect::{SwipeConfig, SwipeSettings},
+            swipe_detect::SwipeConfig,
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
             Component, Event, EventCtx, PaginateFull,
         },
@@ -61,7 +61,6 @@ impl AddressDetails {
         let result = Self {
             details: Frame::left_aligned(details_title, para.into_paragraphs())
                 .with_cancel_button()
-                .with_swipe(Direction::Right, SwipeSettings::immediate())
                 .with_horizontal_pages(),
             xpub_view: Frame::left_aligned(
                 " \n ".into(),

@@ -48,14 +48,6 @@ impl FlowController for ConfirmFido {
 
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Intro, Direction::Left) => Self::Menu.swipe(direction),
-            (Self::Menu, Direction::Right) => {
-                if single_cred() {
-                    Self::Details.swipe_right()
-                } else {
-                    Self::Intro.swipe_right()
-                }
-            }
             (Self::Intro, Direction::Up) => Self::ChooseCredential.swipe(direction),
             (Self::ChooseCredential, Direction::Down) => Self::Intro.swipe(direction),
             (Self::Details, Direction::Up) => Self::Tap.swipe(direction),
@@ -119,7 +111,6 @@ pub fn new_confirm_fido(
     )
     .with_menu_button()
     .with_swipeup_footer(None)
-    .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map_to_button_msg();
 
     // Closure to lazy-load the information on given page index.
@@ -149,7 +140,6 @@ pub fn new_confirm_fido(
     )
     .register_footer_update_fn(footer_update_fn)
     .with_swipe(Direction::Down, SwipeSettings::default())
-    .with_swipe(Direction::Right, SwipeSettings::immediate())
     .with_vertical_pages()
     .map(super::util::map_to_choice);
 
@@ -162,8 +152,7 @@ pub fn new_confirm_fido(
         TR::fido__title_credential_details.into(),
         SwipeContent::new(FidoCredential::new(icon_name, app_name, get_account)),
     )
-    .with_swipeup_footer(Some(title))
-    .with_swipe(Direction::Right, SwipeSettings::immediate());
+    .with_swipeup_footer(Some(title));
     let content_details = if single_cred() {
         content_details.with_menu_button()
     } else {
@@ -175,7 +164,6 @@ pub fn new_confirm_fido(
         .with_menu_button()
         .with_footer(TR::instructions__tap_to_confirm.into(), None)
         .with_swipe(Direction::Down, SwipeSettings::default())
-        .with_swipe(Direction::Right, SwipeSettings::immediate())
         .map(super::util::map_to_confirm);
 
     let content_menu = Frame::left_aligned(
@@ -183,7 +171,6 @@ pub fn new_confirm_fido(
         VerticalMenu::empty().danger(theme::ICON_CANCEL, TR::buttons__cancel.into()),
     )
     .with_cancel_button()
-    .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map(super::util::map_to_choice);
 
     let initial_page = if single_cred() {

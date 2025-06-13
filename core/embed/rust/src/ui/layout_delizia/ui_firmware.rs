@@ -558,7 +558,6 @@ impl FirmwareUI for UIDelizia {
                 .with_cancel_button()
                 .with_chunkify(true)
                 .with_text_mono(true)
-                .with_swipe_right()
         });
 
         let confirm_extra = extra_item.map(|(extra_title, extra)| {
@@ -566,7 +565,6 @@ impl FirmwareUI for UIDelizia {
                 .with_cancel_button()
                 .with_chunkify(true)
                 .with_text_mono(true)
-                .with_swipe_right()
         });
 
         let mut fee_items_params =

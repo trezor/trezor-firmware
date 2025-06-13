@@ -17,7 +17,6 @@ pub struct SimplePage<T> {
     swipe: Swipe,
     scrollbar: ScrollBar,
     axis: Axis,
-    swipe_right_to_go_back: bool,
     fade: Cell<Option<u8>>,
 }
 
@@ -33,7 +32,6 @@ where
             pad: Pad::with_background(background),
             scrollbar: ScrollBar::new(axis),
             axis,
-            swipe_right_to_go_back: false,
             fade: Cell::new(None),
         }
     }
@@ -46,11 +44,6 @@ where
         Self::new(content, Axis::Vertical, background)
     }
 
-    pub fn with_swipe_right_to_go_back(mut self) -> Self {
-        self.swipe_right_to_go_back = true;
-        self
-    }
-
     pub fn inner(&self) -> &T {
         &self.content
     }
@@ -58,12 +51,10 @@ where
     fn setup_swipe(&mut self) {
         if self.is_horizontal() {
             self.swipe.allow_left = self.scrollbar.has_next_page();
-            self.swipe.allow_right =
-                self.scrollbar.has_previous_page() || self.swipe_right_to_go_back;
+            self.swipe.allow_right = self.scrollbar.has_previous_page();
         } else {
             self.swipe.allow_up = self.scrollbar.has_next_page();
             self.swipe.allow_down = self.scrollbar.has_previous_page();
-            self.swipe.allow_right = self.swipe_right_to_go_back;
         }
     }
 
@@ -136,11 +127,6 @@ where
                 (SwipeDirection::Left, Axis::Horizontal) | (SwipeDirection::Up, Axis::Vertical) => {
                     self.change_page(ctx, 1);
                     return None;
-                }
-                (SwipeDirection::Right, _)
-                    if self.swipe_right_to_go_back && self.scrollbar.active_page == 0 =>
-                {
-                    return Some(PageMsg::Cancelled);
                 }
                 (SwipeDirection::Right, Axis::Horizontal)
                 | (SwipeDirection::Down, Axis::Vertical) => {

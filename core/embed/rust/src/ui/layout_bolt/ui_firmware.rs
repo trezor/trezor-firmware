@@ -298,9 +298,7 @@ impl FirmwareUI for UIBolt {
             Frame::left_aligned(
                 theme::label_title(),
                 title,
-                ButtonPage::new(paragraphs, theme::BG)
-                    .with_hold()?
-                    .with_swipe_left(),
+                ButtonPage::new(paragraphs, theme::BG).with_hold()?,
             )
             .with_info_button(),
         );
@@ -453,12 +451,9 @@ impl FirmwareUI for UIBolt {
             .add(Paragraph::new(&theme::TEXT_NORMAL, fee_label).no_break())
             .add(Paragraph::new(&theme::TEXT_MONO, fee));
 
-        let mut page = ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
+        let page = ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
             .with_hold()?
             .with_cancel_button(verb_cancel);
-        if info_button {
-            page = page.with_swipe_left();
-        }
         let mut frame = Frame::left_aligned(
             theme::label_title(),
             title.unwrap_or(TString::empty()),
@@ -775,8 +770,7 @@ impl FirmwareUI for UIBolt {
             ad.add_xpub(xtitle, text)?;
         }
 
-        let layout =
-            RootComponent::new(SimplePage::horizontal(ad, theme::BG).with_swipe_right_to_go_back());
+        let layout = RootComponent::new(SimplePage::horizontal(ad, theme::BG));
         Ok(layout)
     }
 
@@ -981,8 +975,7 @@ impl FirmwareUI for UIBolt {
             Frame::left_aligned(
                 theme::label_title(),
                 title,
-                SimplePage::new(paragraphs.into_paragraphs(), axis, theme::BG)
-                    .with_swipe_right_to_go_back(),
+                SimplePage::new(paragraphs.into_paragraphs(), axis, theme::BG),
             )
             .with_cancel_button(),
         );

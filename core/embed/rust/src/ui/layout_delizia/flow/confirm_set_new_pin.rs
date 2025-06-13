@@ -36,13 +36,9 @@ impl FlowController for SetNewPin {
 
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Intro, Direction::Left) => Self::Menu.swipe(direction),
             (Self::Intro, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
-            (Self::Menu, Direction::Right) => Self::Intro.swipe(direction),
             (Self::CancelPinIntro, Direction::Up) => Self::CancelPinConfirm.swipe(direction),
-            (Self::CancelPinIntro, Direction::Right) => Self::Intro.swipe(direction),
             (Self::CancelPinConfirm, Direction::Down) => Self::CancelPinIntro.swipe(direction),
-            (Self::CancelPinConfirm, Direction::Right) => Self::Intro.swipe(direction),
             _ => self.do_nothing(),
         }
     }
@@ -69,7 +65,6 @@ pub fn new_set_new_pin(
     let content_intro = Frame::left_aligned(title, SwipeContent::new(paragraphs))
         .with_menu_button()
         .with_swipeup_footer(None)
-        .with_swipe(Direction::Left, SwipeSettings::default())
         .map_to_button_msg();
 
     let content_menu = Frame::left_aligned(
@@ -77,7 +72,6 @@ pub fn new_set_new_pin(
         VerticalMenu::empty().danger(theme::ICON_CANCEL, TR::pin__cancel_setup.into()),
     )
     .with_cancel_button()
-    .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map(super::util::map_to_choice);
 
     let paragraphs_cancel_intro = ParagraphVecShort::from_iter([
@@ -91,7 +85,6 @@ pub fn new_set_new_pin(
     )
     .with_cancel_button()
     .with_swipeup_footer(Some(TR::pin__cancel_description.into()))
-    .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map_to_button_msg();
 
     let content_cancel_confirm = Frame::left_aligned(
@@ -101,7 +94,6 @@ pub fn new_set_new_pin(
     .with_cancel_button()
     .with_footer(TR::instructions__tap_to_confirm.into(), None)
     .with_swipe(Direction::Down, SwipeSettings::default())
-    .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map(super::util::map_to_confirm);
 
     let mut res = SwipeFlow::new(&SetNewPin::Intro)?;

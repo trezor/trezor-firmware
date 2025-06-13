@@ -36,12 +36,9 @@ impl FlowController for ConfirmFirmwareUpdate {
 
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Intro, Direction::Left) => Self::Menu.swipe(direction),
             (Self::Intro, Direction::Up) => Self::Confirm.swipe(direction),
-            (Self::Menu, Direction::Right) => Self::Intro.swipe(direction),
             (Self::Fingerprint, Direction::Right) => Self::Menu.swipe(direction),
             (Self::Confirm, Direction::Down) => Self::Intro.swipe(direction),
-            (Self::Confirm, Direction::Left) => Self::Menu.swipe(direction),
             _ => self.do_nothing(),
         }
     }
@@ -71,7 +68,6 @@ pub fn new_confirm_firmware_update(
     )
     .with_menu_button()
     .with_swipeup_footer(None)
-    .with_swipe(Direction::Left, SwipeSettings::default())
     .map_to_button_msg();
 
     let content_menu = Frame::left_aligned(
@@ -84,7 +80,6 @@ pub fn new_confirm_firmware_update(
             .danger(theme::ICON_CANCEL, TR::buttons__cancel.into()),
     )
     .with_cancel_button()
-    .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map(super::util::map_to_choice);
 
     let paragraphs_fingerprint =
@@ -94,7 +89,6 @@ pub fn new_confirm_firmware_update(
         SwipeContent::new(paragraphs_fingerprint),
     )
     .with_cancel_button()
-    .with_swipe(Direction::Right, SwipeSettings::default())
     .map_to_button_msg();
 
     let content_confirm = Frame::left_aligned(
@@ -104,7 +98,6 @@ pub fn new_confirm_firmware_update(
     .with_menu_button()
     .with_footer(TR::instructions__hold_to_confirm.into(), None)
     .with_swipe(Direction::Down, SwipeSettings::default())
-    .with_swipe(Direction::Left, SwipeSettings::default())
     .map(super::util::map_to_confirm);
 
     let mut res = SwipeFlow::new(&ConfirmFirmwareUpdate::Intro)?;

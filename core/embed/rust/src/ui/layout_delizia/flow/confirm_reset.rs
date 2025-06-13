@@ -37,11 +37,8 @@ impl FlowController for ConfirmResetCreate {
 
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Intro, Direction::Left) => Self::Menu.swipe(direction),
             (Self::Intro, Direction::Up) => Self::Confirm.swipe(direction),
-            (Self::Menu, Direction::Right) => Self::Intro.swipe(direction),
             (Self::Confirm, Direction::Down) => Self::Intro.swipe(direction),
-            (Self::Confirm, Direction::Left) => Self::Menu.swipe(direction),
             _ => self.do_nothing(),
         }
     }
@@ -72,8 +69,6 @@ impl FlowController for ConfirmResetRecover {
 
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Intro, Direction::Left) => Self::Menu.swipe(direction),
-            (Self::Menu, Direction::Right) => Self::Intro.swipe(direction),
             (Self::Intro, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
             _ => self.do_nothing(),
         }
@@ -114,7 +109,6 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
     let content_intro = Frame::left_aligned(title, SwipeContent::new(paragraphs))
         .with_menu_button()
         .with_swipeup_footer(None)
-        .with_swipe(Direction::Left, SwipeSettings::default())
         .map_to_button_msg()
         .one_button_request(br);
 
@@ -123,7 +117,6 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
         VerticalMenu::empty().danger(theme::ICON_CANCEL, cancel_btn_text),
     )
     .with_cancel_button()
-    .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map(super::util::map_to_choice);
 
     let res = if recovery {
@@ -139,7 +132,6 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
         .with_menu_button()
         .with_footer(TR::instructions__hold_to_confirm.into(), None)
         .with_swipe(Direction::Down, SwipeSettings::default())
-        .with_swipe(Direction::Left, SwipeSettings::default())
         .map(super::util::map_to_confirm)
         .one_button_request(ButtonRequestCode::ResetDevice.with_name("confirm_setup_device"));
 

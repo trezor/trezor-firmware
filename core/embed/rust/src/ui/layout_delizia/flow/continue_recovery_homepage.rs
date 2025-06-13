@@ -57,8 +57,6 @@ impl FlowController for ContinueRecoveryBeforeShares {
 
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Main, Direction::Left) => Self::Menu.swipe(direction),
-            (Self::Menu, Direction::Right) => Self::Main.swipe(direction),
             (Self::Main, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
             _ => self.do_nothing(),
         }
@@ -82,11 +80,8 @@ impl FlowController for ContinueRecoveryBetweenShares {
 
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Main, Direction::Left) => Self::Menu.swipe(direction),
-            (Self::Menu, Direction::Right) => Self::Main.swipe(direction),
             (Self::Main, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
             (Self::CancelIntro, Direction::Up) => Self::CancelConfirm.swipe(direction),
-            (Self::CancelIntro, Direction::Right) => Self::Menu.swipe(direction),
             (Self::CancelConfirm, Direction::Down) => Self::CancelIntro.swipe(direction),
             _ => self.do_nothing(),
         }
@@ -113,13 +108,9 @@ impl FlowController for ContinueRecoveryBetweenSharesAdvanced {
 
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Main, Direction::Left) => Self::Menu.swipe(direction),
-            (Self::Menu, Direction::Right) => Self::Main.swipe(direction),
             (Self::Main, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
             (Self::CancelIntro, Direction::Up) => Self::CancelConfirm.swipe(direction),
-            (Self::CancelIntro, Direction::Right) => Self::Menu.swipe(direction),
             (Self::CancelConfirm, Direction::Down) => Self::CancelIntro.swipe(direction),
-            (Self::RemainingShares, Direction::Right) => Self::Menu.swipe(direction),
             _ => self.do_nothing(),
         }
     }
@@ -189,7 +180,6 @@ pub fn new_continue_recovery_homepage(
             .with_subtitle(TR::words__instructions.into())
             .with_menu_button()
             .with_swipeup_footer(footer_description)
-            .with_swipe(Direction::Left, SwipeSettings::default())
             .map_to_button_msg()
             .repeated_button_request(ButtonRequest::new(
                 ButtonRequestCode::RecoveryHomepage,
@@ -206,7 +196,6 @@ pub fn new_continue_recovery_homepage(
         Frame::left_aligned(cancel_title.into(), SwipeContent::new(paragraphs_cancel))
             .with_cancel_button()
             .with_swipeup_footer(Some(TR::words__continue_anyway_question.into()))
-            .with_swipe(Direction::Right, SwipeSettings::immediate())
             .map_to_button_msg()
             .repeated_button_request(ButtonRequest::new(
                 ButtonRequestCode::ProtectCall,
@@ -220,7 +209,6 @@ pub fn new_continue_recovery_homepage(
     .with_cancel_button()
     .with_footer(TR::instructions__tap_to_confirm.into(), None)
     .with_swipe(Direction::Down, SwipeSettings::default())
-    .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map(super::util::map_to_confirm);
 
     let res = if show_instructions {
@@ -229,7 +217,6 @@ pub fn new_continue_recovery_homepage(
             VerticalMenu::empty().danger(theme::ICON_CANCEL, cancel_btn.into()),
         )
         .with_cancel_button()
-        .with_swipe(Direction::Right, SwipeSettings::immediate())
         .map(super::util::map_to_choice);
 
         let mut res = SwipeFlow::new(&ContinueRecoveryBeforeShares::Main)?;
@@ -242,7 +229,6 @@ pub fn new_continue_recovery_homepage(
             VerticalMenu::empty().danger(theme::ICON_CANCEL, cancel_btn.into()),
         )
         .with_cancel_button()
-        .with_swipe(Direction::Right, SwipeSettings::immediate())
         .map(super::util::map_to_choice);
 
         let mut res = SwipeFlow::new(&ContinueRecoveryBetweenShares::Main)?;
@@ -268,7 +254,6 @@ pub fn new_continue_recovery_homepage(
                 .danger(theme::ICON_CANCEL, cancel_btn.into()),
         )
         .with_cancel_button()
-        .with_swipe(Direction::Right, SwipeSettings::immediate())
         .map(super::util::map_to_choice);
 
         let (footer_instruction, footer_description) = (
@@ -289,7 +274,6 @@ pub fn new_continue_recovery_homepage(
         )
         .register_footer_update_fn(footer_update_fn)
         .with_swipe(Direction::Up, SwipeSettings::default())
-        .with_swipe(Direction::Left, SwipeSettings::default())
         .with_vertical_pages()
         .map_to_button_msg()
         .repeated_button_request(ButtonRequest::new(
