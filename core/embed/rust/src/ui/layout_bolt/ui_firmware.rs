@@ -347,7 +347,7 @@ impl FirmwareUI for UIBolt {
             let [text, is_data]: [Obj; 2] = util::iter_into_array(para)?;
             let is_data = is_data.try_into()?;
             let style: &TextStyle = if is_data {
-                &theme::TEXT_MONO
+                &theme::TEXT_MONO_DATA
             } else {
                 &theme::TEXT_NORMAL
             };
@@ -385,7 +385,7 @@ impl FirmwareUI for UIBolt {
             items,
             &theme::TEXT_NORMAL,
             &theme::TEXT_MONO,
-            &theme::TEXT_MONO,
+            &theme::TEXT_MONO_DATA,
         )?;
         let page = if hold {
             ButtonPage::new(paragraphs.into_paragraphs(), theme::BG).with_hold()?
