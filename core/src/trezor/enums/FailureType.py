@@ -2,6 +2,8 @@
 # fmt: off
 # isort:skip_file
 
+from trezor import utils
+
 UnexpectedMessage = 1
 ButtonExpected = 2
 DataError = 3
@@ -17,7 +19,8 @@ PinMismatch = 12
 WipeCodeMismatch = 13
 InvalidSession = 14
 Busy = 15
-ThpUnallocatedSession = 16
 InvalidProtocol = 17
 BufferError = 18
 FirmwareError = 99
+if utils.USE_THP:
+    ThpUnallocatedSession = 16

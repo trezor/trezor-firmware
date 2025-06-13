@@ -2,15 +2,16 @@
 # fmt: off
 # isort:skip_file
 
-% if values_altcoin:
+% if values_altcoin or any(v.name.startswith('Thp') for v in values_always):
 from trezor import utils
 
 % endif
 <%
 values_debug = [v for v in values_always if v.name.startswith('DebugLink')]
-values_nondebug = [v for v in values_always if not v.name.startswith('DebugLink')]
+values_thp = [v for v in values_always if v.name.startswith('Thp')]
+values_rest = [v for v in values_always if not v.name.startswith('DebugLink') and not v.name.startswith('Thp')]
 %>\
-% for value in values_nondebug:
+% for value in values_rest:
 ${value.name} = ${value.number}
 % endfor
 % if values_debug:
@@ -19,13 +20,19 @@ if __debug__:
     ${value.name} = ${value.number}
 % endfor
 % endif
+% if values_thp:
+if utils.USE_THP:
+% for value in values_thp:
+    ${value.name} = ${value.number}
+% endfor
+% endif
 % if values_altcoin:
 if not utils.BITCOIN_ONLY:
 <%
 values_debug = [v for v in values_altcoin if v.name.startswith('DebugLink')]
-values_nondebug = [v for v in values_altcoin if not v.name.startswith('DebugLink')]
+values_rest = [v for v in values_altcoin if not v.name.startswith('DebugLink')]
 %>\
-% for value in values_nondebug:
+% for value in values_rest:
     ${value.name} = ${value.number}
 % endfor
 % if values_debug:
