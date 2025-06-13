@@ -36,13 +36,9 @@ impl FlowController for PromptBackup {
 
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Intro, Direction::Left) => Self::Menu.swipe(direction),
             (Self::Intro, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
-            (Self::Menu, Direction::Right) => Self::Intro.swipe(direction),
             (Self::SkipBackupIntro, Direction::Up) => Self::SkipBackupConfirm.swipe(direction),
-            (Self::SkipBackupIntro, Direction::Right) => Self::Intro.swipe(direction),
             (Self::SkipBackupConfirm, Direction::Down) => Self::SkipBackupIntro.swipe(direction),
-            (Self::SkipBackupConfirm, Direction::Right) => Self::Intro.swipe(direction),
             _ => self.do_nothing(),
         }
     }
@@ -68,7 +64,6 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
     let content_intro = Frame::left_aligned(title, SwipeContent::new(paragraphs))
         .with_menu_button()
         .with_swipeup_footer(None)
-        .with_swipe(Direction::Left, SwipeSettings::default())
         .map_to_button_msg();
 
     let content_menu = Frame::left_aligned(
@@ -76,7 +71,6 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
         VerticalMenu::empty().danger(theme::ICON_CANCEL, TR::backup__title_skip.into()),
     )
     .with_cancel_button()
-    .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map(super::util::map_to_choice);
 
     let paragraphs_skip_intro = ParagraphVecShort::from_iter([
@@ -94,7 +88,6 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
     .with_cancel_button()
     .with_swipeup_footer(Some(TR::words__continue_anyway_question.into()))
     .with_swipe(Direction::Up, SwipeSettings::default())
-    .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map_to_button_msg();
 
     let content_skip_confirm = Frame::left_aligned(
@@ -104,7 +97,6 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
     .with_cancel_button()
     .with_footer(TR::instructions__tap_to_confirm.into(), None)
     .with_swipe(Direction::Down, SwipeSettings::default())
-    .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map(super::util::map_to_confirm);
 
     let mut res = SwipeFlow::new(&PromptBackup::Intro)?;

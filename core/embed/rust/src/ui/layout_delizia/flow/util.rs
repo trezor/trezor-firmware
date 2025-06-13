@@ -149,11 +149,6 @@ impl ConfirmValue {
         self
     }
 
-    pub const fn with_swipe_right(mut self) -> Self {
-        self.swipe_right = true;
-        self
-    }
-
     pub const fn with_frame_margin(mut self, frame_margin: usize) -> Self {
         self.frame_margin = frame_margin;
         self
@@ -261,7 +256,6 @@ impl ConfirmValue {
         }
         if let Some(instruction) = self.footer_instruction {
             frame = frame.with_footer(instruction, self.footer_description);
-            frame = frame.with_swipe(Direction::Left, SwipeSettings::default());
         }
 
         if self.swipe_up {
@@ -461,9 +455,7 @@ impl ShowInfoParams {
                 .with_cancel_button()
                 .with_swipe(Direction::Right, SwipeSettings::immediate());
         } else if self.menu_button {
-            frame = frame
-                .with_menu_button()
-                .with_swipe(Direction::Left, SwipeSettings::default());
+            frame = frame.with_menu_button()
         }
         if let Some(instruction) = self.footer_instruction {
             frame = frame.with_footer(instruction, self.footer_description);

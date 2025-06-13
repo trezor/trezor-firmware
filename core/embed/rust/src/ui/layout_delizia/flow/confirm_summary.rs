@@ -45,13 +45,8 @@ impl FlowController for ConfirmSummary {
 
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Summary | Self::Hold, Direction::Left) => Self::Menu.swipe(direction),
             (Self::Summary, Direction::Up) => Self::Hold.swipe(direction),
             (Self::Hold, Direction::Down) => Self::Summary.swipe(direction),
-            (Self::Menu, Direction::Right) => Self::Summary.swipe(direction),
-            (Self::ExtraInfo | Self::AccountInfo | Self::CancelTap, Direction::Right) => {
-                Self::Menu.swipe(direction)
-            }
             _ => self.do_nothing(),
         }
     }
@@ -96,7 +91,6 @@ pub fn new_confirm_summary(
     .with_menu_button()
     .with_footer(TR::instructions__hold_to_sign.into(), None)
     .with_swipe(Direction::Down, SwipeSettings::default())
-    .with_swipe(Direction::Left, SwipeSettings::default())
     .map(super::util::map_to_confirm);
 
     // ExtraInfo
@@ -132,7 +126,6 @@ pub fn new_confirm_summary(
     unwrap!(menu_items.push(MENU_ITEM_CANCEL));
     let content_menu = Frame::left_aligned(TString::empty(), menu)
         .with_cancel_button()
-        .with_swipe(Direction::Right, SwipeSettings::immediate())
         .map(move |msg| match msg {
             VerticalMenuChoiceMsg::Selected(i) => {
                 let selected_item = menu_items[i];
@@ -147,7 +140,6 @@ pub fn new_confirm_summary(
     )
     .with_cancel_button()
     .with_footer(TR::instructions__tap_to_confirm.into(), None)
-    .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map(super::util::map_to_confirm);
 
     let mut res = SwipeFlow::new(&ConfirmSummary::Summary)?;
