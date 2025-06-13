@@ -280,6 +280,7 @@ async def show_address(
             else f"({TR.address__title_cosigner.lower()})"
         )
         return result
+
     if warning is None and multisig_index is not None:
         warning = TR.send__receiving_to_multisig
     await raise_if_not_confirmed(
