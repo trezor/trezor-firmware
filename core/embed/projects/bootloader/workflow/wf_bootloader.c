@@ -30,7 +30,6 @@
 #include <io/display.h>
 #include <io/display_utils.h>
 
-#include "antiglitch.h"
 #include "bootui.h"
 #include "rust_ui_bootloader.h"
 #include "wire/wire_iface_usb.h"
@@ -73,8 +72,6 @@ workflow_result_t workflow_menu(const vendor_header* const vhdr,
     }
 #endif
     if (menu_result == MENU_REBOOT) {  // reboot
-      jump_allow_1();
-      jump_allow_2();
       return WF_OK_REBOOT_SELECTED;
     }
     if (menu_result == MENU_WIPE) {  // wipe
