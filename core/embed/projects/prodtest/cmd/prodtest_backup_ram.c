@@ -19,54 +19,44 @@
 
 #ifdef USE_BACKUP_RAM
 
-#include <rtl/cli.h>
-#include <sys/backup_ram.h>
-#include <sys/systick.h>
 #include <trezor_rtl.h>
 
-static void prodtest_backup_ram_write(cli_t* cli) {
-  uint32_t soc = 0;
+#include <rtl/cli.h>
+#include <sys/backup_ram.h>
+#include <sys/power_manager.h>
+#include <sys/systick.h>
 
-  if (!cli_arg_uint32(cli, "soc_percent", &soc) || soc > 100) {
-    cli_error_arg(cli, "Expecting soc_percent argument in range 0-100");
-    return;
-  }
-
-  if (cli_arg_count(cli) > 1) {
-    cli_error_arg_count(cli);
-    return;
-  }
-
-  backup_ram_power_manager_data_t pm_data;
-
-  pm_data.soc = ((float)soc / 100);
-  pm_data.last_capture_timestamp = systick_cycles();
-
-  backup_ram_status_t status = backup_ram_store_power_manager_data(&pm_data);
-
-  if (status != BACKUP_RAM_OK) {
-    cli_error(cli, CLI_ERROR, "Failed to write backup RAM");
-    return;
-  }
-
-  cli_ok(cli, "");
-}
-
-static void prodtest_backup_ram_read(cli_t* cli) {
+static void prodtest_backup_ram_list(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
     return;
   }
 
-  backup_ram_power_manager_data_t pm_data;
-  backup_ram_status_t status = backup_ram_read_power_manager_data(&pm_data);
-
-  if (status != BACKUP_RAM_OK) {
-    cli_error(cli, CLI_ERROR, "Failed to read backup RAM");
+  if (!backup_ram_init()) {
+    cli_error(cli, CLI_ERROR, "Failed to initialize backup RAM");
     return;
   }
 
-  cli_ok(cli, "SOC: %d\%", (int)(pm_data.soc * 100));
+  int key_count = 0;
+  uint16_t key = 0;
+
+  while ((key = backup_ram_search(key)) != BACKUP_RAM_INVALID_KEY) {
+    size_t data_size = 0;
+    if (backup_ram_read(key, NULL, 0, &data_size)) {
+      cli_trace(cli, "Key #%d: %d bytes", key, data_size);
+    } else {
+      cli_error(cli, CLI_ERROR, "Failed to read key #%d info", key);
+      return;
+    }
+    key++;
+    key_count++;
+  }
+
+  if (key_count == 0) {
+    cli_trace(cli, "No keys found");
+  }
+
+  cli_ok(cli, "");
 }
 
 static void prodtest_backup_ram_erase(cli_t* cli) {
@@ -75,14 +65,9 @@ static void prodtest_backup_ram_erase(cli_t* cli) {
     return;
   }
 
-  backup_ram_status_t status = backup_ram_init();
-  if (status != BACKUP_RAM_OK) {
-    if (status == BACKUP_RAM_OK_STORAGE_INITIALIZED) {
-      cli_trace(cli, "Backup storage had to be initialized");
-    } else {
-      cli_error(cli, CLI_ERROR, "Failed to initialize backup RAM");
-      return;
-    }
+  if (!backup_ram_init()) {
+    cli_error(cli, CLI_ERROR, "Failed to initialize backup RAM");
+    return;
   }
 
   backup_ram_erase();
@@ -90,41 +75,109 @@ static void prodtest_backup_ram_erase(cli_t* cli) {
   cli_ok(cli, "");
 }
 
-static void prodtest_backup_ram_erase_unused(cli_t* cli) {
-  if (cli_arg_count(cli) > 0) {
+#if !PRODUCTION
+
+static void prodtest_backup_ram_read(cli_t* cli) {
+  if (cli_arg_count(cli) != 1) {
     cli_error_arg_count(cli);
     return;
   }
 
-  backup_ram_status_t status = backup_ram_init();
-  if (status != BACKUP_RAM_OK) {
-    if (status == BACKUP_RAM_OK_STORAGE_INITIALIZED) {
-      cli_trace(cli, "Backup storage had to be initialized");
-    } else {
-      cli_error(cli, CLI_ERROR, "Failed to initialize backup RAM");
+  uint32_t key = 0;
+  if (!cli_arg_uint32(cli, "key", &key) && key < 0xFFFF) {
+    cli_error_arg(cli, "Expecting key argument in range 0-65535");
+    return;
+  }
+
+  if (!backup_ram_init()) {
+    cli_error(cli, CLI_ERROR, "Failed to initialize backup RAM");
+    return;
+  }
+
+  if (!backup_ram_read(key, NULL, 0, NULL)) {
+    cli_error(cli, CLI_ERROR, "Key #%d not found", key);
+    return;
+  }
+
+  uint8_t data[BACKUP_RAM_MAX_KEY_DATA_SIZE];
+  size_t data_size = 0;
+  if (!backup_ram_read(key, data, sizeof(data), &data_size)) {
+    cli_error(cli, CLI_ERROR, "Failed to read the key #%d", key);
+    return;
+  }
+
+  cli_trace(cli, "Key #%d: %d bytes", key, data_size);
+
+  size_t offset = 0;
+  while (offset < data_size) {
+    size_t block_size = MIN(16, data_size - offset);
+    char block_hex[16 * 2 + 1];
+    if (!cstr_encode_hex(block_hex, sizeof(block_hex), &data[offset],
+                         block_size)) {
+      cli_error(cli, CLI_ERROR_FATAL, "Buffer too small.");
+      return;
+    }
+    cli_trace(cli, "%04x: %s", offset, block_hex);
+    offset += block_size;
+  }
+
+  cli_ok_hexdata(cli, data, data_size);
+}
+
+static void prodtest_backup_ram_write(cli_t* cli) {
+  if (cli_arg_count(cli) > 2) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  uint32_t key = 0;
+  if (!cli_arg_uint32(cli, "key", &key) && key < 0xFFFF) {
+    cli_error_arg(cli, "Expecting key argument in range 0-65535");
+    return;
+  }
+
+  size_t len = 0;
+  uint8_t data[BACKUP_RAM_MAX_KEY_DATA_SIZE];
+
+  if (cli_has_arg(cli, "hex-data")) {
+    if (!cli_arg_hex(cli, "hex-data", data, sizeof(data), &len)) {
+      if (len == sizeof(data)) {
+        cli_error(cli, CLI_ERROR, "Data too long.");
+      } else {
+        cli_error(cli, CLI_ERROR, "Hexadecimal decoding error.");
+      }
       return;
     }
   }
 
-  backup_ram_erase_unused();
+  if (!backup_ram_init()) {
+    cli_error(cli, CLI_ERROR, "Failed to initialize backup RAM");
+    return;
+  }
+
+  if (!backup_ram_write(key, data, len)) {
+    cli_error(cli, CLI_ERROR, "Failed to write key #%d", key);
+    return;
+  }
+
+  if (len == 0) {
+    cli_trace(cli, "Key #%d removed", key);
+  } else {
+    cli_trace(cli, "Key #%d written: %d bytes", key, len);
+  }
 
   cli_ok(cli, "");
 }
 
+#endif  // !PRODUCTION
+
 // clang-format off
 
- PRODTEST_CLI_CMD(
-   .name = "backup-ram-write",
-   .func = prodtest_backup_ram_write,
-   .info = "Write fuel gauge state to backup RAM",
-   .args = "<soc_percent>"
- );
-
 PRODTEST_CLI_CMD(
-    .name = "backup-ram-read",
-    .func = prodtest_backup_ram_read,
-    .info = "Read fuel gauge state from backup RAM",
-    .args = ""
+   .name = "backup-ram-list",
+   .func = prodtest_backup_ram_list,
+   .info = "List all key in backup RAM",
+   .args = ""
 );
 
 PRODTEST_CLI_CMD(
@@ -134,11 +187,22 @@ PRODTEST_CLI_CMD(
     .args = ""
 );
 
+#if !PRODUCTION
+
 PRODTEST_CLI_CMD(
-    .name = "backup-ram-erase-unused",
-    .func = prodtest_backup_ram_erase_unused,
-    .info = "Erase unused regions of backup RAM",
-    .args = ""
+   .name = "backup-ram-read",
+   .func = prodtest_backup_ram_read,
+   .info = "Read from backup RAM",
+   .args = "<key>",
 );
+
+PRODTEST_CLI_CMD(
+   .name = "backup-ram-write",
+   .func = prodtest_backup_ram_write,
+   .info = "Write to backup RAM",
+   .args = "<key> [<hex-data>]",
+);
+
+#endif // !PRODUCTION
 
 #endif // #ifdef USE_BACKUP_RAM

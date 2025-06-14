@@ -347,16 +347,19 @@ bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
 
 #include <sys/backup_ram.h>
 
-backup_ram_status_t backup_ram_read_power_manager_data(
-    backup_ram_power_manager_data_t *data) {
-  return (backup_ram_status_t)smcall_invoke1(
-      (uint32_t)data, SMCALL_BACKUP_RAM_READ_POWER_MANAGER_DATA);
+uint16_t backup_ram_search(uint16_t min_key) {
+  return (bool)smcall_invoke1(min_key, SMCALL_BACKUP_RAM_SEARCH);
 }
 
-backup_ram_status_t backup_ram_store_power_manager_data(
-    const backup_ram_power_manager_data_t *data) {
-  return (backup_ram_status_t)smcall_invoke1(
-      (uint32_t)data, SMCALL_BACKUP_RAM_STORE_POWER_MANAGER_DATA);
+bool backup_ram_read(uint16_t key, void *buffer, size_t buffer_size,
+                     size_t *data_size) {
+  return (bool)smcall_invoke4(key, (uint32_t)buffer, buffer_size,
+                              (uint32_t)data_size, SMCALL_BACKUP_RAM_READ);
+}
+
+bool backup_ram_write(uint16_t key, const void *data, size_t data_size) {
+  return (bool)smcall_invoke3(key, (uint32_t)data, data_size,
+                              SMCALL_BACKUP_RAM_WRITE);
 }
 
 #endif  // USE_BACKUP_RAM
