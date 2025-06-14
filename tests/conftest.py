@@ -304,6 +304,7 @@ def client(
         )
 
     test_ui = request.config.getoption("ui")
+    fail_on_gc_leak = not request.config.getoption("ignore_gc_leak")
 
     _raw_client.reset_debug_features()
     _raw_client.open()
@@ -314,7 +315,7 @@ def client(
         _raw_client.debug.reset_debug_events()
 
         # Make sure there are no GC leaks from previous tests
-        _raw_client.debug.check_gc_info()
+        _raw_client.debug.check_gc_info(fail_on_gc_leak)
 
         if test_ui:
             # we need to reseed before the wipe
@@ -374,7 +375,7 @@ def client(
             yield _raw_client
     finally:
         # Make sure there are no GC leaks from this test
-        _raw_client.debug.check_gc_info()
+        _raw_client.debug.check_gc_info(fail_on_gc_leak)
 
         _raw_client.close()
 
@@ -474,6 +475,12 @@ def pytest_addoption(parser: "Parser") -> None:
         action="store",
         default=None,
         help="File path for verbose logging",
+    )
+    parser.addoption(
+        "--ignore-gc-leak",
+        action="store_true",
+        default=False,
+        help="Issue a warning when GC leak detected (otherwise, fail the test)",
     )
 
 

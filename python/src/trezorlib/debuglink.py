@@ -21,6 +21,7 @@ import logging
 import re
 import textwrap
 import time
+import warnings
 from contextlib import contextmanager
 from copy import deepcopy
 from datetime import datetime
@@ -851,7 +852,7 @@ class DebugLink:
         im.save(img_location)
         self.t1_screenshot_counter += 1
 
-    def check_gc_info(self):
+    def check_gc_info(self, fail_on_gc_leak: bool = True):
         """Fetch GC heap information and check for leaks."""
         if not self.has_gc_info:
             return
@@ -861,10 +862,25 @@ class DebugLink:
             resp = self._read()
 
         info = dict(sorted((item.name, item.value) for item in resp.items))
-        if self.prev_gc_info:
-            # Free heap memory should not decrease
-            assert info["free"] >= self.prev_gc_info["free"]
+        if info["total"]:
+            LOG.debug(
+                "GC info: free=%.2f%% max_free=%.2f%%",
+                100 * info["free"] / info["total"],
+                100 * info["max_free"] / info["total"],
+            )
+
+        prev_info = self.prev_gc_info
         self.prev_gc_info = info
+
+        if not prev_info:
+            return
+        # Free heap memory should not decrease
+        if info["free"] < prev_info["free"]:
+            msg = f"GC leak found: {prev_info} -> {info}"
+            if fail_on_gc_leak:
+                raise AssertionError(msg)
+            else:
+                warnings.warn(msg)
 
 
 del _make_input_func
