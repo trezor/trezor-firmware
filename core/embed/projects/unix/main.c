@@ -37,6 +37,7 @@
 #include <unistd.h>
 
 #include <io/display.h>
+#include <sec/secret.h>
 #include <sys/system.h>
 #include <sys/systimer.h>
 #include <util/flash.h>
@@ -57,7 +58,6 @@
 #endif
 
 #ifdef USE_TROPIC
-#include <sec/secret.h>
 #include <sec/tropic.h>
 #endif
 
@@ -527,6 +527,10 @@ MP_NOINLINE int main_(int argc, char **argv) {
   mp_stack_set_limit(600000 * (sizeof(void *) / 4));
 
   pre_process_options(argc, argv);
+
+#ifdef LOCKABLE_BOOTLOADER
+  secret_lock_bootloader();
+#endif
 
   system_init(&rsod_panic_handler);
 
