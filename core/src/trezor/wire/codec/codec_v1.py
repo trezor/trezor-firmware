@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING
 from trezor import io, loop, utils
 from trezor.wire.protocol_common import Message, WireError
 
+from . import INTERRUPT
+
 if TYPE_CHECKING:
     from trezorio import WireInterface
     from typing import Callable
@@ -21,13 +23,27 @@ class CodecError(WireError):
 
 
 async def read_message(
-    iface: WireInterface, buffer_getter: Callable[[], bytearray | None]
+    iface: WireInterface,
+    buffer_getter: Callable[[], bytearray | None],
+    init_interrupt: loop.event | None = None,
 ) -> Message:
     read = loop.wait(iface.iface_num() | io.POLL_READ)
     report = bytearray(iface.RX_PACKET_LEN)
 
     # wait for initial report
-    msg_len = await read
+    # `init_interrupt` is notified to stop waiting for a message.
+    has_interrupt = init_interrupt is not None
+    init_read = loop.race(read, init_interrupt) if has_interrupt else read
+
+    # will be `None` if interrupted and `read` is not ready
+    msg_len = await init_read
+
+    # check `init_interrupt` explicitly, in case `read` is also ready.
+    if has_interrupt and init_interrupt.is_set():
+        # NOTE: we must exit here, **before** reading anything from `iface`,
+        # to avoid losing debuglink packets during session restart (see #4401).
+        raise INTERRUPT
+
     assert msg_len == len(report)
     iface.read(report, 0)
     if report[0] != _REP_MARKER:

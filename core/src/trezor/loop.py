@@ -571,3 +571,48 @@ class spawn(Syscall):
         is True, it would be calling close on self, which will result in a ValueError.
         """
         return self.task is this_task
+
+
+class event(Syscall):
+    """Single-shot event for synchronization across tasks."""
+
+    _EMPTY = object()
+
+    def __init__(self) -> None:
+        self.result = event._EMPTY
+        self.callback: Task | None = None
+
+    def is_set(self) -> bool:
+        """Returns `true` if `set()` was called."""
+        return self.result is not self._EMPTY
+
+    def set(self, result: Any = None) -> None:
+        """Mark this event as done."""
+        assert not self.is_set()
+        self.result = result
+
+        if self.callback is not None:
+            # invoke waiting task
+            task = self.callback
+            self.callback = None
+            _step(task, result)
+
+    def handle(self, task: Task) -> None:
+        assert self.callback is None
+        if self.is_set():
+            _step(task, self.result)
+        else:
+            # register the callback to bet invoked when `set()` is called
+            self.callback = task
+
+    def __iter__(self) -> Task:
+        assert self.callback is None
+
+        if self.is_set():
+            # exit immediately if event was set
+            return self.result
+
+        try:
+            return (yield self)
+        finally:
+            self.callback = None

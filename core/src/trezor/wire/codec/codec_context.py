@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Awaitable, Container
 
 from storage import cache_codec
 from storage.cache_common import DataCache, InvalidSessionError
-from trezor import protobuf
+from trezor import loop, protobuf
 from trezor.wire.codec import codec_v1
 from trezor.wire.context import UnexpectedMessageException
 from trezor.wire.message_handler import wrap_protobuf_load
@@ -30,7 +30,12 @@ class CodecContext(Context):
     ) -> None:
         self.buffer_provider = buffer_provider
         self._buffer = None
+        self.interrupt_event = loop.event()
         super().__init__(iface)
+
+    def interrupt(self) -> None:
+        """Raise an exception when `interrupt_event` is awaited by the next `read_from_wire` calls."""
+        self.interrupt_event.set()
 
     def _get_buffer(self) -> bytearray | None:
         if self._buffer is None:
@@ -39,7 +44,7 @@ class CodecContext(Context):
 
     def read_from_wire(self) -> Awaitable[Message]:
         """Read a whole message from the wire without parsing it."""
-        return codec_v1.read_message(self.iface, self._get_buffer)
+        return codec_v1.read_message(self.iface, self._get_buffer, self.interrupt_event)
 
     async def read(
         self,
