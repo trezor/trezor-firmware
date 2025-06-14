@@ -69,6 +69,7 @@
 #include "monero/monero.h"
 #include "nem.h"
 #include "nist256p1.h"
+#include "noise.h"
 #include "pbkdf2.h"
 #include "rand.h"
 #include "rc4.h"
@@ -11400,6 +11401,141 @@ START_TEST(test_elligator2) {
 }
 END_TEST
 
+START_TEST(test_noise) {
+  // Inject the seed to the random number generator to make the test
+  // deterministic
+  random_reseed(2748932008);
+
+  curve25519_key initiator_private_key = {0};
+  curve25519_key responder_private_key = {0};
+  curve25519_key initiator_public_key = {0};
+  curve25519_key responder_public_key = {0};
+  random_buffer(initiator_private_key, sizeof(initiator_private_key));
+  random_buffer(responder_private_key, sizeof(responder_private_key));
+  curve25519_scalarmult_basepoint(initiator_public_key, initiator_private_key);
+  curve25519_scalarmult_basepoint(responder_public_key, responder_private_key);
+
+  noise_context_t initiator_context = {0};
+  noise_context_t responder_context = {0};
+
+  noise_request_t request = {0};
+  noise_response_t response = {0};
+
+  uint8_t message1[] = "message1";
+  uint8_t associated_data1[] = "associated_data1";
+  uint8_t message2[] = "message2";
+  uint8_t associated_data2[] = "associated_data2";
+  uint8_t message3[] = "message3";
+  uint8_t associated_data3[] = "associated_data3";
+  uint8_t message4[] = "message4";
+  uint8_t associated_data4[] = "associated_data4";
+
+  // These test vectors were generated using the python package `dissononce`
+  char expected_request_hex[] =
+      "4f1c3515b7d561226b4917ddbc79eae44542dab2ae54e294c83f39328f126562";
+  char expected_response_hex[] =
+      "cdfe8958fc5f10a893c8441e73207909778d8cc66241309ad4ee07fb9d06a40166296e60"
+      "2ece348d673e98aaba33f56a";
+  char expected_message1_hex[] =
+      "98dea02c9e9a6da170054a8b35d5667b22e56698f83bc07611";
+  char expected_message2_hex[] =
+      "8c543e8ddfc6324acccd013c9dcd174f56773c42aa7a29afcb";
+  char expected_message3_hex[] =
+      "ac00ab8c8146d1af08d6e0c3fed583c7979fcb1426f082d11e";
+  char expected_message4_hex[] =
+      "5e21772c915f1bbfeff75c87c7c2a1589dcb5fe791656c9332";
+
+  uint8_t plaintext1[sizeof(message1)] = {0};
+  uint8_t ciphertext1[sizeof(plaintext1) + NOISE_TAG_SIZE];
+  uint8_t plaintext2[sizeof(message2)] = {0};
+  uint8_t ciphertext2[sizeof(plaintext2) + NOISE_TAG_SIZE] = {0};
+  uint8_t plaintext3[sizeof(message3)] = {0};
+  uint8_t ciphertext3[sizeof(plaintext3) + NOISE_TAG_SIZE] = {0};
+  uint8_t plaintext4[sizeof(message4)] = {0};
+  uint8_t ciphertext4[sizeof(plaintext4) + NOISE_TAG_SIZE] = {0};
+
+  bool ret = false;
+
+  // Initiator sends request
+  ret = noise_create_handshake_request(&initiator_context, &request);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(&request, fromhex(expected_request_hex), sizeof(request));
+
+  // Responder receives request and sends response
+  ret = noise_handle_handshake_request(&responder_context, initiator_public_key,
+                                       responder_private_key, &request,
+                                       &response);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(&response, fromhex(expected_response_hex), sizeof(response));
+
+  // Initiator receives response
+  ret =
+      noise_handle_handshake_response(&initiator_context, initiator_private_key,
+                                      responder_public_key, &response);
+  ck_assert_int_eq(ret, true);
+
+  // Initiator sends message1
+  ret = noise_send_message(&initiator_context, associated_data1,
+                           sizeof(associated_data1), message1, sizeof(message1),
+                           ciphertext1);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(ciphertext1, fromhex(expected_message1_hex),
+                   sizeof(ciphertext1));
+
+  // Initiator sends message2
+  ret = noise_send_message(&initiator_context, associated_data2,
+                           sizeof(associated_data2), message2, sizeof(message2),
+                           ciphertext2);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(ciphertext2, fromhex(expected_message2_hex),
+                   sizeof(ciphertext2));
+
+  // Responder sends message3
+  ret = noise_send_message(&responder_context, associated_data3,
+                           sizeof(associated_data3), message3, sizeof(message3),
+                           ciphertext3);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(ciphertext3, fromhex(expected_message3_hex),
+                   sizeof(ciphertext3));
+
+  // Responder sends message4
+  ret = noise_send_message(&responder_context, associated_data4,
+                           sizeof(associated_data4), message4, sizeof(message4),
+                           ciphertext4);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(ciphertext4, fromhex(expected_message4_hex),
+                   sizeof(ciphertext4));
+
+  // Responder receives message1
+  ret = noise_receive_message(&responder_context, associated_data1,
+                              sizeof(associated_data1), ciphertext1,
+                              sizeof(ciphertext1), plaintext1);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(plaintext1, message1, sizeof(message1));
+
+  // Responder receives message2
+  ret = noise_receive_message(&responder_context, associated_data2,
+                              sizeof(associated_data2), ciphertext2,
+                              sizeof(ciphertext2), plaintext2);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(plaintext2, message2, sizeof(message2));
+
+  // Initiator receives message3
+  ret = noise_receive_message(&initiator_context, associated_data3,
+                              sizeof(associated_data3), ciphertext3,
+                              sizeof(ciphertext3), plaintext3);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(plaintext3, message3, sizeof(message3));
+
+  // Initiator receives message4
+  ret = noise_receive_message(&initiator_context, associated_data4,
+                              sizeof(associated_data4), ciphertext4,
+                              sizeof(ciphertext4), plaintext4);
+  ck_assert_int_eq(ret, true);
+  ck_assert_mem_eq(plaintext4, message4, sizeof(message4));
+}
+END_TEST
+
 static int my_strncasecmp(const char *s1, const char *s2, size_t n) {
   size_t i = 0;
   while (i < n) {
@@ -11753,6 +11889,10 @@ Suite *test_suite(void) {
 
   tc = tcase_create("elligator2");
   tcase_add_test(tc, test_elligator2);
+  suite_add_tcase(s, tc);
+
+  tc = tcase_create("noise");
+  tcase_add_test(tc, test_noise);
   suite_add_tcase(s, tc);
 
 #if USE_CARDANO
