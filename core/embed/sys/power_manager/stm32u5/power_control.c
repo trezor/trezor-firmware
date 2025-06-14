@@ -31,19 +31,6 @@ static bool pm_background_tasks_suspended(void);
 static void pm_background_tasks_resume(void);
 
 pm_status_t pm_control_hibernate() {
-  // TEMPORARY FIX:
-  // Enable Backup domain retention in VBAT mode before entering the
-  // hibernation. BREN bit can be accessed only in LDO mode.
-  __HAL_RCC_PWR_CLK_ENABLE();
-
-  // Switch to LDO regulator
-  CLEAR_BIT(PWR->CR3, PWR_CR3_REGSEL);
-  // Wait until system switch on new regulator
-  while (HAL_IS_BIT_SET(PWR->SVMSR, PWR_SVMSR_REGS))
-    ;
-  // Enable backup domain retention
-  PWR->BDCR1 |= PWR_BDCR1_BREN;
-
   if (!pmic_enter_shipmode()) {
     return PM_ERROR;
   }

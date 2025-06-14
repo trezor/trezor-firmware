@@ -249,6 +249,13 @@ void SystemInit(void) {
   // Disable the internal Pull-Up in Dead Battery pins of UCPD peripheral
   HAL_PWREx_DisableUCPDDeadBattery();
 
+#ifdef USE_BACKUP_RAM
+  // Enable backup domain retention
+  // This bit can be written only when the regulator is LDO,
+  // which must be configured before switching to SMPS.
+  PWR->BDCR1 |= PWR_BDCR1_BREN;
+#endif
+
 #ifdef USE_SMPS
   // Switch to SMPS regulator instead of LDO
   SET_BIT(PWR->CR3, PWR_CR3_REGSEL);
