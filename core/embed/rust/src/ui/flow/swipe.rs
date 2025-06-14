@@ -106,8 +106,6 @@ pub struct SwipeFlow {
     /// If triggering swipe by event, make this decision instead of default
     /// after the swipe.
     pending_decision: Option<Decision>,
-    /// Layout lifecycle state.
-    lifecycle_state: LayoutState,
     /// Returned value from latest transition, stored as Obj.
     returned_value: Option<Result<Obj, Error>>,
 }
@@ -120,7 +118,6 @@ impl SwipeFlow {
             store: Vec::new(),
             allow_swipe: true,
             pending_decision: None,
-            lifecycle_state: LayoutState::Initial,
             returned_value: None,
         })
     }
@@ -165,10 +162,6 @@ impl SwipeFlow {
             .event(ctx, Event::Attach(attach_type));
 
         ctx.request_paint();
-    }
-
-    fn render_state<'s>(&'s self, state: usize, target: &mut RendererImpl<'_, 's, '_>) {
-        self.store[state].render(target);
     }
 
     fn handle_swipe_child(&mut self, _ctx: &mut EventCtx, direction: Direction) -> Decision {
@@ -319,7 +312,7 @@ impl Layout<Result<Obj, Error>> for SwipeFlow {
         #[cfg(not(feature = "ui_debug"))]
         let overflow: bool = false;
         render_on_display(None, Some(Color::black()), |target| {
-            self.render_state(self.state.index(), target);
+            self.current_page().render(target);
             #[cfg(feature = "ui_debug")]
             if target.should_raise_overflow_exception() {
                 overflow = true;
