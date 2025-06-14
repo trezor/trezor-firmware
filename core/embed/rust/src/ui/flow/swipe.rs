@@ -164,10 +164,6 @@ impl SwipeFlow {
         ctx.request_paint();
     }
 
-    fn render_state<'s>(&'s self, state: usize, target: &mut RendererImpl<'_, 's, '_>) {
-        self.store[state].render(target);
-    }
-
     fn handle_swipe_child(&mut self, _ctx: &mut EventCtx, direction: Direction) -> Decision {
         self.state.handle_swipe(direction)
     }
@@ -316,7 +312,7 @@ impl Layout<Result<Obj, Error>> for SwipeFlow {
         #[cfg(not(feature = "ui_debug"))]
         let overflow: bool = false;
         render_on_display(None, Some(Color::black()), |target| {
-            self.render_state(self.state.index(), target);
+            self.current_page().render(target);
             #[cfg(feature = "ui_debug")]
             if target.should_raise_overflow_exception() {
                 overflow = true;
