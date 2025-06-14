@@ -40,6 +40,8 @@ typedef struct {
   uint32_t app_version;
   uint32_t bld_version;
 
+  uint8_t connected_addr[6];  // MAC address of the connected device
+  uint8_t connected_addr_type;
 } event_status_msg_t;
 
 typedef enum {
@@ -71,7 +73,7 @@ typedef struct {
   uint8_t whitelist;
   uint8_t color;
   uint8_t static_addr;
-  uint32_t device_code;
+  uint8_t device_code;
   uint8_t name[BLE_ADV_NAME_LEN];
 } cmd_advertising_on_t;
 

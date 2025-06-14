@@ -46,7 +46,7 @@
 #define BT_UUID_TRZ_RX BT_UUID_DECLARE_128(BT_UUID_TRZ_RX_VAL)
 #define BT_UUID_TRZ_TX BT_UUID_DECLARE_128(BT_UUID_TRZ_TX_VAL)
 
-#define BLE_TX_PACKET_SIZE 64
+#define BLE_TX_PACKET_SIZE 244
 #define BLE_RX_PACKET_SIZE 244
 
 #define BLE_PAIRING_CODE_LEN 6
@@ -68,6 +68,9 @@ typedef struct {
 
   uint32_t app_version;
   uint32_t bld_version;
+
+  uint8_t connected_addr[6];  // MAC address of the connected device
+  uint8_t connected_addr_type;
 
 } event_status_msg_t;
 
@@ -100,7 +103,7 @@ typedef struct {
   uint8_t whitelist;
   uint8_t color;
   uint8_t static_addr;
-  uint32_t device_code;
+  uint8_t device_code;
   uint8_t name[BLE_ADV_NAME_LEN];
 } cmd_advertising_on_t;
 
@@ -143,7 +146,7 @@ bool bonds_erase_current(void);
 // Initialization
 void advertising_init(void);
 // Start advertising, with or without whitelist
-void advertising_start(bool wl, uint8_t color, uint32_t device_code,
+void advertising_start(bool wl, uint8_t color, uint8_t device_code,
                        bool static_addr, char *name, int name_len);
 // Stop advertising
 void advertising_stop(void);

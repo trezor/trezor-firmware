@@ -27,7 +27,7 @@
 
 #define TX_QUEUE_SIZE (8)
 
-#define MAX_SPI_DATA_SIZE (244)
+#define MAX_SPI_DATA_SIZE (251)
 
 typedef enum {
   MGMT_CMD_SYSTEM_OFF = 0x00,
