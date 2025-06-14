@@ -18,6 +18,7 @@ class TR:
     address__title_cosigner: str = "Cosigner"
     address__title_receive_address: str = "Receive address"
     address__title_yours: str = "Yours"
+    address__xpub: str = "XPUB"
     address_details__account_info: str = "Account info"
     address_details__derivation_path: str = "Derivation path"
     address_details__derivation_path_colon: str = "Derivation path:"

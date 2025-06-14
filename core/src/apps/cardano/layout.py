@@ -1061,6 +1061,7 @@ async def show_cardano_address(
 
     await layouts.show_address(
         address,
+        subtitle=f"ADA {TR.words__address}",
         path=path,
         account=account,
         network=network_name,

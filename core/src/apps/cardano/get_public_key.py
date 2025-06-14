@@ -44,7 +44,7 @@ async def get_public_key(
         from apps.common.paths import address_n_to_str
 
         path = address_n_to_str(address_n)
-        await show_pubkey(key.xpub, TR.address__public_key, path=path)
+        await show_pubkey(key.xpub, path=path)
         return await early_response(
             key, show_continue_in_app(TR.address__public_key_confirmed)
         )
