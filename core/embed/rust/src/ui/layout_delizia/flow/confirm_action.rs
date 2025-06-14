@@ -12,7 +12,7 @@ use crate::{
             Component, ComponentExt, EventCtx, PaginateFull,
         },
         flow::{
-            base::{Decision, DecisionBuilder as _},
+            base::{Decision, DecisionBuilder as _, FlowState},
             FlowController, FlowMsg, SwipeFlow, SwipePage,
         },
         geometry::Direction,
@@ -320,11 +320,11 @@ fn create_flow(
     Option<TString<'static>>,
     usize,
     Result<SwipeFlow, Error>,
-    &'static dyn FlowController,
+    FlowState,
 ) {
     let prompt_screen = prompt_screen.or_else(|| hold.then_some(title));
     let prompt_pages: usize = prompt_screen.is_some().into();
-    let initial_page: &dyn FlowController = match (extra, prompt_screen.is_some()) {
+    let initial_page: FlowState = match (extra, prompt_screen.is_some()) {
         (ConfirmActionExtra::Menu { .. }, false) => &ConfirmActionWithMenu::Action,
         (ConfirmActionExtra::Menu { .. }, true) => &ConfirmActionWithMenuAndConfirmation::Action,
         (ConfirmActionExtra::Cancel, false) => &ConfirmAction::Action,

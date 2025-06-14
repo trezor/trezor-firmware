@@ -12,7 +12,7 @@ use crate::{
         },
         display::Color,
         event::SwipeEvent,
-        flow::{base::Decision, FlowController},
+        flow::base::Decision,
         geometry::{Direction, Rect},
         layout::base::{Layout, LayoutState},
         shape::{render_on_display, ConcreteRenderer, Renderer, ScopedRenderer},
@@ -120,7 +120,7 @@ pub struct SwipeFlow {
 }
 
 impl SwipeFlow {
-    pub fn new(initial_state: &'static dyn FlowController) -> Result<Self, error::Error> {
+    pub fn new(initial_state: FlowState) -> Result<Self, error::Error> {
         Ok(Self {
             state: initial_state,
             swipe: SwipeDetect::new(),
@@ -136,7 +136,7 @@ impl SwipeFlow {
     /// Pages must be inserted in the order of the flow state index.
     pub fn add_page(
         &mut self,
-        state: &'static dyn FlowController,
+        state: FlowState,
         page: impl FlowComponentDynTrait + 'static,
     ) -> Result<&mut Self, error::Error> {
         Ok(self.add_allocated_page(state, GcBoxFlowComponent::alloc(page)?))
@@ -144,7 +144,7 @@ impl SwipeFlow {
 
     pub fn add_allocated_page(
         &mut self,
-        state: &'static dyn FlowController,
+        state: FlowState,
         alloc: GcBoxFlowComponent,
     ) -> &mut Self {
         debug_assert!(self.store.len() == state.index());
