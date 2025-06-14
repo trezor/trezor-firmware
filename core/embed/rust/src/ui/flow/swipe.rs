@@ -106,8 +106,6 @@ pub struct SwipeFlow {
     /// If triggering swipe by event, make this decision instead of default
     /// after the swipe.
     pending_decision: Option<Decision>,
-    /// Layout lifecycle state.
-    lifecycle_state: LayoutState,
     /// Returned value from latest transition, stored as Obj.
     returned_value: Option<Result<Obj, Error>>,
 }
@@ -120,7 +118,6 @@ impl SwipeFlow {
             store: Vec::new(),
             allow_swipe: true,
             pending_decision: None,
-            lifecycle_state: LayoutState::Initial,
             returned_value: None,
         })
     }
