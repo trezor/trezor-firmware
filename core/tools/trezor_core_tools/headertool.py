@@ -28,6 +28,8 @@ def do_rehash(fw: firmware_headers.SignableImageProto) -> None:
     """Recalculate the code hashes inside the header."""
     if isinstance(fw, firmware.FirmwareImage):
         fw.header.hashes = fw.code_hashes()
+    if isinstance(fw, firmware.SecmonImage):
+        fw.header.hash = fw.code_hash()
     elif isinstance(fw, firmware_headers.VendorFirmware):
         fw.firmware.header.hashes = fw.firmware.code_hashes()
     # else: do nothing, other kinds of images do not need rehashing
@@ -100,8 +102,8 @@ def cli(
     """Manage firmware headers.
 
     This tool supports three types of files: raw vendor headers (TRZV), bootloader
-    images (TRZB), and firmware images which are prefixed with a vendor header
-    (TRZV+TRZF).
+    images (TRZB), firmware images which are prefixed with a vendor header
+    (TRZV+TRZF), and secmon images (TSEC).
 
     Run with no options on a file to dump information about that file.
 

@@ -33,6 +33,7 @@ if True:
     from .consts import *  # noqa: F401, F403
     from .core import *  # noqa: F401, F403
     from .legacy import *  # noqa: F401, F403
+    from .secmon import *  # noqa: F401, F403
     from .util import (  # noqa: F401
         FirmwareIntegrityError,
         InvalidSignatureError,

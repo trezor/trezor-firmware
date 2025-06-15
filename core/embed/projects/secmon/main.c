@@ -107,8 +107,8 @@ static void secmon_panic(const systask_postmortem_t *pminfo) {
 }
 
 // defined in linker script
-extern uint32_t _codelen;
-#define SECMON_SIZE ((uint32_t) & _codelen)
+extern uint32_t _secmon_size;
+#define SECMON_SIZE ((uint32_t) & _secmon_size)
 #define KERNEL_START (FIRMWARE_START + SECMON_SIZE)
 
 int main(void) {

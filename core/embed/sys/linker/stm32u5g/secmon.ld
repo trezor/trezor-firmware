@@ -28,7 +28,8 @@ _confidential_section_end = ADDR(.confidential) + SIZEOF(.confidential);
 _bootargs_ram_start = BOOTARGS_START;
 _bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
 
-_codelen = _secmon_flash_end - ORIGIN(FLASH);
+_codelen = _secmon_flash_end - _secmon_code_start;
+_secmon_size = _secmon_flash_end - ORIGIN(FLASH);
 
 SECTIONS {
   .vendorheader : ALIGN(4) {
@@ -39,6 +40,15 @@ SECTIONS {
     . = 1K;
     . = ALIGN(CODE_ALIGNMENT);
   } >FLASH
+
+  .secmon_header : ALIGN(4) {
+    KEEP(*(.secmon_header));
+  } >FLASH
+
+  .padding : ALIGN(4) {
+    _secmon_code_start = .;
+    . = ALIGN(CODE_ALIGNMENT);
+  } >FLASH AT>FLASH
 
   .flash : ALIGN(CODE_ALIGNMENT) {
     KEEP(*(.vector_table));
