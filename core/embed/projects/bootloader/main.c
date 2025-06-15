@@ -71,6 +71,9 @@
 #ifdef USE_HAPTIC
 #include <io/haptic.h>
 #endif
+#ifdef USE_IWDG
+#include <sec/iwdg.h>
+#endif
 
 #ifdef USE_BLE
 #include "wire/wire_iface_ble.h"
@@ -363,6 +366,12 @@ void real_jump_to_firmware(void) {
   if (DISPLAY_JUMP_BEHAVIOR == DISPLAY_RESET_CONTENT) {
     display_fade(display_get_backlight(), 0, 200);
   }
+
+#ifdef USE_IWDG
+  if (vhdr.runtime_limit_min > 0) {
+    iwdg_start(vhdr.runtime_limit_min * 60);
+  }
+#endif
 
   drivers_deinit();
 
