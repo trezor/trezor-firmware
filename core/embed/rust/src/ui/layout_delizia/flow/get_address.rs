@@ -27,6 +27,98 @@ use super::super::{
 const QR_BORDER: i16 = 4;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
+pub enum MainFlow {
+    Address,
+    Tap,
+}
+
+impl FlowController for MainFlow {
+    #[inline]
+    fn index(&'static self) -> usize {
+        *self as usize
+    }
+
+    fn handle_swipe(&'static self, direction: Direction) -> Decision {
+        match (self, direction) {
+            (Self::Address, Direction::Up) => Self::Tap.swipe(direction),
+            (Self::Tap, Direction::Down) => Self::Address.swipe(direction),
+            _ => self.do_nothing(),
+        }
+    }
+
+    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
+        match (self, msg) {
+            (Self::Address, FlowMsg::Info) => MenuFlow::Menu.goto(),
+            (Self::Tap, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Tap, FlowMsg::Info) => MenuFlow::Menu.swipe_left(),
+            _ => self.do_nothing(),
+        }
+    }
+}
+
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum MenuFlow {
+    Menu,
+    QrCode,
+    AccountInfo,
+}
+
+impl FlowController for MenuFlow {
+    #[inline]
+    fn index(&'static self) -> usize {
+        *self as usize
+    }
+
+    fn handle_swipe(&'static self, direction: Direction) -> Decision {
+        match (self, direction) {
+            _ => self.do_nothing(),
+        }
+    }
+
+    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
+        match (self, msg) {
+            (Self::Menu, FlowMsg::Choice(0)) => Self::QrCode.swipe_left(),
+            (Self::Menu, FlowMsg::Choice(1)) => Self::AccountInfo.swipe_left(),
+            (Self::Menu, FlowMsg::Choice(2)) => CancelFlow::Cancel.swipe_left(),
+            (Self::Menu, FlowMsg::Cancelled) => MainFlow::Address.swipe_right(),
+            (Self::QrCode, FlowMsg::Cancelled) => Self::Menu.goto(),
+            (Self::AccountInfo, FlowMsg::Cancelled) => Self::Menu.goto(),
+            _ => self.do_nothing(),
+        }
+    }
+}
+
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum CancelFlow {
+    Cancel,
+    CancelTap,
+}
+
+impl FlowController for CancelFlow {
+    #[inline]
+    fn index(&'static self) -> usize {
+        *self as usize
+    }
+
+    fn handle_swipe(&'static self, direction: Direction) -> Decision {
+        match (self, direction) {
+            (Self::Cancel, Direction::Up) => Self::CancelTap.swipe(direction),
+            (Self::CancelTap, Direction::Down) => Self::Cancel.swipe(direction),
+            _ => self.do_nothing(),
+        }
+    }
+
+    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
+        match (self, msg) {
+            (Self::Cancel, FlowMsg::Cancelled) => MenuFlow::Menu.goto(),
+            (Self::CancelTap, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Cancelled),
+            (Self::CancelTap, FlowMsg::Cancelled) => MenuFlow::Menu.goto(),
+            _ => self.do_nothing(),
+        }
+    }
+}
+
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum GetAddress {
     Address,
     Tap,
