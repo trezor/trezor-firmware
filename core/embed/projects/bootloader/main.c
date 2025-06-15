@@ -71,6 +71,9 @@
 #ifdef USE_HAPTIC
 #include <io/haptic.h>
 #endif
+#ifdef USE_IWDG
+#include <sec/iwdg.h>
+#endif
 
 #ifdef USE_BLE
 #include "wire/wire_iface_ble.h"
@@ -92,8 +95,12 @@ void failed_jump_to_firmware(void);
 CONFIDENTIAL volatile secbool dont_optimize_out_true = sectrue;
 CONFIDENTIAL void (*volatile firmware_jump_fn)(void) = failed_jump_to_firmware;
 
-static secbool is_manufacturing_mode(void) {
+static secbool is_manufacturing_mode(vendor_header *vhdr) {
   unit_properties_init();
+
+  if ((vhdr->vtrust & VTRUST_ALLOW_PROVISIONING) == 0) {
+    return secfalse;
+  }
 
 #if (defined TREZOR_MODEL_T3T1 || defined TREZOR_MODEL_T3W1)
   // on T3T1 and T3W1, tester needs to run without touch and tamper, so making
@@ -229,9 +236,11 @@ static void drivers_init(secbool manufacturing_mode,
 
 #ifdef USE_TAMPER
   tamper_init();
+#if PRODUCTION
   if (manufacturing_mode != sectrue) {
     tamper_external_enable();
   }
+#endif
 #endif
 
 #ifdef USE_TOUCH
@@ -330,9 +339,39 @@ void real_jump_to_firmware(void) {
                               &FIRMWARE_AREA),
          "Firmware is corrupted");
 
-  secret_prepare_fw(
-      ((vhdr.vtrust & VTRUST_SECRET_MASK) == VTRUST_SECRET_ALLOW) * sectrue,
-      ((vhdr.vtrust & VTRUST_NO_WARNING) == VTRUST_NO_WARNING) * sectrue);
+  size_t secmon_code_offset = 0;
+
+#ifdef USE_SECMON_VERIFICATION
+  size_t secmon_start = (size_t)IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen +
+                                                 IMAGE_HEADER_SIZE);
+  const secmon_header_t *secmon_hdr = read_secmon_header(
+      (const uint8_t *)secmon_start, SECMON_IMAGE_MAGIC, FIRMWARE_MAXSIZE);
+
+  if (secmon_hdr != NULL) {
+    secmon_code_offset = IMAGE_CODE_ALIGN(SECMON_HEADER_SIZE);
+  }
+
+  if ((vhdr.vtrust & VTRUST_SKIP_SECMON_VERIFICATION) != 0) {
+    ensure((secmon_hdr != NULL) * sectrue, "Secmon header not found");
+
+    ensure(check_secmon_model(secmon_hdr), "Wrong secmon model");
+
+    ensure(check_secmon_header_sig(secmon_hdr), "Invalid secmon signature");
+
+    ensure(check_secmon_contents(secmon_hdr, secmon_start - FIRMWARE_START,
+                                 &FIRMWARE_AREA),
+           "Secmon is corrupted");
+  }
+#endif
+
+  secbool provisioning_access =
+      ((vhdr.vtrust & VTRUST_ALLOW_PROVISIONING) == VTRUST_ALLOW_PROVISIONING) *
+      sectrue;
+
+  secbool secret_run_access =
+      ((vhdr.vtrust & VTRUST_SECRET_MASK) == VTRUST_SECRET_ALLOW) * sectrue;
+
+  secret_prepare_fw(secret_run_access, provisioning_access);
 
   // if all warnings are disabled in VTRUST flags then skip the procedure
   if ((vhdr.vtrust & VTRUST_NO_WARNING) != VTRUST_NO_WARNING) {
@@ -364,12 +403,19 @@ void real_jump_to_firmware(void) {
     display_fade(display_get_backlight(), 0, 200);
   }
 
+#ifdef USE_IWDG
+  if (vhdr.runtime_limit_min > 0) {
+    iwdg_start(vhdr.runtime_limit_min * 60);
+  }
+#endif
+
   drivers_deinit();
 
   system_deinit();
 
   jump_to_next_stage(
-      IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE));
+      IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE) +
+      secmon_code_offset);
 }
 
 __attribute__((noreturn)) void jump_to_fw_through_reset(void) {
@@ -386,7 +432,11 @@ int bootloader_main(void) {
 
   system_init(&rsod_panic_handler);
 
-  secbool manufacturing_mode = is_manufacturing_mode();
+  vendor_header vhdr;
+  volatile secbool vhdr_present = secfalse;
+  vhdr_present = read_vendor_header((const uint8_t *)FIRMWARE_START, &vhdr);
+
+  secbool manufacturing_mode = is_manufacturing_mode(&vhdr);
 
   secbool stay_in_bootloader = boot_sequence(manufacturing_mode);
 
@@ -411,10 +461,8 @@ int bootloader_main(void) {
 #endif
 
   const image_header *hdr = NULL;
-  vendor_header vhdr;
 
   // detect whether the device contains a valid firmware
-  volatile secbool vhdr_present = secfalse;
   volatile secbool vhdr_keys_ok = secfalse;
   volatile secbool vhdr_lock_ok = secfalse;
   volatile secbool img_hdr_ok = secfalse;
@@ -425,8 +473,7 @@ int bootloader_main(void) {
   volatile secbool firmware_present = secfalse;
   volatile secbool firmware_present_backup = secfalse;
   volatile secbool auto_upgrade = secfalse;
-
-  vhdr_present = read_vendor_header((const uint8_t *)FIRMWARE_START, &vhdr);
+  volatile secbool secmon_valid = secfalse;
 
   if (sectrue == vhdr_present) {
     vhdr_keys_ok = check_vendor_header_keys(&vhdr);
@@ -461,7 +508,45 @@ int bootloader_main(void) {
     header_present = version_ok;
   }
 
-  if (sectrue == header_present) {
+#ifdef USE_SECMON_VERIFICATION
+  size_t secmon_start = (size_t)IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen +
+                                                 IMAGE_HEADER_SIZE);
+
+  const secmon_header_t *secmon_hdr = read_secmon_header(
+      (const uint8_t *)secmon_start, SECMON_IMAGE_MAGIC, FIRMWARE_MAXSIZE);
+
+  if ((vhdr.vtrust & VTRUST_SKIP_SECMON_VERIFICATION) != 0) {
+    volatile secbool secmon_valid_tmp = header_present;
+
+    secmon_valid_tmp =
+        secbool_and(secmon_valid_tmp, (secmon_hdr != NULL) * sectrue);
+
+    if (secmon_valid_tmp == sectrue) {
+      secmon_valid_tmp =
+          secbool_and(secmon_valid_tmp, check_secmon_model(secmon_hdr));
+    }
+
+    if (secmon_valid_tmp == sectrue) {
+      secmon_valid_tmp =
+          secbool_and(secmon_valid_tmp, check_secmon_header_sig(secmon_hdr));
+    }
+    if (secmon_valid_tmp == sectrue) {
+      secmon_valid_tmp = secbool_and(
+          secmon_valid_tmp,
+          check_secmon_contents(secmon_hdr, secmon_start - FIRMWARE_START,
+                                &FIRMWARE_AREA));
+    }
+
+    secmon_valid = secmon_valid_tmp;
+
+  } else {
+    secmon_valid = header_present;
+  }
+#else
+  secmon_valid = header_present;
+#endif
+
+  if (sectrue == secmon_valid) {
     ensure_firmware_min_version(hdr->monotonic);
     firmware_present = check_image_contents(
         hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen, &FIRMWARE_AREA);
