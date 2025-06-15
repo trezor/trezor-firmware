@@ -40,7 +40,7 @@ for MODEL in ${MODELS[@]}; do
     TMPDIR=$(mktemp -d)
     trap "rm -rf $TMPDIR" EXIT
     # sign dev and QA vendor header
-    for name in unsafe dev_DO_NOT_SIGN; do
+    for name in unsafe dev_DO_NOT_SIGN prodtest_DO_NOT_SIGN ; do
         SRC_NAME="vendorheader_${name}_unsigned.bin"
         DEST_NAME="vendorheader_${name}_signed_dev.bin"
         if [ ! -f "$SRC_NAME" ]; then
