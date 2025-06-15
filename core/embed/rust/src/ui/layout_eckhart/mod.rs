@@ -96,7 +96,7 @@ impl CommonUI for UIEckhart {
         let mut frame = ErrorScreen::new(
             "Update".into(),
             "Finishing firmware update".into(),
-            "Do not turn of your trezor".into(),
+            "Do not turn off your Trezor".into(),
         );
         show(&mut frame, true);
     }
