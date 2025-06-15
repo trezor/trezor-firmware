@@ -3,9 +3,10 @@
     "text": "UNSAFE, FACTORY TEST ONLY",
     "hw_model": "T3T1",
     "expiry": 0,
-    "version": [0, 0],
+    "version": [0, 1],
     "sig_m": 2,
     "trust": {
+        "deny_provisioning_access": false,
         "allow_run_with_secret": true,
         "show_vendor_string": false,
         "require_user_click": false,
