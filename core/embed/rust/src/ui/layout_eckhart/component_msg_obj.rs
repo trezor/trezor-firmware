@@ -193,6 +193,11 @@ impl ComponentMsgObj for DeviceMenuScreen {
                 Ok(new_tuple(&[REFRESH_MENU.as_obj(), submenu_idx.into()])?)
             }
             DeviceMenuMsg::Close => Ok(CANCELLED.as_obj()),
+            // Demo
+            DeviceMenuMsg::DemoCreateWallet => Ok(DEMO_CREATE_WALLET.as_obj()),
+            DeviceMenuMsg::DemoRestoreWallet => Ok(DEMO_RESTORE_WALLET.as_obj()),
+            DeviceMenuMsg::DemoReceiveBitcoin => Ok(DEMO_RECEIVE_BITCOIN.as_obj()),
+            DeviceMenuMsg::DemoSendBitcoin => Ok(DEMO_SEND_BITCOIN.as_obj()),
         }
     }
 }
