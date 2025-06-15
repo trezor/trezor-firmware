@@ -88,6 +88,8 @@ typedef struct {
 #define VTRUST_NO_WARNING \
   (VTRUST_WAIT_MASK | VTRUST_NO_RED | VTRUST_NO_CLICK | VTRUST_NO_STRING)
 
+#define VTRUST_ALLOW_PROVISIONING 0x200
+
 typedef struct {
   uint32_t magic;
   uint32_t hdrlen;
