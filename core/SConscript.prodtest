@@ -304,7 +304,7 @@ elif (vh := os.environ.get("VENDOR_HEADER", None)):
 elif PRODUCTION:
     VENDORHEADER = f'embed/models/{TREZOR_MODEL}/vendorheader/vendorheader_prodtest_signed_prod.bin'
 elif BOOTLOADER_DEVEL:
-    VENDORHEADER = f'embed/models/{TREZOR_MODEL}/vendorheader/vendorheader_dev_DO_NOT_SIGN_signed_dev.bin'
+    VENDORHEADER = f'embed/models/{TREZOR_MODEL}/vendorheader/vendorheader_prodtest_DO_NOT_SIGN_signed_dev.bin'
 else:
     VENDORHEADER = f'embed/models/{TREZOR_MODEL}/vendorheader/vendorheader_unsafe_signed_prod.bin'
 
