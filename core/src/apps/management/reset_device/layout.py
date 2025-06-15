@@ -26,7 +26,7 @@ async def _confirm_word(
     # remove duplicates
     non_duplicates = list(set(share_words))
     # shuffle list
-    random.shuffle(non_duplicates)
+    # random.shuffle(non_duplicates)
     # take top _NUM_OF_CHOICES words
     choices = non_duplicates[:_NUM_OF_CHOICES]
     # select first of them
@@ -34,7 +34,7 @@ async def _confirm_word(
     # find its index
     checked_index = share_words.index(checked_word) + offset
     # shuffle again so the confirmed word is not always the first choice
-    random.shuffle(choices)
+    # random.shuffle(choices)
     # let the user pick a word
     selected_word: str = await select_word(
         choices, share_index, checked_index, count, group_index

@@ -32,7 +32,7 @@ use super::{
 use heapless::Vec;
 
 const MAX_DEPTH: usize = 3;
-const MAX_SUBSCREENS: usize = 8;
+const MAX_SUBSCREENS: usize = 10;
 const MAX_SUBMENUS: usize = MAX_SUBSCREENS - 2 /* (about and device screen) */;
 
 const DISCONNECT_DEVICE_MENU_INDEX: usize = 1;
@@ -63,6 +63,12 @@ pub enum DeviceMenuMsg {
     // Device menu
     ScreenBrightness,
     AutoLockDelay,
+
+    // Demo
+    DemoCreateWallet,
+    DemoRestoreWallet,
+    DemoReceiveBitcoin,
+    DemoSendBitcoin,
 
     // nothing selected
     Close,
@@ -185,6 +191,7 @@ impl<'a> DeviceMenuScreen<'a> {
         let about = screen.add_subscreen(Subscreen::AboutScreen);
         let security = screen.add_security_menu();
         let device = screen.add_device_menu(device_name, about, auto_lock_delay);
+        let demo = screen.add_demo_menu();
         let settings = screen.add_settings_menu(security, device);
 
         let is_connected = !paired_devices.is_empty(); // FIXME after BLE API has this
@@ -200,8 +207,13 @@ impl<'a> DeviceMenuScreen<'a> {
         let devices = screen.add_paired_devices_menu(paired_devices, paired_device_indices);
         let pair_and_connect = screen.add_pair_and_connect_menu(devices, connected_subtext);
 
-        let root =
-            screen.add_root_menu(failed_backup, pair_and_connect, settings, connected_subtext);
+        let root = screen.add_root_menu(
+            failed_backup,
+            pair_and_connect,
+            demo,
+            settings,
+            connected_subtext,
+        );
 
         screen.set_active_subscreen(root);
 
@@ -247,6 +259,28 @@ impl<'a> DeviceMenuScreen<'a> {
         )));
 
         let submenu_index = self.add_submenu(Submenu::new("Pair & connect".into(), items));
+        self.add_subscreen(Subscreen::Submenu(submenu_index))
+    }
+
+    fn add_demo_menu(&mut self) -> usize {
+        let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
+        unwrap!(items.push(MenuItem::new(
+            "Create wallet".into(),
+            Some(Action::Return(DeviceMenuMsg::DemoCreateWallet)),
+        )));
+        unwrap!(items.push(MenuItem::new(
+            "Restore wallet".into(),
+            Some(Action::Return(DeviceMenuMsg::DemoRestoreWallet)),
+        )));
+        unwrap!(items.push(MenuItem::new(
+            "Receive bitcoin".into(),
+            Some(Action::Return(DeviceMenuMsg::DemoReceiveBitcoin)),
+        )));
+        unwrap!(items.push(MenuItem::new(
+            "Send bitcoin".into(),
+            Some(Action::Return(DeviceMenuMsg::DemoSendBitcoin)),
+        )));
+        let submenu_index = self.add_submenu(Submenu::new("Demo".into(), items));
         self.add_subscreen(Subscreen::Submenu(submenu_index))
     }
 
@@ -317,6 +351,7 @@ impl<'a> DeviceMenuScreen<'a> {
         &mut self,
         failed_backup: bool,
         pair_and_connect_index: usize,
+        demo_index: usize,
         settings_index: usize,
         connected_subtext: Option<TString<'static>>,
     ) -> usize {
@@ -337,6 +372,7 @@ impl<'a> DeviceMenuScreen<'a> {
         item_pair_and_connect
             .with_subtext(connected_subtext.map(|t| (t, Some(&Button::SUBTEXT_STYLE_GREEN))));
         unwrap!(items.push(item_pair_and_connect));
+        unwrap!(items.push(MenuItem::new("Demo".into(), Some(Action::GoTo(demo_index)))));
         unwrap!(items.push(MenuItem::new(
             "Settings".into(),
             Some(Action::GoTo(settings_index)),

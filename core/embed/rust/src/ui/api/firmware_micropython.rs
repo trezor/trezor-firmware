@@ -1862,5 +1862,9 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     WipeDevice: ClassVar[DeviceMenuResult]
     ///     ScreenBrightness: ClassVar[DeviceMenuResult]
     ///     AutoLockDelay: ClassVar[DeviceMenuResult]
+    ///     DemoCreateWallet: ClassVar[DeviceMenuResult]
+    ///     DemoRestoreWallet: ClassVar[DeviceMenuResult]
+    ///     DemoReceiveBitcoin: ClassVar[DeviceMenuResult]
+    ///     DemoSendBitcoin: ClassVar[DeviceMenuResult]
     Qstr::MP_QSTR_DeviceMenuResult => DEVICE_MENU_RESULT.as_obj(),
 };

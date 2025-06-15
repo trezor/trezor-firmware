@@ -730,6 +730,7 @@ if FROZEN:
     if THP:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/thp/*.py'))
 
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/demo/*.py'))
     if EVERYTHING:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/definitions.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/definitions_constants.py'))

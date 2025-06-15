@@ -760,3 +760,7 @@ class DeviceMenuResult:
     WipeDevice: ClassVar[DeviceMenuResult]
     ScreenBrightness: ClassVar[DeviceMenuResult]
     AutoLockDelay: ClassVar[DeviceMenuResult]
+    DemoCreateWallet: ClassVar[DeviceMenuResult]
+    DemoRestoreWallet: ClassVar[DeviceMenuResult]
+    DemoReceiveBitcoin: ClassVar[DeviceMenuResult]
+    DemoSendBitcoin: ClassVar[DeviceMenuResult]

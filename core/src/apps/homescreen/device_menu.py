@@ -91,5 +91,21 @@ async def handle_device_menu() -> None:
             await unpair(BleUnpair(all=False))  # FIXME we can only unpair current
         else:
             raise RuntimeError(f"Unknown menu {result_type}, {index}")
+    elif menu_result is DeviceMenuResult.DemoCreateWallet:
+        from apps.demo import demo_create_wallet
+
+        await demo_create_wallet()
+    elif menu_result is DeviceMenuResult.DemoRestoreWallet:
+        from apps.demo import demo_restore_wallet
+
+        await demo_restore_wallet()
+    elif menu_result is DeviceMenuResult.DemoReceiveBitcoin:
+        from apps.demo import demo_receive_bitcoin
+
+        await demo_receive_bitcoin()
+    elif menu_result is DeviceMenuResult.DemoSendBitcoin:
+        from apps.demo import demo_send_bitcoin
+
+        await demo_send_bitcoin()
     else:
         raise RuntimeError(f"Unknown menu {menu_result}")

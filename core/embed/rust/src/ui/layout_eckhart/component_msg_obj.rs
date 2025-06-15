@@ -158,6 +158,11 @@ impl<'a> ComponentMsgObj for DeviceMenuScreen<'a> {
             DeviceMenuMsg::ScreenBrightness => Ok(SCREEN_BRIGHTNESS.as_obj()),
             DeviceMenuMsg::AutoLockDelay => Ok(AUTO_LOCK_DELAY.as_obj()),
             DeviceMenuMsg::Close => Ok(CANCELLED.as_obj()),
+
+            DeviceMenuMsg::DemoCreateWallet => Ok(DEMO_CREATE_WALLET.as_obj()),
+            DeviceMenuMsg::DemoRestoreWallet => Ok(DEMO_RESTORE_WALLET.as_obj()),
+            DeviceMenuMsg::DemoReceiveBitcoin => Ok(DEMO_RECEIVE_BITCOIN.as_obj()),
+            DeviceMenuMsg::DemoSendBitcoin => Ok(DEMO_SEND_BITCOIN.as_obj()),
         }
     }
 }
