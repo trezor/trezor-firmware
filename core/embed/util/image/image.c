@@ -54,6 +54,19 @@ static const uint8_t * const BOOTLOADER_KEYS[] = {
 #endif
 };
 
+const uint8_t SECMON_KEY_M = 2;
+const uint8_t SECMON_KEY_N = 3;
+static const uint8_t * const SECMON_KEYS[] = {
+#if !PRODUCTION
+  /*** DEVEL/QA KEYS  ***/
+  (const uint8_t *)"\xdb\x99\x5f\xe2\x51\x69\xd1\x41\xca\xb9\xbb\xba\x92\xba\xa0\x1f\x9f\x2e\x1e\xce\x7d\xf4\xcb\x2a\xc0\x51\x90\xf3\x7f\xcc\x1f\x9d",
+  (const uint8_t *)"\x21\x52\xf8\xd1\x9b\x79\x1d\x24\x45\x32\x42\xe1\x5f\x2e\xab\x6c\xb7\xcf\xfa\x7b\x6a\x5e\xd3\x00\x97\x96\x0e\x06\x98\x81\xdb\x12",
+  (const uint8_t *)"\x22\xfc\x29\x77\x92\xf0\xb6\xff\xc0\xbf\xcf\xdb\x7e\xdb\x0c\x0a\xa1\x4e\x02\x5a\x36\x5e\xc0\xe3\x42\xe8\x6e\x38\x29\xcb\x74\xb6",
+#else
+    MODEL_SCMON_KEYS
+#endif
+};
+
 static secbool compute_pubkey(uint8_t sig_m, uint8_t sig_n,
                               const uint8_t *const *pub, uint8_t sigmask,
                               ed25519_public_key res) {
@@ -157,6 +170,84 @@ secbool check_image_header_sig(const image_header *const hdr, uint8_t key_m,
   return sectrue *
          (0 == ed25519_sign_open(fingerprint, IMAGE_HASH_DIGEST_LENGTH, pub,
                                  *(const ed25519_signature *)hdr->sig));
+}
+
+const secmon_header_t *read_secmon_header(const uint8_t *const data,
+                                          const uint32_t maxsize) {
+  const secmon_header_t *hdr = (const secmon_header_t *)data;
+
+  if (hdr->magic != SECMON_IMAGE_MAGIC) {
+    return NULL;
+  }
+  if (hdr->hdrlen != SECMON_HEADER_SIZE) {
+    return NULL;
+  }
+
+  if (hdr->codelen > (maxsize - hdr->hdrlen)) return secfalse;
+  if ((hdr->hdrlen + hdr->codelen) < 4 * 1024) return secfalse;
+  if ((hdr->hdrlen + hdr->codelen) % 512 != 0) return secfalse;
+
+  return hdr;
+}
+
+secbool check_secmon_model(const secmon_header_t *const hdr) {
+#ifndef TREZOR_EMULATOR
+  if (hdr->hw_model != HW_MODEL) {
+    return secfalse;
+  }
+  if (hdr->hw_revision != HW_REVISION) {
+    return secfalse;
+  }
+#endif
+
+  return sectrue;
+}
+
+void get_secmon_fingerprint(const secmon_header_t *const hdr,
+                            uint8_t *const out) {
+  IMAGE_HASH_CTX ctx;
+  IMAGE_HASH_INIT(&ctx);
+  IMAGE_HASH_UPDATE(&ctx, (uint8_t *)hdr, SECMON_HEADER_SIZE - IMAGE_SIG_SIZE);
+  for (int i = 0; i < IMAGE_SIG_SIZE; i++) {
+    IMAGE_HASH_UPDATE(&ctx, (const uint8_t *)"\x00", 1);
+  }
+  IMAGE_HASH_FINAL(&ctx, out);
+}
+
+secbool check_secmon_header_sig(const secmon_header_t *const hdr) {
+  // check header signature
+
+  uint8_t fingerprint[32];
+  get_secmon_fingerprint(hdr, fingerprint);
+
+  ed25519_public_key pub;
+  if (sectrue != compute_pubkey(SECMON_KEY_M, SECMON_KEY_N, SECMON_KEYS,
+                                hdr->sigmask, pub))
+    return secfalse;
+
+  return sectrue *
+         (0 == ed25519_sign_open(fingerprint, IMAGE_HASH_DIGEST_LENGTH, pub,
+                                 *(const ed25519_signature *)hdr->sig));
+}
+
+secbool check_secmon_contents(const secmon_header_t *const hdr,
+                              size_t code_offset, const flash_area_t *area) {
+  if (0 == area) {
+    return secfalse;
+  }
+
+  // Check the secmon integrity, calculate and compare hash
+  const void *data = flash_area_get_address(
+      area, code_offset + SECMON_HEADER_SIZE, hdr->codelen);
+  if (!data) {
+    return secfalse;
+  }
+
+  if (sectrue != check_single_hash(hdr->hash, data, hdr->codelen)) {
+    return secfalse;
+  }
+
+  return sectrue;
 }
 
 secbool __wur read_vendor_header(const uint8_t *const data,

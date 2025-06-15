@@ -29,12 +29,15 @@
 
 #define VENDOR_HEADER_MAX_SIZE (64 * 1024)
 #define IMAGE_HEADER_SIZE 0x400  // size of the bootloader or firmware header
+#define SECMON_HEADER_SIZE 0x200
 #define IMAGE_SIG_SIZE 65
 #define IMAGE_INIT_CHUNK_SIZE (16 * 1024)
 
 #define BOOTLOADER_IMAGE_MAGIC 0x425A5254  // TRZB
 
 #define FIRMWARE_IMAGE_MAGIC 0x465A5254  // TRZF
+
+#define SECMON_IMAGE_MAGIC 0x43455354  // TSEC
 
 #define IMAGE_CODE_ALIGN(addr) \
   ((((uint32_t)(uintptr_t)addr) + (CODE_ALIGNMENT - 1)) & ~(CODE_ALIGNMENT - 1))
@@ -120,6 +123,20 @@ typedef struct {
   uint8_t hash[IMAGE_HASH_DIGEST_LENGTH];
 } firmware_header_info_t;
 
+typedef struct {
+  uint32_t magic;
+  uint32_t hdrlen;
+  uint32_t codelen;
+  uint32_t version;
+  uint32_t hw_model;
+  uint8_t hw_revision;
+  uint8_t reserved_0[3];
+  uint8_t hash[32];
+  uint8_t reserved_1[391];
+  uint8_t sigmask;
+  uint8_t sig[64];
+} secmon_header_t;
+
 const image_header *read_image_header(const uint8_t *const data,
                                       const uint32_t magic,
                                       const uint32_t maxsize);
@@ -156,3 +173,14 @@ secbool check_firmware_header(const uint8_t *header, size_t header_size,
                               firmware_header_info_t *info);
 
 secbool __wur check_bootloader_header_sig(const image_header *const hdr);
+
+const secmon_header_t *read_secmon_header(const uint8_t *const data,
+                                          const uint32_t maxsize);
+
+secbool __wur check_secmon_model(const secmon_header_t *const hdr);
+
+secbool __wur check_secmon_header_sig(const secmon_header_t *const hdr);
+
+secbool __wur check_secmon_contents(const secmon_header_t *const hdr,
+                                    size_t code_offset,
+                                    const flash_area_t *area);

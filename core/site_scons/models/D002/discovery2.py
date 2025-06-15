@@ -47,6 +47,7 @@ def configure(
         ("USE_HSE", "1"),
         ("USE_BOOTARGS_RSOD", "1"),
         ("LOCKABLE_BOOTLOADER", "1"),
+        ("USE_SECMON_VERIFICATION", "1"),
     ]
 
     if "display" in features_wanted:

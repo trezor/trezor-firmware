@@ -183,6 +183,42 @@ def format_header(
     return "\n".join(output)
 
 
+def format_secmon_header(
+    header: firmware.secmon.SecmonHeader,
+    code_hash: bytes,
+    digest: bytes,
+    sig_status: Status,
+) -> str:
+    header_dict = asdict(header)
+    header_out = header_dict.copy()
+
+    for key, val in header_out.items():
+        if "version" in key:
+            header_out[key] = LiteralStr(_format_version(val))
+
+    # status = SYM_OK if header.hash == code_hash else SYM_FAIL
+
+    if all_zero(header.hash):
+        hash_status = Status.MISSING
+    elif header.hash != code_hash:
+        hash_status = Status.INVALID
+    else:
+        hash_status = Status.VALID
+    #
+    # header_out["hashes"] = hashes_out
+
+    all_ok = SYM_OK if hash_status.is_ok() and sig_status.is_ok() else SYM_FAIL
+
+    output = [
+        "SECMON Header " + _format_container(header_out),
+        "Code hash: " + click.style(code_hash.hex(), bold=True),
+        f"Fingerprint: {click.style(digest.hex(), bold=True)}",
+        f"{all_ok} Signature is {sig_status.value}, hash is {hash_status.value}",
+    ]
+
+    return "\n".join(output)
+
+
 # =========================== functionality implementations ===============
 
 
@@ -391,6 +427,39 @@ class BootloaderImage(firmware.FirmwareImage, CosiSignedMixin):
         return self.get_model_keys(dev_keys).boardloader_keys
 
 
+class SecmonImage(firmware.SecmonImage, CosiSignedMixin):
+    NAME: t.ClassVar[str] = "secmon"
+    DEV_KEYS = _make_dev_keys(b"\x41", b"\x42")
+
+    def get_header(self) -> CosiSignatureHeaderProto:
+        return self.header
+
+    def format(self, verbose: bool = False) -> str:
+        return format_secmon_header(
+            self.header,
+            self.code_hash(),
+            self.digest(),
+            _check_signature_any(self),
+        )
+
+    def verify(self, dev_keys: bool = False) -> None:
+        self.validate_code_hash()
+        public_keys = self.public_keys(dev_keys)
+        try:
+            cosi.verify(
+                self.header.signature,
+                self.digest(),
+                self.get_model_keys(dev_keys).boardloader_sigs_needed,
+                public_keys,
+                self.header.sigmask,
+            )
+        except Exception:
+            raise firmware.InvalidSignatureError("Invalid bootloader signature")
+
+    def public_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
+        return self.get_model_keys(dev_keys).boardloader_keys
+
+
 class LegacyFirmware(firmware.LegacyFirmware):
     NAME: t.ClassVar[str] = "legacy_firmware_v1"
 
@@ -485,6 +554,11 @@ def parse_image(image: bytes) -> SignableImageProto:
 
     try:
         return VendorHeader.parse(image)
+    except c.ConstructError:
+        pass
+
+    try:
+        return SecmonImage.parse(image)
     except c.ConstructError:
         pass
 
