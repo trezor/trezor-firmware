@@ -271,6 +271,11 @@ SOURCE_FIRMWARE = [
     'embed/projects/secmon/main.c',
 ]
 
+if TREZOR_MODEL not in ('T3B1', 'T3T1'):
+    SOURCE_FIRMWARE += [
+        'embed/projects/secmon/header.S',
+    ]
+
 if 'sd_card' in FEATURES_AVAILABLE:
     SDCARD = True
 else:
@@ -411,10 +416,17 @@ BINARY_NAME += "-" + tools.get_git_revision_short_hash()
 BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
 BINARY_NAME += ".bin"
 
-action_bin=[
-    '$OBJCOPY -O binary -j .flash -j .data -j .confidential -j .gnu.sgstubs $SOURCE ${TARGET}',
-    '$CP $TARGET ' + BINARY_NAME,
-]
+if TREZOR_MODEL in ('T3B1', 'T3T1'):
+    action_bin=[
+        '$OBJCOPY -O binary -j .secmon_header -j .flash -j .data -j .confidential -j .gnu.sgstubs $SOURCE ${TARGET}',
+        '$CP $TARGET ' + BINARY_NAME,
+    ]
+else:
+    action_bin=[
+        '$OBJCOPY -O binary -j .secmon_header -j .flash -j .data -j .confidential -j .gnu.sgstubs $SOURCE ${TARGET}',
+        '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
+        '$CP $TARGET ' + BINARY_NAME,
+    ]
 
 if STORAGE_INSECURE_TESTING_MODE:
     INSECURE_TESTING_MODE_STR = """
