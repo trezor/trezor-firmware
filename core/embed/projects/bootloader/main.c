@@ -95,8 +95,12 @@ void failed_jump_to_firmware(void);
 CONFIDENTIAL volatile secbool dont_optimize_out_true = sectrue;
 CONFIDENTIAL void (*volatile firmware_jump_fn)(void) = failed_jump_to_firmware;
 
-static secbool is_manufacturing_mode(void) {
+static secbool is_manufacturing_mode(vendor_header *vhdr) {
   unit_properties_init();
+
+  if ((vhdr->vtrust & VTRUST_ALLOW_PROVISIONING) == 0) {
+    return secfalse;
+  }
 
 #if (defined TREZOR_MODEL_T3T1 || defined TREZOR_MODEL_T3W1)
   // on T3T1 and T3W1, tester needs to run without touch and tamper, so making
@@ -232,9 +236,11 @@ static void drivers_init(secbool manufacturing_mode,
 
 #ifdef USE_TAMPER
   tamper_init();
+#if PRODUCTION
   if (manufacturing_mode != sectrue) {
     tamper_external_enable();
   }
+#endif
 #endif
 
 #ifdef USE_TOUCH
