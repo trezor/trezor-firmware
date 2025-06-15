@@ -10,6 +10,7 @@ BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 PRODUCTION = ARGUMENTS.get('PRODUCTION', '0') == '1'
 BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
 BOOTLOADER_DEVEL = ARGUMENTS.get('BOOTLOADER_DEVEL', '0') == '1'
+UNSAFE_FW = ARGUMENTS.get('UNSAFE_FW', '0') == '1'
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
@@ -871,7 +872,10 @@ if BOOTLOADER_QA or BOOTLOADER_DEVEL:
 
 # select vendor header
 if BOOTLOADER_QA or BOOTLOADER_DEVEL:
-    vendor = "dev_DO_NOT_SIGN_signed_dev"
+    if UNSAFE_FW:
+        vendor = "unsafe_signed_dev"
+    else:
+        vendor = "dev_DO_NOT_SIGN_signed_dev"
 elif not PRODUCTION:
     vendor = "unsafe_signed_prod"
 else:
