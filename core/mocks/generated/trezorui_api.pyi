@@ -895,3 +895,7 @@ class DeviceMenuResult:
     RebootToBootloader: ClassVar[DeviceMenuResult]
     TurnOff: ClassVar[DeviceMenuResult]
     RefreshMenu: ClassVar[DeviceMenuResult]
+    DemoCreateWallet: ClassVar[DeviceMenuResult]
+    DemoRestoreWallet: ClassVar[DeviceMenuResult]
+    DemoReceiveBitcoin: ClassVar[DeviceMenuResult]
+    DemoSendBitcoin: ClassVar[DeviceMenuResult]
