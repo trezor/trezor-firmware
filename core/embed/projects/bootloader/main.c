@@ -338,9 +338,37 @@ void real_jump_to_firmware(void) {
                               &FIRMWARE_AREA),
          "Firmware is corrupted");
 
-  secret_prepare_fw(
-      ((vhdr.vtrust & VTRUST_SECRET_MASK) == VTRUST_SECRET_ALLOW) * sectrue,
-      ((vhdr.vtrust & VTRUST_NO_WARNING) == VTRUST_NO_WARNING) * sectrue);
+  size_t secmon_code_offset = 0;
+
+#ifdef USE_SECMON_VERIFICATION
+  size_t secmon_start = (size_t)IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen +
+                                                 IMAGE_HEADER_SIZE);
+  const secmon_header_t *secmon_hdr =
+      read_secmon_header((const uint8_t *)secmon_start, FIRMWARE_MAXSIZE);
+
+  if (secmon_hdr != NULL) {
+    secmon_code_offset = IMAGE_CODE_ALIGN(SECMON_HEADER_SIZE);
+  }
+
+  ensure((secmon_hdr != NULL) * sectrue, "Secmon header not found");
+
+  ensure(check_secmon_model(secmon_hdr), "Wrong secmon model");
+
+  ensure(check_secmon_header_sig(secmon_hdr), "Invalid secmon signature");
+
+  ensure(check_secmon_contents(secmon_hdr, secmon_start - FIRMWARE_START,
+                               &FIRMWARE_AREA),
+         "Secmon is corrupted");
+#endif
+
+  secbool provisioning_access =
+      ((vhdr.vtrust & VTRUST_ALLOW_PROVISIONING) == VTRUST_ALLOW_PROVISIONING) *
+      sectrue;
+
+  secbool secret_run_access =
+      ((vhdr.vtrust & VTRUST_SECRET_MASK) == VTRUST_SECRET_ALLOW) * sectrue;
+
+  secret_prepare_fw(secret_run_access, provisioning_access);
 
   // if all warnings are disabled in VTRUST flags then skip the procedure
   if ((vhdr.vtrust & VTRUST_NO_WARNING) != VTRUST_NO_WARNING) {
@@ -381,7 +409,8 @@ void real_jump_to_firmware(void) {
   system_deinit();
 
   jump_to_next_stage(
-      IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE));
+      IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE) +
+      secmon_code_offset);
 }
 
 __attribute__((noreturn)) void reboot_with_fade(void) {
@@ -398,7 +427,11 @@ int bootloader_main(void) {
 
   system_init(&rsod_panic_handler);
 
-  secbool manufacturing_mode = is_manufacturing_mode();
+  vendor_header vhdr;
+  volatile secbool vhdr_present = secfalse;
+  vhdr_present = read_vendor_header((const uint8_t *)FIRMWARE_START, &vhdr);
+
+  secbool manufacturing_mode = is_manufacturing_mode(&vhdr);
 
   secbool stay_in_bootloader = boot_sequence(manufacturing_mode);
 
@@ -426,10 +459,8 @@ int bootloader_main(void) {
 #endif
 
   const image_header *hdr = NULL;
-  vendor_header vhdr;
 
   // detect whether the device contains a valid firmware
-  volatile secbool vhdr_present = secfalse;
   volatile secbool vhdr_keys_ok = secfalse;
   volatile secbool vhdr_lock_ok = secfalse;
   volatile secbool img_hdr_ok = secfalse;
@@ -440,8 +471,7 @@ int bootloader_main(void) {
   volatile secbool firmware_present = secfalse;
   volatile secbool firmware_present_backup = secfalse;
   volatile secbool auto_upgrade = secfalse;
-
-  vhdr_present = read_vendor_header((const uint8_t *)FIRMWARE_START, &vhdr);
+  volatile secbool secmon_valid = secfalse;
 
   if (sectrue == vhdr_present) {
     vhdr_keys_ok = check_vendor_header_keys(&vhdr);
@@ -476,7 +506,46 @@ int bootloader_main(void) {
     header_present = version_ok;
   }
 
+#ifdef USE_SECMON_VERIFICATION
+  size_t secmon_start = (size_t)IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen +
+                                                 IMAGE_HEADER_SIZE);
+
+  const secmon_header_t *secmon_hdr =
+      read_secmon_header((const uint8_t *)secmon_start, FIRMWARE_MAXSIZE);
+
+  volatile secbool secmon_header_present = secfalse;
+  volatile secbool secmon_model_valid = secfalse;
+  volatile secbool secmon_header_sig_valid = secfalse;
+  volatile secbool secmon_contents_valid = secfalse;
+
   if (sectrue == header_present) {
+    secmon_header_present =
+        secbool_and(header_present, (secmon_hdr != NULL) * sectrue);
+  }
+
+  if (sectrue == secmon_header_present) {
+    secmon_model_valid =
+        secbool_and(secmon_header_present, check_secmon_model(secmon_hdr));
+  }
+
+  if (sectrue == secmon_model_valid) {
+    secmon_header_sig_valid =
+        secbool_and(secmon_model_valid, check_secmon_header_sig(secmon_hdr));
+  }
+
+  if (sectrue == secmon_header_sig_valid) {
+    secmon_contents_valid = secbool_and(
+        secmon_header_sig_valid,
+        check_secmon_contents(secmon_hdr, secmon_start - FIRMWARE_START,
+                              &FIRMWARE_AREA));
+    secmon_valid = secmon_contents_valid;
+  }
+
+#else
+  secmon_valid = header_present;
+#endif
+
+  if (sectrue == secmon_valid) {
     ensure_firmware_min_version(hdr->monotonic);
     firmware_present = check_image_contents(
         hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen, &FIRMWARE_AREA);
