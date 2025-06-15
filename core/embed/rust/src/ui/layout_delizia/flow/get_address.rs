@@ -1,6 +1,6 @@
 use crate::{
     error,
-    micropython::{buffer::StrBuffer, iter::IterBuf, obj::Obj, util},
+    micropython::{buffer::StrBuffer, gc::GcBox, iter::IterBuf, obj::Obj, util},
     strutil::TString,
     translations::TR,
     ui::{
@@ -11,8 +11,7 @@ use crate::{
             ButtonRequestExt, ComponentExt, Qr,
         },
         flow::{
-            base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, GcBoxFlowComponent, SwipeFlow, SwipePage,
+            base::{Decision, DecisionBuilder as _}, FlowController, FlowMsg, FlowStore, GcBoxFlowComponent, SwipeFlow, SwipePage
         },
         geometry::Direction,
         layout::util::ConfirmValueParams,
@@ -275,13 +274,14 @@ pub fn new_get_address(
         .map(super::util::map_to_confirm),
     )?;
 
-    let mut res = SwipeFlow::new(&GetAddress::Address)?;
-    res.add_allocated_page(&GetAddress::Address, content_address)
+    let mut store = GcBox::new(FlowStore::new(&GetAddress::Address))?;
+    store.add_allocated_page(&GetAddress::Address, content_address)
         .add_allocated_page(&GetAddress::Tap, content_tap)
         .add_allocated_page(&GetAddress::Menu, content_menu)
         .add_allocated_page(&GetAddress::QrCode, content_qr)
         .add_allocated_page(&GetAddress::AccountInfo, content_account)
         .add_allocated_page(&GetAddress::Cancel, content_cancel_info)
         .add_allocated_page(&GetAddress::CancelTap, content_cancel_tap);
-    Ok(res)
+
+    Ok(SwipeFlow::new(store))
 }

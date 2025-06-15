@@ -5,4 +5,4 @@ mod swipe;
 pub use crate::ui::component::FlowMsg;
 pub use base::{FlowController, Swipable};
 pub use page::SwipePage;
-pub use swipe::{GcBoxFlowComponent, SwipeFlow};
+pub use swipe::{GcBoxFlowComponent, SwipeFlow, FlowStore};
