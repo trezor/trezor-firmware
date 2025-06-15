@@ -44,8 +44,10 @@ def configure(
         ("HW_MODEL", str(hw_model)),
         ("HW_REVISION", str(hw_revision)),
         ("HSE_VALUE", "32000000"),
+        ("LSI_VALUE", "250"),
         ("USE_HSE", "1"),
         ("USE_LSE", "1"),
+        ("USE_LSI", "1"),
         ("FIXED_HW_DEINIT", "1"),
         ("LOCKABLE_BOOTLOADER", "1"),
         ("LAZY_DISPLAY_INIT", "1"),
@@ -292,6 +294,14 @@ def configure(
         paths += ["embed/sys/power_manager/inc"]
         defines += [("USE_POWER_MANAGER", "1")]
         features_available.append("power_manager")
+
+    if "iwdg" in features_wanted:
+        sources += ["embed/sec/iwdg/stm32/iwdg.c"]
+        sources += [
+            "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_iwdg.c",
+        ]
+        paths += ["embed/sec/iwdg/inc"]
+        defines += [("USE_IWDG", "1")]
 
     env.get("ENV")["LINKER_SCRIPT"] = linker_script
     env.get("ENV")["MEMORY_LAYOUT"] = memory_layout
