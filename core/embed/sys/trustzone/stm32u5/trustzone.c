@@ -61,9 +61,9 @@ extern uint8_t _sgstubs_section_end;
 #define SGSTUBS_SIZE (SGSTUBS_END - SGSTUBS_START)
 
 // defined in linker script
-extern uint32_t _codelen;
+extern uint32_t _secmon_size;
 
-#define SECMON_SIZE ((uint32_t) & _codelen)
+#define SECMON_SIZE ((uint32_t) & _secmon_size)
 
 #define NONSECURE_CODE_START (FIRMWARE_START + SECMON_SIZE)
 #define NONSECURE_CODE_SIZE (FIRMWARE_MAXSIZE - SECMON_SIZE)
