@@ -20,11 +20,11 @@ from typing import TYPE_CHECKING, TextIO
 import click
 
 from .. import eos, tools
-from . import with_client
+from . import with_session
 
 if TYPE_CHECKING:
     from .. import messages
-    from ..client import TrezorClient
+    from ..transport.session import Session
 
 PATH_HELP = "BIP-32 path, e.g. m/44h/194h/0h/0/0"
 
@@ -37,11 +37,11 @@ def cli() -> None:
 @cli.command()
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.option("-d", "--show-display", is_flag=True)
-@with_client
-def get_public_key(client: "TrezorClient", address: str, show_display: bool) -> str:
+@with_session
+def get_public_key(session: "Session", address: str, show_display: bool) -> str:
     """Get Eos public key in base58 encoding."""
     address_n = tools.parse_path(address)
-    res = eos.get_public_key(client, address_n, show_display)
+    res = eos.get_public_key(session, address_n, show_display)
     return f"WIF: {res.wif_public_key}\nRaw: {res.raw_public_key.hex()}"
 
 
@@ -50,16 +50,16 @@ def get_public_key(client: "TrezorClient", address: str, show_display: bool) -> 
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.option("-f", "--file", "_ignore", is_flag=True, hidden=True, expose_value=False)
 @click.option("-C", "--chunkify", is_flag=True)
-@with_client
+@with_session
 def sign_transaction(
-    client: "TrezorClient", address: str, file: TextIO, chunkify: bool
+    session: "Session", address: str, file: TextIO, chunkify: bool
 ) -> "messages.EosSignedTx":
     """Sign EOS transaction."""
     tx_json = json.load(file)
 
     address_n = tools.parse_path(address)
     return eos.sign_tx(
-        client,
+        session,
         address_n,
         tx_json["transaction"],
         tx_json["chain_id"],
