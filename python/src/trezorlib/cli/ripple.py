@@ -20,10 +20,10 @@ from typing import TYPE_CHECKING, TextIO
 import click
 
 from .. import ripple, tools
-from . import with_client
+from . import with_session
 
 if TYPE_CHECKING:
-    from ..client import TrezorClient
+    from ..transport.session import Session
 
 PATH_HELP = "BIP-32 path to key, e.g. m/44h/144h/0h/0/0"
 
@@ -37,13 +37,13 @@ def cli() -> None:
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.option("-d", "--show-display", is_flag=True)
 @click.option("-C", "--chunkify", is_flag=True)
-@with_client
+@with_session
 def get_address(
-    client: "TrezorClient", address: str, show_display: bool, chunkify: bool
+    session: "Session", address: str, show_display: bool, chunkify: bool
 ) -> str:
     """Get Ripple address"""
     address_n = tools.parse_path(address)
-    return ripple.get_address(client, address_n, show_display, chunkify)
+    return ripple.get_address(session, address_n, show_display, chunkify)
 
 
 @cli.command()
@@ -51,13 +51,13 @@ def get_address(
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.option("-f", "--file", "_ignore", is_flag=True, hidden=True, expose_value=False)
 @click.option("-C", "--chunkify", is_flag=True)
-@with_client
-def sign_tx(client: "TrezorClient", address: str, file: TextIO, chunkify: bool) -> None:
+@with_session
+def sign_tx(session: "Session", address: str, file: TextIO, chunkify: bool) -> None:
     """Sign Ripple transaction"""
     address_n = tools.parse_path(address)
     msg = ripple.create_sign_tx_msg(json.load(file))
 
-    result = ripple.sign_tx(client, address_n, msg, chunkify=chunkify)
+    result = ripple.sign_tx(session, address_n, msg, chunkify=chunkify)
     click.echo("Signature:")
     click.echo(result.signature.hex())
     click.echo()
