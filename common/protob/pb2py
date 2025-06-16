@@ -418,6 +418,8 @@ class Descriptor:
             self._nested_types_from_message(nested.orig)
 
     def convert_enum_value_names(self, enum):
+        if isinstance(enum, tuple):
+            return
         for value in enum.value:
             value.name = strip_enum_prefix(enum.name, value.name)
 
