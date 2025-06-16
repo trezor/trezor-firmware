@@ -22,37 +22,37 @@ from . import messages
 from .tools import _return_success
 
 if TYPE_CHECKING:
-    from .client import TrezorClient
+    from .transport.session import Session
 
 
-def list_credentials(client: "TrezorClient") -> Sequence[messages.WebAuthnCredential]:
-    return client.call(
+def list_credentials(session: "Session") -> Sequence[messages.WebAuthnCredential]:
+    return session.call(
         messages.WebAuthnListResidentCredentials(), expect=messages.WebAuthnCredentials
     ).credentials
 
 
-def add_credential(client: "TrezorClient", credential_id: bytes) -> str | None:
-    ret = client.call(
+def add_credential(session: "Session", credential_id: bytes) -> str | None:
+    ret = session.call(
         messages.WebAuthnAddResidentCredential(credential_id=credential_id),
         expect=messages.Success,
     )
     return _return_success(ret)
 
 
-def remove_credential(client: "TrezorClient", index: int) -> str | None:
-    ret = client.call(
+def remove_credential(session: "Session", index: int) -> str | None:
+    ret = session.call(
         messages.WebAuthnRemoveResidentCredential(index=index), expect=messages.Success
     )
     return _return_success(ret)
 
 
-def set_counter(client: "TrezorClient", u2f_counter: int) -> str | None:
-    ret = client.call(
+def set_counter(session: "Session", u2f_counter: int) -> str | None:
+    ret = session.call(
         messages.SetU2FCounter(u2f_counter=u2f_counter), expect=messages.Success
     )
     return _return_success(ret)
 
 
-def get_next_counter(client: "TrezorClient") -> int:
-    ret = client.call(messages.GetNextU2FCounter(), expect=messages.NextU2FCounter)
+def get_next_counter(session: "Session") -> int:
+    ret = session.call(messages.GetNextU2FCounter(), expect=messages.NextU2FCounter)
     return ret.u2f_counter
