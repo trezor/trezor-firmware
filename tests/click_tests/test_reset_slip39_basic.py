@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from trezorlib import device, messages
+from trezorlib.client import ProtocolVersion
 
 from .. import translations as TR
 from ..common import EXTERNAL_ENTROPY, MOCK_GET_ENTROPY, LayoutType, generate_entropy
@@ -47,8 +48,11 @@ def test_reset_slip39_basic(
 
     assert features.initialized is False
 
-    device_handler.run(
+    session = device_handler.client.get_seedless_session()
+    device_handler.run_with_provided_session(
+        session,
         device.setup,
+        seedless=True,
         strength=128,
         backup_type=messages.BackupType.Slip39_Basic,
         pin_protection=False,
@@ -56,6 +60,8 @@ def test_reset_slip39_basic(
         entropy_check_count=0,
         _get_entropy=MOCK_GET_ENTROPY,
     )
+    if device_handler.client.protocol_version is ProtocolVersion.V2:
+        reset.confirm_read(debug, middle_r=True)
 
     # confirm new wallet
     reset.confirm_new_wallet(debug)
@@ -79,7 +85,7 @@ def test_reset_slip39_basic(
 
     # confirm checklist
     # TODO: resolve foreign glyphs extraction from the layout
-    if TR.get_language(debug) != "pt":
+    if TR.get_language() != "pt":
         assert any(
             needle in debug.read_layout().text_content()
             for needle in [

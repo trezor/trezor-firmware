@@ -20,7 +20,7 @@ import pytest
 
 from trezorlib import btc, messages
 from trezorlib.debuglink import LayoutType
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.debuglink import message_filters
 from trezorlib.exceptions import Cancelled
 from trezorlib.tools import parse_path
@@ -291,7 +291,7 @@ VECTORS_LONG_MESSAGE = (
     "coin_name, path, script_type, no_script_type, address, message, signature", VECTORS
 )
 def test_signmessage(
-    client: Client,
+    session: Session,
     coin_name: str,
     path: str,
     script_type: messages.InputScriptType,
@@ -301,7 +301,7 @@ def test_signmessage(
     signature: str,
 ):
     sig = btc.sign_message(
-        client,
+        session,
         coin_name=coin_name,
         n=parse_path(path),
         script_type=script_type,
@@ -318,7 +318,7 @@ def test_signmessage(
     VECTORS_LONG_MESSAGE,
 )
 def test_signmessage_long(
-    client: Client,
+    session: Session,
     coin_name: str,
     path: str,
     script_type: messages.InputScriptType,
@@ -327,11 +327,11 @@ def test_signmessage_long(
     message: str,
     signature: str,
 ):
-    with client:
-        IF = InputFlowSignVerifyMessageLong(client)
+    with session.client as client:
+        IF = InputFlowSignVerifyMessageLong(session.client)
         client.set_input_flow(IF.get())
         sig = btc.sign_message(
-            client,
+            session,
             coin_name=coin_name,
             n=parse_path(path),
             script_type=script_type,
@@ -347,7 +347,7 @@ def test_signmessage_long(
     "coin_name, path, script_type, no_script_type, address, message, signature", VECTORS
 )
 def test_signmessage_info(
-    client: Client,
+    session: Session,
     coin_name: str,
     path: str,
     script_type: messages.InputScriptType,
@@ -356,11 +356,11 @@ def test_signmessage_info(
     message: str,
     signature: str,
 ):
-    with client, pytest.raises(Cancelled):
-        IF = InputFlowSignMessageInfo(client)
+    with session.client as client, pytest.raises(Cancelled):
+        IF = InputFlowSignMessageInfo(session.client)
         client.set_input_flow(IF.get())
         sig = btc.sign_message(
-            client,
+            session,
             coin_name=coin_name,
             n=parse_path(path),
             script_type=script_type,
@@ -403,17 +403,17 @@ MESSAGE_LENGTHS_ECKHART = (
 )
 
 
-def _pagination_test(client: Client, message: str, is_long: bool):
+def _pagination_test(session: Session, message: str, is_long: bool):
 
-    with client:
+    with session.client as client:
         IF = (
             InputFlowSignVerifyMessageLong
             if is_long
             else InputFlowSignMessagePagination
-        )(client)
+        )(session.client)
         client.set_input_flow(IF.get())
         btc.sign_message(
-            client,
+            session,
             coin_name="Bitcoin",
             n=parse_path("m/44h/0h/0h/0/0"),
             message=message,
@@ -422,7 +422,11 @@ def _pagination_test(client: Client, message: str, is_long: bool):
     message_read = IF.message_read.replace(" ", "").replace("...", "")
     signed_message = message.replace("\n", "").replace(" ", "")
 
-    if client.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
+    if session.client.layout_type in (
+        LayoutType.Bolt,
+        LayoutType.Delizia,
+        LayoutType.Eckhart,
+    ):
         assert signed_message in message_read
 
 
@@ -432,22 +436,22 @@ def _pagination_test(client: Client, message: str, is_long: bool):
     reason="Test with different parameters implemented for eckhart",
 )
 @pytest.mark.parametrize("message,is_long", MESSAGE_LENGTHS)
-def test_signmessage_pagination(client: Client, message: str, is_long: bool):
-    _pagination_test(client, message, is_long)
+def test_signmessage_pagination(session: Session, message: str, is_long: bool):
+    _pagination_test(session, message, is_long)
 
 
 @pytest.mark.models("eckhart")
 @pytest.mark.parametrize("message,is_long", MESSAGE_LENGTHS_ECKHART)
-def test_signmessage_pagination_eckhart(client: Client, message: str, is_long: bool):
-    _pagination_test(client, message, is_long)
+def test_signmessage_pagination_eckhart(session: Session, message: str, is_long: bool):
+    _pagination_test(session, message, is_long)
 
 
 @pytest.mark.models("t2t1", reason="Tailored to TT fonts and screen size")
-def test_signmessage_pagination_trailing_newline(client: Client):
+def test_signmessage_pagination_trailing_newline(session: Session):
     message = "THIS\nMUST\nNOT\nBE\nPAGINATED\n"
     # The trailing newline must not cause a new paginated screen to appear.
     # The UI must be a single dialog without pagination.
-    with client:
+    with session.client as client:
         client.set_expected_responses(
             [
                 # expect address confirmation
@@ -458,17 +462,17 @@ def test_signmessage_pagination_trailing_newline(client: Client):
             ]
         )
         btc.sign_message(
-            client,
+            session,
             coin_name="Bitcoin",
             n=parse_path("m/44h/0h/0h/0/0"),
             message=message,
         )
 
 
-def test_signmessage_path_warning(client: Client):
+def test_signmessage_path_warning(session: Session):
     message = "This is an example of a signed message."
 
-    with client:
+    with session.client as client:
         client.set_expected_responses(
             [
                 # expect a path warning
@@ -480,11 +484,11 @@ def test_signmessage_path_warning(client: Client):
                 messages.MessageSignature,
             ]
         )
-        if is_core(client):
-            IF = InputFlowConfirmAllWarnings(client)
+        if is_core(session):
+            IF = InputFlowConfirmAllWarnings(session.client)
             client.set_input_flow(IF.get())
         btc.sign_message(
-            client,
+            session,
             coin_name="Bitcoin",
             n=parse_path("m/86h/0h/0h/0/0"),
             message=message,

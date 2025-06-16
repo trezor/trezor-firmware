@@ -17,15 +17,15 @@
 import pytest
 
 from trezorlib import misc
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 
 from ...common import MNEMONIC12
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_encrypt(client: Client):
+def test_encrypt(session: Session):
     res = misc.encrypt_keyvalue(
-        client,
+        session,
         [0, 1, 2],
         "test",
         b"testing message!",
@@ -35,7 +35,7 @@ def test_encrypt(client: Client):
     assert res.hex() == "676faf8f13272af601776bc31bc14e8f"
 
     res = misc.encrypt_keyvalue(
-        client,
+        session,
         [0, 1, 2],
         "test",
         b"testing message!",
@@ -45,7 +45,7 @@ def test_encrypt(client: Client):
     assert res.hex() == "5aa0fbcb9d7fa669880745479d80c622"
 
     res = misc.encrypt_keyvalue(
-        client,
+        session,
         [0, 1, 2],
         "test",
         b"testing message!",
@@ -55,7 +55,7 @@ def test_encrypt(client: Client):
     assert res.hex() == "958d4f63269b61044aaedc900c8d6208"
 
     res = misc.encrypt_keyvalue(
-        client,
+        session,
         [0, 1, 2],
         "test",
         b"testing message!",
@@ -66,7 +66,7 @@ def test_encrypt(client: Client):
 
     # different key
     res = misc.encrypt_keyvalue(
-        client,
+        session,
         [0, 1, 2],
         "test2",
         b"testing message!",
@@ -77,7 +77,7 @@ def test_encrypt(client: Client):
 
     # different message
     res = misc.encrypt_keyvalue(
-        client,
+        session,
         [0, 1, 2],
         "test",
         b"testing message! it is different",
@@ -90,7 +90,7 @@ def test_encrypt(client: Client):
 
     # different path
     res = misc.encrypt_keyvalue(
-        client,
+        session,
         [0, 1, 3],
         "test",
         b"testing message!",
@@ -101,9 +101,9 @@ def test_encrypt(client: Client):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_decrypt(client: Client):
+def test_decrypt(session: Session):
     res = misc.decrypt_keyvalue(
-        client,
+        session,
         [0, 1, 2],
         "test",
         bytes.fromhex("676faf8f13272af601776bc31bc14e8f"),
@@ -113,7 +113,7 @@ def test_decrypt(client: Client):
     assert res == b"testing message!"
 
     res = misc.decrypt_keyvalue(
-        client,
+        session,
         [0, 1, 2],
         "test",
         bytes.fromhex("5aa0fbcb9d7fa669880745479d80c622"),
@@ -123,7 +123,7 @@ def test_decrypt(client: Client):
     assert res == b"testing message!"
 
     res = misc.decrypt_keyvalue(
-        client,
+        session,
         [0, 1, 2],
         "test",
         bytes.fromhex("958d4f63269b61044aaedc900c8d6208"),
@@ -133,7 +133,7 @@ def test_decrypt(client: Client):
     assert res == b"testing message!"
 
     res = misc.decrypt_keyvalue(
-        client,
+        session,
         [0, 1, 2],
         "test",
         bytes.fromhex("e0cf0eb0425947000eb546cc3994bc6c"),
@@ -144,7 +144,7 @@ def test_decrypt(client: Client):
 
     # different key
     res = misc.decrypt_keyvalue(
-        client,
+        session,
         [0, 1, 2],
         "test2",
         bytes.fromhex("de247a6aa6be77a134bb3f3f925f13af"),
@@ -155,7 +155,7 @@ def test_decrypt(client: Client):
 
     # different message
     res = misc.decrypt_keyvalue(
-        client,
+        session,
         [0, 1, 2],
         "test",
         bytes.fromhex(
@@ -168,7 +168,7 @@ def test_decrypt(client: Client):
 
     # different path
     res = misc.decrypt_keyvalue(
-        client,
+        session,
         [0, 1, 3],
         "test",
         bytes.fromhex("b4811a9d492f5355a5186ddbfccaae7b"),
@@ -178,11 +178,11 @@ def test_decrypt(client: Client):
     assert res == b"testing message!"
 
 
-def test_encrypt_badlen(client: Client):
+def test_encrypt_badlen(session: Session):
     with pytest.raises(Exception):
-        misc.encrypt_keyvalue(client, [0, 1, 2], "test", b"testing")
+        misc.encrypt_keyvalue(session, [0, 1, 2], "test", b"testing")
 
 
-def test_decrypt_badlen(client: Client):
+def test_decrypt_badlen(session: Session):
     with pytest.raises(Exception):
-        misc.decrypt_keyvalue(client, [0, 1, 2], "test", b"testing")
+        misc.decrypt_keyvalue(session, [0, 1, 2], "test", b"testing")
