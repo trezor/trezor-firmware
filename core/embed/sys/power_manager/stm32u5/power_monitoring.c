@@ -98,7 +98,7 @@ void pm_monitor_power_sources(void) {
     fuel_gauge_set_soc(&drv->fuel_gauge, 1.0f, drv->fuel_gauge.P);
   }
 
-  // Ceil the float soc to user friendly integer
+  // Ceil the float soc to user-friendly integer
   uint8_t soc_ceiled_temp = (int)(drv->fuel_gauge.soc_latched * 100 + 0.999f);
   if (soc_ceiled_temp != drv->soc_ceiled) {
     drv->soc_ceiled = soc_ceiled_temp;
@@ -162,7 +162,7 @@ void pm_charging_controller(pm_driver_t* drv) {
 
   } else if (drv->wireless_connected) {
     // Wireless charger is sensitive to large current steps, so we need to
-    // controll the charging current in steps.
+    // control the charging current in steps.
     if (ticks_expired(drv->charging_step_timeout_ms)) {
       if (drv->charging_current_target_ma <
           drv->charging_current_max_limit_ma) {
@@ -190,9 +190,10 @@ void pm_charging_controller(pm_driver_t* drv) {
     pmic_set_charging_limit(drv->charging_current_target_ma);
   }
 
-  if (drv->soc_ceiled >= drv->soc_limit) {
+  if ((drv->soc_ceiled >= drv->soc_limit) && (drv->soc_limit != 100)) {
     drv->soc_limit_reached = true;
-  } else if (drv->soc_ceiled < drv->soc_limit - PM_SOC_LIMIT_HYSTERESIS) {
+  } else if ((drv->soc_limit == 100) ||
+             (drv->soc_ceiled < (drv->soc_limit - PM_SOC_LIMIT_HYSTERESIS))) {
     drv->soc_limit_reached = false;
   }
 
