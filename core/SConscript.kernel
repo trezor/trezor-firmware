@@ -8,6 +8,7 @@ BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 PRODUCTION = ARGUMENTS.get('PRODUCTION', '0') == '1'
 BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
 BOOTLOADER_DEVEL = ARGUMENTS.get('BOOTLOADER_DEVEL', '0') == '1'
+UNSAFE_FW = ARGUMENTS.get('UNSAFE_FW', '0') == '1'
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
@@ -400,6 +401,18 @@ else:
 
 VENDORHEADER = f'embed/models/{TREZOR_MODEL}/vendorheader/vendorheader_{vendor}.bin'
 
+if BOOTLOADER_DEVEL:
+    if UNSAFE_FW:
+        SECMON = f'embed/models/{TREZOR_MODEL}/secmon/secmon_DEV.bin'
+        SECMON_API = f'embed/models/{TREZOR_MODEL}/secmon/secmon_api_DEV.o'
+    else:
+        SECMON = f'build/secmon/secmon.bin'
+        SECMON_API = f'build/secmon/secmon_api.o'
+else:
+    SECMON = f'embed/models/{TREZOR_MODEL}/secmon/secmon.bin'
+    SECMON_API = f'embed/models/{TREZOR_MODEL}/secmon/secmon_api.o'
+
+
 
 obj_program.extend(
     env.Command(
@@ -415,7 +428,7 @@ if "secmon_layout" in FEATURES_AVAILABLE:
             env,
             'secmon',
             'build/secmon/secmon.o',
-            f'build/secmon/secmon.bin',
+            SECMON,
             )
 
 linkerscript_gen = env.Command(
@@ -440,7 +453,7 @@ rust = tools.add_rust_lib(
 
 
 if "secmon_layout" in FEATURES_AVAILABLE:
-    SECMON_LIB = 'build/secmon/secmon_api.o'
+    SECMON_LIB = SECMON_API
 else:
     SECMON_LIB = ''
 
