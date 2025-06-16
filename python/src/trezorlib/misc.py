@@ -19,22 +19,22 @@ from typing import TYPE_CHECKING, Optional
 from . import messages
 
 if TYPE_CHECKING:
-    from .client import TrezorClient
     from .tools import Address
+    from .transport.session import Session
 
 
-def get_entropy(client: "TrezorClient", size: int) -> bytes:
-    return client.call(messages.GetEntropy(size=size), expect=messages.Entropy).entropy
+def get_entropy(session: "Session", size: int) -> bytes:
+    return session.call(messages.GetEntropy(size=size), expect=messages.Entropy).entropy
 
 
 def sign_identity(
-    client: "TrezorClient",
+    session: "Session",
     identity: messages.IdentityType,
     challenge_hidden: bytes,
     challenge_visual: str,
     ecdsa_curve_name: Optional[str] = None,
 ) -> messages.SignedIdentity:
-    return client.call(
+    return session.call(
         messages.SignIdentity(
             identity=identity,
             challenge_hidden=challenge_hidden,
@@ -46,12 +46,12 @@ def sign_identity(
 
 
 def get_ecdh_session_key(
-    client: "TrezorClient",
+    session: "Session",
     identity: messages.IdentityType,
     peer_public_key: bytes,
     ecdsa_curve_name: Optional[str] = None,
 ) -> messages.ECDHSessionKey:
-    return client.call(
+    return session.call(
         messages.GetECDHSessionKey(
             identity=identity,
             peer_public_key=peer_public_key,
@@ -62,7 +62,7 @@ def get_ecdh_session_key(
 
 
 def encrypt_keyvalue(
-    client: "TrezorClient",
+    session: "Session",
     n: "Address",
     key: str,
     value: bytes,
@@ -70,7 +70,7 @@ def encrypt_keyvalue(
     ask_on_decrypt: bool = True,
     iv: bytes = b"",
 ) -> bytes:
-    return client.call(
+    return session.call(
         messages.CipherKeyValue(
             address_n=n,
             key=key,
@@ -85,7 +85,7 @@ def encrypt_keyvalue(
 
 
 def decrypt_keyvalue(
-    client: "TrezorClient",
+    session: "Session",
     n: "Address",
     key: str,
     value: bytes,
@@ -93,7 +93,7 @@ def decrypt_keyvalue(
     ask_on_decrypt: bool = True,
     iv: bytes = b"",
 ) -> bytes:
-    return client.call(
+    return session.call(
         messages.CipherKeyValue(
             address_n=n,
             key=key,
@@ -107,5 +107,5 @@ def decrypt_keyvalue(
     ).value
 
 
-def get_nonce(client: "TrezorClient") -> bytes:
-    return client.call(messages.GetNonce(), expect=messages.Nonce).nonce
+def get_nonce(session: "Session") -> bytes:
+    return session.call(messages.GetNonce(), expect=messages.Nonce).nonce

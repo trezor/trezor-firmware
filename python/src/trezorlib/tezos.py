@@ -19,17 +19,17 @@ from typing import TYPE_CHECKING
 from . import messages
 
 if TYPE_CHECKING:
-    from .client import TrezorClient
     from .tools import Address
+    from .transport.session import Session
 
 
 def get_address(
-    client: "TrezorClient",
+    session: "Session",
     address_n: "Address",
     show_display: bool = False,
     chunkify: bool = False,
 ) -> str:
-    return client.call(
+    return session.call(
         messages.TezosGetAddress(
             address_n=address_n, show_display=show_display, chunkify=chunkify
         ),
@@ -38,12 +38,12 @@ def get_address(
 
 
 def get_public_key(
-    client: "TrezorClient",
+    session: "Session",
     address_n: "Address",
     show_display: bool = False,
     chunkify: bool = False,
 ) -> str:
-    return client.call(
+    return session.call(
         messages.TezosGetPublicKey(
             address_n=address_n, show_display=show_display, chunkify=chunkify
         ),
@@ -52,11 +52,11 @@ def get_public_key(
 
 
 def sign_tx(
-    client: "TrezorClient",
+    session: "Session",
     address_n: "Address",
     sign_tx_msg: messages.TezosSignTx,
     chunkify: bool = False,
 ) -> messages.TezosSignedTx:
     sign_tx_msg.address_n = address_n
     sign_tx_msg.chunkify = chunkify
-    return client.call(sign_tx_msg, expect=messages.TezosSignedTx)
+    return session.call(sign_tx_msg, expect=messages.TezosSignedTx)
