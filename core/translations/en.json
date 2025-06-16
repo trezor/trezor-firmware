@@ -262,7 +262,6 @@
     "coinjoin__max_mining_fee": "Max mining fee",
     "coinjoin__max_rounds": "Max rounds",
     "coinjoin__title": "Authorize coinjoin",
-    "coinjoin__title_do_not_disconnect": "Do not disconnect your trezor!",
     "coinjoin__title_progress": "Coinjoin in progress",
     "coinjoin__waiting_for_others": "Waiting for others",
     "confirm_total__fee_rate": "Fee rate",

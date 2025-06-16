@@ -215,7 +215,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_coinjoin__max_mining_fee;
   MP_QSTR_coinjoin__max_rounds;
   MP_QSTR_coinjoin__title;
-  MP_QSTR_coinjoin__title_do_not_disconnect;
   MP_QSTR_coinjoin__title_progress;
   MP_QSTR_coinjoin__waiting_for_others;
   MP_QSTR_coinjoin_authorized;

@@ -61,11 +61,8 @@ impl ProgressScreen {
             border: ScreenBorder::new(theme::GREEN_LIME),
             coinjoin_progress: true,
             coinjoin_do_not_disconnect: Some(
-                Label::centered(
-                    TR::coinjoin__title_do_not_disconnect.into(),
-                    theme::TEXT_REGULAR,
-                )
-                .vertically_centered(),
+                Label::centered(TR::coinjoin__do_not_disconnect.into(), theme::TEXT_REGULAR)
+                    .vertically_centered(),
             ),
         }
     }

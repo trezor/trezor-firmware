@@ -235,7 +235,6 @@ class TR:
     coinjoin__max_mining_fee: str = "Max mining fee"
     coinjoin__max_rounds: str = "Max rounds"
     coinjoin__title: str = "Authorize coinjoin"
-    coinjoin__title_do_not_disconnect: str = "Do not disconnect your trezor!"
     coinjoin__title_progress: str = "Coinjoin in progress"
     coinjoin__waiting_for_others: str = "Waiting for others"
     confirm_total__fee_rate: str = "Fee rate"

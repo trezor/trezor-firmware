@@ -268,7 +268,6 @@
     "coinjoin__max_mining_fee": "Frais de minage max",
     "coinjoin__max_rounds": "Nbre max de tours",
     "coinjoin__title": "Autoriser coinjoin",
-    "coinjoin__title_do_not_disconnect": "Ne déconnectez pas votre trezor !",
     "coinjoin__title_progress": "Coinjoin en cours",
     "coinjoin__waiting_for_others": "En attente des autres",
     "confirm_total__fee_rate": "Taux des frais",

@@ -41,8 +41,8 @@ impl<U> CoinJoinProgress<U> {
         indeterminate: bool,
     ) -> Result<CoinJoinProgress<impl Component<Msg = Never> + MaybeTrace>, Error> {
         let style = theme::label_coinjoin_progress();
-        let label = Label::centered(TR::coinjoin__title_do_not_disconnect.into(), style)
-            .vertically_centered();
+        let label =
+            Label::centered(TR::coinjoin__do_not_disconnect.into(), style).vertically_centered();
         let bg = Bar::new(style.background_color, theme::BG, 2);
         let inner = (bg, label);
         CoinJoinProgress::with_background(text, inner, indeterminate)

@@ -268,7 +268,6 @@
     "coinjoin__max_mining_fee": "Max. poplatek za těžbu",
     "coinjoin__max_rounds": "Maximum kol",
     "coinjoin__title": "Schválit coinjoin",
-    "coinjoin__title_do_not_disconnect": "Neodpojujte trezor!",
     "coinjoin__title_progress": "Probíhá coinjoin",
     "coinjoin__waiting_for_others": "Čeká se na ostatní",
     "confirm_total__fee_rate": "Výše poplatku",

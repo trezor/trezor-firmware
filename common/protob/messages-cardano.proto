@@ -169,7 +169,7 @@ message CardanoAddressParametersType {
  */
 message CardanoGetAddress {
     // repeated uint32 address_n = 1;                               // moved to address_parameters
-    optional bool show_display = 2 [default=false];                 // optionally prompt for confirmation on trezor display
+    optional bool show_display = 2 [default=false];                 // optionally prompt for confirmation on Trezor display
     required uint32 protocol_magic = 3;                             // network's protocol magic - needed for Byron addresses on testnets
     required uint32 network_id = 4;                                 // network id - mainnet or testnet
     required CardanoAddressParametersType address_parameters = 5;   // parameters used to derive the address

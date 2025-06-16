@@ -263,7 +263,6 @@
     "coinjoin__max_mining_fee": "Comm. max per mining",
     "coinjoin__max_rounds": "Round max",
     "coinjoin__title": "Autorizza coinjoin",
-    "coinjoin__title_do_not_disconnect": "Non scollegare trezor!",
     "coinjoin__title_progress": "Coinjoin in corso",
     "coinjoin__waiting_for_others": "In attesa di altri",
     "confirm_total__fee_rate": "Tasso di comm.",
