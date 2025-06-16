@@ -323,7 +323,6 @@ pub enum TranslatedString {
     coinjoin__max_mining_fee = 214,  // "Max mining fee"
     coinjoin__max_rounds = 215,  // "Max rounds"
     coinjoin__title = 216,  // "Authorize coinjoin"
-    coinjoin__title_do_not_disconnect = 217,  // "Do not disconnect your trezor!"
     coinjoin__title_progress = 218,  // "Coinjoin in progress"
     coinjoin__waiting_for_others = 219,  // "Waiting for others"
     confirm_total__fee_rate_colon = 220,  // "Fee rate:"
@@ -1777,7 +1776,6 @@ impl TranslatedString {
             (Self::coinjoin__max_mining_fee, "Max mining fee"),
             (Self::coinjoin__max_rounds, "Max rounds"),
             (Self::coinjoin__title, "Authorize coinjoin"),
-            (Self::coinjoin__title_do_not_disconnect, "Do not disconnect your trezor!"),
             (Self::coinjoin__title_progress, "Coinjoin in progress"),
             (Self::coinjoin__waiting_for_others, "Waiting for others"),
             (Self::confirm_total__fee_rate_colon, "Fee rate:"),
@@ -3550,7 +3548,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_coinjoin__max_mining_fee, Self::coinjoin__max_mining_fee),
         (Qstr::MP_QSTR_coinjoin__max_rounds, Self::coinjoin__max_rounds),
         (Qstr::MP_QSTR_coinjoin__title, Self::coinjoin__title),
-        (Qstr::MP_QSTR_coinjoin__title_do_not_disconnect, Self::coinjoin__title_do_not_disconnect),
         (Qstr::MP_QSTR_coinjoin__title_progress, Self::coinjoin__title_progress),
         (Qstr::MP_QSTR_coinjoin__waiting_for_others, Self::coinjoin__waiting_for_others),
         (Qstr::MP_QSTR_confirm_total__fee_rate, Self::confirm_total__fee_rate),

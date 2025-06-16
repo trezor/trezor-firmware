@@ -27,9 +27,9 @@ class Device:
         self.run_trezorctl("get-features | grep version")
         lines = res.stdout.splitlines()
         if len(lines) != 1:
-            raise RuntimeError(f"{len(lines)} trezors connected")
+            raise RuntimeError(f"{len(lines)} Trezors connected")
         if model and model not in lines[0]:
-            raise RuntimeError(f"invalid trezor model connected (expected {model})")
+            raise RuntimeError(f"invalid Trezor model connected (expected {model})")
         return lines[0].split()[0]
 
     def reboot(self):

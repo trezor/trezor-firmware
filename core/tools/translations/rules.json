@@ -204,7 +204,6 @@
   "coinjoin__max_mining_fee": "text,1",
   "coinjoin__max_rounds": "text,1",
   "coinjoin__title": "title,1",
-  "coinjoin__title_do_not_disconnect": "title,2",
   "coinjoin__title_progress": "title,1",
   "coinjoin__waiting_for_others": "text,1",
   "confirm_total__fee_rate_colon": "text,1",

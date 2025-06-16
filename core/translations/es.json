@@ -268,7 +268,6 @@
     "coinjoin__max_mining_fee": "Tasa máxima de minería",
     "coinjoin__max_rounds": "Número máx. rondas",
     "coinjoin__title": "Autorizar coinjoin",
-    "coinjoin__title_do_not_disconnect": "¡No desconectes el trezor!",
     "coinjoin__title_progress": "Coinjoin en curso",
     "coinjoin__waiting_for_others": "Esperando a los demás",
     "confirm_total__fee_rate": "Comisión",

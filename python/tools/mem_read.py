@@ -26,7 +26,7 @@ from trezorlib.transport import enumerate_devices
 # read initial stack pointer: ./mem_read.py 8000000 4
 # an entire bootloader can be later disassembled with:
 # arm-none-eabi-objdump -D -b binary -m arm -M force-thumb memory.dat
-# note that in order for this to work, your trezor device must
+# note that in order for this to work, your Trezor device must
 # be running a firmware that was built with debug link enabled
 
 
