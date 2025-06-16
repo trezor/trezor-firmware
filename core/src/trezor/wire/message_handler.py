@@ -4,9 +4,10 @@ from storage.cache_common import InvalidSessionError
 from trezor import log, loop, protobuf, utils, workflow
 from trezor.enums import FailureType
 from trezor.messages import Failure
-from trezor.wire.context import UnexpectedMessageException, with_context
-from trezor.wire.errors import ActionCancelled, DataError, Error, UnexpectedMessage
-from trezor.wire.protocol_common import Context, Message
+
+from .context import UnexpectedMessageException, with_context
+from .errors import ActionCancelled, DataError, Error, UnexpectedMessage
+from .protocol_common import Context, Message
 
 if TYPE_CHECKING:
     from typing import Any, Callable, Container
@@ -65,12 +66,22 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
             msg_type = protobuf.type_for_wire("MessageType", msg.type).MESSAGE_NAME
         except Exception:
             msg_type = f"{msg.type} - unknown message type"
-        log.info(
-            __name__,
-            "received message: %s",
-            msg_type,
-            iface=ctx.iface,
-        )
+        if utils.USE_THP:
+            cid = utils.get_bytes_as_str(ctx.channel_id)
+            log.info(
+                __name__,
+                "(cid: %s) received message: %s",
+                cid,
+                msg_type,
+                iface=ctx.iface,
+            )
+        else:
+            log.info(
+                __name__,
+                "received message: %s",
+                msg_type,
+                iface=ctx.iface,
+            )
 
     res_msg: protobuf.MessageType | None = None
 
