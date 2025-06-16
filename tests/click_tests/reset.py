@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 def confirm_new_wallet(debug: "DebugLink") -> None:
-    assert debug.read_layout().title() == TR.reset__title_create_wallet
+    debug.synchronize_at(TR.reset__title_create_wallet)
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
         debug.click(debug.screen_buttons.ok())
     elif debug.layout_type is LayoutType.Delizia:

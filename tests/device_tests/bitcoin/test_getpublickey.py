@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import Cancelled, TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -110,44 +110,50 @@ VECTORS_INVALID = (  # coin_name, path
 
 
 @pytest.mark.parametrize("coin_name, xpub_magic, path, xpub", VECTORS_BITCOIN)
-def test_get_public_node(client: Client, coin_name, xpub_magic, path, xpub):
-    res = btc.get_public_node(client, path, coin_name=coin_name)
+def test_get_public_node(session: Session, coin_name, xpub_magic, path, xpub):
+    res = btc.get_public_node(session, path, coin_name=coin_name)
     assert res.xpub == xpub
     assert bip32.serialize(res.node, xpub_magic) == xpub
 
 
 @pytest.mark.parametrize("coin_name, xpub_magic, path, xpub", VECTORS_BITCOIN)
-def test_get_public_node_cancel_show(client: Client, coin_name, xpub_magic, path, xpub):
+def test_get_public_node_cancel_show(
+    session: Session, coin_name, xpub_magic, path, xpub
+):
     def input_flow():
         yield
-        client.cancel()
+        session.cancel()
 
-    with pytest.raises(Cancelled), client:
+    with pytest.raises(Cancelled), session.client as client:
         client.set_input_flow(input_flow)
-        btc.get_public_node(client, path, coin_name=coin_name, show_display=True)
+        btc.get_public_node(session, path, coin_name=coin_name, show_display=True)
 
 
 @pytest.mark.models("core")
 @pytest.mark.parametrize("coin_name, xpub_magic, path, xpub", VECTORS_BITCOIN)
-def test_get_public_node_show(client: Client, coin_name, xpub_magic, path, xpub):
-    with client:
-        IF = InputFlowShowXpubQRCode(client)
+def test_get_public_node_show(session: Session, coin_name, xpub_magic, path, xpub):
+    with session.client as client:
+        IF = InputFlowShowXpubQRCode(session.client)
         client.set_input_flow(IF.get())
-        res = btc.get_public_node(client, path, coin_name=coin_name, show_display=True)
+        res = btc.get_public_node(session, path, coin_name=coin_name, show_display=True)
         assert res.xpub == xpub
         assert bip32.serialize(res.node, xpub_magic) == xpub
 
 
 @pytest.mark.xfail(reason="Currently path validation on get_public_node is disabled.")
 @pytest.mark.parametrize("coin_name, path", VECTORS_INVALID)
-def test_invalid_path(client: Client, coin_name, path):
+def test_invalid_path(session: Session, coin_name, path):
     with pytest.raises(TrezorFailure, match="Forbidden key path"):
-        btc.get_public_node(client, path, coin_name=coin_name)
+        btc.get_public_node(session, path, coin_name=coin_name)
 
 
 @pytest.mark.models("legacy")
 @pytest.mark.parametrize("coin_name, xpub_magic, path, xpub", VECTORS_BITCOIN)
-def test_get_public_node_show_legacy(client: Client, coin_name, xpub_magic, path, xpub):
+def test_get_public_node_show_legacy(
+    session: Session, coin_name, xpub_magic, path, xpub
+):
+    client = session.client
+
     def input_flow():
         yield
         client.debug.press_no()  # show QR code
@@ -165,24 +171,24 @@ def test_get_public_node_show_legacy(client: Client, coin_name, xpub_magic, path
         client.debug.press_yes()  # finish the flow
         yield
 
-    with client:
+    with session.client as client:
         # test XPUB display flow (without showing QR code)
-        res = btc.get_public_node(client, path, coin_name=coin_name, show_display=True)
+        res = btc.get_public_node(session, path, coin_name=coin_name, show_display=True)
         assert res.xpub == xpub
         assert bip32.serialize(res.node, xpub_magic) == xpub
 
         # test XPUB QR code display using the input flow above
         client.set_input_flow(input_flow)
-        res = btc.get_public_node(client, path, coin_name=coin_name, show_display=True)
+        res = btc.get_public_node(session, path, coin_name=coin_name, show_display=True)
         assert res.xpub == xpub
         assert bip32.serialize(res.node, xpub_magic) == xpub
 
 
-def test_slip25_path(client: Client):
+def test_slip25_path(session: Session):
     # Ensure that CoinJoin XPUBs are inaccessible without user authorization.
     with pytest.raises(TrezorFailure, match="Forbidden key path"):
         btc.get_public_node(
-            client,
+            session,
             parse_path("m/10025h/0h/0h/1h"),
             script_type=messages.InputScriptType.SPENDTAPROOT,
         )
@@ -213,14 +219,14 @@ VECTORS_SCRIPT_TYPES = (  # script_type, xpub, xpub_ignored_magic
 
 
 @pytest.mark.parametrize("script_type, xpub, xpub_ignored_magic", VECTORS_SCRIPT_TYPES)
-def test_script_type(client: Client, script_type, xpub, xpub_ignored_magic):
+def test_script_type(session: Session, script_type, xpub, xpub_ignored_magic):
     path = parse_path("m/44h/0h/0")
     res = btc.get_public_node(
-        client, path, coin_name="Bitcoin", script_type=script_type
+        session, path, coin_name="Bitcoin", script_type=script_type
     )
     assert res.xpub == xpub
     res = btc.get_public_node(
-        client,
+        session,
         path,
         coin_name="Bitcoin",
         script_type=script_type,
