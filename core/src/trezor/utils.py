@@ -38,6 +38,8 @@ from trezorutils import (  # noqa: F401
 )
 from typing import TYPE_CHECKING
 
+DISABLE_ENCRYPTION: bool = False
+
 if __debug__:
     from trezorutils import get_gc_info  # noqa: F401
     from trezorutils import (
