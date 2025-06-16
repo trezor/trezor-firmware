@@ -46,7 +46,7 @@ async def homescreen() -> None:
         notification_level = 1
     elif storage.device.is_initialized() and not config.has_pin():
         notification = TR.homescreen__title_pin_not_set
-        notification_level = 1
+        notification_level = 0
     elif storage.device.get_experimental_features():
         notification = TR.homescreen__title_experimental_mode
         notification_level = 2
