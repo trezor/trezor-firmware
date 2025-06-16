@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.solana import sign_tx
 from trezorlib.tools import b58decode, parse_path
 
@@ -41,13 +41,11 @@ pytestmark = [pytest.mark.altcoin, pytest.mark.solana, pytest.mark.models("core"
     "solana/sign_tx.predefined_transactions.json",
     "solana/sign_tx.staking_transactions.json",
 )
-def test_solana_sign_tx(client: Client, parameters, result):
-    client.init_device(new_session=True)
-
+def test_solana_sign_tx(session: Session, parameters, result):
     serialized_tx = _serialize_tx(parameters["construct"])
 
-    with client:
-        IF = InputFlowConfirmAllWarnings(client)
+    with session.client as client:
+        IF = InputFlowConfirmAllWarnings(session.client)
         client.set_input_flow(IF.get())
         additional_info = None
         if "additional_info" in parameters:
@@ -76,7 +74,7 @@ def test_solana_sign_tx(client: Client, parameters, result):
             )
 
         actual_result = sign_tx(
-            client,
+            session,
             address_n=parse_path(parameters["address"]),
             serialized_tx=serialized_tx,
             additional_info=additional_info,
