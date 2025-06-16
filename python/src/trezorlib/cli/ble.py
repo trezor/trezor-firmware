@@ -20,10 +20,10 @@ from typing import TYPE_CHECKING
 import click
 
 from .. import ble, exceptions
-from . import with_client
+from . import with_session
 
 if TYPE_CHECKING:
-    from ..client import TrezorClient
+    from ..transport.session import Session
 
 
 @click.group(name="ble")
@@ -38,15 +38,15 @@ def cli() -> None:
     help="Erase all bonds.",
     is_flag=True,
 )
-@with_client
+@with_session(seedless=True)
 def unpair(
-    client: "TrezorClient",
+    session: "Session",
     all: bool,
 ) -> None:
     """Erase bond of currently connected device, or all devices (on device side)"""
 
     try:
-        ble.unpair(client, all)
+        ble.unpair(session, all)
         click.echo("Unpair successful.")
     except exceptions.Cancelled:
         click.echo("Unpair cancelled on device.")

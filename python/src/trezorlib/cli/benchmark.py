@@ -20,17 +20,15 @@ from typing import TYPE_CHECKING, List, Optional
 import click
 
 from .. import benchmark
-from . import with_client
+from . import with_session
 
 if TYPE_CHECKING:
 
-    from ..client import TrezorClient
+    from ..transport.session import Session
 
 
-def list_names_patern(
-    client: "TrezorClient", pattern: Optional[str] = None
-) -> List[str]:
-    names = list(benchmark.list_names(client).names)
+def list_names_patern(session: "Session", pattern: Optional[str] = None) -> List[str]:
+    names = list(benchmark.list_names(session).names)
     if pattern is None:
         return names
     return [name for name in names if fnmatch(name, pattern)]
@@ -43,10 +41,10 @@ def cli() -> None:
 
 @cli.command()
 @click.argument("pattern", required=False)
-@with_client
-def list_names(client: "TrezorClient", pattern: Optional[str] = None) -> None:
+@with_session(empty_passphrase=True)
+def list_names(session: "Session", pattern: Optional[str] = None) -> None:
     """List names of all supported benchmarks"""
-    names = list_names_patern(client, pattern)
+    names = list_names_patern(session, pattern)
     if len(names) == 0:
         click.echo("No benchmark satisfies the pattern.")
     else:
@@ -56,13 +54,13 @@ def list_names(client: "TrezorClient", pattern: Optional[str] = None) -> None:
 
 @cli.command()
 @click.argument("pattern", required=False)
-@with_client
-def run(client: "TrezorClient", pattern: Optional[str]) -> None:
+@with_session(empty_passphrase=True)
+def run(session: "Session", pattern: Optional[str]) -> None:
     """Run benchmark"""
-    names = list_names_patern(client, pattern)
+    names = list_names_patern(session, pattern)
     if len(names) == 0:
         click.echo("No benchmark satisfies the pattern.")
     else:
         for name in names:
-            result = benchmark.run(client, name)
+            result = benchmark.run(session, name)
             click.echo(f"{name}: {result.value} {result.unit}")
