@@ -1,15 +1,12 @@
 use heapless::Vec;
 
 use crate::{
-    error::Error,
-    strutil::{ShortString, TString},
-    time::Duration,
-    ui::{
+    error::Error, micropython::obj::Obj, strutil::{ShortString, TString}, time::Duration, ui::{
         button_request::{ButtonRequest, ButtonRequestCode},
         component::{MsgMap, PageMap},
         geometry::{Offset, Rect},
         shape::Renderer,
-    },
+    }
 };
 
 #[cfg(feature = "ble")]
@@ -617,14 +614,14 @@ impl EventCtx {
 ///
 /// Also currently the type for message emitted by Flow::event to
 /// micropython. They don't need to be the same.
-#[derive(Clone)]
+#[derive(PartialEq, Eq, Clone)]
 pub enum FlowMsg {
     Confirmed,
     Cancelled,
     Info,
     Next,
     Choice(usize),
-    Text(ShortString),
+    Text(Obj),
 }
 
 #[cfg(feature = "micropython")]
@@ -639,7 +636,7 @@ impl TryFrom<FlowMsg> for crate::micropython::obj::Obj {
             FlowMsg::Cancelled => Ok(result::CANCELLED.as_obj()),
             FlowMsg::Info => Ok(result::INFO.as_obj()),
             FlowMsg::Choice(i) => i.try_into(),
-            FlowMsg::Text(s) => s.as_str().try_into(),
+            FlowMsg::Text(s) => Ok(s),
         }
     }
 }

@@ -1,5 +1,5 @@
 use crate::{
-    error::{self, Error},
+    error::Error,
     maybe_trace::MaybeTrace,
     micropython::{
         gc::{self, GcBox},
@@ -96,10 +96,13 @@ impl GcBoxFlowComponent {
 }
 
 pub struct FlowStore {
-    /// Current state of the flow.
+    /// Current page state
     state: FlowState,
     /// Store of all pages which are part of the flow.
-    pages: Vec<GcBox<dyn FlowComponentDynTrait>, 16>,
+    pages: Vec<GcBox<dyn FlowComponentDynTrait>, 4>,
+
+    swipe_map: Vec<((FlowState, Direction), Decision), 3>,
+    event_map: Vec<((FlowState, FlowMsg), Decision), 7>,
 }
 
 trait FlowStoreTrait {
@@ -111,35 +114,34 @@ trait FlowStoreTrait {
 
     fn place_all(&mut self);
 
-    fn handle_swipe(&mut self, direction: Direction) -> Decision;
+    fn handle_swipe(&self, direction: Direction) -> Decision;
 
     fn handle_event(&self, msg: FlowMsg) -> Decision;
 }
 
 impl FlowStore {
-    pub fn new(initial_state: FlowState) -> Self {
-        Self { state: initial_state, pages: Vec::new() }
+    pub fn new() -> Self {
+        Self {
+            state: FlowState::new(0),
+            pages: Vec::new(),
+            swipe_map: Vec::new(),
+            event_map: Vec::new(),
+        }
     }
-
     /// Add a page to the flow.
-    ///
-    /// Pages must be inserted in the order of the flow state index.
-    pub fn add_page(
-        &mut self,
-        state: FlowState,
-        page: impl FlowComponentDynTrait + 'static,
-    ) -> Result<&mut Self, error::Error> {
-        Ok(self.add_allocated_page(state, GcBoxFlowComponent::alloc(page)?))
+    pub fn add(&mut self, alloc: GcBoxFlowComponent) -> FlowState {
+        let res = FlowState::new(self.pages.len());
+        unwrap!(self.pages.push(alloc));
+        res
     }
 
-    pub fn add_allocated_page(
-        &mut self,
-        state: FlowState,
-        alloc: GcBoxFlowComponent,
-    ) -> &mut Self {
-        debug_assert!(self.pages.len() == state.index());
-        unwrap!(self.pages.push(alloc));
-        self
+    pub fn on_swipe(&mut self, state: FlowState, direction: Direction, decision: Decision) {
+        // TODO: check for duplicates
+        unwrap!(self.swipe_map.push(((state, direction), decision)));
+    }
+    pub fn on_event(&mut self, state: FlowState, msg: FlowMsg, decision: Decision) {
+        // TODO: check for duplicates
+        unwrap!(self.event_map.push(((state, msg), decision)));
     }
 }
 
@@ -162,12 +164,24 @@ impl FlowStoreTrait for FlowStore {
         }
     }
 
-    fn handle_swipe(&mut self, direction: Direction) -> Decision {
-        self.state.handle_swipe(direction)
+    fn handle_swipe(&self, direction: Direction) -> Decision {
+        // TODO: use binary search
+        let key = (self.state, direction);
+        self.swipe_map
+            .iter()
+            .find(|&entry| entry.0 == key)
+            .map(|entry| entry.1.clone())
+            .unwrap_or(Decision::Nothing)
     }
 
     fn handle_event(&self, msg: FlowMsg) -> Decision {
-        self.state.handle_event(msg)
+        // TODO: use binary search
+        let key = (self.state, msg);
+        self.event_map
+            .iter()
+            .find(|&entry| entry.0 == key)
+            .map(|entry| entry.1.clone())
+            .unwrap_or(Decision::Nothing)
     }
 }
 
@@ -194,14 +208,14 @@ pub struct SwipeFlow {
 }
 
 impl SwipeFlow {
-    pub fn new(store: GcBox<impl FlowStoreTrait>) -> Self {
-        Self {
-            store: gc::coerce!(FlowStoreTrait, store),
+    pub fn new(store: impl FlowStoreTrait) -> Result<Self, Error> {
+        Ok(Self {
+            store: gc::coerce!(FlowStoreTrait, GcBox::new(store)?),
             swipe: SwipeDetect::new(),
             allow_swipe: true,
             pending_decision: None,
             returned_value: None,
-        }
+        })
     }
 
     /// Transition to a different state.
@@ -289,7 +303,8 @@ impl SwipeFlow {
                 // swipe end.
                 if attach {
                     if let Event::Swipe(SwipeEvent::End(dir)) = event {
-                        self.store.current_page_mut()
+                        self.store
+                            .current_page_mut()
                             .event(ctx, Event::Attach(AttachType::Swipe(dir)));
                     }
                 }
@@ -328,11 +343,11 @@ impl SwipeFlow {
                 self.goto(ctx, new_state, attach);
                 Some(LayoutState::Attached(ctx.button_request()))
             }
-            Decision::Return(msg) => {
+            Decision::Return(res) => {
                 ctx.set_transition_out(return_transition);
                 self.swipe.reset();
                 self.allow_swipe = true;
-                self.returned_value = Some(msg.try_into());
+                self.returned_value = Some(res);
                 Some(LayoutState::Done)
             }
             Decision::Nothing if matches!(event, Event::Attach(_)) => {
