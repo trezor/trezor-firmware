@@ -32,24 +32,24 @@ pub struct BldMenuScreen {
 
 impl BldMenuScreen {
     pub fn new() -> Self {
-        let bluetooth = Button::with_text("Bluetooth".into())
+        let bluetooth = Button::with_text("Pair new device".into())
             .styled(theme::bootloader::button_bld_menu())
             .with_text_align(Alignment::Start);
-        let reboot = Button::with_text("Reboot Trezor".into())
+        let reboot = Button::with_text("Reboot".into())
+            .styled(theme::bootloader::button_bld_menu())
+            .with_text_align(Alignment::Start);
+        let turnoff = Button::with_text("Power off".into())
             .styled(theme::bootloader::button_bld_menu())
             .with_text_align(Alignment::Start);
         let reset = Button::with_text("Factory reset".into())
-            .styled(theme::bootloader::button_bld_menu())
-            .with_text_align(Alignment::Start);
-        let turnoff = Button::with_text("Turn off Trezor".into())
-            .styled(theme::bootloader::button_bld_menu())
+            .styled(theme::bootloader::button_bld_menu_danger())
             .with_text_align(Alignment::Start);
 
         let menu = BldMenu::empty()
             .item(bluetooth)
             .item(reboot)
-            .item(reset)
-            .item(turnoff);
+            .item(turnoff)
+            .item(reset);
         Self {
             header: BldHeader::new("Bootloader".into()).with_close_button(),
             menu,
@@ -78,8 +78,8 @@ impl Component for BldMenuScreen {
             match n {
                 0 => return Some(Self::Msg::Bluetooth),
                 1 => return Some(Self::Msg::Reboot),
-                2 => return Some(Self::Msg::FactoryReset),
-                3 => return Some(Self::Msg::PowerOff),
+                2 => return Some(Self::Msg::PowerOff),
+                3 => return Some(Self::Msg::FactoryReset),
                 _ => {}
             }
         }

@@ -288,6 +288,7 @@ impl Button {
     }
 
     pub fn content_height(&self, width: i16) -> i16 {
+        let width = width - 2 * Self::MENU_ITEM_CONTENT_OFFSET.x;
         match &self.content {
             ButtonContent::Empty => 0,
             ButtonContent::Text { text, single_line } => {
