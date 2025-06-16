@@ -516,29 +516,26 @@ int bootloader_main(void) {
       (const uint8_t *)secmon_start, SECMON_IMAGE_MAGIC, FIRMWARE_MAXSIZE);
 
   if ((vhdr.vtrust & VTRUST_SKIP_SECMON_VERIFICATION) != 0) {
-    volatile secbool secmon_valid_tmp = header_present;
+    volatile secbool secmon_header_present = secfalse;
+    volatile secbool secmon_model_valid = secfalse;
+    volatile secbool secmon_header_sig_valid = secfalse;
+    volatile secbool secmon_contents_valid = secfalse;
 
-    secmon_valid_tmp =
-        secbool_and(secmon_valid_tmp, (secmon_hdr != NULL) * sectrue);
+    secmon_header_present =
+        secbool_and(secmon_header_present, (secmon_hdr != NULL) * sectrue);
 
-    if (secmon_valid_tmp == sectrue) {
-      secmon_valid_tmp =
-          secbool_and(secmon_valid_tmp, check_secmon_model(secmon_hdr));
-    }
+    secmon_model_valid =
+        secbool_and(secmon_header_present, check_secmon_model(secmon_hdr));
 
-    if (secmon_valid_tmp == sectrue) {
-      secmon_valid_tmp =
-          secbool_and(secmon_valid_tmp, check_secmon_header_sig(secmon_hdr));
-    }
-    if (secmon_valid_tmp == sectrue) {
-      secmon_valid_tmp = secbool_and(
-          secmon_valid_tmp,
-          check_secmon_contents(secmon_hdr, secmon_start - FIRMWARE_START,
-                                &FIRMWARE_AREA));
-    }
+    secmon_header_sig_valid =
+        secbool_and(secmon_model_valid, check_secmon_header_sig(secmon_hdr));
 
-    secmon_valid = secmon_valid_tmp;
+    secmon_contents_valid = secbool_and(
+        secmon_header_sig_valid,
+        check_secmon_contents(secmon_hdr, secmon_start - FIRMWARE_START,
+                              &FIRMWARE_AREA));
 
+    secmon_valid = secmon_contents_valid;
   } else {
     secmon_valid = header_present;
   }
