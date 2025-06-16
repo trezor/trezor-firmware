@@ -91,17 +91,19 @@ def prepare(
 
     tap = False
 
+    device_handler.client.get_seedless_session().lock()
+
     # Setup according to the wanted situation
     if situation == Situation.PIN_INPUT:
         # Any action triggering the PIN dialogue
-        device_handler.run(device.apply_settings, auto_lock_delay_ms=300_000)  # type: ignore
+        device_handler.run_with_session(device.apply_settings, auto_lock_delay_ms=300_000)  # type: ignore
         tap = True
     elif situation == Situation.PIN_INPUT_CANCEL:
         # Any action triggering the PIN dialogue
-        device_handler.run(device.apply_settings, auto_lock_delay_ms=300_000)  # type: ignore
+        device_handler.run_with_session(device.apply_settings, auto_lock_delay_ms=300_000)  # type: ignore
     elif situation == Situation.PIN_SETUP:
         # Set new PIN
-        device_handler.run(device.change_pin)  # type: ignore
+        device_handler.run_with_session(device.change_pin)  # type: ignore
         text_content = debug.read_layout().text_content()
         assert any(
             needle in text_content
@@ -125,14 +127,14 @@ def prepare(
             raise RuntimeError("Unknown model")
     elif situation == Situation.PIN_CHANGE:
         # Change PIN
-        device_handler.run(device.change_pin)  # type: ignore
+        device_handler.run_with_session(device.change_pin)  # type: ignore
         _input_see_confirm(debug, old_pin)
         assert TR.pin__change in debug.read_layout().text_content()
         go_next(debug)
         _input_see_confirm(debug, old_pin)
     elif situation == Situation.WIPE_CODE_SETUP:
         # Set wipe code
-        device_handler.run(device.change_wipe_code)  # type: ignore
+        device_handler.run_with_session(device.change_wipe_code)  # type: ignore
         if old_pin:
             _input_see_confirm(debug, old_pin)
         text_content = debug.read_layout().text_content()
