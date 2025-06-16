@@ -99,10 +99,10 @@ pub struct FlowStore {
     /// Current page state
     state: FlowState,
     /// Store of all pages which are part of the flow.
-    pages: Vec<GcBox<dyn FlowComponentDynTrait>, 4>,
+    pages: Vec<GcBox<dyn FlowComponentDynTrait>, 16>,
 
-    swipe_map: Vec<((FlowState, Direction), Decision), 3>,
-    event_map: Vec<((FlowState, FlowMsg), Decision), 7>,
+    swipe_map: Vec<((FlowState, Direction), Decision), 32>,
+    event_map: Vec<((FlowState, FlowMsg), Decision), 32>,
 }
 
 trait FlowStoreTrait {

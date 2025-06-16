@@ -1,12 +1,16 @@
 use heapless::Vec;
 
 use crate::{
-    error::Error, micropython::obj::Obj, strutil::{ShortString, TString}, time::Duration, ui::{
+    error::Error,
+    micropython::obj::Obj,
+    strutil::{ShortString, TString},
+    time::Duration,
+    ui::{
         button_request::{ButtonRequest, ButtonRequestCode},
         component::{MsgMap, PageMap},
         geometry::{Offset, Rect},
         shape::Renderer,
-    }
+    },
 };
 
 #[cfg(feature = "ble")]
