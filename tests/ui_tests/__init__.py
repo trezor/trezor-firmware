@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 import shutil
+from asyncio import wait_for
+from asyncio.exceptions import TimeoutError
 from contextlib import contextmanager
 from typing import Callable, Generator
 
 import pytest
 from _pytest.nodes import Node
 from _pytest.outcomes import Failed
+from noise.exceptions import NoiseInvalidMessage
 
 from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.exceptions import ThpError
 
 from . import common
 from .common import SCREENS_DIR, UI_TESTS_DIR, TestCase, TestResult
@@ -37,7 +41,9 @@ def _process_tested(result: TestResult, item: Node) -> None:
 
 @contextmanager
 def screen_recording(
-    client: Client, request: pytest.FixtureRequest
+    client: Client,
+    request: pytest.FixtureRequest,
+    client_callback: Callable[[], Client] | None = None,
 ) -> Generator[None, None, None]:
     test_ui = request.config.getoption("ui")
     if not test_ui:
@@ -55,12 +61,20 @@ def screen_recording(
         client.debug.start_recording(str(testcase.actual_dir))
         yield
     finally:
-        client.ensure_open()
+        if client_callback:
+            client = client_callback()
         client.sync_responses()
         # Wait for response to Initialize, which gives the emulator time to catch up
         # and redraw the homescreen. Otherwise there's a race condition between that
         # and stopping recording.
-        client.init_device()
+
+        # Instead of client.init_device() we create a new management session
+        # `Ping` is sent to make sure the device is available.
+        try:
+            wait_for(_client_ping(client), timeout=1)
+        except (ThpError, NoiseInvalidMessage, TimeoutError):
+            # Do not raise for unsuccessful ping
+            pass
         client.debug.stop_recording()
 
     result = testcase.build_result(request)
@@ -192,3 +206,7 @@ def main() -> None:
             print("FAILED:", result.test.id)
 
     testreport.generate_reports()
+
+
+async def _client_ping(client: Client):
+    client.get_seedless_session().ping("")

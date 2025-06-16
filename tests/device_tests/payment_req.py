@@ -4,6 +4,7 @@ from hashlib import sha256
 from ecdsa import SECP256k1, SigningKey
 
 from trezorlib import messages
+from trezorlib.transport.session import Session
 
 from ..common import compact_size
 
@@ -46,7 +47,7 @@ def hash_bytes_prefixed(hasher, data):
 
 
 def make_payment_request(
-    client,
+    session: Session,
     recipient_name,
     slip44,
     outputs,
