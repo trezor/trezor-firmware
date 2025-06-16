@@ -327,7 +327,7 @@ build_kernel: ## build kernel image
 	$(SCONS) $(KERNEL_BUILD_DIR)/kernel.bin
 
 build_firmware: MICROPY_ENABLE_SOURCE_LINE ?= 0
-build_firmware: templates build_cross build_secmon build_kernel ## build firmware with frozen modules
+build_firmware: templates build_cross $(if $(or $(filter 1,$(PRODUCTION)),$(filter 1,$(UNSAFE_FW))),,build_secmon) build_kernel ## build firmware with frozen modules
 	$(SCONS) $(FIRMWARE_BUILD_DIR)/firmware.bin
 
 build_unix: MICROPY_ENABLE_SOURCE_LINE ?= 1
