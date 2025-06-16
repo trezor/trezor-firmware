@@ -29,6 +29,7 @@
 #ifdef SECRET_NUM_KEY_SLOTS
 
 #define SECRET_HEADER_MAGIC "TRZS"
+#define SECRET_HEADER_MAGIC_LEN (sizeof(SECRET_HEADER_MAGIC) - 1)
 
 #define SECRET_NUM_MAX_SLOTS 1
 
@@ -40,8 +41,8 @@ static secbool bootloader_locked_set = secfalse;
 static secbool bootloader_locked = secfalse;
 
 secbool secret_verify_header(void) {
-  uint8_t* addr =
-      (uint8_t*)flash_area_get_address(&SECRET_AREA, 0, SECRET_HEADER_LEN);
+  uint8_t* addr = (uint8_t*)flash_area_get_address(
+      &SECRET_AREA, SECRET_HEADER_OFFSET, SECRET_HEADER_LEN);
 
   if (addr == NULL) {
     return secfalse;
@@ -49,9 +50,10 @@ secbool secret_verify_header(void) {
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
 
-  bootloader_locked = memcmp(addr, SECRET_HEADER_MAGIC, SECRET_HEADER_LEN) == 0
-                          ? sectrue
-                          : secfalse;
+  bootloader_locked =
+      memcmp(addr, SECRET_HEADER_MAGIC, SECRET_HEADER_MAGIC_LEN) == 0
+          ? sectrue
+          : secfalse;
 
   mpu_restore(mpu_mode);
 
@@ -74,8 +76,8 @@ void secret_unlock_bootloader(void) { secret_erase(); }
 
 void secret_write_header(void) {
   uint8_t header[SECRET_HEADER_LEN] = {0};
-  memcpy(header, SECRET_HEADER_MAGIC, SECRET_HEADER_LEN);
-  secret_write(header, 0, SECRET_HEADER_LEN);
+  memcpy(header, SECRET_HEADER_MAGIC, SECRET_HEADER_MAGIC_LEN);
+  secret_write(header, SECRET_HEADER_OFFSET, SECRET_HEADER_LEN);
 }
 
 void secret_write(const uint8_t* data, uint32_t offset, uint32_t len) {

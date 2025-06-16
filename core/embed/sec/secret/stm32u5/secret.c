@@ -33,6 +33,7 @@
 #ifdef SECURE_MODE
 
 #define SECRET_HEADER_MAGIC "TRZS"
+#define SECRET_HEADER_MAGIC_LEN (sizeof(SECRET_HEADER_MAGIC) - 1)
 
 #define SECRET_BHK_REG_OFFSET 0
 
@@ -98,8 +99,8 @@ static secbool secret_slot_public[SECRET_NUM_MAX_SLOTS] = {
 };
 
 static secbool secret_verify_header(void) {
-  uint8_t *addr =
-      (uint8_t *)flash_area_get_address(&SECRET_AREA, 0, SECRET_HEADER_LEN);
+  uint8_t *addr = (uint8_t *)flash_area_get_address(
+      &SECRET_AREA, SECRET_HEADER_OFFSET, SECRET_HEADER_LEN);
 
   if (addr == NULL) {
     return secfalse;
@@ -108,8 +109,9 @@ static secbool secret_verify_header(void) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
 
   secbool header_present =
-      memcmp(addr, SECRET_HEADER_MAGIC, SECRET_HEADER_LEN) == 0 ? sectrue
-                                                                : secfalse;
+      memcmp(addr, SECRET_HEADER_MAGIC, SECRET_HEADER_MAGIC_LEN) == 0
+          ? sectrue
+          : secfalse;
 
   mpu_restore(mpu_mode);
 
@@ -124,8 +126,8 @@ static void secret_erase(void) {
 
 static void secret_write_header(void) {
   uint8_t header[SECRET_HEADER_LEN] = {0};
-  memcpy(header, SECRET_HEADER_MAGIC, SECRET_HEADER_LEN);
-  secret_write(header, 0, SECRET_HEADER_LEN);
+  memcpy(header, SECRET_HEADER_MAGIC, SECRET_HEADER_MAGIC_LEN);
+  secret_write(header, SECRET_HEADER_OFFSET, SECRET_HEADER_LEN);
 }
 
 static secbool secret_ensure_initialized(void) {
@@ -289,7 +291,7 @@ static void secret_key_cache(uint8_t slot) {
   uint32_t len = secret_get_slot_len(slot);
   size_t reg_offset = secret_get_reg_offset(slot);
 
-  uint32_t secret[32] = {0};
+  uint32_t secret[SECRET_KEY_MAX_LEN] = {0};
 
   secbool ok = secret_read((uint8_t *)secret, offset, len);
 
@@ -379,7 +381,7 @@ __attribute__((unused)) static void secret_key_uncache(uint8_t slot) {
 }
 
 static void secret_key_erase(uint8_t slot) {
-  uint8_t value[32] = {0};
+  uint8_t value[SECRET_KEY_MAX_LEN] = {0};
 
   uint32_t offset = secret_get_slot_offset(slot);
   uint32_t slot_len = secret_get_slot_len(slot);
@@ -517,7 +519,7 @@ secbool secret_bootloader_locked(void) {
   // in firmware, we determine bootloader state by checking if bootloader
   //  has provided any non-public key
   for (int i = 0; i < SECRET_NUM_KEY_SLOTS; i++) {
-    uint32_t val[32] = {0};
+    uint32_t val[SECRET_KEY_MAX_LEN] = {0};
     size_t len = secret_get_slot_len(i);
     if (secfalse == secret_slot_public[i] &&
         sectrue == secret_key_get(i, (uint8_t *)val, len)) {
@@ -558,19 +560,19 @@ void secret_prepare_fw(secbool allow_run_with_secret,
   secret_bhk_load();
   secret_bhk_lock();
   secret_keys_uncache();
-  secbool se_secret_present = secret_keys_present();
-  secbool se_secret_writable = secret_keys_writable();
-  if (sectrue == allow_provisioning_access && sectrue == se_secret_writable &&
-      secfalse == se_secret_present) {
-    // SE Secret is not present and the secret sector is writable.
+  secbool secret_present = secret_keys_present();
+  secbool secret_writable = secret_keys_writable();
+  if (sectrue == allow_provisioning_access && sectrue == secret_writable &&
+      secfalse == secret_present) {
+    // Secret keys are not present and they are writable.
     // This means the U5 chip is unprovisioned.
     // Allow trusted firmware (prodtest presumably) to access the secret sector,
     // early return here.
     secret_keys_cache();
     return;
   }
-  if (sectrue == allow_run_with_secret && sectrue == se_secret_present) {
-    // Firmware is trusted, and the SE secret is present, make it available.
+  if (sectrue == allow_run_with_secret && sectrue == secret_present) {
+    // Firmware is trusted, and the secret keys are present, make it available.
     secret_keys_cache();
   } else {
     // Make only public keys available.
@@ -578,7 +580,8 @@ void secret_prepare_fw(secbool allow_run_with_secret,
   }
   // Disable access unconditionally.
   secret_disable_access();
-  if (sectrue != allow_run_with_secret && sectrue == se_secret_present) {
+  if (sectrue != allow_run_with_secret &&
+      secfalse != secret_bootloader_locked()) {
     // Untrusted firmware, locked bootloader. Show the restricted screen.
     show_install_restricted_screen();
   }
