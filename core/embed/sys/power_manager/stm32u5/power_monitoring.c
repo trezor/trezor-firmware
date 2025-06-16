@@ -93,7 +93,7 @@ void pm_monitor_power_sources(void) {
                     drv->pmic_data.ntc_temp);
 
   // Charging completed
-  if (drv->pmic_data.charge_status & 0x1) {
+  if (drv->pmic_data.charge_status & 0x2) {
     // Force fuel gauge to 100%, keep the covariance
     fuel_gauge_set_soc(&drv->fuel_gauge, 1.0f, drv->fuel_gauge.P);
   }

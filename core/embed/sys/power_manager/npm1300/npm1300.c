@@ -578,6 +578,7 @@ static void npm1300_calculate_report(npm1300_driver_t* drv,
   report->ibat_meas_status = r->adc_ibat_meas_status;
   report->buck_status = r->buck_status;
   report->usb_status = r->usb_status;
+  report->charge_status = r->charging_status;
 }
 
 // I2C operation for writing constant value to the npm1300 register
