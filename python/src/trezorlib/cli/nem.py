@@ -21,10 +21,10 @@ import click
 import requests
 
 from .. import nem, tools
-from . import with_client
+from . import with_session
 
 if TYPE_CHECKING:
-    from ..client import TrezorClient
+    from ..transport.session import Session
 
 PATH_HELP = "BIP-32 path, e.g. m/44h/134h/0h/0h"
 
@@ -39,9 +39,9 @@ def cli() -> None:
 @click.option("-N", "--network", type=int, default=0x68)
 @click.option("-d", "--show-display", is_flag=True)
 @click.option("-C", "--chunkify", is_flag=True)
-@with_client
+@with_session
 def get_address(
-    client: "TrezorClient",
+    session: "Session",
     address: str,
     network: int,
     show_display: bool,
@@ -49,7 +49,7 @@ def get_address(
 ) -> str:
     """Get NEM address for specified path."""
     address_n = tools.parse_path(address)
-    return nem.get_address(client, address_n, network, show_display, chunkify)
+    return nem.get_address(session, address_n, network, show_display, chunkify)
 
 
 @cli.command()
@@ -58,9 +58,9 @@ def get_address(
 @click.option("-f", "--file", "_ignore", is_flag=True, hidden=True, expose_value=False)
 @click.option("-b", "--broadcast", help="NIS to announce transaction to")
 @click.option("-C", "--chunkify", is_flag=True)
-@with_client
+@with_session
 def sign_tx(
-    client: "TrezorClient",
+    session: "Session",
     address: str,
     file: TextIO,
     broadcast: Optional[str],
@@ -71,7 +71,7 @@ def sign_tx(
     Transaction file is expected in the NIS (RequestPrepareAnnounce) format.
     """
     address_n = tools.parse_path(address)
-    transaction = nem.sign_tx(client, address_n, json.load(file), chunkify=chunkify)
+    transaction = nem.sign_tx(session, address_n, json.load(file), chunkify=chunkify)
 
     payload = {"data": transaction.data.hex(), "signature": transaction.signature.hex()}
 
