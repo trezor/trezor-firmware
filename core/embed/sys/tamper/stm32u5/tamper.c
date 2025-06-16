@@ -213,7 +213,7 @@ void TAMP_IRQHandler(void) {
   TAMP->SCR = sr;
 
 #ifdef BOARDLOADER
-  error_shutdown_ex("INTERNAL TAMPER", NULL, NULL);
+  error_shutdown_ex("TAMPER", NULL, NULL);
 #else
   const char* reason = "UNKNOWN";
   if (sr & TAMP_SR_TAMP1F) {
@@ -243,7 +243,7 @@ void TAMP_IRQHandler(void) {
   } else if (sr & TAMP_SR_ITAMP13F) {
     reason = "ANALOG WDG3";
   }
-  error_shutdown_ex("INTERNAL TAMPER", reason, NULL);
+  error_shutdown_ex("TAMPER", reason, NULL);
 #endif
 }
 
