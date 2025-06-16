@@ -1116,6 +1116,21 @@ protobuf = ">=3.6"
 grpcio-tools = ["grpcio-tools (>=1.26.0rc1)"]
 
 [[package]]
+name = "noiseprotocol"
+version = "0.3.1"
+description = "Implementation of Noise Protocol Framework"
+category = "main"
+optional = false
+python-versions = "~=3.5"
+files = [
+    {file = "noiseprotocol-0.3.1-py3-none-any.whl", hash = "sha256:2e1a603a38439636cf0ffd8b3e8b12cee27d368a28b41be7dbe568b2abb23111"},
+    {file = "noiseprotocol-0.3.1.tar.gz", hash = "sha256:b092a871b60f6a8f07f17950dc9f7098c8fe7d715b049bd4c24ee3752b90d645"},
+]
+
+[package.dependencies]
+cryptography = ">=2.8"
+
+[[package]]
 name = "nose"
 version = "1.3.7"
 description = "nose extends unittest to make testing easier"
@@ -2113,6 +2128,7 @@ cryptography = ">=43.0.3"
 ecdsa = ">=0.9"
 libusb1 = ">=1.6.4"
 mnemonic = ">=0.20"
+noiseprotocol = ">=0.3.1,<0.4.0"
 requests = ">=2.4.0"
 shamir-mnemonic = ">=0.3.0"
 slip10 = ">=1.0.1"
