@@ -2,8 +2,12 @@ import utime
 from typing import TYPE_CHECKING
 
 import storage.cache as storage_cache
-from trezor import log, loop
+from trezor import log, loop, utils
 from trezor.enums import MessageType
+
+if utils.USE_THP:
+    from trezor.enums import ThpMessageType
+
 
 if TYPE_CHECKING:
     from typing import Callable
@@ -15,20 +19,30 @@ if __debug__:
 
     import micropython
 
-    from trezor import utils
-
-
-ALLOW_WHILE_LOCKED = (
-    MessageType.Initialize,
-    MessageType.EndSession,
-    MessageType.GetFeatures,
-    MessageType.Cancel,
-    MessageType.LockDevice,
-    MessageType.DoPreauthorized,
-    MessageType.WipeDevice,
-    MessageType.SetBusy,
-    MessageType.Ping,
-)
+if utils.USE_THP:
+    ALLOW_WHILE_LOCKED = (
+        ThpMessageType.ThpCreateNewSession,
+        MessageType.EndSession,
+        MessageType.GetFeatures,
+        MessageType.Cancel,
+        MessageType.LockDevice,
+        MessageType.DoPreauthorized,
+        MessageType.WipeDevice,
+        MessageType.SetBusy,
+        MessageType.Ping,
+    )
+else:
+    ALLOW_WHILE_LOCKED = (
+        MessageType.Initialize,
+        MessageType.EndSession,
+        MessageType.GetFeatures,
+        MessageType.Cancel,
+        MessageType.LockDevice,
+        MessageType.DoPreauthorized,
+        MessageType.WipeDevice,
+        MessageType.SetBusy,
+        MessageType.Ping,
+    )
 
 
 # Set of workflow tasks.  Multiple workflows can be running at the same time.
