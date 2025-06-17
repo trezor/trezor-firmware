@@ -1,17 +1,16 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{Child, Component, ComponentExt, Event, EventCtx, Label, Pad},
+        component::{Component, ComponentExt, Event, EventCtx, Label, Pad},
         display::Color,
-        geometry::{Point, Rect},
+        geometry::Rect,
         shape,
         shape::Renderer,
     },
 };
 
 use super::{
-    super::fonts,
-    theme::{BUTTON_HEIGHT, TITLE_AREA_HEIGHT, WHITE},
+    theme::{BUTTON_HEIGHT, TEXT_BOLD, TITLE_AREA_HEIGHT},
     ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos,
 };
 
@@ -26,10 +25,10 @@ pub enum ConfirmMsg {
 pub struct Confirm<'a> {
     bg: Pad,
     bg_color: Color,
-    title: TString<'a>,
-    message: Child<Label<'a>>,
+    title: Label<'a>,
+    message: Label<'a>,
     alert: Option<Label<'a>>,
-    info_title: Option<TString<'a>>,
+    info_title: Option<Label<'a>>,
     info_text: Option<Label<'a>>,
     button_text: TString<'static>,
     buttons: ButtonController,
@@ -52,8 +51,8 @@ impl<'a> Confirm<'a> {
         Self {
             bg: Pad::with_background(bg_color).with_clear(),
             bg_color,
-            title,
-            message: Child::new(message),
+            title: Label::left_aligned(title, TEXT_BOLD),
+            message,
             alert,
             info_title: None,
             info_text: None,
@@ -66,7 +65,7 @@ impl<'a> Confirm<'a> {
 
     /// Adding optional info screen
     pub fn with_info_screen(mut self, info_title: TString<'a>, info_text: Label<'a>) -> Self {
-        self.info_title = Some(info_title);
+        self.info_title = Some(Label::left_aligned(info_title, TEXT_BOLD));
         self.info_text = Some(info_text);
         self.buttons = ButtonController::new(self.get_button_layout());
         self
@@ -127,7 +126,7 @@ impl Component for Confirm<'_> {
         self.bg.place(bounds);
 
         // Divide the screen into areas
-        let (_title_area, minus_title) = bounds.split_top(TITLE_AREA_HEIGHT);
+        let (title_area, minus_title) = bounds.split_top(TITLE_AREA_HEIGHT);
         let (between_title_and_buttons, button_area) = minus_title.split_bottom(BUTTON_HEIGHT);
 
         // Texts for the main screen
@@ -136,10 +135,12 @@ impl Component for Confirm<'_> {
         } else {
             (between_title_and_buttons, Rect::zero())
         };
+        self.title.place(title_area);
         self.message.place(message_area);
         self.alert.place(alert_area);
 
         // Text for the info screen
+        self.info_title.place(title_area);
         self.info_text.place(between_title_and_buttons);
 
         self.buttons.place(button_area);
@@ -199,22 +200,12 @@ impl Component for Confirm<'_> {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.bg.render(target);
 
-        let mut display_top_left = |text: TString| {
-            text.map(|t| {
-                shape::Text::new(Point::zero(), t, fonts::FONT_BOLD)
-                    .with_fg(WHITE)
-                    .render(target);
-            });
-        };
-
         // We are either on the info screen or on the "main" screen
         if self.showing_info_screen {
-            if let Some(title) = self.info_title {
-                display_top_left(title);
-            }
+            self.info_title.render(target);
             self.info_text.render(target);
         } else {
-            display_top_left(self.title);
+            self.title.render(target);
             self.message.render(target);
             self.alert.render(target);
         }
