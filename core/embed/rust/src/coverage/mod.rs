@@ -4,7 +4,6 @@ use heapless::{Entry, FnvIndexMap};
 use crate::{
     error::Error,
     micropython::{
-        buffer::StrBuffer,
         list::List,
         macros::{obj_fn_0, obj_fn_2, obj_module},
         module::Module,
@@ -15,7 +14,7 @@ use crate::{
 };
 
 struct Key {
-    file: StrBuffer,
+    file: Qstr,
     line: u16,
 }
 
@@ -23,9 +22,7 @@ impl TryFrom<&Key> for Obj {
     type Error = Error;
 
     fn try_from(val: &Key) -> Result<Self, Self::Error> {
-        let file: Obj = val.file.as_ref().try_into()?;
-        let line: Obj = val.line.into();
-        (file, line).try_into()
+        (Obj::from(val.file), Obj::from(val.line)).try_into()
     }
 }
 
@@ -38,7 +35,7 @@ impl core::hash::Hash for Key {
 
 impl core::cmp::PartialEq for Key {
     fn eq(&self, other: &Key) -> bool {
-        self.file.as_ref() == other.file.as_ref() && self.line == other.line
+        self.file == other.file && self.line == other.line
     }
 }
 
