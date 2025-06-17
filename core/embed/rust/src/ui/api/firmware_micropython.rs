@@ -387,7 +387,6 @@ extern "C" fn new_confirm_summary(n_args: usize, args: *const Obj, kwargs: *mut 
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
-        let suite_sign: bool = kwargs.get_or(Qstr::MP_QSTR_suite_sign, false)?;
 
         let layout = ModelUI::confirm_summary(
             amount,
@@ -400,7 +399,6 @@ extern "C" fn new_confirm_summary(n_args: usize, args: *const Obj, kwargs: *mut 
             extra_items,
             extra_title,
             verb_cancel,
-            suite_sign,
         )?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
@@ -417,8 +415,13 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
+        let subtitle: Option<TString<'static>> = kwargs
+            .get(Qstr::MP_QSTR_subtitle)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
 
-        let layout = ModelUI::confirm_with_info(title, items, verb, verb_info, verb_cancel)?;
+        let layout =
+            ModelUI::confirm_with_info(title, items, verb, verb_info, verb_cancel, subtitle)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1452,7 +1455,6 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     extra_items: Iterable[tuple[str, str]] | None = None,
     ///     extra_title: str | None = None,
     ///     verb_cancel: str | None = None,
-    ///     suite_sign: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm summary of a transaction."""
     Qstr::MP_QSTR_confirm_summary => obj_fn_kw!(0, new_confirm_summary).as_obj(),
@@ -1464,6 +1466,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     verb: str,
     ///     verb_info: str,
     ///     verb_cancel: str | None = None,
+    ///     subtitle: str | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm given items but with third button. Always single page
     ///     without scrolling. In Delizia, the button is placed in

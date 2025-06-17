@@ -646,6 +646,7 @@ def confirm_address(
         verb=verb,
         chunkify=chunkify,
         warning_footer=warning_footer,
+        cancel=True,
     )
 
 
@@ -789,7 +790,6 @@ def confirm_total(
             account_items=account_items or None,
             extra_items=fee_items or None,
             extra_title=TR.confirm_total__title_fee,
-            suite_sign=True,
         ),
         br_name,
         br_code,
@@ -897,6 +897,10 @@ if not utils.BITCOIN_ONLY:
             None,
         )
 
+    def ethereum_address_title() -> str:
+        """Return the title for the Ethereum address confirmation."""
+        return TR.words__send
+
     async def confirm_ethereum_approve(
         recipient_addr: str,
         recipient_str: str | None,
@@ -947,6 +951,7 @@ if not utils.BITCOIN_ONLY:
                 chunkify=chunkify,
                 br_name=br_name,
                 verb=TR.buttons__continue,
+                cancel=True,
             )
         else:
             main_layout = trezorui_api.confirm_with_info(
@@ -954,6 +959,11 @@ if not utils.BITCOIN_ONLY:
                 items=[(recipient_str, True)],
                 verb=TR.buttons__continue,
                 verb_info=TR.ethereum__contract_address,
+                subtitle=(
+                    TR.ethereum__approve_revoke_from
+                    if is_revoke
+                    else TR.ethereum__approve_to
+                ),
             )
             info_layout = trezorui_api.show_info_with_cancel(
                 title=title,
@@ -976,6 +986,7 @@ if not utils.BITCOIN_ONLY:
                 subtitle=TR.ethereum__token_contract,
                 chunkify=chunkify,
                 br_name=br_name,
+                cancel=True,
             )
 
         if is_unknown_network:
@@ -985,6 +996,7 @@ if not utils.BITCOIN_ONLY:
                 chain_id,
                 TR.ethereum__approve_chain_id,
                 br_name=br_name,
+                cancel=True,
             )
 
         properties: list[PropertyType] = (

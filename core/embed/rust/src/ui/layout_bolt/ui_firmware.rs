@@ -438,7 +438,6 @@ impl FirmwareUI for UIBolt {
         extra_items: Option<Obj>,
         _extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
-        _suite_sign: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let info_button: bool = account_items.is_some() || extra_items.is_some();
         let mut paragraphs = ParagraphVecShort::new();
@@ -474,6 +473,7 @@ impl FirmwareUI for UIBolt {
         verb: TString<'static>,
         verb_info: TString<'static>,
         _verb_cancel: Option<TString<'static>>,
+        _subtitle: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecShort::new();
 

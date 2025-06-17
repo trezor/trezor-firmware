@@ -497,7 +497,6 @@ impl FirmwareUI for UICaesar {
         extra_items: Option<Obj>,
         extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
-        _suite_sign: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         // collect available info pages
         let mut info_pages: Vec<(TString, Obj), 2> = Vec::new();
@@ -621,6 +620,7 @@ impl FirmwareUI for UICaesar {
         verb: TString<'static>,
         _verb_info: TString<'static>,
         verb_cancel: Option<TString<'static>>,
+        _subtitle: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecShort::new();
 

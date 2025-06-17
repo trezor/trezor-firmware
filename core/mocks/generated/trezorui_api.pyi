@@ -287,7 +287,6 @@ def confirm_summary(
     extra_items: Iterable[tuple[str, str]] | None = None,
     extra_title: str | None = None,
     verb_cancel: str | None = None,
-    suite_sign: bool = False,
 ) -> LayoutObj[UiResult]:
     """Confirm summary of a transaction."""
 
@@ -300,6 +299,7 @@ def confirm_with_info(
     verb: str,
     verb_info: str,
     verb_cancel: str | None = None,
+    subtitle: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Confirm given items but with third button. Always single page
     without scrolling. In Delizia, the button is placed in

@@ -318,7 +318,6 @@ impl FirmwareUI for UIEckhart {
         extra_items: Option<Obj>,
         extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
-        suite_sign: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         // collect available info
         let account_paragraphs = if let Some(items) = account_items {
@@ -357,7 +356,6 @@ impl FirmwareUI for UIEckhart {
             extra_title,
             extra_paragraphs,
             verb_cancel,
-            suite_sign,
         )?;
         Ok(flow)
     }
@@ -498,6 +496,7 @@ impl FirmwareUI for UIEckhart {
         verb: TString<'static>,
         verb_info: TString<'static>,
         _verb_cancel: Option<TString<'static>>,
+        subtitle: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecShort::new();
 
@@ -518,7 +517,7 @@ impl FirmwareUI for UIEckhart {
 
         let flow = flow::new_confirm_with_menu(
             title,
-            None,
+            subtitle,
             paragraphs
                 .into_paragraphs()
                 .with_placement(LinearPlacement::vertical())
@@ -1377,7 +1376,7 @@ impl FirmwareUI for UIEckhart {
             .with_text_style(style);
         let action_bar = if allow_cancel {
             ActionBar::new_double(
-                Button::with_icon(theme::ICON_CROSS),
+                Button::with_icon(theme::ICON_CROSS).styled(theme::button_cancel()),
                 Button::with_single_line_text(button),
             )
         } else {

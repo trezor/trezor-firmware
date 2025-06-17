@@ -143,7 +143,6 @@ pub trait FirmwareUI {
         extra_items: Option<Obj>, // TODO: replace Obj
         extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
-        suite_sign: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn confirm_with_info(
@@ -152,6 +151,7 @@ pub trait FirmwareUI {
         verb: TString<'static>,
         verb_info: TString<'static>,
         verb_cancel: Option<TString<'static>>,
+        subtitle: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn continue_recovery_homepage(
