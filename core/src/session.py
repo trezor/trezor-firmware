@@ -29,6 +29,23 @@ if utils.USE_BLE:
     # initialize the wire codec over BLE
     wire.setup(ble.interface)
 
+import trezorui_api
+from trezor.ui.layouts.common import interact
+
+
+async def test():
+    layout = trezorui_api.select_word(
+        title="",
+        description="",
+        words=(("Account info"), ("Block hash"), ("Fee info")))
+    res = await interact(layout, None)
+    print([res])
+    layout = trezorui_api.multiple_pages_texts(title="Title", verb="verb", items=["a", "B", "c"])
+    res = await interact(layout, None)
+    print([res])
+
+workflow.spawn(test())
+
 # start the event loop
 loop.run()
 

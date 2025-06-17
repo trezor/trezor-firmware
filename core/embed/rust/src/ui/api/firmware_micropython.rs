@@ -695,6 +695,17 @@ extern "C" fn new_request_passphrase(n_args: usize, args: *const Obj, kwargs: *m
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_select_menu(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let items_iterable: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
+        let items = util::iter_into_vec(items_iterable)?;
+
+        let layout = ModelUI::select_menu(items)?;
+        Ok(LayoutObj::new_root(layout)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -1583,6 +1594,13 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// ) -> LayoutObj[str | UiResult]:
     ///     """Passphrase input keyboard."""
     Qstr::MP_QSTR_request_passphrase => obj_fn_kw!(0, new_request_passphrase).as_obj(),
+
+    /// def select_menu(
+    ///     *,
+    ///     items: Iterable[str],
+    /// ) -> LayoutObj[int]:
+    ///     """Select an item from a menu. Returns index in range `0..len(items)`."""
+    Qstr::MP_QSTR_select_menu => obj_fn_kw!(0, new_select_menu).as_obj(),
 
     /// def select_word(
     ///     *,

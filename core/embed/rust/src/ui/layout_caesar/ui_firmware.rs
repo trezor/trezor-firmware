@@ -27,7 +27,7 @@ use crate::{
         },
         ui_firmware::{
             FirmwareUI, ERROR_NOT_IMPLEMENTED, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
-            MAX_WORD_QUIZ_ITEMS,
+            MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
         },
         ModelUI,
     },
@@ -896,6 +896,18 @@ impl FirmwareUI for UICaesar {
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let layout =
             RootComponent::new(Frame::new(prompt, PassphraseEntry::new()).with_title_centered());
+        Ok(layout)
+    }
+
+    fn select_menu(
+        items: Vec<TString<'static>, MAX_MENU_ITEMS>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        // Returning the index of the selected menu item
+        let layout = RootComponent::new(
+            SimpleChoice::new(items, ChoiceControls::Cancellable)
+                .with_show_incomplete()
+                .with_return_index(),
+        );
         Ok(layout)
     }
 

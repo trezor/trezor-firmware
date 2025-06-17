@@ -675,6 +675,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_sd_card__use_different_card;
   MP_QSTR_sd_card__wanna_format;
   MP_QSTR_sd_card__wrong_sd_card;
+  MP_QSTR_select_menu;
   MP_QSTR_select_word;
   MP_QSTR_select_word_count;
   MP_QSTR_send__cancel_sign;

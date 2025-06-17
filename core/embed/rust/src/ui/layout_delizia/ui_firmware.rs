@@ -1,4 +1,5 @@
 use core::cmp::Ordering;
+use heapless::Vec;
 
 use crate::{
     error::{value_error, Error},
@@ -27,7 +28,7 @@ use crate::{
         },
         ui_firmware::{
             FirmwareUI, ERROR_NOT_IMPLEMENTED, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
-            MAX_WORD_QUIZ_ITEMS,
+            MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
         },
         ModelUI,
     },
@@ -748,6 +749,12 @@ impl FirmwareUI for UIDelizia {
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let flow = flow::request_passphrase::new_request_passphrase()?;
         Ok(flow)
+    }
+
+    fn select_menu(
+        _items: Vec<TString<'static>, MAX_MENU_ITEMS>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn select_word(

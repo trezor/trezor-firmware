@@ -455,6 +455,14 @@ def request_passphrase(
 
 
 # rust/src/ui/api/firmware_micropython.rs
+def select_menu(
+    *,
+    items: Iterable[str],
+) -> LayoutObj[int]:
+    """Select an item from a menu. Returns index in range `0..len(items)`."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
 def select_word(
     *,
     title: str,
