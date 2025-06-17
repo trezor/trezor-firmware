@@ -257,13 +257,15 @@ bool noise_handle_handshake_response(
   return true;
 }
 
-bool noise_send_message(noise_context_t *ctx, const uint8_t *plaintext,
+bool noise_send_message(noise_context_t *ctx, const uint8_t *associated_data,
+                        size_t associated_data_length, const uint8_t *plaintext,
                         size_t plaintext_length, uint8_t *ciphertext) {
   if (!ctx->initialized) {
     return false;
   }
-  if (!encrypt(ctx->encryption_key, ctx->encryption_nonce, NULL, 0, plaintext,
-               plaintext_length, ciphertext)) {
+  if (!encrypt(ctx->encryption_key, ctx->encryption_nonce, associated_data,
+               associated_data_length, plaintext, plaintext_length,
+               ciphertext)) {
     return false;
   }
   if (!increase_nonce(ctx->encryption_nonce)) {
@@ -275,13 +277,16 @@ bool noise_send_message(noise_context_t *ctx, const uint8_t *plaintext,
   return true;
 }
 
-bool noise_receive_message(noise_context_t *ctx, const uint8_t *ciphertext,
-                           size_t ciphertext_length, uint8_t *plaintext) {
+bool noise_receive_message(noise_context_t *ctx, const uint8_t *associated_data,
+                           size_t associated_data_length,
+                           const uint8_t *ciphertext, size_t ciphertext_length,
+                           uint8_t *plaintext) {
   if (!ctx->initialized) {
     return false;
   }
-  if (!decrypt(ctx->decryption_key, ctx->decryption_nonce, NULL, 0, ciphertext,
-               ciphertext_length, plaintext)) {
+  if (!decrypt(ctx->decryption_key, ctx->decryption_nonce, associated_data,
+               associated_data_length, ciphertext, ciphertext_length,
+               plaintext)) {
     // Wrong tag
     return false;
   }

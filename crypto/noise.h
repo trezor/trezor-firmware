@@ -26,7 +26,7 @@
 #include <stdint.h>
 
 // Noise protocol using KK1 handshake pattern and X25519, AES-GCM and SHA256.
-// The handshake messages are empty.
+// The handshake messages and the prologue are empty.
 
 #define KEY_SIZE 32
 #define NONCE_SIZE 12
@@ -72,12 +72,17 @@ bool noise_handle_handshake_response(
 
 // This is called by both the initiator and responder to send a message
 // len(ciphertext) == plaintext_length + TAG_SIZE
-bool noise_send_message(noise_context_t* ctx, const uint8_t* plaintext,
+// The official Noise specification requires the associated_data to be empty
+bool noise_send_message(noise_context_t* ctx, const uint8_t* associated_data,
+                        size_t associated_data_length, const uint8_t* plaintext,
                         size_t plaintext_length, uint8_t* ciphertext);
 
 // This is called by both the initiator and responder to receive a message
 // len(plaintext) == ciphertext_length - TAG_SIZE
-bool noise_receive_message(noise_context_t* ctx, const uint8_t* ciphertext,
-                           size_t ciphertext_length, uint8_t* plaintext);
+// The official Noise specification requires the associated_data to be empty
+bool noise_receive_message(noise_context_t* ctx, const uint8_t* associated_data,
+                           size_t associated_data_length,
+                           const uint8_t* ciphertext, size_t ciphertext_length,
+                           uint8_t* plaintext);
 
 #endif  // __NOISE_H__

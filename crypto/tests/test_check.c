@@ -11422,9 +11422,13 @@ START_TEST(test_noise) {
   noise_response_t response = {0};
 
   uint8_t message1[] = "message1";
+  uint8_t associated_data1[] = "associated_data1";
   uint8_t message2[] = "message2";
+  uint8_t associated_data2[] = "associated_data2";
   uint8_t message3[] = "message3";
+  uint8_t associated_data3[] = "associated_data3";
   uint8_t message4[] = "message4";
+  uint8_t associated_data4[] = "associated_data4";
 
   // These test vectors were generated using the python package `dissononce`
   char expected_request_hex[] =
@@ -11433,13 +11437,13 @@ START_TEST(test_noise) {
       "cdfe8958fc5f10a893c8441e73207909778d8cc66241309ad4ee07fb9d06a40166296e60"
       "2ece348d673e98aaba33f56a";
   char expected_message1_hex[] =
-      "98dea02c9e9a6da170f5d601ed0789fcf542239a8779679a9d";
+      "98dea02c9e9a6da170054a8b35d5667b22e56698f83bc07611";
   char expected_message2_hex[] =
-      "8c543e8ddfc6324acc08087444e304fd617c3f8a20770b0a3e";
+      "8c543e8ddfc6324acccd013c9dcd174f56773c42aa7a29afcb";
   char expected_message3_hex[] =
-      "ac00ab8c8146d1af08310dc9efd54c90042d74baf981fc5154";
+      "ac00ab8c8146d1af08d6e0c3fed583c7979fcb1426f082d11e";
   char expected_message4_hex[] =
-      "5e21772c915f1bbfef05ab34572d85e6637ae329ea19de58cf";
+      "5e21772c915f1bbfeff75c87c7c2a1589dcb5fe791656c9332";
 
   uint8_t plaintext1[sizeof(message1)] = {0};
   uint8_t ciphertext1[sizeof(plaintext1) + TAG_SIZE];
@@ -11472,53 +11476,61 @@ START_TEST(test_noise) {
   ck_assert_int_eq(ret, true);
 
   // Initiator sends message1
-  ret = noise_send_message(&initiator_context, message1, sizeof(message1),
+  ret = noise_send_message(&initiator_context, associated_data1,
+                           sizeof(associated_data1), message1, sizeof(message1),
                            ciphertext1);
   ck_assert_int_eq(ret, true);
   ck_assert_mem_eq(ciphertext1, fromhex(expected_message1_hex),
                    sizeof(ciphertext1));
 
   // Initiator sends message2
-  ret = noise_send_message(&initiator_context, message2, sizeof(message2),
+  ret = noise_send_message(&initiator_context, associated_data2,
+                           sizeof(associated_data2), message2, sizeof(message2),
                            ciphertext2);
   ck_assert_int_eq(ret, true);
   ck_assert_mem_eq(ciphertext2, fromhex(expected_message2_hex),
                    sizeof(ciphertext2));
 
   // Responder sends message3
-  ret = noise_send_message(&responder_context, message3, sizeof(message3),
+  ret = noise_send_message(&responder_context, associated_data3,
+                           sizeof(associated_data3), message3, sizeof(message3),
                            ciphertext3);
   ck_assert_int_eq(ret, true);
   ck_assert_mem_eq(ciphertext3, fromhex(expected_message3_hex),
                    sizeof(ciphertext3));
 
   // Responder sends message4
-  ret = noise_send_message(&responder_context, message4, sizeof(message4),
+  ret = noise_send_message(&responder_context, associated_data4,
+                           sizeof(associated_data4), message4, sizeof(message4),
                            ciphertext4);
   ck_assert_int_eq(ret, true);
   ck_assert_mem_eq(ciphertext4, fromhex(expected_message4_hex),
                    sizeof(ciphertext4));
 
   // Responder receives message1
-  ret = noise_receive_message(&responder_context, ciphertext1,
+  ret = noise_receive_message(&responder_context, associated_data1,
+                              sizeof(associated_data1), ciphertext1,
                               sizeof(ciphertext1), plaintext1);
   ck_assert_int_eq(ret, true);
   ck_assert_mem_eq(plaintext1, message1, sizeof(message1));
 
   // Responder receives message2
-  ret = noise_receive_message(&responder_context, ciphertext2,
+  ret = noise_receive_message(&responder_context, associated_data2,
+                              sizeof(associated_data2), ciphertext2,
                               sizeof(ciphertext2), plaintext2);
   ck_assert_int_eq(ret, true);
   ck_assert_mem_eq(plaintext2, message2, sizeof(message2));
 
   // Initiator receives message3
-  ret = noise_receive_message(&initiator_context, ciphertext3,
+  ret = noise_receive_message(&initiator_context, associated_data3,
+                              sizeof(associated_data3), ciphertext3,
                               sizeof(ciphertext3), plaintext3);
   ck_assert_int_eq(ret, true);
   ck_assert_mem_eq(plaintext3, message3, sizeof(message3));
 
   // Initiator receives message4
-  ret = noise_receive_message(&initiator_context, ciphertext4,
+  ret = noise_receive_message(&initiator_context, associated_data4,
+                              sizeof(associated_data4), ciphertext4,
                               sizeof(ciphertext4), plaintext4);
   ck_assert_int_eq(ret, true);
   ck_assert_mem_eq(plaintext4, message4, sizeof(message4));
