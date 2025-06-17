@@ -28,7 +28,7 @@ typedef enum {
   PM_WAKEUP_FLAG_BLE = 0x1 << 2,     // Bluetooth connection event
   PM_WAKEUP_FLAG_NFC = 0x1 << 3,     // NFC event
   PM_WAKEUP_FLAG_USB = 0x1 << 4,     // USB event
-  PM_WAKEUP_FLAG_TIMER = 0x1 << 5,   // Timer event
+  PM_WAKEUP_FLAG_RTC = 0x1 << 5,     // RTC wake-up timer
 } pm_wakeup_flags_t;
 
 /* power manager status codes */

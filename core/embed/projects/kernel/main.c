@@ -83,6 +83,10 @@
 #include <io/rgb_led.h>
 #endif
 
+#ifdef USE_RTC
+#include <sys/rtc.h>
+#endif
+
 #ifdef SYSTEM_VIEW
 #include <sys/systemview.h>
 #endif
@@ -121,6 +125,10 @@ void drivers_init() {
   backup_ram_init();
 #endif
 #endif  // SECURE_MODE
+
+#ifdef USE_RTC
+  rtc_init();
+#endif
 
 #ifdef USE_CONSUMPTION_MASK
   consumption_mask_init();

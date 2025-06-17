@@ -25,6 +25,10 @@
 #include <sys/systimer.h>
 #include <trezor_rtl.h>
 
+#ifdef USE_RTC
+#include <sys/rtc.h>
+#endif
+
 #include "../power_manager_poll.h"
 #include "../stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
@@ -223,7 +227,16 @@ pm_status_t pm_suspend(void) {
 
   irq_unlock(irq_key);
 
-  pm_control_suspend();
+#ifdef USE_RTC
+  // TODO: Uncomment to wake up by RTC timer
+  // Automatically wakes up after 10 seconds with PM_WAKEUP_FLAG_RTC set
+  // rtc_wakeup_timer_start(10);
+#endif
+
+  pm_wakeup_flags_t wakeup_flags = pm_control_suspend();
+
+  // TODO: Handle wake-up flags
+  UNUSED(wakeup_flags);
 
   // Exit hibernation state if it was requested
   irq_key = irq_lock();

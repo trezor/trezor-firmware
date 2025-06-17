@@ -62,6 +62,10 @@
 #include "cmd/prodtest_optiga.h"
 #endif
 
+#ifdef USE_RTC
+#include <sys/rtc.h>
+#endif
+
 #ifdef USE_TROPIC
 #include <sec/tropic.h>
 #endif
@@ -196,6 +200,9 @@ static bool g_rgbled_control_disabled = false;
 void prodtest_disable_rgbled_control(void) { g_rgbled_control_disabled = true; }
 
 static void drivers_init(void) {
+#ifdef USE_RTC
+  rtc_init();
+#endif
 #ifdef USE_BACKUP_RAM
   backup_ram_init();
 #endif

@@ -26,6 +26,7 @@ FEATURES_WANTED = [
     "power_manager",
     "power_save",
     "rgb_led",
+    "rtc",
     "sbu",
     "sd_card",
     "secure_domain",
