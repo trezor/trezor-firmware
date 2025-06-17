@@ -156,7 +156,7 @@ async def confirm_action_voteproducer(msg: EosActionVoteProducer) -> None:
         await _confirm_properties(
             "confirm_voteproducer",
             TR.eos__cancel_vote,
-            ((TR.eos__voter, eos_name_to_string(msg.voter)),),
+            ((TR.eos__voter, eos_name_to_string(msg.voter), True),),
         )
 
 
@@ -276,8 +276,8 @@ def authorization_fields(auth: EosAuthorization) -> list[PropertyType]:
         header = f"Key #{i}:"
         w_header = f"Key #{i} Weight:"
 
-        append((header, _key))
-        append((w_header, _weight))
+        append((header, _key, True))
+        append((w_header, _weight, True))
 
     for i, account in enumerate(auth.accounts, 1):
         _account = eos_name_to_string(account.account.actor)

@@ -22,8 +22,8 @@ if TYPE_CHECKING:
     from typing import Sequence
 
     from trezor.messages import SolanaTokenInfo
+    from trezor.ui.layouts import PropertyType
 
-    from ...trezor.ui.layouts import PropertyType
     from .definitions import Definitions
     from .transaction import Fee
     from .transaction.instructions import Instruction, SystemProgramTransferInstruction
@@ -45,11 +45,15 @@ def _format_path(path: list[int]) -> str:
 
 def _get_address_reference_props(
     address: AddressReference, display_name: str
-) -> Sequence[tuple[str, str]]:
+) -> Sequence[PropertyType]:
     return (
-        (TR.solana__is_provided_via_lookup_table_template.format(display_name), ""),
-        (f"{TR.solana__lookup_table_address}:", base58.encode(address[0])),
-        (f"{TR.solana__account_index}:", f"{address[1]}"),
+        (
+            TR.solana__is_provided_via_lookup_table_template.format(display_name),
+            None,
+            None,
+        ),
+        (f"{TR.solana__lookup_table_address}:", base58.encode(address[0]), True),
+        (f"{TR.solana__account_index}:", f"{address[1]}", True),
     )
 
 
@@ -117,6 +121,7 @@ async def confirm_instruction(
                     (
                         ui_property.display_name,
                         property_template.format(value, *args),
+                        True,
                     ),
                 ),
                 instruction.ui_name,
@@ -152,7 +157,6 @@ async def confirm_instruction(
                 account_data += _get_address_reference_props(
                     account_value,
                     ui_property.display_name,
-                    True,
                 )
             else:
                 raise ValueError  # Invalid account value

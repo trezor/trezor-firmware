@@ -191,13 +191,13 @@ class Credential:
             return [(None, bech32.encode(hrp, self.key_hash), True)]
         elif self.script_hash:
             return [
-                (None, bech32.encode(bech32.HRP_SCRIPT_HASH, self.script_hash, True))
+                (None, bech32.encode(bech32.HRP_SCRIPT_HASH, self.script_hash), True)
             ]
         elif pointer:
             return [
-                (f"{TR.cardano__block}: {pointer.block_index}", None),
-                (f"{TR.cardano__transaction}: {pointer.tx_index}", None),
-                (f"{TR.cardano__certificate}: {pointer.certificate_index}", None),
+                (f"{TR.cardano__block}: {pointer.block_index}", None, None),
+                (f"{TR.cardano__transaction}: {pointer.tx_index}", None, None),
+                (f"{TR.cardano__certificate}: {pointer.certificate_index}", None, None),
             ]
         else:
             return []

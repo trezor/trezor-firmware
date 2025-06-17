@@ -31,8 +31,7 @@ if TYPE_CHECKING:
         StellarPaymentOp,
         StellarSetOptionsOp,
     )
-
-    from ....trezor.ui.layouts import PropertyType
+    from trezor.ui.layouts import PropertyType
 
 
 async def confirm_source_account(source_account: str) -> None:

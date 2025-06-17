@@ -30,7 +30,6 @@ if TYPE_CHECKING:
     from trezor.enums import CardanoNativeScriptHashDisplayFormat
     from trezor.ui.layouts import PropertyType
 
-    from ...trezor.ui.layouts import PropertyType
     from .helpers.credential import Credential
     from .seed import Keychain
 
@@ -628,7 +627,6 @@ async def confirm_certificate(
         _format_stake_credential(
             certificate.path, certificate.script_hash, certificate.key_hash
         ),
-        True,
     ]
 
     if certificate.type == CardanoCertificateType.STAKE_DELEGATION:
@@ -679,7 +677,7 @@ async def confirm_stake_pool_parameters(
                 format_stake_pool_id(pool_parameters.pool_id),
                 True,
             ),
-            (TR.cardano__pool_reward_account, pool_parameters.reward_account),
+            (TR.cardano__pool_reward_account, pool_parameters.reward_account, True),
             (
                 f"{TR.cardano__pledge}: {format_coin_amount(pool_parameters.pledge, network_id)}\n"
                 + f"{TR.cardano__cost}: {format_coin_amount(pool_parameters.cost, network_id)}\n"
@@ -734,7 +732,7 @@ async def confirm_stake_pool_owner(
                     protocol_magic,
                     network_id,
                 ),
-                False,
+                True,
             )
         )
 
@@ -834,7 +832,7 @@ async def confirm_withdrawal(
 
 def _format_stake_credential(
     path: list[int], script_hash: bytes | None, key_hash: bytes | None
-) -> tuple[str, str]:
+) -> PropertyType:
     from .helpers.paths import ADDRESS_INDEX_PATH_INDEX, RECOMMENDED_ADDRESS_INDEX
 
     if path:
@@ -844,22 +842,26 @@ def _format_stake_credential(
             return (
                 TR.cardano__for_account_template.format(account_number),
                 address_n_to_str(path),
+                True,
             )
         return (
             TR.cardano__for_account_and_index_template.format(
                 account_number, address_index
             ),
             address_n_to_str(path),
+            True,
         )
     elif key_hash:
         return (
             TR.cardano__for_key_hash,
             bech32.encode(bech32.HRP_STAKE_KEY_HASH, key_hash),
+            True,
         )
     elif script_hash:
         return (
             TR.cardano__for_script,
             bech32.encode(bech32.HRP_SCRIPT_HASH, script_hash),
+            True,
         )
     else:
         # should be unreachable unless there's a bug in validation
@@ -933,7 +935,7 @@ async def confirm_cvote_registration(
     nonce: int,
     voting_purpose: int | None,
 ) -> None:
-    props: list[PropertyType] = [(TR.cardano__vote_key_registration, None)]
+    props: list[PropertyType] = [(TR.cardano__vote_key_registration, None, None)]
     if vote_public_key is not None:
         props.append((TR.cardano__vote_public_key, vote_public_key, True))
     props.extend(
@@ -971,7 +973,7 @@ async def show_auxiliary_data_hash(auxiliary_data_hash: bytes) -> None:
     await confirm_properties(
         "confirm_auxiliary_data",
         TR.cardano__confirm_transaction,
-        ((TR.cardano__auxiliary_data_hash, auxiliary_data_hash),),
+        ((TR.cardano__auxiliary_data_hash, auxiliary_data_hash, True),),
         br_code=BRT_Other,
     )
 
@@ -1035,10 +1037,11 @@ async def confirm_collateral_input(
         "confirm_collateral_input",
         TR.cardano__confirm_transaction,
         (
-            (TR.cardano__collateral_input_id, collateral_input.prev_hash),
+            (TR.cardano__collateral_input_id, collateral_input.prev_hash, True),
             (
                 TR.cardano__collateral_input_index,
                 str(collateral_input.prev_index),
+                True,
             ),
         ),
         br_code=BRT_Other,
@@ -1052,8 +1055,8 @@ async def confirm_reference_input(
         "confirm_reference_input",
         TR.cardano__confirm_transaction,
         (
-            (TR.cardano__reference_input_id, reference_input.prev_hash),
-            (TR.cardano__reference_input_index, str(reference_input.prev_index)),
+            (TR.cardano__reference_input_id, reference_input.prev_hash, True),
+            (TR.cardano__reference_input_index, str(reference_input.prev_index), True),
         ),
         br_code=BRT_Other,
     )

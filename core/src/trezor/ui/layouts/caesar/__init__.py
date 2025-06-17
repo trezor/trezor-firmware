@@ -1164,7 +1164,7 @@ if not utils.BITCOIN_ONLY:
 
         items = [
             (f"{TR.words__account}:", account),
-            (f"{TR.address_details__derivation_path}:", account_path),
+            (TR.address_details__derivation_path_colon, account_path),
         ]
         if stake_item is not None:
             items.append(stake_item)
