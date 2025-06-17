@@ -54,7 +54,7 @@ pm_status_t pm_control_hibernate() {
   return PM_ERROR;
 }
 
-void pm_control_suspend() {
+pm_wakeup_flags_t pm_control_suspend(void) {
   // Clear all wakeup flags. From this point, any wakeup event that
   // sets a wakeup flag causes this function to return.
   pm_wakeup_flags_reset();
@@ -107,6 +107,8 @@ void pm_control_suspend() {
 
   // Reinitialize all drivers that were stopped earlier
   power_save_resume_io(&wakeup_params);
+
+  return wakeup_flags;
 }
 
 static void pm_background_tasks_suspend(void) {}

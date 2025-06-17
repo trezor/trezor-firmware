@@ -21,6 +21,7 @@ FEATURES_WANTED = [
     "power_manager",
     "power_save",
     "rgb_led",
+    "rtc",
     "secure_domain",
     "tropic",
     "usb",

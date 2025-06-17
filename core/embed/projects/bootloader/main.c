@@ -59,6 +59,9 @@
 #ifdef USE_HASH_PROCESSOR
 #include <sec/hash_processor.h>
 #endif
+#ifdef USE_RTC
+#include <sys/rtc.h>
+#endif
 #ifdef USE_TAMPER
 #include <sys/tamper.h>
 #endif
@@ -225,7 +228,6 @@ static void drivers_init(secbool manufacturing_mode,
 #ifdef USE_HASH_PROCESSOR
   hash_processor_init();
 #endif
-  display_init(DISPLAY_RESET_CONTENT);
 
 #ifdef USE_TAMPER
   tamper_init();
@@ -233,6 +235,12 @@ static void drivers_init(secbool manufacturing_mode,
     tamper_external_enable();
   }
 #endif
+
+#ifdef USE_RTC
+  rtc_init();
+#endif
+
+  display_init(DISPLAY_RESET_CONTENT);
 
 #ifdef USE_TOUCH
   *touch_initialized = touch_init();

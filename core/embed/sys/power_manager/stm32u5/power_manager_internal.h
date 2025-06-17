@@ -141,4 +141,5 @@ void pm_battery_initial_soc_guess(void);
 pm_status_t pm_control_hibernate(void);
 
 // Power manager control function which puts device into suspend mode.
-void pm_control_suspend(void);
+// Returns the wakeup flags that caused the device to wake up.
+pm_wakeup_flags_t pm_control_suspend(void);

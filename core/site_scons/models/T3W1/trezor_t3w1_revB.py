@@ -98,6 +98,10 @@ def configure(
     paths += ["embed/sys/backup_ram/inc"]
     defines += [("USE_BACKUP_RAM", "1")]
 
+    if "rtc" in features_wanted:
+        sources += ["embed/sys/time/stm32u5/rtc.c"]
+        defines += [("USE_RTC", "1")]
+
     if "haptic" in features_wanted:
         sources += [
             "embed/io/haptic/drv2625/drv2625.c",

@@ -42,6 +42,7 @@ FEATURES_WANTED = [
     "power_manager",
     "power_save",
     "rgb_led",
+    "rtc",
     "sd_card",
     "secmon_layout",
     "tropic",
