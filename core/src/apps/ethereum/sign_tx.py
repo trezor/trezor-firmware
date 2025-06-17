@@ -294,7 +294,7 @@ async def _handle_erc20(
                 # except in the case of the "approve" flow which shows the token address later on!
                 await require_confirm_address(
                     address_bytes,
-                    TR.words__address,
+                    TR.words__send,
                     TR.ethereum__token_contract,
                     TR.buttons__continue,
                     "unknown_token",

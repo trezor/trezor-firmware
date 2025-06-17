@@ -931,6 +931,11 @@ if not utils.BITCOIN_ONLY:
                 items=[(recipient_str, True)],
                 verb=TR.buttons__continue,
                 verb_info=TR.ethereum__contract_address,
+                subtitle=(
+                    TR.ethereum__approve_revoke_from
+                    if is_revoke
+                    else TR.ethereum__approve_to
+                ),
             )
             info_layout = trezorui_api.show_info_with_cancel(
                 title=title,

@@ -492,6 +492,7 @@ impl FirmwareUI for UIEckhart {
         verb: TString<'static>,
         verb_info: TString<'static>,
         _verb_cancel: Option<TString<'static>>,
+        subtitle: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecShort::new();
 
@@ -512,7 +513,7 @@ impl FirmwareUI for UIEckhart {
 
         let flow = flow::new_confirm_with_menu(
             title,
-            None,
+            subtitle,
             paragraphs
                 .into_paragraphs()
                 .with_placement(LinearPlacement::vertical())
