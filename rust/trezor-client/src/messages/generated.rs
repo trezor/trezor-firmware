@@ -92,6 +92,8 @@ trezor_message_impl! {
     ThpCreateNewSession => MessageType_ThpCreateNewSession,
     ThpCredentialRequest => MessageType_ThpCredentialRequest,
     ThpCredentialResponse => MessageType_ThpCredentialResponse,
+    EvoluGetKeys => MessageType_EvoluGetKeys,
+    EvoluKeys => MessageType_EvoluKeys,
     BenchmarkListNames => MessageType_BenchmarkListNames,
     BenchmarkNames => MessageType_BenchmarkNames,
     BenchmarkRun => MessageType_BenchmarkRun,
