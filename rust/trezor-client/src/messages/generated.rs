@@ -186,6 +186,12 @@ trezor_message_impl! {
     EthereumSignTypedHash => MessageType_EthereumSignTypedHash,
 }
 
+#[cfg(feature = "evolu")]
+trezor_message_impl! {
+    EvoluGetNode => MessageType_EvoluGetNode,
+    EvoluNode => MessageType_EvoluNode,
+}
+
 #[cfg(feature = "monero")]
 trezor_message_impl! {
     MoneroTransactionInitRequest => MessageType_MoneroTransactionInitRequest,
