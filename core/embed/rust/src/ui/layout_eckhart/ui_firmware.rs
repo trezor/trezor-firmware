@@ -1085,9 +1085,13 @@ impl FirmwareUI for UIEckhart {
             .add_newline()
             .add_alignment(Alignment::Center)
             .add_text(code, fonts::FONT_SATOSHI_EXTRALIGHT_72);
-        let mut screen = TextScreen::new(FormattedText::new(ops)).with_header(Header::new(title));
+        let mut screen = TextScreen::new(FormattedText::new(ops));
         if button {
-            screen = screen.with_action_bar(ActionBar::new_cancel_confirm());
+            screen = screen
+                .with_header(Header::new(title))
+                .with_action_bar(ActionBar::new_cancel_confirm());
+        } else {
+            screen = screen.with_header(Header::new(title).with_close_button());
         }
         #[cfg(feature = "ble")]
         let screen = crate::ui::component::BLEHandler::new(screen, false);
