@@ -4,7 +4,6 @@ use crate::{
         component::{Component, ComponentExt, Event, EventCtx, Label, Pad},
         display::Color,
         geometry::Rect,
-        shape,
         shape::Renderer,
     },
 };
