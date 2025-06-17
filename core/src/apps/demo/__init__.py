@@ -141,7 +141,6 @@ async def demo_send_bitcoin() -> None:
     await confirm_output(
         address="bc1q7e6qu5smalrpgqrx9k2gnf0hgjyref5p36ru2m",
         amount=amount_str,
-        title="Sending to",
         hold=True,
         br_code=B.ConfirmOutput,
         output_index=0,

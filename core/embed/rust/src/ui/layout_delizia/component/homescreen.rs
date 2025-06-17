@@ -33,7 +33,7 @@ use super::{
     },
     constant,
     theme::{self, GREY_LIGHT, HOMESCREEN_ICON, ICON_KEY},
-    Loader, LoaderMsg,
+    Button, ButtonMsg, Loader, LoaderMsg,
 };
 
 const AREA: Rect = constant::screen();
@@ -512,10 +512,12 @@ pub struct Homescreen {
     delay: Timer,
     attach_animation: AttachAnimation,
     label_anim: HideLabelAnimation,
+    menu_btn: Button,
 }
 
 pub enum HomescreenMsg {
     Dismissed,
+    MenuClicked,
 }
 
 impl Homescreen {
@@ -536,6 +538,10 @@ impl Homescreen {
 
         let image = get_homescreen_image();
         let mut buf = ImageBuffer::new(AREA.size())?;
+        let menu_btn = Button::with_icon(theme::ICON_MENU)
+            .with_expanded_touch_area(Insets::uniform(10))
+            .initially_enabled(true)
+            .styled(theme::button_default());
 
         render_on_canvas(buf.canvas(), None, |target| {
             if let Some(image) = image {
@@ -564,6 +570,7 @@ impl Homescreen {
             delay: Timer::new(),
             attach_animation: AttachAnimation::default(),
             label_anim: HideLabelAnimation::new(label_width.max(label_unlocked_width)),
+            menu_btn,
         })
     }
 
@@ -662,6 +669,9 @@ impl Component for Homescreen {
 
         self.label_device
             .place(label_area.with_width(self.labels_width));
+        // FIXME: proper placement
+        self.menu_btn
+            .place(bounds.split_top(42).0.split_right(32).1);
         self.label_unlocked
             .place(text_unlocked_area.with_width(self.labels_width));
         bounds
@@ -677,6 +687,10 @@ impl Component for Homescreen {
         let resume_label = unsafe { HOMESCREEN_STATE.label };
 
         self.label_anim.process_event(ctx, event, resume_label);
+
+        if let Some(ButtonMsg::Clicked) = self.menu_btn.event(ctx, event) {
+            return Some(HomescreenMsg::MenuClicked);
+        }
 
         if self.hold_to_lock {
             Self::event_hold(self, ctx, event).then_some(HomescreenMsg::Dismissed)
@@ -728,6 +742,9 @@ impl Component for Homescreen {
                     render_notif(notif, NOTIFICATION_TOP, target);
                 }
                 render_instruction(TR::instructions__continue_in_app.into(), target);
+            });
+            target.with_origin(y_offset.neg(), &|target| {
+                self.menu_btn.render(target);
             });
 
             shape::Bar::new(AREA)

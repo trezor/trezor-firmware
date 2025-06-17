@@ -14,7 +14,7 @@ use crate::{
         flow::Swipable,
         layout::{
             obj::ComponentMsgObj,
-            result::{CANCELLED, CONFIRMED},
+            result::{CANCELLED, CONFIRMED, INFO},
         },
     },
 };
@@ -151,6 +151,7 @@ impl ComponentMsgObj for Homescreen {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             HomescreenMsg::Dismissed => Ok(CANCELLED.as_obj()),
+            HomescreenMsg::MenuClicked => Ok(INFO.as_obj()),
         }
     }
 }
@@ -159,6 +160,7 @@ impl ComponentMsgObj for Lockscreen {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             HomescreenMsg::Dismissed => Ok(CANCELLED.as_obj()),
+            HomescreenMsg::MenuClicked => unimplemented!(),
         }
     }
 }

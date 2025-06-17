@@ -1,5 +1,4 @@
 import storage.device
-import trezorble as ble
 import trezorui_api
 from trezor import TR, config, log, utils
 from trezor.ui.layouts import interact
@@ -35,24 +34,16 @@ async def handle_device_menu() -> None:
     failed_backup = (
         storage.device.is_initialized() and storage.device.unfinished_backup()
     )
-    # MOCK DATA
-    paired_devices = ["Trezor Suite"] if ble.is_connected() else []
-    # ###
     firmware_version = ".".join(map(str, utils.VERSION))
     device_name = storage.device.get_label() or "Trezor"
 
     auto_lock_ms = storage.device.get_autolock_delay_ms()
     auto_lock_delay = strings.format_autolock_duration(auto_lock_ms)
 
-    log.debug(
-        __name__,
-        f"device menu, BLE state: {ble.connection_flags()} (peers: {ble.peer_count()})",
-    )
-
     menu_result = await interact(
         trezorui_api.show_device_menu(
             failed_backup=failed_backup,
-            paired_devices=paired_devices,
+            paired_devices=[""],
             firmware_version=firmware_version,
             device_name=device_name,
             auto_lock_delay=auto_lock_delay,
@@ -60,11 +51,7 @@ async def handle_device_menu() -> None:
         "device_menu",
     )
 
-    if menu_result is DeviceMenuResult.DevicePair:
-        from apps.management.ble.pair_new_device import pair_new_device
-
-        await pair_new_device()
-    elif menu_result is DeviceMenuResult.ScreenBrightness:
+    if menu_result is DeviceMenuResult.ScreenBrightness:
         from trezor.ui.layouts import set_brightness
 
         await set_brightness()
@@ -80,30 +67,20 @@ async def handle_device_menu() -> None:
 
             auto_lock_delay_ms = await _prompt_auto_lock_delay()
             storage.device.set_autolock_delay_ms(auto_lock_delay_ms)
-    elif isinstance(menu_result, tuple):
-        # It's a tuple with (result_type, index)
-        result_type, index = menu_result
-        if result_type is DeviceMenuResult.DeviceDisconnect:
-            from trezor.messages import BleUnpair
-
-            from apps.management.ble.unpair import unpair
-
-            await unpair(BleUnpair(all=False))  # FIXME we can only unpair current
-        else:
-            raise RuntimeError(f"Unknown menu {result_type}, {index}")
-    elif menu_result is DeviceMenuResult.DemoCreateWallet:
+    # elif menu_result is DeviceMenuResult.DemoCreateWallet:
+    elif menu_result == 0:
         from apps.demo import demo_create_wallet
 
         await demo_create_wallet()
-    elif menu_result is DeviceMenuResult.DemoRestoreWallet:
+    elif menu_result == 1:
         from apps.demo import demo_restore_wallet
 
         await demo_restore_wallet()
-    elif menu_result is DeviceMenuResult.DemoReceiveBitcoin:
+    elif menu_result == 2:
         from apps.demo import demo_receive_bitcoin
 
         await demo_receive_bitcoin()
-    elif menu_result is DeviceMenuResult.DemoSendBitcoin:
+    elif menu_result == 3:
         from apps.demo import demo_send_bitcoin
 
         await demo_send_bitcoin()

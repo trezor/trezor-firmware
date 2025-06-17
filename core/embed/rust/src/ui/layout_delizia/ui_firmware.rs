@@ -897,7 +897,6 @@ impl FirmwareUI for UIDelizia {
         let layout = RootComponent::new(Homescreen::new(label, notification, lockable)?);
         Ok(layout)
     }
-
     fn show_device_menu(
         _failed_backup: bool,
         _firmware_version: TString<'static>,
@@ -905,9 +904,8 @@ impl FirmwareUI for UIDelizia {
         _paired_devices: heapless::Vec<TString<'static>, 1>,
         _auto_lock_delay: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"show_device_menu not supported",
-        ))
+        let flow = flow::device_menu::new_device_menu()?;
+        Ok(flow)
     }
 
     fn show_pairing_device_name(

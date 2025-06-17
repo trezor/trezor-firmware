@@ -62,7 +62,7 @@ async def homescreen() -> None:
     finally:
         obj.__del__()
 
-    if utils.INTERNAL_MODEL == "T3W1":
+    if utils.INTERNAL_MODEL in ("T3W1", "T3T1"):
         if res is trezorui_api.INFO:
             from .device_menu import handle_device_menu
 
