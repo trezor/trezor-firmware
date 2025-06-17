@@ -1,0 +1,24 @@
+
+syntax = "proto2";
+package hw.trezor.messages.evolu;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageEvolu";
+
+/**
+ * Request: Ask the device for the SLIP-21 node for Evolu, a local first storage
+ * framework. See https://github.com/evoluhq/evolu
+ * @start
+ * @next EvoluNode
+ */
+message EvoluGetNode {
+}
+
+/**
+ * Response: Evolu SLIP-21 node
+ * @end
+ */
+message EvoluNode {
+    required bytes data = 1;
+}

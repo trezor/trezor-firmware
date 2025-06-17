@@ -21,6 +21,7 @@ FEATURES = {
     #
     "Cardano": "cardano",
     "EOS": "eos",
+    "Evolu": "evolu",
     "Monero": "monero",
     "NEM": "nem",
     "Nostr": "nostr",
