@@ -463,6 +463,7 @@ static void secret_keys_cache(void) {
 static void secret_keys_cache_public(void) {
   for (uint8_t i = 0; i < SECRET_NUM_KEY_SLOTS; i++) {
     if ((sectrue == secret_is_slot_valid(i)) &&
+        (sectrue == secret_key_present(i)) &&
         (sectrue == secret_slot_public[i])) {
       secret_key_cache(i);
     }
@@ -557,6 +558,12 @@ void secret_prepare_fw(secbool allow_run_with_secret,
    * all-cases.
    */
 
+  if (sectrue != allow_run_with_secret &&
+      secfalse != secret_bootloader_locked()) {
+    // Untrusted firmware, locked bootloader. Show the restricted screen.
+    show_install_restricted_screen();
+  }
+
   secret_bhk_load();
   secret_bhk_lock();
   secret_keys_uncache();
@@ -580,11 +587,6 @@ void secret_prepare_fw(secbool allow_run_with_secret,
   }
   // Disable access unconditionally.
   secret_disable_access();
-  if (sectrue != allow_run_with_secret &&
-      secfalse != secret_bootloader_locked()) {
-    // Untrusted firmware, locked bootloader. Show the restricted screen.
-    show_install_restricted_screen();
-  }
 }
 
 void secret_init(void) {
