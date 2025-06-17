@@ -3,12 +3,22 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezorio import WireInterface
+    from typing import Any
+
+
+def _no_op(*args: Any, **kwargs: Any) -> None:
+    return None
+
 
 if __debug__:
     from trezorlog import debug, error, info, warning  # noqa: F401
+
+    _levels = [debug, info, warning, error]
+    _min_level = 0  # can be used for manually disabling low-priority logging levels
+    debug, info, warning, error = [_no_op] * _min_level + _levels[_min_level:]
 else:
     # logging is disabled in non-debug builds
-    debug = warning = info = error = lambda *args, **kwargs: None
+    debug = warning = info = error = _no_op
 
 
 def exception(
