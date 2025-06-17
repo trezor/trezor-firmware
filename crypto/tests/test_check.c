@@ -11402,6 +11402,10 @@ START_TEST(test_elligator2) {
 END_TEST
 
 START_TEST(test_noise) {
+  // Inject the seed to the random number generator to make the test
+  // deterministic
+  random_reseed(2748932008);
+
   uint8_t initiator_private_key[KEY_SIZE] = {0};
   uint8_t responder_private_key[KEY_SIZE] = {0};
   uint8_t initiator_public_key[KEY_SIZE] = {0};
