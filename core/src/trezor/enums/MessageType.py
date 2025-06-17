@@ -259,3 +259,5 @@ if not utils.BITCOIN_ONLY:
     NostrPubkey = 2002
     NostrSignEvent = 2003
     NostrEventSignature = 2004
+    EvoluGetNode = 2100
+    EvoluNode = 2101

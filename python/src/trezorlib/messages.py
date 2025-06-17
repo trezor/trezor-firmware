@@ -674,6 +674,8 @@ class MessageType(IntEnum):
     NostrPubkey = 2002
     NostrSignEvent = 2003
     NostrEventSignature = 2004
+    EvoluGetNode = 2100
+    EvoluNode = 2101
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -5497,6 +5499,24 @@ class EthereumFieldType(protobuf.MessageType):
         self.size = size
         self.entry_type = entry_type
         self.struct_name = struct_name
+
+
+class EvoluGetNode(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2100
+
+
+class EvoluNode(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2101
+    FIELDS = {
+        1: protobuf.Field("data", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        data: "bytes",
+    ) -> None:
+        self.data = data
 
 
 class MoneroTransactionSourceEntry(protobuf.MessageType):

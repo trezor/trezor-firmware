@@ -621,6 +621,8 @@ if TYPE_CHECKING:
         NostrPubkey = 2002
         NostrSignEvent = 2003
         NostrEventSignature = 2004
+        EvoluGetNode = 2100
+        EvoluNode = 2101
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102
