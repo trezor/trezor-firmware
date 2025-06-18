@@ -959,7 +959,7 @@ impl FirmwareUI for UIDelizia {
                     value,
                 ));
             } else {
-                paragraphs.add(Paragraph::new(&theme::TEXT_MONO, value));
+                paragraphs.add(Paragraph::new(&theme::TEXT_MONO_DATA, value));
             }
         }
 
