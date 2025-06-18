@@ -27,6 +27,10 @@
 #include <sys/pmic.h>
 #include <sys/systimer.h>
 
+#ifdef USE_SUSPEND
+#include <sys/suspend.h>
+#endif
+
 #include "npm1300_defs.h"
 
 #ifdef KERNEL_MODE
@@ -43,6 +47,7 @@
 // NPM1300 FSM states
 typedef enum {
   NPM1300_STATE_IDLE = 0,
+  NPM1300_STATE_CLEAR_EVENTS,
   NPM1300_STATE_CHARGING_ENABLE,
   NPM1300_STATE_CHARGING_DISABLE,
   NPM1300_STATE_CHARGING_LIMIT,
@@ -73,10 +78,18 @@ typedef struct {
 
 } npm1300_chlimit_regs_t;
 
+typedef struct {
+  uint8_t vbusin;
+
+} npm1300_event_regs_t;
+
 // NPM1300 PMIC driver state
 typedef struct {
   // Set if the PMIC driver is initialized
   bool initialized;
+
+  // EXTI handle
+  EXTI_HandleTypeDef exti_handle;
 
   // I2C bus where the PMIC is connected
   i2c_bus_t* i2c_bus;
@@ -98,6 +111,8 @@ typedef struct {
   npm1300_adc_regs_t adc_regs;
   // Charging limit registers (global buffer used for charging limit)
   npm1300_chlimit_regs_t chlimit_regs;
+  // Event registers (global buffer used for events readout)
+  npm1300_event_regs_t event_regs;
 
   // Discharge current limit [mA]
   uint16_t i_limit;
@@ -122,6 +137,9 @@ typedef struct {
   // Request flags for ADC measurements
   bool adc_trigger_requested;
   bool adc_readout_requested;
+
+  // Request flag for clearing events and releasing INT line
+  bool clear_events_requested;
 
   // Report callback used for asynchronous measurements
   pmic_report_callback_t report_callback;
@@ -270,8 +288,11 @@ static bool npm1300_initialize(i2c_bus_t* bus, uint16_t i_charge,
       {NPM1300_LEDDRV0MODESEL, NPM1300_LEDDRVMODESEL_NOTUSED},
       {NPM1300_LEDDRV1MODESEL, NPM1300_LEDDRVMODESEL_NOTUSED},
       {NPM1300_LEDDRV2MODESEL, NPM1300_LEDDRVMODESEL_NOTUSED},
-      // GPIO
-      {NPM1300_GPIOMODE0, NPM1300_GPIOMODE_GPIINPUT},
+      // GPIO0
+      {NPM1300_GPIOMODE0, NPM1300_GPIOMODE_GPOIRQ},  // GPIO0 as IRQ
+      {NPM1300_GPIODRIVE0, 0x00},                    // 1mA
+      {NPM1300_GPIOOPENDRAIN0, 0x00},                // Push-pull output
+      // GPIO1-4
       {NPM1300_GPIOMODE1, NPM1300_GPIOMODE_GPIINPUT},
       {NPM1300_GPIOMODE2, NPM1300_GPIOMODE_GPIINPUT},
       {NPM1300_GPIOMODE3, NPM1300_GPIOMODE_GPIINPUT},
@@ -283,6 +304,26 @@ static bool npm1300_initialize(i2c_bus_t* bus, uint16_t i_charge,
       // Ship and hibernate mode
       // {NPM1300_SHPHLDCONFIG, .. },
       // {NPM1300_TASKSHPHLDCFGSTROBE, 0x01},
+      // Clear all events
+      {NPM1300_EVENTSADCCLR, 0xFF},
+      {NPM1300_EVENTSBCHARGER0CLR, 0x3F},
+      {NPM1300_EVENTSBCHARGER1CLR, 0x3F},
+      {NPM1300_EVENTSBCHARGER2CLR, 0x07},
+      {NPM1300_EVENTSSHPHLDCLR, 0x0F},
+      {NPM1300_EVENTSVBUSIN0CLR, 0x3F},
+      {NPM1300_EVENTSVBUSIN1CLR, 0x3F},
+      {NPM1300_EVENTSGPIOCLR, 0x1F},
+      // Disable all interrupts
+      {NPM1300_INTENEVENTSADCCLR, 0xFF},
+      {NPM1300_INTENEVENTSBCHARGER0CLR, 0x3F},
+      {NPM1300_INTENEVENTSBCHARGER1CLR, 0x3F},
+      {NPM1300_INTENEVENTSBCHARGER2CLR, 0x07},
+      {NPM1300_INTENEVENTSSHPHLDCLR, 0x0F},
+      {NPM1300_INTENEVENTSVBUSIN0CLR, 0x3F},
+      {NPM1300_INTENEVENTSVBUSIN1CLR, 0x3F},
+      {NPM1300_INTENEVENTSGPIOCLR, 0x1F},
+      // Enable interrupts we are interested in
+      {NPM1300_INTENEVENTSVBUSIN0SET, 0x01},  // VBUS detected
 
       // TODO automatic temp measurement during charging
   };
@@ -315,7 +356,7 @@ bool pmic_init(void) {
   drv->buck_mode_set = PMIC_BUCK_MODE_AUTO;
   drv->buck_mode = PMIC_BUCK_MODE_AUTO;
 
-  drv->i2c_bus = i2c_bus_open(PMIC_I2C_INSTANCE);
+  drv->i2c_bus = i2c_bus_open(NPM1300_I2C_INSTANCE);
   if (drv->i2c_bus == NULL) {
     goto cleanup;
   }
@@ -325,6 +366,24 @@ bool pmic_init(void) {
     goto cleanup;
   }
 
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
+
+  // INT pin, active low, external pull-up
+  NPM1300_INT_PIN_CLK_ENA();
+  GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Pin = NPM1300_INT_PIN;
+  HAL_GPIO_Init(NPM1300_INT_PORT, &GPIO_InitStructure);
+
+  // Setup interrupt line for the NPM1300
+  EXTI_ConfigTypeDef EXTI_Config = {0};
+  EXTI_Config.GPIOSel = NPM1300_EXTI_INTERRUPT_GPIOSEL;
+  EXTI_Config.Line = NPM1300_EXTI_INTERRUPT_LINE;
+  EXTI_Config.Mode = EXTI_MODE_INTERRUPT;
+  EXTI_Config.Trigger = EXTI_TRIGGER_RISING;
+  HAL_EXTI_SetConfigLine(&drv->exti_handle, &EXTI_Config);
+
   if (!npm1300_get_reg(drv->i2c_bus, NPM1300_RSTCAUSE, &drv->restart_cause)) {
     goto cleanup;
   }
@@ -332,6 +391,11 @@ bool pmic_init(void) {
   if (!npm1300_initialize(drv->i2c_bus, drv->i_charge, drv->i_limit)) {
     goto cleanup;
   }
+
+  // Enable interrupt line
+  NVIC_SetPriority(NPM1300_EXTI_INTERRUPT_NUM, IRQ_PRI_NORMAL);
+  __HAL_GPIO_EXTI_CLEAR_FLAG(NPM1300_INT_PIN);
+  NVIC_EnableIRQ(NPM1300_EXTI_INTERRUPT_NUM);
 
   drv->initialized = true;
 
@@ -344,6 +408,9 @@ cleanup:
 
 void pmic_deinit(void) {
   npm1300_driver_t* drv = &g_npm1300_driver;
+
+  NVIC_DisableIRQ(NPM1300_EXTI_INTERRUPT_NUM);
+  HAL_EXTI_ClearConfigLine(&drv->exti_handle);
 
   i2c_bus_close(drv->i2c_bus);
   systimer_delete(drv->timer);
@@ -682,6 +749,12 @@ static const i2c_op_t npm1300_ops_adc_readout[] = {
     NPM_READ_FIELD(NPM1300_USBCDETECTSTATUS, adc_regs.usb_status),
 };
 
+// I2C operation that read & clears event flags and releases INT line
+static const i2c_op_t npm1300_ops_clear_events[] = {
+    NPM_READ_FIELD(NPM1300_VBUSINSTATUS, event_regs.vbusin),
+    NPM_WRITE_CONST(NPM1300_EVENTSVBUSIN0CLR, 0x3F),
+};
+
 #define npm1300_i2c_submit(drv, ops) \
   _npm1300_i2c_submit(drv, ops, ARRAY_LENGTH(ops))
 
@@ -754,6 +827,11 @@ static void npm1300_i2c_callback(void* context, i2c_packet_t* packet) {
   drv->i2c_errors = 0;
 
   switch (drv->state) {
+    case NPM1300_STATE_CLEAR_EVENTS:
+      drv->clear_events_requested = false;
+      drv->state = NPM1300_STATE_IDLE;
+      break;
+
     case NPM1300_STATE_CHARGING_ENABLE:
       drv->charging = true;
       drv->state = NPM1300_STATE_IDLE;
@@ -815,6 +893,24 @@ static void npm1300_i2c_callback(void* context, i2c_packet_t* packet) {
   npm1300_fsm_continue(drv);
 }
 
+void NPM1300_EXTI_INTERRUPT_HANDLER(void) {
+  npm1300_driver_t* drv = &g_npm1300_driver;
+
+  // Clear the EXTI line pending bit
+  __HAL_GPIO_EXTI_CLEAR_FLAG(NPM1300_INT_PIN);
+
+  if (!drv->initialized) {
+    return;
+  }
+
+#ifdef USE_SUSPEND
+  wakeup_flags_set(WAKEUP_FLAG_POWER);
+#endif
+
+  drv->clear_events_requested = true;
+  npm1300_fsm_continue(drv);
+}
+
 // npm1300 driver FSM continuation function that decides what to do next
 //
 // This function is called in the irq context or when interrupts are disabled.
@@ -825,7 +921,10 @@ static void npm1300_fsm_continue(npm1300_driver_t* drv) {
 
   // The order of the following conditions defines the priority
 
-  if (drv->i_charge != drv->i_charge_requested) {
+  if (drv->clear_events_requested) {
+    npm1300_i2c_submit(drv, npm1300_ops_clear_events);
+    drv->state = NPM1300_STATE_CLEAR_EVENTS;
+  } else if (drv->i_charge != drv->i_charge_requested) {
     // Change charging limit
     uint16_t bchg_iset = drv->i_charge / 2;  // 2mA steps
     drv->chlimit_regs.bchg_iset_msb = bchg_iset >> 1;
