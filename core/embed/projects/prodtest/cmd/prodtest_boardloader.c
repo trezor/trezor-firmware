@@ -28,9 +28,6 @@ static void prodtest_boardloader_version(cli_t* cli) {
     return;
   }
 
-  cli_trace(cli, "Parsing boardloader capabilities...");
-  parse_boardloader_capabilities();
-
   boardloader_version_t v;
   get_boardloader_version(&v);
   cli_ok(cli, "%d.%d.%d", v.version_major, v.version_minor, v.version_patch);

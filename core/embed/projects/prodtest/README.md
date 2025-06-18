@@ -115,7 +115,7 @@ OK
 
 
 ### reboot-to-bootloader
-This command initiates device reboot to bootlaoder.
+This command initiates device reboot to bootloader.
 
 Example:
 ```
@@ -134,13 +134,17 @@ OK 0.2.6
 ```
 
 ### bootloader-version
-Retrives the version of the bootlaoder. The command returns `OK` followed by the version in the format `<major>.<minor>.<patch>`.
+Retrieves the version of the bootloader. The command returns `OK` followed by the version in the format `<major>.<minor>.<patch>`.
 
 Example:
 ```
 bootloader-version
 OK 2.1.7
 ```
+
+### bootloader-update
+Updates the bootloader to the supplied binary file.
+
 
 ### ble-adv-start
 Starts BLE advertising. Accepts one parameter, advertising name. The command returns `OK` if the operation is successful.

@@ -17,10 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <trezor_model.h>
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
 #include <sys/mpu.h>
+#include <util/bl_check.h>
+#include <util/board_capabilities.h>
 #include <util/image.h>
 
 static void prodtest_bootloader_version(cli_t *cli) {
@@ -51,6 +54,87 @@ static void prodtest_bootloader_version(cli_t *cli) {
   cli_ok(cli, "%d.%d.%d", v & 0xFF, (v >> 8) & 0xFF, (v >> 16) & 0xFF);
 }
 
+#ifndef TREZOR_MODEL_T2T1
+__attribute__((
+    section(".buf"))) static uint8_t bootloader_buffer[BOOTLOADER_MAXSIZE];
+static size_t bootloader_len = 0;
+
+static void prodtest_bootloader_update(cli_t *cli) {
+  if (cli_arg_count(cli) < 1) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  const char *phase = cli_arg(cli, "phase");
+
+  if (phase == NULL) {
+    cli_error_arg(cli, "Expecting phase (begin|chunk|end).");
+  }
+
+  if (0 == strcmp(phase, "begin")) {
+    if (cli_arg_count(cli) != 1) {
+      cli_error_arg_count(cli);
+      return;
+    }
+
+    // Reset our state
+    bootloader_len = 0;
+    cli_trace(cli, "Begin");
+    cli_ok(cli, "");
+
+  } else if (0 == strcmp(phase, "chunk")) {
+    if (cli_arg_count(cli) < 2) {
+      cli_error_arg_count(cli);
+      return;
+    }
+
+    // Receive next piece of the image
+    size_t chunk_len = 0;
+    // Temporary buffer for this chunk; tweak max if you like
+    uint8_t chunk_buf[1024];
+
+    if (!cli_arg_hex(cli, "hex-data", chunk_buf, sizeof(chunk_buf),
+                     &chunk_len)) {
+      cli_error_arg(cli, "Expecting hex data for chunk.");
+      return;
+    }
+
+    if (bootloader_len + chunk_len > BOOTLOADER_MAXSIZE) {
+      cli_error(cli, CLI_ERROR, "Buffer overflow (have %u, %u more)",
+                (unsigned)bootloader_len, (unsigned)chunk_len);
+      return;
+    }
+
+    memcpy(&bootloader_buffer[bootloader_len], chunk_buf, chunk_len);
+    bootloader_len += chunk_len;
+
+    cli_ok(cli, "%u %u", (unsigned)chunk_len, (unsigned)bootloader_len);
+
+  } else if (0 == strcmp(phase, "end")) {
+    if (cli_arg_count(cli) != 1) {
+      cli_error_arg_count(cli);
+      return;
+    }
+
+    if (bootloader_len == 0) {
+      cli_error(cli, CLI_ERROR, "No data received");
+      return;
+    }
+
+    bl_check_replace(bootloader_buffer, bootloader_len);
+
+    // Reset state so next begin must come before chunks
+    bootloader_len = 0;
+
+    cli_trace(cli, "Update successful (%u bytes)", (unsigned)bootloader_len);
+    cli_ok(cli, "");
+
+  } else {
+    cli_error(cli, CLI_ERROR, "Unknown phase '%s' (begin|chunk|end)", phase);
+  }
+}
+#endif
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -59,3 +143,13 @@ PRODTEST_CLI_CMD(
   .info = "Retrieve the bootloader version",
   .args = ""
 );
+
+#ifndef TREZOR_MODEL_T2T1
+PRODTEST_CLI_CMD(
+  .name = "bootloader-update",
+  .func = prodtest_bootloader_update,
+  .info = "Update bootloader",
+  .args = "<phase> <hex-data>"
+);
+#endif
+
