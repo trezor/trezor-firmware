@@ -99,9 +99,6 @@ typedef struct {
   systimer_t* monitoring_timer;
   systimer_t* shutdown_timer;
 
-  // Wakeup flags
-  volatile pm_wakeup_flags_t wakeup_flags;
-
 } pm_driver_t;
 
 // State handler function definition
@@ -133,10 +130,3 @@ void pm_charging_controller(pm_driver_t* drv);
 // Battery initial state of charge guess function. This function use the sampled
 // battery data to guess the initial state of charge in case its unknown.
 void pm_battery_initial_soc_guess(void);
-
-// Power manager control function which reboots the device into hibernate mode.
-pm_status_t pm_control_hibernate(void);
-
-// Power manager control function which puts device into suspend mode.
-// Returns the wakeup flags that caused the device to wake up.
-pm_wakeup_flags_t pm_control_suspend(void);

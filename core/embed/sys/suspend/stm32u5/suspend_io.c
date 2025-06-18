@@ -22,7 +22,7 @@
 #include <trezor_rtl.h>
 
 #include <sys/irq.h>
-#include <sys/power_save.h>
+#include <sys/suspend_io.h>
 #include <sys/systick.h>
 
 #ifdef USE_BLE
@@ -64,7 +64,7 @@
 #endif
 
 #ifdef SECURE_MODE
-void power_save_suspend_cpu(void) {
+void suspend_cpu(void) {
   // Disable interrupts by setting PRIMASK to 1.
   //
   // The system can wake up, but interrupts will not be processed until
@@ -89,7 +89,7 @@ void power_save_suspend_cpu(void) {
   irq_unlock(irq_key);
 }
 
-void power_save_suspend_secure_io() {
+void suspend_secure_drivers() {
 #ifdef USE_STORAGE_HWKEY
   secure_aes_deinit();
 #endif
@@ -101,7 +101,7 @@ void power_save_suspend_secure_io() {
 #endif
 }
 
-void power_save_resume_secure_io() {
+void resume_secure_drivers() {
 #ifdef USE_STORAGE_HWKEY
   secure_aes_init();
 #endif
@@ -119,8 +119,8 @@ void power_save_resume_secure_io() {
 
 #endif  // SECURE_MODE
 
-void power_save_suspend_io(power_save_wakeup_params_t *wakeup_params) {
-  power_save_suspend_secure_io();
+void suspend_drivers(power_save_wakeup_params_t *wakeup_params) {
+  suspend_secure_drivers();
 
 #ifdef USE_USB
   usb_stop();
@@ -143,7 +143,7 @@ void power_save_suspend_io(power_save_wakeup_params_t *wakeup_params) {
 #endif
 }
 
-void power_save_resume_io(const power_save_wakeup_params_t *wakeup_params) {
+void resume_drivers(const power_save_wakeup_params_t *wakeup_params) {
 #ifdef USE_DISPLAY
   // Reinitialize all drivers that were stopped earlier
   display_init(DISPLAY_RESET_CONTENT);
@@ -164,7 +164,7 @@ void power_save_resume_io(const power_save_wakeup_params_t *wakeup_params) {
 #ifdef USE_BLE
   ble_resume(&wakeup_params->ble);
 #endif
-  power_save_resume_secure_io();
+  resume_secure_drivers();
 }
 
 #endif  // KERNEL_MODE

@@ -16,55 +16,63 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifdef KERNEL_MODE
+#if defined(KERNEL_MODE) && !defined(SECMON)
 
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
-#include <sys/pmic.h>
-#include <sys/power_save.h>
+#include <sys/irq.h>
+#include <sys/suspend.h>
+#include <sys/suspend_io.h>
 
-#include "power_manager_internal.h"
+static wakeup_flags_t g_wakeup_flags = 0;
 
-static void pm_background_tasks_suspend(void);
-static bool pm_background_tasks_suspended(void);
-static void pm_background_tasks_resume(void);
+static void background_tasks_suspend(void);
+static bool background_tasks_suspended(void);
+static void background_tasks_resume(void);
 
-pm_status_t pm_control_hibernate() {
-  if (!pmic_enter_shipmode()) {
-    return PM_ERROR;
-  }
-
-  // Wait for the device to power off
-  // systick_delay_ms(50);
-
-  return PM_ERROR;
+void wakeup_flags_set(wakeup_flags_t flags) {
+  irq_key_t irq_key = irq_lock();
+  g_wakeup_flags |= flags;
+  irq_unlock(irq_key);
 }
 
-pm_wakeup_flags_t pm_control_suspend(void) {
+void wakeup_flags_reset(void) {
+  irq_key_t irq_key = irq_lock();
+  g_wakeup_flags = 0;
+  irq_unlock(irq_key);
+}
+
+void wakeup_flags_get(wakeup_flags_t* flags) {
+  irq_key_t irq_key = irq_lock();
+  *flags = g_wakeup_flags;
+  irq_unlock(irq_key);
+}
+
+wakeup_flags_t system_suspend(void) {
   // Clear all wakeup flags. From this point, any wakeup event that
   // sets a wakeup flag causes this function to return.
-  pm_wakeup_flags_reset();
+  wakeup_flags_reset();
 
   power_save_wakeup_params_t wakeup_params = {0};
 
   // Deinitialize all drivers that are not required in low-power mode
   // (e.g., USB, display, touch, haptic, etc.).
-  power_save_suspend_io(&wakeup_params);
+  suspend_drivers(&wakeup_params);
 
   // In the following loop, the system will attempt to enter low-power mode.
   // Low-power mode may be exited for various reasons, but the loop will
   // terminate only if a wakeup flag is set, indicating that user interaction
   // is required or the user needs to be notified.
 
-  pm_wakeup_flags_t wakeup_flags = 0;
-  pm_wakeup_flags_get(&wakeup_flags);
+  wakeup_flags_t wakeup_flags = 0;
+  wakeup_flags_get(&wakeup_flags);
 
   while (wakeup_flags == 0) {
     // Notify state machines running in the interrupt context about the
     // impending low-power mode. They should complete any pending operations
     // and avoid starting new ones.
-    pm_background_tasks_suspend();
+    background_tasks_suspend();
 
     // Wait until all state machines are idle and the system is ready to enter
     // low-power mode. This loop also exits if any wakeup flag is set
@@ -75,33 +83,33 @@ pm_wakeup_flags_t pm_control_suspend(void) {
       // TODO: Implement a 5-second timeout to trigger a fatal error.
 
       // Check for wakeup flags again
-      pm_wakeup_flags_get(&wakeup_flags);
+      wakeup_flags_get(&wakeup_flags);
 
-    } while (!pm_background_tasks_suspended() && (wakeup_flags == 0));
+    } while (!background_tasks_suspended() && (wakeup_flags == 0));
 
     if (wakeup_flags == 0) {
       // Enter low-power mode
-      power_save_suspend_cpu();
+      suspend_cpu();
 
       // At this point, all pending interrupts are processed.
       // Some of them may set wakeup flags.
-      pm_wakeup_flags_get(&wakeup_flags);
+      wakeup_flags_get(&wakeup_flags);
     }
 
     // Resume state machines running in the interrupt context
-    pm_background_tasks_resume();
+    background_tasks_resume();
   }
 
   // Reinitialize all drivers that were stopped earlier
-  power_save_resume_io(&wakeup_params);
+  resume_drivers(&wakeup_params);
 
   return wakeup_flags;
 }
 
-static void pm_background_tasks_suspend(void) {}
+static void background_tasks_suspend(void) {}
 
-static bool pm_background_tasks_suspended(void) { return true; }
+static bool background_tasks_suspended(void) { return true; }
 
-static void pm_background_tasks_resume(void) {}
+static void background_tasks_resume(void) {}
 
-#endif  // KERNEL_MODE
+#endif  // defined(KERNEL_MODE) && !defined(SECMON)

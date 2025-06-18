@@ -17,15 +17,15 @@ FEATURES_WANTED = [
     "display",
     "dma2d",
     "input",
+    "iwdg",
     "optiga",
     "power_manager",
-    "power_save",
     "rgb_led",
     "rtc",
     "secure_domain",
+    "suspend",
     "tropic",
     "usb",
-    "iwdg",
     ]
 
 if TREZOR_MODEL in ('T3W1', ):

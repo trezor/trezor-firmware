@@ -24,15 +24,15 @@ FEATURES_WANTED = [
     "nfc",
     "optiga",
     "power_manager",
-    "power_save",
     "rgb_led",
     "rtc",
     "sbu",
     "sd_card",
     "secure_domain",
+    "smp",
+    "suspend",
     "tropic",
     "usb",
-    "smp",
     ]
 
 CCFLAGS_MOD = ''
