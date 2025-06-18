@@ -24,7 +24,8 @@ use crate::{
             util::{ConfirmValueParams, PropsList, RecoveryType, StrOrBytes},
         },
         ui_firmware::{
-            FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_WORD_QUIZ_ITEMS,
+            FirmwareUI, ERROR_NOT_IMPLEMENTED, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
+            MAX_WORD_QUIZ_ITEMS,
         },
         ModelUI,
     },
@@ -107,7 +108,7 @@ impl FirmwareUI for UIEckhart {
         _info_button: bool,
         _chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"not implemented"))
+        Err::<Gc<LayoutObj>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn confirm_homescreen(
@@ -292,7 +293,7 @@ impl FirmwareUI for UIEckhart {
         _hold: bool,
         _items: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn confirm_reset_device(recovery: bool) -> Result<impl LayoutMaybeTrace, Error> {
@@ -757,7 +758,7 @@ impl FirmwareUI for UIEckhart {
         _verb: TString<'static>,
         _items: Gc<List>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn prompt_backup() -> Result<impl LayoutMaybeTrace, Error> {
@@ -908,7 +909,7 @@ impl FirmwareUI for UIEckhart {
         _path: Option<TString<'static>>,
         _xpubs: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn show_checklist(
@@ -1267,7 +1268,7 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_remaining_shares(_pages_iterable: Obj) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn show_simple(
@@ -1368,6 +1369,6 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn tutorial() -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 }
