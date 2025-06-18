@@ -57,6 +57,33 @@ west update
 ```
 
 
+## Recommended build methods
+
+
+### Building and signing using script: debug, production
+To be invoked from nix-shell in nordic/trezor folder.
+```sh
+./scripts/build_sign_flash.sh -b t3w1_revA_nrf52832 -d -s
+./scripts/build_sign_flash.sh -b t3w1_revA_nrf52832 -p -s
+```
+
+## Alternative build methods
+
+### Signing custom method
+hash_signer needs to be invoked from nix-shell.
+```sh
+imgtool sign --version 0.1.0+0 --align 4 --header-size 0x200 -S 0x6c000 --pad-header build/trezor-ble/zephyr/zephyr.bin build/trezor-ble/zephyr/zephyr.prep.bin --custom-tlv 0x00A2 0x3
+imgtool sign --version 0.1.0+0 --align 4 --header-size 0x200 -S 0x6c000 --pad-header build/trezor-ble/zephyr/zephyr.hex build/trezor-ble/zephyr/zephyr.prep.hex --custom-tlv 0x00A2 0x3
+imgtool dumpinfo  ./build/trezor-ble/zephyr/zephyr.prep.bin >> ./build/trezor-ble/zephyr/dump.txt
+python ./scripts/extract_hash.py ./build/trezor-ble/zephyr/dump.txt
+hash_signer -d e3d47ab7e90f15badb1a2fac8c082b727c3fa24f1238ad8607b67f720a63c4e9
+python ./scripts/insert_signatures.py ./build/trezor-ble/zephyr/zephyr.prep.hex 0x82a2258db3da5c14ceddfff92e39531c873f870bad81a66506d706fd31da4ab4ad8e76d62686f0b0bbcf02dd4473d27b3bf0a2b98182d8b52bb2f1336eb7630d 0x0003 -o ./build/trezor-ble/zephyr/zephyr.signed_trz.hex
+python ./scripts/insert_signatures.py ./build/trezor-ble/zephyr/zephyr.prep.bin 0x82a2258db3da5c14ceddfff92e39531c873f870bad81a66506d706fd31da4ab4ad8e76d62686f0b0bbcf02dd4473d27b3bf0a2b98182d8b52bb2f1336eb7630d 0x0003 -o ./build/trezor-ble/zephyr/zephyr.signed_trz.bin
+python ../zephyr/scripts/build/mergehex.py  build/mcuboot/zephyr/zephyr.hex build/trezor-ble/zephyr/zephyr.signed_trz.hex -o build/trezor-ble/zephyr.merged.signed.hex
+west flash --hex-file ./build/trezor-ble/zephyr.merged.signed.hex
+```
+
+
 ### Building the Application
 ```sh
 cd trezor
@@ -86,7 +113,7 @@ west flash
 ```
 
 
-### Build MCUBoot bootloader, debug, prod, default
+### Build MCUBoot bootloader: debug, prod, default
 ```sh
 west build ./trezor-ble -b t3w1_revA_nrf52832 --sysbuild --domain mcuboot -- -Dmcuboot_EXTRA_CONF_FILE="$PWD/trezor-ble/sysbuild/mcuboot.conf;$PWD/trezor-ble/sysbuild/mcuboot_debug.conf"
 west build ./trezor-ble -b t3w1_revA_nrf52832 --sysbuild --domain mcuboot -- -Dmcuboot_EXTRA_CONF_FILE="$PWD/trezor-ble/sysbuild/mcuboot.conf;$PWD/trezor-ble/sysbuild/prod.conf"
@@ -96,24 +123,4 @@ west build ./trezor-ble -b t3w1_revA_nrf52832 --sysbuild --domain mcuboot
 ### Build Application
 ```sh
 west build ./trezor-ble -b t3w1_revA_nrf52832 --sysbuild --domain trezor-ble -- -DOVERLAY_CONFIG=debug.conf
-```
-
-### Signing using imgtool directly
-```sh
-imgtool sign --key /home/mbruna/CLionProjects/trezor-model_r/nordic/bootloader/mcuboot/root-rsa-2048.pem --version 0.1.0+0 --align 4 --header-size 0x200 -S 0x6c000 --pad-header build/trezor-ble/zephyr/zephyr.hex build/trezor-ble/zephyr/zephyr.signed2.hex
-
-```
-
-
-### Signing custom method
-```sh
-imgtool sign --version 0.1.0+0 --align 4 --header-size 0x200 -S 0x6c000 --pad-header build/trezor-ble/zephyr/zephyr.bin build/trezor-ble/zephyr/zephyr.prep.bin
-imgtool sign --version 0.1.0+0 --align 4 --header-size 0x200 -S 0x6c000 --pad-header build/trezor-ble/zephyr/zephyr.hex build/trezor-ble/zephyr/zephyr.prep.hex
-imgtool dumpinfo  ./build/trezor-ble/zephyr/zephyr.prep.bin >> ./build/trezor-ble/zephyr/dump.txt
-python ./scripts/extract_hash.py ./build/trezor-ble/zephyr/dump.txt
-hash_signer -d e3d47ab7e90f15badb1a2fac8c082b727c3fa24f1238ad8607b67f720a63c4e9
-python ./scripts/insert_signatures_hex.py ./build/trezor-ble/zephyr/zephyr.prep.hex 0x82a2258db3da5c14ceddfff92e39531c873f870bad81a66506d706fd31da4ab4ad8e76d62686f0b0bbcf02dd4473d27b3bf0a2b98182d8b52bb2f1336eb7630d 0x0003 -o ./build/trezor-ble/zephyr/zephyr.signed_cosi.hex
-python ./scripts/insert_signatures_bin.py ./build/trezor-ble/zephyr/zephyr.prep.bin 0x82a2258db3da5c14ceddfff92e39531c873f870bad81a66506d706fd31da4ab4ad8e76d62686f0b0bbcf02dd4473d27b3bf0a2b98182d8b52bb2f1336eb7630d 0x0003 -o ./build/trezor-ble/zephyr/zephyr.signed_cosi.bin
-mergehex -m build/mcuboot/zephyr/zephyr.hex build/trezor-ble/zephyr/zephyr.signed_cosi.hex -o build/trezor-ble/zephyr.merged.signed.hex
-west flash --hex-file ./build/trezor-ble/zephyr.merged.signed.hex
 ```
