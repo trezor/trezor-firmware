@@ -761,6 +761,7 @@ class TR:
     sd_card__wanna_format: str = "Do you really want to format the SD card?"
     sd_card__wrong_sd_card: str = "Wrong SD card."
     send__cancel_sign: str = "Cancel sign"
+    send__cancel_transaction: str = "Cancel transaction"
     send__confirm_sending: str = "Sending amount"
     send__from_multiple_accounts: str = "Sending from multiple accounts."
     send__incl_transaction_fee: str = "incl. Transaction fee"

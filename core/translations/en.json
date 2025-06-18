@@ -976,6 +976,7 @@
     "send__maximum_fee": "Maximum fee",
     "send__receiving_to_multisig": "Receiving to a multisig address.",
     "send__send_from": "Send from",
+    "send__cancel_transaction": "Cancel transaction",
     "send__sign_transaction": "Sign transaction",
     "send__send_in_the_app": "After signing, send the transaction in the app.",
     "send__title_confirm_sending": "Confirm sending",

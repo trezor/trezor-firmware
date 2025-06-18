@@ -22,6 +22,7 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
 
 from ...common import is_core
+from ...input_flows import InputFlowConfirmAllWarnings
 from ...tx_cache import TxCache
 from .signtx import (
     assert_tx_matches,
@@ -223,6 +224,8 @@ def test_send_mixed(client: Client):
     )
 
     with client:
+        IF = InputFlowConfirmAllWarnings(client)
+        client.set_input_flow(IF.get())
         client.set_expected_responses(
             [
                 # process inputs
@@ -355,6 +358,8 @@ def test_attack_script_type(client: Client):
         return msg
 
     with client:
+        IF = InputFlowConfirmAllWarnings(client)
+        client.set_input_flow(IF.get())
         client.set_filter(messages.TxAck, attack_processor)
         client.set_expected_responses(
             [
