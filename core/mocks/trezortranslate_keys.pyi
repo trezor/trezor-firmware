@@ -767,6 +767,7 @@ class TR:
     send__incl_transaction_fee: str = "incl. Transaction fee"
     send__including_fee: str = "Including fee:"
     send__maximum_fee: str = "Maximum fee"
+    send__multisig_different_paths: str = "Using different paths for different XPUBs."
     send__receiving_to_multisig: str = "Receiving to a multisig address."
     send__send_from: str = "Send from"
     send__send_in_the_app: str = "After signing, send the transaction in the app."

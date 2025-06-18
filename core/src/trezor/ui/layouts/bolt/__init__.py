@@ -175,7 +175,7 @@ def confirm_multisig_warning() -> Awaitable[None]:
 def confirm_multisig_different_paths_warning() -> Awaitable[None]:
     return show_warning(
         "warning_multisig_different_paths",
-        "Using different paths for different XPUBs.",
+        TR.send__multisig_different_paths,
         TR.words__continue_anyway_question,
     )
 
@@ -184,6 +184,16 @@ def confirm_multiple_accounts_warning() -> Awaitable[None]:
     return show_warning(
         "sending_from_multiple_accounts",
         TR.send__from_multiple_accounts,
+        TR.words__continue_anyway_question,
+        button=TR.buttons__continue,
+        br_code=ButtonRequestType.SignTx,
+    )
+
+
+def lock_time_disabled_warning() -> Awaitable[None]:
+    return show_warning(
+        "nondefault_locktime",
+        TR.bitcoin__locktime_no_effect,
         TR.words__continue_anyway_question,
         button=TR.buttons__continue,
         br_code=ButtonRequestType.SignTx,
