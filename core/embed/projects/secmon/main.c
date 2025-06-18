@@ -50,6 +50,10 @@
 #include <sec/tropic.h>
 #endif
 
+#ifdef USE_HASH_PROCESSOR
+#include <sec/hash_processor.h>
+#endif
+
 static void drivers_init(void) {
   flash_init();
 
@@ -87,6 +91,10 @@ static void drivers_init(void) {
 
 #ifdef USE_BACKUP_RAM
   backup_ram_init();
+#endif
+
+#ifdef USE_HASH_PROCESSOR
+  hash_processor_init();
 #endif
 }
 
