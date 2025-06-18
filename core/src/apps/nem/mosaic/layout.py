@@ -11,6 +11,7 @@ if TYPE_CHECKING:
         NEMMosaicSupplyChange,
         NEMTransactionCommon,
     )
+    from trezor.ui.layouts import PropertyType
 
 
 async def ask_mosaic_creation(
@@ -18,9 +19,9 @@ async def ask_mosaic_creation(
 ) -> None:
     from ..layout import require_confirm_fee
 
-    creation_message = [
-        (TR.nem__create_mosaic, creation.definition.mosaic),
-        (TR.nem__under_namespace, creation.definition.namespace),
+    creation_message: list[PropertyType] = [
+        (TR.nem__create_mosaic, creation.definition.mosaic, False),
+        (TR.nem__under_namespace, creation.definition.namespace, False),
     ]
     await require_confirm_content(TR.nem__create_mosaic, creation_message)
     await _require_confirm_properties(creation.definition)
@@ -36,9 +37,9 @@ async def ask_supply_change(
 
     from ..layout import require_confirm_text
 
-    supply_message = [
-        (TR.nem__modify_supply_for, change.mosaic),
-        (TR.nem__under_namespace, change.namespace),
+    supply_message: list[PropertyType] = [
+        (TR.nem__modify_supply_for, change.mosaic, False),
+        (TR.nem__under_namespace, change.namespace, False),
     ]
     await require_confirm_content(TR.nem__supply_change, supply_message)
     if change.type == NEMSupplyChangeType.SupplyChange_Decrease:

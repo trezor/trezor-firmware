@@ -247,7 +247,7 @@ async def confirm_action_unknown(action: EosActionCommon, checksum: bytes) -> No
         (
             (TR.eos__contract, eos_name_to_string(action.account), False),
             (TR.eos__action_name, eos_name_to_string(action.name), False),
-            (TR.eos__checksum, checksum, False),
+            (TR.eos__checksum, checksum, True),
         ),
         hold=is_last,
         br_code=ButtonRequestType.ConfirmOutput,
