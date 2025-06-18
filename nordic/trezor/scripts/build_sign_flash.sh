@@ -49,10 +49,10 @@ while getopts ${OPTSTRING} opt; do
       PRISTINE="--pristine"
       ;;
     d)
-      DEBUG="-- -DOVERLAY_CONFIG=debug.conf"
+      DEBUG="-- -DOVERLAY_CONFIG=debug.conf -Dmcuboot_EXTRA_CONF_FILE=\"$PWD/trezor-ble/sysbuild/mcuboot.conf;$PWD/trezor-ble/sysbuild/mcuboot_debug.conf\""
       ;;
     r)
-      PRODUCTION="-- -DOVERLAY_CONFIG=prod.conf"
+      PRODUCTION="-- -DOVERLAY_CONFIG=prod.conf -Dmcuboot_EXTRA_CONF_FILE=\"$PWD/trezor-ble/sysbuild/mcuboot.conf;$PWD/trezor-ble/sysbuild/mcuboot_prod.conf\""
       ;;
     s)
       SIGN=1
