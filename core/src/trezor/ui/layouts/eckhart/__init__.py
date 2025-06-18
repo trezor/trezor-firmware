@@ -717,7 +717,7 @@ def confirm_properties(
         (
             prop[0],
             prop[1],
-            prop[2] if (len(prop) == 3 and prop[2] is not None) else True,
+            prop[2] if prop[2] is not None else True,
         )
         for prop in props
     ]

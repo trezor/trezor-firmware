@@ -87,7 +87,7 @@ async def confirm_create_account_op(op: StellarCreateAccountOp) -> None:
         "op_create_account",
         TR.stellar__create_account,
         (
-            (TR.words__account, op.new_account, False),
+            (TR.words__account, op.new_account, True),
             (TR.stellar__initial_balance, format_amount(op.starting_balance), False),
         ),
     )
