@@ -38,6 +38,12 @@ static secbool hash_match(const uint8_t *hash, const uint8_t *hash_00,
 }
 
 #define UZLIB_WINDOW_SIZE (1 << 10)
+_Static_assert(
+    UZLIB_WINDOW_SIZE >= IMAGE_HEADER_SIZE,
+    "UZLIB_WINDOW_SIZE must be at least as large as IMAGE_HEADER_SIZE");
+_Static_assert(
+    BOOTLOADER_MAXSIZE <= IMAGE_CHUNK_SIZE,
+    "BOOTLOADER_MAXSIZE must be less than or equal to IMAGE_CHUNK_SIZE");
 
 static void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
                           const void *src, uint32_t srcsize, void *dest,
@@ -99,17 +105,50 @@ void bl_check_replace(const uint8_t *data, size_t len) {
          "Bootloader header decompression failed");
 
   const image_header *new_bld_hdr = read_image_header(
-      (uint8_t *)decomp_out, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_MAXSIZE);
+      (uint8_t *)&decomp_out, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_MAXSIZE);
 
-  ensure(new_bld_hdr == (const image_header *)decomp_out ? sectrue : secfalse,
+  ensure(new_bld_hdr == (const image_header *)&decomp_out ? sectrue : secfalse,
          "Invalid embedded bootloader");
 
   ensure(check_image_model(new_bld_hdr), "Incompatible embedded bootloader");
 
+  ensure(check_bootloader_header_sig(new_bld_hdr),
+         "Invalid embedded bootloader signature");
+
   const image_header *current_bld_hdr =
       read_image_header(bl_data, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_MAXSIZE);
 
-  // todo check sig and contents, as data is now coming from outside
+  uint8_t new_bld_hash[IMAGE_HASH_DIGEST_LENGTH] = {0};
+  uint8_t new_bld_hash_expected[IMAGE_HASH_DIGEST_LENGTH] = {0};
+
+  IMAGE_HASH_CTX ctx;
+  IMAGE_HASH_INIT(&ctx);
+
+  // backup new bld header values, as it will be overwritten by uzlib
+  size_t header_offset = new_bld_hdr->hdrlen;
+  memcpy(new_bld_hash_expected, &new_bld_hdr->hashes[0],
+         IMAGE_HASH_DIGEST_LENGTH);
+  uint32_t new_bld_hw_model = new_bld_hdr->hw_model;
+  uint8_t new_bld_monotonic = new_bld_hdr->monotonic;
+
+  do {
+    uint8_t *p = (uint8_t *)decomp_out + header_offset;
+    uint32_t size = decomp.dest - (uint8_t *)decomp_out - header_offset;
+    IMAGE_HASH_UPDATE(&ctx, p, size);
+    decomp.dest = (uint8_t *)decomp_out;
+    header_offset =
+        0;  // after the first chunk, we don't need to skip the header anymore
+  } while (uzlib_uncompress(&decomp) >= 0);
+
+  IMAGE_HASH_FINAL(&ctx, new_bld_hash);
+
+  if (0 !=
+      memcmp(new_bld_hash, new_bld_hash_expected, IMAGE_HASH_DIGEST_LENGTH)) {
+    // the hash in the header does not match the computed hash
+    error_shutdown("Invalid bootloader contents");
+  }
+
+  memset(&decomp, 0, sizeof(struct uzlib_uncomp));
 
   // cannot find valid header for current bootloader, something is wrong
   ensure(current_bld_hdr == (const image_header *)bl_data ? sectrue : secfalse,
@@ -117,7 +156,7 @@ void bl_check_replace(const uint8_t *data, size_t len) {
 
   ensure(check_image_model(current_bld_hdr), "Incompatible bootloader found");
 
-  if (new_bld_hdr->monotonic < current_bld_hdr->monotonic) {
+  if (new_bld_monotonic < current_bld_hdr->monotonic) {
     // reject downgrade
     mpu_reconfig(mode);
     return;
@@ -126,8 +165,8 @@ void bl_check_replace(const uint8_t *data, size_t len) {
   uint32_t board_name = get_board_name();
   if (board_name == 0 || strncmp((const char *)&board_name, "T2T1", 4) == 0) {
     // no board capabilities, assume Model T
-    if ((strncmp((const char *)&new_bld_hdr->hw_model, "T2T1", 4) != 0) &&
-        (new_bld_hdr->hw_model != 0)) {
+    if ((strncmp((const char *)&new_bld_hw_model, "T2T1", 4) != 0) &&
+        (new_bld_hw_model != 0)) {
       // reject non-model T bootloader
       // 0 represents pre-model check bootloader
       error_shutdown("Incompatible embedded bootloader");
@@ -146,6 +185,12 @@ void bl_check_replace(const uint8_t *data, size_t len) {
   ensure(flash_unlock_write(), NULL);
 
   uint32_t offset = 0;
+
+  uzlib_prepare(&decomp, decomp_window, data, len, decomp_out,
+                sizeof(decomp_out));
+
+  ensure((uzlib_uncompress(&decomp) == TINF_OK) ? sectrue : secfalse,
+         "Bootloader decompression failed");
 
   do {
     uint32_t *p = decomp_out;

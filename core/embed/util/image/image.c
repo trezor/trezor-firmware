@@ -29,6 +29,18 @@ _Static_assert(VENDOR_HEADER_MAX_SIZE + IMAGE_HEADER_SIZE <= IMAGE_CHUNK_SIZE,
                "The size of the firmware headers must be less than or equal to "
                "IMAGE_CHUNK_SIZE");
 
+const uint8_t BOARDLOADER_KEY_M = 2;
+const uint8_t BOARDLOADER_KEY_N = 3;
+static const uint8_t * const BOARDLOADER_KEYS[] = {
+#if !PRODUCTION
+  (const uint8_t *)"\xdb\x99\x5f\xe2\x51\x69\xd1\x41\xca\xb9\xbb\xba\x92\xba\xa0\x1f\x9f\x2e\x1e\xce\x7d\xf4\xcb\x2a\xc0\x51\x90\xf3\x7f\xcc\x1f\x9d",
+  (const uint8_t *)"\x21\x52\xf8\xd1\x9b\x79\x1d\x24\x45\x32\x42\xe1\x5f\x2e\xab\x6c\xb7\xcf\xfa\x7b\x6a\x5e\xd3\x00\x97\x96\x0e\x06\x98\x81\xdb\x12",
+  (const uint8_t *)"\x22\xfc\x29\x77\x92\xf0\xb6\xff\xc0\xbf\xcf\xdb\x7e\xdb\x0c\x0a\xa1\x4e\x02\x5a\x36\x5e\xc0\xe3\x42\xe8\x6e\x38\x29\xcb\x74\xb6",
+#else
+    MODEL_BOARDLOADER_KEYS
+#endif
+};
+
 const uint8_t BOOTLOADER_KEY_M = 2;
 const uint8_t BOOTLOADER_KEY_N = 3;
 static const uint8_t * const BOOTLOADER_KEYS[] = {
@@ -384,4 +396,9 @@ secbool check_firmware_header(const uint8_t *header, size_t header_size,
   IMAGE_HASH_CALC(header, vhdr.hdrlen + ihdr->hdrlen, info->hash);
 
   return sectrue;
+}
+
+secbool check_bootloader_header_sig(const image_header *const hdr) {
+  return check_image_header_sig(hdr, BOARDLOADER_KEY_M, BOARDLOADER_KEY_N,
+                                BOARDLOADER_KEYS);
 }

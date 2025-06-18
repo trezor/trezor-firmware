@@ -27,7 +27,7 @@
 
 #include "../nrf_internal.h"
 #include "rust_smp.h"
-#include "sec/hash_processor.h"
+#include "sha2.h"
 #include "sys/systick.h"
 
 #define IMAGE_HASH_LEN 32
@@ -134,7 +134,10 @@ bool nrf_update(const uint8_t *image_ptr, size_t image_len) {
 
   uint8_t sha256[SHA256_DIGEST_LENGTH] = {0};
 
-  hash_processor_sha256_calc(image_ptr, image_len, sha256);
+  SHA256_CTX ctx;
+  sha256_Init(&ctx);
+  sha256_Update(&ctx, image_ptr, image_len);
+  sha256_Final(&ctx, sha256);
 
   smp_upload_app_image(image_ptr, image_len, sha256, SHA256_DIGEST_LENGTH);
 

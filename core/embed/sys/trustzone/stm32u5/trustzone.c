@@ -521,6 +521,10 @@ void tz_init(void) {
   HAL_GTZC_TZSC_ConfigPeriphAttributes(
       GTZC_PERIPH_IWDG, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
 
+  // Set HASH as secure & privileged
+  HAL_GTZC_TZSC_ConfigPeriphAttributes(
+      GTZC_PERIPH_HASH, GTZC_TZSC_PERIPH_SEC | GTZC_TZSC_PERIPH_PRIV);
+
   // Set all interrupts as non-secure
   for (int i = 0; i < 512; i++) {
     NVIC_SetTargetState(i);
@@ -530,9 +534,10 @@ void tz_init(void) {
   NVIC_ClearTargetState(GTZC_IRQn);
 
   // Make GPDMA1 non-secure & privilege mode
+  // Channel 12 is secure, all others are non-secure
 
   __HAL_RCC_GPDMA1_CLK_ENABLE();
-  GPDMA1->SECCFGR &= ~0xFFFF;
+  GPDMA1->SECCFGR &= ~0xEFFF;
   GPDMA1->PRIVCFGR |= 0xFFFF;
 
   // Enable all GPIOS and make them non-secure & privileged
