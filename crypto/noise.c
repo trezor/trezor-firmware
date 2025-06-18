@@ -27,7 +27,8 @@
 #include "rand.h"
 #include "sha2.h"
 
-_Static_assert(KEY_SIZE == SHA256_DIGEST_LENGTH);
+_Static_assert(KEY_SIZE == SHA256_DIGEST_LENGTH,
+               "KEY_SIZE must be equal to SHA256_DIGEST_LENGTH");
 
 static uint8_t protocol_name[32] = {'N', 'o', 'i', 's', 'e', '_',  'K',  'K',
                                     '1', '_', '2', '5', '5', '1',  '9',  '_',
