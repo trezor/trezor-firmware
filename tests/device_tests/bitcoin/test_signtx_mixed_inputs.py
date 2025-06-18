@@ -18,6 +18,7 @@ from trezorlib import btc, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
+from ...input_flows import InputFlowConfirmAllWarnings
 from ...tx_cache import TxCache
 from .signtx import assert_tx_matches
 
@@ -59,6 +60,8 @@ def test_non_segwit_segwit_inputs(client: Client):
     )
 
     with client:
+        IF = InputFlowConfirmAllWarnings(client)
+        client.set_input_flow(IF.get())
         signatures, serialized_tx = btc.sign_tx(
             client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_API
         )
@@ -95,6 +98,8 @@ def test_segwit_non_segwit_inputs(client: Client):
     )
 
     with client:
+        IF = InputFlowConfirmAllWarnings(client)
+        client.set_input_flow(IF.get())
         signatures, serialized_tx = btc.sign_tx(
             client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_API
         )
@@ -139,6 +144,8 @@ def test_segwit_non_segwit_segwit_inputs(client: Client):
     )
 
     with client:
+        IF = InputFlowConfirmAllWarnings(client)
+        client.set_input_flow(IF.get())
         signatures, serialized_tx = btc.sign_tx(
             client, "Testnet", [inp1, inp2, inp3], [out1], prev_txes=TX_API
         )
@@ -181,6 +188,8 @@ def test_non_segwit_segwit_non_segwit_inputs(client: Client):
     )
 
     with client:
+        IF = InputFlowConfirmAllWarnings(client)
+        client.set_input_flow(IF.get())
         signatures, serialized_tx = btc.sign_tx(
             client, "Testnet", [inp1, inp2, inp3], [out1], prev_txes=TX_API
         )

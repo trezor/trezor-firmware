@@ -345,6 +345,8 @@ def test_send_both(client: Client):
     )
 
     with client:
+        IF = InputFlowConfirmAllWarnings(client)
+        client.set_input_flow(IF.get())
         client.set_expected_responses(
             [
                 request_input(0),

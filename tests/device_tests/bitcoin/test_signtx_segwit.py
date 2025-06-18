@@ -22,6 +22,7 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
 
 from ...common import is_core
+from ...input_flows import InputFlowConfirmAllWarnings
 from ...tx_cache import TxCache
 from .signtx import (
     assert_tx_matches,
@@ -422,6 +423,8 @@ def test_attack_mixed_inputs(client: Client):
         expected_responses.insert(-2, request_input(0))
 
     with client:
+        IF = InputFlowConfirmAllWarnings(client)
+        client.set_input_flow(IF.get())
         # Sign unmodified transaction.
         # "Fee over threshold" warning is displayed - fee is the whole TRUE_AMOUNT
         client.set_expected_responses(expected_responses)
@@ -447,6 +450,8 @@ def test_attack_mixed_inputs(client: Client):
         )
 
     with pytest.raises(TrezorFailure) as e, client:
+        IF = InputFlowConfirmAllWarnings(client)
+        client.set_input_flow(IF.get())
         client.set_expected_responses(expected_responses)
         btc.sign_tx(
             client,

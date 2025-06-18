@@ -180,6 +180,16 @@ def confirm_multisig_different_paths_warning() -> Awaitable[None]:
     )
 
 
+def confirm_multiple_accounts_warning() -> Awaitable[None]:
+    return show_warning(
+        "sending_from_multiple_accounts",
+        TR.send__from_multiple_accounts,
+        TR.words__continue_anyway_question,
+        button=TR.buttons__continue,
+        br_code=ButtonRequestType.SignTx,
+    )
+
+
 def confirm_homescreen(image: bytes) -> Awaitable[None]:
     return raise_if_not_confirmed(
         trezorui_api.confirm_homescreen(
