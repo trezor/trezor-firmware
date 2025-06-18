@@ -449,7 +449,7 @@ async def confirm_output(
 
     await raise_if_not_confirmed(
         trezorui_api.flow_confirm_output(
-            title=TR.words__address,
+            title=TR.words__send,
             subtitle=title,
             message=address,
             extra=None,
@@ -654,7 +654,7 @@ def confirm_amount(
     br_name: str = "confirm_amount",
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
-    description = description or f"{TR.words__amount}:"  # def_arg
+    description = description or f"{TR.words__send}:"  # def_arg
     return confirm_value(
         title,
         amount,
