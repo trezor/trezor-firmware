@@ -134,7 +134,7 @@ static pm_power_status_t pm_handle_state_hibernate(pm_driver_t* drv) {
     drv->request_hibernate = false;
 
     // Put PMIC into ship mode (ultra-low power)
-    pm_control_hibernate();
+    pmic_enter_shipmode();
     return PM_STATE_HIBERNATE;
   }
 

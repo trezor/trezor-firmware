@@ -18,12 +18,14 @@
  */
 #ifdef KERNEL_MODE
 
+#include <trezor_rtl.h>
+
 #include <sys/backup_ram.h>
 #include <sys/irq.h>
 #include <sys/pmic.h>
+#include <sys/suspend.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
-#include <trezor_rtl.h>
 
 #ifdef USE_RTC
 #include <sys/rtc.h>
@@ -233,7 +235,7 @@ pm_status_t pm_suspend(void) {
   // rtc_wakeup_timer_start(10);
 #endif
 
-  pm_wakeup_flags_t wakeup_flags = pm_control_suspend();
+  wakeup_flags_t wakeup_flags = system_suspend();
 
   // TODO: Handle wake-up flags
   UNUSED(wakeup_flags);
@@ -464,44 +466,6 @@ static bool pm_load_recovery_data(pm_recovery_data_t* recovery) {
   }
 
   return true;
-}
-
-pm_status_t pm_wakeup_flags_set(pm_wakeup_flags_t flags) {
-  pm_driver_t* drv = &g_pm;
-  if (!drv->initialized) {
-    return PM_NOT_INITIALIZED;
-  }
-  irq_key_t irq_key = irq_lock();
-  drv->wakeup_flags |= flags;
-  irq_unlock(irq_key);
-
-  return PM_OK;
-}
-
-pm_status_t pm_wakeup_flags_reset(void) {
-  pm_driver_t* drv = &g_pm;
-
-  if (!drv->initialized) {
-    return PM_NOT_INITIALIZED;
-  }
-
-  irq_key_t irq_key = irq_lock();
-  drv->wakeup_flags = 0;
-  irq_unlock(irq_key);
-  return PM_OK;
-}
-
-pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t* flags) {
-  pm_driver_t* drv = &g_pm;
-
-  if (!drv->initialized) {
-    return PM_NOT_INITIALIZED;
-  }
-
-  irq_key_t irq_key = irq_lock();
-  *flags = drv->wakeup_flags;
-  irq_unlock(irq_key);
-  return PM_OK;
 }
 
 pm_status_t pm_set_soc_limit(uint8_t limit) {

@@ -268,17 +268,19 @@ def configure(
         defines += ["USE_PMIC"]
         features_available.append("pmic")
 
-    if "power_save" in features_wanted:
-        sources += ["embed/sys/power_save/stm32u5/power_save.c"]
-        paths += ["embed/sys/power_save/inc"]
-        defines += [("USE_POWER_SAVE", "1")]
+    if "suspend" in features_wanted:
+        sources += [
+            "embed/sys/suspend/stm32u5/suspend.c",
+            "embed/sys/suspend/stm32u5/suspend_io.c",
+        ]
+        paths += ["embed/sys/suspend/inc"]
+        defines += [("USE_SUSPEND", "1")]
 
     if "power_manager" in features_wanted:
         sources += [
             "embed/sys/power_manager/stm32u5/power_manager.c",
             "embed/sys/power_manager/stm32u5/power_monitoring.c",
             "embed/sys/power_manager/stm32u5/power_states.c",
-            "embed/sys/power_manager/stm32u5/power_control.c",
             "embed/sys/power_manager/fuel_gauge/fuel_gauge.c",
             "embed/sys/power_manager/fuel_gauge/battery_model.c",
             "embed/sys/power_manager/stwlc38/stwlc38.c",

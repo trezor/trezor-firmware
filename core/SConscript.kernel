@@ -40,14 +40,15 @@ FEATURES_WANTED = [
     "input",
     "optiga",
     "power_manager",
-    "power_save",
     "rgb_led",
     "rtc",
     "sd_card",
     "secmon_layout",
+    "smp",
+    "suspend",
     "tropic",
     "usb",
-    "smp",
+
     ]
 
 if DISABLE_OPTIGA:

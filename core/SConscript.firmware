@@ -58,6 +58,7 @@ FEATURES_WANTED = [
     "rgb_led",
     "sd_card",
     "secmon_layout",
+    "suspend",
     "tropic",
     "usb",
     ]

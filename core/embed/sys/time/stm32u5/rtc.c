@@ -24,8 +24,8 @@
 
 #include <sys/irq.h>
 #include <sys/mpu.h>
-#include <sys/power_manager.h>
 #include <sys/rtc.h>
+#include <sys/suspend.h>
 
 // RTC driver structure
 typedef struct {
@@ -102,7 +102,7 @@ void RTC_IRQHandler(void) {
     // Deactivate the wakeup timer to prevent re-triggering
     HAL_RTCEx_DeactivateWakeUpTimer(&g_rtc_driver.hrtc);
     // Signal the wakeup event to the power manager
-    pm_wakeup_flags_set(PM_WAKEUP_FLAG_RTC);
+    wakeup_flags_set(WAKEUP_FLAG_RTC);
   }
 
   mpu_restore(mpu_mode);
