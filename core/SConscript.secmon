@@ -33,9 +33,9 @@ FEATURE_FLAGS = {
 FEATURES_WANTED = [
     "consumption_mask",
     "optiga",
-    "power_save",
     "secmon_layout",
     "secure_domain",
+    "suspend",
     "tropic",
     ]
 

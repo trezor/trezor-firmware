@@ -29,7 +29,7 @@
  * This function blocks until an interrupt wakes the CPU.
  * Upon wake-up, it restores the system clock so the CPU can run at full speed.
  */
-void power_save_suspend_cpu(void);
+void suspend_cpu(void);
 
 /**
  * @brief State of the drivers before entering a low-power mode
@@ -55,7 +55,7 @@ typedef struct {
  * @param wakeup_params Pointer to a structure that will be filled with
  *                      the state of the drivers before entering low-power mode.
  */
-void power_save_suspend_io(power_save_wakeup_params_t *wakeup_params);
+void suspend_drivers(power_save_wakeup_params_t *wakeup_params);
 
 /**
  * @brief Resumes I/O drivers.
@@ -67,7 +67,7 @@ void power_save_suspend_io(power_save_wakeup_params_t *wakeup_params);
  * @param wakeup_params Pointer to a structure that contains the state of the
  *                      drivers before entering low-power mode.
  */
-void power_save_resume_io(const power_save_wakeup_params_t *wakeup_params);
+void resume_drivers(const power_save_wakeup_params_t *wakeup_params);
 
 /**
  * @brief Suspends secure peripherals.
@@ -75,7 +75,7 @@ void power_save_resume_io(const power_save_wakeup_params_t *wakeup_params);
  * This function is called before the device enters a low-power state.
  * It suspends secure peripherals to reduce power consumption.
  */
-void power_save_suspend_secure_io(void);
+void suspend_secure_drivers(void);
 
 /**
  * @brief Resumes secure peripherals.
@@ -84,4 +84,4 @@ void power_save_suspend_secure_io(void);
  * It resumes secure peripherals that were suspended before entering
  * the low-power state.
  */
-void power_save_resume_secure_io(void);
+void resume_secure_drivers(void);

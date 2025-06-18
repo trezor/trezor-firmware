@@ -21,16 +21,6 @@
 
 #include <trezor_types.h>
 
-/* Power manager wakeup flags */
-typedef enum {
-  PM_WAKEUP_FLAG_BUTTON = 0x1 << 0,  // Button pressed
-  PM_WAKEUP_FLAG_WPC = 0x1 << 1,     // Wireless power charging event
-  PM_WAKEUP_FLAG_BLE = 0x1 << 2,     // Bluetooth connection event
-  PM_WAKEUP_FLAG_NFC = 0x1 << 3,     // NFC event
-  PM_WAKEUP_FLAG_USB = 0x1 << 4,     // USB event
-  PM_WAKEUP_FLAG_RTC = 0x1 << 5,     // RTC wake-up timer
-} pm_wakeup_flags_t;
-
 /* power manager status codes */
 typedef enum {
   PM_OK = 0,
@@ -209,23 +199,3 @@ pm_status_t pm_set_soc_limit(uint8_t limit);
  * @return pm_status_t Status code indicating success or failure
  */
 pm_status_t pm_store_data_to_backup_ram();
-
-/**
- * @brief Set wakeup flags
- * @param flags Wakeup flags to set
- * @return pm_status_t Status code indicating success or failure
- */
-pm_status_t pm_wakeup_flags_set(pm_wakeup_flags_t flags);
-
-/**
- * @brief Reset wakeup flags
- * @return pm_status_t Status code indicating success or failure
- */
-pm_status_t pm_wakeup_flags_reset(void);
-
-/**
- * @brief Get wakeup flags
- * @param flags Pointer to store the current wakeup flags
- * @return pm_status_t Status code indicating success or failure
- */
-pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t* flags);

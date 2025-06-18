@@ -25,10 +25,13 @@
 #include <io/nrf.h>
 #include <sys/irq.h>
 #include <sys/mpu.h>
-#include <sys/power_manager.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
 #include <util/tsqueue.h>
+
+#ifdef USE_SUSPEND
+#include <sys/suspend.h>
+#endif
 
 #include "../crc8.h"
 #include "../nrf_internal.h"
@@ -305,10 +308,10 @@ void NRF_EXTI_INTERRUPT_HANDLER(void) {
 
   nrf_driver_t *drv = &g_nrf_driver;
 
-#ifdef USE_POWER_MANAGER
+#ifdef USE_SUSPEND
   if (drv->wakeup) {
     // Inform the power manager module about nrf/ble wakeup
-    pm_wakeup_flags_set(PM_WAKEUP_FLAG_BLE);
+    wakeup_flags_set(WAKEUP_FLAG_BLE);
     drv->wakeup = false;
   }
 #endif
