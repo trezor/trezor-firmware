@@ -32,7 +32,6 @@ async def pair_new_device() -> None:
                     title="Bluetooth pairing",
                     description="Pairing code match?",
                     code=f"{code:0>6}",
-                    button=True,
                 ),
                 None,
             )

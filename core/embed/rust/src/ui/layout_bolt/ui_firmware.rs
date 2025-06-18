@@ -896,14 +896,13 @@ impl FirmwareUI for UIBolt {
         title: TString<'static>,
         description: TString<'static>,
         code: TString<'static>,
-        button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Self::confirm_action(
             title,
             Some(code),
             Some(description),
             None,
-            button.then_some(TR::buttons__confirm.into()),
+            None,
             None,
             false,
             false,

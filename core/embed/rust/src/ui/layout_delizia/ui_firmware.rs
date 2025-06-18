@@ -920,7 +920,6 @@ impl FirmwareUI for UIDelizia {
         _title: TString<'static>,
         _description: TString<'static>,
         _code: TString<'static>,
-        _button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
             c"show_pairing_code not supported",

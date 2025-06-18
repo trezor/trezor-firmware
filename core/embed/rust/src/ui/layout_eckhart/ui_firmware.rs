@@ -18,7 +18,7 @@ use crate::{
             },
             ComponentExt as _, Empty, FormattedText, Timeout,
         },
-        geometry::{Alignment, LinearPlacement, Offset},
+        geometry::{LinearPlacement, Offset},
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
             util::{ConfirmValueParams, PropsList, RecoveryType, StrOrBytes},
@@ -1083,27 +1083,9 @@ impl FirmwareUI for UIEckhart {
         title: TString<'static>,
         description: TString<'static>,
         code: TString<'static>,
-        button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let mut ops = OpTextLayout::new(theme::firmware::TEXT_REGULAR);
-        ops.add_text(description, fonts::FONT_SATOSHI_REGULAR_38)
-            .add_newline()
-            .add_newline()
-            .add_newline()
-            .add_alignment(Alignment::Center)
-            .add_text(code, fonts::FONT_SATOSHI_EXTRALIGHT_72);
-        let mut screen = TextScreen::new(FormattedText::new(ops));
-        if button {
-            screen = screen
-                .with_header(Header::new(title))
-                .with_action_bar(ActionBar::new_cancel_confirm());
-        } else {
-            screen = screen.with_header(Header::new(title).with_close_button());
-        }
-        #[cfg(feature = "ble")]
-        let screen = crate::ui::component::BLEHandler::new(screen, false);
-        let layout = RootComponent::new(screen);
-        Ok(layout)
+        let flow = flow::show_pairing_code::new_show_pairing_code(title, description, code)?;
+        Ok(flow)
     }
 
     fn show_info(
