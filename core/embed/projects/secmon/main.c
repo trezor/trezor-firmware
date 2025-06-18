@@ -77,10 +77,6 @@ static void drivers_init(void) {
   check_oem_keys();
 #endif
 
-#if PRODUCTION || BOOTLOADER_QA
-  check_and_replace_bootloader();
-#endif
-
 #ifdef USE_OPTIGA
   optiga_init_and_configure();
 #endif

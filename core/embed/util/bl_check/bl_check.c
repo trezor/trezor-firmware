@@ -30,40 +30,15 @@
 #include "memzero.h"
 #include "uzlib.h"
 
-// symbols from bootloader.bin => bootloader.o
-extern const void _deflated_bootloader_start;
-extern const void _deflated_bootloader_size;
-
-#define CONCAT_NAME_HELPER(prefix, name, suffix) prefix##name##suffix
-#define CONCAT_NAME(name, var) CONCAT_NAME_HELPER(BOOTLOADER_, name, var)
-
-#if BOOTLOADER_QA
-// QA bootloaders
-#define BOOTLOADER_00 CONCAT_NAME(MODEL_INTERNAL_NAME_TOKEN, _QA_00)
-#define BOOTLOADER_FF CONCAT_NAME(MODEL_INTERNAL_NAME_TOKEN, _QA_FF)
-#else
-// normal bootloaders
-#define BOOTLOADER_00 CONCAT_NAME(MODEL_INTERNAL_NAME_TOKEN, _00)
-#define BOOTLOADER_FF CONCAT_NAME(MODEL_INTERNAL_NAME_TOKEN, _FF)
-#endif
-// clang-format on
-
-#if PRODUCTION || BOOTLOADER_QA
-static secbool latest_bootloader(const uint8_t *hash, int len) {
-  if (len != 32) return secfalse;
-
-  uint8_t hash_00[] = BOOTLOADER_00;
-  uint8_t hash_FF[] = BOOTLOADER_FF;
-
-  if (0 == memcmp(hash, hash_00, 32)) return sectrue;
-  if (0 == memcmp(hash, hash_FF, 32)) return sectrue;
+static secbool hash_match(const uint8_t *hash, const uint8_t *hash_00,
+                          const uint8_t *hash_FF) {
+  if (0 == memcmp(hash, hash_00, BLAKE2S_DIGEST_LENGTH)) return sectrue;
+  if (0 == memcmp(hash, hash_FF, BLAKE2S_DIGEST_LENGTH)) return sectrue;
   return secfalse;
 }
-#endif
 
 #define UZLIB_WINDOW_SIZE (1 << 10)
 
-#if PRODUCTION || BOOTLOADER_QA
 static void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
                           const void *src, uint32_t srcsize, void *dest,
                           uint32_t destsize) {
@@ -78,11 +53,14 @@ static void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
   decomp->dest_limit = decomp->dest + destsize;
   uzlib_uncompress_init(decomp, window, window ? UZLIB_WINDOW_SIZE : 0);
 }
-#endif
 
-void check_and_replace_bootloader(void) {
-#if PRODUCTION || BOOTLOADER_QA
+bool bl_check_check(const uint8_t *hash_00, const uint8_t *hash_FF,
+                    size_t hash_len) {
   mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
+
+  if (hash_len != BLAKE2S_DIGEST_LENGTH) {
+    error_shutdown("Invalid bootloader hash length");
+  }
 
   // compute current bootloader hash
   uint8_t hash[BLAKE2S_DIGEST_LENGTH];
@@ -94,15 +72,21 @@ void check_and_replace_bootloader(void) {
   // ensure(known_bootloader(hash, BLAKE2S_DIGEST_LENGTH), "Unknown bootloader
   // detected");
 
-  // do we have the latest bootloader?
-  if (sectrue == latest_bootloader(hash, BLAKE2S_DIGEST_LENGTH)) {
+  // does the bootloader match?
+  if (sectrue == hash_match(hash, hash_00, hash_FF)) {
     mpu_reconfig(mode);
-    return;
+    return false;
   }
 
-  // replace bootloader with the latest one
-  const uint32_t *data = (const uint32_t *)&_deflated_bootloader_start;
-  const uint32_t len = (const uint32_t)&_deflated_bootloader_size;
+  mpu_reconfig(mode);
+  return true;
+}
+
+void bl_check_replace(const uint8_t *data, size_t len) {
+  const uint32_t bl_len = flash_area_get_size(&BOOTLOADER_AREA);
+  const void *bl_data = flash_area_get_address(&BOOTLOADER_AREA, 0, bl_len);
+
+  mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
 
   struct uzlib_uncomp decomp = {0};
   uint8_t decomp_window[UZLIB_WINDOW_SIZE] = {0};
@@ -124,6 +108,8 @@ void check_and_replace_bootloader(void) {
 
   const image_header *current_bld_hdr =
       read_image_header(bl_data, BOOTLOADER_IMAGE_MAGIC, BOOTLOADER_MAXSIZE);
+
+  // todo check sig and contents, as data is now coming from outside
 
   // cannot find valid header for current bootloader, something is wrong
   ensure(current_bld_hdr == (const image_header *)bl_data ? sectrue : secfalse,
@@ -182,7 +168,6 @@ void check_and_replace_bootloader(void) {
   ensure(flash_lock_write(), NULL);
 
   mpu_reconfig(mode);
-#endif
 }
 
 #endif

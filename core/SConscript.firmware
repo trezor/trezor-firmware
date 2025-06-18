@@ -468,6 +468,7 @@ ALLPATHS = [
         'embed/models',
         'embed/gfx/inc',
         'embed/sys/bsp/inc',
+        'embed/util/bl_check/inc',
         'embed/util/image/inc',
         'embed/util/rsod/inc',
         'embed/util/scm_revision/inc',
@@ -906,6 +907,16 @@ if 'nrf' in FEATURES_AVAILABLE:
             'build/firmware/nrf_app.o',
             f'embed/models/{TREZOR_MODEL}/trezor-ble.bin',
             )
+
+tools.embed_compressed_binary(
+        obj_program,
+        env,
+        'bootloader',
+        'embed/projects/bootloaders/bootloader.o',
+        f'embed/models/{TREZOR_MODEL}/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
+        'firmware',
+        'bootloader',
+        )
 
 env.Depends(obj_program, qstr_generated)
 

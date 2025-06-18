@@ -38,9 +38,7 @@ impl CommonUI for UICaesar {
         show(&mut frame, fade_in);
     }
 
-    fn screen_update() {
-        unimplemented!()
-    }
+    fn screen_update() {}
 
     #[cfg(feature = "ui_debug_overlay")]
     fn render_debug_overlay<'s>(_target: &mut impl shape::Renderer<'s>, _info: DebugOverlay) {

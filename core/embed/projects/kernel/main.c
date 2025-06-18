@@ -157,9 +157,6 @@ void drivers_init() {
   check_oem_keys();
 #endif
 
-#if PRODUCTION || BOOTLOADER_QA
-  check_and_replace_bootloader();
-#endif
 #endif
 
 #ifdef USE_BUTTON

@@ -81,6 +81,10 @@
 #include <io/touch.h>
 #endif
 
+#if PRODUCTION || BOOTLOADER_QA
+#include <util/bl_check.h>
+#endif
+
 #include "syscall_context.h"
 #include "syscall_internal.h"
 #include "syscall_verifiers.h"
@@ -164,6 +168,19 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       if (!syscall_get_context()->task.in_callback) {
         sysevents_poll__verified(awaited, signalled, deadline);
       }
+    } break;
+
+    case SYSCALL_BL_CHECK_CHECK: {
+      const uint8_t *hash_00 = (const uint8_t *)args[0];
+      const uint8_t *hash_FF = (const uint8_t *)args[1];
+      size_t hash_len = args[2];
+      args[0] = bl_check_check__verified(hash_00, hash_FF, hash_len);
+    } break;
+
+    case SYSCALL_BL_CHECK_REPLACE: {
+      const uint8_t *data = (const uint8_t *)args[0];
+      size_t len = args[1];
+      bl_check_replace__verified(data, len);
     } break;
 
     case SYSCALL_REBOOT_DEVICE: {
