@@ -109,6 +109,9 @@ void drivers_init() {
   entropy_init();
 #ifdef USE_TAMPER
   tamper_init();
+#if PRODUCTION
+  tamper_external_enable();
+#endif
 #endif
   random_delays_init();
 #ifdef RDI

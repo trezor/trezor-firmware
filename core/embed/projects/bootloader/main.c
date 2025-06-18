@@ -229,9 +229,6 @@ static void drivers_init(secbool manufacturing_mode,
 
 #ifdef USE_TAMPER
   tamper_init();
-  if (manufacturing_mode != sectrue) {
-    tamper_external_enable();
-  }
 #endif
 
 #ifdef USE_TOUCH
