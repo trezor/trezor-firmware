@@ -124,6 +124,9 @@ void drivers_init() {
 #ifdef USE_BACKUP_RAM
   backup_ram_init();
 #endif
+#ifdef USE_HASH_PROCESSOR
+  hash_processor_init();
+#endif
 #endif  // SECURE_MODE
 
 #ifdef USE_RTC
@@ -144,10 +147,6 @@ void drivers_init() {
 
 #ifdef SYSTEM_VIEW
   enable_systemview();
-#endif
-
-#ifdef USE_HASH_PROCESSOR
-  hash_processor_init();
 #endif
 
   display_init(DISPLAY_JUMP_BEHAVIOR);

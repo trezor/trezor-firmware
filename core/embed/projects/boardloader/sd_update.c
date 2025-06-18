@@ -25,8 +25,7 @@
 __attribute__((section(".buf")))
 uint32_t sdcard_buf[BOOTLOADER_MAXSIZE / sizeof(uint32_t)];
 
-static uint32_t check_sdcard(const uint8_t *const *keys, uint8_t key_m,
-                             uint8_t key_n) {
+static uint32_t check_sdcard(void) {
   if (sectrue != sdcard_power_on()) {
     return 0;
   }
@@ -57,7 +56,7 @@ static uint32_t check_sdcard(const uint8_t *const *keys, uint8_t key_m,
       return 0;
     }
 
-    if (sectrue != check_image_header_sig(hdr, key_m, key_n, keys)) {
+    if (sectrue != check_bootloader_header_sig(hdr)) {
       return 0;
     }
 
@@ -91,8 +90,7 @@ static uint32_t check_sdcard(const uint8_t *const *keys, uint8_t key_m,
 
 static void progress_callback(int pos, int len) { term_printf("."); }
 
-static secbool copy_sdcard(const uint8_t *const *keys, uint8_t key_m,
-                           uint8_t key_n) {
+static secbool copy_sdcard(void) {
   display_set_backlight(255);
 
   term_printf("Trezor Boardloader\n");
@@ -107,7 +105,7 @@ static secbool copy_sdcard(const uint8_t *const *keys, uint8_t key_m,
   for (int i = 10; i >= 0; i--) {
     term_printf("%d ", i);
     hal_delay(1000);
-    codelen = check_sdcard(keys, key_m, key_n);
+    codelen = check_sdcard();
     if (0 == codelen) {
       term_printf("\n\nno SD card, aborting\n");
       return secfalse;
@@ -140,8 +138,7 @@ static secbool copy_sdcard(const uint8_t *const *keys, uint8_t key_m,
   return sectrue;
 }
 
-void sd_update_check_and_update(const uint8_t *const *keys, uint8_t key_m,
-                                uint8_t key_n) {
+void sd_update_check_and_update(void) {
   sdcard_init();
 
   // If the bootloader is being updated from SD card, we need to preserve the
@@ -152,18 +149,17 @@ void sd_update_check_and_update(const uint8_t *const *keys, uint8_t key_m,
       (const uint8_t *)BOOTLOADER_START, BOOTLOADER_IMAGE_MAGIC,
       flash_area_get_size(&BOOTLOADER_AREA));
 
-  if ((old_hdr != NULL) &&
-      (sectrue == check_image_header_sig(old_hdr, key_m, key_n, keys)) &&
+  if ((old_hdr != NULL) && (sectrue == check_bootloader_header_sig(old_hdr)) &&
       (sectrue ==
        check_image_contents(old_hdr, IMAGE_HEADER_SIZE, &BOOTLOADER_AREA))) {
     write_bootloader_min_version(old_hdr->monotonic);
   }
 
-  if (check_sdcard(keys, key_m, key_n) != 0) {
+  if (check_sdcard() != 0) {
 #ifdef FIXED_HW_DEINIT
     display_init(DISPLAY_RESET_CONTENT);
 #endif
-    copy_sdcard(keys, key_m, key_n);
+    copy_sdcard();
 #ifdef FIXED_HW_DEINIT
     display_deinit(DISPLAY_RETAIN_CONTENT);
 #endif

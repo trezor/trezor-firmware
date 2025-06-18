@@ -30,11 +30,10 @@ void bootargs_set__verified(boot_command_t command, const void *args,
 void bootargs_get_args__verified(boot_args_t *args);
 
 // ---------------------------------------------------------------------
-#if PRODUCTION || BOOTLOADER_QA
+
 #include <util/bl_check.h>
 
 void bl_check_replace__verified(const uint8_t *data, size_t len);
-#endif
 
 // ---------------------------------------------------------------------
 #include <sys/bootutils.h>

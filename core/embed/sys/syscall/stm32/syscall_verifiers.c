@@ -63,7 +63,7 @@ access_violation:
 }
 
 // ---------------------------------------------------------------------
-#if PRODUCTION || BOOTLOADER_QA
+
 void bl_check_replace__verified(const uint8_t *data, size_t len) {
   if (!probe_read_access(data, len)) {
     goto access_violation;
@@ -75,8 +75,6 @@ void bl_check_replace__verified(const uint8_t *data, size_t len) {
 access_violation:
   apptask_access_violation();
 }
-#endif
-
 // ---------------------------------------------------------------------
 
 void system_exit__verified(int exit_code) {

@@ -70,7 +70,6 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       bootargs_get_args__verified(boot_args);
     } break;
 
-#if PRODUCTION || BOOTLOADER_QA
     case SMCALL_BL_CHECK_CHECK: {
       args[0] = bl_check_check();
     } break;
@@ -80,7 +79,6 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       size_t len = args[1];
       bl_check_replace__verified(data, len);
     } break;
-#endif
 
     case SMCALL_GET_BOARD_NAME: {
       args[0] = get_board_name();

@@ -170,7 +170,6 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       }
     } break;
 
-#if PRODUCTION || BOOTLOADER_QA
     case SYSCALL_BL_CHECK_CHECK: {
       args[0] = bl_check_check();
     } break;
@@ -180,7 +179,6 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       size_t len = args[1];
       bl_check_replace__verified(data, len);
     } break;
-#endif
 
     case SYSCALL_REBOOT_DEVICE: {
       reboot_device();

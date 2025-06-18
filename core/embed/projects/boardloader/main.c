@@ -59,18 +59,6 @@
 #include "sd_update.h"
 #endif
 
-const uint8_t BOARDLOADER_KEY_M = 2;
-const uint8_t BOARDLOADER_KEY_N = 3;
-static const uint8_t * const BOARDLOADER_KEYS[] = {
-#if !PRODUCTION
-    (const uint8_t *)"\xdb\x99\x5f\xe2\x51\x69\xd1\x41\xca\xb9\xbb\xba\x92\xba\xa0\x1f\x9f\x2e\x1e\xce\x7d\xf4\xcb\x2a\xc0\x51\x90\xf3\x7f\xcc\x1f\x9d",
-    (const uint8_t *)"\x21\x52\xf8\xd1\x9b\x79\x1d\x24\x45\x32\x42\xe1\x5f\x2e\xab\x6c\xb7\xcf\xfa\x7b\x6a\x5e\xd3\x00\x97\x96\x0e\x06\x98\x81\xdb\x12",
-    (const uint8_t *)"\x22\xfc\x29\x77\x92\xf0\xb6\xff\xc0\xbf\xcf\xdb\x7e\xdb\x0c\x0a\xa1\x4e\x02\x5a\x36\x5e\xc0\xe3\x42\xe8\x6e\x38\x29\xcb\x74\xb6",
-#else
-    MODEL_BOARDLOADER_KEYS
-#endif
-};
-
 static void drivers_init(void) {
 #ifdef USE_PMIC
   pmic_init();
@@ -136,8 +124,7 @@ int main(void) {
   drivers_init();
 
 #ifdef USE_SD_CARD
-  sd_update_check_and_update(BOARDLOADER_KEYS, BOARDLOADER_KEY_M,
-                             BOARDLOADER_KEY_N);
+  sd_update_check_and_update();
 #endif
 
   const image_header *hdr = read_image_header(
@@ -147,9 +134,7 @@ int main(void) {
   ensure(hdr == (const image_header *)BOOTLOADER_START ? sectrue : secfalse,
          "invalid bootloader header");
 
-  ensure(check_image_header_sig(hdr, BOARDLOADER_KEY_M, BOARDLOADER_KEY_N,
-                                BOARDLOADER_KEYS),
-         "invalid bootloader signature");
+  ensure(check_bootloader_header_sig(hdr), "invalid bootloader signature");
 
   ensure(check_image_contents(hdr, IMAGE_HEADER_SIZE, &BOOTLOADER_AREA),
          "invalid bootloader hash");

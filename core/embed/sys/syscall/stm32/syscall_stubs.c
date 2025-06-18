@@ -87,7 +87,7 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
 // =============================================================================
 // bl_check.h
 // =============================================================================
-#if PRODUCTION || BOOTLOADER_QA
+
 bool bl_check_check(void) {
   return (bool)syscall_invoke0(SYSCALL_BL_CHECK_CHECK);
 }
@@ -95,8 +95,6 @@ bool bl_check_check(void) {
 void bl_check_replace(const uint8_t *data, size_t len) {
   syscall_invoke2((uint32_t)data, len, SYSCALL_BL_CHECK_REPLACE);
 }
-
-#endif
 
 // =============================================================================
 // bootutils.h
