@@ -49,6 +49,8 @@ def _transform_vendor_trust(data: bytes) -> bytes:
 
 
 class VendorTrust(Struct):
+    skip_secmon_verification: bool
+    provisioning_access: bool
     _dont_provide_secret: bool
     allow_run_with_secret: bool
     show_vendor_string: bool
@@ -60,7 +62,9 @@ class VendorTrust(Struct):
 
     SUBCON = c.Transformed(
         c.BitStruct(
-            "_reserved" / c.Default(c.BitsInteger(7), 0b1111111),
+            "_reserved" / c.Default(c.BitsInteger(5), 0b11111),
+            "skip_secmon_verification" / c.Default(c.Flag, 0),
+            "provisioning_access" / c.Default(c.Flag, 0),
             "_dont_provide_secret"
             / c.Default(c.Flag, lambda this: not this.allow_run_with_secret),
             "allow_run_with_secret" / c.Flag,
@@ -91,6 +95,7 @@ class VendorHeader(Struct):
     sig_m: int
     # sig_n: int
     hw_model: Model | bytes
+    runtime_limit_min: int
     pubkeys: list[bytes]
     text: str
     image: dict[str, t.Any]
@@ -110,7 +115,8 @@ class VendorHeader(Struct):
         "sig_n" / c.Rebuild(c.Int8ul, c.len_(c.this.pubkeys)),
         "trust" / VendorTrust.SUBCON,
         "hw_model" / EnumAdapter(c.Bytes(4), Model),
-        "_reserved" / c.Padding(10),
+        "runtime_limit_min" / c.Default(c.Int16ul, 0),
+        "_reserved" / c.Padding(8),
         "pubkeys" / c.Bytes(32)[c.this.sig_n],
         "text" / c.Aligned(4, c.PascalString(c.Int8ul, "utf-8")),
         "image" / ToifStruct,

@@ -2,10 +2,13 @@
     "header_len": 1024,
     "text": "DEV ONLY, DO NOT USE!",
     "hw_model": "T3W1",
+    "runtime_limit_min": 240,
     "expiry": 0,
     "version": [0, 0],
     "sig_m": 2,
     "trust": {
+        "skip_secmon_verification": false,
+        "provisioning_access": true,
         "allow_run_with_secret": true,
         "show_vendor_string": false,
         "require_user_click": false,

@@ -46,6 +46,7 @@ def configure(
         ("HSE_VALUE", "16000000"),
         ("USE_HSE", "1"),
         ("USE_BOOTARGS_RSOD", "1"),
+        ("USE_SECMON_VERIFICATION", "1"),
     ]
 
     if "display" in features_wanted:

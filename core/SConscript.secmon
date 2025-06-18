@@ -8,6 +8,7 @@ BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 PRODUCTION = ARGUMENTS.get('PRODUCTION', '0') == '1'
 BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
 BOOTLOADER_DEVEL = ARGUMENTS.get('BOOTLOADER_DEVEL', '0') == '1'
+UNSAFE_FW = ARGUMENTS.get('UNSAFE_FW', '0') == '1'
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
@@ -243,7 +244,7 @@ env = Environment(
     CPPDEFSUFFIX="'",
 )
 
-if TREZOR_MODEL not in ['T3W1', 'D002']:
+if TREZOR_MODEL not in ['T3W1', 'D002'] or UNSAFE_FW or not BOOTLOADER_DEVEL:
     # Skipping build and creating empty secmon.bin
     secmon_bin = env.Command(
         target='secmon.bin',
@@ -270,6 +271,11 @@ if FEATURE_FLAGS["AES_GCM"]:
 SOURCE_FIRMWARE = [
     'embed/projects/secmon/main.c',
 ]
+
+if TREZOR_MODEL not in ('T3B1', 'T3T1'):
+    SOURCE_FIRMWARE += [
+        'embed/projects/secmon/header.S',
+    ]
 
 if 'sd_card' in FEATURES_AVAILABLE:
     SDCARD = True
@@ -425,10 +431,17 @@ BINARY_NAME += "-" + tools.get_git_revision_short_hash()
 BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
 BINARY_NAME += ".bin"
 
-action_bin=[
-    '$OBJCOPY -O binary -j .flash -j .data -j .confidential -j .gnu.sgstubs $SOURCE ${TARGET}',
-    '$CP $TARGET ' + BINARY_NAME,
-]
+if TREZOR_MODEL in ('T3B1', 'T3T1'):
+    action_bin=[
+        '$OBJCOPY -O binary -j .secmon_header -j .flash -j .data -j .confidential -j .gnu.sgstubs $SOURCE ${TARGET}',
+        '$CP $TARGET ' + BINARY_NAME,
+    ]
+else:
+    action_bin=[
+        '$OBJCOPY -O binary -j .secmon_header -j .flash -j .data -j .confidential -j .gnu.sgstubs $SOURCE ${TARGET}',
+        '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
+        '$CP $TARGET ' + BINARY_NAME,
+    ]
 
 if STORAGE_INSECURE_TESTING_MODE:
     INSECURE_TESTING_MODE_STR = """
