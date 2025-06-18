@@ -45,6 +45,12 @@ void system_exit_fatal__verified(const char *message, size_t message_len,
 void reboot_and_upgrade__verified(const uint8_t hash[32]);
 
 // ---------------------------------------------------------------------
+#if PRODUCTION || BOOTLOADER_QA
+#include <util/bl_check.h>
+void bl_check_replace__verified(const uint8_t *data, size_t len);
+#endif
+
+// ---------------------------------------------------------------------
 #include <io/display.h>
 
 #ifdef FRAMEBUFFER

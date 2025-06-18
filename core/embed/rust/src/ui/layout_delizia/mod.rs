@@ -86,9 +86,7 @@ impl CommonUI for UIDelizia {
         show(&mut frame, fade_in);
     }
 
-    fn screen_update() {
-        unimplemented!()
-    }
+    fn screen_update() {}
 
     #[cfg(feature = "ui_debug_overlay")]
     fn render_debug_overlay<'s>(target: &mut impl shape::Renderer<'s>, info: DebugOverlay) {

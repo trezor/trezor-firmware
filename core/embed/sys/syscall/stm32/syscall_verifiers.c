@@ -63,6 +63,21 @@ access_violation:
 }
 
 // ---------------------------------------------------------------------
+#if PRODUCTION || BOOTLOADER_QA
+void bl_check_replace__verified(const uint8_t *data, size_t len) {
+  if (!probe_read_access(data, len)) {
+    goto access_violation;
+  }
+
+  bl_check_replace(data, len);
+  return;
+
+access_violation:
+  apptask_access_violation();
+}
+#endif
+
+// ---------------------------------------------------------------------
 
 void system_exit__verified(int exit_code) {
   systask_t *task = systask_active();

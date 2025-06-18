@@ -80,14 +80,7 @@ impl CommonUI for UIBolt {
         show(&mut frame, fade_in);
     }
 
-    fn screen_update() {
-        let mut frame = ErrorScreen::new(
-            "Update".into(),
-            "Finishing firmware update".into(),
-            "Do not turn off your Trezor".into(),
-        );
-        show(&mut frame, true);
-    }
+    fn screen_update() {}
 
     #[cfg(feature = "ui_debug_overlay")]
     fn render_debug_overlay<'s>(_target: &mut impl shape::Renderer<'s>, _info: DebugOverlay) {

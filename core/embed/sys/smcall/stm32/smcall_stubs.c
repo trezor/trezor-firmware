@@ -35,6 +35,19 @@ void bootargs_set(boot_command_t command, const void *args, size_t args_size) {
 void bootargs_get_args(boot_args_t *args) {
   smcall_invoke1((uint32_t)args, SMCALL_BOOTARGS_GET_ARGS);
 }
+// =============================================================================
+// bl_check.h
+// =============================================================================
+#if PRODUCTION || BOOTLOADER_QA
+bool bl_check_check(void) {
+  return (bool)smcall_invoke0(SMCALL_BL_CHECK_CHECK);
+}
+
+void bl_check_replace(const uint8_t *data, size_t len) {
+  smcall_invoke2((uint32_t)data, len, SMCALL_BL_CHECK_REPLACE);
+}
+
+#endif
 
 // =============================================================================
 // board_capabilities.h

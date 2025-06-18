@@ -49,6 +49,8 @@
 #include <sec/secret.h>
 #endif
 
+#include <util/bl_check.h>
+
 #include "smcall_numbers.h"
 #include "smcall_probe.h"
 #include "smcall_verifiers.h"
@@ -67,6 +69,18 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       boot_args_t *boot_args = (boot_args_t *)args[0];
       bootargs_get_args__verified(boot_args);
     } break;
+
+#if PRODUCTION || BOOTLOADER_QA
+    case SMCALL_BL_CHECK_CHECK: {
+      args[0] = bl_check_check();
+    } break;
+
+    case SMCALL_BL_CHECK_REPLACE: {
+      const uint8_t *data = (const uint8_t *)args[0];
+      size_t len = args[1];
+      bl_check_replace__verified(data, len);
+    } break;
+#endif
 
     case SMCALL_GET_BOARD_NAME: {
       args[0] = get_board_name();
