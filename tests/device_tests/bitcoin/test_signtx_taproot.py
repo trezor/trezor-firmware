@@ -224,8 +224,9 @@ def test_send_mixed(client: Client):
     )
 
     with client:
-        IF = InputFlowConfirmAllWarnings(client)
-        client.set_input_flow(IF.get())
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
         client.set_expected_responses(
             [
                 # process inputs
@@ -358,8 +359,9 @@ def test_attack_script_type(client: Client):
         return msg
 
     with client:
-        IF = InputFlowConfirmAllWarnings(client)
-        client.set_input_flow(IF.get())
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
         client.set_filter(messages.TxAck, attack_processor)
         client.set_expected_responses(
             [

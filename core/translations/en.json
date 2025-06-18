@@ -975,6 +975,7 @@
     "send__including_fee": "Including fee:",
     "send__maximum_fee": "Maximum fee",
     "send__receiving_to_multisig": "Receiving to a multisig address.",
+    "send__multisig_different_paths": "Using different paths for different XPUBs.",
     "send__send_from": "Send from",
     "send__cancel_transaction": "Cancel transaction",
     "send__sign_transaction": "Sign transaction",
