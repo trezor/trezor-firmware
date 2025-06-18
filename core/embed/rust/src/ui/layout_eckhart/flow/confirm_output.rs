@@ -345,7 +345,7 @@ pub fn new_confirm_output(
                 .into_paragraphs()
                 .with_placement(LinearPlacement::vertical()),
         )
-        .with_header(Header::new(TR::words__amount.into()).with_menu_button())
+        .with_header(Header::new(TR::words__send.into()).with_menu_button())
         .with_action_bar(ActionBar::new_double(
             Button::with_icon(theme::ICON_CHEVRON_UP),
             Button::with_text(TR::buttons__confirm.into()).styled(theme::button_confirm()),
