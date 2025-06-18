@@ -879,8 +879,7 @@ extern "C" fn new_show_pairing_code(n_args: usize, args: *const Obj, kwargs: *mu
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let code: TString = kwargs.get(Qstr::MP_QSTR_code)?.try_into()?;
-        let button: bool = kwargs.get_or(Qstr::MP_QSTR_button, true)?;
-        let layout = ModelUI::show_pairing_code(title, description, code, button)?;
+        let layout = ModelUI::show_pairing_code(title, description, code)?;
         let layout_obj = LayoutObj::new_root(layout)?;
         Ok(layout_obj.into())
     };
@@ -1694,7 +1693,6 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     title: str,
     ///     description: str,
     ///     code: str,
-    ///     button: bool = True,
     /// ) -> LayoutObj[UiResult]:
     ///     """Pairing device: second screen (pairing code).
     ///     Returns on BLEEvent::{PairingCanceled, Disconnected}."""

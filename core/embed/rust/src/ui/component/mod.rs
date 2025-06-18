@@ -36,6 +36,8 @@ pub use bar::Bar;
 pub use base::{Child, Component, ComponentExt, Event, EventCtx, FlowMsg, Never, Timer};
 #[cfg(feature = "ble")]
 pub use ble::BLEHandler;
+#[cfg(feature = "ble")]
+pub use ble::BLEHandlerMsg;
 pub use border::Border;
 pub use button_request::{ButtonRequestExt, SendButtonRequest};
 #[cfg(all(

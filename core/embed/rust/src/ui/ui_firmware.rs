@@ -329,7 +329,6 @@ pub trait FirmwareUI {
         title: TString<'static>,
         description: TString<'static>,
         code: TString<'static>,
-        button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_info(

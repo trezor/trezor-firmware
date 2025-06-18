@@ -3,15 +3,19 @@ use crate::ui::{
     event::BLEEvent,
     geometry::Rect,
     shape::Renderer,
+    util::Pager,
 };
+
+#[cfg(all(feature = "micropython", feature = "touch"))]
+use crate::ui::{component::swipe_detect::SwipeConfig, flow::Swipable};
 
 pub struct BLEHandler<T> {
     inner: T,
     waiting_for_pairing: bool,
 }
 
-pub enum BLEHandlerMsg<T> {
-    Content(T),
+pub enum BLEHandlerMsg<TMsg> {
+    Content(TMsg),
     PairingCode(u32),
     Cancelled,
 }
@@ -22,6 +26,19 @@ impl<T> BLEHandler<T> {
             inner,
             waiting_for_pairing,
         }
+    }
+}
+
+#[cfg(all(feature = "micropython", feature = "touch"))]
+impl<T> Swipable for BLEHandler<T>
+where
+    T: Component,
+{
+    fn get_pager(&self) -> Pager {
+        Pager::single_page()
+    }
+    fn get_swipe_config(&self) -> SwipeConfig {
+        SwipeConfig::default()
     }
 }
 

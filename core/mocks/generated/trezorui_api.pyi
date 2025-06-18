@@ -576,7 +576,6 @@ def show_pairing_code(
     title: str,
     description: str,
     code: str,
-    button: bool = True,
 ) -> LayoutObj[UiResult]:
     """Pairing device: second screen (pairing code).
     Returns on BLEEvent::{PairingCanceled, Disconnected}."""
