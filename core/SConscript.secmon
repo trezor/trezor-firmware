@@ -361,10 +361,6 @@ cmake_gen = env.Command(
     action='$MAKECMAKELISTS --sources $ALLSOURCES --dirs $CPPPATH --defs $ALLDEFS',
 )
 
-BOOTLOADER_SUFFIX = TREZOR_MODEL
-if BOOTLOADER_QA:
-    BOOTLOADER_SUFFIX += '_qa'
-
 # select vendor header
 if BOOTLOADER_QA or BOOTLOADER_DEVEL:
     vendor = "dev_DO_NOT_SIGN_signed_dev"
@@ -388,16 +384,6 @@ obj_program.extend(
         action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
         ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
         ' $SOURCE $TARGET', ))
-
-tools.embed_compressed_binary(
-        obj_program,
-        env,
-        'bootloader',
-        'embed/projects/bootloaders/bootloader.o',
-        f'embed/models/{TREZOR_MODEL}/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
-        'secmon',
-        'bootloader',
-        )
 
 linkerscript_gen = env.Command(
     target='memory.ld',

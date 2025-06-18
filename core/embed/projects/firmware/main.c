@@ -37,12 +37,32 @@
 #include <sys/linker_utils.h>
 #include <sys/systask.h>
 #include <sys/system.h>
+#include <util/bl_check.h>
 #include <util/rsod.h>
 #include "rust_ui_common.h"
+
+#include <blake2s.h>
 
 #ifdef USE_SECP256K1_ZKP
 #include "zkp_context.h"
 #endif
+
+#define CONCAT_NAME_HELPER(prefix, name, suffix) prefix##name##suffix
+#define CONCAT_NAME(name, var) CONCAT_NAME_HELPER(BOOTLOADER_, name, var)
+
+#if BOOTLOADER_QA
+// QA bootloaders
+#define BOOTLOADER_00 CONCAT_NAME(MODEL_INTERNAL_NAME_TOKEN, _QA_00)
+#define BOOTLOADER_FF CONCAT_NAME(MODEL_INTERNAL_NAME_TOKEN, _QA_FF)
+#else
+// normal bootloaders
+#define BOOTLOADER_00 CONCAT_NAME(MODEL_INTERNAL_NAME_TOKEN, _00)
+#define BOOTLOADER_FF CONCAT_NAME(MODEL_INTERNAL_NAME_TOKEN, _FF)
+#endif
+
+// symbols from bootloader.bin => bootloader.o
+extern const void _deflated_bootloader_start;
+extern const void _deflated_bootloader_size;
 
 #ifdef USE_NRF
 #include <io/nrf.h>
@@ -62,13 +82,46 @@ int main_func(uint32_t cmd, void *arg) {
 
   bool fading = DISPLAY_JUMP_BEHAVIOR == DISPLAY_RESET_CONTENT;
 
-#ifdef USE_NRF
-  if (nrf_update_required(&nrf_app_start, (size_t)&nrf_app_size)) {
-    screen_update();
-    nrf_update(&nrf_app_start, (size_t)&nrf_app_size);
-    fading = true;
-  }
+  bool update_required = false;
+
+#if PRODUCTION || BOOTLOADER_QA
+
+  // replace bootloader with the latest one
+  const uint8_t *data = (const uint8_t *)&_deflated_bootloader_start;
+  const size_t len = (size_t)&_deflated_bootloader_size;
+
+  uint8_t hash_00[] = BOOTLOADER_00;
+  uint8_t hash_FF[] = BOOTLOADER_FF;
+
+  // Check if the boardloader is valid and replace it if not
+  bool bl_update_required =
+      bl_check_check(hash_00, hash_FF, BLAKE2S_DIGEST_LENGTH);
+  update_required = update_required || bl_update_required;
+
 #endif
+
+#ifdef USE_NRF
+  bool nrf_update_required_ =
+      nrf_update_required(&nrf_app_start, (size_t)&nrf_app_size);
+  update_required = update_required || nrf_update_required_;
+#endif
+
+  if (update_required) {
+    screen_update();
+    fading = true;
+
+#if PRODUCTION || BOOTLOADER_QA
+    if (bl_update_required) {
+      bl_check_replace(data, len);
+    }
+#endif
+
+#ifdef USE_NRF
+    if (nrf_update_required_) {
+      nrf_update(&nrf_app_start, (size_t)&nrf_app_size);
+    }
+#endif
+  }
 
   screen_boot_stage_2(fading);
 

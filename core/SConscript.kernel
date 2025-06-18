@@ -408,16 +408,6 @@ obj_program.extend(
         ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
         ' $SOURCE $TARGET', ))
 
-tools.embed_compressed_binary(
-        obj_program,
-        env,
-        'bootloader',
-        'embed/projects/bootloaders/bootloader.o',
-        f'embed/models/{TREZOR_MODEL}/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
-        'kernel',
-        'bootloader',
-        )
-
 if "secmon_layout" in FEATURES_AVAILABLE:
     tools.embed_raw_binary(
             obj_program,
