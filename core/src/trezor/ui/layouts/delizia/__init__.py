@@ -710,7 +710,7 @@ def confirm_properties(
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> Awaitable[None]:
     # Monospace flag for values that are bytes.
-    items = [
+    items: list[tuple[str | None, str | bytes | None, bool]] = [
         (
             prop[0],
             prop[1],

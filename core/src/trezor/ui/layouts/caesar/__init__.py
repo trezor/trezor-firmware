@@ -778,7 +778,7 @@ def confirm_properties(
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> Awaitable[None]:
-    items = [
+    items: list[tuple[str | None, str | bytes | None, bool]] = [
         (
             prop[0],
             prop[1],

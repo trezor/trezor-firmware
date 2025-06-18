@@ -915,9 +915,9 @@ async def confirm_cvote_registration_payment_address(
     payment_address: str,
     should_show_payment_warning: bool,
 ) -> None:
-    props = [
-        (TR.cardano__vote_key_registration, None),
-        (TR.cardano__rewards_go_to, payment_address),
+    props: list[PropertyType] = [
+        (TR.cardano__vote_key_registration, None, None),
+        (TR.cardano__rewards_go_to, payment_address, True),
     ]
     if should_show_payment_warning:
         props.append((CVOTE_REWARD_ELIGIBILITY_WARNING, None, None))
