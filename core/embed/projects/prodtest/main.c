@@ -27,6 +27,7 @@
 #include <rtl/cli.h>
 #include <sys/system.h>
 #include <sys/systick.h>
+#include <util/board_capabilities.h>
 #include <util/flash_otp.h>
 #include <util/rsod.h>
 #include <util/unit_properties.h>
@@ -200,6 +201,7 @@ static bool g_rgbled_control_disabled = false;
 void prodtest_disable_rgbled_control(void) { g_rgbled_control_disabled = true; }
 
 static void drivers_init(void) {
+  parse_boardloader_capabilities();
 #ifdef USE_RTC
   rtc_init();
 #endif
