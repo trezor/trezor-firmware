@@ -778,10 +778,16 @@ def confirm_properties(
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> Awaitable[None]:
+    from ubinascii import hexlify
+
     items: list[tuple[str | None, str | bytes | None, bool]] = [
         (
             prop[0],
-            prop[1],
+            (
+                hexlify(prop[1]).decode()
+                if isinstance(prop[1], (bytes, bytearray, memoryview))
+                else prop[1]
+            ),
             prop[2] if prop[2] is not None else True,
         )
         for prop in props
@@ -793,7 +799,6 @@ def confirm_properties(
     return raise_if_not_confirmed(
         trezorui_api.confirm_properties(
             title=title,
-            subtitle=None,
             items=items,
             hold=hold,
         ),

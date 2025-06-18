@@ -415,8 +415,8 @@ impl FirmwareUI for UIDelizia {
 
     fn confirm_properties(
         title: TString<'static>,
-        subtitle: Option<TString<'static>>,
         items: Obj,
+        subtitle: Option<TString<'static>>,
         hold: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = PropsList::new(
