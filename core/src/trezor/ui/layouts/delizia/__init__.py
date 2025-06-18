@@ -158,7 +158,7 @@ def confirm_multisig_different_paths_warning() -> Awaitable[None]:
     return raise_if_not_confirmed(
         trezorui_api.show_danger(
             title=f"{TR.words__important}!",
-            description="Using different paths for different XPUBs.",
+            description=TR.send__multisig_different_paths,
         ),
         "warning_multisig_different_paths",
         br_code=ButtonRequestType.Warning,
@@ -170,6 +170,16 @@ def confirm_multiple_accounts_warning() -> Awaitable[None]:
         "sending_from_multiple_accounts",
         TR.send__from_multiple_accounts,
         verb_cancel=TR.send__cancel_transaction,
+        br_code=ButtonRequestType.SignTx,
+    )
+
+
+def lock_time_disabled_warning() -> Awaitable[None]:
+    return show_warning(
+        "nondefault_locktime",
+        TR.bitcoin__locktime_no_effect,
+        TR.words__continue_anyway_question,
+        button=TR.buttons__continue,
         br_code=ButtonRequestType.SignTx,
     )
 

@@ -1171,20 +1171,20 @@ def sign_tx_go_to_info_eckhart(
         yield
         client.debug.read_layout()
         client.debug.click(client.debug.screen_buttons.menu())
-        client.debug.synchronize_at("VerticalMenuScreen")
+        client.debug.synchronize_at("VerticalMenu")
         client.debug.click(client.debug.screen_buttons.vertical_menu_items()[1])
 
     yield  # confirm transaction
     client.debug.read_layout()
     client.debug.click(client.debug.screen_buttons.menu())
-    client.debug.synchronize_at("VerticalMenuScreen")
+    client.debug.synchronize_at("VerticalMenu")
     client.debug.click(client.debug.screen_buttons.vertical_menu_items()[0])
 
     layout = client.debug.read_layout()
     content = layout.text_content()
 
     client.debug.click(client.debug.screen_buttons.menu())
-    client.debug.synchronize_at("VerticalMenuScreen")
+    client.debug.synchronize_at("VerticalMenu")
     client.debug.click(client.debug.screen_buttons.vertical_menu_items()[1])
 
     layout = client.debug.read_layout()

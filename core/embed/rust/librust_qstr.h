@@ -678,11 +678,13 @@ static void _librust_qstrs(void) {
   MP_QSTR_select_word;
   MP_QSTR_select_word_count;
   MP_QSTR_send__cancel_sign;
+  MP_QSTR_send__cancel_transaction;
   MP_QSTR_send__confirm_sending;
   MP_QSTR_send__from_multiple_accounts;
   MP_QSTR_send__incl_transaction_fee;
   MP_QSTR_send__including_fee;
   MP_QSTR_send__maximum_fee;
+  MP_QSTR_send__multisig_different_paths;
   MP_QSTR_send__receiving_to_multisig;
   MP_QSTR_send__send_from;
   MP_QSTR_send__send_in_the_app;

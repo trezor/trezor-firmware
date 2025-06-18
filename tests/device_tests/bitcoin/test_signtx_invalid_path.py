@@ -179,8 +179,9 @@ def test_attack_path_segwit(client: Client):
         return msg
 
     with client:
-        IF = InputFlowConfirmAllWarnings(client)
-        client.set_input_flow(IF.get())
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
         client.set_filter(messages.TxAck, attack_processor)
         with pytest.raises(TrezorFailure):
             btc.sign_tx(
