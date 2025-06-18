@@ -1350,11 +1350,12 @@ impl FirmwareUI for UIEckhart {
         danger: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         let paragraphs = ParagraphVecShort::from_iter([
-            Paragraph::new(&theme::TEXT_SMALL, description),
+            Paragraph::new(&theme::TEXT_REGULAR, description),
             Paragraph::new(&theme::TEXT_REGULAR, value),
         ])
         .into_paragraphs()
-        .with_placement(LinearPlacement::vertical());
+        .with_placement(LinearPlacement::vertical())
+        .with_spacing(theme::TEXT_VERTICAL_SPACING);
 
         let (color, style) = if danger {
             (theme::ORANGE, theme::label_title_danger())
@@ -1367,7 +1368,7 @@ impl FirmwareUI for UIEckhart {
             .with_text_style(style);
         let action_bar = if allow_cancel {
             ActionBar::new_double(
-                Button::with_icon(theme::ICON_CROSS).styled(theme::button_cancel()),
+                Button::with_icon(theme::ICON_CROSS),
                 Button::with_single_line_text(button),
             )
         } else {

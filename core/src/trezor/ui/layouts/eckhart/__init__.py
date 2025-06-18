@@ -174,6 +174,16 @@ def confirm_multisig_different_paths_warning() -> Awaitable[None]:
     )
 
 
+def confirm_multiple_accounts_warning() -> Awaitable[None]:
+    return show_danger(
+        "sending_from_multiple_accounts",
+        TR.send__from_multiple_accounts,
+        title=TR.words__important,
+        verb_cancel=TR.send__cancel_transaction,
+        br_code=ButtonRequestType.SignTx,
+    )
+
+
 def confirm_homescreen(
     image: bytes,
 ) -> Awaitable[None]:

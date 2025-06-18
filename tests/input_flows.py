@@ -1130,7 +1130,9 @@ def sign_tx_go_to_info_delizia(
     if multi_account:
         yield
         client.debug.read_layout()
-        client.debug.swipe_up()
+        client.debug.click(client.debug.screen_buttons.menu())
+        client.debug.synchronize_at("VerticalMenu")
+        client.debug.click(client.debug.screen_buttons.vertical_menu_items()[1])
 
     yield  # confirm transaction
     client.debug.read_layout()
@@ -1168,7 +1170,9 @@ def sign_tx_go_to_info_eckhart(
     if multi_account:
         yield
         client.debug.read_layout()
-        client.debug.press_yes()
+        client.debug.click(client.debug.screen_buttons.menu())
+        client.debug.synchronize_at("VerticalMenuScreen")
+        client.debug.click(client.debug.screen_buttons.vertical_menu_items()[1])
 
     yield  # confirm transaction
     client.debug.read_layout()
@@ -2939,6 +2943,7 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             hi_prio = (
                 TR.words__cancel_and_exit,
                 TR.send__cancel_sign,
+                TR.send__cancel_transaction,
             )
             if any(needle.lower() in text for needle in hi_prio):
                 self.debug.click(self.debug.screen_buttons.menu())
@@ -2967,6 +2972,7 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             hi_prio = (
                 TR.words__cancel_and_exit,
                 TR.send__cancel_sign,
+                TR.send__cancel_transaction,
             )
             if any(needle.lower() in text for needle in hi_prio):
                 self.debug.click(self.debug.screen_buttons.menu())
