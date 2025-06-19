@@ -157,22 +157,10 @@ void pm_charging_controller(pm_driver_t* drv) {
       return;
     }
   } else if (drv->usb_connected) {
-    // USB connected, set maximum charging current right away
-    drv->charging_current_target_ma = drv->charging_current_max_limit_ma;
+    drv->charging_current_target_ma = PM_BATTERY_CHARGING_CURRENT_MAX;
 
   } else if (drv->wireless_connected) {
-    // Wireless charger is sensitive to large current steps, so we need to
-    // control the charging current in steps.
-    if (ticks_expired(drv->charging_step_timeout_ms)) {
-      if (drv->charging_current_target_ma <
-          drv->charging_current_max_limit_ma) {
-        drv->charging_current_target_ma += PM_WPC_CHARGE_CURR_STEP_MA;
-      }
-
-      // Reset charging step timeout
-      drv->charging_step_timeout_ms =
-          ticks_timeout(PM_WPC_CHARGE_CURR_STEP_TIMEOUT_MS);
-    }
+    drv->charging_current_target_ma = PM_BATTERY_CHARGING_CURRENT_MAX;
 
   } else {
     // Charging enabled but no external power source, clear charging target
