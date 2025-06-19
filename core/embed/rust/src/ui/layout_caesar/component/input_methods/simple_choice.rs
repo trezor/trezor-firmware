@@ -85,6 +85,12 @@ impl SimpleChoice {
         }
     }
 
+    /// Set the page counter at the very beginning.
+    pub fn with_initial_page_counter(mut self, page_counter: usize) -> Self {
+        self.choice_page = self.choice_page.with_initial_page_counter(page_counter);
+        self
+    }
+
     /// Show only the currently selected item, nothing left/right.
     pub fn with_only_one_item(mut self) -> Self {
         self.choice_page = self.choice_page.with_only_one_item(true);

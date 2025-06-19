@@ -261,6 +261,7 @@ pub trait FirmwareUI {
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn select_menu(
+        page_counter: usize,
         items: Vec<TString<'static>, MAX_MENU_ITEMS>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 

@@ -699,8 +699,9 @@ extern "C" fn new_select_menu(n_args: usize, args: *const Obj, kwargs: *mut Map)
     let block = move |_args: &[Obj], kwargs: &Map| {
         let items_iterable: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
         let items = util::iter_into_vec(items_iterable)?;
+        let page_counter: Option<usize> = kwargs.get(Qstr::MP_QSTR_init)?.try_into_option()?;
 
-        let layout = ModelUI::select_menu(items)?;
+        let layout = ModelUI::select_menu(page_counter.unwrap_or(0), items)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1598,6 +1599,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def select_menu(
     ///     *,
     ///     items: Iterable[str],
+    ///     init: int | None = None,
     /// ) -> LayoutObj[int]:
     ///     """Select an item from a menu. Returns index in range `0..len(items)`."""
     Qstr::MP_QSTR_select_menu => obj_fn_kw!(0, new_select_menu).as_obj(),

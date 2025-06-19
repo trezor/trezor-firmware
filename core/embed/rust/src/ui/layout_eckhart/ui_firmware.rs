@@ -861,6 +861,7 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn select_menu(
+        _page_counter: usize,
         _items: Vec<TString<'static>, MAX_MENU_ITEMS>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)

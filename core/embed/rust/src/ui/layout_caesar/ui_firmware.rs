@@ -900,11 +900,13 @@ impl FirmwareUI for UICaesar {
     }
 
     fn select_menu(
+        page_counter: usize,
         items: Vec<TString<'static>, MAX_MENU_ITEMS>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         // Returning the index of the selected menu item
         let layout = RootComponent::new(
             SimpleChoice::new(items, ChoiceControls::Cancellable)
+                .with_initial_page_counter(page_counter)
                 .with_show_incomplete()
                 .with_return_index(),
         );
