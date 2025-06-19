@@ -12,9 +12,6 @@ use crate::{
     },
 };
 
-#[cfg(feature = "ble")]
-use crate::ui::component::BLEHandlerMsg;
-
 use super::super::{
     component::Button,
     firmware::{
@@ -45,9 +42,6 @@ impl FlowController for ShowPairingCode {
             (Self::Main, FlowMsg::Cancelled) => self.return_msg(FlowMsg::Cancelled),
             (Self::Main, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
             (Self::Main, FlowMsg::Info) => Self::Menu.goto(),
-            (Self::Main, FlowMsg::Number(pairing_code)) => {
-                self.return_msg(FlowMsg::Number(pairing_code))
-            }
             (Self::Menu, FlowMsg::Choice(..)) => self.return_msg(FlowMsg::Cancelled),
             (Self::Menu, FlowMsg::Cancelled) => Self::Main.goto(),
             _ => self.do_nothing(),
@@ -55,7 +49,7 @@ impl FlowController for ShowPairingCode {
     }
 }
 
-pub fn new_show_pairing_code(
+pub fn new_show_thp_pairing_code(
     title: TString<'static>,
     description: TString<'static>,
     code: TString<'static>,
@@ -69,16 +63,6 @@ pub fn new_show_pairing_code(
         .add_text(code, fonts::FONT_SATOSHI_EXTRALIGHT_72);
     let screen =
         TextScreen::new(FormattedText::new(ops)).with_header(Header::new(title).with_menu_button());
-
-    #[cfg(feature = "ble")]
-    let main_content = crate::ui::component::BLEHandler::new(screen, false).map(|msg| match msg {
-        BLEHandlerMsg::Cancelled => Some(FlowMsg::Cancelled),
-        BLEHandlerMsg::Content(TextScreenMsg::Cancelled) => Some(FlowMsg::Cancelled),
-        BLEHandlerMsg::Content(TextScreenMsg::Confirmed) => Some(FlowMsg::Confirmed),
-        BLEHandlerMsg::Content(TextScreenMsg::Menu) => Some(FlowMsg::Info),
-        BLEHandlerMsg::PairingCode(code) => Some(FlowMsg::Number(code)),
-    });
-    #[cfg(not(feature = "ble"))]
     let main_content = screen.map(|msg| match msg {
         TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
