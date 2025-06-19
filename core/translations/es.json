@@ -46,11 +46,12 @@
       "Bolt": "Si la dirección de destino no coincide, contacta con el servicio de atención al cliente de Trezor en trezor.io/support.",
       "Caesar": "Si la dirección de destino no coincide, contacta con el servicio de atención al cliente de Trezor en trezor.io/support.",
       "Delizia": "Si la dirección de destino no coincide, contacta con el servicio de atención al cliente de Trezor en trezor.io/support.",
-      "Eckhart": "Si la dirección no coincide, contacte al soporte de Trezor en trezor.io/support."
+      "Eckhart": "Si la dirección de destino no coincide, contacta trezor.io/support."
     },
     "address__cancel_receive": "Cancelar destino",
     "address__confirmed": "Dirección de destino confirmada",
     "address__public_key": "Clave pública",
+    "address__coin_address_template": "{0} dirección",
     "address__public_key_confirmed": "Clave pública confirmada",
     "address__qr_code": "Código QR",
     "address__title_cosigner": "Cofirmante",
@@ -991,6 +992,7 @@
     "words__blockhash": "Blockhash",
     "words__buying": "Comprar",
     "words__cancel_and_exit": "Cancelar y salir",
+    "words__cancel_question": "¿Cancelar?",
     "words__chain": "Cadena",
     "words__confirm": "Confirmar",
     "words__confirm_fee": "Confirmar comisión",

@@ -46,11 +46,12 @@
       "Bolt": "Wenn die Empfängeradresse nicht übereinstimmt, dann wende dich bitte unter trezor.io/support an den Trezor Support.",
       "Caesar": "Wenn die Empfängeradresse nicht übereinstimmt, dann wende dich bitte unter trezor.io/support an den Trezor Support.",
       "Delizia": "Wenn die Empfängeradresse nicht übereinstimmt, dann wende dich bitte unter trezor.io/support an den Trezor Support.",
-      "Eckhart": "Wenn die Empfängeradresse nicht stimmt, kontaktiere Trezor unter trezor.io/support."
+      "Eckhart": "Stimmt Adresse nicht, kontaktiere Trezor-Support: trezor.io/support."
     },
     "address__cancel_receive": "Empfang abbrechen",
     "address__confirmed": "Empfängeradresse bestätigt",
     "address__public_key": "Public Key",
+    "address__coin_address_template": "{0} Adresse",
     "address__public_key_confirmed": "Public Key bestätigt",
     "address__qr_code": "QR-Code",
     "address__title_cosigner": "Mitunterzeich.",
@@ -986,6 +987,7 @@
     "words__blockhash": "Blockhash",
     "words__buying": "Kaufen",
     "words__cancel_and_exit": "Abbrechen und schließen",
+    "words__cancel_question": "Abbrechen?",
     "words__chain": "Chain",
     "words__confirm": "Bestätigen",
     "words__confirm_fee": "Gebühr bestätigen",

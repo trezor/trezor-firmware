@@ -546,8 +546,8 @@ extern "C" fn new_flow_get_address(n_args: usize, args: *const Obj, kwargs: *mut
         let subtitle: Option<TString> = kwargs.get(Qstr::MP_QSTR_subtitle)?.try_into_option()?;
         let description: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
-        let extra: Option<TString> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;
-        let address: Obj = kwargs.get(Qstr::MP_QSTR_address)?;
+        let hint: Option<TString> = kwargs.get(Qstr::MP_QSTR_hint)?.try_into_option()?;
+        let address: TString = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
         let address_qr: TString = kwargs.get(Qstr::MP_QSTR_address_qr)?.try_into()?;
         let case_sensitive: bool = kwargs.get(Qstr::MP_QSTR_case_sensitive)?.try_into()?;
@@ -562,7 +562,7 @@ extern "C" fn new_flow_get_address(n_args: usize, args: *const Obj, kwargs: *mut
             title,
             subtitle,
             description,
-            extra,
+            hint,
             chunkify,
             address_qr,
             case_sensitive,
@@ -571,6 +571,26 @@ extern "C" fn new_flow_get_address(n_args: usize, args: *const Obj, kwargs: *mut
             xpubs,
             br_code,
             br_name,
+        )?;
+        Ok(LayoutObj::new_root(layout)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_flow_get_pubkey(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let subtitle: Option<TString> = kwargs.get(Qstr::MP_QSTR_subtitle)?.try_into_option()?;
+        let hint: Option<TString> = kwargs.get(Qstr::MP_QSTR_hint)?.try_into_option()?;
+        let pubkey: TString = kwargs.get(Qstr::MP_QSTR_pubkey)?.try_into()?;
+        let pubkey_qr: TString = kwargs.get(Qstr::MP_QSTR_pubkey_qr)?.try_into()?;
+        let account: Option<TString> = kwargs.get(Qstr::MP_QSTR_account)?.try_into_option()?;
+        let path: Option<TString> = kwargs.get(Qstr::MP_QSTR_path)?.try_into_option()?;
+        let br_code: u16 = kwargs.get(Qstr::MP_QSTR_br_code)?.try_into()?;
+        let br_name: TString = kwargs.get(Qstr::MP_QSTR_br_name)?.try_into()?;
+
+        let layout = ModelUI::flow_get_pubkey(
+            pubkey, title, subtitle, hint, pubkey_qr, account, path, br_code, br_name,
         )?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
@@ -1515,11 +1535,11 @@ pub static mp_module_trezorui_api: Module = obj_module! {
 
     /// def flow_get_address(
     ///     *,
-    ///     address: str | bytes,
+    ///     address: str,
     ///     title: str,
     ///     subtitle: str | None,
     ///     description: str | None,
-    ///     extra: str | None,
+    ///     hint: str | None,
     ///     chunkify: bool,
     ///     address_qr: str,
     ///     case_sensitive: bool,
@@ -1531,6 +1551,24 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Get address / receive funds."""
     Qstr::MP_QSTR_flow_get_address => obj_fn_kw!(0, new_flow_get_address).as_obj(),
+
+    /// def flow_get_pubkey(
+    ///     *,
+    ///     pubkey: str,
+    ///     title: str,
+    ///     subtitle: str | None,
+    ///     description: str | None,
+    ///     hint: str | None,
+    ///     chunkify: bool,
+    ///     pubkey_qr: str,
+    ///     case_sensitive: bool,
+    ///     account: str | None,
+    ///     path: str | None,
+    ///     br_code: ButtonRequestType,
+    ///     br_name: str,
+    /// ) -> LayoutObj[UiResult]:
+    ///     """Get public key."""
+    Qstr::MP_QSTR_flow_get_pubkey => obj_fn_kw!(0, new_flow_get_pubkey).as_obj(),
 
     /// def multiple_pages_texts(
     ///     *,

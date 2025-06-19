@@ -56,6 +56,12 @@ impl TryFrom<Obj> for StrOrBytes {
     }
 }
 
+impl From<TString<'static>> for StrOrBytes {
+    fn from(value: TString<'static>) -> Self {
+        StrOrBytes::Str(value)
+    }
+}
+
 #[derive(Clone)]
 pub struct ConfirmValueParams {
     pub description: TString<'static>,
@@ -211,6 +217,13 @@ pub fn get_user_custom_image() -> Result<BinaryData<'static>, Error> {
     // SAFETY: buffer is freshly allocated so nobody else has it.
     load_avatar(unsafe { Gc::<[u8]>::as_mut(&mut data) })?;
     Ok(data.into())
+}
+
+/// ContentType is used to define the type of content that can be displayed
+/// in a layout or flow. It can either be an address or a public key.
+pub enum ContentType {
+    Address(TString<'static>),
+    PublicKey(TString<'static>),
 }
 
 /// Maximum number of extended public keys (xpubs) that can be displayed in

@@ -870,7 +870,7 @@ class InputFlowShowXpubQRCode(InputFlowBase):
             br = yield
             layout = self.debug.read_layout()
 
-        assert layout.title() in (TR.address__public_key, "XPUB")
+        assert layout.title() in (TR.address__public_key, TR.address__xpub)
 
         self.debug.click(self.debug.screen_buttons.menu())
         assert "VerticalMenu" in self.all_components()
@@ -927,7 +927,10 @@ class InputFlowShowXpubQRCode(InputFlowBase):
             for _ in range(br.pages - 1):
                 self.debug.click(self.debug.screen_buttons.ok())
 
-        assert TR.address__public_key in layout.title()
+        title = layout.title()
+        assert any(
+            needle in title for needle in (TR.address__xpub, TR.address__public_key)
+        )
 
         self.debug.click(self.debug.screen_buttons.menu())
         assert "VerticalMenu" in self.all_components()

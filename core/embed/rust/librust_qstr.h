@@ -75,6 +75,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_address__cancel_contact_support;
   MP_QSTR_address__cancel_receive;
   MP_QSTR_address__check_with_source;
+  MP_QSTR_address__coin_address_template;
   MP_QSTR_address__confirmed;
   MP_QSTR_address__public_key;
   MP_QSTR_address__public_key_confirmed;
@@ -286,6 +287,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_flow_confirm_output;
   MP_QSTR_flow_confirm_set_new_pin;
   MP_QSTR_flow_get_address;
+  MP_QSTR_flow_get_pubkey;
   MP_QSTR_get;
   MP_QSTR_get_language;
   MP_QSTR_get_transition_out;
@@ -293,6 +295,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_haptic_feedback__enable;
   MP_QSTR_haptic_feedback__subtitle;
   MP_QSTR_haptic_feedback__title;
+  MP_QSTR_hint;
   MP_QSTR_hold;
   MP_QSTR_hold_danger;
   MP_QSTR_homescreen__click_to_connect;
@@ -478,6 +481,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_prompt_backup;
   MP_QSTR_prompt_screen;
   MP_QSTR_prompt_title;
+  MP_QSTR_pubkey;
+  MP_QSTR_pubkey_qr;
   MP_QSTR_qr_title;
   MP_QSTR_read;
   MP_QSTR_reboot_to_bootloader__just_a_moment;
@@ -840,6 +845,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__blockhash;
   MP_QSTR_words__buying;
   MP_QSTR_words__cancel_and_exit;
+  MP_QSTR_words__cancel_question;
   MP_QSTR_words__chain;
   MP_QSTR_words__confirm;
   MP_QSTR_words__confirm_fee;

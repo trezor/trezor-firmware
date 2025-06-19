@@ -195,17 +195,30 @@ pub trait FirmwareUI {
 
     #[allow(clippy::too_many_arguments)]
     fn flow_get_address(
-        address: Obj, // TODO: replace Obj
+        address: TString<'static>,
         title: TString<'static>,
         subtitle: Option<TString<'static>>,
         description: Option<TString<'static>>,
-        extra: Option<TString<'static>>,
+        hint: Option<TString<'static>>,
         chunkify: bool,
         address_qr: TString<'static>,
         case_sensitive: bool,
         account: Option<TString<'static>>,
         path: Option<TString<'static>>,
         xpubs: Obj, // TODO: replace Obj
+        br_code: u16,
+        br_name: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error>;
+
+    #[allow(clippy::too_many_arguments)]
+    fn flow_get_pubkey(
+        pubkey: TString<'static>,
+        title: TString<'static>,
+        subtitle: Option<TString<'static>>,
+        hint: Option<TString<'static>>,
+        pubkey_qr: TString<'static>,
+        account: Option<TString<'static>>,
+        path: Option<TString<'static>>,
         br_code: u16,
         br_name: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error>;

@@ -26,6 +26,7 @@
       "Delizia": "XPUB",
       "Eckhart": "Public key (XPUB)"
     },
+    "address__coin_address_template": "{0} address",
     "address__public_key_confirmed": "Public key confirmed",
     "address__qr_code": "QR code",
     "address__title_cosigner": "Cosigner",
@@ -1183,6 +1184,7 @@
     "words__blockhash": "Blockhash",
     "words__buying": "Buying",
     "words__cancel_and_exit": "Cancel and exit",
+    "words__cancel_question": "Cancel?",
     "words__chain": "Chain",
     "words__confirm": "Confirm",
     "words__confirm_fee": "Confirm fee",
