@@ -833,19 +833,30 @@ OK
 Enters low-power mode.
 
 In low-power mode, the CPU retains its state, including SRAM content.
-The device can be woken by pressing the power button and will continue
-operation from the point where it was suspended.
+
+The following wake-up reasons are currently possible:
+- BUTTON - the power button was pressed
+- POWER - USB or WPC power was detected
+- BLE - BLE communication was detected
+- RTC - the RTC wake-up timer expired
+
+```
+pm-suspend [<wakeup-time>]
+```
+
+The command returns OK followed by a list of wake-up reasons, separated
+by spaces.
 
 Example:
 ```
 pm-suspend
 # Suspending the device to low-power mode...
-# Press the POWER button to resume.
+# Press a button button to resume.
 
 ....
 
 # Resumed to active mode.
-OK
+OK BUTTON
 ```
 
 ### pm-hibernate
