@@ -612,7 +612,7 @@ def confirm_address(
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
     return confirm_value(
-        title,
+        TR.words__send,
         address,
         description or "",
         br_name or "confirm_address",
