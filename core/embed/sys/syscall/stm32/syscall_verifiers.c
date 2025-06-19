@@ -912,6 +912,18 @@ access_violation:
   return false;
 }
 
+pm_status_t pm_suspend__verified(wakeup_flags_t *wakeup_reason) {
+  if (!probe_write_access(wakeup_reason, sizeof(*wakeup_reason))) {
+    goto access_violation;
+  }
+
+  return pm_suspend(wakeup_reason);
+
+access_violation:
+  apptask_access_violation();
+  return PM_ERROR;
+}
+
 #endif
 
 // ---------------------------------------------------------------------

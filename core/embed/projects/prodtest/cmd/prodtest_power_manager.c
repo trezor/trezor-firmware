@@ -65,7 +65,7 @@ void prodtest_pm_suspend(cli_t* cli) {
   cli_trace(cli, "Press the POWER button to resume.");
   systick_delay_ms(1000);
 
-  pm_suspend();
+  pm_suspend(NULL);
 
   systick_delay_ms(1500);
   cli_trace(cli, "Resumed to active mode.");
