@@ -779,7 +779,7 @@ impl FirmwareUI for UIEckhart {
             true,
             account,
             path,
-            Obj::const_null(),
+            Obj::const_none(),
             br_code,
             br_name,
         )?;

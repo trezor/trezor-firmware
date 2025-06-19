@@ -219,7 +219,7 @@ pub fn new_receive(
         true => TR::address__cancel_receive,
         false => TR::words__cancel_question,
     };
-    let content_cancel_info = TextScreen::new(
+    let mut screen_cancel_info = TextScreen::new(
         Paragraph::new(&theme::TEXT_REGULAR, cancel_info)
             .into_paragraphs()
             .with_placement(LinearPlacement::vertical()),
@@ -228,12 +228,15 @@ pub fn new_receive(
     .with_action_bar(ActionBar::new_double(
         Button::with_icon(theme::ICON_CHEVRON_LEFT),
         Button::with_text(TR::buttons__cancel.into()).styled(theme::button_cancel()),
-    ))
-    .with_hint(Hint::new_instruction(
-        TR::address__cancel_contact_support,
-        Some(theme::ICON_INFO),
-    ))
-    .map(|msg| match msg {
+    ));
+    if address {
+        screen_cancel_info = screen_cancel_info.with_hint(Hint::new_instruction(
+            TR::address__cancel_contact_support,
+            Some(theme::ICON_INFO),
+        ))
+    }
+
+    let content_cancel_info = screen_cancel_info.map(|msg| match msg {
         TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
         _ => None,
