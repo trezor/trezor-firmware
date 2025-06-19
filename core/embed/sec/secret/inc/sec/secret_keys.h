@@ -24,13 +24,19 @@
 #ifdef SECURE_MODE
 
 #ifdef USE_OPTIGA
-secbool secret_key_optiga_get(uint8_t* dest, size_t len);
+
+#define OPTIGA_PAIRING_SECRET_SIZE 32
+secbool secret_key_optiga_pairing(uint8_t dest[OPTIGA_PAIRING_SECRET_SIZE]);
+
 #endif
 
 #ifdef USE_TROPIC
-secbool secret_key_tropic_tropic_pubkey_get(uint8_t* dest, size_t len);
 
-secbool secret_key_tropic_trezor_privkey_get(uint8_t* dest, size_t len);
+#include <ed25519-donna/ed25519.h>
+
+secbool secret_key_tropic_public(curve25519_key dest);
+
+secbool secret_key_tropic_pairing(curve25519_key dest);
 #endif
 
 #endif

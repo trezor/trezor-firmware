@@ -24,10 +24,11 @@
 #include <trezor_rtl.h>
 
 #include <sec/secret.h>
+#include <sec/secret_keys.h>
 
 #ifdef USE_OPTIGA
-secbool secret_key_optiga_get(uint8_t* dest, size_t len) {
-  return secret_key_get(SECRET_OPTIGA_SLOT, dest, len);
+secbool secret_key_optiga_pairing(uint8_t dest[OPTIGA_PAIRING_SECRET_SIZE]) {
+  return secret_key_get(SECRET_OPTIGA_SLOT, dest, OPTIGA_PAIRING_SECRET_SIZE);
 }
 #endif
 

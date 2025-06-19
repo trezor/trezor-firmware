@@ -24,10 +24,11 @@
 #include <trezor_rtl.h>
 
 #include <sec/secret.h>
+#include <sec/secret_keys.h>
 
 #ifdef USE_TROPIC
 
-static uint8_t SECRET_TROPIC_TREZOR_PRIVKEY_BYTES[] = {
+static uint8_t SECRET_TROPIC_PAIRING_BYTES[] = {
     0xf0, 0xc4, 0xaa, 0x04, 0x8f, 0x00, 0x13, 0xa0, 0x96, 0x84, 0xdf,
     0x05, 0xe8, 0xa2, 0x2e, 0xf7, 0x21, 0x38, 0x98, 0x28, 0x2b, 0xa9,
     0x43, 0x12, 0xf3, 0x13, 0xdf, 0x2d, 0xce, 0x8d, 0x41, 0x64};
@@ -37,22 +38,19 @@ static uint8_t SECRET_TROPIC_PUBKEY_BYTES[] = {
     0x13, 0x33, 0x41, 0x48, 0x15, 0x89, 0xA2, 0x89, 0x5C, 0xC5, 0xFB,
     0xB1, 0x3E, 0xD5, 0x71, 0x1C, 0x1E, 0x9B, 0x81, 0x98, 0x72};
 
-secbool secret_key_tropic_tropic_pubkey_get(uint8_t* dest, size_t len) {
-  if (len != sizeof(SECRET_TROPIC_PUBKEY_BYTES)) {
-    return secfalse;
-  }
+_Static_assert(sizeof(SECRET_TROPIC_PAIRING_BYTES) == sizeof(curve25519_key),
+               "Invalid size of Tropic pairing key");
 
-  memcpy(dest, SECRET_TROPIC_PUBKEY_BYTES, sizeof(SECRET_TROPIC_PUBKEY_BYTES));
+_Static_assert(sizeof(SECRET_TROPIC_PUBKEY_BYTES) == sizeof(curve25519_key),
+               "Invalid size of Tropic public key");
+
+secbool secret_key_tropic_public(curve25519_key dest) {
+  memcpy(dest, SECRET_TROPIC_PUBKEY_BYTES, sizeof(curve25519_key));
   return sectrue;
 }
 
-secbool secret_key_tropic_trezor_privkey_get(uint8_t* dest, size_t len) {
-  if (len != sizeof(SECRET_TROPIC_TREZOR_PRIVKEY_BYTES)) {
-    return secfalse;
-  }
-
-  memcpy(dest, SECRET_TROPIC_TREZOR_PRIVKEY_BYTES,
-         sizeof(SECRET_TROPIC_TREZOR_PRIVKEY_BYTES));
+secbool secret_key_tropic_pairing(curve25519_key dest) {
+  memcpy(dest, SECRET_TROPIC_PAIRING_BYTES, sizeof(curve25519_key));
   return sectrue;
 }
 #endif

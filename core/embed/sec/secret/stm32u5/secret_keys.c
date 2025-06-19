@@ -24,20 +24,23 @@
 #include <trezor_rtl.h>
 
 #include <sec/secret.h>
+#include <sec/secret_keys.h>
 
 #ifdef USE_OPTIGA
-secbool secret_key_optiga_get(uint8_t* dest, size_t len) {
-  return secret_key_get(SECRET_OPTIGA_SLOT, dest, len);
+secbool secret_key_optiga_pairing(uint8_t dest[OPTIGA_PAIRING_SECRET_SIZE]) {
+  return secret_key_get(SECRET_OPTIGA_SLOT, dest, OPTIGA_PAIRING_SECRET_SIZE);
 }
 #endif
 
 #ifdef USE_TROPIC
-secbool secret_key_tropic_tropic_pubkey_get(uint8_t* dest, size_t len) {
-  return secret_key_get(SECRET_TROPIC_TROPIC_PUBKEY_SLOT, dest, len);
+secbool secret_key_tropic_public(curve25519_key dest) {
+  return secret_key_get(SECRET_TROPIC_TROPIC_PUBKEY_SLOT, dest,
+                        sizeof(curve25519_key));
 }
 
-secbool secret_key_tropic_trezor_privkey_get(uint8_t* dest, size_t len) {
-  return secret_key_get(SECRET_TROPIC_TREZOR_PRIVKEY_SLOT, dest, len);
+secbool secret_key_tropic_pairing(curve25519_key dest) {
+  return secret_key_get(SECRET_TROPIC_TREZOR_PRIVKEY_SLOT, dest,
+                        sizeof(curve25519_key));
 }
 #endif
 

@@ -57,8 +57,8 @@ void optiga_init_and_configure(void) {
 
   optiga_init();
 
-  uint8_t secret[32] = {0};
-  secbool secret_ok = secret_key_optiga_get(secret, sizeof(secret));
+  uint8_t secret[OPTIGA_PAIRING_SECRET_SIZE] = {0};
+  secbool secret_ok = secret_key_optiga_pairing(secret);
 
   if (sectrue == secret_ok) {
     // If the shielded connection cannot be established, reset Optiga and

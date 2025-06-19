@@ -48,9 +48,8 @@ bool tropic_init(void) {
     return true;
   }
 
-  // todo constant
-  uint8_t tropic_secret_tropic_pubkey[32] = {0};
-  uint8_t tropic_secret_trezor_privkey[32] = {0};
+  curve25519_key tropic_secret_tropic_pubkey = {0};
+  curve25519_key tropic_secret_trezor_privkey = {0};
 
   if (!tropic_hal_init()) {
     goto cleanup;
@@ -61,10 +60,8 @@ bool tropic_init(void) {
     goto cleanup;
   }
 
-  secbool pubkey_ok = secret_key_tropic_tropic_pubkey_get(
-      tropic_secret_tropic_pubkey, sizeof(tropic_secret_tropic_pubkey));
-  secbool privkey_ok = secret_key_tropic_trezor_privkey_get(
-      tropic_secret_trezor_privkey, sizeof(tropic_secret_trezor_privkey));
+  secbool pubkey_ok = secret_key_tropic_public(tropic_secret_tropic_pubkey);
+  secbool privkey_ok = secret_key_tropic_pairing(tropic_secret_trezor_privkey);
 
   if (pubkey_ok == sectrue && privkey_ok == sectrue) {
     uint8_t trezor_pubkey[32] = {0};
