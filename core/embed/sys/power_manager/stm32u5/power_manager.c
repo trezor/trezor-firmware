@@ -209,8 +209,12 @@ pm_status_t pm_get_state(pm_state_t* state) {
   return PM_OK;
 }
 
-pm_status_t pm_suspend(void) {
+pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
   pm_driver_t* drv = &g_pm;
+
+  if (wakeup_reason != NULL) {
+    *wakeup_reason = 0;
+  }
 
   if (!drv->initialized) {
     return PM_NOT_INITIALIZED;
@@ -245,6 +249,10 @@ pm_status_t pm_suspend(void) {
   drv->request_exit_suspend = true;
   pm_process_state_machine();
   irq_unlock(irq_key);
+
+  if (wakeup_reason != NULL) {
+    *wakeup_reason = wakeup_flags;
+  }
 
   return PM_OK;
 }
