@@ -59,7 +59,7 @@ bool rtc_init(void) {
   }
 
   // Allow waking up from STOP mode
-  RCC->APB3SMENR &= ~RCC_APB3SMENR_RTCAPBSMEN;
+  RCC->APB3SMENR |= RCC_APB3SMENR_RTCAPBSMEN;
   RCC->SRDAMR |= RCC_SRDAMR_RTCAPBAMEN;
 
   NVIC_ClearPendingIRQ(RTC_IRQn);
