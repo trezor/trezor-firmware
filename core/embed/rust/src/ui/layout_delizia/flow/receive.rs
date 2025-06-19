@@ -1,6 +1,6 @@
 use crate::{
     error,
-    micropython::{buffer::StrBuffer, iter::IterBuf, obj::Obj, util},
+    micropython::{buffer::StrBuffer, obj::Obj, util},
     strutil::TString,
     translations::TR,
     ui::{
@@ -18,6 +18,7 @@ use crate::{
         layout::util::ConfirmValueParams,
     },
 };
+use heapless::Vec;
 
 use super::super::{
     component::{AddressDetails, Frame, PromptScreen, SwipeContent, VerticalMenu},
@@ -25,6 +26,7 @@ use super::super::{
 };
 
 const QR_BORDER: i16 = 4;
+const MAX_XPUBS: usize = 3;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Receive {
@@ -121,6 +123,13 @@ pub fn new_receive(
             .map(super::util::map_to_confirm);
 
     // Menu
+    let (cancel_title, cancel_content) = match address {
+        true => (
+            TR::address__cancel_receive,
+            TR::address__cancel_contact_support,
+        ),
+        false => (TR::buttons__cancel, TR::words__are_you_sure),
+    };
     let content_menu = Frame::left_aligned(
         "".into(),
         VerticalMenu::empty()
@@ -129,7 +138,7 @@ pub fn new_receive(
                 theme::ICON_CHEVRON_RIGHT,
                 TR::address_details__account_info.into(),
             )
-            .danger(theme::ICON_CANCEL, TR::address__cancel_receive.into()),
+            .danger(theme::ICON_CANCEL, cancel_title.into()),
     )
     .with_cancel_button()
     .map(super::util::map_to_choice);
@@ -145,22 +154,19 @@ pub fn new_receive(
 
     // AccountInfo
     let mut ad = AddressDetails::new(TR::address_details__account_info.into(), account, path)?;
-    for i in IterBuf::new().try_iterate(xpubs)? {
+    let xpub_items: Vec<Obj, MAX_XPUBS> = util::iter_into_vec(xpubs).unwrap_or(Vec::new());
+    for i in xpub_items.into_iter() {
         let [xtitle, text]: [StrBuffer; 2] = util::iter_into_array(i)?;
         ad.add_xpub(xtitle, text)?;
     }
     let content_account = ad.map(|_| Some(FlowMsg::Cancelled));
 
     // Cancel
-    let cancel_info = match address {
-        true => TR::address__cancel_receive,
-        false => TR::buttons__cancel,
-    };
     let content_cancel_info = Frame::left_aligned(
-        cancel_info.into(),
+        cancel_title.into(),
         SwipeContent::new(Paragraphs::new(Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
-            TR::address__cancel_contact_support,
+            cancel_content,
         ))),
     )
     .with_cancel_button()
@@ -168,14 +174,12 @@ pub fn new_receive(
     .map_to_button_msg();
 
     // CancelTap
-    let content_cancel_tap = Frame::left_aligned(
-        TR::address__cancel_receive.into(),
-        PromptScreen::new_tap_to_cancel(),
-    )
-    .with_cancel_button()
-    .with_footer(TR::instructions__tap_to_confirm.into(), None)
-    .with_swipe(Direction::Down, SwipeSettings::default())
-    .map(super::util::map_to_confirm);
+    let content_cancel_tap =
+        Frame::left_aligned(cancel_title.into(), PromptScreen::new_tap_to_cancel())
+            .with_cancel_button()
+            .with_footer(TR::instructions__tap_to_confirm.into(), None)
+            .with_swipe(Direction::Down, SwipeSettings::default())
+            .map(super::util::map_to_confirm);
 
     let mut res = SwipeFlow::new(&Receive::Content)?;
     res.add_page(&Receive::Content, content_address)?
