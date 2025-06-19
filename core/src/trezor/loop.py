@@ -315,6 +315,7 @@ class race(Syscall):
         self.callback = task
         scheduled.clear()
 
+        print(f"racing: {self.children}")
         for child in self.children:
             child_task: Task
             if isinstance(child, _type_gen):
@@ -327,12 +328,15 @@ class race(Syscall):
                 # implementation-wise it is an Iterable and we know that its __iter__
                 # will return a Generator.
                 child_task = child.__iter__()  # type: ignore [Cannot access attribute "__iter__" for class "Awaitable[Unknown]";;Cannot access attribute "__iter__" for class "Coroutine[Unknown, Unknown, Unknown]"]
+            print(f"\t{child_task}")
             schedule(child_task, None, None, finalizer)
             scheduled.append(child_task)
 
     def exit(self, except_for: Task | None = None) -> None:
+        print(f"closing race children, except {except_for}")
         for task in self.scheduled:
             if task != except_for:
+                print(f"closing race child: {task}")
                 close(task)
 
     def _finish(self, task: Task, result: Any) -> None:
@@ -415,12 +419,14 @@ class mailbox(Syscall):
             raise ValueError("mailbox already has a value")
 
         self.value = value
+        print(f"mailbox.put({repr(value)})")
         if self.taker is not None:
             self._take(self.taker)
 
     def _take(self, task: Task) -> None:
         """Take a value and schedule the taker."""
         self.taker = None
+        print(f"mailbox._take({task}) value={repr(self.value)}")
         schedule(task, self.value)
         self.clear()
 

@@ -25,7 +25,7 @@ class CodecError(WireError):
 async def read_message(
     iface: WireInterface,
     buffer_getter: Callable[[], bytearray | None],
-    init_interrupt: loop.event | None = None,
+    init_interrupt: loop.mailbox | None = None,
 ) -> Message:
     read = loop.wait(iface.iface_num() | io.POLL_READ)
     report = bytearray(iface.RX_PACKET_LEN)
@@ -36,10 +36,12 @@ async def read_message(
     init_read = loop.race(read, init_interrupt) if has_interrupt else read
 
     # will be `None` if interrupted and `read` is not ready
+    print("awaiting init_read")
     msg_len = await init_read
+    print(f"awaited init_read => {msg_len} & interrupted => {has_interrupt and not init_interrupt.is_empty()}")
 
     # check `init_interrupt` explicitly, in case `read` is also ready.
-    if has_interrupt and init_interrupt.is_set():
+    if msg_len is None or has_interrupt and not init_interrupt.is_empty():
         # NOTE: we must exit here, **before** reading anything from `iface`,
         # to avoid losing debuglink packets during session restart (see #4401).
         raise INTERRUPT

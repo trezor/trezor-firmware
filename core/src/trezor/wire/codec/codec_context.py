@@ -30,12 +30,12 @@ class CodecContext(Context):
     ) -> None:
         self.buffer_provider = buffer_provider
         self._buffer = None
-        self.interrupt_event = loop.event()
+        self.interrupt_event = loop.mailbox()
         super().__init__(iface)
 
     def interrupt(self) -> None:
         """Raise an exception when `interrupt_event` is awaited by the next `read_from_wire` calls."""
-        self.interrupt_event.set()
+        self.interrupt_event.put(None)
 
     def _get_buffer(self) -> bytearray | None:
         if self._buffer is None:
