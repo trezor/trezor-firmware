@@ -621,6 +621,7 @@ def confirm_address(
         verb=verb,
         chunkify=chunkify,
         warning_footer=warning_footer,
+        cancel=True,
     )
 
 
@@ -927,6 +928,7 @@ if not utils.BITCOIN_ONLY:
                 chunkify=chunkify,
                 br_name=br_name,
                 verb=TR.buttons__continue,
+                cancel=True,
             )
         else:
             main_layout = trezorui_api.confirm_with_info(
@@ -961,6 +963,7 @@ if not utils.BITCOIN_ONLY:
                 subtitle=TR.ethereum__token_contract,
                 chunkify=chunkify,
                 br_name=br_name,
+                cancel=True,
             )
 
         if is_unknown_network:
@@ -970,6 +973,7 @@ if not utils.BITCOIN_ONLY:
                 chain_id,
                 TR.ethereum__approve_chain_id,
                 br_name=br_name,
+                cancel=True,
             )
 
         properties = (
