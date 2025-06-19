@@ -242,7 +242,7 @@ pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
   wakeup_flags_t wakeup_flags = system_suspend();
 
   // TODO: Handle wake-up flags
-  UNUSED(wakeup_flags);
+  // UNUSED(wakeup_flags);
 
   // Exit hibernation state if it was requested
   irq_key = irq_lock();
