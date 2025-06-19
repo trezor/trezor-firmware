@@ -18,7 +18,7 @@ use crate::{
             },
             ComponentExt as _, Empty, FormattedText, Timeout,
         },
-        geometry::{LinearPlacement, Offset},
+        geometry::{Alignment, LinearPlacement, Offset},
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
             util::{ConfirmValueParams, PropsList, RecoveryType, StrOrBytes},
@@ -1079,12 +1079,36 @@ impl FirmwareUI for UIEckhart {
         Ok(layout)
     }
 
-    fn show_pairing_code(
+    #[cfg(feature = "ble")]
+    fn show_ble_pairing_code(
         title: TString<'static>,
         description: TString<'static>,
         code: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let flow = flow::show_pairing_code::new_show_pairing_code(title, description, code)?;
+        let mut ops = OpTextLayout::new(theme::firmware::TEXT_REGULAR);
+        ops.add_text(description, fonts::FONT_SATOSHI_REGULAR_38)
+            .add_newline()
+            .add_newline()
+            .add_newline()
+            .add_alignment(Alignment::Center)
+            .add_text(code, fonts::FONT_SATOSHI_EXTRALIGHT_72);
+        let screen = crate::ui::component::BLEHandler::new(
+            TextScreen::new(FormattedText::new(ops))
+                .with_header(Header::new(title))
+                .with_action_bar(ActionBar::new_cancel_confirm()),
+            false,
+        );
+        let layout = RootComponent::new(screen);
+        Ok(layout)
+    }
+
+    fn show_thp_pairing_code(
+        title: TString<'static>,
+        description: TString<'static>,
+        code: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let flow =
+            flow::show_thp_pairing_code::new_show_thp_pairing_code(title, description, code)?;
         Ok(flow)
     }
 

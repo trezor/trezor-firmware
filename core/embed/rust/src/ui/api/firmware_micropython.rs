@@ -874,12 +874,30 @@ extern "C" fn new_show_pairing_device_name(
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_show_pairing_code(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+extern "C" fn new_show_ble_pairing_code(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    #[cfg(feature = "ble")]
+    {
+        let block = move |_args: &[Obj], kwargs: &Map| {
+            let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+            let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+            let code: TString = kwargs.get(Qstr::MP_QSTR_code)?.try_into()?;
+            let layout = ModelUI::show_ble_pairing_code(title, description, code)?;
+            let layout_obj = LayoutObj::new_root(layout)?;
+            Ok(layout_obj.into())
+        };
+        unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+    }
+
+    #[cfg(not(feature = "ble"))]
+    unimplemented!()
+}
+
+extern "C" fn new_show_thp_pairing_code(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let code: TString = kwargs.get(Qstr::MP_QSTR_code)?.try_into()?;
-        let layout = ModelUI::show_pairing_code(title, description, code)?;
+        let layout = ModelUI::show_thp_pairing_code(title, description, code)?;
         let layout_obj = LayoutObj::new_root(layout)?;
         Ok(layout_obj.into())
     };
@@ -1689,15 +1707,24 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     Returns if BLEEvent::PairingRequest is received."""
     Qstr::MP_QSTR_show_pairing_device_name => obj_fn_kw!(0, new_show_pairing_device_name).as_obj(),
 
-    /// def show_pairing_code(
+    /// def show_ble_pairing_code(
     ///     *,
     ///     title: str,
     ///     description: str,
     ///     code: str,
     /// ) -> LayoutObj[UiResult]:
-    ///     """Pairing device: second screen (pairing code).
+    ///     """BLE pairing: second screen (pairing code).
     ///     Returns on BLEEvent::{PairingCanceled, Disconnected}."""
-    Qstr::MP_QSTR_show_pairing_code => obj_fn_kw!(0, new_show_pairing_code).as_obj(),
+    Qstr::MP_QSTR_show_ble_pairing_code => obj_fn_kw!(0, new_show_ble_pairing_code).as_obj(),
+
+    /// def show_thp_pairing_code(
+    ///     *,
+    ///     title: str,
+    ///     description: str,
+    ///     code: str,
+    /// ) -> LayoutObj[UiResult]:
+    ///     """THP pairing: second screen (pairing code)."""
+    Qstr::MP_QSTR_show_thp_pairing_code => obj_fn_kw!(0, new_show_thp_pairing_code).as_obj(),
 
     /// def show_info(
     ///     *,

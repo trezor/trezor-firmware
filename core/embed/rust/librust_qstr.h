@@ -706,6 +706,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_share_words__words_in_order;
   MP_QSTR_share_words__wrote_down_all;
   MP_QSTR_show_address_details;
+  MP_QSTR_show_ble_pairing_code;
   MP_QSTR_show_checklist;
   MP_QSTR_show_danger;
   MP_QSTR_show_device_menu;
@@ -717,7 +718,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_instructions;
   MP_QSTR_show_lockscreen;
   MP_QSTR_show_mismatch;
-  MP_QSTR_show_pairing_code;
   MP_QSTR_show_pairing_device_name;
   MP_QSTR_show_progress;
   MP_QSTR_show_progress_coinjoin;
@@ -726,6 +726,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_share_words_extended;
   MP_QSTR_show_simple;
   MP_QSTR_show_success;
+  MP_QSTR_show_thp_pairing_code;
   MP_QSTR_show_wait_text;
   MP_QSTR_show_warning;
   MP_QSTR_sign;

@@ -13,8 +13,8 @@ pub mod prompt_backup;
 pub mod request_number;
 pub mod request_passphrase;
 pub mod show_danger;
-pub mod show_pairing_code;
 pub mod show_share_words;
+pub mod show_thp_pairing_code;
 
 #[cfg(feature = "universal_fw")]
 pub use confirm_fido::new_confirm_fido;
@@ -31,5 +31,5 @@ pub use prompt_backup::PromptBackup;
 pub use request_number::new_request_number;
 pub use request_passphrase::RequestPassphrase;
 pub use show_danger::ShowDanger;
-pub use show_pairing_code::new_show_pairing_code;
 pub use show_share_words::new_show_share_words_flow;
+pub use show_thp_pairing_code::new_show_thp_pairing_code;
