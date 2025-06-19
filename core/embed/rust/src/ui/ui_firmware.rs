@@ -210,6 +210,19 @@ pub trait FirmwareUI {
         br_name: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
+    #[allow(clippy::too_many_arguments)]
+    fn flow_get_pubkey(
+        pubkey: Obj,
+        title: TString<'static>,
+        subtitle: Option<TString<'static>>,
+        extra: Option<TString<'static>>,
+        pubkey_qr: TString<'static>,
+        account: Option<TString<'static>>,
+        path: Option<TString<'static>>,
+        br_code: u16,
+        br_name: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error>;
+
     // TODO: this is TR specific and used only in confirm_set_new_pin
     fn multiple_pages_texts(
         title: TString<'static>,

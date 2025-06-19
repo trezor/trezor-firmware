@@ -1448,6 +1448,7 @@ pub enum TranslatedString {
     reset__select_word_from_share_template = 1043,  // "Select word #{0} from\nShare #{1}"
     recovery__share_from_group_entered_template = 1044,  // "Share #{0} from Group #{1} entered."
     address__xpub = 1045,  // {"Bolt": "XPUB", "Caesar": "XPUB", "Delizia": "XPUB", "Eckhart": "Public key (XPUB)"}
+    words__cancel_question = 1046,  // "Cancel?"
 }
 
 impl TranslatedString {
@@ -3208,6 +3209,7 @@ impl TranslatedString {
             (Self::address__xpub, "XPUB"),
             #[cfg(feature = "layout_eckhart")]
             (Self::address__xpub, "Public key (XPUB)"),
+            (Self::words__cancel_question, "Cancel?"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4599,6 +4601,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__blockhash, Self::words__blockhash),
         (Qstr::MP_QSTR_words__buying, Self::words__buying),
         (Qstr::MP_QSTR_words__cancel_and_exit, Self::words__cancel_and_exit),
+        (Qstr::MP_QSTR_words__cancel_question, Self::words__cancel_question),
         (Qstr::MP_QSTR_words__chain, Self::words__chain),
         (Qstr::MP_QSTR_words__confirm, Self::words__confirm),
         (Qstr::MP_QSTR_words__confirm_fee, Self::words__confirm_fee),

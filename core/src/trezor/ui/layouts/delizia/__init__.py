@@ -311,17 +311,23 @@ def show_pubkey(
     warning: str | None = None,
     br_name: str = "show_pubkey",
 ) -> Awaitable[None]:
-    title = title or TR.address__public_key  # def_arg
-    mismatch_title = mismatch_title or TR.addr_mismatch__key_mismatch  # def_arg
-    return show_address(
-        address=pubkey,
-        title=title,
-        account=account,
-        path=path,
-        br_name=br_name,
-        br_code=ButtonRequestType.PublicKey,
-        mismatch_title=mismatch_title,
-        chunkify=False,
+
+    return raise_if_not_confirmed(
+        trezorui_api.flow_get_pubkey(
+            pubkey=pubkey,
+            title=title or title or TR.address__public_key,
+            subtitle=None,
+            description=None,
+            extra=None,
+            chunkify=False,
+            pubkey_qr=pubkey,
+            case_sensitive=True,
+            account=account,
+            path=path,
+            br_name=br_name,
+            br_code=ButtonRequestType.PublicKey,
+        ),
+        None,
     )
 
 

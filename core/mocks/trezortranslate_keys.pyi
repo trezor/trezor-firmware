@@ -972,6 +972,7 @@ class TR:
     words__blockhash: str = "Blockhash"
     words__buying: str = "Buying"
     words__cancel_and_exit: str = "Cancel and exit"
+    words__cancel_question: str = "Cancel?"
     words__chain: str = "Chain"
     words__confirm: str = "Confirm"
     words__confirm_fee: str = "Confirm fee"

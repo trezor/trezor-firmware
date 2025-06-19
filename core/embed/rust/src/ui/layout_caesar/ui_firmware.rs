@@ -742,6 +742,20 @@ impl FirmwareUI for UICaesar {
         Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
+    fn flow_get_pubkey(
+        _pubkey: Obj,
+        _title: TString<'static>,
+        _subtitle: Option<TString<'static>>,
+        _extra: Option<TString<'static>>,
+        _pubkey_qr: TString<'static>,
+        _account: Option<TString<'static>>,
+        _path: Option<TString<'static>>,
+        _br_code: u16,
+        _br_name: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+    }
+
     fn multiple_pages_texts(
         title: TString<'static>,
         verb: TString<'static>,

@@ -27,8 +27,8 @@ use super::super::{
 const QR_BORDER: i16 = 4;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub enum GetAddress {
-    Address,
+pub enum Receive {
+    Content,
     Tap,
     Menu,
     QrCode,
@@ -37,7 +37,7 @@ pub enum GetAddress {
     CancelTap,
 }
 
-impl FlowController for GetAddress {
+impl FlowController for Receive {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize
@@ -45,8 +45,8 @@ impl FlowController for GetAddress {
 
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Address, Direction::Up) => Self::Tap.swipe(direction),
-            (Self::Tap, Direction::Down) => Self::Address.swipe(direction),
+            (Self::Content, Direction::Up) => Self::Tap.swipe(direction),
+            (Self::Tap, Direction::Down) => Self::Content.swipe(direction),
             (Self::Cancel, Direction::Up) => Self::CancelTap.swipe(direction),
             (Self::CancelTap, Direction::Down) => Self::Cancel.swipe(direction),
             _ => self.do_nothing(),
@@ -55,13 +55,13 @@ impl FlowController for GetAddress {
 
     fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
-            (Self::Address, FlowMsg::Info) => Self::Menu.goto(),
+            (Self::Content, FlowMsg::Info) => Self::Menu.goto(),
             (Self::Tap, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
             (Self::Tap, FlowMsg::Info) => Self::Menu.swipe_left(),
             (Self::Menu, FlowMsg::Choice(0)) => Self::QrCode.swipe_left(),
             (Self::Menu, FlowMsg::Choice(1)) => Self::AccountInfo.swipe_left(),
             (Self::Menu, FlowMsg::Choice(2)) => Self::Cancel.swipe_left(),
-            (Self::Menu, FlowMsg::Cancelled) => Self::Address.swipe_right(),
+            (Self::Menu, FlowMsg::Cancelled) => Self::Content.swipe_right(),
             (Self::QrCode, FlowMsg::Cancelled) => Self::Menu.goto(),
             (Self::AccountInfo, FlowMsg::Cancelled) => Self::Menu.goto(),
             (Self::Cancel, FlowMsg::Cancelled) => Self::Menu.goto(),
@@ -73,13 +73,14 @@ impl FlowController for GetAddress {
 }
 
 #[allow(clippy::too_many_arguments)]
-pub fn new_get_address(
+pub fn new_receive(
     title: TString<'static>,
     description: Option<TString<'static>>,
     extra: Option<TString<'static>>,
-    address: Obj, // TODO: get rid of Obj
+    content: Obj, // TODO: get rid of Obj
+    address: bool,
     chunkify: bool,
-    address_qr: TString<'static>,
+    qr: TString<'static>,
     case_sensitive: bool,
     account: Option<TString<'static>>,
     path: Option<TString<'static>>,
@@ -91,10 +92,10 @@ pub fn new_get_address(
     let paragraphs = ConfirmValueParams {
         description: description.unwrap_or_else(|| "".into()),
         extra: extra.unwrap_or_else(|| "".into()),
-        value: address.try_into()?,
+        value: content.try_into()?,
         font: if chunkify {
-            let address: TString = address.try_into()?;
-            theme::get_chunkified_text_style(address.len())
+            let content: TString = content.try_into()?;
+            theme::get_chunkified_text_style(content.len())
         } else {
             &theme::TEXT_MONO
         },
@@ -136,8 +137,7 @@ pub fn new_get_address(
     // QrCode
     let content_qr = Frame::left_aligned(
         title,
-        address_qr
-            .map(|s| Qr::new(s, case_sensitive))?
+        qr.map(|s| Qr::new(s, case_sensitive))?
             .with_border(QR_BORDER),
     )
     .with_cancel_button()
@@ -152,8 +152,12 @@ pub fn new_get_address(
     let content_account = ad.map(|_| Some(FlowMsg::Cancelled));
 
     // Cancel
+    let cancel_info = match address {
+        true => TR::address__cancel_receive,
+        false => TR::buttons__cancel,
+    };
     let content_cancel_info = Frame::left_aligned(
-        TR::address__cancel_receive.into(),
+        cancel_info.into(),
         SwipeContent::new(Paragraphs::new(Paragraph::new(
             &theme::TEXT_MAIN_GREY_LIGHT,
             TR::address__cancel_contact_support,
@@ -173,13 +177,13 @@ pub fn new_get_address(
     .with_swipe(Direction::Down, SwipeSettings::default())
     .map(super::util::map_to_confirm);
 
-    let mut res = SwipeFlow::new(&GetAddress::Address)?;
-    res.add_page(&GetAddress::Address, content_address)?
-        .add_page(&GetAddress::Tap, content_tap)?
-        .add_page(&GetAddress::Menu, content_menu)?
-        .add_page(&GetAddress::QrCode, content_qr)?
-        .add_page(&GetAddress::AccountInfo, content_account)?
-        .add_page(&GetAddress::Cancel, content_cancel_info)?
-        .add_page(&GetAddress::CancelTap, content_cancel_tap)?;
+    let mut res = SwipeFlow::new(&Receive::Content)?;
+    res.add_page(&Receive::Content, content_address)?
+        .add_page(&Receive::Tap, content_tap)?
+        .add_page(&Receive::Menu, content_menu)?
+        .add_page(&Receive::QrCode, content_qr)?
+        .add_page(&Receive::AccountInfo, content_account)?
+        .add_page(&Receive::Cancel, content_cancel_info)?
+        .add_page(&Receive::CancelTap, content_cancel_tap)?;
     Ok(res)
 }
