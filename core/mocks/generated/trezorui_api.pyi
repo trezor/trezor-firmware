@@ -357,11 +357,11 @@ def flow_confirm_set_new_pin(
 # rust/src/ui/api/firmware_micropython.rs
 def flow_get_address(
     *,
-    address: str | bytes,
+    address: str,
     title: str,
     subtitle: str | None,
     description: str | None,
-    extra: str | None,
+    hint: str | None,
     chunkify: bool,
     address_qr: str,
     case_sensitive: bool,
@@ -372,6 +372,25 @@ def flow_get_address(
     br_name: str,
 ) -> LayoutObj[UiResult]:
     """Get address / receive funds."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def flow_get_pubkey(
+    *,
+    pubkey: str,
+    title: str,
+    subtitle: str | None,
+    description: str | None,
+    hint: str | None,
+    chunkify: bool,
+    pubkey_qr: str,
+    case_sensitive: bool,
+    account: str | None,
+    path: str | None,
+    br_code: ButtonRequestType,
+    br_name: str,
+) -> LayoutObj[UiResult]:
+    """Get public key."""
 
 
 # rust/src/ui/api/firmware_micropython.rs

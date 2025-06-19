@@ -21,7 +21,7 @@ use crate::{
         geometry::{Alignment, LinearPlacement, Offset},
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
-            util::{ConfirmValueParams, PropsList, RecoveryType, StrOrBytes},
+            util::{ConfirmValueParams, ContentType, PropsList, RecoveryType, StrOrBytes},
         },
         ui_firmware::{
             FirmwareUI, ERROR_NOT_IMPLEMENTED, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
@@ -729,11 +729,11 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn flow_get_address(
-        address: Obj,
+        address: TString<'static>,
         title: TString<'static>,
         subtitle: Option<TString<'static>>,
         description: Option<TString<'static>>,
-        extra: Option<TString<'static>>,
+        hint: Option<TString<'static>>,
         chunkify: bool,
         address_qr: TString<'static>,
         case_sensitive: bool,
@@ -743,18 +743,47 @@ impl FirmwareUI for UIEckhart {
         br_code: u16,
         br_name: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let flow = flow::get_address::new_get_address(
+        let flow = flow::receive::new_receive(
             title,
             subtitle,
             description,
-            extra,
-            address,
+            hint,
+            ContentType::Address(address),
             chunkify,
             address_qr,
             case_sensitive,
             account,
             path,
             xpubs,
+            br_code,
+            br_name,
+        )?;
+        Ok(flow)
+    }
+
+    fn flow_get_pubkey(
+        pubkey: TString<'static>,
+        title: TString<'static>,
+        subtitle: Option<TString<'static>>,
+        hint: Option<TString<'static>>,
+        pubkey_qr: TString<'static>,
+        account: Option<TString<'static>>,
+        path: Option<TString<'static>>,
+        br_code: u16,
+        br_name: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let flow = flow::receive::new_receive(
+            title,
+            subtitle,
+            None,
+            hint,
+            ContentType::PublicKey(pubkey),
+            false,
+            pubkey_qr,
+            true,
+            account,
+            path,
+            Obj::const_none(),
             br_code,
             br_name,
         )?;
