@@ -144,6 +144,9 @@ class SessionlessCache(DataCache):
     ) -> int | T | None:  # noqa: F811
         return super().get_int(key & ~SESSIONLESS_FLAG, default)
 
+    def _get_length(self, key: int) -> int:
+        return super()._get_length(key & ~SESSIONLESS_FLAG)
+
     def is_set(self, key: int) -> bool:
         return super().is_set(key & ~SESSIONLESS_FLAG)
 
