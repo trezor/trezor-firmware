@@ -571,14 +571,24 @@ def show_pairing_device_name(
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def show_pairing_code(
+def show_ble_pairing_code(
     *,
     title: str,
     description: str,
     code: str,
 ) -> LayoutObj[UiResult]:
-    """Pairing device: second screen (pairing code).
+    """BLE pairing: second screen (pairing code).
     Returns on BLEEvent::{PairingCanceled, Disconnected}."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def show_thp_pairing_code(
+    *,
+    title: str,
+    description: str,
+    code: str,
+) -> LayoutObj[UiResult]:
+    """THP pairing: second screen (pairing code)."""
 
 
 # rust/src/ui/api/firmware_micropython.rs

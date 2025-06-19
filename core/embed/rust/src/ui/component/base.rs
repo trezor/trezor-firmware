@@ -625,7 +625,6 @@ pub enum FlowMsg {
     Next,
     Choice(usize),
     Text(ShortString),
-    Number(u32),
 }
 
 #[cfg(feature = "micropython")]
@@ -641,7 +640,6 @@ impl TryFrom<FlowMsg> for crate::micropython::obj::Obj {
             FlowMsg::Info => Ok(result::INFO.as_obj()),
             FlowMsg::Choice(i) => i.try_into(),
             FlowMsg::Text(s) => s.as_str().try_into(),
-            FlowMsg::Number(i) => i.try_into(),
         }
     }
 }
