@@ -39,8 +39,6 @@
 #define PM_BATTERY_CHARGING_CURRENT_MAX PMIC_CHARGING_LIMIT_MAX
 #define PM_BATTERY_CHARGING_CURRENT_MIN PMIC_CHARGING_LIMIT_MIN
 #define PM_BATTERY_SAMPLING_BUF_SIZE 10
-#define PM_WPC_CHARGE_CURR_STEP_MA 20
-#define PM_WPC_CHARGE_CURR_STEP_TIMEOUT_MS 1000
 
 // Fuel gauge extended kalman filter parameters
 #define PM_FUEL_GAUGE_R 2000.0f
@@ -76,7 +74,6 @@ typedef struct {
   bool charging_enabled;
   uint16_t charging_current_target_ma;
   uint16_t charging_current_max_limit_ma;
-  uint32_t charging_step_timeout_ms;
 
   // Power source hardware state
   pmic_report_t pmic_data;
