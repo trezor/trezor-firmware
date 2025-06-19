@@ -873,6 +873,10 @@ if not utils.BITCOIN_ONLY:
             None,
         )
 
+    def ethereum_address_title() -> str:
+        """Return the title for the Ethereum address confirmation."""
+        return TR.words__send
+
     async def confirm_ethereum_approve(
         recipient_addr: str,
         recipient_str: str | None,
