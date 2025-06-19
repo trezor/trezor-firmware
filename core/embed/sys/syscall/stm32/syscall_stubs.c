@@ -721,8 +721,9 @@ bool nrf_update(const uint8_t *data, size_t len) {
 
 #include <sys/power_manager.h>
 
-pm_status_t pm_suspend(void) {
-  return (pm_status_t)syscall_invoke0(SYSCALL_POWER_MANAGER_SUSPEND);
+pm_status_t pm_suspend(wakeup_flags_t *wakeup_reason) {
+  return (pm_status_t)syscall_invoke1((uint32_t)wakeup_reason,
+                                      SYSCALL_POWER_MANAGER_SUSPEND);
 }
 
 pm_status_t pm_hibernate(void) {

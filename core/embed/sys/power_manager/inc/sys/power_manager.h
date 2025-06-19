@@ -144,9 +144,11 @@ pm_status_t pm_get_state(pm_state_t* state);
 
 /**
  * @brief Request device to enter suspend mode
+ * @param wakeup_reason Pointer to store wakeup flags (reason for wakeup).
+ * Can be NULL if not needed.
  * @return pm_status_t Status code indicating success or failure
  */
-pm_status_t pm_suspend(void);
+pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason);
 
 /**
  * @brief Request device to enter hibernation mode

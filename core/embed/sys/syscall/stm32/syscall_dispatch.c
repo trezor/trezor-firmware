@@ -780,7 +780,8 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 
 #ifdef USE_POWER_MANAGER
     case SYSCALL_POWER_MANAGER_SUSPEND: {
-      args[0] = pm_suspend();
+      wakeup_flags_t *wakeup_flags = (wakeup_flags_t *)args[0];
+      args[0] = pm_suspend__verified(wakeup_flags);
     } break;
 
     case SYSCALL_POWER_MANAGER_HIBERNATE: {
