@@ -387,7 +387,6 @@ extern "C" fn new_confirm_summary(n_args: usize, args: *const Obj, kwargs: *mut 
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
-        let suite_sign: bool = kwargs.get_or(Qstr::MP_QSTR_suite_sign, false)?;
 
         let layout = ModelUI::confirm_summary(
             amount,
@@ -400,7 +399,6 @@ extern "C" fn new_confirm_summary(n_args: usize, args: *const Obj, kwargs: *mut 
             extra_items,
             extra_title,
             verb_cancel,
-            suite_sign,
         )?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
@@ -1439,7 +1437,6 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     extra_items: Iterable[tuple[str, str]] | None = None,
     ///     extra_title: str | None = None,
     ///     verb_cancel: str | None = None,
-    ///     suite_sign: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm summary of a transaction."""
     Qstr::MP_QSTR_confirm_summary => obj_fn_kw!(0, new_confirm_summary).as_obj(),

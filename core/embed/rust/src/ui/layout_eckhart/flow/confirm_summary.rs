@@ -99,7 +99,6 @@ pub fn new_confirm_summary(
     extra_title: Option<TString<'static>>,
     extra_paragraphs: Option<ParagraphVecShort<'static>>,
     verb_cancel: Option<TString<'static>>,
-    suite_sign: bool,
 ) -> Result<SwipeFlow, error::Error> {
     // Summary
     let mut summary_paragraphs = ParagraphVecShort::new();
@@ -113,7 +112,7 @@ pub fn new_confirm_summary(
         .add(Paragraph::new(&theme::TEXT_SMALL_LIGHT, fee_label))
         .add(Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, fee));
 
-    let mut screen_summary = TextScreen::new(
+    let content_summary = TextScreen::new(
         summary_paragraphs
             .into_paragraphs()
             .with_placement(LinearPlacement::vertical().with_spacing(theme::PARAGRAPHS_SPACING)),
@@ -123,16 +122,12 @@ pub fn new_confirm_summary(
         Button::with_text(TR::instructions__hold_to_sign.into())
             .with_long_press(theme::CONFIRM_HOLD_DURATION)
             .styled(theme::button_confirm()),
-    ));
-
-    if suite_sign {
-        screen_summary = screen_summary.with_hint(Hint::new_instruction(
-            TR::send__send_in_the_app,
-            Some(theme::ICON_INFO),
-        ))
-    }
-
-    let content_summary = screen_summary.map(|msg| match msg {
+    ))
+    .with_hint(Hint::new_instruction(
+        TR::send__send_in_the_app,
+        Some(theme::ICON_INFO),
+    ))
+    .map(|msg| match msg {
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
         TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
         TextScreenMsg::Menu => Some(FlowMsg::Info),

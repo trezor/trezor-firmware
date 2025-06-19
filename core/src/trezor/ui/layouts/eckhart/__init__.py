@@ -766,7 +766,6 @@ def confirm_total(
             account_items=account_items or None,
             extra_items=fee_items or None,
             extra_title=TR.confirm_total__title_fee,
-            suite_sign=True,
         ),
         br_name,
         br_code,
