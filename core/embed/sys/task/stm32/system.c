@@ -123,8 +123,14 @@ system_emergency_rescue_phase_2(uint32_t arg1, uint32_t arg2) {
   // Now we can safely enable interrupts again
   __enable_fault_irq();
 
-  // Ensure we are in thread mode
+#ifndef SECMON
+  // Ensure we are in thread mode.
+  //
+  // In the secure monitor, we are not able to ensure a transition to
+  // thread mode under all circumstances. And because the error_handler is
+  // always NULL in the secure monitor, it's not even necessary.
   ensure_thread_mode();
+#endif
 
   // Now everything is perfectly initialized and we can do anything
   // in C code
