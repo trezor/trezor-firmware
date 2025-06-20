@@ -32,6 +32,10 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define DEVICE_NAME CONFIG_BT_DEVICE_NAME
 #define DEVICE_NAME_LEN (sizeof(DEVICE_NAME) - 1)
 
+#define ADV_FLAG_PAIRING 0x01
+#define ADV_FLAG_BOND_MEM_FULL 0x02
+#define ADV_FLAG_DEV_CONNECTED 0x04
+
 bool advertising = false;
 bool advertising_wl = false;
 
@@ -61,7 +65,7 @@ void advertising_setup_wl(void) {
   bt_foreach_bond(BT_ID_DEFAULT, add_to_whitelist, NULL);
 }
 
-void advertising_start(bool wl, uint8_t color, uint32_t device_code,
+void advertising_start(bool wl, uint8_t color, uint8_t device_code,
                        bool static_addr, char *name, int name_len) {
   if (advertising) {
     LOG_WRN("Restarting advertising");
@@ -76,11 +80,17 @@ void advertising_start(bool wl, uint8_t color, uint32_t device_code,
 
   int bonds_count = bonds_get_count();
 
+  manufacturer_data[2] = 0;
+
+  if (CONFIG_BT_MAX_PAIRED == bonds_count) {
+    manufacturer_data[2] |= ADV_FLAG_BOND_MEM_FULL;
+  }
+  if (connection_is_connected()) {
+    manufacturer_data[2] |= ADV_FLAG_DEV_CONNECTED;
+  }
+
   manufacturer_data[3] = color;
-  manufacturer_data[4] = device_code & 0xff;
-  manufacturer_data[5] = (device_code >> 8) & 0xff;
-  manufacturer_data[6] = (device_code >> 16) & 0xff;
-  manufacturer_data[7] = (device_code >> 24) & 0xff;
+  manufacturer_data[4] = device_code;
 
   advertising_data[0].type = BT_DATA_FLAGS;
   advertising_data[0].data_len = 1;
@@ -101,8 +111,6 @@ void advertising_start(bool wl, uint8_t color, uint32_t device_code,
     advertising_setup_wl();
     LOG_INF("Advertising with whitelist");
 
-    manufacturer_data[2] = 0x00;
-
     uint32_t options = BT_LE_ADV_OPT_CONNECTABLE | BT_LE_ADV_OPT_SCANNABLE |
                        BT_LE_ADV_OPT_FILTER_CONN |
                        BT_LE_ADV_OPT_FILTER_SCAN_REQ;
@@ -117,11 +125,7 @@ void advertising_start(bool wl, uint8_t color, uint32_t device_code,
   } else {
     LOG_INF("Advertising no whitelist");
 
-    if (CONFIG_BT_MAX_PAIRED == bonds_count) {
-      manufacturer_data[2] = 0x02;
-    } else {
-      manufacturer_data[2] = 0x01;
-    }
+    manufacturer_data[2] |= ADV_FLAG_PAIRING;
 
     uint32_t options = BT_LE_ADV_OPT_CONNECTABLE | BT_LE_ADV_OPT_SCANNABLE;
     if (static_addr) {
