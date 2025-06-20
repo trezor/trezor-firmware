@@ -15,7 +15,7 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow, SwipePage,
         },
         geometry::Direction,
-        layout::util::ConfirmValueParams,
+        layout::util::{ConfirmValueParams, MAX_XPUBS},
     },
 };
 use heapless::Vec;
@@ -26,7 +26,6 @@ use super::super::{
 };
 
 const QR_BORDER: i16 = 4;
-const MAX_XPUBS: usize = 3;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Receive {

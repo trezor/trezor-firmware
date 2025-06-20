@@ -16,6 +16,7 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow,
         },
         geometry::{Direction, LinearPlacement},
+        layout::util::MAX_XPUBS,
     },
 };
 use heapless::Vec;
@@ -31,7 +32,6 @@ use super::super::{
 
 const ITEM_PADDING: i16 = 16;
 const GROUP_PADDING: i16 = 20;
-const MAX_XPUBS: usize = 3;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Receive {
