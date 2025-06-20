@@ -22,15 +22,21 @@
 #include <trezor_types.h>
 
 /**
- * @brief Check bootloader hash against the installed bootloader.
+ * @brief Verify the installed bootloader against expected hashes.
  *
- * Computes the hash of the provided bootloader image and compares it
- * with the hash of the currently installed bootloader.
+ * Calculates the hash of the currently installed bootloader and compares
+ * it against two known-good expected hashes.
  *
- * @return `true` if the hashes do not match (bootloader needs replacement),
- *         `false` otherwise.
+ * @param hash_00 Pointer to the expected hash for 0x00 padded image.
+ * @param hash_FF Pointer to the expected hash for 0xFF padded image.
+ * @param hash_len         Length of each hash, in bytes.
+ *
+ * @return `true` if the installed bootloader's hash does not match either
+ *         of the expected hashes (indicating it should be replaced),
+ *         `false` if it matches one of them.
  */
-bool bl_check_check(void);
+bool bl_check_check(const uint8_t *hash_00, const uint8_t *hash_FF,
+                    size_t hash_len);
 
 /**
  * @brief Replace the currently installed bootloader.
@@ -40,4 +46,4 @@ bool bl_check_check(void);
  * @param data Pointer to the bootloader image data.
  * @param len  Size of the bootloader data in bytes.
  */
-void bl_check_replace(const uint8_t* data, size_t len);
+void bl_check_replace(const uint8_t *data, size_t len);

@@ -64,6 +64,23 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
+bool bl_check_check__verified(const uint8_t *hash_00, const uint8_t *hash_FF,
+                              size_t hash_len) {
+  if (!probe_read_access(hash_00, hash_len)) {
+    goto access_violation;
+  }
+
+  if (!probe_read_access(hash_FF, hash_len)) {
+    goto access_violation;
+  }
+
+  return bl_check_check(hash_00, hash_FF, hash_len);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+};
+
 void bl_check_replace__verified(const uint8_t *data, size_t len) {
   if (!probe_read_access(data, len)) {
     goto access_violation;

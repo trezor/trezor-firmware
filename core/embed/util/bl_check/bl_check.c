@@ -30,28 +30,10 @@
 #include "memzero.h"
 #include "uzlib.h"
 
-#define CONCAT_NAME_HELPER(prefix, name, suffix) prefix##name##suffix
-#define CONCAT_NAME(name, var) CONCAT_NAME_HELPER(BOOTLOADER_, name, var)
-
-#if BOOTLOADER_QA
-// QA bootloaders
-#define BOOTLOADER_00 CONCAT_NAME(MODEL_INTERNAL_NAME_TOKEN, _QA_00)
-#define BOOTLOADER_FF CONCAT_NAME(MODEL_INTERNAL_NAME_TOKEN, _QA_FF)
-#else
-// normal bootloaders
-#define BOOTLOADER_00 CONCAT_NAME(MODEL_INTERNAL_NAME_TOKEN, _00)
-#define BOOTLOADER_FF CONCAT_NAME(MODEL_INTERNAL_NAME_TOKEN, _FF)
-#endif
-// clang-format on
-
-static secbool latest_bootloader(const uint8_t *hash, int len) {
-  if (len != 32) return secfalse;
-
-  uint8_t hash_00[] = BOOTLOADER_00;
-  uint8_t hash_FF[] = BOOTLOADER_FF;
-
-  if (0 == memcmp(hash, hash_00, 32)) return sectrue;
-  if (0 == memcmp(hash, hash_FF, 32)) return sectrue;
+static secbool hash_match(const uint8_t *hash, const uint8_t *hash_00,
+                          const uint8_t *hash_FF) {
+  if (0 == memcmp(hash, hash_00, BLAKE2S_DIGEST_LENGTH)) return sectrue;
+  if (0 == memcmp(hash, hash_FF, BLAKE2S_DIGEST_LENGTH)) return sectrue;
   return secfalse;
 }
 
@@ -78,8 +60,13 @@ static void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
   uzlib_uncompress_init(decomp, window, window ? UZLIB_WINDOW_SIZE : 0);
 }
 
-bool bl_check_check(void) {
+bool bl_check_check(const uint8_t *hash_00, const uint8_t *hash_FF,
+                    size_t hash_len) {
   mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
+
+  if (hash_len != BLAKE2S_DIGEST_LENGTH) {
+    error_shutdown("Invalid bootloader hash length");
+  }
 
   // compute current bootloader hash
   uint8_t hash[BLAKE2S_DIGEST_LENGTH];
@@ -91,8 +78,8 @@ bool bl_check_check(void) {
   // ensure(known_bootloader(hash, BLAKE2S_DIGEST_LENGTH), "Unknown bootloader
   // detected");
 
-  // do we have the latest bootloader?
-  if (sectrue == latest_bootloader(hash, BLAKE2S_DIGEST_LENGTH)) {
+  // does the bootloader match?
+  if (sectrue == hash_match(hash, hash_00, hash_FF)) {
     mpu_reconfig(mode);
     return false;
   }

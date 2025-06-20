@@ -39,8 +39,10 @@ void bootargs_get_args(boot_args_t *args) {
 // bl_check.h
 // =============================================================================
 
-bool bl_check_check(void) {
-  return (bool)smcall_invoke0(SMCALL_BL_CHECK_CHECK);
+bool bl_check_check(const uint8_t *hash_00, const uint8_t *hash_FF,
+                    size_t hash_len) {
+  return (bool)smcall_invoke3((uint32_t)hash_00, (uint32_t)hash_FF,
+                              (uint32_t)hash_len, SMCALL_BL_CHECK_CHECK);
 }
 
 void bl_check_replace(const uint8_t *data, size_t len) {

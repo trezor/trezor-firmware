@@ -71,7 +71,10 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
     } break;
 
     case SMCALL_BL_CHECK_CHECK: {
-      args[0] = bl_check_check();
+      const uint8_t *hash_00 = (const uint8_t *)args[0];
+      const uint8_t *hash_FF = (const uint8_t *)args[1];
+      size_t hash_len = args[2];
+      args[0] = bl_check_check__verified(hash_00, hash_FF, hash_len);
     } break;
 
     case SMCALL_BL_CHECK_REPLACE: {
