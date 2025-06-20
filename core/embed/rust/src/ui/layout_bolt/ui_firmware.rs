@@ -378,6 +378,7 @@ impl FirmwareUI for UIBolt {
         _subtitle: Option<TString<'static>>,
         items: Obj,
         hold: bool,
+        _verb: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = PropsList::new(
             items,
@@ -472,6 +473,7 @@ impl FirmwareUI for UIBolt {
         verb: TString<'static>,
         verb_info: TString<'static>,
         _verb_cancel: Option<TString<'static>>,
+        _subtitle: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecShort::new();
 

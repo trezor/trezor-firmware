@@ -126,6 +126,7 @@ pub trait FirmwareUI {
         subtitle: Option<TString<'static>>,
         items: Obj, // TODO: replace Obj`
         hold: bool,
+        verb: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn confirm_reset_device(recovery: bool) -> Result<impl LayoutMaybeTrace, Error>;
@@ -150,6 +151,7 @@ pub trait FirmwareUI {
         verb: TString<'static>,
         verb_info: TString<'static>,
         verb_cancel: Option<TString<'static>>,
+        subtitle: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn continue_recovery_homepage(

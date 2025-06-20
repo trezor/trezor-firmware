@@ -416,6 +416,7 @@ impl FirmwareUI for UICaesar {
         _subtitle: Option<TString<'static>>,
         items: Obj,
         hold: bool,
+        _verb: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecLong::new();
 
@@ -619,6 +620,7 @@ impl FirmwareUI for UICaesar {
         verb: TString<'static>,
         _verb_info: TString<'static>,
         verb_cancel: Option<TString<'static>>,
+        _subtitle: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecShort::new();
 

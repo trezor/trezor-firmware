@@ -263,6 +263,7 @@ def confirm_properties(
     items: list[tuple[str | None, str | bytes | None, bool]],
     subtitle: str | None = None,
     hold: bool = False,
+    verb: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Confirm list of key-value pairs. The third component in the tuple should be True if
     the value is to be rendered as binary with monospace font, False otherwise."""
@@ -298,6 +299,7 @@ def confirm_with_info(
     verb: str,
     verb_info: str,
     verb_cancel: str | None = None,
+    subtitle: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Confirm given items but with third button. Always single page
     without scrolling. In Delizia, the button is placed in

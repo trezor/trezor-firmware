@@ -359,6 +359,7 @@ impl FirmwareUI for UIEckhart {
         _subtitle: Option<TString<'static>>,
         items: Obj,
         hold: bool,
+        verb: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = PropsList::new(
             items,
@@ -374,7 +375,7 @@ impl FirmwareUI for UIEckhart {
                 LinearPlacement::vertical().with_spacing(theme::PARAGRAPHS_SPACING),
             ),
             None,
-            None,
+            verb,
             hold,
             None,
             None,
@@ -489,6 +490,7 @@ impl FirmwareUI for UIEckhart {
         verb: TString<'static>,
         verb_info: TString<'static>,
         _verb_cancel: Option<TString<'static>>,
+        subtitle: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecShort::new();
 
@@ -496,7 +498,7 @@ impl FirmwareUI for UIEckhart {
             let [text, is_data]: [Obj; 2] = util::iter_into_array(para)?;
             let is_data = is_data.try_into()?;
             let style: &TextStyle = if is_data {
-                &theme::TEXT_MONO_MEDIUM_LIGHT
+                &theme::TEXT_MONO_LIGHT
             } else {
                 &theme::TEXT_SMALL_LIGHT
             };
@@ -509,7 +511,7 @@ impl FirmwareUI for UIEckhart {
 
         let flow = flow::new_confirm_with_menu(
             title,
-            None,
+            subtitle,
             paragraphs
                 .into_paragraphs()
                 .with_placement(LinearPlacement::vertical())
