@@ -1,5 +1,3 @@
-
-
 import serial
 import time
 import logging
@@ -40,9 +38,6 @@ class DutProdtestResponse:
     data_entries: list = field(default_factory=list)
     OK: bool = False
 
-    # def __init__(self):
-    #     self.trace = []
-    #     self.data_entries = []
 
 class Dut():
 
@@ -72,7 +67,7 @@ class Dut():
         self.entry_interactive_mode()
         self.enable_charging()
 
-        time.sleep(2)  # Give some time for the command to be processed
+        time.sleep(2) # Give some time to process te commands
 
         if not self.ping():
             self.init_error()
@@ -351,12 +346,23 @@ class Dut():
             prefix = f"\033[95m[{self.name}]\033[0m"
             logging.debug(prefix + " < " + message)
 
+    def close(self):
+        """
+        Close the DUT's serial port and clean up resources.
+        """
+        if self.vcp is not None and self.vcp.is_open:
+            try:
+                self.vcp.close()
+            except Exception as e:
+                logging.warning(f"Failed to close VCP for {self.name}: {e}")
+        self.vcp = None
+        self.name = None
+        self.relay_ctl = None
+        self.relay_port = None
+
     def __del__(self):
         try:
             if hasattr(self, "vcp") and self.vcp is not None and self.vcp.is_open:
-                self.vcp.close()
+                self.close()
         except Exception as e:
-            logging.warning(f"Failed to close VCP for {self.name}: {e}")
-        self.vcp = None
-        self.name = None
-        self.verbose = None
+            logging.warning(f"Error during DUT cleanup: {e}")

@@ -76,19 +76,3 @@ def send_slack_message(webhook_url: Optional[str], message: str, fallback_text: 
     except Exception as e:
         logger.exception(f"An unexpected error occurred during Slack notification: {e}")
         return False
-
-if __name__ == '__main__':
-    print("Testing Slack notification module (sends as payload parameter)...")
-    test_webhook_url = "YOUR_SLACK_WEBHOOK_URL" # Replace with your actual Slack Webhook URL
-    test_msg = "Test z Pythonu :wave: (posláno jako payload parametr).\n*Formátování* by mělo _fungovat_."
-    fallback = "Test from Python (payload)"
-
-    if "YOUR_SLACK_WEBHOOK_URL" == test_webhook_url or not test_webhook_url:
-        print("\nPlease replace YOUR_SLACK_WEBHOOK_URL with your actual Slack Webhook URL.")
-    else:
-        print(f"Sending test message via webhook...")
-        success = send_slack_message(test_webhook_url, test_msg, fallback_text=fallback)
-        if success:
-            print("\nTest request sent successfully (check your Slack channel).")
-        else:
-            print("\nTest request failed.")

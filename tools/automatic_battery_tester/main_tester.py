@@ -8,26 +8,14 @@ from pathlib import Path
 import subprocess
 import socket
 from typing import Optional, Dict, Any
-
-from test_logic.linear_scenario import LinearScenario
-from test_logic.switching_scenario import SwitchingScenario
-from test_logic.random_wonder_scenario import RandomWonderScenario
+from test_logic import LinearScenario, SwitchingScenario, RandomWonderScenario
 from notifications import send_slack_message
-
-project_root = Path(__file__).parent
-hw_ctl_path = project_root / "hardware_ctl"
-logic_path = project_root / "test_logic"
-
-sys.path.append(str(project_root))
-if str(hw_ctl_path) not in sys.path: sys.path.insert(0, str(hw_ctl_path))
-if str(logic_path) not in sys.path: sys.path.insert(0, str(logic_path))
-
-from hardware_ctl.relay_controller import RelayController
-from dut.dut_controller import DutController
+from hardware_ctl import RelayController
+from dut import DutController
 
 # Configure logging
 log_formatter = log_formatter = logging.Formatter('[%(levelname).1s %(asctime)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-log_file = project_root / "test.log"
+log_file = "test.log"
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -53,7 +41,7 @@ logger.addHandler(console_handler)
 def load_config(config_path="test_config.toml") -> Optional[Dict[str, Any]]:
 
     """Load test configuration from TOML config file ."""
-    config_file = project_root / config_path
+    config_file = config_path
     logging.info(f"Loading configuration file: {config_file}")
     try:
         config = toml.load(config_file)
@@ -145,7 +133,7 @@ def main():
         logging.critical("Failed to load configuration. Exiting.")
         sys.exit(1)
 
-    # Inicializace ovladačů HW
+    # Initialize hardware controllers
     logging.info("Initializing hardware controllers...")
     relay_ctl = None
     dut_ctl = None
@@ -278,16 +266,14 @@ def main():
         test_aborted = True
     finally:
 
-        # --- Cleanup ---
         logging.info("Performing final cleanup...")
         if relay_ctl:
             try:
                 logging.info("Ensuring all relays are OFF...")
-                relay_ctl.turn_all_relays_off()
+                dut_ctl.power_down_all()  # Power down all DUTs
                 relay_ctl.close()
             except Exception as e_relay: logging.error(f"Error during relay cleanup: {e_relay}")
 
-        # ... (cleanup dut_ctl a temp_ctl) ...
         if dut_ctl:
             try: dut_ctl.close()
             except Exception as e_dut: logging.error(f"Error during DUT controller cleanup: {e_dut}")
