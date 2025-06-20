@@ -1,0 +1,11 @@
+# requirements.txt
+pandas
+numpy
+scipy
+matplotlib
+toml
+pyserial
+argcomplete
+typing-extensions
+click
+requests
