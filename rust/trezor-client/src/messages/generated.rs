@@ -105,6 +105,8 @@ trezor_message_impl! {
     ThpQrCodeSecret => MessageType_ThpQrCodeSecret,
     ThpNfcTagHost => MessageType_ThpNfcTagHost,
     ThpNfcTagTrezor => MessageType_ThpNfcTagTrezor,
+    EvoluGetKeys => MessageType_EvoluGetKeys,
+    EvoluKeys => MessageType_EvoluKeys,
     BenchmarkListNames => MessageType_BenchmarkListNames,
     BenchmarkNames => MessageType_BenchmarkNames,
     BenchmarkRun => MessageType_BenchmarkRun,
