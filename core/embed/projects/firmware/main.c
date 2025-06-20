@@ -43,6 +43,8 @@
 
 #include <blake2s.h>
 
+#include "sys/bootutils.h"
+
 #ifdef USE_SECP256K1_ZKP
 #include "zkp_context.h"
 #endif
@@ -121,6 +123,10 @@ int main_func(uint32_t cmd, void *arg) {
       nrf_update(&nrf_app_start, (size_t)&nrf_app_size);
     }
 #endif
+  }
+
+  if (bl_update_required) {
+    reboot_device();
   }
 
   screen_boot_stage_2(fading);
