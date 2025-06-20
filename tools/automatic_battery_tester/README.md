@@ -83,7 +83,7 @@ test_modes = ["linear", "switching", "random_wonder"]
    ```sh
    python main_tester.py
    ```
-4. Follow console and log (`test.log`) instructions.
+4. Follow console instructions or check log in "test.log" file.
 
 ---
 

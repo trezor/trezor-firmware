@@ -1,34 +1,15 @@
 import time
 import logging
+import sys
+from pathlib import Path
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from .dut import Dut
 from hardware_ctl.relay_controller import RelayController
 
-# Podmíněný import pro type hinting
-if TYPE_CHECKING:
-    from libs.prodtest_cli import prodtest_cli, ProdtestResponse
-
-# Přidání cesty k libs pro import prodtest_cli
-import sys
-from pathlib import Path
-libs_path_ctrl = Path(__file__).parent.parent / "libs"
-if str(libs_path_ctrl) not in sys.path:
-    sys.path.insert(0, str(libs_path_ctrl))
-
-# Import prodtest_cli po úpravě sys.path
-try:
-    from prodtest_cli import prodtest_cli, ProdtestResponse
-except ImportError as e:
-    logging.error(f"FATAL: Could not import prodtest_cli from {libs_path_ctrl}. Check file presence and structure.")
-    # Definujeme dummy třídy, aby zbytek mohl selhat při inicializaci
-    class ProdtestResponse: pass
-    class prodtest_cli:
-        def __init__(self, *args, **kwargs): raise ImportError("prodtest_cli not found")
-
 @dataclass
 class ProdtestPmReport:
-    """Dataclass pro uchování výsledků pm-report."""
+    """pm-report command response data structure"""
     power_state: str = ""
     usb: str = ""
     wlc: str = ""
@@ -70,7 +51,7 @@ class DutController:
 
     """
     Device-under-test (DUT) controller.
-    provides direct simulataneous control of configured DUTs
+    provides direct simultaneous control of configured DUTs
     """
     def __init__(self, duts, relay_ctl, verbose: bool = False):
 
@@ -79,19 +60,19 @@ class DutController:
 
         # Power off all DUTs before self test
         for d in duts:
-            self.relay_ctl.set_relay_off(d["relay_port"])
+            self.relay_ctl.set_relay_off(d['relay_port'])
 
         for d in duts:
 
             try:
-                dut = Dut(name=d["name"],
-                          cpu_id=d["cpu_id"],
-                          usb_port=d["usb_port"],
-                          relay_port=d["relay_port"],
+                dut = Dut(name=d['name'],
+                          cpu_id=d['cpu_id'],
+                          usb_port=d['usb_port'],
+                          relay_port=d['relay_port'],
                           relay_ctl=self.relay_ctl,
-                          verbose=True)
+                          verbose=verbose)
                 self.duts.append(dut)
-                logging.info(f"Initialized {d["name"]} on port {d['usb_port']}")
+                logging.info(f"Initialized {d['name']} on port {d['usb_port']}")
                 logging.info(f" -- cpu_id hash : {dut.get_cpu_id_hash()}")
                 logging.info(f" -- relay port  : {dut.get_relay_port()}")
 
@@ -112,7 +93,6 @@ class DutController:
 
         for d in self.duts:
             d.power_down()
-
 
     def enable_charging(self):
         """
@@ -239,24 +219,12 @@ class DutController:
                        test_phase,
                        temp)
 
-
-    # --- Cleanup ---
     def close(self):
-        pass
-        # """Ukončí sériovou komunikaci."""
-        # if self.cli and hasattr(self.cli, 'vcp') and self.cli.vcp:
-        #     logging.info("Closing DUT serial connection...")
-        #     try:
-        #         self.cli.vcp.close()
-        #     except Exception as e:
-        #          logging.error(f"Error closing serial port: {e}")
-        #     self.cli = None
-        # elif self.cli:
-        #      logging.debug("DUT controller had cli object, but no active vcp to close.")
-        #      self.cli = None
-        # else:
-        #      logging.debug("DUT controller already closed or not initialized.")
+        for d in self.duts:
+            try:
+                d.close()
+            except Exception as e:
+                logging.error(f"Failed to close DUT {d.name}: {e}")
 
     def __del__(self):
-        # Zajistí zavření portu i při neočekávaném ukončení objektu
         self.close()
