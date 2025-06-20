@@ -157,9 +157,7 @@ void bl_check_replace(const uint8_t *data, size_t len) {
   ensure(check_image_model(current_bld_hdr), "Incompatible bootloader found");
 
   if (new_bld_monotonic < current_bld_hdr->monotonic) {
-    // reject downgrade
-    mpu_reconfig(mode);
-    return;
+    error_shutdown("Bootloader downgrade rejected");
   }
 
   uint32_t board_name = get_board_name();
