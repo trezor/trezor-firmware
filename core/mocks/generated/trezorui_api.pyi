@@ -359,6 +359,7 @@ def flow_get_address(
     *,
     address: str | bytes,
     title: str,
+    subtitle: str | None,
     description: str | None,
     extra: str | None,
     chunkify: bool,
@@ -371,6 +372,25 @@ def flow_get_address(
     br_name: str,
 ) -> LayoutObj[UiResult]:
     """Get address / receive funds."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def flow_get_pubkey(
+    *,
+    pubkey: str | bytes,
+    title: str,
+    subtitle: str | None,
+    description: str | None,
+    extra: str | None,
+    chunkify: bool,
+    pubkey_qr: str,
+    case_sensitive: bool,
+    account: str | None,
+    path: str | None,
+    br_code: ButtonRequestType,
+    br_name: str,
+) -> LayoutObj[UiResult]:
+    """Get public key."""
 
 
 # rust/src/ui/api/firmware_micropython.rs

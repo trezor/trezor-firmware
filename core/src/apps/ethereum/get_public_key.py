@@ -25,7 +25,9 @@ async def get_public_key(
     if msg.show_display:
         from trezor import TR
 
-        await show_pubkey(hexlify(response.node.public_key).decode())
+        await show_pubkey(
+            hexlify(response.node.public_key).decode(),
+        )
         return await early_response(
             response, show_continue_in_app(TR.address__public_key_confirmed)
         )

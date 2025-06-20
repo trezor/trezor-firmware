@@ -76,11 +76,13 @@ async def get_address(
 
         from . import PATTERN, SLIP44_ID
 
+        coin = "XMR"
         await show_address(
             addr,
+            subtitle=f"{coin} {TR.words__address}",
             address_qr="monero:" + addr,
             path=paths.address_n_to_str(address_n),
-            account=paths.get_account_name("XMR", msg.address_n, PATTERN, SLIP44_ID),
+            account=paths.get_account_name(coin, msg.address_n, PATTERN, SLIP44_ID),
             chunkify=bool(msg.chunkify),
         )
         return await early_response(

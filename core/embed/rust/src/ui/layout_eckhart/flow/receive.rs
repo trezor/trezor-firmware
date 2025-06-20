@@ -6,7 +6,9 @@ use crate::{
     ui::{
         button_request::ButtonRequest,
         component::{
-            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecLong, VecExt},
+            text::paragraphs::{
+                Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort, VecExt,
+            },
             ButtonRequestExt, ComponentExt, Qr,
         },
         flow::{
@@ -32,15 +34,15 @@ const GROUP_PADDING: i16 = 20;
 const MAX_XPUBS: usize = 3;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub enum GetAddress {
-    Address,
+pub enum Receive {
+    Content,
     Menu,
     QrCode,
     AccountInfo,
     Cancel,
 }
 
-impl FlowController for GetAddress {
+impl FlowController for Receive {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize
@@ -52,15 +54,15 @@ impl FlowController for GetAddress {
 
     fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
-            (Self::Address, FlowMsg::Info) => Self::Menu.goto(),
-            (Self::Address, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Content, FlowMsg::Info) => Self::Menu.goto(),
+            (Self::Content, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
             (Self::Menu, FlowMsg::Choice(0)) => Self::QrCode.swipe_left(),
             (Self::Menu, FlowMsg::Choice(1)) => Self::AccountInfo.swipe_left(),
             (Self::Menu, FlowMsg::Choice(2)) => Self::Cancel.swipe_left(),
-            (Self::Menu, FlowMsg::Cancelled) => Self::Address.swipe_right(),
+            (Self::Menu, FlowMsg::Cancelled) => Self::Content.swipe_right(),
             (Self::QrCode, FlowMsg::Cancelled) => Self::Menu.goto(),
             (Self::AccountInfo, FlowMsg::Cancelled) => Self::Menu.goto(),
-            (Self::Cancel, FlowMsg::Cancelled) => Self::Address.goto(),
+            (Self::Cancel, FlowMsg::Cancelled) => Self::Content.goto(),
             (Self::Cancel, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Cancelled),
             _ => self.do_nothing(),
         }
@@ -68,13 +70,15 @@ impl FlowController for GetAddress {
 }
 
 #[allow(clippy::too_many_arguments)]
-pub fn new_get_address(
+pub fn new_receive(
     title: TString<'static>,
-    _description: Option<TString<'static>>,
-    _extra: Option<TString<'static>>,
-    address: Obj, // TODO: get rid of Obj
+    subtitle: Option<TString<'static>>,
+    description: Option<TString<'static>>,
+    extra: Option<TString<'static>>,
+    content: Obj, // TODO: get rid of Obj
+    address: bool,
     chunkify: bool,
-    address_qr: TString<'static>,
+    qr: TString<'static>,
     case_sensitive: bool,
     account: Option<TString<'static>>,
     path: Option<TString<'static>>,
@@ -82,29 +86,42 @@ pub fn new_get_address(
     br_code: u16,
     br_name: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
-    // Address
-    let flow_title: TString = TR::words__receive.into();
-
-    let test_style = if chunkify {
-        let address: TString = address.try_into()?;
-        theme::get_chunkified_text_style(address.len())
+    let text_style = if chunkify {
+        let content: TString = content.try_into()?;
+        theme::get_chunkified_text_style(content.len())
     } else {
         &theme::TEXT_MONO_ADDRESS
     };
-    let paragraphs = Paragraph::new(test_style, address.try_into().unwrap_or(TString::empty()))
-        .into_paragraphs()
-        .with_placement(LinearPlacement::vertical());
 
-    let content_address = TextScreen::new(paragraphs)
-        .with_header(Header::new(flow_title).with_menu_button())
-        .with_subtitle(title)
-        .with_action_bar(ActionBar::new_single(
-            Button::with_text(TR::buttons__confirm.into()).styled(theme::button_confirm()),
-        ))
-        .with_hint(Hint::new_instruction(
-            TR::address__check_with_source,
-            Some(theme::ICON_INFO),
-        ))
+    let mut paragraphs = ParagraphVecShort::new();
+    if let Some(description) = description {
+        paragraphs.add(
+            Paragraph::new(&theme::TEXT_SMALL_LIGHT, description).with_bottom_padding(ITEM_PADDING),
+        );
+    }
+    paragraphs.add(Paragraph::new(
+        text_style,
+        content.try_into().unwrap_or(TString::empty()),
+    ));
+
+    let button = if extra.is_some() {
+        Button::with_text(TR::buttons__confirm.into()).styled(theme::button_cancel_gradient())
+    } else {
+        Button::with_text(TR::buttons__confirm.into()).styled(theme::button_confirm())
+    };
+
+    let mut address_screen = TextScreen::new(
+        paragraphs
+            .into_paragraphs()
+            .with_placement(LinearPlacement::vertical()),
+    )
+    .with_header(Header::new(title).with_menu_button())
+    .with_subtitle(subtitle.unwrap_or(TString::empty()))
+    .with_action_bar(ActionBar::new_single(button));
+    if let Some(extra) = extra {
+        address_screen = address_screen.with_hint(Hint::new_warning_caution(extra));
+    }
+    let content_address = address_screen
         .map(|msg| match msg {
             TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
             TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
@@ -129,7 +146,7 @@ pub fn new_get_address(
             )),
     )
     .with_header(
-        Header::new(flow_title)
+        Header::new(title)
             .with_right_button(Button::with_icon(theme::ICON_CROSS), HeaderMsg::Cancelled),
     )
     .map(|msg| match msg {
@@ -139,9 +156,13 @@ pub fn new_get_address(
     });
 
     // QrCode
-    let content_qr = QrScreen::new(address_qr.map(|s| Qr::new(s, case_sensitive))?)
+    let title_qr = match address {
+        true => TR::address_details__title_receive_address,
+        false => TR::address__xpub,
+    };
+    let content_qr = QrScreen::new(qr.map(|s| Qr::new(s, case_sensitive))?)
         .with_header(
-            Header::new(TR::address_details__title_receive_address.into())
+            Header::new(title_qr.into())
                 .with_right_button(Button::with_icon(theme::ICON_CROSS), HeaderMsg::Cancelled),
         )
         .map(|_| Some(FlowMsg::Cancelled));
@@ -194,32 +215,38 @@ pub fn new_get_address(
     .map(|_| Some(FlowMsg::Cancelled));
 
     // Cancel
-
-    let content_cancel_info = TextScreen::new(
-        Paragraph::new(&theme::TEXT_REGULAR, TR::address__cancel_receive)
+    let cancel_info = match address {
+        true => TR::address__cancel_receive,
+        false => TR::words__cancel_question,
+    };
+    let mut screen_cancel_info = TextScreen::new(
+        Paragraph::new(&theme::TEXT_REGULAR, cancel_info)
             .into_paragraphs()
             .with_placement(LinearPlacement::vertical()),
     )
-    .with_header(Header::new(flow_title))
+    .with_header(Header::new(title))
     .with_action_bar(ActionBar::new_double(
         Button::with_icon(theme::ICON_CHEVRON_LEFT),
         Button::with_text(TR::buttons__cancel.into()).styled(theme::button_cancel()),
-    ))
-    .with_hint(Hint::new_instruction(
-        TR::address__cancel_contact_support,
-        Some(theme::ICON_INFO),
-    ))
-    .map(|msg| match msg {
+    ));
+    if address {
+        screen_cancel_info = screen_cancel_info.with_hint(Hint::new_instruction(
+            TR::address__cancel_contact_support,
+            Some(theme::ICON_INFO),
+        ))
+    }
+
+    let content_cancel_info = screen_cancel_info.map(|msg| match msg {
         TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
         _ => None,
     });
 
-    let mut res = SwipeFlow::new(&GetAddress::Address)?;
-    res.add_page(&GetAddress::Address, content_address)?
-        .add_page(&GetAddress::Menu, content_menu)?
-        .add_page(&GetAddress::QrCode, content_qr)?
-        .add_page(&GetAddress::AccountInfo, content_account)?
-        .add_page(&GetAddress::Cancel, content_cancel_info)?;
+    let mut res = SwipeFlow::new(&Receive::Content)?;
+    res.add_page(&Receive::Content, content_address)?
+        .add_page(&Receive::Menu, content_menu)?
+        .add_page(&Receive::QrCode, content_qr)?
+        .add_page(&Receive::AccountInfo, content_account)?
+        .add_page(&Receive::Cancel, content_cancel_info)?;
     Ok(res)
 }

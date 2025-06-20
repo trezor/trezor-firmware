@@ -725,6 +725,7 @@ impl FirmwareUI for UIEckhart {
     fn flow_get_address(
         address: Obj,
         title: TString<'static>,
+        subtitle: Option<TString<'static>>,
         description: Option<TString<'static>>,
         extra: Option<TString<'static>>,
         chunkify: bool,
@@ -736,17 +737,49 @@ impl FirmwareUI for UIEckhart {
         br_code: u16,
         br_name: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let flow = flow::get_address::new_get_address(
+        let flow = flow::receive::new_receive(
             title,
+            subtitle,
             description,
             extra,
             address,
+            true,
             chunkify,
             address_qr,
             case_sensitive,
             account,
             path,
             xpubs,
+            br_code,
+            br_name,
+        )?;
+        Ok(flow)
+    }
+
+    fn flow_get_pubkey(
+        pubkey: Obj,
+        title: TString<'static>,
+        subtitle: Option<TString<'static>>,
+        extra: Option<TString<'static>>,
+        pubkey_qr: TString<'static>,
+        account: Option<TString<'static>>,
+        path: Option<TString<'static>>,
+        br_code: u16,
+        br_name: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let flow = flow::receive::new_receive(
+            title,
+            subtitle,
+            None,
+            extra,
+            pubkey,
+            false,
+            false,
+            pubkey_qr,
+            true,
+            account,
+            path,
+            Obj::const_none(),
             br_code,
             br_name,
         )?;
