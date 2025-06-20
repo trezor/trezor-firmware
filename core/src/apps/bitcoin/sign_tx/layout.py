@@ -283,26 +283,14 @@ async def confirm_unverified_external_input() -> None:
 
 
 async def confirm_multiple_accounts() -> None:
-    await layouts.show_warning(
-        "sending_from_multiple_accounts",
-        TR.send__from_multiple_accounts,
-        TR.words__continue_anyway_question,
-        button=TR.buttons__continue,
-        br_code=ButtonRequestType.SignTx,
-    )
+    await layouts.confirm_multiple_accounts_warning()
 
 
 async def confirm_nondefault_locktime(lock_time: int, lock_time_disabled: bool) -> None:
     from trezor.strings import format_timestamp
 
     if lock_time_disabled:
-        await layouts.show_warning(
-            "nondefault_locktime",
-            TR.bitcoin__locktime_no_effect,
-            TR.words__continue_anyway_question,
-            button=TR.buttons__continue,
-            br_code=ButtonRequestType.SignTx,
-        )
+        await layouts.lock_time_disabled_warning()
     else:
         if lock_time < _LOCKTIME_TIMESTAMP_MIN_VALUE:
             text = TR.bitcoin__locktime_set_to_blockheight

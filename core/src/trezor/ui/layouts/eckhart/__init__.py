@@ -163,14 +163,31 @@ def confirm_multisig_warning() -> Awaitable[None]:
 
 
 def confirm_multisig_different_paths_warning() -> Awaitable[None]:
-    return raise_if_not_confirmed(
-        trezorui_api.show_danger(
-            title=TR.words__pay_attention,
-            description="Using different paths for different XPUBs.",
-            menu_title=TR.words__receive,
-        ),
+    return show_danger(
         "warning_multisig_different_paths",
+        content=TR.send__multisig_different_paths,
+        title=TR.words__important,
+        menu_title=TR.words__receive,
         br_code=ButtonRequestType.Warning,
+        verb_cancel=TR.words__cancel_and_exit,
+    )
+
+
+def confirm_multiple_accounts_warning() -> Awaitable[None]:
+    return show_danger(
+        "sending_from_multiple_accounts",
+        TR.send__from_multiple_accounts,
+        title=TR.words__important,
+        verb_cancel=TR.send__cancel_transaction,
+        br_code=ButtonRequestType.SignTx,
+    )
+
+
+def lock_time_disabled_warning() -> Awaitable[None]:
+    return show_warning(
+        "nondefault_locktime",
+        TR.bitcoin__locktime_no_effect,
+        br_code=ButtonRequestType.SignTx,
     )
 
 
@@ -350,12 +367,13 @@ def show_warning(
     button: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
 ) -> Awaitable[None]:
-    button = button or TR.buttons__continue  # def_arg
+    button = button or TR.words__continue_anyway  # def_arg
     return raise_if_not_confirmed(
         trezorui_api.show_warning(
             title=TR.words__important,
-            value=content,
-            button=subheader or TR.words__continue_anyway_question,
+            button=button,
+            description=content,
+            value=subheader or "",
             danger=True,
         ),
         br_name,
@@ -442,7 +460,7 @@ async def confirm_output(
 
     await raise_if_not_confirmed(
         trezorui_api.flow_confirm_output(
-            title=TR.words__address,
+            title=TR.words__send,
             subtitle=title,
             message=address,
             extra=None,
@@ -647,7 +665,7 @@ def confirm_amount(
     br_name: str = "confirm_amount",
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
-    description = description or f"{TR.words__amount}:"  # def_arg
+    description = description or f"{TR.words__send}:"  # def_arg
     return confirm_value(
         title,
         amount,

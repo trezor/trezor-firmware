@@ -1447,6 +1447,8 @@ pub enum TranslatedString {
     reset__check_share_backup_template = 1042,  // "Let's do a quick check of Share #{0}."
     reset__select_word_from_share_template = 1043,  // "Select word #{0} from\nShare #{1}"
     recovery__share_from_group_entered_template = 1044,  // "Share #{0} from Group #{1} entered."
+    send__cancel_transaction = 1045,  // "Cancel transaction"
+    send__multisig_different_paths = 1046,  // "Using different paths for different XPUBs."
 }
 
 impl TranslatedString {
@@ -3199,6 +3201,8 @@ impl TranslatedString {
             (Self::reset__check_share_backup_template, "Let's do a quick check of Share #{0}."),
             (Self::reset__select_word_from_share_template, "Select word #{0} from\nShare #{1}"),
             (Self::recovery__share_from_group_entered_template, "Share #{0} from Group #{1} entered."),
+            (Self::send__cancel_transaction, "Cancel transaction"),
+            (Self::send__multisig_different_paths, "Using different paths for different XPUBs."),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4264,11 +4268,13 @@ impl TranslatedString {
         (Qstr::MP_QSTR_sd_card__wanna_format, Self::sd_card__wanna_format),
         (Qstr::MP_QSTR_sd_card__wrong_sd_card, Self::sd_card__wrong_sd_card),
         (Qstr::MP_QSTR_send__cancel_sign, Self::send__cancel_sign),
+        (Qstr::MP_QSTR_send__cancel_transaction, Self::send__cancel_transaction),
         (Qstr::MP_QSTR_send__confirm_sending, Self::send__confirm_sending),
         (Qstr::MP_QSTR_send__from_multiple_accounts, Self::send__from_multiple_accounts),
         (Qstr::MP_QSTR_send__incl_transaction_fee, Self::send__incl_transaction_fee),
         (Qstr::MP_QSTR_send__including_fee, Self::send__including_fee),
         (Qstr::MP_QSTR_send__maximum_fee, Self::send__maximum_fee),
+        (Qstr::MP_QSTR_send__multisig_different_paths, Self::send__multisig_different_paths),
         (Qstr::MP_QSTR_send__receiving_to_multisig, Self::send__receiving_to_multisig),
         (Qstr::MP_QSTR_send__send_from, Self::send__send_from),
         (Qstr::MP_QSTR_send__send_in_the_app, Self::send__send_in_the_app),
