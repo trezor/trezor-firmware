@@ -215,15 +215,19 @@ pm_status_t pm_get_state(pm_state_t* state) {
 // - The callback can schedule the next wake-up by calling
 // rtc_wakeup_timer_start().
 // - If the callback return with wakeup_flags set, system_suspend() returns.
+#ifdef USE_RTC
 void pm_rtc_wakeup_callback(void* context) {
   // TODO: update fuel gauge state
-
+  // TODO: decide whether to reschedule the next wake-up or wake up the coreapp
   if (true) {
-    rtc_wakeup_timer_start(0, pm_rtc_wakeup_callback, NULL);
+    // Reschedule the next wake-up
+    rtc_wakeup_timer_start(10, pm_rtc_wakeup_callback, NULL);
   } else {
+    // Wake up the coreapp
     wakeup_flags_set(WAKEUP_FLAG_RTC);
   }
 }
+#endif
 
 pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
   pm_driver_t* drv = &g_pm;
@@ -256,7 +260,9 @@ pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
 
   wakeup_flags_t wakeup_flags = system_suspend();
 
+#ifdef USE_RTC
   rtc_wakeup_timer_stop();
+#endif
 
   // TODO: Handle wake-up flags
   // UNUSED(wakeup_flags);

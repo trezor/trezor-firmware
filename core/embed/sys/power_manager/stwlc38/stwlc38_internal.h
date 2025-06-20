@@ -72,6 +72,15 @@ typedef struct {
   // Timer used for periodic report readout
   systimer_t *timer;
 
+  // Set if the driver was requested to suspend background operations.
+  // IF so, the driver waits until the last operation is finished,
+  // then enters suspended mode.
+  bool suspending;
+
+  // Set if the driver's background operations are suspended.
+  // In suspended mode, the driver does not start any new operations.
+  bool suspended;
+
   // Main LDO output current state
   bool vout_enabled;
   // Main LDO output requested state

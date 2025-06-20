@@ -156,6 +156,53 @@ cleanup:
   return false;
 }
 
+bool stwlc38_suspend(void) {
+  stwlc38_driver_t *drv = &g_stwlc38_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  irq_key_t irq_key = irq_lock();
+  drv->suspending = true;
+  stwlc38_fsm_continue(drv);
+  irq_unlock(irq_key);
+
+  return true;
+}
+
+bool stwlc38_resume(void) {
+  stwlc38_driver_t *drv = &g_stwlc38_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  irq_key_t irq_key = irq_lock();
+  drv->suspending = false;
+  drv->suspended = false;
+  stwlc38_fsm_continue(drv);
+  irq_unlock(irq_key);
+
+  return true;
+}
+
+bool stwlc38_is_suspended(void) {
+  stwlc38_driver_t *drv = &g_stwlc38_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  bool is_suspended;
+
+  irq_key_t irq_key = irq_lock();
+  is_suspended = drv->suspended;
+  irq_unlock(irq_key);
+
+  return is_suspended;
+}
+
 bool stwlc38_enable(bool enable) {
   stwlc38_driver_t *drv = &g_stwlc38_driver;
 
@@ -329,8 +376,6 @@ void STWLC38_EXTI_INTERRUPT_HANDLER(void) {
   }
 
   if (drv->state == STWLC38_STATE_POWER_DOWN) {
-    // Inform the powerctl module about the WPC
-    // wakeup_flags_set(WAKEUP_FLAGS_WPC);
     drv->report_readout_requested = true;
     stwlc38_fsm_continue(drv);
   }
@@ -339,30 +384,42 @@ void STWLC38_EXTI_INTERRUPT_HANDLER(void) {
 static void stwlc38_fsm_continue(stwlc38_driver_t *drv) {
   // The order of the following conditions defines the priority
 
-  if (drv->state == STWLC38_STATE_POWER_DOWN && drv->report_readout_requested) {
-    // Check if the i2c interface is ready
-    stwlc38_i2c_submit(drv, stwlc38_ops_report_readout);
-    drv->state = STWLC38_STATE_REPORT_READOUT;
+  if (drv->suspended) {
     return;
   }
 
-  if (drv->state != STWLC38_STATE_IDLE) {
-    return;
-  }
-
-  if (drv->vout_enabled != drv->vout_enabled_requested) {
-    // Enable/Disable the main LDO output
-    if (drv->vout_enabled_requested) {
-      stwlc38_i2c_submit(drv, stwlc38_ops_vout_enable);
-      drv->state = STWLC38_STATE_VOUT_ENABLE;
-    } else {
-      stwlc38_i2c_submit(drv, stwlc38_ops_vout_disable);
-      drv->state = STWLC38_STATE_VOUT_DISABLE;
+  if (drv->state == STWLC38_STATE_POWER_DOWN) {
+    if (drv->report_readout_requested) {
+      // Check if the i2c interface is ready
+      stwlc38_i2c_submit(drv, stwlc38_ops_report_readout);
+      drv->state = STWLC38_STATE_REPORT_READOUT;
     }
-  } else if (drv->report_readout_requested) {
-    // Read status registers
-    stwlc38_i2c_submit(drv, stwlc38_ops_report_readout);
-    drv->state = STWLC38_STATE_REPORT_READOUT;
+  } else if (drv->state == STWLC38_STATE_IDLE) {
+    if (drv->vout_enabled != drv->vout_enabled_requested) {
+      // Enable/Disable the main LDO output
+      if (drv->vout_enabled_requested) {
+        stwlc38_i2c_submit(drv, stwlc38_ops_vout_enable);
+        drv->state = STWLC38_STATE_VOUT_ENABLE;
+      } else {
+        stwlc38_i2c_submit(drv, stwlc38_ops_vout_disable);
+        drv->state = STWLC38_STATE_VOUT_DISABLE;
+      }
+    } else if (drv->report_readout_requested) {
+      // Read status registers
+      stwlc38_i2c_submit(drv, stwlc38_ops_report_readout);
+      drv->state = STWLC38_STATE_REPORT_READOUT;
+    }
+  }
+
+  // After processing all requests, check if we need to
+  // suspend the driver
+  if (drv->state == STWLC38_STATE_IDLE ||
+      drv->state == STWLC38_STATE_POWER_DOWN) {
+    // No more requests to process
+    if (drv->suspending) {
+      drv->suspending = false;
+      drv->suspended = true;
+    }
   }
 }
 

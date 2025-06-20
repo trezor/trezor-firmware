@@ -59,6 +59,19 @@ bool pmic_init(void);
 // Deinitializes  PMIC driver
 void pmic_deinit(void);
 
+// Suspends driver activity so the CPU can enter low-power mode.
+//
+// Suspending may take some time if the driver is currently
+// performing an operation. Caller may check the status by
+// pmic_is_suspended().
+bool pmic_suspend(void);
+
+// Resumes the driver operation after it has been suspended.
+bool pmic_resume(void);
+
+// Checks whether the driver is suspended.
+bool pmic_is_suspended(void);
+
 // Gets the cause of the last restart
 uint8_t pmic_restart_cause(void);
 
