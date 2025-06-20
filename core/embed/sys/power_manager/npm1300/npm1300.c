@@ -107,6 +107,15 @@ typedef struct {
   // Current state of the FSM
   npm1300_fsm_state_t state;
 
+  // Set if the driver was requested to suspend background operations.
+  // IF so, the driver waits until the last operation is finished,
+  // then enters suspended mode.
+  bool suspending;
+
+  // Set if the driver's background operations are suspended.
+  // In suspended mode, the driver does not start any new operations.
+  bool suspended;
+
   // ADC register (global buffer used for ADC measurements)
   npm1300_adc_regs_t adc_regs;
   // Charging limit registers (global buffer used for charging limit)
@@ -416,6 +425,53 @@ void pmic_deinit(void) {
   systimer_delete(drv->timer);
 
   memset(drv, 0, sizeof(npm1300_driver_t));
+}
+
+bool pmic_suspend(void) {
+  npm1300_driver_t* drv = &g_npm1300_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  irq_key_t irq_key = irq_lock();
+  drv->suspending = true;
+  npm1300_fsm_continue(drv);
+  irq_unlock(irq_key);
+
+  return true;
+}
+
+bool pmic_resume(void) {
+  npm1300_driver_t* drv = &g_npm1300_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  irq_key_t irq_key = irq_lock();
+  drv->suspending = false;
+  drv->suspended = false;
+  npm1300_fsm_continue(drv);
+  irq_unlock(irq_key);
+
+  return true;
+}
+
+bool pmic_is_suspended(void) {
+  npm1300_driver_t* drv = &g_npm1300_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  bool is_suspended;
+
+  irq_key_t irq_key = irq_lock();
+  is_suspended = drv->suspended;
+  irq_unlock(irq_key);
+
+  return is_suspended;
 }
 
 bool pmic_enter_shipmode(void) {
@@ -830,6 +886,9 @@ static void npm1300_i2c_callback(void* context, i2c_packet_t* packet) {
     case NPM1300_STATE_CLEAR_EVENTS:
       drv->clear_events_requested = false;
       drv->state = NPM1300_STATE_IDLE;
+#ifdef USE_SUSPEND
+      wakeup_flags_set(WAKEUP_FLAG_POWER);
+#endif
       break;
 
     case NPM1300_STATE_CHARGING_ENABLE:
@@ -903,10 +962,6 @@ void NPM1300_EXTI_INTERRUPT_HANDLER(void) {
     return;
   }
 
-#ifdef USE_SUSPEND
-  wakeup_flags_set(WAKEUP_FLAG_POWER);
-#endif
-
   drv->clear_events_requested = true;
   npm1300_fsm_continue(drv);
 }
@@ -915,7 +970,7 @@ void NPM1300_EXTI_INTERRUPT_HANDLER(void) {
 //
 // This function is called in the irq context or when interrupts are disabled.
 static void npm1300_fsm_continue(npm1300_driver_t* drv) {
-  if (drv->state != NPM1300_STATE_IDLE) {
+  if (drv->state != NPM1300_STATE_IDLE || drv->suspended) {
     return;
   }
 
@@ -970,6 +1025,16 @@ static void npm1300_fsm_continue(npm1300_driver_t* drv) {
     npm1300_i2c_submit(drv, npm1300_ops_enter_shipmode);
     drv->shipmode_requested = false;
     drv->state = NPM1300_STATE_ENTER_SHIPMODE;
+  }
+
+  // After processing all requests, check if we need to
+  // suspend the driver
+  if (drv->state == NPM1300_STATE_IDLE) {
+    // No more requests to process
+    if (drv->suspending) {
+      drv->suspending = false;
+      drv->suspended = true;
+    }
   }
 }
 
