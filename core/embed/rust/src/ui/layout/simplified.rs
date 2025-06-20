@@ -124,7 +124,7 @@ pub fn run(frame: &mut impl Component<Msg = impl ReturnToC>) -> u32 {
 pub fn show(frame: &mut impl Component, fading: bool) {
     frame.place(ModelUI::SCREEN);
 
-    if fading {
+    if fading && display::backlight() > 0 {
         ModelUI::fadeout()
     };
 
