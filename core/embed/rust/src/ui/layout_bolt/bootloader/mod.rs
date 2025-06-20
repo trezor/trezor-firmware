@@ -29,14 +29,18 @@ use super::{
     },
     UIBolt,
 };
-use crate::ui::{
-    component::{Event, Label},
-    display::{self, toif::Toif, Color, Icon, LOADER_MAX},
-    geometry::{Alignment, Alignment2D, Offset, Point, Rect},
-    layout::simplified::{process_frame_event, run, show},
-    shape::{self, render_on_display},
-    ui_bootloader::{BootloaderLayoutType, BootloaderUI},
-    CommonUI,
+use crate::{
+    time::Duration,
+    trezorhal::time,
+    ui::{
+        component::{Event, Label},
+        display::{self, toif::Toif, Color, Icon, LOADER_MAX},
+        geometry::{Alignment, Alignment2D, Offset, Point, Rect},
+        layout::simplified::{process_frame_event, run, show},
+        shape::{self, render_on_display},
+        ui_bootloader::{BootloaderLayoutType, BootloaderUI},
+        CommonUI,
+    },
 };
 use intro::Intro;
 use menu::Menu;
@@ -165,6 +169,8 @@ impl BootloaderLayoutType for BootloaderLayout {
     }
 
     fn init_welcome() -> Self {
+        // let the previous screen on for some time
+        time::sleep(Duration::from_millis(1000));
         Self::Welcome(Welcome::new())
     }
 
