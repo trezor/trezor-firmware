@@ -1,15 +1,15 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <stdlib.h>
 #include <unistd.h>
 
 #include <SDL.h>
 
 #include <io/display.h>
+#include <sec/secret.h>
 #include <util/flash.h>
 #include <util/flash_otp.h>
-
-#include <stdlib.h>
 
 int prodtest_main(void);
 
@@ -53,6 +53,10 @@ int main(int argc, char **argv) {
   display_init(DISPLAY_RESET_CONTENT);
   flash_init();
   flash_otp_init();
+
+#ifdef LOCKABLE_BOOTLOADER
+  secret_lock_bootloader();
+#endif
 
   int opt;
   while ((opt = getopt(argc, argv, "h")) != -1) {
