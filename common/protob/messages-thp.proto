@@ -11,6 +11,34 @@ option (include_in_bitcoin_only) = true;
 
 
 /**
+ * Mapping between Trezor wire identifier (uint) and a Thp protobuf message
+ */
+enum ThpMessageType {
+    reserved 0 to 999;  // Values reserved by other messages, see messages.proto
+
+    ThpMessageType_ThpCreateNewSession = 1000 [(bitcoin_only)=true];
+    ThpMessageType_ThpPairingRequest = 1006 [(bitcoin_only) = true];
+    ThpMessageType_ThpPairingRequestApproved = 1007 [(bitcoin_only) = true];
+    ThpMessageType_ThpSelectMethod = 1008 [(bitcoin_only) = true];
+    ThpMessageType_ThpPairingPreparationsFinished = 1009 [(bitcoin_only) = true];
+    ThpMessageType_ThpCredentialRequest = 1010 [(bitcoin_only) = true];
+    ThpMessageType_ThpCredentialResponse = 1011 [(bitcoin_only) = true];
+    ThpMessageType_ThpEndRequest = 1012 [(bitcoin_only) = true];
+    ThpMessageType_ThpEndResponse = 1013 [(bitcoin_only) = true];
+    ThpMessageType_ThpCodeEntryCommitment = 1016 [(bitcoin_only)=true];
+    ThpMessageType_ThpCodeEntryChallenge = 1017 [(bitcoin_only)=true];
+    ThpMessageType_ThpCodeEntryCpaceTrezor = 1018 [(bitcoin_only)=true];
+    ThpMessageType_ThpCodeEntryCpaceHostTag = 1019 [(bitcoin_only)=true];
+    ThpMessageType_ThpCodeEntrySecret = 1020 [(bitcoin_only)=true];
+    ThpMessageType_ThpQrCodeTag = 1024 [(bitcoin_only)=true];
+    ThpMessageType_ThpQrCodeSecret = 1025 [(bitcoin_only)=true];
+    ThpMessageType_ThpNfcTagHost = 1032 [(bitcoin_only)=true];
+    ThpMessageType_ThpNfcTagTrezor = 1033 [(bitcoin_only)=true];
+
+    reserved 1100 to 2147483647;  // Values reserved by other messages, see messages.proto
+}
+
+/**
  * Numeric identifiers of pairing methods.
  * @embed
  */

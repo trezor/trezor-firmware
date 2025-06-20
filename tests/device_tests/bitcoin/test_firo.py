@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
@@ -30,7 +30,7 @@ TXHASH_8a34cc = bytes.fromhex(
 
 
 @pytest.mark.altcoin
-def test_spend_lelantus(client: Client):
+def test_spend_lelantus(session: Session):
     inp1 = messages.TxInputType(
         # THgGLVqfzJcaxRVPWE5fd8YJ1GpVePq2Uk
         address_n=parse_path("m/44h/1h/0h/0/4"),
@@ -45,7 +45,7 @@ def test_spend_lelantus(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     _, serialized_tx = btc.sign_tx(
-        client, "Firo Testnet", [inp1], [out1], prev_txes=TX_API
+        session, "Firo Testnet", [inp1], [out1], prev_txes=TX_API
     )
     assert_tx_matches(
         serialized_tx,
