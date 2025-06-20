@@ -623,7 +623,7 @@ impl FirmwareUI for UIDelizia {
         title: TString<'static>,
         _subtitle: Option<TString<'static>>,
         description: Option<TString<'static>>,
-        extra: Option<TString<'static>>,
+        _hint: Option<TString<'static>>,
         chunkify: bool,
         address_qr: TString<'static>,
         case_sensitive: bool,
@@ -636,7 +636,6 @@ impl FirmwareUI for UIDelizia {
         let flow = flow::receive::new_receive(
             title,
             description,
-            extra,
             address,
             true,
             chunkify,
@@ -655,7 +654,7 @@ impl FirmwareUI for UIDelizia {
         pubkey: Obj,
         title: TString<'static>,
         _subtitle: Option<TString<'static>>,
-        extra: Option<TString<'static>>,
+        _hint: Option<TString<'static>>,
         pubkey_qr: TString<'static>,
         account: Option<TString<'static>>,
         path: Option<TString<'static>>,
@@ -665,7 +664,6 @@ impl FirmwareUI for UIDelizia {
         let flow = flow::receive::new_receive(
             title,
             None,
-            extra,
             pubkey,
             false,
             false,

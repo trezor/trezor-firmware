@@ -74,7 +74,7 @@ pub fn new_receive(
     title: TString<'static>,
     subtitle: Option<TString<'static>>,
     description: Option<TString<'static>>,
-    extra: Option<TString<'static>>,
+    hint: Option<TString<'static>>,
     content: Obj, // TODO: get rid of Obj
     address: bool,
     chunkify: bool,
@@ -104,7 +104,7 @@ pub fn new_receive(
         content.try_into().unwrap_or(TString::empty()),
     ));
 
-    let button = if extra.is_some() {
+    let button = if hint.is_some() {
         Button::with_text(TR::buttons__confirm.into()).styled(theme::button_cancel_gradient())
     } else {
         Button::with_text(TR::buttons__confirm.into()).styled(theme::button_confirm())
@@ -118,8 +118,8 @@ pub fn new_receive(
     .with_header(Header::new(title).with_menu_button())
     .with_subtitle(subtitle.unwrap_or(TString::empty()))
     .with_action_bar(ActionBar::new_single(button));
-    if let Some(extra) = extra {
-        address_screen = address_screen.with_hint(Hint::new_warning_caution(extra));
+    if let Some(hint) = hint {
+        address_screen = address_screen.with_hint(Hint::new_warning_caution(hint));
     }
     let content_address = address_screen
         .map(|msg| match msg {

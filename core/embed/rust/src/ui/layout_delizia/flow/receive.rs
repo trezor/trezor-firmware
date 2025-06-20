@@ -78,7 +78,6 @@ impl FlowController for Receive {
 pub fn new_receive(
     title: TString<'static>,
     description: Option<TString<'static>>,
-    extra: Option<TString<'static>>,
     content: Obj, // TODO: get rid of Obj
     address: bool,
     chunkify: bool,
@@ -93,7 +92,7 @@ pub fn new_receive(
     // Address
     let paragraphs = ConfirmValueParams {
         description: description.unwrap_or_else(|| "".into()),
-        extra: extra.unwrap_or_else(|| "".into()),
+        extra: "".into(),
         value: content.try_into()?,
         font: if chunkify {
             let content: TString = content.try_into()?;

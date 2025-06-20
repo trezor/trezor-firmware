@@ -546,7 +546,7 @@ extern "C" fn new_flow_get_address(n_args: usize, args: *const Obj, kwargs: *mut
         let subtitle: Option<TString> = kwargs.get(Qstr::MP_QSTR_subtitle)?.try_into_option()?;
         let description: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
-        let extra: Option<TString> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;
+        let hint: Option<TString> = kwargs.get(Qstr::MP_QSTR_hint)?.try_into_option()?;
         let address: Obj = kwargs.get(Qstr::MP_QSTR_address)?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
         let address_qr: TString = kwargs.get(Qstr::MP_QSTR_address_qr)?.try_into()?;
@@ -562,7 +562,7 @@ extern "C" fn new_flow_get_address(n_args: usize, args: *const Obj, kwargs: *mut
             title,
             subtitle,
             description,
-            extra,
+            hint,
             chunkify,
             address_qr,
             case_sensitive,
@@ -581,7 +581,7 @@ extern "C" fn new_flow_get_pubkey(n_args: usize, args: *const Obj, kwargs: *mut 
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let subtitle: Option<TString> = kwargs.get(Qstr::MP_QSTR_subtitle)?.try_into_option()?;
-        let extra: Option<TString> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;
+        let hint: Option<TString> = kwargs.get(Qstr::MP_QSTR_hint)?.try_into_option()?;
         let pubkey: Obj = kwargs.get(Qstr::MP_QSTR_pubkey)?;
         let pubkey_qr: TString = kwargs.get(Qstr::MP_QSTR_pubkey_qr)?.try_into()?;
         let account: Option<TString> = kwargs.get(Qstr::MP_QSTR_account)?.try_into_option()?;
@@ -590,7 +590,7 @@ extern "C" fn new_flow_get_pubkey(n_args: usize, args: *const Obj, kwargs: *mut 
         let br_name: TString = kwargs.get(Qstr::MP_QSTR_br_name)?.try_into()?;
 
         let layout = ModelUI::flow_get_pubkey(
-            pubkey, title, subtitle, extra, pubkey_qr, account, path, br_code, br_name,
+            pubkey, title, subtitle, hint, pubkey_qr, account, path, br_code, br_name,
         )?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
@@ -1521,7 +1521,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     title: str,
     ///     subtitle: str | None,
     ///     description: str | None,
-    ///     extra: str | None,
+    ///     hint: str | None,
     ///     chunkify: bool,
     ///     address_qr: str,
     ///     case_sensitive: bool,
@@ -1540,7 +1540,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     title: str,
     ///     subtitle: str | None,
     ///     description: str | None,
-    ///     extra: str | None,
+    ///     hint: str | None,
     ///     chunkify: bool,
     ///     pubkey_qr: str,
     ///     case_sensitive: bool,

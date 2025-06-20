@@ -295,6 +295,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_haptic_feedback__enable;
   MP_QSTR_haptic_feedback__subtitle;
   MP_QSTR_haptic_feedback__title;
+  MP_QSTR_hint;
   MP_QSTR_hold;
   MP_QSTR_hold_danger;
   MP_QSTR_homescreen__click_to_connect;
