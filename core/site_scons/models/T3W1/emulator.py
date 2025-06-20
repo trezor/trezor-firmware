@@ -115,6 +115,8 @@ def configure(
     paths += ["embed/sys/power_manager/inc"]
     features_available.append("power_manager")
 
+    paths += ["embed/sys/suspend/inc"]
+
     features_available.append("backlight")
     defines += [("USE_BACKLIGHT", "1")]
 

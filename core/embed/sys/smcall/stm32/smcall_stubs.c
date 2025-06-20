@@ -94,9 +94,9 @@ void reboot_with_rsod(const systask_postmortem_t *pminfo) {
 // power_manager_secure.h
 // =============================================================================
 
-#ifdef USE_POWER_SAVE
+#ifdef USE_SUSPEND
 
-#include <sys/power_save.h>
+#include <sys/suspend_io.h>
 
 void power_save_suspend_cpu(void) {
   smcall_invoke0(SMCALL_POWER_SAVE_SUSPEND_CPU);
@@ -110,7 +110,7 @@ void power_save_resume_secure_io(void) {
   smcall_invoke0(SMCALL_POWER_SAVE_RESUME_SECURE_IO);
 }
 
-#endif  // USE_POWER_SAVE
+#endif  // USE_SUSPEND
 
 // =============================================================================
 // unit_properties.h

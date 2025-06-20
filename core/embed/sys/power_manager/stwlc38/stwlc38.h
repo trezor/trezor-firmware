@@ -90,6 +90,19 @@ bool stwlc38_init(void);
 // Deinitializes STWLC38 driver
 void stwlc38_deinit(void);
 
+// Suspends driver activity so the CPU can enter low-power mode.
+//
+// Suspending may take some time if the driver is currently
+// performing an operation. Caller may check the status by
+// stwlc38_is_suspended().
+bool stwlc38_suspend(void);
+
+// Resumes the driver operation after it has been suspended.
+bool stwlc38_resume(void);
+
+// Checks whether the driver is suspended.
+bool stwlc38_is_suspended(void);
+
 // Enables or disables the STWLC38. This can be used to enable/disable
 // wireless charging functionality.
 //

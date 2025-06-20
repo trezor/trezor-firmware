@@ -30,12 +30,28 @@
 bool rtc_init(void);
 
 /**
+ * @brief Callback invoked when the RTC wakeup event occurs
+ *
+ * @param context Context pointer passed to rtc_wakeup_timer_start
+ */
+typedef void (*rtc_wakeup_callback_t)(void* context);
+
+/**
  * @brief Schedule a wakeup event after a specified number of seconds
  *
  * Configures the RTC to wake up the system from STOP mode after the specified
- * number of seconds. After waking up, the PM_WAKEUP_FLAG_RTC flag is set.
+ * number of seconds. After waking up, callback is called if not NULL otherwise
+ * the WAKEUP_FLAG_RTC flag is set.
  *
  * @param seconds Number of seconds (1 to 65536) to wait before waking up.
+ * @param callback Callback function to be called when the wakeup event occurs.
+ * @param context Context pointer to be passed to the callback function.
  * @return true if the wakeup was successfully scheduled, false otherwise
  */
-bool rtc_wakeup_timer_start(uint32_t seconds);
+bool rtc_wakeup_timer_start(uint32_t seconds, rtc_wakeup_callback_t callback,
+                            void* context);
+
+/**
+ * @brief Stop the RTC wakeup timer
+ */
+void rtc_wakeup_timer_stop(void);

@@ -25,18 +25,6 @@
 
 #ifdef KERNEL_MODE
 
-// !@# TODO: put following constants the board file
-#define STWLC38_INT_PIN GPIO_PIN_15
-#define STWLC38_INT_PORT GPIOG
-#define STWLC38_INT_PIN_CLK_ENA __HAL_RCC_GPIOG_CLK_ENABLE
-#define STWLC38_EXTI_INTERRUPT_GPIOSEL EXTI_GPIOG
-#define STWLC38_EXTI_INTERRUPT_LINE EXTI_LINE_15
-#define STWLC38_EXTI_INTERRUPT_NUM EXTI15_IRQn
-#define STWLC38_EXTI_INTERRUPT_HANDLER EXTI15_IRQHandler
-#define STWLC38_ENB_PIN GPIO_PIN_3
-#define STWLC38_ENB_PORT GPIOD
-#define STWLC38_ENB_PIN_CLK_ENA __HAL_RCC_GPIOD_CLK_ENABLE
-
 // Period of the report readout [ms]
 #define STWLC38_REPORT_READOUT_INTERVAL_MS 500
 
@@ -83,6 +71,15 @@ typedef struct {
   stwlc38_report_regs_t report_regs;
   // Timer used for periodic report readout
   systimer_t *timer;
+
+  // Set if the driver was requested to suspend background operations.
+  // IF so, the driver waits until the last operation is finished,
+  // then enters suspended mode.
+  bool suspending;
+
+  // Set if the driver's background operations are suspended.
+  // In suspended mode, the driver does not start any new operations.
+  bool suspended;
 
   // Main LDO output current state
   bool vout_enabled;

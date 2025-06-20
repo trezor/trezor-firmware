@@ -41,8 +41,8 @@
 #include <sec/optiga.h>
 #endif
 
-#ifdef USE_POWER_SAVE
-#include <sys/power_save.h>
+#ifdef USE_SUSPEND
+#include <sys/suspend_io.h>
 #endif
 
 #ifdef LOCKABLE_BOOTLOADER
@@ -100,7 +100,7 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       reboot_with_rsod__verified(pminfo);
     } break;
 
-#ifdef USE_POWER_SAVE
+#ifdef USE_SUSPEND
     case SMCALL_POWER_SAVE_SUSPEND_CPU: {
       power_save_suspend_cpu();
     } break;
@@ -112,7 +112,7 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
     case SMCALL_POWER_SAVE_RESUME_SECURE_IO: {
       power_save_resume_secure_io();
     } break;
-#endif  // USE_POWER_SAVE
+#endif  // USE_SUSPEND
 
     case SMCALL_UNIT_PROPERTIES_GET: {
       unit_properties_t *props = (unit_properties_t *)args[0];

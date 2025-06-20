@@ -27,8 +27,8 @@
 
 #include "../button_poll.h"
 
-#ifdef USE_POWER_MANAGER
-#include <sys/power_manager.h>
+#ifdef USE_SUSPEND
+#include <sys/suspend.h>
 #endif
 
 #ifdef KERNEL_MODE
@@ -165,9 +165,9 @@ void BTN_EXTI_INTERRUPT_HANDLER(void) {
   // Clear the EXTI line pending bit
   __HAL_GPIO_EXTI_CLEAR_FLAG(BTN_EXTI_INTERRUPT_PIN);
 
-#ifdef USE_POWER_MANAGER
+#ifdef USE_SUSPEND
   // Inform the powerctl module about button press
-  pm_wakeup_flags_set(PM_WAKEUP_FLAG_BUTTON);
+  wakeup_flags_set(WAKEUP_FLAG_BUTTON);
 #endif
 
   mpu_restore(mpu_mode);

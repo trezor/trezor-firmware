@@ -18,12 +18,14 @@
  */
 #ifdef KERNEL_MODE
 
+#include <trezor_rtl.h>
+
 #include <sys/backup_ram.h>
 #include <sys/irq.h>
 #include <sys/pmic.h>
+#include <sys/suspend.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
-#include <trezor_rtl.h>
 
 #ifdef USE_RTC
 #include <sys/rtc.h>
@@ -207,8 +209,30 @@ pm_status_t pm_get_state(pm_state_t* state) {
   return PM_OK;
 }
 
-pm_status_t pm_suspend(void) {
+// This callback is called from inside the system_suspend() function
+// when the rtc wake-up timer expires. The callback can perform
+// measurements and update the fuel gauge state.
+// - The callback can schedule the next wake-up by calling
+// rtc_wakeup_timer_start().
+// - If the callback return with wakeup_flags set, system_suspend() returns.
+#ifdef USE_RTC
+void pm_rtc_wakeup_callback(void* context) {
+  // TODO: update fuel gauge state
+
+  if (true) {
+    rtc_wakeup_timer_start(10, pm_rtc_wakeup_callback, NULL);
+  } else {
+    wakeup_flags_set(WAKEUP_FLAG_RTC);
+  }
+}
+#endif
+
+pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
   pm_driver_t* drv = &g_pm;
+
+  if (wakeup_reason != NULL) {
+    *wakeup_reason = 0;
+  }
 
   if (!drv->initialized) {
     return PM_NOT_INITIALIZED;
@@ -228,21 +252,28 @@ pm_status_t pm_suspend(void) {
   irq_unlock(irq_key);
 
 #ifdef USE_RTC
-  // TODO: Uncomment to wake up by RTC timer
-  // Automatically wakes up after 10 seconds with PM_WAKEUP_FLAG_RTC set
-  // rtc_wakeup_timer_start(10);
+  // Automatically wakes up after specified time and call pm_rtc_wakeup_callback
+  rtc_wakeup_timer_start(10, pm_rtc_wakeup_callback, NULL);
 #endif
 
-  pm_wakeup_flags_t wakeup_flags = pm_control_suspend();
+  wakeup_flags_t wakeup_flags = system_suspend();
+
+#ifdef USE_RTC
+  rtc_wakeup_timer_stop();
+#endif
 
   // TODO: Handle wake-up flags
-  UNUSED(wakeup_flags);
+  // UNUSED(wakeup_flags);
 
   // Exit hibernation state if it was requested
   irq_key = irq_lock();
   drv->request_exit_suspend = true;
   pm_process_state_machine();
   irq_unlock(irq_key);
+
+  if (wakeup_reason != NULL) {
+    *wakeup_reason = wakeup_flags;
+  }
 
   return PM_OK;
 }
@@ -464,44 +495,6 @@ static bool pm_load_recovery_data(pm_recovery_data_t* recovery) {
   }
 
   return true;
-}
-
-pm_status_t pm_wakeup_flags_set(pm_wakeup_flags_t flags) {
-  pm_driver_t* drv = &g_pm;
-  if (!drv->initialized) {
-    return PM_NOT_INITIALIZED;
-  }
-  irq_key_t irq_key = irq_lock();
-  drv->wakeup_flags |= flags;
-  irq_unlock(irq_key);
-
-  return PM_OK;
-}
-
-pm_status_t pm_wakeup_flags_reset(void) {
-  pm_driver_t* drv = &g_pm;
-
-  if (!drv->initialized) {
-    return PM_NOT_INITIALIZED;
-  }
-
-  irq_key_t irq_key = irq_lock();
-  drv->wakeup_flags = 0;
-  irq_unlock(irq_key);
-  return PM_OK;
-}
-
-pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t* flags) {
-  pm_driver_t* drv = &g_pm;
-
-  if (!drv->initialized) {
-    return PM_NOT_INITIALIZED;
-  }
-
-  irq_key_t irq_key = irq_lock();
-  *flags = drv->wakeup_flags;
-  irq_unlock(irq_key);
-  return PM_OK;
 }
 
 pm_status_t pm_set_soc_limit(uint8_t limit) {

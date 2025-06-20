@@ -47,6 +47,7 @@ const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
     "-I../sys/time/inc",
     "-I../sys/task/inc",
     "-I../sys/power_manager/inc",
+    "-I../sys/suspend/inc",
     "-I../sys/irq/inc",
     "-I../util/flash/inc",
     "-I../util/translations/inc",

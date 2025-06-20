@@ -22,7 +22,7 @@
 #include <trezor_rtl.h>
 
 #include <sys/irq.h>
-#include <sys/power_save.h>
+#include <sys/suspend_io.h>
 #include <sys/systick.h>
 
 #ifdef USE_BLE
