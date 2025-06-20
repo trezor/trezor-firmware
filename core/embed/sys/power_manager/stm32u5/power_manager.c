@@ -209,6 +209,22 @@ pm_status_t pm_get_state(pm_state_t* state) {
   return PM_OK;
 }
 
+// This callback is called from inside the system_suspend() function
+// when the rtc wake-up timer expires. The callback can perform
+// measurements and update the fuel gauge state.
+// - The callback can schedule the next wake-up by calling
+// rtc_wakeup_timer_start().
+// - If the callback return with wakeup_flags set, system_suspend() returns.
+void pm_rtc_wakeup_callback(void* context) {
+  // TODO: update fuel gauge state
+
+  if (true) {
+    rtc_wakeup_timer_start(0, pm_rtc_wakeup_callback, NULL);
+  } else {
+    wakeup_flags_set(WAKEUP_FLAG_RTC);
+  }
+}
+
 pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
   pm_driver_t* drv = &g_pm;
 
@@ -234,12 +250,13 @@ pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
   irq_unlock(irq_key);
 
 #ifdef USE_RTC
-  // TODO: Uncomment to wake up by RTC timer
-  // Automatically wakes up after 10 seconds with PM_WAKEUP_FLAG_RTC set
-  // rtc_wakeup_timer_start(10);
+  // Automatically wakes up after specified time and call pm_rtc_wakeup_callback
+  rtc_wakeup_timer_start(10, pm_rtc_wakeup_callback, NULL);
 #endif
 
   wakeup_flags_t wakeup_flags = system_suspend();
+
+  rtc_wakeup_timer_stop();
 
   // TODO: Handle wake-up flags
   // UNUSED(wakeup_flags);
