@@ -25,6 +25,9 @@
 #include <sys/suspend.h>
 #include <sys/suspend_io.h>
 
+#include <../../power_manager/stwlc38/stwlc38.h>
+#include <sys/pmic.h>
+
 static wakeup_flags_t g_wakeup_flags = 0;
 
 static void background_tasks_suspend(void);
@@ -106,10 +109,18 @@ wakeup_flags_t system_suspend(void) {
   return wakeup_flags;
 }
 
-static void background_tasks_suspend(void) {}
+static void background_tasks_suspend(void) {
+  pmic_suspend();
+  stwlc38_suspend();
+}
 
-static bool background_tasks_suspended(void) { return true; }
+static bool background_tasks_suspended(void) {
+  return pmic_is_suspended() && stwlc38_is_suspended();
+}
 
-static void background_tasks_resume(void) {}
+static void background_tasks_resume(void) {
+  stwlc38_resume();
+  pmic_resume();
+}
 
 #endif  // defined(KERNEL_MODE) && !defined(SECMON)
