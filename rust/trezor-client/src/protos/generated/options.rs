@@ -51,6 +51,8 @@ pub mod exts {
 
     pub const internal_only: ::protobuf::ext::ExtFieldOptional<::protobuf::descriptor::MessageOptions, bool> = ::protobuf::ext::ExtFieldOptional::new(52003, ::protobuf::descriptor::field_descriptor_proto::Type::TYPE_BOOL);
 
+    pub const wire_enum: ::protobuf::ext::ExtFieldOptional<::protobuf::descriptor::MessageOptions, ::std::string::String> = ::protobuf::ext::ExtFieldOptional::new(52004, ::protobuf::descriptor::field_descriptor_proto::Type::TYPE_STRING);
+
     pub const experimental_field: ::protobuf::ext::ExtFieldOptional<::protobuf::descriptor::FieldOptions, bool> = ::protobuf::ext::ExtFieldOptional::new(53001, ::protobuf::descriptor::field_descriptor_proto::Type::TYPE_BOOL);
 
     pub const include_in_bitcoin_only: ::protobuf::ext::ExtFieldOptional<::protobuf::descriptor::FileOptions, bool> = ::protobuf::ext::ExtFieldOptional::new(60000, ::protobuf::descriptor::field_descriptor_proto::Type::TYPE_BOOL);
@@ -75,11 +77,12 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     le.protobuf.MessageOptionsR\x13experimentalMessage:>\n\twire_type\x18\
     \xa2\x96\x03\x20\x01(\r\x12\x1f.google.protobuf.MessageOptionsR\x08wireT\
     ype:F\n\rinternal_only\x18\xa3\x96\x03\x20\x01(\x08\x12\x1f.google.proto\
-    buf.MessageOptionsR\x0cinternalOnly:N\n\x12experimental_field\x18\x89\
-    \x9e\x03\x20\x01(\x08\x12\x1d.google.protobuf.FieldOptionsR\x11experimen\
-    talField:U\n\x17include_in_bitcoin_only\x18\xe0\xd4\x03\x20\x01(\x08\x12\
-    \x1c.google.protobuf.FileOptionsR\x14includeInBitcoinOnlyB4\n#com.satosh\
-    ilabs.trezor.lib.protobufB\rTrezorOptions\
+    buf.MessageOptionsR\x0cinternalOnly:>\n\twire_enum\x18\xa4\x96\x03\x20\
+    \x01(\t\x12\x1f.google.protobuf.MessageOptionsR\x08wireEnum:N\n\x12exper\
+    imental_field\x18\x89\x9e\x03\x20\x01(\x08\x12\x1d.google.protobuf.Field\
+    OptionsR\x11experimentalField:U\n\x17include_in_bitcoin_only\x18\xe0\xd4\
+    \x03\x20\x01(\x08\x12\x1c.google.protobuf.FileOptionsR\x14includeInBitco\
+    inOnlyB4\n#com.satoshilabs.trezor.lib.protobufB\rTrezorOptions\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

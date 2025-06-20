@@ -245,6 +245,12 @@ class ProtoMessage:
 
         if "wire_type" in extensions:
             wire_type = extensions["wire_type"]
+        elif "wire_enum" in extensions:
+            message_type_enum = find_by_name(
+                descriptor.enums, extensions["wire_enum"].bytes.decode()
+            )
+            message_type = find_by_name(message_type_enum.value, message.name)
+            wire_type = message_type.number
         elif message_type is not None:
             wire_type = message_type.number
         else:
@@ -360,12 +366,16 @@ class Descriptor:
         self.enums = []
 
         for file in self.files:
+            enums = self._filter_items(file.enum_type)
+            for enum in enums:
+                self.convert_enum_value_names(enum)
+            self.enums += enums
+
             messages = [
                 ProtoMessage.from_message(self, m)
                 for m in self._filter_items(file.message_type)
             ]
             self.messages += messages
-            self.enums += self._filter_items(file.enum_type)
 
             for message in messages:
                 # recursively search for nested types in newly added messages
@@ -373,9 +383,6 @@ class Descriptor:
 
         if not self.messages and not self.enums:
             raise RuntimeError("No messages and no enums found.")
-
-        for enum in self.enums:
-            self.convert_enum_value_names(enum)
 
     def _filter_items(self, iter):
         return [
@@ -412,12 +419,16 @@ class Descriptor:
         }
 
     def _nested_types_from_message(self, message):
+        nested_enums = self._filter_items(message.enum_type)
+        for enum in nested_enums:
+            self.convert_enum_value_names(enum)
+        self.enums += nested_enums
+
         nested_messages = [
             ProtoMessage.from_message(self, m)
             for m in self._filter_items(message.nested_type)
         ]
         self.messages += nested_messages
-        self.enums += self._filter_items(message.enum_type)
         for nested in nested_messages:
             self._nested_types_from_message(nested.orig)
 

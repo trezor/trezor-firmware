@@ -65,6 +65,7 @@ if TYPE_CHECKING:
     from trezor.enums import StellarSignerType  # noqa: F401
     from trezor.enums import TezosBallotType  # noqa: F401
     from trezor.enums import TezosContractType  # noqa: F401
+    from trezor.enums import ThpMessageType  # noqa: F401
     from trezor.enums import ThpPairingMethod  # noqa: F401
     from trezor.enums import WordRequestType  # noqa: F401
 
@@ -6153,20 +6154,20 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ThpDeviceProperties(protobuf.MessageType):
-        internal_model: "str | None"
+        internal_model: "str"
         model_variant: "int | None"
-        protocol_version_major: "int | None"
-        protocol_version_minor: "int | None"
+        protocol_version_major: "int"
+        protocol_version_minor: "int"
         pairing_methods: "list[ThpPairingMethod]"
 
         def __init__(
             self,
             *,
+            internal_model: "str",
+            protocol_version_major: "int",
+            protocol_version_minor: "int",
             pairing_methods: "list[ThpPairingMethod] | None" = None,
-            internal_model: "str | None" = None,
             model_variant: "int | None" = None,
-            protocol_version_major: "int | None" = None,
-            protocol_version_minor: "int | None" = None,
         ) -> None:
             pass
 
@@ -6191,7 +6192,7 @@ if TYPE_CHECKING:
     class ThpCreateNewSession(protobuf.MessageType):
         passphrase: "str | None"
         on_device: "bool | None"
-        derive_cardano: "bool | None"
+        derive_cardano: "bool"
 
         def __init__(
             self,
@@ -6227,12 +6228,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ThpSelectMethod(protobuf.MessageType):
-        selected_pairing_method: "ThpPairingMethod | None"
+        selected_pairing_method: "ThpPairingMethod"
 
         def __init__(
             self,
             *,
-            selected_pairing_method: "ThpPairingMethod | None" = None,
+            selected_pairing_method: "ThpPairingMethod",
         ) -> None:
             pass
 
@@ -6247,12 +6248,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ThpCodeEntryCommitment(protobuf.MessageType):
-        commitment: "bytes | None"
+        commitment: "bytes"
 
         def __init__(
             self,
             *,
-            commitment: "bytes | None" = None,
+            commitment: "bytes",
         ) -> None:
             pass
 
@@ -6261,12 +6262,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ThpCodeEntryChallenge(protobuf.MessageType):
-        challenge: "bytes | None"
+        challenge: "bytes"
 
         def __init__(
             self,
             *,
-            challenge: "bytes | None" = None,
+            challenge: "bytes",
         ) -> None:
             pass
 
@@ -6275,12 +6276,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ThpCodeEntryCpaceTrezor(protobuf.MessageType):
-        cpace_trezor_public_key: "bytes | None"
+        cpace_trezor_public_key: "bytes"
 
         def __init__(
             self,
             *,
-            cpace_trezor_public_key: "bytes | None" = None,
+            cpace_trezor_public_key: "bytes",
         ) -> None:
             pass
 
@@ -6289,14 +6290,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ThpCodeEntryCpaceHostTag(protobuf.MessageType):
-        cpace_host_public_key: "bytes | None"
-        tag: "bytes | None"
+        cpace_host_public_key: "bytes"
+        tag: "bytes"
 
         def __init__(
             self,
             *,
-            cpace_host_public_key: "bytes | None" = None,
-            tag: "bytes | None" = None,
+            cpace_host_public_key: "bytes",
+            tag: "bytes",
         ) -> None:
             pass
 
@@ -6305,12 +6306,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ThpCodeEntrySecret(protobuf.MessageType):
-        secret: "bytes | None"
+        secret: "bytes"
 
         def __init__(
             self,
             *,
-            secret: "bytes | None" = None,
+            secret: "bytes",
         ) -> None:
             pass
 
@@ -6319,12 +6320,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ThpQrCodeTag(protobuf.MessageType):
-        tag: "bytes | None"
+        tag: "bytes"
 
         def __init__(
             self,
             *,
-            tag: "bytes | None" = None,
+            tag: "bytes",
         ) -> None:
             pass
 
@@ -6333,12 +6334,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ThpQrCodeSecret(protobuf.MessageType):
-        secret: "bytes | None"
+        secret: "bytes"
 
         def __init__(
             self,
             *,
-            secret: "bytes | None" = None,
+            secret: "bytes",
         ) -> None:
             pass
 
@@ -6347,12 +6348,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ThpNfcTagHost(protobuf.MessageType):
-        tag: "bytes | None"
+        tag: "bytes"
 
         def __init__(
             self,
             *,
-            tag: "bytes | None" = None,
+            tag: "bytes",
         ) -> None:
             pass
 
@@ -6361,12 +6362,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ThpNfcTagTrezor(protobuf.MessageType):
-        tag: "bytes | None"
+        tag: "bytes"
 
         def __init__(
             self,
             *,
-            tag: "bytes | None" = None,
+            tag: "bytes",
         ) -> None:
             pass
 
@@ -6375,14 +6376,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ThpCredentialRequest(protobuf.MessageType):
-        host_static_pubkey: "bytes | None"
-        autoconnect: "bool | None"
+        host_static_pubkey: "bytes"
+        autoconnect: "bool"
         credential: "bytes | None"
 
         def __init__(
             self,
             *,
-            host_static_pubkey: "bytes | None" = None,
+            host_static_pubkey: "bytes",
             autoconnect: "bool | None" = None,
             credential: "bytes | None" = None,
         ) -> None:
@@ -6393,14 +6394,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ThpCredentialResponse(protobuf.MessageType):
-        trezor_static_pubkey: "bytes | None"
-        credential: "bytes | None"
+        trezor_static_pubkey: "bytes"
+        credential: "bytes"
 
         def __init__(
             self,
             *,
-            trezor_static_pubkey: "bytes | None" = None,
-            credential: "bytes | None" = None,
+            trezor_static_pubkey: "bytes",
+            credential: "bytes",
         ) -> None:
             pass
 
@@ -6437,14 +6438,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ThpPairingCredential(protobuf.MessageType):
-        cred_metadata: "ThpCredentialMetadata | None"
-        mac: "bytes | None"
+        cred_metadata: "ThpCredentialMetadata"
+        mac: "bytes"
 
         def __init__(
             self,
             *,
-            cred_metadata: "ThpCredentialMetadata | None" = None,
-            mac: "bytes | None" = None,
+            cred_metadata: "ThpCredentialMetadata",
+            mac: "bytes",
         ) -> None:
             pass
 
@@ -6453,14 +6454,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ThpAuthenticatedCredentialData(protobuf.MessageType):
-        host_static_pubkey: "bytes | None"
-        cred_metadata: "ThpCredentialMetadata | None"
+        host_static_pubkey: "bytes"
+        cred_metadata: "ThpCredentialMetadata"
 
         def __init__(
             self,
             *,
-            host_static_pubkey: "bytes | None" = None,
-            cred_metadata: "ThpCredentialMetadata | None" = None,
+            host_static_pubkey: "bytes",
+            cred_metadata: "ThpCredentialMetadata",
         ) -> None:
             pass
 
