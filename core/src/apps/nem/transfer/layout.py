@@ -74,8 +74,9 @@ async def _ask_transfer_mosaic(
                     TR.nem__confirm_transfer_of,
                     format_amount(mosaic_quantity, definition.divisibility)
                     + definition.ticker,
+                    False,
                 ),
-                (TR.nem__of, definition.name),
+                (TR.nem__of, definition.name, False),
             ),
         )
         levy = definition.levy  # local_cache_attribute
@@ -95,7 +96,7 @@ async def _ask_transfer_mosaic(
             await confirm_properties(
                 "confirm_mosaic_levy",
                 TR.nem__confirm_mosaic,
-                ((TR.nem__levy_fee_of, levy_msg),),
+                ((TR.nem__levy_fee_of, levy_msg, False),),
             )
 
     else:
@@ -114,8 +115,9 @@ async def _ask_transfer_mosaic(
                 (
                     TR.nem__confirm_transfer_of,
                     TR.nem__raw_units_template.format(mosaic_quantity),
+                    False,
                 ),
-                (TR.nem__of, f"{mosaic.namespace}.{mosaic.mosaic}"),
+                (TR.nem__of, f"{mosaic.namespace}.{mosaic.mosaic}", False),
             ),
         )
 

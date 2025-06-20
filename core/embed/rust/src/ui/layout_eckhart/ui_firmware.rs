@@ -23,6 +23,7 @@ use crate::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
             util::{ConfirmValueParams, PropsList, RecoveryType, StrOrBytes},
         },
+        layout_eckhart::theme::TEXT_MONO_MEDIUM_LIGHT_DATA,
         ui_firmware::{
             FirmwareUI, ERROR_NOT_IMPLEMENTED, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
             MAX_WORD_QUIZ_ITEMS,
@@ -356,15 +357,15 @@ impl FirmwareUI for UIEckhart {
 
     fn confirm_properties(
         title: TString<'static>,
-        _subtitle: Option<TString<'static>>,
         items: Obj,
+        _subtitle: Option<TString<'static>>,
         hold: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = PropsList::new(
             items,
             &theme::TEXT_SMALL_LIGHT,
-            &theme::TEXT_MONO_LIGHT,
-            &theme::TEXT_MONO_LIGHT,
+            &theme::TEXT_MONO_MEDIUM_LIGHT,
+            &theme::TEXT_MONO_MEDIUM_LIGHT_DATA,
         )?;
 
         let flow = flow::new_confirm_with_menu(

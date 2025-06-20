@@ -415,15 +415,15 @@ impl FirmwareUI for UIDelizia {
 
     fn confirm_properties(
         title: TString<'static>,
-        subtitle: Option<TString<'static>>,
         items: Obj,
+        subtitle: Option<TString<'static>>,
         hold: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = PropsList::new(
             items,
             &theme::TEXT_SUB_GREY_LIGHT,
             &theme::TEXT_MONO,
-            &theme::TEXT_MONO,
+            &theme::TEXT_MONO_DATA,
         )?;
 
         let flow = flow::new_confirm_action_simple(
@@ -959,7 +959,7 @@ impl FirmwareUI for UIDelizia {
                     value,
                 ));
             } else {
-                paragraphs.add(Paragraph::new(&theme::TEXT_MONO, value));
+                paragraphs.add(Paragraph::new(&theme::TEXT_MONO_DATA, value));
             }
         }
 

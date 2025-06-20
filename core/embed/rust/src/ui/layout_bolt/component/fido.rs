@@ -71,8 +71,11 @@ where
 
         Self {
             app_name: Label::centered(app_name, theme::TEXT_DEMIBOLD),
-            account_name: Paragraph::new(&theme::TEXT_MONO, get_account(scrollbar.active_page))
-                .into_paragraphs(),
+            account_name: Paragraph::new(
+                &theme::TEXT_MONO_DATA,
+                get_account(scrollbar.active_page),
+            )
+            .into_paragraphs(),
             page_swipe,
             icon: Child::new(Image::new(icon_data)),
             get_account,

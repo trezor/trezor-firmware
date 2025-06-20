@@ -1,9 +1,15 @@
+from typing import TYPE_CHECKING
+
 from trezor import TR
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount
 from trezor.ui.layouts import confirm_metadata
 
 from .helpers import NEM_MAX_DIVISIBILITY
+
+if TYPE_CHECKING:
+
+    from trezor.ui.layouts import PropertyType
 
 
 async def require_confirm_text(action: str) -> None:
@@ -25,7 +31,7 @@ async def require_confirm_fee(action: str, fee: int) -> None:
     )
 
 
-async def require_confirm_content(headline: str, content: list) -> None:
+async def require_confirm_content(headline: str, content: list[PropertyType]) -> None:
     from trezor.ui.layouts import confirm_properties
 
     await confirm_properties(
