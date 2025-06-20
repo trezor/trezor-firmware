@@ -41,7 +41,11 @@ use crate::ui::{
 use ufmt::uwrite;
 
 use super::theme::bootloader::BLD_WARN_COLOR;
-use crate::ui::{component::Event, layout::simplified::process_frame_event};
+use crate::{
+    time::Duration,
+    trezorhal::time,
+    ui::{component::Event, layout::simplified::process_frame_event},
+};
 use connect::Connect;
 use intro::Intro;
 use menu::Menu;
@@ -148,6 +152,8 @@ impl BootloaderLayoutType for BootloaderLayout {
         }
     }
     fn init_welcome() -> Self {
+        // let the previous screen on for some time
+        time::sleep(Duration::from_millis(1500));
         Self::Welcome(Welcome::new())
     }
 

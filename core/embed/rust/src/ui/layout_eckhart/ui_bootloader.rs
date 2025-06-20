@@ -19,11 +19,11 @@ use super::{
         BldActionBar, BldHeader, BldHeaderMsg, BldMenuScreen, BldTextScreen, BldWelcomeScreen,
         ConnectScreen,
     },
-    component::{Button, WelcomeScreen},
+    component::Button,
     cshape::{render_loader, ScreenBorder},
     fonts,
     theme::{
-        self, backlight,
+        self,
         bootloader::{
             button_cancel, button_confirm, button_wipe_confirm, BLD_BG, BLD_FG,
             TEXT_FW_FINGERPRINT, TEXT_WARNING, WELCOME_COLOR,
@@ -346,20 +346,7 @@ impl BootloaderUI for UIEckhart {
         run(&mut screen)
     }
 
-    fn screen_boot_stage_1(fading: bool) {
-        if fading {
-            Self::fadeout();
-        }
-
-        let mut frame = WelcomeScreen::new();
-        show(&mut frame, false);
-
-        if fading {
-            Self::fadein();
-        } else {
-            display::set_backlight(backlight::get_backlight_normal());
-        }
-    }
+    fn screen_boot_stage_1(_fading: bool) {}
 
     fn screen_wipe_progress(progress: u16, initialize: bool) {
         Self::screen_progress("Resetting Trezor", progress, initialize, theme::RED, None)

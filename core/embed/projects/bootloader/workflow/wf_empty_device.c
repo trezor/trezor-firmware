@@ -41,15 +41,6 @@ workflow_result_t workflow_empty_device(void) {
 #endif
   ensure(erase_storage(NULL), NULL);
 
-  // keep the model screen up for a while
-#ifndef USE_BACKLIGHT
-  systick_delay_ms(1500);
-#else
-  // backlight fading takes some time so the explicit delay here is
-  // shorter
-  systick_delay_ms(1000);
-#endif
-
   protob_ios_t ios;
   workflow_ifaces_init(sectrue, &ios);
 

@@ -32,8 +32,10 @@ mod welcome;
 
 mod connect;
 
-use crate::ui::{
-    component::Event, layout::simplified::process_frame_event, ui_bootloader::BootloaderUI,
+use crate::{
+    time::Duration,
+    trezorhal::time,
+    ui::{component::Event, layout::simplified::process_frame_event, ui_bootloader::BootloaderUI},
 };
 use connect::Connect;
 use intro::Intro;
@@ -115,6 +117,8 @@ impl BootloaderLayoutType for BootloaderLayout {
     }
 
     fn init_welcome() -> Self {
+        // let the previous screen on for some time
+        time::sleep(Duration::from_millis(1500));
         Self::Welcome(Welcome::new())
     }
 
