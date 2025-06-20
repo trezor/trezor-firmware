@@ -23,7 +23,7 @@ use crate::{
         geometry::{self, Direction, Offset},
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
-            util::{PropsList, RecoveryType},
+            util::{ContentType, PropsList, RecoveryType},
         },
         ui_firmware::{
             FirmwareUI, ERROR_NOT_IMPLEMENTED, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
@@ -636,8 +636,7 @@ impl FirmwareUI for UIDelizia {
         let flow = flow::receive::new_receive(
             title,
             description,
-            address,
-            true,
+            ContentType::Address(address),
             chunkify,
             address_qr,
             case_sensitive,
@@ -664,8 +663,7 @@ impl FirmwareUI for UIDelizia {
         let flow = flow::receive::new_receive(
             title,
             None,
-            pubkey,
-            false,
+            ContentType::PublicKey(pubkey),
             false,
             pubkey_qr,
             true,

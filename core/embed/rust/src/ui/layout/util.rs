@@ -213,6 +213,30 @@ pub fn get_user_custom_image() -> Result<BinaryData<'static>, Error> {
     Ok(data.into())
 }
 
+/// ContentType is used to define the type of content that can be displayed
+/// in a layout or flow. It can either be an address or a public key.
+pub enum ContentType {
+    Address(Obj), // TODO: get rid of Obj
+    PublicKey(Obj),
+}
+
+impl ContentType {
+    pub fn obj(&self) -> &Obj {
+        match self {
+            ContentType::Address(obj) => obj,
+            ContentType::PublicKey(obj) => obj,
+        }
+    }
+
+    // Optional: for ownership
+    pub fn into_obj(self) -> Obj {
+        match self {
+            ContentType::Address(obj) => obj,
+            ContentType::PublicKey(obj) => obj,
+        }
+    }
+}
+
 /// Maximum number of extended public keys (xpubs) that can be displayed in
 /// a layout or flow.
 pub const MAX_XPUBS: usize = 16;

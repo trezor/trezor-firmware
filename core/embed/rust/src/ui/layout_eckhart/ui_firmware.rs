@@ -21,7 +21,7 @@ use crate::{
         geometry::{Alignment, LinearPlacement, Offset},
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
-            util::{ConfirmValueParams, PropsList, RecoveryType, StrOrBytes},
+            util::{ConfirmValueParams, ContentType, PropsList, RecoveryType, StrOrBytes},
         },
         ui_firmware::{
             FirmwareUI, ERROR_NOT_IMPLEMENTED, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
@@ -742,8 +742,7 @@ impl FirmwareUI for UIEckhart {
             subtitle,
             description,
             hint,
-            address,
-            true,
+            ContentType::Address(address),
             chunkify,
             address_qr,
             case_sensitive,
@@ -772,8 +771,7 @@ impl FirmwareUI for UIEckhart {
             subtitle,
             None,
             hint,
-            pubkey,
-            false,
+            ContentType::PublicKey(pubkey),
             false,
             pubkey_qr,
             true,

@@ -16,7 +16,7 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow,
         },
         geometry::{Direction, LinearPlacement},
-        layout::util::MAX_XPUBS,
+        layout::util::{ContentType, MAX_XPUBS},
     },
 };
 use heapless::Vec;
@@ -75,8 +75,7 @@ pub fn new_receive(
     subtitle: Option<TString<'static>>,
     description: Option<TString<'static>>,
     hint: Option<TString<'static>>,
-    content: Obj, // TODO: get rid of Obj
-    address: bool,
+    content: ContentType,
     chunkify: bool,
     qr: TString<'static>,
     case_sensitive: bool,
@@ -86,8 +85,23 @@ pub fn new_receive(
     br_code: u16,
     br_name: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
+    let (obj, cancel_info, cancel_hint, title_qr) = match content {
+        ContentType::Address(address) => (
+            address,
+            TR::address__cancel_receive,
+            Some(Hint::new_instruction(
+                TR::address__cancel_contact_support,
+                Some(theme::ICON_INFO),
+            )),
+            TR::address_details__title_receive_address,
+        ),
+        ContentType::PublicKey(pubkey) => {
+            (pubkey, TR::words__cancel_question, None, TR::address__xpub)
+        }
+    };
+    let content: TString = obj.try_into().unwrap_or(TString::empty());
+
     let text_style = if chunkify {
-        let content: TString = content.try_into()?;
         theme::get_chunkified_text_style(content.len())
     } else {
         &theme::TEXT_MONO_ADDRESS
@@ -99,10 +113,7 @@ pub fn new_receive(
             Paragraph::new(&theme::TEXT_SMALL_LIGHT, description).with_bottom_padding(ITEM_PADDING),
         );
     }
-    paragraphs.add(Paragraph::new(
-        text_style,
-        content.try_into().unwrap_or(TString::empty()),
-    ));
+    paragraphs.add(Paragraph::new(text_style, content));
 
     let button = if hint.is_some() {
         Button::with_text(TR::buttons__confirm.into()).styled(theme::button_cancel_gradient())
@@ -156,10 +167,6 @@ pub fn new_receive(
     });
 
     // QrCode
-    let title_qr = match address {
-        true => TR::address_details__title_receive_address,
-        false => TR::address__xpub,
-    };
     let content_qr = QrScreen::new(qr.map(|s| Qr::new(s, case_sensitive))?)
         .with_header(
             Header::new(title_qr.into())
@@ -215,10 +222,6 @@ pub fn new_receive(
     .map(|_| Some(FlowMsg::Cancelled));
 
     // Cancel
-    let cancel_info = match address {
-        true => TR::address__cancel_receive,
-        false => TR::words__cancel_question,
-    };
     let mut screen_cancel_info = TextScreen::new(
         Paragraph::new(&theme::TEXT_REGULAR, cancel_info)
             .into_paragraphs()
@@ -229,11 +232,8 @@ pub fn new_receive(
         Button::with_icon(theme::ICON_CHEVRON_LEFT),
         Button::with_text(TR::buttons__cancel.into()).styled(theme::button_cancel()),
     ));
-    if address {
-        screen_cancel_info = screen_cancel_info.with_hint(Hint::new_instruction(
-            TR::address__cancel_contact_support,
-            Some(theme::ICON_INFO),
-        ))
+    if let Some(hint) = cancel_hint {
+        screen_cancel_info = screen_cancel_info.with_hint(hint);
     }
 
     let content_cancel_info = screen_cancel_info.map(|msg| match msg {

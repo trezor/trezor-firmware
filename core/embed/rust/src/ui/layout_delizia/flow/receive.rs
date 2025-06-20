@@ -15,7 +15,7 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow, SwipePage,
         },
         geometry::Direction,
-        layout::util::{ConfirmValueParams, MAX_XPUBS},
+        layout::util::{ConfirmValueParams, ContentType, MAX_XPUBS},
     },
 };
 use heapless::Vec;
@@ -77,8 +77,7 @@ impl FlowController for Receive {
 pub fn new_receive(
     title: TString<'static>,
     description: Option<TString<'static>>,
-    content: Obj, // TODO: get rid of Obj
-    address: bool,
+    content: ContentType,
     chunkify: bool,
     qr: TString<'static>,
     case_sensitive: bool,
@@ -88,6 +87,14 @@ pub fn new_receive(
     br_code: u16,
     br_name: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
+    let (content, cancel_title, cancel_content) = match content {
+        ContentType::Address(address) => (
+            address,
+            TR::address__cancel_receive,
+            TR::address__cancel_contact_support,
+        ),
+        ContentType::PublicKey(pubkey) => (pubkey, TR::buttons__cancel, TR::words__are_you_sure),
+    };
     // Address
     let paragraphs = ConfirmValueParams {
         description: description.unwrap_or_else(|| "".into()),
@@ -121,13 +128,6 @@ pub fn new_receive(
             .map(super::util::map_to_confirm);
 
     // Menu
-    let (cancel_title, cancel_content) = match address {
-        true => (
-            TR::address__cancel_receive,
-            TR::address__cancel_contact_support,
-        ),
-        false => (TR::buttons__cancel, TR::words__are_you_sure),
-    };
     let content_menu = Frame::left_aligned(
         "".into(),
         VerticalMenu::empty()
