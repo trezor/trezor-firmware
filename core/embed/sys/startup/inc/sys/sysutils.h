@@ -39,9 +39,13 @@ __attribute((noreturn)) void call_with_new_stack(uint32_t arg1, uint32_t arg2,
 
 // Ensure that we are running in privileged thread mode.
 //
-// This function is used only on STM32F4, where a direct jump to the
-// bootloader is performed. It checks if we are in handler mode, and
-// if so, it switches to privileged thread mode.
+// The function checks if we are in handler mode, and if so, it switches to
+// privileged thread mode.
+//
+// It is used in two specific cases:
+// 1. When a direct jump to the bootloader is performed (STM32F4 only)
+// 2. When the system recovers from an error state and needs to call
+//    error_handler callback that draws an RSOD screen.
 void ensure_thread_mode(void);
 
 // Ensure compatible hardware settings before jumping to
