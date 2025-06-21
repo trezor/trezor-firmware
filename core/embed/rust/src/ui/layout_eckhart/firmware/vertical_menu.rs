@@ -300,9 +300,8 @@ impl<T: MenuItems> Component for VerticalMenu<T> {
 
         // Place each button (might overflow the menu bounds)
         for button in self.buttons.iter_mut() {
-            let button_height = button
-                .content_height(button_width - 2 * Button::MENU_ITEM_CONTENT_OFFSET.x)
-                + 2 * Self::MENU_ITEM_CONTENT_PADDING;
+            let button_height =
+                button.content_height(button_width) + 2 * Self::MENU_ITEM_CONTENT_PADDING;
             let button_bounds =
                 Rect::from_top_left_and_size(top_left, Offset::new(button_width, button_height));
 

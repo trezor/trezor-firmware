@@ -20,8 +20,6 @@ pub const ERASE_HOLD_DURATION: ShortDuration = ShortDuration::from_millis(1500);
 pub const FUEL_GAUGE_DURATION: ShortDuration = ShortDuration::from_millis(2000);
 
 // Text styles
-/// Alias for use with copied code, might be deleted later
-pub const TEXT_NORMAL: TextStyle = TEXT_MEDIUM;
 /// TT Satoshi Extra Light - 72 (PIN keyboard, Wallet backup / word)
 pub const TEXT_SUPER_BIG: TextStyle = TextStyle::new(
     fonts::FONT_SATOSHI_EXTRALIGHT_72,
@@ -547,9 +545,9 @@ pub const fn button_keyboard_next() -> ButtonStyleSheet {
 pub const fn button_always_disabled() -> ButtonStyleSheet {
     let style = &ButtonStyle {
         font: fonts::FONT_SATOSHI_MEDIUM_26,
-        text_color: GREY_LIGHT,
+        text_color: GREY,
         button_color: BG,
-        icon_color: GREY_LIGHT,
+        icon_color: GREY,
         background_color: BG,
     };
     ButtonStyleSheet {
