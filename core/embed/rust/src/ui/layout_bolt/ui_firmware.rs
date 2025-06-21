@@ -892,18 +892,28 @@ impl FirmwareUI for UIBolt {
         ))
     }
 
-    fn show_pairing_code(
+    #[cfg(feature = "ble")]
+    fn show_ble_pairing_code(
+        _title: TString<'static>,
+        _description: TString<'static>,
+        _code: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
+            c"show_ble_pairing_code not supported",
+        ))
+    }
+
+    fn show_thp_pairing_code(
         title: TString<'static>,
         description: TString<'static>,
         code: TString<'static>,
-        button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Self::confirm_action(
             title,
             Some(code),
             Some(description),
             None,
-            button.then_some(TR::buttons__confirm.into()),
+            None,
             None,
             false,
             false,

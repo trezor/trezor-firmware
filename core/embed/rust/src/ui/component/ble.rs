@@ -10,8 +10,8 @@ pub struct BLEHandler<T> {
     waiting_for_pairing: bool,
 }
 
-pub enum BLEHandlerMsg<T> {
-    Content(T),
+pub enum BLEHandlerMsg<TMsg> {
+    Content(TMsg),
     PairingCode(u32),
     Cancelled,
 }

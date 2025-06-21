@@ -28,11 +28,10 @@ async def pair_new_device() -> None:
 
         try:
             result = await raise_if_not_confirmed(
-                trezorui_api.show_pairing_code(
+                trezorui_api.show_ble_pairing_code(
                     title="Bluetooth pairing",
                     description="Pairing code match?",
                     code=f"{code:0>6}",
-                    button=True,
                 ),
                 None,
             )
