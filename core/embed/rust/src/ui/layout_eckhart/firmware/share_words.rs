@@ -296,7 +296,7 @@ impl<'a> Component for ShareWords<'a> {
             self.area.top_right(),
             Offset::new(
                 self.area.width()
-                    - theme::TEXT_NORMAL.text_font.text_width(&ordinal)
+                    - theme::TEXT_REGULAR.text_font.text_width(&ordinal)
                     - Self::ORDINAL_PADDING,
                 1,
             ),

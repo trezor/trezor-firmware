@@ -596,7 +596,7 @@ impl FirmwareUI for UIEckhart {
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut main_paragraphs = ParagraphVecShort::new();
         if let Some(description) = description {
-            main_paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, description));
+            main_paragraphs.add(Paragraph::new(&theme::TEXT_REGULAR, description));
         }
         if let Some(extra) = extra {
             main_paragraphs.add(Paragraph::new(&theme::TEXT_SMALL, extra));
