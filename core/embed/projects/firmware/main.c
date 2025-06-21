@@ -125,9 +125,11 @@ int main_func(uint32_t cmd, void *arg) {
 #endif
   }
 
+#if PRODUCTION || BOOTLOADER_QA
   if (bl_update_required) {
     reboot_device();
   }
+#endif
 
   screen_boot_stage_2(fading);
 
