@@ -374,34 +374,59 @@ class Layout(Generic[T]):
         """Set up background tasks for a layout.
 
         Called from `start()`. Creates and yields a list of background tasks, typically
-        event handlers for different interfaces.
+        event handlers for different interfaces. Event handlers are enabled based on build options to prevent keeping stale events in the event queue.
 
         Override and then `yield from super().create_tasks()` to add more tasks."""
         if utils.USE_BUTTON:
-            yield self._handle_input_iface(io.BUTTON, self.layout.button_event)
+            yield self._handle_button_events()
         if utils.USE_TOUCH:
-            yield self._handle_input_iface(io.TOUCH, self.layout.touch_event)
+            yield self._handle_touch_events()
         if utils.USE_BLE:
-            # most layouts don't care but we don't want to keep stale events in the queue
             yield self._handle_ble_events()
         if utils.USE_POWER_MANAGER:
             yield self._handle_power_manager()
 
-    def _handle_input_iface(
-        self, iface: int, event_call: Callable[..., LayoutState | None]
-    ) -> Generator:
-        """Task that is waiting for the user input."""
-        touch = loop.wait(iface)
-        try:
-            while True:
-                # Using `yield` instead of `await` to avoid allocations.
-                event = yield touch
-                workflow.idle_timer.touch()
-                self._event(event_call, *event)
-        except Shutdown:
-            return
-        finally:
-            touch.close()
+    if utils.USE_BUTTON:
+
+        def _handle_button_events(self) -> Generator:
+            """Task that is waiting for the user button input."""
+            button = loop.wait(io.BUTTON)
+            try:
+                while True:
+                    # Using `yield` instead of `await` to avoid allocations.
+                    event = yield button
+                    if utils.USE_POWER_MANAGER:
+                        event_type, event_button = event
+                        # check for POWER_BUTTON (2), BUTTON_UP (0)
+                        if event_button == 2 and event_type == 0:
+                            from apps.base import suspend_device
+
+                            if __debug__:
+                                log.info(__name__, "suspend_device")
+                            suspend_device()
+                            break
+                    workflow.idle_timer.touch()
+                    self._event(self.layout.button_event, *event)
+            except Shutdown:
+                return
+            finally:
+                button.close()
+
+    if utils.USE_TOUCH:
+
+        def _handle_touch_events(self) -> Generator:
+            """Task that is waiting for the user touch input."""
+            touch = loop.wait(io.TOUCH)
+            try:
+                while True:
+                    # Using `yield` instead of `await` to avoid allocations.
+                    event = yield touch
+                    workflow.idle_timer.touch()
+                    self._event(self.layout.touch_event, *event)
+            except Shutdown:
+                return
+            finally:
+                touch.close()
 
     async def _handle_usb_iface(self) -> None:
         if self.context is None:

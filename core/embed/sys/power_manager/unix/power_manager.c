@@ -27,6 +27,11 @@ pm_status_t pm_init(bool inherit_state) { return PM_OK; }
 
 void pm_deinit(void) {}
 
+pm_status_t pm_suspend(void) {
+  // TODO: simulate suspend on emu?
+  return PM_OK;
+}
+
 pm_status_t pm_hibernate(void) {
   exit(1);
   return PM_OK;
