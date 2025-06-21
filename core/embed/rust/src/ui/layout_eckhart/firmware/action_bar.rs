@@ -76,7 +76,7 @@ impl ActionBar {
             .with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)
             .with_gradient();
         if right_button.stylesheet() == &theme::button_default() {
-            right_button = right_button.styled(theme::firmware::button_default_actionbar_right());
+            right_button = right_button.styled(theme::firmware::button_actionbar_right_default());
         };
         Self::new(Mode::Single, None, Some(right_button), None)
     }
@@ -107,7 +107,7 @@ impl ActionBar {
             .with_content_offset(Self::BUTTON_CONTENT_OFFSET.neg())
             .with_gradient();
         if right_button.stylesheet() == &theme::button_default() {
-            right_button = right_button.styled(theme::firmware::button_default_actionbar_right());
+            right_button = right_button.styled(theme::firmware::button_actionbar_right_default());
         };
 
         Self::new(
@@ -206,9 +206,14 @@ impl ActionBar {
             right_button
                 .long_press()
                 .filter(|_| !animation_disabled())
-                .map(|dur| {
+                .map(|(dur, danger)| {
                     HoldToConfirmAnim::new()
                         .with_duration(dur)
+                        .with_color(if danger {
+                            theme::ORANGE
+                        } else {
+                            theme::GREEN_LIME
+                        })
                         .with_header_overlay(TR::instructions__continue_holding.into())
                 })
         } else {
