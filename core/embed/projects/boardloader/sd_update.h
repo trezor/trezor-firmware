@@ -23,5 +23,4 @@
 
 // Check the SD card for a valid bootloader image, and if found, update the
 // bootloader. Halts the execution after updating (successful or not).
-void sd_update_check_and_update(const uint8_t* const* keys, uint8_t key_m,
-                                uint8_t key_n);
+void sd_update_check_and_update(void);

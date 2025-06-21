@@ -45,14 +45,11 @@ SECTIONS {
     *(.text*);
     . = ALIGN(4);
     *(.rodata*);
-    . = ALIGN(4);
-    KEEP(*(.bootloader));
-    *(.bootloader*);
     . = ALIGN(512);
   } >FLASH AT>FLASH
 
   .stack : ALIGN(8) {
-    . = 6K; /* Overflow causes UsageFault */
+    . = 8K; /* Overflow causes UsageFault */
   } >MAIN_RAM
 
   .data : ALIGN(4) {

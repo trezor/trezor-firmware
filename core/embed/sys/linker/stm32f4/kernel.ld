@@ -44,14 +44,11 @@ SECTIONS {
     *(.text*);
     . = ALIGN(4);
     *(.rodata*);
-    . = ALIGN(4);
-    KEEP(*(.bootloader));
-    *(.bootloader*);
     . = ALIGN(512);
   } >FLASH AT>FLASH
 
   .stack : ALIGN(8) {
-    . = 8K; /* Exactly 6k allocated for stack. Overflow causes MemManage fault (when using MPU). */
+    . = 8K; /* Exactly 8k allocated for stack. Overflow causes MemManage fault (when using MPU). */
   } >MAIN_STACK
 
   .data : ALIGN(4) {

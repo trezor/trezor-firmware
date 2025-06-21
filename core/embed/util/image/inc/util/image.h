@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TREZORHAL_IMAGE_H__
-#define __TREZORHAL_IMAGE_H__
+#pragma once
 
 #include <trezor_model.h>
 #include <trezor_types.h>
@@ -156,4 +155,4 @@ void get_image_fingerprint(const image_header *const hdr, uint8_t *const out);
 secbool check_firmware_header(const uint8_t *header, size_t header_size,
                               firmware_header_info_t *info);
 
-#endif
+secbool __wur check_bootloader_header_sig(const image_header *const hdr);

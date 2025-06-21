@@ -17,9 +17,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __BL_CHECK_H__
-#define __BL_CHECK_H__
+#pragma once
 
-void check_and_replace_bootloader(void);
+#include <trezor_types.h>
 
-#endif
+/**
+ * @brief Verify the installed bootloader against expected hashes.
+ *
+ * Calculates the hash of the currently installed bootloader and compares
+ * it against two known-good expected hashes.
+ *
+ * @param hash_00 Pointer to the expected hash for 0x00 padded image.
+ * @param hash_FF Pointer to the expected hash for 0xFF padded image.
+ * @param hash_len         Length of each hash, in bytes.
+ *
+ * @return `true` if the installed bootloader's hash does not match either
+ *         of the expected hashes (indicating it should be replaced),
+ *         `false` if it matches one of them.
+ */
+bool bl_check_check(const uint8_t *hash_00, const uint8_t *hash_FF,
+                    size_t hash_len);
+
+/**
+ * @brief Replace the currently installed bootloader.
+ *
+ * Writes a new bootloader image into flash.
+ *
+ * @param data Pointer to the bootloader image data.
+ * @param len  Size of the bootloader data in bytes.
+ */
+void bl_check_replace(const uint8_t *data, size_t len);

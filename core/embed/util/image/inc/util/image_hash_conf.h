@@ -1,5 +1,23 @@
-#ifndef LIB_IMAGE_HASH_H_
-#define LIB_IMAGE_HASH_H_
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#pragma once
 
 #include <trezor_model.h>
 #include <trezor_types.h>
@@ -7,7 +25,7 @@
 #ifdef IMAGE_HASH_SHA256
 #include "sha2.h"
 #define IMAGE_HASH_DIGEST_LENGTH SHA256_DIGEST_LENGTH
-#if defined(USE_HASH_PROCESSOR) && defined(KERNEL_MODE)
+#if defined(USE_HASH_PROCESSOR) && defined(SECURE_MODE)
 #include <sec/hash_processor.h>
 #define IMAGE_HASH_CTX hash_sha256_context_t
 #define IMAGE_HASH_INIT(ctx) hash_processor_sha256_init(ctx)
@@ -36,6 +54,4 @@
   blake2s(data, len, output, BLAKE2S_DIGEST_LENGTH)
 #else
 #error "IMAGE_HASH_SHA256 or IMAGE_HASH_BLAKE2S must be defined"
-#endif
-
 #endif

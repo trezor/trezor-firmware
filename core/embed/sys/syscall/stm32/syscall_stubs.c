@@ -85,6 +85,20 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
 }
 
 // =============================================================================
+// bl_check.h
+// =============================================================================
+
+bool bl_check_check(const uint8_t *hash_00, const uint8_t *hash_FF,
+                    size_t hash_len) {
+  return (bool)syscall_invoke3((uint32_t)hash_00, (uint32_t)hash_FF,
+                               (uint32_t)hash_len, SYSCALL_BL_CHECK_CHECK);
+}
+
+void bl_check_replace(const uint8_t *data, size_t len) {
+  syscall_invoke2((uint32_t)data, len, SYSCALL_BL_CHECK_REPLACE);
+}
+
+// =============================================================================
 // bootutils.h
 // =============================================================================
 

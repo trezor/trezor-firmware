@@ -5,6 +5,7 @@ MEMORY {
 
   MAIN_RAM (wal) : ORIGIN = MAIN_RAM_START, LENGTH = MAIN_RAM_SIZE
   AUX1_RAM (wal) : ORIGIN = AUX1_RAM_START, LENGTH = AUX1_RAM_SIZE
+  AUX2_RAM (wal) : ORIGIN = AUX2_RAM_START, LENGTH = AUX2_RAM_SIZE
   BOOT_ARGS (wal) : ORIGIN = BOOTARGS_START, LENGTH = BOOTARGS_SIZE
   FB1_RAM (wal) : ORIGIN = FB1_RAM_START, LENGTH = FB1_RAM_SIZE
   FB2_RAM (wal) : ORIGIN = FB2_RAM_START, LENGTH = FB2_RAM_SIZE
@@ -77,7 +78,7 @@ SECTIONS {
     . = ALIGN(4);
     *(.no_dma_buffers*);
     . = ALIGN(4);
-  } >AUX1_RAM
+  } >AUX2_RAM
 
   .stack : ALIGN(8) {
     . = 16K; /* Overflow causes UsageFault */

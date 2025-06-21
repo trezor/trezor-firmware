@@ -124,6 +124,9 @@ void drivers_init() {
 #ifdef USE_BACKUP_RAM
   backup_ram_init();
 #endif
+#ifdef USE_HASH_PROCESSOR
+  hash_processor_init();
+#endif
 #endif  // SECURE_MODE
 
 #ifdef USE_RTC
@@ -146,10 +149,6 @@ void drivers_init() {
   enable_systemview();
 #endif
 
-#ifdef USE_HASH_PROCESSOR
-  hash_processor_init();
-#endif
-
   display_init(DISPLAY_JUMP_BEHAVIOR);
 
 #ifdef SECURE_MODE
@@ -157,9 +156,6 @@ void drivers_init() {
   check_oem_keys();
 #endif
 
-#if PRODUCTION || BOOTLOADER_QA
-  check_and_replace_bootloader();
-#endif
 #endif
 
 #ifdef USE_BUTTON

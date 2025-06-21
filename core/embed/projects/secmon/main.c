@@ -50,6 +50,10 @@
 #include <sec/tropic.h>
 #endif
 
+#ifdef USE_HASH_PROCESSOR
+#include <sec/hash_processor.h>
+#endif
+
 static void drivers_init(void) {
   flash_init();
 
@@ -77,10 +81,6 @@ static void drivers_init(void) {
   check_oem_keys();
 #endif
 
-#if PRODUCTION || BOOTLOADER_QA
-  check_and_replace_bootloader();
-#endif
-
 #ifdef USE_OPTIGA
   optiga_init_and_configure();
 #endif
@@ -91,6 +91,10 @@ static void drivers_init(void) {
 
 #ifdef USE_BACKUP_RAM
   backup_ram_init();
+#endif
+
+#ifdef USE_HASH_PROCESSOR
+  hash_processor_init();
 #endif
 }
 
