@@ -8,7 +8,8 @@ use super::{
         component::{ButtonStyle, ButtonStyleSheet},
         fonts,
     },
-    BLACK, BLUE, GREY, GREY_DARK, GREY_EXTRA_LIGHT, GREY_LIGHT, GREY_SUPER_DARK, RED, WHITE,
+    BLACK, BLUE, GREY, GREY_DARK, GREY_EXTRA_LIGHT, GREY_LIGHT, GREY_SUPER_DARK, ORANGE, RED,
+    WHITE,
 };
 
 pub const BLD_BG: Color = BLACK;
@@ -127,6 +128,32 @@ pub fn button_bld_menu() -> ButtonStyleSheet {
             text_color: GREY_EXTRA_LIGHT,
             button_color: BLD_BG,
             icon_color: GREY_EXTRA_LIGHT,
+            background_color: BLD_BG,
+        },
+        active: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_REGULAR_38,
+            text_color: GREY_DARK,
+            button_color: GREY_SUPER_DARK,
+            icon_color: GREY_DARK,
+            background_color: GREY_SUPER_DARK,
+        },
+        disabled: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_REGULAR_38,
+            text_color: GREY_DARK,
+            button_color: BLD_BG,
+            icon_color: GREY_DARK,
+            background_color: BLD_BG,
+        },
+    }
+}
+
+pub fn button_bld_menu_danger() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_REGULAR_38,
+            text_color: ORANGE,
+            button_color: BLD_BG,
+            icon_color: ORANGE,
             background_color: BLD_BG,
         },
         active: &ButtonStyle {

@@ -11,9 +11,10 @@ use crate::{
 use super::super::{
     cshape::ScreenBorder,
     theme::{
-        ACTION_BAR_HEIGHT, HEADER_HEIGHT, RED, SIDE_INSETS, TEXT_NORMAL, TEXT_SMALL,
-        TEXT_SMALL_GREY, TEXT_SMALL_RED, TEXT_VERTICAL_SPACING,
+        ACTION_BAR_HEIGHT, HEADER_HEIGHT, PADDING, RED, SIDE_INSETS, TEXT_NORMAL, TEXT_SMALL,
+        TEXT_SMALL_GREY, TEXT_SMALL_GREY_EXTRA_LIGHT, TEXT_SMALL_RED, TEXT_VERTICAL_SPACING,
     },
+    WAIT_FOR_RESTART_MESSAGE,
 };
 
 /// Full-screen component showing Eckhart RSOD. To keep it minimal, this screen
@@ -23,22 +24,23 @@ pub struct ErrorScreen<'a> {
     title: Label<'a>,
     message: Label<'a>,
     footer: Label<'a>,
+    wait_for_restart: Label<'a>,
     screen_border: ScreenBorder,
 }
 
 impl<'a> ErrorScreen<'a> {
     pub fn new(title: TString<'a>, message: TString<'a>, footer: TString<'a>) -> Self {
-        let header = Label::left_aligned("Failure".into(), TEXT_SMALL_RED).vertically_centered();
         let title = Label::left_aligned(title, TEXT_NORMAL);
         let message = Label::left_aligned(message, TEXT_SMALL);
-        let footer = Label::centered(footer, TEXT_SMALL_GREY).vertically_centered();
-
+        let footer = Label::left_aligned(footer, TEXT_SMALL_GREY_EXTRA_LIGHT);
         Self {
-            header,
+            header: Label::left_aligned("Failure".into(), TEXT_SMALL_RED).vertically_centered(),
             title,
             message,
             footer,
             screen_border: ScreenBorder::new(RED),
+            wait_for_restart: Label::centered(WAIT_FOR_RESTART_MESSAGE.into(), TEXT_SMALL_GREY)
+                .vertically_centered(),
         }
     }
 }
@@ -47,10 +49,13 @@ impl<'a> Component for ErrorScreen<'a> {
     type Msg = Never;
 
     fn place(&mut self, _bounds: Rect) -> Rect {
-        let area = SCREEN.inset(SIDE_INSETS);
+        const FOOTER_AREA_HEIGHT: i16 = 52;
+        const AREA: Rect = SCREEN.inset(SIDE_INSETS);
 
-        let (header_area, area) = area.split_top(HEADER_HEIGHT);
-        let (area, footer_area) = area.split_bottom(ACTION_BAR_HEIGHT);
+        let (header_area, area) = AREA.split_top(HEADER_HEIGHT);
+        let (area, actionbar_area) = area.split_bottom(ACTION_BAR_HEIGHT);
+        let area = area.inset(Insets::bottom(PADDING));
+        let (area, footer_area) = area.split_bottom(FOOTER_AREA_HEIGHT);
 
         let title_height = self.title.text_height(area.width());
         let message_height = self.message.text_height(area.width());
@@ -63,6 +68,7 @@ impl<'a> Component for ErrorScreen<'a> {
         self.title.place(title_area);
         self.message.place(message_area);
         self.footer.place(footer_area);
+        self.wait_for_restart.place(actionbar_area);
         SCREEN
     }
 
@@ -75,6 +81,7 @@ impl<'a> Component for ErrorScreen<'a> {
         self.title.render(target);
         self.message.render(target);
         self.footer.render(target);
+        self.wait_for_restart.render(target);
         self.screen_border.render(u8::MAX, target);
     }
 }

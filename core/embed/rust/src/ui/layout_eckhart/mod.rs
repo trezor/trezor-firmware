@@ -35,7 +35,9 @@ pub mod ui_firmware;
 mod prodtest;
 
 use crate::ui::layout::simplified::show;
-use component::{ErrorScreen, WelcomeScreen};
+use component::{ErrorScreen, UpdateScreen, WelcomeScreen};
+
+pub const WAIT_FOR_RESTART_MESSAGE: &str = "Wait for device restart";
 
 pub struct UIEckhart;
 
@@ -93,12 +95,8 @@ impl CommonUI for UIEckhart {
     }
 
     fn screen_update() {
-        let mut frame = ErrorScreen::new(
-            "Update".into(),
-            "Finishing firmware update".into(),
-            "Do not turn off your Trezor".into(),
-        );
-        show(&mut frame, true);
+        let mut screen = UpdateScreen::new();
+        show(&mut screen, true);
     }
 
     #[cfg(feature = "ui_debug_overlay")]

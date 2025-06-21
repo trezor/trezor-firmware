@@ -31,15 +31,13 @@ use super::{
         button_default, BLUE, GREY, ICON_CHECKMARK, ICON_CLOSE, ICON_CROSS, RED, TEXT_NORMAL,
         TEXT_SMALL_GREY,
     },
-    UIEckhart,
+    UIEckhart, WAIT_FOR_RESTART_MESSAGE,
 };
 
 #[cfg(feature = "ble")]
 use super::bootloader::{ConfirmPairingScreen, PairingFinalizationScreen, PairingModeScreen};
 
 pub type BootloaderString = String<128>;
-
-const RECONNECT_MESSAGE: &str = "Please reconnect\nthe device";
 
 const SCREEN: Rect = UIEckhart::SCREEN;
 const PROGRESS_TEXT_ORIGIN: Point = SCREEN
@@ -188,7 +186,7 @@ impl BootloaderUI for UIEckhart {
         ))
         .with_header(BldHeader::new_pay_attention())
         .with_footer(
-            Label::centered(RECONNECT_MESSAGE.into(), TEXT_SMALL_GREY).vertically_centered(),
+            Label::centered(WAIT_FOR_RESTART_MESSAGE.into(), TEXT_SMALL_GREY).vertically_centered(),
         )
         .with_screen_border(SCREEN_BORDER_RED);
 
@@ -310,7 +308,7 @@ impl BootloaderUI for UIEckhart {
         ))
         .with_header(BldHeader::new_pay_attention())
         .with_footer(
-            Label::centered(RECONNECT_MESSAGE.into(), TEXT_SMALL_GREY).vertically_centered(),
+            Label::centered(WAIT_FOR_RESTART_MESSAGE.into(), TEXT_SMALL_GREY).vertically_centered(),
         )
         .with_screen_border(SCREEN_BORDER_BLUE);
 
@@ -385,7 +383,7 @@ impl BootloaderUI for UIEckhart {
         ))
         .with_header(BldHeader::new("Done".into()).with_icon(theme::ICON_DONE, theme::GREY))
         .with_footer(
-            Label::centered(RECONNECT_MESSAGE.into(), TEXT_SMALL_GREY).vertically_centered(),
+            Label::centered(WAIT_FOR_RESTART_MESSAGE.into(), TEXT_SMALL_GREY).vertically_centered(),
         )
         .with_screen_border(SCREEN_BORDER_RED);
 
@@ -400,7 +398,7 @@ impl BootloaderUI for UIEckhart {
         ))
         .with_header(BldHeader::new_pay_attention())
         .with_footer(
-            Label::centered(RECONNECT_MESSAGE.into(), TEXT_SMALL_GREY).vertically_centered(),
+            Label::centered(WAIT_FOR_RESTART_MESSAGE.into(), TEXT_SMALL_GREY).vertically_centered(),
         )
         .with_screen_border(SCREEN_BORDER_RED);
         show(&mut screen, true);

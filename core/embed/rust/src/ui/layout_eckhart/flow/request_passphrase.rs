@@ -61,7 +61,7 @@ impl FlowController for RequestPassphrase {
 pub fn new_request_passphrase() -> Result<SwipeFlow, error::Error> {
     let content_confirm_empty = TextScreen::new(
         Paragraph::new(
-            &theme::TEXT_NORMAL,
+            &theme::TEXT_REGULAR,
             TR::passphrase__continue_with_empty_passphrase,
         )
         .into_paragraphs()
