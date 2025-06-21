@@ -88,6 +88,7 @@ CFLAGS += -DUSE_MONERO=1
 CFLAGS += -DUSE_NEM=1
 CFLAGS += -DUSE_CARDANO=1
 CFLAGS += -DUSE_INSECURE_PRNG=1
+CFLAGS += -DUSE_ECASH=1
 CFLAGS += -DAES_128
 CFLAGS += -DAES_192
 CFLAGS += -DAES_VAR
@@ -134,6 +135,7 @@ SRCS  += tls_prf.c
 SRCS  += hash_to_curve.c
 SRCS  += buffer.c der.c
 SRCS  += elligator2.c
+SRCS  += ecash/schnorr.c
 
 OBJS   = $(SRCS:.c=.o)
 OBJS  += secp256k1-zkp.o

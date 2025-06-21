@@ -11426,6 +11426,10 @@ static int my_strncasecmp(const char *s1, const char *s2, size_t n) {
 #include "test_check_monero.h"
 #endif
 
+#if USE_ECASH
+#include "test_check_ecash.h"
+#endif
+
 // define test suite and cases
 Suite *test_suite(void) {
   Suite *s = suite_create("trezor-crypto");
@@ -11754,6 +11758,13 @@ Suite *test_suite(void) {
   tc = tcase_create("elligator2");
   tcase_add_test(tc, test_elligator2);
   suite_add_tcase(s, tc);
+
+#if USE_ECASH
+  tc = tcase_create("ecash_schnorr");
+  tcase_add_test(tc, test_ecash_schnorr_sign_verify_digest);
+  tcase_add_test(tc, test_ecash_schnorr_verify_digest);
+  suite_add_tcase(s, tc);
+#endif
 
 #if USE_CARDANO
   tc = tcase_create("bip32-cardano");
