@@ -71,11 +71,6 @@ impl ChoiceItem {
         self.btn_layout.btn_right = btn_right;
     }
 
-    /// Changing the text.
-    pub fn set_text(&mut self, text: ShortString) {
-        self.text = text;
-    }
-
     fn side_text(&self) -> Option<&str> {
         if self.icon.is_some() {
             None
