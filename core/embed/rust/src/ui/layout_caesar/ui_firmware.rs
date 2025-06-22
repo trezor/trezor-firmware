@@ -27,7 +27,7 @@ use crate::{
         },
         ui_firmware::{
             FirmwareUI, ERROR_NOT_IMPLEMENTED, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
-            MAX_WORD_QUIZ_ITEMS,
+            MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
         },
         ModelUI,
     },
@@ -418,36 +418,8 @@ impl FirmwareUI for UICaesar {
         hold: bool,
         _verb: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let mut paragraphs = ParagraphVecLong::new();
+        let paragraphs = parse_properties(items)?;
 
-        for para in IterBuf::new().try_iterate(items)? {
-            let [key, value, is_data]: [Obj; 3] = util::iter_into_array(para)?;
-            let key = key.try_into_option::<TString>()?;
-            let value = value.try_into_option::<TString>()?;
-            let is_data: bool = is_data.try_into()?;
-
-            if let Some(key) = key {
-                if value.is_some() {
-                    // Decreasing the margin between key and value (default is 5 px, we use 2 px)
-                    // (this enables 4 lines - 2 key:value pairs - on the same screen)
-                    paragraphs.add(
-                        Paragraph::new(&theme::TEXT_BOLD, key)
-                            .no_break()
-                            .with_bottom_padding(2),
-                    );
-                } else {
-                    paragraphs.add(Paragraph::new(&theme::TEXT_BOLD, key));
-                }
-            }
-            if let Some(value) = value {
-                let style = if is_data {
-                    &theme::TEXT_MONO_DATA
-                } else {
-                    &theme::TEXT_MONO
-                };
-                paragraphs.add(Paragraph::new(style, value));
-            }
-        }
         let button_text = if hold {
             TR::buttons__hold_to_confirm.into()
         } else {
@@ -916,6 +888,20 @@ impl FirmwareUI for UICaesar {
         Ok(layout)
     }
 
+    fn select_menu(
+        items: heapless::Vec<TString<'static>, MAX_MENU_ITEMS>,
+        page_counter: usize,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        // Returning the index of the selected menu item
+        let layout = RootComponent::new(
+            SimpleChoice::new(items, ChoiceControls::Cancellable, TR::buttons__view.into())
+                .with_initial_page_counter(page_counter)
+                .with_show_incomplete()
+                .with_return_index(),
+        );
+        Ok(layout)
+    }
+
     fn select_word(
         _title: TString<'static>,
         description: TString<'static>,
@@ -926,7 +912,7 @@ impl FirmwareUI for UICaesar {
         let layout = RootComponent::new(
             Frame::new(
                 description,
-                SimpleChoice::new(words, ChoiceControls::Carousel)
+                SimpleChoice::new(words, ChoiceControls::Carousel, TR::buttons__select.into())
                     .with_show_incomplete()
                     .with_return_index(),
             )
@@ -948,7 +934,11 @@ impl FirmwareUI for UICaesar {
         let layout = RootComponent::new(
             Frame::new(
                 title,
-                SimpleChoice::new(choices, ChoiceControls::Cancellable),
+                SimpleChoice::new(
+                    choices,
+                    ChoiceControls::Cancellable,
+                    TR::buttons__select.into(),
+                ),
             )
             .with_title_centered(),
         );
@@ -1223,6 +1213,26 @@ impl FirmwareUI for UICaesar {
         Ok(obj)
     }
 
+    fn show_properties(
+        title: TString<'static>,
+        properties: Obj,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let paragraphs = parse_properties(properties)?.into_paragraphs();
+
+        let page = ButtonPage::new(paragraphs, theme::BG)
+            .with_back_btn(Some(ButtonDetails::left_arrow_icon()))
+            .with_next_btn(Some(ButtonDetails::right_arrow_icon()))
+            .with_cancel_btn(Some(ButtonDetails::cancel_icon()))
+            .with_confirm_btn(None);
+
+        let mut frame = ScrollableFrame::new(page);
+        if !title.is_empty() {
+            frame = frame.with_title(title);
+        }
+
+        Ok(RootComponent::new(frame))
+    }
+
     fn show_share_words(
         words: heapless::Vec<TString<'static>, 33>,
         _title: Option<TString<'static>>,
@@ -1441,4 +1451,39 @@ fn tutorial_screen(
     ops.add_text(text, fonts::FONT_NORMAL);
     let formatted = FormattedText::new(ops).vertically_centered();
     Page::new(btn_layout, btn_actions, formatted).with_title(title)
+}
+
+fn parse_properties(items: Obj) -> Result<ParagraphVecLong<'static>, Error> {
+    let mut paragraphs = ParagraphVecLong::new();
+
+    for para in IterBuf::new().try_iterate(items)? {
+        let [key, value, is_data]: [Obj; 3] = util::iter_into_array(para)?;
+        let key = key.try_into_option::<TString>()?;
+        let value = value.try_into_option::<TString>()?;
+        let is_data: bool = is_data.try_into()?;
+
+        if let Some(key) = key {
+            if value.is_some() {
+                // Decreasing the margin between key and value (default is 5 px, we use 2 px)
+                // (this enables 4 lines - 2 key:value pairs - on the same screen)
+                paragraphs.add(
+                    Paragraph::new(&theme::TEXT_BOLD, key)
+                        .no_break()
+                        .with_bottom_padding(2),
+                );
+            } else {
+                paragraphs.add(Paragraph::new(&theme::TEXT_BOLD, key));
+            }
+        }
+        if let Some(value) = value {
+            let style = if is_data {
+                &theme::TEXT_MONO_DATA
+            } else {
+                &theme::TEXT_MONO
+            };
+            paragraphs.add(Paragraph::new(style, value));
+        }
+    }
+
+    Ok(paragraphs)
 }

@@ -1450,6 +1450,7 @@ pub enum TranslatedString {
     address__coin_address_template = 1049,  // "{0} address"
     #[cfg(feature = "universal_fw")]
     ethereum__contract_address = 1050,  // "Provider contract address"
+    buttons__view = 1051,  // "View"
 }
 
 impl TranslatedString {
@@ -3212,6 +3213,7 @@ impl TranslatedString {
             (Self::address__coin_address_template, "{0} address"),
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__contract_address, "Provider contract address"),
+            (Self::buttons__view, "View"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3331,6 +3333,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_buttons__try_again, Self::buttons__try_again),
         (Qstr::MP_QSTR_buttons__turn_off, Self::buttons__turn_off),
         (Qstr::MP_QSTR_buttons__turn_on, Self::buttons__turn_on),
+        (Qstr::MP_QSTR_buttons__view, Self::buttons__view),
         (Qstr::MP_QSTR_buttons__view_all_data, Self::buttons__view_all_data),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__addr_base, Self::cardano__addr_base),

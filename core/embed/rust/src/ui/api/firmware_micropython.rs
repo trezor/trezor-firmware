@@ -341,6 +341,17 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_show_properties(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let properties: Obj = kwargs.get(Qstr::MP_QSTR_properties)?;
+
+        let layout = ModelUI::show_properties(title, properties)?;
+        Ok(LayoutObj::new_root(layout)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let recovery: bool = kwargs.get(Qstr::MP_QSTR_recovery)?.try_into()?;
@@ -721,6 +732,18 @@ extern "C" fn new_request_passphrase(n_args: usize, args: *const Obj, kwargs: *m
         let max_len: u32 = kwargs.get(Qstr::MP_QSTR_max_len)?.try_into()?;
 
         let layout = ModelUI::request_passphrase(prompt, max_len)?;
+        Ok(LayoutObj::new_root(layout)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_select_menu(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let items_iterable: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
+        let items = util::iter_into_vec(items_iterable)?;
+        let page_counter: usize = kwargs.get(Qstr::MP_QSTR_page_counter)?.try_into()?;
+
+        let layout = ModelUI::select_menu(items, page_counter)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1654,6 +1677,14 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     """Passphrase input keyboard."""
     Qstr::MP_QSTR_request_passphrase => obj_fn_kw!(0, new_request_passphrase).as_obj(),
 
+    /// def select_menu(
+    ///     *,
+    ///     items: Iterable[str],
+    ///     page_counter: int = 0,
+    /// ) -> LayoutObj[int]:
+    ///     """Select an item from a menu. Returns index in range `0..len(items)`."""
+    Qstr::MP_QSTR_select_menu => obj_fn_kw!(0, new_select_menu).as_obj(),
+
     /// def select_word(
     ///     *,
     ///     title: str,
@@ -1834,6 +1865,15 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     """Show progress loader for coinjoin. Returns CANCELLED after a specified time when
     ///     time_ms timeout is passed."""
     Qstr::MP_QSTR_show_progress_coinjoin => obj_fn_kw!(0, new_show_progress_coinjoin).as_obj(),
+
+    /// def show_properties(
+    ///     *,
+    ///     title: str,
+    ///     properties: list[tuple[str | None, str | bytes | None, bool]],
+    /// ) -> LayoutObj[int]:
+    ///     """Show a list of key-value pairs. The third component in the tuple should be True if
+    ///     the value is to be rendered as binary with monospace font, False otherwise."""
+    Qstr::MP_QSTR_show_properties => obj_fn_kw!(0, new_show_properties).as_obj(),
 
     /// def show_remaining_shares(
     ///     *,

@@ -14,6 +14,7 @@ use super::layout::{
 pub const MAX_CHECKLIST_ITEMS: usize = 3;
 pub const MAX_WORD_QUIZ_ITEMS: usize = 3;
 pub const MAX_GROUP_SHARE_LINES: usize = 4;
+pub const MAX_MENU_ITEMS: usize = 5;
 
 pub const ERROR_NOT_IMPLEMENTED: Error = Error::ValueError(c"not implemented");
 
@@ -275,6 +276,11 @@ pub trait FirmwareUI {
         max_len: u32,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
+    fn select_menu(
+        items: heapless::Vec<TString<'static>, MAX_MENU_ITEMS>,
+        page_counter: usize,
+    ) -> Result<impl LayoutMaybeTrace, Error>;
+
     fn select_word(
         title: TString<'static>,
         description: TString<'static>,
@@ -389,6 +395,11 @@ pub trait FirmwareUI {
         time_ms: u32,
         skip_first_paint: bool,
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
+
+    fn show_properties(
+        _title: TString<'static>,
+        _properties: Obj,
+    ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_remaining_shares(
         pages_iterable: Obj, // TODO: replace Obj

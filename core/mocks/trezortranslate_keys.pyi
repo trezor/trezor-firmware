@@ -117,6 +117,7 @@ class TR:
     buttons__try_again: str = "Try again"
     buttons__turn_off: str = "Turn off"
     buttons__turn_on: str = "Turn on"
+    buttons__view: str = "View"
     buttons__view_all_data: str = "View all data"
     cardano__addr_base: str = "Base"
     cardano__addr_enterprise: str = "Enterprise"
