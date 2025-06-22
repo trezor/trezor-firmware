@@ -475,6 +475,15 @@ def request_passphrase(
 
 
 # rust/src/ui/api/firmware_micropython.rs
+def select_menu(
+    *,
+    items: Iterable[str],
+    page_counter: int = 0,
+) -> LayoutObj[int]:
+    """Select an item from a menu. Returns index in range `0..len(items)`."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
 def select_word(
     *,
     title: str,
@@ -672,6 +681,16 @@ def show_progress_coinjoin(
 ) -> LayoutObj[UiResult]:
     """Show progress loader for coinjoin. Returns CANCELLED after a specified time when
     time_ms timeout is passed."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def show_menu_items(
+    *,
+    title: str,
+    items: list[tuple[str | None, str | bytes | None, bool]],
+) -> LayoutObj[int]:
+    """Show a list of key-value pairs. The third component in the tuple should be True if
+    the value is to be rendered as binary with monospace font, False otherwise."""
 
 
 # rust/src/ui/api/firmware_micropython.rs

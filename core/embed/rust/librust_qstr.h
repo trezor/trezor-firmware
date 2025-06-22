@@ -204,6 +204,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_buttons__try_again;
   MP_QSTR_buttons__turn_off;
   MP_QSTR_buttons__turn_on;
+  MP_QSTR_buttons__view;
   MP_QSTR_buttons__view_all_data;
   MP_QSTR_can_go_back;
   MP_QSTR_cancel;
@@ -679,6 +680,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_sd_card__use_different_card;
   MP_QSTR_sd_card__wanna_format;
   MP_QSTR_sd_card__wrong_sd_card;
+  MP_QSTR_select_menu;
   MP_QSTR_select_word;
   MP_QSTR_select_word_count;
   MP_QSTR_send__cancel_sign;
@@ -722,6 +724,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_info_with_cancel;
   MP_QSTR_show_instructions;
   MP_QSTR_show_lockscreen;
+  MP_QSTR_show_menu_items;
   MP_QSTR_show_mismatch;
   MP_QSTR_show_pairing_device_name;
   MP_QSTR_show_progress;

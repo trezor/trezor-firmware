@@ -25,7 +25,7 @@ use crate::{
         },
         ui_firmware::{
             FirmwareUI, ERROR_NOT_IMPLEMENTED, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
-            MAX_WORD_QUIZ_ITEMS,
+            MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
         },
         ModelUI,
     },
@@ -897,6 +897,13 @@ impl FirmwareUI for UIEckhart {
         Ok(flow)
     }
 
+    fn select_menu(
+        _items: heapless::Vec<TString<'static>, MAX_MENU_ITEMS>,
+        _page_counter: usize,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+    }
+
     fn select_word(
         title: TString<'static>,
         description: TString<'static>,
@@ -1272,6 +1279,13 @@ impl FirmwareUI for UIEckhart {
             obj.skip_first_paint();
         }
         Ok(obj)
+    }
+
+    fn show_menu_items(
+        _title: TString<'static>,
+        _items: Obj,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn show_share_words(

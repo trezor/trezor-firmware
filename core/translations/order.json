@@ -1048,5 +1048,6 @@
   "1046": "send__multisig_different_paths",
   "1047": "address__xpub",
   "1048": "words__cancel_question",
-  "1049": "address__coin_address_template"
+  "1049": "address__coin_address_template",
+  "1050": "buttons__view"
 }

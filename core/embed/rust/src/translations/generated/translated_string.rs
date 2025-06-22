@@ -1448,6 +1448,7 @@ pub enum TranslatedString {
     address__xpub = 1047,  // {"Bolt": "XPUB", "Caesar": "XPUB", "Delizia": "XPUB", "Eckhart": "Public key (XPUB)"}
     words__cancel_question = 1048,  // "Cancel?"
     address__coin_address_template = 1049,  // "{0} address"
+    buttons__view = 1050,  // "View"
 }
 
 impl TranslatedString {
@@ -3208,6 +3209,7 @@ impl TranslatedString {
             (Self::address__xpub, "Public key (XPUB)"),
             (Self::words__cancel_question, "Cancel?"),
             (Self::address__coin_address_template, "{0} address"),
+            (Self::buttons__view, "View"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3327,6 +3329,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_buttons__try_again, Self::buttons__try_again),
         (Qstr::MP_QSTR_buttons__turn_off, Self::buttons__turn_off),
         (Qstr::MP_QSTR_buttons__turn_on, Self::buttons__turn_on),
+        (Qstr::MP_QSTR_buttons__view, Self::buttons__view),
         (Qstr::MP_QSTR_buttons__view_all_data, Self::buttons__view_all_data),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__addr_base, Self::cardano__addr_base),
