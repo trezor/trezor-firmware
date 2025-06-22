@@ -3,10 +3,10 @@
 import os
 import tools, models
 
-TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
-CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
-HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
-PQ_SIGNATURE_ALGORITHM = os.getenv("PQ_SIGNATURE_ALGORITHM", "sphincs-sha2-128s-simple")
+TREZOR_MODEL = ARGUMENTS.get("TREZOR_MODEL", "T2T1")
+CMAKELISTS = int(ARGUMENTS.get("CMAKELISTS", 0))
+HW_REVISION = ARGUMENTS.get("HW_REVISION", None)
+PQ_SIGNATURE_ALGORITHM = os.getenv("PQ_SIGNATURE_ALGORITHM", "ml-dsa-44")
 PQ_SIGNATURE_VERIFICATION_ONLY = os.getenv("PQ_SIGNATURE_VERIFICATION_ONLY", "0") == "1"
 
 FEATURES_WANTED = [
@@ -14,9 +14,9 @@ FEATURES_WANTED = [
     "pmic",
     "sd_card",
     "secure_domain",
-    ]
+]
 
-CCFLAGS_MOD = ''
+CCFLAGS_MOD = ""
 CPPPATH_MOD = []
 CPPDEFINES_MOD = ["BOARDLOADER"]
 SOURCE_MOD = []
@@ -26,32 +26,32 @@ SOURCE_HAL = []
 PATH_HAL = []
 
 # modtrezorcrypto
-CCFLAGS_MOD += '-Wno-sequence-point '
+CCFLAGS_MOD += "-Wno-sequence-point "
 CPPPATH_MOD += [
-    'vendor/trezor-crypto',
-    'vendor/trezor-storage',
+    "vendor/trezor-crypto",
+    "vendor/trezor-storage",
 ]
 CPPDEFINES_MOD += [
-    'KERNEL_MODE',
-    'SECURE_MODE',
-    'AES_128',
-    'AES_192',
-    'USE_KECCAK',
-    'ED25519_NO_PRECOMP',
+    "KERNEL_MODE",
+    "SECURE_MODE",
+    "AES_128",
+    "AES_192",
+    "USE_KECCAK",
+    "ED25519_NO_PRECOMP",
 ]
 SOURCE_MOD += [
-    'vendor/trezor-storage/flash_area.c',
+    "vendor/trezor-storage/flash_area.c",
 ]
 SOURCE_MOD_CRYPTO += [
-    'vendor/trezor-crypto/blake2s.c',
-    'vendor/trezor-crypto/ed25519-donna/curve25519-donna-32bit.c',
-    'vendor/trezor-crypto/ed25519-donna/curve25519-donna-helpers.c',
-    'vendor/trezor-crypto/ed25519-donna/ed25519.c',
-    'vendor/trezor-crypto/ed25519-donna/ed25519-donna-32bit-tables.c',
-    'vendor/trezor-crypto/ed25519-donna/ed25519-donna-impl-base.c',
-    'vendor/trezor-crypto/ed25519-donna/modm-donna-32bit.c',
-    'vendor/trezor-crypto/memzero.c',
-    'vendor/trezor-crypto/sha2.c',
+    "vendor/trezor-crypto/blake2s.c",
+    "vendor/trezor-crypto/ed25519-donna/curve25519-donna-32bit.c",
+    "vendor/trezor-crypto/ed25519-donna/curve25519-donna-helpers.c",
+    "vendor/trezor-crypto/ed25519-donna/ed25519.c",
+    "vendor/trezor-crypto/ed25519-donna/ed25519-donna-32bit-tables.c",
+    "vendor/trezor-crypto/ed25519-donna/ed25519-donna-impl-base.c",
+    "vendor/trezor-crypto/ed25519-donna/modm-donna-32bit.c",
+    "vendor/trezor-crypto/memzero.c",
+    "vendor/trezor-crypto/sha2.c",
 ]
 if PQ_SIGNATURE_ALGORITHM:
     PQ_SIGNATURE_PATH = (
@@ -77,100 +77,115 @@ if PQ_SIGNATURE_ALGORITHM:
 
 # modtrezorui
 CPPPATH_MOD += [
-        'vendor/micropython/lib/uzlib',
+    "vendor/micropython/lib/uzlib",
 ]
 SOURCE_MOD += [
-    'embed/gfx/bitblt/gfx_bitblt.c',
-    'embed/gfx/bitblt/gfx_bitblt_rgb565.c',
-    'embed/gfx/bitblt/gfx_bitblt_rgba8888.c',
-    'embed/gfx/bitblt/gfx_bitblt_mono8.c',
-    'embed/gfx/fonts/font_bitmap.c',
-    'embed/gfx/gfx_color.c',
-    'embed/gfx/gfx_draw.c',
-    'embed/gfx/terminal.c',
-    'embed/io/display/display_utils.c',
-    'embed/util/flash/flash_utils.c',
-    'embed/util/image/image.c',
-    'embed/util/pq/pq.c',
-    'embed/util/rsod/rsod.c',
-    'embed/util/scm_revision/scm_revision.c',
-    'embed/rtl/error_handling.c',
-    'embed/rtl/mini_printf.c',
+    "embed/gfx/bitblt/gfx_bitblt.c",
+    "embed/gfx/bitblt/gfx_bitblt_rgb565.c",
+    "embed/gfx/bitblt/gfx_bitblt_rgba8888.c",
+    "embed/gfx/bitblt/gfx_bitblt_mono8.c",
+    "embed/gfx/fonts/font_bitmap.c",
+    "embed/gfx/gfx_color.c",
+    "embed/gfx/gfx_draw.c",
+    "embed/gfx/terminal.c",
+    "embed/io/display/display_utils.c",
+    "embed/util/flash/flash_utils.c",
+    "embed/util/image/image.c",
+    "embed/util/pq/pq.c",
+    "embed/util/rsod/rsod.c",
+    "embed/util/scm_revision/scm_revision.c",
+    "embed/rtl/error_handling.c",
+    "embed/rtl/mini_printf.c",
 ]
 
-env = Environment(ENV=os.environ,
-    CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')),
+env = Environment(
+    ENV=os.environ,
+    CFLAGS="%s -DPRODUCTION=%s"
+    % (ARGUMENTS.get("CFLAGS", ""), ARGUMENTS.get("PRODUCTION", "0")),
     CONSTRAINTS=["limited_util_s"],
     CPPDEFINES_IMPLICIT=[],
     CPPDEFPREFIX="-D'",
     CPPDEFSUFFIX="'",
 )
 
-FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
+FEATURES_AVAILABLE = models.configure_board(
+    TREZOR_MODEL,
+    HW_REVISION,
+    FEATURES_WANTED,
+    env,
+    CPPDEFINES_HAL,
+    SOURCE_HAL,
+    PATH_HAL,
+)
 
 SOURCE_BOARDLOADER = [
-    'embed/projects/boardloader/main.c',
-    'embed/projects/boardloader/bld_version.c',
+    "embed/projects/boardloader/main.c",
+    "embed/projects/boardloader/bld_version.c",
 ]
 
-if 'sd_card' in FEATURES_AVAILABLE:
+if "sd_card" in FEATURES_AVAILABLE:
     SOURCE_MOD += [
-    'embed/projects/boardloader/sd_update.c',
+        "embed/projects/boardloader/sd_update.c",
     ]
 
 env.Replace(
-    CAT='cat',
-    CP='cp',
-    AS='arm-none-eabi-as',
-    AR='arm-none-eabi-ar',
-    CC='arm-none-eabi-gcc',
-    LINK='arm-none-eabi-gcc',
-    SIZE='arm-none-eabi-size',
-    STRIP='arm-none-eabi-strip',
-    OBJCOPY='arm-none-eabi-objcopy',
-    PYTHON='python',
-    MAKECMAKELISTS='$PYTHON tools/make_cmakelists.py',)
+    CAT="cat",
+    CP="cp",
+    AS="arm-none-eabi-as",
+    AR="arm-none-eabi-ar",
+    CC="arm-none-eabi-gcc",
+    LINK="arm-none-eabi-gcc",
+    SIZE="arm-none-eabi-size",
+    STRIP="arm-none-eabi-strip",
+    OBJCOPY="arm-none-eabi-objcopy",
+    PYTHON="python",
+    MAKECMAKELISTS="$PYTHON tools/make_cmakelists.py",
+)
 
 env.Replace(
-    TREZOR_MODEL=TREZOR_MODEL, )
+    TREZOR_MODEL=TREZOR_MODEL,
+)
 
 env.Replace(
-    COPT=env.get('ENV').get('OPTIMIZE', '-Os'),
-    CCFLAGS='$COPT '
-    '-g3 '
-    '-nostdlib '
-    '-std=gnu11 -Wall -Werror -Wdouble-promotion -Wpointer-arith -Wno-missing-braces -fno-common '
-    '-fsingle-precision-constant -fdata-sections -ffunction-sections '
-    '-ffreestanding '
-    '-fstack-protector-strong '
-    + env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
-    CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
+    COPT=env.get("ENV").get("OPTIMIZE", "-Os"),
+    CCFLAGS="$COPT "
+    "-g3 "
+    "-nostdlib "
+    "-std=gnu11 -Wall -Werror -Wdouble-promotion -Wpointer-arith -Wno-missing-braces -fno-common "
+    "-fsingle-precision-constant -fdata-sections -ffunction-sections "
+    "-ffreestanding "
+    "-fstack-protector-strong " + env.get("ENV")["CPU_CCFLAGS"] + CCFLAGS_MOD,
+    CCFLAGS_QSTR="-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB",
     LINKFLAGS="-T build/boardloader/memory.ld -Wl,--gc-sections -Wl,-Map=build/boardloader/boardloader.map -Wl,--warn-common -Wl,--undefined=__errno -Wl,--print-memory-usage",
     CPPPATH=[
-        'embed/projects/boardloader',
-        'embed/rtl/inc',
-        'embed/models',
-        'embed/upymod/modtrezorui',
-        'embed/gfx/inc',
-        'embed/io/button/inc',
-        'embed/io/haptic/inc',
-        'embed/io/touch/inc',
-        'embed/io/usb/inc',
-        'embed/sys/bsp/inc',
-        'embed/util/image/inc',
-        'embed/util/pq/inc',
-        'embed/util/rsod/inc',
-        'embed/util/scm_revision/inc',
-        'vendor/micropython/lib/cmsis/inc',
-    ] + CPPPATH_MOD + PATH_HAL,
+        "embed/projects/boardloader",
+        "embed/rtl/inc",
+        "embed/models",
+        "embed/upymod/modtrezorui",
+        "embed/gfx/inc",
+        "embed/io/button/inc",
+        "embed/io/haptic/inc",
+        "embed/io/touch/inc",
+        "embed/io/usb/inc",
+        "embed/sys/bsp/inc",
+        "embed/util/image/inc",
+        "embed/util/pq/inc",
+        "embed/util/rsod/inc",
+        "embed/util/scm_revision/inc",
+        "vendor/micropython/lib/cmsis/inc",
+    ]
+    + CPPPATH_MOD
+    + PATH_HAL,
     CPPDEFINES=[
-        'BOARDLOADER',
-        'TREZOR_MODEL_'+TREZOR_MODEL,
-        'USE_HAL_DRIVER',
-    ] + CPPDEFINES_MOD + CPPDEFINES_HAL,
-    ASFLAGS=env.get('ENV')['CPU_ASFLAGS'],
-    ASPPFLAGS='$CFLAGS $CCFLAGS',
-    )
+        "BOARDLOADER",
+        "TREZOR_MODEL_" + TREZOR_MODEL,
+        "USE_HAL_DRIVER",
+    ]
+    + CPPDEFINES_MOD
+    + CPPDEFINES_HAL,
+    ASFLAGS=env.get("ENV")["CPU_ASFLAGS"],
+    ASPPFLAGS="$CFLAGS $CCFLAGS",
+)
 
 source_files = SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_BOARDLOADER + SOURCE_HAL
 if PQ_SIGNATURE_ALGORITHM:
@@ -182,9 +197,9 @@ env.Replace(
 )
 
 cmake_gen = env.Command(
-    target='CMakeLists.txt',
-    source='',
-    action='$MAKECMAKELISTS --sources $ALLSOURCES --dirs $CPPPATH --defs $ALLDEFS',
+    target="CMakeLists.txt",
+    source="",
+    action="$MAKECMAKELISTS --sources $ALLSOURCES --dirs $CPPPATH --defs $ALLDEFS",
 )
 
 #
@@ -193,7 +208,9 @@ cmake_gen = env.Command(
 
 obj_program = []
 obj_program += env.Object(source=SOURCE_MOD)
-obj_program += env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-auto-var-init=zero')
+obj_program += env.Object(
+    source=SOURCE_MOD_CRYPTO, CCFLAGS="$CCFLAGS -ftrivial-auto-var-init=zero"
+)
 obj_program += env.Object(source=SOURCE_BOARDLOADER)
 obj_program += env.Object(source=SOURCE_HAL)
 
@@ -206,22 +223,24 @@ if PQ_SIGNATURE_ALGORITHM:
     )
 
 linkerscript_gen = env.Command(
-    target='memory.ld',
-    source=[f'embed/models/{TREZOR_MODEL}/memory.ld', env.get('ENV')['LINKER_SCRIPT'].format(target='boardloader')],
-    action='$CAT $SOURCES > $TARGET',
+    target="memory.ld",
+    source=[
+        f"embed/models/{TREZOR_MODEL}/memory.ld",
+        env.get("ENV")["LINKER_SCRIPT"].format(target="boardloader"),
+    ],
+    action="$CAT $SOURCES > $TARGET",
 )
 
 program_elf = env.Command(
-    target='boardloader.elf',
+    target="boardloader.elf",
     source=obj_program,
-    action=
-    '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lm -lgcc',
+    action="$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lm -lgcc",
 )
 
 env.Depends(program_elf, linkerscript_gen)
 
 BINARY_NAME = f"build/boardloader/boardloader-{TREZOR_MODEL}"
-BINARY_NAME += "-" + tools.get_version('embed/projects/boardloader/version.h')
+BINARY_NAME += "-" + tools.get_version("embed/projects/boardloader/version.h")
 BINARY_NAME += "-" + tools.get_git_revision_short_hash()
 BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
 BINARY_NAME += ".bin"
@@ -230,10 +249,10 @@ if CMAKELISTS != 0:
     env.Depends(program_elf, cmake_gen)
 
 program_bin = env.Command(
-    target='boardloader.bin',
+    target="boardloader.bin",
     source=program_elf,
     action=[
-        '$OBJCOPY -O binary -j .vector_table -j .text -j .data -j .rodata -j .capabilities -j .confidential $SOURCE $TARGET',
-        '$CP $TARGET ' + BINARY_NAME,
+        "$OBJCOPY -O binary -j .vector_table -j .text -j .data -j .rodata -j .capabilities -j .confidential $SOURCE $TARGET",
+        "$CP $TARGET " + BINARY_NAME,
     ],
 )

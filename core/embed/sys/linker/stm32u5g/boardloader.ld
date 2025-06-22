@@ -64,7 +64,7 @@ SECTIONS {
   } >AUX1_RAM
 
   .stack : ALIGN(8) {
-    . = 16K; /* Overflow causes UsageFault */
+    . = 64K; /* Overflow causes UsageFault */
   } >MAIN_RAM
 
   .confidential : ALIGN(8) {
