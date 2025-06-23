@@ -21,7 +21,6 @@ pub const BG: Color = BLACK; // Default background color.
 // Font constants.
 pub const FONT_BUTTON: Font = fonts::FONT_NORMAL_UPPER;
 pub const FONT_HEADER: Font = fonts::FONT_BOLD_UPPER;
-pub const FONT_CHOICE_ITEMS: Font = fonts::FONT_BIG;
 
 // Text constants.
 pub const TEXT_NORMAL: TextStyle = TextStyle::new(fonts::FONT_NORMAL, FG, BG, FG, FG)
@@ -29,6 +28,9 @@ pub const TEXT_NORMAL: TextStyle = TextStyle::new(fonts::FONT_NORMAL, FG, BG, FG
     .with_ellipsis_icon(ICON_NEXT_PAGE, ELLIPSIS_ICON_MARGIN)
     .with_prev_page_icon(ICON_PREV_PAGE, PREV_PAGE_ICON_MARGIN);
 pub const TEXT_BIG: TextStyle = TextStyle::new(fonts::FONT_BIG, FG, BG, FG, FG);
+pub const TEXT_CHOICE_ITEMS: TextStyle = TEXT_BIG
+    .with_line_spacing(2)
+    .with_line_breaking(LineBreaking::BreakAtWhitespace);
 pub const TEXT_DEMIBOLD: TextStyle = TextStyle::new(fonts::FONT_DEMIBOLD, FG, BG, FG, FG);
 pub const TEXT_BOLD: TextStyle = TextStyle::new(fonts::FONT_BOLD, FG, BG, FG, FG)
     .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
