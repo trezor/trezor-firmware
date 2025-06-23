@@ -128,6 +128,17 @@ def confirm_address(
 
 
 # rust/src/ui/api/firmware_micropython.rs
+def confirm_trade(
+    *,
+    title: str,
+    subtitle: str,
+    out_amount: str,
+    in_amount: str,
+) -> LayoutObj[UiResult]:
+    """Confirm trade (SLIP-24)."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
 def confirm_value(
     *,
     title: str,

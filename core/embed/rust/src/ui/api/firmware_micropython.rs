@@ -112,6 +112,18 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_confirm_trade(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let subtitle: TString = kwargs.get(Qstr::MP_QSTR_subtitle)?.try_into()?;
+        let out_amount: TString = kwargs.get(Qstr::MP_QSTR_out_amount)?.try_into()?;
+        let in_amount: TString = kwargs.get(Qstr::MP_QSTR_in_amount)?.try_into()?;
+        let layout = ModelUI::confirm_trade(title, subtitle, out_amount, in_amount)?;
+        Ok(LayoutObj::new_root(layout)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -1280,6 +1292,16 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm address."""
     Qstr::MP_QSTR_confirm_address => obj_fn_kw!(0, new_confirm_address).as_obj(),
+
+    /// def confirm_trade(
+    ///     *,
+    ///     title: str,
+    ///     subtitle: str,
+    ///     out_amount: str,
+    ///     in_amount: str,
+    /// ) -> LayoutObj[UiResult]:
+    ///     """Confirm trade (SLIP-24)."""
+    Qstr::MP_QSTR_confirm_trade => obj_fn_kw!(0, new_confirm_trade).as_obj(),
 
     /// def confirm_value(
     ///     *,

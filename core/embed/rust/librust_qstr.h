@@ -236,6 +236,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_total__sending_from_account;
   MP_QSTR_confirm_total__title_fee;
   MP_QSTR_confirm_total__title_sending_from;
+  MP_QSTR_confirm_trade;
   MP_QSTR_confirm_value;
   MP_QSTR_confirm_value_intro;
   MP_QSTR_confirm_with_info;
@@ -312,6 +313,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_iface;
   MP_QSTR_iface_num;
   MP_QSTR_image;
+  MP_QSTR_in_amount;
   MP_QSTR_indeterminate;
   MP_QSTR_info;
   MP_QSTR_info_button;
@@ -393,6 +395,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_multiple_pages_texts;
   MP_QSTR_notification;
   MP_QSTR_notification_level;
+  MP_QSTR_out_amount;
   MP_QSTR_page_count;
   MP_QSTR_page_counter;
   MP_QSTR_pages;
