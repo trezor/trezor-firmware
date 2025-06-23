@@ -362,8 +362,8 @@ impl FirmwareUI for UIEckhart {
 
     fn confirm_properties(
         title: TString<'static>,
-        _subtitle: Option<TString<'static>>,
         items: Obj,
+        _subtitle: Option<TString<'static>>,
         hold: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = PropsList::new(

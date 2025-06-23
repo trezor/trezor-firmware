@@ -12,7 +12,7 @@ if __debug__:
 if TYPE_CHECKING:
     from typing import Any, Awaitable, Callable, Coroutine, TypeVar
 
-    PropertyType = tuple[str | None, str | bytes | None]
+    PropertyType = tuple[str | None, str | bytes | None, bool | None]
     ExceptionType = BaseException | type[BaseException]
 
     InfoFunc = Callable[[], Awaitable[None]]

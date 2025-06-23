@@ -260,7 +260,7 @@ def confirm_more(
 def confirm_properties(
     *,
     title: str,
-    items: list[tuple[str | None, str | bytes | None, bool]],
+    items: list[tuple[str | None, str | bytes | None, bool | None]],
     subtitle: str | None = None,
     hold: bool = False,
 ) -> LayoutObj[UiResult]:

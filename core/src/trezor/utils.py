@@ -123,8 +123,6 @@ class unimport:
 
 
 if __debug__:
-    from ubinascii import hexlify
-
     try:
         from trezorutils import enable_oom_dump
 
@@ -146,10 +144,6 @@ if __debug__:
             mem_info()
         else:
             mem_info(True)
-
-    def get_bytes_as_str(a: bytes) -> str:
-        """Converts the provided bytes to a hexadecimal string (decoded as `utf-8`)."""
-        return hexlify(a).decode("utf-8")
 
 
 def ensure(cond: bool, msg: str | None = None) -> None:
@@ -375,6 +369,17 @@ def empty_bytearray(preallocate: int) -> bytearray:
     b = bytearray(preallocate)
     b[:] = bytes()
     return b
+
+
+def hexlify_if_bytes(data: str | bytes | bytearray | memoryview) -> str:
+    if isinstance(data, str):
+        return data
+    elif isinstance(data, (bytes, bytearray, memoryview)):
+        from ubinascii import hexlify
+
+        return hexlify(data).decode()
+    else:
+        raise TypeError("Expected str, bytes, bytearray, or memoryview")
 
 
 if __debug__:

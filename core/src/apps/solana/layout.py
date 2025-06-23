@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from typing import Sequence
 
     from trezor.messages import SolanaTokenInfo
+    from trezor.ui.layouts import PropertyType
 
     from .definitions import Definitions
     from .transaction import Fee
@@ -44,11 +45,15 @@ def _format_path(path: list[int]) -> str:
 
 def _get_address_reference_props(
     address: AddressReference, display_name: str
-) -> Sequence[tuple[str, str]]:
+) -> Sequence[PropertyType]:
     return (
-        (TR.solana__is_provided_via_lookup_table_template.format(display_name), ""),
-        (f"{TR.solana__lookup_table_address}:", base58.encode(address[0])),
-        (f"{TR.solana__account_index}:", f"{address[1]}"),
+        (
+            TR.solana__is_provided_via_lookup_table_template.format(display_name),
+            None,
+            None,
+        ),
+        (f"{TR.solana__lookup_table_address}:", base58.encode(address[0]), True),
+        (f"{TR.solana__account_index}:", f"{address[1]}", True),
     )
 
 
@@ -116,6 +121,7 @@ async def confirm_instruction(
                     (
                         ui_property.display_name,
                         property_template.format(value, *args),
+                        True,
                     ),
                 ),
                 instruction.ui_name,
@@ -133,7 +139,7 @@ async def confirm_instruction(
             ):
                 continue
 
-            account_data: list[tuple[str, str]] = []
+            account_data: list[PropertyType] = []
             # account included in the transaction directly
             if len(account_value) == 2:
                 account_description = f"{base58.encode(account_value[0])}"
@@ -143,11 +149,14 @@ async def confirm_instruction(
                 elif account_value[0] == signer_public_key:
                     account_description = f"{account_description} ({TR.words__signer})"
 
-                account_data.append((ui_property.display_name, account_description))
+                account_data.append(
+                    (ui_property.display_name, account_description, True)
+                )
             # lookup table address reference
             elif len(account_value) == 3:
                 account_data += _get_address_reference_props(
-                    account_value, ui_property.display_name
+                    account_value,
+                    ui_property.display_name,
                 )
             else:
                 raise ValueError  # Invalid account value
@@ -162,7 +171,7 @@ async def confirm_instruction(
             raise ValueError  # Invalid ui property
 
     if instruction.multisig_signers:
-        signers: list[tuple[str, str]] = []
+        signers: list[tuple[str, str, bool]] = []
         for i, multisig_signer in enumerate(instruction.multisig_signers, 1):
             multisig_signer_public_key = multisig_signer[0]
 
@@ -174,6 +183,7 @@ async def confirm_instruction(
                 (
                     f"{TR.words__signer} {i}{path_str}:",
                     base58.encode(multisig_signer[0]),
+                    True,
                 )
             )
 
@@ -223,7 +233,13 @@ async def confirm_unsupported_instruction_details(
         await confirm_properties(
             "instruction_data",
             title,
-            ((f"{TR.solana__instruction_data}:", bytes(instruction.instruction_data)),),
+            (
+                (
+                    f"{TR.solana__instruction_data}:",
+                    bytes(instruction.instruction_data),
+                    True,
+                ),
+            ),
         )
 
         accounts = []
