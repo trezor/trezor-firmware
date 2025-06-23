@@ -27,6 +27,8 @@
 #include <rtl/mini_printf.h>
 #include <rtl/unit_test.h>
 #include <rust_ui_prodtest.h>
+#include <sys/backup_ram.h>
+#include <sys/bootutils.h>
 #include <sys/power_manager.h>
 #include <sys/rtc.h>
 #include <sys/systick.h>
@@ -410,6 +412,30 @@ void prodtest_pm_set_soc_limit(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+void prodtest_pm_new_soc_estimate(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  // Run new battery SoC initialization by erasing the recovery data from
+  // backup RAM followed by forced imediate reboot.
+
+  cli_trace(cli, "Erasing backup RAM and rebooting...");
+  cli_ok(cli, "");
+  systick_delay_ms(100);
+
+  // Deinitialize power manager so the monitor stop feeding the recovery data
+  // to backup RAM.
+  pm_deinit();
+
+  // Erase PM recovery data from backup RAM
+  backup_ram_erase_item(BACKUP_RAM_KEY_PM_RECOVERY);
+  reboot_device();
+
+  cli_error(cli, CLI_ERROR, "failed to reboot");
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -473,6 +499,13 @@ PRODTEST_CLI_CMD(
   .func = prodtest_pm_set_soc_limit,
   .info = "Set limit for the battery SOC",
   .args = "<limit>"
+);
+
+PRODTEST_CLI_CMD(
+  .name = "pm-new-soc-estimate",
+  .func = prodtest_pm_new_soc_estimate,
+  .info = "Run new battery SoC initialization",
+  .args = ""
 );
 
 #endif /* USE_POWER_MANAGER */

@@ -354,6 +354,21 @@ uint16_t backup_ram_search(uint16_t min_key) {
   return key;
 }
 
+bool backup_ram_erase_item(uint16_t key) {
+  backup_ram_driver_t* drv = &g_backup_ram_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  // Writing NULL data will just remove the item with the given key
+  irq_key_t irq_key = irq_lock();
+  bool status = backup_ram_write(key, NULL, 0);
+  irq_unlock(irq_key);
+
+  return status;
+}
+
 bool backup_ram_read(uint16_t key, void* buffer, size_t buffer_size,
                      size_t* data_size) {
   bool success = false;

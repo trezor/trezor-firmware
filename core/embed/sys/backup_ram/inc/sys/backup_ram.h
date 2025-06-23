@@ -54,6 +54,17 @@ void backup_ram_deinit(void);
 
 bool backup_ram_erase(void);
 
+/**
+ * @brief Erases a single item in backup RAM by its key.
+ *
+ * If the item with the given key does not exist, the function does nothing.
+ *
+ * @param key Key of the item to erase
+ *
+ * @return true if the operation was successful, false otherwise.
+ */
+bool backup_ram_erase_item(uint16_t key);
+
 #define BACKUP_RAM_INVALID_KEY 0xFFFF
 
 /**
