@@ -1,14 +1,15 @@
 use crate::{
     strutil::ShortString,
     ui::{
-        display::{Font, Icon},
-        geometry::{Alignment2D, Offset, Rect},
-        shape,
-        shape::Renderer,
+        component::text::{layout::Lines, TextStyle},
+        constant::screen,
+        display::Icon,
+        geometry::{Alignment2D, Offset, Point, Rect},
+        shape::{self, Renderer},
     },
 };
 
-use heapless::String;
+use heapless::{String, Vec};
 
 use super::super::{theme, ButtonDetails, ButtonLayout, Choice};
 
@@ -20,7 +21,7 @@ pub struct ChoiceItem {
     text: ShortString,
     icon: Option<Icon>,
     btn_layout: ButtonLayout,
-    font: Font,
+    style: &'static TextStyle,
     middle_action_without_release: bool,
 }
 
@@ -30,7 +31,7 @@ impl ChoiceItem {
             text: unwrap!(String::try_from(text.as_ref())),
             icon: None,
             btn_layout,
-            font: theme::FONT_CHOICE_ITEMS,
+            style: &theme::TEXT_CHOICE_ITEMS,
             middle_action_without_release: false,
         }
     }
@@ -82,48 +83,43 @@ impl Choice for ChoiceItem {
     /// Painting the item as the main choice in the middle.
     /// Showing both the icon and text, if the icon is available.
     fn render_center<'s>(&self, target: &mut impl Renderer<'s>, area: Rect, inverse: bool) {
-        let width = text_icon_width(Some(self.text.as_ref()), self.icon, self.font);
-        render_rounded_highlight(
-            target,
-            area,
-            Offset::new(width, self.font.visible_text_height("Ay")),
-            inverse,
-        );
+        let text_area = Rect::from_center_and_size(area.center(), self.size_center());
+
+        render_rounded_highlight(target, text_area, inverse);
         render_text_icon(
             target,
-            area,
-            width,
+            text_area,
             Some(self.text.as_ref()),
             self.icon,
-            self.font,
+            self.style,
             inverse,
         );
-    }
-
-    /// Getting the overall width in pixels when displayed in center.
-    /// That means both the icon and text will be shown.
-    fn width_center(&self) -> i16 {
-        text_icon_width(Some(self.text.as_ref()), self.icon, self.font)
-    }
-
-    /// Getting the non-central width in pixels.
-    /// It will show an icon if defined, otherwise the text, not both.
-    fn width_side(&self) -> i16 {
-        text_icon_width(self.side_text(), self.icon, self.font)
     }
 
     /// Painting smaller version of the item on the side.
     fn render_side<'s>(&self, target: &mut impl Renderer<'s>, area: Rect) {
-        let width = text_icon_width(self.side_text(), self.icon, self.font);
+        let text_area = area.split_center_by_height(self.size_side().y).1;
+
         render_text_icon(
             target,
-            area,
-            width,
+            text_area,
             self.side_text(),
             self.icon,
-            self.font,
+            self.style,
             false,
         );
+    }
+
+    /// Getting the overall size in pixels when displayed in center.
+    /// That means both the icon and text will be shown.
+    fn size_center(&self) -> Offset {
+        text_icon_size(Some(self.text.as_ref()), self.icon, self.style)
+    }
+
+    /// Getting the non-central size in pixels.
+    /// It will show an icon if defined, otherwise the text, not both.
+    fn size_side(&self) -> Offset {
+        text_icon_size(self.side_text(), self.icon, self.style)
     }
 
     /// Getting current button layout.
@@ -137,18 +133,10 @@ impl Choice for ChoiceItem {
     }
 }
 
-fn render_rounded_highlight<'s>(
-    target: &mut impl Renderer<'s>,
-    area: Rect,
-    size: Offset,
-    inverse: bool,
-) {
-    let bound = theme::BUTTON_OUTLINE;
-    let left_bottom = area.bottom_center() + Offset::new(-size.x / 2 - bound, bound + 1);
-    let x_size = size.x + 2 * bound;
-    let y_size = size.y + 2 * bound;
-    let outline_size = Offset::new(x_size, y_size);
-    let outline = Rect::from_bottom_left_and_size(left_bottom, outline_size);
+fn render_rounded_highlight<'s>(target: &mut impl Renderer<'s>, area: Rect, inverse: bool) {
+    let outline_size = area.size() + Offset::uniform(2 * theme::BUTTON_OUTLINE);
+    let center = area.center() + Offset::y(1);
+    let outline = Rect::from_center_and_size(center, outline_size);
     if inverse {
         shape::Bar::new(outline)
             .with_radius(1)
@@ -168,47 +156,85 @@ fn render_rounded_highlight<'s>(
     }
 }
 
-fn text_icon_width(text: Option<&str>, icon: Option<Icon>, font: Font) -> i16 {
-    match (text, icon) {
-        (Some(text), Some(icon)) => {
-            icon.toif.width() + ICON_RIGHT_PADDING + font.visible_text_width(text)
+struct TextRows<'s> {
+    rows: Vec<&'s str, 3>,
+    size: Offset,
+}
+
+impl<'s> TextRows<'s> {
+    fn new(text: &'s str, max_width: i16, style: &TextStyle) -> Self {
+        let font = style.text_font;
+        let mut rows = Vec::new();
+        let row_height = font.allcase_text_height();
+        let mut size = Offset::zero();
+        let mut first = true;
+        for line in Lines::split(text, max_width, font) {
+            unwrap!(rows.push(line));
+            size.x = size.x.max(font.visible_text_width(line));
+            size.y += row_height + if first { 0 } else { style.line_spacing };
+            first = false;
         }
-        (Some(text), None) => font.visible_text_width(text),
-        (None, Some(icon)) => icon.toif.width(),
-        (None, None) => 0,
+        Self { rows, size }
     }
+}
+
+const MAX_TEXT_WIDTH: i16 = screen().width() - 10;
+
+fn text_icon_size(text: Option<&str>, icon: Option<Icon>, style: &TextStyle) -> Offset {
+    let text_size = text.map(|text| TextRows::new(text, MAX_TEXT_WIDTH, style).size);
+    let icon_size = icon.map(|icon| icon.toif.size());
+
+    let padding = match (text_size, icon_size) {
+        (Some(_), Some(_)) => ICON_RIGHT_PADDING,
+        _ => 0,
+    };
+
+    let text_size = text_size.unwrap_or(Offset::zero());
+    let icon_size = icon_size.unwrap_or(Offset::zero());
+    Offset::new(
+        text_size.x + padding + icon_size.x,
+        text_size.y.max(style.text_font.allcase_text_height()),
+    )
 }
 
 fn render_text_icon<'s>(
     target: &mut impl Renderer<'s>,
     area: Rect,
-    width: i16,
     text: Option<&str>,
     icon: Option<Icon>,
-    font: Font,
+    style: &TextStyle,
     inverse: bool,
 ) {
+    let font = style.text_font;
     let fg_color = if inverse { theme::BG } else { theme::FG };
+    let width = area.width();
+    let row_height = font.allcase_text_height();
 
-    let mut baseline = area.bottom_center() - Offset::x(width / 2);
+    let mut center_left = area.center() - Offset::x(width / 2);
     if let Some(icon) = icon {
-        let height_diff = font.visible_text_height("Ay") - icon.toif.height();
-        let vertical_offset = Offset::y(-height_diff / 2);
-        shape::ToifImage::new(baseline + vertical_offset, icon.toif)
-            .with_align(Alignment2D::BOTTOM_LEFT)
+        shape::ToifImage::new(center_left, icon.toif)
+            .with_align(Alignment2D::CENTER_LEFT)
             .with_fg(fg_color)
             .render(target);
 
-        baseline = baseline + Offset::x(icon.toif.width() + ICON_RIGHT_PADDING);
+        center_left.x += icon.toif.width() + ICON_RIGHT_PADDING;
     }
 
     if let Some(text) = text {
-        // Possibly shifting the baseline left, when there is a text bearing.
-        // This is to center the text properly.
-        baseline = baseline - Offset::x(font.start_x_bearing(text));
-        shape::Text::new(baseline, text, font)
-            .with_fg(fg_color)
-            .render(target);
+        let mut baseline = Point::new(center_left.x, area.top_left().y);
+        let text_rows = TextRows::new(text, MAX_TEXT_WIDTH, style);
+        for row in text_rows.rows {
+            baseline = baseline + Offset::y(row_height);
+            // Possibly shifting the baseline left, when there is a text bearing.
+            // This is to center the text properly.
+            let center_offset = Offset::x(
+                (text_rows.size.x - font.visible_text_width(row)) / 2 - font.start_x_bearing(row),
+            );
+            shape::Text::new(baseline + center_offset, row, font)
+                .with_fg(fg_color)
+                .render(target);
+            baseline = baseline + Offset::y(style.line_spacing);
+        }
     }
 }
 
