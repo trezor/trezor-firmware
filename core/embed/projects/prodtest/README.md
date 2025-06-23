@@ -712,6 +712,16 @@ optiga-counter-read
 OK 0E
 ```
 
+### pm-new-soc-estimate
+Erase power manager recovery data from the backup RAM and immediately reboot the device to run new battery SoC estimate.
+
+Example:
+```
+pm-new-soc-estimate
+# Erasing backup RAM and rebooting...
+OK
+```
+
 ### pm-set-soc-limit
 Sets the battery state of charge (SOC) limit. The SOC limit is a percentage value between 10 and 100.
 
