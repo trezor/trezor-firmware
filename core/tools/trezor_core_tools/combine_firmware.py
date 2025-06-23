@@ -49,7 +49,12 @@ def main(model: str, bin: list[tuple[str, Path]], outfile: Path | None) -> None:
     offset = 0
     out_buf = io.BytesIO()
 
-    all_values = find_all_values(model)
+    # For binary combining purpose we do not need to distinguish between
+    # secure and non-secure memory layout, because we use the extracted addresses for flashing purpose only.
+    # So, we will use secmon=False in order to not mix secure and
+    # non-secure and combined compoonents have adjacent memory addresses.
+    # This is important in ordet to pass the offset check later in the code.
+    all_values = find_all_values(model, False)
 
     def find_value(name: str) -> int:
         value_name = f"{name.upper()}_START"
@@ -68,6 +73,8 @@ def main(model: str, bin: list[tuple[str, Path]], outfile: Path | None) -> None:
         else:
             # pad until next section
             offset += out_buf.write(b"\x00" * (bin_start - offset))
+
+        # Check that offset matches the expected start address
         assert offset == bin_start
 
         # write binary
