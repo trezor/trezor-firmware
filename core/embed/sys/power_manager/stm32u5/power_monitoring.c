@@ -99,10 +99,7 @@ void pm_monitor_power_sources(void) {
   }
 
   // Ceil the float soc to user-friendly integer
-  uint8_t soc_ceiled_temp = (int)(drv->fuel_gauge.soc_latched * 100 + 0.999f);
-  if (soc_ceiled_temp != drv->soc_ceiled) {
-    drv->soc_ceiled = soc_ceiled_temp;
-  }
+  drv->soc_ceiled = (uint8_t)(drv->fuel_gauge.soc_latched * 100 + 0.999f);
 
   // Check battery voltage for low threshold
   if (drv->soc_ceiled <= PM_BATTERY_LOW_THRESHOLD_SOC && !drv->battery_low) {
