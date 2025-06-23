@@ -233,7 +233,7 @@ impl ConfirmValue {
                 if self.classic_ellipsis {
                     &theme::TEXT_MONO_WITH_CLASSIC_ELLIPSIS
                 } else {
-                    &theme::TEXT_MONO
+                    &theme::TEXT_MONO_DATA
                 }
             } else {
                 &theme::TEXT_NORMAL
@@ -287,7 +287,7 @@ impl ConfirmValue {
                 if self.classic_ellipsis {
                     &theme::TEXT_MONO_WITH_CLASSIC_ELLIPSIS
                 } else {
-                    &theme::TEXT_MONO
+                    &theme::TEXT_MONO_DATA
                 }
             } else {
                 &theme::TEXT_NORMAL
