@@ -1,6 +1,6 @@
 use crate::ui::{
     component::{Child, Component, Event, EventCtx, Pad},
-    geometry::{Insets, Offset, Rect},
+    geometry::{Offset, Rect},
     shape::Renderer,
     util::animation_disabled,
 };
@@ -19,14 +19,14 @@ pub enum ChoiceMsg<T> {
 pub trait Choice {
     fn render_center<'s>(&self, target: &mut impl Renderer<'s>, _area: Rect, _inverse: bool);
 
-    fn width_center(&self) -> i16 {
-        0
+    fn size_center(&self) -> Offset {
+        Offset::zero()
     }
 
     fn render_side<'s>(&self, _target: &mut impl Renderer<'s>, _area: Rect) {}
 
-    fn width_side(&self) -> i16 {
-        0
+    fn size_side(&self) -> Offset {
+        Offset::zero()
     }
 
     fn btn_layout(&self) -> ButtonLayout;
@@ -223,19 +223,8 @@ where
     /// Display current, previous and next choices according to
     /// the current ChoiceItem.
     fn render_choices<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        // Getting the row area for the choices - so that displaying
-        // items in the used font will show them in the middle vertically.
-        let area_height_half = self.pad.area.height() / 2;
-        let font_size_half = theme::FONT_CHOICE_ITEMS.visible_text_height("Ay") / 2;
-        let center_row_area = self
-            .pad
-            .area
-            .split_top(area_height_half)
-            .0
-            .outset(Insets::bottom(font_size_half));
-
         // Drawing the current item in the middle.
-        self.show_current_choice(target, center_row_area);
+        self.show_current_choice(target, self.pad.area);
 
         // Not drawing the rest when not wanted
         if self.show_only_one_item {
@@ -243,8 +232,8 @@ where
         }
 
         // Getting the remaining left and right areas.
-        let center_width = self.get_current_item().width_center();
-        let (left_area, _center_area, right_area) = center_row_area.split_center(center_width);
+        let center_width = self.get_current_item().size_center().x;
+        let (left_area, _center_area, right_area) = self.pad.area.split_center(center_width);
 
         // Possibly drawing on the left side.
         if self.has_previous_choice() || self.controls == ChoiceControls::Carousel {
@@ -324,9 +313,9 @@ where
             }
 
             let (choice, _) = self.choices.get(page_index as usize);
-            let choice_width = choice.width_side();
+            let choice_size = choice.size_side();
 
-            if current_area.width() <= choice_width && !self.show_incomplete {
+            if current_area.width() <= choice_size.x && !self.show_incomplete {
                 // early break for an item that will not fit the remaining space
                 break;
             }
@@ -335,13 +324,13 @@ where
             // to exceed the bounds of the original area.
             let choice_area = Rect::from_top_right_and_size(
                 current_area.top_right(),
-                Offset::new(choice_width, current_area.height()),
+                Offset::new(choice_size.x, current_area.height()),
             );
             choice.render_side(target, choice_area);
 
             // Updating loop variables.
             current_area = current_area
-                .split_right(choice_width + self.items_distance)
+                .split_right(choice_size.x + self.items_distance)
                 .0;
             page_index -= 1;
         }
@@ -365,9 +354,9 @@ where
             }
 
             let (choice, _) = self.choices.get(page_index);
-            let choice_width = choice.width_side();
+            let choice_size = choice.size_side();
 
-            if current_area.width() <= choice_width && !self.show_incomplete {
+            if current_area.width() <= choice_size.x && !self.show_incomplete {
                 // early break for an item that will not fit the remaining space
                 break;
             }
@@ -376,13 +365,13 @@ where
             // to exceed the bounds of the original area.
             let choice_area = Rect::from_top_left_and_size(
                 current_area.top_left(),
-                Offset::new(choice_width, current_area.height()),
+                Offset::new(choice_size.x, current_area.height()),
             );
             choice.render_side(target, choice_area);
 
             // Updating loop variables.
             current_area = current_area
-                .split_left(choice_width + self.items_distance)
+                .split_left(choice_size.x + self.items_distance)
                 .1;
             page_index += 1;
         }
