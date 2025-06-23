@@ -906,6 +906,8 @@ OK 00000001000000000000000000000000000000000000000000000000000000000000000001000
 ### wpc-info
 Retrieves detailed information from the wireless power receiver, including chip identification, firmware version, configuration settings, and error status.
 
+WARNING: The command will only succeed if the receiver is externally powered (5V present on the VOUT/VRECT test point).
+
 Example:
 ```
 > wpc-info
@@ -928,13 +930,14 @@ Example:
 #   nvm_config_err:    0x0
 #   nvm_patch_err:     0x0
 #   nvm_prod_info_err: 0x0
+PROGRESS 0x38 0x4 0x0 0x161 0x1645 0x1D7C 0xC 0x1 0x52353038385055AA09446D0655AA55AA 0x0
 OK
 ```
 
 ### wpc-update
 Updates the firmware and configuration of the wireless power receiver.
 
-WARNING: The update will only succeed if the receiver is externally powered (5V present on the VOUT test point).
+WARNING: The command will only succeed if the receiver is externally powered (5V present on the VOUT/VRECT test point).
 
 Example:
 ```
