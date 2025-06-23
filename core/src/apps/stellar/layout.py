@@ -58,6 +58,7 @@ async def require_confirm_timebounds(start: int, end: int) -> None:
                     if start > 0
                     else TR.stellar__no_restriction
                 ),
+                False,
             ),
             (
                 TR.stellar__valid_to,
@@ -66,6 +67,7 @@ async def require_confirm_timebounds(start: int, end: int) -> None:
                     if end > 0
                     else TR.stellar__no_restriction
                 ),
+                False,
             ),
         ),
     )

@@ -29,7 +29,7 @@ def wrap_protobuf_load(
             log.debug(
                 __name__,
                 "Buffer to be parsed to a LoadedMessage: %s",
-                utils.get_bytes_as_str(buffer),
+                utils.hexlify_if_bytes(buffer),
             )
         msg = protobuf.decode(buffer, expected_type, EXPERIMENTAL_ENABLED)
         if __debug__ and utils.EMULATOR:

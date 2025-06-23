@@ -331,7 +331,7 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
             .unwrap_or(None);
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
 
-        let layout = ModelUI::confirm_properties(title, subtitle, items, hold)?;
+        let layout = ModelUI::confirm_properties(title, items, subtitle, hold)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1404,7 +1404,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def confirm_properties(
     ///     *,
     ///     title: str,
-    ///     items: list[tuple[str | None, str | bytes | None, bool]],
+    ///     items: list[tuple[str | None, str | bytes | None, bool | None]],
     ///     subtitle: str | None = None,
     ///     hold: bool = False,
     /// ) -> LayoutObj[UiResult]:

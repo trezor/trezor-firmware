@@ -601,11 +601,7 @@ async def _confirm_ask_pagination(
     extra_confirmation_if_not_read: bool = False,
     hold: bool = False,
 ) -> None:
-    # TODO: make should_show_more/confirm_more accept bytes directly
-    if isinstance(data, (bytes, bytearray, memoryview)):
-        from ubinascii import hexlify
-
-        data = hexlify(data).decode()
+    data = utils.hexlify_if_bytes(data)
 
     confirm_more_layout = trezorui_api.confirm_more(
         title=title,
@@ -813,8 +809,6 @@ def confirm_properties(
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> Awaitable[None]:
-    # Monospace flag for values that are bytes.
-    items = [(prop[0], prop[1], isinstance(prop[1], bytes)) for prop in props]
 
     if subtitle:
         title += ": " + subtitle
@@ -822,7 +816,7 @@ def confirm_properties(
     return raise_if_not_confirmed(
         trezorui_api.confirm_properties(
             title=title,
-            items=items,
+            items=list(props),
             hold=hold,
         ),
         br_name,
@@ -944,7 +938,7 @@ if not utils.BITCOIN_ONLY:
             title=TR.send__send_from,
             items=[
                 (f"{TR.words__account}:", account or ""),
-                (f"{TR.address_details__derivation_path}:", account_path or ""),
+                (TR.address_details__derivation_path_colon, account_path or ""),
             ],
         )
 
@@ -1044,18 +1038,19 @@ if not utils.BITCOIN_ONLY:
                 br_name="confirm_ethereum_approve",
             )
 
-        properties = (
-            [(TR.words__token, token_symbol)]
+        properties: list[PropertyType] = (
+            [(TR.words__token, token_symbol, True)]
             if is_revoke
             else [
                 (
                     f"{TR.ethereum__approve_amount_allowance}:",
                     total_amount or TR.words__unlimited,
+                    False,
                 )
             ]
         )
         if not is_unknown_network:
-            properties.append((f"{TR.words__chain}:", network_name))
+            properties.append((f"{TR.words__chain}:", network_name, True))
         await confirm_properties(
             "confirm_ethereum_approve",
             TR.ethereum__approve_revoke if is_revoke else TR.ethereum__approve,
@@ -1207,7 +1202,7 @@ if not utils.BITCOIN_ONLY:
 
         items = [
             (f"{TR.words__account}:", account),
-            (f"{TR.address_details__derivation_path}:", account_path),
+            (TR.address_details__derivation_path_colon, account_path),
         ]
         if stake_item is not None:
             items.append(stake_item)
@@ -1418,7 +1413,7 @@ async def confirm_signverify(
     if account is not None:
         items.append((f"{TR.words__account}:", account))
     if path is not None:
-        items.append((f"{TR.address_details__derivation_path}:", path))
+        items.append((TR.address_details__derivation_path_colon, path))
     items.append(
         (
             f"{TR.sign_message__message_size}:",
