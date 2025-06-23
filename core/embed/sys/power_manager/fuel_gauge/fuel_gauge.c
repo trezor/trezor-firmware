@@ -41,6 +41,8 @@ void fuel_gauge_reset(fuel_gauge_state_t* state) {
 }
 
 void fuel_gauge_set_soc(fuel_gauge_state_t* state, float soc, float P) {
+  soc = fmaxf(0.0f, fminf(soc, 1.0f));  // Clamp SOC to [0, 1]
+
   // Set SOC directly
   state->soc = soc;
   state->soc_latched = soc;
@@ -55,8 +57,9 @@ void fuel_gauge_initial_guess(fuel_gauge_state_t* state, float voltage_V,
   // Calculate OCV from terminal voltage and current
   float ocv = battery_meas_to_ocv(voltage_V, current_mA, temperature);
 
-  // Get SOC from OCV using lookup
+  // Extract SoC from battery model
   state->soc = battery_soc(ocv, temperature, discharging_mode);
+  state->soc = fmaxf(0.0f, fminf(state->soc, 1.0f));  // Clamp SOC to [0, 1]
   state->soc_latched = state->soc;
 }
 
