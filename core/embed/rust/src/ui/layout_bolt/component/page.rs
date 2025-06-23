@@ -638,7 +638,7 @@ mod tests {
                     "This paragraph is using a bold font. It doesn't need to be all that long.",
                 ),
                 Paragraph::new(
-                    &theme::TEXT_MONO,
+                    &theme::TEXT_MONO_DATA,
                     "And this one is using MONO. Monospace is nice for numbers, they have the same width and can be scanned quickly. Even if they span several pages or something.",
                 ),
                 Paragraph::new(

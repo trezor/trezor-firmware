@@ -43,14 +43,14 @@ impl AddressDetails {
                 &theme::TEXT_NORMAL,
                 TR::words__account_colon,
             ));
-            para.add(Paragraph::new(&theme::TEXT_MONO, a));
+            para.add(Paragraph::new(&theme::TEXT_MONO_DATA, a));
         }
         if let Some(p) = path {
             para.add(Paragraph::new(
                 &theme::TEXT_NORMAL,
                 TR::address_details__derivation_path_colon,
             ));
-            para.add(Paragraph::new(&theme::TEXT_MONO, p));
+            para.add(Paragraph::new(&theme::TEXT_MONO_DATA, p));
         }
         let result = Self {
             qr_code: Frame::left_aligned(
@@ -72,7 +72,7 @@ impl AddressDetails {
             xpub_view: Frame::left_aligned(
                 theme::label_title(),
                 " \n ".into(),
-                Paragraph::new(&theme::TEXT_MONO, "").into_paragraphs(),
+                Paragraph::new(&theme::TEXT_MONO_DATA, "").into_paragraphs(),
             )
             .with_cancel_button()
             .with_border(theme::borders_horizontal_scroll()),

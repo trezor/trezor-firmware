@@ -132,7 +132,7 @@ where
     }
 
     pub fn with_value(self, value: impl Into<TString<'static>>) -> Self {
-        self.with_text(&theme::TEXT_MONO, value)
+        self.with_text(&theme::TEXT_MONO_DATA, value)
     }
 
     pub fn new_shares(lines: [impl Into<TString<'static>>; 4], controls: U) -> Self {

@@ -345,7 +345,7 @@ impl FirmwareUI for UIBolt {
             let [text, is_data]: [Obj; 2] = util::iter_into_array(para)?;
             let is_data = is_data.try_into()?;
             let style: &TextStyle = if is_data {
-                &theme::TEXT_MONO
+                &theme::TEXT_MONO_DATA
             } else {
                 &theme::TEXT_NORMAL
             };
@@ -383,7 +383,7 @@ impl FirmwareUI for UIBolt {
             items,
             &theme::TEXT_NORMAL,
             &theme::TEXT_MONO,
-            &theme::TEXT_MONO,
+            &theme::TEXT_MONO_DATA,
         )?;
         let page = if hold {
             ButtonPage::new(paragraphs.into_paragraphs(), theme::BG).with_hold()?
@@ -972,7 +972,7 @@ impl FirmwareUI for UIBolt {
                     value,
                 ));
             } else {
-                paragraphs.add(Paragraph::new(&theme::TEXT_MONO, value));
+                paragraphs.add(Paragraph::new(&theme::TEXT_MONO_DATA, value));
             }
         }
 
@@ -1360,7 +1360,7 @@ impl ConfirmValue {
                 let value: TString = self.value.try_into()?;
                 theme::get_chunkified_text_style(value.len())
             } else if self.text_mono {
-                &theme::TEXT_MONO
+                &theme::TEXT_MONO_DATA
             } else {
                 &theme::TEXT_NORMAL
             },
