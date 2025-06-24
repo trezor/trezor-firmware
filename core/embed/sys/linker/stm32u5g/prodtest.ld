@@ -27,7 +27,8 @@ _confidential_section_end = ADDR(.confidential) + SIZEOF(.confidential);
 _bootargs_ram_start = BOOTARGS_START;
 _bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
 
-_codelen = SIZEOF(.padding) + SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
+_codelen = SIZEOF(.secmon_header) + SIZEOF(.padding) + SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
+_secmon_codelen = SIZEOF(.padding) + SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
 
 SECTIONS {
   .vendorheader : ALIGN(4) {
@@ -36,6 +37,10 @@ SECTIONS {
 
   .header : ALIGN(4) {
     KEEP(*(.header));
+  } >FLASH AT>FLASH
+
+  .secmon_header : ALIGN(CODE_ALIGNMENT) {
+    KEEP(*(.secmon_header));
   } >FLASH AT>FLASH
 
   .padding : ALIGN(4) {
