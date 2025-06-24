@@ -34,4 +34,8 @@ ADDRESSES_ACCOUNTING = (
 
 APPROVE_KNOWN_ADDRESSES = {
     unhexlify("e592427a0aece92de3edee1f18e0157c05861564"): "Uniswap V3 Router",
+    unhexlify(
+        "111111125421cA6dc452d289314280a0f8842A65"
+    ): "1inch Aggregation Router V6",
+    unhexlify("1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE"): "LiFI Diamond",
 }
