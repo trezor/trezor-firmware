@@ -89,6 +89,48 @@
             "skip_models": ["t1"]
         },
         {
+            "name": "approve_1inch_unknown_token",
+            "parameters": {
+                "comment": "Approve - 1inch - unknown token",
+                "data": "095ea7b3000000000000000000000000111111125421cA6dc452d289314280a0f8842A650000000000000000000000000000000000000000000000000000000000000064",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xfc6b5d6af8a13258f7cbd0d39e11b35e01a32f93",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "9a2ab9edbc4100eb8b5780b2a9a9bd6e5e3fa8340c6d952ffdceba856ea800d7",
+                "sig_s": "4ed543cbf61786924ffbe88641c727b9b7a8e4156eaabccd81b23913ccdbb88b"
+            },
+            "skip_models": ["t1"]
+        },
+        {
+            "name": "approve_lifi_unknown_token",
+            "parameters": {
+                "comment": "Approve - LiFi - unknown token",
+                "data": "095ea7b30000000000000000000000001231DEB6f5749EF6cE6943a275A1D3E7486F4EaE0000000000000000000000000000000000000000000000000000000000000064",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xfc6b5d6af8a13258f7cbd0d39e11b35e01a32f93",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "662d85ab3e646295d43c2cad28109ad4652d08b9e58891bb936181c2e6b8ddb2",
+                "sig_s": "2c1d9299f1007659892ec9e59a98b90d50a2e38b7b9cd57498862b69571308f1"
+            },
+            "skip_models": ["t1"]
+        },
+        {
             "name": "approve_unlimited",
             "parameters": {
                 "comment": "Approve - unlimited",
