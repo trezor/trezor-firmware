@@ -41,7 +41,7 @@ class DutProdtestResponse:
 
 class Dut():
 
-    def __init__(self, name, cpu_id, usb_port, relay_port, relay_ctl, verbose=False):
+    def __init__(self, name, cpu_id=None, usb_port=None, relay_port=None, relay_ctl=None, verbose=False):
 
         self.name = name
         self.relay_ctl = relay_ctl
@@ -66,6 +66,7 @@ class Dut():
 
         self.entry_interactive_mode()
         self.enable_charging()
+        self.set_backlight(100)
 
         time.sleep(2) # Give some time to process te commands
 
@@ -82,9 +83,11 @@ class Dut():
 
         self.cpu_id_hash = self.generate_id_hash(self.cpu_id)
 
-        if(self.cpu_id != cpu_id):
-            self.init_error()
-            raise RuntimeError(f"DUT {self.name} CPU ID mismatch: expected {cpu_id}, got {self.cpu_id}")
+        # cpu_id check
+        if not cpu_id is None:
+            if(self.cpu_id != cpu_id):
+                self.init_error()
+                raise RuntimeError(f"DUT {self.name} CPU ID mismatch: expected {cpu_id}, got {self.cpu_id}")
 
         logging.debug(f"DUT {self.name} ID hash: {self.cpu_id_hash}")
 
@@ -149,7 +152,8 @@ class Dut():
         Power up the DUT by activating the relay.
         """
         if self.relay_port is None:
-            raise ValueError("Relay port not set for DUT.")
+            logging.debug("Relay port not set for DUT, skipping power up.")
+            return
         self.relay_ctl.set_relay_on(self.relay_port)
 
     def power_down(self):
@@ -157,7 +161,8 @@ class Dut():
         Power down the DUT by deactivating the relay.
         """
         if self.relay_port is None:
-            raise ValueError("Relay port not set for DUT.")
+            logging.debug("Relay port not set for DUT, skipping power down.")
+            return
         self.relay_ctl.set_relay_off(self.relay_port)
 
     def display_bars(self, value: str):
@@ -311,7 +316,7 @@ class Dut():
         return response
 
     def log_data(self, output_directory: Path, test_time_id, test_scenario,
-                 test_phase, temp):
+                 test_phase, temp, verbose=False):
 
         # Log file name format:
         # > <device_id_hash>.<time_identifier>.<test_scenario>.<test><temperarture>.csv
@@ -335,6 +340,9 @@ class Dut():
 
         with open(file_path, 'a') as f:
             f.write(str(report.timestamp) + "," +",".join(report.data_entries[0]) + "\n")
+
+        if verbose:
+            print(str(report.timestamp) + "," +",".join(report.data_entries[0]))
 
     def _log_output(self, message):
         if(self.verbose):
