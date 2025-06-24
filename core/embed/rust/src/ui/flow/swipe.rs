@@ -1,5 +1,5 @@
 use crate::{
-    error::{self, Error},
+    error::Error,
     maybe_trace::MaybeTrace,
     micropython::{
         gc::{self, GcBox},
@@ -12,7 +12,7 @@ use crate::{
         },
         display::Color,
         event::SwipeEvent,
-        flow::{base::Decision, FlowController},
+        flow::base::Decision,
         geometry::{Direction, Rect},
         layout::base::{Layout, LayoutState},
         shape::{render_on_display, ConcreteRenderer, Renderer, ScopedRenderer},
@@ -86,6 +86,105 @@ impl<T> FlowComponentDynTrait for T where
 {
 }
 
+pub type GcBoxFlowComponent = GcBox<dyn FlowComponentDynTrait>;
+
+impl GcBoxFlowComponent {
+    pub fn alloc(page: impl FlowComponentDynTrait + 'static) -> Result<Self, Error> {
+        let gcbox = GcBox::new(page)?;
+        Ok(gc::coerce!(FlowComponentDynTrait, gcbox))
+    }
+}
+
+pub struct FlowStore {
+    /// Current page state
+    state: FlowState,
+    /// Store of all pages which are part of the flow.
+    pages: Vec<GcBox<dyn FlowComponentDynTrait>, 16>,
+
+    swipe_map: Vec<((FlowState, Direction), Decision), 32>,
+    event_map: Vec<((FlowState, FlowMsg), Decision), 32>,
+}
+
+trait FlowStoreTrait {
+    fn current_page(&self) -> &GcBoxFlowComponent;
+
+    fn current_page_mut(&mut self) -> &mut GcBoxFlowComponent;
+
+    fn goto(&mut self, state: FlowState);
+
+    fn place_all(&mut self);
+
+    fn handle_swipe(&self, direction: Direction) -> Decision;
+
+    fn handle_event(&self, msg: FlowMsg) -> Decision;
+}
+
+impl FlowStore {
+    pub fn new() -> Self {
+        Self {
+            state: FlowState::new(0),
+            pages: Vec::new(),
+            swipe_map: Vec::new(),
+            event_map: Vec::new(),
+        }
+    }
+    /// Add a page to the flow.
+    pub fn add(&mut self, alloc: GcBoxFlowComponent) -> FlowState {
+        let res = FlowState::new(self.pages.len());
+        unwrap!(self.pages.push(alloc));
+        res
+    }
+
+    pub fn on_swipe(&mut self, state: FlowState, direction: Direction, decision: Decision) {
+        // TODO: check for duplicates
+        unwrap!(self.swipe_map.push(((state, direction), decision)));
+    }
+    pub fn on_event(&mut self, state: FlowState, msg: FlowMsg, decision: Decision) {
+        // TODO: check for duplicates
+        unwrap!(self.event_map.push(((state, msg), decision)));
+    }
+}
+
+impl FlowStoreTrait for FlowStore {
+    fn current_page(&self) -> &GcBoxFlowComponent {
+        &self.pages[self.state.index()]
+    }
+
+    fn current_page_mut(&mut self) -> &mut GcBoxFlowComponent {
+        &mut self.pages[self.state.index()]
+    }
+
+    fn goto(&mut self, state: FlowState) {
+        self.state = state;
+    }
+
+    fn place_all(&mut self) {
+        for page in self.pages.iter_mut() {
+            page.place(ModelUI::SCREEN);
+        }
+    }
+
+    fn handle_swipe(&self, direction: Direction) -> Decision {
+        // TODO: use binary search
+        let key = (self.state, direction);
+        self.swipe_map
+            .iter()
+            .find(|&entry| entry.0 == key)
+            .map(|entry| entry.1.clone())
+            .unwrap_or(Decision::Nothing)
+    }
+
+    fn handle_event(&self, msg: FlowMsg) -> Decision {
+        // TODO: use binary search
+        let key = (self.state, msg);
+        self.event_map
+            .iter()
+            .find(|&entry| entry.0 == key)
+            .map(|entry| entry.1.clone())
+            .unwrap_or(Decision::Nothing)
+    }
+}
+
 /// Swipe flow consisting of multiple screens.
 ///
 /// Implements swipe navigation between the states with animated transitions,
@@ -95,10 +194,8 @@ impl<T> FlowComponentDynTrait for T where
 /// - currently active component is asked to handle the event,
 /// - if it can't then FlowState::handle_swipe is consulted.
 pub struct SwipeFlow {
-    /// Current state of the flow.
-    state: FlowState,
-    /// Store of all screens which are part of the flow.
-    store: Vec<GcBox<dyn FlowComponentDynTrait>, 16>,
+    /// Flow pages and its current state.
+    store: GcBox<dyn FlowStoreTrait>,
     /// Swipe detector.
     swipe: SwipeDetect,
     /// Swipe allowed
@@ -111,38 +208,14 @@ pub struct SwipeFlow {
 }
 
 impl SwipeFlow {
-    pub fn new(initial_state: &'static dyn FlowController) -> Result<Self, error::Error> {
+    pub fn new(store: impl FlowStoreTrait) -> Result<Self, Error> {
         Ok(Self {
-            state: initial_state,
+            store: gc::coerce!(FlowStoreTrait, GcBox::new(store)?),
             swipe: SwipeDetect::new(),
-            store: Vec::new(),
             allow_swipe: true,
             pending_decision: None,
             returned_value: None,
         })
-    }
-
-    /// Add a page to the flow.
-    ///
-    /// Pages must be inserted in the order of the flow state index.
-    pub fn add_page(
-        &mut self,
-        state: &'static dyn FlowController,
-        page: impl FlowComponentDynTrait + 'static,
-    ) -> Result<&mut Self, error::Error> {
-        debug_assert!(self.store.len() == state.index());
-        let alloc = GcBox::new(page)?;
-        let page = gc::coerce!(FlowComponentDynTrait, alloc);
-        unwrap!(self.store.push(page));
-        Ok(self)
-    }
-
-    fn current_page(&self) -> &GcBox<dyn FlowComponentDynTrait> {
-        &self.store[self.state.index()]
-    }
-
-    fn current_page_mut(&mut self) -> &mut GcBox<dyn FlowComponentDynTrait> {
-        &mut self.store[self.state.index()]
     }
 
     /// Transition to a different state.
@@ -150,7 +223,7 @@ impl SwipeFlow {
     /// This is the only way to change the current flow state.
     fn goto(&mut self, ctx: &mut EventCtx, new_state: FlowState, attach_type: AttachType) {
         // update current page
-        self.state = new_state;
+        self.store.goto(new_state);
 
         // reset and unlock swipe config
         self.swipe = SwipeDetect::new();
@@ -158,32 +231,30 @@ impl SwipeFlow {
         self.allow_swipe = true;
 
         // send an Attach event to the new page
-        self.current_page_mut()
+        self.store
+            .current_page_mut()
             .event(ctx, Event::Attach(attach_type));
 
         ctx.request_paint();
     }
 
-    fn handle_swipe_child(&mut self, _ctx: &mut EventCtx, direction: Direction) -> Decision {
-        self.state.handle_swipe(direction)
-    }
-
     fn handle_event_child(&mut self, ctx: &mut EventCtx, event: Event) -> Decision {
-        let msg = self.current_page_mut().event(ctx, event);
+        let msg = self.store.current_page_mut().event(ctx, event);
 
         match msg {
             // HOTFIX: if no decision was reached, AND the result is a next event,
             // use the decision for a swipe-up.
             Some(FlowMsg::Next)
                 if self
+                    .store
                     .current_page()
                     .get_swipe_config()
                     .is_allowed(Direction::Up) =>
             {
-                self.state.handle_swipe(Direction::Up)
+                self.store.handle_swipe(Direction::Up)
             }
 
-            Some(msg) => self.state.handle_event(msg),
+            Some(msg) => self.store.handle_event(msg),
             None => Decision::Nothing,
         }
     }
@@ -195,7 +266,7 @@ impl SwipeFlow {
         let mut attach = false;
 
         let event = if self.allow_swipe {
-            let page = self.current_page();
+            let page = self.store.current_page();
             let pager = page.get_pager();
             let config = page.get_swipe_config().with_pager(pager);
 
@@ -213,7 +284,7 @@ impl SwipeFlow {
                         decision = override_decision;
                     } else {
                         // normal end-of-swipe event handling
-                        decision = self.handle_swipe_child(ctx, dir);
+                        decision = self.store.handle_swipe(dir);
                     }
                     Event::Swipe(SwipeEvent::End(dir))
                 }
@@ -232,7 +303,8 @@ impl SwipeFlow {
                 // swipe end.
                 if attach {
                     if let Event::Swipe(SwipeEvent::End(dir)) = event {
-                        self.current_page_mut()
+                        self.store
+                            .current_page_mut()
                             .event(ctx, Event::Attach(AttachType::Swipe(dir)));
                     }
                 }
@@ -246,7 +318,7 @@ impl SwipeFlow {
                     self.allow_swipe = true;
                 };
 
-                let config = self.current_page().get_swipe_config();
+                let config = self.store.current_page().get_swipe_config();
 
                 if let Decision::Transition(_, Swipe(direction)) = decision {
                     if config.is_allowed(direction) {
@@ -261,7 +333,7 @@ impl SwipeFlow {
             }
             _ => {
                 //ignore message, we are already transitioning
-                let msg = self.current_page_mut().event(ctx, event);
+                let msg = self.store.current_page_mut().event(ctx, event);
                 assert!(msg.is_none());
             }
         }
@@ -271,11 +343,11 @@ impl SwipeFlow {
                 self.goto(ctx, new_state, attach);
                 Some(LayoutState::Attached(ctx.button_request()))
             }
-            Decision::Return(msg) => {
+            Decision::Return(res) => {
                 ctx.set_transition_out(return_transition);
                 self.swipe.reset();
                 self.allow_swipe = true;
-                self.returned_value = Some(msg.try_into());
+                self.returned_value = Some(res);
                 Some(LayoutState::Done)
             }
             Decision::Nothing if matches!(event, Event::Attach(_)) => {
@@ -293,9 +365,7 @@ impl SwipeFlow {
 /// `Component`'s not-object-safe interface.
 impl Layout<Result<Obj, Error>> for SwipeFlow {
     fn place(&mut self) {
-        for elem in self.store.iter_mut() {
-            elem.place(ModelUI::SCREEN);
-        }
+        self.store.place_all()
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<LayoutState> {
@@ -312,7 +382,7 @@ impl Layout<Result<Obj, Error>> for SwipeFlow {
         #[cfg(not(feature = "ui_debug"))]
         let overflow: bool = false;
         render_on_display(None, Some(Color::black()), |target| {
-            self.current_page().render(target);
+            self.store.current_page().render(target);
             #[cfg(feature = "ui_debug")]
             if target.should_raise_overflow_exception() {
                 overflow = true;
@@ -330,6 +400,6 @@ impl Layout<Result<Obj, Error>> for SwipeFlow {
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for SwipeFlow {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        self.current_page().trace(t)
+        self.store.current_page().trace(t)
     }
 }

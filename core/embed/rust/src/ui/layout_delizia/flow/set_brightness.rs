@@ -7,11 +7,9 @@ use crate::{
     trezorhal::display,
     ui::{
         component::{swipe_detect::SwipeSettings, EventCtx, FlowMsg},
-        flow::{
-            base::{Decision, DecisionBuilder as _},
-            FlowController, SwipeFlow,
-        },
+        flow::{base::Decision, FlowStore, GcBoxFlowComponent, SwipeFlow},
         geometry::Direction,
+        layout_delizia::component::VerticalMenuChoiceMsg,
     },
 };
 
@@ -29,34 +27,6 @@ pub enum SetBrightness {
     Menu,
     Confirm,
     Confirmed,
-}
-
-impl FlowController for SetBrightness {
-    #[inline]
-    fn index(&'static self) -> usize {
-        *self as usize
-    }
-
-    fn handle_swipe(&'static self, direction: Direction) -> Decision {
-        match (self, direction) {
-            (Self::Slider, Direction::Up) => Self::Confirm.swipe(direction),
-            (Self::Confirm, Direction::Down) => Self::Slider.swipe(direction),
-            (Self::Confirmed, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
-            _ => self.do_nothing(),
-        }
-    }
-
-    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
-        match (self, msg) {
-            (Self::Slider, FlowMsg::Info) => Self::Menu.swipe_left(),
-            (Self::Menu, FlowMsg::Cancelled) => Self::Slider.swipe_right(),
-            (Self::Menu, FlowMsg::Choice(0)) => self.return_msg(FlowMsg::Cancelled),
-            (Self::Confirm, FlowMsg::Confirmed) => Self::Confirmed.swipe_up(),
-            (Self::Confirm, FlowMsg::Info) => Self::Menu.swipe_left(),
-            (Self::Confirmed, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
-            _ => self.do_nothing(),
-        }
-    }
 }
 
 static BRIGHTNESS: AtomicU8 = AtomicU8::new(0);
@@ -106,7 +76,7 @@ pub fn new_set_brightness(brightness: Option<u8>) -> Result<SwipeFlow, Error> {
         VerticalMenu::empty().danger(theme::ICON_CANCEL, TR::buttons__cancel.into()),
     )
     .with_cancel_button()
-    .map(super::util::map_to_choice);
+    .map(map_to_choice);
 
     let content_confirm = Frame::left_aligned(
         TR::brightness__change_title.into(),
@@ -134,11 +104,29 @@ pub fn new_set_brightness(brightness: Option<u8>) -> Result<SwipeFlow, Error> {
     .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREEN_LIGHT)
     .map(move |_msg| Some(FlowMsg::Confirmed));
 
-    let mut res = SwipeFlow::new(&SetBrightness::Slider)?;
-    res.add_page(&SetBrightness::Slider, content_slider)?
-        .add_page(&SetBrightness::Menu, content_menu)?
-        .add_page(&SetBrightness::Confirm, content_confirm)?
-        .add_page(&SetBrightness::Confirmed, content_confirmed)?;
+    let mut store = FlowStore::new();
 
-    Ok(res)
+    let slider = store.add(GcBoxFlowComponent::alloc(content_slider)?);
+    let menu = store.add(GcBoxFlowComponent::alloc(content_menu)?);
+    let confirm = store.add(GcBoxFlowComponent::alloc(content_confirm)?);
+    let confirmed = store.add(GcBoxFlowComponent::alloc(content_confirmed)?);
+
+    store.on_swipe(slider, Direction::Up, confirm.swipe_up());
+    store.on_swipe(confirm, Direction::Down, slider.swipe_down());
+    store.on_swipe(confirmed, Direction::Up, FlowMsg::Confirmed.into());
+
+    store.on_event(slider, FlowMsg::Info, menu.swipe_left());
+    store.on_event(menu, FlowMsg::Cancelled, slider.goto());
+    store.on_event(menu, FlowMsg::Choice(0), FlowMsg::Cancelled.into());
+    store.on_event(confirm, FlowMsg::Confirmed, confirmed.swipe_up());
+    store.on_event(confirm, FlowMsg::Info, menu.swipe_left());
+    store.on_event(confirmed, FlowMsg::Confirmed, FlowMsg::Confirmed.into());
+
+    SwipeFlow::new(store)
+}
+
+fn map_to_choice(msg: VerticalMenuChoiceMsg) -> Option<FlowMsg> {
+    match msg {
+        VerticalMenuChoiceMsg::Selected(i) => Some(FlowMsg::Choice(i)),
+    }
 }

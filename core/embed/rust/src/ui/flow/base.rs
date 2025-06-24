@@ -1,7 +1,11 @@
-use crate::ui::{
-    component::{base::AttachType, swipe_detect::SwipeConfig},
-    geometry::Direction,
-    util::Pager,
+use crate::{
+    error::Error,
+    micropython::obj::Obj,
+    ui::{
+        component::{base::AttachType, swipe_detect::SwipeConfig},
+        geometry::Direction,
+        util::Pager,
+    },
 };
 
 pub use crate::ui::component::FlowMsg;
@@ -24,7 +28,7 @@ pub enum Decision {
 
     /// Yield a message to the caller of the flow (i.e. micropython), end event
     /// processing.
-    Return(FlowMsg),
+    Return(Result<Obj, Error>),
 }
 
 impl Decision {
@@ -36,6 +40,12 @@ impl Decision {
     }
 }
 
+impl From<FlowMsg> for Decision {
+    fn from(msg: FlowMsg) -> Self {
+        Self::Return(msg.try_into())
+    }
+}
+
 /// Flow state type
 ///
 /// It is a static dyn reference to a FlowController, which, due to this, is
@@ -44,72 +54,50 @@ impl Decision {
 ///
 /// By convention, a Decision emitted by a controller must embed a reference to
 /// the same type of controller.
-pub type FlowState = &'static dyn FlowController;
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub struct FlowState(usize);
 
-/// Encodes the flow logic as a set of states, and transitions between them
-/// triggered by events and swipes.
-pub trait FlowController {
-    /// What to do when user swipes on screen and current component doesn't
-    /// respond to swipe of that direction.
-    ///
-    /// By convention, the type of the new state inside the state change must be
-    /// Self. This can't be enforced by the type system unfortunately, because
-    /// this trait must remain object-safe and so can't refer to Self.
-    fn handle_swipe(&'static self, direction: Direction) -> Decision;
+impl FlowState {
+    pub(super) fn new(index: usize) -> Self {
+        Self(index)
+    }
 
-    /// What to do when the current component emits a message in response to an
-    /// event.
-    ///
-    /// By convention, the type of the new state inside the state change must be
-    /// Self. This can't be enforced by the type system unfortunately, because
-    /// this trait must remain object-safe and so can't refer to Self.
-    fn handle_event(&'static self, msg: FlowMsg) -> Decision;
+    pub(super) fn index(&self) -> usize {
+        self.0
+    }
 
-    /// Page index of the current state.
-    fn index(&'static self) -> usize;
-}
-
-/// Helper trait for writing nicer flow logic.
-pub trait DecisionBuilder: FlowController + Sized {
     #[inline]
-    fn swipe(&'static self, direction: Direction) -> Decision {
+    pub fn swipe(self, direction: Direction) -> Decision {
         Decision::Transition(self, AttachType::Swipe(direction))
     }
 
     #[inline]
-    fn swipe_left(&'static self) -> Decision {
+    pub fn swipe_left(self) -> Decision {
         self.swipe(Direction::Left)
     }
 
     #[inline]
-    fn swipe_right(&'static self) -> Decision {
+    pub fn swipe_right(self) -> Decision {
         self.swipe(Direction::Right)
     }
 
     #[inline]
-    fn swipe_up(&'static self) -> Decision {
+    pub fn swipe_up(self) -> Decision {
         self.swipe(Direction::Up)
     }
 
     #[inline]
-    fn swipe_down(&'static self) -> Decision {
+    pub fn swipe_down(self) -> Decision {
         self.swipe(Direction::Down)
     }
 
     #[inline]
-    fn goto(&'static self) -> Decision {
+    pub fn goto(self) -> Decision {
         Decision::Transition(self, AttachType::Initial)
     }
 
     #[inline]
-    fn do_nothing(&'static self) -> Decision {
+    pub fn do_nothing(self) -> Decision {
         Decision::Nothing
     }
-
-    #[inline]
-    fn return_msg(&'static self, msg: FlowMsg) -> Decision {
-        Decision::Return(msg)
-    }
 }
-
-impl<T: FlowController> DecisionBuilder for T {}
