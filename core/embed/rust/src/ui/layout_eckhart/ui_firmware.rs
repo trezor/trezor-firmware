@@ -1376,7 +1376,7 @@ impl FirmwareUI for UIEckhart {
             .with_text_style(style);
         let action_bar = if allow_cancel {
             ActionBar::new_double(
-                Button::with_icon(theme::ICON_CROSS).styled(theme::button_cancel()),
+                Button::with_icon(theme::ICON_CROSS),
                 Button::with_single_line_text(button),
             )
         } else {
