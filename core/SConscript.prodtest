@@ -14,6 +14,12 @@ FEATURE_FLAGS = {
     "AES_GCM": True,
 }
 
+
+if TREZOR_MODEL not in ('T2T1', 'T2B1', 'T3B1', 'T3T1', 'D001'):
+    secmon_prodtest = True
+else:
+    secmon_prodtest = False
+
 FEATURES_WANTED = [
     "ble",
     "consumption_mask",
@@ -191,6 +197,13 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/cmd/secure_channel.c',
 ]
 
+
+if secmon_prodtest:
+    SOURCE_PRODTEST += [
+        'embed/projects/prodtest/secmon_header.S',
+    ]
+
+
 env.Replace(
     CAT='cat',
     CP='cp',
@@ -342,11 +355,38 @@ BINARY_NAME += ".bin"
 if CMAKELISTS != 0:
     env.Depends(program_elf, cmake_gen)
 
-program_bin = env.Command(
-    target='prodtest.bin',
-    source=program_elf,
-    action=[
-        '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .confidential $SOURCE $TARGET',
-        '$HEADERTOOL $TARGET ' + ('-D' if ARGUMENTS.get('PRODUCTION', '0') == '0' else ''),
-        '$CP $TARGET ' + BINARY_NAME,
-    ], )
+if secmon_prodtest:
+    secmon_bin = env.Command(
+        target='secmon_prodtest.bin',
+        source=program_elf,
+        action=[
+            '$OBJCOPY -O binary -j .secmon_header -j .flash -j .data -j .confidential $SOURCE $TARGET',
+            '$HEADERTOOL $TARGET ' + ('-D' if ARGUMENTS.get('PRODUCTION', '0') == '0' else ''),
+        ], )
+
+    headers_bin = env.Command(
+        target='headers.bin',
+        source=program_elf,
+        action=[
+            '$OBJCOPY -O binary -j .vendorheader -j .header $SOURCE $TARGET',
+        ], )
+
+    program_bin = env.Command(
+        target='prodtest.bin',
+        source=[ headers_bin, secmon_bin ],
+        action=['cat ${SOURCES[0]} ${SOURCES[1]} > $TARGET',
+                '$HEADERTOOL $TARGET ' + ('-D' if ARGUMENTS.get('PRODUCTION', '0') == '0' else ''),
+                '$CP $TARGET ' + BINARY_NAME,]
+    )
+
+    env.Depends(program_bin, headers_bin)
+    env.Depends(program_bin, secmon_bin)
+else:
+    program_bin = env.Command(
+        target='prodtest.bin',
+        source=program_elf,
+        action=[
+            '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .confidential $SOURCE $TARGET',
+            '$HEADERTOOL $TARGET ' + ('-D' if ARGUMENTS.get('PRODUCTION', '0') == '0' else ''),
+            '$CP $TARGET ' + BINARY_NAME,
+        ], )
