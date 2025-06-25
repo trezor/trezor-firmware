@@ -61,6 +61,12 @@ secbool secret_verify_header(void) {
   return bootloader_locked;
 }
 
+static void secret_erase(void) {
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
+  ensure(flash_area_erase(&SECRET_AREA, NULL), "secret erase");
+  mpu_restore(mpu_mode);
+}
+
 #ifdef LOCKABLE_BOOTLOADER
 secbool secret_bootloader_locked(void) {
   if (bootloader_locked_set != sectrue) {
@@ -132,12 +138,6 @@ static secbool secret_wiped(void) {
   return wiped;
 }
 
-void secret_erase(void) {
-  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
-  ensure(flash_area_erase(&SECRET_AREA, NULL), "secret erase");
-  mpu_restore(mpu_mode);
-}
-
 secbool secret_key_set(uint8_t slot, const uint8_t* key, size_t len) {
   if (slot >= SECRET_NUM_KEY_SLOTS) {
     return secfalse;
@@ -167,14 +167,6 @@ secbool secret_key_get(uint8_t slot, uint8_t* dest, size_t len) {
   uint32_t offset = SECRET_KEY_SLOT_0_OFFSET;
 
   return secret_read(dest, offset, len);
-}
-
-static secbool secret_key_present(uint8_t slot) {
-  if (slot >= SECRET_NUM_KEY_SLOTS) {
-    return secfalse;
-  }
-
-  return (sectrue != secret_wiped()) * sectrue;
 }
 
 secbool secret_key_writable(uint8_t slot) {
