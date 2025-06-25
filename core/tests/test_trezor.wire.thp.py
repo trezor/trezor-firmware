@@ -142,7 +142,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         gen.send(None)
         unallocated_chanel_error_on_channel_789a = "42789a0005027b743563000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
         self.assertEqual(
-            utils.get_bytes_as_str(self.interface.data[-1]),
+            utils.hexlify_if_bytes(self.interface.data[-1]),
             unallocated_chanel_error_on_channel_789a,
         )
 
@@ -271,7 +271,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         # gen.send(None)
         # gen.send(None)
         # for i in self.interface.data:
-        #    print(utils.get_bytes_as_str(i))
+        #    print(utils.hexlify_if_bytes(i))
 
     def tbd_skip_pairing(self):
         config.init()
