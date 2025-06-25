@@ -107,25 +107,6 @@ if __debug__:
     DebugLinkGcInfo = 9010
     DebugLinkGetPairingInfo = 9011
     DebugLinkPairingInfo = 9012
-if utils.USE_THP:
-    ThpCreateNewSession = 1000
-    ThpPairingRequest = 1006
-    ThpPairingRequestApproved = 1007
-    ThpSelectMethod = 1008
-    ThpPairingPreparationsFinished = 1009
-    ThpCredentialRequest = 1010
-    ThpCredentialResponse = 1011
-    ThpEndRequest = 1012
-    ThpEndResponse = 1013
-    ThpCodeEntryCommitment = 1016
-    ThpCodeEntryChallenge = 1017
-    ThpCodeEntryCpaceTrezor = 1018
-    ThpCodeEntryCpaceHostTag = 1019
-    ThpCodeEntrySecret = 1020
-    ThpQrCodeTag = 1024
-    ThpQrCodeSecret = 1025
-    ThpNfcTagHost = 1032
-    ThpNfcTagTrezor = 1033
 if not utils.BITCOIN_ONLY:
     SetU2FCounter = 63
     GetNextU2FCounter = 80
@@ -265,6 +246,9 @@ if not utils.BITCOIN_ONLY:
     SolanaAddress = 903
     SolanaSignTx = 904
     SolanaTxSignature = 905
+    ThpCreateNewSession = 1000
+    ThpCredentialRequest = 1010
+    ThpCredentialResponse = 1011
     NostrGetPubkey = 2001
     NostrPubkey = 2002
     NostrSignEvent = 2003

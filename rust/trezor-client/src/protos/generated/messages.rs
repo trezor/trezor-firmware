@@ -505,40 +505,10 @@ pub enum MessageType {
     MessageType_SolanaTxSignature = 905,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpCreateNewSession)
     MessageType_ThpCreateNewSession = 1000,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpPairingRequest)
-    MessageType_ThpPairingRequest = 1006,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpPairingRequestApproved)
-    MessageType_ThpPairingRequestApproved = 1007,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpSelectMethod)
-    MessageType_ThpSelectMethod = 1008,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpPairingPreparationsFinished)
-    MessageType_ThpPairingPreparationsFinished = 1009,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpCredentialRequest)
     MessageType_ThpCredentialRequest = 1010,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpCredentialResponse)
     MessageType_ThpCredentialResponse = 1011,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpEndRequest)
-    MessageType_ThpEndRequest = 1012,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpEndResponse)
-    MessageType_ThpEndResponse = 1013,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpCodeEntryCommitment)
-    MessageType_ThpCodeEntryCommitment = 1016,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpCodeEntryChallenge)
-    MessageType_ThpCodeEntryChallenge = 1017,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpCodeEntryCpaceTrezor)
-    MessageType_ThpCodeEntryCpaceTrezor = 1018,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpCodeEntryCpaceHostTag)
-    MessageType_ThpCodeEntryCpaceHostTag = 1019,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpCodeEntrySecret)
-    MessageType_ThpCodeEntrySecret = 1020,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpQrCodeTag)
-    MessageType_ThpQrCodeTag = 1024,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpQrCodeSecret)
-    MessageType_ThpQrCodeSecret = 1025,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpNfcTagHost)
-    MessageType_ThpNfcTagHost = 1032,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpNfcTagTrezor)
-    MessageType_ThpNfcTagTrezor = 1033,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_NostrGetPubkey)
     MessageType_NostrGetPubkey = 2001,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_NostrPubkey)
@@ -805,23 +775,8 @@ impl ::protobuf::Enum for MessageType {
             904 => ::std::option::Option::Some(MessageType::MessageType_SolanaSignTx),
             905 => ::std::option::Option::Some(MessageType::MessageType_SolanaTxSignature),
             1000 => ::std::option::Option::Some(MessageType::MessageType_ThpCreateNewSession),
-            1006 => ::std::option::Option::Some(MessageType::MessageType_ThpPairingRequest),
-            1007 => ::std::option::Option::Some(MessageType::MessageType_ThpPairingRequestApproved),
-            1008 => ::std::option::Option::Some(MessageType::MessageType_ThpSelectMethod),
-            1009 => ::std::option::Option::Some(MessageType::MessageType_ThpPairingPreparationsFinished),
             1010 => ::std::option::Option::Some(MessageType::MessageType_ThpCredentialRequest),
             1011 => ::std::option::Option::Some(MessageType::MessageType_ThpCredentialResponse),
-            1012 => ::std::option::Option::Some(MessageType::MessageType_ThpEndRequest),
-            1013 => ::std::option::Option::Some(MessageType::MessageType_ThpEndResponse),
-            1016 => ::std::option::Option::Some(MessageType::MessageType_ThpCodeEntryCommitment),
-            1017 => ::std::option::Option::Some(MessageType::MessageType_ThpCodeEntryChallenge),
-            1018 => ::std::option::Option::Some(MessageType::MessageType_ThpCodeEntryCpaceTrezor),
-            1019 => ::std::option::Option::Some(MessageType::MessageType_ThpCodeEntryCpaceHostTag),
-            1020 => ::std::option::Option::Some(MessageType::MessageType_ThpCodeEntrySecret),
-            1024 => ::std::option::Option::Some(MessageType::MessageType_ThpQrCodeTag),
-            1025 => ::std::option::Option::Some(MessageType::MessageType_ThpQrCodeSecret),
-            1032 => ::std::option::Option::Some(MessageType::MessageType_ThpNfcTagHost),
-            1033 => ::std::option::Option::Some(MessageType::MessageType_ThpNfcTagTrezor),
             2001 => ::std::option::Option::Some(MessageType::MessageType_NostrGetPubkey),
             2002 => ::std::option::Option::Some(MessageType::MessageType_NostrPubkey),
             2003 => ::std::option::Option::Some(MessageType::MessageType_NostrSignEvent),
@@ -1075,23 +1030,8 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_SolanaSignTx" => ::std::option::Option::Some(MessageType::MessageType_SolanaSignTx),
             "MessageType_SolanaTxSignature" => ::std::option::Option::Some(MessageType::MessageType_SolanaTxSignature),
             "MessageType_ThpCreateNewSession" => ::std::option::Option::Some(MessageType::MessageType_ThpCreateNewSession),
-            "MessageType_ThpPairingRequest" => ::std::option::Option::Some(MessageType::MessageType_ThpPairingRequest),
-            "MessageType_ThpPairingRequestApproved" => ::std::option::Option::Some(MessageType::MessageType_ThpPairingRequestApproved),
-            "MessageType_ThpSelectMethod" => ::std::option::Option::Some(MessageType::MessageType_ThpSelectMethod),
-            "MessageType_ThpPairingPreparationsFinished" => ::std::option::Option::Some(MessageType::MessageType_ThpPairingPreparationsFinished),
             "MessageType_ThpCredentialRequest" => ::std::option::Option::Some(MessageType::MessageType_ThpCredentialRequest),
             "MessageType_ThpCredentialResponse" => ::std::option::Option::Some(MessageType::MessageType_ThpCredentialResponse),
-            "MessageType_ThpEndRequest" => ::std::option::Option::Some(MessageType::MessageType_ThpEndRequest),
-            "MessageType_ThpEndResponse" => ::std::option::Option::Some(MessageType::MessageType_ThpEndResponse),
-            "MessageType_ThpCodeEntryCommitment" => ::std::option::Option::Some(MessageType::MessageType_ThpCodeEntryCommitment),
-            "MessageType_ThpCodeEntryChallenge" => ::std::option::Option::Some(MessageType::MessageType_ThpCodeEntryChallenge),
-            "MessageType_ThpCodeEntryCpaceTrezor" => ::std::option::Option::Some(MessageType::MessageType_ThpCodeEntryCpaceTrezor),
-            "MessageType_ThpCodeEntryCpaceHostTag" => ::std::option::Option::Some(MessageType::MessageType_ThpCodeEntryCpaceHostTag),
-            "MessageType_ThpCodeEntrySecret" => ::std::option::Option::Some(MessageType::MessageType_ThpCodeEntrySecret),
-            "MessageType_ThpQrCodeTag" => ::std::option::Option::Some(MessageType::MessageType_ThpQrCodeTag),
-            "MessageType_ThpQrCodeSecret" => ::std::option::Option::Some(MessageType::MessageType_ThpQrCodeSecret),
-            "MessageType_ThpNfcTagHost" => ::std::option::Option::Some(MessageType::MessageType_ThpNfcTagHost),
-            "MessageType_ThpNfcTagTrezor" => ::std::option::Option::Some(MessageType::MessageType_ThpNfcTagTrezor),
             "MessageType_NostrGetPubkey" => ::std::option::Option::Some(MessageType::MessageType_NostrGetPubkey),
             "MessageType_NostrPubkey" => ::std::option::Option::Some(MessageType::MessageType_NostrPubkey),
             "MessageType_NostrSignEvent" => ::std::option::Option::Some(MessageType::MessageType_NostrSignEvent),
@@ -1344,23 +1284,8 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_SolanaSignTx,
         MessageType::MessageType_SolanaTxSignature,
         MessageType::MessageType_ThpCreateNewSession,
-        MessageType::MessageType_ThpPairingRequest,
-        MessageType::MessageType_ThpPairingRequestApproved,
-        MessageType::MessageType_ThpSelectMethod,
-        MessageType::MessageType_ThpPairingPreparationsFinished,
         MessageType::MessageType_ThpCredentialRequest,
         MessageType::MessageType_ThpCredentialResponse,
-        MessageType::MessageType_ThpEndRequest,
-        MessageType::MessageType_ThpEndResponse,
-        MessageType::MessageType_ThpCodeEntryCommitment,
-        MessageType::MessageType_ThpCodeEntryChallenge,
-        MessageType::MessageType_ThpCodeEntryCpaceTrezor,
-        MessageType::MessageType_ThpCodeEntryCpaceHostTag,
-        MessageType::MessageType_ThpCodeEntrySecret,
-        MessageType::MessageType_ThpQrCodeTag,
-        MessageType::MessageType_ThpQrCodeSecret,
-        MessageType::MessageType_ThpNfcTagHost,
-        MessageType::MessageType_ThpNfcTagTrezor,
         MessageType::MessageType_NostrGetPubkey,
         MessageType::MessageType_NostrPubkey,
         MessageType::MessageType_NostrSignEvent,
@@ -1619,31 +1544,16 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_SolanaSignTx => 236,
             MessageType::MessageType_SolanaTxSignature => 237,
             MessageType::MessageType_ThpCreateNewSession => 238,
-            MessageType::MessageType_ThpPairingRequest => 239,
-            MessageType::MessageType_ThpPairingRequestApproved => 240,
-            MessageType::MessageType_ThpSelectMethod => 241,
-            MessageType::MessageType_ThpPairingPreparationsFinished => 242,
-            MessageType::MessageType_ThpCredentialRequest => 243,
-            MessageType::MessageType_ThpCredentialResponse => 244,
-            MessageType::MessageType_ThpEndRequest => 245,
-            MessageType::MessageType_ThpEndResponse => 246,
-            MessageType::MessageType_ThpCodeEntryCommitment => 247,
-            MessageType::MessageType_ThpCodeEntryChallenge => 248,
-            MessageType::MessageType_ThpCodeEntryCpaceTrezor => 249,
-            MessageType::MessageType_ThpCodeEntryCpaceHostTag => 250,
-            MessageType::MessageType_ThpCodeEntrySecret => 251,
-            MessageType::MessageType_ThpQrCodeTag => 252,
-            MessageType::MessageType_ThpQrCodeSecret => 253,
-            MessageType::MessageType_ThpNfcTagHost => 254,
-            MessageType::MessageType_ThpNfcTagTrezor => 255,
-            MessageType::MessageType_NostrGetPubkey => 256,
-            MessageType::MessageType_NostrPubkey => 257,
-            MessageType::MessageType_NostrSignEvent => 258,
-            MessageType::MessageType_NostrEventSignature => 259,
-            MessageType::MessageType_BenchmarkListNames => 260,
-            MessageType::MessageType_BenchmarkNames => 261,
-            MessageType::MessageType_BenchmarkRun => 262,
-            MessageType::MessageType_BenchmarkResult => 263,
+            MessageType::MessageType_ThpCredentialRequest => 239,
+            MessageType::MessageType_ThpCredentialResponse => 240,
+            MessageType::MessageType_NostrGetPubkey => 241,
+            MessageType::MessageType_NostrPubkey => 242,
+            MessageType::MessageType_NostrSignEvent => 243,
+            MessageType::MessageType_NostrEventSignature => 244,
+            MessageType::MessageType_BenchmarkListNames => 245,
+            MessageType::MessageType_BenchmarkNames => 246,
+            MessageType::MessageType_BenchmarkRun => 247,
+            MessageType::MessageType_BenchmarkResult => 248,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1662,7 +1572,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xfe[\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xccV\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\x80\xa6\
     \x1d\x01\xb0\xb5\x18\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -1934,41 +1844,22 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     ess\x10\x86\x07\x1a\x04\x90\xb5\x18\x01\x12$\n\x19MessageType_SolanaAddr\
     ess\x10\x87\x07\x1a\x04\x98\xb5\x18\x01\x12#\n\x18MessageType_SolanaSign\
     Tx\x10\x88\x07\x1a\x04\x90\xb5\x18\x01\x12(\n\x1dMessageType_SolanaTxSig\
-    nature\x10\x89\x07\x1a\x04\x98\xb5\x18\x01\x12.\n\x1fMessageType_ThpCrea\
-    teNewSession\x10\xe8\x07\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12(\n\
-    \x1dMessageType_ThpPairingRequest\x10\xee\x07\x1a\x04\x80\xa6\x1d\x01\
-    \x120\n%MessageType_ThpPairingRequestApproved\x10\xef\x07\x1a\x04\x80\
-    \xa6\x1d\x01\x12&\n\x1bMessageType_ThpSelectMethod\x10\xf0\x07\x1a\x04\
-    \x80\xa6\x1d\x01\x125\n*MessageType_ThpPairingPreparationsFinished\x10\
-    \xf1\x07\x1a\x04\x80\xa6\x1d\x01\x12+\n\x20MessageType_ThpCredentialRequ\
-    est\x10\xf2\x07\x1a\x04\x80\xa6\x1d\x01\x12,\n!MessageType_ThpCredential\
-    Response\x10\xf3\x07\x1a\x04\x80\xa6\x1d\x01\x12$\n\x19MessageType_ThpEn\
-    dRequest\x10\xf4\x07\x1a\x04\x80\xa6\x1d\x01\x12%\n\x1aMessageType_ThpEn\
-    dResponse\x10\xf5\x07\x1a\x04\x80\xa6\x1d\x01\x12-\n\"MessageType_ThpCod\
-    eEntryCommitment\x10\xf8\x07\x1a\x04\x80\xa6\x1d\x01\x12,\n!MessageType_\
-    ThpCodeEntryChallenge\x10\xf9\x07\x1a\x04\x80\xa6\x1d\x01\x12.\n#Message\
-    Type_ThpCodeEntryCpaceTrezor\x10\xfa\x07\x1a\x04\x80\xa6\x1d\x01\x12/\n$\
-    MessageType_ThpCodeEntryCpaceHostTag\x10\xfb\x07\x1a\x04\x80\xa6\x1d\x01\
-    \x12)\n\x1eMessageType_ThpCodeEntrySecret\x10\xfc\x07\x1a\x04\x80\xa6\
-    \x1d\x01\x12#\n\x18MessageType_ThpQrCodeTag\x10\x80\x08\x1a\x04\x80\xa6\
-    \x1d\x01\x12&\n\x1bMessageType_ThpQrCodeSecret\x10\x81\x08\x1a\x04\x80\
-    \xa6\x1d\x01\x12$\n\x19MessageType_ThpNfcTagHost\x10\x88\x08\x1a\x04\x80\
-    \xa6\x1d\x01\x12&\n\x1bMessageType_ThpNfcTagTrezor\x10\x89\x08\x1a\x04\
-    \x80\xa6\x1d\x01\x12%\n\x1aMessageType_NostrGetPubkey\x10\xd1\x0f\x1a\
-    \x04\x90\xb5\x18\x01\x12\"\n\x17MessageType_NostrPubkey\x10\xd2\x0f\x1a\
-    \x04\x98\xb5\x18\x01\x12%\n\x1aMessageType_NostrSignEvent\x10\xd3\x0f\
-    \x1a\x04\x90\xb5\x18\x01\x12*\n\x1fMessageType_NostrEventSignature\x10\
-    \xd4\x0f\x1a\x04\x98\xb5\x18\x01\x12)\n\x1eMessageType_BenchmarkListName\
-    s\x10\x8cG\x1a\x04\x80\xa6\x1d\x01\x12%\n\x1aMessageType_BenchmarkNames\
-    \x10\x8dG\x1a\x04\x80\xa6\x1d\x01\x12#\n\x18MessageType_BenchmarkRun\x10\
-    \x8eG\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bMessageType_BenchmarkResult\x10\
-    \x8fG\x1a\x04\x80\xa6\x1d\x01\x1a\x04\xc8\xf3\x18\x01\"\x04\x08Z\x10\\\"\
-    \x04\x08G\x10J\"\x04\x08r\x10z\"\x06\x08\xdb\x01\x10\xdb\x01\"\x06\x08\
-    \xe0\x01\x10\xe0\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\x06\x08\xb5\x02\x10\
-    \xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\xe9\x07\x10\xed\x07\"\
-    \x06\x08\xf6\x07\x10\xf7\x07\"\x06\x08\xfd\x07\x10\xff\x07\"\x06\x08\x82\
-    \x08\x10\x87\x08B8\n#com.satoshilabs.trezor.lib.protobufB\rTrezorMessage\
-    \x80\xa6\x1d\x01\
+    nature\x10\x89\x07\x1a\x04\x98\xb5\x18\x01\x12$\n\x1fMessageType_ThpCrea\
+    teNewSession\x10\xe8\x07\x12%\n\x20MessageType_ThpCredentialRequest\x10\
+    \xf2\x07\x12&\n!MessageType_ThpCredentialResponse\x10\xf3\x07\x12%\n\x1a\
+    MessageType_NostrGetPubkey\x10\xd1\x0f\x1a\x04\x90\xb5\x18\x01\x12\"\n\
+    \x17MessageType_NostrPubkey\x10\xd2\x0f\x1a\x04\x98\xb5\x18\x01\x12%\n\
+    \x1aMessageType_NostrSignEvent\x10\xd3\x0f\x1a\x04\x90\xb5\x18\x01\x12*\
+    \n\x1fMessageType_NostrEventSignature\x10\xd4\x0f\x1a\x04\x98\xb5\x18\
+    \x01\x12)\n\x1eMessageType_BenchmarkListNames\x10\x8cG\x1a\x04\x80\xa6\
+    \x1d\x01\x12%\n\x1aMessageType_BenchmarkNames\x10\x8dG\x1a\x04\x80\xa6\
+    \x1d\x01\x12#\n\x18MessageType_BenchmarkRun\x10\x8eG\x1a\x04\x80\xa6\x1d\
+    \x01\x12&\n\x1bMessageType_BenchmarkResult\x10\x8fG\x1a\x04\x80\xa6\x1d\
+    \x01\x1a\x04\xc8\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08G\x10J\"\x04\x08r\
+    \x10z\"\x06\x08\xdb\x01\x10\xdb\x01\"\x06\x08\xe0\x01\x10\xe0\x01\"\x06\
+    \x08\xac\x02\x10\xb0\x02\"\x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\xbc\x05\
+    \x10\xc5\x05\"\x06\x08\xe9\x07\x10\xf1\x07\"\x06\x08\xf4\x07\x10\xcb\x08\
+    B8\n#com.satoshilabs.trezor.lib.protobufB\rTrezorMessage\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

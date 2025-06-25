@@ -319,28 +319,11 @@ enum MessageType {
     MessageType_SolanaTxSignature = 905 [(wire_out) = true];
 
     // THP
-    MessageType_ThpCreateNewSession = 1000 [(bitcoin_only) = true, (wire_in) = true];
-    reserved 1001 to 1005;  // never appeared in a release, reserved for future use
-    MessageType_ThpPairingRequest = 1006 [(bitcoin_only) = true];
-    MessageType_ThpPairingRequestApproved = 1007 [(bitcoin_only) = true];
-    MessageType_ThpSelectMethod = 1008 [(bitcoin_only) = true];
-    MessageType_ThpPairingPreparationsFinished = 1009 [(bitcoin_only) = true];
-    MessageType_ThpCredentialRequest = 1010 [(bitcoin_only) = true];
-    MessageType_ThpCredentialResponse = 1011 [(bitcoin_only) = true];
-    MessageType_ThpEndRequest = 1012 [(bitcoin_only) = true];
-    MessageType_ThpEndResponse = 1013 [(bitcoin_only) = true];
-    reserved 1014 to 1015;
-    MessageType_ThpCodeEntryCommitment = 1016 [(bitcoin_only) = true];
-    MessageType_ThpCodeEntryChallenge = 1017 [(bitcoin_only) = true];
-    MessageType_ThpCodeEntryCpaceTrezor = 1018 [(bitcoin_only) = true];
-    MessageType_ThpCodeEntryCpaceHostTag = 1019 [(bitcoin_only) = true];
-    MessageType_ThpCodeEntrySecret = 1020 [(bitcoin_only) = true];
-    reserved 1021 to 1023;
-    MessageType_ThpQrCodeTag = 1024 [(bitcoin_only) = true];
-    MessageType_ThpQrCodeSecret = 1025 [(bitcoin_only) = true];
-    reserved 1026 to 1031;
-    MessageType_ThpNfcTagHost = 1032 [(bitcoin_only) = true];
-    MessageType_ThpNfcTagTrezor = 1033 [(bitcoin_only) = true];
+    MessageType_ThpCreateNewSession = 1000;
+    reserved 1001 to 1009;  // see ThpMessageType in messages-thp.proto
+    MessageType_ThpCredentialRequest = 1010;
+    MessageType_ThpCredentialResponse = 1011;
+    reserved 1012 to 1099;  // see ThpMessageType in messages-thp.proto
 
     // Nostr
     MessageType_NostrGetPubkey = 2001 [(wire_in) = true];
