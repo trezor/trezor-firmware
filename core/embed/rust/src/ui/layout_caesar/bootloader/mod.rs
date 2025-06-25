@@ -267,7 +267,7 @@ impl BootloaderUI for UICaesar {
             .vertically_centered();
 
         let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SPINNER, title, content, true);
-        show(&mut frame, false);
+        run(&mut frame);
     }
 
     fn screen_intro(bld_version: &str, vendor: &str, version: &str, fw_ok: bool) -> u32 {
@@ -325,7 +325,7 @@ impl BootloaderUI for UICaesar {
             .vertically_centered();
 
         let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SPINNER, title, content, true);
-        show(&mut frame, false);
+        run(&mut frame);
     }
 
     fn screen_wipe_fail() {

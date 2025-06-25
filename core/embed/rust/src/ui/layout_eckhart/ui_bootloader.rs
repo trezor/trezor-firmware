@@ -286,9 +286,9 @@ impl BootloaderUI for UIEckhart {
     fn screen_unlock_bootloader_confirm() -> u32 {
         let msg1 =
             Label::left_aligned("Unlock bootloader".into(), TEXT_NORMAL).vertically_centered();
-        let msg2 = Label::centered("This action cannot be undone!".into(), TEXT_NORMAL);
+        let msg2 = Label::left_aligned("This action cannot be undone!".into(), TEXT_NORMAL);
 
-        let right = Button::with_text("Unlock".into()).styled(button_confirm());
+        let right = Button::with_text("Unlock".into()).styled(button_wipe_confirm());
         let left = Button::with_icon(theme::ICON_CHEVRON_LEFT).styled(button_cancel());
 
         let mut screen = BldTextScreen::new(msg1)
@@ -306,13 +306,13 @@ impl BootloaderUI for UIEckhart {
             Alignment::Start,
             TEXT_NORMAL,
         ))
-        .with_header(BldHeader::new_pay_attention())
-        .with_footer(
-            Label::centered(WAIT_FOR_RESTART_MESSAGE.into(), TEXT_SMALL_GREY).vertically_centered(),
-        )
-        .with_screen_border(SCREEN_BORDER_BLUE);
+        .with_header(BldHeader::new_done())
+        .with_action_bar(BldActionBar::new_single(
+            Button::with_text("Restart".into()).styled(button_cancel()),
+        ))
+        .with_screen_border(SCREEN_BORDER_RED);
 
-        show(&mut screen, true);
+        run(&mut screen);
     }
 
     fn screen_intro(bld_version: &str, vendor: &str, version: &str, fw_ok: bool) -> u32 {
@@ -368,13 +368,13 @@ impl BootloaderUI for UIEckhart {
             Alignment::Start,
             TEXT_NORMAL,
         ))
-        .with_header(BldHeader::new("Done".into()).with_icon(theme::ICON_DONE, theme::GREY))
-        .with_footer(
-            Label::centered(WAIT_FOR_RESTART_MESSAGE.into(), TEXT_SMALL_GREY).vertically_centered(),
-        )
+        .with_header(BldHeader::new_done())
+        .with_action_bar(BldActionBar::new_single(
+            Button::with_text("Restart".into()).styled(button_default()),
+        ))
         .with_screen_border(SCREEN_BORDER_RED);
 
-        show(&mut screen, true);
+        run(&mut screen);
     }
 
     fn screen_wipe_fail() {
