@@ -295,7 +295,7 @@ build_bootloader_emu_debug: ## build the unix bootloader emulator
 	$(SCONS) TREZOR_EMULATOR_DEBUGGABLE=1 $(BOOTLOADER_EMU_BUILD_DIR)/bootloader.elf
 
 build_prodtest: ## build production test firmware
-	$(SCONS) $(PRODTEST_BUILD_DIR)/prodtest.bin
+	$(SCONS) BOOTLOADER_DEVEL=1 TREZOR_MODEL="T3W1" HW_REVISION="B" $(PRODTEST_BUILD_DIR)/prodtest.bin
 
 build_prodtest_emu: ## build the unix prodtest emulator
 	$(SCONS) $(PRODTEST_EMU_BUILD_DIR)/prodtest.elf

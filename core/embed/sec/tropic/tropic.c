@@ -162,8 +162,11 @@ bool tropic_get_cert(uint8_t *buf, uint16_t buf_size) {
     return false;
   }
 
-  lt_ret_t res = lt_get_info_cert(&drv->handle, buf, buf_size);
-  return res == LT_OK;
+  // lt_ret_t res = lt_get_info_cert(&drv->handle, buf, buf_size);
+  return false;
+  // TODO
+
+  // return res == LT_OK;
 }
 
 bool tropic_ecc_key_generate(uint16_t slot_index) {

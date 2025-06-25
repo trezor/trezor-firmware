@@ -1,0 +1,158 @@
+#!/usr/bin/env python3
+
+from __future__ import annotations
+
+from typing import Any
+
+import click
+import serial
+import shlex
+from time import sleep
+
+# console_name = "/dev/ttyACM0"
+console_name = "/dev/ttyVCP0"
+
+class ProdtestException(Exception):
+    def __init__(self, text: str) -> None:
+        super().__init__(text)
+        self.text = text
+
+
+
+
+class Connection:
+    def __init__(self, path: str = console_name) -> None:
+        self.connection = serial.Serial(path, 115200, timeout=5)
+
+    def readline(self) -> bytes:
+        line = self.connection.readline().strip()
+        line_str = line.decode()
+
+        print("<<<", line_str)
+        return line
+
+    def writeline(self, data: bytes) -> None:
+        data_str = data.decode()
+        print(">>>", data_str)
+
+        for byte in data:
+            if byte < 32 or byte > 126:
+                print("!!!", byte, "is not printable")
+                continue
+            self.connection.write(bytes([byte]))
+            sleep(0.001)
+        self.connection.write(b"\r")
+
+    def command(self, cmd: str, *args: Any) -> bytes | None:
+        cmd_line = cmd
+        for arg in args:
+            if isinstance(arg, bytes):
+                cmd_line += " " + arg.hex()
+            else:
+                cmd_line += " " + str(arg)
+        self.writeline(cmd_line.encode())
+
+        while True:
+            res = self.readline()
+            if res.startswith(b"ERROR"):
+                error_args = res[len(b"ERROR ") :].decode()
+                parts = shlex.split(error_args)
+                error_text = parts[0]  # error code
+                if len(parts) > 1:
+                    error_text = parts[1]  # error description
+                raise ProdtestException(error_text)
+            elif res.startswith(b"OK"):
+                res_arg = res[len(b"OK ") :]
+                if not res_arg:
+                    return None
+                try:
+                    return bytes.fromhex(res_arg.decode())
+                except ValueError:
+                    return res_arg
+            elif res == b'':
+                continue
+            elif not res.startswith(b"#"):
+                raise ProdtestException("Unexpected response: " + res.decode())
+
+
+@click.group()
+def cli() -> None:
+    pass
+
+
+@cli.command()
+@click.option("-d", "--device", default=console_name, help="Device path")
+def ping(device) -> None:
+    connection = Connection(device)
+    connection.command("tropic-get-chip-id")
+    connection.command("tropic-get-spect-fw-version")
+    connection.command("tropic-get-riscv-fw-version")
+    connection.command("tropic-certtropic-read")
+    connection.command("tropic-ping")
+
+@cli.command()
+@click.option("-d", "--device", default=console_name, help="Device path")
+@click.argument("hex_data")
+def write(device, hex_data) -> None:
+    connection = Connection(device)
+    connection.command(f"tropic-certdev-write {hex_data}")
+
+@cli.command()
+@click.option("-d", "--device", default=console_name, help="Device path")
+@click.argument("hex_data")
+def l2(device, hex_data) -> None:
+    connection = Connection(device)
+    connection.command(f"tropic-send-l2 {hex_data}")
+
+@cli.command()
+@click.option("-d", "--device", default=console_name, help="Device path")
+@click.argument("hex_data")
+def l3(device, hex_data) -> None:
+    connection = Connection(device)
+    connection.command(f"tropic-send-l3 {hex_data}")
+
+@cli.command()
+@click.option("-d", "--device", default=console_name, help="Device path")
+@click.argument("hex_data")
+def l(device, hex_data) -> None:
+    connection = Connection(device)
+    connection.command(f"tropic-send {hex_data}")
+
+@cli.command()
+@click.option("-d", "--device", default=console_name, help="Device path")
+def pair(device) -> None:
+    connection = Connection(device)
+    connection.command(f"tropic-pair")
+
+@cli.command()
+@click.option("-d", "--device", default=console_name, help="Device path")
+@click.argument("number", type=int)
+def p(device, number) -> None:
+    connection = Connection(device)
+    from datetime import datetime
+    time_before = datetime.now()
+    connection.command(f"ping {number * '0'}")
+    time_after = datetime.now()
+    print("Total time (ms):", (time_after - time_before).total_seconds() * 1000)
+    
+@cli.command()
+@click.option("-d", "--device", default=console_name, help="Device path")
+@click.argument("data", type=str)
+def cmd(device, data) -> None:
+    connection = Connection(device)
+    connection.command(f"{data}")
+
+@cli.command()
+@click.option("-d", "--device", default=console_name, help="Device path")
+def update(device) -> None:
+    connection = Connection(device)
+    connection.command(f"tropic-update")
+
+@cli.command()
+@click.option("-d", "--device", default=console_name, help="Device path")
+def test(device) -> None:
+    connection = Connection(device)
+    connection.command("tropic-test")
+
+if __name__ == "__main__":
+    cli()
