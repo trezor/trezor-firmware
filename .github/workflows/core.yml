@@ -119,6 +119,9 @@ jobs:
           - model: D001
             coins: universal
             type: normal
+          - model: T2B1
+            coins: universal
+            type: normal
         exclude:
           - model: T3W1
             type: production
