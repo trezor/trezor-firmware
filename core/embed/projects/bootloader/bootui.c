@@ -147,7 +147,7 @@ confirm_result_t ui_screen_wipe_confirm(void) { return screen_wipe_confirm(); }
 void ui_screen_wipe(void) { screen_wipe_progress(0, true); }
 
 void ui_screen_wipe_progress(int pos, int len) {
-  screen_wipe_progress(1000 * pos / len, false);
+  screen_wipe_progress((int16_t)(1000 * (int64_t)pos / len), false);
 }
 
 // done UI
