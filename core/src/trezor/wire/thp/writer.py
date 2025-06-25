@@ -76,7 +76,7 @@ async def write_payloads_to_wire(
             log.debug(
                 __name__,
                 "write_packet_to_wire: %s",
-                utils.get_bytes_as_str(packet),
+                utils.hexlify_if_bytes(packet),
                 iface=iface,
             )
         written_by_iface: int = 0
@@ -92,7 +92,7 @@ async def write_packet_to_wire(iface: WireInterface, packet: bytes) -> None:
             log.debug(
                 __name__,
                 "write_packet_to_wire: %s",
-                utils.get_bytes_as_str(packet),
+                utils.hexlify_if_bytes(packet),
                 iface=iface,
             )
         n_written = iface.write(packet)

@@ -234,7 +234,7 @@ class TestWireTrezorHostProtocolV1(unittest.TestCase):
         query = gen.send(None)
         for packet in self.interface.data:
             self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
-            print(utils.get_bytes_as_str(packet))
+            print(utils.hexlify_if_bytes(packet))
             query = gen.send(packet)
 
         with self.assertRaises(StopIteration) as e:

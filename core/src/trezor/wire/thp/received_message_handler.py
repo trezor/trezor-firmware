@@ -58,7 +58,7 @@ if TYPE_CHECKING:
 
 if __debug__:
     from trezor import log
-    from trezor.utils import get_bytes_as_str
+    from trezor.utils import hexlify_if_bytes
 
 _TREZOR_STATE_UNPAIRED = b"\x00"
 _TREZOR_STATE_PAIRED = b"\x01"
@@ -158,7 +158,7 @@ def _send_ack(ctx: Channel, ack_bit: int) -> Awaitable[None]:
         log.debug(
             __name__,
             "Writing ACK message to a channel with cid: %s, ack_bit: %d",
-            get_bytes_as_str(ctx.channel_id),
+            hexlify_if_bytes(ctx.channel_id),
             ack_bit,
             iface=ctx.iface,
         )
@@ -267,16 +267,16 @@ async def _handle_state_TH1(
         log.debug(
             __name__,
             "trezor ephemeral pubkey: %s",
-            get_bytes_as_str(trezor_ephemeral_pubkey),
+            hexlify_if_bytes(trezor_ephemeral_pubkey),
             iface=ctx.iface,
         )
         log.debug(
             __name__,
             "encrypted trezor masked static pubkey: %s",
-            get_bytes_as_str(encrypted_trezor_static_pubkey),
+            hexlify_if_bytes(encrypted_trezor_static_pubkey),
             iface=ctx.iface,
         )
-        log.debug(__name__, "tag: %s", get_bytes_as_str(tag), iface=ctx.iface)
+        log.debug(__name__, "tag: %s", hexlify_if_bytes(tag), iface=ctx.iface)
 
     payload = trezor_ephemeral_pubkey + encrypted_trezor_static_pubkey + tag
 
@@ -340,8 +340,8 @@ async def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -
         log.debug(
             __name__,
             "host static pubkey: %s, noise payload: %s",
-            utils.get_bytes_as_str(host_encrypted_static_pubkey),
-            utils.get_bytes_as_str(handshake_completion_request_noise_payload),
+            utils.hexlify_if_bytes(host_encrypted_static_pubkey),
+            utils.hexlify_if_bytes(handshake_completion_request_noise_payload),
             iface=ctx.iface,
         )
 
