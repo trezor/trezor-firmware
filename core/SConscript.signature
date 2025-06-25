@@ -1,0 +1,23 @@
+# pylint: disable=E0602
+
+import os
+import tools, models
+
+TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
+HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
+PQ_SIGNATURE = os.getenv("PQ_SIGNATURE", "1") == "1"
+
+env = Environment(
+    ENV=os.environ,
+)
+
+env.Replace(
+    PQSIGN='pqsign',
+    BOOTLOADER_BINARY="build/bootloader/bootloader.bin"
+)
+
+signature_bin = env.Command(
+    target='signature.bin',
+    source='',
+    action='$PQSIGN $BOOTLOADER_BINARY $TARGET',
+)

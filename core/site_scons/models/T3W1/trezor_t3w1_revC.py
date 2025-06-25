@@ -46,6 +46,7 @@ def configure(
         ("HSE_VALUE", "32000000"),
         ("USE_HSE", "1"),
         ("USE_LSE", "1"),
+        ("USE_SIGNATURE_BLOCK", "1"),
         ("FIXED_HW_DEINIT", "1"),
         ("LOCKABLE_BOOTLOADER", "1"),
         ("USE_BOOTARGS_RSOD", "1"),

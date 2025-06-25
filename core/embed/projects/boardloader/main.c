@@ -59,6 +59,9 @@
 #include "sd_update.h"
 #endif
 
+#include <util/signblock.h>
+#include "slh_dsa.h"
+
 static void drivers_init(void) {
 #ifdef USE_PMIC
   pmic_init();
@@ -135,6 +138,26 @@ int main(void) {
          "invalid bootloader header");
 
   ensure(check_bootloader_header_sig(hdr), "invalid bootloader signature");
+
+#ifdef USE_SIGNATURE_BLOCK
+  {
+    // Development public key
+    static const uint8_t pk[32] = {
+        0xec, 0x01, 0xe6, 0x02, 0x63, 0x02, 0x4f, 0x7e, 0x71, 0x72, 0x80,
+        0x13, 0xb7, 0x31, 0xf7, 0xba, 0x12, 0x99, 0xf5, 0x18, 0xc2, 0x7b,
+        0xa3, 0xed, 0x8f, 0x4a, 0x21, 0x99, 0x74, 0x12, 0x7c, 0x62};
+
+    const signblock_t *signblock = (const signblock_t *)SIGNATURE_BLOCK_START;
+
+    mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SIGNATURE_BLOCK);
+    bool ok = slh_verify((const uint8_t *)hdr, sizeof(*hdr),
+                         signblock->signature1, pk, &slh_dsa_sha2_128s);
+    ensure(sectrue * ok, "invalid bootloader pq signature");
+    mpu_restore(mpu_mode);
+  }
+#endif  // USE_SIGNATURE_BLOCK
+
+  ensure(check_image_model(hdr), "incompatible bootloader model");
 
   ensure(check_image_contents(hdr, IMAGE_HEADER_SIZE, &BOOTLOADER_AREA),
          "invalid bootloader hash");

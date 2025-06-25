@@ -188,6 +188,7 @@ SOURCE_MOD += [
     'embed/util/bl_check/bl_check.c',
     'embed/util/translations/translations.c',
     'embed/util/image/image.c',
+    'embed/util/signblock/signblock.c',
     'embed/rtl/error_handling.c',
     'embed/rtl/mini_printf.c',
     'embed/upymod/modtrezorcrypto/rand.c',
@@ -302,6 +303,7 @@ ALLPATHS = [
         'embed/util/bl_check/inc',
         'embed/util/image/inc',
         'embed/util/rsod/inc',
+        'embed/util/signblock/inc',
         'embed/util/translations/inc',
     ] + CPPPATH_MOD + PATH_HAL
 

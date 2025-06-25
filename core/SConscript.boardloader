@@ -82,6 +82,7 @@ SOURCE_MOD += [
     'embed/util/image/image.c',
     'embed/util/rsod/rsod.c',
     'embed/util/scm_revision/scm_revision.c',
+    'embed/util/signblock/signblock.c',
     'embed/rtl/error_handling.c',
     'embed/rtl/mini_printf.c',
 ]
@@ -148,6 +149,7 @@ env.Replace(
         'embed/util/image/inc',
         'embed/util/rsod/inc',
         'embed/util/scm_revision/inc',
+        'embed/util/signblock/inc',
         'vendor/micropython/lib/cmsis/inc',
     ] + CPPPATH_MOD + PATH_HAL,
     CPPDEFINES=[

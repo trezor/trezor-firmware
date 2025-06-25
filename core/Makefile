@@ -11,6 +11,7 @@ JOBS = $(shell sysctl -n hw.perflevel0.physicalcpu 2>/dev/null ||\
 MAKE = make -j $(JOBS)
 
 BUILD_DIR             = build
+SIGNATURE_BUILD_DIR   = $(BUILD_DIR)/signature
 BOARDLOADER_BUILD_DIR = $(BUILD_DIR)/boardloader
 BOOTLOADER_BUILD_DIR  = $(BUILD_DIR)/bootloader
 BOOTLOADER_CI_BUILD_DIR   = $(BUILD_DIR)/bootloader_ci
@@ -69,6 +70,7 @@ export TEST_BINDGEN_MACROS
 
 FLASH_START		         = $(shell layout_parser ${TREZOR_MODEL} FLASH_START)
 BOARDLOADER_START        = $(shell layout_parser ${TREZOR_MODEL} BOARDLOADER_START)
+SIGNATURE_BLOCK_START    = $(shell layout_parser ${TREZOR_MODEL} SIGNATURE_BLOCK_START)
 BOOTLOADER_START         = $(shell layout_parser ${TREZOR_MODEL} BOOTLOADER_START)
 KERNEL_START             = $(shell layout_parser ${TREZOR_MODEL} KERNEL_START)
 FIRMWARE_START           = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_START)
@@ -277,6 +279,9 @@ translations_check: ## check that translations are up to date
 
 build: build_boardloader build_bootloader build_firmware build_prodtest build_unix ## build all
 
+build_signature: ## build boot signature
+	$(SCONS) $(SIGNATURE_BUILD_DIR)/signature.bin
+
 build_embed: build_boardloader build_bootloader build_firmware # build boardloader, bootloader, firmware
 
 build_boardloader: ## build boardloader
@@ -375,6 +380,9 @@ clean_cross: ## clean mpy-cross build
 ## flash commands:
 
 flash: flash_boardloader flash_bootloader flash_firmware ## flash everything using OpenOCD
+
+flash_signature: $(SIGNATURE_BUILD_DIR)/signature.bin ## flash boot signature using OpenOCD
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(SIGNATURE_BLOCK_START); exit"
 
 flash_boardloader: $(BOARDLOADER_BUILD_DIR)/boardloader.bin ## flash boardloader using OpenOCD
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(BOARDLOADER_START); exit"
