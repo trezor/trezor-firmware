@@ -243,11 +243,10 @@ class PairingContext(Context):
         from trezor.ui.layouts.common import interact
 
         return await interact(
-            trezorui_api.show_pairing_code(
+            trezorui_api.show_thp_pairing_code(
                 title="One more step",
                 description=f"Enter this one-time security code on {self.host_name}",
                 code=self._get_code_code_entry_str(),
-                button=False,
             ),
             br_name=None,
         )

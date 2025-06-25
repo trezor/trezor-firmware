@@ -10,7 +10,7 @@ from .writer import MAX_PAYLOAD_LEN, MESSAGE_TYPE_LENGTH
 
 if __debug__:
     from trezor import log
-    from trezor.utils import get_bytes_as_str
+    from trezor.utils import hexlify_if_bytes
 
 _PROTOBUF_BUFFER_SIZE = 8192
 READ_BUFFER = bytearray(_PROTOBUF_BUFFER_SIZE)
@@ -62,8 +62,8 @@ def _get_new_buffer(buffer_type: int, channel_id: int, length: int) -> memoryvie
                 log.debug(
                     __name__,
                     "Failed to get new buffer to channel %s. Owner is %s.",
-                    get_bytes_as_str((channel_id or 0).to_bytes(2, "big")),
-                    get_bytes_as_str((lock_owner_cid or 0).to_bytes(2, "big")),
+                    hexlify_if_bytes((channel_id or 0).to_bytes(2, "big")),
+                    hexlify_if_bytes((lock_owner_cid or 0).to_bytes(2, "big")),
                 )
             raise WireBufferError
         update_lock_time()
