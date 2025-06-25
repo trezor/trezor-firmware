@@ -4,6 +4,7 @@ SetOption('max_drift', 10)
 SetOption('implicit_cache', 1)
 
 SConscript('SConscript.boardloader', variant_dir='build/boardloader', duplicate=False)
+SConscript('SConscript.bootheader', variant_dir='build/bootheader', duplicate=False)
 SConscript('SConscript.bootloader', variant_dir='build/bootloader', duplicate=False)
 SConscript('SConscript.bootloader_ci', variant_dir='build/bootloader_ci', duplicate=False)
 SConscript('SConscript.bootloader_emu', variant_dir='build/bootloader_emu', duplicate=False)

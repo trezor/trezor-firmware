@@ -16,6 +16,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 headertool = "trezor_core_tools.headertool:cli"
+pqsign = "trezor_core_tools.pqsign:cli"
 layout_parser = "trezor_core_tools.layout_parser:main"
 lsgen = "trezor_core_tools.lsgen:main"
 combine_firmware = "trezor_core_tools.combine_firmware:main"

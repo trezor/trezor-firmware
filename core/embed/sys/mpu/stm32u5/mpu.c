@@ -425,6 +425,17 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       SET_REGION( 6, BOOTLOADER_START,         BOOTLOADER_MAXSIZE, FLASH_DATA,  YES,    NO );
       break;
 #endif
+    case MPU_MODE_BOOTARGS:
+      SET_REGION( 6, BOOTARGS_START,           BOOTARGS_SIZE,      SRAM,        YES,    NO );
+      break;
+#ifdef USE_BOOTHEADER
+      case MPU_MODE_BOOTHEADER:
+      SET_REGION( 6, BOOTHEADER_START,         BOOTHEADER_MAXSIZE, FLASH_DATA, YES, NO );
+      break;
+    case MPU_MODE_UPGRADEHEADER:
+      SET_REGION( 6, UPGRADEHEADER_START,      UPGRADEHEADER_MAXSIZE, FLASH_DATA, YES, NO );
+      break;
+#endif
     case MPU_MODE_OTP:
       SET_REGION( 6, FLASH_OTP_BASE,           OTP_AND_ID_SIZE,    FLASH_DATA,  YES,    NO );
       break;
@@ -440,9 +451,6 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
     case MPU_MODE_APP_SAES:
     case MPU_MODE_APP:
       SET_REGION( 6, ASSETS_START,             ASSETS_MAXSIZE,     FLASH_DATA,   NO,   YES );
-      break;
-    case MPU_MODE_BOOTARGS:
-      SET_REGION( 6, BOOTARGS_START,           BOOTARGS_SIZE,      SRAM,        YES,    NO );
       break;
     default:
       // By default, the kernel needs to have the same access to assets as the app

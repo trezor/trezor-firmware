@@ -12,6 +12,7 @@ MAKE = make -j $(JOBS)
 
 BUILD_DIR             = build
 BOARDLOADER_BUILD_DIR = $(BUILD_DIR)/boardloader
+BOOTHEADER_BUILD_DIR   = $(BUILD_DIR)/bootheader
 BOOTLOADER_BUILD_DIR  = $(BUILD_DIR)/bootloader
 BOOTLOADER_CI_BUILD_DIR   = $(BUILD_DIR)/bootloader_ci
 BOOTLOADER_EMU_BUILD_DIR  = $(BUILD_DIR)/bootloader_emu
@@ -69,6 +70,7 @@ export TEST_BINDGEN_MACROS
 
 FLASH_START		         = $(shell layout_parser ${TREZOR_MODEL} FLASH_START)
 BOARDLOADER_START        = $(shell layout_parser ${TREZOR_MODEL} BOARDLOADER_START)
+BOOTHEADER_START         = $(shell layout_parser ${TREZOR_MODEL} BOOTHEADER_START)
 BOOTLOADER_START         = $(shell layout_parser ${TREZOR_MODEL} BOOTLOADER_START)
 KERNEL_START             = $(shell layout_parser ${TREZOR_MODEL} KERNEL_START)
 FIRMWARE_START           = $(shell layout_parser ${TREZOR_MODEL} FIRMWARE_START)
@@ -282,6 +284,9 @@ build_embed: build_boardloader build_bootloader build_firmware # build boardload
 build_boardloader: ## build boardloader
 	$(SCONS) $(BOARDLOADER_BUILD_DIR)/boardloader.bin
 
+build_bootheader: ## build boot header
+	$(SCONS) $(BOOTHEADER_BUILD_DIR)/bootheader.bin
+
 build_bootloader: ## build bootloader
 	$(SCONS) $(BOOTLOADER_BUILD_DIR)/bootloader.bin
 
@@ -375,6 +380,9 @@ clean_cross: ## clean mpy-cross build
 ## flash commands:
 
 flash: flash_boardloader flash_bootloader flash_firmware ## flash everything using OpenOCD
+
+flash_bootheader: $(BOOTHEADER_BUILD_DIR)/bootheader.bin ## flash boot header using OpenOCD
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(BOOTHEADER_START); exit"
 
 flash_boardloader: $(BOARDLOADER_BUILD_DIR)/boardloader.bin ## flash boardloader using OpenOCD
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(BOARDLOADER_START); exit"

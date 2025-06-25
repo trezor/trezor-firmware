@@ -6,6 +6,7 @@ import tools, models
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
+PQ_SIGNATURE = ARGUMENTS.get('PQ_SIGNATURE', '1') == '1'
 
 FEATURES_WANTED = [
     "display",
@@ -83,6 +84,7 @@ SOURCE_MOD += [
     'embed/io/display/display_utils.c',
     'embed/util/flash/flash_utils.c',
     'embed/util/image/image.c',
+    'embed/util/image/bootheader.c',
     'embed/util/rsod/rsod.c',
     'embed/util/scm_revision/scm_revision.c',
     'embed/rtl/error_handling.c',
@@ -151,6 +153,7 @@ env.Replace(
         'embed/util/image/inc',
         'embed/util/rsod/inc',
         'embed/util/scm_revision/inc',
+        'embed/util/bootheaderinc',
         'vendor/micropython/lib/cmsis/inc',
     ] + CPPPATH_MOD + PATH_HAL,
     CPPDEFINES=[
