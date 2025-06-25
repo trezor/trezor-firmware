@@ -1,7 +1,7 @@
 {
   "header": {
     "language": "en-US",
-    "version": "2.9.0"
+    "version": "2.9.1"
   },
   "translations": {
     "addr_mismatch__contact_support_at": "Please contact Trezor support at",
