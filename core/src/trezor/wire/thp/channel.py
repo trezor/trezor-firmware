@@ -43,7 +43,7 @@ from .writer import (
 
 if __debug__:
     from trezor import log
-    from trezor.utils import get_bytes_as_str
+    from trezor.utils import hexlify_if_bytes
 
     from . import state_to_str
 
@@ -159,7 +159,7 @@ class Channel:
         try:
             buffer = memory_manager.get_existing_read_buffer(self.get_channel_id_int())
             if __debug__:
-                self._log("self.buffer: ", get_bytes_as_str(buffer))
+                self._log("self.buffer: ", hexlify_if_bytes(buffer))
         except WireBufferError:
             if __debug__:
                 self._log(
@@ -376,17 +376,17 @@ class Channel:
             assert nonce_receive is not None
 
             if __debug__:
-                self._log("Buffer before decryption: ", get_bytes_as_str(noise_buffer))
+                self._log("Buffer before decryption: ", hexlify_if_bytes(noise_buffer))
 
             is_tag_valid = crypto.dec(noise_buffer, tag, key_receive, nonce_receive)
             if __debug__:
-                self._log("Buffer after decryption: ", get_bytes_as_str(noise_buffer))
+                self._log("Buffer after decryption: ", hexlify_if_bytes(noise_buffer))
 
             self.channel_cache.set_int(CHANNEL_NONCE_RECEIVE, nonce_receive + 1)
 
         if __debug__:
             self._log("Is decrypted tag valid? ", str(is_tag_valid))
-            self._log("Received tag: ", get_bytes_as_str(tag))
+            self._log("Received tag: ", hexlify_if_bytes(tag))
             self._log("New nonce_receive: ", str((nonce_receive + 1)))
 
         if not is_tag_valid:
@@ -597,7 +597,7 @@ class Channel:
             logger(
                 __name__,
                 "(cid: %s) %s%s",
-                get_bytes_as_str(self.channel_id),
+                hexlify_if_bytes(self.channel_id),
                 text_1,
                 text_2,
                 iface=self.iface,

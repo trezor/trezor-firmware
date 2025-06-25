@@ -15,7 +15,7 @@ if utils.DISABLE_ENCRYPTION:
     DUMMY_TAG = b"\xA0\xA1\xA2\xA3\xA4\xA5\xA6\xA7\xA8\xA9\xB0\xB1\xB2\xB3\xB4\xB5"
 
 if __debug__:
-    from trezor.utils import get_bytes_as_str
+    from trezor.utils import hexlify_if_bytes
 
 
 def enc(
@@ -26,7 +26,7 @@ def enc(
     Returns a 16-byte long encryption tag.
     """
     if __debug__:
-        log.debug(__name__, "enc (key: %s, nonce: %d)", get_bytes_as_str(key), nonce)
+        log.debug(__name__, "enc (key: %s, nonce: %d)", hexlify_if_bytes(key), nonce)
     iv = _get_iv_from_nonce(nonce)
     aes_ctx = aesgcm(key, iv)
     aes_ctx.auth(auth_data)
@@ -43,7 +43,7 @@ def dec(
     """
     iv = _get_iv_from_nonce(nonce)
     if __debug__:
-        log.debug(__name__, "dec (key: %s, nonce: %d)", get_bytes_as_str(key), nonce)
+        log.debug(__name__, "dec (key: %s, nonce: %d)", hexlify_if_bytes(key), nonce)
     aes_ctx = aesgcm(key, iv)
     aes_ctx.auth(auth_data)
     aes_ctx.decrypt_in_place(buffer)
@@ -113,9 +113,9 @@ class Handshake:
             log.debug(
                 __name__,
                 "th1 - enc (key: %s, nonce: %d, handshake_hash %s)",
-                get_bytes_as_str(self.k),
+                hexlify_if_bytes(self.k),
                 0,
-                get_bytes_as_str(self.h),
+                hexlify_if_bytes(self.h),
             )
 
         aes_ctx.auth(self.h)
@@ -150,7 +150,7 @@ class Handshake:
         )
         if __debug__:
             log.debug(
-                __name__, "th2 - dec (key: %s, nonce: %d)", get_bytes_as_str(self.k), 1
+                __name__, "th2 - dec (key: %s, nonce: %d)", hexlify_if_bytes(self.k), 1
             )
         host_static_pubkey = memoryview(encrypted_host_static_pubkey)[:PUBKEY_LENGTH]
         tag = aes_ctx.finish()
@@ -167,7 +167,7 @@ class Handshake:
         aes_ctx.decrypt_in_place(memoryview(encrypted_payload)[:-16])
         if __debug__:
             log.debug(
-                __name__, "th2 - dec (key: %s, nonce: %d)", get_bytes_as_str(self.k), 0
+                __name__, "th2 - dec (key: %s, nonce: %d)", hexlify_if_bytes(self.k), 0
             )
         tag = aes_ctx.finish()
         if tag != encrypted_payload[-16:]:
@@ -178,8 +178,8 @@ class Handshake:
             log.debug(
                 __name__,
                 "(key_receive: %s, key_send: %s)",
-                get_bytes_as_str(self.key_receive),
-                get_bytes_as_str(self.key_send),
+                hexlify_if_bytes(self.key_receive),
+                hexlify_if_bytes(self.key_send),
             )
 
     def get_handshake_completion_response(self, trezor_state: bytes) -> bytes:
