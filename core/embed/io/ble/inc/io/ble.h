@@ -142,6 +142,9 @@ bool ble_issue_command(ble_command_t *command);
 // available.
 bool ble_get_event(ble_event_t *event);
 
+// Flushes the BLE event queue
+void ble_event_flush(void);
+
 // Retrieves the current state of the BLE module
 //
 // Obtains the current operational state of the BLE module.

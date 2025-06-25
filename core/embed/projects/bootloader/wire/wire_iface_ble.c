@@ -179,6 +179,8 @@ bool ble_iface_start_pairing(void) {
     return false;
   }
 
+  ble_event_flush();
+
   ble_command_t cmd = {
       .cmd_type = BLE_PAIRING_MODE,
       .data = {.adv_start =
