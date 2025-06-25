@@ -36,3 +36,6 @@
 [submodule "vendor/ts-tvl"]
 	path = vendor/ts-tvl
 	url = https://github.com/tropicsquare/ts-tvl
+[submodule "vendor/sloth"]
+	path = vendor/sloth
+	url = https://github.com/slh-dsa/sloth
