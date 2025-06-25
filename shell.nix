@@ -11,10 +11,10 @@ let
   });
   # define this variable and devTools if you want nrf{util,connect}
   acceptJlink = builtins.getEnv "TREZOR_FIRMWARE_ACCEPT_JLINK_LICENSE" == "yes";
-  # the last successful build of nixpkgs-unstable as of 2024-11-21
+  # the last successful build of nixpkgs-unstable as of 2025-06-25
   nixpkgs = import (builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/5083ec887760adfe12af64830a66807423a859a7.tar.gz";
-    sha256 = "0sr45csfh2ff8w7jpnkkgl22aa89sza4jlhs6wq0368dpmklsl8g";
+    url = "https://github.com/NixOS/nixpkgs/archive/992f916556fcfaa94451ebc7fc6e396134bbf5b1.tar.gz";
+    sha256 = "0wbqb6sy58q3mnrmx67ffdx8rq10jg4cvh4jx3rrbr1pqzpzsgxc";
   }) {
     config = {
       allowUnfree = acceptJlink;
@@ -85,7 +85,7 @@ stdenvNoCC.mkDerivation ({
     #       and poetry uses the default version (currently 3.10)
     python311
     python310
-    python39
+    oldNixpkgs.python39
     oldNixpkgs.python38
   ] ++ [
     SDL2
@@ -109,7 +109,7 @@ stdenvNoCC.mkDerivation ({
     openssl
     perl
     pkg-config
-    poetry
+    (poetry.withPlugins (ps: [ ps.poetry-plugin-shell ]))
     ps
     oldNixpkgs.protobuf3_19
     pyright
@@ -144,7 +144,7 @@ stdenvNoCC.mkDerivation ({
     openocd-stm
   ] ++ lib.optionals (devTools && !stdenv.isDarwin) [
     gdb
-    kcachegrind
+    kdePackages.kcachegrind
   ] ++ lib.optionals (devTools && acceptJlink) [
     nrfutil
     nrfconnect
