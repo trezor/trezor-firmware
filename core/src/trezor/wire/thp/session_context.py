@@ -25,7 +25,7 @@ _REPEAT_LOOP = False
 
 if __debug__:
     from trezor import log
-    from trezor.utils import get_bytes_as_str
+    from trezor.utils import hexlify_if_bytes
 
 
 class GenericSessionContext(Context):
@@ -41,7 +41,7 @@ class GenericSessionContext(Context):
             log.debug(
                 __name__,
                 "handle - start (channel_id (bytes): %s, session_id: %d)",
-                get_bytes_as_str(self.channel_id),
+                hexlify_if_bytes(self.channel_id),
                 self.session_id,
                 iface=self.iface,
             )
