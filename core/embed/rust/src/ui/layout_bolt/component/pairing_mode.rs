@@ -74,6 +74,9 @@ impl Component for PairingMode {
         if let Event::BLE(BLEEvent::PairingCanceled) = event {
             return Some(PairingMsg::Cancel);
         }
+        if let Event::BLE(BLEEvent::Disconnected) = event {
+            return Some(PairingMsg::Cancel);
+        }
 
         None
     }
