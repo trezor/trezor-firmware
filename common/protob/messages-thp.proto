@@ -11,6 +11,42 @@ option (include_in_bitcoin_only) = true;
 
 
 /**
+ * Mapping between Trezor wire identifier (uint) and a Thp protobuf message
+ */
+enum ThpMessageType {
+    reserved 0 to 19;  // Values reserved by other messages, see messages.proto
+    ThpMessageType_Cancel = 20;
+    reserved 21 to 25;
+    ThpMessageType_ButtonRequest = 26;
+    reserved 27 to 999;
+
+    reserved 1000;  // MessageType_ThpCreateNewSession
+    reserved 1001 to 1005;  // never appeared in a release, reserved for future use
+    ThpMessageType_ThpPairingRequest = 1006;
+    ThpMessageType_ThpPairingRequestApproved = 1007;
+    ThpMessageType_ThpSelectMethod = 1008;
+    ThpMessageType_ThpPairingPreparationsFinished = 1009;
+    ThpMessageType_ThpCredentialRequest = 1010;
+    ThpMessageType_ThpCredentialResponse = 1011;
+    ThpMessageType_ThpEndRequest = 1012;
+    ThpMessageType_ThpEndResponse = 1013;
+    reserved 1014 to 1015;  // reserved for future use
+    ThpMessageType_ThpCodeEntryCommitment = 1016;
+    ThpMessageType_ThpCodeEntryChallenge = 1017;
+    ThpMessageType_ThpCodeEntryCpaceTrezor = 1018;
+    ThpMessageType_ThpCodeEntryCpaceHostTag = 1019;
+    ThpMessageType_ThpCodeEntrySecret = 1020;
+    reserved 1021 to 1023;  // reserved for future use
+    ThpMessageType_ThpQrCodeTag = 1024;
+    ThpMessageType_ThpQrCodeSecret = 1025;
+    reserved 1026 to 1031;  // reserved for future use
+    ThpMessageType_ThpNfcTagHost = 1032;
+    ThpMessageType_ThpNfcTagTrezor = 1033;
+
+    reserved 1100 to 2147483647;  // Values reserved by other messages, see messages.proto
+}
+
+/**
  * Numeric identifiers of pairing methods.
  * @embed
  */
@@ -44,7 +80,7 @@ message ThpHandshakeCompletionReqNoisePayload {
  * @start
  * @next Success
  */
-message ThpCreateNewSession{
+message ThpCreateNewSession {
     optional string passphrase = 1;
     optional bool on_device = 2 [default=false];      // User wants to enter passphrase on the device
     optional bool derive_cardano = 3 [default=false]; // If True, Cardano keys will be derived. Ignored with BTC-only
@@ -56,7 +92,7 @@ message ThpCreateNewSession{
  * @start
  * @next ThpPairingRequestApproved
  */
-message ThpPairingRequest{
+message ThpPairingRequest {
     optional string host_name = 1;     // Human-readable host name
 }
 
@@ -65,7 +101,7 @@ message ThpPairingRequest{
  * @start
  * @next ThpSelectMethod
  */
-message ThpPairingRequestApproved{
+message ThpPairingRequestApproved {
 }
 
 /**
@@ -84,7 +120,7 @@ message ThpSelectMethod {
  * @next ThpQrCodeTag
  * @next ThpNfcTagHost
  */
-message ThpPairingPreparationsFinished{
+message ThpPairingPreparationsFinished {
 }
 
 /**
