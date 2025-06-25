@@ -148,8 +148,11 @@ async def confirm_tx_data(
     from .layout import (
         require_confirm_approve,
         require_confirm_other_data,
-        require_confirm_tx,
+        require_confirm_payment_req,
+        require_confirm_tx
     )
+
+    payment_req = msg.payment_req  # local_cache_attribute
 
     if await handle_staking(msg, defs.network, address_bytes, maximum_fee, fee_items):
         return
@@ -182,30 +185,32 @@ async def confirm_tx_data(
         assert func_sig == constants.SC_FUNC_SIG_TRANSFER or func_sig is None
 
         recipient_str = address_from_bytes(recipient, defs.network) if recipient else None
+
         if payment_req_verifier is not None:
             # If a payment_req_verifier is provided, then msg.payment_req must have been set.
-            assert msg.payment_req is not None
+            assert payment_req is not None
             payment_req_verifier.add_output(value, recipient_str or "")
             payment_req_verifier.verify()
-            recipient_str = msg.payment_req.recipient_name
+            await require_confirm_payment_req(payment_req, maximum_fee)
+        else:
+            is_contract_interaction = token is None and data_total_len > 0
 
-        is_contract_interaction = token is None and data_total_len > 0
+            # ???? needed for payment req??
+            if is_contract_interaction:
+                await require_confirm_other_data(msg.data_initial_chunk, data_total_len)
 
-        if is_contract_interaction:
-            await require_confirm_other_data(msg.data_initial_chunk, data_total_len)
-
-        assert value is not None
-        await require_confirm_tx(
-            recipient_str,
-            value,
-            msg.address_n,
-            maximum_fee,
-            fee_items,
-            defs.network,
-            token,
-            is_contract_interaction=is_contract_interaction,
-            chunkify=bool(msg.chunkify),
-        )
+            assert value is not None
+            await require_confirm_tx(
+                recipient_str,
+                value,
+                msg.address_n,
+                maximum_fee,
+                fee_items,
+                defs.network,
+                token,
+                is_contract_interaction=is_contract_interaction,
+                chunkify=bool(msg.chunkify),
+            )
 
 
 async def handle_staking(

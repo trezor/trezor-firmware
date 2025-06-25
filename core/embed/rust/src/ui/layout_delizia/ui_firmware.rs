@@ -86,6 +86,12 @@ impl FirmwareUI for UIDelizia {
         Err::<Gc<LayoutObj>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
+    fn confirm_trade(title: TString<'static>, subtitle: TString<'static>, out_amount: TString<'static>, in_amount: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
+        let flow =
+            flow::confirm_trade::new_confirm_trade(title, subtitle, out_amount, in_amount)?;
+        Ok(flow)
+    }
+
     fn confirm_value(
         title: TString<'static>,
         value: Obj,

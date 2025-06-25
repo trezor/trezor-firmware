@@ -61,6 +61,14 @@ def confirm_action(
         exc,
     )
 
+def confirm_trade(
+    title: str,
+    subtitle: str,
+    out_amount: str,
+    in_amount: str,
+) -> Awaitable[None]:
+    return raise_if_not_confirmed(trezorui_api.confirm_trade(title=title, subtitle=subtitle, out_amount=out_amount, in_amount=in_amount), "confirm_trade")
+
 
 def confirm_single(
     br_name: str,
@@ -973,6 +981,34 @@ if not utils.BITCOIN_ONLY:
             TR.words__title_summary,
             account_items,
             fee_info_items,
+            TR.confirm_total__title_fee,
+        )
+
+    async def confirm_ethereum_payment_req(recipient_name, trades) -> None:
+        address_layout = trezorui_api.confirm_value(
+            title="Swap",
+            description="Provider",
+            value=recipient_name,
+            verb=TR.instructions__tap_to_continue,
+            verb_cancel=None,
+#            info=True,
+            chunkify=False,
+        )
+
+        # TODO: should be with_info and have a menu
+        await raise_if_not_confirmed(address_layout, "payment_request_provider")
+
+        for trade in trades:
+            await confirm_trade("Swap", "Asset", "123 ETH", "0.001 BTC")
+
+        await _confirm_summary(
+            None,
+            None,
+            "0.001 Somethings",
+            "Transaction fee",
+            TR.words__title_summary,
+            [], # TODO
+            [], # TODO
             TR.confirm_total__title_fee,
         )
 

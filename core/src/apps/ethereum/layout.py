@@ -6,6 +6,7 @@ from trezor.ui.layouts import (
     confirm_blob,
     confirm_ethereum_staking_tx,
     confirm_text,
+    confirm_trade,
     should_show_more,
 )
 
@@ -101,6 +102,11 @@ async def require_confirm_tx(
         is_contract_interaction,
         chunkify=chunkify,
     )
+
+
+async def require_confirm_payment_req(payment_req, maximum_fee) -> None:
+    from trezor.ui.layouts import confirm_ethereum_payment_req
+    await confirm_ethereum_payment_req(payment_req.recipient_name, [("XXX ETH", memo.coin_purchase_memo.amount) for memo in payment_req.memos if memo.coin_purchase_memo], maximum_fee)
 
 
 async def require_confirm_stake(
