@@ -64,6 +64,10 @@ impl<'a> BldHeader<'a> {
         Self::new("Failure".into()).with_icon(theme::ICON_INFO, theme::RED)
     }
 
+    pub fn new_done() -> Self {
+        Self::new("Done".into()).with_icon(theme::ICON_DONE, theme::GREY)
+    }
+
     pub fn new_pay_attention() -> Self {
         Self::new("Pay attention".into()).with_icon(theme::ICON_WARNING, theme::GREY)
     }

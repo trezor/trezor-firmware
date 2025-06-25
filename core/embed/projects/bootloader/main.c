@@ -377,7 +377,7 @@ void real_jump_to_firmware(void) {
       IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE));
 }
 
-__attribute__((noreturn)) void jump_to_fw_through_reset(void) {
+__attribute__((noreturn)) void reboot_with_fade(void) {
   display_fade(display_get_backlight(), 0, 200);
   reboot_device();
 }
@@ -566,10 +566,12 @@ int bootloader_main(void) {
         ensure(dont_optimize_out_true *
                    (firmware_present == firmware_present_backup),
                NULL);
-        jump_to_fw_through_reset();
+        reboot_with_fade();
         break;
       case WF_OK_DEVICE_WIPED:
       case WF_OK_BOOTLOADER_UNLOCKED:
+        reboot_with_fade();
+        return 0;
       case WF_ERROR:
         reboot_or_halt_after_rsod();
         return 0;

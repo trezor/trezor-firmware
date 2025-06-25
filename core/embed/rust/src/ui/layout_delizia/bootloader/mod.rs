@@ -337,7 +337,7 @@ impl BootloaderUI for UIDelizia {
                 .vertically_centered(),
             true,
         );
-        show(&mut frame, true);
+        run(&mut frame);
     }
 
     fn screen_intro(bld_version: &str, vendor: &str, version: &str, fw_ok: bool) -> u32 {
@@ -412,7 +412,7 @@ impl BootloaderUI for UIDelizia {
                 .vertically_centered(),
             true,
         );
-        show(&mut frame, true);
+        run(&mut frame);
     }
 
     fn screen_wipe_fail() {

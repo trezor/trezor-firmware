@@ -395,7 +395,7 @@ impl BootloaderUI for UIBolt {
                 .vertically_centered(),
             true,
         );
-        show(&mut frame, true);
+        run(&mut frame);
     }
 
     fn screen_wipe_fail() {
