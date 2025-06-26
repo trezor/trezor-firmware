@@ -52,6 +52,21 @@ SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/sha2.c',
 ]
 
+if PQ_SIGNATURE:
+    PQ_SIGNATURE_PATH = 'vendor/sphincsplus/ref/'
+    CCFLAGS_MOD += '-DPARAMS=sphincs-sha2-128s -Wno-incompatible-pointer-types '
+    PQ_SIGNATURE_SOURCE = Glob(
+        PQ_SIGNATURE_PATH + '*.c',
+        exclude=[
+            PQ_SIGNATURE_PATH + 'rng.c',
+            PQ_SIGNATURE_PATH + '*haraka*.c',
+            PQ_SIGNATURE_PATH + '*robust.c',
+            PQ_SIGNATURE_PATH + '*shake*.c',
+            PQ_SIGNATURE_PATH + 'PQC*.c',
+        ],
+    )
+    CPPPATH_MOD += [PQ_SIGNATURE_PATH]
+
 # modtrezorui
 CPPPATH_MOD += [
         'vendor/micropython/lib/uzlib',
@@ -166,6 +181,11 @@ obj_program += env.Object(source=SOURCE_MOD)
 obj_program += env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-auto-var-init=zero')
 obj_program += env.Object(source=SOURCE_BOARDLOADER)
 obj_program += env.Object(source=SOURCE_HAL)
+
+if PQ_SIGNATURE:
+    obj_program += env.Object(
+        source=PQ_SIGNATURE_SOURCE,
+    )
 
 linkerscript_gen = env.Command(
     target='memory.ld',
