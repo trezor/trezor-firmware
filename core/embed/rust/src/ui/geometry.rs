@@ -474,6 +474,17 @@ impl Rect {
         (left, center, right)
     }
 
+    /// Split `Rect` into top, center and bottom, given the center one's
+    /// `height`. Center element is symmetric, top and bottom have the same
+    /// size. In case top and bottom cannot be the same size, bottom is 1px
+    /// wider.
+    pub const fn split_center_by_height(self, height: i16) -> (Self, Self, Self) {
+        let top_bottom_height = (self.height() - height) / 2;
+        let (top, center_bottom) = self.split_top(top_bottom_height);
+        let (center, bottom) = center_bottom.split_top(height);
+        (top, center, bottom)
+    }
+
     /// Calculates the intersection of two rectangles.
     ///
     /// If the rectangles do not intersect, an "empty" rectangle is returned.
