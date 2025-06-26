@@ -39,3 +39,7 @@
 [submodule "vendor/sloth"]
 	path = vendor/sloth
 	url = https://github.com/slh-dsa/sloth
+[submodule "vendor/sphincsplus"]
+	path = vendor/sphincsplus
+	url = https://github.com/sphincs/sphincsplus/
+	branch = consistent-basew
