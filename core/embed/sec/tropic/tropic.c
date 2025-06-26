@@ -55,7 +55,8 @@ bool tropic_init(void) {
   }
 
   secbool pubkey_ok = secret_key_tropic_public(tropic_secret_tropic_pubkey);
-  secbool privkey_ok = secret_key_tropic_pairing(tropic_secret_trezor_privkey);
+  secbool privkey_ok =
+      secret_key_tropic_pairing_privileged(tropic_secret_trezor_privkey);
 
   if (pubkey_ok == sectrue && privkey_ok == sectrue) {
     uint8_t trezor_pubkey[32] = {0};
