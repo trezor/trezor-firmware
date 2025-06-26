@@ -123,8 +123,8 @@ pub trait FirmwareUI {
 
     fn confirm_properties(
         title: TString<'static>,
-        items: Obj, // TODO: replace Obj`
         subtitle: Option<TString<'static>>,
+        items: Obj, // TODO: replace Obj`
         hold: bool,
         verb: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;

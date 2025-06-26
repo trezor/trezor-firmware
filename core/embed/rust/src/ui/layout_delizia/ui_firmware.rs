@@ -415,8 +415,8 @@ impl FirmwareUI for UIDelizia {
 
     fn confirm_properties(
         title: TString<'static>,
-        items: Obj,
         subtitle: Option<TString<'static>>,
+        items: Obj,
         hold: bool,
         _verb: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
