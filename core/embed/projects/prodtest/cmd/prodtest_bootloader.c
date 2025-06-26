@@ -121,7 +121,12 @@ static void prodtest_bootloader_update(cli_t *cli) {
       return;
     }
 
-    bl_check_replace(bootloader_buffer, bootloader_len);
+    bootloader_image_t bootloader_image = {
+        .image_ptr = bootloader_buffer,
+        .image_size = bootloader_len,
+    };
+
+    bl_check_replace(&bootloader_image);
 
     // Reset state so next begin must come before chunks
     bootloader_len = 0;
