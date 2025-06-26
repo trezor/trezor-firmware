@@ -13,7 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Migrate storage to version 6.  [#4747]
-- [T3B1] Changed unknown contract address warning screen.  [#5045]
+- [T2B1,T3B1] Changed unknown contract address warning screen.  [#5045]
 - [T3T1] Change multiple accounts warning to danger.  [#5218]
 
 ### Removed

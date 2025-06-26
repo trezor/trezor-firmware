@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Migrate storage to version 6.  [#4747]
+- Changed unknown contract address warning screen.  [#5045]
 
 ### Removed
 - Remove BNB Beacon Chain support.  [#4227]
