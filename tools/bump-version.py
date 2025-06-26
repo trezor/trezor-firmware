@@ -54,7 +54,7 @@ def hex_lit(version):
 )
 def cli(project, version):
     """Bump version for given project (core, python, legacy/firmware,
-    legacy/bootloader).
+    legacy/bootloader, core/embed/projects/prodtest).
     """
     project = Path(project)
 
