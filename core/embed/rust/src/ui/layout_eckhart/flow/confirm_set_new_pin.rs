@@ -97,7 +97,8 @@ pub fn new_set_new_pin(
         )
         .with_action_bar(ActionBar::new_double(
             Button::with_icon(theme::ICON_CHEVRON_LEFT),
-            Button::with_text(TR::buttons__continue.into()).styled(theme::button_cancel_gradient()),
+            Button::with_text(TR::buttons__continue.into())
+                .styled(theme::button_actionbar_danger()),
         ))
         .map(|msg| match msg {
             TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),

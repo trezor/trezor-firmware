@@ -214,7 +214,7 @@ pub fn new_continue_recovery_homepage(
         .with_header(Header::new(cancel_title.into()))
         .with_action_bar(ActionBar::new_double(
             Button::with_icon(theme::ICON_CHEVRON_LEFT),
-            Button::with_text(TR::buttons__cancel.into()).styled(theme::button_cancel()),
+            Button::with_text(TR::buttons__cancel.into()).styled(theme::button_actionbar_danger()),
         ))
         .map(|msg| match msg {
             TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
