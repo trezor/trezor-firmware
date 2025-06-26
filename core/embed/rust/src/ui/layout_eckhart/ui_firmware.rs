@@ -492,11 +492,11 @@ impl FirmwareUI for UIEckhart {
 
     fn confirm_with_info(
         title: TString<'static>,
+        subtitle: Option<TString<'static>>,
         items: Obj,
         verb: TString<'static>,
         verb_info: TString<'static>,
         _verb_cancel: Option<TString<'static>>,
-        subtitle: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecShort::new();
 

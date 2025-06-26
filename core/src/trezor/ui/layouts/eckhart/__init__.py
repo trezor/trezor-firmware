@@ -956,14 +956,14 @@ if not utils.BITCOIN_ONLY:
         else:
             main_layout = trezorui_api.confirm_with_info(
                 title=title,
-                items=[(recipient_str, True)],
-                verb=TR.buttons__continue,
-                verb_info=TR.ethereum__contract_address,
                 subtitle=(
                     TR.ethereum__approve_revoke_from
                     if is_revoke
                     else TR.ethereum__approve_to
                 ),
+                items=[(recipient_str, True)],
+                verb=TR.buttons__continue,
+                verb_info=TR.ethereum__contract_address,
             )
             info_layout = trezorui_api.show_info_with_cancel(
                 title=title,

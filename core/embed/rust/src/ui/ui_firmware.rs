@@ -147,11 +147,11 @@ pub trait FirmwareUI {
 
     fn confirm_with_info(
         title: TString<'static>,
+        subtitle: Option<TString<'static>>,
         items: Obj, // TODO: replace Obj
         verb: TString<'static>,
         verb_info: TString<'static>,
         verb_cancel: Option<TString<'static>>,
-        subtitle: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn continue_recovery_homepage(
