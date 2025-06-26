@@ -237,7 +237,11 @@ static void mpu_init_fixed_regions(void) {
   SET_REGION( 0, FIRMWARE_START,           1024,               FLASH_DATA,  YES,    NO );
   SET_REGION( 1, FIRMWARE_START + 1024,    FIRMWARE_MAXSIZE - 1024, FLASH_CODE,   NO,    NO );
   SET_REGION( 2, MAIN_RAM_START,           MAIN_RAM_SIZE,     SRAM,        YES,    NO );
+#ifdef AUX2_RAM_START
+  SET_REGION( 3, AUX2_RAM_START,           AUX2_RAM_SIZE,     SRAM,        YES,    NO );
+#else
   DIS_REGION( 3 );
+#endif
   SET_REGION( 4, AUX1_RAM_START,           AUX1_RAM_SIZE,     SRAM,        YES,    NO );
 
 #elif defined(SECMON)
