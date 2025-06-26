@@ -50,7 +50,7 @@ pub fn upload_image(image_data: &[u8], image_hash: &[u8]) -> bool {
     if wait_for_response(
         MsgType::ImageUploadResponse,
         &mut resp_buffer,
-        Duration::from_millis(100),
+        Duration::from_millis(500),
     )
     .is_err()
     {
@@ -87,7 +87,7 @@ pub fn upload_image(image_data: &[u8], image_hash: &[u8]) -> bool {
         if wait_for_response(
             MsgType::ImageUploadResponse,
             &mut resp_buffer,
-            Duration::from_millis(100),
+            Duration::from_millis(500),
         )
         .is_err()
         {
