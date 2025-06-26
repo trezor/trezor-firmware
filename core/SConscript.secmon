@@ -186,8 +186,8 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
     ]
 
 SOURCE_MOD += [
-    'embed/util/bl_check/bl_check.c',
     'embed/util/translations/translations.c',
+    'embed/util/image/boot_image.c',
     'embed/util/image/image.c',
     'embed/rtl/error_handling.c',
     'embed/rtl/mini_printf.c',
@@ -305,7 +305,6 @@ ALLPATHS = [
         'embed/models',
         'embed/gfx/inc',
         'embed/sys/bsp/inc',
-        'embed/util/bl_check/inc',
         'embed/util/image/inc',
         'embed/util/rsod/inc',
         'embed/util/translations/inc',
