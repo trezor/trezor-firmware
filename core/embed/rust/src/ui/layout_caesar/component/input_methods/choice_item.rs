@@ -41,12 +41,6 @@ impl ChoiceItem {
         self
     }
 
-    /// Allows to change the font.
-    pub fn with_font(mut self, font: Font) -> Self {
-        self.font = font;
-        self
-    }
-
     /// Allows for middle action without release.
     pub fn with_middle_action_without_release(mut self) -> Self {
         self.middle_action_without_release = true;
