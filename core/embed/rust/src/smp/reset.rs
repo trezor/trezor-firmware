@@ -23,5 +23,5 @@ pub fn send() {
     data[..SMP_HEADER_SIZE].copy_from_slice(&header);
     data[SMP_HEADER_SIZE..SMP_HEADER_SIZE + data_len].copy_from_slice(&cbor_data[..data_len]);
 
-    send_request(&mut data[..SMP_HEADER_SIZE + data_len], &mut buffer);
+    let _ = send_request(&mut data[..SMP_HEADER_SIZE + data_len], &mut buffer);
 }

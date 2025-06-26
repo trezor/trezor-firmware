@@ -162,8 +162,9 @@ void nrf_reboot(void);
  *
  * @param data  Pointer to the data buffer
  * @param len   Length of the data buffer
+ * @param timeout_ms  Timeout in milliseconds for the operation
  */
-void nrf_send_uart_data(const uint8_t *data, uint32_t len);
+bool nrf_send_uart_data(const uint8_t *data, uint32_t len, uint32_t timeout_ms);
 
 /**
  * @brief Check if an nRF device firmware update is required by comparing SHA256

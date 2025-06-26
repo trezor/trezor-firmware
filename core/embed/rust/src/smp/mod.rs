@@ -144,7 +144,7 @@ pub fn encode_request(data: &[u8], out: &mut [u8]) {
     out[len + MSG_HEADER_SIZE + 1] = (crc & 0xFF) as u8;
 }
 
-pub fn send_request(data: &mut [u8], buffer: &mut [u8]) {
+pub fn send_request(data: &mut [u8], buffer: &mut [u8]) -> Result<(), SmpError> {
     encode_request(data, buffer);
 
     let total = data.len() + MSG_HEADER_SIZE + MSG_FOOTER_SIZE;
@@ -175,10 +175,16 @@ pub fn send_request(data: &mut [u8], buffer: &mut [u8]) {
         buf[total_len] = b'\n';
 
         // 4) send it out
-        send_data(&buf[..total_len + FRAME_FOOTER_SIZE]);
+        let sent = send_data(&buf[..total_len + FRAME_FOOTER_SIZE], 10);
+
+        if !sent {
+            return Err(SmpError::Timeout);
+        }
 
         init_frame = false;
     }
+
+    Ok(())
 }
 
 /// A simple writer that copies into a `&mut [u8]` and counts bytes written.

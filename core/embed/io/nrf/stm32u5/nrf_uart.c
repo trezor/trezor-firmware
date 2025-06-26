@@ -27,6 +27,7 @@
 
 #include "../nrf_internal.h"
 #include "rust_smp.h"
+#include "sys/systick.h"
 
 extern nrf_driver_t g_nrf_driver;
 
@@ -147,23 +148,52 @@ void USART3_IRQHandler(void) {
   IRQ_LOG_EXIT();
 }
 
-void nrf_send_uart_data(const uint8_t *data, uint32_t len) {
+bool nrf_send_uart_data(const uint8_t *data, uint32_t len,
+                        uint32_t timeout_ms) {
   nrf_driver_t *drv = &g_nrf_driver;
-  if (drv->initialized) {
-    while (drv->dfu_tx_pending) {
-      irq_key_t key = irq_lock();
-      irq_unlock(key);
-    }
 
-    drv->dfu_tx_pending = true;
-
-    HAL_UART_Transmit_IT(&drv->urt, data, len);
-
-    while (drv->dfu_tx_pending) {
-      irq_key_t key = irq_lock();
-      irq_unlock(key);
-    }
+  if (!drv->initialized) {
+    return false;
   }
+
+  uint32_t deadline = ticks_timeout(timeout_ms);
+  bool result = false;
+
+  irq_key_t key = irq_lock();
+
+  while (drv->dfu_tx_pending && !ticks_expired(deadline)) {
+    // Wait for previous transmission to complete
+    irq_unlock(key);
+    key = irq_lock();
+  }
+
+  if (drv->dfu_tx_pending) {
+    // If we are still pending, it means we timed out
+    goto cleanup;
+  }
+
+  drv->dfu_tx_pending = true;
+
+  HAL_UART_Transmit_IT(&drv->urt, data, len);
+
+  while (drv->dfu_tx_pending && !ticks_expired(deadline)) {
+    // Wait for transmission to complete
+    irq_unlock(key);
+    key = irq_lock();
+  }
+
+  if (drv->dfu_tx_pending) {
+    // If we are still pending, it means we timed out
+    drv->dfu_tx_pending = false;
+    HAL_UART_Abort_IT(&drv->urt);
+    goto cleanup;
+  }
+
+  result = true;
+
+cleanup:
+  irq_unlock(key);
+  return result;
 }
 
 void nrf_set_dfu_mode(bool set) {
