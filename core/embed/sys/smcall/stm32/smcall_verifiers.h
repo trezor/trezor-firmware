@@ -31,12 +31,11 @@ void bootargs_get_args__verified(boot_args_t *args);
 
 // ---------------------------------------------------------------------
 
-#include <util/bl_check.h>
+#include <util/boot_image.h>
 
-bool bl_check_check__verified(const uint8_t *hash_00, const uint8_t *hash_FF,
-                              size_t hash_len);
+bool boot_image_check__verified(const boot_image_t *image);
 
-void bl_check_replace__verified(const uint8_t *data, size_t len);
+void boot_image_replace__verified(const boot_image_t *image);
 
 // ---------------------------------------------------------------------
 #include <sys/bootutils.h>
