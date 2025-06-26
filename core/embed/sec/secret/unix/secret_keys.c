@@ -49,7 +49,7 @@ secbool secret_key_tropic_public(curve25519_key dest) {
   return sectrue;
 }
 
-secbool secret_key_tropic_pairing(curve25519_key dest) {
+secbool secret_key_tropic_pairing_privileged(curve25519_key dest) {
   memcpy(dest, SECRET_TROPIC_PAIRING_BYTES, sizeof(curve25519_key));
   return sectrue;
 }
