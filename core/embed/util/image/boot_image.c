@@ -30,6 +30,8 @@
 #include "memzero.h"
 #include "uzlib.h"
 
+#include <util/boot_image.h>
+
 static secbool hash_match(const uint8_t *hash, const uint8_t *hash_00,
                           const uint8_t *hash_FF) {
   if (0 == memcmp(hash, hash_00, BLAKE2S_DIGEST_LENGTH)) return sectrue;
@@ -45,6 +47,7 @@ _Static_assert(
     BOOTLOADER_MAXSIZE <= IMAGE_CHUNK_SIZE,
     "BOOTLOADER_MAXSIZE must be less than or equal to IMAGE_CHUNK_SIZE");
 
+#ifndef USE_BOOTHEADER
 static void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
                           const void *src, uint32_t srcsize, void *dest,
                           uint32_t destsize) {
@@ -59,14 +62,10 @@ static void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
   decomp->dest_limit = decomp->dest + destsize;
   uzlib_uncompress_init(decomp, window, window ? UZLIB_WINDOW_SIZE : 0);
 }
+#endif
 
-bool bl_check_check(const uint8_t *hash_00, const uint8_t *hash_FF,
-                    size_t hash_len) {
+bool boot_image_check(const boot_image_t *image) {
   mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
-
-  if (hash_len != BLAKE2S_DIGEST_LENGTH) {
-    error_shutdown("Invalid bootloader hash length");
-  }
 
   // compute current bootloader hash
   uint8_t hash[BLAKE2S_DIGEST_LENGTH];
@@ -79,7 +78,7 @@ bool bl_check_check(const uint8_t *hash_00, const uint8_t *hash_FF,
   // detected");
 
   // does the bootloader match?
-  if (sectrue == hash_match(hash, hash_00, hash_FF)) {
+  if (sectrue == hash_match(hash, image->hash_00, image->hash_FF)) {
     mpu_reconfig(mode);
     return false;
   }
@@ -88,7 +87,9 @@ bool bl_check_check(const uint8_t *hash_00, const uint8_t *hash_FF,
   return true;
 }
 
-void bl_check_replace(const uint8_t *data, size_t len) {
+#ifndef USE_BOOTHEADER
+
+void boot_image_replace(const boot_image_t *image) {
   const uint32_t bl_len = flash_area_get_size(&BOOTLOADER_AREA);
   const void *bl_data = flash_area_get_address(&BOOTLOADER_AREA, 0, bl_len);
 
@@ -98,8 +99,8 @@ void bl_check_replace(const uint8_t *data, size_t len) {
   uint8_t decomp_window[UZLIB_WINDOW_SIZE] = {0};
   uint32_t decomp_out[IMAGE_HEADER_SIZE / sizeof(uint32_t)] = {0};
 
-  uzlib_prepare(&decomp, decomp_window, data, len, decomp_out,
-                sizeof(decomp_out));
+  uzlib_prepare(&decomp, decomp_window, image->image_ptr, image->image_size,
+                decomp_out, sizeof(decomp_out));
 
   ensure((uzlib_uncompress(&decomp) == TINF_OK) ? sectrue : secfalse,
          "Bootloader header decompression failed");
@@ -184,8 +185,8 @@ void bl_check_replace(const uint8_t *data, size_t len) {
 
   uint32_t offset = 0;
 
-  uzlib_prepare(&decomp, decomp_window, data, len, decomp_out,
-                sizeof(decomp_out));
+  uzlib_prepare(&decomp, decomp_window, image->image_ptr, image->image_size,
+                decomp_out, sizeof(decomp_out));
 
   ensure((uzlib_uncompress(&decomp) == TINF_OK) ? sectrue : secfalse,
          "Bootloader decompression failed");
@@ -212,5 +213,14 @@ void bl_check_replace(const uint8_t *data, size_t len) {
 
   mpu_reconfig(mode);
 }
+
+#else
+
+void boot_image_replace(const boot_image_t *image) {
+  // copy new signature block to upgrade block
+  // modify the footer to point the bootloader image
+}
+
+#endif
 
 #endif
