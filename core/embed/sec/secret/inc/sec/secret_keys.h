@@ -23,20 +23,35 @@
 
 #ifdef SECURE_MODE
 
+#ifdef SECRET_MASTER_KEY_SLOT
+
+#include <ed25519-donna/ed25519.h>
+
+secbool secret_key_mcu_device_auth(curve25519_key dest);
+
+#endif  // SECRET_MASTER_KEY_SLOT
+
 #ifdef USE_OPTIGA
+
+#include <ecdsa.h>
 
 #define OPTIGA_PAIRING_SECRET_SIZE 32
 secbool secret_key_optiga_pairing(uint8_t dest[OPTIGA_PAIRING_SECRET_SIZE]);
+secbool secret_key_optiga_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
 
-#endif
+#endif  // USE_OPTIGA
 
 #ifdef USE_TROPIC
 
+#include <ecdsa.h>
 #include <ed25519-donna/ed25519.h>
 
 secbool secret_key_tropic_public(curve25519_key dest);
 
-secbool secret_key_tropic_pairing(curve25519_key dest);
-#endif
+secbool secret_key_tropic_pairing_unprivileged(curve25519_key dest);
+secbool secret_key_tropic_pairing_privileged(curve25519_key dest);
+secbool secret_key_tropic_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
 
-#endif
+#endif  // USE_TROPIC
+
+#endif  // SECURE_MODE
