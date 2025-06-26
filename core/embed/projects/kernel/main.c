@@ -32,8 +32,8 @@
 #include <sys/sysevent.h>
 #include <sys/system.h>
 #include <sys/systick.h>
-#include <util/bl_check.h>
 #include <util/board_capabilities.h>
+#include <util/boot_image.h>
 #include <util/image.h>
 #include <util/option_bytes.h>
 #include <util/rsod.h>
