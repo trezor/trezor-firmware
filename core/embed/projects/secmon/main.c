@@ -28,8 +28,8 @@
 #include <sys/systick.h>
 #include <sys/sysutils.h>
 #include <sys/trustzone.h>
-#include <util/bl_check.h>
 #include <util/board_capabilities.h>
+#include <util/boot_image.h>
 #include <util/flash.h>
 #include <util/option_bytes.h>
 #include <util/unit_properties.h>

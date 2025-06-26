@@ -22,28 +22,50 @@
 #include <trezor_types.h>
 
 /**
+ * Structure representing a bootloader image and all its associated data.
+ */
+typedef struct {
+  const void* image_ptr;
+  size_t image_size;
+  uint8_t hash_00[32];
+  uint8_t hash_FF[32];
+
+} boot_image_t;
+
+/**
+ * @brief Get the new bootloader available as a part of the build.
+ *
+ * This function retrieves the bootloader image that is
+ * included in the build. The image is expected to be padded
+ * with 0x00 and 0xFF bytes to match the expected size.
+ *
+ * @return Pointer to a `boot_image_t` structure containing the
+ *         image data, size, and expected hashes.
+ */
+
+const boot_image_t* boot_image_get_embdata(void);
+
+/**
  * @brief Verify the installed bootloader against expected hashes.
  *
  * Calculates the hash of the currently installed bootloader and compares
  * it against two known-good expected hashes.
  *
- * @param hash_00 Pointer to the expected hash for 0x00 padded image.
- * @param hash_FF Pointer to the expected hash for 0xFF padded image.
- * @param hash_len         Length of each hash, in bytes.
+ * @param image Pointer to the `boot_image_t` structure containing
+ *              the expected hashes and other image data.
  *
  * @return `true` if the installed bootloader's hash does not match either
  *         of the expected hashes (indicating it should be replaced),
  *         `false` if it matches one of them.
  */
-bool bl_check_check(const uint8_t *hash_00, const uint8_t *hash_FF,
-                    size_t hash_len);
+bool boot_image_check(const boot_image_t* image);
 
 /**
  * @brief Replace the currently installed bootloader.
  *
  * Writes a new bootloader image into flash.
  *
- * @param data Pointer to the bootloader image data.
- * @param len  Size of the bootloader data in bytes.
+ * @param image Pointer to the `boot_image_t` structure containing
+ *              the new bootloader image data.
  */
-void bl_check_replace(const uint8_t *data, size_t len);
+void boot_image_replace(const boot_image_t* image);
