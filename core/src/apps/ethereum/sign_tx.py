@@ -296,7 +296,7 @@ async def _handle_erc20(
                     TR.ethereum__token_contract,
                     TR.buttons__continue,
                     "unknown_token",
-                    f"{TR.ethereum__unknown_contract_address} {TR.words__know_what_your_doing}",
+                    TR.ethereum__unknown_contract_address,
                 )
 
     return token, token_address, func_sig, recipient, value
