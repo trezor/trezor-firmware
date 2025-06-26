@@ -115,7 +115,7 @@ pub fn new_receive(
     paragraphs.add(Paragraph::new(text_style, content));
 
     let button = if hint.is_some() {
-        Button::with_text(TR::buttons__confirm.into()).styled(theme::button_cancel_gradient())
+        Button::with_text(TR::buttons__confirm.into()).styled(theme::button_actionbar_danger())
     } else {
         Button::with_text(TR::buttons__confirm.into()).styled(theme::button_confirm())
     };
@@ -229,7 +229,7 @@ pub fn new_receive(
     .with_header(Header::new(title))
     .with_action_bar(ActionBar::new_double(
         Button::with_icon(theme::ICON_CHEVRON_LEFT),
-        Button::with_text(TR::buttons__cancel.into()).styled(theme::button_cancel()),
+        Button::with_text(TR::buttons__cancel.into()).styled(theme::button_actionbar_danger()),
     ));
     if let Some(hint) = cancel_hint {
         screen_cancel_info = screen_cancel_info.with_hint(hint);

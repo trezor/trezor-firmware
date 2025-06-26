@@ -439,7 +439,7 @@ impl FirmwareUI for UIEckhart {
             Button::with_text(TR::buttons__confirm.into()).styled(theme::firmware::button_confirm())
         };
         if warning_footer.is_some() {
-            right_button = right_button.styled(theme::button_cancel_gradient());
+            right_button = right_button.styled(theme::button_actionbar_danger());
         }
         let header = if info {
             Header::new(title)
