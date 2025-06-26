@@ -26,6 +26,7 @@
 #include <sec/optiga_commands.h>
 #include <sec/optiga_transport.h>
 #include <sec/secret.h>
+#include <sec/secret_keys.h>
 
 #include "aes/aes.h"
 #include "common.h"
@@ -57,8 +58,7 @@ typedef enum {
   OPTIGA_PAIRING_ERR_READ_FLASH,
   OPTIGA_PAIRING_ERR_WRITE_FLASH,
   OPTIGA_PAIRING_ERR_WRITE_OPTIGA,
-  OPTIGA_PAIRING_ERR_HANDSHAKE1,
-  OPTIGA_PAIRING_ERR_HANDSHAKE2,
+  OPTIGA_PAIRING_ERR_HANDSHAKE,
 } optiga_pairing;
 
 static optiga_pairing optiga_pairing_state = OPTIGA_PAIRING_UNPAIRED;
@@ -89,11 +89,8 @@ static bool optiga_paired(cli_t* cli) {
     case OPTIGA_PAIRING_ERR_WRITE_OPTIGA:
       details = "failed to write pairing secret to Optiga";
       break;
-    case OPTIGA_PAIRING_ERR_HANDSHAKE1:
-      details = "failed optiga_sec_chan_handshake 1";
-      break;
-    case OPTIGA_PAIRING_ERR_HANDSHAKE2:
-      details = "failed optiga_sec_chan_handshake 2";
+    case OPTIGA_PAIRING_ERR_HANDSHAKE:
+      details = "failed optiga_sec_chan_handshake";
       break;
     default:
       break;
@@ -148,23 +145,61 @@ static bool set_metadata(cli_t* cli, uint16_t oid,
   return true;
 }
 
+static secbool initialize_secrets(void) {
+#ifdef SECRET_PRIVILEGED_MASTER_KEY_SLOT
+  uint8_t secret[2 * SECRET_MASTER_KEY_SLOT_SIZE] = {0};
+#else
+  uint8_t secret[OPTIGA_PAIRING_SECRET_SIZE] = {0};
+#endif
+
+  // Generate the pairing secret or master keys.
+  if (OPTIGA_SUCCESS != optiga_get_random(secret, sizeof(secret))) {
+    optiga_pairing_state = OPTIGA_PAIRING_ERR_RNG;
+    return secfalse;
+  }
+  random_xor(secret, sizeof(secret));
+
+#ifdef SECRET_PRIVILEGED_MASTER_KEY_SLOT
+  // Store the master keys in the flash memory.
+  secbool ret = secret_key_set(SECRET_PRIVILEGED_MASTER_KEY_SLOT, secret,
+                               SECRET_MASTER_KEY_SLOT_SIZE);
+  if (sectrue == ret) {
+    ret = secret_key_set(SECRET_UNPRIVILEGED_MASTER_KEY_SLOT,
+                         &secret[SECRET_MASTER_KEY_SLOT_SIZE],
+                         SECRET_MASTER_KEY_SLOT_SIZE);
+  }
+#else
+  // Store the pairing secret in the flash memory.
+  secbool ret =
+      secret_key_set(SECRET_OPTIGA_SLOT, secret, OPTIGA_PAIRING_SECRET_SIZE);
+#endif
+  memzero(secret, sizeof(secret));
+  if (sectrue != ret) {
+    optiga_pairing_state = OPTIGA_PAIRING_ERR_WRITE_FLASH;
+  }
+
+  return ret;
+}
+
 void pair_optiga(cli_t* cli) {
-  uint8_t secret[32] = {0};
+  uint8_t pairing_secret[OPTIGA_PAIRING_SECRET_SIZE] = {0};
 
-  if (secret_key_get(SECRET_OPTIGA_SLOT, secret, sizeof(secret)) != sectrue) {
-    if (secret_key_writable(SECRET_OPTIGA_SLOT) != sectrue) {
-      // optiga pairing secret is unwritable, so fail
-      optiga_pairing_state = OPTIGA_PAIRING_ERR_WRITE_FLASH;
-      return;
+  if (sectrue != secret_key_optiga_pairing(pairing_secret)) {
+    if (sectrue != initialize_secrets()) {
+      // optiga_pairing_state set by initialize_secrets().
+      goto cleanup;
     }
 
-    // Generate the pairing secret.
-    if (OPTIGA_SUCCESS != optiga_get_random(secret, sizeof(secret))) {
-      optiga_pairing_state = OPTIGA_PAIRING_ERR_RNG;
-      return;
+    // Load the pairing secret from the flash memory.
+    if (sectrue != secret_key_optiga_pairing(pairing_secret)) {
+      optiga_pairing_state = OPTIGA_PAIRING_ERR_READ_FLASH;
+      goto cleanup;
     }
-    random_xor(secret, sizeof(secret));
+  }
 
+  // Execute the handshake to verify that the secret is stored in Optiga.
+  if (OPTIGA_SUCCESS !=
+      optiga_sec_chan_handshake(pairing_secret, sizeof(pairing_secret))) {
     // Enable writing the pairing secret to OPTIGA.
     optiga_metadata metadata = {0};
     metadata.change = OPTIGA_META_ACCESS_ALWAYS;
@@ -174,43 +209,25 @@ void pair_optiga(cli_t* cli) {
                        false);  // Ignore result.
 
     // Store the pairing secret in OPTIGA.
-    if (OPTIGA_SUCCESS != optiga_set_data_object(OID_KEY_PAIRING, false, secret,
-                                                 sizeof(secret))) {
+    if (OPTIGA_SUCCESS != optiga_set_data_object(OID_KEY_PAIRING, false,
+                                                 pairing_secret,
+                                                 sizeof(pairing_secret))) {
       optiga_pairing_state = OPTIGA_PAIRING_ERR_WRITE_OPTIGA;
-      return;
+      goto cleanup;
     }
 
-    // Execute the handshake to verify that the secret was stored correctly in
-    // Optiga.
-    if (OPTIGA_SUCCESS != optiga_sec_chan_handshake(secret, sizeof(secret))) {
-      optiga_pairing_state = OPTIGA_PAIRING_ERR_HANDSHAKE1;
-      return;
+    // Execute the handshake to verify that the secret is stored in Optiga.
+    if (OPTIGA_SUCCESS !=
+        optiga_sec_chan_handshake(pairing_secret, sizeof(pairing_secret))) {
+      optiga_pairing_state = OPTIGA_PAIRING_ERR_HANDSHAKE;
+      goto cleanup;
     }
-
-    // Store the pairing secret in the flash memory.
-    if (sectrue != secret_key_set(SECRET_OPTIGA_SLOT, secret, sizeof(secret))) {
-      optiga_pairing_state = OPTIGA_PAIRING_ERR_WRITE_FLASH;
-      return;
-    }
-
-    // Reload the pairing secret from the flash memory.
-    memzero(secret, sizeof(secret));
-    if (sectrue != secret_key_get(SECRET_OPTIGA_SLOT, secret, sizeof(secret))) {
-      optiga_pairing_state = OPTIGA_PAIRING_ERR_READ_FLASH;
-      return;
-    }
-  }
-
-  // Execute the handshake to verify that the secret is stored correctly in both
-  // Optiga and MCU flash.
-  optiga_result ret = optiga_sec_chan_handshake(secret, sizeof(secret));
-  memzero(secret, sizeof(secret));
-  if (OPTIGA_SUCCESS != ret) {
-    optiga_pairing_state = OPTIGA_PAIRING_ERR_HANDSHAKE2;
-    return;
   }
 
   optiga_pairing_state = OPTIGA_PAIRING_PAIRED;
+
+cleanup:
+  memzero(pairing_secret, sizeof(pairing_secret));
   return;
 }
 
