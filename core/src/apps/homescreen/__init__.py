@@ -100,3 +100,17 @@ def lockscreen() -> Coroutine[None, None, None]:
 
 def screensaver() -> Coroutine[None, None, None]:
     return _lockscreen(screensaver=True)
+
+
+async def chargingscreen() -> None:
+    from trezor import loop
+    from trezor.ui.layouts.progress import progress
+
+    from apps.base import suspend_device
+
+    prog = progress("Charging now", danger=True)
+    await loop.sleep(1000)
+    prog.report(500)
+    await loop.sleep(1000)
+    prog.report(1000)
+    suspend_device()

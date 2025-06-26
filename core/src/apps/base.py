@@ -405,7 +405,27 @@ if utils.USE_POWER_MANAGER:
         else:
             set_homescreen()
             workflow.close_others()
-        io.pm.suspend()
+        status, wakeup_flag = io.pm.suspend()
+        if status is io.pm.PM_OK:
+            if wakeup_flag is io.pm.WAKEUP_FLAG_BUTTON:
+                # regular waking up
+                return
+            elif wakeup_flag is io.pm.WAKEUP_FLAG_POWER:
+                # TODO: show charging screen for a while
+                # set_charging_screen()
+                return
+            else:
+                # TODO: handle other wakeup flags if needed
+                pass
+        else:
+            # TODO: handle error in suspend
+            pass
+
+    def set_charging_screen() -> None:
+        """Set the charging screen when the device is woken up by power button."""
+        from apps.homescreen import chargingscreen
+
+        workflow.set_default(chargingscreen, restart=False)
 
 
 def lock_device(interrupt_workflow: bool = True) -> None:
