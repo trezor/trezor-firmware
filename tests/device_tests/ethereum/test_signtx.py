@@ -270,20 +270,11 @@ def test_data_streaming(client: Client):
         )
 
 
-def test_signtx_eip1559_access_list(client: Client):
-    with client:
-
-        sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
-            client,
-            n=parse_path("m/44h/60h/0h/0/100"),
-            nonce=0,
-            gas_limit=20,
-            to="0x1d1c328764a41bda0492b66baa30c4a339ff85ef",
-            chain_id=1,
-            value=10,
-            max_gas_fee=20,
-            max_priority_fee=1,
-            access_list=[
+@pytest.mark.parametrize(
+    "access_list,expected_sig",
+    [
+        pytest.param(
+            [
                 messages.EthereumAccessList(
                     address="0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae",
                     storage_keys=[
@@ -296,33 +287,15 @@ def test_signtx_eip1559_access_list(client: Client):
                     ],
                 )
             ],
-        )
-
-    assert sig_v == 1
-    assert (
-        sig_r.hex()
-        == "9f8763f3ff8d4d409f6b96bc3f1d84dd504e2c667b162778508478645401f121"
-    )
-    assert (
-        sig_s.hex()
-        == "51e30b68b9091cf8138c07380c4378c2711779b68b2e5264d141479f13a12f57"
-    )
-
-
-def test_signtx_eip1559_access_list_larger(client: Client):
-    with client:
-
-        sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
-            client,
-            n=parse_path("m/44h/60h/0h/0/100"),
-            nonce=0,
-            gas_limit=20,
-            to="0x1d1c328764a41bda0492b66baa30c4a339ff85ef",
-            chain_id=1,
-            value=10,
-            max_gas_fee=20,
-            max_priority_fee=1,
-            access_list=[
+            (
+                1,
+                "9f8763f3ff8d4d409f6b96bc3f1d84dd504e2c667b162778508478645401f121",
+                "51e30b68b9091cf8138c07380c4378c2711779b68b2e5264d141479f13a12f57",
+            ),
+            id="single_entry",
+        ),
+        pytest.param(
+            [
                 messages.EthereumAccessList(
                     address="0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae",
                     storage_keys=[
@@ -349,17 +322,52 @@ def test_signtx_eip1559_access_list_larger(client: Client):
                     ],
                 ),
             ],
+            (
+                1,
+                "718a3a30827c979975c846d2f60495310c4959ee3adce2d89e0211785725465c",
+                "7d0ea2a28ef5702ca763c1f340427c0020292ffcbb4553dd1c8ea8e2b9126dbc",
+            ),
+            id="larger_list",
+        ),
+        pytest.param(
+            [
+                messages.EthereumAccessList(
+                    address=f"0xde0b295669a9fd93d5f28d9ec85e40f4cb697b{i:02x}",
+                    storage_keys=[
+                        bytes.fromhex(
+                            "0000000000000000000000000000000000000000000000000000000000000003"
+                        )
+                    ]
+                    * 12,
+                )
+                for i in range(12)
+            ],
+            None,  # Max count test - just verify signatures exist
+            id="max_count",
+        ),
+    ],
+)
+def test_signtx_eip1559_access_list(
+    client: Client,
+    access_list,
+    expected_sig: tuple[int, str, str] | None,
+):
+    with client:
+        sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
+            client,
+            n=parse_path("m/44h/60h/0h/0/100"),
+            nonce=0,
+            gas_limit=20,
+            to="0x1d1c328764a41bda0492b66baa30c4a339ff85ef",
+            chain_id=1,
+            value=10,
+            max_gas_fee=20,
+            max_priority_fee=1,
+            access_list=access_list,
         )
 
-    assert sig_v == 1
-    assert (
-        sig_r.hex()
-        == "718a3a30827c979975c846d2f60495310c4959ee3adce2d89e0211785725465c"
-    )
-    assert (
-        sig_s.hex()
-        == "7d0ea2a28ef5702ca763c1f340427c0020292ffcbb4553dd1c8ea8e2b9126dbc"
-    )
+    if expected_sig is not None:
+        assert (sig_v, sig_r.hex(), sig_s.hex()) == expected_sig
 
 
 def test_sanity_checks_eip1559(client: Client):
