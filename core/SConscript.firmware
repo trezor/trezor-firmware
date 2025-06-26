@@ -243,6 +243,7 @@ SOURCE_MOD += [
     'embed/gfx/gfx_draw.c',
     'embed/gfx/terminal.c',
     'embed/io/display/display_utils.c',
+    'embed/util/bl_check/bl_check_image.c',
     'embed/util/image/image.c',
     'embed/util/translations/translations.c',
     'embed/util/rsod/rsod.c',
