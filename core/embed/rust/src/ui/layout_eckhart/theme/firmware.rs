@@ -563,21 +563,21 @@ pub const fn button_always_disabled() -> ButtonStyleSheet {
 pub const fn input_mnemonic() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            font: fonts::FONT_SATOSHI_REGULAR_38,
             text_color: GREY_LIGHT,
             button_color: BG,
             icon_color: GREY_LIGHT,
             background_color: BG,
         },
         active: &ButtonStyle {
-            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            font: fonts::FONT_SATOSHI_REGULAR_38,
             text_color: GREY_LIGHT,
             button_color: GREY_SUPER_DARK,
             icon_color: GREY_LIGHT,
             background_color: GREY_SUPER_DARK,
         },
         disabled: &ButtonStyle {
-            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            font: fonts::FONT_SATOSHI_REGULAR_38,
             text_color: GREY_LIGHT,
             button_color: BG,
             icon_color: GREY_LIGHT,
@@ -589,21 +589,21 @@ pub const fn input_mnemonic() -> ButtonStyleSheet {
 pub const fn input_mnemonic_suggestion() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            font: fonts::FONT_SATOSHI_REGULAR_38,
             text_color: GREY_DARK,
             button_color: BG,
             icon_color: GREY_DARK,
             background_color: BG,
         },
         active: &ButtonStyle {
-            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            font: fonts::FONT_SATOSHI_REGULAR_38,
             text_color: GREY_LIGHT,
             button_color: BG,
             icon_color: GREY_LIGHT,
             background_color: BG,
         },
         disabled: &ButtonStyle {
-            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            font: fonts::FONT_SATOSHI_REGULAR_38,
             text_color: BG,
             button_color: BG,
             icon_color: BG,
@@ -615,14 +615,14 @@ pub const fn input_mnemonic_suggestion() -> ButtonStyleSheet {
 pub const fn input_mnemonic_confirm() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            font: fonts::FONT_SATOSHI_REGULAR_38,
             text_color: GREEN_LIGHT,
             button_color: BG,
             icon_color: GREEN_LIGHT,
             background_color: BG,
         },
         active: &ButtonStyle {
-            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            font: fonts::FONT_SATOSHI_REGULAR_38,
             text_color: GREEN_LIGHT,
             button_color: GREEN_EXTRA_DARK,
             icon_color: GREEN_LIGHT,
@@ -630,7 +630,7 @@ pub const fn input_mnemonic_confirm() -> ButtonStyleSheet {
         },
         disabled: &ButtonStyle {
             // unused
-            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            font: fonts::FONT_SATOSHI_REGULAR_38,
             text_color: BG,
             button_color: BG,
             icon_color: BG,
