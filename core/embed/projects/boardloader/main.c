@@ -60,7 +60,7 @@
 #endif
 
 #include <util/signblock.h>
-#include "slh_dsa.h"
+#include "api.h"
 
 static void drivers_init(void) {
 #ifdef USE_PMIC
@@ -150,9 +150,10 @@ int main(void) {
     const signblock_t *signblock = (const signblock_t *)SIGNATURE_BLOCK_START;
 
     mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SIGNATURE_BLOCK);
-    bool ok = slh_verify((const uint8_t *)hdr, sizeof(*hdr),
-                         signblock->signature1, pk, &slh_dsa_sha2_128s);
-    ensure(sectrue * ok, "invalid bootloader pq signature");
+    int result = crypto_sign_verify(signblock->signature1, PQ_SIGNATURE_LEN,
+                                    (const uint8_t *)hdr, sizeof(*hdr), pk);
+
+    ensure(sectrue * (result == 0), "invalid bootloader pq signature");
     mpu_restore(mpu_mode);
   }
 #endif  // USE_SIGNATURE_BLOCK
