@@ -170,6 +170,7 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/cmd/prodtest_help.c',
     'embed/projects/prodtest/cmd/prodtest_hw_revision.c',
     'embed/projects/prodtest/cmd/prodtest_nfc.c',
+    'embed/projects/prodtest/cmd/prodtest_rtc.c',
     'embed/projects/prodtest/cmd/prodtest_nrf.c',
     'embed/projects/prodtest/cmd/prodtest_optiga.c',
     'embed/projects/prodtest/cmd/prodtest_otp_batch.c',
