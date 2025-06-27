@@ -1031,6 +1031,8 @@ Example:
 nfc-write-card [<timeout_ms>]
 # NFC reader on, put the card on the reader (timeout <timeout_ms> ms)
 # Writting URI to NFC tag 7AF403
+OK
+```
 
 ### unit-test-run
 Prodtest have capability to verify the overall firmware functionality by running built-in unit tests which should excercise the basic
@@ -1055,18 +1057,14 @@ Example:
 OK
 ```
 
-### fuel-gauge
-Activates fuel gauge which monitors battery state of charge and reports it on
-display and command line, exit the fuel gauge monitor with CTRL+C
+### rtc-timestamp
+Retrieves the current RTC timestamp as a number of seconds since the device got powered up for the first time.
 
 Example:
-fuel-gauge
-# Initialize Fuel gauge.
-PROGRESS 3.123 122.13 0.281
-PROGRESS 3.125 122.18 0.281
-PROGRESS 3.123 122.13 0.280
 ```
-
+rtc-timestamp
+OK 1886533
+```
 
 
 
