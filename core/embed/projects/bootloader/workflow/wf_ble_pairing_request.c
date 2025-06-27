@@ -45,9 +45,13 @@ workflow_result_t workflow_ble_pairing_request(const vendor_header *const vhdr,
   if (!ble_iface_start_pairing()) {
     return WF_OK_PAIRING_FAILED;
   }
+
+  char name[BLE_ADV_NAME_LEN + 1] = {0};
+  ble_get_advertising_name(name, sizeof(name));
+
   c_layout_t layout;
   memset(&layout, 0, sizeof(layout));
-  screen_pairing_mode(ui_get_initial_setup(), &layout);
+  screen_pairing_mode(ui_get_initial_setup(), name, strlen(name), &layout);
 
   uint32_t code = 0;
   workflow_result_t res =
@@ -115,6 +119,95 @@ workflow_result_t workflow_ble_pairing_request(const vendor_header *const vhdr,
   }
 
   return WF_OK_PAIRING_COMPLETED;
+}
+
+workflow_result_t workflow_wireless_setup(const vendor_header *const vhdr,
+                                          const image_header *const hdr,
+                                          protob_ios_t *ios) {
+  ble_iface_start_pairing();
+
+  char name[BLE_ADV_NAME_LEN + 1] = {0};
+  ble_get_advertising_name(name, sizeof(name));
+
+  c_layout_t layout;
+  memset(&layout, 0, sizeof(layout));
+  screen_wireless_setup(name, strlen(name), &layout);
+
+  uint32_t code = 0;
+  workflow_result_t res = workflow_host_control(vhdr, hdr, &layout, &code, ios);
+
+  if (res != WF_OK_UI_ACTION) {
+    ble_iface_end_pairing();
+    return res;
+  }
+
+  if (code == WIRELESS_SETUP_CANCEL) {
+    ble_iface_end_pairing();
+    return WF_OK_PAIRING_FAILED;
+  }
+
+  uint32_t result = ui_screen_confirm_pairing(code);
+
+  uint8_t pairing_code[BLE_PAIRING_CODE_LEN] = {0};
+
+  if (result != CONFIRM || !encode_pairing_code(code, pairing_code)) {
+    ble_command_t cmd = {
+        .cmd_type = BLE_REJECT_PAIRING,
+    };
+    ble_issue_command(&cmd);
+    return WF_OK_PAIRING_FAILED;
+  }
+
+  ble_command_t cmd = {
+      .cmd_type = BLE_ALLOW_PAIRING,
+      .data_len = sizeof(pairing_code),
+  };
+  memcpy(cmd.data.raw, pairing_code, sizeof(pairing_code));
+  ble_issue_command(&cmd);
+
+  bool skip_finalization = false;
+
+  sysevents_t awaited = {0};
+  sysevents_t signalled = {0};
+  awaited.read_ready |= 1 << SYSHANDLE_BLE;
+
+  sysevents_poll(&awaited, &signalled, ticks_timeout(500));
+
+  if (signalled.read_ready == 1 << SYSHANDLE_BLE) {
+    ble_event_t event = {0};
+    if (ble_get_event(&event)) {
+      if (event.type == BLE_PAIRING_COMPLETED) {
+        skip_finalization = true;
+      }
+    }
+  }
+
+  if (!skip_finalization) {
+    pairing_mode_finalization_result_t r =
+        screen_pairing_mode_finalizing(ui_get_initial_setup());
+    if (r == PAIRING_FINALIZATION_FAILED) {
+      ble_iface_end_pairing();
+      return WF_OK_PAIRING_FAILED;
+    }
+    if (r == PAIRING_FINALIZATION_CANCEL) {
+      ble_command_t disconnect = {.cmd_type = BLE_DISCONNECT};
+      ble_issue_command(&disconnect);
+      ble_iface_end_pairing();
+      return WF_OK_PAIRING_FAILED;
+    }
+  }
+
+  memset(&layout, 0, sizeof(layout));
+  screen_wireless_setup_final(&layout);
+
+  uint32_t ui_result = 0;
+  res = workflow_host_control(vhdr, hdr, &layout, &ui_result, ios);
+
+  if (ui_result == WIRELESS_SETUP_FINAL_CANCEL) {
+    return WF_OK_PAIRING_COMPLETED;
+  }
+
+  return res;
 }
 
 #endif

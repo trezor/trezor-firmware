@@ -153,6 +153,9 @@ void ble_event_flush(void);
 // Obtains the current operational state of the BLE module.
 void ble_get_state(ble_state_t *state);
 
+// Retrieves last set advertising name
+void ble_get_advertising_name(char *name, size_t max_len);
+
 // Check if write is possible
 bool ble_can_write(void);
 

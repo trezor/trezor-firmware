@@ -7,7 +7,12 @@ pub trait BootloaderLayoutType {
     fn init_menu(initial_setup: bool) -> Self;
     fn init_connect(initial_setup: bool, auto_update: bool) -> Self;
     #[cfg(feature = "ble")]
-    fn init_pairing_mode(initial_setup: bool) -> Self;
+    fn init_pairing_mode(initial_setup: bool, name: &'static str) -> Self;
+    #[cfg(feature = "ble")]
+    fn init_wireless_setup(name: &'static str) -> Self;
+
+    #[cfg(feature = "ble")]
+    fn init_wireless_setup_final() -> Self;
 }
 
 pub trait BootloaderUI {
