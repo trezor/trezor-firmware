@@ -1042,6 +1042,11 @@ impl FirmwareUI for UIEckhart {
         Ok(layout)
     }
 
+    // fn show_chargingscreen() -> Result<impl LayoutMaybeTrace, Error> {
+    //     let layout = RootComponent::new(Chargingscreen::new()?);
+    //     Ok(layout)
+    // }
+
     fn show_device_menu(
         failed_backup: bool,
         firmware_version: TString<'static>,
