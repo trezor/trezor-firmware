@@ -63,7 +63,7 @@ class CodecContext(Context):
             raise UnexpectedMessageException(msg)
 
         if expected_type is None:
-            expected_type = protobuf.type_for_wire(msg.type)
+            expected_type = protobuf.type_for_wire("MessageType", msg.type)
 
         if __debug__:
             log.debug(

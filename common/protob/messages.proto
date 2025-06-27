@@ -18,6 +18,7 @@ option (include_in_bitcoin_only) = true;
  */
 enum MessageType {
     option (has_bitcoin_only_values) = true;
+    option (wire_enum) = true;
 
     // Management
     MessageType_Initialize = 0 [(bitcoin_only) = true, (wire_in) = true, (wire_tiny) = true];
