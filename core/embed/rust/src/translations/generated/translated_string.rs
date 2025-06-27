@@ -1399,7 +1399,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__approve_to = 1005,  // "Approve to"
     #[cfg(feature = "universal_fw")]
-    ethereum__approve_unlimited_template = 1006,  // {"Bolt": "Approving unlimited amount of {0}", "Caesar": "Approving unlimited amount of {0}", "Delizia": "Approving unlimited amount of {0}", "Eckhart": "Approve unlimited amount of {0}"}
+    ethereum__approve_unlimited_template = 1006,  // "Approving unlimited amount of {0}"
     words__unlimited = 1007,  // "Unlimited"
     #[cfg(feature = "universal_fw")]
     ethereum__approve_intro_revoke = 1008,  // "Review details to revoke token approval."
@@ -3151,17 +3151,7 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__approve_to, "Approve to"),
             #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
             (Self::ethereum__approve_unlimited_template, "Approving unlimited amount of {0}"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::ethereum__approve_unlimited_template, "Approving unlimited amount of {0}"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::ethereum__approve_unlimited_template, "Approving unlimited amount of {0}"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ethereum__approve_unlimited_template, "Approve unlimited amount of {0}"),
             (Self::words__unlimited, "Unlimited"),
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__approve_intro_revoke, "Review details to revoke token approval."),
