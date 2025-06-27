@@ -236,6 +236,7 @@ async def _handle_erc20(
     SC_ARGUMENT_ADDRESS_BYTES = constants.SC_ARGUMENT_ADDRESS_BYTES
     SC_FUNC_SIG_APPROVE = constants.SC_FUNC_SIG_APPROVE
     SC_FUNC_SIG_TRANSFER = constants.SC_FUNC_SIG_TRANSFER
+    REVOKE_AMOUNT = constants.SC_FUNC_APPROVE_REVOKE_AMOUNT
 
     token = None
     token_address = None
@@ -280,7 +281,7 @@ async def _handle_erc20(
 
         if token is tokens.UNKNOWN_TOKEN:
             if func_sig == SC_FUNC_SIG_APPROVE:
-                if value == 0:
+                if value == REVOKE_AMOUNT:
                     title = TR.ethereum__approve_intro_title_revoke
                 else:
                     title = TR.ethereum__approve_intro_title

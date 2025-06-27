@@ -42,6 +42,9 @@ async def require_confirm_approve(
     from trezor.ui.layouts import confirm_ethereum_approve
 
     from apps.ethereum.sc_constants import APPROVE_KNOWN_ADDRESSES as KNOWN_ADDRESSES
+    from apps.ethereum.sc_constants import (
+        SC_FUNC_APPROVE_REVOKE_AMOUNT as REVOKE_AMOUNT,
+    )
 
     from . import networks, tokens
 
@@ -66,7 +69,7 @@ async def require_confirm_approve(
         network is networks.UNKNOWN_NETWORK,
         chain_id_str,
         network.name,
-        value == 0,
+        value == REVOKE_AMOUNT,
         total_amount,
         account,
         account_path,
