@@ -135,10 +135,11 @@ stdenvNoCC.mkDerivation ({
     libiconv
   ] ++ lib.optionals hardwareTest [
     uhubctl
-    tio
+    socat
     ffmpeg_7-headless
     dejavu_fonts
   ] ++ lib.optionals devTools [
+    tio
     shellcheck
     openocd-stm
   ] ++ lib.optionals (devTools && !stdenv.isDarwin) [
