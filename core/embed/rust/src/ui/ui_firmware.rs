@@ -144,6 +144,7 @@ pub trait FirmwareUI {
         extra_items: Option<Obj>, // TODO: replace Obj
         extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
+        external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn confirm_with_info(

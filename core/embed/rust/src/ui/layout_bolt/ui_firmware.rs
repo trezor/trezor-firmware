@@ -438,6 +438,7 @@ impl FirmwareUI for UIBolt {
         extra_items: Option<Obj>,
         _extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
+        _external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let info_button: bool = account_items.is_some() || extra_items.is_some();
         let mut paragraphs = ParagraphVecShort::new();
