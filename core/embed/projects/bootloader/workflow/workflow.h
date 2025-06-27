@@ -81,6 +81,10 @@ workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
 #ifdef USE_BLE
 workflow_result_t workflow_ble_pairing_request(const vendor_header *const vhdr,
                                                const image_header *const hdr);
+
+workflow_result_t workflow_wireless_setup(const vendor_header *const vhdr,
+                                          const image_header *const hdr,
+                                          protob_ios_t *ios);
 #endif
 
 void workflow_ifaces_init(secbool usb21_landing, protob_ios_t *ios);

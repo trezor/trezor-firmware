@@ -28,3 +28,7 @@ uint32_t ble_read(uint8_t *data, uint16_t max_len) { return 0; }
 bool ble_get_mac(uint8_t *mac, size_t max_len) { return false; }
 
 void ble_event_flush(void) {}
+
+void ble_get_advertising_name(char *name, size_t max_len) {
+  memset(name, 0, max_len);
+}

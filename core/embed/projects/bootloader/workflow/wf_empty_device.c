@@ -54,12 +54,13 @@ workflow_result_t workflow_empty_device(void) {
     res = workflow_host_control(NULL, NULL, &layout, &ui_result, &ios);
 #ifdef USE_BLE
     if (res == WF_OK_UI_ACTION && ui_result == WELCOME_PAIRING_MODE) {
-      res = workflow_ble_pairing_request(NULL, NULL);
+      res = workflow_wireless_setup(NULL, NULL, &ios);
       if (res == WF_OK_PAIRING_COMPLETED || res == WF_OK_PAIRING_FAILED) {
         res = WF_CANCELLED;
         ui_result = WELCOME_CANCEL;
         continue;
       }
+      return res;
     }
 #endif
     if (res == WF_OK_UI_ACTION && ui_result == WELCOME_MENU) {

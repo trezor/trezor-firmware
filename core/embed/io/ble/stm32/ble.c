@@ -847,6 +847,22 @@ bool ble_get_mac(uint8_t *mac, size_t max_len) {
   return false;
 }
 
+void ble_get_advertising_name(char *name, size_t max_len) {
+  ble_driver_t *drv = &g_ble_driver;
+
+  if (max_len < sizeof(drv->adv_cmd.name)) {
+    memset(name, 0, max_len);
+    return;
+  }
+
+  if (!drv->initialized) {
+    memset(name, 0, max_len);
+    return;
+  }
+
+  memcpy(name, drv->adv_cmd.name, sizeof(drv->adv_cmd.name));
+}
+
 static void on_ble_iface_event_poll(void *context, bool read_awaited,
                                     bool write_awaited) {
   UNUSED(context);

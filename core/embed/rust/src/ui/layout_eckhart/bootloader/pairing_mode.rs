@@ -1,3 +1,7 @@
+use super::{
+    super::{cshape::ScreenBorder, theme},
+    BldActionBar, BldActionBarMsg,
+};
 use crate::{
     strutil::TString,
     ui::{
@@ -7,11 +11,6 @@ use crate::{
         layout::simplified::ReturnToC,
         shape::Renderer,
     },
-};
-
-use super::{
-    super::{cshape::ScreenBorder, theme},
-    BldActionBar, BldActionBarMsg,
 };
 
 #[repr(u32)]
@@ -31,14 +30,16 @@ impl ReturnToC for PairingMsg {
 
 pub struct PairingModeScreen {
     message: Label<'static>,
+    name: Label<'static>,
     action_bar: Option<BldActionBar>,
     screen_border: ScreenBorder,
 }
 
 impl PairingModeScreen {
-    pub fn new(message: TString<'static>) -> Self {
+    pub fn new(message: TString<'static>, name: TString<'static>) -> Self {
         Self {
             message: Label::new(message, Alignment::Center, theme::TEXT_NORMAL),
+            name: Label::new(name, Alignment::Center, theme::TEXT_NORMAL),
             action_bar: None,
             screen_border: ScreenBorder::new(theme::BLUE),
         }
@@ -56,8 +57,9 @@ impl Component for PairingModeScreen {
     fn place(&mut self, bounds: Rect) -> Rect {
         let (_header_area, rest) = bounds.split_top(theme::HEADER_HEIGHT);
         let (rest, action_bar_area) = rest.split_bottom(theme::ACTION_BAR_HEIGHT);
-        let content_area = rest.inset(theme::SIDE_INSETS);
+        let (content_area, name_area) = rest.inset(theme::SIDE_INSETS).split_top(70);
         self.message.place(content_area);
+        self.name.place(name_area);
         self.action_bar.place(action_bar_area);
         bounds
     }
@@ -83,6 +85,7 @@ impl Component for PairingModeScreen {
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.message.render(target);
+        self.name.render(target);
         self.action_bar.render(target);
         self.screen_border.render(u8::MAX, target);
     }
@@ -93,5 +96,6 @@ impl crate::trace::Trace for PairingModeScreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("PairingMode");
         t.string("message", *self.message.text());
+        t.string("name", *self.name.text());
     }
 }

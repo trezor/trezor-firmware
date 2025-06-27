@@ -93,6 +93,10 @@ pub enum BootloaderLayout {
     Connect(ConnectScreen),
     #[cfg(feature = "ble")]
     PairingMode(PairingModeScreen),
+    #[cfg(feature = "ble")]
+    WirelessSetup(PairingModeScreen),
+    #[cfg(feature = "ble")]
+    WirelessSetupFinal(ConnectScreen),
 }
 
 impl BootloaderLayoutType for BootloaderLayout {
@@ -103,6 +107,14 @@ impl BootloaderLayoutType for BootloaderLayout {
             BootloaderLayout::Connect(f) => process_frame_event::<ConnectScreen>(f, event),
             #[cfg(feature = "ble")]
             BootloaderLayout::PairingMode(f) => process_frame_event::<PairingModeScreen>(f, event),
+            #[cfg(feature = "ble")]
+            BootloaderLayout::WirelessSetup(f) => {
+                process_frame_event::<PairingModeScreen>(f, event)
+            }
+            #[cfg(feature = "ble")]
+            BootloaderLayout::WirelessSetupFinal(f) => {
+                process_frame_event::<ConnectScreen>(f, event)
+            }
         }
     }
 
@@ -113,10 +125,16 @@ impl BootloaderLayoutType for BootloaderLayout {
             BootloaderLayout::Connect(f) => show(f, true),
             #[cfg(feature = "ble")]
             BootloaderLayout::PairingMode(f) => show(f, true),
+            #[cfg(feature = "ble")]
+            BootloaderLayout::WirelessSetup(f) => show(f, true),
+            #[cfg(feature = "ble")]
+            BootloaderLayout::WirelessSetupFinal(f) => show(f, true),
         }
     }
 
     fn init_welcome() -> Self {
+        // TODO: different UI. needs to decide based on some host already paired:
+        // peer_count() > 0
         let screen = BldWelcomeScreen::new();
         Self::Welcome(screen)
     }
@@ -138,12 +156,31 @@ impl BootloaderLayoutType for BootloaderLayout {
     }
 
     #[cfg(feature = "ble")]
-    fn init_pairing_mode(_initial_setup: bool) -> Self {
+    fn init_pairing_mode(_initial_setup: bool, name: &'static str) -> Self {
         // TODO: different style for initial setup
         let btn = Button::with_text("Cancel".into()).styled(button_default());
-        let screen = PairingModeScreen::new("Waiting for pairing...".into())
+        let screen = PairingModeScreen::new("Waiting for pairing...".into(), name.into())
             .with_action_bar(BldActionBar::new_single(btn));
         Self::PairingMode(screen)
+    }
+
+    #[cfg(feature = "ble")]
+    fn init_wireless_setup(name: &'static str) -> Self {
+        // todo implement correct UI
+        let btn = Button::with_text("Cancel".into()).styled(button_default());
+
+        let screen = PairingModeScreen::new("QR_CODE".into(), name.into())
+            .with_action_bar(BldActionBar::new_single(btn));
+        Self::WirelessSetup(screen)
+    }
+
+    #[cfg(feature = "ble")]
+    fn init_wireless_setup_final() -> Self {
+        // todo implement correct UI
+        let btn = Button::with_text("Cancel".into()).styled(button_default());
+        let screen =
+            ConnectScreen::new("WAIT".into()).with_action_bar(BldActionBar::new_single(btn));
+        Self::WirelessSetupFinal(screen)
     }
 }
 

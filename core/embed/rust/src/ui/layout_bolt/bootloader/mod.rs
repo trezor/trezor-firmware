@@ -190,7 +190,7 @@ impl BootloaderLayoutType for BootloaderLayout {
     }
 
     #[cfg(feature = "ble")]
-    fn init_pairing_mode(initial_setup: bool) -> Self {
+    fn init_pairing_mode(initial_setup: bool, _name: &'static str) -> Self {
         let bg = if initial_setup { WELCOME_COLOR } else { BLD_BG };
 
         let btn = if initial_setup {
@@ -207,6 +207,16 @@ impl BootloaderLayoutType for BootloaderLayout {
             btn,
         );
         Self::PairingMode(frame)
+    }
+
+    #[cfg(feature = "ble")]
+    fn init_wireless_setup(_name: &'static str) -> Self {
+        unimplemented!()
+    }
+
+    #[cfg(feature = "ble")]
+    fn init_wireless_setup_final() -> Self {
+        unimplemented!()
     }
 }
 
