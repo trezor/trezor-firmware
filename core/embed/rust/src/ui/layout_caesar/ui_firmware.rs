@@ -468,6 +468,7 @@ impl FirmwareUI for UICaesar {
         extra_items: Option<Obj>,
         extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
+        external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error> {
         // collect available info pages
         let mut info_pages: Vec<(TString, Obj), 2> = Vec::new();
@@ -481,6 +482,11 @@ impl FirmwareUI for UICaesar {
                 account_title.unwrap_or(TR::confirm_total__title_sending_from.into());
             unwrap!(info_pages.push((account_title, info)));
         }
+        if external_menu && !info_pages.is_empty() {
+            return Err(Error::ValueError(
+                c"Cannot use both info pages and external menu",
+            ));
+        }
 
         // button layouts and actions
         let verb_cancel: TString = verb_cancel.unwrap_or(TString::empty());
@@ -488,7 +494,7 @@ impl FirmwareUI for UICaesar {
             // if there are no info pages, the right button is not needed
             // if verb_cancel is "^", the left button is an arrow pointing up
             let left_btn = Some(ButtonDetails::from_text_possible_icon(verb_cancel));
-            let right_btn = has_pages_after.then(|| {
+            let right_btn = (has_pages_after || external_menu).then(|| {
                 ButtonDetails::text("i".into())
                     .with_fixed_width(theme::BUTTON_ICON_WIDTH)
                     .with_font(fonts::FONT_NORMAL)
@@ -499,6 +505,8 @@ impl FirmwareUI for UICaesar {
                 ButtonLayout::new(left_btn, middle_btn, right_btn),
                 if has_pages_after {
                     ButtonActions::cancel_confirm_next()
+                } else if external_menu {
+                    ButtonActions::cancel_confirm_info()
                 } else {
                     ButtonActions::cancel_confirm_none()
                 },

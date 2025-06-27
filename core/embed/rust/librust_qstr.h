@@ -271,6 +271,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_experimental_mode__enable;
   MP_QSTR_experimental_mode__only_for_dev;
   MP_QSTR_experimental_mode__title;
+  MP_QSTR_external_menu;
   MP_QSTR_extra;
   MP_QSTR_extra_item;
   MP_QSTR_extra_items;

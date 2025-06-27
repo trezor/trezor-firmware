@@ -318,6 +318,7 @@ impl FirmwareUI for UIEckhart {
         extra_items: Option<Obj>,
         extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
+        _external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error> {
         // collect available info
         let account_paragraphs = if let Some(items) = account_items {
