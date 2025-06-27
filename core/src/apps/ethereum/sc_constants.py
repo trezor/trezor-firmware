@@ -5,6 +5,7 @@ from ubinascii import unhexlify
 SC_FUNC_SIG_BYTES = const(4)
 SC_ARGUMENT_BYTES = const(32)
 SC_ARGUMENT_ADDRESS_BYTES = const(20)
+SC_FUNC_APPROVE_REVOKE_AMOUNT = const(0)
 
 assert SC_ARGUMENT_ADDRESS_BYTES <= SC_ARGUMENT_BYTES
 

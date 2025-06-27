@@ -1445,6 +1445,8 @@ pub enum TranslatedString {
     recovery__share_from_group_entered_template = 1044,  // "Share #{0} from Group #{1} entered."
     send__cancel_transaction = 1045,  // "Cancel transaction"
     send__multisig_different_paths = 1046,  // "Using different paths for different XPUBs."
+    #[cfg(feature = "universal_fw")]
+    ethereum__contract_address = 1047,  // "Provider contract address"
 }
 
 impl TranslatedString {
@@ -3195,6 +3197,8 @@ impl TranslatedString {
             (Self::recovery__share_from_group_entered_template, "Share #{0} from Group #{1} entered."),
             (Self::send__cancel_transaction, "Cancel transaction"),
             (Self::send__multisig_different_paths, "Using different paths for different XPUBs."),
+            #[cfg(feature = "universal_fw")]
+            (Self::ethereum__contract_address, "Provider contract address"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3665,6 +3669,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__approve_unlimited_template, Self::ethereum__approve_unlimited_template),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__contract, Self::ethereum__contract),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__contract_address, Self::ethereum__contract_address),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__data_size_template, Self::ethereum__data_size_template),
         #[cfg(feature = "universal_fw")]
