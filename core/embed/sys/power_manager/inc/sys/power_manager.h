@@ -197,3 +197,28 @@ pm_status_t pm_charging_set_max_current(uint16_t current_ma);
  * @return pm_status_t Status code indicating success or failure
  */
 pm_status_t pm_set_soc_limit(uint8_t limit);
+
+/**
+ * @brief Suspends driver activity so the CPU can enter low-power mode.
+ *
+ * Suspending may take some time if the driver is currently
+ * performing an operation. Caller may check the status by
+ * pm_is_suspended().
+ *
+ * @return true if the power manager was successfully suspended, false otherwise
+ */
+bool pm_driver_suspend(void);
+
+/**
+ * @brief Resume the power manager after it has been suspended
+ *
+ * @return true if the power manager was successfully resumed, false otherwise
+ *  */
+bool pm_driver_resume(void);
+
+/**
+ * @brief Check if the power manager is suspended
+ *
+ * @return true if the power manager is suspended, false otherwise
+ */
+bool pm_driver_is_suspended(void);
