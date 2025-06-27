@@ -11,13 +11,12 @@ use crate::{
             Component, Event, EventCtx, Paginate, Qr,
         },
         geometry::Rect,
+        layout::util::MAX_XPUBS,
         shape::Renderer,
     },
 };
 
 use super::{theme, Frame, FrameMsg};
-
-const MAX_XPUBS: usize = 16;
 
 pub struct AddressDetails {
     qr_code: Frame<Qr>,

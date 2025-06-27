@@ -26,7 +26,8 @@ pub const PARAGRAPH_TOP_SPACE: i16 = -1;
 /// Offset of paragraph bounding box bottom relative to bottom of its text.
 pub const PARAGRAPH_BOTTOM_SPACE: i16 = 5;
 
-pub type ParagraphVecLong<'a> = Vec<Paragraph<'a>, 32>;
+// Size derived from MAX_XPUBS + 2 more props
+pub type ParagraphVecLong<'a> = Vec<Paragraph<'a>, 36>;
 pub type ParagraphVecShort<'a> = Vec<Paragraph<'a>, 8>;
 
 pub trait ParagraphSource<'a> {

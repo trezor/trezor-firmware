@@ -36,6 +36,7 @@ def _get_xpubs(
 
 @with_keychain
 async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Address:
+    from trezor import TR
     from trezor.enums import InputScriptType
     from trezor.messages import Address
     from trezor.ui.layouts import (
@@ -105,6 +106,7 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
 
     if msg.show_display:
         path = address_n_to_str(address_n)
+        subtitle = TR.address__coin_address_template.format(coin.coin_shortcut)
         if multisig:
             if multisig.nodes:
                 pubnodes = multisig.nodes
@@ -138,6 +140,7 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
 
             await show_address(
                 address_short,
+                subtitle=subtitle,
                 case_sensitive=address_case_sensitive,
                 path=path,
                 multisig_index=multisig_index,
@@ -149,6 +152,7 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
             account = address_n_to_name_or_unknown(coin, address_n, script_type)
             await show_address(
                 address_short,
+                subtitle=subtitle,
                 address_qr=address,
                 case_sensitive=address_case_sensitive,
                 path=path,

@@ -1445,6 +1445,9 @@ pub enum TranslatedString {
     recovery__share_from_group_entered_template = 1044,  // "Share #{0} from Group #{1} entered."
     send__cancel_transaction = 1045,  // "Cancel transaction"
     send__multisig_different_paths = 1046,  // "Using different paths for different XPUBs."
+    address__xpub = 1047,  // {"Bolt": "XPUB", "Caesar": "XPUB", "Delizia": "XPUB", "Eckhart": "Public key (XPUB)"}
+    words__cancel_question = 1048,  // "Cancel?"
+    address__coin_address_template = 1049,  // "{0} address"
 }
 
 impl TranslatedString {
@@ -3195,6 +3198,16 @@ impl TranslatedString {
             (Self::recovery__share_from_group_entered_template, "Share #{0} from Group #{1} entered."),
             (Self::send__cancel_transaction, "Cancel transaction"),
             (Self::send__multisig_different_paths, "Using different paths for different XPUBs."),
+            #[cfg(feature = "layout_bolt")]
+            (Self::address__xpub, "XPUB"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::address__xpub, "XPUB"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::address__xpub, "XPUB"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::address__xpub, "Public key (XPUB)"),
+            (Self::words__cancel_question, "Cancel?"),
+            (Self::address__coin_address_template, "{0} address"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3208,6 +3221,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_address__cancel_contact_support, Self::address__cancel_contact_support),
         (Qstr::MP_QSTR_address__cancel_receive, Self::address__cancel_receive),
         (Qstr::MP_QSTR_address__check_with_source, Self::address__check_with_source),
+        (Qstr::MP_QSTR_address__coin_address_template, Self::address__coin_address_template),
         (Qstr::MP_QSTR_address__confirmed, Self::address__confirmed),
         (Qstr::MP_QSTR_address__public_key, Self::address__public_key),
         (Qstr::MP_QSTR_address__public_key_confirmed, Self::address__public_key_confirmed),
@@ -3215,6 +3229,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_address__title_cosigner, Self::address__title_cosigner),
         (Qstr::MP_QSTR_address__title_receive_address, Self::address__title_receive_address),
         (Qstr::MP_QSTR_address__title_yours, Self::address__title_yours),
+        (Qstr::MP_QSTR_address__xpub, Self::address__xpub),
         (Qstr::MP_QSTR_address_details__account_info, Self::address_details__account_info),
         (Qstr::MP_QSTR_address_details__derivation_path, Self::address_details__derivation_path),
         (Qstr::MP_QSTR_address_details__derivation_path_colon, Self::address_details__derivation_path_colon),
@@ -4583,6 +4598,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__blockhash, Self::words__blockhash),
         (Qstr::MP_QSTR_words__buying, Self::words__buying),
         (Qstr::MP_QSTR_words__cancel_and_exit, Self::words__cancel_and_exit),
+        (Qstr::MP_QSTR_words__cancel_question, Self::words__cancel_question),
         (Qstr::MP_QSTR_words__chain, Self::words__chain),
         (Qstr::MP_QSTR_words__confirm, Self::words__confirm),
         (Qstr::MP_QSTR_words__confirm_fee, Self::words__confirm_fee),

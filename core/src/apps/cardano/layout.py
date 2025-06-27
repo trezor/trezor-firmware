@@ -1111,6 +1111,7 @@ async def show_cardano_address(
 
     await layouts.show_address(
         address,
+        subtitle=TR.address__coin_address_template.format("ADA"),
         path=path,
         account=account,
         network=network_name,

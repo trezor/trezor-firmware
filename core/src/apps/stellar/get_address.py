@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 
 @auto_keychain(__name__)
 async def get_address(msg: StellarGetAddress, keychain: Keychain) -> StellarAddress:
+    from trezor import TR
     from trezor.messages import StellarAddress
     from trezor.ui.layouts import show_address
 
@@ -28,11 +29,13 @@ async def get_address(msg: StellarGetAddress, keychain: Keychain) -> StellarAddr
     if msg.show_display:
         from . import PATTERN, SLIP44_ID
 
+        coin = "XLM"
         await show_address(
             address,
+            subtitle=TR.address__coin_address_template.format(coin),
             case_sensitive=False,
             path=paths.address_n_to_str(address_n),
-            account=paths.get_account_name("XLM", msg.address_n, PATTERN, SLIP44_ID),
+            account=paths.get_account_name(coin, msg.address_n, PATTERN, SLIP44_ID),
             chunkify=bool(msg.chunkify),
         )
 

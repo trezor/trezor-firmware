@@ -46,11 +46,12 @@
       "Bolt": "Si l'adresse de réception ne correspond pas, contactez l'assistance Trezor sur trezor.io/support.",
       "Caesar": "Si l'adresse de réception ne correspond pas, contactez l'assistance Trezor sur trezor.io/support.",
       "Delizia": "Si l'adresse de réception ne correspond pas, contactez l'assistance Trezor sur trezor.io/support.",
-      "Eckhart": "Si l'adresse ne correspond pas, contactez le support Trezor sur trezor.io/support."
+      "Eckhart": "Si l'adr. ne correspond pas, contactez l'assistance Trezor : trezor.io/support."
     },
     "address__cancel_receive": "Annuler réception",
     "address__confirmed": "Adresse de réception confirmée",
     "address__public_key": "Clé publique",
+    "address__coin_address_template": "{0} adr.",
     "address__public_key_confirmed": "Clé publique confirmée",
     "address__qr_code": "Code QR",
     "address__title_cosigner": "Cosignataire",
@@ -986,6 +987,7 @@
     "words__blockhash": "Hachage de bloc",
     "words__buying": "Achat",
     "words__cancel_and_exit": "Annuler et quitter",
+    "words__cancel_question": "Annuler ?",
     "words__chain": "Chaîne",
     "words__confirm": "Conf.",
     "words__confirm_fee": "Conf. les frais",
