@@ -29,99 +29,15 @@
 #include "power_manager_internal.h"
 
 static void pm_battery_sampling(float vbat, float ibat, float ntc_temp);
+static void pm_parse_power_source_state(pm_driver_t* drv);
 
 void pm_monitor_power_sources(void) {
-  pm_driver_t* drv = &g_pm;
-
-  // Check if PMIC data is ready, otherwise skip processing
-  if (!drv->pmic_measurement_ready) {
-    return;
-  }
-
-  // Check USB power source status
-  if (drv->pmic_data.usb_status != 0x0) {
-    if (!drv->usb_connected) {
-      drv->usb_connected = true;
-    }
-  } else {
-    if (drv->usb_connected) {
-      drv->usb_connected = false;
-    }
-  }
-
-  // Check wireless charger status
-  if (drv->wireless_data.vout_ready) {
-    if (!drv->wireless_connected) {
-      drv->wireless_connected = true;
-    }
-  } else {
-    if (drv->wireless_connected) {
-      drv->wireless_connected = false;
-    }
-  }
-
-  // Check battery voltage for critical (undervoltage) threshold
-  if ((drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_THR_V) &&
-      !drv->battery_critical) {
-    // Force Fuel gauge to 0, keep the covariance
-    fuel_gauge_set_soc(&drv->fuel_gauge, 0.0f, drv->fuel_gauge.P);
-
-    drv->battery_critical = true;
-  } else if (drv->pmic_data.vbat > (PM_BATTERY_UNDERVOLT_RECOVERY_THR_V) &&
-             drv->battery_critical) {
-    drv->battery_critical = false;
-  }
-
-  // Run battery charging controller
-  pm_charging_controller(drv);
-
-  // Fuel gauge not initialized yet, battery SoC not available,
-  // Sample the battery data into the circular buffer, request new PMIC
-  if (!drv->fuel_gauge_initialized) {
-    pm_battery_sampling(drv->pmic_data.vbat, drv->pmic_data.ibat,
-                        drv->pmic_data.ntc_temp);
-
-    // Request fresh measurements
-    pmic_measure(pm_pmic_data_ready, NULL);
-    drv->pmic_measurement_ready = false;
-
-    return;
-  }
-
-  fuel_gauge_update(&drv->fuel_gauge, drv->pmic_sampling_period_ms,
-                    drv->pmic_data.vbat, drv->pmic_data.ibat,
-                    drv->pmic_data.ntc_temp);
-
-  // Charging completed
-  if (drv->pmic_data.charge_status & 0x2) {
-    // Force fuel gauge to 100%, keep the covariance
-    fuel_gauge_set_soc(&drv->fuel_gauge, 1.0f, drv->fuel_gauge.P);
-  }
-
-  // Ceil the float soc to user-friendly integer
-  drv->soc_ceiled = (uint8_t)(drv->fuel_gauge.soc_latched * 100 + 0.999f);
-
-  // Check battery voltage for low threshold
-  if (drv->soc_ceiled <= PM_BATTERY_LOW_THRESHOLD_SOC && !drv->battery_low) {
-    drv->battery_low = true;
-  } else if (drv->soc_ceiled > PM_BATTERY_LOW_THRESHOLD_SOC &&
-             drv->battery_low) {
-    drv->battery_low = false;
-  }
-
-  // Process state machine with updated battery and power source information
-  pm_process_state_machine();
-
-  pm_store_data_to_backup_ram();
-
-  // Request fresh measurements
+  // Periodically called timer to request PMIC measurements. PMIC will call
+  // pm_pmic_data_ready() callback when the measurements are ready.
   pmic_measure(pm_pmic_data_ready, NULL);
-  drv->pmic_measurement_ready = false;
-
-  drv->state_machine_stabilized = true;
 }
 
-// PMIC measurement callback
+// pmic measurement callback
 void pm_pmic_data_ready(void* context, pmic_report_t* report) {
   pm_driver_t* drv = &g_pm;
 
@@ -129,19 +45,56 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
   if (drv->pmic_last_update_ms == 0) {
     drv->pmic_sampling_period_ms = PM_BATTERY_SAMPLING_PERIOD_MS;
   } else {
-    // Timeout, reset the last update timestamp
+    // Calculate the time since the last PMIC update
     drv->pmic_sampling_period_ms = systick_ms() - drv->pmic_last_update_ms;
   }
-
   drv->pmic_last_update_ms = systick_ms();
 
-  // Copy PMIC data
+  // Copy pmic data
   memcpy(&drv->pmic_data, report, sizeof(pmic_report_t));
 
   // Get wireless charger data
   stwlc38_get_report(&drv->wireless_data);
 
-  drv->pmic_measurement_ready = true;
+  pm_parse_power_source_state(drv);
+
+  // Run battery charging controller
+  pm_charging_controller(drv);
+
+  if (!drv->fuel_gauge_initialized) {
+    // Fuel gauge not initialized yet, battery SoC not available, sample the
+    // battery data into the circular buffer.
+    pm_battery_sampling(drv->pmic_data.vbat, drv->pmic_data.ibat,
+                        drv->pmic_data.ntc_temp);
+
+  } else {
+    fuel_gauge_update(&drv->fuel_gauge, drv->pmic_sampling_period_ms,
+                      drv->pmic_data.vbat, drv->pmic_data.ibat,
+                      drv->pmic_data.ntc_temp);
+
+    // Charging completed
+    if (drv->pmic_data.charge_status & 0x2) {
+      // Force fuel gauge to 100%, keep the covariance
+      fuel_gauge_set_soc(&drv->fuel_gauge, 1.0f, drv->fuel_gauge.P);
+    }
+
+    // Ceil the float soc to user-friendly integer
+    drv->soc_ceiled = (uint8_t)(drv->fuel_gauge.soc_latched * 100 + 0.999f);
+
+    // Check battery voltage for low threshold
+    if (drv->soc_ceiled <= PM_BATTERY_LOW_THRESHOLD_SOC && !drv->battery_low) {
+      drv->battery_low = true;
+    } else if (drv->soc_ceiled > PM_BATTERY_LOW_THRESHOLD_SOC &&
+               drv->battery_low) {
+      drv->battery_low = false;
+    }
+
+    // Process state machine with updated battery and power source information
+    pm_process_state_machine();
+
+    pm_store_data_to_backup_ram();
+    drv->state_machine_stabilized = true;
+  }
 }
 
 void pm_charging_controller(pm_driver_t* drv) {
@@ -215,6 +168,42 @@ static void pm_battery_sampling(float vbat, float ibat, float ntc_temp) {
     if (drv->bat_sampling_buf_tail_idx >= PM_BATTERY_SAMPLING_BUF_SIZE) {
       drv->bat_sampling_buf_tail_idx = 0;
     }
+  }
+}
+
+static void pm_parse_power_source_state(pm_driver_t* drv) {
+  // Check USB power source status
+  if (drv->pmic_data.usb_status != 0x0) {
+    if (!drv->usb_connected) {
+      drv->usb_connected = true;
+    }
+  } else {
+    if (drv->usb_connected) {
+      drv->usb_connected = false;
+    }
+  }
+
+  // Check wireless charger status
+  if (drv->wireless_data.vout_ready) {
+    if (!drv->wireless_connected) {
+      drv->wireless_connected = true;
+    }
+  } else {
+    if (drv->wireless_connected) {
+      drv->wireless_connected = false;
+    }
+  }
+
+  // Check battery voltage for critical (undervoltage) threshold
+  if ((drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_THR_V) &&
+      !drv->battery_critical) {
+    // Force Fuel gauge to 0, keep the covariance
+    fuel_gauge_set_soc(&drv->fuel_gauge, 0.0f, drv->fuel_gauge.P);
+
+    drv->battery_critical = true;
+  } else if (drv->pmic_data.vbat > (PM_BATTERY_UNDERVOLT_RECOVERY_THR_V) &&
+             drv->battery_critical) {
+    drv->battery_critical = false;
   }
 }
 

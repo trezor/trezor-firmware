@@ -78,14 +78,14 @@ pm_status_t pm_init(bool inherit_state) {
     return PM_ERROR;
   }
 
-  systimer_set_periodic(drv->monitoring_timer, PM_BATTERY_SAMPLING_PERIOD_MS);
-
   // Create shutdown timer
   drv->shutdown_timer = systimer_create(pm_shutdown_timer_handler, NULL);
   if (drv->shutdown_timer == NULL) {
     pm_deinit();
     return PM_ERROR;
   }
+
+  systimer_set_periodic(drv->monitoring_timer, PM_BATTERY_SAMPLING_PERIOD_MS);
 
   // Initial power source measurement
   pmic_measure(pm_pmic_data_ready, NULL);
@@ -531,6 +531,47 @@ static void pm_shutdown_timer_handler(void* context) {
   pm_driver_t* drv = &g_pm;
   drv->shutdown_timer_elapsed = true;
   pm_process_state_machine();
+}
+
+bool pm_driver_suspend(void) {
+  pm_driver_t* drv = &g_pm;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  irq_key_t irq_key = irq_lock();
+  systimer_delete(drv->monitoring_timer);
+  irq_unlock(irq_key);
+
+  return true;
+}
+
+bool pm_driver_resume(void) {
+  pm_driver_t* drv = &g_pm;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  // Recreate the monitoring timer
+  drv->monitoring_timer = systimer_create(pm_monitoring_timer_handler, NULL);
+  if (drv->monitoring_timer == NULL) {
+    return false;
+  }
+
+  // Request new pmic measurement
+  pmic_measure(pm_pmic_data_ready, NULL);
+
+  // Set the periodic sampling period
+  systimer_set_periodic(drv->monitoring_timer, PM_BATTERY_SAMPLING_PERIOD_MS);
+
+  return true;
+}
+
+bool pm_driver_is_suspended(void) {
+  // No specific pending tasks, just return true
+  return true;
 }
 
 #endif
