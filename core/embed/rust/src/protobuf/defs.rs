@@ -17,8 +17,8 @@ impl MsgDef {
         })
     }
 
-    pub fn for_wire_id(wire_id: u16) -> Option<Self> {
-        find_msg_offset_by_wire(wire_id).map(|msg_offset| unsafe {
+    pub fn for_wire_id(enum_name: u16, wire_id: u16) -> Option<Self> {
+        find_msg_offset_by_wire(enum_name, wire_id).map(|msg_offset| unsafe {
             // SAFETY: We are taking the offset right out of the definitions so we can be
             // sure it's to be trusted.
             get_msg(msg_offset)
@@ -146,9 +146,10 @@ fn find_msg_offset_by_name(msg_name: u16) -> Option<u16> {
         .ok()
 }
 
-fn find_msg_offset_by_wire(wire_id: u16) -> Option<u16> {
+fn find_msg_offset_by_wire(enum_name: u16, wire_id: u16) -> Option<u16> {
     #[repr(C, packed)]
     struct WireDef {
+        enum_name: u16,
         wire_id: u16,
         msg_offset: u16,
     }
@@ -160,7 +161,15 @@ fn find_msg_offset_by_wire(wire_id: u16) -> Option<u16> {
         )
     };
     wire_defs
-        .binary_search_by_key(&wire_id, |def| def.wire_id)
+        .binary_search_by(|def| {
+            // need to make a copy to avoid taking a reference of unaligned value from
+            // packed struct, see rust error E0793
+            let def_enum_name = def.enum_name;
+            def_enum_name.cmp(&enum_name).then_with(|| {
+                let def_wire_id = def.wire_id;
+                def_wire_id.cmp(&wire_id)
+            })
+        })
         .map(|i| wire_defs[i].msg_offset)
         .ok()
 }

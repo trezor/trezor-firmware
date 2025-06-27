@@ -405,7 +405,7 @@ if __debug__:
 
                 req_type = None
                 try:
-                    req_type = protobuf.type_for_wire(msg.type)
+                    req_type = protobuf.type_for_wire("MessageType", msg.type)
                     msg_type = req_type.MESSAGE_NAME
                 except Exception:
                     msg_type = f"{msg.type} - unknown message type"

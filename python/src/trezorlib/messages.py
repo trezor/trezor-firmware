@@ -7927,7 +7927,7 @@ class ThpCreateNewSession(protobuf.MessageType):
 
 
 class ThpPairingRequest(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
+    MESSAGE_WIRE_TYPE = 1006
     FIELDS = {
         1: protobuf.Field("host_name", "string", repeated=False, required=False, default=None),
     }
@@ -7941,11 +7941,11 @@ class ThpPairingRequest(protobuf.MessageType):
 
 
 class ThpPairingRequestApproved(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
+    MESSAGE_WIRE_TYPE = 1007
 
 
 class ThpSelectMethod(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
+    MESSAGE_WIRE_TYPE = 1008
     FIELDS = {
         1: protobuf.Field("selected_pairing_method", "ThpPairingMethod", repeated=False, required=True),
     }
@@ -7959,11 +7959,11 @@ class ThpSelectMethod(protobuf.MessageType):
 
 
 class ThpPairingPreparationsFinished(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
+    MESSAGE_WIRE_TYPE = 1009
 
 
 class ThpCodeEntryCommitment(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
+    MESSAGE_WIRE_TYPE = 1016
     FIELDS = {
         1: protobuf.Field("commitment", "bytes", repeated=False, required=True),
     }
@@ -7977,7 +7977,7 @@ class ThpCodeEntryCommitment(protobuf.MessageType):
 
 
 class ThpCodeEntryChallenge(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
+    MESSAGE_WIRE_TYPE = 1017
     FIELDS = {
         1: protobuf.Field("challenge", "bytes", repeated=False, required=True),
     }
@@ -7991,7 +7991,7 @@ class ThpCodeEntryChallenge(protobuf.MessageType):
 
 
 class ThpCodeEntryCpaceTrezor(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
+    MESSAGE_WIRE_TYPE = 1018
     FIELDS = {
         1: protobuf.Field("cpace_trezor_public_key", "bytes", repeated=False, required=True),
     }
@@ -8005,7 +8005,7 @@ class ThpCodeEntryCpaceTrezor(protobuf.MessageType):
 
 
 class ThpCodeEntryCpaceHostTag(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
+    MESSAGE_WIRE_TYPE = 1019
     FIELDS = {
         1: protobuf.Field("cpace_host_public_key", "bytes", repeated=False, required=True),
         2: protobuf.Field("tag", "bytes", repeated=False, required=True),
@@ -8022,7 +8022,7 @@ class ThpCodeEntryCpaceHostTag(protobuf.MessageType):
 
 
 class ThpCodeEntrySecret(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
+    MESSAGE_WIRE_TYPE = 1020
     FIELDS = {
         1: protobuf.Field("secret", "bytes", repeated=False, required=True),
     }
@@ -8036,7 +8036,7 @@ class ThpCodeEntrySecret(protobuf.MessageType):
 
 
 class ThpQrCodeTag(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
+    MESSAGE_WIRE_TYPE = 1024
     FIELDS = {
         1: protobuf.Field("tag", "bytes", repeated=False, required=True),
     }
@@ -8050,7 +8050,7 @@ class ThpQrCodeTag(protobuf.MessageType):
 
 
 class ThpQrCodeSecret(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
+    MESSAGE_WIRE_TYPE = 1025
     FIELDS = {
         1: protobuf.Field("secret", "bytes", repeated=False, required=True),
     }
@@ -8064,7 +8064,7 @@ class ThpQrCodeSecret(protobuf.MessageType):
 
 
 class ThpNfcTagHost(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
+    MESSAGE_WIRE_TYPE = 1032
     FIELDS = {
         1: protobuf.Field("tag", "bytes", repeated=False, required=True),
     }
@@ -8078,7 +8078,7 @@ class ThpNfcTagHost(protobuf.MessageType):
 
 
 class ThpNfcTagTrezor(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
+    MESSAGE_WIRE_TYPE = 1033
     FIELDS = {
         1: protobuf.Field("tag", "bytes", repeated=False, required=True),
     }
@@ -8129,11 +8129,11 @@ class ThpCredentialResponse(protobuf.MessageType):
 
 
 class ThpEndRequest(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
+    MESSAGE_WIRE_TYPE = 1012
 
 
 class ThpEndResponse(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
+    MESSAGE_WIRE_TYPE = 1013
 
 
 class ThpCredentialMetadata(protobuf.MessageType):

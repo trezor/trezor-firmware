@@ -61,8 +61,6 @@ INT_TYPES = (
     FieldDescriptor.TYPE_SINT32,
 )
 
-MESSAGE_TYPE_ENUM = "MessageType"
-
 LengthDelimited = c.Struct(
     "len" / c.VarInt,
     "bytes" / c.Bytes(c.this.len),
@@ -128,6 +126,7 @@ NAME_ENTRY = c.Sequence(
 )
 
 WIRETYPE_ENTRY = c.Sequence(
+    "enum_name" / c.Int16ul,
     "wire_id" / c.Int16ul,
     "msg_offset" / c.Int16ul,
 )
@@ -237,18 +236,18 @@ class ProtoMessage:
 
     @classmethod
     def from_message(cls, descriptor: "Descriptor", message):
-        message_type = find_by_name(descriptor.message_type_enum.value, message.name)
         # use extensions set on the message_type entry (if any)
-        extensions = descriptor.get_extensions(message_type)
+        extensions = descriptor.wire_enum_extensions.get(message.name, {})
         # override with extensions set on the message itself
         extensions.update(descriptor.get_extensions(message))
 
+        wire_type = descriptor.wire_for_name(message.name)
         if "wire_type" in extensions:
+            if wire_type is not None and wire_type != extensions["wire_type"]:
+                raise RuntimeError(
+                    f"Wire type mismatch for {message.name}: {extensions['wire_type']} {wire_type}"
+                )
             wire_type = extensions["wire_type"]
-        elif message_type is not None:
-            wire_type = message_type.number
-        else:
-            wire_type = None
 
         return cls(
             name=message.name,
@@ -350,10 +349,7 @@ class Descriptor:
             ]
             logging.debug(f"found {len(self.files)} bitcoin-only files")
 
-        # find message_type enum
-        top_level_enums = itertools.chain.from_iterable(f.enum_type for f in self.files)
-        self.message_type_enum = find_by_name(top_level_enums, MESSAGE_TYPE_ENUM, ())
-        self.convert_enum_value_names(self.message_type_enum)
+        self.message_types, self.wire_enum_extensions = self.get_wire_enums()
 
         # find messages and enums
         self.messages = []
@@ -424,6 +420,43 @@ class Descriptor:
     def convert_enum_value_names(self, enum):
         for value in enum.value:
             value.name = strip_enum_prefix(enum.name, value.name)
+
+    def get_wire_enums(self):
+        numbers = {}
+        extensions = {}
+
+        for e in itertools.chain.from_iterable(f.enum_type for f in self.files):
+            if not self.get_extensions(e).get("wire_enum"):
+                continue
+            self.convert_enum_value_names(e)
+            for val in e.value:
+                value_extensions = self.get_extensions(val)
+                if (
+                    val.name in extensions
+                    and len(extensions[val.name]) > 0
+                    and extensions[val.name] != value_extensions
+                ):
+                    # NOTE: should probably do some kind of merge but nothing needs it currently
+                    raise RuntimeError(
+                        f"Wire type extensions mismatch for {val.name}: {value_extensions} {extensions[val.name]}"
+                    )
+                extensions[val.name] = value_extensions
+                numbers.setdefault(val.name, {})[e.name] = val.number
+
+        for msg_name, msg_numbers in numbers.items():
+            if len(set(msg_numbers.values())) != 1:
+                # we are specifying two different message ids via two different wire_enums
+                # this is not technically a problem but we want to be nice and avoid using different ids for logically same things
+                raise RuntimeError(f"Wire type mismatch for {msg_name}")
+
+        return numbers, extensions
+
+    def wire_for_name(self, name):
+        message_types = set(self.message_types.get(name, {}).values())
+        if len(message_types) == 1:
+            return message_types.pop()
+        else:
+            return None
 
 
 class PythonRenderer:
@@ -558,9 +591,8 @@ class RustBlobRenderer:
         enums = []
         cursor = 0
         for enum in sorted(self.descriptor.enums, key=lambda e: e.name):
-            # MessageType enum has more than 255 elements yet is never used
-            # for testing membership or iteration.
-            if enum.name == MESSAGE_TYPE_ENUM:
+            # Exclude wire type enums to avoid duplicate data
+            if self.descriptor.get_extensions(enum).get("wire_enum"):
                 continue
             self.enum_map[enum.name] = cursor
             enum_blob = ENUM_ENTRY.build(sorted(v.number for v in enum.value))
@@ -675,12 +707,21 @@ class RustBlobRenderer:
     def build_blob_wire(self):
         # create wire-type -> message mapping
         wire_messages = [m for m in self.descriptor.messages if m.wire_type is not None]
-        # sorting by wire-type
+        # 2nd level sorting by wire-type
         wire_messages.sort(key=lambda m: m.wire_type)
-        return b"".join(
-            WIRETYPE_ENTRY.build((m.wire_type, self.msg_map[m.name]))
-            for m in wire_messages
+        # 1st level sorting by wire enum name
+        wire_enum_names = list(
+            sorted(set(e for vs in self.descriptor.message_types.values() for e in vs))
         )
+
+        result = []
+        for en in wire_enum_names:
+            name_qstr = self.qstr_map[en]
+            for m in wire_messages:
+                result.append(
+                    WIRETYPE_ENTRY.build((name_qstr, m.wire_type, self.msg_map[m.name]))
+                )
+        return b"".join(result)
 
 
 ReadableFile = click.Path(exists=True, dir_okay=False, readable=True)

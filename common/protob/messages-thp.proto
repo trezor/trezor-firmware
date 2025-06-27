@@ -14,6 +14,8 @@ option (include_in_bitcoin_only) = true;
  * Mapping between Trezor wire identifier (uint) and a Thp protobuf message
  */
 enum ThpMessageType {
+    option (wire_enum) = true;
+
     reserved 0 to 19;  // Values reserved by other messages, see messages.proto
     ThpMessageType_Cancel = 20;
     reserved 21 to 25;
