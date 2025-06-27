@@ -62,7 +62,7 @@ jobs:
       - run: nix-shell --run "poetry run trezorctl get-features"
       - run: |
           # log serial console to file; sleep is used because tio needs stdin that is not /dev/null
-          nix-shell --arg hardwareTest true --run "sleep 8h | tio --timestamp --no-reconnect /dev/ttyTREZOR &> trezor.log" &
+          nix-shell --arg hardwareTest true --run "tio --timestamp --no-reconnect /dev/ttyTREZOR &> trezor.log" &
           nix-shell --run "poetry run pytest -v --verbose-log-file pytest.log tests/device_tests $TESTOPTS"
       - run: tail -n50 trezor.log || true
         if: failure()
