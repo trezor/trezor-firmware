@@ -24,6 +24,8 @@
 #include "wire_iface_ble.h"
 
 #include <io/ble.h>
+#include <rtl/mini_printf.h>
+#include <sec/rng.h>
 #include <sys/sysevent.h>
 #include <sys/systick.h>
 
@@ -114,7 +116,7 @@ wire_iface_t* ble_iface_init(void) {
           .cmd_type = BLE_SWITCH_ON,
           .data = {.adv_start =
                        {
-                           .name = "Trezor Bootloader",
+                           .name = MODEL_FULL_NAME,
                            .static_mac = false,
                        }},
       };
@@ -158,6 +160,13 @@ void ble_iface_end_pairing(void) {
   }
 }
 
+char get_random_char(void) {
+  static const char charset[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const size_t max_index = sizeof(charset) - 1;  // exclude terminating '\0'
+  uint32_t key = rng_get() % max_index;
+  return charset[key];
+}
+
 bool ble_iface_start_pairing(void) {
   ble_state_t state = {0};
 
@@ -181,14 +190,18 @@ bool ble_iface_start_pairing(void) {
 
   ble_event_flush();
 
+  char adv_name[BLE_ADV_NAME_LEN];
+  mini_snprintf(adv_name, sizeof(adv_name), "%s (%c%c%c)", MODEL_FULL_NAME,
+                get_random_char(), get_random_char(), get_random_char());
+
   ble_command_t cmd = {
       .cmd_type = BLE_PAIRING_MODE,
       .data = {.adv_start =
                    {
-                       .name = "Trezor Bootloader",
                        .static_mac = false,
                    }},
   };
+  memcpy(cmd.data.adv_start.name, adv_name, BLE_ADV_NAME_LEN);
   ble_issue_command(&cmd);
 
   retry_cnt = 0;
