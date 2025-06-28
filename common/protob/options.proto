@@ -45,6 +45,7 @@ The convention to achieve this is as follows:
 /** Options for tagging enum types */
 extend google.protobuf.EnumOptions {
     optional bool has_bitcoin_only_values = 51001;  // indicate that some values should be excluded on BITCOIN_ONLY builds
+    optional bool wire_enum = 51002;                // this enum is used for mapping wire type integer to message type, it cannot be used as normal enum
 }
 
 /** Options for tagging message types */

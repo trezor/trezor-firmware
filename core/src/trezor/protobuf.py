@@ -17,7 +17,7 @@ def load_message_buffer(
     msg_wire_type: int,
     experimental_enabled: bool = True,
 ) -> MessageType:
-    msg_type = type_for_wire(msg_wire_type)
+    msg_type = type_for_wire("MessageType", msg_wire_type)
     return decode(buffer, msg_type, experimental_enabled)
 
 

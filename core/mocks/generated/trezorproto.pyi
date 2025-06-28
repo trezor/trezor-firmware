@@ -23,8 +23,9 @@ def type_for_name(name: str) -> type[MessageType]:
 
 
 # rust/src/protobuf/obj.rs
-def type_for_wire(wire_id: int) -> type[MessageType]:
-    """Find the message definition for the given wire type (numeric identifier)."""
+def type_for_wire(enum_name: str, wire_id: int) -> type[MessageType]:
+    """Find the message definition for the given wire enum name and
+    wire type (numeric identifier)."""
 
 
 # rust/src/protobuf/obj.rs

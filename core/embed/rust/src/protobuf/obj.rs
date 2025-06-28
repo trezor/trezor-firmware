@@ -303,10 +303,12 @@ pub extern "C" fn protobuf_type_for_name(name: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-pub extern "C" fn protobuf_type_for_wire(wire_id: Obj) -> Obj {
+pub extern "C" fn protobuf_type_for_wire(enum_name: Obj, wire_id: Obj) -> Obj {
     let block = || {
         let wire_id = u16::try_from(wire_id)?;
-        let def = MsgDef::for_wire_id(wire_id).ok_or_else(|| Error::KeyError(wire_id.into()))?;
+        let enum_name = Qstr::try_from(enum_name)?;
+        let def = MsgDef::for_wire_id(enum_name.to_u16(), wire_id)
+            .ok_or_else(|| Error::KeyError(wire_id.into()))?;
         let obj = MsgDefObj::alloc(def)?.into();
         Ok(obj)
     };
@@ -340,9 +342,10 @@ pub static mp_module_trezorproto: Module = obj_module! {
     ///     """Find the message definition for the given protobuf name."""
     Qstr::MP_QSTR_type_for_name => obj_fn_1!(protobuf_type_for_name).as_obj(),
 
-    /// def type_for_wire(wire_id: int) -> type[MessageType]:
-    ///     """Find the message definition for the given wire type (numeric identifier)."""
-    Qstr::MP_QSTR_type_for_wire => obj_fn_1!(protobuf_type_for_wire).as_obj(),
+    /// def type_for_wire(enum_name: str, wire_id: int) -> type[MessageType]:
+    ///     """Find the message definition for the given wire enum name and
+    ///     wire type (numeric identifier)."""
+    Qstr::MP_QSTR_type_for_wire => obj_fn_2!(protobuf_type_for_wire).as_obj(),
 
     /// def decode(
     ///     buffer: bytes,

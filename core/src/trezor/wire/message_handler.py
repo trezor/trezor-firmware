@@ -62,7 +62,7 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
     """
     if __debug__:
         try:
-            msg_type = protobuf.type_for_wire(msg.type).MESSAGE_NAME
+            msg_type = protobuf.type_for_wire("MessageType", msg.type).MESSAGE_NAME
         except Exception:
             msg_type = f"{msg.type} - unknown message type"
         log.info(
@@ -91,7 +91,7 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
     try:
         # Find a protobuf.MessageType subclass that describes this
         # message.  Raises if the type is not found.
-        req_type = protobuf.type_for_wire(msg.type)
+        req_type = protobuf.type_for_wire("MessageType", msg.type)
 
         # Try to decode the message according to schema from
         # `req_type`. Raises if the message is malformed.
