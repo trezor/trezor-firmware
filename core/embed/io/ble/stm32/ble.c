@@ -712,6 +712,20 @@ bool ble_get_event(ble_event_t *event) {
   return result;
 }
 
+void ble_event_flush(void) {
+  ble_driver_t *drv = &g_ble_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
+
+  irq_key_t key = irq_lock();
+
+  tsqueue_reset(&drv->event_queue);
+
+  irq_unlock(key);
+}
+
 void ble_get_state(ble_state_t *state) {
   const ble_driver_t *drv = &g_ble_driver;
 
