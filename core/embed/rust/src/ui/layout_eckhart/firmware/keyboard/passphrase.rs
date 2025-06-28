@@ -106,7 +106,7 @@ const KEYBOARD: [[&str; KEY_COUNT]; PAGE_COUNT] = [
     ];
 
 const MAX_LENGTH: usize = 50; // max length of the passphrase
-const MAX_SHOWN_LEN: usize = 14; // max number of icons per line
+const MAX_SHOWN_LEN: usize = 13; // max number of icons per line
 const LAST_DIGIT_TIMEOUT: Duration = Duration::from_secs(1);
 
 const NEXT_BTN_WIDTH: i16 = 103;
@@ -447,9 +447,9 @@ struct PassphraseInput {
 
 impl PassphraseInput {
     const TWITCH: i16 = 4;
-    const SHOWN_PADDING: i16 = 24;
+    const SHOWN_INSETS: Insets = Insets::new(12, 24, 12, 24);
     const SHOWN_STYLE: TextStyle =
-        theme::TEXT_MEDIUM.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
+        theme::TEXT_REGULAR.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
     const SHOWN_TOUCH_OUTSET: Insets = Insets::bottom(200);
     const ICON: Icon = theme::ICON_DASH_VERTICAL;
     const ICON_WIDTH: i16 = Self::ICON.toif.width();
@@ -480,10 +480,11 @@ impl PassphraseInput {
         // Extend the shown area until the text fits
         while let LayoutFit::OutOfBounds { .. } = TextLayout::new(Self::SHOWN_STYLE)
             .with_align(Alignment::Start)
-            .with_bounds(shown_area.inset(Insets::uniform(Self::SHOWN_PADDING)))
+            .with_bounds(shown_area.inset(Self::SHOWN_INSETS))
             .fit_text(self.passphrase())
         {
-            shown_area = shown_area.outset(Insets::bottom(32));
+            shown_area =
+                shown_area.outset(Insets::bottom(Self::SHOWN_STYLE.text_font.line_height()));
         }
 
         self.shown_area = shown_area;
@@ -499,7 +500,7 @@ impl PassphraseInput {
             .render(target);
 
         TextLayout::new(Self::SHOWN_STYLE)
-            .with_bounds(self.shown_area.inset(Insets::uniform(Self::SHOWN_PADDING)))
+            .with_bounds(self.shown_area.inset(Self::SHOWN_INSETS))
             .with_align(Alignment::Start)
             .render_text(self.passphrase(), target, true);
     }
@@ -508,7 +509,7 @@ impl PassphraseInput {
         debug_assert_ne!(self.display_style, DisplayStyle::Shown);
 
         let hidden_area: Rect = self.area.inset(KEYBOARD_INPUT_INSETS);
-        let style = theme::TEXT_MEDIUM;
+        let style = theme::TEXT_REGULAR;
         let pp_len = self.passphrase().len();
         let last_char = self.display_style != DisplayStyle::Hidden;
 

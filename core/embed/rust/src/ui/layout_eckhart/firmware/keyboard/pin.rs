@@ -274,8 +274,8 @@ impl PinInput {
     const MAX_SHOWN_LEN: usize = 19; // max number of icons per line
 
     const TWITCH: i16 = 4;
-    const SHOWN_PADDING: i16 = 24;
-    const SHOWN_STYLE: TextStyle = theme::TEXT_MEDIUM
+    const SHOWN_INSETS: Insets = Insets::new(12, 24, 12, 24);
+    const SHOWN_STYLE: TextStyle = theme::TEXT_REGULAR
         .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
         .with_chunks(Chunks::new(1, 8));
     const SHOWN_TOUCH_OUTSET: Insets = Insets::bottom(200);
@@ -333,10 +333,11 @@ impl PinInput {
         // Extend the shown area until the text fits
         while let LayoutFit::OutOfBounds { .. } = TextLayout::new(Self::SHOWN_STYLE)
             .with_align(Alignment::Start)
-            .with_bounds(shown_area.inset(Insets::uniform(Self::SHOWN_PADDING)))
+            .with_bounds(shown_area.inset(Self::SHOWN_INSETS))
             .fit_text(self.pin())
         {
-            shown_area = shown_area.outset(Insets::bottom(32));
+            shown_area =
+                shown_area.outset(Insets::bottom(Self::SHOWN_STYLE.text_font.line_height()));
         }
 
         self.shown_area = shown_area;
@@ -352,7 +353,7 @@ impl PinInput {
             .render(target);
 
         TextLayout::new(Self::SHOWN_STYLE)
-            .with_bounds(self.shown_area.inset(Insets::uniform(Self::SHOWN_PADDING)))
+            .with_bounds(self.shown_area.inset(Self::SHOWN_INSETS))
             .with_align(Alignment::Start)
             .render_text(self.pin(), target, true);
     }
@@ -361,7 +362,7 @@ impl PinInput {
         debug_assert_ne!(self.display_style, DisplayStyle::Shown);
 
         let hidden_area: Rect = self.area.inset(KEYBOARD_INPUT_INSETS);
-        let style = theme::TEXT_MEDIUM;
+        let style = theme::TEXT_REGULAR;
         let pin_len = self.pin().len();
         let last_digit = self.display_style == DisplayStyle::LastOnly;
 
