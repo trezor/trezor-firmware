@@ -215,6 +215,22 @@ static secbool boot_sequence(secbool manufacturing_mode) {
   return stay_in_bootloader;
 }
 
+static void display_touch_init(secbool manufacturing_mode,
+                               secbool *touch_initialized) {
+  display_init(DISPLAY_RESET_CONTENT);
+
+#ifdef USE_TOUCH
+  secbool touch_init_ok = secfalse;
+  touch_init_ok = touch_init();
+  if (manufacturing_mode != sectrue) {
+    ensure(touch_init_ok, "Touch screen panel was not loaded properly.");
+  }
+  if (touch_initialized != NULL) {
+    *touch_initialized = touch_init_ok;
+  }
+#endif
+}
+
 static void drivers_init(secbool manufacturing_mode,
                          secbool *touch_initialized) {
   random_delays_init();
@@ -233,13 +249,8 @@ static void drivers_init(secbool manufacturing_mode,
   rtc_init();
 #endif
 
-  display_init(DISPLAY_RESET_CONTENT);
-
-#ifdef USE_TOUCH
-  *touch_initialized = touch_init();
-  if (manufacturing_mode != sectrue) {
-    ensure(*touch_initialized, "Touch screen panel was not loaded properly.");
-  }
+#ifndef LAZY_DISPLAY_INIT
+  display_touch_init(manufacturing_mode, touch_initialized);
 #endif
 
 #ifdef USE_CONSUMPTION_MASK
@@ -333,6 +344,10 @@ void real_jump_to_firmware(void) {
 
   // if all warnings are disabled in VTRUST flags then skip the procedure
   if ((vhdr.vtrust & VTRUST_NO_WARNING) != VTRUST_NO_WARNING) {
+#ifdef LAZY_DISPLAY_INIT
+    display_touch_init(secfalse, NULL);
+#endif
+
     ui_fadeout();
     ui_screen_boot(&vhdr, hdr, 0);
     ui_fadein();
@@ -532,6 +547,10 @@ int bootloader_main(void) {
   if (touched || stay_in_bootloader == sectrue || firmware_present != sectrue ||
       auto_upgrade == sectrue) {
     workflow_result_t result;
+
+#ifdef LAZY_DISPLAY_INIT
+    display_touch_init(secfalse, &touch_initialized);
+#endif
 
     if (header_present == sectrue) {
       if (auto_upgrade == sectrue && firmware_present == sectrue) {
