@@ -24,7 +24,6 @@ FEATURES_WANTED = [
     "display",
     "dma2d",
     "input",
-    "optiga",
     "power_manager",
     "rgb_led",
     ]
@@ -139,7 +138,7 @@ env = Environment(
 
 FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_UNIX, PATH_HAL)
 
-if 'optiga' in FEATURES_AVAILABLE:
+if ('LOCKABLE_BOOTLOADER', '1') in CPPDEFINES_HAL:
     SOURCE_BOOTLOADER += [
         'embed/projects/bootloader/workflow/wf_unlock_bootloader.c',
     ]
