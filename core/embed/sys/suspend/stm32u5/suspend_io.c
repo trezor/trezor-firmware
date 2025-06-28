@@ -106,11 +106,7 @@ void resume_secure_drivers() {
   secure_aes_init();
 #endif
 #ifdef USE_OPTIGA
-#ifdef BOOTLOADER
-  optiga_hal_init();
-#else
   optiga_init_and_configure();
-#endif
 #endif
 #if defined(USE_TROPIC) && !defined(BOOTLOADER)
   tropic_init();

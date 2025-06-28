@@ -18,7 +18,6 @@ FEATURES_WANTED = [
     "dma2d",
     "input",
     "iwdg",
-    "optiga",
     "power_manager",
     "rgb_led",
     "rtc",
@@ -142,7 +141,7 @@ SOURCE_BOOTLOADER = [
     'embed/projects/bootloader/version_check.c',
 ]
 
-if 'optiga' in FEATURES_AVAILABLE:
+if ('LOCKABLE_BOOTLOADER', '1') in CPPDEFINES_HAL:
     SOURCE_BOOTLOADER += [
         'embed/projects/bootloader/workflow/wf_unlock_bootloader.c',
     ]
