@@ -621,6 +621,50 @@ struct Span {
     insert_hyphen_before_line_break: bool,
 }
 
+pub struct Lines<'a, F> {
+    text: &'a str,
+    max_width: i16,
+    font: F,
+}
+
+impl<'a, F> Lines<'a, F> {
+    pub fn split(text: &'a str, max_width: i16, font: F) -> Self {
+        Self {
+            text,
+            max_width,
+            font,
+        }
+    }
+}
+
+impl<'a, F> Iterator for Lines<'a, F>
+where
+    F: Copy + GlyphMetrics,
+{
+    type Item = &'a str;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.text.is_empty() {
+            return None;
+        }
+        let span = Span::fit_horizontally(
+            self.text,
+            self.max_width,
+            self.font,
+            LineBreaking::BreakAtWhitespace,
+            0,
+            None,
+        );
+        let chunk = &self.text[..span.length];
+        self.text = &self.text[span.length + span.skip_next_chars..];
+        if chunk.is_empty() {
+            None
+        } else {
+            Some(chunk)
+        }
+    }
+}
+
 impl Span {
     pub fn fit_horizontally(
         text: &str,
@@ -749,6 +793,7 @@ impl Span {
 mod tests {
     use super::*;
 
+    #[derive(Copy, Clone)]
     pub struct Fixed {
         pub width: i16,
         pub height: i16,
@@ -842,5 +887,33 @@ mod tests {
             }
         }
         spans
+    }
+
+    #[test]
+    fn test_split_lines() {
+        let text = "Hello World!";
+
+        let mut i = Lines::split(text, 13, FIXED_FONT);
+        assert_eq!(i.next(), Some("Hello World!"));
+        assert_eq!(i.next(), None);
+
+        let mut i = Lines::split(text, 12, FIXED_FONT);
+        assert_eq!(i.next(), Some("Hello World!"));
+        assert_eq!(i.next(), None);
+
+        let mut i = Lines::split(text, 11, FIXED_FONT);
+        assert_eq!(i.next(), Some("Hello"));
+        assert_eq!(i.next(), Some("World!"));
+        assert_eq!(i.next(), None);
+
+        let mut i = Lines::split(text, 10, FIXED_FONT);
+        assert_eq!(i.next(), Some("Hello"));
+        assert_eq!(i.next(), Some("World!"));
+        assert_eq!(i.next(), None);
+
+        let mut i = Lines::split(text, 6, FIXED_FONT);
+        assert_eq!(i.next(), Some("Hello"));
+        assert_eq!(i.next(), Some("World!"));
+        assert_eq!(i.next(), None);
     }
 }
