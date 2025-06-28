@@ -26,7 +26,11 @@ pub fn send(text: &str) -> bool {
     data[..SMP_HEADER_SIZE].copy_from_slice(&header);
     data[SMP_HEADER_SIZE..SMP_HEADER_SIZE + data_len].copy_from_slice(&cbor_data[..data_len]);
 
-    send_request(&mut data[..SMP_HEADER_SIZE + data_len], &mut buffer);
+    let res = send_request(&mut data[..SMP_HEADER_SIZE + data_len], &mut buffer);
+
+    if res.is_err() {
+        return false;
+    }
 
     let mut resp_buffer = [0u8; 64];
     if wait_for_response(MsgType::Echo, &mut resp_buffer, Duration::from_millis(100)).is_ok() {

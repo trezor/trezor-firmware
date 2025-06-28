@@ -27,6 +27,7 @@
 
 #include "../nrf_internal.h"
 #include "rust_smp.h"
+#include "sys/systick.h"
 
 extern nrf_driver_t g_nrf_driver;
 
@@ -147,7 +148,10 @@ void USART3_IRQHandler(void) {
   IRQ_LOG_EXIT();
 }
 
-void nrf_send_uart_data(const uint8_t *data, uint32_t len) {
+bool nrf_send_uart_data(const uint8_t *data, uint32_t len,
+                        uint32_t timeout_ms) {
+  uint32_t deadlime = ticks_timeout(timeout_ms);
+
   nrf_driver_t *drv = &g_nrf_driver;
   if (drv->initialized) {
     while (drv->dfu_tx_pending) {
@@ -161,9 +165,19 @@ void nrf_send_uart_data(const uint8_t *data, uint32_t len) {
 
     while (drv->dfu_tx_pending) {
       irq_key_t key = irq_lock();
+
+      if (ticks_expired(deadlime)) {
+        drv->dfu_tx_pending = false;
+        HAL_UART_Abort_IT(&drv->urt);
+        irq_unlock(key);
+        return false;  // Timeout
+      }
+
       irq_unlock(key);
     }
   }
+
+  return true;
 }
 
 void nrf_set_dfu_mode(bool set) {
