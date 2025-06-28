@@ -38,9 +38,6 @@
 #ifdef USE_PVD
 #include <sys/pvd.h>
 #endif
-#ifdef USE_OPTIGA
-#include <sec/optiga_hal.h>
-#endif
 #ifdef USE_TOUCH
 #include <io/touch.h>
 #endif
@@ -243,10 +240,6 @@ static void drivers_init(secbool manufacturing_mode,
   if (manufacturing_mode != sectrue) {
     ensure(*touch_initialized, "Touch screen panel was not loaded properly.");
   }
-#endif
-
-#ifdef USE_OPTIGA
-  optiga_hal_init();
 #endif
 
 #ifdef USE_CONSUMPTION_MASK
