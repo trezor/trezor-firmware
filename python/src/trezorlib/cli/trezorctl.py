@@ -40,6 +40,7 @@ from . import (
     device,
     eos,
     ethereum,
+    evolu,
     fido,
     firmware,
     monero,
@@ -405,6 +406,7 @@ cli.add_command(crypto.cli)
 cli.add_command(device.cli)
 cli.add_command(eos.cli)
 cli.add_command(ethereum.cli)
+cli.add_command(evolu.cli)
 cli.add_command(fido.cli)
 cli.add_command(monero.cli)
 cli.add_command(nem.cli)

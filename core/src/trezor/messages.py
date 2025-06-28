@@ -3936,6 +3936,30 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["EthereumFieldType"]:
             return isinstance(msg, cls)
 
+    class EvoluGetKeys(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EvoluGetKeys"]:
+            return isinstance(msg, cls)
+
+    class EvoluKeys(protobuf.MessageType):
+        owner_id: "bytes"
+        write_key: "bytes"
+        encryption_key: "bytes"
+
+        def __init__(
+            self,
+            *,
+            owner_id: "bytes",
+            write_key: "bytes",
+            encryption_key: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EvoluKeys"]:
+            return isinstance(msg, cls)
+
     class MoneroTransactionSourceEntry(protobuf.MessageType):
         outputs: "list[MoneroOutputEntry]"
         real_output: "int | None"
