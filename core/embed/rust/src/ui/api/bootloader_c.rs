@@ -181,8 +181,39 @@ extern "C" fn screen_confirm_pairing(code: u32, initial_setup: bool) -> u32 {
 
 #[cfg(feature = "ble")]
 #[no_mangle]
-extern "C" fn screen_pairing_mode(initial_setup: bool, layout: *mut c_layout_t) {
-    let mut screen = <ModelUI as BootloaderUI>::CLayoutType::init_pairing_mode(initial_setup);
+extern "C" fn screen_pairing_mode(
+    initial_setup: bool,
+    name: *const cty::c_char,
+    name_len: usize,
+    layout: *mut c_layout_t,
+) {
+    let name = unsafe { from_c_array(name, name_len).unwrap_or("") };
+    let mut screen = <ModelUI as BootloaderUI>::CLayoutType::init_pairing_mode(initial_setup, name);
+    screen.show();
+    // SAFETY: calling code is supposed to give us exclusive access to the layout
+    let mut layout = unsafe { LayoutBuffer::new(layout) };
+    layout.store(screen);
+}
+
+#[cfg(feature = "ble")]
+#[no_mangle]
+extern "C" fn screen_wireless_setup(
+    name: *const cty::c_char,
+    name_len: usize,
+    layout: *mut c_layout_t,
+) {
+    let name = unsafe { from_c_array(name, name_len).unwrap_or("") };
+    let mut screen = <ModelUI as BootloaderUI>::CLayoutType::init_wireless_setup(name);
+    screen.show();
+    // SAFETY: calling code is supposed to give us exclusive access to the layout
+    let mut layout = unsafe { LayoutBuffer::new(layout) };
+    layout.store(screen);
+}
+
+#[cfg(feature = "ble")]
+#[no_mangle]
+extern "C" fn screen_wireless_setup_final(layout: *mut c_layout_t) {
+    let mut screen = <ModelUI as BootloaderUI>::CLayoutType::init_wireless_setup_final();
     screen.show();
     // SAFETY: calling code is supposed to give us exclusive access to the layout
     let mut layout = unsafe { LayoutBuffer::new(layout) };
