@@ -1,16 +1,13 @@
 #[cfg(feature = "ui_debug")]
 use crate::trace::{Trace, Tracer};
-use crate::{
-    trezorhal::secbool::{secbool, sectrue},
-    ui::{
-        component::{Child, Component, Event, EventCtx, Pad},
-        constant::screen,
-        display::Icon,
-        geometry::{Alignment, Alignment2D, Offset, Point, Rect},
-        layout::simplified::ReturnToC,
-        shape,
-        shape::Renderer,
-    },
+use crate::ui::{
+    component::{Child, Component, Event, EventCtx, Pad},
+    constant::screen,
+    display::Icon,
+    geometry::{Alignment, Alignment2D, Offset, Point, Rect},
+    layout::simplified::ReturnToC,
+    shape,
+    shape::Renderer,
 };
 
 use super::super::{

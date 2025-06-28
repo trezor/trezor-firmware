@@ -290,7 +290,7 @@ impl BootloaderUI for UICaesar {
     }
 
     fn screen_boot_stage_1(_fading: bool) {
-        let mut frame = WelcomeScreen::new(cfg!(ui_empty_lock));
+        let mut frame = WelcomeScreen::new(cfg!(feature = "ui_empty_lock"));
         show(&mut frame, false);
     }
 

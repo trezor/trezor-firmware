@@ -1,12 +1,9 @@
-use crate::{
-    trezorhal::secbool::{secbool, sectrue},
-    ui::{
-        component::{Component, Event, EventCtx, Label, Pad},
-        constant::{screen, WIDTH},
-        display::Icon,
-        geometry::{Insets, Point, Rect},
-        shape::Renderer,
-    },
+use crate::ui::{
+    component::{Component, Event, EventCtx, Label, Pad},
+    constant::{screen, WIDTH},
+    display::Icon,
+    geometry::{Insets, Point, Rect},
+    shape::Renderer,
 };
 
 use super::super::{

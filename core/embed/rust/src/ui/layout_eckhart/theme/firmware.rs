@@ -224,32 +224,6 @@ pub const fn button_cancel() -> ButtonStyleSheet {
     }
 }
 
-pub const fn button_cancel_gradient() -> ButtonStyleSheet {
-    ButtonStyleSheet {
-        normal: &ButtonStyle {
-            font: fonts::FONT_SATOSHI_MEDIUM_26,
-            text_color: ORANGE,
-            button_color: ORANGE_DARK,
-            icon_color: ORANGE,
-            background_color: ORANGE_DARK,
-        },
-        active: &ButtonStyle {
-            font: fonts::FONT_SATOSHI_MEDIUM_26,
-            text_color: ORANGE_DIMMED,
-            button_color: ORANGE_EXTRA_DARK,
-            icon_color: ORANGE_DIMMED,
-            background_color: ORANGE_EXTRA_DARK,
-        },
-        disabled: &ButtonStyle {
-            font: fonts::FONT_SATOSHI_MEDIUM_26,
-            text_color: GREY_EXTRA_DARK,
-            button_color: BG,
-            icon_color: GREY_EXTRA_DARK,
-            background_color: BG,
-        },
-    }
-}
-
 pub const fn button_actionbar_right_default() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {

@@ -203,7 +203,7 @@ pub fn new_get_address(
     .with_header(Header::new(flow_title))
     .with_action_bar(ActionBar::new_double(
         Button::with_icon(theme::ICON_CHEVRON_LEFT),
-        Button::with_text(TR::buttons__cancel.into()).styled(theme::button_cancel()),
+        Button::with_text(TR::buttons__cancel.into()).styled(theme::button_actionbar_danger()),
     ))
     .with_hint(Hint::new_instruction(
         TR::address__cancel_contact_support,
