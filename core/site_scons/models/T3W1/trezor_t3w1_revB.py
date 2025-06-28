@@ -48,6 +48,7 @@ def configure(
         ("USE_LSE", "1"),
         ("FIXED_HW_DEINIT", "1"),
         ("LOCKABLE_BOOTLOADER", "1"),
+        ("LAZY_DISPLAY_INIT", "1"),
         ("USE_BOOTARGS_RSOD", "1"),
         ("TERMINAL_FONT_SCALE", "2"),
         ("TERMINAL_X_PADDING", "4"),
