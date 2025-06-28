@@ -1,5 +1,6 @@
 mod action_bar;
 mod brightness_screen;
+// mod chargingscreen;
 mod confirm_homescreen;
 mod device_menu_screen;
 mod fido;
@@ -23,6 +24,7 @@ mod vertical_menu_screen;
 
 pub use action_bar::{ActionBar, ActionBarMsg};
 pub use brightness_screen::SetBrightnessScreen;
+// pub use chargingscreen::ChargingScreen;
 pub use confirm_homescreen::{ConfirmHomescreen, ConfirmHomescreenMsg};
 pub use device_menu_screen::{DeviceMenuMsg, DeviceMenuScreen};
 pub use fido::{FidoAccountName, FidoCredential};

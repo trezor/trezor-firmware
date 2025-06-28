@@ -13,6 +13,7 @@ BOOTLOADER_DEVEL = ARGUMENTS.get('BOOTLOADER_DEVEL', '0') == '1'
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
+COMPILATION_DB = int(ARGUMENTS.get('COMPILATION_DB', 0))
 PYOPT = ARGUMENTS.get('PYOPT', '1')
 DISABLE_OPTIGA = ARGUMENTS.get('DISABLE_OPTIGA', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
@@ -938,6 +939,18 @@ env.Depends(program_elf, linkerscript_gen)
 
 if CMAKELISTS != 0:
     env.Depends(program_elf, cmake_gen)
+
+    if COMPILATION_DB != 0:
+        # Generate compile_commands.json if the option is enabled
+        cmake_gen_commands = env.Command(
+            target='compile_commands.json',
+            source='CMakeLists.txt',
+            action='cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -S . -B build'
+        )
+        env.Depends(program_elf, cmake_gen_commands)
+elif COMPILATION_DB != 0:
+    print("CMAKELISTS is not enabled; skipping COMPILATION_DB (compile_commands.json generation).")
+
 env.Depends(program_elf, rust)
 
 BINARY_NAME = f"build/firmware/firmware-{TREZOR_MODEL}"

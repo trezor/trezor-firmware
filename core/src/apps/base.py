@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 import storage.device as storage_device
 from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS, APP_COMMON_SEED
-from trezor import TR, config, utils, wire, workflow
+from trezor import TR, config, io, utils, wire, workflow
 from trezor.enums import HomescreenFormat, MessageType
 from trezor.messages import Success, UnlockPath
 from trezor.ui.layouts import confirm_action
@@ -394,6 +394,38 @@ def set_homescreen() -> None:
         from apps.homescreen import homescreen
 
         set_default(homescreen)
+
+
+if utils.USE_POWER_MANAGER:
+
+    def suspend_device() -> None:
+        """Suspends the device when the power button is pressed."""
+        if config.has_pin() and config.is_unlocked():
+            lock_device(interrupt_workflow=True)
+        else:
+            set_homescreen()
+            workflow.close_others()
+        while True:
+            status, wakeup_flag = io.pm.suspend()
+            if status is io.pm.PM_OK:
+                if wakeup_flag is io.pm.WAKEUP_FLAG_BUTTON:
+                    # regular waking up
+                    break
+                elif wakeup_flag is io.pm.WAKEUP_FLAG_POWER:
+                    set_charging_screen()
+                    break
+                else:
+                    # TODO: handle other wakeup flags if needed
+                    continue
+            else:
+                # TODO: handle error in suspend
+                break
+
+    def set_charging_screen() -> None:
+        """Set the charging screen when the device is woken up by power button."""
+        from apps.homescreen import chargingscreen
+
+        workflow.set_default(chargingscreen, restart=True)
 
 
 def lock_device(interrupt_workflow: bool = True) -> None:

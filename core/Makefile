@@ -39,6 +39,7 @@ TREZOR_MODEL ?= T2T1
 TREZOR_MEMPERF ?= 0
 ADDRESS_SANITIZER ?= 0
 CMAKELISTS ?= 0
+COMPILATION_DB ?= 0
 PYTEST_TIMEOUT ?= 500
 TEST_LANG ?= "en"
 THP ?= 0
@@ -317,7 +318,7 @@ build_firmware: templates build_cross build_secmon build_kernel ## build firmwar
 
 build_unix: MICROPY_ENABLE_SOURCE_LINE ?= 1
 build_unix: templates ## build unix port
-	$(SCONS) PYOPT=0 $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS)
+	$(SCONS) PYOPT=0 COMPILATION_DB=1 $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS)
 
 build_unix_frozen: MICROPY_ENABLE_SOURCE_LINE ?= 1
 build_unix_frozen: templates build_cross ## build unix port with frozen modules

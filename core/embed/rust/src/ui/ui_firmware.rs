@@ -161,6 +161,8 @@ pub trait FirmwareUI {
         remaining_shares: Option<Obj>, // TODO: replace Obj
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
+    // fn show_chargingscreen() -> Result<impl LayoutMaybeTrace, Error>;
+
     fn check_homescreen_format(image: BinaryData, accept_toif: bool) -> bool;
 
     #[allow(clippy::too_many_arguments)]

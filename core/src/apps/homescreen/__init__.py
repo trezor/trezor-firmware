@@ -100,3 +100,38 @@ def lockscreen() -> Coroutine[None, None, None]:
 
 def screensaver() -> Coroutine[None, None, None]:
     return _lockscreen(screensaver=True)
+
+
+async def chargingscreen() -> None:
+    from trezor import loop
+
+    from apps.base import suspend_device
+
+    auto_suspend_task = None
+
+    try:
+        lockscreen_task = loop.spawn(_lockscreen())
+
+        async def auto_suspend():
+            await loop.sleep(2 * 1000)  # 2 seconds
+            lockscreen_task.close()
+
+        auto_suspend_task = loop.spawn(auto_suspend())
+
+        # Wait for either user interaction or timeout
+        await lockscreen_task
+
+        # If we get here, user interacted and completed the unlock flow
+        # Cancel auto-suspend and let normal flow continue
+        auto_suspend_task.close()
+
+    except loop.TaskClosed:
+        # Timeout occurred - auto-suspend
+        from apps.base import set_homescreen
+
+        set_homescreen()
+        suspend_device()
+
+    finally:
+        if auto_suspend_task and not auto_suspend_task.finished:
+            auto_suspend_task.close()
