@@ -153,6 +153,8 @@ void ble_iface_end_pairing(void) {
 
   if (state.peer_count > 0) {
     ble_command_t cmd = {.cmd_type = BLE_SWITCH_ON};
+    memcpy(cmd.data.adv_start.name, MODEL_FULL_NAME,
+           MIN(sizeof(MODEL_FULL_NAME), BLE_ADV_NAME_LEN));
     ble_issue_command(&cmd);
   } else {
     ble_command_t cmd = {.cmd_type = BLE_SWITCH_OFF};
