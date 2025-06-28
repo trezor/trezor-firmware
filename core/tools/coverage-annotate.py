@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 import json
 import sys
-
 from collections import defaultdict
-
 
 # Aggregate hits from all coverage JSON files
 data = defaultdict(lambda: defaultdict(int))

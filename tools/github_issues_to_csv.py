@@ -3,10 +3,12 @@ Taken from  https://gist.github.com/patrickfuller/e2ea8a94badc5b6967ef3ca0a9452a
 
 Currently writes all issues that have some Weight.
 """
+
 import argparse
 import csv
-import requests
 import os.path
+
+import requests
 
 token = None
 
@@ -49,7 +51,6 @@ def write_issues(r, csvout):
             if not weight:
                 continue
             labels = ", ".join(labels)
-            date = issue["created_at"].split("T")[0]
             milestone = issue["milestone"]["title"] if issue["milestone"] else ""
             assignee = issue["assignee"]["login"] if issue["assignee"] else ""
 

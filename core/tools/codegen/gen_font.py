@@ -4,17 +4,17 @@
 
 from __future__ import annotations
 
+import json
 import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
+
 import click
-import json
 
 # pip install freetype-py
 import freetype
-from mako.template import Template
-
 from foreign_chars import all_languages
+from mako.template import Template
 
 
 def _normalize(s: str) -> str:
@@ -177,12 +177,12 @@ class Glyph:
             else:
                 raise ValueError(f"Negative bearingX for character '{c}'")
         bearingY = metrics.horiBearingY // 64
-        assert advance >= 0 and advance <= 255
-        assert bearingX >= 0 and bearingX <= 255
+        assert 0 <= advance <= 255
+        assert 0 <= bearingX <= 255
         if bearingY < 0:  # HACK
             print(f"normalizing bearingY {bearingY} for '{c}'")
             bearingY = 0
-        assert bearingY >= 0 and bearingY <= 255
+        assert 0 <= bearingY <= 255
 
         buf = list(bitmap.buffer)
         # discard non-space pixels on the left side

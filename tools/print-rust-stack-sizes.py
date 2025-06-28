@@ -4,9 +4,8 @@ import subprocess
 from pathlib import Path
 
 import click
-
-from elftools.construct import Struct, ULInt32, GreedyRange
 from elftools.common.construct_utils import ULEB128
+from elftools.construct import GreedyRange, Struct, ULInt32
 from elftools.elf.elffile import ELFFile
 
 SYMBOL_TYPES = ("t", "w")  # text, weak

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-import coverage
 import json
 import sys
+
+import coverage
 
 result_filename, *coverage_filenames = sys.argv[1:]
 

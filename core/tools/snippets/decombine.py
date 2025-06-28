@@ -1,6 +1,7 @@
 import io
 import sys
 from pathlib import Path
+
 from trezorlib._internal import firmware_headers
 from trezorlib.firmware.core import FirmwareHeader, HeaderType
 

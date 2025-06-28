@@ -76,15 +76,13 @@ class HIDInterface:
     def write_data(self, data):
         buf = uhid.create_input2_event(data)
         self.__uhid_write(buf)
-        logger.log_uhid_event(
-            "UHID_INPUT2", f"data=0x{data.hex()} size={len(data)}"
-        )
+        logger.log_uhid_event("UHID_INPUT2", f"data=0x{data.hex()} size={len(data)}")
         logger.log_hid_packet("DEVICE_OUTPUT", f"0x{data.hex()}")
 
     def process_event(self):
         ev_type, request = uhid.parse_event(self.__uhid_read(uhid.EVENT_LENGTH))
         if ev_type == uhid.EVENT_TYPE_START:
-            dev_flags, = request
+            (dev_flags,) = request
             logger.log_uhid_event("UHID_START", f"dev_flags=0b{dev_flags:08b}")
         elif ev_type == uhid.EVENT_TYPE_STOP:
             logger.log_uhid_event("UHID_STOP")
@@ -105,3 +103,4 @@ class HIDInterface:
                 "UNKNOWN_EVENT",
                 f"ev_type={ev_type} request=0x{request.hex()}",
             )
+        return None

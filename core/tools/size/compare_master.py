@@ -18,10 +18,9 @@ from io import BytesIO
 from pathlib import Path
 from zipfile import ZipFile
 
-import requests
 import click
-
-from binsize import BinarySize, get_sections_sizes, show_binaries_diff, set_root_dir
+import requests
+from binsize import BinarySize, get_sections_sizes, set_root_dir, show_binaries_diff
 
 HERE = Path(__file__).parent
 CORE_DIR = HERE.parent.parent

@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import os
 import secrets
+import shlex
 from dataclasses import dataclass
 from typing import Any
-from typing_extensions import Self
 
 import click
 import requests
 import serial
-import shlex
+from typing_extensions import Self
 
 SERVER_TOKEN = ""
 SERVER_URL = "http://localhost:8000/provision"
@@ -114,9 +114,9 @@ class Connection:
             if res.startswith(b"ERROR"):
                 error_args = res[len(b"ERROR ") :].decode()
                 parts = shlex.split(error_args)
-                error_text = parts[0] # error code
+                error_text = parts[0]  # error code
                 if len(parts) > 1:
-                    error_text = parts[1] # error description
+                    error_text = parts[1]  # error description
                 raise ProdtestException(error_text)
             elif res.startswith(b"OK"):
                 res_arg = res[len(b"OK ") :]
@@ -129,6 +129,7 @@ class Connection:
             elif not res.startswith(b"#"):
                 raise ProdtestException("Unexpected response: " + res.decode())
 
+
 def provision_request(
     device: DeviceInfo, url: str, model: str, verify: bool = True
 ) -> ProvisioningResult:
@@ -140,7 +141,7 @@ def provision_request(
         "cert": device.device_cert.hex(),
         "model": model,
     }
-    resp = requests.post(url + '/provision', json=request, verify=verify)
+    resp = requests.post(url + "/provision", json=request, verify=verify)
     if resp.status_code == 400:
         print("Server returned error:", resp.text)
     resp.raise_for_status()

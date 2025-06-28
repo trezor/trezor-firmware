@@ -12,31 +12,31 @@ CORE_DIR = HERE.parent.parent
 
 def process_line(infile: TextIO, outfile: BinaryIO) -> None:
     line = infile.readline()
-    data = [x.strip().lower() for x in line.split(',')]
+    data = [x.strip().lower() for x in line.split(",")]
     for c in data:
         if len(c) == 4:
             outfile.write(bytes((int(c, 16),)))
 
 
 def header_to_toif(path: str | Path) -> str:
-    with open(path, "r") as infile, open('tmp.toif', "wb") as outfile:
+    with open(path, "r") as infile, open("tmp.toif", "wb") as outfile:
         infile.readline()
         name_line = infile.readline()
         name = name_line.split(" ")[3].split("[")[0]
         infile.readline()
-        magic_line = infile.readline().split(',')[3]
+        magic_line = infile.readline().split(",")[3]
 
         outfile.write(bytes((0x54,)))
-        outfile.write(bytes((0x4f,)))
+        outfile.write(bytes((0x4F,)))
         outfile.write(bytes((0x49,)))
         if "g" in magic_line:
-            outfile.write(bytes((ord('g'),)))
+            outfile.write(bytes((ord("g"),)))
         elif "G" in magic_line:
-            outfile.write(bytes((ord('G'),)))
+            outfile.write(bytes((ord("G"),)))
         elif "f" in magic_line:
-            outfile.write(bytes((ord('f'),)))
+            outfile.write(bytes((ord("f"),)))
         elif "F" in magic_line:
-            outfile.write(bytes((ord('F'),)))
+            outfile.write(bytes((ord("F"),)))
         else:
             print(magic_line)
             raise Exception("Unknown format")
@@ -52,53 +52,71 @@ def header_to_toif(path: str | Path) -> str:
 
 
 def toif_to_header(path: str | Path, name: str) -> None:
-    with open('tmp_c.toif', "rb") as infile, open(path, "w") as outfile:
+    with open("tmp_c.toif", "rb") as infile, open(path, "w") as outfile:
         b = infile.read(4)
         outfile.write("// clang-format off\n")
-        outfile.write(f'static const uint8_t {name}[] = {{\n',)
-        outfile.write("    // magic\n",)
-        if b[3] == ord('f'):
-            outfile.write("    'T', 'O', 'I', 'f',\n",)
-        elif b[3] == ord('F'):
-            outfile.write("    'T', 'O', 'I', 'F',\n",)
-        elif b[3] == ord('g'):
-            outfile.write("    'T', 'O', 'I', 'g',\n",)
-        elif b[3] == ord('G'):
-            outfile.write("    'T', 'O', 'I', 'G',\n",)
+        outfile.write(
+            f"static const uint8_t {name}[] = {{\n",
+        )
+        outfile.write(
+            "    // magic\n",
+        )
+        if b[3] == ord("f"):
+            outfile.write(
+                "    'T', 'O', 'I', 'f',\n",
+            )
+        elif b[3] == ord("F"):
+            outfile.write(
+                "    'T', 'O', 'I', 'F',\n",
+            )
+        elif b[3] == ord("g"):
+            outfile.write(
+                "    'T', 'O', 'I', 'g',\n",
+            )
+        elif b[3] == ord("G"):
+            outfile.write(
+                "    'T', 'O', 'I', 'G',\n",
+            )
         else:
             raise Exception("Unknown format")
 
-        outfile.write("    // width (16-bit), height (16-bit)\n",)
+        outfile.write(
+            "    // width (16-bit), height (16-bit)\n",
+        )
         outfile.write("    ")
         for i in range(4):
             hex_data = infile.read(1).hex()
-            outfile.write(f'0x{hex_data},')
+            outfile.write(f"0x{hex_data},")
             if i != 3:
-                outfile.write(' ')
+                outfile.write(" ")
         outfile.write("\n")
 
-        outfile.write("    // compressed data length (32-bit)\n",)
+        outfile.write(
+            "    // compressed data length (32-bit)\n",
+        )
         outfile.write("    ")
         for i in range(4):
             hex_data = infile.read(1).hex()
-            outfile.write(f'0x{hex_data},')
+            outfile.write(f"0x{hex_data},")
             if i != 3:
-                outfile.write(' ')
+                outfile.write(" ")
         outfile.write("\n")
 
-        outfile.write("    // compressed data\n",)
+        outfile.write(
+            "    // compressed data\n",
+        )
         outfile.write("    ")
         hex_data = infile.read(1).hex()
         first = True
         while hex_data:
             if not first:
-                outfile.write(' ')
+                outfile.write(" ")
             first = False
-            outfile.write(f'0x{hex_data},')
+            outfile.write(f"0x{hex_data},")
             hex_data = infile.read(1).hex()
         outfile.write("\n};\n")
 
-        _byte = infile.read(1)
+        infile.read(1)
 
 
 def reformat_c_icon(path: str | Path) -> None:
