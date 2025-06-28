@@ -19,7 +19,7 @@ elif len(sys.argv) == 2:
     filenames = (FILE_T1, FILE_T2)
 else:
     print(f"Usage: {sys.argv[0]} HEX_CHALLENGE [FILE]...")
-    print(f"       HEX_CHALLENGE: a 0-32 byte challenge in hexadecimal")
+    print("       HEX_CHALLENGE: a 0-32 byte challenge in hexadecimal")
     exit(1)
 
 

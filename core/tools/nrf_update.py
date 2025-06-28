@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
+import sys
 import time
 from pathlib import Path
-import sys
 
 import click
 import serial
+
 
 def send_cmd(ser, cmd, expect_ok=True):
     """Send a line, read response, and abort on non-OK."""
@@ -21,6 +22,7 @@ def send_cmd(ser, cmd, expect_ok=True):
         click.echo("Error from device, aborting.", err=True)
         sys.exit(1)
     return resp
+
 
 def upload_nrf(port, bin_path, chunk_size):
     # Read binary file
@@ -40,7 +42,7 @@ def upload_nrf(port, bin_path, chunk_size):
     # 2) Stream chunks
     offset = 0
     while offset < total:
-        chunk = data[offset:offset + chunk_size]
+        chunk = data[offset : offset + chunk_size]
         hexstr = chunk.hex()
         send_cmd(ser, f"nrf-update chunk {hexstr}")
         offset += len(chunk)
@@ -51,11 +53,15 @@ def upload_nrf(port, bin_path, chunk_size):
     send_cmd(ser, "nrf-update end")
     click.echo("nRF update complete.")
 
+
 @click.command(context_settings={"help_option_names": ["-h", "--help"]})
 @click.argument("port", metavar="<serial-port>")
-@click.argument("binary", metavar="<nrf-binary>", type=click.Path(exists=True, dir_okay=False))
-@click.option("--chunk-size", "-c", default=512, show_default=True,
-              help="Max bytes per chunk")
+@click.argument(
+    "binary", metavar="<nrf-binary>", type=click.Path(exists=True, dir_okay=False)
+)
+@click.option(
+    "--chunk-size", "-c", default=512, show_default=True, help="Max bytes per chunk"
+)
 def main(port, binary, chunk_size):
     """
     Upload an nRF firmware image via USB-VCP CLI.
@@ -71,6 +77,7 @@ def main(port, binary, chunk_size):
     except KeyboardInterrupt:
         click.echo("Interrupted by user.", err=True)
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

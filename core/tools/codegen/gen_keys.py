@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import binascii
+
 from trezorlib import _ed25519
 
 

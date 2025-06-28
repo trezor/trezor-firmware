@@ -9,8 +9,7 @@ import re
 import sys
 from pathlib import Path
 
-
-from binsize import BinarySize, StatisticsPlugin, DataRow
+from binsize import BinarySize, DataRow, StatisticsPlugin
 
 HERE = Path(__file__).parent
 CORE_DIR = HERE.parent.parent

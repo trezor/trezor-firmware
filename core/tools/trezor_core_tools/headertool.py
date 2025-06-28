@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
+from typing import List, Tuple
+
 import click
 
 from trezorlib import cosi, firmware
 from trezorlib._internal import firmware_headers
-
-from typing import List, Sequence, Tuple
 
 # =========================== signing =========================
 
@@ -45,6 +45,11 @@ def do_replace_vendorheader(fw, vh_file) -> None:
         raise click.ClickException("New vendor header must have the same size.")
 
     fw.vendor_header = vh
+
+
+def no_echo(*args, **kwargs):
+    """A no-op function to replace click.echo when quiet mode is enabled."""
+    pass
 
 
 @click.command()
@@ -132,7 +137,7 @@ def cli(
         traceback.print_exc()
         magic = firmware_data[:4]
         raise click.ClickException(
-            "Could not parse file (magic bytes: {!r})".format(magic)
+            f"Could not parse file (magic bytes: {magic})"
         ) from e
 
     digest = fw.digest()
@@ -141,7 +146,7 @@ def cli(
         return
 
     if quiet:
-        echo = lambda *args, **kwargs: None
+        echo = no_echo
     else:
         echo = click.echo
 

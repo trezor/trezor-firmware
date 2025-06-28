@@ -7,7 +7,7 @@ from pathlib import Path
 
 import click
 from mako.template import Template
-from munch import munchify, Munch
+from munch import Munch, munchify
 
 HERE = Path(__file__).parent
 ROOT = HERE.parent.resolve()

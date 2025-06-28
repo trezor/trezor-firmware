@@ -68,11 +68,10 @@ def check_usage_of_functions(func_mapping: Dict[str, List[str]]) -> None:
         is_used_mappings[func_name] = {"mapping": mapping, "is_used": False}
 
     # Check if any of the mapping names is used - and mark it as used if so
-    for func_name in is_used_mappings:
-        for mapping in is_used_mappings[func_name]["mapping"]:
-            is_there = _is_used(mapping)
-            if is_there:
-                is_used_mappings[func_name]["is_used"] = True
+    for func_name, info in is_used_mappings.items():
+        for m in info["mapping"]:
+            if _is_used(m):
+                info["is_used"] = True
                 break
 
     # Find unused functions and generate a report

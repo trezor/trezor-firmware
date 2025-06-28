@@ -4,9 +4,9 @@
 
 from __future__ import annotations
 
-from typing_extensions import Literal
 from typing import Tuple
 
+from typing_extensions import Literal
 
 Bit = Literal[0, 1]
 Point = Tuple[int, int]

@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 
 import datetime
-from pathlib import Path
 import re
 import subprocess
+from pathlib import Path
+from typing import Iterator
 
 import click
-
-from typing import Iterator
 
 LINK_RE = re.compile(r"\[#(\d+)\]")
 ISSUE_URL = "https://github.com/trezor/trezor-firmware/pull/{issue}"
@@ -265,7 +264,7 @@ def generate(project, version, date, check, only_models):
 
     if only_models:
         generate_filtered(project, changelog)
-        return 0
+        return
 
     args = ["towncrier", "build", "--yes", "--version", version, "--date", date]
     if check:
