@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
 import sys
+from dataclasses import dataclass
 
 from helpers import HERE, TRANSLATIONS_DIR
 

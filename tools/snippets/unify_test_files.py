@@ -37,6 +37,7 @@ Usage:
 - specifying FILES_TO_MODIFY
 - call the script with possible flags - see `python unify_test_files.py --help`
 """
+
 import json
 import os
 import re
@@ -92,7 +93,7 @@ class FileUnifier:
         else:
             self.translations = {}
         print(
-            f"{len(self.translations)} translations available (path/address and address/path)\n{80*'*'}"
+            f"{len(self.translations)} translations available (path/address and address/path)\n{80 * '*'}"
         )
 
         # For statistical purposes

@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import click
 import itertools
 
-from .common import  get_linkerscript_for_model, get_layout_for_model, MODELS_DIR
-from .layout_parser import find_all_values
+import click
 
+from .common import MODELS_DIR, get_layout_for_model, get_linkerscript_for_model
+from .layout_parser import find_all_values
 
 FILE_HEADER = """/* Auto-generated file, do not edit.*/
 
 """
 
+
 def create_linker_script(model: str, cmse: bool) -> str:
     content = FILE_HEADER
     defines = find_all_values(model, cmse)
     for name, value in defines.items():
-            content += f"{name} = {hex(value)};\n"
+        content += f"{name} = {hex(value)};\n"
     return content
 
 
@@ -31,7 +32,7 @@ def main(check: bool) -> None:
 
         path = get_layout_for_model(model.name, split)
         if not path.exists():
-             continue
+            continue
 
         path = get_linkerscript_for_model(model.name, split)
         print(f"Processing {path}")
@@ -44,6 +45,7 @@ def main(check: bool) -> None:
                 raise click.ClickException(f"{path} differs from expected")
         else:
             path.write_text(new_content)
+
 
 if __name__ == "__main__":
     main()

@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import ast
 import re
 
 import click
-import ast
 
 from .common import get_layout_for_model
-
 
 # the following regular expression matches a thing looking like those examples:
 #   #define HEADER_START 0x123456
@@ -48,7 +47,7 @@ def find_value(model: str, name: str, secmon: bool) -> int:
 @click.argument("model")
 @click.argument("name")
 @click.option("--secmon", is_flag=True)
-def main(model: str, name: str, secmon:bool) -> None:
+def main(model: str, name: str, secmon: bool) -> None:
     try:
         print(find_value(model, name, secmon))
     except ValueError as e:

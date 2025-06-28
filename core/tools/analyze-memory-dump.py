@@ -2,9 +2,9 @@
 import json
 import sys
 
-
 if len(sys.argv) < 2:
-    print("""\
+    print(
+        """\
 USAGE: ./analyze-memory-dump.py somefile.json [memorymap.html]
 
 Where "somefile.json" was produced by using `trezor.utils.mem_dump("somefile.json")`
@@ -25,8 +25,8 @@ actually care about.
 Modules are nothing but a link to a globals dict. The dict must be examined separately.
 
 Generators and closures are painful :(
-""")
-
+"""
+    )
 
 
 with open(sys.argv[1]) as f:
@@ -64,7 +64,7 @@ def is_ignored_ptr(ptr):
     if isinstance(ptr, str):
         ptr = int(ptr, 16)
 
-    return not (min_ptr <= ptr < max_ptr)
+    return not min_ptr <= ptr < max_ptr
 
 
 def deref_or_shortval(maybe_ptr):
@@ -204,7 +204,7 @@ pixels_per_line = len(
 pixelsize = bytes_per_block
 bytes_per_line = bytes_per_block * pixels_per_line
 maxline = ((max_ptr - min_ptr) & ~(bytes_per_line - 1)) + (bytes_per_line * 2)
-pixelmap = [None] * 2*(maxline // pixelsize)
+pixelmap = [None] * 2 * (maxline // pixelsize)
 
 
 def pixel_index(ptrval):

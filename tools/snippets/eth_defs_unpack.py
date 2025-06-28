@@ -17,10 +17,11 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 from __future__ import annotations
 
-import click
-import requests
 import zipfile
 from pathlib import Path
+
+import click
+import requests
 
 from trezorlib import definitions, merkle_tree
 

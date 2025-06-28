@@ -2,8 +2,10 @@
 ^core/src/
 ^core/site_scons/
 ^core/tests/
+^core/tools/
 ^crypto/
 ^legacy/
 ^storage/
+^tools/
 ^tests/
 ^ci/

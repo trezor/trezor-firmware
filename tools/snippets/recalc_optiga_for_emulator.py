@@ -1,12 +1,12 @@
 import sys
 from pathlib import Path
 
-from pyasn1.codec.der.encoder import encode
-from pyasn1.codec.der.decoder import decode
-from pyasn1.type.univ import BitString
-from pyasn1_modules import rfc2459
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
+from pyasn1.codec.der.decoder import decode
+from pyasn1.codec.der.encoder import encode
+from pyasn1.type.univ import BitString
+from pyasn1_modules import rfc2459
 
 
 def load_certificate(data: bytes):

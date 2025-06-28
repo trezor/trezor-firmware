@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 
-import click
-
-from pathlib import Path
 from hashlib import blake2s
+from pathlib import Path
+
+import click
 
 from trezorlib.firmware.core import FirmwareImage, Model
 
-from .layout_parser import find_value
 from .common import MODELS_DIR
-
+from .layout_parser import find_value
 
 TEMPLATE = """\
 #ifndef BOOTLOADER_HASHES_H

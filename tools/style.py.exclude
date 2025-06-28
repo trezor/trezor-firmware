@@ -2,3 +2,4 @@
 ^legacy/firmware/protob/options_pb2\.py
 ^legacy/firmware/protob/messages_nem_pb2\.py
 ^legacy/vendor
+^tools/automatic_battery_tester/.venv/
