@@ -23,7 +23,6 @@ FEATURES_WANTED = [
     "rtc",
     "secure_domain",
     "suspend",
-    "tropic",
     "usb",
     ]
 

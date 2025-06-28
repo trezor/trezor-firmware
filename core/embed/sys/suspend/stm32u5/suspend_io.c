@@ -93,7 +93,7 @@ void suspend_secure_drivers() {
 #ifdef USE_STORAGE_HWKEY
   secure_aes_deinit();
 #endif
-#if defined(USE_TROPIC) && !defined(BOOTLOADER)
+#ifdef USE_TROPIC
   tropic_deinit();
 #endif
 #ifdef USE_OPTIGA
@@ -108,7 +108,7 @@ void resume_secure_drivers() {
 #ifdef USE_OPTIGA
   optiga_init_and_configure();
 #endif
-#if defined(USE_TROPIC) && !defined(BOOTLOADER)
+#ifdef USE_TROPIC
   tropic_init();
 #endif
 }
