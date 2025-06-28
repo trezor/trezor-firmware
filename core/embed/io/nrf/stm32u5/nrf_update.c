@@ -139,11 +139,18 @@ bool nrf_update(const uint8_t *image_ptr, size_t image_len) {
   sha256_Update(&ctx, image_ptr, image_len);
   sha256_Final(&ctx, sha256);
 
-  smp_upload_app_image(image_ptr, image_len, sha256, SHA256_DIGEST_LENGTH);
+  uint8_t try_cntr = 0;
+
+  bool result = false;
+  do {
+    result = smp_upload_app_image(image_ptr, image_len, sha256,
+                                  SHA256_DIGEST_LENGTH);
+    try_cntr++;
+  } while (!result && try_cntr < 3);
 
   smp_reset();
 
-  return true;
+  return result;
 }
 
 #endif

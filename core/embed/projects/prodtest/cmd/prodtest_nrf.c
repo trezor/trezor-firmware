@@ -69,6 +69,88 @@ static void prodtest_nrf_version(cli_t* cli) {
          info.version_patch, info.version_tweak);
 }
 
+#define NRF_UPDATE_MAXSIZE 0x50000
+__attribute__((section(".buf"))) static uint8_t nrf_buffer[NRF_UPDATE_MAXSIZE];
+static size_t nrf_len = 0;
+
+static void prodtest_nrf_update(cli_t* cli) {
+  if (cli_arg_count(cli) < 1) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  const char* phase = cli_arg(cli, "phase");
+  if (phase == NULL) {
+    cli_error_arg(cli, "Expecting phase (begin|chunk|end).");
+    return;
+  }
+
+  if (0 == strcmp(phase, "begin")) {
+    if (cli_arg_count(cli) != 1) {
+      cli_error_arg_count(cli);
+      return;
+    }
+
+    // Reset our state
+    nrf_len = 0;
+    cli_trace(cli, "begin");
+    cli_ok(cli, "");
+
+  } else if (0 == strcmp(phase, "chunk")) {
+    if (cli_arg_count(cli) < 2) {
+      cli_error_arg_count(cli);
+      return;
+    }
+
+    // Receive next piece of the image
+    size_t chunk_len = 0;
+    uint8_t chunk_buf[512];  // tune this if you like
+
+    if (!cli_arg_hex(cli, "hex-data", chunk_buf, sizeof(chunk_buf),
+                     &chunk_len)) {
+      cli_error_arg(cli, "Expecting hex-data for chunk.");
+      return;
+    }
+
+    if (nrf_len + chunk_len > NRF_UPDATE_MAXSIZE) {
+      cli_error(cli, CLI_ERROR, "Buffer overflow (have %u, need %u)",
+                (unsigned)nrf_len, (unsigned)chunk_len);
+      return;
+    }
+
+    memcpy(&nrf_buffer[nrf_len], chunk_buf, chunk_len);
+    nrf_len += chunk_len;
+
+    cli_ok(cli, "%u %u", (unsigned)chunk_len, (unsigned)nrf_len);
+
+  } else if (0 == strcmp(phase, "end")) {
+    if (cli_arg_count(cli) != 1) {
+      cli_error_arg_count(cli);
+      return;
+    }
+
+    if (nrf_len == 0) {
+      cli_error(cli, CLI_ERROR, "No data received");
+      return;
+    }
+
+    // Hand off to your firmware update routine
+    if (!nrf_update(nrf_buffer, nrf_len)) {
+      cli_error(cli, CLI_ERROR, "Update failed");
+      return;
+    }
+
+    // Clear state so next begin is required
+    nrf_len = 0;
+
+    cli_trace(cli, "Update successful");
+    cli_ok(cli, "");
+
+  } else {
+    cli_error(cli, CLI_ERROR, "Unknown phase '%s' (begin|chunk|end)", phase);
+  }
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -83,6 +165,13 @@ PRODTEST_CLI_CMD(
   .func = prodtest_nrf_version,
   .info = "Reads NRF firmware version",
   .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "nrf-update",
+  .func = prodtest_nrf_update,
+  .info = "Update nRF firmware",
+  .args = "<phase> <hex-data>"
 );
 
 #endif

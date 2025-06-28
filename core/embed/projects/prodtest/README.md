@@ -322,6 +322,10 @@ nrf-version
 OK 0.1.2.3
 ```
 
+### nrf-update
+Updates the nRF firmware.
+
+
 ### touch-draw
 Starts a drawing canvas, where user can draw with finger on pen. Canvas is exited by sending CTRL+C command.
 ```
