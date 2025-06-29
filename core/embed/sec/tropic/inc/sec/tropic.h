@@ -23,19 +23,14 @@
 
 #ifdef KERNEL_MODE
 
-#define TROPIC_CHIP_ID_SIZE 128
-#define TROPIC_RISCV_FW_SIZE 4
-#define TROPIC_SPECT_FW_SIZE 4
-
 bool tropic_init(void);
 
 void tropic_deinit(void);
 
-bool tropic_get_spect_fw_version(uint8_t* version_buffer, uint16_t max_len);
-
-bool tropic_get_riscv_fw_version(uint8_t* version_buffer, uint16_t max_len);
-
-bool tropic_get_chip_id(uint8_t* chip_id, uint16_t max_len);
+#ifdef TREZOR_PRODTEST
+#include "libtropic.h"
+lt_handle_t* tropic_get_handle(void);
+#endif
 
 #endif
 
