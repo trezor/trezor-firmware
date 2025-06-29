@@ -611,6 +611,15 @@ prodtest-homescreen
 OK
 ```
 
+### secrets-init
+Generates random secrets and stores them in the protected storage.
+
+Example:
+```
+secrets-init
+OK
+```
+
 ### optiga-id-read
 Retrieves the coprocessor UID of the Optiga chip as a 27 byte hexadecimal string.
 
