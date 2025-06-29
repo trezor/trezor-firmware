@@ -247,7 +247,7 @@ static void drivers_init(void) {
   ble_init();
 #endif
 #ifdef USE_TROPIC
-  tropic_init();
+  tropic_init(false);
 #endif
 #ifdef USE_HW_REVISION
   hw_revision_init();
