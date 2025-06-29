@@ -288,7 +288,6 @@ int prodtest_main(void) {
 #ifdef USE_OPTIGA
   optiga_init();
   optiga_open_application();
-  pair_optiga(&g_cli);
 #endif
 
 #if defined USE_BUTTON && defined USE_POWER_MANAGER
