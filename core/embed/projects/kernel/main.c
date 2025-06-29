@@ -187,7 +187,7 @@ void drivers_init() {
   optiga_init_and_configure();
 #endif
 #ifdef USE_TROPIC
-  tropic_init();
+  tropic_init(true);
 #endif
 #endif  // SECURE_MODE
 }

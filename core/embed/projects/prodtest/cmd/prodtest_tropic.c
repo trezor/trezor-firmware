@@ -29,6 +29,8 @@
 
 #include "memzero.h"
 
+#include "libtropic.h"
+
 #include "secure_channel.h"
 
 typedef enum {
@@ -49,8 +51,10 @@ static void prodtest_tropic_get_riscv_fw_version(cli_t* cli) {
     return;
   }
 
-  uint8_t version[TROPIC_RISCV_FW_SIZE];
-  if (!tropic_get_riscv_fw_version(version, sizeof(version))) {
+  lt_handle_t* handle = tropic_get_handle();
+
+  uint8_t version[LT_L2_GET_INFO_RISCV_FW_SIZE] = {0};
+  if (lt_get_info_riscv_fw_ver(handle, version, sizeof(version)) != LT_OK) {
     cli_error(cli, CLI_ERROR, "Unable to get RISCV FW version");
   }
 
@@ -64,8 +68,10 @@ static void prodtest_tropic_get_spect_fw_version(cli_t* cli) {
     return;
   }
 
-  uint8_t version[TROPIC_SPECT_FW_SIZE];
-  if (!tropic_get_spect_fw_version(version, sizeof(version))) {
+  lt_handle_t* handle = tropic_get_handle();
+
+  uint8_t version[LT_L2_GET_INFO_SPECT_FW_SIZE];
+  if (!lt_get_info_spect_fw_ver(handle, version, sizeof(version))) {
     cli_error(cli, CLI_ERROR, "Unable to get SPECT FW version");
   }
 
@@ -79,8 +85,10 @@ static void prodtest_tropic_get_chip_id(cli_t* cli) {
     return;
   }
 
-  uint8_t chip_id[TROPIC_CHIP_ID_SIZE];
-  if (!tropic_get_chip_id(chip_id, sizeof(chip_id))) {
+  lt_handle_t* handle = tropic_get_handle();
+
+  uint8_t chip_id[LT_L2_GET_INFO_CHIP_ID_SIZE];
+  if (!lt_get_info_chip_id(handle, chip_id, sizeof(chip_id))) {
     cli_error(cli, CLI_ERROR, "Unable to get CHIP ID");
   }
 

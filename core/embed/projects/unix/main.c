@@ -505,7 +505,7 @@ static int sdl_event_filter(void *userdata, SDL_Event *event) {
 
 void drivers_init() {
 #ifdef USE_TROPIC
-  tropic_init();
+  tropic_init(true);
 #endif
 }
 
