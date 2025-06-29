@@ -624,6 +624,15 @@ secrets-init
 OK
 ```
 
+### optiga-pair
+Writes the pairing secret to the Optiga chip to pair it with the MCU. The command `secrets-init` must be executed before calling this command.
+
+Example:
+```
+optiga-pair
+OK
+```
+
 ### optiga-id-read
 Retrieves the coprocessor UID of the Optiga chip as a 27 byte hexadecimal string.
 

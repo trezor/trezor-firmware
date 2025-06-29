@@ -50,16 +50,6 @@
 #define OID_KEY_PAIRING OPTIGA_OID_PTFBIND_SECRET
 #define OID_TRUST_ANCHOR (OPTIGA_OID_CA_CERT + 0)
 
-typedef enum {
-  OPTIGA_PAIRING_UNPAIRED = 0,
-  OPTIGA_PAIRING_PAIRED,
-  OPTIGA_PAIRING_ERR_READ_FLASH,
-  OPTIGA_PAIRING_ERR_WRITE_OPTIGA,
-  OPTIGA_PAIRING_ERR_HANDSHAKE,
-} optiga_pairing;
-
-static optiga_pairing optiga_pairing_state = OPTIGA_PAIRING_UNPAIRED;
-
 // Data object access conditions.
 static const optiga_metadata_item ACCESS_PAIRED =
     OPTIGA_ACCESS_CONDITION(OPTIGA_ACCESS_COND_CONF, OID_KEY_PAIRING);
@@ -67,29 +57,6 @@ static const optiga_metadata_item KEY_USE_SIGN =
     OPTIGA_META_VALUE(OPTIGA_KEY_USAGE_SIGN);
 static const optiga_metadata_item TYPE_PTFBIND =
     OPTIGA_META_VALUE(OPTIGA_DATA_TYPE_PTFBIND);
-
-static bool optiga_paired(cli_t* cli) {
-  const char* details = "";
-
-  switch (optiga_pairing_state) {
-    case OPTIGA_PAIRING_PAIRED:
-      return true;
-    case OPTIGA_PAIRING_ERR_READ_FLASH:
-      details = "failed to read pairing secret from flash";
-      break;
-    case OPTIGA_PAIRING_ERR_WRITE_OPTIGA:
-      details = "failed to write pairing secret to Optiga";
-      break;
-    case OPTIGA_PAIRING_ERR_HANDSHAKE:
-      details = "failed optiga_sec_chan_handshake";
-      break;
-    default:
-      break;
-  }
-
-  cli_error(cli, CLI_ERROR, "Optiga not paired (%s).", details);
-  return false;
-}
 
 static bool set_metadata(cli_t* cli, uint16_t oid,
                          const optiga_metadata* metadata, bool report_error) {
@@ -136,16 +103,23 @@ static bool set_metadata(cli_t* cli, uint16_t oid,
   return true;
 }
 
-void pair_optiga(cli_t* cli) {
+void prodtest_optiga_pair(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
   uint8_t pairing_secret[OPTIGA_PAIRING_SECRET_SIZE] = {0};
 
   // Load the pairing secret from the flash memory.
   if (sectrue != secret_key_optiga_pairing(pairing_secret)) {
-    optiga_pairing_state = OPTIGA_PAIRING_ERR_READ_FLASH;
+    cli_error(cli, CLI_ERROR,
+              "`secret_key_optiga_pairing` failed. You have to call "
+              "`secrets_write` first.");
     goto cleanup;
   }
 
-  // Execute the handshake to verify that the secret is stored in Optiga.
+  // Execute the handshake to verify whether the secret is stored in Optiga.
   if (OPTIGA_SUCCESS !=
       optiga_sec_chan_handshake(pairing_secret, sizeof(pairing_secret))) {
     // Enable writing the pairing secret to OPTIGA.
@@ -160,19 +134,19 @@ void pair_optiga(cli_t* cli) {
     if (OPTIGA_SUCCESS != optiga_set_data_object(OID_KEY_PAIRING, false,
                                                  pairing_secret,
                                                  sizeof(pairing_secret))) {
-      optiga_pairing_state = OPTIGA_PAIRING_ERR_WRITE_OPTIGA;
+      cli_error(cli, CLI_ERROR, "`optiga_set_data_object` failed.");
       goto cleanup;
     }
 
     // Execute the handshake to verify that the secret is stored in Optiga.
     if (OPTIGA_SUCCESS !=
         optiga_sec_chan_handshake(pairing_secret, sizeof(pairing_secret))) {
-      optiga_pairing_state = OPTIGA_PAIRING_ERR_HANDSHAKE;
+      cli_error(cli, CLI_ERROR, "`optiga_sec_chan_handshake` failed.");
       goto cleanup;
     }
   }
 
-  optiga_pairing_state = OPTIGA_PAIRING_PAIRED;
+  cli_ok(cli, "");
 
 cleanup:
   memzero(pairing_secret, sizeof(pairing_secret));
@@ -192,7 +166,10 @@ static void prodtest_optiga_lock(cli_t* cli) {
     return;
   }
 
-  if (!optiga_paired(cli)) return;
+  // TODO: For every slot that is going to be locked, we might want to verify
+  // that the slot has already been written to. This check can be performed here
+  // or within a separate command, depending on who we want to be responsible
+  // for not locking a partially provisioned optiga.
 
   // Delete trust anchor.
   optiga_result ret =
@@ -263,8 +240,6 @@ static void prodtest_optiga_lock(cli_t* cli) {
 }
 
 optiga_locked_status get_optiga_locked_status(cli_t* cli) {
-  if (!optiga_paired(cli)) return OPTIGA_LOCKED_ERROR;
-
   const uint16_t oids[] = {OID_CERT_DEV, OID_CERT_FIDO, OID_KEY_DEV,
                            OID_KEY_FIDO, OID_KEY_PAIRING};
 
@@ -323,8 +298,6 @@ static void prodtest_optiga_id_read(cli_t* cli) {
     return;
   }
 
-  if (!optiga_paired(cli)) return;
-
   uint8_t optiga_id[27] = {0};
   size_t optiga_id_size = 0;
 
@@ -345,8 +318,6 @@ static void cert_read(cli_t* cli, uint16_t oid) {
     cli_error_arg_count(cli);
     return;
   }
-
-  if (!optiga_paired(cli)) return;
 
   static uint8_t cert[OPTIGA_MAX_CERT_SIZE] = {0};
   size_t cert_size = 0;
@@ -416,8 +387,6 @@ static bool check_device_cert_chain(cli_t* cli, const uint8_t* chain,
 }
 
 static void cert_write(cli_t* cli, uint16_t oid) {
-  if (!optiga_paired(cli)) return;
-
   // Enable writing to the certificate slot.
   optiga_metadata metadata = {0};
   metadata.change = OPTIGA_META_ACCESS_ALWAYS;
@@ -471,8 +440,6 @@ static void pubkey_read(cli_t* cli, uint16_t oid,
     cli_error_arg_count(cli);
     return;
   }
-
-  if (!optiga_paired(cli)) return;
 
   // Enable key agreement usage.
 
@@ -530,8 +497,6 @@ static void pubkey_read(cli_t* cli, uint16_t oid,
 }
 
 static void prodtest_optiga_keyfido_write(cli_t* cli) {
-  if (!optiga_paired(cli)) return;
-
   const size_t EPH_PUB_KEY_SIZE = 33;
   const size_t PAYLOAD_SIZE = 32;
   const size_t CIPHERTEXT_OFFSET = EPH_PUB_KEY_SIZE;
@@ -670,8 +635,6 @@ static void prodtest_optiga_counter_read(cli_t* cli) {
     return;
   }
 
-  if (!optiga_paired(cli)) return;
-
   uint8_t sec = 0;
   size_t size = 0;
 
@@ -726,6 +689,13 @@ PRODTEST_CLI_CMD(
   .name = "optiga-id-read",
   .func = prodtest_optiga_id_read,
   .info = "Retrieve the unique ID of the Optiga chip",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "optiga-pair",
+  .func = prodtest_optiga_pair,
+  .info = "Write the pairing secret to Optiga",
   .args = ""
 );
 
