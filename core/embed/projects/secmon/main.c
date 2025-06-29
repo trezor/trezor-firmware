@@ -85,7 +85,7 @@ static void drivers_init(void) {
 #endif
 
 #ifdef USE_TROPIC
-  tropic_init();
+  tropic_init(true);
 #endif
 
 #ifdef USE_BACKUP_RAM

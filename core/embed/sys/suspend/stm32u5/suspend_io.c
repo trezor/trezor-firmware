@@ -109,7 +109,7 @@ void resume_secure_drivers() {
   optiga_init_and_configure();
 #endif
 #ifdef USE_TROPIC
-  tropic_init();
+  tropic_init(true);
 #endif
 }
 
