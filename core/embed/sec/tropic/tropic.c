@@ -29,7 +29,6 @@
 
 #include "ed25519-donna/ed25519.h"
 #include "memzero.h"
-#include "tropic_internal.h"
 
 #define PKEY_INDEX_BYTE PAIRING_KEY_SLOT_INDEX_0
 
@@ -48,38 +47,28 @@ bool tropic_init(void) {
     return true;
   }
 
-  curve25519_key tropic_secret_tropic_pubkey = {0};
-  curve25519_key tropic_secret_trezor_privkey = {0};
-
-  if (!tropic_hal_init()) {
-    goto cleanup;
-  }
+  curve25519_key tropic_pubkey = {0};
+  curve25519_key trezor_privkey = {0};
 
   if (lt_init(&drv->handle) != LT_OK) {
-    tropic_hal_deinit();
     goto cleanup;
   }
 
-  secbool pubkey_ok = secret_key_tropic_public(tropic_secret_tropic_pubkey);
-  secbool privkey_ok =
-      secret_key_tropic_pairing_privileged(tropic_secret_trezor_privkey);
+  secbool pubkey_ok = secret_key_tropic_public(tropic_pubkey);
+  secbool privkey_ok = secret_key_tropic_pairing_privileged(trezor_privkey);
 
   if (pubkey_ok == sectrue && privkey_ok == sectrue) {
-    uint8_t trezor_pubkey[32] = {0};
-    curve25519_scalarmult_basepoint(trezor_pubkey,
-                                    tropic_secret_trezor_privkey);
+    curve25519_key trezor_pubkey = {0};
+    curve25519_scalarmult_basepoint(trezor_pubkey, trezor_privkey);
 
-    lt_ret_t ret = lt_session_start(
-        &drv->handle, tropic_secret_tropic_pubkey, PKEY_INDEX_BYTE,
-        tropic_secret_trezor_privkey, trezor_pubkey);
+    lt_ret_t ret =
+        lt_session_start(&drv->handle, tropic_pubkey, PKEY_INDEX_BYTE,
+                         trezor_privkey, trezor_pubkey);
 
-    // todo delete the ensure
-    ensure((ret == LT_OK) * sectrue, "lt_session_start failed");
     drv->sec_chan_established = (ret == LT_OK);
   }
 
-  memzero(tropic_secret_trezor_privkey, sizeof(tropic_secret_trezor_privkey));
-  memzero(tropic_secret_trezor_privkey, sizeof(tropic_secret_tropic_pubkey));
+  memzero(trezor_privkey, sizeof(trezor_privkey));
 
   drv->initialized = true;
 
@@ -92,58 +81,18 @@ cleanup:
 
 void tropic_deinit(void) {
   tropic_driver_t *drv = &g_tropic_driver;
-
-  if (drv->handle.device != NULL) {
-    lt_deinit(&drv->handle);
-  }
-
-  tropic_hal_deinit();
-
+  lt_deinit(&drv->handle);
   memset(drv, 0, sizeof(*drv));
 }
 
-bool tropic_get_spect_fw_version(uint8_t *version_buffer, uint16_t max_len) {
+lt_handle_t *tropic_get_handle(void) {
   tropic_driver_t *drv = &g_tropic_driver;
 
   if (!drv->initialized) {
-    return false;
+    return NULL;
   }
 
-  if (LT_OK != lt_get_info_spect_fw_ver(&drv->handle, (uint8_t *)version_buffer,
-                                        max_len)) {
-    return false;
-  }
-
-  return true;
-}
-
-bool tropic_get_riscv_fw_version(uint8_t *version_buffer, uint16_t max_len) {
-  tropic_driver_t *drv = &g_tropic_driver;
-
-  if (!drv->initialized) {
-    return false;
-  }
-
-  if (LT_OK != lt_get_info_riscv_fw_ver(&drv->handle, (uint8_t *)version_buffer,
-                                        max_len)) {
-    return false;
-  }
-
-  return true;
-}
-
-bool tropic_get_chip_id(uint8_t *chip_id, uint16_t max_len) {
-  tropic_driver_t *drv = &g_tropic_driver;
-
-  if (!drv->initialized) {
-    return false;
-  }
-
-  if (LT_OK != lt_get_info_chip_id(&drv->handle, (uint8_t *)chip_id, max_len)) {
-    return false;
-  }
-
-  return true;
+  return &drv->handle;
 }
 
 bool tropic_ping(const uint8_t *msg_out, uint8_t *msg_in, uint16_t msg_len) {
