@@ -178,6 +178,7 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/cmd/prodtest_reboot.c',
     'embed/projects/prodtest/cmd/prodtest_rgbled.c',
     'embed/projects/prodtest/cmd/prodtest_sdcard.c',
+    'embed/projects/prodtest/cmd/prodtest_secrets.c',
     'embed/projects/prodtest/cmd/prodtest_tamper.c',
     'embed/projects/prodtest/cmd/prodtest_sbu.c',
     'embed/projects/prodtest/cmd/prodtest_touch.c',
