@@ -28,6 +28,7 @@ typedef enum {
   PM_OK = 0,
   PM_NOT_INITIALIZED,
   PM_REQUEST_REJECTED,
+  PM_TIMEOUT,
   PM_ERROR,
 } pm_status_t;
 

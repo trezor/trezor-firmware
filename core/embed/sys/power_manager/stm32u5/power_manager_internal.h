@@ -40,12 +40,22 @@
 #define PM_BATTERY_CHARGING_CURRENT_MIN PMIC_CHARGING_LIMIT_MIN
 #define PM_BATTERY_SAMPLING_BUF_SIZE 10
 
+#define PM_SELF_DISG_RATE_HIBERATION_MAH 0.004f
+#define PM_SELF_DISG_RATE_SUSPEND_MAH 0.032f
+
 // Fuel gauge extended kalman filter parameters
 #define PM_FUEL_GAUGE_R 2000.0f
 #define PM_FUEL_GAUGE_Q 0.001f
 #define PM_FUEL_GAUGE_R_AGGRESSIVE 1000.0f
 #define PM_FUEL_GAUGE_Q_AGGRESSIVE 0.001f
 #define PM_FUEL_GAUGE_P_INIT 0.1f
+
+// Timeout after which the device automatically transit from suspend to
+// hibernation
+#define PM_AUTO_HIBERNATE_TIMEOUT_S (24 * 60 * 60)  // 24 hours
+
+#define PM_SUSPENDED_CHARGING_TIMEOUT_S 60
+#define PM_STABILIZATION_TIMEOUT_MS 2000
 
 // Power manager battery sampling data structure
 typedef struct {
@@ -81,6 +91,8 @@ typedef struct {
   uint32_t pmic_last_update_ms;
   uint32_t pmic_sampling_period_ms;
   bool pmic_measurement_ready;
+  bool woke_up_from_suspend;
+  bool suspended_charging;
 
   // Power source logical state
   bool usb_connected;
@@ -95,9 +107,12 @@ typedef struct {
   bool request_turn_on;
   bool shutdown_timer_elapsed;
 
-  // Timers
+  // Timers and timestamps
   systimer_t* monitoring_timer;
   systimer_t* shutdown_timer;
+  uint32_t suspend_timestamp;
+  uint32_t last_active_timestamp;
+  uint32_t time_in_suspend_s;
 
 } pm_driver_t;
 
@@ -134,3 +149,10 @@ void pm_battery_initial_soc_guess(void);
 
 // Store power manager data to backup RAM
 pm_status_t pm_store_data_to_backup_ram(void);
+
+// Direct coulomb counter compensation of the SoC based on the battery current,
+// temp and elapsed time, this function is used to compensate the fuel gauge
+// estimation during the periods where the EKF could not be used, such as
+// suspend or hibernation.
+void pm_compensate_fuel_gauge(float* soc, uint32_t elapsed_s,
+                              float battery_current_mah, float bat_temp_c);

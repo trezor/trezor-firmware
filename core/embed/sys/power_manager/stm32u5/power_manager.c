@@ -31,6 +31,7 @@
 #include <sys/rtc.h>
 #endif
 
+#include "../fuel_gauge/battery_model.h"
 #include "../power_manager_poll.h"
 #include "../stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
@@ -44,6 +45,7 @@ pm_driver_t g_pm = {
 static void pm_monitoring_timer_handler(void* context);
 static void pm_shutdown_timer_handler(void* context);
 static bool pm_load_recovery_data(pm_recovery_data_t* recovery);
+static pm_status_t pm_wait_to_stabilize(pm_driver_t* drv, uint32_t timeout_ms);
 
 pm_status_t pm_init(bool inherit_state) {
   pm_driver_t* drv = &g_pm;
@@ -142,14 +144,12 @@ pm_status_t pm_init(bool inherit_state) {
 
   irq_unlock(irq_key);
 
-  // Poll until fuel_gauge is initialized and first PMIC & WLC measurements
-  // propagates into power_monitor.
-  bool state_machine_stabilized;
-  do {
-    irq_key_t irq_key = irq_lock();
-    state_machine_stabilized = drv->state_machine_stabilized;
-    irq_unlock(irq_key);
-  } while (!state_machine_stabilized);
+  // Wait to stabilize the state machine
+  pm_status_t status = pm_wait_to_stabilize(drv, PM_STABILIZATION_TIMEOUT_MS);
+  if (status != PM_OK) {
+    pm_deinit();
+    return status;
+  }
 
   drv->initialized = true;
 
@@ -210,22 +210,15 @@ pm_status_t pm_get_state(pm_state_t* state) {
 }
 
 // This callback is called from inside the system_suspend() function
-// when the rtc wake-up timer expires. The callback can perform
-// measurements and update the fuel gauge state.
+// when the rtc wake-up timer expires.
 // - The callback can schedule the next wake-up by calling
 // rtc_wakeup_timer_start().
 // - If the callback return with wakeup_flags set, system_suspend() returns.
 #ifdef USE_RTC
 void pm_rtc_wakeup_callback(void* context) {
-  // TODO: update fuel gauge state
-  // TODO: decide whether to reschedule the next wake-up or wake up the coreapp
-  if (true) {
-    // Reschedule the next wake-up
-    rtc_wakeup_timer_start(10, pm_rtc_wakeup_callback, NULL);
-  } else {
-    // Wake up the coreapp
-    wakeup_flags_set(WAKEUP_FLAG_RTC);
-  }
+  // No need to do anything here, but left as a placeholder for potential
+  // future use. This is an optimal place where to set a wakeup flag from RTC
+  // wakeup_flags_set(WAKEUP_FLAG_RTC);
 }
 #endif
 
@@ -247,6 +240,7 @@ pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
 
   // Something went wrong, suspend request was not accepted
   if (drv->request_suspend == true || drv->state != PM_STATE_SUSPEND) {
+    drv->request_suspend = false;
     irq_unlock(irq_key);
     return PM_REQUEST_REJECTED;
   }
@@ -254,15 +248,13 @@ pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
   irq_unlock(irq_key);
 
 #ifdef USE_RTC
-  // Automatically wakes up after specified time and call pm_rtc_wakeup_callback
-  rtc_wakeup_timer_start(10, pm_rtc_wakeup_callback, NULL);
+  // Read the current timestamp before entering suspend mode
+  if (!rtc_get_timestamp(&drv->suspend_timestamp)) {
+    return PM_ERROR;
+  }
 #endif
 
   wakeup_flags_t wakeup_flags = system_suspend();
-
-#ifdef USE_RTC
-  rtc_wakeup_timer_stop();
-#endif
 
   // TODO: Handle wake-up flags
   // UNUSED(wakeup_flags);
@@ -540,6 +532,40 @@ bool pm_driver_suspend(void) {
     return false;
   }
 
+#ifdef USE_RTC
+
+  // Capture the timestamp when device was active for the last time.
+  if (!rtc_get_timestamp(&drv->last_active_timestamp)) {
+    return false;
+  }
+
+  if (drv->usb_connected || drv->wireless_connected) {
+    drv->suspended_charging = true;
+
+    // External power source is connected, wake up early to update the fuel
+    // gauge
+    rtc_wakeup_timer_start(PM_SUSPENDED_CHARGING_TIMEOUT_S,
+                           pm_rtc_wakeup_callback, NULL);
+
+  } else {
+    if ((drv->last_active_timestamp - drv->suspend_timestamp) >=
+        PM_AUTO_HIBERNATE_TIMEOUT_S) {
+      // Device is very long time in suspend mode without external power source,
+      // hibernate it to save power.
+      pm_hibernate();
+    }
+
+    uint32_t time_to_hibernate =
+        PM_AUTO_HIBERNATE_TIMEOUT_S -
+        (drv->last_active_timestamp - drv->suspend_timestamp);
+
+    drv->suspended_charging = false;
+
+    rtc_wakeup_timer_start(time_to_hibernate, pm_rtc_wakeup_callback, NULL);
+  }
+
+#endif
+
   irq_key_t irq_key = irq_lock();
   systimer_delete(drv->monitoring_timer);
   irq_unlock(irq_key);
@@ -554,6 +580,17 @@ bool pm_driver_resume(void) {
     return false;
   }
 
+  drv->woke_up_from_suspend = true;
+
+#ifdef USE_RTC
+  rtc_wakeup_timer_stop();
+
+  uint32_t rtc_timestamp;
+  rtc_get_timestamp(&rtc_timestamp);
+  drv->time_in_suspend_s = (rtc_timestamp - drv->last_active_timestamp);
+
+#endif
+
   // Recreate the monitoring timer
   drv->monitoring_timer = systimer_create(pm_monitoring_timer_handler, NULL);
   if (drv->monitoring_timer == NULL) {
@@ -566,12 +603,46 @@ bool pm_driver_resume(void) {
   // Set the periodic sampling period
   systimer_set_periodic(drv->monitoring_timer, PM_BATTERY_SAMPLING_PERIOD_MS);
 
+  // Wait for pmic measurements to stabilize the fuel gauge estimation.
+  pm_status_t status = pm_wait_to_stabilize(drv, PM_STABILIZATION_TIMEOUT_MS);
+  if (status != PM_OK) {
+    // timeout during state machine stabilization
+    return false;
+  }
   return true;
 }
 
 bool pm_driver_is_suspended(void) {
   // No specific pending tasks, just return true
   return true;
+}
+
+void pm_compensate_fuel_gauge(float* soc, uint32_t elapsed_s,
+                              float battery_current_ma, float bat_temp_c) {
+  float compensation_mah = ((battery_current_ma)*elapsed_s) / 3600.0f;
+  bool discharging_mode = battery_current_ma >= 0.0f;
+  *soc -=
+      (compensation_mah / battery_total_capacity(bat_temp_c, discharging_mode));
+  return;
+}
+
+static pm_status_t pm_wait_to_stabilize(pm_driver_t* drv, uint32_t timeout_ms) {
+  uint32_t expire_time = ticks_timeout(timeout_ms);
+
+  // Poll until fuel_gauge is initialized and first PMIC & WLC measurements
+  // propagates into power_monitor.
+  bool state_machine_stabilized;
+  do {
+    if (ticks_expired(expire_time)) {
+      return PM_TIMEOUT;
+    }
+
+    irq_key_t irq_key = irq_lock();
+    state_machine_stabilized = drv->state_machine_stabilized;
+    irq_unlock(irq_key);
+  } while (!state_machine_stabilized);
+
+  return PM_OK;
 }
 
 #endif
