@@ -26,8 +26,6 @@
 
 /// package: trezorcrypto.optiga
 
-#define MAX_DER_SIGNATURE_SIZE 72
-
 /// class OptigaError(Exception):
 ///     """Error returned by the Optiga chip."""
 MP_DEFINE_EXCEPTION(OptigaError, Exception)

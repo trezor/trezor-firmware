@@ -25,6 +25,8 @@
 
 #ifdef SECRET_MASTER_KEY_SLOT
 
+#define SECRET_KEY_MASKING
+
 #include <ed25519-donna/ed25519.h>
 
 secbool secret_key_mcu_device_auth(curve25519_key dest);
