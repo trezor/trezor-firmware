@@ -24,9 +24,12 @@
 #include <sec/optiga.h>
 #include <sec/optiga_commands.h>
 #include <sec/optiga_transport.h>
+#include <sec/secret_keys.h>
+#include "ecdsa.h"
 #include "hash_to_curve.h"
 #include "hmac.h"
 #include "memzero.h"
+#include "nist256p1.h"
 #include "rand.h"
 #include "storage.h"
 
@@ -101,35 +104,79 @@ static const optiga_metadata_item ACCESS_PIN_HMAC_CTR =
 #define ENCRYPT_SYM_PREFIX_SIZE 3
 
 optiga_sign_result optiga_sign(uint8_t index, const uint8_t *digest,
-                               size_t digest_size, uint8_t *signature,
-                               size_t max_sig_size, size_t *sig_size) {
+                               size_t digest_size, uint8_t *der_signature,
+                               size_t max_der_signature_size,
+                               size_t *der_signature_size) {
+  optiga_sign_result ret = OPTIGA_SIGN_SUCCESS;
   if (index >= OPTIGA_ECC_KEY_COUNT) {
-    return OPTIGA_SIGN_ERROR;
+    ret = OPTIGA_SIGN_ERROR;
+    goto cleanup;
   }
 
-  optiga_result res =
-      optiga_calc_sign(OPTIGA_OID_ECC_KEY + index, digest, digest_size,
-                       &signature[2], max_sig_size - 2, sig_size);
+#ifdef SECRET_KEY_MASKING
+  uint8_t masking_key[ECDSA_PRIVATE_KEY_SIZE] = {0};
+  uint8_t masked_digest[SHA256_DIGEST_LENGTH] = {0};
+  bool is_masked = (index == OPTIGA_FIDO_ECC_KEY_INDEX);
+  if (is_masked) {
+    if (digest_size != SHA256_DIGEST_LENGTH ||
+        secret_key_optiga_masking(masking_key) != sectrue ||
+        ecdsa_mask_scalar(&nist256p1, masking_key, digest, masked_digest) !=
+            0) {
+      ret = OPTIGA_SIGN_ERROR;
+      goto cleanup;
+    }
+    digest = masked_digest;
+  }
+#endif  // SECRET_KEY_MASKING
+
+  optiga_result res = optiga_calc_sign(
+      OPTIGA_OID_ECC_KEY + index, digest, digest_size, &der_signature[2],
+      max_der_signature_size - 2, der_signature_size);
   if (res != OPTIGA_SUCCESS) {
     uint8_t error_code = 0;
     if (res == OPTIGA_ERR_CMD &&
         optiga_get_error_code(&error_code) == OPTIGA_SUCCESS &&
         error_code == OPTIGA_ERR_CODE_ACCESS_COND) {
-      return OPTIGA_SIGN_INACCESSIBLE;
+      ret = OPTIGA_SIGN_INACCESSIBLE;
+      goto cleanup;
     } else {
-      return OPTIGA_SIGN_ERROR;
+      ret = OPTIGA_SIGN_ERROR;
+      goto cleanup;
     }
   }
 
   // Add sequence tag and length.
-  if (*sig_size >= 0x80) {
+  if (*der_signature_size >= 0x80) {
     // Length not supported.
-    return OPTIGA_SIGN_ERROR;
+    ret = OPTIGA_SIGN_ERROR;
+    goto cleanup;
   }
-  signature[0] = 0x30;
-  signature[1] = *sig_size;
-  *sig_size += 2;
-  return OPTIGA_SIGN_SUCCESS;
+  der_signature[0] = 0x30;
+  der_signature[1] = *der_signature_size;
+  *der_signature_size += 2;
+
+#ifdef SECRET_KEY_MASKING
+  uint8_t raw_signature[ECDSA_RAW_SIGNATURE_SIZE] = {0};
+  if (is_masked) {
+    if (max_der_signature_size < MAX_DER_SIGNATURE_SIZE ||
+        ecdsa_sig_from_der(der_signature, der_signature_size, raw_signature) !=
+            0 ||
+        ecdsa_unmask_scalar(curve, masking_key, &raw_signature[32],
+                            &raw_signature[32]) != 0) {
+      ret = OPTIGA_SIGN_ERROR;
+      goto cleanup;
+    }
+    *der_signature_size = ecdsa_sig_to_der(raw_signature, der_signature);
+  }
+#endif  // SECRET_KEY_MASKING
+
+cleanup:
+#ifdef SECRET_KEY_MASKING
+  memzero(masking_key, sizeof(masking_key));
+  memzero(masked_digest, sizeof(masked_digest));
+  memzero(raw_signature, sizeof(raw_signature));
+#endif  // SECRET_KEY_MASKING
+  return ret;
 }
 
 bool optiga_cert_size(uint8_t index, size_t *cert_size) {
