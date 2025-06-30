@@ -40,8 +40,8 @@
 #define PM_BATTERY_CHARGING_CURRENT_MIN PMIC_CHARGING_LIMIT_MIN
 #define PM_BATTERY_SAMPLING_BUF_SIZE 10
 
-#define PM_SELF_DISG_RATE_HIBERATION_MAH 0.004f
-#define PM_SELF_DISG_RATE_SUSPEND_MAH 0.032f
+#define PM_SELF_DISG_RATE_HIBERNATION_MA 0.004f
+#define PM_SELF_DISG_RATE_SUSPEND_MA 0.032f
 
 // Fuel gauge extended kalman filter parameters
 #define PM_FUEL_GAUGE_R 2000.0f
@@ -69,6 +69,14 @@ typedef struct {
   bool initialized;
   bool state_machine_stabilized;
   pm_power_status_t state;
+
+  // Set if the driver was requested to suspend background operations.
+  // IF so, the driver waits until the last operation is finished,
+  // then enters suspended mode.
+  bool suspending;
+
+  // Set if the driver's background operations are suspended.
+  bool suspended;
 
   // Fuel gauge
   fuel_gauge_state_t fuel_gauge;
@@ -156,3 +164,8 @@ pm_status_t pm_store_data_to_backup_ram(void);
 // suspend or hibernation.
 void pm_compensate_fuel_gauge(float* soc, uint32_t elapsed_s,
                               float battery_current_mah, float bat_temp_c);
+
+// Schedule the RTC wakeup when going into suspend mode.
+// Return false if the driver was not initialized or the RTC timestamp is
+// not available.
+bool pm_schedule_rtc_wakeup(void);
