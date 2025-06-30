@@ -35,12 +35,29 @@
 #include <wire/wire_iface_ble.h>
 #endif
 
+#ifdef USE_POWER_MANAGER
+#include <io/display.h>
+#include <io/display_utils.h>
+#include <sys/power_manager.h>
+
+#define FADE_TIME_MS 10000
+#define SUSPEND_TIME_MS 15000
+
+#endif
+
 workflow_result_t workflow_host_control(const vendor_header *const vhdr,
                                         const image_header *const hdr,
                                         c_layout_t *wait_layout,
                                         uint32_t *ui_action_result,
                                         protob_ios_t *ios) {
   workflow_result_t result = WF_ERROR_FATAL;
+
+#ifdef USE_POWER_MANAGER
+  uint32_t fade_deadline = ticks_timeout(FADE_TIME_MS);
+  uint32_t suspend_deadline = ticks_timeout(SUSPEND_TIME_MS);
+  bool faded = false;
+  int fade_value = display_get_backlight();
+#endif
 
   sysevents_t awaited = {0};
 
@@ -59,15 +76,55 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
 #ifdef USE_TOUCH
   awaited.read_ready |= 1 << SYSHANDLE_TOUCH;
 #endif
+#ifdef USE_POWER_MANAGER
+  awaited.read_ready |= 1 << SYSHANDLE_POWER_MANAGER;
+#endif
 
   for (;;) {
     sysevents_t signalled = {0};
 
     sysevents_poll(&awaited, &signalled, ticks_timeout(100));
 
+#ifdef USE_POWER_MANAGER
+    if (signalled.read_ready == 0) {
+      pm_state_t pm_state = {0};
+
+      pm_get_state(&pm_state);
+
+      if (pm_state.usb_connected) {
+        fade_deadline = ticks_timeout(FADE_TIME_MS);
+        suspend_deadline = ticks_timeout(SUSPEND_TIME_MS);
+        continue;
+      }
+
+      // device idle.
+      if (!faded && ticks_expired(fade_deadline)) {
+        fade_value = display_get_backlight();
+        display_fade(fade_value, 20, 200);
+        faded = true;
+      }
+
+      if (ticks_expired(suspend_deadline)) {
+        pm_suspend(NULL);
+        display_fade(display_get_backlight(), fade_value, 200);
+        faded = false;
+        fade_deadline = ticks_timeout(FADE_TIME_MS);
+        suspend_deadline = ticks_timeout(SUSPEND_TIME_MS);
+      }
+      continue;
+    }
+
+    fade_deadline = ticks_timeout(FADE_TIME_MS);
+    suspend_deadline = ticks_timeout(SUSPEND_TIME_MS);
+    if (faded) {
+      display_fade(display_get_backlight(), fade_value, 200);
+      faded = false;
+    }
+#else
     if (signalled.read_ready == 0) {
       continue;
     }
+#endif
 
     uint16_t msg_id = 0;
     protob_io_t *active_iface = NULL;
