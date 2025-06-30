@@ -107,6 +107,27 @@ pm_status_t pm_init(bool inherit_state) {
   irq_key_t irq_key = irq_lock();
 
   if (recovery_ok) {
+#ifdef USE_RTC
+
+    // RTC compensation should happen only during initialization in bootloader
+    if (!inherit_state) {
+      // Get RTC timestamp and compare it with the timestamp from recovery data
+      // to estimate time off and compensate self-discharge of the battery.
+      uint32_t rtc_timestamp;
+      if (recovery.last_capture_timestamp != 0 &&
+          rtc_get_timestamp(&rtc_timestamp)) {
+        // If the RTC timestamp is older than the last captured timestamp,
+        // we will not use it.
+        if (rtc_timestamp >= recovery.last_capture_timestamp) {
+          pm_compensate_fuel_gauge(
+              &recovery.soc, rtc_timestamp - recovery.last_capture_timestamp,
+              PM_SELF_DISG_RATE_HIBERNATION_MA, 25.0f);
+        }
+      }
+    }
+
+#endif
+
     fuel_gauge_set_soc(&drv->fuel_gauge, recovery.soc, recovery.P);
   } else {
     pm_battery_initial_soc_guess();
@@ -255,6 +276,13 @@ pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
 #endif
 
   wakeup_flags_t wakeup_flags = system_suspend();
+
+  // Wait for pmic measurements to stabilize the fuel gauge estimation.
+  pm_status_t status = pm_wait_to_stabilize(drv, PM_STABILIZATION_TIMEOUT_MS);
+  if (status != PM_OK) {
+    // timeout during state machine stabilization
+    return false;
+  }
 
   // TODO: Handle wake-up flags
   // UNUSED(wakeup_flags);
@@ -443,6 +471,13 @@ pm_status_t pm_store_data_to_backup_ram() {
   recovery.bat_critical = drv->battery_critical;
   recovery.bootloader_exit_state = drv->state;
 
+#ifdef USE_RTC
+  if (!rtc_get_timestamp(&recovery.last_capture_timestamp)) {
+    // If RTC timestamp cannot be obtained, set it to 0
+    recovery.last_capture_timestamp = 0;
+  }
+#endif
+
   irq_unlock(irq_key);
 
   bool write_ok =
@@ -532,6 +567,33 @@ bool pm_driver_suspend(void) {
     return false;
   }
 
+  irq_key_t irq_key = irq_lock();
+
+  if (drv->woke_up_from_suspend) {
+    // Driver just woke up from suspend and have no data available yet.
+    // Request the suspend but wait for the next pmic_meausrement
+    drv->suspending = true;
+
+  } else {
+    pm_schedule_rtc_wakeup();
+    drv->suspended = true;
+  }
+
+  // Delete the monitoring timer to stop the periodic sampling
+  systimer_delete(drv->monitoring_timer);
+
+  irq_unlock(irq_key);
+
+  return true;
+}
+
+bool pm_schedule_rtc_wakeup(void) {
+  pm_driver_t* drv = &g_pm;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
 #ifdef USE_RTC
 
   // Capture the timestamp when device was active for the last time.
@@ -570,6 +632,7 @@ bool pm_driver_suspend(void) {
   systimer_delete(drv->monitoring_timer);
   irq_unlock(irq_key);
 
+  drv->suspended = true;
   return true;
 }
 
@@ -580,6 +643,12 @@ bool pm_driver_resume(void) {
     return false;
   }
 
+  if (!drv->suspended) {
+    // Already resumed, nothing to do
+    return true;
+  }
+
+  drv->suspended = false;
   drv->woke_up_from_suspend = true;
 
 #ifdef USE_RTC
@@ -603,18 +672,18 @@ bool pm_driver_resume(void) {
   // Set the periodic sampling period
   systimer_set_periodic(drv->monitoring_timer, PM_BATTERY_SAMPLING_PERIOD_MS);
 
-  // Wait for pmic measurements to stabilize the fuel gauge estimation.
-  pm_status_t status = pm_wait_to_stabilize(drv, PM_STABILIZATION_TIMEOUT_MS);
-  if (status != PM_OK) {
-    // timeout during state machine stabilization
-    return false;
-  }
   return true;
 }
 
 bool pm_driver_is_suspended(void) {
-  // No specific pending tasks, just return true
-  return true;
+  pm_driver_t* drv = &g_pm;
+
+  bool suspended;
+  irq_key_t irq_key = irq_lock();
+  suspended = drv->suspended;
+  irq_unlock(irq_key);
+
+  return suspended;
 }
 
 void pm_compensate_fuel_gauge(float* soc, uint32_t elapsed_s,
@@ -623,7 +692,6 @@ void pm_compensate_fuel_gauge(float* soc, uint32_t elapsed_s,
   bool discharging_mode = battery_current_ma >= 0.0f;
   *soc -=
       (compensation_mah / battery_total_capacity(bat_temp_c, discharging_mode));
-  return;
 }
 
 static pm_status_t pm_wait_to_stabilize(pm_driver_t* drv, uint32_t timeout_ms) {
