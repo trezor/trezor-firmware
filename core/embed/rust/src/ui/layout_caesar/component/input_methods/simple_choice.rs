@@ -76,6 +76,7 @@ impl ChoiceFactory for ChoiceFactorySimple {
 /// inputting a list of values and receiving the chosen one.
 pub struct SimpleChoice {
     choice_page: ChoicePage<ChoiceFactorySimple, usize>,
+    page_count: usize,
     pub return_index: bool,
 }
 
@@ -85,10 +86,12 @@ impl SimpleChoice {
         controls: ChoiceControls,
         select_text: TString<'static>,
     ) -> Self {
+        let page_count = str_choices.len();
         let choices = ChoiceFactorySimple::new(str_choices, controls, select_text);
         let choice_page = ChoicePage::new(choices).with_controls(controls);
         Self {
             choice_page,
+            page_count,
             return_index: false,
         }
     }
@@ -131,6 +134,7 @@ impl Component for SimpleChoice {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        ctx.set_page_count(self.page_count);
         self.choice_page.event(ctx, event)
     }
 
