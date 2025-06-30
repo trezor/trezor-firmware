@@ -2922,8 +2922,6 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
     def input_flow_bolt(self) -> BRGeneratorType:
         br = yield
         while True:
-            # wait for homescreen to go away
-            self.debug.read_layout()
             self.client.ui._default_input_flow(br)
             br = yield
 
@@ -2933,9 +2931,6 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
     def input_flow_delizia(self) -> BRGeneratorType:
         br = yield
         while True:
-            # wait for homescreen to go away
-            # probably won't be needed after https://github.com/trezor/trezor-firmware/pull/3686
-            self.debug.read_layout()
             # Paginating (going as further as possible) and pressing Yes
             if br.pages is not None:
                 for _ in range(br.pages - 1):
@@ -2963,8 +2958,6 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
     def input_flow_eckhart(self) -> BRGeneratorType:
         br = yield
         while True:
-            # wait for homescreen to go away
-            self.debug.read_layout()
             # Paginating (going as further as possible) and pressing Yes
             if br.pages is not None:
                 for _ in range(br.pages - 1):
