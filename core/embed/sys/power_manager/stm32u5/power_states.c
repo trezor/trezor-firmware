@@ -164,6 +164,11 @@ static pm_power_status_t pm_handle_state_charging(pm_driver_t* drv) {
 }
 
 static pm_power_status_t pm_handle_state_suspend(pm_driver_t* drv) {
+  if (drv->request_hibernate) {
+    drv->request_hibernate = false;
+    return PM_STATE_HIBERNATE;
+  }
+
   if (drv->request_exit_suspend) {
     drv->request_exit_suspend = false;
     return PM_STATE_POWER_SAVE;

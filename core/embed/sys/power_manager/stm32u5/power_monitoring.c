@@ -68,9 +68,33 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
                         drv->pmic_data.ntc_temp);
 
   } else {
-    fuel_gauge_update(&drv->fuel_gauge, drv->pmic_sampling_period_ms,
-                      drv->pmic_data.vbat, drv->pmic_data.ibat,
-                      drv->pmic_data.ntc_temp);
+    if (drv->woke_up_from_suspend) {
+      // Just woke up from suspend, use the last known battery data to
+      // update the fuel gauge.
+      if (drv->suspended_charging) {
+        pm_compensate_fuel_gauge(&drv->fuel_gauge.soc, drv->time_in_suspend_s,
+                                 drv->pmic_data.ibat, drv->pmic_data.ntc_temp);
+
+      } else {
+        // Use known battery self-discharge rate to compensate the fuel gauge
+        // estimation during the suspend period. Since this period may be very
+        // long and the batery temperature may vary, use the average ambient
+        // temperature.
+        pm_compensate_fuel_gauge(&drv->fuel_gauge.soc, drv->time_in_suspend_s,
+                                 PM_SELF_DISG_RATE_SUSPEND_MAH, 25.0f);
+      }
+
+      fuel_gauge_set_soc(&drv->fuel_gauge, drv->fuel_gauge.soc,
+                         drv->fuel_gauge.P);
+
+      // clear the flag
+      drv->woke_up_from_suspend = false;
+
+    } else {
+      fuel_gauge_update(&drv->fuel_gauge, drv->pmic_sampling_period_ms,
+                        drv->pmic_data.vbat, drv->pmic_data.ibat,
+                        drv->pmic_data.ntc_temp);
+    }
 
     // Charging completed
     if (drv->pmic_data.charge_status & 0x2) {
