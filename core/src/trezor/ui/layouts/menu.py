@@ -1,9 +1,11 @@
 from typing import TYPE_CHECKING
 
 import trezorui_api
+from trezor.enums import ButtonRequestType
 from trezor.ui.layouts.common import interact
 
 if TYPE_CHECKING:
+    from trezorui_api import LayoutObj, UiResult
     from typing_extensions import Self
 
 
@@ -34,7 +36,11 @@ class Property:
         return cls(name, value, True)
 
 
-async def show_menu(root: Menu) -> None:
+async def show_menu(
+    root: Menu,
+    br_name: str | None,
+    br_code: ButtonRequestType = ButtonRequestType.Other,
+) -> None:
     menu_path = []
     current_page = 0
     while True:
@@ -54,7 +60,7 @@ async def show_menu(root: Menu) -> None:
                 ],
             )
 
-        choice = await interact(layout, "menu", raise_on_cancel=None)
+        choice = await interact(layout, br_name, br_code, raise_on_cancel=None)
         if isinstance(choice, int):
             menu_path.append(choice)
             current_page = 0
@@ -64,3 +70,17 @@ async def show_menu(root: Menu) -> None:
             current_page = menu_path.pop()
         else:
             return
+
+
+async def confirm_with_menu(
+    main: LayoutObj[UiResult],
+    menu: Menu,
+    br_name: str | None,
+    br_code: ButtonRequestType = ButtonRequestType.Other,
+) -> None:
+    while True:
+        result = await interact(main, br_name, br_code)
+        if result is trezorui_api.INFO:
+            await show_menu(menu, br_name, br_code)
+        else:
+            break
