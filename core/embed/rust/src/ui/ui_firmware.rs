@@ -394,9 +394,9 @@ pub trait FirmwareUI {
         skip_first_paint: bool,
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
-    fn show_menu_items(
+    fn show_properties(
         _title: TString<'static>,
-        _items: Obj,
+        _properties: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_remaining_shares(

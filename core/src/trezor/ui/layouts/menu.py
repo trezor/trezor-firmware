@@ -18,12 +18,12 @@ class Menu:
 
 
 class Details:
-    def __init__(self, name: str, *items: "Item") -> None:
+    def __init__(self, name: str, *properties: "Property") -> None:
         self.name = name
-        self.items = items
+        self.properties = properties
 
 
-class Item:
+class Property:
     def __init__(self, name: str | None, value: str, is_data: bool = False) -> None:
         self.name = name
         self.value = value
@@ -34,24 +34,28 @@ class Item:
         return cls(name, value, True)
 
 
-async def show_menu(menu_items: Menu) -> None:
+async def show_menu(root: Menu) -> None:
     menu_path = []
     current_page = 0
     while True:
-        menu = menu_items
+        menu = root
         for i in menu_path:
             menu = menu.children[i]
 
         if isinstance(menu, Menu):
-            items = [child.name for child in menu.children]
-            layout = trezorui_api.select_menu(items=items, page_counter=current_page)
+            layout = trezorui_api.select_menu(
+                items=[child.name for child in menu.children], page_counter=current_page
+            )
         else:
-            items = [(item.name, item.value, item.is_data) for item in menu.items]
-            layout = trezorui_api.show_menu_items(title=menu.name, items=items)
+            layout = trezorui_api.show_properties(
+                title=menu.name,
+                properties=[
+                    (item.name, item.value, item.is_data) for item in menu.properties
+                ],
+            )
 
         choice = await interact(layout, "menu", raise_on_cancel=None)
         if isinstance(choice, int):
-            assert 0 <= choice < len(items)
             menu_path.append(choice)
             current_page = 0
             continue

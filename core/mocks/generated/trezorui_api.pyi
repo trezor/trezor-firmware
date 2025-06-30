@@ -684,10 +684,10 @@ def show_progress_coinjoin(
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def show_menu_items(
+def show_properties(
     *,
     title: str,
-    items: list[tuple[str | None, str | bytes | None, bool]],
+    properties: list[tuple[str | None, str | bytes | None, bool]],
 ) -> LayoutObj[int]:
     """Show a list of key-value pairs. The third component in the tuple should be True if
     the value is to be rendered as binary with monospace font, False otherwise."""

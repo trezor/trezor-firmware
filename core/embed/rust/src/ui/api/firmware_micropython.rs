@@ -337,12 +337,12 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_show_menu_items(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+extern "C" fn new_show_properties(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
+        let properties: Obj = kwargs.get(Qstr::MP_QSTR_properties)?;
 
-        let layout = ModelUI::show_menu_items(title, items)?;
+        let layout = ModelUI::show_properties(title, properties)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1855,14 +1855,14 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     time_ms timeout is passed."""
     Qstr::MP_QSTR_show_progress_coinjoin => obj_fn_kw!(0, new_show_progress_coinjoin).as_obj(),
 
-    /// def show_menu_items(
+    /// def show_properties(
     ///     *,
     ///     title: str,
-    ///     items: list[tuple[str | None, str | bytes | None, bool]],
+    ///     properties: list[tuple[str | None, str | bytes | None, bool]],
     /// ) -> LayoutObj[int]:
     ///     """Show a list of key-value pairs. The third component in the tuple should be True if
     ///     the value is to be rendered as binary with monospace font, False otherwise."""
-    Qstr::MP_QSTR_show_menu_items => obj_fn_kw!(0, new_show_menu_items).as_obj(),
+    Qstr::MP_QSTR_show_properties => obj_fn_kw!(0, new_show_properties).as_obj(),
 
     /// def show_remaining_shares(
     ///     *,

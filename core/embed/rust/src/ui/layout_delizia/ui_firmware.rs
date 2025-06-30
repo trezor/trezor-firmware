@@ -1078,9 +1078,9 @@ impl FirmwareUI for UIDelizia {
         Ok(obj)
     }
 
-    fn show_menu_items(
+    fn show_properties(
         _title: TString<'static>,
-        _items: Obj,
+        _properties: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }

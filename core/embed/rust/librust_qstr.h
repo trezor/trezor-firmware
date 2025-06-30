@@ -482,6 +482,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_prompt_backup;
   MP_QSTR_prompt_screen;
   MP_QSTR_prompt_title;
+  MP_QSTR_properties;
   MP_QSTR_pubkey;
   MP_QSTR_pubkey_qr;
   MP_QSTR_qr_title;
@@ -724,11 +725,11 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_info_with_cancel;
   MP_QSTR_show_instructions;
   MP_QSTR_show_lockscreen;
-  MP_QSTR_show_menu_items;
   MP_QSTR_show_mismatch;
   MP_QSTR_show_pairing_device_name;
   MP_QSTR_show_progress;
   MP_QSTR_show_progress_coinjoin;
+  MP_QSTR_show_properties;
   MP_QSTR_show_remaining_shares;
   MP_QSTR_show_share_words;
   MP_QSTR_show_share_words_extended;

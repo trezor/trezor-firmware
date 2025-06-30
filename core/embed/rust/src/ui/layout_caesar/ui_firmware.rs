@@ -1211,11 +1211,11 @@ impl FirmwareUI for UICaesar {
         Ok(obj)
     }
 
-    fn show_menu_items(
+    fn show_properties(
         title: TString<'static>,
-        items: Obj,
+        properties: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let paragraphs = parse_properties(items)?.into_paragraphs();
+        let paragraphs = parse_properties(properties)?.into_paragraphs();
 
         let page = ButtonPage::new(paragraphs, theme::BG)
             .with_back_btn(Some(ButtonDetails::left_arrow_icon()))
