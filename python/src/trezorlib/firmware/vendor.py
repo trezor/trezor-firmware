@@ -49,6 +49,7 @@ def _transform_vendor_trust(data: bytes) -> bytes:
 
 
 class VendorTrust(Struct):
+    limit_runtime: bool
     deny_provisioning_access: bool
     _dont_provide_secret: bool
     allow_run_with_secret: bool
@@ -61,7 +62,8 @@ class VendorTrust(Struct):
 
     SUBCON = c.Transformed(
         c.BitStruct(
-            "_reserved" / c.Default(c.BitsInteger(6), 0b111111),
+            "_reserved" / c.Default(c.BitsInteger(5), 0b11111),
+            "limit_runtime" / c.Default(c.Flag, 1),
             "deny_provisioning_access" / c.Default(c.Flag, 1),
             "_dont_provide_secret"
             / c.Default(c.Flag, lambda this: not this.allow_run_with_secret),
