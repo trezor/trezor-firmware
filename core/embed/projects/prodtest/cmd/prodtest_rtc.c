@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef USE_RTC
+
 #include <trezor_bsp.h>
 
 #include <rtl/cli.h>
@@ -44,3 +46,4 @@ PRODTEST_CLI_CMD(
   .args = ""
 );
 
+#endif
