@@ -4188,15 +4188,15 @@ START_TEST(test_ecdsa_masking) {
 
   const ecdsa_curve *curve = &nist256p1;
   int res = 0;
-  uint8_t priv_key[32] = {0};
-  uint8_t masking_key[32] = {0};
-  uint8_t digest[32] = {0};
-  uint8_t masked_digest[32] = {0};
-  uint8_t masked_priv_key[32] = {0};
-  uint8_t pub_key[65] = {0};
-  uint8_t masked_pub_key[65] = {0};
-  uint8_t unmasked_pub_key[65] = {0};
-  uint8_t sig[64] = {0};
+  uint8_t priv_key[ECDSA_PRIVATE_KEY_SIZE] = {0};
+  uint8_t masking_key[ECDSA_PRIVATE_KEY_SIZE] = {0};
+  uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
+  uint8_t masked_digest[SHA256_DIGEST_LENGTH] = {0};
+  uint8_t masked_priv_key[ECDSA_PRIVATE_KEY_SIZE] = {0};
+  uint8_t pub_key[ECDSA_PUBLIC_KEY_SIZE] = {0};
+  uint8_t masked_pub_key[ECDSA_PUBLIC_KEY_SIZE] = {0};
+  uint8_t unmasked_pub_key[ECDSA_PUBLIC_KEY_SIZE] = {0};
+  uint8_t sig[ECDSA_RAW_SIGNATURE_SIZE] = {0};
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
     memcpy(priv_key, fromhex(tests[i].priv_key), sizeof(priv_key));
