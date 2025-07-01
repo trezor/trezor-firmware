@@ -6,6 +6,7 @@
     "version": [0, 0],
     "sig_m": 2,
     "trust": {
+        "limit_runtime": false,
         "deny_provisioning_access": true,
         "allow_run_with_secret": true,
         "show_vendor_string": false,
