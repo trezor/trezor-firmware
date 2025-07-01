@@ -79,6 +79,7 @@ SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/hmac.c',
     'vendor/trezor-crypto/hmac_drbg.c',
     'vendor/trezor-crypto/memzero.c',
+    'vendor/trezor-crypto/noise.c',
     'vendor/trezor-crypto/nist256p1.c',
     'vendor/trezor-crypto/rand.c',
     'vendor/trezor-crypto/ripemd160.c',
@@ -167,8 +168,10 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/cmd/prodtest_sdcard.c',
     'embed/projects/prodtest/cmd/prodtest_tamper.c',
     'embed/projects/prodtest/cmd/prodtest_sbu.c',
+    'embed/projects/prodtest/cmd/prodtest_secure_channel.c',
     'embed/projects/prodtest/cmd/prodtest_touch.c',
     'embed/projects/prodtest/cmd/prodtest_tropic.c',
+    'embed/projects/prodtest/cmd/secure_channel.c',
     'embed/projects/prodtest/emulator.c',
 ]
 
