@@ -247,7 +247,12 @@
     "cardano__transaction": "Transakce",
     "cardano__transaction_contains_minting_or_burning": "Transakce obsahuje vytváření nebo pálení tokenů.",
     "cardano__transaction_contains_script_address_no_datum": "Následující výstup transakce obsahuje adresu skriptu, ale neobsahuje datum.",
-    "cardano__transaction_fee": "Transakční poplatek:",
+    "cardano__transaction_fee": {
+      "Bolt": "Transakční poplatek:",
+      "Caesar": "Trans. poplatek:",
+      "Delizia": "Transakční poplatek:",
+      "Eckhart": "Transakční poplatek:"
+    },
     "cardano__transaction_id": "ID transakce:",
     "cardano__transaction_no_collateral_input": "Transakce neobsahuje žádné vstupy zástavy. Skript Plutus nebude možné spustit.",
     "cardano__transaction_no_script_data_hash": "Transakce neobsahuje žádný datový hash skriptu. Skript Plutus nebude možné spustit.",
@@ -466,7 +471,12 @@
     "modify_fee__new_transaction_fee": "Nový trans. poplatek:",
     "modify_fee__no_change": "Poplatek se nezměnil.\n",
     "modify_fee__title": "Upravit poplatek",
-    "modify_fee__transaction_fee": "Transakční poplatek:",
+    "modify_fee__transaction_fee": {
+      "Bolt": "Transakční poplatek:",
+      "Caesar": "Trans. poplatek:",
+      "Delizia": "Transakční poplatek:",
+      "Eckhart": "Transakční poplatek:"
+    },
     "monero__confirm_export": "Potvrdit export",
     "monero__confirm_ki_sync": "Potvrdit synchronizaci ki",
     "monero__confirm_refresh": "Potvrdit obnovení",
@@ -835,7 +845,12 @@
     "solana__stake_withdrawal_warning": "Tato pěněženka nemůže být použita pro výběr z tohoto stakingu.",
     "solana__stake_withdrawal_warning_title": "Adresa autority oprávněné k výběru",
     "solana__transaction_contains_unknown_instructions": "Transakce obsahuje neznámý pokyn.",
-    "solana__transaction_fee": "Transakční poplatek",
+    "solana__transaction_fee": {
+      "Bolt": "Transakční poplatek:",
+      "Caesar": "Trans. poplatek:",
+      "Delizia": "Transakční poplatek:",
+      "Eckhart": "Transakční poplatek:"
+    },
     "solana__transaction_requires_x_signers_template": "Transakce vyžaduje {0} podepisujících osob, což zvyšuje poplatek.",
     "solana__unknown_token": "Neznámý token",
     "solana__unknown_token_address": "Neznámá adresa tokenu",
