@@ -82,7 +82,9 @@ bool rtc_get_timestamp(uint32_t* timestamp) {
   RTC_DateTypeDef date;
   RTC_TimeTypeDef time;
 
-  // Get current time and date, date has to be read first.
+  // Get current time and date,
+  // Important: GetTime has to be called before the GetDate in order to unlock
+  // the values in higher-order callendar.
   if (HAL_OK != HAL_RTC_GetTime(&drv->hrtc, &time, RTC_FORMAT_BIN)) {
     return false;
   }
