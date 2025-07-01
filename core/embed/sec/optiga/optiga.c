@@ -154,7 +154,7 @@ optiga_sign_result optiga_sign(uint8_t index, const uint8_t *digest,
   *sig_size += 2;
 
 #ifdef SECRET_KEY_MASKING
-  uint8_t signature_decoded[64] = {0};
+  uint8_t signature_decoded[ECDSA_RAW_SIGNATURE_SIZE] = {0};
   if (is_masked) {
     if (max_sig_size < MAX_DER_SIGNATURE_SIZE ||
         ecdsa_sig_from_der(signature, sig_size, sig) != 0 ||
