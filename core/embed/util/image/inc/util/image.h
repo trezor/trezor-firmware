@@ -89,6 +89,7 @@ typedef struct {
   (VTRUST_WAIT_MASK | VTRUST_NO_RED | VTRUST_NO_CLICK | VTRUST_NO_STRING)
 
 #define VTRUST_ALLOW_PROVISIONING 0x200
+#define VTRUST_ALLOW_UNLIMITED_RUN 0x400
 
 typedef struct {
   uint32_t magic;
