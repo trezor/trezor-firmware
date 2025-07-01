@@ -1181,6 +1181,8 @@ if not utils.BITCOIN_ONLY:
         br_name: str = "confirm_solana_staking_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
+        from trezor.ui.layouts.menu import Details, Menu, Property, confirm_with_menu
+
         if not amount_item:
             amount_label, amount = fee_item
             amount_label = f"\n\n{amount_label}"
@@ -1190,47 +1192,48 @@ if not utils.BITCOIN_ONLY:
             amount_label, amount = amount_item
             fee_label, fee = fee_item
 
-        items = [
-            (f"{TR.words__account}:", account),
-            (TR.address_details__derivation_path_colon, account_path),
-        ]
+        items = []
         if stake_item is not None:
             items.append(stake_item)
         items.append(blockhash_item)
 
-        extra_title = title
         if vote_account:
             description = f"{description}\n{TR.solana__stake_provider}:"
             title = None  # so the layout will fit in a single page
         else:
             description = f"\n{description}"
-        await raise_if_not_confirmed(
-            trezorui_api.confirm_summary(
-                title=title,
-                amount=vote_account,
-                amount_label=description,
-                fee="",
-                fee_label="",
-                extra_title=extra_title,
-                extra_items=items,
-            ),
-            br_name,
-            br_code,
-        )
 
-        await raise_if_not_confirmed(
-            trezorui_api.confirm_summary(
-                amount=amount,
-                amount_label=amount_label,
-                fee=fee,
-                fee_label=fee_label,
-                account_items=None,
-                extra_title=TR.confirm_total__title_fee,
-                extra_items=fee_details,
-            ),
-            br_name,
-            br_code,
+        main = trezorui_api.confirm_summary(
+            title=title,
+            amount=vote_account,
+            amount_label=description,
+            fee="",
+            fee_label="",
+            external_menu=True,
         )
+        menu = Menu.root(
+            *[Details(name, Property.data(None, value)) for name, value in items]
+        )
+        await confirm_with_menu(main, menu, br_name, br_code)
+
+        main = trezorui_api.confirm_summary(
+            amount=amount,
+            amount_label=amount_label,
+            fee=fee,
+            fee_label=fee_label,
+            external_menu=True,
+        )
+        menu = Menu.root(
+            Details(
+                TR.confirm_total__title_fee, *[Property(k, v) for k, v in fee_details]
+            ),
+            Details(
+                TR.address_details__account_info,
+                Property(f"{TR.words__account}:", account),
+                Property(TR.address_details__derivation_path_colon, account_path),
+            ),
+        )
+        await confirm_with_menu(main, menu, br_name, br_code)
 
     def confirm_cardano_tx(
         amount: str,
