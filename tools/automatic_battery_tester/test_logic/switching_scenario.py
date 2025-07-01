@@ -1,17 +1,16 @@
-
-
-from .test_scenario import TestScenario
+import enum
 import logging
 import time
-import sys
-import enum
 from pathlib import Path
+
 from dut.dut_controller import DutController
-from hardware_ctl.relay_controller import RelayController
+
+from .test_scenario import TestScenario
 
 SKIP_CHARGING = False
 SKIP_RELAXING = False
 SKIP_DISCHARGING = False
+
 
 class ScenarioPhase(enum.Enum):
     NOT_STARTED = 0
@@ -24,9 +23,7 @@ class ScenarioPhase(enum.Enum):
 
 class SwitchingScenario(TestScenario):
 
-    def __init__(self,
-                 discharge_switch_cycle_min = 5,
-                 relaxation_time_min = 60):
+    def __init__(self, discharge_switch_cycle_min=5, relaxation_time_min=60):
 
         # DUT use display backlight intensity to change its load (discharge
         # current). Backlight intensity could be set in range of 0-255, but
@@ -35,22 +32,21 @@ class SwitchingScenario(TestScenario):
         # and 220mA when set to max 225.
         self.discharge_switch_cycle_min = discharge_switch_cycle_min
         self.relaxation_time_min = relaxation_time_min
-        self.discharge_load = 100 # initial discharge load
+        self.discharge_load = 100  # initial discharge load
         self.phase_start = time.time()
         self.remaining_time = time.time()
         self.scenario_phase = ScenarioPhase.NOT_STARTED
         self.test_time_id = "0000000000"
         self.previous_phase = ScenarioPhase.NOT_STARTED
 
-    def setup(self,
-              dut_controller : DutController):
+    def setup(self, dut_controller: DutController):
 
         # Start with charging phase first, so connect the charger with relay
         # and enable the charging.
         self.scenario_phase = ScenarioPhase.CHARGING
         dut_controller.power_up_all()  # Power up all DUTs
 
-        ## Wait for DUTs to power up
+        # Wait for DUTs to power up
         time.sleep(3)
 
         dut_controller.set_backlight(150)
@@ -64,7 +60,7 @@ class SwitchingScenario(TestScenario):
 
     def run(self, dut_controller):
 
-        if(self.previous_phase != self.scenario_phase):
+        if self.previous_phase != self.scenario_phase:
             logging.info(f"Switching scenario entered {self.scenario_phase} phase.")
             self.previous_phase = self.scenario_phase
 
@@ -73,7 +69,7 @@ class SwitchingScenario(TestScenario):
         # Move to next phase when all DUTs are charged.
         if self.scenario_phase == ScenarioPhase.CHARGING:
 
-            if(dut_controller.all_duts_charged() or SKIP_CHARGING):
+            if dut_controller.all_duts_charged() or SKIP_CHARGING:
                 self.scenario_phase = ScenarioPhase.CHARGED_RELAXING
                 self.phase_start = time.time()
 
@@ -81,7 +77,9 @@ class SwitchingScenario(TestScenario):
         elif self.scenario_phase == ScenarioPhase.CHARGED_RELAXING:
 
             # Relaxation time is set in minutes, so convert to seconds
-            if (time.time() - self.phase_start) >= (self.relaxation_time_min * 60) or SKIP_RELAXING:
+            if (time.time() - self.phase_start) >= (
+                self.relaxation_time_min * 60
+            ) or SKIP_RELAXING:
 
                 dut_controller.power_down_all()
                 self.scenario_phase = ScenarioPhase.DISCHARGING
@@ -90,18 +88,21 @@ class SwitchingScenario(TestScenario):
 
                 elapsed_min = int((time.time() - self.phase_start) / 60)
 
-                if(self.remaining_time != self.relaxation_time_min - elapsed_min):
+                if self.remaining_time != self.relaxation_time_min - elapsed_min:
                     # Update remaining time only if it changed
                     self.remaining_time = self.relaxation_time_min - elapsed_min
-                    logging.info(f"Relaxing for {self.relaxation_time_min} minutes, remaining: {self.remaining_time} minutes")
+                    logging.info(
+                        f"Relaxing for {self.relaxation_time_min} minutes, remaining: {self.remaining_time} minutes"
+                    )
 
         elif self.scenario_phase == ScenarioPhase.DISCHARGING:
 
-            if(dut_controller.all_duts_discharged() or
-               SKIP_DISCHARGING):
+            if dut_controller.all_duts_discharged() or SKIP_DISCHARGING:
                 self.scenario_phase = ScenarioPhase.DISCHARGED_RELAXING
                 self.phase_start = time.time()
-            elif (time.time() - self.phase_start) >= (self.discharge_switch_cycle_min * 60):
+            elif (time.time() - self.phase_start) >= (
+                self.discharge_switch_cycle_min * 60
+            ):
 
                 # Change discharge load
                 self.discharge_load += 50
@@ -111,13 +112,16 @@ class SwitchingScenario(TestScenario):
                 dut_controller.set_backlight(self.discharge_load)
 
                 self.phase_start = time.time()
-                logging.info(f"Switched discharge cycle to {self.discharge_load}, next change in {self.discharge_switch_cycle_min} minutes.")
-
+                logging.info(
+                    f"Switched discharge cycle to {self.discharge_load}, next change in {self.discharge_switch_cycle_min} minutes."
+                )
 
         elif self.scenario_phase == ScenarioPhase.DISCHARGED_RELAXING:
 
             # Relaxation time is set in minutes, so convert to seconds
-            if (time.time() - self.phase_start) >= (self.relaxation_time_min * 60) or SKIP_RELAXING:
+            if (time.time() - self.phase_start) >= (
+                self.relaxation_time_min * 60
+            ) or SKIP_RELAXING:
 
                 self.scenario_phase = ScenarioPhase.DONE
                 logging.info("Scenario completed successfully.")
@@ -126,27 +130,25 @@ class SwitchingScenario(TestScenario):
             else:
                 elapsed_min = int((time.time() - self.phase_start) / 60)
 
-                if(self.remaining_time != self.relaxation_time_min - elapsed_min):
+                if self.remaining_time != self.relaxation_time_min - elapsed_min:
                     # Update remaining time only if it changed
                     self.remaining_time = self.relaxation_time_min - elapsed_min
-                    logging.info(f"Relaxing for {self.relaxation_time_min} minutes, remaining: {self.remaining_time} minutes")
+                    logging.info(
+                        f"Relaxing for {self.relaxation_time_min} minutes, remaining: {self.remaining_time} minutes"
+                    )
 
         # Relax
         return False
 
     def log_data(self, dut_controller, output_directory: Path, temp):
 
-        dut_controller.log_data(output_directory, self.test_time_id, "switching",
-                                self.scenario_phase.name.lower(), temp)
-
+        dut_controller.log_data(
+            output_directory,
+            self.test_time_id,
+            "switching",
+            self.scenario_phase.name.lower(),
+            temp,
+        )
 
     def teardown(self, dut_controller):
         pass
-
-
-
-
-
-
-
-

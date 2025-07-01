@@ -1,15 +1,17 @@
-import time
 import logging
 import sys
-from pathlib import Path
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
-from .dut import Dut
+from pathlib import Path
+
 from hardware_ctl.relay_controller import RelayController
+
+from .dut import Dut
+
 
 @dataclass
 class ProdtestPmReport:
     """pm-report command response data structure"""
+
     power_state: str = ""
     usb: str = ""
     wlc: str = ""
@@ -47,37 +49,42 @@ class ProdtestPmReport:
             logging.error(f"Failed to parse pm-report data: {data} ({e})")
             return cls()
 
-class DutController:
 
+class DutController:
     """
     Device-under-test (DUT) controller.
     provides direct simultaneous control of configured DUTs
     """
-    def __init__(self, duts, relay_ctl, verbose: bool = False):
+
+    def __init__(self, duts, relay_ctl: RelayController, verbose: bool = False):
 
         self.duts = []
         self.relay_ctl = relay_ctl
 
         # Power off all DUTs before self test
         for d in duts:
-            self.relay_ctl.set_relay_off(d['relay_port'])
+            self.relay_ctl.set_relay_off(d["relay_port"])
 
         for d in duts:
 
             try:
-                dut = Dut(name=d['name'],
-                          cpu_id=d['cpu_id'],
-                          usb_port=d['usb_port'],
-                          relay_port=d['relay_port'],
-                          relay_ctl=self.relay_ctl,
-                          verbose=verbose)
+                dut = Dut(
+                    name=d["name"],
+                    cpu_id=d["cpu_id"],
+                    usb_port=d["usb_port"],
+                    relay_port=d["relay_port"],
+                    relay_ctl=self.relay_ctl,
+                    verbose=verbose,
+                )
                 self.duts.append(dut)
                 logging.info(f"Initialized {d['name']} on port {d['usb_port']}")
                 logging.info(f" -- cpu_id hash : {dut.get_cpu_id_hash()}")
                 logging.info(f" -- relay port  : {dut.get_relay_port()}")
 
             except Exception as e:
-                logging.critical(f"Failed to initialize DUT {d['name']} on port {d['usb_port']}: {e}")
+                logging.critical(
+                    f"Failed to initialize DUT {d['name']} on port {d['usb_port']}: {e}"
+                )
                 sys.exit(1)
 
         if len(self.duts) == 0:
@@ -204,20 +211,16 @@ class DutController:
             except Exception as e:
                 logging.error(f"Failed to set backlight on {d.name}: {e}")
 
-
-    def log_data(self, output_directory: Path, test_time_id, test_scenario,
-                 test_phase, temp):
+    def log_data(
+        self, output_directory: Path, test_time_id, test_scenario, test_phase, temp
+    ):
 
         # Log file name format:
         # > <device_id_hash>.<time_identifier>.<test_scenario>.<temperarture>.csv
         # Example: a8bf.2506091307.linear.charge.25_deg.csv
 
         for d in self.duts:
-            d.log_data(output_directory,
-                       test_time_id,
-                       test_scenario,
-                       test_phase,
-                       temp)
+            d.log_data(output_directory, test_time_id, test_scenario, test_phase, temp)
 
     def close(self):
         for d in self.duts:

@@ -1,6 +1,7 @@
+import time
 
 import pyvisa
-import time
+
 
 class GDM8351:
 
@@ -14,17 +15,18 @@ class GDM8351:
 
         print("Available devices:")
         for r_name in self.rm.list_resources():
-            if("/dev/ttyACM" in r_name):
+            if "/dev/ttyACM" in r_name:
                 device_count += 1
                 available_devices[device_count] = r_name
                 print(f"    [{device_count}]: {r_name}")
 
-
         self.device_connected = False
         while not self.device_connected:
-            input_device_id = input("Digital multimeter GDM8351: Select VCP port number (or Q to quit the selection): ")
+            input_device_id = input(
+                "Digital multimeter GDM8351: Select VCP port number (or Q to quit the selection): "
+            )
 
-            if(input_device_id.lower() == 'q'):
+            if input_device_id.lower() == "q":
                 print("Exiting device selection.")
                 return
 
@@ -35,11 +37,13 @@ class GDM8351:
                     try:
                         self.device = self.rm.open_resource(device_name)
                         self.device_id = self.device.query("*IDN?")
-                        if("GDM8351" in self.device_id):
+                        if "GDM8351" in self.device_id:
                             print("Device connected successfully.")
                         else:
                             self.device.close()
-                            print("Connected device is not a GDM8351. Please check the device ID.")
+                            print(
+                                "Connected device is not a GDM8351. Please check the device ID."
+                            )
                             continue
 
                         self.device_connected = True
@@ -60,7 +64,9 @@ class GDM8351:
             raise ValueError("Invalid sensor type. Use 'K', 'J', or 'T'.")
 
         if junction_temp_deg < 0 or junction_temp_deg > 50:
-            raise ValueError("Junction temperature must be between 0 and 50 degrees Celsius.")
+            raise ValueError(
+                "Junction temperature must be between 0 and 50 degrees Celsius."
+            )
 
         try:
             junction_temp_deg = float(junction_temp_deg)
@@ -101,15 +107,14 @@ class GDM8351:
 
         if not file_path.exists():
             # creat a file header
-            with open(file_path, 'w') as f:
+            with open(file_path, "w") as f:
                 f.write("time,temperature\n")
 
-        with open(file_path, 'a') as f:
+        with open(file_path, "a") as f:
             f.write(str(time.time()) + "," + str(temp) + "\n")
 
         if verbose:
             print(f"GDM8351 temperature: {temp}°C")
-
 
     def close(self):
         if self.device is not None and self.device_connected:
@@ -118,5 +123,3 @@ class GDM8351:
                 print("GDM8351 connection closed.")
             except Exception as e:
                 print(f"GDM8351 Failed to close connection: {e}")
-
-

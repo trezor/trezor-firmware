@@ -1,17 +1,17 @@
-import serial
-import time
-import logging
 import hashlib
-
+import logging
+import time
 from dataclasses import dataclass, field
-from typing import List
 from pathlib import Path
+
+import serial
 from hardware_ctl.relay_controller import RelayController
 
 BAUDRATE_DEFAULT = 115200
 BYTESIZE_DEFAULT = 8
-PARITY_DEFAULT   = serial.PARITY_NONE
-CMD_TIMEOUT      = 10
+PARITY_DEFAULT = serial.PARITY_NONE
+CMD_TIMEOUT = 10
+
 
 @dataclass
 class DutReportData:
@@ -30,6 +30,7 @@ class DutReportData:
     wlc_die_temp: float = 0.0
     system_voltage: float = 0.0
 
+
 @dataclass
 class DutProdtestResponse:
     timestamp: float | None = None
@@ -39,9 +40,17 @@ class DutProdtestResponse:
     OK: bool = False
 
 
-class Dut():
+class Dut:
 
-    def __init__(self, name, cpu_id=None, usb_port=None, relay_port=None, relay_ctl=None, verbose=False):
+    def __init__(
+        self,
+        name,
+        cpu_id=None,
+        usb_port=None,
+        relay_port=None,
+        relay_ctl: RelayController | None = None,
+        verbose=False,
+    ):
 
         self.name = name
         self.relay_ctl = relay_ctl
@@ -54,13 +63,15 @@ class Dut():
         # Wait for device to boot up
         time.sleep(3)
 
-        self.vcp = serial.Serial(port=usb_port,
-                                baudrate=BAUDRATE_DEFAULT,
-                                bytesize=BYTESIZE_DEFAULT,
-                                parity=PARITY_DEFAULT)
+        self.vcp = serial.Serial(
+            port=usb_port,
+            baudrate=BAUDRATE_DEFAULT,
+            bytesize=BYTESIZE_DEFAULT,
+            parity=PARITY_DEFAULT,
+        )
 
         # Connect serial port
-        if(not self.vcp.is_open):
+        if not self.vcp.is_open:
             self.init_error()
             raise RuntimeError(f"Failed to open serial port {usb_port} for DUT {name}")
 
@@ -68,7 +79,7 @@ class Dut():
         self.enable_charging()
         self.set_backlight(100)
 
-        time.sleep(2) # Give some time to process te commands
+        time.sleep(2)  # Give some time to process te commands
 
         if not self.ping():
             self.init_error()
@@ -84,18 +95,22 @@ class Dut():
         self.cpu_id_hash = self.generate_id_hash(self.cpu_id)
 
         # cpu_id check
-        if not cpu_id is None:
-            if(self.cpu_id != cpu_id):
+        if cpu_id is not None:
+            if self.cpu_id != cpu_id:
                 self.init_error()
-                raise RuntimeError(f"DUT {self.name} CPU ID mismatch: expected {cpu_id}, got {self.cpu_id}")
+                raise RuntimeError(
+                    f"DUT {self.name} CPU ID mismatch: expected {cpu_id}, got {self.cpu_id}"
+                )
 
         logging.debug(f"DUT {self.name} ID hash: {self.cpu_id_hash}")
 
         # device should start charging
         report = self.read_report()
-        if not (report.usb == "USB_connected"):
+        if not report.usb == "USB_connected":
             self.init_error()
-            raise RuntimeError(f"{self.name} USB not connected. Check VCP and relay ports")
+            raise RuntimeError(
+                f"{self.name} USB not connected. Check VCP and relay ports"
+            )
 
         self.display_ok()
         self.disable_charging()
@@ -113,10 +128,6 @@ class Dut():
     def display_ok(self):
         self.display_bars("G")
         time.sleep(3)
-
-    def __del__(self):
-        self.vcp.close()
-        self.vcp = None
 
     def get_cpu_id_hash(self):
         return self.cpu_id_hash
@@ -193,13 +204,12 @@ class Dut():
         return response.OK
 
     def set_soc_limit(self, soc_limit: int):
-
         """
         Set the state of charge (SoC) limit for the DUT.
         :param soc_limit: The SoC limit to set (0-100).
         :return: True if the command was successful, False otherwise.
         """
-        if not (0 <= soc_limit <= 100):
+        if not 0 <= soc_limit <= 100:
             raise ValueError("SoC limit must be between 0 and 100.")
 
         response = self.send_command("pm-set-soc-limit", soc_limit)
@@ -207,7 +217,7 @@ class Dut():
 
     def set_backlight(self, value: int):
 
-        if not (0 <= value <= 255):
+        if not 0 <= value <= 255:
             raise ValueError("Backlight value must be between 0 and 255.")
 
         response = self.send_command("display-set-backlight", value)
@@ -247,7 +257,6 @@ class Dut():
         return data
 
     def read_report(self) -> DutReportData:
-
         """
         Read the PM report from the DUT.
         Returns a ProdtestResponse object containing the report data.
@@ -259,10 +268,9 @@ class Dut():
 
         return self.parse_report(response)
 
-
     def send_command(self, cmd, *args, skip_response=False):
 
-        if(self.vcp is None):
+        if self.vcp is None:
             raise "VPC not initalized"
 
         response = DutProdtestResponse()
@@ -270,37 +278,37 @@ class Dut():
 
         # Assamble command
         response.cmd = cmd
-        if(args):
-            response.cmd = response.cmd + ' ' + ' '.join(str(k) for k in args)
-        response.cmd = response.cmd + '\n'
+        if args:
+            response.cmd = response.cmd + " " + " ".join(str(k) for k in args)
+        response.cmd = response.cmd + "\n"
 
         response.timestamp = time.time()
 
         # Flush serial
         self.vcp.flush()
 
-        self._log_output(response.cmd.rstrip('\r\n'))
+        self._log_output(response.cmd.rstrip("\r\n"))
         self.vcp.write(response.cmd.encode())
 
-        if(skip_response):
+        if skip_response:
             return response
 
-        while(True):
+        while True:
 
             line = self.vcp.readline().decode()
-            self._log_input(line.strip('\r\n'))
+            self._log_input(line.strip("\r\n"))
 
             # Capture traces
-            if(line[:1] == "#"):
+            if line[:1] == "#":
                 response.trace.append(line[2:])
 
             # Capture data
-            if(line[:8] == "PROGRESS"):
+            if line[:8] == "PROGRESS":
                 line = line.replace("\r\n", "")
                 response.data_entries.append((line[9:].split(" ")))
 
             # Terminate
-            if("OK" in line):
+            if "OK" in line:
 
                 response.OK = True
 
@@ -310,19 +318,29 @@ class Dut():
 
                 break
 
-            if("ERROR" in line):
+            if "ERROR" in line:
                 break
 
         return response
 
-    def log_data(self, output_directory: Path, test_time_id, test_scenario,
-                 test_phase, temp, verbose=False):
+    def log_data(
+        self,
+        output_directory: Path,
+        test_time_id,
+        test_scenario,
+        test_phase,
+        temp,
+        verbose=False,
+    ):
 
         # Log file name format:
         # > <device_id_hash>.<time_identifier>.<test_scenario>.<test><temperarture>.csv
         # Example: a8bf.2506091307.linear.charge.25_deg.csv
 
-        file_path = output_directory / f"{self.cpu_id_hash}.{test_time_id}.{test_scenario}.{test_phase}.{temp}.csv"
+        file_path = (
+            output_directory
+            / f"{self.cpu_id_hash}.{test_time_id}.{test_scenario}.{test_phase}.{temp}.csv"
+        )
 
         report = None
         try:
@@ -333,24 +351,28 @@ class Dut():
 
         if not file_path.exists():
             # creat a file header
-            with open(file_path, 'w') as f:
-                f.write("time,power_state,usb,wlc,battery_voltage,battery_current,"
-                        "battery_temp,battery_soc,battery_soc_latched,pmic_die_temp,"
-                        "wlc_voltage,wlc_current,wlc_die_temp,system_voltage\n")
+            with open(file_path, "w") as f:
+                f.write(
+                    "time,power_state,usb,wlc,battery_voltage,battery_current,"
+                    "battery_temp,battery_soc,battery_soc_latched,pmic_die_temp,"
+                    "wlc_voltage,wlc_current,wlc_die_temp,system_voltage\n"
+                )
 
-        with open(file_path, 'a') as f:
-            f.write(str(report.timestamp) + "," +",".join(report.data_entries[0]) + "\n")
+        with open(file_path, "a") as f:
+            f.write(
+                str(report.timestamp) + "," + ",".join(report.data_entries[0]) + "\n"
+            )
 
         if verbose:
-            print(str(report.timestamp) + "," +",".join(report.data_entries[0]))
+            print(str(report.timestamp) + "," + ",".join(report.data_entries[0]))
 
     def _log_output(self, message):
-        if(self.verbose):
+        if self.verbose:
             prefix = f"\033[95m[{self.name}]\033[0m"
             logging.debug(prefix + " > " + message)
 
     def _log_input(self, message):
-        if(self.verbose):
+        if self.verbose:
             prefix = f"\033[95m[{self.name}]\033[0m"
             logging.debug(prefix + " < " + message)
 

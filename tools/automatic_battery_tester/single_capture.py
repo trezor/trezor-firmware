@@ -1,11 +1,10 @@
-
 import sys
 import time
 from pathlib import Path
-from serial.tools import list_ports
-from hardware_ctl.gdm8351 import GDM8351
-from dut import Dut
 
+from dut import Dut
+from hardware_ctl.gdm8351 import GDM8351
+from serial.tools import list_ports
 
 output_directory = Path("single_capture_test_results")
 test_description = "non_specified_test"
@@ -18,6 +17,7 @@ log of the power manager data (continously calls pm-report command) into the
 log file. User can also select to log the temepertature readings from an
 external thermocouple sensor connected to the GDM8351 multimeter.
 """
+
 
 def main():
 
@@ -42,7 +42,7 @@ def main():
 
     dut_port_selection = input("Select VCP port number (or Q to quit the selection): ")
 
-    if dut_port_selection.lower() == 'q':
+    if dut_port_selection.lower() == "q":
         print("Exiting script.")
         sys.exit(0)
 
@@ -58,7 +58,6 @@ def main():
         print(f"Failed to initialize DUT on port {selected_port}: {e}")
         sys.exit(1)
     # Initialize DUT
-
 
     print("**********************************************************")
     print("  GDM8351 port selection (temp measurement) ")
@@ -84,7 +83,6 @@ def main():
     except Exception as e:
         print(f"Error configuring temperature sensing: {e}")
 
-
     # Creat test time ID
     test_time_id = f"{time.strftime('%y%m%d%H%M')}"
 
@@ -94,7 +92,6 @@ def main():
     except OSError as e:
         print("Failed to create output directory:", e)
         sys.exit(1)
-
 
     #########################################################################
     # Test setup section
@@ -111,20 +108,23 @@ def main():
 
         while True:
 
-            dut.log_data(output_directory=output_directory,
-                         test_time_id=test_time_id,
-                         test_scenario="single_capture",
-                         test_phase=test_description,
-                         temp=temp_description,
-                         verbose=True)
+            dut.log_data(
+                output_directory=output_directory,
+                test_time_id=test_time_id,
+                test_scenario="single_capture",
+                test_phase=test_description,
+                temp=temp_description,
+                verbose=True,
+            )
 
             # Read temperature from GDM8351
-            gdm8351.log_temperature(output_directory=output_directory,
-                                    test_time_id=test_time_id,
-                                    verbose=True)
+            gdm8351.log_temperature(
+                output_directory=output_directory,
+                test_time_id=test_time_id,
+                verbose=True,
+            )
 
             time.sleep(1)
-
 
     except KeyboardInterrupt:
         print("Test execution interrupted by user (Ctrl+C)")
@@ -138,12 +138,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-
-

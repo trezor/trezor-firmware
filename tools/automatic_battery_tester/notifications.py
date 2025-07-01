@@ -1,13 +1,19 @@
 # notifications.py
 
-import logging
-import requests
 import json
+import logging
 from typing import Optional
+
+import requests
 
 logger = logging.getLogger(__name__)
 
-def send_slack_message(webhook_url: Optional[str], message: str, fallback_text: str = "Notification from Battery Tester") -> bool:
+
+def send_slack_message(
+    webhook_url: Optional[str],
+    message: str,
+    fallback_text: str = "Notification from Battery Tester",
+) -> bool:
     """
     Send slack message using Incoming Webhook URL
 
@@ -27,24 +33,18 @@ def send_slack_message(webhook_url: Optional[str], message: str, fallback_text: 
 
     slack_data = {
         "text": fallback_text,
-        "blocks": [
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": message
-                }
-            }
-		]
+        "blocks": [{"type": "section", "text": {"type": "mrkdwn", "text": message}}],
     }
 
     try:
 
         payload_json_string = json.dumps(slack_data)
 
-        post_data = {'payload': payload_json_string}
+        post_data = {"payload": payload_json_string}
 
-        logger.info(f"Sending Slack notification via webhook (using payload parameter)...")
+        logger.info(
+            "Sending Slack notification via webhook (using payload parameter)..."
+        )
         logger.debug(f"Slack Webhook URL: {webhook_url}")
         logger.debug(f"Slack Payload (JSON String): {payload_json_string}")
 
@@ -53,21 +53,29 @@ def send_slack_message(webhook_url: Optional[str], message: str, fallback_text: 
             webhook_url,
             data=post_data,
             # headers={'Content-Type': 'application/x-www-form-urlencoded'}
-            timeout=timeout_seconds
+            timeout=timeout_seconds,
         )
 
         if response.status_code == 200 and response.text.lower() == "ok":
             logger.info("Slack notification request sent successfully.")
             return True
         else:
-            error_detail = f"Status: {response.status_code}, Response: '{response.text[:500]}...'"
+            error_detail = (
+                f"Status: {response.status_code}, Response: '{response.text[:500]}...'"
+            )
             logger.error(f"Slack request failed. {error_detail}")
             if response.status_code == 400 and "invalid_payload" in response.text:
-                 logger.error("Slack Error Detail: The JSON payload structure might be incorrect.")
+                logger.error(
+                    "Slack Error Detail: The JSON payload structure might be incorrect."
+                )
             elif response.status_code == 403:
-                 logger.error("Slack Error Detail: Forbidden - Check webhook URL validity or permissions.")
+                logger.error(
+                    "Slack Error Detail: Forbidden - Check webhook URL validity or permissions."
+                )
             elif response.status_code == 404:
-                 logger.error("Slack Error Detail: Not Found - The webhook URL might be incorrect or deactivated.")
+                logger.error(
+                    "Slack Error Detail: Not Found - The webhook URL might be incorrect or deactivated."
+                )
             return False
 
     except requests.exceptions.RequestException as e:
