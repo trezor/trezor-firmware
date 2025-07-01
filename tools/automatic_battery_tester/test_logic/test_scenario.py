@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class TestScenario(ABC):
     """Parent class for test scenarios."""
 
@@ -18,53 +19,3 @@ class TestScenario(ABC):
     @abstractmethod
     def log_data(self):
         pass
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
