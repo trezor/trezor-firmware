@@ -709,28 +709,28 @@ PRODTEST_CLI_CMD(
 PRODTEST_CLI_CMD(
   .name = "optiga-certdev-read",
   .func = prodtest_optiga_certdev_read,
-  .info = "Read the device's X.509 certificate",
+  .info = "Read the device's X.509 certificate from Optiga",
   .args = ""
 );
 
 PRODTEST_CLI_CMD(
   .name = "optiga-certdev-write",
   .func = prodtest_optiga_certdev_write,
-  .info = "Write the device's X.509 certificate",
+  .info = "Write the device's X.509 certificate to Optiga",
   .args = "<hex-data>"
 );
 
 PRODTEST_CLI_CMD(
   .name = "optiga-certfido-read",
   .func = prodtest_optiga_certfido_read,
-  .info = "Read the X.509 certificate for the FIDO key",
+  .info = "Read the X.509 certificate for the FIDO key from Optiga",
   .args = ""
 );
 
 PRODTEST_CLI_CMD(
   .name = "optiga-certfido-write",
   .func = prodtest_optiga_certfido_write,
-  .info = "Write the X.509 certificate for the FIDO key",
+  .info = "Write the X.509 certificate for the FIDO key to Optiga",
   .args = "<hex-data>"
 );
 
