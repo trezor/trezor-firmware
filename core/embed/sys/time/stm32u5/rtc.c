@@ -72,6 +72,34 @@ bool rtc_init(void) {
   return true;
 }
 
+bool rtc_get_timestamp(uint32_t* timestamp) {
+  rtc_driver_t* drv = &g_rtc_driver;
+
+  if (!drv->initialized || timestamp == NULL) {
+    return false;
+  }
+
+  RTC_DateTypeDef date;
+  RTC_TimeTypeDef time;
+
+  // Get current time and date, date has to be read first.
+  if (HAL_OK != HAL_RTC_GetTime(&drv->hrtc, &time, RTC_FORMAT_BIN)) {
+    return false;
+  }
+
+  // Get the current date
+  if (HAL_OK != HAL_RTC_GetDate(&drv->hrtc, &date, RTC_FORMAT_BIN)) {
+    return false;
+  }
+
+  *timestamp =
+      ((date.Year * 365 * 24 * 3600) + ((date.Month - 1) * 30 * 24 * 3600) +
+       ((date.Date - 1) * 24 * 3600) + (time.Hours * 3600) +
+       (time.Minutes * 60) + time.Seconds);
+
+  return true;
+}
+
 bool rtc_wakeup_timer_start(uint32_t seconds, rtc_wakeup_callback_t callback,
                             void* context) {
   rtc_driver_t* drv = &g_rtc_driver;

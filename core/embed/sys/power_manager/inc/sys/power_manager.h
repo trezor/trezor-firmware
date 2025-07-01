@@ -28,6 +28,7 @@ typedef enum {
   PM_OK = 0,
   PM_NOT_INITIALIZED,
   PM_REQUEST_REJECTED,
+  PM_TIMEOUT,
   PM_ERROR,
 } pm_status_t;
 
@@ -203,3 +204,28 @@ pm_status_t pm_set_soc_limit(uint8_t limit);
  * @return pm_status_t Status code indicating success or failure
  */
 pm_status_t pm_store_data_to_backup_ram();
+
+/**
+ * @brief Suspends driver activity so the CPU can enter low-power mode.
+ *
+ * Suspending may take some time if the driver is currently
+ * performing an operation. Caller may check the status by
+ * pm_is_suspended().
+ *
+ * @return true if the power manager was successfully suspended, false otherwise
+ */
+bool pm_driver_suspend(void);
+
+/**
+ * @brief Resume the power manager after it has been suspended
+ *
+ * @return true if the power manager was successfully resumed, false otherwise
+ *  */
+bool pm_driver_resume(void);
+
+/**
+ * @brief Check if the power manager is suspended
+ *
+ * @return true if the power manager is suspended, false otherwise
+ */
+bool pm_driver_is_suspended(void);

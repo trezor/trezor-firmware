@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <trezor_bsp.h>
+
 /**
  * @brief Initialize the RTC driver
  *
@@ -28,6 +30,18 @@
  * @return true if initialization was successful, false otherwise
  */
 bool rtc_init(void);
+
+/**
+ * @brief Get the current timestamp from the RTC
+ *
+ * Retrieves the current timestamp as a number of seconds since the device got
+ * powered up for the first time. The timestamp is calculated based on the
+ * current date and time stored in the RTC.
+ *
+ * @param timestamp Pointer to a variable where the timestamp will be stored.
+ * @return true if the timestamp was successfully retrieved, false otherwise
+ */
+bool rtc_get_timestamp(uint32_t* timestamp);
 
 /**
  * @brief Callback invoked when the RTC wakeup event occurs

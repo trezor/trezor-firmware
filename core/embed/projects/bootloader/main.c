@@ -128,6 +128,10 @@ static secbool boot_sequence(secbool manufacturing_mode) {
   haptic_init();
 #endif
 
+#ifdef USE_RTC
+  rtc_init();
+#endif
+
 #ifdef USE_POWER_MANAGER
   pm_init(false);
 
@@ -230,10 +234,6 @@ static void drivers_init(secbool manufacturing_mode,
 
 #ifdef USE_TAMPER
   tamper_init();
-#endif
-
-#ifdef USE_RTC
-  rtc_init();
 #endif
 
   display_init(DISPLAY_RESET_CONTENT);
