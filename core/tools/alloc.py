@@ -3,15 +3,12 @@ from __future__ import annotations
 
 from pathlib import Path
 from types import SimpleNamespace
-from typing import TYPE_CHECKING, Dict, Protocol, TextIO
+from typing import TYPE_CHECKING, Dict, Protocol, TextIO, TypedDict
 
 import click
 from dominate import document
 from dominate.tags import a, h3, meta, style, table, tbody, td, th, thead, tr
 from dominate.util import raw
-
-# for python37 support, is not present in typing there
-from typing_extensions import TypedDict
 
 HERE = Path(__file__).resolve().parent
 
