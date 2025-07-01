@@ -1,8 +1,9 @@
-
-import pandas as pd
-import numpy as np
-from pathlib import Path
 from dataclasses import dataclass
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
 
 @dataclass
 class BatteryAnalysisData:
@@ -23,25 +24,27 @@ class BatteryAnalysisData:
     ext_temp_time: np.ndarray = None  # Optional time vector for external temperature
     ext_temp: np.ndarray = None  # Optional external temperature data
 
-def load_measured_data(data_file_path: Path,
-                       extern_temp_file_path:Path = None) -> BatteryAnalysisData:
+
+def load_measured_data(
+    data_file_path: Path, extern_temp_file_path: Path = None
+) -> BatteryAnalysisData:
 
     profile_data = pd.read_csv(data_file_path)
 
     # Extract data from the DataFrame
-    time_vector           = profile_data["time"].to_numpy()
-    power_state_vector    = profile_data["power_state"].to_numpy()
-    usb_vector            = profile_data["usb"].to_numpy()
-    wlc_vector            = profile_data["wlc"].to_numpy()
+    time_vector = profile_data["time"].to_numpy()
+    power_state_vector = profile_data["power_state"].to_numpy()
+    usb_vector = profile_data["usb"].to_numpy()
+    wlc_vector = profile_data["wlc"].to_numpy()
     battery_voltage_vector = profile_data["battery_voltage"].to_numpy()
     battery_current_vector = profile_data["battery_current"].to_numpy()
-    battery_temp_vector   = profile_data["battery_temp"].to_numpy()
-    battery_soc_vector    = profile_data["battery_soc"].to_numpy()
+    battery_temp_vector = profile_data["battery_temp"].to_numpy()
+    battery_soc_vector = profile_data["battery_soc"].to_numpy()
     battery_soc_latched_vector = profile_data["battery_soc_latched"].to_numpy()
-    pmic_die_temp_vector  = profile_data["pmic_die_temp"].to_numpy()
-    wlc_voltage_vector    = profile_data["wlc_voltage"].to_numpy()
-    wlc_current_vector    = profile_data["wlc_current"].to_numpy()
-    wlc_die_temp_vector   = profile_data["wlc_die_temp"].to_numpy()
+    pmic_die_temp_vector = profile_data["pmic_die_temp"].to_numpy()
+    wlc_voltage_vector = profile_data["wlc_voltage"].to_numpy()
+    wlc_current_vector = profile_data["wlc_current"].to_numpy()
+    wlc_die_temp_vector = profile_data["wlc_die_temp"].to_numpy()
     system_voltage_vector = profile_data["system_voltage"].to_numpy()
 
     if extern_temp_file_path is not None:
@@ -69,5 +72,5 @@ def load_measured_data(data_file_path: Path,
         wlc_die_temp=wlc_die_temp_vector,
         system_voltage=system_voltage_vector,
         ext_temp_time=ext_temp_time_vector,
-        ext_temp=ext_temp_vector
+        ext_temp=ext_temp_vector,
     )

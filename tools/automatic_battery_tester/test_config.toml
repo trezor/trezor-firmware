@@ -12,13 +12,13 @@ log_interval_seconds = 1
 name = "DUT1"
 cpu_id = "05001D000A50325557323120"
 usb_port = "/dev/ttyACM0"
-relay_port = 6
+relay_port = 1
 
-[[duts]]
-name = "DUT2"
-cpu_id = "1C0023000A50325557323120"
-usb_port = "/dev/ttyACM1"
-relay_port = 8
+#[[duts]]
+#name = "DUT2"
+#cpu_id = "1C0023000A50325557323120"
+#usb_port = "/dev/ttyACM0"
+#relay_port = 1
 
 # Uncomment and edit to add more DUTs
 #[[duts]]
