@@ -1378,8 +1378,10 @@ ecdsa_tweak_pubkey_result ecdsa_tweak_pubkey(const ecdsa_curve *curve,
   return tc_ecdsa_tweak_pubkey(curve, pub_key, tweak, tweaked_pub_key);
 }
 
-int ecdsa_mask_scalar(const ecdsa_curve *curve, const uint8_t *masking_key,
-                      const uint8_t *scalar, uint8_t *masked_scalar) {
+int ecdsa_mask_scalar(const ecdsa_curve *curve,
+                      const uint8_t masking_key[ECDSA_PRIVATE_KEY_SIZE],
+                      const uint8_t scalar[ECDSA_PRIVATE_KEY_SIZE],
+                      uint8_t masked_scalar[ECDSA_PRIVATE_KEY_SIZE]) {
   bignum256 k = {0};
   bn_read_be(masking_key, &k);
   if (bn_is_zero(&k) || !bn_is_less(&k, &curve->order)) {
@@ -1398,8 +1400,10 @@ int ecdsa_mask_scalar(const ecdsa_curve *curve, const uint8_t *masking_key,
   return 0;
 }
 
-int ecdsa_unmask_scalar(const ecdsa_curve *curve, const uint8_t *masking_key,
-                        const uint8_t *masked_scalar, uint8_t *scalar) {
+int ecdsa_unmask_scalar(const ecdsa_curve *curve,
+                        const uint8_t masking_key[ECDSA_PRIVATE_KEY_SIZE],
+                        const uint8_t masked_scalar[ECDSA_PRIVATE_KEY_SIZE],
+                        uint8_t scalar[ECDSA_PRIVATE_KEY_SIZE]) {
   bignum256 k = {0};
   bn_read_be(masking_key, &k);
   if (bn_is_zero(&k) || !bn_is_less(&k, &curve->order)) {
@@ -1419,10 +1423,11 @@ int ecdsa_unmask_scalar(const ecdsa_curve *curve, const uint8_t *masking_key,
   return 0;
 }
 
+// masked_pub_key may be compressed or uncompressed
 int ecdsa_unmask_public_key(const ecdsa_curve *curve,
-                            const uint8_t *masking_key,
+                            const uint8_t masking_key[ECDSA_PRIVATE_KEY_SIZE],
                             const uint8_t *masked_pub_key,
-                            uint8_t pub_key[65]) {
+                            uint8_t pub_key[ECDSA_PUBLIC_KEY_SIZE]) {
   int ret = 0;
 
   curve_point point = {0};

@@ -64,7 +64,8 @@ typedef struct {
 // Maximum length of a DER-encoded secp256k1 or secp256p1 signature.
 #define MAX_DER_SIGNATURE_SIZE 72
 
-#define ECDSA_PRIVATE_KEY_SIZE 32
+#define ECDSA_SCALAR_SIZE 32
+#define ECDSA_PRIVATE_KEY_SIZE ECDSA_SCALAR_SIZE
 #define ECDSA_PUBLIC_KEY_SIZE 65
 #define ECDSA_PUBLIC_KEY_COMPRESSED_SIZE 33
 
@@ -131,13 +132,18 @@ int ecdsa_recover_pub_from_sig(const ecdsa_curve *curve, uint8_t *pub_key,
                                int recid);
 int ecdsa_sig_to_der(const uint8_t *sig, uint8_t *der);
 int ecdsa_sig_from_der(const uint8_t *der, size_t der_len, uint8_t sig[64]);
-int ecdsa_mask_scalar(const ecdsa_curve *curve, const uint8_t *masking_key,
-                      const uint8_t *scalar, uint8_t *masked_scalar);
-int ecdsa_unmask_scalar(const ecdsa_curve *curve, const uint8_t *masking_key,
-                        const uint8_t *masked_scalar, uint8_t *scalar);
+int ecdsa_mask_scalar(const ecdsa_curve *curve,
+                      const uint8_t masking_key[ECDSA_PRIVATE_KEY_SIZE],
+                      const uint8_t scalar[ECDSA_SCALAR_SIZE],
+                      uint8_t masked_scalar[ECDSA_SCALAR_SIZE]);
+int ecdsa_unmask_scalar(const ecdsa_curve *curve,
+                        const uint8_t masking_key[ECDSA_PRIVATE_KEY_SIZE],
+                        const uint8_t masked_scalar[ECDSA_SCALAR_SIZE],
+                        uint8_t scalar[ECDSA_SCALAR_SIZE]);
 int ecdsa_unmask_public_key(const ecdsa_curve *curve,
-                            const uint8_t *masking_key,
-                            const uint8_t *masked_pub_key, uint8_t pub_key[65]);
+                            const uint8_t masking_key[ECDSA_PRIVATE_KEY_SIZE],
+                            const uint8_t *masked_pub_key,
+                            uint8_t pub_key[ECDSA_PUBLIC_KEY_SIZE]);
 
 typedef enum {
   ECDSA_TWEAK_PUBKEY_SUCCESS = 0,
