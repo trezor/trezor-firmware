@@ -47,9 +47,9 @@ typedef enum _optiga_sign_result {
 #define OPTIGA_PIN_SECRET_SIZE 32
 
 optiga_sign_result __wur optiga_sign(uint8_t index, const uint8_t *digest,
-                                     size_t digest_size, uint8_t *signature,
-                                     size_t max_sig_size, size_t *sig_size);
-
+                                     size_t digest_size, uint8_t *der_signature,
+                                     size_t max_der_signature_size,
+                                     size_t *der_signature_size);
 bool __wur optiga_cert_size(uint8_t index, size_t *cert_size);
 
 bool __wur optiga_read_cert(uint8_t index, uint8_t *cert, size_t max_cert_size,
