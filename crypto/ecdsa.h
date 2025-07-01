@@ -66,8 +66,9 @@ typedef struct {
 
 #define ECDSA_SCALAR_SIZE 32
 #define ECDSA_PRIVATE_KEY_SIZE ECDSA_SCALAR_SIZE
-#define ECDSA_PUBLIC_KEY_SIZE 65
-#define ECDSA_PUBLIC_KEY_COMPRESSED_SIZE 33
+#define ECDSA_PUBLIC_KEY_SIZE (1 + 2 * ECDSA_SCALAR_SIZE)
+#define ECDSA_PUBLIC_KEY_COMPRESSED_SIZE (1 + ECDSA_SCALAR_SIZE)
+#define ECDSA_RAW_SIGNATURE_SIZE (2 * ECDSA_SCALAR_SIZE)
 
 void point_copy(const curve_point *cp1, curve_point *cp2);
 void point_add(const ecdsa_curve *curve, const curve_point *cp1,
