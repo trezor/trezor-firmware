@@ -81,7 +81,7 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
         // long and the batery temperature may vary, use the average ambient
         // temperature.
         pm_compensate_fuel_gauge(&drv->fuel_gauge.soc, drv->time_in_suspend_s,
-                                 PM_SELF_DISG_RATE_SUSPEND_MAH, 25.0f);
+                                 PM_SELF_DISG_RATE_SUSPEND_MA, 25.0f);
       }
 
       fuel_gauge_set_soc(&drv->fuel_gauge, drv->fuel_gauge.soc,

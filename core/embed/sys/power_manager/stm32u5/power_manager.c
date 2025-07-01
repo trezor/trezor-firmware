@@ -121,7 +121,7 @@ pm_status_t pm_init(bool inherit_state) {
         if (rtc_timestamp >= recovery.last_capture_timestamp) {
           pm_compensate_fuel_gauge(
               &recovery.soc, rtc_timestamp - recovery.last_capture_timestamp,
-              PM_SELF_DISG_RATE_HIBERATION_MAH, 25.0f);
+              PM_SELF_DISG_RATE_HIBERNATION_MA, 25.0f);
         }
       }
     }
