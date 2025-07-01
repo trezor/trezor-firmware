@@ -108,7 +108,8 @@ optiga_sign_result optiga_sign(uint8_t index, const uint8_t *digest,
                                size_t max_sig_size, size_t *sig_size) {
   optiga_sign_result ret = OPTIGA_SIGN_SUCCESS;
   if (index >= OPTIGA_ECC_KEY_COUNT) {
-    return OPTIGA_SIGN_ERROR;
+    ret = OPTIGA_SIGN_ERROR;
+    goto cleanup;
   }
 
 #ifdef SECRET_KEY_MASKING
@@ -157,9 +158,9 @@ optiga_sign_result optiga_sign(uint8_t index, const uint8_t *digest,
   uint8_t signature_decoded[ECDSA_RAW_SIGNATURE_SIZE] = {0};
   if (is_masked) {
     if (max_sig_size < MAX_DER_SIGNATURE_SIZE ||
-        ecdsa_sig_from_der(signature, sig_size, sig) != 0 ||
+        ecdsa_sig_from_der(signature, sig_size, signature_decoded) != 0 ||
         ecdsa_unmask_scalar(curve, masking_key, &signature_decoded[32],
-                            &signature_decoded[32]) !=) {
+                            &signature_decoded[32]) != 0) {
       ret = OPTIGA_SIGN_ERROR;
       goto cleanup;
     }
@@ -167,7 +168,6 @@ optiga_sign_result optiga_sign(uint8_t index, const uint8_t *digest,
   }
 #endif  // SECRET_KEY_MASKING
 
-  ret = OPTIGA_SIGN_SUCCESS;
 cleanup:
 #ifdef SECRET_KEY_MASKING
   memzero(masking_key, sizeof(masking_key));
