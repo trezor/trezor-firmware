@@ -1050,5 +1050,8 @@
   "1048": "words__cancel_question",
   "1049": "address__coin_address_template",
   "1050": "ethereum__contract_address",
-  "1051": "buttons__view"
+  "1051": "buttons__view",
+  "1052": "ethereum__domain_hash",
+  "1053": "ethereum__message_hash",
+  "1054": "ethereum__title_confirm_typed_hashes"
 }

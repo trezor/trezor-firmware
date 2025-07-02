@@ -1451,6 +1451,12 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__contract_address = 1050,  // "Provider contract address"
     buttons__view = 1051,  // "View"
+    #[cfg(feature = "universal_fw")]
+    ethereum__domain_hash = 1052,  // "Domain hash"
+    #[cfg(feature = "universal_fw")]
+    ethereum__message_hash = 1053,  // "Message hash"
+    #[cfg(feature = "universal_fw")]
+    ethereum__title_confirm_typed_hashes = 1054,  // "Confirm typed hashes"
 }
 
 impl TranslatedString {
@@ -3214,6 +3220,12 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__contract_address, "Provider contract address"),
             (Self::buttons__view, "View"),
+            #[cfg(feature = "universal_fw")]
+            (Self::ethereum__domain_hash, "Domain hash"),
+            #[cfg(feature = "universal_fw")]
+            (Self::ethereum__message_hash, "Message hash"),
+            #[cfg(feature = "universal_fw")]
+            (Self::ethereum__title_confirm_typed_hashes, "Confirm typed hashes"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3692,6 +3704,8 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__data_size_template, Self::ethereum__data_size_template),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__domain_hash, Self::ethereum__domain_hash),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__gas_limit, Self::ethereum__gas_limit),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__gas_price, Self::ethereum__gas_price),
@@ -3699,6 +3713,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__interaction_contract, Self::ethereum__interaction_contract),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__max_gas_price, Self::ethereum__max_gas_price),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__message_hash, Self::ethereum__message_hash),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__name_and_version, Self::ethereum__name_and_version),
         #[cfg(feature = "universal_fw")]
@@ -3743,6 +3759,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__title_confirm_struct, Self::ethereum__title_confirm_struct),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__title_confirm_typed_data, Self::ethereum__title_confirm_typed_data),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__title_confirm_typed_hashes, Self::ethereum__title_confirm_typed_hashes),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__title_input_data, Self::ethereum__title_input_data),
         #[cfg(feature = "universal_fw")]
