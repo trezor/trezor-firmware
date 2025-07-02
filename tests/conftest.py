@@ -406,7 +406,12 @@ def _client_unlocked(
         if request.node.get_closest_marker("experimental"):
             apply_settings(session, experimental_features=True)
         session.end()
-    yield _raw_client
+
+    try:
+        yield _raw_client
+    finally:
+        # Make sure there are no GC leaks from this test
+        _raw_client.debug.check_gc_info(fail_on_gc_leak)
 
 
 @pytest.fixture(scope="function")
