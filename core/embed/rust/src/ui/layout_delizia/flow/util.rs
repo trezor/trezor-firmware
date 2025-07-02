@@ -336,7 +336,6 @@ pub struct ShowInfoParams {
     cancel_button: bool,
     footer_instruction: Option<TString<'static>>,
     footer_description: Option<TString<'static>>,
-    chunkify: bool,
     swipe_up: bool,
     swipe_down: bool,
     items: Vec<(TString<'static>, TString<'static>), 4>,
@@ -351,7 +350,6 @@ impl ShowInfoParams {
             cancel_button: false,
             footer_instruction: None,
             footer_description: None,
-            chunkify: false,
             swipe_up: false,
             swipe_down: false,
             items: Vec::new(),
@@ -433,14 +431,7 @@ impl ShowInfoParams {
             }
             first = false;
             paragraphs.add(Paragraph::new(&theme::TEXT_SUB_GREY, item.0).no_break());
-            if self.chunkify {
-                paragraphs.add(Paragraph::new(
-                    theme::get_chunkified_text_style(item.1.len()),
-                    item.1,
-                ));
-            } else {
-                paragraphs.add(Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, item.1));
-            }
+            paragraphs.add(Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, item.1));
         }
 
         let mut frame = Frame::left_aligned(
