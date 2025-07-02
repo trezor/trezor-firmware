@@ -487,6 +487,10 @@ def boot() -> None:
         workflow_handlers.register(msg_type, handler)
 
     reload_settings_from_storage()
+    if utils.USE_POWER_MANAGER:
+        from apps.management.pm.autodim import autodim_display
+
+        workflow.idle_timer.set(30_000, autodim_display)
 
     if backup.repeated_backup_enabled():
         backup.activate_repeated_backup()

@@ -88,6 +88,11 @@ def disable_animation(disable: bool) -> None:
 
 
 # rust/src/ui/api/firmware_micropython.rs
+def backlight_get() -> int:
+    """Get currently set backlight level. Returns None if backlight is not supported."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
 def backlight_set(level: int) -> None:
     """Set backlight to desired level."""
 
