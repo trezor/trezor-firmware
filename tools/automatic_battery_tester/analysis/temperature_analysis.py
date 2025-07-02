@@ -124,7 +124,7 @@ def sec_to_min(time_vector):
 
 def plot_temperature_profile(waveform_name, profile_data):
 
-    fig, ax = plt.subplots(2)
+    fig, ax = plt.subplots(3)
     fig.canvas.manager.set_window_title(waveform_name)
 
     ax[0].plot(
@@ -133,13 +133,20 @@ def plot_temperature_profile(waveform_name, profile_data):
         color="green",
         label="battery temeperature",
     )
-    ax[0].axhline(y=battery_thermal_limit, color="green", linestyle="--")
+    ax[0].axhline(y=battery_thermal_limit, color="green", linestyle=":")
 
     ax[0].plot(
         sec_to_min(profile_data.time),
         profile_data.pmic_die_temp,
         color="orange",
         label="pmic die temperature",
+    )
+
+    ax[0].plot(
+        sec_to_min(profile_data.time),
+        profile_data.wlc_die_temp,
+        color="purple",
+        label="wlc die temperature",
     )
 
     colored_region_plot(
@@ -159,7 +166,7 @@ def plot_temperature_profile(waveform_name, profile_data):
             label="case temperature",
             linestyle="--",
         )
-        ax[0].axhline(y=case_thermal_limit, color="blue", linestyle="--")
+        ax[0].axhline(y=case_thermal_limit, color="blue", linestyle=":")
 
         colored_region_plot(
             ax[0],
@@ -233,6 +240,59 @@ def plot_temperature_profile(waveform_name, profile_data):
         color="green",
         alpha=0.2,
     )
+
+    ax[2].plot(
+        sec_to_min(profile_data.time),
+        profile_data.wlc_current,
+        color="blue",
+        label="wlc current",
+    )
+
+    ax[2].set_xlabel("Time (min)")
+    ax[2].set_ylabel("Current (mA)")
+    ax[2].set_xlim(
+        left=sec_to_min(profile_data.time)[0], right=sec_to_min(profile_data.time)[-1]
+    )
+
+    ax[2].set_ylim(
+        bottom=min(profile_data.wlc_current) - 10,
+        top=max(profile_data.wlc_current) + 50,
+    )
+
+    # Add secondary y-axis for voltage
+    ax2_voltage = ax[2].twinx()
+    ax2_voltage.plot(
+        sec_to_min(profile_data.time),
+        profile_data.wlc_voltage,
+        color="orange",
+        label="wlc voltage"
+    )
+    ax2_voltage.set_ylabel("Voltage (V)", color="orange")
+    ax2_voltage.tick_params(axis='y', labelcolor="orange")
+
+    # Add legends for both axes
+    lines_1, labels_1 = ax[2].get_legend_handles_labels()
+    lines_2, labels_2 = ax2_voltage.get_legend_handles_labels()
+    ax[2].legend(lines_1 + lines_2, labels_1 + labels_2, loc="upper right")
+
+
+
+
+    ax[2].grid(True)
+    ax[2].legend()
+
+    colored_region_box(
+        ax[2], sec_to_min(profile_data.time), usb_charging_mask, color="blue", alpha=0.2
+    )
+    colored_region_box(
+        ax[2],
+        sec_to_min(profile_data.time),
+        wlc_charging_mask,
+        color="green",
+        alpha=0.2,
+    )
+
+
 
 
 def main():
