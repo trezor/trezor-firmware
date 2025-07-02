@@ -43,7 +43,7 @@ def show_details_input_flow(client: Client):
     else:
         raise NotImplementedError
     # reset ui flow to continue "automatically"
-    client.ui.input_flow = None
+    client.ui.reset_input_flow()
     yield
 
 

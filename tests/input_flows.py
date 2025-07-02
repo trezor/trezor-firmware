@@ -2920,13 +2920,10 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
         super().__init__(client)
 
     def input_flow_bolt(self) -> BRGeneratorType:
-        br = yield
-        while True:
-            self.client.ui._default_input_flow(br)
-            br = yield
+        return self.client.ui.default_input_flow()
 
     def input_flow_caesar(self) -> BRGeneratorType:
-        return self.input_flow_bolt()
+        return self.client.ui.default_input_flow()
 
     def input_flow_delizia(self) -> BRGeneratorType:
         br = yield
