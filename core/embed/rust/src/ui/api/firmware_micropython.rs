@@ -933,7 +933,13 @@ extern "C" fn new_show_pairing_device_name(
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_show_ble_pairing_code(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+// Prefix parameters with `_` to avoid unused variable warning when building
+// without "ble".
+extern "C" fn new_show_ble_pairing_code(
+    _n_args: usize,
+    _args: *const Obj,
+    _kwargs: *mut Map,
+) -> Obj {
     #[cfg(feature = "ble")]
     {
         let block = move |_args: &[Obj], kwargs: &Map| {
@@ -944,7 +950,7 @@ extern "C" fn new_show_ble_pairing_code(n_args: usize, args: *const Obj, kwargs:
             let layout_obj = LayoutObj::new_root(layout)?;
             Ok(layout_obj.into())
         };
-        unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+        unsafe { util::try_with_args_and_kwargs(_n_args, _args, _kwargs, block) }
     }
 
     #[cfg(not(feature = "ble"))]
