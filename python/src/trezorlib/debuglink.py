@@ -930,9 +930,13 @@ class DebugUI:
 
     def default_input_flow(self) -> InputFlowType:
         while True:
-            yield from self._handle_button_request()
+            br = yield
+            if br.code == messages.ButtonRequestType.PinEntry:
+                self.debuglink.input(self.get_pin())
+            else:
+                self._paginate_and_confirm(br.pages)
 
-    def _visit_menu_items(self) -> InputFlowType:
+    def _visit_menu_items(self) -> None:
         layout = self.debuglink.read_layout()
         if not layout.has_menu():
             return
@@ -942,54 +946,48 @@ class DebugUI:
 
         # enter info menu layout and paginate through its items
         self.debuglink.press_info()
-        br = yield
-        assert br.pages is not None
-        for _ in range(br.pages):
+        menu_items_count = self.debuglink.read_layout().page_count()
+        for _ in range(menu_items_count):
             self.debuglink.press_middle()
             # paginate through all properties and confirm
-            yield from self._handle_button_request()
+            self._paginate_and_confirm(None)
             # paginate to next menu item
-            br = yield
             self.debuglink.press_right()
 
         # cancel info menu layout
         self.debuglink.press_no()
-        # back to the main layout
-        br = yield
 
-    def _handle_button_request(self) -> InputFlowType:
-        br = yield
-        if br.code == messages.ButtonRequestType.PinEntry:
-            self.debuglink.input(self.get_pin())
-        else:
-            # Paginating (going as further as possible)
-            if br.pages is not None:
-                for _ in range(br.pages - 1):
-                    if self.debuglink.model is models.T3W1:
-                        self.debuglink.click(self.debuglink.screen_buttons.ok())
-                    else:
-                        self.debuglink.swipe_up()
+    def _paginate_and_confirm(self, pages: int | None) -> None:
+        if pages is None:
+            pages = self.debuglink.read_layout().page_count()
 
-            # Visit info menus (if exist)
-            yield from self._visit_menu_items()
+        # Paginating (going as further as possible)
+        for _ in range(pages - 1):
+            if self.debuglink.model is models.T3W1:
+                self.debuglink.click(self.debuglink.screen_buttons.ok())
+            else:
+                self.debuglink.swipe_up()
 
-            # Confirm current layout
-            if self.debuglink.model is models.T3T1:
-                layout = self.debuglink.read_layout()
-                if "PromptScreen" in layout.all_components():
-                    self.debuglink.press_yes()
-                elif "SwipeContent" in layout.all_components():
-                    self.debuglink.swipe_up()
-                else:
-                    self.debuglink.press_yes()
-            elif self.debuglink.model is models.T3W1:
-                layout = self.debuglink.read_layout()
-                if "TextScreen" in layout.all_components():
-                    self.debuglink.click(self.debuglink.screen_buttons.ok())
-                else:
-                    self.debuglink.press_yes()
+        # Visit info menus (if exist)
+        self._visit_menu_items()
+
+        # Confirm current layout
+        if self.debuglink.model is models.T3T1:
+            layout = self.debuglink.read_layout()
+            if "PromptScreen" in layout.all_components():
+                self.debuglink.press_yes()
+            elif "SwipeContent" in layout.all_components():
+                self.debuglink.swipe_up()
             else:
                 self.debuglink.press_yes()
+        elif self.debuglink.model is models.T3W1:
+            layout = self.debuglink.read_layout()
+            if "TextScreen" in layout.all_components():
+                self.debuglink.click(self.debuglink.screen_buttons.ok())
+            else:
+                self.debuglink.press_yes()
+        else:
+            self.debuglink.press_yes()
 
     def button_request(self, br: messages.ButtonRequest) -> None:
         self.debuglink.snapshot_legacy()

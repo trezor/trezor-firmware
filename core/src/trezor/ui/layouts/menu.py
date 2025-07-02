@@ -80,6 +80,7 @@ async def confirm_with_menu(
 ) -> None:
     while True:
         result = await interact(main, br_name, br_code)
+        br_name = None  # ButtonRequest should be sent once (for the main layout)
         if result is trezorui_api.INFO:
             await show_menu(menu, br_name, br_code)
         else:
