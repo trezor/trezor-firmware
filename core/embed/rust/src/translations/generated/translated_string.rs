@@ -992,7 +992,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     stellar__destination = 700,  // "Destination"
     #[cfg(feature = "universal_fw")]
-    stellar__exchanges_require_memo = 701,  // "Important: Many exchanges require a memo when depositing"
+    stellar__exchanges_require_memo = 701,  // "Memo is not set.\nTypically needed when sending to exchanges."
     #[cfg(feature = "universal_fw")]
     stellar__final_confirm = 702,  // "Final confirm"
     #[cfg(feature = "universal_fw")]
@@ -1465,6 +1465,16 @@ pub enum TranslatedString {
     tutorial__tropic_info3 = 1066,  // "Built for security from the ground up, and open to independent audits."
     tutorial__welcome_safe7 = 1067,  // "Welcome to\nTrezor\nSafe 7"
     tutorial__what_is_tropic = 1068,  // "What is TROPIC01?"
+    #[cfg(feature = "universal_fw")]
+    stellar__sign_with = 1069,  // "Sign with"
+    #[cfg(feature = "universal_fw")]
+    stellar__timebounds = 1070,  // "Timebounds"
+    #[cfg(feature = "universal_fw")]
+    stellar__token_info = 1071,  // "Token info"
+    #[cfg(feature = "universal_fw")]
+    stellar__transaction_source = 1072,  // "Transaction source"
+    #[cfg(feature = "universal_fw")]
+    stellar__transaction_source_diff_warning = 1073,  // "Transaction source does not belong to this Trezor."
 }
 
 impl TranslatedString {
@@ -2669,7 +2679,7 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             (Self::stellar__destination, "Destination"),
             #[cfg(feature = "universal_fw")]
-            (Self::stellar__exchanges_require_memo, "Important: Many exchanges require a memo when depositing"),
+            (Self::stellar__exchanges_require_memo, "Memo is not set.\nTypically needed when sending to exchanges."),
             #[cfg(feature = "universal_fw")]
             (Self::stellar__final_confirm, "Final confirm"),
             #[cfg(feature = "universal_fw")]
@@ -3249,6 +3259,16 @@ impl TranslatedString {
             (Self::tutorial__tropic_info3, "Built for security from the ground up, and open to independent audits."),
             (Self::tutorial__welcome_safe7, "Welcome to\nTrezor\nSafe 7"),
             (Self::tutorial__what_is_tropic, "What is TROPIC01?"),
+            #[cfg(feature = "universal_fw")]
+            (Self::stellar__sign_with, "Sign with"),
+            #[cfg(feature = "universal_fw")]
+            (Self::stellar__timebounds, "Timebounds"),
+            #[cfg(feature = "universal_fw")]
+            (Self::stellar__token_info, "Token info"),
+            #[cfg(feature = "universal_fw")]
+            (Self::stellar__transaction_source, "Transaction source"),
+            #[cfg(feature = "universal_fw")]
+            (Self::stellar__transaction_source_diff_warning, "Transaction source does not belong to this Trezor."),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4529,9 +4549,19 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__sign_tx_fee_template, Self::stellar__sign_tx_fee_template),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__sign_with, Self::stellar__sign_with),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__source_account, Self::stellar__source_account),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__testnet_network, Self::stellar__testnet_network),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__timebounds, Self::stellar__timebounds),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__token_info, Self::stellar__token_info),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__transaction_source, Self::stellar__transaction_source),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__transaction_source_diff_warning, Self::stellar__transaction_source_diff_warning),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__trusted_account, Self::stellar__trusted_account),
         #[cfg(feature = "universal_fw")]

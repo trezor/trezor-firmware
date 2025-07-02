@@ -1067,5 +1067,10 @@
   "1065": "tutorial__tropic_info2",
   "1066": "tutorial__tropic_info3",
   "1067": "tutorial__welcome_safe7",
-  "1068": "tutorial__what_is_tropic"
+  "1068": "tutorial__what_is_tropic",
+  "1069": "stellar__sign_with",
+  "1070": "stellar__timebounds",
+  "1071": "stellar__token_info",
+  "1072": "stellar__transaction_source",
+  "1073": "stellar__transaction_source_diff_warning"
 }
