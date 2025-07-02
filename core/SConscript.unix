@@ -711,9 +711,10 @@ if FROZEN:
         ] if "optiga" not in FEATURES_AVAILABLE else [])
     )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py',
-        exclude=[
-            SOURCE_PY_DIR + 'apps/management/ble/*.py',
-        ] if "ble" not in FEATURES_AVAILABLE else [])
+        exclude=(
+            ([SOURCE_PY_DIR + 'apps/management/ble/*.py'] if "ble" not in FEATURES_AVAILABLE else []) +
+            ([SOURCE_PY_DIR + 'apps/management/pm/*.py'] if "power_manager" not in FEATURES_AVAILABLE else [])
+        ))
     )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/misc/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/*.py'))

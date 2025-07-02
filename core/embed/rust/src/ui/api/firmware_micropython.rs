@@ -31,7 +31,7 @@ use crate::{
 use heapless::Vec;
 
 #[cfg(feature = "backlight")]
-use crate::ui::display::{fade_backlight_duration, set_backlight};
+use crate::ui::display::{backlight, fade_backlight_duration, set_backlight};
 
 /// Dummy implementation so that we can use `Empty` in a return type of
 /// unimplemented trait function
@@ -1228,6 +1228,23 @@ pub extern "C" fn upy_check_homescreen_format(data: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
+pub extern "C" fn upy_backlight_get() -> Obj {
+    let block = || {
+        #[cfg(feature = "backlight")]
+        {
+            let backlight_level = backlight();
+            Ok(Obj::from(backlight_level))
+        }
+        #[cfg(not(feature = "backlight"))]
+        {
+            Err(crate::error::Error::RuntimeError(
+                c"Backlight not supported",
+            ))
+        }
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
 pub extern "C" fn upy_backlight_set(_level: Obj) -> Obj {
     let block = || {
         #[cfg(feature = "backlight")]
@@ -1362,6 +1379,10 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def disable_animation(disable: bool) -> None:
     ///     """Disable animations, debug builds only."""
     Qstr::MP_QSTR_disable_animation => obj_fn_1!(upy_disable_animation).as_obj(),
+
+    /// def backlight_get() -> int:
+    ///     """Get currently set backlight level. Returns None if backlight is not supported."""
+    Qstr::MP_QSTR_backlight_get => obj_fn_0!(upy_backlight_get).as_obj(),
 
     /// def backlight_set(level: int) -> None:
     ///     """Set backlight to desired level."""
