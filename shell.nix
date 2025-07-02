@@ -85,7 +85,7 @@ stdenvNoCC.mkDerivation ({
     #       and poetry uses the default version (currently 3.10)
     python311
     python310
-    python39
+    oldNixpkgs.python39
     oldNixpkgs.python38
   ] ++ [
     SDL2
@@ -143,7 +143,7 @@ stdenvNoCC.mkDerivation ({
     openocd-stm
   ] ++ lib.optionals (devTools && !stdenv.isDarwin) [
     gdb
-    kcachegrind
+    kdePackages.kcachegrind
   ] ++ lib.optionals (devTools && acceptJlink) [
     nrfutil
     nrfconnect
