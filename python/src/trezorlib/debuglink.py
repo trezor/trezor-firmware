@@ -919,11 +919,18 @@ class DebugUI:
     def clear(self) -> None:
         self.pins: Iterator[str] | None = None
         self.passphrase = ""
-        self.input_flow: Union[
-            Generator[None, messages.ButtonRequest, None], object, None
-        ] = None
+        self.reset_input_flow()
 
-    def _default_input_flow(self, br: messages.ButtonRequest) -> None:
+    def reset_input_flow(self):
+        self.input_flow: InputFlowType | object = self.default_input_flow()
+        next(self.input_flow)  # start default input flow generator
+
+    def default_input_flow(self) -> InputFlowType:
+        while True:
+            yield from self._handle_button_request()
+
+    def _handle_button_request(self) -> InputFlowType:
+        br = yield
         if br.code == messages.ButtonRequestType.PinEntry:
             self.debuglink.input(self.get_pin())
         else:
@@ -955,9 +962,7 @@ class DebugUI:
     def button_request(self, br: messages.ButtonRequest) -> None:
         self.debuglink.snapshot_legacy()
 
-        if self.input_flow is None:
-            self._default_input_flow(br)
-        elif self.input_flow is self.INPUT_FLOW_DONE:
+        if self.input_flow is self.INPUT_FLOW_DONE:
             raise AssertionError("input flow ended prematurely")
         else:
             try:
