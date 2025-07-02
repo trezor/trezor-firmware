@@ -220,9 +220,7 @@ void nrf_init(void) {
   }
 }
 
-void nrf_suspend(void) {
-  nrf_driver_t *drv = &g_nrf_driver;
-
+static void nrf_deinit_common(nrf_driver_t *drv) {
   nrf_stop();
 
   systimer_delete(drv->timer);
@@ -246,10 +244,75 @@ void nrf_suspend(void) {
 
   nrf_spi_deinit();
 
-  drv->initialized = false;
-
   drv->pending_spi_transaction = false;
+}
+
+void nrf_suspend(void) {
+  nrf_driver_t *drv = &g_nrf_driver;
+
+  uint8_t data[1] = {MGMT_CMD_SUSPEND};
+  nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, 1, NULL, NULL);
+
+  systick_delay_ms(2);
+
+  nrf_deinit_common(drv);
+
   drv->wakeup = true;
+}
+
+void nrf_resume(void) {
+  nrf_driver_t *drv = &g_nrf_driver;
+
+  drv->timer = systimer_create(nrf_timer_callback, drv);
+
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
+
+  NRF_OUT_RESET_CLK_ENA();
+  HAL_GPIO_WritePin(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN, GPIO_PIN_SET);
+  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStructure.Pull = GPIO_PULLDOWN;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Pin = NRF_OUT_RESET_PIN;
+  HAL_GPIO_Init(NRF_OUT_RESET_PORT, &GPIO_InitStructure);
+
+  NRF_IN_RESERVED_CLK_ENA();
+  GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStructure.Pull = GPIO_PULLDOWN;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Pin = NRF_IN_RESERVED_PIN;
+  HAL_GPIO_Init(NRF_IN_RESERVED_PORT, &GPIO_InitStructure);
+
+  NRF_OUT_SPI_READY_CLK_ENA();
+  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Pin = NRF_OUT_SPI_READY_PIN;
+  HAL_GPIO_Init(NRF_OUT_SPI_READY_PORT, &GPIO_InitStructure);
+
+  NRF_OUT_STAY_IN_BLD_CLK_ENA();
+  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Pin = NRF_OUT_STAY_IN_BLD_PIN;
+  HAL_GPIO_Init(NRF_OUT_STAY_IN_BLD_PORT, &GPIO_InitStructure);
+
+#ifdef USE_SMP
+  nrf_uart_init(drv);
+#endif
+
+  nrf_spi_init(drv);
+
+#ifdef USE_SMP
+  NVIC_EnableIRQ(USART3_IRQn);
+#endif
+  NVIC_EnableIRQ(GPDMA1_Channel1_IRQn);
+  NVIC_EnableIRQ(GPDMA1_Channel2_IRQn);
+  NVIC_EnableIRQ(SPI1_IRQn);
+
+  nrf_start();
+
+  uint8_t data[1] = {MGMT_CMD_RESUME};
+  nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, 1, NULL, NULL);
 }
 
 void nrf_deinit(void) {
@@ -261,7 +324,7 @@ void nrf_deinit(void) {
     HAL_GPIO_DeInit(NRF_IN_SPI_REQUEST_PORT, NRF_IN_SPI_REQUEST_PIN);
     HAL_EXTI_ClearConfigLine(&drv->exti);
 
-    nrf_suspend();
+    nrf_deinit_common(drv);
   }
 }
 

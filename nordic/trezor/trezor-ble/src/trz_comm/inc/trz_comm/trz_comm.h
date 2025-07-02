@@ -52,3 +52,5 @@ trz_packet_t *trz_comm_poll_data(nrf_service_id_t service);
 
 void trz_comm_start_uart(void);
 void trz_comm_stop_uart(void);
+void trz_comm_suspend(void);
+void trz_comm_resume(void);
