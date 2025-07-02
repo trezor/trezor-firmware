@@ -53,8 +53,8 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
   workflow_result_t result = WF_ERROR_FATAL;
 
 #ifdef USE_POWER_MANAGER
-  uint32_t fade_deadline = ticks_timeout(10000);
-  uint32_t suspend_deadline = ticks_timeout(15000);
+  uint32_t fade_deadline = ticks_timeout(FADE_TIME_MS);
+  uint32_t suspend_deadline = ticks_timeout(SUSPEND_TIME_MS);
   bool faded = false;
   int fade_value = display_get_backlight();
 #endif
