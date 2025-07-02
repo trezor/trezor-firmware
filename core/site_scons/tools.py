@@ -68,10 +68,13 @@ def _compress(data: bytes) -> bytes:
 def get_bindgen_defines(defines: list[str | tuple[str, str]], paths: list[str]) -> str:
     rest_defs = []
     for d in defines:
-        if type(d) is tuple:
+        if isinstance(d, (tuple, list)):
+            assert len(d) == 2
             d = f"-D{d[0]}={d[1]}"
-        else:
+        elif isinstance(d, str):
             d = f"-D{d}"
+        else:
+            raise ValueError(f"Invalid define: {d} {type(d)}")
         rest_defs.append(d)
     for d in paths:
         rest_defs.append(f"-I../../{d}")
