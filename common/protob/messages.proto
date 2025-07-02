@@ -348,6 +348,10 @@ enum MessageType {
     MessageType_NostrSignEvent = 2003 [(wire_in) = true];
     MessageType_NostrEventSignature = 2004 [(wire_out) = true];
 
+    // Evolu
+    MessageType_EvoluGetKeys = 3000 [(wire_in) = true];
+    MessageType_EvoluKeys = 3001 [(wire_out) = true];
+
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];
     MessageType_BenchmarkNames = 9101 [(bitcoin_only) = true];

@@ -1,0 +1,25 @@
+
+syntax = "proto2";
+package hw.trezor.messages.evolu;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageEvolu";
+
+/**
+ * Request: Ask the device for the SLIP-21 keys for Evolu
+ * @start
+ * @next EvoluKeys
+ */
+message EvoluGetKeys {
+}
+
+/**
+ * Response: Evolu keys
+ * @end
+ */
+message EvoluKeys {
+    required bytes owner_id = 1;
+    required bytes write_key = 2;
+    required bytes encryption_key = 3;
+}
