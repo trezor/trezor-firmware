@@ -351,6 +351,12 @@ static void ble_process_rx_msg(const uint8_t *data, uint32_t len) {
   }
 }
 
+static bool ble_connected_add_match(ble_driver_t *drv, const uint8_t *addr) {
+  return (addr[0] == drv->connected_addr_type &&
+          memcmp(&addr[1], drv->connected_addr, sizeof(drv->connected_addr)) ==
+              0);
+}
+
 static void ble_process_data(const uint8_t *data, uint32_t len) {
   ble_driver_t *drv = &g_ble_driver;
 
@@ -366,10 +372,15 @@ static void ble_process_data(const uint8_t *data, uint32_t len) {
     return;
   }
 
-  if (data[0] != drv->connected_addr_type ||
-      memcmp(&data[1], drv->connected_addr, sizeof(drv->connected_addr)) != 0) {
-    // inconsistent address of a connected device, ignore the data
-    return;
+  if (!ble_connected_add_match(drv, data)) {
+    // inconsistent address of a connected device
+
+    drv->connected_addr_type = data[0];
+    memcpy(drv->connected_addr, &data[1], sizeof(drv->connected_addr));
+
+    ble_event_t event = {.type = BLE_CONNECTION_CHANGED};
+    memcpy(event.data, drv->connected_addr, sizeof(drv->connected_addr));
+    tsqueue_enqueue(&drv->event_queue, (uint8_t *)&event, sizeof(event), NULL);
   }
 
   tsqueue_enqueue(&drv->rx_queue, data, len, NULL);
@@ -523,6 +534,8 @@ void ble_deinit(void) {
 void ble_suspend(ble_wakeup_params_t *wakeup_params) {
   ble_driver_t *drv = &g_ble_driver;
 
+  memset(wakeup_params, 0, sizeof(ble_wakeup_params_t));
+
   if (drv->initialized) {
     bool connected = drv->connected;
     wakeup_params->accept_msgs = connected;
@@ -532,11 +545,15 @@ void ble_suspend(ble_wakeup_params_t *wakeup_params) {
 
     if (!connected) {
       wakeup_params->reboot_on_resume = true;
-
       // if not connected, we can turn off the radio
       nrf_system_off();
       nrf_deinit();
     } else {
+      irq_key_t key = irq_lock();
+      wakeup_params->connected_addr_type = drv->connected_addr_type;
+      memcpy(wakeup_params->connected_addr, drv->connected_addr,
+             sizeof(drv->connected_addr));
+      irq_unlock(key);
       nrf_suspend();
     }
 
@@ -553,15 +570,22 @@ bool ble_resume(const ble_wakeup_params_t *wakeup_params) {
 
   if (wakeup_params->reboot_on_resume) {
     nrf_reboot();
-  }
-
-  if (wakeup_params->mode_requested) {
-    ble_start();
+  } else {
+    nrf_resume();
   }
 
   irq_key_t key = irq_lock();
+
+  drv->connected_addr_type = wakeup_params->connected_addr_type;
+  memcpy(drv->connected_addr, wakeup_params->connected_addr,
+         sizeof(drv->connected_addr));
   drv->mode_requested = wakeup_params->mode_requested;
+
   irq_unlock(key);
+
+  if (wakeup_params->accept_msgs) {
+    ble_start();
+  }
 
   return true;
 }
@@ -699,7 +723,8 @@ uint32_t ble_read(uint8_t *data, uint16_t max_len) {
 
   tsqueue_dequeue(queue, rx_data, sizeof(rx_data), &read_len, NULL);
 
-  if (read_len != BLE_DATA_SIZE) {
+  if (read_len != BLE_DATA_SIZE ||
+      max_len < (read_len - BLE_DATA_HEADER_SIZE)) {
     return 0;
   }
 
