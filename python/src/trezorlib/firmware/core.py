@@ -33,12 +33,15 @@ __all__ = [
     "FirmwareHeader",
     "FirmwareImage",
     "VendorFirmware",
+    "BootHeader",
+    "BootableImage",
 ]
 
 
 class HeaderType(Enum):
     FIRMWARE = b"TRZF"
     BOOTLOADER = b"TRZB"
+    BOOTLOADER_V2 = b"TRZQ"
 
 
 class FirmwareHeader(Struct):
@@ -211,3 +214,100 @@ class VendorFirmware(Struct):
 
     def model(self) -> Model | None:
         return self.firmware.model()
+
+
+class BootHeader(Struct):
+    magic: HeaderType
+    hw_model: Model | bytes
+    hw_revision: int
+    version: tuple[int, int, int, int]
+    fix_version: tuple[int, int, int, int]
+    monotonic: int
+    header_len: int
+    code_length: int
+
+    _signed_len: int
+
+    sigmask: int
+    signatures: list[bytes]
+    merkle_path_len: int
+    merkle_path: list[bytes]
+
+    # fmt: off
+    SUBCON = c.Struct(
+        "magic" / EnumAdapter(c.Bytes(4), HeaderType),
+        "hw_model" / EnumAdapter(c.Bytes(4), Model),
+        "hw_revision" / c.Int32ul,
+        "version" / TupleAdapter(c.Int8ul, c.Int8ul, c.Int8ul, c.Int8ul),
+        "fix_version" / TupleAdapter(c.Int8ul, c.Int8ul, c.Int8ul, c.Int8ul),
+        "monotonic" / c.Int32ul,
+        "header_len" / c.Int32ul,
+        "code_length" / c.Rebuild(
+            c.Int32ul,
+            lambda this:
+                len(this._.code) if "code" in this._
+                else (this.code_length or 0)
+        ),
+        "_reserved" / c.Padding(32),
+        "_signed_len" / c.Tell,
+
+        "sigmask" / c.Int32ul,
+        "signatures" / c.Bytes(7856)[2],
+        "merkle_path_len" / c.Int32ul,
+        "merkle_path" / c.Bytes(32)[16],
+        "_reserved" / c.Padding(88),
+    )
+    # fmt: on
+
+
+class BootableImage(Struct):
+    """Raw firmware image.
+
+    Consists of boot header and code block.
+    This is the expected format of the bootloader image with pq signature for
+    Trezor core models.
+    """
+
+    header: BootHeader = subcon(BootHeader)
+    _header_end: int
+    _code_offset: int
+    code: bytes
+
+    SUBCON = c.Struct(
+        "header" / BootHeader.SUBCON,
+        "_header_end" / c.Tell,
+        "_code_offset" / c.Tell,
+        "code" / c.Bytes(c.this.header.code_length),
+        c.Terminated,
+    )
+
+    def get_hash_params(self) -> util.FirmwareHashParameters:
+        return Model.from_hw_model(self.header.hw_model).hash_params()
+
+    def digest(self) -> bytes:
+        hash_params = self.get_hash_params()
+        hash_fn = hash_params.hash_function
+
+        # Hash the signed header
+        signed_header = self.header.build()[: self.header._signed_len]
+        hash = hash_fn(signed_header).digest()
+
+        # Hash the code by chunks
+        chunk_size = hash_params.chunk_size
+        for i in range(0, len(self.code), chunk_size):
+            chunk = self.code[i : i + chunk_size]
+            hash = hash_fn(hash + chunk).digest()
+
+        # Add the Merkle path
+        for node in self.header.merkle_path[: self.header.merkle_path_len]:
+            if node < hash:
+                hash = hash_fn(node + hash).digest()
+            else:
+                hash = hash_fn(hash + node).digest()
+
+        return hash
+
+    def model(self) -> Model | None:
+        if isinstance(self.header.hw_model, Model):
+            return self.header.hw_model
+        return None

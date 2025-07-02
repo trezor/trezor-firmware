@@ -32,6 +32,13 @@
 
 #include <util/boot_image.h>
 
+#ifdef USE_BOOT_UCB
+#include <util/boot_header.h>
+#include <util/boot_ucb.h>
+#endif
+
+#ifndef USE_BOOT_UCB
+
 static secbool hash_match(const uint8_t *hash, const uint8_t *hash_00,
                           const uint8_t *hash_FF) {
   if (0 == memcmp(hash, hash_00, BLAKE2S_DIGEST_LENGTH)) return sectrue;
@@ -47,7 +54,6 @@ _Static_assert(
     BOOTLOADER_MAXSIZE <= IMAGE_CHUNK_SIZE,
     "BOOTLOADER_MAXSIZE must be less than or equal to IMAGE_CHUNK_SIZE");
 
-#ifndef USE_BOOTHEADER
 static void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
                           const void *src, uint32_t srcsize, void *dest,
                           uint32_t destsize) {
@@ -62,7 +68,6 @@ static void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
   decomp->dest_limit = decomp->dest + destsize;
   uzlib_uncompress_init(decomp, window, window ? UZLIB_WINDOW_SIZE : 0);
 }
-#endif
 
 bool boot_image_check(const boot_image_t *image) {
   mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
@@ -86,8 +91,6 @@ bool boot_image_check(const boot_image_t *image) {
   mpu_reconfig(mode);
   return true;
 }
-
-#ifndef USE_BOOTHEADER
 
 void boot_image_replace(const boot_image_t *image) {
   const uint32_t bl_len = flash_area_get_size(&BOOTLOADER_AREA);
@@ -216,9 +219,67 @@ void boot_image_replace(const boot_image_t *image) {
 
 #else
 
+bool boot_image_check(const boot_image_t *image) {
+  if (image->image_size < sizeof(boot_header_t)) {
+    // Invalid image size, must be at least the size of the header
+    return false;
+  }
+
+  mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
+
+  boot_header_t *cur_hdr = (boot_header_t *)BOOTLOADER_START;
+  boot_header_t *new_hdr = (boot_header_t *)image->image_ptr;
+
+  bool diff = (cur_hdr->sig.header_size != new_hdr->sig.header_size) ||
+              (memcmp(cur_hdr, new_hdr, cur_hdr->sig.header_size) != 0);
+
+  mpu_restore(mode);
+
+  return diff;
+}
+
 void boot_image_replace(const boot_image_t *image) {
-  // copy new signature block to upgrade block
-  // modify the footer to point the bootloader image
+  uint32_t header_address = (uint32_t)image->image_ptr;
+
+  // Check that image is big enough to hold the header at least
+  ensure(sectrue * (image->image_size >= sizeof(boot_header_t)),
+         "Bootloader image too small");
+
+  // Read bootloader header
+  const boot_header_t *hdr = boot_header_check_integrity(header_address);
+  ensure((hdr != NULL) * sectrue, "Invalid bootloader header");
+
+  // Check the image is big enough to hold both header and code
+  ensure(sectrue * (hdr->sig.header_size <= image->image_size),
+         "Bootloader header too big");
+  ensure(sectrue * (hdr->sig.code_size <= image->image_size),
+         "Bootloader code too big");
+  ensure(sectrue *
+             (hdr->sig.header_size + hdr->sig.code_size <= image->image_size),
+         "Bootloader image too small");
+
+  // Check if the new bootloader is compatible with the hardware model
+  if (sectrue != boot_header_check_model(hdr)) {
+    return;
+  }
+
+  uint32_t code_address = (uint32_t)image + hdr->sig.header_size;
+
+  // Check monotonic version
+  // !@# TODO
+
+  // Calculate the fingerprint of the header and the code
+  boot_header_fingerprint_t fp;
+  boot_header_calc_fingerprint(hdr, code_address, &fp);
+
+  // Check whether the new bootloader is properly signed
+  if (sectrue != boot_header_check_signature(hdr, &fp)) {
+    return;
+  }
+
+  // Write to update control block
+  ensure(boot_ucb_write(header_address, code_address),
+         "Failed to write boot UCB");
 }
 
 #endif

@@ -13,6 +13,7 @@ UI_DEBUG_OVERLAY = ARGUMENTS.get('UI_DEBUG_OVERLAY', '0') == '1'
 
 FEATURES_WANTED = [
     "ble",
+    "boot_ucb",
     "consumption_mask",
     "display",
     "dma2d",
@@ -119,7 +120,6 @@ env = Environment(
 FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
 SOURCE_BOOTLOADER = [
-    'embed/projects/bootloader/header.S',
     'embed/projects/bootloader/bootui.c',
     'embed/projects/bootloader/main.c',
     'embed/projects/bootloader/workflow/wf_firmware_update.c',
@@ -139,6 +139,12 @@ SOURCE_BOOTLOADER = [
     'embed/projects/bootloader/protob/pb/messages.pb.c',
     'embed/projects/bootloader/version_check.c',
 ]
+
+if not "boot_ucb" in FEATURES_AVAILABLE:
+    SOURCE_BOOTLOADER += [
+        'embed/projects/bootloader/header.S',
+    ]
+
 
 if ('LOCKABLE_BOOTLOADER', '1') in CPPDEFINES_HAL:
     SOURCE_BOOTLOADER += [

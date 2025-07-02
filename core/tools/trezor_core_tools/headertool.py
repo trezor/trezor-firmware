@@ -3,7 +3,7 @@ from typing import List, Tuple
 
 import click
 
-from trezorlib import cosi, firmware
+from trezorlib import firmware
 from trezorlib._internal import firmware_headers
 
 # =========================== signing =========================
@@ -154,10 +154,11 @@ def cli(
         do_replace_vendorheader(fw, replace_vendor_header)
 
     if sign_dev_keys:
-        if not isinstance(fw, firmware_headers.CosiSignedImage):
+        if isinstance(fw, firmware_headers.SignedImage):
+            privkeys = fw.DEV_KEYS
+            sigmask = (1 << len(privkeys)) - 1
+        else:
             raise click.ClickException("Can't use development keys on this image type.")
-        privkeys = fw.DEV_KEYS
-        sigmask = (1 << len(privkeys)) - 1
     else:
         sigmask, privkeys = parse_privkey_args(privkey_data)
 
@@ -165,7 +166,10 @@ def cli(
 
     if privkeys:
         echo("Signing with local private keys...", err=True)
-        signature = cosi.sign_with_privkeys(digest, privkeys)
+        if isinstance(fw, firmware_headers.SignedImage):
+            signature = fw.sign_with_privkeys(privkeys)
+        else:
+            raise click.ClickException("Can't sign this image type.")
 
     if insert_signature:
         echo("Inserting external signature...", err=True)
@@ -176,9 +180,10 @@ def cli(
             sigmask |= 1 << (int(bit) - 1)
 
     if signature:
-        if not isinstance(fw, firmware_headers.CosiSignedImage):
+        if isinstance(fw, firmware_headers.SignedImage):
+            fw.insert_signature(signature, sigmask)
+        else:
             raise click.ClickException("Can't sign this image type.")
-        fw.insert_signature(signature, sigmask)
 
     if signature or rehash:
         do_rehash(fw)

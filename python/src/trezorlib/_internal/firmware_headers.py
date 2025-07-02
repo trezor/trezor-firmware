@@ -22,6 +22,7 @@ from enum import Enum
 import click
 import construct as c
 from construct_classes import Struct
+from slhdsa import PublicKey, SecretKey, sha2_128s
 from typing_extensions import Protocol, Self, runtime_checkable
 
 from .. import cosi, firmware
@@ -231,10 +232,12 @@ class SignableImageProto(Protocol):
 
 
 @runtime_checkable
-class CosiSignedImage(SignableImageProto, Protocol):
+class SignedImage(SignableImageProto, Protocol):
     DEV_KEYS: t.ClassVar[t.Sequence[bytes]] = []
 
     def insert_signature(self, signature: bytes, sigmask: int) -> None: ...
+
+    def sign_with_privkeys(self, privkeys: t.Sequence[bytes]) -> bytes: ...
 
 
 @runtime_checkable
@@ -282,6 +285,35 @@ class CosiSignedMixin:
         hw_model = self.get_header().hw_model
         model = fw_models.Model.from_hw_model(hw_model)
         return model.model_keys(dev_keys)
+
+    def sign_with_privkeys(self, privkeys: t.Sequence[bytes]) -> bytes:
+        return cosi.sign_with_privkeys(self.digest(), privkeys)
+
+
+class PqSignedMixin:
+    def signature_present(self) -> bool:
+        return any(not all_zero(sig) for sig in self.header.signatures)
+
+    def insert_signature(self, signature: bytes, sigmask: int) -> None:
+        self.get_header().sigmask = sigmask
+        self.get_header().signatures[0] = signature[:7856]
+        self.get_header().signatures[1] = signature[7856:]
+
+    def get_header(self) -> CosiSignatureHeaderProto:
+        return self.header
+
+    def get_model_keys(self, dev_keys: bool) -> fw_models.ModelKeys:
+        hw_model = self.get_header().hw_model
+        model = fw_models.Model.from_hw_model(hw_model)
+        return model.model_keys(dev_keys)
+
+    def sign_with_privkeys(self, privkeys: t.Sequence[bytes]) -> bytes:
+        digest = self.digest()
+        signature = b""
+        for idx, key in enumerate(privkeys):
+            key = SecretKey.from_digest(key, sha2_128s)
+            signature += key.sign(digest)
+        return signature
 
 
 class VendorHeader(firmware.VendorHeader, CosiSignedMixin):
@@ -391,6 +423,48 @@ class BootloaderImage(firmware.FirmwareImage, CosiSignedMixin):
         return self.get_model_keys(dev_keys).boardloader_keys
 
 
+class BootloaderV2Image(firmware.BootableImage, PqSignedMixin):
+    NAME: t.ClassVar[str] = "bootloader"
+    DEV_KEYS = [
+        bytes.fromhex(
+            "9a8da9d38eb9203bd0d5442db161324f35ce7f6dc78e05507306fb13a7e6c145"
+            "ec01e60263024f7e71728013b731f7ba1299f518c27ba3ed8f4a219974127c62"
+        ),
+        bytes.fromhex(
+            "1773a0855e8a9961b66682a1e819c29ac83931c00b84062bfc89f3041364c0eb"
+            "8af8878085946ed8b116bd24c0f2aac48b7e8f11bf068725ccfbb152abf7a4cd"
+        ),
+    ]
+
+    def format(self, verbose: bool = False) -> str:
+        header_dict = asdict(self)
+        header_out = header_dict.copy()
+
+        for key, val in header_out.items():
+            if "version" in key:
+                header_out[key] = LiteralStr(_format_version(val))
+
+        output = [
+            "Firmware Header " + _format_container(header_out),
+            f"Fingerprint: {click.style(self.digest().hex(), bold=True)}",
+        ]
+
+        return "\n".join(output)
+
+    def verify(self, dev_keys: bool = False) -> None:
+
+        public_keys = self.public_keys(dev_keys)
+        digest = self.digest()
+
+        for idx, key in enumerate(self.public_keys(dev_keys)):
+            key = PublicKey.from_digest(key, sha2_128s)
+            if not key.verify(digest, self.header.signatures[idx]):
+                raise firmware.InvalidSignatureError("Invalid bootloader signature")
+
+    def public_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
+        return self.get_model_keys(dev_keys).boardloader_keys
+
+
 class LegacyFirmware(firmware.LegacyFirmware):
     NAME: t.ClassVar[str] = "legacy_firmware_v1"
 
@@ -478,6 +552,11 @@ class LegacyV2Firmware(firmware.LegacyV2Firmware):
 
 
 def parse_image(image: bytes) -> SignableImageProto:
+    try:
+        return BootloaderV2Image.parse(image)
+    except c.ConstructError:
+        pass
+
     try:
         return VendorFirmware.parse(image)
     except c.ConstructError:
