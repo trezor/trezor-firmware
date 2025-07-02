@@ -71,6 +71,8 @@ typedef struct {
   bool accept_msgs;
   bool reboot_on_resume;
   ble_mode_t mode_requested;
+  uint8_t connected_addr[6];
+  uint8_t connected_addr_type;
 } ble_wakeup_params_t;
 
 typedef enum {

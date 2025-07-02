@@ -44,6 +44,8 @@ typedef enum {
   MGMT_CMD_INFO = 0x01,
   MGMT_CMD_START_UART = 0x02,
   MGMT_CMD_STOP_UART = 0x03,
+  MGMT_CMD_SUSPEND = 0x04,
+  MGMT_CMD_RESUME = 0x05,
 } management_cmd_t;
 
 typedef enum {
@@ -168,6 +170,14 @@ static void process_command(uint8_t *data, uint16_t len) {
     case MGMT_CMD_STOP_UART:
       LOG_INF("Stop UART");
       trz_comm_stop_uart();
+      break;
+    case MGMT_CMD_SUSPEND:
+      LOG_INF("Suspend");
+      trz_comm_suspend();
+      break;
+    case MGMT_CMD_RESUME:
+      LOG_INF("Resume");
+      trz_comm_resume();
       break;
     default:
       break;

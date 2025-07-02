@@ -34,6 +34,8 @@ typedef enum {
   MGMT_CMD_INFO = 0x01,
   MGMT_CMD_START_UART = 0x02,
   MGMT_CMD_STOP_UART = 0x03,
+  MGMT_CMD_SUSPEND = 0x04,
+  MGMT_CMD_RESUME = 0x05,
 } management_cmd_t;
 
 typedef enum {
