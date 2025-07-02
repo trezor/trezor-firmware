@@ -132,7 +132,7 @@ async def handle_pairing_request(
             result = await ctx.show_pairing_method_screen()
         except UnexpectedMessageException as e:
             raw_response = e.msg
-            req_type = protobuf.type_for_wire(raw_response.type)
+            req_type = protobuf.type_for_wire("ThpMessageType", raw_response.type)
             response = message_handler.wrap_protobuf_load(raw_response.data, req_type)
 
         if result is not None:
@@ -303,7 +303,7 @@ async def _handle_code_entry_cpace(
 
     return await _handle_secret_reveal(
         ctx,
-        msg=ThpCodeEntrySecret(secret=ctx.code_entry_secret),
+        msg=ThpCodeEntrySecret(secret=ctx.code_entry_secret or b""),
     )
 
 
@@ -337,7 +337,7 @@ async def _handle_qr_code_tag(
 
     return await _handle_secret_reveal(
         ctx,
-        msg=ThpQrCodeSecret(secret=ctx.qr_code_secret),
+        msg=ThpQrCodeSecret(secret=ctx.qr_code_secret or b""),
     )
 
 

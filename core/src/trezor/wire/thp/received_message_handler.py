@@ -478,7 +478,7 @@ def _decode_message(
     if message_name is not None:
         expected_type = protobuf.type_for_name(message_name)
     else:
-        expected_type = protobuf.type_for_wire(msg_type)
+        expected_type = protobuf.type_for_wire("ThpMessageType", msg_type)
     return message_handler.wrap_protobuf_load(buffer, expected_type)
 
 
