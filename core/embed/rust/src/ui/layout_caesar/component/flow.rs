@@ -35,6 +35,7 @@ where
     /// Possibly enforcing the second button to be ignored after some time after
     /// pressing the first button
     ignore_second_button_ms: Option<u32>,
+    has_menu: bool,
 }
 
 impl<F> Flow<F>
@@ -61,6 +62,7 @@ where
             return_confirmed_index: false,
             show_scrollbar: true,
             ignore_second_button_ms: None,
+            has_menu: false,
         }
     }
 
@@ -92,6 +94,11 @@ where
 
     pub fn confirmed_index(&self) -> Option<usize> {
         self.return_confirmed_index.then_some(self.page_counter)
+    }
+
+    pub fn with_menu(mut self, has_menu: bool) -> Self {
+        self.has_menu = has_menu;
+        self
     }
 
     /// Getting new current page according to page counter.
@@ -334,5 +341,6 @@ where
         t.child("scrollbar", &self.scrollbar);
         t.child("buttons", &self.buttons);
         t.child("flow_page", &self.current_page);
+        t.bool("has_menu", self.has_menu);
     }
 }

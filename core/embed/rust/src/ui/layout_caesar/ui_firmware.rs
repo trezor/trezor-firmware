@@ -590,7 +590,11 @@ impl FirmwareUI for UICaesar {
         };
         let pages = FlowPages::new(get_page, total_pages);
 
-        let layout = RootComponent::new(Flow::new(pages).with_scrollbar(false));
+        let layout = RootComponent::new(
+            Flow::new(pages)
+                .with_scrollbar(false)
+                .with_menu(external_menu),
+        );
         Ok(layout)
     }
 
