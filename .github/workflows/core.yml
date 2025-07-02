@@ -258,6 +258,7 @@ jobs:
       - uses: ./.github/actions/environment
       - run: nix-shell --run "poetry run make -C core build_unix"
       - run: nix-shell --run "cd vendor/ts-tvl/tvl/server/model_config && poetry install && poetry run model_server tcp -c model_config.yml &"
+      - run: sleep 30
       - run: nix-shell --run "poetry run make -C core test"
       - run: nix-shell --run "poetry run core/emu.py -c true"  # sanity check non-frozen emulator
 
