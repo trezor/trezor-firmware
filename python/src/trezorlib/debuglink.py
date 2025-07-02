@@ -434,6 +434,9 @@ class LayoutContent(UnstructuredJSONReader):
             right_button = right_button.get("text", "")
         return left_button + " " + right_button
 
+    def has_menu(self) -> bool:
+        return bool(self.top_level_value("has_menu"))
+
 
 def multipage_content(layouts: list[LayoutContent]) -> str:
     """Get overall content from multiple-page layout."""
@@ -929,12 +932,37 @@ class DebugUI:
         while True:
             yield from self._handle_button_request()
 
+    def _visit_menu_items(self) -> InputFlowType:
+        layout = self.debuglink.read_layout()
+        if not layout.has_menu():
+            return
+
+        # FIXME: currently supports only Caesar
+        assert self.debuglink.model in (models.T2B1, models.T3B1)
+
+        # enter info menu layout and paginate through its items
+        self.debuglink.press_info()
+        br = yield
+        assert br.pages is not None
+        for _ in range(br.pages):
+            self.debuglink.press_middle()
+            # paginate through all properties and confirm
+            yield from self._handle_button_request()
+            # paginate to next menu item
+            br = yield
+            self.debuglink.press_right()
+
+        # cancel info menu layout
+        self.debuglink.press_no()
+        # back to the main layout
+        br = yield
+
     def _handle_button_request(self) -> InputFlowType:
         br = yield
         if br.code == messages.ButtonRequestType.PinEntry:
             self.debuglink.input(self.get_pin())
         else:
-            # Paginating (going as further as possible) and pressing Yes
+            # Paginating (going as further as possible)
             if br.pages is not None:
                 for _ in range(br.pages - 1):
                     if self.debuglink.model is models.T3W1:
@@ -942,6 +970,10 @@ class DebugUI:
                     else:
                         self.debuglink.swipe_up()
 
+            # Visit info menus (if exist)
+            yield from self._visit_menu_items()
+
+            # Confirm current layout
             if self.debuglink.model is models.T3T1:
                 layout = self.debuglink.read_layout()
                 if "PromptScreen" in layout.all_components():
