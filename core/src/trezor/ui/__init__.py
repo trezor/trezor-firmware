@@ -422,6 +422,11 @@ class Layout(Generic[T]):
                     # Using `yield` instead of `await` to avoid allocations.
                     event = yield touch
                     workflow.idle_timer.touch()
+                    if utils.USE_POWER_MANAGER:
+                        from apps.base import autodim_clear
+
+                        autodim_clear()
+
                     self._event(self.layout.touch_event, *event)
             except Shutdown:
                 return
@@ -487,6 +492,13 @@ class Layout(Generic[T]):
             try:
                 while True:
                     flags = yield pm
+                    # Check for USB connection change event
+                    # restart idle timer so that disconnecting from charger starts autodim/autosuspend
+                    if flags & (1 << 2):
+                        from apps.base import autodim_clear
+
+                        workflow.idle_timer.touch()
+                        autodim_clear()
                     self._event(self.layout.pm_event, flags)
             except Exception:
                 raise

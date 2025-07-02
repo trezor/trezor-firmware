@@ -397,6 +397,31 @@ def set_homescreen() -> None:
 
 
 if utils.USE_POWER_MANAGER:
+    from trezorui_api import (
+        BacklightLevels,
+        backlight_fade,
+        backlight_get,
+        backlight_set,
+    )
+
+    AUTODIM_FROM: int | None = None
+
+    def autodim_display() -> None:
+        """Autodim the display if the device is not connected to USB."""
+        global AUTODIM_FROM
+        if io.pm.is_usb_connected():
+            return
+        current_backlight = backlight_get()
+        if current_backlight is not None and current_backlight > BacklightLevels.DIM:
+            AUTODIM_FROM = current_backlight
+            backlight_fade(BacklightLevels.LOW)
+
+    def autodim_clear() -> None:
+        """Clear autodim state and restore previous backlight level if applicable."""
+        global AUTODIM_FROM
+        if AUTODIM_FROM is not None:
+            backlight_set(AUTODIM_FROM)
+            AUTODIM_FROM = None
 
     def handle_power_button_press() -> None:
         """Handle power button press event during firmware operation."""
@@ -525,6 +550,10 @@ def boot() -> None:
         workflow_handlers.register(msg_type, handler)
 
     reload_settings_from_storage()
+    if utils.USE_POWER_MANAGER:
+        # TODO: define dim and suspend timer
+        workflow.idle_timer.set(6_000, autodim_display)
+        workflow.idle_timer.set(60_000, suspend_device)
 
     if backup.repeated_backup_enabled():
         backup.activate_repeated_backup()
