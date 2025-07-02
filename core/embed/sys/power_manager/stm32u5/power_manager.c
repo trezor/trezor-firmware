@@ -597,6 +597,7 @@ bool pm_driver_suspend(void) {
   systimer_delete(drv->monitoring_timer);
   irq_unlock(irq_key);
 
+  drv->suspended = true;
   return true;
 }
 
@@ -607,6 +608,12 @@ bool pm_driver_resume(void) {
     return false;
   }
 
+  if (!drv->suspended) {
+    // Already resumed, nothing to do
+    return true;
+  }
+
+  drv->suspended = false;
   drv->woke_up_from_suspend = true;
 
 #ifdef USE_RTC
@@ -640,8 +647,10 @@ bool pm_driver_resume(void) {
 }
 
 bool pm_driver_is_suspended(void) {
-  // No specific pending tasks, just return true
-  return true;
+  pm_driver_t* drv = &g_pm;
+
+  // No specific pending tasks, just return suspended flag
+  return drv->suspended;
 }
 
 void pm_compensate_fuel_gauge(float* soc, uint32_t elapsed_s,
@@ -650,7 +659,6 @@ void pm_compensate_fuel_gauge(float* soc, uint32_t elapsed_s,
   bool discharging_mode = battery_current_ma >= 0.0f;
   *soc -=
       (compensation_mah / battery_total_capacity(bat_temp_c, discharging_mode));
-  return;
 }
 
 static pm_status_t pm_wait_to_stabilize(pm_driver_t* drv, uint32_t timeout_ms) {

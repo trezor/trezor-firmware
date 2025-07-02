@@ -69,6 +69,7 @@ typedef struct {
   bool initialized;
   bool state_machine_stabilized;
   pm_power_status_t state;
+  bool suspended;
 
   // Fuel gauge
   fuel_gauge_state_t fuel_gauge;
