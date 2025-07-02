@@ -10,6 +10,8 @@ from ..common import draw_simple, interact, raise_if_cancelled
 if TYPE_CHECKING:
     from typing import Awaitable, Callable, Iterable, List, NoReturn, Sequence
 
+    from trezor.messages import StellarAsset
+
     from ..common import ExceptionType, PropertyType
     from ..menu import Details
 
@@ -1412,6 +1414,72 @@ if not utils.BITCOIN_ONLY:
                 break
             except ActionCancelled:
                 continue
+
+    def confirm_stellar_tx(
+        fee: str,
+        account_name: str,
+        account_path: str,
+        is_sending_from_trezor_account: bool,
+        extra_items: Iterable[PropertyType],
+    ) -> Awaitable[None]:
+        return raise_if_cancelled(
+            trezorui_api.confirm_summary(
+                amount=None,
+                amount_label=None,
+                fee=fee,
+                fee_label=TR.send__maximum_fee,
+                account_items=[
+                    (TR.words__account, account_name, None),
+                    (TR.address_details__derivation_path, account_path, None),
+                ],
+                account_title=(
+                    TR.send__send_from
+                    if is_sending_from_trezor_account
+                    else TR.stellar__sign_with
+                ),
+                extra_items=list(extra_items),
+                extra_title=TR.stellar__timebounds,
+            ),
+            br_name="confirm_stellar_tx",
+            br_code=ButtonRequestType.SignTx,
+        )
+
+    async def confirm_stellar_output(
+        address: str,
+        amount: str,
+        output_index: int,
+        asset: StellarAsset,
+    ) -> None:
+        from trezor.enums import StellarAssetType
+
+        await confirm_address(
+            f"{TR.words__recipient} #{output_index + 1}",
+            address,
+            None,
+            br_name="confirm_output_address",
+            br_code=ButtonRequestType.ConfirmOutput,
+        )
+
+        info_items = []
+        if asset.type != StellarAssetType.NATIVE:
+            info_items = [
+                (
+                    TR.stellar__issuer_template.format(asset.code),
+                    asset.issuer or "",
+                    None,
+                )
+            ]
+
+        await confirm_value(
+            f"{TR.words__amount} #{output_index + 1}",
+            amount,
+            None,
+            br_name="confirm_output_amount",
+            br_code=ButtonRequestType.ConfirmOutput,
+            info_items=info_items,
+            chunkify_info=True,
+            chunkify=False,
+        )
 
 
 def confirm_joint_total(spending_amount: str, total_amount: str) -> Awaitable[None]:

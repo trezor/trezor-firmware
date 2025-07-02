@@ -972,11 +972,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     stellar__confirm_memo = 690,  // "Confirm memo"
     #[cfg(feature = "universal_fw")]
-    stellar__confirm_network = 691,  // "Confirm network"
-    #[cfg(feature = "universal_fw")]
     stellar__confirm_operation = 692,  // "Confirm operation"
-    #[cfg(feature = "universal_fw")]
-    stellar__confirm_stellar = 693,  // "Confirm Stellar"
     #[cfg(feature = "universal_fw")]
     stellar__confirm_timebounds = 694,  // "Confirm timebounds"
     #[cfg(feature = "universal_fw")]
@@ -992,7 +988,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     stellar__destination = 700,  // "Destination"
     #[cfg(feature = "universal_fw")]
-    stellar__exchanges_require_memo = 701,  // "Important: Many exchanges require a memo when depositing"
+    stellar__exchanges_require_memo = 701,  // "Memo is not set.\nTypically needed when sending to exchanges."
     #[cfg(feature = "universal_fw")]
     stellar__final_confirm = 702,  // "Final confirm"
     #[cfg(feature = "universal_fw")]
@@ -1003,10 +999,6 @@ pub enum TranslatedString {
     stellar__home_domain = 705,  // "Home Domain"
     #[cfg(feature = "universal_fw")]
     stellar__inflation = 706,  // "Inflation"
-    #[cfg(feature = "universal_fw")]
-    stellar__initial_balance = 707,  // "Initial Balance"
-    #[cfg(feature = "universal_fw")]
-    stellar__initialize_signing_with = 708,  // "Initialize signing with"
     #[cfg(feature = "universal_fw")]
     stellar__issuer_template = 709,  // "{0} issuer"
     #[cfg(feature = "universal_fw")]
@@ -1028,8 +1020,6 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     stellar__no_restriction = 718,  // "[no restriction]"
     #[cfg(feature = "universal_fw")]
-    stellar__on_network_template = 719,  // "Transaction is on {0}"
-    #[cfg(feature = "universal_fw")]
     stellar__path_pay = 720,  // "Path Pay"
     #[cfg(feature = "universal_fw")]
     stellar__path_pay_at_least = 721,  // "Path Pay at least"
@@ -1041,8 +1031,6 @@ pub enum TranslatedString {
     stellar__preauth_transaction = 724,  // "Pre-auth transaction"
     #[cfg(feature = "universal_fw")]
     stellar__price_per_template = 725,  // "Price per {0}:"
-    #[cfg(feature = "universal_fw")]
-    stellar__private_network = 726,  // "private network"
     #[cfg(feature = "universal_fw")]
     stellar__remove_signer = 727,  // "Remove Signer"
     #[cfg(feature = "universal_fw")]
@@ -1062,8 +1050,6 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     stellar__source_account = 735,  // "Source account"
     #[cfg(feature = "universal_fw")]
-    stellar__testnet_network = 736,  // "testnet network"
-    #[cfg(feature = "universal_fw")]
     stellar__trusted_account = 737,  // "Trusted Account"
     #[cfg(feature = "universal_fw")]
     stellar__update = 738,  // "Update"
@@ -1075,8 +1061,6 @@ pub enum TranslatedString {
     stellar__value_sha256 = 741,  // "Value (SHA-256):"
     #[cfg(feature = "universal_fw")]
     stellar__wanna_clean_value_key_template = 742,  // "Do you want to clear value key {0}?"
-    #[cfg(feature = "universal_fw")]
-    stellar__your_account = 743,  // " your account"
     #[cfg(feature = "universal_fw")]
     tezos__baker_address = 744,  // "Baker address"
     #[cfg(feature = "universal_fw")]
@@ -1463,6 +1447,16 @@ pub enum TranslatedString {
     tutorial__what_is_tropic = 1068,  // "What is TROPIC01?"
     tutorial__tap_to_start = 1069,  // "Tap to start tutorial"
     tutorial__tropic_info = 1070,  // "TROPIC01 is a next-gen open-source secure element chip designed for transparent and auditable hardware security."
+    #[cfg(feature = "universal_fw")]
+    stellar__sign_with = 1071,  // "Sign with"
+    #[cfg(feature = "universal_fw")]
+    stellar__timebounds = 1072,  // "Timebounds"
+    #[cfg(feature = "universal_fw")]
+    stellar__token_info = 1073,  // "Token info"
+    #[cfg(feature = "universal_fw")]
+    stellar__transaction_source = 1074,  // "Transaction source"
+    #[cfg(feature = "universal_fw")]
+    stellar__transaction_source_diff_warning = 1075,  // "Transaction source does not belong to this Trezor."
 }
 
 impl TranslatedString {
@@ -2647,11 +2641,7 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             (Self::stellar__confirm_memo, "Confirm memo"),
             #[cfg(feature = "universal_fw")]
-            (Self::stellar__confirm_network, "Confirm network"),
-            #[cfg(feature = "universal_fw")]
             (Self::stellar__confirm_operation, "Confirm operation"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__confirm_stellar, "Confirm Stellar"),
             #[cfg(feature = "universal_fw")]
             (Self::stellar__confirm_timebounds, "Confirm timebounds"),
             #[cfg(feature = "universal_fw")]
@@ -2667,7 +2657,7 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             (Self::stellar__destination, "Destination"),
             #[cfg(feature = "universal_fw")]
-            (Self::stellar__exchanges_require_memo, "Important: Many exchanges require a memo when depositing"),
+            (Self::stellar__exchanges_require_memo, "Memo is not set.\nTypically needed when sending to exchanges."),
             #[cfg(feature = "universal_fw")]
             (Self::stellar__final_confirm, "Final confirm"),
             #[cfg(feature = "universal_fw")]
@@ -2678,10 +2668,6 @@ impl TranslatedString {
             (Self::stellar__home_domain, "Home Domain"),
             #[cfg(feature = "universal_fw")]
             (Self::stellar__inflation, "Inflation"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__initial_balance, "Initial Balance"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__initialize_signing_with, "Initialize signing with"),
             #[cfg(feature = "universal_fw")]
             (Self::stellar__issuer_template, "{0} issuer"),
             #[cfg(feature = "universal_fw")]
@@ -2703,8 +2689,6 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             (Self::stellar__no_restriction, "[no restriction]"),
             #[cfg(feature = "universal_fw")]
-            (Self::stellar__on_network_template, "Transaction is on {0}"),
-            #[cfg(feature = "universal_fw")]
             (Self::stellar__path_pay, "Path Pay"),
             #[cfg(feature = "universal_fw")]
             (Self::stellar__path_pay_at_least, "Path Pay at least"),
@@ -2716,8 +2700,6 @@ impl TranslatedString {
             (Self::stellar__preauth_transaction, "Pre-auth transaction"),
             #[cfg(feature = "universal_fw")]
             (Self::stellar__price_per_template, "Price per {0}:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__private_network, "private network"),
             #[cfg(feature = "universal_fw")]
             (Self::stellar__remove_signer, "Remove Signer"),
             #[cfg(feature = "universal_fw")]
@@ -2737,8 +2719,6 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             (Self::stellar__source_account, "Source account"),
             #[cfg(feature = "universal_fw")]
-            (Self::stellar__testnet_network, "testnet network"),
-            #[cfg(feature = "universal_fw")]
             (Self::stellar__trusted_account, "Trusted Account"),
             #[cfg(feature = "universal_fw")]
             (Self::stellar__update, "Update"),
@@ -2750,8 +2730,6 @@ impl TranslatedString {
             (Self::stellar__value_sha256, "Value (SHA-256):"),
             #[cfg(feature = "universal_fw")]
             (Self::stellar__wanna_clean_value_key_template, "Do you want to clear value key {0}?"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__your_account, " your account"),
             #[cfg(feature = "universal_fw")]
             (Self::tezos__baker_address, "Baker address"),
             #[cfg(feature = "universal_fw")]
@@ -3245,6 +3223,16 @@ impl TranslatedString {
             (Self::tutorial__what_is_tropic, "What is TROPIC01?"),
             (Self::tutorial__tap_to_start, "Tap to start tutorial"),
             (Self::tutorial__tropic_info, "TROPIC01 is a next-gen open-source secure element chip designed for transparent and auditable hardware security."),
+            #[cfg(feature = "universal_fw")]
+            (Self::stellar__sign_with, "Sign with"),
+            #[cfg(feature = "universal_fw")]
+            (Self::stellar__timebounds, "Timebounds"),
+            #[cfg(feature = "universal_fw")]
+            (Self::stellar__token_info, "Token info"),
+            #[cfg(feature = "universal_fw")]
+            (Self::stellar__transaction_source, "Transaction source"),
+            #[cfg(feature = "universal_fw")]
+            (Self::stellar__transaction_source_diff_warning, "Transaction source does not belong to this Trezor."),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4437,11 +4425,7 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__confirm_memo, Self::stellar__confirm_memo),
         #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_stellar__confirm_network, Self::stellar__confirm_network),
-        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__confirm_operation, Self::stellar__confirm_operation),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_stellar__confirm_stellar, Self::stellar__confirm_stellar),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__confirm_timebounds, Self::stellar__confirm_timebounds),
         #[cfg(feature = "universal_fw")]
@@ -4469,10 +4453,6 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__inflation, Self::stellar__inflation),
         #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_stellar__initial_balance, Self::stellar__initial_balance),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_stellar__initialize_signing_with, Self::stellar__initialize_signing_with),
-        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__issuer_template, Self::stellar__issuer_template),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__key, Self::stellar__key),
@@ -4493,8 +4473,6 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__no_restriction, Self::stellar__no_restriction),
         #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_stellar__on_network_template, Self::stellar__on_network_template),
-        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__path_pay, Self::stellar__path_pay),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__path_pay_at_least, Self::stellar__path_pay_at_least),
@@ -4506,8 +4484,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_stellar__preauth_transaction, Self::stellar__preauth_transaction),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__price_per_template, Self::stellar__price_per_template),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_stellar__private_network, Self::stellar__private_network),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__remove_signer, Self::stellar__remove_signer),
         #[cfg(feature = "universal_fw")]
@@ -4525,9 +4501,17 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__sign_tx_fee_template, Self::stellar__sign_tx_fee_template),
         #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__sign_with, Self::stellar__sign_with),
+        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__source_account, Self::stellar__source_account),
         #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_stellar__testnet_network, Self::stellar__testnet_network),
+        (Qstr::MP_QSTR_stellar__timebounds, Self::stellar__timebounds),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__token_info, Self::stellar__token_info),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__transaction_source, Self::stellar__transaction_source),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__transaction_source_diff_warning, Self::stellar__transaction_source_diff_warning),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__trusted_account, Self::stellar__trusted_account),
         #[cfg(feature = "universal_fw")]
@@ -4540,8 +4524,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_stellar__value_sha256, Self::stellar__value_sha256),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__wanna_clean_value_key_template, Self::stellar__wanna_clean_value_key_template),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_stellar__your_account, Self::stellar__your_account),
         (Qstr::MP_QSTR_storage_msg__processing, Self::storage_msg__processing),
         (Qstr::MP_QSTR_storage_msg__starting, Self::storage_msg__starting),
         (Qstr::MP_QSTR_storage_msg__verifying_pin, Self::storage_msg__verifying_pin),

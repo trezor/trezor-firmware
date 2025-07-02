@@ -16,7 +16,15 @@ async def sign_tx(msg: StellarSignTx, keychain: Keychain) -> StellarSignedTx:
     from trezor.crypto.curve import ed25519
     from trezor.crypto.hashlib import sha256
     from trezor.enums import StellarMemoType
-    from trezor.messages import StellarSignedTx, StellarTxOpRequest
+    from trezor.messages import (
+        StellarAccountMergeOp,
+        StellarCreateAccountOp,
+        StellarPathPaymentStrictReceiveOp,
+        StellarPathPaymentStrictSendOp,
+        StellarPaymentOp,
+        StellarSignedTx,
+        StellarTxOpRequest,
+    )
     from trezor.ui.layouts import show_continue_in_app
     from trezor.wire import DataError, ProcessError
     from trezor.wire.context import call_any
@@ -40,6 +48,9 @@ async def sign_tx(msg: StellarSignTx, keychain: Keychain) -> StellarSignedTx:
     # ---------------------------------
     # INIT
     # ---------------------------------
+    is_sending_from_trezor_account = True
+    current_output_index = 0
+
     network_passphrase_hash = sha256(msg.network_passphrase.encode()).digest()
     writers.write_bytes_fixed(w, network_passphrase_hash, 32)
     writers.write_bytes_fixed(w, consts.TX_TYPE, 4)
@@ -51,16 +62,10 @@ async def sign_tx(msg: StellarSignTx, keychain: Keychain) -> StellarSignedTx:
     writers.write_uint32(w, msg.fee)
     writers.write_uint64(w, msg.sequence_number)
 
-    # confirm init
-    await layout.require_confirm_init(
-        msg.source_account, msg.network_passphrase, accounts_match
-    )
-
-    # ---------------------------------
-    # TIMEBOUNDS
-    # ---------------------------------
-    # confirm dialog
-    await layout.require_confirm_timebounds(msg.timebounds_start, msg.timebounds_end)
+    if not accounts_match:
+        is_sending_from_trezor_account = False
+        # If the tx source account does not match the Trezor account, we need to confirm it.
+        await layout.require_confirm_tx_source(msg.source_account)
 
     # timebounds are sent as uint32s since that's all we can display, but they must be hashed as 64bit
     writers.write_bool(w, True)
@@ -103,7 +108,23 @@ async def sign_tx(msg: StellarSignTx, keychain: Keychain) -> StellarSignedTx:
     writers.write_uint32(w, num_operations)
     for _ in range(num_operations):
         op = await call_any(StellarTxOpRequest(), *consts.op_codes.keys())
-        await process_operation(w, op)  # type: ignore [Argument of type "MessageType" cannot be assigned to parameter "op" of type "StellarMessageType" in function "process_operation"]
+        await process_operation(w, op, current_output_index)  # type: ignore [Argument of type "MessageType" cannot be assigned to parameter "op" of type "StellarMessageType" in function "process_operation"]
+
+        if op.source_account is not None and op.source_account != address:  # type: ignore [Cannot access attribute "source_account" for class "MessageType"]
+            # if the operation source account does not match the Trezor account
+            is_sending_from_trezor_account = False
+
+        if any(
+            op_type.is_type_of(op)
+            for op_type in [
+                StellarAccountMergeOp,
+                StellarCreateAccountOp,
+                StellarPaymentOp,
+                StellarPathPaymentStrictSendOp,
+                StellarPathPaymentStrictReceiveOp,
+            ]
+        ):
+            current_output_index += 1
 
     # ---------------------------------
     # FINAL
@@ -111,7 +132,12 @@ async def sign_tx(msg: StellarSignTx, keychain: Keychain) -> StellarSignedTx:
     # 4 null bytes representing a (currently unused) empty union
     writers.write_uint32(w, 0)
     # final confirm
-    await layout.require_confirm_final(msg.fee, num_operations)
+    await layout.require_confirm_final(
+        msg.address_n,
+        msg.fee,
+        (msg.timebounds_start, msg.timebounds_end),
+        is_sending_from_trezor_account,
+    )
 
     # sign
     digest = sha256(w).digest()

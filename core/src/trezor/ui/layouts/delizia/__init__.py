@@ -19,6 +19,8 @@ if TYPE_CHECKING:
         TypeVar,
     )
 
+    from trezor.messages import StellarAsset
+
     from ..common import ExceptionType, PropertyType
     from ..menu import Details
 
@@ -555,6 +557,7 @@ async def confirm_payment_request(
             TR.words__transaction_fee,
             TR.words__title_summary,
             account_items,
+            None,
             fee_info_items,
             TR.confirm_total__title_fee,
             "confirm_payment_request",
@@ -889,6 +892,7 @@ def _confirm_summary(
     fee_label: str,
     title: str | None = None,
     account_items: Iterable[PropertyType] | None = None,
+    account_title: str | None = None,
     extra_items: Iterable[PropertyType] | None = None,
     extra_title: str | None = None,
     br_name: str = "confirm_total",
@@ -907,6 +911,7 @@ def _confirm_summary(
             fee_label=fee_label,
             title=title,
             account_items=account_props,
+            account_title=account_title,
             extra_items=extra_props,
             extra_title=extra_title or None,
         ),
@@ -1101,6 +1106,7 @@ if not utils.BITCOIN_ONLY:
             TR.send__maximum_fee,
             TR.words__title_summary,
             account_items,
+            None,
             fee_info_items,
             TR.confirm_total__title_fee,
         )
@@ -1300,6 +1306,71 @@ if not utils.BITCOIN_ONLY:
             extra_items=items,
             br_name="confirm_cardano_tx",
             br_code=ButtonRequestType.SignTx,
+        )
+
+    def confirm_stellar_tx(
+        fee: str,
+        account_name: str,
+        account_path: str,
+        is_sending_from_trezor_account: bool,
+        extra_items: Iterable[PropertyType],
+    ) -> Awaitable[None]:
+        return _confirm_summary(
+            None,
+            None,
+            fee,
+            TR.send__maximum_fee,
+            account_items=[
+                (TR.words__account, account_name, None),
+                (TR.address_details__derivation_path, account_path, None),
+            ],
+            account_title=(
+                TR.send__send_from
+                if is_sending_from_trezor_account
+                else TR.stellar__sign_with
+            ),
+            extra_items=extra_items,
+            extra_title=TR.stellar__timebounds,
+            br_name="confirm_stellar_tx",
+            br_code=ButtonRequestType.SignTx,
+        )
+
+    async def confirm_stellar_output(
+        address: str,
+        amount: str,
+        output_index: int,
+        asset: StellarAsset,
+    ) -> None:
+        from trezor.enums import StellarAssetType
+
+        subtitle = f"{TR.words__recipient} #{output_index + 1}"
+        await confirm_address(
+            TR.words__address,
+            address,
+            subtitle=subtitle,
+            br_name="confirm_output_address",
+            br_code=ButtonRequestType.ConfirmOutput,
+        )
+
+        info_items = []
+        if asset.type != StellarAssetType.NATIVE:
+            info_items = [
+                (
+                    TR.stellar__issuer_template.format(asset.code),
+                    asset.issuer or "",
+                    None,
+                )
+            ]
+
+        await confirm_value(
+            TR.words__amount,
+            amount,
+            description="",
+            subtitle=subtitle,
+            br_name="confirm_output_amount",
+            br_code=ButtonRequestType.ConfirmOutput,
+            info_items=info_items,
+            chunkify=False,
         )
 
 

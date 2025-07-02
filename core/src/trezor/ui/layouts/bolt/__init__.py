@@ -10,6 +10,8 @@ from ..common import draw_simple, interact, raise_if_cancelled, with_info
 if TYPE_CHECKING:
     from typing import Awaitable, Iterable, List, NoReturn, Sequence
 
+    from trezor.messages import StellarAsset
+
     from ..common import ExceptionType, PropertyType
 
 
@@ -545,15 +547,14 @@ async def confirm_payment_request(
                 "confirm_payment_request", "", list(fee_info_items)
             )
         await _confirm_summary(
-            None,
-            None,
-            transaction_fee,
-            TR.words__transaction_fee,
-            TR.words__title_summary,
-            account_items,
-            None,
-            TR.confirm_total__title_fee,
-            "confirm_payment_request",
+            amount=None,
+            amount_label=None,
+            fee=transaction_fee,
+            fee_label=TR.words__transaction_fee,
+            title=TR.words__title_summary,
+            account_items=account_items,
+            extra_title=TR.confirm_total__title_fee,
+            br_name="confirm_payment_request",
         )
 
 
@@ -768,10 +769,10 @@ def confirm_address(
     return confirm_value(
         title,
         address,
-        description or subtitle or "",
+        description or "",
         br_name or "confirm_address",
         br_code,
-        subtitle=None,
+        subtitle=subtitle,
         verb=(verb or TR.buttons__confirm),
     )
 
@@ -932,6 +933,7 @@ def _confirm_summary(
     fee_label: str,
     title: str | None = None,
     account_items: Iterable[PropertyType] | None = None,
+    account_title: str | None = None,
     extra_items: Iterable[PropertyType] | None = None,
     extra_title: str | None = None,
     br_name: str = "confirm_total",
@@ -949,6 +951,7 @@ def _confirm_summary(
         fee_label=fee_label,
         title=title,
         account_items=account_props,
+        account_title=account_title,
         extra_items=extra_props,
     )
 
@@ -1150,6 +1153,7 @@ if not utils.BITCOIN_ONLY:
             TR.send__maximum_fee,
             TR.words__title_summary,
             account_items,
+            None,
             fee_info_items,
             TR.confirm_total__title_fee,
         )
@@ -1366,6 +1370,70 @@ if not utils.BITCOIN_ONLY:
             extra_items=items,
             br_name="confirm_cardano_tx",
             br_code=ButtonRequestType.SignTx,
+        )
+
+    def confirm_stellar_tx(
+        fee: str,
+        account_name: str,
+        account_path: str,
+        is_sending_from_trezor_account: bool,
+        extra_items: Iterable[PropertyType],
+    ) -> Awaitable[None]:
+        return _confirm_summary(
+            None,
+            None,
+            fee,
+            TR.send__maximum_fee,
+            account_items=[
+                (TR.words__account, account_name, None),
+                (TR.address_details__derivation_path, account_path, None),
+            ],
+            account_title=(
+                TR.send__send_from
+                if is_sending_from_trezor_account
+                else TR.stellar__sign_with
+            ),
+            extra_items=extra_items,
+            extra_title=TR.words__title_information,  # The performance on T2T1 is different from other devices, so we do not use TR.stellar__timebounds here.
+            br_name="confirm_stellar_tx",
+            br_code=ButtonRequestType.SignTx,
+        )
+
+    async def confirm_stellar_output(
+        address: str,
+        amount: str,
+        output_index: int,
+        asset: StellarAsset,
+    ) -> None:
+        from trezor.enums import StellarAssetType
+
+        await confirm_address(
+            f"{TR.words__recipient} #{output_index + 1}",
+            address,
+            br_name="confirm_output_address",
+            br_code=ButtonRequestType.ConfirmOutput,
+        )
+
+        info_items = []
+        if asset.type != StellarAssetType.NATIVE:
+            info_items = [
+                (
+                    TR.stellar__issuer_template.format(asset.code),
+                    asset.issuer or "",
+                    None,
+                )
+            ]
+
+        await confirm_value(
+            f"{TR.words__amount} #{output_index + 1}",
+            amount,
+            description=None,
+            br_name="confirm_output_amount",
+            br_code=ButtonRequestType.ConfirmOutput,
+            info_items=info_items,
+            info_title=TR.stellar__token_info,
+            chunkify_info=True,
+            chunkify=False,
         )
 
 

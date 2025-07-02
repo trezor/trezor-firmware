@@ -11,65 +11,18 @@ if TYPE_CHECKING:
     from trezor.messages import StellarAsset
 
 
-async def require_confirm_init(
-    address: str,
-    network_passphrase: str,
-    accounts_match: bool,
-) -> None:
-    description = (
-        TR.stellar__initialize_signing_with + TR.stellar__your_account
-        if accounts_match
-        else ""
+async def require_confirm_tx_source(tx_source: str) -> None:
+    await layouts.show_warning(
+        br_name="confirm_tx_source",
+        content=TR.stellar__transaction_source_diff_warning,
+        br_code=ButtonRequestType.Warning,
     )
+
     await layouts.confirm_address(
-        TR.stellar__confirm_stellar,
-        address,
-        description=description,
-        br_name="confirm_init",
-    )
-
-    # get_network_warning
-    if network_passphrase == consts.NETWORK_PASSPHRASE_PUBLIC:
-        network = None
-    elif network_passphrase == consts.NETWORK_PASSPHRASE_TESTNET:
-        network = TR.stellar__testnet_network
-    else:
-        network = TR.stellar__private_network
-
-    if network:
-        await layouts.confirm_metadata(
-            "confirm_init_network",
-            TR.stellar__confirm_network,
-            TR.stellar__on_network_template,
-            network,
-            ButtonRequestType.ConfirmOutput,
-        )
-
-
-async def require_confirm_timebounds(start: int, end: int) -> None:
-    await layouts.confirm_properties(
-        "confirm_timebounds",
-        TR.stellar__confirm_timebounds,
-        (
-            (
-                TR.stellar__valid_from,
-                (
-                    strings.format_timestamp(start)
-                    if start > 0
-                    else TR.stellar__no_restriction
-                ),
-                False,
-            ),
-            (
-                TR.stellar__valid_to,
-                (
-                    strings.format_timestamp(end)
-                    if end > 0
-                    else TR.stellar__no_restriction
-                ),
-                False,
-            ),
-        ),
+        title=TR.stellar__transaction_source,
+        address=tx_source,
+        br_name="confirm_tx_source",
+        br_code=ButtonRequestType.ConfirmOutput,
     )
 
 
@@ -85,38 +38,67 @@ async def require_confirm_memo(memo_type: StellarMemoType, memo_text: str) -> No
     elif memo_type == StellarMemoType.RETURN:
         description = "Memo (RETURN)"
     else:
-        return await layouts.confirm_action(
-            "confirm_memo",
-            TR.stellar__confirm_memo,
-            TR.stellar__no_memo_set,
-            TR.stellar__exchanges_require_memo,
+        return await layouts.show_warning(
+            br_name="confirm_memo",
+            content=TR.stellar__exchanges_require_memo,
             br_code=ButtonRequestType.ConfirmOutput,
-            prompt_screen=True,
         )
 
-    await layouts.confirm_blob(
+    await layouts.confirm_text(
         "confirm_memo",
         TR.stellar__confirm_memo,
         memo_text,
         description,
+        ButtonRequestType.ConfirmOutput,
     )
 
 
-async def require_confirm_final(fee: int, num_operations: int) -> None:
-    op_str = strings.format_plural(
-        "{count} {plural}", num_operations, TR.plurals__transaction_of_x_operations
-    )
-    text = (
-        TR.stellar__sign_tx_count_template.format(op_str)
-        + " "
-        + TR.stellar__sign_tx_fee_template
-    )
-    await layouts.confirm_metadata(
-        "confirm_final",
-        TR.stellar__final_confirm,
-        text,
+async def require_confirm_final(
+    address_n: list[int],
+    fee: int,
+    timebounds: tuple[int, int],
+    is_sending_from_trezor_account: bool,
+) -> None:
+    from trezor.wire import DataError
+
+    from apps.common import paths
+
+    from . import PATTERN, SLIP44_ID
+
+    timebounds_start, timebounds_end = timebounds
+    extra_items = [
+        (
+            TR.stellar__valid_from,
+            (
+                strings.format_timestamp(timebounds_start)
+                if timebounds_start > 0
+                else TR.stellar__no_restriction
+            ),
+            None,
+        ),
+        (
+            TR.stellar__valid_to,
+            (
+                strings.format_timestamp(timebounds_end)
+                if timebounds_end > 0
+                else TR.stellar__no_restriction
+            ),
+            None,
+        ),
+    ]
+
+    account_name = paths.get_account_name("Stellar", address_n, PATTERN, SLIP44_ID)
+    account_path = paths.address_n_to_str(address_n)
+
+    if account_name is None:
+        raise DataError("Stellar: Invalid account name")
+
+    await layouts.confirm_stellar_tx(
         format_amount(fee),
-        hold=True,
+        account_name,
+        account_path,
+        is_sending_from_trezor_account,
+        extra_items,
     )
 
 
