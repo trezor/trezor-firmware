@@ -1,10 +1,7 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from storage import cache_common
 from trezor import wire
-from trezor.crypto import bip39
-from trezor.wire import context
 
 from apps.bitcoin.keychain import (
     _get_coin_by_name,
@@ -16,24 +13,8 @@ from apps.bitcoin.keychain import (
     with_keychain,
 )
 
-if not utils.USE_THP:
-    from storage import cache_codec
 
-
-class TestBitcoinKeychain(TestCaseWithContext):
-    if utils.USE_THP:
-
-        def setUp(self):
-            seed = bip39.seed(" ".join(["all"] * 12), "")
-            context.cache_set(cache_common.APP_COMMON_SEED, seed)
-
-    else:
-
-        def setUp(self):
-            cache_codec.start_session()
-            seed = bip39.seed(" ".join(["all"] * 12), "")
-            cache_codec.get_active_session().set(cache_common.APP_COMMON_SEED, seed)
-
+class TestBitcoinKeychain(TestCaseWithSeed):
     def test_bitcoin(self):
         coin = _get_coin_by_name("Bitcoin")
         keychain = await_result(_get_keychain_for_coin(coin))
@@ -108,20 +89,7 @@ class TestBitcoinKeychain(TestCaseWithContext):
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
-class TestAltcoinKeychains(TestCaseWithContext):
-    if utils.USE_THP:
-
-        def setUp(self):
-            seed = bip39.seed(" ".join(["all"] * 12), "")
-            context.cache_set(cache_common.APP_COMMON_SEED, seed)
-
-    else:
-
-        def setUp(self):
-            cache_codec.start_session()
-            seed = bip39.seed(" ".join(["all"] * 12), "")
-            cache_codec.get_active_session().set(cache_common.APP_COMMON_SEED, seed)
-
+class TestAltcoinKeychains(TestCaseWithSeed):
     def test_bcash(self):
         coin = _get_coin_by_name("Bcash")
         keychain = await_result(_get_keychain_for_coin(coin))
@@ -458,21 +426,8 @@ class TestAccountNames(unittest.TestCase):
         )
 
 
-class TestSignMessageBip48(TestCaseWithContext):
+class TestSignMessageBip48(TestCaseWithSeed):
     """BIP-48 message signing: the account node and the leaf."""
-
-    if utils.USE_THP:
-
-        def setUp(self):
-            seed = bip39.seed(" ".join(["all"] * 12), "")
-            context.cache_set(cache_common.APP_COMMON_SEED, seed)
-
-    else:
-
-        def setUp(self):
-            cache_codec.start_session()
-            seed = bip39.seed(" ".join(["all"] * 12), "")
-            cache_codec.get_active_session().set(cache_common.APP_COMMON_SEED, seed)
 
     def _sign_message(self, address_n, script_type, coin_name="Bitcoin"):
         from trezor.messages import SignMessage
