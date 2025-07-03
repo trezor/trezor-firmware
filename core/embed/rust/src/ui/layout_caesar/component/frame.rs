@@ -16,6 +16,7 @@ where
 {
     title: Title,
     content: Child<T>,
+    has_menu: bool,
 }
 
 impl<T> Frame<T>
@@ -26,12 +27,18 @@ where
         Self {
             title: Title::new(title),
             content: Child::new(content),
+            has_menu: false,
         }
     }
 
     /// Aligning the title to the center, instead of the left.
     pub fn with_title_centered(mut self) -> Self {
         self.title = self.title.with_centered();
+        self
+    }
+
+    pub fn with_menu(mut self, has_menu: bool) -> Self {
+        self.has_menu = has_menu;
         self
     }
 
@@ -211,6 +218,7 @@ where
         t.component("Frame");
         t.child("title", &self.title);
         t.child("content", &self.content);
+        t.bool("has_menu", self.has_menu);
     }
 }
 
