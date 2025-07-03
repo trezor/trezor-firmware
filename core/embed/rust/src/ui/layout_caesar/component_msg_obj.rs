@@ -3,7 +3,7 @@ use core::convert::TryInto;
 use super::component::{
     AddressDetails, ButtonPage, CancelConfirmMsg, CancelInfoConfirmMsg, CoinJoinProgress,
     ConfirmHomescreen, Flow, Frame, Homescreen, Lockscreen, NumberInput, Page, PassphraseEntry,
-    PinEntry, Progress, ScrollableContent, ScrollableFrame, ShowMore, SimpleChoice, WordlistEntry,
+    PinEntry, Progress, ScrollableContent, ScrollableFrame, ShowMore, WordlistEntry,
 };
 use crate::{
     error::Error,
@@ -120,22 +120,6 @@ impl ComponentMsgObj for NumberInput {
         match msg {
             Self::Msg::Cancel => (CANCELLED.as_obj(), 0.try_into()?).try_into(),
             Self::Msg::Choice { item, .. } => (CONFIRMED.as_obj(), item.try_into()?).try_into(),
-        }
-    }
-}
-
-impl ComponentMsgObj for SimpleChoice {
-    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        match msg {
-            Self::Msg::Cancel => Ok(CANCELLED.as_obj()),
-            Self::Msg::Choice { item, .. } => {
-                if self.return_index {
-                    item.try_into()
-                } else {
-                    let text = self.result_by_index(item);
-                    text.try_into()
-                }
-            }
         }
     }
 }

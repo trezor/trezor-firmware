@@ -77,7 +77,8 @@ impl ChoiceFactory for ChoiceFactorySimple {
 pub struct SimpleChoice {
     choice_page: ChoicePage<ChoiceFactorySimple, usize>,
     page_count: usize,
-    pub return_index: bool,
+    return_index: bool,
+    ignore_cancelled: bool,
 }
 
 impl SimpleChoice {
@@ -93,6 +94,7 @@ impl SimpleChoice {
             choice_page,
             page_count,
             return_index: false,
+            ignore_cancelled: false,
         }
     }
 
@@ -120,6 +122,12 @@ impl SimpleChoice {
         self
     }
 
+    /// Returning `CONFIRMED` to MicroPython (instead of `CANCELLED`).
+    pub fn with_ignore_cancelled(mut self) -> Self {
+        self.ignore_cancelled = true;
+        self
+    }
+
     /// Translating the resulting index into actual string choice.
     pub fn result_by_index(&self, index: usize) -> TString<'static> {
         self.choice_page.choice_factory().get_string(index)
@@ -140,6 +148,40 @@ impl Component for SimpleChoice {
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.choice_page.render(target);
+    }
+}
+
+#[cfg(feature = "micropython")]
+mod micropython {
+    use super::SimpleChoice;
+    use crate::{
+        error::Error,
+        micropython::obj::Obj,
+        ui::layout::{
+            obj::ComponentMsgObj,
+            result::{CANCELLED, CONFIRMED},
+        },
+    };
+
+    impl ComponentMsgObj for SimpleChoice {
+        fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+            match msg {
+                Self::Msg::Cancel => Ok(if self.ignore_cancelled {
+                    // avoid raising `ActionCancelled` exception
+                    CONFIRMED.as_obj()
+                } else {
+                    CANCELLED.as_obj()
+                }),
+                Self::Msg::Choice { item, .. } => {
+                    if self.return_index {
+                        item.try_into()
+                    } else {
+                        let text = self.result_by_index(item);
+                        text.try_into()
+                    }
+                }
+            }
+        }
     }
 }
 

@@ -62,18 +62,20 @@ async def show_menu(
                 current=current_item,
                 cancel=menu.cancel,
             )
+            choice = await interact(layout, br_name, br_code)
+            if isinstance(choice, int):
+                # go one level down
+                menu_path.append(choice)
+                current_item = 0
+                continue
         else:
             layout = trezorui_api.show_properties(
                 title=menu.name,
                 value=menu.value,
             )
+            await interact(layout, br_name, br_code, raise_on_cancel=None)
 
-        choice = await interact(layout, br_name, br_code, raise_on_cancel=None)
-        if isinstance(choice, int):
-            menu_path.append(choice)
-            current_item = 0
-            continue
-
+        # go one level up, or exit the menu
         if menu_path:
             current_item = menu_path.pop()
         else:

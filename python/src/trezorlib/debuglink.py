@@ -954,8 +954,8 @@ class DebugUI:
             # paginate to next menu item
             self.debuglink.press_right()
 
-        # cancel info menu layout
-        self.debuglink.press_no()
+        # confirm info menu layout
+        self.debuglink.press_yes()
 
     def _paginate_and_confirm(self, pages: int | None) -> None:
         if pages is None:

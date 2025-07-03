@@ -910,7 +910,8 @@ impl FirmwareUI for UICaesar {
             SimpleChoice::new(items, ChoiceControls::Cancellable, TR::buttons__view.into())
                 .with_initial_page_counter(current)
                 .with_show_incomplete()
-                .with_return_index(),
+                .with_return_index()
+                .with_ignore_cancelled(),
         );
         Ok(layout)
     }
