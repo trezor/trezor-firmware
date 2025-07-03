@@ -59,6 +59,8 @@ if t.TYPE_CHECKING:
 HERE = Path(__file__).resolve().parent
 CORE = HERE.parent / "core"
 
+LOG = logging.getLogger(__name__)
+
 LOCK_TIME = 0.2
 
 # So that we see details of failed asserts from this module
@@ -251,6 +253,21 @@ class ModelsFilter:
         return selected_models
 
 
+def _initialize_with_retries(
+    request: pytest.FixtureRequest, raw_client: Client
+) -> None:
+    """Stop the test session if the error reproduces a few times."""
+    for _ in range(5):
+        try:
+            raw_client.sync_responses()
+            return
+        except Exception:
+            LOG.warning("Failed to initialize client", exc_info=True)
+            sleep(1)
+    request.session.shouldstop = "Failed to communicate with Trezor"
+    pytest.fail("Failed to communicate with Trezor")
+
+
 @pytest.fixture(scope="function")
 def _client_unlocked(
     request: pytest.FixtureRequest, _raw_client: Client
@@ -318,11 +335,7 @@ def _client_unlocked(
 
     _raw_client.reset_debug_features()
     if isinstance(_raw_client.protocol, ProtocolV1Channel):
-        try:
-            _raw_client.sync_responses()
-        except Exception:
-            request.session.shouldstop = "Failed to communicate with Trezor"
-            pytest.fail("Failed to communicate with Trezor")
+        _initialize_with_retries(request, _raw_client)
 
     # Resetting all the debug events to not be influenced by previous test
     _raw_client.debug.reset_debug_events()
@@ -344,9 +357,6 @@ def _client_unlocked(
                 try:
                     _raw_client = _raw_client.get_new_client()
                 except Exception as e:
-                    import logging
-
-                    LOG = logging.getLogger(__name__)
                     LOG.error(f"Failed to re-create a client: {e}")
                     sleep(LOCK_TIME)
                     try:
