@@ -44,6 +44,13 @@ pub trait FirmwareUI {
         chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
+    fn confirm_trade(
+        title: TString<'static>,
+        subtitle: TString<'static>,
+        sell_amount: TString<'static>,
+        buy_amount: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error>;
+
     #[allow(clippy::too_many_arguments)]
     fn confirm_value(
         title: TString<'static>,
