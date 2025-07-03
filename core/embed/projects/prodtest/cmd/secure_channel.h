@@ -28,7 +28,8 @@
 // TODO: Consider returning an enum indiciating success, cryptography error or
 // state error
 bool secure_channel_handshake_1(uint8_t response[SECURE_CHANNEL_RESPONSE_SIZE]);
-bool secure_channel_handshake_2(uint8_t request[SECURE_CHANNEL_REQUEST_SIZE]);
+bool secure_channel_handshake_2(
+    const uint8_t request[SECURE_CHANNEL_REQUEST_SIZE]);
 bool secure_channel_encrypt(const uint8_t* plaintext, size_t plaintext_length,
                             const uint8_t* associated_data,
                             size_t associated_data_length, uint8_t* ciphertext);

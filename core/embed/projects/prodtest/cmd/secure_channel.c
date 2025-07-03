@@ -50,14 +50,15 @@ bool secure_channel_handshake_1(
   return true;
 }
 
-bool secure_channel_handshake_2(uint8_t request[SECURE_CHANNEL_REQUEST_SIZE]) {
+bool secure_channel_handshake_2(
+    const uint8_t request[SECURE_CHANNEL_REQUEST_SIZE]) {
   if (noise_state != SECURE_CHANNEL_STATE_1) {
     return false;
   }
 
   if (!noise_handle_handshake_response(&noise_context, prodtest_private_key,
                                        hsm_public_key,
-                                       (noise_response_t*)request)) {
+                                       (const noise_response_t*)request)) {
     // TODO: Uncomment the following line
     // return false;
   }
