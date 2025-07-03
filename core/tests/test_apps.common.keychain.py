@@ -2,12 +2,9 @@
 from common import *  # isort:skip
 
 from mock_storage import mock_storage
-from storage import cache, cache_codec, cache_common
+from storage import cache, cache_codec
 from trezor import wire
-from trezor.crypto import bip39
 from trezor.enums import SafetyCheckLevel
-from trezor.wire import context
-from trezor.wire.codec.codec_context import CodecContext
 
 from apps.common import safety_checks
 from apps.common.keychain import Keychain, LRUCache, get_keychain, with_slip44_keychain
@@ -15,12 +12,6 @@ from apps.common.paths import PATTERN_SEP5, PathSchema
 
 
 class TestKeychain(unittest.TestCase):
-
-    def setUpClass(self):
-        context.CURRENT_CONTEXT = CodecContext(None, bytearray(64))
-
-    def tearDownClass(self):
-        context.CURRENT_CONTEXT = None
 
     def setUp(self):
         cache_codec.start_session()
@@ -80,11 +71,8 @@ class TestKeychain(unittest.TestCase):
             self.assertRaises(wire.DataError, k.verify_path, path)
 
     def test_get_keychain(self):
-        seed = bip39.seed(" ".join(["all"] * 12), "")
-        context.cache_set(cache_common.APP_COMMON_SEED, seed)
-
         schema = PathSchema.parse("m/44'/1'", 0)
-        keychain = await_result(get_keychain("secp256k1", [schema]))
+        keychain = await_result_patched(get_keychain("secp256k1", [schema]))
 
         # valid path:
         self.assertIsNotNone(keychain.derive([H_(44), H_(1)]))
@@ -94,9 +82,6 @@ class TestKeychain(unittest.TestCase):
             keychain.derive([44])
 
     def test_with_slip44(self):
-        seed = bip39.seed(" ".join(["all"] * 12), "")
-        context.cache_set(cache_common.APP_COMMON_SEED, seed)
-
         slip44_id = 42
         valid_path = [H_(44), H_(slip44_id), H_(0)]
         invalid_path = [H_(44), H_(99), H_(0)]
@@ -126,9 +111,9 @@ class TestKeychain(unittest.TestCase):
             check_valid_paths(keychain, valid_path, testnet_path)
             check_invalid_paths(keychain, invalid_path)
 
-        await_result(func_id_only(None))
-        await_result(func_disallow_testnet(None))
-        await_result(func_with_curve(None))
+        await_result_patched(func_id_only(None))
+        await_result_patched(func_disallow_testnet(None))
+        await_result_patched(func_with_curve(None))
 
     def test_lru_cache(self):
         class Deletable:
