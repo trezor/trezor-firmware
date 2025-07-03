@@ -182,7 +182,6 @@
   "cardano__transaction": "text,1",
   "cardano__transaction_contains_minting_or_burning": "text,3",
   "cardano__transaction_contains_script_address_no_datum": "text,5",
-  "cardano__transaction_fee": "text,1",
   "cardano__transaction_id": "text,1",
   "cardano__transaction_no_collateral_input": "text,4",
   "cardano__transaction_no_script_data_hash": "text,4",
