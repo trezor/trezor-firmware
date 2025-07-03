@@ -18,13 +18,15 @@ use crate::{
                 },
                 TextStyle,
             },
-            Border, CachedJpeg, ComponentExt, Empty, FormattedText, Never, Timeout,
+            Border, CachedJpeg, ComponentExt, Empty, FormattedText, MsgMap, Never, Timeout,
         },
+        flow::FlowMsg,
         geometry::{self, Direction, Offset},
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
             util::{ContentType, PropsList, RecoveryType},
         },
+        layout_delizia::component::{FrameMsg, VerticalMenuChoiceMsg},
         ui_firmware::{
             FirmwareUI, ERROR_NOT_IMPLEMENTED, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
             MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
@@ -781,11 +783,31 @@ impl FirmwareUI for UIDelizia {
     }
 
     fn select_menu(
-        _items: heapless::Vec<TString<'static>, MAX_MENU_ITEMS>,
+        items: heapless::Vec<TString<'static>, MAX_MENU_ITEMS>,
         _current: usize,
-        _cancel: Option<TString<'static>>,
+        cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+        let mut menu = VerticalMenu::empty();
+        if let Some(text) = cancel {
+            menu = menu.danger(theme::ICON_CANCEL, text);
+        }
+        for text in items {
+            menu = menu.item(theme::ICON_CHEVRON_RIGHT, text);
+        }
+        let frame = Frame::left_aligned(TString::empty(), menu).with_cancel_button();
+        let layout = MsgMap::new(frame, move |msg| {
+            let choice = match msg {
+                FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => i,
+                // `FlowMsg::Cancelled` should be sent only if `cancel` is not `None`
+                FrameMsg::Button(_) => return Some(FlowMsg::Confirmed),
+            };
+            Some(match (choice, cancel) {
+                (0, Some(_)) => FlowMsg::Cancelled,
+                (1.., Some(_)) => FlowMsg::Choice(choice - 1),
+                (_, None) => FlowMsg::Choice(choice),
+            })
+        });
+        flow::util::single_page(layout)
     }
 
     fn select_word(
