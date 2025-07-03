@@ -500,6 +500,7 @@ impl FirmwareUI for UIEckhart {
         verb: TString<'static>,
         verb_info: TString<'static>,
         _verb_cancel: Option<TString<'static>>,
+        _external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecShort::new();
 

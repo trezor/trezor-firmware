@@ -607,6 +607,7 @@ impl FirmwareUI for UICaesar {
         verb: TString<'static>,
         _verb_info: TString<'static>,
         verb_cancel: Option<TString<'static>>,
+        external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecShort::new();
 
@@ -631,7 +632,8 @@ impl FirmwareUI for UICaesar {
                 paragraphs.into_paragraphs(),
                 verb_cancel,
                 verb,
-            ),
+            )
+            .with_menu(external_menu),
         ));
         Ok(layout)
     }
