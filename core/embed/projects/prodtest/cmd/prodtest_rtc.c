@@ -38,6 +38,47 @@ static void prodtest_rtc_timestamp(cli_t* cli) {
   cli_ok(cli, "%u", timestamp);
 }
 
+static void prodtest_rtc_set(cli_t* cli) {
+  if (cli_arg_count(cli) != 6) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  uint32_t year, month, day, hour, minute, second;
+  if (!cli_arg_uint32(cli, "year", &year) ||
+      !cli_arg_uint32(cli, "month", &month) ||
+      !cli_arg_uint32(cli, "day", &day) ||
+      !cli_arg_uint32(cli, "hour", &hour) ||
+      !cli_arg_uint32(cli, "minute", &minute) ||
+      !cli_arg_uint32(cli, "second", &second)) {
+    cli_error_arg(cli, "Invalid date/time values");
+    return;
+  }
+
+  if (!rtc_set(year, month, day, hour, minute, second)) {
+    cli_error(cli, CLI_ERROR, "Failed to set RTC time");
+    return;
+  }
+  cli_ok(cli, "");
+}
+
+static void prodtest_rtc_get(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  rtc_datetime_t datetime;
+  if (!rtc_get(&datetime)) {
+    cli_error(cli, CLI_ERROR, "Failed to get RTC time");
+    return;
+  }
+
+  cli_ok(cli, "%04u %02u %02u %02u %02u %02u %02u", datetime.year,
+         datetime.month, datetime.day, datetime.hour, datetime.minute,
+         datetime.second, datetime.weekday);
+}
+
 // clang-format off
 PRODTEST_CLI_CMD(
   .name = "rtc-timestamp",
@@ -45,5 +86,21 @@ PRODTEST_CLI_CMD(
   .info = "Read the RTC timestamp",
   .args = ""
 );
+
+PRODTEST_CLI_CMD(
+  .name = "rtc-set",
+  .func = prodtest_rtc_set,
+  .info = "Set RTC date/time",
+  .args = "<year> <month> <day> <hour> <minute> <second>",
+);
+
+
+PRODTEST_CLI_CMD(
+  .name = "rtc-get",
+  .func = prodtest_rtc_get,
+  .info = "Get RTC date/time",
+  .args = "",
+);
+
 
 #endif
