@@ -235,7 +235,7 @@ bool noise_handle_handshake_request(noise_context_t *ctx,
 bool noise_handle_handshake_response(noise_context_t *ctx,
                                      const curve25519_key initiator_private_key,
                                      const curve25519_key responder_public_key,
-                                     noise_response_t *response) {
+                                     const noise_response_t *response) {
   curve25519_key initiator_public_key = {0};
   curve25519_scalarmult_basepoint(initiator_public_key, initiator_private_key);
 
