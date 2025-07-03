@@ -24,6 +24,7 @@ if TYPE_CHECKING:
         EthereumNetworkInfo,
         EthereumStructMember,
         EthereumTokenInfo,
+        PaymentRequest,
     )
 
 
@@ -104,6 +105,67 @@ async def require_confirm_tx(
         fee_info_items,
         is_contract_interaction,
         chunkify=chunkify,
+    )
+
+
+async def require_confirm_payment_request(
+    provider_address: str,
+    verified_payment_req: PaymentRequest,
+    address_n: list[int],
+    maximum_fee: str,
+    fee_info_items: Iterable[tuple[str, str]],
+    chain_id: int,
+    network: EthereumNetworkInfo,
+    token: EthereumTokenInfo | None,
+    token_address: str,
+) -> None:
+    from trezor.ui.layouts import confirm_ethereum_payment_request
+
+    account, account_path = get_account_and_path(address_n)
+    assert (
+        verified_payment_req.amount is not None
+    )  # amount is required for non-CoinJoin transactions
+    total_amount = format_ethereum_amount(verified_payment_req.amount, token, network)
+
+    refunds = []
+    trades = []
+    for memo in verified_payment_req.memos:
+        if memo.refund_memo:
+            refund_account, refund_account_path = get_account_and_path(
+                memo.refund_memo.address_n
+            )
+            assert refund_account is not None
+            assert refund_account_path is not None
+            refunds.append(
+                (memo.refund_memo.address, refund_account, refund_account_path)
+            )
+        elif memo.coin_purchase_memo:
+            coin_purchase_account, coin_purchase_account_path = get_account_and_path(
+                memo.coin_purchase_memo.address_n
+            )
+            assert coin_purchase_account is not None
+            assert coin_purchase_account_path is not None
+            trades.append(
+                (
+                    f"- {total_amount}",
+                    f"+ {memo.coin_purchase_memo.amount}",
+                    memo.coin_purchase_memo.address,
+                    coin_purchase_account,
+                    coin_purchase_account_path,
+                )
+            )
+
+    await confirm_ethereum_payment_request(
+        verified_payment_req.recipient_name,
+        provider_address,
+        refunds,
+        trades,
+        account,
+        account_path,
+        f"{network.name} ({chain_id})",
+        maximum_fee,
+        fee_info_items,
+        token_address,
     )
 
 

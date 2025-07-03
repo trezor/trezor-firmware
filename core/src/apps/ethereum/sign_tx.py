@@ -144,12 +144,23 @@ async def confirm_tx_data(
     data_total_len: int,
     payment_req_verifier: PaymentRequestVerifier | None,
 ) -> None:
-    # function distinguishes between staking / smart contracts / regular transactions
+    from trezor import TR
+    from trezor.ui.layouts import ethereum_address_title
+
+    from . import tokens
     from .layout import (
+        require_confirm_address,
         require_confirm_approve,
         require_confirm_other_data,
+        require_confirm_payment_request,
         require_confirm_tx,
+        require_confirm_unknown_token,
     )
+
+    # local_cache_attribute
+    payment_req = msg.payment_req
+    SC_FUNC_SIG_APPROVE = constants.SC_FUNC_SIG_APPROVE
+    REVOKE_AMOUNT = constants.SC_FUNC_APPROVE_REVOKE_AMOUNT
 
     if await handle_staking(msg, defs.network, address_bytes, maximum_fee, fee_items):
         return
@@ -159,7 +170,28 @@ async def confirm_tx_data(
         msg, defs, address_bytes
     )
 
-    if func_sig == constants.SC_FUNC_SIG_APPROVE:
+    if token is tokens.UNKNOWN_TOKEN:
+        if func_sig == SC_FUNC_SIG_APPROVE:
+            if value == REVOKE_AMOUNT:
+                title = TR.ethereum__approve_intro_title_revoke
+            else:
+                title = TR.ethereum__approve_intro_title
+        else:
+            title = ethereum_address_title()
+        await require_confirm_unknown_token(title)
+        if func_sig != SC_FUNC_SIG_APPROVE:
+            # For unknown tokens we also show the token address immediately after the warning
+            # except in the case of the "approve" flow which shows the token address later on!
+            await require_confirm_address(
+                address_bytes,
+                ethereum_address_title(),
+                TR.ethereum__token_contract,
+                TR.buttons__continue,
+                "unknown_token",
+                TR.ethereum__unknown_contract_address,
+            )
+
+    if func_sig == SC_FUNC_SIG_APPROVE:
         assert token
         assert token_address
 
@@ -185,29 +217,45 @@ async def confirm_tx_data(
         recipient_str = (
             address_from_bytes(recipient, defs.network) if recipient else None
         )
-        if payment_req_verifier is not None:
-            # If a payment_req_verifier is provided, then msg.payment_req must have been set.
-            assert msg.payment_req is not None
-            payment_req_verifier.add_output(value, recipient_str or "")
-            payment_req_verifier.verify()
-            recipient_str = msg.payment_req.recipient_name
+        token_address_str = address_from_bytes(address_bytes, defs.network)
 
         is_contract_interaction = token is None and data_total_len > 0
 
-        if is_contract_interaction:
-            await require_confirm_other_data(msg.data_initial_chunk, data_total_len)
+        if payment_req_verifier is not None:
+            if is_contract_interaction:
+                raise DataError("Payment Requests don't support contract interactions")
 
-        await require_confirm_tx(
-            recipient_str,
-            value,
-            msg.address_n,
-            maximum_fee,
-            fee_items,
-            defs.network,
-            token,
-            is_contract_interaction=is_contract_interaction,
-            chunkify=bool(msg.chunkify),
-        )
+            # If a payment_req_verifier is provided, then msg.payment_req must have been set.
+            assert payment_req is not None
+            assert recipient_str is not None
+            payment_req_verifier.add_output(value, recipient_str or "")
+            payment_req_verifier.verify()
+            await require_confirm_payment_request(
+                recipient_str,
+                payment_req,
+                msg.address_n,
+                maximum_fee,
+                fee_items,
+                msg.chain_id,
+                defs.network,
+                token,
+                token_address_str,
+            )
+        else:
+            if is_contract_interaction:
+                await require_confirm_other_data(msg.data_initial_chunk, data_total_len)
+
+            await require_confirm_tx(
+                recipient_str,
+                value,
+                msg.address_n,
+                maximum_fee,
+                fee_items,
+                defs.network,
+                token,
+                is_contract_interaction=is_contract_interaction,
+                chunkify=bool(msg.chunkify),
+            )
 
 
 async def handle_staking(
@@ -257,12 +305,6 @@ async def _handle_erc20(
     definitions: Definitions,
     address_bytes: bytes,
 ) -> tuple[EthereumTokenInfo | None, bytes | None, bytes | None, bytes, int | None]:
-    from trezor import TR
-    from trezor.ui.layouts import ethereum_address_title
-
-    from . import tokens
-    from .layout import require_confirm_address, require_confirm_unknown_token
-
     # local_cache_attribute
     data_initial_chunk = msg.data_initial_chunk
     SC_FUNC_SIG_BYTES = constants.SC_FUNC_SIG_BYTES
@@ -270,7 +312,6 @@ async def _handle_erc20(
     SC_ARGUMENT_ADDRESS_BYTES = constants.SC_ARGUMENT_ADDRESS_BYTES
     SC_FUNC_SIG_APPROVE = constants.SC_FUNC_SIG_APPROVE
     SC_FUNC_SIG_TRANSFER = constants.SC_FUNC_SIG_TRANSFER
-    REVOKE_AMOUNT = constants.SC_FUNC_APPROVE_REVOKE_AMOUNT
 
     token = None
     token_address = None
@@ -312,27 +353,6 @@ async def _handle_erc20(
 
         token = definitions.get_token(address_bytes)
         token_address = address_bytes
-
-        if token is tokens.UNKNOWN_TOKEN:
-            if func_sig == SC_FUNC_SIG_APPROVE:
-                if value == REVOKE_AMOUNT:
-                    title = TR.ethereum__approve_intro_title_revoke
-                else:
-                    title = TR.ethereum__approve_intro_title
-            else:
-                title = ethereum_address_title()
-            await require_confirm_unknown_token(title)
-            if func_sig != SC_FUNC_SIG_APPROVE:
-                # For unknown tokens we also show the token address immediately after the warning
-                # except in the case of the "approve" flow which shows the token address later on!
-                await require_confirm_address(
-                    address_bytes,
-                    ethereum_address_title(),
-                    TR.ethereum__token_contract,
-                    TR.buttons__continue,
-                    "unknown_token",
-                    TR.ethereum__unknown_contract_address,
-                )
 
     return token, token_address, func_sig, recipient, value
 
