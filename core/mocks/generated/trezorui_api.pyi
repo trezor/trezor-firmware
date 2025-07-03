@@ -129,6 +129,18 @@ def confirm_address(
 
 
 # rust/src/ui/api/firmware_micropython.rs
+def confirm_trade(
+    *,
+    title: str,
+    subtitle: str,
+    sell_amount: str,
+    buy_amount: str,
+) -> LayoutObj[UiResult]:
+    """A general way to confirm a "trade", which consists of
+    two amounts - one that is sold and what that is bought."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
 def confirm_value(
     *,
     title: str,
