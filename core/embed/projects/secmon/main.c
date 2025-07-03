@@ -27,7 +27,6 @@
 #include <sys/system.h>
 #include <sys/systick.h>
 #include <sys/sysutils.h>
-#include <sys/trustzone.h>
 #include <util/board_capabilities.h>
 #include <util/boot_image.h>
 #include <util/flash.h>
@@ -114,8 +113,6 @@ extern uint32_t _secmon_size;
 int main(void) {
   // Initialize system's core services
   system_init(secmon_panic);
-
-  tz_init();
 
   // Initialize secure monitor drivers
   drivers_init();
