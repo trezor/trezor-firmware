@@ -206,6 +206,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_buttons__turn_on;
   MP_QSTR_buttons__view;
   MP_QSTR_buttons__view_all_data;
+  MP_QSTR_buy_amount;
   MP_QSTR_can_go_back;
   MP_QSTR_cancel;
   MP_QSTR_cancel_text;
@@ -239,6 +240,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_total__sending_from_account;
   MP_QSTR_confirm_total__title_fee;
   MP_QSTR_confirm_total__title_sending_from;
+  MP_QSTR_confirm_trade;
   MP_QSTR_confirm_value;
   MP_QSTR_confirm_value_intro;
   MP_QSTR_confirm_with_info;
@@ -684,6 +686,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_select_menu;
   MP_QSTR_select_word;
   MP_QSTR_select_word_count;
+  MP_QSTR_sell_amount;
   MP_QSTR_send__cancel_sign;
   MP_QSTR_send__cancel_transaction;
   MP_QSTR_send__confirm_sending;

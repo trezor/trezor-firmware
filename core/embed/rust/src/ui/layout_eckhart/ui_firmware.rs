@@ -391,6 +391,15 @@ impl FirmwareUI for UIEckhart {
         Ok(flow)
     }
 
+    fn confirm_trade(
+        _title: TString<'static>,
+        _subtitle: TString<'static>,
+        _sell_amount: TString<'static>,
+        _buy_amount: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+    }
+
     fn confirm_value(
         title: TString<'static>,
         value: Obj,
