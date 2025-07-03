@@ -1004,6 +1004,7 @@ class TR:
     words__settings: str = "Settings"
     words__sign: str = "Sign"
     words__signer: str = "Signer"
+    words__swap: str = "Swap"
     words__title_check: str = "Check"
     words__title_done: str = "Done"
     words__title_group: str = "Group"

@@ -1446,6 +1446,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__contract_address = 1050,  // "Provider contract address"
     buttons__view = 1051,  // "View"
+    words__swap = 1052,  // "Swap"
 }
 
 impl TranslatedString {
@@ -3204,6 +3205,7 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__contract_address, "Provider contract address"),
             (Self::buttons__view, "View"),
+            (Self::words__swap, "Swap"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4623,6 +4625,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__settings, Self::words__settings),
         (Qstr::MP_QSTR_words__sign, Self::words__sign),
         (Qstr::MP_QSTR_words__signer, Self::words__signer),
+        (Qstr::MP_QSTR_words__swap, Self::words__swap),
         (Qstr::MP_QSTR_words__title_check, Self::words__title_check),
         (Qstr::MP_QSTR_words__title_done, Self::words__title_done),
         (Qstr::MP_QSTR_words__title_group, Self::words__title_group),
