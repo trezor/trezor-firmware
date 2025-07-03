@@ -483,7 +483,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_prompt_backup;
   MP_QSTR_prompt_screen;
   MP_QSTR_prompt_title;
-  MP_QSTR_properties;
   MP_QSTR_pubkey;
   MP_QSTR_pubkey_qr;
   MP_QSTR_qr_title;

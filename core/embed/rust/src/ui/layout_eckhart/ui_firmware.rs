@@ -1286,7 +1286,7 @@ impl FirmwareUI for UIEckhart {
 
     fn show_properties(
         _title: TString<'static>,
-        _properties: Obj,
+        _value: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }

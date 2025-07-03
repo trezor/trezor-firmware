@@ -1227,11 +1227,25 @@ impl FirmwareUI for UICaesar {
 
     fn show_properties(
         title: TString<'static>,
-        properties: Obj,
+        value: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let paragraphs = parse_properties(properties)?.into_paragraphs();
+        let mut paragraphs = ParagraphVecLong::new();
+        if Obj::is_str(value) {
+            // Display string value using monospace font
+            add_paragraphs(&mut paragraphs, None, Some(value.try_into()?), true);
+        } else {
+            for para in IterBuf::new().try_iterate(value)? {
+                let [key, value]: [Obj; 2] = util::iter_into_array(para)?;
+                add_paragraphs(
+                    &mut paragraphs,
+                    key.try_into_option()?,
+                    value.try_into_option()?,
+                    false,
+                );
+            }
+        }
 
-        let page = ButtonPage::new(paragraphs, theme::BG)
+        let page = ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
             .with_back_btn(Some(ButtonDetails::left_arrow_icon()))
             .with_next_btn(Some(ButtonDetails::right_arrow_icon()))
             .with_cancel_btn(Some(ButtonDetails::cancel_icon()))
@@ -1465,36 +1479,46 @@ fn tutorial_screen(
     Page::new(btn_layout, btn_actions, formatted).with_title(title)
 }
 
+fn add_paragraphs<'a>(
+    paragraphs: &mut ParagraphVecLong<'a>,
+    key: Option<TString<'a>>,
+    value: Option<TString<'a>>,
+    is_data: bool,
+) {
+    if let Some(key) = key {
+        if value.is_some() {
+            // Decreasing the margin between key and value (default is 5 px, we use 2 px)
+            // (this enables 4 lines - 2 key:value pairs - on the same screen)
+            paragraphs.add(
+                Paragraph::new(&theme::TEXT_BOLD, key)
+                    .no_break()
+                    .with_bottom_padding(2),
+            );
+        } else {
+            paragraphs.add(Paragraph::new(&theme::TEXT_BOLD, key));
+        }
+    }
+    if let Some(value) = value {
+        let style = if is_data {
+            &theme::TEXT_MONO_DATA
+        } else {
+            &theme::TEXT_MONO
+        };
+        paragraphs.add(Paragraph::new(style, value));
+    }
+}
+
 fn parse_properties(items: Obj) -> Result<ParagraphVecLong<'static>, Error> {
     let mut paragraphs = ParagraphVecLong::new();
 
     for para in IterBuf::new().try_iterate(items)? {
         let [key, value, is_data]: [Obj; 3] = util::iter_into_array(para)?;
-        let key = key.try_into_option::<TString>()?;
-        let value = value.try_into_option::<TString>()?;
-        let is_data: bool = is_data.try_into()?;
-
-        if let Some(key) = key {
-            if value.is_some() {
-                // Decreasing the margin between key and value (default is 5 px, we use 2 px)
-                // (this enables 4 lines - 2 key:value pairs - on the same screen)
-                paragraphs.add(
-                    Paragraph::new(&theme::TEXT_BOLD, key)
-                        .no_break()
-                        .with_bottom_padding(2),
-                );
-            } else {
-                paragraphs.add(Paragraph::new(&theme::TEXT_BOLD, key));
-            }
-        }
-        if let Some(value) = value {
-            let style = if is_data {
-                &theme::TEXT_MONO_DATA
-            } else {
-                &theme::TEXT_MONO
-            };
-            paragraphs.add(Paragraph::new(style, value));
-        }
+        add_paragraphs(
+            &mut paragraphs,
+            key.try_into_option()?,
+            value.try_into_option()?,
+            is_data.try_into()?,
+        );
     }
 
     Ok(paragraphs)

@@ -5,6 +5,8 @@ from trezor.enums import ButtonRequestType
 from trezor.ui.layouts.common import interact
 
 if TYPE_CHECKING:
+    from typing import Any
+
     from trezorui_api import LayoutObj, UiResult
     from typing_extensions import Self
 
@@ -20,20 +22,23 @@ class Menu:
 
 
 class Details:
-    def __init__(self, name: str, *properties: "Property") -> None:
+    def __init__(self, name: str, properties: "Properties") -> None:
         self.name = name
-        self.properties = properties
+        self.value = properties.obj
 
 
-class Property:
-    def __init__(self, name: str | None, value: str, is_data: bool = False) -> None:
-        self.name = name
-        self.value = value
-        self.is_data = is_data
+class Properties:
+    @classmethod
+    def data(cls, value: str) -> Self:
+        return cls(value)
 
     @classmethod
-    def data(cls, name: str | None, value: str) -> Self:
-        return cls(name, value, True)
+    def paragraphs(cls, value: list[tuple[str, str]]) -> Self:
+        return cls(value)
+
+    def __init__(self, obj: Any) -> None:
+        """Internal c-tor: use the factory methods above instead."""
+        self.obj = obj
 
 
 async def show_menu(
@@ -55,9 +60,7 @@ async def show_menu(
         else:
             layout = trezorui_api.show_properties(
                 title=menu.name,
-                properties=[
-                    (item.name, item.value, item.is_data) for item in menu.properties
-                ],
+                value=menu.value,
             )
 
         choice = await interact(layout, br_name, br_code, raise_on_cancel=None)

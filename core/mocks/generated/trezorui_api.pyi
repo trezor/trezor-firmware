@@ -690,10 +690,9 @@ def show_progress_coinjoin(
 def show_properties(
     *,
     title: str,
-    properties: list[tuple[str | None, str | bytes | None, bool]],
+    value: list[tuple[str, str]] | str,
 ) -> LayoutObj[int]:
-    """Show a list of key-value pairs. The third component in the tuple should be True if
-    the value is to be rendered as binary with monospace font, False otherwise."""
+    """Show a list of key-value pairs, or a chunkified string."""
 
 
 # rust/src/ui/api/firmware_micropython.rs

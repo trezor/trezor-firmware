@@ -1176,12 +1176,12 @@ if not utils.BITCOIN_ONLY:
         stake_item: tuple[str, str] | None,
         amount_item: tuple[str, str] | None,
         fee_item: tuple[str, str],
-        fee_details: Iterable[tuple[str, str]],
+        fee_details: list[tuple[str, str]],
         blockhash_item: tuple[str, str],
         br_name: str = "confirm_solana_staking_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
-        from trezor.ui.layouts.menu import Details, Menu, Property, confirm_with_menu
+        from trezor.ui.layouts.menu import Details, Menu, Properties, confirm_with_menu
 
         if not amount_item:
             amount_label, amount = fee_item
@@ -1212,7 +1212,7 @@ if not utils.BITCOIN_ONLY:
             external_menu=True,
         )
         menu = Menu.root(
-            *[Details(name, Property.data(None, value)) for name, value in items]
+            *[Details(name, Properties.data(value)) for name, value in items]
         )
         await confirm_with_menu(main, menu, br_name, br_code)
 
@@ -1223,14 +1223,15 @@ if not utils.BITCOIN_ONLY:
             fee_label=fee_label,
             external_menu=True,
         )
+        account_details = [
+            (f"{TR.words__account}:", account),
+            (TR.address_details__derivation_path_colon, account_path),
+        ]
         menu = Menu.root(
-            Details(
-                TR.confirm_total__title_fee, *[Property(k, v) for k, v in fee_details]
-            ),
+            Details(TR.confirm_total__title_fee, Properties.paragraphs(fee_details)),
             Details(
                 TR.address_details__account_info,
-                Property(f"{TR.words__account}:", account),
-                Property(TR.address_details__derivation_path_colon, account_path),
+                Properties.paragraphs(account_details),
             ),
         )
         await confirm_with_menu(main, menu, br_name, br_code)

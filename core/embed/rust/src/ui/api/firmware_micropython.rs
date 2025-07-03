@@ -344,9 +344,9 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
 extern "C" fn new_show_properties(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let properties: Obj = kwargs.get(Qstr::MP_QSTR_properties)?;
+        let value: Obj = kwargs.get(Qstr::MP_QSTR_value)?;
 
-        let layout = ModelUI::show_properties(title, properties)?;
+        let layout = ModelUI::show_properties(title, value)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1881,10 +1881,9 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def show_properties(
     ///     *,
     ///     title: str,
-    ///     properties: list[tuple[str | None, str | bytes | None, bool]],
+    ///     value: list[tuple[str, str]] | str,
     /// ) -> LayoutObj[int]:
-    ///     """Show a list of key-value pairs. The third component in the tuple should be True if
-    ///     the value is to be rendered as binary with monospace font, False otherwise."""
+    ///     """Show a list of key-value pairs, or a chunkified string."""
     Qstr::MP_QSTR_show_properties => obj_fn_kw!(0, new_show_properties).as_obj(),
 
     /// def show_remaining_shares(
