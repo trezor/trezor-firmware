@@ -19,6 +19,18 @@
 
 #pragma once
 
+#include <trezor_types.h>
+
+typedef struct {
+  uint16_t year;   /**< Full year (e.g., 2025) */
+  uint8_t month;   /**< Month (1–12) */
+  uint8_t day;     /**< Day of the month (1–31) */
+  uint8_t hour;    /**< Hour (0–23) */
+  uint8_t minute;  /**< Minute (0–59) */
+  uint8_t second;  /**< Second (0–59) */
+  uint8_t weekday; /**< Weekday (1=Monday to 7=Sunday) */
+} rtc_datetime_t;
+
 /**
  * @brief Initialize the RTC driver
  *
@@ -67,3 +79,32 @@ bool rtc_wakeup_timer_start(uint32_t seconds, rtc_wakeup_callback_t callback,
  * @brief Stop the RTC wakeup timer
  */
 void rtc_wakeup_timer_stop(void);
+
+/**
+ * @brief Set the RTC using discrete time values
+ *
+ * Sets the RTC date and time using individual components: year, month, day,
+ * hour, minute, and second. The weekday is automatically calculated based on
+ * the given date.
+ *
+ * @param year Full year (e.g., 2025). Must be between 2000 and 2099.
+ * @param month Month (1–12).
+ * @param day Day of the month (1–31).
+ * @param hour Hour (0–23).
+ * @param minute Minute (0–59).
+ * @param second Second (0–59).
+ * @return true if the time was successfully set, false otherwise
+ */
+bool rtc_set(uint16_t year, uint8_t month, uint8_t day, uint8_t hour,
+             uint8_t minute, uint8_t second);
+
+/**
+ * @brief Get the current RTC time as a structured date and time
+ *
+ * Reads the RTC date and time registers and returns the result in a
+ * structured format.
+ *
+ * @param datetime Pointer to an rtc_datetime_t struct to hold the result.
+ * @return true if the time was successfully retrieved, false otherwise
+ */
+bool rtc_get(rtc_datetime_t* datetime);
