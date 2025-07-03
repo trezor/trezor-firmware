@@ -377,7 +377,7 @@ def _fee_ui_info(
             rent_str = f"{format_amount(fee.rent, 9)} SOL"
             fee_items.append((TR.solana__max_rent_fee, rent_str))
         else:
-            fee_title = f"{TR.solana__transaction_fee}:"
+            fee_title = f"{TR.words__transaction_fee}:"
     return fee_title, fee_str, fee_items
 
 

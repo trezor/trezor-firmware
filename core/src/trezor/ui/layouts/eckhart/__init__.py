@@ -1154,7 +1154,7 @@ if not utils.BITCOIN_ONLY:
                 title=title,
                 subtitle=None,
                 description=description,
-                extra=TR.solana__stake_provider if vote_account else None,
+                extra=TR.words__provider if vote_account else None,
                 message=vote_account,
                 amount=None,
                 chunkify=True,
