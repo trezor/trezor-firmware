@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from typing import Any, Awaitable, Coroutine, Iterable, NoReturn, Sequence, TypeVar
 
     from ..common import ExceptionType, PropertyType
+    from ..menu import Details
 
     T = TypeVar("T")
 
@@ -1031,6 +1032,114 @@ if not utils.BITCOIN_ONLY:
             TR.confirm_total__title_fee,
         )
 
+    async def confirm_trade(
+        title: str,
+        subtitle: str,
+        sell_amount: str,
+        buy_amount: str,
+        address: str,
+        account: str,
+        account_path: str,
+        token_address: str,
+    ) -> None:
+        from trezor.ui.layouts.menu import Menu, confirm_with_menu
+
+        trade_layout = trezorui_api.confirm_trade(
+            title=title,
+            subtitle=subtitle,
+            sell_amount=sell_amount,
+            buy_amount=buy_amount,
+        )
+
+        menu = Menu.root(
+            [
+                create_details(
+                    TR.address__title_receive_address,
+                    [
+                        ("", address),
+                        (TR.words__account, account),
+                        (TR.address_details__derivation_path, account_path),
+                    ],
+                ),
+                create_details(TR.ethereum__token_contract, token_address),
+            ],
+            TR.send__cancel_sign,
+        )
+
+        await confirm_with_menu(trade_layout, menu, "confirm_trade")
+
+    async def confirm_ethereum_payment_request(
+        recipient_name: str,
+        recipient: str,
+        refunds: Iterable[tuple[str, str, str]],
+        trades: Iterable[tuple[str, str, str, str, str]],
+        account: str | None,
+        account_path: str | None,
+        chain_id: str,
+        maximum_fee: str,
+        fee_info_items: Iterable[tuple[str, str]],
+        token_address: str,
+    ) -> None:
+        from trezor.ui.layouts.menu import Menu, confirm_with_menu
+
+        main_layout = trezorui_api.confirm_value(
+            title=TR.words__swap,
+            subtitle=TR.words__provider,
+            value=recipient_name,
+            description=None,
+            verb=TR.instructions__tap_to_continue,
+            verb_cancel=None,
+            chunkify=False,
+            external_menu=True,
+        )
+
+        menu_items = [create_details(TR.address__title_provider_address, recipient)]
+        for r_address, r_account, r_account_path in refunds:
+            menu_items.append(
+                create_details(
+                    TR.address__title_refund_address,
+                    [
+                        ("", r_address),
+                        (TR.words__account, r_account),
+                        (TR.address_details__derivation_path, r_account_path),
+                    ],
+                )
+            )
+        menu = Menu.root(menu_items, TR.send__cancel_sign)
+
+        await confirm_with_menu(main_layout, menu, "confirm_payment_request")
+
+        for sell_amount, buy_amount, t_address, t_account, t_account_path in trades:
+            await confirm_trade(
+                TR.words__swap,
+                TR.words__assets,
+                sell_amount,
+                buy_amount,
+                t_address,
+                t_account,
+                t_account_path,
+                token_address,
+            )
+
+        account_items = []
+        if account:
+            account_items.append((TR.words__account, account))
+        if account_path:
+            account_items.append((TR.address_details__derivation_path, account_path))
+        account_items.append((TR.ethereum__approve_chain_id, chain_id))
+
+        await _confirm_summary(
+            None,
+            None,
+            maximum_fee,
+            TR.words__transaction_fee,
+            TR.words__title_summary,
+            account_items,
+            fee_info_items,
+            TR.confirm_total__title_fee,
+            "confirm_payment_request",
+        )
+
     async def confirm_ethereum_staking_tx(
         title: str,
         intro_question: str,
@@ -1599,4 +1708,12 @@ def tutorial(br_code: ButtonRequestType = BR_CODE_OTHER) -> Awaitable[None]:
         trezorui_api.tutorial(),
         "tutorial",
         br_code,
+    )
+
+
+def create_details(name: str, value: list[tuple[str, str]] | str) -> Details:
+    from trezor.ui.layouts.menu import Details
+
+    return Details.from_layout(
+        name, lambda: trezorui_api.show_properties(title=name, value=value)
     )
