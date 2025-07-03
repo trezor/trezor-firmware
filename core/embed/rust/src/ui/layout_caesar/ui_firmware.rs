@@ -638,8 +638,8 @@ impl FirmwareUI for UICaesar {
                 paragraphs.into_paragraphs(),
                 verb_cancel,
                 verb,
-            ),
-        ));
+            )
+        ).with_menu(true));
         Ok(layout)
     }
 
