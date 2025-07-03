@@ -439,9 +439,17 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
+        let external_menu: bool = kwargs.get_or(Qstr::MP_QSTR_external_menu, false)?;
 
-        let layout =
-            ModelUI::confirm_with_info(title, subtitle, items, verb, verb_info, verb_cancel)?;
+        let layout = ModelUI::confirm_with_info(
+            title,
+            subtitle,
+            items,
+            verb,
+            verb_info,
+            verb_cancel,
+            external_menu,
+        )?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1534,6 +1542,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     verb: str,
     ///     verb_info: str,
     ///     verb_cancel: str | None = None,
+    ///     external_menu: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm given items but with third button. Always single page
     ///     without scrolling. In Delizia, the button is placed in
