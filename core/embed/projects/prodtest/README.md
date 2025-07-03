@@ -1044,7 +1044,25 @@ rtc-timestamp
 OK 1886533
 ```
 
+### rtc-set-time
+Sets the current RTC date and time.
 
+`rtc-set-time <year> <month> <day> <hour> <minute> <second>`
+
+Example:
+```
+rtc-set-time 2025 07 03 14 23 00
+OK
+```
+
+### rtc-get-time
+Reads the current RTC date and time.
+
+Example:
+```
+rtc-get-time
+OK 2025-07-03 14:23:00, 4
+```
 
 
 
