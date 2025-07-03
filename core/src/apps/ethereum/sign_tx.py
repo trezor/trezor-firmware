@@ -148,13 +148,17 @@ async def confirm_tx_data(
     from .layout import (
         require_confirm_approve,
         require_confirm_other_data,
+        require_confirm_payment_request,
         require_confirm_tx,
     )
+
+    payment_req = msg.payment_req  # local_cache_attribute
 
     if await handle_staking(msg, defs.network, address_bytes, maximum_fee, fee_items):
         return
 
     # Handle ERC-20 known functions
+    # TODO: this should only parse params, extract UI code out of it!
     token, token_address, func_sig, recipient, value = await _handle_erc20(
         msg, defs, address_bytes
     )
@@ -175,7 +179,7 @@ async def confirm_tx_data(
             msg.chain_id,
             defs.network,
             token,
-            token_address,
+            token_address,  # TODO: why is this here and not address_bytes - which seems to be the same??
             chunkify=bool(msg.chunkify),
         )
     else:
@@ -185,29 +189,42 @@ async def confirm_tx_data(
         recipient_str = (
             address_from_bytes(recipient, defs.network) if recipient else None
         )
+        token_address_str = address_from_bytes(address_bytes, defs.network)
+
         if payment_req_verifier is not None:
             # If a payment_req_verifier is provided, then msg.payment_req must have been set.
-            assert msg.payment_req is not None
+            assert payment_req is not None
+            assert recipient_str is not None
             payment_req_verifier.add_output(value, recipient_str or "")
             payment_req_verifier.verify()
-            recipient_str = msg.payment_req.recipient_name
+            await require_confirm_payment_request(
+                recipient_str,
+                payment_req,
+                msg.address_n,
+                maximum_fee,
+                fee_items,
+                defs.network,
+                token,
+                token_address_str,
+            )
+        else:
+            is_contract_interaction = token is None and data_total_len > 0
 
-        is_contract_interaction = token is None and data_total_len > 0
+            # TODO: Is this needed for payment reqests??
+            if is_contract_interaction:
+                await require_confirm_other_data(msg.data_initial_chunk, data_total_len)
 
-        if is_contract_interaction:
-            await require_confirm_other_data(msg.data_initial_chunk, data_total_len)
-
-        await require_confirm_tx(
-            recipient_str,
-            value,
-            msg.address_n,
-            maximum_fee,
-            fee_items,
-            defs.network,
-            token,
-            is_contract_interaction=is_contract_interaction,
-            chunkify=bool(msg.chunkify),
-        )
+            await require_confirm_tx(
+                recipient_str,
+                value,
+                msg.address_n,
+                maximum_fee,
+                fee_items,
+                defs.network,
+                token,
+                is_contract_interaction=is_contract_interaction,
+                chunkify=bool(msg.chunkify),
+            )
 
 
 async def handle_staking(
