@@ -44,3 +44,24 @@ class TestCaseWithContext(unittest.TestCase):
 
     def tearDownClass(self):
         context.CURRENT_CONTEXT = None
+
+
+class TestCaseWithSeed(TestCaseWithContext):
+    """
+    Patch `apps.common.seed.get_seed` to return the "all" seed.
+    """
+
+    def setUpClass(self):
+        from mock import MockAsync, patch
+        from trezor.crypto import bip39
+
+        from apps.common import seed as seed_module
+
+        super().setUpClass()
+        seed = bip39.seed(" ".join(["all"] * 12), "")
+        self._seed_patch = patch(seed_module, "get_seed", MockAsync(return_value=seed))
+        self._seed_patch.__enter__()
+
+    def tearDownClass(self):
+        self._seed_patch.__exit__(None, None, None)
+        super().tearDownClass()
