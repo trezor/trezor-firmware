@@ -12,13 +12,16 @@ if TYPE_CHECKING:
 
 
 class Menu:
-    def __init__(self, name: str, *children: "Details") -> None:
+    def __init__(
+        self, name: str, *children: "Details", cancel: str | None = None
+    ) -> None:
         self.name = name
         self.children = children
+        self.cancel = cancel
 
     @classmethod
-    def root(cls, *children: "Details") -> Self:
-        return cls("", *children)
+    def root(cls, *children: "Details", cancel: str | None = None) -> Self:
+        return cls("", *children, cancel=cancel)
 
 
 class Details:
@@ -47,7 +50,7 @@ async def show_menu(
     br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> None:
     menu_path = []
-    current_page = 0
+    current_item = 0
     while True:
         menu = root
         for i in menu_path:
@@ -55,7 +58,9 @@ async def show_menu(
 
         if isinstance(menu, Menu):
             layout = trezorui_api.select_menu(
-                items=[child.name for child in menu.children], page_counter=current_page
+                items=[child.name for child in menu.children],
+                current=current_item,
+                cancel=menu.cancel,
             )
         else:
             layout = trezorui_api.show_properties(
@@ -66,11 +71,11 @@ async def show_menu(
         choice = await interact(layout, br_name, br_code, raise_on_cancel=None)
         if isinstance(choice, int):
             menu_path.append(choice)
-            current_page = 0
+            current_item = 0
             continue
 
         if menu_path:
-            current_page = menu_path.pop()
+            current_item = menu_path.pop()
         else:
             return
 

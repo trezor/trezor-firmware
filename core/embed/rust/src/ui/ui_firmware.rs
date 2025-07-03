@@ -279,7 +279,8 @@ pub trait FirmwareUI {
 
     fn select_menu(
         items: heapless::Vec<TString<'static>, MAX_MENU_ITEMS>,
-        page_counter: usize,
+        current: usize,
+        cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn select_word(

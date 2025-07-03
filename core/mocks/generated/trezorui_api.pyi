@@ -481,7 +481,8 @@ def request_passphrase(
 def select_menu(
     *,
     items: Iterable[str],
-    page_counter: int = 0,
+    current: int,
+    cancel: str | None = None
 ) -> LayoutObj[int]:
     """Select an item from a menu. Returns index in range `0..len(items)`."""
 

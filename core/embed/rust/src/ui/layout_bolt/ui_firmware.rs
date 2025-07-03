@@ -714,7 +714,8 @@ impl FirmwareUI for UIBolt {
 
     fn select_menu(
         _items: heapless::Vec<TString<'static>, MAX_MENU_ITEMS>,
-        _page_counter: usize,
+        _current: usize,
+        _cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
