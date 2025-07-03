@@ -27,7 +27,12 @@ from trezor.messages import (
 )
 from trezor.wire import message_handler
 from trezor.wire.context import UnexpectedMessageException
-from trezor.wire.errors import ActionCancelled, SilentError, UnexpectedMessage
+from trezor.wire.errors import (
+    ActionCancelled,
+    FirmwareError,
+    SilentError,
+    UnexpectedMessage,
+)
 from trezor.wire.thp import ChannelState, ThpError, crypto, get_enabled_pairing_methods
 from trezor.wire.thp.pairing_context import PairingContext
 
@@ -132,7 +137,7 @@ async def handle_pairing_request(
             result = await ctx.show_pairing_method_screen()
         except UnexpectedMessageException as e:
             raw_response = e.msg
-            req_type = protobuf.type_for_wire(raw_response.type)
+            req_type = protobuf.type_for_wire("ThpMessageType", raw_response.type)
             response = message_handler.wrap_protobuf_load(raw_response.data, req_type)
 
         if result is not None:
@@ -301,6 +306,9 @@ async def _handle_code_entry_cpace(
         )  # TODO remove after testing
         raise ThpError("Unexpected Code Entry Tag")
 
+    if ctx.code_entry_secret is None:
+        raise FirmwareError(message="Failed to create code entry secret")
+
     return await _handle_secret_reveal(
         ctx,
         msg=ThpCodeEntrySecret(secret=ctx.code_entry_secret),
@@ -335,6 +343,8 @@ async def _handle_qr_code_tag(
         )  # TODO remove after testing
         raise ThpError("Unexpected QR Code Tag")
 
+    if ctx.qr_code_secret is None:
+        raise FirmwareError(message="Failed to create qr code secret")
     return await _handle_secret_reveal(
         ctx,
         msg=ThpQrCodeSecret(secret=ctx.qr_code_secret),
