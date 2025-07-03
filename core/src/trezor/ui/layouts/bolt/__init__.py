@@ -1205,7 +1205,7 @@ if not utils.BITCOIN_ONLY:
         confirm_layout = trezorui_api.confirm_value(
             title=title,
             description=description,
-            extra=f"{TR.solana__stake_provider}:" if vote_account else None,
+            extra=f"{TR.words__provider}:" if vote_account else None,
             value=vote_account,
             verb=TR.buttons__continue,
             info=True,

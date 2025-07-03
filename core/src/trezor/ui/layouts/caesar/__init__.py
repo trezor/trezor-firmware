@@ -1199,7 +1199,7 @@ if not utils.BITCOIN_ONLY:
         items.append(blockhash_item)
 
         if vote_account:
-            description = f"{description}\n{TR.solana__stake_provider}:"
+            description = f"{description}\n{TR.words__provider}:"
             title = None  # so the layout will fit in a single page
         else:
             description = f"\n{description}"
