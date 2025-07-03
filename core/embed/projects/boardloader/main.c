@@ -44,10 +44,6 @@
 #include <sec/hash_processor.h>
 #endif
 
-#ifdef USE_TRUSTZONE
-#include <sys/trustzone.h>
-#endif
-
 #ifdef USE_TAMPER
 #include <sys/tamper.h>
 #endif
@@ -116,10 +112,6 @@ int main(void) {
     erase_storage(NULL);
     return 2;
   }
-
-#ifdef USE_TRUSTZONE
-  tz_init();
-#endif
 
   drivers_init();
 
