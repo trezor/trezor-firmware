@@ -86,6 +86,41 @@ def confirm_action(
     )
 
 
+async def confirm_trade(
+    title: str,
+    subtitle: str,
+    sell_amount: str,
+    buy_amount: str,
+    address: str,
+    account: str,
+    account_path: str,
+    token_address: str,
+) -> Awaitable[None]:
+    from trezor.ui.layouts.menu import Details, Menu, Property, confirm_with_menu
+
+    trade_layout = trezorui_api.confirm_with_info(
+        title=title,
+        items=[(sell_amount, True), (buy_amount, True)],
+        verb=TR.buttons__confirm,
+        verb_info=TR.buttons__info,
+    )
+
+    menu = Menu.root(
+        Details(
+            TR.address__title_receive_address,
+            Property.data(None, address),
+            Property.data(TR.words__account, account),
+            Property.data(TR.address_details__derivation_path, account_path),
+        ),
+        Details(
+            TR.ethereum__token_contract, # ??? why ETH stuff here? should be general...
+            Property.data(None, token_address),
+        )
+    )
+
+    await confirm_with_menu(trade_layout, menu, "confirm_trade")
+
+
 def confirm_single(
     br_name: str,
     title: str,
@@ -1068,6 +1103,67 @@ if not utils.BITCOIN_ONLY:
                 extra_title=TR.confirm_total__title_fee,
             ),
             br_name="confirm_ethereum_approve",
+        )
+
+    async def confirm_ethereum_payment_request(
+        recipient_name: str,
+        recipient: str,
+        refunds: Iterable[tuple[str, str, str]],
+        trades: Iterable[tuple[str, str, str, str, str]],
+        account: str | None,
+        account_path: str | None,
+        maximum_fee: str,
+        fee_info_items: Iterable[tuple[str, str]],
+        token_address: str,
+    ) -> None:
+        from trezor.ui.layouts.menu import Details, Menu, Property, confirm_with_menu
+
+        main_layout = trezorui_api.confirm_with_info(
+            title=TR.words__swap,
+            items=[(TR.words__provider, True), (recipient_name, False)],
+            verb=TR.buttons__continue,
+            verb_info=TR.buttons__info,
+        )
+
+        refund_menu_items = []
+        for r_address, r_account, r_account_path in refunds:
+            refund_menu_items.append(Details("Refund address", Property.data(None, r_address), Property.data(TR.words__account, r_account), Property.data(TR.address_details__derivation_path, r_account_path)))
+
+        menu = Menu.root(
+            *[Details("Provider address", Property.data(None, recipient))] + refund_menu_items
+        )
+        await confirm_with_menu(main_layout, menu, "confirm_payment_request")
+
+        for sell_amount, buy_amount, t_address, t_account, t_account_path in trades:
+            await confirm_trade(
+                TR.words__swap,
+                TR.words__asset,
+                sell_amount,
+                buy_amount,
+                t_address,
+                t_account,
+                t_account_path,
+                token_address,
+            )
+
+        account_items = []
+        if account_path:
+            account_items.append((TR.words__account, account))
+            account_items.append((TR.address_details__derivation_path, account_path))
+
+        await raise_if_not_confirmed(
+            trezorui_api.confirm_summary(
+                amount=None,
+                amount_label=None,
+                fee=maximum_fee,
+                fee_label=TR.words__transaction_fee,
+                title=TR.words__title_summary,
+                account_items=[(f"{k}:", v) for (k, v) in account_items],
+                account_title=TR.send__send_from,
+                extra_items=fee_info_items,
+                extra_title=TR.confirm_total__title_fee,
+            ),
+            br_name="confirm_payment_request",
         )
 
     async def confirm_ethereum_staking_tx(

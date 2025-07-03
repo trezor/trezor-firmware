@@ -62,6 +62,26 @@ def confirm_action(
     )
 
 
+def confirm_trade(
+    title: str,
+    subtitle: str,
+    sell_amount: str,
+    buy_amount: str,
+    address: str,
+    account: str,
+    account_path: str,
+) -> Awaitable[None]:
+    return raise_if_not_confirmed(
+        trezorui_api.confirm_trade(
+            title=title,
+            subtitle=subtitle,
+            sell_amount=sell_amount,
+            buy_amount=buy_amount,
+        ),
+        "confirm_trade",
+    )
+
+
 def confirm_single(
     br_name: str,
     title: str,
@@ -1009,6 +1029,59 @@ if not utils.BITCOIN_ONLY:
             account_items,
             fee_info_items,
             TR.confirm_total__title_fee,
+        )
+
+    async def confirm_ethereum_payment_request(
+        recipient_name: str,
+        recipient: str,
+        refunds: Iterable[tuple[str, str, str]],
+        trades: Iterable[tuple[str, str, str, str, str]],
+        account: str | None,
+        account_path: str | None,
+        maximum_fee: str,
+        fee_info_items: Iterable[tuple[str, str]],
+        token_address: str,
+    ) -> None:
+        main_layout = trezorui_api.confirm_value(
+            title=TR.words__swap,
+            subtitle=TR.words__provider,
+            value=recipient_name,
+            verb=TR.instructions__tap_to_continue,
+            verb_cancel=None,
+            #            info=True,
+            chunkify=False,
+        )
+
+        # TODO: should be with_menu and have a menu!
+        await raise_if_not_confirmed(main_layout, "confirm_payment_request")
+
+        for sell_amount, buy_amount, t_address, t_account, t_account_path in trades:
+            await confirm_trade(
+                TR.words__swap,
+                TR.words__asset,
+                sell_amount,
+                buy_amount,
+                t_address,
+                t_account,
+                t_account_path,
+            )
+
+        account_items = []
+        if account:
+            account_items.append((TR.words__account, account_path))
+        if account_path:
+            account_items.append((TR.address_details__derivation_path, account_path))
+
+        await _confirm_summary(
+            None,
+            None,
+            maximum_fee,
+            TR.words__transaction_fee,
+            TR.words__title_summary,
+            account_items,
+            fee_info_items,
+            TR.confirm_total__title_fee,
+            "confirm_payment_request",
         )
 
     async def confirm_ethereum_staking_tx(
