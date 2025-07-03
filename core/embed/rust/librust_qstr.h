@@ -81,7 +81,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_address__public_key_confirmed;
   MP_QSTR_address__qr_code;
   MP_QSTR_address__title_cosigner;
+  MP_QSTR_address__title_provider_address;
   MP_QSTR_address__title_receive_address;
+  MP_QSTR_address__title_refund_address;
   MP_QSTR_address__title_yours;
   MP_QSTR_address__xpub;
   MP_QSTR_address_details__account_info;
@@ -849,6 +851,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__are_you_sure;
   MP_QSTR_words__array_of;
   MP_QSTR_words__asset;
+  MP_QSTR_words__assets;
   MP_QSTR_words__authenticate;
   MP_QSTR_words__blockhash;
   MP_QSTR_words__buying;
@@ -886,6 +889,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__settings;
   MP_QSTR_words__sign;
   MP_QSTR_words__signer;
+  MP_QSTR_words__swap;
   MP_QSTR_words__title_check;
   MP_QSTR_words__title_done;
   MP_QSTR_words__title_group;
