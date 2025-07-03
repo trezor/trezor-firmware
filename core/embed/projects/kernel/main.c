@@ -99,10 +99,6 @@
 #include <io/touch.h>
 #endif
 
-#ifdef USE_TRUSTZONE
-#include <sys/trustzone.h>
-#endif
-
 void drivers_init() {
 #ifdef SECURE_MODE
   parse_boardloader_capabilities();
@@ -318,11 +314,6 @@ static void kernel_panic(const systask_postmortem_t *pminfo) {
 int main(void) {
   // Initialize system's core services
   system_init(&kernel_panic);
-
-#ifdef USE_TRUSTZONE
-  // Configure unprivileged access for the coreapp
-  tz_init();
-#endif
 
   // Initialize hardware drivers
   drivers_init();
