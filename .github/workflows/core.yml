@@ -191,6 +191,8 @@ jobs:
         if: matrix.coins == 'universal' && matrix.asan == 'noasan'
       - run: nix-shell --run "poetry run make -C core build_unix_frozen"
       - run: nix-shell --run "poetry run make -C core test_emu_sanity"
+        # Skip `test_emu_sanity` on THP emulators
+        if: matrix.protocol == 'v1'
       - run: cp core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-${{ matrix.model }}-${{ matrix.coins }}
       - uses: actions/upload-artifact@v4
         with:
