@@ -886,6 +886,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__settings;
   MP_QSTR_words__sign;
   MP_QSTR_words__signer;
+  MP_QSTR_words__swap;
   MP_QSTR_words__title_check;
   MP_QSTR_words__title_done;
   MP_QSTR_words__title_group;

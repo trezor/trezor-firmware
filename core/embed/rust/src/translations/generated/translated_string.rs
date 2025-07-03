@@ -1446,6 +1446,9 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__contract_address = 1050,  // "Provider contract address"
     buttons__view = 1051,  // "View"
+    words__swap = 1052,  // "Swap"
+    address__title_provider_address = 1053,  // "Provider address"
+    address__title_refund_address = 1054,  // "Refund address"
 }
 
 impl TranslatedString {
@@ -3204,6 +3207,9 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__contract_address, "Provider contract address"),
             (Self::buttons__view, "View"),
+            (Self::words__swap, "Swap"),
+            (Self::address__title_provider_address, "Provider address"),
+            (Self::address__title_refund_address, "Refund address"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3223,7 +3229,9 @@ impl TranslatedString {
         (Qstr::MP_QSTR_address__public_key_confirmed, Self::address__public_key_confirmed),
         (Qstr::MP_QSTR_address__qr_code, Self::address__qr_code),
         (Qstr::MP_QSTR_address__title_cosigner, Self::address__title_cosigner),
+        (Qstr::MP_QSTR_address__title_provider_address, Self::address__title_provider_address),
         (Qstr::MP_QSTR_address__title_receive_address, Self::address__title_receive_address),
+        (Qstr::MP_QSTR_address__title_refund_address, Self::address__title_refund_address),
         (Qstr::MP_QSTR_address__title_yours, Self::address__title_yours),
         (Qstr::MP_QSTR_address__xpub, Self::address__xpub),
         (Qstr::MP_QSTR_address_details__account_info, Self::address_details__account_info),
@@ -4623,6 +4631,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__settings, Self::words__settings),
         (Qstr::MP_QSTR_words__sign, Self::words__sign),
         (Qstr::MP_QSTR_words__signer, Self::words__signer),
+        (Qstr::MP_QSTR_words__swap, Self::words__swap),
         (Qstr::MP_QSTR_words__title_check, Self::words__title_check),
         (Qstr::MP_QSTR_words__title_done, Self::words__title_done),
         (Qstr::MP_QSTR_words__title_group, Self::words__title_group),
