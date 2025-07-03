@@ -37,12 +37,13 @@ secbool generate_random_secret(uint8_t* secret, size_t length) {
 
 #ifdef USE_OPTIGA
   uint8_t optiga_secret[length];
-  if (OPTIGA_SUCCESS != optiga_get_random(secret, length)) {
+  if (OPTIGA_SUCCESS != optiga_get_random(optiga_secret, length)) {
     return secfalse;
   }
   for (size_t i = 0; i < length; i++) {
     secret[i] ^= optiga_secret[i];
   }
+  memzero(optiga_secret, sizeof(optiga_secret));
 #endif
 
 #ifdef USE_TROPIC
@@ -87,7 +88,7 @@ cleanup:
   return ret;
 }
 
-static void prodtest_secrets_write(cli_t* cli) {
+static void prodtest_secrets_init(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
     return;
@@ -128,8 +129,8 @@ static void prodtest_secrets_write(cli_t* cli) {
 // clang-format off
 
 PRODTEST_CLI_CMD(
-  .name = "secrets-write",
-  .func = prodtest_secrets_write,
+  .name = "secrets-init",
+  .func = prodtest_secrets_init,
   .info = "Generate and write secrets to flash",
   .args = ""
 );
