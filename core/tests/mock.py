@@ -24,6 +24,19 @@ class Mock:
         return self.return_value
 
 
+class MockAsync(Mock):
+    def __call__(self, *args, **kwargs) -> Any:
+        self.calls.append((args, kwargs))
+
+        if self.raises is not None:
+            raise self.raises
+
+        async def _async_return() -> Any:
+            return self.return_value
+
+        return _async_return()
+
+
 class patch:
     MOCK_OBJECT = object()
     NO_VALUE = object()
