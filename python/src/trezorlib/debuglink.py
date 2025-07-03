@@ -496,6 +496,7 @@ class DebugLink:
         # For T1 screenshotting functionality in DebugUI
         self.t1_screenshot_directory: Path | None = None
         self.t1_screenshot_counter = 0
+        self.t1_take_screenshots = False
 
         self.waiting_for_layout_change = False
 
@@ -1326,6 +1327,7 @@ class TrezorClientDebugLink(TrezorClient):
         new_client.debug.screenshot_recording_dir = self.debug.screenshot_recording_dir
         new_client.debug.t1_screenshot_directory = self.debug.t1_screenshot_directory
         new_client.debug.t1_screenshot_counter = self.debug.t1_screenshot_counter
+        new_client.debug.t1_take_screenshots = self.debug.t1_take_screenshots
         return new_client
 
     def close_transport(self) -> None:
