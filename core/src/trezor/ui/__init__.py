@@ -569,6 +569,8 @@ class ProgressLayout:
         if CURRENT_LAYOUT is not self:
             self.start()
 
+        workflow.idle_timer.touch()
+
         if utils.DISABLE_ANIMATION:
             return
 
