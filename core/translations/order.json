@@ -1050,5 +1050,9 @@
   "1048": "words__cancel_question",
   "1049": "address__coin_address_template",
   "1050": "ethereum__contract_address",
-  "1051": "buttons__view"
+  "1051": "buttons__view",
+  "1052": "words__swap",
+  "1053": "address__title_provider_address",
+  "1054": "address__title_refund_address",
+  "1055": "words__assets"
 }
