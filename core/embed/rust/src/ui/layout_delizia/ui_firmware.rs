@@ -1083,10 +1083,31 @@ impl FirmwareUI for UIDelizia {
     }
 
     fn show_properties(
-        _title: TString<'static>,
-        _value: Obj,
+        title: TString<'static>,
+        value: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+        if Obj::is_str(value) {
+            let confirm = ConfirmValue::new(title, value, None)
+                .with_cancel_button()
+                .with_chunkify(true)
+                .with_text_mono(true);
+            let layout = confirm.into_layout()?;
+            return flow::util::single_page(layout.map(|_| Some(FlowMsg::Confirmed)));
+        }
+
+        let mut params = ShowInfoParams::new(title).with_cancel_button();
+        for property in IterBuf::new().try_iterate(value)? {
+            let [header, text]: [Obj; 2] = util::iter_into_array(property)?;
+            let header = header
+                .try_into_option::<TString>()?
+                .unwrap_or_else(TString::empty);
+            let text = text
+                .try_into_option::<TString>()?
+                .unwrap_or_else(TString::empty);
+            params = unwrap!(params.add(header, text));
+        }
+        let layout = params.into_layout()?;
+        flow::util::single_page(layout.map(|_| Some(FlowMsg::Confirmed)))
     }
 
     fn show_share_words(
