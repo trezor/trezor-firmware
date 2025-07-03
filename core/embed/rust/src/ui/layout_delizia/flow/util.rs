@@ -13,7 +13,10 @@ use crate::{
             },
             Component,
         },
-        flow::{FlowMsg, Swipable, SwipeFlow, SwipePage},
+        flow::{
+            base::{Decision, DecisionBuilder},
+            FlowController, FlowMsg, Swipable, SwipeFlow, SwipePage,
+        },
         geometry::Direction,
         layout::util::{ConfirmValueParams, StrOrBytes},
     },
@@ -484,4 +487,32 @@ pub fn map_to_choice(msg: VerticalMenuChoiceMsg) -> Option<FlowMsg> {
     match msg {
         VerticalMenuChoiceMsg::Selected(i) => Some(FlowMsg::Choice(i)),
     }
+}
+
+enum SinglePage {
+    Show,
+}
+
+impl FlowController for SinglePage {
+    #[inline]
+    fn index(&'static self) -> usize {
+        0
+    }
+
+    fn handle_swipe(&'static self, _direction: Direction) -> Decision {
+        self.do_nothing()
+    }
+
+    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
+        self.return_msg(msg)
+    }
+}
+
+pub fn single_page<T>(layout: T) -> Result<SwipeFlow, Error>
+where
+    T: Component<Msg = FlowMsg> + Swipable + MaybeTrace + 'static,
+{
+    let mut flow = SwipeFlow::new(&SinglePage::Show)?;
+    flow.add_page(&SinglePage::Show, layout)?;
+    Ok(flow)
 }
