@@ -435,7 +435,7 @@ class LayoutContent(UnstructuredJSONReader):
         return left_button + " " + right_button
 
     def has_menu(self) -> bool:
-        return bool(self.top_level_value("has_menu"))
+        return bool(self.find_unique_value_by_key("has_menu", False, bool))
 
 
 def multipage_content(layouts: list[LayoutContent]) -> str:
