@@ -3,11 +3,7 @@ from common import *  # isort:skip
 
 import unittest
 
-from storage import cache_codec, cache_common
 from trezor import wire
-from trezor.crypto import bip39
-from trezor.wire import context
-from trezor.wire.codec.codec_context import CodecContext
 
 from apps.common.keychain import get_keychain
 from apps.common.paths import HARDENED
@@ -74,22 +70,11 @@ class TestEthereumKeychain(unittest.TestCase):
                 addr,
             )
 
-    def setUpClass(self):
-        context.CURRENT_CONTEXT = CodecContext(None, bytearray(64))
-
-    def tearDownClass(self):
-        context.CURRENT_CONTEXT = None
-
-    def setUp(self):
-        cache_codec.start_session()
-        seed = bip39.seed(" ".join(["all"] * 12), "")
-        cache_codec.get_active_session().set(cache_common.APP_COMMON_SEED, seed)
-
     def from_address_n(self, address_n):
         slip44 = _slip44_from_address_n(address_n)
         network = make_eth_network(slip44=slip44)
         schemas = _schemas_from_network(PATTERNS_ADDRESS, network)
-        return await_result(get_keychain(CURVE, schemas))
+        return await_result_patched(get_keychain(CURVE, schemas))
 
     def test_from_address_n(self):
         # valid keychain m/44'/60'/0'
@@ -118,8 +103,8 @@ class TestEthereumKeychain(unittest.TestCase):
             self._check_keychain(keychain, 1)
             self.assertIs(defs.network, UNKNOWN_NETWORK)
 
-        await_result(handler(EthereumGetAddress(address_n=[])))
-        await_result(handler(EthereumGetAddress(address_n=[0])))
+        await_result_patched(handler(EthereumGetAddress(address_n=[])))
+        await_result_patched(handler(EthereumGetAddress(address_n=[0])))
 
     def test_with_keychain_from_path_builtins(self):
         @with_keychain_from_path(*PATTERNS_ADDRESS)
@@ -138,10 +123,10 @@ class TestEthereumKeychain(unittest.TestCase):
         )
 
         for address_n in vectors:
-            await_result(handler(EthereumGetAddress(address_n=address_n)))
+            await_result_patched(handler(EthereumGetAddress(address_n=address_n)))
 
         with self.assertRaises(wire.DataError):
-            await_result(
+            await_result_patched(
                 handler(  # unknown network
                     EthereumGetAddress(
                         address_n=[44 | HARDENED, 0 | HARDENED, 0 | HARDENED]
@@ -169,7 +154,7 @@ class TestEthereumKeychain(unittest.TestCase):
         )
 
         for slip44, encoded_network in vectors_valid:
-            await_result(
+            await_result_patched(
                 handler(
                     EthereumGetAddress(
                         address_n=[44 | HARDENED, slip44 | HARDENED, 0 | HARDENED],
@@ -187,7 +172,7 @@ class TestEthereumKeychain(unittest.TestCase):
 
         for slip44, encoded_network in vectors_invalid:
             with self.assertRaises(wire.DataError):
-                await_result(
+                await_result_patched(
                     handler(
                         EthereumGetAddress(
                             address_n=[44 | HARDENED, slip44 | HARDENED, 0 | HARDENED],
@@ -219,7 +204,7 @@ class TestEthereumKeychain(unittest.TestCase):
         )
 
         for chain_id, address_n in vectors:
-            await_result(  # Ethereum
+            await_result_patched(  # Ethereum
                 handler_chain_id(
                     EthereumSignTx(
                         address_n=address_n,
@@ -231,7 +216,7 @@ class TestEthereumKeychain(unittest.TestCase):
             )
 
         with self.assertRaises(wire.DataError):
-            await_result(  # chain_id and network mismatch
+            await_result_patched(  # chain_id and network mismatch
                 handler_chain_id(
                     EthereumSignTx(
                         address_n=[44 | HARDENED, 61 | HARDENED, 0 | HARDENED],
@@ -285,7 +270,7 @@ class TestEthereumKeychain(unittest.TestCase):
         )
 
         for chain_id, address_n, encoded_network in vectors_valid:
-            await_result(
+            await_result_patched(
                 handler_chain_id(
                     EthereumSignTx(
                         address_n=address_n,
@@ -318,7 +303,7 @@ class TestEthereumKeychain(unittest.TestCase):
 
         for chain_id, address_n, encoded_network in vectors_invalid:
             with self.assertRaises(wire.DataError):
-                await_result(
+                await_result_patched(
                     handler_chain_id(
                         EthereumSignTx(
                             address_n=address_n,
