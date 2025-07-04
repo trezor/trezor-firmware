@@ -2999,3 +2999,14 @@ class InputFlowFidoConfirm(InputFlowBase):
         while True:
             yield
             self.debug.press_yes()
+
+
+class InputFlowCancelBrightness(InputFlowBase):
+    def input_flow_bolt(self) -> BRGeneratorType:
+        yield
+        self.debug.click(self.debug.screen_buttons.cancel())
+
+    def input_flow_delizia(self):
+        yield
+        self.debug.click(self.debug.screen_buttons.menu())
+        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
