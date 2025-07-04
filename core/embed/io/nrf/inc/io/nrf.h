@@ -79,6 +79,11 @@ void nrf_deinit(void);
 void nrf_suspend(void);
 
 /**
+ * @brief Resume the NRF driver.
+ */
+void nrf_resume(void);
+
+/**
  * @brief Check if the NRF communication is currently running.
  *
  * @return true if running, false otherwise
