@@ -1002,6 +1002,79 @@
         "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
         "signature": "6OL75JoHdYg5eomt6fXmLffqYwix+jwd1RzOq7M2I+/7obUgdtZPYBm5Cjnhov5wAlWPHE2seQ/BuEZMrZUJCA=="
       }
+    },
+    {
+      "name": "all_sending_like_operations",
+      "parameters": {
+        "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAAfQAAAAAAAAD6AAAAAEAAAAAG4J3zQAAAABd5CqEAAAAAAAAAAUAAAAAAAAAAAAAAABdVWQkZrGFuEMVLp4hkVHbxYkgJ+xAEBpRe+1coDDC4AAAAAAF9eEAAAAAAAAAAAEAAAAAXVVkJGaxhbhDFS6eIZFR28WJICfsQBAaUXvtXKAwwuAAAAABWAAAAAAAAAAphJYCwg5YNl8SPBLYehykVQ0QzSGwrg4Y1E4+Vv1qFQAAAAAdzxaYAAAAAAAAAA0AAAABWAAAAAAAAABwi6oxX35cFm2EtGS/s4/WJXj+OtJyJ+dsy7ehecRRIQAAAAAdzxaYAAAAAF1VZCRmsYW4QxUuniGRUdvFiSAn7EAQGlF77VygMMLgAAAAAkFCQ0RFRkdISUpLTAAAAAAphJYCwg5YNl8SPBLYehykVQ0QzSGwrg4Y1E4+Vv1qFQAAAAAAAeJAAAAAAAAAAAAAAAACAAAAAVgAAAAAAAAAcIuqMV9+XBZthLRkv7OP1iV4/jrScifnbMu3oXnEUSEAAAAAHc8WmAAAAABdVWQkZrGFuEMVLp4hkVHbxYkgJ+xAEBpRe+1coDDC4AAAAAJBQkNERUZHSElKS0wAAAAAKYSWAsIOWDZfEjwS2HocpFUNEM0hsK4OGNROPlb9ahUAAAAAAAHiQAAAAAAAAAAAAAAACAAAAABdVWQkZrGFuEMVLp4hkVHbxYkgJ+xAEBpRe+1coDDC4AAAAAAAAAAA",
+        "address_n": "m/44'/148'/0'",
+        "network_passphrase": "Test SDF Network ; September 2015",
+        "tx": {
+          "source_account": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+          "fee": 500,
+          "sequence_number": 1000,
+          "timebounds_start": 461535181,
+          "timebounds_end": 1575234180,
+          "memo_type": "NONE"
+        },
+        "operations": [
+          {
+            "_message_type": "StellarCreateAccountOp",
+            "new_account": "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V",
+            "starting_balance": 100000000
+          },
+          {
+            "_message_type": "StellarPaymentOp",
+            "destination_account": "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V",
+            "asset": {
+              "type": "ALPHANUM4",
+              "code": "X",
+              "issuer": "GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC"
+            },
+            "amount": 500111000
+          },
+          {
+            "_message_type": "StellarPathPaymentStrictSendOp",
+            "send_asset": {
+              "type": "ALPHANUM4",
+              "code": "X",
+              "issuer": "GBYIXKRRL57FYFTNQS2GJP5TR7LCK6H6HLJHEJ7HNTF3PILZYRISDLNQ"
+            },
+            "send_amount": 500111000,
+            "destination_account": "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V",
+            "destination_asset": {
+              "type": "ALPHANUM12",
+              "code": "ABCDEFGHIJKL",
+              "issuer": "GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC"
+            },
+            "destination_min": 123456
+          },
+          {
+            "_message_type": "StellarPathPaymentStrictReceiveOp",
+            "send_asset": {
+              "type": "ALPHANUM4",
+              "code": "X",
+              "issuer": "GBYIXKRRL57FYFTNQS2GJP5TR7LCK6H6HLJHEJ7HNTF3PILZYRISDLNQ"
+            },
+            "send_max": 500111000,
+            "destination_account": "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V",
+            "destination_asset": {
+              "type": "ALPHANUM12",
+              "code": "ABCDEFGHIJKL",
+              "issuer": "GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC"
+            },
+            "destination_amount": 123456
+          },
+          {
+            "_message_type": "StellarAccountMergeOp",
+            "destination_account": "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
+          }
+        ]
+      },
+      "result": {
+        "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
+        "signature": "ooAYonekHwUqyAahFkVoHL811S0z22sJ8Wqe277RqBnTillDRtIk3uqi0KsLZYJyeC8Ln7J0ZaXAtGPwIYoKCg=="
+      }
     }
   ]
 }

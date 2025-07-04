@@ -1295,8 +1295,13 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__set_sequence_to_template;
   MP_QSTR_stellar__sign_tx_count_template;
   MP_QSTR_stellar__sign_tx_fee_template;
+  MP_QSTR_stellar__sign_with;
   MP_QSTR_stellar__source_account;
   MP_QSTR_stellar__testnet_network;
+  MP_QSTR_stellar__timebounds;
+  MP_QSTR_stellar__token_info;
+  MP_QSTR_stellar__transaction_source;
+  MP_QSTR_stellar__transaction_source_diff_warning;
   MP_QSTR_stellar__trusted_account;
   MP_QSTR_stellar__update;
   MP_QSTR_stellar__valid_from;
