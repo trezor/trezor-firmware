@@ -191,7 +191,6 @@ Miscellaneous debug features.
     optiga-set-sec-max  Set Optiga's security event counter to maximum.
     prodtest-t1         Perform a prodtest on Model One.
     record              Record screen changes into a specified directory.
-    send-bytes          Send raw bytes to Trezor.
 
 Device management commands - setup, recover seed, wipe, etc.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
