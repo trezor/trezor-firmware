@@ -38,6 +38,7 @@ on one page here.
 
   Commands:
     benchmark          Benchmark commands.
+    ble                BLE commands.
     btc                Bitcoin and Bitcoin-like coins commands.
     cardano            Cardano commands.
     clear-session      Clear session (remove cached PIN, passphrase, etc.).
@@ -53,6 +54,7 @@ on one page here.
     list               List connected Trezor devices.
     monero             Monero commands.
     nem                NEM commands.
+    nostr              Nostr commands.
     ping               Send ping message.
     ripple             Ripple commands.
     set                Device settings.
@@ -82,6 +84,25 @@ Benchmark commands.
   Commands:
     list-names  List names of all supported benchmarks
     run         Run benchmark
+
+BLE commands.
+~~~~~~~~~~~~~
+
+.. code::
+
+  trezorctl ble --help
+
+.. code::
+
+  Usage: trezorctl ble [OPTIONS] COMMAND [ARGS]...
+
+    BLE commands.
+
+  Options:
+    --help  Show this message and exit.
+
+  Commands:
+    unpair  Erase bond of currently connected device, or all devices (on device side)
 
 Bitcoin and Bitcoin-like coins commands.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -345,6 +366,26 @@ NEM commands.
   Commands:
     get-address  Get NEM address for specified path.
     sign-tx      Sign (and optionally broadcast) NEM transaction.
+
+Nostr commands.
+~~~~~~~~~~~~~~~
+
+.. code::
+
+  trezorctl nostr --help
+
+.. code::
+
+  Usage: trezorctl nostr [OPTIONS] COMMAND [ARGS]...
+
+    Nostr commands.
+
+  Options:
+    --help  Show this message and exit.
+
+  Commands:
+    get-pubkey  Return the pubkey derived by the given path.
+    sign-event  Sign an event using the key derived by the given path.
 
 Ripple commands.
 ~~~~~~~~~~~~~~~~
