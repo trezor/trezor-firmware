@@ -206,6 +206,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_buttons__turn_on;
   MP_QSTR_buttons__view;
   MP_QSTR_buttons__view_all_data;
+  MP_QSTR_buy_amount;
   MP_QSTR_can_go_back;
   MP_QSTR_cancel;
   MP_QSTR_cancel_text;
@@ -239,6 +240,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_total__sending_from_account;
   MP_QSTR_confirm_total__title_fee;
   MP_QSTR_confirm_total__title_sending_from;
+  MP_QSTR_confirm_trade;
   MP_QSTR_confirm_value;
   MP_QSTR_confirm_value_intro;
   MP_QSTR_confirm_with_info;
@@ -684,6 +686,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_select_menu;
   MP_QSTR_select_word;
   MP_QSTR_select_word_count;
+  MP_QSTR_sell_amount;
   MP_QSTR_send__cancel_sign;
   MP_QSTR_send__cancel_transaction;
   MP_QSTR_send__confirm_sending;
@@ -845,6 +848,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__amount;
   MP_QSTR_words__are_you_sure;
   MP_QSTR_words__array_of;
+  MP_QSTR_words__asset;
   MP_QSTR_words__authenticate;
   MP_QSTR_words__blockhash;
   MP_QSTR_words__buying;
@@ -873,6 +877,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__pay_attention;
   MP_QSTR_words__please_check_again;
   MP_QSTR_words__please_try_again;
+  MP_QSTR_words__provider;
   MP_QSTR_words__really_wanna;
   MP_QSTR_words__receive;
   MP_QSTR_words__recipient;
@@ -881,6 +886,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__settings;
   MP_QSTR_words__sign;
   MP_QSTR_words__signer;
+  MP_QSTR_words__swap;
   MP_QSTR_words__title_check;
   MP_QSTR_words__title_done;
   MP_QSTR_words__title_group;
@@ -892,6 +898,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__title_summary;
   MP_QSTR_words__title_threshold;
   MP_QSTR_words__token;
+  MP_QSTR_words__transaction_fee;
   MP_QSTR_words__try_again;
   MP_QSTR_words__unknown;
   MP_QSTR_words__unlimited;
@@ -1000,7 +1007,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_cardano__transaction;
   MP_QSTR_cardano__transaction_contains_minting_or_burning;
   MP_QSTR_cardano__transaction_contains_script_address_no_datum;
-  MP_QSTR_cardano__transaction_fee;
   MP_QSTR_cardano__transaction_id;
   MP_QSTR_cardano__transaction_no_collateral_input;
   MP_QSTR_cardano__transaction_no_script_data_hash;
@@ -1223,12 +1229,10 @@ static void _librust_qstrs(void) {
   MP_QSTR_solana__stake;
   MP_QSTR_solana__stake_account;
   MP_QSTR_solana__stake_on_question;
-  MP_QSTR_solana__stake_provider;
   MP_QSTR_solana__stake_question;
   MP_QSTR_solana__stake_withdrawal_warning;
   MP_QSTR_solana__stake_withdrawal_warning_title;
   MP_QSTR_solana__transaction_contains_unknown_instructions;
-  MP_QSTR_solana__transaction_fee;
   MP_QSTR_solana__transaction_requires_x_signers_template;
   MP_QSTR_solana__unknown_token;
   MP_QSTR_solana__unknown_token_address;
@@ -1241,7 +1245,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_stellar__add_trust;
   MP_QSTR_stellar__all_will_be_sent_to;
   MP_QSTR_stellar__allow_trust;
-  MP_QSTR_stellar__asset;
   MP_QSTR_stellar__balance_id;
   MP_QSTR_stellar__bump_sequence;
   MP_QSTR_stellar__buying;

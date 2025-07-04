@@ -285,8 +285,6 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     cardano__transaction_contains_script_address_no_datum = 194,  // "The following transaction output contains a script address, but does not contain a datum."
     #[cfg(feature = "universal_fw")]
-    cardano__transaction_fee = 195,  // "Transaction fee:"
-    #[cfg(feature = "universal_fw")]
     cardano__transaction_id = 196,  // "Transaction ID:"
     #[cfg(feature = "universal_fw")]
     cardano__transaction_no_collateral_input = 197,  // "The transaction contains no collateral inputs. Plutus script will not be able to run."
@@ -956,8 +954,7 @@ pub enum TranslatedString {
     stellar__all_will_be_sent_to = 680,  // "All XLM will be sent to"
     #[cfg(feature = "universal_fw")]
     stellar__allow_trust = 681,  // "Allow trust"
-    #[cfg(feature = "universal_fw")]
-    stellar__asset = 682,  // "Asset"
+    words__asset = 682,  // "Asset"
     #[cfg(feature = "universal_fw")]
     stellar__balance_id = 683,  // "Balance ID"
     #[cfg(feature = "universal_fw")]
@@ -1356,8 +1353,7 @@ pub enum TranslatedString {
     solana__stake = 980,  // "Stake"
     #[cfg(feature = "universal_fw")]
     solana__stake_account = 981,  // "Stake account"
-    #[cfg(feature = "universal_fw")]
-    solana__stake_provider = 982,  // "Provider"
+    words__provider = 982,  // "Provider"
     #[cfg(feature = "universal_fw")]
     solana__stake_question = 983,  // "Stake SOL?"
     #[cfg(feature = "universal_fw")]
@@ -1384,8 +1380,7 @@ pub enum TranslatedString {
     solana__max_fees_rent = 997,  // "Max fees and rent"
     #[cfg(feature = "universal_fw")]
     solana__max_rent_fee = 998,  // "Max rent fee"
-    #[cfg(feature = "universal_fw")]
-    solana__transaction_fee = 999,  // "Transaction fee"
+    words__transaction_fee = 999,  // "Transaction fee"
     #[cfg(feature = "universal_fw")]
     ethereum__approve = 1000,  // "Approve"
     #[cfg(feature = "universal_fw")]
@@ -1451,6 +1446,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__contract_address = 1050,  // "Provider contract address"
     buttons__view = 1051,  // "View"
+    words__swap = 1052,  // "Swap"
 }
 
 impl TranslatedString {
@@ -1742,8 +1738,6 @@ impl TranslatedString {
             (Self::cardano__transaction_contains_minting_or_burning, "The transaction contains minting or burning of tokens."),
             #[cfg(feature = "universal_fw")]
             (Self::cardano__transaction_contains_script_address_no_datum, "The following transaction output contains a script address, but does not contain a datum."),
-            #[cfg(feature = "universal_fw")]
-            (Self::cardano__transaction_fee, "Transaction fee:"),
             #[cfg(feature = "universal_fw")]
             (Self::cardano__transaction_id, "Transaction ID:"),
             #[cfg(feature = "universal_fw")]
@@ -2619,8 +2613,7 @@ impl TranslatedString {
             (Self::stellar__all_will_be_sent_to, "All XLM will be sent to"),
             #[cfg(feature = "universal_fw")]
             (Self::stellar__allow_trust, "Allow trust"),
-            #[cfg(feature = "universal_fw")]
-            (Self::stellar__asset, "Asset"),
+            (Self::words__asset, "Asset"),
             #[cfg(feature = "universal_fw")]
             (Self::stellar__balance_id, "Balance ID"),
             #[cfg(feature = "universal_fw")]
@@ -3112,8 +3105,7 @@ impl TranslatedString {
             (Self::solana__stake, "Stake"),
             #[cfg(feature = "universal_fw")]
             (Self::solana__stake_account, "Stake account"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__stake_provider, "Provider"),
+            (Self::words__provider, "Provider"),
             #[cfg(feature = "universal_fw")]
             (Self::solana__stake_question, "Stake SOL?"),
             #[cfg(feature = "universal_fw")]
@@ -3140,8 +3132,7 @@ impl TranslatedString {
             (Self::solana__max_fees_rent, "Max fees and rent"),
             #[cfg(feature = "universal_fw")]
             (Self::solana__max_rent_fee, "Max rent fee"),
-            #[cfg(feature = "universal_fw")]
-            (Self::solana__transaction_fee, "Transaction fee"),
+            (Self::words__transaction_fee, "Transaction fee"),
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__approve, "Approve"),
             #[cfg(feature = "universal_fw")]
@@ -3214,6 +3205,7 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__contract_address, "Provider contract address"),
             (Self::buttons__view, "View"),
+            (Self::words__swap, "Swap"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3527,8 +3519,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_cardano__transaction_contains_minting_or_burning, Self::cardano__transaction_contains_minting_or_burning),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__transaction_contains_script_address_no_datum, Self::cardano__transaction_contains_script_address_no_datum),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_cardano__transaction_fee, Self::cardano__transaction_fee),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__transaction_id, Self::cardano__transaction_id),
         #[cfg(feature = "universal_fw")]
@@ -4354,8 +4344,6 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__stake_on_question, Self::solana__stake_on_question),
         #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_solana__stake_provider, Self::solana__stake_provider),
-        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__stake_question, Self::solana__stake_question),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__stake_withdrawal_warning, Self::solana__stake_withdrawal_warning),
@@ -4363,8 +4351,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_solana__stake_withdrawal_warning_title, Self::solana__stake_withdrawal_warning_title),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__transaction_contains_unknown_instructions, Self::solana__transaction_contains_unknown_instructions),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_solana__transaction_fee, Self::solana__transaction_fee),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__transaction_requires_x_signers_template, Self::solana__transaction_requires_x_signers_template),
         #[cfg(feature = "universal_fw")]
@@ -4389,8 +4375,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_stellar__all_will_be_sent_to, Self::stellar__all_will_be_sent_to),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__allow_trust, Self::stellar__allow_trust),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_stellar__asset, Self::stellar__asset),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_stellar__balance_id, Self::stellar__balance_id),
         #[cfg(feature = "universal_fw")]
@@ -4603,6 +4587,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__amount, Self::words__amount),
         (Qstr::MP_QSTR_words__are_you_sure, Self::words__are_you_sure),
         (Qstr::MP_QSTR_words__array_of, Self::words__array_of),
+        (Qstr::MP_QSTR_words__asset, Self::words__asset),
         (Qstr::MP_QSTR_words__authenticate, Self::words__authenticate),
         (Qstr::MP_QSTR_words__blockhash, Self::words__blockhash),
         (Qstr::MP_QSTR_words__buying, Self::words__buying),
@@ -4631,6 +4616,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__pay_attention, Self::words__pay_attention),
         (Qstr::MP_QSTR_words__please_check_again, Self::words__please_check_again),
         (Qstr::MP_QSTR_words__please_try_again, Self::words__please_try_again),
+        (Qstr::MP_QSTR_words__provider, Self::words__provider),
         (Qstr::MP_QSTR_words__really_wanna, Self::words__really_wanna),
         (Qstr::MP_QSTR_words__receive, Self::words__receive),
         (Qstr::MP_QSTR_words__recipient, Self::words__recipient),
@@ -4639,6 +4625,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__settings, Self::words__settings),
         (Qstr::MP_QSTR_words__sign, Self::words__sign),
         (Qstr::MP_QSTR_words__signer, Self::words__signer),
+        (Qstr::MP_QSTR_words__swap, Self::words__swap),
         (Qstr::MP_QSTR_words__title_check, Self::words__title_check),
         (Qstr::MP_QSTR_words__title_done, Self::words__title_done),
         (Qstr::MP_QSTR_words__title_group, Self::words__title_group),
@@ -4650,6 +4637,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__title_summary, Self::words__title_summary),
         (Qstr::MP_QSTR_words__title_threshold, Self::words__title_threshold),
         (Qstr::MP_QSTR_words__token, Self::words__token),
+        (Qstr::MP_QSTR_words__transaction_fee, Self::words__transaction_fee),
         (Qstr::MP_QSTR_words__try_again, Self::words__try_again),
         (Qstr::MP_QSTR_words__unknown, Self::words__unknown),
         (Qstr::MP_QSTR_words__unlimited, Self::words__unlimited),
