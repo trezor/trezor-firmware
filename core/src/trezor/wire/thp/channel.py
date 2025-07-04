@@ -59,6 +59,7 @@ class Channel:
     """
     THP protocol encrypted communication channel.
     """
+    # can we split it by layers?
 
     def __init__(self, channel_cache: ChannelCache) -> None:
 
@@ -74,6 +75,7 @@ class Channel:
         self.bytes_read: int = 0
         self.expected_payload_length: int = 0
         self.is_cont_packet_expected: bool = False
+        # is it limited? maybe use a special class?
         self.sessions: dict[int, GenericSessionContext] = {}
 
         # Objects for writing a message to a wire
@@ -97,6 +99,7 @@ class Channel:
     # ACCESS TO CHANNEL_DATA
 
     def get_channel_id_int(self) -> int:
+        # int.from_bytes() doesn't overflow in uPy...
         return int.from_bytes(self.channel_id, "big")
 
     def get_channel_state(self) -> int:
@@ -106,6 +109,7 @@ class Channel:
         return state
 
     def get_handshake_hash(self) -> bytes:
+        # maybe add a __getitem__ (instead of the assertion)
         h = self.channel_cache.get(CHANNEL_HANDSHAKE_HASH)
         assert h is not None
         return h
@@ -143,6 +147,8 @@ class Channel:
         task = self._handle_received_packet(packet)
         if task is not None:
             return task
+
+        # please elaborate about the below TODOs
 
         if self.expected_payload_length == 0:  # Reading failed TODO
             from trezor.wire.thp import ThpErrorType
@@ -412,6 +418,7 @@ class Channel:
         payload_size = SESSION_ID_LENGTH + MESSAGE_TYPE_LENGTH + msg_size
         length = payload_size + CHECKSUM_LENGTH + TAG_LENGTH + INIT_HEADER_LENGTH
         try:
+            # what is fallback?
             if fallback:
                 buffer = self.buffer
             else:
@@ -456,6 +463,8 @@ class Channel:
         msg_data = err_type.to_bytes(1, "big")
         length = len(msg_data) + CHECKSUM_LENGTH
         header = PacketHeader.get_error_header(self.get_channel_id_int(), length)
+        # Do we need to flush (`await write_task_spawn`) in case of errors?
+        # what if the message is lost?
         return write_payload_to_wire_and_add_checksum(self.iface, header, msg_data)
 
     def write_handshake_message(self, ctrl_byte: int, payload: bytes) -> None:
@@ -482,6 +491,7 @@ class Channel:
 
         if self.write_task_spawn is not None:
             self.write_task_spawn.close()  # TODO might break something
+            ## ^^ what if the previous message was partially sent?
             if __debug__:
                 self._log("Closed write task", logger=log.warning)
         self._prepare_write()

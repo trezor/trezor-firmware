@@ -125,6 +125,7 @@ async def handle_received_message(
 
     # 3: Send ACK in response
     await _send_ack(ctx, ack_bit=seq_bit)
+    # can it be absorbed into the following response?
 
     ABP.set_expected_receive_seq_bit(ctx.channel_cache, 1 - seq_bit)
 
@@ -217,13 +218,13 @@ def _handle_message_to_app_or_channel(
 ) -> Awaitable[None]:
     state = ctx.get_channel_state()
 
-    if state is ChannelState.ENCRYPTED_TRANSPORT:
+    if state == ChannelState.ENCRYPTED_TRANSPORT:
         return _handle_state_ENCRYPTED_TRANSPORT(ctx, message_length)
 
-    if state is ChannelState.TH1:
+    if state == ChannelState.TH1:
         return _handle_state_TH1(ctx, payload_length, message_length, ctrl_byte)
 
-    if state is ChannelState.TH2:
+    if state == ChannelState.TH2:
         return _handle_state_TH2(ctx, message_length, ctrl_byte)
 
     if _is_channel_state_pairing(state):
@@ -232,6 +233,7 @@ def _handle_message_to_app_or_channel(
     raise ThpError("Unimplemented channel state")
 
 
+# doesn't await
 async def _handle_state_TH1(
     ctx: Channel,
     payload_length: int,
@@ -285,7 +287,7 @@ async def _handle_state_TH1(
     ctx.set_channel_state(ChannelState.TH2)
     return
 
-
+# doesn't await
 async def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -> None:
     from apps.thp.credential_manager import decode_credential, validate_credential
 
@@ -382,7 +384,7 @@ async def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -
     else:
         ctx.set_channel_state(ChannelState.TP0)
 
-
+# doesn't await
 async def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message_length: int) -> None:
     if __debug__:
         log.debug(__name__, "handle_state_ENCRYPTED_TRANSPORT", iface=ctx.iface)
@@ -390,6 +392,7 @@ async def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message_length: int) -
     ctx.decrypt_buffer(message_length)
 
     buffer = memory_manager.get_existing_read_buffer(ctx.get_channel_id_int())
+    # BufferError is an exception
     # if buffer is BufferError:
     # pass  # TODO handle
     session_id, message_type = ustruct.unpack(
@@ -402,6 +405,7 @@ async def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message_length: int) -
         if s is None:
             s = SeedlessSessionContext(ctx, session_id)
 
+        # are those dropped eventually?
         ctx.sessions[session_id] = s
         loop.schedule(s.handle())
 
@@ -431,6 +435,7 @@ async def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message_length: int) -
         )
 
 
+# doesn't await
 async def _handle_pairing(ctx: Channel, message_length: int) -> None:
     from .pairing_context import PairingContext
 
@@ -461,13 +466,11 @@ async def _handle_pairing(ctx: Channel, message_length: int) -> None:
 
 
 def _should_have_ctrl_byte_encrypted_transport(ctx: Channel) -> bool:
-    if ctx.get_channel_state() in [
+    return ctx.get_channel_state() not in [
         ChannelState.UNALLOCATED,
         ChannelState.TH1,
         ChannelState.TH2,
-    ]:
-        return False
-    return True
+    ]
 
 
 def _decode_message(
@@ -486,13 +489,11 @@ def _decode_message(
 
 
 def _is_channel_state_pairing(state: int) -> bool:
-    if state in (
+    return state in (
         ChannelState.TP0,
         ChannelState.TP1,
         ChannelState.TP2,
         ChannelState.TP3,
         ChannelState.TP4,
         ChannelState.TC1,
-    ):
-        return True
-    return False
+    )

@@ -223,4 +223,5 @@ def _hash_of_two(part_1: bytes, part_2: bytes) -> bytes:
 
 def _get_iv_from_nonce(nonce: int) -> bytes:
     utils.ensure(nonce <= 0xFFFFFFFFFFFFFFFF, "Nonce overflow, terminate the channel")
+    # ustruct?
     return bytes(4) + nonce.to_bytes(8, "big")

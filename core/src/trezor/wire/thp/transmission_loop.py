@@ -59,8 +59,10 @@ class TransmissionLoop:
         self.stop = True
 
     async def _wait(self, counter: int = 0) -> None:
+        # please explain this formula
         timeout_ms = round(10200 - 1010000 / (counter + 100))
         await loop.sleep(timeout_ms)
 
     def __del__(self) -> None:
+        # where it is invoked?
         self.stop_immediately()

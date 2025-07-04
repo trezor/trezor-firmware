@@ -500,12 +500,8 @@ def _get_accepted_messages(ctx: PairingContext) -> Tuple[int, ...]:
 
 
 def _get_possible_pairing_methods(ctx: PairingContext) -> Tuple[int, ...]:
-    r = tuple(
-        [
-            _get_message_type_for_method(ctx.selected_method),
-        ]
-    )
-    return r
+    msg_type = _get_message_type_for_method(ctx.selected_method)
+    return (msg_type,)
 
 
 def _get_message_type_for_method(method: int) -> int:

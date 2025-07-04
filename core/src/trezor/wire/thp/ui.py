@@ -50,6 +50,7 @@ def _hotfix(ctx: Context) -> None:
     # The hotfix performs `workflow.close_others()` and in case of clearing of `context.CURRENT_CONTEXT`, it
     # is set to a functional value (`self`)
 
+    # ???
     workflow.close_others()
     try:
         _ = context.get_context()

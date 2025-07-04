@@ -13,6 +13,7 @@ _CONTINUATION_PACKET_MASK = const(0x80)
 _ACK_MASK = const(0xF7)
 _DATA_MASK = const(0xE7)
 
+# use a new data type instead of a bit-field
 
 def add_seq_bit_to_ctrl_byte(ctrl_byte: int, seq_bit: int) -> int:
     if seq_bit == 0:

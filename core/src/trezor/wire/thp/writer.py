@@ -9,7 +9,7 @@ from . import PacketHeader
 INIT_HEADER_LENGTH = const(5)
 CONT_HEADER_LENGTH = const(3)
 CHECKSUM_LENGTH = const(4)
-MAX_PAYLOAD_LEN = const(60000)
+MAX_PAYLOAD_LEN = const(60000)  # is the max 2**16 - epsilon?
 MESSAGE_TYPE_LENGTH = const(2)
 
 if TYPE_CHECKING:
@@ -37,6 +37,7 @@ async def write_payloads_to_wire(
     n_of_data = len(data)
     total_length = sum(len(item) for item in data)
 
+    # use an iterator?
     current_data_idx = 0
     current_data_offset = 0
 
@@ -46,10 +47,10 @@ async def write_payloads_to_wire(
     packet_number = 0
     nwritten = 0
     while nwritten < total_length:
-        if packet_number == 1:
-            header.pack_to_cont_buffer(packet)
-        if packet_number >= 1 and nwritten >= total_length - iface.TX_PACKET_LEN:
-            packet[:] = bytearray(iface.TX_PACKET_LEN)
+        if packet_number >= 1:
+            if nwritten >= total_length - iface.TX_PACKET_LEN:
+                # zero last packet bytes
+                packet[:] = bytes(iface.TX_PACKET_LEN)
             header.pack_to_cont_buffer(packet)
         while True:
             n = utils.memcpy(
@@ -67,6 +68,7 @@ async def write_payloads_to_wire(
             elif packet_offset == iface.TX_PACKET_LEN:
                 break
             else:
+                # replace by assert?
                 raise Exception("Should not happen!!!")
         packet_number += 1
         packet_offset = CONT_HEADER_LENGTH
@@ -82,6 +84,8 @@ async def write_payloads_to_wire(
         written_by_iface: int = 0
         while written_by_iface < len(packet):
             await loop.wait(iface.iface_num() | io.POLL_WRITE)
+            # fail if packet was partially sent?
+            # ~duplicates below code
             written_by_iface = iface.write(packet)
 
 
@@ -95,6 +99,7 @@ async def write_packet_to_wire(iface: WireInterface, packet: bytes) -> None:
                 utils.hexlify_if_bytes(packet),
                 iface=iface,
             )
+        # fail if packet was partially sent?
         n_written = iface.write(packet)
         if n_written == len(packet):
             return

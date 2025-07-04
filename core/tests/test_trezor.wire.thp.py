@@ -237,6 +237,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         # expected_ack_on_received_message = get_ack(cid_1_bytes)
 
         self.interface.mock_read(message_with_invalid_tag, gen)
+        ## Do we need the commented code?
         # gen.send(None)
 
         # self.assertEqual(

@@ -22,7 +22,7 @@ class Message:
     def __init__(
         self,
         message_type: int,
-        message_data: bytes,
+        message_data: bytes | memoryview,
     ) -> None:
         self.data = message_data
         self.type = message_type

@@ -13,6 +13,8 @@ if __debug__:
     from trezor.utils import hexlify_if_bytes
 
 _PROTOBUF_BUFFER_SIZE = 8192
+# TODO: maybe move those buffers to the owning channel? and then return back after reassembly finish/timeout?
+# i.e. something similar to WIRE_BUFFER_PROVIDER...
 READ_BUFFER = bytearray(_PROTOBUF_BUFFER_SIZE)
 WRITE_BUFFER = bytearray(_PROTOBUF_BUFFER_SIZE)
 LOCK_TIMEOUT = 200  # miliseconds
@@ -82,6 +84,7 @@ def _get_new_buffer(buffer_type: int, channel_id: int, length: int) -> memoryvie
     if length > MAX_PAYLOAD_LEN or length > len(buffer):
         raise ThpError("Message is too large")  # TODO reword
 
+    # TODO: wipe buffers on successfull allocation?
     if buffer_type == _READ:
         global READ_BUFFER_SLICE
         READ_BUFFER_SLICE = memoryview(READ_BUFFER)[:length]

@@ -112,6 +112,7 @@ async def _handle_broadcast(iface: WireInterface, packet: utils.BufferType) -> N
     if __debug__:
         log.debug(__name__, "New channel allocated with id %d", cid, iface=iface)
 
+    # what if the response is lost?
     await write_payload_to_wire_and_add_checksum(iface, response_header, response_data)
 
 

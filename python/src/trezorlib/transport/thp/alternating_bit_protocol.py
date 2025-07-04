@@ -1,3 +1,4 @@
+### Can it be removed?
 # from storage.cache_thp import ChannelCache
 # from trezor import log
 # from trezor.wire.thp import ThpError

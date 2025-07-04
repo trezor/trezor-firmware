@@ -22,14 +22,14 @@ def derive_cred_auth_key() -> bytes:
     from apps.common.seed import Slip21Node
 
     # Derive the key using SLIP-21 https://github.com/satoshilabs/slips/blob/master/slip-0021.md,
-    # the derivation path is m/"Credential authentication key"/(counter 4-byte BE)
+    # the derivation path is m/"Credential authentication key"/(4-byte big-endian counter)
 
     thp_secret = get_device_secret()
     label = b"Credential authentication key"
     counter = get_cred_auth_key_counter()
     path: Slip21Path = [label, counter]
 
-    symmetric_key_node: Slip21Node = Slip21Node(thp_secret)
+    symmetric_key_node = Slip21Node(thp_secret)
     symmetric_key_node.derive_path(path)
     cred_auth_key = symmetric_key_node.key()
 

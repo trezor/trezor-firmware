@@ -30,6 +30,7 @@ _SEEDLESS_STATE = const(2)
 
 class ThpDataCache(DataCache):
     def __init__(self) -> None:
+        # TODO: why not store it in `DataCache`?
         self.channel_id = bytearray(_CHANNEL_ID_LENGTH)
         self.last_usage = 0
         super().__init__()
@@ -43,6 +44,7 @@ class ThpDataCache(DataCache):
 class ChannelCache(ThpDataCache):
 
     def __init__(self) -> None:
+        # TODO: why not store it in `DataCache`?
         self.state = bytearray(_CHANNEL_STATE_LENGTH)
         self.iface = bytearray(1)  # TODO add decoding
         self.sync = 0x80  # can_send_bit | sync_receive_bit | sync_send_bit | rfu(5)
@@ -57,11 +59,9 @@ class ChannelCache(ThpDataCache):
         super().__init__()
 
     def clear(self) -> None:
-        self.state[:] = bytearray(
-            int.to_bytes(0, _CHANNEL_STATE_LENGTH, "big")
-        )  # Set state to UNALLOCATED
-        self.state[:] = bytearray(_CHANNEL_STATE_LENGTH)
-        self.iface[:] = bytearray(1)
+        self.state[:] = bytes(_CHANNEL_STATE_LENGTH)  # Set state to UNALLOCATED
+        self.iface[:] = bytes(1)
+        # should we clear self.sync too?
         super().clear()
 
     def set_host_static_pubkey(self, key: bytearray) -> None:
@@ -74,6 +74,7 @@ class SessionThpCache(ThpDataCache):
     def __init__(self) -> None:
         from trezor import utils
 
+        # TODO: why not store it in `DataCache`?
         self.session_id = bytearray(SESSION_ID_LENGTH)
         self.state = bytearray(_SESSION_STATE_LENGTH)
         if utils.BITCOIN_ONLY:
@@ -97,9 +98,8 @@ class SessionThpCache(ThpDataCache):
         super().__init__()
 
     def clear(self) -> None:
-        self.state[:] = bytearray(
-            int.to_bytes(0, _SESSION_STATE_LENGTH, "big")
-        )  # Set state to UNALLOCATED
+        self.state[:] = bytes(_SESSION_STATE_LENGTH)  # Set state to UNALLOCATED
+        # Does it zero the existing bytes?
         self.session_id[:] = b""
         super().clear()
 
