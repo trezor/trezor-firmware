@@ -40,6 +40,9 @@ static rtc_driver_t g_rtc_driver = {
     .initialized = false,
 };
 
+static uint32_t rtc_calendar_to_timestamp(const RTC_DateTypeDef* date,
+                                          const RTC_TimeTypeDef* time);
+
 bool rtc_init(void) {
   rtc_driver_t* drv = &g_rtc_driver;
 
@@ -85,19 +88,16 @@ bool rtc_get_timestamp(uint32_t* timestamp) {
   // Get current time and date,
   // Important: GetTime has to be called before the GetDate in order to unlock
   // the values in higher-order callendar.
-  if (HAL_OK != HAL_RTC_GetTime(&drv->hrtc, &time, RTC_FORMAT_BIN)) {
+  if (HAL_OK != HAL_RTC_GetTime(&drv->hrtc, &time, RTC_FORMAT_BCD)) {
     return false;
   }
 
   // Get the current date
-  if (HAL_OK != HAL_RTC_GetDate(&drv->hrtc, &date, RTC_FORMAT_BIN)) {
+  if (HAL_OK != HAL_RTC_GetDate(&drv->hrtc, &date, RTC_FORMAT_BCD)) {
     return false;
   }
 
-  *timestamp =
-      ((date.Year * 365 * 24 * 3600) + ((date.Month - 1) * 30 * 24 * 3600) +
-       ((date.Date - 1) * 24 * 3600) + (time.Hours * 3600) +
-       (time.Minutes * 60) + time.Seconds);
+  *timestamp = rtc_calendar_to_timestamp(&date, &time);
 
   return true;
 }
@@ -167,6 +167,53 @@ void RTC_IRQHandler(void) {
 
   mpu_restore(mpu_mode);
   IRQ_LOG_EXIT();
+}
+
+static const uint8_t days_in_month[] = {
+    31,  // January
+    28,  // February (not considering leap years here)
+    31,  // March
+    30,  // April
+    31,  // May
+    30,  // June
+    31,  // July
+    31,  // August
+    30,  // September
+    31,  // October
+    30,  // November
+    31   // December
+};
+
+static uint8_t bcd2bin(uint8_t val) { return (val & 0x0F) + ((val >> 4) * 10); }
+
+// Check for leap year
+static int is_leap_year(int year) {
+  year += 2000;  // STM32 RTC uses years 0-99 for 2000-2099
+  return ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0));
+}
+
+static uint32_t rtc_calendar_to_timestamp(const RTC_DateTypeDef* date,
+                                          const RTC_TimeTypeDef* time) {
+  uint8_t year = bcd2bin(date->Year);    // 0..99
+  uint8_t month = bcd2bin(date->Month);  // 1..12
+  uint8_t day = bcd2bin(date->Date);     // 1..31
+  uint8_t hour = bcd2bin(time->Hours);
+  uint8_t min = bcd2bin(time->Minutes);
+  uint8_t sec = bcd2bin(time->Seconds);
+
+  uint32_t days = 0;
+  for (int y = 0; y < year; ++y) {
+    days += 365;
+    if (is_leap_year(y)) days += 1;
+  }
+  for (int m = 1; m < month; ++m) {
+    days += days_in_month[m - 1];
+    if (m == 2 && is_leap_year(year)) days += 1;
+  }
+  days += day - 1;
+
+    uint32_t seconds = days * 86400 + hour * 3600 + min * 60 + sec;
+    return seconds;
 }
 
 #endif  // KERNEL_MODE
