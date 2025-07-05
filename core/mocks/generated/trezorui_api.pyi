@@ -692,7 +692,7 @@ def show_properties(
     *,
     title: str,
     value: list[tuple[str, str]] | str,
-) -> LayoutObj[int]:
+) -> LayoutObj[None]:
     """Show a list of key-value pairs, or a chunkified string."""
 
 

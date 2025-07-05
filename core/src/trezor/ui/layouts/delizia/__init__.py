@@ -1563,8 +1563,11 @@ def confirm_firmware_update(description: str, fingerprint: str) -> Awaitable[Non
 
 
 def set_brightness(current: int | None = None) -> Awaitable[None]:
-    return raise_if_not_confirmed(
+    from trezor.ui.layouts.menu import Menu, confirm_with_menu
+
+    return confirm_with_menu(
         trezorui_api.set_brightness(current=current),
+        Menu.root(cancel=TR.buttons__cancel),
         "set_brightness",
         BR_CODE_OTHER,
     )

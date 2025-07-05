@@ -23,7 +23,7 @@ from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
-from ..input_flows import InputFlowConfirmAllWarnings
+from ..input_flows import InputFlowCancelBrightness, InputFlowConfirmAllWarnings
 
 HERE = Path(__file__).parent.resolve()
 
@@ -478,3 +478,8 @@ def test_label_too_long(client: Client):
 @pytest.mark.setup_client(pin=None)
 def test_set_brightness(client: Client):
     device.set_brightness(client, None)
+
+    with pytest.raises(exceptions.Cancelled), client:
+        IF = InputFlowCancelBrightness(client)
+        client.set_input_flow(IF.get())
+        device.set_brightness(client, None)

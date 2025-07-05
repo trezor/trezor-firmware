@@ -18,7 +18,7 @@ use crate::{
 use super::super::{
     component::{
         number_input_slider::{NumberInputSliderDialog, NumberInputSliderDialogMsg},
-        Footer, Frame, PromptMsg, PromptScreen, StatusScreen, SwipeContent, VerticalMenu,
+        Footer, Frame, PromptMsg, PromptScreen, StatusScreen, SwipeContent,
     },
     theme,
 };
@@ -26,7 +26,6 @@ use super::super::{
 #[derive(Copy, Clone, PartialEq, Eq, ToPrimitive)]
 pub enum SetBrightness {
     Slider,
-    Menu,
     Confirm,
     Confirmed,
 }
@@ -48,11 +47,9 @@ impl FlowController for SetBrightness {
 
     fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
-            (Self::Slider, FlowMsg::Info) => Self::Menu.swipe_left(),
-            (Self::Menu, FlowMsg::Cancelled) => Self::Slider.swipe_right(),
-            (Self::Menu, FlowMsg::Choice(0)) => self.return_msg(FlowMsg::Cancelled),
+            (Self::Slider, FlowMsg::Info) => self.return_msg(FlowMsg::Info),
             (Self::Confirm, FlowMsg::Confirmed) => Self::Confirmed.swipe_up(),
-            (Self::Confirm, FlowMsg::Info) => Self::Menu.swipe_left(),
+            (Self::Confirm, FlowMsg::Info) => self.return_msg(FlowMsg::Info),
             (Self::Confirmed, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
             _ => self.do_nothing(),
         }
@@ -101,13 +98,6 @@ pub fn new_set_brightness(brightness: Option<u8>) -> Result<SwipeFlow, Error> {
         }
     });
 
-    let content_menu = Frame::left_aligned(
-        "".into(),
-        VerticalMenu::empty().danger(theme::ICON_CANCEL, TR::buttons__cancel.into()),
-    )
-    .with_cancel_button()
-    .map(super::util::map_to_choice);
-
     let content_confirm = Frame::left_aligned(
         TR::brightness__change_title.into(),
         SwipeContent::new(PromptScreen::new_tap_to_confirm()),
@@ -136,7 +126,6 @@ pub fn new_set_brightness(brightness: Option<u8>) -> Result<SwipeFlow, Error> {
 
     let mut res = SwipeFlow::new(&SetBrightness::Slider)?;
     res.add_page(&SetBrightness::Slider, content_slider)?
-        .add_page(&SetBrightness::Menu, content_menu)?
         .add_page(&SetBrightness::Confirm, content_confirm)?
         .add_page(&SetBrightness::Confirmed, content_confirmed)?;
 
