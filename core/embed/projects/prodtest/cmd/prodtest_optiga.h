@@ -27,5 +27,5 @@ typedef enum {
   OPTIGA_LOCKED_ERROR,
 } optiga_locked_status;
 
-void pair_optiga(cli_t* cli);
+void prodtest_optiga_pair(cli_t* cli);
 optiga_locked_status get_optiga_locked_status(cli_t* cli);
