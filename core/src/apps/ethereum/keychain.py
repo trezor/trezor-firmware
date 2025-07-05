@@ -16,6 +16,7 @@ if TYPE_CHECKING:
         EthereumSignTx,
         EthereumSignTxEIP1559,
         EthereumSignTypedData,
+        EthereumSignTypedHash,
     )
 
     from apps.common.keychain import Handler, Keychain, MsgOut
@@ -26,6 +27,7 @@ if TYPE_CHECKING:
         EthereumGetAddress,
         EthereumSignMessage,
         EthereumSignTypedData,
+        EthereumSignTypedHash,
     )
 
     HandlerAddressN = Callable[

@@ -1072,10 +1072,12 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__contract;
   MP_QSTR_ethereum__contract_address;
   MP_QSTR_ethereum__data_size_template;
+  MP_QSTR_ethereum__domain_hash;
   MP_QSTR_ethereum__gas_limit;
   MP_QSTR_ethereum__gas_price;
   MP_QSTR_ethereum__interaction_contract;
   MP_QSTR_ethereum__max_gas_price;
+  MP_QSTR_ethereum__message_hash;
   MP_QSTR_ethereum__name_and_version;
   MP_QSTR_ethereum__new_contract;
   MP_QSTR_ethereum__no_message_field;
@@ -1098,6 +1100,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__title_confirm_message;
   MP_QSTR_ethereum__title_confirm_struct;
   MP_QSTR_ethereum__title_confirm_typed_data;
+  MP_QSTR_ethereum__title_confirm_typed_hashes;
   MP_QSTR_ethereum__title_input_data;
   MP_QSTR_ethereum__title_signing_address;
   MP_QSTR_ethereum__token_contract;

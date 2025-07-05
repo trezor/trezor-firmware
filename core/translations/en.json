@@ -341,6 +341,7 @@
       "Eckhart": "Call contract"
     },
     "ethereum__data_size_template": "Size: {0} bytes",
+    "ethereum__domain_hash": "Domain hash",
     "ethereum__gas_limit": "Gas limit",
     "ethereum__gas_price": "Gas price",
     "ethereum__interaction_contract": {
@@ -350,6 +351,7 @@
       "Eckhart": "Interaction contract address"
     },
     "ethereum__max_gas_price": "Max fee per gas",
+    "ethereum__message_hash": "Message hash",
     "ethereum__name_and_version": "Name and version",
     "ethereum__new_contract": "New contract will be deployed",
     "ethereum__no_message_field": "No message field",
@@ -372,6 +374,7 @@
     "ethereum__title_confirm_message": "Confirm message",
     "ethereum__title_confirm_struct": "Confirm struct",
     "ethereum__title_confirm_typed_data": "Confirm typed data",
+    "ethereum__title_confirm_typed_hashes": "Confirm typed hashes",
     "ethereum__title_input_data": "Input data",
     "ethereum__title_signing_address": "Signing address",
     "ethereum__token_contract": {
