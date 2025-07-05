@@ -49,10 +49,21 @@ secbool secret_key_tropic_public(curve25519_key dest) {
   return sectrue;
 }
 
+secbool secret_key_tropic_pairing_unprivileged(curve25519_key dest) {
+  memset(dest, 2, sizeof(curve25519_key));
+  return sectrue;
+}
+
 secbool secret_key_tropic_pairing_privileged(curve25519_key dest) {
   memcpy(dest, SECRET_TROPIC_PAIRING_BYTES, sizeof(curve25519_key));
   return sectrue;
 }
+
+secbool secret_key_tropic_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+  memset(dest, 1, ECDSA_PRIVATE_KEY_SIZE);
+  return sectrue;
+}
+
 #endif
 
 #endif
