@@ -34,6 +34,7 @@ pub enum Syshandle {
     Button = ffi::syshandle_t_SYSHANDLE_BUTTON as _,
     Touch = ffi::syshandle_t_SYSHANDLE_TOUCH as _,
     Ble = ffi::syshandle_t_SYSHANDLE_BLE as _,
+    PowerManager = ffi::syshandle_t_SYSHANDLE_POWER_MANAGER as _,
 }
 
 impl Syshandle {

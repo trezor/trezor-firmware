@@ -10,10 +10,18 @@ use crate::ui::{
 };
 
 use crate::ui::{component::Event, display::color::Color, shape::render_on_display};
-use num_traits::ToPrimitive;
 
 use crate::trezorhal::sysevent::{sysevents_poll, Syshandle};
+
+#[cfg(feature = "power_manager")]
+use crate::{
+    time::Instant,
+    trezorhal::power_manager::{is_usb_connected, suspend},
+    ui::display::fade_backlight_duration,
+};
+
 use heapless::Vec;
+use num_traits::ToPrimitive;
 
 pub trait ReturnToC {
     fn return_to_c(self) -> u32;
@@ -90,6 +98,10 @@ pub fn run(frame: &mut impl Component<Msg = impl ReturnToC>) -> u32 {
     render(frame);
     ModelUI::fadein();
 
+    #[cfg(feature = "power_manager")]
+    let mut start = Instant::now();
+    let mut faded = false;
+
     // flush any pending events
     #[cfg(feature = "button")]
     while button_eval().is_some() {}
@@ -105,10 +117,23 @@ pub fn run(frame: &mut impl Component<Msg = impl ReturnToC>) -> u32 {
     #[cfg(feature = "touch")]
     unwrap!(ifaces.push(Syshandle::Touch));
 
+    #[cfg(feature = "power_manager")]
+    unwrap!(ifaces.push(Syshandle::PowerManager));
+
     loop {
         let event = sysevents_poll(ifaces.as_slice());
 
         if let Some(e) = event {
+            if faded {
+                ModelUI::fadein();
+                faded = false;
+            }
+
+            #[cfg(feature = "power_manager")]
+            {
+                start = Instant::now();
+            }
+
             let mut ctx = EventCtx::new();
 
             let msg = frame.event(&mut ctx, e);
@@ -117,6 +142,31 @@ pub fn run(frame: &mut impl Component<Msg = impl ReturnToC>) -> u32 {
                 return message.return_to_c();
             }
             render(frame);
+        } else {
+            #[cfg(feature = "power_manager")]
+            {
+                if is_usb_connected() {
+                    continue;
+                }
+
+                let elapsed = Instant::now().checked_duration_since(start);
+
+                if let Some(elapsed) = elapsed {
+                    if elapsed.to_secs() >= 10 && !faded {
+                        faded = true;
+                        fade_backlight_duration(20, 200);
+                    }
+                    if elapsed.to_secs() >= 15 {
+                        suspend();
+                        render(frame);
+                        if faded {
+                            ModelUI::fadein();
+                            faded = false;
+                        }
+                        start = Instant::now();
+                    }
+                }
+            }
         }
     }
 }

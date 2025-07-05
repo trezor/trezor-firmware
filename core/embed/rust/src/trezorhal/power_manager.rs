@@ -1,4 +1,5 @@
 use super::ffi;
+use core::ptr::null_mut;
 
 #[cfg(feature = "ui")]
 use crate::ui::event::PMEvent;
@@ -39,4 +40,14 @@ pub fn charging_state() -> ChargingState {
         ffi::pm_charging_status_t_PM_BATTERY_IDLE => ChargingState::Idle,
         _ => panic!("Unknown charging status"),
     }
+}
+
+pub fn is_usb_connected() -> bool {
+    let mut state: ffi::pm_state_t = unsafe { core::mem::zeroed() };
+    unsafe { ffi::pm_get_state(&mut state as _) };
+    state.usb_connected
+}
+
+pub fn suspend() {
+    unsafe { ffi::pm_suspend(null_mut()) };
 }
