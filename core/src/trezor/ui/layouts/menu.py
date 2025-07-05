@@ -1,53 +1,47 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Awaitable
 
 import trezorui_api
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts.common import interact
 
 if TYPE_CHECKING:
-    from typing import Any
+    from typing import Callable, Iterable, Sequence
 
-    from trezorui_api import LayoutObj, UiResult
     from typing_extensions import Self
 
 
 class Menu:
     def __init__(
-        self, name: str, *children: "Details", cancel: str | None = None
+        self, name: str, children: Sequence["Details"], cancel: str | None = None
     ) -> None:
         self.name = name
         self.children = children
         self.cancel = cancel
 
     @classmethod
-    def root(cls, *children: "Details", cancel: str | None = None) -> Self:
-        return cls("", *children, cancel=cancel)
+    def root(
+        cls, children: Iterable["Details"] = (), cancel: str | None = None
+    ) -> Self:
+        return cls("", children=tuple(children), cancel=cancel)
 
 
 class Details:
-    def __init__(self, name: str, properties: "Properties") -> None:
+    def __init__(self, name: str, factory: Callable[[], Awaitable[None]]) -> None:
         self.name = name
-        self.value = properties.obj
-
-
-class Properties:
-    @classmethod
-    def data(cls, value: str) -> Self:
-        return cls(value)
+        self.factory = factory
 
     @classmethod
-    def paragraphs(cls, value: list[tuple[str, str]]) -> Self:
-        return cls(value)
-
-    def __init__(self, obj: Any) -> None:
-        """Internal c-tor: use the factory methods above instead."""
-        self.obj = obj
+    def from_layout(
+        cls, name: str, layout_factory: Callable[[], trezorui_api.LayoutObj[None]]
+    ) -> Self:
+        return cls(
+            name,
+            lambda: interact(layout_factory(), br_name=None, raise_on_cancel=None),
+        )
 
 
 async def show_menu(
     root: Menu,
-    br_name: str | None,
-    br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> None:
     menu_path = []
     current_item = 0
@@ -62,18 +56,16 @@ async def show_menu(
                 current=current_item,
                 cancel=menu.cancel,
             )
-            choice = await interact(layout, br_name, br_code)
+            choice = await interact(layout, br_name=None)
             if isinstance(choice, int):
                 # go one level down
                 menu_path.append(choice)
                 current_item = 0
                 continue
         else:
-            layout = trezorui_api.show_properties(
-                title=menu.name,
-                value=menu.value,
-            )
-            await interact(layout, br_name, br_code, raise_on_cancel=None)
+            assert isinstance(menu, Details)
+            # Details' layout is created on-demand (saving memory)
+            await menu.factory()
 
         # go one level up, or exit the menu
         if menu_path:
@@ -83,7 +75,7 @@ async def show_menu(
 
 
 async def confirm_with_menu(
-    main: LayoutObj[UiResult],
+    main: trezorui_api.LayoutObj[trezorui_api.UiResult],
     menu: Menu,
     br_name: str | None,
     br_code: ButtonRequestType = ButtonRequestType.Other,
@@ -92,6 +84,6 @@ async def confirm_with_menu(
         result = await interact(main, br_name, br_code)
         br_name = None  # ButtonRequest should be sent once (for the main layout)
         if result is trezorui_api.INFO:
-            await show_menu(menu, br_name, br_code)
+            await show_menu(menu)
         else:
             break

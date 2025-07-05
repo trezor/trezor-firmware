@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from typing import Awaitable, Iterable, NoReturn, Sequence
 
     from ..common import ExceptionType, PropertyType
+    from ..menu import Details
 
 
 CONFIRMED = trezorui_api.CONFIRMED
@@ -1181,7 +1182,7 @@ if not utils.BITCOIN_ONLY:
         br_name: str = "confirm_solana_staking_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
-        from trezor.ui.layouts.menu import Details, Menu, Properties, confirm_with_menu
+        from trezor.ui.layouts.menu import Menu, confirm_with_menu
 
         if not amount_item:
             amount_label, amount = fee_item
@@ -1211,9 +1212,7 @@ if not utils.BITCOIN_ONLY:
             fee_label="",
             external_menu=True,
         )
-        menu = Menu.root(
-            *[Details(name, Properties.data(value)) for name, value in items]
-        )
+        menu = Menu.root(create_details(name, value) for name, value in items)
         await confirm_with_menu(main, menu, br_name, br_code)
 
         main = trezorui_api.confirm_summary(
@@ -1227,13 +1226,11 @@ if not utils.BITCOIN_ONLY:
             (f"{TR.words__account}:", account),
             (TR.address_details__derivation_path_colon, account_path),
         ]
-        menu = Menu.root(
-            Details(TR.confirm_total__title_fee, Properties.paragraphs(fee_details)),
-            Details(
-                TR.address_details__account_info,
-                Properties.paragraphs(account_details),
-            ),
-        )
+        items = [
+            (TR.confirm_total__title_fee, fee_details),
+            (TR.address_details__account_info, account_details),
+        ]
+        menu = Menu.root(create_details(name, value) for name, value in items)
         await confirm_with_menu(main, menu, br_name, br_code)
 
     def confirm_cardano_tx(
@@ -1708,4 +1705,12 @@ def confirm_firmware_update(description: str, fingerprint: str) -> Awaitable[Non
         ),
         "firmware_update",
         BR_CODE_OTHER,
+    )
+
+
+def create_details(name: str, value: list[tuple[str, str]] | str) -> Details:
+    from trezor.ui.layouts.menu import Details
+
+    return Details.from_layout(
+        name, lambda: trezorui_api.show_properties(title=name, value=value)
     )

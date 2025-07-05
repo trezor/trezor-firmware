@@ -1887,7 +1887,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     value: list[tuple[str, str]] | str,
-    /// ) -> LayoutObj[int]:
+    /// ) -> LayoutObj[None]:
     ///     """Show a list of key-value pairs, or a chunkified string."""
     Qstr::MP_QSTR_show_properties => obj_fn_kw!(0, new_show_properties).as_obj(),
 
