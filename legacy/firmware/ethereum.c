@@ -55,7 +55,7 @@ static bool eip1559;
 struct SHA3_CTX keccak_ctx = {0};
 
 static uint32_t signing_access_list_count;
-static EthereumAccessList signing_access_list[8];
+static EthereumAccessList signing_access_list[12];
 _Static_assert(sizeof(signing_access_list) ==
                    sizeof(((EthereumSignTxEIP1559 *)NULL)->access_list),
                "access_list buffer size mismatch");
@@ -212,7 +212,7 @@ static uint32_t rlp_calculate_access_list_keys_length(
 }
 
 static uint32_t rlp_calculate_access_list_length(
-    const EthereumAccessList access_list[8], uint32_t access_list_count) {
+    const EthereumAccessList access_list[12], uint32_t access_list_count) {
   uint32_t length = 0;
   for (size_t i = 0; i < access_list_count; i++) {
     uint32_t address_length = rlp_calculate_length(PUBKEYHASH_LEN, 0xff);
