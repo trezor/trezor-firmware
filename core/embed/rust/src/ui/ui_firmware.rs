@@ -32,6 +32,7 @@ pub trait FirmwareUI {
         reverse: bool,
         prompt_screen: bool,
         prompt_title: Option<TString<'static>>,
+        external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn confirm_address(

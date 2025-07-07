@@ -71,6 +71,7 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             .get(Qstr::MP_QSTR_prompt_title)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
+        let external_menu: bool = kwargs.get_or(Qstr::MP_QSTR_external_menu, false)?;
 
         let layout = ModelUI::confirm_action(
             title,
@@ -84,6 +85,7 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             reverse,
             prompt_screen,
             prompt_title,
+            external_menu,
         )?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
@@ -1351,6 +1353,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     reverse: bool = False,
     ///     prompt_screen: bool = False,
     ///     prompt_title: str | None = None,
+    ///     external_menu: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm action."""
     Qstr::MP_QSTR_confirm_action => obj_fn_kw!(0, new_confirm_action).as_obj(),
