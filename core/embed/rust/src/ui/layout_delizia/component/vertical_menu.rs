@@ -318,6 +318,147 @@ impl crate::trace::Trace for VerticalMenu {
     }
 }
 
+pub type VerticalMenuItems = Vec<VerticalMenuItem, 6>;
+
+pub enum VerticalMenuItem {
+    Item(TString<'static>),
+    Cancel(TString<'static>),
+}
+
+impl VerticalMenuItem {
+    fn button(&self) -> Button {
+        match self {
+            VerticalMenuItem::Item(text) => {
+                Button::with_text(*text).styled(theme::button_default())
+            }
+            VerticalMenuItem::Cancel(text) => {
+                Button::with_text(*text).styled(theme::button_warning_high())
+            }
+        }
+    }
+}
+
+pub struct ScrolledVerticalMenu {
+    active: VerticalMenu,
+    items: VerticalMenuItems,
+    pager: Pager,
+    menu_capacity: usize,
+
+    up: Option<Button>,
+    down: Option<Button>,
+}
+
+impl ScrolledVerticalMenu {
+    pub fn new(items: VerticalMenuItems) -> Self {
+        let menu_capacity = match items.len() {
+            0..=MENU_MAX_ITEMS => MENU_MAX_ITEMS,
+            _ => MENU_MAX_ITEMS - 1,
+        };
+        let pages_count = items.chunks(menu_capacity).len() as u16;
+        Self {
+            active: VerticalMenu::empty(),
+            items,
+            pager: Pager::new(pages_count),
+            menu_capacity,
+            up: None,
+            down: None,
+        }
+    }
+
+    fn update_active_buttons(&mut self) {
+        let chunks_to_skip = self.pager.current().into();
+        let mut chunks = self.items.chunks(self.menu_capacity).skip(chunks_to_skip);
+        let current_chunk = unwrap!(chunks.next());
+        self.active.buttons.clear();
+        for item in current_chunk {
+            unwrap!(self.active.buttons.push(item.button()));
+        }
+    }
+}
+
+impl SinglePage for ScrolledVerticalMenu {}
+
+impl Component for ScrolledVerticalMenu {
+    type Msg = VerticalMenuChoiceMsg;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        self.up = if self.pager.is_first() {
+            None
+        } else {
+            Some(Button::with_icon(theme::ICON_CHEVRON_UP))
+        };
+        self.down = if self.pager.is_last() {
+            None
+        } else {
+            Some(Button::with_icon(theme::ICON_CHEVRON_DOWN))
+        };
+
+        let bottom_height = match (self.up.as_ref(), self.down.as_ref()) {
+            (None, None) => 0,
+            _ => MENU_BUTTON_HEIGHT + MENU_SEP_HEIGHT,
+        };
+        let (top, bottom) = bounds.split_bottom(bottom_height);
+        self.update_active_buttons();
+        self.active.place(top);
+        match (self.up.as_mut(), self.down.as_mut()) {
+            (Some(up), Some(down)) => {
+                let (left, _, right) = bottom.split_center(0);
+                up.place(left);
+                down.place(right);
+            }
+            (Some(up), None) => {
+                up.place(bottom);
+            }
+            (None, Some(down)) => {
+                down.place(bottom);
+            }
+            (None, None) => {}
+        };
+        bounds
+    }
+
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        let prev_pager = self.pager;
+        if let Some(up) = self.up.as_mut() {
+            if let Some(ButtonMsg::Clicked) = up.event(ctx, event) {
+                self.pager.goto_prev();
+            }
+        }
+        if let Some(down) = self.down.as_mut() {
+            if let Some(ButtonMsg::Clicked) = down.event(ctx, event) {
+                self.pager.goto_next();
+            }
+        };
+        if prev_pager != self.pager {
+            ctx.request_place();
+            ctx.request_paint();
+        }
+        self.active.event(ctx, event).map(|msg| match msg {
+            VerticalMenuChoiceMsg::Selected(i) => {
+                let offset = usize::from(self.pager.current()) * self.menu_capacity;
+                VerticalMenuChoiceMsg::Selected(offset + i)
+            }
+        })
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.active.render(target);
+        if let Some(up) = self.up.as_ref() {
+            up.render(target);
+        }
+        if let Some(down) = self.down.as_ref() {
+            down.render(target);
+        }
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for ScrolledVerticalMenu {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        self.active.trace(t);
+    }
+}
+
 // Polymorphic struct, avoid adding code as it gets duplicated, prefer
 // extending VerticalMenu instead.
 pub struct PagedVerticalMenu<F: Fn(u16) -> TString<'static>> {

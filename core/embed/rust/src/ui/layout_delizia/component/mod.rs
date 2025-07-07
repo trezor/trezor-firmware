@@ -83,7 +83,10 @@ pub use swipe_up_screen::{SwipeUpScreen, SwipeUpScreenMsg};
 #[cfg(feature = "translations")]
 pub use tap_to_confirm::TapToConfirm;
 pub use updatable_more_info::UpdatableMoreInfo;
-pub use vertical_menu::{PagedVerticalMenu, VerticalMenu, VerticalMenuChoiceMsg};
+pub use vertical_menu::{
+    PagedVerticalMenu, ScrolledVerticalMenu, VerticalMenu, VerticalMenuChoiceMsg, VerticalMenuItem,
+    VerticalMenuItems,
+};
 pub use welcome_screen::WelcomeScreen;
 
 use super::{constant, theme};
