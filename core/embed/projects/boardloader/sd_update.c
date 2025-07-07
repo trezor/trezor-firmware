@@ -21,6 +21,10 @@
 
 #include "sd_update.h"
 
+#ifdef USE_BOOT_UCB
+#error "SD card update is not compatible with boot UCB"
+#endif
+
 // we use SRAM as SD card read buffer (because DMA can't access the CCMRAM)
 __attribute__((section(".buf")))
 uint32_t sdcard_buf[BOOTLOADER_MAXSIZE / sizeof(uint32_t)];

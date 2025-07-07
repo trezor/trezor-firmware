@@ -36,6 +36,7 @@ typedef enum {
   MPU_MODE_BOARDCAPS,     // + boardloader capabilities (privileged RO)
   MPU_MODE_BOOTUPDATE,    // + bootloader area (privileged RW)
   MPU_MODE_BOOTARGS,      // + boot arguments (privileged RW)
+  MPU_MODE_BOOTUCB,       // + boot update control block (privileged RW)
   MPU_MODE_OTP,           // + OTP (privileged RW)
   MPU_MODE_FSMC_REGS,     // + FSMC control registers (privileged RW)
   MPU_MODE_FLASHOB,       // + Option bytes mapping (privileged RW)

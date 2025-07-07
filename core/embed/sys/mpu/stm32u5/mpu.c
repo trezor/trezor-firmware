@@ -220,8 +220,14 @@ static void mpu_init_fixed_regions(void) {
   //   REGION    ADDRESS                   SIZE                 TYPE       WRITE   UNPRIV
   SET_REGION( 0, BOARDLOADER_START,        BOARDLOADER_MAXSIZE, FLASH_CODE,   NO,    NO );
   SET_REGION( 1, MAIN_RAM_START,           MAIN_RAM_SIZE,       SRAM,        YES,    NO );
+#ifdef USE_BOOT_UCB
+  SET_REGION( 2, NONBOARDLOADER_START,     NONBOARDLOADER_MAXSIZE, FLASH_DATA, YES,  NO );
+  DIS_REGION( 3 );
+#else
   SET_REGION( 2, BOOTLOADER_START,         BOOTLOADER_MAXSIZE,  FLASH_DATA,  YES,    NO );
   SET_REGION( 3, FIRMWARE_START,           FIRMWARE_MAXSIZE,    FLASH_DATA,  YES,    NO );
+#endif
+
   SET_REGION( 4, AUX1_RAM_START,           AUX1_RAM_SIZE,       SRAM,        YES,    NO );
 #elif defined(BOOTLOADER)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
@@ -437,29 +443,38 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       SET_REGION( 6, BOOTLOADER_START,         BOOTLOADER_MAXSIZE, FLASH_DATA,  YES,    NO );
       break;
 #endif
+    case MPU_MODE_BOOTARGS:
+      SET_REGION( 6, BOOTARGS_START,           BOOTARGS_SIZE,      SRAM,        YES,    NO );
+      break;
+#ifdef USE_BOOT_UCB
+    case MPU_MODE_BOOTUCB:
+      SET_REGION( 6, BOOTUCB_START,            BOOTUCB_MAXSIZE,    FLASH_DATA,  YES,    NO );
+      break;
+#endif
     case MPU_MODE_OTP:
       SET_REGION( 6, FLASH_OTP_BASE,           OTP_AND_ID_SIZE,    FLASH_DATA,  YES,    NO );
       break;
     case MPU_MODE_SECRET:
       SET_REGION( 6, SECRET_START,             SECRET_MAXSIZE,     FLASH_DATA,  YES,    NO );
       break;
+#ifndef BOARDLOADER
     case MPU_MODE_STORAGE:
       SET_REGION( 6, STORAGE_1_START,          STORAGE_SIZE,       FLASH_DATA,  YES,    NO );
       break;
     case MPU_MODE_ASSETS:
       SET_REGION( 6, ASSETS_START,             ASSETS_MAXSIZE,     FLASH_DATA,  YES,    NO );
       break;
+#endif
     case MPU_MODE_APP_SAES:
     case MPU_MODE_APP:
       SET_REGION( 6, ASSETS_START,             ASSETS_MAXSIZE,     FLASH_DATA,   NO,   YES );
       break;
-    case MPU_MODE_BOOTARGS:
-      SET_REGION( 6, BOOTARGS_START,           BOOTARGS_SIZE,      SRAM,        YES,    NO );
-      break;
     default:
+#ifndef BOARDLOADER
       // By default, the kernel needs to have the same access to assets as the app
       SET_REGION( 6, ASSETS_START,             ASSETS_MAXSIZE,     FLASH_DATA,   NO,    NO );
       break;
+#endif
   }
   // clang-format on
 

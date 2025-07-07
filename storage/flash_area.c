@@ -224,6 +224,22 @@ secbool __wur flash_area_write_data_padded(const flash_area_t *area,
   return sectrue;
 }
 
+secbool flash_area_is_erased(const flash_area_t *area) {
+  for (int i = 0; i < area->num_subareas; i++) {
+    uint16_t first_sector = area->subarea[i].first_sector;
+    uint16_t num_sectors = area->subarea[i].num_sectors;
+    uint32_t subarea_size = flash_sector_size(first_sector, num_sectors);
+    const uint32_t *ptr =
+        (const uint32_t *)flash_get_address(first_sector, 0, 0);
+    for (uint32_t j = 0; j < subarea_size / sizeof(uint32_t); j++) {
+      if (ptr[j] != 0xFFFFFFFF) {
+        return secfalse;
+      }
+    }
+  }
+  return sectrue;
+}
+
 secbool flash_area_erase(const flash_area_t *area,
                          void (*progress)(int pos, int len)) {
   return flash_area_erase_bulk(area, 1, progress);
