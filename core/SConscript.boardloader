@@ -8,6 +8,7 @@ CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 
 FEATURES_WANTED = [
+    "boot_ucb",
     "display",
     "pmic",
     "sd_card",
@@ -22,6 +23,15 @@ SOURCE_MOD_CRYPTO = []
 CPPDEFINES_HAL = []
 SOURCE_HAL = []
 PATH_HAL = []
+
+env = Environment(ENV=os.environ,
+    CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')),
+    CPPDEFINES_IMPLICIT=[],
+    CPPDEFPREFIX="-D'",
+    CPPDEFSUFFIX="'",
+)
+
+FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
 # modtrezorcrypto
 CCFLAGS_MOD += '-Wno-sequence-point '
@@ -52,20 +62,19 @@ SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/sha2.c',
 ]
 
-if PQ_SIGNATURE:
+if 'boot_ucb' in FEATURES_AVAILABLE:
     PQ_SIGNATURE_PATH = 'vendor/sphincsplus/ref/'
-    CCFLAGS_MOD += '-DPARAMS=sphincs-sha2-128s -Wno-incompatible-pointer-types '
-    PQ_SIGNATURE_SOURCE = Glob(
-        PQ_SIGNATURE_PATH + '*.c',
-        exclude=[
-            PQ_SIGNATURE_PATH + 'rng.c',
-            PQ_SIGNATURE_PATH + '*haraka*.c',
-            PQ_SIGNATURE_PATH + '*robust.c',
-            PQ_SIGNATURE_PATH + '*shake*.c',
-            PQ_SIGNATURE_PATH + 'PQC*.c',
-        ],
-    )
-    CPPPATH_MOD += [PQ_SIGNATURE_PATH]
+    CCFLAGS_MOD += '-DPARAMS=sphincs-sha2-128s '
+    PQ_SIGNATURE_SOURCE = [
+        'vendor/sphincsplus/ref/address.c',
+        'vendor/sphincsplus/ref/fors.c',
+        'vendor/sphincsplus/ref/hash_sha2.c',
+        'vendor/sphincsplus/ref/sha2.c',
+        'vendor/sphincsplus/ref/sign.c',
+        'vendor/sphincsplus/ref/thash_sha2_simple.c',
+        'vendor/sphincsplus/ref/utils.c',
+        'vendor/sphincsplus/ref/wots.c',
+    ]
 
 # modtrezorui
 CPPPATH_MOD += [
@@ -88,16 +97,6 @@ SOURCE_MOD += [
     'embed/rtl/error_handling.c',
     'embed/rtl/mini_printf.c',
 ]
-
-env = Environment(ENV=os.environ,
-    CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')),
-    CONSTRAINTS=["limited_util_s"],
-    CPPDEFINES_IMPLICIT=[],
-    CPPDEFPREFIX="-D'",
-    CPPDEFSUFFIX="'",
-)
-
-FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
 SOURCE_BOARDLOADER = [
     'embed/projects/boardloader/main.c',
@@ -182,9 +181,9 @@ obj_program += env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-
 obj_program += env.Object(source=SOURCE_BOARDLOADER)
 obj_program += env.Object(source=SOURCE_HAL)
 
-if PQ_SIGNATURE:
+if 'boot_ucb' in FEATURES_AVAILABLE:
     obj_program += env.Object(
-        source=PQ_SIGNATURE_SOURCE,
+        source=PQ_SIGNATURE_SOURCE, CCFLAGS="$CCFLAGS -Wno-incompatible-pointer-types"
     )
 
 linkerscript_gen = env.Command(

@@ -35,6 +35,10 @@
 #include <util/rsod.h>
 #include <util/unit_properties.h>
 
+#ifdef USE_BOOT_UCB
+#include <util/boot_ucb.h>
+#endif
+
 #ifdef USE_PVD
 #include <sys/pvd.h>
 #endif
@@ -443,6 +447,12 @@ int bootloader_main(void) {
   secbool touch_initialized = secfalse;
 
   system_init(&rsod_panic_handler);
+
+#ifdef USE_BOOT_UCB
+  // By erasing UCB area we ensure that the boardloader will not repeat
+  // the upgrade process if it was already done.
+  boot_ucb_erase();
+#endif
 
   vendor_header vhdr;
   volatile secbool vhdr_present = secfalse;

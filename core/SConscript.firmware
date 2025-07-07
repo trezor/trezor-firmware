@@ -49,6 +49,7 @@ FEATURE_FLAGS = {
 
 FEATURES_WANTED = [
     "ble",
+    "boot_ucb",
     "consumption_mask",
     "display",
     "dma2d",
@@ -244,7 +245,7 @@ SOURCE_MOD += [
     'embed/gfx/gfx_draw.c',
     'embed/gfx/terminal.c',
     'embed/io/display/display_utils.c',
-    'embed/util/image/boot_image.c',
+    'embed/util/image/boot_image_embdata.c',
     'embed/util/image/image.c',
     'embed/util/translations/translations.c',
     'embed/util/rsod/rsod.c',
@@ -913,15 +914,25 @@ if 'nrf' in FEATURES_AVAILABLE:
             f'embed/models/{TREZOR_MODEL}/trezor-ble.bin',
             )
 
-tools.embed_compressed_binary(
-        obj_program,
-        env,
-        'bootloader',
-        'embed/projects/bootloaders/bootloader.o',
-        f'embed/models/{TREZOR_MODEL}/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
-        'firmware',
-        'bootloader',
+if 'boot_ucb' in FEATURES_AVAILABLE:
+    # embed uncompressed bootloader image
+    tools.embed_raw_binary(
+            obj_program,
+            env,
+            'bootloader',
+            'embed/projects/bootloaders/bootloader.o',
+            f'embed/models/{TREZOR_MODEL}/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
         )
+else:
+    # embed compressed bootloader image
+    tools.embed_compressed_binary(
+            obj_program,
+            env,
+            'bootloader',
+            'embed/projects/bootloaders/bootloader.o',
+            f'embed/models/{TREZOR_MODEL}/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
+            'firmware',
+            )
 
 env.Depends(obj_program, qstr_generated)
 

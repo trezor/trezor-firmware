@@ -33,12 +33,15 @@ __all__ = [
     "FirmwareHeader",
     "FirmwareImage",
     "VendorFirmware",
+    "BootHeader",
+    "BootableImage",
 ]
 
 
 class HeaderType(Enum):
     FIRMWARE = b"TRZF"
     BOOTLOADER = b"TRZB"
+    BOOTLOADER_V2 = b"TRZQ"
 
 
 class FirmwareHeader(Struct):
@@ -211,3 +214,132 @@ class VendorFirmware(Struct):
 
     def model(self) -> Model | None:
         return self.firmware.model()
+
+
+class BootHeader(Struct):
+    magic: HeaderType
+    hw_model: Model | bytes
+    hw_revision: int
+    version: tuple[int, int, int, int]
+    fix_version: tuple[int, int, int, int]
+    min_prev_version: tuple[int, int, int, int]
+    monotonic: int
+    auth_len: int
+    header_len: int
+    code_length: int
+    storage_address: int
+    sigmask: int
+
+    _pre_padding_len: int
+    _post_padding_len: int
+
+    # fmt: off
+    SUBCON = c.Struct(
+        # Authenticated part of the header
+        "_start" / c.Tell,
+        "magic" / EnumAdapter(c.Bytes(4), HeaderType),
+        "hw_model" / EnumAdapter(c.Bytes(4), Model),
+        "hw_revision" / c.Int32ul,
+        "version" / TupleAdapter(c.Int8ul, c.Int8ul, c.Int8ul, c.Int8ul),
+        "fix_version" / TupleAdapter(c.Int8ul, c.Int8ul, c.Int8ul, c.Int8ul),
+        "min_prev_version" / TupleAdapter(c.Int8ul, c.Int8ul, c.Int8ul, c.Int8ul),
+        "monotonic" / c.Int32ul,
+        "header_len" / c.Int32ul,
+        "auth_len" / c.Int32ul,
+        "code_length" / c.Rebuild(
+            c.Int32ul,
+            lambda this:
+                len(this._.code) if "code" in this._
+                else (this.code_length or 0)
+        ),
+        "storage_address" / c.Int32ul,
+        "sigmask" / c.Int32ul,
+
+        # Variable-length padding that's part of the authenticated header
+        "_pre_padding_len" / c.Tell,
+        "_padding" / c.Padding(c.this.auth_len - c.this._pre_padding_len),
+        "_post_padding_len" / c.Tell,
+    )
+    # fmt: on
+
+
+class BootHeaderUnauth(Struct):
+    """Unauthenticated part of the boot header."""
+
+    merkle_proof: list[bytes]
+    slh_signatures: list[bytes]
+    ec_signatures: list[bytes]
+    firmware_type: int
+
+    # fmt: off
+    SUBCON = c.Struct(
+        # Merkle proof
+        "merkle_proof" / c.PrefixedArray(c.Int32ul, c.Bytes(32)),
+
+        # Signatures
+        "slh_signatures" / c.Bytes(7856)[2],
+        "ec_signatures" / c.Bytes(64)[2],
+
+        # Other fields that are not part of the signature
+        "firmware_type" / c.Aligned(4, c.Byte),
+    )
+    # fmt: on
+
+
+class BootableImage(Struct):
+    """Raw firmware image.
+
+    Consists of boot header and code block.
+    This is the expected format of the bootloader image with pq signature for
+    Trezor core models.
+    """
+
+    header: BootHeader = subcon(BootHeader)
+    unauth: BootHeaderUnauth = subcon(BootHeaderUnauth)
+    _code_offset: int
+    code: bytes
+
+    SUBCON = c.Struct(
+        "header" / BootHeader.SUBCON,
+        "unauth" / BootHeaderUnauth.SUBCON,
+        "_code_offset" / c.Tell,
+        "code" / c.Bytes(c.this.header.code_length),
+        c.Check(c.this.header.header_len == c.this._code_offset),
+        c.Terminated,
+    )
+
+    def get_hash_params(self) -> util.FirmwareHashParameters:
+        return Model.from_hw_model(self.header.hw_model).hash_params()
+
+    def set_merkle_proof(self, proof: list[bytes]) -> None:
+        """Set the Merkle proof for the boot header."""
+        self.unauth.merkle_proof = proof
+        self.header.auth_len = self.header.header_len - len(self.unauth.build())
+
+    def digest(self) -> bytes:
+        hash_params = self.get_hash_params()
+        hash_fn = hash_params.hash_function
+
+        prefix0 = b"\x00"
+        prefix1 = b"\x01"
+
+        # Hash the bootloader code
+        hash = hash_fn(self.code).digest()
+
+        # Hash the authenticated part of the header
+        auth_header = self.header.build()
+        hash = hash_fn(prefix0 + auth_header + hash).digest()
+
+        # Add the Merkle proof
+        for node in self.unauth.merkle_proof:
+            if node < hash:
+                hash = hash_fn(prefix1 + node + hash).digest()
+            else:
+                hash = hash_fn(prefix1 + hash + node).digest()
+
+        return hash
+
+    def model(self) -> Model | None:
+        if isinstance(self.header.hw_model, Model):
+            return self.header.hw_model
+        return None
