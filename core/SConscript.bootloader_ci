@@ -13,6 +13,7 @@ FEATURES_WANTED = [
     "input",
     "powerctl",
     "rgb_led",
+    "secure_domain",
     "usb",
     ]
 
