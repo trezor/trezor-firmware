@@ -57,6 +57,10 @@ reboot_with_rsod(const systask_postmortem_t *pminfo);
 //    specified duration and then resets the device.
 void __attribute__((noreturn)) reboot_or_halt_after_rsod(void);
 
+// Platform dependent alignment for vector table addresses
+#define IMAGE_CODE_ALIGN(addr) \
+  ((((uint32_t)(uintptr_t)addr) + (CODE_ALIGNMENT - 1)) & ~(CODE_ALIGNMENT - 1))
+
 // Jumps to the next booting stage (e.g. bootloader to firmware).
 // `vectbl_address` points to the flash at the vector table of the next stage.
 //

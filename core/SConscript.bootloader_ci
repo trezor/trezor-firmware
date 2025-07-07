@@ -8,6 +8,7 @@ CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 
 FEATURES_WANTED = [
+    "boot_ucb",
     "consumption_mask",
     "display",
     "input",
@@ -26,6 +27,16 @@ CPPDEFINES_HAL = []
 SOURCE_HAL = []
 PATH_HAL = []
 RUST_UI_FEATURES = []
+
+env = Environment(
+    ENV=os.environ,
+    CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')),
+    CPPDEFINES_IMPLICIT=[],
+    CPPDEFPREFIX="-D'",
+    CPPDEFSUFFIX="'",
+)
+
+FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
 # modtrezorcrypto
 CCFLAGS_MOD += '-Wno-sequence-point '
@@ -58,6 +69,20 @@ SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/rand.c',
     'vendor/trezor-crypto/sha2.c',
 ]
+
+if 'boot_ucb' in FEATURES_AVAILABLE:
+    PQ_SIGNATURE_PATH = 'vendor/sphincsplus/ref/'
+    CCFLAGS_MOD += '-DPARAMS=sphincs-sha2-128s '
+    PQ_SIGNATURE_SOURCE = [
+        'vendor/sphincsplus/ref/address.c',
+        'vendor/sphincsplus/ref/fors.c',
+        'vendor/sphincsplus/ref/hash_sha2.c',
+        'vendor/sphincsplus/ref/sha2.c',
+        'vendor/sphincsplus/ref/sign.c',
+        'vendor/sphincsplus/ref/thash_sha2_simple.c',
+        'vendor/sphincsplus/ref/utils.c',
+        'vendor/sphincsplus/ref/wots.c',
+    ]
 
 # modtrezorui
 CPPPATH_MOD += [
@@ -93,24 +118,18 @@ SOURCE_NANOPB = [
 
 ui.init_ui(TREZOR_MODEL, "bootloader", RUST_UI_FEATURES)
 
-env = Environment(
-    ENV=os.environ,
-    CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')),
-    CPPDEFINES_IMPLICIT=[],
-    CPPDEFPREFIX="-D'",
-    CPPDEFSUFFIX="'",
-)
-
-FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
-
 SOURCE_BOOTLOADER = [
-    'embed/projects/bootloader_ci/header.S',
     'embed/projects/bootloader_ci/bootui.c',
     'embed/projects/bootloader_ci/main.c',
     'embed/projects/bootloader_ci/messages.c',
     'embed/projects/bootloader_ci/protob/pb/messages.pb.c',
     'embed/projects/bootloader_ci/version_check.c',
 ]
+
+if not "boot_ucb" in FEATURES_AVAILABLE:
+    SOURCE_BOOTLOADER += [
+        'embed/projects/bootloader/header.S',
+    ]
 
 env.Replace(
     CAT='cat',
@@ -191,6 +210,11 @@ obj_program += env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-
 obj_program += env.Object(source=SOURCE_BOOTLOADER)
 obj_program += env.Object(source=SOURCE_NANOPB)
 obj_program += env.Object(source=SOURCE_HAL)
+
+if 'boot_ucb' in FEATURES_AVAILABLE:
+    obj_program += env.Object(
+        source=PQ_SIGNATURE_SOURCE, CCFLAGS="$CCFLAGS -Wno-incompatible-pointer-types"
+    )
 
 linkerscript_gen = env.Command(
     target='memory.ld',

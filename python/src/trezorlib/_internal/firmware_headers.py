@@ -22,9 +22,10 @@ from enum import Enum
 import click
 import construct as c
 from construct_classes import Struct
+from slhdsa import PublicKey, SecretKey, sha2_128s  # noqa: I900
 from typing_extensions import Protocol, Self, runtime_checkable
 
-from .. import cosi, firmware
+from .. import _ed25519, cosi, firmware
 from ..firmware import models as fw_models
 
 SYM_OK = click.style("\u2714", fg="green")
@@ -254,17 +255,6 @@ class SignableImageProto(Protocol):
         """Check if the image has a signature."""
         ...
 
-    def public_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
-        """Return public keys that should be used to sign the image.
-
-        This does _not_ return the keys with which the image is actually signed.
-        In particular, `image.public_keys()` will return the production
-        keys even if the image is signed with development keys.
-
-        If dev_keys is True, return development keys.
-        """
-        ...
-
 
 @runtime_checkable
 class CosiSignedImage(SignableImageProto, Protocol):
@@ -278,22 +268,6 @@ class LegacySignedImage(SignableImageProto, Protocol):
     def slots(self) -> t.Iterable[int]: ...
 
     def insert_signature(self, slot: int, key_index: int, signature: bytes) -> None: ...
-
-    def public_keys(
-        self, dev_keys: bool = False, signature_version: int = 3
-    ) -> t.Sequence[bytes]:
-        """Return public keys that should be used to sign the image.
-
-        This does _not_ return the keys with which the image is actually signed.
-        In particular, `image.public_keys()` will return the production
-        keys even if the image is signed with development keys.
-
-        If dev_keys is True, return development keys.
-
-        Specifying signature_version allows to return keys for a different signature
-        scheme version. The default is the newest version 3.
-        """
-        ...
 
 
 class CosiSignatureHeaderProto(Protocol):
@@ -458,6 +432,100 @@ class SecmonImage(firmware.SecmonImage, CosiSignedMixin):
 
     def public_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
         return self.get_model_keys(dev_keys).boardloader_keys
+
+
+class BootloaderV2Image(firmware.BootableImage):
+    NAME: t.ClassVar[str] = "bootloader"
+    DEV_PRIVATE_PQ_KEYS = [
+        bytes.fromhex(key)
+        for key in (
+            "9a8da9d38eb9203bd0d5442db161324f35ce7f6dc78e05507306fb13a7e6c145"
+            "ec01e60263024f7e71728013b731f7ba1299f518c27ba3ed8f4a219974127c62",
+            "1773a0855e8a9961b66682a1e819c29ac83931c00b84062bfc89f3041364c0eb"
+            "8af8878085946ed8b116bd24c0f2aac48b7e8f11bf068725ccfbb152abf7a4cd",
+        )
+    ]
+
+    DEV_PUBLIC_PQ_KEYS = [
+        bytes.fromhex(key)
+        for key in (
+            "ec01e60263024f7e71728013b731f7ba1299f518c27ba3ed8f4a219974127c62",
+            "8af8878085946ed8b116bd24c0f2aac48b7e8f11bf068725ccfbb152abf7a4cd",
+        )
+    ]
+
+    DEV_PRIVATE_EC_KEYS = [
+        (b"\x41" * 32),
+        (b"\x42" * 32),
+    ]
+
+    DEV_PUBLIC_EC_KEYS = [
+        bytes.fromhex(key)
+        for key in (
+            "db995fe25169d141cab9bbba92baa01f9f2e1ece7df4cb2ac05190f37fcc1f9d",
+            "2152f8d19b791d24453242e15f2eab6cb7cffa7b6a5ed30097960e069881db12",
+        )
+    ]
+
+    def signature_present(self) -> bool:
+        return any(not all_zero(sig) for sig in self.unauth.slh_signatures) or any(
+            not all_zero(sig) for sig in self.unauth.ec_signatures
+        )
+
+    def sign_with_devkeys(self) -> None:
+        # sigmask is a part of the signed part of the header the
+        # digest is calculated from
+        self.header.sigmask = (1 << 0) | (1 << 1)
+
+        digest = self.digest()
+
+        # SLH signature signs the image digest
+        for idx, key in enumerate(self.DEV_PRIVATE_PQ_KEYS):
+            key = SecretKey.from_digest(key, sha2_128s)
+            self.unauth.slh_signatures[idx] = key.sign(digest)
+
+        hash_params = self.get_hash_params()
+        hash_fn = hash_params.hash_function
+
+        for idx, key in enumerate(self.DEV_PRIVATE_EC_KEYS):
+            # The EC signature signs both the image digest and the SLH signature
+            ext_digest = hash_fn(digest + self.unauth.slh_signatures[idx]).digest()
+            self.unauth.ec_signatures[idx] = _ed25519.signature_unsafe(
+                ext_digest, key, self.DEV_PUBLIC_EC_KEYS[idx]
+            )
+
+    def format(self, verbose: bool = False) -> str:
+        header_dict = asdict(self)
+        header_out = header_dict.copy()
+
+        for key, val in header_out.items():
+            if "version" in key:
+                header_out[key] = LiteralStr(_format_version(val))
+
+        output = [
+            "Firmware Header " + _format_container(header_out),
+            f"Fingerprint: {click.style(self.digest().hex(), bold=True)}",
+        ]
+
+        return "\n".join(output)
+
+    def verify(self, dev_keys: bool = False) -> None:
+        digest = self.digest()
+
+        for idx, key in enumerate(self.public_ec_keys(dev_keys)):
+            if not _ed25519.checkvalid(self.unauth.ec_signatures[idx], digest, key):
+                raise firmware.InvalidSignatureError("Invalid bootloader signature")
+
+        for idx, key in enumerate(self.public_pq_keys(dev_keys)):
+            key = PublicKey.from_digest(key, sha2_128s)
+            if not key.verify(digest, self.unauth.slh_signatures[idx]):
+                raise firmware.InvalidSignatureError("Invalid bootloader signature")
+
+    def public_pq_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
+        return self.DEV_PUBLIC_PQ_KEYS
+
+    def public_ec_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
+        return self.DEV_PUBLIC_EC_KEYS
 
 
 class LegacyFirmware(firmware.LegacyFirmware):
