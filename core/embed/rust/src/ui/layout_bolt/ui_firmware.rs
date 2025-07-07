@@ -119,6 +119,7 @@ impl FirmwareUI for UIBolt {
         _prompt_screen: bool,
         _cancel: bool,
         _warning_footer: Option<TString<'static>>,
+        _external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         ConfirmValue::new(title, value, description, verb, verb_cancel, hold)
             .with_text_mono(is_data)

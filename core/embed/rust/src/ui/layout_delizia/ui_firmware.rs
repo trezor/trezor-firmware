@@ -106,6 +106,7 @@ impl FirmwareUI for UIDelizia {
         prompt_screen: bool,
         cancel: bool,
         _warning_footer: Option<TString<'static>>,
+        external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         ConfirmValue::new(title, value, description)
             .with_description_font(&theme::TEXT_SUB_GREY)
@@ -123,6 +124,7 @@ impl FirmwareUI for UIDelizia {
             .with_page_counter(page_counter)
             .with_cancel(cancel)
             .with_prompt(prompt_screen)
+            .with_external_menu(external_menu)
             .with_hold(hold)
             .into_flow()
             .and_then(LayoutObj::new_root)

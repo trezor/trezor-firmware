@@ -149,6 +149,7 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
             .get(Qstr::MP_QSTR_warning_footer)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
+        let external_menu: bool = kwargs.get_or(Qstr::MP_QSTR_external_menu, false)?;
 
         let layout_obj = ModelUI::confirm_value(
             title,
@@ -166,6 +167,7 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
             prompt_screen,
             cancel,
             warning_footer,
+            external_menu,
         )?;
         Ok(layout_obj.into())
     };
@@ -1387,6 +1389,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     prompt_screen: bool = False,
     ///     cancel: bool = False,
     ///     warning_footer: str | None = None,
+    ///     external_menu: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm a generic piece of information on the screen.
     ///     The value can either be human readable text (`is_data=False`)

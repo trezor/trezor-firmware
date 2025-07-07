@@ -407,6 +407,7 @@ impl FirmwareUI for UIEckhart {
         _prompt_screen: bool,
         cancel: bool,
         warning_footer: Option<TString<'static>>,
+        _external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         let paragraphs = ConfirmValueParams {
             description: description.unwrap_or("".into()),
