@@ -29,6 +29,7 @@
 #include <sec/random_delays.h>
 #include <sec/rng.h>
 #include <sys/bootutils.h>
+#include <sys/bootargs.h>
 #include <sys/mpu.h>
 #include <sys/system.h>
 #include <sys/systick.h>
