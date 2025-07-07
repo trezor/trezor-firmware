@@ -3,11 +3,14 @@ from typing import TYPE_CHECKING, Awaitable
 import trezorui_api
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts.common import interact
+from trezor.wire import ActionCancelled
 
 if TYPE_CHECKING:
     from typing import Callable, Iterable, Sequence
 
     from typing_extensions import Self
+
+    from common import ExceptionType
 
 
 class Menu:
@@ -42,6 +45,7 @@ class Details:
 
 async def show_menu(
     root: Menu,
+    raise_on_cancel: ExceptionType = ActionCancelled,
 ) -> None:
     menu_path = []
     current_item = 0
@@ -56,7 +60,9 @@ async def show_menu(
                 current=current_item,
                 cancel=menu.cancel,
             )
-            choice = await interact(layout, br_name=None)
+            choice = await interact(
+                layout, br_name=None, raise_on_cancel=raise_on_cancel
+            )
             if isinstance(choice, int):
                 # go one level down
                 menu_path.append(choice)
@@ -79,11 +85,12 @@ async def confirm_with_menu(
     menu: Menu,
     br_name: str | None,
     br_code: ButtonRequestType = ButtonRequestType.Other,
+    raise_on_cancel: ExceptionType = ActionCancelled,
 ) -> None:
     while True:
-        result = await interact(main, br_name, br_code)
+        result = await interact(main, br_name, br_code, raise_on_cancel)
         br_name = None  # ButtonRequest should be sent once (for the main layout)
         if result is trezorui_api.INFO:
-            await show_menu(menu)
+            await show_menu(menu, raise_on_cancel)
         else:
             break
