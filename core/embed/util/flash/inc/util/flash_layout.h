@@ -38,4 +38,11 @@ extern flash_area_t FIRMWARE_AREA;
 extern const flash_area_t FIRMWARE_AREA;
 #endif
 
+#ifdef USE_BOOT_UCB
+extern const flash_area_t BOOTUCB_AREA;
+#ifdef BOARDLOADER
+extern const flash_area_t NONBLDR_AREA;
+#endif
+#endif  // USE_BOOT_UCB
+
 #endif  // TREZORHAL_LAYOUT_H_
