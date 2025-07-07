@@ -58,6 +58,7 @@ pub struct ConfirmValue {
     swipe_right: bool,
     frame_margin: usize,
     cancel: bool,
+    external_menu: bool,
 }
 
 impl ConfirmValue {
@@ -89,6 +90,7 @@ impl ConfirmValue {
             swipe_right: false,
             frame_margin: 0,
             cancel: false,
+            external_menu: false,
         }
     }
 
@@ -168,6 +170,11 @@ impl ConfirmValue {
     pub const fn with_cancel(mut self, cancel: bool) -> Self {
         self.cancel = cancel;
         self
+    }
+
+    pub const fn with_external_menu(mut self, external_menu: bool) -> Self {
+        self.external_menu = external_menu;
+        self.with_menu_button()
     }
 
     pub const fn with_footer(
@@ -300,7 +307,9 @@ impl ConfirmValue {
         }
         .into_paragraphs();
 
-        let confirm_extra = if self.cancel {
+        let confirm_extra = if self.external_menu {
+            ConfirmActionExtra::ExternalMenu
+        } else if self.cancel {
             ConfirmActionExtra::Cancel
         } else {
             ConfirmActionExtra::Menu(

@@ -149,6 +149,7 @@ impl FirmwareUI for UICaesar {
         _prompt_screen: bool,
         _cancel: bool,
         _warning_footer: Option<TString<'static>>,
+        _external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         let paragraphs = ConfirmValueParams {
             description: description.unwrap_or("".into()),
