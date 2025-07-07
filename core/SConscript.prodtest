@@ -22,6 +22,7 @@ else:
 
 FEATURES_WANTED = [
     "ble",
+    "boot_ucb",
     "consumption_mask",
     "display",
     "haptic",
@@ -55,6 +56,16 @@ CPPDEFINES_HAL = []
 SOURCE_HAL = []
 PATH_HAL = []
 RUST_UI_FEATURES = []
+
+env = Environment(
+    ENV=os.environ,
+    CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')),
+    CPPDEFINES_IMPLICIT=[],
+    CPPDEFPREFIX="-D'",
+    CPPDEFSUFFIX="'",
+)
+
+FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
 # modtrezorcrypto
 CPPPATH_MOD += [
@@ -116,6 +127,19 @@ if FEATURE_FLAGS["AES_GCM"]:
         'vendor/trezor-crypto/aes/aesgcm.c',
     ]
 
+if 'boot_ucb' in FEATURES_AVAILABLE:
+    PQ_SIGNATURE_PATH = 'vendor/sphincsplus/ref/'
+    CCFLAGS_MOD += '-DPARAMS=sphincs-sha2-128s '
+    PQ_SIGNATURE_SOURCE = [
+        'vendor/sphincsplus/ref/address.c',
+        'vendor/sphincsplus/ref/fors.c',
+        'vendor/sphincsplus/ref/hash_sha2.c',
+        'vendor/sphincsplus/ref/sha2.c',
+        'vendor/sphincsplus/ref/sign.c',
+        'vendor/sphincsplus/ref/thash_sha2_simple.c',
+        'vendor/sphincsplus/ref/utils.c',
+        'vendor/sphincsplus/ref/wots.c',
+    ]
 
 # modtrezorui
 CPPPATH_MOD += [
@@ -147,16 +171,6 @@ SOURCE_MOD += [
 ]
 
 ui.init_ui(TREZOR_MODEL, "prodtest", RUST_UI_FEATURES)
-
-env = Environment(
-    ENV=os.environ,
-    CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')),
-    CPPDEFINES_IMPLICIT=[],
-    CPPDEFPREFIX="-D'",
-    CPPDEFSUFFIX="'",
-)
-
-FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
 
 SOURCE_PRODTEST = [
@@ -285,6 +299,11 @@ obj_program.extend(env.Object(source=SOURCE_MOD))
 obj_program.extend(env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-auto-var-init=zero'))
 obj_program.extend(env.Object(source=SOURCE_PRODTEST))
 obj_program.extend(env.Object(source=SOURCE_HAL))
+
+if 'boot_ucb' in FEATURES_AVAILABLE:
+    obj_program += env.Object(
+        source=PQ_SIGNATURE_SOURCE, CCFLAGS="$CCFLAGS -Wno-incompatible-pointer-types"
+    )
 
 #
 # Rust library
