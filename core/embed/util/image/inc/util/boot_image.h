@@ -42,7 +42,6 @@ typedef struct {
  * @return Pointer to a `boot_image_t` structure containing the
  *         image data, size, and expected hashes.
  */
-
 const boot_image_t* boot_image_get_embdata(void);
 
 /**

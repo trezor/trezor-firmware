@@ -82,7 +82,7 @@ def get_bindgen_defines(defines: list[str | tuple[str, str]], paths: list[str]) 
     return ",".join(rest_defs)
 
 
-def embed_compressed_binary(obj_program, env, section, target_, file, build, symbol):
+def embed_compressed_binary(obj_program, env, section, target_, file, build):
     _in = f"embedded_{section}.bin.deflated"
 
     def redefine_sym(suffix):
@@ -92,7 +92,7 @@ def embed_compressed_binary(obj_program, env, section, target_, file, build, sym
             + "_"
             + suffix
         )
-        dest = f"_deflated_{symbol}_{suffix}"
+        dest = f"{section}_{suffix}"
         return f" --redefine-sym {src}={dest}"
 
     def compress_action(target, source, env):

@@ -58,3 +58,13 @@ DEFINE_SINGLE_AREA(FIRMWARE_AREA, FIRMWARE, ACCESS_DEFAULT);
 #ifdef KERNEL_MODE
 DEFINE_SINGLE_AREA(ASSETS_AREA, ASSETS, ACCESS_APP);
 #endif
+
+#ifdef USE_BOOT_UCB
+DEFINE_SINGLE_AREA(BOOTUCB_AREA, BOOTUCB, ACCESS_DEFAULT);
+#ifdef BOARDLOADER
+// Area used by the boardloader during bootloader update process.
+// It includes the entire flash memory except the board-loader,
+// the UCB, and the secrets area.
+DEFINE_SINGLE_AREA(NONBOARDLOADER_AREA, NONBOARDLOADER, ACCESS_DEFAULT);
+#endif
+#endif

@@ -39,9 +39,6 @@
 
 #define SECMON_IMAGE_MAGIC 0x43455354  // TSEC
 
-#define IMAGE_CODE_ALIGN(addr) \
-  ((((uint32_t)(uintptr_t)addr) + (CODE_ALIGNMENT - 1)) & ~(CODE_ALIGNMENT - 1))
-
 #define COREAPP_CODE_ALIGN(addr)                             \
   ((((uint32_t)(uintptr_t)addr) + (COREAPP_ALIGNMENT - 1)) & \
    ~(COREAPP_ALIGNMENT - 1))

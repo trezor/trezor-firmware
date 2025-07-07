@@ -35,12 +35,13 @@
 #endif
 
 // symbols from bootloader.bin => bootloader.o
-extern const void _deflated_bootloader_start;
-extern const void _deflated_bootloader_size;
+extern const void bootloader_start;
+extern const void bootloader_size;
+extern const void bootloader_size;
 
 static const boot_image_t g_bootloader_image = {
-    .image_ptr = (const void *)&_deflated_bootloader_start,
-    .image_size = (size_t)&_deflated_bootloader_size,
+    .image_ptr = (const void *)&bootloader_start,
+    .image_size = (size_t)&bootloader_size,
     .hash_00 = BOOTLOADER_00,
     .hash_FF = BOOTLOADER_FF,
 };
