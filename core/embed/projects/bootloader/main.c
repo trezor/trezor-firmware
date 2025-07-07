@@ -406,6 +406,9 @@ int bootloader_main(void) {
 
 #ifdef USE_BOOTARGS_RSOD
   if (bootargs_get_command() == BOOT_COMMAND_SHOW_RSOD) {
+#ifdef LAZY_DISPLAY_INIT
+    display_init(DISPLAY_RESET_CONTENT);
+#endif
     // post mortem info was left in bootargs
     boot_args_t args;
     bootargs_get_args(&args);
