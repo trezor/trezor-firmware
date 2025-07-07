@@ -30,6 +30,8 @@ const MENU_ITEM_INFO: usize = 1;
 // Extra button at the top-right corner of the Action screen
 #[derive(PartialEq)]
 pub enum ConfirmActionExtra {
+    // Shows a menu button that simply returns INFO so it can be handled externally
+    ExternalMenu,
     // Opens a menu which can (optionally) lead to an extra Info screen, or cancel the action
     Menu(ConfirmActionMenuStrings),
     // Shows a cancel button directly
@@ -114,6 +116,7 @@ impl FlowController for ConfirmAction {
     fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
             (Self::Action, FlowMsg::Cancelled) => self.return_msg(FlowMsg::Cancelled),
+            (Self::Action, FlowMsg::Info) => self.return_msg(FlowMsg::Info),
             _ => self.do_nothing(),
         }
     }
@@ -143,6 +146,7 @@ impl FlowController for ConfirmActionWithConfirmation {
     fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
             (Self::Action, FlowMsg::Cancelled) => self.return_msg(FlowMsg::Cancelled),
+            (Self::Action, FlowMsg::Info) => self.return_msg(FlowMsg::Info),
             (Self::Confirmation, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
             _ => self.do_nothing(),
         }
@@ -227,6 +231,7 @@ pub fn new_confirm_action(
     hold: bool,
     prompt_screen: bool,
     prompt_title: TString<'static>,
+    external_menu: bool,
 ) -> Result<SwipeFlow, error::Error> {
     let paragraphs = {
         let action = action.unwrap_or("".into());
@@ -244,9 +249,19 @@ pub fn new_confirm_action(
         paragraphs.into_paragraphs()
     };
 
+    if external_menu && (prompt_screen || hold) {
+        return Err(Error::ValueError(
+            c"external_menu currently not supported in tandem with prompt_screen/hold",
+        ));
+    }
+
     new_confirm_action_simple(
         paragraphs,
-        ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new().with_verb_cancel(verb_cancel)),
+        if external_menu {
+            ConfirmActionExtra::ExternalMenu
+        } else {
+            ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new().with_verb_cancel(verb_cancel))
+        },
         ConfirmActionStrings::new(title, subtitle, None, prompt_screen.then_some(prompt_title)),
         hold,
         None,
@@ -273,7 +288,7 @@ fn new_confirm_action_uni<T: Component + PaginateFull + MaybeTrace + 'static>(
         .with_vertical_pages();
 
     match extra {
-        ConfirmActionExtra::Menu { .. } => {
+        ConfirmActionExtra::Menu { .. } | ConfirmActionExtra::ExternalMenu => {
             content = content.with_menu_button();
         }
         ConfirmActionExtra::Cancel => {
@@ -327,8 +342,12 @@ fn create_flow(
     let initial_page: &dyn FlowController = match (extra, prompt_screen.is_some()) {
         (ConfirmActionExtra::Menu { .. }, false) => &ConfirmActionWithMenu::Action,
         (ConfirmActionExtra::Menu { .. }, true) => &ConfirmActionWithMenuAndConfirmation::Action,
-        (ConfirmActionExtra::Cancel, false) => &ConfirmAction::Action,
-        (ConfirmActionExtra::Cancel, true) => &ConfirmActionWithConfirmation::Action,
+        (ConfirmActionExtra::Cancel | ConfirmActionExtra::ExternalMenu, false) => {
+            &ConfirmAction::Action
+        }
+        (ConfirmActionExtra::Cancel | ConfirmActionExtra::ExternalMenu, true) => {
+            &ConfirmActionWithConfirmation::Action
+        }
     };
 
     (

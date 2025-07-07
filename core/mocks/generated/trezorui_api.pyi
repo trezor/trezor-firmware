@@ -110,6 +110,7 @@ def confirm_action(
     reverse: bool = False,
     prompt_screen: bool = False,
     prompt_title: str | None = None,
+    external_menu: bool = False,
 ) -> LayoutObj[UiResult]:
     """Confirm action."""
 

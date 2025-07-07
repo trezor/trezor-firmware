@@ -61,17 +61,19 @@ impl FirmwareUI for UIDelizia {
         reverse: bool,
         prompt_screen: bool,
         prompt_title: Option<TString<'static>>,
+        external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let flow = flow::confirm_action::new_confirm_action(
             title,
             action,
             description,
             subtitle,
-            verb_cancel,
+            if external_menu { None } else { verb_cancel },
             reverse,
             hold,
             prompt_screen,
             prompt_title.unwrap_or(TString::empty()),
+            external_menu,
         )?;
         Ok(flow)
     }

@@ -57,6 +57,7 @@ impl FirmwareUI for UIBolt {
         reverse: bool,
         _prompt_screen: bool,
         _prompt_title: Option<TString<'static>>,
+        _external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = {
             let action = action.unwrap_or("".into());
@@ -946,6 +947,7 @@ impl FirmwareUI for UIBolt {
             false,
             false,
             None,
+            false,
         )
     }
 

@@ -39,27 +39,47 @@ def confirm_action(
     prompt_screen: bool = False,
     prompt_title: str | None = None,
 ) -> Awaitable[None]:
+    from trezor.ui.layouts.menu import Menu, confirm_with_menu
+
     if description is not None and description_param is not None:
         description = description.format(description_param)
 
-    return raise_if_not_confirmed(
-        trezorui_api.confirm_action(
-            title=title,
-            action=action,
-            description=description,
-            subtitle=subtitle,
-            verb=verb,
-            verb_cancel=verb_cancel,
-            hold=hold,
-            hold_danger=hold_danger,
-            reverse=reverse,
-            prompt_screen=prompt_screen,
-            prompt_title=prompt_title or title,
-        ),
-        br_name,
-        br_code,
-        exc,
+    flow = trezorui_api.confirm_action(
+        title=title,
+        action=action,
+        description=description,
+        subtitle=subtitle,
+        verb=verb,
+        verb_cancel=verb_cancel,
+        hold=hold,
+        hold_danger=hold_danger,
+        reverse=reverse,
+        prompt_screen=prompt_screen,
+        prompt_title=prompt_title or title,
+        external_menu=not (prompt_screen or hold),
     )
+
+    if prompt_screen or hold:
+        # Note: multi-step confirm (prompt_screen/hold)
+        # can't work with external menus yet
+        return raise_if_not_confirmed(
+            flow,
+            br_name,
+            br_code,
+            exc,
+        )
+    else:
+        menu = Menu.root(
+            cancel=verb_cancel or TR.buttons__cancel,
+        )
+
+        return confirm_with_menu(
+            flow,
+            menu,
+            br_name,
+            br_code,
+            exc,
+        )
 
 
 def confirm_single(
