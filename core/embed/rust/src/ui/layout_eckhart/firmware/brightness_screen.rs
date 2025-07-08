@@ -11,6 +11,7 @@ use crate::{
 };
 
 use super::super::{
+    component::Button,
     constant::SCREEN,
     firmware::{Header, HeaderMsg},
     theme,
@@ -26,7 +27,10 @@ impl SetBrightnessScreen {
     const SLIDER_HEIGHT: i16 = 392;
     pub fn new(min: u16, max: u16, init_value: u16) -> Self {
         Self {
-            header: Header::new(TR::brightness__title.into()).with_close_button(),
+            header: Header::new(TR::brightness__title.into()).with_right_button(
+                Button::with_icon(theme::ICON_CHECKMARK).styled(theme::button_header()),
+                HeaderMsg::Cancelled,
+            ),
             slider: VerticalSlider::new(min, max, init_value),
             brightness: init_value as _,
         }
