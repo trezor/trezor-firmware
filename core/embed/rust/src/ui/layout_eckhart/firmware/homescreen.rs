@@ -8,9 +8,9 @@ use crate::{
     time::ShortDuration,
     translations::TR,
     ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Label, Never},
+        component::{text::TextStyle, Component, Event, EventCtx, Label, Never, Swipe},
         display::{image::ImageInfo, Color},
-        geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
+        geometry::{Alignment, Alignment2D, Direction, Insets, Offset, Rect},
         layout::util::get_user_custom_image,
         shape::{self, Renderer},
         util::animation_disabled,
@@ -51,6 +51,9 @@ pub struct Homescreen {
     virtual_locking_button: Button,
     /// Fuel gauge (battery status indicator) rendered in the `action_bar` area
     fuel_gauge: FuelGauge,
+    /// Swipe component for vertical swiping
+    swipe: Swipe,
+    // swipe_config: SwipeConfig,
 }
 
 pub enum HomescreenMsg {
@@ -107,6 +110,7 @@ impl Homescreen {
             fuel_gauge: FuelGauge::on_charging_change_or_attach()
                 .with_alignment(Alignment::Center)
                 .with_font(fonts::FONT_SATOSHI_MEDIUM_26),
+            swipe: Swipe::new().up(),
         })
     }
 
@@ -224,6 +228,8 @@ impl Component for Homescreen {
         self.label.place(label_area);
         self.action_bar.place(bar_area);
         self.fuel_gauge.place(bar_area);
+        // Swipe component is placed in the action bar touch area
+        self.swipe.place(self.action_bar.touch_area());
         // Locking button is placed everywhere except the action bar
         let locking_area = bounds.inset(Insets::bottom(self.action_bar.touch_area().height()));
         self.virtual_locking_button.place(locking_area);
@@ -232,13 +238,21 @@ impl Component for Homescreen {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.event_fuel_gauge(ctx, event);
-        if let Some(ActionBarMsg::Confirmed) = self.action_bar.event(ctx, event) {
-            if self.locked {
-                return Some(HomescreenMsg::Dismissed);
+
+        let swipe_up = matches!(self.swipe.event(ctx, event), Some(Direction::Up));
+        let homebar_tap = matches!(
+            self.action_bar.event(ctx, event),
+            Some(ActionBarMsg::Confirmed)
+        );
+
+        if swipe_up || homebar_tap {
+            return if self.locked {
+                Some(HomescreenMsg::Dismissed)
             } else {
-                return Some(HomescreenMsg::Menu);
-            }
+                Some(HomescreenMsg::Menu)
+            };
         }
+
         if self.lockable {
             Self::event_hold(self, ctx, event).then_some(HomescreenMsg::Dismissed)
         } else {
