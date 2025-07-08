@@ -803,16 +803,48 @@ __attribute__((naked, no_stack_protector)) void GTZC_IRQHandler(void) {
 }
 #endif
 
-__attribute__((no_stack_protector, used)) static void nmi_handler(
-    uint32_t msp, uint32_t exc_return) {
-  mpu_reconfig(MPU_MODE_DEFAULT);
-  // Clear pending Clock security interrupt flag
+__attribute__((no_stack_protector, used)) static void nmi_handler(void) {
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
 #ifdef STM32U5
-  RCC->CICR = RCC_CICR_CSSC;
+  if ((RCC->CIFR & RCC_CIFR_CSSF) != 0) {
+    RCC->CICR = RCC_CICR_CSSC;
 #else
-  RCC->CIR = RCC_CIR_CSSC;
+  if ((RCC->CIR & RCC_CIR_CSSF) != 0) {
+    RCC->CIR = RCC_CIR_CSSC;
 #endif
-  systask_exit_fault(msp, exc_return);
+    // Clock Security System triggered NMI
+    systask_exit_fault(true, __get_MSP());
+  }
+#ifdef STM32U5
+  else if (FLASH->ECCR & FLASH_ECCR_ECCD_Msk) {
+    // FLASH ECC double error
+    uint32_t addr = FLASH->ECCR & FLASH_ECCR_ADDR_ECC_Msk;
+    uint32_t bankid =
+        (FLASH->ECCR & FLASH_ECCR_BK_ECC_Msk) >> FLASH_ECCR_BK_ECC_Pos;
+#if defined(BOARDLOADER)
+    // In boardloader, this is a fatal error only if the address
+    // is in the bootloader code region.
+    if (bankid == 0 && addr >= BOARDLOADER_START &&
+        addr < BOARDLOADER_START + BOARDLOADER_MAXSIZE) {
+      systask_exit_fault(false, __get_MSP());
+    }
+#elif defined(BOOTLOADER)
+    // In bootloader, this is a fatal error only if the address
+    // is in the bootloader code region.
+    if (bankid == 0 && addr >= BOOTLOADER_START &&
+        addr < BOOTLOADER_START + BOOTLOADER_MAXSIZE) {
+      systask_exit_fault(false, __get_MSP());
+    }
+#else
+    (void)addr;
+    (void)bankid;
+    // In application/prodtest this is a fatal error
+    systask_exit_fault(false, __get_MSP());
+#endif
+  }
+#endif  // STM32U5
+
+  mpu_restore(mpu_mode);
 }
 
 __attribute__((no_stack_protector)) void NMI_Handler(void) {
