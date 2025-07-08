@@ -142,13 +142,18 @@ impl Component for Slip39Input {
             let input_len = self.textbox.content().len();
 
             // Get last pending character, if any.
-            let last = if let (Some(key), Some(press)) =
-                (self.multi_tap.pending_key(), self.multi_tap.pending_press())
-            {
-                Some(&Self::keys()[key][press..(press + 1)])
-            } else {
-                None
-            };
+            let last = self
+                .multi_tap
+                .pending_key()
+                .zip(self.multi_tap.pending_press())
+                .and_then(|(key, press)| {
+                    Self::keys().get(key).map(|group| {
+                        debug_assert!(!group.is_empty());
+                        // Wrap around if press count exceeds group length
+                        let press = press % group.len();
+                        &group[press..press + 1]
+                    })
+                });
 
             // Initial position for drawing the icons
             let mut cursor = area.center().ofs(Offset::x(-self.size() / 2));
