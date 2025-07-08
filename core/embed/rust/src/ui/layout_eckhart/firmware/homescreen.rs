@@ -207,21 +207,20 @@ impl Component for Homescreen {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.event_fuel_gauge(ctx, event);
 
-        if let Some(Direction::Up) = self.swipe.event(ctx, event) {
-            if self.locked {
-                return Some(HomescreenMsg::Dismissed);
+        let swipe_up = matches!(self.swipe.event(ctx, event), Some(Direction::Up));
+        let homebar_tap = matches!(
+            self.action_bar.event(ctx, event),
+            Some(ActionBarMsg::Confirmed)
+        );
+
+        if swipe_up || homebar_tap {
+            return if self.locked {
+                Some(HomescreenMsg::Dismissed)
             } else {
-                return Some(HomescreenMsg::Menu);
-            }
+                Some(HomescreenMsg::Menu)
+            };
         }
 
-        if let Some(ActionBarMsg::Confirmed) = self.action_bar.event(ctx, event) {
-            if self.locked {
-                return Some(HomescreenMsg::Dismissed);
-            } else {
-                return Some(HomescreenMsg::Menu);
-            }
-        }
         if self.lockable {
             Self::event_hold(self, ctx, event).then_some(HomescreenMsg::Dismissed)
         } else {
