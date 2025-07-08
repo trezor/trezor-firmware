@@ -108,7 +108,7 @@ impl Homescreen {
             fuel_gauge: FuelGauge::on_charging_change_or_attach()
                 .with_alignment(Alignment::Center)
                 .with_font(fonts::FONT_SATOSHI_MEDIUM_26),
-            swipe: Swipe::vertical(),
+            swipe: Swipe::new().up(),
         })
     }
 
@@ -180,9 +180,6 @@ impl Component for Homescreen {
         debug_assert_eq!(bounds.height(), SCREEN.height());
         debug_assert_eq!(bounds.width(), SCREEN.width());
 
-        // Enable swiping over the entire screen.
-        self.swipe.place(bounds);
-
         let (rest, bar_area) = bounds.split_bottom(theme::ACTION_BAR_HEIGHT);
         let rest = if let Some(hint) = &mut self.hint {
             let (rest, hint_area) = rest.split_bottom(hint.height());
@@ -198,6 +195,8 @@ impl Component for Homescreen {
         self.label.place(label_area);
         self.action_bar.place(bar_area);
         self.fuel_gauge.place(bar_area);
+        // Swipe component is placed in the action bar touch area
+        self.swipe.place(self.action_bar.touch_area());
         // Locking button is placed everywhere except the action bar
         let locking_area = bounds.inset(Insets::bottom(self.action_bar.touch_area().height()));
         self.virtual_locking_button.place(locking_area);
