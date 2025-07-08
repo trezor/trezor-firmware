@@ -516,61 +516,61 @@ impl PassphraseInput {
         let mut cursor = hidden_area.left_center().ofs(Offset::x(12));
 
         // Render only when there are characters
-        if pp_len > 0 {
-            // Number of visible icons + characters
-            let visible_len = pp_len.min(MAX_SHOWN_LEN);
-            // Number of visible icons
-            let visible_icons = visible_len - last_char as usize;
+        if pp_len == 0 {
+            return;
+        }
+        // Number of visible icons + characters
+        let visible_len = pp_len.min(MAX_SHOWN_LEN);
+        // Number of visible icons
+        let visible_icons = visible_len - last_char as usize;
 
-            // Jiggle when overflowed.
-            if pp_len > visible_len && pp_len % 2 == 0 && self.display_style != DisplayStyle::Shown
-            {
-                cursor.x += Self::TWITCH;
+        // Jiggle when overflowed.
+        if pp_len > visible_len && pp_len % 2 == 0 && self.display_style != DisplayStyle::Shown {
+            cursor.x += Self::TWITCH;
+        }
+
+        let mut char_idx = 0;
+
+        // Greyed out overflowing icons
+        for (i, &fg_color) in FADING_ICON_COLORS.iter().enumerate() {
+            if pp_len > visible_len + (FADING_ICON_COUNT - 1 - i) {
+                ToifImage::new(cursor, Self::ICON.toif)
+                    .with_align(Alignment2D::TOP_LEFT)
+                    .with_fg(fg_color)
+                    .render(target);
+                cursor.x += Self::ICON_SPACE + Self::ICON_WIDTH;
+                char_idx += 1;
             }
+        }
 
-            let mut char_idx = 0;
-
-            // Greyed out overflowing icons
-            for (i, &fg_color) in FADING_ICON_COLORS.iter().enumerate() {
-                if pp_len > visible_len + (FADING_ICON_COUNT - 1 - i) {
-                    ToifImage::new(cursor, Self::ICON.toif)
-                        .with_align(Alignment2D::TOP_LEFT)
-                        .with_fg(fg_color)
-                        .render(target);
-                    cursor.x += Self::ICON_SPACE + Self::ICON_WIDTH;
-                    char_idx += 1;
-                }
-            }
-
-            if visible_icons > 0 {
-                // Classical dot(s)
-                for _ in char_idx..visible_icons {
-                    ToifImage::new(cursor, Self::ICON.toif)
-                        .with_align(Alignment2D::TOP_LEFT)
-                        .with_fg(style.text_color)
-                        .render(target);
-                    cursor.x += Self::ICON_SPACE + Self::ICON_WIDTH;
-                }
-            }
-
-            if last_char {
-                // This should not fail because pp_len > 0
-                let last = &self.passphrase()[(pp_len - 1)..pp_len];
-
-                // Adapt a and y positions for the character
-                cursor.y = hidden_area.left_center().y + style.text_font.text_max_height() / 2;
-                cursor.x -= Self::ICON_WIDTH;
-
-                // Paint the last character
-                Text::new(cursor, last, style.text_font)
-                    .with_align(Alignment::Start)
+        if visible_icons > 0 {
+            // Classical dot(s)
+            for _ in char_idx..visible_icons {
+                ToifImage::new(cursor, Self::ICON.toif)
+                    .with_align(Alignment2D::TOP_LEFT)
                     .with_fg(style.text_color)
                     .render(target);
+                cursor.x += Self::ICON_SPACE + Self::ICON_WIDTH;
+            }
+        }
 
-                // Paint the pending marker.
-                if self.display_style == DisplayStyle::LastWithMarker {
-                    render_pending_marker(target, cursor, last, style.text_font, style.text_color);
-                }
+        if last_char {
+            // This should not fail because pp_len > 0
+            let last = &self.passphrase()[(pp_len - 1)..pp_len];
+
+            // Adapt x and y positions for the character
+            cursor.y = hidden_area.left_center().y + style.text_font.text_max_height() / 2;
+            cursor.x -= Self::ICON_WIDTH;
+
+            // Paint the last character
+            Text::new(cursor, last, style.text_font)
+                .with_align(Alignment::Start)
+                .with_fg(style.text_color)
+                .render(target);
+
+            // Paint the pending marker.
+            if self.display_style == DisplayStyle::LastWithMarker {
+                render_pending_marker(target, cursor, last, style.text_font, style.text_color);
             }
         }
     }
