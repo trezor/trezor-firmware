@@ -4,6 +4,7 @@ use crate::{
     error::Error,
     micropython::gc::GcBox,
     strutil::TString,
+    translations::TR,
     trezorhal::storage::has_pin,
     ui::{
         component::{
@@ -101,15 +102,13 @@ impl MenuItem {
 }
 
 struct Submenu {
-    header_text: TString<'static>,
     show_battery: bool,
     items: Vec<MenuItem, SHORT_MENU_ITEMS>,
 }
 
 impl Submenu {
-    pub fn new(header_text: TString<'static>, items: Vec<MenuItem, SHORT_MENU_ITEMS>) -> Self {
+    pub fn new(items: Vec<MenuItem, SHORT_MENU_ITEMS>) -> Self {
         Self {
-            header_text,
             show_battery: false,
             items,
         }
@@ -224,7 +223,7 @@ impl<'a> DeviceMenuScreen<'a> {
             unwrap!(items.push(item_device));
         }
 
-        let submenu_index = self.add_submenu(Submenu::new("Manage paired devices".into(), items));
+        let submenu_index = self.add_submenu(Submenu::new(items));
         self.add_subscreen(Subscreen::Submenu(submenu_index))
     }
 
@@ -247,7 +246,7 @@ impl<'a> DeviceMenuScreen<'a> {
             Some(Action::Return(DeviceMenuMsg::DevicePair)),
         )));
 
-        let submenu_index = self.add_submenu(Submenu::new("Pair & connect".into(), items));
+        let submenu_index = self.add_submenu(Submenu::new(items));
         self.add_subscreen(Subscreen::Submenu(submenu_index))
     }
 
@@ -262,7 +261,7 @@ impl<'a> DeviceMenuScreen<'a> {
             Some(Action::GoTo(device_index))
         )));
 
-        let submenu_index = self.add_submenu(Submenu::new("Settings".into(), items));
+        let submenu_index = self.add_submenu(Submenu::new(items));
         self.add_subscreen(Subscreen::Submenu(submenu_index))
     }
 
@@ -277,7 +276,7 @@ impl<'a> DeviceMenuScreen<'a> {
             Some(Action::Return(DeviceMenuMsg::WipeDevice))
         )));
 
-        let submenu_index = self.add_submenu(Submenu::new("Security".into(), items));
+        let submenu_index = self.add_submenu(Submenu::new(items));
         self.add_subscreen(Subscreen::Submenu(submenu_index))
     }
 
@@ -310,7 +309,7 @@ impl<'a> DeviceMenuScreen<'a> {
             Some(Action::GoTo(about_index))
         )));
 
-        let submenu_index = self.add_submenu(Submenu::new("Device".into(), items));
+        let submenu_index = self.add_submenu(Submenu::new(items));
         self.add_subscreen(Subscreen::Submenu(submenu_index))
     }
 
@@ -344,7 +343,7 @@ impl<'a> DeviceMenuScreen<'a> {
             Some(Action::GoTo(settings_index)),
         )));
 
-        let submenu_index = self.add_submenu(Submenu::new("".into(), items).with_battery());
+        let submenu_index = self.add_submenu(Submenu::new(items).with_battery());
         self.add_subscreen(Subscreen::Submenu(submenu_index))
     }
 
@@ -384,7 +383,7 @@ impl<'a> DeviceMenuScreen<'a> {
                     };
                     menu.item(button);
                 }
-                let mut header = Header::new(submenu.header_text).with_close_button();
+                let mut header = Header::new(TR::buttons__back.into()).with_close_button();
                 if submenu.show_battery {
                     header = header.with_fuel_gauge(Some(FuelGauge::always()));
                 } else {
