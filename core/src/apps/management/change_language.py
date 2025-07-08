@@ -11,10 +11,11 @@ if TYPE_CHECKING:
 
 
 async def change_language(msg: ChangeLanguage) -> Success:
-    from trezor import utils
+    from trezor import utils, workflow
     from trezor.messages import Success
     from trezor.ui.layouts.progress import progress
 
+    workflow.close_others()
     loader: ProgressLayout | None = None
 
     def report(value: int) -> None:
