@@ -169,7 +169,7 @@ impl Component for Slip39Input {
                 }
 
                 if let Some(last) = last {
-                    // Adapt a and y positions for the character
+                    // Adapt x and y positions for the character
                     cursor.y += style.font.allcase_text_height() / 2;
                     cursor.x -= Self::ICON_WIDTH;
 

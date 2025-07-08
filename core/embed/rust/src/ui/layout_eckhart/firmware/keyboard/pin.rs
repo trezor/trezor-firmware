@@ -42,7 +42,7 @@ pub struct PinKeyboard<'a> {
 }
 
 impl<'a> PinKeyboard<'a> {
-    const LAST_DIGIT_TIMEOUT_S: u32 = 1;
+    const LAST_DIGIT_TIMEOUT: Duration = Duration::from_secs(1);
 
     pub fn new(
         major_prompt: TString<'a>,
@@ -179,7 +179,7 @@ impl Component for PinKeyboard<'_> {
                     // Start the timer to show the last digit.
                     self.input
                         .last_digit_timer
-                        .start(ctx, Duration::from_secs(Self::LAST_DIGIT_TIMEOUT_S));
+                        .start(ctx, Self::LAST_DIGIT_TIMEOUT);
                     self.input.display_style = DisplayStyle::LastOnly;
                     // Update the keypad state.
                     self.update_keypad_state(ctx);
@@ -370,59 +370,57 @@ impl PinInput {
         let mut cursor = self.size().snap(hidden_area.center(), Alignment2D::CENTER);
 
         // Render only when there are characters
-        if pin_len > 0 {
-            // Number of visible icons + characters
-            let visible_len = pin_len.min(Self::MAX_SHOWN_LEN);
-            // Number of visible icons
-            let visible_icons = visible_len - last_digit as usize;
+        if pin_len == 0 {
+            return;
+        }
+        // Number of visible icons + characters
+        let visible_len = pin_len.min(Self::MAX_SHOWN_LEN);
+        // Number of visible icons
+        let visible_icons = visible_len - last_digit as usize;
 
-            // Jiggle when overflowed.
-            if pin_len > visible_len
-                && pin_len % 2 == 0
-                && self.display_style != DisplayStyle::Shown
-            {
-                cursor.x += Self::TWITCH;
+        // Jiggle when overflowed.
+        if pin_len > visible_len && pin_len % 2 == 0 && self.display_style != DisplayStyle::Shown {
+            cursor.x += Self::TWITCH;
+        }
+
+        let mut char_idx = 0;
+
+        // Greyed out overflowing icons
+        for (i, &fg_color) in FADING_ICON_COLORS.iter().enumerate() {
+            if pin_len > visible_len + (FADING_ICON_COUNT - 1 - i) {
+                ToifImage::new(cursor, Self::PIN_ICON.toif)
+                    .with_align(Alignment2D::TOP_LEFT)
+                    .with_fg(fg_color)
+                    .render(target);
+                cursor.x += Self::ICON_SPACE + Self::ICON_WIDTH;
+                char_idx += 1;
             }
+        }
 
-            let mut char_idx = 0;
-
-            // Greyed out overflowing icons
-            for (i, &fg_color) in FADING_ICON_COLORS.iter().enumerate() {
-                if pin_len > visible_len + (FADING_ICON_COUNT - 1 - i) {
-                    ToifImage::new(cursor, Self::PIN_ICON.toif)
-                        .with_align(Alignment2D::TOP_LEFT)
-                        .with_fg(fg_color)
-                        .render(target);
-                    cursor.x += Self::ICON_SPACE + Self::ICON_WIDTH;
-                    char_idx += 1;
-                }
-            }
-
-            if visible_icons > 0 {
-                // Classical icons
-                for _ in char_idx..visible_icons {
-                    ToifImage::new(cursor, Self::PIN_ICON.toif)
-                        .with_align(Alignment2D::TOP_LEFT)
-                        .with_fg(style.text_color)
-                        .render(target);
-                    cursor.x += Self::ICON_SPACE + Self::ICON_WIDTH;
-                }
-            }
-
-            if last_digit {
-                // This should not fail because all_chars > 0
-                let last = &self.digits.as_str()[(pin_len - 1)..pin_len];
-
-                // Adapt a and y positions for the character
-                cursor.y = hidden_area.left_center().y + style.text_font.allcase_text_height() / 2;
-                cursor.x -= style.text_font.text_width(last) / 2 - Self::ICON_WIDTH / 2;
-
-                // Paint the last character
-                Text::new(cursor, last, style.text_font)
-                    .with_align(Alignment::Start)
+        if visible_icons > 0 {
+            // Classical icons
+            for _ in char_idx..visible_icons {
+                ToifImage::new(cursor, Self::PIN_ICON.toif)
+                    .with_align(Alignment2D::TOP_LEFT)
                     .with_fg(style.text_color)
                     .render(target);
+                cursor.x += Self::ICON_SPACE + Self::ICON_WIDTH;
             }
+        }
+
+        if last_digit {
+            // This should not fail because pin_len > 0
+            let last = &self.digits.as_str()[(pin_len - 1)..pin_len];
+
+            // Adapt x and y positions for the character
+            cursor.y = hidden_area.left_center().y + style.text_font.allcase_text_height() / 2;
+            cursor.x -= style.text_font.text_width(last) / 2 - Self::ICON_WIDTH / 2;
+
+            // Paint the last character
+            Text::new(cursor, last, style.text_font)
+                .with_align(Alignment::Start)
+                .with_fg(style.text_color)
+                .render(target);
         }
     }
 }
