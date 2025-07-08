@@ -24,6 +24,15 @@ extern "C" fn screen_event(layout: *mut c_layout_t, signalled: &sysevents_t) -> 
 }
 
 #[no_mangle]
+extern "C" fn screen_render(layout: *mut c_layout_t) {
+    unsafe {
+        let mut layout = LayoutBuffer::<<ModelUI as BootloaderUI>::CLayoutType>::new(layout);
+        let layout = layout.get_mut();
+        layout.render()
+    }
+}
+
+#[no_mangle]
 extern "C" fn screen_welcome(layout: *mut c_layout_t) {
     let mut screen = <ModelUI as BootloaderUI>::CLayoutType::init_welcome();
     screen.show();

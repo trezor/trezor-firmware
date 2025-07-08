@@ -2,6 +2,11 @@ use crate::ui::component::Event;
 
 pub trait BootloaderLayoutType {
     fn event(&mut self, event: Option<Event>) -> u32;
+
+    fn render(&mut self) {
+        unimplemented!();
+    }
+
     fn show(&mut self);
     fn init_welcome() -> Self;
     fn init_menu(initial_setup: bool) -> Self;
