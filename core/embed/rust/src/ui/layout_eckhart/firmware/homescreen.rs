@@ -8,9 +8,9 @@ use crate::{
     time::ShortDuration,
     translations::TR,
     ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Label, Never},
+        component::{text::TextStyle, Component, Event, EventCtx, Label, Never, Swipe},
         display::{image::ImageInfo, Color},
-        geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
+        geometry::{Alignment, Alignment2D, Direction, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
         lerp::Lerp,
         shape::{self, Renderer},
@@ -52,6 +52,9 @@ pub struct Homescreen {
     virtual_locking_button: Button,
     /// Fuel gauge (battery status indicator) rendered in the `action_bar` area
     fuel_gauge: FuelGauge,
+    /// Swipe component for vertical swiping
+    swipe: Swipe,
+    // swipe_config: SwipeConfig,
 }
 
 pub enum HomescreenMsg {
@@ -105,6 +108,7 @@ impl Homescreen {
             fuel_gauge: FuelGauge::on_charging_change_or_attach()
                 .with_alignment(Alignment::Center)
                 .with_font(fonts::FONT_SATOSHI_MEDIUM_26),
+            swipe: Swipe::vertical(),
         })
     }
 
@@ -176,6 +180,9 @@ impl Component for Homescreen {
         debug_assert_eq!(bounds.height(), SCREEN.height());
         debug_assert_eq!(bounds.width(), SCREEN.width());
 
+        // Enable swiping over the entire screen.
+        self.swipe.place(bounds);
+
         let (rest, bar_area) = bounds.split_bottom(theme::ACTION_BAR_HEIGHT);
         let rest = if let Some(hint) = &mut self.hint {
             let (rest, hint_area) = rest.split_bottom(hint.height());
@@ -199,6 +206,15 @@ impl Component for Homescreen {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.event_fuel_gauge(ctx, event);
+
+        if let Some(Direction::Up) = self.swipe.event(ctx, event) {
+            if self.locked {
+                return Some(HomescreenMsg::Dismissed);
+            } else {
+                return Some(HomescreenMsg::Menu);
+            }
+        }
+
         if let Some(ActionBarMsg::Confirmed) = self.action_bar.event(ctx, event) {
             if self.locked {
                 return Some(HomescreenMsg::Dismissed);
