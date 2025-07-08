@@ -248,6 +248,17 @@ impl Default for Pager {
     }
 }
 
+/// `DisplayStyle` is used to determine whether the text is fully hidden, fully
+/// shown, or partially visible.
+#[derive(PartialEq, Debug, Copy, Clone)]
+#[cfg_attr(feature = "ui_debug", derive(ufmt::derive::uDebug))]
+pub enum DisplayStyle {
+    Hidden,
+    Shown,
+    LastOnly,
+    LastWithMarker,
+}
+
 #[cfg(test)]
 mod tests {
     use crate::strutil;

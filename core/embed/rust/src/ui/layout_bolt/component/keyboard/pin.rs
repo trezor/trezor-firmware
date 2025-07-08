@@ -12,6 +12,7 @@ use crate::{
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Grid, Insets, Offset, Rect},
         shape::{self, Renderer},
+        util::DisplayStyle,
     },
 };
 
@@ -219,7 +220,7 @@ impl Component for PinKeyboard<'_> {
             // Timeout for showing the last digit.
             Event::Timer(_) if self.timeout_timer.expire(event) => {
                 self.textbox
-                    .mutate(ctx, |_ctx, t| t.set_display_style(DisplayStyle::Dots));
+                    .mutate(ctx, |_ctx, t| t.set_display_style(DisplayStyle::Hidden));
                 self.textbox.request_complete_repaint(ctx);
                 ctx.request_paint();
             }
@@ -256,7 +257,7 @@ impl Component for PinKeyboard<'_> {
                     self.timeout_timer
                         .start(ctx, Duration::from_secs(LAST_DIGIT_TIMEOUT_S));
                     self.textbox
-                        .mutate(ctx, |_ctx, t| t.set_display_style(DisplayStyle::LastDigit));
+                        .mutate(ctx, |_ctx, t| t.set_display_style(DisplayStyle::LastOnly));
                     self.textbox.request_complete_repaint(ctx);
                     ctx.request_paint();
                     return None;
@@ -295,14 +296,6 @@ struct PinDots {
     display_style: DisplayStyle,
 }
 
-#[derive(PartialEq, Debug, Copy, Clone)]
-#[cfg_attr(feature = "ui_debug", derive(ufmt::derive::uDebug))]
-enum DisplayStyle {
-    Dots,
-    Digits,
-    LastDigit,
-}
-
 impl PinDots {
     const DOT: i16 = 6;
     const PADDING: i16 = 6;
@@ -316,7 +309,7 @@ impl PinDots {
             pad: Pad::with_background(style.background_color),
             style,
             digits,
-            display_style: DisplayStyle::Dots,
+            display_style: DisplayStyle::Hidden,
         }
     }
 
@@ -449,14 +442,15 @@ impl Component for PinDots {
         match event {
             Event::Touch(TouchEvent::TouchStart(pos)) => {
                 if self.area.contains(pos) {
-                    self.display_style = DisplayStyle::Digits;
+                    self.display_style = DisplayStyle::Shown;
                     self.pad.clear();
                     ctx.request_paint();
                 };
                 None
             }
             Event::Touch(TouchEvent::TouchEnd(_)) => {
-                if mem::replace(&mut self.display_style, DisplayStyle::Dots) == DisplayStyle::Digits
+                if mem::replace(&mut self.display_style, DisplayStyle::Hidden)
+                    == DisplayStyle::Shown
                 {
                     self.pad.clear();
                     ctx.request_paint();
@@ -472,9 +466,10 @@ impl Component for PinDots {
         self.pad.render(target);
 
         match self.display_style {
-            DisplayStyle::Digits => self.render_digits(dot_area, target),
-            DisplayStyle::Dots => self.render_dots(false, dot_area, target),
-            DisplayStyle::LastDigit => self.render_dots(true, dot_area, target),
+            DisplayStyle::Shown => self.render_digits(dot_area, target),
+            DisplayStyle::Hidden => self.render_dots(false, dot_area, target),
+            DisplayStyle::LastOnly => self.render_dots(true, dot_area, target),
+            _ => {}
         }
     }
 }
