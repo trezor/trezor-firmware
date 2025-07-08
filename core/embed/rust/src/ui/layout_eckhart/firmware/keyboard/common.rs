@@ -131,17 +131,6 @@ pub fn render_pending_marker<'s>(
     }
 }
 
-/// `DisplayStyle` isused to determine whether the text is fully hidden, fully
-/// shown, or partially visible.
-#[derive(PartialEq, Debug, Copy, Clone)]
-#[cfg_attr(feature = "ui_debug", derive(ufmt::derive::uDebug))]
-pub(crate) enum DisplayStyle {
-    Hidden,
-    Shown,
-    LastOnly,
-    LastWithMarker,
-}
-
 /// The number and colors of fading icons to display.
 pub const FADING_ICON_COUNT: usize = 4;
 pub const FADING_ICON_COLORS: [Color; FADING_ICON_COUNT] = [
