@@ -27,8 +27,6 @@
 #include "rust_ui_bootloader.h"
 #include "version.h"
 
-#define BACKLIGHT_NORMAL 150
-
 #define TOIF_LENGTH(ptr) ((*(uint32_t *)((ptr) + 8)) + 12)
 
 // common shared functions

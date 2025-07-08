@@ -16,9 +16,13 @@ use crate::trezorhal::sysevent::{sysevents_poll, Syshandle};
 #[cfg(feature = "power_manager")]
 use crate::{
     time::Instant,
-    trezorhal::power_manager::{is_usb_connected, suspend},
+    trezorhal::power_manager::{hibernate, is_usb_connected, suspend},
     ui::display::fade_backlight_duration,
+    ui::event::PhysicalButton,
 };
+
+#[cfg(all(feature = "haptic", feature = "power_manager"))]
+use crate::trezorhal::haptic::{play, HapticEffect};
 
 use heapless::Vec;
 use num_traits::ToPrimitive;
@@ -98,6 +102,10 @@ pub fn run(frame: &mut impl Component<Msg = impl ReturnToC>) -> u32 {
     render(frame);
     ModelUI::fadein();
 
+    #[cfg(all(feature = "power_manager", feature = "haptic"))]
+    let mut haptic_played = false;
+    #[cfg(feature = "power_manager")]
+    let mut button_pressed_time = None;
     #[cfg(feature = "power_manager")]
     let mut start = Instant::now();
     let mut faded = false;
@@ -132,6 +140,39 @@ pub fn run(frame: &mut impl Component<Msg = impl ReturnToC>) -> u32 {
             #[cfg(feature = "power_manager")]
             {
                 start = Instant::now();
+
+                if e == Event::Button(ButtonEvent::ButtonPressed(PhysicalButton::Power)) {
+                    button_pressed_time = Some(Instant::now());
+
+                    #[cfg(feature = "haptic")]
+                    {
+                        haptic_played = false;
+                    }
+                } else if e == Event::Button(ButtonEvent::ButtonReleased(PhysicalButton::Power)) {
+                    if let Some(t) = button_pressed_time {
+                        if let Some(elapsed) = Instant::now().checked_duration_since(t) {
+                            ModelUI::fadeout();
+                            if elapsed.to_secs() >= 3 {
+                                #[cfg(feature = "haptic")]
+                                {
+                                    if !haptic_played {
+                                        play(HapticEffect::BootloaderEntry);
+                                        haptic_played = true;
+                                    }
+                                }
+                                hibernate();
+                            } else {
+                                suspend();
+                                render(frame);
+                                ModelUI::fadein();
+
+                                faded = false;
+                                button_pressed_time = None;
+                                start = Instant::now();
+                            }
+                        }
+                    }
+                }
             }
 
             let mut ctx = EventCtx::new();
@@ -145,6 +186,18 @@ pub fn run(frame: &mut impl Component<Msg = impl ReturnToC>) -> u32 {
         } else {
             #[cfg(feature = "power_manager")]
             {
+                #[cfg(feature = "haptic")]
+                {
+                    if let Some(t) = button_pressed_time {
+                        if let Some(elapsed) = Instant::now().checked_duration_since(t) {
+                            if elapsed.to_secs() >= 3 && !haptic_played {
+                                play(HapticEffect::BootloaderEntry);
+                                haptic_played = true;
+                            }
+                        }
+                    }
+                }
+
                 if is_usb_connected() {
                     continue;
                 }
@@ -164,6 +217,7 @@ pub fn run(frame: &mut impl Component<Msg = impl ReturnToC>) -> u32 {
                             faded = false;
                         }
                         start = Instant::now();
+                        button_pressed_time = None;
                     }
                 }
             }

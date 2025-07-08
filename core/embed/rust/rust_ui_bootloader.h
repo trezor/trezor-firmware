@@ -11,6 +11,9 @@
 // common event function for screens that need UI + communication
 uint32_t screen_event(c_layout_t* layout, sysevents_t* signalled);
 
+// common render event
+void screen_render(c_layout_t* layout);
+
 // result screens
 void screen_wipe_success(void);
 void screen_wipe_fail(void);

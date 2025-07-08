@@ -2,7 +2,7 @@ use crate::ui::{
     component::{Event, Label},
     display::{self, toif::Toif, Color},
     geometry::{Alignment, Alignment2D, Offset, Point, Rect},
-    layout::simplified::{process_frame_event, run, show},
+    layout::simplified::{process_frame_event, render, run, show},
     shape::{self, render_on_display},
     ui_bootloader::{BootloaderLayoutType, BootloaderUI},
     CommonUI,
@@ -106,6 +106,18 @@ impl BootloaderLayoutType for BootloaderLayout {
             BootloaderLayout::WirelessSetup(f) => {
                 process_frame_event::<WirelessSetupScreen>(f, event)
             }
+        }
+    }
+
+    fn render(&mut self) {
+        match self {
+            BootloaderLayout::Welcome(f) => render(f),
+            BootloaderLayout::Menu(f) => render(f),
+            BootloaderLayout::Connect(f) => render(f),
+            #[cfg(feature = "ble")]
+            BootloaderLayout::PairingMode(f) => render(f),
+            #[cfg(feature = "ble")]
+            BootloaderLayout::WirelessSetup(f) => render(f),
         }
     }
 
