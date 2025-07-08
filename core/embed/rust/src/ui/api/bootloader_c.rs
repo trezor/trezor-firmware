@@ -212,16 +212,6 @@ extern "C" fn screen_wireless_setup(
 
 #[cfg(feature = "ble")]
 #[no_mangle]
-extern "C" fn screen_wireless_setup_final(layout: *mut c_layout_t) {
-    let mut screen = <ModelUI as BootloaderUI>::CLayoutType::init_wireless_setup_final();
-    screen.show();
-    // SAFETY: calling code is supposed to give us exclusive access to the layout
-    let mut layout = unsafe { LayoutBuffer::new(layout) };
-    layout.store(screen);
-}
-
-#[cfg(feature = "ble")]
-#[no_mangle]
 extern "C" fn screen_pairing_mode_finalizing(initial_setup: bool) -> u32 {
     ModelUI::screen_pairing_mode_finalizing(initial_setup)
 }

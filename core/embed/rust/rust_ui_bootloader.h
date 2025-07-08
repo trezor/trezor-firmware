@@ -97,8 +97,3 @@ typedef enum {
 } wireless_setup_result_t;
 void screen_wireless_setup(const char* name, size_t name_len,
                            c_layout_t* layout);
-
-typedef enum {
-  WIRELESS_SETUP_FINAL_CANCEL = 1,
-} wireless_setup_final_result_t;
-void screen_wireless_setup_final(c_layout_t* layout);

@@ -197,17 +197,7 @@ workflow_result_t workflow_wireless_setup(const vendor_header *const vhdr,
     }
   }
 
-  memset(&layout, 0, sizeof(layout));
-  screen_wireless_setup_final(&layout);
-
-  uint32_t ui_result = 0;
-  res = workflow_host_control(vhdr, hdr, &layout, &ui_result, ios);
-
-  if (ui_result == WIRELESS_SETUP_FINAL_CANCEL) {
-    return WF_OK_PAIRING_COMPLETED;
-  }
-
-  return res;
+  return WF_OK_PAIRING_COMPLETED;
 }
 
 #endif
