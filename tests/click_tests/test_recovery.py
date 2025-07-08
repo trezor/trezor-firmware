@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import time
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Generator
 
@@ -23,6 +24,8 @@ from trezorlib import device, exceptions, messages
 
 from ..common import MNEMONIC12, LayoutType, MNEMONIC_SLIP39_BASIC_20_3of6
 from . import recovery
+from .common import go_next
+from .test_autolock import PIN4, set_autolock_delay, unlock_dry_run
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink
@@ -152,3 +155,54 @@ def test_recovery_cancel_issue4613(device_handler: "BackgroundDeviceHandler"):
     assert layout.main_component() == "Homescreen"
     features = device_handler.client.refresh_features()
     assert features.recovery_status == messages.RecoveryStatus.Nothing
+
+
+@pytest.mark.models(skip=["legacy", "safe3"])
+@pytest.mark.setup_client(pin=PIN4)
+def test_recovery_slip39_issue5306(device_handler: "BackgroundDeviceHandler"):
+    """Test for issue fixed in PR #5306: After tapping the key more times
+    than its length, there was an internal error UF."""
+
+    set_autolock_delay(device_handler, 10_000)
+    debug = device_handler.debuglink()
+
+    device_handler.run(device.recover, type=messages.RecoveryType.DryRun)
+
+    unlock_dry_run(debug)
+
+    # select 20 words
+    recovery.select_number_of_words(debug, 20)
+
+    # go to mnemonic keyboard
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
+        layout = go_next(debug)
+        assert layout.main_component() == "MnemonicKeyboard"
+    elif debug.layout_type is LayoutType.Caesar:
+        debug.press_right()
+        layout = debug.read_layout()
+        assert "MnemonicKeyboard" in layout.all_components()
+    else:
+        raise ValueError(f"Unsupported layout type: {debug.layout_type}")
+
+    # click the first key multiple times (more times than its length) to trigger the issue
+    coords = list(debug.button_actions.type_word("a", is_slip39=True))
+    for _ in range(3):
+        debug.click(coords[0])
+
+    # Make sure, the keyboard did not crash
+    layout = debug.read_layout()
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
+        assert layout.main_component() == "MnemonicKeyboard"
+    elif debug.layout_type is LayoutType.Caesar:
+        assert "MnemonicKeyboard" in layout.all_components()
+    else:
+        raise ValueError(f"Unsupported layout type: {debug.layout_type}")
+
+    # wait for the keyboard to lock
+    time.sleep(10.1)
+    if debug.layout_type is LayoutType.Eckhart:
+        assert debug.read_layout().main_component() == "Homescreen"
+    else:
+        assert debug.read_layout().main_component() == "Lockscreen"
+    with pytest.raises(exceptions.Cancelled):
+        device_handler.result()
