@@ -558,7 +558,7 @@ impl PassphraseInput {
                 // This should not fail because pp_len > 0
                 let last = &self.passphrase()[(pp_len - 1)..pp_len];
 
-                // Adapt a and y positions for the character
+                // Adapt x and y positions for the character
                 cursor.y = hidden_area.left_center().y + style.text_font.text_max_height() / 2;
                 cursor.x -= Self::ICON_WIDTH;
 

@@ -13,7 +13,7 @@ use crate::{
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Direction, Grid, Insets, Offset, Rect},
         layout::util::DisplayStyle,
-        shape::{self, Renderer},
+        shape::{Bar, Renderer, Text, ToifImage},
         util::animation_disabled,
     },
 };
@@ -36,8 +36,7 @@ pub enum PinKeyboardMsg {
 }
 
 const MAX_LENGTH: usize = 50;
-const MAX_VISIBLE_DOTS: usize = 18;
-const MAX_VISIBLE_DIGITS: usize = 18;
+const MAX_SHOWN_LEN: usize = 18;
 const DIGIT_COUNT: usize = 10; // 0..10
 
 const HEADER_PADDING_TOP: i16 = 4;
@@ -518,7 +517,7 @@ impl Component for PinKeyboard<'_> {
             self.textbox.render(target);
         }
 
-        shape::Bar::new(self.textbox_area)
+        Bar::new(self.textbox_area)
             .with_bg(theme::label_default().background_color)
             .with_fg(theme::label_default().background_color)
             .with_alpha(255 - self.get_textbox_alpha(t_attach, t_close))
@@ -545,8 +544,8 @@ struct PinDots {
 }
 
 impl PinDots {
-    const DOT: i16 = 6;
-    const PADDING: i16 = 7;
+    const ICON_WIDTH: i16 = 6;
+    const ICON_SPACING: i16 = 7;
     const TWITCH: i16 = 4;
 
     fn new(style: TextStyle) -> Self {
@@ -560,10 +559,10 @@ impl PinDots {
     }
 
     fn size(&self) -> Offset {
-        let ndots = self.digits.len().min(MAX_VISIBLE_DOTS);
-        let mut width = Self::DOT * (ndots as i16);
-        width += Self::PADDING * (ndots.saturating_sub(1) as i16);
-        Offset::new(width, Self::DOT)
+        let ndots = self.digits.len().min(MAX_SHOWN_LEN);
+        let mut width = Self::ICON_WIDTH * (ndots as i16);
+        width += Self::ICON_SPACING * (ndots.saturating_sub(1) as i16);
+        Offset::new(width, Self::ICON_WIDTH)
     }
 
     fn is_empty(&self) -> bool {
@@ -597,78 +596,96 @@ impl PinDots {
         &self.digits
     }
 
-    fn render_digits<'s>(&self, area: Rect, target: &mut impl Renderer<'s>) {
-        let left = area.left_center() + Offset::y(FONT_MONO.visible_text_height("1") / 2);
-        let digits = self.digits.len();
+    fn render_shown<'s>(&self, area: Rect, target: &mut impl Renderer<'s>) {
+        // Make sure the pin should be shown
+        debug_assert_eq!(self.display_style, DisplayStyle::Shown);
 
-        if digits <= MAX_VISIBLE_DIGITS {
-            shape::Text::new(left, &self.digits, FONT_MONO)
-                .with_align(Alignment::Start)
-                .with_fg(self.style.text_color)
-                .render(target);
+        let left = area.left_center() + Offset::y(FONT_MONO.visible_text_height("1") / 2);
+        let pin_len = self.digits.len();
+
+        let offset = pin_len.saturating_sub(MAX_SHOWN_LEN);
+        let visible_digits = if pin_len <= MAX_SHOWN_LEN {
+            &self.digits
         } else {
-            let offset: usize = digits.saturating_sub(MAX_VISIBLE_DIGITS);
-            shape::Text::new(left, &self.digits[offset..], FONT_MONO)
-                .with_align(Alignment::Start)
-                .with_fg(self.style.text_color)
-                .render(target);
-        }
+            &self.digits[offset..]
+        };
+
+        Text::new(left, visible_digits, FONT_MONO)
+            .with_align(Alignment::Start)
+            .with_fg(self.style.text_color)
+            .render(target);
     }
 
-    fn render_dots<'s>(&self, last_digit: bool, area: Rect, target: &mut impl Renderer<'s>) {
+    fn render_hidden<'s>(&self, area: Rect, target: &mut impl Renderer<'s>) {
+        debug_assert_ne!(self.display_style, DisplayStyle::Shown);
+
         let mut cursor = area.left_center();
 
-        let digits = self.digits.len();
-        let dots_visible = digits.min(MAX_VISIBLE_DOTS);
-        let step = Self::DOT + Self::PADDING;
+        let pin_len = self.digits.len();
+        let last_digit = self.display_style == DisplayStyle::LastOnly;
+        let step = Self::ICON_WIDTH + Self::ICON_SPACING;
 
-        // Jiggle when overflowed.
-        if digits > MAX_VISIBLE_DOTS + 1 && (digits + 1) % 2 == 0 {
-            cursor.x += Self::TWITCH
-        }
+        // Render only when there are characters
+        if pin_len > 0 {
+            // Number of visible icons + characters
+            let visible_len = pin_len.min(MAX_SHOWN_LEN);
+            // Number of visible icons
+            let visible_icons = visible_len - last_digit as usize;
 
-        let mut digit_idx = 0;
-        // Small leftmost dot.
-        if digits > MAX_VISIBLE_DOTS + 1 {
-            shape::ToifImage::new(cursor, theme::DOT_SMALL.toif)
-                .with_align(Alignment2D::CENTER_LEFT)
-                .with_fg(theme::GREY)
-                .render(target);
-            cursor.x += step;
-            digit_idx += 1;
-        }
+            // Jiggle when overflowed.
+            if pin_len > visible_len
+                && pin_len % 2 == 0
+                && self.display_style != DisplayStyle::Shown
+            {
+                cursor.x += Self::TWITCH;
+            }
 
-        // Greyed out dot.
-        if digits > MAX_VISIBLE_DOTS {
-            shape::ToifImage::new(cursor, theme::DOT_SMALL.toif)
-                .with_align(Alignment2D::CENTER_LEFT)
-                .with_fg(self.style.text_color)
-                .render(target);
-            cursor.x += step;
-            digit_idx += 1;
-        }
+            let mut char_idx = 0;
 
-        // Draw a dot for each PIN digit.
-        for _ in digit_idx..dots_visible - 1 {
-            shape::ToifImage::new(cursor, theme::ICON_PIN_BULLET.toif)
-                .with_align(Alignment2D::CENTER_LEFT)
-                .with_fg(self.style.text_color)
-                .render(target);
-            cursor.x += step;
-        }
+            // Small leftmost dot.
+            if pin_len > MAX_SHOWN_LEN + 1 {
+                ToifImage::new(cursor, theme::DOT_SMALL.toif)
+                    .with_align(Alignment2D::CENTER_LEFT)
+                    .with_fg(theme::GREY)
+                    .render(target);
+                cursor.x += step;
+                char_idx += 1;
+            }
 
-        if last_digit && digits > 0 {
-            let last = &self.digits[(digits - 1)..digits];
-            cursor.y = area.left_center().y + (FONT_MONO.visible_text_height("1") / 2);
-            shape::Text::new(cursor, last, FONT_MONO)
-                .with_align(Alignment::Start)
-                .with_fg(self.style.text_color)
-                .render(target);
-        } else {
-            shape::ToifImage::new(cursor, theme::ICON_PIN_BULLET.toif)
-                .with_align(Alignment2D::CENTER_LEFT)
-                .with_fg(self.style.text_color)
-                .render(target);
+            // Greyed out dot.
+            if pin_len > MAX_SHOWN_LEN {
+                ToifImage::new(cursor, theme::DOT_SMALL.toif)
+                    .with_align(Alignment2D::CENTER_LEFT)
+                    .with_fg(self.style.text_color)
+                    .render(target);
+                cursor.x += step;
+                char_idx += 1;
+            }
+
+            if visible_icons > 0 {
+                // Classical icons
+                for _ in char_idx..visible_icons {
+                    ToifImage::new(cursor, theme::ICON_PIN_BULLET.toif)
+                        .with_align(Alignment2D::CENTER_LEFT)
+                        .with_fg(self.style.text_color)
+                        .render(target);
+                    cursor.x += step;
+                }
+            }
+
+            if last_digit {
+                // This should not fail because all_chars > 0
+                let last = &self.digits.as_str()[(pin_len - 1)..pin_len];
+
+                // Adapt x and y positions for the character
+                cursor.y = area.left_center().y + (FONT_MONO.visible_text_height("1") / 2);
+
+                // Paint the last character
+                Text::new(cursor, last, FONT_MONO)
+                    .with_align(Alignment::Start)
+                    .with_fg(self.style.text_color)
+                    .render(target);
+            }
         }
     }
 }
@@ -706,13 +723,14 @@ impl Component for PinDots {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let dot_area = self.area.inset(HEADER_PADDING);
+        let pin_area = self.area.inset(HEADER_PADDING);
         self.pad.render(target);
-        match self.display_style {
-            DisplayStyle::Shown => self.render_digits(dot_area, target),
-            DisplayStyle::Hidden => self.render_dots(false, dot_area, target),
-            DisplayStyle::LastOnly => self.render_dots(true, dot_area, target),
-            _ => {}
+
+        if !self.digits.is_empty() {
+            match self.display_style {
+                DisplayStyle::Shown => self.render_shown(pin_area, target),
+                _ => self.render_hidden(pin_area, target),
+            }
         }
     }
 }

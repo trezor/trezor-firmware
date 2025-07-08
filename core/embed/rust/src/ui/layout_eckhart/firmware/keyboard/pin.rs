@@ -413,7 +413,7 @@ impl PinInput {
                 // This should not fail because all_chars > 0
                 let last = &self.digits.as_str()[(pin_len - 1)..pin_len];
 
-                // Adapt a and y positions for the character
+                // Adapt x and y positions for the character
                 cursor.y = hidden_area.left_center().y + style.text_font.allcase_text_height() / 2;
                 cursor.x -= style.text_font.text_width(last) / 2 - Self::ICON_WIDTH / 2;
 
