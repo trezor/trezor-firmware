@@ -179,11 +179,6 @@ impl BootloaderLayoutType for BootloaderLayout {
     fn init_wireless_setup(_name: &'static str) -> Self {
         unimplemented!()
     }
-
-    #[cfg(feature = "ble")]
-    fn init_wireless_setup_final() -> Self {
-        unimplemented!()
-    }
 }
 impl BootloaderUI for UIDelizia {
     type CLayoutType = BootloaderLayout;

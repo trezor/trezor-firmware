@@ -173,15 +173,6 @@ impl BootloaderLayoutType for BootloaderLayout {
             .with_action_bar(BldActionBar::new_single(btn));
         Self::WirelessSetup(screen)
     }
-
-    #[cfg(feature = "ble")]
-    fn init_wireless_setup_final() -> Self {
-        // todo implement correct UI
-        let btn = Button::with_text("Cancel".into()).styled(button_default());
-        let screen =
-            ConnectScreen::new("WAIT".into()).with_action_bar(BldActionBar::new_single(btn));
-        Self::WirelessSetupFinal(screen)
-    }
 }
 
 impl BootloaderUI for UIEckhart {
