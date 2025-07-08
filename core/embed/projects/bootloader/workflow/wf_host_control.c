@@ -31,8 +31,16 @@
 #include "wire/wire_iface_usb.h"
 #include "workflow.h"
 
+#ifdef USE_HAPTIC
+#include <io/haptic.h>
+#endif
+
 #ifdef USE_BLE
 #include <wire/wire_iface_ble.h>
+#endif
+
+#ifdef USE_BUTTON
+#include <io/button.h>
 #endif
 
 #ifdef USE_POWER_MANAGER
@@ -53,6 +61,10 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
   workflow_result_t result = WF_ERROR_FATAL;
 
 #ifdef USE_POWER_MANAGER
+  uint32_t button_deadline = 0;
+#ifdef USE_HAPTIC
+  bool button_haptic_played = false;
+#endif
   uint32_t fade_deadline = ticks_timeout(FADE_TIME_MS);
   uint32_t suspend_deadline = ticks_timeout(SUSPEND_TIME_MS);
   bool faded = false;
@@ -86,6 +98,16 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
     sysevents_poll(&awaited, &signalled, ticks_timeout(100));
 
 #ifdef USE_POWER_MANAGER
+
+#ifdef USE_HAPTIC
+    if (button_deadline != 0 && !button_haptic_played &&
+        ticks_expired(button_deadline)) {
+      // we reached hibernation time
+      haptic_play(HAPTIC_BOOTLOADER_ENTRY);
+      button_haptic_played = true;
+    }
+#endif
+
     if (signalled.read_ready == 0) {
       pm_state_t pm_state = {0};
 
@@ -106,7 +128,9 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
 
       if (ticks_expired(suspend_deadline)) {
         pm_suspend(NULL);
+        screen_render(wait_layout);
         display_fade(display_get_backlight(), fade_value, 200);
+        button_deadline = 0;
         faded = false;
         fade_deadline = ticks_timeout(FADE_TIME_MS);
         suspend_deadline = ticks_timeout(SUSPEND_TIME_MS);
@@ -120,6 +144,44 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
       display_fade(display_get_backlight(), fade_value, 200);
       faded = false;
     }
+
+    // in case of battery powered device, power button is handled by eventloop
+    if (signalled.read_ready & (1 << SYSHANDLE_BUTTON)) {
+      button_event_t btn_event = {0};
+      // todo this eats all button events, not only power button, so it needs to
+      //  be handled differently for button-based battery powered devices.
+      if (button_get_event(&btn_event) && btn_event.button == BTN_POWER) {
+        if (btn_event.event_type == BTN_EVENT_DOWN) {
+          button_deadline = ticks_timeout(3000);
+#ifdef USE_HAPTIC
+          button_haptic_played = false;
+#endif
+        } else if (btn_event.event_type == BTN_EVENT_UP &&
+                   button_deadline != 0) {
+          display_fade(display_get_backlight(), 0, 200);
+          if (ticks_expired(button_deadline)) {
+            // power button pressed for 3 seconds, we hibernate
+
+#ifdef USE_HAPTIC
+            if (!button_haptic_played) {
+              haptic_play(HAPTIC_BOOTLOADER_ENTRY);
+              button_haptic_played = true;
+            }
+#endif
+            pm_hibernate();
+          } else {
+            pm_suspend(NULL);
+            button_deadline = 0;
+            screen_render(wait_layout);
+            display_fade(display_get_backlight(), BACKLIGHT_NORMAL, 200);
+            faded = false;
+            fade_deadline = ticks_timeout(FADE_TIME_MS);
+            suspend_deadline = ticks_timeout(SUSPEND_TIME_MS);
+          }
+        }
+      }
+    }
+
 #else
     if (signalled.read_ready == 0) {
       continue;
