@@ -17,7 +17,7 @@ use crate::{
         flow::Swipable,
         geometry::{Alignment, Alignment2D, Direction, Insets, Offset, Rect},
         shape::{Bar, Renderer, Text, ToifImage},
-        util::Pager,
+        util::{DisplayStyle, Pager},
     },
 };
 
@@ -26,8 +26,8 @@ use super::super::{
     constant::SCREEN,
     keyboard::{
         common::{
-            render_pending_marker, DisplayStyle, MultiTapKeyboard, FADING_ICON_COLORS,
-            FADING_ICON_COUNT, INPUT_TOUCH_HEIGHT, KEYBOARD_INPUT_INSETS, KEYBOARD_INPUT_RADIUS,
+            render_pending_marker, MultiTapKeyboard, FADING_ICON_COLORS, FADING_ICON_COUNT,
+            INPUT_TOUCH_HEIGHT, KEYBOARD_INPUT_INSETS, KEYBOARD_INPUT_RADIUS,
             KEYPAD_VISIBLE_HEIGHT,
         },
         keypad::{ButtonState, Keypad, KeypadButton, KeypadMsg, KeypadState},
