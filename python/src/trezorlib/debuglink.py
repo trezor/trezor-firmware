@@ -500,6 +500,7 @@ class DebugLink:
 
         self.waiting_for_layout_change = False
 
+        self.input_wait_type = DebugWaitType.IMMEDIATE
         self.prev_gc_info: dict[str, int] = {}
 
     @property
@@ -763,8 +764,10 @@ class DebugLink:
 
         if wait is True:
             wait_type = DebugWaitType.CURRENT_LAYOUT
-        else:
+        elif wait is False:
             wait_type = DebugWaitType.IMMEDIATE
+        else:
+            wait_type = self.input_wait_type
 
         # When the call below returns, we know that `decision` has been processed in Core.
         # XXX Due to a bug, the reply may get lost at the end of a workflow.
