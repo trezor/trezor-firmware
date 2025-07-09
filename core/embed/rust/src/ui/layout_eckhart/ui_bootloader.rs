@@ -133,8 +133,6 @@ impl BootloaderLayoutType for BootloaderLayout {
     }
 
     fn init_welcome() -> Self {
-        // TODO: different UI. needs to decide based on some host already paired:
-        // peer_count() > 0
         let screen = BldWelcomeScreen::new();
         Self::Welcome(screen)
     }
