@@ -49,7 +49,7 @@ const HEADER_PADDING: Insets = Insets::new(
     HEADER_PADDING_SIDE,
 );
 
-const LAST_DIGIT_TIMEOUT_S: u32 = 1;
+const LAST_DIGIT_TIMEOUT: Duration = Duration::from_secs(1);
 
 #[derive(Default, Clone)]
 struct AttachAnimation {
@@ -262,7 +262,6 @@ pub struct PinKeyboard<'a> {
     attach_animation: AttachAnimation,
     close_animation: CloseAnimation,
     close_confirm: bool,
-    timeout_timer: Timer,
 }
 
 impl<'a> PinKeyboard<'a> {
@@ -302,7 +301,6 @@ impl<'a> PinKeyboard<'a> {
             attach_animation: AttachAnimation::default(),
             close_animation: CloseAnimation::default(),
             close_confirm: false,
-            timeout_timer: Timer::new(),
         }
     }
 
@@ -429,12 +427,6 @@ impl Component for PinKeyboard<'_> {
                 self.minor_prompt.request_complete_repaint(ctx);
                 ctx.request_paint();
             }
-            // Timeout for showing the last digit.
-            Event::Timer(_) if self.timeout_timer.expire(event) => {
-                self.textbox.display_style = DisplayStyle::Hidden;
-                self.textbox.request_complete_repaint(ctx);
-                ctx.request_paint();
-            }
             _ => {}
         }
 
@@ -480,8 +472,7 @@ impl Component for PinKeyboard<'_> {
                         self.textbox.push(ctx, text);
                     });
                     self.pin_modified(ctx);
-                    self.timeout_timer
-                        .start(ctx, Duration::from_secs(LAST_DIGIT_TIMEOUT_S));
+                    self.textbox.last_digit_timer.start(ctx, LAST_DIGIT_TIMEOUT);
                     self.textbox.display_style = DisplayStyle::LastOnly;
                     self.textbox.request_complete_repaint(ctx);
                     ctx.request_paint();
@@ -540,6 +531,7 @@ struct PinDots {
     style: TextStyle,
     digits: ShortString,
     display_style: DisplayStyle,
+    last_digit_timer: Timer,
 }
 
 impl PinDots {
@@ -554,6 +546,7 @@ impl PinDots {
             style,
             digits: ShortString::new(),
             display_style: DisplayStyle::Hidden,
+            last_digit_timer: Timer::new(),
         }
     }
 
@@ -632,8 +625,8 @@ impl PinDots {
             let visible_icons = visible_len - last_digit as usize;
 
             // Jiggle when overflowed.
-            if pin_len > visible_len
-                && pin_len % 2 == 0
+            if pin_len > visible_len + 2
+                && pin_len % 2 == 1
                 && self.display_style != DisplayStyle::Shown
             {
                 cursor.x += Self::TWITCH;
@@ -700,12 +693,12 @@ impl Component for PinDots {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         match event {
-            Event::Touch(TouchEvent::TouchStart(pos)) => {
-                if self.area.contains(pos) {
-                    self.display_style = DisplayStyle::Shown;
-                    self.pad.clear();
-                    ctx.request_paint();
-                };
+            Event::Touch(TouchEvent::TouchStart(pos)) if self.area.contains(pos) => {
+                // Stop the last char timer
+                self.last_digit_timer.stop();
+                self.display_style = DisplayStyle::Shown;
+                self.pad.clear();
+                ctx.request_paint();
                 None
             }
             Event::Touch(TouchEvent::TouchEnd(_)) => {
@@ -715,6 +708,13 @@ impl Component for PinDots {
                     self.pad.clear();
                     ctx.request_paint();
                 };
+                None
+            }
+            // Timeout for showing the last digit.
+            Event::Timer(_) if self.last_digit_timer.expire(event) => {
+                self.display_style = DisplayStyle::Hidden;
+                self.request_complete_repaint(ctx);
+                ctx.request_paint();
                 None
             }
             _ => None,

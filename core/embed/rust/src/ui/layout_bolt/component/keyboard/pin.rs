@@ -46,7 +46,7 @@ const HEADER_PADDING: Insets = Insets::new(
     HEADER_PADDING_SIDE,
 );
 
-const LAST_DIGIT_TIMEOUT_S: u32 = 1;
+const LAST_DIGIT_TIMEOUT: Duration = Duration::from_secs(1);
 
 pub struct PinKeyboard<'a> {
     allow_cancel: bool,
@@ -246,11 +246,10 @@ impl Component for PinKeyboard<'_> {
                     });
                     self.pin_modified(ctx);
                     self.textbox.mutate(ctx, |ctx, t| {
-                        t.last_digit_timer
-                            .start(ctx, Duration::from_secs(LAST_DIGIT_TIMEOUT_S))
+                        t.last_digit_timer.start(ctx, LAST_DIGIT_TIMEOUT)
                     });
                     self.textbox
-                        .mutate(ctx, |_ctx, t| t.set_display_style(DisplayStyle::LastOnly));
+                        .mutate(ctx, |_ctx, t| t.display_style = DisplayStyle::LastOnly);
                     self.textbox.request_complete_repaint(ctx);
                     ctx.request_paint();
                     return None;
@@ -306,10 +305,6 @@ impl PinInput {
             last_digit_timer: Timer::new(),
             display_style: DisplayStyle::Hidden,
         }
-    }
-
-    fn set_display_style(&mut self, display_style: DisplayStyle) {
-        self.display_style = display_style;
     }
 
     fn size(&self) -> Offset {
@@ -390,8 +385,8 @@ impl PinInput {
             let visible_icons = visible_len - last_digit as usize;
 
             // Jiggle when overflowed.
-            if pin_len > visible_len
-                && pin_len % 2 == 0
+            if pin_len > visible_len + 2
+                && pin_len % 2 == 1
                 && self.display_style != DisplayStyle::Shown
             {
                 cursor.x += Self::TWITCH;
