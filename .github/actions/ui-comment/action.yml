@@ -18,7 +18,5 @@ runs:
       with:
         comment-id: ${{ steps.fc.outputs.comment-id }}
         issue-number: ${{ github.event.pull_request.number }}
-        body: |
-          <!-- ui-comment-${{ github.workflow }} -->
-          ${{ env.PULL_COMMENT }}
+        body-path: ${{ env.PULL_COMMENT_PATH }}
         edit-mode: replace
