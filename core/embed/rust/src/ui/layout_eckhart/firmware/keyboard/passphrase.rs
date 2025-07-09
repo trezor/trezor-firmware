@@ -16,9 +16,8 @@ use crate::{
         event::TouchEvent,
         flow::Swipable,
         geometry::{Alignment, Alignment2D, Direction, Insets, Offset, Rect},
-        layout::util::DisplayStyle,
         shape::{Bar, Renderer, Text, ToifImage},
-        util::Pager,
+        util::{DisplayStyle, Pager},
     },
 };
 

@@ -12,9 +12,8 @@ use crate::{
         },
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Direction, Grid, Insets, Offset, Rect},
-        layout::util::DisplayStyle,
         shape::{Bar, Renderer, Text, ToifImage},
-        util::animation_disabled,
+        util::{animation_disabled, DisplayStyle},
     },
 };
 

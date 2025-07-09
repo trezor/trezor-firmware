@@ -11,8 +11,8 @@ use crate::{
         },
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Grid, Insets, Offset, Rect},
-        layout::util::DisplayStyle,
         shape::{self, Renderer},
+        util::DisplayStyle,
     },
 };
 

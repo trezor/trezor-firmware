@@ -12,8 +12,8 @@ use crate::{
         display::Icon,
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
-        layout::util::DisplayStyle,
         shape::{Bar, Renderer, Text, ToifImage},
+        util::DisplayStyle,
     },
 };
 

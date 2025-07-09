@@ -229,14 +229,3 @@ pub enum ContentType {
 /// Maximum number of extended public keys (xpubs) that can be displayed in
 /// a layout or flow.
 pub const MAX_XPUBS: usize = 16;
-
-/// `DisplayStyle` is used to determine whether the text is fully hidden, fully
-/// shown, or partially visible.
-#[derive(PartialEq, Debug, Copy, Clone)]
-#[cfg_attr(feature = "ui_debug", derive(ufmt::derive::uDebug))]
-pub enum DisplayStyle {
-    Hidden,
-    Shown,
-    LastOnly,
-    LastWithMarker,
-}
