@@ -11,6 +11,8 @@ mod pairing_finalization;
 #[cfg(feature = "ble")]
 mod pairing_mode;
 mod welcome_screen;
+#[cfg(feature = "ble")]
+mod wireless_setup_screen;
 
 pub use bld_actionbar::{BldActionBar, BldActionBarMsg};
 pub use bld_header::{BldHeader, BldHeaderMsg};
@@ -24,5 +26,7 @@ pub use connect::ConnectScreen;
 pub use pairing_finalization::PairingFinalizationScreen;
 #[cfg(feature = "ble")]
 pub use pairing_mode::PairingModeScreen;
+#[cfg(feature = "ble")]
+pub use wireless_setup_screen::WirelessSetupScreen;
 
 pub use welcome_screen::BldWelcomeScreen;
