@@ -26,7 +26,10 @@ use crate::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
             util::{ContentType, PropsList, RecoveryType},
         },
-        layout_delizia::component::{FrameMsg, VerticalMenuChoiceMsg},
+        layout_delizia::component::{
+            FrameMsg, ScrolledVerticalMenu, VerticalMenuChoiceMsg, VerticalMenuItem,
+            VerticalMenuItems,
+        },
         ui_firmware::{
             FirmwareUI, ERROR_NOT_IMPLEMENTED, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
             MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
@@ -791,13 +794,14 @@ impl FirmwareUI for UIDelizia {
         _current: usize,
         cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let mut menu = VerticalMenu::empty();
+        let mut menu_items = VerticalMenuItems::new();
         if let Some(text) = cancel {
-            menu = menu.danger(theme::ICON_CANCEL, text);
+            unwrap!(menu_items.push(VerticalMenuItem::Cancel(text)));
         }
         for text in items {
-            menu = menu.item(theme::ICON_CHEVRON_RIGHT, text);
+            unwrap!(menu_items.push(VerticalMenuItem::Item(text)));
         }
+        let menu = ScrolledVerticalMenu::new(menu_items);
         let frame = Frame::left_aligned(TString::empty(), menu).with_cancel_button();
         let layout = MsgMap::new(frame, move |msg| {
             let choice = match msg {
