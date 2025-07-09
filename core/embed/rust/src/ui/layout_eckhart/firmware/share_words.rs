@@ -150,6 +150,7 @@ impl<'a> Component for ShareWordsScreen<'a> {
             .inset(theme::SIDE_INSETS)
             .with_height(Self::WORD_AREA_HEIGHT);
 
+        self.page_swipe.place(bounds);
         self.header.place(header_area);
         self.subtitle.place(subtitle_area.inset(theme::SIDE_INSETS));
         self.content.place(content_area);
