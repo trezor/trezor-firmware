@@ -251,17 +251,17 @@ if TYPE_CHECKING:
         nonce: "bytes | None"
         recipient_name: "str"
         memos: "list[PaymentRequestMemo]"
-        amount: "int"
+        amount: "int | None"
         signature: "bytes"
 
         def __init__(
             self,
             *,
+            recipient_name: "str",
+            signature: "bytes",
             memos: "list[PaymentRequestMemo] | None" = None,
             nonce: "bytes | None" = None,
-            recipient_name: "str | None" = None,
             amount: "int | None" = None,
-            signature: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -295,7 +295,7 @@ if TYPE_CHECKING:
         def __init__(
             self,
             *,
-            text: "str | None" = None,
+            text: "str",
         ) -> None:
             pass
 
@@ -327,9 +327,9 @@ if TYPE_CHECKING:
         def __init__(
             self,
             *,
+            address: "str",
+            mac: "bytes",
             address_n: "list[int] | None" = None,
-            address: "str | None" = None,
-            mac: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -347,11 +347,11 @@ if TYPE_CHECKING:
         def __init__(
             self,
             *,
+            coin_type: "int",
+            amount: "str",
+            address: "str",
+            mac: "bytes",
             address_n: "list[int] | None" = None,
-            coin_type: "int | None" = None,
-            amount: "str | None" = None,
-            address: "str | None" = None,
-            mac: "bytes | None" = None,
         ) -> None:
             pass
 

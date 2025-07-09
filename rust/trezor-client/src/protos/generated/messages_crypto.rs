@@ -2064,6 +2064,11 @@ impl ::protobuf::Message for PaymentNotification {
     const NAME: &'static str = "PaymentNotification";
 
     fn is_initialized(&self) -> bool {
+        for v in &self.payment_req {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 

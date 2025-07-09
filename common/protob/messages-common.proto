@@ -182,11 +182,11 @@ message HDNodeType {
 message PaymentRequest {
     option (experimental_message) = true;
 
-    optional bytes nonce = 1;                        // the nonce used in the signature computation
-    optional string recipient_name = 2 [default=""]; // merchant's name
-    repeated PaymentRequestMemo memos = 3;           // any memos that were signed as part of the request
-    optional uint64 amount = 4 [default=0];          // the sum of the external output amounts requested, required for non-CoinJoin
-    optional bytes signature = 5 [default=""];       // the trusted party's signature of the paymentRequestDigest
+    optional bytes nonce = 1;              // the nonce used in the signature computation
+    required string recipient_name = 2;    // merchant's name
+    repeated PaymentRequestMemo memos = 3; // any memos that were signed as part of the request
+    optional uint64 amount = 4;            // the sum of the external output amounts requested, required for non-CoinJoin
+    required bytes signature = 5;          // the trusted party's signature of the paymentRequestDigest
 
     message PaymentRequestMemo {
         optional TextMemo text_memo = 1;
@@ -196,7 +196,7 @@ message PaymentRequest {
     }
 
     message TextMemo {
-        optional string text = 1 [default=""];    // plain-text note explaining the purpose of the payment request
+        required string text = 1;      // plain-text note explaining the purpose of the payment request
     }
 
     message TextDetailsMemo {
@@ -205,16 +205,16 @@ message PaymentRequest {
     }
 
     message RefundMemo {
-        optional string address = 1 [default=""];  // the address where the payment should be refunded if necessary
-        repeated uint32 address_n = 2;             // BIP-32 path to derive the key from the master node
-        optional bytes mac = 3 [default=""];       // the MAC returned by GetAddress
+        required string address = 1;   // the address where the payment should be refunded if necessary
+        repeated uint32 address_n = 2; // BIP-32 path to derive the key from the master node
+        required bytes mac = 3;        // the MAC returned by GetAddress
     }
 
     message CoinPurchaseMemo {
-        optional uint32 coin_type = 1 [default=0]; // the SLIP-0044 coin type of the address
-        optional string amount = 2 [default=""];   // the amount the address will receive as a human-readable string including units, e.g. "0.025 BTC"
-        optional string address = 3 [default=""];  // the address where the coin purchase will be delivered
-        repeated uint32 address_n = 4;             // BIP-32 path to derive the key from the master node
-        optional bytes mac = 5 [default=""];       // the MAC returned by GetAddress
+        required uint32 coin_type = 1; // the SLIP-0044 coin type of the address
+        required string amount = 2;    // the amount the address will receive as a human-readable string including units, e.g. "0.025 BTC"
+        required string address = 3;   // the address where the coin purchase will be delivered
+        repeated uint32 address_n = 4; // BIP-32 path to derive the key from the master node
+        required bytes mac = 5;        // the MAC returned by GetAddress
     }
 }

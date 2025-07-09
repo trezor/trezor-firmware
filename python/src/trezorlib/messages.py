@@ -886,26 +886,26 @@ class PaymentRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 37
     FIELDS = {
         1: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
-        2: protobuf.Field("recipient_name", "string", repeated=False, required=False, default=''),
+        2: protobuf.Field("recipient_name", "string", repeated=False, required=True),
         3: protobuf.Field("memos", "PaymentRequestMemo", repeated=True, required=False, default=None),
-        4: protobuf.Field("amount", "uint64", repeated=False, required=False, default=0),
-        5: protobuf.Field("signature", "bytes", repeated=False, required=False, default=b''),
+        4: protobuf.Field("amount", "uint64", repeated=False, required=False, default=None),
+        5: protobuf.Field("signature", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
+        recipient_name: "str",
+        signature: "bytes",
         memos: Optional[Sequence["PaymentRequestMemo"]] = None,
         nonce: Optional["bytes"] = None,
-        recipient_name: Optional["str"] = '',
-        amount: Optional["int"] = 0,
-        signature: Optional["bytes"] = b'',
+        amount: Optional["int"] = None,
     ) -> None:
         self.memos: Sequence["PaymentRequestMemo"] = memos if memos is not None else []
-        self.nonce = nonce
         self.recipient_name = recipient_name
-        self.amount = amount
         self.signature = signature
+        self.nonce = nonce
+        self.amount = amount
 
 
 class PaymentRequestMemo(protobuf.MessageType):
@@ -934,13 +934,13 @@ class PaymentRequestMemo(protobuf.MessageType):
 class TextMemo(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("text", "string", repeated=False, required=False, default=''),
+        1: protobuf.Field("text", "string", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        text: Optional["str"] = '',
+        text: "str",
     ) -> None:
         self.text = text
 
@@ -965,17 +965,17 @@ class TextDetailsMemo(protobuf.MessageType):
 class RefundMemo(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("address", "string", repeated=False, required=False, default=''),
+        1: protobuf.Field("address", "string", repeated=False, required=True),
         2: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
-        3: protobuf.Field("mac", "bytes", repeated=False, required=False, default=b''),
+        3: protobuf.Field("mac", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
+        address: "str",
+        mac: "bytes",
         address_n: Optional[Sequence["int"]] = None,
-        address: Optional["str"] = '',
-        mac: Optional["bytes"] = b'',
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.address = address
@@ -985,21 +985,21 @@ class RefundMemo(protobuf.MessageType):
 class CoinPurchaseMemo(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("coin_type", "uint32", repeated=False, required=False, default=0),
-        2: protobuf.Field("amount", "string", repeated=False, required=False, default=''),
-        3: protobuf.Field("address", "string", repeated=False, required=False, default=''),
+        1: protobuf.Field("coin_type", "uint32", repeated=False, required=True),
+        2: protobuf.Field("amount", "string", repeated=False, required=True),
+        3: protobuf.Field("address", "string", repeated=False, required=True),
         4: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
-        5: protobuf.Field("mac", "bytes", repeated=False, required=False, default=b''),
+        5: protobuf.Field("mac", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
+        coin_type: "int",
+        amount: "str",
+        address: "str",
+        mac: "bytes",
         address_n: Optional[Sequence["int"]] = None,
-        coin_type: Optional["int"] = 0,
-        amount: Optional["str"] = '',
-        address: Optional["str"] = '',
-        mac: Optional["bytes"] = b'',
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.coin_type = coin_type
