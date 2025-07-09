@@ -42,7 +42,7 @@ pub struct PinKeyboard<'a> {
 }
 
 impl<'a> PinKeyboard<'a> {
-    const LAST_DIGIT_TIMEOUT_S: u32 = 1;
+    const LAST_DIGIT_TIMEOUT: Duration = Duration::from_secs(1);
 
     pub fn new(
         major_prompt: TString<'a>,
@@ -179,7 +179,7 @@ impl Component for PinKeyboard<'_> {
                     // Start the timer to show the last digit.
                     self.input
                         .last_digit_timer
-                        .start(ctx, Duration::from_secs(Self::LAST_DIGIT_TIMEOUT_S));
+                        .start(ctx, Self::LAST_DIGIT_TIMEOUT);
                     self.input.display_style = DisplayStyle::LastOnly;
                     // Update the keypad state.
                     self.update_keypad_state(ctx);
