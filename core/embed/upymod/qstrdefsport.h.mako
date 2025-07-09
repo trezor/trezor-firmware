@@ -31,7 +31,7 @@ ALTCOINS = (
 )
 
 ALTCOINS_RE = re.compile("|".join(ALTCOINS), flags=re.IGNORECASE)
-THP_RE = re.compile(r"\.thp", flags=re.IGNORECASE)
+THP_RE = re.compile(r"\.thp|cache_thp", flags=re.IGNORECASE)
 DEBUG_RE = re.compile("debug|prof|wire_log", flags=re.IGNORECASE)
 
 pyfiles = chain.from_iterable(sorted(SRCDIR.glob(p)) for p in PATTERNS)
