@@ -287,14 +287,11 @@ fn new_confirm_action_uni<T: Component + PaginateFull + MaybeTrace + 'static>(
         .with_swipeup_footer(strings.footer_description)
         .with_vertical_pages();
 
-    match extra {
-        ConfirmActionExtra::Menu { .. } | ConfirmActionExtra::ExternalMenu => {
-            content = content.with_menu_button();
-        }
-        ConfirmActionExtra::Cancel => {
-            content = content.with_cancel_button();
-        }
-    }
+    content = match extra {
+        ConfirmActionExtra::ExternalMenu => content.with_menu_button().with_external_menu(),
+        ConfirmActionExtra::Menu { .. } => content.with_menu_button(),
+        ConfirmActionExtra::Cancel => content.with_cancel_button(),
+    };
 
     if page_counter {
         fn footer_update_fn<T: Component + PaginateFull>(
