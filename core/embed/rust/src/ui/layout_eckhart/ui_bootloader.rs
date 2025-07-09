@@ -17,7 +17,7 @@ use ufmt::uwrite;
 use super::{
     bootloader::{
         BldActionBar, BldHeader, BldHeaderMsg, BldMenuScreen, BldTextScreen, BldWelcomeScreen,
-        ConnectScreen,
+        ConnectScreen, WirelessSetupScreen,
     },
     component::Button,
     cshape::{render_loader, ScreenBorder},
@@ -94,7 +94,7 @@ pub enum BootloaderLayout {
     #[cfg(feature = "ble")]
     PairingMode(PairingModeScreen),
     #[cfg(feature = "ble")]
-    WirelessSetup(PairingModeScreen),
+    WirelessSetup(WirelessSetupScreen),
     #[cfg(feature = "ble")]
     WirelessSetupFinal(ConnectScreen),
 }
@@ -109,7 +109,7 @@ impl BootloaderLayoutType for BootloaderLayout {
             BootloaderLayout::PairingMode(f) => process_frame_event::<PairingModeScreen>(f, event),
             #[cfg(feature = "ble")]
             BootloaderLayout::WirelessSetup(f) => {
-                process_frame_event::<PairingModeScreen>(f, event)
+                process_frame_event::<WirelessSetupScreen>(f, event)
             }
             #[cfg(feature = "ble")]
             BootloaderLayout::WirelessSetupFinal(f) => {
@@ -169,11 +169,7 @@ impl BootloaderLayoutType for BootloaderLayout {
 
     #[cfg(feature = "ble")]
     fn init_wireless_setup(name: &'static str) -> Self {
-        // todo implement correct UI
-        let btn = Button::with_text("Cancel".into()).styled(button_default());
-
-        let screen = PairingModeScreen::new("QR_CODE".into(), name.into())
-            .with_action_bar(BldActionBar::new_single(btn));
+        let screen = WirelessSetupScreen::new(name.into());
         Self::WirelessSetup(screen)
     }
 }

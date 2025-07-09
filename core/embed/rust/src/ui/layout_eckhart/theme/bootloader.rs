@@ -9,8 +9,8 @@ use super::{
         component::{ButtonStyle, ButtonStyleSheet},
         fonts,
     },
-    BLACK, BLUE, GREEN_LIGHT, GREY, GREY_DARK, GREY_EXTRA_LIGHT, GREY_LIGHT, GREY_SUPER_DARK,
-    ORANGE, RED, WHITE,
+    BLACK, BLUE, GREY, GREY_DARK, GREY_EXTRA_LIGHT, GREY_LIGHT, GREY_SUPER_DARK, ORANGE, RED,
+    WHITE,
 };
 
 pub const BLD_BG: Color = BLACK;
@@ -20,6 +20,7 @@ pub const WELCOME_COLOR: Color = BLACK;
 
 // UI icons specific to bootloader (white color)
 include_icon!(ICON_SEVEN, "layout_eckhart/res/bootloader/7.toif");
+// alternatively: "layout_eckhart/res/bootloader/QRCode_smaller.toif"
 include_icon!(
     ICON_QR_TREZOR_IO_START,
     "layout_eckhart/res/bootloader/QRCode.toif"
@@ -198,12 +199,11 @@ pub fn button_welcome_screen() -> ButtonStyleSheet {
             icon_color: GREY_EXTRA_LIGHT,
             background_color: BLD_BG,
         },
-        // used for the "Trezor is paired" button/footer
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
-            text_color: GREEN_LIGHT,
+            text_color: GREY,
             button_color: BLD_BG,
-            icon_color: GREEN_LIGHT,
+            icon_color: GREY,
             background_color: BLD_FG,
         },
     }
