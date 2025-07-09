@@ -139,8 +139,13 @@ impl BootloaderLayoutType for BootloaderLayout {
         Self::Welcome(screen)
     }
 
-    fn init_menu(_initial_setup: bool) -> Self {
-        Self::Menu(BldMenuScreen::new())
+    fn init_menu(initial_setup: bool) -> Self {
+        let screen = if initial_setup {
+            BldMenuScreen::new()
+        } else {
+            BldMenuScreen::new().with_screen_border(SCREEN_BORDER_BLUE)
+        };
+        Self::Menu(screen)
     }
 
     fn init_connect(_initial_setup: bool, auto_update: bool) -> Self {
