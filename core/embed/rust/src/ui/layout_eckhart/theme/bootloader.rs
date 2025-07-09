@@ -9,8 +9,8 @@ use super::{
         component::{ButtonStyle, ButtonStyleSheet},
         fonts,
     },
-    BLACK, BLUE, GREY, GREY_DARK, GREY_EXTRA_LIGHT, GREY_LIGHT, GREY_SUPER_DARK, ORANGE, RED,
-    WHITE,
+    BLACK, BLUE, GREEN_LIGHT, GREY, GREY_DARK, GREY_EXTRA_LIGHT, GREY_LIGHT, GREY_SUPER_DARK,
+    ORANGE, RED, WHITE,
 };
 
 pub const BLD_BG: Color = BLACK;
@@ -177,6 +177,34 @@ pub fn button_bld_menu_danger() -> ButtonStyleSheet {
             button_color: BLD_BG,
             icon_color: GREY_DARK,
             background_color: BLD_BG,
+        },
+    }
+}
+
+/// Button style for the welcome screen
+pub fn button_welcome_screen() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREY_LIGHT,
+            button_color: BLD_BG,
+            icon_color: GREY_LIGHT,
+            background_color: BLD_BG,
+        },
+        active: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREY_EXTRA_LIGHT,
+            button_color: GREY_SUPER_DARK,
+            icon_color: GREY_EXTRA_LIGHT,
+            background_color: BLD_BG,
+        },
+        // used for the "Trezor is paired" button/footer
+        disabled: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREEN_LIGHT,
+            button_color: BLD_BG,
+            icon_color: GREEN_LIGHT,
+            background_color: BLD_FG,
         },
     }
 }
