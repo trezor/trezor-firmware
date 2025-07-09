@@ -84,6 +84,7 @@ pub fn new_set_brightness(brightness: Option<u8>) -> Result<SwipeFlow, Error> {
     )
     .with_subtitle(TR::homescreen__settings_subtitle.into())
     .with_menu_button()
+    .with_external_menu()
     .with_swipe(Direction::Up, SwipeSettings::default())
     .with_footer(
         TR::instructions__swipe_horizontally.into(),

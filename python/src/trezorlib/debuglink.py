@@ -936,26 +936,27 @@ class DebugUI:
             else:
                 self._paginate_and_confirm(br.pages)
 
-    def _visit_menu_items(self) -> None:
+    def _visit_menu_items(self) -> LayoutContent:
         layout = self.debuglink.read_layout()
         if not layout.has_menu():
-            return
-
-        # FIXME: currently supports only Caesar
-        assert self.debuglink.model in (models.T2B1, models.T3B1)
+            return layout
 
         # enter info menu layout and paginate through its items
         self.debuglink.press_info()
-        menu_items_count = self.debuglink.read_layout().page_count()
-        for _ in range(menu_items_count):
-            self.debuglink.press_middle()
-            # paginate through all properties and confirm
-            self._paginate_and_confirm(None)
-            # paginate to next menu item
-            self.debuglink.press_right()
+
+        # TODO: support all core models
+        if self.debuglink.model in (models.T2B1, models.T3B1):
+            menu_items_count = self.debuglink.read_layout().page_count()
+            for _ in range(menu_items_count):
+                self.debuglink.press_middle()
+                # paginate through all properties and confirm
+                self._paginate_and_confirm(None)
+                # paginate to next menu item
+                self.debuglink.press_right()
 
         # confirm info menu layout
         self.debuglink.press_yes()
+        return layout
 
     def _paginate_and_confirm(self, pages: int | None) -> None:
         if pages is None:
@@ -969,11 +970,10 @@ class DebugUI:
                 self.debuglink.swipe_up()
 
         # Visit info menus (if exist)
-        self._visit_menu_items()
+        layout = self._visit_menu_items()
 
         # Confirm current layout
         if self.debuglink.model is models.T3T1:
-            layout = self.debuglink.read_layout()
             if "PromptScreen" in layout.all_components():
                 self.debuglink.press_yes()
             elif "SwipeContent" in layout.all_components():
@@ -981,7 +981,6 @@ class DebugUI:
             else:
                 self.debuglink.press_yes()
         elif self.debuglink.model is models.T3W1:
-            layout = self.debuglink.read_layout()
             if "TextScreen" in layout.all_components():
                 self.debuglink.click(self.debuglink.screen_buttons.ok())
             else:

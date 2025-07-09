@@ -93,6 +93,7 @@ pub struct Frame<T> {
     swipe: SwipeConfig,
     horizontal_swipe: HorizontalSwipe,
     margin: usize,
+    has_menu: bool,
 }
 
 pub enum FrameMsg<T> {
@@ -115,6 +116,7 @@ where
             swipe: SwipeConfig::new(),
             horizontal_swipe: HorizontalSwipe::new(),
             margin: 0,
+            has_menu: false,
         }
     }
 
@@ -166,6 +168,14 @@ where
     pub fn with_danger_icon(self) -> Self {
         self.with_button(theme::ICON_WARNING, HeaderMsg::Info, false)
             .button_styled(theme::button_danger())
+    }
+
+    // TODO: currently used to gradually introduce multi-item menus (#5189).
+    // After the migration, this flag should be set in `with_button()`.
+    pub fn with_external_menu(mut self) -> Self {
+        // Allow visiting this menu automatically by tests
+        self.has_menu = true;
+        self
     }
 
     pub fn title_styled(mut self, style: TextStyle) -> Self {
@@ -451,5 +461,7 @@ where
         if let Some(footer) = &self.footer {
             t.child("footer", footer);
         }
+
+        t.bool("has_menu", self.has_menu);
     }
 }
