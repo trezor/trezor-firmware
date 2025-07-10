@@ -329,10 +329,12 @@ impl VerticalMenuItem {
     fn button(&self) -> Button {
         match self {
             VerticalMenuItem::Item(text) => {
-                Button::with_text(*text).styled(theme::button_default())
+                let content = IconText::new(*text, theme::ICON_CHEVRON_RIGHT);
+                Button::with_icon_and_text(content).styled(theme::button_default())
             }
             VerticalMenuItem::Cancel(text) => {
-                Button::with_text(*text).styled(theme::button_warning_high())
+                let content = IconText::new(*text, theme::ICON_CANCEL);
+                Button::with_icon_and_text(content).styled(theme::button_warning_high())
             }
         }
     }
