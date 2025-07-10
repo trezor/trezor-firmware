@@ -47,7 +47,7 @@ from . import mapping, messages, models, protobuf
 from .client import TrezorClient
 from .exceptions import TrezorFailure, UnexpectedMessageError
 from .log import DUMP_BYTES
-from .messages import DebugWaitType
+from .messages import DebugWaitType, TouchEventType
 from .transport import Timeout
 
 if TYPE_CHECKING:
@@ -375,6 +375,14 @@ class LayoutContent(UnstructuredJSONReader):
         assert "PinKeyboard" in self.all_components()
         return self.find_unique_value_by_key("pin", default="", only_type=str)
 
+    def display_style(self) -> str:
+        """Get PIN/passphrase display style from the layout."""
+        assert (
+            "PinKeyboard" in self.all_components()
+            or "PassphraseKeyboard" in self.all_components()
+        )
+        return self.find_unique_value_by_key("display_style", default="", only_type=str)
+
     def passphrase(self) -> str:
         """Get passphrase from the layout."""
         assert "PassphraseKeyboard" in self.all_components()
@@ -635,6 +643,29 @@ class DebugLink:
         # wait for the reply
         resp = self._read()
         assert isinstance(resp, messages.DebugLinkState)
+
+    @contextmanager
+    def hold_touch(self, pos: tuple[int, int]) -> Iterator[None]:
+        x, y = pos
+        self._decision(
+            messages.DebugLinkDecision(
+                x=x,
+                y=y,
+                touch_event_type=TouchEventType.TOUCH_START,
+            ),
+            wait=False,
+        )
+        try:
+            yield
+        finally:
+            self._decision(
+                messages.DebugLinkDecision(
+                    x=x,
+                    y=y,
+                    touch_event_type=messages.TouchEventType.TOUCH_END,
+                ),
+                wait=False,
+            )
 
     def reset_debug_events(self) -> None:
         # Only supported on TT and above certain version

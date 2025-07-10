@@ -67,6 +67,7 @@ if TYPE_CHECKING:
     from trezor.enums import TezosContractType  # noqa: F401
     from trezor.enums import ThpMessageType  # noqa: F401
     from trezor.enums import ThpPairingMethod  # noqa: F401
+    from trezor.enums import TouchEventType  # noqa: F401
     from trezor.enums import WordRequestType  # noqa: F401
 
     class BenchmarkListNames(protobuf.MessageType):
@@ -2693,6 +2694,7 @@ if TYPE_CHECKING:
         y: "int | None"
         hold_ms: "int | None"
         physical_button: "DebugPhysicalButton | None"
+        touch_event_type: "TouchEventType | None"
 
         def __init__(
             self,
@@ -2704,6 +2706,7 @@ if TYPE_CHECKING:
             y: "int | None" = None,
             hold_ms: "int | None" = None,
             physical_button: "DebugPhysicalButton | None" = None,
+            touch_event_type: "TouchEventType | None" = None,
         ) -> None:
             pass
 

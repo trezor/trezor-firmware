@@ -35,6 +35,13 @@ class PassphraseCategory(Enum):
     Special = "#$!"
 
 
+class DisplayStyle(Enum):
+    Hidden = "Hidden"
+    Shown = "Shown"
+    LastOnly = "LastOnly"
+    LastWithMarker = "LastWithMarker"
+
+
 def get_char_category(char: str) -> PassphraseCategory:
     """What is the category of a character"""
     if char.isdigit():
