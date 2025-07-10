@@ -39,9 +39,6 @@ def test_abort(core_emulator: Emulator):
     debug = device_handler.debuglink()
     features = device_handler.features()
 
-    # if debug.layout_type is LayoutType.Delizia:
-    #     pytest.skip("abort not supported on T3T1")
-
     assert features.recovery_status == RecoveryStatus.Nothing
 
     device_handler.run(device.recover, pin_protection=False)
