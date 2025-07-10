@@ -254,9 +254,13 @@ static bool npm1300_initialize(i2c_bus_t* bus, uint16_t i_charge,
       {NPM1300_TASKLDSW1CLR, 0x01},
       {NPM1300_TASKLDSW2CLR, 0x01},
       // BUCK regulators
-      // 2.7V, use sw settigns
-      // {NPM1300_BUCK1NORMVOUT, 17}, // this settings adds 900uA on VBAT
-      // {NPM1300_BUCKSWCTRLSEL, 1},
+
+      // NOTE: NPM1300 ERRATA #27
+      // this settings adds 900uA on VBAT in case the BUCK1NORMVOUT selected
+      // the same voltage as it is selected by external resistor.
+      {NPM1300_BUCK1NORMVOUT, 19},  // 2.9V
+      {NPM1300_BUCKSWCTRLSEL, 1},
+
       // Buck auto mode, Pull downs disabled
       {NPM1300_BUCKCTRL0, 0},  // Auto mode
       //
