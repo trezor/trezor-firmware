@@ -767,7 +767,8 @@ impl FirmwareUI for UIBolt {
     fn set_brightness(current_brightness: Option<u8>) -> Result<impl LayoutMaybeTrace, Error> {
         let current = match current_brightness {
             Some(value) => {
-                // Set the brightness immediately so it is applied in the `_first_print` UI layout function
+                // Set the brightness immediately so it is applied in the `_first_print` UI
+                // layout function
                 unwrap!(storage::set_brightness(value));
                 value
             }

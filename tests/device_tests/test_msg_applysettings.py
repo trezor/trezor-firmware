@@ -25,8 +25,8 @@ from trezorlib.tools import parse_path
 
 from ..input_flows import (
     InputFlowCancelBrightness,
-    InputFlowSetBrightness,
     InputFlowConfirmAllWarnings,
+    InputFlowSetBrightness,
 )
 
 HERE = Path(__file__).parent.resolve()
