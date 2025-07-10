@@ -55,6 +55,12 @@
 
 #define PM_SUSPENDED_CHARGING_TIMEOUT_S 60
 #define PM_STABILIZATION_TIMEOUT_MS 2000
+// Temperature controller parameters
+#define PM_TEMP_CONTROL_IDLE_PERIOD_MS 2 * 60 * 1000  // 2 minutes
+#define PM_TEMP_CONTROL_BAND_1_MAX_TEMP 39.0f
+#define PM_TEMP_CONTROL_BAND_2_MAX_TEMP 43.0f
+#define PM_TEMP_CONTROL_BAND_3_MAX_TEMP 45.0f
+#define PM_TEMP_CONTROL_BAND_4_MAX_TEMP 47.0f
 
 // Power manager battery sampling data structure
 typedef struct {
@@ -92,6 +98,10 @@ typedef struct {
   bool charging_enabled;
   uint16_t charging_current_target_ma;
   uint16_t charging_current_max_limit_ma;
+
+  // Temp controller
+  uint32_t temp_control_timeout;
+  uint16_t i_chg_temp_limit_ma;
 
   // Power source hardware state
   pmic_report_t pmic_data;
