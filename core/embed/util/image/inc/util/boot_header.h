@@ -71,6 +71,9 @@ typedef struct __attribute__((packed)) {
   uint32_t header_size;
   /** Size of the bootloader code in bytes */
   uint32_t code_size;
+  /** Address of storage area for storage relocation purposes */
+  uint32_t storage_address;
+
   /** Bitmask of keys used for signature verification.
    * Each bit corresponds to a public key in the BOOTLOADER_PQ_KEY and
    * BOOTLOADER_EC_KEY arrays. If the bit is set, the corresponding key
@@ -78,13 +81,20 @@ typedef struct __attribute__((packed)) {
    */
   uint32_t sigmask;
 
-  uint8_t reserved[24];
+  uint8_t reserved[20];
 } boot_header_signed_t;
 
 /**
  * Unsigned part of the boot header
  */
 typedef struct __attribute__((packed)) {
+  // Firmware type (this field is modified by the bootloader during the
+  // update process). It indicates the current firmware type (custom,
+  // universal, bitcoin-only, etc.) and is used to determine whether
+  // the storage should be erased before the update.
+  uint8_t firmware_type;
+  uint8_t reserved[27];
+
   /** First PQ signature */
   uint8_t slh_signature1[BOOT_HEADER_PQ_SIGNATURE_LEN];
   /** Second PQ signature */
@@ -99,7 +109,6 @@ typedef struct __attribute__((packed)) {
   /** Merkle tree nodes used for root calculation */
   uint8_t merkle_path[32][BOOT_HEADER_MERKLE_PATH_MAX_LEN];
 
-  uint8_t reserved[28];
 } boot_header_unsigned_t;
 
 /**

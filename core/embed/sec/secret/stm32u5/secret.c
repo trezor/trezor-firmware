@@ -596,4 +596,9 @@ void secret_init(void) {
   secret_ensure_initialized();
 }
 
+void secret_safety_erase(void) {
+  secret_init();
+  secret_bhk_regenerate();
+}
+
 #endif  // SECURE_MODE

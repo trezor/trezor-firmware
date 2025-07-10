@@ -226,10 +226,12 @@ class BootHeader(Struct):
     monotonic: int
     header_len: int
     code_length: int
+    storage_address: int
     sigmask: int
 
     _signed_len: int
 
+    firmware_type: int
     slh_signatures: list[bytes]
     ec_signatures: list[bytes]
     merkle_path_len: int
@@ -251,15 +253,18 @@ class BootHeader(Struct):
                 len(this._.code) if "code" in this._
                 else (this.code_length or 0)
         ),
+        "storage_address" / c.Int32ul,
         "sigmask" / c.Int32ul,
-        "_reserved" / c.Padding(24),
+        "_reserved" / c.Padding(20),
         "_signed_len" / c.Tell,
 
+        "firmware_type" / c.Byte,
+        "_reserved" / c.Padding(27),
         "slh_signatures" / c.Bytes(7856)[2],
         "ec_signatures" / c.Bytes(64)[2],
         "merkle_path_len" / c.Int32ul,
         "merkle_path" / c.Bytes(32)[14],
-        "_reserved" / c.Padding(28),
+
     )
     # fmt: on
 

@@ -54,9 +54,18 @@ __attribute__((section(".header"))) const boot_header_t g_bootloader_header = {
                     .patch = FIX_VERSION_PATCH,
                     .build = FIX_VERSION_BUILD,
                 },
+            .min_prev_version =
+                {
+                    .major = 0,
+                    .minor = 0,
+                    .patch = 0,
+                    .build = 0,
+                },
             .monotonic_version = BOOTLOADER_MONOTONIC_VERSION,
             .header_size = sizeof(boot_header_t),
             .code_size = (uint32_t)&_bootloader_code_size,
+            .storage_address = STORAGE_1_START,
+            .sigmask = 0, // This field will be set by headertool_pq
         },
 };
 #endif
