@@ -4,6 +4,7 @@ use crate::{
     error::Error,
     io::BinaryData,
     micropython::{gc::Gc, iter::IterBuf, list::List, obj::Obj, util},
+    storage,
     strutil::TString,
     time::Duration,
     translations::TR,
@@ -962,12 +963,20 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn set_brightness(current_brightness: Option<u8>) -> Result<impl LayoutMaybeTrace, Error> {
-        let content = SetBrightnessScreen::new(
-            theme::backlight::get_backlight_min() as u16,
-            theme::backlight::get_backlight_max() as u16,
-            current_brightness.unwrap_or(theme::backlight::get_backlight_normal()) as u16,
-        );
-        let layout = RootComponent::new(content);
+        let init_value = match current_brightness {
+            Some(value) => {
+                // Set the brightness immediately so it is applied in the `_first_paint` UI
+                // layout function
+                unwrap!(storage::set_brightness(value));
+                value.into()
+            }
+            None => theme::backlight::get_backlight_normal().into(),
+        };
+        let min = theme::backlight::get_backlight_min().into();
+        let max = theme::backlight::get_backlight_max().into();
+
+        let screen = SetBrightnessScreen::new(min, max, init_value);
+        let layout = RootComponent::new(screen);
         Ok(layout)
     }
 
