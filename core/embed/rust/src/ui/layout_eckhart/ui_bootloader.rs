@@ -1,14 +1,11 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Event, Label},
-        display::{self, toif::Toif, Color},
-        geometry::{Alignment, Alignment2D, Offset, Point, Rect},
-        layout::simplified::{process_frame_event, run, show},
-        shape::{self, render_on_display},
-        ui_bootloader::{BootloaderLayoutType, BootloaderUI},
-        CommonUI,
-    },
+use crate::ui::{
+    component::{Event, Label},
+    display::{self, toif::Toif, Color},
+    geometry::{Alignment, Alignment2D, Offset, Point, Rect},
+    layout::simplified::{process_frame_event, run, show},
+    shape::{self, render_on_display},
+    ui_bootloader::{BootloaderLayoutType, BootloaderUI},
+    CommonUI,
 };
 
 use heapless::String;
@@ -95,8 +92,6 @@ pub enum BootloaderLayout {
     PairingMode(PairingModeScreen),
     #[cfg(feature = "ble")]
     WirelessSetup(WirelessSetupScreen),
-    #[cfg(feature = "ble")]
-    WirelessSetupFinal(ConnectScreen),
 }
 
 impl BootloaderLayoutType for BootloaderLayout {
@@ -111,10 +106,6 @@ impl BootloaderLayoutType for BootloaderLayout {
             BootloaderLayout::WirelessSetup(f) => {
                 process_frame_event::<WirelessSetupScreen>(f, event)
             }
-            #[cfg(feature = "ble")]
-            BootloaderLayout::WirelessSetupFinal(f) => {
-                process_frame_event::<ConnectScreen>(f, event)
-            }
         }
     }
 
@@ -127,8 +118,6 @@ impl BootloaderLayoutType for BootloaderLayout {
             BootloaderLayout::PairingMode(f) => show(f, true),
             #[cfg(feature = "ble")]
             BootloaderLayout::WirelessSetup(f) => show(f, true),
-            #[cfg(feature = "ble")]
-            BootloaderLayout::WirelessSetupFinal(f) => show(f, true),
         }
     }
 
@@ -138,32 +127,31 @@ impl BootloaderLayoutType for BootloaderLayout {
     }
 
     fn init_menu(initial_setup: bool) -> Self {
-        let screen = if initial_setup {
-            BldMenuScreen::new()
-        } else {
-            BldMenuScreen::new().with_screen_border(SCREEN_BORDER_BLUE)
-        };
+        let mut screen = BldMenuScreen::new();
+        if !initial_setup {
+            screen = screen.with_screen_border(SCREEN_BORDER_BLUE);
+        }
         Self::Menu(screen)
     }
 
-    fn init_connect(_initial_setup: bool, auto_update: bool) -> Self {
-        // TODO: different style for initial setup
-        let btn = Button::with_text("Cancel".into()).styled(button_default());
-        let mut screen = ConnectScreen::new("Waiting for host...".into())
-            .with_action_bar(BldActionBar::new_single(btn));
+    fn init_connect(initial_setup: bool, auto_update: bool) -> Self {
+        let mut screen = ConnectScreen::new();
         if auto_update {
-            screen = screen.with_header(BldHeader::new(TString::empty()).with_menu_button());
+            screen = screen.with_header(BldHeader::new("Bootloader".into()).with_menu_button());
+        }
+        if !initial_setup {
+            screen = screen.with_screen_border(SCREEN_BORDER_BLUE);
         }
 
         Self::Connect(screen)
     }
 
     #[cfg(feature = "ble")]
-    fn init_pairing_mode(_initial_setup: bool, name: &'static str) -> Self {
-        // TODO: different style for initial setup
-        let btn = Button::with_text("Cancel".into()).styled(button_default());
-        let screen = PairingModeScreen::new("Waiting for pairing...".into(), name.into())
-            .with_action_bar(BldActionBar::new_single(btn));
+    fn init_pairing_mode(initial_setup: bool, name: &'static str) -> Self {
+        let mut screen = PairingModeScreen::new(name.into());
+        if !initial_setup {
+            screen = screen.with_screen_border(SCREEN_BORDER_BLUE);
+        }
         Self::PairingMode(screen)
     }
 
@@ -499,32 +487,20 @@ impl BootloaderUI for UIEckhart {
     }
 
     #[cfg(feature = "ble")]
-    fn screen_confirm_pairing(code: u32, _initial_setup: bool) -> u32 {
-        let (right, left) = (
-            // TODO: different style for initial setup
-            Button::with_text("Confirm".into())
-                .styled(button_confirm())
-                .with_text_align(Alignment::Center),
-            Button::with_text("Reject".into())
-                .styled(button_cancel())
-                .with_text_align(Alignment::Center),
-        );
-
-        let mut screen = ConfirmPairingScreen::new(code)
-            .with_header(BldHeader::new("Pair device".into()))
-            .with_action_bar(BldActionBar::new_double(left, right));
-
+    fn screen_confirm_pairing(code: u32, initial_setup: bool) -> u32 {
+        let mut screen = ConfirmPairingScreen::new(code);
+        if !initial_setup {
+            screen = screen.with_screen_border(SCREEN_BORDER_BLUE);
+        }
         run(&mut screen)
     }
 
     #[cfg(feature = "ble")]
-    fn screen_pairing_mode_finalizing(_initial_setup: bool) -> u32 {
-        // TODO: different style for initial setup
-        let btn = Button::with_text("Cancel".into()).styled(button_default());
-
-        let mut screen = PairingFinalizationScreen::new("Waiting for host confirmation...".into())
-            .with_action_bar(BldActionBar::new_single(btn));
-
+    fn screen_pairing_mode_finalizing(initial_setup: bool) -> u32 {
+        let mut screen = PairingFinalizationScreen::new();
+        if !initial_setup {
+            screen = screen.with_screen_border(SCREEN_BORDER_BLUE);
+        }
         run(&mut screen)
     }
 }
