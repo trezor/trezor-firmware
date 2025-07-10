@@ -54,6 +54,18 @@ message DebugLinkDecision {
     optional bool wait = 6 [deprecated=true];          // wait for layout change
     optional uint32 hold_ms = 7;                       // touch hold duration
     optional DebugPhysicalButton physical_button = 8;  // physical button press
+
+    /**
+     * Explicit touch event type, used to separate TOUCH_START and TOUCH_END
+     * If not set, defaults to full click behavior (TOUCH_START + optional hold + TOUCH_END)
+     */
+    enum DebugTouchEventType {
+        TOUCH_FULL_CLICK = 0;
+        TOUCH_START = 1;
+        TOUCH_END = 2;
+    }
+
+    optional DebugTouchEventType touch_event_type = 9;
 }
 
 /**

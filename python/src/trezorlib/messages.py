@@ -306,6 +306,12 @@ class DebugPhysicalButton(IntEnum):
     RIGHT_BTN = 2
 
 
+class DebugTouchEventType(IntEnum):
+    TOUCH_FULL_CLICK = 0
+    TOUCH_START = 1
+    TOUCH_END = 2
+
+
 class DebugWaitType(IntEnum):
     IMMEDIATE = 0
     NEXT_LAYOUT = 1
@@ -3910,6 +3916,7 @@ class DebugLinkDecision(protobuf.MessageType):
         6: protobuf.Field("wait", "bool", repeated=False, required=False, default=None),
         7: protobuf.Field("hold_ms", "uint32", repeated=False, required=False, default=None),
         8: protobuf.Field("physical_button", "DebugPhysicalButton", repeated=False, required=False, default=None),
+        9: protobuf.Field("touch_event_type", "DebugTouchEventType", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3923,6 +3930,7 @@ class DebugLinkDecision(protobuf.MessageType):
         wait: Optional["bool"] = None,
         hold_ms: Optional["int"] = None,
         physical_button: Optional["DebugPhysicalButton"] = None,
+        touch_event_type: Optional["DebugTouchEventType"] = None,
     ) -> None:
         self.button = button
         self.swipe = swipe
@@ -3932,6 +3940,7 @@ class DebugLinkDecision(protobuf.MessageType):
         self.wait = wait
         self.hold_ms = hold_ms
         self.physical_button = physical_button
+        self.touch_event_type = touch_event_type
 
 
 class DebugLinkLayout(protobuf.MessageType):

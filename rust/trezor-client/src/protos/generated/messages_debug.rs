@@ -44,6 +44,8 @@ pub struct DebugLinkDecision {
     pub hold_ms: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkDecision.physical_button)
     pub physical_button: ::std::option::Option<::protobuf::EnumOrUnknown<debug_link_decision::DebugPhysicalButton>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkDecision.touch_event_type)
+    pub touch_event_type: ::std::option::Option<::protobuf::EnumOrUnknown<debug_link_decision::DebugTouchEventType>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkDecision.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -238,8 +240,30 @@ impl DebugLinkDecision {
         self.physical_button = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
     }
 
+    // optional .hw.trezor.messages.debug.DebugLinkDecision.DebugTouchEventType touch_event_type = 9;
+
+    pub fn touch_event_type(&self) -> debug_link_decision::DebugTouchEventType {
+        match self.touch_event_type {
+            Some(e) => e.enum_value_or(debug_link_decision::DebugTouchEventType::TOUCH_FULL_CLICK),
+            None => debug_link_decision::DebugTouchEventType::TOUCH_FULL_CLICK,
+        }
+    }
+
+    pub fn clear_touch_event_type(&mut self) {
+        self.touch_event_type = ::std::option::Option::None;
+    }
+
+    pub fn has_touch_event_type(&self) -> bool {
+        self.touch_event_type.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_touch_event_type(&mut self, v: debug_link_decision::DebugTouchEventType) {
+        self.touch_event_type = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(8);
+        let mut fields = ::std::vec::Vec::with_capacity(9);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "button",
@@ -280,6 +304,11 @@ impl DebugLinkDecision {
             "physical_button",
             |m: &DebugLinkDecision| { &m.physical_button },
             |m: &mut DebugLinkDecision| { &mut m.physical_button },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "touch_event_type",
+            |m: &DebugLinkDecision| { &m.touch_event_type },
+            |m: &mut DebugLinkDecision| { &mut m.touch_event_type },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkDecision>(
             "DebugLinkDecision",
@@ -323,6 +352,9 @@ impl ::protobuf::Message for DebugLinkDecision {
                 64 => {
                     self.physical_button = ::std::option::Option::Some(is.read_enum_or_unknown()?);
                 },
+                72 => {
+                    self.touch_event_type = ::std::option::Option::Some(is.read_enum_or_unknown()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -359,6 +391,9 @@ impl ::protobuf::Message for DebugLinkDecision {
         if let Some(v) = self.physical_button {
             my_size += ::protobuf::rt::int32_size(8, v.value());
         }
+        if let Some(v) = self.touch_event_type {
+            my_size += ::protobuf::rt::int32_size(9, v.value());
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -389,6 +424,9 @@ impl ::protobuf::Message for DebugLinkDecision {
         if let Some(v) = self.physical_button {
             os.write_enum(8, ::protobuf::EnumOrUnknown::value(&v))?;
         }
+        if let Some(v) = self.touch_event_type {
+            os.write_enum(9, ::protobuf::EnumOrUnknown::value(&v))?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -414,6 +452,7 @@ impl ::protobuf::Message for DebugLinkDecision {
         self.wait = ::std::option::Option::None;
         self.hold_ms = ::std::option::Option::None;
         self.physical_button = ::std::option::Option::None;
+        self.touch_event_type = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -427,6 +466,7 @@ impl ::protobuf::Message for DebugLinkDecision {
             wait: ::std::option::Option::None,
             hold_ms: ::std::option::Option::None,
             physical_button: ::std::option::Option::None,
+            touch_event_type: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -655,6 +695,73 @@ pub mod debug_link_decision {
     impl DebugPhysicalButton {
         pub(in super) fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
             ::protobuf::reflect::GeneratedEnumDescriptorData::new::<DebugPhysicalButton>("DebugLinkDecision.DebugPhysicalButton")
+        }
+    }
+
+    #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
+    // @@protoc_insertion_point(enum:hw.trezor.messages.debug.DebugLinkDecision.DebugTouchEventType)
+    pub enum DebugTouchEventType {
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.debug.DebugLinkDecision.DebugTouchEventType.TOUCH_FULL_CLICK)
+        TOUCH_FULL_CLICK = 0,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.debug.DebugLinkDecision.DebugTouchEventType.TOUCH_START)
+        TOUCH_START = 1,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.debug.DebugLinkDecision.DebugTouchEventType.TOUCH_END)
+        TOUCH_END = 2,
+    }
+
+    impl ::protobuf::Enum for DebugTouchEventType {
+        const NAME: &'static str = "DebugTouchEventType";
+
+        fn value(&self) -> i32 {
+            *self as i32
+        }
+
+        fn from_i32(value: i32) -> ::std::option::Option<DebugTouchEventType> {
+            match value {
+                0 => ::std::option::Option::Some(DebugTouchEventType::TOUCH_FULL_CLICK),
+                1 => ::std::option::Option::Some(DebugTouchEventType::TOUCH_START),
+                2 => ::std::option::Option::Some(DebugTouchEventType::TOUCH_END),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        fn from_str(str: &str) -> ::std::option::Option<DebugTouchEventType> {
+            match str {
+                "TOUCH_FULL_CLICK" => ::std::option::Option::Some(DebugTouchEventType::TOUCH_FULL_CLICK),
+                "TOUCH_START" => ::std::option::Option::Some(DebugTouchEventType::TOUCH_START),
+                "TOUCH_END" => ::std::option::Option::Some(DebugTouchEventType::TOUCH_END),
+                _ => ::std::option::Option::None
+            }
+        }
+
+        const VALUES: &'static [DebugTouchEventType] = &[
+            DebugTouchEventType::TOUCH_FULL_CLICK,
+            DebugTouchEventType::TOUCH_START,
+            DebugTouchEventType::TOUCH_END,
+        ];
+    }
+
+    impl ::protobuf::EnumFull for DebugTouchEventType {
+        fn enum_descriptor() -> ::protobuf::reflect::EnumDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().enum_by_package_relative_name("DebugLinkDecision.DebugTouchEventType").unwrap()).clone()
+        }
+
+        fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
+            let index = *self as usize;
+            Self::enum_descriptor().value_by_index(index)
+        }
+    }
+
+    impl ::std::default::Default for DebugTouchEventType {
+        fn default() -> Self {
+            DebugTouchEventType::TOUCH_FULL_CLICK
+        }
+    }
+
+    impl DebugTouchEventType {
+        pub(in super) fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
+            ::protobuf::reflect::GeneratedEnumDescriptorData::new::<DebugTouchEventType>("DebugLinkDecision.DebugTouchEventType")
         }
     }
 }
@@ -4727,7 +4834,7 @@ pub mod debug_link_gc_info {
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x14messages-debug.proto\x12\x18hw.trezor.messages.debug\x1a\x15messag\
     es-common.proto\x1a\x19messages-management.proto\x1a\roptions.proto\"\
-    \xb4\x04\n\x11DebugLinkDecision\x12O\n\x06button\x18\x01\x20\x01(\x0e27.\
+    \xec\x05\n\x11DebugLinkDecision\x12O\n\x06button\x18\x01\x20\x01(\x0e27.\
     hw.trezor.messages.debug.DebugLinkDecision.DebugButtonR\x06button\x12U\n\
     \x05swipe\x18\x02\x20\x01(\x0e2?.hw.trezor.messages.debug.DebugLinkDecis\
     ion.DebugSwipeDirectionR\x05swipe\x12\x14\n\x05input\x18\x03\x20\x01(\tR\
@@ -4735,61 +4842,65 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x20\x01(\rR\x01y\x12\x16\n\x04wait\x18\x06\x20\x01(\x08R\x04waitB\x02\
     \x18\x01\x12\x17\n\x07hold_ms\x18\x07\x20\x01(\rR\x06holdMs\x12h\n\x0fph\
     ysical_button\x18\x08\x20\x01(\x0e2?.hw.trezor.messages.debug.DebugLinkD\
-    ecision.DebugPhysicalButtonR\x0ephysicalButton\"<\n\x13DebugSwipeDirecti\
-    on\x12\x06\n\x02UP\x10\0\x12\x08\n\x04DOWN\x10\x01\x12\x08\n\x04LEFT\x10\
-    \x02\x12\t\n\x05RIGHT\x10\x03\"(\n\x0bDebugButton\x12\x06\n\x02NO\x10\0\
-    \x12\x07\n\x03YES\x10\x01\x12\x08\n\x04INFO\x10\x02\"B\n\x13DebugPhysica\
-    lButton\x12\x0c\n\x08LEFT_BTN\x10\0\x12\x0e\n\nMIDDLE_BTN\x10\x01\x12\r\
-    \n\tRIGHT_BTN\x10\x02\"-\n\x0fDebugLinkLayout\x12\x16\n\x06tokens\x18\
-    \x01\x20\x03(\tR\x06tokens:\x02\x18\x01\"-\n\x15DebugLinkReseedRandom\
-    \x12\x14\n\x05value\x18\x01\x20\x01(\rR\x05value\"j\n\x15DebugLinkRecord\
-    Screen\x12)\n\x10target_directory\x18\x01\x20\x01(\tR\x0ftargetDirectory\
-    \x12&\n\rrefresh_index\x18\x02\x20\x01(\r:\x010R\x0crefreshIndex\"\xc6\
-    \x02\n\x11DebugLinkGetState\x12(\n\x0ewait_word_list\x18\x01\x20\x01(\
-    \x08R\x0cwaitWordListB\x02\x18\x01\x12&\n\rwait_word_pos\x18\x02\x20\x01\
-    (\x08R\x0bwaitWordPosB\x02\x18\x01\x12e\n\x0bwait_layout\x18\x03\x20\x01\
-    (\x0e29.hw.trezor.messages.debug.DebugLinkGetState.DebugWaitType:\tIMMED\
-    IATER\nwaitLayout\x123\n\x12return_empty_state\x18\x04\x20\x01(\x08:\x05\
-    falseR\x10returnEmptyState\"C\n\rDebugWaitType\x12\r\n\tIMMEDIATE\x10\0\
-    \x12\x0f\n\x0bNEXT_LAYOUT\x10\x01\x12\x12\n\x0eCURRENT_LAYOUT\x10\x02\"\
-    \x97\x04\n\x0eDebugLinkState\x12\x16\n\x06layout\x18\x01\x20\x01(\x0cR\
-    \x06layout\x12\x10\n\x03pin\x18\x02\x20\x01(\tR\x03pin\x12\x16\n\x06matr\
-    ix\x18\x03\x20\x01(\tR\x06matrix\x12'\n\x0fmnemonic_secret\x18\x04\x20\
-    \x01(\x0cR\x0emnemonicSecret\x129\n\x04node\x18\x05\x20\x01(\x0b2%.hw.tr\
-    ezor.messages.common.HDNodeTypeR\x04node\x123\n\x15passphrase_protection\
-    \x18\x06\x20\x01(\x08R\x14passphraseProtection\x12\x1d\n\nreset_word\x18\
-    \x07\x20\x01(\tR\tresetWord\x12#\n\rreset_entropy\x18\x08\x20\x01(\x0cR\
-    \x0cresetEntropy\x12,\n\x12recovery_fake_word\x18\t\x20\x01(\tR\x10recov\
-    eryFakeWord\x12*\n\x11recovery_word_pos\x18\n\x20\x01(\rR\x0frecoveryWor\
-    dPos\x12$\n\x0ereset_word_pos\x18\x0b\x20\x01(\rR\x0cresetWordPos\x12N\n\
-    \rmnemonic_type\x18\x0c\x20\x01(\x0e2).hw.trezor.messages.management.Bac\
-    kupTypeR\x0cmnemonicType\x12\x16\n\x06tokens\x18\r\x20\x03(\tR\x06tokens\
-    \"\x87\x01\n\x17DebugLinkGetPairingInfo\x12\x1d\n\nchannel_id\x18\x01\
-    \x20\x01(\x0cR\tchannelId\x12%\n\x0ehandshake_hash\x18\x02\x20\x01(\x0cR\
-    \rhandshakeHash\x12&\n\x0fnfc_secret_host\x18\x03\x20\x01(\x0cR\rnfcSecr\
-    etHost\"\xd2\x01\n\x14DebugLinkPairingInfo\x12\x1d\n\nchannel_id\x18\x01\
-    \x20\x01(\x0cR\tchannelId\x12%\n\x0ehandshake_hash\x18\x02\x20\x01(\x0cR\
-    \rhandshakeHash\x12&\n\x0fcode_entry_code\x18\x03\x20\x01(\rR\rcodeEntry\
-    Code\x12\x20\n\x0ccode_qr_code\x18\x04\x20\x01(\x0cR\ncodeQrCode\x12*\n\
-    \x11nfc_secret_trezor\x18\x05\x20\x01(\x0cR\x0fnfcSecretTrezor\"\x0f\n\r\
-    DebugLinkStop\"P\n\x0cDebugLinkLog\x12\x14\n\x05level\x18\x01\x20\x01(\r\
-    R\x05level\x12\x16\n\x06bucket\x18\x02\x20\x01(\tR\x06bucket\x12\x12\n\
-    \x04text\x18\x03\x20\x01(\tR\x04text\"G\n\x13DebugLinkMemoryRead\x12\x18\
-    \n\x07address\x18\x01\x20\x01(\rR\x07address\x12\x16\n\x06length\x18\x02\
-    \x20\x01(\rR\x06length\")\n\x0fDebugLinkMemory\x12\x16\n\x06memory\x18\
-    \x01\x20\x01(\x0cR\x06memory\"^\n\x14DebugLinkMemoryWrite\x12\x18\n\x07a\
-    ddress\x18\x01\x20\x01(\rR\x07address\x12\x16\n\x06memory\x18\x02\x20\
-    \x01(\x0cR\x06memory\x12\x14\n\x05flash\x18\x03\x20\x01(\x08R\x05flash\"\
-    -\n\x13DebugLinkFlashErase\x12\x16\n\x06sector\x18\x01\x20\x01(\rR\x06se\
-    ctor\".\n\x14DebugLinkEraseSdCard\x12\x16\n\x06format\x18\x01\x20\x01(\
-    \x08R\x06format\"0\n\x14DebugLinkWatchLayout\x12\x14\n\x05watch\x18\x01\
-    \x20\x01(\x08R\x05watch:\x02\x18\x01\"\x1f\n\x19DebugLinkResetDebugEvent\
-    s:\x02\x18\x01\"\x1a\n\x18DebugLinkOptigaSetSecMax\"\x14\n\x12DebugLinkG\
-    etGcInfo\"\xa7\x01\n\x0fDebugLinkGcInfo\x12S\n\x05items\x18\x01\x20\x03(\
-    \x0b2=.hw.trezor.messages.debug.DebugLinkGcInfo.DebugLinkGcInfoItemR\x05\
-    items\x1a?\n\x13DebugLinkGcInfoItem\x12\x12\n\x04name\x18\x01\x20\x02(\t\
-    R\x04name\x12\x14\n\x05value\x18\x02\x20\x02(\x04R\x05valueB=\n#com.sato\
-    shilabs.trezor.lib.protobufB\x12TrezorMessageDebug\x80\xa6\x1d\x01\
+    ecision.DebugPhysicalButtonR\x0ephysicalButton\x12i\n\x10touch_event_typ\
+    e\x18\t\x20\x01(\x0e2?.hw.trezor.messages.debug.DebugLinkDecision.DebugT\
+    ouchEventTypeR\x0etouchEventType\"<\n\x13DebugSwipeDirection\x12\x06\n\
+    \x02UP\x10\0\x12\x08\n\x04DOWN\x10\x01\x12\x08\n\x04LEFT\x10\x02\x12\t\n\
+    \x05RIGHT\x10\x03\"(\n\x0bDebugButton\x12\x06\n\x02NO\x10\0\x12\x07\n\
+    \x03YES\x10\x01\x12\x08\n\x04INFO\x10\x02\"B\n\x13DebugPhysicalButton\
+    \x12\x0c\n\x08LEFT_BTN\x10\0\x12\x0e\n\nMIDDLE_BTN\x10\x01\x12\r\n\tRIGH\
+    T_BTN\x10\x02\"K\n\x13DebugTouchEventType\x12\x14\n\x10TOUCH_FULL_CLICK\
+    \x10\0\x12\x0f\n\x0bTOUCH_START\x10\x01\x12\r\n\tTOUCH_END\x10\x02\"-\n\
+    \x0fDebugLinkLayout\x12\x16\n\x06tokens\x18\x01\x20\x03(\tR\x06tokens:\
+    \x02\x18\x01\"-\n\x15DebugLinkReseedRandom\x12\x14\n\x05value\x18\x01\
+    \x20\x01(\rR\x05value\"j\n\x15DebugLinkRecordScreen\x12)\n\x10target_dir\
+    ectory\x18\x01\x20\x01(\tR\x0ftargetDirectory\x12&\n\rrefresh_index\x18\
+    \x02\x20\x01(\r:\x010R\x0crefreshIndex\"\xc6\x02\n\x11DebugLinkGetState\
+    \x12(\n\x0ewait_word_list\x18\x01\x20\x01(\x08R\x0cwaitWordListB\x02\x18\
+    \x01\x12&\n\rwait_word_pos\x18\x02\x20\x01(\x08R\x0bwaitWordPosB\x02\x18\
+    \x01\x12e\n\x0bwait_layout\x18\x03\x20\x01(\x0e29.hw.trezor.messages.deb\
+    ug.DebugLinkGetState.DebugWaitType:\tIMMEDIATER\nwaitLayout\x123\n\x12re\
+    turn_empty_state\x18\x04\x20\x01(\x08:\x05falseR\x10returnEmptyState\"C\
+    \n\rDebugWaitType\x12\r\n\tIMMEDIATE\x10\0\x12\x0f\n\x0bNEXT_LAYOUT\x10\
+    \x01\x12\x12\n\x0eCURRENT_LAYOUT\x10\x02\"\x97\x04\n\x0eDebugLinkState\
+    \x12\x16\n\x06layout\x18\x01\x20\x01(\x0cR\x06layout\x12\x10\n\x03pin\
+    \x18\x02\x20\x01(\tR\x03pin\x12\x16\n\x06matrix\x18\x03\x20\x01(\tR\x06m\
+    atrix\x12'\n\x0fmnemonic_secret\x18\x04\x20\x01(\x0cR\x0emnemonicSecret\
+    \x129\n\x04node\x18\x05\x20\x01(\x0b2%.hw.trezor.messages.common.HDNodeT\
+    ypeR\x04node\x123\n\x15passphrase_protection\x18\x06\x20\x01(\x08R\x14pa\
+    ssphraseProtection\x12\x1d\n\nreset_word\x18\x07\x20\x01(\tR\tresetWord\
+    \x12#\n\rreset_entropy\x18\x08\x20\x01(\x0cR\x0cresetEntropy\x12,\n\x12r\
+    ecovery_fake_word\x18\t\x20\x01(\tR\x10recoveryFakeWord\x12*\n\x11recove\
+    ry_word_pos\x18\n\x20\x01(\rR\x0frecoveryWordPos\x12$\n\x0ereset_word_po\
+    s\x18\x0b\x20\x01(\rR\x0cresetWordPos\x12N\n\rmnemonic_type\x18\x0c\x20\
+    \x01(\x0e2).hw.trezor.messages.management.BackupTypeR\x0cmnemonicType\
+    \x12\x16\n\x06tokens\x18\r\x20\x03(\tR\x06tokens\"\x87\x01\n\x17DebugLin\
+    kGetPairingInfo\x12\x1d\n\nchannel_id\x18\x01\x20\x01(\x0cR\tchannelId\
+    \x12%\n\x0ehandshake_hash\x18\x02\x20\x01(\x0cR\rhandshakeHash\x12&\n\
+    \x0fnfc_secret_host\x18\x03\x20\x01(\x0cR\rnfcSecretHost\"\xd2\x01\n\x14\
+    DebugLinkPairingInfo\x12\x1d\n\nchannel_id\x18\x01\x20\x01(\x0cR\tchanne\
+    lId\x12%\n\x0ehandshake_hash\x18\x02\x20\x01(\x0cR\rhandshakeHash\x12&\n\
+    \x0fcode_entry_code\x18\x03\x20\x01(\rR\rcodeEntryCode\x12\x20\n\x0ccode\
+    _qr_code\x18\x04\x20\x01(\x0cR\ncodeQrCode\x12*\n\x11nfc_secret_trezor\
+    \x18\x05\x20\x01(\x0cR\x0fnfcSecretTrezor\"\x0f\n\rDebugLinkStop\"P\n\
+    \x0cDebugLinkLog\x12\x14\n\x05level\x18\x01\x20\x01(\rR\x05level\x12\x16\
+    \n\x06bucket\x18\x02\x20\x01(\tR\x06bucket\x12\x12\n\x04text\x18\x03\x20\
+    \x01(\tR\x04text\"G\n\x13DebugLinkMemoryRead\x12\x18\n\x07address\x18\
+    \x01\x20\x01(\rR\x07address\x12\x16\n\x06length\x18\x02\x20\x01(\rR\x06l\
+    ength\")\n\x0fDebugLinkMemory\x12\x16\n\x06memory\x18\x01\x20\x01(\x0cR\
+    \x06memory\"^\n\x14DebugLinkMemoryWrite\x12\x18\n\x07address\x18\x01\x20\
+    \x01(\rR\x07address\x12\x16\n\x06memory\x18\x02\x20\x01(\x0cR\x06memory\
+    \x12\x14\n\x05flash\x18\x03\x20\x01(\x08R\x05flash\"-\n\x13DebugLinkFlas\
+    hErase\x12\x16\n\x06sector\x18\x01\x20\x01(\rR\x06sector\".\n\x14DebugLi\
+    nkEraseSdCard\x12\x16\n\x06format\x18\x01\x20\x01(\x08R\x06format\"0\n\
+    \x14DebugLinkWatchLayout\x12\x14\n\x05watch\x18\x01\x20\x01(\x08R\x05wat\
+    ch:\x02\x18\x01\"\x1f\n\x19DebugLinkResetDebugEvents:\x02\x18\x01\"\x1a\
+    \n\x18DebugLinkOptigaSetSecMax\"\x14\n\x12DebugLinkGetGcInfo\"\xa7\x01\n\
+    \x0fDebugLinkGcInfo\x12S\n\x05items\x18\x01\x20\x03(\x0b2=.hw.trezor.mes\
+    sages.debug.DebugLinkGcInfo.DebugLinkGcInfoItemR\x05items\x1a?\n\x13Debu\
+    gLinkGcInfoItem\x12\x12\n\x04name\x18\x01\x20\x02(\tR\x04name\x12\x14\n\
+    \x05value\x18\x02\x20\x02(\x04R\x05valueB=\n#com.satoshilabs.trezor.lib.\
+    protobufB\x12TrezorMessageDebug\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -4832,10 +4943,11 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(DebugLinkGetGcInfo::generated_message_descriptor_data());
             messages.push(DebugLinkGcInfo::generated_message_descriptor_data());
             messages.push(debug_link_gc_info::DebugLinkGcInfoItem::generated_message_descriptor_data());
-            let mut enums = ::std::vec::Vec::with_capacity(4);
+            let mut enums = ::std::vec::Vec::with_capacity(5);
             enums.push(debug_link_decision::DebugSwipeDirection::generated_enum_descriptor_data());
             enums.push(debug_link_decision::DebugButton::generated_enum_descriptor_data());
             enums.push(debug_link_decision::DebugPhysicalButton::generated_enum_descriptor_data());
+            enums.push(debug_link_decision::DebugTouchEventType::generated_enum_descriptor_data());
             enums.push(debug_link_get_state::DebugWaitType::generated_enum_descriptor_data());
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
                 file_descriptor_proto(),

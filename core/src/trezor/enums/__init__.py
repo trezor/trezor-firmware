@@ -269,6 +269,11 @@ if TYPE_CHECKING:
         MIDDLE_BTN = 1
         RIGHT_BTN = 2
 
+    class DebugTouchEventType(IntEnum):
+        TOUCH_FULL_CLICK = 0
+        TOUCH_START = 1
+        TOUCH_END = 2
+
     class DebugWaitType(IntEnum):
         IMMEDIATE = 0
         NEXT_LAYOUT = 1

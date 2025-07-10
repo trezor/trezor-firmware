@@ -47,7 +47,7 @@ from . import mapping, messages, models, protobuf
 from .client import TrezorClient
 from .exceptions import TrezorFailure, UnexpectedMessageError
 from .log import DUMP_BYTES
-from .messages import DebugWaitType
+from .messages import DebugTouchEventType, DebugWaitType
 from .transport import Timeout
 
 if TYPE_CHECKING:
@@ -375,6 +375,20 @@ class LayoutContent(UnstructuredJSONReader):
         assert "PinKeyboard" in self.all_components()
         return self.find_unique_value_by_key("pin", default="", only_type=str)
 
+    def display_style(self) -> DisplayStyle:
+        """Get PIN/passphrase display style from the layout."""
+        assert (
+            "PinKeyboard" in self.all_components()
+            or "PassphraseKeyboard" in self.all_components()
+        )
+        style_str = self.find_unique_value_by_key(
+            "display_style", default="", only_type=str
+        )
+        try:
+            return DisplayStyle[style_str]
+        except KeyError:
+            raise ValueError(f"Unknown display style: '{style_str}'")
+
     def passphrase(self) -> str:
         """Get passphrase from the layout."""
         assert "PassphraseKeyboard" in self.all_components()
@@ -635,6 +649,29 @@ class DebugLink:
         # wait for the reply
         resp = self._read()
         assert isinstance(resp, messages.DebugLinkState)
+
+    @contextmanager
+    def hold_touch(self, pos: tuple[int, int]) -> Iterator[None]:
+        x, y = pos
+        self._decision(
+            messages.DebugLinkDecision(
+                x=x,
+                y=y,
+                touch_event_type=DebugTouchEventType.TOUCH_START,
+            ),
+            wait=False,
+        )
+        try:
+            yield
+        finally:
+            self._decision(
+                messages.DebugLinkDecision(
+                    x=x,
+                    y=y,
+                    touch_event_type=messages.DebugTouchEventType.TOUCH_END,
+                ),
+                wait=False,
+            )
 
     def reset_debug_events(self) -> None:
         # Only supported on TT and above certain version
@@ -1497,7 +1534,7 @@ def prodtest_t1(client: "TrezorClient") -> None:
 
     client.call(
         messages.ProdTestT1(
-            payload=b"\x00\xFF\x55\xAA\x66\x99\x33\xCCABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\x00\xFF\x55\xAA\x66\x99\x33\xCC"
+            payload=b"\x00\xff\x55\xaa\x66\x99\x33\xccABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\x00\xff\x55\xaa\x66\x99\x33\xcc"
         ),
         expect=messages.Success,
     )
@@ -1553,6 +1590,13 @@ def _is_emulator(debug_client: "TrezorClientDebugLink") -> bool:
 
 def optiga_set_sec_max(client: "TrezorClient") -> None:
     client.call(messages.DebugLinkOptigaSetSecMax(), expect=messages.Success)
+
+
+class DisplayStyle(Enum):
+    Hidden = "Hidden"
+    Shown = "Shown"
+    LastOnly = "LastOnly"
+    LastWithMarker = "LastWithMarker"
 
 
 class ScreenButtons:
