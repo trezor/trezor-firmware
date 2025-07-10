@@ -55,8 +55,10 @@ def enter_word(
 
 
 def confirm_recovery(debug: "DebugLink", title: str = "recovery__title") -> None:
-    layout = debug.read_layout()
-    assert TR.translate(title) == layout.title()
+    expected_title = TR.translate(title)
+    # exlicitly wait, in case the recovery was started asynchronously (e.g. using BackgroundDeviceHandler)
+    layout = debug.synchronize_at(expected_title)
+    assert expected_title == layout.title()
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
         debug.click(debug.screen_buttons.ok())
     elif debug.layout_type is LayoutType.Delizia:
