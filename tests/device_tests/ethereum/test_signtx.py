@@ -523,7 +523,11 @@ def test_signtx_staking_eip1559(client: Client, parameters: dict, result: dict):
 
 
 @pytest.mark.experimental
-@pytest.mark.models("core", reason="T1 does not support payment requests")
+@pytest.mark.models(
+    "core",
+    skip="t2t1,t3w1",
+    reason="T1 does not support payment requests. Payment requests not yet implemented on model T and TS7.",
+)
 def test_signtx_payment_req(client: Client):
     from trezorlib import btc, misc
 
