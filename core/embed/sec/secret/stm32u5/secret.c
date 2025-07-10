@@ -132,7 +132,6 @@ static void secret_write_header(void) {
 
 static secbool secret_ensure_initialized(void) {
   if (sectrue != secret_verify_header()) {
-    ensure(erase_storage(NULL), "erase storage failed");
     secret_erase();
     secret_write_header();
     return secfalse;
