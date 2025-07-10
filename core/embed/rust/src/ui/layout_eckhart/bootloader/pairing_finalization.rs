@@ -1,16 +1,13 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Component, Event, EventCtx, Label},
-        event::BLEEvent,
-        geometry::{Alignment, Rect},
-        shape::Renderer,
-    },
+use crate::ui::{
+    component::{Component, Event, EventCtx, Label},
+    event::BLEEvent,
+    geometry::Rect,
+    shape::Renderer,
 };
 
 use super::{
-    super::{cshape::ScreenBorder, theme},
-    BldActionBar, BldActionBarMsg,
+    super::{component::Button, cshape::ScreenBorder, theme},
+    BldActionBar, BldActionBarMsg, BldHeader,
 };
 
 #[repr(u32)]
@@ -22,22 +19,28 @@ pub enum PairingFinalizationMsg {
 }
 
 pub struct PairingFinalizationScreen {
+    header: BldHeader<'static>,
     message: Label<'static>,
-    action_bar: Option<BldActionBar>,
-    screen_border: ScreenBorder,
+    action_bar: BldActionBar,
+    screen_border: Option<ScreenBorder>,
 }
 
 impl PairingFinalizationScreen {
-    pub fn new(message: TString<'static>) -> Self {
+    pub fn new() -> Self {
+        let btn = Button::with_text("Cancel".into()).styled(theme::button_default());
         Self {
-            message: Label::new(message, Alignment::Center, theme::TEXT_NORMAL),
-            action_bar: None,
-            screen_border: ScreenBorder::new(theme::BLUE),
+            header: BldHeader::new("Bluetooth pairing".into()),
+            message: Label::left_aligned(
+                "Waiting for confirmation on host device.".into(),
+                theme::TEXT_NORMAL,
+            ),
+            action_bar: BldActionBar::new_single(btn),
+            screen_border: None,
         }
     }
 
-    pub fn with_action_bar(mut self, action_bar: BldActionBar) -> Self {
-        self.action_bar = Some(action_bar);
+    pub fn with_screen_border(mut self, screen_border: ScreenBorder) -> Self {
+        self.screen_border = Some(screen_border);
         self
     }
 }
@@ -46,9 +49,10 @@ impl Component for PairingFinalizationScreen {
     type Msg = PairingFinalizationMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let (_header_area, rest) = bounds.split_top(theme::HEADER_HEIGHT);
+        let (header_area, rest) = bounds.split_top(theme::HEADER_HEIGHT);
         let (rest, action_bar_area) = rest.split_bottom(theme::ACTION_BAR_HEIGHT);
         let content_area = rest.inset(theme::SIDE_INSETS);
+        self.header.place(header_area);
         self.action_bar.place(action_bar_area);
         self.message.place(content_area);
         bounds
@@ -76,9 +80,12 @@ impl Component for PairingFinalizationScreen {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.header.render(target);
         self.action_bar.render(target);
         self.message.render(target);
-        self.screen_border.render(u8::MAX, target);
+        if let Some(screen_border) = &self.screen_border {
+            screen_border.render(u8::MAX, target);
+        }
     }
 }
 
