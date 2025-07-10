@@ -24,13 +24,11 @@
 #include <sec/rng.h>
 #include <sec/secret.h>
 #include <sys/bootutils.h>
-#include <sys/mpu.h>
 #include <sys/reset_flags.h>
 #include <sys/system.h>
 #include <sys/systick.h>
 #include <util/board_capabilities.h>
 #include <util/flash.h>
-#include <util/flash_utils.h>
 #include <util/option_bytes.h>
 #include <util/rsod.h>
 
@@ -306,9 +304,15 @@ int main(void) {
   reset_flags_reset();
 
   if (sectrue != flash_configure_option_bytes()) {
-    // display is not initialized so don't call ensure
-    erase_storage(NULL);
-    return 2;
+    // Option bytes were not configured correctly at startup.
+    // This may indicate a first boot after manufacturing,
+    // or a potential hardware fault or exploit attempt.
+
+    // Make storage data inaccessible.
+    secret_safety_erase();
+
+    // Display an error message on the screen and reset the device.
+    return 0;
   }
 
   // Initialize drivers needed in the boardloader
@@ -340,5 +344,7 @@ int main(void) {
   // Jump to bootloader code
   jump_to_next_stage(next_stage_addr);
 
+  // We should never reach this point, but if we do,
+  // we can return anything, as the system will reset anyway.
   return 0;
 }

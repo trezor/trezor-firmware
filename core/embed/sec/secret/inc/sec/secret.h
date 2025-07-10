@@ -102,6 +102,18 @@ void secret_prepare_fw(secbool allow_run_with_secret,
  */
 void secret_init(void);
 
+/**
+ * @brief Disables access to the data in the storage in case
+ *        of a failure or an attack.
+ *
+ * - On STM32U5, it erases the BHK keys (erases the BHK area), making the
+ * storage area unusable.
+ *
+ * - On STM32F4, it erases the entire storage area.
+ *
+ */
+void secret_safety_erase(void);
+
 #ifdef LOCKABLE_BOOTLOADER
 
 /**
