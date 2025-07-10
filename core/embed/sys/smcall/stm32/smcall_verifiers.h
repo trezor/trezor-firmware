@@ -132,6 +132,8 @@ bool tropic_ecc_sign__verified(uint16_t key_slot_index, const uint8_t *dig,
 
 // ---------------------------------------------------------------------
 
+#ifdef USE_BACKUP_RAM
+
 #include <sys/backup_ram.h>
 
 bool backup_ram_read__verified(uint16_t key, void *buffer, size_t buffer_size,
@@ -139,5 +141,7 @@ bool backup_ram_read__verified(uint16_t key, void *buffer, size_t buffer_size,
 
 bool backup_ram_write__verified(uint16_t key, const void *data,
                                 size_t data_size);
+
+#endif  // USE_BACKUP_RAM
 
 #endif  // SECMON
