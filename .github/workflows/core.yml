@@ -794,8 +794,9 @@ jobs:
           aws-region: eu-west-1
         continue-on-error: true
       - run: |
+          ls -la
           rm unix/trezor-emu-core
-          aws s3 sync --only-show-errors unix s3://data.trezor.io/dev/firmware/emu-nightly
+          aws s3 sync unix s3://data.trezor.io/dev/firmware/emu-nightly
 
   core_upload_emu_branch:
     name: Upload emulator binaries for the current branch
@@ -826,8 +827,9 @@ jobs:
           echo "branch_name=$branch_name" >> $GITHUB_ENV
       - name: Upload artifacts to branch directory
         run: |
+          ls -la
           rm unix/trezor-emu-core
-          aws s3 sync --only-show-errors unix s3://data.trezor.io/dev/firmware/emu-branches/$branch_name
+          aws s3 sync unix s3://data.trezor.io/dev/firmware/emu-branches/$branch_name
 
   # Connect
   # TODO: core_connect_test
