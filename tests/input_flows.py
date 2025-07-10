@@ -3004,6 +3004,19 @@ class InputFlowFidoConfirm(InputFlowBase):
             self.debug.press_yes()
 
 
+class InputFlowSetBrightness(InputFlowBase):
+
+    def input_flow_bolt(self):
+        return self.client.ui.default_input_flow()
+
+    def input_flow_delizia(self):
+        return self.client.ui.default_input_flow()
+
+    def input_flow_eckhart(self):
+        yield
+        self.debug.click(self.debug.screen_buttons.menu())
+
+
 class InputFlowCancelBrightness(InputFlowBase):
     def input_flow_bolt(self) -> BRGeneratorType:
         yield

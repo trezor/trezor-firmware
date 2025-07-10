@@ -4,6 +4,7 @@ use crate::{
     error::{value_error, Error},
     io::BinaryData,
     micropython::{gc::Gc, iter::IterBuf, list::List, obj::Obj, util},
+    storage,
     strutil::TString,
     translations::TR,
     ui::{
@@ -26,10 +27,6 @@ use crate::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
             util::{ContentType, PropsList, RecoveryType},
         },
-        layout_delizia::component::{
-            FrameMsg, ScrolledVerticalMenu, TradeScreen, VerticalMenuChoiceMsg, VerticalMenuItem,
-            VerticalMenuItems,
-        },
         ui_firmware::{
             FirmwareUI, ERROR_NOT_IMPLEMENTED, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
             MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
@@ -40,9 +37,10 @@ use crate::{
 
 use super::{
     component::{
-        check_homescreen_format, Bip39Input, CoinJoinProgress, Frame, Homescreen, Lockscreen,
-        MnemonicKeyboard, PinKeyboard, Progress, SelectWordCount, SelectWordCountLayout,
-        Slip39Input, StatusScreen, SwipeContent, SwipeUpScreen, VerticalMenu,
+        check_homescreen_format, Bip39Input, CoinJoinProgress, Frame, FrameMsg, Homescreen,
+        Lockscreen, MnemonicKeyboard, PinKeyboard, Progress, ScrolledVerticalMenu, SelectWordCount,
+        SelectWordCountLayout, Slip39Input, StatusScreen, SwipeContent, SwipeUpScreen, TradeScreen,
+        VerticalMenu, VerticalMenuChoiceMsg, VerticalMenuItem, VerticalMenuItems,
     },
     flow::{
         self, new_confirm_action_simple, ConfirmActionExtra, ConfirmActionMenuStrings,
@@ -864,7 +862,16 @@ impl FirmwareUI for UIDelizia {
     }
 
     fn set_brightness(current_brightness: Option<u8>) -> Result<impl LayoutMaybeTrace, Error> {
-        let flow = flow::set_brightness::new_set_brightness(current_brightness)?;
+        let brightness = match current_brightness {
+            Some(value) => {
+                // Set the brightness immediately so it is applied in the `_first_paint` UI
+                // layout function
+                unwrap!(storage::set_brightness(value));
+                value
+            }
+            None => theme::backlight::get_backlight_normal(),
+        };
+        let flow = flow::set_brightness::new_set_brightness(brightness)?;
         Ok(flow)
     }
 
