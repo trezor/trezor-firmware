@@ -4,9 +4,9 @@ use crate::{
     error::{value_error, Error},
     io::BinaryData,
     micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, obj::Obj, util},
+    storage,
     strutil::TString,
     translations::TR,
-    trezorhal::display,
     ui::{
         component::{
             connect::Connect,
@@ -765,14 +765,18 @@ impl FirmwareUI for UIBolt {
     }
 
     fn set_brightness(current_brightness: Option<u8>) -> Result<impl LayoutMaybeTrace, Error> {
-        let current_brightness =
-            current_brightness.unwrap_or(theme::backlight::get_backlight_normal());
-        // Set the backlight to the initial value
-        display::backlight(current_brightness.into());
+        let current = match current_brightness {
+            Some(value) => {
+                // Set the brightness immediately so it is applied in the `_first_print` UI layout function
+                unwrap!(storage::set_brightness(value));
+                value
+            }
+            None => theme::backlight::get_backlight_normal(),
+        };
         let layout = RootComponent::new(Frame::centered(
             theme::label_title(),
             TR::brightness__title.into(),
-            SetBrightnessDialog::new(current_brightness),
+            SetBrightnessDialog::new(current),
         ));
 
         Ok(layout)
