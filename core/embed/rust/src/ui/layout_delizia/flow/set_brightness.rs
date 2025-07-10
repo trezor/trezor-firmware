@@ -72,14 +72,13 @@ fn footer_update_fn(
     }
 }
 
-pub fn new_set_brightness(brightness: Option<u8>) -> Result<SwipeFlow, Error> {
-    let brightness = brightness.unwrap_or(theme::backlight::get_backlight_normal());
+pub fn new_set_brightness(brightness: u8) -> Result<SwipeFlow, Error> {
     let content_slider = Frame::left_aligned(
         TR::brightness__title.into(),
         NumberInputSliderDialog::new(
-            theme::backlight::get_backlight_min() as u16,
-            theme::backlight::get_backlight_max() as u16,
-            brightness as u16,
+            theme::backlight::get_backlight_min().into(),
+            theme::backlight::get_backlight_max().into(),
+            brightness.into(),
         ),
     )
     .with_subtitle(TR::homescreen__settings_subtitle.into())

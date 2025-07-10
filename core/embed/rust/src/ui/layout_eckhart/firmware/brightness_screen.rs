@@ -19,6 +19,7 @@ use super::super::{
 pub struct SetBrightnessScreen {
     header: Header,
     slider: VerticalSlider,
+    brightness: u8,
 }
 
 impl SetBrightnessScreen {
@@ -27,12 +28,16 @@ impl SetBrightnessScreen {
         Self {
             header: Header::new(TR::brightness__title.into()).with_close_button(),
             slider: VerticalSlider::new(min, max, init_value),
+            brightness: init_value as _,
         }
     }
 }
+pub enum BrightnessScreenMsg {
+    Close,
+}
 
 impl Component for SetBrightnessScreen {
-    type Msg = ();
+    type Msg = BrightnessScreenMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         // assert full screen
@@ -50,11 +55,12 @@ impl Component for SetBrightnessScreen {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if let Some(HeaderMsg::Cancelled) = self.header.event(ctx, event) {
-            return Some(());
+            unwrap!(storage::set_brightness(self.brightness));
+            return Some(BrightnessScreenMsg::Close);
         }
 
-        if let Some(value) = self.slider.event(ctx, event) {
-            unwrap!(storage::set_brightness(value as _));
+        if let Some(brightness) = self.slider.event(ctx, event) {
+            self.brightness = brightness;
         }
         None
     }
@@ -101,7 +107,13 @@ impl VerticalSlider {
         }
     }
 
-    pub fn update_value(&mut self, pos: Point, ctx: &mut EventCtx) {
+    fn handle_touch(&mut self, pos: Point, ctx: &mut EventCtx) {
+        self.update_value(pos, ctx);
+        display::backlight(self.value.into());
+        ctx.request_paint();
+    }
+
+    fn update_value(&mut self, pos: Point, ctx: &mut EventCtx) {
         // Area where slider value is not saturated
         let proportional_area = self.area.inset(Insets::new(
             Self::SLIDER_WIDTH / 2,
@@ -135,29 +147,27 @@ impl Component for VerticalSlider {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Event::Touch(touch_event) = event {
-            match touch_event {
-                TouchEvent::TouchStart(pos) if self.touch_area.contains(pos) => {
-                    // Detect only touches inside the touch area
-                    self.touching = true;
-                    self.update_value(pos, ctx);
-                    display::backlight(self.value as _);
-                    ctx.request_paint();
-                }
-                TouchEvent::TouchMove(pos) if self.touching => {
-                    self.update_value(pos, ctx);
-                    // Update only if the touch started inside the touch area
-                    display::backlight(self.value as _);
-                }
-                TouchEvent::TouchEnd(pos) if self.touching => {
-                    self.touching = false;
-                    self.update_value(pos, ctx);
-                    ctx.request_paint();
-                    return Some(self.value as _);
-                }
-                _ => {}
-            };
+        let touch_event = match event {
+            Event::Touch(te) => te,
+            _ => return None,
+        };
+
+        match touch_event {
+            TouchEvent::TouchStart(pos) if self.touch_area.contains(pos) => {
+                self.touching = true;
+                self.handle_touch(pos, ctx);
+            }
+            TouchEvent::TouchMove(pos) if self.touching => {
+                self.handle_touch(pos, ctx);
+            }
+            TouchEvent::TouchEnd(pos) if self.touching => {
+                self.touching = false;
+                self.handle_touch(pos, ctx);
+                return Some(self.value as _);
+            }
+            _ => {}
         }
+
         None
     }
 
