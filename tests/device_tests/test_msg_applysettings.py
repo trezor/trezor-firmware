@@ -23,7 +23,11 @@ from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
-from ..input_flows import InputFlowCancelBrightness, InputFlowConfirmAllWarnings
+from ..input_flows import (
+    InputFlowCancelBrightness,
+    InputFlowSetBrightness,
+    InputFlowConfirmAllWarnings,
+)
 
 HERE = Path(__file__).parent.resolve()
 
@@ -474,11 +478,37 @@ def test_label_too_long(client: Client):
         device.apply_settings(client, label="A" * 33)
 
 
+U8_MIN = 0
+U8_MAX = (1 << 8) - 1  # 255
+
+
+@pytest.mark.models(skip=["legacy", "safe3"])
+@pytest.mark.setup_client(pin=None)
+@pytest.mark.parametrize(
+    "value,should_raise",
+    [
+        (None, False),
+        (U8_MIN, False),
+        (U8_MAX // 2, False),
+        (U8_MAX, False),
+        (U8_MAX + 1, True),
+    ],
+)
+def test_set_brightness(client: Client, value: int | None, should_raise: bool):
+    with client:
+        IF = InputFlowSetBrightness(client)
+        client.set_input_flow(IF.get())
+
+        if should_raise:
+            with pytest.raises(exceptions.TrezorFailure):
+                device.set_brightness(client, value)
+        else:
+            device.set_brightness(client, value)
+
+
 @pytest.mark.models(skip=["legacy", "safe3", "eckhart"])
 @pytest.mark.setup_client(pin=None)
-def test_set_brightness(client: Client):
-    device.set_brightness(client, None)
-
+def test_set_brightness_cancel(client: Client):
     with pytest.raises(exceptions.Cancelled), client:
         IF = InputFlowCancelBrightness(client)
         client.set_input_flow(IF.get())

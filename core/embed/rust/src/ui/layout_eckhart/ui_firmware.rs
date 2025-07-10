@@ -7,6 +7,7 @@ use crate::{
     strutil::TString,
     time::Duration,
     translations::TR,
+    trezorhal::display,
     ui::{
         component::{
             text::{
@@ -951,10 +952,14 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn set_brightness(current_brightness: Option<u8>) -> Result<impl LayoutMaybeTrace, Error> {
+        let current_brightness =
+            current_brightness.unwrap_or(theme::backlight::get_backlight_normal());
+        // Set the backlight to the initial value
+        display::backlight(current_brightness.into());
         let content = SetBrightnessScreen::new(
-            theme::backlight::get_backlight_min() as u16,
-            theme::backlight::get_backlight_max() as u16,
-            current_brightness.unwrap_or(theme::backlight::get_backlight_normal()) as u16,
+            theme::backlight::get_backlight_min().into(),
+            theme::backlight::get_backlight_max().into(),
+            current_brightness.into(),
         );
         let layout = RootComponent::new(content);
         Ok(layout)
