@@ -37,6 +37,7 @@ if TYPE_CHECKING:
     from trezor.enums import DebugButton  # noqa: F401
     from trezor.enums import DebugPhysicalButton  # noqa: F401
     from trezor.enums import DebugSwipeDirection  # noqa: F401
+    from trezor.enums import DebugTouchEventType  # noqa: F401
     from trezor.enums import DebugWaitType  # noqa: F401
     from trezor.enums import DecredStakingSpendType  # noqa: F401
     from trezor.enums import DefinitionType  # noqa: F401
@@ -2693,6 +2694,7 @@ if TYPE_CHECKING:
         y: "int | None"
         hold_ms: "int | None"
         physical_button: "DebugPhysicalButton | None"
+        touch_event_type: "DebugTouchEventType | None"
 
         def __init__(
             self,
@@ -2704,6 +2706,7 @@ if TYPE_CHECKING:
             y: "int | None" = None,
             hold_ms: "int | None" = None,
             physical_button: "DebugPhysicalButton | None" = None,
+            touch_event_type: "DebugTouchEventType | None" = None,
         ) -> None:
             pass
 

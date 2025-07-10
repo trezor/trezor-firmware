@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, Generator
 import pytest
 
 from trezorlib import device, exceptions
-from trezorlib.debuglink import LayoutType
+from trezorlib.debuglink import DisplayStyle, LayoutType
 
 from .. import translations as TR
 from .common import go_back, go_next, navigate_to_action_and_press
@@ -45,6 +45,7 @@ PIN4 = "1234"
 PIN24 = "875163065288639289952973"
 PIN50 = "31415926535897932384626433832795028841971693993751"
 PIN60 = PIN50 + "9" * 10
+MAX_PIN_LEN = 50
 
 DELETE = "inputs__delete"
 SHOW = "inputs__show"
@@ -173,14 +174,15 @@ def _assert_pin_entry(debug: "DebugLink") -> None:
 
 def _input_pin(debug: "DebugLink", pin: str, check: bool = False) -> None:
     """Input the PIN"""
-    if check:
-        before = debug.read_layout().pin()
+    before = debug.read_layout().pin()
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
         digits_order = debug.read_layout().tt_pin_digits_order()
-        for digit in pin:
+        for idx, digit in enumerate(pin):
             digit_index = digits_order.index(digit)
             coords = debug.screen_buttons.pin_passphrase_index(digit_index)
             debug.click(coords)
+            if idx + len(before) < MAX_PIN_LEN:
+                assert debug.read_layout().display_style() is DisplayStyle.LastOnly
     elif debug.layout_type is LayoutType.Caesar:
         for digit in pin:
             navigate_to_action_and_press(debug, digit, TR_PIN_ACTIONS)
@@ -195,7 +197,13 @@ def _input_pin(debug: "DebugLink", pin: str, check: bool = False) -> None:
 def _see_pin(debug: "DebugLink") -> None:
     """Navigate to "SHOW" and press it"""
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
-        debug.click(debug.screen_buttons.pin_passphrase_input())
+
+        with debug.hold_touch(debug.screen_buttons.pin_passphrase_input()):
+            layout = debug.read_layout()
+            if layout.pin():
+                assert layout.display_style() is DisplayStyle.Shown
+        assert debug.read_layout().display_style() is DisplayStyle.Hidden
+
     elif debug.layout_type is LayoutType.Caesar:
         navigate_to_action_and_press(debug, SHOW, TR_PIN_ACTIONS)
     else:
@@ -321,14 +329,14 @@ def test_pin_delete_hold(device_handler: "BackgroundDeviceHandler"):
         _input_see_confirm(debug, PIN4)
 
 
-@pytest.mark.setup_client(pin=PIN60[:50])
+@pytest.mark.setup_client(pin=PIN60[:MAX_PIN_LEN])
 def test_pin_longer_than_max(device_handler: "BackgroundDeviceHandler"):
     with prepare(device_handler) as debug:
         _input_pin(debug, PIN60, check=False)
 
         # What is over 50 digits was not entered
         # TODO: do some UI change when limit is reached?
-        assert debug.read_layout().pin() == PIN60[:50]
+        assert debug.read_layout().pin() == PIN60[:MAX_PIN_LEN]
 
         _see_pin(debug)
         _confirm_pin(debug)
@@ -417,14 +425,64 @@ def test_pin_same_as_wipe_code(device_handler: "BackgroundDeviceHandler"):
         go_back(debug, r_middle=True)
 
 
+@pytest.mark.models("t2t1", "delizia", "eckhart")
 @pytest.mark.setup_client(pin=PIN4)
 def test_last_digit_timeout(device_handler: "BackgroundDeviceHandler"):
     with prepare(device_handler) as debug:
-        for digit in PIN4:
-            # insert a digit
-            _input_pin(debug, digit)
-            # wait until the last digit is hidden
+        _input_pin(debug, PIN4)
+        # wait until the last digit is hidden
+        time.sleep(DELAY_S)
+        assert debug.read_layout().display_style() is DisplayStyle.Hidden
+        # show the entire PIN
+        _see_pin(debug)
+        _confirm_pin(debug)
+
+
+@pytest.mark.models("t2t1", "delizia", "eckhart")
+@pytest.mark.setup_client(pin=PIN4)
+def test_show_pin_issue5328(device_handler: "BackgroundDeviceHandler"):
+    with prepare(device_handler) as debug:
+        _input_pin(debug, PIN4)
+        pos = debug.screen_buttons.pin_passphrase_input()
+        assert debug.read_layout().display_style() is DisplayStyle.LastOnly
+        # Hold the PIN area to show the PIN
+        with debug.hold_touch(pos):
+            assert debug.read_layout().display_style() is DisplayStyle.Shown
+
+            # Wait until the last digit timeout happens and make sure the pin did not hide
             time.sleep(DELAY_S)
-            # show the entire PIN
-            _see_pin(debug)
+            assert debug.read_layout().display_style() is DisplayStyle.Shown
+
+        # Release the touch and check that the PIN is hidden
+        assert debug.read_layout().display_style() is DisplayStyle.Hidden
+
+        _confirm_pin(debug)
+
+
+@pytest.mark.models("t2t1", "delizia", "eckhart")
+@pytest.mark.setup_client(pin=PIN4)
+def test_long_press_digit(device_handler: "BackgroundDeviceHandler"):
+    with prepare(device_handler) as debug:
+
+        # Input the PIN except the last digit
+        _input_pin(debug, PIN4[:-1])
+
+        # Prepare last digit for long press
+        digits_order = debug.read_layout().tt_pin_digits_order()
+        digit_index = digits_order.index(PIN4[-1])
+        pos = debug.screen_buttons.pin_passphrase_index(digit_index)
+
+        # Hold the key with the last digit
+        with debug.hold_touch(pos):
+            assert debug.read_layout().display_style() is DisplayStyle.LastOnly
+            # Wait until the last digit timeout happens and the pin is hidden
+            time.sleep(DELAY_S)
+            assert debug.read_layout().display_style() is DisplayStyle.Hidden
+            # Check that the the last digit hasn't been added yet
+            assert debug.read_layout().pin() == PIN4[:-1]
+
+        # Release the touch and check that the last digit is added
+        assert debug.read_layout().pin() == PIN4
+        assert debug.read_layout().display_style() is DisplayStyle.LastOnly
+
         _confirm_pin(debug)

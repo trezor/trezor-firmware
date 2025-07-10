@@ -11,7 +11,7 @@ if __debug__:
     import trezorui_api
     from storage import debug as storage
     from trezor import io, log, loop, ui, utils, wire, workflow
-    from trezor.enums import DebugWaitType, MessageType
+    from trezor.enums import DebugTouchEventType, DebugWaitType, MessageType
     from trezor.messages import Success
     from trezor.ui import display
 
@@ -224,7 +224,17 @@ if __debug__:
         try:
             # click on specific coordinates, with possible hold
             if x is not None and y is not None:
-                await _layout_click(x, y, msg.hold_ms or 0)
+                if msg.touch_event_type == DebugTouchEventType.TOUCH_START:
+                    ui.CURRENT_LAYOUT._event(
+                        ui.CURRENT_LAYOUT.layout.touch_event, io.TOUCH_START, x, y
+                    )
+                elif msg.touch_event_type == DebugTouchEventType.TOUCH_END:
+                    ui.CURRENT_LAYOUT._event(
+                        ui.CURRENT_LAYOUT.layout.touch_event, io.TOUCH_END, x, y
+                    )
+                else:
+                    # fallback: full click
+                    await _layout_click(x, y, msg.hold_ms or 0)
             # press specific button
             elif msg.physical_button is not None:
                 await _layout_press_button(msg.physical_button, msg.hold_ms or 0)
