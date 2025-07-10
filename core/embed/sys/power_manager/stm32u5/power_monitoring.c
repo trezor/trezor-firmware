@@ -29,8 +29,20 @@
 #include "../stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
 
+static void pm_temperature_controller(pm_driver_t* drv);
 static void pm_battery_sampling(float vbat, float ibat, float ntc_temp);
 static void pm_parse_power_source_state(pm_driver_t* drv);
+
+// Temperature controller LUT
+static const struct {
+  float max_temp;
+  float current_limit_factor;
+} temp_bands[] = {
+    {PM_TEMP_CONTROL_BAND_1_MAX_TEMP, 1.0},
+    {PM_TEMP_CONTROL_BAND_2_MAX_TEMP, 0.7},
+    {PM_TEMP_CONTROL_BAND_3_MAX_TEMP, 0.5},
+    {PM_TEMP_CONTROL_BAND_4_MAX_TEMP, 0.3},
+};
 
 void pm_monitor_power_sources(void) {
   // Periodically called timer to request PMIC measurements. PMIC will call
@@ -162,6 +174,8 @@ void pm_charging_controller(pm_driver_t* drv) {
     drv->charging_current_target_ma = drv->charging_current_max_limit_ma;
   }
 
+  pm_temperature_controller(drv);
+
   // Set charging target
   if (drv->charging_current_target_ma != pmic_get_charging_limit()) {
     // Set charging current limit
@@ -195,13 +209,40 @@ void pm_charging_controller(pm_driver_t* drv) {
   }
 
   if (drv->soc_target_reached) {
-    drv->charging_current_target_ma = 0;
+    drv->i_chg_target_ma = 0;
   }
 
   if (drv->charging_current_target_ma == 0) {
     pmic_set_charging(false);
   } else {
     pmic_set_charging(true);
+  }
+}
+
+static void pm_temperature_controller(pm_driver_t* drv) {
+  if (ticks_expired(drv->temp_control_timeout)) {
+    uint16_t i_chg_temp_limit_ma = 0;
+
+    i_chg_temp_limit_ma = 0;  // Default to safety limit
+    for (size_t i = 0; i < sizeof(temp_bands) / sizeof(temp_bands[0]); ++i) {
+      if (drv->pmic_data.ntc_temp < temp_bands[i].max_temp) {
+        i_chg_temp_limit_ma = PM_BATTERY_CHARGING_CURRENT_MAX *
+                              temp_bands[i].current_limit_factor;
+        break;
+      }
+    }
+
+    // If the temperature limit has changed, update the limit and reset the
+    // debounce timer
+    if (drv->i_chg_temp_limit_ma != i_chg_temp_limit_ma) {
+      drv->i_chg_temp_limit_ma = i_chg_temp_limit_ma;
+      drv->temp_control_timeout = ticks_timeout(PM_TEMP_CONTROL_IDLE_PERIOD_MS);
+    }
+  }
+
+  if (drv->charging_current_target_ma > drv->i_chg_temp_limit_ma) {
+    // Limit the charging current by temperature controller
+    drv->charging_current_target_ma = drv->i_chg_temp_limit_ma;
   }
 }
 
