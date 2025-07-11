@@ -386,10 +386,10 @@ impl Button {
         match self.radius_or_gradient {
             RadiusOrGradient::Radius(radius) => {
                 shape::Bar::new(self.area)
-                    .with_bg(style.background_color)
+                    .with_bg(style.button_color)
+                    .with_fg(style.button_color)
                     .with_radius(radius as i16)
                     .with_thickness(2)
-                    .with_fg(style.button_color)
                     .with_alpha(alpha)
                     .render(target);
             }
@@ -744,7 +744,6 @@ pub struct ButtonStyle {
     pub text_color: Color,
     pub button_color: Color,
     pub icon_color: Color,
-    pub background_color: Color,
 }
 
 #[derive(PartialEq, Eq, Clone)]

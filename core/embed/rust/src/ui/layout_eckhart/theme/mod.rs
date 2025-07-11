@@ -170,21 +170,18 @@ pub const fn button_default() -> ButtonStyleSheet {
             text_color: GREY_LIGHT,
             button_color: BG,
             icon_color: GREY_LIGHT,
-            background_color: BG,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREY_LIGHT,
             button_color: GREY_SUPER_DARK,
             icon_color: GREY_LIGHT,
-            background_color: BG,
         },
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREY,
             button_color: BG,
             icon_color: GREY,
-            background_color: BG,
         },
     }
 }

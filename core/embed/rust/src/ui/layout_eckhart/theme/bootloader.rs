@@ -33,21 +33,18 @@ pub fn button_confirm() -> ButtonStyleSheet {
             text_color: GREY_EXTRA_LIGHT,
             button_color: BLUE,
             icon_color: GREY_EXTRA_LIGHT,
-            background_color: BLD_BG,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREY_EXTRA_LIGHT,
             button_color: GREY_SUPER_DARK,
             icon_color: GREY_EXTRA_LIGHT,
-            background_color: BLD_BG,
         },
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: BLD_FG,
             button_color: GREY_DARK,
             icon_color: BLD_BG,
-            background_color: BLD_FG,
         },
     }
 }
@@ -59,21 +56,18 @@ pub fn button_cancel() -> ButtonStyleSheet {
             text_color: GREY_EXTRA_LIGHT,
             button_color: GREY_SUPER_DARK,
             icon_color: GREY_EXTRA_LIGHT,
-            background_color: BLD_BG,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREY_LIGHT,
             button_color: GREY_DARK,
             icon_color: GREY_LIGHT,
-            background_color: BLD_BG,
         },
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: BLD_FG,
             button_color: GREY_DARK,
             icon_color: BLD_BG,
-            background_color: BLD_FG,
         },
     }
 }
@@ -85,21 +79,18 @@ pub const fn button_header() -> ButtonStyleSheet {
             text_color: GREY_LIGHT,
             button_color: BLD_BG,
             icon_color: GREY_LIGHT,
-            background_color: BLD_BG,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREY_LIGHT,
             button_color: GREY_SUPER_DARK,
             icon_color: GREY_LIGHT,
-            background_color: BLD_BG,
         },
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREY_LIGHT,
             button_color: BLD_BG,
             icon_color: GREY_LIGHT,
-            background_color: BLD_BG,
         },
     }
 }
@@ -111,21 +102,18 @@ pub fn button_wipe_confirm() -> ButtonStyleSheet {
             text_color: GREY_EXTRA_LIGHT,
             button_color: RED,
             icon_color: GREY_EXTRA_LIGHT,
-            background_color: RED,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: RED,
             button_color: GREY_EXTRA_LIGHT,
             icon_color: RED,
-            background_color: GREY_EXTRA_LIGHT,
         },
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: BLD_FG,
             button_color: GREY_DARK,
             icon_color: BLD_FG,
-            background_color: BLD_FG,
         },
     }
 }
@@ -137,21 +125,18 @@ pub fn button_bld_menu() -> ButtonStyleSheet {
             text_color: GREY_EXTRA_LIGHT,
             button_color: BLD_BG,
             icon_color: GREY_EXTRA_LIGHT,
-            background_color: BLD_BG,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_REGULAR_38,
             text_color: GREY_DARK,
             button_color: GREY_SUPER_DARK,
             icon_color: GREY_DARK,
-            background_color: GREY_SUPER_DARK,
         },
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_REGULAR_38,
             text_color: GREY_DARK,
             button_color: BLD_BG,
             icon_color: GREY_DARK,
-            background_color: BLD_BG,
         },
     }
 }
@@ -163,21 +148,18 @@ pub fn button_bld_menu_danger() -> ButtonStyleSheet {
             text_color: ORANGE,
             button_color: BLD_BG,
             icon_color: ORANGE,
-            background_color: BLD_BG,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_REGULAR_38,
             text_color: GREY_DARK,
             button_color: GREY_SUPER_DARK,
             icon_color: GREY_DARK,
-            background_color: GREY_SUPER_DARK,
         },
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_REGULAR_38,
             text_color: GREY_DARK,
             button_color: BLD_BG,
             icon_color: GREY_DARK,
-            background_color: BLD_BG,
         },
     }
 }
@@ -190,21 +172,18 @@ pub fn button_welcome_screen() -> ButtonStyleSheet {
             text_color: GREY_LIGHT,
             button_color: BLD_BG,
             icon_color: GREY_LIGHT,
-            background_color: BLD_BG,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREY_EXTRA_LIGHT,
             button_color: GREY_SUPER_DARK,
             icon_color: GREY_EXTRA_LIGHT,
-            background_color: BLD_BG,
         },
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREY,
             button_color: BLD_BG,
             icon_color: GREY,
-            background_color: BLD_FG,
         },
     }
 }
