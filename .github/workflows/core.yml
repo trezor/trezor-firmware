@@ -325,7 +325,7 @@ jobs:
   # See artifacts for a comprehensive report of UI.
   # See [docs/tests/ui-tests](../tests/ui-tests.md) for more info.
   core_device_test:
-    name: Device tests (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.asan }}, ${{ matrix.lang }}${{ matrix.protocol=='v2' && ', THP' || ''}})
+    name: Device tests (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.asan }}, ${{ matrix.lang }})
     runs-on: ubuntu-latest
     needs:
       - param
@@ -337,13 +337,6 @@ jobs:
         coins: [universal, btconly]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
         lang: ${{ fromJSON(needs.param.outputs.test_lang) }}
-        protocol: [v1]
-        include:
-          - model: T2T1
-            coins: universal
-            asan: noasan
-            lang: en
-            protocol: v2
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       TREZOR_MODEL: ${{ matrix.model }}
@@ -352,7 +345,7 @@ jobs:
       ACTIONS_DO_UI_TEST: ${{ matrix.coins == 'universal' && matrix.asan == 'noasan' }}
       TEST_LANG: ${{ matrix.lang }}
       TESTOPTS: "--durations 50 --session-timeout 1800"  # 30m pytest global timeout
-      THP: ${{ matrix.protocol == 'v2' && '1' || '0'}}
+      PROTOCOL: ${{ matrix.model == 'T3W1' && 'v2' || 'v1'}}
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
@@ -360,7 +353,7 @@ jobs:
           submodules: recursive
       - uses: actions/download-artifact@v4
         with:
-          name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-debuglink-${{ matrix.asan }}-protocol_${{ matrix.protocol }}
+          name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-debuglink-${{ matrix.asan }}-protocol_${{ env.PROTOCOL }}
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
@@ -369,7 +362,7 @@ jobs:
         if: failure()
       - uses: actions/upload-artifact@v4
         with:
-          name: core-test-device-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.lang }}-${{ matrix.asan }}-protocol_${{ matrix.protocol }}
+          name: core-test-device-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.lang }}-${{ matrix.asan }}-protocol_${{ env.PROTOCOL }}
           path: tests/trezor*.log
           retention-days: 7
         if: always()
@@ -385,7 +378,7 @@ jobs:
   # Click tests - UI.
   # See [docs/tests/click-tests](../tests/click-tests.md) for more info.
   core_click_test:
-    name: Click tests (${{ matrix.model }}, ${{ matrix.asan }}, ${{ matrix.lang }}${{ matrix.protocol=='v2' && ', THP' || ''}})
+    name: Click tests (${{ matrix.model }}, ${{ matrix.asan }}, ${{ matrix.lang }})
     runs-on: ubuntu-latest
     needs:
       - param
@@ -397,24 +390,19 @@ jobs:
         model: [T2T1, T3B1, T3T1, T3W1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
         lang: ${{ fromJSON(needs.param.outputs.test_lang) }}
-        protocol: [v1]
-        include:
-          - model: T2T1
-            asan: noasan
-            lang: en
-            protocol: v2
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       # MULTICORE: 4  # more could interfere with other jobs
       PYTEST_TIMEOUT: 400
       TEST_LANG: ${{ matrix.lang }}
+      PROTOCOL: ${{ matrix.model == 'T3W1' && 'v2' || 'v1'}}
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
       - uses: actions/download-artifact@v4
         with:
-          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}-protocol_${{matrix.protocol}}
+          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}-protocol_${{env.PROTOCOL}}
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
@@ -424,7 +412,7 @@ jobs:
         if: ${{ matrix.asan == 'asan' }}
       - uses: actions/upload-artifact@v4
         with:
-          name: core-test-click-${{ matrix.model }}-${{ matrix.lang }}-${{ matrix.asan }}-protocol_${{matrix.protocol}}
+          name: core-test-click-${{ matrix.model }}-${{ matrix.lang }}-${{ matrix.asan }}-protocol_${{env.PROTOCOL}}
           path: tests/trezor*.log
           retention-days: 7
         if: always()
@@ -479,7 +467,7 @@ jobs:
 
   # Persistence tests - UI.
   core_persistence_test:
-    name: Persistence tests (${{ matrix.model }}, ${{ matrix.asan }}${{ matrix.protocol=='v2' && ', THP' || ''}})
+    name: Persistence tests (${{ matrix.model }}, ${{ matrix.asan }})
     runs-on: ubuntu-latest
     needs:
       - param
@@ -490,21 +478,17 @@ jobs:
       matrix:
         model: [T2T1, T3B1, T3T1, T3W1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
-        protocol: [v1]
-        include:
-          - model: T2T1
-            asan: noasan
-            protocol: v2
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
+      PROTOCOL: ${{ matrix.model == 'T3W1' && 'v2' || 'v1'}}
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
       - uses: actions/download-artifact@v4
         with:
-          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}-protocol_${{matrix.protocol}}
+          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}-protocol_${{env.PROTOCOL}}
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
@@ -522,7 +506,7 @@ jobs:
       - uses: ./.github/actions/upload-coverage
       - uses: actions/upload-artifact@v4
         with:
-          name: core-test-persistence-${{ matrix.model }}-${{ matrix.asan }}-protocol_${{matrix.protocol}}
+          name: core-test-persistence-${{ matrix.model }}-${{ matrix.asan }}-protocol_${{env.PROTOCOL}}
           path: |
             tests/trezor*.log
           retention-days: 7
