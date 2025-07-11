@@ -39,7 +39,13 @@ use super::{
         SelectWordCountScreen, SelectWordScreen, SetBrightnessScreen, Slip39Input, TextScreen,
         ValueInputScreen,
     },
-    flow, fonts, theme, UIEckhart,
+    flow, fonts,
+    theme::{
+        self,
+        firmware::{button_actionbar_danger, button_confirm},
+        gradient::Gradient,
+    },
+    UIEckhart,
 };
 
 use heapless::Vec;
@@ -77,21 +83,24 @@ impl FirmwareUI for UIEckhart {
             )
         };
 
-        let right_button = if hold {
-            let verb = verb.unwrap_or(TR::buttons__hold_to_confirm.into());
-            let style = if hold_danger {
-                theme::firmware::button_actionbar_danger()
-            } else {
-                theme::firmware::button_confirm()
-            };
-            Button::with_text(verb)
-                .with_long_press(theme::CONFIRM_HOLD_DURATION)
-                .with_long_press_danger(hold_danger)
-                .styled(style)
-        } else if let Some(verb) = verb {
-            Button::with_text(verb)
-        } else {
-            Button::with_text(TR::buttons__confirm.into()).styled(theme::firmware::button_confirm())
+        let right_button = match (hold, verb) {
+            (true, verb) => {
+                let verb = verb.unwrap_or(TR::buttons__hold_to_confirm.into());
+                let (style, gradient) = if hold_danger {
+                    (button_actionbar_danger(), theme::Gradient::Alert)
+                } else {
+                    (button_confirm(), theme::Gradient::SignGreen)
+                };
+                Button::with_text(verb)
+                    .with_long_press(theme::CONFIRM_HOLD_DURATION)
+                    .with_long_press_danger(hold_danger)
+                    .with_gradient(gradient)
+                    .styled(style)
+            }
+            (false, Some(verb)) => Button::with_text(verb),
+            (false, None) => {
+                Button::with_text(TR::buttons__confirm.into()).styled(button_confirm())
+            }
         };
 
         let mut screen = TextScreen::new(paragraphs)
@@ -444,14 +453,16 @@ impl FirmwareUI for UIEckhart {
             let verb = verb.unwrap_or(TR::buttons__hold_to_confirm.into());
             Button::with_text(verb)
                 .with_long_press(theme::CONFIRM_HOLD_DURATION)
-                .styled(theme::firmware::button_confirm())
+                .styled(button_confirm())
         } else if let Some(verb) = verb {
             Button::with_text(verb)
         } else {
-            Button::with_text(TR::buttons__confirm.into()).styled(theme::firmware::button_confirm())
+            Button::with_text(TR::buttons__confirm.into()).styled(button_confirm())
         };
         if warning_footer.is_some() {
-            right_button = right_button.styled(theme::button_actionbar_danger());
+            right_button = right_button
+                .styled(theme::button_actionbar_danger())
+                .with_gradient(Gradient::Alert);
         }
         let header = if info {
             Header::new(title)

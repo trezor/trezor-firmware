@@ -19,7 +19,7 @@ use super::super::{
         ActionBar, AllowedTextContent, Header, Hint, ShortMenuVec, TextScreen, TextScreenMsg,
         VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
     },
-    theme,
+    theme::{self, gradient::Gradient},
 };
 
 const TIMEOUT_MS: u32 = 2000;
@@ -71,10 +71,13 @@ pub fn new_confirm_with_menu<T: AllowedTextContent + MaybeTrace + 'static>(
         Button::with_text(verb)
             .with_long_press(theme::CONFIRM_HOLD_DURATION)
             .styled(theme::firmware::button_confirm())
+            .with_gradient(Gradient::SignGreen)
     } else if let Some(verb) = verb {
         Button::with_text(verb)
     } else {
-        Button::with_text(TR::buttons__confirm.into()).styled(theme::firmware::button_confirm())
+        Button::with_text(TR::buttons__confirm.into())
+            .styled(theme::firmware::button_confirm())
+            .with_gradient(Gradient::SignGreen)
     };
 
     let mut value_screen = TextScreen::new(content)

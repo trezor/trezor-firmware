@@ -24,7 +24,7 @@ use super::super::{
         ActionBar, Header, ShareWordsScreen, ShareWordsScreenMsg, ShortMenuVec, TextScreen,
         TextScreenMsg, VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
     },
-    theme,
+    theme::{self, gradient::Gradient},
 };
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -110,6 +110,7 @@ pub fn new_show_share_words_flow(
             Button::with_icon(theme::ICON_CHEVRON_UP),
             Button::with_text(TR::buttons__hold_to_confirm.into())
                 .styled(theme::button_confirm())
+                .with_gradient(Gradient::SignGreen)
                 .with_long_press(theme::CONFIRM_HOLD_DURATION),
         ))
         .map(|msg| match msg {

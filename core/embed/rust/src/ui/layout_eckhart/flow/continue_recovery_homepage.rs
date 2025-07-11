@@ -27,7 +27,7 @@ use super::super::{
         ActionBar, Header, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
         VerticalMenuScreen, VerticalMenuScreenMsg,
     },
-    theme,
+    theme::{self, gradient::Gradient},
 };
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -214,7 +214,9 @@ pub fn new_continue_recovery_homepage(
         .with_header(Header::new(cancel_title.into()))
         .with_action_bar(ActionBar::new_double(
             Button::with_icon(theme::ICON_CHEVRON_LEFT),
-            Button::with_text(TR::buttons__cancel.into()).styled(theme::button_actionbar_danger()),
+            Button::with_text(TR::buttons__cancel.into())
+                .styled(theme::button_actionbar_danger())
+                .with_gradient(Gradient::Alert),
         ))
         .map(|msg| match msg {
             TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),

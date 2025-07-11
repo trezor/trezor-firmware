@@ -18,7 +18,8 @@ use super::super::{
         ActionBar, Header, HeaderMsg, Hint, TextScreen, TextScreenMsg, VerticalMenu,
         VerticalMenuScreen, VerticalMenuScreenMsg,
     },
-    fonts, theme,
+    fonts,
+    theme::{self, gradient::Gradient},
 };
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -70,7 +71,8 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
         .with_action_bar(ActionBar::new_single(
             Button::with_text(TR::instructions__hold_to_continue.into())
                 .with_long_press(theme::CONFIRM_HOLD_DURATION)
-                .styled(theme::button_confirm()),
+                .styled(theme::button_confirm())
+                .with_gradient(Gradient::SignGreen),
         ))
         .with_hint(Hint::new_instruction(
             TR::reset__tos_link,

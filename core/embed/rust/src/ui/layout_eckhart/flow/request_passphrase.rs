@@ -70,7 +70,7 @@ pub fn new_request_passphrase() -> Result<SwipeFlow, error::Error> {
     .with_header(Header::new(TR::passphrase__title_enter.into()))
     .with_action_bar(ActionBar::new_double(
         Button::with_icon(theme::ICON_CHEVRON_LEFT),
-        Button::with_text(TR::buttons__confirm.into()).styled(theme::button_default()),
+        Button::with_text(TR::buttons__confirm.into()),
     ))
     .map(|msg| match msg {
         TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),

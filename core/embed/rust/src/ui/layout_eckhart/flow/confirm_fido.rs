@@ -22,7 +22,7 @@ use super::super::{
         ActionBar, FidoCredential, Header, LongMenuGc, ShortMenuVec, TextScreen, TextScreenMsg,
         VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
     },
-    theme,
+    theme::{self, gradient::Gradient},
 };
 
 use core::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -146,7 +146,9 @@ pub fn new_confirm_fido(
         ActionBar::new_cancel_confirm()
     } else {
         ActionBar::new_single(
-            Button::with_text(TR::words__authenticate.into()).styled(theme::button_confirm()),
+            Button::with_text(TR::words__authenticate.into())
+                .styled(theme::button_confirm())
+                .with_gradient(Gradient::SignGreen),
         )
     };
 
