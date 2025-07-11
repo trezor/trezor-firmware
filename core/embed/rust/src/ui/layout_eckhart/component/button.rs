@@ -9,13 +9,12 @@ use crate::{
         display::{toif::Icon, Color, Font},
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
-        lerp::Lerp,
         shape::{self, Renderer},
         util::split_two_lines,
     },
 };
 
-use super::super::theme;
+use super::super::theme::{self, Gradient};
 
 pub enum ButtonMsg {
     Pressed,
@@ -26,7 +25,7 @@ pub enum ButtonMsg {
 
 enum RadiusOrGradient {
     Radius(u8),
-    Gradient,
+    Gradient(Gradient),
     None,
 }
 
@@ -170,9 +169,13 @@ impl Button {
         self
     }
 
-    pub fn with_gradient(mut self) -> Self {
-        self.radius_or_gradient = RadiusOrGradient::Gradient;
+    pub fn with_gradient(mut self, gradient: Gradient) -> Self {
+        self.radius_or_gradient = RadiusOrGradient::Gradient(gradient);
         self
+    }
+
+    pub fn has_gradient(&self) -> bool {
+        matches!(self.radius_or_gradient, RadiusOrGradient::Gradient(_))
     }
 
     pub fn enable_if(&mut self, ctx: &mut EventCtx, enabled: bool) {
@@ -322,44 +325,6 @@ impl Button {
         }
     }
 
-    fn render_gradient_bar<'s>(&self, target: &mut impl Renderer<'s>, style: &ButtonStyle) {
-        let height = self.area.height();
-        let half_width = (self.area.width() / 2) as f32;
-        let x_mid = self.area.center().x;
-
-        // Layer 1: Horizontal Gradient (Overall intensity: 100%)
-        // Stops:    21%, 100%
-        // Opacity: 100%,  20%
-        for y in self.area.y0..self.area.y1 {
-            let factor = (y - self.area.y0) as f32 / height as f32;
-            let slice = Rect::new(Point::new(self.area.x0, y), Point::new(self.area.x1, y + 1));
-            let factor_grad = ((factor - 0.21) / (1.00 - 0.21)).clamp(0.0, 1.0);
-            let alpha = u8::lerp(u8::MAX, 51, factor_grad);
-            shape::Bar::new(slice)
-                .with_bg(style.button_color)
-                .with_alpha(alpha)
-                .render(target);
-        }
-
-        // Layer 2: Vertical Gradient (Overall intensity: 100%)
-        // distance from mid
-        for x in self.area.x0..self.area.x1 {
-            let slice = Rect::new(Point::new(x, self.area.y0), Point::new(x + 1, self.area.y1));
-            let dist_from_mid = (x - x_mid).abs() as f32 / half_width;
-            let alpha = u8::lerp(u8::MIN, u8::MAX, dist_from_mid);
-            shape::Bar::new(slice)
-                .with_bg(theme::BG)
-                .with_alpha(alpha)
-                .render(target);
-        }
-
-        // Layer 3: Black overlay (Overall intensity: 20%)
-        shape::Bar::new(self.area)
-            .with_bg(theme::BG)
-            .with_alpha(51)
-            .render(target);
-    }
-
     pub fn render_background<'s>(
         &self,
         target: &mut impl Renderer<'s>,
@@ -377,8 +342,8 @@ impl Button {
                     .render(target);
             }
             // Gradient bar is rendered only in `normal` state, not `active` or `disabled`
-            RadiusOrGradient::Gradient if self.state.is_normal() => {
-                self.render_gradient_bar(target, style);
+            RadiusOrGradient::Gradient(gradient) if self.state.is_normal() => {
+                gradient.render(target, self.area, 1);
             }
             _ => {
                 shape::Bar::new(self.area)

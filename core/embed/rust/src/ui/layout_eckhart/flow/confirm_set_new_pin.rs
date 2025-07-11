@@ -21,7 +21,7 @@ use crate::{
 use super::super::{
     component::Button,
     firmware::{ActionBar, Header, TextScreen},
-    theme,
+    theme::{self, gradient::Gradient},
 };
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -97,8 +97,9 @@ pub fn new_set_new_pin(
         )
         .with_action_bar(ActionBar::new_double(
             Button::with_icon(theme::ICON_CHEVRON_LEFT),
-            Button::with_text(TR::buttons__continue.into())
-                .styled(theme::button_actionbar_danger()),
+            Button::with_text(TR::buttons__cancel.into())
+                .styled(theme::button_actionbar_danger())
+                .with_gradient(Gradient::Alert),
         ))
         .map(|msg| match msg {
             TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),

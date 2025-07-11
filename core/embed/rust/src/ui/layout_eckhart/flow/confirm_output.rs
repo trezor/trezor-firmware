@@ -26,7 +26,7 @@ use super::super::{
         ActionBar, Header, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
         VerticalMenuScreen, VerticalMenuScreenMsg,
     },
-    theme,
+    theme::{self, gradient::Gradient},
 };
 
 const MENU_ITEM_CANCEL: usize = 0;
@@ -200,7 +200,9 @@ fn content_cancel(
     .with_header(Header::new(TR::words__send.into()))
     .with_action_bar(ActionBar::new_double(
         Button::with_icon(theme::ICON_CHEVRON_LEFT),
-        Button::with_text(TR::buttons__cancel.into()).styled(theme::button_actionbar_danger()),
+        Button::with_text(TR::buttons__cancel.into())
+            .styled(theme::button_actionbar_danger())
+            .with_gradient(Gradient::Alert),
     ))
     .map(|msg| match msg {
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
@@ -409,7 +411,8 @@ pub fn new_confirm_output(
                 Button::with_icon(theme::ICON_CHEVRON_UP),
                 Button::with_text(TR::instructions__hold_to_sign.into())
                     .with_long_press(theme::CONFIRM_HOLD_DURATION)
-                    .styled(theme::button_confirm()),
+                    .styled(theme::button_confirm())
+                    .with_gradient(Gradient::SignGreen),
             ))
             .map(|msg| match msg {
                 TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),

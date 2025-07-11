@@ -27,7 +27,7 @@ use super::super::{
         ActionBar, Header, HeaderMsg, Hint, QrScreen, ShortMenuVec, TextScreen, TextScreenMsg,
         VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
     },
-    theme,
+    theme::{self, gradient::Gradient},
 };
 
 const ITEM_PADDING: i16 = 16;
@@ -115,9 +115,13 @@ pub fn new_receive(
     paragraphs.add(Paragraph::new(text_style, content));
 
     let button = if hint.is_some() {
-        Button::with_text(TR::buttons__confirm.into()).styled(theme::button_actionbar_danger())
+        Button::with_text(TR::buttons__confirm.into())
+            .styled(theme::button_actionbar_danger())
+            .with_gradient(Gradient::Alert)
     } else {
-        Button::with_text(TR::buttons__confirm.into()).styled(theme::button_confirm())
+        Button::with_text(TR::buttons__confirm.into())
+            .styled(theme::button_confirm())
+            .with_gradient(Gradient::SignGreen)
     };
 
     let mut address_screen = TextScreen::new(
@@ -229,7 +233,9 @@ pub fn new_receive(
     .with_header(Header::new(title))
     .with_action_bar(ActionBar::new_double(
         Button::with_icon(theme::ICON_CHEVRON_LEFT),
-        Button::with_text(TR::buttons__cancel.into()).styled(theme::button_actionbar_danger()),
+        Button::with_text(TR::buttons__cancel.into())
+            .styled(theme::button_actionbar_danger())
+            .with_gradient(theme::Gradient::Alert),
     ));
     if let Some(hint) = cancel_hint {
         screen_cancel_info = screen_cancel_info.with_hint(hint);

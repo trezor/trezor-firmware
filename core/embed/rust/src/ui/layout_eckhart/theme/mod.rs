@@ -3,6 +3,7 @@ pub mod backlight;
 pub mod bootloader;
 #[cfg(feature = "micropython")]
 pub mod firmware;
+pub mod gradient;
 #[cfg(feature = "micropython")]
 pub use firmware::*;
 
@@ -17,6 +18,8 @@ use super::{
     component::{ButtonStyle, ButtonStyleSheet},
     fonts,
 };
+
+pub use gradient::Gradient;
 
 // Color palette.
 pub const WHITE: Color = Color::rgb(0xFF, 0xFF, 0xFF);
@@ -40,16 +43,14 @@ pub const ORANGE: Color = Color::rgb(0xFF, 0x63, 0x30);
 pub const ORANGE_DIMMED: Color = Color::rgb(0x9E, 0x57, 0x42);
 pub const ORANGE_DARK: Color = Color::rgb(0x18, 0x0C, 0x0A);
 pub const ORANGE_EXTRA_DARK: Color = Color::rgb(0x12, 0x07, 0x04);
-pub const ORANGE_SUPER_DARK: Color = Color::rgb(0x2A, 0x0A, 0x00); // Homescreen gradient
+pub const ORANGE_SUPER_DARK: Color = Color::rgb(0x2A, 0x0A, 0x00); // used in gradient
 
 pub const YELLOW: Color = Color::rgb(0xFF, 0xE4, 0x58);
-pub const YELLOW_DARK: Color = Color::rgb(0x21, 0x1E, 0x0C); // Homescreen gradient
+pub const YELLOW_DARK: Color = Color::rgb(0x21, 0x1E, 0x0C); // used in gradient
 
 pub const BLUE: Color = Color::rgb(0x00, 0x46, 0xFF);
 
 pub const RED: Color = Color::rgb(0xFF, 0x30, 0x30);
-pub const FATAL_ERROR_COLOR: Color = Color::rgb(0xE7, 0x0E, 0x0E);
-pub const FATAL_ERROR_HIGHLIGHT_COLOR: Color = Color::rgb(0xFF, 0x41, 0x41);
 
 // Common constants
 pub const PADDING: i16 = 24; // [px]

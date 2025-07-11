@@ -21,7 +21,7 @@ use super::super::{
         ActionBar, Header, HeaderMsg, Hint, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
         VerticalMenuScreen, VerticalMenuScreenMsg,
     },
-    theme,
+    theme::{self, gradient::Gradient},
 };
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -103,7 +103,9 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
         )
         .with_action_bar(ActionBar::new_double(
             Button::with_icon(theme::ICON_CHEVRON_LEFT),
-            Button::with_text(TR::buttons__skip.into()).styled(theme::button_cancel()),
+            Button::with_text(TR::buttons__skip.into())
+                .styled(theme::button_actionbar_danger())
+                .with_gradient(Gradient::Alert),
         ))
         .with_hint(Hint::new_instruction(TR::backup__not_recommend, None))
         .map(|msg| match msg {
