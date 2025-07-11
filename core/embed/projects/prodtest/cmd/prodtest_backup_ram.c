@@ -84,8 +84,8 @@ static void prodtest_backup_ram_read(cli_t* cli) {
   }
 
   uint32_t key = 0;
-  if (!cli_arg_uint32(cli, "key", &key) && key < 0xFFFF) {
-    cli_error_arg(cli, "Expecting key argument in range 0-65535");
+  if (!cli_arg_uint32(cli, "key", &key) || key >= 0xFFFF) {
+    cli_error_arg(cli, "Expecting key argument in range 0-65534");
     return;
   }
 
@@ -133,8 +133,8 @@ static void prodtest_backup_ram_write(cli_t* cli) {
   uint32_t key = 0;
   uint32_t type = 0;
 
-  if (!cli_arg_uint32(cli, "key", &key) && key < 0xFFFF) {
-    cli_error_arg(cli, "Expecting key argument in range 0-65535");
+  if (!cli_arg_uint32(cli, "key", &key) || key >= 0xFFFF) {
+    cli_error_arg(cli, "Expecting key argument in range 0-65534");
     return;
   }
 
