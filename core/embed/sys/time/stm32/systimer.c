@@ -125,7 +125,9 @@ void systimer_delete(systimer_t* timer) {
     return;
   }
 
+  irq_key_t irq_key = irq_lock();
   timer->callback = NULL;
+  irq_unlock(irq_key);
 }
 
 void systimer_set(systimer_t* timer, uint32_t delay_ms) {
