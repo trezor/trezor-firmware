@@ -64,6 +64,7 @@ def _find_message_handler_module(msg_type: int) -> str:
         utils.INTERNAL_MODEL == "T2B1"
         or utils.INTERNAL_MODEL == "T3B1"
         or utils.INTERNAL_MODEL == "T3T1"
+        or utils.INTERNAL_MODEL == "T3W1"
     ) and msg_type == MessageType.ShowDeviceTutorial:
         return "apps.management.show_tutorial"
 
