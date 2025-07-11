@@ -510,6 +510,18 @@ def test_set_brightness(client: Client, value: int | None, should_raise: bool):
 
 @pytest.mark.models(
     "core",
+    skip=["safe3"],
+    reason="legacy and TS3 do not have brightness feature",
+)
+@pytest.mark.setup_client(pin=None)
+def test_set_brightness_negative(client: Client):
+    # Negative brightness value should raise ValueError
+    with client, pytest.raises(ValueError):
+        device.set_brightness(client, -1)
+
+
+@pytest.mark.models(
+    "core",
     skip=["safe3", "eckhart"],
     reason="TS7 cannot cancel brightness flow, legacy and TS3 do not have brightness feature at all",
 )
