@@ -803,16 +803,27 @@ __attribute__((naked, no_stack_protector)) void GTZC_IRQHandler(void) {
 }
 #endif
 
-__attribute__((no_stack_protector, used)) static void nmi_handler(
-    uint32_t msp, uint32_t exc_return) {
-  mpu_reconfig(MPU_MODE_DEFAULT);
-  // Clear pending Clock security interrupt flag
+__attribute__((no_stack_protector, used)) static void nmi_handler(void) {
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
 #ifdef STM32U5
-  RCC->CICR = RCC_CICR_CSSC;
+  if ((RCC->CIFR & RCC_CIFR_CSSF) != 0) {
+    RCC->CICR = RCC_CICR_CSSC;
 #else
-  RCC->CIR = RCC_CIR_CSSC;
+  if ((RCC->CIR & RCC_CIR_CSSF) != 0) {
+    RCC->CIR = RCC_CIR_CSSC;
 #endif
-  systask_exit_fault(msp, exc_return);
+    // Clock Security System triggered NMI
+    systask_exit_fault(true, __get_MSP());
+  }
+#if !defined(BOARDLOADER) && !defined(BOOTLOADER)
+  else {
+    // FLASH ECC triggered NMI
+    // In boardloader or bootloader this must not be treated
+    // as a fatal error, otherwise the device could be bricked.
+    systask_exit_fault(true, __get_MSP());
+  }
+#endif
+  mpu_restore(mpu_mode);
 }
 
 __attribute__((no_stack_protector)) void NMI_Handler(void) {
