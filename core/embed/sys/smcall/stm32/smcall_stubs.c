@@ -368,8 +368,9 @@ bool backup_ram_read(uint16_t key, void *buffer, size_t buffer_size,
                               (uint32_t)data_size, SMCALL_BACKUP_RAM_READ);
 }
 
-bool backup_ram_write(uint16_t key, const void *data, size_t data_size) {
-  return (bool)smcall_invoke3(key, (uint32_t)data, data_size,
+bool backup_ram_write(uint16_t key, backup_ram_item_type_t type,
+                      const void *data, size_t data_size) {
+  return (bool)smcall_invoke4(key, type, (uint32_t)data, data_size,
                               SMCALL_BACKUP_RAM_WRITE);
 }
 

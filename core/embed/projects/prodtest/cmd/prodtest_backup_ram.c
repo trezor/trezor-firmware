@@ -125,14 +125,21 @@ static void prodtest_backup_ram_read(cli_t* cli) {
 }
 
 static void prodtest_backup_ram_write(cli_t* cli) {
-  if (cli_arg_count(cli) > 2) {
+  if (cli_arg_count(cli) > 3) {
     cli_error_arg_count(cli);
     return;
   }
 
   uint32_t key = 0;
+  uint32_t type = 0;
+
   if (!cli_arg_uint32(cli, "key", &key) && key < 0xFFFF) {
     cli_error_arg(cli, "Expecting key argument in range 0-65535");
+    return;
+  }
+
+  if (!cli_arg_uint32(cli, "type", &type) || type > 1) {
+    cli_error_arg(cli, "Expecting type argument in range 0-1");
     return;
   }
 
@@ -155,7 +162,7 @@ static void prodtest_backup_ram_write(cli_t* cli) {
     return;
   }
 
-  if (!backup_ram_write(key, data, len)) {
+  if (!backup_ram_write(key, type, data, len)) {
     cli_error(cli, CLI_ERROR, "Failed to write key #%d", key);
     return;
   }
@@ -200,7 +207,7 @@ PRODTEST_CLI_CMD(
    .name = "backup-ram-write",
    .func = prodtest_backup_ram_write,
    .info = "Write to backup RAM",
-   .args = "<key> [<hex-data>]",
+   .args = "<key> <type> [<hex-data>]",
 );
 
 #endif // !PRODUCTION

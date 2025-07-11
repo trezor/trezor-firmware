@@ -494,13 +494,13 @@ access_violation:
   return false;
 }
 
-bool backup_ram_write__verified(uint16_t key, const void *data,
-                                size_t data_size) {
+bool backup_ram_write__verified(uint16_t key, backup_ram_item_type_t type,
+                                const void *data, size_t data_size) {
   if (!probe_read_access(data, data_size)) {
     goto access_violation;
   }
 
-  return backup_ram_write(key, data, data_size);
+  return backup_ram_write(key, type, data, data_size);
 access_violation:
   apptask_access_violation();
   return false;
