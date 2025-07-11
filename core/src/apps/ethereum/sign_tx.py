@@ -219,7 +219,12 @@ async def confirm_tx_data(
         )
         token_address_str = address_from_bytes(address_bytes, defs.network)
 
+        is_contract_interaction = token is None and data_total_len > 0
+
         if payment_req_verifier is not None:
+            if is_contract_interaction:
+                raise DataError("Payment Requests don't support contract interactions")
+
             # If a payment_req_verifier is provided, then msg.payment_req must have been set.
             assert payment_req is not None
             assert recipient_str is not None
@@ -236,9 +241,6 @@ async def confirm_tx_data(
                 token_address_str,
             )
         else:
-            is_contract_interaction = token is None and data_total_len > 0
-
-            # TODO: Is this needed for payment reqests??
             if is_contract_interaction:
                 await require_confirm_other_data(msg.data_initial_chunk, data_total_len)
 
