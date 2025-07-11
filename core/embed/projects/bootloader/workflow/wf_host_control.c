@@ -27,10 +27,13 @@
 #include <sys/types.h>
 #include <util/image.h>
 
-#include "../../../io/haptic/inc/io/haptic.h"
 #include "protob/protob.h"
 #include "wire/wire_iface_usb.h"
 #include "workflow.h"
+
+#ifdef USE_HAPTIC
+#include <io/haptic.h>
+#endif
 
 #ifdef USE_BLE
 #include <wire/wire_iface_ble.h>
@@ -150,7 +153,7 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
             pm_suspend(NULL);
             button_deadline = 0;
             screen_render(wait_layout);
-            display_fade(0, BACKLIGHT_NORMAL, 200);
+            display_fade(display_get_backlight(), BACKLIGHT_NORMAL, 200);
             faded = false;
             fade_deadline = ticks_timeout(FADE_TIME_MS);
             suspend_deadline = ticks_timeout(SUSPEND_TIME_MS);

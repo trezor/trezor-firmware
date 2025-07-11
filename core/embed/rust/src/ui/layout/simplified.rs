@@ -143,20 +143,21 @@ pub fn run(frame: &mut impl Component<Msg = impl ReturnToC>) -> u32 {
                     button_pressed_time = Some(Instant::now());
                 } else if e == Event::Button(ButtonEvent::ButtonReleased(PhysicalButton::Power)) {
                     if let Some(t) = button_pressed_time {
-                        let elapsed = unwrap!(Instant::now().checked_duration_since(t));
-                        ModelUI::fadeout();
-                        if elapsed.to_secs() > 3 {
-                            #[cfg(feature = "haptic")]
-                            play(HapticEffect::BootloaderEntry);
-                            hibernate();
-                        } else {
-                            suspend();
-                            render(frame);
-                            ModelUI::fadein();
+                        if let Some(elapsed) = Instant::now().checked_duration_since(t) {
+                            ModelUI::fadeout();
+                            if elapsed.to_secs() > 3 {
+                                #[cfg(feature = "haptic")]
+                                play(HapticEffect::BootloaderEntry);
+                                hibernate();
+                            } else {
+                                suspend();
+                                render(frame);
+                                ModelUI::fadein();
 
-                            faded = false;
-                            button_pressed_time = None;
-                            start = Instant::now();
+                                faded = false;
+                                button_pressed_time = None;
+                                start = Instant::now();
+                            }
                         }
                     }
                 }

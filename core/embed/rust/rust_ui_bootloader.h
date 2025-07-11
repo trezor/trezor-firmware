@@ -12,7 +12,7 @@
 uint32_t screen_event(c_layout_t* layout, sysevents_t* signalled);
 
 // common render event
-uint32_t screen_render(c_layout_t* layout);
+void screen_render(c_layout_t* layout);
 
 // result screens
 void screen_wipe_success(void);
