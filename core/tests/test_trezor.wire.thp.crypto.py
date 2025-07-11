@@ -117,19 +117,19 @@ class TestTrezorHostProtocolCrypto(unittest.TestCase):
         storage.device.get_device_secret = get_dummy_device_secret
         handshake = self.handshake
 
-        host_ephemeral_privkey = curve25519.generate_secret()
-        host_ephemeral_pubkey = curve25519.publickey(host_ephemeral_privkey)
-        handshake.handle_th1_crypto(b"", host_ephemeral_pubkey)
+        host_ephemeral_private_key = curve25519.generate_secret()
+        host_ephemeral_public_key = curve25519.publickey(host_ephemeral_private_key)
+        handshake.handle_th1_crypto(b"", host_ephemeral_public_key)
 
     def test_th2_crypto(self):
         handshake = self.handshake
 
-        host_static_privkey = curve25519.generate_secret()
-        host_static_pubkey = curve25519.publickey(host_static_privkey)
+        host_static_private_key = curve25519.generate_secret()
+        host_static_public_key = curve25519.publickey(host_static_private_key)
         aes_ctx = aesgcm(handshake.k, IV_2)
         aes_ctx.auth(handshake.h)
-        encrypted_host_static_pubkey = bytearray(
-            aes_ctx.encrypt(host_static_pubkey) + aes_ctx.finish()
+        encrypted_host_static_public_key = bytearray(
+            aes_ctx.encrypt(host_static_public_key) + aes_ctx.finish()
         )
 
         # Code to encrypt Host's noise encrypted payload correctly:
@@ -137,10 +137,12 @@ class TestTrezorHostProtocolCrypto(unittest.TestCase):
         temp_k = handshake.k
         temp_h = handshake.h
 
-        temp_h = crypto._hash_of_two(temp_h, encrypted_host_static_pubkey)
+        temp_h = crypto._hash_of_two(temp_h, encrypted_host_static_public_key)
         _, temp_k = crypto._hkdf(
             handshake.ck,
-            curve25519.multiply(handshake.trezor_ephemeral_privkey, host_static_pubkey),
+            curve25519.multiply(
+                handshake.trezor_ephemeral_private_key, host_static_public_key
+            ),
         )
         aes_ctx = aesgcm(temp_k, IV_1)
         aes_ctx.encrypt_in_place(protomsg)
@@ -149,7 +151,7 @@ class TestTrezorHostProtocolCrypto(unittest.TestCase):
         encrypted_payload = bytearray(protomsg + tag)
         # end of encrypted payload generation
 
-        handshake.handle_th2_crypto(encrypted_host_static_pubkey, encrypted_payload)
+        handshake.handle_th2_crypto(encrypted_host_static_public_key, encrypted_payload)
         self.assertEqual(encrypted_payload[:4], b"\x10\x02\x10\x03")
 
 
