@@ -144,26 +144,54 @@ async def confirm_tx_data(
     data_total_len: int,
     payment_req_verifier: PaymentRequestVerifier | None,
 ) -> None:
-    # function distinguishes between staking / smart contracts / regular transactions
+    from trezor import TR
+    from trezor.ui.layouts import ethereum_address_title
+
+    from . import tokens
     from .layout import (
+        require_confirm_address,
         require_confirm_approve,
         require_confirm_other_data,
         require_confirm_payment_request,
         require_confirm_tx,
+        require_confirm_unknown_token,
     )
 
-    payment_req = msg.payment_req  # local_cache_attribute
+    # local_cache_attribute
+    payment_req = msg.payment_req
+    SC_FUNC_SIG_APPROVE = constants.SC_FUNC_SIG_APPROVE
+    REVOKE_AMOUNT = constants.SC_FUNC_APPROVE_REVOKE_AMOUNT
 
     if await handle_staking(msg, defs.network, address_bytes, maximum_fee, fee_items):
         return
 
     # Handle ERC-20 known functions
-    # TODO: this should only parse params, extract UI code out of it!
     token, token_address, func_sig, recipient, value = await _handle_erc20(
         msg, defs, address_bytes
     )
 
-    if func_sig == constants.SC_FUNC_SIG_APPROVE:
+    if token is tokens.UNKNOWN_TOKEN:
+        if func_sig == SC_FUNC_SIG_APPROVE:
+            if value == REVOKE_AMOUNT:
+                title = TR.ethereum__approve_intro_title_revoke
+            else:
+                title = TR.ethereum__approve_intro_title
+        else:
+            title = ethereum_address_title()
+        await require_confirm_unknown_token(title)
+        if func_sig != SC_FUNC_SIG_APPROVE:
+            # For unknown tokens we also show the token address immediately after the warning
+            # except in the case of the "approve" flow which shows the token address later on!
+            await require_confirm_address(
+                address_bytes,
+                ethereum_address_title(),
+                TR.ethereum__token_contract,
+                TR.buttons__continue,
+                "unknown_token",
+                TR.ethereum__unknown_contract_address,
+            )
+
+    if func_sig == SC_FUNC_SIG_APPROVE:
         assert token
         assert token_address
 
@@ -274,12 +302,6 @@ async def _handle_erc20(
     definitions: Definitions,
     address_bytes: bytes,
 ) -> tuple[EthereumTokenInfo | None, bytes | None, bytes | None, bytes, int | None]:
-    from trezor import TR
-    from trezor.ui.layouts import ethereum_address_title
-
-    from . import tokens
-    from .layout import require_confirm_address, require_confirm_unknown_token
-
     # local_cache_attribute
     data_initial_chunk = msg.data_initial_chunk
     SC_FUNC_SIG_BYTES = constants.SC_FUNC_SIG_BYTES
@@ -287,7 +309,6 @@ async def _handle_erc20(
     SC_ARGUMENT_ADDRESS_BYTES = constants.SC_ARGUMENT_ADDRESS_BYTES
     SC_FUNC_SIG_APPROVE = constants.SC_FUNC_SIG_APPROVE
     SC_FUNC_SIG_TRANSFER = constants.SC_FUNC_SIG_TRANSFER
-    REVOKE_AMOUNT = constants.SC_FUNC_APPROVE_REVOKE_AMOUNT
 
     token = None
     token_address = None
@@ -329,27 +350,6 @@ async def _handle_erc20(
 
         token = definitions.get_token(address_bytes)
         token_address = address_bytes
-
-        if token is tokens.UNKNOWN_TOKEN:
-            if func_sig == SC_FUNC_SIG_APPROVE:
-                if value == REVOKE_AMOUNT:
-                    title = TR.ethereum__approve_intro_title_revoke
-                else:
-                    title = TR.ethereum__approve_intro_title
-            else:
-                title = ethereum_address_title()
-            await require_confirm_unknown_token(title)
-            if func_sig != SC_FUNC_SIG_APPROVE:
-                # For unknown tokens we also show the token address immediately after the warning
-                # except in the case of the "approve" flow which shows the token address later on!
-                await require_confirm_address(
-                    address_bytes,
-                    ethereum_address_title(),
-                    TR.ethereum__token_contract,
-                    TR.buttons__continue,
-                    "unknown_token",
-                    TR.ethereum__unknown_contract_address,
-                )
 
     return token, token_address, func_sig, recipient, value
 
