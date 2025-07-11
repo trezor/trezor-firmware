@@ -95,8 +95,6 @@ pub enum BootloaderLayout {
     PairingMode(PairingModeScreen),
     #[cfg(feature = "ble")]
     WirelessSetup(PairingModeScreen),
-    #[cfg(feature = "ble")]
-    WirelessSetupFinal(ConnectScreen),
 }
 
 impl BootloaderLayoutType for BootloaderLayout {
@@ -110,10 +108,6 @@ impl BootloaderLayoutType for BootloaderLayout {
             #[cfg(feature = "ble")]
             BootloaderLayout::WirelessSetup(f) => {
                 process_frame_event::<PairingModeScreen>(f, event)
-            }
-            #[cfg(feature = "ble")]
-            BootloaderLayout::WirelessSetupFinal(f) => {
-                process_frame_event::<ConnectScreen>(f, event)
             }
         }
     }
@@ -139,8 +133,6 @@ impl BootloaderLayoutType for BootloaderLayout {
             BootloaderLayout::PairingMode(f) => show(f, true),
             #[cfg(feature = "ble")]
             BootloaderLayout::WirelessSetup(f) => show(f, true),
-            #[cfg(feature = "ble")]
-            BootloaderLayout::WirelessSetupFinal(f) => show(f, true),
         }
     }
 
