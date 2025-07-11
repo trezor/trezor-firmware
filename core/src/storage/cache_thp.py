@@ -75,7 +75,7 @@ class ChannelCache(ThpDataCache):
     def sync(self, value: int) -> None:
         self.set_int(CHANNEL_SYNC, value)
 
-    def set_host_static_pubkey(self, key: bytearray) -> None:
+    def set_host_static_public_key(self, key: bytearray) -> None:
         if len(key) != KEY_LENGTH:
             raise Exception("Invalid key length")
         self.set(CHANNEL_HOST_STATIC_PUBKEY, key)
