@@ -1,10 +1,9 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{paginated::PaginateFull, Bar, Component, Event, EventCtx, Label, Never},
+        component::{paginated::SinglePage, Bar, Component, Event, EventCtx, Label, Never},
         geometry::{Grid, Insets, Rect},
         shape::Renderer,
-        util::Pager,
     },
 };
 
@@ -20,22 +19,14 @@ impl TradeScreen {
     pub fn new(sell_amount: TString<'static>, buy_amount: TString<'static>) -> Self {
         Self {
             sell_amount: Label::left_aligned(sell_amount, theme::TEXT_WARNING).top_aligned(),
-            line: Bar::new(theme::GREY_EXTRA_DARK, theme::BG, 1),
+            line: Bar::new(theme::GREY_EXTRA_DARK, theme::BG, 2),
             buy_amount: Label::left_aligned(buy_amount, theme::TEXT_MAIN_GREEN_LIME)
                 .bottom_aligned(),
         }
     }
 }
 
-impl PaginateFull for TradeScreen {
-    fn pager(&self) -> Pager {
-        Pager::new(1).with_current(0)
-    }
-
-    fn change_page(&mut self, _active_page: u16) {
-        unimplemented!()
-    }
-}
+impl SinglePage for TradeScreen {}
 
 impl Component for TradeScreen {
     type Msg = Never;
