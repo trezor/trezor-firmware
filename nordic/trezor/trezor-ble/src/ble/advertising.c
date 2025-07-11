@@ -39,7 +39,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 bool advertising = false;
 bool advertising_wl = false;
 
-uint8_t manufacturer_data[8] = {0xff, 0xff, 0, 0, 0, 0, 0, 0};
+uint8_t manufacturer_data[8] = {0x29, 0x0F, 0, 0, 0, 0, 0, 0};
 
 static struct bt_data advertising_data[2];
 
