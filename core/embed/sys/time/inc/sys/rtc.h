@@ -19,8 +19,6 @@
 
 #pragma once
 
-#include <trezor_bsp.h>
-
 /**
  * @brief Initialize the RTC driver
  *

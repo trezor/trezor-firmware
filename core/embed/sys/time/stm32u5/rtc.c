@@ -188,7 +188,6 @@ static uint8_t bcd2bin(uint8_t val) { return (val & 0x0F) + ((val >> 4) * 10); }
 
 // Check for leap year
 static int is_leap_year(int year) {
-  year += 2000;  // STM32 RTC uses years 0-99 for 2000-2099
   return ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0));
 }
 
@@ -201,19 +200,25 @@ static uint32_t rtc_calendar_to_timestamp(const RTC_DateTypeDef* date,
   uint8_t min = bcd2bin(time->Minutes);
   uint8_t sec = bcd2bin(time->Seconds);
 
+  // STM RTC starts at 2000, so we need to offset the year evey time we
+  // calculate the leap years.
+
   uint32_t days = 0;
   for (int y = 0; y < year; ++y) {
     days += 365;
-    if (is_leap_year(y)) days += 1;
+    if (is_leap_year(y + 2000)) days += 1;
   }
   for (int m = 1; m < month; ++m) {
     days += days_in_month[m - 1];
-    if (m == 2 && is_leap_year(year)) days += 1;
+    if (m == 2 && is_leap_year(year + 2000)) days += 1;
   }
   days += day - 1;
 
-    uint32_t seconds = days * 86400 + hour * 3600 + min * 60 + sec;
-    return seconds;
+  uint32_t seconds = days * 86400 + hour * 3600 + min * 60 + sec;
+
+  // Unix epoch starts at 1970, STM32 RTC at 2000
+  // 946684800 = seconds from 1970-01-01 to 2000-01-01
+  return seconds + 946684800;
 }
 
 #endif  // KERNEL_MODE
