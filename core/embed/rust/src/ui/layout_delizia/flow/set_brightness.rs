@@ -18,7 +18,7 @@ use crate::{
 use super::super::{
     component::{
         number_input_slider::{NumberInputSliderDialog, NumberInputSliderDialogMsg},
-        Footer, Frame, PromptMsg, PromptScreen, StatusScreen, SwipeContent,
+        Footer, Frame,
     },
     theme,
 };
@@ -26,8 +26,6 @@ use super::super::{
 #[derive(Copy, Clone, PartialEq, Eq, ToPrimitive)]
 pub enum SetBrightness {
     Slider,
-    Confirm,
-    Confirmed,
 }
 
 impl FlowController for SetBrightness {
@@ -38,19 +36,17 @@ impl FlowController for SetBrightness {
 
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
-            (Self::Slider, Direction::Up) => Self::Confirm.swipe(direction),
-            (Self::Confirm, Direction::Down) => Self::Slider.swipe(direction),
-            (Self::Confirmed, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Slider, Direction::Up) => {
+                unwrap!(storage::set_brightness(BRIGHTNESS.load(Ordering::Relaxed)));
+                self.return_msg(FlowMsg::Confirmed)
+            }
             _ => self.do_nothing(),
         }
     }
 
     fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
-            (Self::Slider, FlowMsg::Info) => self.return_msg(FlowMsg::Info),
-            (Self::Confirm, FlowMsg::Confirmed) => Self::Confirmed.swipe_up(),
-            (Self::Confirm, FlowMsg::Info) => self.return_msg(FlowMsg::Info),
-            (Self::Confirmed, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Slider, FlowMsg::Cancelled) => self.return_msg(FlowMsg::Cancelled),
             _ => self.do_nothing(),
         }
     }
@@ -67,7 +63,7 @@ fn footer_update_fn(
         footer.update_instruction(ctx, TR::instructions__swipe_horizontally);
         footer.update_description(ctx, TR::setting__adjust);
     } else {
-        footer.update_instruction(ctx, TR::instructions__tap_to_continue);
+        footer.update_instruction(ctx, TR::instructions__tap_to_confirm);
         footer.update_description(ctx, TR::setting__apply);
     }
 }
@@ -82,8 +78,7 @@ pub fn new_set_brightness(brightness: u8) -> Result<SwipeFlow, Error> {
         ),
     )
     .with_subtitle(TR::homescreen__settings_subtitle.into())
-    .with_menu_button()
-    .with_external_menu()
+    .with_cancel_button()
     .with_swipe(Direction::Up, SwipeSettings::default())
     .with_footer(
         TR::instructions__swipe_horizontally.into(),
@@ -98,36 +93,8 @@ pub fn new_set_brightness(brightness: u8) -> Result<SwipeFlow, Error> {
         }
     });
 
-    let content_confirm = Frame::left_aligned(
-        TR::brightness__change_title.into(),
-        SwipeContent::new(PromptScreen::new_tap_to_confirm()),
-    )
-    .with_footer(TR::instructions__tap_to_confirm.into(), None)
-    .with_menu_button()
-    .with_swipe(Direction::Down, SwipeSettings::default())
-    .map(move |msg| match msg {
-        PromptMsg::Confirmed => {
-            let _ = storage::set_brightness(BRIGHTNESS.load(Ordering::Relaxed));
-            Some(FlowMsg::Confirmed)
-        }
-        _ => None,
-    });
-
-    let content_confirmed = Frame::left_aligned(
-        TR::words__title_success.into(),
-        SwipeContent::new(StatusScreen::new_success(
-            TR::brightness__changed_title.into(),
-        ))
-        .with_no_attach_anim(),
-    )
-    .with_swipeup_footer(None)
-    .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREEN_LIGHT)
-    .map(move |_msg| Some(FlowMsg::Confirmed));
-
     let mut res = SwipeFlow::new(&SetBrightness::Slider)?;
-    res.add_page(&SetBrightness::Slider, content_slider)?
-        .add_page(&SetBrightness::Confirm, content_confirm)?
-        .add_page(&SetBrightness::Confirmed, content_confirmed)?;
+    res.add_page(&SetBrightness::Slider, content_slider)?;
 
     Ok(res)
 }
