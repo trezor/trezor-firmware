@@ -518,6 +518,30 @@ pub const fn button_always_disabled() -> ButtonStyleSheet {
     }
 }
 
+pub const fn button_menu_tutorial() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREEN_LIME,
+            button_color: BG,
+            icon_color: GREEN_LIME,
+        },
+        active: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREEN_LIME,
+            button_color: GREEN_EXTRA_DARK,
+            icon_color: GREEN_LIME,
+        },
+        // not used
+        disabled: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: BG,
+            button_color: BG,
+            icon_color: BG,
+        },
+    }
+}
+
 pub const fn input_mnemonic() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
