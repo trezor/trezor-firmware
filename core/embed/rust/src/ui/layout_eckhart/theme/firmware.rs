@@ -179,21 +179,18 @@ pub const fn button_confirm() -> ButtonStyleSheet {
             text_color: GREEN_LIGHT,
             button_color: GREEN_DARK,
             icon_color: GREEN_LIGHT,
-            background_color: GREEN_DARK,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREEN,
             button_color: GREEN_EXTRA_DARK,
             icon_color: GREEN,
-            background_color: BG,
         },
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREY_LIGHT,
             button_color: GREY_DARK,
             icon_color: GREY_LIGHT,
-            background_color: GREY_DARK,
         },
     }
 }
@@ -205,21 +202,18 @@ pub const fn button_cancel() -> ButtonStyleSheet {
             text_color: ORANGE,
             button_color: BG,
             icon_color: ORANGE,
-            background_color: BG,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: ORANGE_DIMMED,
             button_color: ORANGE_EXTRA_DARK,
             icon_color: ORANGE_DIMMED,
-            background_color: ORANGE_EXTRA_DARK,
         },
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREY_EXTRA_DARK,
             button_color: BG,
             icon_color: GREY_EXTRA_DARK,
-            background_color: BG,
         },
     }
 }
@@ -231,21 +225,18 @@ pub const fn button_actionbar_right_default() -> ButtonStyleSheet {
             text_color: GREY_LIGHT,
             button_color: GREY_EXTRA_DARK,
             icon_color: GREY_LIGHT,
-            background_color: GREY_EXTRA_DARK,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREY_DARK,
             button_color: GREY_SUPER_DARK,
             icon_color: GREY_DARK,
-            background_color: BG,
         },
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREY_EXTRA_DARK,
             button_color: BG,
             icon_color: GREY_EXTRA_DARK,
-            background_color: BG,
         },
     }
 }
@@ -257,21 +248,18 @@ pub const fn button_actionbar_danger() -> ButtonStyleSheet {
             text_color: ORANGE,
             button_color: ORANGE_SUPER_DARK,
             icon_color: ORANGE,
-            background_color: BG,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: ORANGE,
             button_color: ORANGE_DARK,
             icon_color: ORANGE,
-            background_color: BG,
         },
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: ORANGE,
             button_color: GREY_DARK,
             icon_color: GREY_LIGHT,
-            background_color: GREY_DARK,
         },
     }
 }
@@ -283,21 +271,18 @@ pub const fn button_header() -> ButtonStyleSheet {
             text_color: GREY_LIGHT,
             button_color: BG,
             icon_color: GREY_LIGHT,
-            background_color: BG,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREY_LIGHT,
             button_color: GREY_SUPER_DARK,
             icon_color: GREY_LIGHT,
-            background_color: BG,
         },
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREY_LIGHT,
             button_color: BG,
             icon_color: GREY_LIGHT,
-            background_color: BG,
         },
     }
 }
@@ -311,21 +296,18 @@ macro_rules! menu_item_title {
                 text_color: $color,
                 button_color: BG,
                 icon_color: $color,
-                background_color: BG,
             },
             active: &ButtonStyle {
                 font: fonts::FONT_SATOSHI_REGULAR_38,
                 text_color: GREY_DARK,
                 button_color: GREY_SUPER_DARK,
                 icon_color: GREY_DARK,
-                background_color: GREY_SUPER_DARK,
             },
             disabled: &ButtonStyle {
                 font: fonts::FONT_SATOSHI_REGULAR_38,
                 text_color: GREY_DARK,
                 button_color: BG,
                 icon_color: GREY_DARK,
-                background_color: BG,
             },
         }
     };
@@ -355,14 +337,12 @@ macro_rules! button_homebar_style {
                 text_color: GREY_LIGHT,
                 button_color: $button_color,
                 icon_color: $icon_color,
-                background_color: BG,
             },
             active: &ButtonStyle {
                 font: fonts::FONT_SATOSHI_MEDIUM_26,
                 text_color: GREY_LIGHT,
                 button_color: GREY_SUPER_DARK,
                 icon_color: GREY_LIGHT,
-                background_color: GREY_SUPER_DARK,
             },
             // unused
             disabled: &ButtonStyle {
@@ -370,7 +350,6 @@ macro_rules! button_homebar_style {
                 text_color: GREY_LIGHT,
                 button_color: GREY_SUPER_DARK,
                 icon_color: GREY_LIGHT,
-                background_color: GREY_SUPER_DARK,
             },
         }
     };
@@ -393,14 +372,12 @@ pub const fn button_select_word() -> ButtonStyleSheet {
             text_color: GREY_EXTRA_LIGHT,
             button_color: BG,
             icon_color: GREY_EXTRA_LIGHT,
-            background_color: BG,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_EXTRALIGHT_46,
             text_color: GREY_DARK,
             button_color: GREY_SUPER_DARK,
             icon_color: GREY_DARK,
-            background_color: GREY_SUPER_DARK,
         },
         // unused
         disabled: &ButtonStyle {
@@ -408,7 +385,6 @@ pub const fn button_select_word() -> ButtonStyleSheet {
             text_color: BG,
             button_color: BG,
             icon_color: BG,
-            background_color: BG,
         },
     }
 }
@@ -420,21 +396,18 @@ pub const fn button_keyboard() -> ButtonStyleSheet {
             text_color: GREY_EXTRA_LIGHT,
             button_color: BG,
             icon_color: GREY_LIGHT,
-            background_color: BG,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_EXTRALIGHT_46,
             text_color: GREY_DARK,
             button_color: GREY_SUPER_DARK,
             icon_color: GREY_DARK,
-            background_color: GREY_SUPER_DARK,
         },
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_EXTRALIGHT_46,
             text_color: GREY_EXTRA_DARK,
             button_color: BG,
             icon_color: GREY_EXTRA_DARK,
-            background_color: BG,
         },
     }
 }
@@ -446,21 +419,18 @@ pub const fn button_keyboard_numeric() -> ButtonStyleSheet {
             text_color: GREY_EXTRA_LIGHT,
             button_color: BG,
             icon_color: GREY_LIGHT,
-            background_color: BG,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_EXTRALIGHT_72,
             text_color: GREY_DARK,
             button_color: GREY_SUPER_DARK,
             icon_color: GREY_DARK,
-            background_color: GREY_SUPER_DARK,
         },
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_EXTRALIGHT_72,
             text_color: GREY_EXTRA_DARK,
             button_color: BG,
             icon_color: GREY_EXTRA_DARK,
-            background_color: BG,
         },
     }
 }
@@ -472,21 +442,18 @@ pub const fn button_keyboard_confirm() -> ButtonStyleSheet {
             text_color: GREEN_LIGHT,              // unused
             button_color: BG,
             icon_color: GREEN_LIGHT,
-            background_color: BG,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_REGULAR_22, // unused
             text_color: GREEN,                    // unused
             button_color: GREEN_EXTRA_DARK,
             icon_color: GREEN,
-            background_color: GREEN_EXTRA_DARK,
         },
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_REGULAR_22, // unused
             text_color: GREY_EXTRA_DARK,          // unused
             button_color: BG,
             icon_color: GREY_EXTRA_DARK,
-            background_color: BG,
         },
     }
 }
@@ -498,14 +465,12 @@ pub const fn button_keyboard_next() -> ButtonStyleSheet {
             text_color: GREY_EXTRA_LIGHT,
             button_color: BG,
             icon_color: GREY_EXTRA_LIGHT,
-            background_color: BG,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREY_DARK,
             button_color: GREY_SUPER_DARK,
             icon_color: GREY_DARK,
-            background_color: GREY_SUPER_DARK,
         },
         // not used
         disabled: &ButtonStyle {
@@ -513,7 +478,6 @@ pub const fn button_keyboard_next() -> ButtonStyleSheet {
             text_color: BG,
             button_color: BG,
             icon_color: BG,
-            background_color: BG,
         },
     }
 }
@@ -525,7 +489,6 @@ pub const fn button_always_disabled() -> ButtonStyleSheet {
         text_color: GREY,
         button_color: BG,
         icon_color: GREY,
-        background_color: BG,
     };
     ButtonStyleSheet {
         normal: style,
@@ -541,21 +504,18 @@ pub const fn input_mnemonic() -> ButtonStyleSheet {
             text_color: GREY_LIGHT,
             button_color: BG,
             icon_color: GREY_LIGHT,
-            background_color: BG,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_REGULAR_38,
             text_color: GREY_LIGHT,
             button_color: GREY_SUPER_DARK,
             icon_color: GREY_LIGHT,
-            background_color: GREY_SUPER_DARK,
         },
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_REGULAR_38,
             text_color: GREY_LIGHT,
             button_color: BG,
             icon_color: GREY_LIGHT,
-            background_color: BG,
         },
     }
 }
@@ -567,21 +527,18 @@ pub const fn input_mnemonic_suggestion() -> ButtonStyleSheet {
             text_color: GREY_DARK,
             button_color: BG,
             icon_color: GREY_DARK,
-            background_color: BG,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_REGULAR_38,
             text_color: GREY_LIGHT,
             button_color: BG,
             icon_color: GREY_LIGHT,
-            background_color: BG,
         },
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_REGULAR_38,
             text_color: BG,
             button_color: BG,
             icon_color: BG,
-            background_color: BG,
         },
     }
 }
@@ -593,14 +550,12 @@ pub const fn input_mnemonic_confirm() -> ButtonStyleSheet {
             text_color: GREEN_LIGHT,
             button_color: BG,
             icon_color: GREEN_LIGHT,
-            background_color: BG,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_REGULAR_38,
             text_color: GREEN_LIGHT,
             button_color: GREEN_EXTRA_DARK,
             icon_color: GREEN_LIGHT,
-            background_color: GREEN_EXTRA_DARK,
         },
         disabled: &ButtonStyle {
             // unused
@@ -608,7 +563,6 @@ pub const fn input_mnemonic_confirm() -> ButtonStyleSheet {
             text_color: BG,
             button_color: BG,
             icon_color: BG,
-            background_color: BG,
         },
     }
 }
