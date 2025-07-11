@@ -305,10 +305,10 @@ if utils.USE_THP:
         # Assert that context `ctx` is `GenericSessionContext`
         assert isinstance(ctx, GenericSessionContext)
 
-        # Check that request contains a host static pubkey
-        if message.host_static_pubkey is None:
+        # Check that request contains a host static public_key
+        if message.host_static_public_key is None:
             return _get_autoconnect_failure(
-                "Credential request must contain a host static pubkey."
+                "Credential request must contain a host static public_key."
             )
 
         # Check that request contains valid credential
@@ -317,7 +317,7 @@ if utils.USE_THP:
                 "Credential request must contain a previously issued pairing credential."
             )
         credential = decode_credential(message.credential)
-        if not validate_credential(credential, message.host_static_pubkey):
+        if not validate_credential(credential, message.host_static_public_key):
             return _get_autoconnect_failure(
                 "Credential request contains an invalid pairing credential."
             )
@@ -337,13 +337,13 @@ if utils.USE_THP:
                 ctx, cred_metadata.host_name
             )
         new_cred = issue_credential(
-            host_static_pubkey=message.host_static_pubkey,
+            host_static_public_key=message.host_static_public_key,
             credential_metadata=cred_metadata,
         )
-        trezor_static_pubkey = crypto.get_trezor_static_pubkey()
+        trezor_static_public_key = crypto.get_trezor_static_public_key()
 
         return ThpCredentialResponse(
-            trezor_static_pubkey=trezor_static_pubkey, credential=new_cred
+            trezor_static_public_key=trezor_static_public_key, credential=new_cred
         )
 
     def _get_autoconnect_failure(msg: str) -> Failure:
