@@ -3,6 +3,7 @@ pub mod backlight;
 pub mod bootloader;
 #[cfg(any(feature = "prodtest", feature = "micropython"))]
 pub mod firmware;
+pub mod gradient;
 #[cfg(any(feature = "prodtest", feature = "micropython"))]
 pub use firmware::*;
 
@@ -17,6 +18,8 @@ use super::{
     component::{ButtonStyle, ButtonStyleSheet},
     fonts,
 };
+
+pub use gradient::Gradient;
 
 // Color palette.
 pub const WHITE: Color = Color::rgb(0xFF, 0xFF, 0xFF);
@@ -48,8 +51,6 @@ pub const YELLOW_DARK: Color = Color::rgb(0x21, 0x1E, 0x0C); // Homescreen gradi
 pub const BLUE: Color = Color::rgb(0x00, 0x46, 0xFF);
 
 pub const RED: Color = Color::rgb(0xFF, 0x30, 0x30);
-pub const FATAL_ERROR_COLOR: Color = Color::rgb(0xE7, 0x0E, 0x0E);
-pub const FATAL_ERROR_HIGHLIGHT_COLOR: Color = Color::rgb(0xFF, 0x41, 0x41);
 
 // Common constants
 pub const PADDING: i16 = 24; // [px]

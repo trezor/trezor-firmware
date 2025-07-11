@@ -72,12 +72,13 @@ impl ActionBar {
     /// component automatically shows navigation up/down buttons for
     /// paginated content.
     pub fn new_single(button: Button) -> Self {
-        let mut right_button = button
-            .with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)
-            .with_gradient();
+        let mut right_button = button.with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH);
         if right_button.stylesheet() == &theme::button_default() {
             right_button = right_button.styled(theme::firmware::button_actionbar_right_default());
         };
+        if !right_button.has_gradient() {
+            right_button = right_button.with_gradient(theme::Gradient::DefaultGrey);
+        }
         Self::new(Mode::Single, None, Some(right_button), None)
     }
 
@@ -104,8 +105,10 @@ impl ActionBar {
             .with_content_offset(Self::BUTTON_CONTENT_OFFSET);
         let mut right_button = right
             .with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)
-            .with_content_offset(Self::BUTTON_CONTENT_OFFSET.neg())
-            .with_gradient();
+            .with_content_offset(Self::BUTTON_CONTENT_OFFSET.neg());
+        if !right_button.has_gradient() {
+            right_button = right_button.with_gradient(theme::Gradient::DefaultGrey);
+        }
         if right_button.stylesheet() == &theme::button_default() {
             right_button = right_button.styled(theme::firmware::button_actionbar_right_default());
         };

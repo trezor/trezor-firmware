@@ -89,13 +89,16 @@ impl Homescreen {
             None => (None, None),
         };
 
+        // Homebar
+        let (style_sheet, gradient) = button_homebar_style(notification_level);
+        let btn = Button::new(Self::homebar_content(bootscreen, locked))
+            .styled(style_sheet)
+            .with_gradient(gradient);
+
         Ok(Self {
             label: HomeLabel::new(label, shadow),
             hint,
-            action_bar: ActionBar::new_single(
-                Button::new(Self::homebar_content(bootscreen, locked))
-                    .styled(button_homebar_style(notification_level)),
-            ),
+            action_bar: ActionBar::new_single(btn),
             image,
             led_color,
             lockable,
