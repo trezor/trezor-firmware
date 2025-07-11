@@ -15,6 +15,7 @@ pub mod request_passphrase;
 pub mod show_danger;
 pub mod show_share_words;
 pub mod show_thp_pairing_code;
+pub mod show_tutorial;
 pub mod util;
 
 #[cfg(feature = "universal_fw")]
@@ -34,3 +35,4 @@ pub use request_passphrase::RequestPassphrase;
 pub use show_danger::ShowDanger;
 pub use show_share_words::new_show_share_words_flow;
 pub use show_thp_pairing_code::new_show_thp_pairing_code;
+pub use show_tutorial::new_show_tutorial;
