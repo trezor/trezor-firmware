@@ -390,7 +390,7 @@ async def _handle_credential_request(
 
     if not ThpCredentialRequest.is_type_of(message):
         raise UnexpectedMessage("Unexpected message")
-    if message.host_static_pubkey is None:
+    if message.host_static_public_key is None:
         raise Exception("Invalid message")  # TODO change failure type
 
     autoconnect: bool = False
@@ -405,12 +405,13 @@ async def _handle_credential_request(
 
         from .credential_manager import validate_credential
 
-        host_static_pubkey = ctx.channel_ctx.channel_cache.get(
+        host_static_public_key = ctx.channel_ctx.channel_cache.get(
             CHANNEL_HOST_STATIC_PUBKEY
         )
 
-        if not host_static_pubkey or not validate_credential(
-            credential=ctx.channel_ctx.credential, host_static_pubkey=host_static_pubkey
+        if not host_static_public_key or not validate_credential(
+            credential=ctx.channel_ctx.credential,
+            host_static_public_key=host_static_public_key,
         ):
             raise Exception(
                 "Cannot ask for autoconnect credential without a valid credential!"
@@ -418,16 +419,16 @@ async def _handle_credential_request(
 
         await ctx.show_autoconnect_credential_confirmation_screen()  # TODO add device name
 
-    trezor_static_pubkey = crypto.get_trezor_static_pubkey()
+    trezor_static_public_key = crypto.get_trezor_static_public_key()
     credential_metadata = ThpCredentialMetadata(
         host_name=ctx.host_name,
         autoconnect=autoconnect,
     )
-    credential = issue_credential(message.host_static_pubkey, credential_metadata)
+    credential = issue_credential(message.host_static_public_key, credential_metadata)
 
     return await ctx.call_any(
         ThpCredentialResponse(
-            trezor_static_pubkey=trezor_static_pubkey, credential=credential
+            trezor_static_public_key=trezor_static_public_key, credential=credential
         ),
         ThpMessageType.ThpCredentialRequest,
         ThpMessageType.ThpEndRequest,
@@ -444,7 +445,7 @@ async def _handle_end_request(
 
 
 async def _end_pairing(ctx: PairingContext) -> ThpEndResponse:
-    ctx.channel_ctx.replace_old_channels_with_the_same_host_pubkey()
+    ctx.channel_ctx.replace_old_channels_with_the_same_host_public_key()
     ctx.channel_ctx.set_channel_state(ChannelState.ENCRYPTED_TRANSPORT)
     return ThpEndResponse()
 

@@ -122,7 +122,7 @@ class Channel:
         if __debug__:
             self._log("set_channel_state: ", state_to_str(state))
 
-    def replace_old_channels_with_the_same_host_pubkey(self) -> None:
+    def replace_old_channels_with_the_same_host_public_key(self) -> None:
         was_any_replaced = conditionally_replace_channel(
             new_channel=self.channel_cache,
             required_state=ChannelState.ENCRYPTED_TRANSPORT,

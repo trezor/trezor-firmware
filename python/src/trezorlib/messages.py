@@ -8174,7 +8174,7 @@ class ThpNfcTagTrezor(protobuf.MessageType):
 class ThpCredentialRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 1016
     FIELDS = {
-        1: protobuf.Field("host_static_pubkey", "bytes", repeated=False, required=True),
+        1: protobuf.Field("host_static_public_key", "bytes", repeated=False, required=True),
         2: protobuf.Field("autoconnect", "bool", repeated=False, required=False, default=False),
         3: protobuf.Field("credential", "bytes", repeated=False, required=False, default=None),
     }
@@ -8182,11 +8182,11 @@ class ThpCredentialRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        host_static_pubkey: "bytes",
+        host_static_public_key: "bytes",
         autoconnect: Optional["bool"] = False,
         credential: Optional["bytes"] = None,
     ) -> None:
-        self.host_static_pubkey = host_static_pubkey
+        self.host_static_public_key = host_static_public_key
         self.autoconnect = autoconnect
         self.credential = credential
 
@@ -8194,17 +8194,17 @@ class ThpCredentialRequest(protobuf.MessageType):
 class ThpCredentialResponse(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 1017
     FIELDS = {
-        1: protobuf.Field("trezor_static_pubkey", "bytes", repeated=False, required=True),
+        1: protobuf.Field("trezor_static_public_key", "bytes", repeated=False, required=True),
         2: protobuf.Field("credential", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        trezor_static_pubkey: "bytes",
+        trezor_static_public_key: "bytes",
         credential: "bytes",
     ) -> None:
-        self.trezor_static_pubkey = trezor_static_pubkey
+        self.trezor_static_public_key = trezor_static_public_key
         self.credential = credential
 
 
@@ -8253,17 +8253,17 @@ class ThpPairingCredential(protobuf.MessageType):
 class ThpAuthenticatedCredentialData(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("host_static_pubkey", "bytes", repeated=False, required=True),
+        1: protobuf.Field("host_static_public_key", "bytes", repeated=False, required=True),
         2: protobuf.Field("cred_metadata", "ThpCredentialMetadata", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        host_static_pubkey: "bytes",
+        host_static_public_key: "bytes",
         cred_metadata: "ThpCredentialMetadata",
     ) -> None:
-        self.host_static_pubkey = host_static_pubkey
+        self.host_static_public_key = host_static_public_key
         self.cred_metadata = cred_metadata
 
 
