@@ -4,6 +4,7 @@ use super::ffi;
 pub enum HapticEffect {
     ButtonPress = ffi::haptic_effect_t_HAPTIC_BUTTON_PRESS as _,
     HoldToConfirm = ffi::haptic_effect_t_HAPTIC_HOLD_TO_CONFIRM as _,
+    BootloaderEntry = ffi::haptic_effect_t_HAPTIC_BOOTLOADER_ENTRY as _,
 }
 
 pub fn play(effect: HapticEffect) {

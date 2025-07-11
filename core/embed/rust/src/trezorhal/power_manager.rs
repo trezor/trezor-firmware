@@ -51,3 +51,7 @@ pub fn is_usb_connected() -> bool {
 pub fn suspend() {
     unsafe { ffi::pm_suspend(null_mut()) };
 }
+
+pub fn hibernate() {
+    unsafe { ffi::pm_hibernate() };
+}

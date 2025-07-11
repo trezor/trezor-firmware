@@ -4,7 +4,7 @@ use crate::{
         component::{Event, Label},
         display::{self, toif::Toif, Color},
         geometry::{Alignment, Alignment2D, Offset, Point, Rect},
-        layout::simplified::{process_frame_event, run, show},
+        layout::simplified::{process_frame_event, render, run, show},
         shape::{self, render_on_display},
         ui_bootloader::{BootloaderLayoutType, BootloaderUI},
         CommonUI,
@@ -95,8 +95,6 @@ pub enum BootloaderLayout {
     PairingMode(PairingModeScreen),
     #[cfg(feature = "ble")]
     WirelessSetup(PairingModeScreen),
-    #[cfg(feature = "ble")]
-    WirelessSetupFinal(ConnectScreen),
 }
 
 impl BootloaderLayoutType for BootloaderLayout {
@@ -111,10 +109,18 @@ impl BootloaderLayoutType for BootloaderLayout {
             BootloaderLayout::WirelessSetup(f) => {
                 process_frame_event::<PairingModeScreen>(f, event)
             }
+        }
+    }
+
+    fn render(&mut self) {
+        match self {
+            BootloaderLayout::Welcome(f) => render(f),
+            BootloaderLayout::Menu(f) => render(f),
+            BootloaderLayout::Connect(f) => render(f),
             #[cfg(feature = "ble")]
-            BootloaderLayout::WirelessSetupFinal(f) => {
-                process_frame_event::<ConnectScreen>(f, event)
-            }
+            BootloaderLayout::PairingMode(f) => render(f),
+            #[cfg(feature = "ble")]
+            BootloaderLayout::WirelessSetup(f) => render(f),
         }
     }
 
@@ -127,8 +133,6 @@ impl BootloaderLayoutType for BootloaderLayout {
             BootloaderLayout::PairingMode(f) => show(f, true),
             #[cfg(feature = "ble")]
             BootloaderLayout::WirelessSetup(f) => show(f, true),
-            #[cfg(feature = "ble")]
-            BootloaderLayout::WirelessSetupFinal(f) => show(f, true),
         }
     }
 
