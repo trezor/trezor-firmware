@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from contextlib import nullcontext
 from pathlib import Path
 
 import pytest
@@ -482,7 +483,11 @@ U8_MIN = 0
 U8_MAX = 0xFF  # 255
 
 
-@pytest.mark.models(skip=["legacy", "safe3"])
+@pytest.mark.models(
+    "core",
+    skip=["safe3"],
+    reason="legacy and TS3 do not have brightness feature",
+)
 @pytest.mark.setup_client(pin=None)
 @pytest.mark.parametrize(
     "value,should_raise",
@@ -499,14 +504,15 @@ def test_set_brightness(client: Client, value: int | None, should_raise: bool):
         IF = InputFlowSetBrightness(client)
         client.set_input_flow(IF.get())
 
-        if should_raise:
-            with pytest.raises(exceptions.TrezorFailure):
-                device.set_brightness(client, value)
-        else:
+        with pytest.raises(exceptions.TrezorFailure) if should_raise else nullcontext():
             device.set_brightness(client, value)
 
 
-@pytest.mark.models(skip=["legacy", "safe3", "eckhart"])
+@pytest.mark.models(
+    "core",
+    skip=["safe3", "eckhart"],
+    reason="TS7 cannot cancel brightness flow, legacy and TS3 do not have brightness feature at all",
+)
 @pytest.mark.setup_client(pin=None)
 def test_set_brightness_cancel(client: Client):
     with pytest.raises(exceptions.Cancelled), client:
