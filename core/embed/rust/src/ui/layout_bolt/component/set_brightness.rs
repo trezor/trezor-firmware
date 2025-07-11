@@ -19,9 +19,9 @@ pub struct SetBrightnessDialog(NumberInputSliderDialog);
 impl SetBrightnessDialog {
     pub fn new(current: u8) -> Self {
         Self(NumberInputSliderDialog::new(
-            theme::backlight::get_backlight_min() as u16,
-            theme::backlight::get_backlight_max() as u16,
-            current as u16,
+            theme::backlight::get_backlight_min().into(),
+            theme::backlight::get_backlight_max().into(),
+            current.into(),
         ))
     }
 }
@@ -36,7 +36,7 @@ impl Component for SetBrightnessDialog {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         match self.0.event(ctx, event) {
             Some(NumberInputSliderDialogMsg::Changed(value)) => {
-                display::backlight(value as _);
+                display::backlight(value.into());
                 None
             }
             Some(NumberInputSliderDialogMsg::Cancelled) => Some(CancelConfirmMsg::Cancelled),
