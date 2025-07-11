@@ -207,7 +207,7 @@ async def confirm_tx_data(
             msg.chain_id,
             defs.network,
             token,
-            token_address,  # TODO: why is this here and not address_bytes - which seems to be the same??
+            token_address,
             chunkify=bool(msg.chunkify),
         )
     else:
