@@ -124,6 +124,13 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
     pm_process_state_machine();
 
     pm_store_data_to_backup_ram();
+
+    if (drv->suspending) {
+      pm_schedule_rtc_wakeup();
+      drv->suspending = false;
+      drv->suspended = true;
+    }
+
     drv->state_machine_stabilized = true;
   }
 }

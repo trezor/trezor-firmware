@@ -277,6 +277,13 @@ pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
 
   wakeup_flags_t wakeup_flags = system_suspend();
 
+  // Wait for pmic measurements to stabilize the fuel gauge estimation.
+  pm_status_t status = pm_wait_to_stabilize(drv, PM_STABILIZATION_TIMEOUT_MS);
+  if (status != PM_OK) {
+    // timeout during state machine stabilization
+    return false;
+  }
+
   // TODO: Handle wake-up flags
   // UNUSED(wakeup_flags);
 
@@ -559,6 +566,33 @@ bool pm_driver_suspend(void) {
     return false;
   }
 
+  irq_key_t irq_key = irq_lock();
+
+  if (drv->woke_up_from_suspend) {
+    // Driver just woke up from suspend and have no data available yet.
+    // Request the suspend but wait for the next pmic_meausrement
+    drv->suspending = true;
+
+  } else {
+    pm_schedule_rtc_wakeup();
+    drv->suspended = true;
+  }
+
+  // Delete the monitoring timer to stop the periodic sampling
+  systimer_delete(drv->monitoring_timer);
+
+  irq_unlock(irq_key);
+
+  return true;
+}
+
+bool pm_schedule_rtc_wakeup(void) {
+  pm_driver_t* drv = &g_pm;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
 #ifdef USE_RTC
 
   // Capture the timestamp when device was active for the last time.
@@ -593,9 +627,6 @@ bool pm_driver_suspend(void) {
 
 #endif
 
-  systimer_delete(drv->monitoring_timer);
-
-  drv->suspended = true;
   return true;
 }
 
@@ -635,20 +666,22 @@ bool pm_driver_resume(void) {
   // Set the periodic sampling period
   systimer_set_periodic(drv->monitoring_timer, PM_BATTERY_SAMPLING_PERIOD_MS);
 
-  // Wait for pmic measurements to stabilize the fuel gauge estimation.
-  pm_status_t status = pm_wait_to_stabilize(drv, PM_STABILIZATION_TIMEOUT_MS);
-  if (status != PM_OK) {
-    // timeout during state machine stabilization
-    return false;
-  }
   return true;
 }
 
 bool pm_driver_is_suspended(void) {
   pm_driver_t* drv = &g_pm;
 
+  // Poll until driver gets suspended
+  bool suspended;
+  do {
+    irq_key_t irq_key = irq_lock();
+    suspended = drv->suspended;
+    irq_unlock(irq_key);
+  } while (!suspended);
+
   // No specific pending tasks, just return suspended flag
-  return drv->suspended;
+  return true;
 }
 
 void pm_compensate_fuel_gauge(float* soc, uint32_t elapsed_s,
