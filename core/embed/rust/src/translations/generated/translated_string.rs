@@ -1451,6 +1451,8 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__contract_address = 1050,  // "Provider contract address"
     buttons__view = 1051,  // "View"
+    tutorial__welcome_safe7 = 1052,  // "Welcome to\nTrezor\nSafe 7"
+    instructions__menu_to_continue = 1053,  // "Use menu to continue"
 }
 
 impl TranslatedString {
@@ -3214,6 +3216,8 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__contract_address, "Provider contract address"),
             (Self::buttons__view, "View"),
+            (Self::tutorial__welcome_safe7, "Welcome to\nTrezor\nSafe 7"),
+            (Self::instructions__menu_to_continue, "Use menu to continue"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3848,6 +3852,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_instructions__hold_to_exit_tutorial, Self::instructions__hold_to_exit_tutorial),
         (Qstr::MP_QSTR_instructions__hold_to_sign, Self::instructions__hold_to_sign),
         (Qstr::MP_QSTR_instructions__learn_more, Self::instructions__learn_more),
+        (Qstr::MP_QSTR_instructions__menu_to_continue, Self::instructions__menu_to_continue),
         (Qstr::MP_QSTR_instructions__shares_continue_with_x_template, Self::instructions__shares_continue_with_x_template),
         (Qstr::MP_QSTR_instructions__shares_start_with_1, Self::instructions__shares_start_with_1),
         (Qstr::MP_QSTR_instructions__shares_start_with_x_template, Self::instructions__shares_start_with_x_template),
@@ -4568,6 +4573,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_tutorial__use_trezor, Self::tutorial__use_trezor),
         (Qstr::MP_QSTR_tutorial__welcome_press_right, Self::tutorial__welcome_press_right),
         (Qstr::MP_QSTR_tutorial__welcome_safe5, Self::tutorial__welcome_safe5),
+        (Qstr::MP_QSTR_tutorial__welcome_safe7, Self::tutorial__welcome_safe7),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_u2f__get, Self::u2f__get),
         #[cfg(feature = "universal_fw")]

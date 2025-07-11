@@ -339,6 +339,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_instructions__hold_to_exit_tutorial;
   MP_QSTR_instructions__hold_to_sign;
   MP_QSTR_instructions__learn_more;
+  MP_QSTR_instructions__menu_to_continue;
   MP_QSTR_instructions__shares_continue_with_x_template;
   MP_QSTR_instructions__shares_start_with_1;
   MP_QSTR_instructions__shares_start_with_x_template;
@@ -804,6 +805,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_tutorial__use_trezor;
   MP_QSTR_tutorial__welcome_press_right;
   MP_QSTR_tutorial__welcome_safe5;
+  MP_QSTR_tutorial__welcome_safe7;
   MP_QSTR_type_for_name;
   MP_QSTR_type_for_wire;
   MP_QSTR_unpair;
