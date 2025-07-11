@@ -109,6 +109,10 @@ if __debug__:
     DebugLinkGcInfo = 9010
     DebugLinkGetPairingInfo = 9011
     DebugLinkPairingInfo = 9012
+if utils.USE_THP:
+    ThpCreateNewSession = 1000
+    ThpCredentialRequest = 1010
+    ThpCredentialResponse = 1011
 if not utils.BITCOIN_ONLY:
     SetU2FCounter = 63
     GetNextU2FCounter = 80
@@ -247,9 +251,6 @@ if not utils.BITCOIN_ONLY:
     SolanaAddress = 903
     SolanaSignTx = 904
     SolanaTxSignature = 905
-    ThpCreateNewSession = 1000
-    ThpCredentialRequest = 1010
-    ThpCredentialResponse = 1011
     NostrGetPubkey = 2001
     NostrPubkey = 2002
     NostrSignEvent = 2003
