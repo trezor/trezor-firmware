@@ -96,7 +96,7 @@ typedef struct {
   // Power source hardware state
   pmic_report_t pmic_data;
   stwlc38_report_t wireless_data;
-  uint32_t pmic_last_update_ms;
+  uint64_t pmic_last_update_us;
   uint32_t pmic_sampling_period_ms;
   bool pmic_measurement_ready;
   bool woke_up_from_suspend;

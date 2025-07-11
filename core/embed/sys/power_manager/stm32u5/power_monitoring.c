@@ -42,13 +42,14 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
   pm_driver_t* drv = &g_pm;
 
   // Store measurement timestamp
-  if (drv->pmic_last_update_ms == 0) {
+  if (drv->pmic_last_update_us == 0) {
     drv->pmic_sampling_period_ms = PM_BATTERY_SAMPLING_PERIOD_MS;
   } else {
     // Calculate the time since the last PMIC update
-    drv->pmic_sampling_period_ms = systick_ms() - drv->pmic_last_update_ms;
+    drv->pmic_sampling_period_ms =
+        (systick_us() - drv->pmic_last_update_us) / 1000;
   }
-  drv->pmic_last_update_ms = systick_ms();
+  drv->pmic_last_update_us = systick_us();
 
   // Copy pmic data
   memcpy(&drv->pmic_data, report, sizeof(pmic_report_t));

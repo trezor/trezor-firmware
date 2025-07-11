@@ -326,12 +326,12 @@ pm_status_t pm_turn_on(void) {
   }
 
   // Poll until at least single PMIC measurement is done
-  uint32_t pmic_last_update_ms;
+  uint32_t pmic_last_update_us;
   do {
     irq_key_t irq_key = irq_lock();
-    pmic_last_update_ms = drv->pmic_last_update_ms;
+    pmic_last_update_us = drv->pmic_last_update_us;
     irq_unlock(irq_key);
-  } while (pmic_last_update_ms == 0);
+  } while (pmic_last_update_us == 0);
 
   bool usb_connected = drv->usb_connected;
   bool wireless_connected =
