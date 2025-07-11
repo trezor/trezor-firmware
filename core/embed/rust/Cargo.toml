@@ -126,7 +126,7 @@ features = ["libm"]
 version = "0.4.2"
 
 [dependencies.static-alloc]
-version = "0.2.4"
+version = "0.2.6"
 
 [dependencies.without-alloc]
 version = "0.2.2"

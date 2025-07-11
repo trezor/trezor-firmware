@@ -308,9 +308,9 @@ checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 
 [[package]]
 name = "static-alloc"
-version = "0.2.4"
+version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "570b7e840addf99f80c5b26abba410e21537002316fc82f2747fd87c171e9d7e"
+checksum = "2e1e06c73b06b04d730f68ecb5f805e86b8d509cf80072a28128160025fbf928"
 dependencies = [
  "alloc-traits",
 ]
