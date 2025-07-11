@@ -81,7 +81,7 @@ class Handshake:
     """
 
     def __init__(self) -> None:
-        self.trezor_ephemeral_privkey: bytes
+        self.trezor_ephemeral_private_key: bytes
         self.ck: bytes
         self.k: bytes
         self.h: bytes
@@ -91,24 +91,30 @@ class Handshake:
     def handle_th1_crypto(
         self,
         device_properties: bytes,
-        host_ephemeral_pubkey: bytes,
+        host_ephemeral_public_key: bytes,
     ) -> tuple[bytes, bytes, bytes]:
 
-        trezor_static_privkey, trezor_static_pubkey = _derive_static_key_pair()
-        self.trezor_ephemeral_privkey = curve25519.generate_secret()
-        trezor_ephemeral_pubkey = curve25519.publickey(self.trezor_ephemeral_privkey)
+        trezor_static_private_key, trezor_static_public_key = _derive_static_key_pair()
+        self.trezor_ephemeral_private_key = curve25519.generate_secret()
+        trezor_ephemeral_public_key = curve25519.publickey(
+            self.trezor_ephemeral_private_key
+        )
         self.h = _hash_of_two(PROTOCOL_NAME, device_properties)
-        self.h = _hash_of_two(self.h, host_ephemeral_pubkey)
+        self.h = _hash_of_two(self.h, host_ephemeral_public_key)
         self.h = _hash_of_two(self.h, b"")
-        self.h = _hash_of_two(self.h, trezor_ephemeral_pubkey)
+        self.h = _hash_of_two(self.h, trezor_ephemeral_public_key)
         point = curve25519.multiply(
-            self.trezor_ephemeral_privkey, host_ephemeral_pubkey
+            self.trezor_ephemeral_private_key, host_ephemeral_public_key
         )
         self.ck, self.k = _hkdf(PROTOCOL_NAME, point)
-        mask = _hash_of_two(trezor_static_pubkey, trezor_ephemeral_pubkey)
-        trezor_masked_static_pubkey = curve25519.multiply(mask, trezor_static_pubkey)
+        mask = _hash_of_two(trezor_static_public_key, trezor_ephemeral_public_key)
+        trezor_masked_static_public_key = curve25519.multiply(
+            mask, trezor_static_public_key
+        )
         aes_ctx = aesgcm(self.k, IV_1)
-        encrypted_trezor_static_pubkey = aes_ctx.encrypt(trezor_masked_static_pubkey)
+        encrypted_trezor_static_public_key = aes_ctx.encrypt(
+            trezor_masked_static_public_key
+        )
         if __debug__:
             log.debug(
                 __name__,
@@ -120,46 +126,54 @@ class Handshake:
 
         aes_ctx.auth(self.h)
         tag_to_encrypted_key = aes_ctx.finish()
-        encrypted_trezor_static_pubkey = (
-            encrypted_trezor_static_pubkey + tag_to_encrypted_key
+        encrypted_trezor_static_public_key = (
+            encrypted_trezor_static_public_key + tag_to_encrypted_key
         )
-        self.h = _hash_of_two(self.h, encrypted_trezor_static_pubkey)
-        point = curve25519.multiply(trezor_static_privkey, host_ephemeral_pubkey)
+        self.h = _hash_of_two(self.h, encrypted_trezor_static_public_key)
+        point = curve25519.multiply(
+            trezor_static_private_key, host_ephemeral_public_key
+        )
         self.ck, self.k = _hkdf(self.ck, curve25519.multiply(mask, point))
         aes_ctx = aesgcm(self.k, IV_1)
         aes_ctx.auth(self.h)
         tag = aes_ctx.finish()
         self.h = _hash_of_two(self.h, tag)
-        return (trezor_ephemeral_pubkey, encrypted_trezor_static_pubkey, tag)
+        return (trezor_ephemeral_public_key, encrypted_trezor_static_public_key, tag)
 
     def handle_th2_crypto(
         self,
-        encrypted_host_static_pubkey: utils.BufferType,
+        encrypted_host_static_public_key: utils.BufferType,
         encrypted_payload: utils.BufferType,
     ) -> None:
 
         aes_ctx = aesgcm(self.k, IV_2)
 
-        # The new value of hash `h` MUST be computed before the `encrypted_host_static_pubkey` is decrypted.
-        # However, decryption of `encrypted_host_static_pubkey` MUST use the previous value of `h` for
+        # The new value of hash `h` MUST be computed before the `encrypted_host_static_public_key` is decrypted.
+        # However, decryption of `encrypted_host_static_public_key` MUST use the previous value of `h` for
         # authentication of the gcm tag.
         aes_ctx.auth(self.h)  # Authenticate with the previous value of `h`
-        self.h = _hash_of_two(self.h, encrypted_host_static_pubkey)  # Compute new value
+        self.h = _hash_of_two(
+            self.h, encrypted_host_static_public_key
+        )  # Compute new value
         aes_ctx.decrypt_in_place(
-            memoryview(encrypted_host_static_pubkey)[:PUBKEY_LENGTH]
+            memoryview(encrypted_host_static_public_key)[:PUBKEY_LENGTH]
         )
         if __debug__:
             log.debug(
                 __name__, "th2 - dec (key: %s, nonce: %d)", hexlify_if_bytes(self.k), 1
             )
-        host_static_pubkey = memoryview(encrypted_host_static_pubkey)[:PUBKEY_LENGTH]
+        host_static_public_key = memoryview(encrypted_host_static_public_key)[
+            :PUBKEY_LENGTH
+        ]
         tag = aes_ctx.finish()
-        if tag != encrypted_host_static_pubkey[-16:]:
+        if tag != encrypted_host_static_public_key[-16:]:
             raise ThpDecryptionError()
 
         self.ck, self.k = _hkdf(
             self.ck,
-            curve25519.multiply(self.trezor_ephemeral_privkey, host_static_pubkey),
+            curve25519.multiply(
+                self.trezor_ephemeral_private_key, host_static_public_key
+            ),
         )
         aes_ctx = aesgcm(self.k, IV_1)
         aes_ctx.auth(self.h)
@@ -194,17 +208,17 @@ def _derive_static_key_pair() -> tuple[bytes, bytes]:
     node = bip32.from_seed(device.get_device_secret(), "curve25519")
     node.derive(node_int)
 
-    trezor_static_privkey = node.private_key()
-    trezor_static_pubkey = node.public_key()[1:33]
+    trezor_static_private_key = node.private_key()
+    trezor_static_public_key = node.public_key()[1:33]
     # Note: the first byte (\x01) of the public key is removed, as it
     # only indicates the type of the elliptic curve used
 
-    return trezor_static_privkey, trezor_static_pubkey
+    return trezor_static_private_key, trezor_static_public_key
 
 
-def get_trezor_static_pubkey() -> bytes:
-    _, pubkey = _derive_static_key_pair()
-    return pubkey
+def get_trezor_static_public_key() -> bytes:
+    _, public_key = _derive_static_key_pair()
+    return public_key
 
 
 def _hkdf(chaining_key: bytes, input: bytes) -> tuple[bytes, bytes]:
