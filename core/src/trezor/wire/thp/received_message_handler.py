@@ -254,31 +254,31 @@ def _handle_state_TH1(
     # if buffer is BufferError:
     # pass  # TODO buffer is gone :/
 
-    host_ephemeral_pubkey = bytearray(
+    host_ephemeral_public_key = bytearray(
         buffer[INIT_HEADER_LENGTH : message_length - CHECKSUM_LENGTH]
     )
-    trezor_ephemeral_pubkey, encrypted_trezor_static_pubkey, tag = (
+    trezor_ephemeral_public_key, encrypted_trezor_static_public_key, tag = (
         ctx.handshake.handle_th1_crypto(
-            get_encoded_device_properties(ctx.iface), host_ephemeral_pubkey
+            get_encoded_device_properties(ctx.iface), host_ephemeral_public_key
         )
     )
 
     if __debug__:
         log.debug(
             __name__,
-            "trezor ephemeral pubkey: %s",
-            hexlify_if_bytes(trezor_ephemeral_pubkey),
+            "trezor ephemeral public key: %s",
+            hexlify_if_bytes(trezor_ephemeral_public_key),
             iface=ctx.iface,
         )
         log.debug(
             __name__,
-            "encrypted trezor masked static pubkey: %s",
-            hexlify_if_bytes(encrypted_trezor_static_pubkey),
+            "encrypted trezor masked static public key: %s",
+            hexlify_if_bytes(encrypted_trezor_static_public_key),
             iface=ctx.iface,
         )
         log.debug(__name__, "tag: %s", hexlify_if_bytes(tag), iface=ctx.iface)
 
-    payload = trezor_ephemeral_pubkey + encrypted_trezor_static_pubkey + tag
+    payload = trezor_ephemeral_public_key + encrypted_trezor_static_public_key + tag
 
     # send handshake init response message
     ctx.write_handshake_message(HANDSHAKE_INIT_RES, payload)
@@ -305,7 +305,7 @@ def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -> None
     buffer = memory_manager.get_existing_read_buffer(ctx.get_channel_id_int())
     # if buffer is BufferError:
     # pass  # TODO handle
-    host_encrypted_static_pubkey = buffer[
+    host_encrypted_static_public_key = buffer[
         INIT_HEADER_LENGTH : INIT_HEADER_LENGTH + KEY_LENGTH + TAG_LENGTH
     ]
     handshake_completion_request_noise_payload = buffer[
@@ -313,7 +313,7 @@ def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -> None
     ]
 
     ctx.handshake.handle_th2_crypto(
-        host_encrypted_static_pubkey, handshake_completion_request_noise_payload
+        host_encrypted_static_public_key, handshake_completion_request_noise_payload
     )
 
     ctx.channel_cache.set(CHANNEL_KEY_RECEIVE, ctx.handshake.key_receive)
@@ -339,15 +339,15 @@ def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -> None
     if __debug__:
         log.debug(
             __name__,
-            "host static pubkey: %s, noise payload: %s",
-            utils.hexlify_if_bytes(host_encrypted_static_pubkey),
+            "host static public key: %s, noise payload: %s",
+            utils.hexlify_if_bytes(host_encrypted_static_public_key),
             utils.hexlify_if_bytes(handshake_completion_request_noise_payload),
             iface=ctx.iface,
         )
 
     # key is decoded in handshake._handle_th2_crypto
-    host_static_pubkey = host_encrypted_static_pubkey[:PUBKEY_LENGTH]
-    ctx.channel_cache.set_host_static_pubkey(bytearray(host_static_pubkey))
+    host_static_public_key = host_encrypted_static_public_key[:PUBKEY_LENGTH]
+    ctx.channel_cache.set_host_static_public_key(bytearray(host_static_public_key))
 
     paired: bool = False
     trezor_state = _TREZOR_STATE_UNPAIRED
@@ -357,7 +357,7 @@ def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -> None
             credential = decode_credential(noise_payload.host_pairing_credential)
             paired = validate_credential(
                 credential,
-                host_static_pubkey,
+                host_static_public_key,
             )
             if paired:
                 trezor_state = _TREZOR_STATE_PAIRED
