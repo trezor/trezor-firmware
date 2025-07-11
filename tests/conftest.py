@@ -173,8 +173,8 @@ def _find_test_ctx(interact: bool) -> TrezorTestContext:
             return TrezorTestContext(
                 device, auto_interact=not interact, force_wipe=True
             )
-        except Exception:
-            pass
+        except Exception as exc:
+            LOG.warning("%s: %s", device, exc)
 
     raise RuntimeError("No debuggable device found")
 
