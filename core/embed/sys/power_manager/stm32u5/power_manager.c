@@ -628,9 +628,7 @@ bool pm_schedule_rtc_wakeup(void) {
 
 #endif
 
-  irq_key_t irq_key = irq_lock();
   systimer_delete(drv->monitoring_timer);
-  irq_unlock(irq_key);
 
   drv->suspended = true;
   return true;
