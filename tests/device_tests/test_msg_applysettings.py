@@ -479,7 +479,7 @@ def test_label_too_long(client: Client):
 
 
 U8_MIN = 0
-U8_MAX = (1 << 8) - 1  # 255
+U8_MAX = 0xFF  # 255
 
 
 @pytest.mark.models(skip=["legacy", "safe3"])
