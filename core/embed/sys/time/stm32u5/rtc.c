@@ -87,7 +87,7 @@ bool rtc_get_timestamp(uint32_t* timestamp) {
 
   // Get current time and date,
   // Important: GetTime has to be called before the GetDate in order to unlock
-  // the values in higher-order callendar.
+  // the values in higher-order calendar.
   if (HAL_OK != HAL_RTC_GetTime(&drv->hrtc, &time, RTC_FORMAT_BCD)) {
     return false;
   }
@@ -214,6 +214,88 @@ static uint32_t rtc_calendar_to_timestamp(const RTC_DateTypeDef* date,
 
     uint32_t seconds = days * 86400 + hour * 3600 + min * 60 + sec;
     return seconds;
+}
+
+/**
+ * Set the RTC using discrete time values, with automatic weekday calculation.
+ * Year is expected as full year (e.g., 2025).
+ */
+bool rtc_set_time(uint16_t year, uint8_t month, uint8_t day, uint8_t hour,
+                  uint8_t minute, uint8_t second) {
+  rtc_driver_t* drv = &g_rtc_driver;
+  if (!drv->initialized) {
+    return false;
+  }
+
+  // Validate inputs
+  if (year < 2000 || year > 2099 || month < 1 || month > 12 || day < 1 ||
+      day > 31 || hour > 23 || minute > 59 || second > 59) {
+    return false;
+  }
+
+  // --- Weekday calculation using Zeller's Congruence ---
+  // Adjust month/year for Zeller's algorithm
+  int y = (month <= 2) ? year - 1 : year;
+  int m = (month <= 2) ? month + 12 : month;
+  int d = day;
+
+  int K = y % 100;
+  int J = y / 100;
+  int h = (d + 13 * (m + 1) / 5 + K + K / 4 + J / 4 + 5 * J) % 7;
+
+  // Convert Zeller's output to RTC weekday (1 = Monday, ..., 7 = Sunday)
+  // Zeller: 0 = Saturday, 1 = Sunday, 2 = Monday, ..., 6 = Friday
+  uint8_t weekday = ((h + 5) % 7) + 1;
+
+  RTC_TimeTypeDef time = {.Hours = hour,
+                          .Minutes = minute,
+                          .Seconds = second,
+                          .TimeFormat = RTC_HOURFORMAT_24,
+                          .DayLightSaving = RTC_DAYLIGHTSAVING_NONE,
+                          .StoreOperation = RTC_STOREOPERATION_RESET};
+
+  if (HAL_OK != HAL_RTC_SetTime(&drv->hrtc, &time, RTC_FORMAT_BIN)) {
+    return false;
+  }
+
+  RTC_DateTypeDef date = {
+      .Year = year - 2000, .Month = month, .Date = day, .WeekDay = weekday};
+
+  if (HAL_OK != HAL_RTC_SetDate(&drv->hrtc, &date, RTC_FORMAT_BIN)) {
+    return false;
+  }
+
+  return true;
+}
+
+bool rtc_get_time(rtc_datetime_t* datetime) {
+  rtc_driver_t* drv = &g_rtc_driver;
+
+  if (!drv->initialized || datetime == NULL) {
+    return false;
+  }
+
+  RTC_DateTypeDef date;
+  RTC_TimeTypeDef time;
+
+  // Get current time before date (important for consistency)
+  if (HAL_OK != HAL_RTC_GetTime(&drv->hrtc, &time, RTC_FORMAT_BIN)) {
+    return false;
+  }
+
+  if (HAL_OK != HAL_RTC_GetDate(&drv->hrtc, &date, RTC_FORMAT_BIN)) {
+    return false;
+  }
+
+  datetime->year = 2000 + date.Year;
+  datetime->month = date.Month;
+  datetime->day = date.Date;
+  datetime->hour = time.Hours;
+  datetime->minute = time.Minutes;
+  datetime->second = time.Seconds;
+  datetime->weekday = date.WeekDay;
+
+  return true;
 }
 
 #endif  // KERNEL_MODE
