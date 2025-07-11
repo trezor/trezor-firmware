@@ -137,10 +137,6 @@ impl Button {
         Self::new(ButtonContent::Icon(icon))
     }
 
-    pub const fn with_icon_and_text(content: IconText) -> Self {
-        Self::new(ButtonContent::IconAndText(content))
-    }
-
     #[cfg(feature = "micropython")]
     pub const fn with_homebar_content(text: Option<TString<'static>>) -> Self {
         Self::new(ButtonContent::HomeBar(text))
@@ -302,11 +298,6 @@ impl Button {
                 text.map(|t| self.text_height(t, *single_line, width))
             }
             ButtonContent::Icon(icon) => icon.toif.height(),
-            ButtonContent::IconAndText(child) => {
-                let text_height = self.style().font.line_height();
-                let icon_height = child.icon.toif.height();
-                text_height.max(icon_height)
-            }
             ButtonContent::TextAndSubtext { text, .. } => {
                 text.map(|t| self.text_height(t, false, width) + self.baseline_subtext_height())
             }
@@ -529,9 +520,6 @@ impl Button {
                     .with_alpha(alpha)
                     .render(target);
             }
-            ButtonContent::IconAndText(child) => {
-                child.render(target, self.area, self.style(), self.content_offset, alpha);
-            }
             #[cfg(feature = "micropython")]
             ButtonContent::HomeBar(text) => {
                 let baseline = self.area.center();
@@ -683,10 +671,6 @@ impl crate::trace::Trace for Button {
             ButtonContent::Empty => {}
             ButtonContent::Text { text, .. } => t.string("text", *text),
             ButtonContent::Icon(_) => t.bool("icon", true),
-            ButtonContent::IconAndText(content) => {
-                t.string("text", content.text);
-                t.bool("icon", true);
-            }
             ButtonContent::TextAndSubtext { text, .. } => {
                 t.string("text", *text);
             }
@@ -727,7 +711,6 @@ pub enum ButtonContent {
         subtext_style: &'static TextStyle,
     },
     Icon(Icon),
-    IconAndText(IconText),
     #[cfg(feature = "micropython")]
     HomeBar(Option<TString<'static>>),
 }
