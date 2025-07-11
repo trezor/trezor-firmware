@@ -258,10 +258,12 @@ def test_connection_confirmation_cancel(client: Client) -> None:
 
     # Request credential with confirmation after pairing
     randomness_static = os.urandom(32)
-    host_static_privkey = curve25519.get_private_key(randomness_static)
-    host_static_pubkey = curve25519.get_public_key(host_static_privkey)
+    host_static_private_key = curve25519.get_private_key(randomness_static)
+    host_static_public_key = curve25519.get_public_key(host_static_private_key)
     protocol._send_message(
-        ThpCredentialRequest(host_static_pubkey=host_static_pubkey, autoconnect=False)
+        ThpCredentialRequest(
+            host_static_public_key=host_static_public_key, autoconnect=False
+        )
     )
     credential_response = protocol._read_message(ThpCredentialResponse)
 
@@ -300,10 +302,12 @@ def test_autoconnect_credential_request_cancel(client: Client) -> None:
 
     # Request credential with confirmation after pairing
     randomness_static = os.urandom(32)
-    host_static_privkey = curve25519.get_private_key(randomness_static)
-    host_static_pubkey = curve25519.get_public_key(host_static_privkey)
+    host_static_private_key = curve25519.get_private_key(randomness_static)
+    host_static_public_key = curve25519.get_public_key(host_static_private_key)
     protocol._send_message(
-        ThpCredentialRequest(host_static_pubkey=host_static_pubkey, autoconnect=False)
+        ThpCredentialRequest(
+            host_static_public_key=host_static_public_key, autoconnect=False
+        )
     )
     credential_response = protocol._read_message(ThpCredentialResponse)
 
@@ -317,7 +321,9 @@ def test_autoconnect_credential_request_cancel(client: Client) -> None:
         client=client, host_static_randomness=randomness_static, credential=credential
     )
     protocol._send_message(
-        ThpCredentialRequest(host_static_pubkey=host_static_pubkey, autoconnect=True)
+        ThpCredentialRequest(
+            host_static_public_key=host_static_public_key, autoconnect=True
+        )
     )
     button_req = protocol._read_message(ButtonRequest)
     assert button_req.name == "thp_connection_request"
@@ -337,10 +343,12 @@ def test_credential_phase(client: Client) -> None:
 
     # Request credential with confirmation after pairing
     randomness_static = os.urandom(32)
-    host_static_privkey = curve25519.get_private_key(randomness_static)
-    host_static_pubkey = curve25519.get_public_key(host_static_privkey)
+    host_static_private_key = curve25519.get_private_key(randomness_static)
+    host_static_public_key = curve25519.get_public_key(host_static_private_key)
     protocol._send_message(
-        ThpCredentialRequest(host_static_pubkey=host_static_pubkey, autoconnect=False)
+        ThpCredentialRequest(
+            host_static_public_key=host_static_public_key, autoconnect=False
+        )
     )
     credential_response = protocol._read_message(ThpCredentialResponse)
 
@@ -374,7 +382,9 @@ def test_credential_phase(client: Client) -> None:
     protocol._do_channel_allocation()
     protocol._do_handshake(credential, randomness_static)
     protocol._send_message(
-        ThpCredentialRequest(host_static_pubkey=host_static_pubkey, autoconnect=True)
+        ThpCredentialRequest(
+            host_static_public_key=host_static_public_key, autoconnect=True
+        )
     )
     # Connection confirmation dialog is shown. (Channel replacement is not triggered.)
     button_req = protocol._read_message(ButtonRequest)
@@ -432,10 +442,12 @@ def test_credential_request_in_encrypted_transport_phase(client: Client) -> None
     _nfc_pairing(client, protocol)
 
     # Request credential with confirmation after pairing
-    host_static_privkey = curve25519.get_private_key(randomness_static)
-    host_static_pubkey = curve25519.get_public_key(host_static_privkey)
+    host_static_private_key = curve25519.get_private_key(randomness_static)
+    host_static_public_key = curve25519.get_public_key(host_static_private_key)
     protocol._send_message(
-        ThpCredentialRequest(host_static_pubkey=host_static_pubkey, autoconnect=False)
+        ThpCredentialRequest(
+            host_static_public_key=host_static_public_key, autoconnect=False
+        )
     )
     credential_response = protocol._read_message(ThpCredentialResponse)
 
@@ -448,7 +460,7 @@ def test_credential_request_in_encrypted_transport_phase(client: Client) -> None
 
     session.call(
         ThpCredentialRequest(
-            host_static_pubkey=host_static_pubkey,
+            host_static_public_key=host_static_public_key,
             autoconnect=True,
             credential=credential,
         ),
@@ -462,10 +474,10 @@ def test_channel_replacement(client: Client) -> None:
 
     host_static_randomness = os.urandom(32)
     host_static_randomness_2 = os.urandom(32)
-    host_static_privkey = curve25519.get_private_key(host_static_randomness)
-    host_static_privkey_2 = curve25519.get_private_key(host_static_randomness_2)
+    host_static_private_key = curve25519.get_private_key(host_static_randomness)
+    host_static_private_key_2 = curve25519.get_private_key(host_static_randomness_2)
 
-    assert host_static_privkey != host_static_privkey_2
+    assert host_static_private_key != host_static_private_key_2
 
     client.protocol = get_encrypted_transport_protocol(client, host_static_randomness)
 
@@ -476,7 +488,7 @@ def test_channel_replacement(client: Client) -> None:
     address_2 = get_test_address(session_2)
     assert address != address_2
 
-    # create new channel using the same host_static_privkey
+    # create new channel using the same host_static_private_key
     client.protocol = get_encrypted_transport_protocol(client, host_static_randomness)
     session_3 = client.get_session(passphrase="OKIDOKI")
     address_3 = get_test_address(session_3)
@@ -488,7 +500,7 @@ def test_channel_replacement(client: Client) -> None:
     new_address_3 = get_test_address(session_3)
     assert address_3 == new_address_3
 
-    # create new channel using different host_static_privkey
+    # create new channel using different host_static_private_key
     client.protocol = get_encrypted_transport_protocol(client, host_static_randomness_2)
     with pytest.raises(exceptions.TrezorFailure) as e_1:
         _ = get_test_address(session)

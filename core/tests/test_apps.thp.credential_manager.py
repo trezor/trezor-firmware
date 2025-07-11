@@ -7,9 +7,9 @@ if utils.USE_THP:
 
     from apps.thp import credential_manager
 
-    def _issue_credential(host_name: str, host_static_pubkey: bytes) -> bytes:
+    def _issue_credential(host_name: str, host_static_public_key: bytes) -> bytes:
         metadata = ThpCredentialMetadata(host_name=host_name)
-        return credential_manager.issue_credential(host_static_pubkey, metadata)
+        return credential_manager.issue_credential(host_static_public_key, metadata)
 
     def _dummy_log(name: str, msg: str, *args):
         pass
