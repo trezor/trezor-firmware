@@ -53,6 +53,7 @@ if t.TYPE_CHECKING:
     from _pytest.terminal import TerminalReporter
 
     from trezorlib._internal.emulator import Emulator
+    from trezorlib.client import TrezorClient
     from trezorlib.debuglink import SessionDebugWrapper
 
 
@@ -84,6 +85,7 @@ def core_emulator(request: pytest.FixtureRequest) -> t.Iterator[Emulator]:
     """Fixture returning default core emulator with possibility of screen recording."""
     with EmulatorWrapper("core", main_args=_emulator_wrapper_main_args()) as emu:
         # Modifying emu.client to add screen recording (when --ui=test is used)
+        _check_protocol(request, emu.client)
         with ui_tests.screen_recording(emu.client, request, lambda: emu.client) as _:
             yield emu
 
@@ -288,20 +290,7 @@ def _client_unlocked(
     if request.node.get_closest_marker("altcoin") and is_btc_only:
         pytest.skip("Skipping altcoin test")
 
-    protocol_marker: Mark | None = request.node.get_closest_marker("protocol")
-    if protocol_marker:
-        args = protocol_marker.args
-        protocol_version = _raw_client.protocol_version
-
-        if protocol_version == ProtocolVersion.V1 and "protocol_v1" not in args:
-            pytest.skip(
-                f"Skipping test for device/emulator with protocol_v{protocol_version} - the protocol is not supported."
-            )
-
-        if protocol_version == ProtocolVersion.V2 and "protocol_v2" not in args:
-            pytest.skip(
-                f"Skipping test for device/emulator with protocol_v{protocol_version} - the protocol is not supported."
-            )
+    _check_protocol(request, _raw_client)
 
     if _raw_client.protocol_version is ProtocolVersion.V2:
         pass
@@ -454,6 +443,18 @@ def session(
     with ui_tests.screen_recording(_client_unlocked, request):
         yield session
     # Calling session.end() is not needed since the device gets wiped later anyway.
+
+
+def _check_protocol(request: pytest.FixtureRequest, client: TrezorClient) -> None:
+    protocol_marker: Mark | None = request.node.get_closest_marker("protocol")
+    if not protocol_marker:
+        return
+
+    protocol_version = ProtocolVersion(client.protocol_version)
+    expected_marker = f"protocol_{protocol_version.name.lower()}"
+
+    if expected_marker not in protocol_marker.args:
+        pytest.skip(f"Test does not support Protocol{protocol_version.name}.")
 
 
 def _is_main_runner(session_or_request: pytest.Session | pytest.FixtureRequest) -> bool:
