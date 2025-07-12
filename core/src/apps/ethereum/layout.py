@@ -248,6 +248,8 @@ async def confirm_message_hash(message_hash: bytes) -> None:
         message_hash_hex,
         "",
         "confirm_message_hash",
+        verb=TR.buttons__confirm,
+        br_code=ButtonRequestType.SignTx,
         cancel=True,
     )
 
