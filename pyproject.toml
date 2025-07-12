@@ -79,6 +79,7 @@ trezor-core-tools = {path = "./core/tools", develop = true}
 flake8-annotations = "^3.1.1"
 pyelftools = "^0.32"
 pytest-retry = "^1.7.0"
+slh-dsa = "^0.1.3"
 
 [tool.poetry.dev-dependencies]
 scan-build = "*"

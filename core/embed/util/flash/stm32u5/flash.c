@@ -78,6 +78,11 @@ static bool flash_sector_is_secure(uint32_t sector) {
              sector <= STORAGE_2_SECTOR_END) {
     return true;
   }
+#ifdef USE_BOOT_UCB
+  else if (sector >= BOOTUCB_SECTOR_START && sector <= BOOTUCB_SECTOR_END) {
+    return true;
+  }
+#endif
 #else
   return true;
 #endif

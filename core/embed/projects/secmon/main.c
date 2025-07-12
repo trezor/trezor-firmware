@@ -27,9 +27,8 @@
 #include <sys/system.h>
 #include <sys/systick.h>
 #include <sys/sysutils.h>
-#include <sys/trustzone.h>
-#include <util/bl_check.h>
 #include <util/board_capabilities.h>
+#include <util/boot_image.h>
 #include <util/flash.h>
 #include <util/option_bytes.h>
 #include <util/unit_properties.h>
@@ -114,8 +113,6 @@ extern uint32_t _codelen;
 int main(void) {
   // Initialize system's core services
   system_init(secmon_panic);
-
-  tz_init();
 
   // Initialize secure monitor drivers
   drivers_init();

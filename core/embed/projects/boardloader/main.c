@@ -21,16 +21,23 @@
 #include <trezor_rtl.h>
 
 #include <io/display.h>
+#include <sec/rng.h>
 #include <sec/secret.h>
 #include <sys/bootutils.h>
 #include <sys/reset_flags.h>
 #include <sys/system.h>
+#include <sys/systick.h>
 #include <util/board_capabilities.h>
 #include <util/flash.h>
-#include <util/flash_utils.h>
-#include <util/image.h>
 #include <util/option_bytes.h>
 #include <util/rsod.h>
+
+#ifdef USE_BOOT_UCB
+#include <util/boot_header.h>
+#include <util/boot_ucb.h>
+#else
+#include <util/image.h>
+#endif
 
 #ifdef USE_PMIC
 #include <sys/pmic.h>
@@ -42,10 +49,6 @@
 
 #ifdef USE_HASH_PROCESSOR
 #include <sec/hash_processor.h>
-#endif
-
-#ifdef USE_TRUSTZONE
-#include <sys/trustzone.h>
 #endif
 
 #ifdef USE_TAMPER
@@ -91,6 +94,26 @@ static void drivers_deinit(void) {
 #endif
 }
 
+// The function adds a small non-deterministic delay bfore returning the
+// original value. The delay length is randomised to any value from 0us to
+// 127us.
+static uint32_t __attribute((no_stack_protector)) fih_delay(uint32_t value) {
+  systick_delay_us(rng_get() % 128);
+  return value;
+}
+
+// Hardened conditional check
+//
+// The expression ​cond​ is first passed through fih_delay(), which inserts
+// the random delay described above, and is then cast to ​secbool​ before
+// being handed to the usual ensure() macro.  The extra jitter makes
+// external timing probes much less able to distinguish whether the test
+// passed or failed.
+#define fih_ensure(cond, msg)                          \
+  do {                                                 \
+    ensure((secbool)fih_delay((uint32_t)(cond)), msg); \
+  } while (0)
+
 board_capabilities_t capabilities
     __attribute__((section(".capabilities_section"))) = {
         .header = CAPABILITIES_HEADER,
@@ -106,52 +129,209 @@ board_capabilities_t capabilities
         .terminator_tag = TAG_TERMINATOR,
         .terminator_length = 0};
 
-int main(void) {
-  system_init(&rsod_panic_handler);
+#ifdef USE_BOOT_UCB
 
-  reset_flags_reset();
+static void try_to_upgrade(void) {
+  boot_ucb_t ucb;
 
-  if (sectrue != flash_configure_option_bytes()) {
-    // display is not initialized so don't call ensure
-    erase_storage(NULL);
-    return 2;
+  // Start with some non-deterministic delay
+  fih_delay(0);
+
+  // Check if the bootloader UCB (update control block) is present and valid
+  if (sectrue != boot_ucb_read(&ucb)) {
+    return;
   }
 
-#ifdef USE_TRUSTZONE
-  tz_init();
-#endif
+  // Check if the new bootloader header is present and valid
+  const boot_header_t* hdr = boot_header_check_integrity(ucb.header_address);
+  if (hdr == NULL) {
+    return;
+  }
 
-  drivers_init();
+  // Check if the new bootloader is compatible with the hardware model
+  if (sectrue != boot_header_check_model(hdr)) {
+    return;
+  }
 
-#ifdef USE_SD_CARD
-  sd_update_check_and_update();
-#endif
+  // Check monotonic version
+  uint8_t min_monotonic_version = get_bootloader_min_version();
+  if (hdr->sig.monotonic_version < min_monotonic_version) {
+    // If the new bootloader is downgraded, we don't proceed with the upgrade
+    return;
+  }
+
+  // Get address of the bootloader code
+  // If the code address in UCB is 0, it means that the code is not present
+  // and we change only the bootloader header. In such case, we
+  // use the current bootloader code to calculate the fingerprint.
+  uint32_t code_address = ucb.code_address;
+  if (code_address == 0) {
+    // Just changing the header, no bootloader code is present
+    code_address = BOOTLOADER_START + hdr->sig.header_size;
+  }
+
+  // Calculate the fingerprint of the header and the code
+  boot_header_fingerprint_t fp;
+  boot_header_calc_fingerprint(hdr, code_address, &fp);
+
+  // Check whether the new bootloader is properly signed
+  if (sectrue != boot_header_check_signature(hdr, &fp)) {
+    return;
+  }
+
+  // Now we have verified that the new bootloader is valid and signed
+  // and we can proceed with the upgrade.
+
+  // Write bootloader header
+  const uint8_t* src = (const uint8_t*)hdr;
+  uint32_t dst = 0;
+  uint32_t dst_end = hdr->sig.header_size;
+  uint32_t bytes_erased = 0;
+
+  const flash_area_t* area = &NONBLDR_AREA;
+
+  while (dst < dst_end) {
+    ensure(flash_area_erase_partial(area, dst, &bytes_erased), NULL);
+    uint32_t bytes_to_copy = MIN(dst_end - dst, bytes_erased);
+    ensure(flash_unlock_write(), NULL);
+    ensure(flash_area_write_data(area, dst, src, bytes_to_copy), NULL);
+    ensure(flash_lock_write(), NULL);
+    dst += bytes_to_copy;
+    src += bytes_to_copy;
+  }
+
+  // Write bootloader code
+  if (ucb.code_address != 0) {
+    dst = hdr->sig.header_size;
+    dst_end = dst + hdr->sig.code_size;
+    src = (const uint8_t*)(ucb.code_address);
+
+    while (dst < dst_end) {
+      ensure(flash_area_erase_partial(area, dst, &bytes_erased), NULL);
+      uint32_t bytes_to_copy = MIN(dst_end - dst, bytes_erased);
+      ensure(flash_unlock_write(), NULL);
+      ensure(flash_area_write_data(area, dst, src, bytes_to_copy), NULL);
+      ensure(flash_lock_write(), NULL);
+      dst += bytes_to_copy;
+      src += bytes_to_copy;
+    }
+  }
+}
+
+static inline void ensure_signed_firmware(volatile uint32_t* next_stage_addr) {
+  *next_stage_addr = 0;  // FIH
+
+  // Start with some non-deterministic delay
+  fih_delay(0);
+
+  // Check if the bootloader header is present and valid
+  const boot_header_t* hdr = boot_header_check_integrity(BOOTLOADER_START);
+  fih_ensure(sectrue * (hdr != NULL), "invalid bootloader header");
+
+  // Get address of the bootloader code
+  uint32_t code_address = BOOTLOADER_START + hdr->sig.header_size;
+
+  // Calculate the fingerprint of the header and the code
+  boot_header_fingerprint_t fp;
+  boot_header_calc_fingerprint(hdr, code_address, &fp);
+
+  // Check if the hardware model matches
+  fih_ensure(boot_header_check_model(hdr), "incompatible hardware model");
+
+  // Check the header signature
+  fih_ensure(boot_header_check_signature(hdr, &fp),
+             "invalid bootloader signature");
+
+  // Ensure the bootloader is not downgraded
+  uint8_t min_monotonic_version = get_bootloader_min_version();
+  fih_ensure((hdr->sig.monotonic_version >= min_monotonic_version) * sectrue,
+             "BOOTLOADER DOWNGRADED");
+  // Write the bootloader version to the secret area.
+  write_bootloader_min_version(hdr->sig.monotonic_version);
+
+  *next_stage_addr = IMAGE_CODE_ALIGN(code_address);  // FIH
+}
+
+#else
+static inline void ensure_signed_firmware(volatile uint32_t *next_stage_addr) {
+  *next_stage_addr = 0;
+
+  // Start with some non-deterministic delay
+  fih_delay(0);
 
   const image_header *hdr = read_image_header(
       (const uint8_t *)BOOTLOADER_START, BOOTLOADER_IMAGE_MAGIC,
       flash_area_get_size(&BOOTLOADER_AREA));
 
-  ensure(hdr == (const image_header *)BOOTLOADER_START ? sectrue : secfalse,
-         "invalid bootloader header");
+  fih_ensure(hdr == (const image_header *)BOOTLOADER_START ? sectrue : secfalse,
+             "invalid bootloader header");
 
-  ensure(check_bootloader_header_sig(hdr), "invalid bootloader signature");
+  fih_ensure(check_bootloader_header_sig(hdr), "invalid bootloader signature");
 
-  ensure(check_image_contents(hdr, IMAGE_HEADER_SIZE, &BOOTLOADER_AREA),
-         "invalid bootloader hash");
+  fih_ensure(check_image_model(hdr), "incompatible bootloader model");
+
+  fih_ensure(check_image_contents(hdr, IMAGE_HEADER_SIZE, &BOOTLOADER_AREA),
+             "invalid bootloader hash");
 
   uint8_t bld_min_version = get_bootloader_min_version();
-  ensure((hdr->monotonic >= bld_min_version) * sectrue,
-         "BOOTLOADER DOWNGRADED");
+  fih_ensure((hdr->monotonic >= bld_min_version) * sectrue,
+             "BOOTLOADER DOWNGRADED");
   // Write the bootloader version to the secret area.
   // This includes the version of bootloader potentially updated from SD card.
   write_bootloader_min_version(hdr->monotonic);
 
-  drivers_deinit();
+  *next_stage_addr = IMAGE_CODE_ALIGN(BOOTLOADER_START + IMAGE_HEADER_SIZE);
+}
+#endif
 
+int main(void) {
+  // Initialize system's core services
+  system_init(&rsod_panic_handler);
+
+  reset_flags_reset();
+
+  if (sectrue != flash_configure_option_bytes()) {
+    // Option bytes were not configured correctly at startup.
+    // This may indicate a first boot after manufacturing,
+    // or a potential hardware fault or exploit attempt.
+
+    // Make storage data inaccessible.
+    secret_safety_erase();
+
+    // Display an error message on the screen and reset the device.
+    return 0;
+  }
+
+  // Initialize drivers needed in the boardloader
+  drivers_init();
+
+#ifdef USE_SD_CARD
+  // Try to update the bootloader form the SD card
+  sd_update_check_and_update();
+#endif
+
+#ifdef USE_BOOT_UCB
+  // Try to upgrade the bootloader from if UCB (update control block)
+  // is present, valid and points to a new valid/signed bootloader image.
+  try_to_upgrade();
+#endif
+
+  // Address of the next stage to jump to. It's set at the end of
+  // ensure_signed_firmware() and serves as anti-glitch protection.
+  volatile uint32_t next_stage_addr = 0;  // FIH
+
+  // Checks if the bootloader is valid ans signed
+  ensure_signed_firmware(&next_stage_addr);
+
+  // Deinitialize the drivers before jumping to the next stage,
+  // so we don't leave any peripherals running.
+  drivers_deinit();
   system_deinit();
 
-  // g_boot_command is preserved on STM32U5
-  jump_to_next_stage(IMAGE_CODE_ALIGN(BOOTLOADER_START + IMAGE_HEADER_SIZE));
+  // Jump to bootloader code
+  jump_to_next_stage(next_stage_addr);
 
+  // We should never reach this point, but if we do,
+  // we can return anything, as the system will reset anyway.
   return 0;
 }
