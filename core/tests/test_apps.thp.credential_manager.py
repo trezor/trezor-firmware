@@ -7,9 +7,9 @@ if utils.USE_THP:
 
     from apps.thp import credential_manager
 
-    def _issue_credential(host_name: str, host_static_pubkey: bytes) -> bytes:
+    def _issue_credential(host_name: str, host_static_public_key: bytes) -> bytes:
         metadata = ThpCredentialMetadata(host_name=host_name)
-        return credential_manager.issue_credential(host_static_pubkey, metadata)
+        return credential_manager.issue_credential(host_static_public_key, metadata)
 
     def _dummy_log(name: str, msg: str, *args):
         pass
@@ -48,16 +48,28 @@ class TestTrezorHostProtocolCredentialManager(unittest.TestCase):
         cred_3 = _issue_credential(HOST_NAME_2, DUMMY_KEY_1)
         self.assertNotEqual(cred_1, cred_3)
 
-        self.assertTrue(credential_manager.validate_credential(cred_1, DUMMY_KEY_1))
-        self.assertTrue(credential_manager.validate_credential(cred_3, DUMMY_KEY_1))
-        self.assertFalse(credential_manager.validate_credential(cred_1, DUMMY_KEY_2))
+        self.assertTrue(
+            credential_manager.decode_and_validate_credential(cred_1, DUMMY_KEY_1)
+        )
+        self.assertTrue(
+            credential_manager.decode_and_validate_credential(cred_3, DUMMY_KEY_1)
+        )
+        self.assertFalse(
+            credential_manager.decode_and_validate_credential(cred_1, DUMMY_KEY_2)
+        )
 
         credential_manager.invalidate_cred_auth_key()
         cred_4 = _issue_credential(HOST_NAME_1, DUMMY_KEY_1)
         self.assertNotEqual(cred_1, cred_4)
-        self.assertFalse(credential_manager.validate_credential(cred_1, DUMMY_KEY_1))
-        self.assertFalse(credential_manager.validate_credential(cred_3, DUMMY_KEY_1))
-        self.assertTrue(credential_manager.validate_credential(cred_4, DUMMY_KEY_1))
+        self.assertFalse(
+            credential_manager.decode_and_validate_credential(cred_1, DUMMY_KEY_1)
+        )
+        self.assertFalse(
+            credential_manager.decode_and_validate_credential(cred_3, DUMMY_KEY_1)
+        )
+        self.assertTrue(
+            credential_manager.decode_and_validate_credential(cred_4, DUMMY_KEY_1)
+        )
 
     def test_protobuf_encoding(self):
         """
