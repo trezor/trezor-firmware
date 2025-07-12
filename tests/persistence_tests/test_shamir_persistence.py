@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import pytest
+
 from trezorlib import device, messages
 from trezorlib.client import ProtocolVersion
 from trezorlib.debuglink import DebugLink, LayoutType
@@ -117,8 +119,8 @@ def test_recovery_single_reset(core_emulator: Emulator):
     assert features.recovery_status == RecoveryStatus.Nothing
 
 
-# TODO add protocol pytest marker - run test only on Protocol_V1
 @core_only
+@pytest.mark.protocol("protocol_v1")
 def test_recovery_on_old_wallet(core_emulator: Emulator):
     """Check that the recovery workflow started on a disconnected device can survive
     handling by the old Wallet.
@@ -138,6 +140,9 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
             assert layout.main_component() == "MnemonicKeyboard"
 
     device_handler = BackgroundDeviceHandler(core_emulator.client)
+    if device_handler.client.protocol_version != ProtocolVersion.V1:
+        pytest.skip("Should run only on Protocol_V1")
+
     debug = device_handler.debuglink()
     features = device_handler.features()
 
@@ -180,8 +185,7 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
     layout = debug.read_layout()
 
     # while keyboard is open, hit the device with Initialize/GetFeatures
-    if device_handler.client.protocol_version == ProtocolVersion.V1:
-        device_handler.client.get_seedless_session().call(messages.Initialize())
+    device_handler.client.get_seedless_session().call(messages.Initialize())
     device_handler.client.refresh_features()
 
     # try entering remaining 19 words
