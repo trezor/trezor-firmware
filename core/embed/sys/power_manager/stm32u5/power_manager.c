@@ -454,7 +454,8 @@ pm_status_t pm_store_data_to_backup_ram() {
   irq_unlock(irq_key);
 
   bool write_ok =
-      backup_ram_write(BACKUP_RAM_KEY_PM_RECOVERY, &recovery, sizeof(recovery));
+      backup_ram_write(BACKUP_RAM_KEY_PM_RECOVERY, BACKUP_RAM_ITEM_PUBLIC,
+                       &recovery, sizeof(recovery));
 
   if (!write_ok) {
     return PM_ERROR;

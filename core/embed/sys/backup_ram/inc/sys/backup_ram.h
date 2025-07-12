@@ -27,6 +27,11 @@
 /** Maximum size of data stored under a single key in backup RAM */
 #define BACKUP_RAM_MAX_KEY_DATA_SIZE 512
 
+typedef enum {
+  BACKUP_RAM_ITEM_PUBLIC = 0,
+  BACKUP_RAM_ITEM_PROTECTED = 1,
+} backup_ram_item_type_t;
+
 /**
  * @brief Initializes backup RAM driver
  *
@@ -53,6 +58,13 @@ void backup_ram_deinit(void);
  */
 
 bool backup_ram_erase(void);
+
+/**
+ * @brief Erases protected backup RAM content
+ *
+ * @return true if the operation was successful, false otherwise.
+ */
+bool backup_ram_erase_protected(void);
 
 /**
  * @brief Erases a single item in backup RAM by its key.
@@ -83,12 +95,14 @@ uint16_t backup_ram_search(uint16_t min_key);
  *
  * @param key Key to identify the data
  * @param data Pointer to the data to be stored
+ * @param type Type of the data being stored
  * @param data_size Size of the data in bytes. If the key does not exist, this
- * value will be set to 0. If data_size == NULL, the size will not be retrieved.
+ * value will be set to 0. If data_size == 0, the item will be removed.
  *
  * @return true if the operation was successful, false otherwise.
  */
-bool backup_ram_write(uint16_t key, const void* data, size_t data_size);
+bool backup_ram_write(uint16_t key, backup_ram_item_type_t type,
+                      const void* data, size_t data_size);
 
 /**
  * @brief Reads key-value data from backup RAM.

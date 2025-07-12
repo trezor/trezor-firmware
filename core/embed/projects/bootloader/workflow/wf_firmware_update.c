@@ -29,6 +29,10 @@
 #include <sec/secret.h>
 #endif
 
+#ifdef USE_BACKUP_RAM
+#include <sys/backup_ram.h>
+#endif
+
 #include "bootui.h"
 #include "protob/protob.h"
 #include "version_check.h"
@@ -339,6 +343,9 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
         secret_bhk_regenerate();
 #endif
         ensure(erase_storage(NULL), NULL);
+#ifdef USE_BACKUP_RAM
+        ensure(backup_ram_erase_protected() * sectrue, NULL);
+#endif
       }
 
       ctx->headers_offset = IMAGE_HEADER_SIZE + vhdr.hdrlen;

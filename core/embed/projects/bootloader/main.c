@@ -585,6 +585,9 @@ int bootloader_main(void) {
         secret_bhk_regenerate();
 #endif
         ensure(erase_storage(NULL), NULL);
+#ifdef USE_BACKUP_RAM
+        ensure(backup_ram_erase_protected() * sectrue, NULL);
+#endif
         error_shutdown("Bootloader fatal error");
         break;
       }

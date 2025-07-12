@@ -391,9 +391,10 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
 
     case SMCALL_BACKUP_RAM_WRITE: {
       uint16_t key = (uint16_t)args[0];
-      const void *data = (const void *)args[1];
-      size_t data_size = (size_t)args[2];
-      args[0] = backup_ram_write__verified(key, data, data_size);
+      backup_ram_item_type_t type = (backup_ram_item_type_t)args[1];
+      const void *data = (const void *)args[2];
+      size_t data_size = (size_t)args[3];
+      args[0] = backup_ram_write__verified(key, type, data, data_size);
     } break;
 #endif
 

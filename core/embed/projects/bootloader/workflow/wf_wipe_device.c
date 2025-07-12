@@ -26,6 +26,10 @@
 #include <io/ble.h>
 #endif
 
+#ifdef USE_BACKUP_RAM
+#include <sys/backup_ram.h>
+#endif
+
 #include <sys/systick.h>
 
 #include "bootui.h"
@@ -92,6 +96,12 @@ workflow_result_t workflow_wipe_device(protob_io_t* iface) {
   }
   ui_screen_wipe();
   secbool wipe_result = erase_device(ui_screen_wipe_progress);
+
+#ifdef USE_BACKUP_RAM
+  if (!backup_ram_erase_protected()) {
+    return WF_ERROR;
+  }
+#endif
 
 #ifdef USE_BLE
   if (!wipe_bonds(iface)) {

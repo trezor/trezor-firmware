@@ -127,6 +127,10 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report);
 // pm_monitor_power_sources() to control the charging current and state.
 void pm_charging_controller(pm_driver_t* drv);
 
-// Battery initial state of charge guess function. This function use the sampled
-// battery data to guess the initial state of charge in case its unknown.
+// Battery initial state of charge guess function. This function uses the
+// sampled battery data to guess the initial state of charge in case its
+// unknown.
 void pm_battery_initial_soc_guess(void);
+
+// Store power manager data to backup RAM
+pm_status_t pm_store_data_to_backup_ram(void);

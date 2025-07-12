@@ -287,11 +287,15 @@ typedef struct {
   uint16_t key;
   // Size of the data in bytes
   uint16_t data_size;
+  // Type of the item
+  uint8_t item_type;
+  // reserved, must be zero
+  uint8_t reserved;
   // Value data (variable length, aligned to 4 bytes)
   uint8_t data[];
 } backup_ram_item_t;
 
-_Static_assert(sizeof(backup_ram_item_t) == 4,
+_Static_assert(sizeof(backup_ram_item_t) == 6,
                "backup_ram_item_t size mismatch");
 
 #define ITEM_SIZE(data_size) \
@@ -361,12 +365,47 @@ bool backup_ram_erase_item(uint16_t key) {
     return false;
   }
 
-  // Writing NULL data will just remove the item with the given key
   irq_key_t irq_key = irq_lock();
-  bool status = backup_ram_write(key, NULL, 0);
+  // Writing data_size==0 will just remove the item with the given key
+  // Type is don't care in this case.
+  bool status = backup_ram_write(key, BACKUP_RAM_ITEM_PUBLIC, NULL, 0);
   irq_unlock(irq_key);
 
   return status;
+}
+
+bool backup_ram_erase_protected(void) {
+  backup_ram_driver_t* drv = &g_backup_ram_driver;
+  if (!drv->initialized) {
+    return false;
+  }
+
+  // Lock interrupts while we mutate the in-RAM copy of the payload
+  irq_key_t irq_key = irq_lock();
+
+  uint32_t offset = 0;
+  // Walk the payload buffer
+  while (offset + ITEM_SIZE(0) <= drv->payload_size) {
+    backup_ram_item_t* item = (backup_ram_item_t*)(drv->payload + offset);
+    size_t this_size = ITEM_SIZE(item->data_size);
+
+    if (item->item_type != BACKUP_RAM_ITEM_PUBLIC) {
+      // Remove this item by sliding the remainder of the payload down over it
+      uint8_t* next_item = (uint8_t*)item + this_size;
+      size_t tail_bytes = drv->payload_size - (offset + this_size);
+      memmove(item, next_item, tail_bytes);
+      drv->payload_size -= this_size;
+      // don't advance offset: new item has just been shifted into this slot
+    } else {
+      // keep this public item: skip over it
+      offset += this_size;
+    }
+  }
+
+  // write the cleaned payload back into flash-backed RAM
+  bool success = backup_ram_commit();
+  irq_unlock(irq_key);
+  return success;
 }
 
 bool backup_ram_read(uint16_t key, void* buffer, size_t buffer_size,
@@ -400,7 +439,8 @@ cleanup:
   return success;
 }
 
-bool backup_ram_write(uint16_t key, const void* data, size_t data_size) {
+bool backup_ram_write(uint16_t key, backup_ram_item_type_t type,
+                      const void* data, size_t data_size) {
   backup_ram_driver_t* drv = &g_backup_ram_driver;
 
   if (!drv->initialized) {
@@ -417,6 +457,11 @@ bool backup_ram_write(uint16_t key, const void* data, size_t data_size) {
   irq_key_t irq_key = irq_lock();
 
   backup_ram_item_t* item = backup_ram_find_item(key);
+
+  if (item != NULL && item->item_type != type && data_size != 0) {
+    // Item exists but has a different type, not supported
+    goto cleanup;
+  }
 
   if (item != NULL && item->data_size == data_size) {
     // The most common case: item exists and has the same size
@@ -450,6 +495,8 @@ bool backup_ram_write(uint16_t key, const void* data, size_t data_size) {
       item = (backup_ram_item_t*)&drv->payload[drv->payload_size];
       item->key = key;
       item->data_size = data_size;
+      item->item_type = type;
+      item->reserved = 0;
       memcpy(item->data, data, data_size);
       memset(&item->data[data_size], 0, ALIGN_UP(data_size, 4) - data_size);
       drv->payload_size += ITEM_SIZE(data_size);

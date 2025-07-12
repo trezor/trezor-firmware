@@ -197,9 +197,3 @@ pm_status_t pm_charging_set_max_current(uint16_t current_ma);
  * @return pm_status_t Status code indicating success or failure
  */
 pm_status_t pm_set_soc_limit(uint8_t limit);
-
-/**
- * @brief Store power manager data to backup RAM
- * @return pm_status_t Status code indicating success or failure
- */
-pm_status_t pm_store_data_to_backup_ram();
