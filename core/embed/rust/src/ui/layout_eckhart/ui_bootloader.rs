@@ -301,7 +301,10 @@ impl BootloaderUI for UIEckhart {
     fn screen_unlock_bootloader_confirm() -> u32 {
         let msg1 =
             Label::left_aligned("Unlock bootloader".into(), TEXT_NORMAL).vertically_centered();
-        let msg2 = Label::left_aligned("This action cannot be undone!".into(), TEXT_NORMAL);
+        let msg2 = Label::left_aligned(
+            "Your seed will be erased. Unlocking bootloader is irreversible.".into(),
+            TEXT_NORMAL,
+        );
 
         let right = Button::with_text("Unlock".into()).styled(button_wipe_confirm());
         let left = Button::with_icon(theme::ICON_CHEVRON_LEFT).styled(button_cancel());

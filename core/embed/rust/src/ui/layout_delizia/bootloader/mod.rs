@@ -319,7 +319,10 @@ impl BootloaderUI for UIDelizia {
     fn screen_unlock_bootloader_confirm() -> u32 {
         let title =
             Label::left_aligned("UNLOCK BOOTLOADER".into(), TEXT_BOLD).vertically_centered();
-        let msg = Label::centered("This action cannot be undone!".into(), TEXT_NORMAL);
+        let msg = Label::centered(
+            "Your seed will be erased. Unlocking bootloader is irreversible.".into(),
+            TEXT_NORMAL,
+        );
 
         let right = Button::with_text("UNLOCK".into())
             .styled(button_confirm())
