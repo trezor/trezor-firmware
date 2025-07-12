@@ -13,14 +13,15 @@ use crate::{
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
         shape::{Bar, Renderer, Text, ToifImage},
+        util::DisplayStyle,
     },
 };
 
 use super::{
     super::super::{component::ButtonContent, constant::SCREEN, theme},
     common::{
-        DisplayStyle, FADING_ICON_COLORS, FADING_ICON_COUNT, INPUT_TOUCH_HEIGHT,
-        KEYBOARD_INPUT_INSETS, KEYBOARD_INPUT_RADIUS, KEYPAD_VISIBLE_HEIGHT,
+        FADING_ICON_COLORS, FADING_ICON_COUNT, INPUT_TOUCH_HEIGHT, KEYBOARD_INPUT_INSETS,
+        KEYBOARD_INPUT_RADIUS, KEYPAD_VISIBLE_HEIGHT,
     },
     keypad::{ButtonState, Keypad, KeypadMsg, KeypadState},
 };
@@ -41,7 +42,7 @@ pub struct PinKeyboard<'a> {
 }
 
 impl<'a> PinKeyboard<'a> {
-    const LAST_DIGIT_TIMEOUT_S: u32 = 1;
+    const LAST_DIGIT_TIMEOUT: Duration = Duration::from_secs(1);
 
     pub fn new(
         major_prompt: TString<'a>,
@@ -178,7 +179,7 @@ impl Component for PinKeyboard<'_> {
                     // Start the timer to show the last digit.
                     self.input
                         .last_digit_timer
-                        .start(ctx, Duration::from_secs(Self::LAST_DIGIT_TIMEOUT_S));
+                        .start(ctx, Self::LAST_DIGIT_TIMEOUT);
                     self.input.display_style = DisplayStyle::LastOnly;
                     // Update the keypad state.
                     self.update_keypad_state(ctx);
@@ -412,7 +413,7 @@ impl PinInput {
                 // This should not fail because all_chars > 0
                 let last = &self.digits.as_str()[(pin_len - 1)..pin_len];
 
-                // Adapt a and y positions for the character
+                // Adapt x and y positions for the character
                 cursor.y = hidden_area.left_center().y + style.text_font.allcase_text_height() / 2;
                 cursor.x -= style.text_font.text_width(last) / 2 - Self::ICON_WIDTH / 2;
 

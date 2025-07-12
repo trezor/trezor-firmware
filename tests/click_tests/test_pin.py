@@ -25,7 +25,7 @@ from trezorlib import device, exceptions
 from trezorlib.debuglink import LayoutType
 
 from .. import translations as TR
-from .common import go_back, go_next, navigate_to_action_and_press
+from .common import DisplayStyle, go_back, go_next, navigate_to_action_and_press
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink
@@ -181,6 +181,10 @@ def _input_pin(debug: "DebugLink", pin: str, check: bool = False) -> None:
             digit_index = digits_order.index(digit)
             coords = debug.screen_buttons.pin_passphrase_index(digit_index)
             debug.click(coords)
+            assert (
+                DisplayStyle[debug.read_layout().display_style()]
+                == DisplayStyle.LastOnly
+            )
     elif debug.layout_type is LayoutType.Caesar:
         for digit in pin:
             navigate_to_action_and_press(debug, digit, TR_PIN_ACTIONS)
@@ -195,7 +199,13 @@ def _input_pin(debug: "DebugLink", pin: str, check: bool = False) -> None:
 def _see_pin(debug: "DebugLink") -> None:
     """Navigate to "SHOW" and press it"""
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
-        debug.click(debug.screen_buttons.pin_passphrase_input())
+
+        with debug.hold_touch(debug.screen_buttons.pin_passphrase_input()):
+            assert (
+                DisplayStyle[debug.read_layout().display_style()] == DisplayStyle.Shown
+            )
+        assert DisplayStyle[debug.read_layout().display_style()] == DisplayStyle.Hidden
+
     elif debug.layout_type is LayoutType.Caesar:
         navigate_to_action_and_press(debug, SHOW, TR_PIN_ACTIONS)
     else:
@@ -420,11 +430,72 @@ def test_pin_same_as_wipe_code(device_handler: "BackgroundDeviceHandler"):
 @pytest.mark.setup_client(pin=PIN4)
 def test_last_digit_timeout(device_handler: "BackgroundDeviceHandler"):
     with prepare(device_handler) as debug:
-        for digit in PIN4:
-            # insert a digit
-            _input_pin(debug, digit)
-            # wait until the last digit is hidden
+        _input_pin(debug, PIN4)
+        # wait until the last digit is hidden
+        time.sleep(DELAY_S)
+        assert DisplayStyle[debug.read_layout().display_style()] == DisplayStyle.Hidden
+        # show the entire PIN
+        _see_pin(debug)
+        _confirm_pin(debug)
+
+
+@pytest.mark.setup_client(pin=PIN4)
+def test_show_pin_issue5328(device_handler: "BackgroundDeviceHandler"):
+    with prepare(device_handler) as debug:
+        _input_pin(debug, PIN4)
+        pos = debug.screen_buttons.pin_passphrase_input()
+        assert (
+            DisplayStyle[debug.read_layout().display_style()] == DisplayStyle.LastOnly
+        )
+        # Hold the PIN area to show the PIN
+        with debug.hold_touch(pos):
+            assert (
+                DisplayStyle[debug.read_layout().display_style()] == DisplayStyle.Shown
+            )
+
+            # Wait until the last digit timeout happens and make sure the pin did not hide
             time.sleep(DELAY_S)
-            # show the entire PIN
-            _see_pin(debug)
+            assert (
+                DisplayStyle[debug.read_layout().display_style()] == DisplayStyle.Shown
+            )
+
+        # Release the touch and check that the PIN is hidden
+        assert DisplayStyle[debug.read_layout().display_style()] == DisplayStyle.Hidden
+
+        _confirm_pin(debug)
+
+
+@pytest.mark.models("t2t1", "delizia", "eckhart")
+@pytest.mark.setup_client(pin=PIN4)
+def test_long_press_digit(device_handler: "BackgroundDeviceHandler"):
+    with prepare(device_handler) as debug:
+
+        # Input the PIN except the last digit
+        _input_pin(debug, PIN4[:-1])
+
+        # Prepare last digit for long press
+        digits_order = debug.read_layout().tt_pin_digits_order()
+        digit_index = digits_order.index(PIN4[-1])
+        pos = debug.screen_buttons.pin_passphrase_index(digit_index)
+
+        # Hold the key with the last digit
+        with debug.hold_touch(pos):
+            assert (
+                DisplayStyle[debug.read_layout().display_style()]
+                == DisplayStyle.LastOnly
+            )
+            # Wait until the last digit timeout happens and the pin is hidden
+            time.sleep(DELAY_S)
+            assert (
+                DisplayStyle[debug.read_layout().display_style()] == DisplayStyle.Hidden
+            )
+            # Check that the the last digit hasn't been added yet
+            assert debug.read_layout().pin() == PIN4[:-1]
+
+        # Release the touch and check that the last digit is added
+        assert debug.read_layout().pin() == PIN4
+        assert (
+            DisplayStyle[debug.read_layout().display_style()] == DisplayStyle.LastOnly
+        )
+
         _confirm_pin(debug)
