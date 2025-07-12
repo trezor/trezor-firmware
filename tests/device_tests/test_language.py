@@ -59,6 +59,19 @@ def get_ping_title(lang: str) -> str:
 
 
 @pytest.fixture
+def client(client: Client) -> Iterator[Client]:
+    session = client.get_seedless_session()
+    lang_before = session.features.language or ""
+    try:
+        set_language(session, "en", force=True)
+        yield client
+    finally:
+        client = client.get_new_client()
+        session = client.get_seedless_session()
+        set_language(session, lang_before[:2], force=True)
+
+
+@pytest.fixture
 def session(session: Session) -> Iterator[Session]:
     lang_before = session.features.language or ""
     try:
