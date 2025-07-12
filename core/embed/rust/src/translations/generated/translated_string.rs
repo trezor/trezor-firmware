@@ -1451,6 +1451,8 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__contract_address = 1050,  // "Provider contract address"
     buttons__view = 1051,  // "View"
+    #[cfg(feature = "universal_fw")]
+    ethereum__title_confirm_message_hash = 1052,  // "Confirm message hash"
 }
 
 impl TranslatedString {
@@ -3214,6 +3216,8 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__contract_address, "Provider contract address"),
             (Self::buttons__view, "View"),
+            #[cfg(feature = "universal_fw")]
+            (Self::ethereum__title_confirm_message_hash, "Confirm message hash"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3739,6 +3743,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__title_confirm_domain, Self::ethereum__title_confirm_domain),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__title_confirm_message, Self::ethereum__title_confirm_message),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__title_confirm_message_hash, Self::ethereum__title_confirm_message_hash),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__title_confirm_struct, Self::ethereum__title_confirm_struct),
         #[cfg(feature = "universal_fw")]
