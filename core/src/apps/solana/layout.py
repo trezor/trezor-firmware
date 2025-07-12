@@ -242,8 +242,8 @@ async def confirm_unsupported_instruction_details(
             ),
         )
 
-        accounts = []
         for i, account in enumerate(instruction.accounts, 1):
+            accounts: list[PropertyType] = []
             if len(account) == 2:
                 account_public_key = account[0]
                 address_type = get_address_type(account[1])
@@ -256,6 +256,7 @@ async def confirm_unsupported_instruction_details(
                     (
                         f"{TR.words__account} {i}{path_str} {address_type}:",
                         base58.encode(account_public_key),
+                        True,
                     )
                 )
             elif len(account) == 3:
@@ -266,11 +267,11 @@ async def confirm_unsupported_instruction_details(
             else:
                 raise ValueError  # Invalid account value
 
-        await confirm_properties(
-            "accounts",
-            title,
-            accounts,
-        )
+            await confirm_properties(
+                "accounts",
+                title,
+                accounts,
+            )
 
 
 async def confirm_unsupported_instruction_confirm(
