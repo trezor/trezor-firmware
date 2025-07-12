@@ -11,7 +11,7 @@ pub struct Swipe {
     pub allow_down: bool,
     pub allow_left: bool,
     pub allow_right: bool,
-
+    bounds: Rect,
     origin: Option<Point>,
 }
 
@@ -25,6 +25,7 @@ impl Swipe {
             allow_down: false,
             allow_left: false,
             allow_right: false,
+            bounds: Rect::zero(),
             origin: None,
         }
     }
@@ -70,6 +71,7 @@ impl Component for Swipe {
     type Msg = Direction;
 
     fn place(&mut self, bounds: Rect) -> Rect {
+        self.bounds = bounds;
         bounds
     }
 
@@ -78,7 +80,7 @@ impl Component for Swipe {
             return None;
         }
         match (event, self.origin) {
-            (Event::Touch(TouchEvent::TouchStart(pos)), _) => {
+            (Event::Touch(TouchEvent::TouchStart(pos)), _) if self.bounds.contains(pos) => {
                 // Mark the starting position of this touch.
                 self.origin.replace(pos);
             }
