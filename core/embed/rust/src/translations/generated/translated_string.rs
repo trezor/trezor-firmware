@@ -1450,6 +1450,8 @@ pub enum TranslatedString {
     address__title_provider_address = 1053,  // "Provider address"
     address__title_refund_address = 1054,  // "Refund address"
     words__assets = 1055,  // "Assets"
+    #[cfg(feature = "universal_fw")]
+    ethereum__title_confirm_message_hash = 1056,  // "Confirm message hash"
 }
 
 impl TranslatedString {
@@ -3212,6 +3214,8 @@ impl TranslatedString {
             (Self::address__title_provider_address, "Provider address"),
             (Self::address__title_refund_address, "Refund address"),
             (Self::words__assets, "Assets"),
+            #[cfg(feature = "universal_fw")]
+            (Self::ethereum__title_confirm_message_hash, "Confirm message hash"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3737,6 +3741,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__title_confirm_domain, Self::ethereum__title_confirm_domain),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__title_confirm_message, Self::ethereum__title_confirm_message),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__title_confirm_message_hash, Self::ethereum__title_confirm_message_hash),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__title_confirm_struct, Self::ethereum__title_confirm_struct),
         #[cfg(feature = "universal_fw")]

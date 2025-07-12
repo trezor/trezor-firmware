@@ -26,6 +26,7 @@ message EthereumSignTypedData {
     required string primary_type = 2;                          // name of the root message struct
     optional bool metamask_v4_compat = 3 [default=true];       // use MetaMask v4 (see https://github.com/MetaMask/eth-sig-util/issues/106)
     optional ethereum.EthereumDefinitions definitions = 4;     // network and/or token definitions
+    optional bytes show_message_hash = 5;                      // hash of the typed data to be signed (if set, user will be asked to confirm before signing)
 }
 
 /**

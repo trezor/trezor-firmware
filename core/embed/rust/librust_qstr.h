@@ -1105,6 +1105,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__title_all_input_data_template;
   MP_QSTR_ethereum__title_confirm_domain;
   MP_QSTR_ethereum__title_confirm_message;
+  MP_QSTR_ethereum__title_confirm_message_hash;
   MP_QSTR_ethereum__title_confirm_struct;
   MP_QSTR_ethereum__title_confirm_typed_data;
   MP_QSTR_ethereum__title_input_data;

@@ -5293,6 +5293,7 @@ class EthereumSignTypedData(protobuf.MessageType):
         2: protobuf.Field("primary_type", "string", repeated=False, required=True),
         3: protobuf.Field("metamask_v4_compat", "bool", repeated=False, required=False, default=True),
         4: protobuf.Field("definitions", "EthereumDefinitions", repeated=False, required=False, default=None),
+        5: protobuf.Field("show_message_hash", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -5302,11 +5303,13 @@ class EthereumSignTypedData(protobuf.MessageType):
         address_n: Optional[Sequence["int"]] = None,
         metamask_v4_compat: Optional["bool"] = True,
         definitions: Optional["EthereumDefinitions"] = None,
+        show_message_hash: Optional["bytes"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.primary_type = primary_type
         self.metamask_v4_compat = metamask_v4_compat
         self.definitions = definitions
+        self.show_message_hash = show_message_hash
 
 
 class EthereumTypedDataStructRequest(protobuf.MessageType):

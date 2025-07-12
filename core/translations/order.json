@@ -1054,5 +1054,6 @@
   "1052": "words__swap",
   "1053": "address__title_provider_address",
   "1054": "address__title_refund_address",
-  "1055": "words__assets"
+  "1055": "words__assets",
+  "1056": "ethereum__title_confirm_message_hash"
 }
