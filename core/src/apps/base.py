@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 import storage.device as storage_device
+from storage import cache
 from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS, APP_COMMON_SEED
 from trezor import TR, config, utils, wire, workflow
 from trezor.enums import HomescreenFormat, MessageType
@@ -398,6 +399,7 @@ def set_homescreen() -> None:
 
 def lock_device(interrupt_workflow: bool = True) -> None:
     if config.has_pin():
+        cache.encrypt_seeds()
         config.lock()
         filters.append(_pinlock_filter)
         set_homescreen()
@@ -432,6 +434,7 @@ async def unlock_device() -> None:
     if not config.is_unlocked():
         # verify_user_pin will raise if the PIN was invalid
         await verify_user_pin()
+        cache.decrypt_seeds()
 
     _SCREENSAVER_IS_ON = False
     set_homescreen()
