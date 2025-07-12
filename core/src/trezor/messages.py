@@ -3874,6 +3874,7 @@ if TYPE_CHECKING:
         primary_type: "str"
         metamask_v4_compat: "bool"
         definitions: "EthereumDefinitions | None"
+        message_hash: "bytes | None"
 
         def __init__(
             self,
@@ -3882,6 +3883,7 @@ if TYPE_CHECKING:
             address_n: "list[int] | None" = None,
             metamask_v4_compat: "bool | None" = None,
             definitions: "EthereumDefinitions | None" = None,
+            message_hash: "bytes | None" = None,
         ) -> None:
             pass
 
