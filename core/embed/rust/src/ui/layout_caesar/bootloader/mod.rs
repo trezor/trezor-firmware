@@ -250,8 +250,11 @@ impl BootloaderUI for UICaesar {
     }
 
     fn screen_unlock_bootloader_confirm() -> u32 {
-        let message = Label::left_aligned("This action cannot be undone!".into(), TEXT_NORMAL)
-            .vertically_centered();
+        let message = Label::left_aligned(
+            "Your seed will be erased. Unlocking bootloader is irreversible.".into(),
+            TEXT_NORMAL,
+        )
+        .vertically_centered();
 
         let mut frame = Confirm::new(
             BLD_BG,
