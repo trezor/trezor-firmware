@@ -45,7 +45,7 @@ async def sign_typed_data(
     await require_confirm_address(address_bytes)
 
     data_hash = await _generate_typed_data_hash(
-        msg.primary_type, msg.metamask_v4_compat
+        msg.primary_type, msg.metamask_v4_compat, msg.show_message_hash
     )
 
     signature = secp256k1.sign(
@@ -59,7 +59,9 @@ async def sign_typed_data(
 
 
 async def _generate_typed_data_hash(
-    primary_type: str, metamask_v4_compat: bool = True
+    primary_type: str,
+    metamask_v4_compat: bool = True,
+    show_message_hash: bytes | None = None,
 ) -> bytes:
     """
     Generate typed data hash according to EIP-712 specification
@@ -71,6 +73,7 @@ async def _generate_typed_data_hash(
 
     from .layout import (
         confirm_empty_typed_message,
+        confirm_message_hash,
         confirm_typed_data_final,
         should_show_domain,
     )
@@ -109,6 +112,11 @@ async def _generate_typed_data_hash(
             show_message,
             [primary_type],
         )
+
+    if show_message_hash is not None:
+        if message_hash != show_message_hash:
+            raise DataError("Message hash mismatch")
+        await confirm_message_hash(message_hash)
 
     await confirm_typed_data_final()
 

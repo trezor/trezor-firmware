@@ -36,6 +36,8 @@ pub struct EthereumSignTypedData {
     pub metamask_v4_compat: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ethereum_eip712.EthereumSignTypedData.definitions)
     pub definitions: ::protobuf::MessageField<super::messages_ethereum::EthereumDefinitions>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum_eip712.EthereumSignTypedData.show_message_hash)
+    pub show_message_hash: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ethereum_eip712.EthereumSignTypedData.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -107,8 +109,44 @@ impl EthereumSignTypedData {
         self.metamask_v4_compat = ::std::option::Option::Some(v);
     }
 
+    // optional bytes show_message_hash = 5;
+
+    pub fn show_message_hash(&self) -> &[u8] {
+        match self.show_message_hash.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_show_message_hash(&mut self) {
+        self.show_message_hash = ::std::option::Option::None;
+    }
+
+    pub fn has_show_message_hash(&self) -> bool {
+        self.show_message_hash.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_show_message_hash(&mut self, v: ::std::vec::Vec<u8>) {
+        self.show_message_hash = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_show_message_hash(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.show_message_hash.is_none() {
+            self.show_message_hash = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.show_message_hash.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_show_message_hash(&mut self) -> ::std::vec::Vec<u8> {
+        self.show_message_hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut fields = ::std::vec::Vec::with_capacity(5);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "address_n",
@@ -129,6 +167,11 @@ impl EthereumSignTypedData {
             "definitions",
             |m: &EthereumSignTypedData| { &m.definitions },
             |m: &mut EthereumSignTypedData| { &mut m.definitions },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "show_message_hash",
+            |m: &EthereumSignTypedData| { &m.show_message_hash },
+            |m: &mut EthereumSignTypedData| { &mut m.show_message_hash },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<EthereumSignTypedData>(
             "EthereumSignTypedData",
@@ -171,6 +214,9 @@ impl ::protobuf::Message for EthereumSignTypedData {
                 34 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.definitions)?;
                 },
+                42 => {
+                    self.show_message_hash = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -196,6 +242,9 @@ impl ::protobuf::Message for EthereumSignTypedData {
             let len = v.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
+        if let Some(v) = self.show_message_hash.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(5, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -213,6 +262,9 @@ impl ::protobuf::Message for EthereumSignTypedData {
         }
         if let Some(v) = self.definitions.as_ref() {
             ::protobuf::rt::write_message_field_with_cached_size(4, v, os)?;
+        }
+        if let Some(v) = self.show_message_hash.as_ref() {
+            os.write_bytes(5, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -235,6 +287,7 @@ impl ::protobuf::Message for EthereumSignTypedData {
         self.primary_type = ::std::option::Option::None;
         self.metamask_v4_compat = ::std::option::Option::None;
         self.definitions.clear();
+        self.show_message_hash = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -244,6 +297,7 @@ impl ::protobuf::Message for EthereumSignTypedData {
             primary_type: ::std::option::Option::None,
             metamask_v4_compat: ::std::option::Option::None,
             definitions: ::protobuf::MessageField::none(),
+            show_message_hash: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -1399,12 +1453,13 @@ impl ::protobuf::reflect::ProtobufValue for EthereumTypedDataValueAck {
 
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x1emessages-ethereum-eip712.proto\x12\"hw.trezor.messages.ethereum_ei\
-    p712\x1a\x17messages-ethereum.proto\"\xdf\x01\n\x15EthereumSignTypedData\
+    p712\x1a\x17messages-ethereum.proto\"\x8b\x02\n\x15EthereumSignTypedData\
     \x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12!\n\x0cprimary_\
     type\x18\x02\x20\x02(\tR\x0bprimaryType\x122\n\x12metamask_v4_compat\x18\
     \x03\x20\x01(\x08:\x04trueR\x10metamaskV4Compat\x12R\n\x0bdefinitions\
     \x18\x04\x20\x01(\x0b20.hw.trezor.messages.ethereum.EthereumDefinitionsR\
-    \x0bdefinitions\"4\n\x1eEthereumTypedDataStructRequest\x12\x12\n\x04name\
+    \x0bdefinitions\x12*\n\x11show_message_hash\x18\x05\x20\x01(\x0cR\x0fsho\
+    wMessageHash\"4\n\x1eEthereumTypedDataStructRequest\x12\x12\n\x04name\
     \x18\x01\x20\x02(\tR\x04name\"\xb4\x05\n\x1aEthereumTypedDataStructAck\
     \x12m\n\x07members\x18\x01\x20\x03(\x0b2S.hw.trezor.messages.ethereum_ei\
     p712.EthereumTypedDataStructAck.EthereumStructMemberR\x07members\x1a\x90\

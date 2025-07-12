@@ -330,6 +330,7 @@ class TR:
     ethereum__title_all_input_data_template: str = "All input data ({0} bytes)"
     ethereum__title_confirm_domain: str = "Confirm domain"
     ethereum__title_confirm_message: str = "Confirm message"
+    ethereum__title_confirm_message_hash: str = "Confirm message hash"
     ethereum__title_confirm_struct: str = "Confirm struct"
     ethereum__title_confirm_typed_data: str = "Confirm typed data"
     ethereum__title_input_data: str = "Input data"

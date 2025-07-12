@@ -305,6 +305,24 @@ def require_confirm_other_data(data: bytes, data_total: int) -> Awaitable[None]:
     )
 
 
+async def confirm_message_hash(message_hash: bytes) -> None:
+    from ubinascii import hexlify
+
+    from trezor.ui.layouts import confirm_value
+
+    message_hash_hex = "0x" + hexlify(message_hash).decode()
+
+    await confirm_value(
+        TR.ethereum__title_confirm_message_hash,
+        message_hash_hex,
+        "",
+        "confirm_message_hash",
+        verb=TR.buttons__confirm,
+        br_code=ButtonRequestType.SignTx,
+        cancel=True,
+    )
+
+
 async def confirm_typed_data_final() -> None:
     from trezor.ui.layouts import confirm_action
 
