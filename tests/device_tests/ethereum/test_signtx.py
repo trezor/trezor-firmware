@@ -523,11 +523,15 @@ def test_signtx_staking_eip1559(client: Client, parameters: dict, result: dict):
 
 
 @pytest.mark.experimental
-@pytest.mark.models("core", reason="T1 does not support payment requests")
+@pytest.mark.models(
+    "core",
+    skip="t2t1,t3w1",
+    reason="T1 does not support payment requests. Payment requests not yet implemented on model T and TS7.",
+)
 def test_signtx_payment_req(client: Client):
     from trezorlib import btc, misc
 
-    from ..payment_req import CoinPurchaseMemo, make_payment_request
+    from ..payment_req import CoinPurchaseMemo, RefundMemo, make_payment_request
 
     memo = CoinPurchaseMemo(
         amount="0.0636 BTC",
@@ -539,6 +543,11 @@ def test_signtx_payment_req(client: Client):
         client, memo.coin_name, memo.address_n
     )
 
+    refund_memo = RefundMemo(address_n=parse_path("m/44h/60h/0h/0/0"))
+    refund_memo.address_resp = ethereum.get_authenticated_address(
+        client, refund_memo.address_n
+    )
+
     nonce = misc.get_nonce(client)
 
     params = dict(example_input_data["parameters"])
@@ -547,7 +556,7 @@ def test_signtx_payment_req(client: Client):
         recipient_name="trezor.io",
         slip44=60,
         outputs=[(int(params["value"], 16), params["to_address"])],
-        memos=[memo],
+        memos=[memo, refund_memo],
         nonce=nonce,
     )
 

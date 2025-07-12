@@ -727,6 +727,8 @@ pub const fn loader_lock_icon() -> LoaderStyleSheet {
 }
 
 pub const TEXT_SUPER: TextStyle = TextStyle::new(fonts::FONT_BIG, GREY_EXTRA_LIGHT, BG, GREY, GREY);
+pub const TEXT_MAIN_GREEN_LIME: TextStyle =
+    TextStyle::new(fonts::FONT_DEMIBOLD, GREEN_LIME, BG, GREY, GREY);
 pub const TEXT_MAIN_GREY_EXTRA_LIGHT: TextStyle =
     TextStyle::new(fonts::FONT_DEMIBOLD, GREY_EXTRA_LIGHT, BG, GREY, GREY);
 pub const TEXT_MAIN_GREY_LIGHT: TextStyle =

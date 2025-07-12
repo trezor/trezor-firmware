@@ -569,7 +569,7 @@ async def confirm_tx_details(
     if fee is not None:
         append(
             (
-                TR.cardano__transaction_fee,
+                f"{TR.words__transaction_fee}:",
                 format_coin_amount(fee, network_id),
                 False,
             )

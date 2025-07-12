@@ -577,6 +577,10 @@ impl Insets {
     pub const fn sides(d: i16) -> Self {
         Self::new(0, d, 0, d)
     }
+
+    pub const fn vertical(d: i16) -> Self {
+        Self::new(d, 0, d, 0)
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
