@@ -625,6 +625,8 @@ if TYPE_CHECKING:
         NostrEventSignature = 2004
         EvoluGetNode = 2100
         EvoluNode = 2101
+        TronGetAddress = 3000
+        TronAddress = 3001
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

@@ -29,6 +29,7 @@ FEATURES = {
     "Solana": "solana",
     "Stellar": "stellar",
     "Tezos": "tezos",
+    "Tron": "tron",
     "WebAuthn": "webauthn",
 }
 MACRO = "trezor_message_impl"

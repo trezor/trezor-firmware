@@ -1,0 +1,27 @@
+syntax = "proto2";
+package hw.trezor.messages.tron;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageTron";
+
+/**
+ * Request: Ask device for Tron address corresponding to address_n path
+ * @start
+ * @next TronAddress
+ * @next Failure
+ */
+message TronGetAddress {
+    repeated uint32 address_n = 1;              // BIP-32 path to derive the key from master node
+    optional bool show_display = 2;             // Optionally show on display before sending the result
+    optional bool chunkify = 3;                 // display the address in chunks of 4 characters
+}
+
+/**
+ * Response: Contains Tron address derived from device private seed
+ * @end
+ */
+message TronAddress {
+    required string address = 1;    // Tron address in Base32 encoding
+    optional bytes mac = 2;         // Address authentication code
+}

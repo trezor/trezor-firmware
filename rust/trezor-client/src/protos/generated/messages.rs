@@ -535,6 +535,10 @@ pub enum MessageType {
     MessageType_EvoluGetNode = 2100,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_EvoluNode)
     MessageType_EvoluNode = 2101,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TronGetAddress)
+    MessageType_TronGetAddress = 3000,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TronAddress)
+    MessageType_TronAddress = 3001,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkListNames)
     MessageType_BenchmarkListNames = 9100,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkNames)
@@ -808,6 +812,8 @@ impl ::protobuf::Enum for MessageType {
             2004 => ::std::option::Option::Some(MessageType::MessageType_NostrEventSignature),
             2100 => ::std::option::Option::Some(MessageType::MessageType_EvoluGetNode),
             2101 => ::std::option::Option::Some(MessageType::MessageType_EvoluNode),
+            3000 => ::std::option::Option::Some(MessageType::MessageType_TronGetAddress),
+            3001 => ::std::option::Option::Some(MessageType::MessageType_TronAddress),
             9100 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             9101 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             9102 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1072,6 +1078,8 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_NostrEventSignature" => ::std::option::Option::Some(MessageType::MessageType_NostrEventSignature),
             "MessageType_EvoluGetNode" => ::std::option::Option::Some(MessageType::MessageType_EvoluGetNode),
             "MessageType_EvoluNode" => ::std::option::Option::Some(MessageType::MessageType_EvoluNode),
+            "MessageType_TronGetAddress" => ::std::option::Option::Some(MessageType::MessageType_TronGetAddress),
+            "MessageType_TronAddress" => ::std::option::Option::Some(MessageType::MessageType_TronAddress),
             "MessageType_BenchmarkListNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             "MessageType_BenchmarkNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             "MessageType_BenchmarkRun" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1335,6 +1343,8 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_NostrEventSignature,
         MessageType::MessageType_EvoluGetNode,
         MessageType::MessageType_EvoluNode,
+        MessageType::MessageType_TronGetAddress,
+        MessageType::MessageType_TronAddress,
         MessageType::MessageType_BenchmarkListNames,
         MessageType::MessageType_BenchmarkNames,
         MessageType::MessageType_BenchmarkRun,
