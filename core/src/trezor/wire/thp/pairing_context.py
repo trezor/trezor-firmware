@@ -113,7 +113,7 @@ class PairingContext(Context):
             raise UnexpectedMessageException(message)
 
         if expected_type is None:
-            expected_type = protobuf.type_for_wire(message.type)
+            expected_type = protobuf.type_for_wire("ThpMessageType", message.type)
             assert expected_type is not None
 
         return message_handler.wrap_protobuf_load(message.data, expected_type)
@@ -316,7 +316,7 @@ async def handle_message(
     try:
         # Find a protobuf.MessageType subclass that describes this
         # message.  Raises if the type is not found.
-        req_type = protobuf.type_for_wire(msg.type)
+        req_type = protobuf.type_for_wire("ThpMessageType", msg.type)
 
         # Try to decode the message according to schema from
         # `req_type`. Raises if the message is malformed.

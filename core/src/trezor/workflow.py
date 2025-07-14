@@ -5,10 +5,6 @@ import storage.cache as storage_cache
 from trezor import log, loop, utils
 from trezor.enums import MessageType
 
-if utils.USE_THP:
-    from trezor.enums import ThpMessageType
-
-
 if TYPE_CHECKING:
     from typing import Callable
 
@@ -21,7 +17,7 @@ if __debug__:
 
 if utils.USE_THP:
     ALLOW_WHILE_LOCKED = (
-        ThpMessageType.ThpCreateNewSession,
+        MessageType.ThpCreateNewSession,
         MessageType.EndSession,
         MessageType.GetFeatures,
         MessageType.Cancel,
