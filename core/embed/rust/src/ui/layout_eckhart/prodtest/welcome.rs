@@ -1,4 +1,9 @@
-use super::super::{cshape::ScreenBorder, fonts, theme::WHITE};
+use super::super::{
+    constant::SCREEN,
+    cshape::ScreenBorder,
+    fonts,
+    theme::{GREEN, RED, WHITE},
+};
 use crate::{
     strutil::format_i64,
     trezorhal::power_manager::{charging_state, soc, ChargingState},
@@ -70,23 +75,29 @@ impl Component for Welcome {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        let state = charging_state();
+
+        let (state_text, bg_color) = match state {
+            ChargingState::Charging => ("Charging", Color::black()),
+            ChargingState::Discharging => ("Discharging", RED),
+            ChargingState::Idle => ("Idle", GREEN),
+        };
+
+        shape::Bar::new(SCREEN).with_bg(bg_color).render(target);
+
         self.screen_border.render(u8::MAX, target);
 
         let mut buf = [0; 20];
         let text = unwrap!(format_i64(soc() as _, &mut buf));
 
-        shape::Text::new(screen().center(), text, fonts::FONT_SATOSHI_REGULAR_22)
-            .with_fg(WHITE)
-            .with_align(Alignment::Center)
-            .render(target);
-
-        let state = charging_state();
-
-        let text = match state {
-            ChargingState::Charging => "Charging",
-            ChargingState::Discharging => "Discharging",
-            ChargingState::Idle => "Idle",
-        };
+        shape::Text::new(
+            screen().center(),
+            state_text,
+            fonts::FONT_SATOSHI_REGULAR_22,
+        )
+        .with_fg(WHITE)
+        .with_align(Alignment::Center)
+        .render(target);
 
         shape::Text::new(
             screen().center() + Offset::y(20),
