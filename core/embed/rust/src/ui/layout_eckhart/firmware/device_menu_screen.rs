@@ -20,11 +20,11 @@ use crate::{
 
 use super::{
     super::{
-        component::{Button, ButtonStyleSheet},
+        component::{Button, ButtonStyleSheet, FuelGauge},
         constant::SCREEN,
         firmware::{
-            FuelGauge, Header, HeaderMsg, TextScreen, TextScreenMsg, VerticalMenu,
-            VerticalMenuScreen, VerticalMenuScreenMsg, SHORT_MENU_ITEMS,
+            Header, HeaderMsg, TextScreen, TextScreenMsg, VerticalMenu, VerticalMenuScreen,
+            VerticalMenuScreenMsg, SHORT_MENU_ITEMS,
         },
     },
     theme, ShortMenuVec,

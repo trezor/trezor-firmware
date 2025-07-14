@@ -20,12 +20,12 @@ use crate::{
 
 use super::{
     super::{
-        component::{Button, ButtonContent, ButtonMsg},
+        component::{Button, ButtonContent, ButtonMsg, FuelGauge},
         fonts,
     },
     constant::{HEIGHT, SCREEN, WIDTH},
     theme::{self, firmware::button_homebar_style, TILES_GRID},
-    ActionBar, ActionBarMsg, FuelGauge, Hint,
+    ActionBar, ActionBarMsg, Hint,
 };
 
 const LOCK_HOLD_DURATION: ShortDuration = ShortDuration::from_millis(3000);

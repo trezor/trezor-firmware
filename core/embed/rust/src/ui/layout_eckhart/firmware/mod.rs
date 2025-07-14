@@ -5,7 +5,6 @@ mod device_menu_screen;
 mod fido;
 #[rustfmt::skip]
 mod fido_icons;
-mod fuel_gauge;
 mod header;
 mod hint;
 mod hold_to_confirm;
@@ -26,7 +25,6 @@ pub use brightness_screen::SetBrightnessScreen;
 pub use confirm_homescreen::{ConfirmHomescreen, ConfirmHomescreenMsg};
 pub use device_menu_screen::{DeviceMenuMsg, DeviceMenuScreen};
 pub use fido::{FidoAccountName, FidoCredential};
-pub use fuel_gauge::FuelGauge;
 pub use header::{Header, HeaderMsg};
 pub use hint::Hint;
 pub use hold_to_confirm::HoldToConfirmAnim;
