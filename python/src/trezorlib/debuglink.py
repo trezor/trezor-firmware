@@ -687,11 +687,15 @@ class DebugLink:
             return self._call(messages.DebugLinkResetDebugEvents())
         return None
 
-    def synchronize_at(self, layout_text: str, timeout: float = 5) -> LayoutContent:
+    def synchronize_at(
+        self, layout_text: str | list[str], timeout: float = 5
+    ) -> LayoutContent:
+        if not isinstance(layout_text, list):
+            layout_text = [layout_text]
         now = time.monotonic()
         while True:
             layout = self.read_layout()
-            if layout_text in layout.json_str:
+            if any(t in layout.json_str for t in layout_text):
                 return layout
             if time.monotonic() - now > timeout:
                 raise RuntimeError("Timeout waiting for layout")

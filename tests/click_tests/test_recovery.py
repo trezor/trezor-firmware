@@ -116,6 +116,7 @@ def test_recovery_bip39_previous_word(device_handler: "BackgroundDeviceHandler")
         recovery.finalize(debug)
 
 
+@pytest.mark.protocol("protocol_v1")
 def test_recovery_cancel_issue4613(device_handler: "BackgroundDeviceHandler"):
     """Test for issue fixed in PR #4613: After aborting the recovery flow from host
     side, it was impossible to exit recovery until device was restarted."""
@@ -181,7 +182,10 @@ def test_recovery_slip39_issue5306(device_handler: "BackgroundDeviceHandler"):
     set_autolock_delay(device_handler, 10_000)
     debug = device_handler.debuglink()
 
-    device_handler.run(device.recover, type=messages.RecoveryType.DryRun)
+    session = device_handler.client.get_seedless_session()
+    device_handler.run_with_provided_session(
+        session, device.recover, type=messages.RecoveryType.DryRun
+    )
 
     unlock_dry_run(debug)
 
