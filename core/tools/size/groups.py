@@ -72,6 +72,7 @@ def _categories_func(row: DataRow) -> str | None:
                     "src/apps/stellar/",
                     "src/apps/eos/",
                     "src/apps/tezos/",
+                    "src/apps/tron/",
                     "src/apps/ripple/",
                     "src/apps/zcash/",
                 )

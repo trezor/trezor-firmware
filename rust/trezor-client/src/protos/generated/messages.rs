@@ -543,6 +543,10 @@ pub enum MessageType {
     MessageType_EvoluGetDelegatedIdentityKey = 2104,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_EvoluDelegatedIdentityKey)
     MessageType_EvoluDelegatedIdentityKey = 2105,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TronGetAddress)
+    MessageType_TronGetAddress = 3000,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TronAddress)
+    MessageType_TronAddress = 3001,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkListNames)
     MessageType_BenchmarkListNames = 9100,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkNames)
@@ -820,6 +824,8 @@ impl ::protobuf::Enum for MessageType {
             2103 => ::std::option::Option::Some(MessageType::MessageType_EvoluRegistrationRequest),
             2104 => ::std::option::Option::Some(MessageType::MessageType_EvoluGetDelegatedIdentityKey),
             2105 => ::std::option::Option::Some(MessageType::MessageType_EvoluDelegatedIdentityKey),
+            3000 => ::std::option::Option::Some(MessageType::MessageType_TronGetAddress),
+            3001 => ::std::option::Option::Some(MessageType::MessageType_TronAddress),
             9100 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             9101 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             9102 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1088,6 +1094,8 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_EvoluRegistrationRequest" => ::std::option::Option::Some(MessageType::MessageType_EvoluRegistrationRequest),
             "MessageType_EvoluGetDelegatedIdentityKey" => ::std::option::Option::Some(MessageType::MessageType_EvoluGetDelegatedIdentityKey),
             "MessageType_EvoluDelegatedIdentityKey" => ::std::option::Option::Some(MessageType::MessageType_EvoluDelegatedIdentityKey),
+            "MessageType_TronGetAddress" => ::std::option::Option::Some(MessageType::MessageType_TronGetAddress),
+            "MessageType_TronAddress" => ::std::option::Option::Some(MessageType::MessageType_TronAddress),
             "MessageType_BenchmarkListNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             "MessageType_BenchmarkNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             "MessageType_BenchmarkRun" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1355,6 +1363,8 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_EvoluRegistrationRequest,
         MessageType::MessageType_EvoluGetDelegatedIdentityKey,
         MessageType::MessageType_EvoluDelegatedIdentityKey,
+        MessageType::MessageType_TronGetAddress,
+        MessageType::MessageType_TronAddress,
         MessageType::MessageType_BenchmarkListNames,
         MessageType::MessageType_BenchmarkNames,
         MessageType::MessageType_BenchmarkRun,

@@ -26,6 +26,7 @@ ALTCOINS = (
     "solana",
     "stellar",
     "tezos",
+    "tron",
     "webauthn",
     "zcash",
 )
