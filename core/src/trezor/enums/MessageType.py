@@ -248,8 +248,8 @@ if not utils.BITCOIN_ONLY:
     SolanaSignTx = 904
     SolanaTxSignature = 905
     ThpCreateNewSession = 1000
-    ThpCredentialRequest = 1010
-    ThpCredentialResponse = 1011
+    ThpCredentialRequest = 1016
+    ThpCredentialResponse = 1017
     NostrGetPubkey = 2001
     NostrPubkey = 2002
     NostrSignEvent = 2003

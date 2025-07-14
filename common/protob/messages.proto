@@ -322,10 +322,10 @@ enum MessageType {
 
     // THP
     MessageType_ThpCreateNewSession = 1000;
-    reserved 1001 to 1009;  // see ThpMessageType in messages-thp.proto
-    MessageType_ThpCredentialRequest = 1010;
-    MessageType_ThpCredentialResponse = 1011;
-    reserved 1012 to 1099;  // see ThpMessageType in messages-thp.proto
+    reserved 1001 to 1015;  // see ThpMessageType in messages-thp.proto
+    MessageType_ThpCredentialRequest = 1016;
+    MessageType_ThpCredentialResponse = 1017;
+    reserved 1018 to 1099;  // see ThpMessageType in messages-thp.proto
 
     // Nostr
     MessageType_NostrGetPubkey = 2001 [(wire_in) = true];
