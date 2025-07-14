@@ -611,6 +611,8 @@ if TYPE_CHECKING:
         NostrPubkey = 2002
         NostrSignEvent = 2003
         NostrEventSignature = 2004
+        TronGetAddress = 3001
+        TronAddress = 3002
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102
