@@ -663,8 +663,8 @@ class MessageType(IntEnum):
     NostrPubkey = 2002
     NostrSignEvent = 2003
     NostrEventSignature = 2004
-    EvoluGetKeys = 3000
-    EvoluKeys = 3001
+    EvoluGetKeys = 2100
+    EvoluKeys = 2101
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -5399,11 +5399,11 @@ class EthereumFieldType(protobuf.MessageType):
 
 
 class EvoluGetKeys(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 3000
+    MESSAGE_WIRE_TYPE = 2100
 
 
 class EvoluKeys(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 3001
+    MESSAGE_WIRE_TYPE = 2101
     FIELDS = {
         1: protobuf.Field("owner_id", "bytes", repeated=False, required=True),
         2: protobuf.Field("write_key", "bytes", repeated=False, required=True),

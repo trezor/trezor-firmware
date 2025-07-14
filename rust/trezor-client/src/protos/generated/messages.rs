@@ -520,9 +520,9 @@ pub enum MessageType {
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_NostrEventSignature)
     MessageType_NostrEventSignature = 2004,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_EvoluGetKeys)
-    MessageType_EvoluGetKeys = 3000,
+    MessageType_EvoluGetKeys = 2100,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_EvoluKeys)
-    MessageType_EvoluKeys = 3001,
+    MessageType_EvoluKeys = 2101,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkListNames)
     MessageType_BenchmarkListNames = 9100,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkNames)
@@ -788,8 +788,8 @@ impl ::protobuf::Enum for MessageType {
             2002 => ::std::option::Option::Some(MessageType::MessageType_NostrPubkey),
             2003 => ::std::option::Option::Some(MessageType::MessageType_NostrSignEvent),
             2004 => ::std::option::Option::Some(MessageType::MessageType_NostrEventSignature),
-            3000 => ::std::option::Option::Some(MessageType::MessageType_EvoluGetKeys),
-            3001 => ::std::option::Option::Some(MessageType::MessageType_EvoluKeys),
+            2100 => ::std::option::Option::Some(MessageType::MessageType_EvoluGetKeys),
+            2101 => ::std::option::Option::Some(MessageType::MessageType_EvoluKeys),
             9100 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             9101 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             9102 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1870,8 +1870,8 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x18\x01\x12\"\n\x17MessageType_NostrPubkey\x10\xd2\x0f\x1a\x04\x98\xb5\
     \x18\x01\x12%\n\x1aMessageType_NostrSignEvent\x10\xd3\x0f\x1a\x04\x90\
     \xb5\x18\x01\x12*\n\x1fMessageType_NostrEventSignature\x10\xd4\x0f\x1a\
-    \x04\x98\xb5\x18\x01\x12#\n\x18MessageType_EvoluGetKeys\x10\xb8\x17\x1a\
-    \x04\x90\xb5\x18\x01\x12\x20\n\x15MessageType_EvoluKeys\x10\xb9\x17\x1a\
+    \x04\x98\xb5\x18\x01\x12#\n\x18MessageType_EvoluGetKeys\x10\xb4\x10\x1a\
+    \x04\x90\xb5\x18\x01\x12\x20\n\x15MessageType_EvoluKeys\x10\xb5\x10\x1a\
     \x04\x98\xb5\x18\x01\x12)\n\x1eMessageType_BenchmarkListNames\x10\x8cG\
     \x1a\x04\x80\xa6\x1d\x01\x12%\n\x1aMessageType_BenchmarkNames\x10\x8dG\
     \x1a\x04\x80\xa6\x1d\x01\x12#\n\x18MessageType_BenchmarkRun\x10\x8eG\x1a\
