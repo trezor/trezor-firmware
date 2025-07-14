@@ -298,6 +298,7 @@ class TrezorConnection:
                 "Device is locked, enter a pin on the device.",
                 err=True,
             )
+            sys.exit(1)
         except transport.DeviceIsBusy:
             click.echo("Device is in use by another process.")
             sys.exit(1)
