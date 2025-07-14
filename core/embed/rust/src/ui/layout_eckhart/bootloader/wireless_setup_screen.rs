@@ -9,7 +9,11 @@ use crate::{
 };
 
 use super::{
-    super::{component::Button, constant::SCREEN, theme},
+    super::{
+        component::{Button, FuelGauge},
+        constant::SCREEN,
+        theme,
+    },
     pairing_mode::PairingMsg,
     BldActionBar, BldActionBarMsg, BldHeader, BldHeaderMsg,
 };
@@ -49,7 +53,9 @@ impl WirelessSetupScreen {
             .styled(theme::button_default())
             .initially_enabled(false);
         let more_info = MoreInfo {
-            header: BldHeader::new("More info".into()).with_close_button(),
+            header: BldHeader::new(TString::empty())
+                .with_fuel_gauge(Some(FuelGauge::always()))
+                .with_close_button(),
             instruction_primary: Label::left_aligned(
                 "The Trezor Suite app is required to set up your Trezor.".into(),
                 theme::TEXT_NORMAL,
