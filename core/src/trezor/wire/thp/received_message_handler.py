@@ -469,14 +469,17 @@ def _should_have_ctrl_byte_encrypted_transport(ctx: Channel) -> bool:
 
 
 def _decode_message(
-    buffer: bytes, msg_type: int, message_name: str | None = None
+    buffer: bytes,
+    msg_type: int,
+    message_name: str | None = None,
+    wire_enum: str = "ThpMessageType",
 ) -> protobuf.MessageType:
     if __debug__:
         log.debug(__name__, "decode message")
     if message_name is not None:
         expected_type = protobuf.type_for_name(message_name)
     else:
-        expected_type = protobuf.type_for_wire(msg_type)
+        expected_type = protobuf.type_for_wire(wire_enum, msg_type)
     return message_handler.wrap_protobuf_load(buffer, expected_type)
 
 
