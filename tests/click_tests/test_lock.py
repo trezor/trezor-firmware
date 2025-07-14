@@ -22,8 +22,6 @@ import pytest
 from trezorlib import messages, models
 from trezorlib.debuglink import LayoutType
 
-from .. import common
-
 if TYPE_CHECKING:
     from ..device_handler import BackgroundDeviceHandler
 
@@ -66,7 +64,7 @@ def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
     assert device_handler.features().unlocked is False
 
     # unlock with message
-    device_handler.run_with_session(common.get_test_address)
+    device_handler.get_session()
 
     assert "PinKeyboard" in debug.read_layout().all_components()
     debug.input(PIN4)

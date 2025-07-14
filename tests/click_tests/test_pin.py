@@ -88,29 +88,19 @@ def prepare(
     # without reseeding "again", the results are still random.
     debug.reseed(0)
 
-    tap = False
-
     device_handler.client.get_seedless_session().lock()
 
     # Setup according to the wanted situation
     if situation == Situation.PIN_INPUT:
         # Any action triggering the PIN dialogue
-        device_handler.run_with_session(device.apply_settings, auto_lock_delay_ms=300_000)  # type: ignore
-        tap = True
+        device_handler.run_with_session(lambda session: session.ping("pin_input", False))  # type: ignore
     elif situation == Situation.PIN_INPUT_CANCEL:
         # Any action triggering the PIN dialogue
         device_handler.run_with_session(device.apply_settings, auto_lock_delay_ms=300_000)  # type: ignore
     elif situation == Situation.PIN_SETUP:
         # Set new PIN
-        device_handler.run_with_session(device.change_pin)  # type: ignore
-        text_content = debug.read_layout().text_content()
-        assert any(
-            needle in text_content
-            for needle in [
-                TR.pin__turn_on,
-                TR.pin__info,
-            ]
-        )
+        device_handler.run_with_provided_session(device_handler.client.get_seedless_session(), device.change_pin)  # type: ignore
+        debug.synchronize_at([TR.pin__turn_on, TR.pin__info, TR.pin__title_settings])
         if debug.layout_type in (
             LayoutType.Bolt,
             LayoutType.Delizia,
@@ -126,23 +116,19 @@ def prepare(
             raise RuntimeError("Unknown model")
     elif situation == Situation.PIN_CHANGE:
         # Change PIN
-        device_handler.run_with_session(device.change_pin)  # type: ignore
+        device_handler.run_with_provided_session(device_handler.client.get_seedless_session(), device.change_pin)  # type: ignore
         _input_see_confirm(debug, old_pin)
-        assert TR.pin__change in debug.read_layout().text_content()
+        debug.synchronize_at(TR.pin__change)
         go_next(debug)
         _input_see_confirm(debug, old_pin)
     elif situation == Situation.WIPE_CODE_SETUP:
         # Set wipe code
-        device_handler.run_with_session(device.change_wipe_code)  # type: ignore
+        device_handler.run_with_provided_session(device_handler.client.get_seedless_session(), device.change_wipe_code)  # type: ignore
         if old_pin:
+            _assert_pin_entry(debug)
             _input_see_confirm(debug, old_pin)
-        text_content = debug.read_layout().text_content()
-        assert any(
-            needle in text_content
-            for needle in [
-                TR.wipe_code__turn_on,
-                TR.wipe_code__info,
-            ]
+        debug.synchronize_at(
+            [TR.wipe_code__turn_on, TR.wipe_code__info, TR.wipe_code__title_settings]
         )
         go_next(debug)
         if debug.layout_type is LayoutType.Caesar:
@@ -155,10 +141,7 @@ def prepare(
     _assert_pin_entry(debug)
     yield debug
 
-    if debug.layout_type is LayoutType.Delizia and tap:
-        go_next(debug)
-        debug.click(debug.screen_buttons.tap_to_confirm())
-    elif debug.layout_type is LayoutType.Eckhart:
+    if debug.layout_type is LayoutType.Eckhart:
         # After the test, we need to go back to the main screen
         main_component = debug.read_layout().main_component()
         if main_component != "Homescreen":
@@ -170,6 +153,7 @@ def prepare(
 
 
 def _assert_pin_entry(debug: "DebugLink") -> None:
+    debug.synchronize_at("PinKeyboard")
     assert "PinKeyboard" in debug.read_layout().all_components()
 
 

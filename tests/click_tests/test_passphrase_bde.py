@@ -21,9 +21,9 @@ from typing import TYPE_CHECKING, Generator, Optional
 import pytest
 
 from trezorlib import messages
+from trezorlib.client import PASSPHRASE_ON_DEVICE
 from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import SessionDebugWrapper as Session
-from trezorlib.transport.session import SessionV1
 
 from ..common import TEST_ADDRESS_N
 from .common import CommonPass, PassphraseCategory, get_char_category
@@ -91,8 +91,7 @@ def prepare_passphrase_dialogue(
     device_handler: "BackgroundDeviceHandler", address: Optional[str] = None
 ) -> Generator["DebugLink", None, None]:
     debug = device_handler.debuglink()
-    session = SessionV1.new(device_handler.client)
-    device_handler.run_with_provided_session(session, _get_test_address)  # type: ignore
+    device_handler.get_session(passphrase=PASSPHRASE_ON_DEVICE)
     debug.synchronize_at("PassphraseKeyboard")
 
     # Resetting the category as it could have been changed by previous tests
@@ -100,7 +99,9 @@ def prepare_passphrase_dialogue(
     KEYBOARD_CATEGORY = PassphraseCategory.LettersLower  # type: ignore
 
     yield debug
+    session = device_handler.result()
 
+    device_handler.run_with_provided_session(session, _get_test_address)  # type: ignore
     result = device_handler.result()
     if address is not None:
         assert result == address
