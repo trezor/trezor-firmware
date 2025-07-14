@@ -3,7 +3,7 @@ import trezorui_api
 from storage import device as storage_device
 from trezor import utils
 from trezor.crypto import random
-from trezor.ui.layouts import CONFIRMED, raise_if_not_confirmed
+from trezor.ui.layouts import CONFIRMED, raise_if_cancelled
 from trezor.wire import ActionCancelled
 
 
@@ -35,7 +35,7 @@ async def pair_new_device() -> None:
     label = storage_device.get_label() or _default_ble_name()
     ble.start_advertising(False, label)
     try:
-        code = await raise_if_not_confirmed(
+        code = await raise_if_cancelled(
             trezorui_api.show_pairing_device_name(
                 device_name=label,
             ),
@@ -45,7 +45,7 @@ async def pair_new_device() -> None:
             raise ActionCancelled
 
         try:
-            result = await raise_if_not_confirmed(
+            result = await raise_if_cancelled(
                 trezorui_api.show_ble_pairing_code(
                     title="Bluetooth pairing",
                     description="Pairing code match?",

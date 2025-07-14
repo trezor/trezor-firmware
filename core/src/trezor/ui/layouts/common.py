@@ -57,7 +57,7 @@ async def interact(
     return result
 
 
-def raise_if_not_confirmed(
+def raise_if_cancelled(
     layout_obj: ui.LayoutObj[ui.UiResult],
     br_name: str | None,
     br_code: ButtonRequestType = ButtonRequestType.Other,
