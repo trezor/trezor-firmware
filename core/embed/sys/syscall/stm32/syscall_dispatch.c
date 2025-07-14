@@ -32,7 +32,6 @@
 #include <sec/secret.h>
 #include <sys/bootutils.h>
 #include <sys/irq.h>
-#include <sys/mpu.h>
 #include <sys/sysevent.h>
 #include <sys/systask.h>
 #include <sys/system.h>
@@ -553,22 +552,18 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       storage_init_callback = (PIN_UI_WAIT_CALLBACK)args[0];
       const uint8_t *salt = (const uint8_t *)args[1];
       uint16_t salt_len = args[2];
-      mpu_reconfig(MPU_MODE_STORAGE);
       storage_init__verified(storage_init_callback_wrapper, salt, salt_len);
     } break;
 
     case SYSCALL_STORAGE_WIPE: {
-      mpu_reconfig(MPU_MODE_STORAGE);
       storage_wipe();
     } break;
 
     case SYSCALL_STORAGE_IS_UNLOCKED: {
-      mpu_reconfig(MPU_MODE_STORAGE);
       args[0] = storage_is_unlocked();
     } break;
 
     case SYSCALL_STORAGE_LOCK: {
-      mpu_reconfig(MPU_MODE_STORAGE);
       storage_lock();
     } break;
 
@@ -576,22 +571,18 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       const uint8_t *pin = (const uint8_t *)args[0];
       size_t pin_len = args[1];
       const uint8_t *ext_salt = (const uint8_t *)args[2];
-      mpu_reconfig(MPU_MODE_STORAGE);
       args[0] = storage_unlock__verified(pin, pin_len, ext_salt);
     } break;
 
     case SYSCALL_STORAGE_HAS_PIN: {
-      mpu_reconfig(MPU_MODE_STORAGE);
       args[0] = storage_has_pin();
     } break;
 
     case SYSCALL_STORAGE_PIN_FAILS_INCREASE: {
-      mpu_reconfig(MPU_MODE_STORAGE);
       args[0] = storage_pin_fails_increase();
     } break;
 
     case SYSCALL_STORAGE_GET_PIN_REM: {
-      mpu_reconfig(MPU_MODE_STORAGE);
       args[0] = storage_get_pin_rem();
     } break;
 
@@ -602,7 +593,6 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       size_t newpin_len = args[3];
       const uint8_t *old_ext_salt = (const uint8_t *)args[4];
       const uint8_t *new_ext_salt = (const uint8_t *)args[5];
-      mpu_reconfig(MPU_MODE_STORAGE);
       args[0] = storage_change_pin__verified(
           oldpin, oldpin_len, newpin, newpin_len, old_ext_salt, new_ext_salt);
     } break;
@@ -610,12 +600,10 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     case SYSCALL_STORAGE_ENSURE_NOT_WIPE_CODE: {
       const uint8_t *pin = (const uint8_t *)args[0];
       size_t pin_len = args[1];
-      mpu_reconfig(MPU_MODE_STORAGE);
       storage_ensure_not_wipe_code__verified(pin, pin_len);
     } break;
 
     case SYSCALL_STORAGE_HAS_WIPE_CODE: {
-      mpu_reconfig(MPU_MODE_STORAGE);
       args[0] = storage_has_wipe_code();
     } break;
 
@@ -625,14 +613,12 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       const uint8_t *ext_salt = (const uint8_t *)args[2];
       const uint8_t *wipe_code = (const uint8_t *)args[3];
       size_t wipe_code_len = args[4];
-      mpu_reconfig(MPU_MODE_STORAGE);
       args[0] = storage_change_wipe_code__verified(pin, pin_len, ext_salt,
                                                    wipe_code, wipe_code_len);
     } break;
 
     case SYSCALL_STORAGE_HAS: {
       uint16_t key = (uint16_t)args[0];
-      mpu_reconfig(MPU_MODE_STORAGE);
       args[0] = storage_has(key);
     } break;
 
@@ -641,7 +627,6 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       void *val = (void *)args[1];
       uint16_t max_len = (uint16_t)args[2];
       uint16_t *len = (uint16_t *)args[3];
-      mpu_reconfig(MPU_MODE_STORAGE);
       args[0] = storage_get__verified(key, val, max_len, len);
     } break;
 
@@ -649,27 +634,23 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       uint16_t key = (uint16_t)args[0];
       const void *val = (const void *)args[1];
       uint16_t len = (uint16_t)args[2];
-      mpu_reconfig(MPU_MODE_STORAGE);
       args[0] = storage_set__verified(key, val, len);
     } break;
 
     case SYSCALL_STORAGE_DELETE: {
       uint16_t key = (uint16_t)args[0];
-      mpu_reconfig(MPU_MODE_STORAGE);
       args[0] = storage_delete(key);
     } break;
 
     case SYSCALL_STORAGE_SET_COUNTER: {
       uint16_t key = (uint16_t)args[0];
       uint32_t count = args[1];
-      mpu_reconfig(MPU_MODE_STORAGE);
       args[0] = storage_set_counter(key, count);
     } break;
 
     case SYSCALL_STORAGE_NEXT_COUNTER: {
       uint16_t key = (uint16_t)args[0];
       uint32_t *count = (uint32_t *)args[1];
-      mpu_reconfig(MPU_MODE_STORAGE);
       args[0] = storage_next_counter__verified(key, count);
     } break;
 

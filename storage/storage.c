@@ -20,6 +20,8 @@
 #include <assert.h>
 #include <string.h>
 
+#include <sys/mpu.h>
+
 #include "chacha20poly1305/rfc7539.h"
 #include "common.h"
 #include "hmac.h"
@@ -811,6 +813,8 @@ static void init_wiped_storage(void) {
 
 void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
                   const uint16_t salt_len) {
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
+
   initialized = secfalse;
   unlocked = secfalse;
   memzero(cached_keys, sizeof(cached_keys));
@@ -833,13 +837,19 @@ void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
   if (secfalse == norcow_get(EDEK_PVC_KEY, &val, &len)) {
     init_wiped_storage();
   }
+
+  mpu_restore(mpu_mode);
 }
 
 secbool storage_pin_fails_increase(void) {
   if (sectrue != initialized) {
     return secfalse;
   }
-  return pin_fails_increase();
+
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
+  secbool ret = pin_fails_increase();
+  mpu_restore(mpu_mode);
+  return ret;
 }
 
 secbool storage_is_unlocked(void) {
@@ -1126,7 +1136,10 @@ secbool storage_unlock(const uint8_t *pin, size_t pin_len,
     ui_message = VERIFYING_PIN_MSG;
   }
 
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
   secbool ret = unlock(pin, pin_len, ext_salt);
+  mpu_restore(mpu_mode);
+
   ui_progress_finish();
   return ret;
 }
@@ -1199,27 +1212,36 @@ secbool storage_get(const uint16_t key, void *val_dest, const uint16_t max_len,
     return secfalse;
   }
 
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
+  secbool ret = secfalse;
+
   // If the top bit of APP is set, then the value is not encrypted and can be
   // read from a locked device.
   if ((app & FLAG_PUBLIC) != 0) {
     const void *val_stored = NULL;
     if (sectrue != norcow_get(key, &val_stored, len)) {
-      return secfalse;
+      goto end;
     }
     if (val_dest == NULL) {
-      return sectrue;
+      ret = sectrue;
+      goto end;
     }
     if (*len > max_len) {
-      return secfalse;
+      goto end;
     }
     memcpy(val_dest, val_stored, *len);
-    return sectrue;
+    ret = sectrue;
+    goto end;
   } else {
     if (sectrue != unlocked) {
-      return secfalse;
+      goto end;
     }
-    return storage_get_encrypted(key, val_dest, max_len, len);
+    ret = storage_get_encrypted(key, val_dest, max_len, len);
   }
+
+end:
+  mpu_restore(mpu_mode);
+  return ret;
 }
 
 /*
@@ -1284,12 +1306,16 @@ secbool storage_set(const uint16_t key, const void *val, const uint16_t len) {
     return secfalse;
   }
 
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
+
   secbool ret = secfalse;
   if ((app & FLAG_PUBLIC) != 0) {
     ret = norcow_set(key, val, len);
   } else {
     ret = storage_set_encrypted(key, val, len);
   }
+
+  mpu_restore(mpu_mode);
   return ret;
 }
 
@@ -1305,10 +1331,12 @@ secbool storage_delete(const uint16_t key) {
     return secfalse;
   }
 
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
   secbool ret = norcow_delete(key);
   if (sectrue == ret) {
     ret = auth_update(key);
   }
+  mpu_restore(mpu_mode);
   return ret;
 }
 
@@ -1327,7 +1355,11 @@ secbool storage_set_counter(const uint16_t key, const uint32_t count) {
     return secfalse;
   }
 
-  return norcow_set_counter(key, count);
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
+  secbool ret = norcow_set_counter(key, count);
+  mpu_restore(mpu_mode);
+
+  return ret;
 }
 
 secbool storage_next_counter(const uint16_t key, uint32_t *count) {
@@ -1347,7 +1379,11 @@ secbool storage_next_counter(const uint16_t key, uint32_t *count) {
     return secfalse;
   }
 
-  return norcow_next_counter(key, count);
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
+  secbool ret = norcow_next_counter(key, count);
+  mpu_restore(mpu_mode);
+
+  return ret;
 }
 
 secbool storage_has_pin(void) {
@@ -1355,13 +1391,24 @@ secbool storage_has_pin(void) {
     return secfalse;
   }
 
+  secbool ret = secfalse;
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
+
   const void *val = NULL;
   uint16_t len = 0;
-  if (sectrue != norcow_get(PIN_NOT_SET_KEY, &val, &len) ||
-      (len > 0 && *(uint8_t *)val != FALSE_BYTE)) {
-    return secfalse;
+  if (sectrue != norcow_get(PIN_NOT_SET_KEY, &val, &len)) {
+    goto end;
   }
-  return sectrue;
+
+  if (len > 0 && *(uint8_t *)val != FALSE_BYTE) {
+    goto end;
+  }
+
+  ret = sectrue;
+
+end:
+  mpu_restore(mpu_mode);
+  return ret;
 }
 
 uint32_t storage_get_pin_rem(void) {
@@ -1369,12 +1416,15 @@ uint32_t storage_get_pin_rem(void) {
     return 0;
   }
 
+  uint32_t rem_mcu = 0;
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
+
   uint32_t ctr_mcu = 0;
   if (sectrue != pin_get_fails(&ctr_mcu)) {
-    return 0;
+    goto end;
   }
 
-  uint32_t rem_mcu = PIN_MAX_TRIES - ctr_mcu;
+  rem_mcu = PIN_MAX_TRIES - ctr_mcu;
 
 #if USE_OPTIGA
   // Synchronize counters in case they diverged.
@@ -1403,6 +1453,8 @@ uint32_t storage_get_pin_rem(void) {
   }
 #endif
 
+end:
+  mpu_restore(mpu_mode);
   return rem_mcu;
 }
 
@@ -1418,6 +1470,8 @@ secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
   ui_message =
       (oldpin_len != 0 && newpin_len == 0) ? VERIFYING_PIN_MSG : PROCESSING_MSG;
 
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
+
   secbool ret = unlock(oldpin, oldpin_len, old_ext_salt);
   if (sectrue != ret) {
     goto end;
@@ -1432,11 +1486,13 @@ secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
   ret = set_pin(newpin, newpin_len, new_ext_salt);
 
 end:
+  mpu_restore(mpu_mode);
   ui_progress_finish();
   return ret;
 }
 
 void storage_ensure_not_wipe_code(const uint8_t *pin, size_t pin_len) {
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
 #if NORCOW_MIN_VERSION <= 2
   // If we are unlocking the storage during upgrade from version 2 or lower,
   // then encode the PIN to the old format.
@@ -1452,6 +1508,7 @@ void storage_ensure_not_wipe_code(const uint8_t *pin, size_t pin_len) {
 #if NORCOW_MIN_VERSION <= 2
   memzero(&legacy_pin, sizeof(legacy_pin));
 #endif
+  mpu_restore(mpu_mode);
 }
 
 secbool storage_has_wipe_code(void) {
@@ -1459,7 +1516,11 @@ secbool storage_has_wipe_code(void) {
     return secfalse;
   }
 
-  return is_not_wipe_code(WIPE_CODE_EMPTY, WIPE_CODE_EMPTY_LEN);
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
+  secbool ret = is_not_wipe_code(WIPE_CODE_EMPTY, WIPE_CODE_EMPTY_LEN);
+  mpu_restore(mpu_mode);
+
+  return ret;
 }
 
 secbool storage_change_wipe_code(const uint8_t *pin, size_t pin_len,
@@ -1476,6 +1537,8 @@ secbool storage_change_wipe_code(const uint8_t *pin, size_t pin_len,
   ui_message =
       (pin_len != 0 && wipe_code_len == 0) ? VERIFYING_PIN_MSG : PROCESSING_MSG;
 
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
+
   secbool ret = unlock(pin, pin_len, ext_salt);
   if (sectrue != ret) {
     goto end;
@@ -1484,16 +1547,19 @@ secbool storage_change_wipe_code(const uint8_t *pin, size_t pin_len,
   ret = set_wipe_code(wipe_code, wipe_code_len);
 
 end:
+  mpu_restore(mpu_mode);
   ui_progress_finish();
   return ret;
 }
 
 void storage_wipe(void) {
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
   norcow_wipe();
   norcow_active_version = NORCOW_VERSION;
   memzero(authentication_sum, sizeof(authentication_sum));
   memzero(cached_keys, sizeof(cached_keys));
   init_wiped_storage();
+  mpu_restore(mpu_mode);
 }
 
 static void __handle_fault(const char *msg, const char *file, int line) {
