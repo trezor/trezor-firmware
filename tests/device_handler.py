@@ -58,6 +58,13 @@ class BackgroundDeviceHandler:
         self.client.watch_layout(True)
         self.client.debug.input_wait_type = DebugWaitType.CURRENT_LAYOUT
 
+    def get_session(self, *args, **kwargs):
+        if self.task is not None:
+            raise RuntimeError("Wait for previous task first")
+
+        with self.debuglink().wait_for_layout_change():
+            self.task = self._pool.submit(self.client.get_session, *args, **kwargs)
+
     def run_with_session(
         self,
         function: t.Callable[tx.Concatenate["Session", P], t.Any],
@@ -72,13 +79,16 @@ class BackgroundDeviceHandler:
         if self.task is not None:
             raise RuntimeError("Wait for previous task first")
 
+        def task_function(*args, **kwargs):
+            if seedless:
+                session = self.client.get_seedless_session()
+            else:
+                session = self.client.get_session()
+            return function(session, *args, **kwargs)
+
         # wait for the first UI change triggered by the task running in the background
-        if seedless:
-            session = self.client.get_seedless_session()
-        else:
-            session = self.client.get_session()
         with self.debuglink().wait_for_layout_change():
-            self.task = self._pool.submit(function, session, *args, **kwargs)
+            self.task = self._pool.submit(task_function, *args, **kwargs)
 
     def run_with_provided_session(
         self,

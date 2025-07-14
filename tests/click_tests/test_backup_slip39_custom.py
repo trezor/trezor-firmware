@@ -73,7 +73,8 @@ def test_backup_slip39_custom(
     # retrieve the result to check that it's not a TrezorFailure exception
     device_handler.result()
 
-    device_handler.run_with_session(
+    device_handler.run_with_provided_session(
+        session,
         device.backup,
         group_threshold=group_threshold,
         groups=[(share_threshold, share_count)],

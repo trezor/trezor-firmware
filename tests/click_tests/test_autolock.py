@@ -69,13 +69,14 @@ def _center_button(debug: DebugLink) -> Tuple[int, int]:
 
 def set_autolock_delay(device_handler: "BackgroundDeviceHandler", delay_ms: int):
     debug = device_handler.debuglink()
-    device_handler.client.get_seedless_session().lock()
-    device_handler.run_with_session(device.apply_settings, auto_lock_delay_ms=delay_ms)  # type: ignore
-
+    session = device_handler.get_session()
     assert "PinKeyboard" in debug.read_layout().all_components()
-
     debug.input("1234")
+    session = device_handler.result()
 
+    device_handler.run_with_provided_session(session, device.apply_settings, auto_lock_delay_ms=delay_ms)  # type: ignore
+
+    debug.synchronize_at(TR.auto_lock__title)
     assert TR.regexp("auto_lock__change_template").match(
         debug.read_layout().text_content().strip()
     )
@@ -86,13 +87,14 @@ def set_autolock_delay(device_handler: "BackgroundDeviceHandler", delay_ms: int)
         layout = debug.read_layout()
     assert layout.main_component() == "Homescreen"
     device_handler.result()
+    return session
 
 
 @pytest.mark.setup_client(pin=PIN4)
 def test_autolock_interrupts_signing(device_handler: "BackgroundDeviceHandler"):
     """Autolock will lock the device that is waiting for the user
     to confirm transaction."""
-    set_autolock_delay(device_handler, 10_000)
+    session = set_autolock_delay(device_handler, 10_000)
 
     debug = device_handler.debuglink()
     # try to sign a transaction
@@ -109,7 +111,7 @@ def test_autolock_interrupts_signing(device_handler: "BackgroundDeviceHandler"):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    device_handler.run_with_session(btc.sign_tx, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET)  # type: ignore
+    device_handler.run_with_provided_session(session, btc.sign_tx, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET)  # type: ignore
 
     assert (
         "1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1"
@@ -172,6 +174,7 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
         session, btc.sign_tx, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET
     )
 
+    debug.synchronize_at([TR.words__send, TR.words__address, TR.words__recipient])
     assert (
         "1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1"
         in debug.read_layout().text_content().replace(" ", "")
@@ -278,10 +281,7 @@ def test_autolock_interrupts_passphrase(device_handler: "BackgroundDeviceHandler
     debug = device_handler.debuglink()
 
     # get address (derive_seed)
-    session = Session(SessionV1.new(client=device_handler.client))
-    device_handler.run_with_provided_session(
-        session, derive_seed, passphrase=PASSPHRASE_ON_DEVICE
-    )  # type: ignore
+    device_handler.get_session(passphrase=PASSPHRASE_ON_DEVICE)
     debug.synchronize_at("PassphraseKeyboard")
 
     if debug.layout_type is LayoutType.Caesar:
@@ -314,7 +314,9 @@ def test_autolock_interrupts_passphrase(device_handler: "BackgroundDeviceHandler
 
 
 def unlock_dry_run(debug: "DebugLink") -> "LayoutContent":
-    assert TR.recovery__check_dry_run in debug.read_layout().text_content()
+    debug.synchronize_at(
+        [TR.recovery__check_dry_run, TR.reset__check_wallet_backup_title]
+    )
     layout = go_next(debug)
     assert "PinKeyboard" in layout.all_components()
 
@@ -458,12 +460,11 @@ def test_autolock_does_not_interrupt_preauthorized(
 ):
     # NOTE: FAKE input tx
     # NOTE: mostly copy-pasted from test_authorize_coinjoin.py::test_sign_tx
-    set_autolock_delay(device_handler, 10_000)
+    session = set_autolock_delay(device_handler, 10_000)
 
     debug = device_handler.debuglink()
 
     # Prepare session to use later
-    session = device_handler.client.get_session()
 
     device_handler.run_with_provided_session(
         session,
