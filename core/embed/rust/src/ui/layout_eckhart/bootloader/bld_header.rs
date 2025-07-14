@@ -9,7 +9,7 @@ use crate::{
 };
 
 use super::super::{
-    component::{Button, ButtonContent, ButtonMsg},
+    component::{Button, ButtonContent, ButtonMsg, FuelGauge},
     constant, theme,
 };
 
@@ -28,6 +28,8 @@ pub struct BldHeader<'a> {
     /// icon in the top-left corner (used instead of left button)
     icon: Option<Icon>,
     icon_color: Option<Color>,
+    /// Battery status indicator
+    fuel_gauge: Option<FuelGauge>,
 }
 
 #[derive(Copy, Clone)]
@@ -57,6 +59,7 @@ impl<'a> BldHeader<'a> {
             left_button_msg: BldHeaderMsg::Cancelled,
             icon: None,
             icon_color: None,
+            fuel_gauge: None,
         }
     }
 
@@ -121,6 +124,11 @@ impl<'a> BldHeader<'a> {
         }
     }
 
+    #[inline(never)]
+    pub fn with_fuel_gauge(self, fuel_gauge: Option<FuelGauge>) -> Self {
+        Self { fuel_gauge, ..self }
+    }
+
     /// Calculates the width needed for the left icon, be it a button with icon
     /// or just icon
     fn left_icon_width(&self) -> i16 {
@@ -147,23 +155,26 @@ impl<'a> Component for BldHeader<'a> {
 
         let bounds = bounds.inset(Self::HEADER_INSETS);
         let rest = if let Some(b) = &mut self.right_button {
-            let (rest, button_area) = bounds.split_right(Self::HEADER_BUTTON_WIDTH);
-            b.place(button_area);
+            let (rest, right_button_area) = bounds.split_right(Self::HEADER_BUTTON_WIDTH);
+            b.place(right_button_area);
             rest
         } else {
             bounds
         };
 
         let icon_width = self.left_icon_width();
-        let (rest, title_area) = rest.split_left(icon_width);
+        let (left_button_area, title_area) = rest.split_left(icon_width);
 
-        self.left_button.place(rest);
+        self.left_button.place(left_button_area);
         self.title.place(title_area);
+        self.fuel_gauge.place(title_area.union(left_button_area));
+
         self.area = bounds;
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.fuel_gauge.event(ctx, event);
         if let Some(ButtonMsg::Clicked) = self.left_button.event(ctx, event) {
             return Some(self.left_button_msg);
         };
@@ -175,6 +186,7 @@ impl<'a> Component for BldHeader<'a> {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.fuel_gauge.render(target);
         self.right_button.render(target);
         self.left_button.render(target);
         if let Some(icon) = self.icon {
