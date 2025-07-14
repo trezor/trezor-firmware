@@ -1249,8 +1249,8 @@ class TrezorClientDebugLink(TrezorClient):
             self.debug = DebugLink(debug_transport, auto_interact)
             if open_transport:
                 self.debug.open()
-            # try to open debuglink, see if it works
-            assert self.debug.transport.ping()
+                # try to open debuglink, see if it works
+                assert self.debug.transport.ping()
         except Exception:
             if not auto_interact:
                 self.debug = NullDebugLink()
