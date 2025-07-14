@@ -149,6 +149,7 @@ ALTCOIN_PREFIXES = (
     "solana",
     "stellar",
     "tezos",
+    "tron",
     "u2f",
 )
 

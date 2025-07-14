@@ -30,6 +30,7 @@ ALTCOINS = [
     "solana",
     "ripple",
     "tezos",
+    "tron",
 ]
 
 SCREEN_TEXT_WIDTHS = {"TT": 240 - 12, "TS3": 128}
