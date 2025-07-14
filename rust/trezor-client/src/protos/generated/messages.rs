@@ -508,9 +508,9 @@ pub enum MessageType {
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpCreateNewSession)
     MessageType_ThpCreateNewSession = 1000,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpCredentialRequest)
-    MessageType_ThpCredentialRequest = 1010,
+    MessageType_ThpCredentialRequest = 1016,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpCredentialResponse)
-    MessageType_ThpCredentialResponse = 1011,
+    MessageType_ThpCredentialResponse = 1017,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_NostrGetPubkey)
     MessageType_NostrGetPubkey = 2001,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_NostrPubkey)
@@ -778,8 +778,8 @@ impl ::protobuf::Enum for MessageType {
             904 => ::std::option::Option::Some(MessageType::MessageType_SolanaSignTx),
             905 => ::std::option::Option::Some(MessageType::MessageType_SolanaTxSignature),
             1000 => ::std::option::Option::Some(MessageType::MessageType_ThpCreateNewSession),
-            1010 => ::std::option::Option::Some(MessageType::MessageType_ThpCredentialRequest),
-            1011 => ::std::option::Option::Some(MessageType::MessageType_ThpCredentialResponse),
+            1016 => ::std::option::Option::Some(MessageType::MessageType_ThpCredentialRequest),
+            1017 => ::std::option::Option::Some(MessageType::MessageType_ThpCredentialResponse),
             2001 => ::std::option::Option::Some(MessageType::MessageType_NostrGetPubkey),
             2002 => ::std::option::Option::Some(MessageType::MessageType_NostrPubkey),
             2003 => ::std::option::Option::Some(MessageType::MessageType_NostrSignEvent),
@@ -1853,7 +1853,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     Type_SolanaSignTx\x10\x88\x07\x1a\x04\x90\xb5\x18\x01\x12(\n\x1dMessageT\
     ype_SolanaTxSignature\x10\x89\x07\x1a\x04\x98\xb5\x18\x01\x12$\n\x1fMess\
     ageType_ThpCreateNewSession\x10\xe8\x07\x12%\n\x20MessageType_ThpCredent\
-    ialRequest\x10\xf2\x07\x12&\n!MessageType_ThpCredentialResponse\x10\xf3\
+    ialRequest\x10\xf8\x07\x12&\n!MessageType_ThpCredentialResponse\x10\xf9\
     \x07\x12%\n\x1aMessageType_NostrGetPubkey\x10\xd1\x0f\x1a\x04\x90\xb5\
     \x18\x01\x12\"\n\x17MessageType_NostrPubkey\x10\xd2\x0f\x1a\x04\x98\xb5\
     \x18\x01\x12%\n\x1aMessageType_NostrSignEvent\x10\xd3\x0f\x1a\x04\x90\
@@ -1865,8 +1865,8 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x04\x80\xa6\x1d\x01\x1a\x08\xc8\xf3\x18\x01\xd0\xf3\x18\x01\"\x04\x08Z\
     \x10\\\"\x04\x08G\x10J\"\x04\x08r\x10z\"\x06\x08\xdb\x01\x10\xdb\x01\"\
     \x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\x06\x08\xb5\
-    \x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\xe9\x07\x10\xf1\
-    \x07\"\x06\x08\xf4\x07\x10\xcb\x08B8\n#com.satoshilabs.trezor.lib.protob\
+    \x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\xe9\x07\x10\xf7\
+    \x07\"\x06\x08\xfa\x07\x10\xcb\x08B8\n#com.satoshilabs.trezor.lib.protob\
     ufB\rTrezorMessage\x80\xa6\x1d\x01\
 ";
 
