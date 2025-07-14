@@ -9,10 +9,7 @@ use crate::{
 };
 
 use super::{
-    super::{
-        component::{Button, ButtonContent, ButtonMsg},
-        firmware::FuelGauge,
-    },
+    super::component::{Button, ButtonContent, ButtonMsg, FuelGauge},
     constant, theme,
 };
 

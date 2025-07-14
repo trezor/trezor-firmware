@@ -1,21 +1,26 @@
 use crate::{
     trezorhal::power_manager::{self, ChargingState},
     ui::{
-        component::{Component, Event, EventCtx, Never, Timer},
+        component::{Component, Event, EventCtx, Never},
         display::{Color, Font, Icon},
         geometry::{Alignment, Alignment2D, Offset, Point, Rect},
         shape::{self, Renderer},
-        util::animation_disabled,
     },
 };
+
+#[cfg(feature = "micropython")]
+use crate::ui::{component::Timer, util::animation_disabled};
 
 use super::super::{
     fonts,
     theme::{
-        firmware::FUEL_GAUGE_DURATION, GREY_LIGHT, ICON_BATTERY_EMPTY, ICON_BATTERY_FULL,
-        ICON_BATTERY_LOW, ICON_BATTERY_MID, ICON_BATTERY_ZAP, RED, YELLOW,
+        GREY_LIGHT, ICON_BATTERY_EMPTY, ICON_BATTERY_FULL, ICON_BATTERY_LOW, ICON_BATTERY_MID,
+        ICON_BATTERY_ZAP, RED, YELLOW,
     },
 };
+
+#[cfg(feature = "micropython")]
+use super::super::theme::firmware::FUEL_GAUGE_DURATION;
 
 /// Component for showing a small fuel gauge (battery status) consisting of:
 /// - icon indicating charging or discharging state
@@ -32,20 +37,20 @@ pub struct FuelGauge {
     charging_state: ChargingState,
     /// State of charge (0-100) [%]
     soc: Option<u8>,
-    /// Timer to track temporary battery status showcase
-    timer: Timer,
     /// Font used for the soc percentage
     font: Font,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone)]
 pub enum FuelGaugeMode {
     /// Always show the fuel gauge
     Always,
     /// Show the fuel gauge only when charging state changes
-    OnChargingChange,
+    #[cfg(feature = "micropython")]
+    OnChargingChange(Timer),
     /// Show the fuel gauge when charging state changes or when attached
-    OnChargingChangeOrAttach,
+    #[cfg(feature = "micropython")]
+    OnChargingChangeOrAttach(Timer),
 }
 
 impl FuelGauge {
@@ -53,12 +58,14 @@ impl FuelGauge {
         Self::new(FuelGaugeMode::Always)
     }
 
+    #[cfg(feature = "micropython")]
     pub const fn on_charging_change() -> Self {
-        Self::new(FuelGaugeMode::OnChargingChange)
+        Self::new(FuelGaugeMode::OnChargingChange(Timer::new()))
     }
 
+    #[cfg(feature = "micropython")]
     pub const fn on_charging_change_or_attach() -> Self {
-        Self::new(FuelGaugeMode::OnChargingChangeOrAttach)
+        Self::new(FuelGaugeMode::OnChargingChangeOrAttach(Timer::new()))
     }
 
     pub const fn with_alignment(mut self, alignment: Alignment) -> Self {
@@ -77,23 +84,26 @@ impl FuelGauge {
     }
 
     pub fn should_be_shown(&self) -> bool {
-        match self.mode {
+        match &self.mode {
             FuelGaugeMode::Always => true,
-            FuelGaugeMode::OnChargingChange | FuelGaugeMode::OnChargingChangeOrAttach => {
-                self.timer.is_running()
-            }
+            #[cfg(feature = "micropython")]
+            FuelGaugeMode::OnChargingChange(timer)
+            | FuelGaugeMode::OnChargingChangeOrAttach(timer) => timer.is_running(),
         }
     }
 
     const fn new(mode: FuelGaugeMode) -> Self {
+        #[cfg(feature = "micropython")]
+        let font = fonts::FONT_SATOSHI_REGULAR_22;
+        #[cfg(not(feature = "micropython"))]
+        let font = fonts::FONT_SATOSHI_MEDIUM_26;
         Self {
             area: Rect::zero(),
             alignment: Alignment::Start,
             mode,
             charging_state: ChargingState::Idle,
             soc: None,
-            timer: Timer::new(),
-            font: fonts::FONT_SATOSHI_REGULAR_22,
+            font,
         }
     }
 
@@ -134,30 +144,40 @@ impl Component for FuelGauge {
                 if self.soc.is_none() {
                     self.update_pm_state();
                 }
-                if !animation_disabled() && self.mode == FuelGaugeMode::OnChargingChangeOrAttach {
-                    self.timer.start(ctx, FUEL_GAUGE_DURATION.into());
+                #[cfg(feature = "micropython")]
+                if let FuelGaugeMode::OnChargingChangeOrAttach(timer) = &mut self.mode {
+                    if !animation_disabled() {
+                        timer.start(ctx, FUEL_GAUGE_DURATION.into());
+                    }
                 }
                 ctx.request_paint();
             }
-            Event::PM(e) => {
+            Event::PM(_e) => {
                 self.update_pm_state();
-                match self.mode {
+                match &mut self.mode {
                     FuelGaugeMode::Always => {
                         ctx.request_paint();
                     }
-                    FuelGaugeMode::OnChargingChange | FuelGaugeMode::OnChargingChangeOrAttach => {
-                        if e.charging_status_changed {
-                            self.timer.start(ctx, FUEL_GAUGE_DURATION.into());
+                    #[cfg(feature = "micropython")]
+                    FuelGaugeMode::OnChargingChange(timer)
+                    | FuelGaugeMode::OnChargingChangeOrAttach(timer) => {
+                        if _e.charging_status_changed {
+                            timer.start(ctx, FUEL_GAUGE_DURATION.into());
                             ctx.request_paint();
                         }
                     }
                 }
             }
-            Event::Timer(_) => {
-                if self.timer.expire(event) {
-                    ctx.request_paint();
+            #[cfg(feature = "micropython")]
+            Event::Timer(_) => match &mut self.mode {
+                FuelGaugeMode::OnChargingChange(timer)
+                | FuelGaugeMode::OnChargingChangeOrAttach(timer) => {
+                    if timer.expire(event) {
+                        ctx.request_paint();
+                    }
                 }
-            }
+                _ => {}
+            },
             _ => {}
         }
 
@@ -170,7 +190,7 @@ impl Component for FuelGauge {
         let soc = self.soc.unwrap_or(0);
         let (icon, color_icon, color_text) = self.battery_indication(self.charging_state, soc);
         let soc_percent_fmt = if self.soc.is_none() {
-            uformat!("--")
+            uformat!("?")
         } else {
             uformat!("{} %", soc)
         };
