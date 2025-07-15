@@ -982,6 +982,24 @@ class DebugUI:
         self.debuglink.press_info()
 
         # TODO: support all core models
+        if self.debuglink.model is models.T3T1:
+            item_buttons = self.debuglink.screen_buttons.vertical_menu_items()
+            close_button = self.debuglink.screen_buttons.menu()
+            _prev, next = self.debuglink.screen_buttons.vertical_menu_prev_next()
+            while True:
+                menu_layout = self.debuglink.read_layout()
+                menu_items = menu_layout.find_unique_value_by_key(
+                    key="menu_items", default=None, only_type=dict
+                )
+                for menu_item, item_button in zip(menu_items["current"], item_buttons):
+                    if "cancel" in menu_item:
+                        continue  # skip cancellation by default
+                    self.debuglink.click(item_button)
+                    self.debuglink.click(close_button)
+                if not menu_items["has_next"]:
+                    break
+                self.debuglink.click(next)
+
         if self.debuglink.model in (models.T2B1, models.T3B1):
             menu_items_count = self.debuglink.read_layout().page_count()
             for _ in range(menu_items_count):
@@ -1827,6 +1845,16 @@ class ScreenButtons:
                 (self._mid(), self._grid(self._height(), 5, 1)),
                 (self._mid(), self._grid(self._height(), 5, 2)),
                 (self._mid(), self._grid(self._height(), 5, 3)),
+            ]
+        else:
+            raise ValueError("Wrong layout type")
+
+    # vertical menu buttons
+    def vertical_menu_prev_next(self) -> "list[Coords]":
+        if self.layout_type is LayoutType.Delizia:
+            return [
+                (self._left(), self._grid(self._height(), 4, 3)),
+                (self._right(), self._grid(self._height(), 4, 3)),
             ]
         else:
             raise ValueError("Wrong layout type")
