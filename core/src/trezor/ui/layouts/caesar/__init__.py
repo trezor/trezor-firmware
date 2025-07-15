@@ -8,7 +8,7 @@ from trezor.wire import ActionCancelled
 from ..common import draw_simple, interact, raise_if_cancelled
 
 if TYPE_CHECKING:
-    from typing import Awaitable, Iterable, NoReturn, Sequence
+    from typing import Awaitable, Callable, Iterable, NoReturn, Sequence
 
     from ..common import ExceptionType, PropertyType
     from ..menu import Details
@@ -862,47 +862,34 @@ async def confirm_value(
             br_code,
         )
 
-    else:
-        info_items_list = list(info_items)
-        if len(info_items_list) > 1:
-            # TODO: Support more than one info item!
-            raise NotImplementedError("Only one info item is supported")
+    from trezor.ui.layouts.menu import Details, Menu, confirm_with_menu
 
-        send_button_request = True
-        while True:
-            result = await interact(
-                trezorui_api.confirm_with_info(
-                    title=title,
-                    items=((value, False),),
-                    verb=verb or TR.buttons__confirm,
-                    verb_info=TR.buttons__info,
-                ),
-                br_name if send_button_request else None,
-                br_code,
-            )
-            send_button_request = False
+    main = trezorui_api.confirm_with_info(
+        title=title,
+        items=((value, False),),
+        verb=verb or TR.buttons__confirm,
+        verb_info=TR.buttons__info,
+        external_menu=True,
+    )
 
-            if result is CONFIRMED:
-                return
-            elif result is INFO:
-                info_title, info_value = info_items_list[0]
-                await interact(
-                    trezorui_api.confirm_value(
-                        title=info_title,
-                        value=info_value,
-                        description=description,
-                        verb="",
-                        verb_cancel="<",
-                        hold=False,
-                        is_data=is_data,
-                        chunkify=chunkify_info,
-                    ),
-                    None,
-                    raise_on_cancel=None,
-                )
-                continue
-            else:
-                raise RuntimeError  # unexpected result, interact should have raised
+    def item_factory(
+        info_title: str, info_value: str
+    ) -> Callable[[], trezorui_api.LayoutObj]:
+        return lambda: trezorui_api.confirm_value(
+            title=info_title,
+            value=info_value,
+            description=description,
+            verb="",
+            verb_cancel="",
+            is_data=is_data,
+            chunkify=chunkify_info,
+        )
+
+    menu = Menu.root(
+        Details.from_layout(name, item_factory(name, value))
+        for name, value in info_items
+    )
+    await confirm_with_menu(main, menu, br_name, br_code)
 
 
 def confirm_total(
