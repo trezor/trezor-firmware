@@ -184,6 +184,11 @@ static pm_power_status_t pm_handle_state_shutting_down(pm_driver_t* drv) {
     return PM_STATE_HIBERNATE;
   }
 
+  if (drv->request_suspend) {
+    drv->request_suspend = false;
+    return PM_STATE_SUSPEND;
+  }
+
   // Return to power save if external power or battery recovered
   if (drv->usb_connected || !drv->battery_critical) {
     return PM_STATE_POWER_SAVE;
