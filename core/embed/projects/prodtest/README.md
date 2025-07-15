@@ -744,43 +744,16 @@ pm-new-soc-estimate
 OK
 ```
 
-### pm-set-soc-limit
-Sets the battery state of charge (SOC) limit. The SOC limit is a percentage value between 10 and 100.
+### pm-set-soc-target
+Sets the battery state of charge (SOC) target. The SOC limit is a percentage value between 10 and 100.
 
 The command returns `OK` if the operation is successful.
 
 ```
-pm-set-soc-limit 50
-# Set SOC limit to 50%
+pm-set-soc-target 50
+# Set SOC target to 50%
 OK
 
-```
-
-### pm-precharge
-Enables the battery charging and precharge the battery to the 3.45V. Then it disables charging and terminates.
-During the precharge, command will print out power manager report into the console. CTRL+C will terminate the precharge.
-
-Example:
-```
-pm-precharge
-# Precharging the device ...
-# Precharging the device to 3.450 V
-# Power manager report:
-# Power state 5
-#   USB connected
-#   WLC disconnected
-#   Battery voltage: 3.435 V
-#   Battery current: -191.700 mA
-#   Battery temperature: 31.541 C
-#   Battery SoC: 68.92
-#   Battery SoC latched: 69.00
-#   PMIC die temperature: 49.096 C
-#   WLC voltage: 0.000 V
-#   WLC current: 0.000 mA
-#   WLC die temperature: 0.000 C
-#   System voltage: 4.449 V
-PROGRESS 5 USB_connected WLC_disconnected 3.435 -191.700 31.541 68.92 69.00 49.096 0.000 0.000 0.000 4.449
-OK
 ```
 
 ### pm-report
