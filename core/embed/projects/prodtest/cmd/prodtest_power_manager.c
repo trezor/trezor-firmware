@@ -331,72 +331,9 @@ void prodtest_pm_event_monitor(cli_t* cli) {
   cli_ok(cli, "");
 }
 
-void prodtest_pm_precharge(cli_t* cli) {
-  if (cli_arg_count(cli) > 0) {
-    cli_error_arg_count(cli);
-    return;
-  }
-
-  // This test considers that the device is connected via USB and placed at
-  // ambient temperature. The battery will be charged with constant current,
-  // and the precharge voltage is statically derived from the battery charging
-  // curve.
-
-  // During charging, the voltage rises because of the relatively high charging
-  // current. When the test ends upon reaching the specified precharge voltage,
-  // the charging current is cut off, which can cause the battery voltage to
-  // fall slightly.
-  float precharge_voltage_V = 3.45f;
-
-  // Disable SoC limit and enable charging
-  pm_set_soc_limit(100);
-  pm_charging_enable();
-
-  cli_trace(cli, "Precharging the device...");
-
-  while (true) {
-    pm_report_t report;
-    pm_status_t status = pm_get_report(&report);
-
-    if (status != PM_OK) {
-      cli_error(cli, CLI_ERROR, "Failed to get power manager report");
-      return;
-    }
-
-    if (report.usb_connected == false) {
-      cli_error(cli, CLI_ERROR, "USB power source is not connected");
-      return;
-    }
-
-    cli_trace(cli, "Precharging the device to %d.%03d V",
-              (int)precharge_voltage_V,
-              (int)(precharge_voltage_V * 1000) % 1000);
-
-    // Print power manager report.
-    prodtest_pm_report(cli);
-
-    if (cli_aborted(cli)) {
-      cli_trace(cli, "aborted");
-      break;
-    }
-
-    // Check if the battery voltage is above the precharge voltag
-    if (report.battery_voltage_v >= precharge_voltage_V) {
-      // Target achieved
-      cli_trace(cli, "Battery voltage reached the target voltage.");
-      pm_charging_disable();
-      break;
-    }
-
-    systick_delay_ms(500);
-  }
-
-  cli_ok(cli, "");
-}
-
-void prodtest_pm_set_soc_limit(cli_t* cli) {
-  uint32_t limit = 0;
-  if (!cli_arg_uint32(cli, "limit", &limit) || limit > 100 || limit < 10) {
+void prodtest_pm_set_soc_target(cli_t* cli) {
+  uint32_t target = 0;
+  if (!cli_arg_uint32(cli, "limit", &target) || target > 100 || target < 10) {
     cli_error_arg(cli, "Expecting value in range 10-100");
     return;
   }
@@ -406,9 +343,9 @@ void prodtest_pm_set_soc_limit(cli_t* cli) {
     return;
   }
 
-  pm_set_soc_limit(limit);
+  pm_set_soc_target(target);
 
-  cli_trace(cli, "Set SOC limit to %d%%", limit);
+  cli_trace(cli, "Set SOC target to %d%%", target);
   cli_ok(cli, "");
 }
 
@@ -476,7 +413,7 @@ PRODTEST_CLI_CMD(
 PRODTEST_CLI_CMD(
 .name = "pm-fuel-gauge-monitor",
 .func = prodtest_pm_fuel_gauge_monitor,
-.info = "Watch fuel gauge ",
+.info = "Watch fuel gauge data",
 .args = ""
 );
 
@@ -488,23 +425,16 @@ PRODTEST_CLI_CMD(
 );
 
 PRODTEST_CLI_CMD(
-  .name = "pm-precharge",
-  .func = prodtest_pm_precharge,
-  .info = "Precharge the device to specific voltage",
-  .args = ""
-);
-
-PRODTEST_CLI_CMD(
-  .name = "pm-set-soc-limit",
-  .func = prodtest_pm_set_soc_limit,
-  .info = "Set limit for the battery SOC",
-  .args = "<limit>"
+  .name = "pm-set-soc-target",
+  .func = prodtest_pm_set_soc_target,
+  .info = "Set battery SoC charging target",
+  .args = "<target>"
 );
 
 PRODTEST_CLI_CMD(
   .name = "pm-new-soc-estimate",
   .func = prodtest_pm_new_soc_estimate,
-  .info = "Run new battery SoC initialization",
+  .info = "Reset battery SoC estimate",
   .args = ""
 );
 
