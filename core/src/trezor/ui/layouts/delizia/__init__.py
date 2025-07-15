@@ -1708,7 +1708,7 @@ async def set_brightness(current: int | None = None) -> None:
         BR_CODE_OTHER,
     )
 
-    await show_success(br_name, TR.brightness__changed_title)
+    show_continue_in_app(TR.brightness__changed_title)
 
 
 def tutorial(br_code: ButtonRequestType = BR_CODE_OTHER) -> Awaitable[None]:
