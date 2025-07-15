@@ -694,12 +694,14 @@ class EthereumFlow:
         elif self.client.layout_type is LayoutType.Caesar:
             # confirm intro
             if info:
-                self.debug.press_right()
+                self.debug.press_right()  # enter menu
+                self.debug.press_middle()  # choose item
                 assert self.debug.read_layout().title() in (
                     TR.ethereum__staking_stake_address,
                     TR.ethereum__staking_claim_address,
                 )
-                self.debug.press_left()
+                self.debug.press_left()  # back to menu
+                self.debug.press_left()  # close menu
             self.debug.press_middle()
             yield
 
