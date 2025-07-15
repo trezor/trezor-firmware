@@ -263,6 +263,7 @@ class Capability(IntEnum):
     Haptic = 21
     BLE = 22
     NFC = 23
+    Tron = 24
 
 
 class SdProtectOperationType(IntEnum):
@@ -421,6 +422,10 @@ class ThpPairingMethod(IntEnum):
     CodeEntry = 2
     QrCode = 3
     NFC = 4
+
+
+class TronRawContractType(IntEnum):
+    TransferContract = 1
 
 
 class MessageType(IntEnum):
@@ -684,6 +689,10 @@ class MessageType(IntEnum):
     EvoluDelegatedIdentityKey = 2105
     TronGetAddress = 2200
     TronAddress = 2201
+    TronSignTx = 2202
+    TronSignature = 2203
+    TronContractRequest = 2204
+    TronTransferContract = 2205
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -8593,6 +8602,162 @@ class TronAddress(protobuf.MessageType):
     ) -> None:
         self.address = address
         self.mac = mac
+
+
+class TronSignTx(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2202
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        2: protobuf.Field("ref_block_bytes", "bytes", repeated=False, required=True),
+        3: protobuf.Field("ref_block_hash", "bytes", repeated=False, required=True),
+        4: protobuf.Field("expiration", "sint64", repeated=False, required=True),
+        5: protobuf.Field("data", "bytes", repeated=False, required=False, default=None),
+        6: protobuf.Field("timestamp", "sint64", repeated=False, required=True),
+        7: protobuf.Field("fee_limit", "sint64", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        ref_block_bytes: "bytes",
+        ref_block_hash: "bytes",
+        expiration: "int",
+        timestamp: "int",
+        address_n: Optional[Sequence["int"]] = None,
+        data: Optional["bytes"] = None,
+        fee_limit: Optional["int"] = None,
+    ) -> None:
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.ref_block_bytes = ref_block_bytes
+        self.ref_block_hash = ref_block_hash
+        self.expiration = expiration
+        self.timestamp = timestamp
+        self.data = data
+        self.fee_limit = fee_limit
+
+
+class TronContractRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2204
+
+
+class TronTransferContract(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2205
+    FIELDS = {
+        1: protobuf.Field("owner_address", "string", repeated=False, required=True),
+        2: protobuf.Field("to_address", "string", repeated=False, required=True),
+        3: protobuf.Field("amount", "sint64", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        owner_address: "str",
+        to_address: "str",
+        amount: "int",
+    ) -> None:
+        self.owner_address = owner_address
+        self.to_address = to_address
+        self.amount = amount
+
+
+class TronSignature(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2203
+    FIELDS = {
+        1: protobuf.Field("signature", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        signature: "bytes",
+    ) -> None:
+        self.signature = signature
+
+
+class TronRawTransaction(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("ref_block_bytes", "bytes", repeated=False, required=True),
+        4: protobuf.Field("ref_block_hash", "bytes", repeated=False, required=True),
+        8: protobuf.Field("expiration", "uint64", repeated=False, required=True),
+        10: protobuf.Field("data", "bytes", repeated=False, required=False, default=None),
+        11: protobuf.Field("contract", "TronRawContract", repeated=True, required=False, default=None),
+        14: protobuf.Field("timestamp", "uint64", repeated=False, required=True),
+        18: protobuf.Field("fee_limit", "uint64", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        ref_block_bytes: "bytes",
+        ref_block_hash: "bytes",
+        expiration: "int",
+        timestamp: "int",
+        contract: Optional[Sequence["TronRawContract"]] = None,
+        data: Optional["bytes"] = None,
+        fee_limit: Optional["int"] = None,
+    ) -> None:
+        self.contract: Sequence["TronRawContract"] = contract if contract is not None else []
+        self.ref_block_bytes = ref_block_bytes
+        self.ref_block_hash = ref_block_hash
+        self.expiration = expiration
+        self.timestamp = timestamp
+        self.data = data
+        self.fee_limit = fee_limit
+
+
+class TronRawContract(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("type", "TronRawContractType", repeated=False, required=True),
+        2: protobuf.Field("parameter", "TronRawParameter", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        type: "TronRawContractType",
+        parameter: "TronRawParameter",
+    ) -> None:
+        self.type = type
+        self.parameter = parameter
+
+
+class TronRawTransferContract(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("owner_address", "bytes", repeated=False, required=True),
+        2: protobuf.Field("to_address", "bytes", repeated=False, required=True),
+        3: protobuf.Field("amount", "uint64", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        owner_address: "bytes",
+        to_address: "bytes",
+        amount: "int",
+    ) -> None:
+        self.owner_address = owner_address
+        self.to_address = to_address
+        self.amount = amount
+
+
+class TronRawParameter(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("type_url", "string", repeated=False, required=True),
+        2: protobuf.Field("value", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        type_url: "str",
+        value: "bytes",
+    ) -> None:
+        self.type_url = type_url
+        self.value = value
 
 
 class WebAuthnListResidentCredentials(protobuf.MessageType):
