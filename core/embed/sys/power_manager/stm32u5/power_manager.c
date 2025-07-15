@@ -214,9 +214,9 @@ pm_status_t pm_get_state(pm_state_t* state) {
   state->usb_connected = drv->usb_connected;
   state->wireless_connected = drv->wireless_connected;
 
-  if (drv->pmic_data.ibat > 0.0f) {
+  if (!drv->usb_connected && !drv->wireless_connected) {
     state->charging_status = PM_BATTERY_DISCHARGING;
-  } else if (drv->pmic_data.ibat < 0.0f) {
+  } else if (drv->charging_current_target_ma > 0) {
     state->charging_status = PM_BATTERY_CHARGING;
   } else {
     state->charging_status = PM_BATTERY_IDLE;
