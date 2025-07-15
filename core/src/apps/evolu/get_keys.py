@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from trezor.messages import EvoluGetKeys, EvoluKeys
 
+_EVOLU_KEY_PATH_PREFIX = [b"TREZOR", b"Evolu"]
+
 
 async def get_keys(_msg: EvoluGetKeys) -> EvoluKeys:
     from storage.device import is_initialized
@@ -27,13 +29,13 @@ async def get_keys(_msg: EvoluGetKeys) -> EvoluKeys:
     node2 = node1.clone()
     node3 = node1.clone()
 
-    node1.derive_path([b"Evolu", b"Owner Id"])
+    node1.derive_path(_EVOLU_KEY_PATH_PREFIX + [b"Owner Id"])
     owner_id = node1.key()
 
-    node2.derive_path([b"Evolu", b"Write Key"])
+    node2.derive_path(_EVOLU_KEY_PATH_PREFIX + [b"Write Key"])
     write_key = node2.key()
 
-    node3.derive_path([b"Evolu", b"Encryption Key"])
+    node3.derive_path(_EVOLU_KEY_PATH_PREFIX + [b"Encryption Key"])
     encryption_key = node3.key()
 
     return EvoluKeys(
