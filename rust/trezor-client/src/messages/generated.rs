@@ -92,8 +92,6 @@ trezor_message_impl! {
     ThpCreateNewSession => MessageType_ThpCreateNewSession,
     ThpCredentialRequest => MessageType_ThpCredentialRequest,
     ThpCredentialResponse => MessageType_ThpCredentialResponse,
-    EvoluGetKeys => MessageType_EvoluGetKeys,
-    EvoluKeys => MessageType_EvoluKeys,
     BenchmarkListNames => MessageType_BenchmarkListNames,
     BenchmarkNames => MessageType_BenchmarkNames,
     BenchmarkRun => MessageType_BenchmarkRun,
@@ -182,6 +180,12 @@ trezor_message_impl! {
     EthereumTypedDataValueAck => MessageType_EthereumTypedDataValueAck,
     EthereumTypedDataSignature => MessageType_EthereumTypedDataSignature,
     EthereumSignTypedHash => MessageType_EthereumSignTypedHash,
+}
+
+#[cfg(feature = "evolu")]
+trezor_message_impl! {
+    EvoluGetKeys => MessageType_EvoluGetKeys,
+    EvoluKeys => MessageType_EvoluKeys,
 }
 
 #[cfg(feature = "monero")]
