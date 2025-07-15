@@ -313,11 +313,10 @@ async def confirm_system_transfer(
     await confirm_solana_recipient(
         recipient=base58.encode(transfer_instruction.recipient_account[0]),
         title=TR.words__recipient,
+        items=[(TR.words__blockhash, base58.encode(blockhash))],
     )
 
-    await confirm_custom_transaction(
-        transfer_instruction.lamports, 9, "SOL", fee, blockhash
-    )
+    await confirm_custom_transaction(transfer_instruction.lamports, 9, "SOL", fee)
 
 
 async def confirm_token_transfer(
@@ -333,8 +332,9 @@ async def confirm_token_transfer(
     items = []
     if token_account != destination_account:
         items.append(
-            (f"{TR.solana__associated_token_account}:", base58.encode(token_account))
+            (TR.solana__associated_token_account, base58.encode(token_account))
         )
+    items.append((TR.words__blockhash, base58.encode(blockhash)))
 
     await confirm_solana_recipient(
         recipient=base58.encode(destination_account),
@@ -355,7 +355,7 @@ async def confirm_token_transfer(
             br_code=ButtonRequestType.ConfirmOutput,
         )
 
-    await confirm_custom_transaction(amount, decimals, token.symbol, fee, blockhash)
+    await confirm_custom_transaction(amount, decimals, token.symbol, fee)
 
 
 def _fee_ui_info(
@@ -386,10 +386,8 @@ async def confirm_custom_transaction(
     decimals: int,
     unit: str,
     fee: Fee,
-    blockhash: bytes,
 ) -> None:
     fee_title, fee_str, fee_items = _fee_ui_info(False, fee)
-    fee_items.append((TR.words__blockhash, base58.encode(blockhash)))
     await confirm_solana_tx(
         amount=f"{format_amount(amount, decimals)} {unit}",
         fee=fee_str,
