@@ -3004,14 +3004,10 @@ class InputFlowFidoConfirm(InputFlowBase):
 class InputFlowSetBrightness(InputFlowBase):
 
     def input_flow_bolt(self):
-        yield
-        self.debug.press_yes()
+        return self.client.ui.default_input_flow()
 
     def input_flow_delizia(self):
-        yield
-        self.debug.press_yes()
-        yield
-        self.debug.press_yes()
+        return self.client.ui.default_input_flow()
 
     def input_flow_eckhart(self):
         yield
