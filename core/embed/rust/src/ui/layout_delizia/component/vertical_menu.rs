@@ -351,16 +351,21 @@ pub struct ScrolledVerticalMenu {
 }
 
 impl ScrolledVerticalMenu {
-    pub fn new(items: VerticalMenuItems) -> Self {
+    pub fn new(items: VerticalMenuItems, mut item_index: usize) -> Self {
         let menu_capacity = match items.len() {
             0..=MENU_MAX_ITEMS => MENU_MAX_ITEMS,
             _ => MENU_MAX_ITEMS - 1,
         };
         let pages_count = items.chunks(menu_capacity).len() as u16;
+        let mut pager = Pager::new(pages_count);
+        while item_index >= menu_capacity {
+            item_index -= menu_capacity;
+            pager.goto_next();
+        }
         Self {
             active: VerticalMenu::empty(),
             items,
-            pager: Pager::new(pages_count),
+            pager,
             menu_capacity,
             up: None,
             down: None,

@@ -809,17 +809,18 @@ impl FirmwareUI for UIDelizia {
 
     fn select_menu(
         items: heapless::Vec<TString<'static>, MAX_MENU_ITEMS>,
-        _current: usize,
+        mut current: usize,
         cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut menu_items = VerticalMenuItems::new();
         if let Some(text) = cancel {
             unwrap!(menu_items.push(VerticalMenuItem::Cancel(text)));
+            current += 1;
         }
         for text in items {
             unwrap!(menu_items.push(VerticalMenuItem::Item(text)));
         }
-        let menu = ScrolledVerticalMenu::new(menu_items);
+        let menu = ScrolledVerticalMenu::new(menu_items, current);
         let frame = Frame::left_aligned(TString::empty(), menu).with_cancel_button();
         let layout = MsgMap::new(frame, move |msg| {
             let choice = match msg {
@@ -1137,7 +1138,7 @@ impl FirmwareUI for UIDelizia {
         if Obj::is_str(value) {
             let confirm = ConfirmValue::new(title, value, None)
                 .with_cancel_button()
-                .with_chunkify(true)
+                // .with_chunkify(true)
                 .with_text_mono(true);
             let layout = confirm.into_layout()?;
             return flow::util::single_page(layout.map(|_| Some(FlowMsg::Confirmed)));
