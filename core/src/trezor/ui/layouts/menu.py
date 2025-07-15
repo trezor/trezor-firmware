@@ -6,11 +6,13 @@ from trezor.ui.layouts.common import interact
 from trezor.wire import ActionCancelled
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Sequence
+    from typing import Callable, Iterable, Sequence, TypeVar
 
     from typing_extensions import Self
 
     from common import ExceptionType
+
+    T = TypeVar("T")
 
 
 class Menu:
@@ -29,13 +31,13 @@ class Menu:
 
 
 class Details:
-    def __init__(self, name: str, factory: Callable[[], Awaitable[None]]) -> None:
+    def __init__(self, name: str, factory: Callable[[], Awaitable[T]]) -> None:
         self.name = name
         self.factory = factory
 
     @classmethod
     def from_layout(
-        cls, name: str, layout_factory: Callable[[], trezorui_api.LayoutObj[None]]
+        cls, name: str, layout_factory: Callable[[], trezorui_api.LayoutObj[T]]
     ) -> Self:
         return cls(
             name,
@@ -71,7 +73,7 @@ async def show_menu(
         else:
             assert isinstance(menu, Details)
             # Details' layout is created on-demand (saving memory)
-            await menu.factory()
+            await menu.factory()  # the result is ignored
 
         # go one level up, or exit the menu
         if menu_path:
