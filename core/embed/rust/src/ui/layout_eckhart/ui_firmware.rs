@@ -954,7 +954,7 @@ impl FirmwareUI for UIEckhart {
     fn set_brightness(current_brightness: Option<u8>) -> Result<impl LayoutMaybeTrace, Error> {
         let init_value = match current_brightness {
             Some(value) => {
-                // Set the brightness immediately so it is applied in the `_first_print` UI
+                // Set the brightness immediately so it is applied in the `_first_paint` UI
                 // layout function
                 unwrap!(storage::set_brightness(value));
                 value.into()
