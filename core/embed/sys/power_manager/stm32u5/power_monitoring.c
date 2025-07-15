@@ -24,6 +24,7 @@
 #include <sys/systick.h>
 #include <trezor_rtl.h>
 
+#include "../fuel_gauge/battery_model.h"
 #include "../fuel_gauge/fuel_gauge.h"
 #include "../stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
@@ -167,15 +168,33 @@ void pm_charging_controller(pm_driver_t* drv) {
     pmic_set_charging_limit(drv->charging_current_target_ma);
   }
 
-  if ((drv->soc_ceiled >= drv->soc_limit) && (drv->soc_limit != 100)) {
-    drv->soc_limit_reached = true;
-  } else if ((drv->soc_limit == 100) ||
-             (drv->soc_ceiled < (drv->soc_limit - PM_SOC_LIMIT_HYSTERESIS))) {
-    drv->soc_limit_reached = false;
+  if (drv->soc_target == 100) {
+    drv->soc_target_reached = false;
+  } else {
+    // Translate SoC target to charging voltage via battery model
+    float target_ocv_voltage_v =
+        battery_ocv(drv->soc_target / 100.0f, drv->pmic_data.ntc_temp, false);
+
+    float battery_ocv_v = battery_meas_to_ocv(
+        drv->pmic_data.vbat, drv->pmic_data.ibat, drv->pmic_data.ntc_temp);
+
+    if (battery_ocv_v > target_ocv_voltage_v) {
+      // current voltage is within tight bounds of target voltage,
+      // we may also force SoC estimate to target value.
+      if (battery_ocv_v < target_ocv_voltage_v + 0.15) {
+        fuel_gauge_set_soc(&drv->fuel_gauge,
+                           (drv->soc_target / 100.0f) - 0.0001f,
+                           drv->fuel_gauge.P);
+      }
+
+      drv->soc_target_reached = true;
+
+    } else if (drv->soc_ceiled < drv->soc_target) {
+      drv->soc_target_reached = false;
+    }
   }
 
-  if (drv->soc_limit_reached) {
-    // Set charging current limit to 0
+  if (drv->soc_target_reached) {
     drv->charging_current_target_ma = 0;
   }
 
