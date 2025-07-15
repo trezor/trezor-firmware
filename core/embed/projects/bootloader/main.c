@@ -97,7 +97,7 @@ CONFIDENTIAL void (*volatile firmware_jump_fn)(void) = failed_jump_to_firmware;
 static secbool is_manufacturing_mode(vendor_header *vhdr) {
   unit_properties_init();
 
-  if ((vhdr->vtrust & VTRUST_ALLOW_PROVISIONING) == VTRUST_ALLOW_PROVISIONING) {
+  if ((vhdr->vtrust & VTRUST_ALLOW_PROVISIONING) != VTRUST_ALLOW_PROVISIONING) {
     return secfalse;
   }
 
