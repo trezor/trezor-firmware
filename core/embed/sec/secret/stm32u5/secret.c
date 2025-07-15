@@ -589,12 +589,6 @@ void secret_prepare_fw(secbool allow_run_with_secret,
   secret_disable_access();
 }
 
-void secret_init(void) {
-  if (secret_bhk_locked() == sectrue) {
-    reboot_device();
-  }
-
-  secret_ensure_initialized();
-}
+void secret_init(void) { secret_ensure_initialized(); }
 
 #endif  // SECURE_MODE
