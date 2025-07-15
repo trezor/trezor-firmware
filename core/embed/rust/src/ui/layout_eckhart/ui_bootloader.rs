@@ -252,10 +252,8 @@ impl BootloaderUI for UIEckhart {
             TEXT_NORMAL,
         ));
 
-        let header = BldHeader::new(title_str.into()).with_right_button(
-            Button::with_icon(theme::ICON_INFO).styled(theme::button_default()),
-            BldHeaderMsg::Info,
-        );
+        let header = BldHeader::new(title_str.into())
+            .with_right_button(Button::with_icon(theme::ICON_INFO), BldHeaderMsg::Info);
         let (left, right) = if should_keep_seed {
             let l = Button::with_text("Cancel".into())
                 .styled(button_cancel())
@@ -265,12 +263,8 @@ impl BootloaderUI for UIEckhart {
                 .with_text_align(Alignment::Center);
             (l, r)
         } else {
-            let l = Button::with_icon(ICON_CROSS)
-                .styled(button_cancel())
-                .with_text_align(Alignment::Center);
-            let r = Button::with_icon(ICON_CHECKMARK)
-                .styled(button_confirm())
-                .with_text_align(Alignment::Center);
+            let l = Button::with_icon(ICON_CROSS).styled(button_cancel());
+            let r = Button::with_icon(ICON_CHECKMARK);
             (l, r)
         };
 

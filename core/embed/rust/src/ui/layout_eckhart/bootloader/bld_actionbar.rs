@@ -1,10 +1,13 @@
 use crate::ui::{
     component::{Component, Event, EventCtx},
-    geometry::{Insets, Offset, Rect},
-    shape::Renderer,
+    geometry::{Alignment2D, Insets, Offset, Rect},
+    shape::{self, Renderer},
 };
 
-use super::super::component::{Button, ButtonMsg};
+use super::super::{
+    component::{Button, ButtonMsg},
+    theme::{self, Gradient},
+};
 
 /// Component for control buttons in the bottom of the screen. Reduced variant
 /// for Bootloader UI.
@@ -15,6 +18,8 @@ pub struct BldActionBar {
     right_button: Button,
     /// Optional left button.
     left_button: Option<Button>,
+    /// Whether to show divider between buttons
+    show_divider: bool,
     area: Rect,
 }
 
@@ -34,7 +39,7 @@ enum Mode {
 }
 
 impl BldActionBar {
-    pub const ACTION_BAR_HEIGHT: i16 = 90; // [px]
+    pub const ACTION_BAR_HEIGHT: i16 = theme::ACTION_BAR_HEIGHT; // [px]
     const SPACER_WIDTH: i16 = 4; // [px]
     const BUTTON_CONTENT_OFFSET: Offset = Offset::x(12); // [px]
     const BUTTON_EXPAND_TOUCH: Insets = Insets::top(Self::ACTION_BAR_HEIGHT);
@@ -44,7 +49,9 @@ impl BldActionBar {
         Self::new(
             Mode::Single,
             None,
-            button.with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH),
+            button
+                .with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)
+                .with_gradient(Gradient::DefaultGrey),
         )
     }
 
@@ -62,11 +69,17 @@ impl BldActionBar {
         )
     }
 
+    pub fn with_divider(mut self) -> Self {
+        self.show_divider = true;
+        self
+    }
+
     fn new(mode: Mode, left_button: Option<Button>, right_button: Button) -> Self {
         Self {
             mode,
             right_button,
             left_button,
+            show_divider: false,
             area: Rect::zero(),
         }
     }
@@ -115,5 +128,11 @@ impl Component for BldActionBar {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.left_button.render(target);
         self.right_button.render(target);
+        if self.show_divider {
+            shape::ToifImage::new(self.area.center(), theme::ICON_DASH_VERTICAL.toif)
+                .with_align(Alignment2D::CENTER)
+                .with_fg(theme::GREY_EXTRA_DARK)
+                .render(target);
+        }
     }
 }

@@ -27,7 +27,7 @@ pub struct PairingFinalizationScreen {
 
 impl PairingFinalizationScreen {
     pub fn new() -> Self {
-        let btn = Button::with_text("Cancel".into()).styled(theme::button_default());
+        let btn = Button::with_text("Cancel".into());
         Self {
             header: BldHeader::new("Bluetooth pairing".into()),
             message: Label::left_aligned(
