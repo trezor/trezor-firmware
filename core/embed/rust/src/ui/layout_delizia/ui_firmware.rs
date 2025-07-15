@@ -1138,7 +1138,6 @@ impl FirmwareUI for UIDelizia {
         if Obj::is_str(value) {
             let confirm = ConfirmValue::new(title, value, None)
                 .with_cancel_button()
-                // .with_chunkify(true)
                 .with_text_mono(true);
             let layout = confirm.into_layout()?;
             return flow::util::single_page(layout.map(|_| Some(FlowMsg::Confirmed)));

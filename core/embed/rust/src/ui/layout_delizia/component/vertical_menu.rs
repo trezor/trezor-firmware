@@ -340,6 +340,20 @@ impl VerticalMenuItem {
     }
 }
 
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for VerticalMenuItem {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        match self {
+            VerticalMenuItem::Item(text) => {
+                t.string("item", *text);
+            }
+            VerticalMenuItem::Cancel(text) => {
+                t.string("cancel", *text);
+            }
+        }
+    }
+}
+
 pub struct ScrolledVerticalMenu {
     active: VerticalMenu,
     items: VerticalMenuItems,
@@ -463,6 +477,20 @@ impl Component for ScrolledVerticalMenu {
 impl crate::trace::Trace for ScrolledVerticalMenu {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         self.active.trace(t);
+
+        let chunks_to_skip = self.pager.current().into();
+        let mut chunks = self.items.chunks(self.menu_capacity).skip(chunks_to_skip);
+        let current_chunk = unwrap!(chunks.next());
+
+        t.in_child("menu_items", &|t| {
+            t.in_list("current", &|t| {
+                for item in current_chunk {
+                    t.in_child(&|t| item.trace(t));
+                }
+            });
+            t.bool("has_next", self.pager.has_next());
+            t.bool("has_prev", self.pager.has_prev());
+        });
     }
 }
 

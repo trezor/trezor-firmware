@@ -2932,7 +2932,10 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             if br.pages is not None:
                 for _ in range(br.pages - 1):
                     self.debug.swipe_up()
-            layout = self.debug.read_layout()
+
+            # Visit info menus (if exist)
+            layout = self.client.ui._visit_menu_items()
+
             text = layout.footer().lower()
             # hi priority warning
             hi_prio = (

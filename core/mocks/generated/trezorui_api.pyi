@@ -708,7 +708,7 @@ def show_properties(
     title: str,
     value: list[tuple[str, str]] | str,
 ) -> LayoutObj[None]:
-    """Show a list of key-value pairs, or a chunkified string."""
+    """Show a list of key-value pairs, or a monospace string."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
