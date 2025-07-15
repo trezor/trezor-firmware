@@ -1408,6 +1408,23 @@ if not utils.BITCOIN_ONLY:
             chunkify=False,
         )
 
+    def confirm_tron_tx(
+        amount: str,
+        fee: str,
+    ) -> Awaitable[None]:
+        amount_title = TR.send__total_amount
+        fee_title = TR.send__maximum_fee
+
+        return _confirm_summary(
+            amount,
+            amount_title,
+            fee,
+            fee_title,
+            extra_items=None,
+            br_name="confirm_tron_tx",
+            br_code=ButtonRequestType.SignTx,
+        )
+
 
 def confirm_joint_total(spending_amount: str, total_amount: str) -> Awaitable[None]:
     return _confirm_summary(

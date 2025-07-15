@@ -370,6 +370,9 @@ if TYPE_CHECKING:
         QrCode = 3
         NFC = 4
 
+    class TronRawContractType(IntEnum):
+        TransferContract = 1
+
     class MessageType(IntEnum):
         Initialize = 0
         Ping = 1
