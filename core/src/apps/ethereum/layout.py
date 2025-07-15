@@ -119,6 +119,7 @@ async def require_confirm_payment_request(
     token: EthereumTokenInfo | None,
     token_address: str,
 ) -> None:
+    from trezor import wire
     from trezor.ui.layouts import confirm_ethereum_payment_request
 
     account, account_path = get_account_and_path(address_n)
@@ -127,10 +128,13 @@ async def require_confirm_payment_request(
     )  # amount is required for non-CoinJoin transactions
     total_amount = format_ethereum_amount(verified_payment_req.amount, token, network)
 
+    texts = []
     refunds = []
     trades = []
     for memo in verified_payment_req.memos:
-        if memo.refund_memo:
+        if memo.text_memo is not None:
+            texts.append(memo.text_memo.text)
+        elif memo.refund_memo:
             refund_account, refund_account_path = get_account_and_path(
                 memo.refund_memo.address_n
             )
@@ -154,10 +158,13 @@ async def require_confirm_payment_request(
                     coin_purchase_account_path,
                 )
             )
+        else:
+            raise wire.DataError("Unrecognized memo type in payment request memo.")
 
     await confirm_ethereum_payment_request(
         verified_payment_req.recipient_name,
         provider_address,
+        texts,
         refunds,
         trades,
         account,
