@@ -219,6 +219,8 @@ def _find_message_handler_module(msg_type: int) -> str:
         # tron
         if msg_type == MessageType.TronGetAddress:
             return "apps.tron.get_address"
+        if msg_type == MessageType.TronSignTx:
+            return "apps.tron.sign_tx"
 
     raise ValueError
 

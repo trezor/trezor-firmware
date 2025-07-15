@@ -336,6 +336,11 @@ enum MessageType {
     // Tron
     MessageType_TronGetAddress = 3001 [(wire_in) = true];
     MessageType_TronAddress = 3002 [(wire_out) = true];
+    MessageType_TronSignTx = 3003 [(wire_in) = true];
+    MessageType_TronSignature = 3004 [(wire_out) = true];
+    MessageType_TronContractRequest = 3005 [(wire_out) = true];
+    // https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/Tron.proto#L338-L380
+    MessageType_TronTransferContract = 3101 [(wire_in) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

@@ -12,9 +12,9 @@ option java_outer_classname = "TrezorMessageTron";
  * @next Failure
  */
 message TronGetAddress {
-    repeated uint32 address_n = 1;              // BIP-32 path to derive the key from master node
-    optional bool show_display = 2;             // Optionally show on display before sending the result
-    optional bool chunkify = 3;                 // display the address in chunks of 4 characters
+    repeated uint32 address_n = 1;   // BIP-32 path to derive the key from master node
+    optional bool show_display = 2;  // Optionally show on display before sending the result
+    optional bool chunkify = 3;      // display the address in chunks of 4 characters
 }
 
 /**
@@ -22,6 +22,86 @@ message TronGetAddress {
  * @end
  */
 message TronAddress {
-    required string address = 1;    // Tron address in Base32 encoding
-    optional bytes mac = 2;         // Address authentication code
+    required string address = 1;  // Tron address in Base32 encoding
+    optional bytes mac = 2;       // Address authentication code
+}
+
+/**
+ * Request: ask device to sign Stellar transaction
+ * @start
+ * @next StellarTxOpRequest
+ */
+message TronSignTx {
+    repeated uint32 address_n = 1;       // BIP-32 path to derive the key from master node
+    required bytes ref_block_bytes = 2;  // The height of the transaction reference block, using the 6th to 8th (exclusive) bytes of the reference block height, a total of 2 bytes
+    required bytes ref_block_hash = 3;   // The hash of the transaction reference block
+    required sint64 expiration = 4;      // Transaction expiration time, beyond which the transaction will no longer be packed
+    optional bytes data = 5;             // Transaction memo. (256 bytes maximum, this is a Trezor limitation, not a Tron protocol limitation)
+    required sint64 timestamp = 6;       // Transaction timestamp, set as the transaction creation time
+    optional sint64 fee_limit = 7;       // The maximum energy cost allowed for the execution of smart contract transactions. Only deploying and triggering smart contract transactions need to be set, others not
+}
+
+/**
+ * Response: device is ready for client to send the next operation
+ * @next TronTransferContract
+ */
+message TronContractRequest {
+}
+
+/**
+ * Request: ask device to confirm this operation type
+ * @next TronSignature
+ */
+message TronTransferContract {
+    // https://developers.tron.network/docs/tron-contracttype#2-transfercontract
+    required string owner_address = 1;  // Sender's address, base58_checked encoding
+    required string to_address = 2;     // Recipient's address, base58_checked encoding
+    required sint64 amount = 3;         // Transfer amount (in SUN)
+}
+
+/**
+ * Response: signature for transaction
+ * @end
+ */
+message TronSignature {
+    required bytes signature = 1;  // Signature of the transaction
+}
+
+
+/**
+ * TronRawTransaction and embedded messages are used to encode the Tron transaction, not for communication.
+ * @start
+ * @end
+ */
+// https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/Tron.proto#L431-L445
+message TronRawTransaction {
+    required bytes ref_block_bytes = 1;
+    required bytes ref_block_hash = 4;
+    required uint64 expiration = 8;
+    optional bytes data = 10;
+    repeated TronRawContract contract = 11;
+    required uint64 timestamp = 14;
+    optional uint64 fee_limit = 18;
+
+    // https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/Tron.proto#L337-L385
+    message TronRawContract {
+        // https://github.com/tronprotocol/protocol/blob/37bb922a9967bbbef1e84de1c9e5cda56a2d7998/core/contract/balance_contract.proto#L32-L36
+        message TronRawTransferContract {
+            required bytes owner_address = 1;
+            required bytes to_address = 2;
+            required uint64 amount = 3;
+        }
+
+        message TronRawParameter {
+            required string type_url = 1; // e.g., "type.googleapis.com/protocol.TransferContract"
+            required bytes value = 2;     // The serialized value of the contract parameter, e.g., TronTransferContract
+        }
+
+        required TronRawContractType type = 1;
+        required TronRawParameter parameter = 2;
+
+        enum TronRawContractType {
+            TransferContract = 1;
+        }
+    }
 }

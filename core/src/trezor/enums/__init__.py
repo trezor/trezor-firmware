@@ -364,6 +364,9 @@ if TYPE_CHECKING:
         QrCode = 3
         NFC = 4
 
+    class TronRawContractType(IntEnum):
+        TransferContract = 1
+
     class MessageType(IntEnum):
         Initialize = 0
         Ping = 1
@@ -613,6 +616,10 @@ if TYPE_CHECKING:
         NostrEventSignature = 2004
         TronGetAddress = 3001
         TronAddress = 3002
+        TronSignTx = 3003
+        TronSignature = 3004
+        TronContractRequest = 3005
+        TronTransferContract = 3101
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102
