@@ -15,6 +15,7 @@ async def get_keys(_msg: EvoluGetKeys) -> EvoluKeys:
     if not is_initialized():
         raise NotInitialized("Device is not initialized")
 
+    # TODO: use translated strings when exposing this to production
     await confirm_action(
         "get_evolu_keys",
         "Evolu keys",
