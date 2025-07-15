@@ -591,7 +591,7 @@ void secret_prepare_fw(secbool allow_run_with_secret,
 
 void secret_init(void) {
   if (secret_bhk_locked() == sectrue) {
-    reboot_device();
+    reboot_device_keep_args();
   }
 
   secret_ensure_initialized();

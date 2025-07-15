@@ -214,6 +214,18 @@ __attribute__((noreturn)) void reboot_device(void) {
   reboot_with_args(BOOT_COMMAND_REBOOT, NULL, 0);
 }
 
+#ifdef STM32U5
+__attribute__((noreturn)) void reboot_device_keep_args(void) {
+  mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTARGS);
+  boot_command_t command = g_boot_command;
+  boot_args_t args;
+  memcpy(&args, g_boot_args.raw, sizeof(g_boot_args.raw));
+  mpu_restore(mode);
+
+  reboot_with_args(command, args.raw, sizeof(args.raw));
+}
+#endif
+
 __attribute__((noreturn)) void reboot_to_off(void) {
   reboot_with_args(BOOT_COMMAND_POWER_OFF, NULL, 0);
 }
