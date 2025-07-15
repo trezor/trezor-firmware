@@ -29,7 +29,7 @@ if t.TYPE_CHECKING:
 
 @click.group(name="evolu")
 def cli() -> None:
-    """Evolu commands."""
+    """Evolu commands. Evolu is a local first storage framework. See https://github.com/evoluhq/evolu"""
 
 
 @cli.command()
@@ -37,7 +37,7 @@ def cli() -> None:
 def get_keys(
     client: "TrezorClient",
 ) -> dict[str, str]:
-    """Return the SLIP-21 Evolu keys."""
+    """Return the SLIP-21 keys for Evolu."""
 
     keys: messages.EvoluKeys = evolu.get_evolu_keys(
         client,
