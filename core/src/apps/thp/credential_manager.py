@@ -44,7 +44,7 @@ def invalidate_cred_auth_key() -> None:
 
 
 def issue_credential(
-    host_static_pubkey: bytes,
+    host_static_public_key: bytes,
     credential_metadata: ThpCredentialMetadata,
 ) -> bytes:
     """
@@ -53,7 +53,7 @@ def issue_credential(
     """
     cred_auth_key = derive_cred_auth_key()
     proto_msg = ThpAuthenticatedCredentialData(
-        host_static_pubkey=host_static_pubkey,
+        host_static_public_key=host_static_public_key,
         cred_metadata=credential_metadata,
     )
     authenticated_credential_data = _encode_message_into_new_buffer(proto_msg)
@@ -64,19 +64,28 @@ def issue_credential(
     return credential_raw
 
 
-def validate_credential(
+def decode_credential(
     encoded_pairing_credential_message: bytes,
-    host_static_pubkey: bytes,
+) -> ThpPairingCredential:
+    """
+    Decode a protobuf encoded pairing credential.
+    """
+    expected_type = protobuf.type_for_name("ThpPairingCredential")
+    credential = wrap_protobuf_load(encoded_pairing_credential_message, expected_type)
+    assert ThpPairingCredential.is_type_of(credential)
+    return credential
+
+
+def validate_credential(
+    credential: ThpPairingCredential,
+    host_static_public_key: bytes,
 ) -> bool:
     """
     Validate a pairing credential binded to the provided host static public key.
     """
     cred_auth_key = derive_cred_auth_key()
-    expected_type = protobuf.type_for_name("ThpPairingCredential")
-    credential = wrap_protobuf_load(encoded_pairing_credential_message, expected_type)
-    assert ThpPairingCredential.is_type_of(credential)
     proto_msg = ThpAuthenticatedCredentialData(
-        host_static_pubkey=host_static_pubkey,
+        host_static_public_key=host_static_public_key,
         cred_metadata=credential.cred_metadata,
     )
     authenticated_credential_data = _encode_message_into_new_buffer(proto_msg)
@@ -84,8 +93,29 @@ def validate_credential(
     return mac == credential.mac
 
 
+def decode_and_validate_credential(
+    encoded_pairing_credential_message: bytes,
+    host_static_public_key: bytes,
+) -> bool:
+    """
+    Decode a protobuf encoded pairing credential and validate it
+    binded to the provided host static public key.
+    """
+    credential = decode_credential(encoded_pairing_credential_message)
+    return validate_credential(credential, host_static_public_key)
+
+
+def is_credential_autoconnect(credential: ThpPairingCredential) -> bool:
+    assert ThpPairingCredential.is_type_of(credential)
+    if credential.cred_metadata is None:
+        return False
+    if credential.cred_metadata.autoconnect is None:
+        return False
+    return credential.cred_metadata.autoconnect
+
+
 def _encode_message_into_new_buffer(msg: protobuf.MessageType) -> bytes:
     msg_len = protobuf.encoded_length(msg)
     new_buffer = bytearray(msg_len)
     protobuf.encode(new_buffer, msg)
-    return new_buffer
+    return bytes(new_buffer)
