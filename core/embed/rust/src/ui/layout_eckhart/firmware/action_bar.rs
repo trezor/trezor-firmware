@@ -61,7 +61,7 @@ enum Mode {
 }
 
 impl ActionBar {
-    pub const ACTION_BAR_HEIGHT: i16 = 90; // [px]
+    pub const ACTION_BAR_HEIGHT: i16 = theme::ACTION_BAR_HEIGHT; // [px]
     const SPACER_WIDTH: i16 = 4; // [px]
     const LEFT_SMALL_BUTTON_WIDTH: i16 = 120; // [px]
     /// offset for button content to move it towards center

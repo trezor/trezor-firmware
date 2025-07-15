@@ -33,18 +33,14 @@ pub struct ConfirmPairingScreen<'a> {
 impl<'a> ConfirmPairingScreen<'a> {
     pub fn new(code: u32) -> Self {
         let (left, right) = (
-            Button::with_icon(theme::ICON_CROSS)
-                .styled(theme::bootloader::button_cancel())
-                .with_text_align(Alignment::Center),
-            Button::with_text("Confirm".into())
-                .styled(theme::button_default())
-                .with_text_align(Alignment::Center),
+            Button::with_icon(theme::ICON_CROSS),
+            Button::with_icon(theme::ICON_CHECKMARK),
         );
 
         Self {
             header: BldHeader::new("Bluetooth pairing".into()),
             instruction: Label::left_aligned("Pairing code match?".into(), theme::TEXT_NORMAL),
-            action_bar: BldActionBar::new_double(left, right),
+            action_bar: BldActionBar::new_double(left, right).with_divider(),
             screen_border: None,
             code_formatted: format_pairing_code(code, PAIRING_CODE_LEN),
         }
