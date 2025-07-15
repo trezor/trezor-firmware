@@ -41,10 +41,8 @@ impl Component for SetBrightnessDialog {
             }
             Some(NumberInputSliderDialogMsg::Cancelled) => Some(CancelConfirmMsg::Cancelled),
             Some(NumberInputSliderDialogMsg::Confirmed) => {
-                match storage::set_brightness(self.0.value() as _) {
-                    Ok(_) => Some(CancelConfirmMsg::Confirmed),
-                    Err(_) => Some(CancelConfirmMsg::Cancelled), // TODO: handle error
-                }
+                unwrap!(storage::set_brightness(self.0.value() as _));
+                Some(CancelConfirmMsg::Confirmed)
             }
             None => None,
         }

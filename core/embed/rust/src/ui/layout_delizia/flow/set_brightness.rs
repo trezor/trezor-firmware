@@ -37,7 +37,7 @@ impl FlowController for SetBrightness {
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
             (Self::Slider, Direction::Up) => {
-                let _ = storage::set_brightness(BRIGHTNESS.load(Ordering::Relaxed));
+                unwrap!(storage::set_brightness(BRIGHTNESS.load(Ordering::Relaxed)));
                 self.return_msg(FlowMsg::Confirmed)
             }
             _ => self.do_nothing(),
