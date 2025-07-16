@@ -84,7 +84,7 @@ class BackgroundDeviceHandler:
                 session = self.client.get_seedless_session()
             else:
                 session = self.client.get_session()
-            function(session, *args, **kwargs)
+            return function(session, *args, **kwargs)
 
         # wait for the first UI change triggered by the task running in the background
         with self.debuglink().wait_for_layout_change():
