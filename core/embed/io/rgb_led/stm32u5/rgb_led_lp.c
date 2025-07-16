@@ -77,13 +77,9 @@ void rgb_led_init(void) {
     }
   }
 
-  // select LSE as LPTIM clock source
-  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
-  PeriphClkInitStruct.PeriphClockSelection =
-      RCC_PERIPHCLK_LPTIM1 | RCC_PERIPHCLK_LPTIM34;
-  PeriphClkInitStruct.Lptim1ClockSelection = RCC_LPTIM1CLKSOURCE_HSI;
-  PeriphClkInitStruct.Lptim34ClockSelection = RCC_LPTIM34CLKSOURCE_HSI;
-  HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
+  // select HSI as LPTIM clock source
+  __HAL_RCC_LPTIM1_CONFIG(RCC_LPTIM1CLKSOURCE_HSI);
+  __HAL_RCC_LPTIM34_CONFIG(RCC_LPTIM34CLKSOURCE_HSI);
 
   __HAL_RCC_LPTIM1_CLK_ENABLE();
   __HAL_RCC_LPTIM1_FORCE_RESET();

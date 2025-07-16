@@ -42,40 +42,42 @@ display_driver_t g_display_driver = {
 static void display_pll_deinit(void) { __HAL_RCC_PLL3_DISABLE(); }
 
 static bool display_pll_init(void) {
-  RCC_PeriphCLKInitTypeDef PLL3InitPeriph = {0};
-
   /* Start and configure PLL3 */
   /* HSE = 16/32MHZ */
-  /* 16/32/(M=8)   = 4MHz input (min) */
-  /* 4*(N=125)  = 500MHz VCO (almost max) */
-  /* 500/(P=8)  = 62.5 for DSI ie exactly the lane byte clock*/
+  /* 16/32/(M=8) = 4MHz input (min) */
+  /* 4*(N=125) = 500MHz VCO (almost max) */
+  /* 500/(P=8) = 62.5 for DSI is exactly the lane byte clock*/
 
-  PLL3InitPeriph.PeriphClockSelection = RCC_PERIPHCLK_DSI | RCC_PERIPHCLK_LTDC;
-  PLL3InitPeriph.DsiClockSelection = RCC_DSICLKSOURCE_PLL3;
-  PLL3InitPeriph.LtdcClockSelection = RCC_LTDCCLKSOURCE_PLL3;
+  __HAL_RCC_PLL3_DISABLE();
+
+  while (__HAL_RCC_GET_FLAG(RCC_FLAG_PLL3RDY) != 0U)
+    ;
+
 #if HSE_VALUE == 32000000
-  PLL3InitPeriph.PLL3.PLL3M = 8;
-#elif HSE_VALUE == 16000000
-  PLL3InitPeriph.PLL3.PLL3M = 4;
-#endif
-  PLL3InitPeriph.PLL3.PLL3N = ((DSI_LANE_BYTE_FREQ_HZ * 8) / 4000000);
-  PLL3InitPeriph.PLL3.PLL3P = 8;
-  PLL3InitPeriph.PLL3.PLL3Q = 8;
-  PLL3InitPeriph.PLL3.PLL3R = 24;
-  PLL3InitPeriph.PLL3.PLL3FRACN = 0;
-  PLL3InitPeriph.PLL3.PLL3RGE = RCC_PLLVCIRANGE_0;
-  PLL3InitPeriph.PLL3.PLL3ClockOut = RCC_PLL3_DIVR | RCC_PLL3_DIVP;
-  PLL3InitPeriph.PLL3.PLL3Source = RCC_PLLSOURCE_HSE;
 
-  if (HAL_RCCEx_PeriphCLKConfig(&PLL3InitPeriph) != HAL_OK) {
-    goto cleanup;
-  }
+  __HAL_RCC_PLL3_CONFIG(RCC_PLLSOURCE_HSE, 8,
+                        ((DSI_LANE_BYTE_FREQ_HZ * 8) / 4000000), 8, 8, 24);
+#elif HSE_VALUE == 16000000
+  __HAL_RCC_PLL3_CONFIG(RCC_PLLSOURCE_HSE, 4,
+                        ((DSI_LANE_BYTE_FREQ_HZ * 8) / 4000000), 8, 8, 24);
+#endif
+
+  __HAL_RCC_PLL3_VCIRANGE(RCC_PLLVCIRANGE_0);
+
+  __HAL_RCC_PLL3CLKOUT_ENABLE(RCC_PLL3_DIVR | RCC_PLL3_DIVP);
+
+  __HAL_RCC_PLL3FRACN_DISABLE();
+
+  __HAL_RCC_PLL3_ENABLE();
+
+  /* Wait till PLL3 is ready */
+  while (__HAL_RCC_GET_FLAG(RCC_FLAG_PLL3RDY) == 0U)
+    ;
+
+  __HAL_RCC_DSI_CONFIG(RCC_DSICLKSOURCE_PLL3);
+  __HAL_RCC_LTDC_CONFIG(RCC_LTDCCLKSOURCE_PLL3);
 
   return true;
-
-cleanup:
-  display_pll_deinit();
-  return false;
 }
 
 static void display_dsi_deinit(display_driver_t *drv) {
@@ -86,7 +88,6 @@ static void display_dsi_deinit(display_driver_t *drv) {
 }
 
 static bool display_dsi_init(display_driver_t *drv) {
-  RCC_PeriphCLKInitTypeDef DSIPHYInitPeriph = {0};
   DSI_PLLInitTypeDef PLLInit = {0};
   DSI_PHY_TimerTypeDef PhyTimers = {0};
   DSI_HOST_TimeoutTypeDef HostTimeouts = {0};
@@ -103,7 +104,7 @@ static bool display_dsi_init(display_driver_t *drv) {
 
   __HAL_DSI_ENABLE(&drv->hlcd_dsi);
 
-  /* Enable the DSI PLL */
+  // /* Enable the DSI PLL */
   __HAL_DSI_PLL_ENABLE(&drv->hlcd_dsi);
 
   HAL_Delay(1);
@@ -117,12 +118,7 @@ static bool display_dsi_init(display_driver_t *drv) {
   HAL_Delay(1);
 
   /* Config DSI Clock to DSI PHY */
-  DSIPHYInitPeriph.PeriphClockSelection = RCC_PERIPHCLK_DSI;
-  DSIPHYInitPeriph.DsiClockSelection = RCC_DSICLKSOURCE_DSIPHY;
-
-  if (HAL_RCCEx_PeriphCLKConfig(&DSIPHYInitPeriph) != HAL_OK) {
-    goto cleanup;
-  }
+  __HAL_RCC_DSI_CONFIG(RCC_DSICLKSOURCE_DSIPHY);
 
   /* Reset the TX escape clock division factor */
   drv->hlcd_dsi.Instance->CCR &= ~DSI_CCR_TXECKDIV;
