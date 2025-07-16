@@ -22,7 +22,7 @@ message TronGetAddress {
  * @end
  */
 message TronAddress {
-    required string address = 1;  // Tron address in Base32 encoding
+    required string address = 1;  // Tron address in base58_checked encoding
     optional bytes mac = 2;       // Address authentication code
 }
 
