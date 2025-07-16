@@ -912,10 +912,6 @@ def _confirm_summary(
             account_items=account_props,
             account_title=account_title,
             extra_items=extra_props,
-            account_items=account_items or None,
-            account_title=account_title,
-            extra_items=extra_items or None,
->>>>>>> 152c1acc01 (refactor(core): improved Stellar transaction signing interface for a more streamlined user experience.)
             extra_title=extra_title or None,
         ),
         br_name,
@@ -1147,7 +1143,43 @@ if not utils.BITCOIN_ONLY:
             )
         menu = Menu.root(menu_items, TR.send__cancel_sign)
 
+<<<<<<< HEAD
         await confirm_with_menu(trade_layout, menu, "confirm_trade")
+=======
+        await confirm_with_menu(main_layout, menu, "confirm_payment_request")
+
+        for sell_amount, buy_amount, t_address, t_account, t_account_path in trades:
+            await confirm_trade(
+                TR.words__swap,
+                TR.words__assets,
+                sell_amount,
+                buy_amount,
+                t_address,
+                t_account,
+                t_account_path,
+                token_address,
+            )
+
+        account_items = []
+        if account:
+            account_items.append((TR.words__account, account))
+        if account_path:
+            account_items.append((TR.address_details__derivation_path, account_path))
+        account_items.append((TR.ethereum__approve_chain_id, chain_id))
+
+        await _confirm_summary(
+            None,
+            None,
+            maximum_fee,
+            TR.words__transaction_fee,
+            TR.words__title_summary,
+            account_items,
+            None,
+            fee_info_items,
+            TR.confirm_total__title_fee,
+            "confirm_payment_request",
+        )
+>>>>>>> d79e5c62f1 (fixup! refactor(core): improved Stellar transaction signing interface for a more streamlined user experience.)
 
     async def confirm_ethereum_staking_tx(
         title: str,

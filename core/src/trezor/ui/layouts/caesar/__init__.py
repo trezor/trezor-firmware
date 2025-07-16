@@ -1422,7 +1422,7 @@ if not utils.BITCOIN_ONLY:
         is_sending_from_trezor_account: bool,
         extra_items: Iterable[tuple[str, str]],
     ) -> Awaitable[None]:
-        return raise_if_not_confirmed(
+        return raise_if_cancelled(
             trezorui_api.confirm_summary(
                 amount=None,
                 amount_label=None,
