@@ -1,35 +1,45 @@
-/common/defs @matejcik
+# overall ownership is for the apps team
+* @obrusvit
 
-/common/protob @matejcik
+# CI and build system
+/.github/ @vdovhanych @mmilata
+/ci/ @vdovhanych @mmilata
 
-/core/embed @prusnak
+# Protobuf definitions
+/common/protob/ @obrusvit @matejcik
 
-/core/src/apps/monero @onvej-sl
+# core/embed belongs to embedded team
+/core/embed/ @TychoVrahe
 
-/core/src/apps/webauthn @andrewkozlik
+# ...except Rust, which belongs to apps team
+/core/embed/rust/ @obrusvit @matejcik
+/core/embed/rust/src/ui/ @obrusvit
+/core/embed/rust/src/smp/ @TychoVrahe
 
-/core/src/storage @andrewkozlik
+# special case apps
+/core/src/apps/monero/ @onvej-sl
+/core/src/apps/webauthn/ @andrewkozlik
 
-/core/src/trezor @matejcik
+# trezor-crypto
+/crypto/ @andrewkozlik @onvej-sl
+/crypto/gui/ @prusnak
+/crypto/monero/ @onvej-sl
+/crypto/tools/ @prusnak
 
-/core/tests @matejcik
+# T1 legacy codebase
+/legacy/ @prusnak @romanz
 
-/core/tools @matejcik
+# Nordic submodule belongs to embedded team
+/nordic/ @TychoVrahe
 
-/crypto @andrewkozlik @onvej-sl
+# python-trezor and tools
+/python/ @matejcik @romanz
 
-/crypto/gui @prusnak
+# storage
+/storage/ @andrewkozlik @TychoVrahe
 
-/crypto/monero @onvej-sl
+# tests main codeowner
+/tests/ @obrusvit
 
-/crypto/tools @prusnak
-
-/legacy @prusnak
-
-/python @matejcik
-
-/storage @andrewkozlik
-
-/tests @matejcik
-
-/vendor @prusnak
+# tools generally belong to apps team
+/tools/ @obrusvit
