@@ -210,7 +210,6 @@ def test_tutorial_menu_close(device_handler: "BackgroundDeviceHandler"):
     # close and open again
     debug.click(debug.screen_buttons.menu())
     _assert_menu_instructions(debug)
-    debug.click(debug.screen_buttons.menu())
 
     # menu screen - continue
     _assert_menu(debug)
