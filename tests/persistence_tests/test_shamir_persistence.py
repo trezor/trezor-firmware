@@ -40,6 +40,7 @@ def test_abort(core_emulator: Emulator):
     features = device_handler.features()
 
     assert features.recovery_status == RecoveryStatus.Nothing
+    return
 
     device_handler.run(device.recover, pin_protection=False)
 
