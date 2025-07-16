@@ -26,6 +26,7 @@
 #include <stm32u5xx_hal_cryp.h>
 
 #include <sec/secure_aes.h>
+#include <sys/systick.h>
 
 #if NORCOW_MIN_VERSION <= 5
 #include "secure_aes_unpriv.h"
@@ -221,13 +222,16 @@ secbool secure_aes_ecb_decrypt_hw(const uint8_t* input, size_t size,
 }
 
 secbool secure_aes_init(void) {
-  RCC_OscInitTypeDef osc_init_def = {0};
-  osc_init_def.OscillatorType = RCC_OSCILLATORTYPE_SHSI;
-  osc_init_def.SHSIState = RCC_SHSI_ON;
-
   // Enable SHSI clock
-  if (HAL_RCC_OscConfig(&osc_init_def) != HAL_OK) {
-    goto cleanup;
+  __HAL_RCC_SHSI_ENABLE();
+
+  uint32_t deadline = ticks_timeout(HSI_TIMEOUT_VALUE);
+
+  // Wait till SHSI is ready
+  while (READ_BIT(RCC->CR, RCC_CR_SHSIRDY) == 0U) {
+    if (ticks_expired(deadline)) {
+      goto cleanup;
+    }
   }
 
   // Enable SAES peripheral clock
@@ -247,12 +251,17 @@ void secure_aes_deinit(void) {
   __HAL_RCC_SAES_FORCE_RESET();
   __HAL_RCC_SAES_RELEASE_RESET();
 
-  RCC_OscInitTypeDef osc_init_def = {0};
-  osc_init_def.OscillatorType = RCC_OSCILLATORTYPE_SHSI;
-  osc_init_def.SHSIState = RCC_SHSI_OFF;
+  // Disable the Secure Internal High Speed oscillator (SHSI)
+  __HAL_RCC_SHSI_DISABLE();
 
-  // Disable SHSI clock
-  HAL_RCC_OscConfig(&osc_init_def);
+  uint32_t deadline = ticks_timeout(2);
+
+  // Wait till SHSI is off
+  while (READ_BIT(RCC->CR, RCC_CR_SHSIRDY) != 0U) {
+    if (ticks_expired(deadline)) {
+      return;
+    }
+  }
 }
 
 #endif  // SECURE_MODE
