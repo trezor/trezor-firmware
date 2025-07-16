@@ -213,16 +213,10 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
     GPIO_InitStruct.Alternate = GPIO_AF10_USB_HS;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
-
     __HAL_RCC_SYSCFG_CLK_ENABLE();
 
-
-    /** Initializes the peripherals clock
-    */
-    PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USBPHY;
-    PeriphClkInit.UsbPhyClockSelection = RCC_USBPHYCLKSOURCE_HSE;
-    HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit);
+    /** Initializes the peripherals clock */
+    __HAL_RCC_USBPHY_CONFIG(RCC_USBPHYCLKSOURCE_HSE);
 
     /** Set the OTG PHY reference clock selection
     */
