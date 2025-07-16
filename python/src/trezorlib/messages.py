@@ -263,6 +263,7 @@ class Capability(IntEnum):
     Haptic = 21
     BLE = 22
     NFC = 23
+    Tron = 24
 
 
 class SdProtectOperationType(IntEnum):
