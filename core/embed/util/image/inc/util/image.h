@@ -129,15 +129,13 @@ typedef struct {
 typedef struct {
   uint32_t magic;
   uint32_t hdrlen;
-  uint32_t reserved0;
   uint32_t codelen;
   uint32_t version;
-  uint32_t reserved1;
   uint32_t hw_model;
   uint8_t hw_revision;
-  uint8_t reserved_2[3];
+  uint8_t reserved_0[3];
   uint8_t hash[32];
-  uint8_t reserved_3[383];
+  uint8_t reserved_1[391];
   uint8_t sigmask;
   uint8_t sig[64];
 } secmon_header_t;
