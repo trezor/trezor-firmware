@@ -315,6 +315,7 @@ def sign_typed_data(
     *,
     metamask_v4_compat: bool = True,
     definitions: Optional[messages.EthereumDefinitions] = None,
+    show_message_hash: Optional[bytes] = None,
 ) -> messages.EthereumTypedDataSignature:
     data = sanitize_typed_data(data)
     types = data["types"]
@@ -325,6 +326,8 @@ def sign_typed_data(
         metamask_v4_compat=metamask_v4_compat,
         definitions=definitions,
     )
+    if show_message_hash is not None:
+        request.show_message_hash = show_message_hash
     response = client.call(request)
 
     # Sending all the types

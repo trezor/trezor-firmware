@@ -36,6 +36,11 @@ def test_ethereum_sign_typed_data(client: Client, parameters, result):
             address_n,
             parameters["data"],
             metamask_v4_compat=parameters["metamask_v4_compat"],
+            show_message_hash=(
+                ethereum.decode_hex(parameters["show_message_hash"])
+                if "show_message_hash" in parameters
+                else None
+            ),
         )
         assert ret.address == result["address"]
         assert f"0x{ret.signature.hex()}" == result["sig"]
@@ -120,4 +125,18 @@ def test_ethereum_sign_typed_data_cancel(client: Client):
             parse_path("m/44h/60h/0h/0/0"),
             DATA,
             metamask_v4_compat=True,
+        )
+
+
+@pytest.mark.models("core")
+def test_ethereum_sign_typed_data_bad_show_message_hash(client: Client):
+    with client, pytest.raises(exceptions.TrezorFailure, match="Message hash mismatch"):
+        ethereum.sign_typed_data(
+            client,
+            parse_path("m/44h/60h/0h/0/0"),
+            DATA,
+            metamask_v4_compat=True,
+            show_message_hash=ethereum.decode_hex(
+                "0xbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadb"
+            ),
         )
