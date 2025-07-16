@@ -1149,6 +1149,7 @@ if not utils.BITCOIN_ONLY:
             TR.words__transaction_fee,
             TR.words__title_summary,
             account_items,
+            None,
             fee_info_items,
             TR.confirm_total__title_fee,
             "confirm_payment_request",
