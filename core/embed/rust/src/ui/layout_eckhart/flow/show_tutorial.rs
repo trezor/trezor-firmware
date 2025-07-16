@@ -25,6 +25,8 @@ use super::super::{
 };
 
 const WELCOME_SCREEN_DURATION_MS: u32 = 3000;
+type TropicScreen = TextScreen<Paragraphs<[Paragraph<'static>; 3]>>;
+type TropicScreenMap = MsgMap<TropicScreen, fn(TextScreenMsg) -> Option<FlowMsg>>;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ShowTutorial {
@@ -85,8 +87,7 @@ impl FlowController for ShowTutorial {
     }
 }
 
-fn content_tropic(
-) -> MsgMap<TextScreen<Paragraphs<[Paragraph<'static>; 3]>>, fn(TextScreenMsg) -> Option<FlowMsg>> {
+fn content_tropic() -> TropicScreenMap {
     TextScreen::new(
         Paragraphs::new([
             Paragraph::new(&theme::TEXT_REGULAR, TR::tutorial__tropic_info1).break_after(),

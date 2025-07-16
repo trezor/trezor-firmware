@@ -504,14 +504,12 @@ pub const fn button_menu_tutorial() -> ButtonStyleSheet {
             text_color: GREEN_LIME,
             button_color: BG,
             icon_color: GREEN_LIME,
-            background_color: BG,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREEN_LIME,
             button_color: GREEN_EXTRA_DARK,
             icon_color: GREEN_LIME,
-            background_color: GREEN_EXTRA_DARK,
         },
         // not used
         disabled: &ButtonStyle {
@@ -519,7 +517,6 @@ pub const fn button_menu_tutorial() -> ButtonStyleSheet {
             text_color: BG,
             button_color: BG,
             icon_color: BG,
-            background_color: BG,
         },
     }
 }
