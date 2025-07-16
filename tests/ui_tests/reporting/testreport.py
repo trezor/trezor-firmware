@@ -26,7 +26,13 @@ from dominate.util import text
 
 from ..common import FixturesType, TestCase, TestResult
 from . import download, html
-from .common import REPORTS_PATH, document, generate_master_diff_report, get_diff
+from .common import (
+    REPORTS_PATH,
+    document,
+    generate_master_diff_report,
+    get_diff,
+    get_status_icon,
+)
 
 TESTREPORT_PATH = REPORTS_PATH / "test"
 IMAGES_PATH = TESTREPORT_PATH / "images"
@@ -240,6 +246,8 @@ def differing_screens() -> None:
                                     i(ui_failure.test.id)
 
     html.write(TESTREPORT_PATH, doc, "differing_screens.html")
+    status_icon = get_status_icon(recent_ui_failures)
+    shutil.copy(status_icon, TESTREPORT_PATH / "test_diff.png")
 
 
 def _get_current_results() -> FixturesType:
