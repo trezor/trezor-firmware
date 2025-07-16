@@ -2904,6 +2904,8 @@ pub mod features {
         Capability_BLE = 22,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_NFC)
         Capability_NFC = 23,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_Tron)
+        Capability_Tron = 24,
     }
 
     impl ::protobuf::Enum for Capability {
@@ -2938,6 +2940,7 @@ pub mod features {
                 21 => ::std::option::Option::Some(Capability::Capability_Haptic),
                 22 => ::std::option::Option::Some(Capability::Capability_BLE),
                 23 => ::std::option::Option::Some(Capability::Capability_NFC),
+                24 => ::std::option::Option::Some(Capability::Capability_Tron),
                 _ => ::std::option::Option::None
             }
         }
@@ -2967,6 +2970,7 @@ pub mod features {
                 "Capability_Haptic" => ::std::option::Option::Some(Capability::Capability_Haptic),
                 "Capability_BLE" => ::std::option::Option::Some(Capability::Capability_BLE),
                 "Capability_NFC" => ::std::option::Option::Some(Capability::Capability_NFC),
+                "Capability_Tron" => ::std::option::Option::Some(Capability::Capability_Tron),
                 _ => ::std::option::Option::None
             }
         }
@@ -2995,6 +2999,7 @@ pub mod features {
             Capability::Capability_Haptic,
             Capability::Capability_BLE,
             Capability::Capability_NFC,
+            Capability::Capability_Tron,
         ];
     }
 
@@ -3029,6 +3034,7 @@ pub mod features {
                 Capability::Capability_Haptic => 20,
                 Capability::Capability_BLE => 21,
                 Capability::Capability_NFC => 22,
+                Capability::Capability_Tron => 23,
             };
             Self::enum_descriptor().value_by_index(index)
         }

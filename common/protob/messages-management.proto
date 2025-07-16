@@ -172,6 +172,7 @@ message Features {
         Capability_Haptic = 21 [(bitcoin_only) = true];
         Capability_BLE = 22 [(bitcoin_only) = true];  // Bluetooth Low Energy
         Capability_NFC = 23 [(bitcoin_only) = true];  // Near Field Communications
+        Capability_Tron = 24;
     }
 }
 
