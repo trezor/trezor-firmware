@@ -25,8 +25,6 @@
 // the device was powered on
 void __attribute__((noreturn)) reboot_device(void);
 
-void __attribute__((noreturn)) reboot_device_keep_args(void);
-
 // Immediately resets the device
 void __attribute__((noreturn)) reboot_to_off(void);
 
