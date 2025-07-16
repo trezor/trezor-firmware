@@ -1187,12 +1187,10 @@ secbool storage_has(const uint16_t key) {
   return storage_get(key, NULL, 0, &len);
 }
 
-/*
- * Finds the data stored under key and writes its length to len. If val_dest is
- * not NULL and max_len >= len, then the data is copied to val_dest.
- */
-secbool storage_get(const uint16_t key, void *val_dest, const uint16_t max_len,
-                    uint16_t *len) {
+static secbool storage_get_uni(const uint16_t key, uint16_t offset,
+                               void *val_dest, const uint16_t max_len,
+                               uint16_t *total_len, uint16_t *slice_len,
+                               secbool slice) {
   const uint8_t app = key >> 8;
   // APP == 0 is reserved for PIN related values
   if (sectrue != initialized || app == APP_STORAGE) {
@@ -1203,23 +1201,58 @@ secbool storage_get(const uint16_t key, void *val_dest, const uint16_t max_len,
   // read from a locked device.
   if ((app & FLAG_PUBLIC) != 0) {
     const void *val_stored = NULL;
-    if (sectrue != norcow_get(key, &val_stored, len)) {
+    if (sectrue != norcow_get(key, &val_stored, total_len)) {
       return secfalse;
     }
     if (val_dest == NULL) {
       return sectrue;
     }
-    if (*len > max_len) {
-      return secfalse;
+    if (slice == sectrue) {
+      if (*total_len < offset) {
+        return secfalse;
+      }
+    } else {
+      if (*total_len > max_len) {
+        return secfalse;
+      }
     }
-    memcpy(val_dest, val_stored, *len);
+
+    uint16_t remaining_len = *total_len - offset;
+    uint16_t copy_len = remaining_len > max_len ? max_len : remaining_len;
+
+    memcpy(val_dest, ((uint8_t *)val_stored) + offset, copy_len);
+
+    if (slice_len != NULL) {
+      *slice_len = copy_len;
+    }
+
     return sectrue;
   } else {
     if (sectrue != unlocked) {
       return secfalse;
     }
-    return storage_get_encrypted(key, val_dest, max_len, len);
+    if (slice == sectrue) {
+      // slices of encrypted data are not supported
+      return secfalse;
+    }
+    return storage_get_encrypted(key, val_dest, max_len, total_len);
   }
+}
+
+secbool storage_get_slice(const uint16_t key, uint16_t offset, void *val_dest,
+                          const uint16_t max_len, uint16_t *total_len,
+                          uint16_t *slice_len) {
+  return storage_get_uni(key, offset, val_dest, max_len, total_len, slice_len,
+                         sectrue);
+}
+
+/*
+ * Finds the data stored under key and writes its length to len. If val_dest is
+ * not NULL and max_len >= len, then the data is copied to val_dest.
+ */
+secbool storage_get(const uint16_t key, void *val_dest, const uint16_t max_len,
+                    uint16_t *len) {
+  return storage_get_uni(key, 0, val_dest, max_len, len, NULL, secfalse);
 }
 
 /*
