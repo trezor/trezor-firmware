@@ -54,16 +54,14 @@ class SecmonHeader(Struct):
         "_start_offset" / c.Tell,
         "magic" / EnumAdapter(c.Bytes(4), SecmonType),
         "header_len" / c.Int32ul,
-        "_reserved" / c.Padding(4),
         "code_length" / c.Int32ul,
         "version" / TupleAdapter(c.Int8ul, c.Int8ul, c.Int8ul, c.Int8ul),
-        "_reserved" / c.Padding(4),
         "hw_model" / EnumAdapter(c.Bytes(4), Model),
         "hw_revision" / c.Int8ul,
         "_reserved" / c.Padding(3),
         "hash" / c.Bytes(32),
 
-        "_reserved" / c.Padding(383),
+        "_reserved" / c.Padding(391),
         "sigmask" / c.Byte,
         "signature" / c.Bytes(64),
 
