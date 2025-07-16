@@ -39,11 +39,10 @@ runs:
         done
         cd ..
 
-        if [ "${{ inputs.status }}" = "success" ]; then
-          cp -v .github/actions/ui-report/success.png $OUTDIR/$MODELJOB-status.png
-        else
-          cp -v .github/actions/ui-report/failure.png $OUTDIR/$MODELJOB-status.png
-        fi
+        # CI job status icon
+        cp -v .github/actions/ui-report/${{ inputs.status }}.png $OUTDIR/$MODELJOB-status.png
+        URL="https://github.com/trezor/trezor-firmware/actions/runs/${{ github.run_id }}/job/${{ github.job }}"
+        nix-shell --run "poetry run python ci/make_redirect_html.py $URL" > $OUTDIR/$MODELJOB-ci_job.html
       shell: sh
     - name: Upload test results
       run: |

@@ -9,12 +9,23 @@ from typing import Iterable
 import click
 
 from ui_tests import update_fixtures
-from ui_tests.common import FIXTURES_FILE, get_current_fixtures
+from ui_tests.common import FIXTURES_FILE, TestResult, get_current_fixtures
 
 
 @click.group()
 def cli():
     pass
+
+
+@cli.command()
+def status() -> None:
+    """Print differing UI fixtures and fail (if there are any)."""
+    code = 0
+    for res in TestResult.recent_results():
+        if res.actual_hash != res.expected_hash:
+            print(f"{res.test.id}")
+            code = 1
+    raise click.exceptions.Exit(code)
 
 
 @cli.command()

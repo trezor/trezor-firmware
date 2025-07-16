@@ -30,7 +30,7 @@ def main():
 
 def print_table(lang):
     main = f"[main]({REPORT_URL}/{lang}_index.html)"
-    screens = f"[screens]({REPORT_URL}/{lang}_diff.html)"
+    screens = f"[all]({REPORT_URL}/{lang}_diff.html)"
     print(f"\n# `{lang}` {main}({screens})\n")
 
     # Currently, persistence_test is not running with translations
@@ -45,15 +45,17 @@ def print_table(lang):
         for test_type in test_types:
             test_prefix = f"{REPORT_URL}/{model}-{lang}-core_{test_type}"
 
-            img = f'<img src="{test_prefix}-status.png" width="20px" height="20px" />'
+            job_img = f'<img src="{test_prefix}-status.png"/>'
 
             test_diff = f"[test]({test_prefix}-index.html)"
-            test_screens = f"[screens]({test_prefix}-differing_screens.html)"
+            test_screens = f"[all]({test_prefix}-differing_screens.html)"
+            test_img = f'<img src="{test_prefix}-test_diff.png"/>'
 
             main_diff = f"[main]({test_prefix}-master_index.html)"
-            main_screens = f"[screens]({test_prefix}-master_diff.html)"
+            main_screens = f"[all]({test_prefix}-master_diff.html)"
+            main_img = f'<img src="{test_prefix}-main_diff.png"/>'
 
-            cell = f"{img} {test_diff}({test_screens}) {main_diff}({main_screens})"
+            cell = f"{job_img} {test_diff}({test_screens}) {test_img} {main_diff}({main_screens}) {main_img}"
             row.append(cell)
 
         print("|".join(row))
