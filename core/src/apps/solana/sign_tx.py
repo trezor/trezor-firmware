@@ -57,7 +57,10 @@ async def sign_tx(
             br_code=ButtonRequestType.Other,
         )
 
-    fee = transaction.calculate_fee()
+    if _has_unsupported_instructions(transaction):
+        fee = None
+    else:
+        fee = transaction.calculate_fee()
 
     additional_tx_info = AdditionalTxInfo.from_solana_tx_additional_info(
         msg.additional_info
@@ -74,9 +77,7 @@ async def sign_tx(
         await confirm_instructions(
             address_n, signer_public_key, transaction, additional_tx_info
         )
-        await confirm_transaction(
-            transaction.blockhash, fee, _has_unsupported_instructions(transaction)
-        )
+        await confirm_transaction(transaction.blockhash, fee)
 
     signature = ed25519.sign(node.private_key(), serialized_tx)
     show_continue_in_app(TR.send__transaction_signed)

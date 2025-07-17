@@ -358,11 +358,9 @@ async def confirm_token_transfer(
     await confirm_custom_transaction(amount, decimals, token.symbol, fee)
 
 
-def _fee_ui_info(
-    has_unsupported_instructions: bool, fee: Fee
-) -> tuple[str, str, list[tuple[str, str]]]:
+def _fee_ui_info(fee: Fee | None) -> tuple[str, str, list[tuple[str, str]]]:
     fee_items: list[tuple[str, str]] = []
-    if has_unsupported_instructions:
+    if fee is None:
         fee_title = f"{TR.solana__max_fees_rent}:"
         fee_str = TR.words__unknown
     else:
@@ -387,7 +385,7 @@ async def confirm_custom_transaction(
     unit: str,
     fee: Fee,
 ) -> None:
-    fee_title, fee_str, fee_items = _fee_ui_info(False, fee)
+    fee_title, fee_str, fee_items = _fee_ui_info(fee)
     await confirm_solana_tx(
         amount=f"{format_amount(amount, decimals)} {unit}",
         fee=fee_str,
@@ -443,7 +441,7 @@ async def confirm_stake_transaction(
         description = TR.solana__stake_on_question.format(vote_account_label)
         vote_account_label = ""
 
-    fee_title, fee_str, fee_items = _fee_ui_info(False, fee)
+    fee_title, fee_str, fee_items = _fee_ui_info(fee)
 
     await confirm_solana_staking_tx(
         title=TR.solana__stake,
@@ -472,7 +470,7 @@ async def confirm_unstake_transaction(
 ) -> None:
     from trezor.ui.layouts import confirm_solana_staking_tx
 
-    fee_title, fee_str, fee_items = _fee_ui_info(False, fee)
+    fee_title, fee_str, fee_items = _fee_ui_info(fee)
 
     await confirm_solana_staking_tx(
         title=TR.solana__unstake,
@@ -496,7 +494,7 @@ async def confirm_claim_transaction(
 ) -> None:
     from trezor.ui.layouts import confirm_solana_staking_tx
 
-    fee_title, fee_str, fee_items = _fee_ui_info(False, fee)
+    fee_title, fee_str, fee_items = _fee_ui_info(fee)
     await confirm_solana_staking_tx(
         title=TR.solana__claim,
         description=TR.solana__claim_question,
@@ -516,10 +514,9 @@ async def confirm_claim_transaction(
 
 async def confirm_transaction(
     blockhash: bytes,
-    fee: Fee,
-    has_unsupported_instructions: bool,
+    fee: Fee | None,
 ) -> None:
-    fee_title, fee_str, fee_items = _fee_ui_info(has_unsupported_instructions, fee)
+    fee_title, fee_str, fee_items = _fee_ui_info(fee)
     fee_items.append((TR.words__blockhash, base58.encode(blockhash)))
     await confirm_solana_tx(
         amount="",
