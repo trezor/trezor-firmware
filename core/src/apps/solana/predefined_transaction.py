@@ -174,7 +174,7 @@ async def try_confirm_token_transfer_transaction(
 
 async def try_confirm_predefined_transaction(
     transaction: Transaction,
-    fee: Fee,
+    fee: Fee | None,
     signer_path: list[int],
     signer_public_key: bytes,
     blockhash: bytes,
@@ -182,6 +182,10 @@ async def try_confirm_predefined_transaction(
 ) -> bool:
     from .layout import confirm_system_transfer
     from .transaction.instructions import SystemProgramTransferInstruction
+
+    if fee is None:
+        # fee must be known for predefined transaction types
+        return False
 
     instructions = transaction.get_visible_instructions()
     instructions_count = len(instructions)
