@@ -210,7 +210,7 @@ def format_secmon_header(
     all_ok = SYM_OK if hash_status.is_ok() and sig_status.is_ok() else SYM_FAIL
 
     output = [
-        "SECMON Header ",
+        "SECMON Header " + _format_container(header_out),
         "Code hash: " + click.style(code_hash.hex(), bold=True),
         f"Fingerprint: {click.style(digest.hex(), bold=True)}",
         f"{all_ok} Signature is {sig_status.value}, hash is {hash_status.value}",
