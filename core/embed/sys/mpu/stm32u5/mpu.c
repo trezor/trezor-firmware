@@ -131,20 +131,32 @@ static void mpu_set_attributes(void) {
 _Static_assert(NORCOW_SECTOR_SIZE == STORAGE_1_MAXSIZE, "norcow misconfigured");
 _Static_assert(NORCOW_SECTOR_SIZE == STORAGE_2_MAXSIZE, "norcow misconfigured");
 
-// PERIPH_SIZE covers secure peripherals only (+16MB of FMC1)
-// PERIPH_SIZE_EXT covers both secure and non-secure peripherals (+16MB of FMC1)
-// The extended size is used in a special case - MPU_MODE_OTP - when access
-// to non-secure FLASH controller registers is required.
+// PERIPH_SIZE covers both secure and non-secure peripherals
+// 0x40000000 to 0x4FFFFFFF (256M) and
+// 0x50000000 to 0x5FFFFFFF (256M).
+
+// When writing to OTP memory while running in secure mode, we have to access
+// the non-secure FLASH peripheral. Additionally, the ST HAL requires access
+// to the same non-secure peripheral during the *first* write or erase
+// operation after writing to OTP. This applies even if the following operation
+// targets a different flash region. To avoid faults, we must ensure
+// the MPU permanently allows access to non-secure peripherals.
+
+// Moreover, on STM32U585, we need to add an additional 16M for FMC1 which
+// follows the peripherals in the memory map.
+// 0x60000000 to 0x60FFFFFF (16M).
+
+// In the kernel, on models with a secure monitor (SECURE_MODE is not defined),
+// we can allow access *only* to the non-secure peripherals region.
 
 #ifdef STM32U585xx
-// On STM32U585, we need to add an additional 16M for FMC1 which
-// follows the peripherals in the memory map.
-
-#define PERIPH_SIZE (SIZE_256M + SIZE_16M)
-#define PERIPH_SIZE_EXT (SIZE_512M + SIZE_16M)
+#define PERIPH_SIZE (SIZE_512M + SIZE_16M)
+#else
+#ifdef SECURE_MODE
+#define PERIPH_SIZE SIZE_512M
 #else
 #define PERIPH_SIZE SIZE_256M
-#define PERIPH_SIZE_EXT SIZE_512M
+#endif
 #endif
 
 #define OTP_AND_ID_SIZE 0x800
@@ -458,17 +470,14 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       //      REGION   ADDRESS                 SIZE                TYPE       WRITE   UNPRIV
 #ifdef KERNEL
     case MPU_MODE_APP_SAES:
-      SET_REGION( 7, PERIPH_BASE,              PERIPH_SIZE,        PERIPHERAL,  YES,    YES ); // Peripherals - SAES, TAMP
+      // This mode is intended for a special unprivileged task that needs
+      // access to secure SAES and TAMPER peripherals in unprivileged mode.
+      SET_REGION( 7, PERIPH_BASE_S,            SIZE_256M,          PERIPHERAL,  YES,    YES );
       break;
 #endif
-    case MPU_MODE_OTP:
-      // Write to OTP requires access to non-secure FLASH controller
-      // (so we extended the peripheral region to cover it)
-      SET_REGION( 7, PERIPH_BASE_NS,           PERIPH_SIZE_EXT,    PERIPHERAL,  YES,    NO );
-      break;
     default:
       // All peripherals (Privileged, Read-Write, Non-Executable)
-      SET_REGION( 7, PERIPH_BASE,              PERIPH_SIZE,        PERIPHERAL,  YES,    NO );
+      SET_REGION( 7, PERIPH_BASE_NS,           PERIPH_SIZE,        PERIPHERAL,  YES,    NO );
       break;
   }
   // clang-format on
