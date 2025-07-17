@@ -62,6 +62,7 @@ typedef enum {
   UPLOAD_ERR_INVALID_SECMON_HEADER_SIG = -19,
   UPLOAD_ERR_INVALID_SECMON_MODEL = -20,
   UPLOAD_ERR_INVALID_SECMON_HASH = -21,
+  UPLOAD_ERR_SECMON_TOO_BIG = -22,
 } upload_status_t;
 
 #define FIRMWARE_UPLOAD_CHUNK_RETRY_COUNT 2
@@ -250,8 +251,8 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
       size_t secmon_start_offset =
           (size_t)IMAGE_CODE_ALIGN(vhdr.hdrlen + IMAGE_HEADER_SIZE);
       size_t secmon_start = (size_t)chunk_buffer + secmon_start_offset;
-      const secmon_header_t *secmon_hdr = read_secmon_header(
-          (const uint8_t *)secmon_start, SECMON_IMAGE_MAGIC, FIRMWARE_MAXSIZE);
+      const secmon_header_t *secmon_hdr =
+          read_secmon_header((const uint8_t *)secmon_start, FIRMWARE_MAXSIZE);
 
       if (secmon_hdr != NULL) {
         ctx->secmon_code_offset =
@@ -278,6 +279,7 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
       }
 
       ctx->secmon_code_size = secmon_hdr->codelen;
+
       memcpy(ctx->expected_secmon_hash, secmon_hdr->hash,
              IMAGE_HASH_DIGEST_LENGTH);
 #endif
@@ -359,6 +361,16 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
         send_msg_failure(iface, FailureType_Failure_ProcessError,
                          "Install restricted");
         return UPLOAD_ERR_BOOTLOADER_LOCKED;
+      }
+#endif
+
+#ifdef USE_SECMON_VERIFICATION
+      if (ctx->secmon_code_size >
+          ((hdr.codelen + IMAGE_HEADER_SIZE + vhdr.hdrlen) -
+           ctx->secmon_code_offset)) {
+        send_msg_failure(iface, FailureType_Failure_ProcessError,
+                         "Secmon code too big");
+        return UPLOAD_ERR_SECMON_TOO_BIG;
       }
 #endif
 

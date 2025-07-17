@@ -350,8 +350,8 @@ void real_jump_to_firmware(void) {
 #ifdef USE_SECMON_VERIFICATION
   size_t secmon_start = (size_t)IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen +
                                                  IMAGE_HEADER_SIZE);
-  const secmon_header_t *secmon_hdr = read_secmon_header(
-      (const uint8_t *)secmon_start, SECMON_IMAGE_MAGIC, FIRMWARE_MAXSIZE);
+  const secmon_header_t *secmon_hdr =
+      read_secmon_header((const uint8_t *)secmon_start, FIRMWARE_MAXSIZE);
 
   if (secmon_hdr != NULL) {
     secmon_code_offset = IMAGE_CODE_ALIGN(SECMON_HEADER_SIZE);
@@ -524,8 +524,8 @@ int bootloader_main(void) {
   size_t secmon_start = (size_t)IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen +
                                                  IMAGE_HEADER_SIZE);
 
-  const secmon_header_t *secmon_hdr = read_secmon_header(
-      (const uint8_t *)secmon_start, SECMON_IMAGE_MAGIC, FIRMWARE_MAXSIZE);
+  const secmon_header_t *secmon_hdr =
+      read_secmon_header((const uint8_t *)secmon_start, FIRMWARE_MAXSIZE);
 
   volatile secbool secmon_header_present = secfalse;
   volatile secbool secmon_model_valid = secfalse;
