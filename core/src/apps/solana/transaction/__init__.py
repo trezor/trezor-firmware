@@ -222,7 +222,7 @@ class Transaction:
             if not instruction.is_ui_hidden
         ]
 
-    def calculate_fee(self) -> Fee:
+    def calculate_fee(self) -> Fee | None:
         number_of_signers = 0
         for address in self.addresses:
             if address[1] == AddressType.AddressSig:
@@ -253,21 +253,26 @@ class Transaction:
                     is_unit_price_set = True
 
         priority_fee = unit_price * unit_limit  # in microlamports
+        rent = self.calculate_rent()
+        if rent is None:
+            return None
         return Fee(
             base=base_fee,
             priority=(priority_fee + MICROLAMPORTS_PER_LAMPORT - 1)
             // MICROLAMPORTS_PER_LAMPORT,
-            rent=self.calculate_rent(),
+            rent=rent,
         )
 
-    def get_account_address(self, account: Account) -> bytes:
+    def get_account_address(self, account: Account) -> bytes | None:
         if len(account) == 2:
             return account[0]
         else:
-            _, index, _ = account
-            return self.addresses[index][0]
+            # AddressReference points to an Address Lookup Table account, whose contents are unavailable here:
+            # https://github.com/trezor/trezor-firmware/issues/5369#issuecomment-3083683085
+            # https://docs.anza.xyz/proposals/versioned-transactions#limitations
+            return None
 
-    def calculate_rent(self) -> int:
+    def calculate_rent(self) -> int | None:
         """
         Returns max rent exemption in lamports.
 
@@ -321,6 +326,8 @@ class Transaction:
                     allocation += (
                         SOLANA_TOKEN22_MAX_ACCOUNT_SIZE + SOLANA_ACCOUNT_OVERHEAD_SIZE
                     )
+                else:
+                    return None
 
         rent_exemption = (
             allocation
