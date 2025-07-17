@@ -173,11 +173,10 @@ secbool check_image_header_sig(const image_header *const hdr, uint8_t key_m,
 }
 
 const secmon_header_t *read_secmon_header(const uint8_t *const data,
-                                          const uint32_t magic,
                                           const uint32_t maxsize) {
   const secmon_header_t *hdr = (const secmon_header_t *)data;
 
-  if (hdr->magic != magic) {
+  if (hdr->magic != SECMON_IMAGE_MAGIC) {
     return NULL;
   }
   if (hdr->hdrlen != SECMON_HEADER_SIZE) {

@@ -178,7 +178,6 @@ secbool check_firmware_header(const uint8_t *header, size_t header_size,
 secbool __wur check_bootloader_header_sig(const image_header *const hdr);
 
 const secmon_header_t *read_secmon_header(const uint8_t *const data,
-                                          const uint32_t magic,
                                           const uint32_t maxsize);
 
 secbool __wur check_secmon_model(const secmon_header_t *const hdr);
