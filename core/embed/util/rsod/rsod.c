@@ -165,9 +165,9 @@ void rsod_gui(const systask_postmortem_t* pminfo) {
 // Initializes system in emergency mode and shows RSOD
 static void init_and_show_rsod(const systask_postmortem_t* pminfo) {
   // Initialize the system's core services
-  // (If the kernel crashes in emergency mode, we are out of options
-  // and show the RSOD without attempting to re-enter emergency mode)
-  system_init(&rsod_terminal);
+  // Pass NULL as error handler => if the system crashes in this routine
+  // we will not try to re-enter emergency mode again and reboot directly.
+  system_init(NULL);
 
   // Initialize necessary drivers
   display_init(DISPLAY_RESET_CONTENT);
