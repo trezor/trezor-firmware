@@ -17,7 +17,6 @@
 from __future__ import annotations
 
 from copy import copy
-from enum import Enum
 
 import construct as c
 from construct_classes import Struct, subcon
@@ -27,18 +26,12 @@ from . import util
 from .models import Model
 
 __all__ = [
-    "SecmonType",
     "SecmonHeader",
     "SecmonImage",
 ]
 
 
-class SecmonType(Enum):
-    SECMON = b"TSEC"
-
-
 class SecmonHeader(Struct):
-    magic: SecmonType
     header_len: int
     code_length: int
     version: tuple[int, int, int, int]
@@ -52,7 +45,7 @@ class SecmonHeader(Struct):
     # fmt: off
     SUBCON = c.Struct(
         "_start_offset" / c.Tell,
-        "magic" / EnumAdapter(c.Bytes(4), SecmonType),
+        "magic" / c.Const(b"TSEC"),
         "header_len" / c.Int32ul,
         "code_length" / c.Int32ul,
         "version" / TupleAdapter(c.Int8ul, c.Int8ul, c.Int8ul, c.Int8ul),
@@ -88,8 +81,6 @@ class SecmonImage(Struct):
 
     SUBCON = c.Struct(
         "header" / SecmonHeader.SUBCON,
-        "_header_end" / c.Tell,
-        "_code_offset" / c.Tell,
         "code" / c.Bytes(c.this.header.code_length),
         c.Terminated,
     )
