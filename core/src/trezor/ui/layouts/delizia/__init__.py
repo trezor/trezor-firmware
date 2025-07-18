@@ -724,36 +724,32 @@ def confirm_value(
     is_data: bool = True,
     chunkify: bool = False,
     info_items: Iterable[tuple[str, str]] | None = None,
-    info_title: str | None = None,
-    chunkify_info: bool = False,
     cancel: bool = False,
 ) -> Awaitable[None]:
     """General confirmation dialog, used by many other confirm_* functions."""
 
-    info_items = info_items or []
-    info_layout = trezorui_api.show_info_with_cancel(
-        title=info_title if info_title else TR.words__title_information,
-        items=info_items,
-        chunkify=chunkify_info,
+    from trezor.ui.layouts.menu import Menu, confirm_with_menu
+
+    main = trezorui_api.confirm_value(
+        title=title,
+        value=value,
+        is_data=is_data,
+        description=description,
+        subtitle=subtitle,
+        verb=verb,
+        info=bool(info_items),
+        hold=hold,
+        chunkify=chunkify,
+        cancel=cancel,
+        external_menu=True,
     )
 
-    return with_info(
-        trezorui_api.confirm_value(
-            title=title,
-            value=value,
-            is_data=is_data,
-            description=description,
-            subtitle=subtitle,
-            verb=verb,
-            info=bool(info_items),
-            hold=hold,
-            chunkify=chunkify,
-            cancel=cancel,
-        ),
-        info_layout,
-        br_name,
-        br_code,
+    info_items = info_items or []
+    menu = Menu.root(
+        (create_details(name, value) for name, value in info_items),
+        cancel=TR.buttons__cancel,
     )
+    return confirm_with_menu(main, menu, br_name, br_code)
 
 
 def confirm_properties(
