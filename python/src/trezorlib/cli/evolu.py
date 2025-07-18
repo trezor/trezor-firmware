@@ -29,7 +29,7 @@ if t.TYPE_CHECKING:
 
 @click.group(name="evolu")
 def cli() -> None:
-    """Evolu commands. Evolu is a local first storage framework. See https://github.com/evoluhq/evolu"""
+    """Evolu commands (DEBUG only). Evolu is a local first storage framework. See https://github.com/evoluhq/evolu"""
 
 
 @cli.command()
