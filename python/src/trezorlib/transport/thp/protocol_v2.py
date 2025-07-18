@@ -190,8 +190,7 @@ class ProtocolV2Channel(Channel):
             if payload == b"\x05":
                 raise exceptions.DeviceLockedException()
             else:
-                err = _get_error_from_int(payload[0])
-                raise Exception("Received ThpError: " + err)
+                raise exceptions.ThpError(_get_error_from_int(payload[0]))
 
         if not header.is_handshake_init_response():
             LOG.error("Received message is not a valid handshake init response message")
@@ -233,8 +232,7 @@ class ProtocolV2Channel(Channel):
         if not header.is_handshake_comp_response():
             LOG.error("Received message is not a valid handshake completion response")
             if control_byte.is_error(header.ctrl_byte):
-                err = _get_error_from_int(data[0])
-                raise Exception("Received ThpError: " + err)
+                raise exceptions.ThpError(_get_error_from_int(data[0]))
         trezor_state = self._noise.decrypt(bytes(data))
         assert trezor_state == b"\x00" or trezor_state == b"\x01"
         self._send_ack_1()
@@ -245,8 +243,7 @@ class ProtocolV2Channel(Channel):
         if not header.is_ack() or len(payload) > 0:
             LOG.error("Received message is not a valid ACK")
             if control_byte.is_error(header.ctrl_byte):
-                err = _get_error_from_int(payload[0])
-                raise Exception("Received ThpError: " + err)
+                raise exceptions.ThpError(_get_error_from_int(payload[0]))
 
     def _send_ack_0(self):
         LOG.debug("sending ack 0")
@@ -294,8 +291,7 @@ class ProtocolV2Channel(Channel):
             # TODO fix this recursion
             return self.read_and_decrypt()
         if control_byte.is_error(header.ctrl_byte):
-            err = _get_error_from_int(raw_payload[0])
-            raise Exception("Received ThpError: " + err)
+            raise exceptions.ThpError(_get_error_from_int(raw_payload[0]))
         if not header.is_encrypted_transport():
             LOG.error(
                 "Trying to decrypt not encrypted message! ("
