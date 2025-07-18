@@ -29,7 +29,7 @@ import xdist
 from _pytest.python import IdMaker
 from _pytest.reports import TestReport
 
-from trezorlib import debuglink, log, messages, models
+from trezorlib import debuglink, exceptions, log, messages, models
 from trezorlib.client import ProtocolVersion
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.device import apply_settings
@@ -334,7 +334,7 @@ def _client_unlocked(
             if _raw_client.is_invalidated:
                 try:
                     _raw_client = _raw_client.get_new_client()
-                except Exception as e:
+                except exceptions.ThpError as e:
                     LOG.error(f"Failed to re-create a client: {e}")
                     sleep(LOCK_TIME)
                     try:
