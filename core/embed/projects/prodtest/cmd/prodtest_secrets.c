@@ -59,7 +59,7 @@ secbool set_random_secret(uint8_t slot, size_t length) {
 
   secbool ret = secfalse;
 
-  if (secret_key_writable(slot) != sectrue) {
+  if (secret_key_writable(slot) == sectrue) {
     if (generate_random_secret(secret, sizeof(secret)) != sectrue) {
       ret = secfalse;
       goto cleanup;
@@ -79,6 +79,9 @@ secbool set_random_secret(uint8_t slot, size_t length) {
       ret = secfalse;
       goto cleanup;
     }
+  } else {
+    ret = secfalse;
+    goto cleanup;
   }
   ret = sectrue;
 
