@@ -1135,13 +1135,24 @@ impl FirmwareUI for UICaesar {
     }
 
     fn show_thp_pairing_code(
-        _title: TString<'static>,
-        _description: TString<'static>,
-        _code: TString<'static>,
+        title: TString<'static>,
+        description: TString<'static>,
+        code: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"show_thp_pairing_code not supported",
-        ))
+        Self::confirm_action(
+            title,
+            Some(code),
+            Some(description),
+            None,
+            None,
+            None,
+            false,
+            false,
+            false,
+            false,
+            None,
+            false,
+        )
     }
 
     fn show_info(
