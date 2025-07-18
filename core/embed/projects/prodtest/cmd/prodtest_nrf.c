@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef USE_BLE
+#ifdef USE_NRF
 
 #include <trezor_rtl.h>
 
@@ -170,6 +170,19 @@ cleanup:
   nrf_update_in_progress = false;
 }
 
+static void prodtest_nrf_pair(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  if (nrf_test_pair()) {
+    cli_ok(cli, "");
+  } else {
+    cli_error(cli, CLI_ERROR, "Pairing failed.");
+  }
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -191,6 +204,13 @@ PRODTEST_CLI_CMD(
   .func = prodtest_nrf_update,
   .info = "Update nRF firmware",
   .args = "<phase> <hex-data>"
+  );
+
+PRODTEST_CLI_CMD(
+  .name = "nrf-pair",
+  .func = prodtest_nrf_pair,
+  .info = "Pair nRF chip",
+  .args = ""
 );
 
 #endif

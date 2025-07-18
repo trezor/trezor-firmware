@@ -229,4 +229,12 @@ bool nrf_test_gpio_stay_in_bld(void);
  * @return true if the GPIO behavior is correct; false otherwise
  */
 bool nrf_test_gpio_reserved(void);
+
+/**
+ * @brief Pair the NRF MCU with Trezor.
+ *
+ * @return true if pairing is successful; false otherwise
+ */
+bool nrf_test_pair(void);
+
 ///////////////////////////////////////////////////////////////////////////////
