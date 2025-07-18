@@ -17,7 +17,6 @@ if __debug__:
 
 if utils.USE_THP:
     ALLOW_WHILE_LOCKED = (
-        MessageType.ThpCreateNewSession,
         MessageType.EndSession,
         MessageType.GetFeatures,
         MessageType.Cancel,
