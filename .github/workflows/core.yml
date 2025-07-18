@@ -697,16 +697,18 @@ jobs:
 
   core_ui_comment:
     name: Post comment with UI diff URLs
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     needs:
       - param
     steps:
       - uses: actions/checkout@v4
       - run: sleep 1m  # try avoiding github api rate limit
-      - run: python ci/make_pull_comment.py "${{ github.run_id }}" '${{ needs.param.outputs.test_lang }}' > ${{ env.PULL_COMMENT_PATH }}
+      - run: |
+          python ci/make_pull_comment.py "${{ github.run_id }}" '${{ needs.param.outputs.test_lang }}' > ${{ env.PULL_COMMENT_PATH }}
+          cat ${{ env.PULL_COMMENT_PATH }} >> $GITHUB_STEP_SUMMARY
       - uses: ./.github/actions/ui-comment
-
+        if: github.event_name == 'pull_request'
       - name: Configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
