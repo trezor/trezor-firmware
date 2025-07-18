@@ -373,9 +373,9 @@ def test_credential_phase(client: Client) -> None:
     protocol._noise.noise_protocol.cipher_state_encrypt.n = 250
 
     protocol._send_message(ButtonAck())
-    with pytest.raises(Exception) as e:
+    with pytest.raises(exceptions.ThpError) as e:
         protocol.read(1)
-    assert e.value.args[0] == "Received ThpError: DECRYPTION FAILED"
+    assert e.value.args[0] == "DECRYPTION FAILED"
 
     # Connect using credential with confirmation and ask for autoconnect credential.
     protocol = prepare_protocol_for_handshake(client)
@@ -424,9 +424,9 @@ def test_credential_phase(client: Client) -> None:
     protocol._noise.noise_protocol.cipher_state_encrypt.n = 100
 
     protocol._send_message(ButtonAck())
-    with pytest.raises(Exception) as e:
+    with pytest.raises(exceptions.ThpError) as e:
         protocol.read(1)
-    assert e.value.args[0] == "Received ThpError: DECRYPTION FAILED"
+    assert e.value.args[0] == "DECRYPTION FAILED"
 
     # Connect using autoconnect credential - should work the same as above
     protocol = prepare_protocol_for_handshake(client)
