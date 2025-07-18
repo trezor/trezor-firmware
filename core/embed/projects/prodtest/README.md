@@ -327,7 +327,9 @@ Updates the nRF firmware.
 
 
 ### nrf-pair
-Writes the pairing secret to the nRF chip to pair it with the MCU. The command `secrets-init` must be executed before calling this command.
+Writes the pairing secret to the nRF chip to pair it with the MCU. 
+The command `secrets-init` must be executed before calling this command. 
+Pairing needs to be done before writing device ID in the OTP memory and before locking the Optiga chip.
 
 Example:
 ```
