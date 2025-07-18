@@ -178,18 +178,6 @@ class Transaction:
                     (account, index, AddressType.AddressReadOnly)
                 )
 
-    def _get_combined_accounts(self) -> list[Account]:
-        accounts: list[Account] = []
-        for address in self.addresses:
-            accounts.append(address)
-
-        for rw_address in self.address_lookup_tables_rw_addresses:
-            accounts.append(rw_address)
-        for ro_address in self.address_lookup_tables_ro_addresses:
-            accounts.append(ro_address)
-
-        return accounts
-
     def _create_instructions(self) -> None:
         # Instructions reference accounts by index in this combined list.
         combined_accounts = (
