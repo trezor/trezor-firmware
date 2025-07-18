@@ -990,6 +990,7 @@ class TR:
     words__instructions: str = "Instructions"
     words__keep_it_safe: str = "Keep it safe!"
     words__know_what_your_doing: str = "Continue only if you know what you are doing!"
+    words__memo: str = "Memo"
     words__my_trezor: str = "My Trezor"
     words__no: str = "No"
     words__not_recommended: str = "Not recommended!"

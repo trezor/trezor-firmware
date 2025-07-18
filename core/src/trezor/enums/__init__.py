@@ -234,6 +234,7 @@ if TYPE_CHECKING:
         Haptic = 21
         BLE = 22
         NFC = 23
+        Tron = 24
 
     class SdProtectOperationType(IntEnum):
         DISABLE = 0
@@ -368,6 +369,9 @@ if TYPE_CHECKING:
         CodeEntry = 2
         QrCode = 3
         NFC = 4
+
+    class TronRawContractType(IntEnum):
+        TransferContract = 1
 
     class MessageType(IntEnum):
         Initialize = 0
@@ -616,6 +620,12 @@ if TYPE_CHECKING:
         NostrPubkey = 2002
         NostrSignEvent = 2003
         NostrEventSignature = 2004
+        TronGetAddress = 3001
+        TronAddress = 3002
+        TronSignTx = 3003
+        TronSignature = 3004
+        TronContractRequest = 3005
+        TronTransferContract = 3101
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

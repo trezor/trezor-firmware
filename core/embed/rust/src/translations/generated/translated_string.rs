@@ -1450,6 +1450,7 @@ pub enum TranslatedString {
     address__title_provider_address = 1053,  // "Provider address"
     address__title_refund_address = 1054,  // "Refund address"
     words__assets = 1055,  // "Assets"
+    words__memo = 1056,  // "Memo"
 }
 
 impl TranslatedString {
@@ -3212,6 +3213,7 @@ impl TranslatedString {
             (Self::address__title_provider_address, "Provider address"),
             (Self::address__title_refund_address, "Refund address"),
             (Self::words__assets, "Assets"),
+            (Self::words__memo, "Memo"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4617,6 +4619,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__instructions, Self::words__instructions),
         (Qstr::MP_QSTR_words__keep_it_safe, Self::words__keep_it_safe),
         (Qstr::MP_QSTR_words__know_what_your_doing, Self::words__know_what_your_doing),
+        (Qstr::MP_QSTR_words__memo, Self::words__memo),
         (Qstr::MP_QSTR_words__my_trezor, Self::words__my_trezor),
         (Qstr::MP_QSTR_words__no, Self::words__no),
         (Qstr::MP_QSTR_words__not_recommended, Self::words__not_recommended),

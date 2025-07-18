@@ -872,6 +872,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__instructions;
   MP_QSTR_words__keep_it_safe;
   MP_QSTR_words__know_what_your_doing;
+  MP_QSTR_words__memo;
   MP_QSTR_words__my_trezor;
   MP_QSTR_words__no;
   MP_QSTR_words__not_recommended;

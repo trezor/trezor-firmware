@@ -61,6 +61,7 @@ on one page here.
     solana             Solana commands.
     stellar            Stellar commands.
     tezos              Tezos commands.
+    tron               Tron commands.
     usb-reset          Perform USB reset on stuck devices.
     version            Show version of trezorctl/trezorlib.
     wait-for-emulator  Wait until Trezor Emulator comes up.

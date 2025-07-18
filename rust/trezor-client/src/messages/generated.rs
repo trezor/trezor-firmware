@@ -291,6 +291,16 @@ trezor_message_impl! {
     TezosPublicKey => MessageType_TezosPublicKey,
 }
 
+#[cfg(feature = "tron")]
+trezor_message_impl! {
+    TronGetAddress => MessageType_TronGetAddress,
+    TronAddress => MessageType_TronAddress,
+    TronSignTx => MessageType_TronSignTx,
+    TronSignature => MessageType_TronSignature,
+    TronContractRequest => MessageType_TronContractRequest,
+    TronTransferContract => MessageType_TronTransferContract,
+}
+
 #[cfg(feature = "webauthn")]
 trezor_message_impl! {
     WebAuthnListResidentCredentials => MessageType_WebAuthnListResidentCredentials,
