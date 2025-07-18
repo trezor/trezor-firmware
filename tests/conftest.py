@@ -60,6 +60,8 @@ if t.TYPE_CHECKING:
 HERE = Path(__file__).resolve().parent
 CORE = HERE.parent / "core"
 
+LOG = logging.getLogger(__name__)
+
 LOCK_TIME = 0.2
 
 # So that we see details of failed asserts from this module
@@ -333,9 +335,6 @@ def _client_unlocked(
                 try:
                     _raw_client = _raw_client.get_new_client()
                 except Exception as e:
-                    import logging
-
-                    LOG = logging.getLogger(__name__)
                     LOG.error(f"Failed to re-create a client: {e}")
                     sleep(LOCK_TIME)
                     try:
