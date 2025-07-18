@@ -180,12 +180,6 @@ static void try_to_upgrade(void) {
   boot_header_fingerprint_t fp;
   boot_header_calc_fingerprint(hdr, code_address, &fp);
 
-  // Check if the fingerprint matches the one in the UCB
-  if (memcmp(&ucb.fingerprint, &fp, sizeof(boot_header_fingerprint_t)) != 0) {
-    // The fingerprint does not match, we cannot proceed with the upgrade
-    return;
-  }
-
   // Check whether the new bootloader is properly signed
   if (sectrue != boot_header_check_signature(hdr, &fp)) {
     return;

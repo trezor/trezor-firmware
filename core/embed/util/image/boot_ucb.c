@@ -26,6 +26,7 @@
 #include <rtl/sizedefs.h>
 #include <sys/mpu.h>
 #include <util/boot_header.h>
+#include <util/image_hash_conf.h>
 #include <util/boot_ucb.h>
 #include <util/flash.h>
 
@@ -89,17 +90,37 @@ secbool boot_ucb_read(boot_ucb_t* ucb) {
     }
   }
 
+  uint8_t hash[32];  // Hash of the header
+
+  IMAGE_HASH_CTX ctx;
+  IMAGE_HASH_INIT(&ctx);
+  IMAGE_HASH_UPDATE(&ctx, (const uint8_t*)hdr, hdr->header_size);
+  IMAGE_HASH_FINAL(&ctx, hash);
+
+  if (memcmp(hash, ucb->hash, sizeof(hash)) != 0) {
+    // Header hash does not match the one stored in UCB
+    // This can happen if the header was modified after the UCB was written.
+    return secfalse;
+  }
+
   return sectrue;
 }
 
-secbool boot_ucb_write(uint32_t header_address, uint32_t code_address,
-                       boot_header_fingerprint_t* fingerprint) {
+secbool boot_ucb_write(uint32_t header_address, uint32_t code_address) {
+
   boot_ucb_t ucb = {
       .magic = BOOT_UCB_MAGIC,
       .header_address = header_address,
       .code_address = code_address,
-      .fingerprint = *fingerprint,
   };
+
+  // Calculate the hash of the header
+  boot_header_t* hdr = (boot_header_t*)header_address;
+
+  IMAGE_HASH_CTX ctx;
+  IMAGE_HASH_INIT(&ctx);
+  IMAGE_HASH_UPDATE(&ctx, (const uint8_t*)hdr, hdr->header_size);
+  IMAGE_HASH_FINAL(&ctx, ucb.hash);
 
   secbool result = secfalse;
 

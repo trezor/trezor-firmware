@@ -33,10 +33,12 @@ typedef struct {
   uint32_t header_address;
   /** Address of the start of the bootloader code in flash memory */
   uint32_t code_address;
-  /** Fingerprint of the bootloader image.
-   * This is used to verify that the bootloader image has not changed
+  /** Padding to align the structure to 16-bytes */
+  uint32_t padding;
+  /** SHA-256 hash of the boot header
+   * This is used to verify that the boot header has not changed
    * since the UCB was written. */
-  boot_header_fingerprint_t fingerprint;
+  uint8_t hash[32];
 
 } boot_ucb_t;
 
@@ -63,11 +65,9 @@ secbool boot_ucb_read(boot_ucb_t* ucb);
  * @param code_address Address of the start of the bootloader code in flash
  *        memory. If the code is not present, it is expected that only the
  *        header will be updated and this parameter should be set to 0.
- * @param fingerprint Pointer to the fingerprint of the bootloader image.
  * @return sectrue if the write was successful, secfalse otherwise.
  */
-secbool boot_ucb_write(uint32_t header_address, uint32_t code_address,
-                       boot_header_fingerprint_t* fingerprint);
+secbool boot_ucb_write(uint32_t header_address, uint32_t code_address);
 
 /**
  * Erases the update control block in flash memory.
