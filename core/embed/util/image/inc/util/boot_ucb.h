@@ -21,6 +21,8 @@
 
 #include <trezor_types.h>
 
+#include <util/boot_header.h>
+
 /**
  * Update control block structure sitting on fixed address in flash memory
  */
@@ -31,9 +33,11 @@ typedef struct {
   uint32_t header_address;
   /** Address of the start of the bootloader code in flash memory */
   uint32_t code_address;
-  /** Padding for 16-byte alignment to allow writing this structure
-   *  to flash memory as a quad-word or series of quad-words. */
-  uint32_t padding;
+  /** Fingerprint of the bootloader image.
+   * This is used to verify that the bootloader image has not changed
+   * since the UCB was written. */
+  boot_header_fingerprint_t fingerprint;
+
 } boot_ucb_t;
 
 /**
@@ -59,9 +63,11 @@ secbool boot_ucb_read(boot_ucb_t* ucb);
  * @param code_address Address of the start of the bootloader code in flash
  *        memory. If the code is not present, it is expected that only the
  *        header will be updated and this parameter should be set to 0.
+ * @param fingerprint Pointer to the fingerprint of the bootloader image.
  * @return sectrue if the write was successful, secfalse otherwise.
  */
-secbool boot_ucb_write(uint32_t header_address, uint32_t code_address);
+secbool boot_ucb_write(uint32_t header_address, uint32_t code_address,
+                       boot_header_fingerprint_t* fingerprint);
 
 /**
  * Erases the update control block in flash memory.

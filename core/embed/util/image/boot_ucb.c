@@ -92,11 +92,13 @@ secbool boot_ucb_read(boot_ucb_t* ucb) {
   return sectrue;
 }
 
-secbool boot_ucb_write(uint32_t header_address, uint32_t code_address) {
+secbool boot_ucb_write(uint32_t header_address, uint32_t code_address,
+                       boot_header_fingerprint_t* fingerprint) {
   boot_ucb_t ucb = {
       .magic = BOOT_UCB_MAGIC,
       .header_address = header_address,
       .code_address = code_address,
+      .fingerprint = *fingerprint,
   };
 
   secbool result = secfalse;
@@ -113,7 +115,6 @@ secbool boot_ucb_write(uint32_t header_address, uint32_t code_address) {
   }
 
   // Write the UCB
-  ENSURE_ALIGNMENT(sizeof(boot_ucb_t), 16);
   if (sectrue !=
       flash_area_write_data(&BOOTUCB_AREA, 0, (const void*)&ucb, sizeof(ucb))) {
     goto cleanup;

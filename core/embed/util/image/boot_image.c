@@ -278,7 +278,7 @@ void boot_image_replace(const boot_image_t *image) {
   ensure(boot_header_check_signature(hdr, &fp), "Invalid bootloader signature");
 
   // Write to update control block
-  ensure(boot_ucb_write(header_address, code_address),
+  ensure(boot_ucb_write(header_address, code_address, &fp),
          "Failed to write boot UCB");
 }
 
