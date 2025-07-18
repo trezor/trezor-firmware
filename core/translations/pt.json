@@ -49,9 +49,9 @@
       "Eckhart": "Se o endereço estiver errado, contacte o suporte da Trezor: trezor.io/support."
     },
     "address__cancel_receive": "Cancelar recebimento",
+    "address__coin_address_template": "{0} endereço",
     "address__confirmed": "Endereço de recebimento confirmado",
     "address__public_key": "Chave pública",
-    "address__coin_address_template": "{0} endereço",
     "address__public_key_confirmed": "Chave pública confirmada",
     "address__qr_code": "QR code",
     "address__title_cosigner": "Coautor",

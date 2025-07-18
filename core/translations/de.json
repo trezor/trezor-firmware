@@ -49,9 +49,9 @@
       "Eckhart": "Stimmt Adresse nicht, kontaktiere Trezor-Support: trezor.io/support."
     },
     "address__cancel_receive": "Empfang abbrechen",
+    "address__coin_address_template": "{0} Adresse",
     "address__confirmed": "Empfängeradresse bestätigt",
     "address__public_key": "Public Key",
-    "address__coin_address_template": "{0} Adresse",
     "address__public_key_confirmed": "Public Key bestätigt",
     "address__qr_code": "QR-Code",
     "address__title_cosigner": "Mitunterzeich.",

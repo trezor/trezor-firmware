@@ -49,9 +49,9 @@
       "Eckhart": "Si la dirección de destino no coincide, contacta trezor.io/support."
     },
     "address__cancel_receive": "Cancelar destino",
+    "address__coin_address_template": "{0} dirección",
     "address__confirmed": "Dirección de destino confirmada",
     "address__public_key": "Clave pública",
-    "address__coin_address_template": "{0} dirección",
     "address__public_key_confirmed": "Clave pública confirmada",
     "address__qr_code": "Código QR",
     "address__title_cosigner": "Cofirmante",

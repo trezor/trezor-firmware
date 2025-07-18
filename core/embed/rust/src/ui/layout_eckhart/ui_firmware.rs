@@ -1460,6 +1460,7 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn tutorial() -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+        let flow = flow::show_tutorial::new_show_tutorial()?;
+        Ok(flow)
     }
 }
