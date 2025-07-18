@@ -551,7 +551,6 @@ class Channel:
         if not only_once and self._can_clear_loop():
             if __debug__:
                 self._log("clearing loop from channel")
-            pass
             loop.clear()
 
     def _encrypt(self, buffer: utils.BufferType, noise_payload_len: int) -> None:
