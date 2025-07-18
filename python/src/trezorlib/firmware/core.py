@@ -266,7 +266,7 @@ class BootHeader(Struct):
 class BootHeaderUnath(Struct):
     """Unathenticated part of the boot header."""
 
-    merkle_path: list[bytes]
+    merkle_proof: list[bytes]
     slh_signatures: list[bytes]
     ec_signatures: list[bytes]
     firmware_type: int
@@ -274,7 +274,7 @@ class BootHeaderUnath(Struct):
     # fmt: off
     SUBCON = c.Struct(
         # Merkle proof
-        "merkle_path" / c.PrefixedArray(c.Int32ul, c.Bytes(32)),
+        "merkle_proof" / c.PrefixedArray(c.Int32ul, c.Bytes(32)),
 
         # Signatures
         "slh_signatures" / c.Bytes(7856)[2],
@@ -311,9 +311,9 @@ class BootableImage(Struct):
     def get_hash_params(self) -> util.FirmwareHashParameters:
         return Model.from_hw_model(self.header.hw_model).hash_params()
 
-    def set_merkle_path(self, path: list[bytes]) -> None:
-        """Set the Merkle path for the boot header."""
-        self.unauth.merkle_path = path
+    def set_merkle_proof(self, proof: list[bytes]) -> None:
+        """Set the Merkle proof for the boot header."""
+        self.unauth.merkle_proof = proof
         self.header.auth_len = self.header.header_len - len(self.unauth.build())
 
     def digest(self) -> bytes:
@@ -330,8 +330,8 @@ class BootableImage(Struct):
         auth_header = self.header.build()
         hash = hash_fn(prefix0 + auth_header + hash).digest()
 
-        # Add the Merkle path
-        for node in self.unauth.merkle_path:
+        # Add the Merkle proof
+        for node in self.unauth.merkle_proof:
             if node < hash:
                 hash = hash_fn(prefix1 + node + hash).digest()
             else:

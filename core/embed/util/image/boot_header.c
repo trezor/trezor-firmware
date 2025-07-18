@@ -220,13 +220,13 @@ const boot_header_merkle_proof_t* boot_header_merkle_proof(
       (boot_header_merkle_proof_t*)((uintptr_t)hdr + hdr->auth_size);
 
   // Check if the path length is in reasonable limits
-  if (proof->path_len > BOOT_HEADER_MERKLE_PATH_MAXLEN) {
+  if (proof->node_count > BOOT_HEADER_MERKLE_PROOF_MAXLEN) {
     return NULL;
   }
 
   // Calculate the Merkle proof structure size
   size_t proof_size = sizeof(boot_header_merkle_proof_t) +
-                      proof->path_len * sizeof(proof->path[0]);
+                      proof->node_count * sizeof(proof->nodes[0]);
 
   // Check if the Merkle proof is completely within the header
   if (hdr->auth_size + proof_size > hdr->header_size) {
@@ -246,7 +246,7 @@ const boot_header_unauth_t* boot_header_unauth(const boot_header_t* hdr) {
   }
 
   size_t proof_size = sizeof(boot_header_merkle_proof_t) +
-                      proof->path_len * sizeof(proof->path[0]);
+                      proof->node_count * sizeof(proof->nodes[0]);
 
   // Unauthenticated part is located right after the Merkle proof
   boot_header_unauth_t* unauth =
@@ -283,9 +283,9 @@ void boot_header_calc_fingerprint(const boot_header_t* hdr,
 
   const boot_header_merkle_proof_t* proof = boot_header_merkle_proof(hdr);
 
-  // Add the Merkle path nodes to the hash
-  for (size_t i = 0; i < proof->path_len; i++) {
-    const merkle_path_node_t* node = &proof->path[i];
+  // Add the Merkle proof nodes to the hash
+  for (size_t i = 0; i < proof->node_count; i++) {
+    const merkle_proof_node_t* node = &proof->nodes[i];
     IMAGE_HASH_INIT(&ctx);
     IMAGE_HASH_UPDATE(&ctx, prefix1, sizeof(prefix1));
     if (memcmp(node, fp, sizeof(fp->bytes)) < 0) {

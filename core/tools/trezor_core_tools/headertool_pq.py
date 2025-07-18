@@ -24,10 +24,10 @@ def no_echo(*args, **kwargs):
 )
 @click.option(
     "-M",
-    "--merkle-path",
-    "merkle_path",
+    "--merkle-proof",
+    "merkle_proof",
     multiple=True,
-    help="Merkle path node. Can be repeated.",
+    help="Merkle proof node. Can be repeated.",
 )
 @click.option("-q", "--quiet", is_flag=True, help="Do not print anything.")
 @click.argument("firmware_file", type=click.File("rb+"))
@@ -36,7 +36,7 @@ def cli(
     verbose,
     dry_run,
     sign_dev_keys,
-    merkle_path,
+    merkle_proof,
     print_digest,
     quiet,
 ):
@@ -75,7 +75,7 @@ def cli(
         echo = click.echo
 
     # Add 16 items
-    fw.set_merkle_path(list(map(bytes.fromhex, merkle_path)))
+    fw.set_merkle_proof(list(map(bytes.fromhex, merkle_proof)))
 
     echo("Signing with dev keys...", err=True)
     fw.sign_with_devkeys()

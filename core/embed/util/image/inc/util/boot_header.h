@@ -29,8 +29,8 @@
 #define BOOT_HEADER_PQ_SIGNATURE_LEN (7856)
 /** Length of EC signature in bytes */
 #define BOOT_HEADER_EC_SIGNATURE_LEN (64)
-/** Number of reserved slots for Merkle path */
-#define BOOT_HEADER_MERKLE_PATH_MAXLEN (256)
+/** Number of reserved slots for Merkle proof */
+#define BOOT_HEADER_MERKLE_PROOF_MAXLEN (256)
 /** Maximum accepted size of the bootloader code in bytes */
 #define BOOT_HEADER_CODE_MAXSIZE (1024 * 1024)
 
@@ -93,11 +93,11 @@ typedef struct __attribute__((packed)) {
 } boot_header_t;
 
 /**
- * Merkle path/tree node
+ * Merkle proof node
  */
 typedef struct {
   uint8_t bytes[32];
-} merkle_path_node_t;
+} merkle_proof_node_t;
 
 /**
  * Merkle proof structure used in the boot header used to
@@ -107,9 +107,9 @@ typedef struct {
  */
 typedef struct __attribute__((packed)) {
   /** Number of nodes in the table below */
-  uint32_t path_len;
-  /** Merkle tree nodes used for root calculation */
-  merkle_path_node_t path[0];
+  uint32_t node_count;
+  /** Merkle proof used for root calculation */
+  merkle_proof_node_t nodes[0];
 
 } boot_header_merkle_proof_t;
 
