@@ -26,16 +26,17 @@ async def get_keys(_msg: EvoluGetKeys) -> EvoluKeys:
     )
     seed = await get_seed()
     node1 = Slip21Node(seed)
+    node1.derive_path(_EVOLU_KEY_PATH_PREFIX)
     node2 = node1.clone()
     node3 = node1.clone()
 
-    node1.derive_path(_EVOLU_KEY_PATH_PREFIX + [b"Owner Id"])
+    node1.derive_path([b"Owner Id"])
     owner_id = node1.key()
 
-    node2.derive_path(_EVOLU_KEY_PATH_PREFIX + [b"Write Key"])
+    node2.derive_path([b"Write Key"])
     write_key = node2.key()
 
-    node3.derive_path(_EVOLU_KEY_PATH_PREFIX + [b"Encryption Key"])
+    node3.derive_path([b"Encryption Key"])
     encryption_key = node3.key()
 
     return EvoluKeys(
