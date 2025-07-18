@@ -114,8 +114,8 @@ if [ "$SIGN" -eq 1 ]; then
     echo "Signed hash $HASH, signature0 $SIGNATURE0, signature1 $SIGNATURE1"
 
     run_under_ncs_subshell \
-        "python ./scripts/insert_signatures_hex.py ./build/$APP_DIR/zephyr/zephyr.prep.hex $SIGNATURE0 $SIGNATURE1 -o ./build/$APP_DIR/zephyr/zephyr.signed_trz.hex && \
-         python ./scripts/insert_signatures_bin.py ./build/$APP_DIR/zephyr/zephyr.prep.bin $SIGNATURE0 $SIGNATURE1 -o ./build/$APP_DIR/zephyr/zephyr.signed_trz.bin && \
+        "python ./scripts/insert_signatures.py ./build/$APP_DIR/zephyr/zephyr.prep.hex $SIGNATURE0 $SIGNATURE1 -o ./build/$APP_DIR/zephyr/zephyr.signed_trz.hex && \
+         python ./scripts/insert_signatures.py ./build/$APP_DIR/zephyr/zephyr.prep.bin $SIGNATURE0 $SIGNATURE1 -o ./build/$APP_DIR/zephyr/zephyr.signed_trz.bin && \
          mergehex -m build/mcuboot/zephyr/zephyr.hex build/$APP_DIR/zephyr/zephyr.signed_trz.hex -o build/zephyr.merged.signed_trz.hex"
 fi
 
