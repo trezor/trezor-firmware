@@ -15,9 +15,16 @@ if TYPE_CHECKING:
     T = TypeVar("T")
 
 
+async def _cancel_default() -> trezorui_api.UiResult:
+    return trezorui_api.CONFIRMED
+
+
 class Menu:
     def __init__(
-        self, name: str, children: Sequence["Details"], cancel: str | None = None
+        self,
+        name: str,
+        children: Sequence["Details"],
+        cancel: "Cancel | None" = None,
     ) -> None:
         self.name = name
         self.children = children
@@ -25,8 +32,10 @@ class Menu:
 
     @classmethod
     def root(
-        cls, children: Iterable["Details"] = (), cancel: str | None = None
+        cls, children: Iterable["Details"] = (), cancel: "str | Cancel | None" = None
     ) -> Self:
+        if isinstance(cancel, str):
+            cancel = Cancel(cancel, _cancel_default)
         return cls("", children=tuple(children), cancel=cancel)
 
 
@@ -45,6 +54,10 @@ class Details:
         )
 
 
+class Cancel(Details):
+    pass
+
+
 async def show_menu(
     root: Menu,
     raise_on_cancel: ExceptionType = ActionCancelled,
@@ -60,12 +73,19 @@ async def show_menu(
             layout = trezorui_api.select_menu(
                 items=[child.name for child in menu.children],
                 current=current_item,
-                cancel=menu.cancel,
+                cancel=menu.cancel and menu.cancel.name,
             )
-            choice = await interact(
-                layout, br_name=None, raise_on_cancel=raise_on_cancel
-            )
-            if isinstance(choice, int):
+            choice = await interact(layout, br_name=None, raise_on_cancel=None)
+            if choice is trezorui_api.CANCELLED:
+                if menu.cancel:
+                    result = await menu.cancel.factory()
+                    assert result in (trezorui_api.CONFIRMED, trezorui_api.CANCELLED)
+                    if result is trezorui_api.CONFIRMED:
+                        # cancellation is confirmed - raise an exception
+                        raise raise_on_cancel
+                    # cancellation is not confirmed - back to the menu
+                    continue
+            elif isinstance(choice, int):
                 # go one level down
                 menu_path.append(choice)
                 current_item = 0

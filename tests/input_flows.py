@@ -424,10 +424,10 @@ class InputFlowSignMessageInfo(InputFlowBase):
     def input_flow_delizia(self) -> BRGeneratorType:
         yield
         # show address/message info
+        self.client.ui._visit_menu_items()
+        # cancel signature
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
-        self.debug.click(self.debug.screen_buttons.menu())
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
         # address mismatch? yes!
         self.debug.swipe_up()
         yield
