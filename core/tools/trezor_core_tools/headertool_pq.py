@@ -43,7 +43,7 @@ def cli(
     """Manage firmware headers.
 
     This tool supports new bootloader header (TRZQ) with PQC signature. Other
-    legacy images are still stuppoerted by headertool.py.
+    legacy images are still supported by headertool.py.
 
     Run with no options on a file to dump information about that file.
 
