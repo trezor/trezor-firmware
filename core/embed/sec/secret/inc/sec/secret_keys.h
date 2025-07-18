@@ -56,4 +56,11 @@ secbool secret_key_tropic_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
 
 #endif  // USE_TROPIC
 
+#ifdef USE_NRF
+
+#define NRF_PAIRING_SECRET_SIZE 32
+secbool secret_key_nrf_pairing(uint8_t dest[NRF_PAIRING_SECRET_SIZE]);
+
+#endif
+
 #endif  // SECURE_MODE

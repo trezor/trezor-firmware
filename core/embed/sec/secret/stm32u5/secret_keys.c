@@ -39,6 +39,7 @@
 #define KEY_INDEX_TROPIC_PAIRING_UNPRIVILEGED 3
 #define KEY_INDEX_TROPIC_PAIRING_PRIVILEGED 4
 #define KEY_INDEX_TROPIC_MASKING 5
+#define KEY_INDEX_NRF_PAIRING 6
 
 static secbool secret_key_derive_sym(uint8_t slot, uint16_t index,
                                      uint16_t subindex,
@@ -154,6 +155,16 @@ secbool secret_key_tropic_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
 }
 
 #endif  // USE_TROPIC
+
+#ifdef USE_NRF
+
+secbool secret_key_nrf_pairing(uint8_t dest[NRF_PAIRING_SECRET_SIZE]) {
+  _Static_assert(NRF_PAIRING_SECRET_SIZE == SHA256_DIGEST_LENGTH);
+  return secret_key_derive_sym(SECRET_UNPRIVILEGED_MASTER_KEY_SLOT,
+                               KEY_INDEX_NRF_PAIRING, 0, dest);
+}
+
+#endif
 
 #else  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
 

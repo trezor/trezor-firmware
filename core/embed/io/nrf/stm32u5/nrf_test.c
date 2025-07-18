@@ -24,23 +24,30 @@
 #include <trezor_rtl.h>
 
 #include <io/nrf.h>
+#include <sec/secret_keys.h>
 #include <sys/systick.h>
 
 #include "../nrf_internal.h"
+#include "sys/irq.h"
 
 typedef enum {
   PRODTEST_CMD_SPI_DATA = 0x00,
   PRODTEST_CMD_UART_DATA = 0x01,
   PRODTEST_CMD_SET_OUTPUT = 0x02,
+  PRODTEST_CMD_PAIR = 0x03,
 } prodtest_cmd_t;
 
 typedef enum {
   PRODTEST_RESP_SPI = 0x00,
   PRODTEST_RESP_UART = 0x01,
+  PRODTEST_RESP_SUCCESS = 0x02,
+  PRODTEST_RESP_FAILURE = 0x03,
 } prodtest_resp_t;
 
 typedef struct {
   bool answered_spi;
+  bool success;
+  bool failure;
 
 } nrf_test_t;
 
@@ -50,6 +57,12 @@ void nrf_test_cb(const uint8_t *data, uint32_t len) {
   switch (data[0]) {
     case PRODTEST_RESP_SPI:
       g_nrf_test.answered_spi = true;
+      break;
+    case PRODTEST_RESP_SUCCESS:
+      g_nrf_test.success = true;
+      break;
+    case PRODTEST_RESP_FAILURE:
+      g_nrf_test.failure = true;
       break;
     default:
       break;
@@ -211,5 +224,42 @@ cleanup:
   nrf_send_msg(NRF_SERVICE_PRODTEST, data, sizeof(data), NULL, NULL);
   return result;
 }
+
+#ifdef SECURE_MODE
+bool nrf_test_pair(void) {
+  nrf_register_listener(NRF_SERVICE_PRODTEST, nrf_test_cb);
+
+  g_nrf_test.success = false;
+  g_nrf_test.failure = false;
+
+  uint8_t data[NRF_PAIRING_SECRET_SIZE + 1] = {PRODTEST_CMD_PAIR};
+
+  if (sectrue != secret_key_nrf_pairing(&data[1])) {
+    return false;
+  }
+
+  if (!nrf_send_msg(NRF_SERVICE_PRODTEST, data, sizeof(data), NULL, NULL)) {
+    return false;
+  }
+
+  uint32_t timeout = ticks_timeout(100);
+
+  while (!ticks_expired(timeout)) {
+    irq_key_t irq_key = irq_lock();
+    bool success = g_nrf_test.success;
+    bool failure = g_nrf_test.failure;
+    irq_unlock(irq_key);
+
+    if (success) {
+      return true;
+    }
+    if (failure) {
+      return false;
+    }
+  }
+
+  return false;
+}
+#endif
 
 #endif

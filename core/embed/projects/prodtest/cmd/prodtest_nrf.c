@@ -17,12 +17,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef USE_BLE
+#ifdef USE_NRF
 
+#include <trezor_model.h>
 #include <trezor_rtl.h>
 
 #include <io/nrf.h>
 #include <rtl/cli.h>
+#include <util/flash_otp.h>
+
+#include "prodtest_optiga.h"
 
 static void prodtest_nrf_communication(cli_t* cli) {
   cli_trace(cli, "Testing SPI communication...");
@@ -170,6 +174,30 @@ cleanup:
   nrf_update_in_progress = false;
 }
 
+static void prodtest_nrf_pair(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  if (OPTIGA_LOCKED_FALSE != get_optiga_locked_status(cli)) {
+    cli_error(cli, CLI_ERROR,
+              "Optiga is not unlocked. Pairing is not allowed.");
+    return;
+  }
+
+  if (secfalse != flash_otp_is_locked(FLASH_OTP_BLOCK_DEVICE_ID)) {
+    cli_error(cli, CLI_ERROR,
+              "OTP Device ID block is locked. Pairing is not allowed.");
+  }
+
+  if (nrf_test_pair()) {
+    cli_ok(cli, "");
+  } else {
+    cli_error(cli, CLI_ERROR, "Pairing failed.");
+  }
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -191,6 +219,13 @@ PRODTEST_CLI_CMD(
   .func = prodtest_nrf_update,
   .info = "Update nRF firmware",
   .args = "<phase> <hex-data>"
+  );
+
+PRODTEST_CLI_CMD(
+  .name = "nrf-pair",
+  .func = prodtest_nrf_pair,
+  .info = "Pair nRF chip",
+  .args = ""
 );
 
 #endif
