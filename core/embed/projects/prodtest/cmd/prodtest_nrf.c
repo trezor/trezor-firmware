@@ -19,10 +19,14 @@
 
 #ifdef USE_NRF
 
+#include <trezor_model.h>
 #include <trezor_rtl.h>
 
 #include <io/nrf.h>
 #include <rtl/cli.h>
+#include <util/flash_otp.h>
+
+#include "prodtest_optiga.h"
 
 static void prodtest_nrf_communication(cli_t* cli) {
   cli_trace(cli, "Testing SPI communication...");
@@ -174,6 +178,17 @@ static void prodtest_nrf_pair(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
     return;
+  }
+
+  if (OPTIGA_LOCKED_FALSE != get_optiga_locked_status(cli)) {
+    cli_error(cli, CLI_ERROR,
+              "Optiga is not unlocked. Pairing is not allowed.");
+    return;
+  }
+
+  if (secfalse != flash_otp_is_locked(FLASH_OTP_BLOCK_DEVICE_ID)) {
+    cli_error(cli, CLI_ERROR,
+              "OTP Device ID block is locked. Pairing is not allowed.");
   }
 
   if (nrf_test_pair()) {
