@@ -3,7 +3,7 @@
 insert_signatures.py
 
 A script to append two TLV entries (signatures) into the unprotected TLV area
-of a Zephyr image in either raw binary or Intel HEX format, updating the existing 
+of a Zephyr image in either raw binary or Intel HEX format, updating the existing
 TLV-info header length.
 
 Usage:
@@ -22,7 +22,7 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="Append signature TLVs to an existing unprotected TLV area in a Zephyr image.")
     # Input file to modify
-    parser.add_argument('input_file', 
+    parser.add_argument('input_file',
         help='Input file (.bin for raw binary or .hex for Intel HEX format)')
 
     # Signature values (hex strings) must represent exactly 64 bytes each
@@ -39,12 +39,12 @@ def parse_args():
         help='Output file (defaults to input_inserted.[bin|hex])')
 
     args = parser.parse_args()
-    
+
     # Validate input file extension
     ext = os.path.splitext(args.input_file)[1].lower()
     if ext not in ['.bin', '.hex']:
         sys.exit("Error: Input file must have .bin or .hex extension")
-    
+
     return args
 
 
@@ -95,7 +95,7 @@ def process_hex_file(input_file):
     end_addr = ih.maxaddr()
     size = end_addr - start_addr + 1
     data = bytearray(ih.tobinarray(start=start_addr, size=size))
-    
+
     return data, start_addr
 
 
