@@ -276,7 +276,7 @@ fn flow_between_shares_simple(
                 TR::words__recovery_share.into(),
                 theme::menu_item_title(),
                 TR::buttons__more_info.into(),
-                None,
+                &theme::TEXT_MENU_ITEM_SUBTITLE,
             ))
             .with_item(Button::new_menu_item(
                 TR::buttons__cancel.into(),

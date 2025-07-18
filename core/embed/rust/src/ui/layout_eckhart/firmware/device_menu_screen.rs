@@ -219,7 +219,7 @@ impl<'a> DeviceMenuScreen<'a> {
             // TODO: this should be a boolean feature of the device
             item_device.with_subtext(Some((
                 "Connected".into(),
-                Some(&Button::SUBTEXT_STYLE_GREEN),
+                Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
             )));
             unwrap!(items.push(item_device));
         }
@@ -238,8 +238,9 @@ impl<'a> DeviceMenuScreen<'a> {
             "Manage paired devices".into(),
             Some(Action::GoTo(manage_devices_index)),
         );
-        manage_paired_item
-            .with_subtext(connected_subtext.map(|t| (t, Some(&Button::SUBTEXT_STYLE_GREEN))));
+        manage_paired_item.with_subtext(
+            connected_subtext.map(|t| (t, Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN))),
+        );
         unwrap!(items.push(manage_paired_item));
         unwrap!(items.push(MenuItem::new(
             "Pair new device".into(),
@@ -334,8 +335,9 @@ impl<'a> DeviceMenuScreen<'a> {
             "Pair & connect".into(),
             Some(Action::GoTo(pair_and_connect_index)),
         );
-        item_pair_and_connect
-            .with_subtext(connected_subtext.map(|t| (t, Some(&Button::SUBTEXT_STYLE_GREEN))));
+        item_pair_and_connect.with_subtext(
+            connected_subtext.map(|t| (t, Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN))),
+        );
         unwrap!(items.push(item_pair_and_connect));
         unwrap!(items.push(MenuItem::new(
             "Settings".into(),
@@ -369,6 +371,8 @@ impl<'a> DeviceMenuScreen<'a> {
                 let mut menu = VerticalMenu::<ShortMenuVec>::empty().with_separators();
                 for item in &submenu.items {
                     let button = if let Some((subtext, subtext_style)) = item.subtext {
+                        let subtext_style =
+                            subtext_style.unwrap_or(&theme::TEXT_MENU_ITEM_SUBTITLE);
                         Button::new_menu_item_with_subtext(
                             item.text,
                             *item.stylesheet,
