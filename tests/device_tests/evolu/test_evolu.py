@@ -20,18 +20,13 @@ from trezorlib import evolu
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.models("core")]
 
-ALL_MNEMONIC = "all all all all all all all all all all all all"
-
 EXPECTED_OWNER_ID = "0940d9f3e307f3bcedbcc8361ae136b619603a686386ecd329c3ed2337cb831d"
 EXPECTED_WRITE_KEY = "2a65e7495bc4edc8ad365c5278404467fc2ec1b3e6978e2406f59329d5357f3e"
 EXPECTED_ENCRYPTION_KEY = (
     "9ad06a43e9d4739502d59c8cafdaa6babb0481cdd0b3acb8455f080b38847642"
 )
 
-pytestmark_all_mnemonic = pytest.mark.setup_client(mnemonic=ALL_MNEMONIC)
 
-
-@pytestmark_all_mnemonic
 def test_get_evolu_keys(client):
     """Test Evolu key derivation against known test vectors."""
     response = evolu.get_evolu_keys(client)
