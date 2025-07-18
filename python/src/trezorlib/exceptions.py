@@ -117,3 +117,7 @@ class DeviceLockedException(TrezorException):
 
 class UnexpectedCodeEntryTagException(TrezorException):
     pass
+
+
+class ThpError(TrezorException):
+    pass
