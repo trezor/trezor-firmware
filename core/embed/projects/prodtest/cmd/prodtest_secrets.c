@@ -60,26 +60,25 @@ secbool set_random_secret(uint8_t slot, size_t length) {
   secbool ret = secfalse;
 
   if (secret_key_writable(slot) != sectrue) {
-    if (generate_random_secret(secret, sizeof(secret)) != sectrue) {
-      ret = secfalse;
-      goto cleanup;
-    }
-
-    if (secret_key_set(slot, secret, sizeof(secret)) != sectrue) {
-      ret = secfalse;
-      goto cleanup;
-    }
-
-    if (secret_key_get(slot, secret_read, sizeof(secret_read)) != sectrue) {
-      ret = secfalse;
-      goto cleanup;
-    }
-
-    if (memcmp(secret, secret_read, sizeof(secret)) != 0) {
-      ret = secfalse;
-      goto cleanup;
-    }
+    goto cleanup;
   }
+
+  if (generate_random_secret(secret, sizeof(secret)) != sectrue) {
+    goto cleanup;
+  }
+
+  if (secret_key_set(slot, secret, sizeof(secret)) != sectrue) {
+    goto cleanup;
+  }
+
+  if (secret_key_get(slot, secret_read, sizeof(secret_read)) != sectrue) {
+    goto cleanup;
+  }
+
+  if (memcmp(secret, secret_read, sizeof(secret)) != 0) {
+    goto cleanup;
+  }
+
   ret = sectrue;
 
 cleanup:
