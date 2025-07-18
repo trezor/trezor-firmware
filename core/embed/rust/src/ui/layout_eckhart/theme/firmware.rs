@@ -143,6 +143,12 @@ pub const TEXT_CHECKLIST_INACTIVE: TextStyle = TextStyle::new(
     GREY_DARK,
 );
 
+pub const TEXT_MENU_ITEM_SUBTITLE: TextStyle =
+    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_22, GREY, BG, GREY, GREY);
+
+pub const TEXT_MENU_ITEM_SUBTITLE_GREEN: TextStyle =
+    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_22, GREEN, BG, GREEN, GREEN);
+
 const fn label_title(color: Color) -> TextStyle {
     TextStyle::new(fonts::FONT_SATOSHI_REGULAR_22, color, BG, color, color).with_line_spacing(-4)
 }
@@ -161,14 +167,6 @@ pub const fn label_title_danger() -> TextStyle {
 
 pub const fn label_title_warning() -> TextStyle {
     label_title(YELLOW)
-}
-
-pub const fn label_menu_item_subtitle() -> TextStyle {
-    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_22, GREY, BG, GREY, GREY)
-}
-
-pub const fn label_menu_item_subtitle_green() -> TextStyle {
-    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_22, GREEN, BG, GREEN, GREEN)
 }
 
 // Button styles

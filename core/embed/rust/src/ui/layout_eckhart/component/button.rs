@@ -17,9 +17,6 @@ use crate::{
 
 use super::super::theme;
 
-#[cfg(feature = "bootloader")]
-use super::super::fonts;
-
 pub enum ButtonMsg {
     Pressed,
     Released,
@@ -49,20 +46,6 @@ pub struct Button {
 }
 
 impl Button {
-    #[cfg(not(feature = "bootloader"))]
-    const DEFAULT_SUBTEXT_STYLE: TextStyle = theme::label_menu_item_subtitle();
-    #[cfg(feature = "bootloader")]
-    const DEFAULT_SUBTEXT_STYLE: TextStyle = theme::TEXT_NORMAL;
-    #[cfg(not(feature = "bootloader"))]
-    pub const SUBTEXT_STYLE_GREEN: TextStyle = theme::label_menu_item_subtitle_green();
-    #[cfg(feature = "bootloader")]
-    pub const SUBTEXT_STYLE_GREEN: TextStyle = TextStyle::new(
-        fonts::FONT_SATOSHI_REGULAR_38,
-        theme::GREEN,
-        theme::BG,
-        theme::GREEN,
-        theme::GREEN,
-    );
     const MENU_ITEM_RADIUS: u8 = 12;
     const MENU_ITEM_ALIGNMENT: Alignment = Alignment::Start;
     pub const MENU_ITEM_CONTENT_OFFSET: Offset = Offset::x(12);
@@ -104,7 +87,7 @@ impl Button {
         text: TString<'static>,
         stylesheet: ButtonStyleSheet,
         subtext: TString<'static>,
-        subtext_style: Option<&'static TextStyle>,
+        subtext_style: &'static TextStyle,
     ) -> Self {
         Self::with_text_and_subtext(text, subtext, subtext_style)
             .with_text_align(Self::MENU_ITEM_ALIGNMENT)
@@ -124,12 +107,12 @@ impl Button {
     pub fn with_text_and_subtext(
         text: TString<'static>,
         subtext: TString<'static>,
-        subtext_style: Option<&'static TextStyle>,
+        subtext_style: &'static TextStyle,
     ) -> Self {
         Self::new(ButtonContent::TextAndSubtext {
             text,
             subtext,
-            subtext_style: subtext_style.unwrap_or(&Self::DEFAULT_SUBTEXT_STYLE),
+            subtext_style,
         })
     }
 
