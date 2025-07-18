@@ -197,17 +197,17 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
 
 if 'boot_ucb' in FEATURES_AVAILABLE:
     PQ_SIGNATURE_PATH = 'vendor/sphincsplus/ref/'
-    CCFLAGS_MOD += '-DPARAMS=sphincs-sha2-128s -Wno-incompatible-pointer-types '
-    PQ_SIGNATURE_SOURCE = Glob(
-        PQ_SIGNATURE_PATH + '*.c',
-        exclude=[
-            PQ_SIGNATURE_PATH + 'rng.c',
-            PQ_SIGNATURE_PATH + '*haraka*.c',
-            PQ_SIGNATURE_PATH + '*robust.c',
-            PQ_SIGNATURE_PATH + '*shake*.c',
-            PQ_SIGNATURE_PATH + 'PQC*.c',
-        ],
-    )
+    CCFLAGS_MOD += '-DPARAMS=sphincs-sha2-128s '
+    PQ_SIGNATURE_SOURCE = [
+        'vendor/sphincsplus/ref/address.c',
+        'vendor/sphincsplus/ref/fors.c',
+        'vendor/sphincsplus/ref/hash_sha2.c',
+        'vendor/sphincsplus/ref/sha2.c',
+        'vendor/sphincsplus/ref/sign.c',
+        'vendor/sphincsplus/ref/thash_sha2_simple.c',
+        'vendor/sphincsplus/ref/utils.c',
+        'vendor/sphincsplus/ref/wots.c',
+    ]
 
 SOURCE_MOD += [
     'embed/util/translations/translations.c',
@@ -366,7 +366,9 @@ obj_program.extend(env.Object(source=SOURCE_FIRMWARE))
 obj_program.extend(env.Object(source=SOURCE_HAL))
 
 if 'boot_ucb' in FEATURES_AVAILABLE:
-    obj_program += env.Object(source=PQ_SIGNATURE_SOURCE)
+    obj_program += env.Object(
+        source=PQ_SIGNATURE_SOURCE, CCFLAGS="$CCFLAGS -Wno-incompatible-pointer-types"
+    )
 
 env.Replace(
     ALLSOURCES=source_files,
