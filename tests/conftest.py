@@ -440,8 +440,7 @@ def session(
 
     if _client_unlocked._setup_pin is not None:
         session.lock()
-    with ui_tests.screen_recording(_client_unlocked, request):
-        yield session
+    yield session
     # Calling session.end() is not needed since the device gets wiped later anyway.
 
 
