@@ -77,9 +77,9 @@ imgtool sign --version 0.1.0+0 --align 4 --header-size 0x200 -S 0x6c000 --pad-he
 imgtool dumpinfo  ./build/trezor-ble/zephyr/zephyr.prep.bin >> ./build/trezor-ble/zephyr/dump.txt
 python ./scripts/extract_hash.py ./build/trezor-ble/zephyr/dump.txt
 hash_signer -d e3d47ab7e90f15badb1a2fac8c082b727c3fa24f1238ad8607b67f720a63c4e9
-python ./scripts/insert_signatures_hex.py ./build/trezor-ble/zephyr/zephyr.prep.hex 0x82a2258db3da5c14ceddfff92e39531c873f870bad81a66506d706fd31da4ab4ad8e76d62686f0b0bbcf02dd4473d27b3bf0a2b98182d8b52bb2f1336eb7630d 0x0003 -o ./build/trezor-ble/zephyr/zephyr.signed_trz.hex
-python ./scripts/insert_signatures_bin.py ./build/trezor-ble/zephyr/zephyr.prep.bin 0x82a2258db3da5c14ceddfff92e39531c873f870bad81a66506d706fd31da4ab4ad8e76d62686f0b0bbcf02dd4473d27b3bf0a2b98182d8b52bb2f1336eb7630d 0x0003 -o ./build/trezor-ble/zephyr/zephyr.signed_trz.bin
-mergehex -m build/mcuboot/zephyr/zephyr.hex build/trezor-ble/zephyr/zephyr.signed_trz.hex -o build/trezor-ble/zephyr.merged.signed.hex
+python ./scripts/insert_signatures.py ./build/trezor-ble/zephyr/zephyr.prep.hex 0x82a2258db3da5c14ceddfff92e39531c873f870bad81a66506d706fd31da4ab4ad8e76d62686f0b0bbcf02dd4473d27b3bf0a2b98182d8b52bb2f1336eb7630d 0x0003 -o ./build/trezor-ble/zephyr/zephyr.signed_trz.hex
+python ./scripts/insert_signatures.py ./build/trezor-ble/zephyr/zephyr.prep.bin 0x82a2258db3da5c14ceddfff92e39531c873f870bad81a66506d706fd31da4ab4ad8e76d62686f0b0bbcf02dd4473d27b3bf0a2b98182d8b52bb2f1336eb7630d 0x0003 -o ./build/trezor-ble/zephyr/zephyr.signed_trz.bin
+python ../zephyr/scripts/build/mergehex.py  build/mcuboot/zephyr/zephyr.hex build/trezor-ble/zephyr/zephyr.signed_trz.hex -o build/trezor-ble/zephyr.merged.signed.hex
 west flash --hex-file ./build/trezor-ble/zephyr.merged.signed.hex
 ```
 
