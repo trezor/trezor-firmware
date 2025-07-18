@@ -3,7 +3,7 @@ from time import sleep
 
 import pytest
 
-from trezorlib import messages
+from trezorlib import exceptions, messages
 from trezorlib.client import ProtocolV2Channel
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
@@ -106,9 +106,9 @@ def test_concurrent_handshakes_1(client: Client) -> None:
 
     # The second host should not be able to interrupt the first host's handshake
     # until timeout (LOCK_TIME) has expired
-    with pytest.raises(Exception) as e:
+    with pytest.raises(exceptions.ThpError) as e:
         protocol_2._read_ack()
-    assert e.value.args[0] == "Received ThpError: TRANSPORT BUSY"
+    assert e.value.args[0] == "TRANSPORT BUSY"
 
     # Wait for LOCK_TIME to expire
     sleep(LOCK_TIME)
@@ -134,9 +134,9 @@ def test_concurrent_handshakes_1(client: Client) -> None:
     protocol_1._send_handshake_completion_request()
     protocol_1._read_ack()
 
-    with pytest.raises(Exception) as e:
+    with pytest.raises(exceptions.ThpError) as e:
         protocol_1._read_handshake_completion_response()
-    assert e.value.args[0] == "Received ThpError: UNALLOCATED CHANNEL"
+    assert e.value.args[0] == "UNALLOCATED CHANNEL"
 
 
 def test_concurrent_handshakes_2(client: Client) -> None:
@@ -152,9 +152,9 @@ def test_concurrent_handshakes_2(client: Client) -> None:
 
     # The second host should not be able to interrupt the first host's handshake
     # until timeout (LOCK_TIME) has expired
-    with pytest.raises(Exception) as e:
+    with pytest.raises(exceptions.ThpError) as e:
         protocol_2._read_ack()
-    assert e.value.args[0] == "Received ThpError: TRANSPORT BUSY"
+    assert e.value.args[0] == "TRANSPORT BUSY"
 
     # Wait for LOCK_TIME to expire
     sleep(LOCK_TIME)
@@ -174,10 +174,10 @@ def test_concurrent_handshakes_2(client: Client) -> None:
 
     protocol_1._send_handshake_completion_request()
 
-    with pytest.raises(Exception) as e:
+    with pytest.raises(exceptions.ThpError) as e:
         protocol_1._read_ack()
 
         # protocol_1._read_handshake_completion_response()
-    assert e.value.args[0] == "Received ThpError: TRANSPORT BUSY"
+    assert e.value.args[0] == "TRANSPORT BUSY"
 
     # TODO - test ACK fallback, test standard encrypted message fallback
