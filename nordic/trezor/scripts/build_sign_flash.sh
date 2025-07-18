@@ -116,7 +116,7 @@ if [ "$SIGN" -eq 1 ]; then
     run_under_ncs_subshell \
         "python ./scripts/insert_signatures.py ./build/$APP_DIR/zephyr/zephyr.prep.hex $SIGNATURE0 $SIGNATURE1 -o ./build/$APP_DIR/zephyr/zephyr.signed_trz.hex && \
          python ./scripts/insert_signatures.py ./build/$APP_DIR/zephyr/zephyr.prep.bin $SIGNATURE0 $SIGNATURE1 -o ./build/$APP_DIR/zephyr/zephyr.signed_trz.bin && \
-         mergehex -m build/mcuboot/zephyr/zephyr.hex build/$APP_DIR/zephyr/zephyr.signed_trz.hex -o build/zephyr.merged.signed_trz.hex"
+         python ../zephyr/scripts/build/mergehex.py build/mcuboot/zephyr/zephyr.hex build/$APP_DIR/zephyr/zephyr.signed_trz.hex -o build/zephyr.merged.signed_trz.hex"
 fi
 
 if [ "$FLASH" -eq 1 ]; then
