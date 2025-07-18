@@ -349,6 +349,7 @@ class Descriptor:
             ]
             logging.debug(f"found {len(self.files)} bitcoin-only files")
 
+        # message_types is a nested dict: message_name -> wire_enum -> wire_id
         self.message_types, self.wire_enum_extensions = self.get_wire_enums()
 
         # find messages and enums
@@ -457,6 +458,9 @@ class Descriptor:
             return message_types.pop()
         else:
             return None
+
+    def wire_enum_has_message(self, enum_name: str, message_name: str) -> bool:
+        return enum_name in self.message_types.get(message_name, {})
 
 
 class PythonRenderer:
@@ -718,9 +722,12 @@ class RustBlobRenderer:
         for en in wire_enum_names:
             name_qstr = self.qstr_map[en]
             for m in wire_messages:
-                result.append(
-                    WIRETYPE_ENTRY.build((name_qstr, m.wire_type, self.msg_map[m.name]))
-                )
+                if self.descriptor.wire_enum_has_message(en, m.name):
+                    result.append(
+                        WIRETYPE_ENTRY.build(
+                            (name_qstr, m.wire_type, self.msg_map[m.name])
+                        )
+                    )
         return b"".join(result)
 
 
