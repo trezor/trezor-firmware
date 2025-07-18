@@ -1,5 +1,5 @@
 use crate::ui::{
-    component::{Event, Label},
+    component::{base::Component, text::TextStyle, Event, Label},
     display::{self, toif::Toif, Color},
     geometry::{Alignment, Alignment2D, Offset, Point, Rect},
     layout::simplified::{process_frame_event, render, run, show},
@@ -25,8 +25,8 @@ use super::{
             button_cancel, button_confirm, button_wipe_confirm, BLD_BG, BLD_FG,
             TEXT_FW_FINGERPRINT, TEXT_WARNING, WELCOME_COLOR,
         },
-        button_default, BLUE, GREY, ICON_CHECKMARK, ICON_CLOSE, ICON_CROSS, RED, TEXT_NORMAL,
-        TEXT_SMALL_GREY,
+        button_default, BLACK, BLUE, GREY, ICON_CHECKMARK, ICON_CLOSE, ICON_CROSS, RED,
+        TEXT_NORMAL, TEXT_SMALL_GREY, WHITE,
     },
     UIEckhart, WAIT_FOR_RESTART_MESSAGE,
 };
@@ -428,9 +428,26 @@ impl BootloaderUI for UIEckhart {
         vendor_img: &'static [u8],
         wait: i32,
     ) {
-        let bg_color = if warning { RED } else { WELCOME_COLOR };
+        let bg_color = if warning {
+            Color::rgb(0xFF, 0, 0)
+        } else {
+            WELCOME_COLOR
+        };
 
         display::sync();
+
+        let pos = Point::new(0, 200);
+
+        let label_text = vendor_str.unwrap_or("");
+
+        const TEXT_WHITE: TextStyle =
+            TextStyle::new(fonts::FONT_SATOSHI_REGULAR_38, WHITE, BLACK, WHITE, WHITE);
+
+        let mut label = Label::new(label_text.into(), Alignment::Center, TEXT_WHITE);
+        label.place(Rect::from_top_left_and_size(
+            pos,
+            Offset::new(SCREEN.width(), label.text_height(SCREEN.width())),
+        ));
 
         render_on_display(None, Some(bg_color), |target| {
             // Draw vendor image if it's valid and has size of 120x120
@@ -451,14 +468,10 @@ impl BootloaderUI for UIEckhart {
             }
 
             // Draw vendor string if present
-            if let Some(text) = vendor_str {
-                let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5 - 50);
-                shape::Text::new(pos, text, fonts::FONT_SATOSHI_REGULAR_38)
-                    .with_align(Alignment::Center)
-                    .with_fg(BLD_FG) //COLOR_BL_BG
-                    .render(target);
+            if vendor_str.is_some() {
+                label.render(target);
 
-                let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5 - 25);
+                let pos = Point::new(SCREEN.width() / 2, 350);
 
                 let mut version_text: BootloaderString = String::new();
                 unwrap!(uwrite!(
@@ -482,15 +495,15 @@ impl BootloaderUI for UIEckhart {
                     let mut text: BootloaderString = String::new();
                     unwrap!(uwrite!(text, "starting in {} s", wait));
 
-                    let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5);
-                    shape::Text::new(pos, text.as_str(), fonts::FONT_SATOSHI_REGULAR_38)
+                    let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 40);
+                    shape::Text::new(pos, text.as_str(), fonts::FONT_SATOSHI_MEDIUM_26)
                         .with_align(Alignment::Center)
                         .with_fg(BLD_FG)
                         .render(target);
                 }
                 core::cmp::Ordering::Less => {
-                    let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5);
-                    shape::Text::new(pos, "click to continue ...", fonts::FONT_SATOSHI_REGULAR_38)
+                    let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 40);
+                    shape::Text::new(pos, "Tap to continue", fonts::FONT_SATOSHI_MEDIUM_26)
                         .with_align(Alignment::Center)
                         .with_fg(BLD_FG)
                         .render(target);
