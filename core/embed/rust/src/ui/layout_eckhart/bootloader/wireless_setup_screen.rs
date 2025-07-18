@@ -96,15 +96,14 @@ impl WirelessSetupScreen {
             .with_bg(theme::WHITE)
             .with_radius(4)
             .render(target);
-        // TODO: uncomment on space bump
-        // shape::ToifImage::new(
-        //     pad_area.center(),
-        //     theme::bootloader::ICON_QR_TREZOR_IO_START.toif,
-        // )
-        // .with_align(Alignment2D::CENTER)
-        // .with_fg(theme::WHITE)
-        // .with_bg(theme::BLACK)
-        // .render(target);
+        shape::ToifImage::new(
+            pad_area.center(),
+            theme::bootloader::ICON_QR_TREZOR_IO_START.toif,
+        )
+        .with_align(Alignment2D::CENTER)
+        .with_fg(theme::WHITE)
+        .with_bg(theme::BLACK)
+        .render(target);
     }
 }
 
