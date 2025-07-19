@@ -12,6 +12,17 @@ use crate::{
 };
 
 #[no_mangle]
+extern "C" fn screen_attach(layout: *mut c_layout_t) -> u32 {
+    // SAFETY: calling code is supposed to give us exclusive access to an already
+    // initialized layout
+    unsafe {
+        let mut layout = LayoutBuffer::<<ModelUI as BootloaderUI>::CLayoutType>::new(layout);
+        let layout = layout.get_mut();
+        layout.show()
+    }
+}
+
+#[no_mangle]
 extern "C" fn screen_event(layout: *mut c_layout_t, signalled: &sysevents_t) -> u32 {
     let e = parse_event(signalled);
     // SAFETY: calling code is supposed to give us exclusive access to an already
@@ -34,8 +45,7 @@ extern "C" fn screen_render(layout: *mut c_layout_t) {
 
 #[no_mangle]
 extern "C" fn screen_welcome(layout: *mut c_layout_t) {
-    let mut screen = <ModelUI as BootloaderUI>::CLayoutType::init_welcome();
-    screen.show();
+    let screen = <ModelUI as BootloaderUI>::CLayoutType::init_welcome();
     // SAFETY: calling code is supposed to give us exclusive access to the layout
     let mut layout = unsafe { LayoutBuffer::new(layout) };
     layout.store(screen);
@@ -104,8 +114,7 @@ extern "C" fn screen_unlock_bootloader_success() {
 
 #[no_mangle]
 extern "C" fn screen_menu(initial_setup: bool, layout: *mut c_layout_t) {
-    let mut screen = <ModelUI as BootloaderUI>::CLayoutType::init_menu(initial_setup);
-    screen.show();
+    let screen = <ModelUI as BootloaderUI>::CLayoutType::init_menu(initial_setup);
     // SAFETY: calling code is supposed to give us exclusive access to the layout
     let mut layout = unsafe { LayoutBuffer::new(layout) };
     layout.store(screen);
@@ -164,9 +173,7 @@ extern "C" fn screen_install_progress(progress: u16, initialize: bool, initial_s
 
 #[no_mangle]
 extern "C" fn screen_connect(initial_setup: bool, auto_update: bool, layout: *mut c_layout_t) {
-    let mut screen =
-        <ModelUI as BootloaderUI>::CLayoutType::init_connect(initial_setup, auto_update);
-    screen.show();
+    let screen = <ModelUI as BootloaderUI>::CLayoutType::init_connect(initial_setup, auto_update);
     // SAFETY: calling code is supposed to give us exclusive access to the layout
     let mut layout = unsafe { LayoutBuffer::new(layout) };
     layout.store(screen);
@@ -197,8 +204,7 @@ extern "C" fn screen_pairing_mode(
     layout: *mut c_layout_t,
 ) {
     let name = unsafe { from_c_array(name, name_len).unwrap_or("") };
-    let mut screen = <ModelUI as BootloaderUI>::CLayoutType::init_pairing_mode(initial_setup, name);
-    screen.show();
+    let screen = <ModelUI as BootloaderUI>::CLayoutType::init_pairing_mode(initial_setup, name);
     // SAFETY: calling code is supposed to give us exclusive access to the layout
     let mut layout = unsafe { LayoutBuffer::new(layout) };
     layout.store(screen);
@@ -212,8 +218,7 @@ extern "C" fn screen_wireless_setup(
     layout: *mut c_layout_t,
 ) {
     let name = unsafe { from_c_array(name, name_len).unwrap_or("") };
-    let mut screen = <ModelUI as BootloaderUI>::CLayoutType::init_wireless_setup(name);
-    screen.show();
+    let screen = <ModelUI as BootloaderUI>::CLayoutType::init_wireless_setup(name);
     // SAFETY: calling code is supposed to give us exclusive access to the layout
     let mut layout = unsafe { LayoutBuffer::new(layout) };
     layout.store(screen);

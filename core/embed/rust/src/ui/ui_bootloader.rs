@@ -7,7 +7,7 @@ pub trait BootloaderLayoutType {
         unimplemented!();
     }
 
-    fn show(&mut self);
+    fn show(&mut self) -> u32;
     fn init_welcome() -> Self;
     fn init_menu(initial_setup: bool) -> Self;
     fn init_connect(initial_setup: bool, auto_update: bool) -> Self;

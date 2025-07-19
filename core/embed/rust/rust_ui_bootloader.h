@@ -8,6 +8,9 @@
 
 // todo: use bindgen to bind return values to rust
 
+// send attach event to the layout
+uint32_t screen_attach(c_layout_t* layout);
+
 // common event function for screens that need UI + communication
 uint32_t screen_event(c_layout_t* layout, sysevents_t* signalled);
 
