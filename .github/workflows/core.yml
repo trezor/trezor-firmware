@@ -697,7 +697,8 @@ jobs:
 
   core_ui_comment:
     name: Post comment with UI diff URLs
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    # skip UI comment job on external PRs (see #5381)
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     needs:
       - param
