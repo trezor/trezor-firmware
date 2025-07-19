@@ -7,7 +7,7 @@ use crate::ui::component::Event;
 
 pub trait ProdtestLayoutType {
     fn event(&mut self, event: Option<Event>) -> u32;
-    fn show(&mut self);
+    fn show(&mut self) -> u32;
     fn init_welcome(id: Option<&'static str>) -> Self;
 }
 

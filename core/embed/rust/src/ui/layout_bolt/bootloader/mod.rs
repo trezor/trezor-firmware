@@ -158,7 +158,7 @@ impl BootloaderLayoutType for BootloaderLayout {
         }
     }
 
-    fn show(&mut self) {
+    fn show(&mut self) -> u32 {
         match self {
             BootloaderLayout::Welcome(f) => show(f, true),
             BootloaderLayout::Menu(f) => show(f, true),
