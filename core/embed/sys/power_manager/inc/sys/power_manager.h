@@ -193,11 +193,21 @@ pm_status_t pm_charging_disable(void);
 pm_status_t pm_charging_set_max_current(uint16_t current_ma);
 
 /**
- * @brief Set the battery State of Charge limit for operations
- * @param limit SoC limit percentage (0-100%)
+ * @brief Set the battery State of Charge precharge target.
+ *
+ * Charging controller will continously compare taget SoC charging voltage from
+ * battery model (temperature dependant) with the actual battery voltage and if
+ * the battery voltage is above the target, charging is stopped. If the battery
+ * voltage also cross the charging voltage target, Fuel gauge SoC estimate is
+ * enforced with the target value.
+ *
+ * Setting value to `100` disables the precharge target and charging cycle will
+ * be driven with PMIC driver.
+ *
+ * @param target SoC target percentage (0-100%)
  * @return pm_status_t Status code indicating success or failure
  */
-pm_status_t pm_set_soc_limit(uint8_t limit);
+pm_status_t pm_set_soc_target(uint8_t target);
 
 /**
  * @brief Suspends driver activity so the CPU can enter low-power mode.
