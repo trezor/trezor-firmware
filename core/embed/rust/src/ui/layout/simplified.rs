@@ -5,7 +5,7 @@ use crate::ui::event::ButtonEvent;
 #[cfg(feature = "touch")]
 use crate::ui::event::TouchEvent;
 use crate::ui::{
-    component::{Component, EventCtx, Never},
+    component::{base::AttachType, Component, EventCtx, Never},
     display, CommonUI, ModelUI,
 };
 
@@ -70,7 +70,7 @@ pub fn touch_unpack(event: u32) -> Option<TouchEvent> {
     TouchEvent::new(event_type, ex as _, ey as _).ok()
 }
 
-pub(crate) fn render(frame: &mut impl Component) {
+pub fn render(frame: &mut impl Component) {
     display::sync();
     render_on_display(None, Some(Color::black()), |target| {
         frame.render(target);
@@ -98,6 +98,16 @@ where
 
 pub fn run(frame: &mut impl Component<Msg = impl ReturnToC>) -> u32 {
     frame.place(ModelUI::SCREEN);
+
+    let e = Event::Attach(AttachType::Initial);
+    let mut ctx = EventCtx::new();
+
+    let msg = frame.event(&mut ctx, e);
+
+    if let Some(message) = msg {
+        return message.return_to_c();
+    }
+
     ModelUI::fadeout();
     render(frame);
     ModelUI::fadein();
@@ -225,8 +235,17 @@ pub fn run(frame: &mut impl Component<Msg = impl ReturnToC>) -> u32 {
     }
 }
 
-pub fn show(frame: &mut impl Component, fading: bool) {
+pub fn show(frame: &mut impl Component<Msg = impl ReturnToC>, fading: bool) -> u32 {
     frame.place(ModelUI::SCREEN);
+
+    let e = Event::Attach(AttachType::Initial);
+    let mut ctx = EventCtx::new();
+
+    let msg = frame.event(&mut ctx, e);
+
+    if let Some(message) = msg {
+        return message.return_to_c();
+    }
 
     if fading && display::backlight() > 0 {
         ModelUI::fadeout()
@@ -237,4 +256,6 @@ pub fn show(frame: &mut impl Component, fading: bool) {
     if fading {
         ModelUI::fadein()
     };
+
+    0
 }

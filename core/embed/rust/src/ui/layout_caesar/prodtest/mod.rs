@@ -31,7 +31,7 @@ impl ProdtestLayoutType for ProdtestLayout {
         }
     }
 
-    fn show(&mut self) {
+    fn show(&mut self) -> u32 {
         match self {
             ProdtestLayout::Welcome(f) => show(f, true),
         }
