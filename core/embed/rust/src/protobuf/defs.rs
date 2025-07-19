@@ -234,3 +234,17 @@ unsafe fn get_enum(enum_offset: u16) -> EnumDef {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::micropython::qstr::Qstr;
+
+    #[test]
+    fn wire_type_basic_lookup() {
+        // SignTx: 15
+        assert!(find_msg_offset_by_wire(Qstr::MP_QSTR_MessageType.to_u16(), 15).is_some());
+        // Guaranteed empty.
+        assert!(find_msg_offset_by_wire(Qstr::MP_QSTR_CONFIRMED.to_u16(), 15).is_none());
+    }
+}
