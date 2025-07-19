@@ -32,8 +32,8 @@
 #include <sys/sysevent.h>
 #include <sys/system.h>
 #include <sys/systick.h>
-#include <util/bl_check.h>
 #include <util/board_capabilities.h>
+#include <util/boot_image.h>
 #include <util/image.h>
 #include <util/option_bytes.h>
 #include <util/rsod.h>
@@ -97,10 +97,6 @@
 
 #ifdef USE_TOUCH
 #include <io/touch.h>
-#endif
-
-#ifdef USE_TRUSTZONE
-#include <sys/trustzone.h>
 #endif
 
 void drivers_init() {
@@ -318,11 +314,6 @@ static void kernel_panic(const systask_postmortem_t *pminfo) {
 int main(void) {
   // Initialize system's core services
   system_init(&kernel_panic);
-
-#ifdef USE_TRUSTZONE
-  // Configure unprivileged access for the coreapp
-  tz_init();
-#endif
 
   // Initialize hardware drivers
   drivers_init();
