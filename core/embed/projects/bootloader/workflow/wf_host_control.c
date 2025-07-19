@@ -92,6 +92,16 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
   awaited.read_ready |= 1 << SYSHANDLE_POWER_MANAGER;
 #endif
 
+  uint32_t res = screen_attach(wait_layout);
+
+  if (res != 0) {
+    if (ui_action_result != NULL) {
+      *ui_action_result = res;
+    }
+    result = WF_OK_UI_ACTION;
+    goto exit_host_control;
+  }
+
   for (;;) {
     sysevents_t signalled = {0};
 
