@@ -129,9 +129,7 @@ async def handle_received_message(
     ABP.set_expected_receive_seq_bit(ctx.channel_cache, 1 - seq_bit)
 
     try:
-        _handle_message_to_app_or_channel(
-            ctx, payload_length, message_length, ctrl_byte
-        )
+        _handle_message_to_app_or_channel(ctx, message_length, ctrl_byte)
     except ThpUnallocatedSessionError as e:
         error_message = Failure(code=FailureType.ThpUnallocatedSession)
         await ctx.write(error_message, e.session_id)
@@ -211,7 +209,6 @@ async def handle_ack(ctx: Channel, ack_bit: int) -> None:
 
 def _handle_message_to_app_or_channel(
     ctx: Channel,
-    payload_length: int,
     message_length: int,
     ctrl_byte: int,
 ) -> None:
@@ -221,7 +218,7 @@ def _handle_message_to_app_or_channel(
         return _handle_state_ENCRYPTED_TRANSPORT(ctx, message_length)
 
     if state == ChannelState.TH1:
-        return _handle_state_TH1(ctx, payload_length, message_length, ctrl_byte)
+        return _handle_state_TH1(ctx, message_length, ctrl_byte)
 
     if state == ChannelState.TH2:
         return _handle_state_TH2(ctx, message_length, ctrl_byte)
@@ -234,7 +231,6 @@ def _handle_message_to_app_or_channel(
 
 def _handle_state_TH1(
     ctx: Channel,
-    payload_length: int,
     message_length: int,
     ctrl_byte: int,
 ) -> None:
@@ -242,7 +238,7 @@ def _handle_state_TH1(
         log.debug(__name__, "handle_state_TH1", iface=ctx.iface)
     if not control_byte.is_handshake_init_req(ctrl_byte):
         raise ThpError("Message received is not a handshake init request!")
-    if not payload_length == PUBKEY_LENGTH + CHECKSUM_LENGTH:
+    if message_length != INIT_HEADER_LENGTH + PUBKEY_LENGTH + CHECKSUM_LENGTH:
         raise ThpError("Message received is not a valid handshake init request!")
 
     if not config.is_unlocked():
