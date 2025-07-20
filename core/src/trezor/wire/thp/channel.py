@@ -24,13 +24,7 @@ from trezor.wire.errors import WireBufferError
 
 from . import ENCRYPTED, ChannelState, PacketHeader, ThpDecryptionError, ThpError
 from . import alternating_bit_protocol as ABP
-from . import (
-    control_byte,
-    crypto,
-    interface_manager,
-    memory_manager,
-    received_message_handler,
-)
+from . import control_byte, crypto, interface_manager, memory_manager
 from .checksum import CHECKSUM_LENGTH
 from .transmission_loop import TransmissionLoop
 from .writer import (
@@ -141,18 +135,11 @@ class Channel:
 
     # READ and DECRYPT
 
-    def receive_packet(self, packet: utils.BufferType) -> Awaitable[None] | None:
+    def receive_packet(self, packet: utils.BufferType) -> memoryview | None:
         if __debug__:
             self._log("receive packet")
 
-        task = self._handle_received_packet(packet)
-        if task is not None:
-            return task
-
-        if self.expected_payload_length == 0:  # Reading failed TODO
-            from trezor.wire.thp import ThpErrorType
-
-            return self.write_error(ThpErrorType.TRANSPORT_BUSY)
+        self._handle_received_packet(packet)
 
         try:
             buffer = memory_manager.get_existing_read_buffer(self.get_channel_id_int())
@@ -169,7 +156,7 @@ class Channel:
 
         if self.expected_payload_length + INIT_HEADER_LENGTH == self.bytes_read:
             self._finish_message()
-            return received_message_handler.handle_received_message(self, buffer)
+            return buffer
         elif self.expected_payload_length + INIT_HEADER_LENGTH > self.bytes_read:
             self.is_cont_packet_expected = True
             if __debug__:
@@ -220,12 +207,7 @@ class Channel:
         if not self.is_cont_packet_expected:
             raise ThpError("Continuation packet is not expected, ignoring")
 
-        try:
-            buffer = memory_manager.get_existing_read_buffer(self.get_channel_id_int())
-        except WireBufferError:
-            self.set_channel_state(ChannelState.INVALIDATED)
-            # TODO ? self.clear() or raise Decryption error?
-            pass  # TODO handle device busy, channel kaput
+        buffer = memory_manager.get_existing_read_buffer(self.get_channel_id_int())
         self._buffer_packet_data(buffer, packet, CONT_HEADER_LENGTH)
 
     def _buffer_packet_data(
