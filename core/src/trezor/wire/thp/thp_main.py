@@ -16,6 +16,7 @@ from . import (
     checksum,
     control_byte,
     get_channel_allocation_response,
+    received_message_handler,
     writer,
 )
 from .channel import Channel
@@ -127,9 +128,9 @@ async def _handle_allocated(
         raise ThpError("Channel has different WireInterface")
 
     if channel.get_channel_state() != ChannelState.UNALLOCATED:
-        x = channel.receive_packet(packet)
-        if x is not None:
-            await x
+        msg = channel.receive_packet(packet)
+        if msg is not None:
+            await received_message_handler.handle_received_message(channel, msg)
 
 
 async def _handle_unallocated(iface: WireInterface, cid: int, packet: bytes) -> None:
