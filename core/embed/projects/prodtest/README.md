@@ -337,6 +337,14 @@ nrf-pair
 OK
 ```
 
+### nrf-verify-pairing
+Verifies the pairing between the main MCU and the nRF chip. The command returns `OK` if the pairing is valid, or `ERROR` if it is not.
+Example:
+```
+nrf-verify-pairing
+OK
+```
+
 
 ### touch-draw
 Starts a drawing canvas, where user can draw with finger on pen. Canvas is exited by sending CTRL+C command.
