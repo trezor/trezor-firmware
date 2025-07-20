@@ -31,7 +31,7 @@ from . import (
     ThpTransportBusy,
 )
 from . import alternating_bit_protocol as ABP
-from . import control_byte, crypto, interface_manager, memory_manager
+from . import control_byte, crypto, interface_manager
 from .checksum import CHECKSUM_LENGTH
 from .memory_manager import encode_into_buffer
 from .transmission_loop import TransmissionLoop
@@ -96,7 +96,7 @@ class Channel:
         # Shared variables
         self.buffer: utils.BufferType = bytearray(self.iface.TX_PACKET_LEN)
         self.bytes_read: int = 0
-        self.expected_payload_length: int = 0
+        self.rx_buffer: memoryview | None = None
         self.is_cont_packet_expected: bool = False
         self.sessions: dict[int, GenericSessionContext] = {}
 
@@ -121,7 +121,7 @@ class Channel:
 
     def clear(self) -> None:
         clear_sessions_with_channel_id(self.channel_id)
-        memory_manager.release_lock_if_owner(self.get_channel_id_int())
+        self.rx_buffer = None
         self.channel_cache.clear()
 
     # ACCESS TO CHANNEL_DATA
@@ -174,78 +174,37 @@ class Channel:
             self._log("receive packet")
 
         self._handle_received_packet(packet)
+        assert self.rx_buffer is not None
 
-        try:
-            if control_byte.is_ack(packet[0]):
-                buffer = memoryview(packet)[: INIT_HEADER_LENGTH + CHECKSUM_LENGTH]
-            else:
-                buffer = memory_manager.get_existing_read_buffer(
-                    self.get_channel_id_int()
-                )
-            if __debug__:
-                self._log("self.buffer: ", hexlify_if_bytes(buffer))
-        except WireBufferError:
-            if __debug__:
-                self._log(
-                    "getting read buffer failed - ",
-                    str(WireBufferError.__name__),
-                    logger=log.warning,
-                )
-            pass  # TODO ??
+        if len(self.rx_buffer) == self.bytes_read:
+            rx_buffer = self.rx_buffer
+            self.rx_buffer = None
+            self.bytes_read = 0
+            self.is_cont_packet_expected = False
+            return rx_buffer
 
-        if self.expected_payload_length + INIT_HEADER_LENGTH == self.bytes_read:
-            self._finish_message()
-            return buffer
-        elif self.expected_payload_length + INIT_HEADER_LENGTH > self.bytes_read:
+        elif len(self.rx_buffer) > self.bytes_read:
             self.is_cont_packet_expected = True
-            if __debug__:
-                self._log(
-                    "CONT EXPECTED - read/expected:",
-                    str(self.bytes_read)
-                    + "/"
-                    + str(self.expected_payload_length + INIT_HEADER_LENGTH),
-                )
+            return None
         else:
             raise ThpError(
                 "Read more bytes than is the expected length of the message!"
             )
-        return None
 
     def _handle_received_packet(self, packet: utils.BufferType) -> None:
         ctrl_byte = packet[0]
         if control_byte.is_continuation(ctrl_byte):
-            return self._handle_cont_packet(packet)
-        return self._handle_init_packet(packet)
+            self._handle_cont_packet(packet)
+        else:
+            self._handle_init_packet(packet)
 
     def _handle_init_packet(self, packet: utils.BufferType) -> None:
         self.bytes_read = 0
-        self.expected_payload_length = 0
+        assert self.rx_buffer is None
 
-        if __debug__:
-            self._log("handle_init_packet")
-
-        ctrl_byte, _, payload_length = ustruct.unpack(
-            PacketHeader.format_str_init, packet
-        )
-        self.expected_payload_length = payload_length
-
-        if control_byte.is_ack(ctrl_byte):
-            if self.expected_payload_length != CHECKSUM_LENGTH:
-                raise ThpError("Invalid ACK length, ignoring")
-            self.bytes_read = INIT_HEADER_LENGTH + CHECKSUM_LENGTH
-            return None
-
-        # If the channel does not "own" the buffer lock, decrypt the first packet
-
-        cid = self.get_channel_id_int()
-        length = payload_length + INIT_HEADER_LENGTH
-        buffer = memory_manager.get_new_read_buffer(cid, length)
-
-        if __debug__:
-            self._log("handle_init_packet - payload len: ", str(payload_length))
-            self._log("handle_init_packet - buffer len: ", str(len(buffer)))
-
-        self._buffer_packet_data(buffer, packet, 0)
+        _, _, payload_length = ustruct.unpack(PacketHeader.format_str_init, packet)
+        self.rx_buffer = self.get_buffers().get_rx(INIT_HEADER_LENGTH + payload_length)
+        self._buffer_packet_data(self.rx_buffer, packet, 0)
 
     def _handle_cont_packet(self, packet: utils.BufferType) -> None:
         if __debug__:
@@ -254,32 +213,20 @@ class Channel:
         if not self.is_cont_packet_expected:
             raise ThpError("Continuation packet is not expected, ignoring")
 
-        buffer = memory_manager.get_existing_read_buffer(self.get_channel_id_int())
-        self._buffer_packet_data(buffer, packet, CONT_HEADER_LENGTH)
+        assert self.rx_buffer is not None
+        self._buffer_packet_data(self.rx_buffer, packet, CONT_HEADER_LENGTH)
 
     def _buffer_packet_data(
         self, payload_buffer: utils.BufferType, packet: utils.BufferType, offset: int
     ) -> None:
         self.bytes_read += utils.memcpy(payload_buffer, self.bytes_read, packet, offset)
 
-    def _finish_message(self) -> None:
-        self.bytes_read = 0
-        self.expected_payload_length = 0
-        self.is_cont_packet_expected = False
-
     def decrypt_buffer(
-        self, message_length: int, offset: int = INIT_HEADER_LENGTH
+        self, message: memoryview, offset: int = INIT_HEADER_LENGTH
     ) -> None:
-        buffer = memory_manager.get_existing_read_buffer(self.get_channel_id_int())
-
-        noise_buffer = memoryview(buffer)[
-            offset : message_length - CHECKSUM_LENGTH - TAG_LENGTH
-        ]
-        tag = buffer[
-            message_length
-            - CHECKSUM_LENGTH
-            - TAG_LENGTH : message_length
-            - CHECKSUM_LENGTH
+        noise_buffer = message[offset : len(message) - CHECKSUM_LENGTH - TAG_LENGTH]
+        tag = message[
+            len(message) - CHECKSUM_LENGTH - TAG_LENGTH : len(message) - CHECKSUM_LENGTH
         ]
 
         key_receive = self.channel_cache.get(CHANNEL_KEY_RECEIVE)
