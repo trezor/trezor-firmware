@@ -198,6 +198,19 @@ static void prodtest_nrf_pair(cli_t* cli) {
   }
 }
 
+static void prodtest_nrf_verify_pairing(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  if (nrf_authenticate()) {
+    cli_ok(cli, "");
+  } else {
+    cli_error(cli, CLI_ERROR, "Pairing verification failed.");
+  }
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -225,6 +238,13 @@ PRODTEST_CLI_CMD(
   .name = "nrf-pair",
   .func = prodtest_nrf_pair,
   .info = "Pair nRF chip",
+  .args = ""
+  );
+
+PRODTEST_CLI_CMD(
+  .name = "nrf-verify-pairing",
+  .func = prodtest_nrf_verify_pairing,
+  .info = "Verify nRF pairing",
   .args = ""
 );
 
