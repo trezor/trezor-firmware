@@ -33,6 +33,7 @@ from . import (
 from . import alternating_bit_protocol as ABP
 from . import control_byte, crypto, interface_manager, memory_manager
 from .checksum import CHECKSUM_LENGTH
+from .memory_manager import encode_into_buffer
 from .transmission_loop import TransmissionLoop
 from .writer import (
     CONT_HEADER_LENGTH,
@@ -325,15 +326,16 @@ class Channel:
                     iface=self.iface,
                 )
 
-        cid = self.get_channel_id_int()
         msg_size = protobuf.encoded_length(msg)
         payload_size = SESSION_ID_LENGTH + MESSAGE_TYPE_LENGTH + msg_size
         length = payload_size + CHECKSUM_LENGTH + TAG_LENGTH + INIT_HEADER_LENGTH
 
-        buffer = memory_manager.get_new_write_buffer(cid, length)
-        noise_payload_len = memory_manager.encode_into_buffer(buffer, msg, session_id)
+        buffer = self.get_buffers().get_tx(length)
+        noise_payload_len = encode_into_buffer(buffer, msg, session_id)
 
-        task = self._write_and_encrypt(noise_payload_len=noise_payload_len, force=force)
+        task = self._write_and_encrypt(
+            buffer=buffer, noise_payload_len=noise_payload_len, force=force
+        )
         if task is not None:
             await task
 
@@ -351,13 +353,10 @@ class Channel:
 
     def _write_and_encrypt(
         self,
+        buffer: memoryview,
         noise_payload_len: int,
         force: bool = False,
     ) -> Awaitable[None] | None:
-        buffer = memory_manager.get_existing_write_buffer(self.get_channel_id_int())
-        # if buffer is WireBufferError:
-        # pass  # TODO handle deviceBUSY
-
         self._encrypt(buffer, noise_payload_len)
         payload_length = noise_payload_len + TAG_LENGTH
 
