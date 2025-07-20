@@ -36,10 +36,12 @@ typedef enum {
   MGMT_CMD_STOP_UART = 0x03,
   MGMT_CMD_SUSPEND = 0x04,
   MGMT_CMD_RESUME = 0x05,
+  MGMT_CMD_AUTH_CHALLENGE = 0x06,
 } management_cmd_t;
 
 typedef enum {
   MGMT_RESP_INFO = 0,
+  MGMT_RESP_AUTH_RESPONSE = 1,
 } management_resp_t;
 
 typedef struct {
@@ -85,6 +87,9 @@ typedef struct {
 
   bool info_valid;
   nrf_info_t info;
+
+  bool auth_data_valid;
+  uint8_t auth_data[SHA256_DIGEST_LENGTH];
 
   systimer_t *timer;
   bool pending_spi_transaction;

@@ -158,10 +158,50 @@ secbool secret_key_tropic_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
 
 #ifdef USE_NRF
 
+static secbool secequal(const void *ptr1, const void *ptr2, size_t n) {
+  const uint8_t *p1 = ptr1;
+  const uint8_t *p2 = ptr2;
+  uint8_t diff = 0;
+  size_t i = 0;
+  for (i = 0; i < n; ++i) {
+    diff |= *p1 ^ *p2;
+    ++p1;
+    ++p2;
+  }
+  return diff ? secfalse : sectrue;
+}
+
 secbool secret_key_nrf_pairing(uint8_t dest[NRF_PAIRING_SECRET_SIZE]) {
   _Static_assert(NRF_PAIRING_SECRET_SIZE == SHA256_DIGEST_LENGTH);
   return secret_key_derive_sym(SECRET_UNPRIVILEGED_MASTER_KEY_SLOT,
                                KEY_INDEX_NRF_PAIRING, 0, dest);
+}
+
+secbool secret_validate_nrf_pairing(const uint8_t *message, size_t msg_len,
+                                    const uint8_t *mac, size_t mac_len) {
+  secbool result = secfalse;
+
+  uint8_t key[NRF_PAIRING_SECRET_SIZE] = {0};
+  if (sectrue != secret_key_nrf_pairing(key)) {
+    return secfalse;
+  }
+
+  if (mac_len != SHA256_DIGEST_LENGTH) {
+    goto cleanup;
+  }
+
+  uint8_t dest[SHA256_DIGEST_LENGTH] = {0};
+
+  hmac_sha256(key, sizeof(key), message, msg_len, dest);
+
+  if (secequal(dest, mac, SHA256_DIGEST_LENGTH) == sectrue) {
+    result = sectrue;
+  }
+
+cleanup:
+  memzero(dest, sizeof(dest));
+  memzero(key, sizeof(key));
+  return result;
 }
 
 #endif

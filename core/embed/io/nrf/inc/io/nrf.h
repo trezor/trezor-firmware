@@ -192,6 +192,8 @@ bool nrf_update_required(const uint8_t *image_ptr, size_t image_len);
  */
 bool nrf_update(const uint8_t *image_ptr, size_t image_len);
 
+bool nrf_authenticate(void);
+
 ///////////////////////////////////////////////////////////////////////////////
 // TEST-only functions
 
