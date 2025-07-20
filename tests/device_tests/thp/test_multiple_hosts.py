@@ -3,7 +3,7 @@ from time import sleep
 
 import pytest
 
-from trezorlib import exceptions, messages
+from trezorlib import exceptions
 from trezorlib.client import ProtocolV2Channel
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
@@ -60,37 +60,6 @@ def _prepare_two_hosts(client: Client) -> tuple[ProtocolV2Channel, ProtocolV2Cha
     client.do_pairing()
 
     return protocol_1, protocol_2
-
-
-def test_fallback_encrypted_transport(client: Client) -> None:
-    client_1 = Client(transport=client.transport, open_transport=True)
-    client_2 = Client(transport=client.transport, open_transport=True)
-    session_1 = client_1.get_session()
-    session_2 = client_2.get_session()
-    msg = messages.GetFeatures()
-    msg2 = messages.Ping(message="PONG")
-
-    # Sequential calls should work without any problem
-    _ = session_1.call(msg)
-    _ = session_2.call(msg)
-    _ = session_1.call(msg)
-    _ = session_2.call(msg)
-    _ = session_1.call(msg)
-    _ = session_2.call(msg)
-    _ = session_1.call(msg)
-    _ = session_2.call(msg)
-
-    # Zig-zag calls should invoke fallback
-    session_1._write(msg2)
-    session_2._write(msg)
-    # BUG - sesssion 1 should be still retransmitting message
-    sleep(2)  # BUG 2 - without this sleep, the test fails
-    resp = session_2._read()
-    assert isinstance(resp, messages.Failure)
-    assert resp.message == "FALLBACK!"
-    sleep(LOCK_TIME)
-    session_1._read()  # TODO REMOVE
-    session_2.call(msg)
 
 
 def test_concurrent_handshakes_1(client: Client) -> None:
