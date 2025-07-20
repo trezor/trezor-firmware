@@ -19,10 +19,17 @@ from storage.cache_thp import (
     conditionally_replace_channel,
     is_there_a_channel_to_replace,
 )
-from trezor import loop, protobuf, utils, workflow
+from trezor import loop, protobuf, utils, wire, workflow
 from trezor.wire.errors import WireBufferError
 
-from . import ENCRYPTED, ChannelState, PacketHeader, ThpDecryptionError, ThpError
+from . import (
+    ENCRYPTED,
+    ChannelState,
+    PacketHeader,
+    ThpDecryptionError,
+    ThpError,
+    ThpTransportBusy,
+)
 from . import alternating_bit_protocol as ABP
 from . import control_byte, crypto, interface_manager, memory_manager
 from .checksum import CHECKSUM_LENGTH
@@ -50,6 +57,24 @@ if TYPE_CHECKING:
     from .session_context import GenericSessionContext
 
 
+class ChannelBuffers:
+    def __init__(self) -> None:
+        self.rx = bytearray(8192)
+        self.tx = bytearray(8192)
+
+    def get_rx(self, size: int) -> memoryview:
+        view = memoryview(self.rx)
+        if size > len(view):
+            raise WireBufferError("RX")
+        return view[:size]
+
+    def get_tx(self, size: int) -> memoryview:
+        view = memoryview(self.tx)
+        if size > len(view):
+            raise WireBufferError("TX")
+        return view[:size]
+
+
 class Channel:
     """
     THP protocol encrypted communication channel.
@@ -65,6 +90,7 @@ class Channel:
         if __debug__:
             self._log("channel initialization")
         self.channel_cache: ChannelCache = channel_cache
+        self._buffers: ChannelBuffers | None = None
 
         # Shared variables
         self.buffer: utils.BufferType = bytearray(self.iface.TX_PACKET_LEN)
@@ -84,6 +110,13 @@ class Channel:
 
         if __debug__:
             self.should_show_pairing_dialog: bool = True
+
+    def get_buffers(self) -> ChannelBuffers:
+        """Try to acquire buffers (in case it's the first message being handled)."""
+        self._buffers = self._buffers or wire.THP_BUFFERS_PROVIDER.take()
+        if not self._buffers:
+            raise ThpTransportBusy(channel_id=self.get_channel_id_int())
+        return self._buffers
 
     def clear(self) -> None:
         clear_sessions_with_channel_id(self.channel_id)
