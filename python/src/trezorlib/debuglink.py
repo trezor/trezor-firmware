@@ -659,7 +659,7 @@ class DebugLink:
         assert isinstance(resp, messages.DebugLinkState)
 
     @contextmanager
-    def hold_touch(self, pos: tuple[int, int]) -> Iterator[None]:
+    def hold_touch(self, pos: tuple[int, int]) -> t.Iterator[None]:
         x, y = pos
         self._decision(
             messages.DebugLinkDecision(
