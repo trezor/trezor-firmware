@@ -16,11 +16,11 @@ from . import (
     checksum,
     control_byte,
     get_channel_allocation_response,
-    received_message_handler,
     writer,
 )
 from .channel import Channel
 from .checksum import CHECKSUM_LENGTH
+from .received_message_handler import handle_received_message
 from .writer import (
     INIT_HEADER_LENGTH,
     MAX_PAYLOAD_LEN,
@@ -46,8 +46,6 @@ async def thp_main_loop(iface: WireInterface) -> None:
     try:
         while True:
             try:
-                if __debug__:
-                    log.debug(__name__, "thp_main_loop", iface=iface)
                 packet_len = await read
                 assert packet_len == len(packet)
                 iface.read(packet, 0)
@@ -62,10 +60,14 @@ async def thp_main_loop(iface: WireInterface) -> None:
                     await _handle_broadcast(iface, packet)
                     continue
 
-                if cid in _CHANNELS:
-                    await _handle_allocated(iface, cid, packet)
-                else:
+                channel = _CHANNELS.get(cid)
+                if channel is None:
                     await _handle_unallocated(iface, cid, packet)
+                    continue
+
+                msg = await _handle_allocated(iface, channel, packet)
+                if msg is not None:
+                    await handle_received_message(channel, msg)
 
             except ThpError as e:
                 if __debug__:
@@ -117,20 +119,14 @@ async def _handle_broadcast(iface: WireInterface, packet: utils.BufferType) -> N
 
 
 async def _handle_allocated(
-    iface: WireInterface, cid: int, packet: utils.BufferType
-) -> None:
-    channel = _CHANNELS[cid]
-    if channel is None:
-        await _handle_unallocated(iface, cid, packet)
-        raise ThpError("Invalid state of a channel")
+    iface: WireInterface, channel: Channel, packet: utils.BufferType
+) -> memoryview | None:
     if channel.iface is not iface:
         # TODO send error message to wire
         raise ThpError("Channel has different WireInterface")
 
-    if channel.get_channel_state() != ChannelState.UNALLOCATED:
-        msg = channel.receive_packet(packet)
-        if msg is not None:
-            await received_message_handler.handle_received_message(channel, msg)
+    assert channel.get_channel_state() != ChannelState.UNALLOCATED
+    return channel.receive_packet(packet)
 
 
 async def _handle_unallocated(iface: WireInterface, cid: int, packet: bytes) -> None:
