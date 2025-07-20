@@ -39,8 +39,6 @@ if __debug__:
 
     DEBUG_CONTEXT: context.Context | None = None
 
-    REFRESH_INDEX = 0
-
     _DEADLOCK_SLEEP_MS = const(3000)
     _DEADLOCK_DETECT_SLEEP = loop.sleep(_DEADLOCK_SLEEP_MS)
 
@@ -49,7 +47,7 @@ if __debug__:
             # Starting with "refresh00", allowing for 100 emulator restarts
             # without losing the order of the screenshots based on filename.
             display.save(
-                f"{storage.save_screen_directory.decode()}/refresh{REFRESH_INDEX:0>2}-"
+                f"{storage.save_screen_directory.decode()}/refresh{storage.refresh_index:0>2}-"
             )
             return True
         return False
@@ -316,8 +314,7 @@ if __debug__:
             # In case emulator is restarted but we still want to record screenshots
             # into the same directory as before, we need to increment the refresh index,
             # so that the screenshots are not overwritten.
-            global REFRESH_INDEX
-            REFRESH_INDEX = msg.refresh_index
+            storage.refresh_index = msg.refresh_index
             storage.save_screen_directory[:] = msg.target_directory.encode()
             storage.save_screen = True
 
