@@ -20,7 +20,7 @@ from . import (
 )
 from .channel import Channel
 from .checksum import CHECKSUM_LENGTH
-from .received_message_handler import handle_received_message
+from .received_message_handler import handle_checksum_and_acks, handle_received_message
 from .writer import (
     INIT_HEADER_LENGTH,
     MAX_PAYLOAD_LEN,
@@ -81,8 +81,14 @@ class Context:
                 continue
 
             msg = await _handle_allocated(iface, channel, packet)
-            if msg is not None:
-                return channel, msg
+            if msg is None:
+                continue
+
+            msg = await handle_checksum_and_acks(channel, msg)
+            if msg is None:
+                continue
+
+            await handle_received_message(channel, msg)
 
 
 async def _handle_codec_v1(iface: WireInterface, packet: bytes) -> None:

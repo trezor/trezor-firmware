@@ -65,24 +65,10 @@ _TREZOR_STATE_PAIRED = b"\x01"
 _TREZOR_STATE_PAIRED_AUTOCONNECT = b"\x02"
 
 
-async def handle_received_message(
+async def handle_checksum_and_acks(
     ctx: Channel, message_buffer: utils.BufferType
-) -> None:
-    """Handle a message received from the channel."""
-
-    if __debug__:
-        log.debug(__name__, "handle_received_message", iface=ctx.iface)
-        # TODO remove after performance tests are done
-        # try:
-        #     import micropython
-
-        #     print("micropython.mem_info() from received_message_handler.py")
-        #     micropython.mem_info()
-        #     print("Allocation count:", micropython.alloc_count())
-        # except AttributeError:
-        #     print(
-        #         "To show allocation count, create the build with TREZOR_MEMPERF=1"
-        #     )
+) -> utils.BufferType | None:
+    """Verify checksum, handle ACKs or return the message"""
     ctrl_byte, _, payload_length = ustruct.unpack(">BHH", message_buffer)
     message_length = payload_length + INIT_HEADER_LENGTH
 
@@ -105,7 +91,7 @@ async def handle_received_message(
     # 1: Handle ACKs
     if control_byte.is_ack(ctrl_byte):
         await handle_ack(ctx, ack_bit)
-        return
+        return None
 
     if _should_have_ctrl_byte_encrypted_transport(
         ctx
@@ -127,6 +113,16 @@ async def handle_received_message(
     await _send_ack(ctx, ack_bit=seq_bit)
 
     ABP.set_expected_receive_seq_bit(ctx.channel_cache, 1 - seq_bit)
+    return message_buffer
+
+
+async def handle_received_message(
+    ctx: Channel, message_buffer: utils.BufferType
+) -> None:
+    """Handle a message received from the channel."""
+
+    ctrl_byte, _, payload_length = ustruct.unpack(">BHH", message_buffer)
+    message_length = payload_length + INIT_HEADER_LENGTH
 
     try:
         _handle_message_to_app_or_channel(ctx, message_length, ctrl_byte)
