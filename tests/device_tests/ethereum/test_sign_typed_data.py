@@ -129,10 +129,12 @@ def test_ethereum_sign_typed_data_cancel(session: Session):
 
 
 @pytest.mark.models("core")
-def test_ethereum_sign_typed_data_bad_show_message_hash(client: Client):
-    with client, pytest.raises(exceptions.TrezorFailure, match="Message hash mismatch"):
+def test_ethereum_sign_typed_data_bad_show_message_hash(session: Session):
+    with session.client, pytest.raises(
+        exceptions.TrezorFailure, match="Message hash mismatch"
+    ):
         ethereum.sign_typed_data(
-            client,
+            session,
             parse_path("m/44h/60h/0h/0/0"),
             DATA,
             metamask_v4_compat=True,
