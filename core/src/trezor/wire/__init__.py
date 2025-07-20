@@ -47,31 +47,30 @@ if __debug__:
 
 if TYPE_CHECKING:
     from trezorio import WireInterface
-    from typing import Any, Callable, Coroutine, TypeVar
+    from typing import Any, Callable, Coroutine, Generic, TypeVar
 
+    T = TypeVar("T")
     Msg = TypeVar("Msg", bound=protobuf.MessageType)
     HandlerTask = Coroutine[Any, Any, protobuf.MessageType]
     Handler = Callable[[Msg], HandlerTask]
 
     LoadedMessageType = TypeVar("LoadedMessageType", bound=protobuf.MessageType)
+else:
+    Generic = (object,)
+    T = 0
 
 
-class BufferProvider:
-    def __init__(self, size: int) -> None:
-        self.buf = bytearray(size)
+class Provider(Generic[T]):
+    def __init__(self, obj: T) -> None:
+        self.obj = obj
 
-    def take(self) -> bytearray | None:
-        if self.buf is None:
+    def take(self) -> T | None:
+        if self.obj is None:
             return None
 
-        buf = self.buf
-        self.buf = None
-        return buf
-
-
-# Reallocated once per session and shared between all wire interfaces.
-# Acquired by the first call to `CodecContext.read_from_wire()`.
-WIRE_BUFFER_PROVIDER = BufferProvider(8192)
+        obj = self.obj
+        self.obj = None
+        return obj
 
 
 def setup(iface: WireInterface) -> None:
@@ -110,6 +109,10 @@ if utils.USE_THP:
                 return  # pylint: disable=lost-exception
 
 else:
+
+    # Reallocated once per session and shared between all wire interfaces.
+    # Acquired by the first call to `CodecContext.read_from_wire()`.
+    WIRE_BUFFER_PROVIDER = Provider(bytearray(8192))
 
     async def handle_session(iface: WireInterface) -> None:
         ctx = CodecContext(iface, WIRE_BUFFER_PROVIDER)
