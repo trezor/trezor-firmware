@@ -434,7 +434,7 @@ if __debug__:
 
         global DEBUG_CONTEXT
 
-        DEBUG_CONTEXT = ctx = CodecContext(iface, wire.BufferProvider(1024))
+        DEBUG_CONTEXT = ctx = CodecContext(iface, wire.Provider(bytearray(1024)))
 
         if storage.layout_watcher:
             try:
