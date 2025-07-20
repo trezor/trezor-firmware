@@ -88,7 +88,7 @@ class Context:
             if msg is None:
                 continue
 
-            await handle_received_message(channel, msg)
+            return (channel, msg)
 
 
 async def _handle_codec_v1(iface: WireInterface, packet: bytes) -> None:
