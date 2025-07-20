@@ -6,6 +6,7 @@ if not __debug__:
 if __debug__:
     save_screen = False
     if EMULATOR:
+        refresh_index = 0
         save_screen_directory = bytearray(4096)
         save_screen_directory[:] = b"."
 
