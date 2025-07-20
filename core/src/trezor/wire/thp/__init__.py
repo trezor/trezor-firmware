@@ -36,6 +36,12 @@ class ThpError(WireError):
     pass
 
 
+class ThpTransportBusy(ThpError):
+
+    def __init__(self, channel_id: int) -> None:
+        self.channel_id = channel_id
+
+
 class ThpDecryptionError(ThpError):
     pass
 
