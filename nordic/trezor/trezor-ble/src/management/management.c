@@ -29,8 +29,11 @@
 #include <zephyr/sys/crc.h>
 #include <zephyr/sys/poweroff.h>
 
+#include <hmac.h>
+
 #include <errno.h>
 
+#include <prodtest/prodtest.h>
 #include <signals/signals.h>
 #include <trz_comm/trz_comm.h>
 
@@ -39,6 +42,8 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 static K_SEM_DEFINE(management_ok, 0, 1);
 
+#define CHALLENGE_MIN_LEN 32
+
 typedef enum {
   MGMT_CMD_SYSTEM_OFF = 0x00,
   MGMT_CMD_INFO = 0x01,
@@ -46,10 +51,12 @@ typedef enum {
   MGMT_CMD_STOP_UART = 0x03,
   MGMT_CMD_SUSPEND = 0x04,
   MGMT_CMD_RESUME = 0x05,
+  MGMT_CMD_AUTH_CHALLENGE = 0x06,
 } management_cmd_t;
 
 typedef enum {
   MGMT_RESP_INFO = 0,
+  MGMT_RESP_AUTH_RESPONSE = 1,
 } management_resp_t;
 
 void management_init(void) { k_sem_give(&management_ok); }
@@ -152,6 +159,17 @@ static void send_info(void) {
   trz_comm_send_msg(NRF_SERVICE_MANAGEMENT, data, sizeof(data));
 }
 
+static void mgmt_process_challenge(uint8_t *data, uint16_t len) {
+  uint8_t response[1 + SHA256_BLOCK_LENGTH];
+  const uint8_t *key = prodtest_get_pairing_key();
+
+  hmac_sha256(key, PAIRING_SECRET_SIZE, data, len, &response[1]);
+
+  response[0] = MGMT_RESP_AUTH_RESPONSE;
+
+  trz_comm_send_msg(NRF_SERVICE_MANAGEMENT, response, sizeof(response));
+}
+
 static void process_command(uint8_t *data, uint16_t len) {
   uint8_t cmd = data[0];
   switch (cmd) {
@@ -178,6 +196,15 @@ static void process_command(uint8_t *data, uint16_t len) {
     case MGMT_CMD_RESUME:
       LOG_INF("Resume");
       trz_comm_resume();
+      break;
+    case MGMT_CMD_AUTH_CHALLENGE:
+      LOG_INF("Challenge command");
+      if (len < (1 + CHALLENGE_MIN_LEN)) {
+        LOG_ERR("Challenge command too short");
+        return;
+      }
+      mgmt_process_challenge(&data[1], len - 1);
+
       break;
     default:
       break;
