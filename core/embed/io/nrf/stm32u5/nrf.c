@@ -23,6 +23,8 @@
 #include <trezor_rtl.h>
 
 #include <io/nrf.h>
+#include <sec/rng.h>
+#include <sec/secret_keys.h>
 #include <sys/irq.h>
 #include <sys/mpu.h>
 #include <sys/systick.h>
@@ -107,6 +109,10 @@ void nrf_management_rx_cb(const uint8_t *data, uint32_t len) {
     case MGMT_RESP_INFO:
       drv->info_valid = true;
       memcpy(&drv->info, &data[1], MIN(len - 1, sizeof(nrf_info_t)));
+      break;
+    case MGMT_RESP_AUTH_RESPONSE:
+      drv->auth_data_valid = true;
+      memcpy(&drv->auth_data, &data[1], MIN(len - 1, sizeof(drv->auth_data)));
       break;
     default:
       break;
@@ -508,5 +514,48 @@ bool nrf_system_off(void) {
 
   return true;
 }
+
+#ifdef SECURE_MODE
+bool nrf_authenticate(void) {
+  nrf_driver_t *drv = &g_nrf_driver;
+  if (!drv->initialized) {
+    return false;
+  }
+
+  drv->info_valid = false;
+
+  uint32_t challenge[8] = {0};
+
+  uint8_t data[1 + sizeof(challenge)] = {MGMT_CMD_AUTH_CHALLENGE};
+
+  // generate random challenge
+  for (int i = 0; i < ARRAY_LENGTH(challenge); i++) {
+    challenge[i] = rng_get();
+  }
+
+  memcpy(data + 1, challenge, sizeof(challenge));
+
+  drv->auth_data_valid = false;
+  memset(drv->auth_data, 0, sizeof(drv->auth_data));
+
+  if (nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, sizeof(data), NULL, NULL) <
+      0) {
+    return false;
+  }
+
+  uint32_t timeout = ticks_timeout(100);
+
+  while (!ticks_expired(timeout)) {
+    if (drv->auth_data_valid) {
+      secbool auth =
+          secret_validate_nrf_pairing((uint8_t *)challenge, sizeof(challenge),
+                                      drv->auth_data, SHA256_DIGEST_LENGTH);
+      return sectrue == auth;
+    }
+  }
+
+  return false;
+}
+#endif
 
 #endif
