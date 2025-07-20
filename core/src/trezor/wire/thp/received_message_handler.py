@@ -364,7 +364,7 @@ def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message: memoryview) -> None
     if __debug__:
         log.debug(__name__, "handle_state_ENCRYPTED_TRANSPORT", iface=ctx.iface)
 
-    ctx.decrypt_buffer(len(message))
+    ctx.decrypt_buffer(message)
 
     session_id, message_type = ustruct.unpack(">BH", message[INIT_HEADER_LENGTH:])
     if session_id not in ctx.sessions:
@@ -410,7 +410,7 @@ def _handle_pairing(ctx: Channel, message: memoryview) -> None:
         ctx.connection_context = PairingContext(ctx)
         loop.schedule(ctx.connection_context.handle())
 
-    ctx.decrypt_buffer(len(message))
+    ctx.decrypt_buffer(message)
     message_type = ustruct.unpack(
         ">H", message[INIT_HEADER_LENGTH + SESSION_ID_LENGTH :]
     )[0]
