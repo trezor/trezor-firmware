@@ -15,7 +15,7 @@ if __debug__:
 if TYPE_CHECKING:
     from typing import TypeVar
 
-    from .. import BufferProvider, WireInterface
+    from .. import Provider, WireInterface
 
     LoadedMessageType = TypeVar("LoadedMessageType", bound=protobuf.MessageType)
 
@@ -26,7 +26,7 @@ class CodecContext(Context):
     def __init__(
         self,
         iface: WireInterface,
-        buffer_provider: BufferProvider,
+        buffer_provider: Provider[bytearray],
     ) -> None:
         self.buffer_provider = buffer_provider
         self._buffer = None
