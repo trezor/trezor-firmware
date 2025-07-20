@@ -26,6 +26,7 @@
 
 #include <zephyr/logging/log.h>
 
+#include <prodtest/prodtest.h>
 #include <signals/signals.h>
 #include <trz_comm/trz_comm.h>
 
@@ -50,8 +51,6 @@ typedef enum {
 
 void prodtest_init(void) { k_sem_give(&prodtest_ok); }
 
-#define PAIRING_SECRET_SIZE 32
-
 static uint8_t pairing_secret[PAIRING_SECRET_SIZE] = {0};
 
 static int prodtest_set(const char *key, size_t len, settings_read_cb read_cb,
@@ -65,6 +64,8 @@ static int prodtest_set(const char *key, size_t len, settings_read_cb read_cb,
 
 SETTINGS_STATIC_HANDLER_DEFINE(prodtest, "prodtest", NULL, prodtest_set, NULL,
                                NULL);
+
+const uint8_t *prodtest_get_pairing_key(void) { return pairing_secret; }
 
 bool prodtest_pair(uint8_t *data, uint16_t len) {
   if (len != PAIRING_SECRET_SIZE) {
@@ -81,6 +82,8 @@ bool prodtest_pair(uint8_t *data, uint16_t len) {
   }
 
   settings_commit();  // Commit settings to persistent storage
+
+  memcpy(pairing_secret, data, len);
 
   return true;
 }

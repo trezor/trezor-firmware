@@ -19,5 +19,9 @@
 
 #pragma once
 
+#define PAIRING_SECRET_SIZE 32
+
 // Initialize the prodtest module
 void prodtest_init(void);
+
+const uint8_t* prodtest_get_pairing_key(void);
