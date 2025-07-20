@@ -247,8 +247,7 @@ def test_get_address(client: Client):
 def test_wipe_device(client: Client):
     _assert_protection(client)
     with client:
-        client.use_pin_sequence([PIN4])
-        session = client.get_session()
+        session = client.get_seedless_session()
         client.set_expected_responses([messages.ButtonRequest, messages.Success])
         device.wipe(session)
     client = client.get_new_client()
