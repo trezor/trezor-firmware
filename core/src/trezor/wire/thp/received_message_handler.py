@@ -18,7 +18,6 @@ from storage.cache_thp import (
 from trezor import config, loop, protobuf, utils
 from trezor.enums import FailureType
 from trezor.messages import Failure
-from trezor.wire.thp import memory_manager
 
 from .. import message_handler
 from ..errors import DataError
@@ -66,8 +65,8 @@ _TREZOR_STATE_PAIRED_AUTOCONNECT = b"\x02"
 
 
 async def handle_checksum_and_acks(
-    ctx: Channel, message_buffer: utils.BufferType
-) -> utils.BufferType | None:
+    ctx: Channel, message_buffer: memoryview
+) -> memoryview | None:
     """Verify checksum, handle ACKs or return the message"""
     ctrl_byte, _, payload_length = ustruct.unpack(">BHH", message_buffer)
     message_length = payload_length + INIT_HEADER_LENGTH
@@ -116,16 +115,11 @@ async def handle_checksum_and_acks(
     return message_buffer
 
 
-async def handle_received_message(
-    ctx: Channel, message_buffer: utils.BufferType
-) -> None:
+async def handle_received_message(ctx: Channel, message_buffer: memoryview) -> None:
     """Handle a message received from the channel."""
 
-    ctrl_byte, _, payload_length = ustruct.unpack(">BHH", message_buffer)
-    message_length = payload_length + INIT_HEADER_LENGTH
-
     try:
-        _handle_message_to_app_or_channel(ctx, message_length, ctrl_byte)
+        _handle_message_to_app_or_channel(ctx, message_buffer)
     except ThpUnallocatedSessionError as e:
         error_message = Failure(code=FailureType.ThpUnallocatedSession)
         await ctx.write(error_message, e.session_id)
@@ -205,36 +199,34 @@ async def handle_ack(ctx: Channel, ack_bit: int) -> None:
 
 def _handle_message_to_app_or_channel(
     ctx: Channel,
-    message_length: int,
-    ctrl_byte: int,
+    message: memoryview,
 ) -> None:
     state = ctx.get_channel_state()
 
     if state == ChannelState.ENCRYPTED_TRANSPORT:
-        return _handle_state_ENCRYPTED_TRANSPORT(ctx, message_length)
+        return _handle_state_ENCRYPTED_TRANSPORT(ctx, message)
 
     if state == ChannelState.TH1:
-        return _handle_state_TH1(ctx, message_length, ctrl_byte)
+        return _handle_state_TH1(ctx, message)
 
     if state == ChannelState.TH2:
-        return _handle_state_TH2(ctx, message_length, ctrl_byte)
+        return _handle_state_TH2(ctx, message)
 
     if _is_channel_state_pairing(state):
-        return _handle_pairing(ctx, message_length)
+        return _handle_pairing(ctx, message)
 
     raise ThpError("Unimplemented channel state")
 
 
 def _handle_state_TH1(
     ctx: Channel,
-    message_length: int,
-    ctrl_byte: int,
+    message: memoryview,
 ) -> None:
     if __debug__:
         log.debug(__name__, "handle_state_TH1", iface=ctx.iface)
-    if not control_byte.is_handshake_init_req(ctrl_byte):
+    if not control_byte.is_handshake_init_req(message[0]):
         raise ThpError("Message received is not a handshake init request!")
-    if message_length != INIT_HEADER_LENGTH + PUBKEY_LENGTH + CHECKSUM_LENGTH:
+    if len(message) != INIT_HEADER_LENGTH + PUBKEY_LENGTH + CHECKSUM_LENGTH:
         raise ThpError("Message received is not a valid handshake init request!")
 
     if not config.is_unlocked():
@@ -242,12 +234,8 @@ def _handle_state_TH1(
 
     ctx.handshake = Handshake()
 
-    buffer = memory_manager.get_existing_read_buffer(ctx.get_channel_id_int())
-    # if buffer is BufferError:
-    # pass  # TODO buffer is gone :/
-
     host_ephemeral_public_key = bytearray(
-        buffer[INIT_HEADER_LENGTH : message_length - CHECKSUM_LENGTH]
+        message[INIT_HEADER_LENGTH : len(message) - CHECKSUM_LENGTH]
     )
     trezor_ephemeral_public_key, encrypted_trezor_static_public_key, tag = (
         ctx.handshake.handle_th1_crypto(
@@ -278,12 +266,12 @@ def _handle_state_TH1(
     return
 
 
-def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -> None:
+def _handle_state_TH2(ctx: Channel, message: memoryview) -> None:
     from apps.thp.credential_manager import decode_credential, validate_credential
 
     if __debug__:
         log.debug(__name__, "handle_state_TH2", iface=ctx.iface)
-    if not control_byte.is_handshake_comp_req(ctrl_byte):
+    if not control_byte.is_handshake_comp_req(message[0]):
         raise ThpError("Message received is not a handshake completion request!")
 
     if ctx.handshake is None:
@@ -294,14 +282,11 @@ def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -> None
     if not config.is_unlocked():
         raise ThpDeviceLockedError
 
-    buffer = memory_manager.get_existing_read_buffer(ctx.get_channel_id_int())
-    # if buffer is BufferError:
-    # pass  # TODO handle
-    host_encrypted_static_public_key = buffer[
+    host_encrypted_static_public_key = message[
         INIT_HEADER_LENGTH : INIT_HEADER_LENGTH + KEY_LENGTH + TAG_LENGTH
     ]
-    handshake_completion_request_noise_payload = buffer[
-        INIT_HEADER_LENGTH + KEY_LENGTH + TAG_LENGTH : message_length - CHECKSUM_LENGTH
+    handshake_completion_request_noise_payload = message[
+        INIT_HEADER_LENGTH + KEY_LENGTH + TAG_LENGTH : len(message) - CHECKSUM_LENGTH
     ]
 
     ctx.handshake.handle_th2_crypto(
@@ -315,10 +300,10 @@ def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -> None
     ctx.channel_cache.set_int(CHANNEL_NONCE_SEND, 1)
 
     noise_payload = _decode_message(
-        buffer[
+        message[
             INIT_HEADER_LENGTH
             + KEY_LENGTH
-            + TAG_LENGTH : message_length
+            + TAG_LENGTH : len(message)
             - CHECKSUM_LENGTH
             - TAG_LENGTH
         ],
@@ -375,18 +360,13 @@ def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -> None
         ctx.set_channel_state(ChannelState.TP0)
 
 
-def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message_length: int) -> None:
+def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message: memoryview) -> None:
     if __debug__:
         log.debug(__name__, "handle_state_ENCRYPTED_TRANSPORT", iface=ctx.iface)
 
-    ctx.decrypt_buffer(message_length)
+    ctx.decrypt_buffer(len(message))
 
-    buffer = memory_manager.get_existing_read_buffer(ctx.get_channel_id_int())
-    # if buffer is BufferError:
-    # pass  # TODO handle
-    session_id, message_type = ustruct.unpack(
-        ">BH", memoryview(buffer)[INIT_HEADER_LENGTH:]
-    )
+    session_id, message_type = ustruct.unpack(">BH", message[INIT_HEADER_LENGTH:])
     if session_id not in ctx.sessions:
 
         s = session_manager.get_session_from_cache(ctx, session_id)
@@ -406,10 +386,10 @@ def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message_length: int) -> None
     s.incoming_message.put(
         Message(
             message_type,
-            buffer[
+            message[
                 INIT_HEADER_LENGTH
                 + MESSAGE_TYPE_LENGTH
-                + SESSION_ID_LENGTH : message_length
+                + SESSION_ID_LENGTH : len(message)
                 - CHECKSUM_LENGTH
                 - TAG_LENGTH
             ],
@@ -423,28 +403,25 @@ def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message_length: int) -> None
         )
 
 
-def _handle_pairing(ctx: Channel, message_length: int) -> None:
+def _handle_pairing(ctx: Channel, message: memoryview) -> None:
     from .pairing_context import PairingContext
 
     if ctx.connection_context is None:
         ctx.connection_context = PairingContext(ctx)
         loop.schedule(ctx.connection_context.handle())
 
-    ctx.decrypt_buffer(message_length)
-    buffer = memory_manager.get_existing_read_buffer(ctx.get_channel_id_int())
-    # if buffer is BufferError:
-    # pass  # TODO handle
+    ctx.decrypt_buffer(len(message))
     message_type = ustruct.unpack(
-        ">H", buffer[INIT_HEADER_LENGTH + SESSION_ID_LENGTH :]
+        ">H", message[INIT_HEADER_LENGTH + SESSION_ID_LENGTH :]
     )[0]
 
     ctx.connection_context.incoming_message.put(
         Message(
             message_type,
-            buffer[
+            message[
                 INIT_HEADER_LENGTH
                 + MESSAGE_TYPE_LENGTH
-                + SESSION_ID_LENGTH : message_length
+                + SESSION_ID_LENGTH : len(message)
                 - CHECKSUM_LENGTH
                 - TAG_LENGTH
             ],
