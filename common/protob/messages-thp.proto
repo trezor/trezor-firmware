@@ -211,7 +211,7 @@ message ThpNfcTagTrezor {
  * @next ThpCredentialResponse
  */
 message ThpCredentialRequest {
-    required bytes host_static_pubkey = 1;         // Host's static public key identifying the credential.
+    required bytes host_static_public_key = 1;     // Host's static public key identifying the credential.
     optional bool autoconnect = 2 [default=false]; // Whether host wants to autoconnect without user confirmation
     optional bytes credential = 3;                 // Host's previous credential
 }
@@ -222,7 +222,7 @@ message ThpCredentialRequest {
  * @next ThpEndRequest
  */
 message ThpCredentialResponse {
-    required bytes trezor_static_pubkey = 1;     // Trezor's static public key used in the handshake.
+    required bytes trezor_static_public_key = 1; // Trezor's static public key used in the handshake.
     required bytes credential = 2;               // The pairing credential issued by the Trezor to the host.
 }
 
@@ -265,6 +265,6 @@ message ThpEndResponse {}
  */
  message ThpAuthenticatedCredentialData {
     option (internal_only) = true;
-    required bytes host_static_pubkey = 1;            // Host's static public key used in the handshake
+    required bytes host_static_public_key = 1;        // Host's static public key used in the handshake
     required ThpCredentialMetadata cred_metadata = 2; // Credential metadata
 }

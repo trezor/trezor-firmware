@@ -6435,14 +6435,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ThpCredentialRequest(protobuf.MessageType):
-        host_static_pubkey: "bytes"
+        host_static_public_key: "bytes"
         autoconnect: "bool"
         credential: "bytes | None"
 
         def __init__(
             self,
             *,
-            host_static_pubkey: "bytes",
+            host_static_public_key: "bytes",
             autoconnect: "bool | None" = None,
             credential: "bytes | None" = None,
         ) -> None:
@@ -6453,13 +6453,13 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ThpCredentialResponse(protobuf.MessageType):
-        trezor_static_pubkey: "bytes"
+        trezor_static_public_key: "bytes"
         credential: "bytes"
 
         def __init__(
             self,
             *,
-            trezor_static_pubkey: "bytes",
+            trezor_static_public_key: "bytes",
             credential: "bytes",
         ) -> None:
             pass
@@ -6513,13 +6513,13 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ThpAuthenticatedCredentialData(protobuf.MessageType):
-        host_static_pubkey: "bytes"
+        host_static_public_key: "bytes"
         cred_metadata: "ThpCredentialMetadata"
 
         def __init__(
             self,
             *,
-            host_static_pubkey: "bytes",
+            host_static_public_key: "bytes",
             cred_metadata: "ThpCredentialMetadata",
         ) -> None:
             pass
