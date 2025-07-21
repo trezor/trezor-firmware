@@ -10,9 +10,9 @@ PY_FILES_LIMITED = $(shell find . -type f -name '*.py'   | sed 'sO^\./OO' | grep
 C_FILES =  $(shell find . -type f -name '*.[ch]' | grep -f ./tools/style.c.include  | grep -v -f ./tools/style.c.exclude )
 
 
-style_check: pystyle_check ruststyle_check cstyle_check changelog_check yaml_check docs_summary_check editor_check ## run all style checks
+style_check: pystyle_check ruststyle_check cstyle_check changelog_check translations_style_check yaml_check docs_summary_check editor_check ## run all style checks
 
-style: pystyle ruststyle cstyle changelog_style ## apply all code styles (C+Rust+Py+Changelog)
+style: pystyle ruststyle cstyle changelog_style translations_style ## apply all code styles (C+Rust+Py+Changelog+translation JSON)
 
 pystyle_check: ## run code style check on application sources and tests
 	flake8 --version
@@ -61,6 +61,14 @@ changelog_check: ## check changelog format
 
 changelog_style: ## fix changelog format
 	./tools/changelog.py style
+
+translations_style: ## Format translation files
+	@echo [TRANSLATIONS-STYLE]
+	@./core/tools/translations/sort_keys.py
+
+translations_style_check: ## Check that translation files are properly formatted
+	@echo [TRANSLATIONS-STYLE-CHECK]
+	@./core/tools/translations/sort_keys.py check
 
 yaml_check: ## check yaml formatting
 	yamllint .

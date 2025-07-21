@@ -49,9 +49,9 @@
       "Eckhart": "Pokud se adresa neshoduje, obraťte se na Trezor podporu na trezor.io/support."
     },
     "address__cancel_receive": "Zrušit příjem",
+    "address__coin_address_template": "{0} adresa",
     "address__confirmed": "Adresa příjemce potvrzena",
     "address__public_key": "Veřejný klíč",
-    "address__coin_address_template": "{0} adresa",
     "address__public_key_confirmed": "Veřejný klíč potvrzen",
     "address__qr_code": "QR kód",
     "address__title_cosigner": "Další podepisující",

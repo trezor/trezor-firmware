@@ -18,15 +18,9 @@
       "Eckhart": "Cancel receive?"
     },
     "address__check_with_source": "Check the address with source.",
+    "address__coin_address_template": "{0} address",
     "address__confirmed": "Receive address confirmed",
     "address__public_key": "Public key",
-    "address__xpub": {
-      "Bolt": "XPUB",
-      "Caesar": "XPUB",
-      "Delizia": "XPUB",
-      "Eckhart": "Public key (XPUB)"
-    },
-    "address__coin_address_template": "{0} address",
     "address__public_key_confirmed": "Public key confirmed",
     "address__qr_code": "QR code",
     "address__title_cosigner": "Cosigner",
@@ -34,6 +28,12 @@
     "address__title_receive_address": "Receive address",
     "address__title_refund_address": "Refund address",
     "address__title_yours": "Yours",
+    "address__xpub": {
+      "Bolt": "XPUB",
+      "Caesar": "XPUB",
+      "Delizia": "XPUB",
+      "Eckhart": "Public key (XPUB)"
+    },
     "address_details__account_info": "Account info",
     "address_details__derivation_path": "Derivation path",
     "address_details__derivation_path_colon": "Derivation path:",
@@ -341,6 +341,7 @@
       "Delizia": "Contract",
       "Eckhart": "Call contract"
     },
+    "ethereum__contract_address": "Provider contract address",
     "ethereum__data_size_template": "Size: {0} bytes",
     "ethereum__gas_limit": "Gas limit",
     "ethereum__gas_price": "Gas price",
@@ -382,7 +383,6 @@
       "Delizia": "Token contract",
       "Eckhart": "Token contract address"
     },
-    "ethereum__contract_address": "Provider contract address",
     "ethereum__units_template": "{0} units",
     "ethereum__unknown_contract_address": {
       "Bolt": "Unknown contract address",

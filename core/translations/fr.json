@@ -49,9 +49,9 @@
       "Eckhart": "Si l'adr. ne correspond pas, contactez l'assistance Trezor : trezor.io/support."
     },
     "address__cancel_receive": "Annuler réception",
+    "address__coin_address_template": "{0} adr.",
     "address__confirmed": "Adresse de réception confirmée",
     "address__public_key": "Clé publique",
-    "address__coin_address_template": "{0} adr.",
     "address__public_key_confirmed": "Clé publique confirmée",
     "address__qr_code": "Code QR",
     "address__title_cosigner": "Cosignataire",
