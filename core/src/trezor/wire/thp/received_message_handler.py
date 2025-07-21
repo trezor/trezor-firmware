@@ -194,22 +194,20 @@ async def _handle_message_to_app_or_channel(ctx: ThpContext) -> None:
             await _handle_state_ENCRYPTED_TRANSPORT(ctx)
     else:
         assert ctx.channel.get_channel_state() == ChannelState.TH1
-        _handle_state_TH1(ctx.channel, await ctx.read())
+        await _handle_state_TH1(ctx)
 
         assert ctx.channel.get_channel_state() == ChannelState.TH2
-        _handle_state_TH2(ctx.channel, await ctx.read())
+        await _handle_state_TH2(ctx)
 
         assert _is_channel_state_pairing(ctx.channel.get_channel_state())
         while True:
             await _handle_pairing(ctx)
 
 
-def _handle_state_TH1(
-    ctx: Channel,
-    message: memoryview,
-) -> None:
+async def _handle_state_TH1(ctx: ThpContext) -> None:
     if __debug__:
-        log.debug(__name__, "handle_state_TH1", iface=ctx.iface)
+        log.debug(__name__, "handle_state_TH1", iface=ctx.channel.iface)
+    message = await ctx.read()
     if not control_byte.is_handshake_init_req(message[0]):
         raise ThpError("Message received is not a handshake init request!")
     if len(message) != INIT_HEADER_LENGTH + PUBKEY_LENGTH + CHECKSUM_LENGTH:
@@ -218,14 +216,14 @@ def _handle_state_TH1(
     if not config.is_unlocked():
         raise ThpDeviceLockedError
 
-    ctx.handshake = Handshake()
+    ctx.channel.handshake = Handshake()
 
     host_ephemeral_public_key = bytes(
         message[INIT_HEADER_LENGTH : len(message) - CHECKSUM_LENGTH]
     )
     trezor_ephemeral_public_key, encrypted_trezor_static_public_key, tag = (
-        ctx.handshake.handle_th1_crypto(
-            get_encoded_device_properties(ctx.iface), host_ephemeral_public_key
+        ctx.channel.handshake.handle_th1_crypto(
+            get_encoded_device_properties(ctx.channel.iface), host_ephemeral_public_key
         )
     )
 
@@ -234,33 +232,34 @@ def _handle_state_TH1(
             __name__,
             "trezor ephemeral public key: %s",
             hexlify_if_bytes(trezor_ephemeral_public_key),
-            iface=ctx.iface,
+            iface=ctx.channel.iface,
         )
         log.debug(
             __name__,
             "encrypted trezor masked static public key: %s",
             hexlify_if_bytes(encrypted_trezor_static_public_key),
-            iface=ctx.iface,
+            iface=ctx.channel.iface,
         )
-        log.debug(__name__, "tag: %s", hexlify_if_bytes(tag), iface=ctx.iface)
+        log.debug(__name__, "tag: %s", hexlify_if_bytes(tag), iface=ctx.channel.iface)
 
     payload = trezor_ephemeral_public_key + encrypted_trezor_static_public_key + tag
 
     # send handshake init response message
-    ctx.write_handshake_message(HANDSHAKE_INIT_RES, payload)
-    ctx.set_channel_state(ChannelState.TH2)
+    ctx.channel.write_handshake_message(HANDSHAKE_INIT_RES, payload)
+    ctx.channel.set_channel_state(ChannelState.TH2)
     return
 
 
-def _handle_state_TH2(ctx: Channel, message: memoryview) -> None:
+async def _handle_state_TH2(ctx: ThpContext) -> None:
     from apps.thp.credential_manager import decode_credential, validate_credential
 
     if __debug__:
-        log.debug(__name__, "handle_state_TH2", iface=ctx.iface)
+        log.debug(__name__, "handle_state_TH2", iface=ctx.channel.iface)
+    message = await ctx.read()
     if not control_byte.is_handshake_comp_req(message[0]):
         raise ThpError("Message received is not a handshake completion request!")
 
-    if ctx.handshake is None:
+    if ctx.channel.handshake is None:
         raise ThpUnallocatedChannelError(
             "Handshake object is not prepared. Create new channel."
         )
@@ -275,15 +274,17 @@ def _handle_state_TH2(ctx: Channel, message: memoryview) -> None:
         INIT_HEADER_LENGTH + KEY_LENGTH + TAG_LENGTH : len(message) - CHECKSUM_LENGTH
     ]
 
-    ctx.handshake.handle_th2_crypto(
+    ctx.channel.handshake.handle_th2_crypto(
         host_encrypted_static_public_key, handshake_completion_request_noise_payload
     )
 
-    ctx.channel_cache.set(CHANNEL_KEY_RECEIVE, ctx.handshake.key_receive)
-    ctx.channel_cache.set(CHANNEL_KEY_SEND, ctx.handshake.key_send)
-    ctx.channel_cache.set(CHANNEL_HANDSHAKE_HASH, ctx.handshake.h)
-    ctx.channel_cache.set_int(CHANNEL_NONCE_RECEIVE, 0)
-    ctx.channel_cache.set_int(CHANNEL_NONCE_SEND, 1)
+    ctx.channel.channel_cache.set(
+        CHANNEL_KEY_RECEIVE, ctx.channel.handshake.key_receive
+    )
+    ctx.channel.channel_cache.set(CHANNEL_KEY_SEND, ctx.channel.handshake.key_send)
+    ctx.channel.channel_cache.set(CHANNEL_HANDSHAKE_HASH, ctx.channel.handshake.h)
+    ctx.channel.channel_cache.set_int(CHANNEL_NONCE_RECEIVE, 0)
+    ctx.channel.channel_cache.set_int(CHANNEL_NONCE_SEND, 1)
 
     noise_payload = _decode_message(
         message[
@@ -305,12 +306,14 @@ def _handle_state_TH2(ctx: Channel, message: memoryview) -> None:
             "host static public key: %s, noise payload: %s",
             utils.hexlify_if_bytes(host_encrypted_static_public_key),
             utils.hexlify_if_bytes(handshake_completion_request_noise_payload),
-            iface=ctx.iface,
+            iface=ctx.channel.iface,
         )
 
     # key is decoded in handshake._handle_th2_crypto
     host_static_public_key = host_encrypted_static_public_key[:PUBKEY_LENGTH]
-    ctx.channel_cache.set_host_static_public_key(bytearray(host_static_public_key))
+    ctx.channel.channel_cache.set_host_static_public_key(
+        bytearray(host_static_public_key)
+    )
 
     paired: bool = False
     trezor_state = _TREZOR_STATE_UNPAIRED
@@ -324,26 +327,26 @@ def _handle_state_TH2(ctx: Channel, message: memoryview) -> None:
             )
             if paired:
                 trezor_state = _TREZOR_STATE_PAIRED
-                ctx.credential = credential
+                ctx.channel.credential = credential
             else:
-                ctx.credential = None
+                ctx.channel.credential = None
         except DataError as e:
             if __debug__:
-                log.exception(__name__, e, iface=ctx.iface)
+                log.exception(__name__, e, iface=ctx.channel.iface)
             pass
 
     # send hanshake completion response
-    ctx.write_handshake_message(
+    ctx.channel.write_handshake_message(
         HANDSHAKE_COMP_RES,
-        ctx.handshake.get_handshake_completion_response(trezor_state),
+        ctx.channel.handshake.get_handshake_completion_response(trezor_state),
     )
 
-    ctx.handshake = None
+    ctx.channel.handshake = None
 
     if paired:
-        ctx.set_channel_state(ChannelState.TC1)
+        ctx.channel.set_channel_state(ChannelState.TC1)
     else:
-        ctx.set_channel_state(ChannelState.TP0)
+        ctx.channel.set_channel_state(ChannelState.TP0)
 
 
 async def _handle_state_ENCRYPTED_TRANSPORT(ctx: ThpContext) -> None:
