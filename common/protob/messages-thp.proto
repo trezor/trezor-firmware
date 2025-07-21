@@ -20,7 +20,8 @@ enum ThpMessageType {
     ThpMessageType_Cancel = 20;
     reserved 21 to 25;
     ThpMessageType_ButtonRequest = 26;
-    reserved 27 to 999;
+    ThpMessageType_ButtonAck = 27;
+    reserved 28 to 999;
 
     reserved 1000;  // MessageType_ThpCreateNewSession
     reserved 1001 to 1007;  // never appeared in a release, reserved for future use

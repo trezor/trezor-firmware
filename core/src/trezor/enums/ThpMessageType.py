@@ -6,6 +6,7 @@ from trezor import utils
 
 Cancel = 20
 ButtonRequest = 26
+ButtonAck = 27
 if utils.USE_THP:
     ThpPairingRequest = 1008
     ThpPairingRequestApproved = 1009
