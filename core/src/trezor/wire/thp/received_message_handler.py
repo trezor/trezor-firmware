@@ -10,7 +10,6 @@ from storage.cache_common import (
 )
 from storage.cache_thp import (
     KEY_LENGTH,
-    SESSION_ID_LENGTH,
     TAG_LENGTH,
     update_channel_last_used,
     update_session_last_used,
@@ -21,7 +20,6 @@ from trezor.messages import Failure
 
 from .. import message_handler
 from ..errors import DataError
-from ..protocol_common import Message
 from . import (
     ACK_MESSAGE,
     HANDSHAKE_COMP_RES,
@@ -42,11 +40,7 @@ from . import checksum, control_byte, get_encoded_device_properties, session_man
 from .checksum import CHECKSUM_LENGTH
 from .crypto import PUBKEY_LENGTH, Handshake
 from .session_context import SeedlessSessionContext
-from .writer import (
-    INIT_HEADER_LENGTH,
-    MESSAGE_TYPE_LENGTH,
-    write_payload_to_wire_and_add_checksum,
-)
+from .writer import INIT_HEADER_LENGTH, write_payload_to_wire_and_add_checksum
 
 if TYPE_CHECKING:
     from typing import Awaitable
@@ -197,7 +191,7 @@ async def handle_ack(ctx: Channel, ack_bit: int) -> None:
 async def _handle_message_to_app_or_channel(ctx: ThpContext) -> None:
     if ctx.channel.get_channel_state() == ChannelState.ENCRYPTED_TRANSPORT:
         while True:
-            _handle_state_ENCRYPTED_TRANSPORT(ctx.channel, await ctx.read())
+            await _handle_state_ENCRYPTED_TRANSPORT(ctx)
     else:
         assert ctx.channel.get_channel_state() == ChannelState.TH1
         _handle_state_TH1(ctx.channel, await ctx.read())
@@ -207,7 +201,7 @@ async def _handle_message_to_app_or_channel(ctx: ThpContext) -> None:
 
         assert _is_channel_state_pairing(ctx.channel.get_channel_state())
         while True:
-            _handle_pairing(ctx.channel, await ctx.read())
+            await _handle_pairing(ctx)
 
 
 def _handle_state_TH1(
@@ -352,73 +346,48 @@ def _handle_state_TH2(ctx: Channel, message: memoryview) -> None:
         ctx.set_channel_state(ChannelState.TP0)
 
 
-def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message: memoryview) -> None:
+async def _handle_state_ENCRYPTED_TRANSPORT(ctx: ThpContext) -> None:
     if __debug__:
-        log.debug(__name__, "handle_state_ENCRYPTED_TRANSPORT", iface=ctx.iface)
+        log.debug(__name__, "handle_state_ENCRYPTED_TRANSPORT", iface=ctx.channel.iface)
 
-    ctx.decrypt_buffer(message)
+    session_id, message = await ctx.decrypt()
+    if session_id not in ctx.channel.sessions:
 
-    session_id, message_type = ustruct.unpack(">BH", message[INIT_HEADER_LENGTH:])
-    if session_id not in ctx.sessions:
-
-        s = session_manager.get_session_from_cache(ctx, session_id)
+        s = session_manager.get_session_from_cache(ctx.channel, session_id)
 
         if s is None:
-            s = SeedlessSessionContext(ctx, session_id)
+            s = SeedlessSessionContext(ctx.channel, session_id)
 
-        ctx.sessions[session_id] = s
+        ctx.channel.sessions[session_id] = s
         loop.schedule(s.handle())
 
-    elif ctx.sessions[session_id].get_session_state() is SessionState.UNALLOCATED:
+    elif (
+        ctx.channel.sessions[session_id].get_session_state() is SessionState.UNALLOCATED
+    ):
         raise ThpUnallocatedSessionError(session_id)
 
-    s = ctx.sessions[session_id]
+    s = ctx.channel.sessions[session_id]
     update_session_last_used(s.channel_id, (s.session_id).to_bytes(1, "big"))
 
-    s.incoming_message.put(
-        Message(
-            message_type,
-            message[
-                INIT_HEADER_LENGTH
-                + MESSAGE_TYPE_LENGTH
-                + SESSION_ID_LENGTH : len(message)
-                - CHECKSUM_LENGTH
-                - TAG_LENGTH
-            ],
-        )
-    )
+    s.incoming_message.put(message)
     if __debug__:
         log.debug(
             __name__,
-            f"Scheduled message to be handled by a session (session_id: {session_id}, msg_type (int): {message_type})",
-            iface=ctx.iface,
+            f"Scheduled message to be handled by a session (session_id: {session_id}, msg_type (int): {message.type})",
+            iface=ctx.channel.iface,
         )
 
 
-def _handle_pairing(ctx: Channel, message: memoryview) -> None:
+async def _handle_pairing(ctx: ThpContext) -> None:
     from .pairing_context import PairingContext
 
-    if ctx.connection_context is None:
-        ctx.connection_context = PairingContext(ctx)
-        loop.schedule(ctx.connection_context.handle())
+    channel = ctx.channel
+    if channel.connection_context is None:
+        channel.connection_context = PairingContext(channel)
+        loop.schedule(channel.connection_context.handle())
 
-    ctx.decrypt_buffer(message)
-    message_type = ustruct.unpack(
-        ">H", message[INIT_HEADER_LENGTH + SESSION_ID_LENGTH :]
-    )[0]
-
-    ctx.connection_context.incoming_message.put(
-        Message(
-            message_type,
-            message[
-                INIT_HEADER_LENGTH
-                + MESSAGE_TYPE_LENGTH
-                + SESSION_ID_LENGTH : len(message)
-                - CHECKSUM_LENGTH
-                - TAG_LENGTH
-            ],
-        )
-    )
+    _, message = await ctx.decrypt()
+    channel.connection_context.incoming_message.put(message)
 
 
 def _should_have_ctrl_byte_encrypted_transport(ctx: Channel) -> bool:
