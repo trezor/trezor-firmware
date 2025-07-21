@@ -137,7 +137,9 @@ async def handle_pairing_request(
             result = await ctx.show_pairing_method_screen()
         except UnexpectedMessageException as e:
             raw_response = e.msg
-            req_type = protobuf.type_for_wire("ThpMessageType", raw_response.type)
+            req_type = protobuf.type_for_wire(
+                ctx.message_type_enum_name, raw_response.type
+            )
             response = message_handler.wrap_protobuf_load(raw_response.data, req_type)
 
         if result is not None:
