@@ -6,7 +6,7 @@ use crate::ui::{
 
 use super::super::{
     component::{Button, ButtonMsg},
-    theme::{self, Gradient},
+    theme,
 };
 
 /// Component for control buttons in the bottom of the screen. Reduced variant
@@ -49,9 +49,7 @@ impl BldActionBar {
         Self::new(
             Mode::Single,
             None,
-            button
-                .with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)
-                .with_gradient(Gradient::DefaultGrey),
+            button.with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH),
         )
     }
 

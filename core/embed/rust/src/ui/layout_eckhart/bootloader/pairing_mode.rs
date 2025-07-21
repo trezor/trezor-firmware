@@ -7,7 +7,7 @@ use crate::{
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Label},
         event::BLEEvent,
-        geometry::Rect,
+        geometry::{Insets, Rect},
         layout::simplified::ReturnToC,
         shape::Renderer,
     },
@@ -67,6 +67,7 @@ impl Component for PairingModeScreen {
         let (rest, action_bar_area) = rest.split_bottom(theme::ACTION_BAR_HEIGHT);
         let rest = rest.inset(theme::SIDE_INSETS);
         let (name_area, content_area) = rest.split_top(self.name.text_height(rest.width()));
+        let content_area = content_area.inset(Insets::top(4));
         self.header.place(header_area);
         self.name.place(name_area);
         self.message.place(content_area);

@@ -21,7 +21,6 @@ const BUTTON_EXPAND_BORDER: i16 = 32;
 pub struct Header {
     area: Rect,
     title: Label<'static>,
-    title_style: TextStyle,
     /// button in the top-right corner
     right_button: Option<Button>,
     /// button in the top-left corner
@@ -51,7 +50,6 @@ impl Header {
         Self {
             area: Rect::zero(),
             title: Label::left_aligned(title, theme::label_title_main()).vertically_centered(),
-            title_style: theme::label_title_main(),
             right_button: None,
             left_button: None,
             right_button_msg: HeaderMsg::Cancelled,
@@ -64,7 +62,6 @@ impl Header {
 
     #[inline(never)]
     pub fn with_text_style(mut self, style: TextStyle) -> Self {
-        self.title_style = style;
         self.title = self.title.styled(style);
         self
     }

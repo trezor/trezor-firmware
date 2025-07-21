@@ -28,8 +28,12 @@ pub struct ConnectScreen {
 }
 
 impl ConnectScreen {
-    pub fn new() -> Self {
-        let btn = Button::with_text("Cancel".into());
+    pub fn new(initial_setup: bool) -> Self {
+        let mut btn = Button::with_text("Cancel".into());
+        if initial_setup {
+            btn = btn.with_gradient(theme::Gradient::DefaultGrey);
+        };
+
         Self {
             header: None,
             message: Label::left_aligned("Waiting for host...".into(), theme::TEXT_NORMAL),

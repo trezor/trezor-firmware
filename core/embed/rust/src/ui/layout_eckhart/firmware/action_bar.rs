@@ -232,11 +232,9 @@ impl ActionBar {
             timeout,
             pager: Pager::default(),
             prev_button: Button::with_icon(theme::ICON_CHEVRON_UP)
-                .styled(theme::button_default())
                 .with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)
                 .with_content_offset(Self::BUTTON_CONTENT_OFFSET),
             next_button: Button::with_icon(theme::ICON_CHEVRON_DOWN)
-                .styled(theme::button_default())
                 .with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)
                 .with_content_offset(Self::BUTTON_CONTENT_OFFSET.neg()),
         }

@@ -33,8 +33,10 @@ pub struct ConfirmPairingScreen<'a> {
 impl<'a> ConfirmPairingScreen<'a> {
     pub fn new(code: u32) -> Self {
         let (left, right) = (
-            Button::with_icon(theme::ICON_CROSS),
-            Button::with_icon(theme::ICON_CHECKMARK),
+            Button::with_icon(theme::ICON_CROSS)
+                .styled(theme::bootloader::button_bld_initial_setup()),
+            Button::with_icon(theme::ICON_CHECKMARK)
+                .styled(theme::bootloader::button_bld_initial_setup()),
         );
 
         Self {

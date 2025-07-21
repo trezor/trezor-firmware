@@ -1,7 +1,7 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{Component, Event, EventCtx, Label},
+        component::{text::TextStyle, Component, Event, EventCtx, Label},
         display::{Color, Icon},
         geometry::{Alignment2D, Insets, Rect},
         shape::{self, Renderer},
@@ -10,7 +10,8 @@ use crate::{
 
 use super::super::{
     component::{Button, ButtonContent, ButtonMsg, FuelGauge},
-    constant, theme,
+    constant,
+    theme::{self, bootloader::text_title},
 };
 
 const BUTTON_EXPAND_BORDER: i16 = 32;
@@ -48,11 +49,7 @@ impl<'a> BldHeader<'a> {
     pub const fn new(title: TString<'a>) -> Self {
         Self {
             area: Rect::zero(),
-            title: Label::left_aligned(
-                title,
-                theme::bootloader::text_title(theme::bootloader::BLD_BG),
-            )
-            .vertically_centered(),
+            title: Label::left_aligned(title, text_title(theme::GREY)).vertically_centered(),
             right_button: None,
             left_button: None,
             right_button_msg: BldHeaderMsg::Cancelled,
@@ -64,15 +61,27 @@ impl<'a> BldHeader<'a> {
     }
 
     pub fn new_rsod_header() -> Self {
-        Self::new("Failure".into()).with_icon(theme::ICON_INFO, theme::RED)
+        Self::new("Failure".into())
+            .with_icon(theme::ICON_INFO, theme::RED)
+            .with_text_style(text_title(theme::RED))
     }
 
-    pub fn new_done() -> Self {
-        Self::new("Done".into()).with_icon(theme::ICON_DONE, theme::GREY)
+    pub fn new_done(color: Color) -> Self {
+        Self::new("Done".into())
+            .with_icon(theme::ICON_DONE, color)
+            .with_text_style(text_title(color))
     }
 
-    pub fn new_pay_attention() -> Self {
-        Self::new("Pay attention".into()).with_icon(theme::ICON_WARNING, theme::GREY)
+    pub fn new_important() -> Self {
+        Self::new("Important".into())
+            .with_icon(theme::ICON_WARNING, theme::RED)
+            .with_text_style(text_title(theme::RED))
+    }
+
+    #[inline(never)]
+    pub fn with_text_style(mut self, style: TextStyle) -> Self {
+        self.title = self.title.styled(style);
+        self
     }
 
     #[inline(never)]
