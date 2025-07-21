@@ -14,7 +14,7 @@ from storage.cache_thp import (
     update_channel_last_used,
     update_session_last_used,
 )
-from trezor import config, loop, protobuf, utils
+from trezor import config, protobuf, utils
 from trezor.enums import FailureType
 from trezor.messages import Failure
 
@@ -26,7 +26,6 @@ from . import (
     HANDSHAKE_INIT_RES,
     ChannelState,
     PacketHeader,
-    SessionState,
     ThpDecryptionError,
     ThpDeviceLockedError,
     ThpError,
@@ -183,15 +182,11 @@ async def handle_ack(ctx: Channel, ack_bit: int) -> None:
                 iface=ctx.iface,
             )
         await ctx.write_task_spawn
-        # Note that no the write_task_spawn could result in loop.clear(),
-        # which will result in termination of this function - any code after
-        # this await might not be executed
 
 
 async def _handle_message_to_app_or_channel(ctx: ThpContext) -> None:
     if ctx.channel.get_channel_state() == ChannelState.ENCRYPTED_TRANSPORT:
-        while True:
-            await _handle_state_ENCRYPTED_TRANSPORT(ctx)
+        await _handle_state_ENCRYPTED_TRANSPORT(ctx)
     else:
         assert ctx.channel.get_channel_state() == ChannelState.TH1
         await _handle_state_TH1(ctx)
@@ -200,8 +195,7 @@ async def _handle_message_to_app_or_channel(ctx: ThpContext) -> None:
         await _handle_state_TH2(ctx)
 
         assert _is_channel_state_pairing(ctx.channel.get_channel_state())
-        while True:
-            await _handle_pairing(ctx)
+        await _handle_pairing(ctx)
 
 
 async def _handle_state_TH1(ctx: ThpContext) -> None:
@@ -245,7 +239,8 @@ async def _handle_state_TH1(ctx: ThpContext) -> None:
     payload = trezor_ephemeral_public_key + encrypted_trezor_static_public_key + tag
 
     # send handshake init response message
-    ctx.channel.write_handshake_message(HANDSHAKE_INIT_RES, payload)
+    # TODO: ACK+retry
+    await ctx.channel.send_payload(HANDSHAKE_INIT_RES, payload)
     ctx.channel.set_channel_state(ChannelState.TH2)
     return
 
@@ -336,7 +331,8 @@ async def _handle_state_TH2(ctx: ThpContext) -> None:
             pass
 
     # send hanshake completion response
-    ctx.channel.write_handshake_message(
+    # TODO: ACK+retry
+    await ctx.channel.send_payload(
         HANDSHAKE_COMP_RES,
         ctx.channel.handshake.get_handshake_completion_response(trezor_state),
     )
@@ -354,43 +350,21 @@ async def _handle_state_ENCRYPTED_TRANSPORT(ctx: ThpContext) -> None:
         log.debug(__name__, "handle_state_ENCRYPTED_TRANSPORT", iface=ctx.channel.iface)
 
     session_id, message = await ctx.decrypt()
-    if session_id not in ctx.channel.sessions:
 
-        s = session_manager.get_session_from_cache(ctx.channel, session_id)
+    s = session_manager.get_session_from_cache(ctx, session_id)
+    if s is None:
+        s = SeedlessSessionContext(ctx, session_id)
 
-        if s is None:
-            s = SeedlessSessionContext(ctx.channel, session_id)
-
-        ctx.channel.sessions[session_id] = s
-        loop.schedule(s.handle())
-
-    elif (
-        ctx.channel.sessions[session_id].get_session_state() is SessionState.UNALLOCATED
-    ):
-        raise ThpUnallocatedSessionError(session_id)
-
-    s = ctx.channel.sessions[session_id]
     update_session_last_used(s.channel_id, (s.session_id).to_bytes(1, "big"))
-
-    s.incoming_message.put(message)
-    if __debug__:
-        log.debug(
-            __name__,
-            f"Scheduled message to be handled by a session (session_id: {session_id}, msg_type (int): {message.type})",
-            iface=ctx.channel.iface,
-        )
+    await s.handle(message)
 
 
 async def _handle_pairing(ctx: ThpContext) -> None:
     from .pairing_context import PairingContext
 
     channel = ctx.channel
-    if channel.connection_context is None:
-        channel.connection_context = PairingContext(channel)
-        loop.schedule(channel.connection_context.handle())
-
-    _, message = await ctx.decrypt()
-    channel.connection_context.incoming_message.put(message)
+    channel.connection_context = PairingContext(channel, ctx)
+    await channel.connection_context.handle()  # will read and write message on its own
 
 
 def _should_have_ctrl_byte_encrypted_transport(ctx: Channel) -> bool:

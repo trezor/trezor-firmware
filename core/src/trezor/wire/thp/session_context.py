@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from storage import cache_thp
 from storage.cache_common import InvalidSessionError
 from storage.cache_thp import SessionThpCache
-from trezor import loop, protobuf
+from trezor import protobuf
 from trezor.wire import message_handler, protocol_common
 from trezor.wire.context import UnexpectedMessageException
 from trezor.wire.message_handler import failure
@@ -12,13 +12,12 @@ from ..protocol_common import Context, Message
 from . import SessionState
 
 if TYPE_CHECKING:
-    from typing import Awaitable, Container
+    from typing import Container
 
     from storage.cache_common import DataCache
 
     from .channel import Channel
-
-    pass
+    from .thp_main import ThpContext
 
 _EXIT_LOOP = True
 _REPEAT_LOOP = False
@@ -30,13 +29,13 @@ if __debug__:
 
 class GenericSessionContext(Context):
 
-    def __init__(self, channel: Channel, session_id: int) -> None:
-        super().__init__(channel.iface, channel.channel_id)
-        self.channel: Channel = channel
+    def __init__(self, ctx: ThpContext, session_id: int) -> None:
+        super().__init__(ctx.channel.iface, ctx.channel.channel_id)
+        self.ctx: ThpContext = ctx
+        self.channel: Channel = ctx.channel
         self.session_id: int = session_id
-        self.incoming_message = loop.mailbox()
 
-    async def handle(self) -> None:
+    async def handle(self, next_message: Message | None) -> None:
         if __debug__:
             log.debug(
                 __name__,
@@ -46,42 +45,34 @@ class GenericSessionContext(Context):
                 iface=self.iface,
             )
 
-        next_message: Message | None = None
-
         while True:
             message = next_message
             next_message = None
             try:
-                await self._handle_message(message)
-                loop.schedule(self.handle())
+                if message is None:
+                    # Wait for a new message from wire
+                    session_id, message = await self.ctx.decrypt()
+                    assert (
+                        session_id == self.session_id
+                    )  # TODO: raise `FailureType.Busy`?
+
+                await message_handler.handle_single_message(self, message)
                 return
             except protocol_common.WireError as e:
                 if __debug__:
                     log.exception(__name__, e, iface=self.iface)
                 await self.write(failure(e))
+                continue
             except UnexpectedMessageException as unexpected:
                 # The workflow was interrupted by an unexpected message. We need to
                 # process it as if it was a new message...
                 next_message = unexpected.msg
+                continue
             except Exception as exc:
                 # Log and try again.
+                # TODO: should exit if writing the response failed?
                 if __debug__:
                     log.exception(__name__, exc, iface=self.iface)
-
-    async def _handle_message(
-        self,
-        next_message: Message | None,
-    ) -> None:
-
-        if next_message is not None:
-            # Process the message from previous run.
-            message = next_message
-            next_message = None
-        else:
-            # Wait for a new message from wire
-            message = await self.incoming_message
-
-        await message_handler.handle_single_message(self, message)
 
     async def read(
         self,
@@ -99,7 +90,8 @@ class GenericSessionContext(Context):
                 exp_type,
                 iface=self.iface,
             )
-        message: Message = await self.incoming_message
+        session_id, message = await self.ctx.decrypt()
+        assert session_id == self.session_id  # TODO: raise `FailureType.Busy`?
         if message.type not in expected_types:
             if __debug__:
                 log.debug(
@@ -119,18 +111,22 @@ class GenericSessionContext(Context):
         return message_handler.wrap_protobuf_load(message.data, expected_type)
 
     async def write(self, msg: protobuf.MessageType) -> None:
-        return await self.channel.write(msg, self.session_id)
+        # TODO: pre-ACK+retry
+        await self.channel.send_message(msg, self.session_id)
+        await self.ctx.wait_for_ack()
 
-    def write_force(self, msg: protobuf.MessageType) -> Awaitable[None]:
-        return self.channel.write(msg, self.session_id, force=True)
+    async def write_force(self, msg: protobuf.MessageType) -> None:
+        # TODO: pre-ACK+retry
+        await self.channel.send_message(msg, self.session_id)
+        await self.ctx.wait_for_ack()
 
     def get_session_state(self) -> SessionState: ...
 
 
 class SeedlessSessionContext(GenericSessionContext):
 
-    def __init__(self, channel_ctx: Channel, session_id: int) -> None:
-        super().__init__(channel_ctx, session_id)
+    def __init__(self, ctx: ThpContext, session_id: int) -> None:
+        super().__init__(ctx, session_id)
 
     def get_session_state(self) -> SessionState:
         return SessionState.SEEDLESS
@@ -142,13 +138,13 @@ class SeedlessSessionContext(GenericSessionContext):
 
 class SessionContext(GenericSessionContext):
 
-    def __init__(self, channel_ctx: Channel, session_cache: SessionThpCache) -> None:
-        if channel_ctx.channel_id != session_cache.channel_id:
+    def __init__(self, ctx: ThpContext, session_cache: SessionThpCache) -> None:
+        if ctx.channel.channel_id != session_cache.channel_id:
             raise Exception(
                 "The session has different channel id than the provided channel context!"
             )
         session_id = int.from_bytes(session_cache.session_id, "big")
-        super().__init__(channel_ctx, session_id)
+        super().__init__(ctx, session_id)
         self.session_cache = session_cache
 
     # ACCESS TO SESSION DATA

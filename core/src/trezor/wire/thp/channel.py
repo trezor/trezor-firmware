@@ -55,7 +55,6 @@ if TYPE_CHECKING:
     from trezor.messages import ThpPairingCredential
 
     from .pairing_context import PairingContext
-    from .session_context import GenericSessionContext
 
 
 class ChannelBuffers:
@@ -98,7 +97,6 @@ class Channel:
         self.bytes_read: int = 0
         self.rx_buffer: memoryview = memoryview(b"")
         self.is_cont_packet_expected: bool = False
-        self.sessions: dict[int, GenericSessionContext] = {}
 
         # Objects for writing a message to a wire
         self.transmission_loop: TransmissionLoop | None = None
@@ -116,7 +114,7 @@ class Channel:
         """Try to acquire buffers (in case it's the first message being handled)."""
         self._buffers = self._buffers or wire.THP_BUFFERS_PROVIDER.take()
         if not self._buffers:
-            raise ThpTransportBusy(channel_id=self.get_channel_id_int())
+            raise ThpTransportBusy(self.get_channel_id_int())
         return self._buffers
 
     def clear(self) -> None:
@@ -256,6 +254,7 @@ class Channel:
         session_id: int = 0,
         force: bool = False,
     ) -> None:
+        raise NotImplementedError
         if __debug__:
             self._log(
                 f"write message: {msg.MESSAGE_NAME}",
@@ -379,7 +378,6 @@ class Channel:
         if not only_once and self._can_clear_loop():
             if __debug__:
                 self._log("clearing loop from channel")
-            loop.clear()
 
     def _encrypt(self, buffer: utils.BufferType, noise_payload_len: int) -> None:
         if __debug__:
