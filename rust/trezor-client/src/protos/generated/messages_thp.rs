@@ -3984,6 +3984,8 @@ pub enum ThpMessageType {
     ThpMessageType_Cancel = 20,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpMessageType.ThpMessageType_ButtonRequest)
     ThpMessageType_ButtonRequest = 26,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpMessageType.ThpMessageType_ButtonAck)
+    ThpMessageType_ButtonAck = 27,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpMessageType.ThpMessageType_ThpPairingRequest)
     ThpMessageType_ThpPairingRequest = 1008,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.thp.ThpMessageType.ThpMessageType_ThpPairingRequestApproved)
@@ -4031,6 +4033,7 @@ impl ::protobuf::Enum for ThpMessageType {
         match value {
             20 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_Cancel),
             26 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ButtonRequest),
+            27 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ButtonAck),
             1008 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpPairingRequest),
             1009 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpPairingRequestApproved),
             1010 => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpSelectMethod),
@@ -4056,6 +4059,7 @@ impl ::protobuf::Enum for ThpMessageType {
         match str {
             "ThpMessageType_Cancel" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_Cancel),
             "ThpMessageType_ButtonRequest" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ButtonRequest),
+            "ThpMessageType_ButtonAck" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ButtonAck),
             "ThpMessageType_ThpPairingRequest" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpPairingRequest),
             "ThpMessageType_ThpPairingRequestApproved" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpPairingRequestApproved),
             "ThpMessageType_ThpSelectMethod" => ::std::option::Option::Some(ThpMessageType::ThpMessageType_ThpSelectMethod),
@@ -4080,6 +4084,7 @@ impl ::protobuf::Enum for ThpMessageType {
     const VALUES: &'static [ThpMessageType] = &[
         ThpMessageType::ThpMessageType_Cancel,
         ThpMessageType::ThpMessageType_ButtonRequest,
+        ThpMessageType::ThpMessageType_ButtonAck,
         ThpMessageType::ThpMessageType_ThpPairingRequest,
         ThpMessageType::ThpMessageType_ThpPairingRequestApproved,
         ThpMessageType::ThpMessageType_ThpSelectMethod,
@@ -4110,23 +4115,24 @@ impl ::protobuf::EnumFull for ThpMessageType {
         let index = match self {
             ThpMessageType::ThpMessageType_Cancel => 0,
             ThpMessageType::ThpMessageType_ButtonRequest => 1,
-            ThpMessageType::ThpMessageType_ThpPairingRequest => 2,
-            ThpMessageType::ThpMessageType_ThpPairingRequestApproved => 3,
-            ThpMessageType::ThpMessageType_ThpSelectMethod => 4,
-            ThpMessageType::ThpMessageType_ThpPairingPreparationsFinished => 5,
-            ThpMessageType::ThpMessageType_ThpCredentialRequest => 6,
-            ThpMessageType::ThpMessageType_ThpCredentialResponse => 7,
-            ThpMessageType::ThpMessageType_ThpEndRequest => 8,
-            ThpMessageType::ThpMessageType_ThpEndResponse => 9,
-            ThpMessageType::ThpMessageType_ThpCodeEntryCommitment => 10,
-            ThpMessageType::ThpMessageType_ThpCodeEntryChallenge => 11,
-            ThpMessageType::ThpMessageType_ThpCodeEntryCpaceTrezor => 12,
-            ThpMessageType::ThpMessageType_ThpCodeEntryCpaceHostTag => 13,
-            ThpMessageType::ThpMessageType_ThpCodeEntrySecret => 14,
-            ThpMessageType::ThpMessageType_ThpQrCodeTag => 15,
-            ThpMessageType::ThpMessageType_ThpQrCodeSecret => 16,
-            ThpMessageType::ThpMessageType_ThpNfcTagHost => 17,
-            ThpMessageType::ThpMessageType_ThpNfcTagTrezor => 18,
+            ThpMessageType::ThpMessageType_ButtonAck => 2,
+            ThpMessageType::ThpMessageType_ThpPairingRequest => 3,
+            ThpMessageType::ThpMessageType_ThpPairingRequestApproved => 4,
+            ThpMessageType::ThpMessageType_ThpSelectMethod => 5,
+            ThpMessageType::ThpMessageType_ThpPairingPreparationsFinished => 6,
+            ThpMessageType::ThpMessageType_ThpCredentialRequest => 7,
+            ThpMessageType::ThpMessageType_ThpCredentialResponse => 8,
+            ThpMessageType::ThpMessageType_ThpEndRequest => 9,
+            ThpMessageType::ThpMessageType_ThpEndResponse => 10,
+            ThpMessageType::ThpMessageType_ThpCodeEntryCommitment => 11,
+            ThpMessageType::ThpMessageType_ThpCodeEntryChallenge => 12,
+            ThpMessageType::ThpMessageType_ThpCodeEntryCpaceTrezor => 13,
+            ThpMessageType::ThpMessageType_ThpCodeEntryCpaceHostTag => 14,
+            ThpMessageType::ThpMessageType_ThpCodeEntrySecret => 15,
+            ThpMessageType::ThpMessageType_ThpQrCodeTag => 16,
+            ThpMessageType::ThpMessageType_ThpQrCodeSecret => 17,
+            ThpMessageType::ThpMessageType_ThpNfcTagHost => 18,
+            ThpMessageType::ThpMessageType_ThpNfcTagTrezor => 19,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -4266,29 +4272,30 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x01\n\x1eThpAuthenticatedCredentialData\x12,\n\x12host_static_pubkey\
     \x18\x01\x20\x02(\x0cR\x10hostStaticPubkey\x12R\n\rcred_metadata\x18\x02\
     \x20\x02(\x0b2-.hw.trezor.messages.thp.ThpCredentialMetadataR\x0ccredMet\
-    adata:\x04\x98\xb2\x19\x01*\xdd\x06\n\x0eThpMessageType\x12\x19\n\x15Thp\
+    adata:\x04\x98\xb2\x19\x01*\xfb\x06\n\x0eThpMessageType\x12\x19\n\x15Thp\
     MessageType_Cancel\x10\x14\x12\x20\n\x1cThpMessageType_ButtonRequest\x10\
-    \x1a\x12%\n\x20ThpMessageType_ThpPairingRequest\x10\xf0\x07\x12-\n(ThpMe\
-    ssageType_ThpPairingRequestApproved\x10\xf1\x07\x12#\n\x1eThpMessageType\
-    _ThpSelectMethod\x10\xf2\x07\x122\n-ThpMessageType_ThpPairingPreparation\
-    sFinished\x10\xf3\x07\x12(\n#ThpMessageType_ThpCredentialRequest\x10\xf8\
-    \x07\x12)\n$ThpMessageType_ThpCredentialResponse\x10\xf9\x07\x12!\n\x1cT\
-    hpMessageType_ThpEndRequest\x10\xfa\x07\x12\"\n\x1dThpMessageType_ThpEnd\
-    Response\x10\xfb\x07\x12*\n%ThpMessageType_ThpCodeEntryCommitment\x10\
-    \x80\x08\x12)\n$ThpMessageType_ThpCodeEntryChallenge\x10\x81\x08\x12+\n&\
-    ThpMessageType_ThpCodeEntryCpaceTrezor\x10\x82\x08\x12,\n'ThpMessageType\
-    _ThpCodeEntryCpaceHostTag\x10\x83\x08\x12&\n!ThpMessageType_ThpCodeEntry\
-    Secret\x10\x84\x08\x12\x20\n\x1bThpMessageType_ThpQrCodeTag\x10\x88\x08\
-    \x12#\n\x1eThpMessageType_ThpQrCodeSecret\x10\x89\x08\x12!\n\x1cThpMessa\
-    geType_ThpNfcTagHost\x10\x90\x08\x12#\n\x1eThpMessageType_ThpNfcTagTrezo\
-    r\x10\x91\x08\x1a\x04\xd0\xf3\x18\x01\"\x04\x08\0\x10\x13\"\x04\x08\x15\
-    \x10\x19\"\x05\x08\x1b\x10\xe7\x07\"\x06\x08\xe8\x07\x10\xe8\x07\"\x06\
-    \x08\xe9\x07\x10\xef\x07\"\x06\x08\xf4\x07\x10\xf7\x07\"\x06\x08\xfc\x07\
-    \x10\xff\x07\"\x06\x08\x85\x08\x10\x87\x08\"\x06\x08\x8a\x08\x10\x8f\x08\
-    \"\x06\x08\x92\x08\x10\xcb\x08\"\t\x08\xcc\x08\x10\xff\xff\xff\xff\x07*G\
-    \n\x10ThpPairingMethod\x12\x0f\n\x0bSkipPairing\x10\x01\x12\r\n\tCodeEnt\
-    ry\x10\x02\x12\n\n\x06QrCode\x10\x03\x12\x07\n\x03NFC\x10\x04B;\n#com.sa\
-    toshilabs.trezor.lib.protobufB\x10TrezorMessageThp\x80\xa6\x1d\x01\
+    \x1a\x12\x1c\n\x18ThpMessageType_ButtonAck\x10\x1b\x12%\n\x20ThpMessageT\
+    ype_ThpPairingRequest\x10\xf0\x07\x12-\n(ThpMessageType_ThpPairingReques\
+    tApproved\x10\xf1\x07\x12#\n\x1eThpMessageType_ThpSelectMethod\x10\xf2\
+    \x07\x122\n-ThpMessageType_ThpPairingPreparationsFinished\x10\xf3\x07\
+    \x12(\n#ThpMessageType_ThpCredentialRequest\x10\xf8\x07\x12)\n$ThpMessag\
+    eType_ThpCredentialResponse\x10\xf9\x07\x12!\n\x1cThpMessageType_ThpEndR\
+    equest\x10\xfa\x07\x12\"\n\x1dThpMessageType_ThpEndResponse\x10\xfb\x07\
+    \x12*\n%ThpMessageType_ThpCodeEntryCommitment\x10\x80\x08\x12)\n$ThpMess\
+    ageType_ThpCodeEntryChallenge\x10\x81\x08\x12+\n&ThpMessageType_ThpCodeE\
+    ntryCpaceTrezor\x10\x82\x08\x12,\n'ThpMessageType_ThpCodeEntryCpaceHostT\
+    ag\x10\x83\x08\x12&\n!ThpMessageType_ThpCodeEntrySecret\x10\x84\x08\x12\
+    \x20\n\x1bThpMessageType_ThpQrCodeTag\x10\x88\x08\x12#\n\x1eThpMessageTy\
+    pe_ThpQrCodeSecret\x10\x89\x08\x12!\n\x1cThpMessageType_ThpNfcTagHost\
+    \x10\x90\x08\x12#\n\x1eThpMessageType_ThpNfcTagTrezor\x10\x91\x08\x1a\
+    \x04\xd0\xf3\x18\x01\"\x04\x08\0\x10\x13\"\x04\x08\x15\x10\x19\"\x05\x08\
+    \x1c\x10\xe7\x07\"\x06\x08\xe8\x07\x10\xe8\x07\"\x06\x08\xe9\x07\x10\xef\
+    \x07\"\x06\x08\xf4\x07\x10\xf7\x07\"\x06\x08\xfc\x07\x10\xff\x07\"\x06\
+    \x08\x85\x08\x10\x87\x08\"\x06\x08\x8a\x08\x10\x8f\x08\"\x06\x08\x92\x08\
+    \x10\xcb\x08\"\t\x08\xcc\x08\x10\xff\xff\xff\xff\x07*G\n\x10ThpPairingMe\
+    thod\x12\x0f\n\x0bSkipPairing\x10\x01\x12\r\n\tCodeEntry\x10\x02\x12\n\n\
+    \x06QrCode\x10\x03\x12\x07\n\x03NFC\x10\x04B;\n#com.satoshilabs.trezor.l\
+    ib.protobufB\x10TrezorMessageThp\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

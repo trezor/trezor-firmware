@@ -396,6 +396,7 @@ class TezosBallotType(IntEnum):
 class ThpMessageType(IntEnum):
     Cancel = 20
     ButtonRequest = 26
+    ButtonAck = 27
     ThpPairingRequest = 1008
     ThpPairingRequestApproved = 1009
     ThpSelectMethod = 1010
