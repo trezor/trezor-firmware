@@ -19,6 +19,7 @@ use crate::{
             },
             ComponentExt as _, Empty, FormattedText, Timeout,
         },
+        flow::FlowMsg,
         geometry::{Alignment, LinearPlacement, Offset},
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
@@ -37,8 +38,8 @@ use super::{
     firmware::{
         ActionBar, Bip39Input, ConfirmHomescreen, DeviceMenuScreen, DurationInput, Header,
         HeaderMsg, Hint, Homescreen, MnemonicKeyboard, PinKeyboard, ProgressScreen,
-        SelectWordCountScreen, SelectWordScreen, SetBrightnessScreen, Slip39Input, TextScreen,
-        ValueInputScreen,
+        SelectWordCountScreen, SelectWordScreen, SetBrightnessScreen, ShortMenuVec, Slip39Input,
+        TextScreen, ValueInputScreen, VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
     },
     flow, fonts,
     theme::{
@@ -925,11 +926,33 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn select_menu(
-        _items: heapless::Vec<TString<'static>, MAX_MENU_ITEMS>,
+        items: heapless::Vec<TString<'static>, MAX_MENU_ITEMS>,
         _current: usize,
-        _cancel: Option<TString<'static>>,
+        cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+        let mut menu = VerticalMenu::<ShortMenuVec>::empty().with_separators();
+        for text in &items {
+            menu.item(Button::new_menu_item(*text, theme::menu_item_title()));
+        }
+        if let Some(text) = cancel {
+            menu.item(Button::new_menu_item(text, theme::menu_item_title_red()));
+        }
+        let screen = VerticalMenuScreen::new(menu)
+            .with_header(Header::new(TString::empty()).with_close_button())
+            .map(move |msg| {
+                let choice = match msg {
+                    VerticalMenuScreenMsg::Selected(i) => i,
+                    VerticalMenuScreenMsg::Close => return Some(FlowMsg::Confirmed),
+                    _ => return None,
+                };
+                Some(if cancel.is_some() && choice == items.len() {
+                    FlowMsg::Cancelled
+                } else {
+                    FlowMsg::Choice(choice)
+                })
+            });
+
+        flow::util::single_page(screen)
     }
 
     fn select_word(
