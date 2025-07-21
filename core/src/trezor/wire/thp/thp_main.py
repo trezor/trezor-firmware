@@ -55,6 +55,9 @@ class ThpContext:
         self.channel = channel
         self.msg: memoryview | None = channel.rx_buffer
 
+    async def wait_for_ack(self) -> None:
+        await _read_next_message(self.channel.iface, expect_ack=True)
+
     async def read(self) -> memoryview:
         if self.msg is None:
             channel = await _read_next_message(self.channel.iface)
@@ -87,7 +90,7 @@ class ThpContext:
         return cls(await _read_next_message(iface))
 
 
-async def _read_next_message(iface: WireInterface) -> Channel:
+async def _read_next_message(iface: WireInterface, expect_ack: bool = False) -> Channel:
     read = loop.wait(iface.iface_num() | io.POLL_READ)
     packet = bytearray(iface.RX_PACKET_LEN)
     while True:
@@ -113,8 +116,13 @@ async def _read_next_message(iface: WireInterface) -> Channel:
         if not await _handle_allocated(iface, channel, packet):
             continue
 
-        if await handle_checksum_and_acks(channel):
-            # channel.rx_buffer contains a valid & acknowledged message
+        has_message = await handle_checksum_and_acks(channel)
+        if expect_ack and has_message:
+            # TODO: not great
+            raise AssertionError("Expected ACK, got a message instead")
+
+        if expect_ack or has_message:
+            # channel.rx_buffer contains an ACK or a valid & acknowledged message
             return channel
 
 
