@@ -1341,10 +1341,44 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_properties(
-        _title: TString<'static>,
-        _value: Obj,
+        title: TString<'static>,
+        value: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+        let mut vec = ParagraphVecShort::new();
+        if Obj::is_str(value) {
+            let text: TString = value.try_into()?;
+            unwrap!(vec.push(Paragraph::new(&theme::TEXT_MONO_ADDRESS_CHUNKS, text)));
+        } else {
+            for property in IterBuf::new().try_iterate(value)? {
+                let [header, text]: [Obj; 2] = util::iter_into_array(property)?;
+                let header = header
+                    .try_into_option::<TString>()?
+                    .unwrap_or_else(TString::empty);
+                let text = text
+                    .try_into_option::<TString>()?
+                    .unwrap_or_else(TString::empty);
+
+                unwrap!(vec.push(Paragraph::new(&theme::TEXT_SMALL, header)));
+                let mut value_paragraph = Paragraph::new(
+                    if header.is_empty() {
+                        &theme::TEXT_MONO_ADDRESS_CHUNKS
+                    } else {
+                        &theme::TEXT_MONO_LIGHT
+                    },
+                    text,
+                );
+                if header.is_empty() {
+                    value_paragraph = value_paragraph.with_bottom_padding(20);
+                }
+                unwrap!(vec.push(value_paragraph));
+            }
+        };
+
+        let screen = TextScreen::new(vec.into_paragraphs())
+            .with_header(Header::new(title).with_close_button());
+
+        let obj = RootComponent::new(screen);
+        Ok(obj)
     }
 
     fn show_share_words(
