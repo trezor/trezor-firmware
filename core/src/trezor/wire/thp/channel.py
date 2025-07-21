@@ -96,7 +96,7 @@ class Channel:
         # Shared variables
         self.buffer: utils.BufferType = bytearray(self.iface.TX_PACKET_LEN)
         self.bytes_read: int = 0
-        self.rx_buffer: memoryview | None = None
+        self.rx_buffer: memoryview = memoryview(b"")
         self.is_cont_packet_expected: bool = False
         self.sessions: dict[int, GenericSessionContext] = {}
 
@@ -121,7 +121,7 @@ class Channel:
 
     def clear(self) -> None:
         clear_sessions_with_channel_id(self.channel_id)
-        self.rx_buffer = None
+        self.rx_buffer = memoryview(b"")
         self.channel_cache.clear()
 
     # ACCESS TO CHANNEL_DATA
@@ -169,23 +169,21 @@ class Channel:
 
     # READ and DECRYPT
 
-    def receive_packet(self, packet: utils.BufferType) -> memoryview | None:
+    def receive_packet(self, packet: utils.BufferType) -> bool:
         if __debug__:
             self._log("receive packet")
 
         self._handle_received_packet(packet)
-        assert self.rx_buffer is not None
 
         if len(self.rx_buffer) == self.bytes_read:
-            rx_buffer = self.rx_buffer
-            self.rx_buffer = None
             self.bytes_read = 0
             self.is_cont_packet_expected = False
-            return rx_buffer
+            # FIXME: if any message is received before `rx_buffer` is decoded, it will be overwritten :(
+            return True
 
         elif len(self.rx_buffer) > self.bytes_read:
             self.is_cont_packet_expected = True
-            return None
+            return False
         else:
             raise ThpError(
                 "Read more bytes than is the expected length of the message!"
@@ -200,7 +198,6 @@ class Channel:
 
     def _handle_init_packet(self, packet: utils.BufferType) -> None:
         self.bytes_read = 0
-        assert self.rx_buffer is None
 
         _, _, payload_length = ustruct.unpack(PacketHeader.format_str_init, packet)
         self.rx_buffer = self.get_buffers().get_rx(INIT_HEADER_LENGTH + payload_length)
@@ -213,7 +210,6 @@ class Channel:
         if not self.is_cont_packet_expected:
             raise ThpError("Continuation packet is not expected, ignoring")
 
-        assert self.rx_buffer is not None
         self._buffer_packet_data(self.rx_buffer, packet, CONT_HEADER_LENGTH)
 
     def _buffer_packet_data(

@@ -64,10 +64,9 @@ _TREZOR_STATE_PAIRED = b"\x01"
 _TREZOR_STATE_PAIRED_AUTOCONNECT = b"\x02"
 
 
-async def handle_checksum_and_acks(
-    ctx: Channel, message_buffer: memoryview
-) -> memoryview | None:
+async def handle_checksum_and_acks(ctx: Channel) -> bool:
     """Verify checksum, handle ACKs or return the message"""
+    message_buffer = ctx.rx_buffer
     ctrl_byte, _, payload_length = ustruct.unpack(">BHH", message_buffer)
     message_length = payload_length + INIT_HEADER_LENGTH
 
@@ -90,7 +89,7 @@ async def handle_checksum_and_acks(
     # 1: Handle ACKs
     if control_byte.is_ack(ctrl_byte):
         await handle_ack(ctx, ack_bit)
-        return None
+        return False
 
     if _should_have_ctrl_byte_encrypted_transport(
         ctx
@@ -112,7 +111,7 @@ async def handle_checksum_and_acks(
     await _send_ack(ctx, ack_bit=seq_bit)
 
     ABP.set_expected_receive_seq_bit(ctx.channel_cache, 1 - seq_bit)
-    return message_buffer
+    return True
 
 
 async def handle_received_message(ctx: Channel, message_buffer: memoryview) -> None:
