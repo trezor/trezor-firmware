@@ -234,7 +234,7 @@ def _handle_state_TH1(
 
     ctx.handshake = Handshake()
 
-    host_ephemeral_public_key = bytearray(
+    host_ephemeral_public_key = bytes(
         message[INIT_HEADER_LENGTH : len(message) - CHECKSUM_LENGTH]
     )
     trezor_ephemeral_public_key, encrypted_trezor_static_public_key, tag = (
