@@ -42,9 +42,8 @@ async def thp_main_loop(iface: WireInterface) -> None:
     channel_manager.load_cached_channels(_CHANNELS, iface)
 
     try:
-        while True:
-            ctx = await ThpContext.accept(iface)
-            await handle_received_message(ctx)
+        ctx = await ThpContext.accept(iface)
+        await handle_received_message(ctx)
     finally:
         channel_manager.CHANNELS_LOADED = False
 
@@ -55,7 +54,10 @@ class ThpContext:
         self.msg: memoryview | None = channel.rx_buffer
 
     async def read(self) -> memoryview:
-        assert self.msg is not None
+        if self.msg is None:
+            channel = await _read_next_message(self.channel.iface)
+            assert channel is self.channel
+            self.msg = channel.rx_buffer
 
         msg = self.msg
         self.msg = None
