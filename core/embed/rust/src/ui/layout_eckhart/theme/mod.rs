@@ -1,5 +1,5 @@
 pub mod backlight;
-#[cfg(feature = "bootloader")]
+#[cfg(any(feature = "bootloader", feature = "prodtest"))]
 pub mod bootloader;
 #[cfg(feature = "micropython")]
 pub mod firmware;
@@ -14,10 +14,7 @@ use crate::ui::{
     util::include_icon,
 };
 
-use super::{
-    component::{ButtonStyle, ButtonStyleSheet},
-    fonts,
-};
+use super::fonts;
 
 pub use gradient::Gradient;
 
@@ -163,26 +160,3 @@ pub const TEXT_SMALL_GREY_EXTRA_LIGHT: TextStyle = TextStyle {
     text_color: GREY_EXTRA_LIGHT,
     ..TEXT_SMALL
 };
-
-pub const fn button_default() -> ButtonStyleSheet {
-    ButtonStyleSheet {
-        normal: &ButtonStyle {
-            font: fonts::FONT_SATOSHI_MEDIUM_26,
-            text_color: GREY_LIGHT,
-            button_color: BG,
-            icon_color: GREY_LIGHT,
-        },
-        active: &ButtonStyle {
-            font: fonts::FONT_SATOSHI_MEDIUM_26,
-            text_color: GREY_LIGHT,
-            button_color: GREY_SUPER_DARK,
-            icon_color: GREY_LIGHT,
-        },
-        disabled: &ButtonStyle {
-            font: fonts::FONT_SATOSHI_MEDIUM_26,
-            text_color: GREY,
-            button_color: BG,
-            icon_color: GREY,
-        },
-    }
-}

@@ -9,8 +9,8 @@ use super::{
         component::{ButtonStyle, ButtonStyleSheet},
         fonts,
     },
-    BLACK, BLUE, GREY, GREY_DARK, GREY_EXTRA_LIGHT, GREY_LIGHT, GREY_SUPER_DARK, ORANGE, RED,
-    WHITE,
+    BLACK, BLUE, GREY, GREY_DARK, GREY_EXTRA_DARK, GREY_EXTRA_LIGHT, GREY_LIGHT, GREY_SUPER_DARK,
+    ORANGE, RED, WHITE,
 };
 
 pub const BLD_BG: Color = BLACK;
@@ -20,11 +20,35 @@ pub const WELCOME_COLOR: Color = BLACK;
 
 // UI icons specific to bootloader (white color)
 include_icon!(ICON_SEVEN, "layout_eckhart/res/bootloader/7.toif");
-// alternatively: "layout_eckhart/res/bootloader/QRCode_smaller.toif"
+// TODO: use "layout_eckhart/res/bootloader/QRCode.toif" when more space
+// available
 include_icon!(
     ICON_QR_TREZOR_IO_START,
-    "layout_eckhart/res/bootloader/QRCode.toif"
+    "layout_eckhart/res/bootloader/QRCode_smaller.toif"
 );
+
+pub const fn button_default() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREY_EXTRA_LIGHT,
+            button_color: GREY_SUPER_DARK,
+            icon_color: GREY_EXTRA_LIGHT,
+        },
+        active: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREY_LIGHT,
+            button_color: GREY_EXTRA_DARK,
+            icon_color: GREY_LIGHT,
+        },
+        disabled: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREY,
+            button_color: BLD_BG,
+            icon_color: GREY,
+        },
+    }
+}
 
 pub fn button_confirm() -> ButtonStyleSheet {
     ButtonStyleSheet {
@@ -165,7 +189,7 @@ pub fn button_bld_menu_danger() -> ButtonStyleSheet {
 }
 
 /// Button style for the welcome screen
-pub fn button_welcome_screen() -> ButtonStyleSheet {
+pub fn button_bld_initial_setup() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
@@ -188,8 +212,14 @@ pub fn button_welcome_screen() -> ButtonStyleSheet {
     }
 }
 
-pub const fn text_title(bg: Color) -> TextStyle {
-    TextStyle::new(fonts::FONT_SATOSHI_MEDIUM_26, GREY, bg, GREY, GREY)
+pub const fn text_title(text_color: Color) -> TextStyle {
+    TextStyle::new(
+        fonts::FONT_SATOSHI_MEDIUM_26,
+        text_color,
+        BLD_BG,
+        text_color,
+        text_color,
+    )
 }
 
 pub const TEXT_FW_FINGERPRINT: TextStyle = TextStyle::new(

@@ -282,19 +282,19 @@ impl FontInfo {
         self.with_glyph_data(|data| data.get_glyph(ch).adv)
     }
 
-    pub fn text_height(&'static self) -> i16 {
+    pub const fn text_height(&'static self) -> i16 {
         self.height
     }
 
-    pub fn text_max_height(&'static self) -> i16 {
+    pub const fn text_max_height(&'static self) -> i16 {
         self.max_height
     }
 
-    pub fn text_baseline(&'static self) -> i16 {
+    pub const fn text_baseline(&'static self) -> i16 {
         self.baseline
     }
 
-    pub fn line_height(&'static self) -> i16 {
+    pub const fn line_height(&'static self) -> i16 {
         constant::LINE_SPACE + self.text_height()
     }
 

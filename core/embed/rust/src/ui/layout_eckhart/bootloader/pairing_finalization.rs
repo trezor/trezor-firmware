@@ -6,7 +6,7 @@ use crate::ui::{
 };
 
 use super::{
-    super::{component::Button, cshape::ScreenBorder, theme},
+    super::{component::Button, cshape::ScreenBorder, theme, CANCEL_MESSAGE},
     BldActionBar, BldActionBarMsg, BldHeader,
 };
 
@@ -26,8 +26,13 @@ pub struct PairingFinalizationScreen {
 }
 
 impl PairingFinalizationScreen {
-    pub fn new() -> Self {
-        let btn = Button::with_text("Cancel".into());
+    pub fn new(initial_setup: bool) -> Self {
+        let mut btn = Button::with_text(CANCEL_MESSAGE.into());
+        if initial_setup {
+            btn = btn
+                .styled(theme::bootloader::button_bld_initial_setup())
+                .with_gradient(theme::Gradient::DefaultGrey);
+        }
         Self {
             header: BldHeader::new("Bluetooth pairing".into()),
             message: Label::left_aligned(

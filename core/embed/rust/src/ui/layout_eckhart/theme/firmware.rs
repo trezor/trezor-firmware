@@ -170,6 +170,29 @@ pub const fn label_title_warning() -> TextStyle {
 }
 
 // Button styles
+pub const fn button_default() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREY_LIGHT,
+            button_color: BG,
+            icon_color: GREY_LIGHT,
+        },
+        active: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREY_LIGHT,
+            button_color: GREY_SUPER_DARK,
+            icon_color: GREY_LIGHT,
+        },
+        disabled: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREY,
+            button_color: BG,
+            icon_color: GREY,
+        },
+    }
+}
+
 pub const fn button_confirm() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {

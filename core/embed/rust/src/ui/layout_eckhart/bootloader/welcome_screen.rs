@@ -44,14 +44,15 @@ impl BldWelcomeScreen {
             (
                 Some(BldHeader::new(TString::empty()).with_menu_button()),
                 Button::with_text("More at trezor.io/start".into())
-                    .styled(theme::bootloader::button_welcome_screen())
+                    .styled(theme::bootloader::button_bld_initial_setup())
                     .initially_enabled(false),
             )
         } else {
             (
                 None,
                 Button::with_text("Tap to begin setup".into())
-                    .styled(theme::bootloader::button_welcome_screen())
+                    .styled(theme::bootloader::button_bld_initial_setup())
+                    .with_gradient(theme::Gradient::DefaultGrey)
                     .initially_enabled(true),
             )
         };

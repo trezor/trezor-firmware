@@ -49,13 +49,18 @@ impl Button {
     const MENU_ITEM_ALIGNMENT: Alignment = Alignment::Start;
     pub const MENU_ITEM_CONTENT_OFFSET: Offset = Offset::x(12);
 
+    #[cfg(feature = "micropython")]
+    const DEFAULT_STYLESHEET: ButtonStyleSheet = theme::firmware::button_default();
+    #[cfg(not(feature = "micropython"))]
+    const DEFAULT_STYLESHEET: ButtonStyleSheet = theme::bootloader::button_default();
+
     pub const fn new(content: ButtonContent) -> Self {
         Self {
             content,
             content_offset: Offset::zero(),
             area: Rect::zero(),
             touch_expand: Insets::zero(),
-            stylesheet: theme::button_default(),
+            stylesheet: Self::DEFAULT_STYLESHEET,
             text_align: Alignment::Center,
             radius_or_gradient: RadiusOrGradient::None,
             state: State::Initial,

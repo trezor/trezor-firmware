@@ -48,7 +48,9 @@ impl WirelessSetupScreen {
             "Get the Trezor Suite app to begin setup.".into(),
             theme::TEXT_NORMAL,
         );
-        let btn = Button::with_text("More info".into());
+        let btn = Button::with_text("More info".into())
+            .styled(theme::bootloader::button_bld_initial_setup())
+            .with_gradient(theme::Gradient::DefaultGrey);
         let btn_more_info =
             Button::with_text("More at trezor.io/start".into()).initially_enabled(false);
         let more_info = MoreInfo {

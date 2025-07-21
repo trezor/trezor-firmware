@@ -37,7 +37,9 @@ mod prodtest;
 use crate::ui::layout::simplified::show;
 use component::{ErrorScreen, UpdateScreen, WelcomeScreen};
 
-pub const WAIT_FOR_RESTART_MESSAGE: &str = "Wait for device restart";
+pub const WAIT_FOR_RESTART_MESSAGE: &str = "Wait for Trezor restart";
+pub const WAIT_MESSAGE: &str = "Wait";
+pub const CANCEL_MESSAGE: &str = "Cancel";
 
 pub struct UIEckhart;
 

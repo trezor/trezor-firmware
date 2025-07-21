@@ -4,7 +4,7 @@ use crate::ui::{
     shape::{self, Renderer},
 };
 
-use super::super::{constant::SCREEN, theme};
+use super::super::{constant::SCREEN, theme, WAIT_MESSAGE};
 
 pub struct UpdateScreen {
     text_header: Label<'static>,
@@ -16,7 +16,7 @@ pub struct UpdateScreen {
 impl UpdateScreen {
     const UPDATE_HEADER: &'static str = "Update done";
     const UPDATE_MESSAGE: &'static str = "Completing final steps...";
-    const UPDATE_FOOTER: &'static str = "Wait";
+    const UPDATE_FOOTER: &'static str = WAIT_MESSAGE;
 
     pub fn new() -> Self {
         Self {
