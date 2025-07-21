@@ -195,22 +195,19 @@ async def handle_ack(ctx: Channel, ack_bit: int) -> None:
 
 
 async def _handle_message_to_app_or_channel(ctx: ThpContext) -> None:
-    state = ctx.channel.get_channel_state()
-    message = await ctx.read()
+    if ctx.channel.get_channel_state() == ChannelState.ENCRYPTED_TRANSPORT:
+        while True:
+            _handle_state_ENCRYPTED_TRANSPORT(ctx.channel, await ctx.read())
+    else:
+        assert ctx.channel.get_channel_state() == ChannelState.TH1
+        _handle_state_TH1(ctx.channel, await ctx.read())
 
-    if state == ChannelState.ENCRYPTED_TRANSPORT:
-        return _handle_state_ENCRYPTED_TRANSPORT(ctx.channel, message)
+        assert ctx.channel.get_channel_state() == ChannelState.TH2
+        _handle_state_TH2(ctx.channel, await ctx.read())
 
-    if state == ChannelState.TH1:
-        return _handle_state_TH1(ctx.channel, message)
-
-    if state == ChannelState.TH2:
-        return _handle_state_TH2(ctx.channel, message)
-
-    if _is_channel_state_pairing(state):
-        return _handle_pairing(ctx.channel, message)
-
-    raise ThpError("Unimplemented channel state")
+        assert _is_channel_state_pairing(ctx.channel.get_channel_state())
+        while True:
+            _handle_pairing(ctx.channel, await ctx.read())
 
 
 def _handle_state_TH1(
