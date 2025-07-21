@@ -84,7 +84,7 @@ async def handle_checksum_and_acks(ctx: Channel) -> bool:
     # 1: Handle ACKs
     if control_byte.is_ack(ctrl_byte):
         await handle_ack(ctx, ack_bit)
-        return False
+        return False  # no data is received
 
     if _should_have_ctrl_byte_encrypted_transport(
         ctx
@@ -106,7 +106,7 @@ async def handle_checksum_and_acks(ctx: Channel) -> bool:
     await _send_ack(ctx, ack_bit=seq_bit)
 
     ABP.set_expected_receive_seq_bit(ctx.channel_cache, 1 - seq_bit)
-    return True
+    return True  # a message was received and ACKed
 
 
 async def handle_received_message(ctx: ThpContext) -> None:
