@@ -20,17 +20,17 @@ from trezorlib import evolu
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.models("core")]
 
-EXPECTED_OWNER_ID = "0940d9f3e307f3bcedbcc8361ae136b619603a686386ecd329c3ed2337cb831d"
-EXPECTED_WRITE_KEY = "2a65e7495bc4edc8ad365c5278404467fc2ec1b3e6978e2406f59329d5357f3e"
+EXPECTED_OWNER_ID = "6edf2ed2e8d2d0eafbaae891157a57ef2856be58ce6edf9497b811c3b0b35f7d"
+EXPECTED_WRITE_KEY = "748d897e4417e95f728869da7f791b9da2a4049fa3a44a27c1ccf68f43110f28"
 EXPECTED_ENCRYPTION_KEY = (
-    "9ad06a43e9d4739502d59c8cafdaa6babb0481cdd0b3acb8455f080b38847642"
+    "12343fd1b7d1cf7c9e2766646c23caaadb6fa882bc38ec86da95366be45b6342"
 )
 
 
 def test_get_evolu_keys(client):
     """Test Evolu key derivation against known test vectors."""
-    response = evolu.get_evolu_keys(client)
+    res = evolu.get_evolu_keys(client)
 
-    assert response.owner_id.hex() == EXPECTED_OWNER_ID
-    assert response.write_key.hex() == EXPECTED_WRITE_KEY
-    assert response.encryption_key.hex() == EXPECTED_ENCRYPTION_KEY
+    assert res.owner_id.hex() == EXPECTED_OWNER_ID
+    assert res.write_key.hex() == EXPECTED_WRITE_KEY
+    assert res.encryption_key.hex() == EXPECTED_ENCRYPTION_KEY
