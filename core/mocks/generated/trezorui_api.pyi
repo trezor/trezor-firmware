@@ -302,6 +302,7 @@ def confirm_summary(
     extra_items: Iterable[tuple[str, str]] | None = None,
     extra_title: str | None = None,
     verb_cancel: str | None = None,
+    back_button: bool = False,
     external_menu: bool = False,
 ) -> LayoutObj[UiResult]:
     """Confirm summary of a transaction."""

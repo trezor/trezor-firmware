@@ -330,6 +330,7 @@ impl FirmwareUI for UIEckhart {
         extra_items: Option<Obj>,
         extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
+        back_button: bool,
         _external_menu: bool, // TODO: will eventually replace the internal menu
     ) -> Result<impl LayoutMaybeTrace, Error> {
         // collect available info
@@ -369,6 +370,7 @@ impl FirmwareUI for UIEckhart {
             extra_title,
             extra_paragraphs,
             verb_cancel,
+            back_button,
         )?;
         Ok(flow)
     }

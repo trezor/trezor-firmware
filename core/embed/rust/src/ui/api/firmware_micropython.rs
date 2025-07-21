@@ -414,6 +414,10 @@ extern "C" fn new_confirm_summary(n_args: usize, args: *const Obj, kwargs: *mut 
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
+        let back_button: Option<bool> = kwargs
+            .get(Qstr::MP_QSTR_back_button)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
         let external_menu: Option<bool> = kwargs
             .get(Qstr::MP_QSTR_external_menu)
             .unwrap_or_else(|_| Obj::const_none())
@@ -430,6 +434,7 @@ extern "C" fn new_confirm_summary(n_args: usize, args: *const Obj, kwargs: *mut 
             extra_items,
             extra_title,
             verb_cancel,
+            back_button.unwrap_or(false),
             external_menu.unwrap_or(false),
         )?;
         Ok(LayoutObj::new_root(layout)?.into())
@@ -1555,6 +1560,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     extra_items: Iterable[tuple[str, str]] | None = None,
     ///     extra_title: str | None = None,
     ///     verb_cancel: str | None = None,
+    ///     back_button: bool = False,
     ///     external_menu: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm summary of a transaction."""
