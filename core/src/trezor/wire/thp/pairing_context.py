@@ -26,7 +26,7 @@ if __debug__:
 class PairingContext(Context):
 
     def __init__(self, channel_ctx: Channel) -> None:
-        super().__init__(channel_ctx.iface, channel_ctx.channel_id)
+        super().__init__(channel_ctx.iface, channel_ctx.channel_id, "ThpMessageType")
         self.channel_ctx: Channel = channel_ctx
         self.incoming_message = loop.mailbox()
         self.nfc_secret: bytes | None = None
@@ -111,7 +111,9 @@ class PairingContext(Context):
             raise UnexpectedMessageException(message)
 
         if expected_type is None:
-            expected_type = protobuf.type_for_wire("ThpMessageType", message.type)
+            expected_type = protobuf.type_for_wire(
+                self.message_type_enum_name, message.type
+            )
             assert expected_type is not None
 
         return message_handler.wrap_protobuf_load(message.data, expected_type)
@@ -121,17 +123,6 @@ class PairingContext(Context):
 
     def write_force(self, msg: protobuf.MessageType) -> Awaitable[None]:
         return self.channel_ctx.write(msg, force=True)
-
-    async def call(
-        self, msg: protobuf.MessageType, expected_type: type[protobuf.MessageType]
-    ) -> protobuf.MessageType:
-        expected_wire_type = expected_type.MESSAGE_WIRE_TYPE
-        assert expected_wire_type is not None
-
-        await self.write(msg)
-        del msg
-
-        return await self.read((expected_wire_type,), expected_type)
 
     async def call_any(
         self, msg: protobuf.MessageType, *expected_types: int
@@ -229,7 +220,7 @@ async def handle_message(
     try:
         # Find a protobuf.MessageType subclass that describes this
         # message.  Raises if the type is not found.
-        req_type = protobuf.type_for_wire("ThpMessageType", msg.type)
+        req_type = protobuf.type_for_wire(pairing_ctx.message_type_enum_name, msg.type)
 
         # Try to decode the message according to schema from
         # `req_type`. Raises if the message is malformed.
