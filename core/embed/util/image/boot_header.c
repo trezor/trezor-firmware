@@ -117,22 +117,6 @@ secbool boot_header_check_signature(const boot_header_t* header,
 
   const boot_header_unauth_t* sig = boot_header_unauth(header);
 
-  // Verify 1st PQC signature
-  result = crypto_sign_verify(sig->slh_signature1, sizeof(sig->slh_signature1),
-                              fp->bytes, sizeof(fp->bytes),
-                              BOARDLOADER_PQ_KEYS[sig1_idx]);
-  if (result != 0) {
-    return secfalse;
-  }
-
-  // Verify 2nd PQC signature
-  result = crypto_sign_verify(sig->slh_signature2, sizeof(sig->slh_signature2),
-                              fp->bytes, sizeof(fp->bytes),
-                              BOARDLOADER_PQ_KEYS[sig2_idx]);
-  if (result != 0) {
-    return secfalse;
-  }
-
   // extended fingerprint for EC signature verification
   // that includes the SLH signature
   boot_header_fingerprint_t fp_ext;
@@ -160,6 +144,22 @@ secbool boot_header_check_signature(const boot_header_t* header,
   // Verify 2nd EC signature
   result = ed25519_sign_open(fp_ext.bytes, sizeof(fp_ext.bytes),
                              BOARDLOADER_EC_KEYS[sig2_idx], sig->ec_signature2);
+  if (result != 0) {
+    return secfalse;
+  }
+
+  // Verify 1st PQC signature
+  result = crypto_sign_verify(sig->slh_signature1, sizeof(sig->slh_signature1),
+                              fp->bytes, sizeof(fp->bytes),
+                              BOARDLOADER_PQ_KEYS[sig1_idx]);
+  if (result != 0) {
+    return secfalse;
+  }
+
+  // Verify 2nd PQC signature
+  result = crypto_sign_verify(sig->slh_signature2, sizeof(sig->slh_signature2),
+                              fp->bytes, sizeof(fp->bytes),
+                              BOARDLOADER_PQ_KEYS[sig2_idx]);
   if (result != 0) {
     return secfalse;
   }
