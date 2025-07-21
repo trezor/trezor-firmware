@@ -39,7 +39,8 @@ use super::{
         ActionBar, Bip39Input, ConfirmHomescreen, DeviceMenuScreen, DurationInput, Header,
         HeaderMsg, Hint, Homescreen, MnemonicKeyboard, PinKeyboard, ProgressScreen,
         SelectWordCountScreen, SelectWordScreen, SetBrightnessScreen, ShortMenuVec, Slip39Input,
-        TextScreen, ValueInputScreen, VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
+        TextScreen, TextScreenMsg, ValueInputScreen, VerticalMenu, VerticalMenuScreen,
+        VerticalMenuScreenMsg,
     },
     flow, fonts,
     theme::{
@@ -405,12 +406,41 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn confirm_trade(
-        _title: TString<'static>,
-        _subtitle: TString<'static>,
-        _sell_amount: TString<'static>,
-        _buy_amount: TString<'static>,
+        title: TString<'static>,
+        subtitle: TString<'static>,
+        sell_amount: TString<'static>,
+        buy_amount: TString<'static>,
+        back_button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+        let font = fonts::FONT_SATOSHI_REGULAR_38;
+        let mut ops = OpTextLayout::new(theme::firmware::TEXT_REGULAR);
+        ops.add_offset(Offset::y(16))
+            .add_color(theme::RED)
+            .add_text(sell_amount, font)
+            .add_offset(Offset::y(44))
+            .add_color(theme::GREEN_LIME)
+            .add_text(buy_amount, font);
+        let screen = TextScreen::new(FormattedText::new(ops))
+            .with_subtitle(subtitle)
+            .with_header(Header::new(title).with_menu_button())
+            .with_action_bar(ActionBar::new_double(
+                Button::with_icon(if back_button {
+                    theme::ICON_CHEVRON_UP
+                } else {
+                    theme::ICON_CLOSE
+                }),
+                Button::with_text(TR::buttons__continue.into()),
+            ))
+            .map(move |msg| match msg {
+                TextScreenMsg::Cancelled => Some(if back_button {
+                    FlowMsg::Back
+                } else {
+                    FlowMsg::Cancelled
+                }),
+                TextScreenMsg::Menu => Some(FlowMsg::Info),
+                TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
+            });
+        flow::util::single_page(screen)
     }
 
     fn confirm_value(
@@ -1381,8 +1411,11 @@ impl FirmwareUI for UIEckhart {
             }
         };
 
-        let screen = TextScreen::new(vec.into_paragraphs())
-            .with_header(Header::new(title).with_close_button());
+        let screen = TextScreen::new(
+            vec.into_paragraphs()
+                .with_placement(LinearPlacement::vertical()),
+        )
+        .with_header(Header::new(title).with_close_button());
 
         let obj = RootComponent::new(screen);
         Ok(obj)

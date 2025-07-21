@@ -96,6 +96,7 @@ impl FirmwareUI for UIDelizia {
         subtitle: TString<'static>,
         sell_amount: TString<'static>,
         buy_amount: TString<'static>,
+        _back_button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         new_confirm_action_simple(
             TradeScreen::new(sell_amount, buy_amount),
