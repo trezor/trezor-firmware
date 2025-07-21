@@ -43,9 +43,11 @@ async def thp_main_loop(iface: WireInterface) -> None:
     global _CHANNELS
     channel_manager.load_cached_channels(_CHANNELS, iface)
 
+    log.info(__name__, "start thp_main_loop()", iface=iface)
     try:
         ctx = await ThpContext.accept(iface)
         await handle_received_message(ctx)
+        log.info(__name__, "close thp_main_loop()", iface=iface)
     finally:
         channel_manager.CHANNELS_LOADED = False
 

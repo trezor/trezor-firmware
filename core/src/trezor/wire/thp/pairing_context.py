@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from .channel import Channel
     from .cpace import Cpace
 
-    pass
+    from .thp_main import ThpContext
 
 if __debug__:
     from trezor import log
@@ -27,10 +27,10 @@ if __debug__:
 
 class PairingContext(Context):
 
-    def __init__(self, channel_ctx: Channel) -> None:
+    def __init__(self, channel_ctx: Channel, ctx: ThpContext) -> None:
         super().__init__(channel_ctx.iface, channel_ctx.channel_id, "ThpMessageType")
         self.channel_ctx: Channel = channel_ctx
-        self.incoming_message = loop.mailbox()
+        self.ctx: ThpContext = ctx
         self.nfc_secret: bytes | None = None
         self.qr_code_secret: bytes | None = None
         self.code_entry_secret: bytes | None = None
@@ -56,7 +56,7 @@ class PairingContext(Context):
                     # If the previous run did not keep an unprocessed message for us,
                     # wait for a new one.
                     try:
-                        message: Message = await self.incoming_message
+                        (_, message) = await self.ctx.decrypt()
                     except protocol_common.WireError as e:
                         if __debug__:
                             log.exception(__name__, e, iface=self.iface)
@@ -103,7 +103,7 @@ class PairingContext(Context):
                 iface=self.iface,
             )
 
-        message: Message = await self.incoming_message
+        (_, message) = await self.ctx.decrypt()
         if message.type not in expected_types:
             from trezor.messages import Cancel
 
@@ -121,10 +121,12 @@ class PairingContext(Context):
         return message_handler.wrap_protobuf_load(message.data, expected_type)
 
     async def write(self, msg: protobuf.MessageType) -> None:
-        return await self.channel_ctx.write(msg)
+        # TODO: ACK+retry
+        return await self.channel_ctx.send_message(msg)
 
     def write_force(self, msg: protobuf.MessageType) -> Awaitable[None]:
-        return self.channel_ctx.write(msg, force=True)
+        # TODO: ACK+retry
+        return self.channel_ctx.send_message(msg)
 
     async def call_any(
         self, msg: protobuf.MessageType, *expected_types: int

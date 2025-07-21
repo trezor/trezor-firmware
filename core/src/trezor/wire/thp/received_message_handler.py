@@ -200,8 +200,7 @@ async def _handle_message_to_app_or_channel(ctx: ThpContext) -> None:
         await _handle_state_TH2(ctx)
 
         assert _is_channel_state_pairing(ctx.channel.get_channel_state())
-        while True:
-            await _handle_pairing(ctx)
+        await _handle_pairing(ctx)
 
 
 async def _handle_state_TH1(ctx: ThpContext) -> None:
@@ -245,7 +244,8 @@ async def _handle_state_TH1(ctx: ThpContext) -> None:
     payload = trezor_ephemeral_public_key + encrypted_trezor_static_public_key + tag
 
     # send handshake init response message
-    ctx.channel.write_handshake_message(HANDSHAKE_INIT_RES, payload)
+    # TODO: ACK+retry
+    await ctx.channel.send_payload(HANDSHAKE_INIT_RES, payload)
     ctx.channel.set_channel_state(ChannelState.TH2)
     return
 
@@ -336,7 +336,8 @@ async def _handle_state_TH2(ctx: ThpContext) -> None:
             pass
 
     # send hanshake completion response
-    ctx.channel.write_handshake_message(
+    # TODO: ACK+retry
+    await ctx.channel.send_payload(
         HANDSHAKE_COMP_RES,
         ctx.channel.handshake.get_handshake_completion_response(trezor_state),
     )
@@ -359,6 +360,7 @@ async def _handle_state_ENCRYPTED_TRANSPORT(ctx: ThpContext) -> None:
         s = session_manager.get_session_from_cache(ctx.channel, session_id)
 
         if s is None:
+            log.error(__name__, "SEEDLESS %d", session_id)
             s = SeedlessSessionContext(ctx.channel, session_id)
 
         ctx.channel.sessions[session_id] = s
@@ -385,13 +387,8 @@ async def _handle_pairing(ctx: ThpContext) -> None:
     from .pairing_context import PairingContext
 
     channel = ctx.channel
-    if channel.connection_context is None:
-        channel.connection_context = PairingContext(channel)
-        loop.schedule(channel.connection_context.handle())
-
-    _, message = await ctx.decrypt()
-    channel.connection_context.incoming_message.put(message)
-
+    channel.connection_context = PairingContext(channel, ctx)
+    await channel.connection_context.handle()  # will read and write message on its own
 
 def _should_have_ctrl_byte_encrypted_transport(ctx: Channel) -> bool:
     return ctx.get_channel_state() not in (

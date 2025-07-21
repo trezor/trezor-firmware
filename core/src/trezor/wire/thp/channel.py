@@ -116,7 +116,7 @@ class Channel:
         """Try to acquire buffers (in case it's the first message being handled)."""
         self._buffers = self._buffers or wire.THP_BUFFERS_PROVIDER.take()
         if not self._buffers:
-            raise ThpTransportBusy(channel_id=self.get_channel_id_int())
+            raise ThpTransportBusy(self.get_channel_id_int())
         return self._buffers
 
     def clear(self) -> None:
@@ -382,7 +382,6 @@ class Channel:
         if not only_once and self._can_clear_loop():
             if __debug__:
                 self._log("clearing loop from channel")
-            loop.clear()
 
     def _encrypt(self, buffer: utils.BufferType, noise_payload_len: int) -> None:
         if __debug__:
