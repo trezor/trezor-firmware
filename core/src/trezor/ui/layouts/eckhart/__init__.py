@@ -8,7 +8,18 @@ from trezor.wire import ActionCancelled
 from ..common import draw_simple, interact, raise_if_cancelled, with_info
 
 if TYPE_CHECKING:
-    from typing import Any, Awaitable, Coroutine, Iterable, NoReturn, Sequence, TypeVar
+    from typing import (
+        Any,
+        Awaitable,
+        Coroutine,
+        Iterable,
+        List,
+        NoReturn,
+        Sequence,
+        TypeVar,
+    )
+
+    from trezor.ui.layouts.menu import Details
 
     from ..common import ExceptionType, PropertyType
 
@@ -19,6 +30,7 @@ BR_CODE_OTHER = ButtonRequestType.Other  # global_import_cache
 
 CONFIRMED = trezorui_api.CONFIRMED
 CANCELLED = trezorui_api.CANCELLED
+BACK = trezorui_api.BACK
 INFO = trezorui_api.INFO
 
 
@@ -1048,6 +1060,165 @@ if not utils.BITCOIN_ONLY:
             TR.confirm_total__title_fee,
         )
 
+    async def confirm_trade(
+        title: str,
+        subtitle: str,
+        sell_amount: str,
+        buy_amount: str,
+        address: str,
+        account: str,
+        account_path: str,
+        token_address: str,
+        back_button: bool,
+    ) -> ui.UiResult:
+        from trezor.ui.layouts.menu import Menu, confirm_with_menu
+
+        trade_layout = trezorui_api.confirm_trade(
+            title=title,
+            subtitle=subtitle,
+            sell_amount=sell_amount,
+            buy_amount=buy_amount,
+            back_button=back_button,
+        )
+
+        menu = Menu.root(
+            [
+                create_details(
+                    TR.address__title_receive_address,
+                    [
+                        ("", address),
+                        (TR.words__account, account),
+                        (TR.address_details__derivation_path, account_path),
+                    ],
+                ),
+                create_details(TR.ethereum__token_contract, token_address),
+            ],
+            TR.send__cancel_sign,
+        )
+
+        return await confirm_with_menu(trade_layout, menu, "confirm_trade")
+
+    async def confirm_ethereum_payment_request(
+        recipient_name: str,
+        recipient: str,
+        texts: Iterable[str],
+        refunds: Iterable[tuple[str, str, str]],
+        trades: List[tuple[str, str, str, str, str]],
+        account: str | None,
+        account_path: str | None,
+        chain_id: str,
+        maximum_fee: str,
+        fee_info_items: Iterable[tuple[str, str]],
+        token_address: str,
+    ) -> None:
+        from trezor.ui.layouts.menu import Menu, confirm_with_menu
+
+        is_swap = len(trades) != 0
+
+        for text in texts:
+            await raise_if_cancelled(
+                trezorui_api.confirm_value(
+                    title=(TR.words__swap if is_swap else TR.words__confirm),
+                    value=text,
+                    description=None,
+                    verb=TR.buttons__confirm,
+                ),
+                "confirm_payment_request",
+            )
+
+        main_layout = trezorui_api.confirm_value(
+            title=(TR.words__swap if is_swap else TR.words__confirm),
+            subtitle=TR.words__provider,
+            value=recipient_name,
+            description=None,
+            verb=TR.buttons__continue,
+            verb_cancel=None,
+            chunkify=False,
+            external_menu=True,
+        )
+
+        menu_items = [create_details(TR.address__title_provider_address, recipient)]
+        for r_address, r_account, r_account_path in refunds:
+            menu_items.append(
+                create_details(
+                    TR.address__title_refund_address,
+                    [
+                        ("", r_address),
+                        (TR.words__account, r_account),
+                        (TR.address_details__derivation_path, r_account_path),
+                    ],
+                )
+            )
+        menu = Menu.root(menu_items, TR.send__cancel_sign)
+
+        while True:
+            back_from_confirm_trade = False
+            await confirm_with_menu(main_layout, menu, "confirm_payment_request")
+
+            while True:
+                back_from_confirm_trade = False
+
+                # HACK: if we have multiple trades to confirm, we disable the back button
+                # to simplify the mechanism we use here to handle it.
+                # In practice, this should never happen, since normally there is only one trade in a transaction,
+                # but in theory it can (since SLIP-24 supports multiple CoinPurchaseMemos...)
+                can_go_back_from_trade = len(trades) == 1
+
+                for (
+                    sell_amount,
+                    buy_amount,
+                    t_address,
+                    t_account,
+                    t_account_path,
+                ) in trades:
+                    res = await confirm_trade(
+                        TR.words__swap,
+                        TR.words__assets,
+                        sell_amount,
+                        buy_amount,
+                        t_address,
+                        t_account,
+                        t_account_path,
+                        token_address,
+                        can_go_back_from_trade,
+                    )
+                    if res is BACK:
+                        back_from_confirm_trade = True
+                        break
+
+                if back_from_confirm_trade:
+                    break
+
+                account_items = []
+                if account:
+                    account_items.append((TR.words__account, account))
+                if account_path:
+                    account_items.append(
+                        (TR.address_details__derivation_path, account_path)
+                    )
+                account_items.append((TR.ethereum__approve_chain_id, chain_id))
+
+                res = await _confirm_summary(
+                    None,
+                    None,
+                    maximum_fee,
+                    TR.words__transaction_fee,
+                    TR.words__swap if is_swap else TR.words__title_summary,
+                    account_items,
+                    fee_info_items,
+                    TR.confirm_total__title_fee,
+                    True,
+                    "confirm_payment_request",
+                )
+                if res is BACK:
+                    continue
+                else:
+                    break
+            if back_from_confirm_trade:
+                continue
+            else:
+                break
+
     async def confirm_ethereum_staking_tx(
         title: str,
         intro_question: str,
@@ -1606,4 +1777,12 @@ def tutorial(br_code: ButtonRequestType = BR_CODE_OTHER) -> Awaitable[None]:
         trezorui_api.tutorial(),
         "tutorial",
         br_code,
+    )
+
+
+def create_details(name: str, value: list[tuple[str, str]] | str) -> Details:
+    from trezor.ui.layouts.menu import Details
+
+    return Details.from_layout(
+        name, lambda: trezorui_api.show_properties(title=name, value=value)
     )
