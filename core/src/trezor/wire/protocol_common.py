@@ -38,8 +38,14 @@ class Context:
 
     channel_id: bytes
 
-    def __init__(self, iface: WireInterface, channel_id: bytes | None = None) -> None:
+    def __init__(
+        self,
+        iface: WireInterface,
+        channel_id: bytes | None = None,
+        message_type_enum_name: str = "MessageType",
+    ) -> None:
         self.iface: WireInterface = iface
+        self.message_type_enum_name = message_type_enum_name
         if channel_id is not None:
             self.channel_id = channel_id
 
@@ -83,6 +89,9 @@ class Context:
         """Write a message to the wire, then await and return the response message."""
         assert expected_type.MESSAGE_WIRE_TYPE is not None
 
+        assert protobuf.type_for_wire(
+            self.message_type_enum_name, expected_type.MESSAGE_WIRE_TYPE
+        )
         await self.write(msg)
         del msg
         return await self.read((expected_type.MESSAGE_WIRE_TYPE,), expected_type)

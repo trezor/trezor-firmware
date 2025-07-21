@@ -117,7 +117,9 @@ class GenericSessionContext(Context):
             raise UnexpectedMessageException(message)
 
         if expected_type is None:
-            expected_type = protobuf.type_for_wire("MessageType", message.type)
+            expected_type = protobuf.type_for_wire(
+                self.message_type_enum_name, message.type
+            )
 
         return message_handler.wrap_protobuf_load(message.data, expected_type)
 
