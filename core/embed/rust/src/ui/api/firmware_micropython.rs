@@ -19,7 +19,7 @@ use crate::{
             base::LAYOUT_STATE,
             device_menu_result::DEVICE_MENU_RESULT,
             obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ},
-            result::{CANCELLED, CONFIRMED, INFO},
+            result::{BACK, CANCELLED, CONFIRMED, INFO},
             util::{upy_disable_animation, RecoveryType},
         },
         ui_firmware::{
@@ -1339,6 +1339,9 @@ pub static mp_module_trezorui_api: Module = obj_module! {
 
     /// CONFIRMED: UiResult
     Qstr::MP_QSTR_CONFIRMED => CONFIRMED.as_obj(),
+
+    /// BACK: UiResult
+    Qstr::MP_QSTR_BACK => BACK.as_obj(),
 
     /// CANCELLED: UiResult
     Qstr::MP_QSTR_CANCELLED => CANCELLED.as_obj(),

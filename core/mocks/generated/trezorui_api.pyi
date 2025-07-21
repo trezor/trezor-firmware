@@ -72,6 +72,7 @@ class UiResult:
     """Result of a UI operation."""
     pass
 CONFIRMED: UiResult
+BACK: UiResult
 CANCELLED: UiResult
 INFO: UiResult
 
