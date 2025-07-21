@@ -1074,6 +1074,7 @@ if not utils.BITCOIN_ONLY:
             items=[(sell_amount, True), (buy_amount, True)],
             verb=TR.buttons__confirm,
             verb_info=TR.buttons__info,
+            external_menu=True,
         )
 
         menu = Menu.root(
