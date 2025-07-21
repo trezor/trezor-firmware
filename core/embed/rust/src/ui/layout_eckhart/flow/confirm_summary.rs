@@ -56,6 +56,7 @@ impl FlowController for ConfirmSummary {
         match (self, msg) {
             (Self::Summary, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
             (Self::Summary, FlowMsg::Info) => Self::Menu.goto(),
+            (Self::Summary, FlowMsg::Back) => self.return_msg(FlowMsg::Back),
             (Self::Menu, FlowMsg::Choice(MENU_ITEM_CANCEL)) => Self::Cancel.goto(),
             (Self::Menu, FlowMsg::Choice(MENU_ITEM_EXTRA_INFO)) => Self::ExtraInfo.goto(),
             (Self::Menu, FlowMsg::Choice(MENU_ITEM_ACCOUNT_INFO)) => Self::AccountInfo.goto(),
@@ -99,6 +100,7 @@ pub fn new_confirm_summary(
     extra_title: Option<TString<'static>>,
     extra_paragraphs: Option<ParagraphVecShort<'static>>,
     verb_cancel: Option<TString<'static>>,
+    back_button: bool,
 ) -> Result<SwipeFlow, error::Error> {
     // Summary
     let mut summary_paragraphs = ParagraphVecShort::new();
@@ -112,25 +114,32 @@ pub fn new_confirm_summary(
         .add(Paragraph::new(&theme::TEXT_SMALL_LIGHT, fee_label))
         .add(Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, fee));
 
+    let confirm_button = Button::with_text(TR::instructions__hold_to_sign.into())
+        .with_long_press(theme::CONFIRM_HOLD_DURATION)
+        .styled(theme::button_confirm())
+        .with_gradient(Gradient::SignGreen);
     let content_summary = TextScreen::new(
         summary_paragraphs
             .into_paragraphs()
             .with_placement(LinearPlacement::vertical().with_spacing(theme::PARAGRAPHS_SPACING)),
     )
     .with_header(Header::new(title).with_menu_button())
-    .with_action_bar(ActionBar::new_single(
-        Button::with_text(TR::instructions__hold_to_sign.into())
-            .with_long_press(theme::CONFIRM_HOLD_DURATION)
-            .styled(theme::button_confirm())
-            .with_gradient(Gradient::SignGreen),
-    ))
+    .with_action_bar(if back_button {
+        ActionBar::new_double(Button::with_icon(theme::ICON_CHEVRON_UP), confirm_button)
+    } else {
+        ActionBar::new_single(confirm_button)
+    })
     .with_hint(Hint::new_instruction(
         TR::send__send_in_the_app,
         Some(theme::ICON_INFO),
     ))
-    .map(|msg| match msg {
+    .map(move |msg| match msg {
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
-        TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
+        TextScreenMsg::Cancelled => Some(if back_button {
+            FlowMsg::Back
+        } else {
+            FlowMsg::Cancelled
+        }),
         TextScreenMsg::Menu => Some(FlowMsg::Info),
     });
 

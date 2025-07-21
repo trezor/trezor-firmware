@@ -815,6 +815,7 @@ def _confirm_summary(
     account_items: Iterable[tuple[str, str]] | None = None,
     extra_items: Iterable[tuple[str, str]] | None = None,
     extra_title: str | None = None,
+    back_button: bool = False,
     br_name: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> Awaitable[None]:
@@ -830,6 +831,7 @@ def _confirm_summary(
             account_items=account_items or None,
             extra_items=extra_items or None,
             extra_title=extra_title or None,
+            back_button=back_button,
         ),
         br_name,
         br_code,
