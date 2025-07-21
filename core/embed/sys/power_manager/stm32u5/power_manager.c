@@ -158,7 +158,7 @@ pm_status_t pm_init(bool inherit_state) {
 
   // Set default SOC target and max charging current limit
   drv->soc_target = 100;
-  drv->charging_current_max_limit_ma = PM_BATTERY_CHARGING_CURRENT_MAX;
+  drv->i_chg_max_limit_ma = PM_BATTERY_CHARGING_CURRENT_MAX;
   drv->i_chg_temp_limit_ma = PM_BATTERY_CHARGING_CURRENT_MAX;
 
   // Fuel gauge SoC available, set fuel_gauge initialized.
@@ -442,7 +442,7 @@ pm_status_t pm_charging_set_max_current(uint16_t current_ma) {
   }
 
   irq_key_t irq_key = irq_lock();
-  drv->charging_current_max_limit_ma = current_ma;
+  drv->i_chg_max_limit_ma = current_ma;
   pm_charging_controller(drv);
   irq_unlock(irq_key);
 

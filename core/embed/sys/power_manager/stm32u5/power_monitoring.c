@@ -152,34 +152,34 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
 void pm_charging_controller(pm_driver_t* drv) {
   if (drv->charging_enabled == false) {
     // Charging is disabled
-    if (drv->charging_current_target_ma != 0) {
-      drv->charging_current_target_ma = 0;
+    if (drv->i_chg_target_ma != 0) {
+      drv->i_chg_target_ma = 0;
     } else {
       // No action required
       return;
     }
   } else if (drv->usb_connected) {
-    drv->charging_current_target_ma = PM_BATTERY_CHARGING_CURRENT_MAX;
+    drv->i_chg_target_ma = PM_BATTERY_CHARGING_CURRENT_MAX;
 
   } else if (drv->wireless_connected) {
-    drv->charging_current_target_ma = PM_BATTERY_CHARGING_CURRENT_MAX;
+    drv->i_chg_target_ma = PM_BATTERY_CHARGING_CURRENT_MAX;
 
   } else {
     // Charging enabled but no external power source, clear charging target
-    drv->charging_current_target_ma = 0;
+    drv->i_chg_target_ma = 0;
   }
 
   // charging current software limit
-  if (drv->charging_current_target_ma > drv->charging_current_max_limit_ma) {
-    drv->charging_current_target_ma = drv->charging_current_max_limit_ma;
+  if (drv->i_chg_target_ma > drv->i_chg_max_limit_ma) {
+    drv->i_chg_target_ma = drv->i_chg_max_limit_ma;
   }
 
   pm_temperature_controller(drv);
 
   // Set charging target
-  if (drv->charging_current_target_ma != pmic_get_charging_limit()) {
+  if (drv->i_chg_target_ma != pmic_get_charging_limit()) {
     // Set charging current limit
-    pmic_set_charging_limit(drv->charging_current_target_ma);
+    pmic_set_charging_limit(drv->i_chg_target_ma);
   }
 
   if (drv->soc_target == 100) {
@@ -212,7 +212,7 @@ void pm_charging_controller(pm_driver_t* drv) {
     drv->i_chg_target_ma = 0;
   }
 
-  if (drv->charging_current_target_ma == 0) {
+  if (drv->i_chg_target_ma == 0) {
     pmic_set_charging(false);
   } else {
     pmic_set_charging(true);
@@ -240,9 +240,9 @@ static void pm_temperature_controller(pm_driver_t* drv) {
     }
   }
 
-  if (drv->charging_current_target_ma > drv->i_chg_temp_limit_ma) {
+  if (drv->i_chg_target_ma > drv->i_chg_temp_limit_ma) {
     // Limit the charging current by temperature controller
-    drv->charging_current_target_ma = drv->i_chg_temp_limit_ma;
+    drv->i_chg_target_ma = drv->i_chg_temp_limit_ma;
   }
 }
 
