@@ -21,7 +21,7 @@ use super::super::{
         ActionBar, Header, HeaderMsg, Hint, ShortMenuVec, TextScreen, TextScreenMsg,
         TutorialScreen, TutorialScreenMsg, VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
     },
-    theme,
+    theme::{self, Gradient},
 };
 
 const WELCOME_SCREEN_DURATION_MS: u32 = 3000;
@@ -197,7 +197,8 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
     .with_action_bar(ActionBar::new_single(
         Button::with_text(TR::instructions__hold_to_exit_tutorial.into())
             .with_long_press(theme::CONFIRM_HOLD_DURATION)
-            .styled(theme::button_confirm()),
+            .styled(theme::button_confirm())
+            .with_gradient(Gradient::SignGreen),
     ))
     .map(|msg| match msg {
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
@@ -240,7 +241,8 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
         Button::with_text(TR::instructions__hold_to_exit_tutorial.into())
             .with_long_press(theme::CONFIRM_HOLD_DURATION)
             .with_long_press_danger(true)
-            .styled(theme::button_actionbar_danger()),
+            .styled(theme::button_actionbar_danger())
+            .with_gradient(Gradient::Alert),
     ))
     .map(|msg| match msg {
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
