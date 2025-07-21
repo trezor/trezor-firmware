@@ -2,8 +2,9 @@ import ustruct
 from micropython import const
 from typing import TYPE_CHECKING
 
-from storage.cache_thp import BROADCAST_CHANNEL_ID
+from storage.cache_thp import BROADCAST_CHANNEL_ID, SESSION_ID_LENGTH, TAG_LENGTH
 from trezor import io, loop, utils
+from trezor.wire.protocol_common import Message
 
 from . import (
     CHANNEL_ALLOCATION_REQ,
@@ -24,6 +25,7 @@ from .received_message_handler import handle_checksum_and_acks, handle_received_
 from .writer import (
     INIT_HEADER_LENGTH,
     MAX_PAYLOAD_LEN,
+    MESSAGE_TYPE_LENGTH,
     write_payload_to_wire_and_add_checksum,
 )
 
@@ -62,6 +64,23 @@ class ThpContext:
         msg = self.msg
         self.msg = None
         return msg
+
+    async def decrypt(self) -> tuple[int, Message]:
+        buf = await self.read()
+        self.channel.decrypt_buffer(buf)
+
+        session_id, message_type = ustruct.unpack(">BH", buf[INIT_HEADER_LENGTH:])
+        message = Message(
+            message_type,
+            buf[
+                INIT_HEADER_LENGTH
+                + MESSAGE_TYPE_LENGTH
+                + SESSION_ID_LENGTH : len(buf)
+                - CHECKSUM_LENGTH
+                - TAG_LENGTH
+            ],
+        )
+        return (session_id, message)
 
     @classmethod
     async def accept(cls, iface: WireInterface) -> "ThpContext":
