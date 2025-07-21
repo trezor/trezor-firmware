@@ -2734,8 +2734,8 @@ impl ::protobuf::reflect::ProtobufValue for ThpNfcTagTrezor {
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct ThpCredentialRequest {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpCredentialRequest.host_static_pubkey)
-    pub host_static_pubkey: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpCredentialRequest.host_static_public_key)
+    pub host_static_public_key: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpCredentialRequest.autoconnect)
     pub autoconnect: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpCredentialRequest.credential)
@@ -2756,40 +2756,40 @@ impl ThpCredentialRequest {
         ::std::default::Default::default()
     }
 
-    // required bytes host_static_pubkey = 1;
+    // required bytes host_static_public_key = 1;
 
-    pub fn host_static_pubkey(&self) -> &[u8] {
-        match self.host_static_pubkey.as_ref() {
+    pub fn host_static_public_key(&self) -> &[u8] {
+        match self.host_static_public_key.as_ref() {
             Some(v) => v,
             None => &[],
         }
     }
 
-    pub fn clear_host_static_pubkey(&mut self) {
-        self.host_static_pubkey = ::std::option::Option::None;
+    pub fn clear_host_static_public_key(&mut self) {
+        self.host_static_public_key = ::std::option::Option::None;
     }
 
-    pub fn has_host_static_pubkey(&self) -> bool {
-        self.host_static_pubkey.is_some()
+    pub fn has_host_static_public_key(&self) -> bool {
+        self.host_static_public_key.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_host_static_pubkey(&mut self, v: ::std::vec::Vec<u8>) {
-        self.host_static_pubkey = ::std::option::Option::Some(v);
+    pub fn set_host_static_public_key(&mut self, v: ::std::vec::Vec<u8>) {
+        self.host_static_public_key = ::std::option::Option::Some(v);
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_host_static_pubkey(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.host_static_pubkey.is_none() {
-            self.host_static_pubkey = ::std::option::Option::Some(::std::vec::Vec::new());
+    pub fn mut_host_static_public_key(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.host_static_public_key.is_none() {
+            self.host_static_public_key = ::std::option::Option::Some(::std::vec::Vec::new());
         }
-        self.host_static_pubkey.as_mut().unwrap()
+        self.host_static_public_key.as_mut().unwrap()
     }
 
     // Take field
-    pub fn take_host_static_pubkey(&mut self) -> ::std::vec::Vec<u8> {
-        self.host_static_pubkey.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    pub fn take_host_static_public_key(&mut self) -> ::std::vec::Vec<u8> {
+        self.host_static_public_key.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
     // optional bool autoconnect = 2;
@@ -2851,9 +2851,9 @@ impl ThpCredentialRequest {
         let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "host_static_pubkey",
-            |m: &ThpCredentialRequest| { &m.host_static_pubkey },
-            |m: &mut ThpCredentialRequest| { &mut m.host_static_pubkey },
+            "host_static_public_key",
+            |m: &ThpCredentialRequest| { &m.host_static_public_key },
+            |m: &mut ThpCredentialRequest| { &mut m.host_static_public_key },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "autoconnect",
@@ -2877,7 +2877,7 @@ impl ::protobuf::Message for ThpCredentialRequest {
     const NAME: &'static str = "ThpCredentialRequest";
 
     fn is_initialized(&self) -> bool {
-        if self.host_static_pubkey.is_none() {
+        if self.host_static_public_key.is_none() {
             return false;
         }
         true
@@ -2887,7 +2887,7 @@ impl ::protobuf::Message for ThpCredentialRequest {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
                 10 => {
-                    self.host_static_pubkey = ::std::option::Option::Some(is.read_bytes()?);
+                    self.host_static_public_key = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 16 => {
                     self.autoconnect = ::std::option::Option::Some(is.read_bool()?);
@@ -2907,7 +2907,7 @@ impl ::protobuf::Message for ThpCredentialRequest {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        if let Some(v) = self.host_static_pubkey.as_ref() {
+        if let Some(v) = self.host_static_public_key.as_ref() {
             my_size += ::protobuf::rt::bytes_size(1, &v);
         }
         if let Some(v) = self.autoconnect {
@@ -2922,7 +2922,7 @@ impl ::protobuf::Message for ThpCredentialRequest {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let Some(v) = self.host_static_pubkey.as_ref() {
+        if let Some(v) = self.host_static_public_key.as_ref() {
             os.write_bytes(1, v)?;
         }
         if let Some(v) = self.autoconnect {
@@ -2948,7 +2948,7 @@ impl ::protobuf::Message for ThpCredentialRequest {
     }
 
     fn clear(&mut self) {
-        self.host_static_pubkey = ::std::option::Option::None;
+        self.host_static_public_key = ::std::option::Option::None;
         self.autoconnect = ::std::option::Option::None;
         self.credential = ::std::option::Option::None;
         self.special_fields.clear();
@@ -2956,7 +2956,7 @@ impl ::protobuf::Message for ThpCredentialRequest {
 
     fn default_instance() -> &'static ThpCredentialRequest {
         static instance: ThpCredentialRequest = ThpCredentialRequest {
-            host_static_pubkey: ::std::option::Option::None,
+            host_static_public_key: ::std::option::Option::None,
             autoconnect: ::std::option::Option::None,
             credential: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
@@ -2986,8 +2986,8 @@ impl ::protobuf::reflect::ProtobufValue for ThpCredentialRequest {
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct ThpCredentialResponse {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpCredentialResponse.trezor_static_pubkey)
-    pub trezor_static_pubkey: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpCredentialResponse.trezor_static_public_key)
+    pub trezor_static_public_key: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpCredentialResponse.credential)
     pub credential: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
@@ -3006,40 +3006,40 @@ impl ThpCredentialResponse {
         ::std::default::Default::default()
     }
 
-    // required bytes trezor_static_pubkey = 1;
+    // required bytes trezor_static_public_key = 1;
 
-    pub fn trezor_static_pubkey(&self) -> &[u8] {
-        match self.trezor_static_pubkey.as_ref() {
+    pub fn trezor_static_public_key(&self) -> &[u8] {
+        match self.trezor_static_public_key.as_ref() {
             Some(v) => v,
             None => &[],
         }
     }
 
-    pub fn clear_trezor_static_pubkey(&mut self) {
-        self.trezor_static_pubkey = ::std::option::Option::None;
+    pub fn clear_trezor_static_public_key(&mut self) {
+        self.trezor_static_public_key = ::std::option::Option::None;
     }
 
-    pub fn has_trezor_static_pubkey(&self) -> bool {
-        self.trezor_static_pubkey.is_some()
+    pub fn has_trezor_static_public_key(&self) -> bool {
+        self.trezor_static_public_key.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_trezor_static_pubkey(&mut self, v: ::std::vec::Vec<u8>) {
-        self.trezor_static_pubkey = ::std::option::Option::Some(v);
+    pub fn set_trezor_static_public_key(&mut self, v: ::std::vec::Vec<u8>) {
+        self.trezor_static_public_key = ::std::option::Option::Some(v);
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_trezor_static_pubkey(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.trezor_static_pubkey.is_none() {
-            self.trezor_static_pubkey = ::std::option::Option::Some(::std::vec::Vec::new());
+    pub fn mut_trezor_static_public_key(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.trezor_static_public_key.is_none() {
+            self.trezor_static_public_key = ::std::option::Option::Some(::std::vec::Vec::new());
         }
-        self.trezor_static_pubkey.as_mut().unwrap()
+        self.trezor_static_public_key.as_mut().unwrap()
     }
 
     // Take field
-    pub fn take_trezor_static_pubkey(&mut self) -> ::std::vec::Vec<u8> {
-        self.trezor_static_pubkey.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    pub fn take_trezor_static_public_key(&mut self) -> ::std::vec::Vec<u8> {
+        self.trezor_static_public_key.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
     // required bytes credential = 2;
@@ -3082,9 +3082,9 @@ impl ThpCredentialResponse {
         let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "trezor_static_pubkey",
-            |m: &ThpCredentialResponse| { &m.trezor_static_pubkey },
-            |m: &mut ThpCredentialResponse| { &mut m.trezor_static_pubkey },
+            "trezor_static_public_key",
+            |m: &ThpCredentialResponse| { &m.trezor_static_public_key },
+            |m: &mut ThpCredentialResponse| { &mut m.trezor_static_public_key },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "credential",
@@ -3103,7 +3103,7 @@ impl ::protobuf::Message for ThpCredentialResponse {
     const NAME: &'static str = "ThpCredentialResponse";
 
     fn is_initialized(&self) -> bool {
-        if self.trezor_static_pubkey.is_none() {
+        if self.trezor_static_public_key.is_none() {
             return false;
         }
         if self.credential.is_none() {
@@ -3116,7 +3116,7 @@ impl ::protobuf::Message for ThpCredentialResponse {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
                 10 => {
-                    self.trezor_static_pubkey = ::std::option::Option::Some(is.read_bytes()?);
+                    self.trezor_static_public_key = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 18 => {
                     self.credential = ::std::option::Option::Some(is.read_bytes()?);
@@ -3133,7 +3133,7 @@ impl ::protobuf::Message for ThpCredentialResponse {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        if let Some(v) = self.trezor_static_pubkey.as_ref() {
+        if let Some(v) = self.trezor_static_public_key.as_ref() {
             my_size += ::protobuf::rt::bytes_size(1, &v);
         }
         if let Some(v) = self.credential.as_ref() {
@@ -3145,7 +3145,7 @@ impl ::protobuf::Message for ThpCredentialResponse {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let Some(v) = self.trezor_static_pubkey.as_ref() {
+        if let Some(v) = self.trezor_static_public_key.as_ref() {
             os.write_bytes(1, v)?;
         }
         if let Some(v) = self.credential.as_ref() {
@@ -3168,14 +3168,14 @@ impl ::protobuf::Message for ThpCredentialResponse {
     }
 
     fn clear(&mut self) {
-        self.trezor_static_pubkey = ::std::option::Option::None;
+        self.trezor_static_public_key = ::std::option::Option::None;
         self.credential = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static ThpCredentialResponse {
         static instance: ThpCredentialResponse = ThpCredentialResponse {
-            trezor_static_pubkey: ::std::option::Option::None,
+            trezor_static_public_key: ::std::option::Option::None,
             credential: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
@@ -3793,8 +3793,8 @@ impl ::protobuf::reflect::ProtobufValue for ThpPairingCredential {
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct ThpAuthenticatedCredentialData {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpAuthenticatedCredentialData.host_static_pubkey)
-    pub host_static_pubkey: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpAuthenticatedCredentialData.host_static_public_key)
+    pub host_static_public_key: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpAuthenticatedCredentialData.cred_metadata)
     pub cred_metadata: ::protobuf::MessageField<ThpCredentialMetadata>,
     // special fields
@@ -3813,49 +3813,49 @@ impl ThpAuthenticatedCredentialData {
         ::std::default::Default::default()
     }
 
-    // required bytes host_static_pubkey = 1;
+    // required bytes host_static_public_key = 1;
 
-    pub fn host_static_pubkey(&self) -> &[u8] {
-        match self.host_static_pubkey.as_ref() {
+    pub fn host_static_public_key(&self) -> &[u8] {
+        match self.host_static_public_key.as_ref() {
             Some(v) => v,
             None => &[],
         }
     }
 
-    pub fn clear_host_static_pubkey(&mut self) {
-        self.host_static_pubkey = ::std::option::Option::None;
+    pub fn clear_host_static_public_key(&mut self) {
+        self.host_static_public_key = ::std::option::Option::None;
     }
 
-    pub fn has_host_static_pubkey(&self) -> bool {
-        self.host_static_pubkey.is_some()
+    pub fn has_host_static_public_key(&self) -> bool {
+        self.host_static_public_key.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_host_static_pubkey(&mut self, v: ::std::vec::Vec<u8>) {
-        self.host_static_pubkey = ::std::option::Option::Some(v);
+    pub fn set_host_static_public_key(&mut self, v: ::std::vec::Vec<u8>) {
+        self.host_static_public_key = ::std::option::Option::Some(v);
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_host_static_pubkey(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.host_static_pubkey.is_none() {
-            self.host_static_pubkey = ::std::option::Option::Some(::std::vec::Vec::new());
+    pub fn mut_host_static_public_key(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.host_static_public_key.is_none() {
+            self.host_static_public_key = ::std::option::Option::Some(::std::vec::Vec::new());
         }
-        self.host_static_pubkey.as_mut().unwrap()
+        self.host_static_public_key.as_mut().unwrap()
     }
 
     // Take field
-    pub fn take_host_static_pubkey(&mut self) -> ::std::vec::Vec<u8> {
-        self.host_static_pubkey.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    pub fn take_host_static_public_key(&mut self) -> ::std::vec::Vec<u8> {
+        self.host_static_public_key.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
         let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "host_static_pubkey",
-            |m: &ThpAuthenticatedCredentialData| { &m.host_static_pubkey },
-            |m: &mut ThpAuthenticatedCredentialData| { &mut m.host_static_pubkey },
+            "host_static_public_key",
+            |m: &ThpAuthenticatedCredentialData| { &m.host_static_public_key },
+            |m: &mut ThpAuthenticatedCredentialData| { &mut m.host_static_public_key },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, ThpCredentialMetadata>(
             "cred_metadata",
@@ -3874,7 +3874,7 @@ impl ::protobuf::Message for ThpAuthenticatedCredentialData {
     const NAME: &'static str = "ThpAuthenticatedCredentialData";
 
     fn is_initialized(&self) -> bool {
-        if self.host_static_pubkey.is_none() {
+        if self.host_static_public_key.is_none() {
             return false;
         }
         if self.cred_metadata.is_none() {
@@ -3892,7 +3892,7 @@ impl ::protobuf::Message for ThpAuthenticatedCredentialData {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
                 10 => {
-                    self.host_static_pubkey = ::std::option::Option::Some(is.read_bytes()?);
+                    self.host_static_public_key = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 18 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.cred_metadata)?;
@@ -3909,7 +3909,7 @@ impl ::protobuf::Message for ThpAuthenticatedCredentialData {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        if let Some(v) = self.host_static_pubkey.as_ref() {
+        if let Some(v) = self.host_static_public_key.as_ref() {
             my_size += ::protobuf::rt::bytes_size(1, &v);
         }
         if let Some(v) = self.cred_metadata.as_ref() {
@@ -3922,7 +3922,7 @@ impl ::protobuf::Message for ThpAuthenticatedCredentialData {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let Some(v) = self.host_static_pubkey.as_ref() {
+        if let Some(v) = self.host_static_public_key.as_ref() {
             os.write_bytes(1, v)?;
         }
         if let Some(v) = self.cred_metadata.as_ref() {
@@ -3945,14 +3945,14 @@ impl ::protobuf::Message for ThpAuthenticatedCredentialData {
     }
 
     fn clear(&mut self) {
-        self.host_static_pubkey = ::std::option::Option::None;
+        self.host_static_public_key = ::std::option::Option::None;
         self.cred_metadata.clear();
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static ThpAuthenticatedCredentialData {
         static instance: ThpAuthenticatedCredentialData = ThpAuthenticatedCredentialData {
-            host_static_pubkey: ::std::option::Option::None,
+            host_static_public_key: ::std::option::Option::None,
             cred_metadata: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
@@ -4257,45 +4257,45 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x01\x20\x02(\x0cR\x03tag\")\n\x0fThpQrCodeSecret\x12\x16\n\x06secret\
     \x18\x01\x20\x02(\x0cR\x06secret\"!\n\rThpNfcTagHost\x12\x10\n\x03tag\
     \x18\x01\x20\x02(\x0cR\x03tag\"#\n\x0fThpNfcTagTrezor\x12\x10\n\x03tag\
-    \x18\x01\x20\x02(\x0cR\x03tag\"\x8d\x01\n\x14ThpCredentialRequest\x12,\n\
-    \x12host_static_pubkey\x18\x01\x20\x02(\x0cR\x10hostStaticPubkey\x12'\n\
-    \x0bautoconnect\x18\x02\x20\x01(\x08:\x05falseR\x0bautoconnect\x12\x1e\n\
-    \ncredential\x18\x03\x20\x01(\x0cR\ncredential\"i\n\x15ThpCredentialResp\
-    onse\x120\n\x14trezor_static_pubkey\x18\x01\x20\x02(\x0cR\x12trezorStati\
-    cPubkey\x12\x1e\n\ncredential\x18\x02\x20\x02(\x0cR\ncredential\"\x0f\n\
-    \rThpEndRequest\"\x10\n\x0eThpEndResponse\"\\\n\x15ThpCredentialMetadata\
-    \x12\x1b\n\thost_name\x18\x01\x20\x01(\tR\x08hostName\x12\x20\n\x0bautoc\
-    onnect\x18\x02\x20\x01(\x08R\x0bautoconnect:\x04\x98\xb2\x19\x01\"\x82\
-    \x01\n\x14ThpPairingCredential\x12R\n\rcred_metadata\x18\x01\x20\x02(\
-    \x0b2-.hw.trezor.messages.thp.ThpCredentialMetadataR\x0ccredMetadata\x12\
-    \x10\n\x03mac\x18\x02\x20\x02(\x0cR\x03mac:\x04\x98\xb2\x19\x01\"\xa8\
-    \x01\n\x1eThpAuthenticatedCredentialData\x12,\n\x12host_static_pubkey\
-    \x18\x01\x20\x02(\x0cR\x10hostStaticPubkey\x12R\n\rcred_metadata\x18\x02\
-    \x20\x02(\x0b2-.hw.trezor.messages.thp.ThpCredentialMetadataR\x0ccredMet\
-    adata:\x04\x98\xb2\x19\x01*\xfb\x06\n\x0eThpMessageType\x12\x19\n\x15Thp\
-    MessageType_Cancel\x10\x14\x12\x20\n\x1cThpMessageType_ButtonRequest\x10\
-    \x1a\x12\x1c\n\x18ThpMessageType_ButtonAck\x10\x1b\x12%\n\x20ThpMessageT\
-    ype_ThpPairingRequest\x10\xf0\x07\x12-\n(ThpMessageType_ThpPairingReques\
-    tApproved\x10\xf1\x07\x12#\n\x1eThpMessageType_ThpSelectMethod\x10\xf2\
-    \x07\x122\n-ThpMessageType_ThpPairingPreparationsFinished\x10\xf3\x07\
-    \x12(\n#ThpMessageType_ThpCredentialRequest\x10\xf8\x07\x12)\n$ThpMessag\
-    eType_ThpCredentialResponse\x10\xf9\x07\x12!\n\x1cThpMessageType_ThpEndR\
-    equest\x10\xfa\x07\x12\"\n\x1dThpMessageType_ThpEndResponse\x10\xfb\x07\
-    \x12*\n%ThpMessageType_ThpCodeEntryCommitment\x10\x80\x08\x12)\n$ThpMess\
-    ageType_ThpCodeEntryChallenge\x10\x81\x08\x12+\n&ThpMessageType_ThpCodeE\
-    ntryCpaceTrezor\x10\x82\x08\x12,\n'ThpMessageType_ThpCodeEntryCpaceHostT\
-    ag\x10\x83\x08\x12&\n!ThpMessageType_ThpCodeEntrySecret\x10\x84\x08\x12\
-    \x20\n\x1bThpMessageType_ThpQrCodeTag\x10\x88\x08\x12#\n\x1eThpMessageTy\
-    pe_ThpQrCodeSecret\x10\x89\x08\x12!\n\x1cThpMessageType_ThpNfcTagHost\
-    \x10\x90\x08\x12#\n\x1eThpMessageType_ThpNfcTagTrezor\x10\x91\x08\x1a\
-    \x04\xd0\xf3\x18\x01\"\x04\x08\0\x10\x13\"\x04\x08\x15\x10\x19\"\x05\x08\
-    \x1c\x10\xe7\x07\"\x06\x08\xe8\x07\x10\xe8\x07\"\x06\x08\xe9\x07\x10\xef\
-    \x07\"\x06\x08\xf4\x07\x10\xf7\x07\"\x06\x08\xfc\x07\x10\xff\x07\"\x06\
-    \x08\x85\x08\x10\x87\x08\"\x06\x08\x8a\x08\x10\x8f\x08\"\x06\x08\x92\x08\
-    \x10\xcb\x08\"\t\x08\xcc\x08\x10\xff\xff\xff\xff\x07*G\n\x10ThpPairingMe\
-    thod\x12\x0f\n\x0bSkipPairing\x10\x01\x12\r\n\tCodeEntry\x10\x02\x12\n\n\
-    \x06QrCode\x10\x03\x12\x07\n\x03NFC\x10\x04B;\n#com.satoshilabs.trezor.l\
-    ib.protobufB\x10TrezorMessageThp\x80\xa6\x1d\x01\
+    \x18\x01\x20\x02(\x0cR\x03tag\"\x94\x01\n\x14ThpCredentialRequest\x123\n\
+    \x16host_static_public_key\x18\x01\x20\x02(\x0cR\x13hostStaticPublicKey\
+    \x12'\n\x0bautoconnect\x18\x02\x20\x01(\x08:\x05falseR\x0bautoconnect\
+    \x12\x1e\n\ncredential\x18\x03\x20\x01(\x0cR\ncredential\"p\n\x15ThpCred\
+    entialResponse\x127\n\x18trezor_static_public_key\x18\x01\x20\x02(\x0cR\
+    \x15trezorStaticPublicKey\x12\x1e\n\ncredential\x18\x02\x20\x02(\x0cR\nc\
+    redential\"\x0f\n\rThpEndRequest\"\x10\n\x0eThpEndResponse\"\\\n\x15ThpC\
+    redentialMetadata\x12\x1b\n\thost_name\x18\x01\x20\x01(\tR\x08hostName\
+    \x12\x20\n\x0bautoconnect\x18\x02\x20\x01(\x08R\x0bautoconnect:\x04\x98\
+    \xb2\x19\x01\"\x82\x01\n\x14ThpPairingCredential\x12R\n\rcred_metadata\
+    \x18\x01\x20\x02(\x0b2-.hw.trezor.messages.thp.ThpCredentialMetadataR\
+    \x0ccredMetadata\x12\x10\n\x03mac\x18\x02\x20\x02(\x0cR\x03mac:\x04\x98\
+    \xb2\x19\x01\"\xaf\x01\n\x1eThpAuthenticatedCredentialData\x123\n\x16hos\
+    t_static_public_key\x18\x01\x20\x02(\x0cR\x13hostStaticPublicKey\x12R\n\
+    \rcred_metadata\x18\x02\x20\x02(\x0b2-.hw.trezor.messages.thp.ThpCredent\
+    ialMetadataR\x0ccredMetadata:\x04\x98\xb2\x19\x01*\xfb\x06\n\x0eThpMessa\
+    geType\x12\x19\n\x15ThpMessageType_Cancel\x10\x14\x12\x20\n\x1cThpMessag\
+    eType_ButtonRequest\x10\x1a\x12\x1c\n\x18ThpMessageType_ButtonAck\x10\
+    \x1b\x12%\n\x20ThpMessageType_ThpPairingRequest\x10\xf0\x07\x12-\n(ThpMe\
+    ssageType_ThpPairingRequestApproved\x10\xf1\x07\x12#\n\x1eThpMessageType\
+    _ThpSelectMethod\x10\xf2\x07\x122\n-ThpMessageType_ThpPairingPreparation\
+    sFinished\x10\xf3\x07\x12(\n#ThpMessageType_ThpCredentialRequest\x10\xf8\
+    \x07\x12)\n$ThpMessageType_ThpCredentialResponse\x10\xf9\x07\x12!\n\x1cT\
+    hpMessageType_ThpEndRequest\x10\xfa\x07\x12\"\n\x1dThpMessageType_ThpEnd\
+    Response\x10\xfb\x07\x12*\n%ThpMessageType_ThpCodeEntryCommitment\x10\
+    \x80\x08\x12)\n$ThpMessageType_ThpCodeEntryChallenge\x10\x81\x08\x12+\n&\
+    ThpMessageType_ThpCodeEntryCpaceTrezor\x10\x82\x08\x12,\n'ThpMessageType\
+    _ThpCodeEntryCpaceHostTag\x10\x83\x08\x12&\n!ThpMessageType_ThpCodeEntry\
+    Secret\x10\x84\x08\x12\x20\n\x1bThpMessageType_ThpQrCodeTag\x10\x88\x08\
+    \x12#\n\x1eThpMessageType_ThpQrCodeSecret\x10\x89\x08\x12!\n\x1cThpMessa\
+    geType_ThpNfcTagHost\x10\x90\x08\x12#\n\x1eThpMessageType_ThpNfcTagTrezo\
+    r\x10\x91\x08\x1a\x04\xd0\xf3\x18\x01\"\x04\x08\0\x10\x13\"\x04\x08\x15\
+    \x10\x19\"\x05\x08\x1c\x10\xe7\x07\"\x06\x08\xe8\x07\x10\xe8\x07\"\x06\
+    \x08\xe9\x07\x10\xef\x07\"\x06\x08\xf4\x07\x10\xf7\x07\"\x06\x08\xfc\x07\
+    \x10\xff\x07\"\x06\x08\x85\x08\x10\x87\x08\"\x06\x08\x8a\x08\x10\x8f\x08\
+    \"\x06\x08\x92\x08\x10\xcb\x08\"\t\x08\xcc\x08\x10\xff\xff\xff\xff\x07*G\
+    \n\x10ThpPairingMethod\x12\x0f\n\x0bSkipPairing\x10\x01\x12\r\n\tCodeEnt\
+    ry\x10\x02\x12\n\n\x06QrCode\x10\x03\x12\x07\n\x03NFC\x10\x04B;\n#com.sa\
+    toshilabs.trezor.lib.protobufB\x10TrezorMessageThp\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
