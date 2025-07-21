@@ -96,8 +96,8 @@ typedef struct {
 
   // Battery charging state
   bool charging_enabled;
-  uint16_t charging_current_target_ma;
-  uint16_t charging_current_max_limit_ma;
+  uint16_t i_chg_target_ma;
+  uint16_t i_chg_max_limit_ma;
 
   // Temp controller
   uint32_t temp_control_timeout;
