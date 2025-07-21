@@ -100,16 +100,25 @@ secbool boot_header_check_signature(const boot_header_t* header,
   _Static_assert(ARRAY_LENGTH(BOARDLOADER_PQ_KEYS) <= 3);
   _Static_assert(ARRAY_LENGTH(BOARDLOADER_EC_KEYS) ==
                  ARRAY_LENGTH(BOARDLOADER_PQ_KEYS));
-  int sig1_idx = header->sigmask & (1 << 0) ? 0 : 1;
-  int sig2_idx = header->sigmask & (1 << 2) ? 2 : 1;
 
-  // There must be two different signatures to verify
-  if (sig1_idx == sig2_idx) {
+  uint32_t sigmask = header->sigmask;
+
+  int sig1_idx = __builtin_ctz(sigmask);
+  if (sig1_idx >= ARRAY_LENGTH(BOARDLOADER_PQ_KEYS)) {
     return secfalse;
   }
 
-  if (sig1_idx >= ARRAY_LENGTH(BOARDLOADER_PQ_KEYS) ||
-      sig2_idx >= ARRAY_LENGTH(BOARDLOADER_PQ_KEYS)) {
+  sigmask &= ~(1 << sig1_idx);
+
+  int sig2_idx = __builtin_ctz(sigmask);
+  if (sig2_idx >= ARRAY_LENGTH(BOARDLOADER_PQ_KEYS)) {
+    return secfalse;
+  }
+
+  sigmask &= ~(1 << sig2_idx);
+
+  if (sigmask != 0) {
+    // There are more than two bits set
     return secfalse;
   }
 
