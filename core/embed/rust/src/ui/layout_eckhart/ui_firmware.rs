@@ -429,8 +429,10 @@ impl FirmwareUI for UIEckhart {
         _prompt_screen: bool,
         cancel: bool,
         warning_footer: Option<TString<'static>>,
-        _external_menu: bool,
+        external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
+        debug_assert!(!(info && external_menu));
+
         let paragraphs = ConfirmValueParams {
             description: description.unwrap_or("".into()),
             extra: extra.unwrap_or("".into()),
@@ -471,6 +473,9 @@ impl FirmwareUI for UIEckhart {
         let header = if info {
             Header::new(title)
                 .with_right_button(Button::with_icon(theme::ICON_INFO), HeaderMsg::Menu)
+        } else if external_menu {
+            Header::new(title)
+                .with_right_button(Button::with_icon(theme::ICON_MENU), HeaderMsg::Menu)
         } else {
             Header::new(title)
         };
