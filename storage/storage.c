@@ -841,6 +841,10 @@ void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
   mpu_restore(mpu_mode);
 }
 
+void storage_set_callback(PIN_UI_WAIT_CALLBACK callback) {
+  ui_callback = callback;
+}
+
 secbool storage_pin_fails_increase(void) {
   if (sectrue != initialized) {
     return secfalse;

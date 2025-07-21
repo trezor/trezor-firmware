@@ -103,6 +103,10 @@
 #include <sys/trustzone.h>
 #endif
 
+#ifdef SECURE_MODE
+#include <storage.h>
+#endif
+
 void drivers_init() {
 #ifdef SECURE_MODE
   parse_boardloader_capabilities();
@@ -326,6 +330,13 @@ int main(void) {
 
   // Initialize hardware drivers
   drivers_init();
+
+#ifdef SECURE_MODE
+  // Initialize storage (only on devices without secure monitor)
+  uint8_t entropy_data[HW_ENTROPY_LEN];
+  entropy_get(entropy_data);
+  storage_init(NULL, entropy_data, sizeof(entropy_data));
+#endif
 
   // Initialize coreapp task
   applet_t coreapp;

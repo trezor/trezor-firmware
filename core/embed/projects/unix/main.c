@@ -37,6 +37,7 @@
 #include <unistd.h>
 
 #include <io/display.h>
+#include <sec/entropy.h>
 #include <sec/secret.h>
 #include <sys/system.h>
 #include <sys/systimer.h>
@@ -70,6 +71,8 @@
 #include "py/repl.h"
 #include "py/runtime.h"
 #include "py/stackctrl.h"
+
+#include "storage.h"
 
 // Command line options, with their defaults
 STATIC bool compile_only = false;
@@ -535,6 +538,11 @@ MP_NOINLINE int main_(int argc, char **argv) {
   system_init(&rsod_panic_handler);
 
   drivers_init();
+
+  // Initialize storage
+  uint8_t entropy_data[HW_ENTROPY_LEN];
+  entropy_get(entropy_data);
+  storage_init(NULL, entropy_data, sizeof(entropy_data));
 
   SDL_SetEventFilter(sdl_event_filter, NULL);
 

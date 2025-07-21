@@ -21,7 +21,6 @@
 
 #include <trezor_rtl.h>
 
-#include <sec/entropy.h>
 #include <sec/random_delays.h>
 #include <sec/rng.h>
 #include <sys/bootargs.h>
@@ -192,11 +191,9 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
 #endif
 #endif
 
-    case SMCALL_STORAGE_INIT: {
+    case SMCALL_STORAGE_SET_CALLBACK: {
       PIN_UI_WAIT_CALLBACK callback = (PIN_UI_WAIT_CALLBACK)args[0];
-      const uint8_t *salt = (const uint8_t *)args[1];
-      uint16_t salt_len = args[2];
-      storage_init__verified(callback, salt, salt_len);
+      storage_set_callback__verified(callback);
     } break;
 
     case SMCALL_STORAGE_WIPE: {
@@ -296,11 +293,6 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       uint16_t key = (uint16_t)args[0];
       uint32_t *count = (uint32_t *)args[1];
       args[0] = storage_next_counter__verified(key, count);
-    } break;
-
-    case SMCALL_ENTROPY_GET: {
-      uint8_t *buf = (uint8_t *)args[0];
-      entropy_get__verified(buf);
     } break;
 
     case SMCALL_RNG_GET: {

@@ -149,8 +149,7 @@ bool __wur optiga_random_buffer__verified(uint8_t *dest, size_t size);
 // ---------------------------------------------------------------------
 #include "storage.h"
 
-void storage_init__verified(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
-                            const uint16_t salt_len);
+void storage_set_callback__verified(PIN_UI_WAIT_CALLBACK callback);
 
 secbool storage_unlock__verified(const uint8_t *pin, size_t pin_len,
                                  const uint8_t *ext_salt);
@@ -182,11 +181,6 @@ bool translations_write__verified(const uint8_t *data, uint32_t offset,
                                   uint32_t len);
 
 const uint8_t *translations_read__verified(uint32_t *len, uint32_t offset);
-
-// ---------------------------------------------------------------------
-#include <sec/entropy.h>
-
-void entropy_get__verified(uint8_t *buf);
 
 // ---------------------------------------------------------------------
 #include <util/fwutils.h>
