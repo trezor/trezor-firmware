@@ -44,8 +44,8 @@ async def thp_main_loop(iface: WireInterface) -> None:
     ctx = Context(iface)
     try:
         while True:
-            (channel, msg) = await ctx.read()
-            await handle_received_message(channel, msg)
+            channel = await ctx.accept()
+            await handle_received_message(channel, channel.rx_buffer)
     finally:
         channel_manager.CHANNELS_LOADED = False
 
@@ -56,7 +56,7 @@ class Context:
         self.read_wait = loop.wait(iface.iface_num() | io.POLL_READ)
         self.packet = bytearray(self.iface.RX_PACKET_LEN)
 
-    async def read(self) -> tuple[Channel, memoryview]:
+    async def accept(self) -> Channel:
         iface = self.iface
         read_wait = self.read_wait
         packet = self.packet
@@ -80,15 +80,12 @@ class Context:
                 await _handle_unallocated(iface, cid, packet)
                 continue
 
-            msg = await _handle_allocated(iface, channel, packet)
-            if msg is None:
+            if not await _handle_allocated(iface, channel, packet):
                 continue
 
-            msg = await handle_checksum_and_acks(channel, msg)
-            if msg is None:
-                continue
-
-            return (channel, msg)
+            if await handle_checksum_and_acks(channel):
+                # channel.rx_buffer contains a valid & acknowledged message
+                return channel
 
 
 async def _handle_codec_v1(iface: WireInterface, packet: bytes) -> None:
@@ -135,7 +132,7 @@ async def _handle_broadcast(iface: WireInterface, packet: utils.BufferType) -> N
 
 async def _handle_allocated(
     iface: WireInterface, channel: Channel, packet: utils.BufferType
-) -> memoryview | None:
+) -> bool:
     if channel.iface is not iface:
         # TODO send error message to wire
         raise ThpError("Channel has different WireInterface")
