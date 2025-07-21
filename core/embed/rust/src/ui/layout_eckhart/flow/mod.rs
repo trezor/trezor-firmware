@@ -15,6 +15,7 @@ pub mod request_passphrase;
 pub mod show_danger;
 pub mod show_share_words;
 pub mod show_thp_pairing_code;
+pub mod util;
 
 #[cfg(feature = "universal_fw")]
 pub use confirm_fido::new_confirm_fido;
