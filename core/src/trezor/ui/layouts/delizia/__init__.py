@@ -39,7 +39,7 @@ def confirm_action(
     br_code: ButtonRequestType = BR_CODE_OTHER,
     prompt_screen: bool = False,
     prompt_title: str | None = None,
-) -> Awaitable[None]:
+) -> Awaitable[ui.UiResult]:
     from trezor.ui.layouts.menu import Menu, confirm_with_menu
 
     if description is not None and description_param is not None:
@@ -63,7 +63,7 @@ def confirm_action(
     if prompt_screen or hold:
         # Note: multi-step confirm (prompt_screen/hold)
         # can't work with external menus yet
-        return raise_if_cancelled(
+        return interact(
             flow,
             br_name,
             br_code,
@@ -225,7 +225,7 @@ def confirm_homescreen(
     )
 
 
-def confirm_change_passphrase(use: bool) -> Awaitable[None]:
+def confirm_change_passphrase(use: bool) -> Awaitable[ui.UiResult]:
     description = TR.passphrase__turn_on if use else TR.passphrase__turn_off
 
     return confirm_action(
@@ -238,7 +238,7 @@ def confirm_change_passphrase(use: bool) -> Awaitable[None]:
     )
 
 
-def confirm_hide_passphrase_from_host() -> Awaitable[None]:
+def confirm_hide_passphrase_from_host() -> Awaitable[ui.UiResult]:
     return confirm_action(
         "set_hide_passphrase_from_host",
         TR.passphrase__title_passphrase,
@@ -277,7 +277,7 @@ async def show_passphrase_from_host(passphrase: str | None) -> None:
 
 def confirm_change_passphrase_source(
     passphrase_always_on_device: bool,
-) -> Awaitable[None]:
+) -> Awaitable[ui.UiResult]:
     description = (
         TR.passphrase__always_on_device
         if passphrase_always_on_device
@@ -663,7 +663,7 @@ def confirm_address(
     chunkify: bool = True,
     br_name: str | None = None,
     br_code: ButtonRequestType = BR_CODE_OTHER,
-) -> Awaitable[None]:
+) -> Awaitable[ui.UiResult]:
     return confirm_value(
         title,
         address,
@@ -682,7 +682,7 @@ def confirm_text(
     data: str,
     description: str | None = None,
     br_code: ButtonRequestType = BR_CODE_OTHER,
-) -> Awaitable[None]:
+) -> Awaitable[ui.UiResult]:
     return confirm_value(
         title,
         data,
@@ -699,7 +699,7 @@ def confirm_amount(
     description: str | None = None,
     br_name: str = "confirm_amount",
     br_code: ButtonRequestType = BR_CODE_OTHER,
-) -> Awaitable[None]:
+) -> Awaitable[ui.UiResult]:
     description = description or f"{TR.words__amount}:"  # def_arg
     return confirm_value(
         title,
@@ -725,7 +725,7 @@ def confirm_value(
     chunkify: bool = False,
     info_items: Iterable[tuple[str, str]] | None = None,
     cancel: bool = False,
-) -> Awaitable[None]:
+) -> Awaitable[ui.UiResult]:
     """General confirmation dialog, used by many other confirm_* functions."""
 
     from trezor.ui.layouts.menu import Menu, confirm_with_menu
@@ -1207,7 +1207,7 @@ if not utils.BITCOIN_ONLY:
         items: Iterable[tuple[str, str]] = (),
         br_name: str = "confirm_solana_recipient",
         br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
-    ) -> Awaitable[None]:
+    ) -> Awaitable[ui.UiResult]:
         return confirm_value(
             title=title,
             value=recipient,
@@ -1322,7 +1322,7 @@ def confirm_metadata(
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
     hold: bool = False,
     verb: str | None = None,
-) -> Awaitable[None]:
+) -> Awaitable[ui.UiResult]:
     verb = verb or TR.buttons__continue  # def_arg
     return confirm_action(
         br_name,
@@ -1643,7 +1643,7 @@ def confirm_change_pin(
     br_name: str,
     title: str,
     description: str,
-) -> Awaitable[None]:
+) -> Awaitable[ui.UiResult]:
     return confirm_action(
         br_name,
         title,
@@ -1657,7 +1657,7 @@ def confirm_remove_pin(
     br_name: str,
     title: str,
     description: str,
-) -> Awaitable[None]:
+) -> Awaitable[ui.UiResult]:
     return confirm_action(
         br_name,
         title,
