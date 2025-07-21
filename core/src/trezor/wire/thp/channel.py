@@ -300,7 +300,7 @@ class Channel:
         sync_bit = ABP.get_send_seq_bit(self.channel_cache)
         ctrl_byte = control_byte.add_seq_bit_to_ctrl_byte(ctrl_byte, sync_bit)
         header = PacketHeader(ctrl_byte, self.get_channel_id_int(), payload_len)
-        self._prepare_write()  # stop sending after this write
+        self._prepare_write()  # stop sending after this write, until receiving an ACK
         return write_payload_to_wire_and_add_checksum(self.iface, header, payload)
 
     def send_message(
