@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from itertools import product
+
 import pytest
 
 from trezorlib import ethereum, exceptions, messages, models
@@ -533,10 +535,15 @@ def test_signtx_staking_eip1559(client: Client, parameters: dict, result: dict):
 @pytest.mark.experimental
 @pytest.mark.models(
     "core",
-    skip="t2t1,t3w1",
-    reason="T1 does not support payment requests. Payment requests not yet implemented on model T and TS7.",
+    skip="t2t1",
+    reason="T1 does not support payment requests. Payment requests not yet implemented on model T.",
 )
-def test_signtx_payment_req(client: Client):
+@pytest.mark.parametrize(
+    "has_refund,has_text,has_multiple_purchases", list(product([True, False], repeat=3))
+)
+def test_signtx_payment_req(
+    client: Client, has_refund: bool, has_text: bool, has_multiple_purchases: bool
+):
     from trezorlib import btc, misc
 
     from ..payment_req import (
@@ -546,22 +553,41 @@ def test_signtx_payment_req(client: Client):
         make_payment_request,
     )
 
-    memo = CoinPurchaseMemo(
+    purchase_memo_1 = CoinPurchaseMemo(
         amount="0.0636 BTC",
         coin_name="Bitcoin",
         slip44=0,
         address_n=parse_path("m/44h/0h/0h/0/0"),
     )
-    memo.address_resp = btc.get_authenticated_address(
-        client, memo.coin_name, memo.address_n
+    purchase_memo_1.address_resp = btc.get_authenticated_address(
+        client, purchase_memo_1.coin_name, purchase_memo_1.address_n
     )
 
-    refund_memo = RefundMemo(address_n=parse_path("m/44h/60h/0h/0/0"))
-    refund_memo.address_resp = ethereum.get_authenticated_address(
-        client, refund_memo.address_n
-    )
+    memos = [purchase_memo_1]
 
-    text_memo = TextMemo(text="We will confirm some text")
+    if has_refund:
+        refund_memo = RefundMemo(address_n=parse_path("m/44h/60h/0h/0/0"))
+        refund_memo.address_resp = ethereum.get_authenticated_address(
+            client, refund_memo.address_n
+        )
+        memos.append(refund_memo)
+
+    if has_text:
+        text_memo = TextMemo(text="We will confirm some text")
+        memos.append(text_memo)
+
+    if has_multiple_purchases:
+        purchase_memo_2 = CoinPurchaseMemo(
+            amount="0.0123 BTC",
+            coin_name="Bitcoin",
+            slip44=0,
+            address_n=parse_path("m/44h/0h/0h/0/0"),
+        )
+        purchase_memo_2.address_resp = btc.get_authenticated_address(
+            client, purchase_memo_2.coin_name, purchase_memo_2.address_n
+        )
+
+        memos.append(purchase_memo_2)
 
     nonce = misc.get_nonce(client)
 
@@ -571,7 +597,7 @@ def test_signtx_payment_req(client: Client):
         recipient_name="trezor.io",
         slip44=60,
         outputs=[(int(params["value"], 16), params["to_address"])],
-        memos=[memo, refund_memo, text_memo],
+        memos=memos,
         nonce=nonce,
     )
 
