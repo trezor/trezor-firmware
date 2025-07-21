@@ -138,6 +138,7 @@ impl FirmwareUI for UICaesar {
         _subtitle: TString<'static>,
         _sell_amount: TString<'static>,
         _buy_amount: TString<'static>,
+        _back_button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }

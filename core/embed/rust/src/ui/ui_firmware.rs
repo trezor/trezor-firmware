@@ -49,6 +49,7 @@ pub trait FirmwareUI {
         subtitle: TString<'static>,
         sell_amount: TString<'static>,
         buy_amount: TString<'static>,
+        back_button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     #[allow(clippy::too_many_arguments)]

@@ -120,7 +120,8 @@ extern "C" fn new_confirm_trade(n_args: usize, args: *const Obj, kwargs: *mut Ma
         let subtitle: TString = kwargs.get(Qstr::MP_QSTR_subtitle)?.try_into()?;
         let sell_amount: TString = kwargs.get(Qstr::MP_QSTR_sell_amount)?.try_into()?;
         let buy_amount: TString = kwargs.get(Qstr::MP_QSTR_buy_amount)?.try_into()?;
-        let layout = ModelUI::confirm_trade(title, subtitle, sell_amount, buy_amount)?;
+        let back_button: bool = kwargs.get_or(Qstr::MP_QSTR_back_button, false)?;
+        let layout = ModelUI::confirm_trade(title, subtitle, sell_amount, buy_amount, back_button)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1406,6 +1407,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     subtitle: str,
     ///     sell_amount: str,
     ///     buy_amount: str,
+    ///     back_button: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """A general way to confirm a "trade", which consists of
     ///     two amounts - one that is sold and what that is bought."""

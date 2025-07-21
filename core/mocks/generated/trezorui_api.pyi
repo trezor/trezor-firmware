@@ -136,6 +136,7 @@ def confirm_trade(
     subtitle: str,
     sell_amount: str,
     buy_amount: str,
+    back_button: bool = False,
 ) -> LayoutObj[UiResult]:
     """A general way to confirm a "trade", which consists of
     two amounts - one that is sold and what that is bought."""
