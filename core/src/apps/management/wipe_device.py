@@ -13,7 +13,7 @@ if __debug__:
 
 async def wipe_device(msg: WipeDevice) -> NoReturn:
     import storage
-    from trezor import TR, config, loop, translations
+    from trezor import TR, config, translations
     from trezor.enums import ButtonRequestType
     from trezor.messages import Success
     from trezor.pin import render_empty_loader
@@ -58,6 +58,5 @@ async def wipe_device(msg: WipeDevice) -> NoReturn:
 
     # reload settings
     reload_settings_from_storage()
-    loop.clear()
     if __debug__:
         log.debug(__name__, "Device wipe - finished")

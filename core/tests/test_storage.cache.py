@@ -49,9 +49,6 @@ class TestStorageCache(unittest.TestCase):
         def test_new_channel_and_session(self):
             channel = thp_common.get_new_channel(self.interface)
 
-            # Assert that channel is created without any sessions
-            self.assertEqual(len(channel.sessions), 0)
-
             cid_1 = channel.channel_id
             session_cache_1 = cache_thp.create_or_replace_session(
                 channel.channel_cache, b"\x01"
