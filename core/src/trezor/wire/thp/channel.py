@@ -297,6 +297,30 @@ class Channel:
             self._write_encrypted_payload_loop(ctrl_byte, payload)
         )
 
+    def send_payload(self, ctrl_byte: int, payload: bytes) -> Awaitable[None]:
+        """Send payload with ABP bit - don't wait for an ACK."""
+        payload_len = len(payload) + CHECKSUM_LENGTH
+        sync_bit = ABP.get_send_seq_bit(self.channel_cache)
+        ctrl_byte = control_byte.add_seq_bit_to_ctrl_byte(ctrl_byte, sync_bit)
+        header = PacketHeader(ctrl_byte, self.get_channel_id_int(), payload_len)
+        self._prepare_write()  # stop sending after this write
+        return write_payload_to_wire_and_add_checksum(self.iface, header, payload)
+
+    def send_message(
+        self, msg: protobuf.MessageType, session_id: int = 0
+    ) -> Awaitable[None]:
+        """Encode, encrypt and send payload with ABP bit - don't wait for an ACK."""
+        msg_size = protobuf.encoded_length(msg)
+        payload_size = SESSION_ID_LENGTH + MESSAGE_TYPE_LENGTH + msg_size
+        length = payload_size + CHECKSUM_LENGTH + TAG_LENGTH + INIT_HEADER_LENGTH
+
+        buffer = self.get_buffers().get_tx(length)
+        noise_payload_len = encode_into_buffer(buffer, msg, session_id)
+        self._encrypt(buffer, noise_payload_len)
+
+        payload_length = noise_payload_len + TAG_LENGTH
+        return self.send_payload(ENCRYPTED, buffer[:payload_length])
+
     def _write_and_encrypt(
         self,
         buffer: memoryview,
