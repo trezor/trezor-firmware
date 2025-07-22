@@ -15,7 +15,7 @@ use crate::trezorhal::sysevent::{sysevents_poll, Syshandle};
 
 #[cfg(feature = "power_manager")]
 use crate::{
-    time::Instant,
+    time::{Duration, Instant},
     trezorhal::power_manager::{hibernate, is_usb_connected, suspend},
     ui::display::fade_backlight_duration,
     ui::event::PhysicalButton,
@@ -26,6 +26,11 @@ use crate::trezorhal::haptic::{play, HapticEffect};
 
 use heapless::Vec;
 use num_traits::ToPrimitive;
+
+#[cfg(feature = "power_manager")]
+const FADE_TIME: Duration = Duration::from_millis(30000);
+#[cfg(feature = "power_manager")]
+const SUSPEND_TIME: Duration = Duration::from_millis(40000);
 
 pub trait ReturnToC {
     fn return_to_c(self) -> u32;
@@ -215,11 +220,11 @@ pub fn run(frame: &mut impl Component<Msg = impl ReturnToC>) -> u32 {
                 let elapsed = Instant::now().checked_duration_since(start);
 
                 if let Some(elapsed) = elapsed {
-                    if elapsed.to_secs() >= 10 && !faded {
+                    if elapsed >= FADE_TIME && !faded {
                         faded = true;
-                        fade_backlight_duration(20, 200);
+                        fade_backlight_duration(ModelUI::get_backlight_low(), 200);
                     }
-                    if elapsed.to_secs() >= 15 {
+                    if elapsed >= SUSPEND_TIME {
                         suspend();
                         render(frame);
                         if faded {

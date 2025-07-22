@@ -48,8 +48,8 @@
 #include <io/display_utils.h>
 #include <sys/power_manager.h>
 
-#define FADE_TIME_MS 10000
-#define SUSPEND_TIME_MS 15000
+#define FADE_TIME_MS 30000
+#define SUSPEND_TIME_MS 40000
 
 #endif
 
@@ -132,7 +132,7 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
       // device idle.
       if (!faded && ticks_expired(fade_deadline)) {
         fade_value = display_get_backlight();
-        display_fade(fade_value, 20, 200);
+        display_fade(fade_value, 45, 200);
         faded = true;
       }
 
