@@ -115,19 +115,19 @@ async def handle_received_message(ctx: ThpContext) -> None:
         await _handle_message_to_app_or_channel(ctx)
     except ThpUnallocatedSessionError as e:
         error_message = Failure(code=FailureType.ThpUnallocatedSession)
-        await ctx.channel.send_message(error_message, e.session_id)
+        await ctx.send_message(error_message, e.session_id)
         await ctx.wait_for_ack()
     except ThpUnallocatedChannelError:
-        await ctx.channel.write_error(ThpErrorType.UNALLOCATED_CHANNEL)
+        await ctx.write_error(ThpErrorType.UNALLOCATED_CHANNEL)
         ctx.channel.clear()
     except ThpDecryptionError:
-        await ctx.channel.write_error(ThpErrorType.DECRYPTION_FAILED)
+        await ctx.write_error(ThpErrorType.DECRYPTION_FAILED)
         ctx.channel.clear()
     except ThpInvalidDataError:
-        await ctx.channel.write_error(ThpErrorType.INVALID_DATA)
+        await ctx.write_error(ThpErrorType.INVALID_DATA)
         ctx.channel.clear()
     except ThpDeviceLockedError:
-        await ctx.channel.write_error(ThpErrorType.DEVICE_LOCKED)
+        await ctx.write_error(ThpErrorType.DEVICE_LOCKED)
 
 
 def _send_ack(ctx: Channel, ack_bit: int) -> Awaitable[None]:
@@ -227,7 +227,7 @@ async def _handle_state_TH1(ctx: ThpContext) -> None:
 
     # send handshake init response message
     # TODO: ACK+retry
-    await ctx.channel.send_payload(HANDSHAKE_INIT_RES, payload)
+    await ctx.send_payload(HANDSHAKE_INIT_RES, payload)
     await ctx.wait_for_ack()
     ctx.channel.set_channel_state(ChannelState.TH2)
     return
@@ -320,7 +320,7 @@ async def _handle_state_TH2(ctx: ThpContext) -> None:
 
     # send hanshake completion response
     # TODO: ACK+retry
-    await ctx.channel.send_payload(
+    await ctx.send_payload(
         HANDSHAKE_COMP_RES,
         ctx.channel.handshake.get_handshake_completion_response(trezor_state),
     )
