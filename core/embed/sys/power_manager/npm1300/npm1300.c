@@ -68,6 +68,8 @@ typedef struct {
   uint8_t adc_vbat2_result_msb;
   uint8_t adc_ibat_meas_status;
   uint8_t charging_status;
+  uint8_t charging_err;
+  uint8_t charging_sensor_err;
   uint8_t buck_status;
   uint8_t usb_status;
 } npm1300_adc_regs_t;
@@ -706,6 +708,8 @@ static void npm1300_calculate_report(npm1300_driver_t* drv,
   report->buck_status = r->buck_status;
   report->usb_status = r->usb_status;
   report->charge_status = r->charging_status;
+  report->charge_err = r->charging_err;
+  report->charge_sensor_err = r->charging_sensor_err;
 }
 
 // I2C operation for writing constant value to the npm1300 register
@@ -805,6 +809,8 @@ static const i2c_op_t npm1300_ops_adc_readout[] = {
     NPM_READ_FIELD(NPM1300_ADCVBAT2RESULTMSB, adc_regs.adc_vbat2_result_msb),
     NPM_READ_FIELD(NPM1300_ADCIBATMEASSTATUS, adc_regs.adc_ibat_meas_status),
     NPM_READ_FIELD(NPM1300_BCHGCHARGESTATUS, adc_regs.charging_status),
+    NPM_READ_FIELD(NPM1300_BCHGERRREASON, adc_regs.charging_err),
+    NPM_READ_FIELD(NPM1300_BCHGERRSENSOR, adc_regs.charging_sensor_err),
     NPM_READ_FIELD(NPM1300_BUCKSTATUS, adc_regs.buck_status),
     NPM_READ_FIELD(NPM1300_USBCDETECTSTATUS, adc_regs.usb_status),
 };
@@ -813,6 +819,12 @@ static const i2c_op_t npm1300_ops_adc_readout[] = {
 static const i2c_op_t npm1300_ops_clear_events[] = {
     NPM_READ_FIELD(NPM1300_VBUSINSTATUS, event_regs.vbusin),
     NPM_WRITE_CONST(NPM1300_EVENTSVBUSIN0CLR, 0x3F),
+};
+
+// Clear charger errors and release charging from error state
+static const i2c_op_t npm1300_ops_clear_charger_errors[] = {
+    NPM_WRITE_CONST(NPM1300_TASKCLEARCHGERR, 1),
+    NPM_WRITE_CONST(NPM1300_TASKRELEASEERR, 1),
 };
 
 #define npm1300_i2c_submit(drv, ops) \
@@ -837,6 +849,20 @@ static void _npm1300_i2c_submit(npm1300_driver_t* drv, const i2c_op_t* ops,
     // This should never happen
     error_shutdown("npm1300 I2C submit error");
   }
+}
+
+bool pmic_clear_charger_errors(void) {
+  npm1300_driver_t* drv = &g_npm1300_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  irq_key_t irq_key = irq_lock();
+  npm1300_i2c_submit(drv, npm1300_ops_clear_charger_errors);
+  irq_unlock(irq_key);
+
+  return true;
 }
 
 // npm1300 driver timer callback invoked when `drv->timer` expires.

@@ -47,6 +47,8 @@ typedef struct {
   // BUCKSTATUS register value
   // (for debugging purposes, see the datasheet)
   uint8_t charge_status;
+  uint8_t charge_err;
+  uint8_t charge_sensor_err;
   uint8_t buck_status;
   uint8_t usb_status;
 } pmic_report_t;
@@ -135,3 +137,6 @@ typedef enum {
 
 // Set the buck voltage regulator mode
 bool pmic_set_buck_mode(pmic_buck_mode_t buck_mode);
+
+// Clears all battery charger errors.
+bool pmic_clear_charger_errors(void);

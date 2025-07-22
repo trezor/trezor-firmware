@@ -176,12 +176,6 @@ void pm_charging_controller(pm_driver_t* drv) {
 
   pm_temperature_controller(drv);
 
-  // Set charging target
-  if (drv->i_chg_target_ma != pmic_get_charging_limit()) {
-    // Set charging current limit
-    pmic_set_charging_limit(drv->i_chg_target_ma);
-  }
-
   if (drv->soc_target == 100) {
     drv->soc_target_reached = false;
   } else {
@@ -212,9 +206,20 @@ void pm_charging_controller(pm_driver_t* drv) {
     drv->i_chg_target_ma = 0;
   }
 
+  // Set charging target
+  if (drv->i_chg_target_ma != pmic_get_charging_limit()) {
+    // Set charging current limit
+    pmic_set_charging_limit(drv->i_chg_target_ma);
+  }
+
   if (drv->i_chg_target_ma == 0) {
     pmic_set_charging(false);
   } else {
+    // Clear and release charger if it has any errors
+    if (drv->pmic_data.charge_err || drv->pmic_data.charge_sensor_err) {
+      pmic_clear_charger_errors();
+    }
+
     pmic_set_charging(true);
   }
 }
