@@ -71,11 +71,7 @@ static void prodtest_otp_write(cli_t* cli, uint8_t block_num) {
     return;
   }
 
-#if PRODUCTION
   bool dry_run = false;
-#else
-  bool dry_run = true;
-#endif
 
   if (cli_has_nth_arg(cli, 1)) {
     const char* option = cli_nth_arg(cli, 1);
