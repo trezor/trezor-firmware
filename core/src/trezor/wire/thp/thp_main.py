@@ -56,7 +56,9 @@ class ThpContext:
         self.msg: memoryview | None = channel.rx_buffer
 
     async def wait_for_ack(self) -> None:
+        self.msg = None
         await _read_next_message(self.channel.iface, expect_ack=True)
+        assert ABP.is_sending_allowed(self.channel.channel_cache)
 
     async def read(self) -> memoryview:
         if self.msg is None:
