@@ -77,7 +77,7 @@ class ChannelCache(ThpDataCache):
 
     def set_host_static_public_key(self, key: bytearray) -> None:
         if len(key) != KEY_LENGTH:
-            raise Exception("Invalid key length")
+            raise ValueError("Invalid key length")
         self.set(CHANNEL_HOST_STATIC_PUBKEY, key)
 
 
@@ -207,7 +207,7 @@ def get_allocated_session_index(channel_id: bytes, session_id: bytes) -> int | N
     Raises `Exception` if either channel_id or session_id has an invalid length.
     """
     if len(channel_id) != _CHANNEL_ID_LENGTH or len(session_id) != SESSION_ID_LENGTH:
-        raise Exception("At least one of arguments has invalid length")
+        raise ValueError("At least one of arguments has invalid length")
 
     for i in range(_MAX_SESSIONS_COUNT):
         if (

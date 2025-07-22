@@ -70,7 +70,7 @@ async def write_payloads_to_wire(
             elif packet_offset == iface.TX_PACKET_LEN:
                 break
             else:
-                raise Exception("Should not happen!!!")
+                raise Exception  # Should not happen
         packet_number += 1
         packet_offset = CONT_HEADER_LENGTH
 
