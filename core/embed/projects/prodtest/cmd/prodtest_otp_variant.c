@@ -73,11 +73,7 @@ static void prodtest_otp_variant_read(cli_t* cli) {
 static void prodtest_otp_variant_write(cli_t* cli) {
   uint8_t block[FLASH_OTP_BLOCK_SIZE] = {0};
 
-#if PRODUCTION
   bool dry_run = false;
-#else
-  bool dry_run = true;
-#endif
 
   int arg_idx = 0;
   int val_count = 0;
