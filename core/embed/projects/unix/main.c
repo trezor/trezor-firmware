@@ -529,6 +529,17 @@ void drivers_init() {
 #endif
 }
 
+// Initialize the system and drivers for running tests in the Rust code.
+// The function is called from the Rust before the test main function is run.
+void rust_tests_c_setup(void) {
+  system_init(NULL);
+  drivers_init();
+
+  uint8_t entropy_data[HW_ENTROPY_LEN];
+  entropy_get(entropy_data);
+  storage_init(NULL, entropy_data, sizeof(entropy_data));
+}
+
 MP_NOINLINE int main_(int argc, char **argv) {
 #ifdef SIGPIPE
   // Do not raise SIGPIPE, instead return EPIPE. Otherwise, e.g. writing
