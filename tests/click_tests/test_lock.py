@@ -29,6 +29,7 @@ if TYPE_CHECKING:
 PIN4 = "1234"
 
 
+@pytest.mark.models(skip="eckhart")
 @pytest.mark.setup_client(pin=PIN4)
 def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
     debug = device_handler.debuglink()

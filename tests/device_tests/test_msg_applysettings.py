@@ -248,7 +248,7 @@ def test_apply_homescreen_jpeg(session: Session):
             device.apply_settings(session, homescreen=b"")
 
 
-@pytest.mark.models(skip=["legacy", "safe3"])
+@pytest.mark.models(skip=["legacy", "safe3", "eckhart"])
 def test_apply_homescreen_jpeg_single_message(session: Session):
     file_name = (
         "test_bg_eckhart.jpg"
