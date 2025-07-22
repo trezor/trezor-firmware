@@ -89,9 +89,14 @@ class Context:
         """Write a message to the wire, then await and return the response message."""
         assert expected_type.MESSAGE_WIRE_TYPE is not None
 
-        assert protobuf.type_for_wire(
-            self.message_type_enum_name, expected_type.MESSAGE_WIRE_TYPE
-        )
+        if __debug__:
+            # Check if `expected_type` is in the used `message_type_enum`
+            # Test skipped for MESSAGE_WIRE_TYPE == 22 because of "TxAck polymorphism" (PR #1266)
+            if expected_type.MESSAGE_WIRE_TYPE != 22:
+                protobuf.type_for_wire(
+                    self.message_type_enum_name, expected_type.MESSAGE_WIRE_TYPE
+                )
+
         await self.write(msg)
         del msg
         return await self.read((expected_type.MESSAGE_WIRE_TYPE,), expected_type)
