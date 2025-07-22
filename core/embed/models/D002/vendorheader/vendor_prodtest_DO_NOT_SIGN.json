@@ -3,6 +3,7 @@
     "text": "UNSAFE, DO NOT USE!",
     "hw_model": "D002",
     "expiry": 0,
+    "fw_type": 1,
     "version": [0, 1],
     "sig_m": 2,
     "trust": {

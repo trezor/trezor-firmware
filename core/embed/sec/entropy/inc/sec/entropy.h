@@ -17,19 +17,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_ENTROPY_H
-#define TREZORHAL_ENTROPY_H
+#pragma once
 
 #include <trezor_types.h>
 
-#ifdef KERNEL_MODE
+#ifdef SECURE_MODE
 
+/**
+ * Initializes the entropy module.
+ * If entropy has not yet been generated for the device, it is generated now.
+ */
 void entropy_init(void);
 
-#endif
+#endif  // SECURE_MODE
 
-#define HW_ENTROPY_LEN (12 + 32)
+/**
+ * Maximum size of generated entropy (minimum is 32 bytes).
+ * Newer devices derive entropy from the master key - 32 bytes.
+ * Older devices derive entropy from CPUID and OTP - 32 + 12 bytes.
+ */
+#define ENTROPY_MAX_SIZE (32 + 12)
 
-void entropy_get(uint8_t *buf);
+typedef struct {
+  /** Number of valid bytes in the bytes array */
+  size_t size;
+  /** Generated entropy bytes */
+  uint8_t bytes[ENTROPY_MAX_SIZE];
+} entropy_data_t;
 
-#endif  // KERNEL_MODE
+/**
+ * Retrieves the generated entropy buffer.
+ * @param entropy structure filled with the generated data.
+ */
+void entropy_get(entropy_data_t* entropy);

@@ -186,7 +186,7 @@ const uint8_t *translations_read__verified(uint32_t *len, uint32_t offset);
 // ---------------------------------------------------------------------
 #include <sec/entropy.h>
 
-void entropy_get__verified(uint8_t *buf);
+void entropy_get__verified(entropy_data_t *entropy);
 
 // ---------------------------------------------------------------------
 #include <util/fwutils.h>
