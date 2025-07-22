@@ -20,6 +20,7 @@ import pytest
 
 from trezorlib import device, exceptions, messages
 
+from .. import translations as TR
 from ..common import MOCK_GET_ENTROPY, LayoutType
 from . import recovery, reset
 from .common import go_next
@@ -119,13 +120,20 @@ def test_repeated_backup_via_device(
     assert features.no_backup is False
     assert features.recovery_status == messages.RecoveryStatus.Backup
 
+    debug.synchronize_at(TR.reset__title_shamir_backup)
     # at this point, the backup is unlocked...
     go_next(debug)
 
     # ... so let's try to do a 2-of-3 backup
     # confirm backup intro
+    debug.synchronize_at(
+        [TR.backup__title_create_wallet_backup, "BlendedImage", "ScrollableFrame"]
+    )
     reset.confirm_read(debug)
     # confirm checklist
+    debug.synchronize_at(
+        [TR.reset__title_shamir_backup, TR.reset__slip39_checklist_title, "Checklist"]
+    )
     reset.confirm_read(debug)
     # shares=3
     reset.set_selection(debug, 3 - 5)
