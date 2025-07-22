@@ -29,6 +29,7 @@ from trezor.wire import message_handler
 from trezor.wire.context import UnexpectedMessageException
 from trezor.wire.errors import (
     ActionCancelled,
+    DataError,
     FirmwareError,
     SilentError,
     UnexpectedMessage,
@@ -105,7 +106,7 @@ async def handle_pairing_request(
         raise UnexpectedMessage("Unexpected message")
 
     if not message.host_name:
-        raise Exception("Missing host_name.")
+        raise DataError("Missing host_name.")
 
     ctx.host_name = message.host_name
     if __debug__ and not ctx.channel_ctx.should_show_pairing_dialog:
@@ -186,7 +187,7 @@ async def handle_credential_phase(
         if credential.cred_metadata is not None:
             ctx.host_name = credential.cred_metadata.host_name
         if ctx.host_name is None:
-            raise Exception("Credential does not have a hostname")
+            raise DataError("Missing hostname in credential")
 
     if show_connection_dialog and not autoconnect:
         await ctx.show_connection_dialog()
@@ -207,7 +208,7 @@ async def _prepare_pairing(ctx: PairingContext) -> None:
     elif ctx.selected_method == ThpPairingMethod.QrCode:
         await _handle_qr_code_is_selected(ctx)
     else:
-        raise Exception("Unknown pairing method")  # TODO unknown pairing method
+        raise DataError("Unknown pairing method")
 
 
 @check_state_and_log(ChannelState.TP1)
@@ -233,7 +234,7 @@ async def _handle_code_entry_is_selected_first_time(ctx: PairingContext) -> None
         raise UnexpectedMessage("Unexpected message")
 
     if challenge_message.challenge is None:
-        raise Exception("Invalid message")
+        raise DataError("Invalid message")
     sha_ctx = sha256(ThpPairingMethod.CodeEntry.to_bytes(1, "big"))
     sha_ctx.update(ctx.channel_ctx.get_handshake_hash())
     sha_ctx.update(ctx.code_entry_secret)
@@ -393,7 +394,7 @@ async def _handle_credential_request(
     if not ThpCredentialRequest.is_type_of(message):
         raise UnexpectedMessage("Unexpected message")
     if message.host_static_public_key is None:
-        raise Exception("Invalid message")  # TODO change failure type
+        raise DataError("Invalid message")
 
     autoconnect: bool = False
     if message.autoconnect is not None:
@@ -402,7 +403,7 @@ async def _handle_credential_request(
     if autoconnect:
         # Cannot ask for autoconnect=True credential directly after pairing
         if ctx.channel_ctx.credential is None:
-            raise Exception("Cannot ask for autoconnect credential after pairing!")
+            raise DataError("Cannot ask for autoconnect credential after pairing")
         from storage.cache_common import CHANNEL_HOST_STATIC_PUBKEY
 
         from .credential_manager import validate_credential
@@ -415,7 +416,7 @@ async def _handle_credential_request(
             credential=ctx.channel_ctx.credential,
             host_static_public_key=host_static_public_key,
         ):
-            raise Exception(
+            raise DataError(
                 "Cannot ask for autoconnect credential without a valid credential!"
             )
 
