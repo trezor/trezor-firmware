@@ -139,7 +139,7 @@ class PairingContext(Context):
 
     async def show_pairing_dialog(self, device_name: str | None = None) -> None:
         from trezor.messages import ThpPairingRequestApproved
-        from trezor.ui.layouts.common import raise_if_cancelled
+        from trezor.ui.layouts import confirm_action
 
         if not device_name:
             action_string = f"Allow {self.host_name} to pair with this Trezor?"
@@ -148,16 +148,16 @@ class PairingContext(Context):
                 f"Allow {self.host_name} on {device_name} to pair with this Trezor?"
             )
 
-        await raise_if_cancelled(
-            trezorui_api.confirm_action(
-                title="Before you continue", action=action_string, description=None
-            ),
+        await confirm_action(
             br_name="thp_pairing_request",
+            title="Before you continue",
+            action=action_string,
         )
+
         await self.write(ThpPairingRequestApproved())
 
     async def show_connection_dialog(self, device_name: str | None = None) -> None:
-        from trezor.ui.layouts.common import raise_if_cancelled
+        from trezor.ui.layouts import confirm_action
 
         if not device_name:
             action_string = f"Allow {self.host_name} to connect with this Trezor?"
@@ -166,11 +166,10 @@ class PairingContext(Context):
                 f"Allow {self.host_name} on {device_name} to connect with this Trezor?"
             )
 
-        await raise_if_cancelled(
-            trezorui_api.confirm_action(
-                title="Connection dialog", action=action_string, description=None
-            ),
+        await confirm_action(
             br_name="thp_connection_request",
+            title="Connection dialog",
+            action=action_string,
         )
 
     async def show_autoconnect_credential_confirmation_screen(
