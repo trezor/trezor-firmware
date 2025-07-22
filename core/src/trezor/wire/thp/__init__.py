@@ -75,7 +75,7 @@ class ThpErrorType(IntEnum):
 class ChannelState(IntEnum):
     UNALLOCATED = 0
     TH1 = 1
-    TH2 = 2
+    TH2 = 2  # TODO: remove if not needed
     TP0 = 3
     TP1 = 4
     TP2 = 5
