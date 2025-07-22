@@ -82,10 +82,12 @@ async def write_payloads_to_wire(
                 utils.hexlify_if_bytes(packet),
                 iface=iface,
             )
-        written_by_iface: int = 0
-        while written_by_iface < len(packet):
+        while True:
             await loop.wait(iface.iface_num() | io.POLL_WRITE)
             written_by_iface = iface.write(packet)
+            if written_by_iface == len(packet):
+                break
+            assert written_by_iface == 0
 
 
 async def write_packet_to_wire(iface: WireInterface, packet: bytes) -> None:
