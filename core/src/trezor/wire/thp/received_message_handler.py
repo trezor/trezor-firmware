@@ -115,7 +115,8 @@ async def handle_received_message(ctx: ThpContext) -> None:
         await _handle_message_to_app_or_channel(ctx)
     except ThpUnallocatedSessionError as e:
         error_message = Failure(code=FailureType.ThpUnallocatedSession)
-        await ctx.channel.write(error_message, e.session_id)
+        await ctx.channel.send_message(error_message, e.session_id)
+        await ctx.wait_for_ack()
     except ThpUnallocatedChannelError:
         await ctx.channel.write_error(ThpErrorType.UNALLOCATED_CHANNEL)
         ctx.channel.clear()
@@ -165,22 +166,9 @@ async def handle_ack(ctx: Channel, ack_bit: int) -> None:
             "Received ACK message with correct ack bit",
             iface=ctx.iface,
         )
-    if ctx.transmission_loop is not None:
-        ctx.transmission_loop.stop_immediately()
-        if __debug__:
-            log.debug(__name__, "Stopped transmission loop", iface=ctx.iface)
 
     ABP.set_sending_allowed(ctx.channel_cache, True)
     ABP.set_send_seq_bit_to_opposite(ctx.channel_cache)
-
-    if ctx.write_task_spawn is not None:
-        if __debug__:
-            log.debug(
-                __name__,
-                'Control to "write_encrypted_payload_loop" task',
-                iface=ctx.iface,
-            )
-        await ctx.write_task_spawn
 
 
 async def _handle_message_to_app_or_channel(ctx: ThpContext) -> None:
