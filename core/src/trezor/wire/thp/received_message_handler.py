@@ -176,18 +176,18 @@ async def _handle_message_to_app_or_channel(ctx: ThpContext) -> None:
         await _handle_state_ENCRYPTED_TRANSPORT(ctx)
     else:
         assert ctx.channel.get_channel_state() == ChannelState.TH1
-        await _handle_state_TH1(ctx)
-
-        assert ctx.channel.get_channel_state() == ChannelState.TH2
-        await _handle_state_TH2(ctx)
+        await _handle_handshake(ctx)
 
         assert _is_channel_state_pairing(ctx.channel.get_channel_state())
         await _handle_pairing(ctx)
 
 
-async def _handle_state_TH1(ctx: ThpContext) -> None:
+async def _handle_handshake(ctx: ThpContext) -> None:
+    from apps.thp.credential_manager import decode_credential, validate_credential
+
     if __debug__:
         log.debug(__name__, "handle_state_TH1", iface=ctx.channel.iface)
+
     message = await ctx.read()  # & ACK received message
     if not control_byte.is_handshake_init_req(message[0]):
         raise ThpError("Message received is not a handshake init request!")
@@ -195,15 +195,19 @@ async def _handle_state_TH1(ctx: ThpContext) -> None:
         raise ThpError("Message received is not a valid handshake init request!")
 
     if not config.is_unlocked():
+        if __debug__:
+            ctx.channel._log(
+                "device is locked - cannot start handshake", logger=log.warning
+            )
         raise ThpDeviceLockedError
 
-    ctx.channel.handshake = Handshake()
+    handshake = Handshake()
 
     host_ephemeral_public_key = bytes(
         message[INIT_HEADER_LENGTH : len(message) - CHECKSUM_LENGTH]
     )
     trezor_ephemeral_public_key, encrypted_trezor_static_public_key, tag = (
-        ctx.channel.handshake.handle_th1_crypto(
+        handshake.handle_th1_crypto(
             get_encoded_device_properties(ctx.channel.iface), host_ephemeral_public_key
         )
     )
@@ -229,12 +233,6 @@ async def _handle_state_TH1(ctx: ThpContext) -> None:
     # TODO: ACK+retry
     await ctx.send_payload(HANDSHAKE_INIT_RES, payload)
     await ctx.wait_for_ack()
-    ctx.channel.set_channel_state(ChannelState.TH2)
-    return
-
-
-async def _handle_state_TH2(ctx: ThpContext) -> None:
-    from apps.thp.credential_manager import decode_credential, validate_credential
 
     if __debug__:
         log.debug(__name__, "handle_state_TH2", iface=ctx.channel.iface)
@@ -242,12 +240,11 @@ async def _handle_state_TH2(ctx: ThpContext) -> None:
     if not control_byte.is_handshake_comp_req(message[0]):
         raise ThpError("Message received is not a handshake completion request!")
 
-    if ctx.channel.handshake is None:
-        raise ThpUnallocatedChannelError(
-            "Handshake object is not prepared. Create new channel."
-        )
-
     if not config.is_unlocked():
+        if __debug__:
+            ctx.channel._log(
+                "device is locked - cannot finish handshake", logger=log.warning
+            )
         raise ThpDeviceLockedError
 
     host_encrypted_static_public_key = message[
@@ -257,15 +254,13 @@ async def _handle_state_TH2(ctx: ThpContext) -> None:
         INIT_HEADER_LENGTH + KEY_LENGTH + TAG_LENGTH : len(message) - CHECKSUM_LENGTH
     ]
 
-    ctx.channel.handshake.handle_th2_crypto(
+    handshake.handle_th2_crypto(
         host_encrypted_static_public_key, handshake_completion_request_noise_payload
     )
 
-    ctx.channel.channel_cache.set(
-        CHANNEL_KEY_RECEIVE, ctx.channel.handshake.key_receive
-    )
-    ctx.channel.channel_cache.set(CHANNEL_KEY_SEND, ctx.channel.handshake.key_send)
-    ctx.channel.channel_cache.set(CHANNEL_HANDSHAKE_HASH, ctx.channel.handshake.h)
+    ctx.channel.channel_cache.set(CHANNEL_KEY_RECEIVE, handshake.key_receive)
+    ctx.channel.channel_cache.set(CHANNEL_KEY_SEND, handshake.key_send)
+    ctx.channel.channel_cache.set(CHANNEL_HANDSHAKE_HASH, handshake.h)
     ctx.channel.channel_cache.set_int(CHANNEL_NONCE_RECEIVE, 0)
     ctx.channel.channel_cache.set_int(CHANNEL_NONCE_SEND, 1)
 
@@ -322,11 +317,11 @@ async def _handle_state_TH2(ctx: ThpContext) -> None:
     # TODO: ACK+retry
     await ctx.send_payload(
         HANDSHAKE_COMP_RES,
-        ctx.channel.handshake.get_handshake_completion_response(trezor_state),
+        handshake.get_handshake_completion_response(trezor_state),
     )
     await ctx.wait_for_ack()
 
-    ctx.channel.handshake = None
+    handshake = None
 
     if paired:
         ctx.channel.set_channel_state(ChannelState.TC1)

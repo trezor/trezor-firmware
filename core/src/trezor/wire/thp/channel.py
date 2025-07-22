@@ -91,7 +91,6 @@ class Channel:
         self.is_cont_packet_expected: bool = False
 
         # Temporary objects
-        self.handshake: crypto.Handshake | None = None
         self.credential: ThpPairingCredential | None = None
         self.connection_context: PairingContext | None = None
 
