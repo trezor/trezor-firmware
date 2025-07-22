@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from time import sleep
 from typing import TYPE_CHECKING
 
 import pytest
@@ -25,8 +26,6 @@ from .. import translations as TR
 
 if TYPE_CHECKING:
     from ..device_handler import BackgroundDeviceHandler
-
-TUTORIAL_ANIMATION_S = 4
 
 
 # Trezor Safe 7 only
@@ -60,19 +59,25 @@ def _assert_tropic_info(debug: "DebugLink"):
     debug.click(debug.screen_buttons.menu())
 
 
-def _assert_begin_screen(debug: "DebugLink"):
+def _wait_for_welcome_animation(debug: "DebugLink"):
+    """Wait for the welcome animation to finish."""
+    sleep(0.3)
+    debug.read_layout()
+
+
+def _assert_begin_screen_and_proceed(debug: "DebugLink"):
     layout = debug.read_layout()
     assert layout.text_content() == TR.tutorial__welcome_safe7.replace("\n", " ")
     assert TR.instructions__tap_to_start in layout.action_bar()
     debug.click(debug.screen_buttons.ok())
 
 
-def _assert_navigation_screen(debug: "DebugLink"):
+def _assert_navigation_screen_and_proceed(debug: "DebugLink"):
     assert debug.read_layout().text_content() == TR.tutorial__navigation_ts7
     debug.click(debug.screen_buttons.ok())
 
 
-def _assert_menu_instructions(debug: "DebugLink"):
+def _assert_instructions_and_proceed_to_menu(debug: "DebugLink"):
     layout = debug.read_layout()
     assert layout.title() == TR.tutorial__title_handy_menu
     assert TR.tutorial__menu in layout.text_content()
@@ -101,13 +106,15 @@ def _assert_final_screen(debug: "DebugLink"):
     assert TR.tutorial__ready_to_use_safe5 in layout.text_content()
 
 
-def test_tutorial_run(device_handler: "BackgroundDeviceHandler"):
+def test_tutorial_full_completion(device_handler: "BackgroundDeviceHandler"):
+    """Test basic flow of the tutorial."""
     debug = device_handler.debuglink()
     device_handler.run(device.show_device_tutorial)
 
-    _assert_begin_screen(debug)
-    _assert_navigation_screen(debug)
-    _assert_menu_instructions(debug)
+    _wait_for_welcome_animation(debug)
+    _assert_begin_screen_and_proceed(debug)
+    _assert_navigation_screen_and_proceed(debug)
+    _assert_instructions_and_proceed_to_menu(debug)
 
     # menu screen - continue
     _assert_menu(debug)
@@ -124,13 +131,15 @@ def test_tutorial_run(device_handler: "BackgroundDeviceHandler"):
     device_handler.result()
 
 
-def test_tutorial_cancel_1(device_handler: "BackgroundDeviceHandler"):
+def test_tutorial_cancel_from_main_menu(device_handler: "BackgroundDeviceHandler"):
+    """Cancel the tutorial from the main menu."""
     debug = device_handler.debuglink()
     device_handler.run(device.show_device_tutorial)
 
-    _assert_begin_screen(debug)
-    _assert_navigation_screen(debug)
-    _assert_menu_instructions(debug)
+    _wait_for_welcome_animation(debug)
+    _assert_begin_screen_and_proceed(debug)
+    _assert_navigation_screen_and_proceed(debug)
+    _assert_instructions_and_proceed_to_menu(debug)
 
     # menu screen - exit
     _assert_menu(debug)
@@ -147,37 +156,15 @@ def test_tutorial_cancel_1(device_handler: "BackgroundDeviceHandler"):
         device_handler.result()
 
 
-def test_tutorial_cancel_2(device_handler: "BackgroundDeviceHandler"):
+def test_tutorial_cancel_from_confirm_menu(device_handler: "BackgroundDeviceHandler"):
+    """Cancel the tutorial from the hold-to-confirm screen."""
     debug = device_handler.debuglink()
     device_handler.run(device.show_device_tutorial)
 
-    _assert_begin_screen(debug)
-    _assert_navigation_screen(debug)
-    _assert_menu_instructions(debug)
-
-    # menu screen - restart
-    _assert_menu(debug)
-    debug.click(debug.screen_buttons.vertical_menu_items()[2])
-
-    _assert_begin_screen(debug)
-    _assert_navigation_screen(debug)
-    _assert_menu_instructions(debug)
-
-    # menu screen - continue
-    _assert_menu(debug)
-    debug.click(debug.screen_buttons.vertical_menu_items()[0])
-
-    # hold to confirm screen - go to menu
-    _assert_htc_screen(debug)
-    debug.click(debug.screen_buttons.menu())
-
-    # htc menu - restart tutorial
-    _assert_menu(debug)
-    debug.click(debug.screen_buttons.vertical_menu_items()[1])
-
-    _assert_begin_screen(debug)
-    _assert_navigation_screen(debug)
-    _assert_menu_instructions(debug)
+    _wait_for_welcome_animation(debug)
+    _assert_begin_screen_and_proceed(debug)
+    _assert_navigation_screen_and_proceed(debug)
+    _assert_instructions_and_proceed_to_menu(debug)
 
     # menu screen - continue
     _assert_menu(debug)
@@ -198,18 +185,20 @@ def test_tutorial_cancel_2(device_handler: "BackgroundDeviceHandler"):
 
 
 def test_tutorial_menu_close(device_handler: "BackgroundDeviceHandler"):
+    """Test all occurences of the menu close action in the tutorial."""
     debug = device_handler.debuglink()
     device_handler.run(device.show_device_tutorial)
 
-    _assert_begin_screen(debug)
-    _assert_navigation_screen(debug)
-    _assert_menu_instructions(debug)
+    _wait_for_welcome_animation(debug)
+    _assert_begin_screen_and_proceed(debug)
+    _assert_navigation_screen_and_proceed(debug)
+    _assert_instructions_and_proceed_to_menu(debug)
 
     # menu screen
     _assert_menu(debug)
     # close and open again
     debug.click(debug.screen_buttons.menu())
-    _assert_menu_instructions(debug)
+    _assert_instructions_and_proceed_to_menu(debug)
 
     # menu screen - continue
     _assert_menu(debug)
@@ -245,12 +234,13 @@ def test_tutorial_menu_close(device_handler: "BackgroundDeviceHandler"):
 
 
 def test_tutorial_menu_tropic(device_handler: "BackgroundDeviceHandler"):
+    """Test all occurences of the tropic info screen in the tutorial."""
     debug = device_handler.debuglink()
     device_handler.run(device.show_device_tutorial)
 
-    _assert_begin_screen(debug)
-    _assert_navigation_screen(debug)
-    _assert_menu_instructions(debug)
+    _assert_begin_screen_and_proceed(debug)
+    _assert_navigation_screen_and_proceed(debug)
+    _assert_instructions_and_proceed_to_menu(debug)
 
     # menu screen
     _assert_menu(debug)
@@ -299,20 +289,21 @@ def test_tutorial_menu_tropic(device_handler: "BackgroundDeviceHandler"):
 
 
 def test_tutorial_restart(device_handler: "BackgroundDeviceHandler"):
+    """Test all occurences of the restart action in the tutorial."""
     debug = device_handler.debuglink()
     device_handler.run(device.show_device_tutorial)
 
-    _assert_begin_screen(debug)
-    _assert_navigation_screen(debug)
-    _assert_menu_instructions(debug)
+    _assert_begin_screen_and_proceed(debug)
+    _assert_navigation_screen_and_proceed(debug)
+    _assert_instructions_and_proceed_to_menu(debug)
 
     # menu screen - restart
     _assert_menu(debug)
     debug.click(debug.screen_buttons.vertical_menu_items()[2])
 
-    _assert_begin_screen(debug)
-    _assert_navigation_screen(debug)
-    _assert_menu_instructions(debug)
+    _assert_begin_screen_and_proceed(debug)
+    _assert_navigation_screen_and_proceed(debug)
+    _assert_instructions_and_proceed_to_menu(debug)
 
     # menu screen - continue
     _assert_menu(debug)
@@ -326,9 +317,9 @@ def test_tutorial_restart(device_handler: "BackgroundDeviceHandler"):
     _assert_menu(debug)
     debug.click(debug.screen_buttons.vertical_menu_items()[1])
 
-    _assert_begin_screen(debug)
-    _assert_navigation_screen(debug)
-    _assert_menu_instructions(debug)
+    _assert_begin_screen_and_proceed(debug)
+    _assert_navigation_screen_and_proceed(debug)
+    _assert_instructions_and_proceed_to_menu(debug)
 
     # menu screen - exit
     _assert_menu(debug)
@@ -345,9 +336,9 @@ def test_tutorial_restart(device_handler: "BackgroundDeviceHandler"):
     _assert_menu(debug)
     debug.click(debug.screen_buttons.vertical_menu_items()[1])
 
-    _assert_begin_screen(debug)
-    _assert_navigation_screen(debug)
-    _assert_menu_instructions(debug)
+    _assert_begin_screen_and_proceed(debug)
+    _assert_navigation_screen_and_proceed(debug)
+    _assert_instructions_and_proceed_to_menu(debug)
 
     # menu screen - continue
     _assert_menu(debug)
