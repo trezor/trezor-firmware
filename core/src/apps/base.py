@@ -12,6 +12,8 @@ from trezor.wire.message_handler import filters, remove_filter
 from . import workflow_handlers
 
 if TYPE_CHECKING:
+    from typing import NoReturn
+
     from trezor import protobuf
     from trezor.messages import (
         Cancel,
@@ -243,7 +245,7 @@ async def handle_GetFeatures(msg: GetFeatures) -> Features:
     return get_features()
 
 
-async def handle_Cancel(msg: Cancel) -> Success:
+async def handle_Cancel(msg: Cancel) -> NoReturn:
     workflow.close_others()
     raise wire.ActionCancelled
 
