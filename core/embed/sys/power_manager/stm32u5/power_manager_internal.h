@@ -51,7 +51,7 @@
 
 // Timeout after which the device automatically transit from suspend to
 // hibernation
-#define PM_AUTO_HIBERNATE_TIMEOUT_S (24 * 60 * 60)  // 24 hours
+#define PM_AUTO_HIBERNATE_TIMEOUT_S (2 * 60 * 60)  // 2 hours
 
 #define PM_SUSPENDED_CHARGING_TIMEOUT_S 60
 #define PM_STABILIZATION_TIMEOUT_MS 2000
