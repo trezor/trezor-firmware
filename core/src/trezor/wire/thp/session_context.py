@@ -112,12 +112,12 @@ class GenericSessionContext(Context):
 
     async def write(self, msg: protobuf.MessageType) -> None:
         # TODO: pre-ACK+retry
-        await self.channel.send_message(msg, self.session_id)
+        await self.ctx.send_message(msg, self.session_id)
         await self.ctx.wait_for_ack()
 
     async def write_force(self, msg: protobuf.MessageType) -> None:
         # TODO: pre-ACK+retry
-        await self.channel.send_message(msg, self.session_id)
+        await self.ctx.send_message(msg, self.session_id)
         await self.ctx.wait_for_ack()
 
     def get_session_state(self) -> SessionState: ...

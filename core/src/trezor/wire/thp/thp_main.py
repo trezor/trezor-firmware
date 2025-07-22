@@ -1,18 +1,22 @@
+import typing as t
 import ustruct
 from micropython import const
-from typing import TYPE_CHECKING
 
 from storage.cache_thp import BROADCAST_CHANNEL_ID, SESSION_ID_LENGTH, TAG_LENGTH
-from trezor import io, loop, utils
+from trezor import io, loop, protobuf, utils
 from trezor.wire.protocol_common import Message
 
 from . import (
     CHANNEL_ALLOCATION_REQ,
     CODEC_V1,
+    ENCRYPTED,
     ChannelState,
     PacketHeader,
     ThpError,
     ThpErrorType,
+)
+from . import alternating_bit_protocol as ABP
+from . import (
     channel_manager,
     checksum,
     control_byte,
@@ -21,6 +25,7 @@ from . import (
 )
 from .channel import Channel
 from .checksum import CHECKSUM_LENGTH
+from .memory_manager import encode_into_buffer
 from .received_message_handler import handle_checksum_and_acks, handle_received_message
 from .writer import (
     INIT_HEADER_LENGTH,
@@ -32,7 +37,7 @@ from .writer import (
 if __debug__:
     from trezor import log
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from trezorio import WireInterface
 
 _CID_REQ_PAYLOAD_LENGTH = const(12)
@@ -54,6 +59,43 @@ class ThpContext:
     def __init__(self, channel: Channel) -> None:
         self.channel = channel
         self.msg: memoryview | None = channel.rx_buffer
+
+    def write_error(self, err_type: int) -> t.Awaitable[None]:
+        msg_data = err_type.to_bytes(1, "big")
+        length = len(msg_data) + CHECKSUM_LENGTH
+        header = PacketHeader.get_error_header(
+            self.channel.get_channel_id_int(), length
+        )
+        return write_payload_to_wire_and_add_checksum(
+            self.channel.iface, header, msg_data
+        )
+
+    def send_payload(self, ctrl_byte: int, payload: bytes) -> t.Awaitable[None]:
+        """Send payload with ABP bit - don't wait for an ACK."""
+        payload_len = len(payload) + CHECKSUM_LENGTH
+        seq_bit = ABP.get_send_seq_bit(self.channel.channel_cache)
+        ctrl_byte = control_byte.add_seq_bit_to_ctrl_byte(ctrl_byte, seq_bit)
+        header = PacketHeader(ctrl_byte, self.channel.get_channel_id_int(), payload_len)
+        # TODO add condition that disallows to write when can_send_message is false
+        ABP.set_sending_allowed(self.channel.channel_cache, False)
+        return write_payload_to_wire_and_add_checksum(
+            self.channel.iface, header, payload
+        )
+
+    def send_message(
+        self, msg: protobuf.MessageType, session_id: int = 0
+    ) -> t.Awaitable[None]:
+        """Encode, encrypt and send payload with ABP bit - don't wait for an ACK."""
+        msg_size = protobuf.encoded_length(msg)
+        payload_size = SESSION_ID_LENGTH + MESSAGE_TYPE_LENGTH + msg_size
+        length = payload_size + CHECKSUM_LENGTH + TAG_LENGTH + INIT_HEADER_LENGTH
+
+        buffer = self.channel.get_buffers().get_tx(length)
+        noise_payload_len = encode_into_buffer(buffer, msg, session_id)
+        self.channel._encrypt(buffer, noise_payload_len)
+
+        payload_length = noise_payload_len + TAG_LENGTH
+        return self.send_payload(ENCRYPTED, buffer[:payload_length])
 
     async def wait_for_ack(self) -> None:
         self.msg = None
