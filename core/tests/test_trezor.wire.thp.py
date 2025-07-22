@@ -82,7 +82,7 @@ if utils.USE_THP:
 
     def get_ack(channel_id: bytes) -> bytes:
         if len(channel_id) != 2:
-            raise Exception("Channel id should by two bytes long")
+            raise ValueError("Invalid channel_id")
         return (
             b"\x20"
             + channel_id
