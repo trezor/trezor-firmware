@@ -294,8 +294,10 @@ secbool storage_next_counter(const uint16_t key, uint32_t *count) {
 // entropy.h
 // =============================================================================
 
-void entropy_get(uint8_t *buf) {
-  smcall_invoke1((uint32_t)buf, SMCALL_ENTROPY_GET);
+#include <sec/entropy.h>
+
+void entropy_get(entropy_data_t *entropy) {
+  smcall_invoke1((uint32_t)entropy, SMCALL_ENTROPY_GET);
 }
 
 // =============================================================================

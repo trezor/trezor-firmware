@@ -2,6 +2,7 @@
     "header_len": 4608,
     "text": "DEV ONLY, DO NOT USE!",
     "hw_model": "D002",
+    "fw_type": 2,
     "expiry": 0,
     "version": [0, 0],
     "sig_m": 2,

@@ -40,6 +40,7 @@
 #define KEY_INDEX_TROPIC_PAIRING_PRIVILEGED 4
 #define KEY_INDEX_TROPIC_MASKING 5
 #define KEY_INDEX_NRF_PAIRING 6
+#define KEY_INDEX_STORAGE_SALT 7
 
 static secbool secret_key_derive_sym(uint8_t slot, uint16_t index,
                                      uint16_t subindex,
@@ -205,6 +206,13 @@ cleanup:
 }
 
 #endif
+
+secbool secret_key_storage_salt(uint16_t fw_type,
+                                uint8_t dest[SECRET_KEY_STORAGE_SALT_SIZE]) {
+  _Static_assert(SECRET_KEY_STORAGE_SALT_SIZE == SHA256_DIGEST_LENGTH);
+  return secret_key_derive_sym(SECRET_UNPRIVILEGED_MASTER_KEY_SLOT,
+                               KEY_INDEX_STORAGE_SALT, fw_type, dest);
+}
 
 #else  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
 

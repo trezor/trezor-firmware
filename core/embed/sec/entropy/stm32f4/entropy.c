@@ -27,38 +27,42 @@
 
 #include "stm32f4xx_ll_utils.h"
 
-#ifdef KERNEL_MODE
+#ifdef SECURE_MODE
 
-static uint8_t g_hw_entropy[HW_ENTROPY_LEN];
+static entropy_data_t g_entropy = {0};
 
 void entropy_init(void) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_OTP);
 
+  entropy_data_t* ent = &g_entropy;
+
   // collect entropy from UUID
   uint32_t w = LL_GetUID_Word0();
-  memcpy(g_hw_entropy, &w, 4);
+  memcpy(&ent->bytes[0], &w, 4);
   w = LL_GetUID_Word1();
-  memcpy(g_hw_entropy + 4, &w, 4);
+  memcpy(&ent->bytes[4], &w, 4);
   w = LL_GetUID_Word2();
-  memcpy(g_hw_entropy + 8, &w, 4);
+  memcpy(&ent->bytes[8], &w, 4);
 
   mpu_restore(mpu_mode);
 
   // set entropy in the OTP randomness block
   if (secfalse == flash_otp_is_locked(FLASH_OTP_BLOCK_RANDOMNESS)) {
-    uint8_t entropy[FLASH_OTP_BLOCK_SIZE];
-    random_buffer(entropy, FLASH_OTP_BLOCK_SIZE);
-    ensure(flash_otp_write(FLASH_OTP_BLOCK_RANDOMNESS, 0, entropy,
+    uint8_t rnd_bytes[FLASH_OTP_BLOCK_SIZE];
+    random_buffer(rnd_bytes, FLASH_OTP_BLOCK_SIZE);
+    ensure(flash_otp_write(FLASH_OTP_BLOCK_RANDOMNESS, 0, rnd_bytes,
                            FLASH_OTP_BLOCK_SIZE),
            NULL);
     ensure(flash_otp_lock(FLASH_OTP_BLOCK_RANDOMNESS), NULL);
   }
   // collect entropy from OTP randomness block
-  ensure(flash_otp_read(FLASH_OTP_BLOCK_RANDOMNESS, 0, g_hw_entropy + 12,
+  ensure(flash_otp_read(FLASH_OTP_BLOCK_RANDOMNESS, 0, &ent->bytes[12],
                         FLASH_OTP_BLOCK_SIZE),
          NULL);
+
+  ent->size = 12 + FLASH_OTP_BLOCK_SIZE;
 }
 
-void entropy_get(uint8_t *buf) { memcpy(buf, g_hw_entropy, HW_ENTROPY_LEN); }
+void entropy_get(entropy_data_t* entropy) { *entropy = g_entropy; }
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE

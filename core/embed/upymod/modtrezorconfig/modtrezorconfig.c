@@ -55,16 +55,16 @@ static secbool wrapped_ui_wait_callback(uint32_t wait, uint32_t progress,
 ///     called from this module!
 ///     """
 STATIC mp_obj_t mod_trezorconfig_init(size_t n_args, const mp_obj_t *args) {
-  uint8_t entropy_data[HW_ENTROPY_LEN];
-  entropy_get(entropy_data);
+  entropy_data_t entropy;
+  entropy_get(&entropy);
 
   if (n_args > 0) {
     MP_STATE_VM(trezorconfig_ui_wait_callback) = args[0];
-    storage_init(wrapped_ui_wait_callback, entropy_data, HW_ENTROPY_LEN);
+    storage_init(wrapped_ui_wait_callback, entropy.bytes, entropy.size);
   } else {
-    storage_init(NULL, entropy_data, HW_ENTROPY_LEN);
+    storage_init(NULL, entropy.bytes, entropy.size);
   }
-  memzero(entropy_data, sizeof(entropy_data));
+  memzero(&entropy, sizeof(entropy));
   return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_init_obj, 0, 1,

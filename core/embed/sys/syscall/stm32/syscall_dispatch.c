@@ -652,8 +652,8 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_ENTROPY_GET: {
-      uint8_t *buf = (uint8_t *)args[0];
-      entropy_get__verified(buf);
+      entropy_data_t *entropy = (entropy_data_t *)args[0];
+      entropy_get__verified(entropy);
     } break;
 
     case SYSCALL_TRANSLATIONS_WRITE: {
