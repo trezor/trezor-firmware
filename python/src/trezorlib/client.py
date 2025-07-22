@@ -27,7 +27,7 @@ from .tools import parse_path
 from .transport import Transport, get_transport
 from .transport.thp.cpace import Cpace
 from .transport.thp.protocol_and_channel import Channel
-from .transport.thp.protocol_v1 import ProtocolV1Channel
+from .transport.thp.protocol_v1 import ProtocolV1Channel, UnexpectedMagicError
 from .transport.thp.protocol_v2 import ProtocolV2Channel, TrezorState
 
 if t.TYPE_CHECKING:
@@ -328,7 +328,12 @@ class TrezorClient:
     def _get_protocol(self) -> Channel:
         protocol = ProtocolV1Channel(self.transport, mapping.DEFAULT_MAPPING)
         protocol.write(messages.Initialize())
-        response = protocol.read()
+        while True:
+            try:
+                response = protocol.read()
+            except UnexpectedMagicError:
+                continue
+            break
 
         if isinstance(response, messages.Failure):
             if response.code == messages.FailureType.InvalidProtocol:
