@@ -126,7 +126,7 @@ async def handle_pairing_request(
     ctx.set_selected_method(select_method_msg.selected_pairing_method)
 
     if ctx.selected_method == ThpPairingMethod.SkipPairing:
-        return await _end_pairing(ctx)
+        return _end_pairing(ctx)
 
     while True:
         await _prepare_pairing(ctx)
@@ -195,7 +195,7 @@ async def handle_credential_phase(
     while ThpCredentialRequest.is_type_of(message):
         message = await _handle_credential_request(ctx, message)
 
-    return await _handle_end_request(ctx, message)
+    return _handle_end_request(ctx, message)
 
 
 async def _prepare_pairing(ctx: PairingContext) -> None:
@@ -439,15 +439,15 @@ async def _handle_credential_request(
 
 
 @check_state_and_log(ChannelState.TC1)
-async def _handle_end_request(
+def _handle_end_request(
     ctx: PairingContext, message: protobuf.MessageType
 ) -> ThpEndResponse:
     if not ThpEndRequest.is_type_of(message):
         raise UnexpectedMessage("Unexpected message")
-    return await _end_pairing(ctx)
+    return _end_pairing(ctx)
 
 
-async def _end_pairing(ctx: PairingContext) -> ThpEndResponse:
+def _end_pairing(ctx: PairingContext) -> ThpEndResponse:
     ctx.channel_ctx.replace_old_channels_with_the_same_host_public_key()
     ctx.channel_ctx.set_channel_state(ChannelState.ENCRYPTED_TRANSPORT)
     return ThpEndResponse()
