@@ -97,6 +97,13 @@ async def _read_next_message(iface: WireInterface, expect_ack: bool = False) -> 
         packet_len = await read
         assert packet_len == len(packet)
         iface.read(packet, 0)
+        if __debug__:
+            log.debug(
+                __name__,
+                "_read_next_message: %s",
+                utils.hexlify_if_bytes(packet),
+                iface=iface,
+            )
 
         if _get_ctrl_byte(packet) == CODEC_V1:
             await _handle_codec_v1(iface, packet)
