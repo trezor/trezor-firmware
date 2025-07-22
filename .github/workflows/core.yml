@@ -402,7 +402,7 @@ jobs:
           submodules: recursive
       - uses: actions/download-artifact@v4
         with:
-          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}-protocol_${{env.PROTOCOL}}
+          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}-protocol_${{ env.PROTOCOL }}
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
@@ -488,7 +488,7 @@ jobs:
           submodules: recursive
       - uses: actions/download-artifact@v4
         with:
-          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}-protocol_${{env.PROTOCOL}}
+          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}-protocol_${{ env.PROTOCOL }}
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
@@ -661,7 +661,7 @@ jobs:
 
   # Tests for U2F and HID.
   core_u2f_test:
-    name: U2F test (${{ matrix.model }}, ${{ matrix.asan }}${{ matrix.protocol=='v2' && ', THP' || ''}})
+    name: U2F test (${{ matrix.model }}, ${{ matrix.asan }}
     runs-on: ubuntu-latest
     needs:
       - param
@@ -671,21 +671,17 @@ jobs:
       matrix:
         model: [T2T1, T3B1, T3T1, T3W1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
-        protocol: [v1]
-        include:
-          - model: T2T1
-            asan: noasan
-            protocol: v2
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
+      PROTOCOL: ${{ matrix.model == 'T3W1' && 'v2' || 'v1'}}
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
       - uses: actions/download-artifact@v4
         with:
-          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}-protocol_${{matrix.protocol}}
+          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}-protocol_${{ env.PROTOCOL }}
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
@@ -693,7 +689,7 @@ jobs:
       - run: nix-shell --run "poetry run make -C core test_emu_u2f"
       - uses: actions/upload-artifact@v4
         with:
-          name: core-test-u2f-${{ matrix.model }}-${{ matrix.asan }}-protocol_${{matrix.protocol}}
+          name: core-test-u2f-${{ matrix.model }}-${{ matrix.asan }}-protocol_${{ env.PROTOCOL }}
           path: tests/trezor*.log
           retention-days: 7
         if: always()
@@ -701,7 +697,7 @@ jobs:
 
   # FIDO2 device tests.
   core_fido2_test:
-    name: FIDO2 test (${{ matrix.model }}, ${{ matrix.asan }}${{ matrix.protocol=='v2' && ', THP' || ''}})
+    name: FIDO2 test (${{ matrix.model }}, ${{ matrix.asan }}
     runs-on: ubuntu-latest
     needs:
       - param
@@ -711,28 +707,24 @@ jobs:
       matrix:
         model: [T2T1, T3T1, T3W1]  # XXX T3B1 https://github.com/trezor/trezor-firmware/issues/2724
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
-        protocol: [v1]
-        include:
-          - model: T2T1
-            asan: noasan
-            protocol: v2
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
+      PROTOCOL: ${{ matrix.model == 'T3W1' && 'v2' || 'v1'}}
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
       - uses: actions/download-artifact@v4
         with:
-          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}-protocol_${{matrix.protocol}}
+          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}-protocol_${{ env.PROTOCOL }}
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
       - run: nix-shell --run "poetry run make -C core test_emu_fido2"
       - uses: actions/upload-artifact@v4
         with:
-          name: core-test-fido2-${{ matrix.model }}-${{ matrix.asan }}-protocol_${{matrix.protocol}}
+          name: core-test-fido2-${{ matrix.model }}-${{ matrix.asan }}-protocol_${{ env.PROTOCOL }}
           path: |
             tests/trezor*.log
           retention-days: 7
