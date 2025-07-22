@@ -23,7 +23,7 @@ def decode_iface(cached_iface: bytes | None) -> WireInterface:
         if cached_iface == _WIRE_INTERFACE_BLE:
             return ble.interface
 
-    raise Exception("Unknown WireInterface")
+    raise ValueError("Unknown WireInterface")
 
 
 def encode_iface(iface: WireInterface) -> bytes:
@@ -33,4 +33,4 @@ def encode_iface(iface: WireInterface) -> bytes:
     if utils.USE_BLE:
         if iface is ble.interface:
             return _WIRE_INTERFACE_BLE
-    raise Exception("Unknown WireInterface")
+    raise ValueError("Unknown WireInterface")
