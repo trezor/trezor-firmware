@@ -52,14 +52,17 @@ class GenericSessionContext(Context):
             message = next_message
             next_message = None
             try:
-                if await self._handle_message(message):
-                    loop.schedule(self.handle())
-                    return
+                await self._handle_message(message)
+                loop.schedule(self.handle())
+                return
+            except protocol_common.WireError as e:
+                if __debug__:
+                    log.exception(__name__, e, iface=self.iface)
+                await self.write(failure(e))
             except UnexpectedMessageException as unexpected:
                 # The workflow was interrupted by an unexpected message. We need to
                 # process it as if it was a new message...
                 next_message = unexpected.msg
-                continue
             except Exception as exc:
                 # Log and try again.
                 if __debug__:
@@ -68,25 +71,17 @@ class GenericSessionContext(Context):
     async def _handle_message(
         self,
         next_message: Message | None,
-    ) -> bool:
+    ) -> None:
 
-        try:
-            if next_message is not None:
-                # Process the message from previous run.
-                message = next_message
-                next_message = None
-            else:
-                # Wait for a new message from wire
-                message = await self.incoming_message
-
-        except protocol_common.WireError as e:
-            if __debug__:
-                log.exception(__name__, e, iface=self.iface)
-            await self.write(failure(e))
-            return _REPEAT_LOOP
+        if next_message is not None:
+            # Process the message from previous run.
+            message = next_message
+            next_message = None
+        else:
+            # Wait for a new message from wire
+            message = await self.incoming_message
 
         await message_handler.handle_single_message(self, message)
-        return _EXIT_LOOP
 
     async def read(
         self,
