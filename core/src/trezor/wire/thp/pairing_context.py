@@ -119,12 +119,12 @@ class PairingContext(Context):
 
     async def write(self, msg: protobuf.MessageType) -> None:
         # TODO: pre-ACK+retry
-        await self.channel_ctx.send_message(msg)
+        await self.ctx.send_message(msg)
         await self.ctx.wait_for_ack()
 
     async def write_force(self, msg: protobuf.MessageType) -> None:
         # TODO: pre-ACK+retry
-        await self.channel_ctx.send_message(msg)
+        await self.ctx.send_message(msg)
         await self.ctx.wait_for_ack()
 
     async def call_any(
