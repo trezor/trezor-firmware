@@ -334,7 +334,7 @@ if utils.USE_THP:
             from trezor.wire.thp import ui
 
             await ui.show_autoconnect_credential_confirmation_screen(
-                ctx, cred_metadata.host_name
+                cred_metadata.host_name
             )
         new_cred = issue_credential(
             host_static_public_key=message.host_static_public_key,
