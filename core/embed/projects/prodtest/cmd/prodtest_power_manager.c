@@ -333,7 +333,7 @@ void prodtest_pm_event_monitor(cli_t* cli) {
 
 void prodtest_pm_set_soc_target(cli_t* cli) {
   uint32_t target = 0;
-  if (!cli_arg_uint32(cli, "limit", &target) || target > 100 || target < 10) {
+  if (!cli_arg_uint32(cli, "target", &target) || target > 100 || target < 10) {
     cli_error_arg(cli, "Expecting value in range 10-100");
     return;
   }
