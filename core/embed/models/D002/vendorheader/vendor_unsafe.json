@@ -2,6 +2,7 @@
     "header_len": 4608,
     "text": "UNSAFE, DO NOT USE!",
     "hw_model": "D002",
+    "fw_type": 1,
     "expiry": 0,
     "version": [0, 1],
     "sig_m": 2,
