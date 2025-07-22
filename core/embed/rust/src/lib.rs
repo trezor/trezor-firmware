@@ -9,6 +9,8 @@
 #![feature(lang_items)]
 #![feature(optimize_attribute)]
 #![feature(trait_alias)]
+#![no_main]
+#![reexport_test_harness_main = "test_main"]
 
 #[macro_use]
 extern crate num_derive;
@@ -88,3 +90,23 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
 #[lang = "eh_personality"]
 /// Needed by full debuginfo `opt-level = 0` builds for some reason.
 extern "C" fn eh_personality() {}
+
+#[cfg(test)]
+#[no_mangle]
+pub fn main() -> i32 {
+    // Initialize the C driver code before running tests
+    unsafe {
+        extern "C" {
+            fn rust_tests_c_setup();
+        }
+        rust_tests_c_setup();
+    }
+    // Call the Rust test harness main function
+    // The function panics if any test fails.
+    // Asserting that it returns () to ensure that if a future Rust version
+    // changes the signature and behavior, we'll be notified.
+    assert_eq!(test_main(), ());
+
+    // Return 0 to indicate success
+    0
+}
