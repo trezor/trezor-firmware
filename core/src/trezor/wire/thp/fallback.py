@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from storage.cache_common import CHANNEL_KEY_RECEIVE, CHANNEL_NONCE_RECEIVE
 from storage.cache_thp import TAG_LENGTH
 from trezor import utils
+from trezor.wire.errors import DataError
 from trezor.wire.thp import received_message_handler
 from trezor.wire.thp.writer import INIT_HEADER_LENGTH
 
@@ -23,7 +24,7 @@ class Fallback:
 
     def __init__(self, channel: Channel, init_packet: memoryview) -> None:
         if len(init_packet) <= INIT_HEADER_LENGTH + CHECKSUM_LENGTH:
-            raise Exception("Invalid init packet - too short")
+            raise ValueError("Invalid init packet - too short")
 
         self._channel: Channel = channel
         self.ctrl_byte: int = init_packet[0]
@@ -101,7 +102,7 @@ class Fallback:
             offset = CHECKSUM_LENGTH - len(buf[-CHECKSUM_LENGTH:])
             utils.memcpy(self._crc_compare, offset, crc_checksum, 0)
         else:
-            raise Exception(
+            raise DataError(
                 f"Buffer (+bytes_read) ({len(buf)}+{self._channel.bytes_read})should not be bigger than payload{self._channel.expected_payload_length}"
             )
 

@@ -13,7 +13,7 @@ class MockHID:
 
     def pad_packet(self, data):
         if len(data) > self.RX_PACKET_LEN:
-            raise Exception("Too long packet")
+            raise ValueError("Too long packet")
         padding_length = self.RX_PACKET_LEN - len(data)
         return data + b"\x00" * padding_length
 
