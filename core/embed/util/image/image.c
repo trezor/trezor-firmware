@@ -273,6 +273,7 @@ secbool __wur read_vendor_header(const uint8_t *const data,
   memcpy(&vhdr->vsig_n, data + 15, 1);
   memcpy(&vhdr->vtrust, data + 16, 2);
   memcpy(&vhdr->hw_model, data + 18, 4);
+  memcpy(&vhdr->fw_type, data + 22, 1);
 
   if (vhdr->vsig_n > MAX_VENDOR_PUBLIC_KEYS) {
     return secfalse;

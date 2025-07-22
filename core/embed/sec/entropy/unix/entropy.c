@@ -17,12 +17,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <trezor_model.h>
 #include <trezor_rtl.h>
 
 #include <sec/entropy.h>
 
-static uint8_t g_hw_entropy[HW_ENTROPY_LEN];
+static entropy_data_t g_entropy = {0};
 
-void entropy_init(void) { memset(g_hw_entropy, 0, HW_ENTROPY_LEN); }
+void entropy_init(void) {
+  entropy_data_t* ent = &g_entropy;
+#ifdef SECRET_PRIVILEGED_MASTER_KEY_SLOT
+  ent->size = 32;
+#else
+  ent->size = 32 + 12;  // Legacy
+#endif
+}
 
-void entropy_get(uint8_t *buf) { memcpy(buf, g_hw_entropy, HW_ENTROPY_LEN); }
+void entropy_get(entropy_data_t* entropy) { *entropy = g_entropy; }

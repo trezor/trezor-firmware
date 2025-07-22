@@ -101,7 +101,7 @@ secbool storage_next_counter__verified(const uint16_t key, uint32_t *count);
 // ---------------------------------------------------------------------
 #include <sec/entropy.h>
 
-void entropy_get__verified(uint8_t *buf);
+void entropy_get__verified(entropy_data_t *entropy);
 
 // ---------------------------------------------------------------------
 #include <util/fwutils.h>

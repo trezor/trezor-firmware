@@ -88,6 +88,22 @@ typedef struct {
 #define VTRUST_ALLOW_PROVISIONING 0x200
 #define VTRUST_ALLOW_UNLIMITED_RUN 0x400
 
+// Globally defined values for the `vendor_header.fw_type` field.
+// !!! Do not modify existing values. Only add new ones if needed.
+//
+typedef enum {
+  // Reserved value (may appear in legacy vendor headers)
+  VENDOR_FW_TYPE_RESERVED = 0,
+  // Custom (unsafe) firmware
+  VENDOR_FW_TYPE_CUSTOM = 1,
+  // Trezor Universal firmware
+  VENDOR_FW_TYPE_UNIVERSAL = 2,
+  // Trezor Bitcoin-only firmware
+  VENDOR_FW_TYPE_BTC_ONLY = 3,
+  // Factory tester firmware
+  VENDOR_FW_TYPE_PRODTEST = 4,
+} vendor_fw_type_t;
+
 typedef struct {
   uint32_t magic;
   uint32_t hdrlen;
@@ -97,6 +113,7 @@ typedef struct {
   uint8_t vsig_n;
   uint16_t vtrust;
   uint32_t hw_model;
+  uint8_t fw_type;
   // uint8_t reserved[10];
   const uint8_t *vpub[MAX_VENDOR_PUBLIC_KEYS];
   uint8_t vstr_len;

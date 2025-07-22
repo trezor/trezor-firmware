@@ -2,6 +2,7 @@
     "header_len": 1024,
     "text": "Trezor",
     "hw_model": "T3W1",
+    "fw_type": 2,
     "expiry": 0,
     "version": [0, 0],
     "sig_m": 2,
