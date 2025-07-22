@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
-import trezorui_api
 from trezor import loop, protobuf, workflow
 from trezor.wire import context, message_handler, protocol_common
 from trezor.wire.context import UnexpectedMessageException
@@ -157,26 +156,13 @@ class PairingContext(Context):
         await self.write(ThpPairingRequestApproved())
 
     async def show_connection_dialog(self, device_name: str | None = None) -> None:
-        from trezor.ui.layouts import confirm_action
-
-        if not device_name:
-            action_string = f"Allow {self.host_name} to connect with this Trezor?"
-        else:
-            action_string = (
-                f"Allow {self.host_name} on {device_name} to connect with this Trezor?"
-            )
-
-        await confirm_action(
-            br_name="thp_connection_request",
-            title="Connection dialog",
-            action=action_string,
-        )
+        await ui.show_connection_dialog(self.host_name, device_name)
 
     async def show_autoconnect_credential_confirmation_screen(
         self, device_name: str | None = None
     ) -> None:
         await ui.show_autoconnect_credential_confirmation_screen(
-            self, self.host_name, device_name
+            self.host_name, device_name
         )
 
     async def show_pairing_method_screen(
@@ -187,53 +173,15 @@ class PairingContext(Context):
         if selected_method is None:
             selected_method = self.selected_method
         if selected_method is ThpPairingMethod.CodeEntry:
-            return await self._show_code_entry_screen()
+            return await ui.show_code_entry_screen(
+                self._get_code_code_entry_str(), host_name=self.host_name
+            )
         elif selected_method is ThpPairingMethod.NFC:
-            return await self._show_nfc_screen()
+            return await ui.show_nfc_screen()
         elif selected_method is ThpPairingMethod.QrCode:
-            return await self._show_qr_code_screen()
+            return await ui.show_qr_code_screen(self._get_code_qr_code_str())
         else:
             raise ValueError("Unknown pairing method")
-
-    async def _show_code_entry_screen(self) -> UiResult:
-        from trezor.ui.layouts.common import interact
-
-        return await interact(
-            trezorui_api.show_thp_pairing_code(
-                title="One more step",
-                description=f"Enter this one-time security code on {self.host_name}",
-                code=self._get_code_code_entry_str(),
-            ),
-            br_name=None,
-        )
-
-    async def _show_nfc_screen(self) -> UiResult:
-        from trezor.ui.layouts.common import interact
-
-        return await interact(
-            trezorui_api.show_simple(
-                title=None,
-                text="Keep your Trezor near your phone to complete the setup.",
-                button="Cancel",
-            ),
-            br_name=None,
-        )
-
-    async def _show_qr_code_screen(self) -> UiResult:
-        from trezor.ui.layouts.common import interact
-
-        return await interact(
-            trezorui_api.show_address_details(  # noqa
-                qr_title="Scan QR code to pair",
-                address=self._get_code_qr_code_str(),
-                case_sensitive=True,
-                details_title="",
-                account="",
-                path="",
-                xpubs=[],
-            ),
-            br_name=None,
-        )
 
     def _get_code_code_entry_str(self) -> str:
         if self.code_code_entry is not None:
