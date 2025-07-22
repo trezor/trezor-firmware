@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 
-from trezor import utils
 from trezor.crypto import bip32
 from trezor.wire import DataError
 
@@ -173,9 +172,6 @@ async def get_keychain(
 ) -> Keychain:
     from .seed import get_seed
 
-    if not utils.USE_THP:
-        pass
-        # try to ask for passphrase here
     seed = await get_seed()
     keychain = Keychain(seed, curve, schemas, slip21_namespaces)
     return keychain
