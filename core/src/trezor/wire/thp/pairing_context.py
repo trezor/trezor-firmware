@@ -228,7 +228,7 @@ class PairingContext(Context):
         elif selected_method is ThpPairingMethod.QrCode:
             return await self._show_qr_code_screen()
         else:
-            raise Exception("Unknown pairing method")
+            raise ValueError("Unknown pairing method")
 
     async def _show_code_entry_screen(self) -> UiResult:
         from trezor.ui.layouts.common import interact

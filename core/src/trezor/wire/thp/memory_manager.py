@@ -77,7 +77,7 @@ def _get_new_buffer(buffer_type: int, channel_id: int, length: int) -> memoryvie
         global WRITE_BUFFER
         buffer = WRITE_BUFFER
     else:
-        raise Exception("Invalid buffer_type")
+        raise ValueError("Unknown buffer_type")
 
     if length > MAX_PAYLOAD_LEN or length > len(buffer):
         raise ThpError("Message is too large")  # TODO reword
@@ -92,7 +92,7 @@ def _get_new_buffer(buffer_type: int, channel_id: int, length: int) -> memoryvie
         WRITE_BUFFER_SLICE = memoryview(WRITE_BUFFER)[:length]
         return WRITE_BUFFER_SLICE
 
-    raise Exception("Invalid buffer_type")
+    raise ValueError("Unknown buffer_type")
 
 
 def _get_existing_buffer(buffer_type: int, channel_id: int) -> memoryview:
@@ -112,7 +112,7 @@ def _get_existing_buffer(buffer_type: int, channel_id: int) -> memoryview:
             raise WireBufferError
         return WRITE_BUFFER_SLICE
 
-    raise Exception("Invalid buffer_type")
+    raise ValueError("Unknown buffer_type")
 
 
 #
