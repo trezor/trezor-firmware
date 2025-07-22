@@ -169,10 +169,9 @@ async def handle_ack(ctx: Channel, ack_bit: int) -> None:
         ctx.transmission_loop.stop_immediately()
         if __debug__:
             log.debug(__name__, "Stopped transmission loop", iface=ctx.iface)
-    elif __debug__:
-        log.debug(__name__, "Transmission loop was not stopped!", iface=ctx.iface)
 
     ABP.set_sending_allowed(ctx.channel_cache, True)
+    ABP.set_send_seq_bit_to_opposite(ctx.channel_cache)
 
     if ctx.write_task_spawn is not None:
         if __debug__:
@@ -201,7 +200,7 @@ async def _handle_message_to_app_or_channel(ctx: ThpContext) -> None:
 async def _handle_state_TH1(ctx: ThpContext) -> None:
     if __debug__:
         log.debug(__name__, "handle_state_TH1", iface=ctx.channel.iface)
-    message = await ctx.read()
+    message = await ctx.read()  # & ACK received message
     if not control_byte.is_handshake_init_req(message[0]):
         raise ThpError("Message received is not a handshake init request!")
     if len(message) != INIT_HEADER_LENGTH + PUBKEY_LENGTH + CHECKSUM_LENGTH:
@@ -241,6 +240,7 @@ async def _handle_state_TH1(ctx: ThpContext) -> None:
     # send handshake init response message
     # TODO: ACK+retry
     await ctx.channel.send_payload(HANDSHAKE_INIT_RES, payload)
+    await ctx.wait_for_ack()
     ctx.channel.set_channel_state(ChannelState.TH2)
     return
 
@@ -250,7 +250,7 @@ async def _handle_state_TH2(ctx: ThpContext) -> None:
 
     if __debug__:
         log.debug(__name__, "handle_state_TH2", iface=ctx.channel.iface)
-    message = await ctx.read()
+    message = await ctx.read()  # & ACK received message
     if not control_byte.is_handshake_comp_req(message[0]):
         raise ThpError("Message received is not a handshake completion request!")
 
@@ -336,6 +336,7 @@ async def _handle_state_TH2(ctx: ThpContext) -> None:
         HANDSHAKE_COMP_RES,
         ctx.channel.handshake.get_handshake_completion_response(trezor_state),
     )
+    await ctx.wait_for_ack()
 
     ctx.channel.handshake = None
 
