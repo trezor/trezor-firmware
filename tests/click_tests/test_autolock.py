@@ -23,10 +23,8 @@ import pytest
 from trezorlib import btc, device, exceptions, messages
 from trezorlib.client import PASSPHRASE_ON_DEVICE
 from trezorlib.debuglink import DebugLink, LayoutType
-from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.protobuf import MessageType
 from trezorlib.tools import parse_path
-from trezorlib.transport.session import SessionV1, derive_seed
 
 from .. import common
 from .. import translations as TR
@@ -113,6 +111,7 @@ def test_autolock_interrupts_signing(device_handler: "BackgroundDeviceHandler"):
 
     device_handler.run_with_provided_session(session, btc.sign_tx, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET)  # type: ignore
 
+    debug.synchronize_at([TR.words__send, TR.words__address, TR.words__recipient])
     assert (
         "1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1"
         in debug.read_layout().text_content().replace(" ", "")
@@ -232,10 +231,7 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
     set_autolock_delay(device_handler, 10_000)
     debug = device_handler.debuglink()
 
-    session = Session(SessionV1.new(device_handler.client))
-    # session = device_handler.client.get_session(passphrase=PASSPHRASE_ON_DEVICE)
-
-    device_handler.run_with_provided_session(session, derive_seed, passphrase=PASSPHRASE_ON_DEVICE)  # type: ignore
+    device_handler.get_session(passphrase=PASSPHRASE_ON_DEVICE)  # type: ignore
     debug.synchronize_at("PassphraseKeyboard")
 
     if debug.layout_type is LayoutType.Caesar:
@@ -268,7 +264,7 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
     elif debug.layout_type is LayoutType.Caesar:
         debug.input("j" * 8)
 
-    device_handler.result()
+    session = device_handler.result()
 
     # get address corresponding to "jjjjjjjj" passphrase
     device_handler.run_with_provided_session(session, common.get_test_address)
