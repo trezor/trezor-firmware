@@ -19,7 +19,7 @@ from storage.cache_thp import (
     conditionally_replace_channel,
     is_there_a_channel_to_replace,
 )
-from trezor import loop, protobuf, utils, wire, workflow
+from trezor import protobuf, utils, wire, workflow
 from trezor.wire.errors import WireBufferError
 
 from . import (
@@ -34,7 +34,6 @@ from . import alternating_bit_protocol as ABP
 from . import control_byte, crypto, interface_manager
 from .checksum import CHECKSUM_LENGTH
 from .memory_manager import encode_into_buffer
-from .transmission_loop import TransmissionLoop
 from .writer import (
     CONT_HEADER_LENGTH,
     INIT_HEADER_LENGTH,
@@ -97,10 +96,6 @@ class Channel:
         self.bytes_read: int = 0
         self.rx_buffer: memoryview = memoryview(b"")
         self.is_cont_packet_expected: bool = False
-
-        # Objects for writing a message to a wire
-        self.transmission_loop: TransmissionLoop | None = None
-        self.write_task_spawn: loop.spawn | None = None
 
         # Temporary objects
         self.handshake: crypto.Handshake | None = None
@@ -246,52 +241,11 @@ class Channel:
         if not is_tag_valid:
             raise ThpDecryptionError()
 
-    # WRITE and ENCRYPT
-
-    async def write(
-        self,
-        msg: protobuf.MessageType,
-        session_id: int = 0,
-        force: bool = False,
-    ) -> None:
-        raise NotImplementedError
-        if __debug__:
-            self._log(
-                f"write message: {msg.MESSAGE_NAME}",
-                logger=log.info,
-            )
-            if utils.EMULATOR:
-                log.debug(
-                    __name__,
-                    "message contents:\n%s",
-                    utils.dump_protobuf(msg),
-                    iface=self.iface,
-                )
-
-        msg_size = protobuf.encoded_length(msg)
-        payload_size = SESSION_ID_LENGTH + MESSAGE_TYPE_LENGTH + msg_size
-        length = payload_size + CHECKSUM_LENGTH + TAG_LENGTH + INIT_HEADER_LENGTH
-
-        buffer = self.get_buffers().get_tx(length)
-        noise_payload_len = encode_into_buffer(buffer, msg, session_id)
-
-        task = self._write_and_encrypt(
-            buffer=buffer, noise_payload_len=noise_payload_len, force=force
-        )
-        if task is not None:
-            await task
-
     def write_error(self, err_type: int) -> Awaitable[None]:
         msg_data = err_type.to_bytes(1, "big")
         length = len(msg_data) + CHECKSUM_LENGTH
         header = PacketHeader.get_error_header(self.get_channel_id_int(), length)
         return write_payload_to_wire_and_add_checksum(self.iface, header, msg_data)
-
-    def write_handshake_message(self, ctrl_byte: int, payload: bytes) -> None:
-        self._prepare_write()
-        self.write_task_spawn = loop.spawn(
-            self._write_encrypted_payload_loop(ctrl_byte, payload)
-        )
 
     def send_payload(self, ctrl_byte: int, payload: bytes) -> Awaitable[None]:
         """Send payload with ABP bit - don't wait for an ACK."""
@@ -317,67 +271,9 @@ class Channel:
         payload_length = noise_payload_len + TAG_LENGTH
         return self.send_payload(ENCRYPTED, buffer[:payload_length])
 
-    def _write_and_encrypt(
-        self,
-        buffer: memoryview,
-        noise_payload_len: int,
-        force: bool = False,
-    ) -> Awaitable[None] | None:
-        self._encrypt(buffer, noise_payload_len)
-        payload_length = noise_payload_len + TAG_LENGTH
-
-        if self.write_task_spawn is not None:
-            self.write_task_spawn.close()  # TODO might break something
-            if __debug__:
-                self._log("Closed write task", logger=log.warning)
-        self._prepare_write()
-        if force:
-            if __debug__:
-                self._log("Writing FORCE message (without async or retransmission).")
-
-            return self._write_encrypted_payload_loop(
-                ENCRYPTED, memoryview(buffer[:payload_length])
-            )
-        self.write_task_spawn = loop.spawn(
-            self._write_encrypted_payload_loop(
-                ENCRYPTED, memoryview(buffer[:payload_length])
-            )
-        )
-        return None
-
     def _prepare_write(self) -> None:
         # TODO add condition that disallows to write when can_send_message is false
         ABP.set_sending_allowed(self.channel_cache, False)
-
-    async def _write_encrypted_payload_loop(
-        self, ctrl_byte: int, payload: bytes, only_once: bool = False
-    ) -> None:
-        if __debug__:
-            self._log("write_encrypted_payload_loop")
-
-        payload_len = len(payload) + CHECKSUM_LENGTH
-        sync_bit = ABP.get_send_seq_bit(self.channel_cache)
-        ctrl_byte = control_byte.add_seq_bit_to_ctrl_byte(ctrl_byte, sync_bit)
-        header = PacketHeader(ctrl_byte, self.get_channel_id_int(), payload_len)
-        self.transmission_loop = TransmissionLoop(self, header, payload)
-        if only_once:
-            if __debug__:
-                self._log('Starting transmission loop "only once"')
-            await self.transmission_loop.start(max_retransmission_count=1)
-        else:
-            if __debug__:
-                self._log("Starting transmission loop")
-            await self.transmission_loop.start()
-
-        ABP.set_send_seq_bit_to_opposite(self.channel_cache)
-
-        # Let the main loop be restarted and clear loop, if there is no other
-        # workflow and the state is ENCRYPTED_TRANSPORT
-        # TODO only once is there to not clear when FALLBACK
-        # TODO missing transmission loop is active -> do not clear
-        if not only_once and self._can_clear_loop():
-            if __debug__:
-                self._log("clearing loop from channel")
 
     def _encrypt(self, buffer: utils.BufferType, noise_payload_len: int) -> None:
         if __debug__:
@@ -400,11 +296,6 @@ class Channel:
             self._log("New nonce_send: ", str((nonce_send + 1)))
 
         buffer[noise_payload_len : noise_payload_len + TAG_LENGTH] = tag
-
-    def _can_clear_loop(self) -> bool:
-        return (
-            not workflow.tasks
-        ) and self.get_channel_state() is ChannelState.ENCRYPTED_TRANSPORT
 
     if __debug__:
 
