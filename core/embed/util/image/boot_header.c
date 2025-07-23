@@ -176,6 +176,12 @@ secbool boot_header_check_signature(const boot_header_t* hdr,
   return sectrue;
 }
 
+static size_t boot_header_merkle_proof_size(
+    const boot_header_merkle_proof_t* proof) {
+  return sizeof(boot_header_merkle_proof_t) +
+         proof->node_count * sizeof(proof->nodes[0]);
+}
+
 static const boot_header_merkle_proof_t* boot_header_get_merkle_proof(
     const boot_header_t* hdr) {
   // Check if the merkle_proof.path_len field is withing the header
@@ -192,9 +198,7 @@ static const boot_header_merkle_proof_t* boot_header_get_merkle_proof(
     return NULL;
   }
 
-  // Calculate the Merkle proof structure size
-  size_t proof_size = sizeof(boot_header_merkle_proof_t) +
-                      proof->node_count * sizeof(proof->nodes[0]);
+  size_t proof_size = boot_header_merkle_proof_size(proof);
 
   // Check if the Merkle proof is completely within the header
   if (hdr->auth_size + proof_size > hdr->header_size) {
@@ -260,8 +264,7 @@ const boot_header_unauth_t* boot_header_get_unauth(const boot_header_t* hdr) {
     return NULL;
   }
 
-  size_t proof_size = sizeof(boot_header_merkle_proof_t) +
-                      proof->node_count * sizeof(proof->nodes[0]);
+  size_t proof_size = boot_header_merkle_proof_size(proof);
 
   // Unauthenticated part is located right after the Merkle proof
   boot_header_unauth_t* unauth =
