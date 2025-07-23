@@ -47,6 +47,13 @@ typedef struct __attribute__((packed)) {
 } boot_header_version_t;
 
 /**
+ * Merkle proof node (SHA-256 digest)
+ */
+typedef struct {
+  uint8_t bytes[32];
+} merkle_proof_node_t;
+
+/**
  * Authenticated part of the boot header
  */
 typedef struct __attribute__((packed)) {
@@ -83,18 +90,13 @@ typedef struct __attribute__((packed)) {
    * BOOTLOADER_EC_KEY arrays. If the bit is set, the corresponding key
    * is used for signature verification. */
   uint32_t sigmask;
+  /* Firmware merkle tree root */
+  merkle_proof_node_t firmware_root;
   /* Padding is automatically added by the post-build step to ensure that
    * the authenticated part of the header is maximized. */
   uint8_t padding[0];
 
 } boot_header_t;
-
-/**
- * Merkle proof node (SHA-256 digest)
- */
-typedef struct {
-  uint8_t bytes[32];
-} merkle_proof_node_t;
 
 /**
  * Merkle proof structure used in the boot header used to
@@ -123,10 +125,12 @@ typedef struct __attribute__((packed)) {
   uint8_t ec_signature[BOOT_HEADER_SIGNATURE_COUNT]
                       [BOOT_HEADER_EC_SIGNATURE_LEN];
 
-  // Firmware type (this field is modified by the bootloader during the
-  // update process). It indicates the current firmware type (custom,
-  // universal, bitcoin-only, etc.) and is used to determine whether
-  // the storage should be erased before the update.
+  /* Firmware type
+   * This field is modified by the bootloader during the
+   * update process). It indicates the current firmware type (custom,
+   * universal, bitcoin-only, etc.) and is used to determine whether
+   * the storage should be erased before the update.
+   */
   uint8_t firmware_type;
   uint8_t padding[3];
 

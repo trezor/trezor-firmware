@@ -230,6 +230,7 @@ class BootHeader(Struct):
     code_length: int
     storage_address: int
     sigmask: int
+    firmware_root: bytes
 
     _pre_padding_len: int
     _post_padding_len: int
@@ -255,6 +256,7 @@ class BootHeader(Struct):
         ),
         "storage_address" / c.Int32ul,
         "sigmask" / c.Int32ul,
+        "firmware_root" / c.Bytes(32),
 
         # Variable-length padding that's part of the authenticated header
         "_pre_padding_len" / c.Tell,
