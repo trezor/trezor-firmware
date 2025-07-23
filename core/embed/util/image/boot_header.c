@@ -197,7 +197,7 @@ const boot_header_t* boot_header_check_integrity(uint32_t address) {
 
   // Check if the header size (= bootloader code offset) is aligned to 8K
   // boundary (flash page size)
-  if (!IS_ALIGNED(hdr->header_size, SIZE_8K)) {
+  if (!IS_ALIGNED(hdr->header_size, SIZE_8K) || hdr->header_size == 0) {
     return NULL;
   }
 
