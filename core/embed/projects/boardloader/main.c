@@ -318,7 +318,7 @@ int main(void) {
   // ensure_signed_firmware() and serves as anti-glitch protection.
   volatile uint32_t next_stage_addr = 0;  // FIH
 
-  // Checks if the bootloader is valid ans signed
+  // Checks if the bootloader is valid and signed
   ensure_signed_firmware(&next_stage_addr);
 
   // Deinitialize the drivers before jumping to the next stage,
