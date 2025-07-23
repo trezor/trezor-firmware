@@ -127,7 +127,12 @@ def test_repeated_backup_via_device(
     # ... so let's try to do a 2-of-3 backup
     # confirm backup intro
     debug.synchronize_at(
-        [TR.backup__title_create_wallet_backup, "BlendedImage", "ScrollableFrame"]
+        [
+            TR.backup__title_create_wallet_backup,
+            TR.reset__recovery_wallet_backup_title,
+            "BlendedImage",
+            "ScrollableFrame",
+        ]
     )
     reset.confirm_read(debug)
     # confirm checklist
