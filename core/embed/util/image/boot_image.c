@@ -262,9 +262,17 @@ void boot_image_replace(const boot_image_t *image) {
   ensure(boot_header_check_model(hdr), "Incompatible hardware model");
 
   // Check monotonic version
-  uint8_t min_monotonic_version = 0;
-  ensure(monoctr_read(MONOCTR_BOOTLOADER_VERSION, &min_monotonic_version),
-         "monoctr read");
+
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
+
+  const boot_header_t *old_hdr = boot_header_check_integrity(BOOTLOADER_START);
+
+  ensure((old_hdr != NULL) * sectrue, "Invalid current bootloader header");
+
+  uint8_t min_monotonic_version = old_hdr->monotonic_version;
+
+  mpu_restore(mpu_mode);
+
   ensure(sectrue * (hdr->monotonic_version >= min_monotonic_version),
          "Bootloader downgrade rejected");
 
