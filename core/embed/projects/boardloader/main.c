@@ -142,7 +142,7 @@ static void try_to_upgrade(void) {
     return;
   }
 
-  // Check if the new bootloader header is present and valid
+  // Check if the new boot header is present and valid
   const boot_header_t* hdr = boot_header_check_integrity(ucb.header_address);
   if (hdr == NULL) {
     return;
@@ -157,7 +157,7 @@ static void try_to_upgrade(void) {
 
   // Get address of the bootloader code
   // If the code address in UCB is 0, it means that the code is not present
-  // and we change only the bootloader header. In such case, we
+  // and we change only the boot header. In such case, we
   // use the current bootloader code to calculate the merkle root.
   uint32_t code_address = ucb.code_address;
   if (code_address == 0) {
@@ -183,7 +183,7 @@ static void try_to_upgrade(void) {
   // Now we have verified that the new bootloader is valid and signed
   // and we can proceed with the upgrade.
 
-  // Write bootloader header
+  // Write boot header
   const uint8_t* src = (const uint8_t*)hdr;
   uint32_t dst = 0;
   uint32_t dst_end = hdr->header_size;
@@ -225,9 +225,9 @@ static inline void ensure_signed_firmware(volatile uint32_t* next_stage_addr) {
   // Start with some non-deterministic delay
   fih_delay(0);
 
-  // Check if the bootloader header is present and valid
+  // Check if the boot header is present and valid
   const boot_header_t* hdr = boot_header_check_integrity(BOOTLOADER_START);
-  fih_ensure(sectrue * (hdr != NULL), "invalid bootloader header");
+  fih_ensure(sectrue * (hdr != NULL), "invalid boot header");
 
   // Get address of the bootloader code
   uint32_t code_address = BOOTLOADER_START + hdr->header_size;
