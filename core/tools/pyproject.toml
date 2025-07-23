@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "trezor_core_tools"
-version = "0.1.3"
+version = "0.1.4"
 description = "Collection of CLI tools for trezor-core development"
 authors = ["matejcik <jan.matejek@satoshilabs.com>"]
 license = "GPLv3+"
