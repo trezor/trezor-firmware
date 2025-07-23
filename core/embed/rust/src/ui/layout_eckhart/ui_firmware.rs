@@ -389,6 +389,8 @@ impl FirmwareUI for UIEckhart {
             &theme::TEXT_SMALL_LIGHT,
             &theme::TEXT_MONO_MEDIUM_LIGHT,
             &theme::TEXT_MONO_MEDIUM_LIGHT_DATA,
+            theme::PROP_INNER_SPACING,
+            theme::PROPS_SPACING,
         )?;
 
         let flow = flow::new_confirm_with_menu(
