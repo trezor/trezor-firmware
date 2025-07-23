@@ -78,6 +78,7 @@ class ThpContext:
         ctrl_byte = control_byte.add_seq_bit_to_ctrl_byte(ctrl_byte, seq_bit)
         header = PacketHeader(ctrl_byte, self.channel.get_channel_id_int(), payload_len)
         # TODO add condition that disallows to write when can_send_message is false
+        assert ABP.is_sending_allowed(self.channel.channel_cache)
         ABP.set_sending_allowed(self.channel.channel_cache, False)
         return write_payload_to_wire_and_add_checksum(
             self.channel.iface, header, payload
