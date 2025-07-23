@@ -25,6 +25,7 @@ permissions:
   pull-requests: write  # For dflook comments on PR
 
 env:
+  SDL_VIDEODRIVER: dummy
   PULL_COMMENT_PATH: ${{ github.workspace }}/tests/core-pull-comment.md
   TREZOR_PYTEST_LOGS_DIR: ${{ github.workspace }}/tests/
 
