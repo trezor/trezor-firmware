@@ -102,74 +102,53 @@ secbool boot_header_check_signature(const boot_header_t* hdr,
                  ARRAY_LENGTH(BOARDLOADER_PQ_KEYS));
 
   uint32_t sigmask = hdr->sigmask;
-
-  int pubkey1_idx = __builtin_ctz(sigmask);
-  if (pubkey1_idx >= ARRAY_LENGTH(BOARDLOADER_PQ_KEYS)) {
-    return secfalse;
-  }
-
-  sigmask &= ~(1 << pubkey1_idx);
-
-  int pubkey2_idx = __builtin_ctz(sigmask);
-  if (pubkey2_idx >= ARRAY_LENGTH(BOARDLOADER_PQ_KEYS)) {
-    return secfalse;
-  }
-
-  sigmask &= ~(1 << pubkey2_idx);
-
-  if (sigmask != 0) {
-    // There are more than two bits set
-    return secfalse;
-  }
-
-  int result;
+  uint32_t sigmask_inv = 0;  // FIH
 
   const boot_header_unauth_t* sig = boot_header_get_unauth(hdr);
 
-  uint8_t ec_hash[IMAGE_HASH_DIGEST_LENGTH];
+  for (int sig_idx = 0; sig_idx < ARRAY_LENGTH(sig->ec_signature); sig_idx++) {
+    // Get the index of the public key in the signature mask
+    int key_idx = __builtin_ctz(sigmask);
+    if (key_idx >= ARRAY_LENGTH(BOARDLOADER_PQ_KEYS)) {
+      return secfalse;
+    }
 
-  // Hash of the merkle root and the 1st SLH signature
-  IMAGE_HASH_CTX ctx;
-  IMAGE_HASH_INIT(&ctx);
-  IMAGE_HASH_UPDATE(&ctx, merkle_root->bytes, sizeof(merkle_root->bytes));
-  IMAGE_HASH_UPDATE(&ctx, sig->slh_signature1, sizeof(sig->slh_signature1));
-  IMAGE_HASH_FINAL(&ctx, ec_hash);
+    // Hash of the merkle root and the SLH signature
+    uint8_t hash[IMAGE_HASH_DIGEST_LENGTH];
+    IMAGE_HASH_CTX ctx;
+    IMAGE_HASH_INIT(&ctx);
+    IMAGE_HASH_UPDATE(&ctx, merkle_root->bytes, sizeof(merkle_root->bytes));
+    IMAGE_HASH_UPDATE(&ctx, sig->slh_signature[sig_idx],
+                      sizeof(sig->slh_signature[sig_idx]));
+    IMAGE_HASH_FINAL(&ctx, hash);
 
-  // Verify 1st EC signature
-  result =
-      ed25519_sign_open(ec_hash, sizeof(ec_hash),
-                        BOARDLOADER_EC_KEYS[pubkey1_idx], sig->ec_signature1);
-  if (result != 0) {
-    return secfalse;
+    // Verify EC signature - do it before we verify the PQC signature
+    int ec_result =
+        ed25519_sign_open(hash, sizeof(hash), BOARDLOADER_EC_KEYS[key_idx],
+                          sig->ec_signature[sig_idx]);
+
+    if (ec_result != 0) {
+      return secfalse;
+    }
+
+    // Verify the PQC signature
+    int pq_result = crypto_sign_verify(
+        sig->slh_signature[sig_idx], sizeof(sig->slh_signature[sig_idx]),
+        merkle_root->bytes, sizeof(merkle_root->bytes),
+        BOARDLOADER_PQ_KEYS[key_idx]);
+
+    if (pq_result != 0) {
+      return secfalse;
+    }
+
+    // Mark the key as used
+    sigmask &= ~(1 << key_idx);
+    sigmask_inv |= (1 << key_idx);
   }
 
-  // Hash of the merkle root and the 2nd SLH signature
-  IMAGE_HASH_INIT(&ctx);
-  IMAGE_HASH_UPDATE(&ctx, merkle_root->bytes, sizeof(merkle_root->bytes));
-  IMAGE_HASH_UPDATE(&ctx, sig->slh_signature2, sizeof(sig->slh_signature2));
-  IMAGE_HASH_FINAL(&ctx, ec_hash);
-
-  // Verify 2nd EC signature
-  result =
-      ed25519_sign_open(ec_hash, sizeof(ec_hash),
-                        BOARDLOADER_EC_KEYS[pubkey2_idx], sig->ec_signature2);
-  if (result != 0) {
-    return secfalse;
-  }
-
-  // Verify 1st PQC signature
-  result = crypto_sign_verify(sig->slh_signature1, sizeof(sig->slh_signature1),
-                              merkle_root->bytes, sizeof(merkle_root->bytes),
-                              BOARDLOADER_PQ_KEYS[pubkey1_idx]);
-  if (result != 0) {
-    return secfalse;
-  }
-
-  // Verify 2nd PQC signature
-  result = crypto_sign_verify(sig->slh_signature2, sizeof(sig->slh_signature2),
-                              merkle_root->bytes, sizeof(merkle_root->bytes),
-                              BOARDLOADER_PQ_KEYS[pubkey2_idx]);
-  if (result != 0) {
+  if (sigmask != 0 || sigmask_inv != hdr->sigmask) {  // FIH
+    // There were more than public key bits set or some of
+    // public keys in original sigmask were not used
     return secfalse;
   }
 

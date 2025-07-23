@@ -25,6 +25,8 @@
 #define BOOT_HEADER_MAGIC_TRZQ 0x515A5254  // TRZQ
 // Reserved space for boot header
 #define BOOT_HEADER_MAXSIZE (2 * 8192)
+//** Number of PQ/EC signatures */
+#define BOOT_HEADER_SIGNATURE_COUNT 2
 /** Length of PQ signature in bytes */
 #define BOOT_HEADER_PQ_SIGNATURE_LEN (7856)
 /** Length of EC signature in bytes */
@@ -114,14 +116,12 @@ typedef struct __attribute__((packed)) {
  * It is placed right after the Merkle proof.
  */
 typedef struct __attribute__((packed)) {
-  /** First PQ signature */
-  uint8_t slh_signature1[BOOT_HEADER_PQ_SIGNATURE_LEN];
-  /** Second PQ signature */
-  uint8_t slh_signature2[BOOT_HEADER_PQ_SIGNATURE_LEN];
-  /** First EC signature */
-  uint8_t ec_signature1[BOOT_HEADER_EC_SIGNATURE_LEN];
-  /** Second EC signature */
-  uint8_t ec_signature2[BOOT_HEADER_EC_SIGNATURE_LEN];
+  /** PQ signatures */
+  uint8_t slh_signature[BOOT_HEADER_SIGNATURE_COUNT]
+                       [BOOT_HEADER_PQ_SIGNATURE_LEN];
+  /** EC signatures */
+  uint8_t ec_signature[BOOT_HEADER_SIGNATURE_COUNT]
+                      [BOOT_HEADER_EC_SIGNATURE_LEN];
 
   // Firmware type (this field is modified by the bootloader during the
   // update process). It indicates the current firmware type (custom,
