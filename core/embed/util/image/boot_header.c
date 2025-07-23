@@ -147,8 +147,8 @@ secbool boot_header_check_signature(const boot_header_t* hdr,
   }
 
   if (sigmask != 0 || sigmask_inv != hdr->sigmask) {  // FIH
-    // There were more than public key bits set or some of
-    // public keys in original sigmask were not used
+    // There were more than BOOT_HEADER_SIGNATURE_COUNT public key bits
+    // set or some of the public keys in the original sigmask were not used.
     return secfalse;
   }
 
