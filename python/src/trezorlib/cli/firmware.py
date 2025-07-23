@@ -363,7 +363,7 @@ def find_best_firmware_version(
         #   to the newer one, in that case update to the minimal
         #   compatible version first
         # Choosing the version key to compare based on (not) being in BL mode
-        client_version = client.version
+        client_version = list(client.version)
         if features.bootloader_mode:
             key_to_compare = "min_bootloader_version"
         else:
