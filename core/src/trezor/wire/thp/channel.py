@@ -354,8 +354,7 @@ class Channel:
         self, message_length: int, offset: int = INIT_HEADER_LENGTH
     ) -> None:
         buffer = memory_manager.get_existing_read_buffer(self.get_channel_id_int())
-        # if buffer is WireBufferError:
-        # pass  # TODO handle deviceBUSY
+
         noise_buffer = memoryview(buffer)[
             offset : message_length - CHECKSUM_LENGTH - TAG_LENGTH
         ]
@@ -481,8 +480,6 @@ class Channel:
             buffer = self.buffer
         else:
             buffer = memory_manager.get_existing_write_buffer(self.get_channel_id_int())
-        # if buffer is WireBufferError:
-        # pass  # TODO handle deviceBUSY
 
         self._encrypt(buffer, noise_payload_len)
         payload_length = noise_payload_len + TAG_LENGTH
