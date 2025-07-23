@@ -21,6 +21,7 @@
 #include <trezor_rtl.h>
 
 #include <sys/bootargs.h>
+#include <sys/bootutils.h>
 #include <sys/systick.h>
 #include <util/flash.h>
 #include <util/flash_utils.h>
