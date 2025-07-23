@@ -63,15 +63,17 @@ typedef struct __attribute__((packed)) {
   uint32_t hw_revision;
   /** Bootloader version */
   boot_header_version_t version;
-  /** Bootloader fix version */
+  /** Minimum version that the device can be downgraded to without
+   * erasing storage. */
   boot_header_version_t fix_version;
-  /** Minimum previous version taht the device can be updated from */
+  /** Minimum previous version that the device can be updated from when
+   * installing this header. */
   boot_header_version_t min_prev_version;
-  /** Bootloader monotonic version */
+  /** An integer which must not decrease between updates. */
   uint32_t monotonic_version;
-  /** Size of this header in bytes.
-   * Final value is calculated in post-build step and must be aligned to 8K
-   * boundary.*/
+  /** Size of the entire header header in bytes, including the Merkle proof
+   * and signatures. It's calculated in the link time and must be
+   * aligned to 8K boundary. */
   uint32_t header_size;
   /** Size of authenticated part of the header in bytes.
    * Final value is calculated in post-build step and includes
@@ -84,7 +86,7 @@ typedef struct __attribute__((packed)) {
   /** Bitmask of keys used for signature verification.
    * Each bit corresponds to a public key in the BOOTLOADER_PQ_KEY and
    * BOOTLOADER_EC_KEY arrays. If the bit is set, the corresponding key
-   * was used for signature verification. */
+   * is used for signature verification. */
   uint32_t sigmask;
   /* Padding is automatically added by the post-build step to ensure that
    * the authenticated part of the header is maximized. */
