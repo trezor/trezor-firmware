@@ -251,14 +251,14 @@ impl FirmwareUI for UIEckhart {
             paragraphs
                 .add(
                     Paragraph::new(&theme::TEXT_SMALL_LIGHT, description)
-                        .with_bottom_padding(theme::PARAGRAPHS_SPACING),
+                        .with_bottom_padding(theme::PROP_INNER_SPACING),
                 )
                 .add(Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, change).with_bottom_padding(16));
         }
         paragraphs
             .add(
                 Paragraph::new(&theme::TEXT_SMALL_LIGHT, total_label)
-                    .with_bottom_padding(theme::PARAGRAPHS_SPACING),
+                    .with_bottom_padding(theme::PROP_INNER_SPACING),
             )
             .add(Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, total_fee_new));
 
@@ -297,7 +297,7 @@ impl FirmwareUI for UIEckhart {
 
         let layout = RootComponent::new(
             TextScreen::new(paragraphs.into_paragraphs().with_placement(
-                LinearPlacement::vertical().with_spacing(theme::PARAGRAPHS_SPACING),
+                LinearPlacement::vertical().with_spacing(theme::PROP_INNER_SPACING),
             ))
             .with_header(Header::new(TR::modify_amount__title.into()))
             .with_action_bar(ActionBar::new_cancel_confirm()),
@@ -394,7 +394,7 @@ impl FirmwareUI for UIEckhart {
             title,
             None,
             paragraphs.into_paragraphs().with_placement(
-                LinearPlacement::vertical().with_spacing(theme::PARAGRAPHS_SPACING),
+                LinearPlacement::vertical().with_spacing(theme::PROP_INNER_SPACING),
             ),
             None,
             verb,
@@ -1286,7 +1286,7 @@ impl FirmwareUI for UIEckhart {
 
         let screen =
             TextScreen::new(paragraphs.into_paragraphs().with_placement(
-                LinearPlacement::vertical().with_spacing(theme::PARAGRAPHS_SPACING),
+                LinearPlacement::vertical().with_spacing(theme::PROP_INNER_SPACING),
             ))
             .with_header(Header::new(title).with_close_button());
         let layout = RootComponent::new(screen);

@@ -192,7 +192,7 @@ pub fn new_continue_recovery_homepage(
         pars_main
             .into_paragraphs()
             .with_placement(LinearPlacement::vertical())
-            .with_spacing(24),
+            .with_spacing(theme::TEXT_VERTICAL_SPACING),
     )
     .with_header(header)
     .with_action_bar(ActionBar::new_single(Button::with_text(verb.into())))

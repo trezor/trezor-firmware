@@ -71,7 +71,7 @@ pub fn new_show_danger(
         Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, value),
     ]
     .into_paragraphs()
-    .with_placement(LinearPlacement::vertical().with_spacing(35));
+    .with_placement(LinearPlacement::vertical().with_spacing(theme::TEXT_VERTICAL_SPACING));
 
     let content_message = TextScreen::new(paragraphs)
         .with_header(

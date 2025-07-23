@@ -28,7 +28,6 @@ pub struct FidoCredential<F: FidoAccountName> {
 
 impl<F: FidoAccountName> FidoCredential<F> {
     const ICON_SIZE: i16 = 32;
-    const SPACING: i16 = 24;
 
     pub fn new(
         icon_name: Option<TString<'static>>,
@@ -45,7 +44,7 @@ impl<F: FidoAccountName> FidoCredential<F> {
         ])
         .into_paragraphs()
         .with_placement(LinearPlacement::vertical())
-        .with_spacing(Self::SPACING);
+        .with_spacing(theme::TEXT_VERTICAL_SPACING);
         Self {
             app_icon,
             text,
@@ -60,7 +59,8 @@ impl<F: FidoAccountName> Component for FidoCredential<F> {
     fn place(&mut self, bounds: Rect) -> Rect {
         let text_area = if let Some(app_icon) = &mut self.app_icon {
             let icon_size = app_icon.toif.size();
-            let (icon_area, text_area) = bounds.split_top(icon_size.y + Self::SPACING);
+            let (icon_area, text_area) =
+                bounds.split_top(icon_size.y + theme::TEXT_VERTICAL_SPACING);
             app_icon.place(icon_area.with_width(icon_size.x).with_height(icon_size.y));
             text_area
         } else {
