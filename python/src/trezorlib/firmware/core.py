@@ -16,13 +16,14 @@
 
 from __future__ import annotations
 
+import hashlib
 from copy import copy
 from enum import Enum
 
 import construct as c
 from construct_classes import Struct, subcon
 
-from .. import cosi
+from .. import cosi, merkle_tree
 from ..tools import EnumAdapter, TupleAdapter
 from . import consts, util
 from .models import Model
@@ -319,25 +320,12 @@ class BootableImage(Struct):
     def digest(self) -> bytes:
         hash_params = self.get_hash_params()
         hash_fn = hash_params.hash_function
+        assert hash_fn is hashlib.sha256  # currently hardcoded in trezorlib.merkle_tree
 
-        prefix0 = b"\x00"
-        prefix1 = b"\x01"
-
-        # Hash the bootloader code
-        hash = hash_fn(self.code).digest()
-
-        # Hash the authenticated part of the header
         auth_header = self.header.build()
-        hash = hash_fn(prefix0 + auth_header + hash).digest()
-
-        # Add the Merkle proof
-        for node in self.unauth.merkle_proof:
-            if node < hash:
-                hash = hash_fn(prefix1 + node + hash).digest()
-            else:
-                hash = hash_fn(prefix1 + hash + node).digest()
-
-        return hash
+        code_hash = hash_fn(self.code).digest()
+        leaf = auth_header + code_hash
+        return merkle_tree.evaluate_proof(leaf, self.unauth.merkle_proof)
 
     def model(self) -> Model | None:
         if isinstance(self.header.hw_model, Model):
