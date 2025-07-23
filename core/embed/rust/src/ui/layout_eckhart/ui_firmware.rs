@@ -1074,12 +1074,12 @@ impl FirmwareUI for UIEckhart {
             active,
             paragraphs
                 .into_paragraphs()
-                .with_placement(LinearPlacement::vertical().with_spacing(40)),
+                .with_placement(LinearPlacement::vertical().with_spacing(theme::CHECKLIST_SPACING)),
         )
-        .with_check_width(32)
+        .with_check_width(theme::CHECKLIST_CHECK_WIDTH)
         .with_icon_done_color(theme::GREEN_LIGHT)
-        .with_done_offset(Offset::y(7))
-        .with_current_offset(Offset::y(4));
+        .with_done_offset(theme::CHECKLIST_DONE_OFFSET)
+        .with_current_offset(theme::CHECKLIST_CURRENT_OFFSET);
 
         let layout = RootComponent::new(
             TextScreen::new(checklist_content)
