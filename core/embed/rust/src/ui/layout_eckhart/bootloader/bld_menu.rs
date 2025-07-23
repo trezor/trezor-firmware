@@ -1,11 +1,13 @@
 use crate::ui::{
     component::{Component, Event, EventCtx},
     geometry::{Offset, Rect},
-    layout_eckhart::{component::ButtonMsg, theme},
     shape::{Bar, Renderer},
 };
 
-use super::super::{component::Button, theme::GREY_EXTRA_DARK};
+use super::super::{
+    component::{Button, ButtonMsg},
+    theme::{self, GREY_EXTRA_DARK},
+};
 use heapless::Vec;
 
 pub const MENU_MAX_ITEMS: usize = 4;

@@ -9,13 +9,13 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow,
         },
         geometry::{Alignment, Direction},
-        layout_eckhart::{component::Button, firmware::ShortMenuVec},
     },
 };
 
 use super::super::{
+    component::Button,
     firmware::{
-        ActionBar, Header, HeaderMsg, Hint, TextScreen, TextScreenMsg, VerticalMenu,
+        ActionBar, Header, HeaderMsg, Hint, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
         VerticalMenuScreen, VerticalMenuScreenMsg,
     },
     fonts,

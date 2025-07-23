@@ -9,11 +9,12 @@ use crate::ui::{
     display::Color,
     geometry::{Alignment, Offset, Rect},
     layout::simplified::{process_frame_event, show},
-    layout_caesar::{fonts, UICaesar},
     shape,
     shape::render_on_display,
     ui_prodtest::{ProdtestLayoutType, ProdtestUI},
 };
+
+use super::{fonts, UICaesar};
 use welcome::Welcome;
 
 #[cfg(feature = "touch")]

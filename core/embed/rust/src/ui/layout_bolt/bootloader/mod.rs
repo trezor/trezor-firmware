@@ -46,12 +46,10 @@ use intro::Intro;
 use menu::Menu;
 
 #[cfg(feature = "ble")]
-use super::theme::bootloader::{button_confirm_initial, button_initial};
-
-#[cfg(feature = "ble")]
-use crate::ui::layout_bolt::{
+use super::{
     bootloader::pairing_finalization::PairingFinalization,
     component::{confirm_pairing::ConfirmPairing, pairing_mode::PairingMode},
+    theme::bootloader::{button_confirm_initial, button_initial},
 };
 
 pub type BootloaderString = String<128>;
