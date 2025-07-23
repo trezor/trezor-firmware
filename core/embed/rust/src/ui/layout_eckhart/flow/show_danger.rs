@@ -81,6 +81,7 @@ pub fn new_show_danger(
                 .with_text_style(theme::label_title_danger()),
         )
         .with_action_bar(ActionBar::new_single(Button::with_text(verb_cancel)))
+        .with_page_limit(1)
         .map(|msg| match msg {
             TextScreenMsg::Menu => Some(FlowMsg::Info),
             TextScreenMsg::Confirmed => Some(FlowMsg::Cancelled),
@@ -118,6 +119,7 @@ pub fn new_show_danger(
         Button::with_text(TR::instructions__continue_in_app.into()),
         TIMEOUT_MS,
     ))
+    .with_page_limit(1)
     .map(|_| Some(FlowMsg::Confirmed));
 
     let mut res = SwipeFlow::new(&ShowDanger::Message)?;
