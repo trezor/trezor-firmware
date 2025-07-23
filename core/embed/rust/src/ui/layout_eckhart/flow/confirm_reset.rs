@@ -3,12 +3,15 @@ use crate::{
     translations::TR,
     ui::{
         button_request::ButtonRequestCode,
-        component::{text::op::OpTextLayout, ButtonRequestExt, ComponentExt, FormattedText},
+        component::{
+            text::paragraphs::{Paragraph, ParagraphSource},
+            ButtonRequestExt, ComponentExt,
+        },
         flow::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
         },
-        geometry::{Alignment, Direction},
+        geometry::{Direction, LinearPlacement},
     },
 };
 
@@ -18,7 +21,6 @@ use super::super::{
         ActionBar, Header, HeaderMsg, Hint, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
         VerticalMenuScreen, VerticalMenuScreenMsg,
     },
-    fonts,
     theme::{self, gradient::Gradient},
 };
 
@@ -62,11 +64,11 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
         )
     };
 
-    let mut op = OpTextLayout::new(theme::TEXT_REGULAR);
-    op.add_text(TR::reset__by_continuing, fonts::FONT_SATOSHI_REGULAR_38)
-        .add_alignment(Alignment::Start);
+    let paragraphs_intro = Paragraph::new(&theme::TEXT_REGULAR, TR::reset__by_continuing)
+        .into_paragraphs()
+        .with_placement(LinearPlacement::vertical());
 
-    let content_intro = TextScreen::new(FormattedText::new(op))
+    let content_intro = TextScreen::new(paragraphs_intro)
         .with_header(Header::new(title).with_menu_button())
         .with_action_bar(ActionBar::new_single(
             Button::with_text(TR::instructions__hold_to_continue.into())
