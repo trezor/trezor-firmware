@@ -41,7 +41,7 @@ extern const flash_area_t FIRMWARE_AREA;
 #ifdef USE_BOOT_UCB
 extern const flash_area_t BOOTUCB_AREA;
 #ifdef BOARDLOADER
-extern const flash_area_t NONBLDR_AREA;
+extern const flash_area_t NONBOARDLOADER_AREA;
 #endif
 #endif  // USE_BOOT_UCB
 

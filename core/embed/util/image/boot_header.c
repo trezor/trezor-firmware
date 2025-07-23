@@ -35,7 +35,7 @@
 extern const uint8_t _bootloader_code_size;
 
 typedef union {
-  boot_header_t hdr;
+  boot_header_auth_t hdr;
   uint8_t raw[BOOT_HEADER_MAXSIZE];
 } boot_header_padded_t;
 
@@ -67,12 +67,12 @@ const boot_header_padded_t g_bootloader_header = {
                 .build = 0,
             },
         .monotonic_version = BOOTLOADER_MONOTONIC_VERSION,
+        .sigmask = 0,  // This field will be set by headertool_pq
         .header_size = BOOT_HEADER_MAXSIZE,
         .auth_size = BOOT_HEADER_MAXSIZE - sizeof(boot_header_merkle_proof_t) -
                      sizeof(boot_header_unauth_t),
         .code_size = (uint32_t)&_bootloader_code_size,
         .storage_address = STORAGE_1_START,
-        .sigmask = 0,  // This field will be set by headertool_pq
     }};
 #endif
 
@@ -94,17 +94,17 @@ static const uint8_t * const BOARDLOADER_EC_KEYS[] = {
 #endif
 };
 
-secbool boot_header_check_signature(const boot_header_t* hdr,
+secbool boot_header_check_signature(const boot_header_auth_t* hdr,
                                     const merkle_proof_node_t* merkle_root) {
   // Get the signature indices based on the signature mask
   _Static_assert(ARRAY_LENGTH(BOARDLOADER_PQ_KEYS) <= 3);
   _Static_assert(ARRAY_LENGTH(BOARDLOADER_EC_KEYS) ==
                  ARRAY_LENGTH(BOARDLOADER_PQ_KEYS));
 
-  uint32_t sigmask = hdr->sigmask;
-  uint32_t sigmask_inv = 0;  // FIH
+  uint8_t sigmask = hdr->sigmask;
+  uint8_t sigmask_inv = 0;  // FIH
 
-  const boot_header_unauth_t* sig = boot_header_get_unauth(hdr);
+  const boot_header_unauth_t* sig = boot_header_unauth_get(hdr);
 
   for (int sig_idx = 0; sig_idx < ARRAY_LENGTH(sig->ec_signature); sig_idx++) {
     // Get the index of the public key in the signature mask
@@ -187,8 +187,8 @@ static const boot_header_merkle_proof_t* boot_header_get_merkle_proof(
   return proof;
 }
 
-const boot_header_t* boot_header_check_integrity(uint32_t address) {
-  boot_header_t* hdr = (boot_header_t*)address;
+const boot_header_auth_t* boot_header_auth_get(uint32_t address) {
+  boot_header_auth_t* hdr = (boot_header_auth_t*)address;
 
   // Check if the header starts with the magic
   if (hdr->magic != BOOT_HEADER_MAGIC_TRZQ) {
@@ -242,7 +242,8 @@ const boot_header_t* boot_header_check_integrity(uint32_t address) {
   return hdr;
 }
 
-const boot_header_unauth_t* boot_header_get_unauth(const boot_header_t* hdr) {
+const boot_header_unauth_t* boot_header_unauth_get(
+    const boot_header_auth_t* hdr) {
   const boot_header_merkle_proof_t* proof = boot_header_get_merkle_proof(hdr);
 
   if (proof == NULL) {
@@ -266,7 +267,7 @@ const boot_header_unauth_t* boot_header_get_unauth(const boot_header_t* hdr) {
   return unauth;
 }
 
-void boot_header_calc_merkle_root(const boot_header_t* hdr,
+void boot_header_calc_merkle_root(const boot_header_auth_t* hdr,
                                   uint32_t code_address,
                                   merkle_proof_node_t* root) {
   IMAGE_HASH_CTX ctx;
@@ -304,18 +305,18 @@ void boot_header_calc_merkle_root(const boot_header_t* hdr,
   }
 }
 
-secbool bootloader_is_unchanged(const boot_header_t* hdr,
-                                uint32_t code_address) {
-  boot_header_t* prev_hdr = (boot_header_t*)BOOTLOADER_START;
+secbool bootloader_area_needs_update(const boot_header_auth_t* hdr,
+                                     uint32_t code_address) {
+  boot_header_auth_t* prev_hdr = (boot_header_auth_t*)BOOTLOADER_START;
   if (hdr->header_size == prev_hdr->header_size &&
       hdr->code_size == prev_hdr->code_size &&
       (memcmp(hdr, prev_hdr, hdr->header_size) == 0) &&
       (memcmp((const uint8_t*)code_address,
               (const uint8_t*)prev_hdr + prev_hdr->header_size,
               hdr->code_size) == 0)) {
-    return sectrue;
+    return secfalse;
   }
-  return secfalse;
+  return sectrue;
 }
 
 #endif  // SECURE_MODE

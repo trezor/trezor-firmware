@@ -60,8 +60,13 @@ DEFINE_SINGLE_AREA(ASSETS_AREA, ASSETS, ACCESS_APP);
 #endif
 
 #ifdef USE_BOOT_UCB
+// Area dedicated to the UCB (Update Control Block) used during
+// boot-loader or boot-header updates.
 DEFINE_SINGLE_AREA(BOOTUCB_AREA, BOOTUCB, ACCESS_DEFAULT);
 #ifdef BOARDLOADER
-DEFINE_SINGLE_AREA(NONBLDR_AREA, NONBLDR, ACCESS_DEFAULT);
+// Area used by the boardloader during bootloader update process.
+// It includes the entire flash memory except the board-loader,
+// the UCB, and the secrets area.
+DEFINE_SINGLE_AREA(NONBOARDLOADER_AREA, NONBLDR, ACCESS_DEFAULT);
 #endif
 #endif

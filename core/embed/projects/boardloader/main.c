@@ -131,7 +131,7 @@ board_capabilities_t capabilities
 
 #ifdef USE_BOOT_UCB
 
-static void try_to_upgrade(void) {
+static void try_bootloader_update(void) {
   boot_ucb_t ucb;
 
   // Start with some non-deterministic delay
@@ -143,7 +143,7 @@ static void try_to_upgrade(void) {
   }
 
   // Check if the new boot header is present and valid
-  const boot_header_t* hdr = boot_header_check_integrity(ucb.header_address);
+  const boot_header_auth_t* hdr = boot_header_auth_get(ucb.header_address);
   if (hdr == NULL) {
     return;
   }
@@ -167,7 +167,7 @@ static void try_to_upgrade(void) {
 
   // Check if the new bootloader is the same as the old one
   // (just prevents unnecessary flash erase/write)
-  if (bootloader_is_unchanged(hdr, code_address)) {
+  if (sectrue != bootloader_area_needs_update(hdr, code_address)) {
     return;
   }
 
@@ -189,7 +189,7 @@ static void try_to_upgrade(void) {
   uint32_t dst_end = hdr->header_size;
   uint32_t bytes_erased = 0;
 
-  const flash_area_t* area = &NONBLDR_AREA;
+  const flash_area_t* area = &NONBOARDLOADER_AREA;
 
   while (dst < dst_end) {
     ensure(flash_area_erase_partial(area, dst, &bytes_erased), NULL);
@@ -219,15 +219,16 @@ static void try_to_upgrade(void) {
   }
 }
 
-static inline void ensure_signed_bootloader(volatile uint32_t* next_stage_addr) {
+static inline void ensure_signed_bootloader(
+    volatile uint32_t* next_stage_addr) {
   *next_stage_addr = 0;  // FIH
 
   // Start with some non-deterministic delay
   fih_delay(0);
 
   // Check if the boot header is present and valid
-  const boot_header_t* hdr = boot_header_check_integrity(BOOTLOADER_START);
-  fih_ensure(sectrue * (hdr != NULL), "invalid bootloader header");
+  const boot_header_auth_t* hdr = boot_header_auth_get(BOOTLOADER_START);
+  fih_ensure(sectrue * (hdr != NULL), "invalid boot header");
 
   // Get address of the bootloader code
   uint32_t code_address = BOOTLOADER_START + hdr->header_size;
@@ -251,7 +252,8 @@ static inline void ensure_signed_bootloader(volatile uint32_t* next_stage_addr) 
 }
 
 #else
-static inline void ensure_signed_bootloader(volatile uint32_t *next_stage_addr) {
+static inline void ensure_signed_bootloader(
+    volatile uint32_t *next_stage_addr) {
   *next_stage_addr = 0;
 
   // Start with some non-deterministic delay
@@ -311,7 +313,7 @@ int main(void) {
 #ifdef USE_BOOT_UCB
   // Try to update the bootloader from the UCB (update control block) if it
   // is present, valid and points to a new valid/signed bootloader image.
-  try_to_upgrade();
+  try_bootloader_update();
 #endif
 
   // Address of the next stage to jump to. It's set at the end of

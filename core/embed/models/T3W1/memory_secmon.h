@@ -50,10 +50,10 @@
 #define BOOTUCB_SECTOR_END 0xE
 
 // Non-boardloader area (includes bootloader, firmware, assets and storage)
-#define NONBLDR_START (0x0C01E000)
-#define NONBLDR_MAXSIZE (497 * 8 * 1024)  // 3976 kB
-#define NONBLDR_SECTOR_START 0xF
-#define NONBLDR_SECTOR_END 0x1FF
+#define NONBOARDLOADER_START (0x0C01E000)
+#define NONBOARDLOADER_MAXSIZE (497 * 8 * 1024)  // 3976 kB
+#define NONBOARDLOADER_SECTOR_START 0xF
+#define NONBOARDLOADER_SECTOR_END 0x1FF
 
 #define BOOTLOADER_START (0x0C01E000)
 #define BOOTLOADER_MAXSIZE (32 * 8 * 1024)  // 256 kB

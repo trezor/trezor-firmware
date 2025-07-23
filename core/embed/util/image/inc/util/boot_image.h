@@ -27,9 +27,10 @@
 typedef struct {
   const void* image_ptr;
   size_t image_size;
+#ifndef USE_BOOT_UCB
   uint8_t hash_00[32];
   uint8_t hash_FF[32];
-
+#endif
 } boot_image_t;
 
 /**
