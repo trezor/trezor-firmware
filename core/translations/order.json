@@ -1067,5 +1067,19 @@
   "1065": "tutorial__tropic_info2",
   "1066": "tutorial__tropic_info3",
   "1067": "tutorial__welcome_safe7",
-  "1068": "tutorial__what_is_tropic"
+  "1068": "tutorial__what_is_tropic",
+  "1069": "ble__manage_paired",
+  "1070": "ble__pair_new",
+  "1071": "ble__pair_title",
+  "1072": "homescreen__firmware_version",
+  "1073": "words__about",
+  "1074": "words__connected",
+  "1075": "words__device",
+  "1076": "words__disconnect",
+  "1077": "words__manage",
+  "1078": "words__name",
+  "1079": "words__off",
+  "1080": "words__on",
+  "1081": "words__review",
+  "1082": "words__security"
 }

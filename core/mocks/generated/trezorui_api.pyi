@@ -611,6 +611,7 @@ def show_device_menu(
     *,
     failed_backup: bool,
     firmware_version: str,
+    firmware_type: str,
     device_name: str,
     paired_devices: Iterable[str],
     auto_lock_delay: str,
@@ -835,4 +836,5 @@ class DeviceMenuResult:
     CheckBackup: ClassVar[DeviceMenuResult]
     WipeDevice: ClassVar[DeviceMenuResult]
     ScreenBrightness: ClassVar[DeviceMenuResult]
+    HapticFeedback: ClassVar[DeviceMenuResult]
     AutoLockDelay: ClassVar[DeviceMenuResult]

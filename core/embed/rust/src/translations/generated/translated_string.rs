@@ -1465,6 +1465,20 @@ pub enum TranslatedString {
     tutorial__tropic_info3 = 1066,  // "Built for security from the ground up, and open to independent audits."
     tutorial__welcome_safe7 = 1067,  // "Welcome to\nTrezor\nSafe 7"
     tutorial__what_is_tropic = 1068,  // "What is TROPIC01?"
+    ble__manage_paired = 1069,  // "Manage paired devices"
+    ble__pair_new = 1070,  // "Pair new device"
+    ble__pair_title = 1071,  // "Pair & connect"
+    homescreen__firmware_version = 1072,  // "Firmware version"
+    words__about = 1073,  // "About"
+    words__connected = 1074,  // "Connected"
+    words__device = 1075,  // "Device"
+    words__disconnect = 1076,  // "Disconnect"
+    words__manage = 1077,  // "Manage"
+    words__name = 1078,  // "Name"
+    words__off = 1079,  // "Off"
+    words__on = 1080,  // "On"
+    words__review = 1081,  // "Review"
+    words__security = 1082,  // "Security"
 }
 
 impl TranslatedString {
@@ -3249,6 +3263,20 @@ impl TranslatedString {
             (Self::tutorial__tropic_info3, "Built for security from the ground up, and open to independent audits."),
             (Self::tutorial__welcome_safe7, "Welcome to\nTrezor\nSafe 7"),
             (Self::tutorial__what_is_tropic, "What is TROPIC01?"),
+            (Self::ble__manage_paired, "Manage paired devices"),
+            (Self::ble__pair_new, "Pair new device"),
+            (Self::ble__pair_title, "Pair & connect"),
+            (Self::homescreen__firmware_version, "Firmware version"),
+            (Self::words__about, "About"),
+            (Self::words__connected, "Connected"),
+            (Self::words__device, "Device"),
+            (Self::words__disconnect, "Disconnect"),
+            (Self::words__manage, "Manage"),
+            (Self::words__name, "Name"),
+            (Self::words__off, "Off"),
+            (Self::words__on, "On"),
+            (Self::words__review, "Review"),
+            (Self::words__security, "Security"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3326,6 +3354,9 @@ impl TranslatedString {
         (Qstr::MP_QSTR_bitcoin__unverified_external_inputs, Self::bitcoin__unverified_external_inputs),
         (Qstr::MP_QSTR_bitcoin__valid_signature, Self::bitcoin__valid_signature),
         (Qstr::MP_QSTR_bitcoin__voting_rights, Self::bitcoin__voting_rights),
+        (Qstr::MP_QSTR_ble__manage_paired, Self::ble__manage_paired),
+        (Qstr::MP_QSTR_ble__pair_new, Self::ble__pair_new),
+        (Qstr::MP_QSTR_ble__pair_title, Self::ble__pair_title),
         (Qstr::MP_QSTR_ble__unpair_all, Self::ble__unpair_all),
         (Qstr::MP_QSTR_ble__unpair_current, Self::ble__unpair_current),
         (Qstr::MP_QSTR_ble__unpair_title, Self::ble__unpair_title),
@@ -3859,6 +3890,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_haptic_feedback__title, Self::haptic_feedback__title),
         (Qstr::MP_QSTR_homescreen__click_to_connect, Self::homescreen__click_to_connect),
         (Qstr::MP_QSTR_homescreen__click_to_unlock, Self::homescreen__click_to_unlock),
+        (Qstr::MP_QSTR_homescreen__firmware_version, Self::homescreen__firmware_version),
         (Qstr::MP_QSTR_homescreen__set_default, Self::homescreen__set_default),
         (Qstr::MP_QSTR_homescreen__settings_subtitle, Self::homescreen__settings_subtitle),
         (Qstr::MP_QSTR_homescreen__settings_title, Self::homescreen__settings_title),
@@ -4641,6 +4673,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_wipe_code__turn_on, Self::wipe_code__turn_on),
         (Qstr::MP_QSTR_wipe_code__wipe_code_mismatch, Self::wipe_code__wipe_code_mismatch),
         (Qstr::MP_QSTR_word_count__title, Self::word_count__title),
+        (Qstr::MP_QSTR_words__about, Self::words__about),
         (Qstr::MP_QSTR_words__account, Self::words__account),
         (Qstr::MP_QSTR_words__account_colon, Self::words__account_colon),
         (Qstr::MP_QSTR_words__address, Self::words__address),
@@ -4657,10 +4690,13 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__chain, Self::words__chain),
         (Qstr::MP_QSTR_words__confirm, Self::words__confirm),
         (Qstr::MP_QSTR_words__confirm_fee, Self::words__confirm_fee),
+        (Qstr::MP_QSTR_words__connected, Self::words__connected),
         (Qstr::MP_QSTR_words__contains, Self::words__contains),
         (Qstr::MP_QSTR_words__continue_anyway, Self::words__continue_anyway),
         (Qstr::MP_QSTR_words__continue_anyway_question, Self::words__continue_anyway_question),
         (Qstr::MP_QSTR_words__continue_with, Self::words__continue_with),
+        (Qstr::MP_QSTR_words__device, Self::words__device),
+        (Qstr::MP_QSTR_words__disconnect, Self::words__disconnect),
         (Qstr::MP_QSTR_words__error, Self::words__error),
         (Qstr::MP_QSTR_words__fee, Self::words__fee),
         (Qstr::MP_QSTR_words__from, Self::words__from),
@@ -4669,9 +4705,13 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__instructions, Self::words__instructions),
         (Qstr::MP_QSTR_words__keep_it_safe, Self::words__keep_it_safe),
         (Qstr::MP_QSTR_words__know_what_your_doing, Self::words__know_what_your_doing),
+        (Qstr::MP_QSTR_words__manage, Self::words__manage),
         (Qstr::MP_QSTR_words__my_trezor, Self::words__my_trezor),
+        (Qstr::MP_QSTR_words__name, Self::words__name),
         (Qstr::MP_QSTR_words__no, Self::words__no),
         (Qstr::MP_QSTR_words__not_recommended, Self::words__not_recommended),
+        (Qstr::MP_QSTR_words__off, Self::words__off),
+        (Qstr::MP_QSTR_words__on, Self::words__on),
         (Qstr::MP_QSTR_words__operation_cancelled, Self::words__operation_cancelled),
         (Qstr::MP_QSTR_words__outputs, Self::words__outputs),
         (Qstr::MP_QSTR_words__pay_attention, Self::words__pay_attention),
@@ -4682,6 +4722,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__receive, Self::words__receive),
         (Qstr::MP_QSTR_words__recipient, Self::words__recipient),
         (Qstr::MP_QSTR_words__recovery_share, Self::words__recovery_share),
+        (Qstr::MP_QSTR_words__review, Self::words__review),
+        (Qstr::MP_QSTR_words__security, Self::words__security),
         (Qstr::MP_QSTR_words__send, Self::words__send),
         (Qstr::MP_QSTR_words__settings, Self::words__settings),
         (Qstr::MP_QSTR_words__sign, Self::words__sign),

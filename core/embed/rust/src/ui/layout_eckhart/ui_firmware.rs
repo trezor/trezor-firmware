@@ -1181,6 +1181,7 @@ impl FirmwareUI for UIEckhart {
     fn show_device_menu(
         failed_backup: bool,
         firmware_version: TString<'static>,
+        firmware_type: TString<'static>,
         device_name: TString<'static>,
         paired_devices: Vec<TString<'static>, 1>,
         auto_lock_delay: TString<'static>,
@@ -1188,6 +1189,7 @@ impl FirmwareUI for UIEckhart {
         let layout = RootComponent::new(DeviceMenuScreen::new(
             failed_backup,
             firmware_version,
+            firmware_type,
             device_name,
             paired_devices,
             auto_lock_delay,

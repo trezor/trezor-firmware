@@ -1,4 +1,4 @@
-import storage.device
+import storage.device as storage_device
 import trezorble as ble
 import trezorui_api
 from trezor import TR, config, log, utils
@@ -11,9 +11,9 @@ async def _prompt_auto_lock_delay() -> int:
     auto_lock_delay_ms = await interact(
         trezorui_api.request_duration(
             title=TR.auto_lock__title,
-            duration_ms=storage.device.get_autolock_delay_ms(),
-            min_ms=storage.device.AUTOLOCK_DELAY_MINIMUM,
-            max_ms=storage.device.AUTOLOCK_DELAY_MAXIMUM,
+            duration_ms=storage_device.get_autolock_delay_ms(),
+            min_ms=storage_device.AUTOLOCK_DELAY_MINIMUM,
+            max_ms=storage_device.AUTOLOCK_DELAY_MAXIMUM,
             description=TR.auto_lock__description,
         ),
         br_name=None,
@@ -39,6 +39,7 @@ async def handle_device_menu() -> None:
     paired_devices = ["Trezor Suite"] if ble.is_connected() else []
     # ###
     firmware_version = ".".join(map(str, utils.VERSION))
+    firmware_type = "Bitcoin-only" if utils.BITCOIN_ONLY else "Universal"
     device_name = storage.device.get_label() or "Trezor"
 
     auto_lock_ms = storage.device.get_autolock_delay_ms()
@@ -55,6 +56,7 @@ async def handle_device_menu() -> None:
             failed_backup=failed_backup,
             paired_devices=paired_devices,
             firmware_version=firmware_version,
+            firmware_type=firmware_type,
             device_name=device_name,
             auto_lock_delay=auto_lock_delay,
         ),

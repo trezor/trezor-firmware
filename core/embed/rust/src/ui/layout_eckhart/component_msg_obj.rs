@@ -156,6 +156,7 @@ impl<'a> ComponentMsgObj for DeviceMenuScreen<'a> {
             DeviceMenuMsg::CheckBackup => Ok(CHECK_BACKUP.as_obj()),
             DeviceMenuMsg::WipeDevice => Ok(WIPE_DEVICE.as_obj()),
             DeviceMenuMsg::ScreenBrightness => Ok(SCREEN_BRIGHTNESS.as_obj()),
+            DeviceMenuMsg::HapticFeedback => Ok(HAPTIC_FEEDBACK.as_obj()),
             DeviceMenuMsg::AutoLockDelay => Ok(AUTO_LOCK_DELAY.as_obj()),
             DeviceMenuMsg::Close => Ok(CANCELLED.as_obj()),
         }

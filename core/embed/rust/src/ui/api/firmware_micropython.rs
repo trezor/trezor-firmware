@@ -937,6 +937,7 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
     let block = move |_args: &[Obj], kwargs: &Map| {
         let failed_backup: bool = kwargs.get(Qstr::MP_QSTR_failed_backup)?.try_into()?;
         let firmware_version: TString = kwargs.get(Qstr::MP_QSTR_firmware_version)?.try_into()?;
+        let firmware_type: TString = kwargs.get(Qstr::MP_QSTR_firmware_type)?.try_into()?;
         let device_name: TString = kwargs.get(Qstr::MP_QSTR_device_name)?.try_into()?;
         let paired_devices: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
         let paired_devices: Vec<TString, 1> = util::iter_into_vec(paired_devices)?;
@@ -945,6 +946,7 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
         let layout = ModelUI::show_device_menu(
             failed_backup,
             firmware_version,
+            firmware_type,
             device_name,
             paired_devices,
             auto_lock_delay,
@@ -1865,6 +1867,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     failed_backup: bool,
     ///     firmware_version: str,
+    ///     firmware_type: str,
     ///     device_name: str,
     ///     paired_devices: Iterable[str],
     ///     auto_lock_delay: str,
@@ -2069,6 +2072,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     CheckBackup: ClassVar[DeviceMenuResult]
     ///     WipeDevice: ClassVar[DeviceMenuResult]
     ///     ScreenBrightness: ClassVar[DeviceMenuResult]
+    ///     HapticFeedback: ClassVar[DeviceMenuResult]
     ///     AutoLockDelay: ClassVar[DeviceMenuResult]
     Qstr::MP_QSTR_DeviceMenuResult => DEVICE_MENU_RESULT.as_obj(),
 };
