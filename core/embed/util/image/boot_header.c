@@ -103,19 +103,19 @@ secbool boot_header_check_signature(const boot_header_t* header,
 
   uint32_t sigmask = header->sigmask;
 
-  int sig1_idx = __builtin_ctz(sigmask);
-  if (sig1_idx >= ARRAY_LENGTH(BOARDLOADER_PQ_KEYS)) {
+  int pubkey1_idx = __builtin_ctz(sigmask);
+  if (pubkey1_idx >= ARRAY_LENGTH(BOARDLOADER_PQ_KEYS)) {
     return secfalse;
   }
 
-  sigmask &= ~(1 << sig1_idx);
+  sigmask &= ~(1 << pubkey1_idx);
 
-  int sig2_idx = __builtin_ctz(sigmask);
-  if (sig2_idx >= ARRAY_LENGTH(BOARDLOADER_PQ_KEYS)) {
+  int pubkey2_idx = __builtin_ctz(sigmask);
+  if (pubkey2_idx >= ARRAY_LENGTH(BOARDLOADER_PQ_KEYS)) {
     return secfalse;
   }
 
-  sigmask &= ~(1 << sig2_idx);
+  sigmask &= ~(1 << pubkey2_idx);
 
   if (sigmask != 0) {
     // There are more than two bits set
@@ -138,8 +138,9 @@ secbool boot_header_check_signature(const boot_header_t* header,
   IMAGE_HASH_FINAL(&ctx, fp_ext.bytes);
 
   // Verify 1st EC signature
-  result = ed25519_sign_open(fp_ext.bytes, sizeof(fp_ext.bytes),
-                             BOARDLOADER_EC_KEYS[sig1_idx], sig->ec_signature1);
+  result =
+      ed25519_sign_open(fp_ext.bytes, sizeof(fp_ext.bytes),
+                        BOARDLOADER_EC_KEYS[pubkey1_idx], sig->ec_signature1);
   if (result != 0) {
     return secfalse;
   }
@@ -151,8 +152,9 @@ secbool boot_header_check_signature(const boot_header_t* header,
   IMAGE_HASH_FINAL(&ctx, fp_ext.bytes);
 
   // Verify 2nd EC signature
-  result = ed25519_sign_open(fp_ext.bytes, sizeof(fp_ext.bytes),
-                             BOARDLOADER_EC_KEYS[sig2_idx], sig->ec_signature2);
+  result =
+      ed25519_sign_open(fp_ext.bytes, sizeof(fp_ext.bytes),
+                        BOARDLOADER_EC_KEYS[pubkey2_idx], sig->ec_signature2);
   if (result != 0) {
     return secfalse;
   }
@@ -160,7 +162,7 @@ secbool boot_header_check_signature(const boot_header_t* header,
   // Verify 1st PQC signature
   result = crypto_sign_verify(sig->slh_signature1, sizeof(sig->slh_signature1),
                               fp->bytes, sizeof(fp->bytes),
-                              BOARDLOADER_PQ_KEYS[sig1_idx]);
+                              BOARDLOADER_PQ_KEYS[pubkey1_idx]);
   if (result != 0) {
     return secfalse;
   }
@@ -168,7 +170,7 @@ secbool boot_header_check_signature(const boot_header_t* header,
   // Verify 2nd PQC signature
   result = crypto_sign_verify(sig->slh_signature2, sizeof(sig->slh_signature2),
                               fp->bytes, sizeof(fp->bytes),
-                              BOARDLOADER_PQ_KEYS[sig2_idx]);
+                              BOARDLOADER_PQ_KEYS[pubkey2_idx]);
   if (result != 0) {
     return secfalse;
   }
