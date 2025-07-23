@@ -57,6 +57,12 @@ pub const ACTION_BAR_HEIGHT: i16 = 90; // [px]
 pub const PARAGRAPHS_SPACING: i16 = 12; // [px]
 pub const TEXT_VERTICAL_SPACING: i16 = 24; // [px]
 
+// checklist settings
+pub const CHECKLIST_CHECK_WIDTH: i16 = 32; // [px]
+pub const CHECKLIST_SPACING: i16 = 40; // [px]
+pub const CHECKLIST_DONE_OFFSET: Offset = Offset::y(7);
+pub const CHECKLIST_CURRENT_OFFSET: Offset = Offset::y(4);
+
 // Tile pattern grid constants
 const TILE_SIZE: i16 = ICON_TILE_STRIPES_BACKSLASH.toif.width();
 const TILES_ROWS: i16 = 6;
