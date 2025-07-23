@@ -191,14 +191,6 @@ secbool boot_header_check_signature(const boot_header_t* hdr,
                                     const merkle_proof_node_t* merkle_root);
 
 /**
- * Checks if the hardware model in the boot header matches the expected one
- *
- * @param hdr Pointer to the boot header
- * @return secbool indicating whether the hardware model matches the expected
- */
-secbool boot_header_check_model(const boot_header_t* hdr);
-
-/**
  * This function compares the boot header and the bootloader code
  * with the previous bootloader header and code. If they are the same,
  * it returns sectrue, otherwise secfalse.

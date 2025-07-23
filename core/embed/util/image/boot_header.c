@@ -205,6 +205,11 @@ const boot_header_t* boot_header_check_integrity(uint32_t address) {
     return NULL;
   }
 
+  // Check if the hardware model and revision match
+  if (hdr->hw_model != HW_MODEL || hdr->hw_revision != HW_REVISION) {
+    return secfalse;
+  }
+
   // Check if the header contains valid merkle proof
   if (NULL == boot_header_get_merkle_proof(hdr)) {
     return NULL;
@@ -307,18 +312,6 @@ void boot_header_calc_merkle_root(const boot_header_t* hdr,
     }
     IMAGE_HASH_FINAL(&ctx, root->bytes);
   }
-}
-
-secbool boot_header_check_model(const boot_header_t* hdr) {
-  if (hdr->hw_model != HW_MODEL) {
-    return secfalse;
-  }
-
-  if (hdr->hw_revision != HW_REVISION) {
-    return secfalse;
-  }
-
-  return sectrue;
 }
 
 secbool bootloader_is_unchanged(const boot_header_t* hdr,

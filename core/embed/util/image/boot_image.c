@@ -258,9 +258,6 @@ void boot_image_replace(const boot_image_t *image) {
   ensure(sectrue * (hdr->header_size + hdr->code_size <= image->image_size),
          "Bootloader image too small");
 
-  // Check if the new bootloader is compatible with the hardware model
-  ensure(boot_header_check_model(hdr), "Incompatible hardware model");
-
   // Check monotonic version
   uint8_t min_monotonic_version = 0;
   ensure(monoctr_read(MONOCTR_BOOTLOADER_VERSION, &min_monotonic_version),

@@ -148,11 +148,6 @@ static void try_to_upgrade(void) {
     return;
   }
 
-  // Check if the new bootloader is compatible with the hardware model
-  if (sectrue != boot_header_check_model(hdr)) {
-    return;
-  }
-
   // Check monotonic version
   uint8_t min_monotonic_version = get_bootloader_min_version();
   if (hdr->monotonic_version < min_monotonic_version) {
@@ -240,9 +235,6 @@ static inline void ensure_signed_firmware(volatile uint32_t* next_stage_addr) {
   // Calculate the merkle root from the header and the code
   merkle_proof_node_t merkle_root;
   boot_header_calc_merkle_root(hdr, code_address, &merkle_root);
-
-  // Check if the hardware model matches
-  fih_ensure(boot_header_check_model(hdr), "incompatible hardware model");
 
   // Check the header signature
   fih_ensure(boot_header_check_signature(hdr, &merkle_root),
