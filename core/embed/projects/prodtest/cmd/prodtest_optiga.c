@@ -122,6 +122,10 @@ void prodtest_optiga_pair(cli_t* cli) {
   // Execute the handshake to verify whether the secret is stored in Optiga.
   if (OPTIGA_SUCCESS !=
       optiga_sec_chan_handshake(pairing_secret, sizeof(pairing_secret))) {
+
+    optiga_soft_reset();
+    optiga_open_application();
+
     // Enable writing the pairing secret to OPTIGA.
     optiga_metadata metadata = {0};
     metadata.change = OPTIGA_META_ACCESS_ALWAYS;
