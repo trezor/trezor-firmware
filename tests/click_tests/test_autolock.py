@@ -327,7 +327,9 @@ def test_dryrun_locks_at_number_of_words(device_handler: "BackgroundDeviceHandle
     set_autolock_delay(device_handler, 10_000)
     debug = device_handler.debuglink()
 
-    device_handler.run_with_session(device.recover, type=messages.RecoveryType.DryRun)
+    device_handler.run_with_session(
+        device.recover, seedless=True, type=messages.RecoveryType.DryRun
+    )
 
     layout = unlock_dry_run(debug)
     assert TR.recovery__num_of_words in debug.read_layout().text_content()
@@ -363,7 +365,9 @@ def test_dryrun_locks_at_word_entry(device_handler: "BackgroundDeviceHandler"):
     set_autolock_delay(device_handler, 10_000)
     debug = device_handler.debuglink()
 
-    device_handler.run_with_session(device.recover, type=messages.RecoveryType.DryRun)
+    device_handler.run_with_session(
+        device.recover, seedless=True, type=messages.RecoveryType.DryRun
+    )
 
     unlock_dry_run(debug)
 
@@ -395,7 +399,9 @@ def test_dryrun_enter_word_slowly(device_handler: "BackgroundDeviceHandler"):
     set_autolock_delay(device_handler, 10_000)
     debug = device_handler.debuglink()
 
-    device_handler.run_with_session(device.recover, type=messages.RecoveryType.DryRun)
+    device_handler.run_with_session(
+        device.recover, seedless=True, type=messages.RecoveryType.DryRun
+    )
 
     unlock_dry_run(debug)
 

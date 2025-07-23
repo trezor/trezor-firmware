@@ -96,6 +96,7 @@ def test_repeated_backup_via_device(
     # run recovery to unlock backup
     device_handler.run_with_session(
         device.recover,
+        seedless=True,
         type=messages.RecoveryType.UnlockRepeatedBackup,
     )
 
@@ -175,6 +176,7 @@ def test_repeated_backup_via_device(
     # try to unlock backup again...
     device_handler.run_with_session(
         device.recover,
+        seedless=True,
         type=messages.RecoveryType.UnlockRepeatedBackup,
     )
 
@@ -215,6 +217,7 @@ def test_repeated_backup_via_device(
     # try to unlock backup yet again...
     device_handler.run_with_session(
         device.recover,
+        seedless=True,
         type=messages.RecoveryType.UnlockRepeatedBackup,
     )
 
