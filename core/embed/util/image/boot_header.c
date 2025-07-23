@@ -126,34 +126,32 @@ secbool boot_header_check_signature(const boot_header_t* header,
 
   const boot_header_unauth_t* sig = boot_header_get_unauth(header);
 
-  // extended fingerprint for EC signature verification
-  // that includes the SLH signature
-  boot_header_fingerprint_t fp_ext;
+  uint8_t ec_hash[IMAGE_HASH_DIGEST_LENGTH];
 
-  // Extended fingerprint for the 1st EC signature
+  // Hash of the merkle root and the 1st SLH signature
   IMAGE_HASH_CTX ctx;
   IMAGE_HASH_INIT(&ctx);
   IMAGE_HASH_UPDATE(&ctx, fp->bytes, sizeof(fp->bytes));
   IMAGE_HASH_UPDATE(&ctx, sig->slh_signature1, sizeof(sig->slh_signature1));
-  IMAGE_HASH_FINAL(&ctx, fp_ext.bytes);
+  IMAGE_HASH_FINAL(&ctx, ec_hash);
 
   // Verify 1st EC signature
   result =
-      ed25519_sign_open(fp_ext.bytes, sizeof(fp_ext.bytes),
+      ed25519_sign_open(ec_hash, sizeof(ec_hash),
                         BOARDLOADER_EC_KEYS[pubkey1_idx], sig->ec_signature1);
   if (result != 0) {
     return secfalse;
   }
 
-  // Extended fingerprint for the 2st EC signature
+  // Hash of the merkle root and the 2nd SLH signature
   IMAGE_HASH_INIT(&ctx);
   IMAGE_HASH_UPDATE(&ctx, fp->bytes, sizeof(fp->bytes));
   IMAGE_HASH_UPDATE(&ctx, sig->slh_signature2, sizeof(sig->slh_signature2));
-  IMAGE_HASH_FINAL(&ctx, fp_ext.bytes);
+  IMAGE_HASH_FINAL(&ctx, ec_hash);
 
   // Verify 2nd EC signature
   result =
-      ed25519_sign_open(fp_ext.bytes, sizeof(fp_ext.bytes),
+      ed25519_sign_open(ec_hash, sizeof(ec_hash),
                         BOARDLOADER_EC_KEYS[pubkey2_idx], sig->ec_signature2);
   if (result != 0) {
     return secfalse;
