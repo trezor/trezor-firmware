@@ -219,7 +219,7 @@ static void try_to_upgrade(void) {
   }
 }
 
-static inline void ensure_signed_firmware(volatile uint32_t* next_stage_addr) {
+static inline void ensure_signed_bootloader(volatile uint32_t* next_stage_addr) {
   *next_stage_addr = 0;  // FIH
 
   // Start with some non-deterministic delay
@@ -251,7 +251,7 @@ static inline void ensure_signed_firmware(volatile uint32_t* next_stage_addr) {
 }
 
 #else
-static inline void ensure_signed_firmware(volatile uint32_t *next_stage_addr) {
+static inline void ensure_signed_bootloader(volatile uint32_t *next_stage_addr) {
   *next_stage_addr = 0;
 
   // Start with some non-deterministic delay
@@ -315,11 +315,11 @@ int main(void) {
 #endif
 
   // Address of the next stage to jump to. It's set at the end of
-  // ensure_signed_firmware() and serves as anti-glitch protection.
+  // ensure_signed_bootloader() and serves as anti-glitch protection.
   volatile uint32_t next_stage_addr = 0;  // FIH
 
   // Checks if the bootloader is valid and signed
-  ensure_signed_firmware(&next_stage_addr);
+  ensure_signed_bootloader(&next_stage_addr);
 
   // Deinitialize the drivers before jumping to the next stage,
   // so we don't leave any peripherals running.
