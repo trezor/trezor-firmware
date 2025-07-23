@@ -176,6 +176,34 @@ secbool boot_header_check_signature(const boot_header_t* hdr,
   return sectrue;
 }
 
+static const boot_header_merkle_proof_t* boot_header_get_merkle_proof(
+    const boot_header_t* hdr) {
+  // Check if the merkle_proof.path_len field is withing the header
+  if (hdr->auth_size + sizeof(boot_header_merkle_proof_t) > hdr->header_size) {
+    return NULL;
+  }
+
+  // Merkle proof is located right after the authenticated part of the header
+  boot_header_merkle_proof_t* proof =
+      (boot_header_merkle_proof_t*)((uintptr_t)hdr + hdr->auth_size);
+
+  // Check if the path length is in reasonable limits
+  if (proof->node_count > BOOT_HEADER_MERKLE_PROOF_MAXLEN) {
+    return NULL;
+  }
+
+  // Calculate the Merkle proof structure size
+  size_t proof_size = sizeof(boot_header_merkle_proof_t) +
+                      proof->node_count * sizeof(proof->nodes[0]);
+
+  // Check if the Merkle proof is completely within the header
+  if (hdr->auth_size + proof_size > hdr->header_size) {
+    return NULL;
+  }
+
+  return proof;
+}
+
 const boot_header_t* boot_header_check_integrity(uint32_t address) {
   boot_header_t* hdr = (boot_header_t*)address;
 
@@ -221,34 +249,6 @@ const boot_header_t* boot_header_check_integrity(uint32_t address) {
   }
 
   return hdr;
-}
-
-const boot_header_merkle_proof_t* boot_header_get_merkle_proof(
-    const boot_header_t* hdr) {
-  // Check if the merkle_proof.path_len field is withing the header
-  if (hdr->auth_size + sizeof(boot_header_merkle_proof_t) > hdr->header_size) {
-    return NULL;
-  }
-
-  // Merkle proof is located right after the authenticated part of the header
-  boot_header_merkle_proof_t* proof =
-      (boot_header_merkle_proof_t*)((uintptr_t)hdr + hdr->auth_size);
-
-  // Check if the path length is in reasonable limits
-  if (proof->node_count > BOOT_HEADER_MERKLE_PROOF_MAXLEN) {
-    return NULL;
-  }
-
-  // Calculate the Merkle proof structure size
-  size_t proof_size = sizeof(boot_header_merkle_proof_t) +
-                      proof->node_count * sizeof(proof->nodes[0]);
-
-  // Check if the Merkle proof is completely within the header
-  if (hdr->auth_size + proof_size > hdr->header_size) {
-    return NULL;
-  }
-
-  return proof;
 }
 
 const boot_header_unauth_t* boot_header_get_unauth(const boot_header_t* hdr) {

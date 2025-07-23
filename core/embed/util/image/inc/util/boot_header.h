@@ -143,16 +143,6 @@ typedef struct __attribute__((packed)) {
 const boot_header_t* boot_header_check_integrity(uint32_t address);
 
 /**
- * Gets the pointer to the Merkle proof in the boot header.
- *
- * @param hdr Pointer to the verifiedboot header
- * @return Pointer to the Merkle proof structure or NULL if the header is
- *         invalid.
- */
-const boot_header_merkle_proof_t* boot_header_get_merkle_proof(
-    const boot_header_t* hdr);
-
-/**
  * Gets pointer to the unauthenticated part of the boot header.
  *
  * @param hdr Pointer to the verifiedboot header
