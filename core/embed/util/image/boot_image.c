@@ -221,15 +221,15 @@ void boot_image_replace(const boot_image_t *image) {
 #else
 
 bool boot_image_check(const boot_image_t *image) {
-  if (image->image_size < sizeof(boot_header_t)) {
+  if (image->image_size < sizeof(boot_header_auth_t)) {
     // Invalid image size, must be at least the size of the header
     return false;
   }
 
   mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
 
-  boot_header_t *cur_hdr = (boot_header_t *)BOOTLOADER_START;
-  boot_header_t *new_hdr = (boot_header_t *)image->image_ptr;
+  boot_header_auth_t *cur_hdr = (boot_header_auth_t *)BOOTLOADER_START;
+  boot_header_auth_t *new_hdr = (boot_header_auth_t *)image->image_ptr;
 
   bool diff = (cur_hdr->header_size != new_hdr->header_size) ||
               (memcmp(cur_hdr, new_hdr, cur_hdr->header_size) != 0);
@@ -243,25 +243,29 @@ void boot_image_replace(const boot_image_t *image) {
   uint32_t header_address = (uint32_t)image->image_ptr;
 
   // Check that image is big enough to hold the header at least
-  ensure(sectrue * (image->image_size >= sizeof(boot_header_t)),
+  ensure(sectrue * (image->image_size >= sizeof(boot_header_auth_t)),
          "Bootloader image too small");
 
   // Read bootloader header
-  const boot_header_t *hdr = boot_header_check_integrity(header_address);
+  const boot_header_auth_t *hdr = boot_header_auth_get(header_address);
   ensure((hdr != NULL) * sectrue, "Invalid bootloader header");
 
   // Check the image is big enough to hold both header and code
-  ensure(sectrue * (hdr->header_size <= image->image_size),
-         "Bootloader header too big");
-  ensure(sectrue * (hdr->code_size <= image->image_size),
-         "Bootloader code too big");
   ensure(sectrue * (hdr->header_size + hdr->code_size <= image->image_size),
          "Bootloader image too small");
 
   // Check monotonic version
-  uint8_t min_monotonic_version = 0;
-  ensure(monoctr_read(MONOCTR_BOOTLOADER_VERSION, &min_monotonic_version),
-         "monoctr read");
+
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
+
+  const boot_header_auth_t *old_hdr = boot_header_auth_get(BOOTLOADER_START);
+
+  ensure((old_hdr != NULL) * sectrue, "Invalid current bootloader header");
+
+  uint8_t min_monotonic_version = old_hdr->monotonic_version;
+
+  mpu_restore(mpu_mode);
+
   ensure(sectrue * (hdr->monotonic_version >= min_monotonic_version),
          "Bootloader downgrade rejected");
 

@@ -40,7 +40,7 @@ static void prodtest_bootloader_version(cli_t *cli) {
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
 
-  const boot_header_t *hdr = boot_header_check_integrity(BOOTLOADER_START);
+  const boot_header_auth_t *hdr = boot_header_auth_get(BOOTLOADER_START);
 
   if (hdr == NULL) {
     mpu_restore(mpu_mode);

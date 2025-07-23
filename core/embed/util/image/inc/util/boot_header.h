@@ -53,6 +53,10 @@ typedef struct {
 
 /**
  * Authenticated part of the boot header
+ *
+ * This structure can be extended in future versions if needed.
+ * Just make sure to add new fields at the end of the structure.
+ * Never remove or reorder existing fields.
  */
 typedef struct __attribute__((packed)) {
   /** Magic constant 'TRZQ' */
@@ -96,7 +100,7 @@ typedef struct __attribute__((packed)) {
    * the authenticated part of the header is maximized. */
   uint8_t padding[0];
 
-} boot_header_t;
+} boot_header_auth_t;
 
 /**
  * Merkle proof structure used in the boot header to calculate the root
@@ -147,7 +151,7 @@ typedef struct __attribute__((packed)) {
  * @param address Address of the boot header in flash memory
  * @return Pointer to the boot header if valid, NULL otherwise.
  */
-const boot_header_t* boot_header_check_integrity(uint32_t address);
+const boot_header_auth_t* boot_header_auth_get(uint32_t address);
 
 /**
  * Gets pointer to the unauthenticated part of the boot header.
@@ -169,7 +173,7 @@ const boot_header_unauth_t* boot_header_unauth_get(
  * @param code_address Address of the bootloader code in flash memory
  * @param root Pointer to the output Merkle root node
  */
-void boot_header_calc_merkle_root(const boot_header_t* hdr,
+void boot_header_calc_merkle_root(const boot_header_auth_t* hdr,
                                   uint32_t code_address,
                                   merkle_proof_node_t* root);
 
@@ -184,7 +188,7 @@ void boot_header_calc_merkle_root(const boot_header_t* hdr,
  * @param merkle_root Pointer to the Merkle root
  * @return secbool indicating whether the signature verification was successful.
  */
-secbool boot_header_check_signature(const boot_header_t* hdr,
+secbool boot_header_check_signature(const boot_header_auth_t* hdr,
                                     const merkle_proof_node_t* merkle_root);
 
 /**
@@ -194,7 +198,7 @@ secbool boot_header_check_signature(const boot_header_t* hdr,
  *
  * @param hdr Pointer to the new boot header
  * @param code_address Address of the new bootloader code in flash memory
- * @return secbool indicating whether the boot header and code are unchanged
+ * @return secbool indicating whether the boot header and code need update
  */
-secbool bootloader_is_unchanged(const boot_header_t* hdr,
-                                uint32_t code_address);
+secbool bootloader_area_needs_update(const boot_header_auth_t* hdr,
+                                     uint32_t code_address);
