@@ -35,13 +35,6 @@
 #define BOOT_HEADER_CODE_MAXSIZE (1024 * 1024)
 
 /**
- * SHA-256 fingerprint of the boot header
- */
-typedef struct {
-  uint8_t bytes[32];
-} boot_header_fingerprint_t;
-
-/**
  * 4-byte version structure used in the boot header
  */
 typedef struct __attribute__((packed)) {
@@ -95,7 +88,7 @@ typedef struct __attribute__((packed)) {
 } boot_header_t;
 
 /**
- * Merkle proof node
+ * Merkle proof node (SHA-256 digest)
  */
 typedef struct {
   uint8_t bytes[32];
@@ -170,32 +163,32 @@ const boot_header_merkle_proof_t* boot_header_get_merkle_proof(
 const boot_header_unauth_t* boot_header_get_unauth(const boot_header_t* hdr);
 
 /**
- * Calculates the fingerprint of the boot header.
+ *  Calculates the Merkle root for signature verification.
  *
- * The fingerprint includes the bootloader code, signed part of the
+ * The result includes the bootloader code, authenticated part of the
  * boot header and the Merkle tree path.
  *
  * @param hdr Pointer to the boot header
  * @param code_address Address of the bootloader code in flash memory
- * @param fp Pointer to the output fingerprint structure
+ * @param root Pointer to the output merkle root node
  */
-void boot_header_calc_fingerprint(const boot_header_t* hdr,
+void boot_header_calc_merkle_root(const boot_header_t* hdr,
                                   uint32_t code_address,
-                                  boot_header_fingerprint_t* fp);
+                                  merkle_proof_node_t* root);
 
 /**
  * Checks the signature in the boot header against the public keys.
  *
  * This function checks the signatures of the boot header using the
- * bootloader public keys. It uses the calculated fingerprint of the boot header
- * to perform the verification.
+ * bootloader public keys. It uses the merkle root calculated from
+ * the boot header and bootloader code to perform the verification.
  *
- * @param header Pointer to the boot header
- * @param fp Pointer to the fingerprint of the boot header
+ * @param hdr Pointer to the boot header
+ * @param merkle_root Pointer to the merkle root
  * @return secbool indicating whether the signature verification was successful.
  */
-secbool boot_header_check_signature(const boot_header_t* header,
-                                    const boot_header_fingerprint_t* fp);
+secbool boot_header_check_signature(const boot_header_t* hdr,
+                                    const merkle_proof_node_t* merkle_root);
 
 /**
  * Checks if the hardware model in the boot header matches the expected one

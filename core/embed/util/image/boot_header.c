@@ -94,14 +94,14 @@ static const uint8_t * const BOARDLOADER_EC_KEYS[] = {
 #endif
 };
 
-secbool boot_header_check_signature(const boot_header_t* header,
-                                    const boot_header_fingerprint_t* fp) {
+secbool boot_header_check_signature(const boot_header_t* hdr,
+                                    const merkle_proof_node_t* merkle_root) {
   // Get the signature indices based on the signature mask
   _Static_assert(ARRAY_LENGTH(BOARDLOADER_PQ_KEYS) <= 3);
   _Static_assert(ARRAY_LENGTH(BOARDLOADER_EC_KEYS) ==
                  ARRAY_LENGTH(BOARDLOADER_PQ_KEYS));
 
-  uint32_t sigmask = header->sigmask;
+  uint32_t sigmask = hdr->sigmask;
 
   int pubkey1_idx = __builtin_ctz(sigmask);
   if (pubkey1_idx >= ARRAY_LENGTH(BOARDLOADER_PQ_KEYS)) {
@@ -124,14 +124,14 @@ secbool boot_header_check_signature(const boot_header_t* header,
 
   int result;
 
-  const boot_header_unauth_t* sig = boot_header_get_unauth(header);
+  const boot_header_unauth_t* sig = boot_header_get_unauth(hdr);
 
   uint8_t ec_hash[IMAGE_HASH_DIGEST_LENGTH];
 
   // Hash of the merkle root and the 1st SLH signature
   IMAGE_HASH_CTX ctx;
   IMAGE_HASH_INIT(&ctx);
-  IMAGE_HASH_UPDATE(&ctx, fp->bytes, sizeof(fp->bytes));
+  IMAGE_HASH_UPDATE(&ctx, merkle_root->bytes, sizeof(merkle_root->bytes));
   IMAGE_HASH_UPDATE(&ctx, sig->slh_signature1, sizeof(sig->slh_signature1));
   IMAGE_HASH_FINAL(&ctx, ec_hash);
 
@@ -145,7 +145,7 @@ secbool boot_header_check_signature(const boot_header_t* header,
 
   // Hash of the merkle root and the 2nd SLH signature
   IMAGE_HASH_INIT(&ctx);
-  IMAGE_HASH_UPDATE(&ctx, fp->bytes, sizeof(fp->bytes));
+  IMAGE_HASH_UPDATE(&ctx, merkle_root->bytes, sizeof(merkle_root->bytes));
   IMAGE_HASH_UPDATE(&ctx, sig->slh_signature2, sizeof(sig->slh_signature2));
   IMAGE_HASH_FINAL(&ctx, ec_hash);
 
@@ -159,7 +159,7 @@ secbool boot_header_check_signature(const boot_header_t* header,
 
   // Verify 1st PQC signature
   result = crypto_sign_verify(sig->slh_signature1, sizeof(sig->slh_signature1),
-                              fp->bytes, sizeof(fp->bytes),
+                              merkle_root->bytes, sizeof(merkle_root->bytes),
                               BOARDLOADER_PQ_KEYS[pubkey1_idx]);
   if (result != 0) {
     return secfalse;
@@ -167,7 +167,7 @@ secbool boot_header_check_signature(const boot_header_t* header,
 
   // Verify 2nd PQC signature
   result = crypto_sign_verify(sig->slh_signature2, sizeof(sig->slh_signature2),
-                              fp->bytes, sizeof(fp->bytes),
+                              merkle_root->bytes, sizeof(merkle_root->bytes),
                               BOARDLOADER_PQ_KEYS[pubkey2_idx]);
   if (result != 0) {
     return secfalse;
@@ -271,9 +271,9 @@ const boot_header_unauth_t* boot_header_get_unauth(const boot_header_t* hdr) {
   return unauth;
 }
 
-void boot_header_calc_fingerprint(const boot_header_t* hdr,
+void boot_header_calc_merkle_root(const boot_header_t* hdr,
                                   uint32_t code_address,
-                                  boot_header_fingerprint_t* fp) {
+                                  merkle_proof_node_t* root) {
   IMAGE_HASH_CTX ctx;
 
   static const uint8_t prefix0[] = {0x00};
@@ -282,14 +282,14 @@ void boot_header_calc_fingerprint(const boot_header_t* hdr,
   // Hash the bootloader code
   IMAGE_HASH_INIT(&ctx);
   IMAGE_HASH_UPDATE(&ctx, (const uint8_t*)code_address, hdr->code_size);
-  IMAGE_HASH_FINAL(&ctx, fp->bytes);
+  IMAGE_HASH_FINAL(&ctx, root->bytes);
 
   // Hash the authenticated part of the header
   IMAGE_HASH_INIT(&ctx);
   IMAGE_HASH_UPDATE(&ctx, prefix0, sizeof(prefix0));
   IMAGE_HASH_UPDATE(&ctx, (const uint8_t*)hdr, hdr->auth_size);
-  IMAGE_HASH_UPDATE(&ctx, fp->bytes, sizeof(fp->bytes));
-  IMAGE_HASH_FINAL(&ctx, fp->bytes);
+  IMAGE_HASH_UPDATE(&ctx, root->bytes, sizeof(root->bytes));
+  IMAGE_HASH_FINAL(&ctx, root->bytes);
 
   const boot_header_merkle_proof_t* proof = boot_header_get_merkle_proof(hdr);
 
@@ -298,14 +298,14 @@ void boot_header_calc_fingerprint(const boot_header_t* hdr,
     const merkle_proof_node_t* node = &proof->nodes[i];
     IMAGE_HASH_INIT(&ctx);
     IMAGE_HASH_UPDATE(&ctx, prefix1, sizeof(prefix1));
-    if (memcmp(node, fp->bytes, sizeof(fp->bytes)) < 0) {
+    if (memcmp(node, root->bytes, sizeof(root->bytes)) < 0) {
       IMAGE_HASH_UPDATE(&ctx, node->bytes, sizeof(node->bytes));
-      IMAGE_HASH_UPDATE(&ctx, fp->bytes, sizeof(fp->bytes));
+      IMAGE_HASH_UPDATE(&ctx, root->bytes, sizeof(root->bytes));
     } else {
-      IMAGE_HASH_UPDATE(&ctx, fp->bytes, sizeof(fp->bytes));
+      IMAGE_HASH_UPDATE(&ctx, root->bytes, sizeof(root->bytes));
       IMAGE_HASH_UPDATE(&ctx, node->bytes, sizeof(node->bytes));
     }
-    IMAGE_HASH_FINAL(&ctx, fp->bytes);
+    IMAGE_HASH_FINAL(&ctx, root->bytes);
   }
 }
 

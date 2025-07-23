@@ -270,12 +270,13 @@ void boot_image_replace(const boot_image_t *image) {
 
   uint32_t code_address = (uint32_t)image->image_ptr + hdr->header_size;
 
-  // Calculate the fingerprint of the header and the code
-  boot_header_fingerprint_t fp;
-  boot_header_calc_fingerprint(hdr, code_address, &fp);
+  // Calculate the merkle root from the header and the code
+  merkle_proof_node_t merkle_root;
+  boot_header_calc_merkle_root(hdr, code_address, &merkle_root);
 
   // Check whether the new bootloader is properly signed
-  ensure(boot_header_check_signature(hdr, &fp), "Invalid bootloader signature");
+  ensure(boot_header_check_signature(hdr, &merkle_root),
+         "Invalid bootloader signature");
 
   // Write to update control block
   ensure(boot_ucb_write(header_address, code_address),

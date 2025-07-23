@@ -163,7 +163,7 @@ static void try_to_upgrade(void) {
   // Get address of the bootloader code
   // If the code address in UCB is 0, it means that the code is not present
   // and we change only the bootloader header. In such case, we
-  // use the current bootloader code to calculate the fingerprint.
+  // use the current bootloader code to calculate the merkle root.
   uint32_t code_address = ucb.code_address;
   if (code_address == 0) {
     // Just changing the header, no bootloader code is present
@@ -176,12 +176,12 @@ static void try_to_upgrade(void) {
     return;
   }
 
-  // Calculate the fingerprint of the header and the code
-  boot_header_fingerprint_t fp;
-  boot_header_calc_fingerprint(hdr, code_address, &fp);
+  // Calculate the merkle root
+  merkle_proof_node_t merkle_root;
+  boot_header_calc_merkle_root(hdr, code_address, &merkle_root);
 
   // Check whether the new bootloader is properly signed
-  if (sectrue != boot_header_check_signature(hdr, &fp)) {
+  if (sectrue != boot_header_check_signature(hdr, &merkle_root)) {
     return;
   }
 
@@ -237,15 +237,15 @@ static inline void ensure_signed_firmware(volatile uint32_t* next_stage_addr) {
   // Get address of the bootloader code
   uint32_t code_address = BOOTLOADER_START + hdr->header_size;
 
-  // Calculate the fingerprint of the header and the code
-  boot_header_fingerprint_t fp;
-  boot_header_calc_fingerprint(hdr, code_address, &fp);
+  // Calculate the merkle root from the header and the code
+  merkle_proof_node_t merkle_root;
+  boot_header_calc_merkle_root(hdr, code_address, &merkle_root);
 
   // Check if the hardware model matches
   fih_ensure(boot_header_check_model(hdr), "incompatible hardware model");
 
   // Check the header signature
-  fih_ensure(boot_header_check_signature(hdr, &fp),
+  fih_ensure(boot_header_check_signature(hdr, &merkle_root),
              "invalid bootloader signature");
 
   // Ensure the bootloader is not downgraded
