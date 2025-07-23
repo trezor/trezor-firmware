@@ -8,9 +8,10 @@ use crate::ui::{
     constant::{HEIGHT, WIDTH},
     display::Color,
     geometry::{Offset, Point, Rect},
-    layout_bolt::theme::GREY_MEDIUM,
     util::include_res,
 };
+
+use super::GREY_MEDIUM;
 
 pub const BLD_BG: Color = Color::rgb(0x00, 0x1E, 0xAD);
 pub const BLD_FG: Color = WHITE;

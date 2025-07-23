@@ -5,13 +5,14 @@ use crate::{
         display::{Color, Font},
         event::BLEEvent,
         geometry::{Alignment, Offset, Point, Rect},
-        layout_bolt::{
-            component::{Button, ButtonMsg},
-            constant::WIDTH,
-            theme::bootloader::{BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING},
-        },
         shape::{self, Renderer},
     },
+};
+
+use super::super::{
+    component::{Button, ButtonMsg},
+    constant::WIDTH,
+    theme::bootloader::{BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING},
 };
 
 #[repr(u32)]

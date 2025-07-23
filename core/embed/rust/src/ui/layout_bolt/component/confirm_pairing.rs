@@ -14,11 +14,12 @@ use crate::{
         display::Color,
         event::BLEEvent,
         geometry::{Offset, Point, Rect},
-        layout_bolt::{fonts, theme::WHITE},
         shape,
         shape::Renderer,
     },
 };
+
+use super::{super::fonts, theme::WHITE};
 
 const ICON_TOP: i16 = 17;
 const CONTENT_START: i16 = 72;

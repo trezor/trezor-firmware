@@ -4,13 +4,14 @@ use crate::{
         component::{Component, Event, EventCtx, Pad},
         display::{Color, Font},
         geometry::{Alignment, Offset, Point, Rect},
-        layout_delizia::{
-            component::{Button, ButtonMsg},
-            constant::WIDTH,
-            theme::bootloader::{button_bld, BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING},
-        },
         shape::{self, Renderer},
     },
+};
+
+use super::super::{
+    component::{Button, ButtonMsg},
+    constant::WIDTH,
+    theme::bootloader::{button_bld, BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING},
 };
 
 #[repr(u32)]

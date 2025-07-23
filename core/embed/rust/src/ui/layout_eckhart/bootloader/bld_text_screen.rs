@@ -2,14 +2,13 @@ use crate::ui::{
     component::{Component, Event, EventCtx, Label},
     constant::SCREEN,
     geometry::{Insets, Rect},
-    layout_eckhart::theme::{ACTION_BAR_HEIGHT, SIDE_INSETS},
     shape::Renderer,
 };
 
 use super::{
     super::{
         cshape::ScreenBorder,
-        theme::{HEADER_HEIGHT, TEXT_VERTICAL_SPACING},
+        theme::{ACTION_BAR_HEIGHT, HEADER_HEIGHT, SIDE_INSETS, TEXT_VERTICAL_SPACING},
     },
     BldActionBar, BldActionBarMsg, BldHeader, BldHeaderMsg,
 };

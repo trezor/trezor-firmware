@@ -10,15 +10,16 @@ use crate::ui::{
     constant::screen,
     display::{toif::Toif, Icon},
     geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
-    layout_bolt::{
-        component::Button,
-        theme::bootloader::{button_initial, CORNER_BUTTON_AREA, MENU32},
-    },
     shape::{self, Renderer},
 };
 
+use super::super::{
+    component::Button,
+    theme::bootloader::{button_initial, CORNER_BUTTON_AREA, MENU32},
+};
+
 #[cfg(feature = "power_manager")]
-use crate::ui::layout_bolt::component::ButtonMsg::Clicked;
+use super::super::component::ButtonMsg::Clicked;
 
 #[repr(u32)]
 #[derive(Copy, Clone, ToPrimitive)]

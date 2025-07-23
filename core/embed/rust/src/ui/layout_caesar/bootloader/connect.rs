@@ -4,12 +4,13 @@ use crate::{
         component::{Component, Event, EventCtx, Pad},
         display::{Color, Font},
         geometry::{Alignment, Offset, Rect},
-        layout_caesar::{
-            component::{ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos},
-            theme::{BUTTON_HEIGHT, TITLE_AREA_HEIGHT},
-        },
         shape::{self, Renderer},
     },
+};
+
+use super::super::{
+    component::{ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos},
+    theme::{BUTTON_HEIGHT, TITLE_AREA_HEIGHT},
 };
 
 #[repr(u32)]

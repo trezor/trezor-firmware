@@ -4,15 +4,16 @@ use crate::{
         component::{Component, Event, EventCtx, Pad},
         display::{Color, Font, Icon},
         geometry::{Alignment, Insets, Offset, Point, Rect},
-        layout_bolt::{
-            component::{Button, ButtonMsg},
-            constant::WIDTH,
-            theme::bootloader::{
-                button_bld, button_bld_menu, button_initial, BLD_BG, BUTTON_AREA_START,
-                BUTTON_HEIGHT, CONTENT_PADDING, CORNER_BUTTON_AREA, MENU32, WELCOME_COLOR,
-            },
-        },
         shape::{self, Renderer},
+    },
+};
+
+use super::super::{
+    component::{Button, ButtonMsg},
+    constant::WIDTH,
+    theme::bootloader::{
+        button_bld, button_bld_menu, button_initial, BLD_BG, BUTTON_AREA_START, BUTTON_HEIGHT,
+        CONTENT_PADDING, CORNER_BUTTON_AREA, MENU32, WELCOME_COLOR,
     },
 };
 

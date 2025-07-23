@@ -12,15 +12,15 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow,
         },
         geometry::{Direction, LinearPlacement},
-        layout_eckhart::firmware::{
-            ShortMenuVec, TextScreenMsg, VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
-        },
     },
 };
 
 use super::super::{
     component::Button,
-    firmware::{ActionBar, Header, TextScreen},
+    firmware::{
+        ActionBar, Header, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
+        VerticalMenuScreen, VerticalMenuScreenMsg,
+    },
     theme::{self, gradient::Gradient},
 };
 
