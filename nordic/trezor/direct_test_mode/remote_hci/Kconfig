@@ -1,0 +1,53 @@
+#
+# Copyright (c) 2023 Nordic Semiconductor
+#
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+mainmenu "Nordic Remote HCI DTM"
+
+config DTM_REMOTE_HCI_CHILD
+	bool
+	default y
+
+config DTM_PUT_THREAD_STACK_SIZE
+	int "dtm_put thread stack size"
+	default 2048
+	help
+	  Stack size of the dtm_put thread.
+
+config DTM_PUT_THREAD_PRIORITY
+	int "dtm_put thread priority"
+	default 7
+	help
+	  Priority of the dtm_put thread.
+
+config REMOTE_HCI_QUEUE_COUNT
+	int "Count of HCI RX/TX queues"
+	default 16
+	help
+	  Maximum depth of the HCI RX/TX queues.
+
+config REMOTE_HCI_QUEUE_SIZE
+	int "Size of HCI RX/TX queue buffer"
+	default 1024
+	help
+	  Maximum size of the HCI RX/TX queue element.
+
+config REMOTE_HCI_TX_THREAD_STACK_SIZE
+	int "Stack size of TX thread"
+	default 2048
+	help
+	  Stack size of the TX thread.
+
+config REMOTE_HCI_TX_THREAD_PRIORITY
+	int "TX thread priority"
+	default 7
+	help
+	  Priority of the TX thread.
+
+module = DTM_REMOTE_HCI
+module-str = "DTM_remote_hci"
+source "${ZEPHYR_BASE}/subsys/logging/Kconfig.template.log_config"
+
+source "Kconfig.zephyr"

@@ -1,0 +1,50 @@
+#
+# Copyright (c) 2024 Nordic Semiconductor
+#
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+choice APPCORE
+	default APPCORE_REMOTE_HCI if DTM_TRANSPORT_HCI
+	default APPCORE_REMOTE_SHELL if SOC_NRF5340_CPUNET
+	depends on SUPPORT_APPCORE
+
+config APPCORE_REMOTE_HCI
+	bool "remote_hci"
+	depends on SOC_NRF5340_CPUNET
+	help
+	  Include remote_hci as the appcore image to use
+
+endchoice
+
+config APPCORE_IMAGE_NAME
+	default "remote_hci" if APPCORE_REMOTE_HCI
+
+config APPCORE_IMAGE_PATH
+	default "${ZEPHYR_NRF_MODULE_DIR}/samples/bluetooth/direct_test_mode/remote_hci" if APPCORE_REMOTE_HCI
+
+choice DTM_TRANSPORT
+	default DTM_TRANSPORT_TWOWIRE
+	prompt "Transport layer to use with DTM"
+	help
+	  Transport interface to use with the DTM.
+
+config DTM_TRANSPORT_TWOWIRE
+	bool "DTM over 2-wire UART"
+	help
+	  Use the 2-wire transport interface as the DTM transport layer.
+
+config DTM_TRANSPORT_HCI
+	bool "DTM over HCI UART [EXPERIMENTAL]"
+	select EXPERIMENTAL
+	help
+	  Use the HCI UART transport interface as the DTM transport layer.
+
+endchoice # DTM_TRANSPORT
+
+config DTM_NO_DFE
+	bool "Disable direction finding"
+	help
+	  Disable direction finding feature.
+
+source "${ZEPHYR_BASE}/share/sysbuild/Kconfig"
