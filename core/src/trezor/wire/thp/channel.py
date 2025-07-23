@@ -151,7 +151,8 @@ class Channel:
         if task is not None:
             return task
 
-        if self.expected_payload_length == 0:  # Reading failed TODO
+        if self.expected_payload_length == 0:
+            # Failed to read the packet or to fallback
             from trezor.wire.thp import ThpErrorType
 
             return self.write_error(ThpErrorType.TRANSPORT_BUSY)
