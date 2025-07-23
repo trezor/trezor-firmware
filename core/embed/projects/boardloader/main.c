@@ -172,7 +172,7 @@ static void try_to_upgrade(void) {
 
   // Check if the new bootloader is the same as the old one
   // (just prevents unccessary flash erase/write)
-  if (boot_header_is_unchanged(hdr, code_address)) {
+  if (bootloader_is_unchanged(hdr, code_address)) {
     return;
   }
 

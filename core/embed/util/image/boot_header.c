@@ -321,7 +321,7 @@ secbool boot_header_check_model(const boot_header_t* hdr) {
   return sectrue;
 }
 
-secbool boot_header_is_unchanged(const boot_header_t* hdr,
+secbool bootloader_is_unchanged(const boot_header_t* hdr,
                                  uint32_t code_address) {
   boot_header_t* prev_hdr = (boot_header_t*)BOOTLOADER_START;
   if (hdr->header_size == prev_hdr->header_size &&

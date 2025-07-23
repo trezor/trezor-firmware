@@ -210,9 +210,9 @@ secbool boot_header_check_model(const boot_header_t* hdr);
  * with the previous bootloader header and code. If they are the same,
  * it returns sectrue, otherwise secfalse.
  *
- * @param hdr Pointer to the current boot header
- * @param code_address Address of the bootloader code in flash memory
+ * @param hdr Pointer to the new boot header
+ * @param code_address Address of the new bootloader code in flash memory
  * @return secbool indicating whether the boot header and code are unchanged
  */
-secbool boot_header_is_unchanged(const boot_header_t* hdr,
+secbool bootloader_is_unchanged(const boot_header_t* hdr,
                                  uint32_t code_address);
