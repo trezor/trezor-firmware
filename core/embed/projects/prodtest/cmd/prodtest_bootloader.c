@@ -26,12 +26,34 @@
 #include <util/boot_image.h>
 #include <util/image.h>
 
+#ifdef USE_BOOT_UCB
+#include <util/boot_header.h>
+#endif
+
 static void prodtest_bootloader_version(cli_t *cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
     return;
   }
 
+#ifdef USE_BOOT_UCB
+
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
+
+  const boot_header_t *hdr = boot_header_check_integrity(BOOTLOADER_START);
+
+  if (hdr == NULL) {
+    mpu_restore(mpu_mode);
+    cli_error(cli, CLI_ERROR, "No valid bootloader header found.");
+    return;
+  }
+
+  cli_ok(cli, "%d.%d.%d", hdr->version.major, hdr->version.minor,
+         hdr->version.patch);
+
+  mpu_restore(mpu_mode);
+
+#else
   uint32_t v = 0;
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
@@ -52,6 +74,8 @@ static void prodtest_bootloader_version(cli_t *cli) {
   mpu_restore(mpu_mode);
 
   cli_ok(cli, "%d.%d.%d", v & 0xFF, (v >> 8) & 0xFF, (v >> 16) & 0xFF);
+
+#endif
 }
 
 #ifndef TREZOR_MODEL_T2T1
