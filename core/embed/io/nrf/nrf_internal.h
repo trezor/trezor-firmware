@@ -97,6 +97,9 @@ typedef struct {
   bool dfu_mode;
   bool dfu_tx_pending;
 
+  bool dtm_mode;
+  void (*dtm_callback)(uint8_t byte);
+
 } nrf_driver_t;
 
 void nrf_start(void);

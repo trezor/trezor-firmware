@@ -23,6 +23,7 @@
 #include <trezor_rtl.h>
 
 #include <io/ble.h>
+#include <io/nrf.h>
 #include <io/usb.h>
 #include <rtl/cli.h>
 #include <sys/systick.h>
@@ -319,6 +320,41 @@ static void prodtest_ble_radio_test_cmd(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+void dtm_rx_callback(uint8_t byte) { (void)!usb_vcp_write(0, &byte, 1); }
+
+void prodtest_ble_direct_test_mode_cmd(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  uint8_t cmd_line_byte;
+
+  // Reset NRF
+  HAL_GPIO_WritePin(GPIOG, GPIO_PIN_0, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOG, GPIO_PIN_0, GPIO_PIN_SET);
+
+  nrf_set_dtm_mode(true, dtm_rx_callback);
+
+  while (true) {
+    // todo so far this interferes with DTM communication
+    //  so not used, but we should find a way to exit without hard reset
+    // if(cli_aborted(cli)){
+    //   cli_trace(cli, "Aborted.");
+    //   break;
+    // }
+
+    // Read byte from the command line and pass it to NRF UART;
+    if (usb_vcp_read(0, &cmd_line_byte, 1) > 0) {
+      nrf_dtm_send_data(&cmd_line_byte, 1);
+    }
+  }
+
+  nrf_set_dtm_mode(false, NULL);
+
+  cli_ok(cli, "");
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -353,6 +389,13 @@ PRODTEST_CLI_CMD(
   .name = "ble-radio-test",
   .func = prodtest_ble_radio_test_cmd,
   .info = "Proxy data between the USB VCP and the nRF over UART to support the Radio Test CLI.",
+  .args = ""
+  );
+
+PRODTEST_CLI_CMD(
+  .name = "ble-direct-test-mode",
+  .func = prodtest_ble_direct_test_mode_cmd,
+  .info = "Proxy data between the USB VCP and the nRF over UART in direct test mode.",
   .args = ""
 );
 

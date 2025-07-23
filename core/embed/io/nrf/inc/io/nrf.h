@@ -239,4 +239,23 @@ bool nrf_test_gpio_reserved(void);
  */
 bool nrf_test_pair(void);
 
+/**
+ * @brief Set the Direct Test Mode (DTM) on the NRF device.
+ *
+ * @param set       true to enable DTM mode, false to disable
+ * @param callback  Function to call with received bytes in DTM mode
+ */
+void nrf_set_dtm_mode(bool set, void (*callback)(uint8_t byte));
+
+/**
+ * @brief Send data in Direct Test Mode (DTM) on the NRF device.
+ *
+ * This function sends raw data bytes in DTM mode. It is only valid when DTM
+ * mode is enabled.
+ *
+ * @param data  Pointer to the data buffer to send
+ * @param len   Length of the data buffer
+ */
+void nrf_dtm_send_data(const uint8_t *data, uint32_t len);
+
 ///////////////////////////////////////////////////////////////////////////////
