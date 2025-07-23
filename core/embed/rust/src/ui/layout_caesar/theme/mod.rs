@@ -1,6 +1,6 @@
 use crate::ui::{
     component::{
-        text::{layout::Chunks, TextStyle},
+        text::{layout::Chunks, paragraphs::PARAGRAPH_BOTTOM_SPACE, TextStyle},
         LineBreaking, PageBreaking,
     },
     display::{Color, Font},
@@ -95,6 +95,10 @@ include_icon!(ICON_TICK, "layout_caesar/res/tick.toif"); // 8*6
 include_icon!(ICON_TICK_FAT, "layout_caesar/res/tick_fat.toif"); // 8*6
 include_icon!(ICON_WARNING, "layout_caesar/res/warning.toif"); // 11*12
 include_icon!(ICON_WARN_TITLE, "layout_caesar/res/bld_header_warn.toif");
+
+// props settings
+pub const PROP_INNER_SPACING: i16 = PARAGRAPH_BOTTOM_SPACE;
+pub const PROPS_SPACING: i16 = PARAGRAPH_BOTTOM_SPACE;
 
 // checklist settings
 pub const CHECKLIST_SPACING: i16 = 5;
