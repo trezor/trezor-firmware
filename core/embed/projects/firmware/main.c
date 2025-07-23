@@ -70,7 +70,7 @@ int main_func(uint32_t cmd, void *arg) {
   bool update_required = false;
 
 #if PRODUCTION || BOOTLOADER_QA
-  // Check if the boardloader is valid and replace it if not
+  // Check if the bootloader is valid and replace it if not
   bool bl_update_required = boot_image_check(boot_image_get_embdata());
   update_required = update_required || bl_update_required;
 #endif
