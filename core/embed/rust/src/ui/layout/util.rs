@@ -92,6 +92,8 @@ pub struct PropsList {
     key_font: &'static TextStyle,
     value_font: &'static TextStyle,
     value_mono_font: &'static TextStyle,
+    key_value_padding: i16,
+    props_padding: i16,
 }
 
 impl PropsList {
@@ -100,12 +102,16 @@ impl PropsList {
         key_font: &'static TextStyle,
         value_font: &'static TextStyle,
         value_mono_font: &'static TextStyle,
+        key_value_padding: i16,
+        props_padding: i16,
     ) -> Result<Self, Error> {
         Ok(Self {
             items: obj.try_into()?,
             key_font,
             value_font,
             value_mono_font,
+            key_value_padding,
+            props_padding,
         })
     }
 }
@@ -138,7 +144,9 @@ impl ParagraphSource<'static> for PropsList {
             };
 
             if obj == Obj::const_none() {
-                return Ok(Paragraph::new(style, StrBuffer::empty()));
+                return Ok(Paragraph::new(style, StrBuffer::empty())
+                    .with_bottom_padding(0)
+                    .with_top_padding(0));
             }
 
             let para = if obj.is_str() {
@@ -152,7 +160,11 @@ impl ParagraphSource<'static> for PropsList {
             };
 
             if obj == key && value != Obj::const_none() {
-                Ok(para.no_break())
+                Ok(para.with_bottom_padding(self.key_value_padding).no_break())
+            } else if (obj == key && value == Obj::const_none() && index != self.size() - 2)
+                || (obj == value && index != self.size() - 1)
+            {
+                Ok(para.with_bottom_padding(self.props_padding))
             } else {
                 Ok(para)
             }
