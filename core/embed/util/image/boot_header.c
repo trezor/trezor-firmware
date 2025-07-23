@@ -297,7 +297,7 @@ void boot_header_calc_fingerprint(const boot_header_t* hdr,
     const merkle_proof_node_t* node = &proof->nodes[i];
     IMAGE_HASH_INIT(&ctx);
     IMAGE_HASH_UPDATE(&ctx, prefix1, sizeof(prefix1));
-    if (memcmp(node, fp, sizeof(fp->bytes)) < 0) {
+    if (memcmp(node, fp->bytes, sizeof(fp->bytes)) < 0) {
       IMAGE_HASH_UPDATE(&ctx, node->bytes, sizeof(node->bytes));
       IMAGE_HASH_UPDATE(&ctx, fp->bytes, sizeof(fp->bytes));
     } else {
