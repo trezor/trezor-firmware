@@ -66,6 +66,7 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
         .with_action_bar(ActionBar::new_single(Button::with_text(
             TR::buttons__continue.into(),
         )))
+        .with_page_limit(1)
         .map(|msg| match msg {
             TextScreenMsg::Menu => Some(FlowMsg::Info),
             TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
@@ -108,6 +109,7 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
                 .with_gradient(Gradient::Alert),
         ))
         .with_hint(Hint::new_instruction(TR::backup__not_recommend, None))
+        .with_page_limit(1)
         .map(|msg| match msg {
             TextScreenMsg::Menu => Some(FlowMsg::Cancelled),
             TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),

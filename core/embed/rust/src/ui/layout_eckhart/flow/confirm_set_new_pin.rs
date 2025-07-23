@@ -65,6 +65,7 @@ pub fn new_set_new_pin(
         .with_action_bar(ActionBar::new_single(Button::with_text(
             TR::buttons__continue.into(),
         )))
+        .with_page_limit(1)
         .map(|msg| match msg {
             TextScreenMsg::Menu => Some(FlowMsg::Info),
             TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
@@ -101,6 +102,7 @@ pub fn new_set_new_pin(
                 .styled(theme::button_actionbar_danger())
                 .with_gradient(Gradient::Alert),
         ))
+        .with_page_limit(1)
         .map(|msg| match msg {
             TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
             TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),

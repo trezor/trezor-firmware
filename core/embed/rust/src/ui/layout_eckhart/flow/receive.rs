@@ -236,7 +236,8 @@ pub fn new_receive(
         Button::with_text(TR::buttons__cancel.into())
             .styled(theme::button_actionbar_danger())
             .with_gradient(theme::Gradient::Alert),
-    ));
+    ))
+    .with_page_limit(1);
     if let Some(hint) = cancel_hint {
         screen_cancel_info = screen_cancel_info.with_hint(hint);
     }

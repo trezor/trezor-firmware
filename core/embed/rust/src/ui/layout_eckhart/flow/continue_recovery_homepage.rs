@@ -196,6 +196,7 @@ pub fn new_continue_recovery_homepage(
     )
     .with_header(header)
     .with_action_bar(ActionBar::new_single(Button::with_text(verb.into())))
+    .with_page_limit(1)
     .repeated_button_request(ButtonRequest::new(
         ButtonRequestCode::RecoveryHomepage,
         "recovery".into(),
@@ -218,6 +219,7 @@ pub fn new_continue_recovery_homepage(
                 .styled(theme::button_actionbar_danger())
                 .with_gradient(Gradient::Alert),
         ))
+        .with_page_limit(1)
         .map(|msg| match msg {
             TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
             TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),

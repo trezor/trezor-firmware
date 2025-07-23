@@ -72,6 +72,7 @@ pub fn new_request_passphrase() -> Result<SwipeFlow, error::Error> {
         Button::with_icon(theme::ICON_CHEVRON_LEFT),
         Button::with_text(TR::buttons__confirm.into()),
     ))
+    .with_page_limit(1)
     .map(|msg| match msg {
         TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),

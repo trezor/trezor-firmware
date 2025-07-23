@@ -204,6 +204,7 @@ pub fn new_confirm_summary(
             .styled(theme::button_actionbar_danger())
             .with_gradient(Gradient::Alert),
     ))
+    .with_page_limit(1)
     .map(|msg| match msg {
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
         TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
@@ -221,6 +222,7 @@ pub fn new_confirm_summary(
         Button::with_text(TR::instructions__continue_in_app.into()),
         TIMEOUT_MS,
     ))
+    .with_page_limit(1)
     .map(|_| Some(FlowMsg::Confirmed));
 
     let mut res = SwipeFlow::new(&ConfirmSummary::Summary)?;
