@@ -124,7 +124,7 @@ secbool boot_header_check_signature(const boot_header_t* header,
 
   int result;
 
-  const boot_header_unauth_t* sig = boot_header_unauth(header);
+  const boot_header_unauth_t* sig = boot_header_get_unauth(header);
 
   // extended fingerprint for EC signature verification
   // that includes the SLH signature
@@ -206,19 +206,19 @@ const boot_header_t* boot_header_check_integrity(uint32_t address) {
   }
 
   // Check if the header contains valid merkle proof
-  if (NULL == boot_header_merkle_proof(hdr)) {
+  if (NULL == boot_header_get_merkle_proof(hdr)) {
     return NULL;
   }
 
-  // Check if the header contains valie anauthenticated part
-  if (NULL == boot_header_unauth(hdr)) {
+  // Check if the header contains valid anauthenticated part
+  if (NULL == boot_header_get_unauth(hdr)) {
     return NULL;
   }
 
   return hdr;
 }
 
-const boot_header_merkle_proof_t* boot_header_merkle_proof(
+const boot_header_merkle_proof_t* boot_header_get_merkle_proof(
     const boot_header_t* hdr) {
   // Check if the merkle_proof.path_len field is withing the header
   if (hdr->auth_size + sizeof(boot_header_merkle_proof_t) > hdr->header_size) {
@@ -246,8 +246,8 @@ const boot_header_merkle_proof_t* boot_header_merkle_proof(
   return proof;
 }
 
-const boot_header_unauth_t* boot_header_unauth(const boot_header_t* hdr) {
-  const boot_header_merkle_proof_t* proof = boot_header_merkle_proof(hdr);
+const boot_header_unauth_t* boot_header_get_unauth(const boot_header_t* hdr) {
+  const boot_header_merkle_proof_t* proof = boot_header_get_merkle_proof(hdr);
 
   if (proof == NULL) {
     // If the Merkle proof is invalid, the unauthenticated part cannot
@@ -291,7 +291,7 @@ void boot_header_calc_fingerprint(const boot_header_t* hdr,
   IMAGE_HASH_UPDATE(&ctx, fp->bytes, sizeof(fp->bytes));
   IMAGE_HASH_FINAL(&ctx, fp->bytes);
 
-  const boot_header_merkle_proof_t* proof = boot_header_merkle_proof(hdr);
+  const boot_header_merkle_proof_t* proof = boot_header_get_merkle_proof(hdr);
 
   // Add the Merkle proof nodes to the hash
   for (size_t i = 0; i < proof->node_count; i++) {
@@ -322,7 +322,7 @@ secbool boot_header_check_model(const boot_header_t* hdr) {
 }
 
 secbool bootloader_is_unchanged(const boot_header_t* hdr,
-                                 uint32_t code_address) {
+                                uint32_t code_address) {
   boot_header_t* prev_hdr = (boot_header_t*)BOOTLOADER_START;
   if (hdr->header_size == prev_hdr->header_size &&
       hdr->code_size == prev_hdr->code_size &&

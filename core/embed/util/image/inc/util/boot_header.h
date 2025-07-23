@@ -156,7 +156,7 @@ const boot_header_t* boot_header_check_integrity(uint32_t address);
  * @return Pointer to the Merkle proof structure or NULL if the header is
  *         invalid.
  */
-const boot_header_merkle_proof_t* boot_header_merkle_proof(
+const boot_header_merkle_proof_t* boot_header_get_merkle_proof(
     const boot_header_t* hdr);
 
 /**
@@ -167,7 +167,7 @@ const boot_header_merkle_proof_t* boot_header_merkle_proof(
  *         header is invalid.
  */
 
-const boot_header_unauth_t* boot_header_unauth(const boot_header_t* hdr);
+const boot_header_unauth_t* boot_header_get_unauth(const boot_header_t* hdr);
 
 /**
  * Calculates the fingerprint of the boot header.
@@ -215,4 +215,4 @@ secbool boot_header_check_model(const boot_header_t* hdr);
  * @return secbool indicating whether the boot header and code are unchanged
  */
 secbool bootloader_is_unchanged(const boot_header_t* hdr,
-                                 uint32_t code_address);
+                                uint32_t code_address);
