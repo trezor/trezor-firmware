@@ -263,7 +263,7 @@ fn content_menu_info(
         paragraphs
             .map_or_else(ParagraphVecShort::new, |p| p)
             .into_paragraphs()
-            .with_placement(LinearPlacement::vertical().with_spacing(theme::PARAGRAPHS_SPACING)),
+            .with_placement(LinearPlacement::vertical().with_spacing(theme::PROP_INNER_SPACING)),
     )
     .with_header(Header::new(title).with_close_button())
     .with_subtitle(subtitle.unwrap_or(TString::empty()))
@@ -303,7 +303,7 @@ pub fn new_confirm_output(
     let content_main = TextScreen::new(
         main_paragraphs
             .into_paragraphs()
-            .with_placement(LinearPlacement::vertical().with_spacing(theme::PARAGRAPHS_SPACING)),
+            .with_placement(LinearPlacement::vertical().with_spacing(theme::PROP_INNER_SPACING)),
     )
     .with_header(Header::new(title.unwrap_or(TString::empty())).with_menu_button())
     .with_action_bar(ActionBar::new_single(Button::with_text(
@@ -401,7 +401,7 @@ pub fn new_confirm_output(
         // Summary
         let content_summary =
             TextScreen::new(summary_paragraphs.into_paragraphs().with_placement(
-                LinearPlacement::vertical().with_spacing(theme::PARAGRAPHS_SPACING),
+                LinearPlacement::vertical().with_spacing(theme::PROP_INNER_SPACING),
             ))
             .with_header(
                 Header::new(summary_title.unwrap_or(TR::words__title_summary.into()))

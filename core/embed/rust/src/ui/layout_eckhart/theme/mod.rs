@@ -54,8 +54,11 @@ pub const PADDING: i16 = 24; // [px]
 pub const HEADER_HEIGHT: i16 = 96; // [px]
 pub const SIDE_INSETS: Insets = Insets::sides(PADDING);
 pub const ACTION_BAR_HEIGHT: i16 = 90; // [px]
-pub const PARAGRAPHS_SPACING: i16 = 12; // [px]
 pub const TEXT_VERTICAL_SPACING: i16 = 24; // [px]
+
+// props settings
+pub const PROP_INNER_SPACING: i16 = 12; // [px]
+pub const PROPS_SPACING: i16 = 16; // [px]
 
 // checklist settings
 pub const CHECKLIST_CHECK_WIDTH: i16 = 32; // [px]

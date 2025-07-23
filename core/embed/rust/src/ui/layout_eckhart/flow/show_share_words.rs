@@ -80,7 +80,7 @@ pub fn new_show_share_words_flow(
         instructions_paragraphs
             .unwrap_or_default()
             .into_paragraphs()
-            .with_placement(LinearPlacement::vertical().with_spacing(24)),
+            .with_placement(LinearPlacement::vertical().with_spacing(theme::TEXT_VERTICAL_SPACING)),
     )
     .with_header(Header::new(TR::reset__recovery_wallet_backup_title.into()))
     .with_action_bar(ActionBar::new_single(Button::with_text(
