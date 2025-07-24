@@ -114,7 +114,7 @@ cleanup:
 }
 #endif
 
-secbool secret_key_mcu_device_auth(curve25519_key dest) {
+secbool secret_key_mcu_device_auth(ed25519_secret_key dest) {
   return secret_key_derive_curve25519(SECRET_PRIVILEGED_MASTER_KEY_SLOT,
                                       KEY_INDEX_MCU_DEVICE_AUTH, dest);
 }

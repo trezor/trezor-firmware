@@ -31,6 +31,11 @@
 #include "memzero.h"
 #include "rand.h"
 #include "secbool.h"
+#include "secure_channel.h"
+
+#ifndef TREZOR_EMULATOR
+#include <trezor_model.h>
+#endif
 
 secbool generate_random_secret(uint8_t* secret, size_t length) {
   random_buffer(secret, length);
@@ -128,6 +133,97 @@ static void prodtest_secrets_init(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+#ifdef SECRET_MASTER_KEY_SLOT_SIZE
+static void prodtest_secrets_get_mcu_device_key(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  ed25519_secret_key mcu_private = {0};
+  if (secret_key_mcu_device_auth(mcu_private) != sectrue) {
+    cli_error(cli, CLI_ERROR, "`secret_key_mcu_device_auth()` failed.");
+    return;
+  }
+  ed25519_public_key mcu_public = {0};
+  ed25519_publickey(mcu_private, mcu_public);
+
+  uint8_t output[sizeof(ed25519_public_key) + NOISE_TAG_SIZE] = {0};
+  if (!secure_channel_encrypt(mcu_public, sizeof(mcu_public), NULL, 0,
+                              output)) {
+    // `secure_channel_handshake_2()` might not have been called
+    cli_error(cli, CLI_ERROR, "`secure_channel_encrypt()` failed.");
+    goto cleanup;
+  }
+
+  cli_ok_hexdata(cli, output, sizeof(output));
+
+cleanup:
+  memzero(mcu_private, sizeof(mcu_private));
+}
+
+static void prodtest_secrets_certdev_write(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+#ifdef TREZOR_EMULATOR
+  cli_error(cli, CLI_ERROR, "Not implemented");
+#else
+  const size_t prefix_length = 2;
+  size_t certificate_length = 0;
+  uint8_t prefixed_certificate[SECRET_MCU_DEVICE_CERT_SIZE] = {0};
+  if (!cli_arg_hex(cli, "hex-data", prefixed_certificate + prefix_length,
+                   sizeof(prefixed_certificate) - prefix_length,
+                   &certificate_length)) {
+    if (certificate_length == sizeof(prefixed_certificate) - prefix_length) {
+      cli_error(cli, CLI_ERROR, "Certificate too long.");
+    } else {
+      cli_error(cli, CLI_ERROR, "Hexadecimal decoding error.");
+    }
+    return;
+  }
+  prefixed_certificate[0] = (certificate_length >> 8) & 0xFF;
+  prefixed_certificate[1] = certificate_length & 0xFF;
+
+  secret_write(prefixed_certificate, SECRET_MCU_DEVICE_CERT_OFFSET,
+               sizeof(prefixed_certificate));
+
+  cli_ok(cli, "");
+#endif
+}
+
+static void prodtest_secrets_certdev_read(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+#ifdef TREZOR_EMULATOR
+  cli_error(cli, CLI_ERROR, "Not implemented");
+#else
+  const size_t prefix_length = 2;
+  uint8_t prefixed_certificate[SECRET_MCU_DEVICE_CERT_SIZE] = {0};
+
+  if (secret_read(prefixed_certificate, SECRET_MCU_DEVICE_CERT_OFFSET,
+                  sizeof(prefixed_certificate)) != sectrue) {
+    cli_error(cli, CLI_ERROR, "`secret_read()` failed.");
+    return;
+  }
+
+  size_t certificate_length =
+      prefixed_certificate[0] << 8 | prefixed_certificate[1];
+
+  if (certificate_length > sizeof(prefixed_certificate) - prefix_length) {
+    cli_error(cli, CLI_ERROR, "Invalid certificate data.");
+    return;
+  }
+  cli_ok_hexdata(cli, prefixed_certificate + prefix_length, certificate_length);
+#endif
+}
+#endif
+
 #ifdef SECRET_LOCK_SLOT_OFFSET
 static void prodtest_secrets_lock(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
@@ -159,6 +255,29 @@ PRODTEST_CLI_CMD(
   .info = "Generate and write secrets to flash",
   .args = ""
 );
+
+#ifdef SECRET_MASTER_KEY_SLOT_SIZE
+PRODTEST_CLI_CMD(
+  .name = "secrets-get-mcu-device-key",
+  .func = prodtest_secrets_get_mcu_device_key,
+  .info = "Get MCU device attestation public key",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "secrets-certdev-write",
+  .func = prodtest_secrets_certdev_write,
+  .info = "Write the device's X.509 certificate to flash",
+  .args = "<hex-data>"
+);
+
+PRODTEST_CLI_CMD(
+  .name = "secrets-certdev-read",
+  .func = prodtest_secrets_certdev_read,
+  .info = "Read the device's X.509 certificate from flash",
+  .args = ""
+);
+#endif
 
 #ifdef SECRET_LOCK_SLOT_OFFSET
 PRODTEST_CLI_CMD(

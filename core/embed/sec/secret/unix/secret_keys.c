@@ -44,6 +44,11 @@ _Static_assert(sizeof(SECRET_TROPIC_PAIRING_BYTES) == sizeof(curve25519_key),
 _Static_assert(sizeof(SECRET_TROPIC_PUBKEY_BYTES) == sizeof(curve25519_key),
                "Invalid size of Tropic public key");
 
+secbool secret_key_mcu_device_auth(ed25519_secret_key dest) {
+  memset(dest, 3, sizeof(ed25519_secret_key));
+  return sectrue;
+}
+
 secbool secret_key_tropic_public(curve25519_key dest) {
   memcpy(dest, SECRET_TROPIC_PUBKEY_BYTES, sizeof(curve25519_key));
   return sectrue;
