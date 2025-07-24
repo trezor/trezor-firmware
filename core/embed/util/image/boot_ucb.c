@@ -61,10 +61,11 @@ secbool boot_ucb_read(boot_ucb_t* ucb) {
 
   // Get address range where the header and code can be located.
   // Both header and code must be inside flash area reserved for the
-  // firmware and must not overlap with the bootloader code.
+  // firmware and must not overlap with the address range where
+  // the new bootloader will be written.
 
-  // !@# TODO: fix the magic number
-  uint32_t min_address = NONBLDR_START + 512 * 1024;
+  uint32_t min_address =
+      NONBLDR_START + (BOOT_HEADER_MAXSIZE + BOOT_HEADER_CODE_MAXSIZE);
   uint32_t max_address = NONBLDR_START + NONBLDR_MAXSIZE;
 
   // Check if the authenticated part of the header is within the valid address

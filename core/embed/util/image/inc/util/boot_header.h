@@ -34,7 +34,7 @@
 /** Number of reserved slots for Merkle proof */
 #define BOOT_HEADER_MERKLE_PROOF_MAXLEN (256)
 /** Maximum accepted size of the bootloader code in bytes */
-#define BOOT_HEADER_CODE_MAXSIZE (1024 * 1024)
+#define BOOT_HEADER_CODE_MAXSIZE (512 * 1024)
 
 /**
  * 4-byte version structure used in the boot header
