@@ -1280,6 +1280,7 @@ pub enum TranslatedString {
     tutorial__continue = 916,  // "Continue tutorial"
     tutorial__exit = 917,  // "Exit tutorial"
     tutorial__menu = 920,  // "Find context-specific actions and options in the menu."
+    tutorial__one_more_step = 921,  // "One more step"
     tutorial__ready_to_use_safe5 = 922,  // "You're all set to start using your device!"
     tutorial__swipe_up_and_down = 924,  // "Tap the lower half of the screen to continue, or swipe down to go back."
     tutorial__title_easy_navigation = 925,  // "Easy navigation"
@@ -1304,7 +1305,7 @@ pub enum TranslatedString {
     tutorial__first_wallet = 944,  // "The Trezor Model One, created in 2013,\nwas the world's first hardware wallet."
     tutorial__restart_tutorial = 945,  // "Restart tutorial"
     tutorial__title_handy_menu = 946,  // "Handy menu"
-    tutorial__title_hold = 947,  // "Hold to confirm important actions"
+    tutorial__title_hold = 947,  // {"Bolt": "Hold to confirm important actions", "Caesar": "Hold to confirm important actions", "Delizia": "Hold to confirm important actions", "Eckhart": "Hold the button to confirm important actions."}
     tutorial__title_well_done = 948,  // "Well done!"
     tutorial__lets_begin = 949,  // "Learn how to use and navigate this device with ease."
     tutorial__get_started = 950,  // "Get started!"
@@ -1452,6 +1453,18 @@ pub enum TranslatedString {
     words__assets = 1055,  // "Assets"
     #[cfg(feature = "universal_fw")]
     ethereum__title_confirm_message_hash = 1056,  // "Confirm message hash"
+    buttons__finish = 1057,  // "Finish"
+    instructions__menu_to_continue = 1058,  // "Use menu to continue"
+    tutorial__last_one = 1059,  // "Last one"
+    tutorial__menu_appendix = 1060,  // "View more info, quit flow, ..."
+    tutorial__navigation_ts7 = 1061,  // "Use buttons at the bottom to navigate and confirm your actions."
+    tutorial__suite_restart = 1062,  // "Replay this tutorial anytime from the Trezor Suite app."
+    tutorial__tropic = 1063,  // "Secured with TROPIC01"
+    tutorial__tropic_info1 = 1064,  // "TROPIC01 is a next-gen secure element with tamper-proof protection and open architecture."
+    tutorial__tropic_info2 = 1065,  // "Private keys stay on-chip, safeguarded by hardware-enforced boundaries and anti-tamper tech."
+    tutorial__tropic_info3 = 1066,  // "Built for security from the ground up, and open to independent audits."
+    tutorial__welcome_safe7 = 1067,  // "Welcome to\nTrezor\nSafe 7"
+    tutorial__what_is_tropic = 1068,  // "What is TROPIC01?"
 }
 
 impl TranslatedString {
@@ -2993,6 +3006,7 @@ impl TranslatedString {
             (Self::tutorial__continue, "Continue tutorial"),
             (Self::tutorial__exit, "Exit tutorial"),
             (Self::tutorial__menu, "Find context-specific actions and options in the menu."),
+            (Self::tutorial__one_more_step, "One more step"),
             (Self::tutorial__ready_to_use_safe5, "You're all set to start using your device!"),
             (Self::tutorial__swipe_up_and_down, "Tap the lower half of the screen to continue, or swipe down to go back."),
             (Self::tutorial__title_easy_navigation, "Easy navigation"),
@@ -3031,7 +3045,14 @@ impl TranslatedString {
             (Self::tutorial__first_wallet, "The Trezor Model One, created in 2013,\nwas the world's first hardware wallet."),
             (Self::tutorial__restart_tutorial, "Restart tutorial"),
             (Self::tutorial__title_handy_menu, "Handy menu"),
+            #[cfg(feature = "layout_bolt")]
             (Self::tutorial__title_hold, "Hold to confirm important actions"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::tutorial__title_hold, "Hold to confirm important actions"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::tutorial__title_hold, "Hold to confirm important actions"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::tutorial__title_hold, "Hold the button to confirm important actions."),
             (Self::tutorial__title_well_done, "Well done!"),
             (Self::tutorial__lets_begin, "Learn how to use and navigate this device with ease."),
             (Self::tutorial__get_started, "Get started!"),
@@ -3216,6 +3237,18 @@ impl TranslatedString {
             (Self::words__assets, "Assets"),
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__title_confirm_message_hash, "Confirm message hash"),
+            (Self::buttons__finish, "Finish"),
+            (Self::instructions__menu_to_continue, "Use menu to continue"),
+            (Self::tutorial__last_one, "Last one"),
+            (Self::tutorial__menu_appendix, "View more info, quit flow, ..."),
+            (Self::tutorial__navigation_ts7, "Use buttons at the bottom to navigate and confirm your actions."),
+            (Self::tutorial__suite_restart, "Replay this tutorial anytime from the Trezor Suite app."),
+            (Self::tutorial__tropic, "Secured with TROPIC01"),
+            (Self::tutorial__tropic_info1, "TROPIC01 is a next-gen secure element with tamper-proof protection and open architecture."),
+            (Self::tutorial__tropic_info2, "Private keys stay on-chip, safeguarded by hardware-enforced boundaries and anti-tamper tech."),
+            (Self::tutorial__tropic_info3, "Built for security from the ground up, and open to independent audits."),
+            (Self::tutorial__welcome_safe7, "Welcome to\nTrezor\nSafe 7"),
+            (Self::tutorial__what_is_tropic, "What is TROPIC01?"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3317,6 +3350,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_buttons__enter, Self::buttons__enter),
         (Qstr::MP_QSTR_buttons__enter_share, Self::buttons__enter_share),
         (Qstr::MP_QSTR_buttons__export, Self::buttons__export),
+        (Qstr::MP_QSTR_buttons__finish, Self::buttons__finish),
         (Qstr::MP_QSTR_buttons__format, Self::buttons__format),
         (Qstr::MP_QSTR_buttons__go_back, Self::buttons__go_back),
         (Qstr::MP_QSTR_buttons__hold_to_confirm, Self::buttons__hold_to_confirm),
@@ -3852,6 +3886,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_instructions__hold_to_exit_tutorial, Self::instructions__hold_to_exit_tutorial),
         (Qstr::MP_QSTR_instructions__hold_to_sign, Self::instructions__hold_to_sign),
         (Qstr::MP_QSTR_instructions__learn_more, Self::instructions__learn_more),
+        (Qstr::MP_QSTR_instructions__menu_to_continue, Self::instructions__menu_to_continue),
         (Qstr::MP_QSTR_instructions__shares_continue_with_x_template, Self::instructions__shares_continue_with_x_template),
         (Qstr::MP_QSTR_instructions__shares_start_with_1, Self::instructions__shares_start_with_1),
         (Qstr::MP_QSTR_instructions__shares_start_with_x_template, Self::instructions__shares_start_with_x_template),
@@ -4544,14 +4579,19 @@ impl TranslatedString {
         (Qstr::MP_QSTR_tutorial__exit, Self::tutorial__exit),
         (Qstr::MP_QSTR_tutorial__first_wallet, Self::tutorial__first_wallet),
         (Qstr::MP_QSTR_tutorial__get_started, Self::tutorial__get_started),
+        (Qstr::MP_QSTR_tutorial__last_one, Self::tutorial__last_one),
         (Qstr::MP_QSTR_tutorial__lets_begin, Self::tutorial__lets_begin),
         (Qstr::MP_QSTR_tutorial__menu, Self::tutorial__menu),
+        (Qstr::MP_QSTR_tutorial__menu_appendix, Self::tutorial__menu_appendix),
         (Qstr::MP_QSTR_tutorial__middle_click, Self::tutorial__middle_click),
+        (Qstr::MP_QSTR_tutorial__navigation_ts7, Self::tutorial__navigation_ts7),
+        (Qstr::MP_QSTR_tutorial__one_more_step, Self::tutorial__one_more_step),
         (Qstr::MP_QSTR_tutorial__press_and_hold, Self::tutorial__press_and_hold),
         (Qstr::MP_QSTR_tutorial__ready_to_use, Self::tutorial__ready_to_use),
         (Qstr::MP_QSTR_tutorial__ready_to_use_safe5, Self::tutorial__ready_to_use_safe5),
         (Qstr::MP_QSTR_tutorial__restart_tutorial, Self::tutorial__restart_tutorial),
         (Qstr::MP_QSTR_tutorial__scroll_down, Self::tutorial__scroll_down),
+        (Qstr::MP_QSTR_tutorial__suite_restart, Self::tutorial__suite_restart),
         (Qstr::MP_QSTR_tutorial__sure_you_want_skip, Self::tutorial__sure_you_want_skip),
         (Qstr::MP_QSTR_tutorial__swipe_up_and_down, Self::tutorial__swipe_up_and_down),
         (Qstr::MP_QSTR_tutorial__title_easy_navigation, Self::tutorial__title_easy_navigation),
@@ -4563,9 +4603,15 @@ impl TranslatedString {
         (Qstr::MP_QSTR_tutorial__title_skip, Self::tutorial__title_skip),
         (Qstr::MP_QSTR_tutorial__title_tutorial_complete, Self::tutorial__title_tutorial_complete),
         (Qstr::MP_QSTR_tutorial__title_well_done, Self::tutorial__title_well_done),
+        (Qstr::MP_QSTR_tutorial__tropic, Self::tutorial__tropic),
+        (Qstr::MP_QSTR_tutorial__tropic_info1, Self::tutorial__tropic_info1),
+        (Qstr::MP_QSTR_tutorial__tropic_info2, Self::tutorial__tropic_info2),
+        (Qstr::MP_QSTR_tutorial__tropic_info3, Self::tutorial__tropic_info3),
         (Qstr::MP_QSTR_tutorial__use_trezor, Self::tutorial__use_trezor),
         (Qstr::MP_QSTR_tutorial__welcome_press_right, Self::tutorial__welcome_press_right),
         (Qstr::MP_QSTR_tutorial__welcome_safe5, Self::tutorial__welcome_safe5),
+        (Qstr::MP_QSTR_tutorial__welcome_safe7, Self::tutorial__welcome_safe7),
+        (Qstr::MP_QSTR_tutorial__what_is_tropic, Self::tutorial__what_is_tropic),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_u2f__get, Self::u2f__get),
         #[cfg(feature = "universal_fw")]

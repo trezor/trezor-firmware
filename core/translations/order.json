@@ -1055,5 +1055,17 @@
   "1053": "address__title_provider_address",
   "1054": "address__title_refund_address",
   "1055": "words__assets",
-  "1056": "ethereum__title_confirm_message_hash"
+  "1056": "ethereum__title_confirm_message_hash",
+  "1057": "buttons__finish",
+  "1058": "instructions__menu_to_continue",
+  "1059": "tutorial__last_one",
+  "1060": "tutorial__menu_appendix",
+  "1061": "tutorial__navigation_ts7",
+  "1062": "tutorial__suite_restart",
+  "1063": "tutorial__tropic",
+  "1064": "tutorial__tropic_info1",
+  "1065": "tutorial__tropic_info2",
+  "1066": "tutorial__tropic_info3",
+  "1067": "tutorial__welcome_safe7",
+  "1068": "tutorial__what_is_tropic"
 }
