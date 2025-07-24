@@ -20,6 +20,7 @@ from ..keychain import address_n_to_name
 if TYPE_CHECKING:
     from trezor.enums import AmountUnit
     from trezor.messages import PaymentRequest, TxOutput
+    from trezor.ui.layouts import PropertyType
 
     from apps.common.coininfo import CoinInfo
     from apps.common.paths import Bip32Path
@@ -202,11 +203,11 @@ async def show_payment_request_details(
 
     account = account_label(coin, address_n)
     account_path = address_n_to_str(address_n) if address_n else None
-    account_items = []
+    account_items: list[PropertyType] = []
     if account:
-        account_items.append((TR.words__account, account))
+        account_items.append((TR.words__account, account, True))
     if account_path:
-        account_items.append((TR.address_details__derivation_path, account_path))
+        account_items.append((TR.address_details__derivation_path, account_path, True))
 
     await layouts.confirm_payment_request(
         payment_request.recipient_name,

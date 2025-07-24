@@ -171,7 +171,7 @@ async def confirm_instruction(
             raise ValueError  # Invalid ui property
 
     if instruction.multisig_signers:
-        signers: list[tuple[str, str, bool]] = []
+        signers: list[PropertyType] = []
         for i, multisig_signer in enumerate(instruction.multisig_signers, 1):
             multisig_signer_public_key = multisig_signer[0]
 
@@ -313,7 +313,7 @@ async def confirm_system_transfer(
     await confirm_solana_recipient(
         recipient=base58.encode(transfer_instruction.recipient_account[0]),
         title=TR.words__recipient,
-        items=[(TR.words__blockhash, base58.encode(blockhash))],
+        items=[(TR.words__blockhash, base58.encode(blockhash), True)],
     )
 
     await confirm_custom_transaction(transfer_instruction.lamports, 9, "SOL", fee)
@@ -329,12 +329,12 @@ async def confirm_token_transfer(
     fee: Fee,
     blockhash: bytes,
 ) -> None:
-    items = []
+    items: list[PropertyType] = []
     if token_account != destination_account:
         items.append(
-            (TR.solana__associated_token_account, base58.encode(token_account))
+            (TR.solana__associated_token_account, base58.encode(token_account), True)
         )
-    items.append((TR.words__blockhash, base58.encode(blockhash)))
+    items.append((TR.words__blockhash, base58.encode(blockhash), True))
 
     await confirm_solana_recipient(
         recipient=base58.encode(destination_account),
@@ -358,22 +358,22 @@ async def confirm_token_transfer(
     await confirm_custom_transaction(amount, decimals, token.symbol, fee)
 
 
-def _fee_ui_info(fee: Fee | None) -> tuple[str, str, list[tuple[str, str]]]:
-    fee_items: list[tuple[str, str]] = []
+def _fee_ui_info(fee: Fee | None) -> tuple[str, str, list[PropertyType]]:
+    fee_items: list[PropertyType] = []
     if fee is None:
         fee_title = f"{TR.solana__max_fees_rent}:"
         fee_str = TR.words__unknown
     else:
         fee_str = format_amount_unit(format_amount(fee.total, 9), "SOL")
         base_fee_str = format_amount_unit(format_amount(fee.base, 9), "SOL")
-        fee_items.append((TR.solana__base_fee, base_fee_str))
+        fee_items.append((TR.solana__base_fee, base_fee_str, True))
         if fee.priority:
             priority_fee_str = format_amount_unit(format_amount(fee.priority, 9), "SOL")
-            fee_items.append((TR.solana__priority_fee, priority_fee_str))
+            fee_items.append((TR.solana__priority_fee, priority_fee_str, True))
         if fee.rent:
             fee_title = f"{TR.solana__max_fees_rent}:"
             rent_str = format_amount_unit(format_amount(fee.rent, 9), "SOL")
-            fee_items.append((TR.solana__max_rent_fee, rent_str))
+            fee_items.append((TR.solana__max_rent_fee, rent_str, True))
         else:
             fee_title = f"{TR.words__transaction_fee}:"
     return fee_title, fee_str, fee_items
@@ -452,14 +452,16 @@ async def confirm_stake_transaction(
         stake_item=(
             TR.solana__stake_account,
             base58.encode(delegate.initialized_stake_account[0]),
+            True,
         ),
         amount_item=(
             f"{TR.words__amount}:",
             format_amount_unit(format_amount(create.lamports, 9), "SOL"),
+            True,
         ),
-        fee_item=(fee_title, fee_str),
+        fee_item=(fee_title, fee_str, True),
         fee_details=fee_items,
-        blockhash_item=(TR.words__blockhash, base58.encode(blockhash)),
+        blockhash_item=(TR.words__blockhash, base58.encode(blockhash), True),
     )
 
 
@@ -480,9 +482,9 @@ async def confirm_unstake_transaction(
         vote_account="",
         stake_item=None,
         amount_item=None,
-        fee_item=(fee_title, fee_str),
+        fee_item=(fee_title, fee_str, True),
         fee_details=fee_items,
-        blockhash_item=(TR.words__blockhash, base58.encode(blockhash)),
+        blockhash_item=(TR.words__blockhash, base58.encode(blockhash), True),
     )
 
 
@@ -505,10 +507,11 @@ async def confirm_claim_transaction(
         amount_item=(
             f"{TR.words__amount}:",
             format_amount_unit(format_amount(total_amount, 9), "SOL"),
+            True,
         ),
-        fee_item=(fee_title, fee_str),
+        fee_item=(fee_title, fee_str, True),
         fee_details=fee_items,
-        blockhash_item=(TR.words__blockhash, base58.encode(blockhash)),
+        blockhash_item=(TR.words__blockhash, base58.encode(blockhash), True),
     )
 
 
@@ -517,7 +520,7 @@ async def confirm_transaction(
     fee: Fee | None,
 ) -> None:
     fee_title, fee_str, fee_items = _fee_ui_info(fee)
-    fee_items.append((TR.words__blockhash, base58.encode(blockhash)))
+    fee_items.append((TR.words__blockhash, base58.encode(blockhash), True))
     await confirm_solana_tx(
         amount="",
         amount_title="",
@@ -568,9 +571,9 @@ async def confirm_payment_request(
             raise wire.DataError("Unrecognized memo type in payment request memo.")
 
     account_path = address_n_to_str(address_n) if address_n else None
-    account_items = []
+    account_items: list[PropertyType] = []
     if account_path:
-        account_items.append((TR.address_details__derivation_path, account_path))
+        account_items.append((TR.address_details__derivation_path, account_path, True))
 
     _, fee_str, fee_items = _fee_ui_info(fee)
 

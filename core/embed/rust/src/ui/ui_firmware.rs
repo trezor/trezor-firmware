@@ -186,8 +186,8 @@ pub trait FirmwareUI {
         subtitle: Option<TString<'static>>,
         description: Option<TString<'static>>,
         extra: Option<TString<'static>>,
-        message: Obj,        // TODO: replace Obj
-        amount: Option<Obj>, // TODO: replace Obj
+        message: TString<'static>,
+        amount: Option<TString<'static>>,
         chunkify: bool,
         text_mono: bool,
         account_title: TString<'static>,
@@ -195,8 +195,8 @@ pub trait FirmwareUI {
         account_path: Option<TString<'static>>,
         br_code: u16,
         br_name: TString<'static>,
-        address_item: Option<(TString<'static>, Obj)>,
-        extra_item: Option<(TString<'static>, Obj)>,
+        address_item: Option<Obj>,
+        extra_item: Option<Obj>,
         summary_items: Option<Obj>, // TODO: replace Obj
         fee_items: Option<Obj>,     // TODO: replace Obj
         summary_title: Option<TString<'static>>,
