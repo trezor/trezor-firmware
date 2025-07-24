@@ -137,7 +137,7 @@ bool tropic_ecc_key_generate(uint16_t slot_index) {
 }
 
 bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
-                     uint16_t dig_len, uint8_t *sig, uint16_t sig_len) {
+                     uint16_t dig_len, uint8_t *sig) {
   tropic_driver_t *drv = &g_tropic_driver;
 
   if (!drv->initialized) {
@@ -151,7 +151,7 @@ bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
   lt_ret_t res =
       lt_ecc_eddsa_sign(&drv->handle, key_slot_index, dig, dig_len, sig);
   if (res != LT_OK) {
-    memzero(sig, sig_len);
+    memzero(sig, ECDSA_RAW_SIGNATURE_SIZE);
     return false;
   }
 

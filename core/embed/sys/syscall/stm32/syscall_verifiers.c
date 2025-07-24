@@ -1213,6 +1213,7 @@ access_violation:
 
 #ifdef USE_TROPIC
 #include <sec/tropic.h>
+#include "ecdsa.h"
 
 bool tropic_ping__verified(const uint8_t *msg_out, uint8_t *msg_in,
                            uint16_t msg_len) {
@@ -1235,17 +1236,16 @@ bool tropic_ecc_key_generate__verified(uint16_t slot_index) {
 }
 
 bool tropic_ecc_sign__verified(uint16_t key_slot_index, const uint8_t *dig,
-                               uint16_t dig_len, uint8_t *sig,
-                               uint16_t sig_len) {
+                               uint16_t dig_len, uint8_t *sig) {
   if (!probe_read_access(dig, dig_len)) {
     goto access_violation;
   }
 
-  if (!probe_write_access(sig, sig_len)) {
+  if (!probe_write_access(sig, ECDSA_RAW_SIGNATURE_SIZE)) {
     goto access_violation;
   }
 
-  return tropic_ecc_sign(key_slot_index, dig, dig_len, sig, sig_len);
+  return tropic_ecc_sign(key_slot_index, dig, dig_len, sig);
 access_violation:
   apptask_access_violation();
   return false;
