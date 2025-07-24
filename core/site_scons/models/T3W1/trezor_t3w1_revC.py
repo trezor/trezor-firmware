@@ -58,6 +58,12 @@ def configure(
         ("TERMINAL_Y_PADDING", "12"),
     ]
 
+    if "boot_ucb" in features_wanted:
+        sources += ["embed/util/image/boot_header.c"]
+        sources += ["embed/util/image/boot_ucb.c"]
+        defines += [("USE_BOOT_UCB", "1")]
+        features_available.append("boot_ucb")
+
     if "display" in features_wanted:
         sources += [
             "embed/io/display/ltdc_dsi/display_driver.c",

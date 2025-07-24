@@ -22,13 +22,23 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <sec/monoctr.h>
 #include <sys/mpu.h>
 #include <util/board_capabilities.h>
+#include <util/boot_image.h>
 #include <util/flash.h>
 #include <util/image.h>
+
 #include "blake2s.h"
 #include "memzero.h"
 #include "uzlib.h"
+
+#ifdef USE_BOOT_UCB
+#include <util/boot_header.h>
+#include <util/boot_ucb.h>
+#endif
+
+#ifndef USE_BOOT_UCB
 
 static secbool hash_match(const uint8_t *hash, const uint8_t *hash_00,
                           const uint8_t *hash_FF) {
@@ -60,13 +70,8 @@ static void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
   uzlib_uncompress_init(decomp, window, window ? UZLIB_WINDOW_SIZE : 0);
 }
 
-bool bl_check_check(const uint8_t *hash_00, const uint8_t *hash_FF,
-                    size_t hash_len) {
+bool boot_image_check(const boot_image_t *image) {
   mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
-
-  if (hash_len != BLAKE2S_DIGEST_LENGTH) {
-    error_shutdown("Invalid bootloader hash length");
-  }
 
   // compute current bootloader hash
   uint8_t hash[BLAKE2S_DIGEST_LENGTH];
@@ -79,7 +84,7 @@ bool bl_check_check(const uint8_t *hash_00, const uint8_t *hash_FF,
   // detected");
 
   // does the bootloader match?
-  if (sectrue == hash_match(hash, hash_00, hash_FF)) {
+  if (sectrue == hash_match(hash, image->hash_00, image->hash_FF)) {
     mpu_reconfig(mode);
     return false;
   }
@@ -88,7 +93,7 @@ bool bl_check_check(const uint8_t *hash_00, const uint8_t *hash_FF,
   return true;
 }
 
-void bl_check_replace(const uint8_t *data, size_t len) {
+void boot_image_replace(const boot_image_t *image) {
   const uint32_t bl_len = flash_area_get_size(&BOOTLOADER_AREA);
   const void *bl_data = flash_area_get_address(&BOOTLOADER_AREA, 0, bl_len);
 
@@ -98,8 +103,8 @@ void bl_check_replace(const uint8_t *data, size_t len) {
   uint8_t decomp_window[UZLIB_WINDOW_SIZE] = {0};
   uint32_t decomp_out[IMAGE_HEADER_SIZE / sizeof(uint32_t)] = {0};
 
-  uzlib_prepare(&decomp, decomp_window, data, len, decomp_out,
-                sizeof(decomp_out));
+  uzlib_prepare(&decomp, decomp_window, image->image_ptr, image->image_size,
+                decomp_out, sizeof(decomp_out));
 
   ensure((uzlib_uncompress(&decomp) == TINF_OK) ? sectrue : secfalse,
          "Bootloader header decompression failed");
@@ -184,8 +189,8 @@ void bl_check_replace(const uint8_t *data, size_t len) {
 
   uint32_t offset = 0;
 
-  uzlib_prepare(&decomp, decomp_window, data, len, decomp_out,
-                sizeof(decomp_out));
+  uzlib_prepare(&decomp, decomp_window, image->image_ptr, image->image_size,
+                decomp_out, sizeof(decomp_out));
 
   ensure((uzlib_uncompress(&decomp) == TINF_OK) ? sectrue : secfalse,
          "Bootloader decompression failed");
@@ -212,5 +217,73 @@ void bl_check_replace(const uint8_t *data, size_t len) {
 
   mpu_reconfig(mode);
 }
+
+#else
+
+bool boot_image_check(const boot_image_t *image) {
+  if (image->image_size < sizeof(boot_header_t)) {
+    // Invalid image size, must be at least the size of the header
+    return false;
+  }
+
+  mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
+
+  boot_header_t *cur_hdr = (boot_header_t *)BOOTLOADER_START;
+  boot_header_t *new_hdr = (boot_header_t *)image->image_ptr;
+
+  bool diff = (cur_hdr->header_size != new_hdr->header_size) ||
+              (memcmp(cur_hdr, new_hdr, cur_hdr->header_size) != 0);
+
+  mpu_restore(mode);
+
+  return diff;
+}
+
+void boot_image_replace(const boot_image_t *image) {
+  uint32_t header_address = (uint32_t)image->image_ptr;
+
+  // Check that image is big enough to hold the header at least
+  ensure(sectrue * (image->image_size >= sizeof(boot_header_t)),
+         "Bootloader image too small");
+
+  // Read bootloader header
+  const boot_header_t *hdr = boot_header_check_integrity(header_address);
+  ensure((hdr != NULL) * sectrue, "Invalid bootloader header");
+
+  // Check the image is big enough to hold both header and code
+  ensure(sectrue * (hdr->header_size + hdr->code_size <= image->image_size),
+         "Bootloader image too small");
+
+  // Check monotonic version
+
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
+
+  const boot_header_t *old_hdr = boot_header_check_integrity(BOOTLOADER_START);
+
+  ensure((old_hdr != NULL) * sectrue, "Invalid current bootloader header");
+
+  uint8_t min_monotonic_version = old_hdr->monotonic_version;
+
+  mpu_restore(mpu_mode);
+
+  ensure(sectrue * (hdr->monotonic_version >= min_monotonic_version),
+         "Bootloader downgrade rejected");
+
+  uint32_t code_address = (uint32_t)image->image_ptr + hdr->header_size;
+
+  // Calculate the merkle root from the header and the code
+  merkle_proof_node_t merkle_root;
+  boot_header_calc_merkle_root(hdr, code_address, &merkle_root);
+
+  // Check whether the new bootloader is properly signed
+  ensure(boot_header_check_signature(hdr, &merkle_root),
+         "Invalid bootloader signature");
+
+  // Write to update control block
+  ensure(boot_ucb_write(header_address, code_address),
+         "Failed to write boot UCB");
+}
+
+#endif
 
 #endif
