@@ -45,28 +45,28 @@ def get_sessionless_cache() -> SessionlessCache:
     return _SESSIONLESS_CACHE
 
 
-def encrypt_seeds() -> None:
+def encrypt_cache() -> None:
     """
     Encrypts seeds in all the cached sessions and the sessionless cache.
     """
-    from storage.seed_encryption import encrypt_session_seeds
+    from storage.cache_encryption import encrypt_session_cache
 
-    log.debug("encrypt_seeds", "Encrypting session seeds")
-    for session in cache_codec._SESSIONS:
-        encrypt_session_seeds(session)
-    encrypt_session_seeds(get_sessionless_cache())
+    log.debug(__name__, "Encrypting session cache")
+    for session in _PROTOCOL_CACHE._SESSIONS:
+        encrypt_session_cache(session)
+    encrypt_session_cache(_SESSIONLESS_CACHE)
 
 
-def decrypt_seeds() -> None:
+def decrypt_cache() -> None:
     """
     Decrypts seeds in all the cached sessions and the sessionless cache.
     """
-    from storage.seed_encryption import decrypt_session_seeds
+    from storage.cache_encryption import decrypt_session_cache
 
-    log.debug("decrypt_seeds", "Decrypting session seeds")
-    for session in cache_codec._SESSIONS:
-        decrypt_session_seeds(session)
-    decrypt_session_seeds(get_sessionless_cache())
+    log.debug(__name__, "Decrypting session cache")
+    for session in _PROTOCOL_CACHE._SESSIONS:
+        decrypt_session_cache(session)
+    decrypt_session_cache(_SESSIONLESS_CACHE)
 
 
 # === Homescreen storage ===

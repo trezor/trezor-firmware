@@ -23,7 +23,7 @@ def is_empty(session: cache_codec.DataCache, fields_to_encrypt: List[int]) -> bo
     return True
 
 
-def get_seed_encryption_key(session_id: bytes) -> bytes:
+def get_cache_encryption_key(session_id: bytes) -> bytes:
     """
     Returns the seed encryption key for a given session ID.
     The key is derived from the device secret and the session ID.
@@ -38,14 +38,14 @@ def get_seed_encryption_key(session_id: bytes) -> bytes:
         from apps.common.paths import Slip21Path
 
     device_secret = get_device_secret()
-    label = b"Seed encryption key"
+    label = b"Cache encryption key"
     path: Slip21Path = [label, session_id]
     key_node = Slip21Node(device_secret)
     key_node.derive_path(path)
     return key_node.key()
 
 
-def chain_seed_values(
+def chain_cache_values(
     session: cache_codec.DataCache, fileds_to_encrypt: List[int]
 ) -> bytes:
     """
@@ -166,9 +166,9 @@ def get_common_data(session: cache_codec.DataCache) -> Tuple[bytes, List[int]]:
     return session_id, fields_to_encrypt
 
 
-def encrypt_session_seeds(session: cache_codec.DataCache) -> None:
+def encrypt_session_cache(session: cache_codec.DataCache) -> None:
     """
-    Encrypts the seeds and other relevant data in the DataCache.
+    Encrypts the relevant data in the DataCache.
     This function retrieves the session ID, derives the encryption key,
     and encrypts the seed values using ChaCha20-Poly1305.
     The encrypted data is then stored back in the session variables.
@@ -183,18 +183,18 @@ def encrypt_session_seeds(session: cache_codec.DataCache) -> None:
     if is_empty(session, fields_to_encrypt):
         return
 
-    encryption_key = get_seed_encryption_key(session_id)
+    encryption_key = get_cache_encryption_key(session_id)
     nonce = random.bytes(12, True)
     cipher = chacha20poly1305(encryption_key, nonce)
-    ciphertext = cipher.encrypt(chain_seed_values(session, fields_to_encrypt))
+    ciphertext = cipher.encrypt(chain_cache_values(session, fields_to_encrypt))
     tag = cipher.finish()
     set_decryption_data(session, nonce, tag)
     parse_value_chain_to_cache(ciphertext, session, fields_to_encrypt)
 
 
-def decrypt_session_seeds(session: cache_codec.DataCache) -> None:
+def decrypt_session_cache(session: cache_codec.DataCache) -> None:
     """
-    Decrypts the seeds and other relevant data in the DataCache.
+    Decrypts the relevant data in the DataCache.
     This function retrieves the session ID, nonce, and tag,
     derives the decryption key, and decrypts the seed values using ChaCha20-Poly1305.
     The decrypted data is then parsed and stored back in the session variables.
@@ -207,9 +207,9 @@ def decrypt_session_seeds(session: cache_codec.DataCache) -> None:
         return
 
     nonce, tag = get_decryption_data(session)
-    decryption_key = get_seed_encryption_key(session_id)
+    decryption_key = get_cache_encryption_key(session_id)
     cipher = chacha20poly1305(decryption_key, nonce)
-    plaintext = cipher.decrypt(chain_seed_values(session, fields_to_decrypt))
+    plaintext = cipher.decrypt(chain_cache_values(session, fields_to_decrypt))
     control_tag = cipher.finish()
     if control_tag != tag:
         raise ValueError("Decryption failed: tag mismatch")
