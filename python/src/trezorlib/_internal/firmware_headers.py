@@ -477,7 +477,7 @@ class BootloaderV2Image(firmware.BootableImage):
         # digest is calculated from
         self.header.sigmask = (1 << 0) | (1 << 1)
 
-        digest = self.digest()
+        digest = self.merkle_root()
 
         # SLH signature signs the image digest
         for idx, key in enumerate(self.DEV_PRIVATE_PQ_KEYS):
@@ -504,13 +504,14 @@ class BootloaderV2Image(firmware.BootableImage):
 
         output = [
             "Firmware Header " + _format_container(header_out),
-            f"Fingerprint: {click.style(self.digest().hex(), bold=True)}",
+            f"Leaf hash: {click.style(self.leaf_hash().hex(), bold=True)}",
+            f"Merkle root: {click.style(self.merkle_root().hex(), bold=True)}",
         ]
 
         return "\n".join(output)
 
     def verify(self, dev_keys: bool = False) -> None:
-        digest = self.digest()
+        digest = self.merkle_root()
 
         for idx, key in enumerate(self.public_ec_keys(dev_keys)):
             if not _ed25519.checkvalid(self.unauth.ec_signatures[idx], digest, key):
