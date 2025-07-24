@@ -320,15 +320,28 @@ class BootableImage(Struct):
         self.unauth.merkle_proof = proof
         self.header.auth_len = self.header.header_len - len(self.unauth.build())
 
-    def digest(self) -> bytes:
-        hash_params = self.get_hash_params()
-        hash_fn = hash_params.hash_function
+    def _leaf_value(self) -> bytes:
+        hash_fn = self.get_hash_params().hash_function
         assert hash_fn is hashlib.sha256  # currently hardcoded in trezorlib.merkle_tree
-
         auth_header = self.header.build()
         code_hash = hash_fn(self.code).digest()
-        leaf = auth_header + code_hash
-        return merkle_tree.evaluate_proof(leaf, self.unauth.merkle_proof)
+        return auth_header + code_hash
+
+    def leaf_hash(self) -> bytes:
+        """Calculate the Merkle leaf hash.
+
+        This is a fingerprint of _this particular_ boot header, which is not affected
+        by other members of the Merkle tree.
+        """
+        return merkle_tree.leaf_hash(self._leaf_value())
+
+    def merkle_root(self) -> bytes:
+        """Calculate the Merkle root hash.
+
+        It identifies the entire Merkle tree that contains this boot header. Signatures
+        are evaluated over this value.
+        """
+        return merkle_tree.evaluate_proof(self._leaf_value(), self.unauth.merkle_proof)
 
     def model(self) -> Model | None:
         if isinstance(self.header.hw_model, Model):

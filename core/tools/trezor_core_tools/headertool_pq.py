@@ -16,11 +16,11 @@ def no_echo(*args, **kwargs):
     "-D", "--sign-dev-keys", is_flag=True, help="Sign with development header keys."
 )
 @click.option(
-    "-d",
-    "--digest",
-    "print_digest",
+    "-m",
+    "--merkle-root",
+    "print_merkle_root",
     is_flag=True,
-    help="Only output header digest for signing and exit.",
+    help="Only output Merkle root for signing and exit.",
 )
 @click.option(
     "-M",
@@ -37,7 +37,7 @@ def cli(
     dry_run,
     sign_dev_keys,
     merkle_proof,
-    print_digest,
+    print_merkle_root,
     quiet,
 ):
     """Manage firmware headers.
@@ -64,9 +64,8 @@ def cli(
             f"Could not parse file (magic bytes: {magic})"
         ) from e
 
-    digest = fw.digest()
-    if print_digest:
-        click.echo(digest.hex())
+    if print_merkle_root:
+        click.echo(fw.merkle_root().hex())
         return
 
     if quiet:
