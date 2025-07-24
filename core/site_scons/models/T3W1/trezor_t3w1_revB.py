@@ -187,6 +187,7 @@ def configure(
         sources += ["embed/sec/tropic/tropic.c"]
         sources += ["embed/sec/tropic/stm32/tropic01.c"]
         sources += ["vendor/libtropic/src/libtropic.c"]
+        sources += ["vendor/libtropic/src/lt_asn1_der.c"]
         sources += ["vendor/libtropic/src/lt_crc16.c"]
         sources += ["vendor/libtropic/src/lt_l1_port_wrap.c"]
         sources += ["vendor/libtropic/src/lt_l1.c"]

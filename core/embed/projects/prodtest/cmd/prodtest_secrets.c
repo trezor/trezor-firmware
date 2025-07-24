@@ -31,6 +31,7 @@
 #include "memzero.h"
 #include "rand.h"
 #include "secbool.h"
+#include "secure_channel.h"
 
 secbool generate_random_secret(uint8_t* secret, size_t length) {
   random_buffer(secret, length);
@@ -128,11 +129,47 @@ static void prodtest_secrets_init(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+static void prodtest_secrets_get_mcu_device_key(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  curve25519_key mcu_private = {0};
+  if (secret_key_mcu_device_auth(mcu_private) != sectrue) {
+    cli_error(cli, CLI_ERROR, "`secret_key_mcu_device_auth()` failed.");
+    return;
+  }
+  curve25519_key mcu_public = {0};
+  curve25519_scalarmult_basepoint(mcu_public, mcu_private);
+
+  uint8_t output[sizeof(curve25519_key) + NOISE_TAG_SIZE] = {0};
+  if (!secure_channel_encrypt(NULL, 0, mcu_public, sizeof(curve25519_key),
+                              output + NOISE_TAG_SIZE)) {
+    cli_error(cli, CLI_ERROR,
+              "`secure_channel_encrypt()` failed. You have to "
+              "call `secure-channel-handshake-2` first.");
+    goto cleanup;
+  }
+
+  cli_ok_hexdata(cli, output, sizeof(output));
+
+cleanup:
+  memzero(mcu_private, sizeof(mcu_private));
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
   .name = "secrets-init",
   .func = prodtest_secrets_init,
   .info = "Generate and write secrets to flash",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "secrets-get-mcu-device_key",
+  .func = prodtest_secrets_get_mcu_device_key,
+  .info = "Get MCU device key",
   .args = ""
 );
