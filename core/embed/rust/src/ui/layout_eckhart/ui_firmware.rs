@@ -391,20 +391,12 @@ impl FirmwareUI for UIEckhart {
             &theme::TEXT_MONO_MEDIUM_LIGHT_DATA,
             theme::PROP_INNER_SPACING,
             theme::PROPS_SPACING,
-        )?;
+        )?
+        .into_paragraphs()
+        .with_placement(LinearPlacement::vertical());
 
-        let flow = flow::new_confirm_with_menu(
-            title,
-            None,
-            paragraphs.into_paragraphs().with_placement(
-                LinearPlacement::vertical().with_spacing(theme::PROP_INNER_SPACING),
-            ),
-            None,
-            verb,
-            hold,
-            None,
-            None,
-        )?;
+        let flow =
+            flow::new_confirm_with_menu(title, None, paragraphs, None, verb, hold, None, None)?;
         Ok(flow)
     }
 
@@ -1272,27 +1264,25 @@ impl FirmwareUI for UIEckhart {
         _horizontal: bool,
         chunkify: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let mut paragraphs = ParagraphVecShort::new();
-        for para in IterBuf::new().try_iterate(items)? {
-            let [key, value]: [Obj; 2] = util::iter_into_array(para)?;
-            let key: TString = key.try_into()?;
-            let value: TString = value.try_into()?;
-            paragraphs.add(Paragraph::new(&theme::TEXT_SMALL_LIGHT, key).no_break());
-            if chunkify {
-                paragraphs.add(Paragraph::new(
-                    theme::get_chunkified_text_style(value.len()),
-                    value,
-                ));
-            } else {
-                paragraphs.add(Paragraph::new(&theme::TEXT_MONO_LIGHT, value));
-            }
-        }
+        let value_mono_font = if chunkify {
+            &theme::TEXT_MONO_ADDRESS_CHUNKS
+        } else {
+            &theme::TEXT_MONO_LIGHT
+        };
+
+        let paragraphs = PropsList::new(
+            items,
+            &theme::TEXT_SMALL_LIGHT,
+            &theme::TEXT_MONO_MEDIUM_LIGHT,
+            value_mono_font,
+            theme::PROP_INNER_SPACING,
+            theme::PROPS_SPACING,
+        )?
+        .into_paragraphs()
+        .with_placement(LinearPlacement::vertical());
 
         let screen =
-            TextScreen::new(paragraphs.into_paragraphs().with_placement(
-                LinearPlacement::vertical().with_spacing(theme::PROP_INNER_SPACING),
-            ))
-            .with_header(Header::new(title).with_close_button());
+            TextScreen::new(paragraphs).with_header(Header::new(title).with_close_button());
         let layout = RootComponent::new(screen);
         Ok(layout)
     }
