@@ -1,7 +1,7 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{Child, Component, ComponentExt, Event, EventCtx, PaginateFull},
+        component::{Child, Component, ComponentExt, Event, EventCtx, Paginate},
         geometry::{Insets, Rect},
         shape::Renderer,
         util::Pager,
@@ -84,9 +84,9 @@ where
     }
 }
 
-impl<T> PaginateFull for Frame<T>
+impl<T> Paginate for Frame<T>
 where
-    T: Component + PaginateFull,
+    T: Component + Paginate,
 {
     fn pager(&self) -> Pager {
         self.content.pager()
@@ -101,7 +101,7 @@ where
 /// Also is allocating space for a scrollbar.
 pub struct ScrollableFrame<T>
 where
-    T: Component + PaginateFull,
+    T: Component + Paginate,
 {
     title: Option<Child<Title>>,
     scrollbar: ScrollBar,
@@ -110,7 +110,7 @@ where
 
 impl<T> ScrollableFrame<T>
 where
-    T: Component + PaginateFull,
+    T: Component + Paginate,
 {
     pub fn new(content: T) -> Self {
         Self {
@@ -132,7 +132,7 @@ where
 
 impl<T> Component for ScrollableFrame<T>
 where
-    T: Component + PaginateFull,
+    T: Component + Paginate,
 {
     type Msg = T::Msg;
 
@@ -213,7 +213,7 @@ where
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for ScrollableFrame<T>
 where
-    T: crate::trace::Trace + Component + PaginateFull,
+    T: crate::trace::Trace + Component + Paginate,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ScrollableFrame");

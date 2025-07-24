@@ -23,7 +23,7 @@ pub enum PageMsg<T> {
 }
 
 /// Paginate trait allowing the user to see the internal pager state.
-pub trait PaginateFull {
+pub trait Paginate {
     /// What is the internal pager state?
     fn pager(&self) -> Pager;
     /// Navigate to the given page.
@@ -46,7 +46,7 @@ pub trait PaginateFull {
 
 pub trait SinglePage {}
 
-impl<T: SinglePage> PaginateFull for T {
+impl<T: SinglePage> Paginate for T {
     fn pager(&self) -> Pager {
         Pager::single_page()
     }

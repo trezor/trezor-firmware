@@ -26,7 +26,7 @@ use crate::ui::{
     geometry::Direction,
 };
 
-use super::PaginateFull;
+use super::Paginate;
 
 /// Type used by components that do not return any messages.
 ///
@@ -155,7 +155,7 @@ where
     }
 }
 
-impl<T: PaginateFull> PaginateFull for Child<T> {
+impl<T: Paginate> Paginate for Child<T> {
     fn pager(&self) -> Pager {
         self.component.pager()
     }

@@ -3,7 +3,7 @@ use crate::{
     ui::{
         component::{
             base::{AttachType, EventPropagation},
-            Component, Event, EventCtx, PaginateFull,
+            Component, Event, EventCtx, Paginate,
         },
         constant::screen,
         display::Color,
@@ -300,7 +300,7 @@ impl<T: Component> Component for SwipeContent<T> {
     }
 }
 
-impl<T: PaginateFull> PaginateFull for SwipeContent<T> {
+impl<T: Paginate> Paginate for SwipeContent<T> {
     fn pager(&self) -> Pager {
         self.inner.pager()
     }
@@ -323,7 +323,7 @@ where
 
 pub struct InternallySwipableContent<T>
 where
-    T: Component + PaginateFull,
+    T: Component + Paginate,
 {
     content: SwipeContent<T>,
     animate: bool,
@@ -331,7 +331,7 @@ where
 
 impl<T> InternallySwipableContent<T>
 where
-    T: Component + PaginateFull,
+    T: Component + Paginate,
 {
     pub fn new(content: T) -> Self {
         Self {
@@ -383,7 +383,7 @@ where
 
 impl<T> Component for InternallySwipableContent<T>
 where
-    T: Component + PaginateFull,
+    T: Component + Paginate,
 {
     type Msg = T::Msg;
 
@@ -409,9 +409,9 @@ where
     }
 }
 
-impl<T> PaginateFull for InternallySwipableContent<T>
+impl<T> Paginate for InternallySwipableContent<T>
 where
-    T: Component + PaginateFull,
+    T: Component + Paginate,
 {
     fn pager(&self) -> Pager {
         self.content.pager()
@@ -425,7 +425,7 @@ where
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for InternallySwipableContent<T>
 where
-    T: crate::trace::Trace + Component + PaginateFull,
+    T: crate::trace::Trace + Component + Paginate,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("InternallySwipableContent");

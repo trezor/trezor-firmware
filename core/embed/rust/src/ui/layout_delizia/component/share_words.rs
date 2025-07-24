@@ -3,7 +3,7 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            base::AttachType, paginated::PaginateFull, text::TextStyle, Component, Event, EventCtx,
+            base::AttachType, paginated::Paginate, text::TextStyle, Component, Event, EventCtx,
             Never,
         },
         event::SwipeEvent,
@@ -242,7 +242,7 @@ impl<'a> Component for ShareWords<'a> {
     }
 }
 
-impl PaginateFull for ShareWords<'_> {
+impl Paginate for ShareWords<'_> {
     fn pager(&self) -> Pager {
         Pager::new(self.share_words.len() as u16).with_current(self.page_index)
     }

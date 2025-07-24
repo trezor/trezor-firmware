@@ -16,7 +16,7 @@ use crate::{
             paginated::PageMsg,
             placed::GridPlaced,
             text::paragraphs::{ParagraphSource, Paragraphs},
-            Component, FormattedText, Never, PaginateFull,
+            Component, FormattedText, Never, Paginate,
         },
         layout::{
             obj::ComponentMsgObj,
@@ -162,7 +162,7 @@ where
 
 impl<T> ComponentMsgObj for ButtonPage<T>
 where
-    T: Component + PaginateFull,
+    T: Component + Paginate,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
@@ -254,7 +254,7 @@ where
 
 impl<T> ComponentMsgObj for SimplePage<T>
 where
-    T: ComponentMsgObj + PaginateFull,
+    T: ComponentMsgObj + Paginate,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {

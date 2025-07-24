@@ -3,7 +3,7 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            text::util::text_multiline, Child, Component, Event, EventCtx, Never, PaginateFull,
+            text::util::text_multiline, Child, Component, Event, EventCtx, Never, Paginate,
         },
         display::Font,
         geometry::{Alignment, Offset, Rect},
@@ -136,7 +136,7 @@ impl<'a> Component for ShareWords<'a> {
     }
 }
 
-impl<'a> PaginateFull for ShareWords<'a> {
+impl<'a> Paginate for ShareWords<'a> {
     fn pager(&self) -> Pager {
         self.pager
     }
