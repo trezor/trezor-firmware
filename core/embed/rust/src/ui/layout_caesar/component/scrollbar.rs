@@ -1,5 +1,5 @@
 use crate::ui::{
-    component::{Component, Event, EventCtx, Never, Pad, PaginateFull},
+    component::{Component, Event, EventCtx, Never, Pad, Paginate},
     geometry::{Offset, Point, Rect},
     shape::{self, Renderer},
     util::Pager,
@@ -222,7 +222,7 @@ impl Component for ScrollBar {
     }
 }
 
-impl PaginateFull for ScrollBar {
+impl Paginate for ScrollBar {
     fn pager(&self) -> Pager {
         self.pager
     }

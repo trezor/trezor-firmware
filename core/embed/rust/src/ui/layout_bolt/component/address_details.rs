@@ -8,7 +8,7 @@ use crate::{
     ui::{
         component::{
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
-            Component, Event, EventCtx, PaginateFull, Qr,
+            Component, Event, EventCtx, Paginate, Qr,
         },
         geometry::Rect,
         layout::util::MAX_XPUBS,
@@ -126,7 +126,7 @@ impl AddressDetails {
     }
 }
 
-impl PaginateFull for AddressDetails {
+impl Paginate for AddressDetails {
     fn pager(&self) -> Pager {
         Pager::new(self.total_pages())
     }

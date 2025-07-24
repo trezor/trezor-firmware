@@ -1,7 +1,7 @@
 use crate::{
     translations::TR,
     ui::{
-        component::{Child, Component, ComponentExt, Event, EventCtx, Pad, PageMsg, PaginateFull},
+        component::{Child, Component, ComponentExt, Event, EventCtx, Pad, PageMsg, Paginate},
         display::Color,
         geometry::{Insets, Rect},
         shape::Renderer,
@@ -15,7 +15,7 @@ use super::{
 
 pub struct ButtonPage<T>
 where
-    T: Component + PaginateFull,
+    T: Component + Paginate,
 {
     content: Child<T>,
     pad: Pad,
@@ -28,7 +28,7 @@ where
 
 impl<T> ButtonPage<T>
 where
-    T: Component + PaginateFull,
+    T: Component + Paginate,
 {
     pub fn new(content: T, background: Color) -> Self {
         Self {
@@ -118,9 +118,9 @@ where
     }
 }
 
-impl<T> PaginateFull for ButtonPage<T>
+impl<T> Paginate for ButtonPage<T>
 where
-    T: Component + PaginateFull,
+    T: Component + Paginate,
 {
     fn pager(&self) -> Pager {
         self.content.pager()
@@ -133,7 +133,7 @@ where
 
 impl<T> Component for ButtonPage<T>
 where
-    T: Component + PaginateFull,
+    T: Component + Paginate,
 {
     type Msg = PageMsg<T::Msg>;
 
@@ -200,7 +200,7 @@ where
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for ButtonPage<T>
 where
-    T: crate::trace::Trace + PaginateFull + Component,
+    T: crate::trace::Trace + Paginate + Component,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ButtonPage");

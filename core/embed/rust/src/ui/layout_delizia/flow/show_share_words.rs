@@ -7,7 +7,7 @@ use crate::{
         component::{
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs},
-            ButtonRequestExt, ComponentExt, EventCtx, PaginateFull as _,
+            ButtonRequestExt, ComponentExt, EventCtx, Paginate as _,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},

@@ -4,7 +4,7 @@ use crate::{
         component::{
             image::Image,
             text::paragraphs::{Paragraph, ParagraphSource, Paragraphs},
-            Child, Component, Event, EventCtx, Label, PaginateFull,
+            Child, Component, Event, EventCtx, Label, Paginate,
         },
         display,
         geometry::{Insets, Rect},

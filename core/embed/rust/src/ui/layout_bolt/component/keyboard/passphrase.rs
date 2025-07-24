@@ -3,7 +3,7 @@ use crate::{
     ui::{
         component::{
             base::ComponentExt, text::common::TextBox, Child, Component, Event, EventCtx, Never,
-            PaginateFull,
+            Paginate,
         },
         display,
         geometry::{Grid, Offset, Rect},

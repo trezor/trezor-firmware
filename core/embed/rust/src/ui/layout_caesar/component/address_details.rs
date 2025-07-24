@@ -8,7 +8,7 @@ use crate::{
     ui::{
         component::{
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
-            Child, Component, Event, EventCtx, Pad, PaginateFull, Qr,
+            Child, Component, Event, EventCtx, Pad, Paginate, Qr,
         },
         geometry::Rect,
         layout::util::MAX_XPUBS,

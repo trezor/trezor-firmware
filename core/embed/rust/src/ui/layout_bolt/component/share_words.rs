@@ -1,7 +1,7 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{Component, Event, EventCtx, Never, PaginateFull},
+        component::{Component, Event, EventCtx, Never, Paginate},
         display::Font,
         geometry::{Offset, Rect},
         shape::{self, Renderer},
@@ -82,7 +82,7 @@ impl<'a> Component for ShareWords<'a> {
     }
 }
 
-impl<'a> PaginateFull for ShareWords<'a> {
+impl<'a> Paginate for ShareWords<'a> {
     fn pager(&self) -> Pager {
         self.pager
     }

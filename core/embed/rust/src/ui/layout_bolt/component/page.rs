@@ -4,9 +4,7 @@ use crate::{
     time::Instant,
     translations::TR,
     ui::{
-        component::{
-            paginated::PageMsg, Component, ComponentExt, Event, EventCtx, Pad, PaginateFull,
-        },
+        component::{paginated::PageMsg, Component, ComponentExt, Event, EventCtx, Pad, Paginate},
         constant,
         display::{self, Color},
         geometry::{Insets, Rect},
@@ -50,7 +48,7 @@ pub struct ButtonPage<T> {
 
 impl<T> ButtonPage<T>
 where
-    T: PaginateFull,
+    T: Paginate,
     T: Component,
 {
     pub fn new(content: T, background: Color) -> Self {
@@ -278,7 +276,7 @@ enum HandleResult<T> {
 
 impl<T> Component for ButtonPage<T>
 where
-    T: PaginateFull,
+    T: Paginate,
     T: Component,
 {
     type Msg = PageMsg<T::Msg>;

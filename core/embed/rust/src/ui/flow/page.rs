@@ -1,5 +1,5 @@
 use crate::ui::{
-    component::{Component, Event, EventCtx, PaginateFull},
+    component::{Component, Event, EventCtx, Paginate},
     event::SwipeEvent,
     geometry::{Axis, Direction, Rect},
     shape::Renderer,
@@ -15,7 +15,7 @@ pub struct SwipePage<T> {
     limit: Option<u16>,
 }
 
-impl<T: PaginateFull> SwipePage<T> {
+impl<T: Paginate> SwipePage<T> {
     pub fn vertical(inner: T) -> Self {
         Self {
             inner,
@@ -50,7 +50,7 @@ impl<T: PaginateFull> SwipePage<T> {
     }
 }
 
-impl<T: Component + PaginateFull> Component for SwipePage<T> {
+impl<T: Component + Paginate> Component for SwipePage<T> {
     type Msg = T::Msg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -91,7 +91,7 @@ impl<T: Component + PaginateFull> Component for SwipePage<T> {
     }
 }
 
-impl<T: PaginateFull> PaginateFull for SwipePage<T> {
+impl<T: Paginate> Paginate for SwipePage<T> {
     fn pager(&self) -> Pager {
         self.inner.pager().with_limit(self.total_with_limit())
     }

@@ -3,7 +3,7 @@ use heapless::Vec;
 use crate::{
     strutil::TString,
     ui::{
-        component::{paginated::SinglePage, Component, Event, EventCtx, Never, PaginateFull},
+        component::{paginated::SinglePage, Component, Event, EventCtx, Never, Paginate},
         display::{font::Font, toif::Icon, Color},
         geometry::{Alignment, Dimensions, Insets, LinearPlacement, Offset, Point, Rect},
         shape::{self, Renderer},
@@ -243,7 +243,7 @@ where
     }
 }
 
-impl<'a, T> PaginateFull for Paragraphs<T>
+impl<'a, T> Paginate for Paragraphs<T>
 where
     T: ParagraphSource<'a>,
 {
