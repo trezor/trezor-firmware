@@ -219,7 +219,8 @@ static void try_to_upgrade(void) {
   }
 }
 
-static inline void ensure_signed_bootloader(volatile uint32_t* next_stage_addr) {
+static inline void ensure_signed_bootloader(
+    volatile uint32_t* next_stage_addr) {
   *next_stage_addr = 0;  // FIH
 
   // Start with some non-deterministic delay
@@ -251,7 +252,8 @@ static inline void ensure_signed_bootloader(volatile uint32_t* next_stage_addr) 
 }
 
 #else
-static inline void ensure_signed_bootloader(volatile uint32_t *next_stage_addr) {
+static inline void ensure_signed_bootloader(
+    volatile uint32_t *next_stage_addr) {
   *next_stage_addr = 0;
 
   // Start with some non-deterministic delay
