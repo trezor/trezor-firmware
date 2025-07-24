@@ -67,6 +67,7 @@ def configure(
             "embed/sec/tropic/tropic.c",
             "embed/sec/tropic/unix/tropic01.c",
             "vendor/libtropic/src/libtropic.c",
+            "vendor/libtropic/src/lt_asn1_der.c",
             "vendor/libtropic/src/lt_crc16.c",
             "vendor/libtropic/src/lt_hkdf.c",
             "vendor/libtropic/src/lt_l1.c",
@@ -87,6 +88,8 @@ def configure(
         paths += ["vendor/libtropic/src"]
         defines += ["USE_TREZOR_CRYPTO"]
         defines += [("LT_USE_TREZOR_CRYPTO", "1")]
+        # This is a workaround for an error caused by the redefinition of the macro `STATIC`, which is initially defined in `SConscript.unix` and later redefined in `libtropic_common.h`. As an adverse effect of defining `TEST`, all functions declared in `libtropic.c` become non-static, causing `lt_asn1_der.c` to be compiled even though it is not used.
+        defines += [("TEST", "1")]
         features_available.append("tropic")
         defines += [("USE_TROPIC", "1")]
 
