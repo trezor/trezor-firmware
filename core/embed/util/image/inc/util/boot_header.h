@@ -55,6 +55,10 @@ typedef struct {
 
 /**
  * Authenticated part of the boot header
+ *
+ * This structure can be extended in future versions if needed.
+ * Just make sure to add new fields at the end of the structure.
+ * Never remove or reorder existing fields.
  */
 typedef struct __attribute__((packed)) {
   /** Magic constant 'TRZQ' */

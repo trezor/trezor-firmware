@@ -211,6 +211,13 @@ const boot_header_t* boot_header_check_integrity(uint32_t address) {
     return NULL;
   }
 
+  // Check if the authenticated part size is at least the size of the
+  // boot header structure. This condition prevents upgrading to the image
+  // with boot header structure smaller than the current one.
+  if (hdr->auth_size < sizeof(boot_header_t)) {
+    return NULL;
+  }
+
   // Check if bootloader code size is withing reasonable limits
   if (hdr->code_size < SIZE_8K || hdr->code_size > BOOT_HEADER_CODE_MAXSIZE) {
     return NULL;
