@@ -1912,7 +1912,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def show_info_with_cancel(
     ///     *,
     ///     title: str,
-    ///     items: Iterable[tuple[str, str]],
+    ///     items: list[tuple[str | None, str | bytes | None, bool | None]],
     ///     horizontal: bool = False,
     ///     chunkify: bool = False,
     /// ) -> LayoutObj[UiResult]:
