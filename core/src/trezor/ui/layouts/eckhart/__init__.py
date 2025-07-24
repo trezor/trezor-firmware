@@ -725,10 +725,12 @@ def confirm_value(
 ) -> Awaitable[None]:
     """General confirmation dialog, used by many other confirm_* functions."""
 
-    info_items = info_items or []
+    items: list[PropertyType] = (
+        [(k, v, True) for k, v in info_items] if info_items is not None else []
+    )
     info_layout = trezorui_api.show_info_with_cancel(
         title=info_title if info_title else TR.words__title_information,
-        items=info_items,
+        items=items,
         chunkify=chunkify_info,
     )
 
@@ -989,9 +991,10 @@ if not utils.BITCOIN_ONLY:
                 verb=TR.buttons__continue,
                 verb_info=TR.ethereum__contract_address,
             )
+            items: list[PropertyType] = [("", recipient_addr, True)]
             info_layout = trezorui_api.show_info_with_cancel(
                 title=title,
-                items=[("", recipient_addr)],
+                items=items,
                 chunkify=chunkify,
             )
             await with_info(main_layout, info_layout, br_name, br_code)
@@ -1468,9 +1471,9 @@ def confirm_modify_fee(
         total_fee_new=total_fee_new,
         fee_rate_amount=fee_rate_amount,
     )
-    items: list[tuple[str, str]] = []
+    items: list[PropertyType] = []
     if fee_rate_amount:
-        items.append((TR.bitcoin__new_fee_rate, fee_rate_amount))
+        items.append((TR.bitcoin__new_fee_rate, fee_rate_amount, True))
     info_layout = trezorui_api.show_info_with_cancel(
         title=TR.confirm_total__title_fee,
         items=items,
@@ -1531,15 +1534,16 @@ async def confirm_signverify(
         cancel=True,
     )
 
-    items: list[tuple[str, str]] = []
+    items: list[PropertyType] = []
     if account is not None:
-        items.append((TR.words__account, account))
+        items.append((TR.words__account, account, True))
     if path is not None:
-        items.append((TR.address_details__derivation_path, path))
+        items.append((TR.address_details__derivation_path, path, True))
     items.append(
         (
             TR.sign_message__message_size,
             TR.sign_message__bytes_template.format(len(message)),
+            True,
         )
     )
 

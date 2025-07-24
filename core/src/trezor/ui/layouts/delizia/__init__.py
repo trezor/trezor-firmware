@@ -960,9 +960,10 @@ if not utils.BITCOIN_ONLY:
                 verb="",
                 verb_info=TR.ethereum__contract_address,
             )
+            items: list[PropertyType] = [("", recipient_addr, True)]
             info_layout = trezorui_api.show_info_with_cancel(
                 title=TR.ethereum__contract_address,
-                items=[("", recipient_addr)],
+                items=items,
                 chunkify=chunkify,
             )
             await with_info(main_layout, info_layout, br_name, br_code)
@@ -1401,9 +1402,9 @@ def confirm_modify_fee(
         total_fee_new=total_fee_new,
         fee_rate_amount=fee_rate_amount,
     )
-    items: list[tuple[str, str]] = []
+    items: list[PropertyType] = []
     if fee_rate_amount:
-        items.append((TR.bitcoin__new_fee_rate, fee_rate_amount))
+        items.append((TR.bitcoin__new_fee_rate, fee_rate_amount, True))
     info_layout = trezorui_api.show_info_with_cancel(
         title=TR.confirm_total__title_fee,
         items=items,
