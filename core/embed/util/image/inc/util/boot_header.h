@@ -76,7 +76,14 @@ typedef struct __attribute__((packed)) {
    * installing this header. */
   boot_header_version_t min_prev_version;
   /** An integer which must not decrease between updates. */
-  uint32_t monotonic_version;
+  uint8_t monotonic_version;
+  /** Bitmask of keys used for signature verification.
+   * Each bit corresponds to a public key in the BOOTLOADER_PQ_KEY and
+   * BOOTLOADER_EC_KEY arrays. If the bit is set, the corresponding key
+   * is used for signature verification. */
+  uint8_t sigmask;
+  /* Reserved bytes (alignment) */
+  uint8_t reserved[2];
   /** Size of the entire header header in bytes, including the Merkle proof
    * and signatures. It's calculated in the link time and must be
    * aligned to 8K boundary. */
@@ -89,11 +96,6 @@ typedef struct __attribute__((packed)) {
   uint32_t code_size;
   /** Address of storage area for storage relocation purposes */
   uint32_t storage_address;
-  /** Bitmask of keys used for signature verification.
-   * Each bit corresponds to a public key in the BOOTLOADER_PQ_KEY and
-   * BOOTLOADER_EC_KEY arrays. If the bit is set, the corresponding key
-   * is used for signature verification. */
-  uint32_t sigmask;
   /* Firmware merkle tree root */
   merkle_proof_node_t firmware_root;
   /* Padding is automatically added by the post-build step to ensure that

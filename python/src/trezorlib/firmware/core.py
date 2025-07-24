@@ -245,7 +245,9 @@ class BootHeader(Struct):
         "version" / TupleAdapter(c.Int8ul, c.Int8ul, c.Int8ul, c.Int8ul),
         "fix_version" / TupleAdapter(c.Int8ul, c.Int8ul, c.Int8ul, c.Int8ul),
         "min_prev_version" / TupleAdapter(c.Int8ul, c.Int8ul, c.Int8ul, c.Int8ul),
-        "monotonic" / c.Int32ul,
+        "monotonic" / c.Int8ul,
+        "sigmask" / c.Int8ul,
+        "_reserved" / c.Padding(2),
         "header_len" / c.Int32ul,
         "auth_len" / c.Int32ul,
         "code_length" / c.Rebuild(
@@ -255,7 +257,6 @@ class BootHeader(Struct):
                 else (this.code_length or 0)
         ),
         "storage_address" / c.Int32ul,
-        "sigmask" / c.Int32ul,
         "firmware_root" / c.Bytes(32),
 
         # Variable-length padding that's part of the authenticated header

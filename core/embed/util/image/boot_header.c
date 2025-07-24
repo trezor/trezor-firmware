@@ -67,12 +67,12 @@ const boot_header_padded_t g_bootloader_header = {
                 .build = 0,
             },
         .monotonic_version = BOOTLOADER_MONOTONIC_VERSION,
+        .sigmask = 0,  // This field will be set by headertool_pq
         .header_size = BOOT_HEADER_MAXSIZE,
         .auth_size = BOOT_HEADER_MAXSIZE - sizeof(boot_header_merkle_proof_t) -
                      sizeof(boot_header_unauth_t),
         .code_size = (uint32_t)&_bootloader_code_size,
         .storage_address = STORAGE_1_START,
-        .sigmask = 0,  // This field will be set by headertool_pq
     }};
 #endif
 
@@ -101,8 +101,8 @@ secbool boot_header_check_signature(const boot_header_t* hdr,
   _Static_assert(ARRAY_LENGTH(BOARDLOADER_EC_KEYS) ==
                  ARRAY_LENGTH(BOARDLOADER_PQ_KEYS));
 
-  uint32_t sigmask = hdr->sigmask;
-  uint32_t sigmask_inv = 0;  // FIH
+  uint8_t sigmask = hdr->sigmask;
+  uint8_t sigmask_inv = 0;  // FIH
 
   const boot_header_unauth_t* sig = boot_header_get_unauth(hdr);
 
