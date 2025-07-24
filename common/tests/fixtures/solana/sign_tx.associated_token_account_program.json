@@ -135,6 +135,89 @@
       "result": {
         "expected_signature": "c7b7dc9afab413788fa185b85cbf72a90b6f12de583a478a531eaa2f7d13f6cbeae97b539c6859f2c954a9d92fbce8be12b0fe1a5a53df367e715b9793f20301"
       }
+    },
+    {
+      "description": "Create Associated Token Account Idempotent LUTs (#5379)",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": 0,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 4
+          },
+          "accounts": [
+            "DzgLhu7ni8KkL9shCnAdsPodLpb3Ykwbhj2wCLVwJq2B",
+            "4ntVeyQ8Au2Q2jpKuNWEkVpNZTFh9yJFkGXiuVW4CEVG",
+            "6HscrwAQ6Zq1LpYqnt11iukiao7Ti5KRxo2ncQErHpFo",
+            "7uHgqMr7bJMe516zBkd23TnFNoHHdPgesgwLtQNBxCnS",
+            "6m2CDdhRgxpH4WjvdzxAYbGxwdGUz5MziiL5jek2kBma",
+            "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+            "ComputeBudget111111111111111111111111111111",
+            "jitodontfront11111111111JustUseJupiterU1tra"
+          ],
+          "blockhash": "3iwgfVmT9cf7T2G6iQ2Q9YmMC7WRbes3qFYLKJcnVzYc",
+          "instructions": [
+            {
+              "program_index": 6,
+              "accounts": {},
+              "data": {
+                "instruction_id": 2,
+                "units": 422985
+              }
+            },
+            {
+              "program_index": 6,
+              "accounts": {},
+              "data": {
+                "instruction_id": 3,
+                "lamports": 233982
+              }
+            },
+
+            {
+              "program_index": 5,
+              "accounts": {
+                "funding_account": 0,
+                "associated_token_account": 1,
+                "wallet_addr": 0,
+                "token_mint": 33,
+                "system_program": 32,
+                "spl_token": 42
+              },
+              "data": {
+                "instruction_id": 1
+              }
+            }
+          ],
+          "luts": [
+            {
+              "account": "44NvtUEvVYeuF7cnMyDsg1GffZGN6F9b5Fid29LzqSa8",
+              "readwrite": [27, 32, 28, 29, 17, 22, 26, 21, 31, 33, 20],
+              "readonly": []
+            },
+            {
+              "account": "4xUAJrSSmxQGrCHuXcMf4w7e6HNmtz7JkTe5x1LKwgG9",
+              "readwrite": [198, 201, 203],
+              "readonly": []
+            },
+            {
+              "account": "AUEghuJaUr4qshAQoSDvV8kfv7xz2kQGeR13G3FihMum",
+              "readwrite": [49, 3, 1],
+              "readonly": [66, 127, 90, 80, 169, 139, 71, 183, 83, 200, 68, 78]
+            },
+            {
+              "account": "EyYvLztJjeEqTNKPKGC8ErAaVJcWuTa8LXE49tXDTKwf",
+              "readwrite": [5, 1, 7, 2, 3, 0, 4],
+              "readonly": []
+            }
+          ]
+        }
+      },
+      "result": {
+        "expected_signature": "61fadc304a576697221af1d93f380a0296da8980a0401dab9696814e644dd1ec6cdc9b1eb88f80f102223764ca19cb2da95df703426c4f986131c9329ff4b604"
+      }
     }
   ]
 }
