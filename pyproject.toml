@@ -86,10 +86,6 @@ towncrier = "^23.6.0"
 wheel = ">0.45"
 #freetype-py = "^2.3.0"
 
-[build-system]
-requires = ["poetry>=1;<1.1", "pip>=20"]
-build-backend = "poetry.masonry.api"
-
 [tool.isort]
 profile = "black"
 extra_standard_library = [
