@@ -31,6 +31,7 @@
 #include "memzero.h"
 #include "rand.h"
 #include "secbool.h"
+#include "secure_channel.h"
 
 secbool generate_random_secret(uint8_t* secret, size_t length) {
   random_buffer(secret, length);
@@ -128,6 +129,73 @@ static void prodtest_secrets_init(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+#ifdef SECRET_MASTER_KEY_SLOT_SIZE
+static void prodtest_secrets_get_mcu_device_key(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  curve25519_key mcu_private = {0};
+  if (secret_key_mcu_device_auth(mcu_private) != sectrue) {
+    cli_error(cli, CLI_ERROR, "`secret_key_mcu_device_auth()` failed.");
+    return;
+  }
+  curve25519_key mcu_public = {0};
+  curve25519_scalarmult_basepoint(mcu_public, mcu_private);
+
+  uint8_t output[sizeof(curve25519_key) + NOISE_TAG_SIZE] = {0};
+  if (!secure_channel_encrypt(NULL, 0, mcu_public, sizeof(curve25519_key),
+                              output + NOISE_TAG_SIZE)) {
+    // `secure_channel_handshake_2()` might not have been called
+    cli_error(cli, CLI_ERROR, "`secure_channel_encrypt()` failed.");
+    goto cleanup;
+  }
+
+  cli_ok_hexdata(cli, output, sizeof(output));
+
+cleanup:
+  memzero(mcu_private, sizeof(mcu_private));
+}
+
+static void prodtest_secrets_certdev_write(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  size_t certificate_length = 0;
+  uint8_t certificate[512] = {0};
+  if (!cli_arg_hex(cli, "hex-data", certificate, sizeof(certificate),
+                   &certificate_length)) {
+    if (certificate_length == sizeof(certificate)) {
+      cli_error(cli, CLI_ERROR, "Certificate too long.");
+    } else {
+      cli_error(cli, CLI_ERROR, "Hexadecimal decoding error.");
+    }
+    return;
+  }
+
+  // TODO: Write the certificate to the flash.
+
+  cli_ok(cli, "");
+}
+
+static void prodtest_secrets_certdev_read(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  uint8_t certificate[512] = {0};
+  size_t certificate_length = 0;
+
+  // TODO: Read the certificate from the flash.
+
+  cli_ok_hexdata(cli, certificate, certificate_length);
+}
+#endif
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -136,3 +204,26 @@ PRODTEST_CLI_CMD(
   .info = "Generate and write secrets to flash",
   .args = ""
 );
+
+#ifdef SECRET_MASTER_KEY_SLOT_SIZE
+PRODTEST_CLI_CMD(
+  .name = "secrets-get-mcu-device_key",
+  .func = prodtest_secrets_get_mcu_device_key,
+  .info = "Get MCU device key",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "secrets-certdev-write",
+  .func = prodtest_secrets_certdev_write,
+  .info = "Write the device's X.509 certificate to flash",
+  .args = "<hex-data>"
+);
+
+PRODTEST_CLI_CMD(
+  .name = "secrets-certdev-read",
+  .func = prodtest_secrets_certdev_read,
+  .info = "Read the device's X.509 certificate from flash",
+  .args = ""
+);
+#endif
