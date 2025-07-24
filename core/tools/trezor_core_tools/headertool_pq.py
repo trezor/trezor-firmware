@@ -64,6 +64,8 @@ def cli(
             f"Could not parse file (magic bytes: {magic})"
         ) from e
 
+    fw.set_merkle_proof(list(map(bytes.fromhex, merkle_proof)))
+
     digest = fw.digest()
     if print_digest:
         click.echo(digest.hex())
@@ -73,9 +75,6 @@ def cli(
         echo = no_echo
     else:
         echo = click.echo
-
-    # Add 16 items
-    fw.set_merkle_proof(list(map(bytes.fromhex, merkle_proof)))
 
     echo("Signing with dev keys...", err=True)
     fw.sign_with_devkeys()
