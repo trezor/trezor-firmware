@@ -30,7 +30,6 @@ MP_DEFINE_EXCEPTION(TropicError, Exception)
 
 #define PING_MSG_MAX_LEN 64
 #define ECC_SLOT_COUNT 32
-#define SIG_SIZE 64
 
 #define CERT_SIZE 512
 
@@ -102,17 +101,17 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_sign(mp_obj_t key_index,
   }
 
   vstr_t sig = {0};
-  vstr_init_len(&sig, SIG_SIZE);
+  vstr_init_len(&sig, ECDSA_RAW_SIGNATURE_SIZE);
 
   bool ret = tropic_ecc_sign(idx, (const uint8_t *)dig.buf, dig.len,
-                             ((uint8_t *)sig.buf), SIG_SIZE);
+                             ((uint8_t *)sig.buf));
   if (!ret) {
     vstr_clear(&sig);
     mp_raise_msg(&mp_type_TropicError,
                  MP_ERROR_TEXT("lt_ecc_eddsa_sign failed."));
   }
 
-  sig.len = SIG_SIZE;
+  sig.len = ECDSA_RAW_SIGNATURE_SIZE;
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_tropic_sign_obj,

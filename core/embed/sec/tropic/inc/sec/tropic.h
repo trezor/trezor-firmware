@@ -39,4 +39,4 @@ bool tropic_ping(const uint8_t* msg_out, uint8_t* msg_in, uint16_t msg_len);
 bool tropic_ecc_key_generate(uint16_t slot_index);
 
 bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t* dig,
-                     uint16_t dig_len, uint8_t* sig, uint16_t sig_len);
+                     uint16_t dig_len, uint8_t* sig);
