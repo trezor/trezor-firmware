@@ -11,9 +11,6 @@ class TestCryptoTropic(unittest.TestCase):
         self.assertEqual(tropic.ping(""), "")
         self.assertEqual(tropic.ping("HeLlO!"), "HeLlO!")
 
-    def test_get_certificate(self):
-        self.assertEqual(len(tropic.get_certificate()), 512)
-
     def test_sign(self):
         try:
             tropic.sign(0, "ASD")

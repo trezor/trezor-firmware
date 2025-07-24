@@ -58,28 +58,6 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_ping(mp_obj_t message) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_tropic_ping_obj,
                                  mod_trezorcrypto_tropic_ping);
 
-/// def get_certificate() -> bytes:
-///     """
-///     Return the chip's certificate.
-///     """
-STATIC mp_obj_t mod_trezorcrypto_tropic_get_certificate() {
-  uint8_t X509_cert[CERT_SIZE] = {0};
-  bool ret = tropic_get_cert(X509_cert, CERT_SIZE);
-  if (!ret) {
-    mp_raise_msg(&mp_type_TropicError,
-                 MP_ERROR_TEXT("tropic_get_cert failed."));
-  }
-
-  vstr_t vstr = {0};
-  vstr_init_len(&vstr, CERT_SIZE);
-
-  memcpy(vstr.buf, X509_cert, CERT_SIZE);
-
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_tropic_get_certificate_obj,
-                                 mod_trezorcrypto_tropic_get_certificate);
-
 /// def key_generate(
 ///     key_index: int,
 /// ) -> None:
@@ -143,8 +121,6 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_tropic_sign_obj,
 STATIC const mp_rom_map_elem_t mod_trezorcrypto_tropic_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_tropic)},
     {MP_ROM_QSTR(MP_QSTR_ping), MP_ROM_PTR(&mod_trezorcrypto_tropic_ping_obj)},
-    {MP_ROM_QSTR(MP_QSTR_get_certificate),
-     MP_ROM_PTR(&mod_trezorcrypto_tropic_get_certificate_obj)},
     {MP_ROM_QSTR(MP_QSTR_key_generate),
      MP_ROM_PTR(&mod_trezorcrypto_tropic_key_generate_obj)},
     {MP_ROM_QSTR(MP_QSTR_sign), MP_ROM_PTR(&mod_trezorcrypto_tropic_sign_obj)},
