@@ -206,7 +206,7 @@ jobs:
           submodules: recursive
       - uses: ./.github/actions/environment
       - run: nix-shell --run "poetry run make -C core build_unix"
-      - run: nix-shell --arg fullDeps true --run "cd vendor/ts-tvl/tvl/server/model_config && poetry env use 3.12 && poetry install && poetry run model_server tcp -c model_config.yml &"
+      - run: nix-shell --arg fullDeps true --run "cd vendor/ts-tvl/model_configs/example_config && poetry env use 3.12 && poetry install && poetry run model_server tcp -c example_config.yml &"
       - run: nix-shell --run "poetry run make -C core test"
       - run: nix-shell --run "poetry run make -C core test_emu_sanity"  # sanity check non-frozen emulator
 
