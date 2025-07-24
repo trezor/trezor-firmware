@@ -120,6 +120,9 @@ def _find_message_handler_module(msg_type: int) -> str:
                 return "apps.nostr.get_pubkey"
             if msg_type == MessageType.NostrSignEvent:
                 return "apps.nostr.sign_event"
+            # evolu
+            if msg_type == MessageType.EvoluGetKeys:
+                return "apps.evolu.get_keys"
 
         if msg_type == MessageType.SetU2FCounter:
             return "apps.management.set_u2f_counter"
