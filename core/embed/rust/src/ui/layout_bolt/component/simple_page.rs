@@ -1,5 +1,5 @@
 use crate::ui::{
-    component::{base::ComponentExt, Component, Event, EventCtx, Pad, PageMsg, PaginateFull},
+    component::{base::ComponentExt, Component, Event, EventCtx, Pad, PageMsg, Paginate},
     display::{self, Color},
     geometry::{Axis, Insets, Rect},
     shape::Renderer,
@@ -22,7 +22,7 @@ pub struct SimplePage<T> {
 
 impl<T> SimplePage<T>
 where
-    T: PaginateFull,
+    T: Paginate,
     T: Component,
 {
     pub fn new(content: T, axis: Axis, background: Color) -> Self {
@@ -83,7 +83,7 @@ where
 
 impl<T> Component for SimplePage<T>
 where
-    T: PaginateFull,
+    T: Paginate,
     T: Component,
 {
     type Msg = PageMsg<T::Msg>;

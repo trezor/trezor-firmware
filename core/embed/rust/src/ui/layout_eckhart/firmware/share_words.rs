@@ -4,7 +4,7 @@ use crate::{
     ui::{
         component::{
             swipe_detect::SwipeConfig, text::TextStyle, Component, Event, EventCtx, Label, Never,
-            PaginateFull, Swipe,
+            Paginate, Swipe,
         },
         flow::Swipable,
         geometry::{Alignment, Direction, Insets, Offset, Rect},
@@ -258,7 +258,7 @@ impl<'a> ShareWords<'a> {
 }
 
 // Pagination
-impl<'a> PaginateFull for ShareWords<'a> {
+impl<'a> Paginate for ShareWords<'a> {
     fn pager(&self) -> Pager {
         self.pager
     }

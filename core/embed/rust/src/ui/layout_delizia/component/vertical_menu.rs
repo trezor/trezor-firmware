@@ -7,7 +7,7 @@ use crate::{
         component::{
             base::{AttachType, Component},
             paginated::SinglePage,
-            Event, EventCtx, PaginateFull,
+            Event, EventCtx, Paginate,
         },
         constant::screen,
         display::{Color, Icon},
@@ -516,7 +516,7 @@ impl<F: Fn(u16) -> TString<'static>> PagedVerticalMenu<F> {
     }
 }
 
-impl<F: Fn(u16) -> TString<'static>> PaginateFull for PagedVerticalMenu<F> {
+impl<F: Fn(u16) -> TString<'static>> Paginate for PagedVerticalMenu<F> {
     fn pager(&self) -> Pager {
         let num_pages =
             (self.item_count / self.inner.n_items) + (self.item_count % self.inner.n_items).min(1);

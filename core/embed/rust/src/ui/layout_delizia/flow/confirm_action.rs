@@ -9,7 +9,7 @@ use crate::{
         component::{
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
-            Component, ComponentExt, EventCtx, PaginateFull,
+            Component, ComponentExt, EventCtx, Paginate,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
@@ -271,7 +271,7 @@ pub fn new_confirm_action(
 }
 
 #[inline(never)]
-fn new_confirm_action_uni<T: Component + PaginateFull + MaybeTrace + 'static>(
+fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
     content: SwipeContent<SwipePage<T>>,
     extra: ConfirmActionExtra,
     strings: ConfirmActionStrings,
@@ -294,7 +294,7 @@ fn new_confirm_action_uni<T: Component + PaginateFull + MaybeTrace + 'static>(
     };
 
     if page_counter {
-        fn footer_update_fn<T: Component + PaginateFull>(
+        fn footer_update_fn<T: Component + Paginate>(
             content: &SwipeContent<SwipePage<T>>,
             ctx: &mut EventCtx,
             footer: &mut Footer,
@@ -434,7 +434,7 @@ fn create_confirm(
 }
 
 #[inline(never)]
-pub fn new_confirm_action_simple<T: Component + PaginateFull + MaybeTrace + 'static>(
+pub fn new_confirm_action_simple<T: Component + Paginate + MaybeTrace + 'static>(
     content: T,
     extra: ConfirmActionExtra,
     strings: ConfirmActionStrings,

@@ -8,7 +8,7 @@ use crate::{
                 paragraphs::{Checklist, ParagraphSource, Paragraphs},
                 TextStyle,
             },
-            Component, Event, EventCtx, FormattedText, Label, PaginateFull, TextLayout,
+            Component, Event, EventCtx, FormattedText, Label, Paginate, TextLayout,
         },
         flow::Swipable,
         geometry::{Insets, Offset, Rect},
@@ -235,7 +235,7 @@ where
 
 /// A marker trait used to constrain the allowed text content types in a
 /// TextScreen.
-pub trait AllowedTextContent: Component + PaginateFull {}
+pub trait AllowedTextContent: Component + Paginate {}
 impl AllowedTextContent for FormattedText {}
 impl<'a, T> AllowedTextContent for Paragraphs<T> where T: ParagraphSource<'a> {}
 impl<'a, T> AllowedTextContent for Checklist<T> where T: ParagraphSource<'a> {}

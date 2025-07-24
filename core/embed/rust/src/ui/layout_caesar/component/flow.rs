@@ -1,7 +1,7 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{Child, Component, ComponentExt, Event, EventCtx, Pad, PaginateFull},
+        component::{Child, Component, ComponentExt, Event, EventCtx, Pad, Paginate},
         constant::SCREEN,
         geometry::Rect,
         shape::Renderer,

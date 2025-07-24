@@ -1,7 +1,7 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{base::Component, FormattedText, PaginateFull},
+        component::{base::Component, FormattedText, Paginate},
         geometry::Rect,
         shape::Renderer,
         util::Pager,
@@ -170,7 +170,7 @@ impl Page {
 }
 
 // Pagination
-impl PaginateFull for Page {
+impl Paginate for Page {
     fn pager(&self) -> Pager {
         self.formatted.pager()
     }
