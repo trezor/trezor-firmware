@@ -1031,7 +1031,6 @@ class InputFlowPaymentRequestDetails(InputFlowBase):
 
         yield  # confirm transaction
         self.debug.click(self.debug.screen_buttons.ok())
-        self.debug.press_yes()
 
 
 class InputFlowSignTxHighFee(InputFlowBase):
