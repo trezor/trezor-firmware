@@ -1,0 +1,6 @@
+
+exported_data/
+dataset/datasets/
+.venv/
+**/.ipynb
+**/.ipynb_checkpoints/

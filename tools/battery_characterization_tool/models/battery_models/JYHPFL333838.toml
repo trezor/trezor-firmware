@@ -1,0 +1,2 @@
+battery_manufacturer = "JYHPFL333838"
+temperatures_to_process = ["5", "10", "15", "20", "25", "30", "35", "40"]
