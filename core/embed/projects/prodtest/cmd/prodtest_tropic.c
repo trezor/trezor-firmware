@@ -87,8 +87,8 @@ static void prodtest_tropic_get_chip_id(cli_t* cli) {
 
   lt_handle_t* handle = tropic_get_handle();
 
-  uint8_t chip_id[LT_L2_GET_INFO_CHIP_ID_SIZE];
-  if (!lt_get_info_chip_id(handle, chip_id, sizeof(chip_id))) {
+  struct lt_chip_id_t chip_id;
+  if (!lt_get_info_chip_id(handle, &chip_id)) {
     cli_error(cli, CLI_ERROR, "Unable to get CHIP ID");
   }
 
