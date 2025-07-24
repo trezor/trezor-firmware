@@ -10,11 +10,6 @@ class TropicError(Exception):
         Test the session by pinging the chip.
         """
 
-    def get_certificate() -> bytes:
-        """
-        Return the chip's certificate.
-        """
-
     def key_generate(
         key_index: int,
     ) -> None:

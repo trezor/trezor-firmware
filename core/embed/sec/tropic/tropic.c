@@ -121,18 +121,6 @@ bool tropic_ping(const uint8_t *msg_out, uint8_t *msg_in, uint16_t msg_len) {
   return res == LT_OK;
 }
 
-bool tropic_get_cert(uint8_t *buf, uint16_t buf_size) {
-  tropic_driver_t *drv = &g_tropic_driver;
-
-  if (!drv->initialized) {
-    return false;
-  }
-
-  // TODO what is the new function
-  // lt_ret_t res = lt_get_info_cert(&drv->handle, buf, buf_size);
-  return LT_OK;
-}
-
 bool tropic_ecc_key_generate(uint16_t slot_index) {
   tropic_driver_t *drv = &g_tropic_driver;
 
