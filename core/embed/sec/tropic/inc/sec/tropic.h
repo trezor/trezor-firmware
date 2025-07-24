@@ -35,8 +35,6 @@ lt_handle_t* tropic_get_handle();
 
 bool tropic_ping(const uint8_t* msg_out, uint8_t* msg_in, uint16_t msg_len);
 
-bool tropic_get_cert(uint8_t* buf, uint16_t buf_size);
-
 bool tropic_ecc_key_generate(uint16_t slot_index);
 
 bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t* dig,
