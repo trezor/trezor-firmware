@@ -1092,8 +1092,6 @@ class InputFlowSignTxHighFee(InputFlowBase):
             br = yield
             assert br.code == expected
             self.debug.click(self.debug.screen_buttons.ok())
-            if br.code == B.SignTx:
-                self.debug.press_yes()
 
         self.finished = True
 
