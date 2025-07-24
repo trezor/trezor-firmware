@@ -114,6 +114,24 @@ impl PropsList {
             props_padding,
         })
     }
+
+    pub fn empty(
+        key_font: &'static TextStyle,
+        value_font: &'static TextStyle,
+        value_mono_font: &'static TextStyle,
+        key_value_padding: i16,
+        props_padding: i16,
+    ) -> Result<Self, Error> {
+        let empty_list = List::alloc(&[])?; // Create an empty GC list
+        Ok(Self {
+            items: empty_list,
+            key_font,
+            value_font,
+            value_mono_font,
+            key_value_padding,
+            props_padding,
+        })
+    }
 }
 
 impl ParagraphSource<'static> for PropsList {

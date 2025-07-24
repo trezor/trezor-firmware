@@ -88,7 +88,7 @@ pub fn new_set_new_pin(
     ])
     .into_paragraphs()
     .with_placement(LinearPlacement::vertical())
-    .with_spacing(24);
+    .with_spacing(theme::TEXT_VERTICAL_SPACING);
 
     let content_cancel = TextScreen::new(paragraphs_cancel_intro)
         .with_header(

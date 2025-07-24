@@ -9,6 +9,7 @@ from .helpers import DECIMALS
 
 if TYPE_CHECKING:
     from trezor.messages import PaymentRequest
+    from trezor.ui.layouts import PropertyType
 
     from apps.common.paths import Bip32Path
 
@@ -71,8 +72,8 @@ async def require_confirm_payment_request(
             )
             trades.append(
                 (
-                    f"-\u00A0{total_amount}",
-                    f"+\u00A0{memo.coin_purchase_memo.amount}",
+                    f"-\u00a0{total_amount}",
+                    f"+\u00a0{memo.coin_purchase_memo.amount}",
                     memo.coin_purchase_memo.address,
                     None,
                     coin_purchase_account_path,
@@ -82,9 +83,9 @@ async def require_confirm_payment_request(
             raise wire.DataError("Unrecognized memo type in payment request memo.")
 
     account_path = address_n_to_str(address_n) if address_n else None
-    account_items = []
+    account_items: list[PropertyType] = []
     if account_path:
-        account_items.append((TR.address_details__derivation_path, account_path))
+        account_items.append((TR.address_details__derivation_path, account_path, True))
 
     await confirm_payment_request(
         verified_payment_request.recipient_name,
