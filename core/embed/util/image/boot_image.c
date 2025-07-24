@@ -251,10 +251,6 @@ void boot_image_replace(const boot_image_t *image) {
   ensure((hdr != NULL) * sectrue, "Invalid bootloader header");
 
   // Check the image is big enough to hold both header and code
-  ensure(sectrue * (hdr->header_size <= image->image_size),
-         "Bootloader header too big");
-  ensure(sectrue * (hdr->code_size <= image->image_size),
-         "Bootloader code too big");
   ensure(sectrue * (hdr->header_size + hdr->code_size <= image->image_size),
          "Bootloader image too small");
 
