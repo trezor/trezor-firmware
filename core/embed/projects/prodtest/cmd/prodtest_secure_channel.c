@@ -59,9 +59,9 @@ static void prodtest_secure_channel_handshake_2(cli_t* cli) {
   }
 
   if (!secure_channel_handshake_2(input)) {
-    // TODO: Consider distinguishing between cryptography error and state error
-    cli_error(cli, CLI_ERROR,
-              "You have to call `secure-channel-handshake-1` first.");
+    // Either `secure_channel_handshake_1()` has not been called or the keys do
+    // not match.
+    cli_error(cli, CLI_ERROR, "`secure_channel_handshake_2()` failed.");
   }
 
   cli_ok(cli, "");

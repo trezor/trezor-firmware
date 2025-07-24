@@ -73,6 +73,9 @@ static const uint8_t SUBJECT_COMMON_NAME[] = {
 #ifdef TREZOR_MODEL_T3T1
   'T', '3', 'T', '1', ' ', 'T', 'r', 'e', 'z', 'o', 'r', ' ', 'S', 'a', 'f', 'e', ' ', '5',
 #endif
+#ifdef TREZOR_MODEL_T3W1
+  'T', '3', 'W', '1', ' ', 'T', 'r', 'e', 'z', 'o', 'r', ' ', 'S', 'a', 'f', 'e', ' ', '7',
+#endif
 };
 // clang-format on
 

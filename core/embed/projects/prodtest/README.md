@@ -666,6 +666,33 @@ Lock successful
 OK
 ```
 
+### secrets-get-mcu-device-key
+Returns a cryptogram that encrypts and authenticates the device attestation public key stored in MCU. The commands `secrets-init` and `secure-channel-handshake-2` must be executed before calling this command.
+
+Example:
+```
+secrets-get-mcu-device-key
+OK 638c8a83ddc8fd84cddf5a0a4fa3d9615146cd341685dca942bab1132c2bc99b
+```
+
+### secrets-certdev-write
+Writes the X.509 device attestation certificate issued by the Trezor Company for the attestation key stored in MCU.
+
+Example:
+```
+secrets-certdev-write <hexadecimal string>
+OK
+```
+
+### secrets-certdev-read
+Retrieves the X.509 device attestation certificate issued by the Trezor Company for the attestation key stored in MCU.
+
+Example:
+```
+secrets-certdev-read
+OK <hexadecimal string>
+```
+
 ### optiga-pair
 Writes the pairing secret to the Optiga chip to pair it with the MCU. The command `secrets-init` must be executed before calling this command.
 
@@ -693,17 +720,17 @@ optiga-certinf-read
 OK <hexadecimal string>
 ```
 
-### optiga-certinf-write
-Writes the X.509 certificate issued by the Trezor Company for the device.
+### optiga-certdev-write
+Writes the X.509 certificate issued by the Trezor Company for the device attestation key stored in Optiga.
 
 Example:
 ```
-optiga-certinf-write <hexadecimal string>
+optiga-certdev-write <hexadecimal string>
 OK
 ```
 
-### optiga-certdev-red
-Retrieves the X.509 certificate issued by the Trezor Company for the device.
+### optiga-certdev-read
+Retrieves the X.509 certificate issued by the Trezor Company for the device attestation key stored in Optiga.
 
 Example:
 ```
@@ -712,7 +739,7 @@ OK <hexadecimal string>
 ```
 
 ### optiga-certfido-write
-Writes the X.509 certificate issued by the Trezor Company for the FIDO attestation key.
+Writes the X.509 certificate issued by the Trezor Company for the FIDO attestation key stored in Optiga.
 
 Example:
 ```
@@ -721,7 +748,7 @@ OK
 ```
 
 ### optiga-certfido-read
-Retrieves the X.509 certificate issued by the Trezor Company for the FIDO attestation key.
+Retrieves the X.509 certificate issued by the Trezor Company for the FIDO attestation key stored in Optiga.
 
 Example:
 ```
@@ -986,6 +1013,144 @@ tropic-update-fw
 OK
 ```
 
+### tropic-certtropic-read
+
+Reads the X.509 certificate issued by Tropic Square for the Tropic chip.
+
+Example:
+```
+tropic-certtropic-read
+OK  308201CB30820151A00302010202100200110308861906100F32000000045B300A06082A8648CE3D0403033047310B300906035504061302435A311D301B060355040A0C1454726F7069632053717561726520732E722E6F2E3119301706035504030C1054524F50494330312D54204341207631301E170D3235303730313130353533325A170D3435303730313130353533325A30173115301306035504030C0C54524F504943303120655345302A300506032B656E032100F582E78C4ECCB186D72A29B6B54E8CAD931C765DBA0C3EDE9405602CB1065246A37E307C300C0603551D130101FF04023000300E0603551D0F0101FF040403020308301F0603551D2304183016801433C711060CE80513B5677B019650644E3B43FAE7303B0603551D1F043430323030A02EA02C862A687474703A2F2F706B692E74726F7069637371756172652E636F6D2F6C332F7430312D5476312E63726C300A06082A8648CE3D0403030368003065023100C46E44F9D1FE26A4DC8AC659D1B6A9A82CEEBE9D283726633053FE410FF665073B7FB6ECE235FD8AB7F87336DDBCF96202300F919622C0A1CF6D00CF43CE4229AC44548055030566E8E03CA98B15D6B29B04DF231B9BF7006A9E28C15E88B07141893082025E308201E4A00302010202027531300A06082A8648CE3D0403033045310B300906035504061302435A311D301B060355040A0C1454726F7069632053717561726520732E722E6F2E3117301506035504030C0E54524F50494330312043412076313020170D3235303333313132303833305A180F32303630303333313132303833305A3047310B300906035504061302435A311D301B060355040A0C1454726F7069632053717561726520732E722E6F2E3119301706035504030C1054524F50494330312D542043412076313076301006072A8648CE3D020106052B8104002203620004A70C3273AE3227DC767EF0293D95CC106691E5BC9AA6C0282BAA8FD4B37CFAC30FEE0D879C32D8D9CE9B0BD7924B5C10097B8C4A5E7ED68D690185E3D128161256C01033C0293DE39A7188A72CFF9EEAF5B3B5DEE898F954C4F226C2ADE70BC6A381A230819F301D0603551D0E0416041433C711060CE80513B5677B019650644E3B43FAE730120603551D130101FF040830060101FF020100300E0603551D0F0101FF040403020106301F0603551D2304183016801443BAB7BDA7CDE728945CF142CBD2F9CD5588A93F30390603551D1F04323030302EA02CA02A8628687474703A2F2F706B692E74726F7069637371756172652E636F6D2F6C322F74303176312E63726C300A06082A8648CE3D0403030368003065023014AEC525E5E8311B5D6312CF0EBB2286700552EEBA32D641672C20F02A612B77E9FC3709C9657CEC6D82D6CDBDDE57C4023100BB9B77CCBBD9DE11086481D4BA9772C38743591E722B9E4D08A89940D879DA2447A55C15F84175C479946326E0F482AF3082028B308201ECA00302010202020BB9300A06082A8648CE3D040304304F310B300906035504061302435A311D301B060355040A0C1454726F7069632053717561726520732E722E6F2E3121301F06035504030C1854726F7069632053717561726520526F6F742043412076313020170D3235303333313132303832395A180F32303635303333313132303832395A3045310B300906035504061302435A311D301B060355040A0C1454726F7069632053717561726520732E722E6F2E3117301506035504030C0E54524F50494330312043412076313076301006072A8648CE3D020106052B81040022036200042301BE5B6ED9A858153F57C6BEBC9F37B858BC2874DDC90C1041BE6D04E7BBF24A7968F2E51173D0ACAC892E65E4FC03EA5BC4381A60154D7CD7CC6DF94591650F5FDC008919157314FC1F8D8295F1A10571DD1573E868BFECA96C92CCBB816FA381A230819F301D0603551D0E0416041443BAB7BDA7CDE728945CF142CBD2F9CD5588A93F30120603551D130101FF040830060101FF020101300E0603551D0F0101FF040403020106301F0603551D230418301680143C18AF711A6699B37914E363963FE25CF304B3BF30390603551D1F04323030302EA02CA02A8628687474703A2F2F706B692E74726F7069637371756172652E636F6D2F6C312F74737276312E63726C300A06082A8648CE3D04030403818C00308188024200BCD02D464329F3FC7DC81723B0C26437E35C2B49782BAE97432789F508B5A220240E6E3E4D12C15C3BDB15A8D3F90CDD19071E2227C4898220B2BEF584B2C20F8F024201EB854F05F9A2C5B466D798FE627C539B98703531735F7AB49546FE5CFB9DF0BF3B6985D700EFBC36DF3FF01692F0ECE98BB8DB2FBB9BF40913EA87EA121A7AD2E730820258308201BBA0030201020202012D300A06082A8648CE3D040304304F310B300906035504061302435A311D301B060355040A0C1454726F7069632053717561726520732E722E6F2E3121301F06035504030C1854726F7069632053717561726520526F6F742043412076313020170D3235303333313132303832355A180F32303735303333313132303832355A304F310B300906035504061302435A311D301B060355040A0C1454726F7069632053717561726520732E722E6F2E3121301F06035504030C1854726F7069632053717561726520526F6F7420434120763130819B301006072A8648CE3D020106052B8104002303818600040187CCEA62837E23092D8A7135789FCC6FBC3D35E79FC01F4F498FC5C2C409CE772F901340090403E8BA4D97E13F1E7594AC6D2F51FD2239F8D457769F378440A18000712BF16A48EA2025837BEFD0502A562FD93941D52CC40ED9553CA79B145BA585F32492BFD792EB96D949D31676CD099F19CE8848697B8C3430AF016FED985E1EB4A3423040301D0603551D0E041604143C18AF711A6699B37914E363963FE25CF304B3BF300F0603551D130101FF040530030101FF300E0603551D0F0101FF040403020106300A06082A8648CE3D04030403818A0030818602416841837339337C182A4EE896CBFD5DA5925F0026E7A6FA3DEE61F49A46B5D9856858D3D86501BE64B0F2F33B05D856DE96F57B947F49E720E875090B30C337791802412FDDB68D166510451FE4C62DBAE0CCD952DC34E03AE6617818CCD0EA28A9DFF045AA13A248A5F066B51139C9BEF471DD004DAC4F78DB56CF7B3E8D6F8F87D048D2
+```
+
+### tropic-lock-check
+
+Returns 'YES' if the Tropic chip has been locked, otherwise returns 'NO'.
+
+Example:
+```
+tropic-lock-check
+OK YES
+```
+
+### tropic-pair
+
+Pairs the MCU with the Tropic chip. This command is idempotent, meaning it can be called multiple times without changing the state of the device. This command is irreversible and cannot be undone. The command `secrets-init` must be executed before calling this command.
+
+Example:
+```
+tropic-pair
+OK
+```
+
+### tropic-get-access-credential
+
+Returns a cryptogram that encrypts and authenticates the Tropic pairing private key and authenticates the Tropic public key. The commands `secrets-init` and `secure-channel-handshake-2` must be executed before calling this command.
+
+Example:
+```
+tropic-get-access-credential
+OK 03ca0e9d74ef59fa80a06161f3d2fceeb3e0c5e2db8182526d337aac78bad2d2ce4cacf05cdcd879843bcc43ed330199
+```
+
+### tropic-get-fido-masking-key
+
+Returns a cryptogram that encrypts and authenticates the FIDO masking key for the Tropic chip. The commands `secrets-init` and `secure-channel-handshake-2` must be executed before calling this command.
+
+Example:
+```
+tropic-get-fido-masking-key
+OK dc106118a32feeef8d9211f54b9c8e9d571abe4cb104dc4ab087531cfee4574283ccf9c6f45e68be712f630d72d4999c
+```
+
+### tropic-handshake
+
+Establishes a secure channel with the Tropic chip. Expects a handshake request as input, returns a handshake response.
+
+```
+tropic-handshake 648724356a6bb22b258557927287af52133a27b7317d3c919db23395cae03d853422af
+OK 09ad6ec70806318313c903094ae8fb63698051210dfa540ea7c7f7e588601dac478eee30432063964574879dee93250d8a5049
+```
+
+### tropic-send-command
+
+Sends a command to the Tropic chip and returns the response. The command `tropic-handshake` must be executed before calling this command.
+
+Example:
+```
+tropic-send-command <hexadecimal string>
+OK <hexadecimal string>
+```
+
+### tropic-certdev-read
+
+Retrieves the X.509 certificate issued by the Trezor Company for the device attestation key stored in Tropic.
+
+Example:
+```
+tropic-certdev-read
+OK <hexadecimal string>
+```
+
+### tropic-certdev-write
+
+Writes the X.509 certificate issued by the Trezor Company for the device attestation key stored in Tropic.
+
+Example:
+```
+tropic-certdev-write <hexadecimal string>
+OK <hexadecimal string>
+```
+
+### tropic-certfido-read
+
+Retrieves the X.509 certificate issued by the Trezor Company for the FIDO attestation key stored in Tropic.
+
+Example:
+```
+tropic-certfido-read
+OK <hexadecimal string>
+```
+
+### tropic-certfido-write
+
+Writes the X.509 certificate issued by the Trezor Company for the FIDO attestation key stored in Tropic.
+
+Example:
+```
+tropic-certfido-write <hexadecimal string>
+OK <hexadecimal string>
+```
+
+### tropic-lock
+
+Configures the Tropic chip. This command is idempotent, meaning it can be called multiple times without changing the state of the device. This command is irreversible and cannot be undone. The command `tropic-pair` must be executed before calling this command.
+
+Example:
+```
+tropic-lock
+OK <hexadecimal string>
+```
+
+### secure-channel-handshake-1
+
+Returns the first handshake message for establishing a secure channel between the device and HSM.
+
+Example:
+```
+secure-channel-handshake-1
+OK 1e85285cbf805d0418be1f502a325806f68fa07c78fd63b7b960b2d0416f8b49
+```
+
+### secure-channel-handshake-2
+
+Establishes a secure channel between the device and HSM. Expects the second handshake message as input. The command `secure-channel-handshake-1` must be executed before calling this command.
+
+Example:
+```
+secure-channel-handshake-2 e08e84b91413ad8f7b07853c8ce4c1b5547a12d9dd65f30e3adaa1e2398e0359bd7ba0e9fb2c64130c25d56abb811f72
+OK
+```
 
 ### wpc-info
 Retrieves detailed information from the wireless power receiver, including chip identification, firmware version, configuration settings, and error status.
@@ -1127,6 +1292,3 @@ Example:
 rtc-get
 OK 2025 07 03 14 23 00 4
 ```
-
-
-
