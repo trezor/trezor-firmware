@@ -74,6 +74,7 @@ def configure(
             "vendor/libtropic/src/lt_l2.c",
             "vendor/libtropic/src/lt_l2_frame_check.c",
             "vendor/libtropic/src/lt_l3.c",
+            "vendor/libtropic/src/lt_l3_process.c",
             "vendor/libtropic/src/lt_random.c",
             "vendor/libtropic/hal/port/unix/lt_port_unix_tcp.c",
             "vendor/libtropic/hal/crypto/trezor_crypto/lt_crypto_trezor_aesgcm.c",
