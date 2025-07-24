@@ -1230,17 +1230,6 @@ access_violation:
   return false;
 }
 
-bool tropic_get_cert__verified(uint8_t *buf, uint16_t buf_size) {
-  if (!probe_write_access(buf, buf_size)) {
-    goto access_violation;
-  }
-
-  return tropic_get_cert(buf, buf_size);
-access_violation:
-  apptask_access_violation();
-  return false;
-}
-
 bool tropic_ecc_key_generate__verified(uint16_t slot_index) {
   return tropic_ecc_key_generate(slot_index);
 }
