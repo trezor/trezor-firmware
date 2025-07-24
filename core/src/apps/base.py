@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 import storage.device as storage_device
 from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS, APP_COMMON_SEED
-from trezor import TR, config, utils, wire, workflow
+from trezor import TR, config, io, utils, wire, workflow
 from trezor.enums import HomescreenFormat, MessageType
 from trezor.messages import Success, UnlockPath
 from trezor.ui.layouts import confirm_action
@@ -398,6 +398,71 @@ def set_homescreen() -> None:
         set_default(homescreen)
 
 
+if utils.USE_POWER_MANAGER:
+    from trezorui_api import (
+        BacklightLevels,
+        backlight_fade,
+        backlight_get,
+        backlight_set,
+    )
+
+    AUTODIM_FROM: int | None = None
+
+    def autodim_display() -> None:
+        """Autodim the display if the device is not connected to USB."""
+        global AUTODIM_FROM
+        if io.pm.is_usb_connected():
+            return
+        current_backlight = backlight_get()
+        if current_backlight is not None and current_backlight > BacklightLevels.DIM:
+            AUTODIM_FROM = current_backlight
+            backlight_fade(BacklightLevels.LOW)
+
+    def autodim_clear() -> None:
+        """Clear autodim state and restore previous backlight level if applicable."""
+        global AUTODIM_FROM
+        if AUTODIM_FROM is not None:
+            backlight_set(AUTODIM_FROM)
+            AUTODIM_FROM = None
+
+    def handle_power_button_press() -> None:
+        """Handle power button press event during firmware operation."""
+        if config.has_pin() and config.is_unlocked():
+            lock_device(interrupt_workflow=True)
+        else:
+            set_homescreen()
+            workflow.close_others()
+        suspend_device(close_others=False)
+
+    def suspend_device(close_others: bool = True) -> None:
+        if io.pm.is_usb_connected():
+            return
+        if close_others:
+            workflow.close_others()
+        while True:
+            wakeup_flag = io.pm.suspend()
+            if wakeup_flag in (io.pm.WAKEUP_FLAG_BUTTON, io.pm.WAKEUP_FLAG_BLE):
+                # regular waking up by button or BLE
+                set_homescreen()
+                break
+            elif wakeup_flag == io.pm.WAKEUP_FLAG_POWER:
+                # charging started
+                if io.pm.is_usb_connected():
+                    set_homescreen()
+                else:
+                    set_chargingscreen()
+                break
+            else:
+                # other wakup flags are ignored, suspend again
+                continue
+
+    def set_chargingscreen() -> None:
+        """Set the charging screen when the device is woken up by power button."""
+        from apps.homescreen import chargingscreen
+
+        workflow.set_default(chargingscreen, restart=True)
+
+
 def lock_device(interrupt_workflow: bool = True) -> None:
     if config.has_pin():
         config.lock()
@@ -487,6 +552,10 @@ def boot() -> None:
         workflow_handlers.register(msg_type, handler)
 
     reload_settings_from_storage()
+    if utils.USE_POWER_MANAGER:
+        # TODO: define dim and suspend timer
+        workflow.idle_timer.set(6_000, autodim_display)
+        workflow.idle_timer.set(60_000, suspend_device)
 
     if backup.repeated_backup_enabled():
         backup.activate_repeated_backup()

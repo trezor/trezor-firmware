@@ -114,6 +114,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_auto_lock_delay;
   MP_QSTR_back_button;
   MP_QSTR_backlight_fade;
+  MP_QSTR_backlight_get;
   MP_QSTR_backlight_set;
   MP_QSTR_backup__can_back_up_anytime;
   MP_QSTR_backup__create_backup_to_prevent_loss;
