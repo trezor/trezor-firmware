@@ -299,8 +299,6 @@ bool button_get_event__verified(button_event_t *event);
 bool tropic_ping__verified(const uint8_t *msg_out, uint8_t *msg_in,
                            uint16_t msg_len);
 
-bool tropic_get_cert__verified(uint8_t *buf, uint16_t buf_size);
-
 bool tropic_ecc_key_generate__verified(uint16_t slot_index);
 
 bool tropic_ecc_sign__verified(uint16_t key_slot_index, const uint8_t *dig,

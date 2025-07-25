@@ -186,6 +186,7 @@ def configure(
         sources += ["vendor/libtropic/src/lt_l2.c"]
         sources += ["vendor/libtropic/src/lt_l2_frame_check.c"]
         sources += ["vendor/libtropic/src/lt_l3.c"]
+        sources += ["vendor/libtropic/src/lt_l3_process.c"]
         sources += ["vendor/libtropic/src/lt_hkdf.c"]
         sources += ["vendor/libtropic/src/lt_random.c"]
         sources += [
