@@ -153,9 +153,11 @@ cleanup:
 
 secbool boot_ucb_erase(void) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTUCB);
-  secbool result = flash_area_erase(&BOOTUCB_AREA, NULL);
+  secbool result = flash_area_is_erased(&BOOTUCB_AREA);
+  if (sectrue != result) {
+    result = flash_area_erase(&BOOTUCB_AREA, NULL);
+  }
   mpu_restore(mpu_mode);
-
   return result;
 }
 
