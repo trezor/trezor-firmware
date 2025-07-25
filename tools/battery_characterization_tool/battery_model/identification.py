@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import curve_fit
 from scipy.signal import convolve, find_peaks
-
+from .debug_plots import identify_r_int_debug_plot
 
 """
 This library provides the set of functions to extract battery model parameters from the measured data
@@ -47,7 +47,6 @@ def low_pass_ma_filter(x : np.ndarray, ma_len: int =40) -> np.ndarray:
 
     return x_ma
 
-
 def find_signal_transitions(x: np.ndarray, fir_len: int =40) -> np.ndarray:
     """
     Use convolution with correlation filter of "step" shape to extract sharp transitions in x.
@@ -58,9 +57,85 @@ def find_signal_transitions(x: np.ndarray, fir_len: int =40) -> np.ndarray:
     conv_x = convolve(x, corr_filter, mode='same', method='direct')
     return find_peaks(abs(conv_x), prominence=300)
 
-def estimate_R_int(time: np.ndarray, ibat: np.ndarray, vbat: np.ndarray, temp: np.ndarray, debug=False):
+def coulomb_counter(time, ibat):
     """
-    Estimate the internal resistance of the battery
+    Provide ibat(mA) ant time(s) vectors to calculate the total
+    charged or discharged current.
+
+    returns total integrated value in mAh
+    """
+    curr_acc = 0
+
+    for i, t in enumerate(time):
+
+        # Nothing to add in first cycle
+        if(i == 0):
+            continue
+
+        # Linear interpolation mAstime
+        curr_acc += (abs((ibat[i-1] + ibat[i])/2)*((time[i]-time[i-1])/1000))
+
+    # convert from mAs to mAh
+    return curr_acc/3600
+
+def sample_ocv_curve(time, ocv, ibat, bat_capacity, num_of_samples, ascending=False):
+    """
+    Use the measured capacity from the constant current load curve and estimated V_oc
+    to split the V_oc into equidistant intervals and calculate the SOC points
+    returns list of index
+    """
+
+    # Calculate SoC presets according to num_of_intervals
+    intervals = np.linspace(0, 1, num_of_samples)
+
+    # First row is SoC, second is V_OC
+    ocv_curve = np.zeros((2, num_of_samples))
+    indices = np.zeros(num_of_samples, dtype=int)
+
+    for i in range(len(intervals)):
+
+        delta = bat_capacity # Just and ultimately largest options
+        idx = 0
+        cusum = 0
+        current = intervals[i]*bat_capacity
+
+        for j in range(len(ibat)):
+
+            if ascending:
+                idx = j
+            else:
+                idx = len(ibat) - j - 1
+
+            if j == 0:
+                continue
+
+            # Interpolate the current
+            cur_incr = (((ibat[idx-1] + ibat[idx])/2)*((time[idx]-time[idx-1])/1000))
+            cusum += abs(cur_incr)/3600
+
+            if(abs(cusum - current) < delta):
+                delta = abs(cusum - current)
+                idx = idx
+
+        ocv_curve[0][i] = intervals[i]
+        try:
+            ocv_curve[1][i] = ocv[idx]
+        except:
+            raise ValueError(f"Index {idx} out of bounds for OCV vector of length {len(ocv)}")
+
+        indices[i] = idx
+
+    return ocv_curve, indices
+
+
+def identify_r_int(time: np.ndarray, ibat: np.ndarray, vbat: np.ndarray, temp: np.ndarray, debug=False):
+    """
+    Identify internal resistance of the battery from the measured voltage and current data.
+
+    internal resistance could be estimated only if battery is discharged with several different loads. Script will
+    identify the load transition and for every such transition it will do a single r_int estimation. Final estimation
+    is an average of all the single estimations. To get best estimation results, feed the discharge waveform with
+    sufficient number of load transitions.
     """
 
     ma_len=40
@@ -81,114 +156,79 @@ def estimate_R_int(time: np.ndarray, ibat: np.ndarray, vbat: np.ndarray, temp: n
     m1_idx = valid_transitions - offset_left   # Marks 1
     m2_idx = valid_transitions + offset_right  # Marks 2
 
-    r_int_est = np.zeros(len(valid_transitions), dtype=float)
-    r_int_est_filtered = np.zeros(len(valid_transitions), dtype=float)
+    r_int = np.zeros(len(valid_transitions), dtype=float)
 
     for i in range(0, len(valid_transitions)):
-        r_int_est[i] = (vbat[m2_idx[i]] - vbat[m1_idx[i]]) / ((ibat[m1_idx[i]]/1000) - (ibat[m2_idx[i]]/1000))
-        r_int_est_filtered[i] = (vbat_filtered[m2_idx[i]] - vbat_filtered[m1_idx[i]]) / ((ibat_filtered[m1_idx[i]])/1000 - (ibat_filtered[m2_idx[i]])/1000)
-
-    R_est_np = np.array(R_est)
-    R_est_filtered_np = np.array(R_est_filtered)
+        r_int[i] = (vbat_filtered[m2_idx[i]] - vbat_filtered[m1_idx[i]]) / ((ibat_filtered[m1_idx[i]])/1000 - (ibat_filtered[m2_idx[i]])/1000)
 
     # Average the R_int, do not consider the data on edges
-    if(len(R_est_np) < 3):
-        R_est_final = sum(R_est_np)/len(R_est_np)
+    if(len(r_int) < 5):
+        r_int_est = sum(r_int)/len(r_int)
     else:
-        R_est_final = sum(R_est_np[1:-1])/len(R_est_np[1:-1])
-
-    if(len(R_est_filtered_np) < 3):
-        R_est_final_filtered = sum(R_est_filtered_np)/len(R_est_filtered_np)
-    else:
-        print(R_est_filtered_np)
-        R_est_final_filtered = sum(R_est_filtered_np[1:-1])/len(R_est_filtered_np[1:-1])
+        r_int_est = sum(r_int[2:-2])/len(r_int[2:-2])
 
     if debug:
-
-        # Plot sampled points
-
-        fig, ax = plt.subplots(3,1)
-        fig.set_size_inches(6,4)
-        fig.set_dpi(300)
-
-        plt.rcParams['pdf.fonttype'] = 42  # Ensures text is editable in PDF
-        plt.rcParams['font.size'] = 6      # Good base font size for readability
-        plt.tight_layout()
-
-        fig.suptitle("Rin identification on switching load profile")
-
-        ax[0].plot(time_to_minutes(time), vbat, label="V_bat", linewidth=0.7)
-        ax[0].plot(time_to_minutes(time), vbat_filtered, label="V_bat_filtered", linewidth=1)
-        ax[0].set_xlabel("Time [min]",fontsize=6)
-        ax[0].set_ylabel("Voltage [V]",fontsize=6)
-        ax[0].set_xlim([0, time_to_minutes(time[-1], time[0])])
-        ax[0].legend()
-        ax[0].tick_params(axis='both', which='major', labelsize=6)
-
-        ax[1].plot(time_to_minutes(time), ibat, label="I_bat", linewidth=0.7)
-        ax[1].plot(time_to_minutes(time), ibat_filtered, label="I_bat_filtered", linewidth=1)
-        ax[1].plot(time_to_minutes(time[transitions_idx_np],time[0]), ibat_filtered[transitions_idx_np], 'x', markersize=3, color='red', label="Load transitions")
-        ax[1].plot(time_to_minutes(time[m1_idx], time[0]), ibat_filtered[m1_idx], 'x',markersize=3, color='magenta', label="V_t1")
-        ax[1].plot(time_to_minutes(time[m2_idx], time[0]), ibat_filtered[m2_idx], 'x',markersize=3, color='lime', label="V_t2")
-        ax[1].set_title("R_int estimation measurement marks")
-        ax[1].set_xlabel("Time [min]",fontsize=6)
-        ax[1].set_ylabel("Current [mA]", fontsize=6)
-        ax[1].set_xlim([0, time_to_minutes(time[-1], time[0])])
-        ax[1].legend()
-        ax[1].tick_params(axis='both', which='major', labelsize=6)
-
-        ax[2].set_title("I_bat convoluted with step correlation FIR filter")
-        ax[2].plot(time_to_minutes(time), ibat_corr, linewidth=0.7, label="I_bat_corr")
-        ax[2].plot(time_to_minutes(time[peaks_indeces],time[0]), ibat_corr[peaks_indeces], 'x', markersize=3 , color='red', label="Load transitions")
-        ax[2].tick_params(axis='both', which='major', labelsize=6)
-        ax[2].legend()
-        ax[2].set_xlim([0, time_to_minutes(time[-1], time[0])])
-        ax[2].set_xlabel("Time [min]", fontsize=6)
-
-        fig, ax = plt.subplots(2,1)
-        fig.set_size_inches(6,4)
-        fig.set_dpi(300)
-
-        ax[0].plot(time_to_minutes(time), ibat, linewidth=0.7, label="I_bat")
-        ax[0].plot(time_to_minutes(time), ibat_filtered, linewidth=0.7, label="I_bat_filtered")
-        ax[0].set_xlabel("Time [s]", fontsize=6)
-        ax[0].set_ylabel("Current [mA]",fontsize=6)
-        ax[0].set_title("Switching load current profile", fontsize=6)
-        ax[0].set_xlim([0, time_to_minutes(time[-1], time[0])])
-        ax[0].legend()
-
-        ax[1].plot(time_to_minutes(time[transitions_idx_np],time[0]), R_est_np, linewidth=0.7, marker="o", markersize=3, label="R_int")
-        ax[1].plot(time_to_minutes(time[transitions_idx_np],time[0]), R_est_filtered_np, linewidth=0.7, marker="o", markersize=3, label="R_int_filtered")
-        ax[1].set_xlabel("Time [s]")
-        ax[1].set_ylabel("Resistance [ohms]", fontsize=6)
-        ax[1].set_title("R_int estimation", fontsize=6)
-        ax[1].set_xlim([0, time_to_minutes(time[-1], time[0])])
-        ax[1].axhline(y=R_est_final, color='r', linestyle='--', label=f"R_int averaged {R_est_final:.2f} ohms")
-        ax[1].axhline(y=R_est_final_filtered, color='g', linestyle='--', label=f"R_int_filtered averaged: {R_est_final_filtered:.2f} ohms")
-        ax[1].legend()
-
-    return R_est_final_filtered
+        identify_r_int_debug_plot(time, vbat_filtered, ibat_filtered, r_int,
+                                  r_int_est,
+                                  valid_transitions,
+                                  m1_idx,
+                                  m2_idx)
+    return r_int_est
 
 
+def identify_ocv_curve(time : np.ndarray, vbat : np.ndarray, ibat: np.ndarray, r_int: float,
+                       max_chg_voltage: float, max_dischg_voltage: float,
+                       num_of_samples: int = 100, debug=False):
+    """
+    Extract the SOC curve as relation between battery open-circuit voltage and state of charge from
+    the measured data of constant load discharge profile.
+    """
 
+    fir_len = 20
 
+    # Low pass filter current and voltage
+    ibat_filtered = low_pass_ma_filter(ibat, fir_len)
+    vbat_filtered = low_pass_ma_filter(vbat, fir_len)
 
+    # Translate the voltage into OCV using the internal resistance
+    ocv = vbat_filtered + ((ibat_filtered/1000) * r_int)
 
+    # Cut the curves edges with max discharge voltage and max charge voltage
+    max_chg_v_idx = 0
+    max_dischg_v_idx = len(vbat_filtered)
 
+    # This cannot be done vector wise, since we want to take a continous set which within the given thresholds.
+    for i in range(len(vbat_filtered)):
 
+        # Sweeping from the end to the beginning
+        x = vbat_filtered[len(vbat_filtered) - i - 1]
+        if(x > max_chg_voltage):
+            max_chg_v_idx = len(vbat_filtered) - i
+            break
 
+    for i in range(len(vbat_filtered)):
 
+        x = vbat_filtered[i]
+        if(x < max_dischg_voltage):
+            max_dischg_v_idx = i + 1
+            break
 
+    # Take only the part which is within the given voltage thresholds
+    time_cut = time[max_chg_v_idx:max_dischg_v_idx]
+    ocv_cut = ocv[max_chg_v_idx:max_dischg_v_idx]
+    ibat_cut = ibat_filtered[max_chg_v_idx:max_dischg_v_idx]
 
+    # Measure current capacity over the full profileintervals
+    total_capacity     = coulomb_counter(time, ibat)
+    effective_capacity = coulomb_counter(time_cut, ibat_cut)
 
+    # Sample ocv curve (relation between SoC and OCV)
+    ocv_curve, indices = sample_ocv_curve(time, ocv, ibat, effective_capacity, num_of_samples, ascending=False)
 
+    if debug:
+        pass
 
-
-
-
-
-
-
+    return ocv_curve, total_capacity, effective_capacity
 
 def poly_2ord(x, a, b, c):
     return a*x**2 + b*x + c
@@ -205,6 +245,8 @@ def rational_fit_split(x, a, b, c, d, e, f, g, h):
 
     result[mask1] = (a + b*x[mask1]) / (c + d*x[mask1])
     result[mask2] = (e + f*x[mask2]) / (g + h*x[mask2])
+
+def rational_fit(x, a, b, c, d):
 
     return result
 
@@ -245,6 +287,26 @@ def continuous_rational_split(x, a1, b1, c1, d1, a2, b2, c2, d2):
     result[mask2] = (a2 + b2*x[mask2]) / (c2 + d2*x[mask2])
 
     return result
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def rational_linear_rational(x, m, b, a1, b1, c1, a3, b3, c3):
@@ -359,24 +421,7 @@ def ocv_rational(x, a, b, c, d, e, f):
     return a + (b + c*x)/(d + e*x + f*x**2)
 
 
-def coulomb_counter(time, ibat):
-    """
-    Provide ibat(mA) ant time(s) vectors to calculate the total
-    charged or discharged current returns total val in mAh
-    """
-    curr_acc = 0
 
-    for i, t in enumerate(time):
-
-        # Nothing to add in first cycle
-        if(i == 0):
-            continue
-
-        # Linear interpolation mAstime
-        curr_acc += (abs((ibat[i-1] + ibat[i])/2)*((time[i]-time[i-1])/1000))
-
-    # convert from mAs to mAh
-    return curr_acc/3600
 
 def time_to_minutes(time, offset=None):
     if(offset is None):
@@ -443,150 +488,6 @@ def fit_soc_curve(soc_curve):
     popt_rlr_complete = [m, b, a1, b1, c1, d1, a3, b3, c3, d3]
 
     return popt_rlr, popt_rlr_complete
-
-
-def extract_SoC_interpolation_points(V_OC, I_OC, T_OC, measured_capacity, num_of_intervals, profile_ascending=False):
-    """
-    Use the measured capacity from the constant current load curve and estimated V_oc
-    to split the V_oc into equidistant intervals and calculate the SOC points
-    returns list of index
-    """
-
-    # Calculate SOC presets according to num_of_intervals
-    intervals = np.linspace(0, 1, num_of_intervals)
-
-    # First row is SoC, second is V_OC
-    SoC_curve = np.zeros((2, num_of_intervals))
-
-    indices = []
-
-    for i in range(len(intervals)):
-
-        delta = measured_capacity # Just and ultimitly largest options
-        idx = 0
-        cusum = 0
-        current = intervals[i]*measured_capacity
-
-        for j in range(len(I_OC)):
-
-            if profile_ascending:
-                rev_i = j
-            else:
-                rev_i = len(I_OC) - j - 1
-
-            if j == 0:
-                continue
-
-            cur_incr = (((I_OC[rev_i-1] + I_OC[rev_i])/2)*((T_OC[rev_i]-T_OC[rev_i-1])/1000))
-            cusum += abs(cur_incr)/3600
-
-            if(abs(cusum - current) < delta):
-                delta = abs(cusum - current)
-                idx = rev_i #len(I_OC) - j - 1
-
-        SoC_curve[0][i] = intervals[i] # SoC
-        try:
-            SoC_curve[1][i] = V_OC[idx]
-        except:
-            print("Break Here")
-        indices.append(idx)
-
-    return SoC_curve, indices
-
-def extract_SoC_curve(test_name, linear_dischg_data, Rint, max_chg_voltage, max_dischg_voltage, num_of_points, debug=False):
-
-    """
-    Extract the SOC curve as relation between battery open-circuit voltage and state of charge from
-    the measured data of constant load discharge profile.
-    """
-    fir_len = 20
-
-    # Low pass filter current and voltage
-    ibat_filtered = low_pass_ma_filter(linear_dischg_data.ibat, fir_len)
-    vbat_filtered = low_pass_ma_filter(linear_dischg_data.vbat, fir_len)
-
-    # Translate the voltage into OCV using the internal resistance
-    V_oc = vbat_filtered + ((ibat_filtered/1000) * Rint)
-
-    # Cut the curves edges with max discharge voltage and max charge voltage
-
-    max_chg_v_idx = 0
-    max_dischg_v_idx = len(vbat_filtered)
-
-    for i in range(len(vbat_filtered)):
-
-        sample = vbat_filtered[len(vbat_filtered) - i - 1]
-
-        if(sample > max_chg_voltage):
-            max_chg_v_idx = len(vbat_filtered) - i
-            break
-
-    for i in range(len(vbat_filtered)):
-
-        sample = vbat_filtered[i]
-
-        if(sample < max_dischg_voltage):
-            max_dischg_v_idx = i + 1
-            break
-
-    # max_dischg_v_idx = int(len(vbat_filtered)*0.95)
-
-    cut_time = linear_dischg_data.time[max_chg_v_idx:max_dischg_v_idx]
-    V_oc_cut = V_oc[max_chg_v_idx:max_dischg_v_idx]
-    I_oc_cut = ibat_filtered[max_chg_v_idx:max_dischg_v_idx]
-
-    # Measure current capacity over the full profileintervals
-    total_capacity     = coulomb_counter(linear_dischg_data.time, linear_dischg_data.ibat)
-    effective_capacity = coulomb_counter(cut_time, I_oc_cut)
-    #effective_capacity = total_capacity
-
-    # Find the curve interpolation points
-    SoC_curve, SoC_curve_indeces = extract_SoC_interpolation_points(V_oc_cut, I_oc_cut, cut_time, effective_capacity, num_of_points)
-    #SoC_curve, SoC_curve_indeces = extract_SoC_interpolation_points(V_oc, linear_dischg_data.ibat, linear_dischg_data.time , effective_capacity, num_of_points)
-
-    intervals = np.array(SoC_curve)
-
-    if debug:
-
-        # fit with spline??
-        #popt, pcov = curve_fit(poly, intervals[:,0], V_oc_cut[SoC_curve_indeces])
-        #V_oc_fitted = poly(intervals[:,0], *popt)
-
-        fig, ax = plt.subplots(2,1)
-        fig.set_size_inches(6,4)
-        fig.set_dpi(300)
-
-        fig.suptitle("Linear discharge profile")
-
-        ax[0].set_title("Open-circuit voltage", fontsize=6)
-        ax[0].plot(time_to_minutes(linear_dischg_data.time), V_oc, linewidth=0.7, label="V_oc")
-        ax[0].plot(time_to_minutes(linear_dischg_data.time), linear_dischg_data.vbat, linewidth=0.7, label="V_bat")
-        ax[0].plot(time_to_minutes(cut_time), V_oc_cut, linewidth=0.7, label="V_oc effective area", color="red")
-        ax[0].set_xlabel("Time [min]", fontsize=6)
-        ax[0].set_ylabel("Voltage [V]", fontsize=6)
-        ax[0].set_xlim([0, time_to_minutes(linear_dischg_data.time[-1], linear_dischg_data.time[0])])
-
-        for ip in SoC_curve_indeces:
-            ax[0].axvline(x=time_to_minutes(cut_time[ip], cut_time[0]), color='gray', linestyle='--', linewidth=0.5,alpha=0.3)
-
-        ax[0].legend()
-
-        ax[1].set_title("Battery current", fontsize=6)
-        ax[1].plot(time_to_minutes(linear_dischg_data.time), linear_dischg_data.ibat, linewidth=0.7,  label="I_bat")
-        ax[1].plot(time_to_minutes(cut_time), I_oc_cut, label="I_bat_filtered effective area", linewidth=0.7, color="red")
-        ax[1].set_xlabel("Time [min]", fontsize=6)
-        ax[1].set_ylabel("Current [mA]", fontsize=6)
-        ax[1].set_xlim([0, time_to_minutes(linear_dischg_data.time[-1], linear_dischg_data.time[0])])
-
-        ax[1].legend()
-
-        #fig, ax = plt.subplots()
-        #ax.plot(intervals[:,0], V_oc_cut[SoC_curve_indeces], label="V_OC")
-        #ax.plot(intervals[:,0], V_oc_fitted, label="V_OC_fitted")
-
-    return SoC_curve, total_capacity, effective_capacity
-
-
 
 def extract_SoC_curve_charging(test_name, linear_dischg_data, Rint, max_chg_voltage, max_dischg_voltage, num_of_points, debug=False):
 
