@@ -267,7 +267,7 @@ class Channel:
             if self.expected_payload_length != CHECKSUM_LENGTH:
                 raise ThpError("Invalid ACK length, ignoring")
             self.bytes_read = INIT_HEADER_LENGTH + CHECKSUM_LENGTH
-            return
+            return None
 
         # If the channel does not "own" the buffer lock, decrypt the first packet
 
