@@ -294,8 +294,8 @@ def _client_unlocked(
 
     _check_protocol(request, _raw_client)
 
-    if _raw_client.protocol_version is ProtocolVersion.V2:
-        pass
+    protocol_version = _raw_client.protocol_version
+
     sd_marker = request.node.get_closest_marker("sd_card")
     if sd_marker and not _raw_client.features.sd_card_present:
         raise RuntimeError(
@@ -340,12 +340,13 @@ def _client_unlocked(
                     try:
                         _raw_client = _raw_client.get_new_client()
                     except Exception:
-                        sleep(1.5)
+                        sleep(LOCK_TIME)
                         _raw_client = _get_raw_client(request)
 
             session = _raw_client.get_seedless_session()
             wipe_device(session)
-            sleep(1.5)  # Makes tests more stable (wait for wipe to finish)
+            if protocol_version is ProtocolVersion.V2:
+                sleep(LOCK_TIME)  # Makes tests more stable (wait for wipe to finish)
             break
         except cryptography.exceptions.InvalidTag:
             # Get a new client
