@@ -81,6 +81,7 @@ def test_backup_slip39_custom(
     )
 
     # confirm backup configuration
+    debug.synchronize_at("Paragraphs")  # XXX wait for homescreen to go away
     if share_count > 1:
         assert TR.regexp("reset__create_x_of_y_multi_share_backup_template").match(
             debug.read_layout().text_content().strip()
