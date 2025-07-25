@@ -470,9 +470,11 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       SET_REGION( 6, ASSETS_START,             ASSETS_MAXSIZE,     FLASH_DATA,   NO,   YES );
       break;
     default:
+#ifndef BOARDLOADER
       // By default, the kernel needs to have the same access to assets as the app
       SET_REGION( 6, ASSETS_START,             ASSETS_MAXSIZE,     FLASH_DATA,   NO,    NO );
       break;
+#endif
   }
   // clang-format on
 
