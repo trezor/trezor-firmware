@@ -199,6 +199,10 @@ OK
 Runs radio test proxy-client. It requires special nRF radio test firmware, see https://docs.nordicsemi.com/bundle/sdk_nrf5_v17.0.2/page/nrf_radio_test_example.html for usage.
 
 
+### ble-direct-test-mode
+Runs direct-test-mode test proxy-client. It requires special nRF direct-test-mode firmware. To exit, hard reset is required.
+
+
 ### button-test
 The `button-test` command tests the functionality of the device's hardware buttons. It waits for the user to press and release a specified button in a designated timeout period.
 

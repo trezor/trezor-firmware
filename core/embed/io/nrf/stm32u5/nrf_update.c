@@ -150,6 +150,8 @@ bool nrf_update(const uint8_t *image_ptr, size_t image_len) {
 
   smp_reset();
 
+  nrf_set_dfu_mode(false);
+
   return result;
 }
 
