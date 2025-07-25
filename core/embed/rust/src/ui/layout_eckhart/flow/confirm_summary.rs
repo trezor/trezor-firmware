@@ -106,13 +106,28 @@ pub fn new_confirm_summary(
     // Summary
     let mut summary_paragraphs = ParagraphVecShort::new();
     if let Some(amount_label) = amount_label {
-        summary_paragraphs.add(Paragraph::new(&theme::TEXT_SMALL_LIGHT, amount_label));
+        let para = Paragraph::new(&theme::TEXT_SMALL_LIGHT, amount_label);
+        if amount.is_some() {
+            summary_paragraphs.add(
+                para.with_bottom_padding(theme::PROP_INNER_SPACING)
+                    .no_break(),
+            );
+        } else {
+            summary_paragraphs.add(para.with_bottom_padding(theme::PROPS_SPACING));
+        }
     }
     if let Some(amount) = amount {
-        summary_paragraphs.add(Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, amount));
+        summary_paragraphs.add(
+            Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, amount)
+                .with_bottom_padding(theme::PROPS_SPACING),
+        );
     }
     summary_paragraphs
-        .add(Paragraph::new(&theme::TEXT_SMALL_LIGHT, fee_label))
+        .add(
+            Paragraph::new(&theme::TEXT_SMALL_LIGHT, fee_label)
+                .with_bottom_padding(theme::PROP_INNER_SPACING)
+                .no_break(),
+        )
         .add(Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, fee));
 
     let confirm_button = Button::with_text(TR::instructions__hold_to_sign.into())
@@ -122,7 +137,7 @@ pub fn new_confirm_summary(
     let content_summary = TextScreen::new(
         summary_paragraphs
             .into_paragraphs()
-            .with_placement(LinearPlacement::vertical().with_spacing(theme::PROP_INNER_SPACING)),
+            .with_placement(LinearPlacement::vertical()),
     )
     .with_header(Header::new(title).with_menu_button())
     .with_action_bar(if back_button {
