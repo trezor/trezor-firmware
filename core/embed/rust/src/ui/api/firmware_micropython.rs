@@ -511,8 +511,8 @@ extern "C" fn new_flow_confirm_output(n_args: usize, args: *const Obj, kwargs: *
         let extra: Option<TString> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;
         let description: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
-        let message: Obj = kwargs.get(Qstr::MP_QSTR_message)?;
-        let amount: Option<Obj> = kwargs.get(Qstr::MP_QSTR_amount)?.try_into_option()?;
+        let message: TString = kwargs.get(Qstr::MP_QSTR_message)?.try_into()?;
+        let amount: Option<TString> = kwargs.get(Qstr::MP_QSTR_amount)?.try_into_option()?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
         let text_mono: bool = kwargs.get_or(Qstr::MP_QSTR_text_mono, true)?;
         let account_title: TString = kwargs.get(Qstr::MP_QSTR_account_title)?.try_into()?;
@@ -525,17 +525,17 @@ extern "C" fn new_flow_confirm_output(n_args: usize, args: *const Obj, kwargs: *
         let address_item = kwargs
             .get(Qstr::MP_QSTR_address_item)?
             .try_into_option()?
-            .map(|item| -> Result<(TString, Obj), crate::error::Error> {
+            .map(|item| -> Result<(TString, TString), crate::error::Error> {
                 let pair: [Obj; 2] = util::iter_into_array(item)?;
-                Ok((pair[0].try_into()?, pair[1]))
+                Ok((pair[0].try_into()?, pair[1].try_into()?))
             })
             .transpose()?;
         let extra_item = kwargs
             .get(Qstr::MP_QSTR_extra_item)?
             .try_into_option()?
-            .map(|item| -> Result<(TString, Obj), crate::error::Error> {
+            .map(|item| -> Result<(TString, TString), crate::error::Error> {
                 let pair: [Obj; 2] = util::iter_into_array(item)?;
-                Ok((pair[0].try_into()?, pair[1]))
+                Ok((pair[0].try_into()?, pair[1].try_into()?))
             })
             .transpose()?;
         let summary_items: Option<Obj> =
@@ -1578,9 +1578,9 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     fee: str,
     ///     fee_label: str,
     ///     title: str | None = None,
-    ///     account_items: Iterable[tuple[str, str]] | None = None,
+    ///     account_items: list[tuple[str | None, str | bytes | None, bool | None]] | None = None,
     ///     account_title: str | None = None,
-    ///     extra_items: Iterable[tuple[str, str]] | None = None,
+    ///     extra_items: list[tuple[str | None, str | bytes | None, bool | None]] | None = None,
     ///     extra_title: str | None = None,
     ///     verb_cancel: str | None = None,
     ///     back_button: bool = False,
@@ -1633,8 +1633,8 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     br_name: str,
     ///     address_item: (str, str) | None,
     ///     extra_item: (str, str) | None,
-    ///     summary_items: Iterable[tuple[str, str]] | None = None,
-    ///     fee_items: Iterable[tuple[str, str]] | None = None,
+    ///     summary_items: list[tuple[str | None, str | bytes | None, bool | None]] | None = None,
+    ///     fee_items: list[tuple[str | None, str | bytes | None, bool | None]] | None = None,
     ///     summary_title: str | None = None,
     ///     summary_br_code: ButtonRequestType | None = None,
     ///     summary_br_name: str | None = None,
@@ -1909,7 +1909,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def show_info_with_cancel(
     ///     *,
     ///     title: str,
-    ///     items: Iterable[tuple[str, str]],
+    ///     items: list[tuple[str | None, str | bytes | None, bool | None]],
     ///     horizontal: bool = False,
     ///     chunkify: bool = False,
     /// ) -> LayoutObj[UiResult]:

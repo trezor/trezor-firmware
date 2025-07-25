@@ -1050,9 +1050,9 @@ if not utils.BITCOIN_ONLY:
                 fee=maximum_fee,
                 fee_label=f"{TR.send__maximum_fee}:",
                 title=TR.words__title_summary,
-                account_items=[(f"{k}:", v) for (k, v) in account_items],
+                account_items=[(f"{k}:", v, True) for (k, v) in account_items],
                 account_title=TR.address_details__account_info,
-                extra_items=fee_info_items,
+                extra_items=[(k, v, True) for (k, v) in fee_info_items],
                 extra_title=TR.confirm_total__title_fee,
             ),
             br_name="confirm_ethereum_approve",
@@ -1218,7 +1218,7 @@ if not utils.BITCOIN_ONLY:
                 amount_label=amount_title,
                 fee=maximum_fee,
                 fee_label=f"{TR.send__maximum_fee}:",
-                extra_items=[(f"{k}:", v) for (k, v) in info_items],
+                extra_items=[(f"{k}:", v, True) for (k, v) in info_items],
                 extra_title=TR.confirm_total__title_fee,
             ),
             br_name=br_name,
@@ -1262,13 +1262,16 @@ if not utils.BITCOIN_ONLY:
             amount_title if amount_title is not None else f"{TR.words__amount}:"
         )  # def_arg
         fee_title = fee_title or TR.words__fee  # def_arg
+        extra_items: list[PropertyType] | None = (
+            [(k, v, True) for (k, v) in items] if items else None
+        )
         return raise_if_cancelled(
             trezorui_api.confirm_summary(
                 amount=amount,
                 amount_label=amount_title,
                 fee=fee,
                 fee_label=fee_title,
-                extra_items=items,  # TODO: extra_title here?
+                extra_items=extra_items,  # TODO: extra_title here?
                 extra_title=TR.words__title_information,
             ),
             br_name=br_name,
@@ -1349,14 +1352,16 @@ if not utils.BITCOIN_ONLY:
     ) -> Awaitable[None]:
         amount_title = f"{TR.send__total_amount}:"
         fee_title = TR.send__including_fee
-
+        extra_items: list[PropertyType] | None = (
+            [(k, v, True) for (k, v) in items] if items else None
+        )
         return raise_if_cancelled(
             trezorui_api.confirm_summary(
                 amount=amount,
                 amount_label=amount_title,
                 fee=fee,
                 fee_label=fee_title,
-                extra_items=items,
+                extra_items=extra_items,
             ),
             br_name="confirm_cardano_tx",
             br_code=ButtonRequestType.SignTx,
@@ -1368,7 +1373,7 @@ if not utils.BITCOIN_ONLY:
         _account: str | None,
         _account_path: str | None,
         maximum_fee: str,
-        fee_info_items: Iterable[tuple[str, str]],
+        fee_info_items: Iterable[PropertyType],
         is_contract_interaction: bool,
         br_name: str = "confirm_ethereum_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
@@ -1379,7 +1384,7 @@ if not utils.BITCOIN_ONLY:
             amount_label=f"{TR.words__amount}:",
             fee=maximum_fee,
             fee_label=f"{TR.send__maximum_fee}:",
-            extra_items=[(f"{k}:", v) for (k, v) in fee_info_items],
+            extra_items=[(f"{k}:", v, is_data) for (k, v, is_data) in fee_info_items],
             extra_title=TR.confirm_total__title_fee,
             verb_cancel="^",
         )

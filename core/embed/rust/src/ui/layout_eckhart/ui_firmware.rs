@@ -143,13 +143,17 @@ impl FirmwareUI for UIEckhart {
         max_rounds: TString<'static>,
         max_feerate: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let paragraphs = ParagraphVecShort::from_iter([
-            Paragraph::new(&theme::TEXT_REGULAR, TR::coinjoin__max_rounds),
-            Paragraph::new(&theme::TEXT_MONO_LIGHT, max_rounds),
-            Paragraph::new(&theme::TEXT_REGULAR, TR::coinjoin__max_mining_fee),
+        let paragraphs = Paragraphs::new([
+            Paragraph::new(&theme::TEXT_REGULAR, TR::coinjoin__max_rounds)
+                .with_bottom_padding(theme::PROP_INNER_SPACING)
+                .no_break(),
+            Paragraph::new(&theme::TEXT_MONO_LIGHT, max_rounds)
+                .with_bottom_padding(theme::PROPS_SPACING),
+            Paragraph::new(&theme::TEXT_REGULAR, TR::coinjoin__max_mining_fee)
+                .with_bottom_padding(theme::PROP_INNER_SPACING)
+                .no_break(),
             Paragraph::new(&theme::TEXT_MONO_LIGHT, max_feerate),
         ])
-        .into_paragraphs()
         .with_placement(LinearPlacement::vertical());
 
         let screen = TextScreen::new(paragraphs)
@@ -288,19 +292,23 @@ impl FirmwareUI for UIEckhart {
             TR::modify_amount__increase_amount
         };
 
-        let paragraphs = ParagraphVecShort::from_iter([
-            Paragraph::new(&theme::TEXT_SMALL_LIGHT, description),
-            Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, amount_change),
-            Paragraph::new(&theme::TEXT_SMALL_LIGHT, TR::modify_amount__new_amount),
+        let paragraphs = Paragraphs::new([
+            Paragraph::new(&theme::TEXT_SMALL_LIGHT, description)
+                .with_bottom_padding(theme::PROP_INNER_SPACING)
+                .no_break(),
+            Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, amount_change)
+                .with_bottom_padding(theme::PROPS_SPACING),
+            Paragraph::new(&theme::TEXT_SMALL_LIGHT, TR::modify_amount__new_amount)
+                .with_bottom_padding(theme::PROP_INNER_SPACING)
+                .no_break(),
             Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, amount_new),
-        ]);
+        ])
+        .with_placement(LinearPlacement::vertical());
 
         let layout = RootComponent::new(
-            TextScreen::new(paragraphs.into_paragraphs().with_placement(
-                LinearPlacement::vertical().with_spacing(theme::PROP_INNER_SPACING),
-            ))
-            .with_header(Header::new(TR::modify_amount__title.into()))
-            .with_action_bar(ActionBar::new_cancel_confirm()),
+            TextScreen::new(paragraphs)
+                .with_header(Header::new(TR::modify_amount__title.into()))
+                .with_action_bar(ActionBar::new_cancel_confirm()),
         );
         Ok(layout)
     }
@@ -336,26 +344,26 @@ impl FirmwareUI for UIEckhart {
     ) -> Result<impl LayoutMaybeTrace, Error> {
         // collect available info
         let account_paragraphs = if let Some(items) = account_items {
-            let mut paragraphs = ParagraphVecShort::new();
-            for pair in IterBuf::new().try_iterate(items)? {
-                let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
-                paragraphs
-                    .add(Paragraph::new(&theme::TEXT_SMALL_LIGHT, label).no_break())
-                    .add(Paragraph::new(&theme::TEXT_MONO_LIGHT, value));
-            }
-            Some(paragraphs)
+            Some(PropsList::new(
+                items,
+                &theme::TEXT_SMALL_LIGHT,
+                &theme::TEXT_MONO_LIGHT,
+                &theme::TEXT_MONO_LIGHT,
+                theme::PROP_INNER_SPACING,
+                theme::PROPS_SPACING,
+            )?)
         } else {
             None
         };
         let extra_paragraphs = if let Some(items) = extra_items {
-            let mut paragraphs = ParagraphVecShort::new();
-            for pair in IterBuf::new().try_iterate(items)? {
-                let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
-                paragraphs
-                    .add(Paragraph::new(&theme::TEXT_SMALL_LIGHT, label).no_break())
-                    .add(Paragraph::new(&theme::TEXT_MONO_LIGHT, value));
-            }
-            Some(paragraphs)
+            Some(PropsList::new(
+                items,
+                &theme::TEXT_SMALL_LIGHT,
+                &theme::TEXT_MONO_LIGHT,
+                &theme::TEXT_MONO_LIGHT,
+                theme::PROP_INNER_SPACING,
+                theme::PROPS_SPACING,
+            )?)
         } else {
             None
         };
@@ -388,20 +396,14 @@ impl FirmwareUI for UIEckhart {
             &theme::TEXT_SMALL_LIGHT,
             &theme::TEXT_MONO_MEDIUM_LIGHT,
             &theme::TEXT_MONO_MEDIUM_LIGHT_DATA,
-        )?;
+            theme::PROP_INNER_SPACING,
+            theme::PROPS_SPACING,
+        )?
+        .into_paragraphs()
+        .with_placement(LinearPlacement::vertical());
 
-        let flow = flow::new_confirm_with_menu(
-            title,
-            None,
-            paragraphs.into_paragraphs().with_placement(
-                LinearPlacement::vertical().with_spacing(theme::PROP_INNER_SPACING),
-            ),
-            None,
-            verb,
-            hold,
-            None,
-            None,
-        )?;
+        let flow =
+            flow::new_confirm_with_menu(title, None, paragraphs, None, verb, hold, None, None)?;
         Ok(flow)
     }
 
@@ -584,7 +586,7 @@ impl FirmwareUI for UIEckhart {
             paragraphs
                 .into_paragraphs()
                 .with_placement(LinearPlacement::vertical())
-                .with_spacing(12),
+                .with_spacing(theme::TEXT_VERTICAL_SPACING),
             None,
             Some(verb),
             false,
@@ -647,8 +649,8 @@ impl FirmwareUI for UIEckhart {
         subtitle: Option<TString<'static>>,
         description: Option<TString<'static>>,
         extra: Option<TString<'static>>,
-        message: Obj,
-        amount: Option<Obj>,
+        message: TString<'static>,
+        amount: Option<TString<'static>>,
         chunkify: bool,
         text_mono: bool,
         account_title: TString<'static>,
@@ -656,8 +658,8 @@ impl FirmwareUI for UIEckhart {
         account_path: Option<TString<'static>>,
         br_code: u16,
         br_name: TString<'static>,
-        address_item: Option<(TString<'static>, Obj)>,
-        extra_item: Option<(TString<'static>, Obj)>,
+        address_item: Option<(TString<'static>, TString<'static>)>,
+        extra_item: Option<(TString<'static>, TString<'static>)>,
         summary_items: Option<Obj>,
         fee_items: Option<Obj>,
         summary_title: Option<TString<'static>>,
@@ -667,10 +669,15 @@ impl FirmwareUI for UIEckhart {
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut main_paragraphs = ParagraphVecShort::new();
         if let Some(description) = description {
-            main_paragraphs.add(Paragraph::new(&theme::TEXT_REGULAR, description));
+            main_paragraphs.add(
+                Paragraph::new(&theme::TEXT_REGULAR, description)
+                    .with_bottom_padding(theme::PROPS_SPACING),
+            );
         }
         if let Some(extra) = extra {
-            main_paragraphs.add(Paragraph::new(&theme::TEXT_SMALL, extra));
+            main_paragraphs.add(
+                Paragraph::new(&theme::TEXT_SMALL, extra).with_bottom_padding(theme::PROPS_SPACING),
+            );
         }
         let font = if chunkify {
             &theme::TEXT_MONO_ADDRESS_CHUNKS
@@ -679,16 +686,10 @@ impl FirmwareUI for UIEckhart {
         } else {
             &theme::TEXT_REGULAR
         };
-        main_paragraphs.add(Paragraph::new(
-            font,
-            message.try_into().unwrap_or(TString::empty()),
-        ));
+        main_paragraphs.add(Paragraph::new(font, message));
 
         let (address_title, address_paragraph) = if let Some((title, item)) = address_item {
-            let paragraph = Paragraph::new(
-                &theme::TEXT_MONO_ADDRESS_CHUNKS,
-                item.try_into().unwrap_or(TString::empty()),
-            );
+            let paragraph = Paragraph::new(&theme::TEXT_MONO_ADDRESS_CHUNKS, item);
             (Some(title), Some(paragraph))
         } else {
             (None, None)
@@ -698,15 +699,17 @@ impl FirmwareUI for UIEckhart {
         let account_paragraphs = {
             let mut paragraphs = ParagraphVecShort::new();
             if let Some(account) = account {
+                let mut para = Paragraph::new(&theme::TEXT_MONO_LIGHT, account);
+                if account_path.is_some() {
+                    para = para.with_bottom_padding(theme::PROPS_SPACING);
+                }
                 paragraphs
                     .add(
-                        Paragraph::new(
-                            &theme::TEXT_SMALL_LIGHT,
-                            TString::from_translation(TR::words__wallet),
-                        )
-                        .no_break(),
+                        Paragraph::new(&theme::TEXT_SMALL_LIGHT, TR::words__wallet)
+                            .with_bottom_padding(theme::PROP_INNER_SPACING)
+                            .no_break(),
                     )
-                    .add(Paragraph::new(&theme::TEXT_MONO_LIGHT, account));
+                    .add(para);
             }
             if let Some(path) = account_path {
                 paragraphs
@@ -715,6 +718,7 @@ impl FirmwareUI for UIEckhart {
                             &theme::TEXT_SMALL_LIGHT,
                             TString::from_translation(TR::address_details__derivation_path),
                         )
+                        .with_bottom_padding(theme::PROP_INNER_SPACING)
                         .no_break(),
                     )
                     .add(Paragraph::new(&theme::TEXT_MONO_LIGHT, path));
@@ -727,36 +731,33 @@ impl FirmwareUI for UIEckhart {
         };
 
         let summary_paragraphs = if let Some(items) = summary_items {
-            let mut paragraphs = ParagraphVecShort::new();
-            for pair in IterBuf::new().try_iterate(items)? {
-                let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
-                paragraphs
-                    .add(Paragraph::new(&theme::TEXT_SMALL_LIGHT, label).no_break())
-                    .add(Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, value));
-            }
-            Some(paragraphs)
+            Some(PropsList::new(
+                items,
+                &theme::TEXT_SMALL_LIGHT,
+                &theme::TEXT_MONO_MEDIUM_LIGHT,
+                &theme::TEXT_MONO_MEDIUM_LIGHT,
+                theme::PROP_INNER_SPACING,
+                theme::PROPS_SPACING,
+            )?)
         } else {
             None
         };
 
         let fee_paragraphs = if let Some(items) = fee_items {
-            let mut paragraphs = ParagraphVecShort::new();
-            for pair in IterBuf::new().try_iterate(items)? {
-                let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
-                paragraphs
-                    .add(Paragraph::new(&theme::TEXT_SMALL_LIGHT, label).no_break())
-                    .add(Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, value));
-            }
-            Some(paragraphs)
+            Some(PropsList::new(
+                items,
+                &theme::TEXT_SMALL_LIGHT,
+                &theme::TEXT_MONO_MEDIUM_LIGHT,
+                &theme::TEXT_MONO_MEDIUM_LIGHT_DATA,
+                theme::PROP_INNER_SPACING,
+                theme::PROPS_SPACING,
+            )?)
         } else {
             None
         };
 
         let (extra_title, extra_paragraph) = if let Some((title, item)) = extra_item {
-            let paragraph = Paragraph::new(
-                &theme::TEXT_MONO_ADDRESS,
-                item.try_into().unwrap_or(TString::empty()),
-            );
+            let paragraph = Paragraph::new(&theme::TEXT_MONO_ADDRESS, item);
             (Some(title), Some(paragraph))
         } else {
             (None, None)
@@ -1268,27 +1269,25 @@ impl FirmwareUI for UIEckhart {
         _horizontal: bool,
         chunkify: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let mut paragraphs = ParagraphVecShort::new();
-        for para in IterBuf::new().try_iterate(items)? {
-            let [key, value]: [Obj; 2] = util::iter_into_array(para)?;
-            let key: TString = key.try_into()?;
-            let value: TString = value.try_into()?;
-            paragraphs.add(Paragraph::new(&theme::TEXT_SMALL_LIGHT, key).no_break());
-            if chunkify {
-                paragraphs.add(Paragraph::new(
-                    theme::get_chunkified_text_style(value.len()),
-                    value,
-                ));
-            } else {
-                paragraphs.add(Paragraph::new(&theme::TEXT_MONO_LIGHT, value));
-            }
-        }
+        let value_mono_font = if chunkify {
+            &theme::TEXT_MONO_ADDRESS_CHUNKS
+        } else {
+            &theme::TEXT_MONO_LIGHT
+        };
+
+        let paragraphs = PropsList::new(
+            items,
+            &theme::TEXT_SMALL_LIGHT,
+            &theme::TEXT_MONO_MEDIUM_LIGHT,
+            value_mono_font,
+            theme::PROP_INNER_SPACING,
+            theme::PROPS_SPACING,
+        )?
+        .into_paragraphs()
+        .with_placement(LinearPlacement::vertical());
 
         let screen =
-            TextScreen::new(paragraphs.into_paragraphs().with_placement(
-                LinearPlacement::vertical().with_spacing(theme::PROP_INNER_SPACING),
-            ))
-            .with_header(Header::new(title).with_close_button());
+            TextScreen::new(paragraphs).with_header(Header::new(title).with_close_button());
         let layout = RootComponent::new(screen);
         Ok(layout)
     }
@@ -1533,11 +1532,10 @@ impl FirmwareUI for UIEckhart {
         allow_cancel: bool,
         danger: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
-        let paragraphs = ParagraphVecShort::from_iter([
+        let paragraphs = Paragraphs::new([
             Paragraph::new(&theme::TEXT_REGULAR, description),
             Paragraph::new(&theme::TEXT_REGULAR, value),
         ])
-        .into_paragraphs()
         .with_placement(LinearPlacement::vertical())
         .with_spacing(theme::TEXT_VERTICAL_SPACING);
 

@@ -777,10 +777,12 @@ def confirm_value(
     if description and value:
         description += ":"
 
-    info_items = info_items or []
+    items: list[PropertyType] = (
+        [(k, v, True) for k, v in info_items] if info_items is not None else []
+    )
     info_layout = trezorui_api.show_info_with_cancel(
         title=info_title if info_title else TR.words__title_information,
-        items=info_items,
+        items=items,
         chunkify=chunkify_info,
     )
 
@@ -880,26 +882,31 @@ def _confirm_summary(
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> Awaitable[None]:
     title = title or TR.words__title_summary  # def_arg
-
+    account_props: list[PropertyType] | None = (
+        [(k, v, True) for k, v in account_items] if account_items else None
+    )
+    extra_props: list[PropertyType] | None = (
+        [(k, v, True) for k, v in extra_items] if extra_items else None
+    )
     total_layout = trezorui_api.confirm_summary(
         amount=amount,
         amount_label=amount_label,
         fee=fee,
         fee_label=fee_label,
         title=title,
-        account_items=account_items or None,
-        extra_items=extra_items or None,
+        account_items=account_props,
+        extra_items=extra_props,
     )
 
     # TODO: use `_info` params directly in this^ layout instead of using `with_info`
-    info_items = []
-    if account_items:
-        info_items.extend(account_items)
-    if extra_items:
-        info_items.extend(extra_items)
+    info_props: list[PropertyType] = []
+    if account_props:
+        info_props.extend(account_props)
+    if extra_props:
+        info_props.extend(extra_props)
     info_layout = trezorui_api.show_info_with_cancel(
         title=extra_title if extra_title else TR.words__title_information,
-        items=info_items,
+        items=info_props,
     )
     return with_info(total_layout, info_layout, br_name, br_code)
 
@@ -919,7 +926,7 @@ if not utils.BITCOIN_ONLY:
         account: str | None,
         account_path: str | None,
         maximum_fee: str,
-        fee_info_items: Iterable[tuple[str, str]],
+        fee_info_items: Iterable[PropertyType],
         is_contract_interaction: bool,
         br_name: str = "confirm_ethereum_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
@@ -940,28 +947,32 @@ if not utils.BITCOIN_ONLY:
             chunkify=(chunkify if recipient else False),
         )
 
+        items: list[PropertyType] = [
+            (f"{TR.words__account}:", account or "", True),
+            (TR.address_details__derivation_path_colon, account_path or "", True),
+        ]
         account_info_layout = trezorui_api.show_info_with_cancel(
             title=TR.send__send_from,
-            items=[
-                (f"{TR.words__account}:", account or ""),
-                (TR.address_details__derivation_path_colon, account_path or ""),
-            ],
+            items=items,
         )
 
+        items: list[PropertyType] = [
+            (f"{k}:", v, is_data) for (k, v, is_data) in fee_info_items
+        ]
         total_layout = trezorui_api.confirm_summary(
             amount=total_amount,
             amount_label=f"{TR.words__amount}:",
             fee=maximum_fee,
             fee_label=f"{TR.send__maximum_fee}:",
             title=TR.words__title_summary,
-            extra_items=fee_info_items,  # used so that info button is shown
+            extra_items=items,  # used so that info button is shown
             extra_title=TR.confirm_total__title_fee,
             verb_cancel="^",
         )
 
         fee_info_layout = trezorui_api.show_info_with_cancel(
             title=TR.confirm_total__title_fee,
-            items=[(f"{k}:", v) for (k, v) in fee_info_items],
+            items=items,
         )
 
         while True:
@@ -1211,13 +1222,19 @@ if not utils.BITCOIN_ONLY:
             info=True,
         )
 
-        items = [
-            (f"{TR.words__account}:", account),
-            (TR.address_details__derivation_path_colon, account_path),
+        items: list[PropertyType] = [
+            (f"{TR.words__account}:", account, True),
+            (TR.address_details__derivation_path_colon, account_path, True),
         ]
         if stake_item is not None:
-            items.append(stake_item)
-        items.append(blockhash_item)
+            stake_property: PropertyType = (stake_item[0], stake_item[1], True)
+            items.append(stake_property)
+        blockhash_property: PropertyType = (
+            blockhash_item[0],
+            blockhash_item[1],
+            True,
+        )
+        items.append(blockhash_property)
 
         info_layout = trezorui_api.show_info_with_cancel(
             title=title,
@@ -1359,9 +1376,9 @@ def confirm_modify_fee(
         total_fee_new=total_fee_new,
         fee_rate_amount=fee_rate_amount,
     )
-    items: list[tuple[str, str]] = []
+    items: list[PropertyType] = []
     if fee_rate_amount:
-        items.append((TR.bitcoin__new_fee_rate, fee_rate_amount))
+        items.append((TR.bitcoin__new_fee_rate, fee_rate_amount, True))
     info_layout = trezorui_api.show_info_with_cancel(
         title=TR.confirm_total__title_fee,
         items=items,
@@ -1420,15 +1437,16 @@ async def confirm_signverify(
         chunkify=chunkify,
     )
 
-    items: list[tuple[str, str]] = []
+    items: list[PropertyType] = []
     if account is not None:
-        items.append((f"{TR.words__account}:", account))
+        items.append((f"{TR.words__account}:", account, True))
     if path is not None:
-        items.append((TR.address_details__derivation_path_colon, path))
+        items.append((TR.address_details__derivation_path_colon, path, True))
     items.append(
         (
             f"{TR.sign_message__message_size}:",
             TR.sign_message__bytes_template.format(len(message)),
+            True,
         )
     )
 
@@ -1664,9 +1682,12 @@ async def confirm_firmware_update(description: str, fingerprint: str) -> None:
         verb=TR.buttons__install,
         info=True,
     )
+    items: list[PropertyType] = [
+        ("", fingerprint, True),
+    ]
     info = trezorui_api.show_info_with_cancel(
         title=TR.firmware_update__title_fingerprint,
-        items=(("", fingerprint),),
+        items=items,
         chunkify=True,
     )
     await with_info(
