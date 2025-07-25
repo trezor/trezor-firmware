@@ -26,6 +26,7 @@ if TYPE_CHECKING:
         EthereumTokenInfo,
         PaymentRequest,
     )
+    from trezor.ui.layouts import PropertyType
 
 
 async def require_confirm_approve(
@@ -33,7 +34,7 @@ async def require_confirm_approve(
     value: int | None,
     address_n: list[int],
     maximum_fee: str,
-    fee_info_items: Iterable[tuple[str, str]],
+    fee_info_items: Iterable[PropertyType],
     chain_id: int,
     network: EthereumNetworkInfo,
     token: EthereumTokenInfo,
@@ -85,7 +86,7 @@ async def require_confirm_tx(
     value: int,
     address_n: list[int],
     maximum_fee: str,
-    fee_info_items: Iterable[tuple[str, str]],
+    fee_info_items: Iterable[PropertyType],
     network: EthereumNetworkInfo,
     token: EthereumTokenInfo | None,
     is_contract_interaction: bool,
@@ -113,7 +114,7 @@ async def require_confirm_payment_request(
     verified_payment_req: PaymentRequest,
     address_n: list[int],
     maximum_fee: str,
-    fee_info_items: Iterable[tuple[str, str]],
+    fee_info_items: Iterable[PropertyType],
     chain_id: int,
     network: EthereumNetworkInfo,
     token: EthereumTokenInfo | None,
@@ -179,7 +180,7 @@ async def require_confirm_stake(
     value: int,
     address_n: list[int],
     maximum_fee: str,
-    fee_info_items: Iterable[tuple[str, str]],
+    fee_info_items: Iterable[PropertyType],
     network: EthereumNetworkInfo,
     chunkify: bool,
 ) -> None:
@@ -208,7 +209,7 @@ async def require_confirm_unstake(
     value: int,
     address_n: list[int],
     maximum_fee: str,
-    fee_info_items: Iterable[tuple[str, str]],
+    fee_info_items: Iterable[PropertyType],
     network: EthereumNetworkInfo,
     chunkify: bool,
 ) -> None:
@@ -236,7 +237,7 @@ async def require_confirm_claim(
     addr_bytes: bytes,
     address_n: list[int],
     maximum_fee: str,
-    fee_info_items: Iterable[tuple[str, str]],
+    fee_info_items: Iterable[PropertyType],
     network: EthereumNetworkInfo,
     chunkify: bool,
 ) -> None:
