@@ -158,7 +158,12 @@ class Channel:
             return self.write_error(ThpErrorType.TRANSPORT_BUSY)
 
         try:
-            buffer = memory_manager.get_existing_read_buffer(self.get_channel_id_int())
+            if control_byte.is_ack(packet[0]):
+                buffer = memoryview(packet)[: INIT_HEADER_LENGTH + CHECKSUM_LENGTH]
+            else:
+                buffer = memory_manager.get_existing_read_buffer(
+                    self.get_channel_id_int()
+                )
             if __debug__:
                 self._log("self.buffer: ", hexlify_if_bytes(buffer))
         except WireBufferError:
@@ -253,8 +258,16 @@ class Channel:
         if __debug__:
             self._log("handle_init_packet")
 
-        _, _, payload_length = ustruct.unpack(PacketHeader.format_str_init, packet)
+        ctrl_byte, _, payload_length = ustruct.unpack(
+            PacketHeader.format_str_init, packet
+        )
         self.expected_payload_length = payload_length
+
+        if control_byte.is_ack(ctrl_byte):
+            if self.expected_payload_length != CHECKSUM_LENGTH:
+                raise ThpError("Invalid ACK length, ignoring")
+            self.bytes_read = INIT_HEADER_LENGTH + CHECKSUM_LENGTH
+            return None
 
         # If the channel does not "own" the buffer lock, decrypt the first packet
 
