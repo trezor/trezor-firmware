@@ -168,6 +168,10 @@ def _create_testcase_html_diff_file(
 ) -> Path:
     test_name = test_case.id
     doc = document(title=test_name, model=test_case.model)
+    with doc.head:
+        script(
+            type="text/javascript", src="https://cdn.jsdelivr.net/npm/pixelmatch@5.3.0"
+        )
     with doc:
         h1(test_name)
         p("This UI test differs from master.", style="color: grey; font-weight: bold;")

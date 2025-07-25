@@ -768,7 +768,7 @@ pub enum TranslatedString {
     recovery__invalid_wallet_backup_entered = 508,  // "Invalid wallet backup entered."
     recovery__invalid_share_entered = 509,  // "Invalid recovery share entered."
     recovery__more_shares_needed = 510,  // {"Bolt": "More shares needed", "Caesar": "More shares needed", "Delizia": "More shares needed", "Eckhart": "More shares needed."}
-    recovery__num_of_words = 511,  // "Select the number of words in your backup."
+    recovery__num_of_words = 511,  // "Select the # of words in your backup."
     recovery__only_first_n_letters = 512,  // "You'll only have to select the first 2-4 letters of each word."
     recovery__progress_will_be_lost = 513,  // "All progress will be lost."
     recovery__share_already_entered = 515,  // {"Bolt": "Share already entered", "Caesar": "Share already entered", "Delizia": "Share already entered", "Eckhart": "Share already entered."}
@@ -2355,7 +2355,7 @@ impl TranslatedString {
             (Self::recovery__more_shares_needed, "More shares needed"),
             #[cfg(feature = "layout_eckhart")]
             (Self::recovery__more_shares_needed, "More shares needed."),
-            (Self::recovery__num_of_words, "Select the number of words in your backup."),
+            (Self::recovery__num_of_words, "Select the # of words in your backup."),
             (Self::recovery__only_first_n_letters, "You'll only have to select the first 2-4 letters of each word."),
             (Self::recovery__progress_will_be_lost, "All progress will be lost."),
             #[cfg(feature = "layout_bolt")]
