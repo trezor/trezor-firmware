@@ -11,7 +11,6 @@ from trezor.wire.protocol_common import Context, Message
 if __debug__:
     from trezor import log
 
-
 if TYPE_CHECKING:
     from typing import TypeVar
 
@@ -63,7 +62,9 @@ class CodecContext(Context):
             raise UnexpectedMessageException(msg)
 
         if expected_type is None:
-            expected_type = protobuf.type_for_wire("MessageType", msg.type)
+            expected_type = protobuf.type_for_wire(
+                self.message_type_enum_name, msg.type
+            )
 
         if __debug__:
             log.debug(

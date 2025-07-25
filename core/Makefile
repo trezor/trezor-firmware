@@ -42,7 +42,7 @@ ADDRESS_SANITIZER ?= 0
 CMAKELISTS ?= 0
 PYTEST_TIMEOUT ?= 500
 TEST_LANG ?= "en"
-THP ?= 0
+THP ?= $(if $(filter T3W1,$(TREZOR_MODEL)),1,0)
 BENCHMARK ?= 0
 LOG_STACK_USAGE ?= 0
 TREZOR_EMULATOR_DEBUGGABLE ?= 0
@@ -185,7 +185,7 @@ test_rust: ## run rs unit tests
 		-- --test-threads=1 --nocapture
 
 test_emu_sanity: ## make sure the emulator doesn't crash on startup
-	$(EMU) --disable-animation --headless --temporary-profile -c -- trezorctl -v ping "Hello World!"
+	$(EMU) --disable-animation --headless --temporary-profile --slip0014 --command true
 
 test_emu: ## run selected device tests from python-trezor
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS) --lang=$(TEST_LANG)

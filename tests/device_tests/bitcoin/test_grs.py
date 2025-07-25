@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
@@ -42,7 +42,7 @@ TXHASH_45aeb9 = bytes.fromhex(
 pytestmark = pytest.mark.altcoin
 
 
-def test_legacy(client: Client):
+def test_legacy(session: Session):
     inp1 = messages.TxInputType(
         # FXHDsC5ZqWQHkDmShzgRVZ1MatpWhwxTAA
         address_n=parse_path("m/44h/17h/0h/0/2"),
@@ -56,7 +56,7 @@ def test_legacy(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     _, serialized_tx = btc.sign_tx(
-        client, "Groestlcoin", [inp1], [out1], prev_txes=TX_API
+        session, "Groestlcoin", [inp1], [out1], prev_txes=TX_API
     )
     assert (
         serialized_tx.hex()
@@ -64,7 +64,7 @@ def test_legacy(client: Client):
     )
 
 
-def test_legacy_change(client: Client):
+def test_legacy_change(session: Session):
     inp1 = messages.TxInputType(
         # FXHDsC5ZqWQHkDmShzgRVZ1MatpWhwxTAA
         address_n=parse_path("m/44h/17h/0h/0/2"),
@@ -78,7 +78,7 @@ def test_legacy_change(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     _, serialized_tx = btc.sign_tx(
-        client, "Groestlcoin", [inp1], [out1], prev_txes=TX_API
+        session, "Groestlcoin", [inp1], [out1], prev_txes=TX_API
     )
     assert (
         serialized_tx.hex()
@@ -86,7 +86,7 @@ def test_legacy_change(client: Client):
     )
 
 
-def test_send_segwit_p2sh(client: Client):
+def test_send_segwit_p2sh(session: Session):
     inp1 = messages.TxInputType(
         # 2N1LGaGg836mqSQqiuUBLfcyGBhyZYBtBZ7
         address_n=parse_path("m/49h/1h/0h/1/0"),
@@ -107,7 +107,7 @@ def test_send_segwit_p2sh(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     _, serialized_tx = btc.sign_tx(
-        client,
+        session,
         "Groestlcoin Testnet",
         [inp1],
         [out1, out2],
@@ -120,7 +120,7 @@ def test_send_segwit_p2sh(client: Client):
     )
 
 
-def test_send_segwit_p2sh_change(client: Client):
+def test_send_segwit_p2sh_change(session: Session):
     inp1 = messages.TxInputType(
         # 2N1LGaGg836mqSQqiuUBLfcyGBhyZYBtBZ7
         address_n=parse_path("m/49h/1h/0h/1/0"),
@@ -141,7 +141,7 @@ def test_send_segwit_p2sh_change(client: Client):
         amount=123_456_789 - 11_000 - 12_300_000,
     )
     _, serialized_tx = btc.sign_tx(
-        client,
+        session,
         "Groestlcoin Testnet",
         [inp1],
         [out1, out2],
@@ -154,7 +154,7 @@ def test_send_segwit_p2sh_change(client: Client):
     )
 
 
-def test_send_segwit_native(client: Client):
+def test_send_segwit_native(session: Session):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/84h/1h/0h/0/0"),
         amount=12_300_000,
@@ -174,7 +174,7 @@ def test_send_segwit_native(client: Client):
         amount=12_300_000 - 11_000 - 5_000_000,
     )
     _, serialized_tx = btc.sign_tx(
-        client,
+        session,
         "Groestlcoin Testnet",
         [inp1],
         [out1, out2],
@@ -187,7 +187,7 @@ def test_send_segwit_native(client: Client):
     )
 
 
-def test_send_segwit_native_change(client: Client):
+def test_send_segwit_native_change(session: Session):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/84h/1h/0h/0/0"),
         amount=12_300_000,
@@ -207,7 +207,7 @@ def test_send_segwit_native_change(client: Client):
         amount=12_300_000 - 11_000 - 5_000_000,
     )
     _, serialized_tx = btc.sign_tx(
-        client,
+        session,
         "Groestlcoin Testnet",
         [inp1],
         [out1, out2],
@@ -220,7 +220,7 @@ def test_send_segwit_native_change(client: Client):
     )
 
 
-def test_send_p2tr(client: Client):
+def test_send_p2tr(session: Session):
     inp1 = messages.TxInputType(
         # tgrs1paxhjl357yzctuf3fe58fcdx6nul026hhh6kyldpfsf3tckj9a3wsvuqrgn
         address_n=parse_path("m/86h/1h/1h/0/0"),
@@ -236,7 +236,7 @@ def test_send_p2tr(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     _, serialized_tx = btc.sign_tx(
-        client, "Groestlcoin Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
+        session, "Groestlcoin Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
     )
     # Transaction hex changed with fix #2085, all other details are the same as this tx:
     # https://blockbook-test.groestlcoin.org/tx/c66a79075044aaab3dba17daffb23f48addee87d7c87c7bc88e2997ce38a74ee
