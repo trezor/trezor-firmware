@@ -584,7 +584,7 @@ impl FirmwareUI for UICaesar {
 
                     let mut ops = OpTextLayout::new(theme::TEXT_MONO);
                     for item in unwrap!(IterBuf::new().try_iterate(*info_obj)) {
-                        let [key, value]: [Obj; 2] = unwrap!(util::iter_into_array(item));
+                        let [key, value, _is_data]: [Obj; 3] = unwrap!(util::iter_into_array(item));
                         if !ops.is_empty() {
                             // Each key-value pair is on its own page
                             ops.add_next_page();
