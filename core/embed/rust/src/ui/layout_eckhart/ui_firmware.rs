@@ -588,7 +588,7 @@ impl FirmwareUI for UIEckhart {
             paragraphs
                 .into_paragraphs()
                 .with_placement(LinearPlacement::vertical())
-                .with_spacing(12),
+                .with_spacing(theme::TEXT_VERTICAL_SPACING),
             None,
             Some(verb),
             false,
