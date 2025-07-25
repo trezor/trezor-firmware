@@ -344,26 +344,26 @@ impl FirmwareUI for UIEckhart {
     ) -> Result<impl LayoutMaybeTrace, Error> {
         // collect available info
         let account_paragraphs = if let Some(items) = account_items {
-            let mut paragraphs = ParagraphVecShort::new();
-            for pair in IterBuf::new().try_iterate(items)? {
-                let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
-                paragraphs
-                    .add(Paragraph::new(&theme::TEXT_SMALL_LIGHT, label).no_break())
-                    .add(Paragraph::new(&theme::TEXT_MONO_LIGHT, value));
-            }
-            Some(paragraphs)
+            Some(PropsList::new(
+                items,
+                &theme::TEXT_SMALL_LIGHT,
+                &theme::TEXT_MONO_LIGHT,
+                &theme::TEXT_MONO_LIGHT,
+                theme::PROP_INNER_SPACING,
+                theme::PROPS_SPACING,
+            )?)
         } else {
             None
         };
         let extra_paragraphs = if let Some(items) = extra_items {
-            let mut paragraphs = ParagraphVecShort::new();
-            for pair in IterBuf::new().try_iterate(items)? {
-                let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
-                paragraphs
-                    .add(Paragraph::new(&theme::TEXT_SMALL_LIGHT, label).no_break())
-                    .add(Paragraph::new(&theme::TEXT_MONO_LIGHT, value));
-            }
-            Some(paragraphs)
+            Some(PropsList::new(
+                items,
+                &theme::TEXT_SMALL_LIGHT,
+                &theme::TEXT_MONO_LIGHT,
+                &theme::TEXT_MONO_LIGHT,
+                theme::PROP_INNER_SPACING,
+                theme::PROPS_SPACING,
+            )?)
         } else {
             None
         };
