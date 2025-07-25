@@ -84,6 +84,8 @@ jobs:
         if: matrix.coins == 'universal' && matrix.type != 'debuglink' && matrix.model == 'T2T1'
       - run: nix-shell --run "poetry run make -C core build_prodtest"
         if: matrix.coins == 'universal' && matrix.type != 'debuglink'
+      - run: nix-shell --run "poetry run make -C core build_prodtest_emu"
+        if: matrix.coins == 'universal' && matrix.type != 'debuglink' && matrix.model == 'T3W1'
       - run: nix-shell --run "poetry run make -C core build_firmware"
       - run: nix-shell --run "poetry run ./tools/print-rust-stack-sizes.py | sort -k1 -n | tail -n 50"
       - run: nix-shell --run "poetry run ./tools/print-rust-type-sizes.sh core/build/firmware/rust-type-sizes.log" | awk '$1 >= 1000' | sort -k1 -n
@@ -99,6 +101,7 @@ jobs:
             core/build/bootloader/*.bin
             core/build/bootloader_ci/*.bin
             core/build/prodtest/*.bin
+            core/build/prodtest_emu/*.bin
             core/build/firmware/firmware.elf
             core/build/firmware/firmware-*.bin
             core/build/firmware/rust-type-sizes.log
