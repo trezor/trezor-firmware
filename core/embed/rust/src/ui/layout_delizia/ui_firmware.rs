@@ -603,8 +603,9 @@ impl FirmwareUI for UIDelizia {
             ShowInfoParams::new(TR::confirm_total__title_fee.into()).with_cancel_button();
         if fee_items.is_some() {
             for pair in IterBuf::new().try_iterate(fee_items.unwrap())? {
-                let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
-                fee_items_params = unwrap!(fee_items_params.add(label, value));
+                let [key, value, _is_data]: [Obj; 3] = util::iter_into_array(pair)?;
+                fee_items_params =
+                    unwrap!(fee_items_params.add(key.try_into()?, value.try_into()?));
             }
         }
 
@@ -614,9 +615,9 @@ impl FirmwareUI for UIDelizia {
                     .with_menu_button()
                     .with_swipeup_footer(None)
                     .with_swipe_down();
-            for pair in IterBuf::new().try_iterate(summary_items.unwrap())? {
-                let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
-                summary = unwrap!(summary.add(label, value));
+            for property in IterBuf::new().try_iterate(summary_items.unwrap())? {
+                let [key, value, _is_data]: [Obj; 3] = util::iter_into_array(property)?;
+                summary = unwrap!(summary.add(key.try_into()?, value.try_into()?));
             }
             Some(summary)
         } else {
