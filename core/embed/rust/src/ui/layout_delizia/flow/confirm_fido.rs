@@ -5,7 +5,7 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            paginated::PaginateFull as _,
+            paginated::Paginate as _,
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, Paragraphs},
             EventCtx,

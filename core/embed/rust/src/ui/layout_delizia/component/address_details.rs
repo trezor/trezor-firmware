@@ -9,7 +9,7 @@ use crate::{
         component::{
             swipe_detect::SwipeConfig,
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
-            Component, Event, EventCtx, PaginateFull,
+            Component, Event, EventCtx, Paginate,
         },
         event::SwipeEvent,
         flow::Swipable,
@@ -110,7 +110,7 @@ impl AddressDetails {
     }
 }
 
-impl PaginateFull for AddressDetails {
+impl Paginate for AddressDetails {
     fn pager(&self) -> Pager {
         let total_xpub_pages: u8 = self.xpub_page_count.iter().copied().sum();
         Pager::new(total_xpub_pages as u16 + 1).with_current(self.current_page)

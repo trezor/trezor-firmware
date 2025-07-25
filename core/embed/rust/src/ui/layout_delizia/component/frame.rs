@@ -4,7 +4,7 @@ use crate::{
     ui::{
         component::{
             base::AttachType,
-            paginated::PaginateFull,
+            paginated::Paginate,
             swipe_detect::{SwipeConfig, SwipeSettings},
             text::TextStyle,
             Component,
@@ -103,7 +103,7 @@ pub enum FrameMsg<T> {
 
 impl<T> Frame<T>
 where
-    T: Component + PaginateFull,
+    T: Component + Paginate,
 {
     pub const fn new(alignment: Alignment, title: TString<'static>, content: T) -> Self {
         Self {
@@ -329,7 +329,7 @@ where
 
 impl<T> Component for Frame<T>
 where
-    T: Component + PaginateFull,
+    T: Component + Paginate,
 {
     type Msg = FrameMsg<T::Msg>;
 
@@ -438,7 +438,7 @@ fn frame_place(
 }
 
 #[cfg(feature = "micropython")]
-impl<T: PaginateFull> crate::ui::flow::Swipable for Frame<T> {
+impl<T: Paginate> crate::ui::flow::Swipable for Frame<T> {
     fn get_swipe_config(&self) -> SwipeConfig {
         self.swipe
     }

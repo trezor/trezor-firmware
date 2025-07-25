@@ -13,10 +13,10 @@ use crate::{
     strutil::TString,
     ui::{
         component::{
-            paginated::{PageMsg, Paginate},
+            paginated::PageMsg,
             placed::GridPlaced,
             text::paragraphs::{ParagraphSource, Paragraphs},
-            Component, FormattedText, Never,
+            Component, FormattedText, Never, Paginate,
         },
         layout::{
             obj::ComponentMsgObj,
