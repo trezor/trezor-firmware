@@ -6,8 +6,8 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
-            ComponentExt, MsgMap,
+            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
+            ComponentExt,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
@@ -23,6 +23,7 @@ use super::super::{
         ActionBar, Header, Hint, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
         VerticalMenuScreen, VerticalMenuScreenMsg,
     },
+    flow::util::content_menu_info,
     theme::{self, gradient::Gradient},
 };
 
@@ -67,25 +68,6 @@ impl FlowController for ConfirmSummary {
             _ => self.do_nothing(),
         }
     }
-}
-
-fn content_menu_info(
-    title: TString<'static>,
-    subtitle: Option<TString<'static>>,
-    paragraphs: Option<ParagraphVecShort<'static>>,
-) -> MsgMap<
-    TextScreen<Paragraphs<ParagraphVecShort<'static>>>,
-    impl Fn(TextScreenMsg) -> Option<FlowMsg>,
-> {
-    TextScreen::new(
-        paragraphs
-            .map_or_else(ParagraphVecShort::new, |p| p)
-            .into_paragraphs()
-            .with_placement(LinearPlacement::vertical().with_spacing(theme::PROP_INNER_SPACING)),
-    )
-    .with_header(Header::new(title).with_close_button())
-    .with_subtitle(subtitle.unwrap_or(TString::empty()))
-    .map(|_| Some(FlowMsg::Cancelled))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -196,14 +178,14 @@ pub fn new_confirm_summary(
     let content_extra = content_menu_info(
         extra_title.unwrap_or(TR::buttons__more_info.into()),
         None,
-        extra_paragraphs,
+        extra_paragraphs.map_or_else(ParagraphVecShort::new, |p| p),
     );
 
     // AccountInfo
     let content_account = content_menu_info(
         account_title.unwrap_or(TR::address_details__account_info.into()),
         Some(TR::send__send_from.into()),
-        account_paragraphs,
+        account_paragraphs.map_or_else(ParagraphVecShort::new, |p| p),
     );
 
     // Cancel
