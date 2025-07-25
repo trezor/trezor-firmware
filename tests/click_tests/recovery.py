@@ -55,8 +55,7 @@ def enter_word(
 
 
 def confirm_recovery(debug: "DebugLink", title: str = "recovery__title") -> None:
-    layout = debug.read_layout()
-    assert TR.translate(title) == layout.title()
+    debug.synchronize_at(TR.translate(title))
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
         debug.click(debug.screen_buttons.ok())
     elif debug.layout_type is LayoutType.Delizia:
