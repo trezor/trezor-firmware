@@ -1373,7 +1373,7 @@ if not utils.BITCOIN_ONLY:
         _account: str | None,
         _account_path: str | None,
         maximum_fee: str,
-        fee_info_items: Iterable[tuple[str, str]],
+        fee_info_items: Iterable[PropertyType],
         is_contract_interaction: bool,
         br_name: str = "confirm_ethereum_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
@@ -1384,7 +1384,7 @@ if not utils.BITCOIN_ONLY:
             amount_label=f"{TR.words__amount}:",
             fee=maximum_fee,
             fee_label=f"{TR.send__maximum_fee}:",
-            extra_items=[(f"{k}:", v, True) for (k, v) in fee_info_items],
+            extra_items=[(f"{k}:", v, is_data) for (k, v, is_data) in fee_info_items],
             extra_title=TR.confirm_total__title_fee,
             verb_cancel="^",
         )

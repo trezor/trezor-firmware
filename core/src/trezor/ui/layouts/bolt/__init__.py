@@ -926,7 +926,7 @@ if not utils.BITCOIN_ONLY:
         account: str | None,
         account_path: str | None,
         maximum_fee: str,
-        fee_info_items: Iterable[tuple[str, str]],
+        fee_info_items: Iterable[PropertyType],
         is_contract_interaction: bool,
         br_name: str = "confirm_ethereum_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
@@ -956,7 +956,9 @@ if not utils.BITCOIN_ONLY:
             items=items,
         )
 
-        items: list[PropertyType] = [(f"{k}:", v, True) for (k, v) in fee_info_items]
+        items: list[PropertyType] = [
+            (f"{k}:", v, is_data) for (k, v, is_data) in fee_info_items
+        ]
         total_layout = trezorui_api.confirm_summary(
             amount=total_amount,
             amount_label=f"{TR.words__amount}:",

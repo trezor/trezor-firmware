@@ -829,7 +829,7 @@ def _confirm_summary(
     fee_label: str,
     title: str | None = None,
     account_items: Iterable[tuple[str, str]] | None = None,
-    extra_items: Iterable[tuple[str, str]] | None = None,
+    extra_items: Iterable[PropertyType] | None = None,
     extra_title: str | None = None,
     back_button: bool = False,
     br_name: str = "confirm_total",
@@ -839,9 +839,7 @@ def _confirm_summary(
     account_props: list[PropertyType] | None = (
         [(k, v, True) for k, v in account_items] if account_items else None
     )
-    extra_props: list[PropertyType] | None = (
-        [(k, v, True) for k, v in extra_items] if extra_items else None
-    )
+    extra_props: list[PropertyType] | None = list(extra_items) if extra_items else None
     return raise_if_cancelled(
         trezorui_api.confirm_summary(
             amount=amount,
@@ -883,7 +881,7 @@ if not utils.BITCOIN_ONLY:
         account: str | None,
         account_path: str | None,
         maximum_fee: str,
-        fee_info_items: Iterable[tuple[str, str]],
+        fee_info_items: Iterable[PropertyType],
         is_contract_interaction: bool,
         br_name: str = "confirm_total",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
@@ -900,7 +898,7 @@ if not utils.BITCOIN_ONLY:
         )
         title = TR.words__send
         fee_items: list[PropertyType] | None = (
-            [(k, v, True) for k, v in fee_info_items] if fee_info_items else None
+            list(fee_info_items) if fee_info_items else None
         )
         await raise_if_cancelled(
             trezorui_api.flow_confirm_output(
@@ -950,7 +948,7 @@ if not utils.BITCOIN_ONLY:
         account: str | None,
         account_path: str | None,
         maximum_fee: str,
-        fee_info_items: Iterable[tuple[str, str]],
+        fee_info_items: Iterable[PropertyType],
         chunkify: bool = False,
     ) -> None:
 
@@ -1120,7 +1118,7 @@ if not utils.BITCOIN_ONLY:
         account_path: str | None,
         chain_id: str,
         maximum_fee: str,
-        fee_info_items: Iterable[tuple[str, str]],
+        fee_info_items: Iterable[PropertyType],
         token_address: str,
     ) -> None:
         from trezor.ui.layouts.menu import Menu, confirm_with_menu
@@ -1241,7 +1239,7 @@ if not utils.BITCOIN_ONLY:
         maximum_fee: str,
         address: str,
         address_title: str,
-        info_items: Iterable[tuple[str, str]],
+        info_items: Iterable[PropertyType],
         chunkify: bool = False,
         br_name: str = "confirm_ethereum_staking_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
@@ -1256,9 +1254,7 @@ if not utils.BITCOIN_ONLY:
                     (TR.send__maximum_fee, maximum_fee, True),
                 ]
             )
-        fee_items: list[PropertyType] | None = (
-            [(k, v, True) for k, v in info_items] if info_items else None
-        )
+        fee_items: list[PropertyType] | None = list(info_items) if info_items else None
         await raise_if_cancelled(
             trezorui_api.flow_confirm_output(
                 title=verb,
@@ -1316,12 +1312,15 @@ if not utils.BITCOIN_ONLY:
             amount_title if amount_title is not None else f"{TR.words__amount}:"
         )  # def_arg
         fee_title = fee_title or TR.words__fee  # def_arg
+        extra_items: list[PropertyType] | None = (
+            [(k, v, True) for k, v in items] if items else None
+        )
         return _confirm_summary(
             amount,
             amount_title,
             fee,
             fee_title,
-            extra_items=items,
+            extra_items=extra_items,
             br_name=br_name,
             br_code=br_code,
         )
@@ -1384,13 +1383,15 @@ if not utils.BITCOIN_ONLY:
     ) -> Awaitable[None]:
         amount_title = TR.send__total_amount
         fee_title = TR.send__incl_transaction_fee
-
+        extra_items: list[PropertyType] | None = (
+            [(k, v, True) for k, v in items] if items else None
+        )
         return _confirm_summary(
             amount,
             amount_title,
             fee,
             fee_title,
-            extra_items=items,
+            extra_items=extra_items,
             br_name="confirm_cardano_tx",
             br_code=ButtonRequestType.SignTx,
         )

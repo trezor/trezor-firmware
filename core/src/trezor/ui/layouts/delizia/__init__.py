@@ -871,14 +871,14 @@ if not utils.BITCOIN_ONLY:
         account: str | None,
         account_path: str | None,
         maximum_fee: str,
-        fee_info_items: Iterable[tuple[str, str]],
+        fee_info_items: Iterable[PropertyType],
         is_contract_interaction: bool,
         br_name: str = "confirm_ethereum_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
     ) -> None:
         fee_items: list[PropertyType] | None = (
-            [(k, v, True) for k, v in fee_info_items] if fee_info_items else None
+            list(fee_info_items) if fee_info_items else None
         )
         summary_items: list[PropertyType] | None = [
             (TR.words__amount, total_amount, True),
