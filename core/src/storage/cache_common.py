@@ -3,15 +3,17 @@ from typing import TYPE_CHECKING
 
 from trezor import utils
 
+ENCRYPTED_FLAG = const(256)
+
 # Traditional cache keys
-APP_COMMON_SEED = const(0)
+APP_COMMON_SEED = const(0 | ENCRYPTED_FLAG)
 APP_COMMON_AUTHORIZATION_TYPE = const(1)
 APP_COMMON_AUTHORIZATION_DATA = const(2)
 APP_COMMON_NONCE = const(3)
 if not utils.BITCOIN_ONLY:
     APP_COMMON_DERIVE_CARDANO = const(4)
-    APP_CARDANO_ICARUS_SECRET = const(5)
-    APP_CARDANO_ICARUS_TREZOR_SECRET = const(6)
+    APP_CARDANO_ICARUS_SECRET = const(5 | ENCRYPTED_FLAG)
+    APP_CARDANO_ICARUS_TREZOR_SECRET = const(6 | ENCRYPTED_FLAG)
     APP_MONERO_LIVE_REFRESH = const(7)
 
 # Keys that are valid across sessions
@@ -162,3 +164,6 @@ class SessionlessCache(DataCache):
     def clear(self) -> None:
         for i in range(len(self.fields)):
             self.delete(i)
+
+    def _get_length(self, key: int) -> int:
+        return super()._get_length(key & ~SESSIONLESS_FLAG)

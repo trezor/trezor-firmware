@@ -3,6 +3,7 @@ import gc
 
 from storage import cache_codec
 from storage.cache_common import SESSIONLESS_FLAG, SessionlessCache
+from trezor import log
 
 # Cache initialization
 _SESSIONLESS_CACHE = SessionlessCache()
@@ -42,6 +43,30 @@ def get_int_all_sessions(key: int) -> builtins.set[int]:
 
 def get_sessionless_cache() -> SessionlessCache:
     return _SESSIONLESS_CACHE
+
+
+def encrypt_cache() -> None:
+    """
+    Encrypts seeds in all the cached sessions and the sessionless cache.
+    """
+    from storage.cache_encryption import encrypt_session_cache
+
+    log.debug(__name__, "Encrypting session cache")
+    for session in _PROTOCOL_CACHE._SESSIONS:
+        encrypt_session_cache(session)
+    encrypt_session_cache(_SESSIONLESS_CACHE)
+
+
+def decrypt_cache() -> None:
+    """
+    Decrypts seeds in all the cached sessions and the sessionless cache.
+    """
+    from storage.cache_encryption import decrypt_session_cache
+
+    log.debug(__name__, "Decrypting session cache")
+    for session in _PROTOCOL_CACHE._SESSIONS:
+        decrypt_session_cache(session)
+    decrypt_session_cache(_SESSIONLESS_CACHE)
 
 
 # === Homescreen storage ===
