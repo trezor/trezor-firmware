@@ -67,6 +67,6 @@ DEFINE_SINGLE_AREA(BOOTUCB_AREA, BOOTUCB, ACCESS_DEFAULT);
 // Area used by the boardloader during bootloader update process.
 // It includes the entire flash memory except the board-loader,
 // the UCB, and the secrets area.
-DEFINE_SINGLE_AREA(NONBOARDLOADER_AREA, NONBLDR, ACCESS_DEFAULT);
+DEFINE_SINGLE_AREA(NONBOARDLOADER_AREA, NONBOARDLOADER, ACCESS_DEFAULT);
 #endif
 #endif
