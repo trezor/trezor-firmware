@@ -27,6 +27,7 @@ use super::super::{
         ActionBar, Header, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
         VerticalMenuScreen, VerticalMenuScreenMsg,
     },
+    flow::util::content_menu_info,
     theme::{self, gradient::Gradient},
 };
 
@@ -250,24 +251,6 @@ fn content_main_menu(
             VerticalMenuScreenMsg::Close => Some(FlowMsg::Cancelled),
             _ => None,
         })
-}
-
-fn content_menu_info<'a, P>(
-    title: TString<'static>,
-    subtitle: Option<TString<'static>>,
-    paragraphs: P,
-) -> MsgMap<TextScreen<Paragraphs<P>>, impl Fn(TextScreenMsg) -> Option<FlowMsg>>
-where
-    P: ParagraphSource<'a> + 'a,
-{
-    TextScreen::new(
-        paragraphs
-            .into_paragraphs()
-            .with_placement(LinearPlacement::vertical()),
-    )
-    .with_header(Header::new(title).with_close_button())
-    .with_subtitle(subtitle.unwrap_or(TString::empty()))
-    .map(|_| Some(FlowMsg::Cancelled))
 }
 
 #[allow(clippy::too_many_arguments)]
