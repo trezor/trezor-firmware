@@ -750,7 +750,7 @@
       "Delizia": "More shares needed",
       "Eckhart": "More shares needed."
     },
-    "recovery__num_of_words": "Select the number of words in your backup.",
+    "recovery__num_of_words": "Select the # of words in your backup.",
     "recovery__only_first_n_letters": "You'll only have to select the first 2-4 letters of each word.",
     "recovery__progress_will_be_lost": "All progress will be lost.",
     "recovery__share_already_entered": {

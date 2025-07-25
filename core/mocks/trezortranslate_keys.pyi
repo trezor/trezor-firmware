@@ -608,7 +608,7 @@ class TR:
     recovery__invalid_share_entered: str = "Invalid recovery share entered."
     recovery__invalid_wallet_backup_entered: str = "Invalid wallet backup entered."
     recovery__more_shares_needed: str = "More shares needed"
-    recovery__num_of_words: str = "Select the number of words in your backup."
+    recovery__num_of_words: str = "Select the # of words in your backup."
     recovery__only_first_n_letters: str = "You'll only have to select the first 2-4 letters of each word."
     recovery__progress_will_be_lost: str = "All progress will be lost."
     recovery__share_already_entered: str = "Share already entered"
