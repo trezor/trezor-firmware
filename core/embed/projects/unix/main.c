@@ -37,6 +37,7 @@
 #include <unistd.h>
 
 #include <io/display.h>
+#include <sec/entropy.h>
 #include <sec/secret.h>
 #include <sys/system.h>
 #include <sys/systimer.h>
@@ -504,6 +505,23 @@ static int sdl_event_filter(void *userdata, SDL_Event *event) {
 }
 
 void drivers_init() {
+  flash_init();
+  flash_otp_init();
+
+  entropy_init();
+
+  unit_properties_init();
+
+  display_init(DISPLAY_RESET_CONTENT);
+
+#if USE_TOUCH
+  touch_init();
+#endif
+
+#ifdef USE_BUTTON
+  button_init();
+#endif
+
 #ifdef USE_TROPIC
   tropic_init();
 #endif
@@ -537,22 +555,6 @@ MP_NOINLINE int main_(int argc, char **argv) {
   drivers_init();
 
   SDL_SetEventFilter(sdl_event_filter, NULL);
-
-  display_init(DISPLAY_RESET_CONTENT);
-
-#if USE_TOUCH
-  touch_init();
-#endif
-
-#ifdef USE_BUTTON
-  button_init();
-#endif
-
-  // Map trezor.flash to memory.
-  flash_init();
-  flash_otp_init();
-
-  unit_properties_init();
 
 #if MICROPY_ENABLE_GC
   char *heap = malloc(heap_size);
