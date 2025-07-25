@@ -649,8 +649,8 @@ impl FirmwareUI for UIEckhart {
         subtitle: Option<TString<'static>>,
         description: Option<TString<'static>>,
         extra: Option<TString<'static>>,
-        message: Obj,
-        amount: Option<Obj>,
+        message: TString<'static>,
+        amount: Option<TString<'static>>,
         chunkify: bool,
         text_mono: bool,
         account_title: TString<'static>,
@@ -658,8 +658,8 @@ impl FirmwareUI for UIEckhart {
         account_path: Option<TString<'static>>,
         br_code: u16,
         br_name: TString<'static>,
-        address_item: Option<(TString<'static>, Obj)>,
-        extra_item: Option<(TString<'static>, Obj)>,
+        address_item: Option<(TString<'static>, TString<'static>)>,
+        extra_item: Option<(TString<'static>, TString<'static>)>,
         summary_items: Option<Obj>,
         fee_items: Option<Obj>,
         summary_title: Option<TString<'static>>,
@@ -686,16 +686,10 @@ impl FirmwareUI for UIEckhart {
         } else {
             &theme::TEXT_REGULAR
         };
-        main_paragraphs.add(Paragraph::new(
-            font,
-            message.try_into().unwrap_or(TString::empty()),
-        ));
+        main_paragraphs.add(Paragraph::new(font, message));
 
         let (address_title, address_paragraph) = if let Some((title, item)) = address_item {
-            let paragraph = Paragraph::new(
-                &theme::TEXT_MONO_ADDRESS_CHUNKS,
-                item.try_into().unwrap_or(TString::empty()),
-            );
+            let paragraph = Paragraph::new(&theme::TEXT_MONO_ADDRESS_CHUNKS, item);
             (Some(title), Some(paragraph))
         } else {
             (None, None)
@@ -763,10 +757,7 @@ impl FirmwareUI for UIEckhart {
         };
 
         let (extra_title, extra_paragraph) = if let Some((title, item)) = extra_item {
-            let paragraph = Paragraph::new(
-                &theme::TEXT_MONO_ADDRESS,
-                item.try_into().unwrap_or(TString::empty()),
-            );
+            let paragraph = Paragraph::new(&theme::TEXT_MONO_ADDRESS, item);
             (Some(title), Some(paragraph))
         } else {
             (None, None)

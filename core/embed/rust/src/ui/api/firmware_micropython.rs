@@ -511,8 +511,8 @@ extern "C" fn new_flow_confirm_output(n_args: usize, args: *const Obj, kwargs: *
         let extra: Option<TString> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;
         let description: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
-        let message: Obj = kwargs.get(Qstr::MP_QSTR_message)?;
-        let amount: Option<Obj> = kwargs.get(Qstr::MP_QSTR_amount)?.try_into_option()?;
+        let message: TString = kwargs.get(Qstr::MP_QSTR_message)?.try_into()?;
+        let amount: Option<TString> = kwargs.get(Qstr::MP_QSTR_amount)?.try_into_option()?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
         let text_mono: bool = kwargs.get_or(Qstr::MP_QSTR_text_mono, true)?;
         let account_title: TString = kwargs.get(Qstr::MP_QSTR_account_title)?.try_into()?;
@@ -525,17 +525,17 @@ extern "C" fn new_flow_confirm_output(n_args: usize, args: *const Obj, kwargs: *
         let address_item = kwargs
             .get(Qstr::MP_QSTR_address_item)?
             .try_into_option()?
-            .map(|item| -> Result<(TString, Obj), crate::error::Error> {
+            .map(|item| -> Result<(TString, TString), crate::error::Error> {
                 let pair: [Obj; 2] = util::iter_into_array(item)?;
-                Ok((pair[0].try_into()?, pair[1]))
+                Ok((pair[0].try_into()?, pair[1].try_into()?))
             })
             .transpose()?;
         let extra_item = kwargs
             .get(Qstr::MP_QSTR_extra_item)?
             .try_into_option()?
-            .map(|item| -> Result<(TString, Obj), crate::error::Error> {
+            .map(|item| -> Result<(TString, TString), crate::error::Error> {
                 let pair: [Obj; 2] = util::iter_into_array(item)?;
-                Ok((pair[0].try_into()?, pair[1]))
+                Ok((pair[0].try_into()?, pair[1].try_into()?))
             })
             .transpose()?;
         let summary_items: Option<Obj> =

@@ -127,7 +127,7 @@ impl FirmwareUI for UIDelizia {
         _warning_footer: Option<TString<'static>>,
         external_menu: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
-        ConfirmValue::new(title, value, description)
+        ConfirmValue::new(title, value.try_into()?, description)
             .with_description_font(&theme::TEXT_SUB_GREY)
             .with_text_mono(is_data)
             .with_subtitle(subtitle)
@@ -159,20 +159,24 @@ impl FirmwareUI for UIDelizia {
         chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         const CONFIRM_VALUE_INTRO_MARGIN: usize = 24;
-        ConfirmValue::new(title, value, Some(TR::instructions__view_all_data.into()))
-            .with_verb(verb)
-            .with_verb_info(Some(TR::buttons__view_all_data.into()))
-            .with_description_font(&theme::TEXT_SUB_GREEN_LIME)
-            .with_subtitle(subtitle)
-            .with_verb_cancel(verb_cancel)
-            .with_footer_description(verb)
-            .with_chunkify(chunkify)
-            .with_page_limit(Some(1))
-            .with_classic_ellipsis(true)
-            .with_frame_margin(CONFIRM_VALUE_INTRO_MARGIN)
-            .with_hold(hold)
-            .into_flow()
-            .and_then(LayoutObj::new_root)
+        ConfirmValue::new(
+            title,
+            value.try_into()?,
+            Some(TR::instructions__view_all_data.into()),
+        )
+        .with_verb(verb)
+        .with_verb_info(Some(TR::buttons__view_all_data.into()))
+        .with_description_font(&theme::TEXT_SUB_GREEN_LIME)
+        .with_subtitle(subtitle)
+        .with_verb_cancel(verb_cancel)
+        .with_footer_description(verb)
+        .with_chunkify(chunkify)
+        .with_page_limit(Some(1))
+        .with_classic_ellipsis(true)
+        .with_frame_margin(CONFIRM_VALUE_INTRO_MARGIN)
+        .with_hold(hold)
+        .into_flow()
+        .and_then(LayoutObj::new_root)
     }
 
     fn confirm_homescreen(
@@ -547,8 +551,8 @@ impl FirmwareUI for UIDelizia {
         subtitle: Option<TString<'static>>,
         description: Option<TString<'static>>,
         extra: Option<TString<'static>>,
-        message: Obj,
-        amount: Option<Obj>,
+        message: TString<'static>,
+        amount: Option<TString<'static>>,
         chunkify: bool,
         text_mono: bool,
         account_title: TString<'static>,
@@ -556,8 +560,8 @@ impl FirmwareUI for UIDelizia {
         account_path: Option<TString<'static>>,
         br_code: u16,
         br_name: TString<'static>,
-        address_item: Option<(TString<'static>, Obj)>,
-        extra_item: Option<(TString<'static>, Obj)>,
+        address_item: Option<(TString<'static>, TString<'static>)>,
+        extra_item: Option<(TString<'static>, TString<'static>)>,
         summary_items: Option<Obj>,
         fee_items: Option<Obj>,
         summary_title: Option<TString<'static>>,
@@ -565,19 +569,22 @@ impl FirmwareUI for UIDelizia {
         summary_br_name: Option<TString<'static>>,
         cancel_text: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let confirm_main =
-            ConfirmValue::new(title.unwrap_or(TString::empty()), message, description)
-                .with_description_font(&theme::TEXT_MAIN_GREY_LIGHT)
-                .with_subtitle(subtitle)
-                .with_extra(extra)
-                .with_extra_font(&theme::TEXT_SUB_GREY)
-                .with_menu_button()
-                .with_swipeup_footer(None)
-                .with_chunkify(chunkify)
-                .with_text_mono(text_mono);
+        let confirm_main = ConfirmValue::new(
+            title.unwrap_or(TString::empty()),
+            message.into(),
+            description,
+        )
+        .with_description_font(&theme::TEXT_MAIN_GREY_LIGHT)
+        .with_subtitle(subtitle)
+        .with_extra(extra)
+        .with_extra_font(&theme::TEXT_SUB_GREY)
+        .with_menu_button()
+        .with_swipeup_footer(None)
+        .with_chunkify(chunkify)
+        .with_text_mono(text_mono);
 
         let confirm_amount = amount.map(|amount| {
-            ConfirmValue::new(TR::words__amount.into(), amount, None)
+            ConfirmValue::new(TR::words__amount.into(), amount.into(), None)
                 .with_subtitle(subtitle)
                 .with_menu_button()
                 .with_swipeup_footer(None)
@@ -586,14 +593,14 @@ impl FirmwareUI for UIDelizia {
         });
 
         let confirm_address = address_item.map(|(address_title, address)| {
-            ConfirmValue::new(address_title, address, None)
+            ConfirmValue::new(address_title, address.into(), None)
                 .with_cancel_button()
                 .with_chunkify(true)
                 .with_text_mono(true)
         });
 
         let confirm_extra = extra_item.map(|(extra_title, extra)| {
-            ConfirmValue::new(extra_title, extra, None)
+            ConfirmValue::new(extra_title, extra.into(), None)
                 .with_cancel_button()
                 .with_chunkify(true)
                 .with_text_mono(true)
@@ -1148,7 +1155,7 @@ impl FirmwareUI for UIDelizia {
         value: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         if Obj::is_str(value) {
-            let confirm = ConfirmValue::new(title, value, None)
+            let confirm = ConfirmValue::new(title, value.try_into()?, None)
                 .with_cancel_button()
                 .with_text_mono(true);
             let layout = confirm.into_layout()?;

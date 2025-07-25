@@ -2,7 +2,6 @@ use heapless::Vec;
 
 use crate::{
     error,
-    micropython::obj::Obj,
     strutil::TString,
     translations::TR,
     ui::{
@@ -16,7 +15,7 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow,
         },
         geometry::{Direction, LinearPlacement},
-        layout::util::{PropsList, StrOrBytes},
+        layout::util::PropsList,
     },
 };
 
@@ -257,7 +256,7 @@ pub fn new_confirm_output(
     title: Option<TString<'static>>,
     subtitle: Option<TString<'static>>,
     main_paragraphs: ParagraphVecShort<'static>,
-    amount: Option<Obj>,
+    amount: Option<TString<'static>>,
     br_name: TString<'static>,
     br_code: u16,
     account_title: TString<'static>,
@@ -314,13 +313,7 @@ pub fn new_confirm_output(
     let res = if let Some(amount) = amount {
         let amount_paragraphs = ParagraphVecShort::from_iter([
             Paragraph::new(&theme::TEXT_SMALL_LIGHT, TR::words__amount).no_break(),
-            Paragraph::new(
-                &theme::TEXT_MONO_MEDIUM_LIGHT,
-                amount
-                    .try_into()
-                    .unwrap_or(StrOrBytes::Str("".into()))
-                    .as_str_offset(0),
-            ),
+            Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, amount),
         ]);
 
         let content_amount = TextScreen::new(
