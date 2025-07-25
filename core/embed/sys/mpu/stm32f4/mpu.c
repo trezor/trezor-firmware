@@ -300,7 +300,7 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
 #endif
 
 #if !defined(BOARDLOADER) && !defined(BOOTLOADER)
-    case MPU_MODE_BOOTUPDATE:
+    case MPU_MODE_BOOTLOADER:
       DIS_REGION( 5 );
       // Bootloader (Privileged, Read-Write, Non-Executable)
       SET_REGION( 6, FLASH_BASE + 0x20000, SIZE_128KB, 0x00, FLASH_DATA, PRIV_RW );

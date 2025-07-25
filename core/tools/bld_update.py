@@ -8,7 +8,7 @@ import click
 import serial
 
 
-def _compress(data: bytes) -> bytes:
+def compress_binary(data: bytes) -> bytes:
     """
     Compress data with zlib at max compression, raw deflate.
     """
@@ -41,15 +41,26 @@ def send_cmd(ser, cmd, expect_ok=True):
 def upload_bootloader(port, bin_path, chunk_size):
     # Read binary file
     data = Path(bin_path).read_bytes()
-    orig_size = len(data)
-    click.echo(f"Read {orig_size} bytes from {bin_path!r}")
+    data_size = len(data)
+    click.echo(f"Read {data_size} bytes from {bin_path!r}")
+
+    if data[:4] == b"TRZB":
+        compress = True
+    elif data[:4] == b"TRZQ":
+        compress = False
+    else:
+        click.echo("Invalid bootloader binary.", err=True)
+        sys.exit(1)
 
     # Compress the data
-    comp_data = _compress(data)
-    comp_size = len(comp_data)
-    click.echo(
-        f"Compressed to {comp_size} bytes ({comp_size * 100 // orig_size}% of original)"
-    )
+    if compress:
+        comp_data = compress_binary(data)
+        comp_size = len(comp_data)
+        click.echo(
+            f"Compressed to {comp_size} bytes ({comp_size * 100 // data_size}% of original)"
+        )
+        data = comp_data
+        data_size = comp_size
 
     # Open USB-VCP port
     with serial.Serial(port, timeout=2) as ser:
@@ -62,15 +73,15 @@ def upload_bootloader(port, bin_path, chunk_size):
         # 1) Begin transfer
         send_cmd(ser, "bootloader-update begin")
 
-        # 2) Stream compressed chunks
+        # 2) Stream data chunks
         offset = 0
-        while offset < comp_size:
-            chunk = comp_data[offset : offset + chunk_size]
+        while offset < data_size:
+            chunk = data[offset : offset + chunk_size]
             hexstr = chunk.hex()
             send_cmd(ser, f"bootloader-update chunk {hexstr}")
             offset += len(chunk)
-            pct = offset * 100 // comp_size
-            click.echo(f"  Uploaded {offset}/{comp_size} bytes ({pct}%)")
+            pct = offset * 100 // data_size
+            click.echo(f"  Uploaded {offset}/{data_size} bytes ({pct}%)")
 
         # 3) Finish transfer
         send_cmd(ser, "bootloader-update end")
@@ -93,7 +104,7 @@ def upload_bootloader(port, bin_path, chunk_size):
 )
 def main(port, binary, chunk_size):
     """
-    Upload a (compressed) bootloader image via USB-VCP CLI.
+    Upload a bootloader image via USB-VCP CLI.
 
     <serial-port> e.g. /dev/ttyUSB0 or COM3
     <bootloader-binary> path to the .bin file

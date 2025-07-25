@@ -71,7 +71,7 @@ static void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
 }
 
 bool boot_image_check(const boot_image_t *image) {
-  mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
+  mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTLOADER);
 
   // compute current bootloader hash
   uint8_t hash[BLAKE2S_DIGEST_LENGTH];
@@ -97,7 +97,7 @@ void boot_image_replace(const boot_image_t *image) {
   const uint32_t bl_len = flash_area_get_size(&BOOTLOADER_AREA);
   const void *bl_data = flash_area_get_address(&BOOTLOADER_AREA, 0, bl_len);
 
-  mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
+  mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTLOADER);
 
   struct uzlib_uncomp decomp = {0};
   uint8_t decomp_window[UZLIB_WINDOW_SIZE] = {0};
@@ -226,7 +226,7 @@ bool boot_image_check(const boot_image_t *image) {
     return false;
   }
 
-  mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
+  mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTLOADER);
 
   boot_header_auth_t *cur_hdr = (boot_header_auth_t *)BOOTLOADER_START;
   boot_header_auth_t *new_hdr = (boot_header_auth_t *)image->image_ptr;
@@ -256,7 +256,7 @@ void boot_image_replace(const boot_image_t *image) {
 
   // Check monotonic version
 
-  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTLOADER);
 
   const boot_header_auth_t *old_hdr = boot_header_auth_get(BOOTLOADER_START);
 
