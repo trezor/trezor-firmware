@@ -206,10 +206,8 @@ void optiga_set_sec_max(void) { smcall_invoke0(SMCALL_OPTIGA_SET_SEC_MAX); }
 
 #include "storage.h"
 
-void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
-                  const uint16_t salt_len) {
-  smcall_invoke3((uint32_t)callback, (uint32_t)salt, salt_len,
-                 SMCALL_STORAGE_INIT);
+void storage_set_callback(PIN_UI_WAIT_CALLBACK callback) {
+  smcall_invoke1((uint32_t)callback, SMCALL_STORAGE_SET_CALLBACK);
 }
 
 void storage_wipe(void) { smcall_invoke0(SMCALL_STORAGE_WIPE); }
@@ -288,14 +286,6 @@ secbool storage_set_counter(const uint16_t key, const uint32_t count) {
 secbool storage_next_counter(const uint16_t key, uint32_t *count) {
   return (secbool)smcall_invoke2(key, (uint32_t)count,
                                  SMCALL_STORAGE_NEXT_COUNTER);
-}
-
-// =============================================================================
-// entropy.h
-// =============================================================================
-
-void entropy_get(uint8_t *buf) {
-  smcall_invoke1((uint32_t)buf, SMCALL_ENTROPY_GET);
 }
 
 // =============================================================================

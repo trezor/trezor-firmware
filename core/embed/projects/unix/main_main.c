@@ -12,8 +12,6 @@
 MP_NOINLINE int main_(int argc, char **argv);
 
 int main(int argc, char **argv) {
-  entropy_init();
-
 #ifdef USE_SECP256K1_ZKP
   ensure(sectrue * (zkp_context_init() == 0), NULL);
 #endif

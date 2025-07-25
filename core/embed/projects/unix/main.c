@@ -37,6 +37,7 @@
 #include <unistd.h>
 
 #include <io/display.h>
+#include <sec/entropy.h>
 #include <sec/secret.h>
 #include <sys/system.h>
 #include <sys/systimer.h>
@@ -70,6 +71,8 @@
 #include "py/repl.h"
 #include "py/runtime.h"
 #include "py/stackctrl.h"
+
+#include "storage.h"
 
 // Command line options, with their defaults
 STATIC bool compile_only = false;
@@ -504,9 +507,37 @@ static int sdl_event_filter(void *userdata, SDL_Event *event) {
 }
 
 void drivers_init() {
+  flash_init();
+  flash_otp_init();
+
+  entropy_init();
+
+  unit_properties_init();
+
+  display_init(DISPLAY_RESET_CONTENT);
+
+#if USE_TOUCH
+  touch_init();
+#endif
+
+#ifdef USE_BUTTON
+  button_init();
+#endif
+
 #ifdef USE_TROPIC
   tropic_init();
 #endif
+}
+
+// Initialize the system and drivers for running tests in the Rust code.
+// The function is called from the Rust before the test main function is run.
+void rust_tests_c_setup(void) {
+  system_init(NULL);
+  drivers_init();
+
+  uint8_t entropy_data[HW_ENTROPY_LEN];
+  entropy_get(entropy_data);
+  storage_init(NULL, entropy_data, sizeof(entropy_data));
 }
 
 MP_NOINLINE int main_(int argc, char **argv) {
@@ -536,23 +567,12 @@ MP_NOINLINE int main_(int argc, char **argv) {
 
   drivers_init();
 
+  // Initialize storage
+  uint8_t entropy_data[HW_ENTROPY_LEN];
+  entropy_get(entropy_data);
+  storage_init(NULL, entropy_data, sizeof(entropy_data));
+
   SDL_SetEventFilter(sdl_event_filter, NULL);
-
-  display_init(DISPLAY_RESET_CONTENT);
-
-#if USE_TOUCH
-  touch_init();
-#endif
-
-#ifdef USE_BUTTON
-  button_init();
-#endif
-
-  // Map trezor.flash to memory.
-  flash_init();
-  flash_otp_init();
-
-  unit_properties_init();
 
 #if MICROPY_ENABLE_GC
   char *heap = malloc(heap_size);

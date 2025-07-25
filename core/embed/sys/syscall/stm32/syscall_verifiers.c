@@ -563,13 +563,25 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
-void storage_init__verified(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
-                            const uint16_t salt_len) {
-  if (!probe_read_access(salt, salt_len)) {
+static PIN_UI_WAIT_CALLBACK storage_callback = NULL;
+
+static secbool storage_callback_wrapper(uint32_t wait, uint32_t progress,
+                                        enum storage_ui_message_t message) {
+  secbool result;
+
+  applet_t *applet = syscall_get_context();
+  result = systask_invoke_callback(&applet->task, wait, progress, message,
+                                   storage_callback);
+  return result;
+}
+
+void storage_set_callback__verified(PIN_UI_WAIT_CALLBACK callback) {
+  if (!probe_execute_access(callback)) {
     goto access_violation;
   }
+  storage_callback = callback;
 
-  storage_init(callback, salt, salt_len);
+  storage_set_callback(storage_callback_wrapper);
   return;
 
 access_violation:
@@ -725,20 +737,6 @@ const uint8_t *translations_read__verified(uint32_t *len, uint32_t offset) {
 access_violation:
   apptask_access_violation();
   return NULL;
-}
-
-// ---------------------------------------------------------------------
-
-void entropy_get__verified(uint8_t *buf) {
-  if (!probe_write_access(buf, HW_ENTROPY_LEN)) {
-    goto access_violation;
-  }
-
-  entropy_get(buf);
-  return;
-
-access_violation:
-  apptask_access_violation();
 }
 
 // ---------------------------------------------------------------------

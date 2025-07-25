@@ -54,6 +54,8 @@
 #include <sec/hash_processor.h>
 #endif
 
+#include "storage.h"
+
 static void drivers_init(void) {
   flash_init();
 
@@ -119,6 +121,11 @@ int main(void) {
 
   // Initialize secure monitor drivers
   drivers_init();
+
+  // Initialize storage
+  uint8_t entropy_data[HW_ENTROPY_LEN];
+  entropy_get(entropy_data);
+  storage_init(NULL, entropy_data, sizeof(entropy_data));
 
   // Jump to the kernel (non-secure world)
   jump_to_vectbl_ns(KERNEL_START);
