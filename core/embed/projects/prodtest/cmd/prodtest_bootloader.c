@@ -38,7 +38,7 @@ static void prodtest_bootloader_version(cli_t *cli) {
 
 #ifdef USE_BOOT_UCB
 
-  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTLOADER);
 
   const boot_header_auth_t *hdr = boot_header_auth_get(BOOTLOADER_START);
 
@@ -56,7 +56,7 @@ static void prodtest_bootloader_version(cli_t *cli) {
 #else
   uint32_t v = 0;
 
-  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTLOADER);
 
   cli_trace(cli, "Reading bootloader image header..");
 
@@ -82,6 +82,33 @@ static void prodtest_bootloader_version(cli_t *cli) {
 __attribute__((
     section(".buf"))) static uint8_t bootloader_buffer[BOOTLOADER_MAXSIZE];
 static size_t bootloader_len = 0;
+
+#if USE_BOOT_UCB
+// Writes boot header and bootloader code to the BOOTUPDATE_AREA
+static bool write_to_bootupdate_area(const uint8_t *data, size_t size) {
+  if (!IS_ALIGNED(size, FLASH_BLOCK_SIZE)) {
+    return false;
+  }
+
+  if (sectrue != flash_area_erase(&BOOTUPDATE_AREA, NULL)) {
+    return false;
+  }
+
+  if (sectrue != flash_unlock_write()) {
+    return false;
+  }
+
+  if (sectrue != flash_area_write_data(&BOOTUPDATE_AREA, 0, data, size)) {
+    return false;
+  }
+
+  if (sectrue != flash_lock_write()) {
+    return false;
+  }
+
+  return true;
+}
+#endif  // USE_BOOT_UCB
 
 static void prodtest_bootloader_update(cli_t *cli) {
   if (cli_arg_count(cli) < 1) {
@@ -145,12 +172,32 @@ static void prodtest_bootloader_update(cli_t *cli) {
       return;
     }
 
+#if USE_BOOT_UCB
+    mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOOTUPDATE);
+
+    if (!write_to_bootupdate_area(bootloader_buffer, bootloader_len)) {
+      mpu_restore(mpu_mode);
+      cli_error(cli, CLI_ERROR, "Failed to flash bootloader");
+      return;
+    }
+
+    boot_image_t bootloader_image = {
+        .image_ptr = (const void *)BOOTUPDATE_START,
+        .image_size = bootloader_len,
+    };
+
+    boot_image_replace(&bootloader_image);
+
+    mpu_restore(mpu_mode);
+
+#else
     boot_image_t bootloader_image = {
         .image_ptr = bootloader_buffer,
         .image_size = bootloader_len,
     };
 
     boot_image_replace(&bootloader_image);
+#endif
 
     // Reset state so next begin must come before chunks
     bootloader_len = 0;

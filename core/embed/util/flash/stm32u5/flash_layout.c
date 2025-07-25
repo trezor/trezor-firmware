@@ -63,6 +63,9 @@ DEFINE_SINGLE_AREA(ASSETS_AREA, ASSETS, ACCESS_APP);
 // Area dedicated to the UCB (Update Control Block) used during
 // boot-loader or boot-header updates.
 DEFINE_SINGLE_AREA(BOOTUCB_AREA, BOOTUCB, ACCESS_DEFAULT);
+// Area used during bootloader update in prodtest. It holds
+// the downloaded bootloader image.
+DEFINE_SINGLE_AREA(BOOTUPDATE_AREA, BOOTUPDATE, ACCESS_DEFAULT);
 #ifdef BOARDLOADER
 // Area used by the boardloader during bootloader update process.
 // It includes the entire flash memory except the board-loader,

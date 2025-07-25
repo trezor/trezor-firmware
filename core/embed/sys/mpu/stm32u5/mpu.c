@@ -439,7 +439,7 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       break;
 #endif
 #if !defined(BOOTLOADER) && !defined(BOARDLOADER)
-    case MPU_MODE_BOOTUPDATE:
+    case MPU_MODE_BOOTLOADER:
       SET_REGION( 6, BOOTLOADER_START,         BOOTLOADER_MAXSIZE, FLASH_DATA,  YES,    NO );
       break;
 #endif
@@ -449,6 +449,9 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
 #ifdef USE_BOOT_UCB
     case MPU_MODE_BOOTUCB:
       SET_REGION( 6, BOOTUCB_START,            BOOTUCB_MAXSIZE,    FLASH_DATA,  YES,    NO );
+      break;
+    case MPU_MODE_BOOTUPDATE:
+      SET_REGION( 6, BOOTUPDATE_START,         BOOTUPDATE_MAXSIZE, FLASH_DATA,  YES,    NO );
       break;
 #endif
     case MPU_MODE_OTP:
