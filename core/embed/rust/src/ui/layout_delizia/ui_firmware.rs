@@ -411,8 +411,8 @@ impl FirmwareUI for UIDelizia {
             let account_title = account_title.unwrap_or(TR::send__send_from.into());
             let mut account_params = ShowInfoParams::new(account_title).with_cancel_button();
             for pair in IterBuf::new().try_iterate(items)? {
-                let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
-                account_params = unwrap!(account_params.add(label, value));
+                let [key, value, _is_data]: [Obj; 3] = util::iter_into_array(pair)?;
+                account_params = unwrap!(account_params.add(key.try_into()?, value.try_into()?));
             }
             Some(account_params)
         } else {
@@ -422,8 +422,8 @@ impl FirmwareUI for UIDelizia {
             let extra_title = extra_title.unwrap_or(TR::buttons__more_info.into());
             let mut extra_params = ShowInfoParams::new(extra_title).with_cancel_button();
             for pair in IterBuf::new().try_iterate(items)? {
-                let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
-                extra_params = unwrap!(extra_params.add(label, value));
+                let [label, value, _is_data]: [Obj; 3] = util::iter_into_array(pair)?;
+                extra_params = unwrap!(extra_params.add(label.try_into()?, value.try_into()?));
             }
             Some(extra_params)
         } else {

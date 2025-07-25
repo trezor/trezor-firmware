@@ -15,6 +15,7 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow,
         },
         geometry::{Direction, LinearPlacement},
+        layout::util::PropsList,
     },
 };
 
@@ -79,9 +80,9 @@ pub fn new_confirm_summary(
     fee: TString<'static>,
     fee_label: TString<'static>,
     account_title: Option<TString<'static>>,
-    account_paragraphs: Option<ParagraphVecShort<'static>>,
+    account_paragraphs: Option<PropsList>,
     extra_title: Option<TString<'static>>,
-    extra_paragraphs: Option<ParagraphVecShort<'static>>,
+    extra_paragraphs: Option<PropsList>,
     verb_cancel: Option<TString<'static>>,
     back_button: bool,
 ) -> Result<SwipeFlow, error::Error> {
@@ -179,14 +180,30 @@ pub fn new_confirm_summary(
     let content_extra = content_menu_info(
         extra_title.unwrap_or(TR::buttons__more_info.into()),
         None,
-        extra_paragraphs.map_or_else(ParagraphVecShort::new, |p| p),
+        extra_paragraphs.unwrap_or_else(|| {
+            unwrap!(PropsList::empty(
+                &theme::TEXT_SMALL_LIGHT,
+                &theme::TEXT_MONO_LIGHT,
+                &theme::TEXT_MONO_LIGHT,
+                theme::PROP_INNER_SPACING,
+                theme::PROPS_SPACING,
+            ))
+        }),
     );
 
     // AccountInfo
     let content_account = content_menu_info(
         account_title.unwrap_or(TR::address_details__account_info.into()),
         Some(TR::send__send_from.into()),
-        account_paragraphs.map_or_else(ParagraphVecShort::new, |p| p),
+        account_paragraphs.unwrap_or_else(|| {
+            unwrap!(PropsList::empty(
+                &theme::TEXT_SMALL_LIGHT,
+                &theme::TEXT_MONO_LIGHT,
+                &theme::TEXT_MONO_LIGHT,
+                theme::PROP_INNER_SPACING,
+                theme::PROPS_SPACING,
+            ))
+        }),
     );
 
     // Cancel

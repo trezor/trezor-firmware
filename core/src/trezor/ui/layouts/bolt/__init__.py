@@ -882,28 +882,31 @@ def _confirm_summary(
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> Awaitable[None]:
     title = title or TR.words__title_summary  # def_arg
-
+    account_props: list[PropertyType] | None = (
+        [(k, v, True) for k, v in account_items] if account_items else None
+    )
+    extra_props: list[PropertyType] | None = (
+        [(k, v, True) for k, v in extra_items] if extra_items else None
+    )
     total_layout = trezorui_api.confirm_summary(
         amount=amount,
         amount_label=amount_label,
         fee=fee,
         fee_label=fee_label,
         title=title,
-        account_items=account_items or None,
-        extra_items=extra_items or None,
+        account_items=account_props,
+        extra_items=extra_props,
     )
 
     # TODO: use `_info` params directly in this^ layout instead of using `with_info`
-    info_items: list[PropertyType] = []
-    if account_items:
-        account_props: list[PropertyType] = [(k, v, True) for k, v in account_items]
-        info_items.extend(account_props)
-    if extra_items:
-        extra_props: list[PropertyType] = [(k, v, True) for k, v in extra_items]
-        info_items.extend(extra_props)
+    info_props: list[PropertyType] = []
+    if account_props:
+        info_props.extend(account_props)
+    if extra_props:
+        info_props.extend(extra_props)
     info_layout = trezorui_api.show_info_with_cancel(
         title=extra_title if extra_title else TR.words__title_information,
-        items=info_items,
+        items=info_props,
     )
     return with_info(total_layout, info_layout, br_name, br_code)
 
@@ -953,18 +956,18 @@ if not utils.BITCOIN_ONLY:
             items=items,
         )
 
+        items: list[PropertyType] = [(f"{k}:", v, True) for (k, v) in fee_info_items]
         total_layout = trezorui_api.confirm_summary(
             amount=total_amount,
             amount_label=f"{TR.words__amount}:",
             fee=maximum_fee,
             fee_label=f"{TR.send__maximum_fee}:",
             title=TR.words__title_summary,
-            extra_items=fee_info_items,  # used so that info button is shown
+            extra_items=items,  # used so that info button is shown
             extra_title=TR.confirm_total__title_fee,
             verb_cancel="^",
         )
 
-        items: list[PropertyType] = [(f"{k}:", v, True) for (k, v) in fee_info_items]
         fee_info_layout = trezorui_api.show_info_with_cancel(
             title=TR.confirm_total__title_fee,
             items=items,

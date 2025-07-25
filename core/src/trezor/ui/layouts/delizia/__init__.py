@@ -799,14 +799,18 @@ def confirm_total(
     total_label = total_label or TR.send__total_amount  # def_arg
     fee_label = fee_label or TR.send__incl_transaction_fee  # def_arg
 
-    fee_items = []
-    account_items = []
+    fee_items: list[PropertyType] = []
+    account_items: list[PropertyType] = []
     if source_account:
-        account_items.append((TR.confirm_total__sending_from_account, source_account))
+        account_items.append(
+            (TR.confirm_total__sending_from_account, source_account, True)
+        )
     if source_account_path:
-        account_items.append((TR.address_details__derivation_path, source_account_path))
+        account_items.append(
+            (TR.address_details__derivation_path, source_account_path, True)
+        )
     if fee_rate_amount:
-        fee_items.append((TR.confirm_total__fee_rate, fee_rate_amount))
+        fee_items.append((TR.confirm_total__fee_rate, fee_rate_amount, True))
 
     return raise_if_cancelled(
         trezorui_api.confirm_summary(
@@ -837,7 +841,12 @@ def _confirm_summary(
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> Awaitable[None]:
     title = title or TR.words__title_summary  # def_arg
-
+    account_props: list[PropertyType] | None = (
+        [(k, v, True) for k, v in account_items] if account_items else None
+    )
+    extra_props: list[PropertyType] | None = (
+        [(k, v, True) for k, v in extra_items] if extra_items else None
+    )
     return raise_if_cancelled(
         trezorui_api.confirm_summary(
             amount=amount,
@@ -845,8 +854,8 @@ def _confirm_summary(
             fee=fee,
             fee_label=fee_label,
             title=title,
-            account_items=account_items or None,
-            extra_items=extra_items or None,
+            account_items=account_props,
+            extra_items=extra_props,
             extra_title=extra_title or None,
         ),
         br_name,
