@@ -102,6 +102,7 @@ async def write_message(iface: WireInterface, mtype: int, mdata: bytes) -> None:
             n = iface.write(report)
             if n == len(report):
                 break
+            assert n == 0
 
         # if we have more data to write, use continuation reports for it
         if nwritten < msize:

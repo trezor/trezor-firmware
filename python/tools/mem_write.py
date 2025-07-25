@@ -39,6 +39,7 @@ def find_debug() -> DebugLink:
 def main() -> None:
     debug = find_debug()
     debug.memory_write(int(sys.argv[1], 16), bytes.fromhex(sys.argv[2]), flash=True)
+    debug.close()
 
 
 if __name__ == "__main__":
