@@ -66,8 +66,7 @@ def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
 
     # unlock with message
     device_handler.get_session()
-
-    assert "PinKeyboard" in debug.read_layout().all_components()
+    debug.synchronize_at("PinKeyboard")
     debug.input(PIN4)
     assert device_handler.result()
 
