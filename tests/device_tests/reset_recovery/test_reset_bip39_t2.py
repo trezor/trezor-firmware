@@ -19,7 +19,8 @@ from mnemonic import Mnemonic
 
 from trezorlib import device, messages
 from trezorlib.btc import get_public_node
-from trezorlib.debuglink import LayoutType, ProtocolVersion
+from trezorlib.client import ProtocolVersion
+from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 
