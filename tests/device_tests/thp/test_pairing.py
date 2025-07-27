@@ -4,6 +4,7 @@ import typing as t
 from hashlib import sha256
 
 import pytest
+from trezorlib.models import T2T1
 import typing_extensions as tx
 
 from tests.common import get_test_address
@@ -53,6 +54,8 @@ pytestmark = [pytest.mark.protocol("protocol_v2")]
 
 
 def test_pairing_qr_code(client: Client) -> None:
+    if client.model != T2T1:
+        pytest.xfail(reason="UI is implemented only for T2T1")
     protocol = prepare_protocol_for_pairing(client)
     handle_pairing_request(client, protocol, "TestTrezor QrCode")
     protocol._send_message(
