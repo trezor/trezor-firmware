@@ -19,7 +19,7 @@ from mnemonic import Mnemonic
 
 from trezorlib import device, messages
 from trezorlib.btc import get_public_node
-from trezorlib.debuglink import LayoutType
+from trezorlib.debuglink import LayoutType, ProtocolVersion
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 
@@ -212,6 +212,7 @@ def test_reset_failed_check(session: Session):
 
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.uninitialized_session
+@pytest.mark.invalidate_client
 def test_failed_pin(session: Session):
     debug = session.client.debug
     strength = 128
@@ -247,6 +248,9 @@ def test_failed_pin(session: Session):
     ret = session.call_raw(messages.ButtonAck())
 
     assert isinstance(ret, messages.ButtonRequest)
+
+    if session.protocol_version is ProtocolVersion.V2:
+        session.call(messages.GetFeatures())
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
