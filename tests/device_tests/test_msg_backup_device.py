@@ -19,6 +19,7 @@ import pytest
 import shamir_mnemonic as shamir
 
 from trezorlib import device, messages
+from trezorlib.client import ProtocolVersion
 from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
@@ -225,3 +226,6 @@ def test_interrupt_backup_fails(session: Session):
     # Second attempt at backup should fail
     with pytest.raises(TrezorFailure, match=r".*Seed already backed up"):
         device.backup(session)
+
+    if session.protocol_version is ProtocolVersion.V2:
+        session.call(messages.GetFeatures())
