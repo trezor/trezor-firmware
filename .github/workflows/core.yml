@@ -394,7 +394,8 @@ jobs:
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       # MULTICORE: 4  # more could interfere with other jobs
-      PYTEST_TIMEOUT: 400
+      PYTEST_TIMEOUT: 100
+      TESTOPTS: "-v -x --durations 0"
       TEST_LANG: ${{ matrix.lang }}
       PROTOCOL: ${{ matrix.model == 'T3W1' && 'v2' || 'v1'}}
     steps:
