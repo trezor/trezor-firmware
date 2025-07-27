@@ -68,7 +68,7 @@ def _center_button(debug: DebugLink) -> Tuple[int, int]:
 def set_autolock_delay(device_handler: "BackgroundDeviceHandler", delay_ms: int):
     debug = device_handler.debuglink()
     session = device_handler.get_session()
-    assert "PinKeyboard" in debug.read_layout().all_components()
+    debug.synchronize_at("PinKeyboard")
     debug.input("1234")
     session = device_handler.result()
 
