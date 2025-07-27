@@ -282,7 +282,7 @@ jobs:
       PYTEST_TIMEOUT: ${{ matrix.asan == 'asan' && 600 || 400 }}
       ACTIONS_DO_UI_TEST: ${{ matrix.coins == 'universal' && matrix.asan == 'noasan' }}
       TEST_LANG: ${{ matrix.lang }}
-      TESTOPTS: "--durations 50 --session-timeout 1800"  # 30m pytest global timeout
+      TESTOPTS: "--durations 10 --session-timeout 1800"  # 30m pytest global timeout
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
@@ -380,7 +380,7 @@ jobs:
     env:
       TREZOR_UPGRADE_TEST: core
       PYTEST_TIMEOUT: 20
-      TESTOPTS: "--durations 50"
+      TESTOPTS: "--durations 10"
     steps:
       - uses: actions/checkout@v4
         with:
