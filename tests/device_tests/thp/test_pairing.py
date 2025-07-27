@@ -4,7 +4,6 @@ import typing as t
 from hashlib import sha256
 
 import pytest
-from trezorlib.models import T2T1
 import typing_extensions as tx
 
 from tests.common import get_test_address
@@ -35,6 +34,7 @@ from trezorlib.messages import (
     ThpQrCodeTag,
     ThpSelectMethod,
 )
+from trezorlib.models import T2T1
 from trezorlib.transport.thp import curve25519
 from trezorlib.transport.thp.cpace import Cpace
 
