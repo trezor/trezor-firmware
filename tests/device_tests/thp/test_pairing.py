@@ -34,6 +34,7 @@ from trezorlib.messages import (
     ThpQrCodeTag,
     ThpSelectMethod,
 )
+from trezorlib.models import T2T1
 from trezorlib.transport.thp import curve25519
 from trezorlib.transport.thp.cpace import Cpace
 
@@ -53,6 +54,8 @@ pytestmark = [pytest.mark.protocol("protocol_v2")]
 
 
 def test_pairing_qr_code(client: Client) -> None:
+    if client.model != T2T1:
+        pytest.xfail(reason="UI is implemented only for T2T1")
     protocol = prepare_protocol_for_pairing(client)
     handle_pairing_request(client, protocol, "TestTrezor QrCode")
     protocol._send_message(
