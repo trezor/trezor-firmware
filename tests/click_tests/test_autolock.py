@@ -311,7 +311,7 @@ def test_autolock_interrupts_passphrase(device_handler: "BackgroundDeviceHandler
 
 def unlock_dry_run(debug: "DebugLink") -> "LayoutContent":
     debug.synchronize_at(
-        [TR.recovery__check_dry_run, TR.reset__check_wallet_backup_title]
+        [TR.recovery__title_dry_run, TR.reset__check_wallet_backup_title]
     )
     layout = go_next(debug)
     assert "PinKeyboard" in layout.all_components()
