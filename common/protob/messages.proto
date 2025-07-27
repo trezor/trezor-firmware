@@ -333,6 +333,10 @@ enum MessageType {
     MessageType_NostrSignEvent = 2003 [(wire_in) = true];
     MessageType_NostrEventSignature = 2004 [(wire_out) = true];
 
+    // Git-based external storage
+    MessageType_GitCommitUpdate = 2100 [(wire_in) = true];
+    MessageType_GitVerify = 2101 [(wire_in) = true];
+
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];
     MessageType_BenchmarkNames = 9101 [(bitcoin_only) = true];

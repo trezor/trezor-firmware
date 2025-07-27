@@ -254,3 +254,5 @@ if not utils.BITCOIN_ONLY:
     NostrPubkey = 2002
     NostrSignEvent = 2003
     NostrEventSignature = 2004
+    GitCommitUpdate = 2100
+    GitVerify = 2101

@@ -670,6 +670,8 @@ class MessageType(IntEnum):
     NostrPubkey = 2002
     NostrSignEvent = 2003
     NostrEventSignature = 2004
+    GitCommitUpdate = 2100
+    GitVerify = 2101
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -5407,6 +5409,43 @@ class EthereumFieldType(protobuf.MessageType):
         self.size = size
         self.entry_type = entry_type
         self.struct_name = struct_name
+
+
+class GitCommitUpdate(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2100
+    FIELDS = {
+        1: protobuf.Field("commit_hash", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        commit_hash: Optional["bytes"] = None,
+    ) -> None:
+        self.commit_hash = commit_hash
+
+
+class GitVerify(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2101
+    FIELDS = {
+        1: protobuf.Field("commit", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("trees", "bytes", repeated=True, required=False, default=None),
+        3: protobuf.Field("path", "string", repeated=True, required=False, default=None),
+        4: protobuf.Field("blob", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        trees: Optional[Sequence["bytes"]] = None,
+        path: Optional[Sequence["str"]] = None,
+        commit: Optional["bytes"] = None,
+        blob: Optional["bytes"] = None,
+    ) -> None:
+        self.trees: Sequence["bytes"] = trees if trees is not None else []
+        self.path: Sequence["str"] = path if path is not None else []
+        self.commit = commit
+        self.blob = blob
 
 
 class MoneroTransactionSourceEntry(protobuf.MessageType):

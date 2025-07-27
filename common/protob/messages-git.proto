@@ -1,0 +1,17 @@
+syntax = "proto2";
+package hw.trezor.messages.git;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageGit";
+
+message GitCommitUpdate {
+    optional bytes commit_hash = 1;
+}
+
+message GitVerify {
+    optional bytes commit = 1;
+    repeated bytes trees = 2;
+    repeated string path = 3;  // must have the same length as `trees`
+    optional bytes blob = 4;
+}

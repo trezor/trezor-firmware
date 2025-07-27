@@ -3986,6 +3986,40 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["EthereumFieldType"]:
             return isinstance(msg, cls)
 
+    class GitCommitUpdate(protobuf.MessageType):
+        commit_hash: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            commit_hash: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["GitCommitUpdate"]:
+            return isinstance(msg, cls)
+
+    class GitVerify(protobuf.MessageType):
+        commit: "bytes | None"
+        trees: "list[bytes]"
+        path: "list[str]"
+        blob: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            trees: "list[bytes] | None" = None,
+            path: "list[str] | None" = None,
+            commit: "bytes | None" = None,
+            blob: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["GitVerify"]:
+            return isinstance(msg, cls)
+
     class MoneroTransactionSourceEntry(protobuf.MessageType):
         outputs: "list[MoneroOutputEntry]"
         real_output: "int | None"
