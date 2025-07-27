@@ -70,10 +70,11 @@ jobs:
             coins: btconly
             type: debuglink
             protocol: v2
-          - model: T3T1
-            coins: universal
-            type: debuglink
-            protocol: v2
+          # TODO: THP build overflows T3T1 flash
+          # - model: T3T1
+          #   coins: universal
+          #   type: debuglink
+          #   protocol: v2
           - model: T3T1
             coins: btconly
             type: debuglink
