@@ -407,7 +407,7 @@ jobs:
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run make -C core test_emu_click_ui_multicore"
+      - run: nix-shell --run "poetry run make -C core test_emu_click_ui"
         if: ${{ matrix.asan == 'noasan' }}
       - run: nix-shell --run "poetry run make -C core test_emu_click"
         if: ${{ matrix.asan == 'asan' }}
