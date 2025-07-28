@@ -331,6 +331,7 @@ void nrf_deinit(void) {
     HAL_EXTI_ClearConfigLine(&drv->exti);
 
     nrf_deinit_common(drv);
+    drv->initialized = false;
   }
 }
 
