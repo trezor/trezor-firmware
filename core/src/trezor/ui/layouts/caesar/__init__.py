@@ -1369,22 +1369,19 @@ if not utils.BITCOIN_ONLY:
     def confirm_cardano_tx(
         amount: str,
         fee: str,
-        items: Iterable[tuple[str, str]],
+        items: Iterable[PropertyType],
         amount_title: str | None = None,
         fee_title: str | None = None,
     ) -> Awaitable[None]:
         amount_title = f"{TR.send__total_amount}:"
         fee_title = TR.send__including_fee
-        extra_items: list[PropertyType] | None = (
-            [(k, v, True) for (k, v) in items] if items else None
-        )
         return raise_if_cancelled(
             trezorui_api.confirm_summary(
                 amount=amount,
                 amount_label=amount_title,
                 fee=fee,
                 fee_label=fee_title,
-                extra_items=extra_items,
+                extra_items=list(items) if items else None,
             ),
             br_name="confirm_cardano_tx",
             br_code=ButtonRequestType.SignTx,
