@@ -121,7 +121,7 @@ class Session:
         # raise an exception if the firmware is too old.
         # So we short-circuit the simplest variant of ping with call_raw.
         if not button_protection:
-            resp = self.call_raw(messages.Ping(message=message))
+            resp = self.call_raw(messages.Ping(message=message), timeout=timeout)
             if isinstance(resp, messages.ButtonRequest):
                 # device is PIN-locked.
                 # respond and hope for the best
