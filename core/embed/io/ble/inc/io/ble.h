@@ -73,6 +73,7 @@ typedef struct {
   ble_mode_t mode_requested;
   uint8_t connected_addr[6];
   uint8_t connected_addr_type;
+  ble_adv_start_cmd_data_t adv_data;
 } ble_wakeup_params_t;
 
 typedef enum {
