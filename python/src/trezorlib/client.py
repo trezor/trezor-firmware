@@ -119,7 +119,7 @@ class TrezorClient:
                 raise RuntimeError(
                     "Connected Trezor does not support any trezorlib-compatible pairing method."
                 )
-        session = SessionV2(client=self, id=b"\x00")
+        session = SessionV2.seedless(self)
         session.call(
             messages.ThpPairingRequest(host_name="Trezorlib"),
             expect=messages.ThpPairingRequestApproved,
@@ -243,7 +243,7 @@ class TrezorClient:
                 self.do_pairing()
 
             if passphrase is SEEDLESS:
-                return SessionV2(self, id=b"\x00")
+                return SessionV2.seedless(self)
 
             if self._session_id_counter >= 255:
                 self._session_id_counter = 0
