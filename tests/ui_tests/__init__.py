@@ -9,6 +9,7 @@ from _pytest.nodes import Node
 from _pytest.outcomes import Failed
 
 from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.exceptions import ThpError
 
 from . import common
 from .common import SCREENS_DIR, UI_TESTS_DIR, TestCase, TestResult
@@ -66,7 +67,11 @@ def screen_recording(
 
         # Instead of client.init_device() we create a new management session
         # `Ping` is sent to make sure the device is available.
-        client.get_seedless_session().ping("")
+        try:
+            client.get_seedless_session().ping("")
+        except ThpError:
+            # Do not raise for unsuccessful ping
+            pass
         client.debug.stop_recording()
 
     result = testcase.build_result(request)
