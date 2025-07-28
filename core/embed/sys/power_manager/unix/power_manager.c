@@ -32,7 +32,40 @@ pm_status_t pm_hibernate(void) {
   return PM_OK;
 }
 
-pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) { exit(1); }
+pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
+  // Mock suspend behavior for Unix/emulator
+  // Wait for 'p' key press or mouse click only
+  SDL_Event event;
+
+  while (SDL_WaitEvent(&event)) {
+    switch (event.type) {
+      case SDL_KEYDOWN:
+        if (event.key.keysym.sym == SDLK_p) {
+          if (wakeup_reason != NULL) {
+            *wakeup_reason = WAKEUP_FLAG_BUTTON;
+          }
+          return PM_OK;
+        }
+        break;
+      case SDL_MOUSEBUTTONDOWN:
+        if (wakeup_reason != NULL) {
+          *wakeup_reason = WAKEUP_FLAG_BUTTON;
+        }
+        return PM_OK;
+      case SDL_QUIT:
+        // Quit gracefully
+        exit(0);
+        break;
+      default:
+        break;
+    }
+  }
+
+  if (wakeup_reason != NULL) {
+    *wakeup_reason = 0;
+  }
+  return PM_ERROR;
+}
 
 pm_status_t pm_turn_on(void) { return PM_OK; }
 pm_status_t pm_charging_enable(void) { return PM_OK; }
