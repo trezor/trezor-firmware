@@ -177,7 +177,7 @@ def identify_r_int(time: np.ndarray, ibat: np.ndarray, vbat: np.ndarray, temp: n
 
 
 def identify_ocv_curve(time : np.ndarray, vbat : np.ndarray, ibat: np.ndarray, r_int: float,
-                       max_chg_voltage: float, max_dischg_voltage: float,
+                       max_curve_v: float, min_curve_v: float,
                        num_of_samples: int = 100, debug=False):
     """
     Extract the SOC curve as relation between battery open-circuit voltage and state of charge from
@@ -193,121 +193,81 @@ def identify_ocv_curve(time : np.ndarray, vbat : np.ndarray, ibat: np.ndarray, r
     # Translate the voltage into OCV using the internal resistance
     ocv = vbat_filtered + ((ibat_filtered/1000) * r_int)
 
-    # Cut the curves edges with max discharge voltage and max charge voltage
-    max_chg_v_idx = 0
-    max_dischg_v_idx = len(vbat_filtered)
+    if(ocv[0] < ocv[-1]):
+        curve_ascending = True
 
-    # This cannot be done vector wise, since we want to take a continous set which within the given thresholds.
-    for i in range(len(vbat_filtered)):
+    # Initialize min/max voltage indices
+    if curve_ascending:
+        min_curve_v_idx = 0
+        max_curve_v_idx = len(vbat_filtered)
+    else:
+        min_curve_v_idx = len(vbat_filtered)
+        max_curve_v_idx = 0
 
-        # Sweeping from the end to the beginning
-        x = vbat_filtered[len(vbat_filtered) - i - 1]
-        if(x > max_chg_voltage):
-            max_chg_v_idx = len(vbat_filtered) - i
-            break
+    # Find min_voltage index
+    for i in range(1, len(vbat_filtered)):
 
-    for i in range(len(vbat_filtered)):
+        if curve_ascending:
+            x = vbat_filtered[-(i + 1)] # Sweep backwards
+            if(x < min_curve_v):
+                min_curve_v_idx = vbat_filtered[-(i)]
+                break
 
-        x = vbat_filtered[i]
-        if(x < max_dischg_voltage):
-            max_dischg_v_idx = i + 1
-            break
+        else:
+            x = vbat_filtered[i]
+            if(x < min_curve_v):
+                min_curve_v_idx = vbat_filtered[(i-1)]
+                break
+
+    # Find max_voltage index
+    for i in range(1, len(vbat_filtered)):
+
+        if curve_ascending:
+            x = vbat_filtered[i]
+            if(x > max_curve_v):
+                max_curve_v_idx = vbat_filtered[i-1]
+                break
+
+        else:
+            x = vbat_filtered[-(i + 1)]  # Sweep backwards
+            if(x > max_curve_v):
+                max_curve_v_idx = vbat_filtered[-(i)]
+                break
+
 
     # Take only the part which is within the given voltage thresholds
-    time_cut = time[max_chg_v_idx:max_dischg_v_idx]
-    ocv_cut = ocv[max_chg_v_idx:max_dischg_v_idx]
-    ibat_cut = ibat_filtered[max_chg_v_idx:max_dischg_v_idx]
+    if curve_ascending:
+        time_cut = time[min_curve_v_idx:max_curve_v_idx]
+        ocv_cut = ocv[min_curve_v_idx:max_curve_v_idx]
+        ibat_cut = ibat_filtered[min_curve_v_idx:max_curve_v_idx]
+    else:
+        time_cut = time[max_curve_v_idx:max_curve_v_idx]
+        ocv_cut = ocv[max_curve_v_idx:max_curve_v_idx]
+        ibat_cut = ibat_filtered[max_curve_v_idx:max_curve_v_idx]
 
     # Measure current capacity over the full profileintervals
     total_capacity     = coulomb_counter(time, ibat)
     effective_capacity = coulomb_counter(time_cut, ibat_cut)
 
     # Sample ocv curve (relation between SoC and OCV)
-    ocv_curve, indices = sample_ocv_curve(time, ocv, ibat, effective_capacity, num_of_samples, ascending=False)
+    ocv_curve, indices = sample_ocv_curve(time, ocv, ibat, effective_capacity, num_of_samples, ascending=curve_ascending)
 
     if debug:
         pass
 
     return ocv_curve, total_capacity, effective_capacity
 
-def poly_2ord(x, a, b, c):
-    return a*x**2 + b*x + c
-
-def rational_fit(x, a, b, c, d):
+def rational_f(x, a, b, c, d):
     return (a + b*x) / (c + d*x)
 
-def rational_fit_split(x, a, b, c, d, e, f, g, h):
-
-    result = np.zeros_like(x, dtype=float)
-
-    mask1 = x < 0.5
-    mask2 = x >= 0.5
-
-    result[mask1] = (a + b*x[mask1]) / (c + d*x[mask1])
-    result[mask2] = (e + f*x[mask2]) / (g + h*x[mask2])
-
-def rational_fit(x, a, b, c, d):
-
-    return result
-
-def rational_fit_split(x, a, b, c, d, e, f, g, h):
-
-    result = np.zeros_like(x, dtype=float)
-
-    mask1 = x < 0.5
-    mask2 = x >= 0.5
-
-    result[mask1] = (a + b*x[mask1]) / (c + d*x[mask1])
-    result[mask2] = (e + f*x[mask2]) / (g + h*x[mask2])
-
-    return result
-
-def continuous_rational_split(x, a1, b1, c1, d1, a2, b2, c2, d2):
+def fit_r_int_curve(r_int_arr, temp_arr, debug=False):
     """
-    Two rational functions with continuity at x_break
-    Parameters reduced by 1 as d2 is derived to ensure continuity
+    Fit the internal resistance curve with rational funtion.
+    returns fitted parameters
     """
-    result = np.zeros_like(x, dtype=float)
 
-    x_break = 0.5
-
-    # First segment
-    mask1 = x < x_break
-    result[mask1] = (a1 + b1*x[mask1]) / (c1 + d1*x[mask1])
-
-    # Calculate value at breakpoint
-    f_break = (a1 + b1*x_break) / (c1 + d1*x_break)
-
-    # Calculate d2 to ensure continuity at x_break
-    # Solve: f_break = (a2 + b2*x_break) / (c2 + d2*x_break) for d2
-    d2 = ((a2 + b2*x_break) / f_break - c2) / x_break
-
-    # Second segment
-    mask2 = x >= x_break
-    result[mask2] = (a2 + b2*x[mask2]) / (c2 + d2*x[mask2])
-
-    return result
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    poptr, pcovr = curve_fit(rational_f, temp_arr, r_int_arr)
+    return poptr, pcovr
 
 def rational_linear_rational(x, m, b, a1, b1, c1, a3, b3, c3):
     """
@@ -351,129 +311,13 @@ def rational_linear_rational(x, m, b, a1, b1, c1, a3, b3, c3):
 
     return result
 
-def continuous_rational_split_two_breaks(x, a1, b1, c1, d1, a2,
-                                         b2, c2, d2, a3, b3, c3):
-    """
-    Three rational functions with continuity at two breakpoints
-    Parameters reduced by 2 as d2 and d3 are derived to ensure continuity
+def fit_ocv_curve(ocv_curve):
 
-    Arguments:
-        x: Independent variable
-        a1,b1,c1,d1: Parameters for first segment (0 to x_break1)
-        a2,b2,c2,d2: Parameters for second segment (x_break1 to x_break2)
-        a3,b3,c3: Parameters for third segment (x_break2 to 1)
-        x_break1, x_break2: Breakpoint positions (optional, default 0.3 and 0.7)
-    """
-    result = np.zeros_like(x, dtype=float)
-
-    x_break1=0.3
-    x_break2=0.7
-
-    # First segment (0 to x_break1)
-    mask1 = x < x_break1
-    result[mask1] = (a1 + b1*x[mask1]) / (c1 + d1*x[mask1])
-
-    # Calculate value at first breakpoint for continuity
-    f_break1 = (a1 + b1*x_break1) / (c1 + d1*x_break1)
-
-    # Calculate d2 to ensure continuity at x_break1
-    d2 = ((a2 + b2*x_break1) / f_break1 - c2) / x_break1
-
-    # Second segment (x_break1 to x_break2)
-    mask2 = (x >= x_break1) & (x < x_break2)
-    result[mask2] = (a2 + b2*x[mask2]) / (c2 + d2*x[mask2])
-
-    # Calculate value at second breakpoint for continuity
-    f_break2 = (a2 + b2*x_break2) / (c2 + d2*x_break2)
-
-    # Calculate d3 to ensure continuity at x_break2
-    d3 = ((a3 + b3*x_break2) / f_break2 - c3) / x_break2
-
-    # Third segment (x_break2 to 1.0)
-    mask3 = x >= x_break2
-    result[mask3] = (a3 + b3*x[mask3]) / (c3 + d3*x[mask3])
-
-    return result
-
-def ocv_piecewise_vec(x, v0, v1, v2, v3, v4, k1, k2):
-    """Vectorized piecewise function for OCV-SOC curve fitting"""
-    result = np.zeros_like(x, dtype=float)
-
-    # Segment 1: 0 to k1 (steep beginning)
-    mask1 = x < k1
-    result[mask1] = v0 + (v1-v0)*(x[mask1]/k1)
-
-    # Segment 2: k1 to 0.5 (first plateau)
-    mask2 = (x >= k1) & (x < 0.5)
-    result[mask2] = v1 + (v2-v1)*((x[mask2]-k1)/(0.5-k1))
-
-    # Segment 3: 0.5 to k2 (second plateau)
-    mask3 = (x >= 0.5) & (x < k2)
-    result[mask3] = v2 + (v3-v2)*((x[mask3]-0.5)/(k2-0.5))
-
-    # Segment 4: k2 to 1.0 (steep end)
-    mask4 = x >= k2
-    result[mask4] = v3 + (v4-v3)*((x[mask4]-k2)/(1-k2))
-
-    return result
-
-def ocv_rational(x, a, b, c, d, e, f):
-    return a + (b + c*x)/(d + e*x + f*x**2)
-
-
-
-
-def time_to_minutes(time, offset=None):
-    if(offset is None):
-        return (time - time[0]) / 60000
-    else:
-        return (time-offset) / 60000
-
-def fit_R_int_curve(r_int_arr, temp_arr):
-    """
-    Fit the internal resistance curve with polynomial
-    """
-
-    # Fit the curve with polynomial
-    popt, pcov = curve_fit(poly_2ord, temp_arr, r_int_arr)
-    poptr, pcovr = curve_fit(rational_fit, temp_arr, r_int_arr)
-
-    fig, ax = plt.subplots()
-
-    print(popt)
-
-    temp = np.arange(0, 35, 0.01)
-
-    ax.plot(temp_arr, r_int_arr, marker='+', label="R_int_measurements")
-    ax.plot(temp, poly_2ord(temp, *popt), label="R_int_fitted")
-    ax.plot(temp, rational_fit(temp, *poptr), label="R_int_rational_fit")
-
-    ax.legend()
-
-    plt.show()
-
-    return poptr
-
-
-def fit_soc_curve(soc_curve):
-
-    # popt_seg, pcov_seg = curve_fit(ocv_piecewise_vec,
-    #                                soc_curve[0], soc_curve[1],
-    #                                bounds=([-10000,-10000,-10000,-10000,-10000, 0, 0.5  ],[10000,10000 ,10000,10000,10000,0.5,1]))
-
-    popt_rlr, pcov_rlr = curve_fit(rational_linear_rational, soc_curve[0], soc_curve[1])
-
-    lin = np.arange(0,1,0.01)
-
-    fig, ax = plt.subplots()
-    ax.plot(soc_curve[0], soc_curve[1], marker='+', linestyle='None', label="SoC_measurements")
-    ax.plot(lin, rational_linear_rational(lin, *popt_rlr), label="SoC_rational_split")
-    ax.legend()
+    popt_rlr, pcov_rlr = curve_fit(rational_linear_rational, ocv_curve[0], ocv_curve[1])
 
     [m, b, a1, b1, c1, a3, b3, c3] = popt_rlr
 
     # Precalculate d parameters
-
     x_break1 = 0.25
     x_break2 = 0.8
     # Calculate values at breakpoints
@@ -487,103 +331,25 @@ def fit_soc_curve(soc_curve):
 
     popt_rlr_complete = [m, b, a1, b1, c1, d1, a3, b3, c3, d3]
 
-    return popt_rlr, popt_rlr_complete
-
-def extract_SoC_curve_charging(test_name, linear_dischg_data, Rint, max_chg_voltage, max_dischg_voltage, num_of_points, debug=False):
-
-    """
-    Extract the SOC curve as relation between battery open-circuit voltage and state of charge from
-    the measured data of constant load discharge profile.
-    """
-    fir_len = 20
-
-    # Low pass filter current and voltage
-    ibat_filtered = low_pass_ma_filter(linear_dischg_data.ibat, fir_len)
-    vbat_filtered = low_pass_ma_filter(linear_dischg_data.vbat, fir_len)
-
-    # Translate the voltage into OCV using the internal resistance
-    V_oc = vbat_filtered + ((ibat_filtered/1000) * Rint)
-
-    # Cut the curves edges with max discharge voltage and max charge voltage
-    max_chg_v_idx = len(vbat_filtered)
-    max_dischg_v_idx = 0
-
-    for i in range(len(vbat_filtered)):
-
-        sample = vbat_filtered[len(vbat_filtered) - i - 1]
-
-        if(i < 2):
-            continue
+    return popt_rlr_complete
 
 
-        if(sample > max_chg_voltage):
-            max_chg_v_idx = len(vbat_filtered) - i
-            break
 
-    for i in range(len(vbat_filtered)):
 
-        sample = vbat_filtered[i]
 
-        if(i < 2):
-            continue
 
-        if(sample < max_dischg_voltage):
-            max_dischg_v_idx = i + 1
 
-    # max_dischg_v_idx = int(len(vbat_filtered)*0.95)
 
-    cut_time = linear_dischg_data.time[max_dischg_v_idx:max_chg_v_idx]
-    V_oc_cut = V_oc[max_dischg_v_idx:max_chg_v_idx]
-    I_oc_cut = ibat_filtered[max_dischg_v_idx:max_chg_v_idx]
 
-    # Measure current capacity over the full profile intervals
-    total_capacity     = coulomb_counter(linear_dischg_data.time, linear_dischg_data.ibat)
-    effective_capacity = coulomb_counter(cut_time, I_oc_cut)
-    #effective_capacity = total_capacity
 
-    # Find the curve interpolation points
-    SoC_curve, SoC_curve_indeces = extract_SoC_interpolation_points(V_oc_cut, I_oc_cut, cut_time, effective_capacity, num_of_points, profile_ascending=True)
-    #SoC_curve, SoC_curve_indeces = extract_SoC_interpolation_points(V_oc, linear_dischg_data.ibat, linear_dischg_data.time , effective_capacity, num_of_points)
 
-    intervals = np.array(SoC_curve)
 
-    if debug:
 
-        # fit with spline??
-        #popt, pcov = curve_fit(poly, intervals[:,0], V_oc_cut[SoC_curve_indeces])
-        #V_oc_fitted = poly(intervals[:,0], *popt)
 
-        fig, ax = plt.subplots(2,1)
-        fig.set_size_inches(6,4)
-        fig.set_dpi(300)
 
-        fig.suptitle("Linear discharge profile")
 
-        ax[0].set_title("Open-circuit voltage", fontsize=6)
-        ax[0].plot(time_to_minutes(linear_dischg_data.time), V_oc, linewidth=0.7, label="V_oc")
-        ax[0].plot(time_to_minutes(linear_dischg_data.time), linear_dischg_data.vbat, linewidth=0.7, label="V_bat")
-        ax[0].plot(time_to_minutes(cut_time), V_oc_cut, linewidth=0.7, label="V_oc effective area", color="red")
-        ax[0].set_xlabel("Time [min]", fontsize=6)
-        ax[0].set_ylabel("Voltage [V]", fontsize=6)
-        ax[0].set_xlim([0, time_to_minutes(linear_dischg_data.time[-1], linear_dischg_data.time[0])])
 
-        for ip in SoC_curve_indeces:
-            ax[0].axvline(x=time_to_minutes(cut_time[ip], cut_time[0]), color='gray', linestyle='--', linewidth=0.5,alpha=0.3)
 
-        ax[0].legend()
 
-        ax[1].set_title("Battery current", fontsize=6)
-        ax[1].plot(time_to_minutes(linear_dischg_data.time), linear_dischg_data.ibat, linewidth=0.7,  label="I_bat")
-        ax[1].plot(time_to_minutes(cut_time), I_oc_cut, label="I_bat_filtered effective area", linewidth=0.7, color="red")
-        ax[1].set_xlabel("Time [min]", fontsize=6)
-        ax[1].set_ylabel("Current [mA]", fontsize=6)
-        ax[1].set_xlim([0, time_to_minutes(linear_dischg_data.time[-1], linear_dischg_data.time[0])])
 
-        ax[1].legend()
-
-        #fig, ax = plt.subplots()
-        #ax.plot(intervals[:,0], V_oc_cut[SoC_curve_indeces], label="V_OC")
-        #ax.plot(intervals[:,0], V_oc_fitted, label="V_OC_fitted")
-
-    return SoC_curve, total_capacity, effective_capacity
 
