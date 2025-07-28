@@ -41,51 +41,60 @@ async def thp_main_loop(iface: WireInterface) -> None:
     global _CHANNELS
     channel_manager.load_cached_channels(_CHANNELS, iface)
 
-    ctx = Context(iface)
     try:
         while True:
-            channel = await ctx.accept()
-            await handle_received_message(channel, channel.rx_buffer)
+            ctx = await ThpContext.accept(iface)
+            await handle_received_message(ctx)
     finally:
         channel_manager.CHANNELS_LOADED = False
 
 
-class Context:
-    def __init__(self, iface: WireInterface) -> None:
-        self.iface = iface
-        self.read_wait = loop.wait(iface.iface_num() | io.POLL_READ)
-        self.packet = bytearray(self.iface.RX_PACKET_LEN)
+class ThpContext:
+    def __init__(self, channel: Channel) -> None:
+        self.channel = channel
+        self.msg: memoryview | None = channel.rx_buffer
 
-    async def accept(self) -> Channel:
-        iface = self.iface
-        read_wait = self.read_wait
-        packet = self.packet
-        while True:
-            packet_len = await read_wait
-            assert packet_len == len(packet)
-            iface.read(packet, 0)
+    async def read(self) -> memoryview:
+        assert self.msg is not None
 
-            if _get_ctrl_byte(packet) == CODEC_V1:
-                await _handle_codec_v1(iface, packet)
-                continue
+        msg = self.msg
+        self.msg = None
+        return msg
 
-            cid = ustruct.unpack(">BH", packet)[1]
+    @classmethod
+    async def accept(cls, iface: WireInterface) -> "ThpContext":
+        return cls(await _read_next_message(iface))
 
-            if cid == BROADCAST_CHANNEL_ID:
-                await _handle_broadcast(iface, packet)
-                continue
 
-            channel = _CHANNELS.get(cid)
-            if channel is None:
-                await _handle_unallocated(iface, cid, packet)
-                continue
+async def _read_next_message(iface: WireInterface) -> Channel:
+    read = loop.wait(iface.iface_num() | io.POLL_READ)
+    packet = bytearray(iface.RX_PACKET_LEN)
+    while True:
+        packet_len = await read
+        assert packet_len == len(packet)
+        iface.read(packet, 0)
 
-            if not await _handle_allocated(iface, channel, packet):
-                continue
+        if _get_ctrl_byte(packet) == CODEC_V1:
+            await _handle_codec_v1(iface, packet)
+            continue
 
-            if await handle_checksum_and_acks(channel):
-                # channel.rx_buffer contains a valid & acknowledged message
-                return channel
+        cid = ustruct.unpack(">BH", packet)[1]
+
+        if cid == BROADCAST_CHANNEL_ID:
+            await _handle_broadcast(iface, packet)
+            continue
+
+        channel = _CHANNELS.get(cid)
+        if channel is None:
+            await _handle_unallocated(iface, cid, packet)
+            continue
+
+        if not await _handle_allocated(iface, channel, packet):
+            continue
+
+        if await handle_checksum_and_acks(channel):
+            # channel.rx_buffer contains a valid & acknowledged message
+            return channel
 
 
 async def _handle_codec_v1(iface: WireInterface, packet: bytes) -> None:

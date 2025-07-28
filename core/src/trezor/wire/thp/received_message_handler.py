@@ -54,6 +54,7 @@ if TYPE_CHECKING:
     from trezor.messages import ThpHandshakeCompletionReqNoisePayload
 
     from .channel import Channel
+    from .thp_main import ThpContext
 
 if __debug__:
     from trezor import log
@@ -114,28 +115,25 @@ async def handle_checksum_and_acks(ctx: Channel) -> bool:
     return True
 
 
-async def handle_received_message(ctx: Channel, message_buffer: memoryview) -> None:
+async def handle_received_message(ctx: ThpContext) -> None:
     """Handle a message received from the channel."""
 
     try:
-        _handle_message_to_app_or_channel(ctx, message_buffer)
+        await _handle_message_to_app_or_channel(ctx)
     except ThpUnallocatedSessionError as e:
         error_message = Failure(code=FailureType.ThpUnallocatedSession)
-        await ctx.write(error_message, e.session_id)
+        await ctx.channel.write(error_message, e.session_id)
     except ThpUnallocatedChannelError:
-        await ctx.write_error(ThpErrorType.UNALLOCATED_CHANNEL)
-        ctx.clear()
+        await ctx.channel.write_error(ThpErrorType.UNALLOCATED_CHANNEL)
+        ctx.channel.clear()
     except ThpDecryptionError:
-        await ctx.write_error(ThpErrorType.DECRYPTION_FAILED)
-        ctx.clear()
+        await ctx.channel.write_error(ThpErrorType.DECRYPTION_FAILED)
+        ctx.channel.clear()
     except ThpInvalidDataError:
-        await ctx.write_error(ThpErrorType.INVALID_DATA)
-        ctx.clear()
+        await ctx.channel.write_error(ThpErrorType.INVALID_DATA)
+        ctx.channel.clear()
     except ThpDeviceLockedError:
-        await ctx.write_error(ThpErrorType.DEVICE_LOCKED)
-
-    if __debug__:
-        log.debug(__name__, "handle_received_message - end", iface=ctx.iface)
+        await ctx.channel.write_error(ThpErrorType.DEVICE_LOCKED)
 
 
 def _send_ack(ctx: Channel, ack_bit: int) -> Awaitable[None]:
@@ -196,23 +194,21 @@ async def handle_ack(ctx: Channel, ack_bit: int) -> None:
         # this await might not be executed
 
 
-def _handle_message_to_app_or_channel(
-    ctx: Channel,
-    message: memoryview,
-) -> None:
-    state = ctx.get_channel_state()
+async def _handle_message_to_app_or_channel(ctx: ThpContext) -> None:
+    state = ctx.channel.get_channel_state()
+    message = await ctx.read()
 
     if state == ChannelState.ENCRYPTED_TRANSPORT:
-        return _handle_state_ENCRYPTED_TRANSPORT(ctx, message)
+        return _handle_state_ENCRYPTED_TRANSPORT(ctx.channel, message)
 
     if state == ChannelState.TH1:
-        return _handle_state_TH1(ctx, message)
+        return _handle_state_TH1(ctx.channel, message)
 
     if state == ChannelState.TH2:
-        return _handle_state_TH2(ctx, message)
+        return _handle_state_TH2(ctx.channel, message)
 
     if _is_channel_state_pairing(state):
-        return _handle_pairing(ctx, message)
+        return _handle_pairing(ctx.channel, message)
 
     raise ThpError("Unimplemented channel state")
 
