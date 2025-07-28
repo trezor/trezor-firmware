@@ -60,8 +60,8 @@ class ProtocolV2Channel(Channel):
             raise RuntimeError("Channel is invalidated")
         return self
 
-    def read(self, session_id: int) -> t.Any:
-        sid, msg_type, msg_data = self.read_and_decrypt()
+    def read(self, session_id: int, timeout: float | None = None) -> t.Any:
+        sid, msg_type, msg_data = self.read_and_decrypt(timeout)
         if sid != session_id:
             raise Exception(
                 f"Received messsage on a different session (expected/received): ({session_id}/{sid}) "
@@ -80,7 +80,7 @@ class ProtocolV2Channel(Channel):
         assert self._features is not None
         return self._features
 
-    def update_features(self) -> None:
+    def update_features(self, timeout: float | None = None) -> None:
         message = messages.GetFeatures()
         message_type, message_data = self.mapping.encode(message)
         self.session_id: int = DEFAULT_SESSION_ID
@@ -88,7 +88,7 @@ class ProtocolV2Channel(Channel):
         header, _payload = self._read_until_valid_crc_check()
         if not header.is_ack():
             raise exceptions.TrezorException("ACK expected")
-        _, msg_type, msg_data = self.read_and_decrypt()
+        _, msg_type, msg_data = self.read_and_decrypt(timeout)
         features = self.mapping.decode(msg_type, msg_data)
         if not isinstance(features, messages.Features):
             raise exceptions.TrezorException("Unexpected response to GetFeatures")
@@ -103,8 +103,8 @@ class ProtocolV2Channel(Channel):
         self._encrypt_and_write(session_id, message_type, message_data)
         self._read_ack()
 
-    def _read_message(self, message_type: type[MT]) -> MT:
-        _, msg_type, msg_data = self.read_and_decrypt()
+    def _read_message(self, message_type: type[MT], timeout: float | None = None) -> MT:
+        _, msg_type, msg_data = self.read_and_decrypt(timeout)
         msg = self.mapping.decode(msg_type, msg_data)
         assert isinstance(msg, message_type)
         return msg
@@ -133,7 +133,8 @@ class ProtocolV2Channel(Channel):
         )
 
     def _read_channel_allocation_response(
-        self, expected_nonce: bytes
+        self,
+        expected_nonce: bytes,
     ) -> tuple[int, bytes]:
         header, payload = self._read_until_valid_crc_check()
         if not self._is_valid_channel_allocation_response(
@@ -317,10 +318,13 @@ class ProtocolV2Channel(Channel):
             )
 
     def _read_until_valid_crc_check(
-        self,
+        self, timeout: float | None = None
     ) -> t.Tuple[MessageHeader, bytes]:
+        if timeout is None:
+            timeout = self._DEFAULT_READ_TIMEOUT
+
         is_valid = False
-        header, payload, chksum = thp_io.read(self.transport)
+        header, payload, chksum = thp_io.read(self.transport, timeout)
         while not is_valid:
             is_valid = checksum.is_valid(chksum, header.to_bytes_init() + payload)
             if not is_valid:
@@ -328,7 +332,7 @@ class ProtocolV2Channel(Channel):
                     "Received a message with an invalid checksum:"
                     + hexlify(header.to_bytes_init() + payload + chksum).decode()
                 )
-                header, payload, chksum = thp_io.read(self.transport)
+                header, payload, chksum = thp_io.read(self.transport, timeout)
 
         return header, payload
 

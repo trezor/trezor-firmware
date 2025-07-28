@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import shutil
-from asyncio import wait_for
-from asyncio.exceptions import TimeoutError
 from contextlib import contextmanager
 from typing import Callable, Generator
 
@@ -13,6 +11,7 @@ from noise.exceptions import NoiseInvalidMessage
 
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import ThpError
+from trezorlib.transport import Timeout
 
 from . import common
 from .common import SCREENS_DIR, UI_TESTS_DIR, TestCase, TestResult
@@ -71,8 +70,8 @@ def screen_recording(
         # Instead of client.init_device() we create a new management session
         # `Ping` is sent to make sure the device is available.
         try:
-            wait_for(_client_ping(client), timeout=1)
-        except (ThpError, NoiseInvalidMessage, TimeoutError):
+            client.get_seedless_session().ping(message="", timeout=1)
+        except (ThpError, NoiseInvalidMessage, Timeout):
             # Do not raise for unsuccessful ping
             pass
         client.debug.stop_recording()
@@ -206,7 +205,3 @@ def main() -> None:
             print("FAILED:", result.test.id)
 
     testreport.generate_reports()
-
-
-async def _client_ping(client: Client):
-    client.get_seedless_session().ping("")
