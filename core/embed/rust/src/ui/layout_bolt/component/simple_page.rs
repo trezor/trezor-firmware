@@ -120,7 +120,7 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        ctx.set_page_count(self.scrollbar.pager().total() as usize);
+        ctx.set_page_count(self.scrollbar.pager().total());
         if let Some(swipe) = self.swipe.event(ctx, event) {
             match (swipe, self.axis) {
                 (SwipeDirection::Left, Axis::Horizontal) | (SwipeDirection::Up, Axis::Vertical) => {

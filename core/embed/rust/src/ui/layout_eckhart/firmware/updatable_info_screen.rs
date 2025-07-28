@@ -90,7 +90,7 @@ where
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         // Update page count of the screen
-        ctx.set_page_count(self.paragraph.pager().total().into());
+        ctx.set_page_count(self.paragraph.pager().total());
 
         if let Event::Attach(_) = event {
             self.update_text(ctx);

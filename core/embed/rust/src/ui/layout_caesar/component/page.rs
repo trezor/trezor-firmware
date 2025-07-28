@@ -153,7 +153,7 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        ctx.set_page_count(self.pager().total() as usize);
+        ctx.set_page_count(self.pager().total());
         if let Some(ButtonControllerMsg::Triggered(pos, _)) = self.buttons.event(ctx, event) {
             match pos {
                 ButtonPos::Left => {

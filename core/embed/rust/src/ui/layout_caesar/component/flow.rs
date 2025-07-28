@@ -263,7 +263,7 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        ctx.set_page_count(self.pages.scrollbar_page_count(self.content_area) as usize);
+        ctx.set_page_count(self.pages.scrollbar_page_count(self.content_area));
         self.title.event(ctx, event);
         let button_event = self.buttons.event(ctx, event);
 

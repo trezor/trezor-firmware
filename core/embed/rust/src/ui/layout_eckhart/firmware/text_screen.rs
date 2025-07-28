@@ -185,7 +185,7 @@ where
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         // Update page count of the screen
-        ctx.set_page_count(self.content_pager().total().into());
+        ctx.set_page_count(self.content_pager().total());
 
         self.content.event(ctx, event);
         if let Some(msg) = self.header.event(ctx, event) {

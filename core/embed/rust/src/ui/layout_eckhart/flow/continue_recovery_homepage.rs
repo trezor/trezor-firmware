@@ -128,7 +128,7 @@ pub fn new_continue_recovery_homepage(
     subtext: Option<TString<'static>>,
     recovery_type: RecoveryType,
     show_instructions: bool, // 1st screen of the recovery process
-    remaining_shares: Option<(OpTextLayout<'static>, usize)>,
+    remaining_shares: Option<(OpTextLayout<'static>, u16)>,
 ) -> Result<SwipeFlow, error::Error> {
     let is_multigroup_check = subtext.is_none();
     let (header, verb, cancel_btn, cancel_title, cancel_intro) = match recovery_type {
@@ -333,7 +333,7 @@ fn flow_between_shares_advanced(
         >,
     >,
     pages: OpTextLayout<'static>,
-    n_remaining_shares: usize,
+    n_remaining_shares: u16,
     cancel_btn: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
     let content_menu = VerticalMenuScreen::new(

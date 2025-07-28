@@ -312,7 +312,7 @@ impl LayoutObjInner {
 
         // Update page count if it changed
         if let Some(count) = self.event_ctx.page_count() {
-            self.page_count = count as u16;
+            self.page_count = count;
         }
 
         Ok(msg.into())

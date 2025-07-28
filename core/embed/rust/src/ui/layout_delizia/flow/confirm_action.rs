@@ -330,12 +330,12 @@ fn create_flow(
     extra: &ConfirmActionExtra,
 ) -> (
     Option<TString<'static>>,
-    usize,
+    u16,
     Result<SwipeFlow, Error>,
     &'static dyn FlowController,
 ) {
     let prompt_screen = prompt_screen.or_else(|| hold.then_some(title));
-    let prompt_pages: usize = prompt_screen.is_some().into();
+    let prompt_pages: u16 = prompt_screen.is_some().into();
     let initial_page: &dyn FlowController = match (extra, prompt_screen.is_some()) {
         (ConfirmActionExtra::Menu { .. }, false) => &ConfirmActionWithMenu::Action,
         (ConfirmActionExtra::Menu { .. }, true) => &ConfirmActionWithMenuAndConfirmation::Action,
