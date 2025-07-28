@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import struct
 from typing import Tuple
 
@@ -45,7 +47,9 @@ def write_payload_to_wire(
         buffer = buffer[transport.CHUNK_SIZE - CONT_HEADER_LENGTH :]
 
 
-def read(transport: Transport) -> Tuple[MessageHeader, bytes, bytes]:
+def read(
+    transport: Transport, timeout: float | None = None
+) -> Tuple[MessageHeader, bytes, bytes]:
     """
     Reads from the given wire transport.
 
@@ -58,12 +62,12 @@ def read(transport: Transport) -> Tuple[MessageHeader, bytes, bytes]:
     buffer = bytearray()
 
     # Read header with first part of message data
-    header, first_chunk = read_first(transport)
+    header, first_chunk = read_first(transport, timeout)
     buffer.extend(first_chunk)
 
     # Read the rest of the message
     while len(buffer) < header.data_length:
-        buffer.extend(read_next(transport, header.cid))
+        buffer.extend(read_next(transport, header.cid, timeout))
 
     data_len = header.data_length - checksum.CHECKSUM_LENGTH
     msg_data = buffer[:data_len]
@@ -72,8 +76,10 @@ def read(transport: Transport) -> Tuple[MessageHeader, bytes, bytes]:
     return (header, msg_data, chksum)
 
 
-def read_first(transport: Transport) -> Tuple[MessageHeader, bytes]:
-    chunk = transport.read_chunk()
+def read_first(
+    transport: Transport, timeout: float | None = None
+) -> Tuple[MessageHeader, bytes]:
+    chunk = transport.read_chunk(timeout)
     try:
         ctrl_byte, cid, data_length = struct.unpack(
             MessageHeader.format_str_init, chunk[:INIT_HEADER_LENGTH]
@@ -85,8 +91,8 @@ def read_first(transport: Transport) -> Tuple[MessageHeader, bytes]:
     return MessageHeader(ctrl_byte, cid, data_length), data
 
 
-def read_next(transport: Transport, cid: int) -> bytes:
-    chunk = transport.read_chunk()
+def read_next(transport: Transport, cid: int, timeout: float | None = None) -> bytes:
+    chunk = transport.read_chunk(timeout)
     ctrl_byte, read_cid = struct.unpack(
         MessageHeader.format_str_cont, chunk[:CONT_HEADER_LENGTH]
     )
