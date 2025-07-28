@@ -715,7 +715,7 @@ def show_progress_coinjoin(
 def show_properties(
     *,
     title: str,
-    value: list[tuple[str, str]] | str,
+    value: list[tuple[str | None, str | bytes | None, bool | None]] | str,
 ) -> LayoutObj[None]:
     """Show a list of key-value pairs, or a monospace string."""
 

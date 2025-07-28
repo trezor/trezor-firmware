@@ -1091,11 +1091,13 @@ if not utils.BITCOIN_ONLY:
             back_button=back_button,
         )
 
-        account_info = [(str(""), address)]
+        account_info: list[PropertyType] = [("", address, True)]
         if account:
-            account_info.append((TR.words__account, account))
+            account_info.append((TR.words__account, account, True))
         if account_path:
-            account_info.append((TR.address_details__derivation_path, account_path))
+            account_info.append(
+                (TR.address_details__derivation_path, account_path, True)
+            )
         menu = Menu.root(
             [
                 create_details(
@@ -1152,12 +1154,12 @@ if not utils.BITCOIN_ONLY:
 
         menu_items = [create_details(TR.address__title_provider_address, recipient)]
         for r_address, r_account, r_account_path in refunds:
-            refund_account_info = [(str(""), r_address)]
+            refund_account_info: list[PropertyType] = [("", r_address, True)]
             if r_account:
-                refund_account_info.append((TR.words__account, r_account))
+                refund_account_info.append((TR.words__account, r_account, True))
             if r_account_path:
                 refund_account_info.append(
-                    (TR.address_details__derivation_path, r_account_path)
+                    (TR.address_details__derivation_path, r_account_path, True)
                 )
             menu_items.append(
                 create_details(
@@ -1807,7 +1809,7 @@ def tutorial(br_code: ButtonRequestType = BR_CODE_OTHER) -> Awaitable[None]:
     )
 
 
-def create_details(name: str, value: list[tuple[str, str]] | str) -> Details:
+def create_details(name: str, value: list[PropertyType] | str) -> Details:
     from trezor.ui.layouts.menu import Details
 
     return Details.from_layout(

@@ -1959,7 +1959,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def show_properties(
     ///     *,
     ///     title: str,
-    ///     value: list[tuple[str, str]] | str,
+    ///     value: list[tuple[str | None, str | bytes | None, bool | None]] | str,
     /// ) -> LayoutObj[None]:
     ///     """Show a list of key-value pairs, or a monospace string."""
     Qstr::MP_QSTR_show_properties => obj_fn_kw!(0, new_show_properties).as_obj(),

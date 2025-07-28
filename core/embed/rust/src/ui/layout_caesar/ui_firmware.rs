@@ -1273,7 +1273,7 @@ impl FirmwareUI for UICaesar {
             add_paragraphs(&mut paragraphs, None, Some(value.try_into()?), true);
         } else {
             for para in IterBuf::new().try_iterate(value)? {
-                let [key, value]: [Obj; 2] = util::iter_into_array(para)?;
+                let [key, value, _is_data]: [Obj; 3] = util::iter_into_array(para)?;
                 add_paragraphs(
                     &mut paragraphs,
                     key.try_into_option()?,
