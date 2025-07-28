@@ -1509,7 +1509,7 @@ impl FirmwareUI for UIEckhart {
                 Button::with_text(button),
             )
         } else if time_ms > 0 {
-            ActionBar::new_timeout(Button::with_text(button), time_ms)
+            ActionBar::new_timeout(Button::with_text(button), Duration::from_millis(time_ms))
         } else {
             ActionBar::new_single(Button::with_text(button))
         };

@@ -3,6 +3,7 @@ use heapless::Vec;
 use crate::{
     error::{self},
     strutil::TString,
+    time::Duration,
     translations::TR,
     ui::{
         component::{
@@ -30,7 +31,7 @@ const MENU_ITEM_CANCEL: usize = 0;
 const MENU_ITEM_EXTRA_INFO: usize = 1;
 const MENU_ITEM_ACCOUNT_INFO: usize = 2;
 
-const TIMEOUT_MS: u32 = 2000;
+const TIMEOUT: Duration = Duration::from_secs(2);
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ConfirmSummary {
@@ -220,7 +221,7 @@ pub fn new_confirm_summary(
     .with_header(Header::new(TR::words__title_done.into()).with_icon(theme::ICON_DONE, theme::GREY))
     .with_action_bar(ActionBar::new_timeout(
         Button::with_text(TR::instructions__continue_in_app.into()),
-        TIMEOUT_MS,
+        TIMEOUT,
     ))
     .with_page_limit(1)
     .map(|_| Some(FlowMsg::Confirmed));

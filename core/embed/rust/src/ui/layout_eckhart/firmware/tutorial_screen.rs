@@ -1,4 +1,5 @@
 use crate::{
+    time::Duration,
     translations::TR,
     ui::{
         component::{swipe_detect::SwipeConfig, Component, Event, EventCtx, Label},
@@ -18,7 +19,7 @@ use super::super::{
 };
 
 const LOADER_SPEED: u16 = 2;
-const ANIM_DURATION_MS: u32 = 3000;
+const ANIM_DURATION: Duration = Duration::from_secs(3);
 
 pub enum TutorialWelcomeScreenMsg {
     Confirmed,
@@ -43,7 +44,7 @@ impl TutorialWelcomeScreen {
             .top_aligned(),
             action_bar: ActionBar::new_timeout(
                 Button::with_text(TR::tutorial__tropic.into()),
-                ANIM_DURATION_MS,
+                ANIM_DURATION,
             ),
             value: 0,
             border: ScreenBorder::new(theme::GREEN_LIME),
