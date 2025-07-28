@@ -209,10 +209,17 @@ def test_interrupt_backup_fails(session: Session):
     assert session.features.no_backup is False
 
     # start backup
-    session.call_raw(messages.BackupDevice())
+    resp = session.call_raw(messages.BackupDevice())
+    assert isinstance(resp, messages.ButtonRequest)
 
-    # interupt backup by sending initialize
-    session = session.client.get_session()
+    if session.protocol_version is ProtocolVersion.V1:
+        # interupt backup by sending initialize
+        session = session.client.get_session()
+    else:
+        # interrupt backup by sending cancel
+        session.cancel()
+        resp = session._read()
+        assert isinstance(resp, messages.Failure)
 
     # check that device state is as expected
     assert session.features.initialized is True
@@ -226,6 +233,3 @@ def test_interrupt_backup_fails(session: Session):
     # Second attempt at backup should fail
     with pytest.raises(TrezorFailure, match=r".*Seed already backed up"):
         device.backup(session)
-
-    if session.protocol_version is ProtocolVersion.V2:
-        session.call(messages.GetFeatures())
