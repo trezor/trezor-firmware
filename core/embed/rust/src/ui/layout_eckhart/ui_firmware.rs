@@ -1388,7 +1388,7 @@ impl FirmwareUI for UIEckhart {
             unwrap!(vec.push(Paragraph::new(&theme::TEXT_MONO_ADDRESS_CHUNKS, text)));
         } else {
             for property in IterBuf::new().try_iterate(value)? {
-                let [header, text]: [Obj; 2] = util::iter_into_array(property)?;
+                let [header, text, _is_data]: [Obj; 3] = util::iter_into_array(property)?;
                 let header = header
                     .try_into_option::<TString>()?
                     .unwrap_or_else(TString::empty);

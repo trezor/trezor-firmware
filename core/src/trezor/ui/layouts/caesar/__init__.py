@@ -1081,11 +1081,13 @@ if not utils.BITCOIN_ONLY:
             external_menu=True,
         )
 
-        account_items: list[tuple[str, str]] = [("", address)]
+        account_items: list[PropertyType] = [("", address, True)]
         if account:
-            account_items.append((TR.words__account, account))
+            account_items.append((TR.words__account, account, True))
         if account_path:
-            account_items.append((TR.address_details__derivation_path, account_path))
+            account_items.append(
+                (TR.address_details__derivation_path, account_path, True)
+            )
         menu = Menu.root(
             [
                 create_details(
@@ -1137,12 +1139,12 @@ if not utils.BITCOIN_ONLY:
 
         menu_items = [create_details(TR.address__title_provider_address, recipient)]
         for r_address, r_account, r_account_path in refunds:
-            refund_account_items: list[tuple[str, str]] = [("", r_address)]
+            refund_account_items: list[PropertyType] = [("", r_address, True)]
             if r_account:
-                refund_account_items.append((TR.words__account, r_account))
+                refund_account_items.append((TR.words__account, r_account, True))
             if r_account_path:
                 refund_account_items.append(
-                    (TR.address_details__derivation_path, r_account_path)
+                    (TR.address_details__derivation_path, r_account_path, True)
                 )
             menu_items.append(
                 create_details(
@@ -1165,12 +1167,14 @@ if not utils.BITCOIN_ONLY:
                 token_address,
             )
 
-        account_items = []
+        account_items: list[PropertyType] = []
         if account:
-            account_items.append((TR.words__account, account))
+            account_items.append((TR.words__account, account, True))
         if account_path:
-            account_items.append((TR.address_details__derivation_path, account_path))
-        account_items.append((TR.ethereum__approve_chain_id, chain_id))
+            account_items.append(
+                (TR.address_details__derivation_path, account_path, True)
+            )
+        account_items.append((TR.ethereum__approve_chain_id, chain_id, True))
 
         summary_layout = trezorui_api.confirm_summary(
             amount=None,
@@ -1180,13 +1184,10 @@ if not utils.BITCOIN_ONLY:
             title=TR.words__title_summary,
             external_menu=True,
         )
-        value: list[tuple[str, str]] | str = (
-            [(str(k), str(v)) for k, v, _ in fee_info_items] if fee_info_items else ""
-        )
         summary_menu_items = [
             create_details(
                 TR.confirm_total__title_fee,
-                value,
+                list(fee_info_items) if fee_info_items else "",
             ),
             create_details(TR.address_details__account_info, account_items),
         ]
@@ -1355,9 +1356,9 @@ if not utils.BITCOIN_ONLY:
             fee_label=str(fee_label),
             external_menu=True,
         )
-        account_details = [
-            (f"{TR.words__account}:", account),
-            (TR.address_details__derivation_path_colon, account_path),
+        account_details: list[PropertyType] = [
+            (f"{TR.words__account}:", account, True),
+            (TR.address_details__derivation_path_colon, account_path, True),
         ]
         iter = [
             (TR.confirm_total__title_fee, fee_details),
@@ -1844,7 +1845,7 @@ def confirm_firmware_update(description: str, fingerprint: str) -> Awaitable[Non
     )
 
 
-def create_details(name: str, value: list[tuple[str, str]] | str) -> Details:
+def create_details(name: str, value: list[PropertyType] | str) -> Details:
     from trezor.ui.layouts.menu import Details
 
     return Details.from_layout(
