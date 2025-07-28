@@ -32,7 +32,6 @@ class UnexpectedMagicError(RuntimeError):
 
 
 class ProtocolV1Channel(Channel):
-    _DEFAULT_READ_TIMEOUT: t.ClassVar[float | None] = None
     HEADER_LEN: t.ClassVar[int] = struct.calcsize(">HL")
     _features: messages.Features | None = None
 
