@@ -834,7 +834,7 @@ async def confirm_value(
     verb_cancel: str | None = None,
     hold: bool = False,
     is_data: bool = True,
-    info_items: Iterable[tuple[str, str]] | None = None,
+    info_items: Iterable[PropertyType] | None = None,
     chunkify: bool = False,
     chunkify_info: bool = False,
     cancel: bool = False,
@@ -886,8 +886,8 @@ async def confirm_value(
         )
 
     menu = Menu.root(
-        Details.from_layout(name, item_factory(name, value))
-        for name, value in info_items
+        Details.from_layout(str(name), item_factory(str(name), str(value)))
+        for name, value, _is_data in info_items
     )
     await confirm_with_menu(main, menu, br_name, br_code)
 
@@ -1213,6 +1213,7 @@ if not utils.BITCOIN_ONLY:
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
         # intro
+        items: list[PropertyType] = [(address_title, address, True)]
         await confirm_value(
             title,
             intro_question,
@@ -1220,7 +1221,7 @@ if not utils.BITCOIN_ONLY:
             br_name,
             br_code,
             verb=verb,
-            info_items=((address_title, address),),
+            info_items=items,
             chunkify_info=chunkify,
         )
 
@@ -1258,7 +1259,7 @@ if not utils.BITCOIN_ONLY:
     def confirm_solana_recipient(
         recipient: str,
         title: str,
-        items: Iterable[tuple[str, str]] = (),
+        items: Iterable[PropertyType] = (),
         br_name: str = "confirm_solana_recipient",
         br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     ) -> Awaitable[None]:
@@ -1275,7 +1276,7 @@ if not utils.BITCOIN_ONLY:
     def confirm_solana_tx(
         amount: str,
         fee: str,
-        items: Iterable[tuple[str, str]],
+        items: Iterable[PropertyType],
         amount_title: str | None = None,
         fee_title: str | None = None,
         br_name: str = "confirm_solana_tx",
@@ -1285,16 +1286,13 @@ if not utils.BITCOIN_ONLY:
             amount_title if amount_title is not None else f"{TR.words__amount}:"
         )  # def_arg
         fee_title = fee_title or TR.words__fee  # def_arg
-        extra_items: list[PropertyType] | None = (
-            [(k, v, True) for (k, v) in items] if items else None
-        )
         return raise_if_cancelled(
             trezorui_api.confirm_summary(
                 amount=amount,
                 amount_label=amount_title,
                 fee=fee,
                 fee_label=fee_title,
-                extra_items=extra_items,  # TODO: extra_title here?
+                extra_items=list(items) if items else None,  # TODO: extra_title here?
                 extra_title=TR.words__title_information,
             ),
             br_name=br_name,
@@ -1307,26 +1305,26 @@ if not utils.BITCOIN_ONLY:
         account: str,
         account_path: str,
         vote_account: str,
-        stake_item: tuple[str, str] | None,
-        amount_item: tuple[str, str] | None,
-        fee_item: tuple[str, str],
-        fee_details: list[tuple[str, str]],
-        blockhash_item: tuple[str, str],
+        stake_item: PropertyType | None,
+        amount_item: PropertyType | None,
+        fee_item: PropertyType,
+        fee_details: list[PropertyType],
+        blockhash_item: PropertyType,
         br_name: str = "confirm_solana_staking_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
         from trezor.ui.layouts.menu import Menu, confirm_with_menu
 
         if not amount_item:
-            amount_label, amount = fee_item
+            amount_label, amount, _is_data = fee_item
             amount_label = f"\n\n{amount_label}"
             fee_label = ""
             fee = ""
         else:
-            amount_label, amount = amount_item
-            fee_label, fee = fee_item
+            amount_label, amount, _is_data = amount_item
+            fee_label, fee, _is_data = fee_item
 
-        items = []
+        items: list[PropertyType] = []
         if stake_item is not None:
             items.append(stake_item)
         items.append(blockhash_item)
@@ -1345,25 +1343,27 @@ if not utils.BITCOIN_ONLY:
             fee_label="",
             external_menu=True,
         )
-        menu = Menu.root(create_details(name, value) for name, value in items)
+        menu = Menu.root(
+            create_details(str(name), str(value)) for name, value, _is_data in items
+        )
         await confirm_with_menu(main, menu, br_name, br_code)
 
         main = trezorui_api.confirm_summary(
-            amount=amount,
+            amount=str(amount),
             amount_label=amount_label,
-            fee=fee,
-            fee_label=fee_label,
+            fee=str(fee),
+            fee_label=str(fee_label),
             external_menu=True,
         )
         account_details = [
             (f"{TR.words__account}:", account),
             (TR.address_details__derivation_path_colon, account_path),
         ]
-        items = [
+        iter = [
             (TR.confirm_total__title_fee, fee_details),
             (TR.address_details__account_info, account_details),
         ]
-        menu = Menu.root(create_details(name, value) for name, value in items)
+        menu = Menu.root(create_details(str(name), props) for name, props in iter)
         await confirm_with_menu(main, menu, br_name, br_code)
 
     def confirm_cardano_tx(

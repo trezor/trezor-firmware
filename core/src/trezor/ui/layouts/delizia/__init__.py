@@ -732,7 +732,7 @@ def confirm_value(
     hold: bool = False,
     is_data: bool = True,
     chunkify: bool = False,
-    info_items: Iterable[tuple[str, str]] | None = None,
+    info_items: Iterable[PropertyType] | None = None,
     cancel: bool = False,
 ) -> Awaitable[ui.UiResult]:
     """General confirmation dialog, used by many other confirm_* functions."""
@@ -755,7 +755,7 @@ def confirm_value(
 
     info_items = info_items or []
     menu = Menu.root(
-        (create_details(name, value) for name, value in info_items),
+        (create_details(str(name), str(value)) for name, value, _is_data in info_items),
         cancel=TR.buttons__cancel,
     )
     return interact_with_menu(main, menu, br_name, br_code)
@@ -1242,7 +1242,7 @@ if not utils.BITCOIN_ONLY:
     def confirm_solana_recipient(
         recipient: str,
         title: str,
-        items: Iterable[tuple[str, str]] = (),
+        items: Iterable[PropertyType] = (),
         br_name: str = "confirm_solana_recipient",
         br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     ) -> Awaitable[ui.UiResult]:
@@ -1259,7 +1259,7 @@ if not utils.BITCOIN_ONLY:
     def confirm_solana_tx(
         amount: str,
         fee: str,
-        items: Iterable[tuple[str, str]],
+        items: Iterable[PropertyType],
         amount_title: str | None = None,
         fee_title: str | None = None,
         br_name: str = "confirm_solana_tx",
@@ -1269,16 +1269,13 @@ if not utils.BITCOIN_ONLY:
             amount_title if amount_title is not None else f"{TR.words__amount}:"
         )  # def_arg
         fee_title = fee_title or TR.words__fee  # def_arg
-        extra_items: list[PropertyType] | None = (
-            [(k, v, True) for k, v in items] if items else None
-        )
         return _confirm_summary(
             amount,
             amount_title,
             fee,
             fee_title,
             extra_title=TR.confirm_total__title_fee,
-            extra_items=extra_items,
+            extra_items=list(items) if items else None,
             br_name=br_name,
             br_code=br_code,
         )
@@ -1289,17 +1286,14 @@ if not utils.BITCOIN_ONLY:
         account: str,
         account_path: str,
         vote_account: str,
-        stake_item: tuple[str, str] | None,
-        amount_item: tuple[str, str] | None,
-        fee_item: tuple[str, str],
-        fee_details: Iterable[tuple[str, str]],
-        blockhash_item: tuple[str, str],
+        stake_item: PropertyType | None,
+        amount_item: PropertyType | None,
+        fee_item: PropertyType,
+        fee_details: Iterable[PropertyType],
+        blockhash_item: PropertyType,
         br_name: str = "confirm_solana_staking_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
-        fee_items: list[PropertyType] | None = (
-            [(k, v, True) for k, v in fee_details] if fee_details else None
-        )
         await raise_if_cancelled(
             trezorui_api.flow_confirm_output(
                 title=title,
@@ -1317,15 +1311,15 @@ if not utils.BITCOIN_ONLY:
                 br_name=br_name,
                 address_item=stake_item,
                 extra_item=blockhash_item,
-                fee_items=fee_items,
+                fee_items=list(fee_details) if fee_details else None,
                 summary_title=title,
                 summary_items=(
                     [
-                        (amount_item[0], amount_item[1], True),
-                        (fee_item[0], fee_item[1], True),
+                        amount_item,
+                        fee_item,
                     ]
                     if amount_item
-                    else [(fee_item[0], fee_item[1], True)]
+                    else [fee_item]
                 ),
                 summary_br_name="confirm_total",
                 summary_br_code=ButtonRequestType.SignTx,
