@@ -17,7 +17,7 @@ See [device-tests.md](device-tests.md) for instructions how to run it.
 
 ### UI tests
 
-UI tests use device tests and take screenshots of every screen change and compare  them against fixtures. Currently for model T only.
+UI tests use device tests and take screenshots of every screen change and compare them against fixtures.
 
 See [ui-tests.md](ui-tests.md) for more info.
 
