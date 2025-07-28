@@ -258,7 +258,7 @@ void prodtest_show_homescreen(void) {
   memset(&g_layout, 0, sizeof(g_layout));
   g_layout.set = true;
 
-  char device_id[FLASH_OTP_BLOCK_SIZE] = {0};
+  static char device_id[FLASH_OTP_BLOCK_SIZE] = {0};
 
   if (sectrue == flash_otp_read(FLASH_OTP_BLOCK_DEVICE_ID, 0,
                                 (uint8_t *)device_id, sizeof(device_id)) &&
