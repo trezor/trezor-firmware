@@ -55,9 +55,9 @@ class Session:
             else:
                 return resp
 
-    def call_raw(self, msg: t.Any) -> t.Any:
+    def call_raw(self, msg: t.Any, timeout: float | None = None) -> t.Any:
         self._write(msg)
-        return self._read()
+        return self._read(timeout)
 
     def _callback_pin(self, msg: messages.PinMatrixRequest) -> MessageType:
         if self.client.pin_callback is None:
@@ -95,7 +95,7 @@ class Session:
     def _write(self, msg: t.Any) -> None:
         raise NotImplementedError
 
-    def _read(self) -> t.Any:
+    def _read(self, timeout: float | None = None) -> t.Any:
         raise NotImplementedError
 
     def refresh_features(self) -> messages.Features:
@@ -110,7 +110,12 @@ class Session:
     def cancel(self) -> None:
         self._write(messages.Cancel())
 
-    def ping(self, message: str, button_protection: bool | None = None) -> str:
+    def ping(
+        self,
+        message: str,
+        button_protection: bool | None = None,
+        timeout: float | None = None,
+    ) -> str:
         # We would like ping to work on any valid TrezorClient instance, but
         # due to the protection modes, we need to go through self.call, and that will
         # raise an exception if the firmware is too old.
@@ -196,11 +201,11 @@ class SessionV1(Session):
             self.client._last_active_session = self
             self.resume()
 
-    def _read(self) -> t.Any:
+    def _read(self, timeout: float | None = None) -> t.Any:
         assert self.client._last_active_session is self
         if t.TYPE_CHECKING:
             assert isinstance(self.client.protocol, ProtocolV1Channel)
-        resp = self.client.protocol.read()
+        resp = self.client.protocol.read(timeout)
 
         from ..debuglink import TrezorClientDebugLink
 
@@ -289,10 +294,10 @@ class SessionV2(Session):
         LOG.debug("writing message %s", type(msg))
         self.channel.write(self.sid, msg)
 
-    def _read(self) -> t.Any:
+    def _read(self, timeout: float | None = None) -> t.Any:
         from ..debuglink import TrezorClientDebugLink
 
-        msg = self.channel.read(self.sid)
+        msg = self.channel.read(self.sid, timeout)
         LOG.debug("reading message %s", type(msg))
         if isinstance(self.client, TrezorClientDebugLink):
             self.client.notify_read(msg)

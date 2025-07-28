@@ -30,7 +30,7 @@ from _pytest.python import IdMaker
 from _pytest.reports import TestReport
 
 from trezorlib import debuglink, exceptions, log, messages, models
-from trezorlib.client import ProtocolVersion
+from trezorlib.client import Channel, ProtocolVersion
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.device import apply_settings
 from trezorlib.device import wipe as wipe_device
@@ -155,7 +155,7 @@ def _get_raw_client(request: pytest.FixtureRequest) -> Client:
         interact = os.environ.get("INTERACT") == "1"
         if not interact:
             # prevent tests from getting stuck in case there is an USB packet loss
-            ProtocolV1Channel._DEFAULT_READ_TIMEOUT = 50.0
+            Channel._DEFAULT_READ_TIMEOUT = 50.0
 
         path = os.environ.get("TREZOR_PATH")
         if path:
