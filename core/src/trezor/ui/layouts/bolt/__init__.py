@@ -766,7 +766,7 @@ def confirm_value(
     subtitle: str | None = None,
     hold: bool = False,
     is_data: bool = True,
-    info_items: Iterable[tuple[str, str]] | None = None,
+    info_items: Iterable[PropertyType] | None = None,
     info_title: str | None = None,
     chunkify: bool = False,
     chunkify_info: bool = False,
@@ -777,12 +777,9 @@ def confirm_value(
     if description and value:
         description += ":"
 
-    items: list[PropertyType] = (
-        [(k, v, True) for k, v in info_items] if info_items is not None else []
-    )
     info_layout = trezorui_api.show_info_with_cancel(
         title=info_title if info_title else TR.words__title_information,
-        items=items,
+        items=list(info_items) if info_items else [],
         chunkify=chunkify_info,
     )
 
@@ -1116,7 +1113,7 @@ if not utils.BITCOIN_ONLY:
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
         # intro
-
+        items: list[PropertyType] = [("", address, True)]
         await confirm_value(
             title,
             intro_question,
@@ -1125,7 +1122,7 @@ if not utils.BITCOIN_ONLY:
             br_code,
             verb=verb,
             is_data=False,
-            info_items=(("", address),),
+            info_items=items,
             info_title=address_title,
             chunkify_info=chunkify,
         )
@@ -1165,7 +1162,7 @@ if not utils.BITCOIN_ONLY:
     def confirm_solana_recipient(
         recipient: str,
         title: str,
-        items: Iterable[tuple[str, str]] = (),
+        items: Iterable[PropertyType] = (),
         br_name: str = "confirm_solana_recipient",
         br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     ) -> Awaitable[None]:
@@ -1182,7 +1179,7 @@ if not utils.BITCOIN_ONLY:
     def confirm_solana_tx(
         amount: str,
         fee: str,
-        items: Iterable[tuple[str, str]],
+        items: Iterable[PropertyType],
         amount_title: str | None = None,
         fee_title: str | None = None,
         br_name: str = "confirm_solana_tx",
@@ -1193,15 +1190,12 @@ if not utils.BITCOIN_ONLY:
         )  # def_arg
         fee_title = fee_title or TR.words__fee  # def_arg
         info_title = TR.confirm_total__title_fee
-        extra_items: list[PropertyType] | None = (
-            [(k, v, True) for (k, v) in items] if items else None
-        )
         return _confirm_summary(
             amount,
             amount_title,
             fee,
             fee_title,
-            extra_items=extra_items,
+            extra_items=list(items) if items else None,
             extra_title=info_title,
             br_name=br_name,
             br_code=br_code,
@@ -1213,16 +1207,16 @@ if not utils.BITCOIN_ONLY:
         account: str,
         account_path: str,
         vote_account: str,
-        stake_item: tuple[str, str] | None,
-        amount_item: tuple[str, str] | None,
-        fee_item: tuple[str, str],
-        fee_details: Iterable[tuple[str, str]],
-        blockhash_item: tuple[str, str],
+        stake_item: PropertyType | None,
+        amount_item: PropertyType | None,
+        fee_item: PropertyType,
+        fee_details: Iterable[PropertyType],
+        blockhash_item: PropertyType,
         br_name: str = "confirm_solana_staking_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
-        (amount_label, amount) = amount_item or ("", "")
-        (fee_label, fee) = fee_item
+        (amount_label, amount, _is_data) = amount_item or ("", "", False)
+        (fee_label, fee, _is_data) = fee_item
 
         confirm_layout = trezorui_api.confirm_value(
             title=title,
@@ -1255,18 +1249,15 @@ if not utils.BITCOIN_ONLY:
 
         await with_info(confirm_layout, info_layout, br_name, br_code)
 
-        extra_items: list[PropertyType] | None = (
-            [(k, v, True) for (k, v) in fee_details] if fee_details else None
-        )
         await _confirm_summary(
-            amount=amount,
+            amount=str(amount),
             amount_label=amount_label,
-            fee=fee,
-            fee_label=fee_label,
+            fee=str(fee),
+            fee_label=str(fee_label),
             account_items=None,
             title=title,
             extra_title=TR.confirm_total__title_fee,
-            extra_items=extra_items,
+            extra_items=fee_details,
             br_name=br_name,
             br_code=br_code,
         )
