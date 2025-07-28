@@ -511,6 +511,18 @@ pub enum MessageType {
     MessageType_ThpCredentialRequest = 1016,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ThpCredentialResponse)
     MessageType_ThpCredentialResponse = 1017,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_CosmosGetAddress)
+    MessageType_CosmosGetAddress = 1100,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_CosmosAddress)
+    MessageType_CosmosAddress = 1101,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_CosmosGetPublicKey)
+    MessageType_CosmosGetPublicKey = 1102,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_CosmosPublicKey)
+    MessageType_CosmosPublicKey = 1103,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_CosmosSignTx)
+    MessageType_CosmosSignTx = 1104,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_CosmosSignedTx)
+    MessageType_CosmosSignedTx = 1105,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_NostrGetPubkey)
     MessageType_NostrGetPubkey = 2001,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_NostrPubkey)
@@ -780,6 +792,12 @@ impl ::protobuf::Enum for MessageType {
             1000 => ::std::option::Option::Some(MessageType::MessageType_ThpCreateNewSession),
             1016 => ::std::option::Option::Some(MessageType::MessageType_ThpCredentialRequest),
             1017 => ::std::option::Option::Some(MessageType::MessageType_ThpCredentialResponse),
+            1100 => ::std::option::Option::Some(MessageType::MessageType_CosmosGetAddress),
+            1101 => ::std::option::Option::Some(MessageType::MessageType_CosmosAddress),
+            1102 => ::std::option::Option::Some(MessageType::MessageType_CosmosGetPublicKey),
+            1103 => ::std::option::Option::Some(MessageType::MessageType_CosmosPublicKey),
+            1104 => ::std::option::Option::Some(MessageType::MessageType_CosmosSignTx),
+            1105 => ::std::option::Option::Some(MessageType::MessageType_CosmosSignedTx),
             2001 => ::std::option::Option::Some(MessageType::MessageType_NostrGetPubkey),
             2002 => ::std::option::Option::Some(MessageType::MessageType_NostrPubkey),
             2003 => ::std::option::Option::Some(MessageType::MessageType_NostrSignEvent),
@@ -1036,6 +1054,12 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_ThpCreateNewSession" => ::std::option::Option::Some(MessageType::MessageType_ThpCreateNewSession),
             "MessageType_ThpCredentialRequest" => ::std::option::Option::Some(MessageType::MessageType_ThpCredentialRequest),
             "MessageType_ThpCredentialResponse" => ::std::option::Option::Some(MessageType::MessageType_ThpCredentialResponse),
+            "MessageType_CosmosGetAddress" => ::std::option::Option::Some(MessageType::MessageType_CosmosGetAddress),
+            "MessageType_CosmosAddress" => ::std::option::Option::Some(MessageType::MessageType_CosmosAddress),
+            "MessageType_CosmosGetPublicKey" => ::std::option::Option::Some(MessageType::MessageType_CosmosGetPublicKey),
+            "MessageType_CosmosPublicKey" => ::std::option::Option::Some(MessageType::MessageType_CosmosPublicKey),
+            "MessageType_CosmosSignTx" => ::std::option::Option::Some(MessageType::MessageType_CosmosSignTx),
+            "MessageType_CosmosSignedTx" => ::std::option::Option::Some(MessageType::MessageType_CosmosSignedTx),
             "MessageType_NostrGetPubkey" => ::std::option::Option::Some(MessageType::MessageType_NostrGetPubkey),
             "MessageType_NostrPubkey" => ::std::option::Option::Some(MessageType::MessageType_NostrPubkey),
             "MessageType_NostrSignEvent" => ::std::option::Option::Some(MessageType::MessageType_NostrSignEvent),
@@ -1291,6 +1315,12 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_ThpCreateNewSession,
         MessageType::MessageType_ThpCredentialRequest,
         MessageType::MessageType_ThpCredentialResponse,
+        MessageType::MessageType_CosmosGetAddress,
+        MessageType::MessageType_CosmosAddress,
+        MessageType::MessageType_CosmosGetPublicKey,
+        MessageType::MessageType_CosmosPublicKey,
+        MessageType::MessageType_CosmosSignTx,
+        MessageType::MessageType_CosmosSignedTx,
         MessageType::MessageType_NostrGetPubkey,
         MessageType::MessageType_NostrPubkey,
         MessageType::MessageType_NostrSignEvent,
@@ -1552,14 +1582,20 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_ThpCreateNewSession => 239,
             MessageType::MessageType_ThpCredentialRequest => 240,
             MessageType::MessageType_ThpCredentialResponse => 241,
-            MessageType::MessageType_NostrGetPubkey => 242,
-            MessageType::MessageType_NostrPubkey => 243,
-            MessageType::MessageType_NostrSignEvent => 244,
-            MessageType::MessageType_NostrEventSignature => 245,
-            MessageType::MessageType_BenchmarkListNames => 246,
-            MessageType::MessageType_BenchmarkNames => 247,
-            MessageType::MessageType_BenchmarkRun => 248,
-            MessageType::MessageType_BenchmarkResult => 249,
+            MessageType::MessageType_CosmosGetAddress => 242,
+            MessageType::MessageType_CosmosAddress => 243,
+            MessageType::MessageType_CosmosGetPublicKey => 244,
+            MessageType::MessageType_CosmosPublicKey => 245,
+            MessageType::MessageType_CosmosSignTx => 246,
+            MessageType::MessageType_CosmosSignedTx => 247,
+            MessageType::MessageType_NostrGetPubkey => 248,
+            MessageType::MessageType_NostrPubkey => 249,
+            MessageType::MessageType_NostrSignEvent => 250,
+            MessageType::MessageType_NostrEventSignature => 251,
+            MessageType::MessageType_BenchmarkListNames => 252,
+            MessageType::MessageType_BenchmarkNames => 253,
+            MessageType::MessageType_BenchmarkRun => 254,
+            MessageType::MessageType_BenchmarkResult => 255,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1578,7 +1614,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xfeV\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xecX\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\x80\xa6\
     \x1d\x01\xb0\xb5\x18\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -1854,20 +1890,26 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     ype_SolanaTxSignature\x10\x89\x07\x1a\x04\x98\xb5\x18\x01\x12$\n\x1fMess\
     ageType_ThpCreateNewSession\x10\xe8\x07\x12%\n\x20MessageType_ThpCredent\
     ialRequest\x10\xf8\x07\x12&\n!MessageType_ThpCredentialResponse\x10\xf9\
-    \x07\x12%\n\x1aMessageType_NostrGetPubkey\x10\xd1\x0f\x1a\x04\x90\xb5\
-    \x18\x01\x12\"\n\x17MessageType_NostrPubkey\x10\xd2\x0f\x1a\x04\x98\xb5\
-    \x18\x01\x12%\n\x1aMessageType_NostrSignEvent\x10\xd3\x0f\x1a\x04\x90\
-    \xb5\x18\x01\x12*\n\x1fMessageType_NostrEventSignature\x10\xd4\x0f\x1a\
-    \x04\x98\xb5\x18\x01\x12)\n\x1eMessageType_BenchmarkListNames\x10\x8cG\
-    \x1a\x04\x80\xa6\x1d\x01\x12%\n\x1aMessageType_BenchmarkNames\x10\x8dG\
-    \x1a\x04\x80\xa6\x1d\x01\x12#\n\x18MessageType_BenchmarkRun\x10\x8eG\x1a\
-    \x04\x80\xa6\x1d\x01\x12&\n\x1bMessageType_BenchmarkResult\x10\x8fG\x1a\
-    \x04\x80\xa6\x1d\x01\x1a\x08\xc8\xf3\x18\x01\xd0\xf3\x18\x01\"\x04\x08Z\
-    \x10\\\"\x04\x08G\x10J\"\x04\x08r\x10z\"\x06\x08\xdb\x01\x10\xdb\x01\"\
-    \x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\x06\x08\xb5\
-    \x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\xe9\x07\x10\xf7\
-    \x07\"\x06\x08\xfa\x07\x10\xcb\x08B8\n#com.satoshilabs.trezor.lib.protob\
-    ufB\rTrezorMessage\x80\xa6\x1d\x01\
+    \x07\x12'\n\x1cMessageType_CosmosGetAddress\x10\xcc\x08\x1a\x04\x90\xb5\
+    \x18\x01\x12$\n\x19MessageType_CosmosAddress\x10\xcd\x08\x1a\x04\x98\xb5\
+    \x18\x01\x12)\n\x1eMessageType_CosmosGetPublicKey\x10\xce\x08\x1a\x04\
+    \x90\xb5\x18\x01\x12&\n\x1bMessageType_CosmosPublicKey\x10\xcf\x08\x1a\
+    \x04\x98\xb5\x18\x01\x12#\n\x18MessageType_CosmosSignTx\x10\xd0\x08\x1a\
+    \x04\x90\xb5\x18\x01\x12%\n\x1aMessageType_CosmosSignedTx\x10\xd1\x08\
+    \x1a\x04\x98\xb5\x18\x01\x12%\n\x1aMessageType_NostrGetPubkey\x10\xd1\
+    \x0f\x1a\x04\x90\xb5\x18\x01\x12\"\n\x17MessageType_NostrPubkey\x10\xd2\
+    \x0f\x1a\x04\x98\xb5\x18\x01\x12%\n\x1aMessageType_NostrSignEvent\x10\
+    \xd3\x0f\x1a\x04\x90\xb5\x18\x01\x12*\n\x1fMessageType_NostrEventSignatu\
+    re\x10\xd4\x0f\x1a\x04\x98\xb5\x18\x01\x12)\n\x1eMessageType_BenchmarkLi\
+    stNames\x10\x8cG\x1a\x04\x80\xa6\x1d\x01\x12%\n\x1aMessageType_Benchmark\
+    Names\x10\x8dG\x1a\x04\x80\xa6\x1d\x01\x12#\n\x18MessageType_BenchmarkRu\
+    n\x10\x8eG\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bMessageType_BenchmarkResult\
+    \x10\x8fG\x1a\x04\x80\xa6\x1d\x01\x1a\x08\xc8\xf3\x18\x01\xd0\xf3\x18\
+    \x01\"\x04\x08Z\x10\\\"\x04\x08G\x10J\"\x04\x08r\x10z\"\x06\x08\xdb\x01\
+    \x10\xdb\x01\"\x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xac\x02\x10\xb0\x02\
+    \"\x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\
+    \xe9\x07\x10\xf7\x07\"\x06\x08\xfa\x07\x10\xcb\x08B8\n#com.satoshilabs.t\
+    rezor.lib.protobufB\rTrezorMessage\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

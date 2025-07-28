@@ -171,6 +171,9 @@ if TYPE_CHECKING:
         BYRON_WITNESS = 0
         SHELLEY_WITNESS = 1
 
+    class CosmosSignMode(IntEnum):
+        SIGN_MODE_DIRECT = 1
+
     class BackupType(IntEnum):
         Bip39 = 0
         Slip39_Basic = 1
@@ -613,6 +616,12 @@ if TYPE_CHECKING:
         ThpCreateNewSession = 1000
         ThpCredentialRequest = 1016
         ThpCredentialResponse = 1017
+        CosmosGetAddress = 1100
+        CosmosAddress = 1101
+        CosmosGetPublicKey = 1102
+        CosmosPublicKey = 1103
+        CosmosSignTx = 1104
+        CosmosSignedTx = 1105
         NostrGetPubkey = 2001
         NostrPubkey = 2002
         NostrSignEvent = 2003
