@@ -54,6 +54,7 @@ static const uint8_t * const BOOTLOADER_KEYS[] = {
 #endif
 };
 
+#ifdef USE_SECMON_VERIFICATION
 const uint8_t SECMON_KEY_M = 2;
 const uint8_t SECMON_KEY_N = 3;
 static const uint8_t * const SECMON_KEYS[] = {
@@ -66,6 +67,7 @@ static const uint8_t * const SECMON_KEYS[] = {
     MODEL_SECMON_KEYS
 #endif
 };
+#endif
 
 static secbool compute_pubkey(uint8_t sig_m, uint8_t sig_n,
                               const uint8_t *const *pub, uint8_t sigmask,
@@ -172,6 +174,7 @@ secbool check_image_header_sig(const image_header *const hdr, uint8_t key_m,
                                  *(const ed25519_signature *)hdr->sig));
 }
 
+#ifdef USE_SECMON_VERIFICATION
 const secmon_header_t *read_secmon_header(const uint8_t *const data,
                                           const uint32_t maxsize) {
   const secmon_header_t *hdr = (const secmon_header_t *)data;
@@ -249,6 +252,7 @@ secbool check_secmon_contents(const secmon_header_t *const hdr,
 
   return sectrue;
 }
+#endif
 
 secbool __wur read_vendor_header(const uint8_t *const data,
                                  vendor_header *const vhdr) {
