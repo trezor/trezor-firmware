@@ -1,4 +1,21 @@
 
+## 0.3.0 [16th July 2025]
+
+### Added
+- [T3B1,T3T1] Added hw-revision command.  [#4682]
+- Added device ID write/read commands.  [#4735]
+- Added command for updating bootloader.  [#5227]
+
+### Changed
+- Show device ID in protest QR code.  [#4735]
+- Report build version in prodtest intro and version command.  [#5050]
+
+### Fixed
+- [T2B1,T3B1] Fix displaying QR code and text.  [#4564]
+
+### Incompatible changes
+- Completely redesigned. See the updated documentation for details.  [#4534]
+
 ## 0.2.12 [22th January 2025]
 
 ### Changed
@@ -102,3 +119,9 @@
 [#4313]: https://github.com/trezor/trezor-firmware/pull/4313
 [#4405]: https://github.com/trezor/trezor-firmware/pull/4405
 [#4407]: https://github.com/trezor/trezor-firmware/pull/4407
+[#4534]: https://github.com/trezor/trezor-firmware/pull/4534
+[#4564]: https://github.com/trezor/trezor-firmware/pull/4564
+[#4682]: https://github.com/trezor/trezor-firmware/pull/4682
+[#4735]: https://github.com/trezor/trezor-firmware/pull/4735
+[#5050]: https://github.com/trezor/trezor-firmware/pull/5050
+[#5227]: https://github.com/trezor/trezor-firmware/pull/5227
