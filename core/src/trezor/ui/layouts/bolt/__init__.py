@@ -1274,19 +1274,16 @@ if not utils.BITCOIN_ONLY:
     def confirm_cardano_tx(
         amount: str,
         fee: str,
-        items: Iterable[tuple[str, str]],
+        items: Iterable[PropertyType],
     ) -> Awaitable[None]:
         amount_title = f"{TR.send__total_amount}:"
         fee_title = TR.send__including_fee
-        extra_items: list[PropertyType] | None = (
-            [(k, v, True) for k, v in items] if items else None
-        )
         return _confirm_summary(
             amount,
             amount_title,
             fee,
             fee_title,
-            extra_items=extra_items,
+            extra_items=items,
             br_name="confirm_cardano_tx",
             br_code=ButtonRequestType.SignTx,
         )
