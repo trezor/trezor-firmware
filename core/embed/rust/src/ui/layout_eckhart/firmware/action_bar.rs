@@ -1,5 +1,6 @@
 use crate::{
     strutil::TString,
+    time::Duration,
     translations::TR,
     ui::{
         component::{Component, Event, EventCtx, Timeout},
@@ -83,7 +84,7 @@ impl ActionBar {
     }
 
     /// Create action bar with single button confirming the layout
-    pub fn new_timeout(button: Button, timeout_ms: u32) -> Self {
+    pub fn new_timeout(button: Button, timeout: Duration) -> Self {
         Self::new(
             Mode::Timeout,
             None,
@@ -91,7 +92,7 @@ impl ActionBar {
             Some(Timeout::new(if animation_disabled() {
                 0
             } else {
-                timeout_ms
+                timeout.to_millis()
             })),
         )
     }
