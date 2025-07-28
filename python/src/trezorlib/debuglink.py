@@ -1211,8 +1211,8 @@ class SessionDebugWrapper(Session):
             msg = self.client._filter_message(msg)
         self._session._write(msg)
 
-    def _read(self) -> t.Any:
-        msg = self._session._read()
+    def _read(self, timeout: float | None = None) -> t.Any:
+        msg = self._session._read(timeout)
         if isinstance(self.client, TrezorClientDebugLink):
             msg = self.client._filter_message(msg)
         return msg
