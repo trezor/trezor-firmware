@@ -44,7 +44,7 @@ def _get_current_git_branch() -> str:
     expose_value=False,
 )
 @click.option("-b", "--branch", help="Branch name")
-@click.option("-r", "--run-id", help="GitHub Actions run id", type=int)
+@click.option("--run-id", help="GitHub Actions run id", type=int)
 @click.option(
     "-o",
     "--only-jobs",
