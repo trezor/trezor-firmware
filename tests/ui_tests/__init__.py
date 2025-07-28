@@ -65,7 +65,8 @@ def screen_recording(
         # and stopping recording.
 
         # Instead of client.init_device() we create a new management session
-        client.get_seedless_session()
+        # `Ping` is sent to make sure the device is available.
+        client.get_seedless_session().ping("")
         client.debug.stop_recording()
 
     result = testcase.build_result(request)
