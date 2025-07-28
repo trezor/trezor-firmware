@@ -311,8 +311,8 @@ if TYPE_CHECKING:
         def __init__(
             self,
             *,
-            title: "str | None" = None,
-            text: "str | None" = None,
+            title: "str",
+            text: "str",
         ) -> None:
             pass
 

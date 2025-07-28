@@ -3221,7 +3221,7 @@ pub mod payment_request {
             ::std::default::Default::default()
         }
 
-        // optional string title = 1;
+        // required string title = 1;
 
         pub fn title(&self) -> &str {
             match self.title.as_ref() {
@@ -3257,7 +3257,7 @@ pub mod payment_request {
             self.title.take().unwrap_or_else(|| ::std::string::String::new())
         }
 
-        // optional string text = 2;
+        // required string text = 2;
 
         pub fn text(&self) -> &str {
             match self.text.as_ref() {
@@ -3318,6 +3318,12 @@ pub mod payment_request {
         const NAME: &'static str = "TextDetailsMemo";
 
         fn is_initialized(&self) -> bool {
+            if self.title.is_none() {
+                return false;
+            }
+            if self.text.is_none() {
+                return false;
+            }
             true
         }
 
@@ -4037,7 +4043,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     gerprint\x18\x02\x20\x02(\rR\x0bfingerprint\x12\x1b\n\tchild_num\x18\x03\
     \x20\x02(\rR\x08childNum\x12\x1d\n\nchain_code\x18\x04\x20\x02(\x0cR\tch\
     ainCode\x12\x1f\n\x0bprivate_key\x18\x05\x20\x01(\x0cR\nprivateKey\x12\
-    \x1d\n\npublic_key\x18\x06\x20\x02(\x0cR\tpublicKey\"\xb8\x07\n\x0ePayme\
+    \x1d\n\npublic_key\x18\x06\x20\x02(\x0cR\tpublicKey\"\xb4\x07\n\x0ePayme\
     ntRequest\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12%\n\x0ere\
     cipient_name\x18\x02\x20\x02(\tR\rrecipientName\x12R\n\x05memos\x18\x03\
     \x20\x03(\x0b2<.hw.trezor.messages.common.PaymentRequest.PaymentRequestM\
@@ -4050,17 +4056,17 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     or.messages.common.PaymentRequest.CoinPurchaseMemoR\x10coinPurchaseMemo\
     \x12e\n\x11text_details_memo\x18\x04\x20\x01(\x0b29.hw.trezor.messages.c\
     ommon.PaymentRequest.TextDetailsMemoR\x0ftextDetailsMemo\x1a\x1e\n\x08Te\
-    xtMemo\x12\x12\n\x04text\x18\x01\x20\x02(\tR\x04text\x1a?\n\x0fTextDetai\
-    lsMemo\x12\x16\n\x05title\x18\x01\x20\x01(\t:\0R\x05title\x12\x14\n\x04t\
-    ext\x18\x02\x20\x01(\t:\0R\x04text\x1aU\n\nRefundMemo\x12\x18\n\x07addre\
-    ss\x18\x01\x20\x02(\tR\x07address\x12\x1b\n\taddress_n\x18\x02\x20\x03(\
-    \rR\x08addressN\x12\x10\n\x03mac\x18\x03\x20\x02(\x0cR\x03mac\x1a\x90\
-    \x01\n\x10CoinPurchaseMemo\x12\x1b\n\tcoin_type\x18\x01\x20\x02(\rR\x08c\
-    oinType\x12\x16\n\x06amount\x18\x02\x20\x02(\tR\x06amount\x12\x18\n\x07a\
-    ddress\x18\x03\x20\x02(\tR\x07address\x12\x1b\n\taddress_n\x18\x04\x20\
-    \x03(\rR\x08addressN\x12\x10\n\x03mac\x18\x05\x20\x02(\x0cR\x03mac:\x04\
-    \x88\xb2\x19\x01B>\n#com.satoshilabs.trezor.lib.protobufB\x13TrezorMessa\
-    geCommon\x80\xa6\x1d\x01\
+    xtMemo\x12\x12\n\x04text\x18\x01\x20\x02(\tR\x04text\x1a;\n\x0fTextDetai\
+    lsMemo\x12\x14\n\x05title\x18\x01\x20\x02(\tR\x05title\x12\x12\n\x04text\
+    \x18\x02\x20\x02(\tR\x04text\x1aU\n\nRefundMemo\x12\x18\n\x07address\x18\
+    \x01\x20\x02(\tR\x07address\x12\x1b\n\taddress_n\x18\x02\x20\x03(\rR\x08\
+    addressN\x12\x10\n\x03mac\x18\x03\x20\x02(\x0cR\x03mac\x1a\x90\x01\n\x10\
+    CoinPurchaseMemo\x12\x1b\n\tcoin_type\x18\x01\x20\x02(\rR\x08coinType\
+    \x12\x16\n\x06amount\x18\x02\x20\x02(\tR\x06amount\x12\x18\n\x07address\
+    \x18\x03\x20\x02(\tR\x07address\x12\x1b\n\taddress_n\x18\x04\x20\x03(\rR\
+    \x08addressN\x12\x10\n\x03mac\x18\x05\x20\x02(\x0cR\x03mac:\x04\x88\xb2\
+    \x19\x01B>\n#com.satoshilabs.trezor.lib.protobufB\x13TrezorMessageCommon\
+    \x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
