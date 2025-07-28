@@ -59,7 +59,7 @@ impl<T: Component + Paginate> Component for SwipePage<T> {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        ctx.set_page_count(self.total_with_limit() as usize);
+        ctx.set_page_count(self.total_with_limit());
 
         if let Event::Swipe(SwipeEvent::End(direction)) = event {
             match (self.axis, direction) {

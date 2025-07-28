@@ -143,7 +143,7 @@ impl Component for GcBox<AddressDetails> {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        ctx.set_page_count(self.pager().total() as usize);
+        ctx.set_page_count(self.pager().total());
         match event {
             Event::Swipe(SwipeEvent::End(Direction::Right)) => {
                 let to_page = self.pager().prev();

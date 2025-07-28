@@ -328,7 +328,7 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        ctx.set_page_count(self.scrollbar.pager().total() as usize);
+        ctx.set_page_count(self.scrollbar.pager().total());
 
         match self.handle_swipe(ctx, event) {
             HandleResult::Return(r) => return Some(r),

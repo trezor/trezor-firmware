@@ -74,7 +74,7 @@ pub fn new_show_share_words_flow(
     let br: ButtonRequest = ButtonRequestCode::ResetDevice.with_name("share_words");
     // Determine whether to show the instructions or not
     let has_intro = instructions_paragraphs.is_some();
-    let nwords = words.len();
+    let nwords = words.len() as u16;
 
     let instruction = TextScreen::new(
         instructions_paragraphs

@@ -141,7 +141,7 @@ impl<'a> Component for ShareWords<'a> {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        ctx.set_page_count(self.share_words.len());
+        ctx.set_page_count(self.share_words.len() as u16);
 
         let (_, should_animate) = self.should_animate_attach(event);
 

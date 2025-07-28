@@ -84,7 +84,7 @@ pub fn new_show_share_words(
     text_confirm: TString<'static>,
     text_check: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
-    let nwords = share_words_vec.len();
+    let nwords = share_words_vec.len() as u16;
     let paragraphs_spacing = 8;
     let title = TR::reset__recovery_wallet_backup_title.into();
 
