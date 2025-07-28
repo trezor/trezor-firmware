@@ -41,6 +41,7 @@ if utils.USE_THP:
 # unused from python:
 # _BRIGHTNESS                = const(0x19)  # int
 _DISABLE_HAPTIC_FEEDBACK   = const(0x20)  # bool (0x01 or empty)
+_GIT_COMMIT_HASH           = const(0x21)  # bytes
 
 
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
@@ -393,3 +394,13 @@ def get_haptic_feedback() -> bool:
     Get haptic feedback enable, default to true if not set.
     """
     return not common.get_bool(_NAMESPACE, _DISABLE_HAPTIC_FEEDBACK, True)
+
+
+def set_git_commit_hash(git_commit_hash: bytes) -> None:
+    if len(git_commit_hash) != 32:
+        raise ValueError  # SHA-256 git commit hashes are required
+    common.set(_NAMESPACE, _GIT_COMMIT_HASH, git_commit_hash)
+
+
+def get_git_commit_hash() -> bytes | None:
+    return common.get(_NAMESPACE, _GIT_COMMIT_HASH)

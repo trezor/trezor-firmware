@@ -121,6 +121,12 @@ def _find_message_handler_module(msg_type: int) -> str:
             if msg_type == MessageType.NostrSignEvent:
                 return "apps.nostr.sign_event"
 
+            # git-based external storage
+            if msg_type == MessageType.GitCommitUpdate:
+                return "apps.misc.git_commit_update"
+            if msg_type == MessageType.GitVerify:
+                return "apps.misc.git_verify"
+
         if msg_type == MessageType.SetU2FCounter:
             return "apps.management.set_u2f_counter"
         if msg_type == MessageType.GetNextU2FCounter:
