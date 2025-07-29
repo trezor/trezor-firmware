@@ -7,6 +7,12 @@ import click
 import serial
 
 
+def exit_interactive_mode(ser):
+    ser.write(("." + "\r\n").encode())
+    time.sleep(0.1)
+    ser.reset_input_buffer()
+
+
 def send_cmd(ser, cmd, expect_ok=True):
     """Send a line, read response, and abort on non-OK."""
     ser.write((cmd + "\r\n").encode())
@@ -30,28 +36,30 @@ def upload_nrf(port, bin_path, chunk_size):
     total = len(data)
     click.echo(f"Read {total} bytes from {bin_path!r}")
 
-    # Open USB-VCP port
-    ser = serial.Serial(port, timeout=2)
-    time.sleep(0.1)
-    ser.reset_input_buffer()
-    ser.reset_output_buffer()
+    # Open USB-VCP port using context manager
+    with serial.Serial(port, timeout=2) as ser:
+        time.sleep(0.1)
+        ser.reset_input_buffer()
+        ser.reset_output_buffer()
 
-    # 1) Begin transfer
-    send_cmd(ser, "nrf-update begin")
+        exit_interactive_mode(ser)
 
-    # 2) Stream chunks
-    offset = 0
-    while offset < total:
-        chunk = data[offset : offset + chunk_size]
-        hexstr = chunk.hex()
-        send_cmd(ser, f"nrf-update chunk {hexstr}")
-        offset += len(chunk)
-        pct = offset * 100 // total
-        click.echo(f"  Uploaded {offset}/{total} bytes ({pct}%)")
+        # 1) Begin transfer
+        send_cmd(ser, "nrf-update begin")
 
-    # 3) Finish transfer
-    send_cmd(ser, "nrf-update end")
-    click.echo("nRF update complete.")
+        # 2) Stream chunks
+        offset = 0
+        while offset < total:
+            chunk = data[offset : offset + chunk_size]
+            hexstr = chunk.hex()
+            send_cmd(ser, f"nrf-update chunk {hexstr}")
+            offset += len(chunk)
+            pct = offset * 100 // total
+            click.echo(f"  Uploaded {offset}/{total} bytes ({pct}%)")
+
+        # 3) Finish transfer
+        send_cmd(ser, "nrf-update end")
+        click.echo("nRF update complete.")
 
 
 @click.command(context_settings={"help_option_names": ["-h", "--help"]})
