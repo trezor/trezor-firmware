@@ -16,6 +16,12 @@ def _compress(data: bytes) -> bytes:
     return compressor.compress(data) + compressor.flush()
 
 
+def exit_interactive_mode(ser):
+    ser.write(("." + "\r\n").encode())
+    time.sleep(0.1)
+    ser.reset_input_buffer()
+
+
 def send_cmd(ser, cmd, expect_ok=True):
     """Send a line, read response, and abort on CLI_ERROR."""
     ser.write((cmd + "\r\n").encode())
@@ -46,27 +52,29 @@ def upload_bootloader(port, bin_path, chunk_size):
     )
 
     # Open USB-VCP port
-    ser = serial.Serial(port, timeout=2)
-    time.sleep(0.1)
-    ser.reset_input_buffer()
-    ser.reset_output_buffer()
+    with serial.Serial(port, timeout=2) as ser:
+        time.sleep(0.1)
+        ser.reset_input_buffer()
+        ser.reset_output_buffer()
 
-    # 1) Begin transfer
-    send_cmd(ser, "bootloader-update begin")
+        exit_interactive_mode(ser)
 
-    # 2) Stream compressed chunks
-    offset = 0
-    while offset < comp_size:
-        chunk = comp_data[offset : offset + chunk_size]
-        hexstr = chunk.hex()
-        send_cmd(ser, f"bootloader-update chunk {hexstr}")
-        offset += len(chunk)
-        pct = offset * 100 // comp_size
-        click.echo(f"  Uploaded {offset}/{comp_size} bytes ({pct}%)")
+        # 1) Begin transfer
+        send_cmd(ser, "bootloader-update begin")
 
-    # 3) Finish transfer
-    send_cmd(ser, "bootloader-update end")
-    click.echo("Bootloader upload complete.")
+        # 2) Stream compressed chunks
+        offset = 0
+        while offset < comp_size:
+            chunk = comp_data[offset : offset + chunk_size]
+            hexstr = chunk.hex()
+            send_cmd(ser, f"bootloader-update chunk {hexstr}")
+            offset += len(chunk)
+            pct = offset * 100 // comp_size
+            click.echo(f"  Uploaded {offset}/{comp_size} bytes ({pct}%)")
+
+        # 3) Finish transfer
+        send_cmd(ser, "bootloader-update end")
+        click.echo("Bootloader upload complete.")
 
 
 @click.command(context_settings={"help_option_names": ["-h", "--help"]})
