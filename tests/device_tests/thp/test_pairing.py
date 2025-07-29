@@ -154,6 +154,7 @@ def test_pairing_code_entry(client: Client) -> None:
 
 
 def test_pairing_code_entry_cancel(client: Client) -> None:
+    client = client.get_new_client()
     protocol = prepare_protocol_for_pairing(client)
 
     handle_pairing_request(client, protocol, "TestTrezor CodeEntry")
@@ -177,6 +178,7 @@ def test_pairing_code_entry_cancel(client: Client) -> None:
 
 
 def test_pairing_cancel_1(client: Client) -> None:
+    client = client.get_new_client()
     protocol = prepare_protocol_for_pairing(client)
 
     protocol._send_message(ThpPairingRequest(host_name="TestTrezor Cancel 1"))
@@ -192,6 +194,7 @@ def test_pairing_cancel_1(client: Client) -> None:
 
 
 def test_pairing_cancel_2(client: Client) -> None:
+    client = client.get_new_client()
     protocol = prepare_protocol_for_pairing(client)
 
     protocol._send_message(ThpPairingRequest(host_name="TestTrezor Cancel 2"))
@@ -300,6 +303,7 @@ def test_connection_confirmation_cancel(client: Client) -> None:
 
 
 def test_autoconnect_credential_request_cancel(client: Client) -> None:
+    client = client.get_new_client()
     protocol = prepare_protocol_for_pairing(client)
     _nfc_pairing(client, protocol)
 

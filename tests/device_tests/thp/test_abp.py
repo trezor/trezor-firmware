@@ -11,6 +11,7 @@ pytestmark = [pytest.mark.protocol("protocol_v2"), pytest.mark.invalidate_client
 
 
 def test_abp(client: Client) -> None:
+    client = client.get_new_client()
     protocol = get_encrypted_transport_protocol(client)
     msg = messages.GetFeatures()
     nonce_enc = protocol._noise.noise_protocol.cipher_state_encrypt.n
