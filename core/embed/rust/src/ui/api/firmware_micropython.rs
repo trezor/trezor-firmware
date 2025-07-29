@@ -524,22 +524,9 @@ extern "C" fn new_flow_confirm_output(n_args: usize, args: *const Obj, kwargs: *
         let br_code: u16 = kwargs.get(Qstr::MP_QSTR_br_code)?.try_into()?;
         let br_name: TString = kwargs.get(Qstr::MP_QSTR_br_name)?.try_into()?;
 
-        let address_item = kwargs
-            .get(Qstr::MP_QSTR_address_item)?
-            .try_into_option()?
-            .map(|item| -> Result<(TString, TString), crate::error::Error> {
-                let pair: [Obj; 2] = util::iter_into_array(item)?;
-                Ok((pair[0].try_into()?, pair[1].try_into()?))
-            })
-            .transpose()?;
-        let extra_item = kwargs
-            .get(Qstr::MP_QSTR_extra_item)?
-            .try_into_option()?
-            .map(|item| -> Result<(TString, TString), crate::error::Error> {
-                let pair: [Obj; 2] = util::iter_into_array(item)?;
-                Ok((pair[0].try_into()?, pair[1].try_into()?))
-            })
-            .transpose()?;
+        let address_item: Option<Obj> =
+            kwargs.get(Qstr::MP_QSTR_address_item)?.try_into_option()?;
+        let extra_item: Option<Obj> = kwargs.get(Qstr::MP_QSTR_extra_item)?.try_into_option()?;
         let summary_items: Option<Obj> =
             kwargs.get(Qstr::MP_QSTR_summary_items)?.try_into_option()?;
         let fee_items: Option<Obj> = kwargs.get(Qstr::MP_QSTR_fee_items)?.try_into_option()?;
@@ -1634,8 +1621,8 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     account_path: str | None,
     ///     br_code: ButtonRequestType,
     ///     br_name: str,
-    ///     address_item: (str, str) | None,
-    ///     extra_item: (str, str) | None,
+    ///     address_item: tuple[str | None, str | bytes | None, bool | None] | None,
+    ///     extra_item: tuple[str | None, str | bytes | None, bool | None] | None,
     ///     summary_items: list[tuple[str | None, str | bytes | None, bool | None]] | None = None,
     ///     fee_items: list[tuple[str | None, str | bytes | None, bool | None]] | None = None,
     ///     summary_title: str | None = None,

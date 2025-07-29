@@ -257,7 +257,10 @@ impl FirmwareUI for UIEckhart {
                     Paragraph::new(&theme::TEXT_SMALL_LIGHT, description)
                         .with_bottom_padding(theme::PROP_INNER_SPACING),
                 )
-                .add(Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, change).with_bottom_padding(16));
+                .add(
+                    Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, change)
+                        .with_bottom_padding(theme::PROPS_SPACING),
+                );
         }
         paragraphs
             .add(
@@ -660,8 +663,8 @@ impl FirmwareUI for UIEckhart {
         account_path: Option<TString<'static>>,
         br_code: u16,
         br_name: TString<'static>,
-        address_item: Option<(TString<'static>, TString<'static>)>,
-        extra_item: Option<(TString<'static>, TString<'static>)>,
+        address_item: Option<Obj>,
+        extra_item: Option<Obj>,
         summary_items: Option<Obj>,
         fee_items: Option<Obj>,
         summary_title: Option<TString<'static>>,
@@ -690,9 +693,16 @@ impl FirmwareUI for UIEckhart {
         };
         main_paragraphs.add(Paragraph::new(font, message));
 
-        let (address_title, address_paragraph) = if let Some((title, item)) = address_item {
-            let paragraph = Paragraph::new(&theme::TEXT_MONO_ADDRESS_CHUNKS, item);
-            (Some(title), Some(paragraph))
+        let (address_title, address_paragraph) = if let Some(address_item) = address_item {
+            let [key, value, _is_data]: [Obj; 3] = util::iter_into_array(address_item)?;
+            let paragraph = Paragraph::new(
+                &theme::TEXT_MONO_ADDRESS_CHUNKS,
+                value.try_into().unwrap_or(TString::empty()),
+            );
+            (
+                Some(key.try_into().unwrap_or(TString::empty())),
+                Some(paragraph),
+            )
         } else {
             (None, None)
         };
@@ -758,9 +768,16 @@ impl FirmwareUI for UIEckhart {
             None
         };
 
-        let (extra_title, extra_paragraph) = if let Some((title, item)) = extra_item {
-            let paragraph = Paragraph::new(&theme::TEXT_MONO_ADDRESS, item);
-            (Some(title), Some(paragraph))
+        let (extra_title, extra_paragraph) = if let Some(extra_item) = extra_item {
+            let [key, value, _is_data]: [Obj; 3] = util::iter_into_array(extra_item)?;
+            let paragraph = Paragraph::new(
+                &theme::TEXT_MONO_ADDRESS,
+                value.try_into().unwrap_or(TString::empty()),
+            );
+            (
+                Some(key.try_into().unwrap_or(TString::empty())),
+                Some(paragraph),
+            )
         } else {
             (None, None)
         };
