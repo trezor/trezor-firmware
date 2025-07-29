@@ -25,7 +25,7 @@ use crate::{
         geometry::{self, Direction, Offset},
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
-            util::{ContentType, PropsList, RecoveryType},
+            util::{ContentType, PropsList, RecoveryType, StrOrBytes},
         },
         ui_firmware::{
             FirmwareUI, ERROR_NOT_IMPLEMENTED, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
@@ -561,8 +561,8 @@ impl FirmwareUI for UIDelizia {
         account_path: Option<TString<'static>>,
         br_code: u16,
         br_name: TString<'static>,
-        address_item: Option<(TString<'static>, TString<'static>)>,
-        extra_item: Option<(TString<'static>, TString<'static>)>,
+        address_item: Option<Obj>,
+        extra_item: Option<Obj>,
         summary_items: Option<Obj>,
         fee_items: Option<Obj>,
         summary_title: Option<TString<'static>>,
@@ -593,18 +593,28 @@ impl FirmwareUI for UIDelizia {
                 .with_swipe_down()
         });
 
-        let confirm_address = address_item.map(|(address_title, address)| {
-            ConfirmValue::new(address_title, address.into(), None)
-                .with_cancel_button()
-                .with_chunkify(true)
-                .with_text_mono(true)
+        let confirm_address = address_item.map(|address_item| {
+            let [key, value, _is_data]: [Obj; 3] = unwrap!(util::iter_into_array(address_item));
+            ConfirmValue::new(
+                key.try_into().unwrap_or(TString::empty()),
+                value.try_into().unwrap_or(StrOrBytes::Str("".into())),
+                None,
+            )
+            .with_cancel_button()
+            .with_chunkify(true)
+            .with_text_mono(true)
         });
 
-        let confirm_extra = extra_item.map(|(extra_title, extra)| {
-            ConfirmValue::new(extra_title, extra.into(), None)
-                .with_cancel_button()
-                .with_chunkify(true)
-                .with_text_mono(true)
+        let confirm_extra = extra_item.map(|extra_item| {
+            let [key, value, _is_data]: [Obj; 3] = unwrap!(util::iter_into_array(extra_item));
+            ConfirmValue::new(
+                key.try_into().unwrap_or(TString::empty()),
+                value.try_into().unwrap_or(StrOrBytes::Str("".into())),
+                None,
+            )
+            .with_cancel_button()
+            .with_chunkify(true)
+            .with_text_mono(true)
         });
 
         let mut fee_items_params =

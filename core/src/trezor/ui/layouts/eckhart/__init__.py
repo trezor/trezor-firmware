@@ -1278,7 +1278,7 @@ if not utils.BITCOIN_ONLY:
                 account_path=account_path,
                 br_code=br_code,
                 br_name=br_name,
-                address_item=(address_title, address),
+                address_item=(address_title, address, True),
                 extra_item=None,
                 summary_items=summary_items,
                 fee_items=fee_items,
