@@ -57,30 +57,17 @@ def confirm_action(
         reverse=reverse,
         prompt_screen=prompt_screen,
         prompt_title=prompt_title or title,
-        external_menu=not (prompt_screen or hold),
+        external_menu=True,
     )
 
-    if prompt_screen or hold:
-        # Note: multi-step confirm (prompt_screen/hold)
-        # can't work with external menus yet
-        return interact(
-            flow,
-            br_name,
-            br_code,
-            exc,
-        )
-    else:
-        menu = Menu.root(
-            cancel=verb_cancel or TR.buttons__cancel,
-        )
-
-        return interact_with_menu(
-            flow,
-            menu,
-            br_name,
-            br_code,
-            exc,
-        )
+    menu = Menu.root(cancel=verb_cancel or TR.buttons__cancel)
+    return interact_with_menu(
+        flow,
+        menu,
+        br_name,
+        br_code,
+        exc,
+    )
 
 
 def confirm_single(
@@ -90,6 +77,8 @@ def confirm_single(
     description_param: str | None = None,
     verb: str | None = None,
 ) -> Awaitable[None]:
+    from trezor.ui.layouts.menu import Menu, confirm_with_menu
+
     description_param = description_param or ""
 
     # Placeholders are coming from translations in form of {0}
@@ -97,15 +86,13 @@ def confirm_single(
     assert template_str in description
 
     begin, _separator, end = description.partition(template_str)
-    return raise_if_cancelled(
-        trezorui_api.confirm_emphasized(
-            title=title,
-            items=(begin, (True, description_param), end),
-            verb=verb,
-        ),
-        br_name,
-        ButtonRequestType.ProtectCall,
+    main = trezorui_api.confirm_emphasized(
+        title=title,
+        items=(begin, (True, description_param), end),
+        verb=verb,
     )
+    menu = Menu.root(cancel=TR.buttons__cancel)
+    return confirm_with_menu(main, menu, br_name, ButtonRequestType.ProtectCall)
 
 
 def confirm_reset_device(recovery: bool = False) -> Awaitable[None]:
@@ -600,6 +587,8 @@ def confirm_blob(
     chunkify: bool = False,
     prompt_screen: bool = True,
 ) -> Awaitable[None]:
+    from trezor.ui.layouts.menu import Menu, confirm_with_menu
+
     if ask_pagination:
         main_layout = trezorui_api.confirm_value_intro(
             title=title,
@@ -646,11 +635,8 @@ def confirm_blob(
             chunkify=chunkify,
             prompt_screen=prompt_screen,
         )
-        return raise_if_cancelled(
-            layout,
-            br_name,
-            br_code,
-        )
+        menu = Menu.root(cancel=TR.buttons__cancel)
+        return confirm_with_menu(layout, menu, br_name, br_code)
 
 
 def confirm_address(
@@ -760,18 +746,17 @@ def confirm_properties(
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     verb: str | None = None,
-) -> Awaitable[None]:
+) -> Awaitable[trezorui_api.UiResult]:
+    from trezor.ui.layouts.menu import Menu, interact_with_menu
 
-    return raise_if_cancelled(
-        trezorui_api.confirm_properties(
-            title=title,
-            subtitle=subtitle,
-            items=list(props),
-            hold=hold,
-        ),
-        br_name,
-        br_code,
+    main = trezorui_api.confirm_properties(
+        title=title,
+        subtitle=subtitle,
+        items=list(props),
+        hold=hold,
     )
+    menu = Menu.root(cancel=TR.buttons__cancel)
+    return interact_with_menu(main, menu, br_name, br_code)
 
 
 def confirm_total(
@@ -1394,21 +1379,22 @@ def confirm_modify_fee(
     total_fee_new: str,
     fee_rate_amount: str | None = None,
 ) -> Awaitable[None]:
+    from trezor.ui.layouts.menu import Menu, confirm_with_menu
+
     fee_layout = trezorui_api.confirm_modify_fee(
         title=title,
         sign=sign,
         user_fee_change=user_fee_change,
         total_fee_new=total_fee_new,
-        fee_rate_amount=fee_rate_amount,
+        fee_rate_amount=None,
     )
-    items: list[tuple[str, str]] = []
+
+    items: list[Details] = []
     if fee_rate_amount:
-        items.append((TR.bitcoin__new_fee_rate, fee_rate_amount))
-    info_layout = trezorui_api.show_info_with_cancel(
-        title=TR.confirm_total__title_fee,
-        items=items,
-    )
-    return with_info(fee_layout, info_layout, "modify_fee", ButtonRequestType.SignTx)
+        items.append(create_details(TR.bitcoin__new_fee_rate, fee_rate_amount))
+
+    menu = Menu.root(items, TR.buttons__cancel)
+    return confirm_with_menu(fee_layout, menu, "modify_fee", ButtonRequestType.SignTx)
 
 
 def confirm_coinjoin(max_rounds: int, max_fee_per_vbyte: str) -> Awaitable[None]:

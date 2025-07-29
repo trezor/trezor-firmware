@@ -28,7 +28,7 @@ use super::{
         component::{Frame, PromptMsg, SwipeContent, VerticalMenuChoiceMsg},
         flow, theme,
     },
-    ConfirmActionExtra, ConfirmActionMenuStrings, ConfirmActionStrings,
+    ConfirmActionExtra, ConfirmActionStrings,
 };
 
 pub struct ConfirmValue {
@@ -312,11 +312,7 @@ impl ConfirmValue {
         } else if self.cancel {
             ConfirmActionExtra::Cancel
         } else {
-            ConfirmActionExtra::Menu(
-                ConfirmActionMenuStrings::new()
-                    .with_verb_cancel(Some(self.verb_cancel))
-                    .with_verb_info(self.verb_info),
-            )
+            ConfirmActionExtra::Menu
         };
 
         flow::new_confirm_action_simple(
