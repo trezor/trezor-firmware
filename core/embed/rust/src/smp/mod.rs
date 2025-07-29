@@ -456,6 +456,7 @@ pub fn wait_for_response(
         irq_unlock(key);
         if let Some(msg_type) = msg_type {
             if msg_type != expected_msg_type {
+                receiver_release();
                 return Err(SmpError::WrongMessage);
             }
 

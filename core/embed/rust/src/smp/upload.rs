@@ -1,6 +1,6 @@
 use super::{
-    receiver_acquire, send_request, wait_for_response, MsgType, SmpBuffer, SmpHeader,
-    SMP_CMD_ID_IMAGE_UPLOAD, SMP_GROUP_IMAGE, SMP_HEADER_SIZE, SMP_OP_WRITE,
+    receiver_acquire, receiver_release, send_request, wait_for_response, MsgType, SmpBuffer,
+    SmpHeader, SMP_CMD_ID_IMAGE_UPLOAD, SMP_GROUP_IMAGE, SMP_HEADER_SIZE, SMP_OP_WRITE,
 };
 use crate::time::Duration;
 use minicbor::Encoder;
@@ -47,6 +47,7 @@ pub fn upload_image(image_data: &[u8], image_hash: &[u8]) -> bool {
     let res = send_request(&mut data[..SMP_HEADER_SIZE + data_len], &mut buffer);
 
     if res.is_err() {
+        receiver_release();
         return false;
     }
 
@@ -88,6 +89,7 @@ pub fn upload_image(image_data: &[u8], image_hash: &[u8]) -> bool {
         let res = send_request(&mut data[..SMP_HEADER_SIZE + data_len], &mut buffer);
 
         if res.is_err() {
+            receiver_release();
             return false;
         }
 

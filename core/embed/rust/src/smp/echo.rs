@@ -1,6 +1,6 @@
 use super::{
-    receiver_acquire, send_request, wait_for_response, MsgType, SmpBuffer, SmpHeader,
-    SMP_CMD_ID_ECHO, SMP_GROUP_OS, SMP_HEADER_SIZE, SMP_OP_READ,
+    receiver_acquire, receiver_release, send_request, wait_for_response, MsgType, SmpBuffer,
+    SmpHeader, SMP_CMD_ID_ECHO, SMP_GROUP_OS, SMP_HEADER_SIZE, SMP_OP_READ,
 };
 use crate::time::Duration;
 use minicbor::{data::Type, decode, Decoder, Encoder};
@@ -29,6 +29,7 @@ pub fn send(text: &str) -> bool {
     let res = send_request(&mut data[..SMP_HEADER_SIZE + data_len], &mut buffer);
 
     if res.is_err() {
+        receiver_release();
         return false;
     }
 
@@ -45,7 +46,7 @@ pub fn send(text: &str) -> bool {
     false
 }
 
-pub fn process_msg(buf: &[u8]) -> Result<&str, decode::Error> {
+fn process_msg(buf: &[u8]) -> Result<&str, decode::Error> {
     let mut dec = Decoder::new(buf);
 
     match dec.map()? {
