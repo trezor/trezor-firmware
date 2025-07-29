@@ -334,6 +334,10 @@ def _client_unlocked(
             if _raw_client.is_invalidated:
                 try:
                     _raw_client = _raw_client.get_new_client()
+                except exceptions.ThpTransportBusy as e:
+                    LOG.warning("retry due to %s", e)
+                    sleep(0.2)
+                    continue
                 except exceptions.ThpError as e:
                     LOG.error(f"Failed to re-create a client: {e}")
                     sleep(LOCK_TIME)

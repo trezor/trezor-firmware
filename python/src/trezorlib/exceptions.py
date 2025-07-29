@@ -111,13 +111,33 @@ class DerivationOnUninitaizedDeviceError(TrezorException):
     To communicate with uninitialized device, use seedless session instead."""
 
 
-class DeviceLockedException(TrezorException):
-    pass
-
-
 class UnexpectedCodeEntryTagException(TrezorException):
     pass
 
 
 class ThpError(TrezorException):
+    pass
+
+
+class ThpTransportBusy(ThpError):
+    pass
+
+
+class ThpUnallocatedChannel(ThpError):
+    pass
+
+
+class ThpDecryptionFailed(ThpError):
+    pass
+
+
+class ThpInvalidData(ThpError):
+    pass
+
+
+class ThpDeviceLocked(ThpError):
+    pass
+
+
+class ThpUnknownError(ThpError):
     pass

@@ -188,10 +188,7 @@ class ProtocolV2Channel(Channel):
         self._send_ack_0()
 
         if control_byte.is_error(header.ctrl_byte):
-            if payload == b"\x05":
-                raise exceptions.DeviceLockedException()
-            else:
-                raise exceptions.ThpError(_get_error_from_int(payload[0]))
+            raise _get_exception_from_code(payload[0])
 
         if not header.is_handshake_init_response():
             LOG.error("Received message is not a valid handshake init response message")
@@ -233,7 +230,7 @@ class ProtocolV2Channel(Channel):
         if not header.is_handshake_comp_response():
             LOG.error("Received message is not a valid handshake completion response")
             if control_byte.is_error(header.ctrl_byte):
-                raise exceptions.ThpError(_get_error_from_int(data[0]))
+                raise _get_exception_from_code(data[0])
         trezor_state = self._noise.decrypt(bytes(data))
         assert trezor_state == b"\x00" or trezor_state == b"\x01"
         self._send_ack_1()
@@ -244,7 +241,7 @@ class ProtocolV2Channel(Channel):
         if not header.is_ack() or len(payload) > 0:
             LOG.error("Received message is not a valid ACK")
             if control_byte.is_error(header.ctrl_byte):
-                raise exceptions.ThpError(_get_error_from_int(payload[0]))
+                raise _get_exception_from_code(payload[0])
 
     def _send_ack_0(self):
         LOG.debug("sending ack 0")
@@ -294,7 +291,7 @@ class ProtocolV2Channel(Channel):
             # TODO fix this recursion
             return self.read_and_decrypt(timeout)
         if control_byte.is_error(header.ctrl_byte):
-            raise exceptions.ThpError(_get_error_from_int(raw_payload[0]))
+            raise _get_exception_from_code(raw_payload[0])
         if not header.is_encrypted_transport():
             LOG.error(
                 "Trying to decrypt not encrypted message! ("
@@ -358,16 +355,14 @@ class ProtocolV2Channel(Channel):
         return True
 
 
-def _get_error_from_int(error_code: int) -> str:
-    # TODO FIXME improve this (ThpErrorType)
-    if error_code == 1:
-        return "TRANSPORT BUSY"
-    if error_code == 2:
-        return "UNALLOCATED CHANNEL"
-    if error_code == 3:
-        return "DECRYPTION FAILED"
-    if error_code == 4:
-        return "INVALID DATA"
-    if error_code == 5:
-        return "DEVICE LOCKED"
-    raise Exception("Not Implemented error case")
+EXCEPTIONS_MAP = {
+    1: exceptions.ThpTransportBusy,
+    2: exceptions.ThpUnallocatedChannel,
+    3: exceptions.ThpDecryptionFailed,
+    4: exceptions.ThpInvalidData,
+    5: exceptions.ThpDeviceLocked,
+}
+
+
+def _get_exception_from_code(error_code: int) -> Exception:
+    return EXCEPTIONS_MAP.get(error_code) or exceptions.ThpUnknownError(error_code)

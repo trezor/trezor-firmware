@@ -36,7 +36,7 @@ from . import btc, mapping, messages, models, protobuf
 from .client import ProtocolVersion, TrezorClient
 from .exceptions import (
     Cancelled,
-    DeviceLockedException,
+    ThpDeviceLocked,
     TrezorFailure,
     UnexpectedMessageError,
 )
@@ -1298,7 +1298,7 @@ class TrezorClientDebugLink(TrezorClient):
 
         try:
             super().__init__(transport)
-        except DeviceLockedException:
+        except ThpDeviceLocked:
             self.use_pin_sequence(["1234"])
             self.debug.input(self.debug.encode_pin("1234"))
             super().__init__(transport)
