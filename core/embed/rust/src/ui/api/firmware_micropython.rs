@@ -1256,6 +1256,7 @@ pub extern "C" fn upy_backlight_fade(_level: Obj) -> Obj {
 pub static mp_module_trezorui_api: Module = obj_module! {
     /// from trezor import utils
     ///
+    /// PropertyType = tuple[str | None, str | bytes | None, bool | None]
     /// T = TypeVar("T")
     ///
     /// class LayoutObj(Generic[T]):
@@ -1548,7 +1549,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     subtitle: str | None = None,
-    ///     items: list[tuple[str | None, str | bytes | None, bool | None]],
+    ///     items: list[PropertyType],
     ///     hold: bool = False,
     ///     verb: str | None = None,
     ///     external_menu: bool = False,
@@ -1568,9 +1569,9 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     fee: str,
     ///     fee_label: str,
     ///     title: str | None = None,
-    ///     account_items: list[tuple[str | None, str | bytes | None, bool | None]] | None = None,
+    ///     account_items: list[PropertyType] | None = None,
     ///     account_title: str | None = None,
-    ///     extra_items: list[tuple[str | None, str | bytes | None, bool | None]] | None = None,
+    ///     extra_items: list[PropertyType] | None = None,
     ///     extra_title: str | None = None,
     ///     verb_cancel: str | None = None,
     ///     back_button: bool = False,
@@ -1621,10 +1622,10 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     account_path: str | None,
     ///     br_code: ButtonRequestType,
     ///     br_name: str,
-    ///     address_item: tuple[str | None, str | bytes | None, bool | None] | None,
-    ///     extra_item: tuple[str | None, str | bytes | None, bool | None] | None,
-    ///     summary_items: list[tuple[str | None, str | bytes | None, bool | None]] | None = None,
-    ///     fee_items: list[tuple[str | None, str | bytes | None, bool | None]] | None = None,
+    ///     address_item: PropertyType | None,
+    ///     extra_item: PropertyType | None,
+    ///     summary_items: list[PropertyType] | None = None,
+    ///     fee_items: list[PropertyType] | None = None,
     ///     summary_title: str | None = None,
     ///     summary_br_code: ButtonRequestType | None = None,
     ///     summary_br_name: str | None = None,
@@ -1899,7 +1900,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def show_info_with_cancel(
     ///     *,
     ///     title: str,
-    ///     items: list[tuple[str | None, str | bytes | None, bool | None]],
+    ///     items: list[PropertyType],
     ///     horizontal: bool = False,
     ///     chunkify: bool = False,
     /// ) -> LayoutObj[UiResult]:
@@ -1946,7 +1947,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def show_properties(
     ///     *,
     ///     title: str,
-    ///     value: list[tuple[str | None, str | bytes | None, bool | None]] | str,
+    ///     value: list[PropertyType] | str,
     /// ) -> LayoutObj[None]:
     ///     """Show a list of key-value pairs, or a monospace string."""
     Qstr::MP_QSTR_show_properties => obj_fn_kw!(0, new_show_properties).as_obj(),
