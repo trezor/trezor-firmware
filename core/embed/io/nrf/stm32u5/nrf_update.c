@@ -148,7 +148,7 @@ bool nrf_update(const uint8_t *image_ptr, size_t image_len) {
     try_cntr++;
   } while (!result && try_cntr < 3);
 
-  smp_reset();
+  nrf_reboot();
 
   return result;
 }
