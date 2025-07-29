@@ -1916,6 +1916,18 @@ files = [
 ]
 
 [[package]]
+name = "slh-dsa"
+version = "0.1.3"
+description = "The pure python impl of the slh-das algorithm(based on fips205)."
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "slh_dsa-0.1.3-py3-none-any.whl", hash = "sha256:7b0d13a16a668fe57d7765ec8b7e3a1f19348d7043d1a9a40a8bd48c4cacc97d"},
+    {file = "slh_dsa-0.1.3.tar.gz", hash = "sha256:d0eb63948ff0dc5d0e5aef9fb1023d337948418d0dc78f186efa06710d002756"},
+]
+
+[[package]]
 name = "slip10"
 version = "1.0.1"
 description = "A reference implementation of the SLIP-0010 specification, which generalizes the BIP-0032 derivation scheme for private and public key pairs in hierarchical deterministic wallets for the curves secp256k1, NIST P-256, ed25519 and curve25519."
@@ -2418,4 +2430,4 @@ test = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more-it
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9"
-content-hash = "ad6a62184d54d678fade13456dfba9e3b707fb04673b6e7cc8c29db4bf9e6610"
+content-hash = "cbd46c4adf2c48ea4f80ac75d7ca76da5a3c204efe361354719395cb59336093"
