@@ -1300,7 +1300,6 @@ class TrezorClientDebugLink(TrezorClient):
             super().__init__(transport)
         except DeviceLockedException:
             LOG.debug("Locked device handling")
-            self.use_pin_sequence(["1234"])
             self.debug.input("")
             self.debug.input(self.debug.encode_pin("1234"))
             super().__init__(transport)
