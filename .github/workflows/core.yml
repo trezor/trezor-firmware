@@ -579,10 +579,9 @@ jobs:
           name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
-      - uses: cachix/install-nix-action@v23
+      - uses: ./.github/actions/environment
         with:
-          nix_path: nixpkgs=channel:nixos-unstable
-      - run: nix-shell --arg fullDeps true --run "poetry install"
+          full-deps: true
       - run: nix-shell --arg fullDeps true --run "poetry run make -C core test_emu_monero"
       - uses: actions/upload-artifact@v4
         with:
