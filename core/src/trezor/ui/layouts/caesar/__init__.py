@@ -1069,11 +1069,10 @@ if not utils.BITCOIN_ONLY:
     ) -> None:
         from trezor.ui.layouts.menu import Menu, confirm_with_menu
 
-        trade_layout = trezorui_api.confirm_with_info(
+        trade_layout = trezorui_api.confirm_properties(
             title=title,
-            items=[(sell_amount, True), (buy_amount, True)],
-            verb=TR.buttons__confirm,
-            verb_info=TR.buttons__info,
+            items=[("", sell_amount, True), ("", buy_amount, True)],
+            verb=TR.buttons__continue,
             external_menu=True,
         )
 

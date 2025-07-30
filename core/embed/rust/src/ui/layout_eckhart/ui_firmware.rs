@@ -419,6 +419,7 @@ impl FirmwareUI for UIEckhart {
             .add_color(theme::RED)
             .add_text(sell_amount, font)
             .add_offset(Offset::y(44))
+            .add_newline()
             .add_color(theme::GREEN_LIME)
             .add_text(buy_amount, font);
         let screen = TextScreen::new(FormattedText::new(ops))
