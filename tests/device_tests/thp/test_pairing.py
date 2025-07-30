@@ -2,6 +2,7 @@ import os
 import time
 import typing as t
 from hashlib import sha256
+from unittest.mock import patch
 
 import pytest
 import typing_extensions as tx
@@ -53,6 +54,15 @@ MT = t.TypeVar("MT", bound=protobuf.MessageType)
 pytestmark = [pytest.mark.protocol("protocol_v2")]
 
 
+@pytest.fixture
+def deterministic_urandom() -> t.Generator[None, None, None]:
+    def mock_urandom(n: int) -> bytes:
+        return bytes((i % 256 for i in range(n)))
+
+    with patch("os.urandom", side_effect=mock_urandom):
+        yield
+
+
 def test_pairing_qr_code(client: Client) -> None:
     if client.model != T2T1:
         pytest.xfail(reason="UI is implemented only for T2T1")
@@ -94,8 +104,18 @@ def test_pairing_qr_code(client: Client) -> None:
     protocol._has_valid_channel = True
 
 
-def test_pairing_code_entry(client: Client) -> None:
-    protocol = prepare_protocol_for_pairing(client)
+@pytest.mark.filterwarnings(
+    "ignore:One of ephemeral keypairs is already set. This is OK for testing, but should NEVER happen in production!"
+)
+def test_pairing_code_entry(
+    client: Client, deterministic_urandom: None  # noqa:F811
+) -> None:
+    # start from a clean slate:
+    protocol = prepare_protocol_for_pairing(
+        client,
+        host_static_randomness=os.urandom(32),
+        host_ephemeral_randomness=os.urandom(64)[-32:],
+    )
 
     handle_pairing_request(client, protocol, "TestTrezor CodeEntry")
 
@@ -153,9 +173,17 @@ def test_pairing_code_entry(client: Client) -> None:
     protocol._has_valid_channel = True
 
 
-def test_pairing_code_entry_cancel(client: Client) -> None:
-    protocol = prepare_protocol_for_pairing(client)
-
+@pytest.mark.filterwarnings(
+    "ignore:One of ephemeral keypairs is already set. This is OK for testing, but should NEVER happen in production!"
+)
+def test_pairing_code_entry_cancel(
+    client: Client, deterministic_urandom: None  # noqa:F811
+) -> None:
+    protocol = prepare_protocol_for_pairing(
+        client,
+        host_static_randomness=os.urandom(32),
+        host_ephemeral_randomness=os.urandom(64)[-32:],
+    )
     handle_pairing_request(client, protocol, "TestTrezor CodeEntry")
 
     protocol._send_message(
