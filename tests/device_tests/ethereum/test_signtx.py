@@ -570,6 +570,7 @@ def test_signtx_payment_req(
     from ..payment_req import (
         CoinPurchaseMemo,
         RefundMemo,
+        TextDetailsMemo,
         TextMemo,
         make_payment_request,
     )
@@ -594,8 +595,8 @@ def test_signtx_payment_req(
         memos.append(refund_memo)
 
     if has_text:
-        text_memo = TextMemo(text="We will confirm some text")
-        memos.append(text_memo)
+        memos.append(TextMemo(text="We will confirm some text"))
+        memos.append(TextDetailsMemo(title="Please confirm", text="Here is the text"))
 
     if has_multiple_purchases:
         purchase_memo_2 = CoinPurchaseMemo(

@@ -1102,7 +1102,7 @@ if not utils.BITCOIN_ONLY:
     async def confirm_ethereum_payment_request(
         recipient_name: str,
         recipient: str,
-        texts: Iterable[str],
+        texts: Iterable[tuple[str | None, str]],
         refunds: Iterable[tuple[str, str | None, str | None]],
         trades: List[tuple[str, str, str, str | None, str | None]],
         account: str | None,
@@ -1114,12 +1114,14 @@ if not utils.BITCOIN_ONLY:
     ) -> None:
         from trezor.ui.layouts.menu import Menu, confirm_with_menu
 
+        # Note: we don't support "sales" (swap to fiat) yet,
+        # so if there is any trade, we assume it must be a swap
         is_swap = len(trades) != 0
 
-        for text in texts:
+        for title, text in texts:
             await raise_if_cancelled(
                 trezorui_api.confirm_value(
-                    title=(TR.words__swap if is_swap else TR.words__confirm),
+                    title=(title or (TR.words__swap if is_swap else TR.words__confirm)),
                     value=text,
                     description=None,
                     verb=TR.buttons__confirm,

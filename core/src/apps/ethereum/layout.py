@@ -133,7 +133,9 @@ async def require_confirm_payment_request(
     trades = []
     for memo in verified_payment_req.memos:
         if memo.text_memo is not None:
-            texts.append(memo.text_memo.text)
+            texts.append((None, memo.text_memo.text))
+        elif memo.text_details_memo is not None:
+            texts.append((memo.text_details_memo.title, memo.text_details_memo.text))
         elif memo.refund_memo:
             refund_account, refund_account_path = get_account_and_path(
                 memo.refund_memo.address_n
