@@ -43,8 +43,8 @@ use super::{
         VerticalMenu, VerticalMenuChoiceMsg, VerticalMenuItem, VerticalMenuItems,
     },
     flow::{
-        self, new_confirm_action_simple, ConfirmActionExtra, ConfirmActionMenuStrings,
-        ConfirmActionStrings, ConfirmValue, ShowInfoParams,
+        self, new_confirm_action_simple, ConfirmActionExtra, ConfirmActionStrings, ConfirmValue,
+        ShowInfoParams,
     },
     fonts, theme, UIDelizia,
 };
@@ -190,7 +190,7 @@ impl FirmwareUI for UIDelizia {
 
             new_confirm_action_simple(
                 paragraphs,
-                ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
+                ConfirmActionExtra::ExternalMenu,
                 ConfirmActionStrings::new(
                     TR::homescreen__settings_title.into(),
                     Some(TR::homescreen__settings_subtitle.into()),
@@ -226,7 +226,7 @@ impl FirmwareUI for UIDelizia {
 
         let flow = flow::new_confirm_action_simple(
             paragraphs,
-            ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
+            ConfirmActionExtra::ExternalMenu,
             ConfirmActionStrings::new(
                 TR::coinjoin__title.into(),
                 None,
@@ -260,7 +260,7 @@ impl FirmwareUI for UIDelizia {
 
         let flow = flow::new_confirm_action_simple(
             FormattedText::new(ops).vertically_centered(),
-            ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
+            ConfirmActionExtra::ExternalMenu,
             ConfirmActionStrings::new(title, None, None, Some(title)),
             false,
             None,
@@ -327,10 +327,7 @@ impl FirmwareUI for UIDelizia {
 
         let flow = flow::new_confirm_action_simple(
             paragraphs.into_paragraphs(),
-            ConfirmActionExtra::Menu(
-                ConfirmActionMenuStrings::new()
-                    .with_verb_info(Some(TR::words__title_information.into())),
-            ),
+            ConfirmActionExtra::ExternalMenu,
             ConfirmActionStrings::new(title, None, None, Some(title)),
             true,
             None,
@@ -456,7 +453,7 @@ impl FirmwareUI for UIDelizia {
 
         let flow = flow::new_confirm_action_simple(
             paragraphs.into_paragraphs(),
-            ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
+            ConfirmActionExtra::ExternalMenu,
             ConfirmActionStrings::new(title, subtitle, None, hold.then_some(title)),
             hold,
             None,
@@ -471,7 +468,7 @@ impl FirmwareUI for UIDelizia {
         _subtitle: Option<TString<'static>>,
         items: Obj,
         verb: TString<'static>,
-        verb_info: TString<'static>,
+        _verb_info: TString<'static>,
         _verb_cancel: Option<TString<'static>>,
         _external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
@@ -494,9 +491,7 @@ impl FirmwareUI for UIDelizia {
 
         let flow = flow::new_confirm_action_simple(
             paragraphs.into_paragraphs(),
-            ConfirmActionExtra::Menu(
-                ConfirmActionMenuStrings::new().with_verb_info(Some(verb_info)),
-            ),
+            ConfirmActionExtra::Menu,
             ConfirmActionStrings::new(title, None, None, None).with_footer_description(Some(verb)),
             false,
             None,
