@@ -315,6 +315,14 @@ class BootableImage(Struct):
     def get_hash_params(self) -> util.FirmwareHashParameters:
         return Model.from_hw_model(self.header.hw_model).hash_params()
 
+    def align_image_size(self, alignment: int) -> None:
+        """Align the image size by padding bootloader code with zeroes to a
+        multiple of `alignment` bytes."""
+        image_size = self.header.header_len + self.header.code_length
+        padding = alignment - (image_size % alignment)
+        self.code += b"\0" * padding
+        self.header.code_length += padding
+
     def set_merkle_proof(self, proof: list[bytes]) -> None:
         """Set the Merkle proof for the boot header."""
         self.unauth.merkle_proof = proof

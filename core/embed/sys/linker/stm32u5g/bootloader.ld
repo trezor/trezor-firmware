@@ -95,9 +95,6 @@ SECTIONS {
   } >BOOT_ARGS
 
   .flash : {
-    /* Pad the rest of bootloader area with zeros */
-    . = ADDR(.header) + BOOTLOADER_MAXSIZE - 1;
-    BYTE(0x00)
     _bootloader_code_end = .;
   } >FLASH
 }

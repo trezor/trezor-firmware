@@ -64,6 +64,8 @@ def cli(
             f"Could not parse file (magic bytes: {magic})"
         ) from e
 
+    fw.align_image_size(256 * 1024)
+
     fw.set_merkle_proof(list(map(bytes.fromhex, merkle_proof)))
 
     if print_merkle_root:
