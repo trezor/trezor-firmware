@@ -392,6 +392,7 @@ impl FirmwareUI for UIBolt {
         items: Obj,
         hold: bool,
         _verb: Option<TString<'static>>,
+        _external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = PropsList::new(
             items,

@@ -285,6 +285,7 @@ def confirm_properties(
     items: list[tuple[str | None, str | bytes | None, bool | None]],
     hold: bool = False,
     verb: str | None = None,
+    external_menu: bool = False,
 ) -> LayoutObj[UiResult]:
     """Confirm list of key-value pairs. The third component in the tuple should be True if
     the value is to be rendered as binary with monospace font, False otherwise."""

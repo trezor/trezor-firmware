@@ -351,8 +351,10 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
             .get(Qstr::MP_QSTR_verb)
             .and_then(Obj::try_into_option)
             .unwrap_or(None);
+        let external_menu: bool = kwargs.get_or(Qstr::MP_QSTR_external_menu, false)?;
 
-        let layout = ModelUI::confirm_properties(title, subtitle, items, hold, verb)?;
+        let layout =
+            ModelUI::confirm_properties(title, subtitle, items, hold, verb, external_menu)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1562,6 +1564,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     items: list[tuple[str | None, str | bytes | None, bool | None]],
     ///     hold: bool = False,
     ///     verb: str | None = None,
+    ///     external_menu: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm list of key-value pairs. The third component in the tuple should be True if
     ///     the value is to be rendered as binary with monospace font, False otherwise."""
