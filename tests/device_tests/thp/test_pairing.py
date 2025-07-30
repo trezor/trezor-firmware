@@ -2,6 +2,7 @@ import os
 import time
 import typing as t
 from hashlib import sha256
+from unittest.mock import patch
 
 import pytest
 import typing_extensions as tx
@@ -38,7 +39,6 @@ from trezorlib.models import T2T1
 from trezorlib.transport.thp import curve25519
 from trezorlib.transport.thp.cpace import Cpace
 
-from .connect import deterministic_urandom  # noqa: F401
 from .connect import (
     get_encrypted_transport_protocol,
     handle_pairing_request,
@@ -52,6 +52,15 @@ if t.TYPE_CHECKING:
 MT = t.TypeVar("MT", bound=protobuf.MessageType)
 
 pytestmark = [pytest.mark.protocol("protocol_v2")]
+
+
+@pytest.fixture
+def deterministic_urandom() -> t.Generator[None, None, None]:
+    def mock_urandom(n: int) -> bytes:
+        return bytes((i % 256 for i in range(n)))
+
+    with patch("os.urandom", side_effect=mock_urandom):
+        yield
 
 
 def test_pairing_qr_code(client: Client) -> None:
