@@ -18,10 +18,9 @@ pub struct TradeScreen {
 impl TradeScreen {
     pub fn new(sell_amount: TString<'static>, buy_amount: TString<'static>) -> Self {
         Self {
-            sell_amount: Label::left_aligned(sell_amount, theme::TEXT_WARNING).top_aligned(),
+            sell_amount: Label::left_aligned(sell_amount, theme::TEXT_WARNING).bottom_aligned(),
             line: Bar::new(theme::GREY_EXTRA_DARK, theme::BG, 2),
-            buy_amount: Label::left_aligned(buy_amount, theme::TEXT_MAIN_GREEN_LIME)
-                .bottom_aligned(),
+            buy_amount: Label::left_aligned(buy_amount, theme::TEXT_MAIN_GREEN_LIME).top_aligned(),
         }
     }
 }
@@ -32,16 +31,13 @@ impl Component for TradeScreen {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let grid = Grid::new(bounds, 4, 1);
-        self.sell_amount.place(grid.row_col(1, 0));
-        self.line.place(
-            Rect::new(
-                grid.row_col(1, 0).bottom_left(),
-                grid.row_col(2, 0).top_right(),
-            )
-            .outset(Insets::vertical(1)),
-        );
-        self.buy_amount.place(grid.row_col(2, 0));
+        let (top, bottom) = bounds.split_top(bounds.height() / 2);
+        let (sell_bounds, _) = top.split_bottom(self.sell_amount.font().text_height());
+        self.sell_amount.place(sell_bounds);
+        self.line
+            .place(Rect::new(top.bottom_left(), bottom.top_right()).outset(Insets::vertical(1)));
+        let (_, buy_bounds) = bottom.split_top(self.buy_amount.font().text_height());
+        self.buy_amount.place(buy_bounds);
         bounds
     }
 

@@ -151,8 +151,8 @@ async def require_confirm_payment_request(
             assert coin_purchase_account_path is not None
             trades.append(
                 (
-                    f"- {total_amount}",
-                    f"+ {memo.coin_purchase_memo.amount}",
+                    f"-\u00A0{total_amount}",
+                    f"+\u00A0{memo.coin_purchase_memo.amount}",
                     memo.coin_purchase_memo.address,
                     coin_purchase_account,
                     coin_purchase_account_path,

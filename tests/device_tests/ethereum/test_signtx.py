@@ -129,6 +129,26 @@ example_input_data = {
 }
 
 
+example_input_data_long_value = {
+    "parameters": {
+        "chain_id": 1,
+        "path": "m/44'/60'/0'/0/0",
+        "nonce": "0x0",
+        "gas_price": "0x4a817c800",
+        "gas_limit": "0x125208",
+        "value": "0xab54a98ceb1f0ad2",
+        "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
+        "tx_type": None,
+        "data": "",
+    },
+    "result": {
+        "sig_v": 37,
+        "sig_r": "a396a13c67594d0df54a2cea8579f69eb185ab0b69bfa30a4c15fd9ac44eb88d",
+        "sig_s": "0eb91df671c175ecfe60e4ab5a02e9627b94a19dd252f75344ea679934581f39",
+    },
+}
+
+
 @pytest.mark.models("core", reason="T1 does not support input flows")
 def test_signtx_fee_info(client: Client):
     input_flow = InputFlowEthereumSignTxShowFeeInfo(client).get()
@@ -539,7 +559,8 @@ def test_signtx_staking_eip1559(client: Client, parameters: dict, result: dict):
     reason="T1 does not support payment requests. Payment requests not yet implemented on model T.",
 )
 @pytest.mark.parametrize(
-    "has_refund,has_text,has_multiple_purchases", list(product([True, False], repeat=3))
+    "has_refund,has_text,has_multiple_purchases",
+    list(product([True, False], repeat=3)),
 )
 def test_signtx_payment_req(
     client: Client, has_refund: bool, has_text: bool, has_multiple_purchases: bool
@@ -605,4 +626,48 @@ def test_signtx_payment_req(
         client,
         params,
         example_input_data["result"],
+    )
+
+
+@pytest.mark.experimental
+@pytest.mark.models(
+    "core",
+    skip="t2t1",
+    reason="T1 does not support payment requests. Payment requests not yet implemented on model T.",
+)
+def test_signtx_payment_req_long_value(
+    client: Client,
+):
+    from trezorlib import btc, misc
+
+    from ..payment_req import CoinPurchaseMemo, make_payment_request
+
+    purchase_memo = CoinPurchaseMemo(
+        amount="0.0123456789123456789 BTC",
+        coin_name="Bitcoin",
+        slip44=0,
+        address_n=parse_path("m/44h/0h/0h/0/0"),
+    )
+    purchase_memo.address_resp = btc.get_authenticated_address(
+        client, purchase_memo.coin_name, purchase_memo.address_n
+    )
+
+    memos = [purchase_memo]
+
+    nonce = misc.get_nonce(client)
+
+    params = dict(example_input_data_long_value["parameters"])
+    params["payment_req"] = make_payment_request(
+        client,
+        recipient_name="trezor.io",
+        slip44=60,
+        outputs=[(int(params["value"], 16), params["to_address"])],
+        memos=memos,
+        nonce=nonce,
+    )
+
+    _do_test_signtx(
+        client,
+        params,
+        example_input_data_long_value["result"],
     )
