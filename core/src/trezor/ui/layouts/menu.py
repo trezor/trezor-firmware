@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, Awaitable
 
 import trezorui_api
-from trezor import ui
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts.common import interact
 from trezor.wire import ActionCancelled
@@ -104,12 +103,12 @@ async def show_menu(
 
 
 async def confirm_with_menu(
-    main: trezorui_api.LayoutObj[trezorui_api.UiResult],
+    main: trezorui_api.LayoutObj[T],
     menu: Menu,
     br_name: str | None,
     br_code: ButtonRequestType = ButtonRequestType.Other,
     raise_on_cancel: ExceptionType = ActionCancelled,
-) -> ui.UiResult:
+) -> T:
     while True:
         result = await interact(main, br_name, br_code, raise_on_cancel)
         br_name = None  # ButtonRequest should be sent once (for the main layout)
