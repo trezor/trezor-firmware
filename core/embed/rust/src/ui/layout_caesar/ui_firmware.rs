@@ -82,6 +82,7 @@ impl FirmwareUI for UICaesar {
             verb.unwrap_or(TString::empty()),
             verb_cancel,
             hold,
+            false,
         )
     }
 
@@ -184,6 +185,7 @@ impl FirmwareUI for UICaesar {
             verb.unwrap_or(TR::buttons__confirm.into()),
             verb_cancel,
             hold,
+            false,
         )?;
         LayoutObj::new_root(layout)
     }
@@ -228,6 +230,7 @@ impl FirmwareUI for UICaesar {
             TR::buttons__hold_to_confirm.into(),
             None,
             true,
+            false,
         )
     }
 
@@ -363,6 +366,7 @@ impl FirmwareUI for UICaesar {
             TR::buttons__confirm.into(),
             Some("".into()),
             false,
+            false,
         )
     }
 
@@ -389,6 +393,7 @@ impl FirmwareUI for UICaesar {
             paragraphs,
             TR::buttons__confirm.into(),
             Some("".into()),
+            false,
             false,
         )
     }
@@ -420,6 +425,7 @@ impl FirmwareUI for UICaesar {
             button,
             Some("<".into()),
             false,
+            false,
         )
     }
 
@@ -428,15 +434,16 @@ impl FirmwareUI for UICaesar {
         _subtitle: Option<TString<'static>>,
         items: Obj,
         hold: bool,
-        _verb: Option<TString<'static>>,
+        verb: Option<TString<'static>>,
+        external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = parse_properties(items)?;
 
-        let button_text = if hold {
+        let button_text = verb.unwrap_or(if hold {
             TR::buttons__hold_to_confirm.into()
         } else {
             TR::buttons__confirm.into()
-        };
+        });
 
         content_in_button_page(
             title,
@@ -444,6 +451,7 @@ impl FirmwareUI for UICaesar {
             button_text,
             Some("".into()),
             hold,
+            external_menu,
         )
     }
 
@@ -467,7 +475,7 @@ impl FirmwareUI for UICaesar {
             .add_text(TR::reset__tos_link, fonts::FONT_BOLD);
         let formatted = FormattedText::new(ops).vertically_centered();
 
-        content_in_button_page(title, formatted, button, Some("".into()), false)
+        content_in_button_page(title, formatted, button, Some("".into()), false, false)
     }
 
     fn confirm_summary(
@@ -687,6 +695,7 @@ impl FirmwareUI for UICaesar {
             paragraphs.into_paragraphs(),
             button,
             Some("".into()),
+            false,
             false,
         )?;
         LayoutObj::new_root(layout)
@@ -1090,6 +1099,7 @@ impl FirmwareUI for UICaesar {
             TR::buttons__continue.into(),
             None,
             false,
+            false,
         )
     }
 
@@ -1451,6 +1461,7 @@ fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
     verb: TString<'static>,
     verb_cancel: Option<TString<'static>>,
     hold: bool,
+    external_menu: bool,
 ) -> Result<impl LayoutMaybeTrace, Error> {
     // Left button - icon, text or nothing.
     let cancel_btn = verb_cancel.map(ButtonDetails::from_text_possible_icon);
@@ -1466,13 +1477,14 @@ fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
     } else {
         None
     };
-    if hold {
+    if hold && !external_menu {
         confirm_btn = confirm_btn.map(|btn| btn.with_default_duration());
     }
 
     let content = ButtonPage::new(content, theme::BG)
         .with_cancel_btn(cancel_btn)
-        .with_confirm_btn(confirm_btn);
+        .with_confirm_btn(confirm_btn)
+        .with_menu(external_menu);
 
     let mut frame = ScrollableFrame::new(content);
     if !title.is_empty() {

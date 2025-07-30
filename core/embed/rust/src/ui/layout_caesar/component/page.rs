@@ -10,7 +10,8 @@ use crate::{
 };
 
 use super::{
-    constant, theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos,
+    constant, fonts, theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout,
+    ButtonPos,
 };
 
 pub struct ButtonPage<T>
@@ -23,6 +24,7 @@ where
     confirm_btn_details: Option<ButtonDetails>,
     back_btn_details: Option<ButtonDetails>,
     next_btn_details: Option<ButtonDetails>,
+    has_menu: bool,
     buttons: Child<ButtonController>,
 }
 
@@ -38,6 +40,7 @@ where
             confirm_btn_details: Some(ButtonDetails::text(TR::buttons__confirm.into())),
             back_btn_details: Some(ButtonDetails::up_arrow_icon()),
             next_btn_details: Some(ButtonDetails::down_arrow_icon_wide()),
+            has_menu: false,
             // Setting empty layout for now, we do not yet know the page count.
             // Initial button layout will be set in `place()` after we can call
             // `content.page_count()`.
@@ -52,6 +55,11 @@ where
 
     pub fn with_confirm_btn(mut self, btn_details: Option<ButtonDetails>) -> Self {
         self.confirm_btn_details = btn_details;
+        self
+    }
+
+    pub fn with_menu(mut self, has_menu: bool) -> Self {
+        self.has_menu = has_menu;
         self
     }
 
@@ -96,25 +104,24 @@ where
     }
 
     fn get_button_layout(&self, has_prev: bool, has_next: bool) -> ButtonLayout {
-        let btn_left = self.get_left_button_details(!has_prev);
-        let btn_right = self.get_right_button_details(has_next);
-        ButtonLayout::new(btn_left, None, btn_right)
-    }
-
-    fn get_left_button_details(&self, is_first: bool) -> Option<ButtonDetails> {
-        if is_first {
+        let btn_left = if !has_prev {
             self.cancel_btn_details.clone()
         } else {
             self.back_btn_details.clone()
-        }
-    }
-
-    fn get_right_button_details(&self, has_next_page: bool) -> Option<ButtonDetails> {
-        if has_next_page {
-            self.next_btn_details.clone()
-        } else {
-            self.confirm_btn_details.clone()
-        }
+        };
+        let (btn_middle, btn_right) = match (has_next, self.has_menu) {
+            (true, _) => (None, self.next_btn_details.clone()),
+            (false, false) => (None, self.confirm_btn_details.clone()),
+            (false, true) => (
+                self.confirm_btn_details.clone().map(|b| b.with_arms()),
+                Some(
+                    ButtonDetails::text("i".into())
+                        .with_fixed_width(theme::BUTTON_ICON_WIDTH)
+                        .with_font(fonts::FONT_NORMAL),
+                ),
+            ),
+        };
+        ButtonLayout::new(btn_left, btn_middle, btn_right)
     }
 }
 
@@ -168,17 +175,20 @@ where
                         return None;
                     }
                 }
+                ButtonPos::Middle => {
+                    return Some(PageMsg::Confirmed);
+                }
                 ButtonPos::Right => {
                     if self.pager().has_next() {
                         // Clicked NEXT. Scroll down.
                         self.next_page();
                         self.change_page(ctx);
+                    } else if self.has_menu {
+                        return Some(PageMsg::Info);
                     } else {
-                        // Clicked CONFIRM. Send result.
                         return Some(PageMsg::Confirmed);
                     }
                 }
-                _ => {}
             }
         }
 
@@ -208,5 +218,6 @@ where
         t.int("page_count", self.pager().total() as i64);
         t.child("buttons", &self.buttons);
         t.child("content", &self.content);
+        t.bool("has_menu", self.has_menu);
     }
 }

@@ -138,6 +138,7 @@ pub trait FirmwareUI {
         items: Obj, // TODO: replace Obj`
         hold: bool,
         verb: Option<TString<'static>>,
+        external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn confirm_reset_device(recovery: bool) -> Result<impl LayoutMaybeTrace, Error>;

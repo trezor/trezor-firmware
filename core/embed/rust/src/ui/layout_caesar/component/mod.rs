@@ -8,7 +8,7 @@ mod loader;
 mod result;
 mod welcome_screen;
 
-use super::{common_messages, constant, theme};
+use super::{common_messages, constant, fonts, theme};
 pub use button::{
     Button, ButtonAction, ButtonActions, ButtonContent, ButtonDetails, ButtonLayout, ButtonPos,
     ButtonStyle, ButtonStyleSheet,

@@ -446,6 +446,7 @@ impl FirmwareUI for UIDelizia {
         items: Obj,
         hold: bool,
         _verb: Option<TString<'static>>,
+        _external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = PropsList::new(
             items,
