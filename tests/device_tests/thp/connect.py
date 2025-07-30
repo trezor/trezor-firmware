@@ -1,3 +1,8 @@
+import typing as t
+from unittest.mock import patch
+
+import pytest
+
 from trezorlib.client import ProtocolV2Channel
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.messages import (
@@ -6,6 +11,15 @@ from trezorlib.messages import (
     ThpPairingRequest,
     ThpPairingRequestApproved,
 )
+
+
+@pytest.fixture
+def deterministic_urandom() -> t.Generator[None, None, None]:
+    def mock_urandom(n: int) -> bytes:
+        return bytes((i % 256 for i in range(n)))
+
+    with patch("os.urandom", side_effect=mock_urandom):
+        yield
 
 
 def prepare_protocol_for_handshake(client: Client) -> ProtocolV2Channel:
@@ -19,11 +33,14 @@ def prepare_protocol_for_handshake(client: Client) -> ProtocolV2Channel:
 def prepare_protocol_for_pairing(
     client: Client,
     host_static_randomness: bytes | None = None,
+    host_ephemeral_randomness: bytes | None = None,
     credential: bytes | None = None,
 ) -> ProtocolV2Channel:
     protocol = prepare_protocol_for_handshake(client)
     protocol._do_handshake(
-        credential=credential, host_static_randomness=host_static_randomness
+        credential=credential,
+        host_static_randomness=host_static_randomness,
+        host_ephemeral_randomness=host_ephemeral_randomness,
     )
     return protocol
 

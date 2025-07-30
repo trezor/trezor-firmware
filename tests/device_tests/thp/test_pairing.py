@@ -38,6 +38,7 @@ from trezorlib.models import T2T1
 from trezorlib.transport.thp import curve25519
 from trezorlib.transport.thp.cpace import Cpace
 
+from .connect import deterministic_urandom  # noqa: F401
 from .connect import (
     get_encrypted_transport_protocol,
     handle_pairing_request,
@@ -94,8 +95,18 @@ def test_pairing_qr_code(client: Client) -> None:
     protocol._has_valid_channel = True
 
 
-def test_pairing_code_entry(client: Client) -> None:
-    protocol = prepare_protocol_for_pairing(client)
+@pytest.mark.filterwarnings(
+    "ignore:One of ephemeral keypairs is already set. This is OK for testing, but should NEVER happen in production!"
+)
+def test_pairing_code_entry(
+    client: Client, deterministic_urandom: None  # noqa:F811
+) -> None:
+    # start from a clean slate:
+    protocol = prepare_protocol_for_pairing(
+        client,
+        host_static_randomness=os.urandom(32),
+        host_ephemeral_randomness=os.urandom(64)[-32:],
+    )
 
     handle_pairing_request(client, protocol, "TestTrezor CodeEntry")
 
@@ -153,9 +164,17 @@ def test_pairing_code_entry(client: Client) -> None:
     protocol._has_valid_channel = True
 
 
-def test_pairing_code_entry_cancel(client: Client) -> None:
-    protocol = prepare_protocol_for_pairing(client)
-
+@pytest.mark.filterwarnings(
+    "ignore:One of ephemeral keypairs is already set. This is OK for testing, but should NEVER happen in production!"
+)
+def test_pairing_code_entry_cancel(
+    client: Client, deterministic_urandom: None  # noqa:F811
+) -> None:
+    protocol = prepare_protocol_for_pairing(
+        client,
+        host_static_randomness=os.urandom(32),
+        host_ephemeral_randomness=os.urandom(64)[-32:],
+    )
     handle_pairing_request(client, protocol, "TestTrezor CodeEntry")
 
     protocol._send_message(
