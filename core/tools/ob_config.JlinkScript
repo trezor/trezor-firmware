@@ -1,0 +1,173 @@
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
+/* This script is used for configuration of STM32U5G9ZJ option bytes and
+ * Follows the option-byte programming sequence from Reference manual RM0456 (rev5)
+ * Chapter 7.4.2.
+ */
+
+// STM32 Flash controller base addresses
+__constant U32 FLASH_BASE = 0x40022000;     // Secure flash controller base
+__constant U32 FLASH_NS_BASE = 0x50022000;  // Non-secure flash controller base
+
+// STM32 Flash register addresses for option bytes configuration
+__constant U32 FLASH_ACR_ADDRESS     = 0x40022000;  // Flash access control register
+__constant U32 FLASH_NSKEYR_ADDRESS  = 0x40022008;  // Flash non-secure key register
+__constant U32 FLASH_SECKEYR_ADDRESS = 0x4002200C;  // Flash secure key register
+__constant U32 FLASH_OPTKEYR_ADDRESS = 0x40022010;  // Flash option key register
+__constant U32 FLASH_NSSR_ADDRESS    = 0x40022020;  // Flash non-secure status register
+__constant U32 FLASH_NSCR_ADDRESS    = 0x40022028;  // Flash non-secure control register
+__constant U32 FLASH_OPTR_ADDRESS    = 0x40022040;  // Flash option register
+__constant U32 FLASH_SECBOOTADD0R    = 0x4002204C;  // Flash secure boot address 0 register
+
+// Flash unlock keys (STM32 specific sequences)
+__constant U32 KEY1 = 0x45670123;    // First key for unlocking flash registers
+__constant U32 KEY2 = 0xCDEF89AB;    // Second key for unlocking flash registers
+__constant U32 OPTKEY1 = 0x08192A3B; // First key for unlocking option bytes
+__constant U32 OPTKEY2 = 0x4C5D6E7F; // Second key for unlocking option bytes
+
+// FLASH_NSCR (Non-Secure Control Register) bit definitions
+__constant U32 FLASH_NSCR_OPTSTRT     = (1 << 17); // Option bytes start programming bit
+__constant U32 FLASH_NSCR_OBL_LAUNCH  = (1 << 27); // Option bytes loading launch bit
+__constant U32 FLASH_NSCR_OPTLOCK_BIT = (1 << 30); // Option bytes lock bit
+__constant U32 FLASH_NSCR_LOCK_BIT    = (1 << 31); // Flash non-secure lock bit
+
+// FLASH_NSSR (Non-Secure Status Register) bit definitions
+__constant U32 FLASH_NSSR_BSY_BIT     = (1 << 16); // Flash busy bit
+
+// FLASH_OPTR (Option Register) bit definitions
+__constant U32 FLASH_OPTR_TZEN_BIT    = (1 << 31); // TrustZone enable bit
+
+// FLASH_SECBOOTADD0R (Secure Boot Address 0 Register) bit definitions
+__constant U32 FLASH_SECBOOTADD0R_BOOT_LOCK_BIT = 0x1; // Boot address lock bit
+
+/**
+ * SetupTarget - Configure STM32 option bytes for TrustZone operation
+ *
+ * This function configures the STM32 microcontroller's option bytes to:
+ * 1. Enable TrustZone (TZEN bit)
+ * 2. Set secure boot address (SECBOOTADD0R)
+ *
+ * Returns: 0 on success, 1 on failure
+ */
+int SetupTarget(void){
+
+  // Local variables to store register values
+  int optr;       // Option register value
+  int nssr;       // Non-secure status register value
+  int nscr;       // Non-secure control register value
+  int secbootadd; // Secure boot address register value
+
+  // Start of option bytes configuration process
+  JLINK_SYS_Report("*** Running option-bytes configuration *** ");
+
+  // Read current option register value and display TrustZone status
+  optr = JLINK_MEM_ReadU32(FLASH_OPTR_ADDRESS);
+  JLINK_SYS_Report1("OPTR: ", optr);
+  JLINK_SYS_Report1("TZEN: ", (optr & FLASH_OPTR_TZEN_BIT) >> 31);
+
+  JLINK_SYS_Report("Unlocking FLASH_NCSR register");
+
+  // Unlock FLASH NSCR register using the standard unlock sequence
+  // This is required before any flash operations can be performed
+  JLINK_MEM_WriteU32(FLASH_NSKEYR_ADDRESS, KEY1);
+  JLINK_MEM_WriteU32(FLASH_NSKEYR_ADDRESS, KEY2);
+
+  // Verify that the NSCR register was successfully unlocked
+  nscr = JLINK_MEM_ReadU32(FLASH_NSCR_ADDRESS);
+  if((nscr & FLASH_NSCR_LOCK_BIT) != 0x0){
+    JLINK_SYS_Report("Failed to unlock FLASH_NSCR_LOCK");
+    return 1;
+  }
+
+  JLINK_SYS_Report("FLASH_NSCR register unlocked");
+
+  // Check if option bytes are locked and unlock them if necessary
+  if(nscr & FLASH_NSCR_OPTLOCK_BIT){
+    // Use option bytes unlock sequence
+    JLINK_MEM_WriteU32(FLASH_OPTKEYR_ADDRESS, OPTKEY1);
+    JLINK_MEM_WriteU32(FLASH_OPTKEYR_ADDRESS, OPTKEY2);
+    JLINK_SYS_Sleep(10); // Brief delay to ensure unlock operation completes
+  }
+
+  // Verify option bytes unlock was successful
+  nscr = JLINK_MEM_ReadU32(FLASH_NSCR_ADDRESS);
+  if(nscr & FLASH_NSCR_OPTLOCK_BIT){
+    JLINK_SYS_Report("Error: Failed to unlock FLASH_NSCR_OPTLOCK");
+    return 1;
+  }
+
+  JLINK_SYS_Report("FLASH_NSCR_OPTLOCK unlocked");
+
+  // Option bytes configuration section
+  // 1. Enable TrustZone (TZEN bit)
+  // 2. Set secure boot address (SECBOOTADD0R to 0x0C004000)
+
+  // Enable TrustZone by setting TZEN bit in OPTR register
+  optr = JLINK_MEM_ReadU32(FLASH_OPTR_ADDRESS);
+  JLINK_MEM_WriteU32(FLASH_OPTR_ADDRESS, optr | FLASH_OPTR_TZEN_BIT);
+
+  // Verify TrustZone was successfully enabled
+  optr = JLINK_MEM_ReadU32(FLASH_OPTR_ADDRESS);
+  JLINK_SYS_Report1("OPTR: ", optr);
+  if((optr & FLASH_OPTR_TZEN_BIT) == 0x0){
+    JLINK_SYS_Report("Error: Failed to set TZEN bit");
+    return 1;
+  }
+
+  JLINK_SYS_Report("TZEN set to 1");
+
+  // Configure secure boot address. Read current secure boot address and
+  // check its status
+  secbootadd = JLINK_MEM_ReadU32(FLASH_SECBOOTADD0R);
+  JLINK_SYS_Report1("SECBOOTADD0: ", secbootadd);
+
+  // Check if secure boot address is already locked
+  if(secbootadd & FLASH_SECBOOTADD0R_BOOT_LOCK_BIT){
+    JLINK_SYS_Report("SECBOOTADD0R locked, skipped.");
+  }else if (secbootadd != 0x0C00007C) {
+    // Address is unlocked but doesn't match ST production value
+    JLINK_SYS_Report("Error: SECBOOTADD0R unlocked, but its content is different from ST production value");
+  }else{
+    // Address is unlocked and matches expected value, update it to target address
+    JLINK_MEM_WriteU32(FLASH_SECBOOTADD0R, 0x0C00407C);
+    secbootadd = JLINK_MEM_ReadU32(FLASH_SECBOOTADD0R);
+    JLINK_SYS_Report1("SECBOOTADD0 set to:", secbootadd);
+  }
+
+  // Set OPTSTRT bit to initiate option bytes programming
+  nscr = JLINK_MEM_ReadU32(FLASH_NSCR_ADDRESS);
+  JLINK_MEM_WriteU32(FLASH_NSCR_ADDRESS, nscr | FLASH_NSCR_OPTSTRT);
+
+  // Wait for flash operation to complete by monitoring BSY flag
+  do{
+    nssr = JLINK_MEM_ReadU32(FLASH_NSSR_ADDRESS);
+  }while((nssr & FLASH_NSSR_BSY_BIT) != 0x0);
+
+  // Launch option bytes loading to apply the new configuration
+  // This causes the system to reload option bytes from flash
+  nscr = JLINK_MEM_ReadU32(FLASH_NSCR_ADDRESS);
+  JLINK_MEM_WriteU32(FLASH_NSCR_ADDRESS, nscr | FLASH_NSCR_OBL_LAUNCH);
+
+  JLINK_SYS_Report("*** Option-bytes configuration completed *** ");
+
+  return 0; // Success
+
+}
