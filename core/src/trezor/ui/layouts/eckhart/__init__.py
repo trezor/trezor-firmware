@@ -1060,7 +1060,7 @@ if not utils.BITCOIN_ONLY:
             TR.confirm_total__title_fee,
         )
 
-    async def confirm_trade(
+    def confirm_trade(
         title: str,
         subtitle: str,
         sell_amount: str,
@@ -1070,8 +1070,8 @@ if not utils.BITCOIN_ONLY:
         account_path: str,
         token_address: str,
         back_button: bool,
-    ) -> ui.UiResult:
-        from trezor.ui.layouts.menu import Menu, confirm_with_menu
+    ) -> Awaitable[ui.UiResult]:
+        from trezor.ui.layouts.menu import Menu, interact_with_menu
 
         trade_layout = trezorui_api.confirm_trade(
             title=title,
@@ -1096,7 +1096,7 @@ if not utils.BITCOIN_ONLY:
             TR.send__cancel_sign,
         )
 
-        return await confirm_with_menu(trade_layout, menu, "confirm_trade")
+        return interact_with_menu(trade_layout, menu, "confirm_trade")
 
     async def confirm_ethereum_payment_request(
         recipient_name: str,

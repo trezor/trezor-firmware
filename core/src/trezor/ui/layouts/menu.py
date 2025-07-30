@@ -102,7 +102,7 @@ async def show_menu(
             return
 
 
-async def confirm_with_menu(
+async def interact_with_menu(
     main: trezorui_api.LayoutObj[T],
     menu: Menu,
     br_name: str | None,
@@ -116,3 +116,15 @@ async def confirm_with_menu(
             await show_menu(menu, raise_on_cancel)
         else:
             return result
+
+
+async def confirm_with_menu(
+    main: trezorui_api.LayoutObj[T],
+    menu: Menu,
+    br_name: str | None,
+    br_code: ButtonRequestType = ButtonRequestType.Other,
+    raise_on_cancel: ExceptionType = ActionCancelled,
+) -> None:
+    result = await interact_with_menu(main, menu, br_name, br_code, raise_on_cancel)
+    # use this function when the layout may only return CONFIRMED on success (or raise an exception)
+    assert result is trezorui_api.CONFIRMED

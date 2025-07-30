@@ -40,7 +40,7 @@ def confirm_action(
     prompt_screen: bool = False,
     prompt_title: str | None = None,
 ) -> Awaitable[ui.UiResult]:
-    from trezor.ui.layouts.menu import Menu, confirm_with_menu
+    from trezor.ui.layouts.menu import Menu, interact_with_menu
 
     if description is not None and description_param is not None:
         description = description.format(description_param)
@@ -74,7 +74,7 @@ def confirm_action(
             cancel=verb_cancel or TR.buttons__cancel,
         )
 
-        return confirm_with_menu(
+        return interact_with_menu(
             flow,
             menu,
             br_name,
@@ -728,7 +728,7 @@ def confirm_value(
 ) -> Awaitable[ui.UiResult]:
     """General confirmation dialog, used by many other confirm_* functions."""
 
-    from trezor.ui.layouts.menu import Menu, confirm_with_menu
+    from trezor.ui.layouts.menu import Menu, interact_with_menu
 
     main = trezorui_api.confirm_value(
         title=title,
@@ -749,7 +749,7 @@ def confirm_value(
         (create_details(name, value) for name, value in info_items),
         cancel=TR.buttons__cancel,
     )
-    return confirm_with_menu(main, menu, br_name, br_code)
+    return interact_with_menu(main, menu, br_name, br_code)
 
 
 def confirm_properties(
