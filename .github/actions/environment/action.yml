@@ -13,8 +13,8 @@ runs:
       with:
         nix_path: nixpkgs=channel:nixos-unstable
     - name: Dependencies nixpkgs
-      run: nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "true"
+      run: timeout -v --kill-after=10 500 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "true"
       shell: sh
     - name: Dependencies poetry
-      run: nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "poetry install"
+      run: timeout -v --kill-after=10 100 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "poetry install"
       shell: sh
