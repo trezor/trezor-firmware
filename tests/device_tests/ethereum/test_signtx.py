@@ -644,7 +644,7 @@ def test_signtx_payment_req(
     reason="T1 does not support payment requests. Payment requests not yet implemented on model T.",
 )
 def test_signtx_payment_req_long_value(
-    client: Client,
+    session: Session,
 ):
     from trezorlib import btc, misc
 
@@ -657,16 +657,16 @@ def test_signtx_payment_req_long_value(
         address_n=parse_path("m/44h/0h/0h/0/0"),
     )
     purchase_memo.address_resp = btc.get_authenticated_address(
-        client, purchase_memo.coin_name, purchase_memo.address_n
+        session, purchase_memo.coin_name, purchase_memo.address_n
     )
 
     memos = [purchase_memo]
 
-    nonce = misc.get_nonce(client)
+    nonce = misc.get_nonce(session)
 
     params = dict(example_input_data_long_value["parameters"])
     params["payment_req"] = make_payment_request(
-        client,
+        session,
         recipient_name="trezor.io",
         slip44=60,
         outputs=[(int(params["value"], 16), params["to_address"])],
@@ -675,7 +675,7 @@ def test_signtx_payment_req_long_value(
     )
 
     _do_test_signtx(
-        client,
+        session,
         params,
         example_input_data_long_value["result"],
     )
