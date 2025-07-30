@@ -23,3 +23,6 @@
 
 // Initializes the BLE module
 bool ble_init(void);
+
+// Stop advertising
+void advertising_stop(void);
