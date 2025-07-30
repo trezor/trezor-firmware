@@ -101,8 +101,8 @@ def make_payment_request(
             hash_bytes_prefixed(h_pr, memo.amount.encode())
             hash_bytes_prefixed(h_pr, memo.address_resp.address.encode())
         elif isinstance(memo, TextDetailsMemo):
-            msg_memo = messages.TextDetailsMemo(text=memo.text)
-            msg_memos.append(messages.PaymentRequestMemo(text_memo=msg_memo))
+            msg_memo = messages.TextDetailsMemo(title=memo.title, text=memo.text)
+            msg_memos.append(messages.PaymentRequestMemo(text_details_memo=msg_memo))
             memo_type = 4
             h_pr.update(memo_type.to_bytes(4, "little"))
             hash_bytes_prefixed(h_pr, memo.title.encode())
