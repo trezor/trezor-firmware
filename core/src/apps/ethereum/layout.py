@@ -138,8 +138,6 @@ async def require_confirm_payment_request(
             refund_account, refund_account_path = get_account_and_path(
                 memo.refund_memo.address_n
             )
-            assert refund_account is not None
-            assert refund_account_path is not None
             refunds.append(
                 (memo.refund_memo.address, refund_account, refund_account_path)
             )
@@ -147,8 +145,6 @@ async def require_confirm_payment_request(
             coin_purchase_account, coin_purchase_account_path = get_account_and_path(
                 memo.coin_purchase_memo.address_n
             )
-            assert coin_purchase_account is not None
-            assert coin_purchase_account_path is not None
             trades.append(
                 (
                     f"-\u00A0{total_amount}",
