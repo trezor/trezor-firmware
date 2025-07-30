@@ -8,7 +8,16 @@ from trezor.wire import ActionCancelled
 from ..common import draw_simple, interact, raise_if_cancelled, with_info
 
 if TYPE_CHECKING:
-    from typing import Any, Awaitable, Coroutine, Iterable, NoReturn, Sequence, TypeVar
+    from typing import (
+        Any,
+        Awaitable,
+        Coroutine,
+        Iterable,
+        List,
+        NoReturn,
+        Sequence,
+        TypeVar,
+    )
 
     from ..common import ExceptionType, PropertyType
     from ..menu import Details
@@ -1034,8 +1043,8 @@ if not utils.BITCOIN_ONLY:
         sell_amount: str,
         buy_amount: str,
         address: str,
-        account: str,
-        account_path: str,
+        account: str | None,
+        account_path: str | None,
         token_address: str,
     ) -> None:
         from trezor.ui.layouts.menu import Menu, confirm_with_menu
@@ -1047,15 +1056,16 @@ if not utils.BITCOIN_ONLY:
             buy_amount=buy_amount,
         )
 
+        account_items: list[tuple[str, str]] = [("", address)]
+        if account:
+            account_items.append((TR.words__account, account))
+        if account_path:
+            account_items.append((TR.address_details__derivation_path, account_path))
         menu = Menu.root(
             [
                 create_details(
                     TR.address__title_receive_address,
-                    [
-                        ("", address),
-                        (TR.words__account, account),
-                        (TR.address_details__derivation_path, account_path),
-                    ],
+                    account_items,
                 ),
                 create_details(TR.ethereum__token_contract, token_address),
             ],
@@ -1068,8 +1078,8 @@ if not utils.BITCOIN_ONLY:
         recipient_name: str,
         recipient: str,
         texts: Iterable[str],
-        refunds: Iterable[tuple[str, str, str]],
-        trades: Iterable[tuple[str, str, str, str, str]],
+        refunds: Iterable[tuple[str, str | None, str | None]],
+        trades: List[tuple[str, str, str, str | None, str | None]],
         account: str | None,
         account_path: str | None,
         chain_id: str,
@@ -1100,14 +1110,17 @@ if not utils.BITCOIN_ONLY:
 
         menu_items = [create_details(TR.address__title_provider_address, recipient)]
         for r_address, r_account, r_account_path in refunds:
+            refund_account_items: list[tuple[str, str]] = [("", r_address)]
+            if r_account:
+                refund_account_items.append((TR.words__account, r_account))
+            if r_account_path:
+                refund_account_items.append(
+                    (TR.address_details__derivation_path, r_account_path)
+                )
             menu_items.append(
                 create_details(
                     TR.address__title_refund_address,
-                    [
-                        ("", r_address),
-                        (TR.words__account, r_account),
-                        (TR.address_details__derivation_path, r_account_path),
-                    ],
+                    refund_account_items,
                 )
             )
         menu = Menu.root(menu_items, TR.send__cancel_sign)
