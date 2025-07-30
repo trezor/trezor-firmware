@@ -146,13 +146,19 @@ class ProtocolV2Channel(Channel):
         device_properties = payload[10:]
         return (channel_id, device_properties)
 
-    def _init_noise(self, randomness_static: bytes | None = None) -> None:
-        if randomness_static is None:
-            randomness_static = os.urandom(32)
+    def _init_noise(
+        self,
+        randomness_static: bytes | None = None,
+        randomness_ephemeral: bytes | None = None,
+    ) -> None:
+        randomness_static = randomness_static or os.urandom(32)
         self._noise = NoiseConnection.from_name(b"Noise_XX_25519_AESGCM_SHA256")
         self._noise.set_as_initiator()
         self._noise.set_keypair_from_private_bytes(Keypair.STATIC, randomness_static)
-
+        if randomness_ephemeral is not None:
+            self._noise.set_keypair_from_private_bytes(
+                Keypair.EPHEMERAL, randomness_ephemeral
+            )
         prologue = bytes(self.device_properties)
         self._noise.set_prologue(prologue)
         self._noise.start_handshake()
@@ -161,11 +167,14 @@ class ProtocolV2Channel(Channel):
         self,
         credential: bytes | None = None,
         host_static_randomness: bytes | None = None,
+        host_ephemeral_randomness: bytes | None = None,
     ) -> int:
 
         randomness_static = host_static_randomness or os.urandom(32)
-
-        self._init_noise(randomness_static)
+        if host_ephemeral_randomness is not None:
+            self._init_noise(randomness_static, host_ephemeral_randomness)
+        else:
+            self._init_noise(randomness_static)
         self._send_handshake_init_request()
         self._read_ack()
         self._read_handshake_init_response()
