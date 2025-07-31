@@ -50,19 +50,17 @@ class InputFlowBase:
 
         # There could be one common input flow for all models
         if hasattr(self, "input_flow_common"):
-            flow = getattr(self, "input_flow_common")
-        elif self.client.layout_type is LayoutType.Bolt:
-            flow = self.input_flow_bolt
-        elif self.client.layout_type is LayoutType.Caesar:
-            flow = self.input_flow_caesar
-        elif self.client.layout_type is LayoutType.Delizia:
-            flow = self.input_flow_delizia
-        elif self.client.layout_type is LayoutType.Eckhart:
-            flow = self.input_flow_eckhart
-        else:
-            raise ValueError("Unknown model")
+            return getattr(self, "input_flow_common")
+        if self.client.layout_type is LayoutType.Bolt:
+            return self.input_flow_bolt
+        if self.client.layout_type is LayoutType.Caesar:
+            return self.input_flow_caesar
+        if self.client.layout_type is LayoutType.Delizia:
+            return self.input_flow_delizia
+        if self.client.layout_type is LayoutType.Eckhart:
+            return self.input_flow_eckhart
 
-        return flow
+        raise ValueError("Unknown model")
 
     def input_flow_bolt(self) -> BRGeneratorType:
         """Special for TT"""
