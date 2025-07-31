@@ -19,10 +19,12 @@ FEATURES_WANTED = [
     "dma2d",
     "input",
     "iwdg",
+    "kernel_mode",
     "power_manager",
     "rgb_led",
     "rtc",
     "secure_domain",
+    "secure_mode",
     "suspend",
     "usb",
     ]
@@ -55,11 +57,8 @@ FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_
 CCFLAGS_MOD += '-Wno-sequence-point '
 CPPPATH_MOD += [
     'vendor/trezor-crypto',
-    'vendor/trezor-storage',
 ]
 CPPDEFINES_MOD += [
-    'KERNEL_MODE',
-    'SECURE_MODE',
     'AES_128',
     'AES_192',
     'USE_KECCAK',
@@ -67,9 +66,6 @@ CPPDEFINES_MOD += [
     'FANCY_FATAL_ERROR',
 ]
 
-SOURCE_MOD += [
-    'vendor/trezor-storage/flash_area.c',
-]
 SOURCE_MOD_CRYPTO = [
     'vendor/trezor-crypto/blake2s.c',
     'vendor/trezor-crypto/chacha_drbg.c',

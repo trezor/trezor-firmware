@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef SECURE_MODE
+
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
@@ -28,8 +30,6 @@
 #include "rand.h"
 
 #include "stm32u5xx_ll_utils.h"
-
-#ifdef SECURE_MODE
 
 static entropy_data_t g_entropy = {0};
 

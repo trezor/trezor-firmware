@@ -32,7 +32,6 @@
 #include <util/flash.h>
 #include <util/image.h>
 #include <util/rsod.h>
-#include "flash.h"
 
 #ifdef USE_HASH_PROCESSOR
 #include <sec/hash_processor.h>

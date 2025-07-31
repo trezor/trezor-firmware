@@ -29,7 +29,6 @@
 #include <util/image.h>
 
 #include "blake2s.h"
-#include "flash_area.h"
 
 #define FW_HASHING_CHUNK_SIZE 1024
 

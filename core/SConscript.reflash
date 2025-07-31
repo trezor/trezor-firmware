@@ -21,7 +21,9 @@ if TREZOR_MODEL in ('D001', 'D002'):
 FEATURES_WANTED = [
     "display",
     "input",
+    "kernel_mode",
     "sd_card",
+    "secure_mode",
     ]
 
 CCFLAGS_MOD = ''
@@ -34,15 +36,9 @@ SOURCE_HAL = []
 PATH_HAL = []
 RUST_UI_FEATURES = []
 
-CPPDEFINES_MOD += [
-    'KERNEL_MODE',
-    'SECURE_MODE',
-]
-
 # modtrezorcrypto
 CPPPATH_MOD += [
     'vendor/trezor-crypto',
-    'vendor/trezor-storage',
 ]
 SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/memzero.c',
@@ -70,7 +66,6 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
-    'vendor/trezor-storage/flash_area.c',
 ]
 
 ui.init_ui(TREZOR_MODEL, "prodtest", RUST_UI_FEATURES)

@@ -6,7 +6,6 @@
 #include <io/display.h>
 #include <io/usb.h>
 #include <rtl/secbool.h>
-#include <sec/storage.h>
 #include <sys/irq.h>
 #include <sys/sysevent.h>
 #include <sys/systick.h>
@@ -48,6 +47,10 @@
 
 #ifdef USE_SUSPEND
 #include <sys/suspend.h>
+#endif
+
+#ifdef USE_STORAGE
+#include <sec/storage.h>
 #endif
 
 #include "bip39.h"

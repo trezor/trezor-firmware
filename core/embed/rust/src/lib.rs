@@ -31,6 +31,7 @@ mod maybe_trace;
 mod micropython;
 #[cfg(feature = "protobuf")]
 mod protobuf;
+#[cfg(feature = "storage")]
 mod storage;
 mod strutil;
 mod time;
