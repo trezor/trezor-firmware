@@ -575,7 +575,10 @@ class DebugLink:
 
     def _call(self, msg: protobuf.MessageType, timeout: float | None = None) -> t.Any:
         self._write(msg)
-        return self._read(timeout=timeout)
+        result = self._read(timeout=timeout)
+        if isinstance(result, messages.Failure):
+            raise TrezorFailure(result)
+        return result
 
     def state(self, wait_type: DebugWaitType | None = None) -> messages.DebugLinkState:
         if wait_type is None:
@@ -636,8 +639,6 @@ class DebugLink:
         obj = self._call(
             messages.DebugLinkGetState(wait_layout=DebugWaitType.NEXT_LAYOUT)
         )
-        if isinstance(obj, messages.Failure):
-            raise TrezorFailure(obj)
         return LayoutContent(obj.tokens)
 
     @contextmanager
