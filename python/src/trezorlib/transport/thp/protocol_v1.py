@@ -22,7 +22,7 @@ import typing as t
 
 from ... import exceptions, messages
 from ...log import DUMP_BYTES
-from .protocol_and_channel import Channel
+from .channel import Channel
 
 LOG = logging.getLogger(__name__)
 

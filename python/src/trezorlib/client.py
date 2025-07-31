@@ -26,7 +26,7 @@ from . import exceptions, mapping, messages, models
 from .tools import parse_path
 from .transport import Transport, get_transport
 from .transport.thp.cpace import Cpace
-from .transport.thp.protocol_and_channel import Channel
+from .transport.thp.channel import Channel
 from .transport.thp.protocol_v1 import ProtocolV1Channel, UnexpectedMagicError
 from .transport.thp.protocol_v2 import ProtocolV2Channel, TrezorState
 

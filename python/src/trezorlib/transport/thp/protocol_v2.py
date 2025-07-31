@@ -15,7 +15,7 @@ from ..thp import checksum, thp_io
 from ..thp.checksum import CHECKSUM_LENGTH
 from ..thp.message_header import MessageHeader
 from . import control_byte
-from .protocol_and_channel import Channel
+from .channel import Channel
 
 LOG = logging.getLogger(__name__)
 
