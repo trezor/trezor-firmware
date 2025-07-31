@@ -11,7 +11,6 @@ def unix_common_files(env, defines, sources, paths):
     paths += [
         "embed/io/display/inc",
         "embed/io/usb/inc",
-        "embed/sec/entropy/inc",
         "embed/sec/random_delays/inc",
         "embed/sec/time_estimate/inc",
         "embed/sys/bsp/inc",
@@ -33,10 +32,10 @@ def unix_common_files(env, defines, sources, paths):
     sources += [
         "embed/io/display/unix/display_driver.c",
         "embed/io/usb/unix/usb.c",
-        "embed/sec/entropy/unix/entropy.c",
         "embed/sec/random_delays/unix/random_delays.c",
         "embed/sec/secret/unix/secret.c",
         "embed/sec/secret/unix/secret_keys.c",
+        "embed/sec/storage/unix/storage_salt.c",
         "embed/sec/monoctr/unix/monoctr.c",
         "embed/sec/rng/unix/rng.c",
         "embed/sec/time_estimate/unix/time_estimate.c",

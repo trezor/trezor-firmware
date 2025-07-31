@@ -21,32 +21,26 @@
 
 #include <trezor_types.h>
 
-#ifdef SECURE_MODE
-
 /**
- * Initializes the entropy module.
- * If entropy has not yet been generated for the device, it is generated now.
+ * Maximum size of generated salt (minimum is 32 bytes).
+ * Newer devices derive salt from the master key - 32 bytes.
+ * Older devices derive salt from CPUID and OTP - 32 + 12 bytes.
  */
-void entropy_init(void);
-
-#endif  // SECURE_MODE
-
-/**
- * Maximum size of generated entropy (minimum is 32 bytes).
- * Newer devices derive entropy from the master key - 32 bytes.
- * Older devices derive entropy from CPUID and OTP - 32 + 12 bytes.
- */
-#define ENTROPY_MAX_SIZE (32 + 12)
+#define STORAGE_SALT_MAX_SIZE (32 + 12)
 
 typedef struct {
   /** Number of valid bytes in the bytes array */
   size_t size;
-  /** Generated entropy bytes */
-  uint8_t bytes[ENTROPY_MAX_SIZE];
-} entropy_data_t;
+  /** Generated salt bytes */
+  uint8_t bytes[STORAGE_SALT_MAX_SIZE];
+} storage_salt_t;
 
 /**
- * Retrieves the generated entropy buffer.
- * @param entropy structure filled with the generated data.
+ * Retrieves the generated buffer with storage salt.
+ *
+ * If storage salt has not yet been generated for the device, it is
+ * generated now.
+ *
+ * @param salt structure filled with the generated data.
  */
-void entropy_get(entropy_data_t* entropy);
+void storage_salt_get(storage_salt_t* salt);

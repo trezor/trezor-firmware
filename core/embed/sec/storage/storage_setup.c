@@ -19,16 +19,16 @@
 
 #ifdef SECURE_MODE
 
-#include <sec/entropy.h>
 #include <sec/storage.h>
 
 #include "memzero.h"
+#include "storage_salt.h"
 
 void storage_setup(PIN_UI_WAIT_CALLBACK callback) {
-  entropy_data_t entropy;
-  entropy_get(&entropy);
-  storage_init(callback, entropy.bytes, entropy.size);
-  memzero(&entropy, sizeof(entropy));
+  storage_salt_t salt;
+  storage_salt_get(&salt);
+  storage_init(callback, salt.bytes, salt.size);
+  memzero(&salt, sizeof(salt));
 }
 
 #endif  // SECURE_MODE

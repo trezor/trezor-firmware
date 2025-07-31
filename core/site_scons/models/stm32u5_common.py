@@ -10,7 +10,6 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
     ]
 
     paths += [
-        "embed/sec/entropy/inc",
         "embed/sec/hash_processor/inc",
         "embed/sec/monoctr/inc",
         "embed/sec/random_delays/inc",
@@ -82,7 +81,6 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
     ]
 
     sources += [
-        "embed/sec/entropy/stm32u5/entropy.c",
         "embed/sec/hash_processor/stm32u5/hash_processor.c",
         "embed/sec/monoctr/stm32u5/monoctr.c",
         "embed/sec/random_delays/stm32/random_delays.c",
@@ -91,6 +89,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/secret/stm32u5/secret_keys.c",
         "embed/sec/secure_aes/stm32u5/secure_aes.c",
         "embed/sec/secure_aes/stm32u5/secure_aes_unpriv.c",
+        "embed/sec/storage/stm32u5/storage_salt.c",
         "embed/sec/time_estimate/stm32/time_estimate.c",
         "embed/sys/dbg/stm32/dbg_printf.c",
         "embed/sys/irq/stm32/irq.c",

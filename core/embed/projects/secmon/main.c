@@ -20,7 +20,6 @@
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 
-#include <sec/entropy.h>
 #include <sec/random_delays.h>
 #include <sec/secure_aes.h>
 #include <sys/bootutils.h>
@@ -62,7 +61,6 @@ static void drivers_init(void) {
 #ifdef USE_STORAGE_HWKEY
   secure_aes_init();
 #endif
-  entropy_init();
 
 #ifdef USE_TAMPER
   tamper_init();
