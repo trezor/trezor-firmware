@@ -64,6 +64,7 @@ def _wait_for_welcome_animation(debug: "DebugLink"):
 
 
 def _assert_begin_screen_and_proceed(debug: "DebugLink"):
+    debug.synchronize_at(TR.instructions__tap_to_start)
     layout = debug.read_layout()
     assert layout.text_content() == TR.tutorial__welcome_safe7.replace("\n", " ")
     assert TR.instructions__tap_to_start in layout.action_bar()
