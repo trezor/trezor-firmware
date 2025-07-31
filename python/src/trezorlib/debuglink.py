@@ -975,7 +975,7 @@ class DebugUI:
 
     def _visit_menu_items(self) -> LayoutContent:
         layout = self.debuglink.read_layout()
-        if not layout.has_menu():
+        if not layout.has_menu() or not self.debuglink.allow_interactions:
             return layout
 
         # enter info menu layout and paginate through its items
