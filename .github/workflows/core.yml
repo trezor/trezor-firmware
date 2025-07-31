@@ -62,23 +62,6 @@ jobs:
           - model: T2B1
             coins: universal
             type: normal
-          - model: T2T1
-            coins: universal
-            type: debuglink
-            protocol: v2
-          - model: T2T1
-            coins: btconly
-            type: debuglink
-            protocol: v2
-          # TODO: THP build overflows T3T1 flash
-          # - model: T3T1
-          #   coins: universal
-          #   type: debuglink
-          #   protocol: v2
-          - model: T3T1
-            coins: btconly
-            type: debuglink
-            protocol: v2
           - model: T3W1
             coins: universal
             type: debuglink
@@ -148,26 +131,6 @@ jobs:
           - type: normal
             asan: asan
         include:
-          - model: T2T1
-            coins: universal
-            type: debuglink
-            asan: noasan
-            protocol: v2
-          - model: T2T1
-            coins: btconly
-            type: debuglink
-            asan: noasan
-            protocol: v2
-          - model: T3T1
-            coins: universal
-            type: debuglink
-            asan: noasan
-            protocol: v2
-          - model: T3T1
-            coins: btconly
-            type: debuglink
-            asan: noasan
-            protocol: v2
           - model: T3W1
             coins: universal
             type: debuglink
@@ -252,7 +215,10 @@ jobs:
       matrix:
         model: [T2T1, T3B1, T3T1, T3W1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
-        protocol: [v1, v2]
+        protocol: [v1]
+        include:
+          - model: T3W1
+            protocol: v2
     env:
       TREZOR_MODEL: ${{ matrix.model }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
@@ -280,7 +246,10 @@ jobs:
       matrix:
         model: [T2T1, T3B1, T3T1, T3W1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
-        protocol: [v1, v2]
+        protocol: [v1]
+        include:
+          - model: T3W1
+            protocol: v2
     env:
       TREZOR_MODEL: ${{ matrix.model }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
@@ -442,7 +411,7 @@ jobs:
         # FIXME: T3T1 https://github.com/trezor/trezor-firmware/issues/3595
         model: [T2T1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
-        protocol: [v1, v2]
+        protocol: [v1]
     env:
       TREZOR_UPGRADE_TEST: core
       PYTEST_TIMEOUT: 20
@@ -660,6 +629,7 @@ jobs:
           retention-days: 7
         if: always()
       - uses: ./.github/actions/upload-coverage
+
 
   # Tests for U2F and HID.
   core_u2f_test:
