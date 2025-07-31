@@ -218,6 +218,7 @@ jobs:
         protocol: [v1]
         include:
           - model: T3W1
+            asan: noasan
             protocol: v2
     env:
       TREZOR_MODEL: ${{ matrix.model }}
@@ -249,6 +250,7 @@ jobs:
         protocol: [v1]
         include:
           - model: T3W1
+            asan: noasan
             protocol: v2
     env:
       TREZOR_MODEL: ${{ matrix.model }}
