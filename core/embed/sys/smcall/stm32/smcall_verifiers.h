@@ -70,10 +70,9 @@ bool __wur optiga_random_buffer__verified(uint8_t *dest, size_t size);
 #endif  // USE_OPTIGA
 
 // ---------------------------------------------------------------------
-#include "storage.h"
+#include <sec/storage.h>
 
-void storage_init__verified(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
-                            const uint16_t salt_len);
+void storage_setup__verified(PIN_UI_WAIT_CALLBACK callback);
 
 secbool storage_unlock__verified(const uint8_t *pin, size_t pin_len,
                                  const uint8_t *ext_salt);
@@ -97,11 +96,6 @@ secbool storage_set__verified(const uint16_t key, const void *val,
                               const uint16_t len);
 
 secbool storage_next_counter__verified(const uint16_t key, uint32_t *count);
-
-// ---------------------------------------------------------------------
-#include <sec/entropy.h>
-
-void entropy_get__verified(entropy_data_t *entropy);
 
 // ---------------------------------------------------------------------
 #include <util/fwutils.h>

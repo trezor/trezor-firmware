@@ -225,19 +225,14 @@ static secbool storage_callback_wrapper(uint32_t wait, uint32_t progress,
   }
 }
 
-void storage_init__verified(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
-                            const uint16_t salt_len) {
+void storage_setup__verified(PIN_UI_WAIT_CALLBACK callback) {
   if (!probe_execute_access(callback)) {
     goto access_violation;
   }
 
-  if (!probe_read_access(salt, salt_len)) {
-    goto access_violation;
-  }
-
   storage_callback = (ns_storage_callback_t)cmse_nsfptr_create(callback);
+  storage_setup(storage_callback_wrapper);
 
-  storage_init(storage_callback_wrapper, salt, salt_len);
   return;
 
 access_violation:
@@ -366,20 +361,6 @@ secbool storage_next_counter__verified(const uint16_t key, uint32_t *count) {
 access_violation:
   apptask_access_violation();
   return secfalse;
-}
-
-// ---------------------------------------------------------------------
-
-void entropy_get__verified(entropy_data_t *entropy) {
-  if (!probe_write_access(entropy, sizeof(*entropy))) {
-    goto access_violation;
-  }
-
-  entropy_get(entropy);
-  return;
-
-access_violation:
-  apptask_access_violation();
 }
 
 // ---------------------------------------------------------------------

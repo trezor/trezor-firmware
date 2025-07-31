@@ -97,16 +97,7 @@ pub type StorageResult<T> = Result<T, StorageError>;
 /// This function must be called before any other storage function.
 pub fn init() {
     unsafe {
-        let mut entropy: ffi::entropy_data_t = ffi::entropy_data_t {
-            bytes: [0; ffi::ENTROPY_MAX_SIZE as usize],
-            size: 0,
-        };
-        ffi::entropy_get(&mut entropy);
-        ffi::storage_init(
-            Some(callback_wrapper),
-            entropy.bytes.as_ptr(),
-            entropy.size as u16,
-        );
+        ffi::storage_setup(Some(callback_wrapper));
     }
 }
 

@@ -36,6 +36,10 @@ bool probe_read_access(const void *addr, size_t len);
 // given memory range.
 bool probe_write_access(void *addr, size_t len);
 
+// Checks if the current application task can execute code at the
+// given address.
+bool probe_execute_access(const void *addr);
+
 // Handles access violation by exiting the current application task
 // with a fatal error and the message "Access violation".
 void handle_access_violation(const char *file, int line);

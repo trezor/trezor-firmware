@@ -119,6 +119,27 @@ bool probe_write_access(void *addr, size_t len) {
   return false;
 }
 
+bool probe_execute_access(const void *addr) {
+  applet_t *applet = syscall_get_context();
+
+  if (addr == NULL) {
+    return true;
+  }
+
+  // Check if the first 4 bytes at the address are within
+  // the applet's code areas.
+
+  if (inside_area(addr, 4, &applet->layout.code1)) {
+    return true;
+  }
+
+  if (inside_area(addr, 4, &applet->layout.code2)) {
+    return true;
+  }
+
+  return false;
+}
+
 void handle_access_violation(const char *file, int line) {
   static const char *msg = "Access violation";
   applet_t *applet = syscall_get_context();
