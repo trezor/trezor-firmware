@@ -173,7 +173,6 @@ static secbool storage_set_encrypted(const uint16_t key, const void *val,
 static secbool storage_get_encrypted(const uint16_t key, void *val_dest,
                                      const uint16_t max_len, uint16_t *len);
 
-#include "flash.h"
 #ifdef FLASH_BIT_ACCESS
 #include "pinlogs_bitwise.h"
 #else

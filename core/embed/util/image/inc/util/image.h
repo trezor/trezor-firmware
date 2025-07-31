@@ -180,9 +180,11 @@ void vendor_header_hash(const vendor_header *const vhdr, uint8_t *hash);
 secbool __wur check_single_hash(const uint8_t *const hash,
                                 const uint8_t *const data, int len);
 
+#ifdef KERNEL_MODE
 secbool __wur check_image_contents(const image_header *const hdr,
                                    uint32_t firstskip,
                                    const flash_area_t *area);
+#endif
 
 void get_image_fingerprint(const image_header *const hdr, uint8_t *const out);
 
@@ -199,7 +201,9 @@ secbool __wur check_secmon_model(const secmon_header_t *const hdr);
 
 secbool __wur check_secmon_header_sig(const secmon_header_t *const hdr);
 
+#ifdef SECURE_MODE
 secbool __wur check_secmon_contents(const secmon_header_t *const hdr,
                                     size_t code_offset,
                                     const flash_area_t *area);
+#endif
 #endif

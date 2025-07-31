@@ -31,11 +31,12 @@
 
 #include "blake2s.h"
 #include "memzero.h"
-#include "uzlib.h"
 
 #ifdef USE_BOOT_UCB
 #include <util/boot_header.h>
 #include <util/boot_ucb.h>
+#else
+#include "uzlib.h"
 #endif
 
 #ifndef USE_BOOT_UCB

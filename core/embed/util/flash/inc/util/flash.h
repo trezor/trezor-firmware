@@ -17,13 +17,38 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_FLASH_H
-#define TREZORHAL_FLASH_H
+#pragma once
+
+#ifdef KERNEL_MODE
 
 #include <trezor_types.h>
 
-#include "flash_ll.h"
+#include <trezor-storage/flash_area.h>
+#include <trezor-storage/flash_ll.h>
+
+#include "../norcow_config.h"
 
 void flash_init(void);
 
-#endif  // TREZORHAL_FLASH_H
+extern const flash_area_t BOARDLOADER_AREA;
+extern const flash_area_t SECRET_AREA;
+extern const flash_area_t BHK_AREA;
+extern const flash_area_t ASSETS_AREA;
+extern const flash_area_t BOOTLOADER_AREA;
+extern const flash_area_t UNUSED_AREA;
+
+#ifdef SECMON
+extern flash_area_t FIRMWARE_AREA;
+#else
+extern const flash_area_t FIRMWARE_AREA;
+#endif
+
+#ifdef USE_BOOT_UCB
+extern const flash_area_t BOOTUCB_AREA;
+extern const flash_area_t BOOTUPDATE_AREA;
+#ifdef BOARDLOADER
+extern const flash_area_t NONBOARDLOADER_AREA;
+#endif
+#endif  // USE_BOOT_UCB
+
+#endif  // KERNEL_MODE

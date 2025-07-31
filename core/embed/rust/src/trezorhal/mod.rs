@@ -25,6 +25,7 @@ pub mod random;
 #[cfg(feature = "rgb_led")]
 pub mod rgb_led;
 pub mod slip39;
+#[cfg(feature = "storage")]
 pub mod storage;
 #[cfg(feature = "translations")]
 pub mod translations;

@@ -19,11 +19,10 @@
 
 #include <trezor_rtl.h>
 
-#include <flash_area.h>
 #include <rtl/cli.h>
 #include <sys/mpu.h>
 #include <util/board_capabilities.h>
-#include <util/flash_layout.h>
+#include <util/flash.h>
 
 #include "common.h"
 

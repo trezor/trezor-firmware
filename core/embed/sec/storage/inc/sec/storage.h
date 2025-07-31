@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <vendor/trezor-storage/storage.h>
+#include <trezor-storage/storage.h>
 
 /**
  * Initialize storage and optionally register a UI progress callback.

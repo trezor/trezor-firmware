@@ -10,9 +10,11 @@ HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 FEATURES_WANTED = [
     "boot_ucb",
     "display",
+    "kernel_mode",
     "pmic",
     "sd_card",
     "secure_domain",
+    "secure_mode",
     ]
 
 CCFLAGS_MOD = ''
@@ -37,19 +39,14 @@ FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_
 CCFLAGS_MOD += '-Wno-sequence-point '
 CPPPATH_MOD += [
     'vendor/trezor-crypto',
-    'vendor/trezor-storage',
 ]
 CPPDEFINES_MOD += [
-    'KERNEL_MODE',
-    'SECURE_MODE',
     'AES_128',
     'AES_192',
     'USE_KECCAK',
     'ED25519_NO_PRECOMP',
 ]
-SOURCE_MOD += [
-    'vendor/trezor-storage/flash_area.c',
-]
+
 SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/blake2s.c',
     'vendor/trezor-crypto/ed25519-donna/curve25519-donna-32bit.c',

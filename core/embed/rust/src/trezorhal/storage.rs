@@ -260,9 +260,6 @@ mod tests {
     const APPKEY: u16 = 0x0101;
 
     fn init_storage(unlock: bool) {
-        unsafe {
-            ffi::flash_init();
-        }
         init();
         wipe();
         lock();
