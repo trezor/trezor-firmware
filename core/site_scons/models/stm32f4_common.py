@@ -10,7 +10,6 @@ def stm32f4_common_files(env, defines, sources, paths):
     ]
 
     paths += [
-        "embed/sec/entropy/inc",
         "embed/sec/monoctr/inc",
         "embed/sec/random_delays/inc",
         "embed/sec/rng/inc",
@@ -64,12 +63,12 @@ def stm32f4_common_files(env, defines, sources, paths):
     ]
 
     sources += [
-        "embed/sec/entropy/stm32f4/entropy.c",
         "embed/sec/monoctr/stm32f4/monoctr.c",
         "embed/sec/random_delays/stm32/random_delays.c",
         "embed/sec/rng/stm32/rng.c",
         "embed/sec/secret/stm32f4/secret.c",
         "embed/sec/secret/stm32f4/secret_keys.c",
+        "embed/sec/storage/stm32f4/storage_salt.c",
         "embed/sec/time_estimate/stm32/time_estimate.c",
         "embed/sys/dbg/stm32/dbg_printf.c",
         "embed/sys/irq/stm32/irq.c",

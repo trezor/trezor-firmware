@@ -37,7 +37,6 @@
 #include <unistd.h>
 
 #include <io/display.h>
-#include <sec/entropy.h>
 #include <sec/secret.h>
 #include <sys/system.h>
 #include <sys/systimer.h>
@@ -507,8 +506,6 @@ static int sdl_event_filter(void *userdata, SDL_Event *event) {
 void drivers_init() {
   flash_init();
   flash_otp_init();
-
-  entropy_init();
 
   unit_properties_init();
 

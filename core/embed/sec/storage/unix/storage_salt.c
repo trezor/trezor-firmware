@@ -20,17 +20,14 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <sec/entropy.h>
+#include "../storage_salt.h"
 
-static entropy_data_t g_entropy = {0};
+void storage_salt_get(storage_salt_t* salt) {
+  memset(salt, 0, sizeof(*salt));
 
-void entropy_init(void) {
-  entropy_data_t* ent = &g_entropy;
 #ifdef SECRET_PRIVILEGED_MASTER_KEY_SLOT
-  ent->size = 32;
+  salt->size = 32;
 #else
-  ent->size = 32 + 12;  // Legacy
+  salt->size = 32 + 12;  // Legacy
 #endif
 }
-
-void entropy_get(entropy_data_t* entropy) { *entropy = g_entropy; }

@@ -22,7 +22,6 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <sec/entropy.h>
 #include <sec/secret_keys.h>
 #include <sys/mpu.h>
 #include <util/flash_otp.h>
@@ -31,19 +30,18 @@
 
 #include "stm32u5xx_ll_utils.h"
 
-static entropy_data_t g_entropy = {0};
+#include "../storage_salt.h"
 
 #ifdef SECRET_PRIVILEGED_MASTER_KEY_SLOT
 
-// Entropy derived from master key
-void entropy_init(void) {
-  entropy_data_t* ent = &g_entropy;
+void storage_salt_get(storage_salt_t* salt) {
+  memset(salt, 0, sizeof(*salt));
 
   vendor_header vhdr = {0};
   ensure(read_vendor_header((const uint8_t*)FIRMWARE_START, &vhdr), NULL);
 
-  _Static_assert(SECRET_KEY_STORAGE_SALT_SIZE <= sizeof(ent->bytes));
-  secbool retval = secret_key_storage_salt(vhdr.fw_type, ent->bytes);
+  _Static_assert(SECRET_KEY_STORAGE_SALT_SIZE <= sizeof(salt->bytes));
+  secbool retval = secret_key_storage_salt(vhdr.fw_type, salt->bytes);
 
 #if PRODUCTION
   ensure(retval, "Failed to get storage salt");
@@ -53,24 +51,22 @@ void entropy_init(void) {
   (void)retval;
 #endif
 
-  ent->size = SECRET_KEY_STORAGE_SALT_SIZE;
+  salt->size = SECRET_KEY_STORAGE_SALT_SIZE;
 }
 
 #else
 
 // Legacy entropy generated from CPUID & radnom data in OTP
-void entropy_init(void) {
+void storage_salt_get(storage_salt_t* salt) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_OTP);
-
-  entropy_data_t* ent = &g_entropy;
 
   // collect entropy from UUID
   uint32_t w = LL_GetUID_Word0();
-  memcpy(&ent->bytes[0], &w, 4);
+  memcpy(&salt->bytes[0], &w, 4);
   w = LL_GetUID_Word1();
-  memcpy(&ent->bytes[4], &w, 4);
+  memcpy(&salt->bytes[4], &w, 4);
   w = LL_GetUID_Word2();
-  memcpy(&ent->bytes[8], &w, 4);
+  memcpy(&salt->bytes[8], &w, 4);
 
   mpu_restore(mpu_mode);
 
@@ -83,15 +79,13 @@ void entropy_init(void) {
            NULL);
   }
   // collect entropy from OTP randomness block
-  ensure(flash_otp_read(FLASH_OTP_BLOCK_RANDOMNESS, 0, &ent->bytes[12],
+  ensure(flash_otp_read(FLASH_OTP_BLOCK_RANDOMNESS, 0, &salt->bytes[12],
                         FLASH_OTP_BLOCK_SIZE),
          NULL);
 
-  ent->size = 12 + FLASH_OTP_BLOCK_SIZE;
+  salt->size = 12 + FLASH_OTP_BLOCK_SIZE;
 }
 
 #endif
-
-void entropy_get(entropy_data_t* entropy) { *entropy = g_entropy; }
 
 #endif  // SECURE_MODE
