@@ -19,8 +19,8 @@
 
 #include <trezor_model.h>
 
-#include <gfx/gfx_draw.h>
 #include <io/display.h>
+#include <io/display_utils.h>
 
 /// class Display:
 ///     """
@@ -44,34 +44,6 @@ STATIC mp_obj_t mod_trezorui_Display_make_new(const mp_obj_type_t *type,
   mp_obj_Display_t *o = mp_obj_malloc(mp_obj_Display_t, type);
   return MP_OBJ_FROM_PTR(o);
 }
-
-/// def refresh(self) -> None:
-///     """
-///     Refresh display (update screen).
-///     """
-STATIC mp_obj_t mod_trezorui_Display_refresh(mp_obj_t self) {
-  display_refresh();
-  return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui_Display_refresh_obj,
-                                 mod_trezorui_Display_refresh);
-
-/// def bar(self, x: int, y: int, w: int, h: int, color: int) -> None:
-///     """
-///     Renders a bar at position (x,y = upper left corner) with width w and
-///     height h of color color.
-///     """
-STATIC mp_obj_t mod_trezorui_Display_bar(size_t n_args, const mp_obj_t *args) {
-  mp_int_t x = mp_obj_get_int(args[1]);
-  mp_int_t y = mp_obj_get_int(args[2]);
-  mp_int_t w = mp_obj_get_int(args[3]);
-  mp_int_t h = mp_obj_get_int(args[4]);
-  uint16_t c = mp_obj_get_int(args[5]);
-  gfx_draw_bar(gfx_rect(x, y, w, h), gfx_color16_to_color(c));
-  return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_bar_obj, 6, 6,
-                                           mod_trezorui_Display_bar);
 
 /// def orientation(self, degrees: int | None = None) -> int:
 ///     """
@@ -97,46 +69,45 @@ STATIC mp_obj_t mod_trezorui_Display_orientation(size_t n_args,
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_orientation_obj,
                                            1, 2,
                                            mod_trezorui_Display_orientation);
-
-/// def save(self, prefix: str) -> None:
+/// def record_start(self, target_directory: bytes, refresh_index: int) -> None:
 ///     """
-///     Saves current display contents to PNG file with given prefix.
+///     Starts screen recording with specified target directory and refresh
+///     index.
 ///     """
-STATIC mp_obj_t mod_trezorui_Display_save(mp_obj_t self, mp_obj_t prefix) {
+STATIC mp_obj_t mod_trezorui_Display_record_start(mp_obj_t self,
+                                                  mp_obj_t target_directory,
+                                                  mp_obj_t refresh_index) {
 #ifdef TREZOR_EMULATOR
-  mp_buffer_info_t pfx = {0};
-  mp_get_buffer_raise(prefix, &pfx, MP_BUFFER_READ);
-  if (pfx.len > 0) {
-    display_save(pfx.buf);
-  }
+  mp_buffer_info_t target_dir;
+  mp_int_t refresh_idx = mp_obj_get_int(refresh_index);
+  mp_get_buffer_raise(target_directory, &target_dir, MP_BUFFER_READ);
+  display_record_start(target_dir.buf, target_dir.len, refresh_idx);
 #endif
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorui_Display_save_obj,
-                                 mod_trezorui_Display_save);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorui_Display_record_start_obj,
+                                 mod_trezorui_Display_record_start);
 
-/// def clear_save(self) -> None:
+/// def record_stop(self) -> None:
 ///     """
-///     Clears buffers in display saving.
+///     Stops screen recording.
 ///     """
-STATIC mp_obj_t mod_trezorui_Display_clear_save(mp_obj_t self) {
+STATIC mp_obj_t mod_trezorui_Display_record_stop(mp_obj_t self) {
 #ifdef TREZOR_EMULATOR
-  display_clear_save();
+  display_record_stop();
 #endif
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui_Display_clear_save_obj,
-                                 mod_trezorui_Display_clear_save);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui_Display_record_stop_obj,
+                                 mod_trezorui_Display_record_stop);
 
 STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
-    {MP_ROM_QSTR(MP_QSTR_refresh),
-     MP_ROM_PTR(&mod_trezorui_Display_refresh_obj)},
-    {MP_ROM_QSTR(MP_QSTR_bar), MP_ROM_PTR(&mod_trezorui_Display_bar_obj)},
     {MP_ROM_QSTR(MP_QSTR_orientation),
      MP_ROM_PTR(&mod_trezorui_Display_orientation_obj)},
-    {MP_ROM_QSTR(MP_QSTR_save), MP_ROM_PTR(&mod_trezorui_Display_save_obj)},
-    {MP_ROM_QSTR(MP_QSTR_clear_save),
-     MP_ROM_PTR(&mod_trezorui_Display_clear_save_obj)},
+    {MP_ROM_QSTR(MP_QSTR_record_start),
+     MP_ROM_PTR(&mod_trezorui_Display_record_start_obj)},
+    {MP_ROM_QSTR(MP_QSTR_record_stop),
+     MP_ROM_PTR(&mod_trezorui_Display_record_stop_obj)},
     {MP_ROM_QSTR(MP_QSTR_WIDTH), MP_ROM_INT(DISPLAY_RESX)},
     {MP_ROM_QSTR(MP_QSTR_HEIGHT), MP_ROM_INT(DISPLAY_RESY)},
 };

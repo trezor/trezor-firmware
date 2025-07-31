@@ -518,11 +518,11 @@ void display_copy_mono1p(const gfx_bitblt_t *bb) {
 
 #endif
 
-const char *display_save(const char *prefix) {
+void display_save(const char *prefix) {
   display_driver_t *drv = &g_display_driver;
 
   if (!drv->initialized) {
-    return NULL;
+    return;
   }
 
 #ifdef DISPLAY_MONO
@@ -543,7 +543,7 @@ const char *display_save(const char *prefix) {
     if (memcmp(drv->prev_saved->pixels, crop->pixels, crop->pitch * crop->h) ==
         0) {
       SDL_FreeSurface(crop);
-      return filename;
+      return;
     }
     SDL_FreeSurface(drv->prev_saved);
   }
@@ -551,7 +551,6 @@ const char *display_save(const char *prefix) {
   snprintf(filename, sizeof(filename), "%s%08d.png", prefix, count++);
   IMG_SavePNG(crop, filename);
   drv->prev_saved = crop;
-  return filename;
 }
 
 void display_clear_save(void) {
