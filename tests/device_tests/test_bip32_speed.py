@@ -19,7 +19,7 @@ import time
 import pytest
 
 from trezorlib import btc, device
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.messages import SafetyCheckLevel
 from trezorlib.tools import H_
 
@@ -29,47 +29,47 @@ pytestmark = [
 ]
 
 
-def test_public_ckd(client: Client):
+def test_public_ckd(session: Session):
     # disable safety checks to access non-standard paths
-    device.apply_settings(client, safety_checks=SafetyCheckLevel.PromptTemporarily)
-    btc.get_address(client, "Bitcoin", [])  # to compute root node via BIP39
+    device.apply_settings(session, safety_checks=SafetyCheckLevel.PromptTemporarily)
+    btc.get_address(session, "Bitcoin", [])  # to compute root node via BIP39
 
     for depth in range(8):
         start = time.time()
-        btc.get_address(client, "Bitcoin", range(depth))
+        btc.get_address(session, "Bitcoin", range(depth))
         delay = time.time() - start
         expected = (depth + 1) * 0.26
         print("DEPTH", depth, "EXPECTED DELAY", expected, "REAL DELAY", delay)
         assert delay <= expected
 
 
-def test_private_ckd(client: Client):
+def test_private_ckd(session: Session):
     # disable safety checks to access non-standard paths
-    device.apply_settings(client, safety_checks=SafetyCheckLevel.PromptTemporarily)
-    btc.get_address(client, "Bitcoin", [])  # to compute root node via BIP39
+    device.apply_settings(session, safety_checks=SafetyCheckLevel.PromptTemporarily)
+    btc.get_address(session, "Bitcoin", [])  # to compute root node via BIP39
 
     for depth in range(8):
         start = time.time()
         address_n = [H_(-i) for i in range(-depth, 0)]
-        btc.get_address(client, "Bitcoin", address_n)
+        btc.get_address(session, "Bitcoin", address_n)
         delay = time.time() - start
         expected = (depth + 1) * 0.26
         print("DEPTH", depth, "EXPECTED DELAY", expected, "REAL DELAY", delay)
         assert delay <= expected
 
 
-def test_cache(client: Client):
+def test_cache(session: Session):
     # disable safety checks to access non-standard paths
-    device.apply_settings(client, safety_checks=SafetyCheckLevel.PromptTemporarily)
+    device.apply_settings(session, safety_checks=SafetyCheckLevel.PromptTemporarily)
 
     start = time.time()
     for x in range(10):
-        btc.get_address(client, "Bitcoin", [x, 2, 3, 4, 5, 6, 7, 8])
+        btc.get_address(session, "Bitcoin", [x, 2, 3, 4, 5, 6, 7, 8])
     nocache_time = time.time() - start
 
     start = time.time()
     for x in range(10):
-        btc.get_address(client, "Bitcoin", [1, 2, 3, 4, 5, 6, 7, x])
+        btc.get_address(session, "Bitcoin", [1, 2, 3, 4, 5, 6, 7, x])
     cache_time = time.time() - start
 
     print("NOCACHE TIME", nocache_time)

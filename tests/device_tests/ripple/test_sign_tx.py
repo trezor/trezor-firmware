@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import ripple
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -25,7 +25,7 @@ pytestmark = [pytest.mark.altcoin, pytest.mark.ripple, pytest.mark.models("core"
 
 
 @pytest.mark.parametrize("chunkify", (True, False))
-def test_ripple_sign_simple_tx(client: Client, chunkify: bool):
+def test_ripple_sign_simple_tx(session: Session, chunkify: bool):
     msg = ripple.create_sign_tx_msg(
         {
             "TransactionType": "Payment",
@@ -39,7 +39,7 @@ def test_ripple_sign_simple_tx(client: Client, chunkify: bool):
         }
     )
     resp = ripple.sign_tx(
-        client, parse_path("m/44h/144h/0h/0/0"), msg, chunkify=chunkify
+        session, parse_path("m/44h/144h/0h/0/0"), msg, chunkify=chunkify
     )
     assert (
         resp.signature.hex()
@@ -62,7 +62,7 @@ def test_ripple_sign_simple_tx(client: Client, chunkify: bool):
         }
     )
     resp = ripple.sign_tx(
-        client, parse_path("m/44h/144h/0h/0/2"), msg, chunkify=chunkify
+        session, parse_path("m/44h/144h/0h/0/2"), msg, chunkify=chunkify
     )
     assert (
         resp.signature.hex()
@@ -88,7 +88,7 @@ def test_ripple_sign_simple_tx(client: Client, chunkify: bool):
         }
     )
     resp = ripple.sign_tx(
-        client, parse_path("m/44h/144h/0h/0/2"), msg, chunkify=chunkify
+        session, parse_path("m/44h/144h/0h/0/2"), msg, chunkify=chunkify
     )
     assert (
         resp.signature.hex()
@@ -100,7 +100,7 @@ def test_ripple_sign_simple_tx(client: Client, chunkify: bool):
     )
 
 
-def test_ripple_sign_invalid_fee(client: Client):
+def test_ripple_sign_invalid_fee(session: Session):
     msg = ripple.create_sign_tx_msg(
         {
             "TransactionType": "Payment",
@@ -117,12 +117,12 @@ def test_ripple_sign_invalid_fee(client: Client):
         TrezorFailure,
         match="ProcessError: Fee must be in the range of 10 to 10,000 drops",
     ):
-        ripple.sign_tx(client, parse_path("m/44h/144h/0h/0/2"), msg)
+        ripple.sign_tx(session, parse_path("m/44h/144h/0h/0/2"), msg)
 
 
 @pytest.mark.experimental
 @pytest.mark.models("core", reason="T1 does not support payment requests")
-def test_signtx_payment_req(client: Client):
+def test_signtx_payment_req(session: Session):
     from trezorlib import ethereum, misc
 
     from ..payment_req import CoinPurchaseMemo, make_payment_request
@@ -133,7 +133,7 @@ def test_signtx_payment_req(client: Client):
         slip44=60,
         address_n=parse_path("m/44h/60h/0h"),
     )
-    memo.address_resp = ethereum.get_authenticated_address(client, memo.address_n)
+    memo.address_resp = ethereum.get_authenticated_address(session, memo.address_n)
 
     msg = ripple.create_sign_tx_msg(
         {
@@ -147,9 +147,9 @@ def test_signtx_payment_req(client: Client):
             "Sequence": 25,
         }
     )
-    nonce = misc.get_nonce(client)
+    nonce = misc.get_nonce(session)
     payment_req = make_payment_request(
-        client,
+        session,
         recipient_name="trezor.io",
         slip44=144,
         outputs=[(msg.payment.amount, msg.payment.destination)],
@@ -157,7 +157,7 @@ def test_signtx_payment_req(client: Client):
         nonce=nonce,
     )
     resp = ripple.sign_tx(
-        client, parse_path("m/44h/144h/0h/0/0"), msg, payment_req=payment_req
+        session, parse_path("m/44h/144h/0h/0/0"), msg, payment_req=payment_req
     )
     assert (
         resp.signature.hex()
@@ -182,10 +182,10 @@ def test_signtx_payment_req(client: Client):
             "LastLedgerSequence": 333111,
         }
     )
-    nonce = misc.get_nonce(client)
+    nonce = misc.get_nonce(session)
     address = f"{msg.payment.destination}?dt={msg.payment.destination_tag}"
     payment_req = make_payment_request(
-        client,
+        session,
         recipient_name="trezor.io",
         slip44=144,
         outputs=[(msg.payment.amount, address)],
@@ -193,7 +193,7 @@ def test_signtx_payment_req(client: Client):
         nonce=nonce,
     )
     resp = ripple.sign_tx(
-        client, parse_path("m/44h/144h/0h/0/2"), msg, payment_req=payment_req
+        session, parse_path("m/44h/144h/0h/0/2"), msg, payment_req=payment_req
     )
     assert (
         resp.signature.hex()
