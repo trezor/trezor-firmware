@@ -2,7 +2,7 @@ use crate::{
     strutil::TString,
     ui::{
         component::{paginated::SinglePage, Bar, Component, Event, EventCtx, Label, Never},
-        geometry::{Grid, Insets, Rect},
+        geometry::{Insets, Rect},
         shape::Renderer,
     },
 };
