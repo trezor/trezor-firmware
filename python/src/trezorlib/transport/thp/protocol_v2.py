@@ -294,24 +294,22 @@ class ProtocolV2Channel(Channel):
     def read_and_decrypt(
         self, timeout: float | None = None
     ) -> t.Tuple[int, int, bytes]:
-        header, raw_payload = self._read_until_valid_crc_check(timeout)
-        if header.cid != self.channel_id:
-            # TODO fix this recursion
-            # Received message from different channel - discard
-            return self.read_and_decrypt(timeout)
-        if control_byte.is_ack(header.ctrl_byte):
-            # TODO fix this recursion
-            return self.read_and_decrypt(timeout)
-        if control_byte.is_error(header.ctrl_byte):
-            raise exceptions.ThpError(_get_error_from_int(raw_payload[0]))
-        if not header.is_encrypted_transport():
-            LOG.error(
-                "Trying to decrypt not encrypted message! ("
-                + hexlify(header.to_bytes_init() + raw_payload).decode()
-                + ")"
-            )
+        while True:
+            header, raw_payload = self._read_until_valid_crc_check(timeout)
+            if header.cid != self.channel_id:
+                # Received message from different channel - discard
+                continue
+            if control_byte.is_ack(header.ctrl_byte):
+                continue
+            if control_byte.is_error(header.ctrl_byte):
+                raise exceptions.ThpError(_get_error_from_int(raw_payload[0]))
+            if not header.is_encrypted_transport():
+                LOG.error(
+                    "Trying to decrypt not encrypted message! ("
+                    + hexlify(header.to_bytes_init() + raw_payload).decode()
+                    + ")"
+                )
 
-        if not control_byte.is_ack(header.ctrl_byte):
             LOG.debug(
                 "--> Get sequence bit %d %s %s",
                 control_byte.get_seq_bit(header.ctrl_byte),
@@ -323,15 +321,15 @@ class ProtocolV2Channel(Channel):
             else:
                 self._send_ack_0()
 
-        message = self._noise.decrypt(bytes(raw_payload))
-        session_id = message[0]
-        message_type = message[1:3]
-        message_data = message[3:]
-        return (
-            session_id,
-            int.from_bytes(message_type, "big"),
-            message_data,
-        )
+            message = self._noise.decrypt(bytes(raw_payload))
+            session_id = message[0]
+            message_type = message[1:3]
+            message_data = message[3:]
+            return (
+                session_id,
+                int.from_bytes(message_type, "big"),
+                message_data,
+            )
 
     def _read_until_valid_crc_check(
         self, timeout: float | None = None
