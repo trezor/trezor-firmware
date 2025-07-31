@@ -3,15 +3,15 @@ from typing import TYPE_CHECKING, Any, List, Optional
 from . import messages
 
 if TYPE_CHECKING:
-    from .client import TrezorClient
+    from .transport.session import Session
 
 
 def get_public_key(
-    client: "TrezorClient",
+    session: "Session",
     address_n: List[int],
     show_display: bool,
 ) -> bytes:
-    return client.call(
+    return session.call(
         messages.SolanaGetPublicKey(address_n=address_n, show_display=show_display),
         expect=messages.SolanaPublicKey,
     ).public_key
@@ -22,12 +22,12 @@ def get_address(*args: Any, **kwargs: Any) -> str:
 
 
 def get_authenticated_address(
-    client: "TrezorClient",
+    session: "Session",
     address_n: List[int],
     show_display: bool,
     chunkify: bool = False,
 ) -> messages.SolanaAddress:
-    return client.call(
+    return session.call(
         messages.SolanaGetAddress(
             address_n=address_n,
             show_display=show_display,
@@ -38,12 +38,12 @@ def get_authenticated_address(
 
 
 def sign_tx(
-    client: "TrezorClient",
+    session: "Session",
     address_n: List[int],
     serialized_tx: bytes,
     additional_info: Optional[messages.SolanaTxAdditionalInfo],
 ) -> bytes:
-    return client.call(
+    return session.call(
         messages.SolanaSignTx(
             address_n=address_n,
             serialized_tx=serialized_tx,
