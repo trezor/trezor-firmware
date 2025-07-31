@@ -10,11 +10,11 @@ use crate::{
     },
 };
 
+#[cfg(any(feature = "ui_debug_overlay", feature = "ui_performance_overlay"))]
+use crate::ui::{CommonUI, ModelUI};
+
 #[cfg(feature = "ui_performance_overlay")]
-use crate::{
-    trezorhal::time,
-    ui::{CommonUI, ModelUI, PerformanceOverlay},
-};
+use crate::{trezorhal::time, ui::PerformanceOverlay};
 
 use super::bumps;
 
@@ -73,6 +73,15 @@ where
 
         let mut target = ScopedRenderer::new(DirectRenderer::new(&mut canvas, bg_color, &cache));
 
+        #[cfg(all(feature = "ui_debug_overlay", not(feature = "ui_performance_overlay")))]
+        {
+            func(&mut target);
+            // In debug mode, render the debug overlay.
+            if !display::is_recording() {
+                ModelUI::render_debug_overlay(&mut target);
+            }
+        }
+
         // In debug mode, measure the time spent on rendering.
         #[cfg(feature = "ui_performance_overlay")]
         {
@@ -84,8 +93,11 @@ where
             ModelUI::render_performance_overlay(&mut target, info);
         }
 
-        // In production, just execute the drawing function without timing.
-        #[cfg(not(feature = "ui_performance_overlay"))]
+        // In production, just execute the drawing function without overlays.
+        #[cfg(all(
+            not(feature = "ui_debug_overlay"),
+            not(feature = "ui_performance_overlay")
+        ))]
         {
             func(&mut target);
         }

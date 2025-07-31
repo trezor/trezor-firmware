@@ -632,6 +632,9 @@ extern "C" fn ui_layout_paint(this: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
         let painted = this.inner_mut().obj_paint_if_requested();
+        if painted? {
+            display::refresh();
+        }
         Ok(painted?.into())
     };
     unsafe { util::try_or_raise(block) }

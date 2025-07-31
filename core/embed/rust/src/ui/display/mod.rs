@@ -121,5 +121,10 @@ pub fn sync() {
 }
 
 pub fn refresh() {
+    #[cfg(feature = "ui_debug_overlay")]
+    if display::is_recording() {
+        display::record_screen();
+    }
+
     display::refresh();
 }

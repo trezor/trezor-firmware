@@ -49,8 +49,7 @@ class HomescreenBase(ui.Layout):
         return storage_cache.homescreen_shown is self.RENDER_INDICATOR
 
     def _paint(self) -> None:
-        if self.layout.paint():
-            ui.refresh()
+        self.layout.paint()
 
     def _first_paint(self) -> None:
         if not self.should_resume:

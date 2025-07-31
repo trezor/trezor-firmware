@@ -27,6 +27,16 @@ pub fn refresh() {
     }
 }
 
+pub fn is_recording() -> bool {
+    unsafe { ffi::display_is_recording() }
+}
+
+pub fn record_screen() {
+    unsafe {
+        ffi::display_record_screen();
+    }
+}
+
 #[cfg(feature = "framebuffer")]
 pub fn get_frame_buffer() -> Option<(&'static mut [u8], usize)> {
     let mut fb_info = ffi::display_fb_info_t {
