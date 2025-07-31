@@ -3,6 +3,7 @@ from __future__ import annotations
 import struct
 from typing import Tuple
 
+from ...exceptions import ThpError
 from .. import Transport
 from ..thp import checksum
 from .message_header import MessageHeader
@@ -97,8 +98,8 @@ def read_next(transport: Transport, cid: int, timeout: float | None = None) -> b
         MessageHeader.format_str_cont, chunk[:CONT_HEADER_LENGTH]
     )
     if ctrl_byte != CONTINUATION_PACKET:
-        raise RuntimeError("Continuation packet with incorrect control byte")
+        raise ThpError("Continuation packet with incorrect control byte")
     if read_cid != cid:
-        raise RuntimeError("Continuation packet for different channel")
+        raise ThpError("Continuation packet for different channel")
 
     return chunk[CONT_HEADER_LENGTH:]
