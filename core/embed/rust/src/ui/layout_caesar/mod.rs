@@ -1,6 +1,6 @@
 use super::{geometry::Rect, CommonUI};
-#[cfg(feature = "ui_debug_overlay")]
-use super::{shape, DebugOverlay};
+#[cfg(feature = "ui_performance_overlay")]
+use super::{shape, PerformanceOverlay};
 
 #[cfg(feature = "bootloader")]
 pub mod bootloader;
@@ -40,8 +40,11 @@ impl CommonUI for UICaesar {
 
     fn screen_update() {}
 
-    #[cfg(feature = "ui_debug_overlay")]
-    fn render_debug_overlay<'s>(_target: &mut impl shape::Renderer<'s>, _info: DebugOverlay) {
+    #[cfg(feature = "ui_performance_overlay")]
+    fn render_performance_overlay<'s>(
+        _target: &mut impl shape::Renderer<'s>,
+        _info: PerformanceOverlay,
+    ) {
         // Not implemented
     }
 }
