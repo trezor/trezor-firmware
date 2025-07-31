@@ -433,7 +433,7 @@ class InputFlowSignMessageInfo(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
         # address mismatch? yes!
         self.debug.swipe_up()
-        yield  # ?
+        yield
 
     def input_flow_eckhart(self) -> BRGeneratorType:
         yield
