@@ -45,7 +45,6 @@ def set_autolock_delay(session: Session, delay):
                 pin_request(session),
                 messages.ButtonRequest,
                 messages.Success,
-                # messages.Features,
             ]
         )
         device.apply_settings(session, auto_lock_delay_ms=delay)
