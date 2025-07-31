@@ -324,10 +324,6 @@ fn generate_trezorhal_bindings() {
         // model
         .allowlist_var("MODEL_INTERNAL_NAME")
         .allowlist_var("MODEL_FULL_NAME")
-        // entropy
-        .allowlist_var("ENTROPY_MAX_SIZE")
-        .allowlist_type("entropy_data_t")
-        .allowlist_function("entropy_get")
         // secbool
         .allowlist_type("secbool")
         .must_use_type("secbool")
@@ -337,7 +333,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("flash_init")
         // storage
         .allowlist_var("EXTERNAL_SALT_SIZE")
-        .allowlist_function("storage_init")
+        .allowlist_function("storage_setup")
         .allowlist_function("storage_wipe")
         .allowlist_function("storage_is_unlocked")
         .allowlist_function("storage_lock")
