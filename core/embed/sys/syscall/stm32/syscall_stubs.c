@@ -504,22 +504,20 @@ void optiga_set_sec_max(void) { syscall_invoke0(SYSCALL_OPTIGA_SET_SEC_MAX); }
 // storage.h
 // =============================================================================
 
-#include "storage.h"
+#include <sec/storage.h>
 
 static PIN_UI_WAIT_CALLBACK storage_init_callback = NULL;
 
-static void storage_init_callback_wrapper(uint32_t wait, uint32_t progress,
-                                          enum storage_ui_message_t message) {
+static void storage_callback_wrapper(uint32_t wait, uint32_t progress,
+                                     enum storage_ui_message_t message) {
   secbool retval = storage_init_callback(wait, progress, message);
   return_from_unprivileged_callback(retval);
 }
 
-void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
-                  const uint16_t salt_len) {
+void storage_setup(PIN_UI_WAIT_CALLBACK callback) {
   storage_init_callback = callback;
 
-  syscall_invoke3((uint32_t)storage_init_callback_wrapper, (uint32_t)salt,
-                  salt_len, SYSCALL_STORAGE_INIT);
+  syscall_invoke1((uint32_t)storage_callback_wrapper, SYSCALL_STORAGE_SETUP);
 }
 
 void storage_wipe(void) { syscall_invoke0(SYSCALL_STORAGE_WIPE); }
@@ -598,16 +596,6 @@ secbool storage_set_counter(const uint16_t key, const uint32_t count) {
 secbool storage_next_counter(const uint16_t key, uint32_t *count) {
   return (secbool)syscall_invoke2(key, (uint32_t)count,
                                   SYSCALL_STORAGE_NEXT_COUNTER);
-}
-
-// =============================================================================
-// entropy.h
-// =============================================================================
-
-#include <sec/entropy.h>
-
-void entropy_get(entropy_data_t *entropy) {
-  syscall_invoke1((uint32_t)entropy, SYSCALL_ENTROPY_GET);
 }
 
 // =============================================================================

@@ -70,6 +70,7 @@ CPPPATH_MOD += [
 ]
 SOURCE_MOD += [
     'embed/upymod/modtrezorconfig/modtrezorconfig.c',
+    'embed/sec/storage/storage_setup.c',
     'vendor/trezor-storage/norcow.c',
     'vendor/trezor-storage/storage.c',
     'vendor/trezor-storage/storage_utils.c',
@@ -485,6 +486,7 @@ ALLPATHS=['.',
          'embed/util/rsod/inc',
          'embed/util/scm_revision/inc',
          'embed/util/translations/inc',
+         'embed/sec/storage/inc',
          'vendor/micropython',
          'vendor/micropython/ports/unix',
          'vendor/micropython/lib/mp-readline',
