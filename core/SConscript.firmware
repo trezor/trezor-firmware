@@ -393,8 +393,6 @@ SOURCE_MICROPYTHON_SPEED = [
     'vendor/micropython/py/vm.c',
 ]
 
-CPPDEFINES_MOD += ['USE_SVC_SHUTDOWN']
-
 if FEATURE_FLAGS["RDI"]:
     CPPDEFINES_MOD += ['RDI']
 
