@@ -89,8 +89,10 @@ stdenvNoCC.mkDerivation ({
     oldNixpkgs.python39
     oldNixpkgs.python38
   ] ++ [
-    SDL2
-    SDL2_image
+    # Current nixpkgs aliases SDL2 to sdl2-compat which on Ubuntu 25.04 makes the emulator
+    # crash with SDL_CreateRenderer error.
+    oldNixpkgs.SDL2
+    oldNixpkgs.SDL2_image
     bash
     bloaty  # for binsize
     check
