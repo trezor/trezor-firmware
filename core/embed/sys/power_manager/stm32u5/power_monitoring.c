@@ -57,12 +57,15 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
   // Store measurement timestamp
   if (drv->pmic_last_update_us == 0) {
     drv->pmic_sampling_period_ms = PM_BATTERY_SAMPLING_PERIOD_MS;
+    drv->vbat_tau = report->vbat;
   } else {
     // Calculate the time since the last PMIC update
     drv->pmic_sampling_period_ms =
         (systick_us() - drv->pmic_last_update_us) / 1000;
   }
   drv->pmic_last_update_us = systick_us();
+
+  drv->vbat_tau = (drv->vbat_tau * 0.95f) + (report->vbat * 0.05f);
 
   // Copy pmic data
   memcpy(&drv->pmic_data, report, sizeof(pmic_report_t));
@@ -178,7 +181,8 @@ void pm_charging_controller(pm_driver_t* drv) {
 
   if (drv->soc_target == 100) {
     drv->soc_target_reached = false;
-  } else {
+  } else if (fabsf((-drv->pmic_data.ibat) - (float)drv->i_chg_target_ma) <=
+             20.0f) {
     // Translate SoC target to charging voltage via battery model
     float target_ocv_voltage_v =
         battery_ocv(drv->soc_target / 100.0f, drv->pmic_data.ntc_temp, false);
@@ -186,20 +190,23 @@ void pm_charging_controller(pm_driver_t* drv) {
     float battery_ocv_v = battery_meas_to_ocv(
         drv->pmic_data.vbat, drv->pmic_data.ibat, drv->pmic_data.ntc_temp);
 
-    if (battery_ocv_v > target_ocv_voltage_v) {
+    drv->target_battery_ocv_v_tau =
+        (drv->target_battery_ocv_v_tau * 0.95f) +
+        (battery_ocv_v * 0.05f);  // Exponential smoothing
+
+    if (drv->target_battery_ocv_v_tau > target_ocv_voltage_v) {
       // current voltage is within tight bounds of target voltage,
       // we may also force SoC estimate to target value.
-      if (battery_ocv_v < target_ocv_voltage_v + 0.15) {
+      if (drv->target_battery_ocv_v_tau < target_ocv_voltage_v + 0.15) {
         fuel_gauge_set_soc(&drv->fuel_gauge,
                            (drv->soc_target / 100.0f) - 0.0001f,
                            drv->fuel_gauge.P);
       }
 
       drv->soc_target_reached = true;
-
-    } else if (drv->soc_ceiled < drv->soc_target) {
-      drv->soc_target_reached = false;
     }
+  } else if (drv->soc_ceiled < drv->soc_target) {
+    drv->soc_target_reached = false;
   }
 
   if (drv->soc_target_reached) {
@@ -299,13 +306,12 @@ static void pm_parse_power_source_state(pm_driver_t* drv) {
   }
 
   // Check battery voltage for critical (undervoltage) threshold
-  if ((drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_THR_V) &&
-      !drv->battery_critical) {
+  if ((drv->vbat_tau < PM_BATTERY_UNDERVOLT_THR_V) && !drv->battery_critical) {
     // Force Fuel gauge to 0, keep the covariance
     fuel_gauge_set_soc(&drv->fuel_gauge, 0.0f, drv->fuel_gauge.P);
 
     drv->battery_critical = true;
-  } else if (drv->pmic_data.vbat > (PM_BATTERY_UNDERVOLT_RECOVERY_THR_V) &&
+  } else if (drv->vbat_tau > (PM_BATTERY_UNDERVOLT_RECOVERY_THR_V) &&
              drv->battery_critical) {
     drv->battery_critical = false;
   }
