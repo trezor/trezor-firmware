@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 def confirm_new_wallet(debug: "DebugLink") -> None:
-    assert debug.read_layout().title() == TR.reset__title_create_wallet
+    debug.synchronize_at(TR.reset__title_create_wallet)
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
         debug.click(debug.screen_buttons.ok())
     elif debug.layout_type is LayoutType.Delizia:
@@ -75,9 +75,9 @@ def cancel_backup(
 def set_selection(debug: "DebugLink", diff: int) -> None:
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
         if debug.layout_type is LayoutType.Eckhart:
-            assert "ValueInputScreen" in debug.read_layout().all_components()
+            debug.synchronize_at("ValueInputScreen")
         else:
-            assert "NumberInputDialog" in debug.read_layout().all_components()
+            debug.synchronize_at("NumberInputDialog")
 
         button = (
             debug.screen_buttons.number_input_minus()
