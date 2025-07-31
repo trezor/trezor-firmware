@@ -9,7 +9,7 @@ CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
 PRODUCTION = 0 if BOOTLOADER_QA else ARGUMENTS.get('PRODUCTION', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
-UI_DEBUG_OVERLAY = ARGUMENTS.get('UI_DEBUG_OVERLAY', '0') == '1'
+UI_PERFORMANCE_OVERLAY = ARGUMENTS.get('UI_PERFORMANCE_OVERLAY', '0') == '1'
 
 FEATURES_WANTED = [
     "ble",
@@ -247,8 +247,8 @@ cmake_gen = env.Command(
 #
 features = ['bootloader',] + FEATURES_AVAILABLE + RUST_UI_FEATURES
 
-if UI_DEBUG_OVERLAY:
-    features.append('ui_debug_overlay')
+if UI_PERFORMANCE_OVERLAY:
+    features.append('ui_performance_overlay')
 
 rust = tools.add_rust_lib(
     env=env,

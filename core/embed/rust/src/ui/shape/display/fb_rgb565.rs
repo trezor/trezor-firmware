@@ -10,10 +10,10 @@ use crate::{
     },
 };
 
-#[cfg(feature = "ui_debug_overlay")]
+#[cfg(feature = "ui_performance_overlay")]
 use crate::{
     trezorhal::time,
-    ui::{CommonUI, DebugOverlay, ModelUI},
+    ui::{CommonUI, ModelUI, PerformanceOverlay},
 };
 
 use super::bumps;
@@ -21,7 +21,7 @@ use super::bumps;
 pub type ConcreteRenderer<'a, 'alloc> = DirectRenderer<'a, 'alloc, Rgb565Canvas<'alloc>>;
 
 // Time of the last frame buffer get operation
-#[cfg(feature = "ui_debug_overlay")]
+#[cfg(feature = "ui_performance_overlay")]
 static mut FRAME_BUFFER_GET_TIME: u64 = 0;
 
 /// Creates the `Renderer` object for drawing on a display and invokes a
@@ -44,12 +44,12 @@ where
 
         let cache = DrawingCache::new(bump_a, bump_b);
 
-        #[cfg(feature = "ui_debug_overlay")]
+        #[cfg(feature = "ui_performance_overlay")]
         let refresh_time = unsafe { time::ticks_us() - FRAME_BUFFER_GET_TIME };
 
         let fb_info = display::get_frame_buffer();
 
-        #[cfg(feature = "ui_debug_overlay")]
+        #[cfg(feature = "ui_performance_overlay")]
         unsafe {
             FRAME_BUFFER_GET_TIME = time::ticks_us()
         };
@@ -74,18 +74,18 @@ where
         let mut target = ScopedRenderer::new(DirectRenderer::new(&mut canvas, bg_color, &cache));
 
         // In debug mode, measure the time spent on rendering.
-        #[cfg(feature = "ui_debug_overlay")]
+        #[cfg(feature = "ui_performance_overlay")]
         {
             let render_time = time::measure_us(|| func(&mut target));
-            let info = DebugOverlay {
+            let info = PerformanceOverlay {
                 render_time,
                 refresh_time,
             };
-            ModelUI::render_debug_overlay(&mut target, info);
+            ModelUI::render_performance_overlay(&mut target, info);
         }
 
         // In production, just execute the drawing function without timing.
-        #[cfg(not(feature = "ui_debug_overlay"))]
+        #[cfg(not(feature = "ui_performance_overlay"))]
         {
             func(&mut target);
         }
