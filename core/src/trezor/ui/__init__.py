@@ -52,20 +52,6 @@ See `trezor::ui::layout::base::EventCtx::ANIM_FRAME_TIMER`.
 # allow only one alert at a time to avoid alerts overlapping
 _alert_in_progress = False
 
-# in debug mode, display an indicator in top right corner
-if __debug__:
-
-    def refresh() -> None:
-        from apps.debug import screenshot
-
-        if not screenshot():
-            side = Display.WIDTH // 30
-            display.bar(Display.WIDTH - side, 0, side, side, 0xF800)
-        display.refresh()
-
-else:
-    refresh = display.refresh
-
 
 async def _alert(count: int) -> None:
     short_sleep = loop.sleep(20)
@@ -324,8 +310,6 @@ class Layout(Generic[T]):
         import storage.cache as storage_cache
 
         painted = self.layout.paint()
-        if painted:
-            refresh()
         if storage_cache.homescreen_shown is not None and painted:
             storage_cache.homescreen_shown = None
 
@@ -566,8 +550,7 @@ class ProgressLayout:
         def do_progress_event(val: int) -> None:
             msg = self.layout.progress_event(val, description or "")
             assert msg is None
-            if self.layout.paint():
-                refresh()
+            self.layout.paint()
 
         # animate the progress bar in a blocking fashion
         step = min(self.progress_step, max(value - self.value, 1))
@@ -589,9 +572,7 @@ class ProgressLayout:
         set_current_layout(self)
 
         self.layout.request_complete_repaint()
-        painted = self.layout.paint()
-        if painted:
-            refresh()
+        self.layout.paint()
         backlight_fade(BacklightLevels.NORMAL)
 
     def stop(self) -> None:

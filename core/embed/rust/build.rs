@@ -367,6 +367,8 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("display_get_frame_buffer")
         .allowlist_function("display_fill")
         .allowlist_function("display_copy_rgb565")
+        .allowlist_function("display_is_recording")
+        .allowlist_function("display_record_screen")
         // gfx_bitblt
         .allowlist_type("gfx_bitblt_t")
         .allowlist_function("gfx_rgb565_fill")

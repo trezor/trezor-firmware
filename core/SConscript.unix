@@ -885,6 +885,7 @@ features = ['micropython', 'protobuf', 'ui', 'translations'] + FEATURES_AVAILABL
 if PYOPT == '0':
     features.append('debug')
     features.append('ui_debug')
+    features.append('ui_debug_overlay')
 if EVERYTHING:
     features.append('universal_fw')
 

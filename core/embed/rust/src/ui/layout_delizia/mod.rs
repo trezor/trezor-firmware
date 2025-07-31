@@ -1,10 +1,12 @@
 use super::{geometry::Rect, CommonUI};
 
+#[cfg(any(feature = "ui_debug_overlay", feature = "ui_performance_overlay"))]
+use super::{display::Color, geometry::Offset, shape};
+
 #[cfg(feature = "ui_performance_overlay")]
 use super::{
-    display::Color,
-    geometry::{Alignment, Alignment2D, Offset, Point},
-    shape, PerformanceOverlay,
+    geometry::{Alignment, Alignment2D, Point},
+    PerformanceOverlay,
 };
 
 #[cfg(feature = "ui_performance_overlay")]
@@ -87,6 +89,18 @@ impl CommonUI for UIDelizia {
     }
 
     fn screen_update() {}
+
+    #[cfg(feature = "ui_debug_overlay")]
+    fn render_debug_overlay<'s>(target: &mut impl shape::Renderer<'s>) {
+        const RECT_SIZE: i16 = constant::SCREEN.width() / 30;
+        let r = Rect::from_top_left_and_size(
+            Self::SCREEN.top_right() - Offset::x(RECT_SIZE),
+            Offset::new(RECT_SIZE, RECT_SIZE),
+        );
+        shape::Bar::new(r)
+            .with_bg(Color::rgb(0xff, 0, 0))
+            .render(target);
+    }
 
     #[cfg(feature = "ui_performance_overlay")]
     fn render_performance_overlay<'s>(

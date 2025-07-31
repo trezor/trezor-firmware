@@ -34,3 +34,72 @@ void display_fade(int start, int end, int delay) {
   display_set_backlight(end);
 #endif
 }
+
+#ifdef TREZOR_EMULATOR
+
+extern void display_clear_save(void);
+
+typedef struct {
+  // Screen recording status
+  bool recording;
+  uint8_t target_directory[256];
+  int refresh_index;
+
+} display_recording_t;
+
+static display_recording_t g_display_recording = {0};
+
+void display_record_start(uint8_t *target_dir, size_t target_dir_len,
+                          int refresh_index) {
+  display_recording_t *rec = &g_display_recording;
+
+  rec->recording = true;
+
+  if (strlen((char *)rec->target_directory) != strlen((char *)target_dir) ||
+      strncmp((char *)target_dir, (char *)rec->target_directory,
+              target_dir_len) != 0) {
+    // If the target directory is not set, we assume the recording is not
+    // started yet.
+    display_clear_save();
+  }
+
+  memset(rec->target_directory, 0, sizeof(rec->target_directory));
+  memcpy(rec->target_directory, target_dir,
+         MIN(sizeof(rec->target_directory), target_dir_len));
+  rec->refresh_index = refresh_index;
+}
+
+void display_record_stop(void) {
+  display_recording_t *rec = &g_display_recording;
+  rec->recording = false;
+  display_clear_save();
+}
+
+bool display_is_recording(void) {
+  display_recording_t *rec = &g_display_recording;
+
+  return rec->recording;
+}
+
+void display_record_screen(void) {
+  display_recording_t *rec = &g_display_recording;
+
+  if (!rec->recording) {
+    return;
+  }
+
+  char prefix[512];
+  snprintf(prefix, sizeof(prefix), "%s/refresh%02d-", rec->target_directory,
+           rec->refresh_index);
+
+  display_save(prefix);
+}
+
+#else
+void display_record_start(uint8_t *target_dir, size_t target_dir_len,
+                          int refresh_index) {}
+void display_record_stop(void) {}
+bool display_is_recording(void) { return false; }
+void display_record_screen(void) {}
+
+#endif

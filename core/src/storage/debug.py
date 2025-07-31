@@ -1,15 +1,9 @@
-from trezorutils import EMULATOR, halt
+from trezorutils import halt
 
 if not __debug__:
     halt("Debugging is disabled")
 
 if __debug__:
-    save_screen = False
-    if EMULATOR:
-        refresh_index = 0
-        save_screen_directory = bytearray(4096)
-        save_screen_directory[:] = b"."
-
     layout_watcher = False
 
     reset_internal_entropy = bytearray(32)
