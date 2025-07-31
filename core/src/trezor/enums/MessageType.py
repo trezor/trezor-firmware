@@ -250,6 +250,12 @@ if not utils.BITCOIN_ONLY:
     ThpCreateNewSession = 1000
     ThpCredentialRequest = 1016
     ThpCredentialResponse = 1017
+    CosmosGetAddress = 1100
+    CosmosAddress = 1101
+    CosmosGetPublicKey = 1102
+    CosmosPublicKey = 1103
+    CosmosSignTx = 1104
+    CosmosSignedTx = 1105
     NostrGetPubkey = 2001
     NostrPubkey = 2002
     NostrSignEvent = 2003

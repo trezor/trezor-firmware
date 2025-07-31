@@ -327,6 +327,14 @@ enum MessageType {
     MessageType_ThpCredentialResponse = 1017;
     reserved 1018 to 1099;  // see ThpMessageType in messages-thp.proto
 
+    // Cosmos
+    MessageType_CosmosGetAddress = 1100 [(wire_in) = true];
+    MessageType_CosmosAddress = 1101 [(wire_out) = true];
+    MessageType_CosmosGetPublicKey = 1102 [(wire_in) = true];
+    MessageType_CosmosPublicKey = 1103 [(wire_out) = true];
+    MessageType_CosmosSignTx = 1104 [(wire_in) = true];
+    MessageType_CosmosSignedTx = 1105 [(wire_out) = true];
+
     // Nostr
     MessageType_NostrGetPubkey = 2001 [(wire_in) = true];
     MessageType_NostrPubkey = 2002 [(wire_out) = true];

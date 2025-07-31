@@ -50,6 +50,7 @@ from . import (
     solana,
     stellar,
     tezos,
+    cosmos,
     with_client,
 )
 
@@ -414,6 +415,7 @@ cli.add_command(settings.cli)
 cli.add_command(solana.cli)
 cli.add_command(stellar.cli)
 cli.add_command(tezos.cli)
+cli.add_command(cosmos.cli)
 
 cli.add_command(firmware.cli)
 cli.add_command(debug.cli)

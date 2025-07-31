@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     from trezor.enums import CardanoTxOutputSerializationFormat  # noqa: F401
     from trezor.enums import CardanoTxSigningMode  # noqa: F401
     from trezor.enums import CardanoTxWitnessType  # noqa: F401
+    from trezor.enums import CosmosSignMode  # noqa: F401
     from trezor.enums import DebugButton  # noqa: F401
     from trezor.enums import DebugPhysicalButton  # noqa: F401
     from trezor.enums import DebugSwipeDirection  # noqa: F401
@@ -1780,6 +1781,284 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["CardanoSignTxFinished"]:
+            return isinstance(msg, cls)
+
+    class CosmosGetAddress(protobuf.MessageType):
+        address_n: "list[int]"
+        prefix: "str"
+        show_display: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            prefix: "str",
+            address_n: "list[int] | None" = None,
+            show_display: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CosmosGetAddress"]:
+            return isinstance(msg, cls)
+
+    class CosmosAddress(protobuf.MessageType):
+        address: "str | None"
+
+        def __init__(
+            self,
+            *,
+            address: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CosmosAddress"]:
+            return isinstance(msg, cls)
+
+    class CosmosGetPublicKey(protobuf.MessageType):
+        address_n: "list[int]"
+        show_display: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            address_n: "list[int] | None" = None,
+            show_display: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CosmosGetPublicKey"]:
+            return isinstance(msg, cls)
+
+    class CosmosPublicKey(protobuf.MessageType):
+        type: "str"
+        value: "bytes"
+
+        def __init__(
+            self,
+            *,
+            type: "str",
+            value: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CosmosPublicKey"]:
+            return isinstance(msg, cls)
+
+    class CosmosSignTx(protobuf.MessageType):
+        address_n: "list[int]"
+        sign_doc: "bytes"
+
+        def __init__(
+            self,
+            *,
+            sign_doc: "bytes",
+            address_n: "list[int] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CosmosSignTx"]:
+            return isinstance(msg, cls)
+
+    class CosmosSignedTx(protobuf.MessageType):
+        signature: "bytes"
+
+        def __init__(
+            self,
+            *,
+            signature: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CosmosSignedTx"]:
+            return isinstance(msg, cls)
+
+    class CosmosSignDoc(protobuf.MessageType):
+        body_bytes: "bytes"
+        auth_info_bytes: "bytes"
+        chain_id: "str"
+        account_number: "int"
+
+        def __init__(
+            self,
+            *,
+            body_bytes: "bytes",
+            auth_info_bytes: "bytes",
+            chain_id: "str",
+            account_number: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CosmosSignDoc"]:
+            return isinstance(msg, cls)
+
+    class CosmosAuthInfo(protobuf.MessageType):
+        signer_infos: "list[CosmosSignerInfo]"
+        fee: "CosmosFee"
+
+        def __init__(
+            self,
+            *,
+            fee: "CosmosFee",
+            signer_infos: "list[CosmosSignerInfo] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CosmosAuthInfo"]:
+            return isinstance(msg, cls)
+
+    class CosmosSignerInfo(protobuf.MessageType):
+        public_key: "CosmosAny"
+        mode_info: "CosmosModeInfo"
+        sequence: "int"
+
+        def __init__(
+            self,
+            *,
+            public_key: "CosmosAny",
+            mode_info: "CosmosModeInfo",
+            sequence: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CosmosSignerInfo"]:
+            return isinstance(msg, cls)
+
+    class CosmosModeInfo(protobuf.MessageType):
+        single: "CosmosModeInfoSingle"
+
+        def __init__(
+            self,
+            *,
+            single: "CosmosModeInfoSingle",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CosmosModeInfo"]:
+            return isinstance(msg, cls)
+
+    class CosmosModeInfoSingle(protobuf.MessageType):
+        mode: "CosmosSignMode"
+
+        def __init__(
+            self,
+            *,
+            mode: "CosmosSignMode",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CosmosModeInfoSingle"]:
+            return isinstance(msg, cls)
+
+    class CosmosTxBody(protobuf.MessageType):
+        messages: "list[CosmosAny]"
+        memo: "str | None"
+        timeout_height: "int | None"
+
+        def __init__(
+            self,
+            *,
+            messages: "list[CosmosAny] | None" = None,
+            memo: "str | None" = None,
+            timeout_height: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CosmosTxBody"]:
+            return isinstance(msg, cls)
+
+    class CosmosBankMsgSend(protobuf.MessageType):
+        from_address: "str"
+        to_address: "str"
+        amount: "list[CosmosCoin]"
+
+        def __init__(
+            self,
+            *,
+            from_address: "str",
+            to_address: "str",
+            amount: "list[CosmosCoin] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CosmosBankMsgSend"]:
+            return isinstance(msg, cls)
+
+    class CosmosFee(protobuf.MessageType):
+        amount: "list[CosmosCoin]"
+        gas_limit: "int"
+        payer: "str | None"
+        granter: "str | None"
+
+        def __init__(
+            self,
+            *,
+            gas_limit: "int",
+            amount: "list[CosmosCoin] | None" = None,
+            payer: "str | None" = None,
+            granter: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CosmosFee"]:
+            return isinstance(msg, cls)
+
+    class CosmosCoin(protobuf.MessageType):
+        denom: "str"
+        amount: "str"
+
+        def __init__(
+            self,
+            *,
+            denom: "str",
+            amount: "str",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CosmosCoin"]:
+            return isinstance(msg, cls)
+
+    class CosmosSecp256k1Pubkey(protobuf.MessageType):
+        key: "bytes"
+
+        def __init__(
+            self,
+            *,
+            key: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CosmosSecp256k1Pubkey"]:
+            return isinstance(msg, cls)
+
+    class CosmosAny(protobuf.MessageType):
+        type_url: "str"
+        value: "bytes"
+
+        def __init__(
+            self,
+            *,
+            type_url: "str",
+            value: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CosmosAny"]:
             return isinstance(msg, cls)
 
     class CipherKeyValue(protobuf.MessageType):

@@ -193,6 +193,10 @@ class CardanoTxWitnessType(IntEnum):
     SHELLEY_WITNESS = 1
 
 
+class CosmosSignMode(IntEnum):
+    SIGN_MODE_DIRECT = 1
+
+
 class BackupType(IntEnum):
     Bip39 = 0
     Slip39_Basic = 1
@@ -666,6 +670,12 @@ class MessageType(IntEnum):
     ThpCreateNewSession = 1000
     ThpCredentialRequest = 1016
     ThpCredentialResponse = 1017
+    CosmosGetAddress = 1100
+    CosmosAddress = 1101
+    CosmosGetPublicKey = 1102
+    CosmosPublicKey = 1103
+    CosmosSignTx = 1104
+    CosmosSignedTx = 1105
     NostrGetPubkey = 2001
     NostrPubkey = 2002
     NostrSignEvent = 2003
@@ -2893,6 +2903,304 @@ class CardanoTxBodyHash(protobuf.MessageType):
 
 class CardanoSignTxFinished(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 319
+
+
+class CosmosGetAddress(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1100
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        2: protobuf.Field("prefix", "string", repeated=False, required=True),
+        3: protobuf.Field("show_display", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        prefix: "str",
+        address_n: Optional[Sequence["int"]] = None,
+        show_display: Optional["bool"] = None,
+    ) -> None:
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.prefix = prefix
+        self.show_display = show_display
+
+
+class CosmosAddress(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1101
+    FIELDS = {
+        1: protobuf.Field("address", "string", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: Optional["str"] = None,
+    ) -> None:
+        self.address = address
+
+
+class CosmosGetPublicKey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1102
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        2: protobuf.Field("show_display", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        address_n: Optional[Sequence["int"]] = None,
+        show_display: Optional["bool"] = None,
+    ) -> None:
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.show_display = show_display
+
+
+class CosmosPublicKey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1103
+    FIELDS = {
+        1: protobuf.Field("type", "string", repeated=False, required=True),
+        2: protobuf.Field("value", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        type: "str",
+        value: "bytes",
+    ) -> None:
+        self.type = type
+        self.value = value
+
+
+class CosmosSignTx(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1104
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        2: protobuf.Field("sign_doc", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        sign_doc: "bytes",
+        address_n: Optional[Sequence["int"]] = None,
+    ) -> None:
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.sign_doc = sign_doc
+
+
+class CosmosSignedTx(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1105
+    FIELDS = {
+        1: protobuf.Field("signature", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        signature: "bytes",
+    ) -> None:
+        self.signature = signature
+
+
+class CosmosSignDoc(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("body_bytes", "bytes", repeated=False, required=True),
+        2: protobuf.Field("auth_info_bytes", "bytes", repeated=False, required=True),
+        3: protobuf.Field("chain_id", "string", repeated=False, required=True),
+        4: protobuf.Field("account_number", "uint64", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        body_bytes: "bytes",
+        auth_info_bytes: "bytes",
+        chain_id: "str",
+        account_number: "int",
+    ) -> None:
+        self.body_bytes = body_bytes
+        self.auth_info_bytes = auth_info_bytes
+        self.chain_id = chain_id
+        self.account_number = account_number
+
+
+class CosmosAuthInfo(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("signer_infos", "CosmosSignerInfo", repeated=True, required=False, default=None),
+        2: protobuf.Field("fee", "CosmosFee", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        fee: "CosmosFee",
+        signer_infos: Optional[Sequence["CosmosSignerInfo"]] = None,
+    ) -> None:
+        self.signer_infos: Sequence["CosmosSignerInfo"] = signer_infos if signer_infos is not None else []
+        self.fee = fee
+
+
+class CosmosSignerInfo(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("public_key", "CosmosAny", repeated=False, required=True),
+        2: protobuf.Field("mode_info", "CosmosModeInfo", repeated=False, required=True),
+        3: protobuf.Field("sequence", "uint64", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        public_key: "CosmosAny",
+        mode_info: "CosmosModeInfo",
+        sequence: "int",
+    ) -> None:
+        self.public_key = public_key
+        self.mode_info = mode_info
+        self.sequence = sequence
+
+
+class CosmosModeInfo(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("single", "CosmosModeInfoSingle", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        single: "CosmosModeInfoSingle",
+    ) -> None:
+        self.single = single
+
+
+class CosmosModeInfoSingle(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("mode", "CosmosSignMode", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        mode: "CosmosSignMode",
+    ) -> None:
+        self.mode = mode
+
+
+class CosmosTxBody(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("messages", "CosmosAny", repeated=True, required=False, default=None),
+        2: protobuf.Field("memo", "string", repeated=False, required=False, default=None),
+        3: protobuf.Field("timeout_height", "uint64", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        messages: Optional[Sequence["CosmosAny"]] = None,
+        memo: Optional["str"] = None,
+        timeout_height: Optional["int"] = None,
+    ) -> None:
+        self.messages: Sequence["CosmosAny"] = messages if messages is not None else []
+        self.memo = memo
+        self.timeout_height = timeout_height
+
+
+class CosmosBankMsgSend(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("from_address", "string", repeated=False, required=True),
+        2: protobuf.Field("to_address", "string", repeated=False, required=True),
+        3: protobuf.Field("amount", "CosmosCoin", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        from_address: "str",
+        to_address: "str",
+        amount: Optional[Sequence["CosmosCoin"]] = None,
+    ) -> None:
+        self.amount: Sequence["CosmosCoin"] = amount if amount is not None else []
+        self.from_address = from_address
+        self.to_address = to_address
+
+
+class CosmosFee(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("amount", "CosmosCoin", repeated=True, required=False, default=None),
+        2: protobuf.Field("gas_limit", "uint64", repeated=False, required=True),
+        3: protobuf.Field("payer", "string", repeated=False, required=False, default=None),
+        4: protobuf.Field("granter", "string", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        gas_limit: "int",
+        amount: Optional[Sequence["CosmosCoin"]] = None,
+        payer: Optional["str"] = None,
+        granter: Optional["str"] = None,
+    ) -> None:
+        self.amount: Sequence["CosmosCoin"] = amount if amount is not None else []
+        self.gas_limit = gas_limit
+        self.payer = payer
+        self.granter = granter
+
+
+class CosmosCoin(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("denom", "string", repeated=False, required=True),
+        2: protobuf.Field("amount", "string", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        denom: "str",
+        amount: "str",
+    ) -> None:
+        self.denom = denom
+        self.amount = amount
+
+
+class CosmosSecp256k1Pubkey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("key", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        key: "bytes",
+    ) -> None:
+        self.key = key
+
+
+class CosmosAny(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("type_url", "string", repeated=False, required=True),
+        2: protobuf.Field("value", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        type_url: "str",
+        value: "bytes",
+    ) -> None:
+        self.type_url = type_url
+        self.value = value
 
 
 class CipherKeyValue(protobuf.MessageType):
