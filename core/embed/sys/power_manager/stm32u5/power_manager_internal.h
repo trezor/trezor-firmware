@@ -91,8 +91,11 @@ typedef struct {
   uint8_t bat_sampling_buf_head_idx;
   uint8_t soc_ceiled;
 
+  float vbat_tau;
+
   uint8_t soc_target;
   bool soc_target_reached;
+  float target_battery_ocv_v_tau;
 
   // Battery charging state
   bool charging_enabled;
