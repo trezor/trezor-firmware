@@ -471,10 +471,11 @@ def _make_input_func(
     def input_func(
         self: "DebugLink",
         hold_ms: int | None = None,
+        wait: bool | None = None,
     ) -> None:
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         decision.hold_ms = hold_ms
-        self._decision(decision)
+        self._decision(decision, wait)
 
     return input_func  # type: ignore [Parameter name mismatch]
 

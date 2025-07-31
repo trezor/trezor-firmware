@@ -211,12 +211,13 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
     with client:
         client.set_filter(messages.TxAck, sleepy_filter)
         # confirm transaction
+        # don't wait for layout change, to avoid "layout deadlock detected" error
         if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
-            debug.click(debug.screen_buttons.ok())
+            debug.click(debug.screen_buttons.ok(), wait=False)
         elif debug.layout_type is LayoutType.Caesar:
-            debug.press_middle()
+            debug.press_middle(wait=False)
         elif debug.layout_type is LayoutType.Delizia:
-            debug.click(debug.screen_buttons.tap_to_confirm())
+            debug.click(debug.screen_buttons.tap_to_confirm(), wait=False)
         else:
             raise ValueError(f"Unsupported layout type: {debug.layout_type}")
 
