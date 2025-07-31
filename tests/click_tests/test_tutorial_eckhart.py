@@ -64,6 +64,7 @@ def _wait_for_welcome_animation(debug: "DebugLink"):
 
 
 def _assert_begin_screen_and_proceed(debug: "DebugLink"):
+    debug.synchronize_at(TR.instructions__tap_to_start)
     layout = debug.read_layout()
     assert layout.text_content() == TR.tutorial__welcome_safe7.replace("\n", " ")
     assert TR.instructions__tap_to_start in layout.action_bar()
@@ -101,7 +102,7 @@ def _assert_final_screen(debug: "DebugLink"):
 def test_tutorial_full_completion(device_handler: "BackgroundDeviceHandler"):
     """Test basic flow of the tutorial."""
     debug = device_handler.debuglink()
-    device_handler.run(device.show_device_tutorial)
+    device_handler.run_with_session(device.show_device_tutorial, seedless=True)
 
     _wait_for_welcome_animation(debug)
     _assert_begin_screen_and_proceed(debug)
@@ -126,7 +127,7 @@ def test_tutorial_full_completion(device_handler: "BackgroundDeviceHandler"):
 def test_tutorial_cancel_from_main_menu(device_handler: "BackgroundDeviceHandler"):
     """Cancel the tutorial from the main menu."""
     debug = device_handler.debuglink()
-    device_handler.run(device.show_device_tutorial)
+    device_handler.run_with_session(device.show_device_tutorial, seedless=True)
 
     _wait_for_welcome_animation(debug)
     _assert_begin_screen_and_proceed(debug)
@@ -151,7 +152,7 @@ def test_tutorial_cancel_from_main_menu(device_handler: "BackgroundDeviceHandler
 def test_tutorial_cancel_from_confirm_menu(device_handler: "BackgroundDeviceHandler"):
     """Cancel the tutorial from the hold-to-confirm screen."""
     debug = device_handler.debuglink()
-    device_handler.run(device.show_device_tutorial)
+    device_handler.run_with_session(device.show_device_tutorial, seedless=True)
 
     _wait_for_welcome_animation(debug)
     _assert_begin_screen_and_proceed(debug)
@@ -179,7 +180,7 @@ def test_tutorial_cancel_from_confirm_menu(device_handler: "BackgroundDeviceHand
 def test_tutorial_menu_close(device_handler: "BackgroundDeviceHandler"):
     """Test all occurences of the menu close action in the tutorial."""
     debug = device_handler.debuglink()
-    device_handler.run(device.show_device_tutorial)
+    device_handler.run_with_session(device.show_device_tutorial, seedless=True)
 
     _wait_for_welcome_animation(debug)
     _assert_begin_screen_and_proceed(debug)
@@ -228,7 +229,7 @@ def test_tutorial_menu_close(device_handler: "BackgroundDeviceHandler"):
 def test_tutorial_menu_tropic(device_handler: "BackgroundDeviceHandler"):
     """Test all occurences of the tropic info screen in the tutorial."""
     debug = device_handler.debuglink()
-    device_handler.run(device.show_device_tutorial)
+    device_handler.run_with_session(device.show_device_tutorial, seedless=True)
 
     _assert_begin_screen_and_proceed(debug)
     _assert_navigation_screen_and_proceed(debug)
@@ -283,7 +284,7 @@ def test_tutorial_menu_tropic(device_handler: "BackgroundDeviceHandler"):
 def test_tutorial_restart(device_handler: "BackgroundDeviceHandler"):
     """Test all occurences of the restart action in the tutorial."""
     debug = device_handler.debuglink()
-    device_handler.run(device.show_device_tutorial)
+    device_handler.run_with_session(device.show_device_tutorial, seedless=True)
 
     _assert_begin_screen_and_proceed(debug)
     _assert_navigation_screen_and_proceed(debug)
