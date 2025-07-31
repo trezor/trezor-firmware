@@ -3,16 +3,14 @@ from typing import TYPE_CHECKING
 
 from trezor import utils
 
-# Traditional cache keys
-APP_COMMON_SEED = const(0)
-APP_COMMON_AUTHORIZATION_TYPE = const(1)
-APP_COMMON_AUTHORIZATION_DATA = const(2)
-APP_COMMON_NONCE = const(3)
-if not utils.BITCOIN_ONLY:
-    APP_COMMON_DERIVE_CARDANO = const(4)
-    APP_CARDANO_ICARUS_SECRET = const(5)
-    APP_CARDANO_ICARUS_TREZOR_SECRET = const(6)
-    APP_MONERO_LIVE_REFRESH = const(7)
+if utils.USE_THP:
+    # Cache keys for THP
+    from .cache_thp_keys import *  # noqa F401, F403
+
+else:
+    # Cache keys for Codec
+    from .cache_codec_keys import *  # noqa F401, F403
+
 
 # Keys that are valid across sessions
 SESSIONLESS_FLAG = const(128)
