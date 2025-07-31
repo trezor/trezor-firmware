@@ -194,7 +194,7 @@ class ProtocolV2Channel(Channel):
 
     def _read_handshake_init_response(self) -> bytes:
         header, payload = self._read_until_valid_crc_check()
-        self._send_ack_0()
+        self._send_ack_bit(bit=0)
 
         if control_byte.is_error(header.ctrl_byte):
             if payload == b"\x05":
@@ -245,7 +245,7 @@ class ProtocolV2Channel(Channel):
                 raise exceptions.ThpError(_get_error_from_int(data[0]))
         trezor_state = self._noise.decrypt(bytes(data))
         assert trezor_state == b"\x00" or trezor_state == b"\x01"
-        self._send_ack_1()
+        self._send_ack_bit(bit=1)
         return int.from_bytes(trezor_state, "big")
 
     def _read_ack(self):
@@ -255,14 +255,12 @@ class ProtocolV2Channel(Channel):
             if control_byte.is_error(header.ctrl_byte):
                 raise exceptions.ThpError(_get_error_from_int(payload[0]))
 
-    def _send_ack_0(self):
-        LOG.debug("sending ack 0")
-        header = MessageHeader(0x20, self.channel_id, 4)
-        thp_io.write_payload_to_wire_and_add_checksum(self.transport, header, b"")
-
-    def _send_ack_1(self):
-        LOG.debug("sending ack 1")
-        header = MessageHeader(0x28, self.channel_id, 4)
+    def _send_ack_bit(self, bit: int):
+        if bit not in (0, 1):
+            raise ValueError("Invalid ACK bit")
+        LOG.debug(f"sending ack {bit}")
+        ctrl_byte = 0x20 if bit == 0 else 0x28
+        header = MessageHeader(ctrl_byte, self.channel_id, 4)
         thp_io.write_payload_to_wire_and_add_checksum(self.transport, header, b"")
 
     def _encrypt_and_write(
@@ -316,10 +314,7 @@ class ProtocolV2Channel(Channel):
                 "from control byte",
                 hexlify(header.ctrl_byte.to_bytes(1, "big")).decode(),
             )
-            if control_byte.get_seq_bit(header.ctrl_byte):
-                self._send_ack_1()
-            else:
-                self._send_ack_0()
+            self._send_ack_bit(bit=control_byte.get_seq_bit(header.ctrl_byte))
 
             message = self._noise.decrypt(bytes(raw_payload))
             session_id = message[0]
