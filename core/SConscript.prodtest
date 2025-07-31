@@ -8,7 +8,7 @@ CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 PRODUCTION = ARGUMENTS.get('PRODUCTION', '0') == '1'
 BOOTLOADER_DEVEL = ARGUMENTS.get('BOOTLOADER_DEVEL', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
-UI_DEBUG_OVERLAY = ARGUMENTS.get('UI_DEBUG_OVERLAY', '0') == '1'
+UI_PERFORMANCE_OVERLAY = ARGUMENTS.get('UI_PERFORMANCE_OVERLAY', '0') == '1'
 
 FEATURE_FLAGS = {
     "AES_GCM": True,
@@ -310,8 +310,8 @@ if 'boot_ucb' in FEATURES_AVAILABLE:
 #
 features = ['prodtest',] + FEATURES_AVAILABLE + RUST_UI_FEATURES
 
-if UI_DEBUG_OVERLAY:
-    features.append('ui_debug_overlay')
+if UI_PERFORMANCE_OVERLAY:
+    features.append('ui_performance_overlay')
 
 
 rust = tools.add_rust_lib(

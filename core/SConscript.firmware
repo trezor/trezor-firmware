@@ -24,7 +24,7 @@ LOG_STACK_USAGE = ARGUMENTS.get('LOG_STACK_USAGE', '0') == '1'
 MICROPY_ENABLE_SOURCE_LINE = ARGUMENTS.get('MICROPY_ENABLE_SOURCE_LINE', '0')
 DISABLE_ANIMATION = ARGUMENTS.get('TREZOR_DISABLE_ANIMATION', '0') == '1'
 BLOCK_ON_VCP = ARGUMENTS.get('BLOCK_ON_VCP', '0') == '1'
-UI_DEBUG_OVERLAY = ARGUMENTS.get('UI_DEBUG_OVERLAY', '0') == '1'
+UI_PERFORMANCE_OVERLAY = ARGUMENTS.get('UI_PERFORMANCE_OVERLAY', '0') == '1'
 
 STORAGE_INSECURE_TESTING_MODE = ARGUMENTS.get('STORAGE_INSECURE_TESTING_MODE', '0') == '1'
 if STORAGE_INSECURE_TESTING_MODE and PRODUCTION:
@@ -864,8 +864,8 @@ if PYOPT == '0':
     features.append('ui_debug')
 if EVERYTHING:
     features.append('universal_fw')
-if UI_DEBUG_OVERLAY:
-    features.append('ui_debug_overlay')
+if UI_PERFORMANCE_OVERLAY:
+    features.append('ui_performance_overlay')
 
 rust = tools.add_rust_lib(
     env=env,
