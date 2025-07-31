@@ -21,7 +21,6 @@
 
 #include <gfx/gfx_bitblt.h>
 #include <io/display.h>
-#include <sec/entropy.h>
 #include <sec/random_delays.h>
 #include <sec/secret.h>
 #include <sec/secure_aes.h>
@@ -106,7 +105,6 @@ void drivers_init() {
 #ifdef USE_STORAGE_HWKEY
   secure_aes_init();
 #endif
-  entropy_init();
 #ifdef USE_TAMPER
   tamper_init();
 #if PRODUCTION
