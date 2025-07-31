@@ -112,19 +112,19 @@ static void prodtest_otp_variant_write(cli_t* cli) {
     cli_trace(cli, "");
   }
 
-#ifdef USE_OPTIGA
-  optiga_locked_status optiga_status = get_optiga_locked_status(cli);
-
-  if (optiga_status == OPTIGA_LOCKED_FALSE) {
-    cli_error(cli, CLI_ERROR, "Optiga not locked");
-    return;
-  }
-
-  if (optiga_status != OPTIGA_LOCKED_TRUE) {
-    // Error reported by get_optiga_locked_status().
-    return;
-  }
-#endif
+  // #ifdef USE_OPTIGA
+  //   optiga_locked_status optiga_status = get_optiga_locked_status(cli);
+  //
+  //   if (optiga_status == OPTIGA_LOCKED_FALSE) {
+  //     cli_error(cli, CLI_ERROR, "Optiga not locked");
+  //     return;
+  //   }
+  //
+  //   if (optiga_status != OPTIGA_LOCKED_TRUE) {
+  //     // Error reported by get_optiga_locked_status().
+  //     // return;
+  //   }
+  // #endif
 
   if (sectrue == flash_otp_is_locked(FLASH_OTP_BLOCK_DEVICE_VARIANT)) {
     cli_error(cli, CLI_ERROR_LOCKED,

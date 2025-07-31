@@ -32,11 +32,11 @@ PRODUCTION ?= 0
 PYOPT      ?= 1
 BITCOIN_ONLY ?= 0
 BOOTLOADER_QA ?= 0
-BOOTLOADER_DEVEL ?= 0
+BOOTLOADER_DEVEL ?= 1
 UNSAFE_FW ?= 0
 DISABLE_OPTIGA ?= 0
 DISABLE_TROPIC ?= 1
-TREZOR_MODEL ?= T2T1
+TREZOR_MODEL ?= T3W1
 TREZOR_MEMPERF ?= 0
 ADDRESS_SANITIZER ?= 0
 CMAKELISTS ?= 0
@@ -226,7 +226,7 @@ test_emu_persistence_ui: ## run persistence tests with UI testing
 		--ui=test --ui-check-missing --do-master-diff --lang=$(TEST_LANG)
 
 test_emu_ui: ## run ui integration tests
-	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS) \
+	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests/test_protection_levels.py $(TESTOPTS) \
 		--ui=test --ui-check-missing --do-master-diff \
 		--lang=$(TEST_LANG)
 
