@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef KERNEL_MODE
+
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 
@@ -73,3 +75,5 @@ DEFINE_SINGLE_AREA(BOOTUPDATE_AREA, BOOTUPDATE, ACCESS_DEFAULT);
 DEFINE_SINGLE_AREA(NONBOARDLOADER_AREA, NONBOARDLOADER, ACCESS_DEFAULT);
 #endif
 #endif
+
+#endif  // KERNEL_MODE

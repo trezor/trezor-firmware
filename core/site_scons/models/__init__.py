@@ -18,9 +18,49 @@ def configure_board(
     paths: list[str],
 ) -> list[str]:
     imported_module = importlib.import_module(f"models.{model}")
-    return imported_module.configure_board(
+
+    features_available = imported_module.configure_board(
         revision, features_wanted, env, defines, sources, paths
     )
+
+    _configure_common_modules(
+        env, features_available, features_wanted, defines, sources, paths
+    )
+
+    return features_available
+
+
+def _configure_common_modules(
+    env: dict,
+    features_available: list[str],
+    features_wanted: list[str],
+    defines: list[str | tuple[str, str]],
+    sources: list[str],
+    paths: list[str],
+) -> list[str]:
+
+    if "kernel_mode" in features_wanted:
+        defines += [("KERNEL_MODE", "1")]
+        paths += ["vendor"]
+        sources += ["vendor/trezor-storage/flash_area.c"]
+
+    if "secure_mode" in features_wanted:
+        defines += [("SECURE_MODE", "1")]
+
+    if "storage" in features_wanted:
+        paths += ["embed/sec/storage/inc"]
+        paths += ["vendor"]
+        defines += [("USE_STORAGE", "1")]
+
+        if "secure_mode" in features_wanted:
+            sources += [
+                "embed/sec/storage/storage_setup.c",
+                "vendor/trezor-storage/norcow.c",
+                "vendor/trezor-storage/storage.c",
+                "vendor/trezor-storage/storage_utils.c",
+            ]
+
+        features_available.append("storage")
 
 
 def has_emulator(model: str) -> bool:

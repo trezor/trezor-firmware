@@ -21,8 +21,8 @@
 #include <trezor_rtl.h>
 
 #include <sys/mpu.h>
+#include <util/flash.h>
 #include <util/flash_utils.h>
-#include "flash_area.h"
 
 typedef struct {
   const flash_area_t* area;

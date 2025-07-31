@@ -24,13 +24,20 @@ if not models.has_emulator(TREZOR_MODEL):
              )
     Return()
 
-FEATURES_WANTED = ["input", "rgb_led", "display", "tropic",  "sd_card", "usb"]
+FEATURES_WANTED = [
+    "display",
+    "input",
+    "kernel_mode",
+    "rgb_led",
+    "sd_card",
+    "secure_mode",
+    "tropic",
+    "usb"
+]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = [
-    'KERNEL_MODE',
-    'SECURE_MODE',
     'AES_128',
     'USE_INSECURE_PRNG',
 ]
@@ -44,11 +51,8 @@ RUST_UI_FEATURES = []
 # modtrezorcrypto
 CPPPATH_MOD += [
     'vendor/trezor-crypto',
-    'vendor/trezor-storage',
 ]
-SOURCE_MOD += [
-    'vendor/trezor-storage/flash_area.c',
-]
+
 SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/aes/aes_modes.c',
     'vendor/trezor-crypto/aes/aesccm.c',

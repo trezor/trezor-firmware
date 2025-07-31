@@ -27,6 +27,7 @@ mod page;
 mod progress;
 mod result;
 mod scroll;
+#[cfg(feature = "storage")]
 mod set_brightness;
 #[cfg(feature = "translations")]
 mod share_words;
@@ -65,6 +66,7 @@ pub use page::ButtonPage;
 pub use progress::Progress;
 pub use result::{ResultFooter, ResultScreen, ResultStyle};
 pub use scroll::ScrollBar;
+#[cfg(feature = "storage")]
 pub use set_brightness::SetBrightnessDialog;
 #[cfg(feature = "translations")]
 pub use share_words::ShareWords;

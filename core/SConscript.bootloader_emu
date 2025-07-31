@@ -25,8 +25,10 @@ FEATURES_WANTED = [
     "display",
     "dma2d",
     "input",
+    "kernel_mode",
     "power_manager",
     "rgb_led",
+    "secure_mode",
     ]
 
 CCFLAGS_MOD = ''
@@ -42,11 +44,8 @@ RUST_UI_FEATURES = []
 CCFLAGS_MOD += '-Wno-sequence-point '
 CPPPATH_MOD += [
     'vendor/trezor-crypto',
-    'vendor/trezor-storage',
 ]
 CPPDEFINES_MOD += [
-    'KERNEL_MODE',
-    'SECURE_MODE',
     'AES_128',
     'AES_192',
     'USE_KECCAK',
@@ -95,7 +94,6 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
-    'vendor/trezor-storage/flash_area.c',
 ]
 
 SOURCE_NANOPB = [

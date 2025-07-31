@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef KERNEL_MODE
+
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
@@ -236,8 +238,6 @@ __attribute__((noreturn)) void reboot_or_halt_after_rsod(void) {
 }
 
 #endif  // SECURE_MODE
-
-#ifdef KERNEL_MODE
 
 static void jump_to_next_stage_phase_2(uint32_t arg1, uint32_t arg2) {
   // We are now running on a new stack. We cannot be sure about
