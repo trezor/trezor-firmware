@@ -106,6 +106,7 @@ impl CommonUI for UIEckhart {
         target: &mut impl shape::Renderer<'s>,
         info: PerformanceOverlay,
     ) {
+        let curve_offset = Offset::new(10, 10);
         let mut text = ShortString::new();
         let t1 = info.render_time.min(99999) as u32;
         let t2 = info.refresh_time.min(99999) as u32;
@@ -117,20 +118,24 @@ impl CommonUI for UIEckhart {
             t2 / 1000,
             (t2 % 1000) / 100
         ));
-        let font = fonts::FONT_SATOSHI_REGULAR_22;
+        let font = fonts::FONT_SATOSHI_MEDIUM_26;
         let size = Offset::new(
             font.visible_text_width("00.0|00.0"),
-            font.visible_text_height("0"),
-        );
+            font.visible_text_height("0|"),
+        ) + curve_offset;
         let pos = Point::new(constant::WIDTH, 0);
         let r = Rect::snap(pos, size, Alignment2D::TOP_RIGHT);
         shape::Bar::new(r)
             .with_alpha(192)
             .with_bg(Color::black())
             .render(target);
-        shape::Text::new(r.bottom_right(), &text, font)
-            .with_align(Alignment::End)
-            .with_fg(Color::rgb(255, 255, 0))
-            .render(target);
+        shape::Text::new(
+            r.bottom_right() - Offset::new(curve_offset.x, font.baseline),
+            &text,
+            font,
+        )
+        .with_align(Alignment::End)
+        .with_fg(Color::rgb(255, 255, 0))
+        .render(target);
     }
 }
