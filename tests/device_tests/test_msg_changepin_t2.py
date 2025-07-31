@@ -39,7 +39,7 @@ def _check_pin(session: Session, pin: str):
 
     with session.client as client:
         client.ui.__init__(session.client.debug)
-        client.use_pin_sequence([pin, pin, pin, pin, pin, pin])
+        client.use_pin_sequence([pin])
         session.lock()
         assert session.features.pin_protection is True
         assert session.features.unlocked is False
