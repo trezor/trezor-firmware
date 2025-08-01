@@ -67,8 +67,9 @@ class Bitcoin:
 
         # Add outputs to sig_hasher and h_tx_check, approve outputs and compute
         # sum of output amounts.
+        print("OOOOOOOOOO")
         await self.step2_approve_outputs()
-
+        print("TTTTTTTTTTT")
         # Check fee, approve lock_time and total.
         await self.approver.approve_tx(self.tx_info, self.orig_txs, self)
 
@@ -221,15 +222,20 @@ class Bitcoin:
 
     async def step2_approve_outputs(self) -> None:
         for i in range(self.tx_info.tx.outputs_count):
+            print("SSSSSSS ", i, self.tx_info.tx.outputs_count)
             # STAGE_REQUEST_2_OUTPUT in legacy
             progress.advance()
+            print("SSSSSSSS X 1")
             txo = await request_tx_output(self.tx_req, i, self.coin)
+            print("SSSSSSSS X 2")
             script_pubkey = self.output_derive_script(txo)
+            print("SSSSSSSS X 3")
             orig_txo: TxOutput | None = None
             if txo.orig_hash:
                 orig_txo = await self.get_original_output(txo, script_pubkey)
             await self.approve_output(txo, script_pubkey, orig_txo)
 
+        print("YYYYYY")
         # Finalize original outputs.
         for orig in self.orig_txs:
             # Fetch remaining removed original outputs.
@@ -523,7 +529,7 @@ class Bitcoin:
                 tx_ack_payment_req = await helpers.request_payment_req(
                     self.tx_req, payment_req_index
                 )
-                await approver.add_payment_request(tx_ack_payment_req, self.keychain)
+                await approver.add_payment_request(tx_ack_payment_req, self.keychain, self.tx_info, txo)
             self.payment_req_index = payment_req_index
 
         if self.tx_info.output_is_change(txo):
@@ -534,7 +540,9 @@ class Bitcoin:
                 txo, script_pubkey, self.tx_info, orig_txo
             )
 
+        print("AAAAAAAA 1")
         self.tx_info.add_output(txo, script_pubkey)
+        print("AAAAAAAA 2")
 
     async def get_tx_digest(
         self,

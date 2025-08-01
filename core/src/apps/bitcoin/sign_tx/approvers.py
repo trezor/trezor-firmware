@@ -35,7 +35,6 @@ class Approver:
         self.coin = coin
         self.weight = tx_weight.TxWeightCalculator()
         self.payment_req_verifier: PaymentRequestVerifier | None = None
-        self.show_payment_req_details = False
 
         # amounts in the current transaction
         self.total_in = 0  # sum of input amounts
@@ -103,7 +102,6 @@ class Approver:
         if self.payment_req_verifier:
             self.payment_req_verifier.verify()
         self.payment_req_verifier = None
-        self.show_payment_req_details = False
 
     async def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         await self._add_output(txo, script_pubkey)
@@ -229,7 +227,8 @@ class BasicApprover(Approver):
                 raise ProcessError(
                     "Adding new OP_RETURN outputs in replacement transactions is not supported."
                 )
-        elif txo.payment_req_index is None or self.show_payment_req_details:
+        elif txo.payment_req_index is None:
+            print("XXXXXXXXXXXX ")
             source_path = (
                 tx_info.change_detector.wallet_path.get_path() if tx_info else None
             )
@@ -246,16 +245,21 @@ class BasicApprover(Approver):
             self.external_output_index += 1
 
     async def add_payment_request(
-        self, msg: PaymentRequest, keychain: Keychain
+        self, msg: PaymentRequest, keychain: Keychain, tx_info: TxInfo | None, txo: TxOutput,
     ) -> None:
+        "XXXXX"
         await super().add_payment_request(msg, keychain)
         if msg.amount is None:
             raise DataError("Missing payment request amount.")
 
-        result = await helpers.should_show_payment_request_details(
-            msg, self.coin, self.amount_unit
+        source_path = (
+            tx_info.change_detector.wallet_path.get_path() if tx_info else None
         )
-        self.show_payment_req_details = result is True
+
+        result = await helpers.should_show_payment_request_details(
+            txo.address, msg, self.coin, self.amount_unit, source_path,
+        )
+
 
     async def approve_orig_txids(
         self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]

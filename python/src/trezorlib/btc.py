@@ -304,6 +304,7 @@ def sign_tx(
         signtx.outputs_count = len(outputs)
 
     else:
+        print("WTF WTD WTD ", len(outputs))
         signtx = messages.SignTx(
             coin_name=coin_name,
             inputs_count=len(inputs),

@@ -76,25 +76,25 @@ outputs = [
 
 memos1 = [
     CoinPurchaseMemo(
-        amount="15.9636 DASH",
-        coin_name="Dash",
-        slip44=5,
-        address_n=parse_path("m/44h/5h/0h/1/0"),
+        amount="15.9636 DOGE",
+        coin_name="Dogecoin",
+        slip44=3,
+        address_n=parse_path("m/44h/3h/0h/1/0"),
     ),
 ]
 
 memos2 = [
     CoinPurchaseMemo(
-        amount="3.1896 DASH",
-        coin_name="Dash",
-        slip44=5,
-        address_n=parse_path("m/44h/5h/0h/1/0"),
+        amount="3.1896 DOGE",
+        coin_name="Dogecoin",
+        slip44=3,
+        address_n=parse_path("m/44h/3h/0h/1/0"),
     ),
     CoinPurchaseMemo(
-        amount="831.570802 GRS",
-        coin_name="Groestlcoin",
-        slip44=17,
-        address_n=parse_path("m/44h/17h/0h/0/3"),
+        amount="831.570802 BCH",
+        coin_name="Bchash",
+        slip44=145,
+        address_n=parse_path("m/44h/145h/0h/0/3"),
     ),
 ]
 
@@ -114,13 +114,11 @@ SERIALIZED_TX = "01000000000101e29305e85821ea86f2bca1fcfe45e7cb0c8de87b612479ee6
             "out0",
             (PaymentRequestParams([0], memos1, get_nonce=True),),
             altcoin=True,
-            models="t2t1",
         ),
         case(
             "out1",
             (PaymentRequestParams([1], memos2, get_nonce=True),),
             altcoin=True,
-            models="t2t1",
         ),
         case("out2", (PaymentRequestParams([2], [], get_nonce=True),)),
         case(
@@ -149,6 +147,7 @@ def test_payment_request(client: Client, payment_request_params):
             output = outputs[txo_index]
             output.payment_req_index = i
             request_outputs.append((output.amount, output.address))
+        print("OUTPUTS XXXX ", len(request_outputs))
         nonce = misc.get_nonce(client) if params.get_nonce else None
         for memo in params.memos:
             if isinstance(memo, RefundMemo):
