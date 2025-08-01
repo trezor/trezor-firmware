@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from trezor import TR
 from trezor.enums import ButtonRequestType
-from trezor.strings import format_amount
+from trezor.strings import format_amount, format_amount_unit
 from trezor.ui.layouts import confirm_metadata
 
 from .helpers import NEM_MAX_DIVISIBILITY
@@ -26,7 +26,7 @@ async def require_confirm_fee(action: str, fee: int) -> None:
         "confirm_fee",
         TR.words__confirm_fee,
         action + "\n{}",
-        f"{format_amount(fee, NEM_MAX_DIVISIBILITY)} XEM",
+        format_amount_unit(format_amount(fee, NEM_MAX_DIVISIBILITY), "XEM"),
         ButtonRequestType.ConfirmOutput,
     )
 
@@ -47,6 +47,6 @@ async def require_confirm_final(fee: int) -> None:
         "confirm_final",
         TR.nem__final_confirm,
         TR.nem__sign_tx_fee_template,
-        f"{format_amount(fee, NEM_MAX_DIVISIBILITY)} XEM",
+        format_amount_unit(format_amount(fee, NEM_MAX_DIVISIBILITY), "XEM"),
         hold=True,
     )
