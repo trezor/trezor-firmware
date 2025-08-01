@@ -156,7 +156,7 @@ include_icon!(
 pub const TEXT_NORMAL: TextStyle =
     TextStyle::new(fonts::FONT_SATOSHI_REGULAR_38, GREY_LIGHT, BG, GREY, GREY);
 pub const TEXT_SMALL: TextStyle =
-    TextStyle::new(fonts::FONT_SATOSHI_MEDIUM_26, GREY_LIGHT, BG, GRY, GREY);
+    TextStyle::new(fonts::FONT_SATOSHI_MEDIUM_26, GREY_LIGHT, BG, GREY, GREY);
 pub const TEXT_SMALL_RED: TextStyle = TextStyle {
     text_color: RED,
     ..TEXT_SMALL
