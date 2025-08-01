@@ -60,6 +60,7 @@ FEATURES_WANTED = [
     "rgb_led",
     "sd_card",
     "secmon_layout",
+    "storage",
     "suspend",
     "tropic",
     "usb",
@@ -85,7 +86,6 @@ FROZEN = True
 # modtrezorconfig
 CPPPATH_MOD += [
     'embed/upymod/modtrezorconfig',
-    'vendor/trezor-storage',
 ]
 SOURCE_MOD += [
     'embed/upymod/modtrezorconfig/modtrezorconfig.c',
@@ -392,8 +392,6 @@ SOURCE_MICROPYTHON_SPEED = [
     'vendor/micropython/py/pystack.c',
     'vendor/micropython/py/vm.c',
 ]
-
-CPPDEFINES_MOD += ['USE_SVC_SHUTDOWN']
 
 if FEATURE_FLAGS["RDI"]:
     CPPDEFINES_MOD += ['RDI']

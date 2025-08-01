@@ -6,14 +6,12 @@
 #include <io/display.h>
 #include <io/usb.h>
 #include <rtl/secbool.h>
-#include <sec/entropy.h>
 #include <sys/irq.h>
 #include <sys/sysevent.h>
 #include <sys/systick.h>
 #include <util/flash.h>
 #include <util/translations.h>
 #include "rust_types.h"
-#include "storage.h"
 
 #ifdef USE_HW_JPEG_DECODER
 #include <gfx/jpegdec.h>
@@ -49,6 +47,10 @@
 
 #ifdef USE_SUSPEND
 #include <sys/suspend.h>
+#endif
+
+#ifdef USE_STORAGE
+#include <sec/storage.h>
 #endif
 
 #include "bip39.h"

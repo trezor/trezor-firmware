@@ -22,8 +22,9 @@
 
 #include <trezor_types.h>
 
+#include <sec/storage.h>
+
 #include "optiga_common.h"
-#include "storage.h"
 
 #define OPTIGA_DEVICE_CERT_INDEX 1
 #define OPTIGA_DEVICE_ECC_KEY_INDEX 0

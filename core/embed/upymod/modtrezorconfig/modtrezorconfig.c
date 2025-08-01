@@ -25,11 +25,11 @@
 
 #if MICROPY_PY_TREZORCONFIG
 
+#include <sec/storage.h>
+
 #include "embed/upymod/trezorobj.h"
 
-#include <sec/entropy.h>
 #include "memzero.h"
-#include "storage.h"
 
 static secbool wrapped_ui_wait_callback(uint32_t wait, uint32_t progress,
                                         enum storage_ui_message_t message) {
@@ -51,20 +51,17 @@ static secbool wrapped_ui_wait_callback(uint32_t wait, uint32_t progress,
 ///    None
 /// ) -> None:
 ///     """
-///     Initializes the storage.  Must be called before any other method is
-///     called from this module!
+///     Performs a soft re-initialization of the storage.
+///     Locks the storage if it is currently unlocked, and allows setting
+///     a new UI callback.
 ///     """
 STATIC mp_obj_t mod_trezorconfig_init(size_t n_args, const mp_obj_t *args) {
-  entropy_data_t entropy;
-  entropy_get(&entropy);
-
   if (n_args > 0) {
     MP_STATE_VM(trezorconfig_ui_wait_callback) = args[0];
-    storage_init(wrapped_ui_wait_callback, entropy.bytes, entropy.size);
+    storage_setup(wrapped_ui_wait_callback);
   } else {
-    storage_init(NULL, entropy.bytes, entropy.size);
+    storage_setup(NULL);
   }
-  memzero(&entropy, sizeof(entropy));
   return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_init_obj, 0, 1,

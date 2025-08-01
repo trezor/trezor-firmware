@@ -21,10 +21,11 @@
 
 #include <sec/optiga.h>
 #include <sec/optiga_common.h>
+#include <sec/storage.h>
+
 #include "ecdsa.h"
 #include "nist256p1.h"
 #include "rand.h"
-#include "storage.h"
 
 #if defined(TREZOR_MODEL_T2B1)
 #include "certs/T2B1.h"

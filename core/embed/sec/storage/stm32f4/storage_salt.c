@@ -17,32 +17,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef SECURE_MODE
+
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <sec/entropy.h>
 #include <sys/mpu.h>
 #include <util/flash_otp.h>
-#include "rand.h"
 
+#include "rand.h"
 #include "stm32f4xx_ll_utils.h"
 
-#ifdef SECURE_MODE
+#include "../storage_salt.h"
 
-static entropy_data_t g_entropy = {0};
-
-void entropy_init(void) {
+void storage_salt_get(storage_salt_t* salt) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_OTP);
-
-  entropy_data_t* ent = &g_entropy;
 
   // collect entropy from UUID
   uint32_t w = LL_GetUID_Word0();
-  memcpy(&ent->bytes[0], &w, 4);
+  memcpy(&salt->bytes[0], &w, 4);
   w = LL_GetUID_Word1();
-  memcpy(&ent->bytes[4], &w, 4);
+  memcpy(&salt->bytes[4], &w, 4);
   w = LL_GetUID_Word2();
-  memcpy(&ent->bytes[8], &w, 4);
+  memcpy(&salt->bytes[8], &w, 4);
 
   mpu_restore(mpu_mode);
 
@@ -56,13 +53,11 @@ void entropy_init(void) {
     ensure(flash_otp_lock(FLASH_OTP_BLOCK_RANDOMNESS), NULL);
   }
   // collect entropy from OTP randomness block
-  ensure(flash_otp_read(FLASH_OTP_BLOCK_RANDOMNESS, 0, &ent->bytes[12],
+  ensure(flash_otp_read(FLASH_OTP_BLOCK_RANDOMNESS, 0, &salt->bytes[12],
                         FLASH_OTP_BLOCK_SIZE),
          NULL);
 
-  ent->size = 12 + FLASH_OTP_BLOCK_SIZE;
+  salt->size = 12 + FLASH_OTP_BLOCK_SIZE;
 }
-
-void entropy_get(entropy_data_t* entropy) { *entropy = g_entropy; }
 
 #endif  // SECURE_MODE

@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef KERNEL_MODE
+
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
@@ -24,6 +26,7 @@
 #include <rtl/sizedefs.h>
 #include <sys/irq.h>
 #include <sys/trustzone.h>
+#include <util/flash.h>
 #include <util/image.h>
 
 #if defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
@@ -610,3 +613,5 @@ void tz_init(void) {
   tz_enable_illegal_access_interrupt();
 }
 #endif  // SECMON
+
+#endif  // KERNEL_MODE

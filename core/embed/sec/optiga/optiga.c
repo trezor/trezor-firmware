@@ -25,13 +25,13 @@
 #include <sec/optiga_commands.h>
 #include <sec/optiga_transport.h>
 #include <sec/secret_keys.h>
+#include <sec/storage.h>
 #include "ecdsa.h"
 #include "hash_to_curve.h"
 #include "hmac.h"
 #include "memzero.h"
 #include "nist256p1.h"
 #include "rand.h"
-#include "storage.h"
 
 // Counter-protected PIN secret and reset key for OID_STRETCHED_PIN_CTR (OID
 // 0xF1D0).

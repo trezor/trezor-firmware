@@ -23,7 +23,7 @@
 #include <stdint.h>
 #include "secbool.h"
 
-#include "flash.h"
+#include "flash_ll.h"
 
 /**
  * Flash driver interface is designed to abstract away differences between

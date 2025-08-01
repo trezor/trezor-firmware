@@ -233,6 +233,7 @@ secbool check_secmon_header_sig(const secmon_header_t *const hdr) {
                                  *(const ed25519_signature *)hdr->sig));
 }
 
+#ifdef SECURE_MODE
 secbool check_secmon_contents(const secmon_header_t *const hdr,
                               size_t code_offset, const flash_area_t *area) {
   if (0 == area) {
@@ -252,7 +253,9 @@ secbool check_secmon_contents(const secmon_header_t *const hdr,
 
   return sectrue;
 }
-#endif
+#endif  // SECURE_MODE
+
+#endif  // USE_SECMON_VERIFICATION
 
 secbool __wur read_vendor_header(const uint8_t *const data,
                                  vendor_header *const vhdr) {
@@ -364,6 +367,7 @@ secbool check_single_hash(const uint8_t *const hash, const uint8_t *const data,
   return sectrue * (0 == memcmp(s_c, hash, IMAGE_HASH_DIGEST_LENGTH));
 }
 
+#ifdef KERNEL_MODE
 secbool check_image_contents(const image_header *const hdr, uint32_t firstskip,
                              const flash_area_t *area) {
   if (0 == area) {
@@ -450,6 +454,7 @@ secbool check_image_contents(const image_header *const hdr, uint32_t firstskip,
 
   return sectrue;
 }
+#endif  // KERNEL_MODE
 
 secbool check_firmware_header(const uint8_t *header, size_t header_size,
                               firmware_header_info_t *info) {

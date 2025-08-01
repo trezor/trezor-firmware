@@ -7,8 +7,9 @@ def init(
    None
 ) -> None:
     """
-    Initializes the storage.  Must be called before any other method is
-    called from this module!
+    Performs a soft re-initialization of the storage.
+    Locks the storage if it is currently unlocked, and allows setting
+    a new UI callback.
     """
 
 

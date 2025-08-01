@@ -17,20 +17,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __NORCOW_CONFIG_H__
+#define __NORCOW_CONFIG_H__
+
 #include <trezor_model.h>
-#include <trezor_rtl.h>
+#include <trezor_types.h>
 
-#include <sec/entropy.h>
+#include <util/flash.h>
 
-static entropy_data_t g_entropy = {0};
+#define NORCOW_HEADER_LEN 0
+#define NORCOW_SECTOR_COUNT 2
 
-void entropy_init(void) {
-  entropy_data_t* ent = &g_entropy;
-#ifdef SECRET_PRIVILEGED_MASTER_KEY_SLOT
-  ent->size = 32;
-#else
-  ent->size = 32 + 12;  // Legacy
+#define STORAGE_AREAS_COUNT NORCOW_SECTOR_COUNT
+extern const flash_area_t STORAGE_AREAS[STORAGE_AREAS_COUNT];
+
+/*
+ * Current storage version.
+ */
+#define NORCOW_VERSION ((uint32_t)0x00000006)
+
 #endif
-}
-
-void entropy_get(entropy_data_t* entropy) { *entropy = g_entropy; }

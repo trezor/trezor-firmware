@@ -17,20 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __NORCOW_CONFIG_H__
-#define __NORCOW_CONFIG_H__
-
 #include <trezor_model.h>
-#include <trezor_types.h>
+#include <trezor_rtl.h>
 
-#include <util/flash.h>
+#include "../storage_salt.h"
 
-#define NORCOW_HEADER_LEN 0
-#define NORCOW_SECTOR_COUNT 2
+void storage_salt_get(storage_salt_t* salt) {
+  memset(salt, 0, sizeof(*salt));
 
-/*
- * Current storage version.
- */
-#define NORCOW_VERSION ((uint32_t)0x00000006)
-
+#ifdef SECRET_PRIVILEGED_MASTER_KEY_SLOT
+  salt->size = 32;
+#else
+  salt->size = 32 + 12;  // Legacy
 #endif
+}

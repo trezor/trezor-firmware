@@ -17,9 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// This header is included in storage module
-//
-// Do not include this header or add dependencies to it unless required by
-// storage.
+#include <trezor-storage/storage.h>
 
-#include "util/flash.h"
+/**
+ * Initialize storage and optionally register a UI progress callback.
+ *
+ * If storage is already initialized, this call locks it, restoring the
+ * post-initialization state, and replaces the existing callback.
+ *
+ * @param callback  Callback invoked during long-term operations (may be NULL).
+ */
+void storage_setup(PIN_UI_WAIT_CALLBACK callback);

@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef KERNEL_MODE
+
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 
@@ -50,3 +52,5 @@ DEFINE_EMPTY_AREA(SECRET_AREA);
 DEFINE_SINGLE_AREA(ASSETS_AREA, ASSETS, ACCESS_DEFAULT);
 DEFINE_SPLIT2_AREA(UNUSED_AREA, UNUSED_1, ACCESS_DEFAULT, UNUSED_2,
                    ACCESS_DEFAULT);
+
+#endif  // KERNEL_MODE
