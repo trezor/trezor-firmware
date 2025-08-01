@@ -54,9 +54,9 @@ class MoneroTransactionProgress:
 
 
 def _format_amount(value: int) -> str:
-    from trezor import strings
+    from trezor.strings import format_amount, format_amount_unit
 
-    return f"{strings.format_amount(value, 12)} XMR"
+    return format_amount_unit(format_amount(value, 12), "XMR")
 
 
 async def require_confirm_watchkey() -> None:

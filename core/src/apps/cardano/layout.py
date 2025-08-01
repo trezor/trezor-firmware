@@ -8,7 +8,7 @@ from trezor.enums import (
     CardanoDRepType,
     CardanoNativeScriptType,
 )
-from trezor.strings import format_amount
+from trezor.strings import format_amount, format_amount_unit
 from trezor.ui import layouts
 from trezor.ui.layouts import confirm_metadata, confirm_properties
 
@@ -76,7 +76,7 @@ def format_coin_amount(amount: int, network_id: int) -> str:
     from .helpers import network_ids
 
     currency = "ADA" if network_ids.is_mainnet(network_id) else "tADA"
-    return f"{format_amount(amount, 6)} {currency}"
+    return f"{format_amount_unit(format_amount(amount, 6), currency)}"
 
 
 async def show_native_script(

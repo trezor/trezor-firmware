@@ -27,6 +27,8 @@ def eos_name_to_string(value: int) -> str:
 
 
 def eos_asset_to_string(asset: EosAsset) -> str:
+    from trezor.strings import format_amount_unit
+
     symbol_bytes = int.to_bytes(asset.symbol, 8, "big")
     precision = symbol_bytes[7]
     symbol = bytes(reversed(symbol_bytes[:7])).rstrip(b"\x00").decode("ascii")
@@ -38,9 +40,9 @@ def eos_asset_to_string(asset: EosAsset) -> str:
             integer = "0"
         fraction = amount_digits[-precision:]
 
-        return f"{integer}.{fraction} {symbol}"
+        return format_amount_unit(f"{integer}.{fraction}", symbol)
     else:
-        return f"{amount_digits} {symbol}"
+        return format_amount_unit(amount_digits, symbol)
 
 
 def public_key_to_wif(pub_key: bytes) -> str:
