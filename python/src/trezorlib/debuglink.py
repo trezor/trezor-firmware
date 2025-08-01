@@ -502,6 +502,8 @@ class DebugLink:
         self.waiting_for_layout_change = False
 
         self.input_wait_type = DebugWaitType.IMMEDIATE
+
+        # For detecting GC leaks / heap fragmentation
         self.prev_gc_info: dict[str, int] = {}
 
     @property
@@ -1333,6 +1335,7 @@ class TrezorClientDebugLink(TrezorClient):
         new_client.debug.t1_screenshot_directory = self.debug.t1_screenshot_directory
         new_client.debug.t1_screenshot_counter = self.debug.t1_screenshot_counter
         new_client.debug.t1_take_screenshots = self.debug.t1_take_screenshots
+        new_client.debug.prev_gc_info = self.debug.prev_gc_info
         return new_client
 
     def close_transport(self) -> None:
