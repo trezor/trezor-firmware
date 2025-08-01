@@ -374,10 +374,12 @@ def unharden(item: int) -> int:
 def get_account_name(
     coin: str, address_n: Bip32Path, pattern: str | Sequence[str], slip44_id: int
 ) -> str | None:
+    from trezor.strings import format_amount_unit
+
     account_num = _get_account_num(address_n, pattern, slip44_id)
     if account_num is None:
         return None
-    return f"{coin} #{account_num}"
+    return format_amount_unit(coin, f"#{account_num}")
 
 
 def _get_account_num(
