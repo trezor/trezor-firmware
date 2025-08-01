@@ -234,7 +234,7 @@ jobs:
       - run: nix-shell --run "poetry run make -C core build_unix"
       - run: nix-shell --arg fullDeps true --run "cd vendor/ts-tvl/tvl/server/model_config && poetry env use 3.12 && poetry install && poetry run model_server tcp -c model_config.yml &"
       - run: nix-shell --run "poetry run make -C core test"
-      - run: nix-shell --run "poetry run core/emu.py -c true"  # sanity check non-frozen emulator
+      - run: nix-shell --run "poetry run make -C core test_emu_sanity"  # sanity check non-frozen emulator
 
   core_unit_rust_test:
     name: Rust unit tests (${{ matrix.model }}, ${{ matrix.asan }}${{ matrix.protocol=='v2' && ', THP' || ''}})
