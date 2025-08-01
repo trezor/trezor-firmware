@@ -77,6 +77,11 @@ def test_set_pin(session: Session):
     assert session.features.pin_protection is True
     _check_pin(session, PIN_MAX)
 
+    # Lock and drop the current channel, to make sure
+    # we can reconnect by getting the PIN via `DebugLinkState`.
+    session.lock()
+    session.invalidate()
+
 
 @pytest.mark.setup_client(pin=PIN4)
 def test_change_pin(session: Session):
