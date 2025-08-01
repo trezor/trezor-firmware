@@ -360,7 +360,7 @@ def with_session(
                     return func(session, *args, **kwargs)
 
                 finally:
-                    if not is_resume_mandatory:
+                    if not is_resume_mandatory and not session.features.bootloader_mode:
                         session.end()
 
         return function_with_session
