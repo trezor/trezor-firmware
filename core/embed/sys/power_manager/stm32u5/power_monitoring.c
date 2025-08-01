@@ -178,7 +178,8 @@ void pm_charging_controller(pm_driver_t* drv) {
 
   if (drv->soc_target == 100) {
     drv->soc_target_reached = false;
-  } else {
+  } else if (fabsf((float)drv->pmic_data.ibat - (float)drv->i_chg_target_ma) <=
+             20.0f) {
     // Translate SoC target to charging voltage via battery model
     float target_ocv_voltage_v =
         battery_ocv(drv->soc_target / 100.0f, drv->pmic_data.ntc_temp, false);
