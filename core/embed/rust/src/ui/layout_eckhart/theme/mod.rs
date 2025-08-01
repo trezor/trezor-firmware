@@ -154,9 +154,9 @@ include_icon!(
 // bootloader and firmware
 
 pub const TEXT_NORMAL: TextStyle =
-    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_38, GREY_LIGHT, BG, FG, FG);
+    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_38, GREY_LIGHT, BG, GREY, GREY);
 pub const TEXT_SMALL: TextStyle =
-    TextStyle::new(fonts::FONT_SATOSHI_MEDIUM_26, GREY_LIGHT, BG, FG, FG);
+    TextStyle::new(fonts::FONT_SATOSHI_MEDIUM_26, GREY_LIGHT, BG, GREY, GREY);
 pub const TEXT_SMALL_RED: TextStyle = TextStyle {
     text_color: RED,
     ..TEXT_SMALL
