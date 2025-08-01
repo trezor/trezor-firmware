@@ -5,6 +5,7 @@ if TYPE_CHECKING:
 
 
 async def load_device(msg: LoadDevice) -> Success:
+    import storage.debug
     import storage.device as storage_device
     from trezor import TR, config
     from trezor.crypto import bip39, slip39
@@ -70,5 +71,6 @@ async def load_device(msg: LoadDevice) -> Success:
     storage_device.set_label(msg.label or "")
     if msg.pin:
         config.change_pin("", msg.pin, None, None)
+        storage.debug.set_pin(msg.pin)
 
     return Success(message="Device loaded")
