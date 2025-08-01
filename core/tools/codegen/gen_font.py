@@ -309,6 +309,17 @@ class FaceProcessor:
                     c = c.upper()
                 assert len(c) == 1
                 assert len(map_from) == 1
+
+                if not self._char_supported(c):
+                    if c == "º":
+                        c = "o"
+                        print(
+                            f"Character 'º' not supported ⚠️ in font {self.name} {self.style}, using fallback glyph {c}"
+                        )
+                    else:
+                        print(
+                            f"Character '{c}' not supported ❌ in font {self.name} {self.style}, using unknown glyph"
+                        )
                 self._load_char(c)
                 glyph = Glyph.from_face(self.face, c, self.shaveX)
                 glyph.print_metrics()
@@ -342,6 +353,9 @@ class FaceProcessor:
         with open(filename, "w", encoding="utf-8") as f:
             json_content = json.dumps(widths, indent=2, ensure_ascii=False)
             f.write(json_content + "\n")
+
+    def _char_supported(self, c: str) -> bool:
+        return self.face.get_char_index(ord(c)) != 0
 
     def _load_char(self, c: str) -> None:
         self.face.load_char(c, freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_NORMAL)  # type: ignore
