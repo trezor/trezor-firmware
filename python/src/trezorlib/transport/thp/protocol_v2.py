@@ -118,6 +118,15 @@ class ProtocolV2Channel(Channel):
         self.sync_bit_send = 0
         self.sync_bit_receive = 0
 
+    def ping(self, timeout: float | None = None):
+        """Make sure the device is available."""
+        # TODO: consider adding a special "ping" message (to avoid channel cache modification)
+        channel_allocation_nonce = os.urandom(8)
+        self._send_channel_allocation_request(channel_allocation_nonce)
+        self._read_channel_allocation_response(
+            channel_allocation_nonce, timeout=timeout
+        )
+
     def _do_channel_allocation(self) -> None:
         channel_allocation_nonce = os.urandom(8)
         self._send_channel_allocation_request(channel_allocation_nonce)
@@ -135,12 +144,18 @@ class ProtocolV2Channel(Channel):
     def _read_channel_allocation_response(
         self,
         expected_nonce: bytes,
+        retry: bool = True,
+        timeout: float | None = None,
     ) -> tuple[int, bytes]:
-        header, payload = self._read_until_valid_crc_check()
-        if not self._is_valid_channel_allocation_response(
-            header, payload, expected_nonce
-        ):
-            raise Exception("Invalid channel allocation response.")
+        while True:
+            header, payload = self._read_until_valid_crc_check(timeout=timeout)
+            if self._is_valid_channel_allocation_response(
+                header, payload, expected_nonce
+            ):
+                break
+            if retry:
+                continue
+            raise exceptions.ThpError("Invalid channel allocation response")
 
         channel_id = int.from_bytes(payload[8:10], "big")
         device_properties = payload[10:]
