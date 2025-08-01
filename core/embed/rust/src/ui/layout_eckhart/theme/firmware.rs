@@ -25,92 +25,78 @@ pub const TEXT_SUPER_BIG: TextStyle = TextStyle::new(
     fonts::FONT_SATOSHI_EXTRALIGHT_72,
     GREY_EXTRA_LIGHT,
     BG,
-    GREY_EXTRA_LIGHT,
-    GREY_EXTRA_LIGHT,
+    GREY_LIGHT,
+    GREY_LIGHT,
 );
 /// TT Satoshi Extra Light - 46 (Char keyboard, Backup check)
 pub const TEXT_BIG: TextStyle = TextStyle::new(
     fonts::FONT_SATOSHI_EXTRALIGHT_46,
     GREY_EXTRA_LIGHT,
     BG,
-    GREY_EXTRA_LIGHT,
-    GREY_EXTRA_LIGHT,
+    GREY_LIGHT,
+    GREY_LIGHT,
 );
 /// TT Satoshi Regular - 38 (Screen text, Menu item label)
-pub const TEXT_REGULAR: TextStyle = TextStyle::new(
-    fonts::FONT_SATOSHI_REGULAR_38,
-    GREY_LIGHT,
-    BG,
-    GREY_LIGHT,
-    GREY_LIGHT,
-);
+pub const TEXT_REGULAR: TextStyle =
+    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_38, GREY_LIGHT, BG, GREY, GREY);
 /// TT Satoshi Medium - 26 (Screen text, Button label, Input value)
-pub const TEXT_MEDIUM: TextStyle = TextStyle::new(
-    fonts::FONT_SATOSHI_MEDIUM_26,
-    GREY_LIGHT,
-    BG,
-    GREY_LIGHT,
-    GREY_LIGHT,
-);
+pub const TEXT_MEDIUM: TextStyle =
+    TextStyle::new(fonts::FONT_SATOSHI_MEDIUM_26, GREY_LIGHT, BG, GREY, GREY);
 
-pub const TEXT_MEDIUM_GREY: TextStyle =
-    TextStyle::new(fonts::FONT_SATOSHI_MEDIUM_26, GREY, BG, GREY, GREY);
+pub const TEXT_MEDIUM_GREY: TextStyle = TextStyle::new(
+    fonts::FONT_SATOSHI_MEDIUM_26,
+    GREY,
+    BG,
+    GREY_DARK,
+    GREY_DARK,
+);
 
 /// TT Satoshi Regular - 22 (Screen title, Hint, PageCounter, Secondary info)
 /// with negative line spacing to make it more compact
-pub const TEXT_SMALL: TextStyle =
-    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_22, GREY, BG, GREY, GREY).with_line_spacing(-4);
+pub const TEXT_SMALL: TextStyle = TextStyle::new(
+    fonts::FONT_SATOSHI_REGULAR_22,
+    GREY,
+    BG,
+    GREY_DARK,
+    GREY_DARK,
+)
+.with_line_spacing(-4);
 /// Roboto Mono Medium - 38 (Number value)
 pub const TEXT_MONO_MEDIUM: TextStyle = TextStyle::new(
     fonts::FONT_MONO_MEDIUM_38,
     GREY_EXTRA_LIGHT,
     BG,
-    GREY_EXTRA_LIGHT,
-    GREY_EXTRA_LIGHT,
+    GREY_LIGHT,
+    GREY_LIGHT,
 )
 .with_line_breaking(LineBreaking::BreakAtWhitespace);
 
-pub const TEXT_MONO_MEDIUM_LIGHT: TextStyle = TextStyle::new(
-    fonts::FONT_MONO_MEDIUM_38,
-    GREY_LIGHT,
-    BG,
-    GREY_LIGHT,
-    GREY_LIGHT,
-)
-.with_line_breaking(LineBreaking::BreakAtWhitespace);
+pub const TEXT_MONO_MEDIUM_LIGHT: TextStyle =
+    TextStyle::new(fonts::FONT_MONO_MEDIUM_38, GREY_LIGHT, BG, GREY, GREY)
+        .with_line_breaking(LineBreaking::BreakAtWhitespace);
 
 pub const TEXT_MONO_MEDIUM_LIGHT_DATA: TextStyle =
     TEXT_MONO_MEDIUM_LIGHT.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
 
 /// Roboto Mono Light - 30 (Address, data)
-pub const TEXT_MONO_LIGHT: TextStyle = TextStyle::new(
-    fonts::FONT_MONO_LIGHT_30,
-    GREY_LIGHT,
-    BG,
-    GREY_LIGHT,
-    GREY_LIGHT,
-)
-.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
+pub const TEXT_MONO_LIGHT: TextStyle =
+    TextStyle::new(fonts::FONT_MONO_LIGHT_30, GREY_LIGHT, BG, GREY, GREY)
+        .with_line_breaking(LineBreaking::BreakWordsNoHyphen);
 
 pub const TEXT_REGULAR_WARNING: TextStyle =
-    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_38, RED, BG, GREY, GREY);
+    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_38, RED, BG, FG, FG);
 
 pub const TEXT_MEDIUM_EXTRA_LIGHT: TextStyle = TextStyle::new(
     fonts::FONT_SATOSHI_MEDIUM_26,
     GREY_EXTRA_LIGHT,
     BG,
-    GREY_EXTRA_LIGHT,
-    GREY_EXTRA_LIGHT,
+    GREY_LIGHT,
+    GREY_LIGHT,
 );
 
-pub const TEXT_SMALL_LIGHT: TextStyle = TextStyle::new(
-    fonts::FONT_SATOSHI_REGULAR_22,
-    GREY_LIGHT,
-    BG,
-    GREY_LIGHT,
-    GREY_LIGHT,
-)
-.with_line_spacing(-4);
+pub const TEXT_SMALL_LIGHT: TextStyle =
+    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_22, GREY_LIGHT, BG, GREY, GREY)
+        .with_line_spacing(-4);
 
 /// Makes sure that the displayed text (usually address) will get divided into
 /// smaller chunks.
@@ -131,23 +117,33 @@ pub const TEXT_MONO_EXTRA_LIGHT: TextStyle = TextStyle::new(
     fonts::FONT_MONO_LIGHT_30,
     GREY_EXTRA_LIGHT,
     BG,
-    GREY_EXTRA_LIGHT,
-    GREY_EXTRA_LIGHT,
+    GREY_LIGHT,
+    GREY_LIGHT,
 );
 
 pub const TEXT_CHECKLIST_INACTIVE: TextStyle = TextStyle::new(
     fonts::FONT_SATOSHI_MEDIUM_26,
     GREY_DARK,
     BG,
+    GREY_EXTRA_DARK,
+    GREY_EXTRA_DARK,
+);
+
+pub const TEXT_MENU_ITEM_SUBTITLE: TextStyle = TextStyle::new(
+    fonts::FONT_SATOSHI_REGULAR_22,
+    GREY,
+    BG,
     GREY_DARK,
     GREY_DARK,
 );
 
-pub const TEXT_MENU_ITEM_SUBTITLE: TextStyle =
-    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_22, GREY, BG, GREY, GREY);
-
-pub const TEXT_MENU_ITEM_SUBTITLE_GREEN: TextStyle =
-    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_22, GREEN, BG, GREEN, GREEN);
+pub const TEXT_MENU_ITEM_SUBTITLE_GREEN: TextStyle = TextStyle::new(
+    fonts::FONT_SATOSHI_REGULAR_22,
+    GREEN,
+    BG,
+    GREEN_DARK,
+    GREEN_DARK,
+);
 
 const fn label_title(color: Color) -> TextStyle {
     TextStyle::new(fonts::FONT_SATOSHI_REGULAR_22, color, BG, color, color).with_line_spacing(-4)
