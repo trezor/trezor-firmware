@@ -10,6 +10,7 @@ if utils.USE_THP:
     from storage.cache_common import CHANNEL_STATE, SESSION_STATE
     from trezor.wire.thp import ChannelState
     from trezor.wire.thp.session_context import SessionContext
+    from trezor.wire.thp.thp_main import ThpContext
 
     _PROTOCOL_CACHE = cache_thp
 
@@ -53,13 +54,13 @@ class TestStorageCache(unittest.TestCase):
             session_cache_1 = cache_thp.create_or_replace_session(
                 channel.channel_cache, b"\x01"
             )
-            session_1 = SessionContext(channel, session_cache_1)
+            session_1 = SessionContext(ThpContext(channel), session_cache_1)
             self.assertEqual(session_1.channel_id, cid_1)
 
             session_cache_2 = cache_thp.create_or_replace_session(
                 channel.channel_cache, b"\x02"
             )
-            session_2 = SessionContext(channel, session_cache_2)
+            session_2 = SessionContext(ThpContext(channel), session_cache_2)
             self.assertEqual(session_2.channel_id, cid_1)
             self.assertEqual(session_1.channel_id, session_2.channel_id)
             self.assertNotEqual(session_1.session_id, session_2.session_id)
@@ -71,7 +72,7 @@ class TestStorageCache(unittest.TestCase):
             session_cache_3 = cache_thp.create_or_replace_session(
                 channel_2.channel_cache, b"\x01"
             )
-            session_3 = SessionContext(channel_2, session_cache_3)
+            session_3 = SessionContext(ThpContext(channel_2), session_cache_3)
             self.assertEqual(session_3.channel_id, cid_2)
 
             # Sessions 1 and 3 should have different channel_id, but the same session_id
