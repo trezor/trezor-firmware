@@ -45,6 +45,11 @@ async def wipe_device(msg: WipeDevice) -> NoReturn:
     # clear cache - exclude current context
     storage.wipe_cache(excluded=try_get_ctx_ids())
 
+    if __debug__:
+        import storage.debug
+
+        storage.debug.set_pin(None)
+
     # erase translations
     translations.deinit()
     translations.erase()

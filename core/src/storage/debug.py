@@ -13,4 +13,17 @@ if __debug__:
     layout_watcher = False
 
     reset_internal_entropy = bytearray(32)
-    reset_internal_entropy[:] = bytes()
+    reset_internal_entropy[:] = b""
+
+    # Cache pin to allow unlocking (for THP pairing)
+    _pin_cache = bytearray(50)
+    _pin_cache[:] = b""
+
+    def set_pin(pin: str | None) -> None:
+        _pin_cache[:] = (pin or "").encode()
+
+    def get_pin() -> str | None:
+        if not _pin_cache:
+            return None
+
+        return _pin_cache.decode()
