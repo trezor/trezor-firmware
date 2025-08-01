@@ -1302,10 +1302,14 @@ class TrezorClientDebugLink(TrezorClient):
 
         try:
             super().__init__(transport)
-        except DeviceLockedException:
+        except DeviceLockedException as e:
             LOG.debug("Locked device handling")
+            cached_pin = self.debug.state().pin
+            if not cached_pin:
+                raise RuntimeError("Cannot unlock the device") from e
             self.debug.input("")
-            self.debug.input(self.debug.encode_pin("1234"))
+            self.debug.input(self.debug.encode_pin(cached_pin))
+            self.debug.synchronize_at("Homescreen")
             super().__init__(transport)
 
         self.sync_responses()
