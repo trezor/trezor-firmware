@@ -185,7 +185,7 @@ test_rust: ## run rs unit tests
 		-- --test-threads=1 --nocapture
 
 test_emu_sanity: ## make sure the emulator doesn't crash on startup
-	$(EMU) --disable-animation --headless --temporary-profile --slip0014 --command true
+	$(EMU) --disable-animation --headless --temporary-profile --command true
 
 test_emu: ## run selected device tests from python-trezor
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS) --lang=$(TEST_LANG)
