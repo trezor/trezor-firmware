@@ -700,7 +700,14 @@ bool cli_nth_arg_uint32(cli_t* cli, int n, uint32_t* result) {
 
 bool cli_arg_uint32(cli_t* cli, const char* name, uint32_t* result) {
   const char* arg = cli_arg(cli, name);
-  return cstr_parse_uint32(arg, 0, result);
+
+  // pick only decimal or hexadecimal
+  int base = 10;
+  if (arg[0] == '0' && (arg[1] == 'x' || arg[1] == 'X')) {
+    base = 16;
+  }
+
+  return cstr_parse_uint32(arg, base, result);
 }
 
 bool cli_arg_hex(cli_t* cli, const char* name, uint8_t* dst, size_t dst_len,
