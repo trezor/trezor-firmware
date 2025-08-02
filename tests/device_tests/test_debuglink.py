@@ -19,6 +19,7 @@ import pytest
 from trezorlib import debuglink, device, messages, misc
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 from trezorlib.transport import udp
 
@@ -70,11 +71,13 @@ def test_softlock_instability(session: Session):
         )
 
     # start from a clean slate:
-    resp = session.client.debug.reseed(0)
-    if isinstance(resp, messages.Failure) and not isinstance(
-        session.client.transport, udp.UdpTransport
-    ):
-        pytest.xfail("reseed only supported on emulator")
+    try:
+        session.client.debug.reseed(0)
+    except TrezorFailure as e:
+        is_udp = isinstance(session.client.transport, udp.UdpTransport)
+        if e.code == messages.FailureType.UnexpectedMessage and not is_udp:
+            pytest.xfail("reseed only supported on emulator")
+
     device.wipe(session)
 
     client = session.client.get_new_client()
