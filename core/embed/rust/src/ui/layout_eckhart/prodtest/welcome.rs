@@ -100,9 +100,9 @@ impl Component for Welcome {
         .render(target);
 
         shape::Text::new(
-            screen().center() + Offset::y(20),
+            screen().center() + Offset::y(40),
             text,
-            fonts::FONT_SATOSHI_REGULAR_22,
+            fonts::FONT_SATOSHI_REGULAR_38,
         )
         .with_align(Alignment::Center)
         .render(target);
