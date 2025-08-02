@@ -47,16 +47,6 @@ if __debug__:
     _DEADLOCK_SLEEP_MS = const(3000)
     _DEADLOCK_DETECT_SLEEP = loop.sleep(_DEADLOCK_SLEEP_MS)
 
-    def screenshot() -> bool:
-        if storage.save_screen:
-            # Starting with "refresh00", allowing for 100 emulator restarts
-            # without losing the order of the screenshots based on filename.
-            display.save(
-                f"{storage.save_screen_directory.decode()}/refresh{storage.refresh_index:0>2}-"
-            )
-            return True
-        return False
-
     def notify_layout_change(layout: Layout | None) -> None:
         layout_change_box.put(layout, replace=True)
 
@@ -355,9 +345,7 @@ if __debug__:
             # In case emulator is restarted but we still want to record screenshots
             # into the same directory as before, we need to increment the refresh index,
             # so that the screenshots are not overwritten.
-            storage.refresh_index = msg.refresh_index
-            storage.save_screen_directory[:] = msg.target_directory.encode()
-            storage.save_screen = True
+            display.record_start(msg.target_directory.encode(), msg.refresh_index)
 
             # force repaint current layout, in order to take an initial screenshot
             # (doing it this way also clears the red square, because the repaint is
@@ -367,8 +355,8 @@ if __debug__:
             ui.CURRENT_LAYOUT._paint()
 
         else:
-            storage.save_screen = False
-            display.clear_save()  # clear C buffers
+            print("stopping recording")
+            display.record_stop()
 
         return Success()
 

@@ -157,6 +157,12 @@ void display_copy_mono1p(const gfx_bitblt_t *bb);
 #ifdef TREZOR_EMULATOR
 // Save the screen content to a file.
 // The function is available only on the emulator.
-const char *display_save(const char *prefix);
-void display_clear_save(void);
+void display_save(const char *prefix);
+
 #endif
+
+void display_record_start(uint8_t *target_dir, size_t target_dir_len,
+                          int refresh_index);
+void display_record_stop(void);
+bool display_is_recording(void);
+void display_record_screen(void);

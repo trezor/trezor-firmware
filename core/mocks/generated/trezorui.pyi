@@ -14,17 +14,6 @@ class Display:
         Initialize the display.
         """
 
-    def refresh(self) -> None:
-        """
-        Refresh display (update screen).
-        """
-
-    def bar(self, x: int, y: int, w: int, h: int, color: int) -> None:
-        """
-        Renders a bar at position (x,y = upper left corner) with width w and
-        height h of color color.
-        """
-
     def orientation(self, degrees: int | None = None) -> int:
         """
         Sets display orientation to 0, 90, 180 or 270 degrees.
@@ -33,12 +22,13 @@ class Display:
         value.
         """
 
-    def save(self, prefix: str) -> None:
+    def record_start(self, target_directory: bytes, refresh_index: int) -> None:
         """
-        Saves current display contents to PNG file with given prefix.
+        Starts screen recording with specified target directory and refresh
+        index.
         """
 
-    def clear_save(self) -> None:
+    def record_stop(self) -> None:
         """
-        Clears buffers in display saving.
+        Stops screen recording.
         """
