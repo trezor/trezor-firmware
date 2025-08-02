@@ -11,6 +11,7 @@ if utils.USE_THP:
     from trezor.wire.thp import ChannelState, interface_manager
     from trezor.wire.thp.channel import Channel
     from trezor.wire.thp.session_context import SessionContext
+    from trezor.wire.thp.thp_main import ThpContext
 
     _MOCK_INTERFACE_HID = b"\x00"
 
@@ -38,7 +39,7 @@ if utils.USE_THP:
         session_cache = cache_thp.create_or_replace_session(
             channel.channel_cache, session_id=b"\x01"
         )
-        session_ctx = SessionContext(channel, session_cache)
+        session_ctx = SessionContext(ThpContext(channel), session_cache)
         context.CURRENT_CONTEXT = session_ctx
 
 
