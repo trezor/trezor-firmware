@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from trezor import TR
 from trezor.enums import ButtonRequestType
-from trezor.strings import format_amount
+from trezor.strings import format_amount, format_amount_unit
 from trezor.ui import layouts
 from trezor.ui.layouts import confirm_metadata
 
@@ -43,7 +43,7 @@ def format_coin_amount(amount: int, coin: CoinInfo, amount_unit: AmountUnit) -> 
         decimals -= 3
         shortcut = "m" + shortcut
     # we don't need to do anything for AmountUnit.BITCOIN
-    return f"{format_amount(amount, decimals)} {shortcut}"
+    return format_amount_unit(format_amount(amount, decimals), shortcut)
 
 
 def account_label(coin: CoinInfo, address_n: Bip32Path | None) -> str:

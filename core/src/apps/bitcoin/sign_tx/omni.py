@@ -18,7 +18,7 @@ def parse(data: bytes) -> str:
     from ustruct import unpack
 
     from trezor import TR
-    from trezor.strings import format_amount
+    from trezor.strings import format_amount, format_amount_unit
 
     if not is_valid(data):
         raise ValueError  # tried to parse data that fails validation
@@ -26,9 +26,7 @@ def parse(data: bytes) -> str:
     if tx_version == 0 and tx_type == 0 and len(data) == 20:  # OMNI simple send
         currency, amount = unpack(">IQ", data[8:20])
         suffix, decimals = currencies.get(currency, ("UNKN", 0))
-        return (
-            f"{TR.bitcoin__simple_send_of} {format_amount(amount, decimals)} {suffix}"
-        )
+        return f"{TR.bitcoin__simple_send_of} {format_amount_unit(format_amount(amount, decimals), suffix)}"
     else:
         # unknown OMNI transaction
         return TR.bitcoin__unknown_transaction

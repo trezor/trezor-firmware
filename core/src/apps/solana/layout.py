@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from trezor import TR
 from trezor.crypto import base58
 from trezor.enums import ButtonRequestType
-from trezor.strings import format_amount
+from trezor.strings import format_amount, format_amount_unit
 from trezor.ui.layouts import (
     confirm_address,
     confirm_metadata,
@@ -364,15 +364,15 @@ def _fee_ui_info(fee: Fee | None) -> tuple[str, str, list[tuple[str, str]]]:
         fee_title = f"{TR.solana__max_fees_rent}:"
         fee_str = TR.words__unknown
     else:
-        fee_str = f"{format_amount(fee.total, 9)} SOL"
-        base_fee_str = f"{format_amount(fee.base, 9)} SOL"
+        fee_str = format_amount_unit(format_amount(fee.total, 9), "SOL")
+        base_fee_str = format_amount_unit(format_amount(fee.base, 9), "SOL")
         fee_items.append((TR.solana__base_fee, base_fee_str))
         if fee.priority:
-            priority_fee_str = f"{format_amount(fee.priority, 9)} SOL"
+            priority_fee_str = format_amount_unit(format_amount(fee.priority, 9), "SOL")
             fee_items.append((TR.solana__priority_fee, priority_fee_str))
         if fee.rent:
             fee_title = f"{TR.solana__max_fees_rent}:"
-            rent_str = f"{format_amount(fee.rent, 9)} SOL"
+            rent_str = format_amount_unit(format_amount(fee.rent, 9), "SOL")
             fee_items.append((TR.solana__max_rent_fee, rent_str))
         else:
             fee_title = f"{TR.words__transaction_fee}:"
@@ -387,7 +387,7 @@ async def confirm_custom_transaction(
 ) -> None:
     fee_title, fee_str, fee_items = _fee_ui_info(fee)
     await confirm_solana_tx(
-        amount=f"{format_amount(amount, decimals)} {unit}",
+        amount=format_amount_unit(format_amount(amount, decimals), unit),
         fee=fee_str,
         fee_title=fee_title,
         items=fee_items,
@@ -455,7 +455,7 @@ async def confirm_stake_transaction(
         ),
         amount_item=(
             f"{TR.words__amount}:",
-            f"{format_amount(create.lamports, 9)} SOL",
+            format_amount_unit(format_amount(create.lamports, 9), "SOL"),
         ),
         fee_item=(fee_title, fee_str),
         fee_details=fee_items,
@@ -504,7 +504,7 @@ async def confirm_claim_transaction(
         stake_item=None,
         amount_item=(
             f"{TR.words__amount}:",
-            f"{format_amount(total_amount, 9)} SOL",
+            format_amount_unit(format_amount(total_amount, 9), "SOL"),
         ),
         fee_item=(fee_title, fee_str),
         fee_details=fee_items,

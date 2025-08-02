@@ -203,7 +203,7 @@ def tagged_hashwriter(tag: bytes) -> HashWriter:
 def format_fee_rate(
     fee_rate: float, coin: CoinInfo, include_shortcut: bool = False
 ) -> str:
-    from trezor.strings import format_amount
+    from trezor.strings import format_amount, format_amount_unit
 
     # Use format_amount to get correct thousands separator -- micropython's built-in
     # formatting doesn't add thousands sep to floating point numbers.
@@ -216,7 +216,9 @@ def format_fee_rate(
     else:
         shortcut = ""
 
-    return f"{fee_rate_formatted} sat{shortcut}/{'v' if coin.segwit else ''}B"
+    return format_amount_unit(
+        fee_rate_formatted, f"sat{shortcut}/{'v' if coin.segwit else ''}B"
+    )
 
 
 # function copied from python/src/trezorlib/tools.py

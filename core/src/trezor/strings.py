@@ -21,6 +21,13 @@ def format_amount(amount: int, decimals: int) -> str:
     return s
 
 
+def format_amount_unit(amount: str, unit: str) -> str:
+    """
+    Formats an amount with a unit, e.g. "1.23 BTC".
+    """
+    return f"{amount} {unit}"
+
+
 def format_ordinal(number: int) -> str:
     return str(number) + {1: "st", 2: "nd", 3: "rd"}.get(
         4 if 10 <= number % 100 < 20 else number % 10, "th"
