@@ -376,6 +376,9 @@ if __debug__:
         if msg.value is not None:
             from trezor.crypto import random
 
+            if not utils.EMULATOR:
+                raise wire.UnexpectedMessage("reseed only supported on emulator")
+
             random.reseed(msg.value)
         return Success()
 
