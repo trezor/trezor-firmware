@@ -370,12 +370,12 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
-void entropy_get__verified(uint8_t *buf) {
-  if (!probe_write_access(buf, HW_ENTROPY_LEN)) {
+void entropy_get__verified(entropy_data_t *entropy) {
+  if (!probe_write_access(entropy, sizeof(*entropy))) {
     goto access_violation;
   }
 
-  entropy_get(buf);
+  entropy_get(entropy);
   return;
 
 access_violation:
