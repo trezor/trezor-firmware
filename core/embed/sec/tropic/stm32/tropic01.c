@@ -41,11 +41,11 @@ void tropic01_reset(void) {
   systick_delay_ms(10);
 }
 
-bool tropic_hal_init(void) {
+lt_ret_t lt_port_init(lt_handle_t *h) {
   tropic01_hal_driver_t *drv = &g_tropic01_hal_driver;
 
   if (drv->initialized) {
-    return true;
+    return LT_OK;
   }
 
   GPIO_InitTypeDef GPIO_InitStructure = {0};
@@ -118,10 +118,10 @@ bool tropic_hal_init(void) {
 
   drv->initialized = true;
 
-  return true;
+  return LT_OK;
 }
 
-void tropic_hal_deinit(void) {
+lt_ret_t lt_port_deinit(lt_handle_t *h) {
   tropic01_hal_driver_t *drv = &g_tropic01_hal_driver;
 
   if (drv->spi.Instance != NULL) {
@@ -139,18 +139,6 @@ void tropic_hal_deinit(void) {
   HAL_GPIO_DeInit(TROPIC01_SPI_MOSI_PORT, TROPIC01_SPI_MOSI_PIN);
   HAL_GPIO_DeInit(TROPIC01_PWR_PORT, TROPIC01_PWR_PIN);
 
-  memset(drv, 0, sizeof(*drv));
-}
-
-lt_ret_t lt_port_init(lt_handle_t *h) {
-  UNUSED(h);
-  // no action, as we initialize separately
-  return LT_OK;
-}
-
-lt_ret_t lt_port_deinit(lt_handle_t *h) {
-  UNUSED(h);
-  // no action, as we deinitialize separately
   return LT_OK;
 }
 
@@ -178,8 +166,8 @@ lt_ret_t lt_port_spi_transfer(lt_handle_t *h, uint8_t offset, uint16_t tx_len,
   if (offset + tx_len > LT_L1_LEN_MAX) {
     return LT_L1_DATA_LEN_ERROR;
   }
-  int ret = HAL_SPI_TransmitReceive(&drv->spi, h->l2_buff + offset,
-                                    h->l2_buff + offset, tx_len, timeout);
+  int ret = HAL_SPI_TransmitReceive(&drv->spi, h->l2.buff + offset,
+                                    h->l2.buff + offset, tx_len, timeout);
   if (ret != HAL_OK) {
     return LT_FAIL;
   }

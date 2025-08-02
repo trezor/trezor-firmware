@@ -23,25 +23,17 @@
 
 #ifdef KERNEL_MODE
 
-#define TROPIC_CHIP_ID_SIZE 128
-#define TROPIC_RISCV_FW_SIZE 4
-#define TROPIC_SPECT_FW_SIZE 4
+#include "libtropic.h"
 
-bool tropic_init(void);
+bool tropic_init(bool init_secure_channel);
 
 void tropic_deinit(void);
 
-bool tropic_get_spect_fw_version(uint8_t* version_buffer, uint16_t max_len);
-
-bool tropic_get_riscv_fw_version(uint8_t* version_buffer, uint16_t max_len);
-
-bool tropic_get_chip_id(uint8_t* chip_id, uint16_t max_len);
+lt_handle_t* tropic_get_handle();
 
 #endif
 
 bool tropic_ping(const uint8_t* msg_out, uint8_t* msg_in, uint16_t msg_len);
-
-bool tropic_get_cert(uint8_t* buf, uint16_t buf_size);
 
 bool tropic_ecc_key_generate(uint16_t slot_index);
 
