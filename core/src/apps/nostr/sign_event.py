@@ -4,6 +4,7 @@ from apps.common.keychain import auto_keychain
 
 if TYPE_CHECKING:
     from trezor.messages import NostrEventSignature, NostrSignEvent
+    from trezor.ui.layouts import PropertyType
 
     from apps.common.keychain import Keychain
 
@@ -40,7 +41,10 @@ async def sign_event(msg: NostrSignEvent, keychain: Keychain) -> NostrEventSigna
         ["[" + ",".join(f'"{t}"' for t in tag) + "]" for tag in tags]
     )
 
-    info_items = [("Created", str(created_at)), ("Tags", serialized_tags)]
+    info_items: list[PropertyType] = [
+        ("Created", str(created_at), True),
+        ("Tags", serialized_tags, True),
+    ]
     await confirm_value(title, content, "", "nostr_sign_event", info_items=info_items)
 
     serialized_event = f'[0,"{hexlify(pk).decode()}",{created_at},{kind},[{serialized_tags}],"{content}"]'

@@ -7,14 +7,15 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
-            ComponentExt, MsgMap,
+            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
+            ComponentExt,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
         },
         geometry::{Direction, LinearPlacement},
+        layout::util::PropsList,
     },
 };
 
@@ -24,6 +25,7 @@ use super::super::{
         ActionBar, Header, Hint, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
         VerticalMenuScreen, VerticalMenuScreenMsg,
     },
+    flow::util::content_menu_info,
     theme::{self, gradient::Gradient},
 };
 
@@ -70,25 +72,6 @@ impl FlowController for ConfirmSummary {
     }
 }
 
-fn content_menu_info(
-    title: TString<'static>,
-    subtitle: Option<TString<'static>>,
-    paragraphs: Option<ParagraphVecShort<'static>>,
-) -> MsgMap<
-    TextScreen<Paragraphs<ParagraphVecShort<'static>>>,
-    impl Fn(TextScreenMsg) -> Option<FlowMsg>,
-> {
-    TextScreen::new(
-        paragraphs
-            .map_or_else(ParagraphVecShort::new, |p| p)
-            .into_paragraphs()
-            .with_placement(LinearPlacement::vertical().with_spacing(theme::PROP_INNER_SPACING)),
-    )
-    .with_header(Header::new(title).with_close_button())
-    .with_subtitle(subtitle.unwrap_or(TString::empty()))
-    .map(|_| Some(FlowMsg::Cancelled))
-}
-
 #[allow(clippy::too_many_arguments)]
 pub fn new_confirm_summary(
     title: TString<'static>,
@@ -97,22 +80,37 @@ pub fn new_confirm_summary(
     fee: TString<'static>,
     fee_label: TString<'static>,
     account_title: Option<TString<'static>>,
-    account_paragraphs: Option<ParagraphVecShort<'static>>,
+    account_paragraphs: Option<PropsList>,
     extra_title: Option<TString<'static>>,
-    extra_paragraphs: Option<ParagraphVecShort<'static>>,
+    extra_paragraphs: Option<PropsList>,
     verb_cancel: Option<TString<'static>>,
     back_button: bool,
 ) -> Result<SwipeFlow, error::Error> {
     // Summary
     let mut summary_paragraphs = ParagraphVecShort::new();
     if let Some(amount_label) = amount_label {
-        summary_paragraphs.add(Paragraph::new(&theme::TEXT_SMALL_LIGHT, amount_label));
+        let para = Paragraph::new(&theme::TEXT_SMALL_LIGHT, amount_label);
+        if amount.is_some() {
+            summary_paragraphs.add(
+                para.with_bottom_padding(theme::PROP_INNER_SPACING)
+                    .no_break(),
+            );
+        } else {
+            summary_paragraphs.add(para.with_bottom_padding(theme::PROPS_SPACING));
+        }
     }
     if let Some(amount) = amount {
-        summary_paragraphs.add(Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, amount));
+        summary_paragraphs.add(
+            Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, amount)
+                .with_bottom_padding(theme::PROPS_SPACING),
+        );
     }
     summary_paragraphs
-        .add(Paragraph::new(&theme::TEXT_SMALL_LIGHT, fee_label))
+        .add(
+            Paragraph::new(&theme::TEXT_SMALL_LIGHT, fee_label)
+                .with_bottom_padding(theme::PROP_INNER_SPACING)
+                .no_break(),
+        )
         .add(Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, fee));
 
     let confirm_button = Button::with_text(TR::instructions__hold_to_sign.into())
@@ -122,7 +120,7 @@ pub fn new_confirm_summary(
     let content_summary = TextScreen::new(
         summary_paragraphs
             .into_paragraphs()
-            .with_placement(LinearPlacement::vertical().with_spacing(theme::PROP_INNER_SPACING)),
+            .with_placement(LinearPlacement::vertical()),
     )
     .with_header(Header::new(title).with_menu_button())
     .with_action_bar(if back_button {
@@ -182,14 +180,30 @@ pub fn new_confirm_summary(
     let content_extra = content_menu_info(
         extra_title.unwrap_or(TR::buttons__more_info.into()),
         None,
-        extra_paragraphs,
+        extra_paragraphs.unwrap_or_else(|| {
+            unwrap!(PropsList::empty(
+                &theme::TEXT_SMALL_LIGHT,
+                &theme::TEXT_MONO_LIGHT,
+                &theme::TEXT_MONO_LIGHT,
+                theme::PROP_INNER_SPACING,
+                theme::PROPS_SPACING,
+            ))
+        }),
     );
 
     // AccountInfo
     let content_account = content_menu_info(
         account_title.unwrap_or(TR::address_details__account_info.into()),
         Some(TR::send__send_from.into()),
-        account_paragraphs,
+        account_paragraphs.unwrap_or_else(|| {
+            unwrap!(PropsList::empty(
+                &theme::TEXT_SMALL_LIGHT,
+                &theme::TEXT_MONO_LIGHT,
+                &theme::TEXT_MONO_LIGHT,
+                theme::PROP_INNER_SPACING,
+                theme::PROPS_SPACING,
+            ))
+        }),
     );
 
     // Cancel

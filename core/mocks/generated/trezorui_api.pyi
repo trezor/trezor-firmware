@@ -1,5 +1,6 @@
 from typing import *
 from trezor import utils
+PropertyType = tuple[str | None, str | bytes | None, bool | None]
 T = TypeVar("T")
 
 
@@ -282,7 +283,7 @@ def confirm_properties(
     *,
     title: str,
     subtitle: str | None = None,
-    items: list[tuple[str | None, str | bytes | None, bool | None]],
+    items: list[PropertyType],
     hold: bool = False,
     verb: str | None = None,
     external_menu: bool = False,
@@ -304,9 +305,9 @@ def confirm_summary(
     fee: str,
     fee_label: str,
     title: str | None = None,
-    account_items: Iterable[tuple[str, str]] | None = None,
+    account_items: list[PropertyType] | None = None,
     account_title: str | None = None,
-    extra_items: Iterable[tuple[str, str]] | None = None,
+    extra_items: list[PropertyType] | None = None,
     extra_title: str | None = None,
     verb_cancel: str | None = None,
     back_button: bool = False,
@@ -360,10 +361,10 @@ def flow_confirm_output(
     account_path: str | None,
     br_code: ButtonRequestType,
     br_name: str,
-    address_item: (str, str) | None,
-    extra_item: (str, str) | None,
-    summary_items: Iterable[tuple[str, str]] | None = None,
-    fee_items: Iterable[tuple[str, str]] | None = None,
+    address_item: PropertyType | None,
+    extra_item: PropertyType | None,
+    summary_items: list[PropertyType] | None = None,
+    fee_items: list[PropertyType] | None = None,
     summary_title: str | None = None,
     summary_br_code: ButtonRequestType | None = None,
     summary_br_name: str | None = None,
@@ -663,7 +664,7 @@ def show_info(
 def show_info_with_cancel(
     *,
     title: str,
-    items: Iterable[tuple[str, str]],
+    items: list[PropertyType],
     horizontal: bool = False,
     chunkify: bool = False,
 ) -> LayoutObj[UiResult]:
@@ -715,7 +716,7 @@ def show_progress_coinjoin(
 def show_properties(
     *,
     title: str,
-    value: list[tuple[str, str]] | str,
+    value: list[PropertyType] | str,
 ) -> LayoutObj[None]:
     """Show a list of key-value pairs, or a monospace string."""
 

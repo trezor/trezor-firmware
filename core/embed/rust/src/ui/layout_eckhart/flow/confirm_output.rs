@@ -2,7 +2,6 @@ use heapless::Vec;
 
 use crate::{
     error,
-    micropython::obj::Obj,
     strutil::TString,
     time::Duration,
     translations::TR,
@@ -17,7 +16,7 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow,
         },
         geometry::{Direction, LinearPlacement},
-        layout::util::StrOrBytes,
+        layout::util::PropsList,
     },
 };
 
@@ -27,6 +26,7 @@ use super::super::{
         ActionBar, Header, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
         VerticalMenuScreen, VerticalMenuScreenMsg,
     },
+    flow::util::content_menu_info,
     theme::{self, gradient::Gradient},
 };
 
@@ -252,31 +252,12 @@ fn content_main_menu(
         })
 }
 
-fn content_menu_info(
-    title: TString<'static>,
-    subtitle: Option<TString<'static>>,
-    paragraphs: Option<ParagraphVecShort<'static>>,
-) -> MsgMap<
-    TextScreen<Paragraphs<ParagraphVecShort<'static>>>,
-    impl Fn(TextScreenMsg) -> Option<FlowMsg>,
-> {
-    TextScreen::new(
-        paragraphs
-            .map_or_else(ParagraphVecShort::new, |p| p)
-            .into_paragraphs()
-            .with_placement(LinearPlacement::vertical().with_spacing(theme::PROP_INNER_SPACING)),
-    )
-    .with_header(Header::new(title).with_close_button())
-    .with_subtitle(subtitle.unwrap_or(TString::empty()))
-    .map(|_| Some(FlowMsg::Cancelled))
-}
-
 #[allow(clippy::too_many_arguments)]
 pub fn new_confirm_output(
     title: Option<TString<'static>>,
     subtitle: Option<TString<'static>>,
     main_paragraphs: ParagraphVecShort<'static>,
-    amount: Option<Obj>,
+    amount: Option<TString<'static>>,
     br_name: TString<'static>,
     br_code: u16,
     account_title: TString<'static>,
@@ -284,12 +265,12 @@ pub fn new_confirm_output(
     address_title: Option<TString<'static>>,
     address_paragraph: Option<Paragraph<'static>>,
     summary_title: Option<TString<'static>>,
-    summary_paragraphs: Option<ParagraphVecShort<'static>>,
+    summary_paragraphs: Option<PropsList>,
     summary_br_code: Option<u16>,
     summary_br_name: Option<TString<'static>>,
     extra_title: Option<TString<'static>>,
     extra_paragraph: Option<Paragraph<'static>>,
-    fee_paragraphs: Option<ParagraphVecShort<'static>>,
+    fee_paragraphs: Option<PropsList>,
     cancel_menu_label: Option<TString<'static>>,
 ) -> Result<SwipeFlow, error::Error> {
     let cancel_menu_label = cancel_menu_label.unwrap_or(TR::buttons__cancel.into());
@@ -301,22 +282,21 @@ pub fn new_confirm_output(
     let account_subtitle = Some(TR::send__send_from.into());
 
     // Main
-    let content_main = TextScreen::new(
-        main_paragraphs
-            .into_paragraphs()
-            .with_placement(LinearPlacement::vertical().with_spacing(theme::PROP_INNER_SPACING)),
-    )
-    .with_header(Header::new(title.unwrap_or(TString::empty())).with_menu_button())
-    .with_action_bar(ActionBar::new_single(Button::with_text(
-        TR::buttons__continue.into(),
-    )))
-    .with_subtitle(subtitle.unwrap_or(TString::empty()))
-    .map(|msg| match msg {
-        TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
-        TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
-        TextScreenMsg::Menu => Some(FlowMsg::Info),
-    })
-    .one_button_request(ButtonRequest::from_num(br_code, br_name));
+    let content_main =
+        TextScreen::new(main_paragraphs.into_paragraphs().with_placement(
+            LinearPlacement::vertical().with_spacing(theme::TEXT_VERTICAL_SPACING),
+        ))
+        .with_header(Header::new(title.unwrap_or(TString::empty())).with_menu_button())
+        .with_action_bar(ActionBar::new_single(Button::with_text(
+            TR::buttons__continue.into(),
+        )))
+        .with_subtitle(subtitle.unwrap_or(TString::empty()))
+        .map(|msg| match msg {
+            TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
+            TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
+            TextScreenMsg::Menu => Some(FlowMsg::Info),
+        })
+        .one_button_request(ButtonRequest::from_num(br_code, br_name));
 
     // Cancelled
     let content_cancelled = TextScreen::new(
@@ -334,13 +314,7 @@ pub fn new_confirm_output(
     let res = if let Some(amount) = amount {
         let amount_paragraphs = ParagraphVecShort::from_iter([
             Paragraph::new(&theme::TEXT_SMALL_LIGHT, TR::words__amount).no_break(),
-            Paragraph::new(
-                &theme::TEXT_MONO_MEDIUM_LIGHT,
-                amount
-                    .try_into()
-                    .unwrap_or(StrOrBytes::Str("".into()))
-                    .as_str_offset(0),
-            ),
+            Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, amount),
         ]);
 
         let content_amount = TextScreen::new(
@@ -377,7 +351,9 @@ pub fn new_confirm_output(
                 content_menu_info(
                     TR::address_details__account_info.into(),
                     account_subtitle,
-                    account_paragraphs.clone(),
+                    account_paragraphs
+                        .clone()
+                        .map_or_else(ParagraphVecShort::new, |p| p),
                 ),
             )?
             .add_page(&ConfirmOutputWithAmount::AddressCancel, content_cancel())?
@@ -393,37 +369,44 @@ pub fn new_confirm_output(
             )?
             .add_page(
                 &ConfirmOutputWithAmount::AmountAccountInfo,
-                content_menu_info(account_title, account_subtitle, account_paragraphs.clone()),
+                content_menu_info(
+                    account_title,
+                    account_subtitle,
+                    account_paragraphs
+                        .clone()
+                        .map_or_else(ParagraphVecShort::new, |p| p),
+                ),
             )?
             .add_page(&ConfirmOutputWithAmount::AmountCancel, content_cancel())?
             .add_page(&ConfirmOutputWithAmount::Cancelled, content_cancelled)?;
         flow
     } else if let Some(summary_paragraphs) = summary_paragraphs {
         // Summary
-        let content_summary =
-            TextScreen::new(summary_paragraphs.into_paragraphs().with_placement(
-                LinearPlacement::vertical().with_spacing(theme::PROP_INNER_SPACING),
-            ))
-            .with_header(
-                Header::new(summary_title.unwrap_or(TR::words__title_summary.into()))
-                    .with_menu_button(),
-            )
-            .with_action_bar(ActionBar::new_double(
-                Button::with_icon(theme::ICON_CHEVRON_UP),
-                Button::with_text(TR::instructions__hold_to_sign.into())
-                    .with_long_press(theme::CONFIRM_HOLD_DURATION)
-                    .styled(theme::button_confirm())
-                    .with_gradient(Gradient::SignGreen),
-            ))
-            .map(|msg| match msg {
-                TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
-                TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
-                TextScreenMsg::Menu => Some(FlowMsg::Info),
-            })
-            .one_button_request(ButtonRequest::from_num(
-                summary_br_code.unwrap(),
-                summary_br_name.unwrap(),
-            ));
+        let content_summary = TextScreen::new(
+            summary_paragraphs
+                .into_paragraphs()
+                .with_placement(LinearPlacement::vertical()),
+        )
+        .with_header(
+            Header::new(summary_title.unwrap_or(TR::words__title_summary.into()))
+                .with_menu_button(),
+        )
+        .with_action_bar(ActionBar::new_double(
+            Button::with_icon(theme::ICON_CHEVRON_UP),
+            Button::with_text(TR::instructions__hold_to_sign.into())
+                .with_long_press(theme::CONFIRM_HOLD_DURATION)
+                .styled(theme::button_confirm())
+                .with_gradient(Gradient::SignGreen),
+        ))
+        .map(|msg| match msg {
+            TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
+            TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
+            TextScreenMsg::Menu => Some(FlowMsg::Info),
+        })
+        .one_button_request(ButtonRequest::from_num(
+            summary_br_code.unwrap(),
+            summary_br_name.unwrap(),
+        ));
 
         // SummaryMenu
         let mut summary_menu = VerticalMenu::<ShortMenuVec>::empty();
@@ -477,12 +460,19 @@ pub fn new_confirm_output(
                     address_title,
                     None,
                     address_paragraph
-                        .map(|address_paragraph| ParagraphVecShort::from_iter([address_paragraph])),
+                        .map(|address_paragraph| ParagraphVecShort::from_iter([address_paragraph]))
+                        .map_or_else(ParagraphVecShort::new, |p| p),
                 ),
             )?
             .add_page(
                 &ConfirmOutputWithSummary::MainMenuAccountInfo,
-                content_menu_info(account_title, account_subtitle, account_paragraphs.clone()),
+                content_menu_info(
+                    account_title,
+                    account_subtitle,
+                    account_paragraphs
+                        .clone()
+                        .map_or_else(ParagraphVecShort::new, |p| p),
+                ),
             )?
             .add_page(&ConfirmOutputWithSummary::Summary, content_summary)?
             .add_page(&ConfirmOutputWithSummary::SummaryMenu, content_summary_menu)?
@@ -492,7 +482,19 @@ pub fn new_confirm_output(
             )?
             .add_page(
                 &ConfirmOutputWithSummary::SummaryMenuFeeInfo,
-                content_menu_info(TR::confirm_total__title_fee.into(), None, fee_paragraphs),
+                content_menu_info(
+                    TR::confirm_total__title_fee.into(),
+                    None,
+                    fee_paragraphs.unwrap_or_else(|| {
+                        unwrap!(PropsList::empty(
+                            &theme::TEXT_SMALL_LIGHT,
+                            &theme::TEXT_MONO_MEDIUM_LIGHT,
+                            &theme::TEXT_MONO_MEDIUM_LIGHT,
+                            theme::PROP_INNER_SPACING,
+                            theme::PROPS_SPACING,
+                        ))
+                    }),
+                ),
             )?
             .add_page(
                 &ConfirmOutputWithSummary::SummaryMenuExtraInfo,
@@ -500,7 +502,8 @@ pub fn new_confirm_output(
                     extra_title.unwrap_or(TString::empty()),
                     None,
                     extra_paragraph
-                        .map(|extra_paragraph| ParagraphVecShort::from_iter([extra_paragraph])),
+                        .map(|extra_paragraph| ParagraphVecShort::from_iter([extra_paragraph]))
+                        .map_or_else(ParagraphVecShort::new, |p| p),
                 ),
             )?
             .add_page(&ConfirmOutputWithSummary::Cancelled, content_cancelled)?;
@@ -519,7 +522,11 @@ pub fn new_confirm_output(
             )?
             .add_page(
                 &ConfirmOutput::AccountInfo,
-                content_menu_info(account_title, account_subtitle, account_paragraphs),
+                content_menu_info(
+                    account_title,
+                    account_subtitle,
+                    account_paragraphs.map_or_else(ParagraphVecShort::new, |p| p),
+                ),
             )?
             .add_page(&ConfirmOutput::Cancel, content_cancel())?
             .add_page(&ConfirmOutput::Cancelled, content_cancelled)?;
