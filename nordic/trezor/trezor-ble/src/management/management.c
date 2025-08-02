@@ -33,6 +33,7 @@
 
 #include <errno.h>
 
+#include <ble/ble.h>
 #include <prodtest/prodtest.h>
 #include <signals/signals.h>
 #include <trz_comm/trz_comm.h>
@@ -192,6 +193,7 @@ static void process_command(uint8_t *data, uint16_t len) {
     case MGMT_CMD_SUSPEND:
       LOG_INF("Suspend");
       trz_comm_suspend();
+      advertising_stop();
       break;
     case MGMT_CMD_RESUME:
       LOG_INF("Resume");

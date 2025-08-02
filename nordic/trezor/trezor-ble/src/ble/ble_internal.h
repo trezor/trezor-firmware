@@ -28,6 +28,7 @@
 #include <zephyr/bluetooth/hci.h>
 #include <zephyr/bluetooth/uuid.h>
 
+#include <ble/ble.h>
 #include <trz_comm/trz_comm.h>
 
 /** @brief UUID of the NUS Service. **/
@@ -148,8 +149,6 @@ void advertising_init(void);
 // Start advertising, with or without whitelist
 void advertising_start(bool wl, uint8_t color, uint8_t device_code,
                        bool static_addr, char *name, int name_len);
-// Stop advertising
-void advertising_stop(void);
 // Check if advertising is active
 bool advertising_is_advertising(void);
 // Check if advertising is active with whitelist
