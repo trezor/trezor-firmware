@@ -86,9 +86,6 @@ def get_field_type(type_name: str, types: dict) -> messages.EthereumFieldType:
         size = parse_array_n(type_name)
         member_typename = typeof_array(type_name)
         entry_type = get_field_type(member_typename, types)
-        # Not supporting nested arrays currently
-        if entry_type.data_type == messages.EthereumDataType.ARRAY:
-            raise NotImplementedError("Nested arrays are not supported")
     elif type_name.startswith("uint"):
         data_type = messages.EthereumDataType.UINT
         size = get_byte_size_for_int_type(type_name)
