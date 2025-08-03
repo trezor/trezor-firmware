@@ -638,12 +638,13 @@ bool pm_driver_resume(void) {
     return false;
   }
 
-  if (!drv->suspended) {
+  if (!drv->suspended && !drv->suspending) {
     // Already resumed, nothing to do
     return true;
   }
 
   drv->suspended = false;
+  drv->suspending = false;
   drv->woke_up_from_suspend = true;
 
 #ifdef USE_RTC
