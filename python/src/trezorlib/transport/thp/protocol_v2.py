@@ -194,8 +194,6 @@ class ProtocolV2Channel(Channel):
 
     def _read_handshake_init_response(self) -> bytes:
         header, payload = self._read_until_valid_crc_check()
-        self._send_ack_bit(bit=0)
-
         if control_byte.is_error(header.ctrl_byte):
             if payload == b"\x05":
                 raise exceptions.DeviceLockedException()
@@ -204,6 +202,8 @@ class ProtocolV2Channel(Channel):
 
         if not header.is_handshake_init_response():
             LOG.error("Received message is not a valid handshake init response message")
+
+        self._send_ack_bit(bit=0)
         self._noise.read_message(payload)
         return payload
 
