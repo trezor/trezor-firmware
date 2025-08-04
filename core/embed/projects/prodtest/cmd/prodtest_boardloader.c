@@ -19,8 +19,13 @@
 
 #include <trezor_rtl.h>
 
+#include <flash_area.h>
 #include <rtl/cli.h>
+#include <sys/mpu.h>
 #include <util/board_capabilities.h>
+#include <util/flash_layout.h>
+
+#include "common.h"
 
 static void prodtest_boardloader_version(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
@@ -33,6 +38,41 @@ static void prodtest_boardloader_version(cli_t* cli) {
   cli_ok(cli, "%d.%d.%d", v.version_major, v.version_minor, v.version_patch);
 }
 
+#if !PRODUCTION && !TREZOR_MODEL_T2T1
+static bool prodtest_boardloader_update_finalize(uint8_t* data, size_t len) {
+  mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOARDLOADER);
+
+  secbool res = flash_area_erase(&BOARDLOADER_AREA, NULL);
+
+  if (res != sectrue) {
+    goto cleanup;
+  }
+
+  res = flash_unlock_write();
+
+  if (res != sectrue) {
+    goto cleanup;
+  }
+
+  res = flash_area_write_data_padded(&BOARDLOADER_AREA, 0, data, len, 0xFF,
+                                     flash_area_get_size(&BOARDLOADER_AREA));
+
+cleanup:
+
+  (void)!flash_lock_write();
+
+  mpu_restore(mode);
+
+  parse_boardloader_capabilities();
+
+  return res == sectrue;
+}
+
+static void prodtest_boardloader_update(cli_t* cli) {
+  binary_update(cli, prodtest_boardloader_update_finalize);
+}
+#endif
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -41,3 +81,12 @@ PRODTEST_CLI_CMD(
   .info = "Retrieve the boardloader version",
   .args = ""
 );
+
+#if !PRODUCTION && !TREZOR_MODEL_T2T1
+PRODTEST_CLI_CMD(
+  .name = "boardloader-update",
+  .func = prodtest_boardloader_update,
+  .info = "Update boardloader",
+  .args = "<phase> <hex-data>"
+);
+#endif

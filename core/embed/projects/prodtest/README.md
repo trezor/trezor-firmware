@@ -133,6 +133,11 @@ boardloader-version
 OK 0.2.6
 ```
 
+### boardloader-update
+Updates the boardloader to the supplied binary file. Only works on development boards, not in production firmware.
+Use `core/tools/bin_update.py` script to update the boardloader binary.
+
+
 ### bootloader-version
 Retrieves the version of the bootloader. The command returns `OK` followed by the version in the format `<major>.<minor>.<patch>`.
 
