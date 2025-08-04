@@ -94,14 +94,15 @@ wakeup_flags_t system_suspend(void) {
     if (wakeup_flags == 0) {
       // Enter low-power mode
       suspend_cpu();
-
-      // At this point, all pending interrupts are processed.
-      // Some of them may set wakeup flags.
-      wakeup_flags_get(&wakeup_flags);
     }
 
     // Resume state machines running in the interrupt context
     background_tasks_resume();
+
+    // Some wakeup flags may be set in interrupts right after CPU wakes up, and
+    // some may be set in the background tasks resume routine. Read them here
+    // to wake up immediately if any are set.
+    wakeup_flags_get(&wakeup_flags);
   }
 
   // Reinitialize all drivers that were stopped earlier
