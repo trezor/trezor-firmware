@@ -6,6 +6,14 @@ from pathlib import Path
 import click
 import serial
 
+UPDATE_TYPES = {
+    "boardloader": {
+        "command": "boardloader-update",
+        "success_message": "Boardloader update complete.",
+    },
+    "nrf": {"command": "nrf-update", "success_message": "nRF update complete."},
+}
+
 
 def exit_interactive_mode(ser):
     ser.write(("." + "\r\n").encode())
@@ -30,11 +38,19 @@ def send_cmd(ser, cmd, expect_ok=True):
     return resp
 
 
-def upload_nrf(port, bin_path, chunk_size):
+def upload_binary(port, bin_path, chunk_size, update_type):
+    if update_type not in UPDATE_TYPES:
+        raise ValueError(
+            f"Invalid update type. Must be one of: {', '.join(UPDATE_TYPES.keys())}"
+        )
+
     # Read binary file
     data = Path(bin_path).read_bytes()
     total = len(data)
     click.echo(f"Read {total} bytes from {bin_path!r}")
+
+    update_config = UPDATE_TYPES[update_type]
+    command = update_config["command"]
 
     # Open USB-VCP port using context manager
     with serial.Serial(port, timeout=2) as ser:
@@ -45,40 +61,47 @@ def upload_nrf(port, bin_path, chunk_size):
         exit_interactive_mode(ser)
 
         # 1) Begin transfer
-        send_cmd(ser, "nrf-update begin")
+        send_cmd(ser, f"{command} begin")
 
         # 2) Stream chunks
         offset = 0
         while offset < total:
             chunk = data[offset : offset + chunk_size]
             hexstr = chunk.hex()
-            send_cmd(ser, f"nrf-update chunk {hexstr}")
+            send_cmd(ser, f"{command} chunk {hexstr}")
             offset += len(chunk)
             pct = offset * 100 // total
             click.echo(f"  Uploaded {offset}/{total} bytes ({pct}%)")
 
         # 3) Finish transfer
-        send_cmd(ser, "nrf-update end")
-        click.echo("nRF update complete.")
+        send_cmd(ser, f"{command} end")
+        click.echo(update_config["success_message"])
 
 
 @click.command(context_settings={"help_option_names": ["-h", "--help"]})
 @click.argument("port", metavar="<serial-port>")
 @click.argument(
-    "binary", metavar="<nrf-binary>", type=click.Path(exists=True, dir_okay=False)
+    "binary", metavar="<binary>", type=click.Path(exists=True, dir_okay=False)
 )
 @click.option(
     "--chunk-size", "-c", default=512, show_default=True, help="Max bytes per chunk"
 )
-def main(port, binary, chunk_size):
+@click.option(
+    "--type",
+    "-t",
+    type=click.Choice(list(UPDATE_TYPES.keys()), case_sensitive=False),
+    required=True,
+    help="Type of update to perform",
+)
+def main(port, binary, chunk_size, type):
     """
-    Upload an nRF firmware image via USB-VCP CLI.
+    Upload a firmware image via USB-VCP CLI.
 
     <serial-port> e.g. /dev/ttyUSB0 or COM3
-    <nrf-binary> path to the .bin file
+    <binary> path to the .bin file
     """
     try:
-        upload_nrf(port, binary, chunk_size)
+        upload_binary(port, binary, chunk_size, type)
     except serial.SerialException as e:
         click.echo(f"Serial error: {e}", err=True)
         sys.exit(1)
