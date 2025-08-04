@@ -4,6 +4,7 @@
 
 #include <gfx/gfx_bitblt.h>
 #include <io/display.h>
+#include <io/display_utils.h>
 #include <io/usb.h>
 #include <rtl/secbool.h>
 #include <sec/entropy.h>

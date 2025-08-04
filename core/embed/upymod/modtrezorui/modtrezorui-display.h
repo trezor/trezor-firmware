@@ -19,8 +19,8 @@
 
 #include <trezor_model.h>
 
-#include <gfx/gfx_draw.h>
 #include <io/display.h>
+#include <io/display_utils.h>
 
 /// class Display:
 ///     """

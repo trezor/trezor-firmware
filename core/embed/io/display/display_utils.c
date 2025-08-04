@@ -51,46 +51,46 @@ static display_recording_t g_display_recording = {0};
 
 void display_record_start(uint8_t *target_dir, size_t target_dir_len,
                           int refresh_index) {
-  display_recording_t *drv = &g_display_recording;
+  display_recording_t *rec = &g_display_recording;
 
-  drv->recording = true;
+  rec->recording = true;
 
-  if (strlen((char *)drv->target_directory) != strlen((char *)target_dir) ||
-      strncmp((char *)target_dir, (char *)drv->target_directory,
+  if (strlen((char *)rec->target_directory) != strlen((char *)target_dir) ||
+      strncmp((char *)target_dir, (char *)rec->target_directory,
               target_dir_len) != 0) {
     // If the target directory is not set, we assume the recording is not
     // started yet.
     display_clear_save();
   }
 
-  memset(drv->target_directory, 0, sizeof(drv->target_directory));
-  memcpy(drv->target_directory, target_dir,
-         MIN(sizeof(drv->target_directory), target_dir_len));
-  drv->refresh_index = refresh_index;
+  memset(rec->target_directory, 0, sizeof(rec->target_directory));
+  memcpy(rec->target_directory, target_dir,
+         MIN(sizeof(rec->target_directory), target_dir_len));
+  rec->refresh_index = refresh_index;
 }
 
 void display_record_stop(void) {
-  display_recording_t *drv = &g_display_recording;
-  drv->recording = false;
+  display_recording_t *rec = &g_display_recording;
+  rec->recording = false;
   display_clear_save();
 }
 
 bool display_is_recording(void) {
-  display_recording_t *drv = &g_display_recording;
+  display_recording_t *rec = &g_display_recording;
 
-  return drv->recording;
+  return rec->recording;
 }
 
 void display_record_screen(void) {
-  display_recording_t *drv = &g_display_recording;
+  display_recording_t *rec = &g_display_recording;
 
-  if (!drv->recording) {
+  if (!rec->recording) {
     return;
   }
 
   char prefix[512];
-  snprintf(prefix, sizeof(prefix), "%s/refresh%02d-", drv->target_directory,
-           drv->refresh_index);
+  snprintf(prefix, sizeof(prefix), "%s/refresh%02d-", rec->target_directory,
+           rec->refresh_index);
 
   display_save(prefix);
 }
