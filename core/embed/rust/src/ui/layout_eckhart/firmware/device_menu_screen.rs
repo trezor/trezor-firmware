@@ -61,14 +61,16 @@ pub enum DeviceMenuMsg {
     ),
 
     // Security menu
+    PinCode,
+    AutoLockDelay,
+    WipeCode,
     CheckBackup,
-    WipeDevice,
 
     // Device menu
     ScreenBrightness,
     HapticFeedback,
-    AutoLockDelay,
     Led,
+    WipeDevice,
 
     // nothing selected
     Close,
@@ -178,7 +180,10 @@ impl DeviceMenuScreen {
         about_items: Obj,
         // NB: we currently only support one device at a time.
         paired_devices: Vec<TString<'static>, 1>,
+        pin_code: Option<bool>,
         auto_lock_delay: Option<TString<'static>>,
+        wipe_code: Option<bool>,
+        check_backup: bool,
         screen_brightness: Option<TString<'static>>,
         haptic_feedback: Option<bool>,
         led: Option<bool>,
@@ -194,7 +199,7 @@ impl DeviceMenuScreen {
         };
 
         let about = screen.add_subscreen(Subscreen::AboutScreen);
-        let security = screen.add_security_menu(auto_lock_delay);
+        let security = screen.add_security_menu(pin_code, auto_lock_delay, wipe_code, check_backup);
         let device =
             screen.add_device_menu(device_name, about, screen_brightness, haptic_feedback, led);
         let settings = screen.add_settings_menu(bluetooth, security, device);
@@ -301,12 +306,31 @@ impl DeviceMenuScreen {
         self.add_subscreen(Subscreen::Submenu(submenu_index))
     }
 
-    fn add_security_menu(&mut self, auto_lock_delay: Option<TString<'static>>) -> usize {
+    fn add_security_menu(
+        &mut self,
+        pin_code: Option<bool>,
+        auto_lock_delay: Option<TString<'static>>,
+        wipe_code: Option<bool>,
+        check_backup: bool,
+    ) -> usize {
         let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
-        unwrap!(items.push(MenuItem::new(
-            TR::reset__check_backup_title.into(),
-            Some(Action::Return(DeviceMenuMsg::CheckBackup)),
-        )));
+
+        if let Some(pin_code) = pin_code {
+            let mut pin_code_item = MenuItem::new(
+                "PIN code".into(),
+                Some(Action::Return(DeviceMenuMsg::PinCode)),
+            );
+            let subtext = if pin_code {
+                (
+                    TR::words__on.into(),
+                    Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
+                )
+            } else {
+                (TR::words__off.into(), None)
+            };
+            pin_code_item.with_subtext(Some(subtext));
+            unwrap!(items.push(pin_code_item));
+        }
 
         if let Some(auto_lock_delay) = auto_lock_delay {
             let mut auto_lock_delay_item = MenuItem::new(
@@ -315,6 +339,30 @@ impl DeviceMenuScreen {
             );
             auto_lock_delay_item.with_subtext(Some((auto_lock_delay, None)));
             unwrap!(items.push(auto_lock_delay_item));
+        }
+
+        if let Some(wipe_code) = wipe_code {
+            let mut wipe_code_item = MenuItem::new(
+                "Wipe code".into(),
+                Some(Action::Return(DeviceMenuMsg::WipeCode)),
+            );
+            let subtext = if wipe_code {
+                (
+                    TR::words__on.into(),
+                    Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
+                )
+            } else {
+                (TR::words__off.into(), None)
+            };
+            wipe_code_item.with_subtext(Some(subtext));
+            unwrap!(items.push(wipe_code_item));
+        }
+
+        if check_backup {
+            unwrap!(items.push(MenuItem::new(
+                TR::reset__check_backup_title.into(),
+                Some(Action::Return(DeviceMenuMsg::CheckBackup)),
+            )));
         }
 
         let submenu_index = self.add_submenu(Submenu::new(items));

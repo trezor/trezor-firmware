@@ -47,6 +47,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_MsgDef;
   MP_QSTR_NONE;
   MP_QSTR_NORMAL;
+  MP_QSTR_PinCode;
   MP_QSTR_RESUME;
   MP_QSTR_RX_PACKET_LEN;
   MP_QSTR_SWIPE_DOWN;
@@ -58,6 +59,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_TRANSITIONING;
   MP_QSTR_TX_PACKET_LEN;
   MP_QSTR_TranslationsHeader;
+  MP_QSTR_WipeCode;
   MP_QSTR_WipeDevice;
   MP_QSTR___del__;
   MP_QSTR___dict__;
@@ -226,6 +228,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_cancel;
   MP_QSTR_cancel_text;
   MP_QSTR_case_sensitive;
+  MP_QSTR_check_backup;
   MP_QSTR_check_homescreen_format;
   MP_QSTR_chunkify;
   MP_QSTR_code;
@@ -477,6 +480,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_pin__turn_off;
   MP_QSTR_pin__turn_on;
   MP_QSTR_pin__wrong_pin;
+  MP_QSTR_pin_code;
   MP_QSTR_plurals__contains_x_keys;
   MP_QSTR_plurals__lock_after_x_days;
   MP_QSTR_plurals__lock_after_x_hours;
@@ -855,6 +859,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_wipe__info;
   MP_QSTR_wipe__title;
   MP_QSTR_wipe__want_to_wipe;
+  MP_QSTR_wipe_code;
   MP_QSTR_wipe_code__change;
   MP_QSTR_wipe_code__changed;
   MP_QSTR_wipe_code__diff_from_pin;

@@ -159,6 +159,8 @@ impl ComponentMsgObj for DeviceMenuScreen {
             DeviceMenuMsg::ScreenBrightness => Ok(SCREEN_BRIGHTNESS.as_obj()),
             DeviceMenuMsg::HapticFeedback => Ok(HAPTIC_FEEDBACK.as_obj()),
             DeviceMenuMsg::AutoLockDelay => Ok(AUTO_LOCK_DELAY.as_obj()),
+            DeviceMenuMsg::PinCode => Ok(PIN_CODE.as_obj()),
+            DeviceMenuMsg::WipeCode => Ok(WIPE_CODE.as_obj()),
             DeviceMenuMsg::Led => Ok(LED.as_obj()),
             DeviceMenuMsg::Close => Ok(CANCELLED.as_obj()),
         }

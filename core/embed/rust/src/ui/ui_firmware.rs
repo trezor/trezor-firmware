@@ -350,13 +350,17 @@ pub trait FirmwareUI {
         lockable: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
+    #[allow(clippy::too_many_arguments)]
     fn show_device_menu(
         failed_backup: bool,
         bluetooth: Option<bool>,
         device_name: TString<'static>,
         about_items: Obj,
         paired_devices: Vec<TString<'static>, 1>,
+        pin_code: Option<bool>,
         auto_lock_delay: Option<TString<'static>>,
+        wipe_code: Option<bool>,
+        check_backup: bool,
         screen_brightness: Option<TString<'static>>,
         haptic_feedback: Option<bool>,
         led: Option<bool>,

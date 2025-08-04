@@ -941,9 +941,12 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
         let about_items: Obj = kwargs.get(Qstr::MP_QSTR_about_items)?;
         let paired_devices: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
         let paired_devices: Vec<TString, 1> = util::iter_into_vec(paired_devices)?;
+        let pin_code: Option<bool> = kwargs.get(Qstr::MP_QSTR_pin_code)?.try_into_option()?;
         let auto_lock_delay: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_auto_lock_delay)?
             .try_into_option()?;
+        let wipe_code: Option<bool> = kwargs.get(Qstr::MP_QSTR_wipe_code)?.try_into_option()?;
+        let check_backup: bool = kwargs.get(Qstr::MP_QSTR_check_backup)?.try_into()?;
         let screen_brightness: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_screen_brightness)?
             .try_into_option()?;
@@ -957,7 +960,10 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
             device_name,
             about_items,
             paired_devices,
+            pin_code,
             auto_lock_delay,
+            wipe_code,
+            check_backup,
             screen_brightness,
             haptic_feedback,
             led,
@@ -1882,7 +1888,10 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     device_name: str,
     ///     about_items: list[tuple[str | None, str | bytes | None, bool | None]],
     ///     paired_devices: Iterable[str],
+    ///     pin_code: bool | None,
     ///     auto_lock_delay: str | None,
+    ///     wipe_code: bool | None,
+    ///     check_backup: bool,
     ///     screen_brightness: str | None,
     ///     haptic_feedback: bool | None,
     ///     led: bool | None,
@@ -2088,6 +2097,10 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     WipeDevice: ClassVar[DeviceMenuResult]
     ///     ScreenBrightness: ClassVar[DeviceMenuResult]
     ///     HapticFeedback: ClassVar[DeviceMenuResult]
+    ///     PinCode: ClassVar[DeviceMenuResult]
     ///     AutoLockDelay: ClassVar[DeviceMenuResult]
+    ///     WipeCode: ClassVar[DeviceMenuResult]
+    ///     Led: ClassVar[DeviceMenuResult]
+    ///     Bluetooth: ClassVar[DeviceMenuResult]
     Qstr::MP_QSTR_DeviceMenuResult => DEVICE_MENU_RESULT.as_obj(),
 };

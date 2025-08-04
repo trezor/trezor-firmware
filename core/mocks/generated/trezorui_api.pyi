@@ -614,7 +614,10 @@ def show_device_menu(
     device_name: str,
     about_items: list[tuple[str | None, str | bytes | None, bool | None]],
     paired_devices: Iterable[str],
+    pin_code: bool | None,
     auto_lock_delay: str | None,
+    wipe_code: bool | None,
+    check_backup: bool,
     screen_brightness: str | None,
     haptic_feedback: bool | None,
     led: bool | None,
@@ -840,4 +843,8 @@ class DeviceMenuResult:
     WipeDevice: ClassVar[DeviceMenuResult]
     ScreenBrightness: ClassVar[DeviceMenuResult]
     HapticFeedback: ClassVar[DeviceMenuResult]
+    PinCode: ClassVar[DeviceMenuResult]
     AutoLockDelay: ClassVar[DeviceMenuResult]
+    WipeCode: ClassVar[DeviceMenuResult]
+    Led: ClassVar[DeviceMenuResult]
+    Bluetooth: ClassVar[DeviceMenuResult]

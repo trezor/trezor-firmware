@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+
 import storage.device as storage_device
 import trezorble as ble
 import trezorui_api
@@ -49,7 +50,12 @@ async def handle_device_menu() -> None:
             device_name=device_name,
             about_items=about_items,
             paired_devices=paired_devices,
+            pin_code=config.has_pin() if storage_device.is_initialized() else None,
             auto_lock_delay=auto_lock_delay,
+            wipe_code=(
+                config.has_wipe_code() if storage_device.is_initialized() else None
+            ),
+            check_backup=storage_device.is_initialized(),
             screen_brightness=(
                 TR.brightness__title if storage_device.is_initialized() else None
             ),
@@ -69,18 +75,29 @@ async def handle_device_menu() -> None:
 
         await pair_new_device()
     elif menu_result is DeviceMenuResult.ScreenBrightness:
-        from apps.management.set_brightness import set_brightness
         from trezor.messages import SetBrightness
+
+        from apps.management.set_brightness import set_brightness
 
         await set_brightness(SetBrightness())
     elif menu_result is DeviceMenuResult.WipeDevice:
         from trezor.messages import WipeDevice
+
         from apps.management.wipe_device import wipe_device
 
         await wipe_device(WipeDevice())
+
+    elif menu_result is DeviceMenuResult.PinCode:
+        from trezor.messages import ChangePin
+
+        from apps.management.change_pin import change_pin
+
+        await change_pin(ChangePin())
+
     elif menu_result is DeviceMenuResult.AutoLockDelay:
-        from apps.management.apply_settings import apply_settings
         from trezor.messages import ApplySettings
+
+        from apps.management.apply_settings import apply_settings
 
         assert config.has_pin()
         auto_lock_delay_ms = await interact(
@@ -100,10 +117,28 @@ async def handle_device_menu() -> None:
                 auto_lock_delay_ms=auto_lock_delay_ms,
             )
         )
+    elif menu_result is DeviceMenuResult.WipeCode:
+        from trezor.messages import ChangeWipeCode
+
+        from apps.management.change_wipe_code import change_wipe_code
+
+        await change_wipe_code(ChangeWipeCode())
+    elif menu_result is DeviceMenuResult.CheckBackup:
+        from trezor.enums import RecoveryType
+        from trezor.messages import RecoveryDevice
+
+        from apps.management.recovery_device import recovery_device
+
+        await recovery_device(
+            RecoveryDevice(
+                type=RecoveryType.DryRun,
+            )
+        )
 
     elif menu_result is DeviceMenuResult.HapticFeedback:
-        from apps.management.apply_settings import apply_settings
         from trezor.messages import ApplySettings
+
+        from apps.management.apply_settings import apply_settings
 
         assert storage_device.is_initialized()
         await apply_settings(
