@@ -1120,7 +1120,8 @@ impl FirmwareUI for UICaesar {
         _device_name: TString<'static>,
         _about_items: Obj,
         _paired_devices: Vec<TString<'static>, 1>,
-        _auto_lock_delay: TString<'static>,
+        _auto_lock_delay: Option<TString<'static>>,
+        _screen_brightness: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
             c"show_device_menu not supported",

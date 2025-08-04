@@ -940,14 +940,19 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
         let about_items: Obj = kwargs.get(Qstr::MP_QSTR_about_items)?;
         let paired_devices: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
         let paired_devices: Vec<TString, 1> = util::iter_into_vec(paired_devices)?;
-        let auto_lock_delay: TString<'static> =
-            kwargs.get(Qstr::MP_QSTR_auto_lock_delay)?.try_into()?;
+        let auto_lock_delay: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_auto_lock_delay)?
+            .try_into_option()?;
+        let screen_brightness: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_screen_brightness)?
+            .try_into_option()?;
         let layout = ModelUI::show_device_menu(
             failed_backup,
             device_name,
             about_items,
             paired_devices,
             auto_lock_delay,
+            screen_brightness,
         )?;
         let layout_obj = LayoutObj::new_root(layout)?;
         Ok(layout_obj.into())
@@ -1867,7 +1872,8 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     device_name: str,
     ///     about_items: list[tuple[str | None, str | bytes | None, bool | None]],
     ///     paired_devices: Iterable[str],
-    ///     auto_lock_delay: str,
+    ///     auto_lock_delay: str | None,
+    ///     screen_brightness: str | None,
     /// ) -> LayoutObj[UiResult | DeviceMenuResult | tuple[DeviceMenuResult, int]]:
     ///     """Show the device menu."""
     Qstr::MP_QSTR_show_device_menu => obj_fn_kw!(0, new_show_device_menu).as_obj(),

@@ -1183,7 +1183,8 @@ impl FirmwareUI for UIEckhart {
         device_name: TString<'static>,
         about_items: Obj,
         paired_devices: Vec<TString<'static>, 1>,
-        auto_lock_delay: TString<'static>,
+        auto_lock_delay: Option<TString<'static>>,
+        screen_brightness: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let layout = RootComponent::new(DeviceMenuScreen::new(
             failed_backup,
@@ -1191,6 +1192,7 @@ impl FirmwareUI for UIEckhart {
             about_items,
             paired_devices,
             auto_lock_delay,
+            screen_brightness,
         )?);
         Ok(layout)
     }

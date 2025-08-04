@@ -5,7 +5,6 @@ use crate::{
     micropython::{gc::GcBox, obj::Obj},
     strutil::TString,
     translations::TR,
-    trezorhal::storage::has_pin,
     ui::{
         component::{
             text::{
@@ -171,7 +170,8 @@ impl DeviceMenuScreen {
         about_items: Obj,
         // NB: we currently only support one device at a time.
         paired_devices: Vec<TString<'static>, 1>,
-        auto_lock_delay: TString<'static>,
+        auto_lock_delay: Option<TString<'static>>,
+        screen_brightness: Option<TString<'static>>,
     ) -> Result<Self, Error> {
         let mut screen = Self {
             bounds: Rect::zero(),
@@ -184,8 +184,8 @@ impl DeviceMenuScreen {
         };
 
         let about = screen.add_subscreen(Subscreen::AboutScreen);
-        let security = screen.add_security_menu();
-        let device = screen.add_device_menu(device_name, about, auto_lock_delay);
+        let security = screen.add_security_menu(auto_lock_delay);
+        let device = screen.add_device_menu(device_name, about, screen_brightness);
         let settings = screen.add_settings_menu(security, device);
 
         let is_connected = !paired_devices.is_empty(); // FIXME after BLE API has this
@@ -267,12 +267,22 @@ impl DeviceMenuScreen {
         self.add_subscreen(Subscreen::Submenu(submenu_index))
     }
 
-    fn add_security_menu(&mut self) -> usize {
+    fn add_security_menu(&mut self, auto_lock_delay: Option<TString<'static>>) -> usize {
         let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
         unwrap!(items.push(MenuItem::new(
             TR::reset__check_backup_title.into(),
             Some(Action::Return(DeviceMenuMsg::CheckBackup)),
         )));
+
+        if let Some(auto_lock_delay) = auto_lock_delay {
+            let mut auto_lock_delay_item = MenuItem::new(
+                TR::auto_lock__title.into(),
+                Some(Action::Return(DeviceMenuMsg::AutoLockDelay)),
+            );
+            auto_lock_delay_item.with_subtext(Some((auto_lock_delay, None)));
+            unwrap!(items.push(auto_lock_delay_item));
+        }
+
         unwrap!(items.push(MenuItem::new(
             TR::wipe__title.into(),
             Some(Action::Return(DeviceMenuMsg::WipeDevice))
@@ -286,24 +296,19 @@ impl DeviceMenuScreen {
         &mut self,
         device_name: TString<'static>,
         about_index: usize,
-        auto_lock_delay: TString<'static>,
+        screen_brightness: Option<TString<'static>>,
     ) -> usize {
         let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
         let mut item_device_name = MenuItem::new(TR::words__name.into(), None);
         item_device_name.with_subtext(Some((device_name, None)));
         unwrap!(items.push(item_device_name));
-        unwrap!(items.push(MenuItem::new(
-            TR::brightness__title.into(),
-            Some(Action::Return(DeviceMenuMsg::ScreenBrightness)),
-        )));
 
-        if has_pin() {
-            let mut autolock_delay_item = MenuItem::new(
-                TR::auto_lock__title.into(),
-                Some(Action::Return(DeviceMenuMsg::AutoLockDelay)),
+        if let Some(brightness) = screen_brightness {
+            let brightness_item = MenuItem::new(
+                brightness,
+                Some(Action::Return(DeviceMenuMsg::ScreenBrightness)),
             );
-            autolock_delay_item.with_subtext(Some((auto_lock_delay, None)));
-            unwrap!(items.push(autolock_delay_item));
+            unwrap!(items.push(brightness_item));
         }
 
         unwrap!(items.push(MenuItem::new(

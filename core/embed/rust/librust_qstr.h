@@ -675,6 +675,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_safety_checks__enforce_strict;
   MP_QSTR_safety_checks__title;
   MP_QSTR_safety_checks__title_safety_override;
+  MP_QSTR_screen_brightness;
   MP_QSTR_sd_card__all_data_will_be_lost;
   MP_QSTR_sd_card__card_required;
   MP_QSTR_sd_card__disable;

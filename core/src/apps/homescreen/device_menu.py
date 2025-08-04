@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 import storage.device as storage_device
 import trezorble as ble
 import trezorui_api
@@ -5,6 +6,9 @@ from trezor import TR, config, log, utils
 from trezor.ui.layouts import interact
 from trezor.wire import ActionCancelled
 from trezorui_api import DeviceMenuResult
+
+if TYPE_CHECKING:
+    from trezor.ui.layouts import PropertyType
 
 
 async def _prompt_auto_lock_delay() -> int:
@@ -40,10 +44,15 @@ async def handle_device_menu() -> None:
     # ###
     firmware_version = ".".join(map(str, utils.VERSION))
     firmware_type = "Bitcoin-only" if utils.BITCOIN_ONLY else "Universal"
+    about_items: list[PropertyType] = [
+        (TR.homescreen__firmware_version, firmware_version, False),
+        (TR.homescreen__firmware_type, firmware_type, False),
+    ]
+
     device_name = storage_device.get_label() or "Trezor"
 
-    auto_lock_ms = storage_device.get_autolock_delay_ms()
-    auto_lock_delay = strings.format_autolock_duration(auto_lock_ms)
+    # auto_lock_ms = storage_device.get_autolock_delay_ms()
+    # auto_lock_delay = strings.format_autolock_duration(auto_lock_ms)
 
     if __debug__:
         log.debug(
@@ -55,12 +64,12 @@ async def handle_device_menu() -> None:
         trezorui_api.show_device_menu(
             failed_backup=failed_backup,
             device_name=device_name,
-            about_items=[
-                (TR.homescreen__firmware_version, firmware_version, False),
-                (TR.homescreen__firmware_type, firmware_type, False),
-            ],
+            about_items=about_items,
             paired_devices=paired_devices,
-            auto_lock_delay=auto_lock_delay,
+            auto_lock_delay=None,
+            screen_brightness=(
+                TR.brightness__title if storage_device.is_initialized() else None
+            ),
         ),
         "device_menu",
     )

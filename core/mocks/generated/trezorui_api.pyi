@@ -613,7 +613,8 @@ def show_device_menu(
     device_name: str,
     about_items: list[tuple[str | None, str | bytes | None, bool | None]],
     paired_devices: Iterable[str],
-    auto_lock_delay: str,
+    auto_lock_delay: str | None,
+    screen_brightness: str | None,
 ) -> LayoutObj[UiResult | DeviceMenuResult | tuple[DeviceMenuResult, int]]:
     """Show the device menu."""
 

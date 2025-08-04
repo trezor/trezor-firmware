@@ -355,7 +355,8 @@ pub trait FirmwareUI {
         device_name: TString<'static>,
         about_items: Obj,
         paired_devices: Vec<TString<'static>, 1>,
-        auto_lock_delay: TString<'static>,
+        auto_lock_delay: Option<TString<'static>>,
+        screen_brightness: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_pairing_device_name(
