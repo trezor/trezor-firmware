@@ -145,7 +145,7 @@ impl ComponentMsgObj for SetBrightnessScreen {
     }
 }
 
-impl<'a> ComponentMsgObj for DeviceMenuScreen<'a> {
+impl ComponentMsgObj for DeviceMenuScreen {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             DeviceMenuMsg::BackupFailed => Ok(BACKUP_FAILED.as_obj()),

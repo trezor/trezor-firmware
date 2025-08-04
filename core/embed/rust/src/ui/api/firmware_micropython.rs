@@ -936,18 +936,16 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
 extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let failed_backup: bool = kwargs.get(Qstr::MP_QSTR_failed_backup)?.try_into()?;
-        let firmware_version: TString = kwargs.get(Qstr::MP_QSTR_firmware_version)?.try_into()?;
-        let firmware_type: TString = kwargs.get(Qstr::MP_QSTR_firmware_type)?.try_into()?;
         let device_name: TString = kwargs.get(Qstr::MP_QSTR_device_name)?.try_into()?;
+        let about_items: Obj = kwargs.get(Qstr::MP_QSTR_about_items)?;
         let paired_devices: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
         let paired_devices: Vec<TString, 1> = util::iter_into_vec(paired_devices)?;
         let auto_lock_delay: TString<'static> =
             kwargs.get(Qstr::MP_QSTR_auto_lock_delay)?.try_into()?;
         let layout = ModelUI::show_device_menu(
             failed_backup,
-            firmware_version,
-            firmware_type,
             device_name,
+            about_items,
             paired_devices,
             auto_lock_delay,
         )?;
@@ -1866,9 +1864,8 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def show_device_menu(
     ///     *,
     ///     failed_backup: bool,
-    ///     firmware_version: str,
-    ///     firmware_type: str,
     ///     device_name: str,
+    ///     about_items: list[tuple[str | None, str | bytes | None, bool | None]],
     ///     paired_devices: Iterable[str],
     ///     auto_lock_delay: str,
     /// ) -> LayoutObj[UiResult | DeviceMenuResult | tuple[DeviceMenuResult, int]]:

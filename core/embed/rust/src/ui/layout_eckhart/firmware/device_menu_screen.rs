@@ -2,19 +2,20 @@ use core::ops::{Deref, DerefMut};
 
 use crate::{
     error::Error,
-    micropython::gc::GcBox,
+    micropython::{gc::GcBox, obj::Obj},
     strutil::TString,
     translations::TR,
     trezorhal::storage::has_pin,
     ui::{
         component::{
             text::{
-                paragraphs::{Paragraph, Paragraphs},
+                paragraphs::{ParagraphSource, Paragraphs},
                 TextStyle,
             },
             Component, Event, EventCtx,
         },
         geometry::{LinearPlacement, Rect},
+        layout::util::PropsList,
         shape::Renderer,
     },
 };
@@ -138,23 +139,22 @@ enum Subscreen {
 
 // Used to preallocate memory for the largest enum variant
 #[allow(clippy::large_enum_variant)]
-enum ActiveScreen<'a> {
+enum ActiveScreen {
     Menu(VerticalMenuScreen<ShortMenuVec>),
-    About(TextScreen<Paragraphs<[Paragraph<'a>; 4]>>),
+    About(TextScreen<Paragraphs<PropsList>>),
 
     // used only during `DeviceMenuScreen::new`
     Empty,
 }
 
-pub struct DeviceMenuScreen<'a> {
+pub struct DeviceMenuScreen {
     bounds: Rect,
-    firmware_version: TString<'static>,
-    firmware_type: TString<'static>,
+    about_items: Obj,
     // These correspond to the currently active subscreen,
     // which is one of the possible kinds of subscreens
     // as defined by `enum Subscreen` (DeviceScreen is still a VerticalMenuScreen!)
     // This way we only need to keep one screen at any time in memory.
-    active_screen: GcBox<ActiveScreen<'a>>,
+    active_screen: GcBox<ActiveScreen>,
     // Information needed to construct any subscreen on demand
     submenus: GcBox<Vec<Submenu, MAX_SUBMENUS>>,
     subscreens: Vec<Subscreen, MAX_SUBSCREENS>,
@@ -164,20 +164,18 @@ pub struct DeviceMenuScreen<'a> {
     parent_subscreens: Vec<usize, MAX_DEPTH>,
 }
 
-impl<'a> DeviceMenuScreen<'a> {
+impl DeviceMenuScreen {
     pub fn new(
         failed_backup: bool,
-        firmware_version: TString<'static>,
-        firmware_type: TString<'static>,
         device_name: TString<'static>,
+        about_items: Obj,
         // NB: we currently only support one device at a time.
         paired_devices: Vec<TString<'static>, 1>,
         auto_lock_delay: TString<'static>,
     ) -> Result<Self, Error> {
         let mut screen = Self {
             bounds: Rect::zero(),
-            firmware_version,
-            firmware_type,
+            about_items,
             active_screen: GcBox::new(ActiveScreen::Empty)?,
             active_subscreen: 0,
             submenus: GcBox::new(Vec::new())?,
@@ -418,26 +416,25 @@ impl<'a> DeviceMenuScreen<'a> {
                 );
             }
             Subscreen::AboutScreen => {
-                let about_content = Paragraphs::new([
-                    Paragraph::new(
-                        &theme::firmware::TEXT_SMALL_LIGHT,
-                        TR::homescreen__firmware_version,
-                    )
-                    .with_bottom_padding(theme::PROP_INNER_SPACING),
-                    Paragraph::new(&theme::firmware::TEXT_REGULAR, self.firmware_type)
-                        .with_bottom_padding(theme::PROPS_SPACING),
-                    Paragraph::new(
-                        &theme::firmware::TEXT_SMALL_LIGHT,
-                        TR::homescreen__firmware_version,
-                    )
-                    .with_bottom_padding(theme::PROP_INNER_SPACING),
-                    Paragraph::new(&theme::firmware::TEXT_REGULAR, self.firmware_version),
-                ])
-                .with_placement(LinearPlacement::vertical());
-
                 *self.active_screen.deref_mut() = ActiveScreen::About(
-                    TextScreen::new(about_content)
-                        .with_header(Header::new(TR::words__about.into()).with_close_button()),
+                    TextScreen::new(
+                        PropsList::new(
+                            self.about_items,
+                            &theme::TEXT_SMALL_LIGHT,
+                            &theme::TEXT_MONO_MEDIUM_LIGHT,
+                            &theme::TEXT_MONO_MEDIUM_LIGHT,
+                        )
+                        .unwrap_or_else(|_| {
+                            unwrap!(PropsList::empty(
+                                &theme::TEXT_SMALL_LIGHT,
+                                &theme::TEXT_MONO_LIGHT,
+                                &theme::TEXT_MONO_LIGHT,
+                            ))
+                        })
+                        .into_paragraphs()
+                        .with_placement(LinearPlacement::vertical()),
+                    )
+                    .with_header(Header::new(TR::words__about.into()).with_close_button()),
                 );
             }
         }
@@ -482,7 +479,7 @@ impl<'a> DeviceMenuScreen<'a> {
     }
 }
 
-impl<'a> Component for DeviceMenuScreen<'a> {
+impl Component for DeviceMenuScreen {
     type Msg = DeviceMenuMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -550,7 +547,7 @@ impl<'a> Component for DeviceMenuScreen<'a> {
 }
 
 #[cfg(feature = "ui_debug")]
-impl<'a> crate::trace::Trace for DeviceMenuScreen<'a> {
+impl crate::trace::Trace for DeviceMenuScreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("DeviceMenuScreen");
     }

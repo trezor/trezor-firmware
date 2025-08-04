@@ -1117,9 +1117,8 @@ impl FirmwareUI for UICaesar {
 
     fn show_device_menu(
         _failed_backup: bool,
-        _firmware_version: TString<'static>,
-        _firmware_type: TString<'static>,
         _device_name: TString<'static>,
+        _about_items: Obj,
         _paired_devices: Vec<TString<'static>, 1>,
         _auto_lock_delay: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {

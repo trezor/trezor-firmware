@@ -382,6 +382,7 @@ class TR:
     haptic_feedback__title: str = "Haptic feedback"
     homescreen__click_to_connect: str = "Click to Connect"
     homescreen__click_to_unlock: str = "Click to Unlock"
+    homescreen__firmware_type: str = "Firmware type"
     homescreen__firmware_version: str = "Firmware version"
     homescreen__set_default: str = "Change wallpaper to default image?"
     homescreen__settings_subtitle: str = "Settings"

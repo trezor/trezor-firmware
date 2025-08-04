@@ -610,9 +610,8 @@ def show_homescreen(
 def show_device_menu(
     *,
     failed_backup: bool,
-    firmware_version: str,
-    firmware_type: str,
     device_name: str,
+    about_items: list[tuple[str | None, str | bytes | None, bool | None]],
     paired_devices: Iterable[str],
     auto_lock_delay: str,
 ) -> LayoutObj[UiResult | DeviceMenuResult | tuple[DeviceMenuResult, int]]:

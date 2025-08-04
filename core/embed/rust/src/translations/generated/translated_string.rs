@@ -1479,6 +1479,7 @@ pub enum TranslatedString {
     words__on = 1080,  // "On"
     words__review = 1081,  // "Review"
     words__security = 1082,  // "Security"
+    homescreen__firmware_type = 1083,  // "Firmware type"
 }
 
 impl TranslatedString {
@@ -3277,6 +3278,7 @@ impl TranslatedString {
             (Self::words__on, "On"),
             (Self::words__review, "Review"),
             (Self::words__security, "Security"),
+            (Self::homescreen__firmware_type, "Firmware type"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3890,6 +3892,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_haptic_feedback__title, Self::haptic_feedback__title),
         (Qstr::MP_QSTR_homescreen__click_to_connect, Self::homescreen__click_to_connect),
         (Qstr::MP_QSTR_homescreen__click_to_unlock, Self::homescreen__click_to_unlock),
+        (Qstr::MP_QSTR_homescreen__firmware_type, Self::homescreen__firmware_type),
         (Qstr::MP_QSTR_homescreen__firmware_version, Self::homescreen__firmware_version),
         (Qstr::MP_QSTR_homescreen__set_default, Self::homescreen__set_default),
         (Qstr::MP_QSTR_homescreen__settings_subtitle, Self::homescreen__settings_subtitle),
