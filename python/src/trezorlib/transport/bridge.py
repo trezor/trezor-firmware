@@ -22,7 +22,6 @@ import typing as t
 import requests
 from typing_extensions import Self
 
-from ..client import ProtocolVersion
 from ..log import DUMP_PACKETS
 from . import DeviceIsBusy, Transport, TransportException
 
@@ -35,7 +34,8 @@ TREZORD_HOST = "http://127.0.0.1:21325"
 TREZORD_ORIGIN_HEADER = {"Origin": "https://python.trezor.io"}
 
 TREZORD_VERSION_MODERN = (2, 0, 25)
-TREZORD_VERSION_THP_SUPPORT = (2, 0, 31)  # TODO add correct value
+# https://github.com/trezor/trezor-suite/commit/4881cefcd4aec9f4da44220cf5ee4c79fd5eb3ff
+TREZORD_VERSION_THP_SUPPORT = (3, 1, 0)
 
 CONNECTION = requests.Session()
 CONNECTION.headers.update(TREZORD_ORIGIN_HEADER)
@@ -70,40 +70,6 @@ def is_legacy_bridge() -> bool:
 
 def supports_protocolV2() -> bool:
     return get_bridge_version() >= TREZORD_VERSION_THP_SUPPORT
-
-
-def detect_protocol_version(transport: "BridgeTransport") -> int:
-    from .. import mapping, messages
-    from ..messages import FailureType
-
-    protocol_version = ProtocolVersion.V1
-    request_type, request_data = mapping.DEFAULT_MAPPING.encode(messages.Initialize())
-    transport.open()
-    transport.write_chunk(request_type.to_bytes(2, "big") + request_data)
-    response = transport.read_chunk()
-    response_type = int.from_bytes(response[:2], "big")
-    response_data = response[2:]
-    response = mapping.DEFAULT_MAPPING.decode(response_type, response_data)
-    if isinstance(response, messages.Failure):
-        if response.code == FailureType.InvalidProtocol:
-            LOG.debug("Protocol V2 detected")
-            protocol_version = ProtocolVersion.V2
-
-    return protocol_version
-
-
-def _is_transport_valid(transport: "BridgeTransport") -> bool:
-    is_valid = detect_protocol_version(transport) == ProtocolVersion.V1
-    if not is_valid:
-        LOG.warning("Detected unsupported Bridge transport!")
-    return is_valid
-
-
-def filter_invalid_bridge_transports(
-    transports: t.Iterable["BridgeTransport"],
-) -> t.Sequence["BridgeTransport"]:
-    """Filters out invalid bridge transports. Keeps only valid ones."""
-    return [t for t in transports if _is_transport_valid(t)]
 
 
 class BridgeHandle:
@@ -200,12 +166,9 @@ class BridgeTransport(Transport):
     ) -> t.Iterable["BridgeTransport"]:
         try:
             legacy = is_legacy_bridge()
-            return filter_invalid_bridge_transports(
-                [
-                    BridgeTransport(dev, legacy)
-                    for dev in call_bridge("enumerate").json()
-                ]
-            )
+            return [
+                BridgeTransport(dev, legacy) for dev in call_bridge("enumerate").json()
+            ]
         except Exception:
             return []
 
