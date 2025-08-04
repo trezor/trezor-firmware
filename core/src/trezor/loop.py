@@ -339,7 +339,9 @@ class race(Syscall):
         if not self.finished:
             self.finished = True
             self.exit(task)
-            schedule(self.callback, result)
+            # The callback should be executed immediatelly, otherwise we may get out-of-order handling of events.
+            # For example, `DebugLinkGetState` may be handled after the current layout has been already changed.
+            _step(self.callback, result)
 
     def __iter__(self) -> Task:
         try:
