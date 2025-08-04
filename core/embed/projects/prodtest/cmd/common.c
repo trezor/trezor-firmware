@@ -1,3 +1,25 @@
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include <trezor_model.h>
+#include <trezor_rtl.h>
+
 #include "common.h"
 
 #include "buffer.h"
@@ -431,4 +453,99 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
   }
 
   return true;
+}
+
+#ifdef USE_NRF
+#define BINARY_MAXSIZE \
+  (0x50000 > BOOTLOADER_MAXSIZE ? 0x50000 : BOOTLOADER_MAXSIZE)
+#else
+#define BINARY_MAXSIZE BOOTLOADER_MAXSIZE
+#endif
+
+__attribute__((section(".buf"))) static uint8_t binary_buffer[BINARY_MAXSIZE];
+static size_t binary_len = 0;
+static bool binary_update_in_progress = false;
+
+void binary_update(cli_t* cli, bool (*finalize)(uint8_t* data, size_t len)) {
+  if (cli_arg_count(cli) < 1) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  const char* phase = cli_arg(cli, "phase");
+
+  if (phase == NULL) {
+    cli_error_arg(cli, "Expecting phase (begin|chunk|end).");
+  }
+
+  if (0 == strcmp(phase, "begin")) {
+    if (cli_arg_count(cli) != 1) {
+      cli_error_arg_count(cli);
+      goto cleanup;
+    }
+
+    // Reset our state
+    binary_len = 0;
+    binary_update_in_progress = true;
+    cli_trace(cli, "Begin");
+    cli_ok(cli, "");
+
+  } else if (0 == strcmp(phase, "chunk")) {
+    if (cli_arg_count(cli) < 2) {
+      cli_error_arg_count(cli);
+      goto cleanup;
+    }
+
+    if (!binary_update_in_progress) {
+      cli_error(cli, CLI_ERROR, "Update not started. Use 'begin' first.");
+      goto cleanup;
+    }
+
+    // Receive next piece of the image
+    size_t chunk_len = 0;
+
+    if (!cli_arg_hex(cli, "hex-data", &binary_buffer[binary_len],
+                     sizeof(binary_buffer) - binary_len, &chunk_len)) {
+      cli_error_arg(cli, "Expecting hex data for chunk.");
+      goto cleanup;
+    }
+
+    binary_len += chunk_len;
+
+    cli_ok(cli, "%u %u", (unsigned)chunk_len, (unsigned)binary_len);
+
+  } else if (0 == strcmp(phase, "end")) {
+    if (cli_arg_count(cli) != 1) {
+      cli_error_arg_count(cli);
+      goto cleanup;
+    }
+
+    if (binary_len == 0) {
+      cli_error(cli, CLI_ERROR, "No data received");
+      goto cleanup;
+    }
+
+    if (!finalize(binary_buffer, binary_len)) {
+      binary_len = 0;
+      cli_error(cli, CLI_ERROR, "Error while finalizing the update");
+      goto cleanup;
+    }
+
+    cli_trace(cli, "Update successful (%u bytes)", (unsigned)binary_len);
+    cli_ok(cli, "");
+
+    // Reset state so next begin must come before chunks
+    binary_len = 0;
+    binary_update_in_progress = false;
+
+  } else {
+    cli_error(cli, CLI_ERROR, "Unknown phase '%s' (begin|chunk|end)", phase);
+    goto cleanup;
+  }
+
+  return;
+
+cleanup:
+  binary_update_in_progress = false;
+  binary_len = 0;
 }
