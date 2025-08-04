@@ -299,6 +299,14 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       break;
 #endif
 
+#if !defined(BOARDLOADER) && !PRODUCTION
+    case MPU_MODE_BOARDLOADER:
+      // Boardloader (Privileged, Read-Write, Non-Executable)
+      // Subregion: 48KB = 64KB except 2/8 at end
+      SET_REGION( 6, FLASH_BASE,           SIZE_64KB,  0xC0, FLASH_DATA, PRIV_RW );
+      break;
+#endif
+
 #if !defined(BOARDLOADER) && !defined(BOOTLOADER)
     case MPU_MODE_BOOTLOADER:
       DIS_REGION( 5 );
