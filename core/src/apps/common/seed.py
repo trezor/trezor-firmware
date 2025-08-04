@@ -110,7 +110,6 @@ if utils.USE_THP:
                 raise Exception("Cardano icarus secret is already set!")
 
             passphrase = await get_passphrase(msg)
-
             common_seed = mnemonic.get_seed(passphrase)
             ctx.cache.set(APP_COMMON_SEED, common_seed)
 
