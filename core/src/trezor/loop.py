@@ -339,7 +339,7 @@ class race(Syscall):
         if not self.finished:
             self.finished = True
             self.exit(task)
-            schedule(self.callback, result)
+            _step(self.callback, result)
 
     def __iter__(self) -> Task:
         try:
