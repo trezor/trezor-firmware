@@ -17,7 +17,7 @@ def is_enabled() -> bool:
 
 async def get_passphrase(msg: ThpCreateNewSession) -> str:
     if not is_enabled():
-        return ""
+        raise DataError("Passphrase protection is disabled")
 
     if msg.on_device or storage_device.get_passphrase_always_on_device():
         passphrase = await _get_on_device()
