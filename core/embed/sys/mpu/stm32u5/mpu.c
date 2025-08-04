@@ -438,6 +438,12 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       SET_REGION( 6, BOARDLOADER_START,        BOARDLOADER_MAXSIZE,FLASH_DATA,   NO,    NO );
       break;
 #endif
+#if !defined(BOARDLOADER) && !PRODUCTION
+    case MPU_MODE_BOARDLOADER:
+      //      REGION   ADDRESS                 SIZE                TYPE       WRITE   UNPRIV
+      SET_REGION( 6, BOARDLOADER_START,        BOARDLOADER_MAXSIZE,FLASH_DATA,  YES,    NO );
+      break;
+#endif
 #if !defined(BOOTLOADER) && !defined(BOARDLOADER)
     case MPU_MODE_BOOTLOADER:
       SET_REGION( 6, BOOTLOADER_START,         BOOTLOADER_MAXSIZE, FLASH_DATA,  YES,    NO );
