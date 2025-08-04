@@ -87,7 +87,7 @@ if utils.USE_THP:
             if not storage_device.is_initialized():
                 raise wire.NotInitialized("Device is not initialized")
 
-            passphrase = "" if msg.passphrase is None else await get_passphrase(msg)
+            passphrase = await get_passphrase(msg)
             common_seed = mnemonic.get_seed(passphrase)
             ctx.cache.set(APP_COMMON_SEED, common_seed)
 
@@ -109,7 +109,7 @@ if utils.USE_THP:
             if ctx.cache.is_set(APP_CARDANO_ICARUS_SECRET):
                 raise Exception("Cardano icarus secret is already set!")
 
-            passphrase = "" if msg.passphrase is None else await get_passphrase(msg)
+            passphrase = await get_passphrase(msg)
 
             common_seed = mnemonic.get_seed(passphrase)
             ctx.cache.set(APP_COMMON_SEED, common_seed)
