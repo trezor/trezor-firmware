@@ -180,7 +180,7 @@ class TrezorConnection:
                     )
             return session
 
-        features = client.protocol.get_features()
+        features = client.features
 
         passphrase_protection = features.passphrase_protection
         if passphrase_protection is None:
