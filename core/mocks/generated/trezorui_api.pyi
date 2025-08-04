@@ -610,11 +610,14 @@ def show_homescreen(
 def show_device_menu(
     *,
     failed_backup: bool,
+    bluetooth: bool | None,
     device_name: str,
     about_items: list[tuple[str | None, str | bytes | None, bool | None]],
     paired_devices: Iterable[str],
     auto_lock_delay: str | None,
     screen_brightness: str | None,
+    haptic_feedback: bool | None,
+    led: bool | None,
 ) -> LayoutObj[UiResult | DeviceMenuResult | tuple[DeviceMenuResult, int]]:
     """Show the device menu."""
 

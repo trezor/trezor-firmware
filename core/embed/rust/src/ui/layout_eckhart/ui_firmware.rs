@@ -1180,19 +1180,25 @@ impl FirmwareUI for UIEckhart {
 
     fn show_device_menu(
         failed_backup: bool,
+        bluetooth: Option<bool>,
         device_name: TString<'static>,
         about_items: Obj,
         paired_devices: Vec<TString<'static>, 1>,
         auto_lock_delay: Option<TString<'static>>,
         screen_brightness: Option<TString<'static>>,
+        haptic_feedback: Option<bool>,
+        led: Option<bool>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let layout = RootComponent::new(DeviceMenuScreen::new(
             failed_backup,
+            bluetooth,
             device_name,
             about_items,
             paired_devices,
             auto_lock_delay,
             screen_brightness,
+            haptic_feedback,
+            led,
         )?);
         Ok(layout)
     }

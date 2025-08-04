@@ -352,11 +352,14 @@ pub trait FirmwareUI {
 
     fn show_device_menu(
         failed_backup: bool,
+        bluetooth: Option<bool>,
         device_name: TString<'static>,
         about_items: Obj,
         paired_devices: Vec<TString<'static>, 1>,
         auto_lock_delay: Option<TString<'static>>,
         screen_brightness: Option<TString<'static>>,
+        haptic_feedback: Option<bool>,
+        led: Option<bool>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_pairing_device_name(

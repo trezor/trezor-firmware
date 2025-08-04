@@ -4,32 +4,10 @@ import trezorble as ble
 import trezorui_api
 from trezor import TR, config, log, utils
 from trezor.ui.layouts import interact
-from trezor.wire import ActionCancelled
 from trezorui_api import DeviceMenuResult
 
 if TYPE_CHECKING:
     from trezor.ui.layouts import PropertyType
-
-
-async def _prompt_auto_lock_delay() -> int:
-    auto_lock_delay_ms = await interact(
-        trezorui_api.request_duration(
-            title=TR.auto_lock__title,
-            duration_ms=storage_device.get_autolock_delay_ms(),
-            min_ms=storage_device.AUTOLOCK_DELAY_MINIMUM,
-            max_ms=storage_device.AUTOLOCK_DELAY_MAXIMUM,
-            description=TR.auto_lock__description,
-        ),
-        br_name=None,
-    )
-
-    if auto_lock_delay_ms is not trezorui_api.CANCELLED:
-        assert isinstance(auto_lock_delay_ms, int)
-        assert auto_lock_delay_ms >= storage_device.AUTOLOCK_DELAY_MINIMUM
-        assert auto_lock_delay_ms <= storage_device.AUTOLOCK_DELAY_MAXIMUM
-        return auto_lock_delay_ms
-    else:
-        raise ActionCancelled  # user cancelled request number prompt
 
 
 async def handle_device_menu() -> None:
@@ -42,17 +20,22 @@ async def handle_device_menu() -> None:
     # MOCK DATA
     paired_devices = ["Trezor Suite"] if ble.is_connected() else []
     # ###
-    firmware_version = ".".join(map(str, utils.VERSION))
-    firmware_type = "Bitcoin-only" if utils.BITCOIN_ONLY else "Universal"
     about_items: list[PropertyType] = [
-        (TR.homescreen__firmware_version, firmware_version, False),
-        (TR.homescreen__firmware_type, firmware_type, False),
+        (TR.homescreen__firmware_version, ".".join(map(str, utils.VERSION)), False),
+        (
+            TR.homescreen__firmware_type,
+            "Bitcoin-only" if utils.BITCOIN_ONLY else "Universal",
+            False,
+        ),
     ]
 
     device_name = storage_device.get_label() or "Trezor"
 
-    # auto_lock_ms = storage_device.get_autolock_delay_ms()
-    # auto_lock_delay = strings.format_autolock_duration(auto_lock_ms)
+    auto_lock_delay = (
+        strings.format_autolock_duration(storage_device.get_autolock_delay_ms())
+        if config.has_pin()
+        else None
+    )
 
     if __debug__:
         log.debug(
@@ -66,10 +49,17 @@ async def handle_device_menu() -> None:
             device_name=device_name,
             about_items=about_items,
             paired_devices=paired_devices,
-            auto_lock_delay=None,
+            auto_lock_delay=auto_lock_delay,
             screen_brightness=(
                 TR.brightness__title if storage_device.is_initialized() else None
             ),
+            haptic_feedback=(
+                storage_device.get_haptic_feedback()
+                if (storage_device.is_initialized() and utils.USE_HAPTIC)
+                else None
+            ),
+            led=None,  # TODO: implement LED setting
+            bluetooth=None,  # TODO: implement BLE setting
         ),
         "device_menu",
     )
@@ -79,21 +69,55 @@ async def handle_device_menu() -> None:
 
         await pair_new_device()
     elif menu_result is DeviceMenuResult.ScreenBrightness:
-        from trezor.ui.layouts import set_brightness
+        from apps.management.set_brightness import set_brightness
+        from trezor.messages import SetBrightness
 
-        await set_brightness()
+        await set_brightness(SetBrightness())
     elif menu_result is DeviceMenuResult.WipeDevice:
         from trezor.messages import WipeDevice
-
         from apps.management.wipe_device import wipe_device
 
         await wipe_device(WipeDevice())
     elif menu_result is DeviceMenuResult.AutoLockDelay:
+        from apps.management.apply_settings import apply_settings
+        from trezor.messages import ApplySettings
 
-        if config.has_pin():
+        assert config.has_pin()
+        auto_lock_delay_ms = await interact(
+            trezorui_api.request_duration(
+                title=TR.auto_lock__title,
+                duration_ms=storage_device.get_autolock_delay_ms(),
+                min_ms=storage_device.AUTOLOCK_DELAY_MINIMUM,
+                max_ms=storage_device.AUTOLOCK_DELAY_MAXIMUM,
+                description=TR.auto_lock__description,
+            ),
+            br_name=None,
+        )
+        assert isinstance(auto_lock_delay_ms, int)
 
-            auto_lock_delay_ms = await _prompt_auto_lock_delay()
-            storage_device.set_autolock_delay_ms(auto_lock_delay_ms)
+        await apply_settings(
+            ApplySettings(
+                auto_lock_delay_ms=auto_lock_delay_ms,
+            )
+        )
+
+    elif menu_result is DeviceMenuResult.HapticFeedback:
+        from apps.management.apply_settings import apply_settings
+        from trezor.messages import ApplySettings
+
+        assert storage_device.is_initialized()
+        await apply_settings(
+            ApplySettings(
+                haptic_feedback=not storage_device.get_haptic_feedback(),
+            )
+        )
+
+    elif menu_result is DeviceMenuResult.Led:
+        pass  # TODO: implement LED setting
+
+    elif menu_result is DeviceMenuResult.Bluetooth:
+        pass  # TODO: implement BLE setting
+
     elif isinstance(menu_result, tuple):
         # It's a tuple with (result_type, index)
         result_type, index = menu_result

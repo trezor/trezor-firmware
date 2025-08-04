@@ -1082,5 +1082,7 @@
   "1080": "words__on",
   "1081": "words__review",
   "1082": "words__security",
-  "1083": "homescreen__firmware_type"
+  "1083": "homescreen__firmware_type",
+  "1084": "words__led",
+  "1085": "words__bluetooth"
 }

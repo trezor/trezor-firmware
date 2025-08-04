@@ -23,6 +23,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_BacklightLevels;
   MP_QSTR_BackupFailed;
   MP_QSTR_BleInterface;
+  MP_QSTR_Bluetooth;
   MP_QSTR_CANCELLED;
   MP_QSTR_CONFIRMED;
   MP_QSTR_CheckBackup;
@@ -37,6 +38,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_LOW;
   MP_QSTR_LayoutObj;
   MP_QSTR_LayoutState;
+  MP_QSTR_Led;
   MP_QSTR_MAX;
   MP_QSTR_MESSAGE_NAME;
   MP_QSTR_MESSAGE_WIRE_TYPE;
@@ -167,6 +169,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ble__unpair_current;
   MP_QSTR_ble__unpair_title;
   MP_QSTR_ble_event;
+  MP_QSTR_bluetooth;
   MP_QSTR_bootscreen;
   MP_QSTR_br_code;
   MP_QSTR_br_name;
@@ -306,6 +309,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_get;
   MP_QSTR_get_language;
   MP_QSTR_get_transition_out;
+  MP_QSTR_haptic_feedback;
   MP_QSTR_haptic_feedback__disable;
   MP_QSTR_haptic_feedback__enable;
   MP_QSTR_haptic_feedback__subtitle;
@@ -380,6 +384,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_language__changed;
   MP_QSTR_language__progress;
   MP_QSTR_language__title;
+  MP_QSTR_led;
   MP_QSTR_lines;
   MP_QSTR_load_from_flash;
   MP_QSTR_lockable;
@@ -880,6 +885,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__assets;
   MP_QSTR_words__authenticate;
   MP_QSTR_words__blockhash;
+  MP_QSTR_words__bluetooth;
   MP_QSTR_words__buying;
   MP_QSTR_words__cancel_and_exit;
   MP_QSTR_words__cancel_question;
@@ -901,6 +907,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__instructions;
   MP_QSTR_words__keep_it_safe;
   MP_QSTR_words__know_what_your_doing;
+  MP_QSTR_words__led;
   MP_QSTR_words__manage;
   MP_QSTR_words__my_trezor;
   MP_QSTR_words__name;

@@ -1475,11 +1475,13 @@ pub enum TranslatedString {
     words__disconnect = 1076,  // "Disconnect"
     words__manage = 1077,  // "Manage"
     words__name = 1078,  // "Name"
-    words__off = 1079,  // "Off"
-    words__on = 1080,  // "On"
+    words__off = 1079,  // "OFF"
+    words__on = 1080,  // "ON"
     words__review = 1081,  // "Review"
     words__security = 1082,  // "Security"
     homescreen__firmware_type = 1083,  // "Firmware type"
+    words__led = 1084,  // "LED"
+    words__bluetooth = 1085,  // "Bluetooth"
 }
 
 impl TranslatedString {
@@ -3274,11 +3276,13 @@ impl TranslatedString {
             (Self::words__disconnect, "Disconnect"),
             (Self::words__manage, "Manage"),
             (Self::words__name, "Name"),
-            (Self::words__off, "Off"),
-            (Self::words__on, "On"),
+            (Self::words__off, "OFF"),
+            (Self::words__on, "ON"),
             (Self::words__review, "Review"),
             (Self::words__security, "Security"),
             (Self::homescreen__firmware_type, "Firmware type"),
+            (Self::words__led, "LED"),
+            (Self::words__bluetooth, "Bluetooth"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4687,6 +4691,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__assets, Self::words__assets),
         (Qstr::MP_QSTR_words__authenticate, Self::words__authenticate),
         (Qstr::MP_QSTR_words__blockhash, Self::words__blockhash),
+        (Qstr::MP_QSTR_words__bluetooth, Self::words__bluetooth),
         (Qstr::MP_QSTR_words__buying, Self::words__buying),
         (Qstr::MP_QSTR_words__cancel_and_exit, Self::words__cancel_and_exit),
         (Qstr::MP_QSTR_words__cancel_question, Self::words__cancel_question),
@@ -4708,6 +4713,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__instructions, Self::words__instructions),
         (Qstr::MP_QSTR_words__keep_it_safe, Self::words__keep_it_safe),
         (Qstr::MP_QSTR_words__know_what_your_doing, Self::words__know_what_your_doing),
+        (Qstr::MP_QSTR_words__led, Self::words__led),
         (Qstr::MP_QSTR_words__manage, Self::words__manage),
         (Qstr::MP_QSTR_words__my_trezor, Self::words__my_trezor),
         (Qstr::MP_QSTR_words__name, Self::words__name),

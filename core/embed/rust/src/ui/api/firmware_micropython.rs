@@ -936,6 +936,7 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
 extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let failed_backup: bool = kwargs.get(Qstr::MP_QSTR_failed_backup)?.try_into()?;
+        let bluetooth: Option<bool> = kwargs.get(Qstr::MP_QSTR_bluetooth)?.try_into_option()?;
         let device_name: TString = kwargs.get(Qstr::MP_QSTR_device_name)?.try_into()?;
         let about_items: Obj = kwargs.get(Qstr::MP_QSTR_about_items)?;
         let paired_devices: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
@@ -946,14 +947,22 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
         let screen_brightness: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_screen_brightness)?
             .try_into_option()?;
+        let haptic_feedback: Option<bool> = kwargs
+            .get(Qstr::MP_QSTR_haptic_feedback)?
+            .try_into_option()?;
+        let led: Option<bool> = kwargs.get(Qstr::MP_QSTR_led)?.try_into_option()?;
         let layout = ModelUI::show_device_menu(
             failed_backup,
+            bluetooth,
             device_name,
             about_items,
             paired_devices,
             auto_lock_delay,
             screen_brightness,
+            haptic_feedback,
+            led,
         )?;
+
         let layout_obj = LayoutObj::new_root(layout)?;
         Ok(layout_obj.into())
     };
@@ -1869,11 +1878,14 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def show_device_menu(
     ///     *,
     ///     failed_backup: bool,
+    ///     bluetooth: bool | None,
     ///     device_name: str,
     ///     about_items: list[tuple[str | None, str | bytes | None, bool | None]],
     ///     paired_devices: Iterable[str],
     ///     auto_lock_delay: str | None,
     ///     screen_brightness: str | None,
+    ///     haptic_feedback: bool | None,
+    ///     led: bool | None,
     /// ) -> LayoutObj[UiResult | DeviceMenuResult | tuple[DeviceMenuResult, int]]:
     ///     """Show the device menu."""
     Qstr::MP_QSTR_show_device_menu => obj_fn_kw!(0, new_show_device_menu).as_obj(),
