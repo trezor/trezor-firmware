@@ -23,17 +23,6 @@ def get_new_session_context(
     return SessionContext(channel_ctx, session_cache)
 
 
-def get_new_seedless_session_ctx(
-    channel_ctx: Channel, session_id: int
-) -> SeedlessSessionContext:
-    """
-    Creates new `SeedlessSessionContext` that is not backed by a cache entry.
-
-    Seed cannot be derived with this type of session.
-    """
-    return SeedlessSessionContext(channel_ctx, session_id)
-
-
 def get_session_from_cache(
     channel_ctx: Channel, session_id: int
 ) -> GenericSessionContext | None:
