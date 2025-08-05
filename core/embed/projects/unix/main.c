@@ -523,7 +523,7 @@ void drivers_init() {
 #endif
 
 #ifdef USE_TROPIC
-  tropic_init();
+  tropic_init(true);
 #endif
 }
 
