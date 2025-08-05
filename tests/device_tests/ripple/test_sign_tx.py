@@ -121,7 +121,11 @@ def test_ripple_sign_invalid_fee(session: Session):
 
 
 @pytest.mark.experimental
-@pytest.mark.models("core", reason="T1 does not support payment requests")
+@pytest.mark.models(
+    "core",
+    skip="t2t1",
+    reason="T1 does not support payment requests. Payment requests not yet implemented on model T.",
+)
 def test_signtx_payment_req(session: Session):
     from trezorlib import ethereum, misc
 

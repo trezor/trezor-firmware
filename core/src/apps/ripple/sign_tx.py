@@ -56,8 +56,9 @@ async def sign_tx(msg: RippleSignTx, keychain: Keychain) -> RippleSignedTx:
             address += f"?dt={payment.destination_tag}"
         verifier.add_output(payment.amount, address)
         verifier.verify()
-        # TODO Show payment request memos.
-        await layout.require_confirm_tx(msg.payment_req.recipient_name, payment.amount)
+        await layout.require_confirm_payment_request(
+            address, msg.payment_req, msg.address_n
+        )
     else:
         if payment.destination_tag is not None:
             await layout.require_confirm_destination_tag(payment.destination_tag)
