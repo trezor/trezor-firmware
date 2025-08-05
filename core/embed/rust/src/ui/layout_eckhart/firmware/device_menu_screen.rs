@@ -59,6 +59,7 @@ pub enum DeviceMenuMsg {
     DeviceDisconnect(
         usize, /* which device to disconnect, index in the list of devices */
     ),
+    DeviceDisconnectAll,
 
     // Security menu
     PinCode,
@@ -223,8 +224,10 @@ impl DeviceMenuScreen {
                 .push(screen.add_subscreen(Subscreen::DeviceScreen(*device, i))));
         }
 
-        let devices = screen.add_paired_devices_menu(paired_devices, paired_device_indices);
-        let pair_and_connect = screen.add_pair_and_connect_menu(devices, connected_subtext);
+        // let devices = screen.add_paired_devices_menu(paired_devices,
+        // paired_device_indices);
+        let pair_and_connect =
+            screen.add_pair_and_connect_menu(paired_devices, paired_device_indices);
 
         let root =
             screen.add_root_menu(failed_backup, pair_and_connect, settings, connected_subtext);
@@ -234,7 +237,7 @@ impl DeviceMenuScreen {
         Ok(screen)
     }
 
-    fn add_paired_devices_menu(
+    fn add_pair_and_connect_menu(
         &mut self,
         paired_devices: Vec<TString<'static>, 1>,
         paired_device_indices: Vec<usize, 1>,
@@ -250,28 +253,16 @@ impl DeviceMenuScreen {
             unwrap!(items.push(item_device));
         }
 
-        let submenu_index = self.add_submenu(Submenu::new(items));
-        self.add_subscreen(Subscreen::Submenu(submenu_index))
-    }
-
-    fn add_pair_and_connect_menu(
-        &mut self,
-        manage_devices_index: usize,
-        connected_subtext: Option<TString<'static>>,
-    ) -> usize {
-        let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
-        let mut manage_paired_item = MenuItem::new(
-            TR::ble__manage_paired.into(),
-            Some(Action::GoTo(manage_devices_index)),
-        );
-        manage_paired_item.with_subtext(
-            connected_subtext.map(|t| (t, Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN))),
-        );
-        unwrap!(items.push(manage_paired_item));
         unwrap!(items.push(MenuItem::new(
             TR::ble__pair_new.into(),
             Some(Action::Return(DeviceMenuMsg::DevicePair)),
         )));
+        let mut forget_all_item = MenuItem::new(
+            TR::ble__forget_all.into(),
+            Some(Action::Return(DeviceMenuMsg::DeviceDisconnectAll)),
+        );
+        forget_all_item.with_stylesheet(MENU_ITEM_WARNING);
+        unwrap!(items.push(forget_all_item));
 
         let submenu_index = self.add_submenu(Submenu::new(items));
         self.add_subscreen(Subscreen::Submenu(submenu_index))
@@ -687,5 +678,17 @@ impl Component for DeviceMenuScreen {
 impl crate::trace::Trace for DeviceMenuScreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("DeviceMenuScreen");
+
+        match self.active_screen.deref() {
+            ActiveScreen::Menu(ref screen) => {
+                t.child("Menu", screen);
+            }
+            ActiveScreen::About(ref screen) => {
+                t.child("About", screen);
+            }
+            ActiveScreen::Empty => {
+                t.string("ActiveScreen", "None".into());
+            }
+        }
     }
 }

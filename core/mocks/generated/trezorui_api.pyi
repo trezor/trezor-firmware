@@ -839,6 +839,7 @@ class DeviceMenuResult:
     BackupFailed: ClassVar[DeviceMenuResult]
     DevicePair: ClassVar[DeviceMenuResult]
     DeviceDisconnect: ClassVar[DeviceMenuResult]
+    DeviceDisconnectAll: ClassVar[DeviceMenuResult]
     CheckBackup: ClassVar[DeviceMenuResult]
     WipeDevice: ClassVar[DeviceMenuResult]
     ScreenBrightness: ClassVar[DeviceMenuResult]

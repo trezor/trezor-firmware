@@ -154,6 +154,7 @@ impl ComponentMsgObj for DeviceMenuScreen {
             DeviceMenuMsg::DeviceDisconnect(index) => {
                 Ok(new_tuple(&[DEVICE_DISCONNECT.as_obj(), index.try_into()?])?)
             }
+            DeviceMenuMsg::DeviceDisconnectAll => Ok(DEVICE_DISCONNECT_ALL.as_obj()),
             DeviceMenuMsg::CheckBackup => Ok(CHECK_BACKUP.as_obj()),
             DeviceMenuMsg::WipeDevice => Ok(WIPE_DEVICE.as_obj()),
             DeviceMenuMsg::ScreenBrightness => Ok(SCREEN_BRIGHTNESS.as_obj()),

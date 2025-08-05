@@ -1084,5 +1084,12 @@
   "1082": "words__security",
   "1083": "homescreen__firmware_type",
   "1084": "words__led",
-  "1085": "words__bluetooth"
+  "1085": "words__bluetooth",
+  "1086": "ble__forget_all",
+  "1087": "words__forget",
+  "1088": "ble__all_devices",
+  "1089": "ble__forget_template",
+  "1090": "ble__all_forgotten",
+  "1091": "ble__connected_device",
+  "1092": "ble__current_forgotten"
 }

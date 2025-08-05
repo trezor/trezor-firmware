@@ -356,6 +356,16 @@ class LayoutContent(UnstructuredJSONReader):
 
         return [get_button_content(btn_key) for btn_key in button_keys]
 
+    def vertical_menu_content(self) -> list[str]:
+        """Get the content of the vertical menu."""
+
+        vertical_menu = self.find_unique_object_with_key_and_value(
+            "component", "VerticalMenu"
+        )
+        assert isinstance(vertical_menu, dict)
+
+        return [btn_obj["text"] for btn_obj in vertical_menu["buttons"]]
+
     def seed_words(self) -> list[str]:
         """Get all the seed words on the screen in order.
 

@@ -148,10 +148,25 @@ async def handle_device_menu() -> None:
         )
 
     elif menu_result is DeviceMenuResult.Led:
+
         pass  # TODO: implement LED setting
 
     elif menu_result is DeviceMenuResult.Bluetooth:
-        pass  # TODO: implement BLE setting
+        turned_on = ble.is_connected()
+        if turned_on:
+            # TODO: implement BLE setting
+            # ble.stop_advertising()
+            pass
+        else:
+            if ble.peer_count() > 0:
+                ble.start_advertising(True, storage_device.get_label())
+
+    elif menu_result is DeviceMenuResult.DeviceDisconnectAll:
+        from trezor.messages import BleUnpair
+
+        from apps.management.ble.unpair import unpair
+
+        await unpair(BleUnpair(all=True))
 
     elif isinstance(menu_result, tuple):
         # It's a tuple with (result_type, index)

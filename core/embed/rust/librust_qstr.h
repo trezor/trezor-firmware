@@ -30,6 +30,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_DIM;
   MP_QSTR_DONE;
   MP_QSTR_DeviceDisconnect;
+  MP_QSTR_DeviceDisconnectAll;
   MP_QSTR_DeviceMenuResult;
   MP_QSTR_DevicePair;
   MP_QSTR_HapticFeedback;
@@ -164,12 +165,15 @@ static void _librust_qstrs(void) {
   MP_QSTR_bitcoin__unverified_external_inputs;
   MP_QSTR_bitcoin__valid_signature;
   MP_QSTR_bitcoin__voting_rights;
+  MP_QSTR_ble__all_devices;
+  MP_QSTR_ble__all_forgotten;
+  MP_QSTR_ble__connected_device;
+  MP_QSTR_ble__current_forgotten;
+  MP_QSTR_ble__forget_all;
+  MP_QSTR_ble__forget_template;
   MP_QSTR_ble__manage_paired;
   MP_QSTR_ble__pair_new;
   MP_QSTR_ble__pair_title;
-  MP_QSTR_ble__unpair_all;
-  MP_QSTR_ble__unpair_current;
-  MP_QSTR_ble__unpair_title;
   MP_QSTR_ble_event;
   MP_QSTR_bluetooth;
   MP_QSTR_bootscreen;
@@ -906,6 +910,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__disconnect;
   MP_QSTR_words__error;
   MP_QSTR_words__fee;
+  MP_QSTR_words__forget;
   MP_QSTR_words__from;
   MP_QSTR_words__good_to_know;
   MP_QSTR_words__important;

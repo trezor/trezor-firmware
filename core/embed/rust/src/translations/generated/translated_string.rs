@@ -1373,9 +1373,6 @@ pub enum TranslatedString {
     instructions__tap_to_continue = 991,  // "Tap to continue"
     #[cfg(feature = "universal_fw")]
     nostr__event_kind_template = 992,  // "Event kind: {0}"
-    ble__unpair_all = 993,  // "Unpair all bluetooth devices"
-    ble__unpair_current = 994,  // "Unpair connected device"
-    ble__unpair_title = 995,  // "Unpair"
     words__unlocked = 996,  // "Unlocked"
     #[cfg(feature = "universal_fw")]
     solana__max_fees_rent = 997,  // "Max fees and rent"
@@ -1482,6 +1479,13 @@ pub enum TranslatedString {
     homescreen__firmware_type = 1083,  // "Firmware type"
     words__led = 1084,  // "LED"
     words__bluetooth = 1085,  // "Bluetooth"
+    ble__forget_all = 1086,  // "Forget all"
+    words__forget = 1087,  // "Forget"
+    ble__all_devices = 1088,  // "all remembered host devices"
+    ble__forget_template = 1089,  // "You're about to forget {0}."
+    ble__all_forgotten = 1090,  // "All hosts have been forgotten."
+    ble__connected_device = 1091,  // "connected device"
+    ble__current_forgotten = 1092,  // "The host has been forgotten."
 }
 
 impl TranslatedString {
@@ -3167,9 +3171,6 @@ impl TranslatedString {
             (Self::instructions__tap_to_continue, "Tap to continue"),
             #[cfg(feature = "universal_fw")]
             (Self::nostr__event_kind_template, "Event kind: {0}"),
-            (Self::ble__unpair_all, "Unpair all bluetooth devices"),
-            (Self::ble__unpair_current, "Unpair connected device"),
-            (Self::ble__unpair_title, "Unpair"),
             (Self::words__unlocked, "Unlocked"),
             #[cfg(feature = "universal_fw")]
             (Self::solana__max_fees_rent, "Max fees and rent"),
@@ -3283,6 +3284,13 @@ impl TranslatedString {
             (Self::homescreen__firmware_type, "Firmware type"),
             (Self::words__led, "LED"),
             (Self::words__bluetooth, "Bluetooth"),
+            (Self::ble__forget_all, "Forget all"),
+            (Self::words__forget, "Forget"),
+            (Self::ble__all_devices, "all remembered host devices"),
+            (Self::ble__forget_template, "You're about to forget {0}."),
+            (Self::ble__all_forgotten, "All hosts have been forgotten."),
+            (Self::ble__connected_device, "connected device"),
+            (Self::ble__current_forgotten, "The host has been forgotten."),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3360,12 +3368,15 @@ impl TranslatedString {
         (Qstr::MP_QSTR_bitcoin__unverified_external_inputs, Self::bitcoin__unverified_external_inputs),
         (Qstr::MP_QSTR_bitcoin__valid_signature, Self::bitcoin__valid_signature),
         (Qstr::MP_QSTR_bitcoin__voting_rights, Self::bitcoin__voting_rights),
+        (Qstr::MP_QSTR_ble__all_devices, Self::ble__all_devices),
+        (Qstr::MP_QSTR_ble__all_forgotten, Self::ble__all_forgotten),
+        (Qstr::MP_QSTR_ble__connected_device, Self::ble__connected_device),
+        (Qstr::MP_QSTR_ble__current_forgotten, Self::ble__current_forgotten),
+        (Qstr::MP_QSTR_ble__forget_all, Self::ble__forget_all),
+        (Qstr::MP_QSTR_ble__forget_template, Self::ble__forget_template),
         (Qstr::MP_QSTR_ble__manage_paired, Self::ble__manage_paired),
         (Qstr::MP_QSTR_ble__pair_new, Self::ble__pair_new),
         (Qstr::MP_QSTR_ble__pair_title, Self::ble__pair_title),
-        (Qstr::MP_QSTR_ble__unpair_all, Self::ble__unpair_all),
-        (Qstr::MP_QSTR_ble__unpair_current, Self::ble__unpair_current),
-        (Qstr::MP_QSTR_ble__unpair_title, Self::ble__unpair_title),
         (Qstr::MP_QSTR_brightness__change_title, Self::brightness__change_title),
         (Qstr::MP_QSTR_brightness__changed_title, Self::brightness__changed_title),
         (Qstr::MP_QSTR_brightness__title, Self::brightness__title),
@@ -4707,6 +4718,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__disconnect, Self::words__disconnect),
         (Qstr::MP_QSTR_words__error, Self::words__error),
         (Qstr::MP_QSTR_words__fee, Self::words__fee),
+        (Qstr::MP_QSTR_words__forget, Self::words__forget),
         (Qstr::MP_QSTR_words__from, Self::words__from),
         (Qstr::MP_QSTR_words__good_to_know, Self::words__good_to_know),
         (Qstr::MP_QSTR_words__important, Self::words__important),
