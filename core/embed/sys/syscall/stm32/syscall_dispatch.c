@@ -738,6 +738,12 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       size_t len = args[1];
       args[0] = ble_read__verified(data, len);
     } break;
+
+    case SYSCALL_BLE_SET_NAME: {
+      const uint8_t *name = (const uint8_t *)args[0];
+      size_t len = args[1];
+      ble_set_name__verified(name, len);
+    } break;
 #endif
 
 #ifdef USE_NRF

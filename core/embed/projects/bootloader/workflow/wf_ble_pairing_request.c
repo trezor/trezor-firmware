@@ -72,10 +72,7 @@ workflow_result_t workflow_ble_pairing_request(const vendor_header *const vhdr,
   uint8_t pairing_code[BLE_PAIRING_CODE_LEN] = {0};
 
   if (result != CONFIRM || !encode_pairing_code(code, pairing_code)) {
-    ble_command_t cmd = {
-        .cmd_type = BLE_REJECT_PAIRING,
-    };
-    ble_issue_command(&cmd);
+    ble_iface_end_pairing();
     return WF_OK_PAIRING_FAILED;
   }
 
@@ -118,6 +115,7 @@ workflow_result_t workflow_ble_pairing_request(const vendor_header *const vhdr,
     }
   }
 
+  ble_set_name((const uint8_t *)MODEL_FULL_NAME, sizeof(MODEL_FULL_NAME));
   return WF_OK_PAIRING_COMPLETED;
 }
 
@@ -151,10 +149,7 @@ workflow_result_t workflow_wireless_setup(const vendor_header *const vhdr,
   uint8_t pairing_code[BLE_PAIRING_CODE_LEN] = {0};
 
   if (result != CONFIRM || !encode_pairing_code(code, pairing_code)) {
-    ble_command_t cmd = {
-        .cmd_type = BLE_REJECT_PAIRING,
-    };
-    ble_issue_command(&cmd);
+    ble_iface_end_pairing();
     return WF_OK_PAIRING_FAILED;
   }
 
@@ -197,6 +192,7 @@ workflow_result_t workflow_wireless_setup(const vendor_header *const vhdr,
     }
   }
 
+  ble_set_name((const uint8_t *)MODEL_FULL_NAME, sizeof(MODEL_FULL_NAME));
   return WF_OK_PAIRING_COMPLETED;
 }
 

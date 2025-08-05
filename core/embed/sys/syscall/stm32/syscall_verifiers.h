@@ -213,6 +213,8 @@ bool ble_write__verified(const uint8_t *data, size_t len);
 
 secbool ble_read__verified(uint8_t *data, size_t len);
 
+void ble_set_name__verified(const uint8_t *name, size_t len);
+
 #endif
 
 // ---------------------------------------------------------------------

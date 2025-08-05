@@ -11,6 +11,8 @@ void ble_stop(void) {}
 
 bool ble_issue_command(ble_command_t *command) { return true; }
 
+void ble_set_name(const uint8_t *name, size_t len) {}
+
 bool ble_get_event(ble_event_t *event) { return false; }
 
 void ble_get_state(ble_state_t *state) {

@@ -115,11 +115,11 @@ pub fn pairing_mode(name: &str) -> Result<(), Error> {
     issue_command(ffi::ble_command_type_t_BLE_PAIRING_MODE, data_advname(name))
 }
 
-pub fn connectable_mode(name: &str) -> Result<(), Error> {
+pub fn switch_on(name: &str) -> Result<(), Error> {
     issue_command(ffi::ble_command_type_t_BLE_SWITCH_ON, data_advname(name))
 }
 
-pub fn stop_advertising() -> Result<(), Error> {
+pub fn switch_off() -> Result<(), Error> {
     issue_command(ffi::ble_command_type_t_BLE_SWITCH_OFF, data_none())
 }
 
@@ -141,6 +141,11 @@ pub fn unpair() -> Result<(), Error> {
 
 pub fn disconnect() -> Result<(), Error> {
     issue_command(ffi::ble_command_type_t_BLE_DISCONNECT, data_none())
+}
+
+pub fn set_name(name: &str) {
+    let bytes = prefix_utf8_bytes(name, ADV_NAME_LEN);
+    unsafe { ffi::ble_set_name(bytes.as_ptr(), bytes.len()) }
 }
 
 pub fn start_comm() {

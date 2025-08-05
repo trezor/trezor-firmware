@@ -61,9 +61,16 @@ def start_advertising(whitelist: bool, name: str | None):
 
 
 # rust/src/trezorhal/ble/micropython.rs
-def stop_advertising():
+def set_name(name: str | None):
     """
-    Stop advertising.
+    Set advertising name.
+    """
+
+
+# rust/src/trezorhal/ble/micropython.rs
+def switch_off():
+    """
+    Stop advertising and disconnect any connected devices.
     Raises exception if BLE driver reports an error.
     """
 
