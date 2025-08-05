@@ -682,21 +682,6 @@ def tutorial(br_code: ButtonRequestType = BR_CODE_OTHER) -> Awaitable[ui.UiResul
     return interact(trezorui_api.tutorial(), "tutorial", br_code)
 
 
-async def should_show_payment_request_details(
-    recipient_name: str,
-    amount: str,
-    memos: list[str],
-) -> bool:
-    memos_str = "\n".join(memos)
-    await _placeholder_confirm(
-        "confirm_payment_request",
-        TR.send__title_confirm_sending,
-        description=f"{amount} to\n{recipient_name}\n{memos_str}",
-        br_code=ButtonRequestType.ConfirmOutput,
-    )
-    return False
-
-
 async def should_show_more(
     title: str,
     para: Iterable[tuple[str, bool]],
