@@ -22,6 +22,7 @@ class TestCoins(unittest.TestCase):
             ("LTC", "Litecoin", 48),
             ("ZEC", "Zcash", 7352),
             ("TAZ", "Zcash Testnet", 7461),
+            ("SATOX", "Satoxcoin", 0),
         ]
         if utils.INTERNAL_MODEL in (  # pylint: disable=internal-model-tuple-comparison
             "T2T1",
