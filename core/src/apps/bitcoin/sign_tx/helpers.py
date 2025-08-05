@@ -583,7 +583,12 @@ def _sanitize_tx_output(txo: TxOutput, coin: CoinInfo) -> TxOutput:
 
 def _sanitize_payment_req(payment_req: PaymentRequest) -> PaymentRequest:
     for memo in payment_req.memos:
-        if (memo.text_memo, memo.refund_memo, memo.coin_purchase_memo).count(None) != 2:
+        if (
+            memo.text_memo,
+            memo.text_details_memo,
+            memo.refund_memo,
+            memo.coin_purchase_memo,
+        ).count(None) != 3:
             raise DataError(
                 "Exactly one memo type must be specified in each PaymentRequestMemo."
             )
