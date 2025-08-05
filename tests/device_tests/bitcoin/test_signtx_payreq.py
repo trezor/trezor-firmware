@@ -15,16 +15,22 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from collections import namedtuple
+from itertools import product
 
 import pytest
 
-from trezorlib import btc, messages, misc, models
+from trezorlib import btc, ethereum, messages, misc
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
-from ...input_flows import InputFlowPaymentRequestDetails
-from ..payment_req import CoinPurchaseMemo, RefundMemo, TextMemo, make_payment_request
+from ..payment_req import (
+    CoinPurchaseMemo,
+    RefundMemo,
+    TextDetailsMemo,
+    TextMemo,
+    make_payment_request,
+)
 from .signtx import forge_prevtx
 
 # address at seed "all all all..." path m/84h/1h/0h/0/0
@@ -36,12 +42,89 @@ PREV_TXES = {PREV_HASH: PREV_TX}
 pytestmark = [pytest.mark.models("core"), pytest.mark.experimental]
 
 
-def case(id, *args, altcoin: bool = False, models: str | None = None):
+@pytest.mark.models(
+    "core",
+    skip="t2t1",
+    reason="T1 does not support payment requests. Payment requests not yet implemented on model T.",
+)
+@pytest.mark.altcoin
+@pytest.mark.parametrize("has_text,has_refund", list(product([True, False], repeat=2)))
+def test_signtx_payment_req_swap_with_text_and_refund(
+    session: Session, has_text: bool, has_refund: bool
+):
+    """The most basic use case for payment requests is a swap between two coins with an optional refund address and an optional text..."""
+    inputs = [
+        messages.TxInputType(
+            address_n=parse_path("m/84h/1h/0h/0/0"),
+            amount=12_300_000,
+            prev_hash=PREV_HASH,
+            prev_index=0,
+            script_type=messages.InputScriptType.SPENDWITNESS,
+        )
+    ]
+
+    outputs = [
+        messages.TxOutputType(
+            address="2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp",
+            amount=5_000_000,
+            script_type=messages.OutputScriptType.PAYTOADDRESS,
+            payment_req_index=0,
+        )
+    ]
+
+    swap_memo = CoinPurchaseMemo(
+        amount="0.0636 ETH",
+        coin_name="Ethereum",
+        slip44=60,
+        address_n=parse_path("m/44h/60h/0h/0/0"),
+    )
+    swap_memo.address_resp = ethereum.get_authenticated_address(
+        session, swap_memo.address_n
+    )
+
+    memos = [swap_memo]
+
+    if has_text:
+        memos.append(
+            TextDetailsMemo(
+                title="But why ...", text="... would you swap your BTC for ETH?"
+            )
+        )
+
+    if has_refund:
+        refund_memo = RefundMemo(address_n=parse_path("m/44h/1h/0h/1/0"))
+        refund_memo.address_resp = btc.get_authenticated_address(
+            session, "Testnet", refund_memo.address_n
+        )
+        memos.append(refund_memo)
+
+    nonce = misc.get_nonce(session)
+
+    payment_req = make_payment_request(
+        session,
+        recipient_name="trezor.io",
+        slip44=1,
+        outputs=[(o.amount, o.address) for o in outputs],
+        memos=memos,
+        nonce=nonce,
+    )
+
+    btc.sign_tx(
+        session,
+        "Testnet",
+        inputs,
+        [outputs[0]],
+        prev_txes=PREV_TXES,
+        payment_reqs=[payment_req],
+    )
+
+
+def case(id, *args, altcoin: bool = False, skip: str | None = None):
     marks = []
     if altcoin:
         marks.append(pytest.mark.altcoin)
-    if models:
-        marks.append(pytest.mark.models(models))
+    if skip:
+        marks.append(pytest.mark.models(skip=skip))
     return pytest.param(*args, id=id, marks=marks)
 
 
@@ -76,25 +159,25 @@ outputs = [
 
 memos1 = [
     CoinPurchaseMemo(
-        amount="15.9636 DASH",
-        coin_name="Dash",
-        slip44=5,
-        address_n=parse_path("m/44h/5h/0h/1/0"),
+        amount="15.9636 DOGE",
+        coin_name="Dogecoin",
+        slip44=3,
+        address_n=parse_path("m/44h/3h/0h/1/0"),
     ),
 ]
 
 memos2 = [
     CoinPurchaseMemo(
-        amount="3.1896 DASH",
-        coin_name="Dash",
-        slip44=5,
-        address_n=parse_path("m/44h/5h/0h/1/0"),
+        amount="3.1896 DOGE",
+        coin_name="Dogecoin",
+        slip44=3,
+        address_n=parse_path("m/44h/3h/0h/1/0"),
     ),
     CoinPurchaseMemo(
-        amount="831.570802 GRS",
-        coin_name="Groestlcoin",
-        slip44=17,
-        address_n=parse_path("m/44h/17h/0h/0/3"),
+        amount="831.570802 BCH",
+        coin_name="Bcash",
+        slip44=145,
+        address_n=parse_path("m/44h/145h/0h/0/3"),
     ),
 ]
 
@@ -114,28 +197,42 @@ SERIALIZED_TX = "01000000000101e29305e85821ea86f2bca1fcfe45e7cb0c8de87b612479ee6
             "out0",
             (PaymentRequestParams([0], memos1, get_nonce=True),),
             altcoin=True,
-            models="t2t1",
+            skip="t2t1",
         ),
         case(
             "out1",
             (PaymentRequestParams([1], memos2, get_nonce=True),),
             altcoin=True,
-            models="t2t1",
+            skip="t2t1",
         ),
-        case("out2", (PaymentRequestParams([2], [], get_nonce=True),)),
+        case(
+            "out2",
+            (PaymentRequestParams([2], [], get_nonce=True),),
+            skip="t2t1",
+        ),
         case(
             "out0+out1",
             (
                 PaymentRequestParams([0], [], get_nonce=False),
                 PaymentRequestParams([1], [], get_nonce=True),
             ),
+            skip="t2t1",
         ),
         case(
             "out01",
             (PaymentRequestParams([0, 1], memos3, get_nonce=True),),
+            skip="t2t1",
         ),
-        case("out012", (PaymentRequestParams([0, 1, 2], [], get_nonce=True),)),
-        case("out12", (PaymentRequestParams([1, 2], [], get_nonce=True),)),
+        case(
+            "out012",
+            (PaymentRequestParams([0, 1, 2], [], get_nonce=True),),
+            skip="t2t1",
+        ),
+        case(
+            "out12",
+            (PaymentRequestParams([1, 2], [], get_nonce=True),),
+            skip="t2t1",
+        ),
     ),
 )
 def test_payment_request(session: Session, payment_request_params):
@@ -194,43 +291,7 @@ def test_payment_request(session: Session, payment_request_params):
         )
 
 
-@pytest.mark.models(skip="safe3")
-def test_payment_request_details(session: Session):
-    if session.model is models.T2B1:
-        pytest.skip("Details not implemented on T2B1")
-
-    # Test that payment request details are shown when requested.
-    outputs[0].payment_req_index = 0
-    outputs[1].payment_req_index = 0
-    outputs[2].payment_req_index = None
-    nonce = misc.get_nonce(session)
-    payment_reqs = [
-        make_payment_request(
-            session,
-            recipient_name="trezor.io",
-            slip44=1,
-            outputs=[(txo.amount, txo.address) for txo in outputs[:2]],
-            memos=[TextMemo("Invoice #87654321.")],
-            nonce=nonce,
-        )
-    ]
-
-    with session.client as client:
-        IF = InputFlowPaymentRequestDetails(client, outputs)
-        client.set_input_flow(IF.get())
-
-        _, serialized_tx = btc.sign_tx(
-            session,
-            "Testnet",
-            inputs,
-            outputs,
-            prev_txes=PREV_TXES,
-            payment_reqs=payment_reqs,
-        )
-
-    assert serialized_tx.hex() == SERIALIZED_TX
-
-
+@pytest.mark.models(skip="t2t1")
 def test_payment_req_wrong_amount(session: Session):
     # Test wrong total amount in payment request.
     outputs[0].payment_req_index = 0
@@ -258,6 +319,7 @@ def test_payment_req_wrong_amount(session: Session):
         )
 
 
+@pytest.mark.models(skip="t2t1")
 def test_payment_req_wrong_mac_refund(session: Session):
     # Test wrong MAC in payment request memo.
     memo = RefundMemo(parse_path("m/44h/1h/0h/1/0"))
@@ -292,15 +354,15 @@ def test_payment_req_wrong_mac_refund(session: Session):
         )
 
 
+@pytest.mark.models(skip="t2t1")
 @pytest.mark.altcoin
-@pytest.mark.models("t2t1", reason="Dash not supported on Safe family")
 def test_payment_req_wrong_mac_purchase(session: Session):
     # Test wrong MAC in payment request memo.
     memo = CoinPurchaseMemo(
-        amount="22.34904 DASH",
-        coin_name="Dash",
-        slip44=5,
-        address_n=parse_path("m/44h/5h/0h/1/0"),
+        amount="22.34904 DOGE",
+        coin_name="Dogecoin",
+        slip44=3,
+        address_n=parse_path("m/44h/3h/0h/1/0"),
     )
     memo.address_resp = btc.get_authenticated_address(
         session, memo.coin_name, memo.address_n
@@ -333,6 +395,7 @@ def test_payment_req_wrong_mac_purchase(session: Session):
         )
 
 
+@pytest.mark.models(skip="t2t1")
 def test_payment_req_wrong_output(session: Session):
     # Test wrong output in payment request.
     outputs[0].payment_req_index = 0
