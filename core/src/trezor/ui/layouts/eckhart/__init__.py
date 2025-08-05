@@ -634,36 +634,6 @@ async def confirm_output(
     )
 
 
-async def should_show_payment_request_details(
-    recipient_name: str,
-    amount: str,
-    memos: list[str],
-) -> bool:
-    """Return True if the user wants to show payment request details (they click a
-    special button) and False when the user wants to continue without showing details.
-
-    Raises ActionCancelled if the user cancels.
-    """
-    result = await interact(
-        trezorui_api.confirm_with_info(
-            title=TR.send__title_sending,
-            items=[(f"{amount} to\n{recipient_name}", False)]
-            + [(memo, False) for memo in memos],
-            verb=TR.buttons__confirm,
-            verb_info=TR.buttons__details,
-        ),
-        "confirm_payment_request",
-        ButtonRequestType.ConfirmOutput,
-    )
-
-    if result is CONFIRMED:
-        return False
-    elif result is INFO:
-        return True
-    else:
-        raise ActionCancelled
-
-
 async def should_show_more(
     title: str,
     para: Iterable[tuple[str | bytes, bool]],
