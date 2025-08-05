@@ -102,6 +102,8 @@ void prodtest_pm_suspend(cli_t* cli) {
   }
 
   cli_ok(cli, "%s", flags_str);
+
+  prodtest_show_homescreen();
 }
 
 void prodtest_pm_charge_disable(cli_t* cli) {
