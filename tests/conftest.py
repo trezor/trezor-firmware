@@ -21,15 +21,13 @@ import os
 import typing as t
 from enum import IntEnum
 from pathlib import Path
-from time import sleep
 
-import cryptography
 import pytest
 import xdist
 from _pytest.python import IdMaker
 from _pytest.reports import TestReport
 
-from trezorlib import debuglink, exceptions, log, messages, models
+from trezorlib import debuglink, log, messages, models
 from trezorlib.client import Channel, ProtocolVersion
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.device import apply_settings
@@ -294,8 +292,6 @@ def _client_unlocked(
 
     _check_protocol(request, _raw_client)
 
-    protocol_version = _raw_client.protocol_version
-
     sd_marker = request.node.get_closest_marker("sd_card")
     if sd_marker and not _raw_client.features.sd_card_present:
         raise RuntimeError(
@@ -318,40 +314,26 @@ def _client_unlocked(
     # Resetting all the debug events to not be influenced by previous test
     _raw_client.debug.reset_debug_events()
 
-    # Make sure there are no GC leaks from previous tests
-    _raw_client.debug.check_gc_info(fail_on_gc_leak)
-
     if test_ui:
         # we need to reseed before the wipe
         _raw_client.debug.reseed(0)
+
+    # Use DebugLink to wipe (since THP channel requires unlocked device)
+    if _raw_client.model is not models.T1B1:
+        _raw_client.debug._call(messages.WipeDevice())
+    else:
+        wipe_device(_raw_client.get_seedless_session())
+
+    # Make sure there are no GC leaks from previous tests
+    # Also wait for the event loop restart after wipe
+    _raw_client.debug.check_gc_info(fail_on_gc_leak)
 
     if sd_marker:
         should_format = sd_marker.kwargs.get("formatted", True)
         _raw_client.debug.erase_sd_card(format=should_format)
 
-    while True:
-        try:
-            if _raw_client.is_invalidated:
-                try:
-                    _raw_client = _raw_client.get_new_client()
-                except exceptions.ThpError as e:
-                    LOG.error(f"Failed to re-create a client: {e}")
-                    sleep(LOCK_TIME)
-                    try:
-                        _raw_client = _raw_client.get_new_client()
-                    except Exception:
-                        sleep(LOCK_TIME)
-                        _raw_client = _get_raw_client(request)
-
-            session = _raw_client.get_seedless_session()
-            wipe_device(session)
-            if protocol_version is ProtocolVersion.V2:
-                sleep(LOCK_TIME)  # Makes tests more stable (wait for wipe to finish)
-            break
-        except cryptography.exceptions.InvalidTag:
-            # Get a new client
-            _raw_client = _get_raw_client(request)
-
+    # Re-open client for this test
+    _raw_client = _raw_client.get_new_client()
     _raw_client.reset_protocol()
 
     if not _raw_client.features.bootloader_mode:
