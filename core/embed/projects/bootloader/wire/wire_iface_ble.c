@@ -149,6 +149,13 @@ void ble_iface_deinit(void) {
 void ble_iface_end_pairing(void) {
   ble_state_t state = {0};
 
+  ble_command_t reject_cmd = {
+      .cmd_type = BLE_REJECT_PAIRING,
+  };
+  ble_issue_command(&reject_cmd);
+
+  ble_set_name((const uint8_t*)MODEL_FULL_NAME, sizeof(MODEL_FULL_NAME));
+
   ble_get_state(&state);
 
   if (state.peer_count > 0) {
@@ -176,22 +183,6 @@ bool ble_iface_start_pairing(void) {
 
   uint16_t retry_cnt = 0;
 
-  while (state.connected && retry_cnt < 10) {
-    ble_command_t cmd_disconnect = {
-        .cmd_type = BLE_DISCONNECT,
-    };
-    ble_issue_command(&cmd_disconnect);
-    systick_delay_ms(20);
-    ble_get_state(&state);
-    retry_cnt++;
-  }
-
-  if (state.connected) {
-    return false;
-  }
-
-  ble_event_flush();
-
   char adv_name[BLE_ADV_NAME_LEN];
   mini_snprintf(adv_name, sizeof(adv_name), "%s (%c%c%c)", MODEL_FULL_NAME,
                 get_random_char(), get_random_char(), get_random_char());
@@ -204,7 +195,9 @@ bool ble_iface_start_pairing(void) {
                    }},
   };
   memcpy(cmd.data.adv_start.name, adv_name, BLE_ADV_NAME_LEN);
-  ble_issue_command(&cmd);
+  if (!ble_issue_command(&cmd)) {
+    return false;
+  }
 
   retry_cnt = 0;
   ble_get_state(&state);
