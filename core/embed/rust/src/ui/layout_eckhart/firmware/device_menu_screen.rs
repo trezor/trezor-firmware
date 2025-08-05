@@ -199,7 +199,16 @@ impl DeviceMenuScreen {
         };
 
         let about = screen.add_subscreen(Subscreen::AboutScreen);
-        let security = screen.add_security_menu(pin_code, auto_lock_delay, wipe_code, check_backup);
+        let security = if pin_code.is_none()
+            && auto_lock_delay.is_none()
+            && wipe_code.is_none()
+            && !check_backup
+        {
+            None
+        } else {
+            Some(screen.add_security_menu(pin_code, auto_lock_delay, wipe_code, check_backup))
+        };
+
         let device =
             screen.add_device_menu(device_name, about, screen_brightness, haptic_feedback, led);
         let settings = screen.add_settings_menu(bluetooth, security, device);
@@ -271,7 +280,7 @@ impl DeviceMenuScreen {
     fn add_settings_menu(
         &mut self,
         bluetooth: Option<bool>,
-        security_index: usize,
+        security_index: Option<usize>,
         device_index: usize,
     ) -> usize {
         let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
@@ -293,10 +302,13 @@ impl DeviceMenuScreen {
             unwrap!(items.push(bluetooth_item));
         }
 
-        unwrap!(items.push(MenuItem::new(
-            TR::words__security.into(),
-            Some(Action::GoTo(security_index))
-        )));
+        if let Some(security_index) = security_index {
+            unwrap!(items.push(MenuItem::new(
+                TR::words__security.into(),
+                Some(Action::GoTo(security_index))
+            )));
+        }
+
         unwrap!(items.push(MenuItem::new(
             TR::words__device.into(),
             Some(Action::GoTo(device_index))
