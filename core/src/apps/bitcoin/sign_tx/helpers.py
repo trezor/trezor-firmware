@@ -90,17 +90,25 @@ class UiConfirmDecredSSTXSubmission(UiConfirm):
 class UiConfirmPaymentRequest(UiConfirm):
     def __init__(
         self,
+        provider_address: str,
         payment_req: PaymentRequest,
         coin: CoinInfo,
         amount_unit: AmountUnit,
+        address_n: Bip32Path | None,
     ) -> None:
+        self.provider_address = provider_address
         self.payment_req = payment_req
         self.amount_unit = amount_unit
         self.coin = coin
+        self.address_n = address_n
 
-    def confirm_dialog(self) -> Awaitable[bool]:
-        return layout.should_show_payment_request_details(
-            self.payment_req, self.coin, self.amount_unit
+    def confirm_dialog(self) -> Awaitable[None]:
+        return layout.show_payment_request_details(
+            self.provider_address,
+            self.payment_req,
+            self.coin,
+            self.amount_unit,
+            self.address_n,
         )
 
     __eq__ = utils.obj_eq
@@ -266,8 +274,8 @@ def confirm_decred_sstx_submission(output: TxOutput, coin: CoinInfo, amount_unit
     return (yield UiConfirmDecredSSTXSubmission(output, coin, amount_unit))  # type: ignore [awaitable-return-type]
 
 
-def should_show_payment_request_details(payment_req: PaymentRequest, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[bool]:  # type: ignore [awaitable-return-type]
-    return (yield UiConfirmPaymentRequest(payment_req, coin, amount_unit))  # type: ignore [awaitable-return-type]
+def show_payment_request_details(provider_address: str, payment_req: PaymentRequest, coin: CoinInfo, amount_unit: AmountUnit, address_n: Bip32Path | None) -> Awaitable[bool]:  # type: ignore [awaitable-return-type]
+    return (yield UiConfirmPaymentRequest(provider_address, payment_req, coin, amount_unit, address_n))  # type: ignore [awaitable-return-type]
 
 
 def confirm_replacement(description: str, txid: bytes) -> Awaitable[Any]:  # type: ignore [awaitable-return-type]
