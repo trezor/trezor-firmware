@@ -695,6 +695,10 @@ uint32_t ble_read(uint8_t *data, uint16_t len) {
   return (uint32_t)syscall_invoke2((uint32_t)data, len, SYSCALL_BLE_READ);
 }
 
+void ble_set_name(const uint8_t *name, size_t len) {
+  syscall_invoke2((uint32_t)name, len, SYSCALL_BLE_SET_NAME);
+}
+
 #endif
 
 #ifdef USE_NRF

@@ -843,6 +843,20 @@ access_violation:
   apptask_access_violation();
   return 0;
 }
+
+void ble_set_name__verified(const uint8_t *name, size_t len) {
+  if (!probe_read_access(name, len)) {
+    goto access_violation;
+  }
+
+  ble_set_name(name, len);
+
+  return;
+
+access_violation:
+  apptask_access_violation();
+}
+
 #endif
 
 // ---------------------------------------------------------------------
