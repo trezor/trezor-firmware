@@ -151,30 +151,73 @@ async def confirm_decred_sstx_submission(
     )
 
 
-async def should_show_payment_request_details(
-    msg: PaymentRequest,
+async def show_payment_request_details(
+    provider_address: str,
+    payment_request: PaymentRequest,
     coin: CoinInfo,
     amount_unit: AmountUnit,
-) -> bool:
+    address_n: Bip32Path | None,
+) -> None:
     from trezor import wire
 
-    memo_texts: list[str] = []
-    for m in msg.memos:
-        if m.text_memo is not None:
-            memo_texts.append(m.text_memo.text)
-        elif m.refund_memo is not None:
-            pass
-        elif m.coin_purchase_memo is not None:
-            memo_texts.append(f"{TR.words__buying} {m.coin_purchase_memo.amount}.")
+    assert payment_request.amount is not None  # required for non-CoinJoin
+    total_amount = format_coin_amount(payment_request.amount, coin, amount_unit)
+
+    texts = []
+    refunds = []
+    trades = []
+    for memo in payment_request.memos:
+        if memo.text_memo is not None:
+            texts.append((None, memo.text_memo.text))
+        elif memo.text_details_memo is not None:
+            texts.append((memo.text_details_memo.title, memo.text_details_memo.text))
+        elif memo.refund_memo:
+            refund_address_n = memo.refund_memo.address_n
+            refund_account = account_label(coin, refund_address_n)
+            refund_account_path = (
+                address_n_to_str(refund_address_n) if refund_address_n else None
+            )
+            refunds.append(
+                (memo.refund_memo.address, refund_account, refund_account_path)
+            )
+        elif memo.coin_purchase_memo:
+            coin_purchase_address_n = memo.coin_purchase_memo.address_n
+            coin_purchase_account = account_label(coin, coin_purchase_address_n)
+            coin_purchase_account_path = (
+                address_n_to_str(coin_purchase_address_n)
+                if coin_purchase_address_n
+                else None
+            )
+            trades.append(
+                (
+                    f"-\u00A0{total_amount}",
+                    f"+\u00A0{memo.coin_purchase_memo.amount}",
+                    memo.coin_purchase_memo.address,
+                    coin_purchase_account,
+                    coin_purchase_account_path,
+                )
+            )
         else:
             raise wire.DataError("Unrecognized memo type in payment request memo.")
 
-    assert msg.amount is not None
+    account = account_label(coin, address_n)
+    account_path = address_n_to_str(address_n) if address_n else None
+    account_items = []
+    if account:
+        account_items.append((TR.words__account, account))
+    if account_path:
+        account_items.append((TR.address_details__derivation_path, account_path))
 
-    return await layouts.should_show_payment_request_details(
-        msg.recipient_name,
-        format_coin_amount(msg.amount, coin, amount_unit),
-        memo_texts,
+    await layouts.confirm_payment_request(
+        payment_request.recipient_name,
+        provider_address,
+        texts,
+        refunds,
+        trades,
+        account_items,
+        None,
+        None,
+        None,
     )
 
 

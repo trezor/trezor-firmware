@@ -523,7 +523,9 @@ class Bitcoin:
                 tx_ack_payment_req = await helpers.request_payment_req(
                     self.tx_req, payment_req_index
                 )
-                await approver.add_payment_request(tx_ack_payment_req, self.keychain)
+                await approver.add_payment_request(
+                    tx_ack_payment_req, self.keychain, self.tx_info, txo
+                )
             self.payment_req_index = payment_req_index
 
         if self.tx_info.output_is_change(txo):
