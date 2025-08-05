@@ -127,17 +127,20 @@ class ProtocolV2Channel(Channel):
 
     def prepare_channel_without_pairing(self, credential: bytes | None = None) -> int:
         self._reset_sync_bits()
-        self._do_channel_allocation()
+        # allow skipping unrelated response packets (e.g. in case of retransmissions)
+        self._do_channel_allocation(retries=50)
         return self._do_handshake(credential=credential)
 
     def _reset_sync_bits(self) -> None:
         self.sync_bit_send = 0
         self.sync_bit_receive = 0
 
-    def _do_channel_allocation(self) -> None:
+    def _do_channel_allocation(self, retries: int = 0) -> None:
         channel_allocation_nonce = os.urandom(8)
         self._send_channel_allocation_request(channel_allocation_nonce)
-        cid, dp = self._read_channel_allocation_response(channel_allocation_nonce)
+        cid, dp = self._read_channel_allocation_response(
+            channel_allocation_nonce, retries=retries
+        )
         self.channel_id = cid
         self.device_properties = dp
 
@@ -149,13 +152,15 @@ class ProtocolV2Channel(Channel):
         )
 
     def _read_channel_allocation_response(
-        self,
-        expected_nonce: bytes,
+        self, expected_nonce: bytes, retries: int = 0
     ) -> tuple[int, bytes]:
-        header, payload = self._read_until_valid_crc_check()
-        if not self._is_valid_channel_allocation_response(
-            header, payload, expected_nonce
-        ):
+        for _ in range(1 + retries):
+            header, payload = self._read_until_valid_crc_check()
+            if self._is_valid_channel_allocation_response(
+                header, payload, expected_nonce
+            ):
+                break
+        else:
             raise Exception("Invalid channel allocation response.")
 
         channel_id = int.from_bytes(payload[8:10], "big")
