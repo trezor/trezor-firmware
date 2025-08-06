@@ -394,14 +394,7 @@ impl FirmwareUI for UIBolt {
         _verb: Option<TString<'static>>,
         _external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let paragraphs = PropsList::new(
-            items,
-            &theme::TEXT_NORMAL,
-            &theme::TEXT_MONO,
-            &theme::TEXT_MONO_DATA,
-            theme::PROP_INNER_SPACING,
-            theme::PROPS_SPACING,
-        )?;
+        let paragraphs = PropsList::new(items)?;
         let page = if hold {
             ButtonPage::new(paragraphs.into_paragraphs(), theme::BG).with_hold()?
         } else {

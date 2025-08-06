@@ -452,14 +452,7 @@ impl FirmwareUI for UIDelizia {
         _verb: Option<TString<'static>>,
         _external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let paragraphs = PropsList::new(
-            items,
-            &theme::TEXT_SUB_GREY_LIGHT,
-            &theme::TEXT_MONO,
-            &theme::TEXT_MONO_DATA,
-            theme::PROP_INNER_SPACING,
-            theme::PROPS_SPACING,
-        )?;
+        let paragraphs = PropsList::new(items)?;
 
         let flow = flow::new_confirm_action_simple(
             paragraphs.into_paragraphs(),

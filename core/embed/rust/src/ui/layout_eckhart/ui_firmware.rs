@@ -347,26 +347,12 @@ impl FirmwareUI for UIEckhart {
     ) -> Result<impl LayoutMaybeTrace, Error> {
         // collect available info
         let account_paragraphs = if let Some(items) = account_items {
-            Some(PropsList::new(
-                items,
-                &theme::TEXT_SMALL_LIGHT,
-                &theme::TEXT_MONO_LIGHT,
-                &theme::TEXT_MONO_LIGHT,
-                theme::PROP_INNER_SPACING,
-                theme::PROPS_SPACING,
-            )?)
+            Some(PropsList::new(items)?)
         } else {
             None
         };
         let extra_paragraphs = if let Some(items) = extra_items {
-            Some(PropsList::new(
-                items,
-                &theme::TEXT_SMALL_LIGHT,
-                &theme::TEXT_MONO_LIGHT,
-                &theme::TEXT_MONO_LIGHT,
-                theme::PROP_INNER_SPACING,
-                theme::PROPS_SPACING,
-            )?)
+            Some(PropsList::new(items)?)
         } else {
             None
         };
@@ -395,7 +381,7 @@ impl FirmwareUI for UIEckhart {
         verb: Option<TString<'static>>,
         _external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let paragraphs = PropsList::new(
+        let paragraphs = PropsList::new_styled(
             items,
             &theme::TEXT_SMALL_LIGHT,
             &theme::TEXT_MONO_MEDIUM_LIGHT,
@@ -743,7 +729,7 @@ impl FirmwareUI for UIEckhart {
         };
 
         let summary_paragraphs = if let Some(items) = summary_items {
-            Some(PropsList::new(
+            Some(PropsList::new_styled(
                 items,
                 &theme::TEXT_SMALL_LIGHT,
                 &theme::TEXT_MONO_MEDIUM_LIGHT,
@@ -756,7 +742,7 @@ impl FirmwareUI for UIEckhart {
         };
 
         let fee_paragraphs = if let Some(items) = fee_items {
-            Some(PropsList::new(
+            Some(PropsList::new_styled(
                 items,
                 &theme::TEXT_SMALL_LIGHT,
                 &theme::TEXT_MONO_MEDIUM_LIGHT,
@@ -1294,7 +1280,7 @@ impl FirmwareUI for UIEckhart {
             &theme::TEXT_MONO_LIGHT
         };
 
-        let paragraphs = PropsList::new(
+        let paragraphs = PropsList::new_styled(
             items,
             &theme::TEXT_SMALL_LIGHT,
             &theme::TEXT_MONO_MEDIUM_LIGHT,
