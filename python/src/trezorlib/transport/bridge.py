@@ -132,6 +132,8 @@ class BridgeTransport(Transport):
             raise TransportException("Debugging not supported on legacy Bridge")
         self.device = device
         self.session: str | None = device["session"]
+        if debug:
+            self.session = device["debugSession"]
         self.debug = debug
         self.legacy = legacy
 
