@@ -122,9 +122,9 @@ impl PropsList {
         key_value_padding: i16,
         props_padding: i16,
     ) -> Result<Self, Error> {
-        let empty_items = List::alloc(&[])?; // Create an empty GC list
+        let empty_list = List::alloc(&[])?; // Create an empty GC list
         Ok(Self {
-            items: empty_items,
+            items: empty_list,
             key_font,
             value_font,
             value_mono_font,
