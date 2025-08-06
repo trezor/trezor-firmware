@@ -1344,6 +1344,9 @@ if not utils.BITCOIN_ONLY:
         br_name: str = "confirm_solana_staking_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
+        summary_items: list[PropertyType] = [fee_item]
+        if amount_item:
+            summary_items.append(amount_item)
         await raise_if_cancelled(
             trezorui_api.flow_confirm_output(
                 title=title,
@@ -1363,14 +1366,7 @@ if not utils.BITCOIN_ONLY:
                 extra_item=blockhash_item,
                 fee_items=list(fee_details) if fee_details else None,
                 summary_title=title,
-                summary_items=(
-                    [
-                        amount_item,
-                        fee_item,
-                    ]
-                    if amount_item
-                    else [fee_item]
-                ),
+                summary_items=summary_items,
                 summary_br_name="confirm_total",
                 summary_br_code=ButtonRequestType.SignTx,
                 cancel_text=TR.buttons__cancel,
