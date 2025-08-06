@@ -55,6 +55,11 @@ async def change_pin(msg: ChangePin) -> Success:
     else:
         msg_wire = "PIN removed"
 
+    if __debug__:
+        import storage.debug
+
+        storage.debug.set_pin(newpin)
+
     await success_pin_change(curpin, newpin)
     return Success(message=msg_wire)
 

@@ -36,6 +36,12 @@ class ThpError(WireError):
     pass
 
 
+class ThpTransportBusy(ThpError):
+
+    def __init__(self, channel_id: int) -> None:
+        self.channel_id = channel_id
+
+
 class ThpDecryptionError(ThpError):
     pass
 
@@ -69,7 +75,7 @@ class ThpErrorType(IntEnum):
 class ChannelState(IntEnum):
     UNALLOCATED = 0
     TH1 = 1
-    TH2 = 2
+    TH2 = 2  # TODO: remove if not needed
     TP0 = 3
     TP1 = 4
     TP2 = 5

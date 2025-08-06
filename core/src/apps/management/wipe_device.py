@@ -13,7 +13,7 @@ if __debug__:
 
 async def wipe_device(msg: WipeDevice) -> NoReturn:
     import storage
-    from trezor import TR, config, loop, translations
+    from trezor import TR, config, translations
     from trezor.enums import ButtonRequestType
     from trezor.messages import Success
     from trezor.pin import render_empty_loader
@@ -45,6 +45,11 @@ async def wipe_device(msg: WipeDevice) -> NoReturn:
     # clear cache - exclude current context
     storage.wipe_cache(excluded=try_get_ctx_ids())
 
+    if __debug__:
+        import storage.debug
+
+        storage.debug.set_pin(None)
+
     # erase translations
     translations.deinit()
     translations.erase()
@@ -58,6 +63,5 @@ async def wipe_device(msg: WipeDevice) -> NoReturn:
 
     # reload settings
     reload_settings_from_storage()
-    loop.clear()
     if __debug__:
         log.debug(__name__, "Device wipe - finished")

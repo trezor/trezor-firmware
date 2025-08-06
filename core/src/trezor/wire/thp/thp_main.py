@@ -2,16 +2,21 @@ import ustruct
 from micropython import const
 from typing import TYPE_CHECKING
 
-from storage.cache_thp import BROADCAST_CHANNEL_ID
-from trezor import io, loop, utils
+from storage.cache_thp import BROADCAST_CHANNEL_ID, SESSION_ID_LENGTH, TAG_LENGTH
+from trezor import io, loop, protobuf, utils
+from trezor.wire.protocol_common import Message
 
 from . import (
     CHANNEL_ALLOCATION_REQ,
     CODEC_V1,
+    ENCRYPTED,
     ChannelState,
     PacketHeader,
     ThpError,
     ThpErrorType,
+)
+from . import alternating_bit_protocol as ABP
+from . import (
     channel_manager,
     checksum,
     control_byte,
@@ -20,9 +25,12 @@ from . import (
 )
 from .channel import Channel
 from .checksum import CHECKSUM_LENGTH
+from .memory_manager import encode_into_buffer
+from .received_message_handler import handle_checksum_and_acks, handle_received_message
 from .writer import (
     INIT_HEADER_LENGTH,
     MAX_PAYLOAD_LEN,
+    MESSAGE_TYPE_LENGTH,
     write_payload_to_wire_and_add_checksum,
 )
 
@@ -30,6 +38,7 @@ if __debug__:
     from trezor import log
 
 if TYPE_CHECKING:
+    import typing as t
     from trezorio import WireInterface
 
 _CID_REQ_PAYLOAD_LENGTH = const(12)
@@ -40,37 +49,134 @@ async def thp_main_loop(iface: WireInterface) -> None:
     global _CHANNELS
     channel_manager.load_cached_channels(_CHANNELS, iface)
 
-    read = loop.wait(iface.iface_num() | io.POLL_READ)
-    packet = bytearray(iface.RX_PACKET_LEN)
     try:
-        while True:
-            try:
-                if __debug__:
-                    log.debug(__name__, "thp_main_loop", iface=iface)
-                packet_len = await read
-                assert packet_len == len(packet)
-                iface.read(packet, 0)
-
-                if _get_ctrl_byte(packet) == CODEC_V1:
-                    await _handle_codec_v1(iface, packet)
-                    continue
-
-                cid = ustruct.unpack(">BH", packet)[1]
-
-                if cid == BROADCAST_CHANNEL_ID:
-                    await _handle_broadcast(iface, packet)
-                    continue
-
-                if cid in _CHANNELS:
-                    await _handle_allocated(iface, cid, packet)
-                else:
-                    await _handle_unallocated(iface, cid, packet)
-
-            except ThpError as e:
-                if __debug__:
-                    log.exception(__name__, e, iface=iface)
+        ctx = await ThpContext.accept(iface)
+        await handle_received_message(ctx)
     finally:
         channel_manager.CHANNELS_LOADED = False
+
+
+class ThpContext:
+    def __init__(self, channel: Channel) -> None:
+        self.channel = channel
+        self.msg: memoryview | None = channel.rx_buffer
+
+    def write_error(self, err_type: int) -> t.Awaitable[None]:
+        msg_data = err_type.to_bytes(1, "big")
+        length = len(msg_data) + CHECKSUM_LENGTH
+        header = PacketHeader.get_error_header(
+            self.channel.get_channel_id_int(), length
+        )
+        return write_payload_to_wire_and_add_checksum(
+            self.channel.iface, header, msg_data
+        )
+
+    def send_payload(self, ctrl_byte: int, payload: bytes) -> t.Awaitable[None]:
+        """Send payload with ABP bit - don't wait for an ACK."""
+        payload_len = len(payload) + CHECKSUM_LENGTH
+        seq_bit = ABP.get_send_seq_bit(self.channel.channel_cache)
+        ctrl_byte = control_byte.add_seq_bit_to_ctrl_byte(ctrl_byte, seq_bit)
+        header = PacketHeader(ctrl_byte, self.channel.get_channel_id_int(), payload_len)
+        # TODO add condition that disallows to write when can_send_message is false
+        assert ABP.is_sending_allowed(self.channel.channel_cache)
+        ABP.set_sending_allowed(self.channel.channel_cache, False)
+        return write_payload_to_wire_and_add_checksum(
+            self.channel.iface, header, payload
+        )
+
+    def send_message(
+        self, msg: protobuf.MessageType, session_id: int = 0
+    ) -> t.Awaitable[None]:
+        """Encode, encrypt and send payload with ABP bit - don't wait for an ACK."""
+        msg_size = protobuf.encoded_length(msg)
+        payload_size = SESSION_ID_LENGTH + MESSAGE_TYPE_LENGTH + msg_size
+        length = payload_size + CHECKSUM_LENGTH + TAG_LENGTH + INIT_HEADER_LENGTH
+
+        buffer = self.channel.get_buffers().get_tx(length)
+        noise_payload_len = encode_into_buffer(buffer, msg, session_id)
+        self.channel._encrypt(buffer, noise_payload_len)
+
+        payload_length = noise_payload_len + TAG_LENGTH
+        return self.send_payload(ENCRYPTED, buffer[:payload_length])
+
+    async def wait_for_ack(self) -> None:
+        self.msg = None
+        await _read_next_message(self.channel.iface, expect_ack=True)
+        assert ABP.is_sending_allowed(self.channel.channel_cache)
+
+    async def read(self) -> memoryview:
+        if self.msg is None:
+            channel = await _read_next_message(self.channel.iface)
+            assert channel is self.channel
+            self.msg = channel.rx_buffer
+
+        msg = self.msg
+        self.msg = None
+        return msg
+
+    async def decrypt(self) -> tuple[int, Message]:
+        buf = await self.read()
+        self.channel.decrypt_buffer(buf)
+
+        session_id, message_type = ustruct.unpack(">BH", buf[INIT_HEADER_LENGTH:])
+        message = Message(
+            message_type,
+            buf[
+                INIT_HEADER_LENGTH
+                + MESSAGE_TYPE_LENGTH
+                + SESSION_ID_LENGTH : len(buf)
+                - CHECKSUM_LENGTH
+                - TAG_LENGTH
+            ],
+        )
+        return (session_id, message)
+
+    @classmethod
+    async def accept(cls, iface: WireInterface) -> "ThpContext":
+        return cls(await _read_next_message(iface))
+
+
+async def _read_next_message(iface: WireInterface, expect_ack: bool = False) -> Channel:
+    read = loop.wait(iface.iface_num() | io.POLL_READ)
+    packet = bytearray(iface.RX_PACKET_LEN)
+    while True:
+        packet_len = await read
+        assert packet_len == len(packet)
+        iface.read(packet, 0)
+        if __debug__:
+            log.debug(
+                __name__,
+                "_read_next_message: %s",
+                utils.hexlify_if_bytes(packet),
+                iface=iface,
+            )
+
+        if _get_ctrl_byte(packet) == CODEC_V1:
+            await _handle_codec_v1(iface, packet)
+            continue
+
+        cid = ustruct.unpack(">BH", packet)[1]
+
+        if cid == BROADCAST_CHANNEL_ID:
+            await _handle_broadcast(iface, packet)
+            continue
+
+        channel = _CHANNELS.get(cid)
+        if channel is None:
+            await _handle_unallocated(iface, cid, packet)
+            continue
+
+        if not await _handle_allocated(iface, channel, packet):
+            continue
+
+        has_message = await handle_checksum_and_acks(channel)
+        if expect_ack and has_message:
+            # TODO: not great
+            raise AssertionError("Expected ACK, got a message instead")
+
+        if expect_ack or has_message:
+            # channel.rx_buffer contains an ACK or a valid & acknowledged message
+            return channel
 
 
 async def _handle_codec_v1(iface: WireInterface, packet: bytes) -> None:
@@ -116,20 +222,14 @@ async def _handle_broadcast(iface: WireInterface, packet: utils.BufferType) -> N
 
 
 async def _handle_allocated(
-    iface: WireInterface, cid: int, packet: utils.BufferType
-) -> None:
-    channel = _CHANNELS[cid]
-    if channel is None:
-        await _handle_unallocated(iface, cid, packet)
-        raise ThpError("Invalid state of a channel")
+    iface: WireInterface, channel: Channel, packet: utils.BufferType
+) -> bool:
     if channel.iface is not iface:
         # TODO send error message to wire
         raise ThpError("Channel has different WireInterface")
 
-    if channel.get_channel_state() != ChannelState.UNALLOCATED:
-        x = channel.receive_packet(packet)
-        if x is not None:
-            await x
+    assert channel.get_channel_state() != ChannelState.UNALLOCATED
+    return channel.receive_packet(packet)
 
 
 async def _handle_unallocated(iface: WireInterface, cid: int, packet: bytes) -> None:

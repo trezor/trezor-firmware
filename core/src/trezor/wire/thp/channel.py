@@ -12,34 +12,27 @@ from storage.cache_common import (
     CHANNEL_STATE,
 )
 from storage.cache_thp import (
-    SESSION_ID_LENGTH,
     TAG_LENGTH,
     ChannelCache,
     clear_sessions_with_channel_id,
     conditionally_replace_channel,
     is_there_a_channel_to_replace,
 )
-from trezor import loop, protobuf, utils, workflow
+from trezor import utils, wire, workflow
 from trezor.wire.errors import WireBufferError
-from trezor.wire.thp.fallback import Fallback
 
-from . import ENCRYPTED, ChannelState, PacketHeader, ThpDecryptionError, ThpError
-from . import alternating_bit_protocol as ABP
 from . import (
+    ChannelState,
+    PacketHeader,
+    ThpDecryptionError,
+    ThpError,
+    ThpTransportBusy,
     control_byte,
     crypto,
     interface_manager,
-    memory_manager,
-    received_message_handler,
 )
 from .checksum import CHECKSUM_LENGTH
-from .transmission_loop import TransmissionLoop
-from .writer import (
-    CONT_HEADER_LENGTH,
-    INIT_HEADER_LENGTH,
-    MESSAGE_TYPE_LENGTH,
-    write_payload_to_wire_and_add_checksum,
-)
+from .writer import CONT_HEADER_LENGTH, INIT_HEADER_LENGTH
 
 if __debug__:
     from trezor import log
@@ -49,12 +42,29 @@ if __debug__:
 
 if TYPE_CHECKING:
     from trezorio import WireInterface
-    from typing import Any, Awaitable
+    from typing import Any
 
     from trezor.messages import ThpPairingCredential
 
     from .pairing_context import PairingContext
-    from .session_context import GenericSessionContext
+
+
+class ChannelBuffers:
+    def __init__(self) -> None:
+        self.rx = bytearray(8192)
+        self.tx = bytearray(8192)
+
+    def get_rx(self, size: int) -> memoryview:
+        view = memoryview(self.rx)
+        if size > len(view):
+            raise WireBufferError("RX")
+        return view[:size]
+
+    def get_tx(self, size: int) -> memoryview:
+        view = memoryview(self.tx)
+        if size > len(view):
+            raise WireBufferError("TX")
+        return view[:size]
 
 
 class Channel:
@@ -72,30 +82,31 @@ class Channel:
         if __debug__:
             self._log("channel initialization")
         self.channel_cache: ChannelCache = channel_cache
+        self._buffers: ChannelBuffers | None = None
 
         # Shared variables
         self.buffer: utils.BufferType = bytearray(self.iface.TX_PACKET_LEN)
         self.bytes_read: int = 0
-        self.expected_payload_length: int = 0
+        self.rx_buffer: memoryview = memoryview(b"")
         self.is_cont_packet_expected: bool = False
-        self.sessions: dict[int, GenericSessionContext] = {}
-
-        # Objects for writing a message to a wire
-        self.transmission_loop: TransmissionLoop | None = None
-        self.write_task_spawn: loop.spawn | None = None
 
         # Temporary objects
-        self._fallback: Fallback | None = None
-        self.handshake: crypto.Handshake | None = None
         self.credential: ThpPairingCredential | None = None
         self.connection_context: PairingContext | None = None
 
         if __debug__:
             self.should_show_pairing_dialog: bool = True
 
+    def get_buffers(self) -> ChannelBuffers:
+        """Try to acquire buffers (in case it's the first message being handled)."""
+        self._buffers = self._buffers or wire.THP_BUFFERS_PROVIDER.take()
+        if not self._buffers:
+            raise ThpTransportBusy(self.get_channel_id_int())
+        return self._buffers
+
     def clear(self) -> None:
         clear_sessions_with_channel_id(self.channel_id)
-        memory_manager.release_lock_if_owner(self.get_channel_id_int())
+        self.rx_buffer = memoryview(b"")
         self.channel_cache.clear()
 
     # ACCESS TO CHANNEL_DATA
@@ -143,184 +154,39 @@ class Channel:
 
     # READ and DECRYPT
 
-    def receive_packet(self, packet: utils.BufferType) -> Awaitable[None] | None:
+    def receive_packet(self, packet: utils.BufferType) -> bool:
         if __debug__:
             self._log("receive packet")
 
-        task = self._handle_received_packet(packet)
-        if task is not None:
-            return task
+        self._handle_received_packet(packet)
 
-        if self.expected_payload_length == 0:
-            # Failed to read the packet or to fallback
-            from trezor.wire.thp import ThpErrorType
+        if len(self.rx_buffer) == self.bytes_read:
+            self.bytes_read = 0
+            self.is_cont_packet_expected = False
+            # FIXME: if any message is received before `rx_buffer` is decoded, it will be overwritten :(
+            return True
 
-            return self.write_error(ThpErrorType.TRANSPORT_BUSY)
-
-        try:
-            if control_byte.is_ack(packet[0]):
-                buffer = memoryview(packet)[: INIT_HEADER_LENGTH + CHECKSUM_LENGTH]
-            else:
-                buffer = memory_manager.get_existing_read_buffer(
-                    self.get_channel_id_int()
-                )
-            if __debug__:
-                self._log("self.buffer: ", hexlify_if_bytes(buffer))
-        except WireBufferError:
-            if __debug__:
-                self._log(
-                    "getting read buffer failed - ",
-                    str(WireBufferError.__name__),
-                    logger=log.warning,
-                )
-            pass  # TODO ??
-        if (
-            self._fallback is not None
-            and self.expected_payload_length == self.bytes_read
-        ):
-
-            self._fallback.finish()
-            if not self._fallback.is_crc_checksum_valid():
-                if __debug__:
-                    self._log("INVALID FALLBACK CRC", logger=log.warning)
-                return None
-
-            # Check ABP seq bit
-            seq_bit = control_byte.get_seq_bit(self._fallback.ctrl_byte)
-            if not ABP.has_msg_correct_seq_bit(self.channel_cache, seq_bit):
-                if __debug__:
-                    self._log(
-                        "Received message with an unexpected sequential bit!",
-                        logger=log.warning,
-                    )
-                return received_message_handler._send_ack(self, ack_bit=seq_bit)
-
-            # Check noise tag
-            if not self._fallback.is_noise_tag_valid():
-                if __debug__:
-                    self._log("Invalid fallback noise tag", logger=log.warning)
-                raise ThpDecryptionError()
-
-            # Update nonces and seq bit
-            nonce_receive = self.channel_cache.get_int(CHANNEL_NONCE_RECEIVE)
-            assert nonce_receive is not None
-            self.channel_cache.set_int(CHANNEL_NONCE_RECEIVE, nonce_receive + 1)
-            ABP.set_expected_receive_seq_bit(self.channel_cache, 1 - seq_bit)
-
-            self._finish_message()
-            sid = self._fallback.session_id or 0
-            self._clear_fallback()
-
-            from trezor.enums import FailureType
-            from trezor.messages import Failure
-
-            return self.write(
-                Failure(code=FailureType.Busy, message="FALLBACK!"),
-                session_id=sid,
-                fallback=True,
-            )
-
-        if (
-            self._fallback is None
-            and self.expected_payload_length + INIT_HEADER_LENGTH == self.bytes_read
-        ):
-            self._finish_message()
-            return received_message_handler.handle_received_message(self, buffer)
-        elif self.expected_payload_length + INIT_HEADER_LENGTH > self.bytes_read:
+        elif len(self.rx_buffer) > self.bytes_read:
             self.is_cont_packet_expected = True
-            if __debug__:
-                self._log(
-                    "CONT EXPECTED - read/expected:",
-                    str(self.bytes_read)
-                    + "/"
-                    + str(self.expected_payload_length + INIT_HEADER_LENGTH),
-                )
+            return False
         else:
             raise ThpError(
                 "Read more bytes than is the expected length of the message!"
             )
-        return None
 
-    def _handle_received_packet(
-        self, packet: utils.BufferType
-    ) -> Awaitable[None] | None:
+    def _handle_received_packet(self, packet: utils.BufferType) -> None:
         ctrl_byte = packet[0]
         if control_byte.is_continuation(ctrl_byte):
             self._handle_cont_packet(packet)
-            return None
-        return self._handle_init_packet(packet)
+        else:
+            self._handle_init_packet(packet)
 
-    def _handle_init_packet(self, packet: utils.BufferType) -> Awaitable[None] | None:
-        self._fallback = None
+    def _handle_init_packet(self, packet: utils.BufferType) -> None:
         self.bytes_read = 0
-        self.expected_payload_length = 0
 
-        if __debug__:
-            self._log("handle_init_packet")
-
-        ctrl_byte, _, payload_length = ustruct.unpack(
-            PacketHeader.format_str_init, packet
-        )
-        self.expected_payload_length = payload_length
-
-        if control_byte.is_ack(ctrl_byte):
-            if self.expected_payload_length != CHECKSUM_LENGTH:
-                raise ThpError("Invalid ACK length, ignoring")
-            self.bytes_read = INIT_HEADER_LENGTH + CHECKSUM_LENGTH
-            return None
-
-        # If the channel does not "own" the buffer lock, decrypt the first packet
-
-        cid = self.get_channel_id_int()
-        length = payload_length + INIT_HEADER_LENGTH
-        try:
-            buffer = memory_manager.get_new_read_buffer(cid, length)
-        except WireBufferError:
-            # Channel does not "own" the buffer lock, decrypt the first packet
-
-            try:
-                if not self._can_fallback():
-                    if __debug__:
-                        self._log(
-                            "Channel is in a state that does not support fallback.",
-                            logger=log.error,
-                        )
-                    raise Exception(
-                        "Channel is in a state that does not support fallback."
-                    )
-                if __debug__:
-                    self._log("Started fallback read")
-                self._fallback = Fallback(self, memoryview(packet))
-
-            except Exception:
-                self._fallback = None
-                self.expected_payload_length = 0
-                self.bytes_read = 0
-                if __debug__:
-                    from ubinascii import hexlify
-
-                    self._log(
-                        "FAILED TO FALLBACK: ",
-                        hexlify(packet).decode(),
-                        logger=log.error,
-                    )
-                return None
-
-            to_read_len = min(len(packet) - INIT_HEADER_LENGTH, payload_length)
-            buf = memoryview(self.buffer)[:to_read_len]
-            utils.memcpy(buf, 0, packet, INIT_HEADER_LENGTH)
-
-            # Fallback
-            fallback_task = self._fallback.read_init_packet(buf)
-            self.bytes_read += to_read_len
-            return fallback_task
-
-        if __debug__:
-            self._log("handle_init_packet - payload len: ", str(payload_length))
-            self._log("handle_init_packet - buffer len: ", str(len(buffer)))
-
-        self._buffer_packet_data(buffer, packet, 0)
-        return None
+        _, _, payload_length = ustruct.unpack(PacketHeader.format_str_init, packet)
+        self.rx_buffer = self.get_buffers().get_rx(INIT_HEADER_LENGTH + payload_length)
+        self._buffer_packet_data(self.rx_buffer, packet, 0)
 
     def _handle_cont_packet(self, packet: utils.BufferType) -> None:
         if __debug__:
@@ -329,54 +195,19 @@ class Channel:
         if not self.is_cont_packet_expected:
             raise ThpError("Continuation packet is not expected, ignoring")
 
-        if self._fallback is not None:
-            to_read_len = min(
-                len(packet) - CONT_HEADER_LENGTH,
-                self.expected_payload_length - self.bytes_read,
-            )
-            buf = memoryview(self.buffer)[:to_read_len]
-            utils.memcpy(buf, 0, packet, CONT_HEADER_LENGTH)
-
-            self._fallback.read_cont_packet(buf)
-
-            self.bytes_read += to_read_len
-            return
-        try:
-            buffer = memory_manager.get_existing_read_buffer(self.get_channel_id_int())
-        except WireBufferError:
-            self.set_channel_state(ChannelState.INVALIDATED)
-            # TODO ? self.clear() or raise Decryption error?
-            pass  # TODO handle device busy, channel kaput
-        self._buffer_packet_data(buffer, packet, CONT_HEADER_LENGTH)
+        self._buffer_packet_data(self.rx_buffer, packet, CONT_HEADER_LENGTH)
 
     def _buffer_packet_data(
         self, payload_buffer: utils.BufferType, packet: utils.BufferType, offset: int
     ) -> None:
         self.bytes_read += utils.memcpy(payload_buffer, self.bytes_read, packet, offset)
 
-    def _finish_message(self) -> None:
-        self.bytes_read = 0
-        self.expected_payload_length = 0
-        self.is_cont_packet_expected = False
-
-    def _clear_fallback(self) -> None:
-        self._fallback = None
-        if __debug__:
-            self._log("Finish fallback")
-
     def decrypt_buffer(
-        self, message_length: int, offset: int = INIT_HEADER_LENGTH
+        self, message: memoryview, offset: int = INIT_HEADER_LENGTH
     ) -> None:
-        buffer = memory_manager.get_existing_read_buffer(self.get_channel_id_int())
-
-        noise_buffer = memoryview(buffer)[
-            offset : message_length - CHECKSUM_LENGTH - TAG_LENGTH
-        ]
-        tag = buffer[
-            message_length
-            - CHECKSUM_LENGTH
-            - TAG_LENGTH : message_length
-            - CHECKSUM_LENGTH
+        noise_buffer = message[offset : len(message) - CHECKSUM_LENGTH - TAG_LENGTH]
+        tag = message[
+            len(message) - CHECKSUM_LENGTH - TAG_LENGTH : len(message) - CHECKSUM_LENGTH
         ]
 
         key_receive = self.channel_cache.get(CHANNEL_KEY_RECEIVE)
@@ -402,165 +233,6 @@ class Channel:
         if not is_tag_valid:
             raise ThpDecryptionError()
 
-    # WRITE and ENCRYPT
-
-    async def write(
-        self,
-        msg: protobuf.MessageType,
-        session_id: int = 0,
-        force: bool = False,
-        fallback: bool = False,
-    ) -> None:
-        if __debug__:
-            self._log(
-                f"write message: {msg.MESSAGE_NAME}",
-                logger=log.info,
-            )
-            if utils.EMULATOR:
-                log.debug(
-                    __name__,
-                    "message contents:\n%s",
-                    utils.dump_protobuf(msg),
-                    iface=self.iface,
-                )
-
-        cid = self.get_channel_id_int()
-        msg_size = protobuf.encoded_length(msg)
-        payload_size = SESSION_ID_LENGTH + MESSAGE_TYPE_LENGTH + msg_size
-        length = payload_size + CHECKSUM_LENGTH + TAG_LENGTH + INIT_HEADER_LENGTH
-        try:
-            if fallback:
-                buffer = self.buffer
-            else:
-                buffer = memory_manager.get_new_write_buffer(cid, length)
-            noise_payload_len = memory_manager.encode_into_buffer(
-                buffer, msg, session_id
-            )
-        except WireBufferError:
-            from trezor.enums import FailureType
-            from trezor.messages import Failure
-
-            if length <= len(self.buffer):
-                # Fallback write - Write buffer is locked, using backup buffer instead
-                noise_payload_len = memory_manager.encode_into_buffer(
-                    self.buffer, msg, session_id
-                )
-                task = self._write_and_encrypt(noise_payload_len, fallback=True)
-                if task is not None:
-                    await task
-                return
-
-            # Message cannot be written - not even in fallback mode, killing channel
-            if __debug__:
-                self._log("Failed to get write buffer, killing channel.")
-
-            noise_payload_len = memory_manager.encode_into_buffer(
-                self.buffer,
-                Failure(
-                    code=FailureType.FirmwareError,
-                    message="Failed to obtain write buffer.",
-                ),
-                session_id,
-            )
-            self.set_channel_state(ChannelState.INVALIDATED)
-        task = self._write_and_encrypt(
-            noise_payload_len=noise_payload_len, force=force, fallback=fallback
-        )
-        if task is not None:
-            await task
-
-    def write_error(self, err_type: int) -> Awaitable[None]:
-        msg_data = err_type.to_bytes(1, "big")
-        length = len(msg_data) + CHECKSUM_LENGTH
-        header = PacketHeader.get_error_header(self.get_channel_id_int(), length)
-        return write_payload_to_wire_and_add_checksum(self.iface, header, msg_data)
-
-    def write_handshake_message(self, ctrl_byte: int, payload: bytes) -> None:
-        self._prepare_write()
-        self.write_task_spawn = loop.spawn(
-            self._write_encrypted_payload_loop(ctrl_byte, payload)
-        )
-
-    def _write_and_encrypt(
-        self,
-        noise_payload_len: int,
-        force: bool = False,
-        fallback: bool = False,
-    ) -> Awaitable[None] | None:
-        if fallback:
-            buffer = self.buffer
-        else:
-            buffer = memory_manager.get_existing_write_buffer(self.get_channel_id_int())
-
-        self._encrypt(buffer, noise_payload_len)
-        payload_length = noise_payload_len + TAG_LENGTH
-
-        if self.write_task_spawn is not None:
-            self.write_task_spawn.close()  # TODO might break something
-            if __debug__:
-                self._log("Closed write task", logger=log.warning)
-        self._prepare_write()
-        if fallback:
-            if __debug__:
-                self._log(
-                    "Writing FALLBACK message (written only once without async or retransmission)."
-                )
-
-            return self._write_encrypted_payload_loop(
-                ctrl_byte=ENCRYPTED,
-                payload=memoryview(buffer[:payload_length]),
-                only_once=True,
-            )
-
-        if force:
-            if __debug__:
-                self._log("Writing FORCE message (without async or retransmission).")
-
-            return self._write_encrypted_payload_loop(
-                ENCRYPTED, memoryview(buffer[:payload_length])
-            )
-        self.write_task_spawn = loop.spawn(
-            self._write_encrypted_payload_loop(
-                ENCRYPTED, memoryview(buffer[:payload_length])
-            )
-        )
-        return None
-
-    def _prepare_write(self) -> None:
-        # TODO add condition that disallows to write when can_send_message is false
-        ABP.set_sending_allowed(self.channel_cache, False)
-
-    async def _write_encrypted_payload_loop(
-        self, ctrl_byte: int, payload: bytes, only_once: bool = False
-    ) -> None:
-        if __debug__:
-            self._log("write_encrypted_payload_loop")
-
-        payload_len = len(payload) + CHECKSUM_LENGTH
-        sync_bit = ABP.get_send_seq_bit(self.channel_cache)
-        ctrl_byte = control_byte.add_seq_bit_to_ctrl_byte(ctrl_byte, sync_bit)
-        header = PacketHeader(ctrl_byte, self.get_channel_id_int(), payload_len)
-        self.transmission_loop = TransmissionLoop(self, header, payload)
-        if only_once:
-            if __debug__:
-                self._log('Starting transmission loop "only once"')
-            await self.transmission_loop.start(max_retransmission_count=1)
-        else:
-            if __debug__:
-                self._log("Starting transmission loop")
-            await self.transmission_loop.start()
-
-        ABP.set_send_seq_bit_to_opposite(self.channel_cache)
-
-        # Let the main loop be restarted and clear loop, if there is no other
-        # workflow and the state is ENCRYPTED_TRANSPORT
-        # TODO only once is there to not clear when FALLBACK
-        # TODO missing transmission loop is active -> do not clear
-        if not only_once and self._can_clear_loop():
-            if __debug__:
-                self._log("clearing loop from channel")
-            loop.clear()
-
     def _encrypt(self, buffer: utils.BufferType, noise_payload_len: int) -> None:
         if __debug__:
             self._log("encrypt")
@@ -582,19 +254,6 @@ class Channel:
             self._log("New nonce_send: ", str((nonce_send + 1)))
 
         buffer[noise_payload_len : noise_payload_len + TAG_LENGTH] = tag
-
-    def _can_clear_loop(self) -> bool:
-        return (
-            not workflow.tasks
-        ) and self.get_channel_state() is ChannelState.ENCRYPTED_TRANSPORT
-
-    def _can_fallback(self) -> bool:
-        state = self.get_channel_state()
-        return state not in [
-            ChannelState.TH1,
-            ChannelState.TH2,
-            ChannelState.UNALLOCATED,
-        ]
 
     if __debug__:
 

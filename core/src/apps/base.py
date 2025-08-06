@@ -231,7 +231,7 @@ if utils.USE_THP:
 
         Returns an appropriate `Failure` message if session creation fails.
         """
-        from trezor import log, loop
+        from trezor import log
         from trezor.enums import FailureType
         from trezor.messages import Failure
         from trezor.wire import NotInitialized
@@ -247,8 +247,8 @@ if utils.USE_THP:
         # Assert that context `ctx` is `GenericSessionContext`
         assert isinstance(ctx, GenericSessionContext)
 
-        channel = ctx.channel
         session_id = ctx.session_id
+        thp_ctx = ctx.ctx  # TODO: rename
 
         # Do not use `ctx` beyond this point, as it is techically
         # allowed to change in between await statements
@@ -259,9 +259,7 @@ if utils.USE_THP:
                 message="Invalid session_id for session creation.",
             )
 
-        new_session = get_new_session_context(
-            channel_ctx=channel, session_id=session_id
-        )
+        new_session = get_new_session_context(ctx=thp_ctx, session_id=session_id)
         try:
             await unlock_device()
             await derive_and_store_roots(new_session, message)
@@ -280,9 +278,6 @@ if utils.USE_THP:
                 session_id,
                 message.passphrase if message.passphrase is not None else "",
             )
-
-        channel.sessions[new_session.session_id] = new_session
-        loop.schedule(new_session.handle())
 
         return Success(message="New session created.")
 

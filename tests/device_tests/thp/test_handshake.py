@@ -4,6 +4,7 @@ import pytest
 
 from trezorlib.client import ProtocolV2Channel
 from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.exceptions import ThpError
 
 from .connect import prepare_protocol_for_handshake
 
@@ -19,11 +20,12 @@ def test_allocate_channel(client: Client) -> None:
     client.protocol._send_channel_allocation_request(nonce)
     client.protocol._read_channel_allocation_response(nonce)
 
-    # Expect different nonce
+    # Expect a different nonce
     client.protocol._send_channel_allocation_request(nonce)
-    with pytest.raises(Exception, match="Invalid channel allocation response."):
+    with pytest.raises(ThpError, match="Invalid channel allocation response"):
         client.protocol._read_channel_allocation_response(
-            expected_nonce=b"\xde\xad\xbe\xef\xde\xad\xbe\xef"
+            expected_nonce=b"\xde\xad\xbe\xef\xde\xad\xbe\xef",
+            retry=False,
         )
     client.invalidate()
 

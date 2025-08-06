@@ -278,6 +278,7 @@ if __debug__:
             ui.CURRENT_LAYOUT.layout.trace(callback)
 
         return DebugLinkState(
+            pin=storage.get_pin(),
             mnemonic_secret=mnemonic.get_secret(),
             mnemonic_type=mnemonic.get_type(),
             passphrase_protection=passphrase.is_enabled(),

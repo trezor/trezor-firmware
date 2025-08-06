@@ -32,6 +32,7 @@ from . import message_handler, protocol_common
 
 if utils.USE_THP:
     from .thp import thp_main
+    from .thp.channel import ChannelBuffers
 else:
     from .codec.codec_context import CodecContext
 
@@ -79,34 +80,24 @@ def setup(iface: WireInterface) -> None:
 
 
 if utils.USE_THP:
-    # memory_manager is imported to create READ/WRITE buffers
-    # in more stable area of memory
+    THP_BUFFERS_PROVIDER = Provider(ChannelBuffers())
     from .thp import memory_manager  # noqa: F401
 
     async def handle_session(iface: WireInterface) -> None:
-
-        # Take a mark of modules that are imported at this point, so we can
-        # roll back and un-import any others.
-        modules = utils.unimport_begin()
-
-        while True:
-            try:
-                await thp_main.thp_main_loop(iface)
-            except Exception as exc:
-                # Log and try again.
-                if __debug__:
-                    log.exception(__name__, exc, iface=iface)
-            finally:
-                # Unload modules imported by the workflow. Should not raise.
-                if __debug__:
-                    log.debug(
-                        __name__,
-                        "utils.unimport_end(modules) and loop.clear()",
-                        iface=iface,
-                    )
-                utils.unimport_end(modules)
-                loop.clear()
-                return  # pylint: disable=lost-exception
+        """Handle a single session and restart event loop."""
+        try:
+            await thp_main.thp_main_loop(iface)
+            # Wait for all active workflows to finish.
+            await workflow.join_all()
+        except Exception as exc:
+            # Log and ignore. The session handler can only exit explicitly in the
+            # following finally block.
+            if __debug__:
+                log.exception(__name__, exc, iface=iface)
+        finally:
+            # Let the session be restarted from `main`.
+            loop.clear()
+            return  # pylint: disable=lost-exception
 
 else:
 

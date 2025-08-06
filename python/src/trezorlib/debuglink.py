@@ -1304,10 +1304,14 @@ class TrezorClientDebugLink(TrezorClient):
 
         try:
             super().__init__(transport)
-        except DeviceLockedException:
+        except DeviceLockedException as e:
             LOG.debug("Locked device handling")
+            cached_pin = self.debug.state().pin
+            if not cached_pin:
+                raise RuntimeError("Cannot unlock the device") from e
             self.debug.input("")
-            self.debug.input(self.debug.encode_pin("1234"))
+            self.debug.input(self.debug.encode_pin(cached_pin))
+            self.debug.synchronize_at("Homescreen")
             super().__init__(transport)
 
         self.sync_responses()
@@ -1421,6 +1425,10 @@ class TrezorClientDebugLink(TrezorClient):
                     resp = self.protocol.read()
                 except Exception:
                     pass
+
+        if self.protocol_version is ProtocolVersion.V2:
+            assert isinstance(self.protocol, ProtocolV2Channel)
+            self.protocol.ping()
 
     def mnemonic_callback(self, _) -> str:
         word, pos = self.debug.read_recovery_word()
