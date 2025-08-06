@@ -19,13 +19,12 @@
 import glob
 import os
 import sys
-from datetime import date
 from typing import List, TextIO
 
 LICENSE_NOTICE = """\
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-{year} SatoshiLabs and contributors
+# Copyright (C) SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -39,9 +38,7 @@ LICENSE_NOTICE = """\
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-""".format(
-    year=date.today().year
-)
+"""
 
 SHEBANG_HEADER = """\
 #!/usr/bin/env python3
