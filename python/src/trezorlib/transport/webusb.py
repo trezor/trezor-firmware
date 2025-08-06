@@ -20,6 +20,7 @@ import atexit
 import logging
 import sys
 import time
+import traceback
 from typing import Iterable, List
 
 from ..log import DUMP_PACKETS
@@ -110,6 +111,8 @@ class WebUsbTransport(Transport):
         return f"{self.PATH_PREFIX}:{dev_to_str(self.device)}"
 
     def open(self) -> None:
+        print(f"{self}.open() {self.device}")
+        traceback.print_stack(file=sys.stdout)
         self.handle = self.device.open()
         if self.handle is None:
             if sys.platform.startswith("linux"):
@@ -125,6 +128,8 @@ class WebUsbTransport(Transport):
             raise DeviceIsBusy(self.device) from e
 
     def close(self) -> None:
+        print(f"{self}.close() {self.device}")
+        traceback.print_stack(file=sys.stdout)
         if self.handle is not None:
             try:
                 self.handle.releaseInterface(self.interface)
