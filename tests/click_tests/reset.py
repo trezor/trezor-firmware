@@ -60,16 +60,17 @@ def cancel_backup(
         debug.press_left()
     elif debug.layout_type is LayoutType.Delizia:
         debug.click(debug.screen_buttons.menu())
-        debug.click(debug.screen_buttons.vertical_menu_items()[0])
+        debug.button_actions.navigate_to_menu_item(0)
         if confirm:
             debug.swipe_up()
             debug.click(debug.screen_buttons.tap_to_confirm())
     elif debug.layout_type is LayoutType.Eckhart:
         debug.click(debug.screen_buttons.menu())
-        debug.click(debug.screen_buttons.vertical_menu_items()[0])
+        debug.button_actions.navigate_to_menu_item(0)
         debug.click(debug.screen_buttons.ok())
     else:
         raise RuntimeError("Unknown model")
+    debug.read_layout()
 
 
 def set_selection(debug: "DebugLink", diff: int) -> None:

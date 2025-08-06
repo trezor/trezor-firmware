@@ -111,7 +111,7 @@ def test_tutorial_full_completion(device_handler: "BackgroundDeviceHandler"):
 
     # menu screen - continue
     _assert_menu(debug)
-    debug.click(debug.screen_buttons.vertical_menu_items()[0])
+    debug.button_actions.navigate_to_menu_item(0)
 
     # htc menu - confirm tutorial
     _assert_htc_screen(debug)
@@ -139,7 +139,7 @@ def test_tutorial_cancel_from_main_menu(device_handler: "BackgroundDeviceHandler
     # due to overflowing menu, we need to swipe up to see the exit option
     for _ in range(3):
         debug.swipe_up()
-    debug.click(debug.screen_buttons.vertical_menu_items()[0])
+    debug.button_actions.navigate_to_menu_item(0)
 
     # exit screen - confirm
     _assert_htc_screen(debug)
@@ -161,7 +161,7 @@ def test_tutorial_cancel_from_confirm_menu(device_handler: "BackgroundDeviceHand
 
     # menu screen - continue
     _assert_menu(debug)
-    debug.click(debug.screen_buttons.vertical_menu_items()[0])
+    debug.button_actions.navigate_to_menu_item(0)
 
     # hold to confirm screen - go to menu
     _assert_htc_screen(debug)
@@ -169,7 +169,7 @@ def test_tutorial_cancel_from_confirm_menu(device_handler: "BackgroundDeviceHand
 
     # htc menu - cancel tutorial
     _assert_menu(debug)
-    debug.click(debug.screen_buttons.vertical_menu_items()[2])
+    debug.button_actions.navigate_to_menu_item(2)
 
     # exit screen - exit tutorial
     debug.click(debug.screen_buttons.ok())
@@ -195,7 +195,7 @@ def test_tutorial_menu_close(device_handler: "BackgroundDeviceHandler"):
 
     # menu screen - continue
     _assert_menu(debug)
-    debug.click(debug.screen_buttons.vertical_menu_items()[0])
+    debug.button_actions.navigate_to_menu_item(0)
 
     # hold to confirm screen - go to menu
     _assert_htc_screen(debug)
@@ -209,7 +209,7 @@ def test_tutorial_menu_close(device_handler: "BackgroundDeviceHandler"):
 
     # htc menu - exit tutorial
     _assert_menu(debug)
-    debug.click(debug.screen_buttons.vertical_menu_items()[2])
+    debug.button_actions.navigate_to_menu_item(2)
 
     # exit screen
     _assert_htc_screen(debug)
@@ -237,14 +237,14 @@ def test_tutorial_menu_tropic(device_handler: "BackgroundDeviceHandler"):
 
     # menu screen
     _assert_menu(debug)
-    debug.click(debug.screen_buttons.vertical_menu_items()[1])
+    debug.button_actions.navigate_to_menu_item(1)
 
     # main menu tropic info
     _assert_tropic_info(debug)
 
     # menu screen - continue
     _assert_menu(debug)
-    debug.click(debug.screen_buttons.vertical_menu_items()[0])
+    debug.button_actions.navigate_to_menu_item(0)
 
     # hold to confirm screen
     _assert_htc_screen(debug)
@@ -252,14 +252,14 @@ def test_tutorial_menu_tropic(device_handler: "BackgroundDeviceHandler"):
 
     # htc menu - show tropic
     _assert_menu(debug)
-    debug.click(debug.screen_buttons.vertical_menu_items()[0])
+    debug.button_actions.navigate_to_menu_item(0)
 
     # htc menu tropic info
     _assert_tropic_info(debug)
 
     # htc menu - exit tutorial
     _assert_menu(debug)
-    debug.click(debug.screen_buttons.vertical_menu_items()[2])
+    debug.button_actions.navigate_to_menu_item(2)
 
     # exit screen
     _assert_htc_screen(debug)
@@ -267,7 +267,7 @@ def test_tutorial_menu_tropic(device_handler: "BackgroundDeviceHandler"):
 
     # exit menu - show tropic
     _assert_menu(debug)
-    debug.click(debug.screen_buttons.vertical_menu_items()[0])
+    debug.button_actions.navigate_to_menu_item(0)
 
     # exit menu tropic info
     _assert_tropic_info(debug)
@@ -292,7 +292,7 @@ def test_tutorial_restart(device_handler: "BackgroundDeviceHandler"):
 
     # menu screen - restart
     _assert_menu(debug)
-    debug.click(debug.screen_buttons.vertical_menu_items()[2])
+    debug.button_actions.navigate_to_menu_item(2)
 
     _assert_begin_screen_and_proceed(debug)
     _assert_navigation_screen_and_proceed(debug)
@@ -300,7 +300,7 @@ def test_tutorial_restart(device_handler: "BackgroundDeviceHandler"):
 
     # menu screen - continue
     _assert_menu(debug)
-    debug.click(debug.screen_buttons.vertical_menu_items()[0])
+    debug.button_actions.navigate_to_menu_item(0)
 
     # hold to confirm screen - go to menu
     _assert_htc_screen(debug)
@@ -308,7 +308,7 @@ def test_tutorial_restart(device_handler: "BackgroundDeviceHandler"):
 
     # htc menu - restart tutorial
     _assert_menu(debug)
-    debug.click(debug.screen_buttons.vertical_menu_items()[1])
+    debug.button_actions.navigate_to_menu_item(1)
 
     _assert_begin_screen_and_proceed(debug)
     _assert_navigation_screen_and_proceed(debug)
@@ -319,7 +319,7 @@ def test_tutorial_restart(device_handler: "BackgroundDeviceHandler"):
     # due to overflowing menu, we need to swipe up to see the exit option
     for _ in range(3):
         debug.swipe_up()
-    debug.click(debug.screen_buttons.vertical_menu_items()[0])
+    debug.button_actions.navigate_to_menu_item(0)
 
     # exit screen - go to menu
     _assert_htc_screen(debug)
@@ -327,7 +327,7 @@ def test_tutorial_restart(device_handler: "BackgroundDeviceHandler"):
 
     # exit menu - restart tutorial
     _assert_menu(debug)
-    debug.click(debug.screen_buttons.vertical_menu_items()[1])
+    debug.button_actions.navigate_to_menu_item(1)
 
     _assert_begin_screen_and_proceed(debug)
     _assert_navigation_screen_and_proceed(debug)
@@ -335,7 +335,7 @@ def test_tutorial_restart(device_handler: "BackgroundDeviceHandler"):
 
     # menu screen - continue
     _assert_menu(debug)
-    debug.click(debug.screen_buttons.vertical_menu_items()[0])
+    debug.button_actions.navigate_to_menu_item(0)
 
     # htc menu - confirm tutorial
     _assert_htc_screen(debug)
