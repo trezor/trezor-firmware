@@ -21,8 +21,8 @@ pub const WELCOME_COLOR: Color = BLACK;
 // UI icons specific to bootloader (white color)
 include_icon!(ICON_SEVEN, "layout_eckhart/res/bootloader/7.toif");
 include_icon!(
-    ICON_QR_TREZOR_IO_START,
-    "layout_eckhart/res/bootloader/QRCode.toif"
+    ICON_QR_TREZOR_IO_SETUP,
+    "layout_eckhart/res/bootloader/QRCode_170.toif"
 );
 
 pub const fn button_default() -> ButtonStyleSheet {
