@@ -155,7 +155,7 @@ class RecoveryFlow:
             self.debug.click(self.debug.screen_buttons.menu())
             self.debug.synchronize_at("VerticalMenu")
             if confirm:
-                self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+                self.debug.button_actions.navigate_to_menu_item(0)
             else:
                 self.debug.click(self.debug.screen_buttons.menu())
         else:
@@ -186,7 +186,7 @@ class RecoveryFlow:
             )
             self.debug.click(self.debug.screen_buttons.menu())
             self.debug.synchronize_at("VerticalMenu")
-            self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+            self.debug.button_actions.navigate_to_menu_item(0)
             assert (yield).name == "abort_recovery"
             self.debug.swipe_up()
             layout = self.debug.read_layout()
@@ -198,7 +198,7 @@ class RecoveryFlow:
             )
             self.debug.click(self.debug.screen_buttons.menu())
             self.debug.synchronize_at("VerticalMenu")
-            self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+            self.debug.button_actions.navigate_to_menu_item(1)
             assert (yield).name == "abort_recovery"
             layout = self.debug.read_layout()
             assert layout.title() == TR.recovery__title
@@ -214,7 +214,7 @@ class RecoveryFlow:
             )
             self.debug.click(self.debug.screen_buttons.menu())
             self.debug.synchronize_at("VerticalMenu")
-            self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+            self.debug.button_actions.navigate_to_menu_item(0)
             assert (yield).name == "recovery_share"
             layout = self.debug.read_layout()
             assert layout.title() == TR.words__recovery_share
@@ -381,7 +381,7 @@ class RecoveryFlow:
         # Moving through the menu into the show_shares screen
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         br = yield
         # Scroll through remaining share pages
         assert br.pages is not None
@@ -573,7 +573,7 @@ class EthereumFlow:
         if info:
             self.debug.click(self.debug.screen_buttons.menu())
             self.debug.synchronize_at("VerticalMenu")
-            self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+            self.debug.button_actions.navigate_to_menu_item(0)
             text = self.debug.read_layout().text_content()
             assert TR.ethereum__gas_limit in text
             assert TR.ethereum__gas_price in text
@@ -622,7 +622,7 @@ class EthereumFlow:
         if info:
             self.debug.click(self.debug.screen_buttons.menu())
             self.debug.synchronize_at("VerticalMenu")
-            self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+            self.debug.button_actions.navigate_to_menu_item(0)
             text = self.debug.read_layout().text_content()
             assert TR.ethereum__gas_limit in text
             assert TR.ethereum__gas_price in text
@@ -723,7 +723,7 @@ class EthereumFlow:
             if info:
                 self.debug.click(self.debug.screen_buttons.menu())
                 self.debug.synchronize_at("VerticalMenu")
-                self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+                self.debug.button_actions.navigate_to_menu_item(0)
                 assert self.debug.read_layout().title() in (
                     TR.ethereum__staking_stake_address,
                     TR.ethereum__staking_claim_address,
@@ -740,7 +740,7 @@ class EthereumFlow:
             if info:
                 self.debug.click(self.debug.screen_buttons.menu())
                 self.debug.synchronize_at("VerticalMenu")
-                self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+                self.debug.button_actions.navigate_to_menu_item(0)
                 assert TR.ethereum__gas_limit in self.debug.read_layout().text_content()
                 assert TR.ethereum__gas_price in self.debug.read_layout().text_content()
                 self.debug.click(self.debug.screen_buttons.menu())
@@ -755,7 +755,7 @@ class EthereumFlow:
             if info:
                 self.debug.click(self.debug.screen_buttons.menu())
                 self.debug.synchronize_at("VerticalMenu")
-                self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+                self.debug.button_actions.navigate_to_menu_item(0)
                 assert self.debug.read_layout().title() in (
                     TR.ethereum__staking_stake_address,
                     TR.ethereum__staking_claim_address,
@@ -772,7 +772,7 @@ class EthereumFlow:
             if info:
                 self.debug.click(self.debug.screen_buttons.menu())
                 self.debug.synchronize_at("VerticalMenu")
-                self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+                self.debug.button_actions.navigate_to_menu_item(0)
                 assert TR.ethereum__gas_limit in self.debug.read_layout().text_content()
                 assert TR.ethereum__gas_price in self.debug.read_layout().text_content()
                 self.debug.click(self.debug.screen_buttons.menu())
