@@ -129,6 +129,8 @@ system_emergency_rescue_phase_2(uint32_t arg1, uint32_t arg2) {
 
   // Now we can safely enable interrupts again
   __enable_fault_irq();
+  // In case we crashed while irq_lock was active
+  __enable_irq();
 
 #ifndef SECMON
   // Ensure we are in thread mode.
