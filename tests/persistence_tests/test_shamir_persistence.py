@@ -75,7 +75,7 @@ def test_abort(core_emulator: Emulator):
     if debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
         # cancel in the menu
         debug.click(debug.screen_buttons.menu())
-        debug.click(debug.screen_buttons.vertical_menu_items()[0])
+        debug.button_actions.navigate_to_menu_item(0)
     else:
         layout = common.go_back(debug)
         assert TR.recovery__title_cancel_recovery.lower() in layout.title().lower()

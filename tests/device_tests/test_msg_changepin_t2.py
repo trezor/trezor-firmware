@@ -192,7 +192,7 @@ def test_pin_menu_cancel_setup(session: Session):
             debug.click(debug.screen_buttons.menu())
             debug.synchronize_at("VerticalMenu")
             # click "Cancel PIN setup"
-            debug.click(debug.screen_buttons.vertical_menu_items()[0])
+            debug.button_actions.navigate_to_menu_item(0)
             debug.synchronize_at("Paragraphs")
             # swipe through info screen
             debug.swipe_up()
