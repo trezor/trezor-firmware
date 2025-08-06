@@ -200,7 +200,14 @@ def test_pin_menu_cancel_setup(session: Session):
             # tap to confirm
             debug.click(debug.screen_buttons.tap_to_confirm())
         elif session.client.layout_type is LayoutType.Eckhart:
-            debug.press_no()
+            # enter context menu
+            debug.click(debug.screen_buttons.menu())
+            debug.synchronize_at("VerticalMenu")
+            # click "Cancel PIN setup"
+            debug.click(debug.screen_buttons.vertical_menu_items()[0])
+            # tap to confirm
+            debug.synchronize_at("TextScreen")
+            debug.click(debug.screen_buttons.ok())
 
     with session.client as client, pytest.raises(Cancelled):
         client.set_input_flow(cancel_pin_setup_input_flow)
