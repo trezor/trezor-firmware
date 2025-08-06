@@ -1245,6 +1245,10 @@ class SessionDebugWrapper(Session):
         self.refresh_features()
 
 
+class DebugLinkNotFound(Exception):
+    pass
+
+
 class TrezorClientDebugLink(TrezorClient):
     # This class implements automatic responses
     # and other functionality for unit tests
@@ -1277,7 +1281,7 @@ class TrezorClientDebugLink(TrezorClient):
                 self.debug.open()
                 # try to open debuglink, see if it works
                 if not self.debug.transport.ping():
-                    LOG.warning("DebugLink is not available")
+                    raise DebugLinkNotFound(self.debug.transport.get_path())
 
         except Exception:
             if not auto_interact:

@@ -22,7 +22,7 @@ import time
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, TextIO, Union, cast
 
-from ..debuglink import TrezorClientDebugLink
+from ..debuglink import DebugLinkNotFound, TrezorClientDebugLink
 from ..transport import Transport
 from ..transport.udp import UdpTransport
 
@@ -194,12 +194,16 @@ class Emulator:
         (self.profile_dir / "trezor.pid").write_text(str(self.process.pid) + "\n")
         (self.profile_dir / "trezor.port").write_text(str(self.port) + "\n")
 
-        self._client = TrezorClientDebugLink(
-            self.transport,
-            auto_interact=self.auto_interact,
-            open_transport=True,
-            debug_transport=debug_transport,
-        )
+        try:
+            self._client = TrezorClientDebugLink(
+                self.transport,
+                auto_interact=self.auto_interact,
+                open_transport=True,
+                debug_transport=debug_transport,
+            )
+        except DebugLinkNotFound as e:
+            # Don't fail `start()` to allow non-debug emulator sanity test.
+            LOG.warning("DebugLink not found: %s", e)
 
     def stop(self) -> None:
         if self._client:
