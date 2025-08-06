@@ -2160,7 +2160,7 @@ class ButtonActions:
             self.debuglink.click(
                 self.debuglink.screen_buttons.vertical_menu_items()[idx]
             )
-        if self.debuglink.layout_type is LayoutType.Eckhart:
+        elif self.debuglink.layout_type is LayoutType.Eckhart:
             assert "VerticalMenu" in layout.all_components()
             for _ in range(idx):
                 self.debuglink.swipe_up()
