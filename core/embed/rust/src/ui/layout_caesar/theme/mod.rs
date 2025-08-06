@@ -99,6 +99,9 @@ include_icon!(ICON_WARN_TITLE, "layout_caesar/res/bld_header_warn.toif");
 // props settings
 pub const PROP_INNER_SPACING: i16 = PARAGRAPH_BOTTOM_SPACE;
 pub const PROPS_SPACING: i16 = PARAGRAPH_BOTTOM_SPACE;
+pub const PROPS_KEY_FONT: TextStyle = TEXT_BOLD;
+pub const PROPS_VALUE_FONT: TextStyle = TEXT_MONO;
+pub const PROPS_VALUE_MONO_FONT: TextStyle = TEXT_MONO_DATA;
 
 // checklist settings
 pub const CHECKLIST_SPACING: i16 = 5;
