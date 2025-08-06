@@ -485,15 +485,7 @@ pub fn new_confirm_output(
                 content_menu_info(
                     TR::confirm_total__title_fee.into(),
                     None,
-                    fee_paragraphs.unwrap_or_else(|| {
-                        unwrap!(PropsList::empty(
-                            &theme::TEXT_SMALL_LIGHT,
-                            &theme::TEXT_MONO_MEDIUM_LIGHT,
-                            &theme::TEXT_MONO_MEDIUM_LIGHT,
-                            theme::PROP_INNER_SPACING,
-                            theme::PROPS_SPACING,
-                        ))
-                    }),
+                    fee_paragraphs.unwrap_or_else(|| unwrap!(PropsList::empty())),
                 ),
             )?
             .add_page(

@@ -180,30 +180,14 @@ pub fn new_confirm_summary(
     let content_extra = content_menu_info(
         extra_title.unwrap_or(TR::buttons__more_info.into()),
         None,
-        extra_paragraphs.unwrap_or_else(|| {
-            unwrap!(PropsList::empty(
-                &theme::TEXT_SMALL_LIGHT,
-                &theme::TEXT_MONO_LIGHT,
-                &theme::TEXT_MONO_LIGHT,
-                theme::PROP_INNER_SPACING,
-                theme::PROPS_SPACING,
-            ))
-        }),
+        extra_paragraphs.unwrap_or_else(|| unwrap!(PropsList::empty())),
     );
 
     // AccountInfo
     let content_account = content_menu_info(
         account_title.unwrap_or(TR::address_details__account_info.into()),
         Some(TR::send__send_from.into()),
-        account_paragraphs.unwrap_or_else(|| {
-            unwrap!(PropsList::empty(
-                &theme::TEXT_SMALL_LIGHT,
-                &theme::TEXT_MONO_LIGHT,
-                &theme::TEXT_MONO_LIGHT,
-                theme::PROP_INNER_SPACING,
-                theme::PROPS_SPACING,
-            ))
-        }),
+        account_paragraphs.unwrap_or_else(|| unwrap!(PropsList::empty())),
     );
 
     // Cancel

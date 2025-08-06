@@ -19,6 +19,24 @@ use crate::{
     },
 };
 
+cfg_if::cfg_if! {
+    if #[cfg(feature = "layout_bolt")] {
+        use crate::ui::layout_bolt::theme;
+    } else if #[cfg(feature = "layout_caesar")] {
+        use crate::ui::layout_caesar::theme;
+    } else if #[cfg(feature = "layout_delizia")] {
+        use crate::ui::layout_delizia::theme;
+    } else if #[cfg(feature = "layout_eckhart")] {
+        use crate::ui::layout_eckhart::theme;
+    } else {
+        compile_error!("Non supported layout feature enabled");
+    }
+}
+
+use theme::{
+    PROPS_KEY_FONT, PROPS_SPACING, PROPS_VALUE_FONT, PROPS_VALUE_MONO_FONT, PROP_INNER_SPACING,
+};
+
 /// Maximum number of characters that can be displayed on screen at once. Used
 /// for on-the-fly conversion of binary data to hexadecimal representation.
 /// NOTE: can be fine-tuned for particular model screen to decrease memory
@@ -97,7 +115,7 @@ pub struct PropsList {
 }
 
 impl PropsList {
-    pub fn new(
+    pub fn new_styled(
         obj: Obj,
         key_font: &'static TextStyle,
         value_font: &'static TextStyle,
@@ -115,22 +133,20 @@ impl PropsList {
         })
     }
 
-    pub fn empty(
-        key_font: &'static TextStyle,
-        value_font: &'static TextStyle,
-        value_mono_font: &'static TextStyle,
-        key_value_padding: i16,
-        props_padding: i16,
-    ) -> Result<Self, Error> {
+    pub fn new(obj: Obj) -> Result<Self, Error> {
+        Self::new_styled(
+            obj,
+            &PROPS_KEY_FONT,
+            &PROPS_VALUE_FONT,
+            &PROPS_VALUE_MONO_FONT,
+            PROP_INNER_SPACING,
+            PROPS_SPACING,
+        )
+    }
+
+    pub fn empty() -> Result<Self, Error> {
         let empty_list = List::alloc(&[])?; // Create an empty GC list
-        Ok(Self {
-            items: empty_list,
-            key_font,
-            value_font,
-            value_mono_font,
-            key_value_padding,
-            props_padding,
-        })
+        Self::new(empty_list.into())
     }
 }
 
