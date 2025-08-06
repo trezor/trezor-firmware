@@ -356,6 +356,16 @@ class LayoutContent(UnstructuredJSONReader):
 
         return [get_button_content(btn_key) for btn_key in button_keys]
 
+    def vertical_menu_content(self) -> list[str]:
+        """Get the content of the vertical menu."""
+
+        vertical_menu = self.find_unique_object_with_key_and_value(
+            "component", "VerticalMenu"
+        )
+        assert isinstance(vertical_menu, dict)
+
+        return [btn_obj["text"] for btn_obj in vertical_menu["buttons"]]
+
     def seed_words(self) -> list[str]:
         """Get all the seed words on the screen in order.
 
@@ -988,6 +998,19 @@ class DebugUI:
                 self.debuglink.input(self.get_pin())
             else:
                 self._paginate_and_confirm(br.pages)
+
+    def navigate_to_menu_item(self, idx: int) -> None:
+        layout = self.debuglink.read_layout()
+        if self.buttons.layout_type is LayoutType.Eckhart:
+            assert "VerticalMenu" in layout.all_components()
+
+            # swipe n-1 times to get the nth item to the top
+            for _ in range(idx - 1):
+                self.debug.swipe_up()
+                (self._mid(), self._grid(self._height(), 5, 1))
+            self.debug.click(self.buttons.vertical_menu_items()[0])
+        else:
+            raise ValueError("Wrong layout type")
 
     def _visit_menu_items(self) -> LayoutContent:
         layout = self.debuglink.read_layout()
@@ -2140,3 +2163,22 @@ class ButtonActions:
         )
         click_amount = BUTTON_LETTERS_BIP39[idx].index(letter) + 1
         return self.buttons.mnemonic_from_index(idx), click_amount
+
+    # vertical menu buttons
+    def _vertical_menu_items(self) -> list[Coords]:
+        if self.layout_type is LayoutType.Delizia:
+            sb = ScreenButtons(self.layout_type)
+            return [
+                (sb._mid(), sb._grid(sb._height(), 4, 1)),
+                (sb._mid(), sb._grid(sb._height(), 4, 2)),
+                (sb._mid(), sb._grid(sb._height(), 4, 3)),
+            ]
+        elif self.layout_type is LayoutType.Eckhart:
+            sb = ScreenButtons(self.layout_type)
+            return [
+                (sb._mid(), sb._grid(sb._height(), 5, 1)),
+                (sb._mid(), sb._grid(sb._height(), 5, 2)),
+                (sb._mid(), sb._grid(sb._height(), 5, 3)),
+            ]
+        else:
+            raise ValueError("Wrong layout type")
