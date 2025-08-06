@@ -48,7 +48,7 @@ impl FlowController for SetNewPin {
             (Self::Menu, FlowMsg::Choice(0)) => Self::Cancel.goto(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Intro.goto(),
             (Self::Cancel, FlowMsg::Cancelled) => Self::Intro.goto(),
-            (Self::Cancel, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Cancel, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Cancelled),
             _ => self.do_nothing(),
         }
     }
