@@ -481,7 +481,7 @@ impl crate::trace::Trace for ScrolledVerticalMenu {
         let chunks_to_skip = self.pager.current().into();
         let mut chunks = self.items.chunks(self.menu_capacity).skip(chunks_to_skip);
         let current_chunk = unwrap!(chunks.next());
-
+        t.component("ScrolledVerticalMenu");
         t.in_child("menu_items", &|t| {
             t.in_list("current", &|t| {
                 for item in current_chunk {
@@ -567,6 +567,7 @@ impl<F: Fn(u16) -> TString<'static>> Component for PagedVerticalMenu<F> {
 #[cfg(feature = "ui_debug")]
 impl<F: Fn(u16) -> TString<'static>> crate::trace::Trace for PagedVerticalMenu<F> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("PagedVerticalMenu");
         self.inner.trace(t)
     }
 }

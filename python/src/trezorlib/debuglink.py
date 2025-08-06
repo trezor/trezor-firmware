@@ -1014,6 +1014,7 @@ class DebugUI:
             _prev, next = self.debuglink.screen_buttons.vertical_menu_prev_next()
             while True:
                 menu_layout = self.debuglink.read_layout()
+                assert "ScrolledVerticalMenu" in menu_layout.all_components()
                 menu_items = menu_layout.find_unique_value_by_key(
                     key="menu_items", default=None, only_type=dict
                 )
@@ -2155,11 +2156,58 @@ class ButtonActions:
         """Navigate to the nth item in the vertical menu. Starts from 0."""
         layout = self.debuglink.read_layout()
         if self.debuglink.layout_type is LayoutType.Delizia:
-            assert len(self.debuglink.screen_buttons.vertical_menu_items()) > idx
-            assert "VerticalMenu" in layout.all_components()
-            self.debuglink.click(
-                self.debuglink.screen_buttons.vertical_menu_items()[idx]
-            )
+            # fido multi-screen menu with 2 items per screen
+            if "PagedVerticalMenu" in layout.all_components():
+                items_per_screen = 2
+                # get to the correct screen
+                for _ in range(idx // items_per_screen):
+                    self.debuglink.swipe_up()
+                    assert (
+                        "PagedVerticalMenu"
+                        in self.debuglink.read_layout().all_components()
+                    )
+                # click the correct item
+                new_idx = 0 if idx % items_per_screen == 0 else 2
+                self.debuglink.click(
+                    self.debuglink.screen_buttons.vertical_menu_items()[new_idx]
+                )
+            elif "ScrolledVerticalMenu" in layout.all_components():
+                _prev, next = self.debuglink.screen_buttons.vertical_menu_prev_next()
+                menu = layout.find_unique_value_by_key(
+                    key="menu_items", default=None, only_type=dict
+                )
+                # multi-screen variant
+                if menu["has_next"]:
+                    items_per_screen = 2
+                    # get to the correct screen
+                    for _ in range(idx // items_per_screen):
+                        assert menu["has_next"]
+                        self.debuglink.click(next)
+                    # click the correct item
+                    assert (
+                        "ScrolledVerticalMenu"
+                        in self.debuglink.read_layout().all_components()
+                    )
+                    new_idx = idx % items_per_screen
+                    self.debuglink.click(
+                        self.debuglink.screen_buttons.vertical_menu_items()[new_idx]
+                    )
+                # single-screen variant
+                else:
+                    assert (
+                        len(self.debuglink.screen_buttons.vertical_menu_items()) > idx
+                    )
+                    self.debuglink.click(
+                        self.debuglink.screen_buttons.vertical_menu_items()[idx]
+                    )
+            # single-screen static menu
+            # FIXME: remove this when the ScrollableVerticalMenu is implemented everywhere
+            else:
+                assert len(self.debuglink.screen_buttons.vertical_menu_items()) > idx
+                self.debuglink.click(
+                    self.debuglink.screen_buttons.vertical_menu_items()[idx]
+                )
+
         elif self.debuglink.layout_type is LayoutType.Eckhart:
             assert "VerticalMenu" in layout.all_components()
             for _ in range(idx):
