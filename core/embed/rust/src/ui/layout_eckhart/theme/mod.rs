@@ -132,9 +132,9 @@ include_icon!(ICON_BATTERY_LOW, "layout_eckhart/res/battery/low.toif");
 include_icon!(ICON_BATTERY_EMPTY, "layout_eckhart/res/battery/empty.toif");
 
 // Border overlay icons for bootloader screens and hold to confirm animation
-include_icon!(ICON_BORDER_BL, "layout_eckhart/res/border/BL.toif");
-include_icon!(ICON_BORDER_BR, "layout_eckhart/res/border/BR.toif");
-include_icon!(ICON_BORDER_TOP, "layout_eckhart/res/border/TOP.toif");
+include_icon!(ICON_BORDER_BL, "layout_eckhart/res/border/BL_1.toif");
+include_icon!(ICON_BORDER_BR, "layout_eckhart/res/border/BR_1.toif");
+include_icon!(ICON_BORDER_TOP, "layout_eckhart/res/border/TOP_1.toif");
 
 // Icons for number input screen
 include_icon!(ICON_PLUS, "layout_eckhart/res/plus.toif");
