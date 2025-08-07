@@ -55,12 +55,6 @@ impl<'a> BldHeader<'a> {
         }
     }
 
-    pub fn new_rsod_header() -> Self {
-        Self::new("Failure".into())
-            .with_icon(theme::ICON_INFO, theme::RED)
-            .with_text_style(text_title(theme::RED))
-    }
-
     pub fn new_done(color: Color) -> Self {
         Self::new("Done".into())
             .with_icon(theme::ICON_DONE, color)
