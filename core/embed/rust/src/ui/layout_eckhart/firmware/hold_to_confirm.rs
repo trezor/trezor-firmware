@@ -215,8 +215,10 @@ impl HoldToConfirmAnim {
         let progress = (elapsed / self.rollback_duration()).clamp(0.0, 1.0);
         let clip_width = (progress * SCREEN.width() as f32) as i16;
         Rect::from_center_and_size(
-            SCREEN.top_center().ofs(Offset::y(ScreenBorder::WIDTH / 2)),
-            Offset::new(clip_width, ScreenBorder::WIDTH),
+            SCREEN
+                .top_center()
+                .ofs(Offset::y(ScreenBorder::TOTAL_WIDTH / 2)),
+            Offset::new(clip_width, ScreenBorder::TOTAL_WIDTH),
         )
     }
 
@@ -224,11 +226,15 @@ impl HoldToConfirmAnim {
         let progress = (elapsed / self.total_duration).clamp(0.0, 1.0);
 
         const TOP_GAP_ZERO: Rect = Rect::from_center_and_size(
-            SCREEN.top_center().ofs(Offset::y(ScreenBorder::WIDTH / 2)),
+            SCREEN
+                .top_center()
+                .ofs(Offset::y(ScreenBorder::TOTAL_WIDTH / 2)),
             Offset::zero(),
         );
         const TOP_GAP_FULL: Rect = Rect::from_center_and_size(
-            SCREEN.top_center().ofs(Offset::y(ScreenBorder::WIDTH / 2)),
+            SCREEN
+                .top_center()
+                .ofs(Offset::y(ScreenBorder::TOTAL_WIDTH / 2)),
             Offset::new(SCREEN.width(), ScreenBorder::TOP_ARC_HEIGHT),
         );
         match progress {
@@ -239,8 +245,8 @@ impl HoldToConfirmAnim {
                 let clip = Rect::from_center_and_size(
                     SCREEN
                         .bottom_center()
-                        .ofs(Offset::y(-ScreenBorder::WIDTH / 2)),
-                    Offset::new(width, ScreenBorder::WIDTH),
+                        .ofs(Offset::y(-ScreenBorder::TOTAL_WIDTH / 2)),
+                    Offset::new(width, ScreenBorder::TOTAL_WIDTH),
                 );
                 (clip, TOP_GAP_FULL)
             }
@@ -250,7 +256,7 @@ impl HoldToConfirmAnim {
                 let sides_progress = ((p - Self::BOTTOM_DURATION_RATIO)
                     / Self::SIDES_DURATION_RATIO)
                     .clamp(0.0, 1.0);
-                let height = i16::lerp(ScreenBorder::WIDTH, SCREEN.height(), sides_progress);
+                let height = i16::lerp(ScreenBorder::TOTAL_WIDTH, SCREEN.height(), sides_progress);
                 let clip = Rect::from_bottom_left_and_size(
                     SCREEN.bottom_left(),
                     Offset::new(SCREEN.width(), height),
@@ -272,7 +278,9 @@ impl HoldToConfirmAnim {
                 let eased_progress = ease.eval(top_progress);
                 let width = i16::lerp(SCREEN.width(), 0, eased_progress);
                 let top_gap = Rect::from_center_and_size(
-                    SCREEN.top_center().ofs(Offset::y(ScreenBorder::WIDTH / 2)),
+                    SCREEN
+                        .top_center()
+                        .ofs(Offset::y(ScreenBorder::TOTAL_WIDTH / 2)),
                     Offset::new(width, ScreenBorder::TOP_ARC_HEIGHT),
                 );
                 (SCREEN, top_gap)

@@ -19,8 +19,8 @@ pub struct ScreenBorder {
 }
 
 impl ScreenBorder {
-    pub const WIDTH: i16 = 5;
-    pub const LINE_WIDTH: i16 = Self::WIDTH - 1;
+    pub const TOTAL_WIDTH: i16 = 5;
+    pub const LINE_WIDTH: i16 = Self::TOTAL_WIDTH - 1;
     pub const TOP_ARC_HEIGHT: i16 = ICON_BORDER_TOP.toif.height();
     pub const SCREEN_INSET: Rect = SCREEN.inset(Insets::uniform(1));
 
