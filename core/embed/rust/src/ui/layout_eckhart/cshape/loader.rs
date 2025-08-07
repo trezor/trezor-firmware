@@ -1,5 +1,4 @@
 use crate::ui::{
-    constant::SCREEN,
     geometry::{Alignment2D, Offset, Point, Rect},
     lerp::Lerp,
     shape::{self, Renderer},
@@ -9,6 +8,8 @@ use super::{
     super::theme::{self, ICON_BORDER_BL, ICON_BORDER_BR},
     ScreenBorder,
 };
+
+const SCREEN: Rect = ScreenBorder::SCREEN_INSET;
 
 /// Renders the loader. Higher `progress` reveals the `border` from the top in
 /// clock-wise direction. Used in ProgressScreen and Bootloader. `progress` goes
