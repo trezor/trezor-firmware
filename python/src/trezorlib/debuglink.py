@@ -2168,7 +2168,7 @@ class ButtonActions:
                         in self.debuglink.read_layout().all_components()
                     )
                 # click the correct item
-                new_idx = 0 if idx % items_per_screen == 0 else 2
+                new_idx = idx % items_per_screen
                 self.debuglink.click(item_buttons[new_idx])
             elif "ScrolledVerticalMenu" in layout.all_components():
                 _prev, next = self.debuglink.screen_buttons.vertical_menu_prev_next()

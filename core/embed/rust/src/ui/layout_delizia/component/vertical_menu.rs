@@ -568,6 +568,8 @@ impl<F: Fn(u16) -> TString<'static>> Component for PagedVerticalMenu<F> {
 impl<F: Fn(u16) -> TString<'static>> crate::trace::Trace for PagedVerticalMenu<F> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("PagedVerticalMenu");
-        self.inner.trace(t)
+        t.child("inner", &self.inner);
+        t.int("page", self.page as _);
+        t.int("item_count", self.item_count as _);
     }
 }
