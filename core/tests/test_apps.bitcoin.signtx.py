@@ -39,7 +39,7 @@ class TestSignTx(unittest.TestCase):
 
     def test_one_one_fee(self):
         # input tx: 1f326f65768d55ef146efbb345bd87abe84ac7185726d0457a026fc347a26ef3
-        # input 0: 0.03801747 BTC
+        # input 0: 0.03801747 BTC
 
         # output tx: https://btc1.trezor.io/tx/e590d5d76867e9f14466f715e26438845afff0ae082cda1f2f55aa8bf7f98140
 

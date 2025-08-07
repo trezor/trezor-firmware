@@ -132,7 +132,7 @@ def test_signtx_payment_req(session: Session):
     from ..payment_req import CoinPurchaseMemo, make_payment_request
 
     memo = CoinPurchaseMemo(
-        amount="6.36 ETH",
+        amount="6.36 ETH",
         coin_name="Ethereum",
         slip44=60,
         address_n=parse_path("m/44h/60h/0h"),

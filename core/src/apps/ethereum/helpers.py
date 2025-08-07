@@ -172,7 +172,7 @@ def format_ethereum_amount(
     network: EthereumNetworkInfo,
     force_unit_gwei: bool = False,
 ) -> str:
-    from trezor.strings import format_amount
+    from trezor.strings import format_amount, format_amount_unit
 
     if token:
         suffix = token.symbol
@@ -188,11 +188,10 @@ def format_ethereum_amount(
         suffix = "Gwei"
     elif decimals > 9 and value < 10 ** (decimals - 9):
         # Don't want to display wei values for tokens with small decimal numbers
-        suffix = "Wei " + suffix
+        suffix = "Wei " + suffix
         decimals = 0
 
-    amount = format_amount(value, decimals)
-    return f"{amount} {suffix}"
+    return format_amount_unit(format_amount(value, decimals), suffix)
 
 
 def get_account_and_path(address_n: list[int]) -> tuple[str | None, str | None]:
