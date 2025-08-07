@@ -27,7 +27,7 @@ pub struct ErrorScreen<'a> {
 
 impl<'a> ErrorScreen<'a> {
     pub fn new(title: TString<'a>, message: TString<'a>, footer: TString<'a>) -> Self {
-        let title = Label::centered(title, theme::TEXT_BOLD);
+        let title = Label::centered(title, theme::TEXT_BOLD_UPPER);
         let message = Label::centered(message, theme::TEXT_NORMAL).vertically_centered();
         let footer = Label::centered(footer, theme::TEXT_NORMAL).vertically_centered();
 

@@ -28,10 +28,17 @@
 #include <util/scm_revision.h>
 #endif
 
+#ifdef TREZOR_MODEL_T3W1
+#define RSOD_DEFAULT_TITLE "Internal error";
+#define RSOD_DEFAULT_MESSAGE "Unspecified";
+#define RSOD_DEFAULT_FOOTER "Please visit\ntrezor.io/rsod";
+#define RSOD_EXIT_MESSAGE "Exit %d"
+#else
 #define RSOD_DEFAULT_TITLE "INTERNAL ERROR";
 #define RSOD_DEFAULT_MESSAGE "UNSPECIFIED";
 #define RSOD_DEFAULT_FOOTER "PLEASE VISIT TREZOR.IO/RSOD";
 #define RSOD_EXIT_MESSAGE "EXIT %d"
+#endif
 
 #ifdef KERNEL_MODE
 

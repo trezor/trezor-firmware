@@ -14,7 +14,7 @@ use super::super::{
         ACTION_BAR_HEIGHT, HEADER_HEIGHT, PADDING, RED, SIDE_INSETS, TEXT_NORMAL, TEXT_SMALL,
         TEXT_SMALL_GREY, TEXT_SMALL_GREY_EXTRA_LIGHT, TEXT_SMALL_RED, TEXT_VERTICAL_SPACING,
     },
-    WAIT_FOR_RESTART_MESSAGE,
+    WAIT_FOR_SHUTDOWN_MESSAGE,
 };
 
 /// Full-screen component showing Eckhart RSOD. To keep it minimal, this screen
@@ -39,7 +39,7 @@ impl<'a> ErrorScreen<'a> {
             message,
             footer,
             screen_border: ScreenBorder::new(RED),
-            wait_for_restart: Label::centered(WAIT_FOR_RESTART_MESSAGE.into(), TEXT_SMALL_GREY)
+            wait_for_restart: Label::centered(WAIT_FOR_SHUTDOWN_MESSAGE.into(), TEXT_SMALL_GREY)
                 .vertically_centered(),
         }
     }
