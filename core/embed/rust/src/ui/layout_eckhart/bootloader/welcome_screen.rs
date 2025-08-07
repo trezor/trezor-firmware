@@ -9,15 +9,16 @@ use crate::{
 };
 
 use super::{
-    super::{component::Button, constant::SCREEN, fonts, theme},
+    super::{
+        component::{render_logo, Button},
+        constant::SCREEN,
+        fonts, theme,
+    },
     BldActionBar, BldActionBarMsg, BldHeader,
 };
 
 #[cfg(feature = "power_manager")]
 use super::BldHeaderMsg;
-
-const TEXT_ORIGIN: Point = Point::new(24, 76);
-const STRIDE: i16 = 46;
 
 #[repr(u32)]
 #[derive(Copy, Clone, ToPrimitive)]
@@ -93,20 +94,7 @@ impl Component for BldWelcomeScreen {
         #[cfg(feature = "power_manager")]
         self.header.render(target);
 
-        let font = fonts::FONT_SATOSHI_REGULAR_38;
-        shape::Text::new(TEXT_ORIGIN, "Trezor", font)
-            .with_fg(theme::GREY_LIGHT)
-            .render(target);
-        shape::Text::new(TEXT_ORIGIN + Offset::y(STRIDE), "Safe", font)
-            .with_fg(theme::GREY_LIGHT)
-            .render(target);
-        shape::ToifImage::new(
-            TEXT_ORIGIN + Offset::y(2 * STRIDE),
-            theme::bootloader::ICON_SEVEN.toif,
-        )
-        .with_fg(theme::GREY)
-        .with_align(Alignment2D::CENTER_LEFT)
-        .render(target);
+        render_logo(target);
 
         // hint
         let icon_pos = Point::new(24, 398);
