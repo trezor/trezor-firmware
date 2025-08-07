@@ -27,6 +27,15 @@
 uint32_t __stack_chk_guard = 0;
 #endif
 
+#define ALL_DATA_ERASED_MESSAGE "All data has been erased from the device"
+
+#ifdef TREZOR_MODEL_T3W1
+// empty message for T3W1 so that it falls to the more appropriate default
+#define RECONNECT_DEVICE_MESSAGE ""
+#else
+#define RECONNECT_DEVICE_MESSAGE "Please reconnect\nthe device"
+#endif
+
 // Calls to this function are inserted by the compiler
 // when stack protection is enabled.
 void __attribute__((noreturn, used)) __stack_chk_fail(void) {
@@ -52,19 +61,17 @@ __fatal_error(const char *msg, const char *file, int line) {
 }
 
 void __attribute__((noreturn)) show_wipe_code_screen(void) {
-  error_shutdown_ex("WIPE CODE ENTERED",
-                    "All data has been erased from the device",
-                    "PLEASE RECONNECT\nTHE DEVICE");
+  error_shutdown_ex("Wipe code entered", ALL_DATA_ERASED_MESSAGE,
+                    RECONNECT_DEVICE_MESSAGE);
 }
 
 void __attribute__((noreturn)) show_pin_too_many_screen(void) {
-  error_shutdown_ex("PIN ATTEMPTS\nEXCEEDED",
-                    "All data has been\nerased from the device",
-                    "Please reconnect the\ndevice");
+  error_shutdown_ex("Pin attempts exceeded", ALL_DATA_ERASED_MESSAGE,
+                    RECONNECT_DEVICE_MESSAGE);
 }
 
 void __attribute__((noreturn)) show_install_restricted_screen(void) {
-  error_shutdown_ex("INSTALL RESTRICTED",
+  error_shutdown_ex("Install restricted",
                     "Installation of custom firmware is currently restricted.",
-                    "Please visit\ntrezor.io/bootloader");
+                    "Please visit trezor.io/bootloader");
 }

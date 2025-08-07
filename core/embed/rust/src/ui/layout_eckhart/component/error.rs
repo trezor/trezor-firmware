@@ -53,20 +53,20 @@ impl<'a> Component for ErrorScreen<'a> {
     type Msg = Never;
 
     fn place(&mut self, _bounds: Rect) -> Rect {
-        const FOOTER_AREA_HEIGHT: i16 = 52;
         const AREA: Rect = SCREEN.inset(SIDE_INSETS);
 
         let (header_area, area) = AREA.split_top(HEADER_HEIGHT);
         let (area, actionbar_area) = area.split_bottom(ACTION_BAR_HEIGHT);
         let area = area.inset(Insets::bottom(PADDING));
-        let (area, footer_area) = area.split_bottom(FOOTER_AREA_HEIGHT);
 
         let title_height = self.title.text_height(area.width());
         let message_height = self.message.text_height(area.width());
+        let footer_height = self.footer.text_height(area.width());
         let (title_area, area) = area.split_top(title_height);
-        let (message_area, _) = area
+        let (message_area, area) = area
             .inset(Insets::top(TEXT_VERTICAL_SPACING))
             .split_top(message_height);
+        let (_, footer_area) = area.split_bottom(footer_height);
 
         self.header.place(header_area);
         self.title.place(title_area);
