@@ -44,10 +44,11 @@ async def handle_device_menu() -> None:
     auto_lock_ms = storage.device.get_autolock_delay_ms()
     auto_lock_delay = strings.format_autolock_duration(auto_lock_ms)
 
-    log.debug(
-        __name__,
-        f"device menu, BLE state: {ble.connection_flags()} (peers: {ble.peer_count()})",
-    )
+    if __debug__:
+        log.debug(
+            __name__,
+            f"device menu, BLE state: {ble.connection_flags()} (peers: {ble.peer_count()})",
+        )
 
     menu_result = await interact(
         trezorui_api.show_device_menu(
