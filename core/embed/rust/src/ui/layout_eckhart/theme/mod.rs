@@ -56,13 +56,6 @@ pub const SIDE_INSETS: Insets = Insets::sides(PADDING);
 pub const ACTION_BAR_HEIGHT: i16 = 90; // [px]
 pub const TEXT_VERTICAL_SPACING: i16 = 24; // [px]
 
-// props settings
-pub const PROP_INNER_SPACING: i16 = 12; // [px]
-pub const PROPS_SPACING: i16 = 16; // [px]
-pub const PROPS_KEY_FONT: TextStyle = TEXT_SMALL_LIGHT;
-pub const PROPS_VALUE_FONT: TextStyle = TEXT_MONO_LIGHT;
-pub const PROPS_VALUE_MONO_FONT: TextStyle = TEXT_MONO_LIGHT;
-
 // checklist settings
 pub const CHECKLIST_CHECK_WIDTH: i16 = 32; // [px]
 pub const CHECKLIST_SPACING: i16 = 40; // [px]
