@@ -119,10 +119,6 @@ include_icon!(
     ICON_SPECIAL_CHARS,
     "layout_eckhart/res/keyboard/special_chars_group.toif"
 );
-// Welcome screen.
-include_icon!(ICON_LOGO, "layout_eckhart/res/lock_full.toif");
-// Homescreen notifications.
-include_icon!(ICON_WARNING40, "layout_eckhart/res/warning40.toif");
 
 // Battery icons
 include_icon!(ICON_BATTERY_ZAP, "layout_eckhart/res/battery/zap.toif");
@@ -149,6 +145,9 @@ include_icon!(
     ICON_TILE_STRIPES_SLASH, // for "///"
     "layout_eckhart/res/defaut_homescreen/hs_tile2.toif"
 );
+
+// Icon for the bootup screen
+include_icon!(ICON_SEVEN, "layout_eckhart/res/bootloader/7.toif");
 
 // Common text styles and button styles must use fonts accessible from both
 // bootloader and firmware
