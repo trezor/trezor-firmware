@@ -298,6 +298,33 @@ T3W1 = ModelKeys(
     firmware_sigs_needed=-1,
 )
 
+ROOT_ED25519_KEYS = []  # TODO - add when ready
+ROOT_ED25519_KEYS_DEV = [
+    bytes.fromhex(key)
+    for key in (
+        "db995fe25169d141cab9bbba92baa01f9f2e1ece7df4cb2ac05190f37fcc1f9d",
+        "2152f8d19b791d24453242e15f2eab6cb7cffa7b6a5ed30097960e069881db12",
+    )
+]
+ROOT_SLH_DSA_KEYS = []  # TODO - add when ready
+ROOT_SLH_DSA_KEYS_DEV_PRIVATE = [
+    bytes.fromhex(key)
+    for key in (
+        "9a8da9d38eb9203bd0d5442db161324f35ce7f6dc78e05507306fb13a7e6c145"
+        "ec01e60263024f7e71728013b731f7ba1299f518c27ba3ed8f4a219974127c62",
+        "1773a0855e8a9961b66682a1e819c29ac83931c00b84062bfc89f3041364c0eb"
+        "8af8878085946ed8b116bd24c0f2aac48b7e8f11bf068725ccfbb152abf7a4cd",
+    )
+]
+ROOT_SLH_DSA_KEYS_DEV_PUBLIC = [
+    bytes.fromhex(key)
+    for key in (
+        "ec01e60263024f7e71728013b731f7ba1299f518c27ba3ed8f4a219974127c62",
+        "8af8878085946ed8b116bd24c0f2aac48b7e8f11bf068725ccfbb152abf7a4cd",
+    )
+]
+
+
 LEGACY_HASH_PARAMS = FirmwareHashParameters(
     hash_function=hashlib.sha256,
     chunk_size=1024 * 64,
