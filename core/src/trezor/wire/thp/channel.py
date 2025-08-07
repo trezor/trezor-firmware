@@ -22,7 +22,14 @@ from storage.cache_thp import (
 from trezor import loop, protobuf, utils, workflow
 from trezor.wire.errors import WireBufferError
 
-from . import ENCRYPTED, ChannelState, PacketHeader, ThpDecryptionError, ThpError
+from . import (
+    ENCRYPTED,
+    ChannelState,
+    PacketHeader,
+    ThpDecryptionError,
+    ThpError,
+    ThpErrorType,
+)
 from . import alternating_bit_protocol as ABP
 from . import (
     control_byte,
@@ -56,6 +63,59 @@ if TYPE_CHECKING:
     from .session_context import GenericSessionContext
 
 
+class Reassembler:
+    def __init__(self, cid: int) -> None:
+        self.cid = cid
+        self.reset()
+
+    def reset(self) -> None:
+        self.bytes_read = 0
+        self.buffer_len = 0
+
+    def get_next_message(self, packet: memoryview) -> memoryview | None:
+        """
+        Process current packet, returning the payload buffer on success.
+
+        May raise WireBufferError if there is a concurrent payload reassembly in progress.
+        """
+        ctrl_byte = packet[0]
+        if control_byte.is_continuation(ctrl_byte):
+            if not self.bytes_read:
+                # ignore unexpected continuation packets
+                return None
+
+            # may raise WireBufferError
+            buffer = memory_manager.get_existing_read_buffer(self.cid)
+            self._buffer_packet_data(buffer, packet, CONT_HEADER_LENGTH)
+        else:
+            self.reset()
+            _, _, payload_length = ustruct.unpack(PacketHeader.format_str_init, packet)
+            self.buffer_len = payload_length + INIT_HEADER_LENGTH
+
+            if control_byte.is_ack(ctrl_byte):
+                # don't allocate buffer for ACKs (since they are small)
+                buffer = packet[: self.buffer_len]
+                self.bytes_read = len(buffer)
+            else:
+                # may raise WireBufferError
+                buffer = memory_manager.get_new_read_buffer(self.cid, self.buffer_len)
+                self._buffer_packet_data(buffer, packet, 0)
+
+        assert len(buffer) == self.buffer_len
+        if self.bytes_read < self.buffer_len:
+            return None
+        elif self.bytes_read == self.buffer_len:
+            self.reset()
+            return buffer
+        else:
+            raise ThpError("read more bytes than expected")
+
+    def _buffer_packet_data(
+        self, payload_buffer: memoryview, packet: memoryview, offset: int
+    ) -> None:
+        self.bytes_read += utils.memcpy(payload_buffer, self.bytes_read, packet, offset)
+
+
 class Channel:
     """
     THP protocol encrypted communication channel.
@@ -73,10 +133,8 @@ class Channel:
         self.channel_cache: ChannelCache = channel_cache
 
         # Shared variables
-        self.bytes_read: int = 0
-        self.expected_payload_length: int = 0
-        self.is_cont_packet_expected: bool = False
         self.sessions: dict[int, GenericSessionContext] = {}
+        self.reassembler = Reassembler(self.get_channel_id_int())
 
         # Objects for writing a message to a wire
         self.transmission_loop: TransmissionLoop | None = None
@@ -141,121 +199,17 @@ class Channel:
     # READ and DECRYPT
 
     def receive_packet(self, packet: utils.BufferType) -> Awaitable[None] | None:
-        if __debug__:
-            self._log("receive packet")
-
-        task = self._handle_received_packet(packet)
-        if task is not None:
-            return task
-
-        if self.expected_payload_length == 0:
-            # Failed to read the packet or to fallback
-            from trezor.wire.thp import ThpErrorType
-
+        try:
+            buffer = self.reassembler.get_next_message(memoryview(packet))
+        except WireBufferError:
+            self.reassembler.reset()
             return self.write_error(ThpErrorType.TRANSPORT_BUSY)
 
-        try:
-            if control_byte.is_ack(packet[0]):
-                buffer = memoryview(packet)[: INIT_HEADER_LENGTH + CHECKSUM_LENGTH]
-            else:
-                buffer = memory_manager.get_existing_read_buffer(
-                    self.get_channel_id_int()
-                )
-            if __debug__:
-                self._log("buffer: ", hexlify_if_bytes(buffer))
-        except WireBufferError:
-            if __debug__:
-                self._log(
-                    "getting read buffer failed - ",
-                    str(WireBufferError.__name__),
-                    logger=log.warning,
-                )
-            pass  # TODO ??
+        if buffer is None:
+            return None
 
-        if self.expected_payload_length + INIT_HEADER_LENGTH == self.bytes_read:
-            self._finish_message()
-            return received_message_handler.handle_received_message(self, buffer)
-        elif self.expected_payload_length + INIT_HEADER_LENGTH > self.bytes_read:
-            self.is_cont_packet_expected = True
-            if __debug__:
-                self._log(
-                    "CONT EXPECTED - read/expected:",
-                    str(self.bytes_read)
-                    + "/"
-                    + str(self.expected_payload_length + INIT_HEADER_LENGTH),
-                )
-        else:
-            raise ThpError(
-                "Read more bytes than is the expected length of the message!"
-            )
-        return None
-
-    def _handle_received_packet(self, packet: utils.BufferType) -> None:
-        ctrl_byte = packet[0]
-        if control_byte.is_continuation(ctrl_byte):
-            return self._handle_cont_packet(packet)
-        return self._handle_init_packet(packet)
-
-    def _handle_init_packet(self, packet: utils.BufferType) -> None:
-        self.bytes_read = 0
-        self.expected_payload_length = 0
-
-        if __debug__:
-            self._log("handle_init_packet")
-
-        ctrl_byte, _, payload_length = ustruct.unpack(
-            PacketHeader.format_str_init, packet
-        )
-        self.expected_payload_length = payload_length
-
-        if control_byte.is_ack(ctrl_byte):
-            if self.expected_payload_length != CHECKSUM_LENGTH:
-                raise ThpError("Invalid ACK length, ignoring")
-            self.bytes_read = INIT_HEADER_LENGTH + CHECKSUM_LENGTH
-            return
-
-        # If the channel does not "own" the buffer lock, decrypt the first packet
-
-        cid = self.get_channel_id_int()
-        length = payload_length + INIT_HEADER_LENGTH
-        try:
-            buffer = memory_manager.get_new_read_buffer(cid, length)
-        except WireBufferError:
-            # Channel does not "own" the buffer lock
-            self.expected_payload_length = 0
-            self.bytes_read = 0
-            return
-
-        if __debug__:
-            self._log("handle_init_packet - payload len: ", str(payload_length))
-            self._log("handle_init_packet - buffer len: ", str(len(buffer)))
-
-        self._buffer_packet_data(buffer, packet, 0)
-
-    def _handle_cont_packet(self, packet: utils.BufferType) -> None:
-        if __debug__:
-            self._log("handle_cont_packet")
-
-        if not self.is_cont_packet_expected:
-            raise ThpError("Continuation packet is not expected, ignoring")
-
-        try:
-            buffer = memory_manager.get_existing_read_buffer(self.get_channel_id_int())
-        except WireBufferError:
-            self.set_channel_state(ChannelState.INVALIDATED)
-            # TODO ? self.clear() or raise Decryption error?
-            pass  # TODO handle device busy, channel kaput
-        self._buffer_packet_data(buffer, packet, CONT_HEADER_LENGTH)
-
-    def _buffer_packet_data(
-        self, payload_buffer: utils.BufferType, packet: utils.BufferType, offset: int
-    ) -> None:
-        self.bytes_read += utils.memcpy(payload_buffer, self.bytes_read, packet, offset)
-
-    def _finish_message(self) -> None:
-        self.bytes_read = 0
-        self.expected_payload_length = 0
-        self.is_cont_packet_expected = False
+        self._log("buffer: ", hexlify_if_bytes(buffer))
+        return received_message_handler.handle_received_message(self, buffer)
 
     def decrypt_buffer(
         self, message_length: int, offset: int = INIT_HEADER_LENGTH
