@@ -33,6 +33,7 @@ if __debug__:
             DebugLinkRecordScreen,
             DebugLinkReseedRandom,
             DebugLinkState,
+            WipeDevice,
         )
         from trezor.ui import Layout
         from trezor.wire import WireInterface
@@ -46,6 +47,9 @@ if __debug__:
 
     _DEADLOCK_SLEEP_MS = const(3000)
     _DEADLOCK_DETECT_SLEEP = loop.sleep(_DEADLOCK_SLEEP_MS)
+
+    class RestartEventLoop(Exception):
+        pass
 
     def screenshot() -> bool:
         if storage.save_screen:
@@ -427,6 +431,17 @@ if __debug__:
             ]
         )
 
+    async def dispatch_WipeDevice(msg: WipeDevice) -> None:
+        """Wipe the device and restart the event loop."""
+        from storage import wipe
+
+        try:
+            wipe(clear_cache=True)
+            assert DEBUG_CONTEXT is not None
+            await DEBUG_CONTEXT.write(Success())
+        finally:
+            raise RestartEventLoop
+
     async def _no_op(_msg: Any) -> Success:
         return Success()
 
@@ -484,6 +499,9 @@ if __debug__:
                 req_msg = message_handler.wrap_protobuf_load(msg.data, req_type)
                 try:
                     res_msg = await WORKFLOW_HANDLERS[msg.type](req_msg)
+                except RestartEventLoop:
+                    loop.clear()
+                    return
                 except Exception as exc:
                     # Log and ignore, never die.
                     log.exception(__name__, exc)
@@ -508,6 +526,7 @@ if __debug__:
         MessageType.DebugLinkWatchLayout: _no_op,
         MessageType.DebugLinkResetDebugEvents: _no_op,
         MessageType.DebugLinkGetGcInfo: dispatch_DebugLinkGetGcInfo,
+        MessageType.WipeDevice: dispatch_WipeDevice,
     }
 
     def boot() -> None:
