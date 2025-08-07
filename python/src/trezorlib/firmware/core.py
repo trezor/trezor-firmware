@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import hashlib
+import typing as t
 from copy import copy
 from enum import Enum
 
@@ -25,7 +26,7 @@ from construct_classes import Struct, subcon
 
 from .. import cosi, merkle_tree
 from ..tools import EnumAdapter, TupleAdapter
-from . import consts, util
+from . import consts, models, util
 from .models import Model
 from .vendor import VendorHeader
 
@@ -347,3 +348,13 @@ class BootableImage(Struct):
         if isinstance(self.header.hw_model, Model):
             return self.header.hw_model
         return None
+
+    def public_pq_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
+        if dev_keys:
+            return models.ROOT_SLH_DSA_KEYS_DEV_PUBLIC
+        return models.ROOT_SLH_DSA_KEYS
+
+    def public_ec_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
+        if dev_keys:
+            return models.ROOT_ED25519_KEYS_DEV
+        return models.ROOT_ED25519_KEYS

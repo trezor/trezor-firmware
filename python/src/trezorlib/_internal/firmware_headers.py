@@ -436,36 +436,7 @@ class SecmonImage(firmware.SecmonImage, CosiSignedMixin):
 
 class BootloaderV2Image(firmware.BootableImage):
     NAME: t.ClassVar[str] = "bootloader"
-    DEV_PRIVATE_PQ_KEYS = [
-        bytes.fromhex(key)
-        for key in (
-            "9a8da9d38eb9203bd0d5442db161324f35ce7f6dc78e05507306fb13a7e6c145"
-            "ec01e60263024f7e71728013b731f7ba1299f518c27ba3ed8f4a219974127c62",
-            "1773a0855e8a9961b66682a1e819c29ac83931c00b84062bfc89f3041364c0eb"
-            "8af8878085946ed8b116bd24c0f2aac48b7e8f11bf068725ccfbb152abf7a4cd",
-        )
-    ]
-
-    DEV_PUBLIC_PQ_KEYS = [
-        bytes.fromhex(key)
-        for key in (
-            "ec01e60263024f7e71728013b731f7ba1299f518c27ba3ed8f4a219974127c62",
-            "8af8878085946ed8b116bd24c0f2aac48b7e8f11bf068725ccfbb152abf7a4cd",
-        )
-    ]
-
-    DEV_PRIVATE_EC_KEYS = [
-        (b"\x41" * 32),
-        (b"\x42" * 32),
-    ]
-
-    DEV_PUBLIC_EC_KEYS = [
-        bytes.fromhex(key)
-        for key in (
-            "db995fe25169d141cab9bbba92baa01f9f2e1ece7df4cb2ac05190f37fcc1f9d",
-            "2152f8d19b791d24453242e15f2eab6cb7cffa7b6a5ed30097960e069881db12",
-        )
-    ]
+    DEV_ED25519_KEYS_PRIVATE = _make_dev_keys(b"\x41", b"\x42")
 
     def signature_present(self) -> bool:
         return any(not all_zero(sig) for sig in self.unauth.slh_signatures) or any(
@@ -480,18 +451,18 @@ class BootloaderV2Image(firmware.BootableImage):
         digest = self.merkle_root()
 
         # SLH signature signs the image digest
-        for idx, key in enumerate(self.DEV_PRIVATE_PQ_KEYS):
+        for idx, key in enumerate(fw_models.ROOT_SLH_DSA_KEYS_DEV_PRIVATE):
             key = SecretKey.from_digest(key, sha2_128s)
             self.unauth.slh_signatures[idx] = key.sign(digest)
 
         hash_params = self.get_hash_params()
         hash_fn = hash_params.hash_function
 
-        for idx, key in enumerate(self.DEV_PRIVATE_EC_KEYS):
+        for idx, key in enumerate(self.DEV_ED25519_KEYS_PRIVATE):
             # The EC signature signs both the image digest and the SLH signature
             ext_digest = hash_fn(digest + self.unauth.slh_signatures[idx]).digest()
             self.unauth.ec_signatures[idx] = _ed25519.signature_unsafe(
-                ext_digest, key, self.DEV_PUBLIC_EC_KEYS[idx]
+                ext_digest, key, fw_models.ROOT_ED25519_KEYS_DEV[idx]
             )
 
     def format(self, verbose: bool = False) -> str:
@@ -521,12 +492,6 @@ class BootloaderV2Image(firmware.BootableImage):
             key = PublicKey.from_digest(key, sha2_128s)
             if not key.verify(digest, self.unauth.slh_signatures[idx]):
                 raise firmware.InvalidSignatureError("Invalid bootloader signature")
-
-    def public_pq_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
-        return self.DEV_PUBLIC_PQ_KEYS
-
-    def public_ec_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
-        return self.DEV_PUBLIC_EC_KEYS
 
 
 class LegacyFirmware(firmware.LegacyFirmware):
