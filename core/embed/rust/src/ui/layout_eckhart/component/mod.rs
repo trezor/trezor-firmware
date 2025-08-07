@@ -20,7 +20,7 @@ use crate::ui::{
 pub fn render_logo<'s>(target: &mut impl Renderer<'s>) {
     const TEXT_ORIGIN: Point = Point::new(24, 76);
     const STRIDE: i16 = 46;
-    const ICON_ORIGIN: Point = Point::new(24, 138);
+    const ICON_ORIGIN: Point = Point::new(24, 147);
     const FONT: Font = fonts::FONT_SATOSHI_REGULAR_38;
 
     shape::Text::new(TEXT_ORIGIN, "Trezor", FONT)
