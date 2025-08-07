@@ -321,7 +321,7 @@ async def _confirm_data_chunk(
     MAX_DISPLAYED_SIZE = 56
     displayed_bytes = first_chunk[:MAX_DISPLAYED_SIZE]
     bytes_optional_plural = "byte" if data_size == 1 else "bytes"
-    props: list[tuple[str, bytes | None, bool | None]] = [
+    props: list[PropertyType] = [
         (
             f"{title} ({data_size} {bytes_optional_plural}):",
             displayed_bytes,
@@ -540,11 +540,15 @@ async def confirm_tx(
 ) -> None:
     total_amount = format_coin_amount(spending, network_id)
     fee_amount = format_coin_amount(fee, network_id)
-    items = (
-        (TR.cardano__network, f"{protocol_magics.to_ui_string(protocol_magic)}"),
-        (TR.cardano__valid_since, f"{format_optional_int(validity_interval_start)}"),
-        (TR.cardano__ttl, f"{format_optional_int(ttl)}"),
-    )
+    items: list[PropertyType] = [
+        (TR.cardano__network, f"{protocol_magics.to_ui_string(protocol_magic)}", True),
+        (
+            TR.cardano__valid_since,
+            f"{format_optional_int(validity_interval_start)}",
+            True,
+        ),
+        (TR.cardano__ttl, f"{format_optional_int(ttl)}", True),
+    ]
 
     await layouts.confirm_cardano_tx(
         total_amount,
@@ -698,7 +702,7 @@ async def confirm_stake_pool_owner(
 ) -> None:
     from trezor import messages
 
-    props: list[tuple[str, str | None, bool | None]] = []
+    props: list[PropertyType] = []
     if owner.staking_key_path:
         props.append(
             (TR.cardano__pool_owner, address_n_to_str(owner.staking_key_path), True)
@@ -868,7 +872,7 @@ def _format_stake_credential(
         raise ValueError
 
 
-def _format_drep(drep: messages.CardanoDRep) -> tuple[str, str, bool]:
+def _format_drep(drep: messages.CardanoDRep) -> PropertyType:
     if drep.type == CardanoDRepType.KEY_HASH:
         assert drep.key_hash is not None  # validate_drep
         return (

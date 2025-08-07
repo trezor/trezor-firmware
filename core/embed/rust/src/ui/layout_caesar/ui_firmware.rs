@@ -592,7 +592,7 @@ impl FirmwareUI for UICaesar {
 
                     let mut ops = OpTextLayout::new(theme::TEXT_MONO);
                     for item in unwrap!(IterBuf::new().try_iterate(*info_obj)) {
-                        let [key, value]: [Obj; 2] = unwrap!(util::iter_into_array(item));
+                        let [key, value, _is_data]: [Obj; 3] = unwrap!(util::iter_into_array(item));
                         if !ops.is_empty() {
                             // Each key-value pair is on its own page
                             ops.add_next_page();
@@ -706,8 +706,8 @@ impl FirmwareUI for UICaesar {
         _subtitle: Option<TString<'static>>,
         _description: Option<TString<'static>>,
         _extra: Option<TString<'static>>,
-        _message: Obj,
-        _amount: Option<Obj>,
+        _message: TString<'static>,
+        _amount: Option<TString<'static>>,
         _chunkify: bool,
         _text_mono: bool,
         _account_title: TString<'static>,
@@ -715,8 +715,8 @@ impl FirmwareUI for UICaesar {
         _account_path: Option<TString<'static>>,
         _br_code: u16,
         _br_name: TString<'static>,
-        _address_item: Option<(TString<'static>, Obj)>,
-        _extra_item: Option<(TString<'static>, Obj)>,
+        _address_item: Option<Obj>,
+        _extra_item: Option<Obj>,
         _summary_items: Option<Obj>,
         _fee_items: Option<Obj>,
         _summary_title: Option<TString<'static>>,
@@ -1273,7 +1273,7 @@ impl FirmwareUI for UICaesar {
             add_paragraphs(&mut paragraphs, None, Some(value.try_into()?), true);
         } else {
             for para in IterBuf::new().try_iterate(value)? {
-                let [key, value]: [Obj; 2] = util::iter_into_array(para)?;
+                let [key, value, _is_data]: [Obj; 3] = util::iter_into_array(para)?;
                 add_paragraphs(
                     &mut paragraphs,
                     key.try_into_option()?,
