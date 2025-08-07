@@ -4,8 +4,9 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx, Label},
         constant::SCREEN,
+        display::Font,
         event::BLEEvent,
-        geometry::{Alignment, Rect},
+        geometry::{Alignment, Offset, Point, Rect},
         shape::{self, Renderer},
     },
 };
@@ -91,15 +92,13 @@ impl<'a> Component for ConfirmPairingScreen<'a> {
             screen_border.render(u8::MAX, target);
         }
 
-        // TODO: font size 72 is requested but it seems pricy for bootloader
-        shape::Text::new(
-            SCREEN.center(),
-            &self.code_formatted,
-            fonts::FONT_SATOSHI_REGULAR_38,
-        )
-        .with_fg(theme::GREY_EXTRA_LIGHT)
-        .with_align(Alignment::Center)
-        .render(target);
+        const FONT_CODE: Font = fonts::FONT_SATOSHI_EXTRALIGHT_72_NUMS_ONLY;
+        const BASE_POS: Point = SCREEN.center().ofs(Offset::y(FONT_CODE.height));
+
+        shape::Text::new(BASE_POS, &self.code_formatted, FONT_CODE)
+            .with_fg(theme::GREY_EXTRA_LIGHT)
+            .with_align(Alignment::Center)
+            .render(target);
     }
 }
 
