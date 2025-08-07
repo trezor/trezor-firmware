@@ -4,8 +4,9 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx, Label},
         constant::SCREEN,
+        display::Font,
         event::BLEEvent,
-        geometry::{Alignment, Rect},
+        geometry::{Alignment, Offset, Point, Rect},
         shape::{self, Renderer},
     },
 };
@@ -91,14 +92,27 @@ impl<'a> Component for ConfirmPairingScreen<'a> {
             screen_border.render(u8::MAX, target);
         }
 
-        // TODO: font size 72 is requested but it seems pricy for bootloader
+        const FONT_CODE: Font = fonts::FONT_SATOSHI_EXTRALIGHT_72_NUMS_ONLY;
+        const BASE_POS: Point = SCREEN.center().ofs(Offset::y(FONT_CODE.height));
+        const POS_CODE_P1: Point = BASE_POS.ofs(Offset::x(-16));
+        const POS_CODE_P2: Point = BASE_POS.ofs(Offset::x(16));
+
         shape::Text::new(
-            SCREEN.center(),
-            &self.code_formatted,
-            fonts::FONT_SATOSHI_REGULAR_38,
+            POS_CODE_P1,
+            &self.code_formatted[0..PAIRING_CODE_LEN / 2],
+            fonts::FONT_SATOSHI_EXTRALIGHT_72_NUMS_ONLY,
         )
         .with_fg(theme::GREY_EXTRA_LIGHT)
-        .with_align(Alignment::Center)
+        .with_align(Alignment::End)
+        .render(target);
+
+        shape::Text::new(
+            POS_CODE_P2,
+            &self.code_formatted[PAIRING_CODE_LEN / 2..],
+            fonts::FONT_SATOSHI_EXTRALIGHT_72_NUMS_ONLY,
+        )
+        .with_fg(theme::GREY_EXTRA_LIGHT)
+        .with_align(Alignment::Start)
         .render(target);
     }
 }
