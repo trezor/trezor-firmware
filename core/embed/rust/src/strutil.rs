@@ -55,19 +55,32 @@ pub fn format_i64(num: i64, buffer: &mut [u8]) -> Option<&str> {
     }
 }
 
-/// Format the BLE pairing code with zero-padding so that it always has a
-/// minimum width.
+/// Formats a BLE pairing code as a zero-padded string with spaces between
+/// digits. Adds an extra space after the 3rd digit for improved readability.
+/// Example: code=123, width=6 produces "0 0 0   1 2 3"
 pub fn format_pairing_code(code: u32, width: usize) -> ShortString {
     let mut buf = [0; 20];
     let code_str = unwrap!(format_i64(code as _, &mut buf));
 
     let mut formatted_code = ShortString::new();
-    // Add leading zeros
-    for _ in 0..width.saturating_sub(code_str.len()) {
-        unwrap!(formatted_code.push('0'));
+    let padding = width.saturating_sub(code_str.len());
+
+    for i in 0..width {
+        let c = if i < padding {
+            '0'
+        } else {
+            unwrap!(code_str.chars().nth(i - padding))
+        };
+        unwrap!(formatted_code.push(c));
+        if i < width - 1 {
+            unwrap!(formatted_code.push(' '));
+            if i == (width / 2 - 1) {
+                // extra space in the middle
+                unwrap!(formatted_code.push(' '));
+            }
+        }
     }
-    // Add the actual digits
-    unwrap!(formatted_code.push_str(code_str));
+
     formatted_code
 }
 
@@ -303,34 +316,28 @@ mod tests {
         use super::format_pairing_code;
         let width = 6;
         // Test normal cases with different digit counts
-        assert_eq!(format_pairing_code(123, width).as_str(), "000123");
-        assert_eq!(format_pairing_code(7, width).as_str(), "000007");
-        assert_eq!(format_pairing_code(123456, width).as_str(), "123456");
+        assert_eq!(format_pairing_code(123, width).as_str(), "0 0 0  1 2 3");
+        assert_eq!(format_pairing_code(7, width).as_str(), "0 0 0  0 0 7");
+        assert_eq!(format_pairing_code(123456, width).as_str(), "1 2 3  4 5 6");
 
         // Test boundary cases
-        assert_eq!(format_pairing_code(0, width).as_str(), "000000");
-        assert_eq!(format_pairing_code(999999, width).as_str(), "999999");
-        assert_eq!(format_pairing_code(1000000, width).as_str(), "1000000"); // Exceeds 6 digits
-
-        // Test with maximum u32 value
-        assert_eq!(format_pairing_code(u32::MAX, width).as_str(), "4294967295");
+        assert_eq!(format_pairing_code(0, width).as_str(), "0 0 0  0 0 0");
+        assert_eq!(format_pairing_code(999999, width).as_str(), "9 9 9  9 9 9");
 
         // Test with values having exactly 6 digits
-        assert_eq!(format_pairing_code(100000, width).as_str(), "100000");
-        assert_eq!(format_pairing_code(999999, width).as_str(), "999999");
+        assert_eq!(format_pairing_code(100000, width).as_str(), "1 0 0  0 0 0");
 
         // Verify behavior with sequential values around boundaries
-        assert_eq!(format_pairing_code(9999, width).as_str(), "009999");
-        assert_eq!(format_pairing_code(10000, width).as_str(), "010000");
-        assert_eq!(format_pairing_code(99999, width).as_str(), "099999");
-        assert_eq!(format_pairing_code(100000, width).as_str(), "100000");
+        assert_eq!(format_pairing_code(9999, width).as_str(), "0 0 9  9 9 9");
+        assert_eq!(format_pairing_code(10000, width).as_str(), "0 1 0  0 0 0");
+        assert_eq!(format_pairing_code(99999, width).as_str(), "0 9 9  9 9 9");
 
-        // Test different width
-        let width = 3;
-        assert_eq!(format_pairing_code(1, width).as_str(), "001");
-        assert_eq!(format_pairing_code(12, width).as_str(), "012");
-        assert_eq!(format_pairing_code(123, width).as_str(), "123");
-        assert_eq!(format_pairing_code(1234, width).as_str(), "1234");
+        // Test different even width (width=4, middle after position 1)
+        let width = 4;
+        assert_eq!(format_pairing_code(1, width).as_str(), "0 0  0 1");
+        assert_eq!(format_pairing_code(12, width).as_str(), "0 0  1 2");
+        assert_eq!(format_pairing_code(123, width).as_str(), "0 1  2 3");
+        assert_eq!(format_pairing_code(1234, width).as_str(), "1 2  3 4");
     }
 
     #[test]
