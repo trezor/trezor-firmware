@@ -35,7 +35,7 @@ def format_coin_amount(amount: int, coin: CoinInfo, amount_unit: AmountUnit) -> 
         decimals = 0
         shortcut = "sat"
         if coin.coin_shortcut != "BTC":
-            shortcut += " " + coin.coin_shortcut
+            shortcut += " " + coin.coin_shortcut
     elif amount_unit == AmountUnit.MICROBITCOIN and decimals >= 6:
         decimals -= 6
         shortcut = "u" + shortcut
