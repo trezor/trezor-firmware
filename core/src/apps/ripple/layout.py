@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from trezor import TR, wire
 from trezor.enums import ButtonRequestType
-from trezor.strings import format_amount
+from trezor.strings import format_amount, format_amount_unit
 from trezor.ui.layouts import confirm_metadata, confirm_total
 
 from .helpers import DECIMALS
@@ -15,8 +15,8 @@ if TYPE_CHECKING:
 
 async def require_confirm_total(total: int, fee: int) -> None:
     await confirm_total(
-        format_amount(total, DECIMALS) + " XRP",
-        format_amount(fee, DECIMALS) + " XRP",
+        format_amount_unit(format_amount(total, DECIMALS), "XRP"),
+        format_amount_unit(format_amount(fee, DECIMALS), "XRP"),
     )
 
 
@@ -35,7 +35,9 @@ async def require_confirm_destination_tag(tag: int) -> None:
 async def require_confirm_tx(to: str, value: int, chunkify: bool = False) -> None:
     from trezor.ui.layouts import confirm_output
 
-    await confirm_output(to, format_amount(value, DECIMALS) + " XRP", chunkify=chunkify)
+    await confirm_output(
+        to, format_amount_unit(format_amount(value, DECIMALS), "XRP"), chunkify=chunkify
+    )
 
 
 async def require_confirm_payment_request(
@@ -48,7 +50,9 @@ async def require_confirm_payment_request(
     from apps.common.paths import address_n_to_str
 
     assert verified_payment_request.amount is not None  # required for non-CoinJoin
-    total_amount = format_amount(verified_payment_request.amount, DECIMALS) + " XRP"
+    total_amount = format_amount_unit(
+        format_amount(verified_payment_request.amount, DECIMALS), "XRP"
+    )
 
     texts = []
     refunds = []
