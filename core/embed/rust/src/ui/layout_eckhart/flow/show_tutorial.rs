@@ -114,9 +114,9 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
             .into_paragraphs()
             .with_placement(LinearPlacement::vertical()),
     )
-    .with_action_bar(ActionBar::new_single(Button::with_text(
-        TR::instructions__tap_to_start.into(),
-    )))
+    .with_action_bar(ActionBar::new_single(Button::with_homebar_content(Some(
+        TR::tutorial__tap_to_start.into(),
+    ))))
     .map(|msg| match msg {
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
         _ => None,
