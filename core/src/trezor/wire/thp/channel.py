@@ -27,12 +27,7 @@ from . import alternating_bit_protocol as ABP
 from . import control_byte, crypto, memory_manager
 from .checksum import CHECKSUM_LENGTH
 from .transmission_loop import TransmissionLoop
-from .writer import (
-    CONT_HEADER_LENGTH,
-    INIT_HEADER_LENGTH,
-    MESSAGE_TYPE_LENGTH,
-    write_payload_to_wire_and_add_checksum,
-)
+from .writer import MESSAGE_TYPE_LENGTH
 
 if __debug__:
     from trezor import log
@@ -44,6 +39,7 @@ if TYPE_CHECKING:
     from typing import Any, Awaitable
 
     from trezor.messages import ThpPairingCredential
+    from trezor.wire import WireInterface
 
     from .interface_context import ThpContext
     from .pairing_context import PairingContext
@@ -73,11 +69,11 @@ class Reassembler:
 
             # may raise WireBufferError
             buffer = memory_manager.get_existing_read_buffer(self.cid)
-            self._buffer_packet_data(buffer, packet, CONT_HEADER_LENGTH)
+            self._buffer_packet_data(buffer, packet, PacketHeader.CONT_LENGTH)
         else:
             self.reset()
-            _, _, payload_length = ustruct.unpack(PacketHeader.format_str_init, packet)
-            self.buffer_len = payload_length + INIT_HEADER_LENGTH
+            _, _, payload_length = ustruct.unpack(PacketHeader.INIT_FORMAT, packet)
+            self.buffer_len = payload_length + PacketHeader.INIT_LENGTH
 
             if control_byte.is_ack(ctrl_byte):
                 # don't allocate buffer for ACKs (since they are small)
@@ -113,7 +109,7 @@ class Channel:
 
         # Channel properties
         self.channel_id: bytes = channel_cache.channel_id
-        self.iface = ctx._iface
+        self.ctx: ThpContext = ctx
         if __debug__:
             self._log("channel initialization")
         self.channel_cache: ChannelCache = channel_cache
@@ -133,6 +129,10 @@ class Channel:
 
         if __debug__:
             self.should_show_pairing_dialog: bool = True
+
+    @property
+    def iface(self) -> WireInterface:
+        return self.ctx._iface
 
     def clear(self) -> None:
         clear_sessions_with_channel_id(self.channel_id)
@@ -194,7 +194,7 @@ class Channel:
             raise
 
     def decrypt_buffer(
-        self, message_length: int, offset: int = INIT_HEADER_LENGTH
+        self, message_length: int, offset: int = PacketHeader.INIT_LENGTH
     ) -> None:
         buffer = memory_manager.get_existing_read_buffer(self.get_channel_id_int())
 
@@ -255,7 +255,7 @@ class Channel:
         cid = self.get_channel_id_int()
         msg_size = protobuf.encoded_length(msg)
         payload_size = SESSION_ID_LENGTH + MESSAGE_TYPE_LENGTH + msg_size
-        length = payload_size + CHECKSUM_LENGTH + TAG_LENGTH + INIT_HEADER_LENGTH
+        length = payload_size + CHECKSUM_LENGTH + TAG_LENGTH + PacketHeader.INIT_LENGTH
 
         buffer = memory_manager.get_new_write_buffer(cid, length)
         noise_payload_len = memory_manager.encode_into_buffer(buffer, msg, session_id)
@@ -268,7 +268,7 @@ class Channel:
         msg_data = err_type.to_bytes(1, "big")
         length = len(msg_data) + CHECKSUM_LENGTH
         header = PacketHeader.get_error_header(self.get_channel_id_int(), length)
-        return write_payload_to_wire_and_add_checksum(self.iface, header, msg_data)
+        return self.ctx.write_payload(header, msg_data)
 
     def write_handshake_message(self, ctrl_byte: int, payload: bytes) -> None:
         self._prepare_write()

@@ -43,11 +43,7 @@ from . import checksum, control_byte, get_encoded_device_properties, session_man
 from .checksum import CHECKSUM_LENGTH
 from .crypto import PUBKEY_LENGTH, Handshake
 from .session_context import SeedlessSessionContext
-from .writer import (
-    INIT_HEADER_LENGTH,
-    MESSAGE_TYPE_LENGTH,
-    write_payload_to_wire_and_add_checksum,
-)
+from .writer import MESSAGE_TYPE_LENGTH
 
 if TYPE_CHECKING:
     from typing import Awaitable
@@ -84,7 +80,7 @@ async def handle_received_message(
         #         "To show allocation count, create the build with TREZOR_MEMPERF=1"
         #     )
     ctrl_byte, _, payload_length = ustruct.unpack(">BHH", message_buffer)
-    message_length = payload_length + INIT_HEADER_LENGTH
+    message_length = payload_length + PacketHeader.INIT_LENGTH
 
     _check_checksum(message_length, message_buffer)
 
@@ -151,18 +147,18 @@ async def handle_received_message(
         log.debug(__name__, "handle_received_message - end", iface=ctx.iface)
 
 
-def _send_ack(ctx: Channel, ack_bit: int) -> Awaitable[None]:
+def _send_ack(channel: Channel, ack_bit: int) -> Awaitable[None]:
     ctrl_byte = control_byte.add_ack_bit_to_ctrl_byte(ACK_MESSAGE, ack_bit)
-    header = PacketHeader(ctrl_byte, ctx.get_channel_id_int(), CHECKSUM_LENGTH)
+    header = PacketHeader(ctrl_byte, channel.get_channel_id_int(), CHECKSUM_LENGTH)
     if __debug__:
         log.debug(
             __name__,
             "Writing ACK message to a channel with cid: %s, ack_bit: %d",
-            hexlify_if_bytes(ctx.channel_id),
+            hexlify_if_bytes(channel.channel_id),
             ack_bit,
-            iface=ctx.iface,
+            iface=channel.iface,
         )
-    return write_payload_to_wire_and_add_checksum(ctx.iface, header, b"")
+    return channel.ctx.write_payload(header, b"")
 
 
 def _check_checksum(message_length: int, message_buffer: utils.BufferType) -> None:
@@ -255,7 +251,7 @@ def _handle_state_TH1(
     # pass  # TODO buffer is gone :/
 
     host_ephemeral_public_key = bytearray(
-        buffer[INIT_HEADER_LENGTH : message_length - CHECKSUM_LENGTH]
+        buffer[PacketHeader.INIT_LENGTH : message_length - CHECKSUM_LENGTH]
     )
     trezor_ephemeral_public_key, encrypted_trezor_static_public_key, tag = (
         ctx.handshake.handle_th1_crypto(
@@ -306,10 +302,13 @@ def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -> None
     # if buffer is BufferError:
     # pass  # TODO handle
     host_encrypted_static_public_key = buffer[
-        INIT_HEADER_LENGTH : INIT_HEADER_LENGTH + KEY_LENGTH + TAG_LENGTH
+        PacketHeader.INIT_LENGTH : PacketHeader.INIT_LENGTH + KEY_LENGTH + TAG_LENGTH
     ]
     handshake_completion_request_noise_payload = buffer[
-        INIT_HEADER_LENGTH + KEY_LENGTH + TAG_LENGTH : message_length - CHECKSUM_LENGTH
+        PacketHeader.INIT_LENGTH
+        + KEY_LENGTH
+        + TAG_LENGTH : message_length
+        - CHECKSUM_LENGTH
     ]
 
     ctx.handshake.handle_th2_crypto(
@@ -324,7 +323,7 @@ def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -> None
 
     noise_payload = _decode_message(
         buffer[
-            INIT_HEADER_LENGTH
+            PacketHeader.INIT_LENGTH
             + KEY_LENGTH
             + TAG_LENGTH : message_length
             - CHECKSUM_LENGTH
@@ -393,7 +392,7 @@ def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message_length: int) -> None
     # if buffer is BufferError:
     # pass  # TODO handle
     session_id, message_type = ustruct.unpack(
-        ">BH", memoryview(buffer)[INIT_HEADER_LENGTH:]
+        ">BH", memoryview(buffer)[PacketHeader.INIT_LENGTH :]
     )
     if session_id not in ctx.sessions:
 
@@ -415,7 +414,7 @@ def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message_length: int) -> None
         Message(
             message_type,
             buffer[
-                INIT_HEADER_LENGTH
+                PacketHeader.INIT_LENGTH
                 + MESSAGE_TYPE_LENGTH
                 + SESSION_ID_LENGTH : message_length
                 - CHECKSUM_LENGTH
@@ -443,14 +442,14 @@ def _handle_pairing(ctx: Channel, message_length: int) -> None:
     # if buffer is BufferError:
     # pass  # TODO handle
     message_type = ustruct.unpack(
-        ">H", buffer[INIT_HEADER_LENGTH + SESSION_ID_LENGTH :]
+        ">H", buffer[PacketHeader.INIT_LENGTH + SESSION_ID_LENGTH :]
     )[0]
 
     ctx.connection_context.incoming_message.put(
         Message(
             message_type,
             buffer[
-                INIT_HEADER_LENGTH
+                PacketHeader.INIT_LENGTH
                 + MESSAGE_TYPE_LENGTH
                 + SESSION_ID_LENGTH : message_length
                 - CHECKSUM_LENGTH

@@ -6,7 +6,8 @@ from typing import Any, Awaitable
 if utils.USE_THP:
     import thp_common
     from mock_wire_interface import MockHID
-    from trezor.wire.thp import ENCRYPTED, PacketHeader, writer
+    from trezor.wire.thp import ENCRYPTED, PacketHeader
+    from trezor.wire.thp.interface_context import ThpContext
 
 
 @unittest.skipUnless(utils.USE_THP, "only needed for THP")
@@ -76,33 +77,23 @@ class TestTrezorHostProtocolWriter(unittest.TestCase):
 
     def setUp(self):
         self.interface = MockHID()
-
-    def test_write_empty_packet(self):
-        self.await_until_result(writer.write_packet_to_wire(self.interface, b""))
-
-        print(self.interface.data[0])
-        self.assertEqual(len(self.interface.data), 1)
-        self.assertEqual(self.interface.data[0], b"")
+        self.ctx = ThpContext(self.interface)
 
     def test_write_empty_payload(self):
         header = PacketHeader(ENCRYPTED, 4660, 4)
-        await_result(writer.write_payloads_to_wire(self.interface, header, (b"",)))
+        await_result(self.ctx._write_payload_chunks(header, b""))
         self.assertEqual(len(self.interface.data), 0)
 
     def test_write_short_payload(self):
         header = PacketHeader(ENCRYPTED, 4660, 5)
         data = b"\x07"
-        self.await_until_result(
-            writer.write_payloads_to_wire(self.interface, header, (data,))
-        )
+        self.await_until_result(self.ctx._write_payload_chunks(header, data))
         self.assertEqual(hexlify(self.interface.data[0]), self.short_payload_expected)
 
     def test_write_longer_payload(self):
         data = bytearray(range(256))
         header = PacketHeader(ENCRYPTED, 4660, 256)
-        self.await_until_result(
-            writer.write_payloads_to_wire(self.interface, header, (data,))
-        )
+        self.await_until_result(self.ctx._write_payload_chunks(header, data))
 
         for i in range(len(self.longer_payload_expected)):
             self.assertEqual(
@@ -112,11 +103,9 @@ class TestTrezorHostProtocolWriter(unittest.TestCase):
     def test_write_eight_longer_payloads(self):
         data = bytearray(range(256))
         header = PacketHeader(ENCRYPTED, 4660, 2048)
-        self.await_until_result(
-            writer.write_payloads_to_wire(
-                self.interface, header, (data, data, data, data, data, data, data, data)
-            )
-        )
+        chunks = [data] * 8
+        self.await_until_result(self.ctx._write_payload_chunks(header, *chunks))
+
         for i in range(len(self.eight_longer_payloads_expected)):
             self.assertEqual(
                 hexlify(self.interface.data[i]), self.eight_longer_payloads_expected[i]
@@ -124,9 +113,7 @@ class TestTrezorHostProtocolWriter(unittest.TestCase):
 
     def test_write_empty_payload_with_checksum(self):
         header = PacketHeader(ENCRYPTED, 4660, 4)
-        self.await_until_result(
-            writer.write_payload_to_wire_and_add_checksum(self.interface, header, b"")
-        )
+        self.await_until_result(self.ctx.write_payload(header, b""))
 
         self.assertEqual(
             hexlify(self.interface.data[0]), self.empty_payload_with_checksum_expected
@@ -135,9 +122,7 @@ class TestTrezorHostProtocolWriter(unittest.TestCase):
     def test_write_longer_payload_with_checksum(self):
         data = bytearray(range(256))
         header = PacketHeader(ENCRYPTED, 4660, 256)
-        self.await_until_result(
-            writer.write_payload_to_wire_and_add_checksum(self.interface, header, data)
-        )
+        self.await_until_result(self.ctx.write_payload(header, data))
 
         for i in range(len(self.longer_payload_with_checksum_expected)):
             self.assertEqual(
