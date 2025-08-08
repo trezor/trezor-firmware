@@ -4,8 +4,8 @@ use crate::{
     ui::{
         component::{swipe_detect::SwipeConfig, Component, Event, EventCtx, Label},
         flow::Swipable,
-        geometry::{Alignment, Insets, Rect},
-        shape::Renderer,
+        geometry::{Alignment, Alignment2D, Insets, Point, Rect},
+        shape::{Renderer, ToifImage},
         util::{animation_disabled, Pager},
     },
 };
@@ -20,6 +20,7 @@ use super::super::{
 
 const LOADER_SPEED: u16 = 2;
 const ANIM_DURATION: Duration = Duration::from_secs(3);
+const ICONS_PADDING: i16 = 15; // [px]
 
 pub enum TutorialWelcomeScreenMsg {
     Confirmed,
@@ -42,10 +43,7 @@ impl TutorialWelcomeScreen {
                 theme::firmware::TEXT_REGULAR,
             )
             .top_aligned(),
-            action_bar: ActionBar::new_timeout(
-                Button::with_text(TR::tutorial__tropic.into()),
-                ANIM_DURATION,
-            ),
+            action_bar: ActionBar::new_timeout(Button::empty(), ANIM_DURATION),
             value: 0,
             border: ScreenBorder::new(theme::GREEN_LIME),
         }
@@ -94,6 +92,34 @@ impl Component for TutorialWelcomeScreen {
         let progress_val = self.value.min(1000);
         self.text.render(target);
         self.action_bar.render(target);
+
+        let icon_tropic = theme::ICON_TROPIC.toif;
+        // Center the icon in the action bar area in the full-screen component
+        let icon_center = SCREEN
+            .bottom_center()
+            .sub(Point::new(0, theme::ACTION_BAR_HEIGHT / 2))
+            .into();
+
+        // Topic icon
+        ToifImage::new(icon_center, icon_tropic)
+            .with_align(Alignment2D::CENTER)
+            .with_fg(theme::GREY_EXTRA_LIGHT)
+            .render(target);
+
+        // Intro icon
+        ToifImage::new(
+            icon_center
+                .sub(Point::new(
+                    0,
+                    ICONS_PADDING + icon_tropic.height() / 2,
+                ))
+                .into(),
+            theme::ICON_SECURED.toif,
+        )
+        .with_align(Alignment2D::BOTTOM_CENTER)
+        .with_fg(theme::GREY_EXTRA_LIGHT)
+        .render(target);
+
         render_loader_indeterminate(progress_val, &self.border, target);
     }
 }

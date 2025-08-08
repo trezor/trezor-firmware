@@ -150,6 +150,10 @@ include_icon!(
     "layout_eckhart/res/defaut_homescreen/hs_tile2.toif"
 );
 
+// Tutorial screen icons
+include_icon!(ICON_TROPIC, "layout_eckhart/res/tropic.toif");
+include_icon!(ICON_SECURED, "layout_eckhart/res/secured.toif");
+
 // Common text styles and button styles must use fonts accessible from both
 // bootloader and firmware
 

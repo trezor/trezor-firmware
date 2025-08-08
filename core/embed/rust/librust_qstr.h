@@ -808,6 +808,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_tutorial__suite_restart;
   MP_QSTR_tutorial__sure_you_want_skip;
   MP_QSTR_tutorial__swipe_up_and_down;
+  MP_QSTR_tutorial__tap_to_start;
   MP_QSTR_tutorial__title_easy_navigation;
   MP_QSTR_tutorial__title_handy_menu;
   MP_QSTR_tutorial__title_hello;
@@ -817,7 +818,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_tutorial__title_skip;
   MP_QSTR_tutorial__title_tutorial_complete;
   MP_QSTR_tutorial__title_well_done;
-  MP_QSTR_tutorial__tropic;
   MP_QSTR_tutorial__tropic_info1;
   MP_QSTR_tutorial__tropic_info2;
   MP_QSTR_tutorial__tropic_info3;

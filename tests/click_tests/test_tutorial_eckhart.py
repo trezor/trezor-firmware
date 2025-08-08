@@ -64,10 +64,9 @@ def _wait_for_welcome_animation(debug: "DebugLink"):
 
 
 def _assert_begin_screen_and_proceed(debug: "DebugLink"):
-    debug.synchronize_at(TR.instructions__tap_to_start)
     layout = debug.read_layout()
     assert layout.text_content() == TR.tutorial__welcome_safe7.replace("\n", " ")
-    assert TR.instructions__tap_to_start in layout.action_bar()
+    assert TR.tutorial__tap_to_start in layout.action_bar()
     debug.click(debug.screen_buttons.ok())
 
 
@@ -231,6 +230,7 @@ def test_tutorial_menu_tropic(device_handler: "BackgroundDeviceHandler"):
     debug = device_handler.debuglink()
     device_handler.run_with_session(device.show_device_tutorial, seedless=True)
 
+    _wait_for_welcome_animation(debug)
     _assert_begin_screen_and_proceed(debug)
     _assert_navigation_screen_and_proceed(debug)
     _assert_instructions_and_proceed_to_menu(debug)
@@ -286,6 +286,7 @@ def test_tutorial_restart(device_handler: "BackgroundDeviceHandler"):
     debug = device_handler.debuglink()
     device_handler.run_with_session(device.show_device_tutorial, seedless=True)
 
+    _wait_for_welcome_animation(debug)
     _assert_begin_screen_and_proceed(debug)
     _assert_navigation_screen_and_proceed(debug)
     _assert_instructions_and_proceed_to_menu(debug)
