@@ -1,18 +1,6 @@
-from typing import TYPE_CHECKING
-
 from storage.cache_thp import ChannelCache
 
 from . import ThpError
-
-if __debug__:
-
-    from storage.cache_common import CHANNEL_IFACE
-    from trezor import log
-
-    from . import interface_manager
-
-    if TYPE_CHECKING:
-        from trezorio import WireInterface
 
 
 def is_ack_valid(cache: ChannelCache, ack_bit: int) -> bool:
@@ -32,17 +20,11 @@ def is_ack_valid(cache: ChannelCache, ack_bit: int) -> bool:
 
 def _is_ack_expected(cache: ChannelCache) -> bool:
     is_expected: bool = not is_sending_allowed(cache)
-    if __debug__ and not is_expected:
-        log.debug(__name__, "Received unexpected ACK message", iface=_get_iface(cache))
     return is_expected
 
 
 def _has_ack_correct_sync_bit(cache: ChannelCache, sync_bit: int) -> bool:
     is_correct: bool = get_send_seq_bit(cache) == sync_bit
-    if __debug__ and not is_correct:
-        log.debug(
-            __name__, "Received ACK message with wrong ack bit", iface=_get_iface(cache)
-        )
     return is_correct
 
 
@@ -90,13 +72,6 @@ def set_expected_receive_seq_bit(cache: ChannelCache, seq_bit: int) -> None:
     Set the expected sequential number (bit) of the next message to be received
     in the provided channel
     """
-    if __debug__:
-        log.debug(
-            __name__,
-            "Set sync receive expected seq bit to %d",
-            seq_bit,
-            iface=_get_iface(cache),
-        )
     if seq_bit not in (0, 1):
         raise ThpError("Unexpected receive sync bit")
 
@@ -109,13 +84,6 @@ def set_expected_receive_seq_bit(cache: ChannelCache, seq_bit: int) -> None:
 def _set_send_seq_bit(cache: ChannelCache, seq_bit: int) -> None:
     if seq_bit not in (0, 1):
         raise ThpError("Unexpected send seq bit")
-    if __debug__:
-        log.debug(
-            __name__,
-            "setting sync send seq bit to %d",
-            seq_bit,
-            iface=_get_iface(cache),
-        )
     # set third bit to "seq_bit" value
     cache.sync &= 0xDF
     if seq_bit:
@@ -128,9 +96,3 @@ def set_send_seq_bit_to_opposite(cache: ChannelCache) -> None:
     i.e. 1 -> 0 and 0 -> 1
     """
     _set_send_seq_bit(cache=cache, seq_bit=1 - get_send_seq_bit(cache))
-
-
-if __debug__:
-
-    def _get_iface(cache: ChannelCache) -> WireInterface:
-        return interface_manager.decode_iface(cache.get(CHANNEL_IFACE))
