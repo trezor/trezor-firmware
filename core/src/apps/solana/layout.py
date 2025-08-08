@@ -310,6 +310,7 @@ async def confirm_system_transfer(
     fee: Fee,
     blockhash: bytes,
 ) -> None:
+    # TODO: payreq
     await confirm_solana_recipient(
         recipient=base58.encode(transfer_instruction.recipient_account[0]),
         title=TR.words__recipient,

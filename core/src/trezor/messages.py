@@ -5452,6 +5452,7 @@ if TYPE_CHECKING:
         address_n: "list[int]"
         serialized_tx: "bytes"
         additional_info: "SolanaTxAdditionalInfo | None"
+        payment_req: "PaymentRequest | None"
 
         def __init__(
             self,
@@ -5459,6 +5460,7 @@ if TYPE_CHECKING:
             serialized_tx: "bytes",
             address_n: "list[int] | None" = None,
             additional_info: "SolanaTxAdditionalInfo | None" = None,
+            payment_req: "PaymentRequest | None" = None,
         ) -> None:
             pass
 

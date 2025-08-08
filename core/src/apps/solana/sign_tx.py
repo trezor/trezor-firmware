@@ -66,18 +66,24 @@ async def sign_tx(
         msg.additional_info
     )
 
-    if not await try_confirm_predefined_transaction(
-        transaction,
-        fee,
-        address_n,
-        signer_public_key,
-        transaction.blockhash,
-        additional_tx_info,
-    ):
-        await confirm_instructions(
-            address_n, signer_public_key, transaction, additional_tx_info
-        )
-        await confirm_transaction(transaction.blockhash, fee)
+    if msg.payment_req:
+        from apps.common.payment_request import PaymentRequestVerifier
+        verifier = PaymentRequestVerifier(msg.payment_req, SLIP44_ID, keychain)
+        verifier.add_output(payment.amount, address)
+        verifier.verify()
+    else:
+        if not await try_confirm_predefined_transaction(
+            transaction,
+            fee,
+            address_n,
+            signer_public_key,
+            transaction.blockhash,
+            additional_tx_info,
+        ):
+            await confirm_instructions(
+                address_n, signer_public_key, transaction, additional_tx_info
+            )
+            await confirm_transaction(transaction.blockhash, fee)
 
     signature = ed25519.sign(node.private_key(), serialized_tx)
     show_continue_in_app(TR.send__transaction_signed)

@@ -1285,6 +1285,8 @@ pub struct SolanaSignTx {
     pub serialized_tx: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaSignTx.additional_info)
     pub additional_info: ::protobuf::MessageField<SolanaTxAdditionalInfo>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaSignTx.payment_req)
+    pub payment_req: ::protobuf::MessageField<super::messages_common::PaymentRequest>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.solana.SolanaSignTx.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1338,7 +1340,7 @@ impl SolanaSignTx {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut fields = ::std::vec::Vec::with_capacity(4);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "address_n",
@@ -1354,6 +1356,11 @@ impl SolanaSignTx {
             "additional_info",
             |m: &SolanaSignTx| { &m.additional_info },
             |m: &mut SolanaSignTx| { &mut m.additional_info },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, super::messages_common::PaymentRequest>(
+            "payment_req",
+            |m: &SolanaSignTx| { &m.payment_req },
+            |m: &mut SolanaSignTx| { &mut m.payment_req },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SolanaSignTx>(
             "SolanaSignTx",
@@ -1375,6 +1382,11 @@ impl ::protobuf::Message for SolanaSignTx {
                 return false;
             }
         };
+        for v in &self.payment_req {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 
@@ -1392,6 +1404,9 @@ impl ::protobuf::Message for SolanaSignTx {
                 },
                 26 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.additional_info)?;
+                },
+                34 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.payment_req)?;
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -1415,6 +1430,10 @@ impl ::protobuf::Message for SolanaSignTx {
             let len = v.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
+        if let Some(v) = self.payment_req.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -1429,6 +1448,9 @@ impl ::protobuf::Message for SolanaSignTx {
         }
         if let Some(v) = self.additional_info.as_ref() {
             ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
+        }
+        if let Some(v) = self.payment_req.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(4, v, os)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -1450,6 +1472,7 @@ impl ::protobuf::Message for SolanaSignTx {
         self.address_n.clear();
         self.serialized_tx = ::std::option::Option::None;
         self.additional_info.clear();
+        self.payment_req.clear();
         self.special_fields.clear();
     }
 
@@ -1458,6 +1481,7 @@ impl ::protobuf::Message for SolanaSignTx {
             address_n: ::std::vec::Vec::new(),
             serialized_tx: ::std::option::Option::None,
             additional_info: ::protobuf::MessageField::none(),
+            payment_req: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -1643,26 +1667,29 @@ impl ::protobuf::reflect::ProtobufValue for SolanaTxSignature {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x15messages-solana.proto\x12\x19hw.trezor.messages.solana\"T\n\x12Sol\
-    anaGetPublicKey\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\
-    !\n\x0cshow_display\x18\x02\x20\x01(\x08R\x0bshowDisplay\"0\n\x0fSolanaP\
-    ublicKey\x12\x1d\n\npublic_key\x18\x01\x20\x02(\x0cR\tpublicKey\"n\n\x10\
-    SolanaGetAddress\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\
-    \x12!\n\x0cshow_display\x18\x02\x20\x01(\x08R\x0bshowDisplay\x12\x1a\n\
-    \x08chunkify\x18\x03\x20\x01(\x08R\x08chunkify\";\n\rSolanaAddress\x12\
-    \x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12\x10\n\x03mac\x18\
-    \x02\x20\x01(\x0cR\x03mac\"\xa6\x01\n\x18SolanaTxTokenAccountInfo\x12!\n\
-    \x0cbase_address\x18\x01\x20\x02(\tR\x0bbaseAddress\x12#\n\rtoken_progra\
-    m\x18\x02\x20\x02(\tR\x0ctokenProgram\x12\x1d\n\ntoken_mint\x18\x03\x20\
-    \x02(\tR\ttokenMint\x12#\n\rtoken_account\x18\x04\x20\x02(\tR\x0ctokenAc\
-    count\"\xa4\x01\n\x16SolanaTxAdditionalInfo\x12e\n\x14token_accounts_inf\
-    os\x18\x01\x20\x03(\x0b23.hw.trezor.messages.solana.SolanaTxTokenAccount\
-    InfoR\x12tokenAccountsInfos\x12#\n\rencoded_token\x18\x02\x20\x01(\x0cR\
-    \x0cencodedToken\"\xac\x01\n\x0cSolanaSignTx\x12\x1b\n\taddress_n\x18\
-    \x01\x20\x03(\rR\x08addressN\x12#\n\rserialized_tx\x18\x02\x20\x02(\x0cR\
-    \x0cserializedTx\x12Z\n\x0fadditional_info\x18\x03\x20\x01(\x0b21.hw.tre\
-    zor.messages.solana.SolanaTxAdditionalInfoR\x0eadditionalInfo\"1\n\x11So\
-    lanaTxSignature\x12\x1c\n\tsignature\x18\x01\x20\x02(\x0cR\tsignature\
+    \n\x15messages-solana.proto\x12\x19hw.trezor.messages.solana\x1a\x15mess\
+    ages-common.proto\x1a\roptions.proto\"T\n\x12SolanaGetPublicKey\x12\x1b\
+    \n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12!\n\x0cshow_display\x18\
+    \x02\x20\x01(\x08R\x0bshowDisplay\"0\n\x0fSolanaPublicKey\x12\x1d\n\npub\
+    lic_key\x18\x01\x20\x02(\x0cR\tpublicKey\"n\n\x10SolanaGetAddress\x12\
+    \x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12!\n\x0cshow_display\
+    \x18\x02\x20\x01(\x08R\x0bshowDisplay\x12\x1a\n\x08chunkify\x18\x03\x20\
+    \x01(\x08R\x08chunkify\";\n\rSolanaAddress\x12\x18\n\x07address\x18\x01\
+    \x20\x02(\tR\x07address\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"\
+    \xa6\x01\n\x18SolanaTxTokenAccountInfo\x12!\n\x0cbase_address\x18\x01\
+    \x20\x02(\tR\x0bbaseAddress\x12#\n\rtoken_program\x18\x02\x20\x02(\tR\
+    \x0ctokenProgram\x12\x1d\n\ntoken_mint\x18\x03\x20\x02(\tR\ttokenMint\
+    \x12#\n\rtoken_account\x18\x04\x20\x02(\tR\x0ctokenAccount\"\xa4\x01\n\
+    \x16SolanaTxAdditionalInfo\x12e\n\x14token_accounts_infos\x18\x01\x20\
+    \x03(\x0b23.hw.trezor.messages.solana.SolanaTxTokenAccountInfoR\x12token\
+    AccountsInfos\x12#\n\rencoded_token\x18\x02\x20\x01(\x0cR\x0cencodedToke\
+    n\"\xfe\x01\n\x0cSolanaSignTx\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\
+    \x08addressN\x12#\n\rserialized_tx\x18\x02\x20\x02(\x0cR\x0cserializedTx\
+    \x12Z\n\x0fadditional_info\x18\x03\x20\x01(\x0b21.hw.trezor.messages.sol\
+    ana.SolanaTxAdditionalInfoR\x0eadditionalInfo\x12P\n\x0bpayment_req\x18\
+    \x04\x20\x01(\x0b2).hw.trezor.messages.common.PaymentRequestR\npaymentRe\
+    qB\x04\xc8\xf0\x19\x01\"1\n\x11SolanaTxSignature\x12\x1c\n\tsignature\
+    \x18\x01\x20\x02(\x0cR\tsignature\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -1679,7 +1706,9 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     static file_descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::FileDescriptor> = ::protobuf::rt::Lazy::new();
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
-            let mut deps = ::std::vec::Vec::with_capacity(0);
+            let mut deps = ::std::vec::Vec::with_capacity(2);
+            deps.push(super::messages_common::file_descriptor().clone());
+            deps.push(super::options::file_descriptor().clone());
             let mut messages = ::std::vec::Vec::with_capacity(8);
             messages.push(SolanaGetPublicKey::generated_message_descriptor_data());
             messages.push(SolanaPublicKey::generated_message_descriptor_data());
