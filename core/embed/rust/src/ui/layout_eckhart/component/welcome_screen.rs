@@ -1,16 +1,10 @@
-use crate::{
-    trezorhal::model,
-    ui::{
-        component::{Component, Event, EventCtx, Never},
-        geometry::{Alignment, Offset, Rect},
-        shape::{self, Renderer},
-    },
+use crate::ui::{
+    component::{Component, Event, EventCtx, Never},
+    geometry::{Offset, Rect},
+    shape::Renderer,
 };
 
-use super::super::{
-    fonts,
-    theme::{GREY_LIGHT, TEXT_VERTICAL_SPACING},
-};
+use super::super::component::render_logo;
 
 const TEXT_OFFSET: Offset = Offset::new(30, 40);
 
@@ -38,17 +32,7 @@ impl Component for WelcomeScreen {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let font = fonts::FONT_SATOSHI_REGULAR_38;
-        let mut cursor = self.area.top_left() + TEXT_OFFSET;
-        let row_height = font.text_height() + TEXT_VERTICAL_SPACING;
-
-        for part in model::FULL_NAME.split(' ') {
-            shape::Text::new(cursor, part, font)
-                .with_align(Alignment::Start)
-                .with_fg(GREY_LIGHT)
-                .render(target);
-            cursor = cursor + Offset::y(row_height);
-        }
+        render_logo(target);
     }
 }
 
@@ -56,6 +40,5 @@ impl Component for WelcomeScreen {
 impl crate::trace::Trace for WelcomeScreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("WelcomeScreen");
-        t.string("model", model::FULL_NAME.into());
     }
 }
