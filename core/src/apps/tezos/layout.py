@@ -83,12 +83,11 @@ async def require_confirm_register_delegate(address: str, fee: int) -> None:
 
 
 def format_tezos_amount(value: int) -> str:
-    from trezor.strings import format_amount
+    from trezor.strings import format_amount, format_amount_unit
 
     from .helpers import TEZOS_AMOUNT_DECIMALS
 
-    formatted_value = format_amount(value, TEZOS_AMOUNT_DECIMALS)
-    return formatted_value + " XTZ"
+    return format_amount_unit(format_amount(value, TEZOS_AMOUNT_DECIMALS), "XTZ")
 
 
 async def require_confirm_ballot(proposal: str, ballot: str) -> None:

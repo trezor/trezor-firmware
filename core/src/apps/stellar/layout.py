@@ -133,8 +133,8 @@ def format_asset(asset: StellarAsset | None) -> str:
 
 
 def format_amount(amount: int, asset: StellarAsset | None = None) -> str:
-    return (
-        strings.format_amount(amount, consts.AMOUNT_DECIMALS)
-        + " "
-        + format_asset(asset)
+    from trezor.strings import format_amount_unit
+
+    return format_amount_unit(
+        strings.format_amount(amount, consts.AMOUNT_DECIMALS), format_asset(asset)
     )
