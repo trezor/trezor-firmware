@@ -26,7 +26,7 @@ class TestAuthorization(unittest.TestCase):
 
         def setUpClass(self):
             if __debug__:
-                thp_common.suppres_debug_log()
+                thp_common.suppress_debug_log()
             thp_common.prepare_context()
 
     else:
