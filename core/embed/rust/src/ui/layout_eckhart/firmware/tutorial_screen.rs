@@ -20,6 +20,7 @@ use super::super::{
 
 const LOADER_SPEED: u16 = 2;
 const ANIM_DURATION: Duration = Duration::from_secs(3);
+const ICONS_PADDING: i16 = 15; // [px]
 
 pub enum TutorialWelcomeScreenMsg {
     Confirmed,
@@ -34,7 +35,6 @@ pub struct TutorialWelcomeScreen {
 }
 
 impl TutorialWelcomeScreen {
-    const ICONS_PADDING: i16 = 10; // [px]
     pub fn new() -> Self {
         Self {
             text: Label::new(
@@ -111,7 +111,7 @@ impl Component for TutorialWelcomeScreen {
             icon_center
                 .sub(Point::new(
                     0,
-                    Self::ICONS_PADDING + icon_tropic.height() / 2,
+                    ICONS_PADDING + icon_tropic.height() / 2,
                 ))
                 .into(),
             theme::ICON_SECURED.toif,
