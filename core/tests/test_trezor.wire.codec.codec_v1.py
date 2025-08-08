@@ -20,7 +20,7 @@ def make_header(mtype, length):
 
 class TestWireCodecV1(unittest.TestCase):
     def setUp(self):
-        self.interface = MockHID(0xDEADBEEF)
+        self.interface = MockHID()
 
     def test_read_one_packet(self):
         # zero length message - just a header

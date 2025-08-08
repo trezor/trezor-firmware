@@ -6,7 +6,7 @@ class MockHID:
     TX_PACKET_LEN = 64
     RX_PACKET_LEN = 64
 
-    def __init__(self, num):
+    def __init__(self, num: int = 42):
         self.num = num
         self.data = []
         self.packet = None

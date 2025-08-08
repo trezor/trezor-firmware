@@ -75,7 +75,7 @@ class TestTrezorHostProtocolWriter(unittest.TestCase):
         super().__init__()
 
     def setUp(self):
-        self.interface = MockHID(0xDEADBEEF)
+        self.interface = MockHID()
 
     def test_write_empty_packet(self):
         self.await_until_result(writer.write_packet_to_wire(self.interface, b""))

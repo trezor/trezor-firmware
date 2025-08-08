@@ -18,7 +18,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         super().__init__()
 
     def setUp(self):
-        self.interface = MockHID(0xDEADBEEF)
+        self.interface = MockHID()
         memory_manager.READ_BUFFER = bytearray(64)
         memory_manager.WRITE_BUFFER = bytearray(256)
         interface_manager.decode_iface = thp_common.dummy_decode_iface

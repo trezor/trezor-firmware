@@ -43,7 +43,7 @@ class TestStorageCache(unittest.TestCase):
             super().__init__()
 
         def setUp(self):
-            self.interface = MockHID(0xDEADBEEF)
+            self.interface = MockHID()
             cache.clear_all()
 
         def test_new_channel_and_session(self):

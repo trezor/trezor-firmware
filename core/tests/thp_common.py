@@ -18,7 +18,7 @@ if utils.USE_THP:
         from trezor.wire import WireInterface
 
     def dummy_decode_iface(cached_iface: bytes):
-        return MockHID(0xDEADBEEF)
+        return MockHID()
 
     def dummy_encode_iface(iface: WireInterface):
         return _MOCK_INTERFACE_HID
