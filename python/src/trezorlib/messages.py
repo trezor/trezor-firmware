@@ -2328,6 +2328,7 @@ class CardanoSignTxInit(protobuf.MessageType):
         21: protobuf.Field("reference_inputs_count", "uint32", repeated=False, required=False, default=0),
         22: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
         23: protobuf.Field("tag_cbor_sets", "bool", repeated=False, required=False, default=False),
+        24: protobuf.Field("payment_req", "PaymentRequest", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -2356,6 +2357,7 @@ class CardanoSignTxInit(protobuf.MessageType):
         reference_inputs_count: Optional["int"] = 0,
         chunkify: Optional["bool"] = None,
         tag_cbor_sets: Optional["bool"] = False,
+        payment_req: Optional["PaymentRequest"] = None,
     ) -> None:
         self.signing_mode = signing_mode
         self.protocol_magic = protocol_magic
@@ -2380,6 +2382,7 @@ class CardanoSignTxInit(protobuf.MessageType):
         self.reference_inputs_count = reference_inputs_count
         self.chunkify = chunkify
         self.tag_cbor_sets = tag_cbor_sets
+        self.payment_req = payment_req
 
 
 class CardanoTxInput(protobuf.MessageType):

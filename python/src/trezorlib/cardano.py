@@ -900,6 +900,7 @@ def sign_tx(
     include_network_id: bool = False,
     chunkify: bool = False,
     tag_cbor_sets: bool = False,
+    payment_req: Optional[m.PaymentRequest] = None,
 ) -> Dict[str, Any]:
     witness_requests = _get_witness_requests(
         inputs,
@@ -936,6 +937,7 @@ def sign_tx(
             include_network_id=include_network_id,
             chunkify=chunkify,
             tag_cbor_sets=tag_cbor_sets,
+            payment_req=payment_req,
         ),
         expect=m.CardanoTxItemAck,
     )
