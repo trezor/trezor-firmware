@@ -39,7 +39,7 @@ class TestStorageCache(unittest.TestCase):
 
         def setUpClass(self):
             if __debug__:
-                thp_common.suppres_debug_log()
+                thp_common.suppress_debug_log()
             super().__init__()
 
         def setUp(self):

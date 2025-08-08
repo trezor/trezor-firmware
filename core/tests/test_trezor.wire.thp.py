@@ -13,7 +13,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
 
     def __init__(self):
         if __debug__:
-            thp_common.suppres_debug_log()
+            thp_common.suppress_debug_log()
         interface_manager.encode_iface = thp_common.dummy_encode_iface
         super().__init__()
 
