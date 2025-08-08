@@ -71,11 +71,11 @@ class TestTrezorHostProtocolWriter(unittest.TestCase):
 
     def __init__(self):
         if __debug__:
-            thp_common.suppres_debug_log()
+            thp_common.suppress_debug_log()
         super().__init__()
 
     def setUp(self):
-        self.interface = MockHID(0xDEADBEEF)
+        self.interface = MockHID()
 
     def test_write_empty_packet(self):
         self.await_until_result(writer.write_packet_to_wire(self.interface, b""))
