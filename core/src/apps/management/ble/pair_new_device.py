@@ -7,13 +7,6 @@ from trezor.ui.layouts import CONFIRMED, interact
 from trezor.wire import ActionCancelled
 
 
-def _end_pairing() -> None:
-    if ble.peer_count() > 0:
-        ble.start_advertising(True, storage_device.get_label())
-    else:
-        ble.stop_advertising()
-
-
 def _default_ble_name() -> str:
     """Return model name and three random letters.
 
@@ -34,6 +27,7 @@ def _default_ble_name() -> str:
 async def pair_new_device() -> None:
     label = storage_device.get_label() or _default_ble_name()
     ble.start_advertising(False, label)
+    result = None
     try:
         code = await interact(
             trezorui_api.show_pairing_device_name(
@@ -60,4 +54,6 @@ async def pair_new_device() -> None:
             if result is CONFIRMED:
                 ble.allow_pairing(code)
     finally:
-        _end_pairing()
+        if result is not CONFIRMED:
+            ble.reject_pairing()
+        ble.set_name(storage_device.get_label())

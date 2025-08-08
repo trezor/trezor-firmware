@@ -720,6 +720,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_send__transaction_signed;
   MP_QSTR_send__you_are_contributing;
   MP_QSTR_set_brightness;
+  MP_QSTR_set_name;
   MP_QSTR_setting__adjust;
   MP_QSTR_setting__apply;
   MP_QSTR_share_words__words_in_order;
@@ -759,7 +760,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_skip_first_paint;
   MP_QSTR_start_advertising;
   MP_QSTR_start_comm;
-  MP_QSTR_stop_advertising;
   MP_QSTR_storage_msg__processing;
   MP_QSTR_storage_msg__starting;
   MP_QSTR_storage_msg__verifying_pin;
@@ -771,6 +771,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_summary_br_name;
   MP_QSTR_summary_items;
   MP_QSTR_summary_title;
+  MP_QSTR_switch_off;
   MP_QSTR_text;
   MP_QSTR_text_check;
   MP_QSTR_text_confirm;
