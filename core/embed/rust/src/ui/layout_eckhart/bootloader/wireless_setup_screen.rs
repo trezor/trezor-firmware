@@ -83,12 +83,11 @@ impl WirelessSetupScreen {
             return;
         }
 
-        let qr_code_size = theme::bootloader::ICON_QR_TREZOR_IO_START.toif.width();
-        let padding = 20;
-        let qr_code_pad_size = qr_code_size + padding;
+        let qr_code_size = theme::bootloader::ICON_QR_TREZOR_IO_SETUP.toif.width();
+        let qr_code_pad_width = 11;
         let pad_area = Rect::snap(
             self.qr_area.center(),
-            Offset::new(qr_code_pad_size, qr_code_pad_size),
+            Offset::uniform(qr_code_size + qr_code_pad_width),
             Alignment2D::CENTER,
         );
 
@@ -99,7 +98,7 @@ impl WirelessSetupScreen {
             .render(target);
         shape::ToifImage::new(
             pad_area.center(),
-            theme::bootloader::ICON_QR_TREZOR_IO_START.toif,
+            theme::bootloader::ICON_QR_TREZOR_IO_SETUP.toif,
         )
         .with_align(Alignment2D::CENTER)
         .with_fg(theme::WHITE)
