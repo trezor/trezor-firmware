@@ -365,7 +365,7 @@ def cancel_recovery(debug: "DebugLink", recovery_type: str = "dry_run") -> None:
         debug.click(debug.screen_buttons.menu())
         layout = debug.read_layout()
         assert cancel_title in layout.text_content()
-        debug.click(debug.screen_buttons.vertical_menu_items()[0])
+        debug.button_actions.navigate_to_menu_item(0)
     else:
         raise ValueError("Unknown model")
 

@@ -351,7 +351,7 @@ class InputFlowSignVerifyMessageLong(InputFlowBase):
 
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
 
         br = yield
         self.debug.read_layout()
@@ -386,7 +386,7 @@ class InputFlowSignVerifyMessageLong(InputFlowBase):
 
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
 
         br = yield  # confirm address long
         self.debug.read_layout()
@@ -430,7 +430,7 @@ class InputFlowSignMessageInfo(InputFlowBase):
         self.client.ui._visit_menu_items()
         # cancel signature
         self.debug.click(self.debug.screen_buttons.menu())
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         # address mismatch? yes!
         self.debug.swipe_up()
         yield
@@ -493,16 +493,16 @@ class InputFlowShowAddressQRCode(InputFlowBase):
         # synchronize; TODO get rid of this once we have single-global-layout
         self.debug.synchronize_at("VerticalMenu")
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         self.debug.synchronize_at("Qr")
         # qr code
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+        self.debug.button_actions.navigate_to_menu_item(1)
         # address details
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[2])
+        self.debug.button_actions.navigate_to_menu_item(2)
         # cancel
         self.debug.swipe_up()
         # really cancel
@@ -523,16 +523,16 @@ class InputFlowShowAddressQRCode(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         self.debug.synchronize_at("Qr")
         # qr code
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+        self.debug.button_actions.navigate_to_menu_item(1)
         # address details
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[2])
+        self.debug.button_actions.navigate_to_menu_item(2)
         # cancel
         self.debug.click(self.debug.screen_buttons.cancel())
         # address
@@ -578,16 +578,16 @@ class InputFlowShowAddressQRCodeCancel(InputFlowBase):
         # synchronize; TODO get rid of this once we have single-global-layout
         self.debug.synchronize_at("VerticalMenu")
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         self.debug.synchronize_at("Qr")
         # qr code
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+        self.debug.button_actions.navigate_to_menu_item(1)
         # address details
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[2])
+        self.debug.button_actions.navigate_to_menu_item(2)
         # cancel
         self.debug.swipe_up()
         self.debug.synchronize_at("PromptScreen")
@@ -599,16 +599,16 @@ class InputFlowShowAddressQRCodeCancel(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         self.debug.synchronize_at("Qr")
         # qr code
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+        self.debug.button_actions.navigate_to_menu_item(1)
         # address details
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[2])
+        self.debug.button_actions.navigate_to_menu_item(2)
         # cancel
         self.debug.synchronize_at("TextScreen")
         self.debug.click(self.debug.screen_buttons.ok())
@@ -710,7 +710,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         yield  # multisig address warning
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+        self.debug.button_actions.navigate_to_menu_item(1)
 
         yield  # show address
         layout = self.debug.read_layout()
@@ -720,14 +720,14 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.menu())
         assert "VerticalMenu" in self.all_components()
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         self.debug.synchronize_at("Qr")
         # qr code
         assert "Qr" in self.all_components()
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
         assert "VerticalMenu" in self.all_components()
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+        self.debug.button_actions.navigate_to_menu_item(1)
         layout = self.debug.synchronize_at("AddressDetails")
         # address details
         assert "Multisig 2 of 3" in layout.screen_content()
@@ -741,7 +741,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[2])
+        self.debug.button_actions.navigate_to_menu_item(2)
         # cancel
         self.debug.swipe_up()
         # really cancel
@@ -762,7 +762,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         yield  # multisig address warning
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+        self.debug.button_actions.navigate_to_menu_item(1)
 
         yield  # show address
         layout = self.debug.read_layout()
@@ -772,14 +772,14 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.menu())
         assert "VerticalMenu" in self.all_components()
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         self.debug.synchronize_at("Qr")
         # qr code
         assert "QrScreen" in self.all_components()
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
         assert "VerticalMenu" in self.all_components()
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+        self.debug.button_actions.navigate_to_menu_item(1)
         layout = self.debug.synchronize_at("TextScreen")
         # address details
         assert "Multisig 2 of 3" in layout.screen_content()
@@ -792,7 +792,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[2])
+        self.debug.button_actions.navigate_to_menu_item(2)
         # cancel
         self.debug.click(self.debug.screen_buttons.cancel())
         # address
@@ -879,14 +879,14 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.menu())
         assert "VerticalMenu" in self.all_components()
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         self.debug.synchronize_at("Qr")
         # qr code
         assert "Qr" in self.all_components()
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
         assert "VerticalMenu" in self.all_components()
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+        self.debug.button_actions.navigate_to_menu_item(1)
         layout = self.debug.synchronize_at("AddressDetails")
         # address details
         assert TR.address_details__derivation_path in layout.screen_content()
@@ -894,7 +894,7 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.menu())
         layout = self.debug.synchronize_at("VerticalMenu")
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[2])
+        self.debug.button_actions.navigate_to_menu_item(2)
         # cancel
         self.debug.swipe_up()
         # really cancel
@@ -939,14 +939,14 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.menu())
         assert "VerticalMenu" in self.all_components()
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         self.debug.synchronize_at("Qr")
         # qr code
         assert "QrScreen" in self.all_components()
         self.debug.click(self.debug.screen_buttons.menu())
         # menu
         assert "VerticalMenu" in self.all_components()
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+        self.debug.button_actions.navigate_to_menu_item(1)
         layout = self.debug.synchronize_at("TextScreen")
         # address details
         assert TR.address_details__derivation_path in layout.screen_content()
@@ -954,7 +954,7 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         self.debug.click(self.debug.screen_buttons.menu())
         layout = self.debug.synchronize_at("VerticalMenu")
         # menu
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[2])
+        self.debug.button_actions.navigate_to_menu_item(2)
         # cancel
         self.debug.click(self.debug.screen_buttons.cancel())
         # address
@@ -1061,20 +1061,20 @@ def sign_tx_go_to_info_delizia(
         client.debug.read_layout()
         client.debug.click(client.debug.screen_buttons.menu())
         client.debug.synchronize_at("VerticalMenu")
-        client.debug.click(client.debug.screen_buttons.vertical_menu_items()[1])
+        client.debug.button_actions.navigate_to_menu_item(1)
 
     yield  # confirm transaction
     client.debug.read_layout()
     client.debug.click(client.debug.screen_buttons.menu())
     client.debug.synchronize_at("VerticalMenu")
-    client.debug.click(client.debug.screen_buttons.vertical_menu_items()[0])
+    client.debug.button_actions.navigate_to_menu_item(0)
 
     layout = client.debug.read_layout()
     content = layout.text_content()
 
     client.debug.click(client.debug.screen_buttons.menu())
     client.debug.synchronize_at("VerticalMenu")
-    client.debug.click(client.debug.screen_buttons.vertical_menu_items()[1])
+    client.debug.button_actions.navigate_to_menu_item(1)
 
     layout = client.debug.read_layout()
     content += " " + layout.text_content()
@@ -1101,20 +1101,20 @@ def sign_tx_go_to_info_eckhart(
         client.debug.read_layout()
         client.debug.click(client.debug.screen_buttons.menu())
         client.debug.synchronize_at("VerticalMenu")
-        client.debug.click(client.debug.screen_buttons.vertical_menu_items()[1])
+        client.debug.button_actions.navigate_to_menu_item(1)
 
     yield  # confirm transaction
     client.debug.read_layout()
     client.debug.click(client.debug.screen_buttons.menu())
     client.debug.synchronize_at("VerticalMenu")
-    client.debug.click(client.debug.screen_buttons.vertical_menu_items()[0])
+    client.debug.button_actions.navigate_to_menu_item(0)
 
     layout = client.debug.read_layout()
     content = layout.text_content()
 
     client.debug.click(client.debug.screen_buttons.menu())
     client.debug.synchronize_at("VerticalMenu")
-    client.debug.click(client.debug.screen_buttons.vertical_menu_items()[1])
+    client.debug.button_actions.navigate_to_menu_item(1)
 
     layout = client.debug.read_layout()
     content += " " + layout.text_content()
@@ -1245,14 +1245,14 @@ class InputFlowSignTxInformationCancel(InputFlowBase):
     def input_flow_delizia(self) -> BRGeneratorType:
         yield from sign_tx_go_to_info_delizia(self.client)
         self.debug.click(self.debug.screen_buttons.menu())
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[2])
+        self.debug.button_actions.navigate_to_menu_item(2)
         self.debug.synchronize_at("PromptScreen")
         self.debug.click(self.debug.screen_buttons.tap_to_confirm())
 
     def input_flow_eckhart(self) -> BRGeneratorType:
         yield from sign_tx_go_to_info_eckhart(self.client)
         self.debug.click(self.debug.screen_buttons.menu())
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[2])
+        self.debug.button_actions.navigate_to_menu_item(2)
         self.debug.synchronize_at("TextScreen")
         self.debug.click(self.debug.screen_buttons.ok())
 
@@ -1308,7 +1308,7 @@ class InputFlowSignTxInformationReplacement(InputFlowBase):
 
         yield  # transaction summary, press info
         self.debug.click(self.client.debug.screen_buttons.menu())
-        self.debug.click(self.client.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         # close menu
         self.debug.click(self.client.debug.screen_buttons.menu())
         self.debug.press_yes()
@@ -1479,7 +1479,7 @@ class InputFlowEIP712ShowMore(InputFlowBase):
             self.debug.press_right()
         elif self.client.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
             self.debug.click(self.debug.screen_buttons.menu())
-            self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+            self.debug.button_actions.navigate_to_menu_item(0)
         else:
             raise NotImplementedError
 
@@ -2840,7 +2840,7 @@ class InputFlowResetSkipBackup(InputFlowBase):
         yield
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         self.debug.swipe_up()
         self.debug.synchronize_at("PromptScreen")
         self.debug.click(self.debug.screen_buttons.tap_to_confirm())
@@ -2853,7 +2853,7 @@ class InputFlowResetSkipBackup(InputFlowBase):
         yield
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.button_actions.navigate_to_menu_item(0)
         self.debug.press_no()
 
 
@@ -2888,7 +2888,7 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             if any(needle.lower() in text for needle in hi_prio):
                 self.debug.click(self.debug.screen_buttons.menu())
                 self.debug.synchronize_at("VerticalMenu")
-                self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+                self.debug.button_actions.navigate_to_menu_item(1)
             elif "PromptScreen" in layout.all_components():
                 self.debug.press_yes()
             elif "SwipeContent" in layout.all_components():
@@ -2915,7 +2915,7 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             if any(needle.lower() in text for needle in hi_prio):
                 self.debug.click(self.debug.screen_buttons.menu())
                 self.debug.synchronize_at("VerticalMenu")
-                self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+                self.debug.button_actions.navigate_to_menu_item(1)
             else:
                 self.debug.click(self.debug.screen_buttons.ok())
             br = yield
