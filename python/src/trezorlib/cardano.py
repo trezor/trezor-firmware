@@ -330,7 +330,7 @@ def _parse_address_parameters(
 
 def parse_optional_address_parameters(
     address_parameters: Optional[dict],
-) -> Optional[messages.CardanoAddressParametersType]:
+) -> Optional[m.CardanoAddressParametersType]:
     if address_parameters is None:
         return None
 
@@ -1021,22 +1021,21 @@ def sign_tx(
 
 
 def sign_message(
-    client: "TrezorClient",
+    session: "Session",
     signing_path: Path,
     payload: bytes,
     hash_payload: bool,
     prefer_hex_display: bool,
-    address_parameters: Optional[messages.CardanoAddressParametersType] = None,
-    derivation_type: messages.CardanoDerivationType = messages.CardanoDerivationType.ICARUS,
+    address_parameters: Optional[m.CardanoAddressParametersType] = None,
+    derivation_type: m.CardanoDerivationType = m.CardanoDerivationType.ICARUS,
     protocol_magic: Optional[int] = None,
     network_id: Optional[int] = None,
-) -> messages.CardanoSignMessageFinished:
-    UNEXPECTED_RESPONSE_ERROR = exceptions.TrezorException("Unexpected response")
+) -> m.CardanoSignMessageFinished:
 
-    size, chunks = _parse_chunkable_data(payload, messages.CardanoMessagePayloadChunk)
+    size, chunks = _parse_chunkable_data(payload, m.CardanoMessagePayloadChunk)
 
-    response = client.call(
-        messages.CardanoSignMessageInit(
+    response = session.call(
+        m.CardanoSignMessageInit(
             signing_path=signing_path,
             payload_size=size,
             hash_payload=hash_payload,
@@ -1045,20 +1044,13 @@ def sign_message(
             protocol_magic=protocol_magic,
             network_id=network_id,
             derivation_type=derivation_type,
-        )
+        ),
+        expect=m.CardanoMessageItemAck,
     )
 
-    if not isinstance(response, messages.CardanoMessageItemAck):
-        raise UNEXPECTED_RESPONSE_ERROR
-
     for chunk in chunks:
-        chunk_response = client.call(chunk)
-        if not isinstance(chunk_response, messages.CardanoMessageItemAck):
-            raise UNEXPECTED_RESPONSE_ERROR
+        session.call(chunk, expect=m.CardanoMessageItemAck)
 
-    final_response = client.call(messages.CardanoMessageItemHostAck())
-
-    if not isinstance(final_response, messages.CardanoSignMessageFinished):
-        raise UNEXPECTED_RESPONSE_ERROR
-
-    return final_response
+    return session.call(
+        m.CardanoMessageItemHostAck(), expect=m.CardanoSignMessageFinished
+    )

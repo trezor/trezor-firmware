@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from apps.common.cbor import CborSequence
 
     Headers = dict[str | int, Any]
+    from apps.common.keychain import Keychain as Slip21Keychain
 
 _COSE_HEADER_ADDRESS_KEY = "address"
 _COSE_HEADER_ALGORITHM_KEY = const(1)
@@ -152,7 +153,9 @@ def _sign_sig_structure(
 
 @seed.with_keychain
 async def sign_message(
-    msg: CardanoSignMessageInit, keychain: seed.Keychain
+    msg: CardanoSignMessageInit,
+    keychain: seed.Keychain,
+    slip21_keychain: "Slip21Keychain",
 ) -> CardanoSignMessageFinished:
     from trezor.messages import CardanoSignMessageFinished
 

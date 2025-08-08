@@ -333,18 +333,17 @@ def get_native_script_hash(
     type=ChoiceType({m.name: m for m in messages.CardanoDerivationType}),
     default=messages.CardanoDerivationType.ICARUS,
 )
-@with_client
+@with_session(derive_cardano=True)
 def sign_message(
-    client: "TrezorClient",
+    session: "Session",
     file: TextIO,
     derivation_type: messages.CardanoDerivationType,
 ) -> messages.CardanoSignMessageFinished:
     """Sign Cardano message containing arbitrary data."""
     request: dict[Any, Any] = json.load(file)
 
-    client.init_device(derive_cardano=True)
     return cardano.sign_message(
-        client,
+        session,
         payload=bytes.fromhex(request["payload"]),
         hash_payload=request["hash_payload"],
         prefer_hex_display=request["prefer_hex_display"],

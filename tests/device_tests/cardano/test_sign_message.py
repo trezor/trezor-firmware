@@ -1,7 +1,7 @@
 import pytest
 
 from trezorlib import cardano, messages, tools
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 
 from ...common import parametrize_using_common_fixtures
@@ -14,26 +14,24 @@ pytestmark = [
 
 
 @parametrize_using_common_fixtures("cardano/sign_message.json")
-def test_cardano_sign_message(client: Client, parameters, result):
-    response = call_sign_message(client, parameters)
+def test_cardano_sign_message(session: Session, parameters, result):
+    response = call_sign_message(session, parameters)
     assert response == _transform_expected_result(result)
 
 
 @parametrize_using_common_fixtures("cardano/sign_message.failed.json")
-def test_cardano_sign_message_failed(client: Client, parameters, result):
+def test_cardano_sign_message_failed(session: Session, parameters, result):
     with pytest.raises(TrezorFailure, match=result["error_message"]):
-        call_sign_message(client, parameters)
+        call_sign_message(session, parameters)
 
 
 def call_sign_message(
-    client: Client,
+    session: Session,
     parameters,
 ) -> messages.CardanoSignMessageFinished:
-    client.init_device(new_session=True, derive_cardano=True)
-
-    with client:
+    with session.client:
         return cardano.sign_message(
-            client,
+            session=session,
             payload=bytes.fromhex(parameters["payload"]),
             hash_payload=parameters["hash_payload"],
             prefer_hex_display=parameters["prefer_hex_display"],
