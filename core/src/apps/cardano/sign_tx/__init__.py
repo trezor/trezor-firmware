@@ -43,7 +43,7 @@ async def sign_tx(
     else:
         raise RuntimeError  # should be unreachable
 
-    signer = signer_type(msg, keychain)
+    signer = signer_type(msg, keychain, slip21_keychain)
 
     try:
         await signer.sign()

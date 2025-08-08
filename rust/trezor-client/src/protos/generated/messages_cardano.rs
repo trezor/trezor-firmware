@@ -2344,6 +2344,8 @@ pub struct CardanoSignTxInit {
     pub chunkify: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.cardano.CardanoSignTxInit.tag_cbor_sets)
     pub tag_cbor_sets: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.cardano.CardanoSignTxInit.payment_req)
+    pub payment_req: ::protobuf::MessageField<super::messages_common::PaymentRequest>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.cardano.CardanoSignTxInit.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -2821,7 +2823,7 @@ impl CardanoSignTxInit {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(23);
+        let mut fields = ::std::vec::Vec::with_capacity(24);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "signing_mode",
@@ -2938,6 +2940,11 @@ impl CardanoSignTxInit {
             |m: &CardanoSignTxInit| { &m.tag_cbor_sets },
             |m: &mut CardanoSignTxInit| { &mut m.tag_cbor_sets },
         ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, super::messages_common::PaymentRequest>(
+            "payment_req",
+            |m: &CardanoSignTxInit| { &m.payment_req },
+            |m: &mut CardanoSignTxInit| { &mut m.payment_req },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CardanoSignTxInit>(
             "CardanoSignTxInit",
             fields,
@@ -2992,6 +2999,11 @@ impl ::protobuf::Message for CardanoSignTxInit {
         if self.required_signers_count.is_none() {
             return false;
         }
+        for v in &self.payment_req {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 
@@ -3066,6 +3078,9 @@ impl ::protobuf::Message for CardanoSignTxInit {
                 },
                 184 => {
                     self.tag_cbor_sets = ::std::option::Option::Some(is.read_bool()?);
+                },
+                194 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.payment_req)?;
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -3148,6 +3163,10 @@ impl ::protobuf::Message for CardanoSignTxInit {
         if let Some(v) = self.tag_cbor_sets {
             my_size += 2 + 1;
         }
+        if let Some(v) = self.payment_req.as_ref() {
+            let len = v.compute_size();
+            my_size += 2 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -3223,6 +3242,9 @@ impl ::protobuf::Message for CardanoSignTxInit {
         if let Some(v) = self.tag_cbor_sets {
             os.write_bool(23, v)?;
         }
+        if let Some(v) = self.payment_req.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(24, v, os)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -3263,6 +3285,7 @@ impl ::protobuf::Message for CardanoSignTxInit {
         self.reference_inputs_count = ::std::option::Option::None;
         self.chunkify = ::std::option::Option::None;
         self.tag_cbor_sets = ::std::option::Option::None;
+        self.payment_req.clear();
         self.special_fields.clear();
     }
 
@@ -3291,6 +3314,7 @@ impl ::protobuf::Message for CardanoSignTxInit {
             reference_inputs_count: ::std::option::Option::None,
             chunkify: ::std::option::Option::None,
             tag_cbor_sets: ::std::option::Option::None,
+            payment_req: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -10490,108 +10514,110 @@ impl CardanoTxWitnessType {
 
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x16messages-cardano.proto\x12\x1ahw.trezor.messages.cardano\x1a\x15me\
-    ssages-common.proto\"\x87\x01\n\x1cCardanoBlockchainPointerType\x12\x1f\
-    \n\x0bblock_index\x18\x01\x20\x02(\rR\nblockIndex\x12\x19\n\x08tx_index\
-    \x18\x02\x20\x02(\rR\x07txIndex\x12+\n\x11certificate_index\x18\x03\x20\
-    \x02(\rR\x10certificateIndex\"\xef\x02\n\x13CardanoNativeScript\x12G\n\
-    \x04type\x18\x01\x20\x02(\x0e23.hw.trezor.messages.cardano.CardanoNative\
-    ScriptTypeR\x04type\x12I\n\x07scripts\x18\x02\x20\x03(\x0b2/.hw.trezor.m\
-    essages.cardano.CardanoNativeScriptR\x07scripts\x12\x19\n\x08key_hash\
-    \x18\x03\x20\x01(\x0cR\x07keyHash\x12\x19\n\x08key_path\x18\x04\x20\x03(\
-    \rR\x07keyPath\x12:\n\x19required_signatures_count\x18\x05\x20\x01(\rR\
-    \x17requiredSignaturesCount\x12%\n\x0einvalid_before\x18\x06\x20\x01(\
-    \x04R\rinvalidBefore\x12+\n\x11invalid_hereafter\x18\x07\x20\x01(\x04R\
-    \x10invalidHereafter\"\xaa\x02\n\x1aCardanoGetNativeScriptHash\x12G\n\
-    \x06script\x18\x01\x20\x02(\x0b2/.hw.trezor.messages.cardano.CardanoNati\
-    veScriptR\x06script\x12g\n\x0edisplay_format\x18\x02\x20\x02(\x0e2@.hw.t\
-    rezor.messages.cardano.CardanoNativeScriptHashDisplayFormatR\rdisplayFor\
-    mat\x12Z\n\x0fderivation_type\x18\x03\x20\x02(\x0e21.hw.trezor.messages.\
-    cardano.CardanoDerivationTypeR\x0ederivationType\":\n\x17CardanoNativeSc\
-    riptHash\x12\x1f\n\x0bscript_hash\x18\x01\x20\x02(\x0cR\nscriptHash\"\
-    \xaf\x03\n\x1cCardanoAddressParametersType\x12Q\n\x0caddress_type\x18\
-    \x01\x20\x02(\x0e2..hw.trezor.messages.cardano.CardanoAddressTypeR\x0bad\
-    dressType\x12\x1b\n\taddress_n\x18\x02\x20\x03(\rR\x08addressN\x12*\n\
-    \x11address_n_staking\x18\x03\x20\x03(\rR\x0faddressNStaking\x12(\n\x10s\
-    taking_key_hash\x18\x04\x20\x01(\x0cR\x0estakingKeyHash\x12i\n\x13certif\
-    icate_pointer\x18\x05\x20\x01(\x0b28.hw.trezor.messages.cardano.CardanoB\
-    lockchainPointerTypeR\x12certificatePointer\x12.\n\x13script_payment_has\
-    h\x18\x06\x20\x01(\x0cR\x11scriptPaymentHash\x12.\n\x13script_staking_ha\
-    sh\x18\x07\x20\x01(\x0cR\x11scriptStakingHash\"\xe4\x02\n\x11CardanoGetA\
-    ddress\x12(\n\x0cshow_display\x18\x02\x20\x01(\x08:\x05falseR\x0bshowDis\
-    play\x12%\n\x0eprotocol_magic\x18\x03\x20\x02(\rR\rprotocolMagic\x12\x1d\
-    \n\nnetwork_id\x18\x04\x20\x02(\rR\tnetworkId\x12g\n\x12address_paramete\
-    rs\x18\x05\x20\x02(\x0b28.hw.trezor.messages.cardano.CardanoAddressParam\
-    etersTypeR\x11addressParameters\x12Z\n\x0fderivation_type\x18\x06\x20\
-    \x02(\x0e21.hw.trezor.messages.cardano.CardanoDerivationTypeR\x0ederivat\
-    ionType\x12\x1a\n\x08chunkify\x18\x07\x20\x01(\x08R\x08chunkify\"<\n\x0e\
-    CardanoAddress\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12\
-    \x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"\xb1\x01\n\x13CardanoGetPubl\
-    icKey\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12!\n\x0csho\
-    w_display\x18\x02\x20\x01(\x08R\x0bshowDisplay\x12Z\n\x0fderivation_type\
-    \x18\x03\x20\x02(\x0e21.hw.trezor.messages.cardano.CardanoDerivationType\
-    R\x0ederivationType\"a\n\x10CardanoPublicKey\x12\x12\n\x04xpub\x18\x01\
-    \x20\x02(\tR\x04xpub\x129\n\x04node\x18\x02\x20\x02(\x0b2%.hw.trezor.mes\
-    sages.common.HDNodeTypeR\x04node\"\xde\x08\n\x11CardanoSignTxInit\x12S\n\
-    \x0csigning_mode\x18\x01\x20\x02(\x0e20.hw.trezor.messages.cardano.Carda\
-    noTxSigningModeR\x0bsigningMode\x12%\n\x0eprotocol_magic\x18\x02\x20\x02\
-    (\rR\rprotocolMagic\x12\x1d\n\nnetwork_id\x18\x03\x20\x02(\rR\tnetworkId\
-    \x12!\n\x0cinputs_count\x18\x04\x20\x02(\rR\x0binputsCount\x12#\n\routpu\
-    ts_count\x18\x05\x20\x02(\rR\x0coutputsCount\x12\x10\n\x03fee\x18\x06\
-    \x20\x02(\x04R\x03fee\x12\x10\n\x03ttl\x18\x07\x20\x01(\x04R\x03ttl\x12-\
-    \n\x12certificates_count\x18\x08\x20\x02(\rR\x11certificatesCount\x12+\n\
-    \x11withdrawals_count\x18\t\x20\x02(\rR\x10withdrawalsCount\x12,\n\x12ha\
-    s_auxiliary_data\x18\n\x20\x02(\x08R\x10hasAuxiliaryData\x126\n\x17valid\
-    ity_interval_start\x18\x0b\x20\x01(\x04R\x15validityIntervalStart\x124\n\
-    \x16witness_requests_count\x18\x0c\x20\x02(\rR\x14witnessRequestsCount\
-    \x12;\n\x1aminting_asset_groups_count\x18\r\x20\x02(\rR\x17mintingAssetG\
-    roupsCount\x12Z\n\x0fderivation_type\x18\x0e\x20\x02(\x0e21.hw.trezor.me\
-    ssages.cardano.CardanoDerivationTypeR\x0ederivationType\x123\n\x12includ\
-    e_network_id\x18\x0f\x20\x01(\x08:\x05falseR\x10includeNetworkId\x12(\n\
-    \x10script_data_hash\x18\x10\x20\x01(\x0cR\x0escriptDataHash\x126\n\x17c\
-    ollateral_inputs_count\x18\x11\x20\x02(\rR\x15collateralInputsCount\x124\
-    \n\x16required_signers_count\x18\x12\x20\x02(\rR\x14requiredSignersCount\
-    \x129\n\x15has_collateral_return\x18\x13\x20\x01(\x08:\x05falseR\x13hasC\
-    ollateralReturn\x12)\n\x10total_collateral\x18\x14\x20\x01(\x04R\x0ftota\
-    lCollateral\x127\n\x16reference_inputs_count\x18\x15\x20\x01(\r:\x010R\
-    \x14referenceInputsCount\x12\x1a\n\x08chunkify\x18\x16\x20\x01(\x08R\x08\
-    chunkify\x12)\n\rtag_cbor_sets\x18\x17\x20\x01(\x08:\x05falseR\x0btagCbo\
-    rSets\"L\n\x0eCardanoTxInput\x12\x1b\n\tprev_hash\x18\x01\x20\x02(\x0cR\
-    \x08prevHash\x12\x1d\n\nprev_index\x18\x02\x20\x02(\rR\tprevIndex\"\xc5\
-    \x03\n\x0fCardanoTxOutput\x12\x18\n\x07address\x18\x01\x20\x01(\tR\x07ad\
-    dress\x12g\n\x12address_parameters\x18\x02\x20\x01(\x0b28.hw.trezor.mess\
-    ages.cardano.CardanoAddressParametersTypeR\x11addressParameters\x12\x16\
-    \n\x06amount\x18\x03\x20\x02(\x04R\x06amount\x12,\n\x12asset_groups_coun\
-    t\x18\x04\x20\x02(\rR\x10assetGroupsCount\x12\x1d\n\ndatum_hash\x18\x05\
-    \x20\x01(\x0cR\tdatumHash\x12d\n\x06format\x18\x06\x20\x01(\x0e2>.hw.tre\
-    zor.messages.cardano.CardanoTxOutputSerializationFormat:\x0cARRAY_LEGACY\
-    R\x06format\x12-\n\x11inline_datum_size\x18\x07\x20\x01(\r:\x010R\x0finl\
-    ineDatumSize\x125\n\x15reference_script_size\x18\x08\x20\x01(\r:\x010R\
-    \x13referenceScriptSize\"S\n\x11CardanoAssetGroup\x12\x1b\n\tpolicy_id\
-    \x18\x01\x20\x02(\x0cR\x08policyId\x12!\n\x0ctokens_count\x18\x02\x20\
-    \x02(\rR\x0btokensCount\"q\n\x0cCardanoToken\x12(\n\x10asset_name_bytes\
-    \x18\x01\x20\x02(\x0cR\x0eassetNameBytes\x12\x16\n\x06amount\x18\x02\x20\
-    \x01(\x04R\x06amount\x12\x1f\n\x0bmint_amount\x18\x03\x20\x01(\x12R\nmin\
-    tAmount\"/\n\x19CardanoTxInlineDatumChunk\x12\x12\n\x04data\x18\x01\x20\
-    \x02(\x0cR\x04data\"3\n\x1dCardanoTxReferenceScriptChunk\x12\x12\n\x04da\
-    ta\x18\x01\x20\x02(\x0cR\x04data\"f\n\x10CardanoPoolOwner\x12(\n\x10stak\
-    ing_key_path\x18\x01\x20\x03(\rR\x0estakingKeyPath\x12(\n\x10staking_key\
-    _hash\x18\x02\x20\x01(\x0cR\x0estakingKeyHash\"\xd9\x01\n\x1aCardanoPool\
-    RelayParameters\x12D\n\x04type\x18\x01\x20\x02(\x0e20.hw.trezor.messages\
-    .cardano.CardanoPoolRelayTypeR\x04type\x12!\n\x0cipv4_address\x18\x02\
-    \x20\x01(\x0cR\x0bipv4Address\x12!\n\x0cipv6_address\x18\x03\x20\x01(\
-    \x0cR\x0bipv6Address\x12\x1b\n\thost_name\x18\x04\x20\x01(\tR\x08hostNam\
-    e\x12\x12\n\x04port\x18\x05\x20\x01(\rR\x04port\"?\n\x17CardanoPoolMetad\
-    ataType\x12\x10\n\x03url\x18\x01\x20\x02(\tR\x03url\x12\x12\n\x04hash\
-    \x18\x02\x20\x02(\x0cR\x04hash\"\x9a\x03\n\x19CardanoPoolParametersType\
-    \x12\x17\n\x07pool_id\x18\x01\x20\x02(\x0cR\x06poolId\x12\x20\n\x0cvrf_k\
-    ey_hash\x18\x02\x20\x02(\x0cR\nvrfKeyHash\x12\x16\n\x06pledge\x18\x03\
-    \x20\x02(\x04R\x06pledge\x12\x12\n\x04cost\x18\x04\x20\x02(\x04R\x04cost\
-    \x12)\n\x10margin_numerator\x18\x05\x20\x02(\x04R\x0fmarginNumerator\x12\
-    -\n\x12margin_denominator\x18\x06\x20\x02(\x04R\x11marginDenominator\x12\
-    %\n\x0ereward_account\x18\x07\x20\x02(\tR\rrewardAccount\x12O\n\x08metad\
-    ata\x18\n\x20\x01(\x0b23.hw.trezor.messages.cardano.CardanoPoolMetadataT\
-    ypeR\x08metadata\x12!\n\x0cowners_count\x18\x0b\x20\x02(\rR\x0bownersCou\
-    nt\x12!\n\x0crelays_count\x18\x0c\x20\x02(\rR\x0brelaysCount\"\x8a\x01\n\
+    ssages-common.proto\x1a\roptions.proto\"\x87\x01\n\x1cCardanoBlockchainP\
+    ointerType\x12\x1f\n\x0bblock_index\x18\x01\x20\x02(\rR\nblockIndex\x12\
+    \x19\n\x08tx_index\x18\x02\x20\x02(\rR\x07txIndex\x12+\n\x11certificate_\
+    index\x18\x03\x20\x02(\rR\x10certificateIndex\"\xef\x02\n\x13CardanoNati\
+    veScript\x12G\n\x04type\x18\x01\x20\x02(\x0e23.hw.trezor.messages.cardan\
+    o.CardanoNativeScriptTypeR\x04type\x12I\n\x07scripts\x18\x02\x20\x03(\
+    \x0b2/.hw.trezor.messages.cardano.CardanoNativeScriptR\x07scripts\x12\
+    \x19\n\x08key_hash\x18\x03\x20\x01(\x0cR\x07keyHash\x12\x19\n\x08key_pat\
+    h\x18\x04\x20\x03(\rR\x07keyPath\x12:\n\x19required_signatures_count\x18\
+    \x05\x20\x01(\rR\x17requiredSignaturesCount\x12%\n\x0einvalid_before\x18\
+    \x06\x20\x01(\x04R\rinvalidBefore\x12+\n\x11invalid_hereafter\x18\x07\
+    \x20\x01(\x04R\x10invalidHereafter\"\xaa\x02\n\x1aCardanoGetNativeScript\
+    Hash\x12G\n\x06script\x18\x01\x20\x02(\x0b2/.hw.trezor.messages.cardano.\
+    CardanoNativeScriptR\x06script\x12g\n\x0edisplay_format\x18\x02\x20\x02(\
+    \x0e2@.hw.trezor.messages.cardano.CardanoNativeScriptHashDisplayFormatR\
+    \rdisplayFormat\x12Z\n\x0fderivation_type\x18\x03\x20\x02(\x0e21.hw.trez\
+    or.messages.cardano.CardanoDerivationTypeR\x0ederivationType\":\n\x17Car\
+    danoNativeScriptHash\x12\x1f\n\x0bscript_hash\x18\x01\x20\x02(\x0cR\nscr\
+    iptHash\"\xaf\x03\n\x1cCardanoAddressParametersType\x12Q\n\x0caddress_ty\
+    pe\x18\x01\x20\x02(\x0e2..hw.trezor.messages.cardano.CardanoAddressTypeR\
+    \x0baddressType\x12\x1b\n\taddress_n\x18\x02\x20\x03(\rR\x08addressN\x12\
+    *\n\x11address_n_staking\x18\x03\x20\x03(\rR\x0faddressNStaking\x12(\n\
+    \x10staking_key_hash\x18\x04\x20\x01(\x0cR\x0estakingKeyHash\x12i\n\x13c\
+    ertificate_pointer\x18\x05\x20\x01(\x0b28.hw.trezor.messages.cardano.Car\
+    danoBlockchainPointerTypeR\x12certificatePointer\x12.\n\x13script_paymen\
+    t_hash\x18\x06\x20\x01(\x0cR\x11scriptPaymentHash\x12.\n\x13script_staki\
+    ng_hash\x18\x07\x20\x01(\x0cR\x11scriptStakingHash\"\xe4\x02\n\x11Cardan\
+    oGetAddress\x12(\n\x0cshow_display\x18\x02\x20\x01(\x08:\x05falseR\x0bsh\
+    owDisplay\x12%\n\x0eprotocol_magic\x18\x03\x20\x02(\rR\rprotocolMagic\
+    \x12\x1d\n\nnetwork_id\x18\x04\x20\x02(\rR\tnetworkId\x12g\n\x12address_\
+    parameters\x18\x05\x20\x02(\x0b28.hw.trezor.messages.cardano.CardanoAddr\
+    essParametersTypeR\x11addressParameters\x12Z\n\x0fderivation_type\x18\
+    \x06\x20\x02(\x0e21.hw.trezor.messages.cardano.CardanoDerivationTypeR\
+    \x0ederivationType\x12\x1a\n\x08chunkify\x18\x07\x20\x01(\x08R\x08chunki\
+    fy\"<\n\x0eCardanoAddress\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07ad\
+    dress\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"\xb1\x01\n\x13Carda\
+    noGetPublicKey\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12!\
+    \n\x0cshow_display\x18\x02\x20\x01(\x08R\x0bshowDisplay\x12Z\n\x0fderiva\
+    tion_type\x18\x03\x20\x02(\x0e21.hw.trezor.messages.cardano.CardanoDeriv\
+    ationTypeR\x0ederivationType\"a\n\x10CardanoPublicKey\x12\x12\n\x04xpub\
+    \x18\x01\x20\x02(\tR\x04xpub\x129\n\x04node\x18\x02\x20\x02(\x0b2%.hw.tr\
+    ezor.messages.common.HDNodeTypeR\x04node\"\xb0\t\n\x11CardanoSignTxInit\
+    \x12S\n\x0csigning_mode\x18\x01\x20\x02(\x0e20.hw.trezor.messages.cardan\
+    o.CardanoTxSigningModeR\x0bsigningMode\x12%\n\x0eprotocol_magic\x18\x02\
+    \x20\x02(\rR\rprotocolMagic\x12\x1d\n\nnetwork_id\x18\x03\x20\x02(\rR\tn\
+    etworkId\x12!\n\x0cinputs_count\x18\x04\x20\x02(\rR\x0binputsCount\x12#\
+    \n\routputs_count\x18\x05\x20\x02(\rR\x0coutputsCount\x12\x10\n\x03fee\
+    \x18\x06\x20\x02(\x04R\x03fee\x12\x10\n\x03ttl\x18\x07\x20\x01(\x04R\x03\
+    ttl\x12-\n\x12certificates_count\x18\x08\x20\x02(\rR\x11certificatesCoun\
+    t\x12+\n\x11withdrawals_count\x18\t\x20\x02(\rR\x10withdrawalsCount\x12,\
+    \n\x12has_auxiliary_data\x18\n\x20\x02(\x08R\x10hasAuxiliaryData\x126\n\
+    \x17validity_interval_start\x18\x0b\x20\x01(\x04R\x15validityIntervalSta\
+    rt\x124\n\x16witness_requests_count\x18\x0c\x20\x02(\rR\x14witnessReques\
+    tsCount\x12;\n\x1aminting_asset_groups_count\x18\r\x20\x02(\rR\x17mintin\
+    gAssetGroupsCount\x12Z\n\x0fderivation_type\x18\x0e\x20\x02(\x0e21.hw.tr\
+    ezor.messages.cardano.CardanoDerivationTypeR\x0ederivationType\x123\n\
+    \x12include_network_id\x18\x0f\x20\x01(\x08:\x05falseR\x10includeNetwork\
+    Id\x12(\n\x10script_data_hash\x18\x10\x20\x01(\x0cR\x0escriptDataHash\
+    \x126\n\x17collateral_inputs_count\x18\x11\x20\x02(\rR\x15collateralInpu\
+    tsCount\x124\n\x16required_signers_count\x18\x12\x20\x02(\rR\x14required\
+    SignersCount\x129\n\x15has_collateral_return\x18\x13\x20\x01(\x08:\x05fa\
+    lseR\x13hasCollateralReturn\x12)\n\x10total_collateral\x18\x14\x20\x01(\
+    \x04R\x0ftotalCollateral\x127\n\x16reference_inputs_count\x18\x15\x20\
+    \x01(\r:\x010R\x14referenceInputsCount\x12\x1a\n\x08chunkify\x18\x16\x20\
+    \x01(\x08R\x08chunkify\x12)\n\rtag_cbor_sets\x18\x17\x20\x01(\x08:\x05fa\
+    lseR\x0btagCborSets\x12P\n\x0bpayment_req\x18\x18\x20\x01(\x0b2).hw.trez\
+    or.messages.common.PaymentRequestR\npaymentReqB\x04\xc8\xf0\x19\x01\"L\n\
+    \x0eCardanoTxInput\x12\x1b\n\tprev_hash\x18\x01\x20\x02(\x0cR\x08prevHas\
+    h\x12\x1d\n\nprev_index\x18\x02\x20\x02(\rR\tprevIndex\"\xc5\x03\n\x0fCa\
+    rdanoTxOutput\x12\x18\n\x07address\x18\x01\x20\x01(\tR\x07address\x12g\n\
+    \x12address_parameters\x18\x02\x20\x01(\x0b28.hw.trezor.messages.cardano\
+    .CardanoAddressParametersTypeR\x11addressParameters\x12\x16\n\x06amount\
+    \x18\x03\x20\x02(\x04R\x06amount\x12,\n\x12asset_groups_count\x18\x04\
+    \x20\x02(\rR\x10assetGroupsCount\x12\x1d\n\ndatum_hash\x18\x05\x20\x01(\
+    \x0cR\tdatumHash\x12d\n\x06format\x18\x06\x20\x01(\x0e2>.hw.trezor.messa\
+    ges.cardano.CardanoTxOutputSerializationFormat:\x0cARRAY_LEGACYR\x06form\
+    at\x12-\n\x11inline_datum_size\x18\x07\x20\x01(\r:\x010R\x0finlineDatumS\
+    ize\x125\n\x15reference_script_size\x18\x08\x20\x01(\r:\x010R\x13referen\
+    ceScriptSize\"S\n\x11CardanoAssetGroup\x12\x1b\n\tpolicy_id\x18\x01\x20\
+    \x02(\x0cR\x08policyId\x12!\n\x0ctokens_count\x18\x02\x20\x02(\rR\x0btok\
+    ensCount\"q\n\x0cCardanoToken\x12(\n\x10asset_name_bytes\x18\x01\x20\x02\
+    (\x0cR\x0eassetNameBytes\x12\x16\n\x06amount\x18\x02\x20\x01(\x04R\x06am\
+    ount\x12\x1f\n\x0bmint_amount\x18\x03\x20\x01(\x12R\nmintAmount\"/\n\x19\
+    CardanoTxInlineDatumChunk\x12\x12\n\x04data\x18\x01\x20\x02(\x0cR\x04dat\
+    a\"3\n\x1dCardanoTxReferenceScriptChunk\x12\x12\n\x04data\x18\x01\x20\
+    \x02(\x0cR\x04data\"f\n\x10CardanoPoolOwner\x12(\n\x10staking_key_path\
+    \x18\x01\x20\x03(\rR\x0estakingKeyPath\x12(\n\x10staking_key_hash\x18\
+    \x02\x20\x01(\x0cR\x0estakingKeyHash\"\xd9\x01\n\x1aCardanoPoolRelayPara\
+    meters\x12D\n\x04type\x18\x01\x20\x02(\x0e20.hw.trezor.messages.cardano.\
+    CardanoPoolRelayTypeR\x04type\x12!\n\x0cipv4_address\x18\x02\x20\x01(\
+    \x0cR\x0bipv4Address\x12!\n\x0cipv6_address\x18\x03\x20\x01(\x0cR\x0bipv\
+    6Address\x12\x1b\n\thost_name\x18\x04\x20\x01(\tR\x08hostName\x12\x12\n\
+    \x04port\x18\x05\x20\x01(\rR\x04port\"?\n\x17CardanoPoolMetadataType\x12\
+    \x10\n\x03url\x18\x01\x20\x02(\tR\x03url\x12\x12\n\x04hash\x18\x02\x20\
+    \x02(\x0cR\x04hash\"\x9a\x03\n\x19CardanoPoolParametersType\x12\x17\n\
+    \x07pool_id\x18\x01\x20\x02(\x0cR\x06poolId\x12\x20\n\x0cvrf_key_hash\
+    \x18\x02\x20\x02(\x0cR\nvrfKeyHash\x12\x16\n\x06pledge\x18\x03\x20\x02(\
+    \x04R\x06pledge\x12\x12\n\x04cost\x18\x04\x20\x02(\x04R\x04cost\x12)\n\
+    \x10margin_numerator\x18\x05\x20\x02(\x04R\x0fmarginNumerator\x12-\n\x12\
+    margin_denominator\x18\x06\x20\x02(\x04R\x11marginDenominator\x12%\n\x0e\
+    reward_account\x18\x07\x20\x02(\tR\rrewardAccount\x12O\n\x08metadata\x18\
+    \n\x20\x01(\x0b23.hw.trezor.messages.cardano.CardanoPoolMetadataTypeR\
+    \x08metadata\x12!\n\x0cowners_count\x18\x0b\x20\x02(\rR\x0bownersCount\
+    \x12!\n\x0crelays_count\x18\x0c\x20\x02(\rR\x0brelaysCount\"\x8a\x01\n\
     \x0bCardanoDRep\x12?\n\x04type\x18\x01\x20\x02(\x0e2+.hw.trezor.messages\
     .cardano.CardanoDRepTypeR\x04type\x12\x19\n\x08key_hash\x18\x02\x20\x01(\
     \x0cR\x07keyHash\x12\x1f\n\x0bscript_hash\x18\x03\x20\x01(\x0cR\nscriptH\
@@ -10688,8 +10714,9 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     static file_descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::FileDescriptor> = ::protobuf::rt::Lazy::new();
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
-            let mut deps = ::std::vec::Vec::with_capacity(1);
+            let mut deps = ::std::vec::Vec::with_capacity(2);
             deps.push(super::messages_common::file_descriptor().clone());
+            deps.push(super::options::file_descriptor().clone());
             let mut messages = ::std::vec::Vec::with_capacity(37);
             messages.push(CardanoBlockchainPointerType::generated_message_descriptor_data());
             messages.push(CardanoNativeScript::generated_message_descriptor_data());
