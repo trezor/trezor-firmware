@@ -6,6 +6,7 @@ option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageCardano";
 
 import "messages-common.proto";
+import "options.proto";
 
 enum CardanoDerivationType {
     LEDGER = 0;
@@ -237,6 +238,7 @@ message CardanoSignTxInit {
     optional uint32 reference_inputs_count = 21 [default=0];
     optional bool chunkify = 22;                                // display the address in chunks of 4 characters
     optional bool tag_cbor_sets = 23 [default=false];           // use tag 258 for sets in cbor
+    optional common.PaymentRequest payment_req = 24 [(experimental_field)=true]; // SLIP-24 payment request
 }
 
 /**
