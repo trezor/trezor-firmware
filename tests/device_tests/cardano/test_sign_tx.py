@@ -16,14 +16,21 @@
 
 import pytest
 
-from trezorlib import cardano, device, messages
+from trezorlib import btc, cardano, device, messages, misc
 from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
+from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
 from ...input_flows import InputFlowConfirmAllWarnings
+from ..payment_req import (
+    CoinPurchaseMemo,
+    RefundMemo,
+    TextDetailsMemo,
+    make_payment_request,
+)
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.cardano, pytest.mark.models("core")]
 
@@ -118,6 +125,41 @@ def call_sign_tx(session: Session, parameters, input_flow=None, chunkify: bool =
     else:
         device.apply_settings(session, safety_checks=messages.SafetyCheckLevel.Strict)
 
+    if parameters.get("payment_req"):
+        # Note: "payment_req" in the JSON is just a boolean,
+        # which makes us generate a payment request here.
+        # It could be changed to encode the payment request in the JSON,
+        # but it feels overkill for now.
+        purchase_memo = CoinPurchaseMemo(
+            amount="0.00001 BTC",
+            coin_name="Bitcoin",
+            slip44=0,
+            address_n=parse_path("m/44h/0h/0h/0/0"),
+        )
+        purchase_memo.address_resp = btc.get_authenticated_address(
+            session, purchase_memo.coin_name, purchase_memo.address_n
+        )
+        refund_memo = RefundMemo(address_n=parse_path("m/44h/1815h/0h/0/2"))
+        refund_memo.address_resp = cardano.get_authenticated_address(
+            session, cardano.create_address_parameters(8, refund_memo.address_n)
+        )
+        text_details_memo = TextDetailsMemo(
+            title="Are you sure...",
+            text="... you want to swap your valuable ADA for some sats?",
+        )
+        memos = [purchase_memo, refund_memo, text_details_memo]
+        nonce = misc.get_nonce(session)
+        payment_request = make_payment_request(
+            session,
+            recipient_name="trezor.io",
+            slip44=1815,
+            outputs=[(o[0].amount, o[0].address) for o in outputs],
+            memos=memos,
+            nonce=nonce,
+        )
+    else:
+        payment_request = None
+
     with session.client as client:
         if input_flow is not None:
             session.client.watch_layout()
@@ -147,6 +189,7 @@ def call_sign_tx(session: Session, parameters, input_flow=None, chunkify: bool =
             include_network_id=parameters["include_network_id"],
             chunkify=chunkify,
             tag_cbor_sets=parameters["tag_cbor_sets"],
+            payment_req=payment_request,
         )
 
 
@@ -182,3 +225,32 @@ def _transform_expected_result(result):
                 "cvote_registration_signature"
             ] = bytes.fromhex(cvote_registration_signature)
     return transformed_result
+
+
+@pytest.mark.models(
+    "core",
+    skip="t2t1",
+    reason="T1 does not support payment requests. Payment requests not yet implemented on model T.",
+)
+@pytest.mark.altcoin
+@pytest.mark.experimental
+@parametrize_using_common_fixtures(
+    "cardano/sign_tx.slip24.json",
+)
+def test_signtx_payment_req(session: Session, parameters, result):
+    call_sign_tx(session, parameters, None)
+
+
+@pytest.mark.models(
+    "core",
+    skip="t2t1",
+    reason="T1 does not support payment requests. Payment requests not yet implemented on model T.",
+)
+@pytest.mark.altcoin
+@pytest.mark.experimental
+@parametrize_using_common_fixtures(
+    "cardano/sign_tx.slip24.failed.json",
+)
+def test_sign_tx_payment_req_failed(session: Session, parameters, result):
+    with pytest.raises(TrezorFailure, match=result["error_message"]):
+        call_sign_tx(session, parameters, None)

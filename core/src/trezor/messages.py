@@ -1284,6 +1284,7 @@ if TYPE_CHECKING:
         reference_inputs_count: "int"
         chunkify: "bool | None"
         tag_cbor_sets: "bool"
+        payment_req: "PaymentRequest | None"
 
         def __init__(
             self,
@@ -1311,6 +1312,7 @@ if TYPE_CHECKING:
             reference_inputs_count: "int | None" = None,
             chunkify: "bool | None" = None,
             tag_cbor_sets: "bool | None" = None,
+            payment_req: "PaymentRequest | None" = None,
         ) -> None:
             pass
 
