@@ -44,7 +44,7 @@ if utils.USE_THP:
 
 if __debug__:
     # Disable log.debug
-    def suppres_debug_log() -> None:
+    def suppress_debug_log() -> None:
         from trezor import log
 
-        log.debug = lambda *args, **kwargs: None
+        log._min_level = 1
