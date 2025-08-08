@@ -21,6 +21,7 @@
 #include <trezor_rtl.h>
 
 #include <io/touch.h>
+#include <io/unix/sdl_display.h>
 #include <sys/systick.h>
 #include <sys/unix/sdl_event.h>
 
@@ -28,6 +29,7 @@
 
 extern int sdl_display_res_x, sdl_display_res_y;
 extern int sdl_touch_offset_x, sdl_touch_offset_y;
+extern int sdl_touch_x, sdl_touch_y;
 
 // distance from the edge where arrow button swipe starts [px]
 static const int _btn_swipe_begin = 120;
@@ -77,6 +79,11 @@ static bool is_inside_display(int x, int y) {
 
 static void handle_mouse_events(touch_driver_t* drv, SDL_Event* event) {
   bool inside_display = is_inside_display(event->button.x, event->button.y);
+
+  sdl_touch_x = inside_display ? event->button.x - sdl_touch_offset_x
+                               : touch_unpack_x(drv->last_event);
+  sdl_touch_y = inside_display ? event->button.y - sdl_touch_offset_y
+                               : touch_unpack_y(drv->last_event);
 
   switch (event->type) {
     case SDL_MOUSEBUTTONDOWN:
