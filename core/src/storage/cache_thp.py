@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from storage.cache_common import (
     CHANNEL_HOST_STATIC_PUBKEY,
     CHANNEL_ID,
+    CHANNEL_IFACE,
     CHANNEL_STATE,
     CHANNEL_SYNC,
     SESSION_ID,
@@ -13,7 +14,7 @@ from storage.cache_common import (
 )
 
 if TYPE_CHECKING:
-    from typing import Tuple
+    from typing import Iterable, Tuple
 
     pass
 
@@ -182,12 +183,13 @@ def update_session_last_used(channel_id: bytes, session_id: bytes) -> None:
             return
 
 
-def get_all_allocated_channels() -> list[ChannelCache]:
-    _list: list[ChannelCache] = []
+def iter_allocated_channels(iface_num: int) -> Iterable[ChannelCache]:
     for channel in _CHANNELS:
-        if channel.get_int(CHANNEL_STATE, _UNALLOCATED_STATE) != _UNALLOCATED_STATE:
-            _list.append(channel)
-    return _list
+        state = channel.get_int(CHANNEL_STATE, _UNALLOCATED_STATE)
+        if state == _UNALLOCATED_STATE:
+            continue
+        if channel.get_int(CHANNEL_IFACE) == iface_num:
+            yield channel
 
 
 def get_allocated_session(
