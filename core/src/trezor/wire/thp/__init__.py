@@ -11,6 +11,7 @@ from ..protocol_common import WireError
 
 if TYPE_CHECKING:
     from enum import IntEnum
+    from typing import Iterable
 
     from trezor.wire import WireInterface
     from typing_extensions import Self
@@ -87,8 +88,11 @@ class SessionState(IntEnum):
 
 
 class PacketHeader:
-    format_str_init = ">BHH"
-    format_str_cont = ">BH"
+    INIT_FORMAT = ">BHH"
+    CONT_FORMAT = ">BH"
+
+    INIT_LENGTH = ustruct.calcsize(INIT_FORMAT)
+    CONT_LENGTH = ustruct.calcsize(CONT_FORMAT)
 
     def __init__(self, ctrl_byte: int, cid: int, length: int) -> None:
         self.ctrl_byte = ctrl_byte
@@ -96,7 +100,7 @@ class PacketHeader:
         self.length = length
 
     def to_bytes(self) -> bytes:
-        return ustruct.pack(self.format_str_init, self.ctrl_byte, self.cid, self.length)
+        return ustruct.pack(self.INIT_FORMAT, self.ctrl_byte, self.cid, self.length)
 
     def pack_to_init_buffer(self, buffer: bytearray, buffer_offset: int = 0) -> None:
         """
@@ -104,7 +108,7 @@ class PacketHeader:
         into the provided buffer.
         """
         ustruct.pack_into(
-            self.format_str_init,
+            self.INIT_FORMAT,
             buffer,
             buffer_offset,
             self.ctrl_byte,
@@ -118,8 +122,37 @@ class PacketHeader:
         into the provided buffer.
         """
         ustruct.pack_into(
-            self.format_str_cont, buffer, buffer_offset, CONTINUATION_PACKET, self.cid
+            self.CONT_FORMAT, buffer, buffer_offset, CONTINUATION_PACKET, self.cid
         )
+
+    def fragment_payload(self, packet_size: int, *items: bytes) -> Iterable[bytes]:
+        """Fragment payload into THP transport packets."""
+        packet = bytearray(packet_size)
+        self.pack_to_init_buffer(packet)
+
+        buf = memoryview(packet)[self.INIT_LENGTH :]
+        buf_offset = 0
+        should_zero_pad = False
+
+        for item in items:
+            item_offset = 0
+            while item_offset < len(item):
+                n = utils.memcpy(buf, buf_offset, item, item_offset)
+                buf_offset += n
+                item_offset += n
+
+                if buf_offset == len(buf):
+                    should_zero_pad = True
+                    yield packet  # packet is full - send to the host
+                    self.pack_to_cont_buffer(packet)
+                    buf = memoryview(packet)[self.CONT_LENGTH :]
+                    buf_offset = 0
+
+        if buf_offset > 0:
+            # send last packet (pad with zeroes if needed)
+            if should_zero_pad:
+                utils.memzero(buf[buf_offset:])
+            yield packet
 
     @classmethod
     def get_error_header(cls, cid: int, length: int) -> Self:

@@ -1,5 +1,6 @@
 import ustruct
 from micropython import const
+from trezorcrypto import crc
 from typing import TYPE_CHECKING
 
 from storage.cache_thp import (
@@ -7,7 +8,7 @@ from storage.cache_thp import (
     ChannelCache,
     iter_allocated_channels,
 )
-from trezor import io, loop
+from trezor import io, loop, utils
 
 from ..errors import WireBufferError
 from . import (
@@ -23,19 +24,15 @@ from . import (
 )
 from .channel import Channel
 from .checksum import CHECKSUM_LENGTH
-from .writer import INIT_HEADER_LENGTH, write_payload_to_wire_and_add_checksum
 
 if __debug__:
     from trezor import log
 
 if TYPE_CHECKING:
     from trezorio import WireInterface
+    from typing import Awaitable, Iterable
 
 _CID_REQ_PAYLOAD_LENGTH = const(12)
-
-# Codec_v1 magic constant:
-# "?##" + Failure message type + msg_size + msg_data (code = "Failure_InvalidProtocol")
-CODEC_V1_ERROR_MESSAGE = b"\x3f\x23\x23\x00\x03\x00\x00\x00\x14\x08\x11"
 
 
 class ThpContext:
@@ -96,27 +93,43 @@ class ThpContext:
                 await channel.write_error(ThpErrorType.TRANSPORT_BUSY)
                 continue
 
-    async def write_packet(self, packet: bytes) -> None:
-        assert len(packet) == self._iface.TX_PACKET_LEN
-        while True:
-            await self._write
-            n_written = self._iface.write(packet)
-            if n_written == len(packet):
-                return
-            assert n_written == 0
+    def write_payload(self, header: PacketHeader, payload: bytes) -> Awaitable[None]:
+        checksum = crc.crc32(payload, crc.crc32(header.to_bytes()))
+        checksum_bytes = checksum.to_bytes(CHECKSUM_LENGTH, "big")
+        return self._write_payload_chunks(header, payload, checksum_bytes)
+
+    def _write_payload_chunks(
+        self, header: PacketHeader, *chunks: bytes
+    ) -> Awaitable[None]:
+        fragments = header.fragment_payload(self._iface.TX_PACKET_LEN, *chunks)
+        return self._write_packets(fragments)
+
+    async def _write_packets(self, fragments: Iterable[bytes]) -> None:
+        packet_len = self._iface.TX_PACKET_LEN
+        for packet in fragments:
+            assert len(packet) == packet_len
+
+            n_written = 0
+            while n_written == 0:
+                await self._write
+                n_written = self._iface.write(packet)
+
+            assert n_written == packet_len
 
     async def _handle_codec_v1(self, packet: bytes) -> None:
         # If the received packet is not an initial codec_v1 packet, do not send error message
         if packet[1:3] == b"##":
-            buf = CODEC_V1_ERROR_MESSAGE
-            buf += bytes(self._iface.TX_PACKET_LEN - len(buf))
-            await self.write_packet(buf)
+            response = bytearray(self._iface.TX_PACKET_LEN)
+            # Codec_v1 magic constant:
+            # "?##" + Failure message type + msg_size + msg_data (code = "Failure_InvalidProtocol")
+            utils.memcpy(response, 0, b"?##\x00\x03\x00\x00\x00\x14\x08\x11", 0)
+            await self._write_packets([response])
 
     async def _handle_broadcast(self, packet: bytes) -> None:
         if _get_ctrl_byte(packet) != CHANNEL_ALLOCATION_REQ:
             raise ThpError("Unexpected ctrl_byte in a broadcast channel packet")
 
-        data = packet[: INIT_HEADER_LENGTH + _CID_REQ_PAYLOAD_LENGTH]
+        data = packet[: PacketHeader.INIT_LENGTH + _CID_REQ_PAYLOAD_LENGTH]
         if not checksum.is_valid(data[-CHECKSUM_LENGTH:], data[:-CHECKSUM_LENGTH]):
             raise ThpError("Checksum is not valid")
 
@@ -140,16 +153,14 @@ class ThpContext:
                 channel.get_channel_id_int(),
                 iface=self._iface,
             )
-        await write_payload_to_wire_and_add_checksum(
-            self._iface, response_header, response_data
-        )
+        await self.write_payload(response_header, response_data)
 
     async def _handle_unallocated(self, cid: int, packet: bytes) -> None:
         if control_byte.is_continuation(_get_ctrl_byte(packet)):
             return
         data = (ThpErrorType.UNALLOCATED_CHANNEL).to_bytes(1, "big")
         header = PacketHeader.get_error_header(cid, len(data) + CHECKSUM_LENGTH)
-        await write_payload_to_wire_and_add_checksum(self._iface, header, data)
+        await self.write_payload(header, data)
 
 
 def _get_ctrl_byte(packet: bytes) -> int:

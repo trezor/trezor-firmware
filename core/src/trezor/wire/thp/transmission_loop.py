@@ -3,8 +3,6 @@ from typing import TYPE_CHECKING
 
 from trezor import loop
 
-from .writer import write_payload_to_wire_and_add_checksum
-
 if TYPE_CHECKING:
     from . import PacketHeader
     from .channel import Channel
@@ -32,9 +30,7 @@ class TransmissionLoop:
         for i in range(max_retransmission_count):
             if i >= MIN_RETRANSMISSION_COUNT:
                 self.min_retransmisson_count_achieved = True
-            await write_payload_to_wire_and_add_checksum(
-                self.channel.iface, self.header, self.transport_payload
-            )
+            await self.channel.ctx.write_payload(self.header, self.transport_payload)
 
             # Do not create wait task for last iteration
             if i == max_retransmission_count - 1:
