@@ -316,28 +316,28 @@ mod tests {
         use super::format_pairing_code;
         let width = 6;
         // Test normal cases with different digit counts
-        assert_eq!(format_pairing_code(123, width).as_str(), "0 0 0   1 2 3");
-        assert_eq!(format_pairing_code(7, width).as_str(), "0 0 0   0 0 7");
-        assert_eq!(format_pairing_code(123456, width).as_str(), "1 2 3   4 5 6");
+        assert_eq!(format_pairing_code(123, width).as_str(), "0 0 0  1 2 3");
+        assert_eq!(format_pairing_code(7, width).as_str(), "0 0 0  0 0 7");
+        assert_eq!(format_pairing_code(123456, width).as_str(), "1 2 3  4 5 6");
 
         // Test boundary cases
-        assert_eq!(format_pairing_code(0, width).as_str(), "0 0 0   0 0 0");
-        assert_eq!(format_pairing_code(999999, width).as_str(), "9 9 9   9 9 9");
+        assert_eq!(format_pairing_code(0, width).as_str(), "0 0 0  0 0 0");
+        assert_eq!(format_pairing_code(999999, width).as_str(), "9 9 9  9 9 9");
 
         // Test with values having exactly 6 digits
-        assert_eq!(format_pairing_code(100000, width).as_str(), "1 0 0   0 0 0");
+        assert_eq!(format_pairing_code(100000, width).as_str(), "1 0 0  0 0 0");
 
         // Verify behavior with sequential values around boundaries
-        assert_eq!(format_pairing_code(9999, width).as_str(), "0 0 9   9 9 9");
-        assert_eq!(format_pairing_code(10000, width).as_str(), "0 1 0   0 0 0");
-        assert_eq!(format_pairing_code(99999, width).as_str(), "0 9 9   9 9 9");
+        assert_eq!(format_pairing_code(9999, width).as_str(), "0 0 9  9 9 9");
+        assert_eq!(format_pairing_code(10000, width).as_str(), "0 1 0  0 0 0");
+        assert_eq!(format_pairing_code(99999, width).as_str(), "0 9 9  9 9 9");
 
         // Test different even width (width=4, middle after position 1)
         let width = 4;
-        assert_eq!(format_pairing_code(1, width).as_str(), "0 0   0 1");
-        assert_eq!(format_pairing_code(12, width).as_str(), "0 0   1 2");
-        assert_eq!(format_pairing_code(123, width).as_str(), "0 1   2 3");
-        assert_eq!(format_pairing_code(1234, width).as_str(), "1 2   3 4");
+        assert_eq!(format_pairing_code(1, width).as_str(), "0 0  0 1");
+        assert_eq!(format_pairing_code(12, width).as_str(), "0 0  1 2");
+        assert_eq!(format_pairing_code(123, width).as_str(), "0 1  2 3");
+        assert_eq!(format_pairing_code(1234, width).as_str(), "1 2  3 4");
     }
 
     #[test]
