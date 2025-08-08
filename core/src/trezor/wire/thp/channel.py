@@ -22,22 +22,9 @@ from storage.cache_thp import (
 from trezor import loop, protobuf, utils, workflow
 from trezor.wire.errors import WireBufferError
 
-from . import (
-    ENCRYPTED,
-    ChannelState,
-    PacketHeader,
-    ThpDecryptionError,
-    ThpError,
-    ThpErrorType,
-)
+from . import ENCRYPTED, ChannelState, PacketHeader, ThpDecryptionError, ThpError
 from . import alternating_bit_protocol as ABP
-from . import (
-    control_byte,
-    crypto,
-    interface_manager,
-    memory_manager,
-    received_message_handler,
-)
+from . import control_byte, crypto, memory_manager
 from .checksum import CHECKSUM_LENGTH
 from .transmission_loop import TransmissionLoop
 from .writer import (
@@ -54,11 +41,11 @@ if __debug__:
     from . import state_to_str
 
 if TYPE_CHECKING:
-    from trezorio import WireInterface
     from typing import Any, Awaitable
 
     from trezor.messages import ThpPairingCredential
 
+    from .interface_context import ThpContext
     from .pairing_context import PairingContext
     from .session_context import GenericSessionContext
 
@@ -76,7 +63,7 @@ class Reassembler:
         """
         Process current packet, returning the payload buffer on success.
 
-        May raise WireBufferError if there is a concurrent payload reassembly in progress.
+        May raise `WireBufferError` if there is a concurrent payload reassembly in progress.
         """
         ctrl_byte = packet[0]
         if control_byte.is_continuation(ctrl_byte):
@@ -121,13 +108,12 @@ class Channel:
     THP protocol encrypted communication channel.
     """
 
-    def __init__(self, channel_cache: ChannelCache) -> None:
+    def __init__(self, channel_cache: ChannelCache, ctx: ThpContext) -> None:
+        assert ctx._iface.iface_num() == channel_cache.get_int(CHANNEL_IFACE)
 
         # Channel properties
         self.channel_id: bytes = channel_cache.channel_id
-        channel_iface = channel_cache.get(CHANNEL_IFACE)
-        assert channel_iface is not None
-        self.iface: WireInterface = interface_manager.decode_iface(channel_iface)
+        self.iface = ctx._iface
         if __debug__:
             self._log("channel initialization")
         self.channel_cache: ChannelCache = channel_cache
@@ -198,18 +184,14 @@ class Channel:
 
     # READ and DECRYPT
 
-    def receive_packet(self, packet: utils.BufferType) -> Awaitable[None] | None:
+    def handle_packet(self, packet: utils.BufferType) -> memoryview | None:
+        if self.get_channel_state() == ChannelState.UNALLOCATED:
+            return None
         try:
-            buffer = self.reassembler.get_next_message(memoryview(packet))
+            return self.reassembler.get_next_message(memoryview(packet))
         except WireBufferError:
             self.reassembler.reset()
-            return self.write_error(ThpErrorType.TRANSPORT_BUSY)
-
-        if buffer is None:
-            return None
-
-        self._log("buffer: ", hexlify_if_bytes(buffer))
-        return received_message_handler.handle_received_message(self, buffer)
+            raise
 
     def decrypt_buffer(
         self, message_length: int, offset: int = INIT_HEADER_LENGTH

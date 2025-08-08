@@ -5,7 +5,8 @@ from trezor import io
 
 if utils.USE_THP:
     import thp_common
-    from trezor.wire.thp import interface_manager, memory_manager, thp_main
+    from trezor.wire import handle_session as thp_main_loop
+    from trezor.wire.thp import memory_manager
 
 
 @unittest.skipUnless(utils.USE_THP, "only needed for THP")
@@ -14,18 +15,16 @@ class TestTrezorHostProtocol(unittest.TestCase):
     def __init__(self):
         if __debug__:
             thp_common.suppress_debug_log()
-        interface_manager.encode_iface = thp_common.dummy_encode_iface
         super().__init__()
 
     def setUp(self):
         self.interface = MockHID()
         memory_manager.READ_BUFFER = bytearray(64)
         memory_manager.WRITE_BUFFER = bytearray(256)
-        interface_manager.decode_iface = thp_common.dummy_decode_iface
 
     def test_codec_message(self):
         self.assertEqual(len(self.interface.data), 0)
-        gen = thp_main.thp_main_loop(self.interface)
+        gen = thp_main_loop(self.interface)
         gen.send(None)
 
         # There should be a failiure response to received init packet (starts with "?##")
@@ -49,7 +48,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         self.assertEqual(len(self.interface.data), 1)
 
     def test_message_on_unallocated_channel(self):
-        gen = thp_main.thp_main_loop(self.interface)
+        gen = thp_main_loop(self.interface)
         query = gen.send(None)
         self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
         message_to_channel_789a = (
