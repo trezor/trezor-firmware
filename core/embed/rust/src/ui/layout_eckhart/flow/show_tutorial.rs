@@ -22,11 +22,11 @@ use super::super::{
         TutorialWelcomeScreen, TutorialWelcomeScreenMsg, VerticalMenu, VerticalMenuScreen,
         VerticalMenuScreenMsg,
     },
-    theme::{self, Gradient},
+    theme::{self, Gradient, ScreenBackground},
 };
 
 const WELCOME_SCREEN_DURATION_MS: u32 = 3000;
-type TropicScreen = TextScreen<Paragraphs<[Paragraph<'static>; 3]>>;
+type TropicScreen = TextScreen<Paragraphs<Paragraph<'static>>>;
 type TropicScreenMap = MsgMap<TropicScreen, fn(TextScreenMsg) -> Option<FlowMsg>>;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -90,12 +90,9 @@ impl FlowController for ShowTutorial {
 
 fn content_tropic() -> TropicScreenMap {
     TextScreen::new(
-        Paragraphs::new([
-            Paragraph::new(&theme::TEXT_REGULAR, TR::tutorial__tropic_info1).break_after(),
-            Paragraph::new(&theme::TEXT_REGULAR, TR::tutorial__tropic_info2).break_after(),
-            Paragraph::new(&theme::TEXT_REGULAR, TR::tutorial__tropic_info3),
-        ])
-        .with_placement(LinearPlacement::vertical()),
+        Paragraph::new(&theme::TEXT_REGULAR, TR::tutorial__tropic_info)
+            .into_paragraphs()
+            .with_placement(LinearPlacement::vertical()),
     )
     .with_header(Header::new(TR::tutorial__what_is_tropic.into()).with_close_button())
     .map(|msg| match msg {
@@ -114,9 +111,10 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
             .into_paragraphs()
             .with_placement(LinearPlacement::vertical()),
     )
-    .with_action_bar(ActionBar::new_single(Button::with_text(
-        TR::instructions__tap_to_start.into(),
-    )))
+    .with_action_bar(ActionBar::new_single(Button::with_homebar_content(Some(
+        TR::tutorial__tap_to_start.into(),
+    ))))
+    .with_background(ScreenBackground::new(None, None))
     .map(|msg| match msg {
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
         _ => None,

@@ -1,3 +1,5 @@
+#[cfg(feature = "micropython")]
+pub mod background;
 pub mod backlight;
 #[cfg(any(feature = "bootloader", feature = "prodtest"))]
 pub mod bootloader;
@@ -15,7 +17,8 @@ use crate::ui::{
 };
 
 use super::fonts;
-
+#[cfg(feature = "micropython")]
+pub use background::ScreenBackground;
 pub use gradient::Gradient;
 
 // Color palette.
@@ -153,6 +156,10 @@ include_icon!(
 
 // Icon for the bootup screen
 include_icon!(ICON_SEVEN, "layout_eckhart/res/bootloader/7.toif");
+
+// Tutorial screen icons
+include_icon!(ICON_TROPIC, "layout_eckhart/res/tropic.toif");
+include_icon!(ICON_SECURED, "layout_eckhart/res/secured.toif");
 
 // Common text styles and button styles must use fonts accessible from both
 // bootloader and firmware
