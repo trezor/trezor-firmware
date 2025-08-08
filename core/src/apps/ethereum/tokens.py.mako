@@ -29,7 +29,7 @@ def group_tokens(tokens):
 %>\
 
 UNKNOWN_TOKEN = EthereumTokenInfo(
-    symbol="Wei UNKN",
+    symbol="Wei UNKN",
     decimals=0,
     address=b"",
     chain_id=0,

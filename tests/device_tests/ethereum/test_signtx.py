@@ -583,7 +583,7 @@ def test_signtx_payment_req(
     )
 
     purchase_memo_1 = CoinPurchaseMemo(
-        amount="0.0636 BTC",
+        amount="0.0636 BTC",
         coin_name="Bitcoin",
         slip44=0,
         address_n=parse_path("m/44h/0h/0h/0/0"),
@@ -607,7 +607,7 @@ def test_signtx_payment_req(
 
     if has_multiple_purchases:
         purchase_memo_2 = CoinPurchaseMemo(
-            amount="0.0123 BTC",
+            amount="0.0123 BTC",
             coin_name="Bitcoin",
             slip44=0,
             address_n=parse_path("m/44h/0h/0h/0/0"),
@@ -651,7 +651,7 @@ def test_signtx_payment_req_long_value(
     from ..payment_req import CoinPurchaseMemo, make_payment_request
 
     purchase_memo = CoinPurchaseMemo(
-        amount="0.0123456789123456789 BTC",
+        amount="0.0123456789123456789 BTC",
         coin_name="Bitcoin",
         slip44=0,
         address_n=parse_path("m/44h/0h/0h/0/0"),
