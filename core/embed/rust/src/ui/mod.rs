@@ -38,8 +38,8 @@ pub mod ui_firmware;
 
 pub use ui_common::CommonUI;
 
-#[cfg(feature = "ui_debug_overlay")]
-pub use ui_common::DebugOverlay;
+#[cfg(feature = "ui_performance_overlay")]
+pub use ui_common::PerformanceOverlay;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "layout_bolt")] {
