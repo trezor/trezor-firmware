@@ -5,7 +5,7 @@ Handles on-the-wire communication with a host computer. The communication is:
 
 - Request / response.
 - Protobuf-encoded, see `protobuf.py`.
-- Wrapped in a simple envelope format, see `trezor/wire/codec/codec_v1.py` or `trezor/wire/thp/thp_main.py`.
+- Wrapped in a simple envelope format, see `trezor/wire/codec/codec_v1.py` or `trezor/wire/thp/context.py`.
 - Transferred over USB interface, or UDP in case of Unix emulation.
 
 This module:
@@ -31,7 +31,8 @@ from .. import workflow
 from . import message_handler, protocol_common
 
 if utils.USE_THP:
-    from .thp import thp_main
+    from .thp import received_message_handler
+    from .thp.interface_context import ThpContext
 else:
     from .codec.codec_context import CodecContext
 
@@ -48,6 +49,8 @@ if __debug__:
 if TYPE_CHECKING:
     from trezorio import WireInterface
     from typing import Any, Callable, Coroutine, Generic, TypeVar
+
+    from trezor.wire.thp.channel import Channel
 
     T = TypeVar("T")
     Msg = TypeVar("Msg", bound=protobuf.MessageType)
@@ -83,30 +86,30 @@ if utils.USE_THP:
     # in more stable area of memory
     from .thp import memory_manager  # noqa: F401
 
-    async def handle_session(iface: WireInterface) -> None:
+    if __debug__:
+        _THP_CHANNELS = []
 
-        # Take a mark of modules that are imported at this point, so we can
-        # roll back and un-import any others.
-        modules = utils.unimport_begin()
+        def find_thp_channel(channel_id: bytes) -> Channel | None:
+            """Used by `DebugLinkGetPairingInfo` (only for tests)."""
+            key = int.from_bytes(channel_id, "big")
+            for channels in _THP_CHANNELS:
+                result = channels.get(key)
+                if result is not None:
+                    return result
+            return None
+
+    async def handle_session(iface: WireInterface) -> None:
+        ctx = ThpContext.load_from_cache(iface)
+        if __debug__:
+            _THP_CHANNELS.append(ctx._channels)
 
         while True:
             try:
-                await thp_main.thp_main_loop(iface)
-            except Exception as exc:
-                # Log and try again.
-                if __debug__:
-                    log.exception(__name__, exc, iface=iface)
-            finally:
-                # Unload modules imported by the workflow. Should not raise.
-                if __debug__:
-                    log.debug(
-                        __name__,
-                        "utils.unimport_end(modules) and loop.clear()",
-                        iface=iface,
-                    )
-                utils.unimport_end(modules)
-                loop.clear()
-                return  # pylint: disable=lost-exception
+                (channel, message) = await ctx.get_next_message()
+                await received_message_handler.handle_received_message(channel, message)
+            except Exception:
+                loop.clear()  # restart event loop in case of error
+                raise  # the traceback will be printed by `loop._step()`
 
 else:
 

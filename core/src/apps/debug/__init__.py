@@ -287,20 +287,15 @@ if __debug__:
         if msg.channel_id is None:
             raise RuntimeError("Invalid DebugLinkGetPairingInfo message")
 
-        from trezor.wire.thp.channel import Channel
+        from trezor.wire import find_thp_channel
         from trezor.wire.thp.pairing_context import PairingContext
-        from trezor.wire.thp.thp_main import _CHANNELS
 
-        channel_id = int.from_bytes(msg.channel_id, "big")
-        channel: Channel | None = None
-        ctx: PairingContext | None = None
-        try:
-            channel = _CHANNELS[channel_id]
-            ctx = channel.connection_context
-        except KeyError:
-            pass
+        channel = find_thp_channel(msg.channel_id)
+        if channel is None:
+            raise RuntimeError("Channel not found")
 
-        if ctx is None or not isinstance(ctx, PairingContext):
+        ctx = channel.connection_context
+        if not isinstance(ctx, PairingContext):
             raise RuntimeError("Trezor is not in pairing mode")
 
         ctx.nfc_secret_host = msg.nfc_secret_host
