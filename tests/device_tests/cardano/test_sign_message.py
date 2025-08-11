@@ -28,7 +28,7 @@ def test_cardano_sign_message_failed(session: Session, parameters, result):
 def call_sign_message(
     session: Session,
     parameters,
-) -> messages.CardanoSignMessageFinished:
+) -> messages.CardanoMessageSignature:
     with session.client:
         return cardano.sign_message(
             session=session,
@@ -43,8 +43,8 @@ def call_sign_message(
         )
 
 
-def _transform_expected_result(result: dict) -> messages.CardanoSignMessageFinished:
-    return messages.CardanoSignMessageFinished(
+def _transform_expected_result(result: dict) -> messages.CardanoMessageSignature:
+    return messages.CardanoMessageSignature(
         signature=bytes.fromhex(result["signature"]),
         address=bytes.fromhex(result["address"]),
         pub_key=bytes.fromhex(result["pub_key"]),

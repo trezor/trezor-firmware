@@ -608,10 +608,9 @@ class MessageType(IntEnum):
     CardanoTxReferenceScriptChunk = 336
     CardanoTxReferenceInput = 337
     CardanoSignMessageInit = 338
-    CardanoMessagePayloadChunk = 339
-    CardanoMessageItemAck = 340
-    CardanoMessageItemHostAck = 341
-    CardanoSignMessageFinished = 342
+    CardanoMessageDataRequest = 339
+    CardanoMessageDataResponse = 340
+    CardanoMessageSignature = 341
     RippleGetAddress = 400
     RippleAddress = 401
     RippleSignTx = 402
@@ -2935,12 +2934,25 @@ class CardanoSignMessageInit(protobuf.MessageType):
         self.address_parameters = address_parameters
 
 
-class CardanoMessageItemAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 340
-
-
-class CardanoMessagePayloadChunk(protobuf.MessageType):
+class CardanoMessageDataRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 339
+    FIELDS = {
+        1: protobuf.Field("length", "uint32", repeated=False, required=True),
+        2: protobuf.Field("offset", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        length: "int",
+        offset: "int",
+    ) -> None:
+        self.length = length
+        self.offset = offset
+
+
+class CardanoMessageDataResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 340
     FIELDS = {
         1: protobuf.Field("data", "bytes", repeated=False, required=True),
     }
@@ -2953,12 +2965,8 @@ class CardanoMessagePayloadChunk(protobuf.MessageType):
         self.data = data
 
 
-class CardanoMessageItemHostAck(protobuf.MessageType):
+class CardanoMessageSignature(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 341
-
-
-class CardanoSignMessageFinished(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 342
     FIELDS = {
         1: protobuf.Field("signature", "bytes", repeated=False, required=True),
         2: protobuf.Field("address", "bytes", repeated=False, required=True),
