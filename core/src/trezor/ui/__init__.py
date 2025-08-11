@@ -96,8 +96,6 @@ class Shutdown(Exception):
     pass
 
 
-SHUTDOWN = Shutdown()
-
 CURRENT_LAYOUT: "Layout | ProgressLayout | None" = None
 
 
@@ -371,7 +369,7 @@ class Layout(Generic[T]):
         assert self.result_box.is_empty()
         self.stop(_kill_taker=False)
         self.result_box.put(msg)
-        raise SHUTDOWN
+        raise Shutdown()
 
     def create_tasks(self) -> Iterator[loop.Task]:
         """Set up background tasks for a layout.
