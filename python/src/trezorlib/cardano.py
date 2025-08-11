@@ -1024,7 +1024,6 @@ def sign_message(
     session: "Session",
     signing_path: Path,
     payload: bytes,
-    hash_payload: bool,
     prefer_hex_display: bool,
     address_parameters: Optional[m.CardanoAddressParametersType] = None,
     derivation_type: m.CardanoDerivationType = m.CardanoDerivationType.ICARUS,
@@ -1038,7 +1037,6 @@ def sign_message(
         m.CardanoSignMessageInit(
             signing_path=signing_path,
             payload_size=size,
-            hash_payload=hash_payload,
             address_parameters=address_parameters,
             prefer_hex_display=prefer_hex_display,
             protocol_magic=protocol_magic,
