@@ -48,8 +48,8 @@ async def _validate_message_init(
             )
         addresses.validate_message_address_parameters(msg.address_parameters)
 
-    if msg.payload_size > MAX_CHUNK_SIZE and not msg.hash_payload:
-        raise ProcessError("Payload too long to sign without hashing")
+    if msg.payload_size > MAX_CHUNK_SIZE:
+        raise ProcessError("Payload too long to sign")
 
     await _validate_message_signing_path(msg.signing_path, keychain)
 
@@ -78,9 +78,8 @@ async def _get_confirmed_header_address(
         return addresses.get_public_key_hash(keychain, msg.signing_path)
 
 
-async def _get_payload_hash_and_first_chunk(size: int) -> tuple[bytes, bytes]:
-    """Returns the hash of the whole payload and the raw first chunk of the payload."""
-    from trezor.crypto import hashlib
+async def _get_payload_first_chunk(size: int) -> bytes:
+    """Returns the first chunk of the payload."""
     from trezor.messages import (
         CardanoMessageItemAck,
         CardanoMessageItemHostAck,
@@ -88,37 +87,33 @@ async def _get_payload_hash_and_first_chunk(size: int) -> tuple[bytes, bytes]:
     )
 
     first_chunk = b""
-    hash_fn = hashlib.blake2b(outlen=28)
 
     async for chunk_index, chunk in ChunkIterator(
         total_size=size,
         ack_msg=CardanoMessageItemAck(),
         chunk_type=CardanoMessagePayloadChunk,
     ):
-        hash_fn.update(chunk.data)
         if chunk_index == 0:
             first_chunk = chunk.data
+        else:
+            raise ProcessError("Expected only one chunk")
 
     await ctx_call(CardanoMessageItemAck(), CardanoMessageItemHostAck)
-    return hash_fn.digest(), first_chunk
+    return first_chunk
 
 
-async def _get_confirmed_payload(
-    size: int, is_signing_hash: bool, prefer_hex_display: bool
-) -> bytes:
+async def _get_confirmed_payload(size: int, prefer_hex_display: bool) -> bytes:
     from . import layout
 
-    hash, first_chunk = await _get_payload_hash_and_first_chunk(size)
+    first_chunk = await _get_payload_first_chunk(size)
 
     await layout.confirm_message_payload(
         payload_size=size,
         payload_first_chunk=first_chunk,
-        payload_hash=hash,
-        is_signing_hash=is_signing_hash,
         prefer_hex_display=prefer_hex_display,
     )
 
-    return hash if is_signing_hash else first_chunk
+    return first_chunk
 
 
 def _cborize_sig_structure(
@@ -165,7 +160,6 @@ async def sign_message(
 
     payload = await _get_confirmed_payload(
         size=msg.payload_size,
-        is_signing_hash=msg.hash_payload,
         prefer_hex_display=msg.prefer_hex_display,
     )
 
@@ -176,9 +170,7 @@ async def sign_message(
         _COSE_HEADER_ADDRESS_KEY: address,
     }
 
-    await layout.confirm_message_path(
-        path=msg.signing_path, is_signing_hash=msg.hash_payload
-    )
+    await layout.confirm_message_path(path=msg.signing_path)
 
     signature = _sign_sig_structure(
         msg.signing_path,

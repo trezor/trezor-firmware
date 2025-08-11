@@ -345,7 +345,6 @@ def sign_message(
     return cardano.sign_message(
         session,
         payload=bytes.fromhex(request["payload"]),
-        hash_payload=request["hash_payload"],
         prefer_hex_display=request["prefer_hex_display"],
         signing_path=tools.parse_path(request["signing_path"]),
         address_parameters=cardano.parse_optional_address_parameters(
