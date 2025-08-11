@@ -822,9 +822,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_tutorial__title_skip;
   MP_QSTR_tutorial__title_tutorial_complete;
   MP_QSTR_tutorial__title_well_done;
-  MP_QSTR_tutorial__tropic_info1;
-  MP_QSTR_tutorial__tropic_info2;
-  MP_QSTR_tutorial__tropic_info3;
+  MP_QSTR_tutorial__tropic_info;
   MP_QSTR_tutorial__use_trezor;
   MP_QSTR_tutorial__welcome_press_right;
   MP_QSTR_tutorial__welcome_safe5;

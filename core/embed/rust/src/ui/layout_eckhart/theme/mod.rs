@@ -1,3 +1,5 @@
+#[cfg(feature = "micropython")]
+pub mod background;
 pub mod backlight;
 #[cfg(any(feature = "bootloader", feature = "prodtest"))]
 pub mod bootloader;
@@ -15,7 +17,8 @@ use crate::ui::{
 };
 
 use super::fonts;
-
+#[cfg(feature = "micropython")]
+pub use background::ScreenBackground;
 pub use gradient::Gradient;
 
 // Color palette.

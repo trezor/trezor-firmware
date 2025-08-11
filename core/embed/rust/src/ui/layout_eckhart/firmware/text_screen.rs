@@ -18,7 +18,7 @@ use crate::{
 };
 
 use super::{
-    theme::{self, SIDE_INSETS},
+    theme::{self, ScreenBackground, SIDE_INSETS},
     ActionBar, ActionBarMsg, FidoAccountName, FidoCredential, Header, HeaderMsg, Hint,
 };
 
@@ -37,6 +37,7 @@ pub struct TextScreen<T> {
     hint: Option<Hint<'static>>,
     action_bar: Option<ActionBar>,
     page_limit: Option<u16>,
+    background: Option<ScreenBackground>,
     // TODO: swipe handling
     // TODO: animations
 }
@@ -64,6 +65,7 @@ where
             hint: None,
             action_bar: Some(ActionBar::new_paginate_only()),
             page_limit: None,
+            background: None,
         }
     }
 
@@ -91,6 +93,11 @@ where
 
     pub fn with_page_limit(mut self, page_limit: u16) -> Self {
         self.page_limit = Some(page_limit);
+        self
+    }
+
+    pub fn with_background(mut self, background: ScreenBackground) -> Self {
+        self.background = Some(background);
         self
     }
 
@@ -213,6 +220,9 @@ where
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        if let Some(background) = &self.background {
+            background.render(target);
+        }
         self.header.render(target);
         self.subtitle.render(target);
         self.hint.render(target);
