@@ -1789,7 +1789,6 @@ if TYPE_CHECKING:
         network_id: "int | None"
         signing_path: "list[int]"
         payload_size: "int"
-        hash_payload: "bool"
         prefer_hex_display: "bool"
         address_parameters: "CardanoAddressParametersType | None"
         derivation_type: "CardanoDerivationType"
@@ -1798,7 +1797,6 @@ if TYPE_CHECKING:
             self,
             *,
             payload_size: "int",
-            hash_payload: "bool",
             prefer_hex_display: "bool",
             derivation_type: "CardanoDerivationType",
             signing_path: "list[int] | None" = None,

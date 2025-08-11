@@ -324,16 +324,12 @@ async def confirm_reference_script(
 
 async def confirm_message_payload(
     payload_first_chunk: bytes,
-    payload_hash: bytes,
     payload_size: int,
-    is_signing_hash: bool,
     prefer_hex_display: bool,
 ) -> None:
     props: list[PropertyType]
 
-    max_displayed_bytes = (
-        _DEFAULT_MAX_DISPLAYED_CHUNK_SIZE if is_signing_hash else MAX_CHUNK_SIZE
-    )
+    max_displayed_bytes = MAX_CHUNK_SIZE
 
     if not payload_first_chunk:
         assert payload_size == 0
@@ -357,8 +353,6 @@ async def confirm_message_payload(
             data_size=payload_size,
             max_displayed_size=max_displayed_bytes,
         )
-
-    props.append((TR.cardano__message_hash, payload_hash))
 
     await confirm_properties(
         "confirm_message_payload",
@@ -602,13 +596,9 @@ async def confirm_witness_request(
     )
 
 
-async def confirm_message_path(path: list[int], is_signing_hash: bool) -> None:
+async def confirm_message_path(path: list[int]) -> None:
     path_title = _get_path_title(path)
-    text = (
-        TR.cardano__sign_message_hash_path_template.format(path_title)
-        if is_signing_hash
-        else TR.cardano__sign_message_path_template.format(path_title)
-    )
+    text = TR.cardano__sign_message_path_template.format(path_title)
     await layouts.confirm_text(
         "confirm_message_signing_path",
         TR.cardano__confirm_message,

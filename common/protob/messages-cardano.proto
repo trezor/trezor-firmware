@@ -537,10 +537,9 @@ message CardanoSignMessageInit {
     optional uint32 network_id = 2;                               // network id - mainnet or testnet
     repeated uint32 signing_path = 3;                             // BIP-32-style path to derive the signing key from master node
     required uint32 payload_size = 4;                             // size of the payload to be signed
-    required bool hash_payload = 5;                               // whether to hash the payload before signing
-    required bool prefer_hex_display = 6;                         // whether to decode payload as hex even if valid ascii
-    optional CardanoAddressParametersType address_parameters = 7;
-    required CardanoDerivationType derivation_type = 8;
+    required bool prefer_hex_display = 5;                         // whether to decode payload as hex even if valid ascii
+    optional CardanoAddressParametersType address_parameters = 6;
+    required CardanoDerivationType derivation_type = 7;
 }
 
 /**
