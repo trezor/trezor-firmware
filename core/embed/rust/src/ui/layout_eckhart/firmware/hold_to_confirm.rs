@@ -15,6 +15,12 @@ use super::{
     constant::SCREEN,
 };
 
+#[cfg(feature = "haptic")]
+use pareen;
+
+#[cfg(feature = "haptic")]
+use crate::trezorhal::haptic;
+
 /// A component that displays a border that grows from the bottom of the screen
 /// to the top. The animation is parametrizable by color and duration.
 pub struct HoldToConfirmAnim {
@@ -145,13 +151,17 @@ impl Component for HoldToConfirmAnim {
 
         // Growing animation
         if self.is_active() {
+            let elapsed = self.timer.elapsed();
             // override header with custom text
-            if self.timer.elapsed() > Self::HEADER_OVERLAY_DELAY {
+            if elapsed > Self::HEADER_OVERLAY_DELAY {
                 self.render_header_overlay(target);
             }
             // growing border
-            let (clip, top_gap) = self.get_clips(self.timer.elapsed());
+            let (clip, top_gap) = self.get_clips(elapsed);
             self.render_clipped_border(clip, top_gap, u8::MAX, target);
+
+            #[cfg(feature = "haptic")]
+            haptic::play_custom(self.get_haptic(elapsed), 100);
         }
     }
 }
@@ -289,6 +299,23 @@ impl HoldToConfirmAnim {
             // Animation complete
             _ => (SCREEN, TOP_GAP_ZERO),
         }
+    }
+
+    #[cfg(feature = "haptic")]
+    fn get_haptic(&self, elapsed: Duration) -> i8 {
+        // Normalize elapsed time
+        let progress = (elapsed / self.total_duration).clamp(0.0, 1.0);
+
+        // Create a linear easing from 0.0 to 1.0 over normalized progress
+        let ease = pareen::constant(0.0).seq_ease_in(
+            0.0,
+            easer::functions::Linear,
+            1.0,
+            pareen::constant(1.0),
+        );
+
+        // Scale eased value to 0–100
+        (100.0 * ease.eval(progress)) as i8
     }
 }
 

@@ -10,6 +10,9 @@ use crate::{
     },
 };
 
+#[cfg(feature = "haptic")]
+use crate::trezorhal::haptic::{self, HapticEffect};
+
 use super::{
     super::component::{Button, ButtonMsg},
     theme, HoldToConfirmAnim,
@@ -267,6 +270,8 @@ impl ActionBar {
                     ctx.enable_swipe();
                 } else {
                     // Animations disabled, return confirmed
+                    #[cfg(feature = "haptic")]
+                    haptic::play(HapticEffect::HoldToConfirm);
                     return Some(ActionBarMsg::Confirmed);
                 }
             }
@@ -277,6 +282,11 @@ impl ActionBar {
                     ctx.request_paint();
                     ctx.enable_swipe();
                 }
+            }
+            (ButtonMsg::LongPressed, true) => {
+                #[cfg(feature = "haptic")]
+                haptic::play(HapticEffect::HoldToConfirm);
+                return Some(ActionBarMsg::Confirmed);
             }
             (ButtonMsg::Clicked, false) | (ButtonMsg::LongPressed, true) => {
                 return Some(ActionBarMsg::Confirmed);
