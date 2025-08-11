@@ -25,7 +25,7 @@ MAX_CHUNK_SIZE = const(1024)
 def _get_chunks_count(size: int) -> int:
     """Integer-only version of `ceil(size / MAX_CHUNK_SIZE)`."""
     assert size >= 0
-    return 0 if size == 0 else (size - 1) // MAX_CHUNK_SIZE + 1
+    return (size + MAX_CHUNK_SIZE - 1) // MAX_CHUNK_SIZE
 
 
 def _validate_chunk(
