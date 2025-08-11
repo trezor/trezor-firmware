@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 from trezor.wire import ProcessError
 from trezor.wire.context import call as ctx_call
 
-from apps.cardano.helpers.chunks import MAX_CHUNK_SIZE, ChunkIterator
 from apps.cardano.helpers.credential import Credential
 from apps.cardano.helpers.paths import SCHEMA_MINT, SCHEMA_PUBKEY
 from apps.cardano.helpers.utils import derive_public_key
@@ -15,7 +14,7 @@ from . import addresses, seed
 if TYPE_CHECKING:
     from typing import Any
 
-    from trezor.messages import CardanoSignMessageFinished, CardanoSignMessageInit
+    from trezor.messages import CardanoMessageSignature, CardanoSignMessageInit
 
     from apps.common.cbor import CborSequence
 
@@ -48,9 +47,6 @@ async def _validate_message_init(
             )
         addresses.validate_message_address_parameters(msg.address_parameters)
 
-    if msg.payload_size > MAX_CHUNK_SIZE:
-        raise ProcessError("Payload too long to sign")
-
     await _validate_message_signing_path(msg.signing_path, keychain)
 
 
@@ -78,42 +74,43 @@ async def _get_confirmed_header_address(
         return addresses.get_public_key_hash(keychain, msg.signing_path)
 
 
-async def _get_payload_first_chunk(size: int) -> bytes:
-    """Returns the first chunk of the payload."""
-    from trezor.messages import (
-        CardanoMessageItemAck,
-        CardanoMessageItemHostAck,
-        CardanoMessagePayloadChunk,
-    )
+async def _get_payload_data(
+    payload_size: int,
+    chunk_length: int,
+    chunk_offset: int,
+) -> bytes:
+    """Returns payload data using length+offset pattern."""
+    from trezor.messages import CardanoMessageDataRequest, CardanoMessageDataResponse
 
-    first_chunk = b""
+    if chunk_offset + chunk_length > payload_size:
+        raise ProcessError("Requested data exceeds payload size")
 
-    async for chunk_index, chunk in ChunkIterator(
-        total_size=size,
-        ack_msg=CardanoMessageItemAck(),
-        chunk_type=CardanoMessagePayloadChunk,
-    ):
-        if chunk_index == 0:
-            first_chunk = chunk.data
-        else:
-            raise ProcessError("Expected only one chunk")
+    request = CardanoMessageDataRequest(length=chunk_length, offset=chunk_offset)
+    response = await ctx_call(request, CardanoMessageDataResponse)
 
-    await ctx_call(CardanoMessageItemAck(), CardanoMessageItemHostAck)
-    return first_chunk
+    if len(response.data) != chunk_length:
+        raise ProcessError("Data length mismatch")
+
+    return response.data
 
 
 async def _get_confirmed_payload(size: int, prefer_hex_display: bool) -> bytes:
     from . import layout
 
-    first_chunk = await _get_payload_first_chunk(size)
+    # Request the entire payload at once for now, regardless of RAM constraints.
+    payload = (
+        await _get_payload_data(payload_size=size, chunk_length=size, chunk_offset=0)
+        if size > 0
+        else b""
+    )
 
     await layout.confirm_message_payload(
         payload_size=size,
-        payload_first_chunk=first_chunk,
+        payload_first_chunk=payload,
         prefer_hex_display=prefer_hex_display,
     )
 
-    return first_chunk
+    return payload
 
 
 def _cborize_sig_structure(
@@ -151,8 +148,8 @@ async def sign_message(
     msg: CardanoSignMessageInit,
     keychain: seed.Keychain,
     slip21_keychain: "Slip21Keychain",
-) -> CardanoSignMessageFinished:
-    from trezor.messages import CardanoSignMessageFinished
+) -> CardanoMessageSignature:
+    from trezor.messages import CardanoMessageSignature
 
     from . import layout
 
@@ -178,7 +175,7 @@ async def sign_message(
         _cborize_sig_structure(payload=payload, protected_headers=headers),
     )
 
-    return CardanoSignMessageFinished(
+    return CardanoMessageSignature(
         signature=signature,
         address=address,
         pub_key=derive_public_key(keychain, msg.signing_path),

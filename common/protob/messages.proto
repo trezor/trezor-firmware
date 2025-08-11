@@ -251,10 +251,9 @@ enum MessageType {
     MessageType_CardanoTxReferenceScriptChunk = 336 [(wire_in) = true];
     MessageType_CardanoTxReferenceInput = 337 [(wire_in) = true];
     MessageType_CardanoSignMessageInit = 338 [(wire_in) = true];
-    MessageType_CardanoMessagePayloadChunk = 339 [(wire_in) = true];
-    MessageType_CardanoMessageItemAck = 340 [(wire_out) = true];
-    MessageType_CardanoMessageItemHostAck = 341 [(wire_in) = true];
-    MessageType_CardanoSignMessageFinished = 342 [(wire_out) = true];
+    MessageType_CardanoMessageDataRequest = 339 [(wire_out) = true];
+    MessageType_CardanoMessageDataResponse = 340 [(wire_in) = true];
+    MessageType_CardanoMessageSignature = 341 [(wire_out) = true];
 
     // Ripple
     MessageType_RippleGetAddress = 400 [(wire_in) = true];

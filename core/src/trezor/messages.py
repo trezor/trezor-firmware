@@ -1808,13 +1808,23 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["CardanoSignMessageInit"]:
             return isinstance(msg, cls)
 
-    class CardanoMessageItemAck(protobuf.MessageType):
+    class CardanoMessageDataRequest(protobuf.MessageType):
+        length: "int"
+        offset: "int"
+
+        def __init__(
+            self,
+            *,
+            length: "int",
+            offset: "int",
+        ) -> None:
+            pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["CardanoMessageItemAck"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["CardanoMessageDataRequest"]:
             return isinstance(msg, cls)
 
-    class CardanoMessagePayloadChunk(protobuf.MessageType):
+    class CardanoMessageDataResponse(protobuf.MessageType):
         data: "bytes"
 
         def __init__(
@@ -1825,16 +1835,10 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["CardanoMessagePayloadChunk"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["CardanoMessageDataResponse"]:
             return isinstance(msg, cls)
 
-    class CardanoMessageItemHostAck(protobuf.MessageType):
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["CardanoMessageItemHostAck"]:
-            return isinstance(msg, cls)
-
-    class CardanoSignMessageFinished(protobuf.MessageType):
+    class CardanoMessageSignature(protobuf.MessageType):
         signature: "bytes"
         address: "bytes"
         pub_key: "bytes"
@@ -1849,7 +1853,7 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["CardanoSignMessageFinished"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["CardanoMessageSignature"]:
             return isinstance(msg, cls)
 
     class CipherKeyValue(protobuf.MessageType):

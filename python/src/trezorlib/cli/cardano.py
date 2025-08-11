@@ -338,7 +338,7 @@ def sign_message(
     session: "Session",
     file: TextIO,
     derivation_type: messages.CardanoDerivationType,
-) -> messages.CardanoSignMessageFinished:
+) -> messages.CardanoMessageSignature:
     """Sign Cardano message containing arbitrary data."""
     request: dict[Any, Any] = json.load(file)
 
