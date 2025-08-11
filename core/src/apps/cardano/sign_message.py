@@ -6,7 +6,7 @@ from trezor.wire.context import call as ctx_call
 
 from apps.cardano.helpers.credential import Credential
 from apps.cardano.helpers.paths import SCHEMA_MINT, SCHEMA_PUBKEY
-from apps.cardano.helpers.utils import derive_public_key
+from apps.cardano.helpers.utils import derive_public_key, is_printable_ascii
 from apps.common import cbor
 
 from . import addresses, seed
@@ -103,6 +103,12 @@ async def _get_confirmed_payload(size: int, prefer_hex_display: bool) -> bytes:
         if size > 0
         else b""
     )
+
+    if size == 28 and not is_printable_ascii(payload):
+        # We do not support hashed signing yet, this is a heuristic to reject them.
+        # The length of a Blake2b224 hash is 28 bytes (224 bits).
+        # The chance of a valid hash composed of only printable ASCII is very low.
+        raise ProcessError("The payload is interpreted as a hash and cannot be signed")
 
     await layout.confirm_message_payload(
         payload_size=size,

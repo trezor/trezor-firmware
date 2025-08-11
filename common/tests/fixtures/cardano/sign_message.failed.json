@@ -19,6 +19,19 @@
       "result": {
         "error_message": "Must specify network_id and protocol_magic if using address_parameters"
       }
+    },
+    {
+      "description": "Reject probable hash 28-byte non-ASCII payload",
+      "parameters": {
+        "signing_path": "m/1852'/1815'/4'/0/0",
+        "network_id": 1,
+        "protocol_magic": 764824073,
+        "payload": "ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00",
+        "prefer_hex_display": true
+      },
+      "result": {
+        "error_message": "The payload is interpreted as a hash and cannot be signed"
+      }
     }
   ]
 }
