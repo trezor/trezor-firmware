@@ -141,7 +141,9 @@ def test_pairing_code_entry(
 
     cpace = Cpace(handshake_hash=protocol.handshake_hash)
     cpace.random_bytes = os.urandom
-    cpace.generate_keys_and_secret(code.to_bytes(6, "big"), cpace_trezor_public_key)
+    cpace.generate_keys_and_secret(
+        f"{code:06}".encode("ascii"), cpace_trezor_public_key
+    )
     sha_ctx = sha256(cpace.shared_secret)
     tag = sha_ctx.digest()
 
