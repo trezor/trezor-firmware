@@ -530,7 +530,8 @@ message CardanoSignTxFinished {
 /**
  * Request: Ask device to sign a message containing arbitrary data
  * @start
- * @next CardanoMessageItemAck
+ * @next CardanoMessageDataRequest
+ * @next CardanoMessageSignature
  */
 message CardanoSignMessageInit {
     optional uint32 protocol_magic = 1;                           // network's protocol magic
@@ -543,30 +544,29 @@ message CardanoSignMessageInit {
 }
 
 /**
- * @next CardanoMessagePayloadChunk
- * @next CardanoMessageItemHostAck
+ * Device requests data chunk with specific size and offset
+ * @next CardanoMessageDataResponse
  */
-message CardanoMessageItemAck {
+message CardanoMessageDataRequest {
+    required uint32 length = 1;        // size of data chunk to read
+    required uint32 offset = 2;        // offset from start of payload
 }
 
 /**
- * @next CardanoMessageItemAck
+ * Client provides requested data chunk
+ * @next CardanoMessageDataRequest
+ * @next CardanoMessageSignature
  */
-message CardanoMessagePayloadChunk {
-    required bytes data = 1;  // expected maximum chunk size is 1024 bytes
+message CardanoMessageDataResponse {
+    required bytes data = 1;  // the requested data chunk
 }
 
-/**
- * @next CardanoSignMessageFinished
- */
-message CardanoMessageItemHostAck {
-}
 
 /**
  * Response: Contains signature for message and address used in signed headers
  * @end
  */
-message CardanoSignMessageFinished {
+message CardanoMessageSignature {
     required bytes signature = 1; // signature for structure containing payload and protected headers
     required bytes address = 2;   // value of the address field in protected headers
     required bytes pub_key = 3;   // public key given by signing path

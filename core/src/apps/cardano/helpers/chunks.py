@@ -11,7 +11,6 @@ if TYPE_CHECKING:
     Chunk = Union[
         messages.CardanoTxInlineDatumChunk,
         messages.CardanoTxReferenceScriptChunk,
-        messages.CardanoMessagePayloadChunk,
     ]
 
     C = TypeVar("C", bound=Chunk)

@@ -395,14 +395,12 @@ pub enum MessageType {
     MessageType_CardanoTxReferenceInput = 337,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_CardanoSignMessageInit)
     MessageType_CardanoSignMessageInit = 338,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_CardanoMessagePayloadChunk)
-    MessageType_CardanoMessagePayloadChunk = 339,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_CardanoMessageItemAck)
-    MessageType_CardanoMessageItemAck = 340,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_CardanoMessageItemHostAck)
-    MessageType_CardanoMessageItemHostAck = 341,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_CardanoSignMessageFinished)
-    MessageType_CardanoSignMessageFinished = 342,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_CardanoMessageDataRequest)
+    MessageType_CardanoMessageDataRequest = 339,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_CardanoMessageDataResponse)
+    MessageType_CardanoMessageDataResponse = 340,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_CardanoMessageSignature)
+    MessageType_CardanoMessageSignature = 341,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_RippleGetAddress)
     MessageType_RippleGetAddress = 400,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_RippleAddress)
@@ -732,10 +730,9 @@ impl ::protobuf::Enum for MessageType {
             336 => ::std::option::Option::Some(MessageType::MessageType_CardanoTxReferenceScriptChunk),
             337 => ::std::option::Option::Some(MessageType::MessageType_CardanoTxReferenceInput),
             338 => ::std::option::Option::Some(MessageType::MessageType_CardanoSignMessageInit),
-            339 => ::std::option::Option::Some(MessageType::MessageType_CardanoMessagePayloadChunk),
-            340 => ::std::option::Option::Some(MessageType::MessageType_CardanoMessageItemAck),
-            341 => ::std::option::Option::Some(MessageType::MessageType_CardanoMessageItemHostAck),
-            342 => ::std::option::Option::Some(MessageType::MessageType_CardanoSignMessageFinished),
+            339 => ::std::option::Option::Some(MessageType::MessageType_CardanoMessageDataRequest),
+            340 => ::std::option::Option::Some(MessageType::MessageType_CardanoMessageDataResponse),
+            341 => ::std::option::Option::Some(MessageType::MessageType_CardanoMessageSignature),
             400 => ::std::option::Option::Some(MessageType::MessageType_RippleGetAddress),
             401 => ::std::option::Option::Some(MessageType::MessageType_RippleAddress),
             402 => ::std::option::Option::Some(MessageType::MessageType_RippleSignTx),
@@ -993,10 +990,9 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_CardanoTxReferenceScriptChunk" => ::std::option::Option::Some(MessageType::MessageType_CardanoTxReferenceScriptChunk),
             "MessageType_CardanoTxReferenceInput" => ::std::option::Option::Some(MessageType::MessageType_CardanoTxReferenceInput),
             "MessageType_CardanoSignMessageInit" => ::std::option::Option::Some(MessageType::MessageType_CardanoSignMessageInit),
-            "MessageType_CardanoMessagePayloadChunk" => ::std::option::Option::Some(MessageType::MessageType_CardanoMessagePayloadChunk),
-            "MessageType_CardanoMessageItemAck" => ::std::option::Option::Some(MessageType::MessageType_CardanoMessageItemAck),
-            "MessageType_CardanoMessageItemHostAck" => ::std::option::Option::Some(MessageType::MessageType_CardanoMessageItemHostAck),
-            "MessageType_CardanoSignMessageFinished" => ::std::option::Option::Some(MessageType::MessageType_CardanoSignMessageFinished),
+            "MessageType_CardanoMessageDataRequest" => ::std::option::Option::Some(MessageType::MessageType_CardanoMessageDataRequest),
+            "MessageType_CardanoMessageDataResponse" => ::std::option::Option::Some(MessageType::MessageType_CardanoMessageDataResponse),
+            "MessageType_CardanoMessageSignature" => ::std::option::Option::Some(MessageType::MessageType_CardanoMessageSignature),
             "MessageType_RippleGetAddress" => ::std::option::Option::Some(MessageType::MessageType_RippleGetAddress),
             "MessageType_RippleAddress" => ::std::option::Option::Some(MessageType::MessageType_RippleAddress),
             "MessageType_RippleSignTx" => ::std::option::Option::Some(MessageType::MessageType_RippleSignTx),
@@ -1253,10 +1249,9 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_CardanoTxReferenceScriptChunk,
         MessageType::MessageType_CardanoTxReferenceInput,
         MessageType::MessageType_CardanoSignMessageInit,
-        MessageType::MessageType_CardanoMessagePayloadChunk,
-        MessageType::MessageType_CardanoMessageItemAck,
-        MessageType::MessageType_CardanoMessageItemHostAck,
-        MessageType::MessageType_CardanoSignMessageFinished,
+        MessageType::MessageType_CardanoMessageDataRequest,
+        MessageType::MessageType_CardanoMessageDataResponse,
+        MessageType::MessageType_CardanoMessageSignature,
         MessageType::MessageType_RippleGetAddress,
         MessageType::MessageType_RippleAddress,
         MessageType::MessageType_RippleSignTx,
@@ -1519,77 +1514,76 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_CardanoTxReferenceScriptChunk => 181,
             MessageType::MessageType_CardanoTxReferenceInput => 182,
             MessageType::MessageType_CardanoSignMessageInit => 183,
-            MessageType::MessageType_CardanoMessagePayloadChunk => 184,
-            MessageType::MessageType_CardanoMessageItemAck => 185,
-            MessageType::MessageType_CardanoMessageItemHostAck => 186,
-            MessageType::MessageType_CardanoSignMessageFinished => 187,
-            MessageType::MessageType_RippleGetAddress => 188,
-            MessageType::MessageType_RippleAddress => 189,
-            MessageType::MessageType_RippleSignTx => 190,
-            MessageType::MessageType_RippleSignedTx => 191,
-            MessageType::MessageType_MoneroTransactionInitRequest => 192,
-            MessageType::MessageType_MoneroTransactionInitAck => 193,
-            MessageType::MessageType_MoneroTransactionSetInputRequest => 194,
-            MessageType::MessageType_MoneroTransactionSetInputAck => 195,
-            MessageType::MessageType_MoneroTransactionInputViniRequest => 196,
-            MessageType::MessageType_MoneroTransactionInputViniAck => 197,
-            MessageType::MessageType_MoneroTransactionAllInputsSetRequest => 198,
-            MessageType::MessageType_MoneroTransactionAllInputsSetAck => 199,
-            MessageType::MessageType_MoneroTransactionSetOutputRequest => 200,
-            MessageType::MessageType_MoneroTransactionSetOutputAck => 201,
-            MessageType::MessageType_MoneroTransactionAllOutSetRequest => 202,
-            MessageType::MessageType_MoneroTransactionAllOutSetAck => 203,
-            MessageType::MessageType_MoneroTransactionSignInputRequest => 204,
-            MessageType::MessageType_MoneroTransactionSignInputAck => 205,
-            MessageType::MessageType_MoneroTransactionFinalRequest => 206,
-            MessageType::MessageType_MoneroTransactionFinalAck => 207,
-            MessageType::MessageType_MoneroKeyImageExportInitRequest => 208,
-            MessageType::MessageType_MoneroKeyImageExportInitAck => 209,
-            MessageType::MessageType_MoneroKeyImageSyncStepRequest => 210,
-            MessageType::MessageType_MoneroKeyImageSyncStepAck => 211,
-            MessageType::MessageType_MoneroKeyImageSyncFinalRequest => 212,
-            MessageType::MessageType_MoneroKeyImageSyncFinalAck => 213,
-            MessageType::MessageType_MoneroGetAddress => 214,
-            MessageType::MessageType_MoneroAddress => 215,
-            MessageType::MessageType_MoneroGetWatchKey => 216,
-            MessageType::MessageType_MoneroWatchKey => 217,
-            MessageType::MessageType_DebugMoneroDiagRequest => 218,
-            MessageType::MessageType_DebugMoneroDiagAck => 219,
-            MessageType::MessageType_MoneroGetTxKeyRequest => 220,
-            MessageType::MessageType_MoneroGetTxKeyAck => 221,
-            MessageType::MessageType_MoneroLiveRefreshStartRequest => 222,
-            MessageType::MessageType_MoneroLiveRefreshStartAck => 223,
-            MessageType::MessageType_MoneroLiveRefreshStepRequest => 224,
-            MessageType::MessageType_MoneroLiveRefreshStepAck => 225,
-            MessageType::MessageType_MoneroLiveRefreshFinalRequest => 226,
-            MessageType::MessageType_MoneroLiveRefreshFinalAck => 227,
-            MessageType::MessageType_EosGetPublicKey => 228,
-            MessageType::MessageType_EosPublicKey => 229,
-            MessageType::MessageType_EosSignTx => 230,
-            MessageType::MessageType_EosTxActionRequest => 231,
-            MessageType::MessageType_EosTxActionAck => 232,
-            MessageType::MessageType_EosSignedTx => 233,
-            MessageType::MessageType_WebAuthnListResidentCredentials => 234,
-            MessageType::MessageType_WebAuthnCredentials => 235,
-            MessageType::MessageType_WebAuthnAddResidentCredential => 236,
-            MessageType::MessageType_WebAuthnRemoveResidentCredential => 237,
-            MessageType::MessageType_SolanaGetPublicKey => 238,
-            MessageType::MessageType_SolanaPublicKey => 239,
-            MessageType::MessageType_SolanaGetAddress => 240,
-            MessageType::MessageType_SolanaAddress => 241,
-            MessageType::MessageType_SolanaSignTx => 242,
-            MessageType::MessageType_SolanaTxSignature => 243,
-            MessageType::MessageType_ThpCreateNewSession => 244,
-            MessageType::MessageType_ThpCredentialRequest => 245,
-            MessageType::MessageType_ThpCredentialResponse => 246,
-            MessageType::MessageType_NostrGetPubkey => 247,
-            MessageType::MessageType_NostrPubkey => 248,
-            MessageType::MessageType_NostrSignEvent => 249,
-            MessageType::MessageType_NostrEventSignature => 250,
-            MessageType::MessageType_BenchmarkListNames => 251,
-            MessageType::MessageType_BenchmarkNames => 252,
-            MessageType::MessageType_BenchmarkRun => 253,
-            MessageType::MessageType_BenchmarkResult => 254,
+            MessageType::MessageType_CardanoMessageDataRequest => 184,
+            MessageType::MessageType_CardanoMessageDataResponse => 185,
+            MessageType::MessageType_CardanoMessageSignature => 186,
+            MessageType::MessageType_RippleGetAddress => 187,
+            MessageType::MessageType_RippleAddress => 188,
+            MessageType::MessageType_RippleSignTx => 189,
+            MessageType::MessageType_RippleSignedTx => 190,
+            MessageType::MessageType_MoneroTransactionInitRequest => 191,
+            MessageType::MessageType_MoneroTransactionInitAck => 192,
+            MessageType::MessageType_MoneroTransactionSetInputRequest => 193,
+            MessageType::MessageType_MoneroTransactionSetInputAck => 194,
+            MessageType::MessageType_MoneroTransactionInputViniRequest => 195,
+            MessageType::MessageType_MoneroTransactionInputViniAck => 196,
+            MessageType::MessageType_MoneroTransactionAllInputsSetRequest => 197,
+            MessageType::MessageType_MoneroTransactionAllInputsSetAck => 198,
+            MessageType::MessageType_MoneroTransactionSetOutputRequest => 199,
+            MessageType::MessageType_MoneroTransactionSetOutputAck => 200,
+            MessageType::MessageType_MoneroTransactionAllOutSetRequest => 201,
+            MessageType::MessageType_MoneroTransactionAllOutSetAck => 202,
+            MessageType::MessageType_MoneroTransactionSignInputRequest => 203,
+            MessageType::MessageType_MoneroTransactionSignInputAck => 204,
+            MessageType::MessageType_MoneroTransactionFinalRequest => 205,
+            MessageType::MessageType_MoneroTransactionFinalAck => 206,
+            MessageType::MessageType_MoneroKeyImageExportInitRequest => 207,
+            MessageType::MessageType_MoneroKeyImageExportInitAck => 208,
+            MessageType::MessageType_MoneroKeyImageSyncStepRequest => 209,
+            MessageType::MessageType_MoneroKeyImageSyncStepAck => 210,
+            MessageType::MessageType_MoneroKeyImageSyncFinalRequest => 211,
+            MessageType::MessageType_MoneroKeyImageSyncFinalAck => 212,
+            MessageType::MessageType_MoneroGetAddress => 213,
+            MessageType::MessageType_MoneroAddress => 214,
+            MessageType::MessageType_MoneroGetWatchKey => 215,
+            MessageType::MessageType_MoneroWatchKey => 216,
+            MessageType::MessageType_DebugMoneroDiagRequest => 217,
+            MessageType::MessageType_DebugMoneroDiagAck => 218,
+            MessageType::MessageType_MoneroGetTxKeyRequest => 219,
+            MessageType::MessageType_MoneroGetTxKeyAck => 220,
+            MessageType::MessageType_MoneroLiveRefreshStartRequest => 221,
+            MessageType::MessageType_MoneroLiveRefreshStartAck => 222,
+            MessageType::MessageType_MoneroLiveRefreshStepRequest => 223,
+            MessageType::MessageType_MoneroLiveRefreshStepAck => 224,
+            MessageType::MessageType_MoneroLiveRefreshFinalRequest => 225,
+            MessageType::MessageType_MoneroLiveRefreshFinalAck => 226,
+            MessageType::MessageType_EosGetPublicKey => 227,
+            MessageType::MessageType_EosPublicKey => 228,
+            MessageType::MessageType_EosSignTx => 229,
+            MessageType::MessageType_EosTxActionRequest => 230,
+            MessageType::MessageType_EosTxActionAck => 231,
+            MessageType::MessageType_EosSignedTx => 232,
+            MessageType::MessageType_WebAuthnListResidentCredentials => 233,
+            MessageType::MessageType_WebAuthnCredentials => 234,
+            MessageType::MessageType_WebAuthnAddResidentCredential => 235,
+            MessageType::MessageType_WebAuthnRemoveResidentCredential => 236,
+            MessageType::MessageType_SolanaGetPublicKey => 237,
+            MessageType::MessageType_SolanaPublicKey => 238,
+            MessageType::MessageType_SolanaGetAddress => 239,
+            MessageType::MessageType_SolanaAddress => 240,
+            MessageType::MessageType_SolanaSignTx => 241,
+            MessageType::MessageType_SolanaTxSignature => 242,
+            MessageType::MessageType_ThpCreateNewSession => 243,
+            MessageType::MessageType_ThpCredentialRequest => 244,
+            MessageType::MessageType_ThpCredentialResponse => 245,
+            MessageType::MessageType_NostrGetPubkey => 246,
+            MessageType::MessageType_NostrPubkey => 247,
+            MessageType::MessageType_NostrSignEvent => 248,
+            MessageType::MessageType_NostrEventSignature => 249,
+            MessageType::MessageType_BenchmarkListNames => 250,
+            MessageType::MessageType_BenchmarkNames => 251,
+            MessageType::MessageType_BenchmarkRun => 252,
+            MessageType::MessageType_BenchmarkResult => 253,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1608,7 +1602,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\x85Y\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xd4X\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\x80\xa6\
     \x1d\x01\xb0\xb5\x18\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -1820,28 +1814,27 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     TxReferenceScriptChunk\x10\xd0\x02\x1a\x04\x90\xb5\x18\x01\x12.\n#Messag\
     eType_CardanoTxReferenceInput\x10\xd1\x02\x1a\x04\x90\xb5\x18\x01\x12-\n\
     \"MessageType_CardanoSignMessageInit\x10\xd2\x02\x1a\x04\x90\xb5\x18\x01\
-    \x121\n&MessageType_CardanoMessagePayloadChunk\x10\xd3\x02\x1a\x04\x90\
-    \xb5\x18\x01\x12,\n!MessageType_CardanoMessageItemAck\x10\xd4\x02\x1a\
-    \x04\x98\xb5\x18\x01\x120\n%MessageType_CardanoMessageItemHostAck\x10\
-    \xd5\x02\x1a\x04\x90\xb5\x18\x01\x121\n&MessageType_CardanoSignMessageFi\
-    nished\x10\xd6\x02\x1a\x04\x98\xb5\x18\x01\x12'\n\x1cMessageType_RippleG\
-    etAddress\x10\x90\x03\x1a\x04\x90\xb5\x18\x01\x12$\n\x19MessageType_Ripp\
-    leAddress\x10\x91\x03\x1a\x04\x98\xb5\x18\x01\x12#\n\x18MessageType_Ripp\
-    leSignTx\x10\x92\x03\x1a\x04\x90\xb5\x18\x01\x12%\n\x1aMessageType_Rippl\
-    eSignedTx\x10\x93\x03\x1a\x04\x90\xb5\x18\x01\x123\n(MessageType_MoneroT\
-    ransactionInitRequest\x10\xf5\x03\x1a\x04\x98\xb5\x18\x01\x12/\n$Message\
-    Type_MoneroTransactionInitAck\x10\xf6\x03\x1a\x04\x98\xb5\x18\x01\x127\n\
-    ,MessageType_MoneroTransactionSetInputRequest\x10\xf7\x03\x1a\x04\x98\
-    \xb5\x18\x01\x123\n(MessageType_MoneroTransactionSetInputAck\x10\xf8\x03\
-    \x1a\x04\x98\xb5\x18\x01\x128\n-MessageType_MoneroTransactionInputViniRe\
-    quest\x10\xfb\x03\x1a\x04\x98\xb5\x18\x01\x124\n)MessageType_MoneroTrans\
-    actionInputViniAck\x10\xfc\x03\x1a\x04\x98\xb5\x18\x01\x12;\n0MessageTyp\
-    e_MoneroTransactionAllInputsSetRequest\x10\xfd\x03\x1a\x04\x98\xb5\x18\
-    \x01\x127\n,MessageType_MoneroTransactionAllInputsSetAck\x10\xfe\x03\x1a\
-    \x04\x98\xb5\x18\x01\x128\n-MessageType_MoneroTransactionSetOutputReques\
-    t\x10\xff\x03\x1a\x04\x98\xb5\x18\x01\x124\n)MessageType_MoneroTransacti\
-    onSetOutputAck\x10\x80\x04\x1a\x04\x98\xb5\x18\x01\x128\n-MessageType_Mo\
-    neroTransactionAllOutSetRequest\x10\x81\x04\x1a\x04\x98\xb5\x18\x01\x124\
+    \x120\n%MessageType_CardanoMessageDataRequest\x10\xd3\x02\x1a\x04\x98\
+    \xb5\x18\x01\x121\n&MessageType_CardanoMessageDataResponse\x10\xd4\x02\
+    \x1a\x04\x90\xb5\x18\x01\x12.\n#MessageType_CardanoMessageSignature\x10\
+    \xd5\x02\x1a\x04\x98\xb5\x18\x01\x12'\n\x1cMessageType_RippleGetAddress\
+    \x10\x90\x03\x1a\x04\x90\xb5\x18\x01\x12$\n\x19MessageType_RippleAddress\
+    \x10\x91\x03\x1a\x04\x98\xb5\x18\x01\x12#\n\x18MessageType_RippleSignTx\
+    \x10\x92\x03\x1a\x04\x90\xb5\x18\x01\x12%\n\x1aMessageType_RippleSignedT\
+    x\x10\x93\x03\x1a\x04\x90\xb5\x18\x01\x123\n(MessageType_MoneroTransacti\
+    onInitRequest\x10\xf5\x03\x1a\x04\x98\xb5\x18\x01\x12/\n$MessageType_Mon\
+    eroTransactionInitAck\x10\xf6\x03\x1a\x04\x98\xb5\x18\x01\x127\n,Message\
+    Type_MoneroTransactionSetInputRequest\x10\xf7\x03\x1a\x04\x98\xb5\x18\
+    \x01\x123\n(MessageType_MoneroTransactionSetInputAck\x10\xf8\x03\x1a\x04\
+    \x98\xb5\x18\x01\x128\n-MessageType_MoneroTransactionInputViniRequest\
+    \x10\xfb\x03\x1a\x04\x98\xb5\x18\x01\x124\n)MessageType_MoneroTransactio\
+    nInputViniAck\x10\xfc\x03\x1a\x04\x98\xb5\x18\x01\x12;\n0MessageType_Mon\
+    eroTransactionAllInputsSetRequest\x10\xfd\x03\x1a\x04\x98\xb5\x18\x01\
+    \x127\n,MessageType_MoneroTransactionAllInputsSetAck\x10\xfe\x03\x1a\x04\
+    \x98\xb5\x18\x01\x128\n-MessageType_MoneroTransactionSetOutputRequest\
+    \x10\xff\x03\x1a\x04\x98\xb5\x18\x01\x124\n)MessageType_MoneroTransactio\
+    nSetOutputAck\x10\x80\x04\x1a\x04\x98\xb5\x18\x01\x128\n-MessageType_Mon\
+    eroTransactionAllOutSetRequest\x10\x81\x04\x1a\x04\x98\xb5\x18\x01\x124\
     \n)MessageType_MoneroTransactionAllOutSetAck\x10\x82\x04\x1a\x04\x98\xb5\
     \x18\x01\x128\n-MessageType_MoneroTransactionSignInputRequest\x10\x83\
     \x04\x1a\x04\x98\xb5\x18\x01\x124\n)MessageType_MoneroTransactionSignInp\
