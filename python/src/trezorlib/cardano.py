@@ -108,7 +108,6 @@ Chunk = TypeVar(
     bound=Union[
         m.CardanoTxInlineDatumChunk,
         m.CardanoTxReferenceScriptChunk,
-        m.CardanoMessagePayloadChunk,
     ],
 )
 
@@ -1029,26 +1028,30 @@ def sign_message(
     derivation_type: m.CardanoDerivationType = m.CardanoDerivationType.ICARUS,
     protocol_magic: Optional[int] = None,
     network_id: Optional[int] = None,
-) -> m.CardanoSignMessageFinished:
-
-    size, chunks = _parse_chunkable_data(payload, m.CardanoMessagePayloadChunk)
-
+) -> m.CardanoMessageSignature:
     response = session.call(
         m.CardanoSignMessageInit(
             signing_path=signing_path,
-            payload_size=size,
+            payload_size=len(payload),
             address_parameters=address_parameters,
             prefer_hex_display=prefer_hex_display,
             protocol_magic=protocol_magic,
             network_id=network_id,
             derivation_type=derivation_type,
         ),
-        expect=m.CardanoMessageItemAck,
     )
 
-    for chunk in chunks:
-        session.call(chunk, expect=m.CardanoMessageItemAck)
+    while isinstance(response, m.CardanoMessageDataRequest):
+        offset = response.offset
+        requested_size = response.length
 
-    return session.call(
-        m.CardanoMessageItemHostAck(), expect=m.CardanoSignMessageFinished
-    )
+        if offset + requested_size > len(payload):
+            raise ValueError("Device requested data beyond payload bounds")
+
+        chunk_data = payload[offset : offset + requested_size]
+        response = session.call(m.CardanoMessageDataResponse(data=chunk_data))
+
+    if not isinstance(response, m.CardanoMessageSignature):
+        raise ValueError("Unexpected response")
+
+    return response
