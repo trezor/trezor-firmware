@@ -149,6 +149,7 @@ OK 2.1.7
 
 ### bootloader-update
 Updates the bootloader to the supplied binary file.
+Use `core/tools/bld_update.py` script to update the bootloader binary.
 
 
 ### ble-adv-start
@@ -332,7 +333,7 @@ OK 0.1.2.3
 ```
 
 ### nrf-update
-Updates the nRF firmware.
+Updates the nRF firmware. Use `core/tools/bin_update.py` script to update the nRF application binary.
 
 
 ### nrf-pair
