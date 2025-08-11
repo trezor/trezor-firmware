@@ -167,7 +167,7 @@ class TrezorClient:
         cpace.random_bytes = os.urandom
         assert cpace_trezor_msg.cpace_trezor_public_key is not None
         cpace.generate_keys_and_secret(
-            code.to_bytes(6, "big"), cpace_trezor_msg.cpace_trezor_public_key
+            f"{code:06}".encode("ascii"), cpace_trezor_msg.cpace_trezor_public_key
         )
         sha_ctx = sha256(cpace.shared_secret)
         tag = sha_ctx.digest()
