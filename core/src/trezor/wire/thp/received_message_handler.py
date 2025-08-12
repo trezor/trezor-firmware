@@ -12,7 +12,6 @@ from storage.cache_thp import (
     KEY_LENGTH,
     SESSION_ID_LENGTH,
     TAG_LENGTH,
-    update_channel_last_used,
     update_session_last_used,
 )
 from trezor import config, loop, protobuf, utils
@@ -39,7 +38,7 @@ from . import (
     ThpUnallocatedSessionError,
 )
 from . import alternating_bit_protocol as ABP
-from . import checksum, control_byte, get_encoded_device_properties, session_manager
+from . import control_byte, get_encoded_device_properties, session_manager
 from .checksum import CHECKSUM_LENGTH
 from .crypto import PUBKEY_LENGTH, Handshake
 from .session_context import SeedlessSessionContext
@@ -82,8 +81,6 @@ async def handle_received_message(
     ctrl_byte, _, payload_length = ustruct.unpack(">BHH", message_buffer)
     message_length = payload_length + PacketHeader.INIT_LENGTH
 
-    _check_checksum(message_length, message_buffer)
-
     # Synchronization process
     seq_bit = control_byte.get_seq_bit(ctrl_byte)
     ack_bit = control_byte.get_ack_bit(ctrl_byte)
@@ -95,8 +92,6 @@ async def handle_received_message(
             ack_bit,
             iface=ctx.iface,
         )
-    # 0: Update "last-time used"
-    update_channel_last_used(ctx.channel_id)
 
     # 1: Handle ACKs
     if control_byte.is_ack(ctrl_byte):
@@ -159,18 +154,6 @@ def _send_ack(channel: Channel, ack_bit: int) -> Awaitable[None]:
             iface=channel.iface,
         )
     return channel.ctx.write_payload(header, b"")
-
-
-def _check_checksum(message_length: int, message_buffer: utils.BufferType) -> None:
-    if __debug__:
-        log.debug(__name__, "check_checksum")
-    if not checksum.is_valid(
-        checksum=message_buffer[message_length - CHECKSUM_LENGTH : message_length],
-        data=memoryview(message_buffer)[: message_length - CHECKSUM_LENGTH],
-    ):
-        if __debug__:
-            log.debug(__name__, "Invalid checksum, ignoring message.")
-        raise ThpError("Invalid checksum, ignoring message.")
 
 
 async def handle_ack(ctx: Channel, ack_bit: int) -> None:

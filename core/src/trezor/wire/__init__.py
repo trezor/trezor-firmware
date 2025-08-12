@@ -105,7 +105,9 @@ if utils.USE_THP:
 
         while True:
             try:
-                (channel, message) = await ctx.get_next_message()
+                channel = await ctx.get_next_message()
+                message = channel.reassembler.message
+                assert message is not None
                 await received_message_handler.handle_received_message(channel, message)
             except Exception:
                 loop.clear()  # restart event loop in case of error
