@@ -65,9 +65,12 @@ def cancel_backup(
             debug.swipe_up()
             debug.click(debug.screen_buttons.tap_to_confirm())
     elif debug.layout_type is LayoutType.Eckhart:
-        debug.click(debug.screen_buttons.menu())
-        debug.button_actions.navigate_to_menu_item(0)
-        debug.click(debug.screen_buttons.ok())
+        if confirm:
+            debug.click(debug.screen_buttons.menu())
+            debug.button_actions.navigate_to_menu_item(0)
+            debug.click(debug.screen_buttons.ok())
+        else:
+            debug.click(debug.screen_buttons.cancel())
     else:
         raise RuntimeError("Unknown model")
 
