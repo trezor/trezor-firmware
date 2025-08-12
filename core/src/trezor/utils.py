@@ -29,6 +29,7 @@ from trezorutils import (  # noqa: F401
     firmware_vendor,
     halt,
     memcpy,
+    memzero,
     presize_module,
     reboot_to_bootloader,
     sd_hotswap_enabled,
