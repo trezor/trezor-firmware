@@ -34,7 +34,9 @@ if TYPE_CHECKING:
         def __del__(self) -> None: ...
 
 
-FORBIDDEN_KEY_PATH = DataError("Forbidden key path")
+class ForbiddenKeyPath(DataError):
+    def __init__(self) -> None:
+        super().__init__("Forbidden key path")
 
 
 class LRUCache:
@@ -103,7 +105,7 @@ class Keychain:
         if self.is_in_keychain(path):
             return
 
-        raise FORBIDDEN_KEY_PATH
+        raise ForbiddenKeyPath()
 
     def is_in_keychain(self, path: paths.Bip32Path) -> bool:
         return any(schema.match(path) for schema in self.schemas)
@@ -150,7 +152,7 @@ class Keychain:
         if safety_checks.is_strict() and not any(
             ns == path[: len(ns)] for ns in self.slip21_namespaces
         ):
-            raise FORBIDDEN_KEY_PATH
+            raise ForbiddenKeyPath()
 
         return self._derive_with_cache(
             1,
