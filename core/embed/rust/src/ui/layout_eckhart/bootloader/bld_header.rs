@@ -22,10 +22,7 @@ pub struct BldHeader<'a> {
     title: Label<'a>,
     /// button in the top-right corner
     right_button: Option<Button>,
-    /// button in the top-left corner
-    left_button: Option<Button>,
     right_button_msg: BldHeaderMsg,
-    left_button_msg: BldHeaderMsg,
     /// icon in the top-left corner (used instead of left button)
     icon: Option<Icon>,
     icon_color: Option<Color>,
@@ -51,9 +48,7 @@ impl<'a> BldHeader<'a> {
             area: Rect::zero(),
             title: Label::left_aligned(title, text_title(theme::GREY)).vertically_centered(),
             right_button: None,
-            left_button: None,
             right_button_msg: BldHeaderMsg::Cancelled,
-            left_button_msg: BldHeaderMsg::Cancelled,
             icon: None,
             icon_color: None,
             fuel_gauge: None,
@@ -96,18 +91,6 @@ impl<'a> BldHeader<'a> {
     }
 
     #[inline(never)]
-    pub fn with_left_button(self, button: Button, msg: BldHeaderMsg) -> Self {
-        debug_assert!(matches!(button.content(), ButtonContent::Icon(_)));
-        let touch_area = Insets::uniform(BUTTON_EXPAND_BORDER);
-        Self {
-            icon: None,
-            left_button: Some(button.with_expanded_touch_area(touch_area)),
-            left_button_msg: msg,
-            ..self
-        }
-    }
-
-    #[inline(never)]
     pub fn with_menu_button(self) -> Self {
         self.with_right_button(
             Button::with_icon(theme::ICON_MENU).styled(theme::bootloader::button_header()),
@@ -126,7 +109,6 @@ impl<'a> BldHeader<'a> {
     #[inline(never)]
     pub fn with_icon(self, icon: Icon, color: Color) -> Self {
         Self {
-            left_button: None,
             icon: Some(icon),
             icon_color: Some(color),
             ..self
@@ -138,16 +120,10 @@ impl<'a> BldHeader<'a> {
         Self { fuel_gauge, ..self }
     }
 
-    /// Calculates the width needed for the left icon, be it a button with icon
-    /// or just icon
+    /// Calculates the width needed for the left icon
     fn left_icon_width(&self) -> i16 {
-        let margin_right: i16 = 16; // [px]
-        if let Some(b) = &self.left_button {
-            match b.content() {
-                ButtonContent::Icon(icon) => icon.toif.width() + margin_right,
-                _ => 0,
-            }
-        } else if let Some(icon) = self.icon {
+        if let Some(icon) = self.icon {
+            let margin_right: i16 = 16; // [px]
             icon.toif.width() + margin_right
         } else {
             0
@@ -172,11 +148,10 @@ impl<'a> Component for BldHeader<'a> {
         };
 
         let icon_width = self.left_icon_width();
-        let (left_button_area, title_area) = rest.split_left(icon_width);
+        let (left_icon_area, title_area) = rest.split_left(icon_width);
 
-        self.left_button.place(left_button_area);
         self.title.place(title_area);
-        self.fuel_gauge.place(title_area.union(left_button_area));
+        self.fuel_gauge.place(title_area.union(left_icon_area));
 
         self.area = bounds;
         bounds
@@ -184,9 +159,6 @@ impl<'a> Component for BldHeader<'a> {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.fuel_gauge.event(ctx, event);
-        if let Some(ButtonMsg::Clicked) = self.left_button.event(ctx, event) {
-            return Some(self.left_button_msg);
-        };
         if let Some(ButtonMsg::Clicked) = self.right_button.event(ctx, event) {
             return Some(self.right_button_msg);
         };
@@ -197,7 +169,6 @@ impl<'a> Component for BldHeader<'a> {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.fuel_gauge.render(target);
         self.right_button.render(target);
-        self.left_button.render(target);
         if let Some(icon) = self.icon {
             shape::ToifImage::new(self.area.left_center(), icon.toif)
                 .with_fg(self.icon_color.unwrap_or(theme::GREY_LIGHT))

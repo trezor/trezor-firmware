@@ -25,8 +25,8 @@ use super::{
             button_cancel, button_confirm, button_default, button_wipe_confirm, BLD_BG, BLD_FG,
             TEXT_FW_FINGERPRINT, TEXT_WARNING, WELCOME_COLOR,
         },
-        BLACK, BLUE, GREEN_LIGHT, GREY, GREY_LIGHT, ICON_CHECKMARK, ICON_CLOSE, ICON_CROSS, RED,
-        TEXT_NORMAL, TEXT_SMALL_GREY, WHITE,
+        BLACK, BLUE, GREEN_LIGHT, GREY, GREY_LIGHT, ICON_CHECKMARK, ICON_CROSS, RED, TEXT_NORMAL,
+        TEXT_SMALL_GREY, WHITE,
     },
     UIEckhart, CANCEL_MESSAGE, WAIT_FOR_RESTART_MESSAGE, WAIT_MESSAGE,
 };
@@ -263,10 +263,7 @@ impl BootloaderUI for UIEckhart {
             .with_action_bar(BldActionBar::new_double(left, right))
             .with_screen_border(SCREEN_BORDER_BLUE)
             .with_more_info(
-                BldHeader::new("FW Fingerprint".into()).with_right_button(
-                    Button::with_icon(ICON_CLOSE).styled(theme::bootloader::button_header()),
-                    BldHeaderMsg::Cancelled,
-                ),
+                BldHeader::new("FW Fingerprint".into()).with_close_button(),
                 Label::left_aligned(fingerprint.into(), TEXT_FW_FINGERPRINT),
             );
 
