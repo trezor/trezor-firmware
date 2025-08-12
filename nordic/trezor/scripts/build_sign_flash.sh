@@ -6,10 +6,11 @@
 # This charade serves to differentiate commands run under poetry shell and ncs shell since their pythons are not compatible
 
 # Update the OPTSTRING to include 'a:'
-OPTSTRING=":b:a:pdsfc"
+OPTSTRING=":b:a:pdwsfc"
 
 APP_DIR="trezor-ble"
 BOARD=
+WRAP=0
 SIGN=0
 FLASH=0
 PRISTINE=
@@ -28,7 +29,7 @@ run_under_ncs_subshell() {
 }
 
 usage() {
-    echo "$0 [-b board_name] [-a app_dir] [-p] [-d] [-r] [-s] [-f]"
+    echo "$0 [-b board_name] [-a app_dir] [-p] [-d] [-c] [-w] [-s] [-f]"
     cat <<END
     Parameters:
     -b board_name: build with board name as param
@@ -36,6 +37,7 @@ usage() {
     -p: production build
     -d: use debug overlay when building
     -c: clean build (pristine)
+    -w: wrap firmware in custom envelope for signing tool
     -s: sign result
     -f: flash board
 
@@ -59,6 +61,9 @@ while getopts ${OPTSTRING} opt; do
       ;;
     p)
       PRODUCTION="-- -DOVERLAY_CONFIG=prod.conf -Dmcuboot_EXTRA_CONF_FILE=\"$PWD/$APP_DIR/sysbuild/mcuboot.conf;$PWD/$APP_DIR/sysbuild/mcuboot_prod.conf\""
+      ;;
+    w)
+      WRAP=1
       ;;
     s)
       SIGN=1
@@ -100,6 +105,10 @@ get_version_from_file() {
 
 VERSION=$(get_version_from_file)
 
+# Wrap FW in envelope with version and image_type
+if [ "$WRAP" -eq 1 ]; then
+    python ./scripts/wrap_firmware.py build/$APP_DIR/zephyr/zephyr.bin -v "$VERSION" -o build/$APP_DIR/zephyr/wrapped_zephyr.bin
+fi
 
 # Update paths in signing and flashing commands
 if [ "$SIGN" -eq 1 ]; then
