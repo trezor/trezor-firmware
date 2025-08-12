@@ -706,6 +706,7 @@ static void prodtest_tropic_get_riscv_fw_version(cli_t* cli) {
   if (lt_get_info_riscv_fw_ver(tropic_handle, version, sizeof(version)) !=
       LT_OK) {
     cli_error(cli, CLI_ERROR, "Unable to get RISCV FW version");
+    return;
   }
 
   // Respond with an OK message and version
@@ -721,8 +722,10 @@ static void prodtest_tropic_get_spect_fw_version(cli_t* cli) {
   lt_handle_t* tropic_handle = tropic_get_handle();
 
   uint8_t version[LT_L2_GET_INFO_SPECT_FW_SIZE];
-  if (!lt_get_info_spect_fw_ver(tropic_handle, version, sizeof(version))) {
+  if (lt_get_info_spect_fw_ver(tropic_handle, version, sizeof(version)) !=
+      LT_OK) {
     cli_error(cli, CLI_ERROR, "Unable to get SPECT FW version");
+    return;
   }
 
   // Respond with an OK message and version
@@ -738,8 +741,9 @@ static void prodtest_tropic_get_chip_id(cli_t* cli) {
   lt_handle_t* tropic_handle = tropic_get_handle();
 
   struct lt_chip_id_t chip_id;
-  if (!lt_get_info_chip_id(tropic_handle, &chip_id)) {
+  if (lt_get_info_chip_id(tropic_handle, &chip_id) != LT_OK) {
     cli_error(cli, CLI_ERROR, "Unable to get CHIP ID");
+    return;
   }
 
   // Respond with an OK message and chip ID
@@ -1002,6 +1006,7 @@ static void prodtest_tropic_pair(cli_t* cli) {
 
   // Retrieve the factory pairing key pair.
   lt_ret_t ret = LT_FAIL;
+  // TODO: This is an emulator key, use the real key instead
   curve25519_key factory_private = {
       0xf0, 0xc4, 0xaa, 0x04, 0x8f, 0x00, 0x13, 0xa0, 0x96, 0x84, 0xdf,
       0x05, 0xe8, 0xa2, 0x2e, 0xf7, 0x21, 0x38, 0x98, 0x28, 0x2b, 0xa9,
