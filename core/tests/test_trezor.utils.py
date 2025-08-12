@@ -76,6 +76,13 @@ class TestUtils(unittest.TestCase):
                 b"\xa0\x93@\x98\xa6\x80\xdb\x07m\xdf~\xe2'E\xf1\x19\xd8\xfd\xa4`\x10H\xf0_\xdbf\xa6N\xdd\xc0\xcf\xed",
             )
 
+    def test_memzero(self):
+        data = bytearray(range(10))
+        utils.memzero(memoryview(data)[3:7])
+        self.assertEqual(data, bytearray([0, 1, 2, 0, 0, 0, 0, 7, 8, 9]))
+        utils.memzero(data)
+        self.assertEqual(data, bytearray(10))
+
 
 if __name__ == "__main__":
     unittest.main()
