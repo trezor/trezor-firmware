@@ -1,3 +1,6 @@
+#[cfg(feature = "rgb_led")]
+use crate::trezorhal::rgb_led;
+
 use crate::{
     strutil::TString,
     ui::{
@@ -11,8 +14,9 @@ use crate::{
 use super::super::{
     cshape::ScreenBorder,
     theme::{
-        ACTION_BAR_HEIGHT, HEADER_HEIGHT, PADDING, RED, SIDE_INSETS, TEXT_NORMAL, TEXT_SMALL,
-        TEXT_SMALL_GREY, TEXT_SMALL_GREY_EXTRA_LIGHT, TEXT_SMALL_RED, TEXT_VERTICAL_SPACING,
+        ACTION_BAR_HEIGHT, HEADER_HEIGHT, LED_RED, PADDING, RED, SIDE_INSETS, TEXT_NORMAL,
+        TEXT_SMALL, TEXT_SMALL_GREY, TEXT_SMALL_GREY_EXTRA_LIGHT, TEXT_SMALL_RED,
+        TEXT_VERTICAL_SPACING,
     },
     WAIT_FOR_RESTART_MESSAGE,
 };
@@ -83,5 +87,7 @@ impl<'a> Component for ErrorScreen<'a> {
         self.footer.render(target);
         self.wait_for_restart.render(target);
         self.screen_border.render(u8::MAX, target);
+        #[cfg(feature = "rgb_led")]
+        rgb_led::set_color(LED_RED.into());
     }
 }

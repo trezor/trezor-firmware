@@ -149,6 +149,16 @@ fn render_led_simulation<'a>(
     step_size: u16,
     color: Color,
 ) {
+    let color = match color {
+        theme::LED_WHITE => theme::GREY_LIGHT,
+        theme::LED_GREEN_LIGHT => theme::GREEN_LIGHT,
+        theme::LED_GREEN_LIME => theme::GREEN_LIME,
+        theme::LED_ORANGE => theme::ORANGE,
+        theme::LED_RED => theme::RED,
+        theme::LED_YELLOW => theme::YELLOW,
+        theme::LED_BLUE => theme::BLUE,
+        _ => color,
+    };
     // Vertical gradient (color intensity fading from bottom to top)
     for (slice, factor) in iter_slices(area, Axis::Vertical, step_size) {
         // Gradient 1 (Overall intensity: 35%)
