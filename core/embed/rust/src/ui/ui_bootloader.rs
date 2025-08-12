@@ -65,4 +65,9 @@ pub trait BootloaderUI {
 
     #[cfg(feature = "ble")]
     fn screen_pairing_mode_finalizing(initial_setup: bool) -> u32;
+
+    #[cfg(feature = "power_manager")]
+    fn screen_bootloader_entry_progress(_progress: u16, _initialize: bool) {
+        unimplemented!();
+    }
 }

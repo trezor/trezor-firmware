@@ -229,3 +229,9 @@ extern "C" fn screen_wireless_setup(
 extern "C" fn screen_pairing_mode_finalizing(initial_setup: bool) -> u32 {
     ModelUI::screen_pairing_mode_finalizing(initial_setup)
 }
+
+#[cfg(feature = "power_manager")]
+#[no_mangle]
+extern "C" fn screen_bootloader_entry_progress(progress: u16, initialize: bool) {
+    ModelUI::screen_bootloader_entry_progress(progress, initialize)
+}
