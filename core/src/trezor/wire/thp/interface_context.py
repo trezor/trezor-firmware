@@ -7,6 +7,7 @@ from storage.cache_thp import (
     BROADCAST_CHANNEL_ID,
     ChannelCache,
     iter_allocated_channels,
+    update_channel_last_used,
 )
 from trezor import io, loop, utils
 
@@ -61,7 +62,7 @@ class ThpContext:
         self._write = loop.wait(iface.iface_num() | io.POLL_WRITE)
         self._channels: dict[int, Channel] = {}
 
-    async def get_next_message(self) -> tuple[Channel, memoryview]:
+    async def get_next_message(self) -> Channel:
         packet = bytearray(self._iface.RX_PACKET_LEN)
         while True:
             packet_len = await self._read
@@ -86,11 +87,11 @@ class ThpContext:
                 continue
 
             try:
-                message = channel.handle_packet(packet)
-                if message is not None:
-                    # `message` must be handled ASAP without blocking,
+                if channel.reassemble(packet):
+                    update_channel_last_used(channel.channel_id)
+                    # The reassembled message must be handled ASAP without blocking,
                     # since it may point to the global read buffer.
-                    return channel, message
+                    return channel
             except WireBufferError:
                 await channel.write_error(ThpErrorType.TRANSPORT_BUSY)
                 continue
