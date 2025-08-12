@@ -362,6 +362,15 @@ bool haptic_play(haptic_effect_t effect) {
 }
 
 bool haptic_play_custom(int8_t amplitude_pct, uint16_t duration_ms) {
+  haptic_driver_t *driver = &g_haptic_driver;
+
+  if (!driver->initialized) {
+    return false;
+  }
+
+  if (!driver->enabled) {
+    return true;
+  }
   if (amplitude_pct < 0) {
     amplitude_pct = 0;
   } else if (amplitude_pct > 100) {
