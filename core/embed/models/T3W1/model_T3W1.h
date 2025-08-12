@@ -25,8 +25,8 @@
 
 #include "bootloaders/bootloader_hashes.h"
 
-#define MODEL_NAME "T3W1"
-#define MODEL_FULL_NAME "Trezor T3W1"
+#define MODEL_NAME "Safe 7"
+#define MODEL_FULL_NAME "Trezor Safe 7"
 #define MODEL_INTERNAL_NAME "T3W1"
 #define MODEL_INTERNAL_NAME_TOKEN T3W1
 #define MODEL_INTERNAL_NAME_QSTR MP_QSTR_T3W1
