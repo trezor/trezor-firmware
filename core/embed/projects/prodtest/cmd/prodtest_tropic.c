@@ -1352,25 +1352,6 @@ static void prodtest_tropic_send_command(cli_t* cli) {
   cli_ok_hexdata(cli, output, output_length);
 }
 
-lt_ret_t write_whole_I_config(lt_handle_t* h,
-                              const struct lt_config_t* config) {
-  lt_ret_t ret = LT_FAIL;
-
-  for (int i = 0; i < 27; i++) {
-    uint16_t conf_addr = get_conf_addr(i);
-    uint32_t obj = config->obj[i];
-    for (int b = 0; b < 32; b++) {
-      if ((obj >> b) & 1) {
-        ret = lt_i_config_write(h, conf_addr, b);
-        if (ret != LT_OK) {
-          return ret;
-        }
-      }
-    }
-  }
-  return LT_OK;
-}
-
 static void prodtest_tropic_lock(cli_t* cli) {
   // This function is:
   //   * idempotent (it can be called multiple times without changing the state
@@ -1398,16 +1379,16 @@ static void prodtest_tropic_lock(cli_t* cli) {
     return;
   }
 
-  ret = write_whole_R_config(tropic_handle, &reversible_configuration);
+  ret = lt_write_whole_R_config(tropic_handle, &reversible_configuration);
   if (ret != LT_OK) {
-    cli_error(cli, CLI_ERROR, "`write_whole_R_config()` failed with error %d",
-              ret);
+    cli_error(cli, CLI_ERROR,
+              "`lt_write_whole_R_config()` failed with error %d", ret);
     return;
   }
 
-  ret = read_whole_R_config(tropic_handle, &configuration_read);
+  ret = lt_read_whole_R_config(tropic_handle, &configuration_read);
   if (ret != LT_OK) {
-    cli_error(cli, CLI_ERROR, "`read_whole_R_config()` failed with error %d",
+    cli_error(cli, CLI_ERROR, "`lt_read_whole_R_config()` failed with error %d",
               ret);
     return;
   }
@@ -1418,16 +1399,16 @@ static void prodtest_tropic_lock(cli_t* cli) {
     return;
   }
 
-  ret = write_whole_I_config(tropic_handle, &irreversible_configuration);
+  ret = lt_write_whole_I_config(tropic_handle, &irreversible_configuration);
   if (ret != LT_OK) {
-    cli_error(cli, CLI_ERROR, "`write_whole_I_config()` failed with error %d",
-              ret);
+    cli_error(cli, CLI_ERROR,
+              "`lt_write_whole_I_config()` failed with error %d", ret);
     return;
   }
 
-  ret = read_whole_I_config(tropic_handle, &configuration_read);
+  ret = lt_read_whole_I_config(tropic_handle, &configuration_read);
   if (ret != LT_OK) {
-    cli_error(cli, CLI_ERROR, "`read_whole_I_config()` failed with error %d",
+    cli_error(cli, CLI_ERROR, "`lt_read_whole_I_config()` failed with error %d",
               ret);
     return;
   }
@@ -1511,10 +1492,15 @@ static lt_ret_t data_read(lt_handle_t* h, uint16_t first_slot,
   uint16_t slot = first_slot;
 
   while (slot <= last_data_slot) {
-    lt_ret_t ret = lt_r_mem_data_read(h, slot, prefixed_data + position,
-                                      R_MEM_DATA_SIZE_MAX);
+    uint16_t slot_length = 0;
+    lt_ret_t ret =
+        lt_r_mem_data_read(h, slot, prefixed_data + position, &slot_length);
     if (ret != LT_OK) {
       return ret;
+    }
+
+    if (slot_length != R_MEM_DATA_SIZE_MAX) {
+      return LT_FAIL;
     }
 
     position += R_MEM_DATA_SIZE_MAX;
@@ -1541,8 +1527,7 @@ static bool check_device_cert_chain(cli_t* cli, const uint8_t* chain,
   ed25519_signature signature = {0};
 
   if (lt_ecc_eddsa_sign(tropic_get_handle(), TROPIC_DEV_KEY_SLOT, challenge,
-                        sizeof(challenge), signature,
-                        sizeof(signature)) != LT_OK) {
+                        sizeof(challenge), signature) != LT_OK) {
     return false;
   }
 

@@ -184,11 +184,15 @@ lt_ret_t lt_port_delay(lt_handle_t *h, uint32_t ms) {
 }
 
 lt_ret_t lt_port_random_bytes(uint32_t *buff, uint16_t len) {
+  if (len % sizeof(uint32_t) != 0) {
+    return LT_PARAM_ERR;
+  }
+
   while (len > 0) {
     uint32_t random = rng_get();
     *buff = random;
     buff++;
-    len--;
+    len -= sizeof(uint32_t);
   }
 
   return LT_OK;

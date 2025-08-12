@@ -105,7 +105,7 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_sign(mp_obj_t key_index,
   vstr_init_len(&sig, SIG_SIZE);
 
   bool ret = tropic_ecc_sign(idx, (const uint8_t *)dig.buf, dig.len,
-                             ((uint8_t *)sig.buf), SIG_SIZE);
+                             ((uint8_t *)sig.buf));
   if (!ret) {
     vstr_clear(&sig);
     mp_raise_msg(&mp_type_TropicError,

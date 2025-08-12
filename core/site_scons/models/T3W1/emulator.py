@@ -85,6 +85,7 @@ def configure(
         ]
         paths += ["embed/sec/tropic/inc"]
         paths += ["vendor/libtropic/include"]
+        paths += ["vendor/libtropic/hal/port/unix"]
         paths += ["vendor/libtropic/src"]
         defines += ["USE_TREZOR_CRYPTO"]
         defines += [("LT_USE_TREZOR_CRYPTO", "1")]
