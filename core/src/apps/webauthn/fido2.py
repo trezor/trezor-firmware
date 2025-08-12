@@ -511,7 +511,7 @@ async def send_cmd(cmd: Cmd, iface: HID) -> None:
         copied = utils.memcpy(frm.data, 0, cmd.data, offset, datalen)
         offset += copied
         if copied < _FRAME_CONT_SIZE:
-            frm.data[copied:] = bytearray(_FRAME_CONT_SIZE - copied)
+            utils.memzero(memoryview(frm.data)[copied:])
         while True:
             await write
             if iface.write(buf) > 0:
@@ -542,7 +542,7 @@ def send_cmd_sync(cmd: Cmd, iface: HID) -> None:
         copied = utils.memcpy(frm.data, 0, cmd.data, offset, datalen)
         offset += copied
         if copied < _FRAME_CONT_SIZE:
-            frm.data[copied:] = bytearray(_FRAME_CONT_SIZE - copied)
+            utils.memzero(memoryview(frm.data)[copied:])
         iface.write_blocking(buf, 1000)
         seq += 1
 
