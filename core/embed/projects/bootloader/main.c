@@ -117,7 +117,7 @@ static secbool is_manufacturing_mode(vendor_header *vhdr) {
   return manufacturing_mode;
 }
 
-static secbool boot_sequence(secbool manufacturing_mode) {
+static secbool boot_sequence(void) {
   secbool stay_in_bootloader = secfalse;
 
 #ifdef USE_BACKUP_RAM
@@ -149,7 +149,7 @@ static secbool boot_sequence(secbool manufacturing_mode) {
       (cmd == BOOT_COMMAND_INSTALL_UPGRADE || cmd == BOOT_COMMAND_REBOOT ||
        cmd == BOOT_COMMAND_SHOW_RSOD || cmd == BOOT_COMMAND_STOP_AND_WAIT);
 
-  if (sectrue == manufacturing_mode && cmd != BOOT_COMMAND_POWER_OFF) {
+  if (cmd != BOOT_COMMAND_POWER_OFF) {
     turn_on = true;
   }
 
@@ -159,6 +159,7 @@ static secbool boot_sequence(secbool manufacturing_mode) {
 
   uint32_t press_start = 0;
   bool turn_on_locked = false;
+  bool haptic_played = false;
   bool bld_locked = false;
 
   while (!turn_on) {
@@ -166,7 +167,7 @@ static secbool boot_sequence(secbool manufacturing_mode) {
     if (btn_down) {
       if (press_start == 0) {
         press_start = systick_ms();
-        turn_on_locked = false;
+        turn_on_locked = true;
         bld_locked = false;
       }
 
@@ -176,13 +177,13 @@ static secbool boot_sequence(secbool manufacturing_mode) {
         haptic_play(HAPTIC_BOOTLOADER_ENTRY);
 #endif
         bld_locked = true;
-      } else if ((elapsed >= 1000 || manufacturing_mode == sectrue) &&
-                 !turn_on_locked) {
-#ifdef USE_HAPTIC
-        haptic_play(HAPTIC_BUTTON_PRESS);
-#endif
-        turn_on_locked = true;
       }
+#ifdef USE_HAPTIC
+      else if (elapsed >= 500 && !haptic_played) {
+        haptic_play(HAPTIC_BUTTON_PRESS);
+        haptic_played = true;
+      }
+#endif
     } else if (press_start != 0) {
       // Button just released
       if (bld_locked) {
@@ -460,7 +461,7 @@ int bootloader_main(void) {
 
   secbool manufacturing_mode = is_manufacturing_mode(&vhdr);
 
-  secbool stay_in_bootloader = boot_sequence(manufacturing_mode);
+  secbool stay_in_bootloader = boot_sequence();
 
   drivers_init(manufacturing_mode, &touch_initialized);
 
