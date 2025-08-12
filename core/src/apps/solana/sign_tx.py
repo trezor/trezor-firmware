@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from trezor.crypto import base58
 from trezor.wire import DataError
 
 from apps.common.keychain import with_slip44_keychain
@@ -11,13 +12,15 @@ from .types import AdditionalTxInfo
 if TYPE_CHECKING:
     from trezor.messages import SolanaSignTx, SolanaTxSignature
 
-    from apps.common.keychain import Keychain
+    from apps.common.keychain import Keychain as Slip21Keychain
 
 
-@with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
+@with_slip44_keychain(
+    *PATTERNS, slip44_id=SLIP44_ID, curve=CURVE, slip21_namespaces=[[b"SLIP-0024"]]
+)
 async def sign_tx(
     msg: SolanaSignTx,
-    keychain: Keychain,
+    keychain: Slip21Keychain,
 ) -> SolanaTxSignature:
     from trezor import TR
     from trezor.crypto.curve import ed25519
@@ -28,7 +31,10 @@ async def sign_tx(
     from apps.common import seed
 
     from .layout import confirm_transaction
-    from .predefined_transaction import try_confirm_predefined_transaction
+    from .predefined_transaction import (
+        get_token_transfer_instructions,
+        try_confirm_predefined_transaction,
+    )
 
     address_n = msg.address_n  # local_cache_attribute
     serialized_tx = msg.serialized_tx  # local_cache_attribute
@@ -66,6 +72,20 @@ async def sign_tx(
         msg.additional_info
     )
 
+    if msg.payment_req:
+        from apps.common.payment_request import PaymentRequestVerifier
+
+        transfer_token_instructions = get_token_transfer_instructions(
+            transaction.get_visible_instructions()
+        )
+        verifier = PaymentRequestVerifier(msg.payment_req, SLIP44_ID, keychain)
+        for transfer_token_instruction in transfer_token_instructions:
+            verifier.add_output(
+                transfer_token_instruction.amount,
+                base58.encode(transfer_token_instruction.destination_account[0]),
+            )
+        verifier.verify()
+
     if not await try_confirm_predefined_transaction(
         transaction,
         fee,
@@ -73,6 +93,7 @@ async def sign_tx(
         signer_public_key,
         transaction.blockhash,
         additional_tx_info,
+        msg.payment_req,
     ):
         await confirm_instructions(
             address_n, signer_public_key, transaction, additional_tx_info

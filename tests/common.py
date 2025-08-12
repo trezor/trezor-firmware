@@ -112,9 +112,12 @@ def parametrize_using_common_fixtures(*paths: str) -> "MarkDecorator":
                 if skip_model == "t3t1":
                     skiplist.append(models.T3T1)
             if skiplist:
-                skip_marks = [pytest.mark.models(skip=skiplist)]
+                extra_marks = [pytest.mark.models(skip=skiplist)]
             else:
-                skip_marks = []
+                extra_marks = []
+
+            if test.get("experimental"):
+                extra_marks.append(pytest.mark.experimental)
 
             tests.append(
                 pytest.param(
@@ -126,7 +129,7 @@ def parametrize_using_common_fixtures(*paths: str) -> "MarkDecorator":
                             mnemonic=fixture["setup"]["mnemonic"],
                         )
                     ]
-                    + skip_marks,
+                    + extra_marks,
                     id=test_id,
                 )
             )

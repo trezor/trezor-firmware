@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from trezor.crypto import base58
+from trezor.wire import ProcessError
 
 from .transaction import Transaction
 from .transaction.instructions import (
@@ -13,6 +14,8 @@ from .transaction.instructions import (
 
 if TYPE_CHECKING:
     from typing import Type
+
+    from trezor.messages import PaymentRequest
 
     from .transaction import Fee
     from .types import AdditionalTxInfo
@@ -122,9 +125,10 @@ async def try_confirm_token_transfer_transaction(
     signer_path: list[int],
     blockhash: bytes,
     additional_info: AdditionalTxInfo,
+    verified_payment_request: PaymentRequest | None,
 ) -> bool:
     from .definitions import unknown_token
-    from .layout import confirm_token_transfer
+    from .layout import confirm_payment_request, confirm_token_transfer
     from .token_account import try_get_token_account_base_address
 
     visible_instructions = transaction.get_visible_instructions()
@@ -159,16 +163,31 @@ async def try_confirm_token_transfer_transaction(
     is_unknown = token is None
     if is_unknown:
         token = unknown_token(token_mint)
-    await confirm_token_transfer(
-        token_account if base_address is None else base_address,
-        token_account,
-        token,
-        is_unknown,
-        total_token_amount,
-        transfer_token_instructions[0].decimals,
-        fee,
-        blockhash,
-    )
+
+    if verified_payment_request:
+        if len(transfer_token_instructions) > 1:
+            raise ProcessError("Multiple transfers not supported for payment requests")
+        provider_address = base58.encode(token_account)
+        await confirm_payment_request(
+            provider_address,
+            signer_path,
+            total_token_amount,
+            transfer_token_instructions[0].decimals,
+            token,
+            fee,
+            verified_payment_request,
+        )
+    else:
+        await confirm_token_transfer(
+            token_account if base_address is None else base_address,
+            token_account,
+            token,
+            is_unknown,
+            total_token_amount,
+            transfer_token_instructions[0].decimals,
+            fee,
+            blockhash,
+        )
     return True
 
 
@@ -179,6 +198,7 @@ async def try_confirm_predefined_transaction(
     signer_public_key: bytes,
     blockhash: bytes,
     additional_info: AdditionalTxInfo,
+    verified_payment_request: PaymentRequest | None,
 ) -> bool:
     from .layout import confirm_system_transfer
     from .transaction.instructions import SystemProgramTransferInstruction
@@ -214,6 +234,7 @@ async def try_confirm_predefined_transaction(
         signer_path,
         blockhash,
         additional_info,
+        verified_payment_request,
     )
 
 
