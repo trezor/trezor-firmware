@@ -37,7 +37,7 @@
 
 #define SECRET_BHK_REG_OFFSET 0
 
-#define SECRET_NUM_MAX_SLOTS 3
+#define SECRET_NUM_MAX_SLOTS 4
 
 #ifndef SECRET_KEY_SLOT_0_OFFSET
 #define SECRET_KEY_SLOT_0_OFFSET 0
@@ -54,6 +54,11 @@
 #define SECRET_KEY_SLOT_2_LEN 0
 #endif
 
+#ifndef SECRET_KEY_SLOT_3_OFFSET
+#define SECRET_KEY_SLOT_3_OFFSET 0
+#define SECRET_KEY_SLOT_3_LEN 0
+#endif
+
 #define SECRET_KEY_MAX_LEN (24 * sizeof(uint32_t))
 
 _Static_assert(SECRET_NUM_MAX_SLOTS >= SECRET_NUM_KEY_SLOTS);
@@ -67,17 +72,21 @@ _Static_assert(SECRET_KEY_SLOT_1_LEN % 16 == 0,
                "secret key length must be multiple of 16 bytes");
 _Static_assert(SECRET_KEY_SLOT_2_LEN % 16 == 0,
                "secret key length must be multiple of 16 bytes");
+_Static_assert(SECRET_KEY_SLOT_3_LEN % 16 == 0,
+               "secret key length must be multiple of 16 bytes");
 
 static uint32_t secret_slot_offsets[SECRET_NUM_MAX_SLOTS] = {
     SECRET_KEY_SLOT_0_OFFSET,
     SECRET_KEY_SLOT_1_OFFSET,
     SECRET_KEY_SLOT_2_OFFSET,
+    SECRET_KEY_SLOT_3_OFFSET,
 };
 
 static uint32_t secret_slot_lengths[SECRET_NUM_MAX_SLOTS] = {
     SECRET_KEY_SLOT_0_LEN,
     SECRET_KEY_SLOT_1_LEN,
     SECRET_KEY_SLOT_2_LEN,
+    SECRET_KEY_SLOT_3_LEN,
 };
 
 static secbool secret_slot_public[SECRET_NUM_MAX_SLOTS] = {
@@ -92,6 +101,11 @@ static secbool secret_slot_public[SECRET_NUM_MAX_SLOTS] = {
     secfalse,
 #endif
 #ifdef SECRET_KEY_SLOT_2_PUBLIC
+    sectrue,
+#else
+    secfalse,
+#endif
+#ifdef SECRET_KEY_SLOT_3_PUBLIC
     sectrue,
 #else
     secfalse,
