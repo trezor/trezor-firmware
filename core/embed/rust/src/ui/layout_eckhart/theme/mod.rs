@@ -49,6 +49,15 @@ pub const BLUE: Color = Color::rgb(0x00, 0x46, 0xFF);
 
 pub const RED: Color = Color::rgb(0xFF, 0x30, 0x30);
 
+// Color palette - LED diode
+pub const LED_WHITE: Color = Color::rgb(0x23, 0x23, 0x20);
+pub const LED_GREEN_LIGHT: Color = Color::rgb(0x04, 0x0D, 0x04);
+pub const LED_GREEN_LIME: Color = Color::rgb(0x23, 0x4B, 0x0A);
+pub const LED_ORANGE: Color = Color::rgb(0xBC, 0x2A, 0x06);
+pub const LED_RED: Color = Color::rgb(0x64, 0x06, 0x03);
+pub const LED_YELLOW: Color = Color::rgb(0x16, 0x10, 0x00);
+pub const LED_BLUE: Color = Color::rgb(0x05, 0x05, 0x32);
+
 // Common constants
 pub const PADDING: i16 = 24; // [px]
 pub const HEADER_HEIGHT: i16 = 96; // [px]
