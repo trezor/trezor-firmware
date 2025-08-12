@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor import TR
+from trezor import TR, wire
 from trezor.crypto import base58
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount, format_amount_unit
@@ -21,7 +21,7 @@ from .types import AddressType
 if TYPE_CHECKING:
     from typing import Sequence
 
-    from trezor.messages import SolanaTokenInfo
+    from trezor.messages import PaymentRequest, SolanaTokenInfo
     from trezor.ui.layouts import PropertyType
 
     from .definitions import Definitions
@@ -524,4 +524,64 @@ async def confirm_transaction(
         fee=fee_str,
         fee_title=fee_title,
         items=fee_items,
+    )
+
+
+async def confirm_payment_request(
+    provider_address: str,
+    address_n: list[int],
+    amount: int,
+    decimals: int,
+    token: SolanaTokenInfo,
+    fee: Fee,
+    verified_payment_request: PaymentRequest,
+) -> None:
+    from trezor.ui.layouts import confirm_payment_request
+
+    total_amount = format_amount_unit(format_amount(amount, decimals), token.symbol)
+
+    texts: list[tuple[str | None, str]] = []
+    refunds: list[tuple[str, str | None, str | None]] = []
+    trades: list[tuple[str, str, str, str | None, str | None]] = []
+    for memo in verified_payment_request.memos:
+        if memo.text_memo is not None:
+            texts.append((None, memo.text_memo.text))
+        elif memo.text_details_memo is not None:
+            texts.append((memo.text_details_memo.title, memo.text_details_memo.text))
+        elif memo.refund_memo:
+            refund_account_path = address_n_to_str(memo.refund_memo.address_n)
+            refunds.append((memo.refund_memo.address, None, refund_account_path))
+        elif memo.coin_purchase_memo:
+            coin_purchase_account_path = address_n_to_str(
+                memo.coin_purchase_memo.address_n
+            )
+            trades.append(
+                (
+                    f"-\u00A0{total_amount}",
+                    f"+\u00A0{memo.coin_purchase_memo.amount}",
+                    memo.coin_purchase_memo.address,
+                    None,
+                    coin_purchase_account_path,
+                )
+            )
+        else:
+            raise wire.DataError("Unrecognized memo type in payment request memo.")
+
+    account_path = address_n_to_str(address_n) if address_n else None
+    account_items = []
+    if account_path:
+        account_items.append((TR.address_details__derivation_path, account_path))
+
+    _, fee_str, fee_items = _fee_ui_info(fee)
+
+    await confirm_payment_request(
+        verified_payment_request.recipient_name,
+        provider_address,
+        texts,
+        refunds,
+        trades,
+        account_items,
+        fee_str,
+        fee_items,
+        None,
     )

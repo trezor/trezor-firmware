@@ -7067,6 +7067,7 @@ class SolanaSignTx(protobuf.MessageType):
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
         2: protobuf.Field("serialized_tx", "bytes", repeated=False, required=True),
         3: protobuf.Field("additional_info", "SolanaTxAdditionalInfo", repeated=False, required=False, default=None),
+        4: protobuf.Field("payment_req", "PaymentRequest", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -7075,10 +7076,12 @@ class SolanaSignTx(protobuf.MessageType):
         serialized_tx: "bytes",
         address_n: Optional[Sequence["int"]] = None,
         additional_info: Optional["SolanaTxAdditionalInfo"] = None,
+        payment_req: Optional["PaymentRequest"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.serialized_tx = serialized_tx
         self.additional_info = additional_info
+        self.payment_req = payment_req
 
 
 class SolanaTxSignature(protobuf.MessageType):

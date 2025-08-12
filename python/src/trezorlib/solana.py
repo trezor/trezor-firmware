@@ -58,12 +58,14 @@ def sign_tx(
     address_n: List[int],
     serialized_tx: bytes,
     additional_info: Optional[messages.SolanaTxAdditionalInfo],
+    payment_req: Optional[messages.PaymentRequest] = None,
 ) -> bytes:
     return session.call(
         messages.SolanaSignTx(
             address_n=address_n,
             serialized_tx=serialized_tx,
             additional_info=additional_info,
+            payment_req=payment_req,
         ),
         expect=messages.SolanaTxSignature,
     ).signature
