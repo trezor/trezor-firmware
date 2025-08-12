@@ -82,7 +82,7 @@ impl Homescreen {
                 (Some(led_color), Some(hint))
             }
             None if locked && coinjoin_authorized => (
-                Some(theme::GREEN_LIME),
+                Some(theme::LED_GREEN_LIME),
                 Some(Hint::new_instruction_green(
                     TR::coinjoin__do_not_disconnect,
                     Some(theme::ICON_INFO),
@@ -127,15 +127,15 @@ impl Homescreen {
 
     fn get_notification_display(level: u8, text: TString<'static>) -> (Color, Hint<'static>) {
         match level {
-            0 => (theme::RED, Hint::new_warning_danger(text)),
-            1 => (theme::YELLOW, Hint::new_warning_neutral(text)),
-            2 => (theme::BLUE, Hint::new_instruction(text, None)),
+            0 => (theme::LED_RED, Hint::new_warning_danger(text)),
+            1 => (theme::LED_YELLOW, Hint::new_warning_neutral(text)),
+            2 => (theme::LED_BLUE, Hint::new_instruction(text, None)),
             3 => (
-                theme::GREEN_LIGHT,
+                theme::LED_GREEN_LIGHT,
                 Hint::new_instruction_green(text, Some(theme::ICON_INFO)),
             ),
             _ => (
-                theme::GREY_LIGHT,
+                theme::LED_WHITE,
                 Hint::new_instruction(text, Some(theme::ICON_INFO)),
             ),
         }
