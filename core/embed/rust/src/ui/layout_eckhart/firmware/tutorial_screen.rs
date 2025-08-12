@@ -30,7 +30,7 @@ const LOADER_DURATION: Duration = Duration::from_secs(3);
 const TOTAL_DURATION: Duration = Duration::from_secs(5);
 const LOADER_MAX_VAL: u16 = 1000;
 const ICONS_PADDING: i16 = 15; // [px]
-const LED_COLOR: Color = theme::GREY_LIGHT;
+const LED_COLOR: Color = theme::LED_WHITE;
 
 pub enum TutorialWelcomeScreenMsg {
     Confirmed,

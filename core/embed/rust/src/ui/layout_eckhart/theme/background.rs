@@ -42,7 +42,7 @@ impl ScreenBackground {
         if let Some(led_color) = self.led_color {
             // Layer 3: (Optional) LED lightning simulation
             let gradient_area = SCREEN.inset(Insets::bottom(theme::ACTION_BAR_HEIGHT));
-            Gradient::HomescreenLEDSim(led_color).render(target, gradient_area, self.step_size);
+            Gradient::ScreenLEDSim(led_color).render(target, gradient_area, self.step_size);
         }
 
         // Layer 4: Tile pattern
