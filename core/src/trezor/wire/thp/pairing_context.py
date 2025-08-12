@@ -28,7 +28,6 @@ class PairingContext(Context):
     def __init__(self, channel_ctx: Channel) -> None:
         super().__init__(channel_ctx.iface, channel_ctx.channel_id, "ThpMessageType")
         self.channel_ctx: Channel = channel_ctx
-        self.incoming_message = loop.mailbox()
         self.nfc_secret: bytes | None = None
         self.qr_code_secret: bytes | None = None
         self.code_entry_secret: bytes | None = None
@@ -45,8 +44,7 @@ class PairingContext(Context):
         self.cpace: Cpace
         self.host_name: str | None
 
-    async def handle(self) -> None:
-        next_message: Message | None = None
+    async def handle(self, next_message: Message | None = None) -> None:
 
         while True:
             try:
@@ -54,7 +52,7 @@ class PairingContext(Context):
                     # If the previous run did not keep an unprocessed message for us,
                     # wait for a new one.
                     try:
-                        message: Message = await self.incoming_message
+                        _, message = await self.channel_ctx.decrypt_message()
                     except protocol_common.WireError as e:
                         if __debug__:
                             log.exception(__name__, e, iface=self.iface)
@@ -101,7 +99,8 @@ class PairingContext(Context):
                 iface=self.iface,
             )
 
-        message: Message = await self.incoming_message
+        _, message = await self.channel_ctx.decrypt_message()
+        log.debug(__name__, "got pairing message from mailbox", iface=self.iface)
         if message.type not in expected_types:
             from trezor.messages import Cancel
 
@@ -118,11 +117,8 @@ class PairingContext(Context):
 
         return message_handler.wrap_protobuf_load(message.data, expected_type)
 
-    async def write(self, msg: protobuf.MessageType) -> None:
-        return await self.channel_ctx.write(msg)
-
-    def write_force(self, msg: protobuf.MessageType) -> Awaitable[None]:
-        return self.channel_ctx.write(msg, force=True)
+    def write(self, msg: protobuf.MessageType) -> Awaitable[None]:
+        return self.channel_ctx.write(msg)
 
     async def call_any(
         self, msg: protobuf.MessageType, *expected_types: int

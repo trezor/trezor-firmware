@@ -103,13 +103,10 @@ if utils.USE_THP:
         if __debug__:
             _THP_CHANNELS.append(ctx._channels)
 
-        while True:
-            try:
-                (channel, message) = await ctx.get_next_message()
-                await received_message_handler.handle_received_message(channel, message)
-            except Exception:
-                loop.clear()  # restart event loop in case of error
-                raise  # the traceback will be printed by `loop._step()`
+            channel = await ctx.get_next_message()
+            await received_message_handler.handle_received_message(channel)
+            channel._log("THP session is over")
+            loop.clear()
 
 else:
 

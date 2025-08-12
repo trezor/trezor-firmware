@@ -216,7 +216,7 @@ async def _handle_code_entry_is_selected(ctx: PairingContext) -> None:
     if ctx.code_entry_secret is None:
         await _handle_code_entry_is_selected_first_time(ctx)
     else:
-        await ctx.write_force(ThpPairingPreparationsFinished())
+        await ctx.write(ThpPairingPreparationsFinished())
 
 
 async def _handle_code_entry_is_selected_first_time(ctx: PairingContext) -> None:
@@ -246,7 +246,7 @@ async def _handle_code_entry_is_selected_first_time(ctx: PairingContext) -> None
     )
     assert ctx.code_code_entry is not None
     ctx.cpace.generate_keys(f"{ctx.code_code_entry:06}".encode("ascii"))
-    await ctx.write_force(
+    await ctx.write(
         ThpCodeEntryCpaceTrezor(cpace_trezor_public_key=ctx.cpace.trezor_public_key)
     )
 
@@ -254,7 +254,7 @@ async def _handle_code_entry_is_selected_first_time(ctx: PairingContext) -> None
 @check_state_and_log(ChannelState.TP1)
 async def _handle_nfc_is_selected(ctx: PairingContext) -> None:
     ctx.nfc_secret = random.bytes(16)
-    await ctx.write_force(ThpPairingPreparationsFinished())
+    await ctx.write(ThpPairingPreparationsFinished())
 
 
 @check_state_and_log(ChannelState.TP1)
@@ -266,7 +266,7 @@ async def _handle_qr_code_is_selected(ctx: PairingContext) -> None:
     sha_ctx.update(ctx.qr_code_secret)
 
     ctx.code_qr_code = sha_ctx.digest()[:16]
-    await ctx.write_force(ThpPairingPreparationsFinished())
+    await ctx.write(ThpPairingPreparationsFinished())
 
 
 @check_state_and_log(ChannelState.TP3)

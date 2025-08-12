@@ -22,11 +22,16 @@ from storage.cache_thp import (
 from trezor import loop, protobuf, utils, workflow
 from trezor.wire.errors import WireBufferError
 
+from ..protocol_common import Message
 from . import ENCRYPTED, ChannelState, PacketHeader, ThpDecryptionError, ThpError
 from . import alternating_bit_protocol as ABP
 from . import control_byte, crypto, memory_manager
-from .checksum import CHECKSUM_LENGTH
-from .transmission_loop import TransmissionLoop
+from .checksum import CHECKSUM_LENGTH, is_valid
+from .received_message_handler import (
+    _send_ack,
+    _should_have_ctrl_byte_encrypted_transport,
+    handle_ack,
+)
 from .writer import MESSAGE_TYPE_LENGTH
 
 if __debug__:
@@ -52,12 +57,14 @@ class Reassembler:
         self.reset()
 
     def reset(self) -> None:
-        self.bytes_read = 0
-        self.buffer_len = 0
+        self.bytes_read: int = 0
+        self.buffer_len: int = 0
+        self.message: memoryview | None = None
 
-    def get_next_message(self, packet: memoryview) -> memoryview | None:
+    def handle_packet(self, packet: memoryview) -> bool:
         """
-        Process current packet, returning the payload buffer on success.
+        Process current packet, returning `True` on success.
+        In case of checksum error or if reasembly is not over, `False` is returned.
 
         May raise `WireBufferError` if there is a concurrent payload reassembly in progress.
         """
@@ -65,7 +72,7 @@ class Reassembler:
         if control_byte.is_continuation(ctrl_byte):
             if not self.bytes_read:
                 # ignore unexpected continuation packets
-                return None
+                return False
 
             # may raise WireBufferError
             buffer = memory_manager.get_existing_read_buffer(self.cid)
@@ -86,10 +93,12 @@ class Reassembler:
 
         assert len(buffer) == self.buffer_len
         if self.bytes_read < self.buffer_len:
-            return None
+            return False
         elif self.bytes_read == self.buffer_len:
-            self.reset()
-            return buffer
+            if not verify_checksum(buffer):
+                return False
+            self.message = buffer
+            return True
         else:
             raise ThpError("read more bytes than expected")
 
@@ -97,6 +106,18 @@ class Reassembler:
         self, payload_buffer: memoryview, packet: memoryview, offset: int
     ) -> None:
         self.bytes_read += utils.memcpy(payload_buffer, self.bytes_read, packet, offset)
+
+
+def verify_checksum(buffer: memoryview) -> memoryview | None:
+    """
+    Return the buffer if the checksum is valid, otherwise return `None`.
+    """
+    if is_valid(buffer[-CHECKSUM_LENGTH:], buffer[:-CHECKSUM_LENGTH]):
+        return buffer
+    # ignore invalid payloads
+    if __debug__:
+        log.warning("Invalid payload checksum: %s", utils.hexlify_if_bytes(buffer))
+    return None
 
 
 class Channel:
@@ -117,10 +138,6 @@ class Channel:
         # Shared variables
         self.sessions: dict[int, GenericSessionContext] = {}
         self.reassembler = Reassembler(self.get_channel_id_int())
-
-        # Objects for writing a message to a wire
-        self.transmission_loop: TransmissionLoop | None = None
-        self.write_task_spawn: loop.spawn | None = None
 
         # Temporary objects
         self.handshake: crypto.Handshake | None = None
@@ -184,23 +201,26 @@ class Channel:
 
     # READ and DECRYPT
 
-    def handle_packet(self, packet: utils.BufferType) -> memoryview | None:
+    def reassemble(self, packet: utils.BufferType) -> bool:
+        """
+        Process current packet, returning `True` on success.
+        In case of checksum error or if reassembly is not over, `False` is returned.
+
+        May raise `WireBufferError` if there is a concurrent payload reassembly in progress.
+        """
         if self.get_channel_state() == ChannelState.UNALLOCATED:
-            return None
+            return False
         try:
-            return self.reassembler.get_next_message(memoryview(packet))
+            return self.reassembler.handle_packet(memoryview(packet))
         except WireBufferError:
             self.reassembler.reset()
             raise
 
-    def decrypt_buffer(
-        self, message_length: int, offset: int = PacketHeader.INIT_LENGTH
+    def _decrypt_buffer(
+        self, buffer: memoryview, offset: int = PacketHeader.INIT_LENGTH
     ) -> None:
-        buffer = memory_manager.get_existing_read_buffer(self.get_channel_id_int())
-
-        noise_buffer = memoryview(buffer)[
-            offset : message_length - CHECKSUM_LENGTH - TAG_LENGTH
-        ]
+        message_length = len(buffer)
+        noise_buffer = buffer[offset : message_length - CHECKSUM_LENGTH - TAG_LENGTH]
         tag = buffer[
             message_length
             - CHECKSUM_LENGTH
@@ -237,7 +257,6 @@ class Channel:
         self,
         msg: protobuf.MessageType,
         session_id: int = 0,
-        force: bool = False,
     ) -> None:
         if __debug__:
             self._log(
@@ -260,9 +279,12 @@ class Channel:
         buffer = memory_manager.get_new_write_buffer(cid, length)
         noise_payload_len = memory_manager.encode_into_buffer(buffer, msg, session_id)
 
-        task = self._write_and_encrypt(noise_payload_len=noise_payload_len, force=force)
-        if task is not None:
-            await task
+        self._encrypt(buffer, noise_payload_len)
+        payload_length = noise_payload_len + TAG_LENGTH
+
+        return await self._write_encrypted_payload_loop(
+            ENCRYPTED, buffer[:payload_length]
+        )
 
     def write_error(self, err_type: int) -> Awaitable[None]:
         msg_data = err_type.to_bytes(1, "big")
@@ -270,75 +292,126 @@ class Channel:
         header = PacketHeader.get_error_header(self.get_channel_id_int(), length)
         return self.ctx.write_payload(header, msg_data)
 
-    def write_handshake_message(self, ctrl_byte: int, payload: bytes) -> None:
-        self._prepare_write()
-        self.write_task_spawn = loop.spawn(
-            self._write_encrypted_payload_loop(ctrl_byte, payload)
-        )
+    def write_handshake_message(
+        self, ctrl_byte: int, payload: bytes
+    ) -> Awaitable[None]:
+        return self._write_encrypted_payload_loop(ctrl_byte, payload)
 
-    def _write_and_encrypt(
-        self,
-        noise_payload_len: int,
-        force: bool = False,
-    ) -> Awaitable[None] | None:
-        buffer = memory_manager.get_existing_write_buffer(self.get_channel_id_int())
+    async def _get_reassembled_message(self) -> memoryview:
+        while self.reassembler.message is None:
+            # receive and reassemble a new message from this channel
+            channel = await self.ctx.get_next_message()
+            if channel is self:
+                break
 
-        self._encrypt(buffer, noise_payload_len)
-        payload_length = noise_payload_len + TAG_LENGTH
-
-        if self.write_task_spawn is not None:
-            self.write_task_spawn.close()  # TODO might break something
-            if __debug__:
-                self._log("Closed write task", logger=log.warning)
-        self._prepare_write()
-        if force:
-            if __debug__:
-                self._log("Writing FORCE message (without async or retransmission).")
-
-            return self._write_encrypted_payload_loop(
-                ENCRYPTED, memoryview(buffer[:payload_length])
+            # TODO: if this channel is inactive, allow switching to other channels
+            channel._log(
+                "Ignored message from unexpected channel: ",
+                utils.hexlify_if_bytes(channel.reassembler.message or "N/A"),
             )
-        self.write_task_spawn = loop.spawn(
-            self._write_encrypted_payload_loop(
-                ENCRYPTED, memoryview(buffer[:payload_length])
-            )
-        )
-        return None
 
-    def _prepare_write(self) -> None:
-        # TODO add condition that disallows to write when can_send_message is false
-        ABP.set_sending_allowed(self.channel_cache, False)
+        msg = self.reassembler.message
+        self.reassembler.reset()  # next call will reassemble a new message
+        assert msg is not None
+        return msg
+
+    async def decrypt_message(self) -> tuple[int, Message]:
+        """
+        Receive decrypt and return a (session_id, message) together with handling ACKs.
+        """
+        buffer = await self.recv_message()
+        self._decrypt_buffer(buffer)
+        session_id, message_type = ustruct.unpack(
+            ">BH", buffer[PacketHeader.INIT_LENGTH :]
+        )
+        message = Message(
+            message_type,
+            buffer[
+                PacketHeader.INIT_LENGTH
+                + MESSAGE_TYPE_LENGTH
+                + SESSION_ID_LENGTH : len(buffer)
+                - CHECKSUM_LENGTH
+                - TAG_LENGTH
+            ],
+        )
+        return (session_id, message)
+
+    async def recv_message(self, _return_on_ack: bool = False) -> memoryview:
+        """
+        Receive and return a valid message, together with handling ACKs.
+        Message content is not decrypted.
+
+        If `return_on_ack` is set, return when a valid ACK is received.
+        """
+        while True:
+            # Handle an existing message (if already reassembled).
+            # Otherwise, receive and reassemble a new one.
+            msg = await self._get_reassembled_message()
+
+            # Synchronization process
+            ctrl_byte = msg[0]
+            seq_bit = control_byte.get_seq_bit(ctrl_byte)
+
+            # 1: Handle ACKs
+            if control_byte.is_ack(ctrl_byte):
+                handle_ack(self, control_byte.get_ack_bit(ctrl_byte))
+                if _return_on_ack:
+                    return msg
+                else:
+                    continue
+
+            if _should_have_ctrl_byte_encrypted_transport(
+                self
+            ) and not control_byte.is_encrypted_transport(ctrl_byte):
+                raise ThpError("Message is not encrypted. Ignoring")
+
+            # 2: Handle message with unexpected sequential bit
+            if seq_bit != ABP.get_expected_receive_seq_bit(self.channel_cache):
+                if __debug__:
+                    self._log(
+                        "Received message with an unexpected sequential bit",
+                    )
+                await _send_ack(self, ack_bit=seq_bit)
+                raise ThpError("Received message with an unexpected sequential bit")
+
+            # 3: Send ACK in response
+            await _send_ack(self, ack_bit=seq_bit)
+
+            ABP.set_expected_receive_seq_bit(self.channel_cache, 1 - seq_bit)
+
+            return msg
 
     async def _write_encrypted_payload_loop(
-        self, ctrl_byte: int, payload: bytes, only_once: bool = False
+        self, ctrl_byte: int, payload: bytes
     ) -> None:
         if __debug__:
             self._log("write_encrypted_payload_loop")
 
+        assert ABP.is_sending_allowed(self.channel_cache)
+
         payload_len = len(payload) + CHECKSUM_LENGTH
         sync_bit = ABP.get_send_seq_bit(self.channel_cache)
         ctrl_byte = control_byte.add_seq_bit_to_ctrl_byte(ctrl_byte, sync_bit)
+
         header = PacketHeader(ctrl_byte, self.get_channel_id_int(), payload_len)
-        self.transmission_loop = TransmissionLoop(self, header, payload)
-        if only_once:
-            if __debug__:
-                self._log('Starting transmission loop "only once"')
-            await self.transmission_loop.start(max_retransmission_count=1)
-        else:
-            if __debug__:
-                self._log("Starting transmission loop")
-            await self.transmission_loop.start()
+        await self.ctx.write_payload(header, payload)
+        # TODO: re-transmit if no ACK is received
+        # TODO: there may be multiple ACKs due to host-side retransmissions
 
+        # ACK is needed before sending more data
+        ABP.set_sending_allowed(self.channel_cache, False)
+        while True:
+            # a valid ACK will result in calling `ABP.set_sending_allowed()`
+            self._log("waiting for ACK after send")
+            msg = await self.recv_message(_return_on_ack=True)
+            if ABP.is_sending_allowed(self.channel_cache):
+                break
+            if __debug__:
+                # the host should send an ACK before sending other messages
+                self._log("Ignored non-ACK message: ", utils.hexlify_if_bytes(msg))
+
+        self._log("got ACK after send")
         ABP.set_send_seq_bit_to_opposite(self.channel_cache)
-
-        # Let the main loop be restarted and clear loop, if there is no other
-        # workflow and the state is ENCRYPTED_TRANSPORT
-        # TODO only once is there to not clear when FALLBACK
-        # TODO missing transmission loop is active -> do not clear
-        if not only_once and self._can_clear_loop():
-            if __debug__:
-                self._log("clearing loop from channel")
-            loop.clear()
 
     def _encrypt(self, buffer: utils.BufferType, noise_payload_len: int) -> None:
         if __debug__:

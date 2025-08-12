@@ -49,7 +49,7 @@ async def wipe_device(msg: WipeDevice) -> NoReturn:
     translations.deinit()
     translations.erase()
     try:
-        await get_context().write_force(Success(message="Device wiped"))
+        await get_context().write(Success(message="Device wiped"))
     except Exception:
         if __debug__:
             log.debug(__name__, "Failed to send Success message after wipe.")

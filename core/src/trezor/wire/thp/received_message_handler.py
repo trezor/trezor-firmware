@@ -12,7 +12,6 @@ from storage.cache_thp import (
     KEY_LENGTH,
     SESSION_ID_LENGTH,
     TAG_LENGTH,
-    update_channel_last_used,
     update_session_last_used,
 )
 from trezor import config, loop, protobuf, utils
@@ -39,7 +38,7 @@ from . import (
     ThpUnallocatedSessionError,
 )
 from . import alternating_bit_protocol as ABP
-from . import checksum, control_byte, get_encoded_device_properties, session_manager
+from . import control_byte, get_encoded_device_properties, session_manager
 from .checksum import CHECKSUM_LENGTH
 from .crypto import PUBKEY_LENGTH, Handshake
 from .session_context import SeedlessSessionContext
@@ -61,73 +60,11 @@ _TREZOR_STATE_PAIRED = b"\x01"
 _TREZOR_STATE_PAIRED_AUTOCONNECT = b"\x02"
 
 
-async def handle_received_message(
-    ctx: Channel, message_buffer: utils.BufferType
-) -> None:
+async def handle_received_message(ctx: Channel) -> None:
     """Handle a message received from the channel."""
 
-    if __debug__:
-        log.debug(__name__, "handle_received_message", iface=ctx.iface)
-        # TODO remove after performance tests are done
-        # try:
-        #     import micropython
-
-        #     print("micropython.mem_info() from received_message_handler.py")
-        #     micropython.mem_info()
-        #     print("Allocation count:", micropython.alloc_count())
-        # except AttributeError:
-        #     print(
-        #         "To show allocation count, create the build with TREZOR_MEMPERF=1"
-        #     )
-    ctrl_byte, _, payload_length = ustruct.unpack(">BHH", message_buffer)
-    message_length = payload_length + PacketHeader.INIT_LENGTH
-
-    _check_checksum(message_length, message_buffer)
-
-    # Synchronization process
-    seq_bit = control_byte.get_seq_bit(ctrl_byte)
-    ack_bit = control_byte.get_ack_bit(ctrl_byte)
-    if __debug__:
-        log.debug(
-            __name__,
-            "handle_completed_message - seq bit of message: %d, ack bit of message: %d",
-            seq_bit,
-            ack_bit,
-            iface=ctx.iface,
-        )
-    # 0: Update "last-time used"
-    update_channel_last_used(ctx.channel_id)
-
-    # 1: Handle ACKs
-    if control_byte.is_ack(ctrl_byte):
-        await handle_ack(ctx, ack_bit)
-        return
-
-    if _should_have_ctrl_byte_encrypted_transport(
-        ctx
-    ) and not control_byte.is_encrypted_transport(ctrl_byte):
-        raise ThpError("Message is not encrypted. Ignoring")
-
-    # 2: Handle message with unexpected sequential bit
-    if seq_bit != ABP.get_expected_receive_seq_bit(ctx.channel_cache):
-        if __debug__:
-            log.debug(
-                __name__,
-                "Received message with an unexpected sequential bit",
-                iface=ctx.iface,
-            )
-        await _send_ack(ctx, ack_bit=seq_bit)
-        raise ThpError("Received message with an unexpected sequential bit")
-
-    # 3: Send ACK in response
-    await _send_ack(ctx, ack_bit=seq_bit)
-
-    ABP.set_expected_receive_seq_bit(ctx.channel_cache, 1 - seq_bit)
-
     try:
-        _handle_message_to_app_or_channel(
-            ctx, payload_length, message_length, ctrl_byte
-        )
+        await _handle_message_to_app_or_channel(ctx)
     except ThpUnallocatedSessionError as e:
         error_message = Failure(code=FailureType.ThpUnallocatedSession)
         await ctx.write(error_message, e.session_id)
@@ -161,19 +98,7 @@ def _send_ack(channel: Channel, ack_bit: int) -> Awaitable[None]:
     return channel.ctx.write_payload(header, b"")
 
 
-def _check_checksum(message_length: int, message_buffer: utils.BufferType) -> None:
-    if __debug__:
-        log.debug(__name__, "check_checksum")
-    if not checksum.is_valid(
-        checksum=message_buffer[message_length - CHECKSUM_LENGTH : message_length],
-        data=memoryview(message_buffer)[: message_length - CHECKSUM_LENGTH],
-    ):
-        if __debug__:
-            log.debug(__name__, "Invalid checksum, ignoring message.")
-        raise ThpError("Invalid checksum, ignoring message.")
-
-
-async def handle_ack(ctx: Channel, ack_bit: int) -> None:
+def handle_ack(ctx: Channel, ack_bit: int) -> None:
     if not ABP.is_ack_valid(ctx.channel_cache, ack_bit):
         return
     # ACK is expected and it has correct sync bit
@@ -183,61 +108,36 @@ async def handle_ack(ctx: Channel, ack_bit: int) -> None:
             "Received ACK message with correct ack bit",
             iface=ctx.iface,
         )
-    if ctx.transmission_loop is not None:
-        ctx.transmission_loop.stop_immediately()
-        if __debug__:
-            log.debug(__name__, "Stopped transmission loop", iface=ctx.iface)
-    elif __debug__:
-        log.debug(__name__, "Transmission loop was not stopped!", iface=ctx.iface)
-
     ABP.set_sending_allowed(ctx.channel_cache, True)
 
-    if ctx.write_task_spawn is not None:
-        if __debug__:
-            log.debug(
-                __name__,
-                'Control to "write_encrypted_payload_loop" task',
-                iface=ctx.iface,
-            )
-        await ctx.write_task_spawn
-        # Note that no the write_task_spawn could result in loop.clear(),
-        # which will result in termination of this function - any code after
-        # this await might not be executed
 
-
-def _handle_message_to_app_or_channel(
-    ctx: Channel,
-    payload_length: int,
-    message_length: int,
-    ctrl_byte: int,
-) -> None:
+def _handle_message_to_app_or_channel(ctx: Channel) -> Awaitable[None]:
     state = ctx.get_channel_state()
 
     if state == ChannelState.ENCRYPTED_TRANSPORT:
-        return _handle_state_ENCRYPTED_TRANSPORT(ctx, message_length)
+        return _handle_state_ENCRYPTED_TRANSPORT(ctx)
 
     if state == ChannelState.TH1:
-        return _handle_state_TH1(ctx, payload_length, message_length, ctrl_byte)
-
-    if state == ChannelState.TH2:
-        return _handle_state_TH2(ctx, message_length, ctrl_byte)
+        return _handle_state_handshake(ctx)
 
     if _is_channel_state_pairing(state):
-        return _handle_pairing(ctx, message_length)
+        return _handle_pairing(ctx)
 
     raise ThpError("Unimplemented channel state")
 
 
-def _handle_state_TH1(
+async def _handle_state_handshake(
     ctx: Channel,
-    payload_length: int,
-    message_length: int,
-    ctrl_byte: int,
 ) -> None:
     if __debug__:
         log.debug(__name__, "handle_state_TH1", iface=ctx.iface)
+    msg = await ctx.recv_message()
+    message_length = len(msg)
+    ctrl_byte, _, payload_length = ustruct.unpack(">BHH", msg)
+
     if not control_byte.is_handshake_init_req(ctrl_byte):
         raise ThpError("Message received is not a handshake init request!")
+
     if not payload_length == PUBKEY_LENGTH + CHECKSUM_LENGTH:
         raise ThpError("Message received is not a valid handshake init request!")
 
@@ -277,16 +177,12 @@ def _handle_state_TH1(
     payload = trezor_ephemeral_public_key + encrypted_trezor_static_public_key + tag
 
     # send handshake init response message
-    ctx.write_handshake_message(HANDSHAKE_INIT_RES, payload)
-    ctx.set_channel_state(ChannelState.TH2)
-    return
+    await ctx.write_handshake_message(HANDSHAKE_INIT_RES, payload)
 
+    msg = await ctx.recv_message()
+    message_length = len(msg)
+    ctrl_byte, _, payload_length = ustruct.unpack(">BHH", msg)
 
-def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -> None:
-    from apps.thp.credential_manager import decode_credential, validate_credential
-
-    if __debug__:
-        log.debug(__name__, "handle_state_TH2", iface=ctx.iface)
     if not control_byte.is_handshake_comp_req(ctrl_byte):
         raise ThpError("Message received is not a handshake completion request!")
 
@@ -352,6 +248,8 @@ def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -> None
     trezor_state = _TREZOR_STATE_UNPAIRED
 
     if noise_payload.host_pairing_credential is not None:
+        from apps.thp.credential_manager import decode_credential, validate_credential
+
         try:  # TODO change try-except for something better
             credential = decode_credential(noise_payload.host_pairing_credential)
             paired = validate_credential(
@@ -369,7 +267,7 @@ def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -> None
             pass
 
     # send hanshake completion response
-    ctx.write_handshake_message(
+    await ctx.write_handshake_message(
         HANDSHAKE_COMP_RES,
         ctx.handshake.get_handshake_completion_response(trezor_state),
     )
@@ -382,18 +280,11 @@ def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -> None
         ctx.set_channel_state(ChannelState.TP0)
 
 
-def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message_length: int) -> None:
+async def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel) -> None:
     if __debug__:
         log.debug(__name__, "handle_state_ENCRYPTED_TRANSPORT", iface=ctx.iface)
 
-    ctx.decrypt_buffer(message_length)
-
-    buffer = memory_manager.get_existing_read_buffer(ctx.get_channel_id_int())
-    # if buffer is BufferError:
-    # pass  # TODO handle
-    session_id, message_type = ustruct.unpack(
-        ">BH", memoryview(buffer)[PacketHeader.INIT_LENGTH :]
-    )
+    session_id, message = await ctx.decrypt_message()
     if session_id not in ctx.sessions:
 
         s = session_manager.get_session_from_cache(ctx, session_id)
@@ -402,61 +293,22 @@ def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message_length: int) -> None
             s = SeedlessSessionContext(ctx, session_id)
 
         ctx.sessions[session_id] = s
-        loop.schedule(s.handle())
 
     elif ctx.sessions[session_id].get_session_state() is SessionState.UNALLOCATED:
         raise ThpUnallocatedSessionError(session_id)
 
     s = ctx.sessions[session_id]
     update_session_last_used(s.channel_id, (s.session_id).to_bytes(1, "big"))
-
-    s.incoming_message.put(
-        Message(
-            message_type,
-            buffer[
-                PacketHeader.INIT_LENGTH
-                + MESSAGE_TYPE_LENGTH
-                + SESSION_ID_LENGTH : message_length
-                - CHECKSUM_LENGTH
-                - TAG_LENGTH
-            ],
-        )
-    )
-    if __debug__:
-        log.debug(
-            __name__,
-            f"Scheduled message to be handled by a session (session_id: {session_id}, msg_type (int): {message_type})",
-            iface=ctx.iface,
-        )
+    await s.handle(message)
 
 
-def _handle_pairing(ctx: Channel, message_length: int) -> None:
+async def _handle_pairing(ctx: Channel) -> None:
     from .pairing_context import PairingContext
 
-    if ctx.connection_context is None:
-        ctx.connection_context = PairingContext(ctx)
-        loop.schedule(ctx.connection_context.handle())
+    ctx.connection_context = PairingContext(ctx)
 
-    ctx.decrypt_buffer(message_length)
-    buffer = memory_manager.get_existing_read_buffer(ctx.get_channel_id_int())
-    # if buffer is BufferError:
-    # pass  # TODO handle
-    message_type = ustruct.unpack(
-        ">H", buffer[PacketHeader.INIT_LENGTH + SESSION_ID_LENGTH :]
-    )[0]
-
-    ctx.connection_context.incoming_message.put(
-        Message(
-            message_type,
-            buffer[
-                PacketHeader.INIT_LENGTH
-                + MESSAGE_TYPE_LENGTH
-                + SESSION_ID_LENGTH : message_length
-                - CHECKSUM_LENGTH
-                - TAG_LENGTH
-            ],
-        )
-    )
+    _session_id, message = await ctx.decrypt_message()
+    await ctx.connection_context.handle(message)
 
 
 def _should_have_ctrl_byte_encrypted_transport(ctx: Channel) -> bool:
