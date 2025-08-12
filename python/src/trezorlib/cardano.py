@@ -105,7 +105,10 @@ AuxiliaryDataSupplement = Dict[str, Union[int, bytes]]
 SignTxResponse = Dict[str, Union[bytes, List[Witness], AuxiliaryDataSupplement]]
 Chunk = TypeVar(
     "Chunk",
-    bound=Union[m.CardanoTxInlineDatumChunk, m.CardanoTxReferenceScriptChunk],
+    bound=Union[
+        m.CardanoTxInlineDatumChunk,
+        m.CardanoTxReferenceScriptChunk,
+    ],
 )
 
 
@@ -321,6 +324,22 @@ def _parse_address_parameters(
         address_parameters.get("certificateIndex"),
         script_payment_hash,
         script_staking_hash,
+    )
+
+
+def parse_optional_address_parameters(
+    address_parameters: Optional[dict],
+) -> Optional[m.CardanoAddressParametersType]:
+    if address_parameters is None:
+        return None
+
+    ADDRESS_PARAMETERS_MISSING_FIELDS_ERROR = (
+        "Address parameters are missing some fields"
+    )
+
+    return _parse_address_parameters(
+        address_parameters,
+        ADDRESS_PARAMETERS_MISSING_FIELDS_ERROR,
     )
 
 
@@ -996,3 +1015,41 @@ def sign_tx(
     response = session.call(m.CardanoTxHostAck(), expect=m.CardanoSignTxFinished)
 
     return sign_tx_response
+
+
+def sign_message(
+    session: "Session",
+    signing_path: Path,
+    payload: bytes,
+    prefer_hex_display: bool,
+    address_parameters: Optional[m.CardanoAddressParametersType] = None,
+    derivation_type: m.CardanoDerivationType = m.CardanoDerivationType.ICARUS,
+    protocol_magic: Optional[int] = None,
+    network_id: Optional[int] = None,
+) -> m.CardanoMessageSignature:
+    response = session.call(
+        m.CardanoSignMessageInit(
+            signing_path=signing_path,
+            payload_size=len(payload),
+            address_parameters=address_parameters,
+            prefer_hex_display=prefer_hex_display,
+            protocol_magic=protocol_magic,
+            network_id=network_id,
+            derivation_type=derivation_type,
+        ),
+    )
+
+    while isinstance(response, m.CardanoMessageDataRequest):
+        offset = response.offset
+        requested_size = response.length
+
+        if offset + requested_size > len(payload):
+            raise ValueError("Device requested data beyond payload bounds")
+
+        chunk_data = payload[offset : offset + requested_size]
+        response = session.call(m.CardanoMessageDataResponse(data=chunk_data))
+
+    if not isinstance(response, m.CardanoMessageSignature):
+        raise ValueError("Unexpected response")
+
+    return response

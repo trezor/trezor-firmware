@@ -554,6 +554,10 @@ if TYPE_CHECKING:
         CardanoTxInlineDatumChunk = 335
         CardanoTxReferenceScriptChunk = 336
         CardanoTxReferenceInput = 337
+        CardanoSignMessageInit = 338
+        CardanoMessageDataRequest = 339
+        CardanoMessageDataResponse = 340
+        CardanoMessageSignature = 341
         RippleGetAddress = 400
         RippleAddress = 401
         RippleSignTx = 402

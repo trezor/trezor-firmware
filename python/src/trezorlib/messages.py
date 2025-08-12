@@ -607,6 +607,10 @@ class MessageType(IntEnum):
     CardanoTxInlineDatumChunk = 335
     CardanoTxReferenceScriptChunk = 336
     CardanoTxReferenceInput = 337
+    CardanoSignMessageInit = 338
+    CardanoMessageDataRequest = 339
+    CardanoMessageDataResponse = 340
+    CardanoMessageSignature = 341
     RippleGetAddress = 400
     RippleAddress = 401
     RippleSignTx = 402
@@ -2893,6 +2897,89 @@ class CardanoTxBodyHash(protobuf.MessageType):
 
 class CardanoSignTxFinished(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 319
+
+
+class CardanoSignMessageInit(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 338
+    FIELDS = {
+        1: protobuf.Field("protocol_magic", "uint32", repeated=False, required=False, default=None),
+        2: protobuf.Field("network_id", "uint32", repeated=False, required=False, default=None),
+        3: protobuf.Field("signing_path", "uint32", repeated=True, required=False, default=None),
+        4: protobuf.Field("payload_size", "uint32", repeated=False, required=True),
+        5: protobuf.Field("prefer_hex_display", "bool", repeated=False, required=True),
+        6: protobuf.Field("address_parameters", "CardanoAddressParametersType", repeated=False, required=False, default=None),
+        7: protobuf.Field("derivation_type", "CardanoDerivationType", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        payload_size: "int",
+        prefer_hex_display: "bool",
+        derivation_type: "CardanoDerivationType",
+        signing_path: Optional[Sequence["int"]] = None,
+        protocol_magic: Optional["int"] = None,
+        network_id: Optional["int"] = None,
+        address_parameters: Optional["CardanoAddressParametersType"] = None,
+    ) -> None:
+        self.signing_path: Sequence["int"] = signing_path if signing_path is not None else []
+        self.payload_size = payload_size
+        self.prefer_hex_display = prefer_hex_display
+        self.derivation_type = derivation_type
+        self.protocol_magic = protocol_magic
+        self.network_id = network_id
+        self.address_parameters = address_parameters
+
+
+class CardanoMessageDataRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 339
+    FIELDS = {
+        1: protobuf.Field("length", "uint32", repeated=False, required=True),
+        2: protobuf.Field("offset", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        length: "int",
+        offset: "int",
+    ) -> None:
+        self.length = length
+        self.offset = offset
+
+
+class CardanoMessageDataResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 340
+    FIELDS = {
+        1: protobuf.Field("data", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        data: "bytes",
+    ) -> None:
+        self.data = data
+
+
+class CardanoMessageSignature(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 341
+    FIELDS = {
+        1: protobuf.Field("signature", "bytes", repeated=False, required=True),
+        2: protobuf.Field("address", "bytes", repeated=False, required=True),
+        3: protobuf.Field("pub_key", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        signature: "bytes",
+        address: "bytes",
+        pub_key: "bytes",
+    ) -> None:
+        self.signature = signature
+        self.address = address
+        self.pub_key = pub_key
 
 
 class CipherKeyValue(protobuf.MessageType):

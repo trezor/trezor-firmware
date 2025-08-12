@@ -1782,6 +1782,80 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["CardanoSignTxFinished"]:
             return isinstance(msg, cls)
 
+    class CardanoSignMessageInit(protobuf.MessageType):
+        protocol_magic: "int | None"
+        network_id: "int | None"
+        signing_path: "list[int]"
+        payload_size: "int"
+        prefer_hex_display: "bool"
+        address_parameters: "CardanoAddressParametersType | None"
+        derivation_type: "CardanoDerivationType"
+
+        def __init__(
+            self,
+            *,
+            payload_size: "int",
+            prefer_hex_display: "bool",
+            derivation_type: "CardanoDerivationType",
+            signing_path: "list[int] | None" = None,
+            protocol_magic: "int | None" = None,
+            network_id: "int | None" = None,
+            address_parameters: "CardanoAddressParametersType | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CardanoSignMessageInit"]:
+            return isinstance(msg, cls)
+
+    class CardanoMessageDataRequest(protobuf.MessageType):
+        length: "int"
+        offset: "int"
+
+        def __init__(
+            self,
+            *,
+            length: "int",
+            offset: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CardanoMessageDataRequest"]:
+            return isinstance(msg, cls)
+
+    class CardanoMessageDataResponse(protobuf.MessageType):
+        data: "bytes"
+
+        def __init__(
+            self,
+            *,
+            data: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CardanoMessageDataResponse"]:
+            return isinstance(msg, cls)
+
+    class CardanoMessageSignature(protobuf.MessageType):
+        signature: "bytes"
+        address: "bytes"
+        pub_key: "bytes"
+
+        def __init__(
+            self,
+            *,
+            signature: "bytes",
+            address: "bytes",
+            pub_key: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CardanoMessageSignature"]:
+            return isinstance(msg, cls)
+
     class CipherKeyValue(protobuf.MessageType):
         address_n: "list[int]"
         key: "str"

@@ -524,3 +524,48 @@ message CardanoTxBodyHash {
  */
 message CardanoSignTxFinished {
 }
+
+/**
+ * Request: Ask device to sign a message containing arbitrary data
+ * @start
+ * @next CardanoMessageDataRequest
+ * @next CardanoMessageSignature
+ */
+message CardanoSignMessageInit {
+    optional uint32 protocol_magic = 1;                           // network's protocol magic
+    optional uint32 network_id = 2;                               // network id - mainnet or testnet
+    repeated uint32 signing_path = 3;                             // BIP-32-style path to derive the signing key from master node
+    required uint32 payload_size = 4;                             // size of the payload to be signed
+    required bool prefer_hex_display = 5;                         // whether to decode payload as hex even if valid ascii
+    optional CardanoAddressParametersType address_parameters = 6;
+    required CardanoDerivationType derivation_type = 7;
+}
+
+/**
+ * Device requests data chunk with specific size and offset
+ * @next CardanoMessageDataResponse
+ */
+message CardanoMessageDataRequest {
+    required uint32 length = 1;        // size of data chunk to read
+    required uint32 offset = 2;        // offset from start of payload
+}
+
+/**
+ * Client provides requested data chunk
+ * @next CardanoMessageDataRequest
+ * @next CardanoMessageSignature
+ */
+message CardanoMessageDataResponse {
+    required bytes data = 1;  // the requested data chunk
+}
+
+
+/**
+ * Response: Contains signature for message and address used in signed headers
+ * @end
+ */
+message CardanoMessageSignature {
+    required bytes signature = 1; // signature for structure containing payload and protected headers
+    required bytes address = 2;   // value of the address field in protected headers
+    required bytes pub_key = 3;   // public key given by signing path
+}

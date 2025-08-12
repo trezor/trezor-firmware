@@ -15,7 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import json
-from typing import TYPE_CHECKING, Optional, TextIO
+from typing import TYPE_CHECKING, Any, Optional, TextIO
 
 import click
 
@@ -322,4 +322,35 @@ def get_native_script_hash(
 
     return cardano.get_native_script_hash(
         session, native_script, display_format, derivation_type=derivation_type
+    )
+
+
+@cli.command()
+@click.argument("file", type=click.File("r"))
+@click.option(
+    "-D",
+    "--derivation-type",
+    type=ChoiceType({m.name: m for m in messages.CardanoDerivationType}),
+    default=messages.CardanoDerivationType.ICARUS,
+)
+@with_session(derive_cardano=True)
+def sign_message(
+    session: "Session",
+    file: TextIO,
+    derivation_type: messages.CardanoDerivationType,
+) -> messages.CardanoMessageSignature:
+    """Sign Cardano message containing arbitrary data."""
+    request: dict[Any, Any] = json.load(file)
+
+    return cardano.sign_message(
+        session,
+        payload=bytes.fromhex(request["payload"]),
+        prefer_hex_display=request["prefer_hex_display"],
+        signing_path=tools.parse_path(request["signing_path"]),
+        address_parameters=cardano.parse_optional_address_parameters(
+            request.get("address_parameters")
+        ),
+        protocol_magic=request.get("protocol_magic"),
+        network_id=request.get("network_id"),
+        derivation_type=derivation_type,
     )
