@@ -26,9 +26,11 @@ uint32_t screen_install_fail(void);
 void screen_unlock_bootloader_success(void);
 
 // progress screens
-void screen_install_progress(int16_t progress, bool initialize,
+void screen_install_progress(uint16_t progress, bool initialize,
                              bool initial_setup);
-void screen_wipe_progress(int16_t progress, bool initialize);
+void screen_wipe_progress(uint16_t progress, bool initialize);
+
+void screen_bootloader_entry_progress(uint16_t progress, bool initialize);
 
 // simple screens with no interaction
 
