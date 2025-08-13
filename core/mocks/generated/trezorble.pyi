@@ -98,6 +98,27 @@ def is_connected() -> bool:
 
 
 # rust/src/trezorhal/ble/micropython.rs
+def is_connectable() -> bool:
+    """
+    True if a central/host can connect.
+    """
+
+
+# rust/src/trezorhal/ble/micropython.rs
+def is_pairing() -> bool:
+    """
+    True if BLE is in pairing mode, waiting for a pairing request.
+    """
+
+
+# rust/src/trezorhal/ble/micropython.rs
+def is_pairing_requested() -> bool:
+    """
+    True if BLE pairing request was received.
+    """
+
+
+# rust/src/trezorhal/ble/micropython.rs
 def connection_flags() -> list[str]:
     """
     Returns current connection state as a list of string flags.
