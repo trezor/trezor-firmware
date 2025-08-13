@@ -44,15 +44,7 @@ class ThpDecryptionError(ThpError):
     pass
 
 
-class ThpInvalidDataError(ThpError):
-    pass
-
-
 class ThpDeviceLockedError(ThpError):
-    pass
-
-
-class ThpUnallocatedChannelError(ThpError):
     pass
 
 

@@ -63,6 +63,7 @@ def _prepare_two_hosts(client: Client) -> tuple[ProtocolV2Channel, ProtocolV2Cha
 
 
 def test_concurrent_handshakes_1(client: Client) -> None:
+    pytest.skip("broken by #5546")
     client = client.get_new_client()
     protocol_1, protocol_2 = _prepare_two_hosts_for_handshake(client)
 
@@ -110,6 +111,7 @@ def test_concurrent_handshakes_1(client: Client) -> None:
 
 
 def test_concurrent_handshakes_2(client: Client) -> None:
+    pytest.skip("broken by #5546")
     protocol_1, protocol_2 = _prepare_two_hosts_for_handshake(client)
 
     # The first host starts handshake

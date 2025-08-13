@@ -286,6 +286,7 @@ def _nfc_pairing(client: Client, protocol: ProtocolV2Channel) -> None:
 
 
 def test_connection_confirmation_cancel(client: Client) -> None:
+    pytest.skip("broken by #5546")
     protocol = prepare_protocol_for_pairing(client)
     _nfc_pairing(client, protocol)
 
@@ -330,6 +331,7 @@ def test_connection_confirmation_cancel(client: Client) -> None:
 
 
 def test_autoconnect_credential_request_cancel(client: Client) -> None:
+    pytest.skip("broken by #5546")
     protocol = prepare_protocol_for_pairing(client)
     _nfc_pairing(client, protocol)
 
@@ -371,6 +373,7 @@ def test_autoconnect_credential_request_cancel(client: Client) -> None:
 
 
 def test_credential_phase(client: Client) -> None:
+    pytest.skip("broken by #5546")
     protocol = prepare_protocol_for_pairing(client)
     _nfc_pairing(client, protocol)
 

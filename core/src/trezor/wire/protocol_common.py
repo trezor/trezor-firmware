@@ -74,12 +74,9 @@ class Context:
         """
         ...
 
-    async def write(self, msg: protobuf.MessageType) -> None:
+    def write(self, msg: protobuf.MessageType) -> Awaitable[None]:
         """Write a message to the wire."""
         ...
-
-    def write_force(self, msg: protobuf.MessageType) -> Awaitable[None]:
-        return self.write(msg)
 
     async def call(
         self,

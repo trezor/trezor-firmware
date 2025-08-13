@@ -5,13 +5,11 @@ from typing import TYPE_CHECKING
 
 from storage.cache_thp import (
     BROADCAST_CHANNEL_ID,
-    ChannelCache,
-    iter_allocated_channels,
+    find_allocated_channel,
     update_channel_last_used,
 )
 from trezor import io, loop, utils
 
-from ..errors import WireBufferError
 from . import (
     CHANNEL_ALLOCATION_REQ,
     CODEC_V1,
@@ -43,19 +41,6 @@ class ThpContext:
     It also handles and responds to low-level single packet THP messages, creating new channels if needed.
     """
 
-    @classmethod
-    def load_from_cache(cls, iface: WireInterface) -> "ThpContext":
-        ctx = cls(iface)
-        for channel_cache in iter_allocated_channels(iface.iface_num()):
-            ctx._load_channel(channel_cache)
-        return ctx
-
-    def _load_channel(self, cache: ChannelCache) -> Channel:
-        channel_id = int.from_bytes(cache.channel_id, "big")
-        assert channel_id not in self._channels
-        self._channels[channel_id] = channel = Channel(cache, self)
-        return channel
-
     def __init__(self, iface: WireInterface) -> None:
         self._iface = iface
         self._read = loop.wait(iface.iface_num() | io.POLL_READ)
@@ -63,6 +48,13 @@ class ThpContext:
         self._channels: dict[int, Channel] = {}
 
     async def get_next_message(self) -> Channel:
+        """
+        Reassemble a valid THP payload and return its channel.
+
+        Also handle THP channel allocation.
+        """
+        from .. import THP_BUFFERS_PROVIDER
+
         packet = bytearray(self._iface.RX_PACKET_LEN)
         while True:
             packet_len = await self._read
@@ -76,25 +68,25 @@ class ThpContext:
                 continue
 
             cid = ustruct.unpack(">BH", packet)[1]
-
             if cid == BROADCAST_CHANNEL_ID:
                 await self._handle_broadcast(packet)
                 continue
 
-            channel = self._channels.get(cid)
-            if channel is None:
-                await self._handle_unallocated(cid, packet)
+            if (cache := find_allocated_channel(cid)) is None:
+                if not control_byte.is_continuation(_get_ctrl_byte(packet)):
+                    await self.write_error(cid, ThpErrorType.UNALLOCATED_CHANNEL)
                 continue
 
-            try:
-                if channel.reassemble(packet):
-                    update_channel_last_used(channel.channel_id)
-                    # The reassembled message must be handled ASAP without blocking,
-                    # since it may point to the global read buffer.
-                    return channel
-            except WireBufferError:
-                await channel.write_error(ThpErrorType.TRANSPORT_BUSY)
-                continue
+            if (channel := self._channels.get(cid)) is None:
+                if (buffers := THP_BUFFERS_PROVIDER.take()) is None:
+                    # concurrent payload reassembly is not supported
+                    await self.write_error(cid, ThpErrorType.TRANSPORT_BUSY)
+                    continue
+                channel = self._channels[cid] = Channel(cache, self, buffers)
+
+            if channel.reassemble(packet):
+                update_channel_last_used(channel.channel_id)
+                return channel
 
     def write_payload(self, header: PacketHeader, payload: bytes) -> Awaitable[None]:
         checksum = crc.crc32(payload, crc.crc32(header.to_bytes()))
@@ -149,10 +141,8 @@ class ThpContext:
 
         log.info(__name__, "got alloc: %s", utils.hexlify_if_bytes(packet))
         channel_cache = channel_manager.create_new_channel(self._iface)
-        channel = self._load_channel(channel_cache)
-
         response_data = get_channel_allocation_response(
-            nonce, channel.channel_id, self._iface
+            nonce, channel_cache.channel_id, self._iface
         )
         response_header = PacketHeader.get_channel_allocation_response_header(
             len(response_data) + CHECKSUM_LENGTH,
@@ -160,18 +150,17 @@ class ThpContext:
         if __debug__:
             log.debug(
                 __name__,
-                "New channel allocated with id %d",
-                channel.get_channel_id_int(),
+                "New channel allocated with id: %s",
+                utils.hexlify_if_bytes(channel_cache.channel_id),
                 iface=self._iface,
             )
         await self.write_payload(response_header, response_data)
 
-    async def _handle_unallocated(self, cid: int, packet: bytes) -> None:
-        if control_byte.is_continuation(_get_ctrl_byte(packet)):
-            return
-        data = (ThpErrorType.UNALLOCATED_CHANNEL).to_bytes(1, "big")
-        header = PacketHeader.get_error_header(cid, len(data) + CHECKSUM_LENGTH)
-        await self.write_payload(header, data)
+    def write_error(self, cid: int, err_type: ThpErrorType) -> Awaitable[None]:
+        msg_data = err_type.to_bytes(1, "big")
+        length = len(msg_data) + CHECKSUM_LENGTH
+        header = PacketHeader.get_error_header(cid, length)
+        return self.write_payload(header, msg_data)
 
 
 def _get_ctrl_byte(packet: bytes) -> int:
