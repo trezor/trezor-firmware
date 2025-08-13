@@ -402,6 +402,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_language__changed;
   MP_QSTR_language__progress;
   MP_QSTR_language__title;
+  MP_QSTR_led__disable;
+  MP_QSTR_led__enable;
+  MP_QSTR_led__title;
   MP_QSTR_led_enabled;
   MP_QSTR_lines;
   MP_QSTR_load_from_flash;

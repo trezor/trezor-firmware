@@ -1478,6 +1478,9 @@ pub enum TranslatedString {
     homescreen__firmware_type = 1094,  // "Firmware type"
     words__off = 1095,  // "OFF"
     words__on = 1096,  // "ON"
+    led__disable = 1097,  // "Disable LED?"
+    led__enable = 1098,  // "Enable LED?"
+    led__title = 1099,  // "LED"
 }
 
 impl TranslatedString {
@@ -3275,6 +3278,9 @@ impl TranslatedString {
             (Self::homescreen__firmware_type, "Firmware type"),
             (Self::words__off, "OFF"),
             (Self::words__on, "ON"),
+            (Self::led__disable, "Disable LED?"),
+            (Self::led__enable, "Enable LED?"),
+            (Self::led__title, "LED"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3939,6 +3945,9 @@ impl TranslatedString {
         (Qstr::MP_QSTR_language__changed, Self::language__changed),
         (Qstr::MP_QSTR_language__progress, Self::language__progress),
         (Qstr::MP_QSTR_language__title, Self::language__title),
+        (Qstr::MP_QSTR_led__disable, Self::led__disable),
+        (Qstr::MP_QSTR_led__enable, Self::led__enable),
+        (Qstr::MP_QSTR_led__title, Self::led__title),
         (Qstr::MP_QSTR_lockscreen__tap_to_connect, Self::lockscreen__tap_to_connect),
         (Qstr::MP_QSTR_lockscreen__tap_to_unlock, Self::lockscreen__tap_to_unlock),
         (Qstr::MP_QSTR_lockscreen__title_locked, Self::lockscreen__title_locked),

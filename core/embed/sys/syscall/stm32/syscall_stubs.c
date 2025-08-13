@@ -420,6 +420,15 @@ uint32_t touch_get_event(void) {
 #ifdef USE_RGB_LED
 
 #include <io/rgb_led.h>
+
+void rgb_led_set_enabled(bool enabled) {
+  syscall_invoke1((uint32_t)enabled, SYSCALL_RGB_LED_SET_ENABLED);
+}
+
+bool rgb_led_get_enabled(void) {
+  return (bool)syscall_invoke0(SYSCALL_RGB_LED_GET_ENABLED);
+}
+
 void rgb_led_set_color(uint32_t color) {
   syscall_invoke1(color, SYSCALL_RGB_LED_SET_COLOR);
 }
