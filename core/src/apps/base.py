@@ -231,7 +231,7 @@ if utils.USE_THP:
 
         Returns an appropriate `Failure` message if session creation fails.
         """
-        from trezor import log, loop
+        from trezor import log
         from trezor.enums import FailureType
         from trezor.messages import Failure
         from trezor.wire import NotInitialized
@@ -280,9 +280,6 @@ if utils.USE_THP:
                 session_id,
                 message.passphrase if message.passphrase is not None else "",
             )
-
-        channel.sessions[new_session.session_id] = new_session
-        loop.schedule(new_session.handle())
 
         return Success(message="New session created.")
 

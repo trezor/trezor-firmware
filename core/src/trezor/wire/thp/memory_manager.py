@@ -1,154 +1,20 @@
-import utime
 from micropython import const
 
 from storage.cache_thp import SESSION_ID_LENGTH
 from trezor import protobuf, utils
-from trezor.wire.errors import WireBufferError
 
-from . import ThpError
-from .writer import MAX_PAYLOAD_LEN, MESSAGE_TYPE_LENGTH
+from .writer import MESSAGE_TYPE_LENGTH
 
-if __debug__:
-    from trezor import log
-    from trezor.utils import hexlify_if_bytes
-
-_PROTOBUF_BUFFER_SIZE = 8192
-READ_BUFFER = bytearray(_PROTOBUF_BUFFER_SIZE)
-WRITE_BUFFER = bytearray(_PROTOBUF_BUFFER_SIZE)
-LOCK_TIMEOUT = 200  # miliseconds
+_PROTOBUF_BUFFER_SIZE = const(8192)
 
 
-lock_owner_cid: int | None = None
-lock_time: int = 0
+class ThpBuffer:
+    def __init__(self) -> None:
+        self.buf = memoryview(bytearray(_PROTOBUF_BUFFER_SIZE))
 
-READ_BUFFER_SLICE: memoryview | None = None
-WRITE_BUFFER_SLICE: memoryview | None = None
-
-# Buffer types
-_READ: int = const(0)
-_WRITE: int = const(1)
-
-
-#
-# Access to buffer slices
-
-
-def release_lock_if_owner(channel_id: int) -> None:
-    global lock_owner_cid
-    if lock_owner_cid == channel_id:
-        lock_owner_cid = None
-
-
-def get_new_read_buffer(channel_id: int, length: int) -> memoryview:
-    return _get_new_buffer(_READ, channel_id, length)
-
-
-def get_new_write_buffer(channel_id: int, length: int) -> memoryview:
-    return _get_new_buffer(_WRITE, channel_id, length)
-
-
-def get_existing_read_buffer(channel_id: int) -> memoryview:
-    return _get_existing_buffer(_READ, channel_id)
-
-
-def get_existing_write_buffer(channel_id: int) -> memoryview:
-    return _get_existing_buffer(_WRITE, channel_id)
-
-
-def _get_new_buffer(buffer_type: int, channel_id: int, length: int) -> memoryview:
-    if is_locked():
-        if not is_owner(channel_id):
-            if __debug__:
-                log.debug(
-                    __name__,
-                    "Failed to get new buffer to channel %s. Owner is %s.",
-                    hexlify_if_bytes((channel_id or 0).to_bytes(2, "big")),
-                    hexlify_if_bytes((lock_owner_cid or 0).to_bytes(2, "big")),
-                )
-            raise WireBufferError
-        update_lock_time()
-    else:
-        update_lock(channel_id)
-
-    if buffer_type == _READ:
-        global READ_BUFFER
-        buffer = READ_BUFFER
-    elif buffer_type == _WRITE:
-        global WRITE_BUFFER
-        buffer = WRITE_BUFFER
-    else:
-        raise ValueError("Unknown buffer_type")
-
-    if length > MAX_PAYLOAD_LEN or length > len(buffer):
-        raise ThpError("Message is too large")  # TODO reword
-
-    if buffer_type == _READ:
-        global READ_BUFFER_SLICE
-        READ_BUFFER_SLICE = memoryview(READ_BUFFER)[:length]
-        return READ_BUFFER_SLICE
-
-    if buffer_type == _WRITE:
-        global WRITE_BUFFER_SLICE
-        WRITE_BUFFER_SLICE = memoryview(WRITE_BUFFER)[:length]
-        return WRITE_BUFFER_SLICE
-
-    raise ValueError("Unknown buffer_type")
-
-
-def _get_existing_buffer(buffer_type: int, channel_id: int) -> memoryview:
-    if not is_owner(channel_id):
-        raise WireBufferError
-    update_lock_time()
-
-    if buffer_type == _READ:
-        global READ_BUFFER_SLICE
-        if READ_BUFFER_SLICE is None:
-            raise WireBufferError
-        return READ_BUFFER_SLICE
-
-    if buffer_type == _WRITE:
-        global WRITE_BUFFER_SLICE
-        if WRITE_BUFFER_SLICE is None:
-            raise WireBufferError
-        return WRITE_BUFFER_SLICE
-
-    raise ValueError("Unknown buffer_type")
-
-
-#
-# Buffer locking
-
-
-def is_locked() -> bool:
-    global lock_owner_cid
-    global lock_time
-
-    time_diff = utime.ticks_diff(utime.ticks_ms(), lock_time)
-    return lock_owner_cid is not None and time_diff < LOCK_TIMEOUT
-
-
-def is_owner(channel_id: int) -> bool:
-    global lock_owner_cid
-    return lock_owner_cid is not None and lock_owner_cid == channel_id
-
-
-def update_lock(channel_id: int) -> None:
-    set_owner(channel_id)
-    update_lock_time()
-
-
-def set_owner(channel_id: int) -> None:
-    global lock_owner_cid
-    lock_owner_cid = channel_id
-
-
-def update_lock_time() -> None:
-    global lock_time
-    lock_time = utime.ticks_ms()
-
-
-#
-# Helper for encoding messages into buffer
+    def get(self, length: int) -> memoryview:
+        assert length <= len(self.buf)
+        return self.buf[:length]
 
 
 def encode_into_buffer(

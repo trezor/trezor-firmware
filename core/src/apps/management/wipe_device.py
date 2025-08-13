@@ -13,7 +13,7 @@ if __debug__:
 
 async def wipe_device(msg: WipeDevice) -> NoReturn:
     import storage
-    from trezor import TR, config, loop, translations
+    from trezor import TR, config, translations
     from trezor.enums import ButtonRequestType
     from trezor.messages import Success
     from trezor.pin import render_empty_loader
@@ -49,7 +49,7 @@ async def wipe_device(msg: WipeDevice) -> NoReturn:
     translations.deinit()
     translations.erase()
     try:
-        await get_context().write_force(Success(message="Device wiped"))
+        await get_context().write(Success(message="Device wiped"))
     except Exception:
         if __debug__:
             log.debug(__name__, "Failed to send Success message after wipe.")
@@ -58,6 +58,5 @@ async def wipe_device(msg: WipeDevice) -> NoReturn:
 
     # reload settings
     reload_settings_from_storage()
-    loop.clear()
     if __debug__:
         log.debug(__name__, "Device wipe - finished")
