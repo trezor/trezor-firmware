@@ -94,7 +94,7 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
         boot_args = None
 
     ctx = get_context()
-    await ctx.write_force(Success(message="Rebooting"))
+    await ctx.write(Success(message="Rebooting"))
     # make sure the outgoing USB buffer is flushed
     await loop.wait(ctx.iface.iface_num() | io.POLL_WRITE)
 

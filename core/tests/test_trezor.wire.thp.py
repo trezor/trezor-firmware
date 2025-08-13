@@ -6,7 +6,6 @@ from trezor import io
 if utils.USE_THP:
     import thp_common
     from trezor.wire import handle_session as thp_main_loop
-    from trezor.wire.thp import memory_manager
 
 
 @unittest.skipUnless(utils.USE_THP, "only needed for THP")
@@ -19,8 +18,6 @@ class TestTrezorHostProtocol(unittest.TestCase):
 
     def setUp(self):
         self.interface = MockHID()
-        memory_manager.READ_BUFFER = bytearray(64)
-        memory_manager.WRITE_BUFFER = bytearray(256)
 
     def test_codec_message(self):
         self.assertEqual(len(self.interface.data), 0)
