@@ -1095,7 +1095,7 @@ OK <hexadecimal string>
 
 ### secure-channel-handshake-1
 
-Returns the first handshake message for establishing a secure channel with the device.
+Returns the first handshake message for establishing a secure channel between the device and HSM.
 
 Example:
 ```
