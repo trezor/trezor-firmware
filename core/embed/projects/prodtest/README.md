@@ -965,6 +965,28 @@ tropic-get-chip-id
 OK 00000001000000000000000000000000000000000000000000000000000000000000000001000000054400000000FFFFFFFFFFFF01F00F000544545354303103001300000B54524F50494330312D4553FFFFFFFF000100000000FFFF000100000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF13000300
 ```
 
+
+### tropic-update-fw
+
+Updates Tropic firmware to the embedded version.
+
+Example:
+```
+tropic-update-fw
+# Silicon revision: ABAB
+# Rebooting into Maintenance mode
+# Chip is executing bootloader
+# Updating RISC-V FW
+# Updating SPECT FW
+# Rebooting into Application mode
+# Reading RISC-V FW version
+# Chip is executing RISC-V application FW version: 1.0.0 (+ .0)
+# Reading SPECT FW version
+# Chip is executing SPECT FW version: 1.0.0 (+ .0)
+OK
+```
+
+
 ### wpc-info
 Retrieves detailed information from the wireless power receiver, including chip identification, firmware version, configuration settings, and error status.
 

@@ -216,6 +216,10 @@ def configure(
         paths += ["vendor/libtropic/src"]
         defines += [("USE_TROPIC", "1")]
         defines += [("LT_USE_TREZOR_CRYPTO", "1")]
+        defines += [("LT_HELPERS", "1")]
+
+        paths += ["vendor/libtropic/TROPIC01_fw_update_files/boot_v_1_0_1/fw_v_1_0_0"]
+        defines += [("ABAB", "1")]
 
     if "sbu" in features_wanted:
         sources += ["embed/io/sbu/stm32/sbu.c"]
