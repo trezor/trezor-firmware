@@ -44,6 +44,7 @@ class PairingContext(Context):
 
         self.cpace: Cpace
         self.host_name: str | None
+        self.app_name: str | None
 
     async def handle(self) -> None:
         next_message: Message | None = None
@@ -136,33 +137,23 @@ class PairingContext(Context):
             raise DataError("Selected pairing method is not supported")
         self.selected_method = selected_method
 
-    async def show_pairing_dialog(self, device_name: str | None = None) -> None:
-        from trezor.messages import ThpPairingRequestApproved
+    async def show_pairing_dialog(self) -> None:
         from trezor.ui.layouts import confirm_action
 
-        if not device_name:
-            action_string = f"Allow {self.host_name} to pair with this Trezor?"
-        else:
-            action_string = (
-                f"Allow {self.host_name} on {device_name} to pair with this Trezor?"
-            )
-
+        subject = ui._app_on_host(self.app_name, self.host_name)
+        action_string = f"Allow {subject} to pair with this Trezor?"
         await confirm_action(
             br_name="thp_pairing_request",
             title="Before you continue",
             action=action_string,
         )
 
-        await self.write(ThpPairingRequestApproved())
+    async def show_connection_dialog(self) -> None:
+        await ui.show_connection_dialog(self.host_name, self.app_name)
 
-    async def show_connection_dialog(self, device_name: str | None = None) -> None:
-        await ui.show_connection_dialog(self.host_name, device_name)
-
-    async def show_autoconnect_credential_confirmation_screen(
-        self, device_name: str | None = None
-    ) -> None:
+    async def show_autoconnect_credential_confirmation_screen(self) -> None:
         await ui.show_autoconnect_credential_confirmation_screen(
-            self.host_name, device_name
+            self.host_name, self.app_name
         )
 
     async def show_pairing_method_screen(
