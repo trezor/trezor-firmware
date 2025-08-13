@@ -33,6 +33,7 @@
 [submodule "vendor/libtropic"]
 	path = vendor/libtropic
 	url = https://github.com/tropicsquare/libtropic.git
+	branch = develop
 [submodule "vendor/ts-tvl"]
 	path = vendor/ts-tvl
 	url = https://github.com/tropicsquare/ts-tvl
