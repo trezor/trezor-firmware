@@ -1026,7 +1026,7 @@ OK dc106118a32feeef8d9211f54b9c8e9d571abe4cb104dc4ab087531cfee4574283ccf9c6f45e6
 
 ### tropic-handshake
 
-Establishes a secure channel with the Tropic chip. Expects handshake a request as input, returns a handshake response.
+Establishes a secure channel with the Tropic chip. Expects a handshake request as input, returns a handshake response.
 
 ```
 tropic-handshake 648724356a6bb22b258557927287af52133a27b7317d3c919db23395cae03d853422af
