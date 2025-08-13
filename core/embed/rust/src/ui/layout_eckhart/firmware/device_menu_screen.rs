@@ -203,7 +203,7 @@ impl DeviceMenuScreen {
         device_name: Option<TString<'static>>,
         _screen_brightness: Option<TString<'static>>,
         _haptic_feedback: Option<bool>,
-        led: Option<bool>,
+        led_enabled: Option<bool>,
         about_items: Obj,
     ) -> Result<Self, Error> {
         let mut screen = Self {
@@ -219,7 +219,8 @@ impl DeviceMenuScreen {
         let about = screen.add_subscreen(Subscreen::AboutScreen);
         let regulatory = screen.add_subscreen(Subscreen::RegulatoryScreen);
         let security = screen.add_security_menu();
-        let device = screen.add_device_menu(device_name, regulatory, about, auto_lock_delay, led);
+        let device =
+            screen.add_device_menu(device_name, regulatory, about, auto_lock_delay, led_enabled);
         let settings = screen.add_settings_menu(security, device);
 
         let is_connected = !paired_devices.is_empty(); // FIXME after BLE API has this
@@ -322,7 +323,7 @@ impl DeviceMenuScreen {
         regulatory_index: usize,
         about_index: usize,
         auto_lock_delay: Option<TString<'static>>,
-        led: Option<bool>,
+        led_enabled: Option<bool>,
     ) -> usize {
         let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
         if let Some(device_name) = device_name {
@@ -348,18 +349,17 @@ impl DeviceMenuScreen {
             unwrap!(items.push(autolock_delay_item));
         }
 
-        if let Some(led) = led {
+        if let Some(led_enabled) = led_enabled {
             let mut led_item = MenuItem::new(
                 TR::words__led.into(),
                 Some(Action::Return(DeviceMenuMsg::LedEnabled)),
             );
-            let subtext = if led {
-                (
+            let subtext = match led_enabled {
+                true => (
                     TR::words__on.into(),
                     Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
-                )
-            } else {
-                (TR::words__off.into(), None)
+                ),
+                _ => (TR::words__off.into(), None),
             };
             led_item.with_subtext(Some(subtext));
             unwrap!(items.push(led_item));

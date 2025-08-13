@@ -454,6 +454,15 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 #endif
 
 #ifdef USE_RGB_LED
+    case SYSCALL_RGB_LED_SET_ENABLED: {
+      bool enabled = (args[0] != 0);
+      rgb_led_set_enabled(enabled);
+    } break;
+
+    case SYSCALL_RGB_LED_GET_ENABLED: {
+      args[0] = rgb_led_get_enabled();
+    } break;
+
     case SYSCALL_RGB_LED_SET_COLOR: {
       uint32_t color = args[0];
       rgb_led_set_color(color);

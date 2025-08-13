@@ -69,7 +69,11 @@ async def handle_device_menu() -> None:
             device_name=device_name,
             screen_brightness=None,  # TODO implement
             haptic_feedback=None,  # TODO implement
-            led_enabled=None,  # TODO implement
+            led_enabled=(
+                storage_device.get_rgb_led()
+                if (storage_device.is_initialized() and utils.USE_RGB_LED)
+                else None
+            ),
             about_items=[
                 (TR.homescreen__firmware_version, firmware_version, False),
                 (TR.homescreen__firmware_type, firmware_type, False),
@@ -141,7 +145,18 @@ async def handle_device_menu() -> None:
     elif menu_result is DeviceMenuResult.HapticFeedback:
         pass  # TODO implement haptic feedback handling
     elif menu_result is DeviceMenuResult.LedEnabled:
-        pass  # TODO implement led handling
+        from trezor import io
+        from trezor.ui.layouts import confirm_action
+
+        enable = not storage_device.get_rgb_led()
+        await confirm_action(
+            "led__settings",
+            TR.led__title,
+            TR.led__enable if enable else TR.led__disable,
+        )
+
+        io.rgb_led.rgb_led_set_enabled(enable)
+        storage_device.set_rgb_led(enable)
     elif menu_result is DeviceMenuResult.WipeDevice:
         from trezor.messages import WipeDevice
 

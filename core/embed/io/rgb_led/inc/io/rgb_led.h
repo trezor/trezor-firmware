@@ -30,15 +30,22 @@ void rgb_led_init(void);
 // Deinitialize RGB LED driver
 void rgb_led_deinit(void);
 
-#endif
+#endif  // KERNEL_MODE
 
-#define RGBLED_GREEN 0x00FF00
-#define RGBLED_RED 0xFF0000
-#define RGBLED_BLUE 0x0000FF
-#define RGBLED_YELLOW 0xFFFF00
+// Set RGB LED enabled state
+// enabled: true to enable, false to disable
+void rgb_led_set_enabled(bool enabled);
+
+// Get RGB LED enabled state
+bool rgb_led_get_enabled(void);
 
 // Set RGB LED color
 // color: 24-bit RGB color, 0x00RRGGBB
 void rgb_led_set_color(uint32_t color);
+
+#define RGBLED_GREEN 0x040D04
+#define RGBLED_RED 0x640603
+#define RGBLED_BLUE 0x050532
+#define RGBLED_YELLOW 0x161000
 
 #endif  // TREZORHAL_RGB_LED_H
