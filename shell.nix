@@ -142,6 +142,8 @@ stdenvNoCC.mkDerivation ({
     ffmpeg_7-headless
     dejavu_fonts
   ] ++ lib.optionals devTools [
+    cmake
+    ninja
     tio
     shellcheck
     openocd-stm
@@ -151,7 +153,6 @@ stdenvNoCC.mkDerivation ({
   ] ++ lib.optionals (devTools && acceptJlink) [
     nrfutil
     nrfconnect
-    nrf-command-line-tools
   ];
   LD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
   DYLD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
