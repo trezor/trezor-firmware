@@ -56,6 +56,7 @@ static void prodtest_tropic_get_riscv_fw_version(cli_t* cli) {
   uint8_t version[LT_L2_GET_INFO_RISCV_FW_SIZE] = {0};
   if (lt_get_info_riscv_fw_ver(handle, version, sizeof(version)) != LT_OK) {
     cli_error(cli, CLI_ERROR, "Unable to get RISCV FW version");
+    return;
   }
 
   // Respond with an OK message and version
@@ -70,9 +71,10 @@ static void prodtest_tropic_get_spect_fw_version(cli_t* cli) {
 
   lt_handle_t* handle = tropic_get_handle();
 
-  uint8_t version[LT_L2_GET_INFO_SPECT_FW_SIZE];
-  if (!lt_get_info_spect_fw_ver(handle, version, sizeof(version))) {
+  uint8_t version[LT_L2_GET_INFO_SPECT_FW_SIZE] = {0};
+  if (lt_get_info_spect_fw_ver(handle, version, sizeof(version)) != LT_OK) {
     cli_error(cli, CLI_ERROR, "Unable to get SPECT FW version");
+    return;
   }
 
   // Respond with an OK message and version
@@ -87,9 +89,10 @@ static void prodtest_tropic_get_chip_id(cli_t* cli) {
 
   lt_handle_t* handle = tropic_get_handle();
 
-  uint8_t chip_id[LT_L2_GET_INFO_CHIP_ID_SIZE];
-  if (!lt_get_info_chip_id(handle, chip_id, sizeof(chip_id))) {
+  uint8_t chip_id[LT_L2_GET_INFO_CHIP_ID_SIZE] = {0};
+  if (lt_get_info_chip_id(handle, chip_id, sizeof(chip_id)) != LT_OK) {
     cli_error(cli, CLI_ERROR, "Unable to get CHIP ID");
+    return;
   }
 
   // Respond with an OK message and chip ID
