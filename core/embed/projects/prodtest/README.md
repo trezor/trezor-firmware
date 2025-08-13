@@ -1105,7 +1105,7 @@ OK 1e85285cbf805d0418be1f502a325806f68fa07c78fd63b7b960b2d0416f8b49
 
 ### secure-channel-handshake-2
 
-Establishes a secure channel with the device. Expects the second handshake message as input. The command `secure-channel-handshake-1` must be executed before calling this command.
+Establishes a secure channel between the device and HSM. Expects the second handshake message as input. The command `secure-channel-handshake-1` must be executed before calling this command.
 
 Example:
 ```
