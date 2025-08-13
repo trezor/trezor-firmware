@@ -29,6 +29,8 @@
 
 #include "memzero.h"
 
+#include "fw_CPU.h"
+#include "fw_SPECT.h"
 #include "libtropic.h"
 
 #include "secure_channel.h"
@@ -402,6 +404,124 @@ static void prodtest_tropic_certfido_write(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+static void prodtest_tropic_update_fw(cli_t* cli) {
+#define FW_APP_UPDATE_BANK FW_BANK_FW1
+#define FW_SPECT_UPDATE_BANK FW_BANK_SPECT1
+
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  tropic_init();
+
+  lt_handle_t* h = tropic_get_handle();
+
+  lt_chip_id_t chip_id = {0};
+  if (lt_get_info_chip_id(h, &chip_id) != LT_OK) {
+    cli_error(cli, CLI_ERROR, "Unable to get CHIP ID");
+    return;
+  }
+
+  cli_trace(cli, "Silicon revision: %c%c%c%c", chip_id.silicon_rev[0],
+            chip_id.silicon_rev[1], chip_id.silicon_rev[2],
+            chip_id.silicon_rev[3]);
+
+#ifdef ABAB
+  if (strncmp((char*)chip_id.silicon_rev, "ABAB", 4) != 0) {
+    cli_error(cli, CLI_ERROR, "Wrong tropic chip silicon revision");
+    return;
+  }
+#else
+  cli_error(cli, CLI_ERROR, "Tropic chip silicon revision not set");
+  return;
+#endif
+
+  // For firmware update chip must be rebooted into MAINTENANCE mode.
+  cli_trace(cli, "Rebooting into Maintenance mode");
+  lt_ret_t ret = lt_reboot(h, LT_MODE_MAINTENANCE);
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "lt_reboot() failed, ret=%s",
+              lt_ret_verbose(ret));
+    return;
+  }
+
+  if (h->l2.mode != LT_MODE_MAINTENANCE) {
+    cli_error(cli, CLI_ERROR, "Chip couldn't get into MAINTENANCE mode");
+    return;
+  }
+
+  cli_trace(cli, "Chip is executing bootloader");
+
+  cli_trace(cli, "Updating RISC-V FW");
+  ret = lt_do_mutable_fw_update(h, fw_CPU, sizeof(fw_CPU), FW_APP_UPDATE_BANK);
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "RISC-V FW update failed, ret=%s",
+              lt_ret_verbose(ret));
+    goto cleanup;
+  }
+
+  cli_trace(cli, "Updating SPECT FW");
+  ret = lt_do_mutable_fw_update(h, fw_SPECT, sizeof(fw_SPECT),
+                                FW_SPECT_UPDATE_BANK);
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "SPECT FW update failed, ret=%s",
+              lt_ret_verbose(ret));
+    goto cleanup;
+  }
+
+  // To read firmware versions chip must be rebooted into application mode.
+  cli_trace(cli, "Rebooting into Application mode");
+  ret = lt_reboot(h, LT_MODE_APP);
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "lt_reboot() failed, ret=%s",
+              lt_ret_verbose(ret));
+    goto cleanup;
+  }
+
+  if (h->l2.mode != LT_MODE_APP) {
+    cli_error(cli, CLI_ERROR,
+              "Device couldn't get into APP mode, APP and SPECT firmwares in "
+              "fw banks are not valid or banks are empty");
+    goto cleanup;
+  }
+
+  cli_trace(cli, "Reading RISC-V FW version");
+
+  uint8_t risc_fw_ver[LT_L2_GET_INFO_RISCV_FW_SIZE] = {0};
+  ret = lt_get_info_riscv_fw_ver(h, risc_fw_ver, LT_L2_GET_INFO_RISCV_FW_SIZE);
+
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "Failed to get RISC-V FW version, ret=%s",
+              lt_ret_verbose(ret));
+    goto cleanup;
+  }
+
+  cli_trace(cli,
+            "Chip is executing RISC-V application FW version: %d.%d.%d (+ .%d)",
+            risc_fw_ver[3], risc_fw_ver[2], risc_fw_ver[1], risc_fw_ver[0]);
+
+  cli_trace(cli, "Reading SPECT FW version");
+  uint8_t spect_fw_ver[LT_L2_GET_INFO_SPECT_FW_SIZE] = {0};
+  ret = lt_get_info_spect_fw_ver(h, spect_fw_ver, LT_L2_GET_INFO_SPECT_FW_SIZE);
+
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "Failed to get SPECT FW version, ret=%s",
+              lt_ret_verbose(ret));
+    goto cleanup;
+  }
+
+  cli_trace(cli, "Chip is executing SPECT FW version: %d.%d.%d (+ .%d)",
+            spect_fw_ver[3], spect_fw_ver[2], spect_fw_ver[1], spect_fw_ver[0]);
+
+  cli_ok(cli, "");
+
+  return;
+
+cleanup:
+  tropic_deinit();
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -506,6 +626,13 @@ PRODTEST_CLI_CMD(
   .name = "tropic-lock",
   .func = prodtest_tropic_lock,
   .info = "Lock Tropic",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "tropic-update-fw",
+  .func = prodtest_tropic_update_fw,
+  .info = "Update tropic FW to embedded binary",
   .args = ""
 );
 
