@@ -207,9 +207,9 @@ PRODTEST_CLI_CMD(
 
 #ifdef SECRET_MASTER_KEY_SLOT_SIZE
 PRODTEST_CLI_CMD(
-  .name = "secrets-get-mcu-device_key",
+  .name = "secrets-get-mcu-device-key",
   .func = prodtest_secrets_get_mcu_device_key,
-  .info = "Get MCU device key",
+  .info = "Get MCU device attestation public key",
   .args = ""
 );
 
