@@ -65,7 +65,7 @@ function help_and_die() {
 OPT_BUILD_NORMAL=1
 OPT_BUILD_BITCOINONLY=1
 INIT=1
-MODELS=(T1B1 T2B1 T2T1 T3T1)
+MODELS=(T1B1 T2B1 T2T1 T3T1 T3W1)
 CORE_TARGETS=(boardloader bootloader firmware)
 
 REPOSITORY="file:///local"
