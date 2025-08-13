@@ -328,13 +328,15 @@ if utils.USE_THP:
 
         assert credential.cred_metadata is not None
         cred_metadata = ThpCredentialMetadata(
-            host_name=credential.cred_metadata.host_name, autoconnect=autoconnect
+            host_name=credential.cred_metadata.host_name,
+            app_name=credential.cred_metadata.app_name,
+            autoconnect=autoconnect,
         )
         if autoconnect:
             from trezor.wire.thp import ui
 
             await ui.show_autoconnect_credential_confirmation_screen(
-                cred_metadata.host_name
+                cred_metadata.host_name, cred_metadata.app_name
             )
         new_cred = issue_credential(
             host_static_public_key=message.host_static_public_key,

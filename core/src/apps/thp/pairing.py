@@ -21,6 +21,7 @@ from trezor.messages import (
     ThpNfcTagTrezor,
     ThpPairingPreparationsFinished,
     ThpPairingRequest,
+    ThpPairingRequestApproved,
     ThpQrCodeSecret,
     ThpQrCodeTag,
     ThpSelectMethod,
@@ -105,14 +106,17 @@ async def handle_pairing_request(
     if not ThpPairingRequest.is_type_of(message):
         raise UnexpectedMessage("Unexpected message")
 
+    # TODO: make app_name required eventually
     if not message.host_name:
         raise DataError("Missing host_name.")
 
     ctx.host_name = message.host_name
+    ctx.app_name = message.app_name
     if __debug__ and not ctx.channel_ctx.should_show_pairing_dialog:
         await _skip_pairing_dialog(ctx)
     else:
         await ctx.show_pairing_dialog()
+        await ctx.write(ThpPairingRequestApproved())
     assert ThpSelectMethod.MESSAGE_WIRE_TYPE is not None
     select_method_msg = await ctx.read(
         [
@@ -186,8 +190,9 @@ async def handle_credential_phase(
             autoconnect = ctx.channel_ctx.is_channel_to_replace()
         if credential.cred_metadata is not None:
             ctx.host_name = credential.cred_metadata.host_name
-        if ctx.host_name is None:
-            raise DataError("Missing hostname in credential")
+            ctx.app_name = credential.cred_metadata.app_name
+        if ctx.host_name is None and ctx.app_name is None:
+            raise DataError("Missing host/app name in credential")
 
     if show_connection_dialog and not autoconnect:
         await ctx.show_connection_dialog()
@@ -425,6 +430,7 @@ async def _handle_credential_request(
     trezor_static_public_key = crypto.get_trezor_static_public_key()
     credential_metadata = ThpCredentialMetadata(
         host_name=ctx.host_name,
+        app_name=ctx.app_name,
         autoconnect=autoconnect,
     )
     credential = issue_credential(message.host_static_public_key, credential_metadata)

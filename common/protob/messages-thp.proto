@@ -98,7 +98,8 @@ message ThpCreateNewSession {
  * @next ThpPairingRequestApproved
  */
 message ThpPairingRequest {
-    optional string host_name = 1;     // Human-readable host name
+    optional string host_name = 1;     // Human-readable host name (browser name for web apps)
+    optional string app_name = 2;      // Human-readable application name
 }
 
 /**
@@ -245,8 +246,9 @@ message ThpEndResponse {}
  */
  message ThpCredentialMetadata {
     option (internal_only) = true;
-    optional string host_name = 1;     // Human-readable host name
+    optional string host_name = 1;     // Human-readable host name (browser name for web apps)
     optional bool autoconnect = 2;     // Whether host is allowed to autoconnect without user confirmation
+    optional string app_name = 3;      // Human-readable application name
 }
 
 /**
