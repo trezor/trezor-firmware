@@ -210,7 +210,6 @@ def test_repeated_backup_via_device(
 
     # but if we cancel the backup at this point...
     reset.cancel_backup(debug)
-    debug.synchronize_at("Homescreen")
 
     # ...we are out of recovery mode!
     features = device_handler.features()
