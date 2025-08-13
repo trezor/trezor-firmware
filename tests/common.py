@@ -111,6 +111,8 @@ def parametrize_using_common_fixtures(*paths: str) -> "MarkDecorator":
                     skiplist.append(models.T3B1)
                 if skip_model == "t3t1":
                     skiplist.append(models.T3T1)
+                if skip_model == "t3w1":
+                    skiplist.append(models.T3W1)
             if skiplist:
                 extra_marks = [pytest.mark.models(skip=skiplist)]
             else:
