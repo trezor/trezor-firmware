@@ -73,6 +73,7 @@ def cancel_backup(
             debug.click(debug.screen_buttons.cancel())
     else:
         raise RuntimeError("Unknown model")
+    debug.read_layout()
 
 
 def set_selection(debug: "DebugLink", diff: int) -> None:
