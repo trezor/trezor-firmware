@@ -87,7 +87,7 @@ pm_status_t pm_init(bool inherit_state) {
     return PM_ERROR;
   }
 
-  systimer_set_periodic(drv->monitoring_timer, PM_BATTERY_SAMPLING_PERIOD_MS);
+  systimer_set_periodic(drv->monitoring_timer, PM_TIMER_PERIOD_MS);
 
   // Initial power source measurement
   pmic_measure(pm_pmic_data_ready, NULL);
@@ -359,9 +359,6 @@ pm_status_t pm_turn_on(void) {
   if (drv->state == PM_STATE_HIBERNATE || drv->state == PM_STATE_CHARGING) {
     return PM_REQUEST_REJECTED;
   }
-
-  // Set monitoiring timer with longer period
-  systimer_set_periodic(drv->monitoring_timer, PM_TIMER_PERIOD_MS);
 
   return PM_OK;
 }
@@ -666,7 +663,7 @@ bool pm_driver_resume(void) {
   pmic_measure(pm_pmic_data_ready, NULL);
 
   // Set the periodic sampling period
-  systimer_set_periodic(drv->monitoring_timer, PM_BATTERY_SAMPLING_PERIOD_MS);
+  systimer_set_periodic(drv->monitoring_timer, PM_TIMER_PERIOD_MS);
 
   return true;
 }
