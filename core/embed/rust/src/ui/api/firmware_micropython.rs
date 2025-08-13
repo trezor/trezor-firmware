@@ -936,19 +936,41 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
 extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let failed_backup: bool = kwargs.get(Qstr::MP_QSTR_failed_backup)?.try_into()?;
-        let firmware_version: TString = kwargs.get(Qstr::MP_QSTR_firmware_version)?.try_into()?;
+        let pin_unset: bool = kwargs.get(Qstr::MP_QSTR_pin_unset)?.try_into()?;
+        let bluetooth: Option<bool> = kwargs.get(Qstr::MP_QSTR_bluetooth)?.try_into_option()?;
         let device_name: TString = kwargs.get(Qstr::MP_QSTR_device_name)?.try_into()?;
+        let about_items: Obj = kwargs.get(Qstr::MP_QSTR_about_items)?;
         let paired_devices: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
         let paired_devices: Vec<TString, 1> = util::iter_into_vec(paired_devices)?;
-        let auto_lock_delay: TString<'static> =
-            kwargs.get(Qstr::MP_QSTR_auto_lock_delay)?.try_into()?;
+        let pin_code: Option<bool> = kwargs.get(Qstr::MP_QSTR_pin_code)?.try_into_option()?;
+        let auto_lock_delay: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_auto_lock_delay)?
+            .try_into_option()?;
+        let wipe_code: Option<bool> = kwargs.get(Qstr::MP_QSTR_wipe_code)?.try_into_option()?;
+        let check_backup: bool = kwargs.get(Qstr::MP_QSTR_check_backup)?.try_into()?;
+        let screen_brightness: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_screen_brightness)?
+            .try_into_option()?;
+        let haptic_feedback: Option<bool> = kwargs
+            .get(Qstr::MP_QSTR_haptic_feedback)?
+            .try_into_option()?;
+        let led: Option<bool> = kwargs.get(Qstr::MP_QSTR_led)?.try_into_option()?;
         let layout = ModelUI::show_device_menu(
             failed_backup,
-            firmware_version,
+            pin_unset,
+            bluetooth,
             device_name,
+            about_items,
             paired_devices,
+            pin_code,
             auto_lock_delay,
+            wipe_code,
+            check_backup,
+            screen_brightness,
+            haptic_feedback,
+            led,
         )?;
+
         let layout_obj = LayoutObj::new_root(layout)?;
         Ok(layout_obj.into())
     };
@@ -1864,10 +1886,18 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def show_device_menu(
     ///     *,
     ///     failed_backup: bool,
-    ///     firmware_version: str,
+    ///     pin_unset: bool,
+    ///     bluetooth: bool | None,
     ///     device_name: str,
+    ///     about_items: list[tuple[str | None, str | bytes | None, bool | None]],
     ///     paired_devices: Iterable[str],
-    ///     auto_lock_delay: str,
+    ///     pin_code: bool | None,
+    ///     auto_lock_delay: str | None,
+    ///     wipe_code: bool | None,
+    ///     check_backup: bool,
+    ///     screen_brightness: str | None,
+    ///     haptic_feedback: bool | None,
+    ///     led: bool | None,
     /// ) -> LayoutObj[UiResult | DeviceMenuResult | tuple[DeviceMenuResult, int]]:
     ///     """Show the device menu."""
     Qstr::MP_QSTR_show_device_menu => obj_fn_kw!(0, new_show_device_menu).as_obj(),
@@ -2066,9 +2096,15 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     BackupFailed: ClassVar[DeviceMenuResult]
     ///     DevicePair: ClassVar[DeviceMenuResult]
     ///     DeviceDisconnect: ClassVar[DeviceMenuResult]
+    ///     DeviceDisconnectAll: ClassVar[DeviceMenuResult]
     ///     CheckBackup: ClassVar[DeviceMenuResult]
     ///     WipeDevice: ClassVar[DeviceMenuResult]
     ///     ScreenBrightness: ClassVar[DeviceMenuResult]
+    ///     HapticFeedback: ClassVar[DeviceMenuResult]
+    ///     PinCode: ClassVar[DeviceMenuResult]
     ///     AutoLockDelay: ClassVar[DeviceMenuResult]
+    ///     WipeCode: ClassVar[DeviceMenuResult]
+    ///     Led: ClassVar[DeviceMenuResult]
+    ///     Bluetooth: ClassVar[DeviceMenuResult]
     Qstr::MP_QSTR_DeviceMenuResult => DEVICE_MENU_RESULT.as_obj(),
 };

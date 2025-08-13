@@ -10,10 +10,16 @@ static DEVICE_MENU_RESULT_BASE_TYPE: Type = obj_type! { name: Qstr::MP_QSTR_Devi
 pub static BACKUP_FAILED: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static DEVICE_PAIR: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static DEVICE_DISCONNECT: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static DEVICE_DISCONNECT_ALL: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static CHECK_BACKUP: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static WIPE_DEVICE: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static SCREEN_BRIGHTNESS: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static HAPTIC_FEEDBACK: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static PIN_CODE: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static WIPE_CODE: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static AUTO_LOCK_DELAY: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static LED: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static BLUETOOTH: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 
 // Create a DeviceMenuResult class that contains all result types
 static DEVICE_MENU_RESULT_TYPE: Type = obj_type! {
@@ -22,10 +28,16 @@ static DEVICE_MENU_RESULT_TYPE: Type = obj_type! {
         Qstr::MP_QSTR_BackupFailed => BACKUP_FAILED.as_obj(),
         Qstr::MP_QSTR_DevicePair => DEVICE_PAIR.as_obj(),
         Qstr::MP_QSTR_DeviceDisconnect => DEVICE_DISCONNECT.as_obj(),
+        Qstr::MP_QSTR_DeviceDisconnectAll => DEVICE_DISCONNECT_ALL.as_obj(),
         Qstr::MP_QSTR_CheckBackup => CHECK_BACKUP.as_obj(),
         Qstr::MP_QSTR_WipeDevice => WIPE_DEVICE.as_obj(),
         Qstr::MP_QSTR_ScreenBrightness => SCREEN_BRIGHTNESS.as_obj(),
+        Qstr::MP_QSTR_HapticFeedback => HAPTIC_FEEDBACK.as_obj(),
+        Qstr::MP_QSTR_PinCode => PIN_CODE.as_obj(),
         Qstr::MP_QSTR_AutoLockDelay => AUTO_LOCK_DELAY.as_obj(),
+        Qstr::MP_QSTR_WipeCode => WIPE_CODE.as_obj(),
+        Qstr::MP_QSTR_Led => LED.as_obj(),
+        Qstr::MP_QSTR_Bluetooth => BLUETOOTH.as_obj(),
     } },
 };
 

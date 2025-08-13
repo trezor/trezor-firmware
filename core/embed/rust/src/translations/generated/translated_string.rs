@@ -1373,9 +1373,6 @@ pub enum TranslatedString {
     instructions__tap_to_continue = 991,  // "Tap to continue"
     #[cfg(feature = "universal_fw")]
     nostr__event_kind_template = 992,  // "Event kind: {0}"
-    ble__unpair_all = 993,  // "Unpair all bluetooth devices"
-    ble__unpair_current = 994,  // "Unpair connected device"
-    ble__unpair_title = 995,  // "Unpair"
     words__unlocked = 996,  // "Unlocked"
     #[cfg(feature = "universal_fw")]
     solana__max_fees_rent = 997,  // "Max fees and rent"
@@ -1465,6 +1462,33 @@ pub enum TranslatedString {
     tutorial__tropic_info3 = 1066,  // "Built for security from the ground up, and open to independent audits."
     tutorial__welcome_safe7 = 1067,  // "Welcome to\nTrezor\nSafe 7"
     tutorial__what_is_tropic = 1068,  // "What is TROPIC01?"
+    ble__manage_paired = 1069,  // "Manage paired devices"
+    ble__pair_new = 1070,  // "Pair new device"
+    ble__pair_title = 1071,  // "Pair & connect"
+    homescreen__firmware_version = 1072,  // "Firmware version"
+    words__about = 1073,  // "About"
+    words__connected = 1074,  // "Connected"
+    words__device = 1075,  // "Device"
+    words__disconnect = 1076,  // "Disconnect"
+    words__manage = 1077,  // "Manage"
+    words__name = 1078,  // "Name"
+    words__off = 1079,  // "OFF"
+    words__on = 1080,  // "ON"
+    words__review = 1081,  // "Review"
+    words__security = 1082,  // "Security"
+    homescreen__firmware_type = 1083,  // "Firmware type"
+    words__led = 1084,  // "LED"
+    words__bluetooth = 1085,  // "Bluetooth"
+    ble__forget_all = 1086,  // "Forget all"
+    words__forget = 1087,  // "Forget"
+    ble__all_devices = 1088,  // "all remembered host devices"
+    ble__forget_template = 1089,  // "You're about to forget {0}."
+    ble__all_forgotten = 1090,  // "All hosts have been forgotten."
+    ble__connected_device = 1091,  // "connected device"
+    ble__current_forgotten = 1092,  // "The host has been forgotten."
+    led__disable = 1093,  // "Disable LED?"
+    led__enable = 1094,  // "Enable LED?"
+    led__title = 1095,  // "LED"
 }
 
 impl TranslatedString {
@@ -3150,9 +3174,6 @@ impl TranslatedString {
             (Self::instructions__tap_to_continue, "Tap to continue"),
             #[cfg(feature = "universal_fw")]
             (Self::nostr__event_kind_template, "Event kind: {0}"),
-            (Self::ble__unpair_all, "Unpair all bluetooth devices"),
-            (Self::ble__unpair_current, "Unpair connected device"),
-            (Self::ble__unpair_title, "Unpair"),
             (Self::words__unlocked, "Unlocked"),
             #[cfg(feature = "universal_fw")]
             (Self::solana__max_fees_rent, "Max fees and rent"),
@@ -3249,6 +3270,33 @@ impl TranslatedString {
             (Self::tutorial__tropic_info3, "Built for security from the ground up, and open to independent audits."),
             (Self::tutorial__welcome_safe7, "Welcome to\nTrezor\nSafe 7"),
             (Self::tutorial__what_is_tropic, "What is TROPIC01?"),
+            (Self::ble__manage_paired, "Manage paired devices"),
+            (Self::ble__pair_new, "Pair new device"),
+            (Self::ble__pair_title, "Pair & connect"),
+            (Self::homescreen__firmware_version, "Firmware version"),
+            (Self::words__about, "About"),
+            (Self::words__connected, "Connected"),
+            (Self::words__device, "Device"),
+            (Self::words__disconnect, "Disconnect"),
+            (Self::words__manage, "Manage"),
+            (Self::words__name, "Name"),
+            (Self::words__off, "OFF"),
+            (Self::words__on, "ON"),
+            (Self::words__review, "Review"),
+            (Self::words__security, "Security"),
+            (Self::homescreen__firmware_type, "Firmware type"),
+            (Self::words__led, "LED"),
+            (Self::words__bluetooth, "Bluetooth"),
+            (Self::ble__forget_all, "Forget all"),
+            (Self::words__forget, "Forget"),
+            (Self::ble__all_devices, "all remembered host devices"),
+            (Self::ble__forget_template, "You're about to forget {0}."),
+            (Self::ble__all_forgotten, "All hosts have been forgotten."),
+            (Self::ble__connected_device, "connected device"),
+            (Self::ble__current_forgotten, "The host has been forgotten."),
+            (Self::led__disable, "Disable LED?"),
+            (Self::led__enable, "Enable LED?"),
+            (Self::led__title, "LED"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3326,9 +3374,15 @@ impl TranslatedString {
         (Qstr::MP_QSTR_bitcoin__unverified_external_inputs, Self::bitcoin__unverified_external_inputs),
         (Qstr::MP_QSTR_bitcoin__valid_signature, Self::bitcoin__valid_signature),
         (Qstr::MP_QSTR_bitcoin__voting_rights, Self::bitcoin__voting_rights),
-        (Qstr::MP_QSTR_ble__unpair_all, Self::ble__unpair_all),
-        (Qstr::MP_QSTR_ble__unpair_current, Self::ble__unpair_current),
-        (Qstr::MP_QSTR_ble__unpair_title, Self::ble__unpair_title),
+        (Qstr::MP_QSTR_ble__all_devices, Self::ble__all_devices),
+        (Qstr::MP_QSTR_ble__all_forgotten, Self::ble__all_forgotten),
+        (Qstr::MP_QSTR_ble__connected_device, Self::ble__connected_device),
+        (Qstr::MP_QSTR_ble__current_forgotten, Self::ble__current_forgotten),
+        (Qstr::MP_QSTR_ble__forget_all, Self::ble__forget_all),
+        (Qstr::MP_QSTR_ble__forget_template, Self::ble__forget_template),
+        (Qstr::MP_QSTR_ble__manage_paired, Self::ble__manage_paired),
+        (Qstr::MP_QSTR_ble__pair_new, Self::ble__pair_new),
+        (Qstr::MP_QSTR_ble__pair_title, Self::ble__pair_title),
         (Qstr::MP_QSTR_brightness__change_title, Self::brightness__change_title),
         (Qstr::MP_QSTR_brightness__changed_title, Self::brightness__changed_title),
         (Qstr::MP_QSTR_brightness__title, Self::brightness__title),
@@ -3859,6 +3913,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_haptic_feedback__title, Self::haptic_feedback__title),
         (Qstr::MP_QSTR_homescreen__click_to_connect, Self::homescreen__click_to_connect),
         (Qstr::MP_QSTR_homescreen__click_to_unlock, Self::homescreen__click_to_unlock),
+        (Qstr::MP_QSTR_homescreen__firmware_type, Self::homescreen__firmware_type),
+        (Qstr::MP_QSTR_homescreen__firmware_version, Self::homescreen__firmware_version),
         (Qstr::MP_QSTR_homescreen__set_default, Self::homescreen__set_default),
         (Qstr::MP_QSTR_homescreen__settings_subtitle, Self::homescreen__settings_subtitle),
         (Qstr::MP_QSTR_homescreen__settings_title, Self::homescreen__settings_title),
@@ -3904,6 +3960,9 @@ impl TranslatedString {
         (Qstr::MP_QSTR_language__changed, Self::language__changed),
         (Qstr::MP_QSTR_language__progress, Self::language__progress),
         (Qstr::MP_QSTR_language__title, Self::language__title),
+        (Qstr::MP_QSTR_led__disable, Self::led__disable),
+        (Qstr::MP_QSTR_led__enable, Self::led__enable),
+        (Qstr::MP_QSTR_led__title, Self::led__title),
         (Qstr::MP_QSTR_lockscreen__tap_to_connect, Self::lockscreen__tap_to_connect),
         (Qstr::MP_QSTR_lockscreen__tap_to_unlock, Self::lockscreen__tap_to_unlock),
         (Qstr::MP_QSTR_lockscreen__title_locked, Self::lockscreen__title_locked),
@@ -4641,6 +4700,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_wipe_code__turn_on, Self::wipe_code__turn_on),
         (Qstr::MP_QSTR_wipe_code__wipe_code_mismatch, Self::wipe_code__wipe_code_mismatch),
         (Qstr::MP_QSTR_word_count__title, Self::word_count__title),
+        (Qstr::MP_QSTR_words__about, Self::words__about),
         (Qstr::MP_QSTR_words__account, Self::words__account),
         (Qstr::MP_QSTR_words__account_colon, Self::words__account_colon),
         (Qstr::MP_QSTR_words__address, Self::words__address),
@@ -4651,27 +4711,37 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__assets, Self::words__assets),
         (Qstr::MP_QSTR_words__authenticate, Self::words__authenticate),
         (Qstr::MP_QSTR_words__blockhash, Self::words__blockhash),
+        (Qstr::MP_QSTR_words__bluetooth, Self::words__bluetooth),
         (Qstr::MP_QSTR_words__buying, Self::words__buying),
         (Qstr::MP_QSTR_words__cancel_and_exit, Self::words__cancel_and_exit),
         (Qstr::MP_QSTR_words__cancel_question, Self::words__cancel_question),
         (Qstr::MP_QSTR_words__chain, Self::words__chain),
         (Qstr::MP_QSTR_words__confirm, Self::words__confirm),
         (Qstr::MP_QSTR_words__confirm_fee, Self::words__confirm_fee),
+        (Qstr::MP_QSTR_words__connected, Self::words__connected),
         (Qstr::MP_QSTR_words__contains, Self::words__contains),
         (Qstr::MP_QSTR_words__continue_anyway, Self::words__continue_anyway),
         (Qstr::MP_QSTR_words__continue_anyway_question, Self::words__continue_anyway_question),
         (Qstr::MP_QSTR_words__continue_with, Self::words__continue_with),
+        (Qstr::MP_QSTR_words__device, Self::words__device),
+        (Qstr::MP_QSTR_words__disconnect, Self::words__disconnect),
         (Qstr::MP_QSTR_words__error, Self::words__error),
         (Qstr::MP_QSTR_words__fee, Self::words__fee),
+        (Qstr::MP_QSTR_words__forget, Self::words__forget),
         (Qstr::MP_QSTR_words__from, Self::words__from),
         (Qstr::MP_QSTR_words__good_to_know, Self::words__good_to_know),
         (Qstr::MP_QSTR_words__important, Self::words__important),
         (Qstr::MP_QSTR_words__instructions, Self::words__instructions),
         (Qstr::MP_QSTR_words__keep_it_safe, Self::words__keep_it_safe),
         (Qstr::MP_QSTR_words__know_what_your_doing, Self::words__know_what_your_doing),
+        (Qstr::MP_QSTR_words__led, Self::words__led),
+        (Qstr::MP_QSTR_words__manage, Self::words__manage),
         (Qstr::MP_QSTR_words__my_trezor, Self::words__my_trezor),
+        (Qstr::MP_QSTR_words__name, Self::words__name),
         (Qstr::MP_QSTR_words__no, Self::words__no),
         (Qstr::MP_QSTR_words__not_recommended, Self::words__not_recommended),
+        (Qstr::MP_QSTR_words__off, Self::words__off),
+        (Qstr::MP_QSTR_words__on, Self::words__on),
         (Qstr::MP_QSTR_words__operation_cancelled, Self::words__operation_cancelled),
         (Qstr::MP_QSTR_words__outputs, Self::words__outputs),
         (Qstr::MP_QSTR_words__pay_attention, Self::words__pay_attention),
@@ -4682,6 +4752,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__receive, Self::words__receive),
         (Qstr::MP_QSTR_words__recipient, Self::words__recipient),
         (Qstr::MP_QSTR_words__recovery_share, Self::words__recovery_share),
+        (Qstr::MP_QSTR_words__review, Self::words__review),
+        (Qstr::MP_QSTR_words__security, Self::words__security),
         (Qstr::MP_QSTR_words__send, Self::words__send),
         (Qstr::MP_QSTR_words__settings, Self::words__settings),
         (Qstr::MP_QSTR_words__sign, Self::words__sign),

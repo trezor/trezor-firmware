@@ -1,31 +1,14 @@
-import storage.device
+from typing import TYPE_CHECKING
+
+import storage.device as storage_device
 import trezorble as ble
 import trezorui_api
 from trezor import TR, config, log, utils
 from trezor.ui.layouts import interact
-from trezor.wire import ActionCancelled
 from trezorui_api import DeviceMenuResult
 
-
-async def _prompt_auto_lock_delay() -> int:
-    auto_lock_delay_ms = await interact(
-        trezorui_api.request_duration(
-            title=TR.auto_lock__title,
-            duration_ms=storage.device.get_autolock_delay_ms(),
-            min_ms=storage.device.AUTOLOCK_DELAY_MINIMUM,
-            max_ms=storage.device.AUTOLOCK_DELAY_MAXIMUM,
-            description=TR.auto_lock__description,
-        ),
-        br_name=None,
-    )
-
-    if auto_lock_delay_ms is not trezorui_api.CANCELLED:
-        assert isinstance(auto_lock_delay_ms, int)
-        assert auto_lock_delay_ms >= storage.device.AUTOLOCK_DELAY_MINIMUM
-        assert auto_lock_delay_ms <= storage.device.AUTOLOCK_DELAY_MAXIMUM
-        return auto_lock_delay_ms
-    else:
-        raise ActionCancelled  # user cancelled request number prompt
+if TYPE_CHECKING:
+    from trezor.ui.layouts import PropertyType
 
 
 async def handle_device_menu() -> None:
@@ -33,16 +16,28 @@ async def handle_device_menu() -> None:
 
     # TODO: unify with notification handling in `apps/homescreen/__init__.py:homescreen()`
     failed_backup = (
-        storage.device.is_initialized() and storage.device.unfinished_backup()
+        storage_device.is_initialized() and storage_device.unfinished_backup()
     )
+    pin_unset = storage_device.is_initialized() and not config.has_pin()
     # MOCK DATA
     paired_devices = ["Trezor Suite"] if ble.is_connected() else []
     # ###
-    firmware_version = ".".join(map(str, utils.VERSION))
-    device_name = storage.device.get_label() or "Trezor"
+    about_items: list[PropertyType] = [
+        (TR.homescreen__firmware_version, ".".join(map(str, utils.VERSION)), False),
+        (
+            TR.homescreen__firmware_type,
+            "Bitcoin-only" if utils.BITCOIN_ONLY else "Universal",
+            False,
+        ),
+    ]
 
-    auto_lock_ms = storage.device.get_autolock_delay_ms()
-    auto_lock_delay = strings.format_autolock_duration(auto_lock_ms)
+    device_name = storage_device.get_label() or "Trezor"
+
+    auto_lock_delay = (
+        strings.format_autolock_duration(storage_device.get_autolock_delay_ms())
+        if config.has_pin()
+        else None
+    )
 
     if __debug__:
         log.debug(
@@ -53,10 +48,32 @@ async def handle_device_menu() -> None:
     menu_result = await interact(
         trezorui_api.show_device_menu(
             failed_backup=failed_backup,
-            paired_devices=paired_devices,
-            firmware_version=firmware_version,
+            pin_unset=pin_unset,
             device_name=device_name,
+            about_items=about_items,
+            paired_devices=paired_devices,
+            pin_code=config.has_pin() if storage_device.is_initialized() else None,
             auto_lock_delay=auto_lock_delay,
+            wipe_code=(
+                config.has_wipe_code() if storage_device.is_initialized() else None
+            ),
+            check_backup=storage_device.is_initialized(),
+            screen_brightness=(
+                TR.brightness__title if storage_device.is_initialized() else None
+            ),
+            haptic_feedback=(
+                storage_device.get_haptic_feedback()
+                if (storage_device.is_initialized() and utils.USE_HAPTIC)
+                else None
+            ),
+            led=(
+                storage_device.get_rgb_led()
+                if (storage_device.is_initialized() and utils.USE_RGB_LED)
+                else None
+            ),
+            bluetooth=(
+                False if (utils.USE_BLE and False) else None
+            ),  # TODO: implement BLE setting
         ),
         "device_menu",
     )
@@ -66,21 +83,115 @@ async def handle_device_menu() -> None:
 
         await pair_new_device()
     elif menu_result is DeviceMenuResult.ScreenBrightness:
-        from trezor.ui.layouts import set_brightness
+        from trezor.messages import SetBrightness
 
-        await set_brightness()
+        from apps.management.set_brightness import set_brightness
+
+        await set_brightness(SetBrightness())
     elif menu_result is DeviceMenuResult.WipeDevice:
         from trezor.messages import WipeDevice
 
         from apps.management.wipe_device import wipe_device
 
         await wipe_device(WipeDevice())
+
+    elif menu_result is DeviceMenuResult.PinCode:
+        from trezor.messages import ChangePin
+
+        from apps.management.change_pin import change_pin
+
+        await change_pin(ChangePin())
+
     elif menu_result is DeviceMenuResult.AutoLockDelay:
+        from trezor.messages import ApplySettings
 
-        if config.has_pin():
+        from apps.management.apply_settings import apply_settings
 
-            auto_lock_delay_ms = await _prompt_auto_lock_delay()
-            storage.device.set_autolock_delay_ms(auto_lock_delay_ms)
+        assert config.has_pin()
+        auto_lock_delay_ms = await interact(
+            trezorui_api.request_duration(
+                title=TR.auto_lock__title,
+                duration_ms=storage_device.get_autolock_delay_ms(),
+                min_ms=storage_device.AUTOLOCK_DELAY_MINIMUM,
+                max_ms=storage_device.AUTOLOCK_DELAY_MAXIMUM,
+                description=TR.auto_lock__description,
+            ),
+            br_name=None,
+        )
+        assert isinstance(auto_lock_delay_ms, int)
+
+        await apply_settings(
+            ApplySettings(
+                auto_lock_delay_ms=auto_lock_delay_ms,
+            )
+        )
+    elif menu_result is DeviceMenuResult.WipeCode:
+        from trezor.messages import ChangeWipeCode
+
+        from apps.management.change_wipe_code import change_wipe_code
+
+        await change_wipe_code(ChangeWipeCode())
+    elif menu_result is DeviceMenuResult.CheckBackup:
+        from trezor.enums import RecoveryType
+        from trezor.messages import RecoveryDevice
+
+        from apps.management.recovery_device import recovery_device
+
+        await recovery_device(
+            RecoveryDevice(
+                type=RecoveryType.DryRun,
+            )
+        )
+    elif menu_result is DeviceMenuResult.BackupFailed:
+        from apps.management.backup_device import perform_backup
+
+        assert storage_device.unfinished_backup()
+        # If the backup failed, we can only perform a repeated backup.
+        await perform_backup(is_repeated_backup=True)
+
+    elif menu_result is DeviceMenuResult.HapticFeedback:
+        from trezor.messages import ApplySettings
+
+        from apps.management.apply_settings import apply_settings
+
+        assert storage_device.is_initialized()
+        await apply_settings(
+            ApplySettings(
+                haptic_feedback=not storage_device.get_haptic_feedback(),
+            )
+        )
+
+    elif menu_result is DeviceMenuResult.Led:
+        from trezor import io
+        from trezor.ui.layouts import confirm_action
+
+        enable = not storage_device.get_rgb_led()
+        await confirm_action(
+            "led__settings",
+            TR.led__title,
+            TR.led__enable if enable else TR.led__disable,
+        )
+
+        io.rgb_led.rgb_led_set_enabled(enable)
+        storage_device.set_rgb_led(enable)
+
+    elif menu_result is DeviceMenuResult.Bluetooth:
+        turned_on = ble.is_connected()
+        if turned_on:
+            # TODO: implement BLE setting
+            # ble.stop_advertising()
+            pass
+        else:
+            if ble.peer_count() > 0:
+                ble.start_advertising(True, storage_device.get_label())
+
+    elif menu_result is DeviceMenuResult.DeviceDisconnectAll:
+        from trezor.messages import BleUnpair
+
+        from apps.management.ble.unpair import unpair
+
+        await unpair(BleUnpair(all=True))
+
     elif isinstance(menu_result, tuple):
         # It's a tuple with (result_type, index)
         result_type, index = menu_result

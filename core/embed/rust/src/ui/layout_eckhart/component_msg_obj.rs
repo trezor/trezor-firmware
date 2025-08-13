@@ -145,18 +145,24 @@ impl ComponentMsgObj for SetBrightnessScreen {
     }
 }
 
-impl<'a> ComponentMsgObj for DeviceMenuScreen<'a> {
+impl ComponentMsgObj for DeviceMenuScreen {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             DeviceMenuMsg::BackupFailed => Ok(BACKUP_FAILED.as_obj()),
+            DeviceMenuMsg::Bluetooth => Ok(BLUETOOTH.as_obj()),
             DeviceMenuMsg::DevicePair => Ok(DEVICE_PAIR.as_obj()),
             DeviceMenuMsg::DeviceDisconnect(index) => {
                 Ok(new_tuple(&[DEVICE_DISCONNECT.as_obj(), index.try_into()?])?)
             }
+            DeviceMenuMsg::DeviceDisconnectAll => Ok(DEVICE_DISCONNECT_ALL.as_obj()),
             DeviceMenuMsg::CheckBackup => Ok(CHECK_BACKUP.as_obj()),
             DeviceMenuMsg::WipeDevice => Ok(WIPE_DEVICE.as_obj()),
             DeviceMenuMsg::ScreenBrightness => Ok(SCREEN_BRIGHTNESS.as_obj()),
+            DeviceMenuMsg::HapticFeedback => Ok(HAPTIC_FEEDBACK.as_obj()),
             DeviceMenuMsg::AutoLockDelay => Ok(AUTO_LOCK_DELAY.as_obj()),
+            DeviceMenuMsg::PinCode => Ok(PIN_CODE.as_obj()),
+            DeviceMenuMsg::WipeCode => Ok(WIPE_CODE.as_obj()),
+            DeviceMenuMsg::Led => Ok(LED.as_obj()),
             DeviceMenuMsg::Close => Ok(CANCELLED.as_obj()),
         }
     }

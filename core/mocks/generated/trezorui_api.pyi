@@ -610,10 +610,18 @@ def show_homescreen(
 def show_device_menu(
     *,
     failed_backup: bool,
-    firmware_version: str,
+    pin_unset: bool,
+    bluetooth: bool | None,
     device_name: str,
+    about_items: list[tuple[str | None, str | bytes | None, bool | None]],
     paired_devices: Iterable[str],
-    auto_lock_delay: str,
+    pin_code: bool | None,
+    auto_lock_delay: str | None,
+    wipe_code: bool | None,
+    check_backup: bool,
+    screen_brightness: str | None,
+    haptic_feedback: bool | None,
+    led: bool | None,
 ) -> LayoutObj[UiResult | DeviceMenuResult | tuple[DeviceMenuResult, int]]:
     """Show the device menu."""
 
@@ -832,7 +840,13 @@ class DeviceMenuResult:
     BackupFailed: ClassVar[DeviceMenuResult]
     DevicePair: ClassVar[DeviceMenuResult]
     DeviceDisconnect: ClassVar[DeviceMenuResult]
+    DeviceDisconnectAll: ClassVar[DeviceMenuResult]
     CheckBackup: ClassVar[DeviceMenuResult]
     WipeDevice: ClassVar[DeviceMenuResult]
     ScreenBrightness: ClassVar[DeviceMenuResult]
+    HapticFeedback: ClassVar[DeviceMenuResult]
+    PinCode: ClassVar[DeviceMenuResult]
     AutoLockDelay: ClassVar[DeviceMenuResult]
+    WipeCode: ClassVar[DeviceMenuResult]
+    Led: ClassVar[DeviceMenuResult]
+    Bluetooth: ClassVar[DeviceMenuResult]

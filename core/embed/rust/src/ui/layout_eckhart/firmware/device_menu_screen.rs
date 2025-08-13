@@ -2,19 +2,19 @@ use core::ops::{Deref, DerefMut};
 
 use crate::{
     error::Error,
-    micropython::gc::GcBox,
+    micropython::{gc::GcBox, obj::Obj},
     strutil::TString,
     translations::TR,
-    trezorhal::storage::has_pin,
     ui::{
         component::{
             text::{
-                paragraphs::{Paragraph, Paragraphs},
+                paragraphs::{ParagraphSource, Paragraphs},
                 TextStyle,
             },
             Component, Event, EventCtx,
         },
-        geometry::Rect,
+        geometry::{LinearPlacement, Rect},
+        layout::util::PropsList,
         shape::Renderer,
     },
 };
@@ -51,19 +51,27 @@ pub enum DeviceMenuMsg {
     // Root menu
     BackupFailed,
 
+    // Bluetooth
+    Bluetooth,
+
     // "Pair & Connect"
     DevicePair, // pair a new device
     DeviceDisconnect(
         usize, /* which device to disconnect, index in the list of devices */
     ),
+    DeviceDisconnectAll,
 
     // Security menu
+    PinCode,
+    AutoLockDelay,
+    WipeCode,
     CheckBackup,
-    WipeDevice,
 
     // Device menu
     ScreenBrightness,
-    AutoLockDelay,
+    HapticFeedback,
+    Led,
+    WipeDevice,
 
     // nothing selected
     Close,
@@ -75,14 +83,17 @@ struct MenuItem {
     stylesheet: &'static ButtonStyleSheet,
     action: Option<Action>,
 }
-const MENU_ITEM_TITLE_STYLE_SHEET: &ButtonStyleSheet = &theme::menu_item_title();
+const MENU_ITEM_NORMAL: &ButtonStyleSheet = &theme::menu_item_title();
+const MENU_ITEM_LIGHT_WARNING: &ButtonStyleSheet = &theme::menu_item_title_yellow();
+const MENU_ITEM_WARNING: &ButtonStyleSheet = &theme::menu_item_title_orange();
+const MENU_ITEM_ERROR: &ButtonStyleSheet = &theme::menu_item_title_red();
 
 impl MenuItem {
     pub fn new(text: TString<'static>, action: Option<Action>) -> Self {
         Self {
             text,
             subtext: None,
-            stylesheet: MENU_ITEM_TITLE_STYLE_SHEET,
+            stylesheet: MENU_ITEM_NORMAL,
             action,
         }
     }
@@ -137,22 +148,22 @@ enum Subscreen {
 
 // Used to preallocate memory for the largest enum variant
 #[allow(clippy::large_enum_variant)]
-enum ActiveScreen<'a> {
+enum ActiveScreen {
     Menu(VerticalMenuScreen<ShortMenuVec>),
-    About(TextScreen<Paragraphs<[Paragraph<'a>; 2]>>),
+    About(TextScreen<Paragraphs<PropsList>>),
 
     // used only during `DeviceMenuScreen::new`
     Empty,
 }
 
-pub struct DeviceMenuScreen<'a> {
+pub struct DeviceMenuScreen {
     bounds: Rect,
-    firmware_version: TString<'static>,
+    about_items: Obj,
     // These correspond to the currently active subscreen,
     // which is one of the possible kinds of subscreens
     // as defined by `enum Subscreen` (DeviceScreen is still a VerticalMenuScreen!)
     // This way we only need to keep one screen at any time in memory.
-    active_screen: GcBox<ActiveScreen<'a>>,
+    active_screen: GcBox<ActiveScreen>,
     // Information needed to construct any subscreen on demand
     submenus: GcBox<Vec<Submenu, MAX_SUBMENUS>>,
     subscreens: Vec<Subscreen, MAX_SUBSCREENS>,
@@ -162,18 +173,27 @@ pub struct DeviceMenuScreen<'a> {
     parent_subscreens: Vec<usize, MAX_DEPTH>,
 }
 
-impl<'a> DeviceMenuScreen<'a> {
+impl DeviceMenuScreen {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         failed_backup: bool,
-        firmware_version: TString<'static>,
+        pin_unset: bool,
+        bluetooth: Option<bool>,
         device_name: TString<'static>,
+        about_items: Obj,
         // NB: we currently only support one device at a time.
         paired_devices: Vec<TString<'static>, 1>,
-        auto_lock_delay: TString<'static>,
+        pin_code: Option<bool>,
+        auto_lock_delay: Option<TString<'static>>,
+        wipe_code: Option<bool>,
+        check_backup: bool,
+        screen_brightness: Option<TString<'static>>,
+        haptic_feedback: Option<bool>,
+        led: Option<bool>,
     ) -> Result<Self, Error> {
         let mut screen = Self {
             bounds: Rect::zero(),
-            firmware_version,
+            about_items,
             active_screen: GcBox::new(ActiveScreen::Empty)?,
             active_subscreen: 0,
             submenus: GcBox::new(Vec::new())?,
@@ -182,9 +202,19 @@ impl<'a> DeviceMenuScreen<'a> {
         };
 
         let about = screen.add_subscreen(Subscreen::AboutScreen);
-        let security = screen.add_security_menu();
-        let device = screen.add_device_menu(device_name, about, auto_lock_delay);
-        let settings = screen.add_settings_menu(security, device);
+        let security = if pin_code.is_none()
+            && auto_lock_delay.is_none()
+            && wipe_code.is_none()
+            && !check_backup
+        {
+            None
+        } else {
+            Some(screen.add_security_menu(pin_code, auto_lock_delay, wipe_code, check_backup))
+        };
+
+        let device =
+            screen.add_device_menu(device_name, about, screen_brightness, haptic_feedback, led);
+        let settings = screen.add_settings_menu(bluetooth, security, device);
 
         let is_connected = !paired_devices.is_empty(); // FIXME after BLE API has this
         let connected_subtext: Option<TString<'static>> =
@@ -196,18 +226,25 @@ impl<'a> DeviceMenuScreen<'a> {
                 .push(screen.add_subscreen(Subscreen::DeviceScreen(*device, i))));
         }
 
-        let devices = screen.add_paired_devices_menu(paired_devices, paired_device_indices);
-        let pair_and_connect = screen.add_pair_and_connect_menu(devices, connected_subtext);
+        // let devices = screen.add_paired_devices_menu(paired_devices,
+        // paired_device_indices);
+        let pair_and_connect =
+            screen.add_pair_and_connect_menu(paired_devices, paired_device_indices);
 
-        let root =
-            screen.add_root_menu(failed_backup, pair_and_connect, settings, connected_subtext);
+        let root = screen.add_root_menu(
+            failed_backup,
+            pin_unset,
+            pair_and_connect,
+            settings,
+            connected_subtext,
+        );
 
         screen.set_active_subscreen(root);
 
         Ok(screen)
     }
 
-    fn add_paired_devices_menu(
+    fn add_pair_and_connect_menu(
         &mut self,
         paired_devices: Vec<TString<'static>, 1>,
         paired_device_indices: Vec<usize, 1>,
@@ -217,47 +254,61 @@ impl<'a> DeviceMenuScreen<'a> {
             let mut item_device = MenuItem::new(*device, Some(Action::GoTo(idx)));
             // TODO: this should be a boolean feature of the device
             item_device.with_subtext(Some((
-                "Connected".into(),
+                TR::words__connected.into(),
                 Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
             )));
             unwrap!(items.push(item_device));
         }
 
-        let submenu_index = self.add_submenu(Submenu::new(items));
-        self.add_subscreen(Subscreen::Submenu(submenu_index))
-    }
-
-    fn add_pair_and_connect_menu(
-        &mut self,
-        manage_devices_index: usize,
-        connected_subtext: Option<TString<'static>>,
-    ) -> usize {
-        let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
-        let mut manage_paired_item = MenuItem::new(
-            "Manage paired devices".into(),
-            Some(Action::GoTo(manage_devices_index)),
-        );
-        manage_paired_item.with_subtext(
-            connected_subtext.map(|t| (t, Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN))),
-        );
-        unwrap!(items.push(manage_paired_item));
         unwrap!(items.push(MenuItem::new(
-            "Pair new device".into(),
+            TR::ble__pair_new.into(),
             Some(Action::Return(DeviceMenuMsg::DevicePair)),
         )));
+        let mut forget_all_item = MenuItem::new(
+            TR::ble__forget_all.into(),
+            Some(Action::Return(DeviceMenuMsg::DeviceDisconnectAll)),
+        );
+        forget_all_item.with_stylesheet(MENU_ITEM_WARNING);
+        unwrap!(items.push(forget_all_item));
 
         let submenu_index = self.add_submenu(Submenu::new(items));
         self.add_subscreen(Subscreen::Submenu(submenu_index))
     }
 
-    fn add_settings_menu(&mut self, security_index: usize, device_index: usize) -> usize {
+    fn add_settings_menu(
+        &mut self,
+        bluetooth: Option<bool>,
+        security_index: Option<usize>,
+        device_index: usize,
+    ) -> usize {
         let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
+
+        if let Some(bluetooth) = bluetooth {
+            let mut bluetooth_item = MenuItem::new(
+                TR::words__bluetooth.into(),
+                Some(Action::Return(DeviceMenuMsg::Bluetooth)),
+            );
+            let subtext = if bluetooth {
+                (
+                    TR::words__on.into(),
+                    Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
+                )
+            } else {
+                (TR::words__off.into(), None)
+            };
+            bluetooth_item.with_subtext(Some(subtext));
+            unwrap!(items.push(bluetooth_item));
+        }
+
+        if let Some(security_index) = security_index {
+            unwrap!(items.push(MenuItem::new(
+                TR::words__security.into(),
+                Some(Action::GoTo(security_index))
+            )));
+        }
+
         unwrap!(items.push(MenuItem::new(
-            "Security".into(),
-            Some(Action::GoTo(security_index))
-        )));
-        unwrap!(items.push(MenuItem::new(
-            "Device".into(),
+            TR::words__device.into(),
             Some(Action::GoTo(device_index))
         )));
 
@@ -265,16 +316,64 @@ impl<'a> DeviceMenuScreen<'a> {
         self.add_subscreen(Subscreen::Submenu(submenu_index))
     }
 
-    fn add_security_menu(&mut self) -> usize {
+    fn add_security_menu(
+        &mut self,
+        pin_code: Option<bool>,
+        auto_lock_delay: Option<TString<'static>>,
+        wipe_code: Option<bool>,
+        check_backup: bool,
+    ) -> usize {
         let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
-        unwrap!(items.push(MenuItem::new(
-            "Check backup".into(),
-            Some(Action::Return(DeviceMenuMsg::CheckBackup)),
-        )));
-        unwrap!(items.push(MenuItem::new(
-            "Wipe device".into(),
-            Some(Action::Return(DeviceMenuMsg::WipeDevice))
-        )));
+
+        if let Some(pin_code) = pin_code {
+            let mut pin_code_item = MenuItem::new(
+                "PIN code".into(),
+                Some(Action::Return(DeviceMenuMsg::PinCode)),
+            );
+            let subtext = if pin_code {
+                (
+                    TR::words__on.into(),
+                    Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
+                )
+            } else {
+                (TR::words__off.into(), None)
+            };
+            pin_code_item.with_subtext(Some(subtext));
+            unwrap!(items.push(pin_code_item));
+        }
+
+        if let Some(auto_lock_delay) = auto_lock_delay {
+            let mut auto_lock_delay_item = MenuItem::new(
+                TR::auto_lock__title.into(),
+                Some(Action::Return(DeviceMenuMsg::AutoLockDelay)),
+            );
+            auto_lock_delay_item.with_subtext(Some((auto_lock_delay, None)));
+            unwrap!(items.push(auto_lock_delay_item));
+        }
+
+        if let Some(wipe_code) = wipe_code {
+            let mut wipe_code_item = MenuItem::new(
+                "Wipe code".into(),
+                Some(Action::Return(DeviceMenuMsg::WipeCode)),
+            );
+            let subtext = if wipe_code {
+                (
+                    TR::words__on.into(),
+                    Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
+                )
+            } else {
+                (TR::words__off.into(), None)
+            };
+            wipe_code_item.with_subtext(Some(subtext));
+            unwrap!(items.push(wipe_code_item));
+        }
+
+        if check_backup {
+            unwrap!(items.push(MenuItem::new(
+                TR::reset__check_backup_title.into(),
+                Some(Action::Return(DeviceMenuMsg::CheckBackup)),
+            )));
+        }
 
         let submenu_index = self.add_submenu(Submenu::new(items));
         self.add_subscreen(Subscreen::Submenu(submenu_index))
@@ -284,30 +383,68 @@ impl<'a> DeviceMenuScreen<'a> {
         &mut self,
         device_name: TString<'static>,
         about_index: usize,
-        auto_lock_delay: TString<'static>,
+        screen_brightness: Option<TString<'static>>,
+        haptic_feedback: Option<bool>,
+        led: Option<bool>,
     ) -> usize {
         let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
-        let mut item_device_name = MenuItem::new("Name".into(), None);
+        let mut item_device_name = MenuItem::new(TR::words__name.into(), None);
         item_device_name.with_subtext(Some((device_name, None)));
         unwrap!(items.push(item_device_name));
-        unwrap!(items.push(MenuItem::new(
-            "Screen brightness".into(),
-            Some(Action::Return(DeviceMenuMsg::ScreenBrightness)),
-        )));
 
-        if has_pin() {
-            let mut autolock_delay_item = MenuItem::new(
-                "Auto-lock delay".into(),
-                Some(Action::Return(DeviceMenuMsg::AutoLockDelay)),
+        if let Some(brightness) = screen_brightness {
+            let brightness_item = MenuItem::new(
+                brightness,
+                Some(Action::Return(DeviceMenuMsg::ScreenBrightness)),
             );
-            autolock_delay_item.with_subtext(Some((auto_lock_delay, None)));
-            unwrap!(items.push(autolock_delay_item));
+            unwrap!(items.push(brightness_item));
+        }
+
+        if let Some(haptic_feedback) = haptic_feedback {
+            let mut haptic_item = MenuItem::new(
+                TR::haptic_feedback__title.into(),
+                Some(Action::Return(DeviceMenuMsg::HapticFeedback)),
+            );
+            let subtext = if haptic_feedback {
+                (
+                    TR::words__on.into(),
+                    Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
+                )
+            } else {
+                (TR::words__off.into(), None)
+            };
+            haptic_item.with_subtext(Some(subtext));
+            unwrap!(items.push(haptic_item));
+        }
+
+        if let Some(led) = led {
+            let mut led_item = MenuItem::new(
+                TR::words__led.into(),
+                Some(Action::Return(DeviceMenuMsg::Led)),
+            );
+            let subtext = if led {
+                (
+                    TR::words__on.into(),
+                    Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
+                )
+            } else {
+                (TR::words__off.into(), None)
+            };
+            led_item.with_subtext(Some(subtext));
+            unwrap!(items.push(led_item));
         }
 
         unwrap!(items.push(MenuItem::new(
-            "About".into(),
+            TR::words__about.into(),
             Some(Action::GoTo(about_index))
         )));
+
+        let mut wipe_device_item = MenuItem::new(
+            TR::wipe__title.into(),
+            Some(Action::Return(DeviceMenuMsg::WipeDevice)),
+        );
+        wipe_device_item.with_stylesheet(MENU_ITEM_WARNING);
+        unwrap!(items.push(wipe_device_item));
 
         let submenu_index = self.add_submenu(Submenu::new(items));
         self.add_subscreen(Subscreen::Submenu(submenu_index))
@@ -316,6 +453,7 @@ impl<'a> DeviceMenuScreen<'a> {
     fn add_root_menu(
         &mut self,
         failed_backup: bool,
+        pin_unset: bool,
         pair_and_connect_index: usize,
         settings_index: usize,
         connected_subtext: Option<TString<'static>>,
@@ -323,15 +461,24 @@ impl<'a> DeviceMenuScreen<'a> {
         let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
         if failed_backup {
             let mut item_backup_failed = MenuItem::new(
-                "Backup failed".into(),
+                TR::homescreen__title_backup_failed.into(),
                 Some(Action::Return(DeviceMenuMsg::BackupFailed)),
             );
-            item_backup_failed.with_subtext(Some(("Review".into(), None)));
-            item_backup_failed.with_stylesheet(MENU_ITEM_TITLE_STYLE_SHEET);
+            item_backup_failed.with_subtext(Some((TR::words__review.into(), None)));
+            item_backup_failed.with_stylesheet(MENU_ITEM_ERROR);
             unwrap!(items.push(item_backup_failed));
         }
+        if pin_unset {
+            let mut item_pin_unset = MenuItem::new(
+                TR::homescreen__title_pin_not_set.into(),
+                Some(Action::Return(DeviceMenuMsg::PinCode)),
+            );
+            item_pin_unset.with_subtext(Some((TR::words__review.into(), None)));
+            item_pin_unset.with_stylesheet(MENU_ITEM_LIGHT_WARNING);
+            unwrap!(items.push(item_pin_unset));
+        }
         let mut item_pair_and_connect = MenuItem::new(
-            "Pair & connect".into(),
+            TR::ble__pair_title.into(),
             Some(Action::GoTo(pair_and_connect_index)),
         );
         item_pair_and_connect.with_subtext(
@@ -339,7 +486,7 @@ impl<'a> DeviceMenuScreen<'a> {
         );
         unwrap!(items.push(item_pair_and_connect));
         unwrap!(items.push(MenuItem::new(
-            "Settings".into(),
+            TR::words__settings.into(),
             Some(Action::GoTo(settings_index)),
         )));
 
@@ -399,12 +546,12 @@ impl<'a> DeviceMenuScreen<'a> {
                 let mut menu = VerticalMenu::empty().with_separators();
                 menu.item(Button::new_menu_item(device, theme::menu_item_title()));
                 menu.item(Button::new_menu_item(
-                    "Disconnect".into(),
+                    TR::words__disconnect.into(),
                     theme::menu_item_title_red(),
                 ));
                 *self.active_screen.deref_mut() = ActiveScreen::Menu(
                     VerticalMenuScreen::new(menu).with_header(
-                        Header::new("Manage".into())
+                        Header::new(TR::words__manage.into())
                             .with_close_button()
                             .with_left_button(
                                 Button::with_icon(theme::ICON_CHEVRON_LEFT),
@@ -414,14 +561,25 @@ impl<'a> DeviceMenuScreen<'a> {
                 );
             }
             Subscreen::AboutScreen => {
-                let about_content = Paragraphs::new([
-                    Paragraph::new(&theme::firmware::TEXT_REGULAR, "Firmware version"),
-                    Paragraph::new(&theme::firmware::TEXT_REGULAR, self.firmware_version),
-                ]);
-
                 *self.active_screen.deref_mut() = ActiveScreen::About(
-                    TextScreen::new(about_content)
-                        .with_header(Header::new("About".into()).with_close_button()),
+                    TextScreen::new(
+                        PropsList::new(
+                            self.about_items,
+                            &theme::TEXT_SMALL_LIGHT,
+                            &theme::TEXT_MONO_MEDIUM_LIGHT,
+                            &theme::TEXT_MONO_MEDIUM_LIGHT,
+                        )
+                        .unwrap_or_else(|_| {
+                            unwrap!(PropsList::empty(
+                                &theme::TEXT_SMALL_LIGHT,
+                                &theme::TEXT_MONO_LIGHT,
+                                &theme::TEXT_MONO_LIGHT,
+                            ))
+                        })
+                        .into_paragraphs()
+                        .with_placement(LinearPlacement::vertical()),
+                    )
+                    .with_header(Header::new(TR::words__about.into()).with_close_button()),
                 );
             }
         }
@@ -466,7 +624,7 @@ impl<'a> DeviceMenuScreen<'a> {
     }
 }
 
-impl<'a> Component for DeviceMenuScreen<'a> {
+impl Component for DeviceMenuScreen {
     type Msg = DeviceMenuMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -534,8 +692,20 @@ impl<'a> Component for DeviceMenuScreen<'a> {
 }
 
 #[cfg(feature = "ui_debug")]
-impl<'a> crate::trace::Trace for DeviceMenuScreen<'a> {
+impl crate::trace::Trace for DeviceMenuScreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("DeviceMenuScreen");
+
+        match self.active_screen.deref() {
+            ActiveScreen::Menu(ref screen) => {
+                t.child("Menu", screen);
+            }
+            ActiveScreen::About(ref screen) => {
+                t.child("About", screen);
+            }
+            ActiveScreen::Empty => {
+                t.string("ActiveScreen", "None".into());
+            }
+        }
     }
 }
