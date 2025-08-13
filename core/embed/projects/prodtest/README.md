@@ -662,8 +662,8 @@ Writes the X.509 device attestation certificate issued by the Trezor Company for
 
 Example:
 ```
-secrets-certdev-write
-OK <hexadecimal string>
+secrets-certdev-write <hexadecimal string>
+OK
 ```
 
 ### secrets-certdev-read
