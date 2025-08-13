@@ -27,6 +27,12 @@
 
 #include <libtropic.h>
 
+#ifdef TREZOR_EMULATOR
+#include <arpa/inet.h>
+#include <libtropic/hal/port/unix/lt_port_unix_tcp.h>
+#include <time.h>
+#endif
+
 #include "ed25519-donna/ed25519.h"
 #include "memzero.h"
 
@@ -36,6 +42,9 @@ typedef struct {
   bool initialized;
   bool sec_chan_established;
   lt_handle_t handle;
+#ifdef TREZOR_EMULATOR
+  lt_dev_unix_tcp_t device;
+#endif
 } tropic_driver_t;
 
 static tropic_driver_t g_tropic_driver = {0};
@@ -47,12 +56,18 @@ bool tropic_init(void) {
     return true;
   }
 
-  curve25519_key tropic_pubkey = {0};
-  curve25519_key trezor_privkey = {0};
+#ifdef TREZOR_EMULATOR
+  drv->device.addr = inet_addr("127.0.0.1");
+  drv->device.port = 28992;
+  drv->handle.l2.device = &drv->device;
+#endif
 
   if (lt_init(&drv->handle) != LT_OK) {
     goto cleanup;
   }
+
+  curve25519_key tropic_pubkey = {0};
+  curve25519_key trezor_privkey = {0};
 
   secbool pubkey_ok = secret_key_tropic_public(tropic_pubkey);
   secbool privkey_ok = secret_key_tropic_pairing_privileged(trezor_privkey);
