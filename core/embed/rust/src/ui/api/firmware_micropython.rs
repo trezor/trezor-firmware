@@ -936,6 +936,7 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
 extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let failed_backup: bool = kwargs.get(Qstr::MP_QSTR_failed_backup)?.try_into()?;
+        let pin_unset: bool = kwargs.get(Qstr::MP_QSTR_pin_unset)?.try_into()?;
         let bluetooth: Option<bool> = kwargs.get(Qstr::MP_QSTR_bluetooth)?.try_into_option()?;
         let device_name: TString = kwargs.get(Qstr::MP_QSTR_device_name)?.try_into()?;
         let about_items: Obj = kwargs.get(Qstr::MP_QSTR_about_items)?;
@@ -956,6 +957,7 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
         let led: Option<bool> = kwargs.get(Qstr::MP_QSTR_led)?.try_into_option()?;
         let layout = ModelUI::show_device_menu(
             failed_backup,
+            pin_unset,
             bluetooth,
             device_name,
             about_items,
@@ -1884,6 +1886,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def show_device_menu(
     ///     *,
     ///     failed_backup: bool,
+    ///     pin_unset: bool,
     ///     bluetooth: bool | None,
     ///     device_name: str,
     ///     about_items: list[tuple[str | None, str | bytes | None, bool | None]],

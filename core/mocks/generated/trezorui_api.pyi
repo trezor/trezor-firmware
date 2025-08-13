@@ -610,6 +610,7 @@ def show_homescreen(
 def show_device_menu(
     *,
     failed_backup: bool,
+    pin_unset: bool,
     bluetooth: bool | None,
     device_name: str,
     about_items: list[tuple[str | None, str | bytes | None, bool | None]],

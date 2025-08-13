@@ -353,6 +353,7 @@ pub trait FirmwareUI {
     #[allow(clippy::too_many_arguments)]
     fn show_device_menu(
         failed_backup: bool,
+        pin_unset: bool,
         bluetooth: Option<bool>,
         device_name: TString<'static>,
         about_items: Obj,

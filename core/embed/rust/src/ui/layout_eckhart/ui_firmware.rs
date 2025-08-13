@@ -1180,6 +1180,7 @@ impl FirmwareUI for UIEckhart {
 
     fn show_device_menu(
         failed_backup: bool,
+        pin_unset: bool,
         bluetooth: Option<bool>,
         device_name: TString<'static>,
         about_items: Obj,
@@ -1194,6 +1195,7 @@ impl FirmwareUI for UIEckhart {
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let layout = RootComponent::new(DeviceMenuScreen::new(
             failed_backup,
+            pin_unset,
             bluetooth,
             device_name,
             about_items,

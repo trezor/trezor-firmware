@@ -995,6 +995,7 @@ impl FirmwareUI for UIDelizia {
 
     fn show_device_menu(
         _failed_backup: bool,
+        _pin_unset: bool,
         _bluetooth: Option<bool>,
         _device_name: TString<'static>,
         _about_items: Obj,

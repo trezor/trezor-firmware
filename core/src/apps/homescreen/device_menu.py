@@ -18,6 +18,7 @@ async def handle_device_menu() -> None:
     failed_backup = (
         storage_device.is_initialized() and storage_device.unfinished_backup()
     )
+    pin_unset = storage_device.is_initialized() and not config.has_pin()
     # MOCK DATA
     paired_devices = ["Trezor Suite"] if ble.is_connected() else []
     # ###
@@ -47,6 +48,7 @@ async def handle_device_menu() -> None:
     menu_result = await interact(
         trezorui_api.show_device_menu(
             failed_backup=failed_backup,
+            pin_unset=pin_unset,
             device_name=device_name,
             about_items=about_items,
             paired_devices=paired_devices,
@@ -134,6 +136,12 @@ async def handle_device_menu() -> None:
                 type=RecoveryType.DryRun,
             )
         )
+    elif menu_result is DeviceMenuResult.BackupFailed:
+        from apps.management.backup_device import perform_backup
+
+        assert storage_device.unfinished_backup()
+        # If the backup failed, we can only perform a repeated backup.
+        await perform_backup(is_repeated_backup=True)
 
     elif menu_result is DeviceMenuResult.HapticFeedback:
         from trezor.messages import ApplySettings

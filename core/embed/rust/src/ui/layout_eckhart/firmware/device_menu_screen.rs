@@ -84,6 +84,7 @@ struct MenuItem {
     action: Option<Action>,
 }
 const MENU_ITEM_NORMAL: &ButtonStyleSheet = &theme::menu_item_title();
+const MENU_ITEM_LIGHT_WARNING: &ButtonStyleSheet = &theme::menu_item_title_yellow();
 const MENU_ITEM_WARNING: &ButtonStyleSheet = &theme::menu_item_title_orange();
 const MENU_ITEM_ERROR: &ButtonStyleSheet = &theme::menu_item_title_red();
 
@@ -176,6 +177,7 @@ impl DeviceMenuScreen {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         failed_backup: bool,
+        pin_unset: bool,
         bluetooth: Option<bool>,
         device_name: TString<'static>,
         about_items: Obj,
@@ -229,8 +231,13 @@ impl DeviceMenuScreen {
         let pair_and_connect =
             screen.add_pair_and_connect_menu(paired_devices, paired_device_indices);
 
-        let root =
-            screen.add_root_menu(failed_backup, pair_and_connect, settings, connected_subtext);
+        let root = screen.add_root_menu(
+            failed_backup,
+            pin_unset,
+            pair_and_connect,
+            settings,
+            connected_subtext,
+        );
 
         screen.set_active_subscreen(root);
 
@@ -446,6 +453,7 @@ impl DeviceMenuScreen {
     fn add_root_menu(
         &mut self,
         failed_backup: bool,
+        pin_unset: bool,
         pair_and_connect_index: usize,
         settings_index: usize,
         connected_subtext: Option<TString<'static>>,
@@ -459,6 +467,15 @@ impl DeviceMenuScreen {
             item_backup_failed.with_subtext(Some((TR::words__review.into(), None)));
             item_backup_failed.with_stylesheet(MENU_ITEM_ERROR);
             unwrap!(items.push(item_backup_failed));
+        }
+        if pin_unset {
+            let mut item_pin_unset = MenuItem::new(
+                TR::homescreen__title_pin_not_set.into(),
+                Some(Action::Return(DeviceMenuMsg::PinCode)),
+            );
+            item_pin_unset.with_subtext(Some((TR::words__review.into(), None)));
+            item_pin_unset.with_stylesheet(MENU_ITEM_LIGHT_WARNING);
+            unwrap!(items.push(item_pin_unset));
         }
         let mut item_pair_and_connect = MenuItem::new(
             TR::ble__pair_title.into(),
