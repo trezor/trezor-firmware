@@ -75,7 +75,9 @@ secbool monoctr_write(monoctr_type_t type, uint8_t value) {
 
   for (int i = 0; i < value; i++) {
     uint32_t data[4] = {0};
-    secret_write((uint8_t *)data, offset + i * 16, 16);
+    if (sectrue != secret_write((uint8_t *)data, offset + i * 16, 16)) {
+      return secfalse;
+    }
   }
 
   return sectrue;

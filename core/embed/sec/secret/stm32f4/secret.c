@@ -84,18 +84,24 @@ void secret_unlock_bootloader(void) { secret_erase(); }
 void secret_write_header(void) {
   uint8_t header[SECRET_HEADER_LEN] = {0};
   memcpy(header, SECRET_HEADER_MAGIC, SECRET_HEADER_MAGIC_LEN);
-  secret_write(header, SECRET_HEADER_OFFSET, SECRET_HEADER_LEN);
+  ensure(secret_write(header, SECRET_HEADER_OFFSET, SECRET_HEADER_LEN),
+         "secret write header failed");
 }
 
-void secret_write(const uint8_t* data, uint32_t offset, uint32_t len) {
+secbool secret_write(const uint8_t* data, uint32_t offset, uint32_t len) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
   ensure(flash_unlock_write(), "secret write");
   for (int i = 0; i < len; i++) {
-    ensure(flash_area_write_byte(&SECRET_AREA, offset + i, data[i]),
-           "secret write");
+    if (sectrue != flash_area_write_byte(&SECRET_AREA, offset + i, data[i])) {
+      ensure(flash_lock_write(), "secret write");
+      mpu_restore(mpu_mode);
+      return secfalse;
+    }
   }
   ensure(flash_lock_write(), "secret write");
   mpu_restore(mpu_mode);
+
+  return sectrue;
 }
 
 secbool secret_read(uint8_t* data, uint32_t offset, uint32_t len) {
@@ -152,8 +158,7 @@ secbool secret_key_set(uint8_t slot, const uint8_t* key, size_t len) {
 
   secret_erase();
   secret_write_header();
-  secret_write(key, offset, len);
-  return sectrue;
+  return secret_write(key, offset, len);
 }
 
 secbool secret_key_get(uint8_t slot, uint8_t* dest, size_t len) {

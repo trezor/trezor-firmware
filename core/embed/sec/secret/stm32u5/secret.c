@@ -127,7 +127,8 @@ static void secret_erase(void) {
 static void secret_write_header(void) {
   uint8_t header[SECRET_HEADER_LEN] = {0};
   memcpy(header, SECRET_HEADER_MAGIC, SECRET_HEADER_MAGIC_LEN);
-  secret_write(header, SECRET_HEADER_OFFSET, SECRET_HEADER_LEN);
+  ensure(secret_write(header, SECRET_HEADER_OFFSET, SECRET_HEADER_LEN),
+         "secret write header failed");
 }
 
 static secbool secret_ensure_initialized(void) {
@@ -139,16 +140,20 @@ static secbool secret_ensure_initialized(void) {
   return sectrue;
 }
 
-void secret_write(const uint8_t *data, uint32_t offset, uint32_t len) {
+secbool secret_write(const uint8_t *data, uint32_t offset, uint32_t len) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
   ensure(flash_unlock_write(), "secret write");
   for (int i = 0; i < len / 16; i++) {
-    ensure(flash_area_write_quadword(&SECRET_AREA, offset + (i * 16),
-                                     (uint32_t *)&data[(i * 16)]),
-           "secret write");
+    if (sectrue != flash_area_write_quadword(&SECRET_AREA, offset + (i * 16),
+                                             (uint32_t *)&data[(i * 16)])) {
+      ensure(flash_lock_write(), "secret write");
+      mpu_restore(mpu_mode);
+      return secfalse;
+    }
   }
   ensure(flash_lock_write(), "secret write");
   mpu_restore(mpu_mode);
+  return sectrue;
 }
 
 secbool secret_read(uint8_t *data, uint32_t offset, uint32_t len) {
@@ -327,7 +332,10 @@ secbool secret_key_set(uint8_t slot, const uint8_t *key, size_t len) {
       secure_aes_ecb_encrypt_hw(key, len, secret_enc, SECURE_AES_KEY_DHUK_SP)) {
     return secfalse;
   }
-  secret_write(secret_enc, offset, len);
+  if (sectrue != secret_write(secret_enc, offset, len)) {
+    memzero(secret_enc, sizeof(secret_enc));
+    return secfalse;
+  }
   memzero(secret_enc, sizeof(secret_enc));
   secret_key_cache(slot);
   return sectrue;
@@ -385,7 +393,7 @@ static void secret_key_erase(uint8_t slot) {
   uint32_t offset = secret_get_slot_offset(slot);
   uint32_t slot_len = secret_get_slot_len(slot);
 
-  secret_write(value, offset, slot_len);
+  ensure(secret_write(value, offset, slot_len), "secret erase failed");
 }
 
 // Provision the secret BHK from the secret storage to the BHK register
@@ -499,7 +507,7 @@ static secbool secret_keys_present_any(void) {
 #endif
 
 // return sectrue if at least one key slot is writable
-static secbool secret_keys_writable(void) {
+__attribute__((unused)) static secbool secret_keys_writable(void) {
   secbool result = secfalse;
 
   for (uint8_t i = 0; i < SECRET_NUM_KEY_SLOTS; i++) {
@@ -542,6 +550,45 @@ void secret_unlock_bootloader(void) {
 
 #endif
 
+#ifdef SECRET_LOCK_SLOT_OFFSET
+
+secbool secret_lock(void) {
+  uint8_t lock_data[SECRET_LOCK_SLOT_LEN] = {0};
+  return secret_write(lock_data, SECRET_LOCK_SLOT_OFFSET, sizeof(lock_data));
+}
+
+secbool secret_is_locked(void) {
+  uint8_t *header_data =
+      (uint8_t *)flash_area_get_address(&SECRET_AREA, 0, SECRET_HEADER_LEN);
+
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SECRET);
+  uint16_t zero_count = 0;
+  for (int i = 0; i < SECRET_HEADER_LEN; i++) {
+    // 0 is returned when the secret sector is inaccessible
+    if (header_data[i] == 0) {
+      zero_count++;
+    }
+  }
+  mpu_restore(mpu_mode);
+
+  if (zero_count == SECRET_HEADER_LEN) {
+    return sectrue;
+  }
+
+  uint8_t lock_data[SECRET_LOCK_SLOT_LEN] = {0};
+  secret_read(lock_data, SECRET_LOCK_SLOT_OFFSET, SECRET_LOCK_SLOT_LEN);
+
+  for (int i = 0; i < SECRET_LOCK_SLOT_LEN; i++) {
+    // 0xFF being the default value of the flash memory (before any write)
+    if (lock_data[i] != 0xFF) {
+      return sectrue;
+    }
+  }
+
+  return secfalse;
+}
+#endif
+
 void secret_prepare_fw(secbool allow_run_with_secret,
                        secbool allow_provisioning_access) {
   /**
@@ -567,11 +614,20 @@ void secret_prepare_fw(secbool allow_run_with_secret,
   secret_bhk_lock();
   secret_keys_uncache();
   secbool secret_present = secret_keys_present();
+
+#ifdef SECRET_LOCK_SLOT_OFFSET
+  secbool secret_locked = secret_is_locked();
+#else
+  // Without the lock record, we determine the lock status by the presence of
+  // keys. When none of the keys is writable, or all keys are present, it means
+  // the sector is locked.
   secbool secret_writable = secret_keys_writable();
-  if (sectrue == allow_provisioning_access && sectrue == secret_writable &&
-      secfalse == secret_present) {
-    // Secret keys are not present and they are writable.
-    // This means the U5 chip is unprovisioned.
+  secbool secret_locked =
+      secbool_or(secbool_not(secret_writable), secret_present);
+#endif
+
+  if (sectrue == allow_provisioning_access && secfalse == secret_locked) {
+    // U5 chip is unprovisioned.
     // Allow trusted firmware (prodtest presumably) to access the secret sector,
     // early return here.
     secret_keys_cache();

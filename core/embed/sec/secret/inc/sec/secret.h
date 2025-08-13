@@ -29,8 +29,10 @@
  * @param data   Pointer to the data to write.
  * @param offset Offset in the storage to begin writing.
  * @param len    Number of bytes to write.
+ *
+ * @return secbool sectrue on successful write, secfalse otherwise.
  */
-void secret_write(const uint8_t* data, uint32_t offset, uint32_t len);
+secbool secret_write(const uint8_t* data, uint32_t offset, uint32_t len);
 
 /**
  * @brief Reads data from the secret storage.
@@ -113,6 +115,21 @@ void secret_init(void);
  *
  */
 void secret_safety_erase(void);
+
+/**
+ * Locks the secret sector, making it unavailable for further writing from
+ * prodtest.
+ *
+ * @return sectrue if the lock was successful
+ */
+secbool secret_lock(void);
+
+/**
+ * Checks if the secret storage is locked.
+ *
+ * @return sectrue if locked.
+ */
+secbool secret_is_locked(void);
 
 #ifdef LOCKABLE_BOOTLOADER
 

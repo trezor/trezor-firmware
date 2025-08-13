@@ -39,6 +39,13 @@ static inline secbool secbool_and(secbool a, secbool b) {
   return secfalse;
 }
 
+static inline secbool secbool_not(secbool a) {
+  if (sectrue == a) {
+    return secfalse;
+  }
+  return sectrue;
+}
+
 #ifndef __wur
 #define __wur __attribute__((warn_unused_result))
 #endif
