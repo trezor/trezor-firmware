@@ -60,6 +60,12 @@ Pillow = ">=11"
 # crypto
 ecdsa = "^0.16"
 pyasn1 = "*"
+noiseprotocol = ">=0.3.1 <0.4"
+
+# MCUBoot/nRF dependencies
+cbor2 = "5.6.5"
+intelhex = "2.3.0"
+imgtool = "2.2.0"
 
 # legacy
 setuptools = ">=24.2.0"
@@ -80,6 +86,7 @@ flake8-annotations = "^3.1.1"
 pyelftools = "^0.32"
 pytest-retry = "^1.7.0"
 slh-dsa = "^0.1.3"
+west = "^1.4.0"
 
 [tool.poetry.group.dev.dependencies]
 scan-build = "*"
