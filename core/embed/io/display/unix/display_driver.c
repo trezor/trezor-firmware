@@ -84,10 +84,9 @@ typedef struct {
 #endif
 
 #ifdef USE_HAPTIC
-  // Color of the haptic feedback
   uint32_t haptic_color;
   uint32_t haptic_expire_time;
-#endif
+#endif /* USE_HAPTIC */
 
 } display_driver_t;
 
@@ -98,7 +97,7 @@ static display_driver_t g_display_driver = {
 //!@# TODO get rid of this...
 int sdl_display_res_x = DISPLAY_RESX, sdl_display_res_y = DISPLAY_RESY;
 int sdl_touch_offset_x, sdl_touch_offset_y;
-int sdl_touch_x = 0, sdl_touch_y = 0;
+int sdl_touch_x = -1, sdl_touch_y = -1;
 
 static void display_exit_handler(void) {
   display_deinit(DISPLAY_RESET_CONTENT);
@@ -200,7 +199,7 @@ bool display_init(display_content_mode_t mode) {
 #ifdef USE_HAPTIC
   drv->haptic_color = 0;
   drv->haptic_expire_time = 0;
-#endif
+#endif /* USE_HAPTIC */
 
   gfx_bitblt_init();
 
@@ -465,15 +464,12 @@ void draw_haptic() {
   const int radius = 5;
 
 #ifdef USE_TOUCH
-
   int center_x = sdl_touch_x;
   int center_y = sdl_touch_y;
-
 #else
-
   int center_x = DISPLAY_RESX / 2;
   int center_y = DISPLAY_RESY + 20;
-#endif
+#endif /* USE_TOUCH */
 
   // Position based on background
   if (drv->background) {
@@ -496,7 +492,7 @@ void draw_haptic() {
   }
   SDL_SetRenderDrawColor(drv->renderer, 0, 0, 0, 255);
 }
-#endif  // USE_HAPTIC
+#endif /* USE_HAPTIC */
 
 void display_refresh(void) {
   display_driver_t *drv = &g_display_driver;
