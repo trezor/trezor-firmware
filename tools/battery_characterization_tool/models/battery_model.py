@@ -181,7 +181,7 @@ class BatteryModel:
         """
         Linear interpolation between two points and given x between them.
         (x1,y1) - First known point on the line
-        (x2,y2) - Secodnf known point on the line
+        (x2,y2) - Second known point on the line
         x - Interpolated value, following rule have to apply (x1 < x < x2)
         """
         a = (y2 - y1) / (x2 - x1)

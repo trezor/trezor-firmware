@@ -2,7 +2,7 @@ class DummyEstimator:
 
     def __init__(self, battery_model, label=None):
 
-        # Batery model consis of characterized battery data
+        # Battery model consists of characterized battery data
         self.name = "Dummy Estimator"
         if label is not None:
             self.name = self.name + ": " + label

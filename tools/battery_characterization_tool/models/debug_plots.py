@@ -33,9 +33,9 @@ def identify_r_int_debug_plot(
     time,
     vbat,
     ibat,
-    transition_indeces,
-    transition_indeces_m1,
-    transition_indeces_m2,
+    transition_indices,
+    transition_indices_m1,
+    transition_indices_m2,
     r_int,
     r_int_cons_indices,
     r_int_cons,
@@ -57,27 +57,27 @@ def identify_r_int_debug_plot(
 
     ax[1].plot(time_to_minutes(time), ibat, label="I_bat")
     ax[1].plot(
-        time_to_minutes(time[transition_indeces], time[0]),
-        ibat[transition_indeces],
+        time_to_minutes(time[transition_indices], time[0]),
+        ibat[transition_indices],
         "x",
         markersize=3,
         color="red",
         label="Load transitions",
     )
     ax[1].plot(
-        time_to_minutes(time[transition_indeces_m1], time[0]),
-        ibat[transition_indeces_m1],
+        time_to_minutes(time[transition_indices_m1], time[0]),
+        ibat[transition_indices_m1],
         "x",
         markersize=3,
         color="magenta",
         label="V_t1",
     )
     ax[1].plot(
-        time_to_minutes(time[transition_indeces_m2], time[0]),
-        ibat[transition_indeces_m2],
+        time_to_minutes(time[transition_indices_m2], time[0]),
+        ibat[transition_indices_m2],
         "x",
         markersize=3,
-        color="lime",
+        color="green",
         label="V_t2",
     )
     plot_general_config(
@@ -88,7 +88,7 @@ def identify_r_int_debug_plot(
     )
 
     ax[2].plot(
-        time_to_minutes(time[transition_indeces], time[0]),
+        time_to_minutes(time[transition_indices], time[0]),
         r_int,
         marker="o",
         markersize=3,
@@ -110,7 +110,7 @@ def identify_r_int_debug_plot(
     plot_general_config(ax[2], "R_int estimation", "Time [min]", "Resistance [ohms]")
 
 
-def identify_ocv_curve_debug_plot(time, vbat, ibat, ocv, ocv_curve_indeces, name=None):
+def identify_ocv_curve_debug_plot(time, vbat, ibat, ocv, ocv_curve_indices, name=None):
 
     fig, ax = plt.subplots(2, 1)
     fig_general_config(fig)
@@ -124,7 +124,7 @@ def identify_ocv_curve_debug_plot(time, vbat, ibat, ocv, ocv_curve_indeces, name
     ax[0].plot(time_to_minutes(time), vbat, label="vbat")
     plot_general_config(ax[0], "Open-circuit voltage", "Time [min]", "Voltage [V]")
 
-    for ix in ocv_curve_indeces:
+    for ix in ocv_curve_indices:
         ax[0].axvline(
             x=time_to_minutes(time[ix], time[0]),
             color="gray",

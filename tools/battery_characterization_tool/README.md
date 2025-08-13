@@ -62,7 +62,7 @@ The battery model identification script processes captured battery data from a s
 
 **Prerequisites before running:**
 
-- Add correctly formatted dataset to the `/dataset/datasets/` directory
+- Add a correctly formatted dataset to the `/dataset/datasets/` directory
 - Add a battery model configuration `.toml` file in `models/battery_models/`
 
 ### Dataset Structure

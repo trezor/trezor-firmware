@@ -25,7 +25,7 @@ console = ConsoleFormatter()
 
 
 def prompt_for_dataset() -> BatteryDataset:
-    """Promt user to select a dataset from a DATASET_DIRECTORY and load it
+    """Prompt user to select a dataset from a DATASET_DIRECTORY and load it
         into a BatteryDataset object.
     Returns:
         BatteryDataset: The selected dataset object.
@@ -239,7 +239,7 @@ def main():
 
     run_simulation(dataset, battery_model)
 
-    console.footer
+    console.footer()
 
 
 if __name__ == "__main__":

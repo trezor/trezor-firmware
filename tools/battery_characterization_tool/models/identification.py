@@ -53,7 +53,7 @@ def low_pass_ma_filter(x: np.ndarray, ma_len: int = 40) -> np.ndarray:
 def find_signal_transitions(x: np.ndarray, fir_len: int = 40) -> np.ndarray:
     """
     Use convolution with correlation filter of "step" shape to extract sharp transitions in x.
-    Returns vector of transition indeces.
+    Returns vector of transition indices.
     """
 
     corr_filter = np.concatenate(

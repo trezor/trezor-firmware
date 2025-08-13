@@ -15,7 +15,7 @@ class EkfEstimator:
         if label is not None:
             self.name = self.name + ": " + label
 
-        # Batery model consis of characterized battery data
+        # Battery model consists of characterized battery data
         self.bm = battery_model
 
         if R is None or Q is None or P_init is None:
