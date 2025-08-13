@@ -288,7 +288,7 @@ impl ActionBar {
                 haptic::play(HapticEffect::HoldToConfirm);
                 return Some(ActionBarMsg::Confirmed);
             }
-            (ButtonMsg::Clicked, false) | (ButtonMsg::LongPressed, true) => {
+            (ButtonMsg::Clicked, false) => {
                 return Some(ActionBarMsg::Confirmed);
             }
             _ => {}
