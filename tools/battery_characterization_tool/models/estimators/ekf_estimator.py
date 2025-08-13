@@ -94,7 +94,7 @@ class EkfEstimator:
             discharge_mode = False
 
         # Convert dt to seconds
-        dt_sec = dt / 1000.0
+        dt_sec = dt
 
         # State prediction (coulomb counting)
         x_k1_k = (

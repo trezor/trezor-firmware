@@ -498,8 +498,8 @@ def main():
         rows.append(
             [
                 f"{temp}°C",
-                f"{data['total_capacity_dischg'] * 1000:.2f} mAh",
-                f"{data['total_capacity_chg'] * 1000:.2f} mAh",
+                f"{data['total_capacity_dischg']:.2f} mAh",
+                f"{data['total_capacity_chg']:.2f} mAh",
                 f"{estimate_r_int(float(temp), r_int_rf_params) * 1000:.2f} mΩ",
             ]
         )

@@ -83,8 +83,8 @@ def coulomb_counter(time, ibat):
         if i == 0:
             continue
 
-        # Linear interpolation mAstime
-        curr_acc += abs((ibat[i - 1] + ibat[i]) / 2) * ((time[i] - time[i - 1]) / 1000)
+        # Linear interpolation [mAs]
+        curr_acc += abs((ibat[i - 1] + ibat[i]) / 2) * ((time[i] - time[i - 1]))
 
     # convert from mAs to mAh
     return curr_acc / 3600
@@ -119,9 +119,9 @@ def sample_ocv_curve(time, ocv, ibat, bat_capacity, num_of_samples, ascending=Fa
             if j == 0:
                 continue
 
-            # Interpolate the current
+            # Interpolate the current (mAs)
             cur_incr = ((ibat[idx - 1] + ibat[idx]) / 2) * (
-                (time[idx] - time[idx - 1]) / 1000
+                (time[idx] - time[idx - 1])
             )
             cusum += abs(cur_incr) / 3600
 

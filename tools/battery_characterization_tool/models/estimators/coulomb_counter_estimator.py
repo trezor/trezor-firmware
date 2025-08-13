@@ -32,7 +32,7 @@ class CoulombCounterEstimator:
 
         self.SoC -= (
             current_mA / (3600 * self.bm._total_capacity(temp_deg, discharge_mode))
-        ) * (dt / 1000)
+        ) * dt
         self.SoC = min(1, max(0, self.SoC))
 
         # Return SoC, covariance not tracked
