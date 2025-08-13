@@ -202,7 +202,9 @@ static secbool boot_sequence(secbool manufacturing_mode) {
 
     if (state.charging_status == PM_BATTERY_CHARGING) {
       // charing screen
+#ifdef USE_RGB_LED
       rgb_led_set_color(0x0000FF);
+#endif
     } else {
       if (!btn_down && !state.usb_connected && !state.wireless_connected) {
         // device in just intended to be turned off
@@ -215,10 +217,14 @@ static secbool boot_sequence(secbool manufacturing_mode) {
     }
   }
 
+#ifdef USE_RGB_LED
   rgb_led_set_color(0);
+#endif
 
   while (pm_turn_on() != PM_OK) {
+#ifdef USE_RGB_LED
     rgb_led_set_color(0x400000);
+#endif
     systick_delay_ms(1000);
     pm_hibernate();
     systick_delay_ms(1000);

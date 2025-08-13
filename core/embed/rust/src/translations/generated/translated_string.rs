@@ -1486,6 +1486,9 @@ pub enum TranslatedString {
     ble__all_forgotten = 1090,  // "All hosts have been forgotten."
     ble__connected_device = 1091,  // "connected device"
     ble__current_forgotten = 1092,  // "The host has been forgotten."
+    led__disable = 1093,  // "Disable LED?"
+    led__enable = 1094,  // "Enable LED?"
+    led__title = 1095,  // "LED"
 }
 
 impl TranslatedString {
@@ -3291,6 +3294,9 @@ impl TranslatedString {
             (Self::ble__all_forgotten, "All hosts have been forgotten."),
             (Self::ble__connected_device, "connected device"),
             (Self::ble__current_forgotten, "The host has been forgotten."),
+            (Self::led__disable, "Disable LED?"),
+            (Self::led__enable, "Enable LED?"),
+            (Self::led__title, "LED"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3954,6 +3960,9 @@ impl TranslatedString {
         (Qstr::MP_QSTR_language__changed, Self::language__changed),
         (Qstr::MP_QSTR_language__progress, Self::language__progress),
         (Qstr::MP_QSTR_language__title, Self::language__title),
+        (Qstr::MP_QSTR_led__disable, Self::led__disable),
+        (Qstr::MP_QSTR_led__enable, Self::led__enable),
+        (Qstr::MP_QSTR_led__title, Self::led__title),
         (Qstr::MP_QSTR_lockscreen__tap_to_connect, Self::lockscreen__tap_to_connect),
         (Qstr::MP_QSTR_lockscreen__tap_to_unlock, Self::lockscreen__tap_to_unlock),
         (Qstr::MP_QSTR_lockscreen__title_locked, Self::lockscreen__title_locked),

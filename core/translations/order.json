@@ -1091,5 +1091,8 @@
   "1089": "ble__forget_template",
   "1090": "ble__all_forgotten",
   "1091": "ble__connected_device",
-  "1092": "ble__current_forgotten"
+  "1092": "ble__current_forgotten",
+  "1093": "led__disable",
+  "1094": "led__enable",
+  "1095": "led__title"
 }

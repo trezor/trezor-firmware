@@ -66,8 +66,14 @@ async def handle_device_menu() -> None:
                 if (storage_device.is_initialized() and utils.USE_HAPTIC)
                 else None
             ),
-            led=None,  # TODO: implement LED setting
-            bluetooth=None,  # TODO: implement BLE setting
+            led=(
+                storage_device.get_rgb_led()
+                if (storage_device.is_initialized() and utils.USE_RGB_LED)
+                else None
+            ),
+            bluetooth=(
+                False if (utils.USE_BLE and False) else None
+            ),  # TODO: implement BLE setting
         ),
         "device_menu",
     )
@@ -156,8 +162,18 @@ async def handle_device_menu() -> None:
         )
 
     elif menu_result is DeviceMenuResult.Led:
+        from trezor import io
+        from trezor.ui.layouts import confirm_action
 
-        pass  # TODO: implement LED setting
+        enable = not storage_device.get_rgb_led()
+        await confirm_action(
+            "led__settings",
+            TR.led__title,
+            TR.led__enable if enable else TR.led__disable,
+        )
+
+        io.rgb_led.rgb_led_set_enabled(enable)
+        storage_device.set_rgb_led(enable)
 
     elif menu_result is DeviceMenuResult.Bluetooth:
         turned_on = ble.is_connected()
