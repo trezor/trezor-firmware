@@ -649,7 +649,7 @@ OK
 ```
 
 ### secrets-get-mcu-device-key
-Returns the device attestation key stored in MCU.
+Returns a cryptogram that encrypts and authenticates the device attestation public key stored in MCU. The commands `secrets-init` and `secure-channel-handshake-2` must be executed before calling this command.
 
 Example:
 ```
