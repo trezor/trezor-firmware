@@ -361,8 +361,11 @@ static void _librust_qstrs(void) {
   MP_QSTR_instructions__view_all_data;
   MP_QSTR_instructions_verb;
   MP_QSTR_interface;
+  MP_QSTR_is_connectable;
   MP_QSTR_is_connected;
   MP_QSTR_is_data;
+  MP_QSTR_is_pairing;
+  MP_QSTR_is_pairing_requested;
   MP_QSTR_is_type_of;
   MP_QSTR_items;
   MP_QSTR_joint__title;
