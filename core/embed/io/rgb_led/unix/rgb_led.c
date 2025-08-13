@@ -17,12 +17,64 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <trezor_rtl.h>
+
 #include <io/rgb_led.h>
 #include <io/unix/sdl_display.h>
 
 #ifdef KERNEL_MODE
-void rgb_led_init(void){};
-void rgb_led_deinit(void){};
-#endif
 
-void rgb_led_set_color(uint32_t color) { display_rgb_led(color); }
+// Driver state
+typedef struct {
+  bool initialized;
+  bool enabled;
+} rgb_led_driver_t;
+
+// RGB LED driver instance
+static rgb_led_driver_t g_rgb_led_driver = {
+    .initialized = true,
+    .enabled = false,
+};
+
+void rgb_led_init(void) {
+  rgb_led_driver_t *driver = &g_rgb_led_driver;
+
+  driver->initialized = true;
+  driver->enabled = true;
+}
+
+void rgb_led_deinit(void) {
+  rgb_led_driver_t *driver = &g_rgb_led_driver;
+  memset(driver, 0, sizeof(rgb_led_driver_t));
+}
+
+void rgb_led_set_enabled(bool enabled) {
+  rgb_led_driver_t *driver = &g_rgb_led_driver;
+
+  if (!driver->initialized) {
+    return;
+  }
+
+  driver->enabled = enabled;
+}
+
+bool rgb_led_get_enabled(void) {
+  rgb_led_driver_t *driver = &g_rgb_led_driver;
+
+  if (!driver->initialized) {
+    return false;
+  }
+
+  return driver->enabled;
+}
+
+void rgb_led_set_color(uint32_t color) {
+  rgb_led_driver_t *driver = &g_rgb_led_driver;
+  if (!driver->initialized || !driver->enabled) {
+    return;
+  }
+
+  display_rgb_led(color);
+}
+
+#endif /* KERNEL_MODE */

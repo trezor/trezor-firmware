@@ -944,12 +944,14 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
         let paired_devices: Vec<TString, 1> = util::iter_into_vec(paired_devices)?;
         let auto_lock_delay: TString<'static> =
             kwargs.get(Qstr::MP_QSTR_auto_lock_delay)?.try_into()?;
+        let led: Option<bool> = kwargs.get(Qstr::MP_QSTR_led)?.try_into_option()?;
         let layout = ModelUI::show_device_menu(
             failed_backup,
             firmware_version,
             device_name,
             paired_devices,
             auto_lock_delay,
+            led,
         )?;
         let layout_obj = LayoutObj::new_root(layout)?;
         Ok(layout_obj.into())
@@ -1882,6 +1884,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     device_name: str | None,
     ///     paired_devices: Iterable[str],
     ///     auto_lock_delay: str,
+    ///     led: bool | None,
     /// ) -> LayoutObj[UiResult | DeviceMenuResult | tuple[DeviceMenuResult, int]]:
     ///     """Show the device menu."""
     Qstr::MP_QSTR_show_device_menu => obj_fn_kw!(0, new_show_device_menu).as_obj(),
@@ -2085,5 +2088,6 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     ScreenBrightness: ClassVar[DeviceMenuResult]
     ///     AutoLockDelay: ClassVar[DeviceMenuResult]
     ///     DeviceName: ClassVar[DeviceMenuResult]
+    ///     Led: ClassVar[DeviceMenuResult]
     Qstr::MP_QSTR_DeviceMenuResult => DEVICE_MENU_RESULT.as_obj(),
 };

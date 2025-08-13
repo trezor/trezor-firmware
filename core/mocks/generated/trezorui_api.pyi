@@ -627,6 +627,7 @@ def show_device_menu(
     device_name: str | None,
     paired_devices: Iterable[str],
     auto_lock_delay: str,
+    led: bool | None,
 ) -> LayoutObj[UiResult | DeviceMenuResult | tuple[DeviceMenuResult, int]]:
     """Show the device menu."""
 
@@ -850,3 +851,4 @@ class DeviceMenuResult:
     ScreenBrightness: ClassVar[DeviceMenuResult]
     AutoLockDelay: ClassVar[DeviceMenuResult]
     DeviceName: ClassVar[DeviceMenuResult]
+    Led: ClassVar[DeviceMenuResult]

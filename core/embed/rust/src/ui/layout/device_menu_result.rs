@@ -15,6 +15,7 @@ pub static WIPE_DEVICE: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_B
 pub static SCREEN_BRIGHTNESS: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static AUTO_LOCK_DELAY: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static DEVICE_NAME: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static LED: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 
 // Create a DeviceMenuResult class that contains all result types
 static DEVICE_MENU_RESULT_TYPE: Type = obj_type! {
@@ -28,6 +29,7 @@ static DEVICE_MENU_RESULT_TYPE: Type = obj_type! {
         Qstr::MP_QSTR_ScreenBrightness => SCREEN_BRIGHTNESS.as_obj(),
         Qstr::MP_QSTR_AutoLockDelay => AUTO_LOCK_DELAY.as_obj(),
         Qstr::MP_QSTR_DeviceName => DEVICE_NAME.as_obj(),
+        Qstr::MP_QSTR_Led => LED.as_obj(),
     } },
 };
 

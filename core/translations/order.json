@@ -1078,5 +1078,11 @@
   "1076": "device_name__continue_with_empty_label",
   "1077": "device_name__enter",
   "1078": "regulatory_certification__title",
-  "1079": "words__name"
+  "1079": "words__name",
+  "1080": "led__disable",
+  "1081": "led__enable",
+  "1082": "led__title",
+  "1083": "words__led",
+  "1084": "words__off",
+  "1085": "words__on"
 }

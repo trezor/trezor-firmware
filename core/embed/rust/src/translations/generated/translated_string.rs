@@ -1461,6 +1461,12 @@ pub enum TranslatedString {
     device_name__enter = 1077,  // "Enter device name"
     regulatory_certification__title = 1078,  // "Regulatory certification"
     words__name = 1079,  // "Name"
+    led__disable = 1080,  // "Disable LED?"
+    led__enable = 1081,  // "Enable LED?"
+    led__title = 1082,  // "LED"
+    words__led = 1083,  // "LED"
+    words__off = 1084,  // "OFF"
+    words__on = 1085,  // "ON"
 }
 
 impl TranslatedString {
@@ -3241,6 +3247,12 @@ impl TranslatedString {
             (Self::device_name__enter, "Enter device name"),
             (Self::regulatory_certification__title, "Regulatory certification"),
             (Self::words__name, "Name"),
+            (Self::led__disable, "Disable LED?"),
+            (Self::led__enable, "Enable LED?"),
+            (Self::led__title, "LED"),
+            (Self::words__led, "LED"),
+            (Self::words__off, "OFF"),
+            (Self::words__on, "ON"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3898,6 +3910,9 @@ impl TranslatedString {
         (Qstr::MP_QSTR_language__changed, Self::language__changed),
         (Qstr::MP_QSTR_language__progress, Self::language__progress),
         (Qstr::MP_QSTR_language__title, Self::language__title),
+        (Qstr::MP_QSTR_led__disable, Self::led__disable),
+        (Qstr::MP_QSTR_led__enable, Self::led__enable),
+        (Qstr::MP_QSTR_led__title, Self::led__title),
         (Qstr::MP_QSTR_lockscreen__tap_to_connect, Self::lockscreen__tap_to_connect),
         (Qstr::MP_QSTR_lockscreen__tap_to_unlock, Self::lockscreen__tap_to_unlock),
         (Qstr::MP_QSTR_lockscreen__title_locked, Self::lockscreen__title_locked),
@@ -4656,10 +4671,13 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__instructions, Self::words__instructions),
         (Qstr::MP_QSTR_words__keep_it_safe, Self::words__keep_it_safe),
         (Qstr::MP_QSTR_words__know_what_your_doing, Self::words__know_what_your_doing),
+        (Qstr::MP_QSTR_words__led, Self::words__led),
         (Qstr::MP_QSTR_words__my_trezor, Self::words__my_trezor),
         (Qstr::MP_QSTR_words__name, Self::words__name),
         (Qstr::MP_QSTR_words__no, Self::words__no),
         (Qstr::MP_QSTR_words__not_recommended, Self::words__not_recommended),
+        (Qstr::MP_QSTR_words__off, Self::words__off),
+        (Qstr::MP_QSTR_words__on, Self::words__on),
         (Qstr::MP_QSTR_words__operation_cancelled, Self::words__operation_cancelled),
         (Qstr::MP_QSTR_words__outputs, Self::words__outputs),
         (Qstr::MP_QSTR_words__pay_attention, Self::words__pay_attention),

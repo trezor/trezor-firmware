@@ -1022,6 +1022,7 @@ impl FirmwareUI for UIDelizia {
         _device_name: Option<TString<'static>>,
         _paired_devices: heapless::Vec<TString<'static>, 1>,
         _auto_lock_delay: TString<'static>,
+        _led: Option<bool>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
             c"show_device_menu not supported",

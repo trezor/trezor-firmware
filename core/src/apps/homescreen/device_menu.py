@@ -61,6 +61,11 @@ async def handle_device_menu() -> None:
             firmware_version=firmware_version,
             device_name=device_name,
             auto_lock_delay=auto_lock_delay,
+            led=(
+                storage.device.get_rgb_led()
+                if (storage.device.is_initialized() and utils.USE_RGB_LED)
+                else None
+            ),
         ),
         "device_menu",
     )
@@ -102,6 +107,19 @@ async def handle_device_menu() -> None:
         )
         assert isinstance(label, str)
         await apply_settings(ApplySettings(label=label))
+    elif menu_result is DeviceMenuResult.Led:
+        from trezor import io
+        from trezor.ui.layouts import confirm_action
+
+        enable = not storage.device.get_rgb_led()
+        await confirm_action(
+            "led__settings",
+            TR.led__title,
+            TR.led__enable if enable else TR.led__disable,
+        )
+
+        io.rgb_led.rgb_led_set_enabled(enable)
+        storage.device.set_rgb_led(enable)
     elif isinstance(menu_result, tuple):
         # It's a tuple with (result_type, index)
         result_type, index = menu_result

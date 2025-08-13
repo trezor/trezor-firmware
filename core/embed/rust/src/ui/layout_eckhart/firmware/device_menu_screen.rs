@@ -25,10 +25,10 @@ use super::{
         constant::SCREEN,
         firmware::{
             Header, HeaderMsg, RegulatoryMsg, RegulatoryScreen, TextScreen, TextScreenMsg,
-            VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg, SHORT_MENU_ITEMS,
+            VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg, MEDIUM_MENU_ITEMS,
         },
     },
-    theme, ShortMenuVec,
+    theme, MediumMenuVec,
 };
 use heapless::Vec;
 
@@ -65,6 +65,7 @@ pub enum DeviceMenuMsg {
     DeviceName,
     ScreenBrightness,
     AutoLockDelay,
+    Led,
 
     // nothing selected
     Close,
@@ -104,11 +105,11 @@ impl MenuItem {
 
 struct Submenu {
     show_battery: bool,
-    items: Vec<MenuItem, SHORT_MENU_ITEMS>,
+    items: Vec<MenuItem, MEDIUM_MENU_ITEMS>,
 }
 
 impl Submenu {
-    pub fn new(items: Vec<MenuItem, SHORT_MENU_ITEMS>) -> Self {
+    pub fn new(items: Vec<MenuItem, MEDIUM_MENU_ITEMS>) -> Self {
         Self {
             show_battery: false,
             items,
@@ -141,7 +142,7 @@ enum Subscreen {
 // Used to preallocate memory for the largest enum variant
 #[allow(clippy::large_enum_variant)]
 enum ActiveScreen<'a> {
-    Menu(VerticalMenuScreen<ShortMenuVec>),
+    Menu(VerticalMenuScreen<MediumMenuVec>),
     About(TextScreen<Paragraphs<[Paragraph<'a>; 2]>>),
     Regulatory(RegulatoryScreen),
 
@@ -174,6 +175,7 @@ impl<'a> DeviceMenuScreen<'a> {
         // NB: we currently only support one device at a time.
         paired_devices: Vec<TString<'static>, 1>,
         auto_lock_delay: TString<'static>,
+        led: Option<bool>,
     ) -> Result<Self, Error> {
         let mut screen = Self {
             bounds: Rect::zero(),
@@ -188,7 +190,7 @@ impl<'a> DeviceMenuScreen<'a> {
         let about = screen.add_subscreen(Subscreen::AboutScreen);
         let regulatory = screen.add_subscreen(Subscreen::RegulatoryScreen);
         let security = screen.add_security_menu();
-        let device = screen.add_device_menu(device_name, regulatory, about, auto_lock_delay);
+        let device = screen.add_device_menu(device_name, regulatory, about, auto_lock_delay, led);
         let settings = screen.add_settings_menu(security, device);
 
         let is_connected = !paired_devices.is_empty(); // FIXME after BLE API has this
@@ -217,7 +219,7 @@ impl<'a> DeviceMenuScreen<'a> {
         paired_devices: Vec<TString<'static>, 1>,
         paired_device_indices: Vec<usize, 1>,
     ) -> usize {
-        let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
+        let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
         for (device, idx) in paired_devices.iter().zip(paired_device_indices) {
             let mut item_device = MenuItem::new(*device, Some(Action::GoTo(idx)));
             // TODO: this should be a boolean feature of the device
@@ -237,7 +239,7 @@ impl<'a> DeviceMenuScreen<'a> {
         manage_devices_index: usize,
         connected_subtext: Option<TString<'static>>,
     ) -> usize {
-        let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
+        let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
         let mut manage_paired_item = MenuItem::new(
             "Manage paired devices".into(),
             Some(Action::GoTo(manage_devices_index)),
@@ -256,7 +258,7 @@ impl<'a> DeviceMenuScreen<'a> {
     }
 
     fn add_settings_menu(&mut self, security_index: usize, device_index: usize) -> usize {
-        let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
+        let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
         unwrap!(items.push(MenuItem::new(
             "Security".into(),
             Some(Action::GoTo(security_index))
@@ -271,7 +273,7 @@ impl<'a> DeviceMenuScreen<'a> {
     }
 
     fn add_security_menu(&mut self) -> usize {
-        let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
+        let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
         unwrap!(items.push(MenuItem::new(
             "Check backup".into(),
             Some(Action::Return(DeviceMenuMsg::CheckBackup)),
@@ -291,8 +293,9 @@ impl<'a> DeviceMenuScreen<'a> {
         regulatory_index: usize,
         about_index: usize,
         auto_lock_delay: TString<'static>,
+        led: Option<bool>,
     ) -> usize {
-        let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
+        let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
         if let Some(device_name) = device_name {
             let mut item_device_name = MenuItem::new(
                 TR::words__name.into(),
@@ -316,6 +319,23 @@ impl<'a> DeviceMenuScreen<'a> {
             unwrap!(items.push(autolock_delay_item));
         }
 
+        if let Some(led) = led {
+            let mut led_item = MenuItem::new(
+                TR::words__led.into(),
+                Some(Action::Return(DeviceMenuMsg::Led)),
+            );
+            let subtext = if led {
+                (
+                    TR::words__on.into(),
+                    Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
+                )
+            } else {
+                (TR::words__off.into(), None)
+            };
+            led_item.with_subtext(Some(subtext));
+            unwrap!(items.push(led_item));
+        }
+
         unwrap!(items.push(MenuItem::new(
             TR::regulatory_certification__title.into(),
             Some(Action::GoTo(regulatory_index))
@@ -337,7 +357,7 @@ impl<'a> DeviceMenuScreen<'a> {
         settings_index: usize,
         connected_subtext: Option<TString<'static>>,
     ) -> usize {
-        let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
+        let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
         if failed_backup {
             let mut item_backup_failed = MenuItem::new(
                 "Backup failed".into(),
@@ -384,7 +404,7 @@ impl<'a> DeviceMenuScreen<'a> {
         match self.subscreens[self.active_subscreen] {
             Subscreen::Submenu(ref mut submenu_index) => {
                 let submenu = &self.submenus[*submenu_index];
-                let mut menu = VerticalMenu::<ShortMenuVec>::empty().with_separators();
+                let mut menu = VerticalMenu::<MediumMenuVec>::empty().with_separators();
                 for item in &submenu.items {
                     let button = if let Some((subtext, subtext_style)) = item.subtext {
                         let subtext_style =

@@ -37,6 +37,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_LOW;
   MP_QSTR_LayoutObj;
   MP_QSTR_LayoutState;
+  MP_QSTR_Led;
   MP_QSTR_MAX;
   MP_QSTR_MESSAGE_NAME;
   MP_QSTR_MESSAGE_WIRE_TYPE;
@@ -381,6 +382,10 @@ static void _librust_qstrs(void) {
   MP_QSTR_language__changed;
   MP_QSTR_language__progress;
   MP_QSTR_language__title;
+  MP_QSTR_led;
+  MP_QSTR_led__disable;
+  MP_QSTR_led__enable;
+  MP_QSTR_led__title;
   MP_QSTR_lines;
   MP_QSTR_load_from_flash;
   MP_QSTR_lockable;
@@ -899,10 +904,13 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__instructions;
   MP_QSTR_words__keep_it_safe;
   MP_QSTR_words__know_what_your_doing;
+  MP_QSTR_words__led;
   MP_QSTR_words__my_trezor;
   MP_QSTR_words__name;
   MP_QSTR_words__no;
   MP_QSTR_words__not_recommended;
+  MP_QSTR_words__off;
+  MP_QSTR_words__on;
   MP_QSTR_words__operation_cancelled;
   MP_QSTR_words__outputs;
   MP_QSTR_words__pay_attention;

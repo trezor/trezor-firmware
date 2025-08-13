@@ -158,6 +158,7 @@ impl<'a> ComponentMsgObj for DeviceMenuScreen<'a> {
             DeviceMenuMsg::DeviceName => Ok(DEVICE_NAME.as_obj()),
             DeviceMenuMsg::ScreenBrightness => Ok(SCREEN_BRIGHTNESS.as_obj()),
             DeviceMenuMsg::AutoLockDelay => Ok(AUTO_LOCK_DELAY.as_obj()),
+            DeviceMenuMsg::Led => Ok(LED.as_obj()),
             DeviceMenuMsg::Close => Ok(CANCELLED.as_obj()),
         }
     }
