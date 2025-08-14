@@ -59,7 +59,6 @@ bool tropic_init(void) {
 #ifdef TREZOR_EMULATOR
   drv->device.addr = inet_addr("127.0.0.1");
   drv->device.port = 28992;
-  drv->device.rng_seed = (unsigned int)time(NULL);
   drv->handle.l2.device = &drv->device;
 #endif
 
