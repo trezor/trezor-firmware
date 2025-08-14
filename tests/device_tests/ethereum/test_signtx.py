@@ -560,11 +560,7 @@ def test_signtx_staking_eip1559(session: Session, parameters: dict, result: dict
 
 
 @pytest.mark.experimental
-@pytest.mark.models(
-    "core",
-    skip="t2t1",
-    reason="T1 does not support payment requests. Payment requests not yet implemented on model T.",
-)
+@pytest.mark.models("core")
 @pytest.mark.parametrize(
     "has_refund,has_text,has_multiple_purchases",
     list(product([True, False], repeat=3)),
@@ -638,11 +634,7 @@ def test_signtx_payment_req(
 
 
 @pytest.mark.experimental
-@pytest.mark.models(
-    "core",
-    skip="t2t1",
-    reason="T1 does not support payment requests. Payment requests not yet implemented on model T.",
-)
+@pytest.mark.models("core")
 def test_signtx_payment_req_long_value(
     session: Session,
 ):

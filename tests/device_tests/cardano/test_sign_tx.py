@@ -227,11 +227,6 @@ def _transform_expected_result(result):
     return transformed_result
 
 
-@pytest.mark.models(
-    "core",
-    skip="t2t1",
-    reason="T1 does not support payment requests. Payment requests not yet implemented on model T.",
-)
 @pytest.mark.altcoin
 @pytest.mark.experimental
 @parametrize_using_common_fixtures(
@@ -241,11 +236,6 @@ def test_signtx_payment_req(session: Session, parameters, result):
     call_sign_tx(session, parameters, None)
 
 
-@pytest.mark.models(
-    "core",
-    skip="t2t1",
-    reason="T1 does not support payment requests. Payment requests not yet implemented on model T.",
-)
 @pytest.mark.altcoin
 @pytest.mark.experimental
 @parametrize_using_common_fixtures(

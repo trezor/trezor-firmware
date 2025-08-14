@@ -42,11 +42,6 @@ PREV_TXES = {PREV_HASH: PREV_TX}
 pytestmark = [pytest.mark.models("core"), pytest.mark.experimental]
 
 
-@pytest.mark.models(
-    "core",
-    skip="t2t1",
-    reason="T1 does not support payment requests. Payment requests not yet implemented on model T.",
-)
 @pytest.mark.altcoin
 @pytest.mark.parametrize("has_text,has_refund", list(product([True, False], repeat=2)))
 def test_signtx_payment_req_swap_with_text_and_refund(
@@ -197,18 +192,15 @@ SERIALIZED_TX = "01000000000101e29305e85821ea86f2bca1fcfe45e7cb0c8de87b612479ee6
             "out0",
             (PaymentRequestParams([0], memos1, get_nonce=True),),
             altcoin=True,
-            skip="t2t1",
         ),
         case(
             "out1",
             (PaymentRequestParams([1], memos2, get_nonce=True),),
             altcoin=True,
-            skip="t2t1",
         ),
         case(
             "out2",
             (PaymentRequestParams([2], [], get_nonce=True),),
-            skip="t2t1",
         ),
         case(
             "out0+out1",
@@ -216,22 +208,18 @@ SERIALIZED_TX = "01000000000101e29305e85821ea86f2bca1fcfe45e7cb0c8de87b612479ee6
                 PaymentRequestParams([0], [], get_nonce=False),
                 PaymentRequestParams([1], [], get_nonce=True),
             ),
-            skip="t2t1",
         ),
         case(
             "out01",
             (PaymentRequestParams([0, 1], memos3, get_nonce=True),),
-            skip="t2t1",
         ),
         case(
             "out012",
             (PaymentRequestParams([0, 1, 2], [], get_nonce=True),),
-            skip="t2t1",
         ),
         case(
             "out12",
             (PaymentRequestParams([1, 2], [], get_nonce=True),),
-            skip="t2t1",
         ),
     ),
 )
@@ -291,7 +279,6 @@ def test_payment_request(session: Session, payment_request_params):
         )
 
 
-@pytest.mark.models(skip="t2t1")
 def test_payment_req_wrong_amount(session: Session):
     # Test wrong total amount in payment request.
     outputs[0].payment_req_index = 0
@@ -319,7 +306,6 @@ def test_payment_req_wrong_amount(session: Session):
         )
 
 
-@pytest.mark.models(skip="t2t1")
 def test_payment_req_wrong_mac_refund(session: Session):
     # Test wrong MAC in payment request memo.
     memo = RefundMemo(parse_path("m/44h/1h/0h/1/0"))
@@ -354,7 +340,6 @@ def test_payment_req_wrong_mac_refund(session: Session):
         )
 
 
-@pytest.mark.models(skip="t2t1")
 @pytest.mark.altcoin
 def test_payment_req_wrong_mac_purchase(session: Session):
     # Test wrong MAC in payment request memo.
@@ -395,7 +380,6 @@ def test_payment_req_wrong_mac_purchase(session: Session):
         )
 
 
-@pytest.mark.models(skip="t2t1")
 def test_payment_req_wrong_output(session: Session):
     # Test wrong output in payment request.
     outputs[0].payment_req_index = 0
