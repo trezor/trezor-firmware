@@ -484,8 +484,13 @@ class BootloaderV2Image(firmware.BootableImage):
     def verify(self, dev_keys: bool = False) -> None:
         digest = self.merkle_root()
 
+        hash_fn = self.get_hash_params().hash_function
+
         for idx, key in enumerate(self.public_ec_keys(dev_keys)):
-            if not _ed25519.checkvalid(self.unauth.ec_signatures[idx], digest, key):
+            ext_digest = hash_fn(digest + self.unauth.slh_signatures[idx]).digest()
+            try:
+                _ed25519.checkvalid(self.unauth.ec_signatures[idx], ext_digest, key)
+            except _ed25519.SignatureMismatch:
                 raise firmware.InvalidSignatureError("Invalid bootloader signature")
 
         for idx, key in enumerate(self.public_pq_keys(dev_keys)):
