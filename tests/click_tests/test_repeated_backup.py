@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import time
 from typing import TYPE_CHECKING
 
 import pytest
@@ -207,6 +208,9 @@ def test_repeated_backup_via_device(
     assert features.backup_availability == messages.BackupAvailability.Available
     assert features.no_backup is False
     assert features.recovery_status == messages.RecoveryStatus.Backup
+
+    # TODO: remove after #5546 (added as workaround for https://github.com/trezor/trezor-firmware/pull/5499#issuecomment-3187459469)
+    time.sleep(0.1)
 
     # but if we cancel the backup at this point...
     reset.cancel_backup(debug)
