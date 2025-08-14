@@ -979,7 +979,7 @@ cleanup:
   memzero(fido_masking_key, sizeof(fido_masking_key));
 }
 
-static lt_ret_t l2_get_req_len(uint8_t* buffer, size_t buffer_length,
+static lt_ret_t l2_get_req_len(const uint8_t* buffer, size_t buffer_length,
                                size_t* req_length) {
   if (!buffer || !req_length) {
     return LT_PARAM_ERR;
