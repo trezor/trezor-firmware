@@ -136,15 +136,15 @@ static void prodtest_secrets_get_mcu_device_key(cli_t* cli) {
     return;
   }
 
-  curve25519_key mcu_private = {0};
+  ed25519_secret_key mcu_private = {0};
   if (secret_key_mcu_device_auth(mcu_private) != sectrue) {
     cli_error(cli, CLI_ERROR, "`secret_key_mcu_device_auth()` failed.");
     return;
   }
-  curve25519_key mcu_public = {0};
-  curve25519_scalarmult_basepoint(mcu_public, mcu_private);
+  ed25519_public_key mcu_public = {0};
+  ed25519_publickey(mcu_private, mcu_public);
 
-  uint8_t output[sizeof(curve25519_key) + NOISE_TAG_SIZE] = {0};
+  uint8_t output[sizeof(ed25519_public_key) + NOISE_TAG_SIZE] = {0};
   if (!secure_channel_encrypt(mcu_public, sizeof(mcu_public), NULL, 0,
                               output)) {
     // `secure_channel_handshake_2()` might not have been called
