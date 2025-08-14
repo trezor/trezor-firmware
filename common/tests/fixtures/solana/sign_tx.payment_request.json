@@ -5,7 +5,6 @@
   },
   "tests": [
     {
-      "skip_models": ["t2"],
       "experimental": true,
       "description": "Payment request",
       "parameters": {
@@ -57,7 +56,6 @@
       }
     },
     {
-      "skip_models": ["t2"],
       "experimental": true,
       "description": "Payment request - multiple transfers",
       "parameters": {

@@ -391,17 +391,23 @@ impl FirmwareUI for UIBolt {
         _subtitle: Option<TString<'static>>,
         items: Obj,
         hold: bool,
-        _verb: Option<TString<'static>>,
-        _external_menu: bool,
+        verb: Option<TString<'static>>,
+        external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = PropsList::new(items)?;
         let page = if hold {
             ButtonPage::new(paragraphs.into_paragraphs(), theme::BG).with_hold()?
         } else {
             ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
-                .with_cancel_confirm(None, Some(TR::buttons__confirm.into()))
+                .with_cancel_confirm(None, Some(verb.unwrap_or(TR::buttons__confirm.into())))
         };
-        let layout = RootComponent::new(Frame::left_aligned(theme::label_title(), title, page));
+        let mut frame = Frame::left_aligned(theme::label_title(), title, page);
+        if external_menu {
+            // Note: this could become a hamburger button when we would actually
+            // support menus, but for now all we have on model T is an info button
+            frame = frame.with_info_button();
+        }
+        let layout = RootComponent::new(frame);
         Ok(layout)
     }
 
