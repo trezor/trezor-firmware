@@ -1495,7 +1495,7 @@ static void read_cert(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
   cli_ok_hexdata(cli, certificate, certificate_length);
 
 cleanup:
-  memzero(tropic_public, sizeof(tropic_public));
+  memzero(privileged_private, sizeof(privileged_private));
 }
 
 static void prodtest_tropic_certfido_write(cli_t* cli) {
