@@ -94,9 +94,10 @@ static void prodtest_nrf_pair(cli_t* cli) {
     return;
   }
 
-  if (secfalse != flash_otp_is_locked(FLASH_OTP_BLOCK_DEVICE_ID)) {
-    cli_error(cli, CLI_ERROR,
-              "OTP Device ID block is locked. Pairing is not allowed.");
+  if (secfalse != flash_otp_is_locked(FLASH_OTP_BLOCK_DEVICE_SN)) {
+    cli_error(
+        cli, CLI_ERROR,
+        "OTP Device serial number block is locked. Pairing is not allowed.");
   }
 
   if (nrf_test_pair()) {

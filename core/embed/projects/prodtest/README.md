@@ -339,7 +339,7 @@ Updates the nRF firmware. Use `core/tools/bin_update.py` script to update the nR
 ### nrf-pair
 Writes the pairing secret to the nRF chip to pair it with the MCU.
 The command `secrets-init` must be executed before calling this command.
-Pairing needs to be done before writing device ID in the OTP memory and before locking the Optiga chip.
+Pairing needs to be done before writing device serial number in the OTP memory and before locking the Optiga chip.
 
 Example:
 ```
@@ -544,40 +544,42 @@ otp-batch-write T2B1-231231 --dry-run
 # !!! It's a dry run, OTP will be left unchanged.
 # !!! Use '--execute' switch to write to OTP memory.
 #
-# Writing device batch info into OTP memory...
+# Writing info into OTP memory...
 # Bytes written: 543242312D323331323331000000000000000000000000000000000000000000
 # Locking OTP block...
 ```
 
 
-### otp-device-id-read
-Retrieves the device ID string from the device's OTP memory. The device ID string is unique for each device.
+### otp-device-sn-read
+Retrieves the device's serial number from the device's OTP memory. The device serial number is unique for each device.
+A QR code with the serial number is displayed on the prodtest screen and printed on the packaging.
 
 If the OTP memory has not been written yet, it returns error code `no-data`.
 
 Example:
 ```
-otp-device-id-read
+otp-device-sn-read
 # Reading device OTP memory...
 # Bytes read: <hexadecimal string>
 ERROR no-data "OTP block is empty."
 ```
 
-### otp-device-id-write
-Writes the device ID string to the device's OTP memory. The device ID string is unique for each device.
+### otp-device-sn-write
+Writes the device serial number to the device's OTP memory. The device serial number is unique for each device.
+A QR code with the serial number is displayed on the prodtest screen and printed on the packaging.
 
-The batch string can be up to 31 characters in length.
+The serial number can be up to 31 characters in length.
 
 In non-production firmware, you must include `--execute` as the last parameter to write the data to the OTP memory. Conversely, in production firmware, you can use `--dry-run` as the last parameter to simulate the command without actually writing to the OTP memory.
 
 Example:
 ```
-otp-device-id-write 123456ABCD --dry-run
+otp-device-sn-write 123456ABCD --dry-run
 #
 # !!! It's a dry run, OTP will be left unchanged.
 # !!! Use '--execute' switch to write to OTP memory.
 #
-# Writing device batch info into OTP memory...
+# Writing info into OTP memory...
 # Bytes written: 3132333435364142434400000000000000000000000000000000000000000000
 # Locking OTP block...
 ```
