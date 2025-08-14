@@ -43,7 +43,7 @@
   PAIRING_KEY_SLOT_INDEX_1  // This key is used by HSM to inject the attestation
                             // FIDO key and generate the device key, and by an
                             // unofficial firwmare with an unlocked bootloader
-#define PRIVILEGED_PAIRING_KEYSLOT \
+#define PRIVILEGED_PAIRING_KEY_SLOT \
   PAIRING_KEY_SLOT_INDEX_2  // This key is used by an official firmware
 
 #define TROPIC_FIDO_CERT_FIRST_SLOT 0
@@ -721,7 +721,7 @@ static bool is_paired(cli_t* cli) {
   curve25519_scalarmult_basepoint(privileged_public, privileged_private);
 
   ret =
-      lt_session_start(tropic_handle, tropic_public, PRIVILEGED_PAIRING_KEYSLOT,
+      lt_session_start(tropic_handle, tropic_public, PRIVILEGED_PAIRING_KEY_SLOT,
                        privileged_private, privileged_public);
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR,
@@ -868,7 +868,7 @@ static void prodtest_tropic_pair(cli_t* cli) {
   if (ret == LT_OK) {
     // Write the privileged pairing key to the tropic's pairing key slot if it
     // has not been written yet.
-    ret = pairing_key_write(tropic_handle, PRIVILEGED_PAIRING_KEYSLOT,
+    ret = pairing_key_write(tropic_handle, PRIVILEGED_PAIRING_KEY_SLOT,
                             privileged_public);
     // If the pairing key has already been written, `pairing_key_write()`
     // returns `LT_OK`.
@@ -1408,7 +1408,7 @@ static void cert_write(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
   curve25519_scalarmult_basepoint(privileged_public, privileged_private);
 
   ret =
-      lt_session_start(tropic_handle, tropic_public, PRIVILEGED_PAIRING_KEYSLOT,
+      lt_session_start(tropic_handle, tropic_public, PRIVILEGED_PAIRING_KEY_SLOT,
                        privileged_private, privileged_public);
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR,
@@ -1446,7 +1446,7 @@ cleanup:
   memzero(privileged_private, sizeof(privileged_private));
 }
 
-static void read_cert(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
+static void cert_read(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
     return;
@@ -1475,7 +1475,7 @@ static void read_cert(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
   curve25519_scalarmult_basepoint(privileged_public, privileged_private);
 
   ret =
-      lt_session_start(tropic_handle, tropic_public, PRIVILEGED_PAIRING_KEYSLOT,
+      lt_session_start(tropic_handle, tropic_public, PRIVILEGED_PAIRING_KEY_SLOT,
                        privileged_private, privileged_public);
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR,
@@ -1507,11 +1507,11 @@ static void prodtest_tropic_certdev_write(cli_t* cli) {
 }
 
 static void prodtest_tropic_certfido_read(cli_t* cli) {
-  read_cert(cli, TROPIC_FIDO_CERT_FIRST_SLOT, TROPIC_FIDO_CERT_SLOTS_COUNT);
+  cert_read(cli, TROPIC_FIDO_CERT_FIRST_SLOT, TROPIC_FIDO_CERT_SLOTS_COUNT);
 }
 
 static void prodtest_tropic_certdev_read(cli_t* cli) {
-  read_cert(cli, TROPIC_DEV_CERT_FIRST_SLOT, TROPIC_DEV_CERT_SLOTS_COUNT);
+  cert_read(cli, TROPIC_DEV_CERT_FIRST_SLOT, TROPIC_DEV_CERT_SLOTS_COUNT);
 }
 
 // clang-format off

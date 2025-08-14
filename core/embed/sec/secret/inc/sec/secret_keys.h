@@ -29,7 +29,7 @@
 
 #include <ed25519-donna/ed25519.h>
 
-secbool secret_key_mcu_device_auth(curve25519_key dest);
+secbool secret_key_mcu_device_auth(ed25519_secret_key dest);
 
 #endif  // SECRET_MASTER_KEY_SLOT_SIZE
 
