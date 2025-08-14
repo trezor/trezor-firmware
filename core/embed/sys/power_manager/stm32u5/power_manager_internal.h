@@ -43,9 +43,9 @@
 
 // Fuel gauge extended kalman filter parameters
 #define PM_FUEL_GAUGE_R 2000.0f
-#define PM_FUEL_GAUGE_Q 0.001f
-#define PM_FUEL_GAUGE_R_AGGRESSIVE 1000.0f
-#define PM_FUEL_GAUGE_Q_AGGRESSIVE 0.001f
+#define PM_FUEL_GAUGE_Q 0.0003f
+#define PM_FUEL_GAUGE_R_AGGRESSIVE 1500.0f
+#define PM_FUEL_GAUGE_Q_AGGRESSIVE 0.0004f
 #define PM_FUEL_GAUGE_P_INIT 0.1f
 
 // Timeout after which the device automatically transit from suspend to
