@@ -68,9 +68,8 @@ static bool tropic_is_locked = false;
 
 static uint8_t tropic_cert_chain[LT_NUM_CERTIFICATES *
                                  LT_L2_GET_INFO_REQ_CERT_SIZE_SINGLE] = {0};
-size_t tropic_cert_chain_length = 0;
-curve25519_key tropic_public = {0};
-bool tropic_cert_chain_cached = false;
+static size_t tropic_cert_chain_length = 0;
+static curve25519_key tropic_public_cached = {0};
 
 // TODO: Update this link to correspond with the latest chip revision when it
 // becomes available.
@@ -566,7 +565,7 @@ static void prodtest_tropic_get_chip_id(cli_t* cli) {
 }
 
 static bool cache_tropic_cert_chain(lt_handle_t* handle) {
-  if (tropic_cert_chain_cached) {
+  if (tropic_cert_chain_length > 0) {
     return true;
   }
 
@@ -584,7 +583,7 @@ static bool cache_tropic_cert_chain(lt_handle_t* handle) {
     return false;
   }
 
-  ret = lt_get_st_pub(&cert_store, tropic_public, sizeof(tropic_public));
+  ret = lt_get_st_pub(&cert_store, tropic_public_cached, sizeof(tropic_public_cached));
   if (ret != LT_OK) {
     return false;
   }
@@ -598,7 +597,6 @@ static bool cache_tropic_cert_chain(lt_handle_t* handle) {
   }
 
   tropic_cert_chain_length = length;
-  tropic_cert_chain_cached = true;
 
   return true;
 }
@@ -815,7 +813,7 @@ static void prodtest_tropic_pair(cli_t* cli) {
       goto cleanup;
     }
   }
-  if (memcmp(tropic_public, tropic_public_read, sizeof(tropic_public)) != 0) {
+  if (memcmp(tropic_public_cached, tropic_public_read, sizeof(tropic_public_cached)) != 0) {
     cli_error(cli, CLI_ERROR,
               "Tropic public key does not match the expected value.");
     goto cleanup;
@@ -865,18 +863,18 @@ static void prodtest_tropic_pair(cli_t* cli) {
   curve25519_scalarmult_basepoint(privileged_public, privileged_private);
 
   // Try to establish a session using the factory pairing key.
-  ret = lt_session_start(tropic_handle, tropic_public, FACTORY_PAIRING_KEY_SLOT,
+  ret = lt_session_start(tropic_handle, tropic_public_cached, FACTORY_PAIRING_KEY_SLOT,
                          factory_private, factory_public);
   if (ret == LT_OK) {
     // Write the privileged pairing key to the tropic's pairing key slot if it
     // has not been written yet.
     ret = pairing_key_write(tropic_handle, PRIVILEGED_PAIRING_KEYSLOT,
                             privileged_public);
-    // If the pairing key has already been written, `write_pairing_key()`
+    // If the pairing key has already been written, `pairing_key_write()`
     // returns `LT_OK`.
     if (ret != LT_OK) {
       cli_error(cli, CLI_ERROR,
-                "`write_pairing_key()` failed for privileged pairing key with "
+                "`pairing_key_write()` failed for privileged pairing key with "
                 "error %d",
                 ret);
       goto cleanup;
@@ -886,12 +884,12 @@ static void prodtest_tropic_pair(cli_t* cli) {
     // has not been written yet.
     ret = pairing_key_write(tropic_handle, UNPRIVILEGED_PAIRING_KEY_SLOT,
                             unprivileged_public);
-    // If the pairing key has already been written, `write_pairing_key()`
+    // If the pairing key has already been written, `pairing_key_write()`
     // returns `LT_OK`.
     if (ret != LT_OK) {
       cli_error(
           cli, CLI_ERROR,
-          "`write_pairing_key()` failed for unprivileged pairing key with "
+          "`pairing_key_write()` failed for unprivileged pairing key with "
           "error %d",
           ret);
       goto cleanup;
@@ -942,8 +940,8 @@ static void prodtest_tropic_get_access_credential(cli_t* cli) {
 
   uint8_t output[sizeof(unprivileged_private) + NOISE_TAG_SIZE] = {0};
   if (!secure_channel_encrypt((uint8_t*)unprivileged_private,
-                              sizeof(unprivileged_private), tropic_public,
-                              sizeof(tropic_public), output)) {
+                              sizeof(unprivileged_private), tropic_public_cached,
+                              sizeof(tropic_public_cached), output)) {
     // `secure_channel_handshake_2()` might not have been called
     cli_error(cli, CLI_ERROR, "`secure_channel_encrypt()` failed.");
     goto cleanup;

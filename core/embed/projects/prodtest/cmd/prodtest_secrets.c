@@ -145,8 +145,8 @@ static void prodtest_secrets_get_mcu_device_key(cli_t* cli) {
   curve25519_scalarmult_basepoint(mcu_public, mcu_private);
 
   uint8_t output[sizeof(curve25519_key) + NOISE_TAG_SIZE] = {0};
-  if (!secure_channel_encrypt(NULL, 0, mcu_public, sizeof(curve25519_key),
-                              output + NOISE_TAG_SIZE)) {
+  if (!secure_channel_encrypt(mcu_public, sizeof(mcu_public), NULL, 0,
+                              output)) {
     // `secure_channel_handshake_2()` might not have been called
     cli_error(cli, CLI_ERROR, "`secure_channel_encrypt()` failed.");
     goto cleanup;
