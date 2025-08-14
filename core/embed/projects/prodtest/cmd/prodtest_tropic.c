@@ -1000,7 +1000,7 @@ static lt_ret_t l2_get_req_len(const uint8_t* buffer, size_t buffer_length,
   return LT_OK;
 }
 
-static lt_ret_t l2_get_rsp_len(uint8_t* buffer, size_t buffer_length,
+static lt_ret_t l2_get_rsp_len(const uint8_t* buffer, size_t buffer_length,
                                size_t* rsp_length) {
   if (!buffer || !rsp_length) {
     return LT_PARAM_ERR;
