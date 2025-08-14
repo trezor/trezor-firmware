@@ -435,42 +435,36 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
   return;
 #endif
 
-  lt_ret_t ret;
-
-  // Reused variable
-  uint8_t fw_ver[LT_L2_GET_INFO_RISCV_FW_SIZE] = {0};
-
   // For firmware update chip must be rebooted into MAINTENANCE mode.
   cli_trace(cli, "Rebooting into Maintenance mode");
-  ret = lt_reboot(h, LT_MODE_MAINTENANCE);
+  lt_ret_t ret = lt_reboot(h, LT_MODE_MAINTENANCE);
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR, "lt_reboot() failed, ret=%s",
               lt_ret_verbose(ret));
     return;
   }
 
-  if (h->l2.mode == LT_MODE_MAINTENANCE) {
-    cli_trace(cli, "Chip is executing bootloader");
-
-    cli_trace(cli, "Updating RISC-V FW");
-    ret =
-        lt_do_mutable_fw_update(h, fw_CPU, sizeof(fw_CPU), FW_APP_UPDATE_BANK);
-    if (ret != LT_OK) {
-      cli_error(cli, CLI_ERROR, "RISC-V FW update failed, ret=%s",
-                lt_ret_verbose(ret));
-      return;
-    }
-
-    cli_trace(cli, "Updating SPECT FW");
-    ret = lt_do_mutable_fw_update(h, fw_SPECT, sizeof(fw_SPECT),
-                                  FW_SPECT_UPDATE_BANK);
-    if (ret != LT_OK) {
-      cli_error(cli, CLI_ERROR, "SPECT FW update failed, ret=%s",
-                lt_ret_verbose(ret));
-      return;
-    }
-  } else {
+  if (h->l2.mode != LT_MODE_MAINTENANCE) {
     cli_error(cli, CLI_ERROR, "Chip couldn't get into MAINTENANCE mode");
+    return;
+  }
+
+  cli_trace(cli, "Chip is executing bootloader");
+
+  cli_trace(cli, "Updating RISC-V FW");
+  ret = lt_do_mutable_fw_update(h, fw_CPU, sizeof(fw_CPU), FW_APP_UPDATE_BANK);
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "RISC-V FW update failed, ret=%s",
+              lt_ret_verbose(ret));
+    return;
+  }
+
+  cli_trace(cli, "Updating SPECT FW");
+  ret = lt_do_mutable_fw_update(h, fw_SPECT, sizeof(fw_SPECT),
+                                FW_SPECT_UPDATE_BANK);
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "SPECT FW update failed, ret=%s",
+              lt_ret_verbose(ret));
     return;
   }
 
@@ -483,36 +477,40 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
     return;
   }
 
-  if (h->l2.mode == LT_MODE_APP) {
-    cli_trace(cli, "Reading RISC-V FW version");
-    ret = lt_get_info_riscv_fw_ver(h, fw_ver, LT_L2_GET_INFO_RISCV_FW_SIZE);
-    if (ret == LT_OK) {
-      cli_trace(
-          cli,
-          "Chip is executing RISC-V application FW version: %d.%d.%d (+ .%d)",
-          fw_ver[3], fw_ver[2], fw_ver[1], fw_ver[0]);
-    } else {
-      cli_error(cli, CLI_ERROR, "Failed to get RISC-V FW version, ret=%s",
-                lt_ret_verbose(ret));
-      return;
-    }
-
-    cli_trace(cli, "Reading SPECT FW version");
-    ret = lt_get_info_spect_fw_ver(h, fw_ver, LT_L2_GET_INFO_SPECT_FW_SIZE);
-    if (ret == LT_OK) {
-      cli_trace(cli, "Chip is executing SPECT FW version: %d.%d.%d (+ .%d)",
-                fw_ver[3], fw_ver[2], fw_ver[1], fw_ver[0]);
-    } else {
-      cli_error(cli, CLI_ERROR, "Failed to get SPECT FW version, ret=%s",
-                lt_ret_verbose(ret));
-      return;
-    }
-  } else {
+  if (h->l2.mode != LT_MODE_APP) {
     cli_error(cli, CLI_ERROR,
               "Device couldn't get into APP mode, APP and SPECT firmwares in "
               "fw banks are not valid or banks are empty");
     return;
   }
+
+  cli_trace(cli, "Reading RISC-V FW version");
+
+  uint8_t risc_fw_ver[LT_L2_GET_INFO_RISCV_FW_SIZE] = {0};
+  ret = lt_get_info_riscv_fw_ver(h, risc_fw_ver, LT_L2_GET_INFO_RISCV_FW_SIZE);
+
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "Failed to get RISC-V FW version, ret=%s",
+              lt_ret_verbose(ret));
+    return;
+  }
+
+  cli_trace(cli,
+            "Chip is executing RISC-V application FW version: %d.%d.%d (+ .%d)",
+            risc_fw_ver[3], risc_fw_ver[2], risc_fw_ver[1], risc_fw_ver[0]);
+
+  cli_trace(cli, "Reading SPECT FW version");
+  uint8_t spect_fw_ver[LT_L2_GET_INFO_SPECT_FW_SIZE] = {0};
+  ret = lt_get_info_spect_fw_ver(h, spect_fw_ver, LT_L2_GET_INFO_SPECT_FW_SIZE);
+
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR, "Failed to get SPECT FW version, ret=%s",
+              lt_ret_verbose(ret));
+    return;
+  }
+
+  cli_trace(cli, "Chip is executing SPECT FW version: %d.%d.%d (+ .%d)",
+            spect_fw_ver[3], spect_fw_ver[2], spect_fw_ver[1], spect_fw_ver[0]);
 
   cli_ok(cli, "");
 }
