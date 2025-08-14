@@ -147,12 +147,12 @@ static void prodtest_otp_batch_write(cli_t* cli) {
   prodtest_otp_write(cli, FLASH_OTP_BLOCK_BATCH);
 }
 
-static void prodtest_otp_device_id_read(cli_t* cli) {
-  prodtest_otp_read(cli, FLASH_OTP_BLOCK_DEVICE_ID);
+static void prodtest_otp_device_sn_read(cli_t* cli) {
+  prodtest_otp_read(cli, FLASH_OTP_BLOCK_DEVICE_SN);
 }
 
-static void prodtest_otp_device_id_write(cli_t* cli) {
-  prodtest_otp_write(cli, FLASH_OTP_BLOCK_DEVICE_ID);
+static void prodtest_otp_device_sn_write(cli_t* cli) {
+  prodtest_otp_write(cli, FLASH_OTP_BLOCK_DEVICE_SN);
 }
 
 // clang-format off
@@ -172,15 +172,15 @@ PRODTEST_CLI_CMD(
 );
 
 PRODTEST_CLI_CMD(
-  .name = "otp-device-id-read",
-  .func = prodtest_otp_device_id_read,
-  .info = "Read the device ID from OTP memory",
+  .name = "otp-device-sn-read",
+  .func = prodtest_otp_device_sn_read,
+  .info = "Read the device serial number from OTP memory",
   .args = ""
 );
 
 PRODTEST_CLI_CMD(
-  .name = "otp-device-id-write",
-  .func = prodtest_otp_device_id_write,
-  .info = "Write the device ID into OTP memory",
+  .name = "otp-device-sn-write",
+  .func = prodtest_otp_device_sn_write,
+  .info = "Write the device serial number into OTP memory",
   .args = "<text> [--execute | --dry-run]"
 );

@@ -258,13 +258,13 @@ void prodtest_show_homescreen(void) {
   memset(&g_layout, 0, sizeof(g_layout));
   g_layout.set = true;
 
-  static char device_id[FLASH_OTP_BLOCK_SIZE] = {0};
+  static char device_sn[FLASH_OTP_BLOCK_SIZE] = {0};
 
-  if (sectrue == flash_otp_read(FLASH_OTP_BLOCK_DEVICE_ID, 0,
-                                (uint8_t *)device_id, sizeof(device_id)) &&
-      (device_id[0] != 0xFF)) {
-    screen_prodtest_welcome(&g_layout.layout, device_id,
-                            strnlen(device_id, sizeof(device_id) - 1));
+  if (sectrue == flash_otp_read(FLASH_OTP_BLOCK_DEVICE_SN, 0,
+                                (uint8_t *)device_sn, sizeof(device_sn)) &&
+      (device_sn[0] != 0xFF)) {
+    screen_prodtest_welcome(&g_layout.layout, device_sn,
+                            strnlen(device_sn, sizeof(device_sn) - 1));
   } else {
     screen_prodtest_welcome(&g_layout.layout, NULL, 0);
   }
