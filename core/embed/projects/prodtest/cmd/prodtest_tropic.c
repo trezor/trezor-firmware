@@ -791,6 +791,7 @@ static void prodtest_tropic_pair(cli_t* cli) {
 
   lt_handle_t* tropic_handle = tropic_get_handle();
 
+  // Ensure that tropic_public is cached.
   if (!cache_tropic_cert_chain(tropic_handle)) {
     cli_error(cli, CLI_ERROR, "`cache_tropic_cert_chain()` failed");
     goto cleanup;
