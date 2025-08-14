@@ -185,7 +185,7 @@ lt_ret_t lt_port_delay(lt_handle_t *h, uint32_t ms) {
   return LT_OK;
 }
 
-lt_ret_t lt_port_random_bytes(uint32_t *buff, uint16_t len) {
+lt_ret_t lt_port_random_bytes(void *buff, size_t count) {
   random_buffer((uint8_t *)buff, len);
 
   return LT_OK;
