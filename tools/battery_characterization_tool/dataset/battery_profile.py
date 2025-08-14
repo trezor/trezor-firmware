@@ -282,6 +282,6 @@ def get_mean_temp(temp):
 
 def time_to_minutes(time, offset=None):
     if offset is None:
-        return (time - time[0]) / 60000
+        return (time - time[0]) / 60
     else:
-        return (time - offset) / 60000
+        return (time - offset) / 60

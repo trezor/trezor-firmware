@@ -120,9 +120,7 @@ def sample_ocv_curve(time, ocv, ibat, bat_capacity, num_of_samples, ascending=Fa
                 continue
 
             # Interpolate the current (mAs)
-            cur_incr = ((ibat[idx - 1] + ibat[idx]) / 2) * (
-                (time[idx] - time[idx - 1])
-            )
+            cur_incr = ((ibat[idx - 1] + ibat[idx]) / 2) * ((time[idx] - time[idx - 1]))
             cusum += abs(cur_incr) / 3600
 
             if cusum >= current:

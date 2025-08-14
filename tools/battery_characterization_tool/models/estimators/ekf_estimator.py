@@ -75,23 +75,27 @@ class EkfEstimator:
         # voltage_V  = self._filter_measurement(voltage_V, self.v_meas_history)
         # current_mA = self._filter_measurement(current_mA, self.i_meas_history)
 
-        if temp_deg < 10:
-            self.R = 10
-            self.Q = 0.01
-        else:
-
-            # Pick fuel gauge agressivity
-            if self.x_latched < 0.2:
-                self.R = self.R_agressive_default
-                self.Q = self.Q_agressive_default
-            else:
-                self.R = self.R_default
-                self.Q = self.Q_default
+        if current_mA == 0:
+            # If the current is zero, we cannot estimate the SoC
+            # We can only use the last known value
+            return self.x_latched, self.P
 
         # Select between charge or /discharge mode
         discharge_mode = True
         if current_mA < 0:
             discharge_mode = False
+
+        self.R = self.R_default
+        self.Q = self.Q_default
+
+        if discharge_mode:
+            if self.x_latched < 0.2:
+                self.R = self.R_agressive_default
+                self.Q = self.Q_agressive_default
+        else:
+            if self.x_latched > 0.8:
+                self.R = self.R_agressive_default
+                self.Q = self.Q_agressive_default
 
         # Convert dt to seconds
         dt_sec = dt

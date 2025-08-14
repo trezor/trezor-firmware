@@ -97,8 +97,11 @@ def generate_sim_res_fig(waveform, sim_name, *sim_results) -> Figure:
     wd = waveform["data"]
 
     fig, ax = plt.subplots(4, 1)
-    fig.set_size_inches(10, 10)
+    fig.set_size_inches(10, 12)  # Increased height to accommodate titles
     fig.suptitle(f"{sim_name}°C")
+
+    # Adjust spacing between subplots to prevent title overlap
+    plt.subplots_adjust(hspace=0.4)
 
     ax[0].plot(time_to_minutes(wd.time), wd.vbat, label="vbat")
     ax[0].set_title("Battery voltage")
@@ -161,10 +164,11 @@ def run_simulation(dataset: BatteryDataset, battery_model: BatteryModel):
     ekf_est = EkfEstimator(
         battery_model=battery_model,
         R=2000,
-        Q=0.001,
-        Q_agressive=0.001,
-        R_agressive=1000,
+        Q=0.005,
+        Q_agressive=0.005,
+        R_agressive=1200,
         P_init=0.1,
+        label="1",
     )
     console.info(
         f"EKF estimator [R={ekf_est.R}, Q={ekf_est.Q}, "
@@ -175,10 +179,11 @@ def run_simulation(dataset: BatteryDataset, battery_model: BatteryModel):
     ekf_est2 = EkfEstimator(
         battery_model=battery_model,
         R=2000,
-        Q=0.001,
-        Q_agressive=0.001,
+        Q=0.01,
+        Q_agressive=0.01,
         R_agressive=1000,
         P_init=0.1,
+        label="2",
     )
 
     console.info(
