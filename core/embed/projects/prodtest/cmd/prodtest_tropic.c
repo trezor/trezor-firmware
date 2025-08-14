@@ -584,16 +584,17 @@ static bool cache_tropic_cert_chain(lt_handle_t* handle) {
     return false;
   }
 
+  ret = lt_get_st_pub(&cert_store, tropic_public, sizeof(tropic_public));
+  if (ret != LT_OK) {
+    return false;
+  }
+
+  // Compactify tropic_cert_chain for future use. This invalidates the cert_store.
   size_t length = 0;
   for (size_t i = 0; i < LT_NUM_CERTIFICATES; i++) {
     memmove(&tropic_cert_chain[length], cert_store.certs[i],
             cert_store.cert_len[i]);
     length += cert_store.cert_len[i];
-  }
-
-  ret = lt_get_st_pub(&cert_store, tropic_public, sizeof(tropic_public));
-  if (ret != LT_OK) {
-    return false;
   }
 
   tropic_cert_chain_length = length;
