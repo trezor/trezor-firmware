@@ -75,8 +75,13 @@ typedef struct {
   tsqueue_t tx_queue;
 
   ble_adv_start_cmd_data_t adv_cmd;
-  uint8_t mac[6];
+  bt_le_addr_t mac;
   bool mac_ready;
+
+  uint8_t bond_count;
+  bt_le_addr_t bonds[BLE_MAX_BONDS];
+  bool bonds_ready;
+
   systimer_t *timer;
   uint16_t ping_cntr;
 } ble_driver_t;
@@ -179,6 +184,13 @@ static bool ble_send_pairing_accept(ble_driver_t *drv, uint8_t *code) {
 static bool ble_send_mac_request(ble_driver_t *drv) {
   UNUSED(drv);
   uint8_t cmd = INTERNAL_CMD_GET_MAC;
+
+  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL);
+}
+
+static bool ble_send_bond_list_request(ble_driver_t *drv) {
+  UNUSED(drv);
+  uint8_t cmd = INTERNAL_CMD_GET_BOND_LIST;
 
   return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL);
 }
@@ -373,7 +385,23 @@ static void ble_process_rx_msg_mac(const uint8_t *data, uint32_t len) {
   }
 
   drv->mac_ready = true;
-  memcpy(drv->mac, &data[1], sizeof(drv->mac));
+  drv->mac.type = 0;
+  memcpy(&drv->mac.addr, &data[1], sizeof(drv->mac.addr));
+}
+
+static void ble_process_rx_msg_bond_list(const uint8_t *data, uint32_t len) {
+  ble_driver_t *drv = &g_ble_driver;
+  if (!drv->initialized) {
+    return;
+  }
+
+  if (len < 2) {
+    return;
+  }
+
+  drv->bonds_ready = true;
+  drv->bond_count = data[1];
+  memcpy(&drv->bonds, &data[2], MIN(len - 2, sizeof(drv->bonds)));
 }
 
 static void ble_process_rx_msg(const uint8_t *data, uint32_t len) {
@@ -396,6 +424,10 @@ static void ble_process_rx_msg(const uint8_t *data, uint32_t len) {
       break;
     case INTERNAL_EVENT_PAIRING_COMPLETED:
       ble_process_rx_msg_pairing_completed(data, len);
+      break;
+    case INTERNAL_EVENT_BOND_LIST:
+      ble_process_rx_msg_bond_list(data, len);
+      break;
     default:
       break;
   }
@@ -968,15 +1000,11 @@ void ble_get_state(ble_state_t *state) {
   irq_unlock(key);
 }
 
-bool ble_get_mac(uint8_t *mac, size_t max_len) {
+bool ble_get_mac(bt_le_addr_t *mac) {
   ble_driver_t *drv = &g_ble_driver;
 
-  if (max_len < sizeof(drv->mac)) {
-    return false;
-  }
-
   if (!drv->initialized) {
-    memset(mac, 0, max_len);
+    memset(mac, 0, sizeof(*mac));
     return false;
   }
 
@@ -989,14 +1017,47 @@ bool ble_get_mac(uint8_t *mac, size_t max_len) {
   uint32_t timeout = ticks_timeout(100);
 
   while (!ticks_expired(timeout)) {
+    irq_key_t key = irq_lock();
     if (drv->mac_ready) {
-      memcpy(mac, drv->mac, sizeof(drv->mac));
+      memcpy(mac, &drv->mac, sizeof(drv->mac));
+      irq_unlock(key);
       return true;
     }
+    irq_unlock(key);
   }
 
-  memset(mac, 0, max_len);
+  memset(mac, 0, sizeof(*mac));
   return false;
+}
+
+uint8_t ble_get_bond_list(bt_le_addr_t *bonds, size_t count) {
+  ble_driver_t *drv = &g_ble_driver;
+
+  if (!drv->initialized || count < BLE_MAX_BONDS) {
+    memset(bonds, 0, count * sizeof(bt_le_addr_t));
+    return 0;
+  }
+
+  drv->bonds_ready = false;
+
+  if (!ble_send_bond_list_request(drv)) {
+    return 0;
+  }
+
+  uint32_t timeout = ticks_timeout(100);
+
+  while (!ticks_expired(timeout)) {
+    irq_key_t key = irq_lock();
+    if (drv->bonds_ready) {
+      memcpy(bonds, &drv->bonds, sizeof(drv->bonds));
+      irq_unlock(key);
+      return drv->bond_count;
+    }
+    irq_unlock(key);
+  }
+
+  memset(bonds, 0, count * sizeof(bt_le_addr_t));
+  return 0;
 }
 
 void ble_get_advertising_name(char *name, size_t max_len) {

@@ -31,6 +31,8 @@
 #define BLE_ADV_NAME_LEN 20
 #define BLE_PAIRING_CODE_LEN 6
 
+#define BLE_MAX_BONDS 8
+
 typedef enum {
   BLE_SWITCH_OFF = 0,      // Turn off BLE advertising, disconnect
   BLE_SWITCH_ON = 1,       // Turn on BLE advertising
@@ -51,6 +53,20 @@ typedef enum {
   BLE_MODE_PAIRING,
   BLE_MODE_DFU,
 } ble_mode_t;
+
+/*
+ * Address types:
+ * BT_ADDR_LE_PUBLIC       0x00
+ * BT_ADDR_LE_RANDOM       0x01
+ * BT_ADDR_LE_PUBLIC_ID    0x02
+ * BT_ADDR_LE_RANDOM_ID    0x03
+ * BT_ADDR_LE_UNRESOLVED   0xFE
+ * BT_ADDR_LE_ANONYMOUS    0xFF
+ */
+typedef struct {
+  uint8_t type;
+  uint8_t addr[6];
+} bt_le_addr_t;
 
 typedef struct {
   uint8_t name[BLE_ADV_NAME_LEN];
@@ -173,6 +189,9 @@ bool ble_write(const uint8_t *data, uint16_t len);
 // Check if read is possible
 bool ble_can_read(void);
 
+// Get bond list
+uint8_t ble_get_bond_list(bt_le_addr_t *bonds, size_t count);
+
 // Reads data from a connected BLE device
 //
 // max_len indicates the maximum number of bytes to read. Rest of the data
@@ -185,4 +204,4 @@ uint32_t ble_read(uint8_t *data, uint16_t max_len);
 //
 // When not using static address, the address is random and may not correspond
 // to what is actually used for advertising
-bool ble_get_mac(uint8_t *mac, size_t max_len);
+bool ble_get_mac(bt_le_addr_t *addr);

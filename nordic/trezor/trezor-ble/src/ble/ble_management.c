@@ -123,6 +123,24 @@ static void management_send_mac(uint8_t *mac) {
   trz_comm_send_msg(NRF_SERVICE_BLE_MANAGER, tx_data, sizeof(tx_data));
 }
 
+static void management_send_bonds(void) {
+  bt_addr_le_t addr_list[CONFIG_BT_MAX_PAIRED] = {0};
+  size_t bond_count = bonds_get_all(addr_list, CONFIG_BT_MAX_PAIRED);
+
+  uint8_t tx_data[1 + (CONFIG_BT_MAX_PAIRED * (1 + BT_ADDR_SIZE))] = {0};
+
+  tx_data[0] = INTERNAL_EVENT_BOND_LIST;
+  tx_data[1] = bond_count;
+  for (size_t i = 0; i < bond_count; i++) {
+    tx_data[2 + i * (1 + BT_ADDR_SIZE)] = addr_list[i].type;
+    memcpy(&tx_data[2 + i * (1 + BT_ADDR_SIZE) + 1], addr_list[i].a.val,
+           BT_ADDR_SIZE);
+  }
+
+  trz_comm_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t *)tx_data,
+                    sizeof(tx_data));
+}
+
 static void process_command(uint8_t *data, uint16_t len) {
   uint8_t cmd = data[0];
   bool success = true;
@@ -174,7 +192,10 @@ static void process_command(uint8_t *data, uint16_t len) {
     } break;
     case INTERNAL_CMD_SET_BUSY: {
       ble_set_busy_flag(data[1]);
-    }
+    } break;
+    case INTERNAL_CMD_GET_BOND_LIST: {
+      management_send_bonds();
+    } break;
     default:
       break;
   }

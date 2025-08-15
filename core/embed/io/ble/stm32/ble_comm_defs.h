@@ -52,6 +52,7 @@ typedef enum {
   INTERNAL_EVENT_PAIRING_CANCELLED = 0x05,
   INTERNAL_EVENT_MAC = 0x06,
   INTERNAL_EVENT_PAIRING_COMPLETED = 0x07,
+  INTERNAL_EVENT_BOND_LIST = 0x08,
 } internal_event_t;
 
 typedef enum {
@@ -66,6 +67,7 @@ typedef enum {
   INTERNAL_CMD_UNPAIR = 0x08,
   INTERNAL_CMD_GET_MAC = 0x09,
   INTERNAL_CMD_SET_BUSY = 0x0A,
+  INTERNAL_CMD_GET_BOND_LIST = 0x0B,
 } internal_cmd_t;
 
 typedef struct {

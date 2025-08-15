@@ -200,6 +200,17 @@ ble-erase-bonds
 OK
 ```
 
+### ble-get-bonds
+Retrieves all BLE bonds from the device.
+
+Example:
+```
+ble-get-bonds
+# Initializing the BLE...
+# Got 1 bonds.
+# Bond 1: 5c:dc:49:d1:8d:35
+OK
+```
 
 ### ble-radio-test
 Runs radio test proxy-client. It requires special nRF radio test firmware, see https://docs.nordicsemi.com/bundle/sdk_nrf5_v17.0.2/page/nrf_radio_test_example.html for usage.
