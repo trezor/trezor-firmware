@@ -182,7 +182,13 @@ static void process_command(uint8_t *data, uint16_t len) {
       pairing_num_comp_reply(false, NULL);
       break;
     case INTERNAL_CMD_UNPAIR:
-      success = bonds_erase_current();
+      if (len < (1 + sizeof(bt_addr_le_t))) {
+        success = bonds_erase_current();
+      } else {
+        bt_addr_le_t addr;
+        memcpy(&addr, &data[1], sizeof(addr));
+        success = bonds_erase_device(&addr);
+      }
       break;
     case INTERNAL_CMD_GET_MAC: {
       uint8_t mac[BT_ADDR_SIZE] = {0};

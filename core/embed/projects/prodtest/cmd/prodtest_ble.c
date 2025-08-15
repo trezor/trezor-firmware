@@ -255,6 +255,41 @@ static void prodtest_ble_get_bonds(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+static void prodtest_ble_unpair(cli_t* cli) {
+  if (cli_arg_count(cli) > 1) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  uint32_t index;
+
+  if (!cli_arg_uint32(cli, "index", &index)) {
+    cli_error(cli, CLI_ERROR, "Invalid index.");
+    return;
+  }
+
+  if (!ensure_ble_init(cli)) {
+    return;
+  }
+
+  bt_le_addr_t bonds[BLE_MAX_BONDS];
+  uint8_t cnt = ble_get_bond_list(bonds, BLE_MAX_BONDS);
+
+  if (index > cnt || index < 1) {
+    cli_error(cli, CLI_ERROR, "Invalid index.");
+    return;
+  }
+
+  bt_le_addr_t* addr = &bonds[index - 1];
+  if (!ble_unpair(addr)) {
+    cli_error(cli, CLI_ERROR, "Could not unpair.");
+    return;
+  }
+
+  cli_trace(cli, "Unpaired.");
+  cli_ok(cli, "");
+}
+
 static void prodtest_ble_radio_test_cmd(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -415,6 +450,13 @@ PRODTEST_CLI_CMD(
   .func = prodtest_ble_get_bonds,
   .info = "Get list of current bonds",
   .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "ble-unpair",
+  .func = prodtest_ble_unpair,
+  .info = "Unpair device on given index. Use ble-get-bonds to get the index",
+  .args = "<index>"
 );
 
 

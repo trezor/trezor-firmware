@@ -18,7 +18,6 @@
  */
 
 #ifdef KERNEL
-
 #include <trezor_rtl.h>
 
 #include <gfx/dma2d_bitblt.h>
@@ -723,6 +722,11 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       const uint8_t *name = (const uint8_t *)args[0];
       size_t len = args[1];
       ble_set_name__verified(name, len);
+    } break;
+
+    case SYSCALL_BLE_UNPAIR: {
+      const bt_le_addr_t *addr = (const bt_le_addr_t *)args[0];
+      args[0] = ble_unpair__verified(addr);
     } break;
 #endif
 

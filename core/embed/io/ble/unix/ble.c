@@ -35,4 +35,6 @@ void ble_get_advertising_name(char *name, size_t max_len) {
   memset(name, 0, max_len);
 }
 
+bool ble_unpair(const bt_le_addr_t *addr) { return false; }
+
 uint8_t ble_get_bond_list(bt_le_addr_t *bonds, size_t count) { return 0; }

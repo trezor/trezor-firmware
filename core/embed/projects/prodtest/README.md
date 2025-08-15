@@ -212,6 +212,19 @@ ble-get-bonds
 OK
 ```
 
+### ble-unpair
+Unpairs a BLE device. It accepts one parameter, which is index returned by the `ble-get-bonds` command.
+
+`ble-unpair <index>`
+
+Example:
+```
+ble-unpair 1
+# Initializing the BLE...
+# Unpaired.
+OK
+```
+
 ### ble-radio-test
 Runs radio test proxy-client. It requires special nRF radio test firmware, see https://docs.nordicsemi.com/bundle/sdk_nrf5_v17.0.2/page/nrf_radio_test_example.html for usage.
 
