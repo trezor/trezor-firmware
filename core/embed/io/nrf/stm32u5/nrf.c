@@ -545,7 +545,6 @@ bool nrf_system_off(void) {
   return true;
 }
 
-#ifdef SECURE_MODE
 bool nrf_authenticate(void) {
   nrf_driver_t *drv = &g_nrf_driver;
   if (!drv->initialized) {
@@ -586,6 +585,5 @@ bool nrf_authenticate(void) {
 
   return false;
 }
-#endif
 
 #endif
