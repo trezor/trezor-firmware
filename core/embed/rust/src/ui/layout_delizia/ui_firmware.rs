@@ -14,8 +14,8 @@ use crate::{
             text::{
                 op::OpTextLayout,
                 paragraphs::{
-                    Checklist, Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort,
-                    Paragraphs, VecExt,
+                    self, Checklist, Paragraph, ParagraphSource, ParagraphVecLong,
+                    ParagraphVecShort, Paragraphs, VecExt,
                 },
                 TextStyle,
             },
@@ -50,6 +50,12 @@ use super::{
 };
 
 impl FirmwareUI for UIDelizia {
+    // props settings
+    const PROP_INNER_SPACING: i16 = paragraphs::PARAGRAPH_BOTTOM_SPACE;
+    const PROPS_SPACING: i16 = paragraphs::PARAGRAPH_BOTTOM_SPACE;
+    const PROPS_KEY_FONT: TextStyle = theme::TEXT_SUB_GREY_LIGHT;
+    const PROPS_VALUE_FONT: TextStyle = theme::TEXT_MONO;
+    const PROPS_VALUE_MONO_FONT: TextStyle = theme::TEXT_MONO_DATA;
     fn confirm_action(
         title: TString<'static>,
         action: Option<TString<'static>>,
@@ -452,7 +458,7 @@ impl FirmwareUI for UIDelizia {
         _verb: Option<TString<'static>>,
         _external_menu: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let paragraphs = PropsList::new(items)?;
+        let paragraphs = PropsList::new::<UIDelizia>(items)?;
 
         let flow = flow::new_confirm_action_simple(
             paragraphs.into_paragraphs(),

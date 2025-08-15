@@ -16,6 +16,7 @@ use crate::{
         },
         geometry::{Direction, LinearPlacement},
         layout::util::PropsList,
+        ui_firmware::FirmwareUI,
     },
 };
 
@@ -27,6 +28,7 @@ use super::super::{
     },
     flow::util::content_menu_info,
     theme::{self, gradient::Gradient},
+    UIEckhart,
 };
 
 const MENU_ITEM_CANCEL: usize = 0;
@@ -92,23 +94,23 @@ pub fn new_confirm_summary(
         let para = Paragraph::new(&theme::TEXT_SMALL_LIGHT, amount_label);
         if amount.is_some() {
             summary_paragraphs.add(
-                para.with_bottom_padding(theme::PROP_INNER_SPACING)
+                para.with_bottom_padding(UIEckhart::PROP_INNER_SPACING)
                     .no_break(),
             );
         } else {
-            summary_paragraphs.add(para.with_bottom_padding(theme::PROPS_SPACING));
+            summary_paragraphs.add(para.with_bottom_padding(UIEckhart::PROPS_SPACING));
         }
     }
     if let Some(amount) = amount {
         summary_paragraphs.add(
             Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, amount)
-                .with_bottom_padding(theme::PROPS_SPACING),
+                .with_bottom_padding(UIEckhart::PROPS_SPACING),
         );
     }
     summary_paragraphs
         .add(
             Paragraph::new(&theme::TEXT_SMALL_LIGHT, fee_label)
-                .with_bottom_padding(theme::PROP_INNER_SPACING)
+                .with_bottom_padding(UIEckhart::PROP_INNER_SPACING)
                 .no_break(),
         )
         .add(Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, fee));
@@ -180,14 +182,14 @@ pub fn new_confirm_summary(
     let content_extra = content_menu_info(
         extra_title.unwrap_or(TR::buttons__more_info.into()),
         None,
-        extra_paragraphs.unwrap_or_else(|| unwrap!(PropsList::empty())),
+        extra_paragraphs.unwrap_or_else(|| unwrap!(PropsList::empty::<UIEckhart>())),
     );
 
     // AccountInfo
     let content_account = content_menu_info(
         account_title.unwrap_or(TR::address_details__account_info.into()),
         Some(TR::send__send_from.into()),
-        account_paragraphs.unwrap_or_else(|| unwrap!(PropsList::empty())),
+        account_paragraphs.unwrap_or_else(|| unwrap!(PropsList::empty::<UIEckhart>())),
     );
 
     // Cancel

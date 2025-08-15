@@ -3,6 +3,7 @@ use crate::{
     io::BinaryData,
     micropython::{gc::Gc, list::List, obj::Obj},
     strutil::TString,
+    ui::component::text::TextStyle,
 };
 use heapless::Vec;
 
@@ -19,6 +20,11 @@ pub const MAX_MENU_ITEMS: usize = 5;
 pub const ERROR_NOT_IMPLEMENTED: Error = Error::ValueError(c"not implemented");
 
 pub trait FirmwareUI {
+    const PROP_INNER_SPACING: i16; // [px]
+    const PROPS_SPACING: i16; // [px]
+    const PROPS_KEY_FONT: TextStyle;
+    const PROPS_VALUE_FONT: TextStyle;
+    const PROPS_VALUE_MONO_FONT: TextStyle;
     #[allow(clippy::too_many_arguments)]
     fn confirm_action(
         title: TString<'static>,

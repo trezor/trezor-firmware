@@ -54,6 +54,11 @@ use super::{
 use heapless::Vec;
 
 impl FirmwareUI for UIEckhart {
+    const PROP_INNER_SPACING: i16 = 12; // [px]
+    const PROPS_SPACING: i16 = 16; // [px]
+    const PROPS_KEY_FONT: TextStyle = theme::TEXT_SMALL_LIGHT;
+    const PROPS_VALUE_FONT: TextStyle = theme::TEXT_MONO_LIGHT;
+    const PROPS_VALUE_MONO_FONT: TextStyle = theme::TEXT_MONO_LIGHT;
     fn confirm_action(
         title: TString<'static>,
         action: Option<TString<'static>>,
@@ -145,12 +150,12 @@ impl FirmwareUI for UIEckhart {
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = Paragraphs::new([
             Paragraph::new(&theme::TEXT_REGULAR, TR::coinjoin__max_rounds)
-                .with_bottom_padding(theme::PROP_INNER_SPACING)
+                .with_bottom_padding(UIEckhart::PROP_INNER_SPACING)
                 .no_break(),
             Paragraph::new(&theme::TEXT_MONO_LIGHT, max_rounds)
-                .with_bottom_padding(theme::PROPS_SPACING),
+                .with_bottom_padding(UIEckhart::PROPS_SPACING),
             Paragraph::new(&theme::TEXT_REGULAR, TR::coinjoin__max_mining_fee)
-                .with_bottom_padding(theme::PROP_INNER_SPACING)
+                .with_bottom_padding(UIEckhart::PROP_INNER_SPACING)
                 .no_break(),
             Paragraph::new(&theme::TEXT_MONO_LIGHT, max_feerate),
         ])
@@ -255,17 +260,17 @@ impl FirmwareUI for UIEckhart {
             paragraphs
                 .add(
                     Paragraph::new(&theme::TEXT_SMALL_LIGHT, description)
-                        .with_bottom_padding(theme::PROP_INNER_SPACING),
+                        .with_bottom_padding(UIEckhart::PROP_INNER_SPACING),
                 )
                 .add(
                     Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, change)
-                        .with_bottom_padding(theme::PROPS_SPACING),
+                        .with_bottom_padding(UIEckhart::PROPS_SPACING),
                 );
         }
         paragraphs
             .add(
                 Paragraph::new(&theme::TEXT_SMALL_LIGHT, total_label)
-                    .with_bottom_padding(theme::PROP_INNER_SPACING),
+                    .with_bottom_padding(UIEckhart::PROP_INNER_SPACING),
             )
             .add(Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, total_fee_new));
 
@@ -297,12 +302,12 @@ impl FirmwareUI for UIEckhart {
 
         let paragraphs = Paragraphs::new([
             Paragraph::new(&theme::TEXT_SMALL_LIGHT, description)
-                .with_bottom_padding(theme::PROP_INNER_SPACING)
+                .with_bottom_padding(UIEckhart::PROP_INNER_SPACING)
                 .no_break(),
             Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, amount_change)
-                .with_bottom_padding(theme::PROPS_SPACING),
+                .with_bottom_padding(UIEckhart::PROPS_SPACING),
             Paragraph::new(&theme::TEXT_SMALL_LIGHT, TR::modify_amount__new_amount)
-                .with_bottom_padding(theme::PROP_INNER_SPACING)
+                .with_bottom_padding(UIEckhart::PROP_INNER_SPACING)
                 .no_break(),
             Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, amount_new),
         ])
@@ -347,12 +352,12 @@ impl FirmwareUI for UIEckhart {
     ) -> Result<impl LayoutMaybeTrace, Error> {
         // collect available info
         let account_paragraphs = if let Some(items) = account_items {
-            Some(PropsList::new(items)?)
+            Some(PropsList::new::<UIEckhart>(items)?)
         } else {
             None
         };
         let extra_paragraphs = if let Some(items) = extra_items {
-            Some(PropsList::new(items)?)
+            Some(PropsList::new::<UIEckhart>(items)?)
         } else {
             None
         };
@@ -386,8 +391,8 @@ impl FirmwareUI for UIEckhart {
             &theme::TEXT_SMALL_LIGHT,
             &theme::TEXT_MONO_MEDIUM_LIGHT,
             &theme::TEXT_MONO_MEDIUM_LIGHT_DATA,
-            theme::PROP_INNER_SPACING,
-            theme::PROPS_SPACING,
+            UIEckhart::PROP_INNER_SPACING,
+            UIEckhart::PROPS_SPACING,
         )?
         .into_paragraphs()
         .with_placement(LinearPlacement::vertical());
@@ -662,12 +667,13 @@ impl FirmwareUI for UIEckhart {
         if let Some(description) = description {
             main_paragraphs.add(
                 Paragraph::new(&theme::TEXT_REGULAR, description)
-                    .with_bottom_padding(theme::PROPS_SPACING),
+                    .with_bottom_padding(UIEckhart::PROPS_SPACING),
             );
         }
         if let Some(extra) = extra {
             main_paragraphs.add(
-                Paragraph::new(&theme::TEXT_SMALL, extra).with_bottom_padding(theme::PROPS_SPACING),
+                Paragraph::new(&theme::TEXT_SMALL, extra)
+                    .with_bottom_padding(UIEckhart::PROPS_SPACING),
             );
         }
         let font = if chunkify {
@@ -699,12 +705,12 @@ impl FirmwareUI for UIEckhart {
             if let Some(account) = account {
                 let mut para = Paragraph::new(&theme::TEXT_MONO_LIGHT, account);
                 if account_path.is_some() {
-                    para = para.with_bottom_padding(theme::PROPS_SPACING);
+                    para = para.with_bottom_padding(UIEckhart::PROPS_SPACING);
                 }
                 paragraphs
                     .add(
                         Paragraph::new(&theme::TEXT_SMALL_LIGHT, TR::words__wallet)
-                            .with_bottom_padding(theme::PROP_INNER_SPACING)
+                            .with_bottom_padding(UIEckhart::PROP_INNER_SPACING)
                             .no_break(),
                     )
                     .add(para);
@@ -716,7 +722,7 @@ impl FirmwareUI for UIEckhart {
                             &theme::TEXT_SMALL_LIGHT,
                             TString::from_translation(TR::address_details__derivation_path),
                         )
-                        .with_bottom_padding(theme::PROP_INNER_SPACING)
+                        .with_bottom_padding(UIEckhart::PROP_INNER_SPACING)
                         .no_break(),
                     )
                     .add(Paragraph::new(&theme::TEXT_MONO_LIGHT, path));
@@ -734,8 +740,8 @@ impl FirmwareUI for UIEckhart {
                 &theme::TEXT_SMALL_LIGHT,
                 &theme::TEXT_MONO_MEDIUM_LIGHT,
                 &theme::TEXT_MONO_MEDIUM_LIGHT,
-                theme::PROP_INNER_SPACING,
-                theme::PROPS_SPACING,
+                UIEckhart::PROP_INNER_SPACING,
+                UIEckhart::PROPS_SPACING,
             )?)
         } else {
             None
@@ -747,8 +753,8 @@ impl FirmwareUI for UIEckhart {
                 &theme::TEXT_SMALL_LIGHT,
                 &theme::TEXT_MONO_MEDIUM_LIGHT,
                 &theme::TEXT_MONO_MEDIUM_LIGHT_DATA,
-                theme::PROP_INNER_SPACING,
-                theme::PROPS_SPACING,
+                UIEckhart::PROP_INNER_SPACING,
+                UIEckhart::PROPS_SPACING,
             )?)
         } else {
             None
@@ -1285,8 +1291,8 @@ impl FirmwareUI for UIEckhart {
             &theme::TEXT_SMALL_LIGHT,
             &theme::TEXT_MONO_MEDIUM_LIGHT,
             value_mono_font,
-            theme::PROP_INNER_SPACING,
-            theme::PROPS_SPACING,
+            UIEckhart::PROP_INNER_SPACING,
+            UIEckhart::PROPS_SPACING,
         )?
         .into_paragraphs()
         .with_placement(LinearPlacement::vertical());

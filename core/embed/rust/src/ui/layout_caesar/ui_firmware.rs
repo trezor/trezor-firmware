@@ -13,8 +13,8 @@ use crate::{
             text::{
                 op::OpTextLayout,
                 paragraphs::{
-                    Checklist, Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort,
-                    Paragraphs, VecExt,
+                    self, Checklist, Paragraph, ParagraphSource, ParagraphVecLong,
+                    ParagraphVecShort, Paragraphs, VecExt,
                 },
                 TextStyle,
             },
@@ -46,6 +46,12 @@ use super::{
 use heapless::Vec;
 
 impl FirmwareUI for UICaesar {
+    // props settings
+    const PROP_INNER_SPACING: i16 = paragraphs::PARAGRAPH_BOTTOM_SPACE;
+    const PROPS_SPACING: i16 = paragraphs::PARAGRAPH_BOTTOM_SPACE;
+    const PROPS_KEY_FONT: TextStyle = theme::TEXT_BOLD;
+    const PROPS_VALUE_FONT: TextStyle = theme::TEXT_MONO;
+    const PROPS_VALUE_MONO_FONT: TextStyle = theme::TEXT_MONO_DATA;
     fn confirm_action(
         title: TString<'static>,
         action: Option<TString<'static>>,

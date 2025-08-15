@@ -28,6 +28,7 @@ use super::super::{
     },
     flow::util::content_menu_info,
     theme::{self, gradient::Gradient},
+    UIEckhart,
 };
 
 const MENU_ITEM_CANCEL: usize = 0;
@@ -485,7 +486,7 @@ pub fn new_confirm_output(
                 content_menu_info(
                     TR::confirm_total__title_fee.into(),
                     None,
-                    fee_paragraphs.unwrap_or_else(|| unwrap!(PropsList::empty())),
+                    fee_paragraphs.unwrap_or_else(|| unwrap!(PropsList::empty::<UIEckhart>())),
                 ),
             )?
             .add_page(

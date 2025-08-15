@@ -15,26 +15,9 @@ use crate::{
             paragraphs::{Paragraph, ParagraphSource},
             TextStyle,
         },
+        ui_firmware::FirmwareUI,
         util::set_animation_disabled,
     },
-};
-
-cfg_if::cfg_if! {
-    if #[cfg(feature = "layout_bolt")] {
-        use crate::ui::layout_bolt::theme;
-    } else if #[cfg(feature = "layout_caesar")] {
-        use crate::ui::layout_caesar::theme;
-    } else if #[cfg(feature = "layout_delizia")] {
-        use crate::ui::layout_delizia::theme;
-    } else if #[cfg(feature = "layout_eckhart")] {
-        use crate::ui::layout_eckhart::theme;
-    } else {
-        compile_error!("Non supported layout feature enabled");
-    }
-}
-
-use theme::{
-    PROPS_KEY_FONT, PROPS_SPACING, PROPS_VALUE_FONT, PROPS_VALUE_MONO_FONT, PROP_INNER_SPACING,
 };
 
 /// Maximum number of characters that can be displayed on screen at once. Used
@@ -133,20 +116,20 @@ impl PropsList {
         })
     }
 
-    pub fn new(obj: Obj) -> Result<Self, Error> {
+    pub fn new<T: FirmwareUI>(obj: Obj) -> Result<Self, Error> {
         Self::new_styled(
             obj,
-            &PROPS_KEY_FONT,
-            &PROPS_VALUE_FONT,
-            &PROPS_VALUE_MONO_FONT,
-            PROP_INNER_SPACING,
-            PROPS_SPACING,
+            &T::PROPS_KEY_FONT,
+            &T::PROPS_VALUE_FONT,
+            &T::PROPS_VALUE_MONO_FONT,
+            T::PROP_INNER_SPACING,
+            T::PROPS_SPACING,
         )
     }
 
-    pub fn empty() -> Result<Self, Error> {
+    pub fn empty<T: FirmwareUI>() -> Result<Self, Error> {
         let empty_list = List::alloc(&[])?; // Create an empty GC list
-        Self::new(empty_list.into())
+        Self::new::<T>(empty_list.into())
     }
 }
 
