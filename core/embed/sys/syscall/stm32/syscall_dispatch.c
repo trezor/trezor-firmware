@@ -738,6 +738,12 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       const bt_le_addr_t *addr = (const bt_le_addr_t *)args[0];
       args[0] = ble_unpair__verified(addr);
     } break;
+
+    case SYSCALL_BLE_GET_BOND_LIST: {
+      bt_le_addr_t *list = (bt_le_addr_t *)args[0];
+      size_t list_size = args[1];
+      args[0] = ble_get_bond_list__verified(list, list_size);
+    } break;
 #endif
 
 #ifdef USE_NRF
