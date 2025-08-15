@@ -37,9 +37,6 @@ class TaskClosed(Exception):
     pass
 
 
-TASK_CLOSED = TaskClosed()
-
-
 def schedule(
     task: Task,
     value: Any = None,
@@ -510,7 +507,7 @@ class spawn(Syscall):
         self.finished = True
         if isinstance(value, GeneratorExit):
             # coerce GeneratorExit to a catchable TaskClosed
-            self.return_value = TASK_CLOSED
+            self.return_value = TaskClosed()
         else:
             self.return_value = value
 
