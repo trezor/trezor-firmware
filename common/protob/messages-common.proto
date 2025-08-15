@@ -200,8 +200,8 @@ message PaymentRequest {
     }
 
     message TextDetailsMemo {
-        optional string title = 1 [default=""];   // plain-text heading
-        optional string text = 2 [default=""];    // plain-text note containing additional details about the payment
+        required string title = 1;     // plain-text heading
+        required string text = 2;      // plain-text note containing additional details about the payment
     }
 
     message RefundMemo {
