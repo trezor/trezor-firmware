@@ -14,6 +14,7 @@ from ..errors import WireBufferError
 from . import (
     CHANNEL_ALLOCATION_REQ,
     CODEC_V1,
+    PING,
     PacketHeader,
     ThpError,
     ThpErrorType,
@@ -32,7 +33,7 @@ if TYPE_CHECKING:
     from trezorio import WireInterface
     from typing import Awaitable, Iterable
 
-_CID_REQ_PAYLOAD_LENGTH = const(12)
+_BROADCAST_PAYLOAD_LENGTH = const(12)
 
 
 class ThpContext:
@@ -68,7 +69,8 @@ class ThpContext:
             assert packet_len == len(packet)
             self._iface.read(packet, 0)
 
-            if _get_ctrl_byte(packet) == CODEC_V1:
+            ctrl_byte = _get_ctrl_byte(packet)
+            if ctrl_byte == CODEC_V1:
                 await self._handle_codec_v1(packet)
                 continue
 
@@ -126,17 +128,25 @@ class ThpContext:
             await self._write_packets([response])
 
     async def _handle_broadcast(self, packet: bytes) -> None:
-        if _get_ctrl_byte(packet) != CHANNEL_ALLOCATION_REQ:
-            raise ThpError("Unexpected ctrl_byte in a broadcast channel packet")
+        ctrl_byte, _, payload_length = ustruct.unpack(">BHH", packet)
 
-        data = packet[: PacketHeader.INIT_LENGTH + _CID_REQ_PAYLOAD_LENGTH]
-        if not checksum.is_valid(data[-CHECKSUM_LENGTH:], data[:-CHECKSUM_LENGTH]):
-            raise ThpError("Checksum is not valid")
+        packet = packet[: PacketHeader.INIT_LENGTH + payload_length]
+        if not checksum.is_valid(packet[-CHECKSUM_LENGTH:], packet[:-CHECKSUM_LENGTH]):
+            raise ThpError("Invalid checksum")
 
-        length, nonce = ustruct.unpack(">H8s", packet[3:])
-        if length != _CID_REQ_PAYLOAD_LENGTH:
+        if payload_length != _BROADCAST_PAYLOAD_LENGTH:
             raise ThpError("Invalid length in broadcast channel packet")
 
+        nonce = packet[PacketHeader.INIT_LENGTH : -CHECKSUM_LENGTH]
+
+        if ctrl_byte == PING:
+            response_header = PacketHeader.get_pong_header(_BROADCAST_PAYLOAD_LENGTH)
+            return await self.write_payload(response_header, nonce)
+
+        if ctrl_byte != CHANNEL_ALLOCATION_REQ:
+            raise ThpError("Unexpected ctrl_byte in a broadcast channel packet")
+
+        log.info(__name__, "got alloc: %s", utils.hexlify_if_bytes(packet))
         channel_cache = channel_manager.create_new_channel(self._iface)
         channel = self._load_channel(channel_cache)
 

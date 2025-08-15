@@ -1440,6 +1440,10 @@ class TrezorClientDebugLink(TrezorClient):
                 except Exception:
                     pass
 
+        if self.protocol_version is ProtocolVersion.V2:
+            assert isinstance(self.protocol, ProtocolV2Channel)
+            self.protocol.sync_responses()
+
     def mnemonic_callback(self, _) -> str:
         word, pos = self.debug.read_recovery_word()
         if word:

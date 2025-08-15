@@ -137,6 +137,23 @@ class ProtocolV2Channel(Channel):
         self.sync_bit_send = 0
         self.sync_bit_receive = 0
 
+    def sync_responses(
+        self, retries: int = MAX_RETRANSMISSION_COUNT, timeout: float = 10.0
+    ) -> None:
+        """Make sure the event loop is running and ready."""
+        nonce = os.urandom(8)
+        thp_io.write_payload_to_wire_and_add_checksum(
+            self.transport,
+            MessageHeader.get_ping_header(len(nonce) + CHECKSUM_LENGTH),
+            nonce,
+        )
+        for _ in range(1 + retries):
+            header, payload = self._read_until_valid_crc_check(timeout=timeout)
+            if self._is_valid_pong(header, payload, nonce):
+                break
+        else:
+            raise RuntimeError("Invalid ping response")
+
     def _do_channel_allocation(self, retries: int = 0) -> None:
         channel_allocation_nonce = os.urandom(8)
         self._send_channel_allocation_request(channel_allocation_nonce)
@@ -149,7 +166,9 @@ class ProtocolV2Channel(Channel):
     def _send_channel_allocation_request(self, nonce: bytes):
         thp_io.write_payload_to_wire_and_add_checksum(
             self.transport,
-            MessageHeader.get_channel_allocation_request_header(12),
+            MessageHeader.get_channel_allocation_request_header(
+                len(nonce) + CHECKSUM_LENGTH
+            ),
             nonce,
         )
 
@@ -379,6 +398,17 @@ class ProtocolV2Channel(Channel):
             return False
         if payload[:8] != original_nonce:
             LOG.error("Invalid channel allocation response payload (nonce mismatch)")
+            return False
+        return True
+
+    def _is_valid_pong(
+        self, header: MessageHeader, payload: bytes, original_nonce: bytes
+    ) -> bool:
+        if not header.is_pong():
+            LOG.error("Received message is not a pong")
+            return False
+        if payload != original_nonce:
+            LOG.error("Invalid pong payload (nonce mismatch)")
             return False
         return True
 
