@@ -20,7 +20,6 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/secure_aes/inc",
         "embed/sec/time_estimate/inc",
         "embed/sys/bsp/stm32u5",
-        "embed/sys/dbg/inc",
         "embed/sys/irq/inc",
         "embed/sys/linker/inc",
         "embed/sys/mpu/inc",
@@ -93,7 +92,6 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/secure_aes/stm32u5/secure_aes_unpriv.c",
         "embed/sec/storage/stm32u5/storage_salt.c",
         "embed/sec/time_estimate/stm32/time_estimate.c",
-        "embed/sys/dbg/stm32/dbg_printf.c",
         "embed/sys/irq/stm32/irq.c",
         "embed/sys/linker/linker_utils.c",
         "embed/sys/mpu/stm32u5/mpu.c",
@@ -131,6 +129,23 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/util/tsqueue/tsqueue.c",
         "embed/util/unit_properties/stm32/unit_properties.c",
     ]
+
+    if "dbg_console" in features_wanted:
+        sources += [
+            "embed/sys/dbg/dbg_console.c",
+            "embed/sys/dbg/stm32/dbg_console_backend.c",
+        ]
+        paths += ["embed/sys/dbg/inc"]
+        defines += [("USE_DBG_CONSOLE", "1")]
+
+        if env.get("DBG_CONSOLE") == "VCP" and "usb" in features_wanted:
+            features_wanted += ["usb_iface_vcp"]
+            defines += ["USE_DBG_CONSOLE_VCP"]
+        elif env.get("DBG_CONSOLE") == "SWO":
+            defines += ["USE_DBG_CONSOLE_SWO"]
+        elif env.get("DBG_CONSOLE") == "SYSTEM_VIEW":
+            features_wanted += ["system_view"]
+            defines += ["USE_DBG_CONSOLE_SYSTEM_VIEW"]
 
     if "applet" in features_wanted:
         sources += ["embed/sys/task/stm32/applet.c"]

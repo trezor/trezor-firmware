@@ -21,22 +21,26 @@
 
 #include "py/mphal.h"
 
-#include <io/usb_config.h>
 #include <sys/systick.h>
 
+#ifdef USE_DBG_CONSOLE
+#include <sys/dbg_console.h>
+#endif
+
 int mp_hal_stdin_rx_chr(void) {
+#ifdef USE_DBG_CONSOLE
   uint8_t c = 0;
-  int r = syshandle_read(SYSHANDLE_USB_VCP, &c, sizeof(c));
-  (void)r;
+  dbg_console_read(&c, sizeof(c));
   return c;
+#else
+  return 0;
+#endif
 }
 
 void mp_hal_stdout_tx_strn(const char *str, size_t len) {
-  // The write timeout defaults to 0, because otherwise when the VCP receive
-  // buffer on the host gets full, the timeout will block device operation.
-  int r = syshandle_write_blocking(SYSHANDLE_USB_VCP, (const uint8_t *)str, len,
-                                   BLOCK_ON_VCP ? 1000 : 0);
-  (void)r;
+#ifdef USE_DBG_CONSOLE
+  dbg_console_write(str, len);
+#endif
 }
 
 // Dummy implementation required by ports/stm32/gccollect.c.

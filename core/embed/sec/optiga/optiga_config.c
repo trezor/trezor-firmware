@@ -29,26 +29,33 @@
 
 #include "memzero.h"
 
-#ifdef USE_OPTIGA_LOGGING
+#ifdef USE_DBG_CONSOLE
+#include <sys/dbg_console.h>
+#endif
+
+#if defined(USE_DBG_CONSOLE) && defined(USE_OPTIGA_LOGGING)
 #include <inttypes.h>
 #if 1  // color log
 #define OPTIGA_LOG_FORMAT \
-  "%" PRIu32 " \x1b[35moptiga\x1b[0m \x1b[32mDEBUG\x1b[0m %s: "
+  "%d.%03d \x1b[35moptiga\x1b[0m \x1b[32mDEBUG\x1b[0m %s: "
 #else
-#define OPTIGA_LOG_FORMAT "%" PRIu32 " optiga DEBUG %s: "
+#define OPTIGA_LOG_FORMAT "%d.%03d optiga DEBUG %s: "
 #endif
 static void optiga_log_hex(const char *prefix, const uint8_t *data,
                            size_t data_size) {
-  printf(OPTIGA_LOG_FORMAT, hal_ticks_ms() * 1000, prefix);
+  ticks_t now = hal_ticks_ms();
+  uint32_t sec = now / 1000;
+  uint32_t msec = now % 1000;
+  dbg_console_printf(OPTIGA_LOG_FORMAT, sec, msec, prefix);
   for (size_t i = 0; i < data_size; i++) {
-    printf("%02x", data[i]);
+    dbg_console_printf("%02x", data[i]);
   }
-  printf("\n");
+  dbg_console_printf("\n");
 }
 #endif
 
 void optiga_init_and_configure(void) {
-#ifdef USE_OPTIGA_LOGGING
+#if defined(USE_DBG_CONSOLE) && defined(USE_OPTIGA_LOGGING)
   // command log is relatively quiet so we enable it in debug builds
   optiga_command_set_log_hex(optiga_log_hex);
   // transport log can be spammy, uncomment if you want it:

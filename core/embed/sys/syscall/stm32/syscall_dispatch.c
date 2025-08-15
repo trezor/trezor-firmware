@@ -167,6 +167,20 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       args[0] = syshandle_write__verified(handle, data, data_size);
     } break;
 
+#ifdef USE_DBG_CONSOLE
+    case SYSCALL_DBG_CONSOLE_READ: {
+      void *buffer = (void *)args[0];
+      size_t buffer_size = (size_t)args[1];
+      args[0] = dbg_console_read__verified(buffer, buffer_size);
+    } break;
+
+    case SYSCALL_DBG_CONSOLE_WRITE: {
+      const void *data = (const void *)args[0];
+      size_t data_size = (size_t)args[1];
+      dbg_console_write__verified(data, data_size);
+    } break;
+#endif
+
     case SYSCALL_BOOT_IMAGE_CHECK: {
       const boot_image_t *image = (const boot_image_t *)args[0];
       args[0] = boot_image_check__verified(image);
