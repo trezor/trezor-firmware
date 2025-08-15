@@ -70,6 +70,7 @@ typedef struct {
 typedef struct {
   bool accept_msgs;
   bool reboot_on_resume;
+  uint8_t peer_count;
   ble_mode_t mode_requested;
   uint8_t connected_addr[6];
   uint8_t connected_addr_type;
