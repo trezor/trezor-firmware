@@ -727,6 +727,10 @@ uint32_t nrf_get_version(void) {
   return syscall_invoke0(SYSCALL_NRF_GET_VERSION);
 }
 
+bool nrf_authenticate(void) {
+  return (bool)syscall_invoke0(SYSCALL_NRF_AUTHENTICATE);
+}
+
 #endif
 
 // =============================================================================
