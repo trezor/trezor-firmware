@@ -37,8 +37,8 @@ static bool usb_write(uint8_t* data, size_t size) {
     return false;
   }
 
-  int r =
-      usb_webusb_write_blocking(SYSHANDLE_USB_IFACE_0, data, size, USB_TIMEOUT);
+  ssize_t r =
+      syshandle_write_blocking(SYSHANDLE_USB_WIRE, data, size, USB_TIMEOUT);
 
   return r == size;
 }
@@ -48,8 +48,8 @@ static int usb_read(uint8_t* buffer, size_t buffer_size) {
     return -1;
   }
 
-  int r = usb_webusb_read_blocking(SYSHANDLE_USB_IFACE_0, buffer,
-                                   USB_PACKET_SIZE, USB_TIMEOUT);
+  ssize_t r = syshandle_read_blocking(SYSHANDLE_USB_WIRE, buffer, buffer_size,
+                                      USB_TIMEOUT);
 
   return r;
 }
@@ -59,46 +59,6 @@ static void usb_error(void) {
                     "Error reading from USB. Try different USB cable.", NULL);
 }
 
-static void usb_init_all(secbool usb21_landing) {
-  usb_dev_info_t dev_info = {
-      .device_class = 0x00,
-      .device_subclass = 0x00,
-      .device_protocol = 0x00,
-      .vendor_id = 0x1209,
-      .product_id = 0x53C0,
-      .release_num = 0x0200,
-      .manufacturer = MODEL_USB_MANUFACTURER,
-      .product = MODEL_USB_PRODUCT,
-      .serial_number = "000000000000000000000000",
-      .interface = "TREZOR Interface",
-      .usb21_enabled = sectrue,
-      .usb21_landing = usb21_landing,
-  };
-
-  static uint8_t rx_buffer[USB_PACKET_SIZE];
-
-  static const usb_webusb_info_t webusb_info = {
-      .iface_num = SYSHANDLE_USB_IFACE_0,
-#ifdef TREZOR_EMULATOR
-      .emu_port = 21324,
-#else
-      .ep_in = 0x01,
-      .ep_out = 0x01,
-#endif
-      .subclass = 0,
-      .protocol = 0,
-      .max_packet_len = sizeof(rx_buffer),
-      .rx_buffer = rx_buffer,
-      .polling_interval = 1,
-  };
-
-  ensure(usb_init(&dev_info), NULL);
-
-  ensure(usb_webusb_add(&webusb_info), NULL);
-
-  ensure(usb_start(), NULL);
-}
-
 wire_iface_t* usb_iface_init(secbool usb21_landing) {
   wire_iface_t* iface = &g_usb_iface;
 
@@ -106,11 +66,16 @@ wire_iface_t* usb_iface_init(secbool usb21_landing) {
     return iface;
   }
 
-  usb_init_all(usb21_landing);
+  usb_start_params_t params = {
+      .serial_number = "000000000000000000000000",
+      .usb21_landing = usb21_landing,
+  };
+
+  usb_start(&params);
 
   memset(iface, 0, sizeof(wire_iface_t));
 
-  iface->poll_iface_id = SYSHANDLE_USB_IFACE_0;
+  iface->poll_iface_id = SYSHANDLE_USB_WIRE;
   iface->tx_packet_size = USB_PACKET_SIZE;
   iface->rx_packet_size = USB_PACKET_SIZE;
   iface->write = &usb_write;
@@ -129,5 +94,5 @@ void usb_iface_deinit(void) {
   }
 
   memset(iface, 0, sizeof(wire_iface_t));
-  usb_deinit();
+  usb_stop();
 }

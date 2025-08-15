@@ -21,10 +21,12 @@
 
 #include <trezor_types.h>
 
-// Event sources that can be signaled by the system or device drivers
+/** System handles registered by system or device drivers */
 typedef enum {
-  SYSHANDLE_USB_IFACE_0,
-  SYSHANDLE_USB_IFACE_7 = SYSHANDLE_USB_IFACE_0 + 7,
+  SYSHANDLE_USB_WIRE,
+  SYSHANDLE_USB_DEBUG,
+  SYSHANDLE_USB_WEBAUTHN,
+  SYSHANDLE_USB_VCP,
   SYSHANDLE_BLE_IFACE_0,
   // SYSHANDLE_BLE_IFACE_N = SYSHANDLE_BLE_IFACE_0 + N - 1,
   SYSHANDLE_POWER_MANAGER,
@@ -36,7 +38,66 @@ typedef enum {
   SYSHANDLE_COUNT,
 } syshandle_t;
 
-// Bitmask of event sources
+#define SYSHANDLE_USB_IFACE_MIN SYSHANDLE_USB_WIRE
+#define SYSHANDLE_USB_IFACE_MAX SYSHANDLE_USB_VCP
+
+/**
+ * Reads data from the specified device
+ *
+ * This function is non-blocking and returns immediately.
+ *
+ * @param handle Handle of the device to read from
+ * @param buffer Pointer to the buffer where the read data will be stored
+ * @param buffer_size Size of the buffer in bytes
+ *
+ * @return Number of bytes read, or negative value on error.
+ */
+ssize_t syshandle_read(syshandle_t handle, void* buffer, size_t buffer_size);
+
+/**
+ * Writes data to the specified device
+ *
+ * This function is non-blocking and returns immediately.
+ *
+ * @param handle Handle of the device to write to
+ * @param data Pointer to the data to write
+ * @param data_size Size of the data in bytes
+ *
+ * @return Number of bytes written, or negative value on error.
+ */
+ssize_t syshandle_write(syshandle_t handle, const void* data, size_t data_size);
+
+/**
+ * Reads data from the specified device, blocks until data is available
+ * or timeout expires.
+ *
+ * If the timeout is 0, the function behaves like `syshandle_read`.
+ *
+ * @param handle Handle of the device to read from
+ * @param buffer Pointer to the buffer where the read data will be stored
+ * @param buffer_size Size of the buffer in bytes
+ * @param timeout Timeout in milliseconds, 0 means no timeout
+ *
+ * @return Number of bytes read, or negative value on error.
+ */
+ssize_t syshandle_read_blocking(syshandle_t handle, void* buffer,
+                                size_t buffer_size, uint32_t timeout);
+
+/**
+ * Writes data to the specified device, blocks until data is written
+ * or timeout expires.
+ *
+ * If the timeout is 0, the function behaves like `syshandle_write`.
+ *
+ * @param handle Handle of the device to write to
+ * @param data Pointer to the data to write
+ * @param data_size Size of the data in bytes
+ * @param timeout Timeout in milliseconds, 0 means no timeout
+ */
+ssize_t syshandle_write_blocking(syshandle_t handle, const void* data,
+                                 size_t data_size, uint32_t timeout);
+
+// Bitmask of event handles
 typedef uint32_t syshandle_mask_t;
 
 typedef struct {
@@ -46,12 +107,14 @@ typedef struct {
   syshandle_mask_t write_ready;
 } sysevents_t;  // sys_events_t
 
-// Polls for the specified events. The function blocks until at least
-// one event is signaled or deadline expires.
-//
-// Multiple events may be signaled simultaneously.
-//
-// Returns the events that were signaled. If the timeout expires, both
-// fields in the result are set to 0.
+/*
+ * Polls for the specified device events. The function blocks until at least
+ * one event is signaled or deadline expires.
+ *
+ * Multiple events may be signaled simultaneously.
+ *
+ * Returns the events that were signaled. If the timeout expires, both
+ * fields in the result are set to 0.
+ */
 void sysevents_poll(const sysevents_t* awaited, sysevents_t* signalled,
                     uint32_t deadline);

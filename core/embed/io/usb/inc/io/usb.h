@@ -17,14 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TREZORHAL_USB_H__
-#define __TREZORHAL_USB_H__
+#pragma once
 
 #include <trezor_types.h>
-
-#include <io/usb_hid.h>
-#include <io/usb_vcp.h>
-#include <io/usb_webusb.h>
 
 #define USB_PACKET_LEN 64
 
@@ -70,6 +65,8 @@ typedef union {
 //
 // clang-format on
 
+#define USB_MAX_STR_SIZE 62
+
 typedef struct {
   uint8_t device_class;
   uint8_t device_subclass;
@@ -77,53 +74,69 @@ typedef struct {
   uint16_t vendor_id;
   uint16_t product_id;
   uint16_t release_num;
-  const char *manufacturer;
-  const char *product;
-  const char *serial_number;
-  const char *interface;
+  char manufacturer[USB_MAX_STR_SIZE + 1];
+  char product[USB_MAX_STR_SIZE + 1];
+  char serial_number[USB_MAX_STR_SIZE + 1];
+  char interface[USB_MAX_STR_SIZE + 1];
   secbool usb21_enabled;
   secbool usb21_landing;
 } usb_dev_info_t;
 
-// Initializes USB stack
-//
-// When the USB driver is initialized, class drivers can be registered.
-// After all class drivers are registered, `usb_start()` can  be called.
-//
-// Returns `sectrue` if the initialization is successful.
+typedef struct {
+  char serial_number[USB_MAX_STR_SIZE + 1];
+  secbool usb21_landing;
+} usb_start_params_t;
+
+/**
+ * Initializes the USB stack driver.
+ *
+ * When the USB driver is initialized, class drivers can be registered using
+ * `usb_xxx_add()` functions. After all class drivers are registered,
+ * `usb_start` can be called.
+ *
+ * @param dev_info Pointer to USB device information structure.
+ * @return `sectrue` if the initialization is successful.
+ */
 secbool usb_init(const usb_dev_info_t *dev_info);
 
-// Deinitialize USB stack
-//
-// This function completely deinitializes the USB driver and all class drivers.
-// After this function is called, `usb_init()` can be called again.
+/**
+ * Deinitializes the USB stack.
+ *
+ * This function completely deinitializes the USB driver and all class drivers.
+ * After this function is called, `usb_init` can be called again.
+ */
 void usb_deinit(void);
 
-// Starts USB driver and its class drivers
-//
-// Initializes the USB stack (and hardware) and starts all registered class
-// drivers.
-//
-// This function can be called after all class drivers are registered or after
-// `usb_stop()` is called.
-//
-// Returns `sectrue` if the USB stack is started successfully.
-secbool usb_start(void);
+/**
+ * Starts the USB stack and registered class drivers.
+ *
+ * @param params Parameter that can be used to change some
+ * settings specified during USB stack initialization. May be `NULL`.
+ *
+ * @return `sectrue` if the USB stack is started successfully.
+ */
+secbool usb_start(usb_start_params_t *params);
 
-// Stops USB driver and its class drivers
-//
-// Uninitializes the USB stack (and hardware) but leaves all configuration
-// intact, so it can be started again with `usb_start()`.
-//
-// When the USB stack is stopped, it does not respond to any USB events and
-// the CPU can go to stop/standby mode.
+/**
+ * Stops the USB stack but leaves all configuration intact,
+ * so it can be re-started again with @ref usb_start.
+ *
+ * When the USB stack is stopped, it does not respond to any USB events and
+ * the CPU can go to stop/standby mode.
+ */
 void usb_stop(void);
 
-// Reads USB event
-// Return USB_EVENT_NONE if no event is available
+/**
+ * @brief Reads a USB event.
+ *
+ * @return USB_EVENT_NONE if no event is available.
+ */
 usb_event_t usb_get_event(void);
 
-// Reads USB state into `state`
+/**
+ * @brief Reads the USB state into the provided structure.
+ *
+ * @param state Pointer to a @ref usb_state_t structure to receive the
+ * current state.
+ */
 void usb_get_state(usb_state_t *state);
-
-#endif
