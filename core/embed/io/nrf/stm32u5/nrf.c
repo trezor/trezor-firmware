@@ -491,6 +491,35 @@ bool nrf_get_info(nrf_info_t *info) {
   return false;
 }
 
+uint32_t nrf_get_version(void) {
+  nrf_driver_t *drv = &g_nrf_driver;
+  if (!drv->initialized) {
+    return 0;
+  }
+
+  drv->info_valid = false;
+
+  uint8_t data[1] = {MGMT_CMD_INFO};
+  if (nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, 1, NULL, NULL) < 0) {
+    return 0;
+  }
+
+  uint32_t timeout = ticks_timeout(100);
+
+  while (!ticks_expired(timeout)) {
+    if (drv->info_valid) {
+      uint32_t version = 0;
+      version |= drv->info.version_major << 24;
+      version |= drv->info.version_minor << 16;
+      version |= drv->info.version_patch << 8;
+      version |= drv->info.version_tweak;
+      return version;
+    }
+  }
+
+  return 0;
+}
+
 bool nrf_system_off(void) {
   nrf_driver_t *drv = &g_nrf_driver;
   if (!drv->initialized) {
