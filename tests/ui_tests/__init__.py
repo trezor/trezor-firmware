@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import shutil
-import time
 import typing as t
 from contextlib import contextmanager
 
@@ -10,7 +9,6 @@ import pytest
 from _pytest.nodes import Node
 from _pytest.outcomes import Failed
 
-from trezorlib.client import ProtocolVersion
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 LOG = logging.getLogger(__name__)
@@ -58,15 +56,9 @@ def screen_recording(
     shutil.rmtree(testcase.actual_dir, ignore_errors=True)
     testcase.actual_dir.mkdir()
 
-    if client.protocol_version is ProtocolVersion.V2:
-        # In case of an event loop restart, it's possible that the first
-        # packet(s) of `DebugLinkRecordScreen` will be lost, resulting in
-        # `TrezorFailure: FirmwareError: Invalid magic` error responses
-        # during test setup.
-        # This issue will be resolved as part of THP event loop restart refactoring,
-        # but till then let's wait a bit here, to reduce the packet loss probability.
-        # TODO: remove after THP event loop restart refactoring
-        time.sleep(0.1)
+    # Make sure the device is ready - otherwise, the next `DebugLinkRecordScreen` request
+    # may be lost due to an event loop restart.
+    client.sync_responses()
     try:
         client.debug.start_recording(str(testcase.actual_dir))
         yield
