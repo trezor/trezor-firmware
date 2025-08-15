@@ -19,7 +19,7 @@ class TestEthereumTokens(unittest.TestCase):
         token = tokens.token_by_chain_address(999, b"\x00\xFF")
         self.assertIs(token, None)
 
-        self.assertEqual(tokens.UNKNOWN_TOKEN.symbol, "Wei UNKN")
+        self.assertEqual(tokens.UNKNOWN_TOKEN.symbol, "Wei UNKN")
         self.assertEqual(tokens.UNKNOWN_TOKEN.decimals, 0)
 
 

@@ -131,7 +131,7 @@ def call_sign_tx(session: Session, parameters, input_flow=None, chunkify: bool =
         # It could be changed to encode the payment request in the JSON,
         # but it feels overkill for now.
         purchase_memo = CoinPurchaseMemo(
-            amount="0.00001 BTC",
+            amount="0.00001 BTC",
             coin_name="Bitcoin",
             slip44=0,
             address_n=parse_path("m/44h/0h/0h/0/0"),

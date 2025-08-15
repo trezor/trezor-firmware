@@ -83,7 +83,7 @@ def test_solana_sign_tx(session: Session, parameters, result):
 
         if parameters.get("payment_req"):
             purchase_memo = CoinPurchaseMemo(
-                amount="0.00001 BTC",
+                amount="0.00001 BTC",
                 coin_name="Bitcoin",
                 slip44=0,
                 address_n=parse_path("m/44h/0h/0h/0/0"),

@@ -35,7 +35,7 @@ def format_coin_amount(amount: int, coin: CoinInfo, amount_unit: AmountUnit) -> 
         decimals = 0
         shortcut = "sat"
         if coin.coin_shortcut != "BTC":
-            shortcut += " " + coin.coin_shortcut
+            shortcut += " " + coin.coin_shortcut
     elif amount_unit == AmountUnit.MICROBITCOIN and decimals >= 6:
         decimals -= 6
         shortcut = "u" + shortcut
@@ -190,8 +190,8 @@ async def show_payment_request_details(
             )
             trades.append(
                 (
-                    f"-\u00A0{total_amount}",
-                    f"+\u00A0{memo.coin_purchase_memo.amount}",
+                    f"- {total_amount}",
+                    f"+ {memo.coin_purchase_memo.amount}",
                     memo.coin_purchase_memo.address,
                     coin_purchase_account,
                     coin_purchase_account_path,

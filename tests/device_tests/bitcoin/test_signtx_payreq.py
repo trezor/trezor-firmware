@@ -73,7 +73,7 @@ def test_signtx_payment_req_swap_with_text_and_refund(
     ]
 
     swap_memo = CoinPurchaseMemo(
-        amount="0.0636 ETH",
+        amount="0.0636 ETH",
         coin_name="Ethereum",
         slip44=60,
         address_n=parse_path("m/44h/60h/0h/0/0"),
@@ -159,7 +159,7 @@ outputs = [
 
 memos1 = [
     CoinPurchaseMemo(
-        amount="15.9636 DOGE",
+        amount="15.9636 DOGE",
         coin_name="Dogecoin",
         slip44=3,
         address_n=parse_path("m/44h/3h/0h/1/0"),
@@ -168,13 +168,13 @@ memos1 = [
 
 memos2 = [
     CoinPurchaseMemo(
-        amount="3.1896 DOGE",
+        amount="3.1896 DOGE",
         coin_name="Dogecoin",
         slip44=3,
         address_n=parse_path("m/44h/3h/0h/1/0"),
     ),
     CoinPurchaseMemo(
-        amount="831.570802 BCH",
+        amount="831.570802 BCH",
         coin_name="Bcash",
         slip44=145,
         address_n=parse_path("m/44h/145h/0h/0/3"),
@@ -359,7 +359,7 @@ def test_payment_req_wrong_mac_refund(session: Session):
 def test_payment_req_wrong_mac_purchase(session: Session):
     # Test wrong MAC in payment request memo.
     memo = CoinPurchaseMemo(
-        amount="22.34904 DOGE",
+        amount="22.34904 DOGE",
         coin_name="Dogecoin",
         slip44=3,
         address_n=parse_path("m/44h/3h/0h/1/0"),
