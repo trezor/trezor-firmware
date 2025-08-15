@@ -760,6 +760,10 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       args[0] = nrf_update__verified(data, len);
     } break;
 
+    case SYSCALL_NRF_GET_VERSION: {
+      args[0] = nrf_get_version();
+    } break;
+
 #endif
 
 #ifdef USE_POWER_MANAGER

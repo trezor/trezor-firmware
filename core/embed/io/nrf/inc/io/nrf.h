@@ -151,6 +151,14 @@ bool nrf_abort_msg(int32_t id);
 bool nrf_get_info(nrf_info_t *info);
 
 /**
+ * Get application/firmware version of the NRF device.
+ *
+ * @return version number of the NRF device as a 32-bit integer - with major
+ * being MSB. Returns zero in case of failure.
+ */
+uint32_t nrf_get_version(void);
+
+/**
  * @brief Place the NRF device into system-off (deep sleep) mode.
  *
  * @return true if the command was acknowledged; false otherwise
@@ -192,6 +200,11 @@ bool nrf_update_required(const uint8_t *image_ptr, size_t image_len);
  */
 bool nrf_update(const uint8_t *image_ptr, size_t image_len);
 
+/**
+ * @brief Authenticate pairing of nRF chip with Trezor
+ *
+ * @return true if nrf chip is properly paired
+ */
 bool nrf_authenticate(void);
 
 ///////////////////////////////////////////////////////////////////////////////

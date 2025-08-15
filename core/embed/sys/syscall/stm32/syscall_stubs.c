@@ -723,6 +723,10 @@ bool nrf_update(const uint8_t *data, size_t len) {
                                SYSCALL_NRF_UPDATE);
 }
 
+uint32_t nrf_get_version(void) {
+  return syscall_invoke0(SYSCALL_NRF_GET_VERSION);
+}
+
 #endif
 
 // =============================================================================
