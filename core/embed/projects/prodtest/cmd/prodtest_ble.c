@@ -26,6 +26,7 @@
 #include <io/nrf.h>
 #include <io/usb.h>
 #include <rtl/cli.h>
+#include <sys/sysevent.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
 
@@ -303,7 +304,7 @@ static void prodtest_ble_radio_test_cmd(cli_t* cli) {
     }
 
     // Read byte from the command line and pass it to NRF UART;
-    if (usb_vcp_read(0, &cmd_line_byte, 1) > 0) {
+    if (syshandle_read(SYSHANDLE_USB_VCP, &cmd_line_byte, 1) > 0) {
       HAL_UART_Transmit(&huart, &cmd_line_byte, 1, 100);
     }
 
@@ -320,7 +321,9 @@ static void prodtest_ble_radio_test_cmd(cli_t* cli) {
   cli_ok(cli, "");
 }
 
-void dtm_rx_callback(uint8_t byte) { (void)!usb_vcp_write(0, &byte, 1); }
+void dtm_rx_callback(uint8_t byte) {
+  syshandle_write(SYSHANDLE_USB_VCP, &byte, sizeof(byte));
+}
 
 void prodtest_ble_direct_test_mode_cmd(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
@@ -345,7 +348,7 @@ void prodtest_ble_direct_test_mode_cmd(cli_t* cli) {
     // }
 
     // Read byte from the command line and pass it to NRF UART;
-    if (usb_vcp_read(0, &cmd_line_byte, 1) > 0) {
+    if (syshandle_read(SYSHANDLE_USB_VCP, &cmd_line_byte, 1) > 0) {
       nrf_dtm_send_data(&cmd_line_byte, 1);
     }
   }

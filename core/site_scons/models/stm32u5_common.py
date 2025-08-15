@@ -2,6 +2,8 @@ from __future__ import annotations
 
 
 def stm32u5_common_files(env, features_wanted, defines, sources, paths):
+    features_available: list[str] = []
+
     defines += [
         ("STM32_HAL_H", "<stm32u5xx.h>"),
         ("FLASH_BLOCK_WORDS", "4"),
@@ -133,4 +135,33 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
     if "applet" in features_wanted:
         sources += ["embed/sys/task/stm32/applet.c"]
 
+    if "usb" in features_wanted:
+        sources += [
+            "embed/io/usb/stm32/usb_class_hid.c",
+            "embed/io/usb/stm32/usb_class_vcp.c",
+            "embed/io/usb/stm32/usb_class_webusb.c",
+            "embed/io/usb/stm32/usb.c",
+            "embed/io/usb/stm32/usbd_conf.c",
+            "embed/io/usb/stm32/usbd_core.c",
+            "embed/io/usb/stm32/usbd_ctlreq.c",
+            "embed/io/usb/stm32/usbd_ioreq.c",
+            "embed/io/usb/usb_config.c",
+            "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_ll_usb.c",
+        ]
+
+        features_available.append("usb")
+        paths += ["embed/io/usb/inc"]
+        defines += [("USE_USB", "1")]
+
+        if "usb_iface_wire" in features_wanted:
+            defines += [("USE_USB_IFACE_WIRE", "1")]
+        if "usb_iface_debug" in features_wanted:
+            defines += [("USE_USB_IFACE_DEBUG", "1")]
+        if "usb_iface_webauthn" in features_wanted:
+            defines += [("USE_USB_IFACE_WEBAUTHN", "1")]
+        if "usb_iface_vcp" in features_wanted:
+            defines += [("USE_USB_IFACE_VCP", "1")]
+
     env.get("ENV")["SUFFIX"] = "stm32u5"
+
+    return features_available

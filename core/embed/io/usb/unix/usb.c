@@ -29,12 +29,13 @@
 #include <unistd.h>
 
 #include <io/usb.h>
+#include <io/usb_hid.h>
+#include <io/usb_vcp.h>
+#include <io/usb_webusb.h>
+
 #include "profile.h"
 
 #include "memzero.h"
-
-// emulator opens UDP server and emulates HID/WebUSB interfaces
-// gracefully ignores all other USB interfaces
 
 #define USBD_MAX_NUM_INTERFACES 8
 
@@ -65,7 +66,7 @@ secbool usb_init(const usb_dev_info_t *dev_info) {
   UNUSED(dev_info);
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
     usb_iface_t *iface = &usb_ifaces[i];
-    iface->handle = SYSHANDLE_USB_IFACE_0 + i;
+    iface->handle = 0;
     iface->type = USB_IFACE_TYPE_DISABLED;
     iface->port = 0;
     iface->sock = -1;
@@ -80,7 +81,7 @@ secbool usb_init(const usb_dev_info_t *dev_info) {
 
 void usb_deinit(void) { usb_stop(); }
 
-secbool usb_start(void) {
+secbool usb_start(usb_start_params_t *params) {
   const char *ip = getenv("TREZOR_UDP_IP");
 
   // iterate interfaces
@@ -110,8 +111,8 @@ secbool usb_start(void) {
                                 sizeof(struct sockaddr_in))),
            NULL);
 
-    ensure(sectrue * syshandle_register(SYSHANDLE_USB_IFACE_0 + i,
-                                        &usb_iface_handle_vmt, iface),
+    ensure(sectrue *
+               syshandle_register(iface->handle, &usb_iface_handle_vmt, iface),
            NULL);
   }
 
@@ -124,36 +125,48 @@ void usb_stop(void) {
     if (iface->sock >= 0) {
       close(iface->sock);
       iface->sock = -1;
-      syshandle_unregister(SYSHANDLE_USB_IFACE_0 + i);
+      syshandle_unregister(iface->handle);
     }
   }
 }
 
 secbool usb_hid_add(const usb_hid_info_t *info) {
-  if (info->iface_num < USBD_MAX_NUM_INTERFACES &&
-      usb_ifaces[info->iface_num].type == USB_IFACE_TYPE_DISABLED) {
-    usb_ifaces[info->iface_num].type = USB_IFACE_TYPE_HID;
-    usb_ifaces[info->iface_num].port = info->emu_port;
+  if (info->iface_num < USBD_MAX_NUM_INTERFACES) {
+    usb_iface_t *iface = &usb_ifaces[info->iface_num];
+    if (iface->type == USB_IFACE_TYPE_DISABLED) {
+      iface->type = USB_IFACE_TYPE_HID;
+      iface->port = info->emu_port;
+      iface->handle = info->handle;
+      return sectrue;
+    }
   }
-  return sectrue;
+  return secfalse;
 }
 
 secbool usb_webusb_add(const usb_webusb_info_t *info) {
-  if (info->iface_num < USBD_MAX_NUM_INTERFACES &&
-      usb_ifaces[info->iface_num].type == USB_IFACE_TYPE_DISABLED) {
-    usb_ifaces[info->iface_num].type = USB_IFACE_TYPE_WEBUSB;
-    usb_ifaces[info->iface_num].port = info->emu_port;
+  if (info->iface_num < USBD_MAX_NUM_INTERFACES) {
+    usb_iface_t *iface = &usb_ifaces[info->iface_num];
+    if (iface->type == USB_IFACE_TYPE_DISABLED) {
+      iface->type = USB_IFACE_TYPE_WEBUSB;
+      iface->port = info->emu_port;
+      iface->handle = info->handle;
+      return sectrue;
+    }
   }
-  return sectrue;
+  return secfalse;
 }
 
 secbool usb_vcp_add(const usb_vcp_info_t *info) {
-  if (info->iface_num < USBD_MAX_NUM_INTERFACES &&
-      usb_ifaces[info->iface_num].type == USB_IFACE_TYPE_DISABLED) {
-    usb_ifaces[info->iface_num].type = USB_IFACE_TYPE_VCP;
-    usb_ifaces[info->iface_num].port = info->emu_port;
+  if (info->iface_num < USBD_MAX_NUM_INTERFACES) {
+    usb_iface_t *iface = &usb_ifaces[info->iface_num];
+    if (iface->type == USB_IFACE_TYPE_DISABLED) {
+      iface->type = USB_IFACE_TYPE_VCP;
+      iface->port = info->emu_port;
+      iface->handle = info->handle;
+      return sectrue;
+    }
   }
-  return sectrue;
+  return secfalse;
 }
 
 static secbool usb_emulated_poll_read(usb_iface_t *iface) {
@@ -229,164 +242,6 @@ static int usb_emulated_write(usb_iface_t *iface, const uint8_t *buf,
   return r;
 }
 
-secbool usb_hid_can_read(uint8_t iface_num) {
-  if (iface_num >= USBD_MAX_NUM_INTERFACES ||
-      usb_ifaces[iface_num].type != USB_IFACE_TYPE_HID) {
-    return secfalse;
-  }
-  return usb_emulated_poll_read(&usb_ifaces[iface_num]);
-}
-
-secbool usb_webusb_can_read(uint8_t iface_num) {
-  if (iface_num >= USBD_MAX_NUM_INTERFACES ||
-      usb_ifaces[iface_num].type != USB_IFACE_TYPE_WEBUSB) {
-    return secfalse;
-  }
-  return usb_emulated_poll_read(&usb_ifaces[iface_num]);
-}
-
-secbool usb_hid_can_write(uint8_t iface_num) {
-  if (iface_num >= USBD_MAX_NUM_INTERFACES ||
-      usb_ifaces[iface_num].type != USB_IFACE_TYPE_HID) {
-    return secfalse;
-  }
-  return usb_emulated_poll_write(&usb_ifaces[iface_num]);
-}
-
-secbool usb_webusb_can_write(uint8_t iface_num) {
-  if (iface_num >= USBD_MAX_NUM_INTERFACES ||
-      usb_ifaces[iface_num].type != USB_IFACE_TYPE_WEBUSB) {
-    return secfalse;
-  }
-  return usb_emulated_poll_write(&usb_ifaces[iface_num]);
-}
-
-int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
-  if (iface_num >= USBD_MAX_NUM_INTERFACES ||
-      usb_ifaces[iface_num].type != USB_IFACE_TYPE_HID) {
-    return -1;
-  }
-  return usb_emulated_read(&usb_ifaces[iface_num], buf, len);
-}
-
-int usb_webusb_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
-  if (iface_num >= USBD_MAX_NUM_INTERFACES ||
-      usb_ifaces[iface_num].type != USB_IFACE_TYPE_WEBUSB) {
-    return -1;
-  }
-  return usb_emulated_read(&usb_ifaces[iface_num], buf, len);
-}
-
-int usb_webusb_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len,
-                             int timeout) {
-  const uint32_t start = clock();
-  while (sectrue != usb_webusb_can_read(iface_num)) {
-    if (timeout >= 0 &&
-        (1000 * (clock() - start)) / CLOCKS_PER_SEC >= timeout) {
-      return -1;  // Timeout
-    }
-  }
-  return usb_webusb_read(iface_num, buf, len);
-}
-
-int usb_hid_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
-  if (iface_num >= USBD_MAX_NUM_INTERFACES ||
-      usb_ifaces[iface_num].type != USB_IFACE_TYPE_HID) {
-    return -1;
-  }
-  return usb_emulated_write(&usb_ifaces[iface_num], buf, len);
-}
-
-int usb_hid_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len,
-                           int timeout) {
-  const uint32_t start = clock();
-  while (sectrue != usb_hid_can_write(iface_num)) {
-    if (timeout >= 0 &&
-        (1000 * (clock() - start)) / CLOCKS_PER_SEC >= timeout) {
-      return -1;  // Timeout
-    }
-  }
-  return usb_hid_write(iface_num, buf, len);
-}
-
-int usb_webusb_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
-  if (iface_num >= USBD_MAX_NUM_INTERFACES ||
-      usb_ifaces[iface_num].type != USB_IFACE_TYPE_WEBUSB) {
-    return -1;
-  }
-  return usb_emulated_write(&usb_ifaces[iface_num], buf, len);
-}
-
-int usb_webusb_write_blocking(uint8_t iface_num, const uint8_t *buf,
-                              uint32_t len, int timeout) {
-  const uint32_t start = clock();
-  while (sectrue != usb_webusb_can_write(iface_num)) {
-    if (timeout >= 0 &&
-        (1000 * (clock() - start)) / CLOCKS_PER_SEC >= timeout) {
-      return -1;  // Timeout
-    }
-  }
-  return usb_webusb_write(iface_num, buf, len);
-}
-
-secbool usb_vcp_can_read(uint8_t iface_num) {
-  if (iface_num >= USBD_MAX_NUM_INTERFACES ||
-      usb_ifaces[iface_num].type != USB_IFACE_TYPE_VCP) {
-    return secfalse;
-  }
-  return usb_emulated_poll_read(&usb_ifaces[iface_num]);
-}
-
-secbool usb_vcp_can_write(uint8_t iface_num) {
-  if (iface_num >= USBD_MAX_NUM_INTERFACES ||
-      usb_ifaces[iface_num].type != USB_IFACE_TYPE_VCP) {
-    return secfalse;
-  }
-  return usb_emulated_poll_write(&usb_ifaces[iface_num]);
-}
-
-int usb_vcp_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
-  if (iface_num >= USBD_MAX_NUM_INTERFACES ||
-      usb_ifaces[iface_num].type != USB_IFACE_TYPE_VCP) {
-    return -1;
-  }
-  return usb_emulated_read(&usb_ifaces[iface_num], buf, len);
-}
-
-int usb_vcp_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len,
-                          int timeout) {
-  const uint32_t start = clock();
-  while (sectrue != usb_vcp_can_read(iface_num)) {
-    if (timeout >= 0 &&
-        (1000 * (clock() - start)) / CLOCKS_PER_SEC >= timeout) {
-      return -1;  // Timeout
-    }
-  }
-  return usb_vcp_read(iface_num, buf, len);
-}
-
-int usb_vcp_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
-  if (iface_num >= USBD_MAX_NUM_INTERFACES ||
-      usb_ifaces[iface_num].type != USB_IFACE_TYPE_VCP) {
-    return -1;
-  }
-  return usb_emulated_write(&usb_ifaces[iface_num], buf, len);
-}
-
-int usb_vcp_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len,
-                           int timeout) {
-  const uint32_t start = clock();
-  while (sectrue != usb_vcp_can_write(iface_num)) {
-    if (timeout >= 0 &&
-        (1000 * (clock() - start)) / CLOCKS_PER_SEC >= timeout) {
-      return -1;  // Timeout
-    }
-  }
-  return usb_vcp_write(iface_num, buf, len);
-}
-
-void mp_hal_set_vcp_iface(int iface_num) {}
-
 secbool usb_configured(void) {
   if (access(profile_usb_disconnect_path(), F_OK) == 0) {
     return secfalse;
@@ -442,10 +297,24 @@ static bool on_check_write_ready(void *context, systask_id_t task_id,
   return usb_emulated_poll_write(iface);
 }
 
+static ssize_t on_read(void *context, void *buffer, size_t buffer_size) {
+  usb_iface_t *iface = (usb_iface_t *)context;
+
+  return usb_emulated_read(iface, (uint8_t *)buffer, buffer_size);
+}
+
+static ssize_t on_write(void *context, const void *data, size_t data_size) {
+  usb_iface_t *iface = (usb_iface_t *)context;
+
+  return usb_emulated_write(iface, (const uint8_t *)data, data_size);
+}
+
 static const syshandle_vmt_t usb_iface_handle_vmt = {
     .task_created = NULL,
     .task_killed = NULL,
     .check_read_ready = on_check_read_ready,
     .check_write_ready = on_check_write_ready,
     .poll = on_event_poll,
+    .read = on_read,
+    .write = on_write,
 };

@@ -51,6 +51,18 @@ FEATURES_WANTED = [
     "suspend",
     "tropic",
     "usb",
+    "usb_iface_wire",
+    ]
+
+if BITCOIN_ONLY == '0':
+    FEATURES_WANTED += [
+        "usb_iface_webauthn",
+    ]
+
+if PYOPT == '0':
+    FEATURES_WANTED += [
+        "usb_iface_debug",
+        "usb_iface_vcp",
     ]
 
 if not TREZOR_MODEL in ['T3W1', 'D002']:

@@ -141,6 +141,7 @@ typedef struct {
  * usb_vcp_class_init.  See usb_vcp_info_t for details of the configuration
  * fields. */
 typedef struct {
+  syshandle_t handle;
   USBD_HandleTypeDef *dev_handle;
   const usb_vcp_descriptor_block_t *desc_block;
   usb_rbuf_t rx_ring;
@@ -164,9 +165,6 @@ static const USBD_ClassTypeDef usb_vcp_class;
 static const USBD_ClassTypeDef usb_vcp_data_class;
 
 static const syshandle_vmt_t usb_vcp_handle_vmt;
-
-#define usb_get_vcp_state(iface_num) \
-  ((usb_vcp_state_t *)usb_get_iface_state(iface_num, &usb_vcp_class))
 
 /* usb_vcp_add adds and configures new USB VCP interface according to
  * configuration options passed in `info`. */
@@ -303,6 +301,7 @@ secbool usb_vcp_add(const usb_vcp_info_t *info) {
   d->ep_in.bInterval = 0;
 
   // Interface state
+  state->handle = info->handle;
   state->desc_block = d;
 
   state->rx_ring.buf = info->rx_buffer;
@@ -339,94 +338,42 @@ secbool usb_vcp_add(const usb_vcp_info_t *info) {
 
 static inline size_t ring_length(usb_rbuf_t *b) { return (b->write - b->read); }
 
-static inline int ring_empty(usb_rbuf_t *b) { return ring_length(b) == 0; }
+static inline bool ring_empty(usb_rbuf_t *b) { return ring_length(b) == 0; }
 
-static inline int ring_full(usb_rbuf_t *b) { return ring_length(b) == b->cap; }
+static inline bool ring_full(usb_rbuf_t *b) { return ring_length(b) == b->cap; }
 
-secbool usb_vcp_can_read(uint8_t iface_num) {
-  usb_vcp_state_t *state = usb_get_vcp_state(iface_num);
-  if (state == NULL) {
-    return secfalse;  // Invalid interface number
-  }
-  if (ring_empty(&state->rx_ring)) {
-    return secfalse;  // Nothing in the rx buffer
-  }
-  return sectrue;
+static bool usb_vcp_can_read(usb_vcp_state_t *state) {
+  return !ring_empty(&state->rx_ring);
 }
 
-secbool usb_vcp_can_write(uint8_t iface_num) {
-  usb_vcp_state_t *state = usb_get_vcp_state(iface_num);
-  if (state == NULL) {
-    return secfalse;  // Invalid interface number
-  }
-  if (ring_full(&state->tx_ring)) {
-    return secfalse;  // Tx ring buffer is full
-  }
-  return sectrue;
+static bool usb_vcp_can_write(usb_vcp_state_t *state) {
+  return !ring_full(&state->tx_ring);
 }
 
-int usb_vcp_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
-  usb_vcp_state_t *state = usb_get_vcp_state(iface_num);
-  if (state == NULL) {
-    return -1;  // Invalid interface number
-  }
-
+static ssize_t usb_vcp_read(usb_vcp_state_t *state, uint8_t *buffer,
+                            uint32_t buffer_size) {
   // Read from the rx ring buffer
   usb_rbuf_t *b = &state->rx_ring;
   size_t mask = b->cap - 1;
   size_t i;
-  for (i = 0; (i < len) && !ring_empty(b); i++) {
-    buf[i] = b->buf[b->read & mask];
+  for (i = 0; (i < buffer_size) && !ring_empty(b); i++) {
+    buffer[i] = b->buf[b->read & mask];
     b->read++;
   }
   return i;
 }
 
-int usb_vcp_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
-  usb_vcp_state_t *state = usb_get_vcp_state(iface_num);
-  if (state == NULL) {
-    return -1;  // Invalid interface number
-  }
-
+static ssize_t usb_vcp_write(usb_vcp_state_t *state, const uint8_t *data,
+                             size_t data_size) {
   // Write into the tx ring buffer
   usb_rbuf_t *b = &state->tx_ring;
   size_t mask = b->cap - 1;
   size_t i;
-  for (i = 0; (i < len) && !ring_full(b); i++) {
-    b->buf[b->write & mask] = buf[i];
+  for (i = 0; (i < data_size) && !ring_full(b); i++) {
+    b->buf[b->write & mask] = data[i];
     b->write++;
   }
 
-  return i;
-}
-
-int usb_vcp_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len,
-                          int timeout) {
-  uint32_t start = HAL_GetTick();
-  while (sectrue != usb_vcp_can_read(iface_num)) {
-    if (timeout >= 0 && HAL_GetTick() - start >= timeout) {
-      return 0;  // Timeout
-    }
-    __WFI();  // Enter sleep mode, waiting for interrupt
-  }
-  return usb_vcp_read(iface_num, buf, len);
-}
-
-int usb_vcp_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len,
-                           int timeout) {
-  uint32_t start = HAL_GetTick();
-  uint32_t i = 0;
-  while (i < len) {
-    while (sectrue != usb_vcp_can_write(iface_num)) {
-      if (timeout >= 0 && HAL_GetTick() - start >= timeout) {
-        return i;  // Timeout
-      }
-      __WFI();  // Enter sleep mode, waiting for interrupt
-    }
-    int ret = usb_vcp_write(iface_num, buf + i, len - i);
-    if (ret < 0) return ret;
-    i += ret;
-  }
   return i;
 }
 
@@ -452,9 +399,7 @@ static uint8_t usb_vcp_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   USBD_LL_PrepareReceive(dev, state->ep_out, state->rx_packet,
                          state->max_packet_len);
 
-  uint8_t iface_num = state->desc_block->iface_cdc.bInterfaceNumber;
-  syshandle_t handle = SYSHANDLE_USB_IFACE_0 + iface_num;
-  if (!syshandle_register(handle, &usb_vcp_handle_vmt, state)) {
+  if (!syshandle_register(state->handle, &usb_vcp_handle_vmt, state)) {
     return USBD_FAIL;
   }
 
@@ -464,9 +409,7 @@ static uint8_t usb_vcp_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
 static uint8_t usb_vcp_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   usb_vcp_state_t *state = (usb_vcp_state_t *)dev->pUserData;
 
-  uint8_t iface_num = state->desc_block->iface_cdc.bInterfaceNumber;
-  syshandle_t handle = SYSHANDLE_USB_IFACE_0 + iface_num;
-  syshandle_unregister(handle);
+  syshandle_unregister(state->handle);
 
   // Flush endpoints
   USBD_LL_FlushEP(dev, state->ep_in);
@@ -607,42 +550,49 @@ static void on_event_poll(void *context, bool read_awaited,
                           bool write_awaited) {
   usb_vcp_state_t *state = (usb_vcp_state_t *)context;
 
-  uint8_t iface_num = state->desc_block->iface_cdc.bInterfaceNumber;
-  syshandle_t handle = SYSHANDLE_USB_IFACE_0 + iface_num;
-
   // Only one task can read or write at a time. Therefore, we can
   // assume that only one task is waiting for events and keep the
   // logic simple.
 
-  if (read_awaited && usb_vcp_can_read(iface_num)) {
-    syshandle_signal_read_ready(handle, NULL);
+  if (read_awaited && usb_vcp_can_read(state)) {
+    syshandle_signal_read_ready(state->handle, NULL);
   }
 
-  if (write_awaited && usb_vcp_can_write(iface_num)) {
-    syshandle_signal_write_ready(handle, NULL);
+  if (write_awaited && usb_vcp_can_write(state)) {
+    syshandle_signal_write_ready(state->handle, NULL);
   }
 }
 
 static bool on_check_read_ready(void *context, systask_id_t task_id,
                                 void *param) {
   usb_vcp_state_t *state = (usb_vcp_state_t *)context;
-  uint8_t iface_num = state->desc_block->iface_cdc.bInterfaceNumber;
 
   UNUSED(task_id);
   UNUSED(param);
 
-  return usb_vcp_can_read(iface_num);
+  return usb_vcp_can_read(state);
 }
 
 static bool on_check_write_ready(void *context, systask_id_t task_id,
                                  void *param) {
   usb_vcp_state_t *state = (usb_vcp_state_t *)context;
-  uint8_t iface_num = state->desc_block->iface_cdc.bInterfaceNumber;
 
   UNUSED(task_id);
   UNUSED(param);
 
-  return usb_vcp_can_write(iface_num);
+  return usb_vcp_can_write(state);
+}
+
+static ssize_t on_read(void *context, void *buffer, size_t buffer_size) {
+  usb_vcp_state_t *state = (usb_vcp_state_t *)context;
+
+  return usb_vcp_read(state, (uint8_t *)buffer, buffer_size);
+}
+
+static ssize_t on_write(void *context, const void *data, size_t data_size) {
+  usb_vcp_state_t *state = (usb_vcp_state_t *)context;
+
+  return usb_vcp_write(state, (const uint8_t *)data, data_size);
 }
 
 static const syshandle_vmt_t usb_vcp_handle_vmt = {
@@ -651,6 +601,8 @@ static const syshandle_vmt_t usb_vcp_handle_vmt = {
     .check_read_ready = on_check_read_ready,
     .check_write_ready = on_check_write_ready,
     .poll = on_event_poll,
+    .read = on_read,
+    .write = on_write,
 };
 
 #endif  // KERNEL_MODE

@@ -277,7 +277,7 @@ static int cli_readch(cli_t* cli) {
 
   for (;;) {
     char ch;
-    size_t len = cli->read(cli->callback_context, &ch, 1);
+    ssize_t len = cli->read(cli->callback_context, &ch, 1);
 
     if (len != 1) {
       return 0;

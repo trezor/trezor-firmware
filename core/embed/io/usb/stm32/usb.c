@@ -30,7 +30,6 @@
 #include "usb_internal.h"
 
 #define USB_MAX_CONFIG_DESC_SIZE 256
-#define USB_MAX_STR_SIZE 62
 #define USB_MAX_STR_DESC_SIZE (USB_MAX_STR_SIZE * 2 + 2)
 
 #if defined(USE_USB_FS)
@@ -44,10 +43,10 @@
 #endif
 
 typedef struct {
-  const char *manufacturer;
-  const char *product;
-  const char *serial_number;
-  const char *interface;
+  char manufacturer[USB_MAX_STR_SIZE + 1];
+  char product[USB_MAX_STR_SIZE + 1];
+  char serial_number[USB_MAX_STR_SIZE + 1];
+  char interface[USB_MAX_STR_SIZE + 1];
 } usb_dev_string_table_t;
 
 typedef struct {
@@ -105,12 +104,6 @@ static const USBD_ClassTypeDef usb_class;
 static const USBD_DescriptorsTypeDef usb_descriptors;
 static const syshandle_vmt_t g_usb_handle_vmt;
 
-static secbool __wur check_desc_str(const char *s) {
-  if (NULL == s) return secfalse;
-  if (strlen(s) > USB_MAX_STR_SIZE) return secfalse;
-  return sectrue;
-}
-
 secbool usb_init(const usb_dev_info_t *dev_info) {
   usb_driver_t *drv = &g_usb_driver;
 
@@ -146,23 +139,12 @@ secbool usb_init(const usb_dev_info_t *dev_info) {
   drv->dev_desc.bNumConfigurations = 1;
 
   // String table
-  if (sectrue != check_desc_str(dev_info->manufacturer)) {
-    return secfalse;
-  }
-  if (sectrue != check_desc_str(dev_info->product)) {
-    return secfalse;
-  }
-  if (sectrue != check_desc_str(dev_info->serial_number)) {
-    return secfalse;
-  }
-  if (sectrue != check_desc_str(dev_info->interface)) {
-    return secfalse;
-  }
-
-  drv->str_table.manufacturer = dev_info->manufacturer;
-  drv->str_table.product = dev_info->product;
-  drv->str_table.serial_number = dev_info->serial_number;
-  drv->str_table.interface = dev_info->interface;
+  strncpy(drv->str_table.manufacturer, dev_info->manufacturer,
+          USB_MAX_STR_SIZE);
+  strncpy(drv->str_table.product, dev_info->product, USB_MAX_STR_SIZE);
+  strncpy(drv->str_table.serial_number, dev_info->serial_number,
+          USB_MAX_STR_SIZE);
+  strncpy(drv->str_table.interface, dev_info->interface, USB_MAX_STR_SIZE);
 
   drv->config_desc = (usb_config_descriptor_t *)(drv->desc_buffer);
 
@@ -205,7 +187,7 @@ void usb_deinit(void) {
   drv->initialized = secfalse;
 }
 
-secbool usb_start(void) {
+secbool usb_start(usb_start_params_t *params) {
   usb_driver_t *drv = &g_usb_driver;
 
   if (drv->initialized != sectrue) {
@@ -215,7 +197,25 @@ secbool usb_start(void) {
 
   if (drv->dev_handle.dev_state != USBD_STATE_UNINITIALIZED) {
     // The driver has been started already
+    if (params != NULL &&
+        (drv->usb21_landing != params->usb21_landing ||
+         strncmp(drv->str_table.serial_number, params->serial_number,
+                 USB_MAX_STR_SIZE) != 0)) {
+      // If the USB 2.1 landing or serial number has changed, we need to stop
+      // and restart the driver.
+      usb_stop();
+    } else {
+      // The driver is already started and the settings are the same.
+      return sectrue;
+    }
+
     return sectrue;
+  }
+
+  if (params != NULL) {
+    drv->usb21_landing = params->usb21_landing;
+    strncpy(drv->str_table.serial_number, params->serial_number,
+            USB_MAX_STR_SIZE);
   }
 
   drv->was_ready = secfalse;

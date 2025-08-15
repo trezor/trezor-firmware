@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
     from .credential import U2fCredential
 
-    HID = io.HID
+    HID = io.USBIF
 
 
 _CID_BROADCAST = const(0xFFFF_FFFF)  # broadcast channel id
