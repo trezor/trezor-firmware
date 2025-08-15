@@ -72,6 +72,9 @@ def parameters_to_proto(parameters):
     tx_data["network_passphrase"] = parameters["network_passphrase"]
     tx_data["num_operations"] = len(ops_data)
 
+    if parameters.get("payment_request"):
+        XXX
+
     def make_op(operation_data):
         type_name = operation_data["_message_type"]
         assert type_name.startswith("Stellar") and type_name.endswith("Op")
