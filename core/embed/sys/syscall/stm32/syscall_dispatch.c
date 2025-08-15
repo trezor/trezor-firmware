@@ -733,6 +733,11 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       size_t len = args[1];
       ble_set_name__verified(name, len);
     } break;
+
+    case SYSCALL_BLE_UNPAIR: {
+      const bt_le_addr_t *addr = (const bt_le_addr_t *)args[0];
+      args[0] = ble_unpair__verified(addr);
+    } break;
 #endif
 
 #ifdef USE_NRF

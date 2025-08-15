@@ -696,6 +696,10 @@ void ble_set_name(const uint8_t *name, size_t len) {
   syscall_invoke2((uint32_t)name, len, SYSCALL_BLE_SET_NAME);
 }
 
+bool ble_unpair(const bt_le_addr_t *addr) {
+  return (bool)syscall_invoke1((uint32_t)addr, SYSCALL_BLE_UNPAIR);
+}
+
 #endif
 
 #ifdef USE_NRF

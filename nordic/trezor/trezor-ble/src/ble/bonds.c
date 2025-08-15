@@ -80,6 +80,42 @@ bool bonds_erase_current(void) {
   return err == 0;
 }
 
+bool bonds_erase_device(const bt_addr_le_t *addr) {
+  if (addr == NULL) {
+    return false;
+  }
+
+  bool erased = false;
+  bt_addr_le_t target;
+
+  // Copy MAC and try both address types (ignore the input type)
+  memcpy(target.a.val, addr->a.val, BT_ADDR_SIZE);
+
+  target.type = BT_ADDR_LE_PUBLIC;
+  if (bt_unpair(BT_ID_DEFAULT, &target) == 0) {
+    erased = true;
+  }
+
+  target.type = BT_ADDR_LE_RANDOM;
+  if (bt_unpair(BT_ID_DEFAULT, &target) == 0) {
+    erased = true;
+  }
+
+  // Best-effort: remove from accept list for both types (ignore errors)
+  target.type = BT_ADDR_LE_PUBLIC;
+  (void)bt_le_filter_accept_list_remove(&target);
+  target.type = BT_ADDR_LE_RANDOM;
+  (void)bt_le_filter_accept_list_remove(&target);
+
+  if (erased) {
+    LOG_INF("Bond(s) deleted for device MAC");
+  } else {
+    LOG_INF("No bonds found for device MAC");
+  }
+
+  return erased;
+}
+
 typedef struct {
   bt_addr_le_t *addr_list;
   size_t max_count;

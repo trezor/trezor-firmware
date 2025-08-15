@@ -82,6 +82,9 @@ typedef struct {
   bt_le_addr_t bonds[BLE_MAX_BONDS];
   bool bonds_ready;
 
+  bool result;
+  bool result_ready;
+
   systimer_t *timer;
   uint16_t ping_cntr;
 } ble_driver_t;
@@ -134,13 +137,6 @@ static bool ble_send_advertising_off(ble_driver_t *drv) {
 static bool ble_send_erase_bonds(ble_driver_t *drv) {
   (void)drv;
   uint8_t cmd = INTERNAL_CMD_ERASE_BONDS;
-  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL) >=
-         0;
-}
-
-static bool ble_send_unpair(ble_driver_t *drv) {
-  (void)drv;
-  uint8_t cmd = INTERNAL_CMD_UNPAIR;
   return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL) >=
          0;
 }
@@ -405,6 +401,8 @@ static void ble_process_rx_msg_bond_list(const uint8_t *data, uint32_t len) {
 }
 
 static void ble_process_rx_msg(const uint8_t *data, uint32_t len) {
+  ble_driver_t *drv = &g_ble_driver;
+
   if (len < 1) {
     return;
   }
@@ -427,6 +425,14 @@ static void ble_process_rx_msg(const uint8_t *data, uint32_t len) {
       break;
     case INTERNAL_EVENT_BOND_LIST:
       ble_process_rx_msg_bond_list(data, len);
+      break;
+    case INTERNAL_EVENT_SUCCESS:
+      drv->result_ready = true;
+      drv->result = true;
+      break;
+    case INTERNAL_EVENT_FAILURE:
+      drv->result_ready = true;
+      drv->result = false;
       break;
     default:
       break;
@@ -867,9 +873,6 @@ bool ble_issue_command(ble_command_t *command) {
     case BLE_REJECT_PAIRING:
       result = ble_send_pairing_reject(drv);
       break;
-    case BLE_UNPAIR:
-      result = ble_send_unpair(drv);
-      break;
     case BLE_KEEP_CONNECTION:
       drv->restart_adv_on_disconnect = false;
       if (drv->connected) {
@@ -1074,6 +1077,50 @@ void ble_get_advertising_name(char *name, size_t max_len) {
   }
 
   memcpy(name, drv->adv_cmd.name, sizeof(drv->adv_cmd.name));
+}
+
+bool ble_unpair(const bt_le_addr_t *addr) {
+  ble_driver_t *drv = &g_ble_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  irq_key_t key = irq_lock();
+  drv->result_ready = false;
+  irq_unlock(key);
+
+  bool result;
+  if (addr == NULL) {
+    uint8_t cmd = INTERNAL_CMD_UNPAIR;
+    result = nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL,
+                          NULL) >= 0;
+  } else {
+    uint8_t data[1 + sizeof(bt_le_addr_t)] = {0};
+    data[0] = INTERNAL_CMD_UNPAIR;
+    memcpy(&data[1], addr, sizeof(bt_le_addr_t));
+    result = nrf_send_msg(NRF_SERVICE_BLE_MANAGER, data, sizeof(data), NULL,
+                          NULL) >= 0;
+  }
+
+  if (!result) {
+    return false;
+  }
+
+  result = false;
+
+  uint32_t timeout = ticks_timeout(100);
+  while (!ticks_expired(timeout)) {
+    key = irq_lock();
+    if (drv->result_ready) {
+      result = drv->result;
+      irq_unlock(key);
+      return result;
+    }
+    irq_unlock(key);
+  }
+
+  return result;
 }
 
 static void on_ble_iface_event_poll(void *context, bool read_awaited,
