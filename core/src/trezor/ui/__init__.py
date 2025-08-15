@@ -78,6 +78,23 @@ def alert(count: int = 3) -> None:
         loop.schedule(_alert(count))
 
 
+if utils.USE_POWER_MANAGER:
+
+    def _handle_power_button_press() -> None:
+        """Handle power button press event during firmware operation."""
+        from trezor import config, workflow
+
+        from apps.base import lock_device, set_homescreen
+        from apps.management.pm.suspend import suspend_device
+
+        if config.has_pin() and config.is_unlocked():
+            lock_device(interrupt_workflow=True)
+        else:
+            set_homescreen()
+            workflow.close_others()
+        suspend_device(close_others=False)
+
+
 class Shutdown(Exception):
     pass
 
@@ -380,6 +397,14 @@ class Layout(Generic[T]):
                 while True:
                     # Using `yield` instead of `await` to avoid allocations.
                     event = yield button
+                    if utils.USE_POWER_MANAGER:
+                        event_type, event_button = event
+                        # check for POWER_BUTTON (2), BUTTON_UP (0)
+                        if event_button == 2 and event_type == 0:
+                            if __debug__:
+                                log.info(__name__, "suspend_device")
+                            _handle_power_button_press()
+                            break
                     workflow.idle_timer.touch()
                     self._event(self.layout.button_event, *event)
             except Shutdown:
