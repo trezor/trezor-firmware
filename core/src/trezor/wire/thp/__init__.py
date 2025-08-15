@@ -30,6 +30,9 @@ ACK_MESSAGE = const(0x20)
 CHANNEL_ALLOCATION_REQ = const(0x40)
 _CHANNEL_ALLOCATION_RES = const(0x41)
 _ERROR = const(0x42)
+PING = const(0x43)
+_PONG = const(0x44)
+
 CONTINUATION_PACKET = const(0x80)
 
 
@@ -167,6 +170,13 @@ class PacketHeader:
         Returns header for allocation response handshake message.
         """
         return cls(_CHANNEL_ALLOCATION_RES, BROADCAST_CHANNEL_ID, length)
+
+    @classmethod
+    def get_pong_header(cls, length: int) -> Self:
+        """
+        Returns header for pong message.
+        """
+        return cls(_PONG, BROADCAST_CHANNEL_ID, length)
 
 
 _DEFAULT_ENABLED_PAIRING_METHODS = [
