@@ -112,13 +112,14 @@ impl Component for TutorialWelcomeScreen {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        const ICON_TROPIC: Toif<'static> = theme::ICON_TROPIC.toif;
+
         if !self.stopwatch.is_running_within(LOADER_DURATION) {
             ScreenBackground::new(Some(LED_COLOR), None).render(target);
         }
 
         self.text.render(target);
 
-        let icon_tropic = theme::ICON_TROPIC.toif;
         // Center the icon in the action bar area in the full-screen component
         let icon_center = SCREEN
             .bottom_center()
@@ -126,7 +127,7 @@ impl Component for TutorialWelcomeScreen {
             .into();
 
         // Topic icon
-        ToifImage::new(icon_center, icon_tropic)
+        ToifImage::new(icon_center, ICON_TROPIC)
             .with_align(Alignment2D::CENTER)
             .with_fg(theme::GREY_EXTRA_LIGHT)
             .render(target);
@@ -134,7 +135,7 @@ impl Component for TutorialWelcomeScreen {
         // Intro icon
         ToifImage::new(
             icon_center
-                .sub(Point::new(0, ICONS_PADDING + icon_tropic.height() / 2))
+                .sub(Point::new(0, ICONS_PADDING + ICON_TROPIC.height() / 2))
                 .into(),
             theme::ICON_SECURED.toif,
         )
