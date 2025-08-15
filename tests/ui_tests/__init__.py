@@ -9,12 +9,9 @@ from contextlib import contextmanager
 import pytest
 from _pytest.nodes import Node
 from _pytest.outcomes import Failed
-from noise.exceptions import NoiseInvalidMessage
 
 from trezorlib.client import ProtocolVersion
 from trezorlib.debuglink import TrezorClientDebugLink as Client
-from trezorlib.exceptions import ThpError
-from trezorlib.transport import Timeout
 
 LOG = logging.getLogger(__name__)
 
@@ -76,19 +73,10 @@ def screen_recording(
     finally:
         if client_callback:
             client = client_callback()
-        client.sync_responses()
-        # Wait for response to Initialize, which gives the emulator time to catch up
-        # and redraw the homescreen. Otherwise there's a race condition between that
-        # and stopping recording.
 
-        # Instead of client.init_device() we create a new management session
-        # `Ping` is sent to make sure the device is available.
-        try:
-            client.get_seedless_session().ping(message="", timeout=1)
-        except (ThpError, NoiseInvalidMessage, Timeout):
-            # Do not raise for unsuccessful ping
-            LOG.exception("Ping failed")
-            pass
+        # Wait for response, which gives the emulator time to catch up and redraw the homescreen.
+        # Otherwise there's a race condition between that and stopping recording.
+        client.sync_responses()
         client.debug.stop_recording()
 
     result = testcase.build_result(request)
