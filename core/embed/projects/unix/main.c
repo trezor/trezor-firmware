@@ -37,6 +37,7 @@
 #include <unistd.h>
 
 #include <io/display.h>
+#include <io/usb_config.h>
 #include <sec/secret.h>
 #include <sys/system.h>
 #include <sys/systimer.h>
@@ -522,6 +523,8 @@ void drivers_init() {
 #ifdef USE_TROPIC
   tropic_init();
 #endif
+
+  usb_configure(NULL);
 }
 
 // Initialize the system and drivers for running tests in the Rust code.

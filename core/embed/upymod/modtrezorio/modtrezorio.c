@@ -46,11 +46,9 @@ uint32_t last_touch_sample_time = 0;
   }
 
 // clang-format off
-#include "modtrezorio-hid.h"
 #include "modtrezorio-poll.h"
-#include "modtrezorio-vcp.h"
-#include "modtrezorio-webusb.h"
 #include "modtrezorio-usb.h"
+#include "modtrezorio-usb-if.h"
 // clang-format on
 #ifdef USE_SD_CARD
 #include "modtrezorio-fatfs.h"
@@ -90,7 +88,10 @@ uint32_t last_touch_sample_time = 0;
 
 /// USB_EVENT: int # interface id for USB events
 
-/// WireInterface = Union[HID, WebUSB, BleInterface]
+/// WireInterface = Union[USBIF, BleInterface]
+/// USBIF_WIRE: int  # interface id of the USB wire interface
+/// USBIF_DEBUG: int  # interface id of the USB debug interface
+/// USBIF_WEBAUTHN: int  # interface id of the USB WebAuthn
 
 STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorio)},
@@ -130,9 +131,10 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
 #endif
 
     {MP_ROM_QSTR(MP_QSTR_USB), MP_ROM_PTR(&mod_trezorio_USB_type)},
-    {MP_ROM_QSTR(MP_QSTR_HID), MP_ROM_PTR(&mod_trezorio_HID_type)},
-    {MP_ROM_QSTR(MP_QSTR_VCP), MP_ROM_PTR(&mod_trezorio_VCP_type)},
-    {MP_ROM_QSTR(MP_QSTR_WebUSB), MP_ROM_PTR(&mod_trezorio_WebUSB_type)},
+    {MP_ROM_QSTR(MP_QSTR_USBIF), MP_ROM_PTR(&mod_trezorio_USBIF_type)},
+    {MP_ROM_QSTR(MP_QSTR_USBIF_WIRE), MP_ROM_INT(SYSHANDLE_USB_WIRE)},
+    {MP_ROM_QSTR(MP_QSTR_USBIF_DEBUG), MP_ROM_INT(SYSHANDLE_USB_DEBUG)},
+    {MP_ROM_QSTR(MP_QSTR_USBIF_WEBAUTHN), MP_ROM_INT(SYSHANDLE_USB_WEBAUTHN)},
 
     {MP_ROM_QSTR(MP_QSTR_poll), MP_ROM_PTR(&mod_trezorio_poll_obj)},
     {MP_ROM_QSTR(MP_QSTR_POLL_READ), MP_ROM_INT(POLL_READ)},

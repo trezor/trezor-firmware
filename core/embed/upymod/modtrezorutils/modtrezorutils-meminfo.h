@@ -307,26 +307,9 @@ typedef struct _mp_obj_closure_t {
 extern const mp_obj_type_t mp_type_bound_meth;
 extern const mp_obj_type_t mp_type_closure;
 extern const mp_obj_type_t mp_type_cell;
-extern const mp_obj_type_t mod_trezorio_WebUSB_type;
 extern const mp_obj_type_t mod_trezorio_USB_type;
-extern const mp_obj_type_t mod_trezorio_VCP_type;
-extern const mp_obj_type_t mod_trezorio_HID_type;
+extern const mp_obj_type_t mod_trezorio_USBIF_type;
 extern const mp_obj_type_t mod_trezorui_Display_type;
-
-typedef struct _mp_obj_WebUSB_t {
-  mp_obj_base_t base;
-  usb_webusb_info_t info;
-} mp_obj_WebUSB_t;
-
-typedef struct _mp_obj_VCP_t {
-  mp_obj_base_t base;
-  usb_vcp_info_t info;
-} mp_obj_VCP_t;
-
-typedef struct _mp_obj_HID_t {
-  mp_obj_base_t base;
-  usb_hid_info_t info;
-} mp_obj_HID_t;
 
 typedef struct _mp_obj_protomsg_t {
   mp_obj_base_t base;
@@ -496,36 +479,6 @@ void dump_set(FILE *out, const mp_obj_set_t *set) {
   }
 }
 
-void dump_trezor_hid(FILE *out, const mp_obj_HID_t *hid) {
-  print_type(out, "trezor-hid", NULL, hid, false);
-  fprintf(out, ",\n\"rx_buffer\": \"%p\"},\n", hid->info.rx_buffer);
-  print_type(out, "rawbuffer", NULL, hid->info.rx_buffer, true);
-  fprintf(out, ",\n");
-}
-
-void dump_trezor_webusb(FILE *out, const mp_obj_WebUSB_t *webusb) {
-  print_type(out, "trezor-webusb", NULL, webusb, false);
-  fprintf(out, ",\n\"rx_buffer\": \"%p\"},\n", webusb->info.rx_buffer);
-  print_type(out, "rawbuffer", NULL, webusb->info.rx_buffer, true);
-  fprintf(out, ",\n");
-}
-
-void dump_trezor_vcp(FILE *out, const mp_obj_VCP_t *vcp) {
-  print_type(out, "trezor-vcp", NULL, vcp, false);
-  fprintf(out, ",\n\"tx_packet\": \"%p\"", vcp->info.tx_packet);
-  fprintf(out, ",\n\"tx_buffer\": \"%p\"", vcp->info.tx_buffer);
-  fprintf(out, ",\n\"rx_packet\": \"%p\"", vcp->info.rx_packet);
-  fprintf(out, ",\n\"rx_buffer\": \"%p\"},\n", vcp->info.rx_buffer);
-  print_type(out, "rawbuffer", NULL, vcp->info.tx_packet, true);
-  fprintf(out, ",\n");
-  print_type(out, "rawbuffer", NULL, vcp->info.tx_buffer, true);
-  fprintf(out, ",\n");
-  print_type(out, "rawbuffer", NULL, vcp->info.rx_packet, true);
-  fprintf(out, ",\n");
-  print_type(out, "rawbuffer", NULL, vcp->info.rx_buffer, true);
-  fprintf(out, ",\n");
-}
-
 void dump_protomsg(FILE *out, const mp_obj_protomsg_t *value) {
   mp_obj_t name[2] = {MP_OBJ_NULL, MP_OBJ_NULL};
   mp_obj_type_t *type = protobuf_debug_msg_type();
@@ -654,19 +607,8 @@ void dump_value_opt(FILE *out, mp_const_obj_t value, bool eval_short) {
     dump_generator(out, value);
   }
 
-  else if (mp_obj_is_type(value, &mod_trezorio_WebUSB_type)) {
-    dump_trezor_webusb(out, value);
-  }
-
-  else if (mp_obj_is_type(value, &mod_trezorio_VCP_type)) {
-    dump_trezor_vcp(out, value);
-  }
-
-  else if (mp_obj_is_type(value, &mod_trezorio_HID_type)) {
-    dump_trezor_hid(out, value);
-  }
-
   else if (mp_obj_is_type(value, &mod_trezorio_USB_type) ||
+           mp_obj_is_type(value, &mod_trezorio_USBIF_type) ||
            mp_obj_is_type(value, &mod_trezorui_Display_type)) {
     print_type(out, "trezor", NULL, value, true);
     fprintf(out, ",\n");

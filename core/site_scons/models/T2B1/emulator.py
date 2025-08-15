@@ -18,7 +18,9 @@ def configure(
     hw_revision = 0
     mcu = "STM32F427xx"
 
-    unix_common_files(env, defines, sources, paths)
+    features_available += unix_common_files(
+        env, features_wanted, defines, sources, paths
+    )
 
     defines += [
         "FRAMEBUFFER",

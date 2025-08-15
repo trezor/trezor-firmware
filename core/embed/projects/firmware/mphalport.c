@@ -21,30 +21,23 @@
 
 #include "py/mphal.h"
 
-#include <io/usb.h>
+#include <io/usb_config.h>
 #include <sys/systick.h>
 
-static int vcp_iface_num = -1;
-
 int mp_hal_stdin_rx_chr(void) {
-  ensure(sectrue * (vcp_iface_num >= 0), "vcp stdio is not configured");
   uint8_t c = 0;
-  int r = usb_vcp_read_blocking(vcp_iface_num, &c, 1, -1);
+  int r = syshandle_read(SYSHANDLE_USB_VCP, &c, sizeof(c));
   (void)r;
   return c;
 }
 
 void mp_hal_stdout_tx_strn(const char *str, size_t len) {
-  if (vcp_iface_num >= 0) {
-    // The write timeout defaults to 0, because otherwise when the VCP receive
-    // buffer on the host gets full, the timeout will block device operation.
-    int r = usb_vcp_write_blocking(vcp_iface_num, (const uint8_t *)str, len,
+  // The write timeout defaults to 0, because otherwise when the VCP receive
+  // buffer on the host gets full, the timeout will block device operation.
+  int r = syshandle_write_blocking(SYSHANDLE_USB_VCP, (const uint8_t *)str, len,
                                    BLOCK_ON_VCP ? 1000 : 0);
-    (void)r;
-  }
+  (void)r;
 }
-
-void mp_hal_set_vcp_iface(int iface_num) { vcp_iface_num = iface_num; }
 
 // Dummy implementation required by ports/stm32/gccollect.c.
 // The normal version requires MICROPY_ENABLE_SCHEDULER which we don't use.

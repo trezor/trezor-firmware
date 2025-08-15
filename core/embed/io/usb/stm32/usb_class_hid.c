@@ -60,6 +60,7 @@ typedef struct __attribute__((packed)) {
  * fields. */
 
 typedef struct {
+  syshandle_t handle;
   USBD_HandleTypeDef *dev_handle;
   const usb_hid_descriptor_block_t *desc_block;
   const uint8_t *report_desc;
@@ -82,9 +83,6 @@ _Static_assert(sizeof(usb_hid_state_t) <= USBD_CLASS_STATE_MAX_SIZE);
 static const USBD_ClassTypeDef usb_hid_class;
 
 static const syshandle_vmt_t usb_hid_handle_vmt;
-
-#define usb_get_hid_state(iface_num) \
-  ((usb_hid_state_t *)usb_get_iface_state(iface_num, &usb_hid_class))
 
 /* usb_hid_add adds and configures new USB HID interface according to
  * configuration options passed in `info`. */
@@ -152,6 +150,7 @@ secbool usb_hid_add(const usb_hid_info_t *info) {
   d->ep_out.bInterval = info->polling_interval;
 
   // Interface state
+  state->handle = info->handle;
   state->desc_block = d;
   state->report_desc = info->report_desc;
   state->rx_buffer = info->rx_buffer;
@@ -170,129 +169,30 @@ secbool usb_hid_add(const usb_hid_info_t *info) {
   return sectrue;
 }
 
-secbool usb_hid_can_read(uint8_t iface_num) {
-  usb_hid_state_t *state = usb_get_hid_state(iface_num);
-
-  if (state == NULL) {
-    return secfalse;  // Invalid interface number
-  }
+static bool usb_hid_can_read(usb_hid_state_t *state) {
   if (state->dev_handle == NULL) {
-    return secfalse;  // Class driver not initialized
+    return false;  // Class driver not initialized
   }
   if (state->last_read_len == 0) {
-    return secfalse;  // Nothing in the receiving buffer
+    return false;  // Nothing in the receiving buffer
   }
   if (state->dev_handle->dev_state != USBD_STATE_CONFIGURED) {
-    return secfalse;  // Device is not configured
+    return false;  // Device is not configured
   }
-  return sectrue;
+  return true;
 }
 
-secbool usb_hid_can_write(uint8_t iface_num) {
-  usb_hid_state_t *state = usb_get_hid_state(iface_num);
-  if (state == NULL) {
-    return secfalse;  // Invalid interface number
-  }
+static bool usb_hid_can_write(usb_hid_state_t *state) {
   if (state->dev_handle == NULL) {
-    return secfalse;  // Class driver not initialized
+    return false;  // Class driver not initialized
   }
   if (state->ep_in_is_idle == 0) {
-    return secfalse;  // Last transmission is not over yet
+    return false;  // Last transmission is not over yet
   }
   if (state->dev_handle->dev_state != USBD_STATE_CONFIGURED) {
-    return secfalse;  // Device is not configured
+    return false;  // Device is not configured
   }
-  return sectrue;
-}
-
-int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
-  volatile usb_hid_state_t *state = usb_get_hid_state(iface_num);
-
-  if (state == NULL) {
-    return -1;  // Invalid interface number
-  }
-
-  if (state->dev_handle == NULL) {
-    return -1;  // Class driver not initialized
-  }
-
-  // Copy maximum possible amount of data
-  uint32_t last_read_len = state->last_read_len;
-  if (len < last_read_len) {
-    return 0;  // Not enough data in the read buffer
-  }
-  memcpy(buf, state->rx_buffer, last_read_len);
-
-  // Reset the length to indicate we are ready to read next packet
-  state->last_read_len = 0;
-
-  // Prepare the OUT EP to receive next packet
-  USBD_LL_PrepareReceive(state->dev_handle, state->ep_out, state->rx_buffer,
-                         state->max_packet_len);
-
-  return last_read_len;
-}
-
-int usb_hid_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
-  volatile usb_hid_state_t *state = usb_get_hid_state(iface_num);
-
-  if (state == NULL) {
-    return -1;  // Invalid interface number
-  }
-
-  if (state->dev_handle == NULL) {
-    return -1;  // Class driver not initialized
-  }
-
-  if (state->ep_in_is_idle == 0) {
-    return 0;  // Last transmission is not over yet
-  }
-
-  state->ep_in_is_idle = 0;
-  USBD_LL_Transmit(state->dev_handle, state->ep_in, UNCONST(buf),
-                   (uint16_t)len);
-
-  return len;
-}
-
-int usb_hid_read_select(uint32_t timeout) {
-  const uint32_t start = HAL_GetTick();
-  for (;;) {
-    for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
-      if (sectrue == usb_hid_can_read(i)) {
-        return i;
-      }
-    }
-    if (HAL_GetTick() - start >= timeout) {
-      break;
-    }
-    __WFI();  // Enter sleep mode, waiting for interrupt
-  }
-  return -1;  // Timeout
-}
-
-int usb_hid_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len,
-                          int timeout) {
-  const uint32_t start = HAL_GetTick();
-  while (sectrue != usb_hid_can_read(iface_num)) {
-    if (timeout >= 0 && HAL_GetTick() - start >= timeout) {
-      return 0;  // Timeout
-    }
-    __WFI();  // Enter sleep mode, waiting for interrupt
-  }
-  return usb_hid_read(iface_num, buf, len);
-}
-
-int usb_hid_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len,
-                           int timeout) {
-  const uint32_t start = HAL_GetTick();
-  while (sectrue != usb_hid_can_write(iface_num)) {
-    if (timeout >= 0 && HAL_GetTick() - start >= timeout) {
-      return 0;  // Timeout
-    }
-    __WFI();  // Enter sleep mode, waiting for interrupt
-  }
-  return usb_hid_write(iface_num, buf, len);
+  return true;
 }
 
 static uint8_t usb_hid_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
@@ -315,10 +215,7 @@ static uint8_t usb_hid_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   USBD_LL_PrepareReceive(dev, state->ep_out, state->rx_buffer,
                          state->max_packet_len);
 
-  uint8_t iface_num = state->desc_block->iface.bInterfaceNumber;
-  syshandle_t handle = SYSHANDLE_USB_IFACE_0 + iface_num;
-
-  if (!syshandle_register(handle, &usb_hid_handle_vmt, state)) {
+  if (!syshandle_register(state->handle, &usb_hid_handle_vmt, state)) {
     return USBD_FAIL;
   }
 
@@ -328,8 +225,7 @@ static uint8_t usb_hid_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
 static uint8_t usb_hid_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   usb_hid_state_t *state = (usb_hid_state_t *)dev->pUserData;
 
-  uint8_t iface_num = state->desc_block->iface.bInterfaceNumber;
-  syshandle_unregister(SYSHANDLE_USB_IFACE_0 + iface_num);
+  syshandle_unregister(state->handle);
 
   // Flush endpoints
   USBD_LL_FlushEP(dev, state->ep_in);
@@ -465,42 +361,79 @@ static void on_event_poll(void *context, bool read_awaited,
                           bool write_awaited) {
   usb_hid_state_t *state = (usb_hid_state_t *)context;
 
-  uint8_t iface_num = state->desc_block->iface.bInterfaceNumber;
-  syshandle_t handle = SYSHANDLE_USB_IFACE_0 + iface_num;
-
   // Only one task can read or write at a time. Therefore, we can
   // assume that only one task is waiting for events and keep the
   // logic simple.
 
-  if (read_awaited && usb_hid_can_read(iface_num)) {
-    syshandle_signal_read_ready(handle, NULL);
+  if (read_awaited && usb_hid_can_read(state)) {
+    syshandle_signal_read_ready(state->handle, NULL);
   }
 
-  if (write_awaited && usb_hid_can_write(iface_num)) {
-    syshandle_signal_write_ready(handle, NULL);
+  if (write_awaited && usb_hid_can_write(state)) {
+    syshandle_signal_write_ready(state->handle, NULL);
   }
 }
 
 static bool on_check_read_ready(void *context, systask_id_t task_id,
                                 void *param) {
   usb_hid_state_t *state = (usb_hid_state_t *)context;
-  uint8_t iface_num = state->desc_block->iface.bInterfaceNumber;
 
   UNUSED(task_id);
   UNUSED(param);
 
-  return usb_hid_can_read(iface_num);
+  return usb_hid_can_read(state);
 }
 
 static bool on_check_write_ready(void *context, systask_id_t task_id,
                                  void *param) {
   usb_hid_state_t *state = (usb_hid_state_t *)context;
-  uint8_t iface_num = state->desc_block->iface.bInterfaceNumber;
 
   UNUSED(task_id);
   UNUSED(param);
 
-  return usb_hid_can_write(iface_num);
+  return usb_hid_can_write(state);
+}
+
+static ssize_t on_read(void *context, void *buffer, size_t buffer_size) {
+  usb_hid_state_t *state = (usb_hid_state_t *)context;
+
+  if (state->dev_handle == NULL) {
+    return -1;  // Class driver not initialized
+  }
+
+  // Copy maximum possible amount of data
+  uint32_t last_read_len = state->last_read_len;
+  if (buffer_size < last_read_len) {
+    return 0;  // Not enough data in the read buffer
+  }
+  memcpy(buffer, state->rx_buffer, last_read_len);
+
+  // Reset the length to indicate we are ready to read next packet
+  state->last_read_len = 0;
+
+  // Prepare the OUT EP to receive next packet
+  USBD_LL_PrepareReceive(state->dev_handle, state->ep_out, state->rx_buffer,
+                         state->max_packet_len);
+
+  return last_read_len;
+}
+
+static ssize_t on_write(void *context, const void *data, size_t data_size) {
+  usb_hid_state_t *state = (usb_hid_state_t *)context;
+
+  if (state->dev_handle == NULL) {
+    return -1;  // Class driver not initialized
+  }
+
+  if (state->ep_in_is_idle == 0) {
+    return 0;  // Last transmission is not over yet
+  }
+
+  state->ep_in_is_idle = 0;
+  USBD_LL_Transmit(state->dev_handle, state->ep_in, UNCONST(data),
+                   (uint16_t)data_size);
+
+  return data_size;
 }
 
 static const syshandle_vmt_t usb_hid_handle_vmt = {
@@ -509,6 +442,8 @@ static const syshandle_vmt_t usb_hid_handle_vmt = {
     .check_read_ready = on_check_read_ready,
     .check_write_ready = on_check_write_ready,
     .poll = on_event_poll,
+    .read = on_read,
+    .write = on_write,
 };
 
 #endif  // KERNEL_MODE

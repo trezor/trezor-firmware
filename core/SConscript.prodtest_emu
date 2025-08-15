@@ -32,7 +32,8 @@ FEATURES_WANTED = [
     "sd_card",
     "secure_mode",
     "tropic",
-    "usb"
+    "usb",
+    "usb_iface_vcp",
 ]
 
 CCFLAGS_MOD = ''

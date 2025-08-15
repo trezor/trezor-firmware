@@ -20,7 +20,9 @@ def configure(
     linker_script = """embed/sys/linker/stm32u5g/{target}.ld"""
     memory_layout = "memory.ld"
 
-    stm32u5_common_files(env, features_wanted, defines, sources, paths)
+    features_available += stm32u5_common_files(
+        env, features_wanted, defines, sources, paths
+    )
 
     env.get("ENV")[
         "CPU_ASFLAGS"
@@ -85,22 +87,6 @@ def configure(
             ("USE_TOUCH", "1"),
             ("USE_I2C", "1"),
         ]
-
-    if "usb" in features_wanted:
-        sources += [
-            "embed/io/usb/stm32/usb_class_hid.c",
-            "embed/io/usb/stm32/usb_class_vcp.c",
-            "embed/io/usb/stm32/usb_class_webusb.c",
-            "embed/io/usb/stm32/usb.c",
-            "embed/io/usb/stm32/usbd_conf.c",
-            "embed/io/usb/stm32/usbd_core.c",
-            "embed/io/usb/stm32/usbd_ctlreq.c",
-            "embed/io/usb/stm32/usbd_ioreq.c",
-            "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_ll_usb.c",
-        ]
-        features_available.append("usb")
-        paths += ["embed/io/usb/inc"]
-        defines += [("USE_USB", "1")]
 
     defines += [
         "FRAMEBUFFER",
