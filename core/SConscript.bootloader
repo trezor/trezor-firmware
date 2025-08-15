@@ -27,6 +27,7 @@ FEATURES_WANTED = [
     "secure_mode",
     "suspend",
     "usb",
+    "usb_iface_wire",
     ]
 
 if TREZOR_MODEL in ('T3W1', ):

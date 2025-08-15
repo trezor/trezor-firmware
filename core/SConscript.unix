@@ -34,6 +34,14 @@ FEATURES_WANTED = [
     "sd_card",
     "secure_mode",
     "storage",
+    "usb",
+    "usb_iface_wire",
+    "usb_iface_debug",
+    ]
+
+if BITCOIN_ONLY == '0':
+    FEATURES_WANTED += [
+        "usb_iface_webauthn",
     ]
 
 if not DISABLE_TROPIC:

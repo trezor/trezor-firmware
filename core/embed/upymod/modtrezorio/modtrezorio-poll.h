@@ -236,7 +236,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
       return mp_const_true;
     }
 
-    for (syshandle_t h = SYSHANDLE_USB_IFACE_0; h <= SYSHANDLE_USB_IFACE_7;
+    for (syshandle_t h = SYSHANDLE_USB_IFACE_MIN; h <= SYSHANDLE_USB_IFACE_MAX;
          h++) {
       if (signalled.read_ready & (1 << h)) {
         ret->items[0] = MP_OBJ_NEW_SMALL_INT(h);

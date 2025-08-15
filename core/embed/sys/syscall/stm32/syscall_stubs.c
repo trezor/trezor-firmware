@@ -84,6 +84,17 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
                   SYSCALL_SYSEVENTS_POLL);
 }
 
+ssize_t syshandle_read(syshandle_t handle, void *buffer, size_t buffer_size) {
+  return syscall_invoke3((uint32_t)handle, (uint32_t)buffer, buffer_size,
+                         SYSCALL_SYSHANDLE_READ);
+}
+
+ssize_t syshandle_write(syshandle_t handle, const void *data,
+                        size_t data_size) {
+  return syscall_invoke3((uint32_t)handle, (uint32_t)data, data_size,
+                         SYSCALL_SYSHANDLE_WRITE);
+}
+
 // =============================================================================
 // boot_image.h
 // =============================================================================
@@ -174,13 +185,9 @@ void display_refresh(void) { syscall_invoke0(SYSCALL_DISPLAY_REFRESH); }
 
 #include <io/usb.h>
 
-secbool usb_init(const usb_dev_info_t *dev_info) {
-  return (secbool)syscall_invoke1((uint32_t)dev_info, SYSCALL_USB_INIT);
+secbool usb_start(const usb_start_params_t *params) {
+  return (secbool)syscall_invoke1((uint32_t)params, SYSCALL_USB_START);
 }
-
-void usb_deinit(void) { syscall_invoke0(SYSCALL_USB_DEINIT); }
-
-secbool usb_start(void) { return (secbool)syscall_invoke0(SYSCALL_USB_START); }
 
 void usb_stop(void) { syscall_invoke0(SYSCALL_USB_STOP); }
 
@@ -190,141 +197,6 @@ usb_event_t usb_get_event(void) {
 
 void usb_get_state(usb_state_t *state) {
   syscall_invoke1((uint32_t)state, SYSCALL_USB_GET_STATE);
-}
-
-// =============================================================================
-// usb_hid.h
-// =============================================================================
-
-#include <io/usb_hid.h>
-
-secbool usb_hid_add(const usb_hid_info_t *hid_info) {
-  return (secbool)syscall_invoke1((uint32_t)hid_info, SYSCALL_USB_HID_ADD);
-}
-
-secbool usb_hid_can_read(uint8_t iface_num) {
-  return (secbool)syscall_invoke1((uint32_t)iface_num,
-                                  SYSCALL_USB_HID_CAN_READ);
-}
-
-secbool usb_hid_can_write(uint8_t iface_num) {
-  return (secbool)syscall_invoke1((uint32_t)iface_num,
-                                  SYSCALL_USB_HID_CAN_WRITE);
-}
-
-int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
-  return (int)syscall_invoke3((uint32_t)iface_num, (uint32_t)buf, len,
-                              SYSCALL_USB_HID_READ);
-}
-
-int usb_hid_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
-  return (int)syscall_invoke3((uint32_t)iface_num, (uint32_t)buf, len,
-                              SYSCALL_USB_HID_WRITE);
-}
-
-int usb_hid_read_select(uint32_t timeout) {
-  return (int)syscall_invoke1(timeout, SYSCALL_USB_HID_READ_SELECT);
-}
-
-int usb_hid_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len,
-                          int timeout) {
-  return (int)syscall_invoke4((uint32_t)iface_num, (uint32_t)buf, len, timeout,
-                              SYSCALL_USB_HID_READ_BLOCKING);
-}
-
-int usb_hid_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len,
-                           int timeout) {
-  return (int)syscall_invoke4((uint32_t)iface_num, (uint32_t)buf, len, timeout,
-                              SYSCALL_USB_HID_WRITE_BLOCKING);
-}
-
-// =============================================================================
-// usb_vcp.h
-// =============================================================================
-
-#include <io/usb_vcp.h>
-
-secbool usb_vcp_add(const usb_vcp_info_t *vcp_info) {
-  return (secbool)syscall_invoke1((uint32_t)vcp_info, SYSCALL_USB_VCP_ADD);
-}
-
-secbool usb_vcp_can_read(uint8_t iface_num) {
-  return (secbool)syscall_invoke1((uint32_t)iface_num,
-                                  SYSCALL_USB_VCP_CAN_READ);
-}
-
-secbool usb_vcp_can_write(uint8_t iface_num) {
-  return (secbool)syscall_invoke1((uint32_t)iface_num,
-                                  SYSCALL_USB_VCP_CAN_WRITE);
-}
-
-int usb_vcp_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
-  return (int)syscall_invoke3((uint32_t)iface_num, (uint32_t)buf, len,
-                              SYSCALL_USB_VCP_READ);
-}
-
-int usb_vcp_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
-  return (int)syscall_invoke3((uint32_t)iface_num, (uint32_t)buf, len,
-                              SYSCALL_USB_VCP_WRITE);
-}
-
-int usb_vcp_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len,
-                          int timeout) {
-  return (int)syscall_invoke4((uint32_t)iface_num, (uint32_t)buf, len, timeout,
-                              SYSCALL_USB_VCP_READ_BLOCKING);
-}
-
-int usb_vcp_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len,
-                           int timeout) {
-  return (int)syscall_invoke4((uint32_t)iface_num, (uint32_t)buf, len, timeout,
-                              SYSCALL_USB_VCP_WRITE_BLOCKING);
-}
-
-// =============================================================================
-// usb_webusb.h
-// =============================================================================
-
-#include <io/usb_webusb.h>
-
-secbool usb_webusb_add(const usb_webusb_info_t *webusb_info) {
-  return (secbool)syscall_invoke1((uint32_t)webusb_info,
-                                  SYSCALL_USB_WEBUSB_ADD);
-}
-
-secbool usb_webusb_can_read(uint8_t iface_num) {
-  return (secbool)syscall_invoke1((uint32_t)iface_num,
-                                  SYSCALL_USB_WEBUSB_CAN_READ);
-}
-
-secbool usb_webusb_can_write(uint8_t iface_num) {
-  return (secbool)syscall_invoke1((uint32_t)iface_num,
-                                  SYSCALL_USB_WEBUSB_CAN_WRITE);
-}
-
-int usb_webusb_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
-  return (int)syscall_invoke3((uint32_t)iface_num, (uint32_t)buf, len,
-                              SYSCALL_USB_WEBUSB_READ);
-}
-
-int usb_webusb_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
-  return (int)syscall_invoke3((uint32_t)iface_num, (uint32_t)buf, len,
-                              SYSCALL_USB_WEBUSB_WRITE);
-}
-
-int usb_webusb_read_select(uint32_t timeout) {
-  return (int)syscall_invoke1(timeout, SYSCALL_USB_WEBUSB_READ_SELECT);
-}
-
-int usb_webusb_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len,
-                             int timeout) {
-  return (int)syscall_invoke4((uint32_t)iface_num, (uint32_t)buf, len, timeout,
-                              SYSCALL_USB_WEBUSB_READ_BLOCKING);
-}
-
-int usb_webusb_write_blocking(uint8_t iface_num, const uint8_t *buf,
-                              uint32_t len, int timeout) {
-  return (int)syscall_invoke4((uint32_t)iface_num, (uint32_t)buf, len, timeout,
-                              SYSCALL_USB_WEBUSB_WRITE_BLOCKING);
 }
 
 // =============================================================================

@@ -22,6 +22,7 @@
 
 #include <io/display.h>
 #include <io/display_utils.h>
+#include <io/usb_config.h>
 #include <sec/random_delays.h>
 #include <sec/secret.h>
 #include <sys/bootargs.h>
@@ -294,6 +295,8 @@ static void drivers_init(secbool manufacturing_mode,
 #ifdef USE_CONSUMPTION_MASK
   consumption_mask_init();
 #endif
+
+  usb_configure(NULL);
 
 #ifdef USE_BLE
   ble_init();

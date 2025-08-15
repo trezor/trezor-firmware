@@ -25,12 +25,14 @@
 #include <gfx/gfx_draw.h>
 #include <io/display.h>
 #include <io/usb.h>
+#include <io/usb_config.h>
 #include <rtl/mini_printf.h>
 #include <sec/random_delays.h>
 #include <sec/rng.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
 #include <sys/mpu.h>
+#include <sys/sysevent.h>
 #include <sys/system.h>
 #include <sys/systick.h>
 #include <util/flash_otp.h>
@@ -47,7 +49,7 @@
 #include <sec/hash_processor.h>
 #endif
 
-#define USB_IFACE_NUM 0
+#define USB_IFACE_NUM SYSHANDLE_USB_WIRE
 
 static void drivers_init(void) {
   display_init(DISPLAY_RESET_CONTENT);
@@ -66,39 +68,14 @@ static void drivers_deinit(void) {
 }
 
 static void usb_init_all(secbool usb21_landing) {
-  usb_dev_info_t dev_info = {
-      .device_class = 0x00,
-      .device_subclass = 0x00,
-      .device_protocol = 0x00,
-      .vendor_id = 0x1209,
-      .product_id = 0x53C0,
-      .release_num = 0x0200,
-      .manufacturer = MODEL_USB_MANUFACTURER,
-      .product = MODEL_USB_PRODUCT,
+  ensure(usb_configure(NULL), NULL);
+
+  usb_start_params_t params = {
       .serial_number = "000000000000000000000000",
-      .interface = "TREZOR Interface",
-      .usb21_enabled = sectrue,
       .usb21_landing = usb21_landing,
   };
 
-  static uint8_t rx_buffer[USB_PACKET_SIZE];
-
-  static const usb_webusb_info_t webusb_info = {
-      .iface_num = USB_IFACE_NUM,
-      .ep_in = 0x01,
-      .ep_out = 0x01,
-      .subclass = 0,
-      .protocol = 0,
-      .max_packet_len = sizeof(rx_buffer),
-      .rx_buffer = rx_buffer,
-      .polling_interval = 1,
-  };
-
-  ensure(usb_init(&dev_info), NULL);
-
-  ensure(usb_webusb_add(&webusb_info), NULL);
-
-  ensure(usb_start(), NULL);
+  ensure(usb_start(&params), NULL);
 }
 
 static secbool bootloader_usb_loop(const vendor_header *const vhdr,
@@ -110,8 +87,8 @@ static secbool bootloader_usb_loop(const vendor_header *const vhdr,
   uint8_t buf[USB_PACKET_SIZE];
 
   for (;;) {
-    int r = usb_webusb_read_blocking(USB_IFACE_NUM, buf, USB_PACKET_SIZE,
-                                     USB_TIMEOUT);
+    int r = syshandle_read_blocking(USB_IFACE_NUM, buf, USB_PACKET_SIZE,
+                                    USB_TIMEOUT);
     if (r != USB_PACKET_SIZE) {
       continue;
     }

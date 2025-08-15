@@ -29,6 +29,8 @@ FEATURES_WANTED = [
     "power_manager",
     "rgb_led",
     "secure_mode",
+    "usb",
+    "usb_iface_wire",
     ]
 
 CCFLAGS_MOD = ''
