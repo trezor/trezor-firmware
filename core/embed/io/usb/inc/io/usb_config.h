@@ -19,15 +19,13 @@
 
 #pragma once
 
-// `trezor_types.h` consolidates commonly needed includes for interface
-// header files and provides essential types required in most files.
-//
-// Avoid adding additional includes here unless absolutely necessary,
-// as it may pollute the global namespace across the project.
+#include <sys/sysevent.h>
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <sys/types.h>
+typedef void (*usb_vcp_intr_callback_t)(void);
 
-#include "rtl/secbool.h"
+/**
+ * Initialize and configures USB stack and all enabled USB interfaces.
+ *
+ * @param vcp_intr_callback Optional callback to be called on VCP interrupt.
+ */
+secbool usb_configure(usb_vcp_intr_callback_t vcp_intr_callback);

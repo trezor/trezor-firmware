@@ -54,6 +54,12 @@ typedef void (*syshandle_poll_cb_t)(void *context, bool read_awaited,
 typedef bool (*syshandle_check_cb_t)(void *context, systask_id_t task_id,
                                      void *param);
 
+typedef ssize_t (*syshandle_read_cb_t)(void *context, void *buffer,
+                                       size_t buffer_size);
+
+typedef ssize_t (*syshandle_write_cb_t)(void *context, const void *data,
+                                        size_t data_size);
+
 // System handle virtual method table
 typedef struct {
   syshandle_task_created_cb_t task_created;
@@ -61,6 +67,8 @@ typedef struct {
   syshandle_poll_cb_t poll;
   syshandle_check_cb_t check_read_ready;
   syshandle_check_cb_t check_write_ready;
+  syshandle_read_cb_t read;
+  syshandle_write_cb_t write;
 } syshandle_vmt_t;
 
 // ----------------------------------------------------------------------

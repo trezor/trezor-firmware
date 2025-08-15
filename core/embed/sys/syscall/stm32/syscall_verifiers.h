@@ -27,6 +27,12 @@
 void sysevents_poll__verified(const sysevents_t *awaited,
                               sysevents_t *signalled, uint32_t deadline);
 
+ssize_t syshandle_read__verified(syshandle_t handle, void *buffer,
+                                 size_t buffer_size);
+
+ssize_t syshandle_write__verified(syshandle_t handle, const void *data,
+                                  size_t data_size);
+
 // ---------------------------------------------------------------------
 #include <sys/systask.h>
 
@@ -65,46 +71,10 @@ void display_copy_rgb565__verified(const gfx_bitblt_t *bb);
 
 // ---------------------------------------------------------------------
 #include <io/usb.h>
+
 void usb_get_state__verified(usb_state_t *state);
 
-// ---------------------------------------------------------------------
-#include <io/usb_hid.h>
-
-int usb_hid_read__verified(uint8_t iface_num, uint8_t *buf, uint32_t len);
-
-int usb_hid_write__verified(uint8_t iface_num, const uint8_t *buf,
-                            uint32_t len);
-
-int usb_hid_read_blocking__verified(uint8_t iface_num, uint8_t *buf,
-                                    uint32_t len, int timeout);
-int usb_hid_write_blocking__verified(uint8_t iface_num, const uint8_t *buf,
-                                     uint32_t len, int timeout);
-
-// ---------------------------------------------------------------------
-#include <io/usb_vcp.h>
-
-int usb_vcp_read__verified(uint8_t iface_num, uint8_t *buf, uint32_t len);
-
-int usb_vcp_write__verified(uint8_t iface_num, const uint8_t *buf,
-                            uint32_t len);
-
-int usb_vcp_read_blocking__verified(uint8_t iface_num, uint8_t *buf,
-                                    uint32_t len, int timeout);
-int usb_vcp_write_blocking__verified(uint8_t iface_num, const uint8_t *buf,
-                                     uint32_t len, int timeout);
-
-// ---------------------------------------------------------------------
-#include <io/usb_webusb.h>
-
-int usb_webusb_read__verified(uint8_t iface_num, uint8_t *buf, uint32_t len);
-
-int usb_webusb_write__verified(uint8_t iface_num, const uint8_t *buf,
-                               uint32_t len);
-
-int usb_webusb_read_blocking__verified(uint8_t iface_num, uint8_t *buf,
-                                       uint32_t len, int timeout);
-int usb_webusb_write_blocking__verified(uint8_t iface_num, const uint8_t *buf,
-                                        uint32_t len, int timeout);
+secbool usb_start__verified(usb_start_params_t *params);
 
 // ---------------------------------------------------------------------
 

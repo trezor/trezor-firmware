@@ -64,6 +64,7 @@ FEATURES_WANTED = [
     "suspend",
     "tropic",
     "usb",
+    "usb_iface_wire",
     ]
 
 if DISABLE_OPTIGA:

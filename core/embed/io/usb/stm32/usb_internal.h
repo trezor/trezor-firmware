@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_USBD_INTERNAL_H
-#define TREZORHAL_USBD_INTERNAL_H
+#pragma once
 
 #include <trezor_types.h>
 
@@ -126,5 +125,3 @@ void usb_set_iface_class(uint8_t iface_num, const USBD_ClassTypeDef *class);
 // The function checks if the remaining space is enough and
 // returns NULL if not.
 void *usb_alloc_class_descriptors(size_t desc_len);
-
-#endif  // TREZORHAL_USBD_INTERNAL_H

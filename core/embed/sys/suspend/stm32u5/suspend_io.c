@@ -155,7 +155,7 @@ void resume_drivers(const power_save_wakeup_params_t *wakeup_params) {
   rgb_led_init();
 #endif
 #ifdef USE_USB
-  usb_start();
+  usb_start(NULL);
 #endif
 #ifdef USE_BLE
   ble_resume(&wakeup_params->ble);
