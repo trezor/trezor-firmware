@@ -25,6 +25,7 @@
 #include <sec/optiga_commands.h>
 #include <sec/optiga_transport.h>
 #include <sec/secret_keys.h>
+#include <sys/dbg_console.h>
 #include <sys/systick.h>
 
 #include "memzero.h"
@@ -33,17 +34,20 @@
 #include <inttypes.h>
 #if 1  // color log
 #define OPTIGA_LOG_FORMAT \
-  "%" PRIu32 " \x1b[35moptiga\x1b[0m \x1b[32mDEBUG\x1b[0m %s: "
+  "%d.%03d \x1b[35moptiga\x1b[0m \x1b[32mDEBUG\x1b[0m %s: "
 #else
-#define OPTIGA_LOG_FORMAT "%" PRIu32 " optiga DEBUG %s: "
+#define OPTIGA_LOG_FORMAT "%d.%03d optiga DEBUG %s: "
 #endif
 static void optiga_log_hex(const char *prefix, const uint8_t *data,
                            size_t data_size) {
-  printf(OPTIGA_LOG_FORMAT, hal_ticks_ms() * 1000, prefix);
+  ticks_t now = hal_ticks_ms();
+  uint32_t sec = now / 1000;
+  uint32_t msec = now % 1000;
+  dbg_printf(OPTIGA_LOG_FORMAT, sec, msec, prefix);
   for (size_t i = 0; i < data_size; i++) {
-    printf("%02x", data[i]);
+    dbg_printf("%02x", data[i]);
   }
-  printf("\n");
+  dbg_printf("\n");
 }
 #endif
 

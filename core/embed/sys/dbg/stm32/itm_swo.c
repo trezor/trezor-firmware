@@ -17,14 +17,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <sys/irq.h>
 
-#ifdef KERNEL_MODE
+#include "../dbg_internal.h"
 
-// vprintf-like functions for debugging
-void dbg_vprintf(const char* fmt, va_list args);
+ssize_t dbg_read_internal(void *buffer, size_t buffer_size) { return 0; }
 
-// printf-like functions for debugging
-void dbg_printf(const char* fmt, ...);
+ssize_t dbg_write_internal(const void *data, size_t data_size) {
+  irq_key_t irq_key = irq_lock();
 
-#endif  // KERNEL_MODE
+  for (size_t i = 0; i < data_size; i++) {
+    ITM_SendChar(((const char *)data)[i]);
+  }
+
+  irq_unlock(irq_key);
+
+  return data_size;
+}

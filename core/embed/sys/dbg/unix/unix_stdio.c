@@ -17,29 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <trezor_rtl.h>
+#include <stdio.h>
 
-#include "py/mphal.h"
+#include "../dbg_internal.h"
 
-#include <sys/dbg_console.h>
-#include <sys/systick.h>
+ssize_t dbg_read_internal(void *buffer, size_t buffer_size) { return 0; }
 
-int mp_hal_stdin_rx_chr(void) {
-  uint8_t c = 0;
-  dbg_read(&c, sizeof(c));
-  return c;
+ssize_t dbg_write_internal(const void *data, size_t data_size) {
+  printf("%.*s", (int)data_size, (const char *)data);
+  return data_size;
 }
-
-void mp_hal_stdout_tx_strn(const char *str, size_t len) { dbg_write(str, len); }
-
-// Dummy implementation required by ports/stm32/gccollect.c.
-// The normal version requires MICROPY_ENABLE_SCHEDULER which we don't use.
-void soft_timer_gc_mark_all(void) {}
-
-void mp_hal_delay_ms(mp_uint_t Delay) { systick_delay_ms(Delay); }
-
-void mp_hal_delay_us(mp_uint_t usec) { systick_delay_us(usec); }
-
-mp_uint_t mp_hal_ticks_ms(void) { return systick_ms(); }
-
-mp_uint_t mp_hal_ticks_us(void) { return systick_us(); }

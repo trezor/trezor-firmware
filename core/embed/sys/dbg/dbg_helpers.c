@@ -17,31 +17,38 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef KERNEL_MODE
+#include <trezor_rtl.h>
 
 #include <rtl/mini_printf.h>
-#include <stdarg.h>
-#include <sys/irq.h>
+#include <sys/sysevent.h>
 
-void dbg_vprintf(const char* fmt, va_list args) {
-  char temp[80];
-  mini_vsnprintf(temp, sizeof(temp), fmt, args);
+#ifdef USE_VCP_FOR_DEBUGGING
+#define SYSHANDLE_CONSOLE SYSHANDLE_USB_VCP
+#else
+#define SYSHANDLE_CONSOLE SYSHANDLE_DBG_CONSOLE
+#endif
 
-  irq_key_t irq_key = irq_lock();
-  for (size_t i = 0; i < sizeof(temp); i++) {
-    if (temp[i] == '\0') {
-      break;
-    }
-    ITM_SendChar(temp[i]);
-  }
-  irq_unlock(irq_key);
+ssize_t dbg_read(void *buffer, size_t buffer_size) {
+  return syshandle_read(SYSHANDLE_CONSOLE, buffer, buffer_size);
 }
 
-void dbg_printf(const char* fmt, ...) {
+ssize_t dbg_write(const void *data, size_t data_size) {
+#ifdef BLOCK_ON_VCP
+  return syshandle_write_blocking(SYSHANDLE_CONSOLE, data, data_size, 1000);
+#else
+  return syshandle_write(SYSHANDLE_CONSOLE, data, data_size);
+#endif
+}
+
+void dbg_vprintf(const char *fmt, va_list args) {
+  char temp[80];
+  mini_vsnprintf(temp, sizeof(temp), fmt, args);
+  dbg_write(temp, strnlen(temp, sizeof(temp)));
+}
+
+void dbg_printf(const char *fmt, ...) {
   va_list args;
   va_start(args, fmt);
   dbg_vprintf(fmt, args);
   va_end(args);
 }
-
-#endif  // KERNEL_MODE
