@@ -17,14 +17,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <stdio.h>
+#include <unistd.h>
 
-#ifdef KERNEL_MODE
+#include <sys/dbg_console.h>
 
-// vprintf-like functions for debugging
-void dbg_vprintf(const char* fmt, va_list args);
+void dbg_console_init(void) {}
 
-// printf-like functions for debugging
-void dbg_printf(const char* fmt, ...);
+ssize_t dbg_console_read(void *buffer, size_t buffer_size) { return 0; }
 
-#endif  // KERNEL_MODE
+void dbg_console_write(const void *data, size_t data_size) {
+  int result = write(STDERR_FILENO, data, data_size);
+  (void)result;
+}

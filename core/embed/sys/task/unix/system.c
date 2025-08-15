@@ -22,6 +22,7 @@
 #include <stdlib.h>
 
 #include <sys/bootutils.h>
+#include <sys/dbg_console.h>
 #include <sys/system.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
@@ -32,6 +33,7 @@ void system_init(systask_error_handler_t error_handler) {
   g_error_handler = error_handler;
   systick_init();
   systimer_init();
+  dbg_console_init();
 }
 
 void system_deinit(void) { systick_deinit(); }

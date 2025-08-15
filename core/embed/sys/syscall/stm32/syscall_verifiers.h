@@ -46,6 +46,17 @@ void system_exit_fatal__verified(const char *message, size_t message_len,
                                  const char *file, size_t file_len, int line);
 
 // ---------------------------------------------------------------------
+#ifdef USE_DBG_CONSOLE
+
+#include <sys/dbg_console.h>
+
+ssize_t dbg_console_read__verified(void *buffer, size_t buffer_size);
+
+void dbg_console_write__verified(const void *data, size_t data_size);
+
+#endif
+
+// ---------------------------------------------------------------------
 #include <sys/bootutils.h>
 
 void reboot_and_upgrade__verified(const uint8_t hash[32]);

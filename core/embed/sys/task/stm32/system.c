@@ -33,6 +33,10 @@
 #include <sys/systimer.h>
 #include <sys/sysutils.h>
 
+#ifdef USE_DBG_CONSOLE
+#include <sys/dbg_console.h>
+#endif
+
 #ifdef USE_SDRAM
 #include <sys/sdram.h>
 #endif
@@ -66,6 +70,9 @@ void system_init(systask_error_handler_t error_handler) {
   systimer_init();
 #ifdef KERNEL
   syscall_ipc_init();
+#endif
+#ifdef USE_DBG_CONSOLE
+  dbg_console_init();
 #endif
 }
 
