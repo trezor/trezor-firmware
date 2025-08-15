@@ -855,6 +855,19 @@ access_violation:
   apptask_access_violation();
 }
 
+bool ble_unpair__verified(const bt_le_addr_t *addr) {
+  if (!probe_read_access(addr, sizeof(*addr))) {
+    goto access_violation;
+  }
+
+  return ble_unpair(addr);
+
+access_violation:
+  apptask_access_violation();
+
+  return false;
+}
+
 #endif
 
 // ---------------------------------------------------------------------

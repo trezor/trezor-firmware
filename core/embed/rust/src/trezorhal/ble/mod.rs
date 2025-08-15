@@ -4,10 +4,9 @@ mod micropython;
 #[cfg(feature = "ui")]
 use crate::ui::event::BLEEvent;
 
-use crate::error::Error;
-use core::mem::size_of;
-
 use super::ffi;
+use crate::error::Error;
+use core::{mem::size_of, ptr};
 
 pub const ADV_NAME_LEN: usize = ffi::BLE_ADV_NAME_LEN as usize;
 pub const PAIRING_CODE_LEN: usize = ffi::BLE_PAIRING_CODE_LEN as usize;
@@ -136,7 +135,12 @@ pub fn erase_bonds() -> Result<(), Error> {
 }
 
 pub fn unpair() -> Result<(), Error> {
-    issue_command(ffi::ble_command_type_t_BLE_UNPAIR, data_none())
+    unsafe {
+        if !ffi::ble_unpair(ptr::null_mut()) {
+            return Err(COMMAND_FAILED);
+        }
+        Ok(())
+    }
 }
 
 pub fn disconnect() -> Result<(), Error> {
