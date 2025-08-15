@@ -700,6 +700,11 @@ bool ble_unpair(const bt_le_addr_t *addr) {
   return (bool)syscall_invoke1((uint32_t)addr, SYSCALL_BLE_UNPAIR);
 }
 
+uint8_t ble_get_bond_list(bt_le_addr_t *bonds, size_t count) {
+  return (uint8_t)syscall_invoke2((uint32_t)bonds, count,
+                                  SYSCALL_BLE_GET_BOND_LIST);
+}
+
 #endif
 
 #ifdef USE_NRF
