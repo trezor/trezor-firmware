@@ -17,31 +17,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef KERNEL_MODE
+#include <trezor_rtl.h>
 
 #include <rtl/mini_printf.h>
-#include <stdarg.h>
-#include <sys/irq.h>
+#include <sys/dbg_console.h>
 
-void dbg_vprintf(const char* fmt, va_list args) {
+void dbg_console_vprintf(const char *fmt, va_list args) {
   char temp[80];
   mini_vsnprintf(temp, sizeof(temp), fmt, args);
-
-  irq_key_t irq_key = irq_lock();
-  for (size_t i = 0; i < sizeof(temp); i++) {
-    if (temp[i] == '\0') {
-      break;
-    }
-    ITM_SendChar(temp[i]);
-  }
-  irq_unlock(irq_key);
+  dbg_console_write(temp, strnlen(temp, sizeof(temp)));
 }
 
-void dbg_printf(const char* fmt, ...) {
+void dbg_console_printf(const char *fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  dbg_vprintf(fmt, args);
+  dbg_console_vprintf(fmt, args);
   va_end(args);
 }
-
-#endif  // KERNEL_MODE
