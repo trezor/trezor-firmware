@@ -298,7 +298,14 @@ T3W1 = ModelKeys(
     firmware_sigs_needed=-1,
 )
 
-ROOT_ED25519_KEYS = []  # TODO - add when ready
+ROOT_ED25519_KEYS = [
+    bytes.fromhex(key)
+    for key in (
+        "b0d73e86ae392a26da7275994e965097ae7ee8f88455788e8c534021d5de1885",
+        "a8f18b9486167c97b059fd4f053be824f7d5b0cb8710b3ca12d26d2ddac351c9",
+        "d20fbda4271aeb06c18c26c6f2adb6d6b0e312f845f90441fd614f397554a86e",
+    )
+]
 ROOT_ED25519_KEYS_DEV = [
     bytes.fromhex(key)
     for key in (
@@ -306,7 +313,14 @@ ROOT_ED25519_KEYS_DEV = [
         "2152f8d19b791d24453242e15f2eab6cb7cffa7b6a5ed30097960e069881db12",
     )
 ]
-ROOT_SLH_DSA_KEYS = []  # TODO - add when ready
+ROOT_SLH_DSA_KEYS = [
+    bytes.fromhex(key)
+    for key in (
+        "ec57a2643e553c5919473cd579cddda650057c2fd598a447574bdb6c1f0f5521",
+        "d296d8cf9be3e923e10ac03f43566d189d11f6b5ddabdf8dc12d29c00e5a136a",
+        "b72bd71bf8e109d3774d91e3c1abd2a2e9ff6b5711896f8d873a3df9b9be98d1",
+    )
+]
 ROOT_SLH_DSA_KEYS_DEV_PRIVATE = [
     bytes.fromhex(key)
     for key in (
