@@ -3,9 +3,9 @@ use crate::{
     translations::TR,
     ui::{
         component::{swipe_detect::SwipeConfig, Component, Event, EventCtx, Label, Timeout},
-        display::Color,
+        display::{toif::Toif, Color},
         flow::Swipable,
-        geometry::{Alignment, Alignment2D, Insets, Point, Rect},
+        geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         shape::{Renderer, ToifImage},
         util::{animation_disabled, Pager},
     },
@@ -113,6 +113,10 @@ impl Component for TutorialWelcomeScreen {
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         const ICON_TROPIC: Toif<'static> = theme::ICON_TROPIC.toif;
+        // Center the icon in the action bar area in the full-screen component
+        const ICON_POS: Point = SCREEN
+            .bottom_center()
+            .ofs(Offset::new(0, -theme::ACTION_BAR_HEIGHT / 2));
 
         if !self.stopwatch.is_running_within(LOADER_DURATION) {
             ScreenBackground::new(Some(LED_COLOR), None).render(target);
@@ -120,21 +124,15 @@ impl Component for TutorialWelcomeScreen {
 
         self.text.render(target);
 
-        // Center the icon in the action bar area in the full-screen component
-        let icon_center = SCREEN
-            .bottom_center()
-            .sub(Point::new(0, theme::ACTION_BAR_HEIGHT / 2))
-            .into();
-
         // Topic icon
-        ToifImage::new(icon_center, ICON_TROPIC)
+        ToifImage::new(ICON_POS, ICON_TROPIC)
             .with_align(Alignment2D::CENTER)
             .with_fg(theme::GREY_EXTRA_LIGHT)
             .render(target);
 
         // Intro icon
         ToifImage::new(
-            icon_center
+            ICON_POS
                 .sub(Point::new(0, ICONS_PADDING + ICON_TROPIC.height() / 2))
                 .into(),
             theme::ICON_SECURED.toif,
