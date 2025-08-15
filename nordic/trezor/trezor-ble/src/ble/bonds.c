@@ -27,6 +27,8 @@
 
 #include "ble_internal.h"
 
+#include <string.h>
+
 #define LOG_MODULE_NAME ble_bonds
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
@@ -76,4 +78,50 @@ bool bonds_erase_current(void) {
   err = bt_unpair(BT_ID_DEFAULT, info.le.dst);
 
   return err == 0;
+}
+
+typedef struct {
+  bt_addr_le_t *addr_list;
+  size_t max_count;
+  size_t filled;
+} bonds_ctx_t;
+
+static void get_bonds(const struct bt_bond_info *info, void *user_data) {
+  bonds_ctx_t *ctx = (bonds_ctx_t *)user_data;
+
+  if (ctx == NULL) {
+    return;
+  }
+
+  if ((ctx->filled < ctx->max_count) && (ctx->addr_list != NULL)) {
+    bt_addr_le_t *dst = &ctx->addr_list[ctx->filled];
+    // First byte: address type, next 6 bytes: MAC address
+    dst->type = info->addr.type;
+    memcpy(dst->a.val, info->addr.a.val, BT_ADDR_SIZE);
+  }
+
+  ctx->filled += 1;
+}
+
+size_t bonds_get_all(bt_addr_le_t *addr, size_t max_count) {
+  // If no storage provided, just return total number of bonds
+  if (addr == NULL || max_count == 0) {
+    int total = 0;
+    bt_foreach_bond(BT_ID_DEFAULT, count_bonds, &total);
+    return total;
+  }
+
+  bonds_ctx_t ctx = {
+      .addr_list = addr,
+      .max_count = max_count,
+      .filled = 0,
+  };
+
+  bt_foreach_bond(BT_ID_DEFAULT, get_bonds, &ctx);
+
+  // Return how many entries were actually written (capped by max_count)
+  if (ctx.filled > max_count) {
+    return max_count;
+  }
+  return ctx.filled;
 }
