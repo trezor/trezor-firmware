@@ -117,7 +117,23 @@ static secbool is_manufacturing_mode(vendor_header *vhdr) {
   return manufacturing_mode;
 }
 
-static secbool boot_sequence(secbool manufacturing_mode) {
+static void display_touch_init(secbool manufacturing_mode,
+                               secbool *touch_initialized) {
+  display_init(DISPLAY_RESET_CONTENT);
+
+#ifdef USE_TOUCH
+  secbool touch_init_ok = secfalse;
+  touch_init_ok = touch_init();
+  if (manufacturing_mode != sectrue) {
+    ensure(touch_init_ok, "Touch screen panel was not loaded properly.");
+  }
+  if (touch_initialized != NULL) {
+    *touch_initialized = touch_init_ok;
+  }
+#endif
+}
+
+static secbool boot_sequence(void) {
   secbool stay_in_bootloader = secfalse;
 
 #ifdef USE_BACKUP_RAM
@@ -149,7 +165,7 @@ static secbool boot_sequence(secbool manufacturing_mode) {
       (cmd == BOOT_COMMAND_INSTALL_UPGRADE || cmd == BOOT_COMMAND_REBOOT ||
        cmd == BOOT_COMMAND_SHOW_RSOD || cmd == BOOT_COMMAND_STOP_AND_WAIT);
 
-  if (sectrue == manufacturing_mode && cmd != BOOT_COMMAND_POWER_OFF) {
+  if (cmd != BOOT_COMMAND_POWER_OFF) {
     turn_on = true;
   }
 
@@ -158,36 +174,35 @@ static secbool boot_sequence(secbool manufacturing_mode) {
   }
 
   uint32_t press_start = 0;
+  uint32_t progress_start = 0;
   bool turn_on_locked = false;
   bool bld_locked = false;
+#ifdef USE_HAPTIC
+  bool haptic_played = false;
+#endif
 
   while (!turn_on) {
     bool btn_down = button_is_down(BTN_POWER);
     if (btn_down) {
       if (press_start == 0) {
         press_start = systick_ms();
-        turn_on_locked = false;
+        turn_on_locked = true;
         bld_locked = false;
       }
 
       uint32_t elapsed = systick_ms() - press_start;
-      if (elapsed >= 3000 && !bld_locked) {
-#ifdef USE_HAPTIC
-        haptic_play(HAPTIC_BOOTLOADER_ENTRY);
-#endif
+      if (elapsed >= 2000) {
         bld_locked = true;
-      } else if ((elapsed >= 1000 || manufacturing_mode == sectrue) &&
-                 !turn_on_locked) {
-#ifdef USE_HAPTIC
-        haptic_play(HAPTIC_BUTTON_PRESS);
-#endif
-        turn_on_locked = true;
+        break;
       }
+#ifdef USE_HAPTIC
+      if (elapsed >= 500 && !haptic_played) {
+        haptic_play(HAPTIC_BUTTON_PRESS);
+        haptic_played = true;
+      }
+#endif
     } else if (press_start != 0) {
       // Button just released
-      if (bld_locked) {
-        stay_in_bootloader = sectrue;
-      }
       if (turn_on_locked) {
         break;
       }
@@ -219,31 +234,47 @@ static secbool boot_sequence(secbool manufacturing_mode) {
 
   while (pm_turn_on() != PM_OK) {
     rgb_led_set_color(0x400000);
-    systick_delay_ms(1000);
+    systick_delay_ms(400);
+    rgb_led_set_color(0);
+    systick_delay_ms(400);
+    rgb_led_set_color(0x400000);
+    systick_delay_ms(400);
+    rgb_led_set_color(0);
+    systick_delay_ms(400);
+    rgb_led_set_color(0x400000);
+    systick_delay_ms(400);
+    rgb_led_set_color(0);
     pm_hibernate();
     systick_delay_ms(1000);
     reboot_to_off();
   }
 
+  if (bld_locked) {
+#ifdef USE_HAPTIC
+    haptic_play(HAPTIC_BOOTLOADER_ENTRY);
+#endif
+
+    display_touch_init(secfalse, NULL);
+    screen_bootloader_entry_progress(0, true);
+    progress_start = systick_ms();
+
+    bool btn_down = button_is_down(BTN_POWER);
+    while (btn_down) {
+      uint32_t progress = systick_ms() - progress_start;
+      if (progress > 1000) {
+        progress = 1000;
+      }
+      screen_bootloader_entry_progress(progress, false);
+
+      btn_down = button_is_down(BTN_POWER);
+    }
+
+    stay_in_bootloader = sectrue;
+  }
+
 #endif
 
   return stay_in_bootloader;
-}
-
-static void display_touch_init(secbool manufacturing_mode,
-                               secbool *touch_initialized) {
-  display_init(DISPLAY_RESET_CONTENT);
-
-#ifdef USE_TOUCH
-  secbool touch_init_ok = secfalse;
-  touch_init_ok = touch_init();
-  if (manufacturing_mode != sectrue) {
-    ensure(touch_init_ok, "Touch screen panel was not loaded properly.");
-  }
-  if (touch_initialized != NULL) {
-    *touch_initialized = touch_init_ok;
-  }
-#endif
 }
 
 static void drivers_init(secbool manufacturing_mode,
@@ -460,7 +491,7 @@ int bootloader_main(void) {
 
   secbool manufacturing_mode = is_manufacturing_mode(&vhdr);
 
-  secbool stay_in_bootloader = boot_sequence(manufacturing_mode);
+  secbool stay_in_bootloader = boot_sequence();
 
   drivers_init(manufacturing_mode, &touch_initialized);
 
