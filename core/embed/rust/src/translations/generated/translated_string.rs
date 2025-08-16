@@ -1459,12 +1459,10 @@ pub enum TranslatedString {
     tutorial__menu_appendix = 1060,  // "View more info, quit flow, ..."
     tutorial__navigation_ts7 = 1061,  // "Use buttons at the bottom to navigate and confirm your actions."
     tutorial__suite_restart = 1062,  // "Replay this tutorial anytime from the Trezor Suite app."
-    tutorial__tropic = 1063,  // "Secured with TROPIC01"
-    tutorial__tropic_info1 = 1064,  // "TROPIC01 is a next-gen secure element with tamper-proof protection and open architecture."
-    tutorial__tropic_info2 = 1065,  // "Private keys stay on-chip, safeguarded by hardware-enforced boundaries and anti-tamper tech."
-    tutorial__tropic_info3 = 1066,  // "Built for security from the ground up, and open to independent audits."
-    tutorial__welcome_safe7 = 1067,  // "Welcome to\nTrezor\nSafe 7"
+    tutorial__welcome_safe7 = 1067,  // "Welcome\nto Trezor\nSafe 7"
     tutorial__what_is_tropic = 1068,  // "What is TROPIC01?"
+    tutorial__tap_to_start = 1069,  // "Tap to start tutorial"
+    tutorial__tropic_info = 1070,  // "TROPIC01 is a next-gen open-source secure element chip designed for transparent and auditable hardware security."
 }
 
 impl TranslatedString {
@@ -3243,12 +3241,10 @@ impl TranslatedString {
             (Self::tutorial__menu_appendix, "View more info, quit flow, ..."),
             (Self::tutorial__navigation_ts7, "Use buttons at the bottom to navigate and confirm your actions."),
             (Self::tutorial__suite_restart, "Replay this tutorial anytime from the Trezor Suite app."),
-            (Self::tutorial__tropic, "Secured with TROPIC01"),
-            (Self::tutorial__tropic_info1, "TROPIC01 is a next-gen secure element with tamper-proof protection and open architecture."),
-            (Self::tutorial__tropic_info2, "Private keys stay on-chip, safeguarded by hardware-enforced boundaries and anti-tamper tech."),
-            (Self::tutorial__tropic_info3, "Built for security from the ground up, and open to independent audits."),
-            (Self::tutorial__welcome_safe7, "Welcome to\nTrezor\nSafe 7"),
+            (Self::tutorial__welcome_safe7, "Welcome\nto Trezor\nSafe 7"),
             (Self::tutorial__what_is_tropic, "What is TROPIC01?"),
+            (Self::tutorial__tap_to_start, "Tap to start tutorial"),
+            (Self::tutorial__tropic_info, "TROPIC01 is a next-gen open-source secure element chip designed for transparent and auditable hardware security."),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4594,6 +4590,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_tutorial__suite_restart, Self::tutorial__suite_restart),
         (Qstr::MP_QSTR_tutorial__sure_you_want_skip, Self::tutorial__sure_you_want_skip),
         (Qstr::MP_QSTR_tutorial__swipe_up_and_down, Self::tutorial__swipe_up_and_down),
+        (Qstr::MP_QSTR_tutorial__tap_to_start, Self::tutorial__tap_to_start),
         (Qstr::MP_QSTR_tutorial__title_easy_navigation, Self::tutorial__title_easy_navigation),
         (Qstr::MP_QSTR_tutorial__title_handy_menu, Self::tutorial__title_handy_menu),
         (Qstr::MP_QSTR_tutorial__title_hello, Self::tutorial__title_hello),
@@ -4603,10 +4600,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_tutorial__title_skip, Self::tutorial__title_skip),
         (Qstr::MP_QSTR_tutorial__title_tutorial_complete, Self::tutorial__title_tutorial_complete),
         (Qstr::MP_QSTR_tutorial__title_well_done, Self::tutorial__title_well_done),
-        (Qstr::MP_QSTR_tutorial__tropic, Self::tutorial__tropic),
-        (Qstr::MP_QSTR_tutorial__tropic_info1, Self::tutorial__tropic_info1),
-        (Qstr::MP_QSTR_tutorial__tropic_info2, Self::tutorial__tropic_info2),
-        (Qstr::MP_QSTR_tutorial__tropic_info3, Self::tutorial__tropic_info3),
+        (Qstr::MP_QSTR_tutorial__tropic_info, Self::tutorial__tropic_info),
         (Qstr::MP_QSTR_tutorial__use_trezor, Self::tutorial__use_trezor),
         (Qstr::MP_QSTR_tutorial__welcome_press_right, Self::tutorial__welcome_press_right),
         (Qstr::MP_QSTR_tutorial__welcome_safe5, Self::tutorial__welcome_safe5),

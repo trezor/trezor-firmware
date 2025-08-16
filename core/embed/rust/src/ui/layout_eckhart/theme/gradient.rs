@@ -19,7 +19,7 @@ pub enum Gradient {
     #[cfg(feature = "micropython")]
     HomescreenBase,
     #[cfg(feature = "micropython")]
-    HomescreenLEDSim(Color),
+    ScreenLEDSim(Color),
 }
 
 impl Gradient {
@@ -52,7 +52,7 @@ fn render_gradient<'s>(
         #[cfg(feature = "micropython")]
         Gradient::HomescreenBase => render_homescreen_base(target, area, step_size),
         #[cfg(feature = "micropython")]
-        Gradient::HomescreenLEDSim(color) => render_led_simulation(target, area, step_size, color),
+        Gradient::ScreenLEDSim(color) => render_led_simulation(target, area, step_size, color),
     }
 }
 

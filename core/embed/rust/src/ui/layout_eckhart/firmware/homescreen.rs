@@ -10,7 +10,7 @@ use crate::{
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Label, Never, Swipe},
         display::{image::ImageInfo, Color},
-        geometry::{Alignment, Alignment2D, Direction, Insets, Offset, Rect},
+        geometry::{Alignment, Direction, Insets, Offset, Rect},
         layout::util::get_user_custom_image,
         shape::{self, Renderer},
         util::animation_disabled,
@@ -23,7 +23,7 @@ use super::{
         fonts,
     },
     constant::{HEIGHT, SCREEN, WIDTH},
-    theme::{self, firmware::button_homebar_style, Gradient, TILES_GRID},
+    theme::{self, firmware::button_homebar_style, ScreenBackground},
     ActionBar, ActionBarMsg, Hint,
 };
 
@@ -164,37 +164,6 @@ impl Homescreen {
         }
         false
     }
-
-    fn render_default_hs<'s>(&self, target: &mut impl Renderer<'s>) {
-        // Layer 1: Base Solid Colour
-        shape::Bar::new(SCREEN)
-            .with_bg(theme::GREY_EXTRA_DARK)
-            .render(target);
-
-        // Layer 2: Base Gradient overlay
-        Gradient::HomescreenBase.render(target, SCREEN, 1);
-
-        // Layer 3: (Optional) LED lightning simulation
-        if let Some(led_color) = self.led_color {
-            let gradient_area = SCREEN.inset(Insets::bottom(theme::ACTION_BAR_HEIGHT));
-            Gradient::HomescreenLEDSim(led_color).render(target, gradient_area, 1);
-        }
-
-        // Layer 4: Tile pattern
-        // TODO: improve frame rate
-        for idx in 0..TILES_GRID.cell_count() {
-            let tile_area = TILES_GRID.cell(idx);
-            let icon = if theme::TILES_SLASH_INDICES.contains(&idx) {
-                theme::ICON_TILE_STRIPES_SLASH.toif
-            } else {
-                theme::ICON_TILE_STRIPES_BACKSLASH.toif
-            };
-            shape::ToifImage::new(tile_area.top_left(), icon)
-                .with_align(Alignment2D::TOP_LEFT)
-                .with_fg(theme::BLACK)
-                .render(target);
-        }
-    }
 }
 
 impl Drop for Homescreen {
@@ -266,7 +235,7 @@ impl Component for Homescreen {
                 shape::JpegImage::new_image(SCREEN.top_left(), image).render(target);
             }
         } else {
-            self.render_default_hs(target);
+            ScreenBackground::new(self.led_color, None).render(target);
         }
         self.label.render(target);
         self.hint.render(target);
