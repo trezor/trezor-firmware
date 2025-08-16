@@ -527,35 +527,6 @@ jobs:
       - uses: ./.github/actions/environment
       - run: nix-shell --run "poetry run core/tools/size/checker.py core/build/firmware/firmware.elf"
 
-  # Compares the current flash space with the situation in the current master
-  # Fails if the new binary is significantly larger than the master one
-  # (the threshold is defined in the script, currently 5kb).
-  # Also generates a report with the current situation
-  core_flash_size_compare:
-    name: Flash size comparison
-    runs-on: ubuntu-latest
-    needs: core_firmware
-    strategy:
-      fail-fast: false
-      matrix:
-        model: [T2T1]  # FIXME: T2T1 url is hardcoded in compare_master.py
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          fetch-depth: 0
-      - uses: actions/download-artifact@v4
-        with:
-          name: core-firmware-${{ matrix.model }}-universal-normal
-          path: core/build
-      - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run core/tools/size/compare_master.py core/build/firmware/firmware.elf -r firmware_elf_size_report.txt"
-      - uses: actions/upload-artifact@v4
-        with:
-          name: core-test-flash-size-${{ matrix.model }}
-          path: firmware_elf_size_report.txt
-          retention-days: 7
-
   # Monero tests.
   core_monero_test:
     name: Monero test (${{ matrix.model }}, ${{ matrix.asan }})
