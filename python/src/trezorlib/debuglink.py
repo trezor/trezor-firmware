@@ -1423,17 +1423,20 @@ class TrezorClientDebugLink(TrezorClient):
         """
         import secrets
 
-        # Start by canceling whatever is on screen. This will work to cancel T1 PIN
-        # prompt, which is in TINY mode and does not respond to `Ping`.
         if self.protocol_version is ProtocolVersion.V1:
             assert isinstance(self.protocol, ProtocolV1Channel)
-            self.protocol.write(messages.Cancel())
-            resp = self.protocol.read()
+            if self.model is models.T1B1:
+                # Start by canceling whatever is on screen. This will work to cancel T1 PIN
+                # prompt, which is in TINY mode and does not respond to `Ping`.
+                self.protocol.write(messages.Cancel())
+
             message = "SYNC" + secrets.token_hex(8)
             self.protocol.write(messages.Ping(message=message))
-            while resp != messages.Success(message=message):
+            success = messages.Success(message=message)
+            while True:
                 try:
-                    resp = self.protocol.read()
+                    if self.protocol.read() == success:
+                        return
                 except Exception:
                     pass
 
