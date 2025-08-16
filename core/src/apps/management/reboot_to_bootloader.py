@@ -8,16 +8,12 @@ if TYPE_CHECKING:
     from trezor.messages import RebootToBootloader
 
 
-async def install_upgrade(
-    firmware_header: bytes, language_data_length: int
-) -> tuple[BootCommand, bytes]:
+async def install_upgrade(firmware_header: bytes) -> tuple[BootCommand, bytes]:
     from ubinascii import hexlify
 
     from trezor import TR, utils, wire
     from trezor.enums import BootCommand
-    from trezor.ui.layouts import confirm_firmware_update, show_wait_text
-
-    from apps.management.change_language import do_change_language
+    from trezor.ui.layouts import confirm_firmware_update
 
     # check and parse received firmware header
     try:
@@ -42,20 +38,6 @@ async def install_upgrade(
         fingerprint=hexlify(hdr.fingerprint).decode(),
     )
 
-    # send language data
-    if language_data_length > 0:
-        show_wait_text(TR.reboot_to_bootloader__just_a_moment)
-        try:
-            await do_change_language(
-                language_data_length,
-                show_display=False,
-                expected_version=hdr.version,
-                report=lambda i: None,
-            )
-        except MemoryError:
-            # Continue firmware upgrade even if language change failed
-            pass
-
     return BootCommand.INSTALL_UPGRADE, hdr.hash
 
 
@@ -78,9 +60,7 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
         and msg.firmware_header is not None
         and is_official
     ):
-        boot_command, boot_args = await install_upgrade(
-            msg.firmware_header, msg.language_data_length
-        )
+        boot_command, boot_args = await install_upgrade(msg.firmware_header)
 
     else:
         await confirm_action(
