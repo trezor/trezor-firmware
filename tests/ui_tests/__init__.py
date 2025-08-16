@@ -56,6 +56,9 @@ def screen_recording(
     shutil.rmtree(testcase.actual_dir, ignore_errors=True)
     testcase.actual_dir.mkdir()
 
+    # Make sure the device is ready - otherwise, the next `DebugLinkRecordScreen` request
+    # may be lost due to an event loop restart.
+    client.sync_responses()
     try:
         client.debug.start_recording(str(testcase.actual_dir))
         yield
