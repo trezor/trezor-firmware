@@ -27,6 +27,12 @@
 
 #include <libtropic.h>
 
+#ifdef TREZOR_EMULATOR
+#include <arpa/inet.h>
+#include <libtropic/hal/port/unix/lt_port_unix_tcp.h>
+#include <time.h>
+#endif
+
 #include "ed25519-donna/ed25519.h"
 #include "memzero.h"
 
@@ -36,6 +42,9 @@ typedef struct {
   bool initialized;
   bool sec_chan_established;
   lt_handle_t handle;
+#ifdef TREZOR_EMULATOR
+  lt_dev_unix_tcp_t device;
+#endif
 } tropic_driver_t;
 
 static tropic_driver_t g_tropic_driver = {0};
@@ -47,12 +56,18 @@ bool tropic_init(void) {
     return true;
   }
 
-  curve25519_key tropic_pubkey = {0};
-  curve25519_key trezor_privkey = {0};
+#ifdef TREZOR_EMULATOR
+  drv->device.addr = inet_addr("127.0.0.1");
+  drv->device.port = 28992;
+  drv->handle.l2.device = &drv->device;
+#endif
 
   if (lt_init(&drv->handle) != LT_OK) {
     goto cleanup;
   }
+
+  curve25519_key tropic_pubkey = {0};
+  curve25519_key trezor_privkey = {0};
 
   secbool pubkey_ok = secret_key_tropic_public(tropic_pubkey);
   secbool privkey_ok = secret_key_tropic_pairing_privileged(trezor_privkey);
@@ -106,17 +121,6 @@ bool tropic_ping(const uint8_t *msg_out, uint8_t *msg_in, uint16_t msg_len) {
   return res == LT_OK;
 }
 
-bool tropic_get_cert(uint8_t *buf, uint16_t buf_size) {
-  tropic_driver_t *drv = &g_tropic_driver;
-
-  if (!drv->initialized) {
-    return false;
-  }
-
-  lt_ret_t res = lt_get_info_cert(&drv->handle, buf, buf_size);
-  return res == LT_OK;
-}
-
 bool tropic_ecc_key_generate(uint16_t slot_index) {
   tropic_driver_t *drv = &g_tropic_driver;
 
@@ -144,8 +148,8 @@ bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
     return false;
   }
 
-  lt_ret_t res = lt_ecc_eddsa_sign(&drv->handle, key_slot_index, dig, dig_len,
-                                   sig, sig_len);
+  lt_ret_t res =
+      lt_ecc_eddsa_sign(&drv->handle, key_slot_index, dig, dig_len, sig);
   if (res != LT_OK) {
     memzero(sig, sig_len);
     return false;

@@ -323,10 +323,6 @@ bool tropic_ping(const uint8_t *msg_in, uint8_t *msg_out, uint16_t msg_len) {
                               SMCALL_TROPIC_PING);
 }
 
-bool tropic_get_cert(uint8_t *buf, uint16_t buf_size) {
-  return (bool)smcall_invoke2((uint32_t)buf, buf_size, SMCALL_TROPIC_GET_CERT);
-}
-
 bool tropic_ecc_key_generate(uint16_t slot_index) {
   return (bool)smcall_invoke1((uint32_t)slot_index,
                               SMCALL_TROPIC_ECC_KEY_GENERATE);

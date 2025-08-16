@@ -836,11 +836,6 @@ bool tropic_ping(const uint8_t *msg_in, uint8_t *msg_out, uint16_t msg_len) {
                                SYSCALL_TROPIC_PING);
 }
 
-bool tropic_get_cert(uint8_t *buf, uint16_t buf_size) {
-  return (bool)syscall_invoke2((uint32_t)buf, buf_size,
-                               SYSCALL_TROPIC_GET_CERT);
-}
-
 bool tropic_ecc_key_generate(uint16_t slot_index) {
   return (bool)syscall_invoke1((uint32_t)slot_index,
                                SYSCALL_TROPIC_ECC_KEY_GENERATE);

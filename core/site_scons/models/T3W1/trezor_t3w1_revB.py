@@ -187,16 +187,21 @@ def configure(
         sources += ["embed/sec/tropic/tropic.c"]
         sources += ["embed/sec/tropic/stm32/tropic01.c"]
         sources += ["vendor/libtropic/src/libtropic.c"]
+        sources += ["vendor/libtropic/src/lt_asn1_der.c"]
         sources += ["vendor/libtropic/src/lt_crc16.c"]
         sources += ["vendor/libtropic/src/lt_l1_port_wrap.c"]
         sources += ["vendor/libtropic/src/lt_l1.c"]
         sources += ["vendor/libtropic/src/lt_l2.c"]
         sources += ["vendor/libtropic/src/lt_l2_frame_check.c"]
         sources += ["vendor/libtropic/src/lt_l3.c"]
+        sources += ["vendor/libtropic/src/lt_l3_process.c"]
         sources += ["vendor/libtropic/src/lt_hkdf.c"]
         sources += ["vendor/libtropic/src/lt_random.c"]
         sources += [
             "vendor/libtropic/hal/crypto/trezor_crypto/lt_crypto_trezor_aesgcm.c"
+        ]
+        sources += [
+            "vendor/libtropic/hal/crypto/trezor_crypto/lt_crypto_trezor_ecdsa.c"
         ]
         sources += [
             "vendor/libtropic/hal/crypto/trezor_crypto/lt_crypto_trezor_ed25519.c"
@@ -212,6 +217,10 @@ def configure(
         paths += ["vendor/libtropic/src"]
         defines += [("USE_TROPIC", "1")]
         defines += [("LT_USE_TREZOR_CRYPTO", "1")]
+        defines += [("LT_HELPERS", "1")]
+
+        paths += ["vendor/libtropic/TROPIC01_fw_update_files/boot_v_1_0_1/fw_v_1_0_0"]
+        defines += [("ABAB", "1")]
 
     if "sbu" in features_wanted:
         sources += ["embed/io/sbu/stm32/sbu.c"]
