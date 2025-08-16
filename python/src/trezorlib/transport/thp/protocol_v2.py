@@ -37,6 +37,8 @@ LOG = logging.getLogger(__name__)
 
 DEFAULT_SESSION_ID: int = 0
 
+MAX_RETRANSMISSION_COUNT = 50
+
 if t.TYPE_CHECKING:
     pass
 MT = t.TypeVar("MT", bound=protobuf.MessageType)
@@ -128,7 +130,7 @@ class ProtocolV2Channel(Channel):
     def prepare_channel_without_pairing(self, credential: bytes | None = None) -> int:
         self._reset_sync_bits()
         # allow skipping unrelated response packets (e.g. in case of retransmissions)
-        self._do_channel_allocation(retries=50)
+        self._do_channel_allocation(retries=MAX_RETRANSMISSION_COUNT)
         return self._do_handshake(credential=credential)
 
     def _reset_sync_bits(self) -> None:
