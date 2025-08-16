@@ -56,7 +56,7 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
 
   // Store measurement timestamp
   if (drv->pmic_last_update_us == 0) {
-    drv->pmic_sampling_period_ms = PM_BATTERY_SAMPLING_PERIOD_MS;
+    drv->pmic_sampling_period_ms = PM_TIMER_PERIOD_MS;
     drv->vbat_tau = report->vbat;
   } else {
     // Calculate the time since the last PMIC update

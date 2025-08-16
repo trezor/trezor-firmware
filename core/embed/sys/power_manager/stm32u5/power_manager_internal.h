@@ -28,8 +28,7 @@
 #include "../stwlc38/stwlc38.h"
 
 // Power manager thresholds & timings
-#define PM_TIMER_PERIOD_MS 300
-#define PM_BATTERY_SAMPLING_PERIOD_MS 100
+#define PM_TIMER_PERIOD_MS 100
 #define PM_SHUTDOWN_TIMEOUT_MS 15000
 #define PM_BATTERY_UNDERVOLT_THR_V 3.0f
 #define PM_BATTERY_UNDERVOLT_RECOVERY_THR_V 3.1f
