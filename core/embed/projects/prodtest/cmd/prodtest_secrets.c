@@ -128,6 +128,29 @@ static void prodtest_secrets_init(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+#ifdef SECRET_LOCK_SLOT_OFFSET
+static void prodtest_secrets_lock(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  if (sectrue == secret_is_locked()) {
+    cli_trace(cli, "Already locked");
+    cli_ok(cli, "");
+    return;
+  }
+
+  if (sectrue != secret_lock()) {
+    cli_error(cli, CLI_ERROR, "Failed to lock secret sector");
+    return;
+  }
+
+  cli_trace(cli, "Lock successful");
+  cli_ok(cli, "");
+}
+#endif
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -136,3 +159,12 @@ PRODTEST_CLI_CMD(
   .info = "Generate and write secrets to flash",
   .args = ""
 );
+
+#ifdef SECRET_LOCK_SLOT_OFFSET
+PRODTEST_CLI_CMD(
+  .name = "secrets-lock",
+  .func = prodtest_secrets_lock,
+  .info = "Locks the secret sector",
+  .args = ""
+);
+#endif

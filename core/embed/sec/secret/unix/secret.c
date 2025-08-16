@@ -44,6 +44,10 @@ static uint8_t secret_key_slot1[SECRET_KEY_SLOT_1_LEN] = {0};
 static uint8_t secret_key_slot2[SECRET_KEY_SLOT_2_LEN] = {0};
 #endif
 
+#ifdef SECRET_LOCK_SLOT_OFFSET
+static secbool secret_sector_locked = secfalse;
+#endif
+
 size_t secret_get_slot_len(uint8_t slot) {
   switch (slot) {
 #ifdef SECRET_KEY_SLOT_0_LEN
@@ -174,5 +178,16 @@ void secret_prepare_fw(secbool allow_run_with_secret,
 }
 
 void secret_init(void) {}
+
+#ifdef SECRET_LOCK_SLOT_OFFSET
+
+secbool secret_is_locked(void) { return secret_sector_locked; }
+
+secbool secret_lock(void) {
+  secret_sector_locked = sectrue;
+  return sectrue;
+}
+
+#endif
 
 #endif  // KERNEL_MODE

@@ -656,6 +656,16 @@ secrets-init
 OK
 ```
 
+### secrets-lock
+Locks the secret sector.
+
+Example:
+```
+secrets-lock
+Lock successful
+OK
+```
+
 ### optiga-pair
 Writes the pairing secret to the Optiga chip to pair it with the MCU. The command `secrets-init` must be executed before calling this command.
 

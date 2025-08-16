@@ -22,11 +22,12 @@
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
+#include <rtl/mini_printf.h>
+#include <sec/secret.h>
 #include <util/flash_otp.h>
 
 #include <stdlib.h>
 #include "prodtest_optiga.h"
-#include "rtl/mini_printf.h"
 
 static void prodtest_otp_variant_read(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
@@ -115,6 +116,13 @@ static void prodtest_otp_variant_write(cli_t* cli) {
     cli_trace(cli, "!!! Use '--execute' switch to write to OTP memory.");
     cli_trace(cli, "");
   }
+
+#ifdef SECRET_LOCK_SLOT_OFFSET
+  if (sectrue != secret_is_locked()) {
+    cli_error(cli, CLI_ERROR, "Secrets not locked");
+    return;
+  }
+#endif
 
 #ifdef USE_OPTIGA
   optiga_locked_status optiga_status = get_optiga_locked_status(cli);
