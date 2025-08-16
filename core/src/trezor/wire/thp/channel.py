@@ -25,7 +25,7 @@ from trezor.wire.errors import WireBufferError
 from . import ENCRYPTED, ChannelState, PacketHeader, ThpDecryptionError, ThpError
 from . import alternating_bit_protocol as ABP
 from . import control_byte, crypto, memory_manager
-from .checksum import CHECKSUM_LENGTH
+from .checksum import CHECKSUM_LENGTH, is_valid
 from .transmission_loop import TransmissionLoop
 from .writer import MESSAGE_TYPE_LENGTH
 
@@ -52,12 +52,15 @@ class Reassembler:
         self.reset()
 
     def reset(self) -> None:
-        self.bytes_read = 0
-        self.buffer_len = 0
+        self.bytes_read: int = 0
+        self.buffer_len: int = 0
+        self.message: memoryview | None = None
 
-    def get_next_message(self, packet: memoryview) -> memoryview | None:
+    def handle_packet(self, packet: memoryview) -> bool:
         """
-        Process current packet, returning the payload buffer on success.
+        Process current packet, returning `True` when a valid message is reassembled.
+        The parsed message can retrieved via the `message` field (if it's not `None`).
+        In case of a checksum error or if the reassembly is not over, return `False`.
 
         May raise `WireBufferError` if there is a concurrent payload reassembly in progress.
         """
@@ -65,7 +68,7 @@ class Reassembler:
         if control_byte.is_continuation(ctrl_byte):
             if not self.bytes_read:
                 # ignore unexpected continuation packets
-                return None
+                return False
 
             # may raise WireBufferError
             buffer = memory_manager.get_existing_read_buffer(self.cid)
@@ -86,17 +89,33 @@ class Reassembler:
 
         assert len(buffer) == self.buffer_len
         if self.bytes_read < self.buffer_len:
-            return None
-        elif self.bytes_read == self.buffer_len:
-            self.reset()
-            return buffer
-        else:
+            return False
+
+        if self.bytes_read > self.buffer_len:
             raise ThpError("read more bytes than expected")
+
+        if not verify_checksum(buffer):
+            return False
+
+        self.message = buffer
+        return True
 
     def _buffer_packet_data(
         self, payload_buffer: memoryview, packet: memoryview, offset: int
     ) -> None:
         self.bytes_read += utils.memcpy(payload_buffer, self.bytes_read, packet, offset)
+
+
+def verify_checksum(buffer: memoryview) -> memoryview | None:
+    """
+    Return the buffer if the checksum is valid, otherwise return `None`.
+    """
+    if is_valid(buffer[-CHECKSUM_LENGTH:], buffer[:-CHECKSUM_LENGTH]):
+        return buffer
+    # ignore invalid payloads
+    if __debug__:
+        log.warning("Invalid payload checksum: %s", utils.hexlify_if_bytes(buffer))
+    return None
 
 
 class Channel:
@@ -184,11 +203,18 @@ class Channel:
 
     # READ and DECRYPT
 
-    def handle_packet(self, packet: utils.BufferType) -> memoryview | None:
+    def reassemble(self, packet: utils.BufferType) -> bool:
+        """
+        Process current packet, returning `True` when a valid message is reassembled.
+        The parsed message can retrieved via the `message` field (if it's not `None`).
+        In case of a checksum error or if the reassembly is not over, return `False`.
+
+        May raise `WireBufferError` if there is a concurrent payload reassembly in progress.
+        """
         if self.get_channel_state() == ChannelState.UNALLOCATED:
-            return None
+            return False
         try:
-            return self.reassembler.get_next_message(memoryview(packet))
+            return self.reassembler.handle_packet(memoryview(packet))
         except WireBufferError:
             self.reassembler.reset()
             raise
