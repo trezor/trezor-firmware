@@ -16,5 +16,5 @@ runs:
       run: timeout -v --kill-after=10 500 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "true"
       shell: sh
     - name: Dependencies poetry
-      run: timeout -v --kill-after=10 100 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "poetry install"
+      run: timeout -v --kill-after=10 200 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "poetry install"
       shell: sh
