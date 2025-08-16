@@ -542,3 +542,43 @@ def test_set_brightness_cancel(session: Session):
         IF = InputFlowCancelBrightness(client)
         client.set_input_flow(IF.get())
         device.set_brightness(session, None)
+
+
+@pytest.mark.models(
+    "delizia",
+    "eckhart",
+    reason="other devices do not have haptic feedback feature",
+)
+def test_set_haptic_feedback(client: Client):
+    with client:
+        client.use_pin_sequence([PIN4])
+        session = client.get_session()
+
+    # Haptic feedback is by default turned on
+    assert session.client.features.haptic_feedback is True
+
+    with session.client as client:
+        # Disable haptic feedback on initialized device with pin
+        device.apply_settings(session, haptic_feedback=False)
+        assert client.features.haptic_feedback is False
+
+        # Enable haptic feedback on initialized device without pin
+        client.use_pin_sequence([PIN4])
+        device.change_pin(session, remove=True)
+        assert client.features.pin_protection is False
+        device.apply_settings(session, haptic_feedback=True)
+        assert client.features.haptic_feedback is True
+
+    # Wipe device
+    device.wipe(session)
+    client = client.get_new_client()
+    with client:
+        session = client.get_seedless_session()
+    assert session.client.features.initialized is False
+
+    # Haptic feedback setting is not supported on uninitialized devices
+    with pytest.raises(
+        exceptions.TrezorFailure, match="not initialized"
+    ), session.client as client:
+        client.set_expected_responses([messages.Failure])
+        device.apply_settings(session, haptic_feedback=False)
