@@ -18,7 +18,6 @@
  */
 
 #ifdef KERNEL
-
 #include <trezor_rtl.h>
 
 #include <gfx/dma2d_bitblt.h>
@@ -724,6 +723,17 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       size_t len = args[1];
       ble_set_name__verified(name, len);
     } break;
+
+    case SYSCALL_BLE_UNPAIR: {
+      const bt_le_addr_t *addr = (const bt_le_addr_t *)args[0];
+      args[0] = ble_unpair__verified(addr);
+    } break;
+
+    case SYSCALL_BLE_GET_BOND_LIST: {
+      bt_le_addr_t *list = (bt_le_addr_t *)args[0];
+      size_t list_size = args[1];
+      args[0] = ble_get_bond_list__verified(list, list_size);
+    } break;
 #endif
 
 #ifdef USE_NRF
@@ -738,6 +748,14 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       const uint8_t *data = (const uint8_t *)args[0];
       size_t len = args[1];
       args[0] = nrf_update__verified(data, len);
+    } break;
+
+    case SYSCALL_NRF_GET_VERSION: {
+      args[0] = nrf_get_version();
+    } break;
+
+    case SYSCALL_NRF_AUTHENTICATE: {
+      args[0] = nrf_authenticate();
     } break;
 
 #endif
