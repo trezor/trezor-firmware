@@ -33,6 +33,9 @@ _ERROR = 0x42
 CHANNEL_ALLOCATION_REQ = 0x40
 _CHANNEL_ALLOCATION_RES = 0x41
 
+PING = 0x43
+PONG = 0x44
+
 TREZOR_STATE_UNPAIRED = b"\x00"
 TREZOR_STATE_PAIRED = b"\x01"
 
@@ -80,6 +83,9 @@ class MessageHeader:
             and self.ctrl_byte == _CHANNEL_ALLOCATION_RES
         )
 
+    def is_pong(self):
+        return self.cid == BROADCAST_CHANNEL_ID and self.ctrl_byte == PONG
+
     def is_handshake_init_response(self) -> bool:
         return self.ctrl_byte & DATA_MASK == HANDSHAKE_INIT_RES
 
@@ -96,3 +102,7 @@ class MessageHeader:
     @classmethod
     def get_channel_allocation_request_header(cls, length: int):
         return cls(CHANNEL_ALLOCATION_REQ, BROADCAST_CHANNEL_ID, length)
+
+    @classmethod
+    def get_ping_header(cls, length: int):
+        return cls(PING, BROADCAST_CHANNEL_ID, length)
