@@ -18,6 +18,7 @@ FEATURES_WANTED = [
     "secure_domain",
     "secure_mode",
     "usb",
+    "usb_iface_wire",
     ]
 
 CCFLAGS_MOD = ''

@@ -42,6 +42,7 @@ FEATURES_WANTED = [
     "suspend",
     "tropic",
     "usb",
+    "usb_iface_vcp",
     ]
 
 CCFLAGS_MOD = ''
