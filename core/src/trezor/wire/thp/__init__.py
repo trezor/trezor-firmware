@@ -190,11 +190,15 @@ def get_enabled_pairing_methods(
 
 
 def _get_device_properties(iface: WireInterface) -> ThpDeviceProperties:
-    # TODO define model variants
+    model_variant = (
+        (utils.unit_color() or 0)
+        | (int(utils.unit_btconly() or False) << 8)
+        | ((utils.unit_packaging() or 0) << 16)
+    )
     return ThpDeviceProperties(
         pairing_methods=get_enabled_pairing_methods(iface),
         internal_model=utils.INTERNAL_MODEL,
-        model_variant=None,
+        model_variant=model_variant,
         protocol_version_major=2,
         protocol_version_minor=0,
     )
