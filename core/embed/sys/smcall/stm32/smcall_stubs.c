@@ -323,19 +323,15 @@ bool tropic_ping(const uint8_t *msg_in, uint8_t *msg_out, uint16_t msg_len) {
                               SMCALL_TROPIC_PING);
 }
 
-bool tropic_get_cert(uint8_t *buf, uint16_t buf_size) {
-  return (bool)smcall_invoke2((uint32_t)buf, buf_size, SMCALL_TROPIC_GET_CERT);
-}
-
 bool tropic_ecc_key_generate(uint16_t slot_index) {
   return (bool)smcall_invoke1((uint32_t)slot_index,
                               SMCALL_TROPIC_ECC_KEY_GENERATE);
 }
 
 bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
-                     uint16_t dig_len, uint8_t *sig, uint16_t sig_len) {
-  return (bool)smcall_invoke5((uint32_t)key_slot_index, (uint32_t)dig, dig_len,
-                              (uint32_t)sig, sig_len, SMCALL_TROPIC_ECC_SIGN);
+                     uint16_t dig_len, uint8_t *sig) {
+  return (bool)smcall_invoke4((uint32_t)key_slot_index, (uint32_t)dig, dig_len,
+                              (uint32_t)sig, SMCALL_TROPIC_ECC_SIGN);
 }
 
 #endif

@@ -30,12 +30,20 @@
 #include "ed25519-donna/ed25519.h"
 #include "memzero.h"
 
+#ifdef TREZOR_EMULATOR
+#include <arpa/inet.h>
+#include <lt_port_unix_tcp.h>
+#endif
+
 #define PKEY_INDEX_BYTE PAIRING_KEY_SLOT_INDEX_0
 
 typedef struct {
   bool initialized;
   bool sec_chan_established;
   lt_handle_t handle;
+#ifdef TREZOR_EMULATOR
+  lt_dev_unix_tcp_t dev_unix_tcp;
+#endif
 } tropic_driver_t;
 
 static tropic_driver_t g_tropic_driver = {0};
@@ -49,6 +57,12 @@ bool tropic_init(void) {
 
   curve25519_key tropic_pubkey = {0};
   curve25519_key trezor_privkey = {0};
+
+#ifdef TREZOR_EMULATOR
+  drv->handle.l2.device = &drv->dev_unix_tcp;
+  drv->dev_unix_tcp.addr = inet_addr("127.0.0.1");
+  drv->dev_unix_tcp.port = 28992;
+#endif
 
   if (lt_init(&drv->handle) != LT_OK) {
     goto cleanup;
@@ -106,17 +120,6 @@ bool tropic_ping(const uint8_t *msg_out, uint8_t *msg_in, uint16_t msg_len) {
   return res == LT_OK;
 }
 
-bool tropic_get_cert(uint8_t *buf, uint16_t buf_size) {
-  tropic_driver_t *drv = &g_tropic_driver;
-
-  if (!drv->initialized) {
-    return false;
-  }
-
-  lt_ret_t res = lt_get_info_cert(&drv->handle, buf, buf_size);
-  return res == LT_OK;
-}
-
 bool tropic_ecc_key_generate(uint16_t slot_index) {
   tropic_driver_t *drv = &g_tropic_driver;
 
@@ -133,7 +136,7 @@ bool tropic_ecc_key_generate(uint16_t slot_index) {
 }
 
 bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
-                     uint16_t dig_len, uint8_t *sig, uint16_t sig_len) {
+                     uint16_t dig_len, uint8_t *sig) {
   tropic_driver_t *drv = &g_tropic_driver;
 
   if (!drv->initialized) {
@@ -144,10 +147,10 @@ bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
     return false;
   }
 
-  lt_ret_t res = lt_ecc_eddsa_sign(&drv->handle, key_slot_index, dig, dig_len,
-                                   sig, sig_len);
+  lt_ret_t res =
+      lt_ecc_eddsa_sign(&drv->handle, key_slot_index, dig, dig_len, sig);
   if (res != LT_OK) {
-    memzero(sig, sig_len);
+    memzero(sig, ECDSA_RAW_SIGNATURE_SIZE);
     return false;
   }
 
