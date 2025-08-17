@@ -9,11 +9,7 @@ use crate::{
 };
 
 use super::{
-    super::{
-        component::{Button, FuelGauge},
-        constant::SCREEN,
-        theme,
-    },
+    super::{component::Button, constant::SCREEN, theme},
     pairing_mode::PairingMsg,
     BldActionBar, BldActionBarMsg, BldHeader, BldHeaderMsg,
 };
@@ -54,9 +50,7 @@ impl WirelessSetupScreen {
         let btn_more_info =
             Button::with_text("More at trezor.io/start".into()).initially_enabled(false);
         let more_info = MoreInfo {
-            header: BldHeader::new(TString::empty())
-                .with_fuel_gauge(Some(FuelGauge::always()))
-                .with_close_button(),
+            header: BldHeader::new_with_fuel_gauge().with_close_button(),
             instruction_primary: Label::left_aligned(
                 "The Trezor Suite app is required to set up your Trezor.".into(),
                 theme::TEXT_NORMAL,
@@ -140,22 +134,36 @@ impl Component for WirelessSetupScreen {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Some(BldActionBarMsg::Confirmed) = self.action_bar.event(ctx, event) {
+        match event {
+            Event::Attach(..) | Event::PM(..) => {
+                // propagate events for the fuel gauge
+                self.header.event(ctx, event);
+                self.more_info.header.event(ctx, event);
+                return None;
+            }
+            Event::BLE(bleevent) => match bleevent {
+                BLEEvent::PairingRequest(code) => {
+                    return Some(PairingMsg::Pairing(code));
+                }
+                BLEEvent::Disconnected => {
+                    return Some(PairingMsg::Cancel);
+                }
+                BLEEvent::PairingCanceled => {
+                    return Some(PairingMsg::Cancel);
+                }
+                _ => {}
+            },
+            _ => {}
+        };
+
+        if self.more_info_showing {
+            if let Some(BldHeaderMsg::Cancelled) = self.more_info.header.event(ctx, event) {
+                self.more_info_showing = false;
+            }
+        } else if let Some(BldActionBarMsg::Confirmed) = self.action_bar.event(ctx, event) {
             self.more_info_showing = true;
         }
-        if let Some(BldHeaderMsg::Cancelled) = self.more_info.header.event(ctx, event) {
-            self.more_info_showing = false;
-        }
 
-        if let Event::BLE(BLEEvent::PairingRequest(code)) = event {
-            return Some(PairingMsg::Pairing(code));
-        }
-        if let Event::BLE(BLEEvent::PairingCanceled) = event {
-            return Some(PairingMsg::Cancel);
-        }
-        if let Event::BLE(BLEEvent::Disconnected) = event {
-            return Some(PairingMsg::Cancel);
-        }
         None
     }
 

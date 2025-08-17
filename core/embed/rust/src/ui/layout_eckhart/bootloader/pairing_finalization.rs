@@ -64,6 +64,7 @@ impl Component for PairingFinalizationScreen {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.header.event(ctx, event);
         if let Some(BldActionBarMsg::Confirmed) = self.action_bar.event(ctx, event) {
             // Single mode ActionBar used to CancelPairing - so we map it to Msg::Cancel
             return Some(PairingFinalizationMsg::Cancel);

@@ -1,18 +1,11 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{Component, Event, EventCtx},
-        geometry::{Alignment, Rect},
-        shape::Renderer,
-    },
+use crate::ui::{
+    component::{Component, Event, EventCtx},
+    geometry::{Alignment, Rect},
+    shape::Renderer,
 };
 
 use super::{
-    super::{
-        component::{Button, FuelGauge},
-        cshape::ScreenBorder,
-        theme,
-    },
+    super::{component::Button, cshape::ScreenBorder, theme},
     bld_menu::BldMenuSelectionMsg,
     BldHeader, BldHeaderMsg, BldMenu,
 };
@@ -57,9 +50,7 @@ impl BldMenuScreen {
             .item(turnoff)
             .item(reset);
         Self {
-            header: BldHeader::new(TString::empty())
-                .with_fuel_gauge(Some(FuelGauge::always()))
-                .with_close_button(),
+            header: BldHeader::new_with_fuel_gauge().with_close_button(),
             menu,
             screen_border: None,
         }

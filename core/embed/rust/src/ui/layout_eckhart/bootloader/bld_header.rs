@@ -1,7 +1,7 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Label},
+        component::{Component, Event, EventCtx, Label},
         display::{Color, Icon},
         geometry::{Alignment2D, Insets, Rect},
         shape::{self, Renderer},
@@ -19,15 +19,10 @@ const BUTTON_EXPAND_BORDER: i16 = 32;
 /// Component for the header of a screen. Reduced variant for Bootloader UI.
 pub struct BldHeader<'a> {
     area: Rect,
-    title: Label<'a>,
-    /// button in the top-right corner
+    left_content: LeftContent<'a>,
+    /// Button in the top-right corner
     right_button: Option<Button>,
     right_button_msg: BldHeaderMsg,
-    /// icon in the top-left corner (used instead of left button)
-    icon: Option<Icon>,
-    icon_color: Option<Color>,
-    /// Battery status indicator
-    fuel_gauge: Option<FuelGauge>,
 }
 
 #[derive(Copy, Clone)]
@@ -38,43 +33,49 @@ pub enum BldHeaderMsg {
     Info,
 }
 
+enum LeftContent<'a> {
+    /// Title with indication of charging on the left
+    Title(Label<'a>, FuelGauge),
+    /// Icon and title
+    IconAndTitle(Label<'a>, Icon, Color),
+    /// Battery status indicator (icon, percentage) and nothing else
+    FuelGauge(FuelGauge),
+}
+
 impl<'a> BldHeader<'a> {
     pub const HEADER_HEIGHT: i16 = theme::HEADER_HEIGHT; // [px]
     pub const HEADER_BUTTON_WIDTH: i16 = 56; // [px]
     const HEADER_INSETS: Insets = theme::SIDE_INSETS; // [px]
 
     pub const fn new(title: TString<'a>) -> Self {
-        Self {
-            area: Rect::zero(),
-            title: Label::left_aligned(title, text_title(theme::GREY)).vertically_centered(),
-            right_button: None,
-            right_button_msg: BldHeaderMsg::Cancelled,
-            icon: None,
-            icon_color: None,
-            fuel_gauge: None,
-        }
+        Self::from_left_content(LeftContent::Title(
+            Label::left_aligned(title, text_title(theme::GREY)).vertically_centered(),
+            FuelGauge::charging_icon_only(),
+        ))
     }
 
     pub fn new_done(color: Color) -> Self {
-        Self::new("Done".into())
-            .with_icon(theme::ICON_DONE, color)
-            .with_text_style(text_title(color))
+        Self::from_left_content(LeftContent::IconAndTitle(
+            Label::left_aligned("Done".into(), text_title(color)).vertically_centered(),
+            theme::ICON_DONE,
+            color,
+        ))
     }
 
     pub fn new_important() -> Self {
-        Self::new("Important".into())
-            .with_icon(theme::ICON_WARNING, theme::RED)
-            .with_text_style(text_title(theme::RED))
+        Self::from_left_content(LeftContent::IconAndTitle(
+            Label::left_aligned("Important".into(), text_title(theme::RED)).vertically_centered(),
+            theme::ICON_WARNING,
+            theme::RED,
+        ))
+    }
+
+    pub const fn new_with_fuel_gauge() -> Self {
+        Self::from_left_content(LeftContent::FuelGauge(FuelGauge::always()))
     }
 
     #[inline(never)]
-    pub fn with_text_style(mut self, style: TextStyle) -> Self {
-        self.title = self.title.styled(style);
-        self
-    }
-
-    #[inline(never)]
-    pub fn with_right_button(self, button: Button, msg: BldHeaderMsg) -> Self {
+    pub const fn with_right_button(self, button: Button, msg: BldHeaderMsg) -> Self {
         debug_assert!(matches!(button.content(), ButtonContent::Icon(_)));
         let touch_area = Insets::uniform(BUTTON_EXPAND_BORDER);
         Self {
@@ -85,7 +86,7 @@ impl<'a> BldHeader<'a> {
     }
 
     #[inline(never)]
-    pub fn with_menu_button(self) -> Self {
+    pub const fn with_menu_button(self) -> Self {
         self.with_right_button(
             Button::with_icon(theme::ICON_MENU).styled(theme::bootloader::button_header()),
             BldHeaderMsg::Menu,
@@ -93,35 +94,57 @@ impl<'a> BldHeader<'a> {
     }
 
     #[inline(never)]
-    pub fn with_close_button(self) -> Self {
+    pub const fn with_close_button(self) -> Self {
         self.with_right_button(
             Button::with_icon(theme::ICON_CLOSE).styled(theme::bootloader::button_header()),
             BldHeaderMsg::Cancelled,
         )
     }
 
-    #[inline(never)]
-    pub fn with_icon(self, icon: Icon, color: Color) -> Self {
+    const fn from_left_content(left_content: LeftContent<'a>) -> Self {
         Self {
-            icon: Some(icon),
-            icon_color: Some(color),
-            ..self
+            area: Rect::zero(),
+            left_content,
+            right_button: None,
+            right_button_msg: BldHeaderMsg::Cancelled,
         }
     }
 
-    #[inline(never)]
-    pub fn with_fuel_gauge(self, fuel_gauge: Option<FuelGauge>) -> Self {
-        Self { fuel_gauge, ..self }
+    fn place_components(&mut self, bounds: Rect) {
+        let bounds = if let Some(b) = &mut self.right_button {
+            let (rest, right_button_area) = bounds.split_right(Self::HEADER_BUTTON_WIDTH);
+            b.place(right_button_area);
+            rest
+        } else {
+            bounds
+        };
+        match &mut self.left_content {
+            LeftContent::Title(label, fuel_gauge) => {
+                if fuel_gauge.should_be_shown() {
+                    // we know that FuelGauge for this content shows only charging icon
+                    let icon_width = Self::left_icon_width(&theme::ICON_BATTERY_ZAP);
+                    let (icon_area, title_area) = bounds.split_left(icon_width);
+                    label.place(title_area);
+                    fuel_gauge.place(icon_area);
+                } else {
+                    label.place(bounds);
+                }
+            }
+            LeftContent::IconAndTitle(label, icon, _) => {
+                let icon_width = Self::left_icon_width(icon);
+                let (_, title_area) = bounds.split_left(icon_width);
+                label.place(title_area);
+            }
+            LeftContent::FuelGauge(fuel_gauge) => {
+                fuel_gauge.place(bounds);
+            }
+        };
     }
 
     /// Calculates the width needed for the left icon
-    fn left_icon_width(&self) -> i16 {
-        if let Some(icon) = self.icon {
-            let margin_right: i16 = 16; // [px]
-            icon.toif.width() + margin_right
-        } else {
-            0
-        }
+    fn left_icon_width(icon: &Icon) -> i16 {
+        const ICON_TEXT_GAP: i16 = 16;
+        icon.toif.width() + ICON_TEXT_GAP
     }
 }
 
@@ -133,42 +156,55 @@ impl<'a> Component for BldHeader<'a> {
         debug_assert_eq!(bounds.height(), Self::HEADER_HEIGHT);
 
         let bounds = bounds.inset(Self::HEADER_INSETS);
-        let rest = if let Some(b) = &mut self.right_button {
-            let (rest, right_button_area) = bounds.split_right(Self::HEADER_BUTTON_WIDTH);
-            b.place(right_button_area);
-            rest
-        } else {
-            bounds
-        };
-
-        let icon_width = self.left_icon_width();
-        let (left_icon_area, title_area) = rest.split_left(icon_width);
-
-        self.title.place(title_area);
-        self.fuel_gauge.place(title_area.union(left_icon_area));
-
         self.area = bounds;
+        self.place_components(bounds);
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.fuel_gauge.event(ctx, event);
         if let Some(ButtonMsg::Clicked) = self.right_button.event(ctx, event) {
             return Some(self.right_button_msg);
         };
+        match &mut self.left_content {
+            LeftContent::Title(_, fuel_gauge) => {
+                match event {
+                    Event::Attach(..) | Event::PM(..) => {
+                        fuel_gauge.event(ctx, event);
+                        self.place_components(self.area);
+                    }
+                    _ => {}
+                };
+            }
+            LeftContent::FuelGauge(fuel_gauge) => {
+                fuel_gauge.event(ctx, event);
+            }
+            _ => {}
+        }
 
         None
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.fuel_gauge.render(target);
+        match &self.left_content {
+            LeftContent::Title(label, fuel_gauge) => {
+                label.render(target);
+                if !label.text().is_empty() {
+                    // this prevents overlapping icon with the text on WelcomeScreen, it's better
+                    // to not show it there
+                    fuel_gauge.render(target);
+                }
+            }
+            LeftContent::IconAndTitle(label, icon, color) => {
+                label.render(target);
+                shape::ToifImage::new(self.area.left_center(), icon.toif)
+                    .with_fg(*color)
+                    .with_align(Alignment2D::CENTER_LEFT)
+                    .render(target);
+            }
+            LeftContent::FuelGauge(fuel_gauge) => {
+                fuel_gauge.render(target);
+            }
+        };
         self.right_button.render(target);
-        if let Some(icon) = self.icon {
-            shape::ToifImage::new(self.area.left_center(), icon.toif)
-                .with_fg(self.icon_color.unwrap_or(theme::GREY_LIGHT))
-                .with_align(Alignment2D::CENTER_LEFT)
-                .render(target);
-        }
-        self.title.render(target);
     }
 }
