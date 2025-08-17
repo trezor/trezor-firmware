@@ -69,6 +69,7 @@ impl<'a> Component for ConfirmPairingScreen<'a> {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.header.event(ctx, event);
         if let Some(msg) = self.action_bar.event(ctx, event) {
             match msg {
                 BldActionBarMsg::Cancelled => return Some(Self::Msg::Cancel),

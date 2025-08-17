@@ -241,7 +241,7 @@ impl Button {
         self.content_offset = offset;
     }
 
-    pub fn content(&self) -> &ButtonContent {
+    pub const fn content(&self) -> &ButtonContent {
         &self.content
     }
 
