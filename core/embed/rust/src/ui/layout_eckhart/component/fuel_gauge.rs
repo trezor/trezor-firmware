@@ -45,6 +45,8 @@ pub struct FuelGauge {
 pub enum FuelGaugeMode {
     /// Always show the fuel gauge
     Always,
+    /// Show only charging icon if the device is charging
+    ChargingIconOnly,
     /// Show the fuel gauge only when charging state changes
     #[cfg(feature = "micropython")]
     OnChargingChange(Timer),
@@ -56,6 +58,10 @@ pub enum FuelGaugeMode {
 impl FuelGauge {
     pub const fn always() -> Self {
         Self::new(FuelGaugeMode::Always)
+    }
+
+    pub const fn charging_icon_only() -> Self {
+        Self::new(FuelGaugeMode::ChargingIconOnly)
     }
 
     #[cfg(feature = "micropython")]
@@ -86,6 +92,7 @@ impl FuelGauge {
     pub fn should_be_shown(&self) -> bool {
         match &self.mode {
             FuelGaugeMode::Always => true,
+            FuelGaugeMode::ChargingIconOnly => self.charging_state == ChargingState::Charging,
             #[cfg(feature = "micropython")]
             FuelGaugeMode::OnChargingChange(timer)
             | FuelGaugeMode::OnChargingChangeOrAttach(timer) => timer.is_running(),
@@ -158,6 +165,11 @@ impl Component for FuelGauge {
                     FuelGaugeMode::Always => {
                         ctx.request_paint();
                     }
+                    FuelGaugeMode::ChargingIconOnly => {
+                        if _e.charging_status_changed {
+                            ctx.request_paint();
+                        }
+                    }
                     #[cfg(feature = "micropython")]
                     FuelGaugeMode::OnChargingChange(timer)
                     | FuelGaugeMode::OnChargingChangeOrAttach(timer) => {
@@ -215,19 +227,31 @@ impl Component for FuelGauge {
         );
         let text_y_coord = self.font.vert_center(area.y0, area.y1, &soc_percent_fmt);
 
-        shape::ToifImage::new(area.left_center(), icon.toif)
-            .with_fg(color_icon)
-            .with_align(Alignment2D::CENTER_LEFT)
-            .render(target);
+        match self.mode {
+            FuelGaugeMode::ChargingIconOnly => {
+                if self.charging_state == ChargingState::Charging {
+                    shape::ToifImage::new(area.left_center(), icon.toif)
+                        .with_fg(color_icon)
+                        .with_align(Alignment2D::CENTER_LEFT)
+                        .render(target);
+                }
+            }
+            _ => {
+                shape::ToifImage::new(area.left_center(), icon.toif)
+                    .with_fg(color_icon)
+                    .with_align(Alignment2D::CENTER_LEFT)
+                    .render(target);
 
-        shape::Text::new(
-            Point::new(area.x1, text_y_coord),
-            &soc_percent_fmt,
-            self.font,
-        )
-        .with_fg(color_text)
-        .with_align(Alignment::End)
-        .render(target);
+                shape::Text::new(
+                    Point::new(area.x1, text_y_coord),
+                    &soc_percent_fmt,
+                    self.font,
+                )
+                .with_fg(color_text)
+                .with_align(Alignment::End)
+                .render(target);
+            }
+        }
     }
 }
 
