@@ -110,6 +110,10 @@ if utils.USE_THP:
         finally:
             # Wait for all active workflows to finish.
             await workflow.join_all()
+            if __debug__:
+                import apps.debug
+
+                await apps.debug.close_session()
             loop.clear()
 
 else:
