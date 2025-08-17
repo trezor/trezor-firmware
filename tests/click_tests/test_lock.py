@@ -84,6 +84,7 @@ def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
     hold(lock_duration)
     session.refresh_features()
     assert device_handler.features().unlocked is False
+    assert debug.read_layout().main_component() == "Lockscreen"
 
     # unlock by touching
     if debug.layout_type is LayoutType.Caesar:
