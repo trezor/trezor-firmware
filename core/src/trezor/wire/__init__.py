@@ -167,7 +167,10 @@ else:
                         await workflow.join_all()
                         # Let the session be restarted from `main`.
                         if __debug__:
-                            log.debug(__name__, "loop.clear()", iface=iface)
+                            import apps.debug
+
+                            await apps.debug.close_session()
+
                         loop.clear()
                         return  # pylint: disable=lost-exception
 
