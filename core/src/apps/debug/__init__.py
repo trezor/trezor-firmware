@@ -79,6 +79,11 @@ if __debug__:
 
         # wait for layout change
         while True:
+            if _EXIT_FLAG:
+                # a response will be sent after restarting the event loop
+                # (since `storage.layout_watcher` is set).
+                return
+
             if not detect_deadlock or not layout_change_box.is_empty():
                 # short-circuit if there is a result already waiting
                 next_layout = await layout_change_box
@@ -428,6 +433,28 @@ if __debug__:
     async def _no_op(_msg: Any) -> Success:
         return Success()
 
+    _EXIT_FLAG = False
+    _EXIT_BOX = loop.mailbox()
+    _SESSION_TASK: loop.spawn | None = None
+
+    _CLOSE_TIMEOUT_MS = const(5000)
+
+    async def close_session() -> None:
+        if _SESSION_TASK is None:
+            return
+
+        global _EXIT_FLAG
+
+        _EXIT_FLAG = True
+        _EXIT_BOX.put(None)
+        if layout_change_box.is_empty():
+            # make sure `DebugLinkGetState` won't get stuck
+            layout_change_box.put(None)
+
+        res = await loop.race(_SESSION_TASK, loop.sleep(_CLOSE_TIMEOUT_MS))
+        if res is not None:
+            log.error(__name__, "debuglink session is stuck")
+
     async def handle_session(iface: WireInterface) -> None:
         from trezor import protobuf, wire
         from trezor.wire.codec import codec_v1
@@ -443,7 +470,15 @@ if __debug__:
             except Exception as e:
                 log.exception(__name__, e)
 
-        while True:
+        read_wait = loop.wait(iface.iface_num() | io.POLL_READ)
+
+        while not _EXIT_FLAG:
+            await loop.race(read_wait, _EXIT_BOX)
+            if _EXIT_FLAG:
+                # in case both `read_wait` and `_EXIT_BOX` are ready,
+                # don't handle the message and exit the loop.
+                break
+
             try:
                 try:
                     msg = await ctx.read_from_wire()
@@ -515,4 +550,6 @@ if __debug__:
     def boot() -> None:
         import usb
 
-        loop.schedule(handle_session(usb.iface_debug))
+        global _SESSION_TASK
+
+        _SESSION_TASK = loop.spawn(handle_session(usb.iface_debug))
