@@ -762,6 +762,7 @@ uint32_t ble_read(uint8_t *data, uint16_t max_len) {
 
   if (read_len != BLE_DATA_SIZE ||
       max_len < (read_len - BLE_DATA_HEADER_SIZE)) {
+    irq_unlock(key);
     return 0;
   }
 
