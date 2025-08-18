@@ -1,4 +1,4 @@
-import storage.device
+import storage.device as storage_device
 import trezorble as ble
 import trezorui_api
 from trezor import TR, config, log, utils
@@ -11,9 +11,9 @@ async def _prompt_auto_lock_delay() -> int:
     auto_lock_delay_ms = await interact(
         trezorui_api.request_duration(
             title=TR.auto_lock__title,
-            duration_ms=storage.device.get_autolock_delay_ms(),
-            min_ms=storage.device.AUTOLOCK_DELAY_MINIMUM,
-            max_ms=storage.device.AUTOLOCK_DELAY_MAXIMUM,
+            duration_ms=storage_device.get_autolock_delay_ms(),
+            min_ms=storage_device.AUTOLOCK_DELAY_MINIMUM,
+            max_ms=storage_device.AUTOLOCK_DELAY_MAXIMUM,
             description=TR.auto_lock__description,
         ),
         br_name=None,
@@ -21,8 +21,8 @@ async def _prompt_auto_lock_delay() -> int:
 
     if auto_lock_delay_ms is not trezorui_api.CANCELLED:
         assert isinstance(auto_lock_delay_ms, int)
-        assert auto_lock_delay_ms >= storage.device.AUTOLOCK_DELAY_MINIMUM
-        assert auto_lock_delay_ms <= storage.device.AUTOLOCK_DELAY_MAXIMUM
+        assert auto_lock_delay_ms >= storage_device.AUTOLOCK_DELAY_MINIMUM
+        assert auto_lock_delay_ms <= storage_device.AUTOLOCK_DELAY_MAXIMUM
         return auto_lock_delay_ms
     else:
         raise ActionCancelled  # user cancelled request number prompt
@@ -33,19 +33,19 @@ async def handle_device_menu() -> None:
 
     # TODO: unify with notification handling in `apps/homescreen/__init__.py:homescreen()`
     failed_backup = (
-        storage.device.is_initialized() and storage.device.unfinished_backup()
+        storage_device.is_initialized() and storage_device.unfinished_backup()
     )
     # MOCK DATA
     paired_devices = ["Trezor Suite"] if ble.is_connected() else []
     # ###
     firmware_version = ".".join(map(str, utils.VERSION))
     device_name = (
-        (storage.device.get_label() or "Trezor")
-        if storage.device.is_initialized()
+        (storage_device.get_label() or "Trezor")
+        if storage_device.is_initialized()
         else None
     )
 
-    auto_lock_ms = storage.device.get_autolock_delay_ms()
+    auto_lock_ms = storage_device.get_autolock_delay_ms()
     auto_lock_delay = strings.format_autolock_duration(auto_lock_ms)
 
     if __debug__:
@@ -84,19 +84,19 @@ async def handle_device_menu() -> None:
         if config.has_pin():
 
             auto_lock_delay_ms = await _prompt_auto_lock_delay()
-            storage.device.set_autolock_delay_ms(auto_lock_delay_ms)
+            storage_device.set_autolock_delay_ms(auto_lock_delay_ms)
     elif menu_result is DeviceMenuResult.DeviceName:
         from trezor.messages import ApplySettings
 
         from apps.management.apply_settings import apply_settings
 
-        assert storage.device.is_initialized()
+        assert storage_device.is_initialized()
         label = await interact(
             trezorui_api.request_string(
                 prompt=TR.device_name__enter,
-                max_len=storage.device.LABEL_MAXLENGTH,
+                max_len=storage_device.LABEL_MAXLENGTH,
                 allow_empty=False,
-                prefill=storage.device.get_label(),
+                prefill=storage_device.get_label(),
             ),
             "device_name",
         )

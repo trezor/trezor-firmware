@@ -1079,5 +1079,17 @@
   "1077": "device_name__enter",
   "1078": "regulatory_certification__title",
   "1079": "words__name",
-  "1080": "device_name__changed"
+  "1080": "device_name__changed",
+  "1081": "ble__manage_paired",
+  "1082": "ble__pair_new",
+  "1083": "ble__pair_title",
+  "1084": "homescreen__firmware_version",
+  "1085": "words__about",
+  "1086": "words__connected",
+  "1087": "words__device",
+  "1088": "words__disconnect",
+  "1089": "words__led",
+  "1090": "words__manage",
+  "1091": "words__review",
+  "1092": "words__security"
 }
