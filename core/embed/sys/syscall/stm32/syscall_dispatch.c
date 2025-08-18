@@ -18,6 +18,7 @@
  */
 
 #ifdef KERNEL
+
 #include <trezor_rtl.h>
 
 #include <gfx/dma2d_bitblt.h>
