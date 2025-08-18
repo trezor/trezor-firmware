@@ -24,7 +24,9 @@
 #include <trezor_rtl.h>
 
 #include <io/rgb_led.h>
+#include <sys/systimer.h>
 
+#include "rgb_led_internal.h"
 #include "sys/systick.h"
 
 #define LED_SWITCHING_FREQUENCY_HZ 20000
@@ -42,14 +44,12 @@
 #define RGB_LED_BLUE_PORT GPIOB
 #define RGB_LED_BLUE_CLK_ENA __HAL_RCC_GPIOB_CLK_ENABLE
 
-typedef struct {
-  LPTIM_HandleTypeDef tim_1;
-  LPTIM_HandleTypeDef tim_3;
-  bool initialized;
-  bool enabled;
-} rgb_led_t;
+#define RGB_LED_EFFECT_TIMER_PERIOD_MS 20
 
 static rgb_led_t g_rgb_led = {0};
+
+static void rgb_led_apply_color(rgb_led_t* drv, uint32_t color);
+static void rgb_led_systimer_callback(void* context);
 
 static void rgb_led_set_default_pin_state(void) {
   HAL_GPIO_DeInit(RGB_LED_RED_PORT, RGB_LED_RED_PIN);
@@ -164,6 +164,7 @@ void rgb_led_init(void) {
   GPIO_InitStructure.Alternate = GPIO_AF4_LPTIM3;
   HAL_GPIO_Init(RGB_LED_BLUE_PORT, &GPIO_InitStructure);
 
+  drv->effect_timer = systimer_create(rgb_led_systimer_callback, NULL);
   drv->initialized = true;
   drv->enabled = true;
 }
@@ -173,6 +174,9 @@ void rgb_led_deinit(void) {
   if (!drv->initialized) {
     return;
   }
+
+  systimer_delete(drv->effect_timer);
+  drv->effect_timer = NULL;
 
   rgb_led_set_default_pin_state();
 
@@ -186,7 +190,6 @@ void rgb_led_deinit(void) {
   __HAL_RCC_LPTIM1_CLK_DISABLE();
   __HAL_RCC_LPTIM1_FORCE_RESET();
   __HAL_RCC_LPTIM1_RELEASE_RESET();
-
   __HAL_RCC_LPTIM3_CLK_DISABLE();
   __HAL_RCC_LPTIM3_FORCE_RESET();
   __HAL_RCC_LPTIM3_RELEASE_RESET();
@@ -229,9 +232,56 @@ void rgb_led_set_color(uint32_t color) {
     return;
   }
 
-  uint32_t red = (color >> 16) & 0xFF;
-  uint32_t green = (color >> 8) & 0xFF;
-  uint32_t blue = color & 0xFF;
+  if (drv->ongoing_effect) {
+    // Override the effect with a direct color setting
+    rgb_led_effect_stop();
+  }
+
+  rgb_led_apply_color(drv, color);
+}
+
+void rgb_led_effect_start(rgb_led_effect_type_t effect_type) {
+  rgb_led_t* drv = &g_rgb_led;
+
+  if (!drv->initialized) {
+    return;
+  }
+
+  if (effect_type >= RGB_LED_NUM_OF_EFFECTS) {
+    // Invalid effect type
+    return;
+  }
+
+  if (!rgb_led_assign_effect(&drv->effect, effect_type)) {
+    return;
+  }
+
+  systimer_set_periodic(drv->effect_timer, RGB_LED_EFFECT_TIMER_PERIOD_MS);
+  drv->effect.start_time_ms = systick_ms();
+
+  drv->ongoing_effect = true;
+
+  return;
+}
+
+void rgb_led_effect_stop(void) {
+  rgb_led_t* drv = &g_rgb_led;
+
+  if (!drv->initialized) {
+    return;
+  }
+
+  drv->ongoing_effect = false;
+  systimer_unset(drv->effect_timer);
+
+  // Reset the LED to default state
+  rgb_led_apply_color(drv, RGBLED_OFF);  // Turn off the LED
+}
+
+static void rgb_led_apply_color(rgb_led_t* drv, uint32_t color) {
+  uint32_t red = RGB_EXTRACT_RED(color);
+  uint32_t green = RGB_EXTRACT_GREEN(color);
+  uint32_t blue = RGB_EXTRACT_BLUE(color);
 
   if (red != 0) {
     __HAL_LPTIM_CAPTURE_COMPARE_ENABLE(&drv->tim_1, LPTIM_CHANNEL_1);
@@ -257,6 +307,18 @@ void rgb_led_set_color(uint32_t color) {
                           TIMER_PERIOD - (green * (TIMER_PERIOD) / 255));
   __HAL_LPTIM_COMPARE_SET(&drv->tim_3, LPTIM_CHANNEL_1,
                           TIMER_PERIOD - (blue * (TIMER_PERIOD) / 255));
+}
+
+static void rgb_led_systimer_callback(void* context) {
+  rgb_led_t* drv = &g_rgb_led;
+
+  if (!drv->initialized || !drv->ongoing_effect) {
+    return;
+  }
+
+  uint32_t elapsed_ms = systick_ms() - drv->effect.start_time_ms;
+  uint32_t color = drv->effect.callback(elapsed_ms);
+  rgb_led_apply_color(drv, color);
 }
 
 #endif
