@@ -68,10 +68,11 @@ class ProtocolV2Channel(Channel):
         prepare_channel_without_pairing: bool = True,
     ) -> None:
         super().__init__(transport, mapping)
+        self._reset_sync_bits()
         if prepare_channel_without_pairing:
-            self.trezor_state = self.prepare_channel_without_pairing(
-                credential=credential
-            )
+            # allow skipping unrelated response packets (e.g. in case of retransmissions)
+            self._do_channel_allocation(retries=MAX_RETRANSMISSION_COUNT)
+            self.trezor_state = self._do_handshake(credential=credential)
 
     def get_channel(self) -> ProtocolV2Channel:
         if not self._has_valid_channel:
@@ -126,12 +127,6 @@ class ProtocolV2Channel(Channel):
         msg = self.mapping.decode(msg_type, msg_data)
         assert isinstance(msg, message_type)
         return msg
-
-    def prepare_channel_without_pairing(self, credential: bytes | None = None) -> int:
-        self._reset_sync_bits()
-        # allow skipping unrelated response packets (e.g. in case of retransmissions)
-        self._do_channel_allocation(retries=MAX_RETRANSMISSION_COUNT)
-        return self._do_handshake(credential=credential)
 
     def _reset_sync_bits(self) -> None:
         self.sync_bit_send = 0
