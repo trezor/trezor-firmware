@@ -97,7 +97,7 @@ def main():
     # Test setup section
     #########################################################################
 
-    dut.set_soc_limit(100)
+    dut.set_soc_target(100)
     dut.set_backlight(100)
     dut.enable_charging()
 
