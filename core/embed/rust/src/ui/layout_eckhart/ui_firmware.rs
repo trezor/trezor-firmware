@@ -27,7 +27,7 @@ use crate::{
         },
         ui_firmware::{
             FirmwareUI, ERROR_NOT_IMPLEMENTED, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
-            MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
+            MAX_MENU_ITEMS, MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS,
         },
         ModelUI,
     },
@@ -50,8 +50,6 @@ use super::{
     },
     UIEckhart,
 };
-
-use heapless::Vec;
 
 impl FirmwareUI for UIEckhart {
     fn confirm_action(
@@ -1192,19 +1190,35 @@ impl FirmwareUI for UIEckhart {
 
     fn show_device_menu(
         failed_backup: bool,
+        pin_unset: bool,
+        paired_devices: heapless::Vec<TString<'static>, MAX_PAIRED_DEVICES>,
+        connected_idx: Option<usize>,
+        bluetooth: Option<bool>,
+        pin_code: Option<bool>,
+        auto_lock_delay: Option<TString<'static>>,
+        wipe_code: Option<bool>,
+        check_backup: bool,
         device_name: Option<TString<'static>>,
-        about_items: Obj,
-        paired_devices: Vec<TString<'static>, 1>,
-        auto_lock_delay: TString<'static>,
+        screen_brightness: Option<TString<'static>>,
+        haptic_feedback: Option<bool>,
         led: Option<bool>,
+        about_items: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let layout = RootComponent::new(DeviceMenuScreen::new(
             failed_backup,
-            about_items,
-            device_name,
+            pin_unset,
             paired_devices,
+            connected_idx,
+            bluetooth,
+            pin_code,
             auto_lock_delay,
+            wipe_code,
+            check_backup,
+            device_name,
+            screen_brightness,
+            haptic_feedback,
             led,
+            about_items,
         )?);
         Ok(layout)
     }

@@ -148,17 +148,34 @@ impl ComponentMsgObj for SetBrightnessScreen {
 impl ComponentMsgObj for DeviceMenuScreen {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
+            // Root menu
             DeviceMenuMsg::BackupFailed => Ok(BACKUP_FAILED.as_obj()),
+            // Bluetooth
+            DeviceMenuMsg::Bluetooth => Ok(BLUETOOTH.as_obj()),
+            // "Pair & Connect"
             DeviceMenuMsg::DevicePair => Ok(DEVICE_PAIR.as_obj()),
-            DeviceMenuMsg::DeviceDisconnect(index) => {
-                Ok(new_tuple(&[DEVICE_DISCONNECT.as_obj(), index.try_into()?])?)
+            DeviceMenuMsg::DeviceDisconnect => Ok(DEVICE_DISCONNECT.as_obj()),
+            DeviceMenuMsg::DeviceConnect(index) => {
+                Ok(new_tuple(&[DEVICE_CONNECT.as_obj(), index.try_into()?])?)
             }
+            DeviceMenuMsg::DeviceUnpair(index) => {
+                Ok(new_tuple(&[DEVICE_UNPAIR.as_obj(), index.try_into()?])?)
+            }
+            DeviceMenuMsg::DeviceUnpairAll => Ok(DEVICE_UNPAIR_ALL.as_obj()),
+            // Security menu
+            DeviceMenuMsg::PinCode => Ok(PIN_CODE.as_obj()),
+            DeviceMenuMsg::PinRemove => Ok(PIN_REMOVE.as_obj()),
+            DeviceMenuMsg::AutoLockDelay => Ok(AUTO_LOCK_DELAY.as_obj()),
+            DeviceMenuMsg::WipeCode => Ok(WIPE_CODE.as_obj()),
+            DeviceMenuMsg::WipeRemove => Ok(WIPE_REMOVE.as_obj()),
             DeviceMenuMsg::CheckBackup => Ok(CHECK_BACKUP.as_obj()),
-            DeviceMenuMsg::WipeDevice => Ok(WIPE_DEVICE.as_obj()),
+            // Device menu
             DeviceMenuMsg::DeviceName => Ok(DEVICE_NAME.as_obj()),
             DeviceMenuMsg::ScreenBrightness => Ok(SCREEN_BRIGHTNESS.as_obj()),
-            DeviceMenuMsg::AutoLockDelay => Ok(AUTO_LOCK_DELAY.as_obj()),
+            DeviceMenuMsg::HapticFeedback => Ok(HAPTIC_FEEDBACK.as_obj()),
             DeviceMenuMsg::Led => Ok(LED.as_obj()),
+            DeviceMenuMsg::WipeDevice => Ok(WIPE_DEVICE.as_obj()),
+            // nothing selected
             DeviceMenuMsg::Close => Ok(CANCELLED.as_obj()),
         }
     }

@@ -23,15 +23,20 @@ static void _librust_qstrs(void) {
   MP_QSTR_BacklightLevels;
   MP_QSTR_BackupFailed;
   MP_QSTR_BleInterface;
+  MP_QSTR_Bluetooth;
   MP_QSTR_CANCELLED;
   MP_QSTR_CONFIRMED;
   MP_QSTR_CheckBackup;
   MP_QSTR_DIM;
   MP_QSTR_DONE;
+  MP_QSTR_DeviceConnect;
   MP_QSTR_DeviceDisconnect;
   MP_QSTR_DeviceMenuResult;
   MP_QSTR_DeviceName;
   MP_QSTR_DevicePair;
+  MP_QSTR_DeviceUnpair;
+  MP_QSTR_DeviceUnpairAll;
+  MP_QSTR_HapticFeedback;
   MP_QSTR_INFO;
   MP_QSTR_INITIAL;
   MP_QSTR_LOW;
@@ -46,6 +51,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_MsgDef;
   MP_QSTR_NONE;
   MP_QSTR_NORMAL;
+  MP_QSTR_PinCode;
+  MP_QSTR_PinRemove;
   MP_QSTR_RESUME;
   MP_QSTR_RX_PACKET_LEN;
   MP_QSTR_SWIPE_DOWN;
@@ -57,7 +64,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_TRANSITIONING;
   MP_QSTR_TX_PACKET_LEN;
   MP_QSTR_TranslationsHeader;
+  MP_QSTR_WipeCode;
   MP_QSTR_WipeDevice;
+  MP_QSTR_WipeRemove;
   MP_QSTR___del__;
   MP_QSTR___dict__;
   MP_QSTR___name__;
@@ -170,6 +179,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ble__unpair_title;
   MP_QSTR_ble__version;
   MP_QSTR_ble_event;
+  MP_QSTR_bluetooth;
   MP_QSTR_bootscreen;
   MP_QSTR_br_code;
   MP_QSTR_br_name;
@@ -226,6 +236,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_cancel;
   MP_QSTR_cancel_text;
   MP_QSTR_case_sensitive;
+  MP_QSTR_check_backup;
   MP_QSTR_check_homescreen_format;
   MP_QSTR_chunkify;
   MP_QSTR_code;
@@ -259,6 +270,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_value;
   MP_QSTR_confirm_value_intro;
   MP_QSTR_confirm_with_info;
+  MP_QSTR_connected_idx;
   MP_QSTR_connection_flags;
   MP_QSTR_continue_recovery_homepage;
   MP_QSTR_count;
@@ -311,6 +323,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_get;
   MP_QSTR_get_language;
   MP_QSTR_get_transition_out;
+  MP_QSTR_haptic_feedback;
   MP_QSTR_haptic_feedback__disable;
   MP_QSTR_haptic_feedback__enable;
   MP_QSTR_haptic_feedback__subtitle;
@@ -484,6 +497,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_pin__turn_off;
   MP_QSTR_pin__turn_on;
   MP_QSTR_pin__wrong_pin;
+  MP_QSTR_pin_code;
+  MP_QSTR_pin_unset;
   MP_QSTR_plurals__contains_x_keys;
   MP_QSTR_plurals__lock_after_x_days;
   MP_QSTR_plurals__lock_after_x_hours;
@@ -691,6 +706,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_safety_checks__enforce_strict;
   MP_QSTR_safety_checks__title;
   MP_QSTR_safety_checks__title_safety_override;
+  MP_QSTR_screen_brightness;
   MP_QSTR_sd_card__all_data_will_be_lost;
   MP_QSTR_sd_card__card_required;
   MP_QSTR_sd_card__disable;
@@ -863,6 +879,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_wipe__info;
   MP_QSTR_wipe__title;
   MP_QSTR_wipe__want_to_wipe;
+  MP_QSTR_wipe_code;
   MP_QSTR_wipe_code__change;
   MP_QSTR_wipe_code__changed;
   MP_QSTR_wipe_code__diff_from_pin;
