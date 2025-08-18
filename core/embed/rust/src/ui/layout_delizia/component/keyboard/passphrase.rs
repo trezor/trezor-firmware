@@ -1,6 +1,5 @@
 use crate::{
     strutil::{ShortString, TString},
-    translations::TR,
     ui::{
         component::{
             base::ComponentExt, swipe_detect::SwipeConfig, text::common::TextBox, Component, Event,
@@ -31,7 +30,7 @@ pub enum PassphraseKeyboardMsg {
 }
 
 /// Enum keeping track of which keyboard is shown and which comes next. Keep the
-/// number of values and the constant PAGE_COUNT in synch.
+/// number of values and the constant PAGE_COUNT in sync.
 #[repr(u32)]
 #[derive(Copy, Clone, ToPrimitive)]
 #[cfg_attr(feature = "ui_debug", derive(ufmt::derive::uDebug))]
@@ -88,6 +87,7 @@ pub struct PassphraseKeyboard {
     active_layout: KeyboardLayout,
     fade: Cell<bool>,
     swipe_config: SwipeConfig, // FIXME: how about page_swipe
+    max_len: usize,
 }
 
 const PAGE_COUNT: usize = 4;
@@ -100,14 +100,12 @@ const KEYBOARD: [[&str; KEY_COUNT]; PAGE_COUNT] = [
     ["_<>", ".:@", "/|\\", "!()", "+%&", "-[]", "?{}", ",'`", ";\"~", "$^="],
     ];
 
-const MAX_LENGTH: usize = 50;
-
 const CONFIRM_BTN_INSETS: Insets = Insets::new(5, 0, 5, 0);
 const CONFIRM_EMPTY_BTN_MARGIN_RIGHT: i16 = 7;
 const CONFIRM_EMPTY_BTN_INSETS: Insets = Insets::new(5, CONFIRM_EMPTY_BTN_MARGIN_RIGHT, 5, 0);
 
 impl PassphraseKeyboard {
-    pub fn new() -> Self {
+    pub fn new(prompt: TString<'static>, max_len: usize) -> Self {
         let active_layout = KeyboardLayout::LettersLower;
 
         let confirm_btn = Button::with_icon(theme::ICON_SIMPLE_CHECKMARK24)
@@ -139,11 +137,8 @@ impl PassphraseKeyboard {
 
         Self {
             page_swipe: Swipe::horizontal(),
-            input: Input::new(),
-            input_prompt: Label::left_aligned(
-                TString::from_translation(TR::passphrase__title_enter),
-                theme::label_keyboard(),
-            ),
+            input: Input::new(max_len),
+            input_prompt: Label::left_aligned(prompt, theme::label_keyboard()),
             erase_btn,
             cancel_btn,
             confirm_btn,
@@ -158,6 +153,7 @@ impl PassphraseKeyboard {
             active_layout,
             fade: Cell::new(false),
             swipe_config: SwipeConfig::new(),
+            max_len,
         }
     }
 
@@ -249,7 +245,7 @@ impl PassphraseKeyboard {
     /// We should disable the input when the passphrase has reached maximum
     /// length and we are not cycling through the characters.
     fn is_button_active(&self, key: usize) -> bool {
-        let textbox_not_full = self.input.textbox.len() < MAX_LENGTH;
+        let textbox_not_full = self.input.textbox.len() < self.max_len;
         let key_is_pending = {
             if let Some(pending) = self.input.multi_tap.pending_key() {
                 pending == key
@@ -418,10 +414,10 @@ struct Input {
 }
 
 impl Input {
-    fn new() -> Self {
+    fn new(max_len: usize) -> Self {
         Self {
             area: Rect::zero(),
-            textbox: TextBox::empty(MAX_LENGTH),
+            textbox: TextBox::empty(max_len),
             multi_tap: MultiTapKeyboard::new(),
         }
     }

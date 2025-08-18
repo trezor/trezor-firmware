@@ -1,7 +1,6 @@
 use crate::{
     error,
-    strutil::ShortString,
-    translations::TR,
+    strutil::{ShortString, TString},
     ui::{
         component::ComponentExt,
         flow::{
@@ -49,14 +48,15 @@ impl FlowController for RequestPassphrase {
     }
 }
 
-pub fn new_request_passphrase() -> Result<SwipeFlow, error::Error> {
-    let content_confirm_empty = Frame::left_aligned(
-        TR::passphrase__continue_with_empty_passphrase.into(),
-        PromptScreen::new_yes_or_no(),
-    )
-    .map(super::util::map_to_prompt);
+pub fn new_request_passphrase(
+    prompt: TString<'static>,
+    prompt_empty: TString<'static>,
+    max_len: usize,
+) -> Result<SwipeFlow, error::Error> {
+    let content_confirm_empty = Frame::left_aligned(prompt_empty, PromptScreen::new_yes_or_no())
+        .map(super::util::map_to_prompt);
 
-    let content_keypad = PassphraseKeyboard::new().map(|msg| match msg {
+    let content_keypad = PassphraseKeyboard::new(prompt, max_len).map(|msg| match msg {
         PassphraseKeyboardMsg::Confirmed(s) => Some(FlowMsg::Text(s)),
         PassphraseKeyboardMsg::Cancelled => Some(FlowMsg::Cancelled),
     });

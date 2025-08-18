@@ -35,6 +35,7 @@ pub struct PassphraseKeyboard {
     keys: [Child<Button>; KEY_COUNT],
     scrollbar: ScrollBar,
     fade: Cell<bool>,
+    max_len: usize,
 }
 
 const STARTING_PAGE: usize = 1;
@@ -48,14 +49,13 @@ const KEYBOARD: [[&str; KEY_COUNT]; PAGE_COUNT] = [
     ["_<>", ".:@", "/|\\", "!()", "+%&", "-[]", "?{}", ",'`", ";\"~", "$^="],
     ];
 
-const MAX_LENGTH: usize = 50;
 const INPUT_AREA_HEIGHT: i16 = ScrollBar::DOT_SIZE + 9;
 
 impl PassphraseKeyboard {
-    pub fn new() -> Self {
+    pub fn new(max_len: usize) -> Self {
         Self {
             page_swipe: Swipe::horizontal(),
-            input: Input::new().into_child(),
+            input: Input::new(max_len).into_child(),
             confirm: Button::with_icon(theme::ICON_CONFIRM)
                 .styled(theme::button_confirm())
                 .into_child(),
@@ -73,6 +73,7 @@ impl PassphraseKeyboard {
             }),
             scrollbar: ScrollBar::horizontal(),
             fade: Cell::new(false),
+            max_len,
         }
     }
 
@@ -166,7 +167,7 @@ impl PassphraseKeyboard {
     /// We should disable the input when the passphrase has reached maximum
     /// length and we are not cycling through the characters.
     fn is_button_active(&self, key: usize) -> bool {
-        let textbox_not_full = self.input.inner().textbox.len() < MAX_LENGTH;
+        let textbox_not_full = self.input.inner().textbox.len() < self.max_len;
         let key_is_pending = {
             if let Some(pending) = self.input.inner().multi_tap.pending_key() {
                 pending == key
@@ -318,10 +319,10 @@ struct Input {
 }
 
 impl Input {
-    fn new() -> Self {
+    fn new(max_len: usize) -> Self {
         Self {
             area: Rect::zero(),
-            textbox: TextBox::empty(MAX_LENGTH),
+            textbox: TextBox::empty(max_len),
             multi_tap: MultiTapKeyboard::new(),
         }
     }

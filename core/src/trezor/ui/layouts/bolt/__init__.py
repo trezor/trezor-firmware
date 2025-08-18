@@ -1635,7 +1635,9 @@ def show_wait_text(message: str) -> None:
 async def request_passphrase_on_device(max_len: int) -> str:
     result = await interact(
         trezorui_api.request_passphrase(
-            prompt=TR.passphrase__title_enter, max_len=max_len
+            prompt=TR.passphrase__title_enter,
+            prompt_empty=TR.passphrase__continue_with_empty_passphrase,
+            max_len=max_len,
         ),
         "passphrase_device",
         ButtonRequestType.PassphraseEntry,

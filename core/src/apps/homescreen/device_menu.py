@@ -39,7 +39,11 @@ async def handle_device_menu() -> None:
     paired_devices = ["Trezor Suite"] if ble.is_connected() else []
     # ###
     firmware_version = ".".join(map(str, utils.VERSION))
-    device_name = storage.device.get_label() or "Trezor"
+    device_name = (
+        (storage.device.get_label() or "Trezor")
+        if storage.device.is_initialized()
+        else None
+    )
 
     auto_lock_ms = storage.device.get_autolock_delay_ms()
     auto_lock_delay = strings.format_autolock_duration(auto_lock_ms)
@@ -81,6 +85,23 @@ async def handle_device_menu() -> None:
 
             auto_lock_delay_ms = await _prompt_auto_lock_delay()
             storage.device.set_autolock_delay_ms(auto_lock_delay_ms)
+    elif menu_result is DeviceMenuResult.DeviceName:
+        from trezor.messages import ApplySettings
+
+        from apps.management.apply_settings import apply_settings
+
+        assert storage.device.is_initialized()
+        label = await interact(
+            trezorui_api.request_string(
+                prompt=TR.device_name__enter,
+                max_len=storage.device.LABEL_MAXLENGTH,
+                allow_empty=False,
+                prefill=storage.device.get_label(),
+            ),
+            "device_name",
+        )
+        assert isinstance(label, str)
+        await apply_settings(ApplySettings(label=label))
     elif isinstance(menu_result, tuple):
         # It's a tuple with (result_type, index)
         result_type, index = menu_result

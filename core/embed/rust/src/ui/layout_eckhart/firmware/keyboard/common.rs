@@ -8,7 +8,7 @@ use crate::{
     },
 };
 
-use super::super::theme;
+use super::super::{super::component::ButtonContent, theme};
 
 /// Contains state commonly used in implementations multi-tap keyboards.
 pub struct MultiTapKeyboard {
@@ -106,6 +106,50 @@ impl MultiTapKeyboard {
             TextEdit::ReplaceLast(ch)
         } else {
             TextEdit::Append(ch)
+        }
+    }
+}
+
+/// Enum keeping track of which keyboard is shown and which comes next. Keep the
+/// number of values and the constant PAGE_COUNT in sync.
+#[repr(u32)]
+#[derive(Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "ui_debug", derive(ufmt::derive::uDebug))]
+pub(crate) enum KeyboardLayout {
+    LettersLower = 0,
+    LettersUpper = 1,
+    Numeric = 2,
+    Special = 3,
+}
+
+impl KeyboardLayout {
+    pub fn next(self) -> Self {
+        match self {
+            Self::LettersLower => Self::LettersUpper,
+            Self::LettersUpper => Self::Numeric,
+            Self::Numeric => Self::Special,
+            Self::Special => Self::LettersLower,
+        }
+    }
+
+    pub fn prev(self) -> Self {
+        match self {
+            Self::LettersLower => Self::Special,
+            Self::LettersUpper => Self::LettersLower,
+            Self::Numeric => Self::LettersUpper,
+            Self::Special => Self::Numeric,
+        }
+    }
+}
+
+impl From<KeyboardLayout> for ButtonContent {
+    /// Used to get content for the "next keyboard" button
+    fn from(kl: KeyboardLayout) -> Self {
+        match kl {
+            KeyboardLayout::LettersLower => ButtonContent::single_line_text("abc".into()),
+            KeyboardLayout::LettersUpper => ButtonContent::single_line_text("ABC".into()),
+            KeyboardLayout::Numeric => ButtonContent::single_line_text("123".into()),
+            KeyboardLayout::Special => ButtonContent::Icon(theme::ICON_ASTERISK),
         }
     }
 }

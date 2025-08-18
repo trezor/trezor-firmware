@@ -30,6 +30,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_DONE;
   MP_QSTR_DeviceDisconnect;
   MP_QSTR_DeviceMenuResult;
+  MP_QSTR_DeviceName;
   MP_QSTR_DevicePair;
   MP_QSTR_INFO;
   MP_QSTR_INITIAL;
@@ -97,6 +98,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_address_label;
   MP_QSTR_address_qr;
   MP_QSTR_allow_cancel;
+  MP_QSTR_allow_empty;
   MP_QSTR_allow_pairing;
   MP_QSTR_amount;
   MP_QSTR_amount_change;
@@ -266,6 +268,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_details_title;
   MP_QSTR_device_name;
   MP_QSTR_device_name__change_template;
+  MP_QSTR_device_name__continue_with_empty_label;
+  MP_QSTR_device_name__enter;
   MP_QSTR_device_name__title;
   MP_QSTR_disable_animation;
   MP_QSTR_disconnect;
@@ -480,6 +484,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_plurals__x_groups_needed;
   MP_QSTR_plurals__x_shares_needed;
   MP_QSTR_pm_event;
+  MP_QSTR_prefill;
   MP_QSTR_prefill_word;
   MP_QSTR_progress__authenticity_check;
   MP_QSTR_progress__done;
@@ -494,6 +499,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_progress_event;
   MP_QSTR_prompt;
   MP_QSTR_prompt_backup;
+  MP_QSTR_prompt_empty;
   MP_QSTR_prompt_screen;
   MP_QSTR_prompt_title;
   MP_QSTR_pubkey;
@@ -565,6 +571,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_request_passphrase;
   MP_QSTR_request_pin;
   MP_QSTR_request_slip39;
+  MP_QSTR_request_string;
   MP_QSTR_reset__advanced_group_threshold_info;
   MP_QSTR_reset__all_x_of_y_template;
   MP_QSTR_reset__any_x_of_y_template;
@@ -892,6 +899,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__keep_it_safe;
   MP_QSTR_words__know_what_your_doing;
   MP_QSTR_words__my_trezor;
+  MP_QSTR_words__name;
   MP_QSTR_words__no;
   MP_QSTR_words__not_recommended;
   MP_QSTR_words__operation_cancelled;

@@ -961,10 +961,21 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn request_passphrase(
-        _prompt: TString<'static>,
-        _max_len: u32,
+        prompt: TString<'static>,
+        prompt_empty: TString<'static>,
+        max_len: usize,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let flow = flow::request_passphrase::new_request_passphrase()?;
+        let flow = flow::request_passphrase::new_request_passphrase(prompt, prompt_empty, max_len)?;
+        Ok(flow)
+    }
+
+    fn request_string(
+        prompt: TString<'static>,
+        max_len: usize,
+        allow_empty: bool,
+        prefill: Option<TString<'static>>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let flow = flow::request_string::new_request_string(prompt, max_len, allow_empty, prefill)?;
         Ok(flow)
     }
 
@@ -1185,7 +1196,7 @@ impl FirmwareUI for UIEckhart {
     fn show_device_menu(
         failed_backup: bool,
         firmware_version: TString<'static>,
-        device_name: TString<'static>,
+        device_name: Option<TString<'static>>,
         paired_devices: Vec<TString<'static>, 1>,
         auto_lock_delay: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
