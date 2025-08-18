@@ -100,6 +100,7 @@ struct MenuItem {
     action: Option<Action>,
 }
 const MENU_ITEM_TITLE_STYLE_SHEET: &ButtonStyleSheet = &theme::menu_item_title();
+const MENU_ITEM_WARNING: &ButtonStyleSheet = &theme::menu_item_title_orange();
 
 impl MenuItem {
     pub fn new(text: TString<'static>, action: Option<Action>) -> Self {
@@ -197,12 +198,12 @@ impl DeviceMenuScreen {
         _connected_idx: Option<usize>,
         _bluetooth: Option<bool>,
         _pin_code: Option<bool>,
-        auto_lock_delay: Option<TString<'static>>,
+        _auto_lock_delay: Option<TString<'static>>,
         _wipe_code: Option<bool>,
         _check_backup: bool,
         device_name: Option<TString<'static>>,
-        _screen_brightness: Option<TString<'static>>,
-        _haptic_feedback: Option<bool>,
+        screen_brightness: Option<TString<'static>>,
+        haptic_feedback: Option<bool>,
         led_enabled: Option<bool>,
         about_items: Obj,
     ) -> Result<Self, Error> {
@@ -219,8 +220,14 @@ impl DeviceMenuScreen {
         let about = screen.add_subscreen(Subscreen::AboutScreen);
         let regulatory = screen.add_subscreen(Subscreen::RegulatoryScreen);
         let security = screen.add_security_menu();
-        let device =
-            screen.add_device_menu(device_name, regulatory, about, auto_lock_delay, led_enabled);
+        let device = screen.add_device_menu(
+            device_name,
+            screen_brightness,
+            haptic_feedback,
+            led_enabled,
+            regulatory,
+            about,
+        );
         let settings = screen.add_settings_menu(security, device);
 
         let is_connected = !paired_devices.is_empty(); // FIXME after BLE API has this
@@ -320,10 +327,11 @@ impl DeviceMenuScreen {
     fn add_device_menu(
         &mut self,
         device_name: Option<TString<'static>>,
+        screen_brightness: Option<TString<'static>>,
+        haptic_feedback: Option<bool>,
+        led_enabled: Option<bool>,
         regulatory_index: usize,
         about_index: usize,
-        auto_lock_delay: Option<TString<'static>>,
-        led_enabled: Option<bool>,
     ) -> usize {
         let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
         if let Some(device_name) = device_name {
@@ -335,18 +343,28 @@ impl DeviceMenuScreen {
             unwrap!(items.push(item_device_name));
         }
 
-        unwrap!(items.push(MenuItem::new(
-            TR::brightness__title.into(),
-            Some(Action::Return(DeviceMenuMsg::ScreenBrightness)),
-        )));
-
-        if let Some(auto_lock_delay) = auto_lock_delay {
-            let mut autolock_delay_item = MenuItem::new(
-                TR::auto_lock__title.into(),
-                Some(Action::Return(DeviceMenuMsg::AutoLockDelay)),
+        if let Some(brightness) = screen_brightness {
+            let brightness_item = MenuItem::new(
+                brightness,
+                Some(Action::Return(DeviceMenuMsg::ScreenBrightness)),
             );
-            autolock_delay_item.with_subtext(Some((auto_lock_delay, None)));
-            unwrap!(items.push(autolock_delay_item));
+            unwrap!(items.push(brightness_item));
+        }
+
+        if let Some(haptic_feedback) = haptic_feedback {
+            let mut haptic_item = MenuItem::new(
+                TR::haptic_feedback__title.into(),
+                Some(Action::Return(DeviceMenuMsg::HapticFeedback)),
+            );
+            let subtext = match haptic_feedback {
+                true => (
+                    TR::words__on.into(),
+                    Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
+                ),
+                _ => (TR::words__off.into(), None),
+            };
+            haptic_item.with_subtext(Some(subtext));
+            unwrap!(items.push(haptic_item));
         }
 
         if let Some(led_enabled) = led_enabled {
@@ -374,6 +392,13 @@ impl DeviceMenuScreen {
             TR::words__about.into(),
             Some(Action::GoTo(about_index))
         )));
+
+        let mut wipe_device_item = MenuItem::new(
+            TR::wipe__title.into(),
+            Some(Action::Return(DeviceMenuMsg::WipeDevice)),
+        );
+        wipe_device_item.with_stylesheet(MENU_ITEM_WARNING);
+        unwrap!(items.push(wipe_device_item));
 
         let submenu_index = self.add_submenu(Submenu::new(items));
         self.add_subscreen(Subscreen::Submenu(submenu_index))
