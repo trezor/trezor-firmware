@@ -26,8 +26,6 @@ enum ChoiceCategory {
     SpecialSymbol,
 }
 
-const MAX_PASSPHRASE_LENGTH: usize = 50;
-
 const DIGITS: &str = "0123456789";
 const LOWERCASE_LETTERS: &str = "abcdefghijklmnopqrstuvwxyz";
 const UPPERCASE_LETTERS: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -273,26 +271,28 @@ pub struct PassphraseEntry {
     show_last_digit: bool,
     textbox: TextBox,
     current_category: ChoiceCategory,
+    max_len: usize,
 }
 
 impl PassphraseEntry {
-    pub fn new() -> Self {
+    pub fn new(max_len: usize) -> Self {
         Self {
             choice_page: ChoicePage::new(ChoiceFactoryPassphrase::new(ChoiceCategory::Menu, true))
                 .with_initial_page_counter(random_menu_position())
                 .with_controls(ChoiceControls::Carousel),
-            passphrase_dots: Child::new(ChangingTextLine::center_mono("", MAX_PASSPHRASE_LENGTH)),
+            passphrase_dots: Child::new(ChangingTextLine::center_mono("", max_len)),
             show_plain_passphrase: false,
             show_last_digit: false,
-            textbox: TextBox::empty(MAX_PASSPHRASE_LENGTH),
+            textbox: TextBox::empty(max_len),
             current_category: ChoiceCategory::Menu,
+            max_len,
         }
     }
 
     fn update_passphrase_dots(&mut self, ctx: &mut EventCtx) {
         debug_assert!({
             let s = ShortString::new();
-            s.capacity() >= MAX_PASSPHRASE_LENGTH
+            s.capacity() >= self.max_len
         });
 
         let text_to_show = if self.show_plain_passphrase {
@@ -362,7 +362,7 @@ impl PassphraseEntry {
     }
 
     fn is_full(&self) -> bool {
-        self.textbox.len() >= MAX_PASSPHRASE_LENGTH
+        self.textbox.len() >= self.max_len
     }
 
     /// Randomly choose an index in the current category

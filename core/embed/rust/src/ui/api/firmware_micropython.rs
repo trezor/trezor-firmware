@@ -753,9 +753,23 @@ extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map)
 extern "C" fn new_request_passphrase(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let max_len: u32 = kwargs.get(Qstr::MP_QSTR_max_len)?.try_into()?;
+        let prompt_empty: TString = kwargs.get(Qstr::MP_QSTR_prompt_empty)?.try_into()?;
+        let max_len: usize = kwargs.get(Qstr::MP_QSTR_max_len)?.try_into()?;
 
-        let layout = ModelUI::request_passphrase(prompt, max_len)?;
+        let layout = ModelUI::request_passphrase(prompt, prompt_empty, max_len)?;
+        Ok(LayoutObj::new_root(layout)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_request_string(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let max_len: usize = kwargs.get(Qstr::MP_QSTR_max_len)?.try_into()?;
+        let allow_empty: bool = kwargs.get(Qstr::MP_QSTR_allow_empty)?.try_into()?;
+        let prefill: Option<TString> = kwargs.get(Qstr::MP_QSTR_prefill)?.try_into_option()?;
+
+        let layout = ModelUI::request_string(prompt, max_len, allow_empty, prefill)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -924,7 +938,8 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
     let block = move |_args: &[Obj], kwargs: &Map| {
         let failed_backup: bool = kwargs.get(Qstr::MP_QSTR_failed_backup)?.try_into()?;
         let firmware_version: TString = kwargs.get(Qstr::MP_QSTR_firmware_version)?.try_into()?;
-        let device_name: TString = kwargs.get(Qstr::MP_QSTR_device_name)?.try_into()?;
+        let device_name: Option<TString> =
+            kwargs.get(Qstr::MP_QSTR_device_name)?.try_into_option()?;
         let paired_devices: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
         let paired_devices: Vec<TString, 1> = util::iter_into_vec(paired_devices)?;
         let auto_lock_delay: TString<'static> =
@@ -1749,10 +1764,21 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def request_passphrase(
     ///     *,
     ///     prompt: str,
+    ///     prompt_empty: str,
     ///     max_len: int,
     /// ) -> LayoutObj[str | UiResult]:
     ///     """Passphrase input keyboard."""
     Qstr::MP_QSTR_request_passphrase => obj_fn_kw!(0, new_request_passphrase).as_obj(),
+
+    /// def request_string(
+    ///     *,
+    ///     prompt: str,
+    ///     max_len: int,
+    ///     allow_empty: bool,
+    ///     prefill: str | None,
+    /// ) -> LayoutObj[str | UiResult]:
+    ///     """Label input keyboard."""
+    Qstr::MP_QSTR_request_string => obj_fn_kw!(0, new_request_string).as_obj(),
 
     /// def select_menu(
     ///     *,
@@ -1853,7 +1879,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     failed_backup: bool,
     ///     firmware_version: str,
-    ///     device_name: str,
+    ///     device_name: str | None,
     ///     paired_devices: Iterable[str],
     ///     auto_lock_delay: str,
     /// ) -> LayoutObj[UiResult | DeviceMenuResult | tuple[DeviceMenuResult, int]]:
@@ -2058,5 +2084,6 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     WipeDevice: ClassVar[DeviceMenuResult]
     ///     ScreenBrightness: ClassVar[DeviceMenuResult]
     ///     AutoLockDelay: ClassVar[DeviceMenuResult]
+    ///     DeviceName: ClassVar[DeviceMenuResult]
     Qstr::MP_QSTR_DeviceMenuResult => DEVICE_MENU_RESULT.as_obj(),
 };

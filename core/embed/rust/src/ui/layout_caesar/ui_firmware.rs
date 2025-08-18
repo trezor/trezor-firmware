@@ -917,11 +917,22 @@ impl FirmwareUI for UICaesar {
 
     fn request_passphrase(
         prompt: TString<'static>,
-        _max_len: u32,
+        _prompt_empty: TString<'static>,
+        max_len: usize,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let layout =
-            RootComponent::new(Frame::new(prompt, PassphraseEntry::new()).with_title_centered());
+        let layout = RootComponent::new(
+            Frame::new(prompt, PassphraseEntry::new(max_len)).with_title_centered(),
+        );
         Ok(layout)
+    }
+
+    fn request_string(
+        _prompt: TString<'static>,
+        _max_len: usize,
+        _allow_empty: bool,
+        _prefill: Option<TString<'static>>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn select_menu(
@@ -1118,7 +1129,7 @@ impl FirmwareUI for UICaesar {
     fn show_device_menu(
         _failed_backup: bool,
         _firmware_version: TString<'static>,
-        _device_name: TString<'static>,
+        _device_name: Option<TString<'static>>,
         _paired_devices: Vec<TString<'static>, 1>,
         _auto_lock_delay: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {

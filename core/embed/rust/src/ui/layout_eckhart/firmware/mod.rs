@@ -32,6 +32,7 @@ pub use hold_to_confirm::HoldToConfirmAnim;
 pub use homescreen::{check_homescreen_format, Homescreen, HomescreenMsg};
 pub use keyboard::{
     bip39::Bip39Input,
+    label::{LabelKeyboard, LabelKeyboardMsg},
     mnemonic::{MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg},
     passphrase::{PassphraseKeyboard, PassphraseKeyboardMsg},
     pin::{PinKeyboard, PinKeyboardMsg},

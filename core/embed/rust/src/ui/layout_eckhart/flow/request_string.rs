@@ -17,19 +17,17 @@ use crate::{
 
 use super::super::{
     component::Button,
-    firmware::{
-        ActionBar, Header, PassphraseKeyboard, PassphraseKeyboardMsg, TextScreen, TextScreenMsg,
-    },
+    firmware::{ActionBar, Header, LabelKeyboard, LabelKeyboardMsg, TextScreen, TextScreenMsg},
     theme,
 };
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub enum RequestPassphrase {
+pub enum RequestString {
     Keypad,
     ConfirmEmpty,
 }
 
-impl FlowController for RequestPassphrase {
+impl FlowController for RequestString {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize
@@ -58,15 +56,19 @@ impl FlowController for RequestPassphrase {
     }
 }
 
-pub fn new_request_passphrase(
+pub fn new_request_string(
     prompt: TString<'static>,
-    prompt_empty: TString<'static>,
     max_len: usize,
+    allow_empty: bool,
+    prefill: Option<TString<'static>>,
 ) -> Result<SwipeFlow, error::Error> {
     let content_confirm_empty = TextScreen::new(
-        Paragraph::new(&theme::TEXT_REGULAR, prompt_empty)
-            .into_paragraphs()
-            .with_placement(LinearPlacement::vertical()),
+        Paragraph::new(
+            &theme::TEXT_REGULAR,
+            TR::device_name__continue_with_empty_label,
+        )
+        .into_paragraphs()
+        .with_placement(LinearPlacement::vertical()),
     )
     .with_header(Header::new(prompt))
     .with_action_bar(ActionBar::new_double(
@@ -80,13 +82,14 @@ pub fn new_request_passphrase(
         _ => Some(FlowMsg::Cancelled),
     });
 
-    let content_keypad = PassphraseKeyboard::new(prompt, max_len).map(|msg| match msg {
-        PassphraseKeyboardMsg::Confirmed(s) => Some(FlowMsg::Text(s)),
-        PassphraseKeyboardMsg::Cancelled => Some(FlowMsg::Cancelled),
-    });
+    let content_keypad =
+        LabelKeyboard::new(prompt, max_len, allow_empty, prefill).map(|msg| match msg {
+            LabelKeyboardMsg::Confirmed(s) => Some(FlowMsg::Text(s)),
+            LabelKeyboardMsg::Cancelled => Some(FlowMsg::Cancelled),
+        });
 
-    let mut res = SwipeFlow::new(&RequestPassphrase::Keypad)?;
-    res.add_page(&RequestPassphrase::Keypad, content_keypad)?
-        .add_page(&RequestPassphrase::ConfirmEmpty, content_confirm_empty)?;
+    let mut res = SwipeFlow::new(&RequestString::Keypad)?;
+    res.add_page(&RequestString::Keypad, content_keypad)?
+        .add_page(&RequestString::ConfirmEmpty, content_confirm_empty)?;
     Ok(res)
 }

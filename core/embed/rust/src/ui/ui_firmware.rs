@@ -287,7 +287,15 @@ pub trait FirmwareUI {
 
     fn request_passphrase(
         prompt: TString<'static>,
-        max_len: u32,
+        prompt_empty: TString<'static>,
+        max_len: usize,
+    ) -> Result<impl LayoutMaybeTrace, Error>;
+
+    fn request_string(
+        prompt: TString<'static>,
+        max_len: usize,
+        allow_empty: bool,
+        prefill: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn select_menu(
@@ -353,7 +361,7 @@ pub trait FirmwareUI {
     fn show_device_menu(
         failed_backup: bool,
         firmware_version: TString<'static>,
-        device_name: TString<'static>,
+        device_name: Option<TString<'static>>,
         paired_devices: Vec<TString<'static>, 1>,
         auto_lock_delay: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error>;

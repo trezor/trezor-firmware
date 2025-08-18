@@ -1463,6 +1463,9 @@ pub enum TranslatedString {
     tutorial__what_is_tropic = 1068,  // "What is TROPIC01?"
     tutorial__tap_to_start = 1069,  // "Tap to start tutorial"
     tutorial__tropic_info = 1070,  // "TROPIC01 is a next-gen open-source secure element chip designed for transparent and auditable hardware security."
+    device_name__enter = 1071,  // "Enter device name"
+    words__name = 1072,  // "Name"
+    device_name__continue_with_empty_label = 1073,  // "Continue with empty device name?"
 }
 
 impl TranslatedString {
@@ -3245,6 +3248,9 @@ impl TranslatedString {
             (Self::tutorial__what_is_tropic, "What is TROPIC01?"),
             (Self::tutorial__tap_to_start, "Tap to start tutorial"),
             (Self::tutorial__tropic_info, "TROPIC01 is a next-gen open-source secure element chip designed for transparent and auditable hardware security."),
+            (Self::device_name__enter, "Enter device name"),
+            (Self::words__name, "Name"),
+            (Self::device_name__continue_with_empty_label, "Continue with empty device name?"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3612,6 +3618,8 @@ impl TranslatedString {
         #[cfg(feature = "debug")]
         (Qstr::MP_QSTR_debug__loading_seed_not_recommended, Self::debug__loading_seed_not_recommended),
         (Qstr::MP_QSTR_device_name__change_template, Self::device_name__change_template),
+        (Qstr::MP_QSTR_device_name__continue_with_empty_label, Self::device_name__continue_with_empty_label),
+        (Qstr::MP_QSTR_device_name__enter, Self::device_name__enter),
         (Qstr::MP_QSTR_device_name__title, Self::device_name__title),
         (Qstr::MP_QSTR_entropy__send, Self::entropy__send),
         (Qstr::MP_QSTR_entropy__title_confirm, Self::entropy__title_confirm),
@@ -4664,6 +4672,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__keep_it_safe, Self::words__keep_it_safe),
         (Qstr::MP_QSTR_words__know_what_your_doing, Self::words__know_what_your_doing),
         (Qstr::MP_QSTR_words__my_trezor, Self::words__my_trezor),
+        (Qstr::MP_QSTR_words__name, Self::words__name),
         (Qstr::MP_QSTR_words__no, Self::words__no),
         (Qstr::MP_QSTR_words__not_recommended, Self::words__not_recommended),
         (Qstr::MP_QSTR_words__operation_cancelled, Self::words__operation_cancelled),

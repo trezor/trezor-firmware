@@ -62,6 +62,7 @@ pub enum DeviceMenuMsg {
     WipeDevice,
 
     // Device menu
+    DeviceName,
     ScreenBrightness,
     AutoLockDelay,
 
@@ -166,7 +167,7 @@ impl<'a> DeviceMenuScreen<'a> {
     pub fn new(
         failed_backup: bool,
         firmware_version: TString<'static>,
-        device_name: TString<'static>,
+        device_name: Option<TString<'static>>,
         // NB: we currently only support one device at a time.
         paired_devices: Vec<TString<'static>, 1>,
         auto_lock_delay: TString<'static>,
@@ -282,14 +283,20 @@ impl<'a> DeviceMenuScreen<'a> {
 
     fn add_device_menu(
         &mut self,
-        device_name: TString<'static>,
+        device_name: Option<TString<'static>>,
         about_index: usize,
         auto_lock_delay: TString<'static>,
     ) -> usize {
         let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
-        let mut item_device_name = MenuItem::new("Name".into(), None);
-        item_device_name.with_subtext(Some((device_name, None)));
-        unwrap!(items.push(item_device_name));
+        if let Some(device_name) = device_name {
+            let mut item_device_name = MenuItem::new(
+                TR::words__name.into(),
+                Some(Action::Return(DeviceMenuMsg::DeviceName)),
+            );
+            item_device_name.with_subtext(Some((device_name, None)));
+            unwrap!(items.push(item_device_name));
+        }
+
         unwrap!(items.push(MenuItem::new(
             "Screen brightness".into(),
             Some(Action::Return(DeviceMenuMsg::ScreenBrightness)),

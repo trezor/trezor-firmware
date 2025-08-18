@@ -497,9 +497,21 @@ def request_pin(
 def request_passphrase(
     *,
     prompt: str,
+    prompt_empty: str,
     max_len: int,
 ) -> LayoutObj[str | UiResult]:
     """Passphrase input keyboard."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def request_string(
+    *,
+    prompt: str,
+    max_len: int,
+    allow_empty: bool,
+    prefill: str | None,
+) -> LayoutObj[str | UiResult]:
+    """Label input keyboard."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
@@ -612,7 +624,7 @@ def show_device_menu(
     *,
     failed_backup: bool,
     firmware_version: str,
-    device_name: str,
+    device_name: str | None,
     paired_devices: Iterable[str],
     auto_lock_delay: str,
 ) -> LayoutObj[UiResult | DeviceMenuResult | tuple[DeviceMenuResult, int]]:
@@ -837,3 +849,4 @@ class DeviceMenuResult:
     WipeDevice: ClassVar[DeviceMenuResult]
     ScreenBrightness: ClassVar[DeviceMenuResult]
     AutoLockDelay: ClassVar[DeviceMenuResult]
+    DeviceName: ClassVar[DeviceMenuResult]
