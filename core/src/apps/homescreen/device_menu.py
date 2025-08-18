@@ -9,10 +9,10 @@ from trezorui_api import DeviceMenuResult
 async def handle_device_menu() -> None:
     from trezor import strings
 
-    # TODO: unify with notification handling in `apps/homescreen/__init__.py:homescreen()`
     failed_backup = (
         storage_device.is_initialized() and storage_device.unfinished_backup()
     )
+    pin_unset = storage_device.is_initialized() and not config.has_pin()
     # MOCK DATA
     paired_devices = ["Trezor Suite"] if ble.is_connected() else []
     bluetooth_version = "2.3.1.1"
@@ -35,7 +35,7 @@ async def handle_device_menu() -> None:
     menu_result = await interact(
         trezorui_api.show_device_menu(
             failed_backup=failed_backup,
-            pin_unset=False,
+            pin_unset=pin_unset,
             paired_devices=paired_devices,
             connected_idx=None,
             bluetooth=True,  # TODO implement bluetooth handling
@@ -73,7 +73,11 @@ async def handle_device_menu() -> None:
     )
     # Root menu
     if menu_result is DeviceMenuResult.BackupFailed:
-        pass  # TODO implement backup failed handling
+        from apps.management.backup_device import perform_backup
+
+        assert storage_device.unfinished_backup()
+        # If the backup failed, we can only perform a repeated backup.
+        await perform_backup(is_repeated_backup=True)
     # Pair & Connect
     elif menu_result is DeviceMenuResult.DeviceDisconnect:
         pass  # TODO implement device disconnect handling
