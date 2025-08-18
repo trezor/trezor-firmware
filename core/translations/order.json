@@ -1113,5 +1113,8 @@
   "1111": "wipe_code__remove",
   "1112": "wipe_code__title",
   "1113": "words__disabled",
-  "1114": "words__enabled"
+  "1114": "words__enabled",
+  "1115": "ble__disable",
+  "1116": "ble__enable",
+  "1117": "words__bluetooth"
 }
