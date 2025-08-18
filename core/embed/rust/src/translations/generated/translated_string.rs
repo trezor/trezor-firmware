@@ -1506,6 +1506,9 @@ pub enum TranslatedString {
     ble__disable = 1115,  // "Turn Bluetooth off?"
     ble__enable = 1116,  // "Turn Bluetooth on?"
     words__bluetooth = 1117,  // "Bluetooth"
+    wipe__start_again = 1118,  // "Wipe your Trezor and start the setup process again."
+    words__set = 1119,  // "Set"
+    words__wipe = 1120,  // "Wipe"
 }
 
 impl TranslatedString {
@@ -3331,6 +3334,9 @@ impl TranslatedString {
             (Self::ble__disable, "Turn Bluetooth off?"),
             (Self::ble__enable, "Turn Bluetooth on?"),
             (Self::words__bluetooth, "Bluetooth"),
+            (Self::wipe__start_again, "Wipe your Trezor and start the setup process again."),
+            (Self::words__set, "Set"),
+            (Self::words__wipe, "Wipe"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4727,6 +4733,7 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_u2f__title_set, Self::u2f__title_set),
         (Qstr::MP_QSTR_wipe__info, Self::wipe__info),
+        (Qstr::MP_QSTR_wipe__start_again, Self::wipe__start_again),
         (Qstr::MP_QSTR_wipe__title, Self::wipe__title),
         (Qstr::MP_QSTR_wipe__want_to_wipe, Self::wipe__want_to_wipe),
         (Qstr::MP_QSTR_wipe_code__change, Self::wipe_code__change),
@@ -4806,6 +4813,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__review, Self::words__review),
         (Qstr::MP_QSTR_words__security, Self::words__security),
         (Qstr::MP_QSTR_words__send, Self::words__send),
+        (Qstr::MP_QSTR_words__set, Self::words__set),
         (Qstr::MP_QSTR_words__settings, Self::words__settings),
         (Qstr::MP_QSTR_words__sign, Self::words__sign),
         (Qstr::MP_QSTR_words__signer, Self::words__signer),
@@ -4828,6 +4836,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__unlocked, Self::words__unlocked),
         (Qstr::MP_QSTR_words__wallet, Self::words__wallet),
         (Qstr::MP_QSTR_words__warning, Self::words__warning),
+        (Qstr::MP_QSTR_words__wipe, Self::words__wipe),
         (Qstr::MP_QSTR_words__writable, Self::words__writable),
         (Qstr::MP_QSTR_words__yes, Self::words__yes),
     ];

@@ -9,10 +9,10 @@ from trezorui_api import DeviceMenuResult
 async def handle_device_menu() -> None:
     from trezor import strings
 
-    # TODO: unify with notification handling in `apps/homescreen/__init__.py:homescreen()`
-    failed_backup = (
-        storage_device.is_initialized() and storage_device.unfinished_backup()
-    )
+    is_initialized = storage_device.is_initialized()
+    led_configurable = is_initialized and utils.USE_RGB_LED
+    haptic_configurable = is_initialized and utils.USE_HAPTIC
+    failed_backup = is_initialized and storage_device.unfinished_backup()
     # MOCK DATA
     paired_devices = ["Trezor Suite"] if ble.is_connected() else []
     bluetooth_version = "2.3.1.1"
@@ -38,30 +38,18 @@ async def handle_device_menu() -> None:
             paired_devices=paired_devices,
             connected_idx=None,
             bluetooth=True,  # TODO implement bluetooth handling
-            pin_code=config.has_pin() if storage_device.is_initialized() else None,
+            pin_code=config.has_pin() if is_initialized else None,
             auto_lock_delay=auto_lock_delay,
-            wipe_code=(
-                config.has_wipe_code() if storage_device.is_initialized() else None
-            ),
-            check_backup=storage_device.is_initialized(),
+            wipe_code=config.has_wipe_code() if is_initialized else None,
+            check_backup=is_initialized,
             device_name=(
-                (storage_device.get_label() or "Trezor")
-                if storage_device.is_initialized()
-                else None
+                (storage_device.get_label() or "Trezor") if is_initialized else None
             ),
-            screen_brightness=(
-                TR.brightness__title if storage_device.is_initialized() else None
-            ),
+            screen_brightness=TR.brightness__title if is_initialized else None,
             haptic_feedback=(
-                storage_device.get_haptic_feedback()
-                if (storage_device.is_initialized() and utils.USE_HAPTIC)
-                else None
+                storage_device.get_haptic_feedback() if haptic_configurable else None
             ),
-            led_enabled=(
-                storage_device.get_rgb_led()
-                if (storage_device.is_initialized() and utils.USE_RGB_LED)
-                else None
-            ),
+            led_enabled=(storage_device.get_rgb_led() if led_configurable else None),
             about_items=[
                 (TR.homescreen__firmware_version, firmware_version, False),
                 (TR.homescreen__firmware_type, firmware_type, False),
@@ -71,8 +59,23 @@ async def handle_device_menu() -> None:
         "device_menu",
     )
     # Root menu
-    if menu_result is DeviceMenuResult.BackupFailed:
-        pass  # TODO implement backup failed handling
+    if menu_result is DeviceMenuResult.BackupFailed and failed_backup:
+        from trezor.messages import WipeDevice
+        from trezor.ui.layouts import raise_if_cancelled
+
+        from apps.management.wipe_device import wipe_device
+
+        await raise_if_cancelled(
+            trezorui_api.show_warning(
+                title=TR.homescreen__title_backup_failed,
+                button=TR.words__wipe,
+                description=TR.wipe__start_again,
+                danger=True,
+            ),
+            "prompt_device_wipe",
+        )
+
+        await wipe_device(WipeDevice())
     # Pair & Connect
     elif menu_result is DeviceMenuResult.DeviceDisconnect:
         pass  # TODO implement device disconnect handling
@@ -96,7 +99,6 @@ async def handle_device_menu() -> None:
         from trezor.ui.layouts import confirm_action
 
         turned_on = ble.is_connected()
-
         await confirm_action(
             "ble__settings",
             TR.words__bluetooth,
@@ -104,24 +106,23 @@ async def handle_device_menu() -> None:
         )
         pass  # TODO implement bluetooth handling
     # Security settings
-    elif menu_result is DeviceMenuResult.PinCode:
+    elif menu_result is DeviceMenuResult.PinCode and is_initialized:
         from trezor.messages import ChangePin
 
         from apps.management.change_pin import change_pin
 
         await change_pin(ChangePin())
-    elif menu_result is DeviceMenuResult.PinRemove:
+    elif menu_result is DeviceMenuResult.PinRemove and config.has_pin():
         from trezor.messages import ChangePin
 
         from apps.management.change_pin import change_pin
 
         await change_pin(ChangePin(remove=True))
-    elif menu_result is DeviceMenuResult.AutoLockDelay:
+    elif menu_result is DeviceMenuResult.AutoLockDelay and config.has_pin():
         from trezor.messages import ApplySettings
 
         from apps.management.apply_settings import apply_settings
 
-        assert config.has_pin()
         auto_lock_delay_ms = await interact(
             trezorui_api.request_duration(
                 title=TR.auto_lock__title,
@@ -132,25 +133,26 @@ async def handle_device_menu() -> None:
             ),
             br_name=None,
         )
+        # Necessary for the style check not to raise type error
         assert isinstance(auto_lock_delay_ms, int)
         await apply_settings(
             ApplySettings(
                 auto_lock_delay_ms=auto_lock_delay_ms,
             )
         )
-    elif menu_result is DeviceMenuResult.WipeCode:
+    elif menu_result is DeviceMenuResult.WipeCode and is_initialized:
         from trezor.messages import ChangeWipeCode
 
         from apps.management.change_wipe_code import change_wipe_code
 
         await change_wipe_code(ChangeWipeCode())
-    elif menu_result is DeviceMenuResult.WipeRemove:
+    elif menu_result is DeviceMenuResult.WipeRemove and config.has_wipe_code():
         from trezor.messages import ChangeWipeCode
 
         from apps.management.change_wipe_code import change_wipe_code
 
         await change_wipe_code(ChangeWipeCode(remove=True))
-    elif menu_result is DeviceMenuResult.CheckBackup:
+    elif menu_result is DeviceMenuResult.CheckBackup and is_initialized:
         from trezor.enums import RecoveryType
         from trezor.messages import RecoveryDevice
 
@@ -162,12 +164,11 @@ async def handle_device_menu() -> None:
             )
         )
     # Device settings
-    elif menu_result is DeviceMenuResult.DeviceName:
+    elif menu_result is DeviceMenuResult.DeviceName and is_initialized:
         from trezor.messages import ApplySettings
 
         from apps.management.apply_settings import apply_settings
 
-        assert storage_device.is_initialized()
         label = await interact(
             trezorui_api.request_string(
                 prompt=TR.device_name__enter,
@@ -177,26 +178,26 @@ async def handle_device_menu() -> None:
             ),
             "device_name",
         )
+        # Necessary for the style check not to raise type error
         assert isinstance(label, str)
         await apply_settings(ApplySettings(label=label))
-    elif menu_result is DeviceMenuResult.ScreenBrightness:
+    elif menu_result is DeviceMenuResult.ScreenBrightness and is_initialized:
         from trezor.messages import SetBrightness
 
         from apps.management.set_brightness import set_brightness
 
         await set_brightness(SetBrightness())
-    elif menu_result is DeviceMenuResult.HapticFeedback:
+    elif menu_result is DeviceMenuResult.HapticFeedback and haptic_configurable:
         from trezor.messages import ApplySettings
 
         from apps.management.apply_settings import apply_settings
 
-        assert storage_device.is_initialized()
         await apply_settings(
             ApplySettings(
                 haptic_feedback=not storage_device.get_haptic_feedback(),
             )
         )
-    elif menu_result is DeviceMenuResult.LedEnabled:
+    elif menu_result is DeviceMenuResult.LedEnabled and led_configurable:
         from trezor import io
         from trezor.ui.layouts import confirm_action
 
