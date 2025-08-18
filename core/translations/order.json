@@ -1104,5 +1104,8 @@
   "1102": "pin__title",
   "1103": "wipe_code__change_question",
   "1104": "wipe_code__remove",
-  "1105": "wipe_code__title"
+  "1105": "wipe_code__title",
+  "1106": "ble__disable",
+  "1107": "ble__enable",
+  "1108": "words__bluetooth"
 }
