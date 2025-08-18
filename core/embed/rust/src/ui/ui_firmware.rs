@@ -360,8 +360,8 @@ pub trait FirmwareUI {
 
     fn show_device_menu(
         failed_backup: bool,
-        firmware_version: TString<'static>,
         device_name: Option<TString<'static>>,
+        about_items: Obj,
         paired_devices: Vec<TString<'static>, 1>,
         auto_lock_delay: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
