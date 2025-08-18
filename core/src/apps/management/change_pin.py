@@ -79,7 +79,7 @@ def _require_confirm_change_pin(msg: ChangePin) -> Awaitable[None]:
         return confirm_change_pin(
             "change_pin",
             TR.pin__title_settings,
-            description=TR.pin__change,
+            description=TR.pin__change_question,
         )
 
     if not msg.remove and not has_pin:  # setting new pin
