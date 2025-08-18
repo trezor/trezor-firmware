@@ -1080,6 +1080,8 @@ bool ble_unpair(const bt_le_addr_t *addr) {
     irq_key_t key = irq_lock();
     if (drv->result_ready) {
       result = drv->result;
+      irq_unlock(key);
+      return result;
     }
     irq_unlock(key);
   }
