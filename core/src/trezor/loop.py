@@ -251,13 +251,15 @@ class wait(Syscall):
 
     def send(self, __value: Any) -> Any:
         assert self.task is not None
+        task = self.task
         self.close()
-        _step(self.task, __value)
+        _step(task, __value)
         return self._DO_NOT_RESCHEDULE
 
     throw = send
 
     def close(self) -> None:
+        self.task = None
         _queue.discard(self)
         if self.msg_iface in _paused:
             _paused[self.msg_iface].discard(self)
