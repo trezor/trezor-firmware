@@ -1484,6 +1484,9 @@ pub enum TranslatedString {
     pin__remove = 1100,  // "Remove PIN"
     wipe_code__change_question = 1101,  // "Change wipe code?"
     wipe_code__remove = 1102,  // "Remove wipe code"
+    ble__disable = 1103,  // "Turn Bluetooth off?"
+    ble__enable = 1104,  // "Turn Bluetooth on?"
+    words__bluetooth = 1105,  // "Bluetooth"
 }
 
 impl TranslatedString {
@@ -3287,6 +3290,9 @@ impl TranslatedString {
             (Self::pin__remove, "Remove PIN"),
             (Self::wipe_code__change_question, "Change wipe code?"),
             (Self::wipe_code__remove, "Remove wipe code"),
+            (Self::ble__disable, "Turn Bluetooth off?"),
+            (Self::ble__enable, "Turn Bluetooth on?"),
+            (Self::words__bluetooth, "Bluetooth"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3364,6 +3370,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_bitcoin__unverified_external_inputs, Self::bitcoin__unverified_external_inputs),
         (Qstr::MP_QSTR_bitcoin__valid_signature, Self::bitcoin__valid_signature),
         (Qstr::MP_QSTR_bitcoin__voting_rights, Self::bitcoin__voting_rights),
+        (Qstr::MP_QSTR_ble__disable, Self::ble__disable),
+        (Qstr::MP_QSTR_ble__enable, Self::ble__enable),
         (Qstr::MP_QSTR_ble__manage_paired, Self::ble__manage_paired),
         (Qstr::MP_QSTR_ble__pair_new, Self::ble__pair_new),
         (Qstr::MP_QSTR_ble__pair_title, Self::ble__pair_title),
@@ -4698,6 +4706,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__assets, Self::words__assets),
         (Qstr::MP_QSTR_words__authenticate, Self::words__authenticate),
         (Qstr::MP_QSTR_words__blockhash, Self::words__blockhash),
+        (Qstr::MP_QSTR_words__bluetooth, Self::words__bluetooth),
         (Qstr::MP_QSTR_words__buying, Self::words__buying),
         (Qstr::MP_QSTR_words__cancel_and_exit, Self::words__cancel_and_exit),
         (Qstr::MP_QSTR_words__cancel_question, Self::words__cancel_question),
