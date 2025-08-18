@@ -1478,6 +1478,8 @@ pub enum TranslatedString {
     words__manage = 1094,  // "Manage"
     words__review = 1095,  // "Review"
     words__security = 1096,  // "Security"
+    homescreen__firmware_type = 1097,  // "Firmware type"
+    ble__version = 1098,  // "Bluetooth version"
 }
 
 impl TranslatedString {
@@ -3275,6 +3277,8 @@ impl TranslatedString {
             (Self::words__manage, "Manage"),
             (Self::words__review, "Review"),
             (Self::words__security, "Security"),
+            (Self::homescreen__firmware_type, "Firmware type"),
+            (Self::ble__version, "Bluetooth version"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3358,6 +3362,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ble__unpair_all, Self::ble__unpair_all),
         (Qstr::MP_QSTR_ble__unpair_current, Self::ble__unpair_current),
         (Qstr::MP_QSTR_ble__unpair_title, Self::ble__unpair_title),
+        (Qstr::MP_QSTR_ble__version, Self::ble__version),
         (Qstr::MP_QSTR_brightness__change_title, Self::brightness__change_title),
         (Qstr::MP_QSTR_brightness__changed_title, Self::brightness__changed_title),
         (Qstr::MP_QSTR_brightness__title, Self::brightness__title),
@@ -3890,6 +3895,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_haptic_feedback__title, Self::haptic_feedback__title),
         (Qstr::MP_QSTR_homescreen__click_to_connect, Self::homescreen__click_to_connect),
         (Qstr::MP_QSTR_homescreen__click_to_unlock, Self::homescreen__click_to_unlock),
+        (Qstr::MP_QSTR_homescreen__firmware_type, Self::homescreen__firmware_type),
         (Qstr::MP_QSTR_homescreen__firmware_version, Self::homescreen__firmware_version),
         (Qstr::MP_QSTR_homescreen__set_default, Self::homescreen__set_default),
         (Qstr::MP_QSTR_homescreen__settings_subtitle, Self::homescreen__settings_subtitle),

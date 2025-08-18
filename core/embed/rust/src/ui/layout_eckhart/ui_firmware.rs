@@ -1192,15 +1192,15 @@ impl FirmwareUI for UIEckhart {
 
     fn show_device_menu(
         failed_backup: bool,
-        firmware_version: TString<'static>,
         device_name: Option<TString<'static>>,
+        about_items: Obj,
         paired_devices: Vec<TString<'static>, 1>,
         auto_lock_delay: TString<'static>,
         led: Option<bool>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let layout = RootComponent::new(DeviceMenuScreen::new(
             failed_backup,
-            firmware_version,
+            about_items,
             device_name,
             paired_devices,
             auto_lock_delay,

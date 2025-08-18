@@ -39,11 +39,13 @@ async def handle_device_menu() -> None:
     paired_devices = ["Trezor Suite"] if ble.is_connected() else []
     # ###
     firmware_version = ".".join(map(str, utils.VERSION))
+    firmware_type = "Bitcoin-only" if utils.BITCOIN_ONLY else "Universal"
     device_name = (
         (storage_device.get_label() or "Trezor")
         if storage_device.is_initialized()
         else None
     )
+    bluetooth_version = "2.3.1.1"
 
     auto_lock_ms = storage_device.get_autolock_delay_ms()
     auto_lock_delay = strings.format_autolock_duration(auto_lock_ms)
@@ -58,8 +60,12 @@ async def handle_device_menu() -> None:
         trezorui_api.show_device_menu(
             failed_backup=failed_backup,
             paired_devices=paired_devices,
-            firmware_version=firmware_version,
             device_name=device_name,
+            about_items=[
+                (TR.homescreen__firmware_version, firmware_version, False),
+                (TR.homescreen__firmware_type, firmware_type, False),
+                (TR.ble__version, bluetooth_version, False),
+            ],
             auto_lock_delay=auto_lock_delay,
             led=(
                 storage_device.get_rgb_led()

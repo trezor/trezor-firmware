@@ -1095,5 +1095,7 @@
   "1093": "words__disconnect",
   "1094": "words__manage",
   "1095": "words__review",
-  "1096": "words__security"
+  "1096": "words__security",
+  "1097": "homescreen__firmware_type",
+  "1098": "ble__version"
 }
