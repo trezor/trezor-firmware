@@ -3,11 +3,12 @@ use crate::{
     ui::{
         component::{
             swipe_detect::{SwipeConfig, SwipeSettings},
-            Component, Event, EventCtx, SwipeDetect,
+            text::{layout::LayoutFit, TextStyle},
+            Component, Event, EventCtx, Label, SwipeDetect, TextLayout,
         },
         event::SwipeEvent,
         flow::Swipable,
-        geometry::{Alignment2D, Direction, Rect},
+        geometry::{Alignment2D, Direction, Offset, Rect},
         shape::{Renderer, ToifImage},
         util::{animation_disabled, Pager},
     },
@@ -17,6 +18,8 @@ use super::{constant::SCREEN, theme, Header, HeaderMsg, MenuItems, VerticalMenu,
 
 pub struct VerticalMenuScreen<T> {
     header: Header,
+    /// Optional subtitle label
+    subtitle: Option<Label<'static>>,
     /// Scrollable vertical menu
     menu: VerticalMenu<T>,
     /// Base position of the menu sliding window to scroll around
@@ -39,9 +42,14 @@ pub enum VerticalMenuScreenMsg {
 
 impl<T: MenuItems> VerticalMenuScreen<T> {
     const TOUCH_SENSITIVITY_DIVIDER: i16 = 15;
+    const SUBTITLE_STYLE: TextStyle = theme::TEXT_MEDIUM_GREY;
+    const SUBTITLE_HEIGHT: i16 = 68;
+    const SUBTITLE_DOUBLE_HEIGHT: i16 = 100;
+
     pub fn new(menu: VerticalMenu<T>) -> Self {
         Self {
             header: Header::new(TString::empty()),
+            subtitle: None,
             menu,
             offset_base: 0,
             swipe: None,
@@ -53,6 +61,14 @@ impl<T: MenuItems> VerticalMenuScreen<T> {
 
     pub fn with_header(mut self, header: Header) -> Self {
         self.header = header;
+        self
+    }
+
+    pub fn with_subtitle(mut self, subtitle: TString<'static>) -> Self {
+        if !subtitle.is_empty() {
+            self.subtitle =
+                Some(Label::left_aligned(subtitle, Self::SUBTITLE_STYLE).vertically_centered());
+        }
         self
     }
 
@@ -169,7 +185,30 @@ impl<T: MenuItems> Component for VerticalMenuScreen<T> {
         debug_assert_eq!(bounds.height(), SCREEN.height());
         debug_assert_eq!(bounds.width(), SCREEN.width());
 
-        let (header_area, menu_area) = bounds.split_top(Header::HEADER_HEIGHT);
+        let (header_area, rest) = bounds.split_top(Header::HEADER_HEIGHT);
+
+        let menu_area = if let Some(subtitle) = &mut self.subtitle {
+            // Choose appropriate height for the subtitle
+            let subtitle_height = if let LayoutFit::OutOfBounds { .. } =
+                subtitle.text().map(|text| {
+                    TextLayout::new(Self::SUBTITLE_STYLE)
+                        .with_bounds(
+                            Rect::from_size(Offset::new(bounds.width(), Self::SUBTITLE_HEIGHT))
+                                .inset(theme::SIDE_INSETS),
+                        )
+                        .fit_text(text)
+                }) {
+                Self::SUBTITLE_DOUBLE_HEIGHT
+            } else {
+                Self::SUBTITLE_HEIGHT
+            };
+
+            let (subtitle_area, rest) = rest.split_top(subtitle_height);
+            subtitle.place(subtitle_area.inset(theme::SIDE_INSETS));
+            rest
+        } else {
+            rest
+        };
 
         self.header.place(header_area);
         self.menu.place(menu_area);
@@ -202,6 +241,7 @@ impl<T: MenuItems> Component for VerticalMenuScreen<T> {
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.header.render(target);
+        self.subtitle.render(target);
         self.menu.render(target);
         self.render_overflow_arrow(target);
     }
