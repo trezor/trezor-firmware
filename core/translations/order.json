@@ -1098,5 +1098,11 @@
   "1096": "words__on",
   "1097": "led__disable",
   "1098": "led__enable",
-  "1099": "led__title"
+  "1099": "led__title",
+  "1100": "pin__change_question",
+  "1101": "pin__remove",
+  "1102": "pin__title",
+  "1103": "wipe_code__change_question",
+  "1104": "wipe_code__remove",
+  "1105": "wipe_code__title"
 }
