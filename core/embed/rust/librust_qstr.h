@@ -60,6 +60,7 @@ static void _librust_qstrs(void) {
   MP_QSTR___del__;
   MP_QSTR___dict__;
   MP_QSTR___name__;
+  MP_QSTR_about_items;
   MP_QSTR_account;
   MP_QSTR_account_items;
   MP_QSTR_account_path;
@@ -166,6 +167,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ble__unpair_all;
   MP_QSTR_ble__unpair_current;
   MP_QSTR_ble__unpair_title;
+  MP_QSTR_ble__version;
   MP_QSTR_ble_event;
   MP_QSTR_bootscreen;
   MP_QSTR_br_code;
@@ -302,7 +304,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_firmware_update__restart;
   MP_QSTR_firmware_update__title;
   MP_QSTR_firmware_update__title_fingerprint;
-  MP_QSTR_firmware_version;
   MP_QSTR_flow_confirm_output;
   MP_QSTR_flow_confirm_set_new_pin;
   MP_QSTR_flow_get_address;
@@ -319,6 +320,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_hold_danger;
   MP_QSTR_homescreen__click_to_connect;
   MP_QSTR_homescreen__click_to_unlock;
+  MP_QSTR_homescreen__firmware_type;
   MP_QSTR_homescreen__firmware_version;
   MP_QSTR_homescreen__set_default;
   MP_QSTR_homescreen__settings_subtitle;

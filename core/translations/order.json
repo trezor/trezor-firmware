@@ -1091,5 +1091,7 @@
   "1089": "words__led",
   "1090": "words__manage",
   "1091": "words__review",
-  "1092": "words__security"
+  "1092": "words__security",
+  "1093": "ble__version",
+  "1094": "homescreen__firmware_type"
 }
