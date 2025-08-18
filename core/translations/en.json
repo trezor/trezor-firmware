@@ -1193,6 +1193,7 @@
     "u2f__title_get": "Get U2F counter",
     "u2f__title_set": "Set U2F counter",
     "wipe__info": "All data will be erased.",
+    "wipe__start_again": "Wipe your Trezor and start the setup process again.",
     "wipe__title": "Wipe device",
     "wipe__want_to_wipe": "Do you really want to wipe the device?\n",
     "wipe_code__change": "Change wipe code",
@@ -1272,6 +1273,7 @@
     "words__review": "Review",
     "words__security": "Security",
     "words__send": "Send",
+    "words__set": "Set",
     "words__settings": "Settings",
     "words__sign": "Sign",
     "words__signer": "Signer",
@@ -1299,6 +1301,7 @@
     "words__unlocked": "Unlocked",
     "words__wallet": "Wallet",
     "words__warning": "Warning",
+    "words__wipe": "Wipe",
     "words__writable": "Writable",
     "words__yes": "Yes"
   }
