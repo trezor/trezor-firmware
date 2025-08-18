@@ -1097,5 +1097,9 @@
   "1095": "words__review",
   "1096": "words__security",
   "1097": "homescreen__firmware_type",
-  "1098": "ble__version"
+  "1098": "ble__version",
+  "1099": "pin__change_question",
+  "1100": "pin__remove",
+  "1101": "wipe_code__change_question",
+  "1102": "wipe_code__remove"
 }

@@ -3,29 +3,7 @@ import trezorble as ble
 import trezorui_api
 from trezor import TR, config, log, utils
 from trezor.ui.layouts import interact
-from trezor.wire import ActionCancelled
 from trezorui_api import DeviceMenuResult
-
-
-async def _prompt_auto_lock_delay() -> int:
-    auto_lock_delay_ms = await interact(
-        trezorui_api.request_duration(
-            title=TR.auto_lock__title,
-            duration_ms=storage_device.get_autolock_delay_ms(),
-            min_ms=storage_device.AUTOLOCK_DELAY_MINIMUM,
-            max_ms=storage_device.AUTOLOCK_DELAY_MAXIMUM,
-            description=TR.auto_lock__description,
-        ),
-        br_name=None,
-    )
-
-    if auto_lock_delay_ms is not trezorui_api.CANCELLED:
-        assert isinstance(auto_lock_delay_ms, int)
-        assert auto_lock_delay_ms >= storage_device.AUTOLOCK_DELAY_MINIMUM
-        assert auto_lock_delay_ms <= storage_device.AUTOLOCK_DELAY_MAXIMUM
-        return auto_lock_delay_ms
-    else:
-        raise ActionCancelled  # user cancelled request number prompt
 
 
 async def handle_device_menu() -> None:
@@ -42,8 +20,11 @@ async def handle_device_menu() -> None:
     firmware_version = ".".join(map(str, utils.VERSION))
     firmware_type = "Bitcoin-only" if utils.BITCOIN_ONLY else "Universal"
 
-    auto_lock_ms = storage_device.get_autolock_delay_ms()
-    auto_lock_delay = strings.format_autolock_duration(auto_lock_ms)
+    auto_lock_delay = (
+        strings.format_autolock_duration(storage_device.get_autolock_delay_ms())
+        if config.has_pin()
+        else None
+    )
 
     if __debug__:
         log.debug(
@@ -58,11 +39,12 @@ async def handle_device_menu() -> None:
             paired_devices=paired_devices,
             connected_idx=None,
             bluetooth=None,
-            pin_code=None,
+            pin_code=config.has_pin() if storage_device.is_initialized() else None,
             auto_lock_delay=auto_lock_delay,
-            wipe_code=False,
-            check_backup=storage_device.is_initialized()
-            and storage_device.unfinished_backup(),
+            wipe_code=(
+                config.has_wipe_code() if storage_device.is_initialized() else None
+            ),
+            check_backup=storage_device.is_initialized(),
             device_name=(
                 (storage_device.get_label() or "Trezor")
                 if storage_device.is_initialized()
@@ -115,20 +97,62 @@ async def handle_device_menu() -> None:
         pass  # TODO implement bluetooth handling
     # Security settings
     elif menu_result is DeviceMenuResult.PinCode:
-        pass  # TODO implement pin code handling
-    elif menu_result is DeviceMenuResult.PinRemove:
-        pass  # TODO implement pin remove handling
-    elif menu_result is DeviceMenuResult.AutoLockDelay:
-        if config.has_pin():
+        from trezor.messages import ChangePin
 
-            auto_lock_delay_ms = await _prompt_auto_lock_delay()
-            storage_device.set_autolock_delay_ms(auto_lock_delay_ms)
+        from apps.management.change_pin import change_pin
+
+        await change_pin(ChangePin())
+    elif menu_result is DeviceMenuResult.PinRemove:
+        from trezor.messages import ChangePin
+
+        from apps.management.change_pin import change_pin
+
+        await change_pin(ChangePin(remove=True))
+    elif menu_result is DeviceMenuResult.AutoLockDelay:
+        from trezor.messages import ApplySettings
+
+        from apps.management.apply_settings import apply_settings
+
+        assert config.has_pin()
+        auto_lock_delay_ms = await interact(
+            trezorui_api.request_duration(
+                title=TR.auto_lock__title,
+                duration_ms=storage_device.get_autolock_delay_ms(),
+                min_ms=storage_device.AUTOLOCK_DELAY_MINIMUM,
+                max_ms=storage_device.AUTOLOCK_DELAY_MAXIMUM,
+                description=TR.auto_lock__description,
+            ),
+            br_name=None,
+        )
+        assert isinstance(auto_lock_delay_ms, int)
+        await apply_settings(
+            ApplySettings(
+                auto_lock_delay_ms=auto_lock_delay_ms,
+            )
+        )
     elif menu_result is DeviceMenuResult.WipeCode:
-        pass  # TODO implement wipe code handling
+        from trezor.messages import ChangeWipeCode
+
+        from apps.management.change_wipe_code import change_wipe_code
+
+        await change_wipe_code(ChangeWipeCode())
     elif menu_result is DeviceMenuResult.WipeRemove:
-        pass  # TODO implement wipe remove handling
+        from trezor.messages import ChangeWipeCode
+
+        from apps.management.change_wipe_code import change_wipe_code
+
+        await change_wipe_code(ChangeWipeCode(remove=True))
     elif menu_result is DeviceMenuResult.CheckBackup:
-        pass  # TODO implement check backup handling
+        from trezor.enums import RecoveryType
+        from trezor.messages import RecoveryDevice
+
+        from apps.management.recovery_device import recovery_device
+
+        await recovery_device(
+            RecoveryDevice(
+                type=RecoveryType.DryRun,
+            )
+        )
     # Device settings
     elif menu_result is DeviceMenuResult.DeviceName:
         from trezor.messages import ApplySettings

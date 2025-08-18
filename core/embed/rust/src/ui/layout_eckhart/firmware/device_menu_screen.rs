@@ -34,7 +34,7 @@ use super::{
 use heapless::Vec;
 
 const MAX_DEPTH: usize = 3;
-const MAX_SUBSCREENS: usize = 12;
+const MAX_SUBSCREENS: usize = 13;
 const MAX_SUBMENUS: usize = MAX_SUBSCREENS - 1 - MAX_PAIRED_DEVICES /* (about and device screens) */;
 
 const DIS_CONNECT_DEVICE_MENU_INDEX: usize = 0;
@@ -191,10 +191,10 @@ impl DeviceMenuScreen {
         paired_devices: Vec<TString<'static>, MAX_PAIRED_DEVICES>,
         _connected_idx: Option<usize>,
         _bluetooth: Option<bool>,
-        _pin_code: Option<bool>,
-        _auto_lock_delay: Option<TString<'static>>,
-        _wipe_code: Option<bool>,
-        _check_backup: bool,
+        pin_code: Option<bool>,
+        auto_lock_delay: Option<TString<'static>>,
+        wipe_code: Option<bool>,
+        check_backup: bool,
         device_name: Option<TString<'static>>,
         screen_brightness: Option<TString<'static>>,
         haptic_feedback: Option<bool>,
@@ -213,7 +213,15 @@ impl DeviceMenuScreen {
 
         let about = screen.add_subscreen(Subscreen::AboutScreen);
         let regulatory = screen.add_subscreen(Subscreen::RegulatoryScreen);
-        let security = screen.add_security_menu();
+        let security = if pin_code.is_none()
+            && auto_lock_delay.is_none()
+            && wipe_code.is_none()
+            && !check_backup
+        {
+            None
+        } else {
+            Some(screen.add_security_menu(pin_code, auto_lock_delay, wipe_code, check_backup))
+        };
         let device = screen.add_device_menu(
             device_name,
             screen_brightness,
@@ -288,12 +296,14 @@ impl DeviceMenuScreen {
         self.add_subscreen(Subscreen::Submenu(submenu_index))
     }
 
-    fn add_settings_menu(&mut self, security_index: usize, device_index: usize) -> usize {
+    fn add_settings_menu(&mut self, security_index: Option<usize>, device_index: usize) -> usize {
         let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
-        unwrap!(items.push(MenuItem::new(
-            TR::words__security.into(),
-            Some(Action::GoTo(security_index))
-        )));
+        if let Some(security_index) = security_index {
+            unwrap!(items.push(MenuItem::new(
+                TR::words__security.into(),
+                Some(Action::GoTo(security_index))
+            )));
+        }
         unwrap!(items.push(MenuItem::new(
             TR::words__device.into(),
             Some(Action::GoTo(device_index))
@@ -303,16 +313,101 @@ impl DeviceMenuScreen {
         self.add_subscreen(Subscreen::Submenu(submenu_index))
     }
 
-    fn add_security_menu(&mut self) -> usize {
+    fn add_code_menu(&mut self, wipe_code: bool) -> usize {
         let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
-        unwrap!(items.push(MenuItem::new(
-            TR::reset__check_backup_title.into(),
-            Some(Action::Return(DeviceMenuMsg::CheckBackup)),
-        )));
-        unwrap!(items.push(MenuItem::new(
-            TR::wipe__title.into(),
-            Some(Action::Return(DeviceMenuMsg::WipeDevice))
-        )));
+        let change_text = match wipe_code {
+            true => TR::wipe_code__change,
+            false => TR::pin__change,
+        }
+        .into();
+        let change_action = match wipe_code {
+            true => Action::Return(DeviceMenuMsg::WipeCode),
+            false => Action::Return(DeviceMenuMsg::PinCode),
+        };
+        let change_pin_item = MenuItem::new(change_text, Some(change_action));
+        unwrap!(items.push(change_pin_item));
+
+        let remove_text = match wipe_code {
+            true => TR::wipe_code__remove,
+            false => TR::pin__remove,
+        }
+        .into();
+        let remove_action = match wipe_code {
+            true => Action::Return(DeviceMenuMsg::WipeRemove),
+            false => Action::Return(DeviceMenuMsg::PinRemove),
+        };
+        let mut remove_pin_item = MenuItem::new(remove_text, Some(remove_action));
+        remove_pin_item.with_stylesheet(MENU_ITEM_WARNING);
+        unwrap!(items.push(remove_pin_item));
+
+        let submenu_index = self.add_submenu(Submenu::new(items));
+        self.add_subscreen(Subscreen::Submenu(submenu_index))
+    }
+
+    fn add_security_menu(
+        &mut self,
+        pin_code: Option<bool>,
+        auto_lock_delay: Option<TString<'static>>,
+        wipe_code: Option<bool>,
+        check_backup: bool,
+    ) -> usize {
+        let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
+
+        if let Some(pin_code) = pin_code {
+            let (action, subtext) = if pin_code {
+                let pin_menu_idx = self.add_code_menu(false);
+                let action = Action::GoTo(pin_menu_idx);
+                let subtext = (
+                    TR::words__on.into(),
+                    Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
+                );
+                (action, subtext)
+            } else {
+                let action = Action::Return(DeviceMenuMsg::PinCode);
+                let subtext = (TR::words__off.into(), None);
+                (action, subtext)
+            };
+
+            let mut pin_code_item = MenuItem::new("PIN code".into(), Some(action));
+            pin_code_item.with_subtext(Some(subtext));
+            unwrap!(items.push(pin_code_item));
+        }
+
+        if let Some(auto_lock_delay) = auto_lock_delay {
+            let mut auto_lock_delay_item = MenuItem::new(
+                TR::auto_lock__title.into(),
+                Some(Action::Return(DeviceMenuMsg::AutoLockDelay)),
+            );
+            auto_lock_delay_item.with_subtext(Some((auto_lock_delay, None)));
+            unwrap!(items.push(auto_lock_delay_item));
+        }
+
+        if let Some(wipe_code) = wipe_code {
+            let (action, subtext) = if wipe_code {
+                let wipe_menu_idx = self.add_code_menu(true);
+                let action = Action::GoTo(wipe_menu_idx);
+                let subtext = (
+                    TR::words__on.into(),
+                    Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
+                );
+                (action, subtext)
+            } else {
+                let action = Action::Return(DeviceMenuMsg::WipeCode);
+                let subtext = (TR::words__off.into(), None);
+                (action, subtext)
+            };
+
+            let mut wipe_code_item = MenuItem::new("Wipe code".into(), Some(action));
+            wipe_code_item.with_subtext(Some(subtext));
+            unwrap!(items.push(wipe_code_item));
+        }
+
+        if check_backup {
+            unwrap!(items.push(MenuItem::new(
+                TR::reset__check_backup_title.into(),
+                Some(Action::Return(DeviceMenuMsg::CheckBackup)),
+            )));
+        }
 
         let submenu_index = self.add_submenu(Submenu::new(items));
         self.add_subscreen(Subscreen::Submenu(submenu_index))
