@@ -37,15 +37,10 @@ async def handle_device_menu() -> None:
     )
     # MOCK DATA
     paired_devices = ["Trezor Suite"] if ble.is_connected() else []
+    bluetooth_version = "2.3.1.1"
     # ###
     firmware_version = ".".join(map(str, utils.VERSION))
     firmware_type = "Bitcoin-only" if utils.BITCOIN_ONLY else "Universal"
-    device_name = (
-        (storage_device.get_label() or "Trezor")
-        if storage_device.is_initialized()
-        else None
-    )
-    bluetooth_version = "2.3.1.1"
 
     auto_lock_ms = storage_device.get_autolock_delay_ms()
     auto_lock_delay = strings.format_autolock_duration(auto_lock_ms)
@@ -64,11 +59,21 @@ async def handle_device_menu() -> None:
             bluetooth=None,  # TODO implement
             pin_code=None,  # TODO implement
             auto_lock_delay=auto_lock_delay,
-            wipe_code=False,  # TODO implement
+            wipe_code=None,  # TODO implement
             check_backup=False,  # TODO implement
-            device_name=device_name,
-            screen_brightness=None,  # TODO implement
-            haptic_feedback=None,  # TODO implement
+            device_name=(
+                (storage_device.get_label() or "Trezor")
+                if storage_device.is_initialized()
+                else None
+            ),
+            screen_brightness=(
+                TR.brightness__title if storage_device.is_initialized() else None
+            ),
+            haptic_feedback=(
+                storage_device.get_haptic_feedback()
+                if (storage_device.is_initialized() and utils.USE_HAPTIC)
+                else None
+            ),
             led_enabled=(
                 storage_device.get_rgb_led()
                 if (storage_device.is_initialized() and utils.USE_RGB_LED)
@@ -141,9 +146,22 @@ async def handle_device_menu() -> None:
         assert isinstance(label, str)
         await apply_settings(ApplySettings(label=label))
     elif menu_result is DeviceMenuResult.ScreenBrightness:
-        pass  # TODO implement screen brightness handling
+        from trezor.messages import SetBrightness
+
+        from apps.management.set_brightness import set_brightness
+
+        await set_brightness(SetBrightness())
     elif menu_result is DeviceMenuResult.HapticFeedback:
-        pass  # TODO implement haptic feedback handling
+        from trezor.messages import ApplySettings
+
+        from apps.management.apply_settings import apply_settings
+
+        assert storage_device.is_initialized()
+        await apply_settings(
+            ApplySettings(
+                haptic_feedback=not storage_device.get_haptic_feedback(),
+            )
+        )
     elif menu_result is DeviceMenuResult.LedEnabled:
         from trezor import io
         from trezor.ui.layouts import confirm_action
