@@ -14,7 +14,7 @@ use crate::{
             },
             Component, Event, EventCtx,
         },
-        geometry::Rect,
+        geometry::{LinearPlacement, Rect},
         shape::Renderer,
     },
 };
@@ -222,7 +222,7 @@ impl<'a> DeviceMenuScreen<'a> {
             let mut item_device = MenuItem::new(*device, Some(Action::GoTo(idx)));
             // TODO: this should be a boolean feature of the device
             item_device.with_subtext(Some((
-                "Connected".into(),
+                TR::words__connected.into(),
                 Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
             )));
             unwrap!(items.push(item_device));
@@ -239,7 +239,7 @@ impl<'a> DeviceMenuScreen<'a> {
     ) -> usize {
         let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
         let mut manage_paired_item = MenuItem::new(
-            "Manage paired devices".into(),
+            TR::ble__manage_paired.into(),
             Some(Action::GoTo(manage_devices_index)),
         );
         manage_paired_item.with_subtext(
@@ -247,7 +247,7 @@ impl<'a> DeviceMenuScreen<'a> {
         );
         unwrap!(items.push(manage_paired_item));
         unwrap!(items.push(MenuItem::new(
-            "Pair new device".into(),
+            TR::ble__pair_new.into(),
             Some(Action::Return(DeviceMenuMsg::DevicePair)),
         )));
 
@@ -258,11 +258,11 @@ impl<'a> DeviceMenuScreen<'a> {
     fn add_settings_menu(&mut self, security_index: usize, device_index: usize) -> usize {
         let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
         unwrap!(items.push(MenuItem::new(
-            "Security".into(),
+            TR::words__security.into(),
             Some(Action::GoTo(security_index))
         )));
         unwrap!(items.push(MenuItem::new(
-            "Device".into(),
+            TR::words__device.into(),
             Some(Action::GoTo(device_index))
         )));
 
@@ -273,11 +273,11 @@ impl<'a> DeviceMenuScreen<'a> {
     fn add_security_menu(&mut self) -> usize {
         let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
         unwrap!(items.push(MenuItem::new(
-            "Check backup".into(),
+            TR::reset__check_backup_title.into(),
             Some(Action::Return(DeviceMenuMsg::CheckBackup)),
         )));
         unwrap!(items.push(MenuItem::new(
-            "Wipe device".into(),
+            TR::wipe__title.into(),
             Some(Action::Return(DeviceMenuMsg::WipeDevice))
         )));
 
@@ -303,13 +303,13 @@ impl<'a> DeviceMenuScreen<'a> {
         }
 
         unwrap!(items.push(MenuItem::new(
-            "Screen brightness".into(),
+            TR::brightness__title.into(),
             Some(Action::Return(DeviceMenuMsg::ScreenBrightness)),
         )));
 
         if has_pin() {
             let mut autolock_delay_item = MenuItem::new(
-                "Auto-lock delay".into(),
+                TR::auto_lock__title.into(),
                 Some(Action::Return(DeviceMenuMsg::AutoLockDelay)),
             );
             autolock_delay_item.with_subtext(Some((auto_lock_delay, None)));
@@ -322,7 +322,7 @@ impl<'a> DeviceMenuScreen<'a> {
         )));
 
         unwrap!(items.push(MenuItem::new(
-            "About".into(),
+            TR::words__about.into(),
             Some(Action::GoTo(about_index))
         )));
 
@@ -340,15 +340,15 @@ impl<'a> DeviceMenuScreen<'a> {
         let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
         if failed_backup {
             let mut item_backup_failed = MenuItem::new(
-                "Backup failed".into(),
+                TR::homescreen__title_backup_failed.into(),
                 Some(Action::Return(DeviceMenuMsg::BackupFailed)),
             );
-            item_backup_failed.with_subtext(Some(("Review".into(), None)));
+            item_backup_failed.with_subtext(Some((TR::words__review.into(), None)));
             item_backup_failed.with_stylesheet(MENU_ITEM_TITLE_STYLE_SHEET);
             unwrap!(items.push(item_backup_failed));
         }
         let mut item_pair_and_connect = MenuItem::new(
-            "Pair & connect".into(),
+            TR::ble__pair_title.into(),
             Some(Action::GoTo(pair_and_connect_index)),
         );
         item_pair_and_connect.with_subtext(
@@ -356,7 +356,7 @@ impl<'a> DeviceMenuScreen<'a> {
         );
         unwrap!(items.push(item_pair_and_connect));
         unwrap!(items.push(MenuItem::new(
-            "Settings".into(),
+            TR::words__settings.into(),
             Some(Action::GoTo(settings_index)),
         )));
 
@@ -416,12 +416,12 @@ impl<'a> DeviceMenuScreen<'a> {
                 let mut menu = VerticalMenu::empty();
                 menu.item(Button::new_menu_item(device, theme::menu_item_title()));
                 menu.item(Button::new_menu_item(
-                    "Disconnect".into(),
+                    TR::words__disconnect.into(),
                     theme::menu_item_title_red(),
                 ));
                 *self.active_screen.deref_mut() = ActiveScreen::Menu(
                     VerticalMenuScreen::new(menu).with_header(
-                        Header::new("Manage".into())
+                        Header::new(TR::words__manage.into())
                             .with_close_button()
                             .with_left_button(
                                 Button::with_icon(theme::ICON_CHEVRON_LEFT),
@@ -432,13 +432,18 @@ impl<'a> DeviceMenuScreen<'a> {
             }
             Subscreen::AboutScreen => {
                 let about_content = Paragraphs::new([
-                    Paragraph::new(&theme::firmware::TEXT_REGULAR, "Firmware version"),
+                    Paragraph::new(
+                        &theme::firmware::TEXT_SMALL_LIGHT,
+                        TR::homescreen__firmware_version,
+                    )
+                    .with_bottom_padding(theme::PROP_INNER_SPACING),
                     Paragraph::new(&theme::firmware::TEXT_REGULAR, self.firmware_version),
-                ]);
+                ])
+                .with_placement(LinearPlacement::vertical());
 
                 *self.active_screen.deref_mut() = ActiveScreen::About(
                     TextScreen::new(about_content)
-                        .with_header(Header::new("About".into()).with_close_button()),
+                        .with_header(Header::new(TR::words__about.into()).with_close_button()),
                 );
             }
             Subscreen::RegulatoryScreen => {
