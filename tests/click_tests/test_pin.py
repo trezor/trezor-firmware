@@ -120,7 +120,7 @@ def prepare(
         device_handler.run_with_provided_session(device_handler.client.get_seedless_session(), device.change_pin)  # type: ignore
         _assert_pin_entry(debug)
         _input_see_confirm(debug, old_pin)
-        debug.synchronize_at(TR.pin__change)
+        debug.synchronize_at(TR.pin__change_question)
         go_next(debug)
         _input_see_confirm(debug, old_pin)
     elif situation == Situation.WIPE_CODE_SETUP:
