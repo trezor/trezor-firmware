@@ -1084,5 +1084,16 @@
   "1082": "led__title",
   "1083": "words__led",
   "1084": "words__off",
-  "1085": "words__on"
+  "1085": "words__on",
+  "1086": "ble__manage_paired",
+  "1087": "ble__pair_new",
+  "1088": "ble__pair_title",
+  "1089": "homescreen__firmware_version",
+  "1090": "words__about",
+  "1091": "words__connected",
+  "1092": "words__device",
+  "1093": "words__disconnect",
+  "1094": "words__manage",
+  "1095": "words__review",
+  "1096": "words__security"
 }

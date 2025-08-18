@@ -1467,6 +1467,17 @@ pub enum TranslatedString {
     words__led = 1083,  // "LED"
     words__off = 1084,  // "OFF"
     words__on = 1085,  // "ON"
+    ble__manage_paired = 1086,  // "Manage paired devices"
+    ble__pair_new = 1087,  // "Pair new device"
+    ble__pair_title = 1088,  // "Pair & connect"
+    homescreen__firmware_version = 1089,  // "Firmware version"
+    words__about = 1090,  // "About"
+    words__connected = 1091,  // "Connected"
+    words__device = 1092,  // "Device"
+    words__disconnect = 1093,  // "Disconnect"
+    words__manage = 1094,  // "Manage"
+    words__review = 1095,  // "Review"
+    words__security = 1096,  // "Security"
 }
 
 impl TranslatedString {
@@ -3253,6 +3264,17 @@ impl TranslatedString {
             (Self::words__led, "LED"),
             (Self::words__off, "OFF"),
             (Self::words__on, "ON"),
+            (Self::ble__manage_paired, "Manage paired devices"),
+            (Self::ble__pair_new, "Pair new device"),
+            (Self::ble__pair_title, "Pair & connect"),
+            (Self::homescreen__firmware_version, "Firmware version"),
+            (Self::words__about, "About"),
+            (Self::words__connected, "Connected"),
+            (Self::words__device, "Device"),
+            (Self::words__disconnect, "Disconnect"),
+            (Self::words__manage, "Manage"),
+            (Self::words__review, "Review"),
+            (Self::words__security, "Security"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3330,6 +3352,9 @@ impl TranslatedString {
         (Qstr::MP_QSTR_bitcoin__unverified_external_inputs, Self::bitcoin__unverified_external_inputs),
         (Qstr::MP_QSTR_bitcoin__valid_signature, Self::bitcoin__valid_signature),
         (Qstr::MP_QSTR_bitcoin__voting_rights, Self::bitcoin__voting_rights),
+        (Qstr::MP_QSTR_ble__manage_paired, Self::ble__manage_paired),
+        (Qstr::MP_QSTR_ble__pair_new, Self::ble__pair_new),
+        (Qstr::MP_QSTR_ble__pair_title, Self::ble__pair_title),
         (Qstr::MP_QSTR_ble__unpair_all, Self::ble__unpair_all),
         (Qstr::MP_QSTR_ble__unpair_current, Self::ble__unpair_current),
         (Qstr::MP_QSTR_ble__unpair_title, Self::ble__unpair_title),
@@ -3865,6 +3890,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_haptic_feedback__title, Self::haptic_feedback__title),
         (Qstr::MP_QSTR_homescreen__click_to_connect, Self::homescreen__click_to_connect),
         (Qstr::MP_QSTR_homescreen__click_to_unlock, Self::homescreen__click_to_unlock),
+        (Qstr::MP_QSTR_homescreen__firmware_version, Self::homescreen__firmware_version),
         (Qstr::MP_QSTR_homescreen__set_default, Self::homescreen__set_default),
         (Qstr::MP_QSTR_homescreen__settings_subtitle, Self::homescreen__settings_subtitle),
         (Qstr::MP_QSTR_homescreen__settings_title, Self::homescreen__settings_title),
@@ -4643,6 +4669,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_wipe_code__turn_on, Self::wipe_code__turn_on),
         (Qstr::MP_QSTR_wipe_code__wipe_code_mismatch, Self::wipe_code__wipe_code_mismatch),
         (Qstr::MP_QSTR_word_count__title, Self::word_count__title),
+        (Qstr::MP_QSTR_words__about, Self::words__about),
         (Qstr::MP_QSTR_words__account, Self::words__account),
         (Qstr::MP_QSTR_words__account_colon, Self::words__account_colon),
         (Qstr::MP_QSTR_words__address, Self::words__address),
@@ -4659,10 +4686,13 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__chain, Self::words__chain),
         (Qstr::MP_QSTR_words__confirm, Self::words__confirm),
         (Qstr::MP_QSTR_words__confirm_fee, Self::words__confirm_fee),
+        (Qstr::MP_QSTR_words__connected, Self::words__connected),
         (Qstr::MP_QSTR_words__contains, Self::words__contains),
         (Qstr::MP_QSTR_words__continue_anyway, Self::words__continue_anyway),
         (Qstr::MP_QSTR_words__continue_anyway_question, Self::words__continue_anyway_question),
         (Qstr::MP_QSTR_words__continue_with, Self::words__continue_with),
+        (Qstr::MP_QSTR_words__device, Self::words__device),
+        (Qstr::MP_QSTR_words__disconnect, Self::words__disconnect),
         (Qstr::MP_QSTR_words__error, Self::words__error),
         (Qstr::MP_QSTR_words__fee, Self::words__fee),
         (Qstr::MP_QSTR_words__from, Self::words__from),
@@ -4672,6 +4702,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__keep_it_safe, Self::words__keep_it_safe),
         (Qstr::MP_QSTR_words__know_what_your_doing, Self::words__know_what_your_doing),
         (Qstr::MP_QSTR_words__led, Self::words__led),
+        (Qstr::MP_QSTR_words__manage, Self::words__manage),
         (Qstr::MP_QSTR_words__my_trezor, Self::words__my_trezor),
         (Qstr::MP_QSTR_words__name, Self::words__name),
         (Qstr::MP_QSTR_words__no, Self::words__no),
@@ -4688,6 +4719,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__receive, Self::words__receive),
         (Qstr::MP_QSTR_words__recipient, Self::words__recipient),
         (Qstr::MP_QSTR_words__recovery_share, Self::words__recovery_share),
+        (Qstr::MP_QSTR_words__review, Self::words__review),
+        (Qstr::MP_QSTR_words__security, Self::words__security),
         (Qstr::MP_QSTR_words__send, Self::words__send),
         (Qstr::MP_QSTR_words__settings, Self::words__settings),
         (Qstr::MP_QSTR_words__sign, Self::words__sign),

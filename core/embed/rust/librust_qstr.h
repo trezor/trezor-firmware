@@ -161,6 +161,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_bitcoin__unverified_external_inputs;
   MP_QSTR_bitcoin__valid_signature;
   MP_QSTR_bitcoin__voting_rights;
+  MP_QSTR_ble__manage_paired;
+  MP_QSTR_ble__pair_new;
+  MP_QSTR_ble__pair_title;
   MP_QSTR_ble__unpair_all;
   MP_QSTR_ble__unpair_current;
   MP_QSTR_ble__unpair_title;
@@ -316,6 +319,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_hold_danger;
   MP_QSTR_homescreen__click_to_connect;
   MP_QSTR_homescreen__click_to_unlock;
+  MP_QSTR_homescreen__firmware_version;
   MP_QSTR_homescreen__set_default;
   MP_QSTR_homescreen__settings_subtitle;
   MP_QSTR_homescreen__settings_title;
@@ -876,6 +880,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_wipe_code__wipe_code_mismatch;
   MP_QSTR_word_count__title;
   MP_QSTR_words;
+  MP_QSTR_words__about;
   MP_QSTR_words__account;
   MP_QSTR_words__account_colon;
   MP_QSTR_words__address;
@@ -892,10 +897,13 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__chain;
   MP_QSTR_words__confirm;
   MP_QSTR_words__confirm_fee;
+  MP_QSTR_words__connected;
   MP_QSTR_words__contains;
   MP_QSTR_words__continue_anyway;
   MP_QSTR_words__continue_anyway_question;
   MP_QSTR_words__continue_with;
+  MP_QSTR_words__device;
+  MP_QSTR_words__disconnect;
   MP_QSTR_words__error;
   MP_QSTR_words__fee;
   MP_QSTR_words__from;
@@ -905,6 +913,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__keep_it_safe;
   MP_QSTR_words__know_what_your_doing;
   MP_QSTR_words__led;
+  MP_QSTR_words__manage;
   MP_QSTR_words__my_trezor;
   MP_QSTR_words__name;
   MP_QSTR_words__no;
@@ -921,6 +930,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__receive;
   MP_QSTR_words__recipient;
   MP_QSTR_words__recovery_share;
+  MP_QSTR_words__review;
+  MP_QSTR_words__security;
   MP_QSTR_words__send;
   MP_QSTR_words__settings;
   MP_QSTR_words__sign;
