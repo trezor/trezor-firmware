@@ -2,6 +2,7 @@ use crate::ui::{
     geometry::{Alignment2D, Offset, Point, Rect},
     lerp::Lerp,
     shape::{self, Renderer},
+    util::animation_disabled,
 };
 
 use super::{
@@ -15,6 +16,7 @@ const SCREEN: Rect = ScreenBorder::SCREEN_SHRUNK;
 /// clock-wise direction. Used in ProgressScreen and Bootloader. `progress` goes
 /// from 0 to 1000.
 pub fn render_loader<'s>(progress: u16, border: &'s ScreenBorder, target: &mut impl Renderer<'s>) {
+    let progress = if animation_disabled() { 0 } else { progress };
     let progress_ratio = progress_to_ratio(progress);
     // Draw the border first
     border.render(u8::MAX, target);
@@ -34,6 +36,7 @@ pub fn render_loader_indeterminate<'s>(
     border: &'s ScreenBorder,
     target: &mut impl Renderer<'s>,
 ) {
+    let progress = if animation_disabled() { 0 } else { progress };
     let progress_ratio = progress_to_ratio(progress);
     let clip = get_clip_indeterminate(progress_ratio);
     // Draw the border in clip
