@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from typing import Optional
+
 CODEC_V1 = 0x3F
 CONTINUATION_PACKET = 0x80
 HANDSHAKE_INIT_REQ = 0x00
@@ -51,7 +53,11 @@ def add_ack_bit_to_ctrl_byte(ctrl_byte: int, ack_bit: int) -> int:
     raise Exception("Unexpected acknowledgement bit")
 
 
-def get_seq_bit(ctrl_byte: int) -> int:
+def get_seq_bit(ctrl_byte: int) -> Optional[int]:
+    if ctrl_byte & 0xE0:
+        # not all message types contain SEQ bit
+        return None
+
     return (ctrl_byte & 0x10) >> 4
 
 

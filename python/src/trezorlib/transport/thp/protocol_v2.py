@@ -350,13 +350,15 @@ class ProtocolV2Channel(Channel):
                     + ")"
                 )
 
+            seq_bit = control_byte.get_seq_bit(header.ctrl_byte)
+            assert seq_bit is not None
             LOG.debug(
                 "--> Get sequence bit %d %s %s",
-                control_byte.get_seq_bit(header.ctrl_byte),
+                seq_bit,
                 "from control byte",
                 hexlify(header.ctrl_byte.to_bytes(1, "big")).decode(),
             )
-            self._send_ack_bit(bit=control_byte.get_seq_bit(header.ctrl_byte))
+            self._send_ack_bit(bit=seq_bit)
 
             message = self._noise.decrypt(bytes(raw_payload))
             session_id = message[0]
