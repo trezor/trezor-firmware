@@ -9,7 +9,6 @@ from trezorui_api import DeviceMenuResult
 async def handle_device_menu() -> None:
     from trezor import strings
 
-    # TODO: unify with notification handling in `apps/homescreen/__init__.py:homescreen()`
     failed_backup = (
         storage_device.is_initialized() and storage_device.unfinished_backup()
     )
@@ -72,7 +71,11 @@ async def handle_device_menu() -> None:
     )
     # Root menu
     if menu_result is DeviceMenuResult.BackupFailed:
-        pass  # TODO implement backup failed handling
+        from apps.management.backup_device import perform_backup
+
+        assert storage_device.unfinished_backup()
+        # If the backup failed, we can only perform a repeated backup.
+        await perform_backup(is_repeated_backup=True)
     # Pair & Connect
     elif menu_result is DeviceMenuResult.DeviceDisconnect:
         pass  # TODO implement device disconnect handling
