@@ -167,9 +167,11 @@ else:
                     if not do_not_restart:
                         # Wait for all active workflows to finish.
                         await workflow.join_all()
-                        # Let the session be restarted from `main`.
                         if __debug__:
-                            log.debug(__name__, "loop.clear()", iface=iface)
+                            import apps.debug
+
+                            await apps.debug.close_session()
+                        # Let the session be restarted from `main`.
                         loop.clear()
                         return  # pylint: disable=lost-exception
 
