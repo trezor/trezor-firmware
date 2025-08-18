@@ -371,18 +371,28 @@ class ProtocolV2Channel(Channel):
         if timeout is None:
             timeout = self._DEFAULT_READ_TIMEOUT
 
-        is_valid = False
-        header, payload, chksum = thp_io.read(self.transport, timeout)
-        while not is_valid:
-            is_valid = checksum.is_valid(chksum, header.to_bytes_init() + payload)
-            if not is_valid:
+        while True:
+            header, payload, chksum = thp_io.read(self.transport, timeout)
+            if not checksum.is_valid(chksum, header.to_bytes_init() + payload):
                 LOG.error(
                     "Received a message with an invalid checksum:"
                     + hexlify(header.to_bytes_init() + payload + chksum).decode()
                 )
-                header, payload, chksum = thp_io.read(self.transport, timeout)
+                continue
 
-        return header, payload
+            seq_bit = control_byte.get_seq_bit(header.ctrl_byte)
+            if seq_bit is not None:
+                if seq_bit != self.sync_bit_receive:
+                    LOG.warning(
+                        "Received unexpected message: sync bit=%d, expected=%d",
+                        seq_bit,
+                        self.sync_bit_receive,
+                    )
+                    continue
+
+                self.sync_bit_receive = 1 - self.sync_bit_receive
+
+            return header, payload
 
     def _is_valid_channel_allocation_response(
         self, header: MessageHeader, payload: bytes, original_nonce: bytes
