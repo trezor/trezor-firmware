@@ -196,7 +196,7 @@ impl DeviceMenuScreen {
         failed_backup: bool,
         paired_devices: Vec<TString<'static>, MAX_PAIRED_DEVICES>,
         _connected_idx: Option<usize>,
-        _bluetooth: Option<bool>,
+        bluetooth: Option<bool>,
         pin_code: Option<bool>,
         auto_lock_delay: Option<TString<'static>>,
         wipe_code: Option<bool>,
@@ -236,7 +236,7 @@ impl DeviceMenuScreen {
             regulatory,
             about,
         );
-        let settings = screen.add_settings_menu(security, device);
+        let settings = screen.add_settings_menu(bluetooth, security, device);
 
         let is_connected = !paired_devices.is_empty(); // FIXME after BLE API has this
         let connected_subtext: Option<TString<'static>> =
@@ -302,8 +302,29 @@ impl DeviceMenuScreen {
         self.add_subscreen(Subscreen::Submenu(submenu_index))
     }
 
-    fn add_settings_menu(&mut self, security_index: Option<usize>, device_index: usize) -> usize {
+    fn add_settings_menu(
+        &mut self,
+        bluetooth: Option<bool>,
+        security_index: Option<usize>,
+        device_index: usize,
+    ) -> usize {
         let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
+        if let Some(bluetooth) = bluetooth {
+            let mut bluetooth_item = MenuItem::new(
+                TR::words__bluetooth.into(),
+                Some(Action::Return(DeviceMenuMsg::Bluetooth)),
+            );
+            let subtext = if bluetooth {
+                (
+                    TR::words__on.into(),
+                    Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
+                )
+            } else {
+                (TR::words__off.into(), None)
+            };
+            bluetooth_item.with_subtext(Some(subtext));
+            unwrap!(items.push(bluetooth_item));
+        }
         if let Some(security_index) = security_index {
             unwrap!(items.push(MenuItem::new(
                 TR::words__security.into(),
