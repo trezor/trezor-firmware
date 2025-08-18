@@ -1105,5 +1105,13 @@
   "1103": "words__off",
   "1104": "words__on",
   "1105": "words__review",
-  "1106": "words__security"
+  "1106": "words__security",
+  "1107": "pin__change_question",
+  "1108": "pin__remove",
+  "1109": "pin__title",
+  "1110": "wipe_code__change_question",
+  "1111": "wipe_code__remove",
+  "1112": "wipe_code__title",
+  "1113": "words__disabled",
+  "1114": "words__enabled"
 }

@@ -472,6 +472,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_pin__cancel_info;
   MP_QSTR_pin__cancel_setup;
   MP_QSTR_pin__change;
+  MP_QSTR_pin__change_question;
   MP_QSTR_pin__changed;
   MP_QSTR_pin__cursor_will_change;
   MP_QSTR_pin__diff_from_wipe_code;
@@ -489,8 +490,10 @@ static void _librust_qstrs(void) {
   MP_QSTR_pin__reenter;
   MP_QSTR_pin__reenter_new;
   MP_QSTR_pin__reenter_to_confirm;
+  MP_QSTR_pin__remove;
   MP_QSTR_pin__setup_completed;
   MP_QSTR_pin__should_be_long;
+  MP_QSTR_pin__title;
   MP_QSTR_pin__title_check_pin;
   MP_QSTR_pin__title_settings;
   MP_QSTR_pin__title_wrong_pin;
@@ -881,6 +884,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_wipe__want_to_wipe;
   MP_QSTR_wipe_code;
   MP_QSTR_wipe_code__change;
+  MP_QSTR_wipe_code__change_question;
   MP_QSTR_wipe_code__changed;
   MP_QSTR_wipe_code__diff_from_pin;
   MP_QSTR_wipe_code__disabled;
@@ -891,6 +895,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_wipe_code__mismatch;
   MP_QSTR_wipe_code__reenter;
   MP_QSTR_wipe_code__reenter_to_confirm;
+  MP_QSTR_wipe_code__remove;
+  MP_QSTR_wipe_code__title;
   MP_QSTR_wipe_code__title_check;
   MP_QSTR_wipe_code__title_invalid;
   MP_QSTR_wipe_code__title_settings;
@@ -922,7 +928,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__continue_anyway_question;
   MP_QSTR_words__continue_with;
   MP_QSTR_words__device;
+  MP_QSTR_words__disabled;
   MP_QSTR_words__disconnect;
+  MP_QSTR_words__enabled;
   MP_QSTR_words__error;
   MP_QSTR_words__fee;
   MP_QSTR_words__from;
