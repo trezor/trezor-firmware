@@ -60,6 +60,7 @@ dependencies = [
     "pyelftools>=0.32,<0.33",
     "pytest-retry>=1.7.0,<2",
     "slh-dsa>=0.1.3,<0.2",
+    "bleak>=1.1.0",
 ]
 
 [dependency-groups]
