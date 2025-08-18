@@ -325,18 +325,16 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
     case SMCALL_TROPIC_ECC_KEY_GENERATE: {
       uint16_t slot_index = (uint16_t)args[0];
       args[0] = tropic_ecc_key_generate__verified(slot_index);
-
     } break;
+
     case SMCALL_TROPIC_ECC_SIGN: {
       uint16_t key_slot_index = (uint16_t)args[0];
       const uint8_t *dig = (const uint8_t *)args[1];
       uint16_t dig_len = (uint16_t)args[2];
       uint8_t *sig = (uint8_t *)args[3];
       uint16_t sig_len = (uint16_t)args[4];
-
       args[0] =
           tropic_ecc_sign__verified(key_slot_index, dig, dig_len, sig, sig_len);
-
     } break;
 #endif
 
