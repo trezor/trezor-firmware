@@ -1108,5 +1108,8 @@
   "1106": "ble__disable",
   "1107": "ble__enable",
   "1108": "words__bluetooth",
-  "1109": "words__disconnected"
+  "1109": "words__disconnected",
+  "1110": "ble__forget_all",
+  "1111": "words__connect",
+  "1112": "words__forget"
 }
