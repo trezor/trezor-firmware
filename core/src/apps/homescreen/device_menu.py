@@ -5,6 +5,8 @@ from trezor import TR, config, log, utils
 from trezor.ui.layouts import interact
 from trezorui_api import DeviceMenuResult
 
+MAX_PAIRED_DEVICES = 4
+
 
 async def handle_device_menu() -> None:
     from trezor import strings
@@ -14,7 +16,13 @@ async def handle_device_menu() -> None:
     haptic_configurable = is_initialized and utils.USE_HAPTIC
     failed_backup = is_initialized and storage_device.unfinished_backup()
     # MOCK DATA
-    paired_devices = ["Trezor Suite"] if ble.is_connected() else []
+    paired_devices = [
+        "Trezor Suite",
+        "2nd device iiiiiiiiiiiii",
+        "3rd Device iiiiiiiiiiiiii",
+        "4th Device forcedmultiline",
+    ]
+    connected_idx = 1
     bluetooth_version = "2.3.1.1"
     # ###
     firmware_version = ".".join(map(str, utils.VERSION))
@@ -36,7 +44,7 @@ async def handle_device_menu() -> None:
         trezorui_api.show_device_menu(
             failed_backup=failed_backup,
             paired_devices=paired_devices,
-            connected_idx=None,
+            connected_idx=connected_idx,
             bluetooth=True,  # TODO implement bluetooth handling
             pin_code=config.has_pin() if is_initialized else None,
             auto_lock_delay=auto_lock_delay,
@@ -80,20 +88,53 @@ async def handle_device_menu() -> None:
         await wipe_device(WipeDevice())
     # Pair & Connect
     elif menu_result is DeviceMenuResult.DeviceDisconnect:
-        pass  # TODO implement device disconnect handling
+        from trezor.ui.layouts import confirm_action
+
+        await confirm_action(
+            "device_disconnect",
+            "device_disconnect",
+            "disconnect currently connected device?",
+        )
+        # TODO implement device disconnect handling
     elif menu_result is DeviceMenuResult.DevicePair:
+        from trezor.ui.layouts import show_warning
+
         from apps.management.ble.pair_new_device import pair_new_device
 
-        await pair_new_device()
+        if len(paired_devices) < MAX_PAIRED_DEVICES:
+            await pair_new_device()
+        else:
+            await show_warning(
+                "device_pair",
+                "Limit of paired devices reached.",
+                button=TR.buttons__continue,
+            )
     elif menu_result is DeviceMenuResult.DeviceUnpairAll:
-        pass  # TODO implement all devices unpair handling
+        from trezor.messages import BleUnpair
+
+        from apps.management.ble.unpair import unpair
+
+        await unpair(BleUnpair(all=True))
     elif isinstance(menu_result, tuple):
+        from trezor.ui.layouts import confirm_action
+
         # It's a tuple with (result_type, index)
         result_type, index = menu_result
         if result_type is DeviceMenuResult.DeviceConnect:
-            pass  # TODO implement device connect handling
+            await confirm_action(
+                "device_connect",
+                "device_connect",
+                f"connect {index} device?",
+                "The currently connected device will be disconnected.",
+            )
+            # TODO implement device connect handling
         elif result_type is DeviceMenuResult.DeviceUnpair:
-            pass  # TODO implement device unpair handling
+            await confirm_action(
+                "device_unpair",
+                "device_unpair",
+                f"unpair {index} device?",
+            )
+            # TODO implement device unpair handling
         else:
             raise RuntimeError(f"Unknown menu {result_type}, {index}")
     # Bluetooth

@@ -122,15 +122,13 @@ impl Button {
                 &theme::TEXT_MENU_ITEM_SUBTITLE,
             )
         };
-        let subtext = if let Some(subtext) = subtext {
-            subtext
-        } else {
+        let subtext = subtext.unwrap_or_else(|| {
             if connected {
                 TR::words__connected.into()
             } else {
                 TR::words__disconnected.into()
             }
-        };
+        });
 
         Self::with_text_and_subtext(text, subtext, subtext_style, Some(icon))
             .with_text_align(Self::MENU_ITEM_ALIGNMENT)
