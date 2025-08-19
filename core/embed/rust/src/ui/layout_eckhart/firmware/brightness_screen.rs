@@ -1,12 +1,12 @@
 use crate::{
-    storage,
+    storage, strutil,
     translations::TR,
     trezorhal::display,
     ui::{
         component::{Component, Event, EventCtx},
         event::TouchEvent,
         geometry::{Alignment2D, Insets, Offset, Point, Rect},
-        shape::{Bar, Renderer},
+        shape::{self, Bar, Renderer},
     },
 };
 
@@ -14,7 +14,7 @@ use super::super::{
     component::Button,
     constant::SCREEN,
     firmware::{Header, HeaderMsg},
-    theme,
+    fonts, theme,
 };
 
 pub struct SetBrightnessScreen {
@@ -72,6 +72,21 @@ impl Component for SetBrightnessScreen {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.header.render(target);
         self.slider.render(target);
+
+        let mut buf = [0; 20];
+        let text = unwrap!(strutil::format_i64(self.brightness as _, &mut buf));
+        let pos = Point::new(40, theme::HEADER_HEIGHT + 50);
+        shape::Text::new(pos, text, fonts::FONT_SATOSHI_REGULAR_38)
+            .with_fg(theme::GREY_EXTRA_LIGHT)
+            .render(target);
+        let pos = pos.ofs(Offset::new(0, 50));
+        shape::Text::new(pos, text, fonts::FONT_MONO_MEDIUM_38)
+            .with_fg(theme::GREY_LIGHT)
+            .render(target);
+        let pos = pos.ofs(Offset::new(0, 50));
+        shape::Text::new(pos, text, fonts::FONT_MONO_LIGHT_30)
+            .with_fg(theme::GREY)
+            .render(target);
     }
 }
 
