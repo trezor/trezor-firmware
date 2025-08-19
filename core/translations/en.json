@@ -811,6 +811,7 @@
       "Eckhart": "{0} of {1} shares entered."
     },
     "recovery__you_have_entered": "You have entered",
+    "regulatory_certification__title": "Regulatory certification",
     "reset__advanced_group_threshold_info": "The group threshold specifies the number of groups required to recover your wallet.",
     "reset__all_x_of_y_template": "all {0} of {1} shares",
     "reset__any_x_of_y_template": "any {0} of {1} shares",
