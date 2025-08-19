@@ -174,6 +174,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_bitcoin__voting_rights;
   MP_QSTR_ble__disable;
   MP_QSTR_ble__enable;
+  MP_QSTR_ble__forget_all;
   MP_QSTR_ble__manage_paired;
   MP_QSTR_ble__pair_new;
   MP_QSTR_ble__pair_title;
@@ -930,6 +931,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__chain;
   MP_QSTR_words__confirm;
   MP_QSTR_words__confirm_fee;
+  MP_QSTR_words__connect;
   MP_QSTR_words__connected;
   MP_QSTR_words__contains;
   MP_QSTR_words__continue_anyway;
@@ -942,6 +944,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__enabled;
   MP_QSTR_words__error;
   MP_QSTR_words__fee;
+  MP_QSTR_words__forget;
   MP_QSTR_words__from;
   MP_QSTR_words__good_to_know;
   MP_QSTR_words__important;
