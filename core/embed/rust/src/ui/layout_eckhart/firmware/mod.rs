@@ -12,6 +12,7 @@ mod homescreen;
 mod keyboard;
 mod progress_screen;
 mod qr_screen;
+mod regulatory_screen;
 mod select_word_screen;
 mod share_words;
 mod text_screen;
@@ -41,6 +42,7 @@ pub use keyboard::{
 };
 pub use progress_screen::ProgressScreen;
 pub use qr_screen::{QrMsg, QrScreen};
+pub use regulatory_screen::{RegulatoryMsg, RegulatoryScreen};
 pub use select_word_screen::{SelectWordMsg, SelectWordScreen};
 pub use share_words::{ShareWordsScreen, ShareWordsScreenMsg};
 pub use text_screen::{AllowedTextContent, TextScreen, TextScreenMsg};

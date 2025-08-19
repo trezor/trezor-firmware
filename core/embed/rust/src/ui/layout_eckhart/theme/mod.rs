@@ -161,6 +161,13 @@ include_icon!(ICON_SEVEN, "layout_eckhart/res/bootloader/7.toif");
 include_icon!(ICON_TROPIC, "layout_eckhart/res/tropic.toif");
 include_icon!(ICON_SECURED, "layout_eckhart/res/secured.toif");
 
+// Regulatory screen icons
+include_icon!(ICON_UKRAINE, "layout_eckhart/res/ukraine.toif");
+include_icon!(ICON_KOREA, "layout_eckhart/res/korea_full.toif");
+include_icon!(ICON_EUROPE, "layout_eckhart/res/europe.toif");
+include_icon!(ICON_RCM, "layout_eckhart/res/rcm.toif");
+include_icon!(ICON_FCC, "layout_eckhart/res/fcc.toif");
+
 // Common text styles and button styles must use fonts accessible from both
 // bootloader and firmware
 

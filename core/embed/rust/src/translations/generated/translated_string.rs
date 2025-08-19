@@ -1466,6 +1466,7 @@ pub enum TranslatedString {
     device_name__enter = 1071,  // "Enter device name"
     words__name = 1072,  // "Name"
     device_name__continue_with_empty_label = 1073,  // "Continue with empty device name?"
+    regulatory_certification__title = 1074,  // "Regulatory certification"
 }
 
 impl TranslatedString {
@@ -3251,6 +3252,7 @@ impl TranslatedString {
             (Self::device_name__enter, "Enter device name"),
             (Self::words__name, "Name"),
             (Self::device_name__continue_with_empty_label, "Continue with empty device name?"),
+            (Self::regulatory_certification__title, "Regulatory certification"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4191,6 +4193,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_recovery__x_more_shares_needed_template_plural, Self::recovery__x_more_shares_needed_template_plural),
         (Qstr::MP_QSTR_recovery__x_of_y_entered_template, Self::recovery__x_of_y_entered_template),
         (Qstr::MP_QSTR_recovery__you_have_entered, Self::recovery__you_have_entered),
+        (Qstr::MP_QSTR_regulatory_certification__title, Self::regulatory_certification__title),
         (Qstr::MP_QSTR_reset__advanced_group_threshold_info, Self::reset__advanced_group_threshold_info),
         (Qstr::MP_QSTR_reset__all_x_of_y_template, Self::reset__all_x_of_y_template),
         (Qstr::MP_QSTR_reset__any_x_of_y_template, Self::reset__any_x_of_y_template),
