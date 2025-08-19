@@ -63,6 +63,62 @@ static void prodtest_rgbled_set(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+static void prodtest_rgbled_effect_start(cli_t* cli) {
+  uint32_t effect_num;
+  uint32_t requested_cycles = 0;
+
+  if (!cli_arg_uint32(cli, "effect_num", &effect_num) ||
+      effect_num >= RGB_LED_NUM_OF_EFFECTS) {
+    cli_error_arg(cli, "Expecting effect number in range 0-%d.",
+                  (RGB_LED_NUM_OF_EFFECTS - 1));
+    return;
+  }
+
+  if (cli_has_arg(cli, "requested_cycles")) {
+    if (!cli_arg_uint32(cli, "requested_cycles", &requested_cycles) ||
+        requested_cycles == 0) {
+      cli_error_arg(cli,
+                    "Expecting requested_cycles to be a positive integer.");
+      return;
+    }
+  }
+
+  if (cli_arg_count(cli) > 2) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  if (requested_cycles == 0) {
+    cli_trace(cli, "Start RGB LED effect #%d for infinite cycles", effect_num);
+  } else {
+    cli_trace(cli, "Start RGB LED effect #%d for %d cycles", effect_num,
+              requested_cycles);
+  }
+
+  // Disable automatic control of RGB LED in prodtest main loop
+  prodtest_disable_rgbled_control();
+
+  rgb_led_effect_start((rgb_led_effect_type_t)effect_num, requested_cycles);
+
+  cli_ok(cli, "");
+}
+
+static void prodtest_rgbled_effect_stop(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  cli_trace(cli, "Stop ongoing RGB LED effect");
+
+  // Disable automatic control of RGB LED in prodtest main loop
+  prodtest_disable_rgbled_control();
+
+  rgb_led_effect_stop();
+
+  cli_ok(cli, "");
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -71,5 +127,20 @@ PRODTEST_CLI_CMD(
   .info = "Set the RGB LED color",
   .args = "<r> <g> <b>"
 );
+
+PRODTEST_CLI_CMD(
+  .name = "rgbled-effect-start",
+  .func = prodtest_rgbled_effect_start,
+  .info = "Start rgbled effect",
+  .args = "<effect_num> <requested_cycles>"
+);
+
+PRODTEST_CLI_CMD(
+  .name = "rgbled-effect-stop",
+  .func = prodtest_rgbled_effect_stop,
+  .info = "Stop rgbled effect",
+  .args = ""
+);
+
 
 #endif  // USE_RGB_LED
