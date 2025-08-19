@@ -1014,6 +1014,7 @@ class TR:
     words__continue_with: str = "Continue with"
     words__device: str = "Device"
     words__disconnect: str = "Disconnect"
+    words__disconnected: str = "Disconnected"
     words__error: str = "Error"
     words__fee: str = "Fee"
     words__from: str = "from"
