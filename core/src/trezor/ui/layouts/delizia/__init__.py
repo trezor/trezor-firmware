@@ -236,6 +236,19 @@ def confirm_homescreen(
     )
 
 
+async def confirm_change_label(
+    br_name: str, title: str, template: str, param: str
+) -> None:
+
+    await confirm_single(
+        br_name=br_name,
+        title=title,
+        description=template,
+        description_param=param,
+        verb=TR.buttons__change,
+    )
+
+
 def confirm_change_passphrase(use: bool) -> Awaitable[ui.UiResult]:
     description = TR.passphrase__turn_on if use else TR.passphrase__turn_off
 

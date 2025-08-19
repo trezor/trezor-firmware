@@ -1461,6 +1461,7 @@ pub enum TranslatedString {
     device_name__enter = 1077,  // "Enter device name"
     regulatory_certification__title = 1078,  // "Regulatory certification"
     words__name = 1079,  // "Name"
+    device_name__changed = 1080,  // "Device name changed."
 }
 
 impl TranslatedString {
@@ -3241,6 +3242,7 @@ impl TranslatedString {
             (Self::device_name__enter, "Enter device name"),
             (Self::regulatory_certification__title, "Regulatory certification"),
             (Self::words__name, "Name"),
+            (Self::device_name__changed, "Device name changed."),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3608,6 +3610,7 @@ impl TranslatedString {
         #[cfg(feature = "debug")]
         (Qstr::MP_QSTR_debug__loading_seed_not_recommended, Self::debug__loading_seed_not_recommended),
         (Qstr::MP_QSTR_device_name__change_template, Self::device_name__change_template),
+        (Qstr::MP_QSTR_device_name__changed, Self::device_name__changed),
         (Qstr::MP_QSTR_device_name__continue_with_empty_label, Self::device_name__continue_with_empty_label),
         (Qstr::MP_QSTR_device_name__enter, Self::device_name__enter),
         (Qstr::MP_QSTR_device_name__title, Self::device_name__title),

@@ -1078,5 +1078,6 @@
   "1076": "device_name__continue_with_empty_label",
   "1077": "device_name__enter",
   "1078": "regulatory_certification__title",
-  "1079": "words__name"
+  "1079": "words__name",
+  "1080": "device_name__changed"
 }

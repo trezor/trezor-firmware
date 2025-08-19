@@ -188,10 +188,12 @@ impl FirmwareUI for UIEckhart {
             }
         }
         let text = FormattedText::new(ops);
-        let action_bar = ActionBar::new_double(
-            Button::with_icon(theme::ICON_CROSS),
-            Button::with_text(verb.unwrap_or(TR::buttons__confirm.into())),
-        );
+        let right_button = if let Some(verb) = verb {
+            Button::with_text(verb)
+        } else {
+            Button::with_text(TR::buttons__confirm.into()).styled(button_confirm())
+        };
+        let action_bar = ActionBar::new_double(Button::with_icon(theme::ICON_CROSS), right_button);
         let screen = TextScreen::new(text)
             .with_header(Header::new(title))
             .with_action_bar(action_bar);
