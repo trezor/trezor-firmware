@@ -19,7 +19,7 @@ use crate::{
 use super::super::{
     component::Button,
     firmware::{
-        ActionBar, Header, HeaderMsg, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
+        ActionBar, Header, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
         VerticalMenuScreen, VerticalMenuScreenMsg,
     },
     theme,
@@ -98,10 +98,7 @@ pub fn new_show_danger(
                 theme::menu_item_title_orange(),
             )),
     )
-    .with_header(
-        Header::new(menu_title.unwrap_or("".into()))
-            .with_right_button(Button::with_icon(theme::ICON_CROSS), HeaderMsg::Cancelled),
-    )
+    .with_header(Header::new(menu_title.unwrap_or(TString::empty())).with_close_button())
     .map(|msg| match msg {
         VerticalMenuScreenMsg::Selected(i) => Some(FlowMsg::Choice(i)),
         VerticalMenuScreenMsg::Close => Some(FlowMsg::Cancelled),

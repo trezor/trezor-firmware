@@ -178,7 +178,7 @@ impl HoldToConfirmAnim {
             // FIXME: vert_center is precisely aligned with the `Header` title (which uses
             // `Label`) but this solution might break with `Header` changes
             let text_offset = Offset::new(
-                Header::HEADER_INSETS.left,
+                theme::PADDING,
                 font.vert_center(0, Header::HEADER_HEIGHT - 1, "A"),
             );
             let text_pos = header_pad.top_left() + text_offset;
