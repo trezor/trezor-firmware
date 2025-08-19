@@ -93,11 +93,13 @@ def confirm_single(
         trezorui_api.confirm_emphasized(
             title=title,
             items=(begin, (True, description_param), end),
-            verb=verb,
+            verb=None,
         ),
         br_name,
         ButtonRequestType.ProtectCall,
     )
+
+    show_continue_in_app(TR.address__confirmed)
 
 
 def confirm_reset_device(recovery: bool = False) -> Awaitable[None]:
@@ -215,6 +217,21 @@ def confirm_homescreen(
         "set_homesreen",
         ButtonRequestType.ProtectCall,
     )
+
+
+async def confirm_change_label(
+    br_name: str, title: str, template: str, param: str
+) -> None:
+
+    await confirm_single(
+        br_name=br_name,
+        title=title,
+        description=template,
+        description_param=param,
+        verb=None,
+    )
+
+    show_continue_in_app(TR.device_name__changed)
 
 
 def confirm_change_passphrase(use: bool) -> Awaitable[None]:

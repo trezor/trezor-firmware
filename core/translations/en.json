@@ -282,6 +282,7 @@
     "debug__loading_seed": "Loading seed",
     "debug__loading_seed_not_recommended": "Loading private seed is not recommended.",
     "device_name__change_template": "Change device name to {0}?",
+    "device_name__changed": "Device name changed.",
     "device_name__continue_with_empty_label": "Continue with empty device name?",
     "device_name__enter": "Enter device name",
     "device_name__title": "Device name",

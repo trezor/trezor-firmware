@@ -268,6 +268,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_details_title;
   MP_QSTR_device_name;
   MP_QSTR_device_name__change_template;
+  MP_QSTR_device_name__changed;
   MP_QSTR_device_name__continue_with_empty_label;
   MP_QSTR_device_name__enter;
   MP_QSTR_device_name__title;

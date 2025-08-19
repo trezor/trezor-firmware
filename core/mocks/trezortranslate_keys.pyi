@@ -250,6 +250,7 @@ class TR:
     debug__loading_seed: str = "Loading seed"
     debug__loading_seed_not_recommended: str = "Loading private seed is not recommended."
     device_name__change_template: str = "Change device name to {0}?"
+    device_name__changed: str = "Device name changed."
     device_name__continue_with_empty_label: str = "Continue with empty device name?"
     device_name__enter: str = "Enter device name"
     device_name__title: str = "Device name"

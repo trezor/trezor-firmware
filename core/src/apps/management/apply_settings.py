@@ -161,14 +161,10 @@ async def _require_confirm_change_homescreen(homescreen: bytes) -> None:
 
 
 async def _require_confirm_change_label(label: str) -> None:
-    from trezor.ui.layouts import confirm_single
+    from trezor.ui.layouts import confirm_change_label
 
-    await confirm_single(
-        "set_label",
-        TR.device_name__title,
-        description=TR.device_name__change_template,
-        description_param=label,
-        verb=TR.buttons__change,
+    await confirm_change_label(
+        "set_label", TR.device_name__title, TR.device_name__change_template, label
     )
 
 
