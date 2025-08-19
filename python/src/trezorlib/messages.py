@@ -955,15 +955,15 @@ class TextMemo(protobuf.MessageType):
 class TextDetailsMemo(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("title", "string", repeated=False, required=False, default=''),
-        2: protobuf.Field("text", "string", repeated=False, required=False, default=''),
+        1: protobuf.Field("title", "string", repeated=False, required=True),
+        2: protobuf.Field("text", "string", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        title: Optional["str"] = '',
-        text: Optional["str"] = '',
+        title: "str",
+        text: "str",
     ) -> None:
         self.title = title
         self.text = text
