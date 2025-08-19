@@ -1511,6 +1511,7 @@ pub enum TranslatedString {
     words__wipe = 1120,  // "Wipe"
     lockscreen__unlock = 1121,  // "Unlock"
     recovery__start_entering = 1122,  // "Start entering"
+    words__disconnected = 1123,  // "Disconnected"
 }
 
 impl TranslatedString {
@@ -3348,6 +3349,7 @@ impl TranslatedString {
             (Self::words__wipe, "Wipe"),
             (Self::lockscreen__unlock, "Unlock"),
             (Self::recovery__start_entering, "Start entering"),
+            (Self::words__disconnected, "Disconnected"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4796,6 +4798,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__device, Self::words__device),
         (Qstr::MP_QSTR_words__disabled, Self::words__disabled),
         (Qstr::MP_QSTR_words__disconnect, Self::words__disconnect),
+        (Qstr::MP_QSTR_words__disconnected, Self::words__disconnected),
         (Qstr::MP_QSTR_words__enabled, Self::words__enabled),
         (Qstr::MP_QSTR_words__error, Self::words__error),
         (Qstr::MP_QSTR_words__fee, Self::words__fee),

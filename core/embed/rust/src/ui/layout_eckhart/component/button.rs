@@ -1,5 +1,8 @@
+#[cfg(feature = "translations")]
+use crate::translations::TR;
 #[cfg(feature = "haptic")]
 use crate::trezorhal::haptic::{play, HapticEffect};
+
 use crate::{
     strutil::TString,
     time::{Duration, ShortDuration},
@@ -48,6 +51,7 @@ impl Button {
     const MENU_ITEM_RADIUS: u8 = 12;
     const MENU_ITEM_ALIGNMENT: Alignment = Alignment::Start;
     pub const MENU_ITEM_CONTENT_OFFSET: Offset = Offset::x(12);
+    const CONN_ICON_WIDTH: i16 = 34;
 
     #[cfg(feature = "micropython")]
     const DEFAULT_STYLESHEET: ButtonStyleSheet = theme::firmware::button_default();
@@ -93,7 +97,42 @@ impl Button {
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
     ) -> Self {
-        Self::with_text_and_subtext(text, subtext, subtext_style)
+        Self::with_text_and_subtext(text, subtext, subtext_style, None)
+            .with_text_align(Self::MENU_ITEM_ALIGNMENT)
+            .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
+            .styled(stylesheet)
+            .with_radius(Self::MENU_ITEM_RADIUS)
+    }
+
+    #[cfg(feature = "micropython")]
+    pub fn new_connection_item(
+        text: TString<'static>,
+        stylesheet: ButtonStyleSheet,
+        subtext: Option<TString<'static>>,
+        connected: bool,
+    ) -> Self {
+        let (icon, subtext_style) = if connected {
+            (
+                (theme::ICON_SQUARE, theme::GREEN_LIGHT),
+                &theme::TEXT_MENU_ITEM_SUBTITLE_GREEN,
+            )
+        } else {
+            (
+                (theme::ICON_SQUARE, theme::GREY_DARK),
+                &theme::TEXT_MENU_ITEM_SUBTITLE,
+            )
+        };
+        let subtext = if let Some(subtext) = subtext {
+            subtext
+        } else {
+            if connected {
+                TR::words__connected.into()
+            } else {
+                TR::words__disconnected.into()
+            }
+        };
+
+        Self::with_text_and_subtext(text, subtext, subtext_style, Some(icon))
             .with_text_align(Self::MENU_ITEM_ALIGNMENT)
             .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
             .styled(stylesheet)
@@ -112,11 +151,13 @@ impl Button {
         text: TString<'static>,
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
+        icon: Option<(Icon, Color)>,
     ) -> Self {
         Self::new(ButtonContent::TextAndSubtext {
             text,
             subtext,
             subtext_style,
+            icon,
         })
     }
 
@@ -289,7 +330,17 @@ impl Button {
                 text.map(|t| self.text_height(t, *single_line, width))
             }
             ButtonContent::Icon(icon) => icon.toif.height(),
-            ButtonContent::TextAndSubtext { text, .. } => {
+            ButtonContent::TextAndSubtext {
+                text,
+                subtext: _,
+                subtext_style: _,
+                icon,
+            } => {
+                let width = if icon.is_some() {
+                    width - Self::CONN_ICON_WIDTH
+                } else {
+                    width
+                };
                 text.map(|t| self.text_height(t, false, width) + self.baseline_subtext_height())
             }
             #[cfg(feature = "micropython")]
@@ -415,14 +466,14 @@ impl Button {
                 text,
                 subtext,
                 subtext_style,
+                icon,
             } => {
                 let text_baseline_height = self.baseline_text_height();
+                let available_width = self.area.width()
+                    - 2 * self.content_offset.x
+                    - icon.map_or(0, |_| Self::CONN_ICON_WIDTH);
                 let single_line_text = text.map(|t| {
-                    let (t1, t2) = split_two_lines(
-                        t,
-                        stylesheet.font,
-                        self.area.width() - 2 * self.content_offset.x,
-                    );
+                    let (t1, t2) = split_two_lines(t, stylesheet.font, available_width);
                     if t1.is_empty() || t2.is_empty() {
                         show_text(
                             t,
@@ -444,8 +495,10 @@ impl Button {
 
                 subtext.map(|subtext| {
                     #[cfg(feature = "ui_debug")]
-                    if subtext_style.text_font.text_width(subtext) > self.area.width() {
-                        fatal_error!(&uformat!(len: 128, "Subtext too long: '{}'", subtext));
+                    {
+                        if subtext_style.text_font.text_width(subtext) > available_width {
+                            fatal_error!(&uformat!(len: 128, "Subtext too long: '{}'", subtext));
+                        }
                     }
                     shape::Text::new(
                         render_origin(if single_line_text {
@@ -465,6 +518,19 @@ impl Button {
                     .with_alpha(alpha)
                     .render(target);
                 });
+
+                if let Some((icon, icon_color)) = icon {
+                    shape::ToifImage::new(
+                        self.area
+                            .right_center()
+                            .ofs(Offset::x(Self::CONN_ICON_WIDTH / 2).neg())
+                            .ofs(self.content_offset.neg()),
+                        icon.toif,
+                    )
+                    .with_align(Alignment2D::CENTER)
+                    .with_fg(*icon_color)
+                    .render(target);
+                }
             }
             ButtonContent::Icon(icon) => {
                 shape::ToifImage::new(self.area.center() + self.content_offset, icon.toif)
@@ -662,6 +728,7 @@ pub enum ButtonContent {
         text: TString<'static>,
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
+        icon: Option<(Icon, Color)>,
     },
     Icon(Icon),
     #[cfg(feature = "micropython")]

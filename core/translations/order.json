@@ -1121,5 +1121,6 @@
   "1119": "words__set",
   "1120": "words__wipe",
   "1121": "lockscreen__unlock",
-  "1122": "recovery__start_entering"
+  "1122": "recovery__start_entering",
+  "1123": "words__disconnected"
 }

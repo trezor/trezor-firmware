@@ -938,6 +938,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__device;
   MP_QSTR_words__disabled;
   MP_QSTR_words__disconnect;
+  MP_QSTR_words__disconnected;
   MP_QSTR_words__enabled;
   MP_QSTR_words__error;
   MP_QSTR_words__fee;
