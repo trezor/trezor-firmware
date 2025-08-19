@@ -47,7 +47,7 @@ class ThpContext:
         self._write = loop.wait(iface.iface_num() | io.POLL_WRITE)
         self._channels: dict[int, Channel] = {}
 
-    async def get_next_message(self) -> Channel:
+    async def get_next_message(self, timeout_ms: int | None = None) -> Channel:
         """
         Reassemble a valid THP payload and return its channel.
 
@@ -57,6 +57,7 @@ class ThpContext:
 
         packet = bytearray(self._iface.RX_PACKET_LEN)
         while True:
+            self._read.timeout_ms = timeout_ms
             packet_len = await self._read
             assert packet_len is not None
             assert packet_len == len(packet)

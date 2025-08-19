@@ -1,4 +1,5 @@
 import ustruct
+from micropython import const
 from typing import TYPE_CHECKING
 
 from storage.cache_common import (
@@ -20,6 +21,7 @@ from storage.cache_thp import (
     is_there_a_channel_to_replace,
 )
 from trezor import protobuf, utils, workflow
+from trezor.loop import Timeout
 
 from ..protocol_common import Message
 from . import (
@@ -51,6 +53,10 @@ if TYPE_CHECKING:
     from .memory_manager import ThpBuffer
     from .pairing_context import PairingContext
     from .session_context import GenericSessionContext
+
+
+_MAX_RETRANSMISSION_COUNT = const(50)
+_MIN_RETRANSMISSION_COUNT = const(2)
 
 
 class Reassembler:
@@ -209,7 +215,9 @@ class Channel:
     # READ and DECRYPT
 
     async def recv_payload(
-        self, expected_ctrl_byte: Callable[[int], bool] | None
+        self,
+        expected_ctrl_byte: Callable[[int], bool] | None,
+        timeout_ms: int | None = None,
     ) -> memoryview:
         """
         Receive and return a valid THP payload from this channel & its control byte.
@@ -219,10 +227,11 @@ class Channel:
 
         If `expected_ctrl_byte` is `None`, returns after the first received ACK.
         """
+
         while True:
             # Handle an existing message (if already reassembled).
             # Otherwise, receive and reassemble a new one.
-            msg = await self._get_reassembled_message()
+            msg = await self._get_reassembled_message(timeout_ms=timeout_ms)
 
             # Synchronization process
             ctrl_byte = msg[0]
@@ -237,6 +246,8 @@ class Channel:
                 continue
 
             if expected_ctrl_byte is None or not expected_ctrl_byte(ctrl_byte):
+                if __debug__:
+                    self._log("Unexpected control byte", utils.hexlify_if_bytes(msg))
                 raise ThpError("Unexpected control byte")
 
             # 2: Handle message with unexpected sequential bit
@@ -255,11 +266,13 @@ class Channel:
 
             return payload
 
-    async def _get_reassembled_message(self) -> memoryview:
+    async def _get_reassembled_message(
+        self, timeout_ms: int | None = None
+    ) -> memoryview:
         """Doesn't block if a message has been already reassembled."""
         while self.reassembler.message is None:
             # receive and reassemble a new message from this channel
-            channel = await self.ctx.get_next_message()
+            channel = await self.ctx.get_next_message(timeout_ms=timeout_ms)
             if channel is self:
                 break
 
@@ -377,23 +390,23 @@ class Channel:
         # ACK is needed before sending more data
         ABP.set_sending_allowed(self.channel_cache, False)
 
-        # TODO implement retransmissions:
-        #   sender = loop.spawn(self._retransmit(header, payload))  # will raise on timeout
-        #   receiver = loop.spawn(self._wait_for_ack())  # will return on success
-        #   await loop.race(sender, receiver)
-        await self.ctx.write_payload(header, payload)
-        await self._wait_for_ack()
+        for i in range(_MAX_RETRANSMISSION_COUNT):
+            await self.ctx.write_payload(header, payload)
+            # starting from 100ms till ~3.42s
+            timeout_ms = round(10200 - 1010000 / (100 + i))
+            try:
+                # wait and return after receiving an ACK, or raise in case of an unexpected message.
+                await self.recv_payload(expected_ctrl_byte=None, timeout_ms=timeout_ms)
+            except Timeout:
+                if __debug__:
+                    log.warning(__name__, "Retransmit after %d ms", timeout_ms)
+                continue
+            # `ABP.set_sending_allowed()` will be called after a valid ACK
+            if ABP.is_sending_allowed(self.channel_cache):
+                ABP.set_send_seq_bit_to_opposite(self.channel_cache)
+                return
 
-        # `ABP.set_sending_allowed()` will be called after a valid ACK
-        assert ABP.is_sending_allowed(self.channel_cache)
-
-        ABP.set_send_seq_bit_to_opposite(self.channel_cache)
-
-    async def _wait_for_ack(self) -> None:
-        # `ABP.set_sending_allowed()` will be called after a valid ACK
-        while not ABP.is_sending_allowed(self.channel_cache):
-            # wait and return after receiving an ACK, or raise in case of an unexpected message.
-            await self.recv_payload(expected_ctrl_byte=None)
+        raise ThpError("Retransmission timeout")
 
     def _encrypt(self, buffer: utils.BufferType, noise_payload_len: int) -> None:
         if __debug__:
