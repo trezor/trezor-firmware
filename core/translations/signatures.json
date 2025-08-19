@@ -1,8 +1,8 @@
 {
   "current": {
-    "merkle_root": "1b3bc4ec8dacc4d125ed0d73b99c559aa64b07f2c0b51dda1de45d407cbb4a3a",
-    "datetime": "2025-08-25T13:36:29.389660+00:00",
-    "commit": "b6aa4b9752aa16b1ee5dacb674d28375ea2a5b23"
+    "merkle_root": "18e38402a120d4060afb7c413425e7489214a33b82923d8a4a96a46717881d23",
+    "datetime": "2025-08-25T13:37:16.882698+00:00",
+    "commit": "a7dd608349465807a4e977bfd33e7b9d288e3ad3"
   },
   "history": [
     {
