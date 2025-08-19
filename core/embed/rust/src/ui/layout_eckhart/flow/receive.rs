@@ -24,8 +24,8 @@ use heapless::Vec;
 use super::super::{
     component::Button,
     firmware::{
-        ActionBar, Header, HeaderMsg, Hint, QrScreen, ShortMenuVec, TextScreen, TextScreenMsg,
-        VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
+        ActionBar, Header, Hint, QrScreen, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
+        VerticalMenuScreen, VerticalMenuScreenMsg,
     },
     theme::{self, gradient::Gradient},
 };
@@ -159,10 +159,7 @@ pub fn new_receive(
                 theme::menu_item_title_orange(),
             )),
     )
-    .with_header(
-        Header::new(title)
-            .with_right_button(Button::with_icon(theme::ICON_CROSS), HeaderMsg::Cancelled),
-    )
+    .with_header(Header::new(title).with_close_button())
     .map(|msg| match msg {
         VerticalMenuScreenMsg::Selected(i) => Some(FlowMsg::Choice(i)),
         VerticalMenuScreenMsg::Close => Some(FlowMsg::Cancelled),
@@ -214,10 +211,7 @@ pub fn new_receive(
         para.into_paragraphs()
             .with_placement(LinearPlacement::vertical()),
     )
-    .with_header(
-        Header::new(TR::address_details__account_info.into())
-            .with_right_button(Button::with_icon(theme::ICON_CROSS), HeaderMsg::Cancelled),
-    )
+    .with_header(Header::new(TR::address_details__account_info.into()).with_close_button())
     .map(|_| Some(FlowMsg::Cancelled));
 
     // Cancel

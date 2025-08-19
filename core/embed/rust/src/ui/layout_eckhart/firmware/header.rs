@@ -13,13 +13,10 @@ use super::{
     constant, theme,
 };
 
-const BUTTON_EXPAND_BORDER: i16 = 32;
-
 /// Component for the header of a screen. Eckhart UI shows the title (can be two
 /// lines), optional icon button on the left, and optional icon button
 /// (typically for menu) on the right.
 pub struct Header {
-    area: Rect,
     title: Label<'static>,
     /// button in the top-right corner
     right_button: Option<Button>,
@@ -30,6 +27,7 @@ pub struct Header {
     /// icon in the top-left corner (used instead of left button)
     icon: Option<Icon>,
     icon_color: Option<Color>,
+    icon_area: Rect,
     /// Battery status indicator
     fuel_gauge: Option<FuelGauge>,
 }
@@ -43,12 +41,10 @@ pub enum HeaderMsg {
 
 impl Header {
     pub const HEADER_HEIGHT: i16 = theme::HEADER_HEIGHT; // [px]
-    pub const HEADER_BUTTON_WIDTH: i16 = 56; // [px]
-    pub const HEADER_INSETS: Insets = Insets::sides(24); // [px]
+    const BUTTON_TOUCH_EXPAND: Insets = Insets::sides(32); // [px]
 
     pub const fn new(title: TString<'static>) -> Self {
         Self {
-            area: Rect::zero(),
             title: Label::left_aligned(title, theme::label_title_main()).vertically_centered(),
             right_button: None,
             left_button: None,
@@ -56,6 +52,7 @@ impl Header {
             left_button_msg: HeaderMsg::Cancelled,
             icon: None,
             icon_color: None,
+            icon_area: Rect::zero(),
             fuel_gauge: Some(FuelGauge::on_charging_change()),
         }
     }
@@ -69,9 +66,12 @@ impl Header {
     #[inline(never)]
     pub fn with_right_button(self, button: Button, msg: HeaderMsg) -> Self {
         debug_assert!(matches!(button.content(), ButtonContent::Icon(_)));
-        let touch_area = Insets::uniform(BUTTON_EXPAND_BORDER);
         Self {
-            right_button: Some(button.with_expanded_touch_area(touch_area)),
+            right_button: Some(
+                button
+                    .with_expanded_touch_area(Self::BUTTON_TOUCH_EXPAND)
+                    .with_radius(12),
+            ),
             right_button_msg: msg,
             ..self
         }
@@ -80,10 +80,13 @@ impl Header {
     #[inline(never)]
     pub fn with_left_button(self, button: Button, msg: HeaderMsg) -> Self {
         debug_assert!(matches!(button.content(), ButtonContent::Icon(_)));
-        let touch_area = Insets::uniform(BUTTON_EXPAND_BORDER);
         Self {
             icon: None,
-            left_button: Some(button.with_expanded_touch_area(touch_area)),
+            left_button: Some(
+                button
+                    .with_expanded_touch_area(Self::BUTTON_TOUCH_EXPAND)
+                    .with_radius(12),
+            ),
             left_button_msg: msg,
             ..self
         }
@@ -126,20 +129,35 @@ impl Header {
         ctx.request_paint();
     }
 
+    /// Calculates the width needed for the right button
+    fn right_button_width(&self) -> i16 {
+        if let Some(b) = &self.right_button {
+            match b.content() {
+                ButtonContent::Icon(icon) => icon.toif.width() + 2 * theme::PADDING,
+                // We do not expect any other ButtonContent as the right button of the Header
+                _ => unreachable!(),
+            }
+        } else {
+            // Title must have a default padding from the right side
+            theme::PADDING
+        }
+    }
+
     /// Calculates the width needed for the left icon, be it a button with icon
     /// or just icon
-    fn left_icon_width(&self) -> i16 {
-        let margin_right: i16 = 16; // [px]
+    fn left_object_width(&self) -> i16 {
+        const ICON_MARGIN_RIGHT: i16 = 16; // [px]
         if let Some(b) = &self.left_button {
             match b.content() {
-                ButtonContent::Icon(icon) => icon.toif.width() + margin_right,
+                ButtonContent::Icon(icon) => icon.toif.width() + 2 * theme::PADDING,
                 // We do not expect any other ButtonContent as the left button of the Header
                 _ => unreachable!(),
             }
         } else if let Some(icon) = self.icon {
-            icon.toif.width() + margin_right
+            theme::PADDING + icon.toif.width() + ICON_MARGIN_RIGHT
         } else {
-            0
+            // Title must have a default padding from the left side
+            theme::PADDING
         }
     }
 }
@@ -148,31 +166,24 @@ impl Component for Header {
     type Msg = HeaderMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        debug_assert_eq!(bounds.width(), constant::screen().width());
+        debug_assert_eq!(bounds.width(), constant::SCREEN.width());
         debug_assert_eq!(bounds.height(), Self::HEADER_HEIGHT);
 
-        let bounds = bounds.inset(Self::HEADER_INSETS);
-        let rest = if let Some(b) = &mut self.right_button {
-            let (rest, right_button_area) = bounds.split_right(Self::HEADER_BUTTON_WIDTH);
-            b.place(right_button_area);
-            rest
-        } else {
-            bounds
-        };
+        let (rest, right_button_area) = bounds.split_right(self.right_button_width());
+        self.icon_area = rest.inset(Insets::left(theme::PADDING));
+        let (left_object_area, title_area) = rest.split_left(self.left_object_width());
 
-        let icon_width = self.left_icon_width();
-        let (left_button_area, title_area) = rest.split_left(icon_width);
-
-        self.left_button.place(left_button_area);
+        self.left_button.place(left_object_area);
         self.title.place(title_area);
-        self.fuel_gauge.place(title_area.union(left_button_area));
+        self.fuel_gauge.place(self.icon_area);
+        self.right_button.place(right_button_area);
+
         if let Some(fuel_gauge) = &mut self.fuel_gauge {
             // Force update the fuel gauge state, so it is up-to-date
             // necessary e.g. for the first DeviceMenu Submenu re-entry
             fuel_gauge.update_pm_state();
         }
 
-        self.area = bounds;
         bounds
     }
 
@@ -200,7 +211,7 @@ impl Component for Header {
         } else {
             self.left_button.render(target);
             if let Some(icon) = self.icon {
-                shape::ToifImage::new(self.area.left_center(), icon.toif)
+                shape::ToifImage::new(self.icon_area.left_center(), icon.toif)
                     .with_fg(self.icon_color.unwrap_or(theme::GREY_LIGHT))
                     .with_align(Alignment2D::CENTER_LEFT)
                     .render(target);
