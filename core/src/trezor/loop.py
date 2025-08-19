@@ -201,9 +201,6 @@ class Timeout(Exception):
     pass
 
 
-_TIMEOUT_ERROR = Timeout()
-
-
 class sleep(Syscall):
     """Pause current task and resume it after given delay.
 
@@ -247,7 +244,7 @@ class wait(Syscall):
         pause(self, self.msg_iface)
         if self.timeout_ms is not None:
             deadline = utime.ticks_add(utime.ticks_ms(), self.timeout_ms)
-            schedule(self, _TIMEOUT_ERROR, deadline)
+            schedule(self, Timeout(), deadline)
 
     def send(self, __value: Any) -> Any:
         assert self.task is not None
