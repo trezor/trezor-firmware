@@ -21,11 +21,11 @@
 
 #include <trezor_types.h>
 
-#ifdef SYSTEM_VIEW
+#ifdef USE_SYSTEM_VIEW
 #include <sys/systemview.h>
 #endif
 
-#ifdef SYSTEM_VIEW
+#ifdef USE_SYSTEM_VIEW
 #define IRQ_LOG_ENTER() SEGGER_SYSVIEW_RecordEnterISR();
 #define IRQ_LOG_EXIT() SEGGER_SYSVIEW_RecordExitISR();
 #else
