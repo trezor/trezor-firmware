@@ -1488,6 +1488,9 @@ pub enum TranslatedString {
     ble__enable = 1104,  // "Turn Bluetooth on?"
     words__bluetooth = 1105,  // "Bluetooth"
     words__disconnected = 1106,  // "Disconnected"
+    ble__forget_all = 1107,  // "Forget all"
+    words__connect = 1108,  // "Connect"
+    words__forget = 1109,  // "Forget"
 }
 
 impl TranslatedString {
@@ -3295,6 +3298,9 @@ impl TranslatedString {
             (Self::ble__enable, "Turn Bluetooth on?"),
             (Self::words__bluetooth, "Bluetooth"),
             (Self::words__disconnected, "Disconnected"),
+            (Self::ble__forget_all, "Forget all"),
+            (Self::words__connect, "Connect"),
+            (Self::words__forget, "Forget"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3374,6 +3380,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_bitcoin__voting_rights, Self::bitcoin__voting_rights),
         (Qstr::MP_QSTR_ble__disable, Self::ble__disable),
         (Qstr::MP_QSTR_ble__enable, Self::ble__enable),
+        (Qstr::MP_QSTR_ble__forget_all, Self::ble__forget_all),
         (Qstr::MP_QSTR_ble__manage_paired, Self::ble__manage_paired),
         (Qstr::MP_QSTR_ble__pair_new, Self::ble__pair_new),
         (Qstr::MP_QSTR_ble__pair_title, Self::ble__pair_title),
@@ -4715,6 +4722,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__chain, Self::words__chain),
         (Qstr::MP_QSTR_words__confirm, Self::words__confirm),
         (Qstr::MP_QSTR_words__confirm_fee, Self::words__confirm_fee),
+        (Qstr::MP_QSTR_words__connect, Self::words__connect),
         (Qstr::MP_QSTR_words__connected, Self::words__connected),
         (Qstr::MP_QSTR_words__contains, Self::words__contains),
         (Qstr::MP_QSTR_words__continue_anyway, Self::words__continue_anyway),
@@ -4725,6 +4733,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__disconnected, Self::words__disconnected),
         (Qstr::MP_QSTR_words__error, Self::words__error),
         (Qstr::MP_QSTR_words__fee, Self::words__fee),
+        (Qstr::MP_QSTR_words__forget, Self::words__forget),
         (Qstr::MP_QSTR_words__from, Self::words__from),
         (Qstr::MP_QSTR_words__good_to_know, Self::words__good_to_know),
         (Qstr::MP_QSTR_words__important, Self::words__important),

@@ -121,12 +121,10 @@ impl Button {
         };
         let subtext = if let Some(subtext) = subtext {
             subtext
+        } else if connected {
+            TR::words__connected.into()
         } else {
-            if connected {
-                TR::words__connected.into()
-            } else {
-                TR::words__disconnected.into()
-            }
+            TR::words__disconnected.into()
         };
 
         Self::with_text_and_subtext(text, subtext, subtext_style, Some(icon))
