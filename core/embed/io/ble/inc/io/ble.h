@@ -51,6 +51,15 @@ typedef enum {
   BLE_MODE_DFU,
 } ble_mode_t;
 
+/*
+ * Address types:
+ * BT_ADDR_LE_PUBLIC       0x00
+ * BT_ADDR_LE_RANDOM       0x01
+ * BT_ADDR_LE_PUBLIC_ID    0x02
+ * BT_ADDR_LE_RANDOM_ID    0x03
+ * BT_ADDR_LE_UNRESOLVED   0xFE
+ * BT_ADDR_LE_ANONYMOUS    0xFF
+ */
 typedef struct {
   uint8_t type;
   uint8_t addr[6];
