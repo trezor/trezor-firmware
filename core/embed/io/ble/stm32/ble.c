@@ -225,6 +225,10 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
       tsqueue_enqueue(&drv->event_queue, (uint8_t *)&event, sizeof(event),
                       NULL);
 
+      if (drv->mode_requested == BLE_MODE_PAIRING) {
+        ble_pairing_end(drv);
+      }
+
       drv->pairing_allowed = false;
       drv->pairing_requested = false;
       if (msg.peer_count > 0) {
@@ -274,8 +278,12 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
   drv->peer_count = msg.peer_count;
 
   if (prev_mode == BLE_MODE_PAIRING && drv->mode_current != BLE_MODE_PAIRING) {
-    // pairing mode ended
-    ble_pairing_end(drv);
+    if (drv->mode_requested == BLE_MODE_PAIRING) {
+      // unexpected pairing end - restart pairing
+      ble_send_advertising_on(drv, false);
+    } else {
+      ble_pairing_end(drv);
+    }
   }
 
   if (drv->mode_requested == BLE_MODE_KEEP_CONNECTION && !drv->connected) {
@@ -291,6 +299,12 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
     if (msg.connected && drv->mode_requested == BLE_MODE_KEEP_CONNECTION) {
       drv->mode_requested = BLE_MODE_CONNECTABLE;
     }
+  }
+
+  // if there are no peers (i.e. after wiping the bonds), it makes no sense to
+  // stay in connectable mode as there is no one that can connect
+  if (msg.peer_count == 0 && drv->mode_requested == BLE_MODE_CONNECTABLE) {
+    drv->mode_requested = BLE_MODE_OFF;
   }
 
   drv->status_valid = true;
