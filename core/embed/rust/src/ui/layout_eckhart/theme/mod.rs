@@ -168,6 +168,9 @@ include_icon!(ICON_EUROPE, "layout_eckhart/res/europe.toif");
 include_icon!(ICON_RCM, "layout_eckhart/res/rcm.toif");
 include_icon!(ICON_FCC, "layout_eckhart/res/fcc.toif");
 
+// Square icon for BLE connection items
+include_icon!(ICON_SQUARE, "layout_eckhart/res/square.toif");
+
 // Common text styles and button styles must use fonts accessible from both
 // bootloader and firmware
 
