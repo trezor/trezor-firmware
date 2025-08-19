@@ -18,6 +18,7 @@ import pytest
 
 from trezorlib import device
 from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.exceptions import Cancelled
 
 
 @pytest.mark.setup_client(uninitialized=True)
@@ -26,3 +27,20 @@ from trezorlib.debuglink import SessionDebugWrapper as Session
 def test_tutorial(session: Session):
     device.show_device_tutorial(session)
     assert session.features.initialized is False
+
+
+@pytest.mark.setup_client(uninitialized=True)
+@pytest.mark.uninitialized_session
+def test_tutorial_cancel(session: Session):
+
+    session.ping(message="before")
+
+    def input_flow():
+        yield
+        session.cancel()
+
+    with pytest.raises(Cancelled), session.client as client:
+        client.set_input_flow(input_flow)
+        device.show_device_tutorial(session)
+
+    session.ping(message="after")
