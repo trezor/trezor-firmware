@@ -1107,5 +1107,6 @@
   "1105": "wipe_code__title",
   "1106": "ble__disable",
   "1107": "ble__enable",
-  "1108": "words__bluetooth"
+  "1108": "words__bluetooth",
+  "1109": "words__disconnected"
 }

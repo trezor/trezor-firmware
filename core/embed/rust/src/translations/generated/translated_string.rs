@@ -1490,6 +1490,7 @@ pub enum TranslatedString {
     ble__disable = 1106,  // "Turn Bluetooth off?"
     ble__enable = 1107,  // "Turn Bluetooth on?"
     words__bluetooth = 1108,  // "Bluetooth"
+    words__disconnected = 1109,  // "Disconnected"
 }
 
 impl TranslatedString {
@@ -3299,6 +3300,7 @@ impl TranslatedString {
             (Self::ble__disable, "Turn Bluetooth off?"),
             (Self::ble__enable, "Turn Bluetooth on?"),
             (Self::words__bluetooth, "Bluetooth"),
+            (Self::words__disconnected, "Disconnected"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4729,6 +4731,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__continue_with, Self::words__continue_with),
         (Qstr::MP_QSTR_words__device, Self::words__device),
         (Qstr::MP_QSTR_words__disconnect, Self::words__disconnect),
+        (Qstr::MP_QSTR_words__disconnected, Self::words__disconnected),
         (Qstr::MP_QSTR_words__error, Self::words__error),
         (Qstr::MP_QSTR_words__fee, Self::words__fee),
         (Qstr::MP_QSTR_words__from, Self::words__from),
