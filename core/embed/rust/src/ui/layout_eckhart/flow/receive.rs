@@ -170,11 +170,7 @@ pub fn new_receive(
     });
 
     // QrCode
-    let content_qr = QrScreen::new(qr.map(|s| Qr::new(s, case_sensitive))?)
-        .with_header(
-            Header::new(title_qr.into())
-                .with_right_button(Button::with_icon(theme::ICON_CROSS), HeaderMsg::Cancelled),
-        )
+    let content_qr = QrScreen::new(title_qr.into(), qr.map(|s| Qr::new(s, case_sensitive))?)
         .map(|_| Some(FlowMsg::Cancelled));
 
     // AccountInfo
