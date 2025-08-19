@@ -125,13 +125,13 @@ static void management_send_mac(uint8_t *mac) {
 
 static void management_send_bonds(void) {
   bt_addr_le_t addr_list[CONFIG_BT_MAX_PAIRED] = {0};
-  int bond_count = bonds_get_all(addr_list, CONFIG_BT_MAX_PAIRED);
+  size_t bond_count = bonds_get_all(addr_list, CONFIG_BT_MAX_PAIRED);
 
   uint8_t tx_data[1 + (CONFIG_BT_MAX_PAIRED * (1 + BT_ADDR_SIZE))] = {0};
 
   tx_data[0] = INTERNAL_EVENT_BOND_LIST;
   tx_data[1] = bond_count;
-  for (int i = 0; i < bond_count; i++) {
+  for (size_t i = 0; i < bond_count; i++) {
     tx_data[2 + i * (1 + BT_ADDR_SIZE)] = addr_list[i].type;
     memcpy(&tx_data[2 + i * (1 + BT_ADDR_SIZE) + 1], addr_list[i].a.val,
            BT_ADDR_SIZE);

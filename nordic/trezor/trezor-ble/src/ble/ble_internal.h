@@ -147,7 +147,7 @@ bool bonds_erase_current(void);
 // Erase bonds for a specific device
 bool bonds_erase_device(const bt_addr_le_t *addr);
 // Get all bonded devices
-int bonds_get_all(bt_addr_le_t *addr, size_t max_count);
+size_t bonds_get_all(bt_addr_le_t *addr, size_t max_count);
 
 // Advertising functions
 // Initialization

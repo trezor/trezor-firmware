@@ -119,7 +119,7 @@ bool bonds_erase_device(const bt_addr_le_t *addr) {
 typedef struct {
   bt_addr_le_t *addr_list;
   size_t max_count;
-  int filled;
+  size_t filled;
 } bonds_ctx_t;
 
 static void get_bonds(const struct bt_bond_info *info, void *user_data) {
@@ -129,19 +129,17 @@ static void get_bonds(const struct bt_bond_info *info, void *user_data) {
     return;
   }
 
-  if (ctx->filled < (int)ctx->max_count) {
+  if ((ctx->filled < ctx->max_count) && (ctx->addr_list != NULL)) {
     bt_addr_le_t *dst = &ctx->addr_list[ctx->filled];
-    if (dst != NULL) {
-      // First byte: address type, next 6 bytes: MAC address
-      dst->type = info->addr.type;
-      memcpy(dst->a.val, info->addr.a.val, BT_ADDR_SIZE);
-    }
+    // First byte: address type, next 6 bytes: MAC address
+    dst->type = info->addr.type;
+    memcpy(dst->a.val, info->addr.a.val, BT_ADDR_SIZE);
   }
 
   ctx->filled += 1;
 }
 
-int bonds_get_all(bt_addr_le_t *addr, size_t max_count) {
+size_t bonds_get_all(bt_addr_le_t *addr, size_t max_count) {
   // If no storage provided, just return total number of bonds
   if (addr == NULL || max_count == 0) {
     int total = 0;
@@ -158,8 +156,8 @@ int bonds_get_all(bt_addr_le_t *addr, size_t max_count) {
   bt_foreach_bond(BT_ID_DEFAULT, get_bonds, &ctx);
 
   // Return how many entries were actually written (capped by max_count)
-  if (ctx.filled > (int)max_count) {
-    return (int)max_count;
+  if (ctx.filled > max_count) {
+    return max_count;
   }
   return ctx.filled;
 }
