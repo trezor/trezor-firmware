@@ -83,11 +83,11 @@ stdenvNoCC.mkDerivation ({
     # install other python versions for tox testing
     # NOTE: running e.g. "python3" in the shell runs the first version in the following list,
     #       and poetry uses the default version (currently 3.10)
+    python313
     python312
     python311
     python310
     oldNixpkgs.python39
-    oldNixpkgs.python38
   ] ++ [
     # Current nixpkgs aliases SDL2 to sdl2-compat which on Ubuntu 25.04 makes the emulator
     # crash with SDL_CreateRenderer error.
