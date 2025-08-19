@@ -27,7 +27,6 @@ if STORAGE_INSECURE_TESTING_MODE:
 FEATURE_FLAGS = {
     "RDI": True,
     "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
-    "SYSTEM_VIEW": False,
     "AES_GCM": True,
 }
 
@@ -231,23 +230,6 @@ CPPDEFINES_MOD += [
 
 if FEATURE_FLAGS["RDI"]:
     CPPDEFINES_MOD += ['RDI']
-
-if FEATURE_FLAGS["SYSTEM_VIEW"]:
-    SOURCE_MOD += [
-        'embed/sys/systemview/stm32/config/SEGGER_SYSVIEW_Config_NoOS.c',
-        'embed/sys/systemview/stm32/segger/SEGGER_SYSVIEW.c',
-        'embed/sys/systemview/stm32/segger/SEGGER_RTT.c',
-        'embed/sys/systemview/stm32/segger/SEGGER_RTT_ASM_ARMv7M.S',
-        'embed/sys/systemview/stm32/segger/Syscalls/SEGGER_RTT_Syscalls_GCC.c',
-        'embed/sys/systemview/systemview.c',
-    ]
-    CPPPATH_MOD += [
-        'embed/sys/systemview/inc',
-        'embed/sys/systemview/stm32/config',
-        'embed/sys/systemview/stm32/segger',
-    ]
-    CPPDEFINES_MOD += ['SYSTEM_VIEW']
-    CCFLAGS_MOD += '-DSYSTEM_VIEW '
 
 TRANSLATION_DATA = [
     "translations/en.json",

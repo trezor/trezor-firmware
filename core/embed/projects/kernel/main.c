@@ -86,10 +86,6 @@
 #include <sys/rtc.h>
 #endif
 
-#ifdef SYSTEM_VIEW
-#include <sys/systemview.h>
-#endif
-
 #ifdef USE_TAMPER
 #include <sys/tamper.h>
 #endif
@@ -142,10 +138,6 @@ void drivers_init() {
 
 #ifdef USE_PVD
   pvd_init();
-#endif
-
-#ifdef SYSTEM_VIEW
-  enable_systemview();
 #endif
 
   display_init(DISPLAY_JUMP_BEHAVIOR);

@@ -26,12 +26,25 @@
 #include <sys/dbg_console.h>
 #include <sys/sysevent.h>
 
+#ifdef USE_DBG_CONSOLE_SYSTEM_VIEW
+#include "SEGGER_RTT.h"
+#include "SEGGER_SYSVIEW.h"
+#endif
+
 #if defined(USE_DBG_CONSOLE_VCP) && !defined(USE_USB_IFACE_VCP)
 #error "USE_DBG_CONSOLE_VCP requires USE_USB_IFACE_VCP"
 #endif
 
+#if defined(USE_DBG_CONSOLE_SYSTEM_VIEW) && !defined(USE_SYSTEM_VIEW)
+#error "USE_DBG_CONSOLE_SYSTEM_VIEW requires USE_SYSTEM_VIEW"
+#endif
 
-void dbg_console_init(void) {}
+void dbg_console_init(void) {
+#ifdef USE_DBG_CONSOLE_SYSTEM_VIEW
+  SEGGER_SYSVIEW_Conf();
+  SEGGER_SYSVIEW_Start();
+#endif
+}
 
 ssize_t dbg_console_read(void *buffer, size_t buffer_size) { return 0; }
 
@@ -44,6 +57,20 @@ static void itm_swo_write(const void *data, size_t data_size) {
   }
 
   irq_unlock(irq_key);
+}
+#endif
+
+#ifdef USE_DBG_CONSOLE_SYSTEM_VIEW
+static void sysview_write(const void *data, size_t data_size) {
+#if 1
+  static char str[512];
+  strncpy(str, (const char *)data, sizeof(str) - 1);
+  str[sizeof(str) - 1] = 0;
+  SEGGER_SYSVIEW_Print(str);
+#endif
+#if 0
+  SEGGER_RTT_Write(0, data, data_size);
+#endif
 }
 #endif
 
@@ -60,6 +87,9 @@ static void usb_vcp_write(const void *data, size_t data_size) {
 void dbg_console_write(const void *data, size_t data_size) {
 #ifdef USE_DBG_CONSOLE_SWO
   itm_swo_write(data, data_size);
+#endif
+#ifdef USE_DBG_CONSOLE_SYSTEM_VIEW
+  sysview_write(data, data_size);
 #endif
 #ifdef USE_DBG_CONSOLE_VCP
   usb_vcp_write(data, data_size);
