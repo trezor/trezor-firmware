@@ -237,7 +237,7 @@ static secbool boot_sequence(void) {
 
   while (pm_turn_on() != PM_OK) {
 #ifdef USE_RGB_LED
-    rgb_led_set_color(0x400000);
+    rgb_led_set_color(RGBLED_RED);
 #endif
     systick_delay_ms(400);
 #ifdef USE_RGB_LED
@@ -245,7 +245,7 @@ static secbool boot_sequence(void) {
 #endif
     systick_delay_ms(400);
 #ifdef USE_RGB_LED
-    rgb_led_set_color(0x400000);
+    rgb_led_set_color(RGBLED_RED);
 #endif
     systick_delay_ms(400);
 #ifdef USE_RGB_LED
@@ -253,7 +253,7 @@ static secbool boot_sequence(void) {
 #endif
     systick_delay_ms(400);
 #ifdef USE_RGB_LED
-    rgb_led_set_color(0x400000);
+    rgb_led_set_color(RGBLED_RED);
 #endif
     systick_delay_ms(400);
 #ifdef USE_RGB_LED
