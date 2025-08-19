@@ -1250,6 +1250,7 @@
     "words__device": "Device",
     "words__disabled": "Disabled",
     "words__disconnect": "Disconnect",
+    "words__disconnected": "Disconnected",
     "words__enabled": "Enabled",
     "words__error": "Error",
     "words__fee": "Fee",

@@ -1028,6 +1028,7 @@ class TR:
     words__device: str = "Device"
     words__disabled: str = "Disabled"
     words__disconnect: str = "Disconnect"
+    words__disconnected: str = "Disconnected"
     words__enabled: str = "Enabled"
     words__error: str = "Error"
     words__fee: str = "Fee"
