@@ -92,7 +92,6 @@ pub fn new_show_danger(
     // Menu
     let content_menu = VerticalMenuScreen::new(
         VerticalMenu::<ShortMenuVec>::empty()
-            .with_separators()
             .with_item(Button::new_menu_item(verb_cancel, theme::menu_item_title()))
             .with_item(Button::new_menu_item(
                 TR::words__continue_anyway.into(),
