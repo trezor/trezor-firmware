@@ -384,7 +384,7 @@ impl<'a> DeviceMenuScreen<'a> {
         match self.subscreens[self.active_subscreen] {
             Subscreen::Submenu(ref mut submenu_index) => {
                 let submenu = &self.submenus[*submenu_index];
-                let mut menu = VerticalMenu::<ShortMenuVec>::empty().with_separators();
+                let mut menu = VerticalMenu::<ShortMenuVec>::empty();
                 for item in &submenu.items {
                     let button = if let Some((subtext, subtext_style)) = item.subtext {
                         let subtext_style =
@@ -413,7 +413,7 @@ impl<'a> DeviceMenuScreen<'a> {
                     ActiveScreen::Menu(VerticalMenuScreen::new(menu).with_header(header));
             }
             Subscreen::DeviceScreen(device, _) => {
-                let mut menu = VerticalMenu::empty().with_separators();
+                let mut menu = VerticalMenu::empty();
                 menu.item(Button::new_menu_item(device, theme::menu_item_title()));
                 menu.item(Button::new_menu_item(
                     "Disconnect".into(),

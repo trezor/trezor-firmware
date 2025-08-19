@@ -984,7 +984,7 @@ impl FirmwareUI for UIEckhart {
         _current: usize,
         cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let mut menu = VerticalMenu::<ShortMenuVec>::empty().with_separators();
+        let mut menu = VerticalMenu::<ShortMenuVec>::empty();
         for text in &items {
             menu.item(Button::new_menu_item(*text, theme::menu_item_title()));
         }
