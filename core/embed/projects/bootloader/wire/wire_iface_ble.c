@@ -137,7 +137,7 @@ void ble_iface_deinit(void) {
   }
 
   ble_command_t cmd = {
-      .cmd_type = BLE_SWITCH_OFF,
+      .cmd_type = BLE_KEEP_CONNECTION,
   };
   ble_issue_command(&cmd);
 

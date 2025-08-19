@@ -40,6 +40,8 @@ typedef enum {
   BLE_ALLOW_PAIRING = 5,   // Accept pairing request
   BLE_REJECT_PAIRING = 6,  // Reject pairing request
   BLE_UNPAIR = 7,          // Erase bond for currently connected device
+  BLE_KEEP_CONNECTION =
+      8,  // Keep connection to the connected device, but do not advertise
 } ble_command_type_t;
 
 typedef enum {

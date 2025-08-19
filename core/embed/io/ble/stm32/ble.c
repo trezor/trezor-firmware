@@ -58,6 +58,7 @@ typedef struct {
   bool status_valid;
   bool accept_msgs;
   bool reboot_on_resume;
+  bool restart_adv_on_disconnect;
   uint8_t busy_flag;
   bool pairing_allowed;
   bool pairing_requested;
@@ -287,17 +288,19 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
   }
 
   if (drv->mode_requested == BLE_MODE_KEEP_CONNECTION && !drv->connected) {
-    if (drv->peer_count > 0) {
+    if (drv->peer_count > 0 && drv->restart_adv_on_disconnect) {
       drv->mode_requested = BLE_MODE_CONNECTABLE;
     } else {
       drv->mode_requested = BLE_MODE_OFF;
     }
   }
 
-  if (msg.peer_count > 1 && drv->peer_count <= 1) {
-    // new bond
-    if (msg.connected && drv->mode_requested == BLE_MODE_KEEP_CONNECTION) {
-      drv->mode_requested = BLE_MODE_CONNECTABLE;
+  if (drv->mode_requested == BLE_MODE_CONNECTABLE &&
+      !drv->restart_adv_on_disconnect) {
+    if (drv->connected) {
+      drv->mode_requested = BLE_MODE_KEEP_CONNECTION;
+    } else {
+      drv->mode_requested = BLE_MODE_OFF;
     }
   }
 
@@ -801,10 +804,12 @@ bool ble_issue_command(ble_command_t *command) {
 
   switch (command->cmd_type) {
     case BLE_SWITCH_OFF:
+      drv->restart_adv_on_disconnect = false;
       drv->mode_requested = BLE_MODE_OFF;
       result = true;
       break;
     case BLE_SWITCH_ON:
+      drv->restart_adv_on_disconnect = true;
       memcpy(&drv->adv_cmd, &command->data.adv_start, sizeof(drv->adv_cmd));
       if (drv->connected) {
         drv->mode_requested = BLE_MODE_KEEP_CONNECTION;
@@ -814,6 +819,7 @@ bool ble_issue_command(ble_command_t *command) {
       result = true;
       break;
     case BLE_PAIRING_MODE:
+      drv->restart_adv_on_disconnect = true;
       irq_unlock(key);
       result = ble_start_pairing(command);
       return result;
@@ -831,6 +837,14 @@ bool ble_issue_command(ble_command_t *command) {
       break;
     case BLE_UNPAIR:
       result = ble_send_unpair(drv);
+      break;
+    case BLE_KEEP_CONNECTION:
+      drv->restart_adv_on_disconnect = false;
+      if (drv->connected) {
+        drv->mode_requested = BLE_MODE_KEEP_CONNECTION;
+      } else {
+        drv->mode_requested = BLE_MODE_OFF;
+      }
       break;
     default:
       break;

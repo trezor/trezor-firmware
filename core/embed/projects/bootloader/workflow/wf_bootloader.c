@@ -27,12 +27,15 @@
 #include <sys/power_manager.h>
 #endif
 
+#ifdef USE_BLE
+#include <io/ble.h>
+#endif
+
 #include <io/display.h>
 #include <io/display_utils.h>
 
 #include "bootui.h"
 #include "rust_ui_bootloader.h"
-#include "wire/wire_iface_usb.h"
 #include "workflow.h"
 
 workflow_result_t workflow_menu(const vendor_header* const vhdr,
@@ -60,6 +63,12 @@ workflow_result_t workflow_menu(const vendor_header* const vhdr,
       workflow_ifaces_pause(ios);
       workflow_ble_pairing_request(vhdr, hdr);
       workflow_ifaces_resume(ios);
+      if (ios == NULL) {
+        // in case we were not in connected-mode, stop advertising
+        ble_command_t cmd = {0};
+        cmd.cmd_type = BLE_KEEP_CONNECTION;
+        ble_issue_command(&cmd);
+      }
       continue;
     }
 #endif
