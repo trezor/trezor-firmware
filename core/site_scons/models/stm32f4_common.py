@@ -147,6 +147,19 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
         if "usb_iface_vcp" in features_wanted:
             defines += [("USE_USB_IFACE_VCP", "1")]
 
+    if "system_view" in features_wanted:
+        sources += [
+            "embed/sys/dbg/stm32/systemview/config/SEGGER_SYSVIEW_Config_NoOS.c",
+            "embed/sys/dbg/stm32/systemview/segger/SEGGER_SYSVIEW.c",
+            "embed/sys/dbg/stm32/systemview/segger/SEGGER_RTT.c",
+            "embed/sys/dbg/stm32/systemview/segger/SEGGER_RTT_ASM_ARMv7M.S",
+        ]
+        paths += [
+            "embed/sys/dbg/stm32/systemview/config",
+            "embed/sys/dbg/stm32/systemview/segger",
+        ]
+        defines += [("USE_SYSTEM_VIEW", "1")]
+
     env.get("ENV")["SUFFIX"] = "stm32f4"
     env.get("ENV")["LINKER_SCRIPT"] = """embed/sys/linker/stm32f4/{target}.ld"""
     env.get("ENV")["MEMORY_LAYOUT"] = "memory.ld"
