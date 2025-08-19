@@ -835,6 +835,86 @@
                 "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
                 "sig": "0x4873bf73cf22e35776d8b23a249f93f38a6d5aa8c1a121281675094f5fac64b55a3b6cf28e140930f9185156d07f171a17e06925b5cebd95a2a8761d074e43f91c"
             }
+        },
+        {
+            "name": "nested_array_of_string",
+            "comment": "Nested arrays (issue #2963)",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "metamask_v4_compat": true,
+                "data": {
+                    "types": {
+                        "EIP712Domain": [],
+                        "Message": [
+                            {
+                                "name": "text",
+                                "type": "string[][]"
+                            }
+                        ]
+                    },
+                    "primaryType": "Message",
+                    "message": {
+                        "text": [
+                            ["1", "2"],
+                            ["3", "4"]
+                        ]
+                    },
+                    "domain": {}
+                },
+                "message_hash": "0xc40dc798242ec8a6a0f2974e8f687583c118a6b74f161dc39cd79025d228ca1d",
+                "domain_separator_hash": null
+            },
+            "result": {
+                "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "sig": "0x26df1807221e9a0ce4d3f0a6422c55f9cca7de55268a9d6c4772fd28893730b8755f3d23cef14ea02ea74c9045a3a8ae6a3f1ceb252cd2a6f3a43832d8a0c7b01c"
+            }
+        },
+        {
+            "name": "nested_array_of_object",
+            "comment": "Nested arrays (issue #2963)",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "metamask_v4_compat": true,
+                "data": {
+                    "types": {
+                        "EIP712Domain": [],
+                        "Message": [
+                            {
+                                "name": "element",
+                                "type": "Element[][]"
+                            }
+                        ],
+                        "Element": [
+                            {
+                                "name": "foo",
+                                "type": "int8"
+                            }
+                        ]
+                    },
+                    "primaryType": "Message",
+                    "message": {
+                        "element": [
+                            [
+                                {
+                                    "foo": 1
+                                }
+                            ],
+                            [
+                                {
+                                    "foo": 2
+                                }
+                            ]
+                        ]
+                    },
+                    "domain": {}
+                },
+                "message_hash": "0x56034f4b5afe2fb032f1e60b3bc649c8725396d1e9b4d85725bdff1d366a86e6",
+                "domain_separator_hash": null
+            },
+            "result": {
+                "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "sig": "0x6f2c2e2392ca20374679b4d34a2e910cf2357c32ce06c25592c1ebe5a77e76433e4b38d853ccce71930df085861a90c36611a24ba673964bf6a889a063c568311b"
+            }
         }
     ]
 }
