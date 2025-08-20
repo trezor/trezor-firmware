@@ -322,6 +322,17 @@ void rgb_led_set_color(uint32_t color) {
   syscall_invoke1(color, SYSCALL_RGB_LED_SET_COLOR);
 }
 
+void rgb_led_effect_start(rgb_led_effect_type_t effect_type,
+                          uint32_t requested_cycles) {
+  syscall_invoke2((uint32_t)effect_type, requested_cycles,
+                  SYSCALL_RGB_LED_EFFECT_START);
+}
+
+/**
+ * @brief Stop the currently running RGB led effect and turn off the RGB led
+ */
+void rgb_led_effect_stop(void) { syscall_invoke0(SYSCALL_RGB_LED_EFFECT_STOP); }
+
 #endif
 
 // =============================================================================

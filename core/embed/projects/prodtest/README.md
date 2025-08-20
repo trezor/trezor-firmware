@@ -542,7 +542,7 @@ OK
 ```
 
 ### rgbled-effect-start
-Start the rgb effect from the predifined list. Command takes two arguments, first argument define a number of the rgbled effect, second argument then define number of requested cycles for which the effect should run. `requested_cycles` argument is optional, calling the command without it will run effect indefinitly.
+Start the rgb effect from the predefined list. Command takes two arguments, first argument defines a number of the rgbled effect, second argument then defines number of requested cycles for which the effect should run. `requested_cycles` argument is optional, calling the command without it will run effect indefinitely.
 
 `rgbled-effect-start <effect_num> <requested_cycles>`
 
@@ -554,7 +554,7 @@ OK
 ```
 
 ### rgbled-effect-stop
-stop the ongoing rgbled effect.
+Stop the ongoing rgbled effect.
 
 Examples:
 ```

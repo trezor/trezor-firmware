@@ -337,6 +337,16 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       uint32_t color = args[0];
       rgb_led_set_color(color);
     } break;
+
+    case SYSCALL_RGB_LED_EFFECT_START: {
+      rgb_led_effect_type_t effect_type = (rgb_led_effect_type_t)args[0];
+      uint32_t requested_cycles = args[1];
+      rgb_led_effect_start(effect_type, requested_cycles);
+    } break;
+
+    case SYSCALL_RGB_LED_EFFECT_STOP: {
+      rgb_led_effect_stop();
+    } break;
 #endif
 
 #ifdef USE_HAPTIC
