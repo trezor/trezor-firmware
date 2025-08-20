@@ -303,6 +303,7 @@ EOF
       --env TREZOR_MODEL="$TREZOR_MODEL" \
       --env PRODUCTION="$PRODUCTION" \
       --env VENDOR_HEADER="$VENDOR_HEADER" \
+      --env BOOTLOADER_DEVEL=1 \
       --init \
       "$SNAPSHOT_NAME" \
       /nix/var/nix/profiles/default/bin/nix-shell --run "bash /local/build/$SCRIPT_NAME"
