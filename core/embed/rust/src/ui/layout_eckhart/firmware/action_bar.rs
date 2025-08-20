@@ -181,9 +181,33 @@ impl ActionBar {
         let new_is_last = new_pager.is_last();
         let old_is_first = self.pager.is_first();
         let new_is_first = new_pager.is_first();
+        let old_is_single = self.pager.is_single();
+        let new_is_single = new_pager.is_single();
 
         self.pager = new_pager;
-        if (old_is_last != new_is_last) || (new_is_first != old_is_first) {
+        if self.mode == Mode::PaginateOnly {
+            if new_is_single && !old_is_single {
+                // On single page, disable first/last buttons
+                self.left_button = None;
+                self.right_button = None;
+                self.place_buttons(self.area);
+            } else if !new_is_single && old_is_single {
+                // On multiple pages, enable grayed-out first/last buttons
+                self.left_button = Some(
+                    Button::with_icon(theme::ICON_CHEVRON_UP)
+                        .with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)
+                        .with_content_offset(Self::BUTTON_CONTENT_OFFSET)
+                        .initially_enabled(false),
+                );
+                self.right_button = Some(
+                    Button::with_icon(theme::ICON_CHEVRON_DOWN)
+                        .with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)
+                        .with_content_offset(Self::BUTTON_CONTENT_OFFSET.neg())
+                        .initially_enabled(false),
+                );
+                self.place_buttons(self.area);
+            }
+        } else if (old_is_last != new_is_last) || (new_is_first != old_is_first) {
             self.place_buttons(self.area);
         }
     }
@@ -334,25 +358,12 @@ impl ActionBar {
                 self.next_button.place(right_area);
             }
             Mode::PaginateOnly => {
-                let (left_area, right_area) = if self.pager.is_first() {
-                    // Only `next_button`
-                    self.next_button.set_content_offset(Offset::zero());
-                    (Rect::zero(), bounds)
-                } else if self.pager.is_last() {
-                    // Only `prev_button`
-                    self.prev_button.set_content_offset(Offset::zero());
-                    (bounds, Rect::zero())
-                } else {
-                    // Equal-sized `next_button` and `prev_button`
-                    let (left, _, right) = bounds.split_center(Self::SPACER_WIDTH);
-                    self.prev_button
-                        .set_content_offset(Self::BUTTON_CONTENT_OFFSET);
-                    self.next_button
-                        .set_content_offset(Self::BUTTON_CONTENT_OFFSET.neg());
-                    (left, right)
-                };
+                // Equal-sized `next_button` and `prev_button`
+                let (left_area, _, right_area) = bounds.split_center(Self::SPACER_WIDTH);
                 self.prev_button.place(left_area);
                 self.next_button.place(right_area);
+                self.left_button.place(left_area);
+                self.right_button.place(right_area);
             }
         }
     }
@@ -467,7 +478,7 @@ impl Component for ActionBar {
             Mode::Single => !self.pager.is_first(),
             Mode::Double { .. } => true,
             Mode::Timeout => false,
-            Mode::PaginateOnly => !self.pager.is_first() && !self.pager.is_last(),
+            Mode::PaginateOnly => !self.pager.is_single(),
         };
         if show_divider {
             let pos_divider = self.prev_button.area().right_center();
