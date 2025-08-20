@@ -155,12 +155,13 @@ static void process_command(uint8_t *data, uint16_t len) {
 
       int name_len = strnlen(cmd->name, BLE_ADV_NAME_LEN);
 
-      if (cmd->whitelist != 0) {
+      if (cmd->flags.whitelist != 0) {
         pairing_num_comp_reply(false, NULL);
       }
 
-      advertising_start(cmd->whitelist != 0, cmd->color, cmd->device_code,
-                        cmd->static_addr, (char *)cmd->name, name_len);
+      advertising_start(cmd->flags.whitelist != 0, cmd->flags.user_disconnect,
+                        cmd->color, cmd->device_code, cmd->static_addr,
+                        (char *)cmd->name, name_len);
     } break;
     case INTERNAL_CMD_ADVERTISING_OFF:
       advertising_stop();
