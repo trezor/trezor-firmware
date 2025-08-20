@@ -293,7 +293,7 @@ class TrezorConnection:
                     empty_passphrase=empty_passphrase,
                     must_resume=must_resume,
                 )
-        except exceptions.DeviceLockedException:
+        except exceptions.DeviceLocked:
             click.echo(
                 "Device is locked, enter a pin on the device.",
                 err=True,
