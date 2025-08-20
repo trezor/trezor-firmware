@@ -7,7 +7,7 @@ package-mode = false
 
 [tool.poetry.dependencies]
 # all
-python = "^3.9"
+python = ">=3.9,<4"
 trezor = {path = "./python", develop = true}
 tvl = {path = "./vendor/ts-tvl", develop = true}
 scons = "*"
