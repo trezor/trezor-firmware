@@ -59,6 +59,8 @@ typedef struct {
   bool accept_msgs;
   bool reboot_on_resume;
   bool restart_adv_on_disconnect;
+  bool next_adv_with_disconnect;  // next advertising will be started with
+                                  // forced disconnect flag
   uint8_t busy_flag;
   bool pairing_allowed;
   bool pairing_requested;
@@ -107,11 +109,15 @@ static bool ble_send_advertising_on(ble_driver_t *drv, bool whitelist) {
 
   cmd_advertising_on_t data = {
       .cmd_id = INTERNAL_CMD_ADVERTISING_ON,
-      .whitelist = whitelist ? 1 : 0,
+      .flags.whitelist = whitelist ? 1 : 0,
+      .flags.user_disconnect = drv->next_adv_with_disconnect ? 1 : 0,
+      .flags.reserved = 0,
       .color = props.color,
       .static_addr = drv->adv_cmd.static_mac,
       .device_code = MODEL_BLE_CODE,
   };
+
+  drv->next_adv_with_disconnect = false;
 
   memcpy(data.name, drv->adv_cmd.name, BLE_ADV_NAME_LEN);
 
@@ -214,11 +220,15 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
       }
 
       if (drv->mode_current != BLE_MODE_PAIRING) {
+#ifdef BLE_MULTIPOINT
         if (msg.peer_count > 1) {
           drv->mode_requested = BLE_MODE_CONNECTABLE;
         } else {
           drv->mode_requested = BLE_MODE_KEEP_CONNECTION;
         }
+#else
+        drv->mode_requested = BLE_MODE_KEEP_CONNECTION;
+#endif
       }
     } else {
       // connection lost
@@ -271,9 +281,11 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
     drv->mode_current = BLE_MODE_OFF;
   }
 
+#ifdef BLE_MULTIPOINT
   if (drv->mode_current == BLE_MODE_KEEP_CONNECTION && drv->peer_count > 1) {
     drv->mode_requested = BLE_MODE_CONNECTABLE;
   }
+#endif
 
   drv->busy_flag = msg.busy_flag;
   drv->peer_count = msg.peer_count;
@@ -299,6 +311,15 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
       !drv->restart_adv_on_disconnect) {
     drv->mode_requested = BLE_MODE_OFF;
   }
+
+#ifdef BLE_MULTIPOINT
+  if (msg.peer_count > 1 && drv->peer_count <= 1) {
+    // new bond
+    if (msg.connected && drv->mode_requested == BLE_MODE_KEEP_CONNECTION) {
+      drv->mode_requested = BLE_MODE_CONNECTABLE;
+    }
+  }
+#endif
 
   // if there are no peers (i.e. after wiping the bonds), it makes no sense to
   // stay in connectable mode as there is no one that can connect
@@ -820,6 +841,9 @@ bool ble_issue_command(ble_command_t *command) {
       result = ble_start_pairing(command);
       return result;
     case BLE_DISCONNECT:
+      if (drv->connected && drv->restart_adv_on_disconnect) {
+        drv->next_adv_with_disconnect = true;
+      }
       result = ble_send_disconnect(drv);
       break;
     case BLE_ERASE_BONDS:
