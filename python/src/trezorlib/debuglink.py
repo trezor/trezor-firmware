@@ -34,12 +34,7 @@ from mnemonic import Mnemonic
 
 from . import btc, mapping, messages, models, protobuf
 from .client import ProtocolVersion, TrezorClient
-from .exceptions import (
-    Cancelled,
-    DeviceLockedException,
-    TrezorFailure,
-    UnexpectedMessageError,
-)
+from .exceptions import Cancelled, TrezorFailure, UnexpectedMessageError
 from .log import DUMP_BYTES
 from .messages import DebugTouchEventType, DebugWaitType
 from .tools import parse_path
@@ -1317,14 +1312,7 @@ class TrezorClientDebugLink(TrezorClient):
         self.pin_callback = get_pin
         self.button_callback = self.ui.button_request
 
-        try:
-            super().__init__(transport)
-        except DeviceLockedException:
-            LOG.debug("Locked device handling")
-            self.debug.input("")
-            self.debug.input(self.debug.encode_pin("1234"))
-            super().__init__(transport)
-
+        super().__init__(transport)
         self.sync_responses()
 
         # So that we can choose right screenshotting logic (T1 vs TT)
