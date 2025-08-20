@@ -231,11 +231,6 @@ class ProtocolV2Channel(Channel):
 
     def _read_handshake_init_response(self) -> bytes:
         header, payload = self._read_until_valid_crc_check()
-        if control_byte.is_error(header.ctrl_byte):
-            if payload == b"\x05":
-                raise exceptions.DeviceLockedException()
-            else:
-                raise exceptions.ThpError(_get_error_from_int(payload[0]))
 
         if not header.is_handshake_init_response():
             LOG.error("Received message is not a valid handshake init response message")
@@ -278,8 +273,6 @@ class ProtocolV2Channel(Channel):
         header, data = self._read_until_valid_crc_check()
         if not header.is_handshake_comp_response():
             LOG.error("Received message is not a valid handshake completion response")
-            if control_byte.is_error(header.ctrl_byte):
-                raise exceptions.ThpError(_get_error_from_int(data[0]))
         trezor_state = self._noise.decrypt(bytes(data))
         assert trezor_state == b"\x00" or trezor_state == b"\x01"
         self._send_ack_bit(bit=1)
@@ -289,8 +282,6 @@ class ProtocolV2Channel(Channel):
         header, payload = self._read_until_valid_crc_check()
         if not header.is_ack() or len(payload) > 0:
             LOG.error("Received message is not a valid ACK")
-            if control_byte.is_error(header.ctrl_byte):
-                raise exceptions.ThpError(_get_error_from_int(payload[0]))
 
     def _send_ack_bit(self, bit: int):
         if bit not in (0, 1):
@@ -336,8 +327,6 @@ class ProtocolV2Channel(Channel):
                 continue
             if control_byte.is_ack(header.ctrl_byte):
                 continue
-            if control_byte.is_error(header.ctrl_byte):
-                raise exceptions.ThpError(_get_error_from_int(raw_payload[0]))
             if not header.is_encrypted_transport():
                 LOG.error(
                     "Trying to decrypt not encrypted message! ("
@@ -392,6 +381,10 @@ class ProtocolV2Channel(Channel):
 
                 self.sync_bit_receive = 1 - self.sync_bit_receive
 
+            if control_byte.is_error(header.ctrl_byte):
+                code = payload[0]
+                raise _ERRORS_MAP.get(code) or exceptions.ThpUnknownError(code)
+
             return header, payload
 
     def _is_valid_channel_allocation_response(
@@ -420,16 +413,10 @@ class ProtocolV2Channel(Channel):
         return True
 
 
-def _get_error_from_int(error_code: int) -> str:
-    # TODO FIXME improve this (ThpErrorType)
-    if error_code == 1:
-        return "TRANSPORT BUSY"
-    if error_code == 2:
-        return "UNALLOCATED CHANNEL"
-    if error_code == 3:
-        return "DECRYPTION FAILED"
-    if error_code == 4:
-        return "INVALID DATA"
-    if error_code == 5:
-        return "DEVICE LOCKED"
-    raise Exception("Not Implemented error case")
+_ERRORS_MAP = {
+    1: exceptions.TransportBusy,
+    2: exceptions.UnallocatedChannel,
+    3: exceptions.DecryptionFailed,
+    4: exceptions.InvalidData,
+    5: exceptions.DeviceLocked,
+}
