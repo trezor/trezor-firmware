@@ -25,7 +25,7 @@ runs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: strace-${{ github.job }}
+        name: strace-${{ github.job }}${{ strategy.job-index }}
         path: |
           strace.log
           retention-days: 1
