@@ -222,11 +222,15 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
       }
 
       if (drv->mode_current != BLE_MODE_PAIRING) {
+#ifdef BLE_MULTIPOINT
         if (msg.peer_count > 1) {
           drv->mode_requested = BLE_MODE_CONNECTABLE;
         } else {
           drv->mode_requested = BLE_MODE_KEEP_CONNECTION;
         }
+#else
+        drv->mode_requested = BLE_MODE_KEEP_CONNECTION;
+#endif
       }
     } else {
       // connection lost
@@ -279,9 +283,11 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
     drv->mode_current = BLE_MODE_OFF;
   }
 
+#ifdef BLE_MULTIPOINT
   if (drv->mode_current == BLE_MODE_KEEP_CONNECTION && drv->peer_count > 1) {
     drv->mode_requested = BLE_MODE_CONNECTABLE;
   }
+#endif
 
   drv->busy_flag = msg.busy_flag;
   drv->peer_count = msg.peer_count;
