@@ -195,7 +195,7 @@ pub const fn button_default() -> ButtonStyleSheet {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREY,
             button_color: BG,
-            icon_color: GREY,
+            icon_color: GREY_EXTRA_DARK,
         },
     }
 }
