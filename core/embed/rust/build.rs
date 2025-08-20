@@ -399,7 +399,10 @@ fn generate_trezorhal_bindings() {
         // random
         .allowlist_function("random_uniform")
         // rgb led
+        .allowlist_type("rgb_led_effect_type_t")
         .allowlist_function("rgb_led_set_color")
+        .allowlist_function("rgb_led_effect_start")
+        .allowlist_function("rgb_led_effect_stop")
         // systick
         .allowlist_function("systick_delay_ms")
         .allowlist_function("systick_ms")
