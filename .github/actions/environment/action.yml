@@ -12,9 +12,20 @@ runs:
       uses: cachix/install-nix-action@v31
       with:
         nix_path: nixpkgs=channel:nixos-unstable
+    - name: strace
+      run: sudo apt install strace
+      shell: sh
     - name: Dependencies nixpkgs
-      run: timeout -v --kill-after=10 500 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "true"
+      run: strace -o strace.log -t -f timeout -v --kill-after=10 600 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "true"
       shell: sh
     - name: Dependencies uv
       run: timeout -v --kill-after=10 200 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "uv sync"
       shell: sh
+    - name: strace logs
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: strace-${{ github.job }}${{ strategy.job-index }}
+        path: |
+          strace.log
+          retention-days: 1
