@@ -7,8 +7,8 @@ license = "GPLv3+"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.8"
-trezor = "^0.13.9"
+python = ">=3.9,<4"
+trezor = "^0.14"
 
 [build-system]
 requires = ["poetry-core"]
