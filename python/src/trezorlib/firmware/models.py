@@ -80,6 +80,8 @@ class ModelKeys:
     bootloader_sigs_needed: int
     firmware_keys: t.Sequence[bytes]
     firmware_sigs_needed: int
+    secmon_keys: t.Sequence[bytes]
+    secmon_sigs_needed: int
 
 
 LEGACY_V1V2 = ModelKeys(
@@ -99,6 +101,8 @@ LEGACY_V1V2 = ModelKeys(
         )
     ],
     firmware_sigs_needed=3,
+    secmon_keys=(),
+    secmon_sigs_needed=-1,
 )
 
 LEGACY_V1V2_DEV = ModelKeys(
@@ -118,6 +122,8 @@ LEGACY_V1V2_DEV = ModelKeys(
         )
     ],
     firmware_sigs_needed=3,
+    secmon_keys=(),
+    secmon_sigs_needed=-1,
 )
 
 LEGACY_V3 = ModelKeys(
@@ -135,6 +141,8 @@ LEGACY_V3 = ModelKeys(
         )
     ],
     firmware_sigs_needed=2,
+    secmon_keys=(),
+    secmon_sigs_needed=-1,
 )
 
 LEGACY_V3_DEV = ModelKeys(
@@ -152,6 +160,8 @@ LEGACY_V3_DEV = ModelKeys(
         )
     ],
     firmware_sigs_needed=2,
+    secmon_keys=(),
+    secmon_sigs_needed=-1,
 )
 
 T2T1 = ModelKeys(
@@ -176,6 +186,8 @@ T2T1 = ModelKeys(
     bootloader_sigs_needed=2,
     firmware_keys=(),
     firmware_sigs_needed=-1,
+    secmon_keys=(),
+    secmon_sigs_needed=-1,
 )
 
 TREZOR_CORE_DEV = ModelKeys(
@@ -200,6 +212,15 @@ TREZOR_CORE_DEV = ModelKeys(
     bootloader_sigs_needed=2,
     firmware_keys=(),
     firmware_sigs_needed=-1,
+    secmon_keys=[
+        bytes.fromhex(key)
+        for key in (
+            "db995fe25169d141cab9bbba92baa01f9f2e1ece7df4cb2ac05190f37fcc1f9d",
+            "2152f8d19b791d24453242e15f2eab6cb7cffa7b6a5ed30097960e069881db12",
+            "22fc297792f0b6ffc0bfcfdb7edb0c0aa14e025a365ec0e342e86e3829cb74b6",
+        )
+    ],
+    secmon_sigs_needed=2,
 )
 
 T2B1 = ModelKeys(
@@ -224,6 +245,8 @@ T2B1 = ModelKeys(
     bootloader_sigs_needed=2,
     firmware_keys=(),
     firmware_sigs_needed=-1,
+    secmon_keys=(),
+    secmon_sigs_needed=-1,
 )
 
 T3T1 = ModelKeys(
@@ -248,6 +271,8 @@ T3T1 = ModelKeys(
     bootloader_sigs_needed=2,
     firmware_keys=(),
     firmware_sigs_needed=-1,
+    secmon_keys=(),
+    secmon_sigs_needed=-1,
 )
 
 T3B1 = ModelKeys(
@@ -272,6 +297,8 @@ T3B1 = ModelKeys(
     bootloader_sigs_needed=2,
     firmware_keys=(),
     firmware_sigs_needed=-1,
+    secmon_keys=(),
+    secmon_sigs_needed=-1,
 )
 
 T3W1 = ModelKeys(
@@ -296,6 +323,15 @@ T3W1 = ModelKeys(
     bootloader_sigs_needed=2,
     firmware_keys=(),
     firmware_sigs_needed=-1,
+    secmon_keys=[
+        bytes.fromhex(key)
+        for key in (
+            "7da3dd4769fef0f9489d5ff7fba8be122aef0f60778302557ba2cc67ff2a6d9e",
+            "4ae3bf88b0e5226322d867432940265b4bef46e5c45b64730e26ca32ee653e0b",
+            "6c1640f38d037c57e86960863505ef70ff60f98157440cf25f1c133b4a15960e",
+        )
+    ],
+    secmon_sigs_needed=2,
 )
 
 ROOT_ED25519_KEYS = [

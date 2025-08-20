@@ -431,7 +431,7 @@ class SecmonImage(firmware.SecmonImage, CosiSignedMixin):
             raise firmware.InvalidSignatureError("Invalid bootloader signature")
 
     def public_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
-        return self.get_model_keys(dev_keys).boardloader_keys
+        return self.get_model_keys(dev_keys).secmon_keys
 
 
 class BootloaderV2Image(firmware.BootableImage):
