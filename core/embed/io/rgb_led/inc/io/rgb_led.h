@@ -64,14 +64,56 @@ bool rgb_led_get_enabled(void);
 #define RGBLED_ORANGE RGB_COMPOSE_COLOR(188, 42, 6)
 #define RGBLED_RED RGB_COMPOSE_COLOR(100, 6, 3)
 #define RGBLED_YELLOW RGB_COMPOSE_COLOR(22, 16, 0)
-#define RGBLED_BLUE RGB_COMPOSE_COLOR(0, 0, 50)
+#define RGBLED_BLUE RGB_COMPOSE_COLOR(5, 5, 50)
 #define RGBLED_OFF 0x000000
+
+/**
+ * @brief RGB LED effect type
+ */
+typedef enum {
+  RGB_LED_EFFECT_BOOTLOADER_BREATHE = 0,
+  RGB_LED_EFFECT_CHARGING,
+  RGB_LED_NUM_OF_EFFECTS,
+} rgb_led_effect_type_t;
+
+/**
+ * @brief Initialize RGB LED driver
+ */
+void rgb_led_init(void);
+
+/**
+ * @brief Deinitialize RGB LED driver
+ */
+void rgb_led_deinit(void);
+
+#endif  // KERNEL_MODE
 
 // Set RGB LED color
 // color: 24-bit RGB color, 0x00RRGGBB
+
+/**
+ * @brief Set the RGB led color.
+ *
+ * Set the color of the RGB led, if there is ongoing RGB led effect, this
+ * setting will stop the effect and override the color.
+ *
+ * @param color 24-bit RGB color, 0x00RRGGBB
+ */
 void rgb_led_set_color(uint32_t color);
 
+/**
+ * @brief Start an RGB led effect.
+ *
+ * @param effect_type The type of effect to start selected from
+ *                    `rgb_led_effect_type_t` enum.
+ *
+ * @param requested_cycles The number of cycles to run the effect for, 0 will
+ *                         run the effect indefinitely.
+ */
 void rgb_led_effect_start(rgb_led_effect_type_t effect_type,
                           uint32_t requested_cycles);
 
+/**
+ * @brief Stop the currently running RGB led effect and turn off the RGB led
+ */
 void rgb_led_effect_stop(void);
