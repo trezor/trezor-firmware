@@ -16,8 +16,16 @@ runs:
       run: sudo apt install strace
       shell: sh
     - name: Dependencies nixpkgs
-      run: strace -f nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "true"
+      run: strace -o strace.log -f nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "true"
       shell: sh
     - name: Dependencies poetry
       run: timeout -v --kill-after=10 100 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "poetry install"
       shell: sh
+    - name: strace logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: strace-${{ github.job }}
+        path: |
+          strace.log
+          retention-days: 1
