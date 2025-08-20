@@ -147,7 +147,6 @@ class ThpContext:
         if ctrl_byte != CHANNEL_ALLOCATION_REQ:
             raise ThpError("Unexpected ctrl_byte in a broadcast channel packet")
 
-        log.info(__name__, "got alloc: %s", utils.hexlify_if_bytes(packet))
         channel_cache = channel_manager.create_new_channel(self._iface)
         channel = self._load_channel(channel_cache)
 
