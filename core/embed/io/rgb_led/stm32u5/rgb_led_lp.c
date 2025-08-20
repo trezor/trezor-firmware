@@ -293,9 +293,9 @@ static void rgb_led_systimer_callback(void* context) {
   uint32_t color = drv->effect.callback(elapsed_ms, &drv->effect.data);
   rgb_led_apply_color(drv, color);
 
+  // Stop the effect if the requested cycles have been reached
   if (drv->effect.data.requested_cycles &&
       drv->effect.data.cycles >= drv->effect.data.requested_cycles) {
-    // Stop the effect if the requested cycles have been reached
     rgb_led_effect_stop();
   }
 }
