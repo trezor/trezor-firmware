@@ -111,6 +111,8 @@ jobs:
       fail-fast: false
       matrix:
         model: [T3W1]
+    env:
+      PRODUCTION: "0"
     steps:
       - uses: actions/checkout@v4
         with:
