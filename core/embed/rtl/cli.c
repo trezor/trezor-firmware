@@ -551,12 +551,11 @@ void cli_process_command(cli_t* cli, const cli_command_t* cmd) {
       cli_error(cli, CLI_ERROR_FATAL,
                 "Command handler didn't finish properly.");
     }
-  } else {
-    // Finalize the last command with an empty line
-    cli_printf(cli, "\r\n");
   }
 
   if (cli->interactive) {
+    // Finalize the last command with an empty line
+    cli_printf(cli, "\r\n");
     // Print the prompt
     cli_printf(cli, "> ");
   }
