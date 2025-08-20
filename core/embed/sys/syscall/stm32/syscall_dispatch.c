@@ -466,7 +466,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_RGB_LED_EFFECT_STOP: {
-      rgb_led_effect_stop(effect_type);
+      rgb_led_effect_stop();
     } break;
 #endif
 
