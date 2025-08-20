@@ -35,6 +35,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #include "ble_internal.h"
 
 bool bonds_erase_all(void) {
+  connection_disconnect();
   int err = bt_unpair(BT_ID_DEFAULT, BT_ADDR_LE_ANY);
   if (err) {
     LOG_INF("Cannot delete bonds (err: %d)\n", err);
@@ -75,6 +76,8 @@ bool bonds_erase_current(void) {
     return false;
   }
 
+  connection_disconnect();
+
   err = bt_unpair(BT_ID_DEFAULT, info.le.dst);
 
   return err == 0;
@@ -85,11 +88,23 @@ bool bonds_erase_device(const bt_addr_le_t *addr) {
     return false;
   }
 
+  struct bt_conn *current = connection_get_current();
+
   bool erased = false;
   bt_addr_le_t target;
 
   // Copy MAC and try both address types (ignore the input type)
   memcpy(target.a.val, addr->a.val, BT_ADDR_SIZE);
+
+  if (current != NULL) {
+    struct bt_conn_info info;
+    int err = bt_conn_get_info(current, &info);
+    if (err == 0 &&
+        memcmp(info.le.dst->a.val, target.a.val, BT_ADDR_SIZE) == 0) {
+      // If the device is currently connected, disconnect it first
+      connection_disconnect();
+    }
+  }
 
   target.type = BT_ADDR_LE_PUBLIC;
   if (bt_unpair(BT_ID_DEFAULT, &target) == 0) {
