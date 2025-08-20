@@ -13,7 +13,7 @@ runs:
       with:
         nix_path: nixpkgs=channel:nixos-unstable
     - name: strace
-      run: apt install strace
+      run: sudo apt install strace
       shell: sh
     - name: Dependencies nixpkgs
       run: strace -f nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "true"
