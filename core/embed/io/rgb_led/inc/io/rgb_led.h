@@ -64,13 +64,14 @@ bool rgb_led_get_enabled(void);
 #define RGBLED_ORANGE RGB_COMPOSE_COLOR(188, 42, 6)
 #define RGBLED_RED RGB_COMPOSE_COLOR(100, 6, 3)
 #define RGBLED_YELLOW RGB_COMPOSE_COLOR(22, 16, 0)
-#define RGBLED_BLUE RGB_COMPOSE_COLOR(5, 5, 50)
+#define RGBLED_BLUE RGB_COMPOSE_COLOR(0, 0, 50)
 #define RGBLED_OFF 0x000000
 
 // Set RGB LED color
 // color: 24-bit RGB color, 0x00RRGGBB
 void rgb_led_set_color(uint32_t color);
 
-void rgb_led_effect_start(rgb_led_effect_type_t effect_type);
+void rgb_led_effect_start(rgb_led_effect_type_t effect_type,
+                          uint32_t requested_cycles);
 
 void rgb_led_effect_stop(void);
