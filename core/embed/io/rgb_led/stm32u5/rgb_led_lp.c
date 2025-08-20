@@ -240,7 +240,8 @@ void rgb_led_set_color(uint32_t color) {
   rgb_led_apply_color(drv, color);
 }
 
-void rgb_led_effect_start(rgb_led_effect_type_t effect_type) {
+void rgb_led_effect_start(rgb_led_effect_type_t effect_type,
+                          uint32_t requested_cycles) {
   rgb_led_t* drv = &g_rgb_led;
 
   if (!drv->initialized) {
@@ -255,6 +256,8 @@ void rgb_led_effect_start(rgb_led_effect_type_t effect_type) {
   if (!rgb_led_assign_effect(&drv->effect, effect_type)) {
     return;
   }
+
+  drv->effect.data.requested_cycles = requested_cycles;
 
   systimer_set_periodic(drv->effect_timer, RGB_LED_EFFECT_TIMER_PERIOD_MS);
   drv->effect.start_time_ms = systick_ms();
@@ -317,8 +320,14 @@ static void rgb_led_systimer_callback(void* context) {
   }
 
   uint32_t elapsed_ms = systick_ms() - drv->effect.start_time_ms;
-  uint32_t color = drv->effect.callback(elapsed_ms);
+  uint32_t color = drv->effect.callback(elapsed_ms, &drv->effect.data);
   rgb_led_apply_color(drv, color);
+
+  if (drv->effect.data.requested_cycles &&
+      drv->effect.data.cycles >= drv->effect.data.requested_cycles) {
+    // Stop the effect if the requested cycles have been reached
+    rgb_led_effect_stop();
+  }
 }
 
 #endif

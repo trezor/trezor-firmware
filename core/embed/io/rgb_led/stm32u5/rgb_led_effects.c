@@ -34,10 +34,13 @@
   (EFFECT_CHARGING_UP_MS + EFFECT_CHARGING_DOWN_MS)
 
 // Effect callback function prototypes
-static uint32_t rgb_led_effect_bootloader_breathe(uint32_t elapsed_ms);
-static uint32_t rgb_led_effect_charging(uint32_t elapsed_ms);
+static uint32_t rgb_led_effect_bootloader_breathe(uint32_t elapsed_ms,
+                                                  rgb_led_effect_data_t *data);
+static uint32_t rgb_led_effect_charging(uint32_t elapsed_ms,
+                                        rgb_led_effect_data_t *data);
 
-static uint32_t (*rgb_led_effects_callbacks[])(uint32_t elapsed_ms) = {
+static uint32_t (*rgb_led_effects_callbacks[])(uint32_t elapsed_ms,
+                                               rgb_led_effect_data_t *data) = {
     [RGB_LED_EFFECT_BOOTLOADER_BREATHE] = rgb_led_effect_bootloader_breathe,
     [RGB_LED_EFFECT_CHARGING] = rgb_led_effect_charging,
 };
@@ -84,7 +87,9 @@ bool rgb_led_assign_effect(rgb_led_effect_t *effect,
   return true;
 }
 
-static uint32_t rgb_led_effect_bootloader_breathe(uint32_t elapsed_ms) {
+static uint32_t rgb_led_effect_bootloader_breathe(uint32_t elapsed_ms,
+                                                  rgb_led_effect_data_t *data) {
+  data->cycles = elapsed_ms / EFFECT_BOOTLOADER_BREATHE_CYCLE_MS;
   uint32_t effect_time = elapsed_ms % EFFECT_BOOTLOADER_BREATHE_CYCLE_MS;
 
   if (effect_time < EFFECT_BOOTLOADER_BREATHE_UP_MS) {
@@ -100,7 +105,9 @@ static uint32_t rgb_led_effect_bootloader_breathe(uint32_t elapsed_ms) {
   }
 }
 
-static uint32_t rgb_led_effect_charging(uint32_t elapsed_ms) {
+static uint32_t rgb_led_effect_charging(uint32_t elapsed_ms,
+                                        rgb_led_effect_data_t *data) {
+  data->cycles = elapsed_ms / EFFECT_CHARGING_CYCLE_MS;
   uint32_t effect_time = elapsed_ms % EFFECT_CHARGING_CYCLE_MS;
 
   if (effect_time < EFFECT_CHARGING_UP_MS) {

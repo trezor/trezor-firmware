@@ -26,9 +26,15 @@
 #include <sys/systimer.h>
 
 typedef struct {
+  uint32_t cycles;
+  uint32_t requested_cycles;
+} rgb_led_effect_data_t;
+
+typedef struct {
   rgb_led_effect_type_t type;
   uint32_t start_time_ms;
-  uint32_t (*callback)(uint32_t elapsed_ms);
+  rgb_led_effect_data_t data;
+  uint32_t (*callback)(uint32_t elapsed_ms, rgb_led_effect_data_t *data);
 } rgb_led_effect_t;
 
 typedef struct {
