@@ -48,5 +48,12 @@ typedef struct {
   rgb_led_effect_t effect;
 } rgb_led_t;
 
+/**
+ * @brief Assign effect a callback function according to the effect_type,
+ *
+ * @param effect pointer to the effect handler
+ * @param effect_type the type of effect to assign
+ * @return true on success, false on failure
+ */
 bool rgb_led_assign_effect(rgb_led_effect_t *effect,
                            rgb_led_effect_type_t effect_type);

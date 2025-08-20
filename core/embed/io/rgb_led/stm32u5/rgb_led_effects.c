@@ -39,18 +39,21 @@ static uint32_t rgb_led_effect_bootloader_breathe(uint32_t elapsed_ms,
 static uint32_t rgb_led_effect_charging(uint32_t elapsed_ms,
                                         rgb_led_effect_data_t *data);
 
+// Effect callback functions lookup table
 static uint32_t (*rgb_led_effects_callbacks[])(uint32_t elapsed_ms,
                                                rgb_led_effect_data_t *data) = {
     [RGB_LED_EFFECT_BOOTLOADER_BREATHE] = rgb_led_effect_bootloader_breathe,
     [RGB_LED_EFFECT_CHARGING] = rgb_led_effect_charging,
 };
 
+// Single color linear interpolation auxiliary function
 static inline uint32_t linear_interpolate(uint32_t y0, uint32_t y1, uint32_t x,
                                           uint32_t x1) {
   int32_t diff = (int32_t)y1 - (int32_t)y0;
   return (uint32_t)(y0 + (diff * (int32_t)x / (int32_t)x1));
 }
 
+// Linear interpolation between two colors based on elapsed time
 static uint32_t rgb_led_linear_effect(uint32_t c_start, uint32_t c_end,
                                       uint32_t elapsed_ms, uint32_t total_ms) {
   if (elapsed_ms >= total_ms) {
@@ -72,6 +75,7 @@ static uint32_t rgb_led_linear_effect(uint32_t c_start, uint32_t c_end,
   return RGB_COMPOSE_COLOR(r, g, b);
 }
 
+// Assign effect callback from the lookup table
 bool rgb_led_assign_effect(rgb_led_effect_t *effect,
                            rgb_led_effect_type_t effect_type) {
   if (effect_type < 0 || effect_type >= RGB_LED_NUM_OF_EFFECTS) {
@@ -87,6 +91,11 @@ bool rgb_led_assign_effect(rgb_led_effect_t *effect,
   return true;
 }
 
+/**
+ * Bootloader breathe effect
+ * Slow Linear transition effect from RGBLED_OFF to RGBLED_BLUE and back to
+ * RGBLED_OFF
+ */
 static uint32_t rgb_led_effect_bootloader_breathe(uint32_t elapsed_ms,
                                                   rgb_led_effect_data_t *data) {
   data->cycles = elapsed_ms / EFFECT_BOOTLOADER_BREATHE_CYCLE_MS;
@@ -105,6 +114,11 @@ static uint32_t rgb_led_effect_bootloader_breathe(uint32_t elapsed_ms,
   }
 }
 
+/**
+ * Charging effect
+ * Faster linear transition effect from RGBLED_OFF to RGBLED_YELLOW and back to
+ * RGBLED_OFF
+ */
 static uint32_t rgb_led_effect_charging(uint32_t elapsed_ms,
                                         rgb_led_effect_data_t *data) {
   data->cycles = elapsed_ms / EFFECT_CHARGING_CYCLE_MS;
