@@ -35,6 +35,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define ADV_FLAG_PAIRING 0x01
 #define ADV_FLAG_BOND_MEM_FULL 0x02
 #define ADV_FLAG_DEV_CONNECTED 0x04
+#define ADV_FLAG_USER_DISCONNECT 0x08
 
 bool advertising = false;
 bool advertising_wl = false;
@@ -65,8 +66,9 @@ void advertising_setup_wl(void) {
   bt_foreach_bond(BT_ID_DEFAULT, add_to_whitelist, NULL);
 }
 
-void advertising_start(bool wl, uint8_t color, uint8_t device_code,
-                       bool static_addr, char *name, int name_len) {
+void advertising_start(bool wl, bool user_disconnect, uint8_t color,
+                       uint8_t device_code, bool static_addr, char *name,
+                       int name_len) {
   if (advertising) {
     LOG_WRN("Restarting advertising");
     bt_le_adv_stop();
@@ -87,6 +89,9 @@ void advertising_start(bool wl, uint8_t color, uint8_t device_code,
   }
   if (connection_is_connected()) {
     manufacturer_data[2] |= ADV_FLAG_DEV_CONNECTED;
+  }
+  if (user_disconnect) {
+    manufacturer_data[2] |= ADV_FLAG_USER_DISCONNECT;
   }
 
   manufacturer_data[3] = color;

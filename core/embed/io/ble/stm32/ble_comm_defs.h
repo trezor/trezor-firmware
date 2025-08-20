@@ -70,7 +70,11 @@ typedef enum {
 
 typedef struct {
   uint8_t cmd_id;
-  uint8_t whitelist;
+  struct {
+    uint8_t whitelist : 1;
+    uint8_t user_disconnect : 1;
+    uint8_t reserved : 6;
+  } flags;
   uint8_t color;
   uint8_t static_addr;
   uint8_t device_code;

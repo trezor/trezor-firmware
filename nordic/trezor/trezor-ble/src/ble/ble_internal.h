@@ -101,7 +101,12 @@ typedef enum {
 
 typedef struct {
   uint8_t cmd_id;
-  uint8_t whitelist;
+  struct {
+    uint8_t whitelist : 1;
+    uint8_t user_disconnect : 1;  // If set, the device should not try to
+                                  // reconnect after disconnecting
+    uint8_t reserved : 6;
+  } flags;
   uint8_t color;
   uint8_t static_addr;
   uint8_t device_code;
@@ -147,8 +152,9 @@ bool bonds_erase_current(void);
 // Initialization
 void advertising_init(void);
 // Start advertising, with or without whitelist
-void advertising_start(bool wl, uint8_t color, uint8_t device_code,
-                       bool static_addr, char *name, int name_len);
+void advertising_start(bool wl, bool user_disconnect, uint8_t color,
+                       uint8_t device_code, bool static_addr, char *name,
+                       int name_len);
 // Check if advertising is active
 bool advertising_is_advertising(void);
 // Check if advertising is active with whitelist
