@@ -5,7 +5,7 @@ from trezor import log, loop, protobuf, utils, workflow
 from trezor.enums import FailureType
 from trezor.messages import Failure
 
-from .context import UnexpectedMessageException, with_context
+from .context import AbortWorkflow, UnexpectedMessageException, with_context
 from .errors import ActionCancelled, DataError, Error, UnexpectedMessage
 from .protocol_common import Context, Message
 
@@ -153,6 +153,11 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
         # to process. It is not a standard exception that should be logged and a result
         # sent to the wire.
         raise
+
+    except AbortWorkflow:
+        # Aborting current workflow, to restart the event loop.
+        return False
+
     except BaseException as exc:
         # Either:
         # - the message had a type that has a registered handler, but does not have

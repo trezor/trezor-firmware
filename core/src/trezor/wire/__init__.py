@@ -104,7 +104,10 @@ if utils.USE_THP:
         if __debug__:
             _THP_CHANNELS.append(ctx._channels)
         try:
-            channel = await ctx.get_next_message()
+            while (channel := await ctx.get_next_message()) is None:
+                # If there is an active THP channel on another interface,
+                # wait for event loop restart, while responding to the host.
+                pass
             while await received_message_handler.handle_received_message(channel):
                 pass
         finally:
