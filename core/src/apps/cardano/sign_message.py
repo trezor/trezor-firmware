@@ -111,9 +111,9 @@ async def _get_confirmed_payload(size: int, prefer_hex_display: bool) -> bytes:
         raise ProcessError("The payload is interpreted as a hash and cannot be signed")
 
     await layout.confirm_message_payload(
-        payload_size=size,
-        payload_first_chunk=payload,
-        prefer_hex_display=prefer_hex_display,
+        payload,
+        size,
+        prefer_hex_display,
     )
 
     return payload

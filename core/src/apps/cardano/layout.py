@@ -323,7 +323,7 @@ async def confirm_reference_script(
 
 
 async def confirm_message_payload(
-    payload_first_chunk: bytes,
+    payload: bytes,
     payload_size: int,
     prefer_hex_display: bool,
 ) -> None:
@@ -331,17 +331,17 @@ async def confirm_message_payload(
 
     max_displayed_bytes = MAX_CHUNK_SIZE
 
-    if not payload_first_chunk:
+    if not payload:
         assert payload_size == 0
         props = _get_data_chunk_props(
             title=TR.cardano__empty_message,
-            first_chunk=payload_first_chunk,
+            first_chunk=payload,
             data_size=payload_size,
         )
-    elif not prefer_hex_display and is_unambiguous_ascii(payload_first_chunk):
+    elif not prefer_hex_display and is_unambiguous_ascii(payload):
         props = _get_data_chunk_props(
             title=TR.cardano__message_text,
-            first_chunk=payload_first_chunk,
+            first_chunk=payload,
             data_size=payload_size,
             max_displayed_size=max_displayed_bytes,
             decoder=lambda chunk: chunk.decode("ascii"),
@@ -349,7 +349,7 @@ async def confirm_message_payload(
     else:
         props = _get_data_chunk_props(
             title=TR.cardano__message_hex,
-            first_chunk=payload_first_chunk,
+            first_chunk=payload,
             data_size=payload_size,
             max_displayed_size=max_displayed_bytes,
         )
