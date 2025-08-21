@@ -33,7 +33,7 @@ use super::{
 use heapless::Vec;
 
 const MAX_DEPTH: usize = 3;
-const MAX_SUBSCREENS: usize = 8;
+const MAX_SUBSCREENS: usize = 10;
 const MAX_SUBMENUS: usize = MAX_SUBSCREENS - 2 /* (about and device screen) */;
 
 const DISCONNECT_DEVICE_MENU_INDEX: usize = 1;
