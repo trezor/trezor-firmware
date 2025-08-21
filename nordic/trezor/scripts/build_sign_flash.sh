@@ -21,10 +21,34 @@ fatal() {
     exit 1
 }
 
+# Auto-detect environment and choose appropriate execution method
+detect_environment() {
+    # Check if we're in Docker environment for reproducible build
+    # e.g. Docker/Nix with pre-configured toolchain for reproducible build
+    if [ -n "$GNUARMEMB_TOOLCHAIN_PATH" ] && [ -n "$ZEPHYR_TOOLCHAIN_VARIANT" ]; then
+        return 0  # Use direct execution
+    elif command -v nrfutil > /dev/null 2>&1; then
+        # We have nrfutil available (local development)
+        return 1  # Use nrfutil subshell
+    else
+        # Fallback to direct execution
+        echo "Warning: Neither nrfutil nor pre-configured toolchain detected, using direct execution"
+        return 0
+    fi
+}
+
 run_under_ncs_subshell() {
-    # In the subshell, toolchain environment is sourced then the command is run
-    (source <(nrfutil toolchain-manager env | perl -pe 's/^(\w+)\s*:\s*(.*)/export \1=\2/');  bash -x -c "$@") \
-        || fatal "Error in subshell"
+    detect_environment
+    local use_direct=$?
+
+    if [ $use_direct -eq 0 ]; then
+        # Docker/Nix environment - run directly
+        eval "$@" || fatal "Error in direct command execution"
+    else
+        # Local development environment - use nrfutil
+        (source <(nrfutil toolchain-manager env | perl -pe 's/^(\w+)\s*:\s*(.*)/export \1=\2/'); bash -x -c "$@") \
+            || fatal "Error in nrfutil subshell"
+    fi
 }
 
 usage() {
