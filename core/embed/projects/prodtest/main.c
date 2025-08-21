@@ -299,7 +299,12 @@ int prodtest_main(void) {
   rgb_led_set_color(RGBLED_GREEN);
 #endif
 
+#ifdef TREZOR_MODEL_T3W1
+  display_set_backlight(85);
+#else
   display_set_backlight(150);
+#endif
+
   prodtest_show_homescreen();
 
   while (true) {

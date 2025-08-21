@@ -132,7 +132,7 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
       // device idle.
       if (!faded && ticks_expired(fade_deadline)) {
         fade_value = display_get_backlight();
-        display_fade(fade_value, 45, 200);
+        display_fade(fade_value, BACKLIGHT_LOW, 200);
         faded = true;
       }
 
