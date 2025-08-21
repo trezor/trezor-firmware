@@ -44,12 +44,12 @@
 // Discharge temperatures
 static const float BATTERY_TEMP_POINTS_DISCHG[BATTERY_NUM_TEMP_POINTS] = {
     0.80f,  5.78f,  10.64f, 15.55f, 20.65f,
-    25.42f, 31.41f, 35.41f, 40.39f, 45.29f};
+    25.43f, 31.41f, 35.41f, 40.38f, 45.28f};
 
 // Charge temperatures
 static const float BATTERY_TEMP_POINTS_CHG[BATTERY_NUM_TEMP_POINTS] = {
     2.32f,  7.28f,  12.60f, 17.51f, 22.50f,
-    27.46f, 32.31f, 37.36f, 42.34f, 47.35f};
+    27.38f, 32.31f, 37.36f, 42.34f, 47.37f};
 
 // Internal resistance curve parameters (rational function parameters
 // a+b*t)/(c+d*t)
@@ -62,10 +62,10 @@ static const float BATTERY_OCV_DISCHARGE_PARAMS[BATTERY_NUM_TEMP_POINTS][10] = {
     // Temperature: 0.80°C (key: 0)
     {
         0.126550f, 3.211777f,  // m, b (linear segment)
-        16.395191f, 128.363626f, 5.345433f,
-        38.414635f,  // a1, b1, c1, d1 (first rational segment)
-        1257.147271f, -1252.056059f, 379.613560f,
-        -378.115976f  // a3, b3, c3, d3 (third rational segment)
+        19.098931f, 149.532130f, 6.226951f,
+        44.749610f,  // a1, b1, c1, d1 (first rational segment)
+        1209.541847f, -1204.643391f, 365.238423f,
+        -363.797538f  // a3, b3, c3, d3 (third rational segment)
     },
     // Temperature: 5.78°C (key: 5)
     {
@@ -86,10 +86,10 @@ static const float BATTERY_OCV_DISCHARGE_PARAMS[BATTERY_NUM_TEMP_POINTS][10] = {
     // Temperature: 15.55°C (key: 15)
     {
         0.114185f, 3.232650f,  // m, b (linear segment)
-        53.301731f, 494.341291f, 17.390648f,
-        147.397127f,  // a1, b1, c1, d1 (first rational segment)
-        3148.601582f, -3139.694761f, 947.559853f,
-        -944.961920f  // a3, b3, c3, d3 (third rational segment)
+        60.048245f, 556.913282f, 19.591820f,
+        166.054156f,  // a1, b1, c1, d1 (first rational segment)
+        3200.736593f, -3191.682291f, 963.249686f,
+        -960.608735f  // a3, b3, c3, d3 (third rational segment)
     },
     // Temperature: 20.65°C (key: 20)
     {
@@ -99,13 +99,13 @@ static const float BATTERY_OCV_DISCHARGE_PARAMS[BATTERY_NUM_TEMP_POINTS][10] = {
         1180.804882f, -1178.074609f, 355.167808f,
         -354.373464f  // a3, b3, c3, d3 (third rational segment)
     },
-    // Temperature: 25.42°C (key: 25)
+    // Temperature: 25.43°C (key: 25)
     {
-        0.117951f, 3.235429f,  // m, b (linear segment)
-        89.871275f, 1253.014022f, 29.329382f,
-        376.569165f,  // a1, b1, c1, d1 (first rational segment)
-        1131.880318f, -1129.339379f, 340.039336f,
-        -339.304723f  // a3, b3, c3, d3 (third rational segment)
+        0.117543f, 3.236008f,  // m, b (linear segment)
+        78.102339f, 1077.942159f, 25.484299f,
+        323.846567f,  // a1, b1, c1, d1 (first rational segment)
+        1130.318095f, -1127.865886f, 339.544458f,
+        -338.836536f  // a3, b3, c3, d3 (third rational segment)
     },
     // Temperature: 31.41°C (key: 30)
     {
@@ -123,21 +123,21 @@ static const float BATTERY_OCV_DISCHARGE_PARAMS[BATTERY_NUM_TEMP_POINTS][10] = {
         4774.132278f, -4767.725320f, 1431.719239f,
         -1429.869351f  // a3, b3, c3, d3 (third rational segment)
     },
-    // Temperature: 40.39°C (key: 40)
+    // Temperature: 40.38°C (key: 40)
     {
-        0.123437f, 3.237152f,  // m, b (linear segment)
-        203.753833f, 3441.209337f, 66.623422f,
-        1035.896296f,  // a1, b1, c1, d1 (first rational segment)
-        1068.509706f, -1066.951782f, 320.376374f,
-        -319.926907f  // a3, b3, c3, d3 (third rational segment)
+        0.123696f, 3.237016f,  // m, b (linear segment)
+        221.044970f, 3715.383819f, 72.272903f,
+        1118.389323f,  // a1, b1, c1, d1 (first rational segment)
+        -4039.944265f, 4034.063152f, -1211.294227f,
+        1209.598810f  // a3, b3, c3, d3 (third rational segment)
     },
-    // Temperature: 45.29°C (key: 45)
+    // Temperature: 45.28°C (key: 45)
     {
-        0.124998f, 3.235772f,  // m, b (linear segment)
-        1819.150259f, 31026.915232f, 595.177551f,
-        9343.581417f,  // a1, b1, c1, d1 (first rational segment)
-        41239.010522f, -41183.173619f, 12365.128437f,
-        -12349.005616f  // a3, b3, c3, d3 (third rational segment)
+        0.125006f, 3.235912f,  // m, b (linear segment)
+        151.467401f, 2582.526900f, 49.550052f,
+        777.691108f,  // a1, b1, c1, d1 (first rational segment)
+        1112.445343f, -1110.999778f, 333.537185f,
+        -333.119361f  // a3, b3, c3, d3 (third rational segment)
     }};
 
 // Charge OCV curve parameters for each temperature
@@ -169,10 +169,10 @@ static const float BATTERY_OCV_CHARGE_PARAMS[BATTERY_NUM_TEMP_POINTS][10] = {
     // Temperature: 17.51°C (key: 15)
     {
         0.115653f, 3.274031f,  // m, b (linear segment)
-        64.044330f, 529.396718f, 20.054090f,
-        157.624172f,  // a1, b1, c1, d1 (first rational segment)
-        1058.938754f, -1022.297695f, 317.911706f,
-        -307.869074f  // a3, b3, c3, d3 (third rational segment)
+        237.696958f, 1964.826751f, 74.429637f,
+        585.013431f,  // a1, b1, c1, d1 (first rational segment)
+        968.862408f, -935.338129f, 290.869232f,
+        -281.680851f  // a3, b3, c3, d3 (third rational segment)
     },
     // Temperature: 22.50°C (key: 20)
     {
@@ -182,13 +182,13 @@ static const float BATTERY_OCV_CHARGE_PARAMS[BATTERY_NUM_TEMP_POINTS][10] = {
         983.725464f, -950.493228f, 295.209174f,
         -286.098635f  // a3, b3, c3, d3 (third rational segment)
     },
-    // Temperature: 27.46°C (key: 25)
+    // Temperature: 27.38°C (key: 25)
     {
-        0.108980f, 3.280729f,  // m, b (linear segment)
-        13.408572f, 195.788230f, 4.191912f,
-        58.632729f,  // a1, b1, c1, d1 (first rational segment)
-        1421.480447f, -1387.510482f, 425.138078f,
-        -415.819849f  // a3, b3, c3, d3 (third rational segment)
+        0.111950f, 3.273751f,  // m, b (linear segment)
+        -25.521502f, -274.597696f, -8.095046f,
+        -81.706277f,  // a1, b1, c1, d1 (first rational segment)
+        1073.930068f, -1053.131703f, 321.219989f,
+        -315.514254f  // a3, b3, c3, d3 (third rational segment)
     },
     // Temperature: 32.31°C (key: 30)
     {
@@ -214,13 +214,13 @@ static const float BATTERY_OCV_CHARGE_PARAMS[BATTERY_NUM_TEMP_POINTS][10] = {
         1018.218867f, -1006.960134f, 303.810937f,
         -300.720120f  // a3, b3, c3, d3 (third rational segment)
     },
-    // Temperature: 47.35°C (key: 45)
+    // Temperature: 47.37°C (key: 45)
     {
-        0.096072f, 3.287899f,  // m, b (linear segment)
-        19.109756f, 316.572653f, 6.001677f,
-        94.659222f,  // a1, b1, c1, d1 (first rational segment)
-        1023.376933f, -1010.269846f, 305.114363f,
-        -301.461068f  // a3, b3, c3, d3 (third rational segment)
+        0.102922f, 3.281457f,  // m, b (linear segment)
+        133.236246f, 1680.463569f, 42.563832f,
+        499.016826f,  // a1, b1, c1, d1 (first rational segment)
+        731.525161f, -722.630154f, 218.130924f,
+        -215.651760f  // a3, b3, c3, d3 (third rational segment)
     }};
 
 // Battery capacity data for each temperature
@@ -235,13 +235,13 @@ static const float BATTERY_CAPACITY[BATTERY_NUM_TEMP_POINTS][2] = {
     {355.86f, 378.79f},
     // Temperature: 20.65°C (key: 20)
     {362.69f, 394.38f},
-    // Temperature: 25.42°C (key: 25)
-    {358.49f, 352.85f},
+    // Temperature: 25.43°C (key: 25)
+    {357.80f, 383.75f},
     // Temperature: 31.41°C (key: 30)
     {361.17f, 379.75f},
     // Temperature: 35.41°C (key: 35)
     {357.76f, 366.75f},
-    // Temperature: 40.39°C (key: 40)
-    {358.06f, 383.63f},
-    // Temperature: 45.29°C (key: 45)
-    {354.19f, 350.75f}};
+    // Temperature: 40.38°C (key: 40)
+    {357.29f, 383.63f},
+    // Temperature: 45.28°C (key: 45)
+    {353.41f, 377.66f}};
