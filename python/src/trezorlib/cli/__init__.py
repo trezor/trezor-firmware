@@ -307,6 +307,9 @@ class TrezorConnection:
             sys.exit(1)
         except exceptions.FailedSessionResumption:
             sys.exit(1)
+        except exceptions.DerivationOnUninitaizedDeviceError:
+            click.echo("Device is not initialized.")
+            sys.exit(1)
         except Exception:
             click.echo("Failed to find a Trezor device.")
             if self.path is not None:
