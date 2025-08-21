@@ -59,40 +59,37 @@ static void prodtest_wpc_info(cli_t* cli) {
     goto cleanup;
   }
 
-  cli_trace(cli, "chip_id    0x%d ", chip_info.chip_id);
-  cli_trace(cli, "chip_rev   0x%d ", chip_info.chip_rev);
-  cli_trace(cli, "cust_id    0x%d ", chip_info.cust_id);
-  cli_trace(cli, "rom_id     0x%X ", chip_info.rom_id);
+  cli_trace(cli, "chip_id    0x%X", chip_info.chip_id);
+  cli_trace(cli, "chip_rev   0x%X", chip_info.chip_rev);
+  cli_trace(cli, "cust_id    0x%X", chip_info.cust_id);
+  cli_trace(cli, "rom_id     0x%X", chip_info.rom_id);
 
   if (chip_info.patch_id == 0) {
     cli_trace(cli, "patch_id   0x%X (This value may be visible after reset)",
               chip_info.patch_id);
   } else {
-    cli_trace(cli, "patch_id   0x%X ", chip_info.patch_id);
+    cli_trace(cli, "patch_id   0x%X", chip_info.patch_id);
   }
-  cli_trace(cli, "cfg_id     0x%X ", chip_info.cfg_id);
-  cli_trace(cli, "pe_id      0x%X ", chip_info.pe_id);
-  cli_trace(cli, "op_mode    0x%X ", chip_info.op_mode);
-  cli_trace(cli, "device_id  %s", device_id);
+  cli_trace(cli, "cfg_id     0x%X", chip_info.cfg_id);
+  cli_trace(cli, "pe_id      0x%X", chip_info.pe_id);
+  cli_trace(cli, "op_mode    0x%X", chip_info.op_mode);
+  cli_trace(cli, "device_id  0x%s", device_id);
   cli_trace(cli, "");
-  cli_trace(cli, "sys_err              0x%X ", chip_info.sys_err);
-  cli_trace(cli, "  core_hard_fault:   0x%X ", chip_info.core_hard_fault);
-  cli_trace(cli, "  nvm_ip_err:        0x%X ", chip_info.nvm_ip_err);
-  cli_trace(cli, "  nvm_boot_err:      0x%X ", chip_info.nvm_boot_err);
-  cli_trace(cli, "  nvm_pe_error:      0x%X ", chip_info.nvm_pe_error);
-  cli_trace(cli, "  nvm_config_err:    0x%X ", chip_info.nvm_config_err);
-  cli_trace(cli, "  nvm_patch_err:     0x%X ", chip_info.nvm_patch_err);
-  cli_trace(cli, "  nvm_prod_info_err: 0x%X ", chip_info.nvm_prod_info_err);
+  cli_trace(cli, "sys_err              0x%X", chip_info.sys_err);
+  cli_trace(cli, "  core_hard_fault:   0x%X", chip_info.core_hard_fault);
+  cli_trace(cli, "  nvm_ip_err:        0x%X", chip_info.nvm_ip_err);
+  cli_trace(cli, "  nvm_boot_err:      0x%X", chip_info.nvm_boot_err);
+  cli_trace(cli, "  nvm_pe_error:      0x%X", chip_info.nvm_pe_error);
+  cli_trace(cli, "  nvm_config_err:    0x%X", chip_info.nvm_config_err);
+  cli_trace(cli, "  nvm_patch_err:     0x%X", chip_info.nvm_patch_err);
+  cli_trace(cli, "  nvm_prod_info_err: 0x%X", chip_info.nvm_prod_info_err);
 
-  cli_progress(cli, "0x%d 0x%d 0x%d 0x%X 0x%X 0x%X 0x%X 0x%X 0x%s 0x%X",
-               chip_info.chip_id, chip_info.chip_rev, chip_info.cust_id,
-               chip_info.rom_id, chip_info.patch_id, chip_info.cfg_id,
-               chip_info.pe_id, chip_info.op_mode, device_id,
-               chip_info.sys_err);
+  cli_ok(cli, "0x%X 0x%X 0x%X 0x%X 0x%X 0x%X 0x%X 0x%X 0x%s 0x%X",
+         chip_info.chip_id, chip_info.chip_rev, chip_info.cust_id,
+         chip_info.rom_id, chip_info.patch_id, chip_info.cfg_id,
+         chip_info.pe_id, chip_info.op_mode, device_id, chip_info.sys_err);
 
   stwlc38_deinit();
-
-  cli_ok(cli, "");
 
 cleanup:
 
