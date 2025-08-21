@@ -17,7 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/systick.h>
+#ifdef KERNEL_MODE
+
 #include <trezor_rtl.h>
 
 #include "rgb_led_internal.h"
@@ -136,3 +137,5 @@ static uint32_t rgb_led_effect_charging(uint32_t elapsed_ms,
     return RGBLED_OFF;
   }
 }
+
+#endif
