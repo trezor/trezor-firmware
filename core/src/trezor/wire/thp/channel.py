@@ -247,7 +247,7 @@ class Channel:
 
             if expected_ctrl_byte is None or not expected_ctrl_byte(ctrl_byte):
                 if __debug__:
-                    self._log("Unexpected control byte", utils.hexlify_if_bytes(msg))
+                    self._log("Unexpected control byte: ", utils.hexlify_if_bytes(msg))
                 raise ThpError("Unexpected control byte")
 
             # 2: Handle message with unexpected sequential bit
