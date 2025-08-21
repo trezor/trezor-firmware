@@ -299,7 +299,7 @@ int prodtest_main(void) {
   rgb_led_set_color(RGBLED_GREEN);
 #endif
 
-  display_set_backlight(150);
+  display_set_backlight(85);
   prodtest_show_homescreen();
 
   while (true) {

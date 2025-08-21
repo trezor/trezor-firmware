@@ -25,7 +25,7 @@
 
 #include "rust_ui_bootloader.h"
 
-#define BACKLIGHT_NORMAL 150
+#define BACKLIGHT_NORMAL 85
 
 // Displays a warning screen before jumping to the untrusted firmware
 //

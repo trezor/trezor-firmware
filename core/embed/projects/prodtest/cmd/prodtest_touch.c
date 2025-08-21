@@ -353,7 +353,7 @@ static void prodtest_touch_draw(cli_t* cli) {
   uint32_t idx = 0;
 
   screen_prodtest_draw(events, 0);
-  display_set_backlight(150);
+  display_set_backlight(85);
 
   for (;;) {
     uint32_t evt = touch_get_event();
