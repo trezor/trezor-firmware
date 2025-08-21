@@ -21,8 +21,6 @@
 
 #include <trezor_types.h>
 
-#ifdef KERNEL_MODE
-
 #define RGB_EXTRACT_RED(color) (((color) >> 16) & 0xFF)
 #define RGB_EXTRACT_GREEN(color) (((color) >> 8) & 0xFF)
 #define RGB_EXTRACT_BLUE(color) ((color) & 0xFF)
@@ -76,6 +74,8 @@ typedef enum {
   RGB_LED_NUM_OF_EFFECTS,
 } rgb_led_effect_type_t;
 
+#ifdef KERNEL_MODE
+
 /**
  * @brief Initialize RGB LED driver
  */
@@ -87,9 +87,6 @@ void rgb_led_init(void);
 void rgb_led_deinit(void);
 
 #endif  // KERNEL_MODE
-
-// Set RGB LED color
-// color: 24-bit RGB color, 0x00RRGGBB
 
 /**
  * @brief Set the RGB led color.
