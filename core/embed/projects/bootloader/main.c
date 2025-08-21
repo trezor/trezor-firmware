@@ -196,7 +196,7 @@ static secbool boot_sequence(void) {
       }
 #ifdef USE_HAPTIC
       if (elapsed >= 500 && !haptic_played) {
-        haptic_play(HAPTIC_BUTTON_PRESS);
+        haptic_play(HAPTIC_POWER_ON);
         haptic_played = true;
       }
 #endif
