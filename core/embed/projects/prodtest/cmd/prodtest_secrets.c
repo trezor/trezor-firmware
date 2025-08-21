@@ -163,7 +163,7 @@ cleanup:
 }
 
 static void prodtest_secrets_certdev_write(cli_t* cli) {
-  if (cli_arg_count(cli) > 0) {
+  if (cli_arg_count(cli) != 1) {
     cli_error_arg_count(cli);
     return;
   }
