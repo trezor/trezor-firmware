@@ -16,6 +16,7 @@ PYOPT = ARGUMENTS.get('PYOPT', '1')
 DISABLE_OPTIGA = ARGUMENTS.get('DISABLE_OPTIGA', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
+DBG_CONSOLE = ARGUMENTS.get('DBG_CONSOLE', '')
 
 STORAGE_INSECURE_TESTING_MODE = ARGUMENTS.get('STORAGE_INSECURE_TESTING_MODE', '0') == '1'
 if STORAGE_INSECURE_TESTING_MODE and PRODUCTION:
@@ -23,6 +24,15 @@ if STORAGE_INSECURE_TESTING_MODE and PRODUCTION:
 if STORAGE_INSECURE_TESTING_MODE:
     DISABLE_OPTIGA = True
     PYOPT = "0"
+
+CCFLAGS_MOD = ''
+CPPPATH_MOD = []
+CPPDEFINES_MOD = []
+SOURCE_MOD = []
+SOURCE_MOD_CRYPTO = []
+CPPDEFINES_HAL = []
+SOURCE_HAL = []
+PATH_HAL = []
 
 FEATURE_FLAGS = {
     "RDI": True,
@@ -59,10 +69,10 @@ if BITCOIN_ONLY == '0':
     ]
 
 if PYOPT == '0':
-    FEATURES_WANTED += [
-        "usb_iface_debug",
-        "usb_iface_vcp",
-    ]
+    DBG_CONSOLE = DBG_CONSOLE or "VCP"
+
+if DBG_CONSOLE != "":
+    FEATURES_WANTED += ["dbg_console"]
 
 if not TREZOR_MODEL in ['T3W1', 'D002']:
     FEATURES_WANTED += ["secure_mode"]
@@ -72,15 +82,6 @@ if DISABLE_OPTIGA:
     if PRODUCTION:
         raise RuntimeError("DISABLE_OPTIGA requires non-production build")
     FEATURES_WANTED.remove("optiga")
-
-CCFLAGS_MOD = ''
-CPPPATH_MOD = []
-CPPDEFINES_MOD = []
-SOURCE_MOD = []
-SOURCE_MOD_CRYPTO = []
-CPPDEFINES_HAL = []
-SOURCE_HAL = []
-PATH_HAL = []
 
 FROZEN = True
 
@@ -251,6 +252,7 @@ env = Environment(
     CPPDEFINES_IMPLICIT=[],
     CPPDEFPREFIX="-D'",
     CPPDEFSUFFIX="'",
+    DBG_CONSOLE=DBG_CONSOLE,
 )
 
 FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)

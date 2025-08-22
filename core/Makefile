@@ -49,6 +49,7 @@ QUIET_MODE ?= 0
 TREZOR_DISABLE_ANIMATION ?= $(if $(filter 0,$(PYOPT)),1,0)
 STORAGE_INSECURE_TESTING_MODE ?= 0
 UI_PERFORMANCE_OVERLAY ?= 0
+DBG_CONSOLE ?=
 
 # If set, VCP writes will be blocking, in order to allow reliable debug data transmission over VCP.
 # Disabled by default, to prevent debug firmware from getting stuck while writing log messages (if the host is not reading them).
@@ -145,7 +146,8 @@ SCONS_VARS = \
 	TREZOR_MEMPERF="$(TREZOR_MEMPERF)" \
 	TREZOR_MODEL="$(TREZOR_MODEL)" \
 	UI_PERFORMANCE_OVERLAY="$(UI_PERFORMANCE_OVERLAY)" \
-	BLOCK_ON_VCP="$(BLOCK_ON_VCP)"
+	BLOCK_ON_VCP="$(BLOCK_ON_VCP)" \
+	DBG_CONSOLE="$(DBG_CONSOLE)"
 
 SCONS_OPTS = -Q -j $(JOBS)
 ifeq ($(QUIET_MODE),1)
