@@ -1,9 +1,11 @@
+#[cfg(feature = "translations")]
+use crate::translations::TR;
 #[cfg(feature = "haptic")]
 use crate::trezorhal::haptic::{play, HapticEffect};
+
 use crate::{
     strutil::TString,
     time::{Duration, ShortDuration},
-    translations::TR,
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Timer},
         constant,
@@ -102,6 +104,7 @@ impl Button {
             .with_radius(Self::MENU_ITEM_RADIUS)
     }
 
+    #[cfg(feature = "micropython")]
     pub fn new_connection_item(
         text: TString<'static>,
         stylesheet: ButtonStyleSheet,
