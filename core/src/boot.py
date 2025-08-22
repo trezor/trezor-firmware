@@ -65,6 +65,8 @@ async def bootscreen() -> None:
                 ui.display.orientation(storage.device.get_rotation())
                 if utils.USE_HAPTIC:
                     io.haptic.haptic_set_enabled(storage.device.get_haptic_feedback())
+                if utils.USE_RGB_LED:
+                    io.rgb_led.rgb_led_set_enabled(storage.device.get_rgb_led())
                 lockscreen = Lockscreen(
                     label=storage.device.get_label(), bootscreen=True
                 )

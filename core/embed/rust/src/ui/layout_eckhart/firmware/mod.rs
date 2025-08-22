@@ -52,8 +52,8 @@ pub use value_input_screen::{
     DurationInput, NumberInput, ValueInput, ValueInputScreen, ValueInputScreenMsg,
 };
 pub use vertical_menu::{
-    LongMenuGc, MenuItems, ShortMenuVec, VerticalMenu, VerticalMenuMsg, LONG_MENU_ITEMS,
-    SHORT_MENU_ITEMS,
+    LongMenuGc, MediumMenuVec, MenuItems, ShortMenuVec, VerticalMenu, VerticalMenuMsg,
+    LONG_MENU_ITEMS, MEDIUM_MENU_ITEMS, SHORT_MENU_ITEMS,
 };
 pub use vertical_menu_screen::{VerticalMenuScreen, VerticalMenuScreenMsg};
 

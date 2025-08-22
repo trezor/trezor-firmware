@@ -41,6 +41,7 @@ if utils.USE_THP:
 # unused from python:
 # _BRIGHTNESS                = const(0x19)  # int
 _DISABLE_HAPTIC_FEEDBACK   = const(0x20)  # bool (0x01 or empty)
+_DISABLE_RGB_LED           = const(0x21)  # bool (0x01 or empty)
 
 
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
@@ -393,3 +394,17 @@ def get_haptic_feedback() -> bool:
     Get haptic feedback enable, default to true if not set.
     """
     return not common.get_bool(_NAMESPACE, _DISABLE_HAPTIC_FEEDBACK, True)
+
+
+def set_rgb_led(enable: bool) -> None:
+    """
+    Enable or disable RGB LED.
+    """
+    common.set_bool(_NAMESPACE, _DISABLE_RGB_LED, not enable, True)
+
+
+def get_rgb_led() -> bool:
+    """
+    Get RGB LED enable, default to true if not set.
+    """
+    return not common.get_bool(_NAMESPACE, _DISABLE_RGB_LED, True)
