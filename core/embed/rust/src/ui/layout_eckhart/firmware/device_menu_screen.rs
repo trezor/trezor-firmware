@@ -29,13 +29,22 @@ use super::{
             VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg, MEDIUM_MENU_ITEMS,
         },
     },
-    theme, MediumMenuVec,
+    theme, MediumMenuVec, ShortMenuVec,
 };
 use heapless::Vec;
 
+// - root
+//   - pair & connect
+//   - settings
+//     - security
+//       - pin code
+//       - wipe code
+//     - device
+const MAX_SUBMENUS: usize = 7;
+// pin and wipe code
 const MAX_DEPTH: usize = 3;
-const MAX_SUBSCREENS: usize = 12;
-const MAX_SUBMENUS: usize = MAX_SUBSCREENS - 1 - MAX_PAIRED_DEVICES /* (about and device screens) */;
+// submenus, device screens, regulatory and about screens
+const MAX_SUBSCREENS: usize = MAX_SUBMENUS + MAX_PAIRED_DEVICES + 2;
 
 const DIS_CONNECT_DEVICE_MENU_INDEX: usize = 0;
 const FORGET_DEVICE_MENU_INDEX: usize = 1;
@@ -168,6 +177,7 @@ enum Subscreen {
 #[allow(clippy::large_enum_variant)]
 enum ActiveScreen {
     Menu(VerticalMenuScreen<MediumMenuVec>),
+    Device(VerticalMenuScreen<ShortMenuVec>),
     About(TextScreen<Paragraphs<PropsList>>),
     Regulatory(RegulatoryScreen),
 
@@ -635,7 +645,7 @@ impl DeviceMenuScreen {
                     TR::words__forget.into(),
                     theme::menu_item_title_orange(),
                 ));
-                *self.active_screen.deref_mut() = ActiveScreen::Menu(
+                *self.active_screen.deref_mut() = ActiveScreen::Device(
                     VerticalMenuScreen::new(menu)
                         .with_header(
                             Header::new(TR::buttons__back.into())
@@ -725,6 +735,9 @@ impl Component for DeviceMenuScreen {
             ActiveScreen::Menu(menu) => {
                 menu.place(bounds);
             }
+            ActiveScreen::Device(device) => {
+                device.place(bounds);
+            }
             ActiveScreen::About(about) => {
                 about.place(bounds);
             }
@@ -741,26 +754,32 @@ impl Component for DeviceMenuScreen {
         // Handle the event for the active menu
         let subscreen = &self.subscreens[self.active_subscreen];
         match (subscreen, self.active_screen.deref_mut()) {
-            (Subscreen::Submenu(..) | Subscreen::DeviceScreen(..), ActiveScreen::Menu(menu)) => {
+            (Subscreen::Submenu(..), ActiveScreen::Menu(menu)) => match menu.event(ctx, event) {
+                Some(VerticalMenuScreenMsg::Selected(button_idx)) => {
+                    return self.handle_submenu(ctx, button_idx);
+                }
+                Some(VerticalMenuScreenMsg::Back) => {
+                    return self.go_back(ctx);
+                }
+                Some(VerticalMenuScreenMsg::Close) => {
+                    return Some(DeviceMenuMsg::Close);
+                }
+                _ => {}
+            },
+            (Subscreen::DeviceScreen(_, connected, device_idx), ActiveScreen::Device(menu)) => {
                 match menu.event(ctx, event) {
-                    Some(VerticalMenuScreenMsg::Selected(button_idx)) => {
-                        if let Subscreen::DeviceScreen(_, connected, device_idx) = subscreen {
-                            match button_idx {
-                                DIS_CONNECT_DEVICE_MENU_INDEX if *connected => {
-                                    return Some(DeviceMenuMsg::DeviceDisconnect);
-                                }
-                                DIS_CONNECT_DEVICE_MENU_INDEX if !*connected => {
-                                    return Some(DeviceMenuMsg::DeviceConnect(*device_idx));
-                                }
-                                FORGET_DEVICE_MENU_INDEX => {
-                                    return Some(DeviceMenuMsg::DeviceUnpair(*device_idx));
-                                }
-                                _ => {}
-                            }
-                        } else {
-                            return self.handle_submenu(ctx, button_idx);
+                    Some(VerticalMenuScreenMsg::Selected(button_idx)) => match button_idx {
+                        DIS_CONNECT_DEVICE_MENU_INDEX if *connected => {
+                            return Some(DeviceMenuMsg::DeviceDisconnect);
                         }
-                    }
+                        DIS_CONNECT_DEVICE_MENU_INDEX if !*connected => {
+                            return Some(DeviceMenuMsg::DeviceConnect(*device_idx));
+                        }
+                        FORGET_DEVICE_MENU_INDEX => {
+                            return Some(DeviceMenuMsg::DeviceUnpair(*device_idx));
+                        }
+                        _ => {}
+                    },
                     Some(VerticalMenuScreenMsg::Back) => {
                         return self.go_back(ctx);
                     }
@@ -789,6 +808,7 @@ impl Component for DeviceMenuScreen {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         match self.active_screen.deref() {
             ActiveScreen::Menu(menu) => menu.render(target),
+            ActiveScreen::Device(device) => device.render(target),
             ActiveScreen::About(about) => about.render(target),
             ActiveScreen::Regulatory(regulatory) => regulatory.render(target),
             ActiveScreen::Empty => {}
@@ -804,6 +824,9 @@ impl crate::trace::Trace for DeviceMenuScreen {
         match self.active_screen.deref() {
             ActiveScreen::Menu(ref screen) => {
                 t.child("Menu", screen);
+            }
+            ActiveScreen::Device(ref screen) => {
+                t.child("Device", screen);
             }
             ActiveScreen::About(ref screen) => {
                 t.child("About", screen);
