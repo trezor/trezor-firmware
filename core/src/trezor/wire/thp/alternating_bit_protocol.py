@@ -10,10 +10,7 @@ def is_ack_valid(cache: ChannelCache, ack_bit: int) -> bool:
     if not _is_ack_expected(cache):
         return False
 
-    if not _has_ack_correct_sync_bit(cache, ack_bit):
-        return False
-
-    return True
+    return _has_ack_correct_sync_bit(cache, ack_bit)
 
 
 def _is_ack_expected(cache: ChannelCache) -> bool:

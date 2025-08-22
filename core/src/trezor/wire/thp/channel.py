@@ -229,7 +229,8 @@ class Channel:
 
     async def recv_payload(
         self,
-        expected_ctrl_byte: Callable[[int], bool] | None,
+        expected_ctrl_byte: Callable[[int], bool],
+        return_ack: bool = False,
         timeout_ms: int | None = None,
     ) -> memoryview:
         """
@@ -238,7 +239,7 @@ class Channel:
 
         Raise if the received control byte is an unexpected one.
 
-        If `expected_ctrl_byte` is `None`, returns after the first received ACK.
+        If `return_ack` is set, return after receiving an expected ACK.
         """
 
         while True:
@@ -248,17 +249,32 @@ class Channel:
 
             # Synchronization process
             ctrl_byte = msg[0]
-            payload = msg[PacketHeader.INIT_LENGTH : -CHECKSUM_LENGTH]
-            seq_bit = control_byte.get_seq_bit(ctrl_byte)
-
-            # 1: Handle ACKs
-            if control_byte.is_ack(ctrl_byte):
-                handle_ack(self, control_byte.get_ack_bit(ctrl_byte))
-                if expected_ctrl_byte is None:
-                    return payload
+            if not (control_byte.is_ack(ctrl_byte) or control_byte.is_data(ctrl_byte)):
+                if __debug__:
+                    self._log(
+                        "Unrelated control byte - ignoring ",
+                        utils.hexlify_if_bytes(msg),
+                        logger=log.warning,
+                    )
                 continue
 
-            if expected_ctrl_byte is None or not expected_ctrl_byte(ctrl_byte):
+            payload = msg[PacketHeader.INIT_LENGTH : -CHECKSUM_LENGTH]
+            seq_bit = control_byte.get_seq_bit(ctrl_byte)
+            ack_bit = control_byte.get_ack_bit(ctrl_byte)
+
+            # 0: Handle ACKs
+            if received_expected_ack(self, ack_bit):
+                if control_byte.is_ack(ctrl_byte):
+                    # ACK message is handled
+                    self.reassembler.reset()
+
+                if return_ack:
+                    # keep the reassembled payload (for future handling)
+                    return payload[:0]
+
+            # 1: Check expected control byte
+            self.reassembler.reset()
+            if not expected_ctrl_byte(ctrl_byte) or return_ack:
                 if __debug__:
                     self._log(
                         "Unexpected control byte - ignoring ",
@@ -437,8 +453,12 @@ class Channel:
             # Channel's estimated latency + a variable delay (from 200ms till ~3.52s)
             timeout_ms = ack_latency_ms + round(10300 - 1010000 / (100 + i))
             try:
-                # wait and return after receiving an ACK, or raise in case of an unexpected message.
-                await self.recv_payload(expected_ctrl_byte=None, timeout_ms=timeout_ms)
+                # wait and return after receiving an expected ACK.
+                await self.recv_payload(
+                    expected_ctrl_byte=control_byte.is_encrypted_transport,
+                    return_ack=True,
+                    timeout_ms=timeout_ms,
+                )
             except Timeout:
                 if __debug__:
                     log.warning(__name__, "Retransmit after %d ms", timeout_ms)
@@ -506,9 +526,9 @@ def send_ack(channel: Channel, ack_bit: int) -> Awaitable[None]:
     return channel.iface_ctx.write_payload(header, b"")
 
 
-def handle_ack(ctx: Channel, ack_bit: int) -> None:
+def received_expected_ack(ctx: Channel, ack_bit: int) -> bool:
     if not ABP.is_ack_valid(ctx.channel_cache, ack_bit):
-        return
+        return False
     # ACK is expected and it has correct sync bit
     if __debug__:
         log.debug(
@@ -517,3 +537,4 @@ def handle_ack(ctx: Channel, ack_bit: int) -> None:
             iface=ctx.iface,
         )
     ABP.set_sending_allowed(ctx.channel_cache, True)
+    return True

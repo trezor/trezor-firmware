@@ -41,6 +41,11 @@ def is_ack(ctrl_byte: int) -> bool:
     return ctrl_byte & _ACK_MASK == ACK_MESSAGE
 
 
+def is_data(ctrl_byte: int) -> bool:
+    """Return `True` for ACK, handshake and encrypted transport messages."""
+    return ctrl_byte & 0xE0 == 0
+
+
 def is_continuation(ctrl_byte: int) -> bool:
     return ctrl_byte & _CONTINUATION_PACKET_MASK == CONTINUATION_PACKET
 
