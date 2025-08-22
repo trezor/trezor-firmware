@@ -228,6 +228,8 @@ class LayoutContent(UnstructuredJSONReader):
     def subtitle(self) -> str:
         """Getting text that is displayed as a subtitle."""
         subtitle = self._get_str_or_dict_text("subtitle")
+        # Replace newlines with space
+        subtitle = subtitle.replace("\n", " ")
         return subtitle
 
     def text_content(self) -> str:
@@ -1856,6 +1858,13 @@ class ScreenButtons:
     # Menu/close menu button
     def menu(self) -> Coords:
         return self._grid55(4, 0)
+
+    # Header back button
+    def back(self) -> Coords:
+        if self.layout_type is LayoutType.Eckhart:
+            return self._grid55(0, 0)
+        else:
+            raise ValueError("Wrong layout type")
 
     # Center of the screen
     def tap_to_confirm(self) -> Coords:
