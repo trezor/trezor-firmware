@@ -24,14 +24,7 @@ from trezor import protobuf, utils, workflow
 from trezor.loop import Timeout
 
 from ..protocol_common import Message
-from . import (
-    ACK_MESSAGE,
-    ENCRYPTED,
-    ChannelState,
-    PacketHeader,
-    ThpDecryptionError,
-    ThpError,
-)
+from . import ACK_MESSAGE, ENCRYPTED, ChannelState, PacketHeader, ThpDecryptionError
 from . import alternating_bit_protocol as ABP
 from . import control_byte, crypto, memory_manager
 from .checksum import CHECKSUM_LENGTH, is_valid
@@ -102,7 +95,15 @@ class Reassembler:
             return False
 
         if self.bytes_read > self.buffer_len:
-            raise ThpError("read more bytes than expected")
+            if __debug__:
+                log.warning(
+                    __name__,
+                    "Reassembled %d bytes, %d expected",
+                    self.bytes_read,
+                    self.buffer_len,
+                )
+            self.reset()
+            return False
 
         if not verify_checksum(buffer):
             return False
@@ -247,8 +248,12 @@ class Channel:
 
             if expected_ctrl_byte is None or not expected_ctrl_byte(ctrl_byte):
                 if __debug__:
-                    self._log("Unexpected control byte: ", utils.hexlify_if_bytes(msg))
-                raise ThpError("Unexpected control byte")
+                    self._log(
+                        "Unexpected control byte - ignoring ",
+                        utils.hexlify_if_bytes(msg),
+                        logger=log.warning,
+                    )
+                continue
 
             # 2: Handle message with unexpected sequential bit
             if seq_bit != ABP.get_expected_receive_seq_bit(self.channel_cache):
@@ -257,7 +262,7 @@ class Channel:
                         "Received message with an unexpected sequential bit",
                     )
                 await send_ack(self, ack_bit=seq_bit)
-                raise ThpError("Received message with an unexpected sequential bit")
+                continue
 
             # 3: Send ACK in response
             await send_ack(self, ack_bit=seq_bit)
@@ -406,7 +411,7 @@ class Channel:
                 ABP.set_send_seq_bit_to_opposite(self.channel_cache)
                 return
 
-        raise ThpError("Retransmission timeout")
+        raise Timeout("THP retransmission timeout")
 
     def _encrypt(self, buffer: utils.BufferType, noise_payload_len: int) -> None:
         if __debug__:
