@@ -93,7 +93,8 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/secure_aes/stm32u5/secure_aes_unpriv.c",
         "embed/sec/storage/stm32u5/storage_salt.c",
         "embed/sec/time_estimate/stm32/time_estimate.c",
-        "embed/sys/dbg/stm32/dbg_printf.c",
+        "embed/sys/dbg/dbg_console.c",
+        "embed/sys/dbg/stm32/dbg_console_backend.c",
         "embed/sys/irq/stm32/irq.c",
         "embed/sys/linker/linker_utils.c",
         "embed/sys/mpu/stm32u5/mpu.c",
@@ -161,6 +162,19 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
             defines += [("USE_USB_IFACE_WEBAUTHN", "1")]
         if "usb_iface_vcp" in features_wanted:
             defines += [("USE_USB_IFACE_VCP", "1")]
+
+    if "system_view" in features_wanted:
+        sources += [
+            "embed/sys/dbg/stm32/systemview/config/SEGGER_SYSVIEW_Config_NoOS.c",
+            "embed/sys/dbg/stm32/systemview/segger/SEGGER_SYSVIEW.c",
+            "embed/sys/dbg/stm32/systemview/segger/SEGGER_RTT.c",
+            "embed/sys/dbg/stm32/systemview/segger/SEGGER_RTT_ASM_ARMv7M.S",
+        ]
+        paths += [
+            "embed/sys/dbg/stm32/systemview/config",
+            "embed/sys/dbg/stm32/systemview/segger",
+        ]
+        defines += [("USE_SYSTEM_VIEW", "1")]
 
     env.get("ENV")["SUFFIX"] = "stm32u5"
 

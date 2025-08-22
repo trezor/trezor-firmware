@@ -10,6 +10,7 @@ BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
 PRODUCTION = 0 if BOOTLOADER_QA else ARGUMENTS.get('PRODUCTION', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 UI_PERFORMANCE_OVERLAY = ARGUMENTS.get('UI_PERFORMANCE_OVERLAY', '0') == '1'
+DBG_CONSOLE = ARGUMENTS.get('DBG_CONSOLE', '')
 
 FEATURES_WANTED = [
     "ble",
@@ -42,6 +43,20 @@ CPPDEFINES_HAL = []
 SOURCE_HAL = []
 PATH_HAL = []
 RUST_UI_FEATURES = []
+
+if DBG_CONSOLE == "VCP":
+    FEATURES_WANTED += ["usb_iface_vcp"]
+    CPPDEFINES_MOD += ["USE_DBG_CONSOLE_VCP"]
+elif DBG_CONSOLE == "SWO":
+    CPPDEFINES_MOD += ["USE_DBG_CONSOLE_SWO"]
+elif DBG_CONSOLE == "SYSTEM_VIEW":
+    FEATURES_WANTED += ["system_view"]
+    CPPDEFINES_MOD += ["USE_DBG_CONSOLE_SYSTEM_VIEW"]
+elif DBG_CONSOLE == "":
+    pass
+else:
+    raise RuntimeError("DBG_CONSOLE argument is invalid")
+
 
 env = Environment(
     ENV=os.environ,

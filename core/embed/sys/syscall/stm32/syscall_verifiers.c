@@ -90,6 +90,32 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
+ssize_t dbg_console_read__verified(void *buffer, size_t buffer_size) {
+  if (!probe_write_access(buffer, buffer_size)) {
+    goto access_violation;
+  }
+
+  return dbg_console_read(buffer, buffer_size);
+
+access_violation:
+  apptask_access_violation();
+  return -1;
+}
+
+void dbg_console_write__verified(const void *data, size_t data_size) {
+  if (!probe_read_access(data, data_size)) {
+    goto access_violation;
+  }
+
+  dbg_console_write(data, data_size);
+  return;
+
+access_violation:
+  apptask_access_violation();
+}
+
+// ---------------------------------------------------------------------
+
 bool boot_image_check__verified(const boot_image_t *image) {
   if (!probe_read_access(image, sizeof(*image))) {
     goto access_violation;

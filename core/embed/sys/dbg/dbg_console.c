@@ -17,37 +17,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef SYSTEM_VIEW
-
 #include <trezor_rtl.h>
 
-#include <sys/systemview.h>
-#include "mpconfigport.h"
+#include <rtl/mini_printf.h>
+#include <sys/dbg_console.h>
 
-#include "SEGGER_SYSVIEW.h"
-#include "SEGGER_SYSVIEW_Conf.h"
-
-void enable_systemview() {
-  SEGGER_SYSVIEW_Conf();
-  SEGGER_SYSVIEW_Start();
+void dbg_console_vprintf(const char *fmt, va_list args) {
+  char temp[80];
+  mini_vsnprintf(temp, sizeof(temp), fmt, args);
+  dbg_console_write(temp, strnlen(temp, sizeof(temp)));
 }
 
-#ifdef SYSTEMVIEW_DEST_RTT
-size_t _write(int file, const void *ptr, size_t len);
-#endif
-
-size_t segger_print(const char *str, size_t len) {
-#ifdef SYSTEMVIEW_DEST_SYSTEMVIEW
-  static char str_copy[1024];
-  size_t copylen = len > 1023 ? 1023 : len;
-  memcpy(str_copy, str, copylen);
-  str_copy[copylen] = 0;
-  SEGGER_SYSVIEW_Print(str_copy);
-  return len;
-#endif
-#ifdef SYSTEMVIEW_DEST_RTT
-  _write(0, str, len);
-  return len;
-#endif
+void dbg_console_printf(const char *fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  dbg_console_vprintf(fmt, args);
+  va_end(args);
 }
-#endif

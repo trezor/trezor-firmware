@@ -23,6 +23,7 @@
 #include <rtl/mini_printf.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
+#include <sys/dbg_console.h>
 #include <sys/linker_utils.h>
 #include <sys/mpu.h>
 #include <sys/stack_utils.h>
@@ -67,6 +68,7 @@ void system_init(systask_error_handler_t error_handler) {
 #ifdef KERNEL
   syscall_ipc_init();
 #endif
+  dbg_console_init();
 }
 
 void system_deinit(void) {

@@ -18,11 +18,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CORE_SYSTEMVIEW_H
-#define CORE_SYSTEMVIEW_H
+#pragma once
 
 #include "SEGGER_SYSVIEW.h"
-
-void enable_systemview(void);
-
-#endif  // CORE_SYSTEMVIEW_H
