@@ -1,7 +1,5 @@
 from storage.cache_thp import ChannelCache
 
-from . import ThpError
-
 
 def is_ack_valid(cache: ChannelCache, ack_bit: int) -> bool:
     """
@@ -72,8 +70,7 @@ def set_expected_receive_seq_bit(cache: ChannelCache, seq_bit: int) -> None:
     Set the expected sequential number (bit) of the next message to be received
     in the provided channel
     """
-    if seq_bit not in (0, 1):
-        raise ThpError("Unexpected receive sync bit")
+    assert seq_bit in (0, 1)
 
     # set second bit to "seq_bit" value
     cache.sync &= 0xBF
@@ -82,8 +79,7 @@ def set_expected_receive_seq_bit(cache: ChannelCache, seq_bit: int) -> None:
 
 
 def _set_send_seq_bit(cache: ChannelCache, seq_bit: int) -> None:
-    if seq_bit not in (0, 1):
-        raise ThpError("Unexpected send seq bit")
+    assert seq_bit in (0, 1)
     # set third bit to "seq_bit" value
     cache.sync &= 0xDF
     if seq_bit:

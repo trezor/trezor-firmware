@@ -15,7 +15,6 @@ from . import (
     CODEC_V1,
     PING,
     PacketHeader,
-    ThpError,
     ThpErrorType,
     channel_manager,
     checksum,
@@ -168,10 +167,20 @@ class InterfaceContext:
 
         packet = packet[: PacketHeader.INIT_LENGTH + payload_length]
         if not checksum.is_valid(packet[-CHECKSUM_LENGTH:], packet[:-CHECKSUM_LENGTH]):
-            raise ThpError("Invalid checksum")
+            if __debug__:
+                log.debug(
+                    __name__, "Invalid checksum: %s", utils.hexlify_if_bytes(packet)
+                )
+            return
 
         if payload_length != _BROADCAST_PAYLOAD_LENGTH:
-            raise ThpError("Invalid length in broadcast channel packet")
+            if __debug__:
+                log.debug(
+                    __name__,
+                    "Invalid length in broadcast channel packet: %d",
+                    payload_length,
+                )
+            return
 
         nonce = packet[PacketHeader.INIT_LENGTH : -CHECKSUM_LENGTH]
 
@@ -180,7 +189,13 @@ class InterfaceContext:
             return await self.write_payload(response_header, nonce)
 
         if ctrl_byte != CHANNEL_ALLOCATION_REQ:
-            raise ThpError("Unexpected ctrl_byte in a broadcast channel packet")
+            if __debug__:
+                log.debug(
+                    __name__,
+                    "Unexpected ctrl_byte in a broadcast channel packet: %d",
+                    ctrl_byte,
+                )
+            return
 
         channel_cache = channel_manager.create_new_channel(self._iface)
         response_data = get_channel_allocation_response(

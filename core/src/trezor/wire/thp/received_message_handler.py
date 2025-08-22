@@ -21,7 +21,6 @@ from . import (
     SessionState,
     ThpDecryptionError,
     ThpDeviceLockedError,
-    ThpError,
     ThpErrorType,
     ThpUnallocatedSessionError,
     control_byte,
@@ -62,9 +61,8 @@ async def handle_received_message(channel: Channel) -> bool:
         elif state is ChannelState.TH1:
             await _handle_state_handshake(channel)
             return channel.get_channel_state() == ChannelState.TC1
-        else:
-            raise ThpError("Unimplemented channel state")
-
+        if __debug__:
+            channel._log("Invalid channel state", logger=log.error)
     except ThpUnallocatedSessionError as e:
         error_message = Failure(code=FailureType.ThpUnallocatedSession)
         await channel.write(error_message, e.session_id)
@@ -89,7 +87,8 @@ async def _handle_state_handshake(
     payload = await ctx.recv_payload(control_byte.is_handshake_init_req)
 
     if len(payload) != PUBKEY_LENGTH:
-        raise ThpError("Message received is not a valid handshake init request!")
+        log.error(__name__, "Message received is not a valid handshake init request!")
+        return
 
     if not config.is_unlocked():
         raise ThpDeviceLockedError
