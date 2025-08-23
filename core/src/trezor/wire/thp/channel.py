@@ -21,7 +21,7 @@ from storage.cache_thp import (
     is_there_a_channel_to_replace,
 )
 from trezor import protobuf, utils, workflow
-from trezor.loop import Timeout
+from trezor.loop import Timeout, race, sleep
 
 from ..protocol_common import Message
 from . import (
@@ -57,6 +57,11 @@ if TYPE_CHECKING:
 
 _MAX_RETRANSMISSION_COUNT = const(50)
 _MIN_RETRANSMISSION_COUNT = const(2)
+
+# Stop retransmission if writes are blocked - e.g. due to USB flow control.
+# It allows restarting the event loop to handle other THP channels.
+_WRITE_TIMEOUT_MS = const(5_000)
+_WRITE_TIMEOUT = sleep(_WRITE_TIMEOUT_MS)
 
 
 class Reassembler:
@@ -388,7 +393,12 @@ class Channel:
         ABP.set_sending_allowed(self.channel_cache, False)
 
         for i in range(_MAX_RETRANSMISSION_COUNT):
-            await self.ctx.write_payload(header, payload)
+            result = await race(self.ctx.write_payload(header, payload), _WRITE_TIMEOUT)
+            if isinstance(result, int):
+                if __debug__:
+                    log.error(__name__, "Sending is stuck for %d ms", _WRITE_TIMEOUT_MS)
+                break
+
             # starting from 100ms till ~3.42s
             timeout_ms = round(10200 - 1010000 / (100 + i))
             try:
@@ -403,7 +413,8 @@ class Channel:
                 ABP.set_send_seq_bit_to_opposite(self.channel_cache)
                 return
 
-        raise ThpError("Retransmission timeout")
+        # restart event loop due to unresponsive channel
+        raise Timeout("THP retransmission timeout")
 
     def _encrypt(self, buffer: utils.BufferType, noise_payload_len: int) -> None:
         if __debug__:
