@@ -18,7 +18,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_;
   MP_QSTR_ATTACHED;
   MP_QSTR_AttachType;
-  MP_QSTR_AutoLockDelay;
+  MP_QSTR_AutoLockBattery;
+  MP_QSTR_AutoLockUSB;
   MP_QSTR_BACK;
   MP_QSTR_BLEIF;
   MP_QSTR_BacklightLevels;
@@ -126,6 +127,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_authenticate__header;
   MP_QSTR_auto_lock__change_template;
   MP_QSTR_auto_lock__description;
+  MP_QSTR_auto_lock__on_battery;
+  MP_QSTR_auto_lock__on_usb;
   MP_QSTR_auto_lock__title;
   MP_QSTR_auto_lock__turned_on;
   MP_QSTR_auto_lock_delay;

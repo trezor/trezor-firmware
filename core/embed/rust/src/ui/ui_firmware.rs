@@ -366,7 +366,7 @@ pub trait FirmwareUI {
         paired_devices: heapless::Vec<TString<'static>, MAX_PAIRED_DEVICES>,
         connected_idx: Option<u8>,
         pin_code: Option<bool>,
-        auto_lock_delay: Option<TString<'static>>,
+        auto_lock_delay: Option<[TString<'static>; 2]>,
         wipe_code: Option<bool>,
         check_backup: bool,
         device_name: Option<TString<'static>>,

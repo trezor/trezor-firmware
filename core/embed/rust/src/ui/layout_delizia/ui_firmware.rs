@@ -1021,7 +1021,7 @@ impl FirmwareUI for UIDelizia {
         _paired_devices: heapless::Vec<TString<'static>, MAX_PAIRED_DEVICES>,
         _connected_idx: Option<u8>,
         _pin_code: Option<bool>,
-        _auto_lock_delay: Option<TString<'static>>,
+        _auto_lock_delay: Option<[TString<'static>; 2]>,
         _wipe_code: Option<bool>,
         _check_backup: bool,
         _device_name: Option<TString<'static>>,

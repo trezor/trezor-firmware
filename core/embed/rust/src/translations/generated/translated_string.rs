@@ -1543,6 +1543,8 @@ pub enum TranslatedString {
     thp__pair_name = 1151,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "{0} is your Trezor's name."}
     thp__pair_new_device = 1152,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Pair with new device"}
     tutorial__power = 1153,  // "Use the power button on the side to turn your device on or off."
+    auto_lock__on_battery = 1154,  // "on battery / wireless charger"
+    auto_lock__on_usb = 1155,  // "connected to USB"
 }
 
 impl TranslatedString {
@@ -3523,6 +3525,8 @@ impl TranslatedString {
             #[cfg(feature = "layout_eckhart")]
             (Self::thp__pair_new_device, "Pair with new device"),
             (Self::tutorial__power, "Use the power button on the side to turn your device on or off."),
+            (Self::auto_lock__on_battery, "on battery / wireless charger"),
+            (Self::auto_lock__on_usb, "connected to USB"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3556,6 +3560,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_authenticate__header, Self::authenticate__header),
         (Qstr::MP_QSTR_auto_lock__change_template, Self::auto_lock__change_template),
         (Qstr::MP_QSTR_auto_lock__description, Self::auto_lock__description),
+        (Qstr::MP_QSTR_auto_lock__on_battery, Self::auto_lock__on_battery),
+        (Qstr::MP_QSTR_auto_lock__on_usb, Self::auto_lock__on_usb),
         (Qstr::MP_QSTR_auto_lock__title, Self::auto_lock__title),
         (Qstr::MP_QSTR_auto_lock__turned_on, Self::auto_lock__turned_on),
         (Qstr::MP_QSTR_backup__can_back_up_anytime, Self::backup__can_back_up_anytime),

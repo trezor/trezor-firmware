@@ -49,6 +49,7 @@ pub enum DeviceMenuId {
     Settings,
     Security,
     PinCode,
+    AutoLock,
     WipeCode,
     Device,
     Power,
@@ -63,9 +64,10 @@ impl TryFrom<u8> for DeviceMenuId {
             2 => Ok(DeviceMenuId::Settings),
             3 => Ok(DeviceMenuId::Security),
             4 => Ok(DeviceMenuId::PinCode),
-            5 => Ok(DeviceMenuId::WipeCode),
-            6 => Ok(DeviceMenuId::Device),
-            7 => Ok(DeviceMenuId::Power),
+            5 => Ok(DeviceMenuId::AutoLock),
+            6 => Ok(DeviceMenuId::WipeCode),
+            7 => Ok(DeviceMenuId::Device),
+            8 => Ok(DeviceMenuId::Power),
             _ => Err(()),
         }
     }
@@ -86,7 +88,7 @@ impl From<DeviceMenuId> for usize {
 }
 
 // FIXME: use mem::variant_count when it becomes stable
-const MAX_SUBMENUS: usize = 8;
+const MAX_SUBMENUS: usize = 9;
 // submenus, device screens, regulatory and about screens
 const MAX_SUBSCREENS: usize = MAX_SUBMENUS + MAX_PAIRED_DEVICES + 2;
 
@@ -123,7 +125,8 @@ pub enum DeviceMenuMsg {
     // Security menu
     PinCode,
     PinRemove,
-    AutoLockDelay,
+    AutoLockBattery,
+    AutoLockUSB,
     WipeCode,
     WipeRemove,
     CheckBackup,
@@ -226,18 +229,25 @@ impl MenuItem {
 struct Submenu {
     show_battery: bool,
     items: Vec<MenuItem, MEDIUM_MENU_ITEMS>,
+    subtitle: Option<TString<'static>>,
 }
 
 impl Submenu {
     pub fn new(items: Vec<MenuItem, MEDIUM_MENU_ITEMS>) -> Self {
         Self {
             show_battery: false,
+            subtitle: None,
             items,
         }
     }
 
     pub fn with_battery(mut self) -> Self {
         self.show_battery = true;
+        self
+    }
+
+    pub fn with_subtitle(mut self, subtitle: TString<'static>) -> Self {
+        self.subtitle = Some(subtitle);
         self
     }
 }
@@ -299,7 +309,7 @@ impl DeviceMenuScreen {
         paired_devices: Vec<TString<'static>, MAX_PAIRED_DEVICES>,
         connected_idx: Option<u8>,
         pin_code: Option<bool>,
-        auto_lock_delay: Option<TString<'static>>,
+        auto_lock_delay: Option<[TString<'static>; 2]>,
         wipe_code: Option<bool>,
         check_backup: bool,
         device_name: Option<TString<'static>>,
@@ -469,10 +479,29 @@ impl DeviceMenuScreen {
         self.register_submenu(id, Submenu::new(items));
     }
 
+    fn register_auto_lock_menu(&mut self, auto_lock_delay: [TString<'static>; 2]) {
+        let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
+        let battery_delay = MenuItem::new(
+            auto_lock_delay[0],
+            Some(Action::Return(DeviceMenuMsg::AutoLockBattery)),
+        )
+        .with_subtext(Some((TR::auto_lock__on_battery.into(), None)));
+        items.add(battery_delay);
+
+        let usb_delay = MenuItem::new(
+            auto_lock_delay[1],
+            Some(Action::Return(DeviceMenuMsg::AutoLockUSB)),
+        )
+        .with_subtext(Some((TR::auto_lock__on_usb.into(), None)));
+        items.add(usb_delay);
+
+        self.register_submenu(DeviceMenuId::AutoLock, Submenu::new(items));
+    }
+
     fn register_security_menu(
         &mut self,
         pin_code: Option<bool>,
-        auto_lock_delay: Option<TString<'static>>,
+        auto_lock_delay: Option<[TString<'static>; 2]>,
         wipe_code: Option<bool>,
         check_backup: bool,
     ) {
@@ -495,9 +524,9 @@ impl DeviceMenuScreen {
         }
 
         if let Some(auto_lock_delay) = auto_lock_delay {
+            self.register_auto_lock_menu(auto_lock_delay);
             let auto_lock_delay_item =
-                MenuItem::return_msg(TR::auto_lock__title.into(), DeviceMenuMsg::AutoLockDelay)
-                    .with_subtext(Some((auto_lock_delay, None)));
+                MenuItem::go_to_submenu(TR::auto_lock__title.into(), DeviceMenuId::AutoLock);
             items.add(auto_lock_delay_item);
         }
 
@@ -710,8 +739,12 @@ impl DeviceMenuScreen {
                         HeaderMsg::Back,
                     );
                 }
-                *self.active_screen.deref_mut() =
-                    ActiveScreen::Menu(VerticalMenuScreen::new(menu).with_header(header), id);
+                *self.active_screen.deref_mut() = ActiveScreen::Menu(
+                    VerticalMenuScreen::new(menu)
+                        .with_header(header)
+                        .with_subtitle(submenu.subtitle.unwrap_or(TString::empty())),
+                    id,
+                );
             }
             Subscreen::DeviceScreen(device, connected, _) => {
                 let mut menu = VerticalMenu::empty();
@@ -796,6 +829,7 @@ impl DeviceMenuScreen {
                 DeviceMenuId::Settings => DeviceMenuId::Root,
                 DeviceMenuId::Security => DeviceMenuId::Settings,
                 DeviceMenuId::PinCode => DeviceMenuId::Security,
+                DeviceMenuId::AutoLock => DeviceMenuId::Security,
                 DeviceMenuId::WipeCode => DeviceMenuId::Security,
                 DeviceMenuId::Device => DeviceMenuId::Settings,
                 DeviceMenuId::Power => DeviceMenuId::Root,
