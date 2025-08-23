@@ -1509,6 +1509,7 @@ pub enum TranslatedString {
     wipe__start_again = 1118,  // "Wipe your Trezor and start the setup process again."
     words__set = 1119,  // "Set"
     words__wipe = 1120,  // "Wipe"
+    lockscreen__unlock = 1121,  // "Unlock"
 }
 
 impl TranslatedString {
@@ -3337,6 +3338,7 @@ impl TranslatedString {
             (Self::wipe__start_again, "Wipe your Trezor and start the setup process again."),
             (Self::words__set, "Set"),
             (Self::words__wipe, "Wipe"),
+            (Self::lockscreen__unlock, "Unlock"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4024,6 +4026,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_lockscreen__tap_to_unlock, Self::lockscreen__tap_to_unlock),
         (Qstr::MP_QSTR_lockscreen__title_locked, Self::lockscreen__title_locked),
         (Qstr::MP_QSTR_lockscreen__title_not_connected, Self::lockscreen__title_not_connected),
+        (Qstr::MP_QSTR_lockscreen__unlock, Self::lockscreen__unlock),
         (Qstr::MP_QSTR_misc__decrypt_value, Self::misc__decrypt_value),
         (Qstr::MP_QSTR_misc__enable_labeling, Self::misc__enable_labeling),
         (Qstr::MP_QSTR_misc__encrypt_value, Self::misc__encrypt_value),

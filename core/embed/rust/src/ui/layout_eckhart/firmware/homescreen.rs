@@ -118,9 +118,9 @@ impl Homescreen {
 
     fn homebar_content(bootscreen: bool, locked: bool) -> ButtonContent {
         let text = if bootscreen {
-            Some(TR::lockscreen__tap_to_connect.into())
+            Some(TR::instructions__tap_to_start.into())
         } else if locked {
-            Some(TR::lockscreen__tap_to_unlock.into())
+            Some(TR::lockscreen__unlock.into())
         } else {
             None
         };
