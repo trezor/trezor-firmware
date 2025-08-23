@@ -285,6 +285,7 @@ pub trait FirmwareUI {
         subprompt: TString<'static>,
         allow_cancel: bool,
         warning: bool,
+        last_attempt: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn request_passphrase(

@@ -486,9 +486,10 @@ def request_duration(
 def request_pin(
     *,
     prompt: str,
-    subprompt: str,
+    attempts: str,
     allow_cancel: bool = True,
     wrong_pin: bool = False,
+    last_attempt: bool = False,
 ) -> LayoutObj[str | UiResult]:
     """Request pin on device."""
 
