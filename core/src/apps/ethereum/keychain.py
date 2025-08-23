@@ -104,8 +104,8 @@ def _schemas_from_network(
     if network_info is networks.UNKNOWN_NETWORK:
         # allow Ethereum or testnet paths for unknown networks
         slip44_id = (60, 1)
-    elif network_info.slip44 not in (60, 1):
-        # allow cross-signing with Ethereum unless it's testnet
+    elif network_info.slip44 != 60:
+        # allow cross-signing with Ethereum for all non-mainnet networks
         slip44_id = (network_info.slip44, 60)
     else:
         slip44_id = (network_info.slip44,)
