@@ -38,9 +38,10 @@ use heapless::Vec;
 //   - settings
 //     - security
 //       - pin code
+//       - auto-lock
 //       - wipe code
 //     - device
-const MAX_SUBMENUS: usize = 7;
+const MAX_SUBMENUS: usize = 8;
 const MAX_DEPTH: usize = 3;
 // submenus, device screens, regulatory and about screens
 const MAX_SUBSCREENS: usize = MAX_SUBMENUS + MAX_PAIRED_DEVICES + 2;
@@ -78,7 +79,8 @@ pub enum DeviceMenuMsg {
     // Security menu
     PinCode,
     PinRemove,
-    AutoLockDelay,
+    AutoLockBattery,
+    AutoLockUSB,
     WipeCode,
     WipeRemove,
     CheckBackup,
@@ -138,18 +140,25 @@ impl MenuItem {
 struct Submenu {
     show_battery: bool,
     items: Vec<MenuItem, MEDIUM_MENU_ITEMS>,
+    subtitle: Option<TString<'static>>,
 }
 
 impl Submenu {
     pub fn new(items: Vec<MenuItem, MEDIUM_MENU_ITEMS>) -> Self {
         Self {
             show_battery: false,
+            subtitle: None,
             items,
         }
     }
 
     pub fn with_battery(mut self) -> Self {
         self.show_battery = true;
+        self
+    }
+
+    pub fn with_subtitle(mut self, subtitle: TString<'static>) -> Self {
+        self.subtitle = Some(subtitle);
         self
     }
 }
@@ -209,7 +218,7 @@ impl DeviceMenuScreen {
         connected_idx: Option<usize>,
         bluetooth: Option<bool>,
         pin_code: Option<bool>,
-        auto_lock_delay: Option<TString<'static>>,
+        auto_lock_delay: Option<[TString<'static>; 2]>,
         wipe_code: Option<bool>,
         check_backup: bool,
         device_name: Option<TString<'static>>,
@@ -380,10 +389,31 @@ impl DeviceMenuScreen {
         self.add_subscreen(Subscreen::Submenu(submenu_index))
     }
 
+    fn add_auto_lock_menu(&mut self, auto_lock_delay: [TString<'static>; 2]) -> usize {
+        let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
+        let mut battery_delay = MenuItem::new(
+            auto_lock_delay[0],
+            Some(Action::Return(DeviceMenuMsg::AutoLockBattery)),
+        );
+        battery_delay.with_subtext(Some((TR::auto_lock__on_battery.into(), None)));
+        unwrap!(items.push(battery_delay));
+
+        let mut usb_delay = MenuItem::new(
+            auto_lock_delay[1],
+            Some(Action::Return(DeviceMenuMsg::AutoLockUSB)),
+        );
+        usb_delay.with_subtext(Some((TR::auto_lock__on_usb.into(), None)));
+        unwrap!(items.push(usb_delay));
+
+        let submenu_index =
+            self.add_submenu(Submenu::new(items).with_subtitle(TR::auto_lock__title.into()));
+        self.add_subscreen(Subscreen::Submenu(submenu_index))
+    }
+
     fn add_security_menu(
         &mut self,
         pin_code: Option<bool>,
-        auto_lock_delay: Option<TString<'static>>,
+        auto_lock_delay: Option<[TString<'static>; 2]>,
         wipe_code: Option<bool>,
         check_backup: bool,
     ) -> usize {
@@ -410,12 +440,12 @@ impl DeviceMenuScreen {
         }
 
         if let Some(auto_lock_delay) = auto_lock_delay {
-            let mut auto_lock_delay_item = MenuItem::new(
+            let auto_lock_idx = self.add_auto_lock_menu(auto_lock_delay);
+            let autolock_delay_item = MenuItem::new(
                 TR::auto_lock__title.into(),
-                Some(Action::Return(DeviceMenuMsg::AutoLockDelay)),
+                Some(Action::GoTo(auto_lock_idx)),
             );
-            auto_lock_delay_item.with_subtext(Some((auto_lock_delay, None)));
-            unwrap!(items.push(auto_lock_delay_item));
+            unwrap!(items.push(autolock_delay_item));
         }
 
         if let Some(wipe_code) = wipe_code {
@@ -626,8 +656,11 @@ impl DeviceMenuScreen {
                         HeaderMsg::Back,
                     );
                 }
-                *self.active_screen.deref_mut() =
-                    ActiveScreen::Menu(VerticalMenuScreen::new(menu).with_header(header));
+                *self.active_screen.deref_mut() = ActiveScreen::Menu(
+                    VerticalMenuScreen::new(menu)
+                        .with_header(header)
+                        .with_subtitle(submenu.subtitle.unwrap_or(TString::empty())),
+                );
             }
             Subscreen::DeviceScreen(device, connected, _) => {
                 let mut menu = VerticalMenu::empty();

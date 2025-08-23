@@ -8,8 +8,18 @@ from trezorui_api import DeviceMenuResult
 MAX_PAIRED_DEVICES = 4
 
 
-async def handle_device_menu() -> None:
+def get_auto_lock_delay() -> tuple[str, str] | None:
     from trezor import strings
+
+    if not config.has_pin():
+        return None
+    delay = storage_device.get_autolock_delay_ms()
+    #  TODO: the second value is mocked by using the same value
+    formatted = strings.format_autolock_duration(delay)
+    return [formatted, formatted]
+
+
+async def handle_device_menu() -> None:
 
     failed_backup = (
         storage_device.is_initialized() and storage_device.unfinished_backup()
@@ -27,12 +37,6 @@ async def handle_device_menu() -> None:
     firmware_version = ".".join(map(str, utils.VERSION))
     firmware_type = "Bitcoin-only" if utils.BITCOIN_ONLY else "Universal"
 
-    auto_lock_delay = (
-        strings.format_autolock_duration(storage_device.get_autolock_delay_ms())
-        if config.has_pin()
-        else None
-    )
-
     if __debug__:
         log.debug(
             __name__,
@@ -46,7 +50,7 @@ async def handle_device_menu() -> None:
             connected_idx=connected_idx,
             bluetooth=True,  # TODO implement bluetooth handling
             pin_code=config.has_pin() if storage_device.is_initialized() else None,
-            auto_lock_delay=auto_lock_delay,
+            auto_lock_delay=get_auto_lock_delay(),
             wipe_code=(
                 config.has_wipe_code() if storage_device.is_initialized() else None
             ),
@@ -160,7 +164,11 @@ async def handle_device_menu() -> None:
         from apps.management.change_pin import change_pin
 
         await change_pin(ChangePin(remove=True))
-    elif menu_result is DeviceMenuResult.AutoLockDelay:
+    elif menu_result in (
+        DeviceMenuResult.AutoLockBattery,
+        DeviceMenuResult.AutoLockUSB,
+    ):
+
         from trezor.messages import ApplySettings
 
         from apps.management.apply_settings import apply_settings

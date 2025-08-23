@@ -1508,6 +1508,8 @@ pub enum TranslatedString {
     ble__forget_all = 1117,  // "Forget all"
     words__connect = 1118,  // "Connect"
     words__forget = 1119,  // "Forget"
+    auto_lock__on_battery = 1120,  // "on battery / wireless charger"
+    auto_lock__on_usb = 1121,  // "connected to USB"
 }
 
 impl TranslatedString {
@@ -3335,6 +3337,8 @@ impl TranslatedString {
             (Self::ble__forget_all, "Forget all"),
             (Self::words__connect, "Connect"),
             (Self::words__forget, "Forget"),
+            (Self::auto_lock__on_battery, "on battery / wireless charger"),
+            (Self::auto_lock__on_usb, "connected to USB"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3368,6 +3372,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_authenticate__header, Self::authenticate__header),
         (Qstr::MP_QSTR_auto_lock__change_template, Self::auto_lock__change_template),
         (Qstr::MP_QSTR_auto_lock__description, Self::auto_lock__description),
+        (Qstr::MP_QSTR_auto_lock__on_battery, Self::auto_lock__on_battery),
+        (Qstr::MP_QSTR_auto_lock__on_usb, Self::auto_lock__on_usb),
         (Qstr::MP_QSTR_auto_lock__title, Self::auto_lock__title),
         (Qstr::MP_QSTR_auto_lock__turned_on, Self::auto_lock__turned_on),
         (Qstr::MP_QSTR_backup__can_back_up_anytime, Self::backup__can_back_up_anytime),

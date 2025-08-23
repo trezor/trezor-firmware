@@ -367,7 +367,7 @@ pub trait FirmwareUI {
         connected_idx: Option<usize>,
         bluetooth: Option<bool>,
         pin_code: Option<bool>,
-        auto_lock_delay: Option<TString<'static>>,
+        auto_lock_delay: Option<[TString<'static>; 2]>,
         wipe_code: Option<bool>,
         check_backup: bool,
         device_name: Option<TString<'static>>,
