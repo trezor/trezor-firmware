@@ -610,7 +610,7 @@ def show_group_share_success(
 # rust/src/ui/api/firmware_micropython.rs
 def show_homescreen(
     *,
-    label: str | None,
+    label: str,
     notification: str | None,
     notification_level: int = 0,
     lockable: bool,

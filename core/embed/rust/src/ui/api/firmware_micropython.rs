@@ -915,10 +915,7 @@ extern "C" fn new_show_group_share_success(
 
 extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let label: TString<'static> = kwargs
-            .get(Qstr::MP_QSTR_label)?
-            .try_into_option()?
-            .unwrap_or_else(|| model::FULL_NAME.into());
+        let label: TString<'static> = kwargs.get(Qstr::MP_QSTR_label)?.try_into()?;
         let notification: Option<TString<'static>> =
             kwargs.get(Qstr::MP_QSTR_notification)?.try_into_option()?;
         let notification_level: u8 = kwargs.get_or(Qstr::MP_QSTR_notification_level, 0)?;
@@ -1890,7 +1887,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
 
     /// def show_homescreen(
     ///     *,
-    ///     label: str | None,
+    ///     label: str,
     ///     notification: str | None,
     ///     notification_level: int = 0,
     ///     lockable: bool,
