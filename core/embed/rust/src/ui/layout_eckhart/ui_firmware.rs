@@ -39,8 +39,8 @@ use super::{
         ActionBar, Bip39Input, ConfirmHomescreen, DeviceMenuScreen, DurationInput, Header,
         HeaderMsg, Hint, Homescreen, MnemonicKeyboard, PinKeyboard, ProgressScreen,
         SelectWordCountScreen, SelectWordScreen, SetBrightnessScreen, ShortMenuVec, Slip39Input,
-        TextScreen, TextScreenMsg, ValueInputScreen, VerticalMenu, VerticalMenuScreen,
-        VerticalMenuScreenMsg,
+        StringKeyboard, TextScreen, TextScreenMsg, ValueInputScreen, VerticalMenu,
+        VerticalMenuScreen, VerticalMenuScreenMsg,
     },
     flow, fonts,
     theme::{
@@ -975,8 +975,8 @@ impl FirmwareUI for UIEckhart {
         allow_empty: bool,
         prefill: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let flow = flow::request_string::new_request_string(prompt, max_len, allow_empty, prefill)?;
-        Ok(flow)
+        let layout = RootComponent::new(StringKeyboard::new(prompt, max_len, allow_empty, prefill));
+        Ok(layout)
     }
 
     fn select_menu(

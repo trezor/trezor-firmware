@@ -175,7 +175,7 @@ async def handle_device_menu() -> None:
             trezorui_api.request_string(
                 prompt=TR.device_name__enter,
                 max_len=storage_device.LABEL_MAXLENGTH,
-                allow_empty=False,
+                allow_empty=True,
                 prefill=storage_device.get_label(),
             ),
             "device_name",
