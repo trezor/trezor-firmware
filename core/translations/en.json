@@ -514,6 +514,7 @@
     "led__title": "LED",
     "lockscreen__tap_to_connect": "Tap to connect",
     "lockscreen__tap_to_unlock": "Tap to unlock",
+    "lockscreen__unlock": "Unlock",
     "lockscreen__title_locked": "Locked",
     "lockscreen__title_not_connected": "Not connected",
     "misc__decrypt_value": "Decrypt value",
