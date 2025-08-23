@@ -11,15 +11,17 @@ from trezorui_api import CANCELLED, DeviceMenuResult
 BLE_MAX_BONDS = 8
 
 
+# Must be in sync with the DeviceMenuId in device_menu.ui
 class SubmenuId:
     ROOT = const(0)
     PAIR_AND_CONNECT = const(1)
     SETTINGS = const(2)
     SECURITY = const(3)
     PIN_CODE = const(4)
-    WIPE_CODE = const(5)
-    DEVICE = const(6)
-    POWER = const(7)
+    AUTO_LOCK = const(5)
+    WIPE_CODE = const(6)
+    DEVICE = const(7)
+    POWER = const(8)
 
 
 def _get_hostname(ble_addr: bytes, hostname_map: dict[bytes, str]) -> str:
@@ -38,8 +40,18 @@ def _find_device(connected_addr: bytes | None, bonds: list[bytes]) -> int | None
     return None
 
 
-async def handle_device_menu() -> None:
+def get_auto_lock_delay() -> tuple[str, str] | None:
     from trezor import strings
+
+    if not config.has_pin():
+        return None
+    delay = storage_device.get_autolock_delay_ms()
+    #  TODO: the second value is mocked by using the same value
+    formatted = strings.format_autolock_duration(delay)
+    return (formatted, formatted)
+
+
+async def handle_device_menu() -> None:
 
     assert utils.USE_THP and utils.USE_BLE
     from ..thp import paired_cache
@@ -72,12 +84,6 @@ async def handle_device_menu() -> None:
         firmware_version = ".".join(map(str, utils.VERSION))
         firmware_type = "Bitcoin-only" if utils.BITCOIN_ONLY else "Universal"
 
-        auto_lock_delay = (
-            strings.format_autolock_duration(storage_device.get_autolock_delay_ms())
-            if config.has_pin()
-            else None
-        )
-
         menu_result = await interact(
             trezorui_api.show_device_menu(
                 init_submenu=init_submenu,
@@ -85,7 +91,7 @@ async def handle_device_menu() -> None:
                 paired_devices=paired_devices,
                 connected_idx=connected_idx,
                 pin_code=config.has_pin() if is_initialized else None,
-                auto_lock_delay=auto_lock_delay,
+                auto_lock_delay=get_auto_lock_delay(),
                 wipe_code=config.has_wipe_code() if is_initialized else None,
                 check_backup=is_initialized,
                 device_name=(
@@ -215,7 +221,11 @@ async def handle_device_menu() -> None:
                 pass
             finally:
                 init_submenu = SubmenuId.SECURITY
-        elif menu_result is DeviceMenuResult.AutoLockDelay and config.has_pin():
+        elif (
+            menu_result
+            in (DeviceMenuResult.AutoLockUSB, DeviceMenuResult.AutoLockBattery)
+            and config.has_pin()
+        ):
             from trezor.messages import ApplySettings
 
             from apps.management.apply_settings import apply_settings

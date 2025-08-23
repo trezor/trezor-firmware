@@ -943,9 +943,11 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
         let connected_idx: Option<u8> =
             kwargs.get(Qstr::MP_QSTR_connected_idx)?.try_into_option()?;
         let pin_code: Option<bool> = kwargs.get(Qstr::MP_QSTR_pin_code)?.try_into_option()?;
-        let auto_lock_delay: Option<TString> = kwargs
+        let auto_lock_delay: Option<[TString; 2]> = kwargs
             .get(Qstr::MP_QSTR_auto_lock_delay)?
-            .try_into_option()?;
+            .try_into_option()?
+            .map(util::iter_into_array)
+            .transpose()?;
         let wipe_code: Option<bool> = kwargs.get(Qstr::MP_QSTR_wipe_code)?.try_into_option()?;
         let check_backup: bool = kwargs.get(Qstr::MP_QSTR_check_backup)?.try_into()?;
         let device_name: Option<TString> =
@@ -1920,7 +1922,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     paired_devices: Iterable[str],
     ///     connected_idx: int | None,
     ///     pin_code: bool | None,
-    ///     auto_lock_delay: str | None,
+    ///     auto_lock_delay: tuple[str, str] | None,
     ///     wipe_code: bool | None,
     ///     check_backup: bool,
     ///     device_name: str | None,
@@ -2140,7 +2142,8 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     DeviceUnpairAll: ClassVar[DeviceMenuResult]
     ///     PinCode: ClassVar[DeviceMenuResult]
     ///     PinRemove: ClassVar[DeviceMenuResult]
-    ///     AutoLockDelay: ClassVar[DeviceMenuResult]
+    ///     AutoLockBattery: ClassVar[DeviceMenuResult]
+    ///     AutoLockUSB: ClassVar[DeviceMenuResult]
     ///     WipeCode: ClassVar[DeviceMenuResult]
     ///     WipeRemove: ClassVar[DeviceMenuResult]
     ///     CheckBackup: ClassVar[DeviceMenuResult]

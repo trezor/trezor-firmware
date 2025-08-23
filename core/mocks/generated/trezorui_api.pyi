@@ -629,7 +629,7 @@ def show_device_menu(
     paired_devices: Iterable[str],
     connected_idx: int | None,
     pin_code: bool | None,
-    auto_lock_delay: str | None,
+    auto_lock_delay: tuple[str, str] | None,
     wipe_code: bool | None,
     check_backup: bool,
     device_name: str | None,
@@ -870,7 +870,8 @@ class DeviceMenuResult:
     DeviceUnpairAll: ClassVar[DeviceMenuResult]
     PinCode: ClassVar[DeviceMenuResult]
     PinRemove: ClassVar[DeviceMenuResult]
-    AutoLockDelay: ClassVar[DeviceMenuResult]
+    AutoLockBattery: ClassVar[DeviceMenuResult]
+    AutoLockUSB: ClassVar[DeviceMenuResult]
     WipeCode: ClassVar[DeviceMenuResult]
     WipeRemove: ClassVar[DeviceMenuResult]
     CheckBackup: ClassVar[DeviceMenuResult]

@@ -169,7 +169,8 @@ impl ComponentMsgObj for DeviceMenuScreen {
             // Security menu
             DeviceMenuMsg::PinCode => Ok(PIN_CODE.as_obj()),
             DeviceMenuMsg::PinRemove => Ok(PIN_REMOVE.as_obj()),
-            DeviceMenuMsg::AutoLockDelay => Ok(AUTO_LOCK_DELAY.as_obj()),
+            DeviceMenuMsg::AutoLockBattery => Ok(AUTO_LOCK_BATTERY.as_obj()),
+            DeviceMenuMsg::AutoLockUSB => Ok(AUTO_LOCK_USB.as_obj()),
             DeviceMenuMsg::WipeCode => Ok(WIPE_CODE.as_obj()),
             DeviceMenuMsg::WipeRemove => Ok(WIPE_REMOVE.as_obj()),
             DeviceMenuMsg::CheckBackup => Ok(CHECK_BACKUP.as_obj()),

@@ -1152,5 +1152,7 @@
   "1150": "thp__continue_on_host",
   "1151": "thp__pair_name",
   "1152": "thp__pair_new_device",
-  "1153": "tutorial__power"
+  "1153": "tutorial__power",
+  "1154": "auto_lock__on_battery",
+  "1155": "auto_lock__on_usb"
 }
