@@ -1495,6 +1495,7 @@ pub enum TranslatedString {
     words__on = 1104,  // "ON"
     words__review = 1105,  // "Review"
     words__security = 1106,  // "Security"
+    lockscreen__unlock = 1107,  // "Unlock"
 }
 
 impl TranslatedString {
@@ -3309,6 +3310,7 @@ impl TranslatedString {
             (Self::words__on, "ON"),
             (Self::words__review, "Review"),
             (Self::words__security, "Security"),
+            (Self::lockscreen__unlock, "Unlock"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3994,6 +3996,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_lockscreen__tap_to_unlock, Self::lockscreen__tap_to_unlock),
         (Qstr::MP_QSTR_lockscreen__title_locked, Self::lockscreen__title_locked),
         (Qstr::MP_QSTR_lockscreen__title_not_connected, Self::lockscreen__title_not_connected),
+        (Qstr::MP_QSTR_lockscreen__unlock, Self::lockscreen__unlock),
         (Qstr::MP_QSTR_misc__decrypt_value, Self::misc__decrypt_value),
         (Qstr::MP_QSTR_misc__enable_labeling, Self::misc__enable_labeling),
         (Qstr::MP_QSTR_misc__encrypt_value, Self::misc__encrypt_value),
