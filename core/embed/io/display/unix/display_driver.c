@@ -82,6 +82,12 @@ typedef struct {
   // Color of the RGB LED
   uint32_t led_color;
 #endif
+
+#ifdef USE_HAPTIC
+  uint32_t haptic_color;
+  uint32_t haptic_expire_time;
+#endif /* USE_HAPTIC */
+
 } display_driver_t;
 
 static display_driver_t g_display_driver = {
@@ -91,6 +97,7 @@ static display_driver_t g_display_driver = {
 //!@# TODO get rid of this...
 int sdl_display_res_x = DISPLAY_RESX, sdl_display_res_y = DISPLAY_RESY;
 int sdl_touch_offset_x, sdl_touch_offset_y;
+int sdl_touch_x = -1, sdl_touch_y = -1;
 
 static void display_exit_handler(void) {
   display_deinit(DISPLAY_RESET_CONTENT);
@@ -188,6 +195,11 @@ bool display_init(display_content_mode_t mode) {
 #ifdef USE_RGB_LED
   drv->led_color = 0;
 #endif
+
+#ifdef USE_HAPTIC
+  drv->haptic_color = 0;
+  drv->haptic_expire_time = 0;
+#endif /* USE_HAPTIC */
 
   gfx_bitblt_init();
 
@@ -386,6 +398,102 @@ void draw_rgb_led() {
 }
 #endif  // USE_RGB_LED
 
+#ifdef USE_HAPTIC
+
+void display_haptic_effect(haptic_effect_t effect) {
+  display_driver_t *drv = &g_display_driver;
+  if (!drv->initialized) {
+    return;
+  }
+
+  switch (effect) {
+    case HAPTIC_BUTTON_PRESS:
+      drv->haptic_color = 0xFF0000;                    // Red
+      drv->haptic_expire_time = SDL_GetTicks() + 200;  // 200 ms duration
+      break;
+    case HAPTIC_HOLD_TO_CONFIRM:
+      drv->haptic_color = 0xFF00;                      // Green
+      drv->haptic_expire_time = SDL_GetTicks() + 500;  // 500 ms duration
+      break;
+    case HAPTIC_BOOTLOADER_ENTRY:
+      drv->haptic_color = 0x0000FF;                    // Blue
+      drv->haptic_expire_time = SDL_GetTicks() + 500;  // 500 ms duration
+      break;
+    default:
+      drv->haptic_color = 0x0;
+      break;
+  }
+
+  display_refresh();
+}
+
+void display_custom_effect(uint32_t duration_ms) {
+  display_driver_t *drv = &g_display_driver;
+  if (!drv->initialized) {
+    return;
+  }
+
+  drv->haptic_color = 0xFFA500;  // Orange
+  drv->haptic_expire_time = SDL_GetTicks() + duration_ms;
+  display_refresh();
+}
+
+void draw_haptic() {
+  display_driver_t *drv = &g_display_driver;
+  if (!drv->initialized) {
+    return;
+  }
+
+  if (SDL_GetTicks() > drv->haptic_expire_time) {
+    drv->haptic_color = 0;  // Clear
+    return;
+  }
+
+  const uint32_t color = drv->haptic_color;
+
+  if (color == 0) {
+    return;  // No LED color set
+  }
+
+  // Extract RGB components
+  uint32_t r = (color >> 16) & 0xFF;
+  uint32_t g = (color >> 8) & 0xFF;
+  uint32_t b = color & 0xFF;
+
+  // Define touch circle properties
+  const int radius = 5;
+
+#ifdef USE_TOUCH
+  int center_x = sdl_touch_x;
+  int center_y = sdl_touch_y;
+#else
+  int center_x = DISPLAY_RESX / 2;
+  int center_y = DISPLAY_RESY + 20;
+#endif /* USE_TOUCH */
+
+  // Position based on background
+  if (drv->background) {
+    center_x += TOUCH_OFFSET_X;
+    center_y += TOUCH_OFFSET_Y;
+  } else {
+    center_x += EMULATOR_BORDER;
+    center_y += EMULATOR_BORDER;
+  }
+
+  // // Draw the touch circle
+  SDL_SetRenderDrawColor(drv->renderer, r, g, b, 255);
+
+  for (int y = -radius; y <= radius; y++) {
+    for (int x = -radius; x <= radius; x++) {
+      if (x * x + y * y <= radius * radius) {
+        SDL_RenderDrawPoint(drv->renderer, center_x + x, center_y + y);
+      }
+    }
+  }
+  SDL_SetRenderDrawColor(drv->renderer, 0, 0, 0, 255);
+}
+#endif /* USE_HAPTIC */
+
 void display_refresh(void) {
   display_driver_t *drv = &g_display_driver;
 
@@ -422,6 +530,10 @@ void display_refresh(void) {
   }
 #ifdef USE_RGB_LED
   draw_rgb_led();
+#endif
+
+#ifdef USE_HAPTIC
+  draw_haptic();
 #endif
 
   SDL_RenderPresent(drv->renderer);
@@ -538,6 +650,28 @@ void display_save(const char *prefix) {
       drv->buffer->format->Rmask, drv->buffer->format->Gmask,
       drv->buffer->format->Bmask, drv->buffer->format->Amask);
   SDL_BlitSurface(drv->buffer, &rect, crop, NULL);
+
+#ifdef USE_HAPTIC
+  // === Static haptic dots ===
+  if (SDL_GetTicks() < drv->haptic_expire_time) {
+    uint32_t color = drv->haptic_color;
+
+    if (color != 0) {
+      // Extract RGB components
+      uint32_t r = (color >> 16) & 0xFF;
+      uint32_t g = (color >> 8) & 0xFF;
+      uint32_t b = color & 0xFF;
+      // Draw a one-pixel dot
+      if (sdl_touch_x >= 0 && sdl_touch_x < rect.w && sdl_touch_y >= 0 &&
+          sdl_touch_y < rect.h) {
+        Uint8 *pixel_ptr = (Uint8 *)crop->pixels + (sdl_touch_y * crop->pitch) +
+                           (sdl_touch_x * crop->format->BytesPerPixel);
+        *(Uint32 *)pixel_ptr = SDL_MapRGBA(crop->format, r, g, b, 255);
+      }
+    }
+  }
+#endif  // USE_HAPTIC
+
   // compare with previous screen, skip if equal
   if (drv->prev_saved != NULL) {
     if (memcmp(drv->prev_saved->pixels, crop->pixels, crop->pitch * crop->h) ==
