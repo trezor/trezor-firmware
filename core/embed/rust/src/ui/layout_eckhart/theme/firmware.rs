@@ -40,9 +40,10 @@ pub const TEXT_BIG: TextStyle = TextStyle::new(
     fonts::FONT_SATOSHI_EXTRALIGHT_46,
     GREY_EXTRA_LIGHT,
     BG,
-    GREY_LIGHT,
-    GREY_LIGHT,
-);
+    GREY,
+    GREY,
+)
+.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
 /// TT Satoshi Regular - 38 (Screen text, Menu item label)
 pub const TEXT_REGULAR: TextStyle =
     TextStyle::new(fonts::FONT_SATOSHI_REGULAR_38, GREY_LIGHT, BG, GREY, GREY);
