@@ -43,7 +43,9 @@ async def handle_device_menu() -> None:
             wipe_code=config.has_wipe_code() if is_initialized else None,
             check_backup=is_initialized,
             device_name=(
-                (storage_device.get_label() or "Trezor") if is_initialized else None
+                (storage_device.get_label() or utils.MODEL_FULL_NAME)
+                if is_initialized
+                else None
             ),
             screen_brightness=TR.brightness__title if is_initialized else None,
             haptic_feedback=(
