@@ -43,6 +43,8 @@
     "authenticate__header": "Authenticate device",
     "auto_lock__change_template": "Auto-lock Trezor after {0} of inactivity?",
     "auto_lock__description": "Set the time before your Trezor locks automatically.",
+    "auto_lock__on_battery": "on battery / wireless charger",
+    "auto_lock__on_usb": "connected to USB",
     "auto_lock__title": {
       "Bolt": "Auto-lock delay",
       "Caesar": "Auto-lock delay",
