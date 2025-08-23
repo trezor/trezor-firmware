@@ -946,17 +946,24 @@ impl FirmwareUI for UIEckhart {
 
     fn request_pin(
         prompt: TString<'static>,
-        subprompt: TString<'static>,
+        attempts: TString<'static>,
         allow_cancel: bool,
-        warning: bool,
+        wrong_pin: bool,
+        last_attempt: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let warning = if warning {
+        let warning = if wrong_pin {
             Some(TR::pin__wrong_pin.into())
         } else {
             None
         };
 
-        let layout = RootComponent::new(PinKeyboard::new(prompt, subprompt, warning, allow_cancel));
+        let layout = RootComponent::new(PinKeyboard::new(
+            prompt,
+            attempts,
+            warning,
+            allow_cancel,
+            last_attempt,
+        ));
         Ok(layout)
     }
 

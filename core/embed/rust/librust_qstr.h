@@ -118,6 +118,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_app_name;
   MP_QSTR_area_bytesize;
   MP_QSTR_attach_timer_fn;
+  MP_QSTR_attempts;
   MP_QSTR_authenticate__confirm_template;
   MP_QSTR_authenticate__header;
   MP_QSTR_auto_lock__change_template;
@@ -402,6 +403,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_language__changed;
   MP_QSTR_language__progress;
   MP_QSTR_language__title;
+  MP_QSTR_last_attempt;
   MP_QSTR_led__disable;
   MP_QSTR_led__enable;
   MP_QSTR_led__title;
@@ -803,7 +805,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_storage_msg__starting;
   MP_QSTR_storage_msg__verifying_pin;
   MP_QSTR_storage_msg__wrong_pin;
-  MP_QSTR_subprompt;
   MP_QSTR_subtext;
   MP_QSTR_subtitle;
   MP_QSTR_summary_br_code;

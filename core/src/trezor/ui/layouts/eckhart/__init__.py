@@ -1722,18 +1722,22 @@ def request_pin_on_device(
     from trezor.wire import PinCancelled
 
     if attempts_remaining is None:
-        subprompt = ""
+        attempts = ""
+        last_attempt = False
     elif attempts_remaining == 1:
-        subprompt = TR.pin__last_attempt
+        attempts = TR.pin__last_attempt
+        last_attempt = True
     else:
-        subprompt = f"{attempts_remaining} {TR.pin__tries_left}"
+        attempts = f"{attempts_remaining}\n{TR.pin__tries_left}"
+        last_attempt = False
 
     result = interact(
         trezorui_api.request_pin(
             prompt=prompt,
-            subprompt=subprompt,
+            attempts=attempts,
             allow_cancel=allow_cancel,
             wrong_pin=wrong_pin,
+            last_attempt=last_attempt,
         ),
         "pin_device",
         ButtonRequestType.PinEntry,
