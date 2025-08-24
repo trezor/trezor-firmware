@@ -1,5 +1,4 @@
 from typing import TYPE_CHECKING
-from ubinascii import hexlify
 
 from trezor import protobuf
 from trezor.crypto import random
@@ -308,13 +307,6 @@ async def _handle_code_entry_cpace(
     ctx.cpace.compute_shared_secret(message.cpace_host_public_key)
     expected_tag = sha256(ctx.cpace.shared_secret).digest()
     if expected_tag != message.tag:
-        print(
-            "expected code entry tag:", hexlify(expected_tag).decode()
-        )  # TODO remove after testing
-        print(
-            "expected code entry shared secret:",
-            hexlify(ctx.cpace.shared_secret).decode(),
-        )  # TODO remove after testing
         raise ThpError("Unexpected Code Entry Tag")
 
     if ctx.code_entry_secret is None:
