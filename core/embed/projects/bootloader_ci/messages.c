@@ -26,6 +26,7 @@
 #include "pb/messages.pb.h"
 
 #include <io/usb.h>
+#include <sys/sysevent.h>
 #include <util/flash.h>
 #include <util/flash_utils.h>
 #include <util/image.h>
@@ -79,8 +80,8 @@ static bool _usb_write(pb_ostream_t *stream, const pb_byte_t *buf,
              USB_PACKET_SIZE - state->packet_pos);
       written += USB_PACKET_SIZE - state->packet_pos;
       // send packet
-      int r = usb_webusb_write_blocking(state->iface_num, state->buf,
-                                        USB_PACKET_SIZE, USB_TIMEOUT);
+      int r = syshandle_write_blocking(state->iface_num, state->buf,
+                                       USB_PACKET_SIZE, USB_TIMEOUT);
       ensure(sectrue * (r == USB_PACKET_SIZE), NULL);
       // prepare new packet
       state->packet_index++;
@@ -101,8 +102,8 @@ static void _usb_write_flush(usb_write_state *state) {
             USB_PACKET_SIZE - state->packet_pos);
   }
   // send packet
-  int r = usb_webusb_write_blocking(state->iface_num, state->buf,
-                                    USB_PACKET_SIZE, USB_TIMEOUT);
+  int r = syshandle_write_blocking(state->iface_num, state->buf,
+                                   USB_PACKET_SIZE, USB_TIMEOUT);
   ensure(sectrue * (r == USB_PACKET_SIZE), NULL);
 }
 
@@ -193,7 +194,7 @@ typedef struct {
 static void _usb_webusb_read_retry(uint8_t iface_num, uint8_t *buf) {
   for (int retry = 0;; retry++) {
     int r =
-        usb_webusb_read_blocking(iface_num, buf, USB_PACKET_SIZE, USB_TIMEOUT);
+        syshandle_read_blocking(iface_num, buf, USB_PACKET_SIZE, USB_TIMEOUT);
     if (r != USB_PACKET_SIZE) {  // reading failed
       if (r == 0 && retry < 10) {
         // only timeout => let's try again

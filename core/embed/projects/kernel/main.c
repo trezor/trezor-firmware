@@ -98,6 +98,11 @@
 #include <io/touch.h>
 #endif
 
+#ifdef USE_USB
+#include <io/usb.h>
+#include <io/usb_config.h>
+#endif
+
 void drivers_init() {
 #ifdef SECURE_MODE
   parse_boardloader_capabilities();
@@ -184,6 +189,10 @@ void drivers_init() {
   tropic_init();
 #endif
 #endif  // SECURE_MODE
+
+#ifdef USE_USB
+  usb_configure(NULL);
+#endif
 }
 
 // Kernel task main loop
