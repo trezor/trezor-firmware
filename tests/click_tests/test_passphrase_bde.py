@@ -92,7 +92,7 @@ def prepare_passphrase_dialogue(
 ) -> Generator["DebugLink", None, None]:
     debug = device_handler.debuglink()
     device_handler.get_session(passphrase=PASSPHRASE_ON_DEVICE)
-    debug.synchronize_at("PassphraseKeyboard")
+    debug.synchronize_at(["PassphraseKeyboard", "StringKeyboard"])
 
     # Resetting the category as it could have been changed by previous tests
     global KEYBOARD_CATEGORY

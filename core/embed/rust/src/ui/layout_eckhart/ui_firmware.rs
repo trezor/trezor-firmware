@@ -38,7 +38,7 @@ use super::{
     component::Button,
     firmware::{
         ActionBar, Bip39Input, ConfirmHomescreen, DeviceMenuScreen, DurationInput, Header,
-        HeaderMsg, Hint, Homescreen, MnemonicKeyboard, PinKeyboard, ProgressScreen,
+        HeaderMsg, Hint, Homescreen, LabelInput, MnemonicKeyboard, PinKeyboard, ProgressScreen,
         SelectWordCountScreen, SelectWordScreen, SetBrightnessScreen, ShortMenuVec, Slip39Input,
         StringKeyboard, TextScreen, TextScreenMsg, ValueInputScreen, VerticalMenu,
         VerticalMenuScreen, VerticalMenuScreenMsg,
@@ -982,7 +982,8 @@ impl FirmwareUI for UIEckhart {
         allow_empty: bool,
         prefill: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let layout = RootComponent::new(StringKeyboard::new(prompt, max_len, allow_empty, prefill));
+        let input = LabelInput::new(max_len, prefill, true, allow_empty);
+        let layout = RootComponent::new(StringKeyboard::new(prompt, input));
         Ok(layout)
     }
 
