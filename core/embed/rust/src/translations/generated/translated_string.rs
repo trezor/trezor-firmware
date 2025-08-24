@@ -710,7 +710,7 @@ pub enum TranslatedString {
     pin__diff_from_wipe_code = 450,  // "The new PIN must be different from your wipe code."
     pin__disabled = 451,  // "PIN protection\nturned off."
     pin__enabled = 452,  // "PIN protection\nturned on."
-    pin__enter = 453,  // {"Bolt": "Enter PIN", "Caesar": "Enter PIN", "Delizia": "Enter PIN", "Eckhart": "Unlock device\nEnter PIN"}
+    pin__enter = 453,  // "Enter PIN"
     pin__enter_new = 454,  // "Enter new PIN"
     pin__entered_not_valid = 455,  // "The PIN you have entered is not valid."
     pin__info = 456,  // {"Bolt": "PIN will be required to access this device.", "Caesar": "PIN will be required to access this device.", "Delizia": "PIN will be required to access this device.", "Eckhart": "The PIN will be required to access this device."}
@@ -2313,14 +2313,7 @@ impl TranslatedString {
             (Self::pin__diff_from_wipe_code, "The new PIN must be different from your wipe code."),
             (Self::pin__disabled, "PIN protection\nturned off."),
             (Self::pin__enabled, "PIN protection\nturned on."),
-            #[cfg(feature = "layout_bolt")]
             (Self::pin__enter, "Enter PIN"),
-            #[cfg(feature = "layout_caesar")]
-            (Self::pin__enter, "Enter PIN"),
-            #[cfg(feature = "layout_delizia")]
-            (Self::pin__enter, "Enter PIN"),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::pin__enter, "Unlock device\nEnter PIN"),
             (Self::pin__enter_new, "Enter new PIN"),
             (Self::pin__entered_not_valid, "The PIN you have entered is not valid."),
             #[cfg(feature = "layout_bolt")]
