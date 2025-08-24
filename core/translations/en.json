@@ -803,6 +803,7 @@
     "recovery__title_remaining_shares": "Remaining shares",
     "recovery__title_unlock_repeated_backup": "Multi-share backup",
     "recovery__type_word_x_of_y_template": "Type word {0} of {1}",
+    "recovery__start_entering": "Start\nentering",
     "recovery__unlock_repeated_backup": "Create additional backup?",
     "recovery__unlock_repeated_backup_verb": "Create backup",
     "recovery__wallet_recovered": {
@@ -814,7 +815,12 @@
     "recovery__wanna_cancel_dry_run": "Are you sure you want to cancel the backup check?",
     "recovery__wanna_cancel_recovery": "Are you sure you want to cancel the recovery process?",
     "recovery__word_count_template": "({0} words)",
-    "recovery__word_x_of_y_template": "Word {0} of {1}",
+    "recovery__word_x_of_y_template": {
+      "Bolt": "Word {0} of {1}",
+      "Caesar": "Word {0} of {1}",
+      "Delizia": "Word {0} of {1}",
+      "Eckhart": "Word {0}\nof {1}"
+    },
     "recovery__x_more_items_starting_template_plural": {
       "Bolt": "{count} more {plural} starting",
       "Caesar": "{count} more {plural} starting",
