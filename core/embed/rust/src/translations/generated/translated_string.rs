@@ -785,7 +785,7 @@ pub enum TranslatedString {
     recovery__wanna_cancel_dry_run = 526,  // "Are you sure you want to cancel the backup check?"
     recovery__wanna_cancel_recovery = 527,  // "Are you sure you want to cancel the recovery process?"
     recovery__word_count_template = 528,  // "({0} words)"
-    recovery__word_x_of_y_template = 529,  // "Word {0} of {1}"
+    recovery__word_x_of_y_template = 529,  // {"Bolt": "Word {0} of {1}", "Caesar": "Word {0} of {1}", "Delizia": "Word {0} of {1}", "Eckhart": "Word {0}\nof {1}"}
     recovery__x_more_items_starting_template_plural = 530,  // {"Bolt": "{count} more {plural} starting", "Caesar": "{count} more {plural} starting", "Delizia": "{count} more {plural} starting", "Eckhart": "You need {count} more {plural} starting"}
     recovery__x_more_shares_needed_template_plural = 531,  // {"Bolt": "{count} more {plural} needed", "Caesar": "{count} more {plural} needed", "Delizia": "{count} more {plural} needed", "Eckhart": "{count} more {plural} needed."}
     recovery__x_of_y_entered_template = 532,  // {"Bolt": "{0} of {1} shares entered", "Caesar": "{0} of {1} shares entered", "Delizia": "{0} of {1} shares entered", "Eckhart": "{0} of {1} shares entered."}
@@ -1510,6 +1510,7 @@ pub enum TranslatedString {
     words__set = 1119,  // "Set"
     words__wipe = 1120,  // "Wipe"
     lockscreen__unlock = 1121,  // "Unlock"
+    recovery__start_entering = 1122,  // "Start entering"
 }
 
 impl TranslatedString {
@@ -2451,7 +2452,14 @@ impl TranslatedString {
             (Self::recovery__wanna_cancel_dry_run, "Are you sure you want to cancel the backup check?"),
             (Self::recovery__wanna_cancel_recovery, "Are you sure you want to cancel the recovery process?"),
             (Self::recovery__word_count_template, "({0} words)"),
+            #[cfg(feature = "layout_bolt")]
             (Self::recovery__word_x_of_y_template, "Word {0} of {1}"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::recovery__word_x_of_y_template, "Word {0} of {1}"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::recovery__word_x_of_y_template, "Word {0} of {1}"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::recovery__word_x_of_y_template, "Word {0}\nof {1}"),
             #[cfg(feature = "layout_bolt")]
             (Self::recovery__x_more_items_starting_template_plural, "{count} more {plural} starting"),
             #[cfg(feature = "layout_caesar")]
@@ -3339,6 +3347,7 @@ impl TranslatedString {
             (Self::words__set, "Set"),
             (Self::words__wipe, "Wipe"),
             (Self::lockscreen__unlock, "Unlock"),
+            (Self::recovery__start_entering, "Start entering"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4290,6 +4299,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_recovery__share_from_another_multi_share_backup, Self::recovery__share_from_another_multi_share_backup),
         (Qstr::MP_QSTR_recovery__share_from_group_entered_template, Self::recovery__share_from_group_entered_template),
         (Qstr::MP_QSTR_recovery__share_num_template, Self::recovery__share_num_template),
+        (Qstr::MP_QSTR_recovery__start_entering, Self::recovery__start_entering),
         (Qstr::MP_QSTR_recovery__title, Self::recovery__title),
         (Qstr::MP_QSTR_recovery__title_cancel_dry_run, Self::recovery__title_cancel_dry_run),
         (Qstr::MP_QSTR_recovery__title_cancel_recovery, Self::recovery__title_cancel_recovery),

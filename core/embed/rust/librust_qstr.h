@@ -576,6 +576,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_recovery__share_from_another_multi_share_backup;
   MP_QSTR_recovery__share_from_group_entered_template;
   MP_QSTR_recovery__share_num_template;
+  MP_QSTR_recovery__start_entering;
   MP_QSTR_recovery__title;
   MP_QSTR_recovery__title_cancel_dry_run;
   MP_QSTR_recovery__title_cancel_recovery;

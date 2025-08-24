@@ -643,6 +643,7 @@ class TR:
     recovery__share_from_another_multi_share_backup: str = "You have entered a share from a different backup."
     recovery__share_from_group_entered_template: str = "Share #{0} from Group #{1} entered."
     recovery__share_num_template: str = "Share {0}"
+    recovery__start_entering: str = "Start entering"
     recovery__title: str = "Recover wallet"
     recovery__title_cancel_dry_run: str = "Cancel backup check"
     recovery__title_cancel_recovery: str = "Cancel recovery"

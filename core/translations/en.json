@@ -795,6 +795,7 @@
       "Delizia": "Share {0}",
       "Eckhart": "Share #{0}"
     },
+    "recovery__start_entering": "Start entering",
     "recovery__title": "Recover wallet",
     "recovery__title_cancel_dry_run": "Cancel backup check",
     "recovery__title_cancel_recovery": "Cancel recovery",
@@ -814,7 +815,12 @@
     "recovery__wanna_cancel_dry_run": "Are you sure you want to cancel the backup check?",
     "recovery__wanna_cancel_recovery": "Are you sure you want to cancel the recovery process?",
     "recovery__word_count_template": "({0} words)",
-    "recovery__word_x_of_y_template": "Word {0} of {1}",
+    "recovery__word_x_of_y_template": {
+      "Bolt": "Word {0} of {1}",
+      "Caesar": "Word {0} of {1}",
+      "Delizia": "Word {0} of {1}",
+      "Eckhart": "Word {0}\nof {1}"
+    },
     "recovery__x_more_items_starting_template_plural": {
       "Bolt": "{count} more {plural} starting",
       "Caesar": "{count} more {plural} starting",
