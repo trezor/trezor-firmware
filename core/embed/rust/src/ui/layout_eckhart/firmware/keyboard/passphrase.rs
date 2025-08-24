@@ -27,7 +27,7 @@ use super::super::{
         common::{
             render_pending_marker, KeyboardLayout, MultiTapKeyboard, FADING_ICON_COLORS,
             FADING_ICON_COUNT, INPUT_TOUCH_HEIGHT, KEYBOARD_INPUT_INSETS, KEYBOARD_INPUT_RADIUS,
-            KEYPAD_VISIBLE_HEIGHT,
+            KEYBOARD_PROMPT_INSETS, KEYPAD_VISIBLE_HEIGHT, SHOWN_INSETS,
         },
         keypad::{ButtonState, Keypad, KeypadButton, KeypadMsg, KeypadState},
     },
@@ -244,7 +244,7 @@ impl Component for PassphraseKeyboard {
 
         self.input.place(input_area);
         self.input_prompt
-            .place(top_area.inset(KEYBOARD_INPUT_INSETS));
+            .place(top_area.inset(KEYBOARD_PROMPT_INSETS));
         self.keypad.place(keypad_area);
         self.next_btn.place(next_btn_area);
 
@@ -400,9 +400,9 @@ struct PassphraseInput {
 
 impl PassphraseInput {
     const TWITCH: i16 = 4;
-    const SHOWN_INSETS: Insets = Insets::new(12, 24, 12, 24);
-    const SHOWN_STYLE: TextStyle =
+    const STYLE: TextStyle =
         theme::TEXT_REGULAR.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
+
     const SHOWN_TOUCH_OUTSET: Insets = Insets::bottom(200);
     const ICON: Icon = theme::ICON_DASH_VERTICAL;
     const ICON_WIDTH: i16 = Self::ICON.toif.width();
@@ -431,13 +431,12 @@ impl PassphraseInput {
         .inset(KEYBOARD_INPUT_INSETS);
 
         // Extend the shown area until the text fits
-        while let LayoutFit::OutOfBounds { .. } = TextLayout::new(Self::SHOWN_STYLE)
+        while let LayoutFit::OutOfBounds { .. } = TextLayout::new(Self::STYLE)
             .with_align(Alignment::Start)
-            .with_bounds(shown_area.inset(Self::SHOWN_INSETS))
+            .with_bounds(shown_area.inset(SHOWN_INSETS))
             .fit_text(self.passphrase())
         {
-            shown_area =
-                shown_area.outset(Insets::bottom(Self::SHOWN_STYLE.text_font.line_height()));
+            shown_area = shown_area.outset(Insets::bottom(Self::STYLE.text_font.line_height()));
         }
 
         self.shown_area = shown_area;
@@ -452,8 +451,8 @@ impl PassphraseInput {
             .with_radius(KEYBOARD_INPUT_RADIUS)
             .render(target);
 
-        TextLayout::new(Self::SHOWN_STYLE)
-            .with_bounds(self.shown_area.inset(Self::SHOWN_INSETS))
+        TextLayout::new(Self::STYLE)
+            .with_bounds(self.shown_area.inset(SHOWN_INSETS))
             .with_align(Alignment::Start)
             .render_text(self.passphrase(), target, true);
     }
@@ -462,7 +461,6 @@ impl PassphraseInput {
         debug_assert_ne!(self.display_style, DisplayStyle::Shown);
 
         let hidden_area: Rect = self.area.inset(KEYBOARD_INPUT_INSETS);
-        let style = theme::TEXT_REGULAR;
         let pp_len = self.passphrase().len();
         let last_char = self.display_style != DisplayStyle::Hidden;
 
@@ -488,7 +486,7 @@ impl PassphraseInput {
         for (i, &fg_color) in FADING_ICON_COLORS.iter().enumerate() {
             if pp_len > visible_len + (FADING_ICON_COUNT - 1 - i) {
                 ToifImage::new(cursor, Self::ICON.toif)
-                    .with_align(Alignment2D::TOP_LEFT)
+                    .with_align(Alignment2D::CENTER_LEFT)
                     .with_fg(fg_color)
                     .render(target);
                 cursor.x += Self::ICON_SPACE + Self::ICON_WIDTH;
@@ -500,8 +498,8 @@ impl PassphraseInput {
             // Classical dot(s)
             for _ in char_idx..visible_icons {
                 ToifImage::new(cursor, Self::ICON.toif)
-                    .with_align(Alignment2D::TOP_LEFT)
-                    .with_fg(style.text_color)
+                    .with_align(Alignment2D::CENTER_LEFT)
+                    .with_fg(Self::STYLE.text_color)
                     .render(target);
                 cursor.x += Self::ICON_SPACE + Self::ICON_WIDTH;
             }
@@ -512,18 +510,23 @@ impl PassphraseInput {
             let last = &self.passphrase()[(pp_len - 1)..pp_len];
 
             // Adapt x and y positions for the character
-            cursor.y = hidden_area.left_center().y + style.text_font.text_max_height() / 2;
-            cursor.x -= Self::ICON_WIDTH;
+            cursor.y += Self::STYLE.text_font.visible_text_height("1") / 2;
 
             // Paint the last character
-            Text::new(cursor, last, style.text_font)
+            Text::new(cursor, last, Self::STYLE.text_font)
                 .with_align(Alignment::Start)
-                .with_fg(style.text_color)
+                .with_fg(Self::STYLE.text_color)
                 .render(target);
 
             // Paint the pending marker.
             if self.display_style == DisplayStyle::LastWithMarker {
-                render_pending_marker(target, cursor, last, style.text_font, style.text_color);
+                render_pending_marker(
+                    target,
+                    cursor,
+                    last,
+                    Self::STYLE.text_font,
+                    Self::STYLE.text_color,
+                );
             }
         }
     }
