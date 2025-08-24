@@ -684,7 +684,12 @@
     "pin__diff_from_wipe_code": "The new PIN must be different from your wipe code.",
     "pin__disabled": "PIN protection\nturned off.",
     "pin__enabled": "PIN protection\nturned on.",
-    "pin__enter": "Enter PIN",
+    "pin__enter": {
+      "Bolt": "Enter PIN",
+      "Caesar": "Enter PIN",
+      "Delizia": "Enter PIN",
+      "Eckhart": "Unlock device\nEnter PIN"
+    },
     "pin__enter_new": "Enter new PIN",
     "pin__entered_not_valid": "The PIN you have entered is not valid.",
     "pin__info": {
