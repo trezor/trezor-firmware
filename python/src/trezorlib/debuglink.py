@@ -233,6 +233,8 @@ class LayoutContent(UnstructuredJSONReader):
     def subtitle(self) -> str:
         """Getting text that is displayed as a subtitle."""
         subtitle = self._get_str_or_dict_text("subtitle")
+        # Replace newlines with space
+        subtitle = subtitle.replace("\n", " ")
         return subtitle
 
     def text_content(self) -> str:
@@ -403,6 +405,11 @@ class LayoutContent(UnstructuredJSONReader):
         """Get passphrase from the layout."""
         assert "PassphraseKeyboard" in self.all_components()
         return self.find_unique_value_by_key("passphrase", default="", only_type=str)
+
+    def label(self) -> str:
+        """Get label from the layout."""
+        assert "LabelKeyboard" in self.all_components()
+        return self.find_unique_value_by_key("label", default="", only_type=str)
 
     def page_count(self) -> int:
         """Get number of pages for the layout."""
@@ -1862,6 +1869,13 @@ class ScreenButtons:
     def menu(self) -> Coords:
         return self._grid55(4, 0)
 
+    # Header back button
+    def back(self) -> Coords:
+        if self.layout_type is LayoutType.Eckhart:
+            return self._grid55(0, 0)
+        else:
+            raise ValueError("Wrong layout type")
+
     # Center of the screen
     def tap_to_confirm(self) -> Coords:
         assert self.layout_type is LayoutType.Delizia
@@ -2095,6 +2109,11 @@ PASSPHRASE_DIGITS = ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0")
 PASSPHRASE_SPECIAL = ("_<>", ".:@", "/|\\", "!()", "+%&", "-[]", "?{}", ",'`", ";\"~", "$^=")
 # fmt: on
 
+LABEL_LOWERCASE_ECKHART = PASSPHRASE_LOWERCASE_DE
+LABEL_UPPERCASE_ECKHART = PASSPHRASE_UPPERCASE_DE
+LABEL_DIGITS = PASSPHRASE_DIGITS
+LABEL_SPECIAL = PASSPHRASE_SPECIAL
+
 
 class ButtonActions:
     def __init__(self, debuglink: DebugLink):
@@ -2120,8 +2139,30 @@ class ButtonActions:
         else:
             return PASSPHRASE_SPECIAL
 
+    def _label_choices(self, char: str) -> "tuple[str, ...]":
+        if char in " *#" or char.islower():
+            if self.debuglink.layout_type is LayoutType.Eckhart:
+                return LABEL_LOWERCASE_ECKHART
+            else:
+                raise ValueError("Wrong layout type")
+        elif char.isupper():
+            if self.debuglink.layout_type is LayoutType.Eckhart:
+                return LABEL_UPPERCASE_ECKHART
+            else:
+                raise ValueError("Wrong layout type")
+        elif char.isdigit():
+            return PASSPHRASE_DIGITS
+        else:
+            return PASSPHRASE_SPECIAL
+
     def passphrase(self, char: str) -> t.Tuple[Coords, int]:
         choices = self._passphrase_choices(char)
+        idx = next(i for i, letters in enumerate(choices) if char in letters)
+        click_amount = choices[idx].index(char) + 1
+        return self.debuglink.screen_buttons.pin_passphrase_index(idx), click_amount
+
+    def label(self, char: str) -> t.Tuple[Coords, int]:
+        choices = self._label_choices(char)
         idx = next(i for i, letters in enumerate(choices) if char in letters)
         click_amount = choices[idx].index(char) + 1
         return self.debuglink.screen_buttons.pin_passphrase_index(idx), click_amount
