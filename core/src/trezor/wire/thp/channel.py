@@ -1,4 +1,5 @@
 import ustruct
+import utime
 from micropython import const
 from typing import TYPE_CHECKING
 
@@ -23,6 +24,7 @@ from storage.cache_thp import (
 from trezor import protobuf, utils, workflow
 from trezor.loop import Timeout
 
+from ..context import AbortWorkflow
 from ..protocol_common import Message
 from . import (
     ACK_MESSAGE,
@@ -57,6 +59,8 @@ if TYPE_CHECKING:
 
 _MAX_RETRANSMISSION_COUNT = const(50)
 _MIN_RETRANSMISSION_COUNT = const(2)
+
+_STALE_CHANNEL_TIMEOUT_MS = const(1000)
 
 
 class Reassembler:
@@ -270,11 +274,27 @@ class Channel:
         self, timeout_ms: int | None = None
     ) -> memoryview:
         """Doesn't block if a message has been already reassembled."""
+        ping_sent_ms: int | None = None
         while self.reassembler.message is None:
             # receive and reassemble a new message from this channel
             channel = await self.ctx.get_next_message(timeout_ms=timeout_ms)
             if channel is self:
                 break
+
+            # interrupted by a different channel
+            if ping_sent_ms is None:
+                ping_sent_ms = utime.ticks_ms()
+                continue
+
+            elapsed = utime.ticks_diff(utime.ticks_ms(), ping_sent_ms)
+            if elapsed < _STALE_CHANNEL_TIMEOUT_MS:
+                continue
+
+            if __debug__:
+                self._log(
+                    f"Interrupting stale channel after {elapsed} ms", logger=log.warning
+                )
+            raise AbortWorkflow
 
             # currently only single-channel sessions are supported during a single event loop run
             self._log(

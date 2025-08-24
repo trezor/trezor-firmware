@@ -47,11 +47,12 @@ class ThpContext:
         self._write = loop.wait(iface.iface_num() | io.POLL_WRITE)
         self._channels: dict[int, Channel] = {}
 
-    async def get_next_message(self, timeout_ms: int | None = None) -> Channel:
+    async def get_next_message(self, timeout_ms: int | None = None) -> Channel | None:
         """
         Reassemble a valid THP payload and return its channel.
 
         Also handle THP channel allocation.
+        Return `None` if there is already another active THP channel.
         """
         from .. import THP_BUFFERS_PROVIDER
 
@@ -80,9 +81,11 @@ class ThpContext:
 
             if (channel := self._channels.get(cid)) is None:
                 if (buffers := THP_BUFFERS_PROVIDER.take()) is None:
-                    # concurrent payload reassembly is not supported
+                    # Concurrent payload reassembly is not supported:
+                    # - Notify the new channel, so it will retry later.
+                    # - Interrupt this method, to detect whether the existing channel is still alive.
                     await self.write_error(cid, ThpErrorType.TRANSPORT_BUSY)
-                    continue
+                    return None
                 channel = self._channels[cid] = Channel(cache, self, buffers)
 
             if channel.reassemble(packet):

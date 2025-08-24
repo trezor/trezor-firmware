@@ -35,7 +35,11 @@ if TYPE_CHECKING:
     T = TypeVar("T")
 
 
-class UnexpectedMessageException(Exception):
+class AbortWorkflow(Exception):
+    pass
+
+
+class UnexpectedMessageException(AbortWorkflow):
     """A message was received that is not part of the current workflow.
 
     Utility exception to inform the session handler that the current workflow

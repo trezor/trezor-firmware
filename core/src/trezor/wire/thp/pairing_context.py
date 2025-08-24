@@ -3,7 +3,7 @@ from ubinascii import hexlify
 
 from trezor import loop, protobuf, workflow
 from trezor.wire import context, message_handler, protocol_common
-from trezor.wire.context import UnexpectedMessageException
+from trezor.wire.context import AbortWorkflow, UnexpectedMessageException
 from trezor.wire.errors import ActionCancelled, DataError, SilentError
 from trezor.wire.protocol_common import Context, Message
 from trezor.wire.thp import ChannelState, get_enabled_pairing_methods, ui
@@ -234,6 +234,8 @@ async def handle_message(
         # We might handle only the few common cases here, like
         # Initialize and Cancel.
         return exc.msg
+    except AbortWorkflow:
+        return None
     except SilentError as exc:
         if __debug__:
             log.error(__name__, "SilentError: %s", exc.message, iface=pairing_ctx.iface)

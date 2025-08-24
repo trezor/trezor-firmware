@@ -31,10 +31,9 @@ def test_concurrent_handshakes(client: Client) -> None:
     # The second host starts handshake
     protocol_2._send_handshake_init_request()
 
-    # The second host should not be able to interrupt the first host's handshake
-    with pytest.raises(exceptions.ThpError) as e:
+    # The second host should not be able to interrupt the first host's handshake immediately
+    with pytest.raises(exceptions.TransportBusy):
         protocol_2._read_ack()
-    assert e.value.args[0] == "TRANSPORT BUSY"
 
     # The first host can complete handshake
     protocol_1._send_handshake_completion_request()

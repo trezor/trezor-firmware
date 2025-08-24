@@ -50,7 +50,8 @@ class GenericSessionContext(Context):
                 if message is None:
                     message = await self._read_next_message()
                 await handle_single_message(self, message)
-                self.channel._log("session loop is over")
+                if __debug__:
+                    self.channel._log("session loop is over")
                 return
             except protocol_common.WireError as e:
                 if __debug__:
@@ -71,9 +72,10 @@ class GenericSessionContext(Context):
             session_id, message = await self.channel.decrypt_message()
             if session_id == self.session_id:
                 return message
-            self.channel._log(
-                "Ignored message for unexpected session", logger=log.warning
-            )
+            if __debug__:
+                self.channel._log(
+                    "Ignored message for unexpected session", logger=log.warning
+                )
 
     async def read(
         self,
