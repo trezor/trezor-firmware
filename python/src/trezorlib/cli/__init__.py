@@ -238,6 +238,24 @@ class TrezorConnection:
         seedless_session = client.get_seedless_session()
         return seedless_session
 
+    def _connection_context(self, connect_fn: t.Callable[[], t.Any]):
+        try:
+            conn = connect_fn()
+        except Exception as e:
+            self._print_exception(e, "Failed to connect")
+            sys.exit(1)
+
+        try:
+            yield conn
+        except exceptions.Cancelled:
+            # handle cancel action
+            click.echo("Action was cancelled.")
+            sys.exit(1)
+        except exceptions.TrezorException as e:
+            # handle any Trezor-sent exceptions as user-readable
+            raise click.ClickException(str(e)) from e
+            # other exceptions may cause a traceback
+
     @contextmanager
     def client_context(self):
         """Get a client instance as a context manager. Handle errors in a manner
@@ -247,27 +265,7 @@ class TrezorConnection:
         >>> with obj.client_context() as client:
         >>>     do_your_actions_here()
         """
-        try:
-            client = self.get_client()
-        except transport.DeviceIsBusy:
-            click.echo("Device is in use by another process.")
-            sys.exit(1)
-        except Exception:
-            click.echo("Failed to find a Trezor device.")
-            if self.path is not None:
-                click.echo(f"Using path: {self.path}")
-            sys.exit(1)
-
-        try:
-            yield client
-        except exceptions.Cancelled:
-            # handle cancel action
-            click.echo("Action was cancelled.")
-            sys.exit(1)
-        except exceptions.TrezorException as e:
-            # handle any Trezor-sent exceptions as user-readable
-            raise click.ClickException(str(e)) from e
-            # other exceptions may cause a traceback
+        yield from self._connection_context(self.get_client)
 
     @contextmanager
     def session_context(
@@ -277,55 +275,25 @@ class TrezorConnection:
         seedless: bool = False,
         must_resume: bool = False,
     ):
-        """Get a session instance as a context manager. Handle errors in a manner
-        appropriate for end-users.
-
-        Usage:
-        >>> with obj.session_context() as session:
-        >>>     do_your_actions_here()
-        """
-        try:
-            if seedless:
-                session = self.get_seedless_session()
-            else:
-                session = self.get_session(
-                    derive_cardano=derive_cardano,
-                    empty_passphrase=empty_passphrase,
-                    must_resume=must_resume,
-                )
-        except exceptions.DeviceLocked:
-            click.echo(
-                "Device is locked, enter a pin on the device.",
-                err=True,
+        yield from self._connection_context(
+            self.get_seedless_session
+            if seedless
+            else lambda: self.get_session(
+                derive_cardano=derive_cardano,
+                empty_passphrase=empty_passphrase,
+                must_resume=must_resume,
             )
-            sys.exit(1)
-        except transport.DeviceIsBusy:
-            click.echo("Device is in use by another process.")
-            sys.exit(1)
-        except exceptions.UnexpectedCodeEntryTagException:
-            click.echo("Entered Code is invalid.")
-            sys.exit(1)
-        except exceptions.FailedSessionResumption:
-            sys.exit(1)
-        except exceptions.DerivationOnUninitaizedDeviceError:
-            click.echo("Device is not initialized.")
-            sys.exit(1)
-        except Exception:
-            click.echo("Failed to find a Trezor device.")
-            if self.path is not None:
-                click.echo(f"Using path: {self.path}")
-            sys.exit(1)
+        )
 
-        try:
-            yield session
-        except exceptions.Cancelled:
-            # handle cancel action
-            click.echo("Action was cancelled.")
-            sys.exit(1)
-        except exceptions.TrezorException as e:
-            # handle any Trezor-sent exceptions as user-readable
-            raise click.ClickException(str(e)) from e
-            # other exceptions may cause a traceback
+    def _print_exception(self, exc: Exception, message: str):
+        LOG.debug(message, exc_info=True)
+        message = f"{message}: {exc.__class__.__name__}"
+        if description := str(exc):
+            message = f"{message} ({description})"
+
+        click.echo(message)
+        if self.path is not None:
+            click.echo(f"Using path: {self.path}")
 
 
 def with_session(
