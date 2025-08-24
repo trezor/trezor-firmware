@@ -35,7 +35,13 @@ from trezor.wire.errors import (
     SilentError,
     UnexpectedMessage,
 )
-from trezor.wire.thp import ChannelState, ThpError, crypto, get_enabled_pairing_methods
+from trezor.wire.thp import (
+    ChannelState,
+    ThpError,
+    crypto,
+    get_enabled_pairing_methods,
+    ui,
+)
 from trezor.wire.thp.pairing_context import PairingContext
 
 from .credential_manager import is_credential_autoconnect, issue_credential
@@ -195,7 +201,7 @@ async def handle_credential_phase(
             raise DataError("Missing host/app name in credential")
 
     if show_connection_dialog and not autoconnect:
-        await ctx.show_connection_dialog()
+        await ui.show_connection_dialog(ctx.host_name, ctx.app_name)
 
     while ThpCredentialRequest.is_type_of(message):
         message = await _handle_credential_request(ctx, message)
@@ -425,7 +431,9 @@ async def _handle_credential_request(
                 "Cannot ask for autoconnect credential without a valid credential!"
             )
 
-        await ctx.show_autoconnect_credential_confirmation_screen()  # TODO add device name
+        await ui.show_autoconnect_credential_confirmation_screen(
+            host_name=ctx.host_name, app_name=ctx.app_name
+        )
 
     trezor_static_public_key = crypto.get_trezor_static_public_key()
     credential_metadata = ThpCredentialMetadata(

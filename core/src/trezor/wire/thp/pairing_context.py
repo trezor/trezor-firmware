@@ -143,14 +143,6 @@ class PairingContext(Context):
             action=action_string,
         )
 
-    async def show_connection_dialog(self) -> None:
-        await ui.show_connection_dialog(self.host_name, self.app_name)
-
-    async def show_autoconnect_credential_confirmation_screen(self) -> None:
-        await ui.show_autoconnect_credential_confirmation_screen(
-            self.host_name, self.app_name
-        )
-
     async def show_pairing_method_screen(
         self, selected_method: ThpPairingMethod | None = None
     ) -> UiResult:
