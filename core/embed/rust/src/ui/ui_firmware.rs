@@ -16,6 +16,8 @@ pub const MAX_WORD_QUIZ_ITEMS: usize = 3;
 pub const MAX_GROUP_SHARE_LINES: usize = 4;
 pub const MAX_MENU_ITEMS: usize = 5;
 
+pub const MAX_PAIRED_DEVICES: usize = 8; // Maximum number of paired devices in the device menu
+
 pub const ERROR_NOT_IMPLEMENTED: Error = Error::ValueError(c"not implemented");
 
 pub trait FirmwareUI {
@@ -358,12 +360,21 @@ pub trait FirmwareUI {
         lockable: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
+    #[allow(clippy::too_many_arguments)]
     fn show_device_menu(
         failed_backup: bool,
+        paired_devices: heapless::Vec<TString<'static>, MAX_PAIRED_DEVICES>,
+        connected_idx: Option<usize>,
+        bluetooth: Option<bool>,
+        pin_code: Option<bool>,
+        auto_lock_delay: Option<TString<'static>>,
+        wipe_code: Option<bool>,
+        check_backup: bool,
         device_name: Option<TString<'static>>,
+        screen_brightness: Option<TString<'static>>,
+        haptic_feedback: Option<bool>,
+        led_enabled: Option<bool>,
         about_items: Obj,
-        paired_devices: Vec<TString<'static>, 1>,
-        auto_lock_delay: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_pairing_device_name(

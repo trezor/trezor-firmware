@@ -28,7 +28,7 @@ use crate::{
         },
         ui_firmware::{
             FirmwareUI, ERROR_NOT_IMPLEMENTED, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
-            MAX_MENU_ITEMS, MAX_WORD_QUIZ_ITEMS,
+            MAX_MENU_ITEMS, MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS,
         },
         ModelUI,
     },
@@ -934,10 +934,18 @@ impl FirmwareUI for UIBolt {
 
     fn show_device_menu(
         _failed_backup: bool,
+        _paired_devices: heapless::Vec<TString<'static>, MAX_PAIRED_DEVICES>,
+        _connected_idx: Option<usize>,
+        _bluetooth: Option<bool>,
+        _pin_code: Option<bool>,
+        _auto_lock_delay: Option<TString<'static>>,
+        _wipe_code: Option<bool>,
+        _check_backup: bool,
         _device_name: Option<TString<'static>>,
+        _screen_brightness: Option<TString<'static>>,
+        _haptic_feedback: Option<bool>,
+        _led_enabled: Option<bool>,
         _about_items: Obj,
-        _paired_devices: heapless::Vec<TString<'static>, 1>,
-        _auto_lock_delay: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
             c"show_device_menu not supported",

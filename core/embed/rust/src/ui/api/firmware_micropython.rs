@@ -23,7 +23,8 @@ use crate::{
             util::{upy_disable_animation, RecoveryType},
         },
         ui_firmware::{
-            FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_WORD_QUIZ_ITEMS,
+            FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_PAIRED_DEVICES,
+            MAX_WORD_QUIZ_ITEMS,
         },
         ModelUI,
     },
@@ -937,20 +938,43 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
 extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let failed_backup: bool = kwargs.get(Qstr::MP_QSTR_failed_backup)?.try_into()?;
+        let paired_devices: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
+        let paired_devices: Vec<TString, MAX_PAIRED_DEVICES> = util::iter_into_vec(paired_devices)?;
+        let connected_idx: Option<usize> =
+            kwargs.get(Qstr::MP_QSTR_connected_idx)?.try_into_option()?;
+        let bluetooth: Option<bool> = kwargs.get(Qstr::MP_QSTR_bluetooth)?.try_into_option()?;
+        let pin_code: Option<bool> = kwargs.get(Qstr::MP_QSTR_pin_code)?.try_into_option()?;
+        let auto_lock_delay: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_auto_lock_delay)?
+            .try_into_option()?;
+        let wipe_code: Option<bool> = kwargs.get(Qstr::MP_QSTR_wipe_code)?.try_into_option()?;
+        let check_backup: bool = kwargs.get(Qstr::MP_QSTR_check_backup)?.try_into()?;
         let device_name: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_device_name)?.try_into_option()?;
+        let screen_brightness: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_screen_brightness)?
+            .try_into_option()?;
+        let haptic_feedback: Option<bool> = kwargs
+            .get(Qstr::MP_QSTR_haptic_feedback)?
+            .try_into_option()?;
+        let led_enabled: Option<bool> = kwargs.get(Qstr::MP_QSTR_led_enabled)?.try_into_option()?;
         let about_items: Obj = kwargs.get(Qstr::MP_QSTR_about_items)?;
-        let paired_devices: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
-        let paired_devices: Vec<TString, 1> = util::iter_into_vec(paired_devices)?;
-        let auto_lock_delay: TString<'static> =
-            kwargs.get(Qstr::MP_QSTR_auto_lock_delay)?.try_into()?;
         let layout = ModelUI::show_device_menu(
             failed_backup,
-            device_name,
-            about_items,
             paired_devices,
+            connected_idx,
+            bluetooth,
+            pin_code,
             auto_lock_delay,
+            wipe_code,
+            check_backup,
+            device_name,
+            screen_brightness,
+            haptic_feedback,
+            led_enabled,
+            about_items,
         )?;
+
         let layout_obj = LayoutObj::new_root(layout)?;
         Ok(layout_obj.into())
     };
@@ -1878,10 +1902,18 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def show_device_menu(
     ///     *,
     ///     failed_backup: bool,
-    ///     device_name: str | None,
-    ///     about_items: list[PropertyType],
     ///     paired_devices: Iterable[str],
-    ///     auto_lock_delay: str,
+    ///     connected_idx: int | None,
+    ///     bluetooth: bool | None,
+    ///     pin_code: bool | None,
+    ///     auto_lock_delay: str | None,
+    ///     wipe_code: bool | None,
+    ///     check_backup: bool,
+    ///     device_name: str | None,
+    ///     screen_brightness: str | None,
+    ///     haptic_feedback: bool | None,
+    ///     led_enabled: bool | None,
+    ///     about_items: list[tuple[str | None, str | bytes | None, bool | None]],
     /// ) -> LayoutObj[UiResult | DeviceMenuResult | tuple[DeviceMenuResult, int]]:
     ///     """Show the device menu."""
     Qstr::MP_QSTR_show_device_menu => obj_fn_kw!(0, new_show_device_menu).as_obj(),
@@ -2078,12 +2110,22 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// class DeviceMenuResult:
     ///     """Result of a device menu operation."""
     ///     BackupFailed: ClassVar[DeviceMenuResult]
-    ///     DevicePair: ClassVar[DeviceMenuResult]
+    ///     DeviceConnect: ClassVar[DeviceMenuResult]
     ///     DeviceDisconnect: ClassVar[DeviceMenuResult]
-    ///     CheckBackup: ClassVar[DeviceMenuResult]
-    ///     WipeDevice: ClassVar[DeviceMenuResult]
-    ///     ScreenBrightness: ClassVar[DeviceMenuResult]
+    ///     DevicePair: ClassVar[DeviceMenuResult]
+    ///     DeviceUnpair: ClassVar[DeviceMenuResult]
+    ///     DeviceUnpairAll: ClassVar[DeviceMenuResult]
+    ///     Bluetooth: ClassVar[DeviceMenuResult]
+    ///     PinCode: ClassVar[DeviceMenuResult]
+    ///     PinRemove: ClassVar[DeviceMenuResult]
     ///     AutoLockDelay: ClassVar[DeviceMenuResult]
+    ///     WipeCode: ClassVar[DeviceMenuResult]
+    ///     WipeRemove: ClassVar[DeviceMenuResult]
+    ///     CheckBackup: ClassVar[DeviceMenuResult]
     ///     DeviceName: ClassVar[DeviceMenuResult]
+    ///     ScreenBrightness: ClassVar[DeviceMenuResult]
+    ///     HapticFeedback: ClassVar[DeviceMenuResult]
+    ///     LedEnabled: ClassVar[DeviceMenuResult]
+    ///     WipeDevice: ClassVar[DeviceMenuResult]
     Qstr::MP_QSTR_DeviceMenuResult => DEVICE_MENU_RESULT.as_obj(),
 };

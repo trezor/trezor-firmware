@@ -5,7 +5,6 @@ use crate::{
     micropython::{gc::GcBox, obj::Obj},
     strutil::TString,
     translations::TR,
-    trezorhal::storage::has_pin,
     ui::{
         component::{
             text::{
@@ -17,6 +16,7 @@ use crate::{
         geometry::{LinearPlacement, Rect},
         layout::util::PropsList,
         shape::Renderer,
+        ui_firmware::MAX_PAIRED_DEVICES,
     },
 };
 
@@ -33,11 +33,19 @@ use super::{
 };
 use heapless::Vec;
 
+// - root
+//   - pair & connect
+//   - settings
+//     - security
+//       - pin code
+//       - wipe code
+//     - device
+const MAX_SUBMENUS: usize = 8; // TODO: decrease to 7 BLE implementation
 const MAX_DEPTH: usize = 3;
-const MAX_SUBSCREENS: usize = 10;
-const MAX_SUBMENUS: usize = MAX_SUBSCREENS - 2 /* (about and device screen) */;
+// submenus, device screens, regulatory and about screens
+const MAX_SUBSCREENS: usize = MAX_SUBMENUS + MAX_PAIRED_DEVICES + 2;
 
-const DISCONNECT_DEVICE_MENU_INDEX: usize = 1;
+const DIS_CONNECT_DEVICE_MENU_INDEX: usize = 0;
 
 #[derive(Clone)]
 enum Action {
@@ -52,20 +60,34 @@ pub enum DeviceMenuMsg {
     // Root menu
     BackupFailed,
 
+    // Bluetooth
+    Bluetooth,
+
     // "Pair & Connect"
-    DevicePair, // pair a new device
-    DeviceDisconnect(
-        usize, /* which device to disconnect, index in the list of devices */
+    DevicePair,       // pair a new device
+    DeviceDisconnect, // disconnect a device
+    DeviceConnect(
+        usize, /* which device to connect, index in the list of devices */
     ),
+    DeviceUnpair(
+        usize, /* which device to unpair, index in the list of devices */
+    ),
+    DeviceUnpairAll,
 
     // Security menu
+    PinCode,
+    PinRemove,
+    AutoLockDelay,
+    WipeCode,
+    WipeRemove,
     CheckBackup,
-    WipeDevice,
 
     // Device menu
     DeviceName,
     ScreenBrightness,
-    AutoLockDelay,
+    HapticFeedback,
+    LedEnabled,
+    WipeDevice,
 
     // nothing selected
     Close,
@@ -168,13 +190,21 @@ pub struct DeviceMenuScreen {
 }
 
 impl DeviceMenuScreen {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         failed_backup: bool,
-        about_items: Obj,
+        paired_devices: Vec<TString<'static>, MAX_PAIRED_DEVICES>,
+        _connected_idx: Option<usize>,
+        _bluetooth: Option<bool>,
+        _pin_code: Option<bool>,
+        auto_lock_delay: Option<TString<'static>>,
+        _wipe_code: Option<bool>,
+        _check_backup: bool,
         device_name: Option<TString<'static>>,
-        // NB: we currently only support one device at a time.
-        paired_devices: Vec<TString<'static>, 1>,
-        auto_lock_delay: TString<'static>,
+        _screen_brightness: Option<TString<'static>>,
+        _haptic_feedback: Option<bool>,
+        led: Option<bool>,
+        about_items: Obj,
     ) -> Result<Self, Error> {
         let mut screen = Self {
             bounds: Rect::zero(),
@@ -189,14 +219,14 @@ impl DeviceMenuScreen {
         let about = screen.add_subscreen(Subscreen::AboutScreen);
         let regulatory = screen.add_subscreen(Subscreen::RegulatoryScreen);
         let security = screen.add_security_menu();
-        let device = screen.add_device_menu(device_name, regulatory, about, auto_lock_delay);
+        let device = screen.add_device_menu(device_name, regulatory, about, auto_lock_delay, led);
         let settings = screen.add_settings_menu(security, device);
 
         let is_connected = !paired_devices.is_empty(); // FIXME after BLE API has this
         let connected_subtext: Option<TString<'static>> =
             is_connected.then_some("1 device connected".into());
 
-        let mut paired_device_indices: Vec<usize, 1> = Vec::new();
+        let mut paired_device_indices: Vec<usize, MAX_PAIRED_DEVICES> = Vec::new();
         for (i, device) in paired_devices.iter().enumerate() {
             unwrap!(paired_device_indices
                 .push(screen.add_subscreen(Subscreen::DeviceScreen(*device, i))));
@@ -215,8 +245,8 @@ impl DeviceMenuScreen {
 
     fn add_paired_devices_menu(
         &mut self,
-        paired_devices: Vec<TString<'static>, 1>,
-        paired_device_indices: Vec<usize, 1>,
+        paired_devices: Vec<TString<'static>, MAX_PAIRED_DEVICES>,
+        paired_device_indices: Vec<usize, MAX_PAIRED_DEVICES>,
     ) -> usize {
         let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
         for (device, idx) in paired_devices.iter().zip(paired_device_indices) {
@@ -291,7 +321,8 @@ impl DeviceMenuScreen {
         device_name: Option<TString<'static>>,
         regulatory_index: usize,
         about_index: usize,
-        auto_lock_delay: TString<'static>,
+        auto_lock_delay: Option<TString<'static>>,
+        led: Option<bool>,
     ) -> usize {
         let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
         if let Some(device_name) = device_name {
@@ -308,13 +339,30 @@ impl DeviceMenuScreen {
             Some(Action::Return(DeviceMenuMsg::ScreenBrightness)),
         )));
 
-        if has_pin() {
+        if let Some(auto_lock_delay) = auto_lock_delay {
             let mut autolock_delay_item = MenuItem::new(
                 TR::auto_lock__title.into(),
                 Some(Action::Return(DeviceMenuMsg::AutoLockDelay)),
             );
             autolock_delay_item.with_subtext(Some((auto_lock_delay, None)));
             unwrap!(items.push(autolock_delay_item));
+        }
+
+        if let Some(led) = led {
+            let mut led_item = MenuItem::new(
+                TR::words__led.into(),
+                Some(Action::Return(DeviceMenuMsg::LedEnabled)),
+            );
+            let subtext = if led {
+                (
+                    TR::words__on.into(),
+                    Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
+                )
+            } else {
+                (TR::words__off.into(), None)
+            };
+            led_item.with_subtext(Some(subtext));
+            unwrap!(items.push(led_item));
         }
 
         unwrap!(items.push(MenuItem::new(
@@ -527,9 +575,9 @@ impl Component for DeviceMenuScreen {
             (Subscreen::Submenu(..) | Subscreen::DeviceScreen(..), ActiveScreen::Menu(menu)) => {
                 match menu.event(ctx, event) {
                     Some(VerticalMenuScreenMsg::Selected(index)) => {
-                        if let Subscreen::DeviceScreen(_, i) = subscreen {
-                            if index == DISCONNECT_DEVICE_MENU_INDEX {
-                                return Some(DeviceMenuMsg::DeviceDisconnect(*i));
+                        if let Subscreen::DeviceScreen(_, _) = subscreen {
+                            if index == DIS_CONNECT_DEVICE_MENU_INDEX {
+                                return Some(DeviceMenuMsg::DeviceDisconnect);
                             }
                         } else {
                             return self.handle_submenu(ctx, index);

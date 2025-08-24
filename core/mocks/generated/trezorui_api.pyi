@@ -623,10 +623,18 @@ def show_homescreen(
 def show_device_menu(
     *,
     failed_backup: bool,
-    device_name: str | None,
-    about_items: list[PropertyType],
     paired_devices: Iterable[str],
-    auto_lock_delay: str,
+    connected_idx: int | None,
+    bluetooth: bool | None,
+    pin_code: bool | None,
+    auto_lock_delay: str | None,
+    wipe_code: bool | None,
+    check_backup: bool,
+    device_name: str | None,
+    screen_brightness: str | None,
+    haptic_feedback: bool | None,
+    led_enabled: bool | None,
+    about_items: list[tuple[str | None, str | bytes | None, bool | None]],
 ) -> LayoutObj[UiResult | DeviceMenuResult | tuple[DeviceMenuResult, int]]:
     """Show the device menu."""
 
@@ -843,10 +851,20 @@ class LayoutState:
 class DeviceMenuResult:
     """Result of a device menu operation."""
     BackupFailed: ClassVar[DeviceMenuResult]
-    DevicePair: ClassVar[DeviceMenuResult]
+    DeviceConnect: ClassVar[DeviceMenuResult]
     DeviceDisconnect: ClassVar[DeviceMenuResult]
-    CheckBackup: ClassVar[DeviceMenuResult]
-    WipeDevice: ClassVar[DeviceMenuResult]
-    ScreenBrightness: ClassVar[DeviceMenuResult]
+    DevicePair: ClassVar[DeviceMenuResult]
+    DeviceUnpair: ClassVar[DeviceMenuResult]
+    DeviceUnpairAll: ClassVar[DeviceMenuResult]
+    Bluetooth: ClassVar[DeviceMenuResult]
+    PinCode: ClassVar[DeviceMenuResult]
+    PinRemove: ClassVar[DeviceMenuResult]
     AutoLockDelay: ClassVar[DeviceMenuResult]
+    WipeCode: ClassVar[DeviceMenuResult]
+    WipeRemove: ClassVar[DeviceMenuResult]
+    CheckBackup: ClassVar[DeviceMenuResult]
     DeviceName: ClassVar[DeviceMenuResult]
+    ScreenBrightness: ClassVar[DeviceMenuResult]
+    HapticFeedback: ClassVar[DeviceMenuResult]
+    LedEnabled: ClassVar[DeviceMenuResult]
+    WipeDevice: ClassVar[DeviceMenuResult]

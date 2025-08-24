@@ -1476,6 +1476,8 @@ pub enum TranslatedString {
     words__security = 1092,  // "Security"
     ble__version = 1093,  // "Bluetooth version"
     homescreen__firmware_type = 1094,  // "Firmware type"
+    words__off = 1095,  // "OFF"
+    words__on = 1096,  // "ON"
 }
 
 impl TranslatedString {
@@ -3271,6 +3273,8 @@ impl TranslatedString {
             (Self::words__security, "Security"),
             (Self::ble__version, "Bluetooth version"),
             (Self::homescreen__firmware_type, "Firmware type"),
+            (Self::words__off, "OFF"),
+            (Self::words__on, "ON"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4703,6 +4707,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__name, Self::words__name),
         (Qstr::MP_QSTR_words__no, Self::words__no),
         (Qstr::MP_QSTR_words__not_recommended, Self::words__not_recommended),
+        (Qstr::MP_QSTR_words__off, Self::words__off),
+        (Qstr::MP_QSTR_words__on, Self::words__on),
         (Qstr::MP_QSTR_words__operation_cancelled, Self::words__operation_cancelled),
         (Qstr::MP_QSTR_words__outputs, Self::words__outputs),
         (Qstr::MP_QSTR_words__pay_attention, Self::words__pay_attention),
