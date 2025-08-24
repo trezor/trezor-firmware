@@ -20,10 +20,12 @@ use heapless::Vec;
 /// Number of buttons.
 /// Presently, VerticalMenu holds only fixed number of buttons.
 pub const LONG_MENU_ITEMS: usize = 100;
+pub const MEDIUM_MENU_ITEMS: usize = 10;
 pub const SHORT_MENU_ITEMS: usize = 5;
 
 pub type LongMenuGc = GcBox<Vec<Button, LONG_MENU_ITEMS>>;
 pub type ShortMenuVec = Vec<Button, SHORT_MENU_ITEMS>;
+pub type MediumMenuVec = Vec<Button, MEDIUM_MENU_ITEMS>;
 
 pub trait MenuItems: Default {
     fn empty() -> Self {
@@ -36,7 +38,7 @@ pub trait MenuItems: Default {
     fn get_last(&self) -> Option<&Button>;
 }
 
-impl MenuItems for ShortMenuVec {
+impl<const N: usize> MenuItems for Vec<Button, N> {
     fn push(&mut self, button: Button) {
         unwrap!(self.push(button));
     }
