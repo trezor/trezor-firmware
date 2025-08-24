@@ -29,7 +29,7 @@ from .transport import Transport, get_transport
 from .transport.thp.channel import Channel
 from .transport.thp.cpace import Cpace
 from .transport.thp.protocol_v1 import ProtocolV1Channel, UnexpectedMagicError
-from .transport.thp.protocol_v2 import ProtocolV2Channel, TrezorState
+from .transport.thp.protocol_v2 import ProtocolV2Channel
 
 if t.TYPE_CHECKING:
     from .transport.session import Session, SessionV1, SessionV2
@@ -120,6 +120,7 @@ class TrezorClient:
                 raise RuntimeError(
                     "Connected Trezor does not support any trezorlib-compatible pairing method."
                 )
+        LOG.debug("Starting pairing: %r", pairing_method)
         session = SessionV2.seedless(self)
         session.call(
             messages.ThpPairingRequest(host_name="Trezorlib"),
@@ -142,7 +143,7 @@ class TrezorClient:
             skip_firmware_version_check=True,
         )
         assert isinstance(self.protocol, ProtocolV2Channel)
-        self.protocol._has_valid_channel = True
+        self.protocol._is_paired = True
 
     def _handle_code_entry(self, session: SessionV2) -> None:
         from .cli import get_code_entry_code
@@ -209,7 +210,7 @@ class TrezorClient:
         )
 
         assert isinstance(self.protocol, ProtocolV2Channel)
-        self.protocol._has_valid_channel = True
+        self.protocol._is_paired = True
 
     def get_session(
         self,
@@ -240,7 +241,7 @@ class TrezorClient:
         if isinstance(self.protocol, ProtocolV2Channel):
             from .transport.session import SessionV2
 
-            if self.protocol.trezor_state is TrezorState.UNPAIRED:
+            if not self.protocol._is_paired:
                 self.do_pairing()
 
             if passphrase is SEEDLESS:
@@ -273,10 +274,7 @@ class TrezorClient:
 
     def _get_features(self) -> messages.Features:
         if isinstance(self.protocol, ProtocolV2Channel):
-            if (
-                self.protocol.trezor_state is TrezorState.UNPAIRED
-                or not self.protocol._has_valid_channel
-            ):
+            if not self.protocol._is_paired:
                 self.do_pairing()
         return self.protocol.get_features()
 
