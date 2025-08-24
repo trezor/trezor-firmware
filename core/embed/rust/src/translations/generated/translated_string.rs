@@ -698,7 +698,7 @@ pub enum TranslatedString {
     passphrase__please_enter = 438,  // "Please enter your passphrase."
     passphrase__revoke_on_device = 439,  // "Do you want to revoke the passphrase on device setting?"
     passphrase__title_confirm = 440,  // "Confirm passphrase"
-    passphrase__title_enter = 441,  // "Enter passphrase"
+    passphrase__title_enter = 441,  // {"Bolt": "Enter passphrase", "Caesar": "Enter passphrase", "Delizia": "Enter passphrase", "Eckhart": "Enter\npassphrase"}
     passphrase__title_hide = 442,  // "Hide passphrase"
     passphrase__title_settings = 443,  // "Passphrase settings"
     passphrase__title_source = 444,  // "Passphrase source"
@@ -2294,7 +2294,14 @@ impl TranslatedString {
             (Self::passphrase__please_enter, "Please enter your passphrase."),
             (Self::passphrase__revoke_on_device, "Do you want to revoke the passphrase on device setting?"),
             (Self::passphrase__title_confirm, "Confirm passphrase"),
+            #[cfg(feature = "layout_bolt")]
             (Self::passphrase__title_enter, "Enter passphrase"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::passphrase__title_enter, "Enter passphrase"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::passphrase__title_enter, "Enter passphrase"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::passphrase__title_enter, "Enter\npassphrase"),
             (Self::passphrase__title_hide, "Hide passphrase"),
             (Self::passphrase__title_settings, "Passphrase settings"),
             (Self::passphrase__title_source, "Passphrase source"),
