@@ -158,9 +158,6 @@ class Channel:
         self.credential: ThpPairingCredential | None = None
         self.connection_context: PairingContext | None = None
 
-        if __debug__:
-            self.should_show_pairing_dialog: bool = True
-
     @property
     def iface(self) -> WireInterface:
         return self.ctx._iface

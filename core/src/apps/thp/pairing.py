@@ -118,11 +118,8 @@ async def handle_pairing_request(
 
     ctx.host_name = message.host_name
     ctx.app_name = message.app_name
-    if __debug__ and not ctx.channel_ctx.should_show_pairing_dialog:
-        await _skip_pairing_dialog(ctx)
-    else:
-        await ctx.show_pairing_dialog()
-        await ctx.write(ThpPairingRequestApproved())
+    await ctx.show_pairing_dialog()
+    await ctx.write(ThpPairingRequestApproved())
     assert ThpSelectMethod.MESSAGE_WIRE_TYPE is not None
     select_method_msg = await ctx.read(
         [
@@ -484,20 +481,3 @@ def _check_method_is_allowed(ctx: PairingContext, method: ThpPairingMethod) -> N
 def _check_method_is_selected(ctx: PairingContext, method: ThpPairingMethod) -> None:
     if method is not ctx.selected_method:
         raise ThpError("Not selected pairing method")
-
-
-if __debug__:
-
-    async def _skip_pairing_dialog(ctx: PairingContext) -> None:
-        from trezor.enums import ButtonRequestType
-        from trezor.messages import ButtonAck, ButtonRequest, ThpPairingRequestApproved
-        from trezor.wire.errors import ActionCancelled
-
-        resp = await ctx.call(
-            ButtonRequest(code=ButtonRequestType.Other, name="thp_pairing_request"),
-            expected_type=ButtonAck,
-        )
-        if isinstance(resp, ButtonAck):
-            await ctx.write(ThpPairingRequestApproved())
-        else:
-            raise ActionCancelled
