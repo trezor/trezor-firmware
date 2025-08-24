@@ -60,37 +60,65 @@ async def handle_device_menu() -> None:
         trezorui_api.show_device_menu(
             failed_backup=failed_backup,
             paired_devices=paired_devices,
+            connected_idx=None,  # TODO implement
+            bluetooth=None,  # TODO implement
+            pin_code=None,  # TODO implement
+            auto_lock_delay=auto_lock_delay,
+            wipe_code=False,  # TODO implement
+            check_backup=False,  # TODO implement
             device_name=device_name,
+            screen_brightness=None,  # TODO implement
+            haptic_feedback=None,  # TODO implement
+            led_enabled=None,  # TODO implement
             about_items=[
                 (TR.homescreen__firmware_version, firmware_version, False),
                 (TR.homescreen__firmware_type, firmware_type, False),
                 (TR.ble__version, bluetooth_version, False),
             ],
-            auto_lock_delay=auto_lock_delay,
         ),
         "device_menu",
     )
-
-    if menu_result is DeviceMenuResult.DevicePair:
+    # Root menu
+    if menu_result is DeviceMenuResult.BackupFailed:
+        pass  # TODO implement backup failed handling
+    # Pair & Connect
+    elif menu_result is DeviceMenuResult.DeviceDisconnect:
+        pass  # TODO implement device disconnect handling
+    elif menu_result is DeviceMenuResult.DevicePair:
         from apps.management.ble.pair_new_device import pair_new_device
 
         await pair_new_device()
-    elif menu_result is DeviceMenuResult.ScreenBrightness:
-        from trezor.ui.layouts import set_brightness
-
-        await set_brightness()
-    elif menu_result is DeviceMenuResult.WipeDevice:
-        from trezor.messages import WipeDevice
-
-        from apps.management.wipe_device import wipe_device
-
-        await wipe_device(WipeDevice())
+    elif menu_result is DeviceMenuResult.DeviceUnpairAll:
+        pass  # TODO implement all devices unpair handling
+    elif isinstance(menu_result, tuple):
+        # It's a tuple with (result_type, index)
+        result_type, index = menu_result
+        if result_type is DeviceMenuResult.DeviceConnect:
+            pass  # TODO implement device connect handling
+        elif result_type is DeviceMenuResult.DeviceUnpair:
+            pass  # TODO implement device unpair handling
+        else:
+            raise RuntimeError(f"Unknown menu {result_type}, {index}")
+    # Bluetooth
+    elif menu_result is DeviceMenuResult.Bluetooth:
+        pass  # TODO implement bluetooth handling
+    # Security settings
+    elif menu_result is DeviceMenuResult.PinCode:
+        pass  # TODO implement pin code handling
+    elif menu_result is DeviceMenuResult.PinRemove:
+        pass  # TODO implement pin remove handling
     elif menu_result is DeviceMenuResult.AutoLockDelay:
-
         if config.has_pin():
 
             auto_lock_delay_ms = await _prompt_auto_lock_delay()
             storage_device.set_autolock_delay_ms(auto_lock_delay_ms)
+    elif menu_result is DeviceMenuResult.WipeCode:
+        pass  # TODO implement wipe code handling
+    elif menu_result is DeviceMenuResult.WipeRemove:
+        pass  # TODO implement wipe remove handling
+    elif menu_result is DeviceMenuResult.CheckBackup:
+        pass  # TODO implement check backup handling
+    # Device settings
     elif menu_result is DeviceMenuResult.DeviceName:
         from trezor.messages import ApplySettings
 
@@ -108,16 +136,17 @@ async def handle_device_menu() -> None:
         )
         assert isinstance(label, str)
         await apply_settings(ApplySettings(label=label))
-    elif isinstance(menu_result, tuple):
-        # It's a tuple with (result_type, index)
-        result_type, index = menu_result
-        if result_type is DeviceMenuResult.DeviceDisconnect:
-            from trezor.messages import BleUnpair
+    elif menu_result is DeviceMenuResult.ScreenBrightness:
+        pass  # TODO implement screen brightness handling
+    elif menu_result is DeviceMenuResult.HapticFeedback:
+        pass  # TODO implement haptic feedback handling
+    elif menu_result is DeviceMenuResult.LedEnabled:
+        pass  # TODO implement led handling
+    elif menu_result is DeviceMenuResult.WipeDevice:
+        from trezor.messages import WipeDevice
 
-            from apps.management.ble.unpair import unpair
+        from apps.management.wipe_device import wipe_device
 
-            await unpair(BleUnpair(all=False))  # FIXME we can only unpair current
-        else:
-            raise RuntimeError(f"Unknown menu {result_type}, {index}")
+        await wipe_device(WipeDevice())
     else:
         raise RuntimeError(f"Unknown menu {menu_result}")

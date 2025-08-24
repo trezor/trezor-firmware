@@ -1236,6 +1236,8 @@
     "words__name": "Name",
     "words__no": "No",
     "words__not_recommended": "Not recommended!",
+    "words__off": "OFF",
+    "words__on": "ON",
     "words__operation_cancelled": "Operation cancelled",
     "words__outputs": "outputs",
     "words__pay_attention": "Pay attention",
