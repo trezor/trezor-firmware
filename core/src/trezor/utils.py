@@ -17,6 +17,7 @@ from trezorutils import (  # noqa: F401
     USE_HAPTIC,
     USE_OPTIGA,
     USE_POWER_MANAGER,
+    USE_RGB_LED,
     USE_SD_CARD,
     USE_THP,
     USE_TOUCH,

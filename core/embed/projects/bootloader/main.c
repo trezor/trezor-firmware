@@ -216,7 +216,9 @@ static secbool boot_sequence(void) {
 
     if (state.charging_status == PM_BATTERY_CHARGING) {
       // charing screen
-      rgb_led_set_color(0x0000FF);
+#ifdef USE_RGB_LED
+      rgb_led_set_color(RGBLED_BLUE);
+#endif
     } else {
       if (!btn_down && !state.usb_connected && !state.wireless_connected) {
         // device in just intended to be turned off
@@ -229,20 +231,24 @@ static secbool boot_sequence(void) {
     }
   }
 
+#ifdef USE_RGB_LED
   rgb_led_set_color(0);
+#endif
 
   while (pm_turn_on() != PM_OK) {
-    rgb_led_set_color(0x400000);
+#ifdef USE_RGB_LED
+    rgb_led_set_color(RGBLED_RED);
     systick_delay_ms(400);
     rgb_led_set_color(0);
     systick_delay_ms(400);
-    rgb_led_set_color(0x400000);
+    rgb_led_set_color(RGBLED_RED);
     systick_delay_ms(400);
     rgb_led_set_color(0);
     systick_delay_ms(400);
-    rgb_led_set_color(0x400000);
+    rgb_led_set_color(RGBLED_RED);
     systick_delay_ms(400);
     rgb_led_set_color(0);
+#endif
     pm_hibernate();
     systick_delay_ms(1000);
     reboot_to_off();

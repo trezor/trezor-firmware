@@ -1095,5 +1095,8 @@
   "1093": "ble__version",
   "1094": "homescreen__firmware_type",
   "1095": "words__off",
-  "1096": "words__on"
+  "1096": "words__on",
+  "1097": "led__disable",
+  "1098": "led__enable",
+  "1099": "led__title"
 }
