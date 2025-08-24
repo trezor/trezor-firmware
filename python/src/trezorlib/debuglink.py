@@ -385,6 +385,7 @@ class LayoutContent(UnstructuredJSONReader):
         assert (
             "PinKeyboard" in self.all_components()
             or "PassphraseKeyboard" in self.all_components()
+            or "StringKeyboard" in self.all_components()
         )
         style_str = self.find_unique_value_by_key(
             "display_style", default="", only_type=str
@@ -396,8 +397,14 @@ class LayoutContent(UnstructuredJSONReader):
 
     def passphrase(self) -> str:
         """Get passphrase from the layout."""
-        assert "PassphraseKeyboard" in self.all_components()
-        return self.find_unique_value_by_key("passphrase", default="", only_type=str)
+        if "StringKeyboard" in self.all_components():
+            return self.find_unique_value_by_key("content", default="", only_type=str)
+        elif "PassphraseKeyboard" in self.all_components():
+            return self.find_unique_value_by_key(
+                "passphrase", default="", only_type=str
+            )
+        else:
+            raise ValueError("No passphrase component in layout")
 
     def page_count(self) -> int:
         """Get number of pages for the layout."""

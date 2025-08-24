@@ -17,8 +17,8 @@ use super::firmware::{
     AllowedTextContent, ConfirmHomescreen, ConfirmHomescreenMsg, DeviceMenuMsg, DeviceMenuScreen,
     Homescreen, HomescreenMsg, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PinKeyboard,
     PinKeyboardMsg, ProgressScreen, SelectWordCountMsg, SelectWordCountScreen, SelectWordMsg,
-    SelectWordScreen, SetBrightnessScreen, StringKeyboard, StringKeyboardMsg, TextScreen,
-    TextScreenMsg, ValueInput, ValueInputScreen, ValueInputScreenMsg,
+    SelectWordScreen, SetBrightnessScreen, StringInput, StringKeyboard, StringKeyboardMsg,
+    TextScreen, TextScreenMsg, ValueInput, ValueInputScreen, ValueInputScreenMsg,
 };
 
 impl ComponentMsgObj for PinKeyboard<'_> {
@@ -30,10 +30,10 @@ impl ComponentMsgObj for PinKeyboard<'_> {
     }
 }
 
-impl ComponentMsgObj for StringKeyboard {
+impl<I: StringInput> ComponentMsgObj for StringKeyboard<I> {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
-            StringKeyboardMsg::Confirmed => self.string().try_into(),
+            StringKeyboardMsg::Confirmed(content) => content.as_str().try_into(),
             StringKeyboardMsg::Cancelled => Ok(CANCELLED.as_obj()),
         }
     }

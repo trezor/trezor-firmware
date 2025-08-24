@@ -233,7 +233,7 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
     debug = device_handler.debuglink()
 
     device_handler.get_session(passphrase=PASSPHRASE_ON_DEVICE)  # type: ignore
-    debug.synchronize_at("PassphraseKeyboard")
+    debug.synchronize_at(["PassphraseKeyboard", "StringKeyboard"])
 
     if debug.layout_type is LayoutType.Caesar:
         # Going into the selected character category
@@ -279,7 +279,7 @@ def test_autolock_interrupts_passphrase(device_handler: "BackgroundDeviceHandler
 
     # get address (derive_seed)
     device_handler.get_session(passphrase=PASSPHRASE_ON_DEVICE)
-    debug.synchronize_at("PassphraseKeyboard")
+    debug.synchronize_at(["PassphraseKeyboard", "StringKeyboard"])
 
     if debug.layout_type is LayoutType.Caesar:
         # Going into the selected character category

@@ -18,7 +18,8 @@ use crate::{
 use super::super::{
     component::Button,
     firmware::{
-        ActionBar, Header, PassphraseKeyboard, PassphraseKeyboardMsg, TextScreen, TextScreenMsg,
+        ActionBar, Header, PassphraseInput, StringKeyboard, StringKeyboardMsg, TextScreen,
+        TextScreenMsg,
     },
     theme,
 };
@@ -80,9 +81,10 @@ pub fn new_request_passphrase(
         _ => Some(FlowMsg::Cancelled),
     });
 
-    let content_keypad = PassphraseKeyboard::new(prompt, max_len).map(|msg| match msg {
-        PassphraseKeyboardMsg::Confirmed(s) => Some(FlowMsg::Text(s)),
-        PassphraseKeyboardMsg::Cancelled => Some(FlowMsg::Cancelled),
+    let input = PassphraseInput::new(max_len, false, true);
+    let content_keypad = StringKeyboard::new(prompt, input).map(|msg| match msg {
+        StringKeyboardMsg::Confirmed(s) => Some(FlowMsg::Text(s)),
+        StringKeyboardMsg::Cancelled => Some(FlowMsg::Cancelled),
     });
 
     let mut res = SwipeFlow::new(&RequestPassphrase::Keypad)?;
