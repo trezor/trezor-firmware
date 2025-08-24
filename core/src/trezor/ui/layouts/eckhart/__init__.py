@@ -223,11 +223,10 @@ async def confirm_change_label(
     br_name: str, title: str, template: str, param: str
 ) -> None:
 
-    await confirm_single(
+    await confirm_action(
         br_name=br_name,
         title=title,
-        description=template,
-        description_param=param,
+        description=template.format(param),
         verb=None,
     )
 
