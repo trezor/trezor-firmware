@@ -45,7 +45,8 @@ pub struct PinKeyboard<'a> {
 impl<'a> PinKeyboard<'a> {
     const LAST_DIGIT_TIMEOUT: Duration = Duration::from_secs(1);
     const MAJOR_WARNING_TIMEOUT: Duration = Duration::from_secs(2);
-    // Ad hoc number that so that all languages can reasonably show the attempts prompt
+    // Ad hoc number that so that all languages can reasonably show the attempts
+    // prompt
     const ATTEMPTS_WIDTH: i16 = 85;
 
     pub fn new(
