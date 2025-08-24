@@ -795,6 +795,7 @@
       "Delizia": "Share {0}",
       "Eckhart": "Share #{0}"
     },
+    "recovery__start_entering": "Start\nentering",
     "recovery__title": "Recover wallet",
     "recovery__title_cancel_dry_run": "Cancel backup check",
     "recovery__title_cancel_recovery": "Cancel recovery",
@@ -803,7 +804,6 @@
     "recovery__title_remaining_shares": "Remaining shares",
     "recovery__title_unlock_repeated_backup": "Multi-share backup",
     "recovery__type_word_x_of_y_template": "Type word {0} of {1}",
-    "recovery__start_entering": "Start\nentering",
     "recovery__unlock_repeated_backup": "Create additional backup?",
     "recovery__unlock_repeated_backup_verb": "Create backup",
     "recovery__wallet_recovered": {
