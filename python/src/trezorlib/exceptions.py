@@ -105,16 +105,6 @@ class InvalidSessionError(TrezorException):
     Raised when Trezor returns unexpected PassphraseRequest"""
 
 
-class DerivationOnUninitaizedDeviceError(TrezorException):
-    """Tried to derive seed on uninitialized device.
-
-    To communicate with uninitialized device, use seedless session instead."""
-
-
-class UnexpectedCodeEntryTagException(TrezorException):
-    pass
-
-
 class ThpError(TrezorException):
     pass
 
