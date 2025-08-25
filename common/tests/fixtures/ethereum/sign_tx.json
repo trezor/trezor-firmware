@@ -156,6 +156,46 @@
                 "sig_r": "79f079c4db54be4041329e096f8b47c04bcbc8ef6d5684748436ea8ff16ed5e5",
                 "sig_s": "32cf560c7fc98ac1041b27154b0787170ac93181124c41d7310323b40ca46cf1"
             }
+        },
+        {
+            "name": "Holesky Testnet, testnet path",
+            "parameters": {
+                "data": "",
+                "path": "m/44'/1'/0'/0/1",
+                "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
+                "chain_id": 17000,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": 1,
+                "value": "0x64"
+            },
+            "result": {
+                "sig_v": 34036,
+                "sig_r": "625c39532fc756305519227d700c979259f35a615668f866c3ea45c32771fcf6",
+                "sig_s": "79ae3f247f107b92a4ab3ced52345924f46fbee2a2fc6af31fb341debdc18ab4"
+            },
+            "skip_models": ["t1"]
+        },
+        {
+            "name": "Holesky Testnet, mainnet path",
+            "parameters": {
+                "data": "",
+                "path": "m/44'/60'/0'/0/1",
+                "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
+                "chain_id": 17000,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": 1,
+                "value": "0x64"
+            },
+            "result": {
+                "sig_v": 34035,
+                "sig_r": "711890c8ad19cf06b1e18319d1f377bf0f04ba23a1a0110b18a0000eed1418ad",
+                "sig_s": "235417e17d3bf0584bc2ac46fb493e0a7049e10a978b106c12a9a4310592c63a"
+            },
+            "skip_models": ["t1"]
         }
     ]
 }
