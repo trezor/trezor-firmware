@@ -919,12 +919,14 @@ tools.embed_raw_binary(
         )
 
 if 'nrf' in FEATURES_AVAILABLE:
+    suffix = "-dev" if BOOTLOADER_DEVEL else ""
+
     tools.embed_raw_binary(
             obj_program,
             env,
             'nrf_app',
             'build/firmware/nrf_app.o',
-            f'embed/models/{TREZOR_MODEL}/trezor-ble.bin',
+            f'embed/models/{TREZOR_MODEL}/trezor-ble{suffix}.bin',
             )
 
 if 'boot_ucb' in FEATURES_AVAILABLE:
