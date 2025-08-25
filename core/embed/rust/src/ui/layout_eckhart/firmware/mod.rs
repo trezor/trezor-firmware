@@ -37,7 +37,7 @@ pub use keyboard::{
     passphrase::{PassphraseKeyboard, PassphraseKeyboardMsg},
     pin::{PinKeyboard, PinKeyboardMsg},
     slip39::Slip39Input,
-    string_keyboard::{StringKeyboard, StringKeyboardMsg},
+    string::{StringKeyboard, StringKeyboardMsg},
     word_count_screen::{SelectWordCountMsg, SelectWordCountScreen},
 };
 pub use progress_screen::ProgressScreen;
