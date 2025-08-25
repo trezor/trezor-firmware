@@ -12,7 +12,6 @@ from trezor.strings import format_amount, format_amount_unit
 from trezor.ui import layouts
 from trezor.ui.layouts import confirm_metadata, confirm_properties
 
-from apps.cardano.helpers.chunks import MAX_CHUNK_SIZE
 from apps.common.paths import address_n_to_str
 
 from . import addresses
@@ -329,8 +328,6 @@ async def confirm_message_payload(
 ) -> None:
     props: list[PropertyType]
 
-    max_displayed_bytes = MAX_CHUNK_SIZE
-
     if not payload:
         assert payload_size == 0
         props = _get_data_chunk_props(
@@ -343,7 +340,7 @@ async def confirm_message_payload(
             title=TR.cardano__message_text,
             first_chunk=payload,
             data_size=payload_size,
-            max_displayed_size=max_displayed_bytes,
+            max_displayed_size=None,
             decoder=lambda chunk: chunk.decode("ascii"),
         )
     else:
@@ -351,7 +348,7 @@ async def confirm_message_payload(
             title=TR.cardano__message_hex,
             first_chunk=payload,
             data_size=payload_size,
-            max_displayed_size=max_displayed_bytes,
+            max_displayed_size=None,
         )
 
     await confirm_properties(
@@ -366,10 +363,14 @@ def _get_data_chunk_props(
     title: str,
     first_chunk: bytes,
     data_size: int,
-    max_displayed_size: int = _DEFAULT_MAX_DISPLAYED_CHUNK_SIZE,
+    max_displayed_size: int | None = _DEFAULT_MAX_DISPLAYED_CHUNK_SIZE,
     decoder: Callable[[bytes], bytes | str] | None = None,
 ) -> list[PropertyType]:
-    displayed_bytes = first_chunk[:max_displayed_size]
+    displayed_bytes = (
+        first_chunk[:max_displayed_size]
+        if max_displayed_size is not None
+        else first_chunk
+    )
     bytes_optional_plural = "byte" if data_size == 1 else "bytes"
     props: list[PropertyType] = [
         (
@@ -378,7 +379,7 @@ def _get_data_chunk_props(
             True,
         )
     ]
-    if data_size > max_displayed_size:
+    if max_displayed_size is not None and data_size > max_displayed_size:
         props.append(("...", None, None))
 
     return props
