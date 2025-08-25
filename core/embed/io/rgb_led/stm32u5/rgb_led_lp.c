@@ -253,18 +253,17 @@ void rgb_led_effect_start(rgb_led_effect_type_t effect_type,
     return;
   }
 
+  systimer_unset();
+
   if (!rgb_led_assign_effect(&drv->effect, effect_type)) {
     return;
   }
 
   drv->effect.data.requested_cycles = requested_cycles;
-
-  systimer_set_periodic(drv->effect_timer, RGB_LED_EFFECT_TIMER_PERIOD_MS);
+  drv->ongoing_effect = true;
   drv->effect.start_time_ms = systick_ms();
 
-  drv->ongoing_effect = true;
-
-  return;
+  systimer_set_periodic(drv->effect_timer, RGB_LED_EFFECT_TIMER_PERIOD_MS);
 }
 
 void rgb_led_effect_stop(void) {
@@ -274,8 +273,8 @@ void rgb_led_effect_stop(void) {
     return;
   }
 
-  drv->ongoing_effect = false;
   systimer_unset(drv->effect_timer);
+  drv->ongoing_effect = false;
 
   // Reset the LED to default state
   rgb_led_apply_color(drv, RGBLED_OFF);  // Turn off the LED
