@@ -75,7 +75,7 @@ def _require_confirm_action(
         return confirm_action(
             "change_wipe_code",
             TR.wipe_code__title_settings,
-            description=TR.wipe_code__change,
+            description=TR.wipe_code__change_question,
             verb=TR.buttons__change,
         )
 

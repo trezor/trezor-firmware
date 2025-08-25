@@ -100,6 +100,9 @@ struct MenuItem {
     action: Option<Action>,
 }
 const MENU_ITEM_TITLE_STYLE_SHEET: &ButtonStyleSheet = &theme::menu_item_title();
+const MENU_ITEM_LIGHT_WARNING: &ButtonStyleSheet = &theme::menu_item_title_yellow();
+const MENU_ITEM_WARNING: &ButtonStyleSheet = &theme::menu_item_title_orange();
+const MENU_ITEM_ERROR: &ButtonStyleSheet = &theme::menu_item_title_red();
 
 impl MenuItem {
     pub fn new(text: TString<'static>, action: Option<Action>) -> Self {
@@ -195,14 +198,14 @@ impl DeviceMenuScreen {
         failed_backup: bool,
         paired_devices: Vec<TString<'static>, MAX_PAIRED_DEVICES>,
         _connected_idx: Option<usize>,
-        _bluetooth: Option<bool>,
-        _pin_code: Option<bool>,
+        bluetooth: Option<bool>,
+        pin_code: Option<bool>,
         auto_lock_delay: Option<TString<'static>>,
-        _wipe_code: Option<bool>,
-        _check_backup: bool,
+        wipe_code: Option<bool>,
+        check_backup: bool,
         device_name: Option<TString<'static>>,
-        _screen_brightness: Option<TString<'static>>,
-        _haptic_feedback: Option<bool>,
+        screen_brightness: Option<TString<'static>>,
+        haptic_feedback: Option<bool>,
         led_enabled: Option<bool>,
         about_items: Obj,
     ) -> Result<Self, Error> {
@@ -218,10 +221,24 @@ impl DeviceMenuScreen {
 
         let about = screen.add_subscreen(Subscreen::AboutScreen);
         let regulatory = screen.add_subscreen(Subscreen::RegulatoryScreen);
-        let security = screen.add_security_menu();
-        let device =
-            screen.add_device_menu(device_name, regulatory, about, auto_lock_delay, led_enabled);
-        let settings = screen.add_settings_menu(security, device);
+        let security = if pin_code.is_none()
+            && auto_lock_delay.is_none()
+            && wipe_code.is_none()
+            && !check_backup
+        {
+            None
+        } else {
+            Some(screen.add_security_menu(pin_code, auto_lock_delay, wipe_code, check_backup))
+        };
+        let device = screen.add_device_menu(
+            device_name,
+            screen_brightness,
+            haptic_feedback,
+            led_enabled,
+            regulatory,
+            about,
+        );
+        let settings = screen.add_settings_menu(bluetooth, security, device);
 
         let is_connected = !paired_devices.is_empty(); // FIXME after BLE API has this
         let connected_subtext: Option<TString<'static>> =
@@ -235,9 +252,14 @@ impl DeviceMenuScreen {
 
         let devices = screen.add_paired_devices_menu(paired_devices, paired_device_indices);
         let pair_and_connect = screen.add_pair_and_connect_menu(devices, connected_subtext);
-
-        let root =
-            screen.add_root_menu(failed_backup, pair_and_connect, settings, connected_subtext);
+        let pin_unset = pin_code == Some(false);
+        let root = screen.add_root_menu(
+            failed_backup,
+            pin_unset,
+            pair_and_connect,
+            settings,
+            connected_subtext,
+        );
 
         screen.set_active_subscreen(root);
 
@@ -287,12 +309,35 @@ impl DeviceMenuScreen {
         self.add_subscreen(Subscreen::Submenu(submenu_index))
     }
 
-    fn add_settings_menu(&mut self, security_index: usize, device_index: usize) -> usize {
+    fn add_settings_menu(
+        &mut self,
+        bluetooth: Option<bool>,
+        security_index: Option<usize>,
+        device_index: usize,
+    ) -> usize {
         let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
-        unwrap!(items.push(MenuItem::new(
-            TR::words__security.into(),
-            Some(Action::GoTo(security_index))
-        )));
+        if let Some(bluetooth) = bluetooth {
+            let mut bluetooth_item = MenuItem::new(
+                TR::words__bluetooth.into(),
+                Some(Action::Return(DeviceMenuMsg::Bluetooth)),
+            );
+            let subtext = if bluetooth {
+                (
+                    TR::words__on.into(),
+                    Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
+                )
+            } else {
+                (TR::words__off.into(), None)
+            };
+            bluetooth_item.with_subtext(Some(subtext));
+            unwrap!(items.push(bluetooth_item));
+        }
+        if let Some(security_index) = security_index {
+            unwrap!(items.push(MenuItem::new(
+                TR::words__security.into(),
+                Some(Action::GoTo(security_index))
+            )));
+        }
         unwrap!(items.push(MenuItem::new(
             TR::words__device.into(),
             Some(Action::GoTo(device_index))
@@ -302,16 +347,101 @@ impl DeviceMenuScreen {
         self.add_subscreen(Subscreen::Submenu(submenu_index))
     }
 
-    fn add_security_menu(&mut self) -> usize {
+    fn add_code_menu(&mut self, wipe_code: bool) -> usize {
         let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
-        unwrap!(items.push(MenuItem::new(
-            TR::reset__check_backup_title.into(),
-            Some(Action::Return(DeviceMenuMsg::CheckBackup)),
-        )));
-        unwrap!(items.push(MenuItem::new(
-            TR::wipe__title.into(),
-            Some(Action::Return(DeviceMenuMsg::WipeDevice))
-        )));
+        let change_text = match wipe_code {
+            true => TR::wipe_code__change,
+            false => TR::pin__change,
+        }
+        .into();
+        let change_action = match wipe_code {
+            true => Action::Return(DeviceMenuMsg::WipeCode),
+            false => Action::Return(DeviceMenuMsg::PinCode),
+        };
+        let change_pin_item = MenuItem::new(change_text, Some(change_action));
+        unwrap!(items.push(change_pin_item));
+
+        let remove_text = match wipe_code {
+            true => TR::wipe_code__remove,
+            false => TR::pin__remove,
+        }
+        .into();
+        let remove_action = match wipe_code {
+            true => Action::Return(DeviceMenuMsg::WipeRemove),
+            false => Action::Return(DeviceMenuMsg::PinRemove),
+        };
+        let mut remove_pin_item = MenuItem::new(remove_text, Some(remove_action));
+        remove_pin_item.with_stylesheet(MENU_ITEM_WARNING);
+        unwrap!(items.push(remove_pin_item));
+
+        let submenu_index = self.add_submenu(Submenu::new(items));
+        self.add_subscreen(Subscreen::Submenu(submenu_index))
+    }
+
+    fn add_security_menu(
+        &mut self,
+        pin_code: Option<bool>,
+        auto_lock_delay: Option<TString<'static>>,
+        wipe_code: Option<bool>,
+        check_backup: bool,
+    ) -> usize {
+        let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
+
+        if let Some(pin_code) = pin_code {
+            let (action, subtext) = if pin_code {
+                let pin_menu_idx = self.add_code_menu(false);
+                let action = Action::GoTo(pin_menu_idx);
+                let subtext = (
+                    TR::words__enabled.into(),
+                    Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
+                );
+                (action, subtext)
+            } else {
+                let action = Action::Return(DeviceMenuMsg::PinCode);
+                let subtext = (TR::words__disabled.into(), None);
+                (action, subtext)
+            };
+
+            let mut pin_code_item = MenuItem::new(TR::pin__title.into(), Some(action));
+            pin_code_item.with_subtext(Some(subtext));
+            unwrap!(items.push(pin_code_item));
+        }
+
+        if let Some(auto_lock_delay) = auto_lock_delay {
+            let mut auto_lock_delay_item = MenuItem::new(
+                TR::auto_lock__title.into(),
+                Some(Action::Return(DeviceMenuMsg::AutoLockDelay)),
+            );
+            auto_lock_delay_item.with_subtext(Some((auto_lock_delay, None)));
+            unwrap!(items.push(auto_lock_delay_item));
+        }
+
+        if let Some(wipe_code) = wipe_code {
+            let (action, subtext) = if wipe_code {
+                let wipe_menu_idx = self.add_code_menu(true);
+                let action = Action::GoTo(wipe_menu_idx);
+                let subtext = (
+                    TR::words__enabled.into(),
+                    Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
+                );
+                (action, subtext)
+            } else {
+                let action = Action::Return(DeviceMenuMsg::WipeCode);
+                let subtext = (TR::words__disabled.into(), None);
+                (action, subtext)
+            };
+
+            let mut wipe_code_item = MenuItem::new(TR::wipe_code__title.into(), Some(action));
+            wipe_code_item.with_subtext(Some(subtext));
+            unwrap!(items.push(wipe_code_item));
+        }
+
+        if check_backup {
+            unwrap!(items.push(MenuItem::new(
+                TR::reset__check_backup_title.into(),
+                Some(Action::Return(DeviceMenuMsg::CheckBackup)),
+            )));
+        }
 
         let submenu_index = self.add_submenu(Submenu::new(items));
         self.add_subscreen(Subscreen::Submenu(submenu_index))
@@ -320,10 +450,11 @@ impl DeviceMenuScreen {
     fn add_device_menu(
         &mut self,
         device_name: Option<TString<'static>>,
+        screen_brightness: Option<TString<'static>>,
+        haptic_feedback: Option<bool>,
+        led_enabled: Option<bool>,
         regulatory_index: usize,
         about_index: usize,
-        auto_lock_delay: Option<TString<'static>>,
-        led_enabled: Option<bool>,
     ) -> usize {
         let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
         if let Some(device_name) = device_name {
@@ -335,18 +466,28 @@ impl DeviceMenuScreen {
             unwrap!(items.push(item_device_name));
         }
 
-        unwrap!(items.push(MenuItem::new(
-            TR::brightness__title.into(),
-            Some(Action::Return(DeviceMenuMsg::ScreenBrightness)),
-        )));
-
-        if let Some(auto_lock_delay) = auto_lock_delay {
-            let mut autolock_delay_item = MenuItem::new(
-                TR::auto_lock__title.into(),
-                Some(Action::Return(DeviceMenuMsg::AutoLockDelay)),
+        if let Some(brightness) = screen_brightness {
+            let brightness_item = MenuItem::new(
+                brightness,
+                Some(Action::Return(DeviceMenuMsg::ScreenBrightness)),
             );
-            autolock_delay_item.with_subtext(Some((auto_lock_delay, None)));
-            unwrap!(items.push(autolock_delay_item));
+            unwrap!(items.push(brightness_item));
+        }
+
+        if let Some(haptic_feedback) = haptic_feedback {
+            let mut haptic_item = MenuItem::new(
+                TR::haptic_feedback__title.into(),
+                Some(Action::Return(DeviceMenuMsg::HapticFeedback)),
+            );
+            let subtext = match haptic_feedback {
+                true => (
+                    TR::words__on.into(),
+                    Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
+                ),
+                _ => (TR::words__off.into(), None),
+            };
+            haptic_item.with_subtext(Some(subtext));
+            unwrap!(items.push(haptic_item));
         }
 
         if let Some(led_enabled) = led_enabled {
@@ -375,6 +516,13 @@ impl DeviceMenuScreen {
             Some(Action::GoTo(about_index))
         )));
 
+        let mut wipe_device_item = MenuItem::new(
+            TR::wipe__title.into(),
+            Some(Action::Return(DeviceMenuMsg::WipeDevice)),
+        );
+        wipe_device_item.with_stylesheet(MENU_ITEM_WARNING);
+        unwrap!(items.push(wipe_device_item));
+
         let submenu_index = self.add_submenu(Submenu::new(items));
         self.add_subscreen(Subscreen::Submenu(submenu_index))
     }
@@ -382,6 +530,7 @@ impl DeviceMenuScreen {
     fn add_root_menu(
         &mut self,
         failed_backup: bool,
+        pin_unset: bool,
         pair_and_connect_index: usize,
         settings_index: usize,
         connected_subtext: Option<TString<'static>>,
@@ -393,8 +542,17 @@ impl DeviceMenuScreen {
                 Some(Action::Return(DeviceMenuMsg::BackupFailed)),
             );
             item_backup_failed.with_subtext(Some((TR::words__review.into(), None)));
-            item_backup_failed.with_stylesheet(MENU_ITEM_TITLE_STYLE_SHEET);
+            item_backup_failed.with_stylesheet(MENU_ITEM_ERROR);
             unwrap!(items.push(item_backup_failed));
+        }
+        if pin_unset {
+            let mut item_pin_unset = MenuItem::new(
+                TR::homescreen__title_pin_not_set.into(),
+                Some(Action::Return(DeviceMenuMsg::PinCode)),
+            );
+            item_pin_unset.with_subtext(Some((TR::words__set.into(), None)));
+            item_pin_unset.with_stylesheet(MENU_ITEM_LIGHT_WARNING);
+            unwrap!(items.push(item_pin_unset));
         }
         let mut item_pair_and_connect = MenuItem::new(
             TR::ble__pair_title.into(),

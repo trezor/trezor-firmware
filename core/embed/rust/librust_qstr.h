@@ -171,6 +171,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_bitcoin__unverified_external_inputs;
   MP_QSTR_bitcoin__valid_signature;
   MP_QSTR_bitcoin__voting_rights;
+  MP_QSTR_ble__disable;
+  MP_QSTR_ble__enable;
   MP_QSTR_ble__manage_paired;
   MP_QSTR_ble__pair_new;
   MP_QSTR_ble__pair_title;
@@ -472,6 +474,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_pin__cancel_info;
   MP_QSTR_pin__cancel_setup;
   MP_QSTR_pin__change;
+  MP_QSTR_pin__change_question;
   MP_QSTR_pin__changed;
   MP_QSTR_pin__cursor_will_change;
   MP_QSTR_pin__diff_from_wipe_code;
@@ -489,8 +492,10 @@ static void _librust_qstrs(void) {
   MP_QSTR_pin__reenter;
   MP_QSTR_pin__reenter_new;
   MP_QSTR_pin__reenter_to_confirm;
+  MP_QSTR_pin__remove;
   MP_QSTR_pin__setup_completed;
   MP_QSTR_pin__should_be_long;
+  MP_QSTR_pin__title;
   MP_QSTR_pin__title_check_pin;
   MP_QSTR_pin__title_settings;
   MP_QSTR_pin__title_wrong_pin;
@@ -877,10 +882,12 @@ static void _librust_qstrs(void) {
   MP_QSTR_warning;
   MP_QSTR_warning_footer;
   MP_QSTR_wipe__info;
+  MP_QSTR_wipe__start_again;
   MP_QSTR_wipe__title;
   MP_QSTR_wipe__want_to_wipe;
   MP_QSTR_wipe_code;
   MP_QSTR_wipe_code__change;
+  MP_QSTR_wipe_code__change_question;
   MP_QSTR_wipe_code__changed;
   MP_QSTR_wipe_code__diff_from_pin;
   MP_QSTR_wipe_code__disabled;
@@ -891,6 +898,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_wipe_code__mismatch;
   MP_QSTR_wipe_code__reenter;
   MP_QSTR_wipe_code__reenter_to_confirm;
+  MP_QSTR_wipe_code__remove;
+  MP_QSTR_wipe_code__title;
   MP_QSTR_wipe_code__title_check;
   MP_QSTR_wipe_code__title_invalid;
   MP_QSTR_wipe_code__title_settings;
@@ -910,6 +919,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__assets;
   MP_QSTR_words__authenticate;
   MP_QSTR_words__blockhash;
+  MP_QSTR_words__bluetooth;
   MP_QSTR_words__buying;
   MP_QSTR_words__cancel_and_exit;
   MP_QSTR_words__cancel_question;
@@ -922,7 +932,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__continue_anyway_question;
   MP_QSTR_words__continue_with;
   MP_QSTR_words__device;
+  MP_QSTR_words__disabled;
   MP_QSTR_words__disconnect;
+  MP_QSTR_words__enabled;
   MP_QSTR_words__error;
   MP_QSTR_words__fee;
   MP_QSTR_words__from;
@@ -952,6 +964,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__review;
   MP_QSTR_words__security;
   MP_QSTR_words__send;
+  MP_QSTR_words__set;
   MP_QSTR_words__settings;
   MP_QSTR_words__sign;
   MP_QSTR_words__signer;
@@ -974,6 +987,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__unlocked;
   MP_QSTR_words__wallet;
   MP_QSTR_words__warning;
+  MP_QSTR_words__wipe;
   MP_QSTR_words__writable;
   MP_QSTR_words__yes;
   MP_QSTR_write;
