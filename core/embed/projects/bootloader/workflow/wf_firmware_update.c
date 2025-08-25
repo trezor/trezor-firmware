@@ -86,6 +86,7 @@ typedef struct {
   size_t headers_offset;                // offset of headers in the first block
   size_t read_offset;   // offset of the next read data in the chunk buffer
   uint32_t chunk_size;  // size of already received chunk data
+  bool confirmed;       // true if the firmware is confirmed by the user
 #ifdef USE_SECMON_VERIFICATION
   size_t secmon_code_offset;     // offset of the secmon code in the first block
   size_t secmon_code_size;       // size of the secmon code
@@ -171,8 +172,8 @@ static void fw_data_received(size_t len, void *ctx) {
   firmware_update_ctx_t *context = (firmware_update_ctx_t *)ctx;
 
   context->chunk_size += len;
-  // update loader but skip first block
-  if (context->firmware_block > 0) {
+  // update loader only after the update is confirmed
+  if (context->confirmed) {
     ui_screen_install_progress_upload(
         1000 *
         (context->firmware_block * IMAGE_CHUNK_SIZE + context->chunk_size) /
@@ -402,6 +403,7 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
       }
 
       ui_screen_install_start();
+      ctx->confirmed = true;
 
       // if firmware is not upgrade, erase storage
       if (sectrue != should_keep_seed) {
