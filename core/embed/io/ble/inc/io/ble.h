@@ -89,8 +89,7 @@ typedef struct {
   bool reboot_on_resume;
   uint8_t peer_count;
   ble_mode_t mode_requested;
-  uint8_t connected_addr[6];
-  uint8_t connected_addr_type;
+  bt_le_addr_t connected_addr;
   ble_adv_start_cmd_data_t adv_data;
 } ble_wakeup_params_t;
 
@@ -119,6 +118,7 @@ typedef struct {
   bool pairing_requested;
   bool state_known;
   uint8_t peer_count;
+  bt_le_addr_t connected_addr;
 } ble_state_t;
 
 // Initializes the BLE module

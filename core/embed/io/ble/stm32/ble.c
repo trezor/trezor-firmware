@@ -51,8 +51,7 @@ typedef struct {
   ble_mode_t mode_requested;
   ble_mode_t mode_current;
   bool connected;
-  uint8_t connected_addr[6];
-  uint8_t connected_addr_type;
+  bt_le_addr_t connected_addr;
   uint8_t peer_count;
   bool initialized;
   bool status_valid;
@@ -247,21 +246,22 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
       }
     }
 
-    memcpy(drv->connected_addr, msg.connected_addr,
-           sizeof(drv->connected_addr));
-    drv->connected_addr_type = msg.connected_addr_type;
+    memcpy(drv->connected_addr.addr, msg.connected_addr,
+           sizeof(drv->connected_addr.addr));
+    drv->connected_addr.type = msg.connected_addr_type;
     drv->connected = msg.connected;
   } else {
-    if (memcmp(drv->connected_addr, msg.connected_addr,
-               sizeof(drv->connected_addr)) != 0 ||
-        drv->connected_addr_type != msg.connected_addr_type) {
+    if (memcmp(drv->connected_addr.addr, msg.connected_addr,
+               sizeof(drv->connected_addr.addr)) != 0 ||
+        drv->connected_addr.type != msg.connected_addr_type) {
       // address changed
-      memcpy(drv->connected_addr, msg.connected_addr,
-             sizeof(drv->connected_addr));
-      drv->connected_addr_type = msg.connected_addr_type;
+      memcpy(drv->connected_addr.addr, msg.connected_addr,
+             sizeof(drv->connected_addr.addr));
+      drv->connected_addr.type = msg.connected_addr_type;
 
       ble_event_t event = {.type = BLE_CONNECTION_CHANGED};
-      memcpy(event.data, drv->connected_addr, sizeof(drv->connected_addr));
+      memcpy(event.data, drv->connected_addr.addr,
+             sizeof(drv->connected_addr.addr));
       tsqueue_enqueue(&drv->event_queue, (uint8_t *)&event, sizeof(event),
                       NULL);
     }
@@ -440,9 +440,9 @@ static void ble_process_rx_msg(const uint8_t *data, uint32_t len) {
 }
 
 static bool ble_connected_add_match(ble_driver_t *drv, const uint8_t *addr) {
-  return (addr[0] == drv->connected_addr_type &&
-          memcmp(&addr[1], drv->connected_addr, sizeof(drv->connected_addr)) ==
-              0);
+  return (addr[0] == drv->connected_addr.type &&
+          memcmp(&addr[1], drv->connected_addr.addr,
+                 sizeof(drv->connected_addr.addr)) == 0);
 }
 
 static void ble_process_data(const uint8_t *data, uint32_t len) {
@@ -463,11 +463,13 @@ static void ble_process_data(const uint8_t *data, uint32_t len) {
   if (!ble_connected_add_match(drv, data)) {
     // inconsistent address of a connected device
 
-    drv->connected_addr_type = data[0];
-    memcpy(drv->connected_addr, &data[1], sizeof(drv->connected_addr));
+    drv->connected_addr.type = data[0];
+    memcpy(drv->connected_addr.addr, &data[1],
+           sizeof(drv->connected_addr.addr));
 
     ble_event_t event = {.type = BLE_CONNECTION_CHANGED};
-    memcpy(event.data, drv->connected_addr, sizeof(drv->connected_addr));
+    memcpy(event.data, drv->connected_addr.addr,
+           sizeof(drv->connected_addr.addr));
     tsqueue_enqueue(&drv->event_queue, (uint8_t *)&event, sizeof(event), NULL);
   }
 
@@ -640,8 +642,7 @@ void ble_suspend(ble_wakeup_params_t *wakeup_params) {
       nrf_deinit();
     } else {
       irq_key_t key = irq_lock();
-      wakeup_params->connected_addr_type = drv->connected_addr_type;
-      memcpy(wakeup_params->connected_addr, drv->connected_addr,
+      memcpy(&wakeup_params->connected_addr, &drv->connected_addr,
              sizeof(drv->connected_addr));
       irq_unlock(key);
       nrf_suspend();
@@ -666,9 +667,9 @@ bool ble_resume(const ble_wakeup_params_t *wakeup_params) {
 
   irq_key_t key = irq_lock();
 
-  drv->connected_addr_type = wakeup_params->connected_addr_type;
   drv->peer_count = wakeup_params->peer_count;
-  memcpy(drv->connected_addr, wakeup_params->connected_addr,
+
+  memcpy(&drv->connected_addr, &wakeup_params->connected_addr,
          sizeof(drv->connected_addr));
   memcpy(&drv->adv_cmd, &wakeup_params->adv_data, sizeof(drv->adv_cmd));
   drv->mode_requested = wakeup_params->mode_requested;
@@ -763,8 +764,9 @@ bool ble_write(const uint8_t *data, uint16_t len) {
   }
 
   uint8_t tx_buf[BLE_DATA_SIZE];
-  tx_buf[0] = drv->connected_addr_type;
-  memcpy(&tx_buf[1], drv->connected_addr, sizeof(drv->connected_addr));
+  tx_buf[0] = drv->connected_addr.type;
+  memcpy(&tx_buf[1], drv->connected_addr.addr,
+         sizeof(drv->connected_addr.addr));
   memcpy(&tx_buf[BLE_DATA_HEADER_SIZE], data,
          MIN(len, BLE_DATA_SIZE - BLE_DATA_HEADER_SIZE));
 
@@ -999,6 +1001,8 @@ void ble_get_state(ble_state_t *state) {
   state->connectable = drv->mode_current == BLE_MODE_CONNECTABLE;
   state->pairing_requested = drv->pairing_requested;
   state->state_known = drv->status_valid;
+  memcpy(&state->connected_addr, &drv->connected_addr,
+         sizeof(drv->connected_addr));
 
   irq_unlock(key);
 }

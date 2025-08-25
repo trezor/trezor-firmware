@@ -5,7 +5,7 @@ mod micropython;
 use crate::ui::event::BLEEvent;
 
 use super::ffi;
-use crate::error::Error;
+use crate::{error::Error, trezorhal::ffi::bt_le_addr_t};
 use core::{mem::size_of, ptr};
 
 pub const ADV_NAME_LEN: usize = ffi::BLE_ADV_NAME_LEN as usize;
@@ -54,6 +54,12 @@ fn state() -> ffi::ble_state_t {
         pairing: false,
         pairing_requested: false,
         state_known: false,
+        connected_addr: {
+            bt_le_addr_t {
+                type_: 0,
+                addr: [0; 6],
+            }
+        },
     };
     unsafe { ffi::ble_get_state(&mut state as _) };
     state
@@ -178,6 +184,10 @@ pub fn is_pairing() -> bool {
 
 pub fn is_pairing_requested() -> bool {
     state().pairing_requested
+}
+
+pub fn connected_addr() -> bt_le_addr_t {
+    state().connected_addr
 }
 
 pub fn write(bytes: &[u8]) -> Result<(), Error> {
