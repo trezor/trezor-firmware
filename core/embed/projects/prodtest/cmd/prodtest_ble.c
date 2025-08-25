@@ -168,15 +168,15 @@ static void prodtest_ble_info(cli_t* cli) {
     return;
   }
 
-  uint8_t mac[6] = {0};
+  bt_le_addr_t mac = {0};
 
-  if (!ble_get_mac(mac, 6)) {
+  if (!ble_get_mac(&mac)) {
     cli_error(cli, CLI_ERROR, "Could not read MAC.");
     return;
   }
 
-  cli_trace(cli, "MAC: %02x:%02x:%02x:%02x:%02x:%02x", mac[5], mac[4], mac[3],
-            mac[2], mac[1], mac[0]);
+  cli_trace(cli, "MAC: %02x:%02x:%02x:%02x:%02x:%02x", mac.addr[5], mac.addr[4],
+            mac.addr[3], mac.addr[2], mac.addr[1], mac.addr[0]);
   cli_ok(cli, "");
 }
 
@@ -227,6 +227,66 @@ static void prodtest_ble_erase_bonds_cmd(cli_t* cli) {
   }
 
   cli_trace(cli, "Erased %d bonds.", state.peer_count);
+  cli_ok(cli, "");
+}
+
+static void prodtest_ble_get_bonds(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  if (!ensure_ble_init(cli)) {
+    return;
+  }
+
+  bt_le_addr_t bonds[BLE_MAX_BONDS];
+
+  uint8_t cnt = ble_get_bond_list(bonds, BLE_MAX_BONDS);
+
+  cli_trace(cli, "Got %d bonds.", cnt);
+
+  for (uint8_t i = 0; i < cnt; i++) {
+    cli_trace(cli, "Bond %d: %02x:%02x:%02x:%02x:%02x:%02x", i + 1,
+              bonds[i].addr[5], bonds[i].addr[4], bonds[i].addr[3],
+              bonds[i].addr[2], bonds[i].addr[1], bonds[i].addr[0]);
+  }
+
+  cli_ok(cli, "");
+}
+
+static void prodtest_ble_unpair(cli_t* cli) {
+  if (cli_arg_count(cli) > 1) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  uint32_t index;
+
+  if (!cli_arg_uint32(cli, "index", &index)) {
+    cli_error(cli, CLI_ERROR, "Invalid index.");
+    return;
+  }
+
+  if (!ensure_ble_init(cli)) {
+    return;
+  }
+
+  bt_le_addr_t bonds[BLE_MAX_BONDS];
+  uint8_t cnt = ble_get_bond_list(bonds, BLE_MAX_BONDS);
+
+  if (index > cnt || index < 1) {
+    cli_error(cli, CLI_ERROR, "Invalid index.");
+    return;
+  }
+
+  bt_le_addr_t* addr = &bonds[index - 1];
+  if (!ble_unpair(addr)) {
+    cli_error(cli, CLI_ERROR, "Could not unpair.");
+    return;
+  }
+
+  cli_trace(cli, "Unpaired.");
   cli_ok(cli, "");
 }
 
@@ -384,6 +444,21 @@ PRODTEST_CLI_CMD(
   .info = "Erase all BLE bonds",
   .args = ""
 );
+
+PRODTEST_CLI_CMD(
+  .name = "ble-get-bonds",
+  .func = prodtest_ble_get_bonds,
+  .info = "Get list of current bonds",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "ble-unpair",
+  .func = prodtest_ble_unpair,
+  .info = "Unpair device on given index. Use ble-get-bonds to get the index",
+  .args = "<index>"
+);
+
 
 PRODTEST_CLI_CMD(
   .name = "ble-radio-test",

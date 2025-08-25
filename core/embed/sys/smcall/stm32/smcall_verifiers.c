@@ -477,4 +477,25 @@ access_violation:
 
 #endif  // USE_BACKUP_RAM
 
+#ifdef USE_NRF
+secbool secret_validate_nrf_pairing__verified(const uint8_t *message,
+                                              size_t msg_len,
+                                              const uint8_t *mac,
+                                              size_t mac_len) {
+  if (!probe_read_access(message, msg_len)) {
+    goto access_violation;
+  }
+  if (!probe_read_access(mac, mac_len)) {
+    goto access_violation;
+  }
+
+  return secret_validate_nrf_pairing(message, msg_len, mac, mac_len);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+#endif
+
 #endif  // SECMON

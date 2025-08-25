@@ -696,6 +696,15 @@ void ble_set_name(const uint8_t *name, size_t len) {
   syscall_invoke2((uint32_t)name, len, SYSCALL_BLE_SET_NAME);
 }
 
+bool ble_unpair(const bt_le_addr_t *addr) {
+  return (bool)syscall_invoke1((uint32_t)addr, SYSCALL_BLE_UNPAIR);
+}
+
+uint8_t ble_get_bond_list(bt_le_addr_t *bonds, size_t count) {
+  return (uint8_t)syscall_invoke2((uint32_t)bonds, count,
+                                  SYSCALL_BLE_GET_BOND_LIST);
+}
+
 #endif
 
 #ifdef USE_NRF
@@ -712,6 +721,14 @@ bool nrf_update_required(const uint8_t *data, size_t len) {
 bool nrf_update(const uint8_t *data, size_t len) {
   return (bool)syscall_invoke2((uint32_t)data, (uint32_t)len,
                                SYSCALL_NRF_UPDATE);
+}
+
+uint32_t nrf_get_version(void) {
+  return syscall_invoke0(SYSCALL_NRF_GET_VERSION);
+}
+
+bool nrf_authenticate(void) {
+  return (bool)syscall_invoke0(SYSCALL_NRF_AUTHENTICATE);
 }
 
 #endif

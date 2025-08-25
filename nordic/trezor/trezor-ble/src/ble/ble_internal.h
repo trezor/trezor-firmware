@@ -83,6 +83,7 @@ typedef enum {
   INTERNAL_EVENT_PAIRING_CANCELLED = 0x05,
   INTERNAL_EVENT_MAC = 0x06,
   INTERNAL_EVENT_PAIRING_COMPLETED = 0x07,
+  INTERNAL_EVENT_BOND_LIST = 0x08,
 } internal_event_t;
 
 typedef enum {
@@ -97,6 +98,7 @@ typedef enum {
   INTERNAL_CMD_UNPAIR = 0x08,
   INTERNAL_CMD_GET_MAC = 0x09,
   INTERNAL_CMD_SET_BUSY = 0x0A,
+  INTERNAL_CMD_GET_BOND_LIST = 0x0B,
 } internal_cmd_t;
 
 typedef struct {
@@ -142,6 +144,10 @@ bool bonds_erase_all(void);
 int bonds_get_count(void);
 // Erase current bond
 bool bonds_erase_current(void);
+// Erase bonds for a specific device
+bool bonds_erase_device(const bt_addr_le_t *addr);
+// Get all bonded devices
+size_t bonds_get_all(bt_addr_le_t *addr, size_t max_count);
 
 // Advertising functions
 // Initialization

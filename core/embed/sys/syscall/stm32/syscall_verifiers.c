@@ -855,6 +855,32 @@ access_violation:
   apptask_access_violation();
 }
 
+bool ble_unpair__verified(const bt_le_addr_t *addr) {
+  if (!probe_read_access(addr, sizeof(*addr))) {
+    goto access_violation;
+  }
+
+  return ble_unpair(addr);
+
+access_violation:
+  apptask_access_violation();
+
+  return false;
+}
+
+uint8_t ble_get_bond_list__verified(bt_le_addr_t *bonds, size_t count) {
+  if (!probe_write_access(bonds, sizeof(bt_le_addr_t) * count)) {
+    goto access_violation;
+  }
+
+  return ble_get_bond_list(bonds, count);
+
+access_violation:
+  apptask_access_violation();
+
+  return 0;
+}
+
 #endif
 
 // ---------------------------------------------------------------------

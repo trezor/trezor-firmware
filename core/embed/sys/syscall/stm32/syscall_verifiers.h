@@ -209,6 +209,10 @@ secbool ble_read__verified(uint8_t *data, size_t len);
 
 void ble_set_name__verified(const uint8_t *name, size_t len);
 
+bool ble_unpair__verified(const bt_le_addr_t *addr);
+
+uint8_t ble_get_bond_list__verified(bt_le_addr_t *bonds, size_t count);
+
 #endif
 
 // ---------------------------------------------------------------------
