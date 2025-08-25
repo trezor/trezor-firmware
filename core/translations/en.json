@@ -790,7 +790,7 @@
       "Delizia": "Share {0}",
       "Eckhart": "Share #{0}"
     },
-    "recovery__start_entering": "Start\nentering",
+    "recovery__start_entering": "Start entering",
     "recovery__title": "Recover wallet",
     "recovery__title_cancel_dry_run": "Cancel backup check",
     "recovery__title_cancel_recovery": "Cancel recovery",

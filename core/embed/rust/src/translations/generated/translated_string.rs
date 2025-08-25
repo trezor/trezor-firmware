@@ -1496,7 +1496,7 @@ pub enum TranslatedString {
     words__review = 1105,  // "Review"
     words__security = 1106,  // "Security"
     lockscreen__unlock = 1107,  // "Unlock"
-    recovery__start_entering = 1108,  // "Start\nentering"
+    recovery__start_entering = 1108,  // "Start entering"
 }
 
 impl TranslatedString {
@@ -3319,7 +3319,7 @@ impl TranslatedString {
             (Self::words__review, "Review"),
             (Self::words__security, "Security"),
             (Self::lockscreen__unlock, "Unlock"),
-            (Self::recovery__start_entering, "Start\nentering"),
+            (Self::recovery__start_entering, "Start entering"),
     ];
 
     #[cfg(feature = "micropython")]
