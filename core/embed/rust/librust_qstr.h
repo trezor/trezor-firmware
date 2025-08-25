@@ -273,6 +273,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_value;
   MP_QSTR_confirm_value_intro;
   MP_QSTR_confirm_with_info;
+  MP_QSTR_connected_addr;
   MP_QSTR_connected_idx;
   MP_QSTR_connection_flags;
   MP_QSTR_continue_recovery_homepage;

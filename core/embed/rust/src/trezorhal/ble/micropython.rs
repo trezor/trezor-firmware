@@ -142,6 +142,23 @@ extern "C" fn py_connection_flags() -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
+// Return (addr_bytes, addr_type) if connected, otherwise None.
+// addr_bytes: bytes of length 6
+// addr_type: integer as provided by bt_le_addr_t (e.g., 0=public, 1=random)
+extern "C" fn py_connected_addr() -> Obj {
+    let block = || {
+        if !is_connected() {
+            return Ok(Obj::const_none());
+        }
+        let a = connected_addr();
+        let addr_obj = Obj::try_from(&a.addr[..])?;
+        let type_obj = Obj::from(a.type_);
+        (addr_obj, type_obj).try_into()
+    };
+
+    unsafe { util::try_or_raise(block) }
+}
+
 extern "C" fn py_iface_num(_self: Obj) -> Obj {
     Obj::small_int(8) // FIXME SYSHANDLE_BLE_IFACE_0
 }
@@ -316,6 +333,14 @@ pub static mp_module_trezorble: Module = obj_module! {
     ///     Returns current connection state as a list of string flags.
     ///     """
     Qstr::MP_QSTR_connection_flags => obj_fn_0!(py_connection_flags).as_obj(),
+
+    /// def connected_addr() -> tuple[bytes, int] | None:
+    ///     """
+    ///     If connected, returns a tuple (addr_bytes, addr_type), otherwise None.
+    ///     addr_bytes: bytes of length 6
+    ///     addr_type: integer as provided by bt_le_addr_t (e.g., 0=public, 1=random)
+    ///     """
+    Qstr::MP_QSTR_connected_addr => obj_fn_0!(py_connected_addr).as_obj(),
 
     /// def allow_pairing(code: int):
     ///     """

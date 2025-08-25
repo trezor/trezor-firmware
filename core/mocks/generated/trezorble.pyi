@@ -126,6 +126,15 @@ def connection_flags() -> list[str]:
 
 
 # rust/src/trezorhal/ble/micropython.rs
+def connected_addr() -> tuple[bytes, int] | None:
+    """
+    If connected, returns a tuple (addr_bytes, addr_type), otherwise None.
+    addr_bytes: bytes of length 6
+    addr_type: integer as provided by bt_le_addr_t (e.g., 0=public, 1=random)
+    """
+
+
+# rust/src/trezorhal/ble/micropython.rs
 def allow_pairing(code: int):
     """
     Accept BLE pairing request. Code must match the one received with
