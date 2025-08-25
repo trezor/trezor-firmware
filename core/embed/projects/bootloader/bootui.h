@@ -25,7 +25,13 @@
 
 #include "rust_ui_bootloader.h"
 
+#ifdef TREZOR_MODEL_T3W1
+#define BACKLIGHT_NORMAL 85
+#else
 #define BACKLIGHT_NORMAL 150
+#endif
+
+#define BACKLIGHT_LOW 45
 
 // Displays a warning screen before jumping to the untrusted firmware
 //

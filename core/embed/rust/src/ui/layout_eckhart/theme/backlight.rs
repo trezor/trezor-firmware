@@ -2,7 +2,7 @@
 use crate::storage;
 
 // Typical backlight values.
-const BACKLIGHT_NORMAL: u8 = 150;
+const BACKLIGHT_NORMAL: u8 = 85;
 const BACKLIGHT_LOW: u8 = 45;
 const BACKLIGHT_DIM: u8 = 5;
 const BACKLIGHT_NONE: u8 = 0;
