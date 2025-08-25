@@ -122,7 +122,9 @@ workflow_result_t workflow_ble_pairing_request(const vendor_header *const vhdr,
 workflow_result_t workflow_wireless_setup(const vendor_header *const vhdr,
                                           const image_header *const hdr,
                                           protob_ios_t *ios) {
-  ble_iface_start_pairing();
+  if (!ble_iface_start_pairing()) {
+    return WF_OK_PAIRING_FAILED;
+  }
 
   char name[BLE_ADV_NAME_LEN + 1] = {0};
   ble_get_advertising_name(name, sizeof(name));
