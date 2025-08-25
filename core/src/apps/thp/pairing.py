@@ -118,7 +118,7 @@ async def handle_pairing_request(
 
     ctx.host_name = message.host_name
     ctx.app_name = message.app_name
-    await ctx.show_pairing_dialog()
+    await ui.show_pairing_dialog(ctx.host_name, ctx.app_name)
     await ctx.write(ThpPairingRequestApproved())
     assert ThpSelectMethod.MESSAGE_WIRE_TYPE is not None
     select_method_msg = await ctx.read(

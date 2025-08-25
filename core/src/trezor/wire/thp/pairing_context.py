@@ -132,17 +132,6 @@ class PairingContext(Context):
             raise DataError("Selected pairing method is not supported")
         self.selected_method = selected_method
 
-    async def show_pairing_dialog(self) -> None:
-        from trezor.ui.layouts import confirm_action
-
-        subject = ui._app_on_host(self.app_name, self.host_name)
-        action_string = f"Allow {subject} to pair with this Trezor?"
-        await confirm_action(
-            br_name="thp_pairing_request",
-            title="Before you continue",
-            action=action_string,
-        )
-
     async def show_pairing_method_screen(
         self, selected_method: ThpPairingMethod | None = None
     ) -> UiResult:
