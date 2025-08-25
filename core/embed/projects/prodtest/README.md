@@ -517,6 +517,28 @@ rgbled-set 255 0 0
 OK
 ```
 
+### rgbled-effect-start
+Start the rgb effect from the predefined list. Command takes two arguments, first argument defines a number of the rgbled effect, second argument then defines number of requested cycles for which the effect should run. `requested_cycles` argument is optional, calling the command without it will run effect indefinitely.
+
+`rgbled-effect-start <effect_num> <requested_cycles>`
+
+Example:
+```
+rgbled-effect-start 0 2
+# Start RGB LED effect #0 for 2 cycles
+OK
+```
+
+### rgbled-effect-stop
+Stop the ongoing rgbled effect.
+
+Examples:
+```
+rgbled-effect-stop
+# Stop ongoing RGB LED effect
+OK
+```
+
 ### otp-batch-read
 Retrieves the batch string from the device's OTP memory. The batch string identifies the model and production batch of the device.
 

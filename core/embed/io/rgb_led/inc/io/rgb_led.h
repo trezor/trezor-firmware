@@ -17,28 +17,73 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_RGB_LED_H
-#define TREZORHAL_RGB_LED_H
+#pragma once
 
 #include <trezor_types.h>
 
+#define RGB_EXTRACT_RED(color) (((color) >> 16) & 0xFF)
+#define RGB_EXTRACT_GREEN(color) (((color) >> 8) & 0xFF)
+#define RGB_EXTRACT_BLUE(color) ((color) & 0xFF)
+
+#define RGB_COMPOSE_COLOR(red, green, blue) \
+  (((red) & 0xFF) << 16 | ((green) & 0xFF) << 8 | ((blue) & 0xFF))
+
+#define RGBLED_WHITE RGB_COMPOSE_COLOR(35, 35, 32)
+#define RGBLED_GREEN RGB_COMPOSE_COLOR(0, 255, 0)
+#define RGBLED_GREEN_LIGHT RGB_COMPOSE_COLOR(4, 13, 4)
+#define RGBLED_GREEN_LIME RGB_COMPOSE_COLOR(35, 75, 10)
+#define RGBLED_ORANGE RGB_COMPOSE_COLOR(188, 42, 6)
+#define RGBLED_RED RGB_COMPOSE_COLOR(100, 6, 3)
+#define RGBLED_YELLOW RGB_COMPOSE_COLOR(22, 16, 0)
+#define RGBLED_BLUE RGB_COMPOSE_COLOR(5, 5, 50)
+#define RGBLED_OFF 0x000000
+
+/**
+ * @brief RGB LED effect type
+ */
+typedef enum {
+  RGB_LED_EFFECT_BOOTLOADER_BREATHE = 0,
+  RGB_LED_EFFECT_CHARGING,
+  RGB_LED_NUM_OF_EFFECTS,
+} rgb_led_effect_type_t;
+
 #ifdef KERNEL_MODE
 
-// Initialize RGB LED driver
+/**
+ * @brief Initialize RGB LED driver
+ */
 void rgb_led_init(void);
 
-// Deinitialize RGB LED driver
+/**
+ * @brief Deinitialize RGB LED driver
+ */
 void rgb_led_deinit(void);
 
-#endif
+#endif  // KERNEL_MODE
 
-#define RGBLED_GREEN 0x00FF00
-#define RGBLED_RED 0xFF0000
-#define RGBLED_BLUE 0x0000FF
-#define RGBLED_YELLOW 0xFFFF00
-
-// Set RGB LED color
-// color: 24-bit RGB color, 0x00RRGGBB
+/**
+ * @brief Set the RGB led color.
+ *
+ * Set the color of the RGB led, if there is ongoing RGB led effect, this
+ * setting will stop the effect and override the color.
+ *
+ * @param color 24-bit RGB color, 0x00RRGGBB
+ */
 void rgb_led_set_color(uint32_t color);
 
-#endif  // TREZORHAL_RGB_LED_H
+/**
+ * @brief Start an RGB led effect.
+ *
+ * @param effect_type The type of effect to start selected from
+ *                    `rgb_led_effect_type_t` enum.
+ *
+ * @param requested_cycles The number of cycles to run the effect for, 0 will
+ *                         run the effect indefinitely.
+ */
+void rgb_led_effect_start(rgb_led_effect_type_t effect_type,
+                          uint32_t requested_cycles);
+
+/**
+ * @brief Stop the currently running RGB led effect and turn off the RGB led
+ */
+void rgb_led_effect_stop(void);
