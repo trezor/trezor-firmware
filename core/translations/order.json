@@ -1116,5 +1116,8 @@
   "1114": "ble__enable",
   "1115": "words__bluetooth",
   "1116": "words__disabled",
-  "1117": "words__enabled"
+  "1117": "words__enabled",
+  "1118": "words__set",
+  "1119": "wipe__start_again",
+  "1120": "words__wipe"
 }

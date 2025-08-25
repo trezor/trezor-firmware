@@ -71,11 +71,24 @@ async def handle_device_menu() -> None:
     )
     # Root menu
     if menu_result is DeviceMenuResult.BackupFailed:
-        from apps.management.backup_device import perform_backup
+        from trezor.messages import WipeDevice
+        from trezor.ui.layouts import raise_if_cancelled
 
-        assert storage_device.unfinished_backup()
-        # If the backup failed, we can only perform a repeated backup.
-        await perform_backup(is_repeated_backup=True)
+        from apps.management.wipe_device import wipe_device
+
+        assert storage_device.unfinished_backup() and storage_device.is_initialized()
+
+        await raise_if_cancelled(
+            trezorui_api.show_warning(
+                title=TR.homescreen__title_backup_failed,
+                button=TR.words__wipe,
+                description=TR.wipe__start_again,
+                danger=True,
+            ),
+            "prompt_device_wipe",
+        )
+
+        await wipe_device(WipeDevice())
     # Pair & Connect
     elif menu_result is DeviceMenuResult.DeviceDisconnect:
         pass  # TODO implement device disconnect handling

@@ -976,6 +976,7 @@ class TR:
     u2f__title_get: str = "Get U2F counter"
     u2f__title_set: str = "Set U2F counter"
     wipe__info: str = "All data will be erased."
+    wipe__start_again: str = "Wipe your Trezor and start the setup process again."
     wipe__title: str = "Wipe device"
     wipe__want_to_wipe: str = "Do you really want to wipe the device?\n"
     wipe_code__change: str = "Change wipe code"
@@ -1055,6 +1056,7 @@ class TR:
     words__review: str = "Review"
     words__security: str = "Security"
     words__send: str = "Send"
+    words__set: str = "Set"
     words__settings: str = "Settings"
     words__sign: str = "Sign"
     words__signer: str = "Signer"
@@ -1077,6 +1079,7 @@ class TR:
     words__unlocked: str = "Unlocked"
     words__wallet: str = "Wallet"
     words__warning: str = "Warning"
+    words__wipe: str = "Wipe"
     words__writable: str = "Writable"
     words__yes: str = "Yes"
 

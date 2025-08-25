@@ -102,6 +102,7 @@ struct MenuItem {
 const MENU_ITEM_TITLE_STYLE_SHEET: &ButtonStyleSheet = &theme::menu_item_title();
 const MENU_ITEM_LIGHT_WARNING: &ButtonStyleSheet = &theme::menu_item_title_yellow();
 const MENU_ITEM_WARNING: &ButtonStyleSheet = &theme::menu_item_title_orange();
+const MENU_ITEM_ERROR: &ButtonStyleSheet = &theme::menu_item_title_red();
 
 impl MenuItem {
     pub fn new(text: TString<'static>, action: Option<Action>) -> Self {
@@ -541,7 +542,7 @@ impl DeviceMenuScreen {
                 Some(Action::Return(DeviceMenuMsg::BackupFailed)),
             );
             item_backup_failed.with_subtext(Some((TR::words__review.into(), None)));
-            item_backup_failed.with_stylesheet(MENU_ITEM_TITLE_STYLE_SHEET);
+            item_backup_failed.with_stylesheet(MENU_ITEM_ERROR);
             unwrap!(items.push(item_backup_failed));
         }
         if pin_unset {
@@ -549,7 +550,7 @@ impl DeviceMenuScreen {
                 TR::homescreen__title_pin_not_set.into(),
                 Some(Action::Return(DeviceMenuMsg::PinCode)),
             );
-            item_pin_unset.with_subtext(Some((TR::words__review.into(), None)));
+            item_pin_unset.with_subtext(Some((TR::words__set.into(), None)));
             item_pin_unset.with_stylesheet(MENU_ITEM_LIGHT_WARNING);
             unwrap!(items.push(item_pin_unset));
         }

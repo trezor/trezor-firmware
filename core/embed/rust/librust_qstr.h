@@ -882,6 +882,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_warning;
   MP_QSTR_warning_footer;
   MP_QSTR_wipe__info;
+  MP_QSTR_wipe__start_again;
   MP_QSTR_wipe__title;
   MP_QSTR_wipe__want_to_wipe;
   MP_QSTR_wipe_code;
@@ -963,6 +964,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__review;
   MP_QSTR_words__security;
   MP_QSTR_words__send;
+  MP_QSTR_words__set;
   MP_QSTR_words__settings;
   MP_QSTR_words__sign;
   MP_QSTR_words__signer;
@@ -985,6 +987,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__unlocked;
   MP_QSTR_words__wallet;
   MP_QSTR_words__warning;
+  MP_QSTR_words__wipe;
   MP_QSTR_words__writable;
   MP_QSTR_words__yes;
   MP_QSTR_write;
