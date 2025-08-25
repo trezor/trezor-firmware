@@ -1,7 +1,8 @@
 use crate::{
     strutil::TString,
+    translations::TR,
     ui::{
-        component::{Component, Event, EventCtx, Label, Maybe},
+        component::{Component, Event, EventCtx, Label},
         geometry::Rect,
         shape::Renderer,
     },
@@ -26,9 +27,10 @@ pub enum MnemonicKeyboardMsg {
 
 pub struct MnemonicKeyboard<T> {
     /// Initial prompt, displayed on empty input.
-    prompt: Maybe<Label<'static>>,
+    prompt: Label<'static>,
+    word_prompt: Label<'static>,
     /// Input area, acting as the auto-complete.
-    input: Maybe<T>,
+    input: T,
     /// Key buttons.
     keypad: Keypad,
     /// Whether going back is allowed (is not on the very first word).
@@ -40,37 +42,36 @@ where
     T: MnemonicInput,
 {
     pub const KEY_COUNT: usize = 9;
-    pub fn new(input: T, prompt: TString<'static>, can_go_back: bool) -> Self {
-        // Input might be already pre-filled
-        let prompt_visible = input.is_empty();
-
+    // Ad hoc number that so that all languages can reasonably show the word number
+    // prompt
+    const WORD_PROMPT_WIDTH: i16 = 85;
+    pub fn new(input: T, words: TString<'static>, can_go_back: bool) -> Self {
         let keypad_content: [_; MNEMONIC_KEY_COUNT] =
             core::array::from_fn(|idx| ButtonContent::single_line_text(T::keys()[idx].into()));
 
         Self {
-            prompt: Maybe::new(
-                theme::BG,
-                Label::centered(prompt, theme::TEXT_SMALL).vertically_centered(),
-                prompt_visible,
-            ),
+            prompt: Label::left_aligned(
+                TR::recovery__start_entering.into(),
+                theme::firmware::TEXT_SMALL,
+            )
+            .vertically_centered(),
+            word_prompt: Label::centered(words, theme::TEXT_SMALL_LIGHT).vertically_centered(),
             keypad: Keypad::new_hidden().with_keys_content(&keypad_content),
             can_go_back,
-            input: Maybe::new(theme::BG, input, !prompt_visible),
+            input,
         }
     }
 
     fn on_input_change(&mut self, ctx: &mut EventCtx) {
         self.toggle_buttons(ctx);
-        self.toggle_prompt_or_input(ctx);
     }
 
     /// Either enable or disable the key buttons, depending on the dictionary
     /// completion mask and the pending key.
     fn toggle_buttons(&mut self, ctx: &mut EventCtx) {
-        let input = self.input.inner();
         // Enable/disable the key buttons based on the ability to form a valid word.
         for idx in 0..Self::KEY_COUNT {
-            let state = if input.can_key_press_lead_to_a_valid_word(idx) {
+            let state = if self.input.can_key_press_lead_to_a_valid_word(idx) {
                 ButtonState::Enabled
             } else {
                 ButtonState::Disabled
@@ -80,7 +81,7 @@ where
         }
 
         // Determine states for erase and back buttons
-        let (erase_state, back_state) = if input.is_empty() {
+        let (erase_state, back_state) = if self.input.is_empty() {
             (
                 ButtonState::Hidden,
                 if self.can_go_back {
@@ -94,15 +95,14 @@ where
         };
 
         // Determine state and style for the confirm button based on input state
-        let confirm_state = if input.is_empty() || input.mnemonic().is_none() {
+        let confirm_state = if self.input.is_empty() || self.input.mnemonic().is_none() {
             ButtonState::Hidden
         } else {
             ButtonState::Enabled
         };
-        let confirm_style = if input.mnemonic().is_some() {
+        let confirm_style = if self.input.mnemonic().is_some() {
             let any_press_can_lead_to_valid_word = || {
-                (0..Self::KEY_COUNT)
-                    .any(|idx| self.input.inner().can_key_press_lead_to_a_valid_word(idx))
+                (0..Self::KEY_COUNT).any(|idx| self.input.can_key_press_lead_to_a_valid_word(idx))
             };
             if any_press_can_lead_to_valid_word() {
                 theme::button_keyboard()
@@ -126,17 +126,17 @@ where
             .set_button_stylesheet(KeypadButton::Confirm, confirm_style);
     }
 
-    /// After edit operations, we need to either show or hide the prompt, the
-    /// input, the erase button and the back button.
-    fn toggle_prompt_or_input(&mut self, ctx: &mut EventCtx) {
-        let input_empty = self.input.inner().is_empty();
-        // Prompt is shown if the input is empty.
-        self.prompt.show_if(ctx, input_empty);
-        self.input.show_if(ctx, !input_empty);
+    fn render_prompt_or_input<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        if self.input.is_empty() {
+            self.prompt.render(target);
+            self.word_prompt.render(target);
+        } else {
+            self.input.render(target);
+        }
     }
 
     pub fn mnemonic(&self) -> Option<&'static str> {
-        self.input.inner().mnemonic()
+        self.input.mnemonic()
     }
 }
 
@@ -155,11 +155,14 @@ where
         let (_, keypad_area) = bounds.split_bottom(KEYPAD_VISIBLE_HEIGHT);
         let (input_area, _) = bounds.split_top(INPUT_TOUCH_HEIGHT);
 
-        let prompt_area = input_area.inset(KEYBOARD_INPUT_INSETS);
+        let (prompt_area, word_prompt_area) = input_area
+            .inset(KEYBOARD_INPUT_INSETS)
+            .split_right(Self::WORD_PROMPT_WIDTH);
         let input_area = input_area.inset(KEYBOARD_INPUT_INSETS);
 
         // Prompt/input placement
         self.prompt.place(prompt_area);
+        self.word_prompt.place(word_prompt_area);
         self.input.place(input_area);
 
         // Keypad placement
@@ -188,7 +191,7 @@ where
 
         match self.keypad.event(ctx, event) {
             Some(KeypadMsg::Key(idx)) => {
-                self.input.inner_mut().on_key_click(ctx, idx);
+                self.input.on_key_click(ctx, idx);
                 self.on_input_change(ctx);
                 return None;
             }
@@ -199,17 +202,17 @@ where
                 }
             }
             Some(KeypadMsg::EraseShort) => {
-                self.input.inner_mut().on_backspace_click(ctx);
+                self.input.on_backspace_click(ctx);
                 self.on_input_change(ctx);
                 return None;
             }
             Some(KeypadMsg::EraseLong) => {
-                self.input.inner_mut().on_backspace_long_press(ctx);
+                self.input.on_backspace_long_press(ctx);
                 self.on_input_change(ctx);
                 return None;
             }
             Some(KeypadMsg::Confirm) => {
-                match self.input.inner_mut().on_confirm_click(ctx) {
+                match self.input.on_confirm_click(ctx) {
                     Some(MnemonicInputMsg::Confirmed) => {
                         // Confirmed, bubble up.
                         return Some(MnemonicKeyboardMsg::Confirmed);
@@ -229,20 +232,12 @@ where
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let render_prompt_or_input = |target| {
-            if self.input.inner().is_empty() {
-                self.prompt.render(target);
-            } else {
-                self.input.render(target);
-            }
-        };
-
         if self.keypad.pressed() {
-            render_prompt_or_input(target);
+            self.render_prompt_or_input(target);
             self.keypad.render(target);
         } else {
             self.keypad.render(target);
-            render_prompt_or_input(target);
+            self.render_prompt_or_input(target);
         }
     }
 }

@@ -1,5 +1,5 @@
 use crate::{
-    strutil::{ShortString, TString},
+    strutil::TString,
     ui::{
         component::{
             swipe_detect::SwipeConfig,
@@ -43,14 +43,14 @@ enum DisplayStyle {
     Complete,
 }
 
-pub enum LabelKeyboardMsg {
-    Confirmed(ShortString),
+pub enum StringKeyboardMsg {
+    Confirmed,
     Cancelled,
 }
 
-pub struct LabelKeyboard {
+pub struct StringKeyboard {
     page_swipe: Swipe,
-    input: LabelInput,
+    input: StringInput,
     input_prompt: Label<'static>,
     keypad: Keypad,
     next_btn: Button,
@@ -76,7 +76,7 @@ const NEXT_BTN_PADDING: i16 = 14;
 const NEXT_BTN_INSETS: Insets =
     Insets::new(NEXT_BTN_PADDING, NEXT_BTN_PADDING, 0, NEXT_BTN_PADDING);
 
-impl LabelKeyboard {
+impl StringKeyboard {
     pub fn new(
         prompt: TString<'static>,
         max_len: usize,
@@ -100,7 +100,7 @@ impl LabelKeyboard {
 
         Self {
             page_swipe: Swipe::horizontal(),
-            input: LabelInput::new(max_len, prefill),
+            input: StringInput::new(max_len, prefill),
             input_prompt: Label::left_aligned(prompt, theme::firmware::TEXT_SMALL)
                 .vertically_centered(),
             next_btn,
@@ -168,7 +168,7 @@ impl LabelKeyboard {
         }
     }
 
-    /// Update the keypad state based on the current label and input state
+    /// Update the keypad state based on the current string and input state
     /// Can be used only when no key is pressed
     fn update_keypad_state(&mut self, ctx: &mut EventCtx) {
         let keypad_state = match self.input.display_style {
@@ -184,7 +184,7 @@ impl LabelKeyboard {
                 }
             }
             _ => {
-                if self.label().len() == self.max_len {
+                if self.string().len() == self.max_len {
                     if let Some(pending_key) = self.multi_tap.pending_key() {
                         // Disable all except of confirm, erase and the pending key
                         KeypadState {
@@ -211,7 +211,7 @@ impl LabelKeyboard {
                     KeypadState {
                         back: ButtonState::Hidden,
                         erase: ButtonState::Hidden,
-                        cancel: ButtonState::Hidden,
+                        cancel: ButtonState::Enabled,
                         confirm: if self.allow_empty {
                             ButtonState::Enabled
                         } else {
@@ -236,13 +236,13 @@ impl LabelKeyboard {
         self.keypad.set_state(keypad_state, ctx);
     }
 
-    pub fn label(&self) -> &str {
+    pub fn string(&self) -> &str {
         self.input.textbox.content()
     }
 }
 
-impl Component for LabelKeyboard {
-    type Msg = LabelKeyboardMsg;
+impl Component for StringKeyboard {
+    type Msg = StringKeyboardMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         // assert full screen
@@ -279,8 +279,8 @@ impl Component for LabelKeyboard {
             Event::Timer(_) if self.multi_tap.timeout_event(event) => {
                 self.multi_tap.clear_pending_state(ctx);
                 self.input.display_style = DisplayStyle::OneLine;
-                // Disable keypad when the label reached the max length
-                if self.label().len() == self.max_len {
+                // Disable keypad when the string reached the max length
+                if self.string().len() == self.max_len {
                     self.update_keypad_state(ctx);
                 }
                 return None;
@@ -292,13 +292,13 @@ impl Component for LabelKeyboard {
         // Input event has to be handled before the swipe so that swipe in the input
         // area is not processed
         match self.input.event(ctx, event) {
-            Some(LabelInputMsg::TouchStart) => {
+            Some(StringInputMsg::TouchStart) => {
                 self.multi_tap.clear_pending_state(ctx);
                 // Disable keypad.
                 self.update_keypad_state(ctx);
                 return None;
             }
-            Some(LabelInputMsg::TouchEnd) => {
+            Some(StringInputMsg::TouchEnd) => {
                 // Enable keypad.
                 self.update_keypad_state(ctx);
                 return None;
@@ -353,12 +353,10 @@ impl Component for LabelKeyboard {
                 return None;
             }
             Some(KeypadMsg::Cancel) => {
-                return Some(LabelKeyboardMsg::Cancelled);
+                return Some(StringKeyboardMsg::Cancelled);
             }
             Some(KeypadMsg::Confirm) => {
-                return Some(LabelKeyboardMsg::Confirmed(unwrap!(ShortString::try_from(
-                    self.label()
-                ))));
+                return Some(StringKeyboardMsg::Confirmed);
             }
             _ => {}
         }
@@ -367,14 +365,14 @@ impl Component for LabelKeyboard {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let empty = self.label().is_empty();
+        let empty = self.string().is_empty();
 
         // Render prompt when the pin is empty
         if empty {
             self.input_prompt.render(target);
         }
 
-        // When the entire label is shown, the input area might overlap the keypad
+        // When the entire string is shown, the input area might overlap the keypad
         // so it has to be render later
         match self.input.display_style {
             DisplayStyle::Complete => {
@@ -400,19 +398,19 @@ impl Component for LabelKeyboard {
 
 #[derive(PartialEq, Debug, Copy, Clone)]
 #[cfg_attr(feature = "ui_debug", derive(ufmt::derive::uDebug))]
-pub enum LabelInputMsg {
+pub enum StringInputMsg {
     TouchStart,
     TouchEnd,
 }
 
-struct LabelInput {
+struct StringInput {
     area: Rect,
     textbox: TextBox,
     display_style: DisplayStyle,
     shown_area: Rect,
 }
 
-impl LabelInput {
+impl StringInput {
     const TWITCH: i16 = 4;
     const SHOWN_INSETS: Insets = Insets::new(12, 24, 12, 24);
     const SHOWN_STYLE: TextStyle =
@@ -437,12 +435,12 @@ impl LabelInput {
         }
     }
 
-    fn label(&self) -> &str {
+    fn string(&self) -> &str {
         self.textbox.content()
     }
 
     fn update_shown_area(&mut self) {
-        // The area where the label is shown
+        // The area where the string is shown
         let mut shown_area = Rect::from_top_left_and_size(
             self.area.top_left(),
             Offset::new(SCREEN.width(), self.area.height()),
@@ -453,7 +451,7 @@ impl LabelInput {
         while let LayoutFit::OutOfBounds { .. } = TextLayout::new(Self::SHOWN_STYLE)
             .with_align(Alignment::Start)
             .with_bounds(shown_area.inset(Self::SHOWN_INSETS))
-            .fit_text(self.label())
+            .fit_text(self.string())
         {
             shown_area =
                 shown_area.outset(Insets::bottom(Self::SHOWN_STYLE.text_font.line_height()));
@@ -474,7 +472,7 @@ impl LabelInput {
         TextLayout::new(Self::SHOWN_STYLE)
             .with_bounds(self.shown_area.inset(Self::SHOWN_INSETS))
             .with_align(Alignment::Start)
-            .render_text(self.label(), target, true);
+            .render_text(self.string(), target, true);
     }
 
     fn render_one_line<'s>(&self, target: &mut impl Renderer<'s>) {
@@ -495,7 +493,7 @@ impl LabelInput {
         // the last character
         let available_area_width = area.width() - 1;
         let text_to_display = long_line_content_with_ellipsis(
-            self.label(),
+            self.string(),
             "...",
             style.text_font,
             available_area_width,
@@ -519,73 +517,11 @@ impl LabelInput {
                 style.text_color,
             );
         }
-        // let pp_len = self.label().len();
-        // let last_char = self.display_style != DisplayStyle::Hidden;
-
-        // // Render only when there are characters
-        // if pp_len == 0 {
-        //     return;
-        // }
-        // // Number of visible icons + characters
-        // let visible_len = pp_len.min(MAX_SHOWN_LEN);
-        // // Number of visible icons
-        // let visible_icons = visible_len - last_char as usize;
-
-        // // Jiggle when overflowed.
-        // if pp_len > visible_len && pp_len % 2 == 0 && self.display_style !=
-        // DisplayStyle::Shown {     cursor.x += Self::TWITCH;
-        // }
-
-        // let mut char_idx = 0;
-
-        // // Greyed out overflowing icons
-        // for (i, &fg_color) in FADING_ICON_COLORS.iter().enumerate() {
-        //     if pp_len > visible_len + (FADING_ICON_COUNT - 1 - i) {
-        //         ToifImage::new(cursor, Self::ICON.toif)
-        //             .with_align(Alignment2D::TOP_LEFT)
-        //             .with_fg(fg_color)
-        //             .render(target);
-        //         cursor.x += Self::ICON_SPACE + Self::ICON_WIDTH;
-        //         char_idx += 1;
-        //     }
-        // }
-
-        // if visible_icons > 0 {
-        //     // Classical dot(s)
-        //     for _ in char_idx..visible_icons {
-        //         ToifImage::new(cursor, Self::ICON.toif)
-        //             .with_align(Alignment2D::TOP_LEFT)
-        //             .with_fg(style.text_color)
-        //             .render(target);
-        //         cursor.x += Self::ICON_SPACE + Self::ICON_WIDTH;
-        //     }
-        // }
-
-        // if last_char {
-        //     // This should not fail because pp_len > 0
-        //     let last = &self.label()[(pp_len - 1)..pp_len];
-
-        //     // Adapt x and y positions for the character
-        //     cursor.y = hidden_area.left_center().y +
-        // style.text_font.text_max_height() / 2;     cursor.x -=
-        // Self::ICON_WIDTH;
-
-        //     // Paint the last character
-        //     Text::new(cursor, last, style.text_font)
-        //         .with_align(Alignment::Start)
-        //         .with_fg(style.text_color)
-        //         .render(target);
-
-        //     // Paint the pending marker.
-        //     if self.display_style == DisplayStyle::LastWithMarker {
-        //         render_pending_marker(target, cursor, last, style.text_font,
-        // style.text_color);     }
-        // }
     }
 }
 
-impl Component for LabelInput {
-    type Msg = LabelInputMsg;
+impl Component for StringInput {
+    type Msg = StringInputMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
@@ -598,8 +534,8 @@ impl Component for LabelInput {
             return None;
         }
 
-        // Extend the label area downward to allow touch input without the finger
-        // covering the label
+        // Extend the string area downward to allow touch input without the finger
+        // covering the string
         let extended_shown_area = self
             .shown_area
             .outset(Self::SHOWN_TOUCH_OUTSET)
@@ -608,10 +544,10 @@ impl Component for LabelInput {
         match event {
             // Return touch start if the touch is detected inside the touchable area
             Event::Touch(TouchEvent::TouchStart(pos)) if self.area.contains(pos) => {
-                // Show the entire label on the touch start
+                // Show the entire string on the touch start
                 self.display_style = DisplayStyle::Complete;
                 self.update_shown_area();
-                return Some(LabelInputMsg::TouchStart);
+                return Some(StringInputMsg::TouchStart);
             }
             // Return touch end if the touch end is detected inside the visible area
             Event::Touch(TouchEvent::TouchEnd(pos))
@@ -619,7 +555,7 @@ impl Component for LabelInput {
                     && self.display_style == DisplayStyle::Complete =>
             {
                 self.display_style = DisplayStyle::OneLine;
-                return Some(LabelInputMsg::TouchEnd);
+                return Some(StringInputMsg::TouchEnd);
             }
             // Return touch end if the touch moves out of the visible area
             Event::Touch(TouchEvent::TouchMove(pos))
@@ -627,7 +563,7 @@ impl Component for LabelInput {
                     && self.display_style == DisplayStyle::Complete =>
             {
                 self.display_style = DisplayStyle::OneLine;
-                return Some(LabelInputMsg::TouchEnd);
+                return Some(StringInputMsg::TouchEnd);
             }
             _ => {}
         };
@@ -635,7 +571,7 @@ impl Component for LabelInput {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        if !self.label().is_empty() {
+        if !self.string().is_empty() {
             match self.display_style {
                 DisplayStyle::Complete => self.render_complete(target),
                 _ => self.render_one_line(target),
@@ -645,7 +581,7 @@ impl Component for LabelInput {
 }
 
 #[cfg(feature = "micropython")]
-impl Swipable for LabelKeyboard {
+impl Swipable for StringKeyboard {
     fn get_swipe_config(&self) -> SwipeConfig {
         self.swipe_config
     }
@@ -656,12 +592,12 @@ impl Swipable for LabelKeyboard {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for LabelKeyboard {
+impl crate::trace::Trace for StringKeyboard {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         let display_style = uformat!("{:?}", self.input.display_style);
         let active_layout = uformat!("{:?}", self.active_layout);
-        t.component("LabelKeyboard");
-        t.string("label", self.label().into());
+        t.component("StringKeyboard");
+        t.string("string", self.string().into());
         t.string("display_style", display_style.as_str().into());
         t.string("active_layout", active_layout.as_str().into());
     }

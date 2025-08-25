@@ -486,9 +486,10 @@ def request_duration(
 def request_pin(
     *,
     prompt: str,
-    subprompt: str,
+    attempts: str,
     allow_cancel: bool = True,
     wrong_pin: bool = False,
+    last_attempt: bool = False,
 ) -> LayoutObj[str | UiResult]:
     """Request pin on device."""
 
@@ -610,7 +611,7 @@ def show_group_share_success(
 # rust/src/ui/api/firmware_micropython.rs
 def show_homescreen(
     *,
-    label: str | None,
+    label: str,
     notification: str | None,
     notification_level: int = 0,
     lockable: bool,

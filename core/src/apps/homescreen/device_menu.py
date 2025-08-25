@@ -41,7 +41,7 @@ async def handle_device_menu() -> None:
     firmware_version = ".".join(map(str, utils.VERSION))
     firmware_type = "Bitcoin-only" if utils.BITCOIN_ONLY else "Universal"
     device_name = (
-        (storage_device.get_label() or "Trezor")
+        (storage_device.get_label() or utils.MODEL_FULL_NAME)
         if storage_device.is_initialized()
         else None
     )
@@ -133,7 +133,7 @@ async def handle_device_menu() -> None:
             trezorui_api.request_string(
                 prompt=TR.device_name__enter,
                 max_len=storage_device.LABEL_MAXLENGTH,
-                allow_empty=False,
+                allow_empty=True,
                 prefill=storage_device.get_label(),
             ),
             "device_name",

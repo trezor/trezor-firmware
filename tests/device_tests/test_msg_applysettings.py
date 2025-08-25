@@ -490,6 +490,17 @@ def test_label_too_long(session: Session):
         device.apply_settings(session, label="A" * 33)
 
 
+@pytest.mark.setup_client(pin=None)
+@pytest.mark.parametrize(
+    "label",
+    ["", "A" * 32],
+    ids=["empty", "max_len"],
+)
+def test_set_label(session: Session, label: str):
+    with session.client:
+        device.apply_settings(session, label=label)
+
+
 U8_MIN = 0
 U8_MAX = 0xFF  # 255
 

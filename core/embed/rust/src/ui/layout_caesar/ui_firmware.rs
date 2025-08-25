@@ -907,11 +907,12 @@ impl FirmwareUI for UICaesar {
 
     fn request_pin(
         prompt: TString<'static>,
-        subprompt: TString<'static>,
+        attempts: TString<'static>,
         _allow_cancel: bool,
-        _warning: bool,
+        _wrong_pin: bool,
+        _last_attempt: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let layout = RootComponent::new(PinEntry::new(prompt, subprompt));
+        let layout = RootComponent::new(PinEntry::new(prompt, attempts));
         Ok(layout)
     }
 

@@ -741,11 +741,12 @@ extern "C" fn new_request_duration(n_args: usize, args: *const Obj, kwargs: *mut
 extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let subprompt: TString = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
+        let attempts: TString = kwargs.get(Qstr::MP_QSTR_attempts)?.try_into()?;
         let allow_cancel: bool = kwargs.get_or(Qstr::MP_QSTR_allow_cancel, true)?;
-        let warning: bool = kwargs.get_or(Qstr::MP_QSTR_wrong_pin, false)?;
+        let wrong_pin: bool = kwargs.get_or(Qstr::MP_QSTR_wrong_pin, false)?;
+        let last_attempt: bool = kwargs.get_or(Qstr::MP_QSTR_last_attempt, false)?;
 
-        let layout = ModelUI::request_pin(prompt, subprompt, allow_cancel, warning)?;
+        let layout = ModelUI::request_pin(prompt, attempts, allow_cancel, wrong_pin, last_attempt)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -915,10 +916,7 @@ extern "C" fn new_show_group_share_success(
 
 extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let label: TString<'static> = kwargs
-            .get(Qstr::MP_QSTR_label)?
-            .try_into_option()?
-            .unwrap_or_else(|| model::FULL_NAME.into());
+        let label: TString<'static> = kwargs.get(Qstr::MP_QSTR_label)?.try_into()?;
         let notification: Option<TString<'static>> =
             kwargs.get(Qstr::MP_QSTR_notification)?.try_into_option()?;
         let notification_level: u8 = kwargs.get_or(Qstr::MP_QSTR_notification_level, 0)?;
@@ -1778,9 +1776,10 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def request_pin(
     ///     *,
     ///     prompt: str,
-    ///     subprompt: str,
+    ///     attempts: str,
     ///     allow_cancel: bool = True,
     ///     wrong_pin: bool = False,
+    ///     last_attempt: bool = False,
     /// ) -> LayoutObj[str | UiResult]:
     ///     """Request pin on device."""
     Qstr::MP_QSTR_request_pin => obj_fn_kw!(0, new_request_pin).as_obj(),
@@ -1890,7 +1889,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
 
     /// def show_homescreen(
     ///     *,
-    ///     label: str | None,
+    ///     label: str,
     ///     notification: str | None,
     ///     notification_level: int = 0,
     ///     lockable: bool,

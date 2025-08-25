@@ -62,6 +62,8 @@ pub enum HomescreenMsg {
 }
 
 impl Homescreen {
+    const HOMELABEL_INSETS: Insets = Insets::top(38);
+
     pub fn new(
         label: TString<'static>,
         lockable: bool,
@@ -116,9 +118,9 @@ impl Homescreen {
 
     fn homebar_content(bootscreen: bool, locked: bool) -> ButtonContent {
         let text = if bootscreen {
-            Some(TR::lockscreen__tap_to_connect.into())
+            Some(TR::instructions__tap_to_start.into())
         } else if locked {
-            Some(TR::lockscreen__tap_to_unlock.into())
+            Some(TR::lockscreen__unlock.into())
         } else {
             None
         };
@@ -190,9 +192,7 @@ impl Component for Homescreen {
         } else {
             rest
         };
-        let label_area = rest
-            .inset(theme::SIDE_INSETS)
-            .inset(Insets::top(theme::PADDING));
+        let label_area = rest.inset(theme::SIDE_INSETS).inset(Self::HOMELABEL_INSETS);
 
         self.label.place(label_area);
         self.action_bar.place(bar_area);
