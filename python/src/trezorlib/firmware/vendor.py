@@ -63,8 +63,8 @@ class VendorTrust(Struct):
     SUBCON = c.Transformed(
         c.BitStruct(
             "_reserved" / c.Default(c.BitsInteger(5), 0b11111),
-            "limit_runtime" / c.Default(c.Flag, 1),
-            "deny_provisioning_access" / c.Default(c.Flag, 1),
+            "limit_runtime" / c.Default(c.Flag, True),
+            "deny_provisioning_access" / c.Default(c.Flag, True),
             "_dont_provide_secret"
             / c.Default(c.Flag, lambda this: not this.allow_run_with_secret),
             "allow_run_with_secret" / c.Flag,
