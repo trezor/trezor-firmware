@@ -391,13 +391,13 @@ impl DeviceMenuScreen {
                 let pin_menu_idx = self.add_code_menu(false);
                 let action = Action::GoTo(pin_menu_idx);
                 let subtext = (
-                    TR::words__on.into(),
+                    TR::words__enabled.into(),
                     Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
                 );
                 (action, subtext)
             } else {
                 let action = Action::Return(DeviceMenuMsg::PinCode);
-                let subtext = (TR::words__off.into(), None);
+                let subtext = (TR::words__disabled.into(), None);
                 (action, subtext)
             };
 
@@ -420,13 +420,13 @@ impl DeviceMenuScreen {
                 let wipe_menu_idx = self.add_code_menu(true);
                 let action = Action::GoTo(wipe_menu_idx);
                 let subtext = (
-                    TR::words__on.into(),
+                    TR::words__enabled.into(),
                     Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
                 );
                 (action, subtext)
             } else {
                 let action = Action::Return(DeviceMenuMsg::WipeCode);
-                let subtext = (TR::words__off.into(), None);
+                let subtext = (TR::words__disabled.into(), None);
                 (action, subtext)
             };
 
