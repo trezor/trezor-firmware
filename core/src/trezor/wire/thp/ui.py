@@ -29,6 +29,18 @@ async def show_autoconnect_credential_confirmation_screen(
     )
 
 
+async def show_pairing_dialog(host_name: str | None, app_name: str | None) -> None:
+    from trezor.ui.layouts import confirm_action
+
+    subject = _app_on_host(app_name, host_name)
+    action_string = f"Allow {subject} to pair with this Trezor?"
+    await confirm_action(
+        br_name="thp_pairing_request",
+        title="Before you continue",
+        action=action_string,
+    )
+
+
 async def show_connection_dialog(host_name: str | None, app_name: str | None) -> None:
     from trezor.ui.layouts import confirm_action
 
