@@ -704,7 +704,7 @@ pub enum TranslatedString {
     passphrase__title_source = 444,  // "Passphrase source"
     passphrase__turn_off = 445,  // "Turn off passphrase protection?"
     passphrase__turn_on = 446,  // "Turn on passphrase protection?"
-    pin__change = 447,  // "Change PIN?"
+    pin__change = 447,  // "Change PIN"
     pin__changed = 448,  // "PIN changed."
     pin__cursor_will_change = 449,  // "Position of the cursor will change between entries for enhanced security."
     pin__diff_from_wipe_code = 450,  // "The new PIN must be different from your wipe code."
@@ -1107,7 +1107,7 @@ pub enum TranslatedString {
     wipe__info = 771,  // "All data will be erased."
     wipe__title = 772,  // "Wipe device"
     wipe__want_to_wipe = 773,  // "Do you really want to wipe the device?\n"
-    wipe_code__change = 774,  // "Change wipe code?"
+    wipe_code__change = 774,  // "Change wipe code"
     wipe_code__changed = 775,  // "Wipe code changed."
     wipe_code__diff_from_pin = 776,  // "The wipe code must be different from your PIN."
     wipe_code__disabled = 777,  // "Wipe code disabled."
@@ -1495,6 +1495,19 @@ pub enum TranslatedString {
     words__on = 1104,  // "ON"
     words__review = 1105,  // "Review"
     words__security = 1106,  // "Security"
+    pin__change_question = 1107,  // "Change PIN?"
+    pin__remove = 1108,  // "Remove PIN"
+    pin__title = 1109,  // "PIN code"
+    wipe_code__change_question = 1110,  // "Change wipe code?"
+    wipe_code__remove = 1111,  // "Remove wipe code"
+    wipe_code__title = 1112,  // "Wipe code"
+    ble__disable = 1113,  // "Turn Bluetooth off?"
+    ble__enable = 1114,  // "Turn Bluetooth on?"
+    words__bluetooth = 1115,  // "Bluetooth"
+    words__disconnected = 1116,  // "Disconnected"
+    ble__forget_all = 1117,  // "Forget all"
+    words__connect = 1118,  // "Connect"
+    words__forget = 1119,  // "Forget"
 }
 
 impl TranslatedString {
@@ -2299,7 +2312,7 @@ impl TranslatedString {
             (Self::passphrase__title_source, "Passphrase source"),
             (Self::passphrase__turn_off, "Turn off passphrase protection?"),
             (Self::passphrase__turn_on, "Turn on passphrase protection?"),
-            (Self::pin__change, "Change PIN?"),
+            (Self::pin__change, "Change PIN"),
             (Self::pin__changed, "PIN changed."),
             (Self::pin__cursor_will_change, "Position of the cursor will change between entries for enhanced security."),
             (Self::pin__diff_from_wipe_code, "The new PIN must be different from your wipe code."),
@@ -2814,7 +2827,7 @@ impl TranslatedString {
             (Self::wipe__info, "All data will be erased."),
             (Self::wipe__title, "Wipe device"),
             (Self::wipe__want_to_wipe, "Do you really want to wipe the device?\n"),
-            (Self::wipe_code__change, "Change wipe code?"),
+            (Self::wipe_code__change, "Change wipe code"),
             (Self::wipe_code__changed, "Wipe code changed."),
             (Self::wipe_code__diff_from_pin, "The wipe code must be different from your PIN."),
             (Self::wipe_code__disabled, "Wipe code disabled."),
@@ -3309,6 +3322,19 @@ impl TranslatedString {
             (Self::words__on, "ON"),
             (Self::words__review, "Review"),
             (Self::words__security, "Security"),
+            (Self::pin__change_question, "Change PIN?"),
+            (Self::pin__remove, "Remove PIN"),
+            (Self::pin__title, "PIN code"),
+            (Self::wipe_code__change_question, "Change wipe code?"),
+            (Self::wipe_code__remove, "Remove wipe code"),
+            (Self::wipe_code__title, "Wipe code"),
+            (Self::ble__disable, "Turn Bluetooth off?"),
+            (Self::ble__enable, "Turn Bluetooth on?"),
+            (Self::words__bluetooth, "Bluetooth"),
+            (Self::words__disconnected, "Disconnected"),
+            (Self::ble__forget_all, "Forget all"),
+            (Self::words__connect, "Connect"),
+            (Self::words__forget, "Forget"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3386,6 +3412,9 @@ impl TranslatedString {
         (Qstr::MP_QSTR_bitcoin__unverified_external_inputs, Self::bitcoin__unverified_external_inputs),
         (Qstr::MP_QSTR_bitcoin__valid_signature, Self::bitcoin__valid_signature),
         (Qstr::MP_QSTR_bitcoin__voting_rights, Self::bitcoin__voting_rights),
+        (Qstr::MP_QSTR_ble__disable, Self::ble__disable),
+        (Qstr::MP_QSTR_ble__enable, Self::ble__enable),
+        (Qstr::MP_QSTR_ble__forget_all, Self::ble__forget_all),
         (Qstr::MP_QSTR_ble__manage_paired, Self::ble__manage_paired),
         (Qstr::MP_QSTR_ble__pair_new, Self::ble__pair_new),
         (Qstr::MP_QSTR_ble__pair_title, Self::ble__pair_title),
@@ -4173,6 +4202,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_pin__cancel_info, Self::pin__cancel_info),
         (Qstr::MP_QSTR_pin__cancel_setup, Self::pin__cancel_setup),
         (Qstr::MP_QSTR_pin__change, Self::pin__change),
+        (Qstr::MP_QSTR_pin__change_question, Self::pin__change_question),
         (Qstr::MP_QSTR_pin__changed, Self::pin__changed),
         (Qstr::MP_QSTR_pin__cursor_will_change, Self::pin__cursor_will_change),
         (Qstr::MP_QSTR_pin__diff_from_wipe_code, Self::pin__diff_from_wipe_code),
@@ -4190,8 +4220,10 @@ impl TranslatedString {
         (Qstr::MP_QSTR_pin__reenter, Self::pin__reenter),
         (Qstr::MP_QSTR_pin__reenter_new, Self::pin__reenter_new),
         (Qstr::MP_QSTR_pin__reenter_to_confirm, Self::pin__reenter_to_confirm),
+        (Qstr::MP_QSTR_pin__remove, Self::pin__remove),
         (Qstr::MP_QSTR_pin__setup_completed, Self::pin__setup_completed),
         (Qstr::MP_QSTR_pin__should_be_long, Self::pin__should_be_long),
+        (Qstr::MP_QSTR_pin__title, Self::pin__title),
         (Qstr::MP_QSTR_pin__title_check_pin, Self::pin__title_check_pin),
         (Qstr::MP_QSTR_pin__title_settings, Self::pin__title_settings),
         (Qstr::MP_QSTR_pin__title_wrong_pin, Self::pin__title_wrong_pin),
@@ -4703,6 +4735,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_wipe__title, Self::wipe__title),
         (Qstr::MP_QSTR_wipe__want_to_wipe, Self::wipe__want_to_wipe),
         (Qstr::MP_QSTR_wipe_code__change, Self::wipe_code__change),
+        (Qstr::MP_QSTR_wipe_code__change_question, Self::wipe_code__change_question),
         (Qstr::MP_QSTR_wipe_code__changed, Self::wipe_code__changed),
         (Qstr::MP_QSTR_wipe_code__diff_from_pin, Self::wipe_code__diff_from_pin),
         (Qstr::MP_QSTR_wipe_code__disabled, Self::wipe_code__disabled),
@@ -4713,6 +4746,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_wipe_code__mismatch, Self::wipe_code__mismatch),
         (Qstr::MP_QSTR_wipe_code__reenter, Self::wipe_code__reenter),
         (Qstr::MP_QSTR_wipe_code__reenter_to_confirm, Self::wipe_code__reenter_to_confirm),
+        (Qstr::MP_QSTR_wipe_code__remove, Self::wipe_code__remove),
+        (Qstr::MP_QSTR_wipe_code__title, Self::wipe_code__title),
         (Qstr::MP_QSTR_wipe_code__title_check, Self::wipe_code__title_check),
         (Qstr::MP_QSTR_wipe_code__title_invalid, Self::wipe_code__title_invalid),
         (Qstr::MP_QSTR_wipe_code__title_settings, Self::wipe_code__title_settings),
@@ -4731,12 +4766,14 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__assets, Self::words__assets),
         (Qstr::MP_QSTR_words__authenticate, Self::words__authenticate),
         (Qstr::MP_QSTR_words__blockhash, Self::words__blockhash),
+        (Qstr::MP_QSTR_words__bluetooth, Self::words__bluetooth),
         (Qstr::MP_QSTR_words__buying, Self::words__buying),
         (Qstr::MP_QSTR_words__cancel_and_exit, Self::words__cancel_and_exit),
         (Qstr::MP_QSTR_words__cancel_question, Self::words__cancel_question),
         (Qstr::MP_QSTR_words__chain, Self::words__chain),
         (Qstr::MP_QSTR_words__confirm, Self::words__confirm),
         (Qstr::MP_QSTR_words__confirm_fee, Self::words__confirm_fee),
+        (Qstr::MP_QSTR_words__connect, Self::words__connect),
         (Qstr::MP_QSTR_words__connected, Self::words__connected),
         (Qstr::MP_QSTR_words__contains, Self::words__contains),
         (Qstr::MP_QSTR_words__continue_anyway, Self::words__continue_anyway),
@@ -4744,8 +4781,10 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__continue_with, Self::words__continue_with),
         (Qstr::MP_QSTR_words__device, Self::words__device),
         (Qstr::MP_QSTR_words__disconnect, Self::words__disconnect),
+        (Qstr::MP_QSTR_words__disconnected, Self::words__disconnected),
         (Qstr::MP_QSTR_words__error, Self::words__error),
         (Qstr::MP_QSTR_words__fee, Self::words__fee),
+        (Qstr::MP_QSTR_words__forget, Self::words__forget),
         (Qstr::MP_QSTR_words__from, Self::words__from),
         (Qstr::MP_QSTR_words__good_to_know, Self::words__good_to_know),
         (Qstr::MP_QSTR_words__important, Self::words__important),
