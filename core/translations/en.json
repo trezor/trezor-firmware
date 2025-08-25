@@ -657,12 +657,7 @@
     "passphrase__revoke_on_device": "Do you want to revoke the passphrase on device setting?",
     "passphrase__show": "Show passphrase",
     "passphrase__title_confirm": "Confirm passphrase",
-    "passphrase__title_enter": {
-      "Bolt": "Enter passphrase",
-      "Caesar": "Enter passphrase",
-      "Delizia": "Enter passphrase",
-      "Eckhart": "Enter\npassphrase"
-    },
+    "passphrase__title_enter": "Enter passphrase",
     "passphrase__title_hide": "Hide passphrase",
     "passphrase__title_passphrase": "Passphrase",
     "passphrase__title_settings": "Passphrase settings",
