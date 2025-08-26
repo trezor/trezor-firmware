@@ -127,20 +127,11 @@ VERSION=$(get_version_from_file)
 
 # Update paths in signing and flashing commands
 if [ "$SIGN" -eq 1 ]; then
-    run_under_ncs_subshell \
-        "imgtool sign --version $VERSION --align 4 --header-size 0x200 -S 0x6c000 --pad-header build/$APP_DIR/zephyr/zephyr.bin build/$APP_DIR/zephyr/zephyr.prep.bin --custom-tlv 0x00A2 0x03 && \
-         imgtool sign --version $VERSION --align 4 --header-size 0x200 -S 0x6c000 --pad-header build/$APP_DIR/zephyr/zephyr.hex build/$APP_DIR/zephyr/zephyr.prep.hex --custom-tlv 0x00A2 0x03 && \
-         ../bootloader/mcuboot/scripts/imgtool.py dumpinfo ./build/$APP_DIR/zephyr/zephyr.prep.bin > ./build/$APP_DIR/zephyr/dump.txt"
-
-    HASH=$(python ./scripts/extract_hash.py ./build/$APP_DIR/zephyr/dump.txt)
-    SIGNATURE0=$(hash_signer -d "$HASH" -s0)
-    SIGNATURE1=$(hash_signer -d "$HASH" -s1)
-    echo "Signed hash $HASH, signature0 $SIGNATURE0, signature1 $SIGNATURE1"
-
-    run_under_ncs_subshell \
-        "python ./scripts/insert_signatures.py ./build/$APP_DIR/zephyr/zephyr.prep.hex $SIGNATURE0 $SIGNATURE1 -o ./build/$APP_DIR/zephyr/zephyr.signed_trz.hex && \
-         python ./scripts/insert_signatures.py ./build/$APP_DIR/zephyr/zephyr.prep.bin $SIGNATURE0 $SIGNATURE1 -o ./build/$APP_DIR/zephyr/zephyr.signed_trz.bin && \
-         python ../zephyr/scripts/build/mergehex.py build/mcuboot/zephyr/zephyr.hex build/$APP_DIR/zephyr/zephyr.signed_trz.hex -o build/zephyr.merged.signed_trz.hex"
+    nrftool wrap build/$APP_DIR/zephyr/zephyr.bin build/$APP_DIR/zephyr/zephyr.wrapped.bin
+    nrftool sign-dev build/$APP_DIR/zephyr/zephyr.wrapped.bin
+    nrftool wrap build/$APP_DIR/zephyr/zephyr.hex build/$APP_DIR/zephyr/zephyr.wrapped.hex
+    nrftool sign-dev build/$APP_DIR/zephyr/zephyr.wrapped.hex
+    python ../zephyr/scripts/build/mergehex.py build/mcuboot/zephyr/zephyr.hex build/$APP_DIR/zephyr/zephyr.wrapped.hex -o build/zephyr.merged.signed_trz.hex
 fi
 
 if [ "$FLASH" -eq 1 ]; then
