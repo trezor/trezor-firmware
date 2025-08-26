@@ -5,6 +5,9 @@ package hw.trezor.messages.stellar;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageStellar";
 
+import "messages-common.proto";
+import "options.proto";
+
 // https://github.com/stellar/stellar-core/blob/02d26858069de7c0eefe065056fb0a19bf72ea56/src/xdr/Stellar-ledger-entries.x#L25-L31
 enum StellarAssetType {
     NATIVE = 0;
@@ -61,6 +64,7 @@ message StellarSignTx {
     optional uint64 memo_id = 12;            // 8-byte uint64
     optional bytes memo_hash = 13;           // 32 bytes representing a hash
     required uint32 num_operations = 14;     // number of operations in this transaction
+    optional common.PaymentRequest payment_req = 15 [(experimental_field)=true]; // SLIP-24 payment request
 
     // https://github.com/stellar/stellar-core/blob/02d26858069de7c0eefe065056fb0a19bf72ea56/src/xdr/Stellar-transaction.x#L506-L513
     enum StellarMemoType {
