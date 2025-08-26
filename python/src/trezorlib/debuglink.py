@@ -410,8 +410,8 @@ class LayoutContent(UnstructuredJSONReader):
 
     def label(self) -> str:
         """Get label from the layout."""
-        assert "LabelKeyboard" in self.all_components()
-        return self.find_unique_value_by_key("label", default="", only_type=str)
+        assert "StringKeyboard" in self.all_components()
+        return self.find_unique_value_by_key("content", default="", only_type=str)
 
     def page_count(self) -> int:
         """Get number of pages for the layout."""
