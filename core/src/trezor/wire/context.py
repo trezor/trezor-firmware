@@ -40,9 +40,11 @@ class UnexpectedMessageException(Exception):
 
     Utility exception to inform the session handler that the current workflow
     should be aborted and a new one started as if `msg` was the first message.
+
+    If `msg` is `None`, the event loop should be restarted.
     """
 
-    def __init__(self, msg: Message) -> None:
+    def __init__(self, msg: Message | None) -> None:
         super().__init__()
         self.msg = msg
 

@@ -55,10 +55,11 @@ class GenericSessionContext(Context):
                     log.exception(__name__, e, iface=self.iface)
                 await self.write(failure(e))
             except UnexpectedMessageException as unexpected:
-                # The workflow was interrupted by an unexpected message. We need to
-                # process it as if it was a new message...
-                message = unexpected.msg
-                continue
+                if unexpected.msg is not None:
+                    # The workflow was interrupted by an unexpected message. We need to
+                    # process it as if it was a new message...
+                    message = unexpected.msg
+                    continue
             except Exception as exc:
                 if __debug__:
                     log.exception(__name__, exc, iface=self.iface)

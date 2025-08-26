@@ -143,7 +143,8 @@ async def handle_pairing_request(
             # Should raise UnexpectedMessageException
             result = await ctx.show_pairing_method_screen()
         except UnexpectedMessageException as e:
-            raw_response = e.msg
+            if (raw_response := e.msg) is None:
+                raise  # propagate stale channel preemption
             req_type = protobuf.type_for_wire(
                 ctx.message_type_enum_name, raw_response.type
             )

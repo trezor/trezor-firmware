@@ -1,4 +1,5 @@
 import ustruct
+import utime
 from micropython import const
 from typing import TYPE_CHECKING
 
@@ -22,6 +23,7 @@ from storage.cache_thp import (
 )
 from trezor import protobuf, utils, workflow
 from trezor.loop import Timeout, race, sleep
+from trezor.wire.context import UnexpectedMessageException
 
 from ..protocol_common import Message
 from . import (
@@ -62,6 +64,10 @@ _MIN_RETRANSMISSION_COUNT = const(2)
 # It allows restarting the event loop to handle other THP channels.
 _WRITE_TIMEOUT_MS = const(5_000)
 _WRITE_TIMEOUT = sleep(_WRITE_TIMEOUT_MS)
+
+# Preempt a stale channel if another channel becomes active and we allowed enough time for the host to respond.
+# It allows interrupting a "stuck" THP workflow using a different channel on the same interface.
+_PREEMPT_TIMEOUT_MS = const(1_000)
 
 
 class Reassembler:
@@ -134,6 +140,13 @@ def verify_checksum(buffer: memoryview) -> memoryview | None:
     return None
 
 
+class ChannelPreemptedException(UnexpectedMessageException):
+    """Raising this exception should restart the event loop."""
+
+    def __init__(self) -> None:
+        super().__init__(msg=None)
+
+
 class Channel:
     """
     THP protocol encrypted communication channel.
@@ -158,6 +171,7 @@ class Channel:
         # Shared variables
         self.sessions: dict[int, GenericSessionContext] = {}
         self.reassembler = Reassembler(self.get_channel_id_int(), self.read_buf)
+        self.last_write_ms: int = utime.ticks_ms()
 
         # Temporary objects
         self.credential: ThpPairingCredential | None = None
@@ -275,6 +289,10 @@ class Channel:
         while self.reassembler.message is None:
             # receive and reassemble a new message from this channel
             channel = await self.ctx.get_next_message(timeout_ms=timeout_ms)
+            if channel is None:
+                self.preempt_if_stale()
+                continue
+
             if channel is self:
                 break
 
@@ -378,6 +396,15 @@ class Channel:
     ) -> Awaitable[None]:
         return self.write_encrypted_payload(ctrl_byte, payload)
 
+    def preempt_if_stale(self) -> None:
+        elapsed_ms = utime.ticks_diff(utime.ticks_ms(), self.last_write_ms)
+        preempt = elapsed_ms > _PREEMPT_TIMEOUT_MS
+        if __debug__:
+            logger = log.error if preempt else log.warning
+            self._log(f"Interrupted channel after {elapsed_ms} ms", logger=logger)
+        if preempt:
+            raise ChannelPreemptedException
+
     async def write_encrypted_payload(self, ctrl_byte: int, payload: bytes) -> None:
         if __debug__:
             self._log("write_encrypted_payload_loop")
@@ -391,6 +418,9 @@ class Channel:
 
         # ACK is needed before sending more data
         ABP.set_sending_allowed(self.channel_cache, False)
+
+        # allows preempting this channel, if another channel becomes active
+        self.last_write_ms = utime.ticks_ms()
 
         for i in range(_MAX_RETRANSMISSION_COUNT):
             result = await race(self.ctx.write_payload(header, payload), _WRITE_TIMEOUT)
