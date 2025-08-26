@@ -47,12 +47,20 @@ class Model(Enum):
     DISC2 = b"D002"
 
     @classmethod
+    def from_bytes(cls, hw_model: bytes) -> Model:
+        if hw_model == b"\x00\x00\x00\x00":
+            return cls.T2T1
+        return cls(hw_model)
+
+    @classmethod
     def from_hw_model(cls, hw_model: Self | bytes) -> Model:
         if isinstance(hw_model, cls):
             return hw_model
-        if hw_model == b"\x00\x00\x00\x00":
-            return cls.T2T1
-        raise ValueError(f"Unknown hardware model: {hw_model}")
+        try:
+            assert isinstance(hw_model, bytes)
+            return cls.from_bytes(hw_model)
+        except ValueError as e:
+            raise ValueError(f"Unknown hardware model: {hw_model}") from e
 
     @classmethod
     def from_trezor_model(cls, trezor_model: TrezorModel) -> Self:
