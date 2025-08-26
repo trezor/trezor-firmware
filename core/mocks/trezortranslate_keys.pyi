@@ -31,6 +31,8 @@ class TR:
     authenticate__header: str = "Authenticate device"
     auto_lock__change_template: str = "Auto-lock Trezor after {0} of inactivity?"
     auto_lock__description: str = "Set the time before your Trezor locks automatically."
+    auto_lock__on_battery: str = "on battery / wireless charger"
+    auto_lock__on_usb: str = "connected to USB"
     auto_lock__title: str = "Auto-lock delay"
     auto_lock__turned_on: str = "Auto-lock turned on"
     backup__can_back_up_anytime: str = "You can back up your Trezor once, at any time."

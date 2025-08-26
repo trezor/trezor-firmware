@@ -1125,5 +1125,7 @@
   "1123": "words__disconnected",
   "1124": "ble__forget_all",
   "1125": "words__connect",
-  "1126": "words__forget"
+  "1126": "words__forget",
+  "1127": "auto_lock__on_battery",
+  "1128": "auto_lock__on_usb"
 }
