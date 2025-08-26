@@ -611,6 +611,7 @@ class TR:
     progress__signing_transaction: str = "Signing transaction..."
     progress__syncing: str = "Syncing..."
     progress__x_seconds_left_template: str = "{0} seconds left"
+    reboot__countdown: str = "Restarting in"
     reboot_to_bootloader__just_a_moment: str = "Just a moment..."
     reboot_to_bootloader__restart: str = "Trezor will restart in bootloader mode."
     reboot_to_bootloader__title: str = "Go to bootloader"

@@ -1514,6 +1514,7 @@ pub enum TranslatedString {
     hibernate__hint = 1123,  // "Your Trezor will be disconnected from all hosts."
     hibernate__start_bootloader = 1124,  // "Start bootloader"
     hibernate__turn_trezor_off = 1125,  // "Turn your Trezor off?"
+    reboot__countdown = 1126,  // "Restarting in"
 }
 
 impl TranslatedString {
@@ -3354,6 +3355,7 @@ impl TranslatedString {
             (Self::hibernate__hint, "Your Trezor will be disconnected from all hosts."),
             (Self::hibernate__start_bootloader, "Start bootloader"),
             (Self::hibernate__turn_trezor_off, "Turn your Trezor off?"),
+            (Self::reboot__countdown, "Restarting in"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4273,6 +4275,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_progress__signing_transaction, Self::progress__signing_transaction),
         (Qstr::MP_QSTR_progress__syncing, Self::progress__syncing),
         (Qstr::MP_QSTR_progress__x_seconds_left_template, Self::progress__x_seconds_left_template),
+        (Qstr::MP_QSTR_reboot__countdown, Self::reboot__countdown),
         (Qstr::MP_QSTR_reboot_to_bootloader__just_a_moment, Self::reboot_to_bootloader__just_a_moment),
         (Qstr::MP_QSTR_reboot_to_bootloader__restart, Self::reboot_to_bootloader__restart),
         (Qstr::MP_QSTR_reboot_to_bootloader__title, Self::reboot_to_bootloader__title),

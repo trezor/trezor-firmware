@@ -37,7 +37,7 @@ use super::{
     component::Button,
     firmware::{
         ActionBar, Bip39Input, ConfirmHomescreen, DeviceMenuScreen, DurationInput, Header,
-        HeaderMsg, Hint, Homescreen, MnemonicKeyboard, PinKeyboard, ProgressScreen,
+        HeaderMsg, Hint, Homescreen, MnemonicKeyboard, PinKeyboard, ProgressScreen, RestartScreen,
         SelectWordCountScreen, SelectWordScreen, SetBrightnessScreen, ShortMenuVec, Slip39Input,
         StringKeyboard, TextScreen, TextScreenMsg, ValueInputScreen, VerticalMenu,
         VerticalMenuScreen, VerticalMenuScreenMsg,
@@ -228,6 +228,11 @@ impl FirmwareUI for UIEckhart {
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let flow = flow::confirm_hibernate::new_confirm_hibernate(description, hint)?;
         Ok(flow)
+    }
+
+    fn confirm_restart(description: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
+        let layout = RootComponent::new(RestartScreen::new(description));
+        Ok(layout)
     }
 
     fn confirm_modify_fee(

@@ -264,6 +264,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_more;
   MP_QSTR_confirm_properties;
   MP_QSTR_confirm_reset_device;
+  MP_QSTR_confirm_restart;
   MP_QSTR_confirm_summary;
   MP_QSTR_confirm_total__fee_rate;
   MP_QSTR_confirm_total__fee_rate_colon;
@@ -544,6 +545,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_pubkey_qr;
   MP_QSTR_qr_title;
   MP_QSTR_read;
+  MP_QSTR_reboot__countdown;
   MP_QSTR_reboot_to_bootloader__just_a_moment;
   MP_QSTR_reboot_to_bootloader__restart;
   MP_QSTR_reboot_to_bootloader__title;

@@ -117,6 +117,8 @@ pub trait FirmwareUI {
         hint: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
+    fn confirm_restart(description: TString<'static>) -> Result<impl LayoutMaybeTrace, Error>;
+
     fn confirm_modify_fee(
         title: TString<'static>,
         sign: i32,

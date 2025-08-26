@@ -304,6 +304,10 @@ impl FirmwareUI for UIDelizia {
         Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
+    fn confirm_restart(_description: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+    }
+
     fn confirm_modify_fee(
         title: TString<'static>,
         sign: i32,

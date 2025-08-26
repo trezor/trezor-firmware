@@ -16,9 +16,10 @@ use crate::{
 use super::firmware::{
     AllowedTextContent, ConfirmHomescreen, ConfirmHomescreenMsg, DeviceMenuMsg, DeviceMenuScreen,
     Homescreen, HomescreenMsg, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PinKeyboard,
-    PinKeyboardMsg, ProgressScreen, SelectWordCountMsg, SelectWordCountScreen, SelectWordMsg,
-    SelectWordScreen, SetBrightnessScreen, StringKeyboard, StringKeyboardMsg, TextScreen,
-    TextScreenMsg, ValueInput, ValueInputScreen, ValueInputScreenMsg,
+    PinKeyboardMsg, ProgressScreen, RestartMsg, RestartScreen, SelectWordCountMsg,
+    SelectWordCountScreen, SelectWordMsg, SelectWordScreen, SetBrightnessScreen, StringKeyboard,
+    StringKeyboardMsg, TextScreen, TextScreenMsg, ValueInput, ValueInputScreen,
+    ValueInputScreenMsg,
 };
 
 impl ComponentMsgObj for PinKeyboard<'_> {
@@ -135,6 +136,15 @@ impl<T: ValueInput> ComponentMsgObj for ValueInputScreen<T> {
             ValueInputScreenMsg::Menu => unreachable!(),
             // changed value message is handled only in the flow
             ValueInputScreenMsg::Changed(_) => unreachable!(),
+        }
+    }
+}
+
+impl ComponentMsgObj for RestartScreen {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            RestartMsg::Cancelled => Ok(CANCELLED.as_obj()),
+            RestartMsg::Confirmed => Ok(CONFIRMED.as_obj()),
         }
     }
 }

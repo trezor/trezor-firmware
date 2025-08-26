@@ -733,6 +733,7 @@
     "progress__signing_transaction": "Signing transaction...",
     "progress__syncing": "Syncing...",
     "progress__x_seconds_left_template": "{0} seconds left",
+    "reboot__countdown": "Restarting in",
     "reboot_to_bootloader__just_a_moment": "Just a moment...",
     "reboot_to_bootloader__restart": "Trezor will restart in bootloader mode.",
     "reboot_to_bootloader__title": "Go to bootloader",
