@@ -104,10 +104,16 @@ if utils.USE_THP:
         if __debug__:
             _THP_CHANNELS.append(ctx._channels)
         try:
-            channel = await ctx.get_next_message()
+            while (channel := await ctx.get_next_message()) is None:
+                if __debug__:
+                    # happens if another interface is active and using THP buffers.
+                    log.error(__name__, "Another interface is active", iface=iface)
+
             while await received_message_handler.handle_received_message(channel):
                 pass
         finally:
+            if __debug__:
+                log.debug(__name__, "Finished THP session", iface=iface)
             # Wait for all active workflows to finish.
             await workflow.join_all()
             if __debug__:
