@@ -1121,5 +1121,9 @@
   "1119": "words__set",
   "1120": "words__wipe",
   "1121": "lockscreen__unlock",
-  "1122": "recovery__start_entering"
+  "1122": "recovery__start_entering",
+  "1123": "hibernate__hint",
+  "1124": "hibernate__start_bootloader",
+  "1125": "hibernate__turn_trezor_off",
+  "1126": "reboot__countdown"
 }

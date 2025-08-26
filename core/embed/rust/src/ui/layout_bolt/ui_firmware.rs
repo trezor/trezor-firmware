@@ -275,6 +275,17 @@ impl FirmwareUI for UIBolt {
         Ok(layout)
     }
 
+    fn confirm_hibernate(
+        _description: TString<'static>,
+        _hint: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+    }
+
+    fn confirm_restart(_description: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+    }
+
     fn confirm_modify_fee(
         title: TString<'static>,
         sign: i32,
