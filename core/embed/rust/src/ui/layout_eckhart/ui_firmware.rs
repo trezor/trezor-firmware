@@ -222,6 +222,14 @@ impl FirmwareUI for UIEckhart {
         Ok(flow)
     }
 
+    fn confirm_hibernate(
+        description: TString<'static>,
+        hint: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let flow = flow::confirm_hibernate::new_confirm_hibernate(description, hint)?;
+        Ok(flow)
+    }
+
     fn confirm_modify_fee(
         title: TString<'static>,
         sign: i32,

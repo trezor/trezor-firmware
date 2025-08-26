@@ -235,6 +235,15 @@ def confirm_firmware_update(
 
 
 # rust/src/ui/api/firmware_micropython.rs
+def confirm_hibernate(
+    *,
+    description: str,
+    hint: str,
+) -> LayoutObj[UiResult]:
+    """Ask whether to hibernate device, optionally request start bootloader."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
 def confirm_homescreen(
     *,
     title: str,

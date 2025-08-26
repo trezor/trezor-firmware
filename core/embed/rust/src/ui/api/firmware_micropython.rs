@@ -275,6 +275,17 @@ extern "C" fn new_confirm_firmware_update(
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_confirm_hibernate(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let hint: TString = kwargs.get(Qstr::MP_QSTR_hint)?.try_into()?;
+
+        let layout = ModelUI::confirm_hibernate(description, hint)?;
+        Ok(LayoutObj::new_root(layout)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_confirm_homescreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -1541,6 +1552,14 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Ask whether to update firmware, optionally show fingerprint."""
     Qstr::MP_QSTR_confirm_firmware_update => obj_fn_kw!(0, new_confirm_firmware_update).as_obj(),
+
+    /// def confirm_hibernate(
+    ///     *,
+    ///     description: str,
+    ///     hint: str,
+    /// ) -> LayoutObj[UiResult]:
+    ///     """Ask whether to hibernate device, optionally request start bootloader."""
+    Qstr::MP_QSTR_confirm_hibernate => obj_fn_kw!(0, new_confirm_hibernate).as_obj(),
 
     /// def confirm_homescreen(
     ///     *,

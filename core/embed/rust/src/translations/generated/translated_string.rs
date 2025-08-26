@@ -1511,6 +1511,9 @@ pub enum TranslatedString {
     words__wipe = 1120,  // "Wipe"
     lockscreen__unlock = 1121,  // "Unlock"
     recovery__start_entering = 1122,  // "Start entering"
+    hibernate__hint = 1123,  // "Your Trezor will be disconnected from all hosts."
+    hibernate__start_bootloader = 1124,  // "Start bootloader"
+    hibernate__turn_trezor_off = 1125,  // "Turn your Trezor off?"
 }
 
 impl TranslatedString {
@@ -3348,6 +3351,9 @@ impl TranslatedString {
             (Self::words__wipe, "Wipe"),
             (Self::lockscreen__unlock, "Unlock"),
             (Self::recovery__start_entering, "Start entering"),
+            (Self::hibernate__hint, "Your Trezor will be disconnected from all hosts."),
+            (Self::hibernate__start_bootloader, "Start bootloader"),
+            (Self::hibernate__turn_trezor_off, "Turn your Trezor off?"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3979,6 +3985,9 @@ impl TranslatedString {
         (Qstr::MP_QSTR_haptic_feedback__enable, Self::haptic_feedback__enable),
         (Qstr::MP_QSTR_haptic_feedback__subtitle, Self::haptic_feedback__subtitle),
         (Qstr::MP_QSTR_haptic_feedback__title, Self::haptic_feedback__title),
+        (Qstr::MP_QSTR_hibernate__hint, Self::hibernate__hint),
+        (Qstr::MP_QSTR_hibernate__start_bootloader, Self::hibernate__start_bootloader),
+        (Qstr::MP_QSTR_hibernate__turn_trezor_off, Self::hibernate__turn_trezor_off),
         (Qstr::MP_QSTR_homescreen__click_to_connect, Self::homescreen__click_to_connect),
         (Qstr::MP_QSTR_homescreen__click_to_unlock, Self::homescreen__click_to_unlock),
         (Qstr::MP_QSTR_homescreen__firmware_type, Self::homescreen__firmware_type),

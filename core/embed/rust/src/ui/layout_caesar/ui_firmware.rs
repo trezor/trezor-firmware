@@ -334,6 +334,13 @@ impl FirmwareUI for UICaesar {
         Ok(layout)
     }
 
+    fn confirm_hibernate(
+        _description: TString<'static>,
+        _hint: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+    }
+
     fn confirm_modify_fee(
         _title: TString<'static>,
         sign: i32,

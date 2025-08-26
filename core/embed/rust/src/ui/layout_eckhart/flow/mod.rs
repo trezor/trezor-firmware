@@ -1,6 +1,7 @@
 #[cfg(feature = "universal_fw")]
 pub mod confirm_fido;
 pub mod confirm_firmware_update;
+pub mod confirm_hibernate;
 pub mod confirm_output;
 pub mod confirm_reset;
 pub mod confirm_set_new_pin;
@@ -21,6 +22,7 @@ pub mod util;
 #[cfg(feature = "universal_fw")]
 pub use confirm_fido::new_confirm_fido;
 pub use confirm_firmware_update::new_confirm_firmware_update;
+pub use confirm_hibernate::new_confirm_hibernate;
 pub use confirm_output::new_confirm_output;
 pub use confirm_reset::new_confirm_reset;
 pub use confirm_set_new_pin::new_set_new_pin;

@@ -257,6 +257,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_emphasized;
   MP_QSTR_confirm_fido;
   MP_QSTR_confirm_firmware_update;
+  MP_QSTR_confirm_hibernate;
   MP_QSTR_confirm_homescreen;
   MP_QSTR_confirm_modify_fee;
   MP_QSTR_confirm_modify_output;
@@ -332,6 +333,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_haptic_feedback__enable;
   MP_QSTR_haptic_feedback__subtitle;
   MP_QSTR_haptic_feedback__title;
+  MP_QSTR_hibernate__hint;
+  MP_QSTR_hibernate__start_bootloader;
+  MP_QSTR_hibernate__turn_trezor_off;
   MP_QSTR_hint;
   MP_QSTR_hold;
   MP_QSTR_hold_danger;

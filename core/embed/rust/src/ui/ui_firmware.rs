@@ -112,6 +112,11 @@ pub trait FirmwareUI {
         fingerprint: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
+    fn confirm_hibernate(
+        description: TString<'static>,
+        hint: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error>;
+
     fn confirm_modify_fee(
         title: TString<'static>,
         sign: i32,
