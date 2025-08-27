@@ -95,6 +95,9 @@ static void prodtest_rgbled_effect_start(cli_t* cli) {
               requested_cycles);
   }
 
+  // Disable automatic control of RGB LED in prodtest main loop
+  prodtest_disable_rgbled_control();
+
   rgb_led_effect_start((rgb_led_effect_type_t)effect_num, requested_cycles);
 
   cli_ok(cli, "");
@@ -107,6 +110,9 @@ static void prodtest_rgbled_effect_stop(cli_t* cli) {
   }
 
   cli_trace(cli, "Stop ongoing RGB LED effect");
+
+  // Disable automatic control of RGB LED in prodtest main loop
+  prodtest_disable_rgbled_control();
 
   rgb_led_effect_stop();
 
