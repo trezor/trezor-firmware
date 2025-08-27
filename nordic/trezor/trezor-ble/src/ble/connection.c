@@ -70,13 +70,13 @@ void connected(struct bt_conn *conn, uint8_t err) {
   bt_conn_le_param_update(conn, param);
 
   // Prefer 2M both directions; 0 options = no specific constraints
-  const struct bt_conn_le_phy_param phy_2m = {
-      .options = 0,
-      .pref_tx_phy = BT_GAP_LE_PHY_2M,
-      .pref_rx_phy = BT_GAP_LE_PHY_2M,
-  };
-
-  bt_conn_le_phy_update(conn, &phy_2m);
+  // const struct bt_conn_le_phy_param phy_2m = {
+  //    .options = 0,
+  //    .pref_tx_phy = BT_GAP_LE_PHY_2M,
+  //    .pref_rx_phy = BT_GAP_LE_PHY_2M,
+  //};
+  //
+  // bt_conn_le_phy_update(conn, &phy_2m);
 
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
   LOG_INF("Connected %s", addr);
