@@ -126,6 +126,15 @@ def connection_flags() -> list[str]:
 
 
 # rust/src/trezorhal/ble/micropython.rs
+def get_bonds() -> list[tuple[bytes, int], ...]:
+    """
+    Returns a list of (addr_bytes, addr_type) tuples, representing the current bonds.
+    addr_bytes: bytes of length 6
+    addr_type: integer as provided by bt_le_addr_t (e.g., 0=public, 1=random)
+    """
+
+
+# rust/src/trezorhal/ble/micropython.rs
 def connected_addr() -> tuple[bytes, int] | None:
     """
     If connected, returns a tuple (addr_bytes, addr_type), otherwise None.

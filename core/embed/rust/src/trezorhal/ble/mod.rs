@@ -9,6 +9,7 @@ use crate::{error::Error, trezorhal::ffi::bt_le_addr_t};
 use core::{mem::size_of, ptr};
 
 pub const ADV_NAME_LEN: usize = ffi::BLE_ADV_NAME_LEN as usize;
+pub const BLE_MAX_BONDS: usize = ffi::BLE_MAX_BONDS as usize;
 pub const PAIRING_CODE_LEN: usize = ffi::BLE_PAIRING_CODE_LEN as usize;
 pub const RX_PACKET_SIZE: usize = ffi::BLE_RX_PACKET_SIZE as usize;
 pub const TX_PACKET_SIZE: usize = ffi::BLE_TX_PACKET_SIZE as usize;
@@ -192,6 +193,15 @@ pub fn is_pairing_requested() -> bool {
 
 pub fn connected_addr() -> bt_le_addr_t {
     state().connected_addr
+}
+
+pub fn get_bonds<F, T>(f: F) -> T
+where
+    F: Fn(&[bt_le_addr_t]) -> T,
+{
+    let mut bonds = [bt_le_addr_t::zero(); BLE_MAX_BONDS];
+    let size = unsafe { ffi::ble_get_bond_list(bonds.as_mut_ptr(), bonds.len()) };
+    f(&bonds[..size.into()])
 }
 
 pub fn write(bytes: &[u8]) -> Result<(), Error> {

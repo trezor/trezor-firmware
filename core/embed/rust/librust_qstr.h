@@ -327,6 +327,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_flow_get_address;
   MP_QSTR_flow_get_pubkey;
   MP_QSTR_get;
+  MP_QSTR_get_bonds;
   MP_QSTR_get_language;
   MP_QSTR_get_transition_out;
   MP_QSTR_haptic_feedback;
