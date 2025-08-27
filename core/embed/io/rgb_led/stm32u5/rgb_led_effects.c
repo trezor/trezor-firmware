@@ -21,59 +21,82 @@
 
 #include <trezor_rtl.h>
 
+#include "math.h"
 #include "rgb_led_internal.h"
 
-// Effects constants
-#define EFFECT_BOOTLOADER_BREATHE_UP_MS 2000
-#define EFFECT_BOOTLOADER_BREATHE_DOWN_MS 800
-#define EFFECT_BOOTLOADER_BREATHE_CYCLE_MS \
-  (EFFECT_BOOTLOADER_BREATHE_UP_MS + EFFECT_BOOTLOADER_BREATHE_DOWN_MS)
+// RGB_LED_EFFECT_BOOTLOADER_BREATHE constants
+#define EF_BB_PHASE1_MS 2000  // Breathe up
+#define EF_BB_PHASE2_MS 400   // LED ON pause
+#define EF_BB_PHASE3_MS 800   // Breathe down
+#define EF_BB_PHASE4_MS 100   // LED OFF pause
+#define EF_BB_CYCLE_MS \
+  (EF_BB_PHASE1_MS + EF_BB_PHASE2_MS + EF_BB_PHASE3_MS + EF_BB_PHASE4_MS)
 
-#define EFFECT_CHARGING_UP_MS 200
-#define EFFECT_CHARGING_DOWN_MS 500
-#define EFFECT_CHARGING_CYCLE_MS \
-  (EFFECT_CHARGING_UP_MS + EFFECT_CHARGING_DOWN_MS)
+// RGB_LED_EFFECT_CHARGING constants
+#define EF_CHG_PHASE1_MS 300
+#define EF_CHG_PHASE2_MS 800
+#define EF_CHG_PHASE3_MS 300
+#define EF_CHG_PHASE4_MS 800
+#define EF_CHG_CYCLE_MS \
+  (EF_CHG_PHASE1_MS + EF_CHG_PHASE2_MS + EF_CHG_PHASE3_MS + EF_CHG_PHASE4_MS)
+
+#define GAMMA_CORRECTION_FACTOR 3.0f
 
 // Effect callback function prototypes
-static uint32_t rgb_led_effect_bootloader_breathe(uint32_t elapsed_ms,
-                                                  rgb_led_effect_data_t *data);
-static uint32_t rgb_led_effect_charging(uint32_t elapsed_ms,
-                                        rgb_led_effect_data_t *data);
+static void rgb_led_effect_bootloader_breathe(uint32_t elapsed_ms,
+                                              rgb_led_effect_data_t *data,
+                                              rgb_led_color_fs_t *color);
+static void rgb_led_effect_charging_gamma(uint32_t elapsed_ms,
+                                          rgb_led_effect_data_t *data,
+                                          rgb_led_color_fs_t *color);
 
 // Effect callback functions lookup table
-static uint32_t (*rgb_led_effects_callbacks[])(uint32_t elapsed_ms,
-                                               rgb_led_effect_data_t *data) = {
+static void (*rgb_led_effects_callbacks[])(uint32_t elapsed_ms,
+                                           rgb_led_effect_data_t *data,
+                                           rgb_led_color_fs_t *color) = {
     [RGB_LED_EFFECT_BOOTLOADER_BREATHE] = rgb_led_effect_bootloader_breathe,
-    [RGB_LED_EFFECT_CHARGING] = rgb_led_effect_charging,
+    [RGB_LED_EFFECT_CHARGING] = rgb_led_effect_charging_gamma,
 };
 
-// Single color linear interpolation auxiliary function
-static inline uint32_t linear_interpolate(uint32_t y0, uint32_t y1, uint32_t x,
-                                          uint32_t x1) {
-  int32_t diff = (int32_t)y1 - (int32_t)y0;
-  return (uint32_t)(y0 + (diff * (int32_t)x / (int32_t)x1));
+// Single color linear interpolation auxiliary function for floats
+static inline float linear_interpolate_f(float y0, float y1, float x,
+                                         float x1) {
+  return (y0 + ((y1 - y0) * x / x1));
 }
 
-// Linear interpolation between two colors based on elapsed time
-static uint32_t rgb_led_linear_effect(uint32_t c_start, uint32_t c_end,
-                                      uint32_t elapsed_ms, uint32_t total_ms) {
+// Linear interpolation between two colors based on elapsed time with gamma
+// correction
+static void rgb_led_linear_gc_effect(uint32_t c0, uint32_t c1,
+                                     uint32_t elapsed_ms, uint32_t total_ms,
+                                     rgb_led_color_fs_t *interp_color) {
   if (elapsed_ms >= total_ms) {
-    return c_end;
+    interp_color->red = 0;
+    interp_color->green = 0;
+    interp_color->blue = 0;
+    return;
   }
 
-  uint32_t start_r = RGB_EXTRACT_RED(c_start);
-  uint32_t start_g = RGB_EXTRACT_GREEN(c_start);
-  uint32_t start_b = RGB_EXTRACT_BLUE(c_start);
+  float inv_gamma = 1.0f / GAMMA_CORRECTION_FACTOR;
 
-  uint32_t end_r = RGB_EXTRACT_RED(c_end);
-  uint32_t end_g = RGB_EXTRACT_GREEN(c_end);
-  uint32_t end_b = RGB_EXTRACT_BLUE(c_end);
+  float r0 = powf(RGB_EXTRACT_RED(c0) / 255.0f, inv_gamma);
+  float g0 = powf(RGB_EXTRACT_GREEN(c0) / 255.0f, inv_gamma);
+  float b0 = powf(RGB_EXTRACT_BLUE(c0) / 255.0f, inv_gamma);
 
-  uint32_t r = linear_interpolate(start_r, end_r, elapsed_ms, total_ms);
-  uint32_t g = linear_interpolate(start_g, end_g, elapsed_ms, total_ms);
-  uint32_t b = linear_interpolate(start_b, end_b, elapsed_ms, total_ms);
+  float r1 = powf(RGB_EXTRACT_RED(c1) / 255.0f, inv_gamma);
+  float g1 = powf(RGB_EXTRACT_GREEN(c1) / 255.0f, inv_gamma);
+  float b1 = powf(RGB_EXTRACT_BLUE(c1) / 255.0f, inv_gamma);
 
-  return RGB_COMPOSE_COLOR(r, g, b);
+  float r = linear_interpolate_f(r0, r1, (float)elapsed_ms, (float)total_ms);
+  float g = linear_interpolate_f(g0, g1, (float)elapsed_ms, (float)total_ms);
+  float b = linear_interpolate_f(b0, b1, (float)elapsed_ms, (float)total_ms);
+
+  r = powf(r, GAMMA_CORRECTION_FACTOR);
+  g = powf(g, GAMMA_CORRECTION_FACTOR);
+  b = powf(b, GAMMA_CORRECTION_FACTOR);
+
+  interp_color->red = (uint32_t)(r * TIMER_PERIOD);
+  interp_color->green = (uint32_t)(g * TIMER_PERIOD);
+  interp_color->blue = (uint32_t)(b * TIMER_PERIOD);
 }
 
 // Assign effect callback from the lookup table
@@ -97,21 +120,44 @@ bool rgb_led_assign_effect(rgb_led_effect_t *effect,
  * Slow Linear transition effect from RGBLED_OFF to RGBLED_BLUE and back to
  * RGBLED_OFF
  */
-static uint32_t rgb_led_effect_bootloader_breathe(uint32_t elapsed_ms,
-                                                  rgb_led_effect_data_t *data) {
-  data->cycles = elapsed_ms / EFFECT_BOOTLOADER_BREATHE_CYCLE_MS;
-  uint32_t effect_time = elapsed_ms % EFFECT_BOOTLOADER_BREATHE_CYCLE_MS;
+static void rgb_led_effect_bootloader_breathe(uint32_t elapsed_ms,
+                                              rgb_led_effect_data_t *data,
+                                              rgb_led_color_fs_t *ef_color) {
+  data->cycles = elapsed_ms / EF_BB_CYCLE_MS;
+  uint32_t ef_time = elapsed_ms % EF_BB_CYCLE_MS;
 
-  if (effect_time < EFFECT_BOOTLOADER_BREATHE_UP_MS) {
-    return rgb_led_linear_effect(RGBLED_OFF, RGBLED_BLUE, effect_time,
-                                 EFFECT_BOOTLOADER_BREATHE_UP_MS);
-  } else if (effect_time < EFFECT_BOOTLOADER_BREATHE_CYCLE_MS) {
-    return rgb_led_linear_effect(RGBLED_BLUE, RGBLED_OFF,
-                                 effect_time - EFFECT_BOOTLOADER_BREATHE_UP_MS,
-                                 EFFECT_BOOTLOADER_BREATHE_DOWN_MS);
+  if (ef_time < EF_BB_PHASE1_MS) {
+    // PHASE 1: linear transition to RGBLED_BLUE
+    rgb_led_linear_gc_effect(RGBLED_OFF, RGBLED_BLUE, ef_time, EF_BB_PHASE1_MS,
+                             ef_color);
+    return;
+  } else if (ef_time < EF_BB_PHASE1_MS + EF_BB_PHASE2_MS) {
+    // PHASE 2: hold RGBLED_BLUE color
+    ef_color->red = (RGB_EXTRACT_RED(RGBLED_BLUE) * TIMER_PERIOD) / 255;
+    ef_color->green = (RGB_EXTRACT_GREEN(RGBLED_BLUE) * TIMER_PERIOD) / 255;
+    ef_color->blue = (RGB_EXTRACT_BLUE(RGBLED_BLUE) * TIMER_PERIOD) / 255;
+    return;
+
+  } else if (ef_time < EF_BB_PHASE1_MS + EF_BB_PHASE2_MS + EF_BB_PHASE3_MS) {
+    // PHASE 3: linear transition to RGBLED_OFF
+    rgb_led_linear_gc_effect(RGBLED_BLUE, RGBLED_OFF,
+                             ef_time - EF_BB_PHASE1_MS - EF_BB_PHASE2_MS,
+                             EF_BB_PHASE3_MS, ef_color);
+    return;
+
+  } else if (ef_time < EF_BB_CYCLE_MS) {
+    // PHASE 4: hold the off state
+    ef_color->red = 0;
+    ef_color->green = 0;
+    ef_color->blue = 0;
+    return;
+
   } else {
     // Should not happen
-    return RGBLED_OFF;
+    ef_color->red = 0;
+    ef_color->green = 0;
+    ef_color->blue = 0;
+    return;
   }
 }
 
@@ -120,21 +166,42 @@ static uint32_t rgb_led_effect_bootloader_breathe(uint32_t elapsed_ms,
  * Faster linear transition effect from RGBLED_OFF to RGBLED_YELLOW and back to
  * RGBLED_OFF
  */
-static uint32_t rgb_led_effect_charging(uint32_t elapsed_ms,
-                                        rgb_led_effect_data_t *data) {
-  data->cycles = elapsed_ms / EFFECT_CHARGING_CYCLE_MS;
-  uint32_t effect_time = elapsed_ms % EFFECT_CHARGING_CYCLE_MS;
+static void rgb_led_effect_charging_gamma(uint32_t elapsed_ms,
+                                          rgb_led_effect_data_t *data,
+                                          rgb_led_color_fs_t *ef_color) {
+  data->cycles = elapsed_ms / EF_CHG_CYCLE_MS;
+  uint32_t ef_time = elapsed_ms % EF_CHG_CYCLE_MS;
 
-  if (effect_time < EFFECT_CHARGING_UP_MS) {
-    return rgb_led_linear_effect(RGBLED_OFF, RGBLED_YELLOW, effect_time,
-                                 EFFECT_CHARGING_UP_MS);
-  } else if (effect_time < EFFECT_CHARGING_CYCLE_MS) {
-    return rgb_led_linear_effect(RGBLED_YELLOW, RGBLED_OFF,
-                                 effect_time - EFFECT_CHARGING_UP_MS,
-                                 EFFECT_CHARGING_DOWN_MS);
+  if (ef_time < EF_CHG_PHASE1_MS) {
+    // PHASE 1: linear transition to RGBLED_YELLOW
+    rgb_led_linear_gc_effect(RGBLED_OFF, RGBLED_YELLOW, ef_time,
+                             EF_CHG_PHASE1_MS, ef_color);
+    return;
+  } else if (ef_time < EF_CHG_PHASE1_MS + EF_CHG_PHASE2_MS) {
+    // PHASE 2: hold RGBLED_YELLOW color
+    ef_color->red = (RGB_EXTRACT_RED(RGBLED_YELLOW) * TIMER_PERIOD) / 255;
+    ef_color->green = (RGB_EXTRACT_GREEN(RGBLED_YELLOW) * TIMER_PERIOD) / 255;
+    ef_color->blue = (RGB_EXTRACT_BLUE(RGBLED_YELLOW) * TIMER_PERIOD) / 255;
+    return;
+  } else if (ef_time < EF_CHG_PHASE1_MS + EF_CHG_PHASE2_MS + EF_CHG_PHASE3_MS) {
+    // PHASE 3: linear transition to RGBLED_OFF
+    rgb_led_linear_gc_effect(RGBLED_YELLOW, RGBLED_OFF,
+                             ef_time - EF_CHG_PHASE1_MS - EF_CHG_PHASE2_MS,
+                             EF_CHG_PHASE3_MS, ef_color);
+    return;
+  } else if (ef_time < EF_CHG_CYCLE_MS) {
+    // PHASE 4: hold the off state
+    ef_color->red = 0;
+    ef_color->green = 0;
+    ef_color->blue = 0;
+    return;
+
   } else {
     // Should not happen
-    return RGBLED_OFF;
+    ef_color->red = 0;
+    ef_color->green = 0;
+    ef_color->blue = 0;
+    return;
   }
 }
 

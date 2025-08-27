@@ -28,33 +28,6 @@
 #define RGB_COMPOSE_COLOR(red, green, blue) \
   (((red) & 0xFF) << 16 | ((green) & 0xFF) << 8 | ((blue) & 0xFF))
 
-typedef enum {
-  RGB_LED_STATUS_OK = 0,
-  RGB_LED_NOT_INITIALIZED,
-  RGB_LED_INVALID_ARGUMENT,
-} rgb_led_status_t;
-
-typedef enum {
-  RGB_LED_EFFECT_BOOTLOADER_BREATHE = 0,
-  RGB_LED_EFFECT_CHARGING,
-  RGB_LED_NUM_OF_EFFECTS,
-} rgb_led_effect_type_t;
-
-// Initialize RGB LED driver
-void rgb_led_init(void);
-
-// Deinitialize RGB LED driver
-void rgb_led_deinit(void);
-
-#endif  // KERNEL_MODE
-
-// Set RGB LED enabled state
-// enabled: true to enable, false to disable
-void rgb_led_set_enabled(bool enabled);
-
-// Get RGB LED enabled state
-bool rgb_led_get_enabled(void);
-
 #define RGBLED_WHITE RGB_COMPOSE_COLOR(35, 35, 32)
 #define RGBLED_GREEN RGB_COMPOSE_COLOR(0, 255, 0)
 #define RGBLED_GREEN_LIGHT RGB_COMPOSE_COLOR(4, 13, 4)
@@ -87,6 +60,20 @@ void rgb_led_init(void);
 void rgb_led_deinit(void);
 
 #endif  // KERNEL_MODE
+
+/**
+ * @brief Set RGB LED enabled state
+ *
+ * @param enabled: true to enable, false to disable
+ */
+void rgb_led_set_enabled(bool enabled);
+
+/**
+ * @brief Get RGB LED enabled state
+ *
+ * @return true if enabled, false otherwise
+ */
+bool rgb_led_get_enabled(void);
 
 /**
  * @brief Set the RGB led color.

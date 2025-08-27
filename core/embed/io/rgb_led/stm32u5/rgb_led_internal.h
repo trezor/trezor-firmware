@@ -25,6 +25,15 @@
 #include <io/rgb_led.h>
 #include <sys/systimer.h>
 
+#define LED_SWITCHING_FREQUENCY_HZ 1000
+#define TIMER_PERIOD (16000000 / LED_SWITCHING_FREQUENCY_HZ)
+
+typedef struct {
+  uint32_t red;
+  uint32_t green;
+  uint32_t blue;
+} rgb_led_color_fs_t;
+
 typedef struct {
   uint32_t cycles;
   uint32_t requested_cycles;
@@ -34,7 +43,8 @@ typedef struct {
   rgb_led_effect_type_t type;
   uint32_t start_time_ms;
   rgb_led_effect_data_t data;
-  uint32_t (*callback)(uint32_t elapsed_ms, rgb_led_effect_data_t *data);
+  void (*callback)(uint32_t elapsed_ms, rgb_led_effect_data_t *data,
+                   rgb_led_color_fs_t *ef_color);
 } rgb_led_effect_t;
 
 typedef struct {
