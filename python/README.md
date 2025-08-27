@@ -94,6 +94,7 @@ Install the [Poetry](https://python-poetry.org/) tool, checkout
 pip3 install poetry
 git clone https://github.com/trezor/trezor-firmware
 cd trezor-firmware
+git submodule update --init --recursive
 poetry install
 poetry shell
 ```
