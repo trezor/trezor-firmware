@@ -20,14 +20,14 @@ if __debug__:
 apps.base.set_homescreen()
 workflow.start_default()
 
-# initialize the wire codec over USB
-wire.setup(usb.iface_wire)
-
 if utils.USE_BLE:
     import trezorble as ble
 
-    # initialize the wire codec over BLE
-    wire.setup(ble.interface)
+    # initialize the wire codec over USB & BLE
+    wire.setup(usb.iface_wire, ble.interface)
+else:
+    # initialize the wire codec over USB
+    wire.setup(usb.iface_wire)
 
 # start the event loop
 loop.run()

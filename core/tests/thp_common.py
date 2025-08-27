@@ -18,18 +18,17 @@ if utils.USE_THP:
 
     def prepare_context() -> None:
         mock_iface = MockHID()
-        channel_cache = create_new_channel(mock_iface)
+        channel = get_new_channel(mock_iface)
         session_cache = cache_thp.create_or_replace_session(
-            channel_cache, session_id=b"\x01"
-        )
-        channel = Channel(
-            channel_cache, ThpContext(mock_iface), (ThpBuffer(), ThpBuffer())
+            channel.channel_cache, session_id=b"\x01"
         )
         context.CURRENT_CONTEXT = SessionContext(channel, session_cache)
 
     def get_new_channel(iface: WireInterface) -> Channel:
         channel_cache = create_new_channel(iface)
-        return Channel(channel_cache, ThpContext(iface), (ThpBuffer(), ThpBuffer()))
+        thp_ctx = ThpContext(iface)
+        (iface_ctx,) = thp_ctx._ifaces
+        return Channel(channel_cache, iface_ctx, (ThpBuffer(), ThpBuffer()))
 
 
 if __debug__:

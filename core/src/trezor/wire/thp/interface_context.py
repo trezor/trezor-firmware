@@ -8,7 +8,8 @@ from storage.cache_thp import (
     find_allocated_channel,
     update_channel_last_used,
 )
-from trezor import io, loop, utils
+from trezor import io, utils
+from trezor.loop import Timeout, race, sleep, wait
 
 from . import (
     CHANNEL_ALLOCATION_REQ,
@@ -22,7 +23,7 @@ from . import (
     control_byte,
     get_channel_allocation_response,
 )
-from .channel import Channel
+from .channel import Channel, ChannelPreemptedException
 from .checksum import CHECKSUM_LENGTH
 
 if __debug__:
@@ -30,65 +31,100 @@ if __debug__:
 
 if TYPE_CHECKING:
     from trezorio import WireInterface
-    from typing import Awaitable, Iterable
+    from typing import Awaitable, Generator, Iterable
 
 _BROADCAST_PAYLOAD_LENGTH = const(12)
 
 
-class ThpContext:
-    """
-    This class allows fetching multi-packet THP payloads from a given interface.
-    It also handles and responds to low-level single packet THP messages, creating new channels if needed.
-    """
+# Uses `yield` instead of `await` to avoid allocations.
+def _timeout_after(ms: int) -> Generator[sleep, int, None]:
+    yield sleep(ms)
+    raise Timeout
 
-    def __init__(self, iface: WireInterface) -> None:
-        self._iface = iface
-        self._read = loop.wait(iface.iface_num() | io.POLL_READ)
-        self._write = loop.wait(iface.iface_num() | io.POLL_WRITE)
-        self._channels: dict[int, Channel] = {}
+
+class ThpContext:
+    def __init__(self, *ifaces: WireInterface) -> None:
+        max_packet_len = max(iface.RX_PACKET_LEN for iface in ifaces)
+        self._packet_buf = bytearray(max_packet_len)
+        self._packet_view = memoryview(self._packet_buf)
+        self._ifaces = [InterfaceContext(iface, self) for iface in ifaces]
 
     async def get_next_message(self, timeout_ms: int | None = None) -> Channel | None:
         """
-        Reassemble a valid THP payload and return its channel.
+        Reassemble a valid THP payload from any THP interface, and return its channel.
 
         Also handle THP channel allocation.
         """
-        from .. import THP_BUFFERS_PROVIDER
+        # wait until one of the channels becomes readable
+        children = (ctx._wait_for_packet() for ctx in self._ifaces)
+        if timeout_ms is None:
+            race_task = race(*children)
+        else:
+            race_task = race(*children, _timeout_after(timeout_ms))
 
-        packet = bytearray(self._iface.RX_PACKET_LEN)
-        while True:
-            self._read.timeout_ms = timeout_ms
-            packet_len = await self._read
-            assert packet_len is not None
-            assert packet_len == len(packet)
-            self._iface.read(packet, 0)
+        (ctx, packet_len) = await race_task  # will raise on timeout
+        assert packet_len == ctx._iface.RX_PACKET_LEN
 
-            ctrl_byte = _get_ctrl_byte(packet)
-            if ctrl_byte == CODEC_V1:
-                await self._handle_codec_v1(packet)
-                continue
+        # read and handle the packet using its `InterfaceContext`
+        ctx._iface.read(self._packet_buf, 0)
+        return await ctx.handle_packet(self._packet_view[:packet_len])
 
-            cid = ustruct.unpack(">BH", packet)[1]
-            if cid == BROADCAST_CHANNEL_ID:
-                await self._handle_broadcast(packet)
-                continue
 
-            if (cache := find_allocated_channel(cid)) is None:
-                if not control_byte.is_continuation(_get_ctrl_byte(packet)):
-                    await self.write_error(cid, ThpErrorType.UNALLOCATED_CHANNEL)
-                continue
+class InterfaceContext:
+    """
+    This class handles multi-packet THP payloads from a single interface.
+    It also handles and responds to low-level single packet THP messages, creating new channels if needed.
+    """
 
-            if (channel := self._channels.get(cid)) is None:
-                if (buffers := THP_BUFFERS_PROVIDER.take()) is None:
-                    # concurrent payload reassembly is not supported
-                    await self.write_error(cid, ThpErrorType.TRANSPORT_BUSY)
-                    return None  # try to preempt the caller (if stale)
+    def __init__(self, iface: WireInterface, ctx: ThpContext) -> None:
+        self._iface = iface
+        self._read = wait(iface.iface_num() | io.POLL_READ)
+        self._write = wait(iface.iface_num() | io.POLL_WRITE)
+        self._channels: dict[int, Channel] = {}
+        self.thp_ctx = ctx
 
-                channel = self._channels[cid] = Channel(cache, self, buffers)
+    def _wait_for_packet(self) -> Generator[wait, int, tuple["InterfaceContext", int]]:
+        """Block until this interface is readable.
 
-            if channel.reassemble(packet):
-                update_channel_last_used(channel.channel_id)
-                return channel
+        It adapts `loop.wait`, to be used in a `race()` over multiple THP interfaces by `ThpContext.get_next_message()`.
+        """
+        # Uses `yield` instead of `await` to avoid allocations.
+        packet_len = yield self._read
+        return self, packet_len
+
+    async def handle_packet(self, packet: memoryview) -> Channel | None:
+        """
+        Reassemble a valid THP payload and return its channel, if reassembly succeeds.
+        Otherwise, returns `None` and should be called again (with the next packet).
+
+        Also handle THP channel allocation.
+        """
+        ctrl_byte = _get_ctrl_byte(packet)
+        if ctrl_byte == CODEC_V1:
+            return await self._handle_codec_v1(packet)
+
+        cid = ustruct.unpack(">BH", packet)[1]
+        if cid == BROADCAST_CHANNEL_ID:
+            return await self._handle_broadcast(packet)
+
+        if (cache := find_allocated_channel(cid)) is None:
+            if not control_byte.is_continuation(_get_ctrl_byte(packet)):
+                await self.write_error(cid, ThpErrorType.UNALLOCATED_CHANNEL)
+            return None
+
+        if (channel := self._channels.get(cid)) is None:
+            from .. import THP_BUFFERS_PROVIDER
+
+            if (buffers := THP_BUFFERS_PROVIDER.take()) is None:
+                # concurrent payload reassembly is not supported
+                await self.write_error(cid, ThpErrorType.TRANSPORT_BUSY)
+                raise ChannelPreemptedException  # try to preempt the caller (if stale)
+
+            channel = self._channels[cid] = Channel(cache, self, buffers)
+
+        if channel.reassemble(packet):
+            update_channel_last_used(channel.channel_id)
+            return channel
 
     def write_payload(self, header: PacketHeader, payload: bytes) -> Awaitable[None]:
         checksum = crc.crc32(payload, crc.crc32(header.to_bytes()))
