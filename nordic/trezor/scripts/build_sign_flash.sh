@@ -104,8 +104,8 @@ VERSION=$(get_version_from_file)
 # Update paths in signing and flashing commands
 if [ "$SIGN" -eq 1 ]; then
     run_under_ncs_subshell \
-        "imgtool sign --version $VERSION --align 4 --header-size 0x200 -S 0x6c000 --pad-header build/$APP_DIR/zephyr/zephyr.bin build/$APP_DIR/zephyr/zephyr.prep.bin --custom-tlv 0x00A2 0x03 && \
-         imgtool sign --version $VERSION --align 4 --header-size 0x200 -S 0x6c000 --pad-header build/$APP_DIR/zephyr/zephyr.hex build/$APP_DIR/zephyr/zephyr.prep.hex --custom-tlv 0x00A2 0x03 && \
+        "imgtool sign --version $VERSION --align 4 --header-size 0x200 -S 0x6c000 --pad-header build/$APP_DIR/zephyr/zephyr.bin build/$APP_DIR/zephyr/zephyr.prep.bin --custom-tlv 0x00A2 0x03 --custom-tlv 0x00A3 0x54335731 && \
+         imgtool sign --version $VERSION --align 4 --header-size 0x200 -S 0x6c000 --pad-header build/$APP_DIR/zephyr/zephyr.hex build/$APP_DIR/zephyr/zephyr.prep.hex --custom-tlv 0x00A2 0x03 --custom-tlv 0x00A3 0x54335731  && \
          ../bootloader/mcuboot/scripts/imgtool.py dumpinfo ./build/$APP_DIR/zephyr/zephyr.prep.bin > ./build/$APP_DIR/zephyr/dump.txt"
 
     HASH=$(python ./scripts/extract_hash.py ./build/$APP_DIR/zephyr/dump.txt)

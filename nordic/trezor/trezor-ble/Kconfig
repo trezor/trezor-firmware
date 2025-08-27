@@ -25,4 +25,8 @@ config DEFAULT_THREAD_STACK_SIZE
 	help
 	  Common stack size used
 
+config MODEL_IDENTIFIER
+    int "Model identifier"
+
+
 endmenu
