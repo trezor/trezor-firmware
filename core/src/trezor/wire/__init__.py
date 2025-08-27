@@ -76,11 +76,6 @@ class Provider(Generic[T]):
         return obj
 
 
-def setup(iface: WireInterface) -> None:
-    """Initialize the wire stack on the provided WireInterface."""
-    loop.schedule(handle_session(iface))
-
-
 if utils.USE_THP:
     from .thp.memory_manager import ThpBuffer
 
@@ -99,21 +94,25 @@ if utils.USE_THP:
                     return result
             return None
 
-    async def handle_session(iface: WireInterface) -> None:
-        ctx = ThpContext(iface)
+    def setup(*ifaces: WireInterface) -> None:
+        """Initialize the wire stack on the provided interfaces."""
+        loop.schedule(handle_session_thp(*ifaces))
+
+    async def handle_session_thp(*ifaces: WireInterface) -> None:
+        ctx = ThpContext(*ifaces)
         if __debug__:
-            _THP_CHANNELS.append(ctx._channels)
+            _THP_CHANNELS.extend(iface_ctx._channels for iface_ctx in ctx._iface_ctxs)
+
         try:
             while (channel := await ctx.get_next_message()) is None:
-                if __debug__:
-                    # happens if another interface is active and using THP buffers.
-                    log.error(__name__, "Another interface is active", iface=iface)
+                # wait until a new channel is established (on any interface)
+                pass
 
             while await received_message_handler.handle_received_message(channel):
                 pass
         finally:
             if __debug__:
-                log.debug(__name__, "Finished THP session", iface=iface)
+                log.debug(__name__, "Finished THP session: %s", ifaces)
             # Wait for all active workflows to finish.
             await workflow.join_all()
             if __debug__:
@@ -128,7 +127,12 @@ else:
     # Acquired by the first call to `CodecContext.read_from_wire()`.
     WIRE_BUFFER_PROVIDER = Provider(bytearray(8192))
 
-    async def handle_session(iface: WireInterface) -> None:
+    def setup(*ifaces: WireInterface) -> None:
+        """Initialize the wire stack on the provided interfaces."""
+        for iface in ifaces:
+            loop.schedule(handle_session_codec(iface))
+
+    async def handle_session_codec(iface: WireInterface) -> None:
         ctx = CodecContext(iface, WIRE_BUFFER_PROVIDER)
         next_msg: protocol_common.Message | None = None
 
