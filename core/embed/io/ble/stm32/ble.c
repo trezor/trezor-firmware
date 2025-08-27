@@ -279,7 +279,7 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
 
   ble_mode_t prev_mode = drv->mode_current;
   if ((msg.advertising && !msg.advertising_whitelist) ||
-      (msg.connected && drv->pairing_allowed)) {
+      (msg.connected && drv->pairing_allowed && !msg.flags.bonded_connection)) {
     drv->mode_current = BLE_MODE_PAIRING;
   } else if (msg.advertising) {
     drv->mode_current = BLE_MODE_CONNECTABLE;
@@ -297,6 +297,12 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
 
   drv->busy_flag = msg.busy_flag;
   drv->peer_count = msg.peer_count;
+
+  if (msg.connected && msg.flags.bonded_connection &&
+      drv->mode_requested == BLE_MODE_PAIRING) {
+    // bonded device connected in pairing mode - end pairing
+    ble_pairing_end(drv);
+  }
 
   if (prev_mode == BLE_MODE_PAIRING && drv->mode_current != BLE_MODE_PAIRING) {
     if (drv->mode_requested == BLE_MODE_PAIRING) {
