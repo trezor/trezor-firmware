@@ -126,6 +126,7 @@ message Features {
     optional bool haptic_feedback = 52;         // haptic feedback is enabled
     optional RecoveryType recovery_type = 53;   // what type of recovery we are in. NB: this works in conjunction with recovery_status
     optional uint32 optiga_sec = 54;            // Optiga's security event counter.
+    optional uint32 soc = 55;                   // Battery state of charge (0 - 100%)
 
     enum BackupAvailability {
         /// Device is already backed up, or a previous backup has failed.
