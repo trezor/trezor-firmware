@@ -32,4 +32,7 @@ config RADIO_TEST_RX_TIMEOUT
 	  received in RX mode when a specified number of packets are set to be received.
 	  If the timeout is reached before the first packet is received, the radio will be disabled.
 
+config MODEL_IDENTIFIER
+    int "Model identifier"
+
 source "Kconfig.zephyr"
