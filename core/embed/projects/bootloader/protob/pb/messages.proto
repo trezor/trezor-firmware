@@ -72,6 +72,7 @@ message Features {
     optional bool unit_btconly = 46;          // unit/device is intended as bitcoin only
     optional bool bootloader_locked = 49;       // bootloader is locked
     optional uint32 unit_packaging = 51;      // unit/device packaging version
+    optional uint32 soc = 55;                   // Battery state of charge (0 - 100%)
 }
 
 /**

@@ -30,6 +30,10 @@
 #include <sec/secret.h>
 #endif
 
+#ifdef USE_POWER_MANAGER
+#include <sys/power_manager.h>
+#endif
+
 #include "memzero.h"
 #include "pb/messages.pb.h"
 #include "protob.h"
@@ -134,6 +138,14 @@ secbool send_msg_features(protob_io_t *iface, const vendor_header *const vhdr,
   MSG_SEND_ASSIGN_VALUE(bootloader_locked,
                         (secret_bootloader_locked() == sectrue));
 #endif
+
+#ifdef USE_POWER_MANAGER
+  pm_state_t state = {0};
+  if (PM_OK == pm_get_state(&state)) {
+    MSG_SEND_ASSIGN_VALUE(soc, state.soc);
+  }
+#endif
+
   return MSG_SEND(Features);
 }
 
