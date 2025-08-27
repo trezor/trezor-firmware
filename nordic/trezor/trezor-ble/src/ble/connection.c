@@ -66,7 +66,7 @@ void connected(struct bt_conn *conn, uint8_t err) {
 
   show_params(conn);
 
-  const struct bt_le_conn_param *param = BT_LE_CONN_PARAM(6, 6, 0, 400);
+  const struct bt_le_conn_param *param = BT_LE_CONN_PARAM(6, 12, 0, 400);
   bt_conn_le_param_update(conn, param);
 
   // Prefer 2M both directions; 0 options = no specific constraints
@@ -170,7 +170,7 @@ void connection_resume(void) {
   struct bt_conn *conn = connection_get_current();
 
   if (conn != NULL) {
-    const struct bt_le_conn_param *param = BT_LE_CONN_PARAM(6, 6, 0, 400);
+    const struct bt_le_conn_param *param = BT_LE_CONN_PARAM(6, 12, 0, 400);
     bt_conn_le_param_update(conn, param);
   }
 }
