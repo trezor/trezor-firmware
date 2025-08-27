@@ -101,3 +101,10 @@ void rgb_led_effect_start(rgb_led_effect_type_t effect_type,
  * @brief Stop the currently running RGB led effect and turn off the RGB led
  */
 void rgb_led_effect_stop(void);
+
+/**
+ * @brief Get the ongoing RGB led effect state
+ *
+ * @return true if an effect is currently running, false otherwise
+ */
+bool rgb_led_effect_ongoing(void);

@@ -25,8 +25,8 @@
 #include <io/rgb_led.h>
 #include <sys/systimer.h>
 
-#define LED_SWITCHING_FREQUENCY_HZ 1000
-#define TIMER_PERIOD (16000000 / LED_SWITCHING_FREQUENCY_HZ)
+#define RGB_LED_PWM_FREQ 1000
+#define RGB_LED_TIMER_PERIOD (16000000 / RGB_LED_PWM_FREQ)
 
 typedef struct {
   uint32_t red;

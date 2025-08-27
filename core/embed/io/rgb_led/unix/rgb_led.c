@@ -102,4 +102,9 @@ void rgb_led_effect_stop(void) {
   return;
 }
 
+bool rgb_led_get_effect_ongoing(void) {
+  // RGB effect not supported in unix yet
+  return false;
+}
+
 #endif /* KERNEL_MODE */

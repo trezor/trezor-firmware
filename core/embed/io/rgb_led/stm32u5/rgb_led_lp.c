@@ -24,6 +24,7 @@
 #include <trezor_rtl.h>
 
 #include <io/rgb_led.h>
+#include <sys/irq.h>
 #include <sys/systimer.h>
 
 #include "rgb_led_internal.h"
@@ -77,7 +78,7 @@ void rgb_led_init(void) {
 
   drv->tim_1.State = HAL_LPTIM_STATE_RESET;
   drv->tim_1.Instance = LPTIM1;
-  drv->tim_1.Init.Period = TIMER_PERIOD;
+  drv->tim_1.Init.Period = RGB_LED_TIMER_PERIOD;
   drv->tim_1.Init.Clock.Source = LPTIM_CLOCKSOURCE_APBCLOCK_LPOSC;
   drv->tim_1.Init.Clock.Prescaler = LPTIM_PRESCALER_DIV1;
   drv->tim_1.Init.UltraLowPowerClock.Polarity = LPTIM_CLOCKPOLARITY_RISING;
@@ -88,7 +89,7 @@ void rgb_led_init(void) {
 
   drv->tim_3.State = HAL_LPTIM_STATE_RESET;
   drv->tim_3.Instance = LPTIM3;
-  drv->tim_3.Init.Period = TIMER_PERIOD;
+  drv->tim_3.Init.Period = RGB_LED_TIMER_PERIOD;
   drv->tim_3.Init.Clock.Source = LPTIM_CLOCKSOURCE_APBCLOCK_LPOSC;
   drv->tim_3.Init.Clock.Prescaler = LPTIM_PRESCALER_DIV1;
   drv->tim_3.Init.UltraLowPowerClock.Polarity = LPTIM_CLOCKPOLARITY_RISING;
@@ -109,9 +110,9 @@ void rgb_led_init(void) {
   HAL_LPTIM_Counter_Start(&drv->tim_1);
   HAL_LPTIM_Counter_Start(&drv->tim_3);
 
-  __HAL_LPTIM_COMPARE_SET(&drv->tim_1, LPTIM_CHANNEL_1, TIMER_PERIOD);
-  __HAL_LPTIM_COMPARE_SET(&drv->tim_3, LPTIM_CHANNEL_1, TIMER_PERIOD);
-  __HAL_LPTIM_COMPARE_SET(&drv->tim_3, LPTIM_CHANNEL_2, TIMER_PERIOD);
+  __HAL_LPTIM_COMPARE_SET(&drv->tim_1, LPTIM_CHANNEL_1, RGB_LED_TIMER_PERIOD);
+  __HAL_LPTIM_COMPARE_SET(&drv->tim_3, LPTIM_CHANNEL_1, RGB_LED_TIMER_PERIOD);
+  __HAL_LPTIM_COMPARE_SET(&drv->tim_3, LPTIM_CHANNEL_2, RGB_LED_TIMER_PERIOD);
 
   // Enable the Peripheral
   __HAL_LPTIM_ENABLE(&drv->tim_1);
@@ -220,9 +221,9 @@ void rgb_led_set_color(uint32_t color) {
   }
 
   rgb_led_color_fs_t color_fs;
-  color_fs.red = (RGB_EXTRACT_RED(color) * TIMER_PERIOD) / 255;
-  color_fs.green = (RGB_EXTRACT_GREEN(color) * TIMER_PERIOD) / 255;
-  color_fs.blue = (RGB_EXTRACT_BLUE(color) * TIMER_PERIOD) / 255;
+  color_fs.red = (RGB_EXTRACT_RED(color) * RGB_LED_TIMER_PERIOD) / 255;
+  color_fs.green = (RGB_EXTRACT_GREEN(color) * RGB_LED_TIMER_PERIOD) / 255;
+  color_fs.blue = (RGB_EXTRACT_BLUE(color) * RGB_LED_TIMER_PERIOD) / 255;
 
   rgb_led_apply_color(drv, &color_fs);
 }
@@ -271,10 +272,26 @@ void rgb_led_effect_stop(void) {
   rgb_led_apply_color(drv, &color_fs);
 }
 
+bool rgb_led_effect_ongoing(void) {
+  rgb_led_t* drv = &g_rgb_led;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  bool ongoing;
+  irq_key_t irq_key = irq_lock();
+  ongoing = drv->ongoing_effect;
+  irq_unlock(irq_key);
+
+  return ongoing;
+}
+
 static void rgb_led_apply_color(rgb_led_t* drv, rgb_led_color_fs_t* color_fs) {
   // Check color settings is in range
-  if (color_fs->red > TIMER_PERIOD || color_fs->green > TIMER_PERIOD ||
-      color_fs->blue > TIMER_PERIOD) {
+  if (color_fs->red > RGB_LED_TIMER_PERIOD ||
+      color_fs->green > RGB_LED_TIMER_PERIOD ||
+      color_fs->blue > RGB_LED_TIMER_PERIOD) {
     return;
   }
 
@@ -297,11 +314,11 @@ static void rgb_led_apply_color(rgb_led_t* drv, rgb_led_color_fs_t* color_fs) {
   }
 
   __HAL_LPTIM_COMPARE_SET(&drv->tim_1, LPTIM_CHANNEL_1,
-                          TIMER_PERIOD - (color_fs->red));
+                          RGB_LED_TIMER_PERIOD - (color_fs->red));
   __HAL_LPTIM_COMPARE_SET(&drv->tim_3, LPTIM_CHANNEL_2,
-                          TIMER_PERIOD - (color_fs->green));
+                          RGB_LED_TIMER_PERIOD - (color_fs->green));
   __HAL_LPTIM_COMPARE_SET(&drv->tim_3, LPTIM_CHANNEL_1,
-                          TIMER_PERIOD - (color_fs->blue));
+                          RGB_LED_TIMER_PERIOD - (color_fs->blue));
 }
 
 static void rgb_led_systimer_callback(void* context) {
