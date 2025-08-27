@@ -159,6 +159,21 @@ extern "C" fn py_connected_addr() -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
+extern "C" fn py_get_bonds() -> Obj {
+    let block = || {
+        get_bonds(|bonds| {
+            let mut result = List::with_capacity(bonds.len())?;
+            for bond in bonds {
+                let addr = Obj::try_from(&bond.addr[..])?;
+                let addr_type = Obj::from(bond.type_);
+                result.append(Obj::try_from((addr, addr_type))?)?;
+            }
+            Ok(result.leak().into())
+        })
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
 extern "C" fn py_iface_num(_self: Obj) -> Obj {
     Obj::small_int(8) // FIXME SYSHANDLE_BLE_IFACE_0
 }
@@ -333,6 +348,14 @@ pub static mp_module_trezorble: Module = obj_module! {
     ///     Returns current connection state as a list of string flags.
     ///     """
     Qstr::MP_QSTR_connection_flags => obj_fn_0!(py_connection_flags).as_obj(),
+
+    /// def get_bonds() -> list[tuple[bytes, int], ...]:
+    ///     """
+    ///     Returns a list of (addr_bytes, addr_type) tuples, representing the current bonds.
+    ///     addr_bytes: bytes of length 6
+    ///     addr_type: integer as provided by bt_le_addr_t (e.g., 0=public, 1=random)
+    ///     """
+    Qstr::MP_QSTR_get_bonds => obj_fn_0!(py_get_bonds).as_obj(),
 
     /// def connected_addr() -> tuple[bytes, int] | None:
     ///     """

@@ -410,6 +410,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_type("usb_event_t")
         .allowlist_function("usb_get_state")
         // ble
+        .allowlist_var("BLE_MAX_BONDS")
         .allowlist_var("BLE_PAIRING_CODE_LEN")
         .allowlist_var("BLE_RX_PACKET_SIZE")
         .allowlist_var("BLE_TX_PACKET_SIZE")
@@ -422,9 +423,11 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("ble_read")
         .allowlist_function("ble_set_name")
         .allowlist_function("ble_unpair")
+        .allowlist_function("ble_get_bond_list")
         .allowlist_type("ble_command_t")
         .allowlist_type("ble_state_t")
         .allowlist_type("ble_event_t")
+        .allowlist_type("bt_le_addr_t")
         // touch
         .allowlist_function("touch_get_event")
         // button
