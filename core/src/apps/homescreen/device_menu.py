@@ -16,13 +16,8 @@ async def handle_device_menu() -> None:
     haptic_configurable = is_initialized and utils.USE_HAPTIC
     failed_backup = is_initialized and storage_device.unfinished_backup()
     # MOCK DATA
-    paired_devices = [
-        "Trezor Suite",
-        "2nd device iiiiiiiiiiiii",
-        "3rd Device iiiiiiiiiiiiii",
-        "4th Device forcedmultiline",
-    ]
-    connected_idx = 1
+    paired_devices = ["Trezor Suite"]
+    connected_idx = 0 if ble.is_connected() else None
     bluetooth_version = "2.3.1.1"
     # ###
     firmware_version = ".".join(map(str, utils.VERSION))
