@@ -218,7 +218,9 @@ static secbool boot_sequence(void) {
     if (state.charging_status == PM_BATTERY_CHARGING) {
       // charing screen
 #ifdef USE_RGB_LED
-      rgb_led_set_color(RGBLED_BLUE);
+      if (!rgb_led_effect_ongoing()) {
+        rgb_led_effect_start(RGB_LED_EFFECT_CHARGING, 0);
+      }
 #endif
     } else {
       if (!btn_down && !state.usb_connected && !state.wireless_connected) {
