@@ -24,6 +24,7 @@
 #include <trezor_rtl.h>
 
 #include <io/rgb_led.h>
+#include <sys/irq.h>
 #include <sys/systimer.h>
 
 #include "rgb_led_internal.h"
@@ -269,6 +270,21 @@ void rgb_led_effect_stop(void) {
   color_fs.green = 0;
   color_fs.blue = 0;
   rgb_led_apply_color(drv, &color_fs);
+}
+
+bool rgb_led_effect_ongoing(void) {
+  rgb_led_t* drv = &g_rgb_led;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  bool ongoing;
+  irq_key_t irq_key = irq_lock();
+  ongoing = drv->ongoing_effect;
+  irq_unlock(irq_key);
+
+  return ongoing;
 }
 
 static void rgb_led_apply_color(rgb_led_t* drv, rgb_led_color_fs_t* color_fs) {
