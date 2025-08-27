@@ -46,6 +46,15 @@ pub fn ble_parse_event(event: ffi::ble_event_t) -> BLEEvent {
     }
 }
 
+impl bt_le_addr_t {
+    fn zero() -> bt_le_addr_t {
+        bt_le_addr_t {
+            type_: 0,
+            addr: [0; 6],
+        }
+    }
+}
+
 fn state() -> ffi::ble_state_t {
     let mut state = ffi::ble_state_t {
         connected: false,
@@ -54,12 +63,7 @@ fn state() -> ffi::ble_state_t {
         pairing: false,
         pairing_requested: false,
         state_known: false,
-        connected_addr: {
-            bt_le_addr_t {
-                type_: 0,
-                addr: [0; 6],
-            }
-        },
+        connected_addr: bt_le_addr_t::zero(),
     };
     unsafe { ffi::ble_get_state(&mut state as _) };
     state
