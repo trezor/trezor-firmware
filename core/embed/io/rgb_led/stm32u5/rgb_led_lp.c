@@ -29,18 +29,6 @@
 #include "rgb_led_internal.h"
 #include "sys/systick.h"
 
-#define RGB_LED_RED_PIN GPIO_PIN_2
-#define RGB_LED_RED_PORT GPIOB
-#define RGB_LED_RED_CLK_ENA __HAL_RCC_GPIOB_CLK_ENABLE
-
-#define RGB_LED_GREEN_PIN GPIO_PIN_2
-#define RGB_LED_GREEN_PORT GPIOF
-#define RGB_LED_GREEN_CLK_ENA __HAL_RCC_GPIOF_CLK_ENABLE
-
-#define RGB_LED_BLUE_PIN GPIO_PIN_0
-#define RGB_LED_BLUE_PORT GPIOB
-#define RGB_LED_BLUE_CLK_ENA __HAL_RCC_GPIOB_CLK_ENABLE
-
 #define RGB_LED_EFFECT_TIMER_PERIOD_MS 20
 
 static rgb_led_t g_rgb_led = {0};
