@@ -41,7 +41,7 @@ pub enum VerticalMenuScreenMsg {
 }
 
 impl<T: MenuItems> VerticalMenuScreen<T> {
-    const TOUCH_SENSITIVITY_DIVIDER: i16 = 15;
+    const TOUCH_SENSITIVITY_DIVIDER: i16 = 12;
     const SUBTITLE_STYLE: TextStyle = theme::TEXT_MEDIUM_GREY;
     const SUBTITLE_HEIGHT: i16 = 68;
     const SUBTITLE_DOUBLE_HEIGHT: i16 = 100;
@@ -155,6 +155,7 @@ impl<T: MenuItems> VerticalMenuScreen<T> {
 
                     self.menu.set_offset(offset);
                     self.menu.update_button_states(ctx);
+                    ctx.request_paint();
                 }
                 _ => {}
             }
