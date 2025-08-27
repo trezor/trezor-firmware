@@ -29,7 +29,9 @@
 #include <sec/secret.h>
 #include <sec/secret_keys.h>
 
+#include "ecdsa.h"
 #include "memzero.h"
+#include "nist256p1.h"
 
 #include "common.h"
 #include "fw_CPU.h"
@@ -51,10 +53,10 @@
 
 #define TROPIC_FIDO_CERT_FIRST_SLOT 0
 #define TROPIC_FIDO_CERT_SLOTS_COUNT 3
+#define TROPIC_FIDO_KEY_SLOT ECC_SLOT_1
 #define TROPIC_DEV_CERT_FIRST_SLOT 3
 #define TROPIC_DEV_CERT_SLOTS_COUNT 3
 #define TROPIC_DEV_KEY_SLOT 0
-#define TROPIC_FIDO_KEY_SLOT 1
 
 typedef enum {
   TROPIC_HANDSHAKE_STATE_0,  // Handshake has not been initiated yet
@@ -1577,6 +1579,49 @@ static void prodtest_tropic_certdev_read(cli_t* cli) {
   cert_read(cli, TROPIC_DEV_CERT_FIRST_SLOT, TROPIC_DEV_CERT_SLOTS_COUNT);
 }
 
+static void pubkey_read(cli_t* cli, ecc_slot_t slot,
+                        const uint8_t masking_key[ECDSA_PRIVATE_KEY_SIZE]) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  uint8_t public_key[ECDSA_PUBLIC_KEY_SIZE] = {0x04};
+  lt_ecc_curve_type_t curve_type = 0;
+  ecc_key_origin_t origin = 0;
+  lt_ret_t ret =
+      lt_ecc_key_read(tropic_get_handle(), slot,
+                      &public_key[1], &curve_type, &origin);
+  if (ret != LT_OK || curve_type != CURVE_P256) {
+    cli_error(cli, CLI_ERROR, "lt_ecc_key_read error %d.", ret);
+    return;
+  }
+
+  if (masking_key != NULL) {
+    if (ecdsa_unmask_public_key(&nist256p1, masking_key, public_key,
+                                public_key) != 0) {
+      cli_error(cli, CLI_ERROR, "key unmasking error");
+      return;
+    }
+  }
+
+  cli_ok_hexdata(cli, public_key, sizeof(public_key));
+}
+
+static void prodtest_tropic_keyfido_read(cli_t* cli) {
+#ifdef SECRET_KEY_MASKING
+  uint8_t masking_key[ECDSA_PRIVATE_KEY_SIZE] = {0};
+  if (secret_key_tropic_masking(masking_key) != sectrue) {
+    cli_error(cli, CLI_ERROR, "masking key not available");
+    return;
+  }
+  pubkey_read(cli, TROPIC_FIDO_KEY_SLOT, masking_key);
+  memzero(masking_key, sizeof(masking_key));
+#else
+  pubkey_read(cli, TROPIC_FIDO_KEY_SLOT, NULL);
+#endif  // SECRET_KEY_MASKING
+}
+
 static void prodtest_tropic_update_fw(cli_t* cli) {
 #define FW_APP_UPDATE_BANK FW_BANK_FW1
 #define FW_SPECT_UPDATE_BANK FW_BANK_SPECT1
@@ -1793,6 +1838,13 @@ PRODTEST_CLI_CMD(
   .func = prodtest_tropic_certfido_write,
   .info = "Write the X.509 certificate for the FIDO key to Tropic",
   .args = "<hex-data>"
+);
+
+PRODTEST_CLI_CMD(
+  .name = "tropic-keyfido-read",
+  .func = prodtest_tropic_keyfido_read,
+  .info = "Read the FIDO public key from Tropic.",
+  .args = ""
 );
 
 PRODTEST_CLI_CMD(
