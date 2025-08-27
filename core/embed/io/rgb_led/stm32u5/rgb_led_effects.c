@@ -130,34 +130,26 @@ static void rgb_led_effect_bootloader_breathe(uint32_t elapsed_ms,
     // PHASE 1: linear transition to RGBLED_BLUE
     rgb_led_linear_gc_effect(RGBLED_OFF, RGBLED_BLUE, ef_time, EF_BB_PHASE1_MS,
                              ef_color);
-    return;
   } else if (ef_time < EF_BB_PHASE1_MS + EF_BB_PHASE2_MS) {
     // PHASE 2: hold RGBLED_BLUE color
     ef_color->red = (RGB_EXTRACT_RED(RGBLED_BLUE) * TIMER_PERIOD) / 255;
     ef_color->green = (RGB_EXTRACT_GREEN(RGBLED_BLUE) * TIMER_PERIOD) / 255;
     ef_color->blue = (RGB_EXTRACT_BLUE(RGBLED_BLUE) * TIMER_PERIOD) / 255;
-    return;
-
   } else if (ef_time < EF_BB_PHASE1_MS + EF_BB_PHASE2_MS + EF_BB_PHASE3_MS) {
     // PHASE 3: linear transition to RGBLED_OFF
     rgb_led_linear_gc_effect(RGBLED_BLUE, RGBLED_OFF,
                              ef_time - EF_BB_PHASE1_MS - EF_BB_PHASE2_MS,
                              EF_BB_PHASE3_MS, ef_color);
-    return;
-
   } else if (ef_time < EF_BB_CYCLE_MS) {
     // PHASE 4: hold the off state
     ef_color->red = 0;
     ef_color->green = 0;
     ef_color->blue = 0;
-    return;
-
   } else {
     // Should not happen
     ef_color->red = 0;
     ef_color->green = 0;
     ef_color->blue = 0;
-    return;
   }
 }
 
@@ -176,32 +168,26 @@ static void rgb_led_effect_charging_gamma(uint32_t elapsed_ms,
     // PHASE 1: linear transition to RGBLED_YELLOW
     rgb_led_linear_gc_effect(RGBLED_OFF, RGBLED_YELLOW, ef_time,
                              EF_CHG_PHASE1_MS, ef_color);
-    return;
   } else if (ef_time < EF_CHG_PHASE1_MS + EF_CHG_PHASE2_MS) {
     // PHASE 2: hold RGBLED_YELLOW color
     ef_color->red = (RGB_EXTRACT_RED(RGBLED_YELLOW) * TIMER_PERIOD) / 255;
     ef_color->green = (RGB_EXTRACT_GREEN(RGBLED_YELLOW) * TIMER_PERIOD) / 255;
     ef_color->blue = (RGB_EXTRACT_BLUE(RGBLED_YELLOW) * TIMER_PERIOD) / 255;
-    return;
   } else if (ef_time < EF_CHG_PHASE1_MS + EF_CHG_PHASE2_MS + EF_CHG_PHASE3_MS) {
     // PHASE 3: linear transition to RGBLED_OFF
     rgb_led_linear_gc_effect(RGBLED_YELLOW, RGBLED_OFF,
                              ef_time - EF_CHG_PHASE1_MS - EF_CHG_PHASE2_MS,
                              EF_CHG_PHASE3_MS, ef_color);
-    return;
   } else if (ef_time < EF_CHG_CYCLE_MS) {
     // PHASE 4: hold the off state
     ef_color->red = 0;
     ef_color->green = 0;
     ef_color->blue = 0;
-    return;
-
   } else {
     // Should not happen
     ef_color->red = 0;
     ef_color->green = 0;
     ef_color->blue = 0;
-    return;
   }
 }
 

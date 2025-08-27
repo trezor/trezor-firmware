@@ -328,10 +328,11 @@ void rgb_led_effect_start(rgb_led_effect_type_t effect_type,
                   SYSCALL_RGB_LED_EFFECT_START);
 }
 
-/**
- * @brief Stop the currently running RGB led effect and turn off the RGB led
- */
 void rgb_led_effect_stop(void) { syscall_invoke0(SYSCALL_RGB_LED_EFFECT_STOP); }
+
+bool rgb_led_effect_ongoing(void) {
+  return (bool)syscall_invoke0(SYSCALL_RGB_LED_EFFECT_ONGOING);
+}
 
 #endif
 
