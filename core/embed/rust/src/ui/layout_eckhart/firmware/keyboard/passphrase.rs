@@ -1,5 +1,5 @@
 use crate::{
-    strutil::{ShortString, TString},
+    strutil::TString,
     time::Duration,
     ui::{
         component::{
@@ -280,11 +280,6 @@ impl StringInput for PassphraseInput {
     fn might_overlap_keypad(&self) -> bool {
         self.display_style == DisplayStyle::Shown
     }
-
-    #[cfg(feature = "ui_debug")]
-    fn display_style(&self) -> ShortString {
-        uformat!("{:?}", self.display_style)
-    }
 }
 
 impl Component for PassphraseInput {
@@ -367,5 +362,17 @@ impl Component for PassphraseInput {
             DisplayStyle::Shown => self.render_shown(target),
             _ => self.render_hidden(target),
         }
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for PassphraseInput {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("PassphraseInput");
+        t.string("content", self.content().into());
+        let display_style = uformat!("{:?}", self.display_style);
+        t.string("display_style", display_style.as_str().into());
+        t.bool("allow_empty", self.allow_empty);
+        t.bool("allow_cancel", self.allow_cancel);
     }
 }

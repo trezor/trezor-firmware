@@ -1,5 +1,5 @@
 use crate::{
-    strutil::{ShortString, TString},
+    strutil::TString,
     ui::{
         component::{
             text::{
@@ -253,11 +253,6 @@ impl StringInput for LabelInput {
     fn might_overlap_keypad(&self) -> bool {
         self.display_style == LabelDisplayStyle::Complete
     }
-
-    #[cfg(feature = "ui_debug")]
-    fn display_style(&self) -> ShortString {
-        uformat!("{:?}", self.display_style)
-    }
 }
 
 impl Component for LabelInput {
@@ -335,5 +330,17 @@ impl Component for LabelInput {
             LabelDisplayStyle::Complete => self.render_complete(target),
             _ => self.render_one_line(target),
         }
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for LabelInput {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("LabelInput");
+        t.string("content", self.content().into());
+        let display_style = uformat!("{:?}", self.display_style);
+        t.string("display_style", display_style.as_str().into());
+        t.bool("allow_empty", self.allow_empty);
+        t.bool("allow_cancel", self.allow_cancel);
     }
 }
