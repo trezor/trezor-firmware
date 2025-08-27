@@ -282,18 +282,17 @@ pub trait StringInput: Component<Msg = StringInputMsg> {
 
     // The information needed for the component render order
     fn might_overlap_keypad(&self) -> bool;
-
-    #[cfg(feature = "ui_debug")]
-    fn display_style(&self) -> ShortString;
 }
 
 #[cfg(feature = "ui_debug")]
-impl<I: StringInput> crate::trace::Trace for StringKeyboard<I> {
+impl<I> crate::trace::Trace for StringKeyboard<I>
+where
+    I: StringInput + crate::trace::Trace,
+{
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         let active_layout = uformat!("{:?}", self.active_layout);
         t.component("StringKeyboard");
         t.string("active_layout", active_layout.as_str().into());
-        t.string("content", self.input.content().into());
-        t.string("display_style", self.input.display_style().as_str().into());
+        t.child("input", &self.input);
     }
 }
