@@ -29,9 +29,6 @@
 #include "rgb_led_internal.h"
 #include "sys/systick.h"
 
-#define LED_SWITCHING_FREQUENCY_HZ 20000
-#define TIMER_PERIOD (16000000 / LED_SWITCHING_FREQUENCY_HZ)
-
 #define RGB_LED_RED_PIN GPIO_PIN_2
 #define RGB_LED_RED_PORT GPIOB
 #define RGB_LED_RED_CLK_ENA __HAL_RCC_GPIOB_CLK_ENABLE
@@ -48,7 +45,7 @@
 
 static rgb_led_t g_rgb_led = {0};
 
-static void rgb_led_apply_color(rgb_led_t* drv, uint32_t color);
+static void rgb_led_apply_color(rgb_led_t* drv, rgb_led_color_fs_t* color_fs);
 static void rgb_led_systimer_callback(void* context);
 
 static void rgb_led_set_default_pin_state(void) {
@@ -224,11 +221,8 @@ bool rgb_led_get_enabled(void) {
 
 void rgb_led_set_color(uint32_t color) {
   rgb_led_t* drv = &g_rgb_led;
-  if (!drv->initialized) {
-    return;
-  }
 
-  if (!drv->enabled) {
+  if (!drv->initialized || !drv->enabled) {
     return;
   }
 
@@ -237,14 +231,19 @@ void rgb_led_set_color(uint32_t color) {
     rgb_led_effect_stop();
   }
 
-  rgb_led_apply_color(drv, color);
+  rgb_led_color_fs_t color_fs;
+  color_fs.red = (RGB_EXTRACT_RED(color) * TIMER_PERIOD) / 255;
+  color_fs.green = (RGB_EXTRACT_GREEN(color) * TIMER_PERIOD) / 255;
+  color_fs.blue = (RGB_EXTRACT_BLUE(color) * TIMER_PERIOD) / 255;
+
+  rgb_led_apply_color(drv, &color_fs);
 }
 
 void rgb_led_effect_start(rgb_led_effect_type_t effect_type,
                           uint32_t requested_cycles) {
   rgb_led_t* drv = &g_rgb_led;
 
-  if (!drv->initialized) {
+  if (!drv->initialized || !drv->enabled) {
     return;
   }
 
@@ -253,7 +252,7 @@ void rgb_led_effect_start(rgb_led_effect_type_t effect_type,
     return;
   }
 
-  systimer_unset();
+  systimer_unset(drv->effect_timer);
 
   if (!rgb_led_assign_effect(&drv->effect, effect_type)) {
     return;
@@ -277,50 +276,60 @@ void rgb_led_effect_stop(void) {
   drv->ongoing_effect = false;
 
   // Reset the LED to default state
-  rgb_led_apply_color(drv, RGBLED_OFF);  // Turn off the LED
+  rgb_led_color_fs_t color_fs;
+  color_fs.red = 0;
+  color_fs.green = 0;
+  color_fs.blue = 0;
+  rgb_led_apply_color(drv, &color_fs);
 }
 
-static void rgb_led_apply_color(rgb_led_t* drv, uint32_t color) {
-  uint32_t red = RGB_EXTRACT_RED(color);
-  uint32_t green = RGB_EXTRACT_GREEN(color);
-  uint32_t blue = RGB_EXTRACT_BLUE(color);
+static void rgb_led_apply_color(rgb_led_t* drv, rgb_led_color_fs_t* color_fs) {
+  // Check color settings is in range
+  if (color_fs->red > TIMER_PERIOD || color_fs->green > TIMER_PERIOD ||
+      color_fs->blue > TIMER_PERIOD) {
+    return;
+  }
 
-  if (red != 0) {
+  if (color_fs->red != 0) {
     __HAL_LPTIM_CAPTURE_COMPARE_ENABLE(&drv->tim_1, LPTIM_CHANNEL_1);
   } else {
     __HAL_LPTIM_CAPTURE_COMPARE_DISABLE(&drv->tim_1, LPTIM_CHANNEL_1);
   }
 
-  if (green != 0) {
+  if (color_fs->green != 0) {
     __HAL_LPTIM_CAPTURE_COMPARE_ENABLE(&drv->tim_3, LPTIM_CHANNEL_2);
   } else {
     __HAL_LPTIM_CAPTURE_COMPARE_DISABLE(&drv->tim_3, LPTIM_CHANNEL_2);
   }
 
-  if (blue != 0) {
+  if (color_fs->blue != 0) {
     __HAL_LPTIM_CAPTURE_COMPARE_ENABLE(&drv->tim_3, LPTIM_CHANNEL_1);
   } else {
     __HAL_LPTIM_CAPTURE_COMPARE_DISABLE(&drv->tim_3, LPTIM_CHANNEL_1);
   }
 
   __HAL_LPTIM_COMPARE_SET(&drv->tim_1, LPTIM_CHANNEL_1,
-                          TIMER_PERIOD - (red * (TIMER_PERIOD) / 255));
+                          TIMER_PERIOD - (color_fs->red));
   __HAL_LPTIM_COMPARE_SET(&drv->tim_3, LPTIM_CHANNEL_2,
-                          TIMER_PERIOD - (green * (TIMER_PERIOD) / 255));
+                          TIMER_PERIOD - (color_fs->green));
   __HAL_LPTIM_COMPARE_SET(&drv->tim_3, LPTIM_CHANNEL_1,
-                          TIMER_PERIOD - (blue * (TIMER_PERIOD) / 255));
+                          TIMER_PERIOD - (color_fs->blue));
 }
 
 static void rgb_led_systimer_callback(void* context) {
   rgb_led_t* drv = &g_rgb_led;
 
-  if (!drv->initialized || !drv->ongoing_effect) {
+  if (!drv->initialized || !drv->ongoing_effect || !drv->enabled) {
     return;
   }
 
   uint32_t elapsed_ms = systick_ms() - drv->effect.start_time_ms;
-  uint32_t color = drv->effect.callback(elapsed_ms, &drv->effect.data);
-  rgb_led_apply_color(drv, color);
+
+  rgb_led_color_fs_t color_fs;
+
+  // Call LED effect callback which retrieves current effect color.
+  drv->effect.callback(elapsed_ms, &drv->effect.data, &color_fs);
+  rgb_led_apply_color(drv, &color_fs);
 
   // Stop the effect if the requested cycles have been reached
   if (drv->effect.data.requested_cycles &&
