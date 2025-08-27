@@ -227,10 +227,7 @@ class LayoutContent(UnstructuredJSONReader):
 
     def subtitle(self) -> str:
         """Getting text that is displayed as a subtitle."""
-        subtitle = self._get_str_or_dict_text("subtitle")
-        # Replace newlines with space
-        subtitle = subtitle.replace("\n", " ")
-        return subtitle
+        return self._get_str_or_dict_text("subtitle")
 
     def text_content(self) -> str:
         """What is on the screen, in one long string, so content can be

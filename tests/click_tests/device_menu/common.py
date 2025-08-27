@@ -30,8 +30,8 @@ PIN4 = "1234"
 REGULATORY_AREAS = [
     "United States",
     "Canada",
-    "Europe / UK",
-    "Australia / New Zealand",
+    "Europe",
+    "Australia",
     "Ukraine",
     "South Korea",
 ]
