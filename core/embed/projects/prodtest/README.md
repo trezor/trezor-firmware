@@ -1146,6 +1146,18 @@ tropic-certfido-write <hexadecimal string>
 OK <hexadecimal string>
 ```
 
+### tropic-keyfido-read
+
+Retrieves the FIDO attestation public key stored in Tropic.
+
+This command can be used to verify that the FIDO attestation key was stored correctly by verifying that the returned string of bytes appears in the FIDO attestation certificate.
+
+Example:
+```
+tropic-keyfido-read
+OK <hexadecimal string>
+```
+
 ### tropic-lock
 
 Configures the Tropic chip. This command is idempotent, meaning it can be called multiple times without changing the state of the device. This command is irreversible and cannot be undone. The command `tropic-pair` must be executed before calling this command.
