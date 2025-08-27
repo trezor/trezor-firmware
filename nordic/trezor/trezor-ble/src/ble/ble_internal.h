@@ -61,7 +61,10 @@ typedef struct {
 
   uint8_t peer_count;
   uint8_t busy_flag;
-  uint8_t reserved;
+  struct {
+    bool bonded_connection : 1;
+    uint8_t reserved : 7;
+  } flags;
   uint8_t sd_version_number;
 
   uint16_t sd_company_id;
@@ -177,6 +180,8 @@ void connection_disconnect(void);
 bool connection_is_connected(void);
 // Get current connection
 struct bt_conn *connection_get_current(void);
+// Is current connection bonded
+bool connection_is_bonded(void);
 
 // Pairing functions
 // Initialization

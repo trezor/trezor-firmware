@@ -34,6 +34,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 static struct bt_conn *current_conn = NULL;
 static struct bt_conn *next_conn = NULL;
+static bool bonded_connection = false;
 
 static void show_params(struct bt_conn *conn) {
   struct bt_conn_info info;
@@ -102,6 +103,8 @@ void connected(struct bt_conn *conn, uint8_t err) {
 void disconnected(struct bt_conn *conn, uint8_t reason) {
   char addr[BT_ADDR_LE_STR_LEN];
 
+  bonded_connection = false;
+
   advertising_stop();
 
   pairing_reset();
@@ -132,7 +135,14 @@ static void security_changed(struct bt_conn *conn, bt_security_t level,
 
   if (!err) {
     LOG_INF("Security changed: %s level %u", addr, level);
+
+    if (level == BT_SECURITY_L4) {
+      bonded_connection = true;
+    } else {
+      bonded_connection = false;
+    }
   } else {
+    bonded_connection = false;
     LOG_WRN("Security failed: %s level %u err %d", addr, level, err);
   }
 }
@@ -174,3 +184,5 @@ void connection_resume(void) {
     bt_conn_le_param_update(conn, param);
   }
 }
+
+bool connection_is_bonded(void) { return bonded_connection; }

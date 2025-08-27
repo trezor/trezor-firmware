@@ -60,6 +60,8 @@ void ble_management_send_status_event(void) {
   msg.app_version = 0;
   msg.bld_version = 0;
   msg.busy_flag = ble_get_busy_flag();
+  msg.flags.bonded_connection = connection_is_bonded();
+  msg.flags.reserved = 0;
 
   if (connected) {
     memcpy(msg.connected_addr, bt_conn_get_dst(conn)->a.val, BT_ADDR_SIZE);
