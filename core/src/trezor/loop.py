@@ -14,9 +14,11 @@ from typing import TYPE_CHECKING
 from trezor import io, log
 
 if TYPE_CHECKING:
-    from typing import Any, Awaitable, Callable, Coroutine, Generator, Union
+    from typing import Any, Awaitable, Callable, Coroutine, Generator
 
-    Task = Union[Coroutine, Generator, "wait"]
+    from .loop import wait
+
+    Task = Coroutine | Generator | wait
     AwaitableTask = Task | Awaitable
     Finalizer = Callable[[Task, Any], None]
 
