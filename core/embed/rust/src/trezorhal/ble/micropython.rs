@@ -142,31 +142,28 @@ extern "C" fn py_connection_flags() -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-// Return (addr_bytes, addr_type) if connected, otherwise None.
+// Return addr_bytes if connected, otherwise None.
 // addr_bytes: bytes of length 6
-// addr_type: integer as provided by bt_le_addr_t (e.g., 0=public, 1=random)
 extern "C" fn py_connected_addr() -> Obj {
     let block = || {
         if !is_connected() {
             return Ok(Obj::const_none());
         }
         let a = connected_addr();
-        let addr_obj = Obj::try_from(&a.addr[..])?;
-        let type_obj = Obj::from(a.type_);
-        (addr_obj, type_obj).try_into()
+        Obj::try_from(&a.addr[..])
     };
 
     unsafe { util::try_or_raise(block) }
 }
 
+// Returns a list of addr_bytes, representing the current bonds.
+// addr_bytes: bytes of length 6
 extern "C" fn py_get_bonds() -> Obj {
     let block = || {
         get_bonds(|bonds| {
             let mut result = List::with_capacity(bonds.len())?;
             for bond in bonds {
-                let addr = Obj::try_from(&bond.addr[..])?;
-                let addr_type = Obj::from(bond.type_);
-                result.append(Obj::try_from((addr, addr_type))?)?;
+                result.append(Obj::try_from(&bond.addr[..])?)?;
             }
             Ok(result.leak().into())
         })
@@ -349,19 +346,17 @@ pub static mp_module_trezorble: Module = obj_module! {
     ///     """
     Qstr::MP_QSTR_connection_flags => obj_fn_0!(py_connection_flags).as_obj(),
 
-    /// def get_bonds() -> list[tuple[bytes, int], ...]:
+    /// def get_bonds() -> list[bytes]:
     ///     """
-    ///     Returns a list of (addr_bytes, addr_type) tuples, representing the current bonds.
+    ///     Returns a list of addr_bytes, representing the current bonds.
     ///     addr_bytes: bytes of length 6
-    ///     addr_type: integer as provided by bt_le_addr_t (e.g., 0=public, 1=random)
     ///     """
     Qstr::MP_QSTR_get_bonds => obj_fn_0!(py_get_bonds).as_obj(),
 
-    /// def connected_addr() -> tuple[bytes, int] | None:
+    /// def connected_addr() -> bytes | None:
     ///     """
-    ///     If connected, returns a tuple (addr_bytes, addr_type), otherwise None.
+    ///     If connected, returns addr_bytes, otherwise None.
     ///     addr_bytes: bytes of length 6
-    ///     addr_type: integer as provided by bt_le_addr_t (e.g., 0=public, 1=random)
     ///     """
     Qstr::MP_QSTR_connected_addr => obj_fn_0!(py_connected_addr).as_obj(),
 
