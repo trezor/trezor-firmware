@@ -1,11 +1,19 @@
 import utime
 from typing import TYPE_CHECKING
 
+from trezor import loop
+
 if TYPE_CHECKING:
-    from typing import NoReturn
+    from typing import Generator, NoReturn
 
     from trezor.enums import BootCommand
     from trezor.messages import RebootToBootloader
+
+
+# Uses `yield` instead of `await` to avoid allocations.
+def _timeout_after(ms: int) -> Generator[loop.sleep, int, None]:
+    yield loop.sleep(ms)
+    raise loop.Timeout
 
 
 async def install_upgrade(
@@ -94,7 +102,11 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
         boot_args = None
 
     ctx = get_context()
-    await ctx.write(Success(message="Rebooting"))
+    try:
+        await loop.race(ctx.write(Success(message="Rebooting")), _timeout_after(1000))
+    except loop.Timeout:
+        # assuming the host eventually got the `Success` message
+        pass
     # make sure the outgoing USB buffer is flushed
     await loop.wait(ctx.iface.iface_num() | io.POLL_WRITE)
 
