@@ -104,6 +104,19 @@ impl Button {
             .with_radius(Self::MENU_ITEM_RADIUS)
     }
 
+    pub fn new_menu_item_with_overflowing_subtext(
+        text: TString<'static>,
+        stylesheet: ButtonStyleSheet,
+        subtext: TString<'static>,
+        subtext_style: &'static TextStyle,
+    ) -> Self {
+        Self::with_text_and_overflowing_subtext(text, subtext, subtext_style, None)
+            .with_text_align(Self::MENU_ITEM_ALIGNMENT)
+            .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
+            .styled(stylesheet)
+            .with_radius(Self::MENU_ITEM_RADIUS)
+    }
+
     #[cfg(feature = "micropython")]
     pub fn new_connection_item(
         text: TString<'static>,
@@ -155,6 +168,22 @@ impl Button {
             text,
             subtext,
             subtext_style,
+            subtext_overflow: false,
+            icon,
+        })
+    }
+
+    pub fn with_text_and_overflowing_subtext(
+        text: TString<'static>,
+        subtext: TString<'static>,
+        subtext_style: &'static TextStyle,
+        icon: Option<(Icon, Color)>,
+    ) -> Self {
+        Self::new(ButtonContent::TextAndSubtext {
+            text,
+            subtext,
+            subtext_style,
+            subtext_overflow: true,
             icon,
         })
     }
@@ -328,12 +357,7 @@ impl Button {
                 text.map(|t| self.text_height(t, *single_line, width))
             }
             ButtonContent::Icon(icon) => icon.toif.height(),
-            ButtonContent::TextAndSubtext {
-                text,
-                subtext: _,
-                subtext_style: _,
-                icon,
-            } => {
+            ButtonContent::TextAndSubtext { text, icon, .. } => {
                 let width = if icon.is_some() {
                     width - Self::CONN_ICON_WIDTH
                 } else {
@@ -464,6 +488,7 @@ impl Button {
                 text,
                 subtext,
                 subtext_style,
+                subtext_overflow,
                 icon,
             } => {
                 let text_baseline_height = self.baseline_text_height();
@@ -494,7 +519,9 @@ impl Button {
                 subtext.map(|subtext| {
                     #[cfg(feature = "ui_debug")]
                     {
-                        if subtext_style.text_font.text_width(subtext) > available_width {
+                        if subtext_style.text_font.text_width(subtext) > available_width
+                            && !subtext_overflow
+                        {
                             fatal_error!(&uformat!(len: 128, "Subtext too long: '{}'", subtext));
                         }
                     }
@@ -726,6 +753,7 @@ pub enum ButtonContent {
         text: TString<'static>,
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
+        subtext_overflow: bool,
         icon: Option<(Icon, Color)>,
     },
     Icon(Icon),
