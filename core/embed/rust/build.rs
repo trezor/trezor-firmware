@@ -405,6 +405,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("rgb_led_effect_start")
         .allowlist_function("rgb_led_effect_stop")
         .allowlist_function("rgb_led_effect_ongoing")
+        .allowlist_function("rgb_led_effect_get_type")
         // systick
         .allowlist_function("systick_delay_ms")
         .allowlist_function("systick_ms")
