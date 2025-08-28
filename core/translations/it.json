@@ -662,7 +662,6 @@
     "reset__continue_with_share_template": "Continua con azione n.{0}.",
     "reset__create_x_of_y_multi_share_backup_template": "Creare {0} back-up multi-condivisione su {1}?",
     "reset__finished_verifying_group_template": "Hai completato la verifica azioni di recupero per il gruppo {0}.",
-    "reset__finished_verifying_seed": "Hai completato la verifica frase Seed di recupero.",
     "reset__finished_verifying_shares": "Hai completato la verifica azioni di recupero.",
     "reset__group_description": "Un gruppo è costituito da azioni di recupero.",
     "reset__group_info": "Ogni gruppo ha un dato numero di azioni e una soglia specifica. Nei passaggi successivi, imposterai il numero di azioni e le soglie.",
