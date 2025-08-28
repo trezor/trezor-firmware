@@ -11,16 +11,17 @@ use crate::{
     ui::{
         component::{
             text::{
+                layout::Chunks,
                 op::OpTextLayout,
                 paragraphs::{
                     Checklist, Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt,
                 },
-                TextStyle,
+                LineBreaking, TextStyle,
             },
             ComponentExt as _, Empty, FormattedText, Timeout,
         },
         flow::FlowMsg,
-        geometry::{Alignment, LinearPlacement, Offset},
+        geometry::{LinearPlacement, Offset},
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
             util::{ConfirmValueParams, ContentType, PropsList, RecoveryType, StrOrBytes},
@@ -35,6 +36,7 @@ use crate::{
 
 use super::{
     component::Button,
+    constant::SCREEN,
     firmware::{
         ActionBar, Bip39Input, ConfirmHomescreen, DeviceMenuScreen, DurationInput, Header,
         HeaderMsg, Hint, Homescreen, MnemonicKeyboard, PinKeyboard, ProgressScreen,
@@ -1234,19 +1236,34 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_pairing_device_name(
-        device_name: TString<'static>,
+        title: TString<'static>,
+        items: Obj,
+        verb: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let font = fonts::FONT_SATOSHI_REGULAR_38;
         let text_style = theme::firmware::TEXT_REGULAR;
         let mut ops = OpTextLayout::new(text_style);
-        let text: TString = " is your Trezor's name.".into();
-        ops.add_color(theme::GREEN)
-            .add_text(device_name, font)
-            .add_color(text_style.text_color)
-            .add_text(text, font);
+
+        for item in IterBuf::new().try_iterate(items)? {
+            if item.is_str() {
+                ops.add_text(TString::try_from(item)?, font);
+            } else {
+                let [emphasis, text]: [Obj; 2] = util::iter_into_array(item)?;
+                let text: TString = text.try_into()?;
+                if emphasis.try_into()? {
+                    ops.add_color(theme::GREEN_LIME)
+                        .add_line_breaking(LineBreaking::BreakWordsNoHyphen)
+                        .add_text(text, font)
+                        .add_color(text_style.text_color)
+                        .add_line_breaking(LineBreaking::BreakAtWhitespace);
+                } else {
+                    ops.add_text(text, font);
+                }
+            }
+        }
         let screen = TextScreen::new(FormattedText::new(ops))
-            .with_header(Header::new("Pair with new device".into()).with_close_button())
-            .with_action_bar(ActionBar::new_text_only("Continue on host".into()));
+            .with_header(Header::new(title).with_close_button())
+            .with_action_bar(ActionBar::new_text_only(verb));
         #[cfg(feature = "ble")]
         let screen = crate::ui::component::BLEHandler::new(screen, true);
         let layout = RootComponent::new(screen);
@@ -1259,17 +1276,31 @@ impl FirmwareUI for UIEckhart {
         description: TString<'static>,
         code: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
+        let available_width = SCREEN.width() - 2 * theme::PADDING;
+        // Choose the font so the code fits on one line
+        let (code_font, code_width) = code.map(|c| {
+            let f72 = fonts::FONT_SATOSHI_EXTRALIGHT_72;
+            let f46 = fonts::FONT_SATOSHI_EXTRALIGHT_46;
+            if f72.text_width(c) < available_width {
+                (f72, f72.text_width(c))
+            } else {
+                (f46, f46.text_width(c))
+            }
+        });
+        // Adapt the offset so the code spreads accross the available width
+        let x_offset = (available_width - code_width) / (code.len() as i16 - 1);
+
         let mut ops = OpTextLayout::new(theme::firmware::TEXT_REGULAR);
         ops.add_text(description, fonts::FONT_SATOSHI_REGULAR_38)
+            .add_chunkify_text(Some((Chunks::new(1, x_offset), 100)))
+            .add_color(theme::GREY_EXTRA_LIGHT)
             .add_newline()
-            .add_newline()
-            .add_newline()
-            .add_alignment(Alignment::Center)
-            .add_text(code, fonts::FONT_SATOSHI_EXTRALIGHT_72);
+            .add_text(code, code_font);
         let screen = crate::ui::component::BLEHandler::new(
             TextScreen::new(FormattedText::new(ops))
                 .with_header(Header::new(title))
-                .with_action_bar(ActionBar::new_cancel_confirm()),
+                .with_action_bar(ActionBar::new_cancel_confirm())
+                .with_page_limit(1),
             false,
         );
         let layout = RootComponent::new(screen);

@@ -379,7 +379,9 @@ pub trait FirmwareUI {
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_pairing_device_name(
-        device_name: TString<'static>,
+        title: TString<'static>,
+        items: Obj,
+        verb: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     #[cfg(feature = "ble")]

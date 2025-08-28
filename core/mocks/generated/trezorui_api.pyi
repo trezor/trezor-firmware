@@ -643,7 +643,9 @@ def show_device_menu(
 # rust/src/ui/api/firmware_micropython.rs
 def show_pairing_device_name(
     *,
-    device_name: str,
+    title: str,
+    items: Iterable[str | tuple[bool, str]],
+    verb: str,
 ) -> LayoutObj[UiResult]:
     """Pairing device: first screen (device name).
     Returns if BLEEvent::PairingRequest is received."""

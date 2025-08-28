@@ -1,7 +1,7 @@
 import trezorble as ble
 import trezorui_api
 from storage import device as storage_device
-from trezor import utils
+from trezor import TR, utils
 from trezor.crypto import random
 from trezor.ui.layouts import CONFIRMED, interact
 from trezor.wire import ActionCancelled
@@ -27,11 +27,21 @@ def _default_ble_name() -> str:
 async def pair_new_device() -> None:
     label = storage_device.get_label() or _default_ble_name()
     ble.start_advertising(False, label)
+
+    # Placeholders are coming from translations in form of {0}
+    template_str = "{0}"
+    description = TR.ble__device_name_template
+    assert template_str in description
+
+    begin, _separator, end = description.partition(template_str)
+
     result = None
     try:
         code = await interact(
             trezorui_api.show_pairing_device_name(
-                device_name=label,
+                title=TR.ble__pair_new,
+                items=(begin, (True, label), end),
+                verb=TR.ble__continue_on_host,
             ),
             None,
         )
@@ -41,8 +51,8 @@ async def pair_new_device() -> None:
         try:
             result = await interact(
                 trezorui_api.show_ble_pairing_code(
-                    title="Bluetooth pairing",
-                    description="Pairing code match?",
+                    title=TR.ble__pairing,
+                    description=TR.ble__pair_code_match,
                     code=f"{code:0>6}",
                 ),
                 None,

@@ -985,8 +985,10 @@ extern "C" fn new_show_pairing_device_name(
     kwargs: *mut Map,
 ) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let device_name: TString = kwargs.get(Qstr::MP_QSTR_device_name)?.try_into()?;
-        let layout = ModelUI::show_pairing_device_name(device_name)?;
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
+        let verb: TString = kwargs.get(Qstr::MP_QSTR_verb)?.try_into()?;
+        let layout = ModelUI::show_pairing_device_name(title, items, verb)?;
         let layout_obj = LayoutObj::new_root(layout)?;
         Ok(layout_obj.into())
     };
@@ -1919,7 +1921,9 @@ pub static mp_module_trezorui_api: Module = obj_module! {
 
     /// def show_pairing_device_name(
     ///     *,
-    ///     device_name: str,
+    ///     title: str,
+    ///     items: Iterable[str | tuple[bool, str]],
+    ///     verb: str,
     /// ) -> LayoutObj[UiResult]:
     ///     """Pairing device: first screen (device name).
     ///     Returns if BLEEvent::PairingRequest is received."""

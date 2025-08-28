@@ -954,7 +954,9 @@ impl FirmwareUI for UIBolt {
     }
 
     fn show_pairing_device_name(
-        _device_name: TString<'static>,
+        _title: TString<'static>,
+        _items: Obj,
+        _verb: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
             c"show_pairing_device_name not supported",

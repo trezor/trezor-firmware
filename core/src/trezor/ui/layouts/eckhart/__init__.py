@@ -99,8 +99,6 @@ def confirm_single(
         ButtonRequestType.ProtectCall,
     )
 
-    show_continue_in_app(TR.address__confirmed)
-
 
 def confirm_reset_device(recovery: bool = False) -> Awaitable[None]:
     return raise_if_cancelled(

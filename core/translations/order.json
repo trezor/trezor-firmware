@@ -1125,5 +1125,9 @@
   "1123": "words__disconnected",
   "1124": "ble__forget_all",
   "1125": "words__connect",
-  "1126": "words__forget"
+  "1126": "words__forget",
+  "1127": "ble__continue_on_host",
+  "1128": "ble__device_name_template",
+  "1129": "ble__pair_code_match",
+  "1130": "ble__pairing"
 }

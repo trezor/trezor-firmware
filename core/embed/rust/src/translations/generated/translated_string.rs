@@ -1515,6 +1515,10 @@ pub enum TranslatedString {
     ble__forget_all = 1124,  // "Forget all"
     words__connect = 1125,  // "Connect"
     words__forget = 1126,  // "Forget"
+    ble__continue_on_host = 1127,  // "Continue on host"
+    ble__device_name_template = 1128,  // "{0} is your device name."
+    ble__pair_code_match = 1129,  // "Pairing code match?"
+    ble__pairing = 1130,  // "Bluetooth pairing"
 }
 
 impl TranslatedString {
@@ -3356,6 +3360,10 @@ impl TranslatedString {
             (Self::ble__forget_all, "Forget all"),
             (Self::words__connect, "Connect"),
             (Self::words__forget, "Forget"),
+            (Self::ble__continue_on_host, "Continue on host"),
+            (Self::ble__device_name_template, "{0} is your device name."),
+            (Self::ble__pair_code_match, "Pairing code match?"),
+            (Self::ble__pairing, "Bluetooth pairing"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3433,12 +3441,16 @@ impl TranslatedString {
         (Qstr::MP_QSTR_bitcoin__unverified_external_inputs, Self::bitcoin__unverified_external_inputs),
         (Qstr::MP_QSTR_bitcoin__valid_signature, Self::bitcoin__valid_signature),
         (Qstr::MP_QSTR_bitcoin__voting_rights, Self::bitcoin__voting_rights),
+        (Qstr::MP_QSTR_ble__continue_on_host, Self::ble__continue_on_host),
+        (Qstr::MP_QSTR_ble__device_name_template, Self::ble__device_name_template),
         (Qstr::MP_QSTR_ble__disable, Self::ble__disable),
         (Qstr::MP_QSTR_ble__enable, Self::ble__enable),
         (Qstr::MP_QSTR_ble__forget_all, Self::ble__forget_all),
         (Qstr::MP_QSTR_ble__manage_paired, Self::ble__manage_paired),
+        (Qstr::MP_QSTR_ble__pair_code_match, Self::ble__pair_code_match),
         (Qstr::MP_QSTR_ble__pair_new, Self::ble__pair_new),
         (Qstr::MP_QSTR_ble__pair_title, Self::ble__pair_title),
+        (Qstr::MP_QSTR_ble__pairing, Self::ble__pairing),
         (Qstr::MP_QSTR_ble__unpair_all, Self::ble__unpair_all),
         (Qstr::MP_QSTR_ble__unpair_current, Self::ble__unpair_current),
         (Qstr::MP_QSTR_ble__unpair_title, Self::ble__unpair_title),
