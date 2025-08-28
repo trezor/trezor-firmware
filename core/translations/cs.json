@@ -833,7 +833,6 @@
     "solana__stake_withdrawal_warning": "Tato pěněženka nemůže být použita pro výběr z tohoto stakingu.",
     "solana__stake_withdrawal_warning_title": "Adresa autority oprávněné k výběru",
     "solana__transaction_contains_unknown_instructions": "Transakce obsahuje neznámý pokyn.",
-    "solana__transaction_fee": "Transakční poplatek",
     "solana__transaction_requires_x_signers_template": "Transakce vyžaduje {0} podepisujících osob, což zvyšuje poplatek.",
     "solana__unknown_token": "Neznámý token",
     "solana__unknown_token_address": "Neznámá adresa tokenu",
