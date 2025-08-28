@@ -300,6 +300,8 @@ static void drivers_init(secbool manufacturing_mode,
 
 #ifdef USE_BLE
   ble_init();
+  // increase BLE speed for sake of upload speed
+  ble_set_high_speed(true);
 #endif
 }
 
