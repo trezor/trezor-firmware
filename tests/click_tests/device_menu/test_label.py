@@ -232,15 +232,14 @@ def test_label_over_32_chars(device_handler: "BackgroundDeviceHandler"):
     # Assert the correct label on the homescreen
     assert debug.read_layout().text_content() == LABEL32
     # Open the device menu, it must not fail due to label button text overflow
-    # TODO allow when the menu can handle long labels
-    # debug.click(debug.screen_buttons.ok())
-    # debug.synchronize_at("DeviceMenuScreen")
-    # # Navigate to device menu
-    # Menu.DEVICE.navigate_to(debug, features)
-    # # Check the correct label in the button subtext
-    # layout = debug.read_layout()
-    # label_idx = layout.vertical_menu_content().index(LABEL_TITLE)
-    # assert layout.vertical_menu_subtext()[label_idx] == LABEL32
+    debug.click(debug.screen_buttons.ok())
+    debug.synchronize_at("DeviceMenuScreen")
+    # Navigate to device menu
+    Menu.DEVICE.navigate_to(debug, features)
+    # Check the correct label in the button subtext
+    layout = debug.read_layout()
+    label_idx = layout.vertical_menu_content().index(LABEL_TITLE)
+    assert layout.vertical_menu_subtext()[label_idx] == LABEL32
 
     features = device_handler.features()
     assert features.initialized is True
