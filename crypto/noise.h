@@ -75,6 +75,15 @@ bool noise_handle_handshake_response(noise_context_t* ctx,
                                      const curve25519_key responder_public_key,
                                      const noise_response_t* response);
 
+// This is called by the initiator to handle the handshake response
+// This is a wrapper above noise_handle_handshake_response that allows to pass
+// multiple responder public keys, the first key that succeeds in paring is
+// used
+bool noise_handle_handshake_response_multiple_keys(
+    noise_context_t* ctx, const curve25519_key initiator_private_key,
+    const curve25519_key responder_public_keys[],
+    size_t responder_public_keys_count, const noise_response_t* response);
+
 // This is called by both the initiator and responder to send a message
 // len(ciphertext) == plaintext_length + NOISE_TAG_SIZE
 // The official Noise specification requires the associated_data to be empty
