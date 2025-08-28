@@ -8,6 +8,19 @@ from trezorui_api import DeviceMenuResult
 MAX_PAIRED_DEVICES = 4
 
 
+def _format_mac(ble_addr: bytes) -> str:
+    return ":".join(f"{byte:02X}" for byte in ble_addr)
+
+
+def _find_device(connected_addr: bytes | None, bonds: list[bytes]) -> int | None:
+    if connected_addr is None:
+        return None
+    for i, bond in enumerate(bonds):
+        if bond == connected_addr:
+            return i
+    return None
+
+
 async def handle_device_menu() -> None:
     from trezor import strings
 
@@ -15,9 +28,17 @@ async def handle_device_menu() -> None:
     led_configurable = is_initialized and utils.USE_RGB_LED
     haptic_configurable = is_initialized and utils.USE_HAPTIC
     failed_backup = is_initialized and storage_device.unfinished_backup()
-    # MOCK DATA
-    paired_devices = ["Trezor Suite"]
-    connected_idx = 0 if ble.is_connected() else None
+
+    bonds = ble.get_bonds()
+    if __debug__:
+        log.debug(__name__, "bonds: %s", bonds)
+
+    connected_addr = ble.connected_addr()
+    connected_idx = _find_device(connected_addr, bonds)
+    if __debug__:
+        log.debug(__name__, "connected: %s (%s)", connected_addr, connected_idx)
+    paired_devices = [_format_mac(bond) for bond in bonds]
+
     bluetooth_version = "2.3.1.1"
     # ###
     firmware_version = ".".join(map(str, utils.VERSION))
