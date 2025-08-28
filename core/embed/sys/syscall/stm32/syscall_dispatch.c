@@ -351,6 +351,11 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     case SYSCALL_RGB_LED_EFFECT_ONGOING: {
       args[0] = rgb_led_effect_ongoing();
     } break;
+
+    case SYSCALL_RGB_LED_EFFECT_GET_TYPE: {
+      args[0] = rgb_led_effect_get_type();
+    } break;
+
 #endif
 
 #ifdef USE_HAPTIC

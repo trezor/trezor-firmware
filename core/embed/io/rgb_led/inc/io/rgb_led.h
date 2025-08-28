@@ -42,6 +42,7 @@
  * @brief RGB LED effect type
  */
 typedef enum {
+  RGB_LED_EFFECT_NONE = -1,
   RGB_LED_EFFECT_PAIRING = 0,
   RGB_LED_EFFECT_CHARGING,
   RGB_LED_NUM_OF_EFFECTS,
@@ -135,3 +136,13 @@ void rgb_led_effect_stop(void);
  * @return true if an effect is currently running, false otherwise
  */
 bool rgb_led_effect_ongoing(void);
+
+/**
+ * @brief Get the ongoing RGB led effect type
+ *
+ * Get the ongoing RGB led effect type, return RGB_LED_EFFECT_NONE if no effect
+ * is running.
+ *
+ * @return The type of the currently running RGB led effect
+ */
+rgb_led_effect_type_t rgb_led_effect_get_type(void);
