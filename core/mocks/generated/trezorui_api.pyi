@@ -852,7 +852,6 @@ class LayoutState:
 class DeviceMenuResult:
     """Result of a device menu operation."""
     BackupFailed: ClassVar[DeviceMenuResult]
-    DeviceConnect: ClassVar[DeviceMenuResult]
     DeviceDisconnect: ClassVar[DeviceMenuResult]
     DevicePair: ClassVar[DeviceMenuResult]
     DeviceUnpair: ClassVar[DeviceMenuResult]

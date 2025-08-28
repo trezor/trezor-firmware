@@ -164,9 +164,6 @@ impl ComponentMsgObj for DeviceMenuScreen {
             // "Pair & Connect"
             DeviceMenuMsg::DevicePair => Ok(DEVICE_PAIR.as_obj()),
             DeviceMenuMsg::DeviceDisconnect => Ok(DEVICE_DISCONNECT.as_obj()),
-            DeviceMenuMsg::DeviceConnect(index) => {
-                Ok(new_tuple(&[DEVICE_CONNECT.as_obj(), index.try_into()?])?)
-            }
             DeviceMenuMsg::DeviceUnpair(index) => {
                 Ok(new_tuple(&[DEVICE_UNPAIR.as_obj(), index.try_into()?])?)
             }

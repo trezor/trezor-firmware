@@ -14,7 +14,6 @@ pub static BLUETOOTH: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BAS
 // "Pair & Connect"
 pub static DEVICE_PAIR: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static DEVICE_DISCONNECT: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
-pub static DEVICE_CONNECT: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static DEVICE_UNPAIR: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static DEVICE_UNPAIR_ALL: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 // Security menu
@@ -43,7 +42,6 @@ static DEVICE_MENU_RESULT_TYPE: Type = obj_type! {
         Qstr::MP_QSTR_Bluetooth => BLUETOOTH.as_obj(),
         Qstr::MP_QSTR_DevicePair => DEVICE_PAIR.as_obj(),
         Qstr::MP_QSTR_DeviceDisconnect => DEVICE_DISCONNECT.as_obj(),
-        Qstr::MP_QSTR_DeviceConnect => DEVICE_CONNECT.as_obj(),
         Qstr::MP_QSTR_DeviceUnpair => DEVICE_UNPAIR.as_obj(),
         Qstr::MP_QSTR_DeviceUnpairAll => DEVICE_UNPAIR_ALL.as_obj(),
         Qstr::MP_QSTR_PinCode => PIN_CODE.as_obj(),
