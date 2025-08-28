@@ -43,6 +43,10 @@
 #include <io/button.h>
 #endif
 
+#ifdef USE_RGB_LED
+#include <io/rgb_led.h>
+#endif
+
 #ifdef USE_POWER_MANAGER
 #include <io/display.h>
 #include <io/display_utils.h>
@@ -122,6 +126,16 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
       pm_state_t pm_state = {0};
 
       pm_get_state(&pm_state);
+
+#ifdef USE_RGB_LED
+      if (pm_state.charging_status == PM_BATTERY_CHARGING) {
+        if (!rgb_led_effect_ongoing()) {
+          rgb_led_effect_start(RGB_LED_EFFECT_CHARGING, 0);
+        }
+      } else {
+        rgb_led_effect_stop();
+      }
+#endif
 
       if (pm_state.usb_connected) {
         fade_deadline = ticks_timeout(FADE_TIME_MS);
