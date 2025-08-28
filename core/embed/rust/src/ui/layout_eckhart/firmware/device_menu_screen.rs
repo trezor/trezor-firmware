@@ -46,8 +46,7 @@ const MAX_DEPTH: usize = 3;
 // submenus, device screens, regulatory and about screens
 const MAX_SUBSCREENS: usize = MAX_SUBMENUS + MAX_PAIRED_DEVICES + 2;
 
-const DIS_CONNECT_DEVICE_MENU_INDEX: usize = 0;
-const FORGET_DEVICE_MENU_INDEX: usize = 1;
+const DISCONNECT_DEVICE_MENU_INDEX: usize = 0;
 
 #[derive(Clone)]
 enum Action {
@@ -68,9 +67,6 @@ pub enum DeviceMenuMsg {
     // "Pair & Connect"
     DevicePair,       // pair a new device
     DeviceDisconnect, // disconnect a device
-    DeviceConnect(
-        usize, /* which device to connect, index in the list of devices */
-    ),
     DeviceUnpair(
         usize, /* which device to unpair, index in the list of devices */
     ),
@@ -675,12 +671,12 @@ impl DeviceMenuScreen {
             }
             Subscreen::DeviceScreen(device, connected, _) => {
                 let mut menu = VerticalMenu::empty();
-                let text = if connected {
-                    TR::words__disconnect
-                } else {
-                    TR::words__connect
-                };
-                menu.item(Button::new_menu_item(text.into(), theme::menu_item_title()));
+                if connected {
+                    menu.item(Button::new_menu_item(
+                        TR::words__disconnect.into(),
+                        theme::menu_item_title(),
+                    ));
+                }
                 menu.item(Button::new_menu_item(
                     TR::words__forget.into(),
                     theme::menu_item_title_orange(),
@@ -809,16 +805,12 @@ impl Component for DeviceMenuScreen {
             (Subscreen::DeviceScreen(_, connected, device_idx), ActiveScreen::Device(menu)) => {
                 match menu.event(ctx, event) {
                     Some(VerticalMenuScreenMsg::Selected(button_idx)) => match button_idx {
-                        DIS_CONNECT_DEVICE_MENU_INDEX if *connected => {
+                        DISCONNECT_DEVICE_MENU_INDEX if *connected => {
                             return Some(DeviceMenuMsg::DeviceDisconnect);
                         }
-                        DIS_CONNECT_DEVICE_MENU_INDEX if !*connected => {
-                            return Some(DeviceMenuMsg::DeviceConnect(*device_idx));
-                        }
-                        FORGET_DEVICE_MENU_INDEX => {
+                        _ => {
                             return Some(DeviceMenuMsg::DeviceUnpair(*device_idx));
                         }
-                        _ => {}
                     },
                     Some(VerticalMenuScreenMsg::Back) => {
                         return self.go_back(ctx);
