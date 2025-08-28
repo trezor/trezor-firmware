@@ -61,6 +61,7 @@ void ble_management_send_status_event(void) {
   msg.bld_version = 0;
   msg.busy_flag = ble_get_busy_flag();
   msg.flags.bonded_connection = connection_is_bonded();
+  msg.flags.high_speed = connection_is_high_speed();
   msg.flags.reserved = 0;
 
   if (connected) {
@@ -204,6 +205,12 @@ static void process_command(uint8_t *data, uint16_t len) {
     } break;
     case INTERNAL_CMD_GET_BOND_LIST: {
       management_send_bonds();
+    } break;
+    case INTERNAL_CMD_SET_SPEED_HIGH: {
+      connection_set_high_speed();
+    } break;
+    case INTERNAL_CMD_SET_SPEED_LOW: {
+      connection_set_low_speed();
     } break;
     default:
       break;
