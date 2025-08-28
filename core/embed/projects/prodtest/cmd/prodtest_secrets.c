@@ -28,6 +28,7 @@
 #include <sec/secret.h>
 #include <sec/secret_keys.h>
 
+#include "common.h"
 #include "memzero.h"
 #include "rand.h"
 #include "secbool.h"
@@ -162,6 +163,31 @@ cleanup:
   memzero(mcu_private, sizeof(mcu_private));
 }
 
+#ifndef TREZOR_EMULATOR
+static bool check_device_cert_chain(cli_t* cli, const uint8_t* chain,
+                                    size_t chain_size) {
+  ed25519_secret_key mcu_private = {0};
+  if (secret_key_mcu_device_auth(mcu_private) != sectrue) {
+    cli_error(cli, CLI_ERROR, "`secret_key_mcu_device_auth()` failed.");
+    return false;
+  }
+
+  // The challenge is intentionally constant zero.
+  uint8_t challenge[CHALLENGE_SIZE] = {0};
+  ed25519_signature signature = {0};
+  ed25519_sign(challenge, sizeof(challenge), mcu_private, signature);
+  memzero(mcu_private, sizeof(mcu_private));
+
+  if (!check_cert_chain(cli, chain, chain_size, signature, sizeof(signature),
+                        challenge)) {
+    // Error returned by check_cert_chain().
+    return false;
+  }
+
+  return true;
+}
+#endif
+
 static void prodtest_secrets_certdev_write(cli_t* cli) {
   if (cli_arg_count(cli) != 1) {
     cli_error_arg_count(cli);
@@ -186,6 +212,12 @@ static void prodtest_secrets_certdev_write(cli_t* cli) {
   }
   prefixed_certificate[0] = (certificate_length >> 8) & 0xFF;
   prefixed_certificate[1] = certificate_length & 0xFF;
+
+  if (!check_device_cert_chain(cli, &prefixed_certificate[prefix_length],
+                               certificate_length)) {
+    // Error returned by check_device_cert_chain().
+    return;
+  }
 
   secret_write(prefixed_certificate, SECRET_MCU_DEVICE_CERT_OFFSET,
                sizeof(prefixed_certificate));
