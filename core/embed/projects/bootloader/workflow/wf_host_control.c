@@ -133,7 +133,9 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
           rgb_led_effect_start(RGB_LED_EFFECT_CHARGING, 0);
         }
       } else {
-        rgb_led_effect_stop();
+        if (rgb_led_effect_get_type() == RGB_LED_EFFECT_CHARGING) {
+          rgb_led_effect_stop();
+        }
       }
 #endif
 
