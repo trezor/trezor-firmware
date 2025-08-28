@@ -334,6 +334,11 @@ bool rgb_led_effect_ongoing(void) {
   return (bool)syscall_invoke0(SYSCALL_RGB_LED_EFFECT_ONGOING);
 }
 
+rgb_led_effect_type_t rgb_led_effect_get_type(void) {
+  return (rgb_led_effect_type_t)syscall_invoke0(
+      SYSCALL_RGB_LED_EFFECT_GET_TYPE);
+}
+
 #endif
 
 // =============================================================================

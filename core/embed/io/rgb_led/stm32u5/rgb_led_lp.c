@@ -287,6 +287,21 @@ bool rgb_led_effect_ongoing(void) {
   return ongoing;
 }
 
+rgb_led_effect_type_t rgb_led_effect_get_type(void) {
+  rgb_led_t* drv = &g_rgb_led;
+
+  if (!drv->initialized || !drv->ongoing_effect) {
+    return RGB_LED_EFFECT_NONE;
+  }
+
+  rgb_led_effect_type_t effect_type;
+  irq_key_t irq_key = irq_lock();
+  effect_type = drv->effect.type;
+  irq_unlock(irq_key);
+
+  return effect_type;
+}
+
 static void rgb_led_apply_color(rgb_led_t* drv, rgb_led_color_fs_t* color_fs) {
   // Check color settings is in range
   if (color_fs->red > RGB_LED_TIMER_PERIOD ||
