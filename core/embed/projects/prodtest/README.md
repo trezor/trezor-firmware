@@ -700,7 +700,8 @@ OK 638c8a83ddc8fd84cddf5a0a4fa3d9615146cd341685dca942bab1132c2bc99b
 ```
 
 ### secrets-certdev-write
-Writes the X.509 device attestation certificate issued by the Trezor Company for the attestation key stored in MCU.
+Writes the X.509 device attestation certificate issued by the Trezor Company for the attestation key stored in the MCU.
+The `otp-device-sn-write` command must be executed before calling this command.
 
 Example:
 ```
@@ -709,7 +710,7 @@ OK
 ```
 
 ### secrets-certdev-read
-Retrieves the X.509 device attestation certificate issued by the Trezor Company for the attestation key stored in MCU.
+Retrieves the X.509 device attestation certificate issued by the Trezor Company for the attestation key stored in the MCU.
 
 Example:
 ```
@@ -746,6 +747,7 @@ OK <hexadecimal string>
 
 ### optiga-certdev-write
 Writes the X.509 certificate issued by the Trezor Company for the device attestation key stored in Optiga.
+The `otp-device-sn-write` command must be executed before calling this command.
 
 Example:
 ```
@@ -1008,7 +1010,7 @@ OK 00000300
 
 ### tropic-get-chip-id
 
-Reads the Tropic chip ID. The command returns `OK` followed by the chip ID.
+Reads the Tropic chip ID. The command returns `OK` followed by the 128-byte serialization of `lt_chip_id_t`.
 
 Example:
 ```
@@ -1119,6 +1121,7 @@ OK <hexadecimal string>
 ### tropic-certdev-write
 
 Writes the X.509 certificate issued by the Trezor Company for the device attestation key stored in Tropic.
+The `otp-device-sn-write` command must be executed before calling this command.
 
 Example:
 ```

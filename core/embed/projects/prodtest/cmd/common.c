@@ -19,6 +19,7 @@
 
 #include <trezor_model.h>
 #include <trezor_rtl.h>
+#include <util/unit_properties.h>
 
 #include "common.h"
 
@@ -62,6 +63,13 @@ static const uint8_t OID_COMMON_NAME[] = {
   0x06, 0x03, // an OID of 3 bytes
     0x55, 0x04, 0x03, // corresponds to commonName in X.509
 };
+
+#if !(defined TREZOR_MODEL_T3B1 || defined TREZOR_MODEL_T3T1)
+static const uint8_t OID_SERIAL_NUMBER[] = {
+  0x06, 0x03, // an OID of 3 bytes
+    0x55, 0x04, 0x05, // corresponds to serialNumber in X.509
+};
+#endif
 
 static const uint8_t SUBJECT_COMMON_NAME[] = {
 #ifdef TREZOR_MODEL_T2B1
@@ -184,44 +192,51 @@ static bool get_authority_key_digest(cli_t* cli, DER_ITEM* tbs_cert,
   return true;
 }
 
-static bool get_common_name(DER_ITEM* name, const uint8_t** common_name,
-                            size_t* common_name_size) {
+static bool get_name_attribute(DER_ITEM* name, const uint8_t* type,
+                               size_t type_size, const uint8_t** value,
+                               size_t* value_size) {
   if (name->id != DER_SEQUENCE) {
     return false;
   }
 
-  DER_ITEM distinguished_name = {0};
-  if (!der_read_item(&name->buf, &distinguished_name) ||
-      distinguished_name.id != DER_SET) {
-    return false;
+  DER_ITEM relative_distinguished_name = {0};
+  while (der_read_item(&name->buf, &relative_distinguished_name)) {
+    if (relative_distinguished_name.id != DER_SET) {
+      return false;
+    }
+
+    DER_ITEM attribute = {0};
+    if (!der_read_item(&relative_distinguished_name.buf, &attribute) ||
+        attribute.id != DER_SEQUENCE) {
+      return false;
+    }
+
+    DER_ITEM attribute_type = {0};
+    if (!der_read_item(&attribute.buf, &attribute_type)) {
+      return false;
+    }
+
+    if (attribute_type.buf.size != type_size ||
+        memcmp(attribute_type.buf.data, type, type_size) != 0) {
+      continue;
+    }
+
+    DER_ITEM attribute_value = {0};
+    if (!der_read_item(&attribute.buf, &attribute_value) ||
+        (attribute_value.id != DER_UTF8_STRING &&
+         attribute_value.id != DER_PRINTABLE_STRING)) {
+      return false;
+    }
+
+    if (!buffer_ptr(&attribute_value.buf, value)) {
+      return false;
+    }
+    *value_size = buffer_remaining(&attribute_value.buf);
+    return true;
   }
 
-  DER_ITEM attribute = {0};
-  if (!der_read_item(&distinguished_name.buf, &attribute) ||
-      attribute.id != DER_SEQUENCE) {
-    return false;
-  }
-
-  DER_ITEM attribute_type = {0};
-  if (!der_read_item(&attribute.buf, &attribute_type) ||
-      attribute_type.buf.size != sizeof(OID_COMMON_NAME) ||
-      memcmp(attribute_type.buf.data, OID_COMMON_NAME,
-             sizeof(OID_COMMON_NAME)) != 0) {
-    return false;
-  }
-
-  DER_ITEM attribute_value = {0};
-  if (!der_read_item(&attribute.buf, &attribute_value) ||
-      attribute_value.id != DER_UTF8_STRING) {
-    return false;
-  }
-
-  if (!buffer_ptr(&attribute_value.buf, common_name)) {
-    return false;
-  }
-  *common_name_size = buffer_remaining(&attribute_value.buf);
-
-  return true;
+  // Attribute not found.
+  return false;
 }
 
 static bool verify_signature(alg_id_t alg_id, const uint8_t* pub_key,
@@ -333,7 +348,9 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
       // Check the common name of the subject of the device certificate.
       const uint8_t* common_name = NULL;
       size_t common_name_size = 0;
-      if (!get_common_name(&subject, &common_name, &common_name_size) ||
+      if (!get_name_attribute(&subject, OID_COMMON_NAME,
+                              sizeof(OID_COMMON_NAME), &common_name,
+                              &common_name_size) ||
           common_name_size != sizeof(SUBJECT_COMMON_NAME) ||
           memcmp(common_name, SUBJECT_COMMON_NAME,
                  sizeof(SUBJECT_COMMON_NAME)) != 0) {
@@ -341,6 +358,33 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
                   "check_device_cert_chain, invalid common name.");
         return false;
       }
+
+#if !(defined TREZOR_MODEL_T3B1 || defined TREZOR_MODEL_T3T1)
+      // Check that the serial number of the subject, matches the device.
+      uint8_t device_sn[MAX_DEVICE_SN_SIZE] = {0};
+      size_t device_sn_size = 0;
+      if (!get_device_sn(device_sn, sizeof(device_sn), &device_sn_size) ||
+          device_sn_size == 0) {
+        cli_error(cli, CLI_ERROR,
+                  "check_device_cert_chain, device_sn not set.");
+      }
+
+      const uint8_t* subject_sn = NULL;
+      size_t subject_sn_size = 0;
+      if (!get_name_attribute(&subject, OID_SERIAL_NUMBER,
+                              sizeof(OID_SERIAL_NUMBER), &subject_sn,
+                              &subject_sn_size)) {
+        cli_error(cli, CLI_ERROR,
+                  "check_device_cert_chain, device_sn not set.");
+      }
+
+      if (subject_sn_size != device_sn_size ||
+          memcmp(subject_sn, device_sn, device_sn_size) != 0) {
+        cli_error(cli, CLI_ERROR,
+                  "check_device_cert_chain, serial number mismatch.");
+        return false;
+      }
+#endif
     }
 
     // Read the Subject Public Key Info.

@@ -160,6 +160,26 @@ void unit_properties_get(unit_properties_t* props) {
   *props = drv->cache;
 }
 
+bool get_device_sn(uint8_t* device_sn, size_t max_device_sn_size,
+                   size_t* device_sn_size) {
+  uint8_t block[FLASH_OTP_BLOCK_SIZE] = {0};
+  // The OTP block should contain a null-terminated string when set.
+  if (sectrue !=
+          flash_otp_read(FLASH_OTP_BLOCK_DEVICE_SN, 0, block, sizeof(block)) ||
+      block[0] == 0xFF) {
+    return false;
+  }
+
+  size_t len = strnlen((char*)block, sizeof(block));
+  if (len > max_device_sn_size) {
+    return false;
+  }
+
+  memcpy(device_sn, block, len);
+  *device_sn_size = len;
+  return true;
+}
+
 #endif  // SECURE_MODE
 
 const unit_properties_t* unit_properties(void) {
