@@ -21,6 +21,8 @@
 
 #include <trezor_types.h>
 
+#define MAX_DEVICE_SN_SIZE 31
+
 #ifdef SECURE_MODE
 
 // Initializes module a detects the unit properties
@@ -64,3 +66,6 @@ void unit_properties_get(unit_properties_t* props);
 
 // Gets a pointer to the static unit properties structure
 const unit_properties_t* unit_properties(void);
+
+bool get_device_sn(uint8_t* device_sn, size_t max_device_sn_size,
+                   size_t* device_sn_size);

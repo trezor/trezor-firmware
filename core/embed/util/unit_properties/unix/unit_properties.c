@@ -78,3 +78,15 @@ const unit_properties_t* unit_properties(void) {
 
   return &cache;
 }
+
+bool get_device_sn(uint8_t* device_sn, size_t max_device_sn_size,
+                   size_t* device_sn_size) {
+  uint8_t sn[] = "12345678901234";
+  if (max_device_sn_size < sizeof(sn) - 1) {
+    return false;
+  }
+
+  memcpy(device_sn, sn, sizeof(sn) - 1);
+  *device_sn_size = sizeof(sn) - 1;
+  return true;
+}
