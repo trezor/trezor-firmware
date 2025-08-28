@@ -69,6 +69,13 @@ class Model(Enum):
         return MODEL_HASH_PARAMS_MAP[self]
 
 
+def get_nrf_keys(model: Model, dev_keys: bool = False) -> t.Sequence[bytes]:
+    keys = model.model_keys(dev_keys).nrf_keys
+    if not keys:
+        raise ValueError("Model does not have NRF keys")
+    return keys
+
+
 @dataclass
 class ModelKeys:
     """Model-specific keys."""
@@ -82,6 +89,7 @@ class ModelKeys:
     firmware_sigs_needed: int
     secmon_keys: t.Sequence[bytes]
     secmon_sigs_needed: int
+    nrf_keys: t.Sequence[bytes]
 
 
 LEGACY_V1V2 = ModelKeys(
@@ -103,6 +111,7 @@ LEGACY_V1V2 = ModelKeys(
     firmware_sigs_needed=3,
     secmon_keys=(),
     secmon_sigs_needed=-1,
+    nrf_keys=(),
 )
 
 LEGACY_V1V2_DEV = ModelKeys(
@@ -124,6 +133,7 @@ LEGACY_V1V2_DEV = ModelKeys(
     firmware_sigs_needed=3,
     secmon_keys=(),
     secmon_sigs_needed=-1,
+    nrf_keys=(),
 )
 
 LEGACY_V3 = ModelKeys(
@@ -143,6 +153,7 @@ LEGACY_V3 = ModelKeys(
     firmware_sigs_needed=2,
     secmon_keys=(),
     secmon_sigs_needed=-1,
+    nrf_keys=(),
 )
 
 LEGACY_V3_DEV = ModelKeys(
@@ -162,6 +173,7 @@ LEGACY_V3_DEV = ModelKeys(
     firmware_sigs_needed=2,
     secmon_keys=(),
     secmon_sigs_needed=-1,
+    nrf_keys=(),
 )
 
 T2T1 = ModelKeys(
@@ -188,6 +200,7 @@ T2T1 = ModelKeys(
     firmware_sigs_needed=-1,
     secmon_keys=(),
     secmon_sigs_needed=-1,
+    nrf_keys=(),
 )
 
 TREZOR_CORE_DEV = ModelKeys(
@@ -221,6 +234,13 @@ TREZOR_CORE_DEV = ModelKeys(
         )
     ],
     secmon_sigs_needed=2,
+    nrf_keys=[
+        bytes.fromhex(k)
+        for k in (
+            "d759793bbc13a2819a827c76adb6fba8a49aee007f49f2d0992d99b825ad2c48",
+            "6355691c178a8ff91007a7478afb955ef7352c63e7b25703984cf78b26e21a56",
+        )
+    ],
 )
 
 T2B1 = ModelKeys(
@@ -247,6 +267,7 @@ T2B1 = ModelKeys(
     firmware_sigs_needed=-1,
     secmon_keys=(),
     secmon_sigs_needed=-1,
+    nrf_keys=(),
 )
 
 T3T1 = ModelKeys(
@@ -273,6 +294,7 @@ T3T1 = ModelKeys(
     firmware_sigs_needed=-1,
     secmon_keys=(),
     secmon_sigs_needed=-1,
+    nrf_keys=(),
 )
 
 T3B1 = ModelKeys(
@@ -299,6 +321,7 @@ T3B1 = ModelKeys(
     firmware_sigs_needed=-1,
     secmon_keys=(),
     secmon_sigs_needed=-1,
+    nrf_keys=(),
 )
 
 T3W1 = ModelKeys(
@@ -332,6 +355,14 @@ T3W1 = ModelKeys(
         )
     ],
     secmon_sigs_needed=2,
+    nrf_keys=[
+        bytes.fromhex(k)
+        for k in (
+            "d1bad5e8c73dfe183ba1bd5464b2c96f1d1de66d53c95026d17169148d096f3e",
+            "585f0635efc6518c490228a72ae1f5d0808ebe77f1c12516eb6d525821eb1e21",
+            "065ee19b0de4eec3be70938935313ca2949cc3808b2bf3ad7ef0ac419a974191",
+        )
+    ],
 )
 
 ROOT_ED25519_KEYS = [
