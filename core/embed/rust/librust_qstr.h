@@ -29,7 +29,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_CheckBackup;
   MP_QSTR_DIM;
   MP_QSTR_DONE;
-  MP_QSTR_DeviceConnect;
   MP_QSTR_DeviceDisconnect;
   MP_QSTR_DeviceMenuResult;
   MP_QSTR_DeviceName;

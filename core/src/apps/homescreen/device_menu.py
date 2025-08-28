@@ -133,15 +133,7 @@ async def handle_device_menu() -> None:
 
         # It's a tuple with (result_type, index)
         result_type, index = menu_result
-        if result_type is DeviceMenuResult.DeviceConnect:
-            await confirm_action(
-                "device_connect",
-                "device_connect",
-                f"connect {index} device?",
-                "The currently connected device will be disconnected.",
-            )
-            # TODO implement device connect handling
-        elif result_type is DeviceMenuResult.DeviceUnpair:
+        if result_type is DeviceMenuResult.DeviceUnpair:
             await confirm_action(
                 "device_unpair",
                 "device_unpair",
