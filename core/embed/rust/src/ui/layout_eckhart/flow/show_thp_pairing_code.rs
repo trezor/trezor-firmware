@@ -3,17 +3,21 @@ use crate::{
     strutil::TString,
     translations::TR,
     ui::{
-        component::{text::op::OpTextLayout, ComponentExt, FormattedText},
+        component::{
+            text::{layout::Chunks, op::OpTextLayout},
+            ComponentExt, FormattedText,
+        },
         flow::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
         },
-        geometry::{Alignment, Direction},
+        geometry::Direction,
     },
 };
 
 use super::super::{
     component::Button,
+    constant::SCREEN,
     firmware::{
         Header, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu, VerticalMenuScreen,
         VerticalMenuScreenMsg,
@@ -54,13 +58,27 @@ pub fn new_show_thp_pairing_code(
     description: TString<'static>,
     code: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
+    let available_width = SCREEN.width() - 2 * theme::PADDING;
+    // Choose the font so the code fits on one line
+    let (code_font, code_width) = code.map(|c| {
+        let f72 = fonts::FONT_SATOSHI_EXTRALIGHT_72;
+        let f46 = fonts::FONT_SATOSHI_EXTRALIGHT_46;
+        if f72.text_width(c) < available_width {
+            (f72, f72.text_width(c))
+        } else {
+            (f46, f46.text_width(c))
+        }
+    });
+    // Adapt the offset so the code spreads accross the available width
+    let x_offset = (available_width - code_width) / (code.len() as i16 - 1);
+
     let mut ops = OpTextLayout::new(theme::firmware::TEXT_REGULAR);
     ops.add_text(description, fonts::FONT_SATOSHI_REGULAR_38)
+        .add_chunkify_text(Some((Chunks::new(1, x_offset), 70)))
+        .add_color(theme::GREY_EXTRA_LIGHT)
         .add_newline()
-        .add_newline()
-        .add_newline()
-        .add_alignment(Alignment::Center)
-        .add_text(code, fonts::FONT_SATOSHI_EXTRALIGHT_72);
+        .add_text(code, code_font);
+
     let screen =
         TextScreen::new(FormattedText::new(ops)).with_header(Header::new(title).with_menu_button());
     let main_content = screen.map(|msg| match msg {
