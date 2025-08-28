@@ -349,6 +349,17 @@ class BootableImage(Struct):
             return self.header.hw_model
         return None
 
+    def insert_sigmask(self, sigmask: int) -> None:
+        self.header.sigmask = sigmask
+
+    def insert_signatures(
+        self, slh_singature: bytes, ed_signature: bytes, slot_idx: int
+    ) -> None:
+        if not 0 <= slot_idx <= 1:
+            raise ValueError("Invalid pubkey-pair slot_idx")
+        self.unauth.slh_signatures[slot_idx] = slh_singature
+        self.unauth.ec_signatures[slot_idx] = ed_signature
+
     def public_pq_keys(self, dev_keys: bool = False) -> t.Sequence[bytes]:
         if dev_keys:
             return models.ROOT_SLH_DSA_KEYS_DEV_PUBLIC
