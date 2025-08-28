@@ -105,7 +105,7 @@ static void rgb_led_linear_gc_effect(uint32_t c0, uint32_t c1,
 // Assign effect callback from the lookup table
 bool rgb_led_assign_effect(rgb_led_effect_t *effect,
                            rgb_led_effect_type_t effect_type) {
-  if (effect_type >= RGB_LED_NUM_OF_EFFECTS) {
+  if (effect_type >= RGB_LED_NUM_OF_EFFECTS && effect_type < 0) {
     return false;
   }
 
