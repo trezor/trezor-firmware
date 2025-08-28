@@ -55,7 +55,7 @@ def all_zero(data: bytes) -> bool:
     return all(b == 0 for b in data)
 
 
-def _check_signature_any(fw: "SignableImageProto", is_devel: bool = False) -> Status:
+def check_signature_any(fw: "SignableImageProto", is_devel: bool = False) -> Status:
     if not fw.signature_present():
         return Status.MISSING
     try:
@@ -78,7 +78,7 @@ class LiteralStr(str):
     pass
 
 
-def _format_container(
+def format_container(
     pb: t.Union[c.Container, Struct, dict],
     indent: int = 0,
     sep: str = " " * 4,
@@ -176,7 +176,7 @@ def format_header(
     all_ok = SYM_OK if hash_status.is_ok() and sig_status.is_ok() else SYM_FAIL
 
     output = [
-        "Firmware Header " + _format_container(header_out),
+        "Firmware Header " + format_container(header_out),
         f"Fingerprint: {click.style(digest.hex(), bold=True)}",
         f"{all_ok} Signature is {sig_status.value}, hashes are {hash_status.value}",
     ]
@@ -211,7 +211,7 @@ def format_secmon_header(
     all_ok = SYM_OK if hash_status.is_ok() and sig_status.is_ok() else SYM_FAIL
 
     output = [
-        "SECMON Header " + _format_container(header_out),
+        "SECMON Header " + format_container(header_out),
         "Code hash: " + click.style(code_hash.hex(), bold=True),
         f"Fingerprint: {click.style(digest.hex(), bold=True)}",
         f"{all_ok} Signature is {sig_status.value}, hash is {hash_status.value}",
@@ -306,7 +306,7 @@ class VendorHeader(firmware.VendorHeader, CosiSignedMixin):
     def _format(self, terse: bool) -> str:
         if not terse:
             output = [
-                "Vendor Header " + _format_container(self),
+                "Vendor Header " + format_container(self),
                 f"Pubkey bundle hash: {self.vhash().hex()}",
             ]
         else:
@@ -321,7 +321,7 @@ class VendorHeader(firmware.VendorHeader, CosiSignedMixin):
         if not terse:
             output.append(f"Fingerprint: {click.style(self.digest().hex(), bold=True)}")
 
-        sig_status = _check_signature_any(self)
+        sig_status = check_signature_any(self)
         sym = SYM_OK if sig_status.is_ok() else SYM_FAIL
         output.append(f"{sym} Signature is {sig_status.value}")
 
@@ -354,7 +354,7 @@ class VendorFirmware(firmware.VendorFirmware, CosiSignedMixin):
                 self.firmware.header,
                 self.firmware.code_hashes(),
                 self.digest(),
-                _check_signature_any(self, is_devel),
+                check_signature_any(self, is_devel),
             )
         )
 
@@ -380,7 +380,7 @@ class BootloaderImage(firmware.FirmwareImage, CosiSignedMixin):
             self.header,
             self.code_hashes(),
             self.digest(),
-            _check_signature_any(self),
+            check_signature_any(self),
         )
 
     def verify(self, dev_keys: bool = False) -> None:
@@ -413,7 +413,7 @@ class SecmonImage(firmware.SecmonImage, CosiSignedMixin):
             self.header,
             self.code_hash(),
             self.digest(),
-            _check_signature_any(self),
+            check_signature_any(self),
         )
 
     def verify(self, dev_keys: bool = False) -> None:
@@ -474,7 +474,7 @@ class BootloaderV2Image(firmware.BootableImage):
                 header_out[key] = LiteralStr(_format_version(val))
 
         output = [
-            "Firmware Header " + _format_container(header_out),
+            "Firmware Header " + format_container(header_out),
             f"Leaf hash: {click.style(self.leaf_hash().hex(), bold=True)}",
             f"Merkle root: {click.style(self.merkle_root().hex(), bold=True)}",
         ]
@@ -526,7 +526,7 @@ class LegacyFirmware(firmware.LegacyFirmware):
         else:
             embedded_content = ""
 
-        return _format_container(contents) + embedded_content
+        return format_container(contents) + embedded_content
 
     def public_keys(
         self, dev_keys: bool = False, signature_version: int = 2
@@ -565,7 +565,7 @@ class LegacyV2Firmware(firmware.LegacyV2Firmware):
             self.header,
             self.code_hashes(),
             self.digest(),
-            _check_signature_any(self),
+            check_signature_any(self),
         )
 
     def public_keys(
