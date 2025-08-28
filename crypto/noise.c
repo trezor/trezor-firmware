@@ -335,3 +335,22 @@ bool noise_receive_message(noise_context_t *ctx, const uint8_t *associated_data,
   }
   return true;
 }
+
+bool noise_handle_handshake_response_multiple_keys(
+    noise_context_t *ctx, const curve25519_key initiator_private_key,
+    const curve25519_key responder_public_keys[],
+    size_t responder_public_keys_count, const noise_response_t *response) {
+  curve25519_key ephemeral_key_backup = {0};
+  memcpy(ephemeral_key_backup, ctx->initiator_ephemeral_private_key,
+         sizeof(ephemeral_key_backup));
+  for (size_t i = 0; i < responder_public_keys_count; i++) {
+    memcpy(ctx->initiator_ephemeral_private_key, ephemeral_key_backup,
+           sizeof(ephemeral_key_backup));
+    if (noise_handle_handshake_response(ctx, initiator_private_key,
+                                        responder_public_keys[i], response)) {
+      memzero(ephemeral_key_backup, sizeof(ephemeral_key_backup));
+      return true;
+    }
+  }
+  return false;
+}
