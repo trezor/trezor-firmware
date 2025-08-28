@@ -33,7 +33,8 @@ typedef struct {
   uint8_t busy_flag;
   struct {
     bool bonded_connection : 1;
-    uint8_t reserved : 7;
+    bool high_speed : 1;
+    uint8_t reserved : 6;
   } flags;
   uint8_t sd_version_number;
 
@@ -71,6 +72,8 @@ typedef enum {
   INTERNAL_CMD_GET_MAC = 0x09,
   INTERNAL_CMD_SET_BUSY = 0x0A,
   INTERNAL_CMD_GET_BOND_LIST = 0x0B,
+  INTERNAL_CMD_SET_SPEED_HIGH = 0x0C,
+  INTERNAL_CMD_SET_SPEED_LOW = 0x0D,
 } internal_cmd_t;
 
 typedef struct {

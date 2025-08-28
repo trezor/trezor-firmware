@@ -32,9 +32,14 @@
 #define LOG_MODULE_NAME ble_connection
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
+#define PPCP_SUSPEND BT_LE_CONN_PARAM(400, 800, 1, 500)
+#define PPCP_HIGH_SPEED BT_LE_CONN_PARAM(12, 12, 0, 400)
+#define PPCP_LOW_SPEED BT_LE_CONN_PARAM(24, 100, 0, 400)
+
 static struct bt_conn *current_conn = NULL;
 static struct bt_conn *next_conn = NULL;
 static bool bonded_connection = false;
+static bool high_speed_requested = false;
 
 static void show_params(struct bt_conn *conn) {
   struct bt_conn_info info;
@@ -67,7 +72,8 @@ void connected(struct bt_conn *conn, uint8_t err) {
 
   show_params(conn);
 
-  const struct bt_le_conn_param *param = BT_LE_CONN_PARAM(6, 12, 0, 400);
+  const struct bt_le_conn_param *param =
+      high_speed_requested ? PPCP_HIGH_SPEED : PPCP_LOW_SPEED;
   bt_conn_le_param_update(conn, param);
 
   // Prefer 2M both directions; 0 options = no specific constraints
@@ -171,7 +177,7 @@ void connection_suspend(void) {
   struct bt_conn *conn = connection_get_current();
 
   if (conn != NULL) {
-    const struct bt_le_conn_param *param = BT_LE_CONN_PARAM(400, 800, 0, 500);
+    const struct bt_le_conn_param *param = PPCP_SUSPEND;
     bt_conn_le_param_update(conn, param);
   }
 }
@@ -180,9 +186,16 @@ void connection_resume(void) {
   struct bt_conn *conn = connection_get_current();
 
   if (conn != NULL) {
-    const struct bt_le_conn_param *param = BT_LE_CONN_PARAM(6, 12, 0, 400);
+    const struct bt_le_conn_param *param =
+        high_speed_requested ? PPCP_HIGH_SPEED : PPCP_LOW_SPEED;
     bt_conn_le_param_update(conn, param);
   }
 }
 
 bool connection_is_bonded(void) { return bonded_connection; }
+
+bool connection_is_high_speed(void) { return high_speed_requested; }
+
+void connection_set_high_speed(void) { high_speed_requested = true; }
+
+void connection_set_low_speed(void) { high_speed_requested = false; }
