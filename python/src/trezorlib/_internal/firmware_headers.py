@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import typing as t
 from copy import copy
 from dataclasses import asdict
@@ -55,7 +57,7 @@ def all_zero(data: bytes) -> bool:
     return all(b == 0 for b in data)
 
 
-def check_signature_any(fw: "SignableImageProto", is_devel: bool = False) -> Status:
+def check_signature_any(fw: SignableImageProto, is_devel: bool = False) -> Status:
     if not fw.signature_present():
         return Status.MISSING
     try:
