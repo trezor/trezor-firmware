@@ -103,15 +103,9 @@ async def handle_device_menu() -> None:
 
         await wipe_device(WipeDevice())
     # Pair & Connect
-    elif menu_result is DeviceMenuResult.DeviceDisconnect:
-        from trezor.ui.layouts import confirm_action
+    elif menu_result is DeviceMenuResult.DeviceDisconnect and ble.is_connected():
 
-        await confirm_action(
-            "device_disconnect",
-            "device_disconnect",
-            "disconnect currently connected device?",
-        )
-        # TODO implement device disconnect handling
+        ble.disconnect()
     elif menu_result is DeviceMenuResult.DevicePair:
         from trezor.ui.layouts import show_warning
 
