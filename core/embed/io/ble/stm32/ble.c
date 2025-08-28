@@ -132,6 +132,14 @@ static bool ble_send_advertising_on(ble_driver_t *drv, bool whitelist) {
                       NULL, NULL) >= 0;
 }
 
+static bool ble_send_speed_request(ble_driver_t *drv, bool high_speed) {
+  (void)drv;
+  uint8_t cmd =
+      high_speed ? INTERNAL_CMD_SET_SPEED_HIGH : INTERNAL_CMD_SET_SPEED_LOW;
+  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL) >=
+         0;
+}
+
 static bool ble_send_advertising_off(ble_driver_t *drv) {
   (void)drv;
   uint8_t cmd = INTERNAL_CMD_ADVERTISING_OFF;
@@ -334,6 +342,17 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
   // stay in connectable mode as there is no one that can connect
   if (msg.peer_count == 0 && drv->mode_requested == BLE_MODE_CONNECTABLE) {
     drv->mode_requested = BLE_MODE_OFF;
+  }
+
+  // in case connection speed differs, send a command
+#ifdef BOOTLOADER
+  bool high_speed_request = true;
+#else
+  bool high_speed_request = false;
+#endif
+
+  if (msg.flags.high_speed != high_speed_request) {
+    ble_send_speed_request(drv, high_speed_request);
   }
 
   drv->status_valid = true;
