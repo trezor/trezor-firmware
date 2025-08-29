@@ -172,7 +172,7 @@ extern "C" fn py_get_bonds() -> Obj {
 }
 
 extern "C" fn py_iface_num(_self: Obj) -> Obj {
-    Obj::small_int(8) // FIXME SYSHANDLE_BLE_IFACE_0
+    Obj::small_int(unwrap!(ffi::syshandle_t_SYSHANDLE_BLE_IFACE_0.try_into()))
 }
 
 extern "C" fn py_iface_write(_self: Obj, msg: Obj) -> Obj {
