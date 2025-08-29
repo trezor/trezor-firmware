@@ -30,6 +30,8 @@ pub struct BleUnpair {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.ble.BleUnpair.all)
     pub all: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ble.BleUnpair.addr)
+    pub addr: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ble.BleUnpair.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -65,13 +67,54 @@ impl BleUnpair {
         self.all = ::std::option::Option::Some(v);
     }
 
+    // optional bytes addr = 2;
+
+    pub fn addr(&self) -> &[u8] {
+        match self.addr.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_addr(&mut self) {
+        self.addr = ::std::option::Option::None;
+    }
+
+    pub fn has_addr(&self) -> bool {
+        self.addr.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_addr(&mut self, v: ::std::vec::Vec<u8>) {
+        self.addr = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_addr(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.addr.is_none() {
+            self.addr = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.addr.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_addr(&mut self) -> ::std::vec::Vec<u8> {
+        self.addr.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "all",
             |m: &BleUnpair| { &m.all },
             |m: &mut BleUnpair| { &mut m.all },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "addr",
+            |m: &BleUnpair| { &m.addr },
+            |m: &mut BleUnpair| { &mut m.addr },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<BleUnpair>(
             "BleUnpair",
@@ -94,6 +137,9 @@ impl ::protobuf::Message for BleUnpair {
                 8 => {
                     self.all = ::std::option::Option::Some(is.read_bool()?);
                 },
+                18 => {
+                    self.addr = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -109,6 +155,9 @@ impl ::protobuf::Message for BleUnpair {
         if let Some(v) = self.all {
             my_size += 1 + 1;
         }
+        if let Some(v) = self.addr.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -117,6 +166,9 @@ impl ::protobuf::Message for BleUnpair {
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
         if let Some(v) = self.all {
             os.write_bool(1, v)?;
+        }
+        if let Some(v) = self.addr.as_ref() {
+            os.write_bytes(2, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -136,12 +188,14 @@ impl ::protobuf::Message for BleUnpair {
 
     fn clear(&mut self) {
         self.all = ::std::option::Option::None;
+        self.addr = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static BleUnpair {
         static instance: BleUnpair = BleUnpair {
             all: ::std::option::Option::None,
+            addr: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -167,8 +221,9 @@ impl ::protobuf::reflect::ProtobufValue for BleUnpair {
 
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x12messages-ble.proto\x12\x16hw.trezor.messages.ble\x1a\roptions.prot\
-    o\"\x1d\n\tBleUnpair\x12\x10\n\x03all\x18\x01\x20\x01(\x08R\x03allB;\n#c\
-    om.satoshilabs.trezor.lib.protobufB\x10TrezorMessageBle\x80\xa6\x1d\x01\
+    o\"1\n\tBleUnpair\x12\x10\n\x03all\x18\x01\x20\x01(\x08R\x03all\x12\x12\
+    \n\x04addr\x18\x02\x20\x01(\x0cR\x04addrB;\n#com.satoshilabs.trezor.lib.\
+    protobufB\x10TrezorMessageBle\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
