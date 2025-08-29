@@ -1,3 +1,4 @@
+import gc
 from typing import TYPE_CHECKING
 
 from trezor import utils
@@ -100,6 +101,7 @@ async def sign_tx(
             res = await call(req, request_class)
         elif isinstance(req, helpers.UiConfirm):
             res = await req.confirm_dialog()
+            gc.collect()
             progress.progress.report_init()
         else:
             raise TypeError("Invalid signing instruction")
