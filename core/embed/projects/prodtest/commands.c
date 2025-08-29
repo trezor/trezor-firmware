@@ -21,19 +21,19 @@
 
 #ifdef TREZOR_EMULATOR
 #include <stdlib.h>
-const cli_command_t **_cmd_list;
+cli_command_t *_cmd_list;
 size_t _cmd_count;
 
 void register_cli_command(const cli_command_t *cmd) {
-  _cmd_list = realloc(_cmd_list, sizeof(*_cmd_list) * (_cmd_count + 1));
-  _cmd_list[_cmd_count++] = cmd;
+  _cmd_list = realloc(_cmd_list, sizeof(cli_command_t) * (_cmd_count + 1));
+  _cmd_list[_cmd_count++] = *cmd;
 }
 
 #endif
 
 const cli_command_t *commands_get_ptr(void) {
 #ifdef TREZOR_EMULATOR
-  return *_cmd_list;
+  return _cmd_list;
 
 #else
   extern cli_command_t _prodtest_cli_cmd_section_start;
