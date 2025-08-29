@@ -104,13 +104,13 @@ impl Button {
             .with_radius(Self::MENU_ITEM_RADIUS)
     }
 
-    pub fn new_menu_item_with_overflowing_subtext(
+    pub fn new_single_line_menu_item_with_overflowing_subtext(
         text: TString<'static>,
         stylesheet: ButtonStyleSheet,
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
     ) -> Self {
-        Self::with_text_and_overflowing_subtext(text, subtext, subtext_style, None)
+        Self::with_single_line_text_and_overflowing_subtext(text, subtext, subtext_style, None)
             .with_text_align(Self::MENU_ITEM_ALIGNMENT)
             .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
             .styled(stylesheet)
@@ -143,11 +143,16 @@ impl Button {
             }
         });
 
-        Self::with_text_and_subtext(text, subtext, subtext_style, Some(icon))
-            .with_text_align(Self::MENU_ITEM_ALIGNMENT)
-            .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
-            .styled(stylesheet)
-            .with_radius(Self::MENU_ITEM_RADIUS)
+        Self::with_single_line_text_and_overflowing_subtext(
+            text,
+            subtext,
+            subtext_style,
+            Some(icon),
+        )
+        .with_text_align(Self::MENU_ITEM_ALIGNMENT)
+        .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
+        .styled(stylesheet)
+        .with_radius(Self::MENU_ITEM_RADIUS)
     }
 
     pub const fn with_single_line_text(text: TString<'static>) -> Self {
@@ -164,28 +169,26 @@ impl Button {
         subtext_style: &'static TextStyle,
         icon: Option<(Icon, Color)>,
     ) -> Self {
-        Self::new(ButtonContent::TextAndSubtext {
+        Self::new(ButtonContent::text_and_subtext(
             text,
             subtext,
             subtext_style,
-            subtext_overflow: false,
             icon,
-        })
+        ))
     }
 
-    pub fn with_text_and_overflowing_subtext(
+    pub fn with_single_line_text_and_overflowing_subtext(
         text: TString<'static>,
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
         icon: Option<(Icon, Color)>,
     ) -> Self {
-        Self::new(ButtonContent::TextAndSubtext {
+        Self::new(ButtonContent::single_line_text_and_overflowing_subtext(
             text,
             subtext,
             subtext_style,
-            subtext_overflow: true,
             icon,
-        })
+        ))
     }
 
     pub const fn with_icon(icon: Icon) -> Self {
@@ -357,13 +360,20 @@ impl Button {
                 text.map(|t| self.text_height(t, *single_line, width))
             }
             ButtonContent::Icon(icon) => icon.toif.height(),
-            ButtonContent::TextAndSubtext { text, icon, .. } => {
+            ButtonContent::TextAndSubtext {
+                text,
+                single_line,
+                icon,
+                ..
+            } => {
                 let width = if icon.is_some() {
                     width - Self::CONN_ICON_WIDTH
                 } else {
                     width
                 };
-                text.map(|t| self.text_height(t, false, width) + self.baseline_subtext_height())
+                text.map(|t| {
+                    self.text_height(t, *single_line, width) + self.baseline_subtext_height()
+                })
             }
             #[cfg(feature = "micropython")]
             ButtonContent::HomeBar(..) => theme::ACTION_BAR_HEIGHT,
@@ -486,6 +496,7 @@ impl Button {
             }
             ButtonContent::TextAndSubtext {
                 text,
+                single_line,
                 subtext,
                 subtext_style,
                 subtext_overflow,
@@ -496,23 +507,33 @@ impl Button {
                     - 2 * self.content_offset.x
                     - icon.map_or(0, |_| Self::CONN_ICON_WIDTH);
                 let single_line_text = text.map(|t| {
-                    let (t1, t2) = split_two_lines(t, stylesheet.font, available_width);
-                    if t1.is_empty() || t2.is_empty() {
+                    if *single_line {
                         show_text(
                             t,
                             render_origin(text_baseline_height / 2 - constant::LINE_SPACE * 2),
                         );
                         true
                     } else {
-                        show_text(
-                            t1,
-                            render_origin(-(text_baseline_height / 2 + constant::LINE_SPACE * 3)),
-                        );
-                        show_text(
-                            t2,
-                            render_origin(text_baseline_height - constant::LINE_SPACE * 2),
-                        );
-                        false
+                        let (t1, t2) = split_two_lines(t, stylesheet.font, available_width);
+                        if t1.is_empty() || t2.is_empty() {
+                            show_text(
+                                t,
+                                render_origin(text_baseline_height / 2 - constant::LINE_SPACE * 2),
+                            );
+                            true
+                        } else {
+                            show_text(
+                                t1,
+                                render_origin(
+                                    -(text_baseline_height / 2 + constant::LINE_SPACE * 3),
+                                ),
+                            );
+                            show_text(
+                                t2,
+                                render_origin(text_baseline_height - constant::LINE_SPACE * 2),
+                            );
+                            false
+                        }
                     }
                 });
 
@@ -751,6 +772,7 @@ pub enum ButtonContent {
     },
     TextAndSubtext {
         text: TString<'static>,
+        single_line: bool,
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
         subtext_overflow: bool,
@@ -773,6 +795,38 @@ impl ButtonContent {
         Self::Text {
             text,
             single_line: true,
+        }
+    }
+
+    pub const fn text_and_subtext(
+        text: TString<'static>,
+        subtext: TString<'static>,
+        subtext_style: &'static TextStyle,
+        icon: Option<(Icon, Color)>,
+    ) -> Self {
+        Self::TextAndSubtext {
+            text,
+            single_line: false,
+            subtext,
+            subtext_style,
+            subtext_overflow: false,
+            icon,
+        }
+    }
+
+    pub const fn single_line_text_and_overflowing_subtext(
+        text: TString<'static>,
+        subtext: TString<'static>,
+        subtext_style: &'static TextStyle,
+        icon: Option<(Icon, Color)>,
+    ) -> Self {
+        Self::TextAndSubtext {
+            text,
+            single_line: true,
+            subtext,
+            subtext_style,
+            subtext_overflow: true,
+            icon,
         }
     }
 }

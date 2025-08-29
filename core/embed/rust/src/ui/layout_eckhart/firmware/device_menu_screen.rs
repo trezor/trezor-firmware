@@ -97,7 +97,7 @@ pub enum DeviceMenuMsg {
 struct MenuItem {
     text: TString<'static>,
     subtext: Option<(TString<'static>, Option<&'static TextStyle>)>,
-    subtext_overflow: bool,
+    allow_overflow: bool,
     stylesheet: &'static ButtonStyleSheet,
     connection_status: Option<bool>,
     action: Option<Action>,
@@ -112,7 +112,7 @@ impl MenuItem {
         Self {
             text,
             subtext: None,
-            subtext_overflow: false,
+            allow_overflow: false,
             stylesheet: MENU_ITEM_NORMAL,
             action,
             connection_status: None,
@@ -124,16 +124,12 @@ impl MenuItem {
         subtext: Option<(TString<'static>, Option<&'static TextStyle>)>,
     ) -> &mut Self {
         self.subtext = subtext;
-        self.subtext_overflow = false;
+        self.allow_overflow = false;
         self
     }
 
-    pub fn with_overflowing_subtext(
-        &mut self,
-        subtext: Option<(TString<'static>, Option<&'static TextStyle>)>,
-    ) -> &mut Self {
-        self.subtext = subtext;
-        self.subtext_overflow = true;
+    pub fn allow_overflow(&mut self) -> &mut Self {
+        self.allow_overflow = true;
         self
     }
 
@@ -477,7 +473,9 @@ impl DeviceMenuScreen {
                 TR::words__name.into(),
                 Some(Action::Return(DeviceMenuMsg::DeviceName)),
             );
-            item_device_name.with_overflowing_subtext(Some((device_name, None)));
+            item_device_name
+                .with_subtext(Some((device_name, None)))
+                .allow_overflow();
             unwrap!(items.push(item_device_name));
         }
 
@@ -618,21 +616,12 @@ impl DeviceMenuScreen {
                     } else if let Some((subtext, subtext_style)) = item.subtext {
                         let subtext_style =
                             subtext_style.unwrap_or(&theme::TEXT_MENU_ITEM_SUBTITLE);
-                        if item.subtext_overflow {
-                            Button::new_menu_item_with_overflowing_subtext(
-                                item.text,
-                                *item.stylesheet,
-                                subtext,
-                                subtext_style,
-                            )
+                        let ctor = if item.allow_overflow {
+                            Button::new_single_line_menu_item_with_overflowing_subtext
                         } else {
-                            Button::new_menu_item_with_subtext(
-                                item.text,
-                                *item.stylesheet,
-                                subtext,
-                                subtext_style,
-                            )
-                        }
+                            Button::new_menu_item_with_subtext
+                        };
+                        ctor(item.text, *item.stylesheet, subtext, subtext_style)
                     } else {
                         Button::new_menu_item(item.text, *item.stylesheet)
                     };
