@@ -1368,7 +1368,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     def page_count(self) -> int:
     ///         """Return the number of pages in the layout object."""
     ///
-    ///     def button_request(self) -> tuple[int, str] | None:
+    ///     def button_request(self) -> tuple[ButtonRequestType, str] | None:
     ///         """Return (code, type) of button request made during the last event or timer pass."""
     ///
     ///     def get_transition_out(self) -> AttachType:
