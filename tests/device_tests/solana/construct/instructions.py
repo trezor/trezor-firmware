@@ -1267,6 +1267,7 @@ Token2022Program_Instruction = Select(
 
 class AssociatedTokenAccountProgramInstruction(Enum):
     CREATE = None
+    CREATE1 = 0
     CREATE_IDEMPOTENT = 1
     RECOVER_NESTED = 2
 
@@ -1286,6 +1287,24 @@ AssociatedTokenAccountProgram_Create = Struct(
     "data"
     / CompactStruct(
         "instruction_id" / Pass,
+    ),
+)
+
+AssociatedTokenAccountProgram_Create1 = Struct(
+    "program_index" / Byte,
+    "accounts"
+    / CompactStruct(
+        "funding_account" / Byte,
+        "associated_token_account" / Byte,
+        "wallet_address" / Byte,
+        "token_mint" / Byte,
+        "system_program" / Byte,
+        "spl_token" / Byte,
+        "rent_sysvar" / Optional(Byte),
+    ),
+    "data"
+    / CompactStruct(
+        "instruction_id" / Const(0, Byte),
     ),
 )
 
@@ -1327,6 +1346,7 @@ AssociatedTokenAccountProgram_RecoverNested = Struct(
 
 AssociatedTokenAccountProgram_Instruction = Select(
     AssociatedTokenAccountProgram_Create,
+    AssociatedTokenAccountProgram_Create1,
     AssociatedTokenAccountProgram_CreateIdempotent,
     AssociatedTokenAccountProgram_RecoverNested,
 )
