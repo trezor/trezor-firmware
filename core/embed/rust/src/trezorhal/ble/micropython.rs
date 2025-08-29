@@ -23,11 +23,34 @@ extern "C" fn py_erase_bonds() -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn py_unpair() -> Obj {
+extern "C" fn py_unpair(obj: Obj) -> Obj {
+    // Accepts: None OR a 6-byte MAC address (bytes-like)
+    let addr_bytes_opt = if obj == Obj::const_none() {
+        None
+    } else {
+        let bytes: [u8; 6] = unwrap!(util::iter_into_array(obj));
+        Some(bytes)
+    };
+
     let block = || {
-        unpair()?;
+        if let Some(bytes) = addr_bytes_opt {
+            // Scan bonds, unpair on match, and stop.
+            get_bonds(|bonds| -> Result<(), Error> {
+                for b in bonds {
+                    if b.addr == bytes {
+                        return unpair(Some(b));
+                    }
+                }
+                Err(Error::ValueError(c"Address not found among bonds"))
+            })?;
+        } else {
+            // Unpair current connection
+            unpair(None)?;
+        }
+
         Ok(Obj::const_none())
     };
+
     unsafe { util::try_or_raise(block) }
 }
 
@@ -270,12 +293,12 @@ pub static mp_module_trezorble: Module = obj_module! {
     ///     """
     Qstr::MP_QSTR_erase_bonds => obj_fn_0!(py_erase_bonds).as_obj(),
 
-    /// def unpair():
+    /// def unpair(addr: bytes | None = None):
     ///     """
-    ///     Erases bond for current connection, if any.
+    ///     Erases the bond for the given address or for current connection if addr is None.
     ///     Raises exception if BLE driver reports an error.
     ///     """
-    Qstr::MP_QSTR_unpair => obj_fn_0!(py_unpair).as_obj(),
+    Qstr::MP_QSTR_unpair => obj_fn_1!(py_unpair).as_obj(),
 
     /// def start_comm():
     ///     """

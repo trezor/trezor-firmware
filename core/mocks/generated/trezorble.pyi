@@ -38,9 +38,9 @@ def erase_bonds():
 
 
 # rust/src/trezorhal/ble/micropython.rs
-def unpair():
+def unpair(addr: bytes | None = None):
     """
-    Erases bond for current connection, if any.
+    Erases the bond for the given address or for current connection if addr is None.
     Raises exception if BLE driver reports an error.
     """
 

@@ -11,12 +11,19 @@ option (include_in_bitcoin_only) = true;
 
 
 /**
- * Request: erases bond for currently connected device
+ * Request: erases BLE bond(s).
+ *
+ * If `all` is set, all bonds are erased.
+ * If `addr` is provided, the bond for that specific device (6-byte MAC) is erased.
+ * Otherwise, the bond for the currently connected device is erased.
+ *
  * @start
  * @next Success
  * @next Failure
  */
 message BleUnpair {
-  optional bool all = 1;  // whether to erase bonds for all devices
+  optional bool all  = 1;  // whether to erase bonds for all devices
+  optional bytes addr = 2; // 6-byte MAC address to unpair
 }
+
 

@@ -1517,6 +1517,12 @@ pub enum TranslatedString {
     words__forget = 1126,  // "Forget"
     words__power = 1127,  // "Power"
     ble__limit_reached = 1128,  // "Limit of paired devices reached"
+    ble__forget_all_description = 1129,  // "They'll be removed, and you'll need to pair them again before use."
+    ble__forget_all_devices = 1130,  // "Forget all devices?"
+    ble__forget_all_success = 1131,  // "All hosts removed."
+    ble__forget_this_description = 1132,  // "It will be removed, and you'll need to pair it again before use."
+    ble__forget_this_device = 1133,  // "Forget this device?"
+    ble__forget_this_success = 1134,  // "Host removed."
 }
 
 impl TranslatedString {
@@ -3360,6 +3366,12 @@ impl TranslatedString {
             (Self::words__forget, "Forget"),
             (Self::words__power, "Power"),
             (Self::ble__limit_reached, "Limit of paired devices reached"),
+            (Self::ble__forget_all_description, "They'll be removed, and you'll need to pair them again before use."),
+            (Self::ble__forget_all_devices, "Forget all devices?"),
+            (Self::ble__forget_all_success, "All hosts removed."),
+            (Self::ble__forget_this_description, "It will be removed, and you'll need to pair it again before use."),
+            (Self::ble__forget_this_device, "Forget this device?"),
+            (Self::ble__forget_this_success, "Host removed."),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3440,6 +3452,12 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ble__disable, Self::ble__disable),
         (Qstr::MP_QSTR_ble__enable, Self::ble__enable),
         (Qstr::MP_QSTR_ble__forget_all, Self::ble__forget_all),
+        (Qstr::MP_QSTR_ble__forget_all_description, Self::ble__forget_all_description),
+        (Qstr::MP_QSTR_ble__forget_all_devices, Self::ble__forget_all_devices),
+        (Qstr::MP_QSTR_ble__forget_all_success, Self::ble__forget_all_success),
+        (Qstr::MP_QSTR_ble__forget_this_description, Self::ble__forget_this_description),
+        (Qstr::MP_QSTR_ble__forget_this_device, Self::ble__forget_this_device),
+        (Qstr::MP_QSTR_ble__forget_this_success, Self::ble__forget_this_success),
         (Qstr::MP_QSTR_ble__limit_reached, Self::ble__limit_reached),
         (Qstr::MP_QSTR_ble__manage_paired, Self::ble__manage_paired),
         (Qstr::MP_QSTR_ble__pair_new, Self::ble__pair_new),

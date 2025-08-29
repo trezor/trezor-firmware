@@ -9,13 +9,23 @@ if TYPE_CHECKING:
 
 async def unpair(msg: BleUnpair) -> None:
     from trezor.messages import Success
-    from trezor.ui.layouts import confirm_action
+    from trezor.ui.layouts import show_success, show_warning
     from trezor.wire.context import NoWireContext, get_context
 
     if msg.all:
-        await confirm_action("erase bonds", TR.ble__unpair_title, TR.ble__unpair_all)
+        await show_warning(
+            "prompt_all_devices_unpair",
+            TR.ble__forget_all_devices,
+            TR.ble__forget_all_description,
+            TR.buttons__confirm,
+        )
     else:
-        await confirm_action("unpair", TR.ble__unpair_title, TR.ble__unpair_current)
+        await show_warning(
+            "prompt_device_unpair",
+            TR.ble__forget_this_device,
+            TR.ble__forget_this_description,
+            TR.buttons__confirm,
+        )
 
     # NOTE: refactor into ctx.maybe_write if we end up doing this in multiple places
     try:
@@ -27,5 +37,20 @@ async def unpair(msg: BleUnpair) -> None:
 
     if msg.all:
         ble.erase_bonds()
+    elif msg.addr is not None:
+        ble.unpair(msg.addr)
     else:
         ble.unpair()
+
+    if msg.all:
+        await show_success(
+            br_name="device_unpair_all_success",
+            content=TR.ble__forget_all_success,
+            button=TR.buttons__close,
+        )
+    else:
+        await show_success(
+            br_name="device_unpair_success",
+            content=TR.ble__forget_this_device,
+            button=TR.buttons__close,
+        )

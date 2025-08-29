@@ -1127,5 +1127,11 @@
   "1125": "words__connect",
   "1126": "words__forget",
   "1127": "words__power",
-  "1128": "ble__limit_reached"
+  "1128": "ble__limit_reached",
+  "1129": "ble__forget_all_description",
+  "1130": "ble__forget_all_devices",
+  "1131": "ble__forget_all_success",
+  "1132": "ble__forget_this_description",
+  "1133": "ble__forget_this_device",
+  "1134": "ble__forget_this_success"
 }

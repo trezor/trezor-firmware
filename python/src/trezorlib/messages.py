@@ -2035,14 +2035,17 @@ class BleUnpair(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 8001
     FIELDS = {
         1: protobuf.Field("all", "bool", repeated=False, required=False, default=None),
+        2: protobuf.Field("addr", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         all: Optional["bool"] = None,
+        addr: Optional["bytes"] = None,
     ) -> None:
         self.all = all
+        self.addr = addr
 
 
 class FirmwareErase(protobuf.MessageType):

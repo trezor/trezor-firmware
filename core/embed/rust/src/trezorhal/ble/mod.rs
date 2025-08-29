@@ -54,6 +54,10 @@ impl bt_le_addr_t {
             addr: [0; 6],
         }
     }
+
+    fn new(type_: u8, addr: [u8; 6]) -> bt_le_addr_t {
+        bt_le_addr_t { type_, addr }
+    }
 }
 
 fn state() -> ffi::ble_state_t {
@@ -145,13 +149,16 @@ pub fn erase_bonds() -> Result<(), Error> {
     issue_command(ffi::ble_command_type_t_BLE_ERASE_BONDS, data_none())
 }
 
-pub fn unpair() -> Result<(), Error> {
-    unsafe {
-        if !ffi::ble_unpair(ptr::null_mut()) {
-            return Err(COMMAND_FAILED);
-        }
-        Ok(())
+pub fn unpair(addr: Option<&bt_le_addr_t>) -> Result<(), Error> {
+    let ptr: *const bt_le_addr_t = match addr {
+        Some(a) => a as *const bt_le_addr_t,
+        None => ptr::null(),
+    };
+
+    if !unsafe { ffi::ble_unpair(ptr) } {
+        return Err(COMMAND_FAILED);
     }
+    Ok(())
 }
 
 pub fn disconnect() -> Result<(), Error> {

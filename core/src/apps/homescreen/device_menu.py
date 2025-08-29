@@ -128,18 +128,17 @@ async def handle_device_menu() -> None:
         from apps.management.ble.unpair import unpair
 
         await unpair(BleUnpair(all=True))
+
     elif isinstance(menu_result, tuple):
-        from trezor.ui.layouts import confirm_action
+        from trezor.messages import BleUnpair
+
+        from apps.management.ble.unpair import unpair
 
         # It's a tuple with (result_type, index)
         result_type, index = menu_result
-        if result_type is DeviceMenuResult.DeviceUnpair:
-            await confirm_action(
-                "device_unpair",
-                "device_unpair",
-                f"unpair {index} device?",
-            )
-            # TODO implement device unpair handling
+        if result_type is DeviceMenuResult.DeviceUnpair and index < len(bonds):
+
+            await unpair(BleUnpair(addr=bonds[index]))
         else:
             raise RuntimeError(f"Unknown menu {result_type}, {index}")
     # Bluetooth
