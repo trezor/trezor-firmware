@@ -97,7 +97,7 @@ pub enum DeviceMenuMsg {
 struct MenuItem {
     text: TString<'static>,
     subtext: Option<(TString<'static>, Option<&'static TextStyle>)>,
-    subtext_overflow: bool,
+    subtext_marquee: bool,
     stylesheet: &'static ButtonStyleSheet,
     connection_status: Option<bool>,
     action: Option<Action>,
@@ -112,7 +112,7 @@ impl MenuItem {
         Self {
             text,
             subtext: None,
-            subtext_overflow: false,
+            subtext_marquee: false,
             stylesheet: MENU_ITEM_NORMAL,
             action,
             connection_status: None,
@@ -124,16 +124,16 @@ impl MenuItem {
         subtext: Option<(TString<'static>, Option<&'static TextStyle>)>,
     ) -> &mut Self {
         self.subtext = subtext;
-        self.subtext_overflow = false;
+        self.subtext_marquee = false;
         self
     }
 
-    pub fn with_overflowing_subtext(
+    pub fn with_subtext_marquee(
         &mut self,
         subtext: Option<(TString<'static>, Option<&'static TextStyle>)>,
     ) -> &mut Self {
         self.subtext = subtext;
-        self.subtext_overflow = true;
+        self.subtext_marquee = true;
         self
     }
 
@@ -253,7 +253,7 @@ impl DeviceMenuScreen {
             Some(screen.add_security_menu(pin_code, auto_lock_delay, wipe_code, check_backup))
         };
         let device = screen.add_device_menu(
-            device_name,
+            Some(TString::Str("dadadadadadadadadadadadadadadadQWE")),
             screen_brightness,
             haptic_feedback,
             led_enabled,
@@ -477,7 +477,7 @@ impl DeviceMenuScreen {
                 TR::words__name.into(),
                 Some(Action::Return(DeviceMenuMsg::DeviceName)),
             );
-            item_device_name.with_overflowing_subtext(Some((device_name, None)));
+            item_device_name.with_subtext_marquee(Some((device_name, None)));
             unwrap!(items.push(item_device_name));
         }
 
@@ -618,8 +618,8 @@ impl DeviceMenuScreen {
                     } else if let Some((subtext, subtext_style)) = item.subtext {
                         let subtext_style =
                             subtext_style.unwrap_or(&theme::TEXT_MENU_ITEM_SUBTITLE);
-                        if item.subtext_overflow {
-                            Button::new_menu_item_with_overflowing_subtext(
+                        if item.subtext_marquee {
+                            Button::new_menu_item_with_subtext_marquee(
                                 item.text,
                                 *item.stylesheet,
                                 subtext,
