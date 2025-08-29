@@ -224,8 +224,14 @@ static int usb_emulated_read(usb_iface_t *iface, uint8_t *buf, uint32_t len) {
       len = iface->msg_len;
     }
     memcpy(buf, iface->msg, len);
-    iface->msg_len = 0;
-    memzero(iface->msg, sizeof(iface->msg));
+
+    if (iface->type == USB_IFACE_TYPE_VCP) {
+      iface->msg_len -= len;
+      memmove(iface->msg, iface->msg + len, iface->msg_len);
+    } else {
+      iface->msg_len = 0;
+      memzero(iface->msg, sizeof(iface->msg));
+    }
     return len;
   }
 
