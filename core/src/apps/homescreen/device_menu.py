@@ -61,7 +61,6 @@ async def handle_device_menu() -> None:
             failed_backup=failed_backup,
             paired_devices=paired_devices,
             connected_idx=connected_idx,
-            bluetooth=True,  # TODO implement bluetooth handling
             pin_code=config.has_pin() if is_initialized else None,
             auto_lock_delay=auto_lock_delay,
             wipe_code=config.has_wipe_code() if is_initialized else None,
@@ -141,17 +140,6 @@ async def handle_device_menu() -> None:
             await unpair(BleUnpair(addr=bonds[index]))
         else:
             raise RuntimeError(f"Unknown menu {result_type}, {index}")
-    # Bluetooth
-    elif menu_result is DeviceMenuResult.Bluetooth:
-        from trezor.ui.layouts import confirm_action
-
-        turned_on = ble.is_connected()
-        await confirm_action(
-            "ble__settings",
-            TR.words__bluetooth,
-            TR.ble__disable if turned_on else TR.ble__enable,
-        )
-        pass  # TODO implement bluetooth handling
     # Security settings
     elif menu_result is DeviceMenuResult.PinCode and is_initialized:
         from trezor.messages import ChangePin
