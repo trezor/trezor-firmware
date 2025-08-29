@@ -626,7 +626,6 @@ def show_device_menu(
     failed_backup: bool,
     paired_devices: Iterable[str],
     connected_idx: int | None,
-    bluetooth: bool | None,
     pin_code: bool | None,
     auto_lock_delay: str | None,
     wipe_code: bool | None,
@@ -856,7 +855,6 @@ class DeviceMenuResult:
     DevicePair: ClassVar[DeviceMenuResult]
     DeviceUnpair: ClassVar[DeviceMenuResult]
     DeviceUnpairAll: ClassVar[DeviceMenuResult]
-    Bluetooth: ClassVar[DeviceMenuResult]
     PinCode: ClassVar[DeviceMenuResult]
     PinRemove: ClassVar[DeviceMenuResult]
     AutoLockDelay: ClassVar[DeviceMenuResult]

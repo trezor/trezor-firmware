@@ -937,7 +937,6 @@ impl FirmwareUI for UIBolt {
         _failed_backup: bool,
         _paired_devices: heapless::Vec<TString<'static>, MAX_PAIRED_DEVICES>,
         _connected_idx: Option<usize>,
-        _bluetooth: Option<bool>,
         _pin_code: Option<bool>,
         _auto_lock_delay: Option<TString<'static>>,
         _wipe_code: Option<bool>,
