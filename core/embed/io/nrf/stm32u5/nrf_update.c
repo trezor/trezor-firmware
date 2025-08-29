@@ -24,11 +24,11 @@
 #include <trezor_rtl.h>
 
 #include <io/nrf.h>
+#include <sys/systick.h>
 
 #include "../nrf_internal.h"
 #include "rust_smp.h"
 #include "sha2.h"
-#include "sys/systick.h"
 
 #define IMAGE_HASH_LEN 32
 #define IMAGE_TLV_SHA256 0x10
@@ -147,6 +147,9 @@ bool nrf_update(const uint8_t *image_ptr, size_t image_len) {
                                   SHA256_DIGEST_LENGTH);
     try_cntr++;
   } while (!result && try_cntr < 3);
+
+  // wait for flash to be written
+  systick_delay_ms(1000);
 
   nrf_reboot();
 
