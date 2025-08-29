@@ -1072,11 +1072,13 @@ if TYPE_CHECKING:
 
     class BleUnpair(protobuf.MessageType):
         all: "bool | None"
+        addr: "bytes | None"
 
         def __init__(
             self,
             *,
             all: "bool | None" = None,
+            addr: "bytes | None" = None,
         ) -> None:
             pass
 

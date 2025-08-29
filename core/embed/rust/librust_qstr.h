@@ -177,6 +177,12 @@ static void _librust_qstrs(void) {
   MP_QSTR_ble__disable;
   MP_QSTR_ble__enable;
   MP_QSTR_ble__forget_all;
+  MP_QSTR_ble__forget_all_description;
+  MP_QSTR_ble__forget_all_devices;
+  MP_QSTR_ble__forget_all_success;
+  MP_QSTR_ble__forget_this_description;
+  MP_QSTR_ble__forget_this_device;
+  MP_QSTR_ble__forget_this_success;
   MP_QSTR_ble__limit_reached;
   MP_QSTR_ble__manage_paired;
   MP_QSTR_ble__pair_new;
