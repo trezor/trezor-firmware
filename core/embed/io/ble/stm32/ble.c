@@ -78,6 +78,7 @@ typedef struct {
   ble_adv_start_cmd_data_t adv_cmd;
   bt_le_addr_t mac;
   bool mac_ready;
+  bool high_speed;
 
   uint8_t bond_count;
   bt_le_addr_t bonds[BLE_MAX_BONDS];
@@ -344,15 +345,9 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
     drv->mode_requested = BLE_MODE_OFF;
   }
 
-  // in case connection speed differs, send a command
-#ifdef BOOTLOADER
-  bool high_speed_request = true;
-#else
-  bool high_speed_request = false;
-#endif
-
-  if (msg.flags.high_speed != high_speed_request) {
-    ble_send_speed_request(drv, high_speed_request);
+  // in case connection speed differs from request, send a command
+  if (msg.flags.high_speed != drv->high_speed) {
+    ble_send_speed_request(drv, drv->high_speed);
   }
 
   drv->status_valid = true;
@@ -668,6 +663,7 @@ void ble_suspend(ble_wakeup_params_t *wakeup_params) {
     wakeup_params->accept_msgs = connected;
     wakeup_params->mode_requested = drv->mode_requested;
     wakeup_params->peer_count = drv->peer_count;
+    wakeup_params->high_speed = drv->high_speed;
     memcpy(&wakeup_params->adv_data, &drv->adv_cmd, sizeof(drv->adv_cmd));
 
     ble_deinit_common(drv);
@@ -705,6 +701,7 @@ bool ble_resume(const ble_wakeup_params_t *wakeup_params) {
   irq_key_t key = irq_lock();
 
   drv->peer_count = wakeup_params->peer_count;
+  drv->high_speed = wakeup_params->high_speed;
 
   memcpy(&drv->connected_addr, &wakeup_params->connected_addr,
          sizeof(drv->connected_addr));
@@ -1165,6 +1162,15 @@ bool ble_unpair(const bt_le_addr_t *addr) {
   }
 
   return result;
+}
+
+void ble_set_high_speed(bool enable) {
+  ble_driver_t *drv = &g_ble_driver;
+  if (!drv->initialized) {
+    return;
+  }
+
+  drv->high_speed = enable;
 }
 
 static void on_ble_iface_event_poll(void *context, bool read_awaited,

@@ -87,6 +87,7 @@ typedef struct {
 typedef struct {
   bool accept_msgs;
   bool reboot_on_resume;
+  bool high_speed;
   uint8_t peer_count;
   ble_mode_t mode_requested;
   bt_le_addr_t connected_addr;
@@ -207,3 +208,9 @@ uint32_t ble_read(uint8_t *data, uint16_t max_len);
 // When not using static address, the address is random and may not correspond
 // to what is actually used for advertising
 bool ble_get_mac(bt_le_addr_t *addr);
+
+// Set high speed connection
+//
+// When enabled, the connection parameters will be set to achieve
+// higher data throughput, at the cost of increased power consumption.
+void ble_set_high_speed(bool enable);
