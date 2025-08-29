@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import collections
 import json
+import re
 
 import click
 
@@ -49,6 +50,13 @@ def merge() -> None:
     """Merge back translation files downloaded from Crowdin."""
     tdir = TranslationsDir()
 
+    def clean_translation(text: str) -> str:
+        """Remove or replace non-printable characters in translation strings."""
+        # Replace non-breaking spaces with regular spaces, EXCEPT before ? and !
+        # Use negative lookahead to avoid replacing before French punctuation
+        text = re.sub(r'\u00A0(?![?!])', ' ', text)
+        return text
+
     for lang in sorted(tdir.all_languages()):
         merged_translations: dict[str, str | dict[str, str]] = collections.defaultdict(dict)
         for layout_type in translations.ALL_LAYOUTS:
@@ -58,7 +66,9 @@ def merge() -> None:
             # mapping string name to its translation (for the current layout)
             layout_specific_translations: dict[str, str] = blob_json["translations"]
             for key, value in layout_specific_translations.items():
-                merged_translations[key][layout_type.name] = value
+                # Clean the translation value
+                cleaned_value = clean_translation(value)
+                merged_translations[key][layout_type.name] = cleaned_value
 
         for key in merged_translations.keys():
             # deduplicate entries if all translations are the same
