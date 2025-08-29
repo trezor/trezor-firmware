@@ -41,7 +41,7 @@ if __debug__:
 
         Handler = Callable[[Any], Awaitable[Any]]
 
-    layout_change_box = loop.mailbox()
+    layout_change_box = loop.mailbox[Layout | None]()
 
     DEBUG_CONTEXT: Context | None = None
 
@@ -434,7 +434,7 @@ if __debug__:
         return Success()
 
     _EXIT_FLAG = False
-    _EXIT_BOX = loop.mailbox()
+    _EXIT_BOX = loop.mailbox[None]()
     _SESSION_TASK: loop.spawn | None = None
 
     _CLOSE_TIMEOUT_MS = const(5000)

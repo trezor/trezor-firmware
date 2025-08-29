@@ -5,6 +5,7 @@ from trezorui import Display
 from typing import TYPE_CHECKING
 
 from trezor import io, log, loop, utils, wire, workflow
+from trezor.enums import ButtonRequestType
 from trezor.messages import ButtonAck, ButtonRequest
 from trezor.wire import context
 from trezor.wire.protocol_common import Context
@@ -153,7 +154,7 @@ class Layout(Generic[T]):
         self.tasks: set[loop.Task] = set()
         self.timers: dict[int, loop.Task] = {}
         self.result_box = loop.mailbox()
-        self.button_request_box = loop.mailbox()
+        self.button_request_box = loop.mailbox[tuple[ButtonRequestType, str]]()
         self.button_request_ack_pending: bool = False
         self.transition_out: AttachType | None = None
         self.backlight_level = BacklightLevels.NORMAL
@@ -435,10 +436,12 @@ class Layout(Generic[T]):
             return
         while True:
             try:
-                br_code, br_name = await loop.race(
+                result = await loop.race(
                     self.context.read(()),
                     self.button_request_box,
                 )
+                assert isinstance(result, tuple)
+                br_code, br_name = result
 
                 if __debug__:
                     log.info(__name__, "ButtonRequest sent: %s", br_name)
