@@ -77,7 +77,8 @@ class TestTrezorHostProtocolWriter(unittest.TestCase):
 
     def setUp(self):
         self.interface = MockHID()
-        self.ctx = ThpContext(self.interface)
+        thp_ctx = ThpContext(self.interface)
+        (self.ctx,) = thp_ctx._ifaces
 
     def test_write_empty_payload(self):
         header = PacketHeader(ENCRYPTED, 4660, 4)

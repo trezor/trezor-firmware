@@ -51,7 +51,7 @@ if TYPE_CHECKING:
     from trezor.messages import ThpPairingCredential
     from trezor.wire import WireInterface
 
-    from .interface_context import ThpContext
+    from .interface_context import InterfaceContext
     from .memory_manager import ThpBuffer
     from .pairing_context import PairingContext
     from .session_context import GenericSessionContext
@@ -155,14 +155,14 @@ class Channel:
     def __init__(
         self,
         channel_cache: ChannelCache,
-        ctx: ThpContext,
+        ctx: InterfaceContext,
         buffers: tuple[ThpBuffer, ThpBuffer],
     ) -> None:
         assert ctx._iface.iface_num() == channel_cache.get_int(CHANNEL_IFACE)
 
         # Channel properties
         self.channel_id: bytes = channel_cache.channel_id
-        self.ctx: ThpContext = ctx
+        self.iface_ctx: InterfaceContext = ctx
         self.read_buf, self.write_buf = buffers
         if __debug__:
             self._log("channel initialization")
@@ -179,7 +179,7 @@ class Channel:
 
     @property
     def iface(self) -> WireInterface:
-        return self.ctx._iface
+        return self.iface_ctx._iface
 
     def clear(self) -> None:
         clear_sessions_with_channel_id(self.channel_id)
@@ -286,11 +286,24 @@ class Channel:
         self, timeout_ms: int | None = None
     ) -> memoryview:
         """Doesn't block if a message has been already reassembled."""
+        thp_ctx = self.iface_ctx.thp_ctx
         while self.reassembler.message is None:
-            # receive and reassemble a new message from this channel
-            channel = await self.ctx.get_next_message(timeout_ms=timeout_ms)
-            if channel is None:
-                self.preempt_if_stale()
+            # receive and reassemble a new message from any THP channel
+            try:
+                channel = await thp_ctx.get_next_message(timeout_ms=timeout_ms)
+                if channel is None:
+                    continue
+            except ChannelPreemptedException:
+                elapsed_ms = utime.ticks_diff(utime.ticks_ms(), self.last_write_ms)
+                # allow preempting channel only after enough time has passed
+                is_stale = elapsed_ms > _PREEMPT_TIMEOUT_MS
+                if __debug__:
+                    self._log(
+                        f"Interrupted channel after {elapsed_ms} ms",
+                        logger=(log.error if is_stale else log.warning),
+                    )
+                if is_stale:
+                    raise
                 continue
 
             if channel is self:
@@ -396,15 +409,6 @@ class Channel:
     ) -> Awaitable[None]:
         return self.write_encrypted_payload(ctrl_byte, payload)
 
-    def preempt_if_stale(self) -> None:
-        elapsed_ms = utime.ticks_diff(utime.ticks_ms(), self.last_write_ms)
-        preempt = elapsed_ms > _PREEMPT_TIMEOUT_MS
-        if __debug__:
-            logger = log.error if preempt else log.warning
-            self._log(f"Interrupted channel after {elapsed_ms} ms", logger=logger)
-        if preempt:
-            raise ChannelPreemptedException
-
     async def write_encrypted_payload(self, ctrl_byte: int, payload: bytes) -> None:
         if __debug__:
             self._log("write_encrypted_payload_loop")
@@ -423,7 +427,9 @@ class Channel:
         self.last_write_ms = utime.ticks_ms()
 
         for i in range(_MAX_RETRANSMISSION_COUNT):
-            result = await race(self.ctx.write_payload(header, payload), _WRITE_TIMEOUT)
+            result = await race(
+                self.iface_ctx.write_payload(header, payload), _WRITE_TIMEOUT
+            )
             if isinstance(result, int):
                 if __debug__:
                     log.error(__name__, "Sending is stuck for %d ms", _WRITE_TIMEOUT_MS)
@@ -492,7 +498,7 @@ def send_ack(channel: Channel, ack_bit: int) -> Awaitable[None]:
             ack_bit,
             iface=channel.iface,
         )
-    return channel.ctx.write_payload(header, b"")
+    return channel.iface_ctx.write_payload(header, b"")
 
 
 def handle_ack(ctx: Channel, ack_bit: int) -> None:

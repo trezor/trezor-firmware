@@ -69,12 +69,12 @@ async def handle_received_message(channel: Channel) -> bool:
         error_message = Failure(code=FailureType.ThpUnallocatedSession)
         await channel.write(error_message, e.session_id)
     except ThpDecryptionError:
-        await channel.ctx.write_error(
+        await channel.iface_ctx.write_error(
             channel.get_channel_id_int(), ThpErrorType.DECRYPTION_FAILED
         )
         channel.clear()
     except ThpDeviceLockedError:
-        await channel.ctx.write_error(
+        await channel.iface_ctx.write_error(
             channel.get_channel_id_int(), ThpErrorType.DEVICE_LOCKED
         )
     return False
