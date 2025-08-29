@@ -940,7 +940,6 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
         let paired_devices: Vec<TString, MAX_PAIRED_DEVICES> = util::iter_into_vec(paired_devices)?;
         let connected_idx: Option<usize> =
             kwargs.get(Qstr::MP_QSTR_connected_idx)?.try_into_option()?;
-        let bluetooth: Option<bool> = kwargs.get(Qstr::MP_QSTR_bluetooth)?.try_into_option()?;
         let pin_code: Option<bool> = kwargs.get(Qstr::MP_QSTR_pin_code)?.try_into_option()?;
         let auto_lock_delay: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_auto_lock_delay)?
@@ -961,7 +960,6 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
             failed_backup,
             paired_devices,
             connected_idx,
-            bluetooth,
             pin_code,
             auto_lock_delay,
             wipe_code,
@@ -1903,7 +1901,6 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     failed_backup: bool,
     ///     paired_devices: Iterable[str],
     ///     connected_idx: int | None,
-    ///     bluetooth: bool | None,
     ///     pin_code: bool | None,
     ///     auto_lock_delay: str | None,
     ///     wipe_code: bool | None,
@@ -2113,7 +2110,6 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     DevicePair: ClassVar[DeviceMenuResult]
     ///     DeviceUnpair: ClassVar[DeviceMenuResult]
     ///     DeviceUnpairAll: ClassVar[DeviceMenuResult]
-    ///     Bluetooth: ClassVar[DeviceMenuResult]
     ///     PinCode: ClassVar[DeviceMenuResult]
     ///     PinRemove: ClassVar[DeviceMenuResult]
     ///     AutoLockDelay: ClassVar[DeviceMenuResult]

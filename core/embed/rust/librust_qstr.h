@@ -23,7 +23,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_BLEIF;
   MP_QSTR_BacklightLevels;
   MP_QSTR_BackupFailed;
-  MP_QSTR_Bluetooth;
   MP_QSTR_CANCELLED;
   MP_QSTR_CONFIRMED;
   MP_QSTR_CheckBackup;
@@ -192,7 +191,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_ble__unpair_title;
   MP_QSTR_ble__version;
   MP_QSTR_ble_event;
-  MP_QSTR_bluetooth;
   MP_QSTR_bootscreen;
   MP_QSTR_br_code;
   MP_QSTR_br_name;
