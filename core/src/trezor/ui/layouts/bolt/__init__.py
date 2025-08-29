@@ -1509,11 +1509,11 @@ async def confirm_modify_output(
         # if the user cancels here, raise ActionCancelled (by default)
         await interact(
             trezorui_api.confirm_value(
-                title="MODIFY AMOUNT",
+                title=TR.modify_amount__title,
                 value=address,
-                verb="CONTINUE",
+                verb=TR.buttons__continue,
                 verb_cancel=None,
-                description="Address:",
+                description=TR.words__address + ":",
             ),
             "modify_output" if send_button_request else None,
             ButtonRequestType.ConfirmOutput,
