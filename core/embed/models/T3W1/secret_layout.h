@@ -47,7 +47,7 @@
 #define SECRET_MCU_DEVICE_CERT_OFFSET 0x870
 #define SECRET_MCU_DEVICE_CERT_SIZE 0x400
 
-#define SECRET_LOCK_SLOT_OFFSET 0xC70
+#define SECRET_LOCK_SLOT_OFFSET 0x1FF0
 #define SECRET_LOCK_SLOT_LEN 0x10
 
 // second page: refreshed on wallet wipe
