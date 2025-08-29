@@ -420,7 +420,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__contract = 272,  // {"Bolt": "Contract", "Caesar": "Contract", "Delizia": "Contract", "Eckhart": "Call contract"}
     #[cfg(feature = "universal_fw")]
-    ethereum__data_size_template = 273,  // "Size: {0}\u{00a0}bytes"
+    ethereum__data_size_template = 273,  // "Size: {0} bytes"
     #[cfg(feature = "universal_fw")]
     ethereum__gas_limit = 274,  // "Gas limit"
     #[cfg(feature = "universal_fw")]
@@ -458,7 +458,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__title_signing_address = 291,  // "Signing address"
     #[cfg(feature = "universal_fw")]
-    ethereum__units_template = 292,  // "{0}\u{00a0}units"
+    ethereum__units_template = 292,  // "{0} units"
     #[cfg(feature = "universal_fw")]
     ethereum__unknown_token = 293,  // "Unknown token"
     #[cfg(feature = "universal_fw")]
@@ -914,7 +914,7 @@ pub enum TranslatedString {
     send__you_are_contributing = 655,  // "You are contributing:"
     share_words__words_in_order = 656,  // " words in order."
     share_words__wrote_down_all = 657,  // "I wrote down all "
-    sign_message__bytes_template = 658,  // "{0}\u{00a0}Bytes"
+    sign_message__bytes_template = 658,  // "{0} Bytes"
     sign_message__confirm_address = 659,  // "Signing address"
     sign_message__confirm_message = 660,  // "Confirm message"
     sign_message__message_size = 661,  // "Message size"
@@ -1411,7 +1411,7 @@ pub enum TranslatedString {
     words__wallet = 1028,  // "Wallet"
     words__authenticate = 1029,  // "Authenticate"
     #[cfg(feature = "universal_fw")]
-    ethereum__title_all_input_data_template = 1031,  // "All input data ({0}\u{00a0}bytes)"
+    ethereum__title_all_input_data_template = 1031,  // "All input data ({0} bytes)"
     auto_lock__description = 1032,  // "Set the time before your Trezor locks automatically."
     plurals__lock_after_x_days = 1033,  // "day|days"
     firmware_update__restart = 1034,  // "Trezor will restart after update."
@@ -1960,7 +1960,7 @@ impl TranslatedString {
             #[cfg(feature = "layout_eckhart")]
             (Self::ethereum__contract, "Call contract"),
             #[cfg(feature = "universal_fw")]
-            (Self::ethereum__data_size_template, "Size: {0}\u{00a0}bytes"),
+            (Self::ethereum__data_size_template, "Size: {0} bytes"),
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__gas_limit, "Gas limit"),
             #[cfg(feature = "universal_fw")]
@@ -1998,7 +1998,7 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__title_signing_address, "Signing address"),
             #[cfg(feature = "universal_fw")]
-            (Self::ethereum__units_template, "{0}\u{00a0}units"),
+            (Self::ethereum__units_template, "{0} units"),
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__unknown_token, "Unknown token"),
             #[cfg(feature = "universal_fw")]
@@ -2656,7 +2656,7 @@ impl TranslatedString {
             (Self::send__you_are_contributing, "You are contributing:"),
             (Self::share_words__words_in_order, " words in order."),
             (Self::share_words__wrote_down_all, "I wrote down all "),
-            (Self::sign_message__bytes_template, "{0}\u{00a0}Bytes"),
+            (Self::sign_message__bytes_template, "{0} Bytes"),
             (Self::sign_message__confirm_address, "Signing address"),
             (Self::sign_message__confirm_message, "Confirm message"),
             (Self::sign_message__message_size, "Message size"),
@@ -3253,7 +3253,7 @@ impl TranslatedString {
             (Self::words__wallet, "Wallet"),
             (Self::words__authenticate, "Authenticate"),
             #[cfg(feature = "universal_fw")]
-            (Self::ethereum__title_all_input_data_template, "All input data ({0}\u{00a0}bytes)"),
+            (Self::ethereum__title_all_input_data_template, "All input data ({0} bytes)"),
             (Self::auto_lock__description, "Set the time before your Trezor locks automatically."),
             (Self::plurals__lock_after_x_days, "day|days"),
             (Self::firmware_update__restart, "Trezor will restart after update."),
