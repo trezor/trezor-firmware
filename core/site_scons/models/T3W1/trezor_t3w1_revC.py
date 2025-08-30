@@ -231,6 +231,7 @@ def configure(
 
     if "rgb_led" in features_wanted:
         sources += ["embed/io/rgb_led/stm32u5/rgb_led_lp.c"]
+        sources += ["embed/io/rgb_led/stm32u5/rgb_led_effects.c"]
         paths += ["embed/io/rgb_led/inc"]
         features_available.append("rgb_led")
         defines += [("USE_RGB_LED", "1")]
