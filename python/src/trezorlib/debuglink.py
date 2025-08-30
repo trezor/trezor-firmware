@@ -227,8 +227,7 @@ class LayoutContent(UnstructuredJSONReader):
 
     def subtitle(self) -> str:
         """Getting text that is displayed as a subtitle."""
-        subtitle = self._get_str_or_dict_text("subtitle")
-        return subtitle
+        return self._get_str_or_dict_text("subtitle")
 
     def text_content(self) -> str:
         """What is on the screen, in one long string, so content can be
@@ -352,7 +351,7 @@ class LayoutContent(UnstructuredJSONReader):
         return [get_button_content(btn_key) for btn_key in button_keys]
 
     def vertical_menu_content(self) -> list[str]:
-        """Get the content of the vertical menu."""
+        """Get the main content of the vertical menu."""
 
         vertical_menu = self.find_unique_object_with_key_and_value(
             "component", "VerticalMenu"
@@ -360,6 +359,16 @@ class LayoutContent(UnstructuredJSONReader):
         assert isinstance(vertical_menu, dict)
 
         return [btn_obj["text"] for btn_obj in vertical_menu["buttons"]]
+
+    def vertical_menu_subtext(self) -> list[str]:
+        """Get the subtext items of the vertical menu."""
+
+        vertical_menu = self.find_unique_object_with_key_and_value(
+            "component", "VerticalMenu"
+        )
+        assert isinstance(vertical_menu, dict)
+
+        return [btn_obj.get("subtext", "") for btn_obj in vertical_menu["buttons"]]
 
     def seed_words(self) -> list[str]:
         """Get all the seed words on the screen in order.
@@ -385,6 +394,7 @@ class LayoutContent(UnstructuredJSONReader):
         assert (
             "PinKeyboard" in self.all_components()
             or "PassphraseKeyboard" in self.all_components()
+            or "StringKeyboard" in self.all_components()
         )
         style_str = self.find_unique_value_by_key(
             "display_style", default="", only_type=str
@@ -396,8 +406,19 @@ class LayoutContent(UnstructuredJSONReader):
 
     def passphrase(self) -> str:
         """Get passphrase from the layout."""
-        assert "PassphraseKeyboard" in self.all_components()
-        return self.find_unique_value_by_key("passphrase", default="", only_type=str)
+        if "StringKeyboard" in self.all_components():
+            return self.find_unique_value_by_key("content", default="", only_type=str)
+        elif "PassphraseKeyboard" in self.all_components():
+            return self.find_unique_value_by_key(
+                "passphrase", default="", only_type=str
+            )
+        else:
+            raise ValueError("No passphrase component in layout")
+
+    def label(self) -> str:
+        """Get label from the layout."""
+        assert "StringKeyboard" in self.all_components()
+        return self.find_unique_value_by_key("content", default="", only_type=str)
 
     def page_count(self) -> int:
         """Get number of pages for the layout."""
@@ -1850,6 +1871,13 @@ class ScreenButtons:
     def menu(self) -> Coords:
         return self._grid55(4, 0)
 
+    # Header back button
+    def back(self) -> Coords:
+        if self.layout_type is LayoutType.Eckhart:
+            return self._grid55(0, 0)
+        else:
+            raise ValueError("Wrong layout type")
+
     # Center of the screen
     def tap_to_confirm(self) -> Coords:
         assert self.layout_type is LayoutType.Delizia
@@ -2083,6 +2111,11 @@ PASSPHRASE_DIGITS = ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0")
 PASSPHRASE_SPECIAL = ("_<>", ".:@", "/|\\", "!()", "+%&", "-[]", "?{}", ",'`", ";\"~", "$^=")
 # fmt: on
 
+LABEL_LOWERCASE_ECKHART = PASSPHRASE_LOWERCASE_DE
+LABEL_UPPERCASE_ECKHART = PASSPHRASE_UPPERCASE_DE
+LABEL_DIGITS = PASSPHRASE_DIGITS
+LABEL_SPECIAL = PASSPHRASE_SPECIAL
+
 
 class ButtonActions:
     def __init__(self, debuglink: DebugLink):
@@ -2108,8 +2141,30 @@ class ButtonActions:
         else:
             return PASSPHRASE_SPECIAL
 
+    def _label_choices(self, char: str) -> "tuple[str, ...]":
+        if char in " *#" or char.islower():
+            if self.debuglink.layout_type is LayoutType.Eckhart:
+                return LABEL_LOWERCASE_ECKHART
+            else:
+                raise ValueError("Wrong layout type")
+        elif char.isupper():
+            if self.debuglink.layout_type is LayoutType.Eckhart:
+                return LABEL_UPPERCASE_ECKHART
+            else:
+                raise ValueError("Wrong layout type")
+        elif char.isdigit():
+            return PASSPHRASE_DIGITS
+        else:
+            return PASSPHRASE_SPECIAL
+
     def passphrase(self, char: str) -> t.Tuple[Coords, int]:
         choices = self._passphrase_choices(char)
+        idx = next(i for i, letters in enumerate(choices) if char in letters)
+        click_amount = choices[idx].index(char) + 1
+        return self.debuglink.screen_buttons.pin_passphrase_index(idx), click_amount
+
+    def label(self, char: str) -> t.Tuple[Coords, int]:
+        choices = self._label_choices(char)
         idx = next(i for i, letters in enumerate(choices) if char in letters)
         click_amount = choices[idx].index(char) + 1
         return self.debuglink.screen_buttons.pin_passphrase_index(idx), click_amount
