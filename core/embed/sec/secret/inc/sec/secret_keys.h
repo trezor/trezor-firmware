@@ -27,9 +27,9 @@
 
 #define SECRET_KEY_MASKING
 
-#include <ed25519-donna/ed25519.h>
+#include <../vendor/mldsa-native/mldsa/params.h>
 
-secbool secret_key_mcu_device_auth(ed25519_secret_key dest);
+secbool secret_key_mcu_device_auth(uint8_t dest[MLDSA_SEEDBYTES]);
 
 #endif  // SECRET_MASTER_KEY_SLOT_SIZE
 

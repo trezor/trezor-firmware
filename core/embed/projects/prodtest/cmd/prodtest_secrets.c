@@ -38,6 +38,8 @@
 #include <trezor_model.h>
 #endif
 
+#include <../vendor/mldsa-native/mldsa/sign.h>
+
 secbool generate_random_secret(uint8_t* secret, size_t length) {
   random_buffer(secret, length);
 
@@ -141,15 +143,20 @@ static void prodtest_secrets_get_mcu_device_key(cli_t* cli) {
     return;
   }
 
-  ed25519_secret_key mcu_private = {0};
-  if (secret_key_mcu_device_auth(mcu_private) != sectrue) {
+  uint8_t seed[MLDSA_SEEDBYTES] = {0};
+  if (secret_key_mcu_device_auth(seed) != sectrue) {
     cli_error(cli, CLI_ERROR, "`secret_key_mcu_device_auth()` failed.");
-    return;
+    goto cleanup;
   }
-  ed25519_public_key mcu_public = {0};
-  ed25519_publickey(mcu_private, mcu_public);
 
-  uint8_t output[sizeof(ed25519_public_key) + NOISE_TAG_SIZE] = {0};
+  uint8_t mcu_public[CRYPTO_PUBLICKEYBYTES] = {0};
+  uint8_t mcu_private[CRYPTO_SECRETKEYBYTES] = {0};
+  if (crypto_sign_keypair_internal(mcu_public, mcu_private, seed) != 0) {
+    cli_error(cli, CLI_ERROR, "`crypto_sign_keypair_internal()` failed.");
+    goto cleanup;
+  }
+
+  uint8_t output[sizeof(mcu_public) + NOISE_TAG_SIZE] = {0};
   if (!secure_channel_encrypt(mcu_public, sizeof(mcu_public), NULL, 0,
                               output)) {
     // `secure_channel_handshake_2()` might not have been called
@@ -160,31 +167,56 @@ static void prodtest_secrets_get_mcu_device_key(cli_t* cli) {
   cli_ok_hexdata(cli, output, sizeof(output));
 
 cleanup:
+  memzero(seed, sizeof(seed));
   memzero(mcu_private, sizeof(mcu_private));
 }
 
 #ifndef TREZOR_EMULATOR
 static bool check_device_cert_chain(cli_t* cli, const uint8_t* chain,
                                     size_t chain_size) {
-  ed25519_secret_key mcu_private = {0};
-  if (secret_key_mcu_device_auth(mcu_private) != sectrue) {
+  bool ret = false;
+
+  uint8_t seed[MLDSA_SEEDBYTES] = {0};
+  if (secret_key_mcu_device_auth(seed) != sectrue) {
     cli_error(cli, CLI_ERROR, "`secret_key_mcu_device_auth()` failed.");
-    return false;
+    goto cleanup;
   }
+
+  uint8_t mcu_public[CRYPTO_PUBLICKEYBYTES] = {0};
+  uint8_t mcu_private[CRYPTO_SECRETKEYBYTES] = {0};
+  if (crypto_sign_keypair_internal(mcu_public, mcu_private, seed) != 0) {
+    cli_error(cli, CLI_ERROR, "`crypto_sign_keypair_internal()` failed.");
+    goto cleanup;
+  }
+
+  uint8_t rnd[MLDSA_RNDBYTES] = {0};
+  random_buffer(rnd, sizeof(rnd));
 
   // The challenge is intentionally constant zero.
+  const uint8_t ENCODED_EMPTY_CONTEXT_STRING[] = {0, 0};
   uint8_t challenge[CHALLENGE_SIZE] = {0};
-  ed25519_signature signature = {0};
-  ed25519_sign(challenge, sizeof(challenge), mcu_private, signature);
-  memzero(mcu_private, sizeof(mcu_private));
-
-  if (!check_cert_chain(cli, chain, chain_size, signature, sizeof(signature),
-                        challenge)) {
-    // Error returned by check_cert_chain().
-    return false;
+  uint8_t signature[CRYPTO_BYTES] = {0};
+  size_t siglen = 0;
+  if (crypto_sign_signature_internal(
+          signature, &siglen, challenge, sizeof(challenge),
+          ENCODED_EMPTY_CONTEXT_STRING, sizeof(ENCODED_EMPTY_CONTEXT_STRING),
+          rnd, mcu_private, 0) != 0) {
+    cli_error(cli, CLI_ERROR, "`crypto_sign_signature()` failed.");
+    goto cleanup;
   }
 
-  return true;
+  if (!check_cert_chain(cli, chain, chain_size, signature, siglen, challenge)) {
+    // Error returned by check_cert_chain().
+    goto cleanup;
+  }
+
+  ret = true;
+
+cleanup:
+  memzero(seed, sizeof(seed));
+  memzero(mcu_private, sizeof(mcu_private));
+  memzero(rnd, sizeof(rnd));
+  return ret;
 }
 #endif
 

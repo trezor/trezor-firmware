@@ -41,3 +41,7 @@
 	path = vendor/sphincsplus
 	url = https://github.com/sphincs/sphincsplus/
 	branch = consistent-basew
+[submodule "vendor/mldsa-native"]
+	path = vendor/mldsa-native
+	url = https://github.com/pq-code-package/mldsa-native.git
+	ignore = untracked

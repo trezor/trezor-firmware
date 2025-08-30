@@ -71,17 +71,6 @@ cleanup:
   return ret;
 }
 
-static secbool secret_key_derive_curve25519(uint8_t slot, uint16_t index,
-                                            curve25519_key dest) {
-  _Static_assert(sizeof(curve25519_key) == SHA256_DIGEST_LENGTH);
-
-  secbool ret = secret_key_derive_sym(slot, index, 0, dest);
-  dest[0] &= 248;
-  dest[31] &= 127;
-  dest[31] |= 64;
-  return ret;
-}
-
 #if defined(USE_OPTIGA) || defined(USE_TROPIC)
 static secbool secret_key_derive_nist256p1(
     uint8_t slot, uint16_t index, uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
@@ -114,9 +103,10 @@ cleanup:
 }
 #endif
 
-secbool secret_key_mcu_device_auth(ed25519_secret_key dest) {
-  return secret_key_derive_curve25519(SECRET_PRIVILEGED_MASTER_KEY_SLOT,
-                                      KEY_INDEX_MCU_DEVICE_AUTH, dest);
+secbool secret_key_mcu_device_auth(uint8_t dest[MLDSA_SEEDBYTES]) {
+  _Static_assert(MLDSA_SEEDBYTES == SHA256_DIGEST_LENGTH);
+  return secret_key_derive_sym(SECRET_PRIVILEGED_MASTER_KEY_SLOT,
+                               KEY_INDEX_MCU_DEVICE_AUTH, 0, dest);
 }
 
 #ifdef USE_OPTIGA
@@ -133,6 +123,17 @@ secbool secret_key_optiga_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
 #endif  // USE_OPTIGA
 
 #ifdef USE_TROPIC
+static secbool secret_key_derive_curve25519(uint8_t slot, uint16_t index,
+                                            curve25519_key dest) {
+  _Static_assert(sizeof(curve25519_key) == SHA256_DIGEST_LENGTH);
+
+  secbool ret = secret_key_derive_sym(slot, index, 0, dest);
+  dest[0] &= 248;
+  dest[31] &= 127;
+  dest[31] |= 64;
+  return ret;
+}
+
 secbool secret_key_tropic_public(curve25519_key dest) {
   return secret_key_get(SECRET_TROPIC_TROPIC_PUBKEY_SLOT, dest,
                         sizeof(curve25519_key));
