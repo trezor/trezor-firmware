@@ -5645,6 +5645,7 @@ if TYPE_CHECKING:
         memo_id: "int | None"
         memo_hash: "bytes | None"
         num_operations: "int"
+        payment_req: "PaymentRequest | None"
 
         def __init__(
             self,
@@ -5661,6 +5662,7 @@ if TYPE_CHECKING:
             memo_text: "str | None" = None,
             memo_id: "int | None" = None,
             memo_hash: "bytes | None" = None,
+            payment_req: "PaymentRequest | None" = None,
         ) -> None:
             pass
 
