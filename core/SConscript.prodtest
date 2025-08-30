@@ -138,6 +138,17 @@ if 'boot_ucb' in FEATURES_AVAILABLE:
         'vendor/sphincsplus/ref/wots.c',
     ]
 
+SOURCE_MLDSA = [
+        'vendor/mldsa-native/mldsa/fips202/fips202.c',
+        'vendor/mldsa-native/mldsa/fips202/fips202x4.c',
+        'vendor/mldsa-native/mldsa/fips202/keccakf1600.c',
+        'vendor/mldsa-native/mldsa/ntt.c',
+        'vendor/mldsa-native/mldsa/packing.c',
+        'vendor/mldsa-native/mldsa/poly.c',
+        'vendor/mldsa-native/mldsa/polyvec.c',
+        'vendor/mldsa-native/mldsa/sign.c',
+]
+
 # modtrezorui
 CPPPATH_MOD += [
         'vendor/micropython/lib/uzlib'
@@ -297,6 +308,7 @@ obj_program.extend(env.Object(source=SOURCE_MOD))
 obj_program.extend(env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-auto-var-init=zero'))
 obj_program.extend(env.Object(source=SOURCE_PRODTEST))
 obj_program.extend(env.Object(source=SOURCE_HAL))
+obj_program.extend(env.Object(source=SOURCE_MLDSA))
 
 if 'boot_ucb' in FEATURES_AVAILABLE:
     obj_program += env.Object(
