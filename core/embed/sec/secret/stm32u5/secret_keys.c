@@ -114,9 +114,10 @@ cleanup:
 }
 #endif
 
-secbool secret_key_mcu_device_auth(ed25519_secret_key dest) {
-  return secret_key_derive_curve25519(SECRET_PRIVILEGED_MASTER_KEY_SLOT,
-                                      KEY_INDEX_MCU_DEVICE_AUTH, dest);
+secbool secret_key_mcu_device_auth(uint8_t dest[MLDSA_SEEDBYTES]) {
+  _Static_assert(MLDSA_SEEDBYTES == SHA256_DIGEST_LENGTH);
+  return secret_key_derive_sym(SECRET_PRIVILEGED_MASTER_KEY_SLOT,
+                               KEY_INDEX_MCU_DEVICE_AUTH, 0, dest);
 }
 
 #ifdef USE_OPTIGA
