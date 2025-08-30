@@ -26,7 +26,7 @@
 typedef struct cli cli_t;
 
 // Maximum length of command line input (including command, arguments)
-#define CLI_LINE_BUFFER_SIZE 4096
+#define CLI_LINE_BUFFER_SIZE 8192
 // Maximum number of command arguments + 1
 #define CLI_MAX_ARGS 64
 

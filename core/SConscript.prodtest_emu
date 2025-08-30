@@ -106,6 +106,16 @@ if FEATURE_FLAGS["AES_GCM"]:
         'vendor/trezor-crypto/aes/aesgcm.c',
     ]
 
+SOURCE_MLDSA = [
+        'vendor/mldsa-native/mldsa/fips202/fips202.c',
+        'vendor/mldsa-native/mldsa/fips202/fips202x4.c',
+        'vendor/mldsa-native/mldsa/fips202/keccakf1600.c',
+        'vendor/mldsa-native/mldsa/ntt.c',
+        'vendor/mldsa-native/mldsa/packing.c',
+        'vendor/mldsa-native/mldsa/poly.c',
+        'vendor/mldsa-native/mldsa/polyvec.c',
+        'vendor/mldsa-native/mldsa/sign.c',
+]
 
 # modtrezorui
 CPPPATH_MOD += [
@@ -287,6 +297,7 @@ obj_program += env.Object(source=SOURCE_MOD)
 obj_program += env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-auto-var-init=zero')
 obj_program += env.Object(source=SOURCE_PRODTEST)
 obj_program += env.Object(source=SOURCE_HAL)
+obj_program += env.Object(source=SOURCE_MLDSA)
 
 program_elf = env.Command(
     target='prodtest.elf',
