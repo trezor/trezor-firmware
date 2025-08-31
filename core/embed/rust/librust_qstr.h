@@ -20,9 +20,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_AttachType;
   MP_QSTR_AutoLockDelay;
   MP_QSTR_BACK;
+  MP_QSTR_BLEIF;
   MP_QSTR_BacklightLevels;
   MP_QSTR_BackupFailed;
-  MP_QSTR_BleInterface;
   MP_QSTR_Bluetooth;
   MP_QSTR_CANCELLED;
   MP_QSTR_CONFIRMED;

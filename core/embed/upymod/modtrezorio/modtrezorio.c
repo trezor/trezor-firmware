@@ -88,7 +88,7 @@ uint32_t last_touch_sample_time = 0;
 
 /// USB_EVENT: int # interface id for USB events
 
-/// WireInterface = Union[USBIF, BleInterface]
+/// WireInterface = Union[USBIF, BLEIF]
 /// USBIF_WIRE: int  # interface id of the USB wire interface
 /// USBIF_DEBUG: int  # interface id of the USB debug interface
 /// USBIF_WEBAUTHN: int  # interface id of the USB WebAuthn

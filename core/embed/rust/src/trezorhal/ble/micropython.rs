@@ -212,7 +212,7 @@ extern "C" fn py_iface_read(n_args: usize, args: *const Obj) -> Obj {
 }
 
 static BLE_INTERFACE_TYPE: Type = obj_type! {
-    name: Qstr::MP_QSTR_BleInterface,
+    name: Qstr::MP_QSTR_BLEIF,
     locals: &obj_dict!(obj_map! {
         Qstr::MP_QSTR_iface_num => obj_fn_1!(py_iface_num).as_obj(),
         Qstr::MP_QSTR_write => obj_fn_2!(py_iface_write).as_obj(),
@@ -229,7 +229,7 @@ static BLE_INTERFACE_OBJ: SimpleTypeObj = SimpleTypeObj::new(&BLE_INTERFACE_TYPE
 pub static mp_module_trezorble: Module = obj_module! {
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorble.to_obj(),
 
-    /// class BleInterface:
+    /// class BLEIF:
     ///     """
     ///     BLE interface wrapper.
     ///     """
@@ -257,7 +257,7 @@ pub static mp_module_trezorble: Module = obj_module! {
     ///
     /// mock:global
     ///
-    /// interface: BleInterface
+    /// interface: BLEIF
     /// """BLE interface instance."""
     Qstr::MP_QSTR_interface => BLE_INTERFACE_OBJ.as_obj(),
 

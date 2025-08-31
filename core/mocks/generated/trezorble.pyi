@@ -2,7 +2,7 @@ from typing import *
 
 
 # rust/src/trezorhal/ble/micropython.rs
-class BleInterface:
+class BLEIF:
     """
     BLE interface wrapper.
     """
@@ -25,7 +25,7 @@ class BleInterface:
         """
         Reads message using BLE (device).
         """
-interface: BleInterface
+interface: BLEIF
 """BLE interface instance."""
 
 
