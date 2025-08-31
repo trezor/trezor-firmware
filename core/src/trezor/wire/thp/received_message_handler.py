@@ -160,7 +160,7 @@ async def _handle_state_handshake(
 
     # key is decoded in handshake._handle_th2_crypto
     host_static_public_key = host_encrypted_static_public_key[:PUBKEY_LENGTH]
-    ctx.channel_cache.set_host_static_public_key(bytearray(host_static_public_key))
+    ctx.channel_cache.set_host_static_public_key(host_static_public_key)
 
     paired: bool = False
     trezor_state = _TREZOR_STATE_UNPAIRED
