@@ -22,9 +22,6 @@
 #include <string.h>
 
 #include <rtl/cli.h>
-#ifdef USE_OPTIGA
-#include <sec/optiga_commands.h>
-#endif
 #include <sec/secret.h>
 #include <sec/secret_keys.h>
 
@@ -33,6 +30,15 @@
 #include "rand.h"
 #include "secbool.h"
 #include "secure_channel.h"
+
+#ifdef USE_OPTIGA
+#include <sec/optiga.h>
+#endif
+
+#ifdef USE_TROPIC
+#include <libtropic.h>
+#include <sec/tropic.h>
+#endif
 
 #ifndef TREZOR_EMULATOR
 #include <trezor_model.h>
@@ -43,21 +49,26 @@
 secbool generate_random_secret(uint8_t* secret, size_t length) {
   random_buffer(secret, length);
 
+  uint8_t buffer[length];
 #ifdef USE_OPTIGA
-  uint8_t optiga_secret[length];
-  if (OPTIGA_SUCCESS != optiga_get_random(optiga_secret, length)) {
+  if (OPTIGA_SUCCESS != optiga_random_buffer(buffer, length)) {
     return secfalse;
   }
   for (size_t i = 0; i < length; i++) {
-    secret[i] ^= optiga_secret[i];
+    secret[i] ^= buffer[i];
   }
-  memzero(optiga_secret, sizeof(optiga_secret));
 #endif
 
 #ifdef USE_TROPIC
-  // TODO: Generate randomness using tropic and xor it with `secret`.
+  if (LT_OK != lt_random_value_get(tropic_get_handle(), buffer, length)) {
+    return secfalse;
+  }
+  for (size_t i = 0; i < length; i++) {
+    secret[i] ^= buffer[i];
+  }
 #endif
 
+  memzero(buffer, sizeof(buffer));
   return sectrue;
 }
 
