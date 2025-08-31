@@ -43,6 +43,11 @@ def _timeout_after(ms: int) -> Generator[sleep, int, NoReturn]:
 
 
 class ThpContext:
+    """
+    This class handles THP receiving from multiple wire interfaces.
+    It also handles and responds to low-level single packet THP messages, creating new channels if needed.
+    """
+
     def __init__(self, *ifaces: WireInterface) -> None:
         max_packet_len = max(iface.RX_PACKET_LEN for iface in ifaces)
         self._packet_buf = bytearray(max_packet_len)
