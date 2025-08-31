@@ -76,7 +76,7 @@ class DataCache:
         utils.ensure(key < len(self.fields))
         return self.data[key][0] == 1
 
-    def set(self, key: int, value: bytes) -> None:
+    def set(self, key: int, value: bytes | memoryview) -> None:
         utils.ensure(key < len(self.fields))
         utils.ensure(len(value) <= self.fields[key])
         self.data[key][0] = 1
