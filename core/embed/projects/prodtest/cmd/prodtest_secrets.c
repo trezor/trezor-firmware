@@ -22,9 +22,6 @@
 #include <string.h>
 
 #include <rtl/cli.h>
-#ifdef USE_OPTIGA
-#include <sec/optiga_commands.h>
-#endif
 #include <sec/secret.h>
 #include <sec/secret_keys.h>
 
@@ -33,6 +30,16 @@
 #include "rand.h"
 #include "secbool.h"
 #include "secure_channel.h"
+
+#ifdef USE_OPTIGA
+#include <sec/optiga.h>
+#endif
+
+#ifdef USE_TROPIC
+#include <libtropic.h>
+#include <sec/tropic.h>
+#include "prodtest_tropic.h"
+#endif
 
 #ifndef TREZOR_EMULATOR
 #include <trezor_model.h>
@@ -43,21 +50,26 @@
 secbool generate_random_secret(uint8_t* secret, size_t length) {
   random_buffer(secret, length);
 
+  uint8_t buffer[length];
 #ifdef USE_OPTIGA
-  uint8_t optiga_secret[length];
-  if (OPTIGA_SUCCESS != optiga_get_random(optiga_secret, length)) {
+  if (!optiga_random_buffer(buffer, length)) {
     return secfalse;
   }
   for (size_t i = 0; i < length; i++) {
-    secret[i] ^= optiga_secret[i];
+    secret[i] ^= buffer[i];
   }
-  memzero(optiga_secret, sizeof(optiga_secret));
 #endif
 
 #ifdef USE_TROPIC
-  // TODO: Generate randomness using tropic and xor it with `secret`.
+  if (LT_OK != lt_random_value_get(tropic_get_handle(), buffer, length)) {
+    return secfalse;
+  }
+  for (size_t i = 0; i < length; i++) {
+    secret[i] ^= buffer[i];
+  }
 #endif
 
+  memzero(buffer, sizeof(buffer));
   return sectrue;
 }
 
@@ -103,6 +115,17 @@ static void prodtest_secrets_init(cli_t* cli) {
     cli_error_arg_count(cli);
     return;
   }
+
+#ifdef USE_TROPIC
+  // Ensure that a session with Tropic is established so that we can include
+  // randomness from the chip when generating the secrets. At this point in
+  // provisioning the factory pairing key should still be valid.
+  if (!prodtest_tropic_factory_session_start(tropic_get_handle())) {
+    cli_error(cli, CLI_ERROR,
+              "`prodtest_tropic_factory_session_start` failed.");
+    return;
+  }
+#endif
 
 #ifdef SECRET_PRIVILEGED_MASTER_KEY_SLOT
   if (set_random_secret(SECRET_PRIVILEGED_MASTER_KEY_SLOT,
