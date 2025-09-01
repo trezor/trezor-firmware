@@ -5,7 +5,7 @@ from trezor import TR, config, log, utils
 from trezor.ui.layouts import interact
 from trezorui_api import DeviceMenuResult
 
-MAX_PAIRED_DEVICES = 4
+BLE_MAX_BONDS = 8
 
 
 def _format_mac(ble_addr: bytes) -> str:
@@ -107,17 +107,20 @@ async def handle_device_menu() -> None:
 
         ble.disconnect()
     elif menu_result is DeviceMenuResult.DevicePair:
-        from trezor.ui.layouts import show_warning
+        from trezor.ui.layouts import raise_if_cancelled, show_warning
 
         from apps.management.ble.pair_new_device import pair_new_device
 
-        if len(paired_devices) < MAX_PAIRED_DEVICES:
+        if ble.is_connected():
+            ble.disconnect()
+
+        if len(paired_devices) < BLE_MAX_BONDS:
             await pair_new_device()
         else:
             await show_warning(
                 "device_pair",
-                "Limit of paired devices reached.",
-                button=TR.buttons__continue,
+                TR.ble__limit_reached,
+                button=TR.buttons__confirm,
             )
     elif menu_result is DeviceMenuResult.DeviceUnpairAll:
         from trezor.messages import BleUnpair
