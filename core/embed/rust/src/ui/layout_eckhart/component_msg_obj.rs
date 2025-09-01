@@ -184,6 +184,10 @@ impl ComponentMsgObj for DeviceMenuScreen {
             DeviceMenuMsg::HapticFeedback => Ok(HAPTIC_FEEDBACK.as_obj()),
             DeviceMenuMsg::LedEnabled => Ok(LED_ENABLED.as_obj()),
             DeviceMenuMsg::WipeDevice => Ok(WIPE_DEVICE.as_obj()),
+            // Power settings
+            DeviceMenuMsg::TurnOff => Ok(TURN_OFF.as_obj()),
+            DeviceMenuMsg::Reboot => Ok(REBOOT.as_obj()),
+            DeviceMenuMsg::RebootToBootloader => Ok(REBOOT_TO_BOOTLOADER.as_obj()),
             // nothing selected
             DeviceMenuMsg::Close => Ok(CANCELLED.as_obj()),
         }

@@ -52,6 +52,20 @@ STATIC mp_obj_t mod_trezorio_pm_suspend() {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_pm_suspend_obj,
                                  mod_trezorio_pm_suspend);
 
+/// def hibernate() -> None:
+///     """
+///     Hibernates the device. Raises RuntimeError on failure.
+///     """
+STATIC mp_obj_t mod_trezorio_pm_hibernate() {
+  pm_status_t res = pm_hibernate();
+  if (res != PM_OK) {
+    mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Failed to hibernate"));
+  }
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_pm_hibernate_obj,
+                                 mod_trezorio_pm_hibernate);
+
 /// def is_usb_connected() -> bool:
 ///     """
 ///     Returns True if USB is connected, False otherwise. Raises RuntimeError
@@ -72,6 +86,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_pm_is_usb_connected_obj,
 STATIC const mp_rom_map_elem_t mod_trezorio_pm_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_pm)},
     {MP_ROM_QSTR(MP_QSTR_suspend), MP_ROM_PTR(&mod_trezorio_pm_suspend_obj)},
+    {MP_ROM_QSTR(MP_QSTR_hibernate),
+     MP_ROM_PTR(&mod_trezorio_pm_hibernate_obj)},
     {MP_ROM_QSTR(MP_QSTR_is_usb_connected),
      MP_ROM_PTR(&mod_trezorio_pm_is_usb_connected_obj)},
 

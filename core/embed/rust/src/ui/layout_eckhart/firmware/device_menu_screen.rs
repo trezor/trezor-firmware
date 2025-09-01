@@ -40,7 +40,8 @@ use heapless::Vec;
 //       - pin code
 //       - wipe code
 //     - device
-const MAX_SUBMENUS: usize = 7;
+//   - power
+const MAX_SUBMENUS: usize = 8;
 const MAX_DEPTH: usize = 3;
 // submenus, device screens, regulatory and about screens
 const MAX_SUBSCREENS: usize = MAX_SUBMENUS + MAX_PAIRED_DEVICES + 2;
@@ -74,6 +75,11 @@ pub enum DeviceMenuMsg {
         usize, /* which device to unpair, index in the list of devices */
     ),
     DeviceUnpairAll,
+
+    // Power
+    TurnOff,
+    Reboot,
+    RebootToBootloader,
 
     // Security menu
     PinCode,
@@ -257,6 +263,7 @@ impl DeviceMenuScreen {
             about,
         );
         let settings = screen.add_settings_menu(bluetooth, security, device);
+        let power = screen.add_power_menu();
 
         let is_connected = connected_idx.is_some_and(|idx| idx < paired_devices.len());
         let connected_subtext: Option<TString<'static>> =
@@ -278,6 +285,7 @@ impl DeviceMenuScreen {
             pair_and_connect,
             settings,
             connected_subtext,
+            power,
         );
 
         screen.set_active_subscreen(root);
@@ -352,6 +360,25 @@ impl DeviceMenuScreen {
         unwrap!(items.push(MenuItem::new(
             TR::words__device.into(),
             Some(Action::GoTo(device_index))
+        )));
+
+        let submenu_index = self.add_submenu(Submenu::new(items));
+        self.add_subscreen(Subscreen::Submenu(submenu_index))
+    }
+
+    fn add_power_menu(&mut self) -> usize {
+        let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
+        unwrap!(items.push(MenuItem::new(
+            TR::buttons__turn_off.into(),
+            Some(Action::Return(DeviceMenuMsg::TurnOff))
+        )));
+        unwrap!(items.push(MenuItem::new(
+            TR::buttons__restart.into(),
+            Some(Action::Return(DeviceMenuMsg::Reboot))
+        )));
+        unwrap!(items.push(MenuItem::new(
+            TR::reboot_to_bootloader__title.into(),
+            Some(Action::Return(DeviceMenuMsg::RebootToBootloader))
         )));
 
         let submenu_index = self.add_submenu(Submenu::new(items));
@@ -547,6 +574,7 @@ impl DeviceMenuScreen {
         pair_and_connect_index: usize,
         settings_index: usize,
         connected_subtext: Option<TString<'static>>,
+        power_index: usize,
     ) -> usize {
         let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
         if failed_backup {
@@ -578,6 +606,11 @@ impl DeviceMenuScreen {
         unwrap!(items.push(MenuItem::new(
             TR::words__settings.into(),
             Some(Action::GoTo(settings_index)),
+        )));
+
+        unwrap!(items.push(MenuItem::new(
+            TR::words__power.into(),
+            Some(Action::GoTo(power_index)),
         )));
 
         let submenu_index = self.add_submenu(Submenu::new(items).with_battery());

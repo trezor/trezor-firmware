@@ -2126,5 +2126,8 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     HapticFeedback: ClassVar[DeviceMenuResult]
     ///     LedEnabled: ClassVar[DeviceMenuResult]
     ///     WipeDevice: ClassVar[DeviceMenuResult]
+    ///     Reboot: ClassVar[DeviceMenuResult]
+    ///     RebootToBootloader: ClassVar[DeviceMenuResult]
+    ///     TurnOff: ClassVar[DeviceMenuResult]
     Qstr::MP_QSTR_DeviceMenuResult => DEVICE_MENU_RESULT.as_obj(),
 };
