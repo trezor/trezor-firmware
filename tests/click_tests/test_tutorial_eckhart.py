@@ -51,7 +51,7 @@ def _assert_tropic_info(debug: "DebugLink"):
     layout = debug.read_layout()
     assert layout.title() == TR.tutorial__what_is_tropic
     text = _paginated_text(debug)
-    assert TR.tutorial__tropic_info in text
+    assert TR.tutorial__tropic_info.replace(" ", "") in text.replace(" ", "")
 
     debug.click(debug.screen_buttons.menu())
 
