@@ -42,7 +42,7 @@
  * @brief RGB LED effect type
  */
 typedef enum {
-  RGB_LED_EFFECT_BOOTLOADER_BREATHE = 0,
+  RGB_LED_EFFECT_PAIRING = 0,
   RGB_LED_EFFECT_CHARGING,
   RGB_LED_NUM_OF_EFFECTS,
 } rgb_led_effect_type_t;
