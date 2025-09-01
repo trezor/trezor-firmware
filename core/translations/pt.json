@@ -366,7 +366,7 @@
     "ethereum__approve_to": "Aprovar a",
     "ethereum__approve_unlimited_template": "Aprovando quantia ilimitada de {0}",
     "ethereum__contract": "Contrato:",
-    "ethereum__contract_address": "Endereço de contrato do provedor",
+    "ethereum__contract_address": "End. de contrato do provedor",
     "ethereum__data_size_template": "Tamanho: {0} bytes",
     "ethereum__gas_limit": "Limite de gás:",
     "ethereum__gas_price": "Preço do gás:",
@@ -817,9 +817,9 @@
     "reset__check_share_backup_template": "Vamos fazer uma verificação rápida da Parte #{0}.",
     "reset__check_share_title_template": "VER. COTA Nº{0}",
     "reset__check_wallet_backup_title": {
-      "Bolt": "Verificação do backup da carteira",
+      "Bolt": "Verif. backup carteira",
       "Caesar": "Verificação do backup da carteira",
-      "Delizia": "Verificar backup da carteira",
+      "Delizia": "Verif. backup carteira",
       "Eckhart": "Verificação do backup da carteira"
     },
     "reset__continue_with_next_share": "Continuar com a próxima cota.",

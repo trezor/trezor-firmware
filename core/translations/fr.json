@@ -62,7 +62,7 @@
       "Eckhart": "Chemin de dérivation incorrect pour le compte sélectionné."
     },
     "addr_mismatch__xpub_mismatch": "XPUB incorrecte ?",
-    "address__cancel_contact_support": "Si l'adresse de réception ne correspond pas, contactez le support Trezor à trezor.io/support.",
+    "address__cancel_contact_support": "Si l'adresse ne correspond pas, contactez le support à trezor.io/support.",
     "address__cancel_receive": {
       "Bolt": "Annuler réception",
       "Caesar": "Annuler la réception",
@@ -149,7 +149,12 @@
     },
     "backup__can_back_up_anytime": "Vous pouvez sauvegarder votre Trezor une seule fois à tout moment.",
     "backup__create_backup_to_prevent_loss": "Créez une sauvegarde pour éviter de perdre l'accès à vos fonds",
-    "backup__info_multi_share_backup": "La sauvegarde de votre portefeuille contient plusieurs listes de mots dans un ordre spécifique (fragments).",
+    "backup__info_multi_share_backup": {
+      "Bolt": "La sauvegarde contient plusieurs listes dans un ordre spécifique (fragments).",
+      "Caesar": "La sauvegarde contient plusieurs listes dans un ordre spécifique (fragments).",
+      "Delizia": "La sauvegarde de votre portefeuille contient plusieurs listes de mots dans un ordre spécifique (fragments).",
+      "Eckhart": "La sauvegarde de votre portefeuille contient plusieurs listes de mots dans un ordre spécifique (fragments)."
+    },
     "backup__info_single_share_backup": "La sauvegarde de votre portefeuille contient {0} mots dans un ordre spécifique.",
     "backup__it_should_be_backed_up": {
       "Bolt": "Sauvegardez votre portef. maintenant.",
@@ -159,7 +164,7 @@
     },
     "backup__it_should_be_backed_up_now": {
       "Bolt": "Il doit être sauvegardé dès maintenant !",
-      "Caesar": "Il devrait être sauvegardé dès maintenant !",
+      "Caesar": "Il doit être sauvegardé dès maintenant !",
       "Delizia": "Il devrait être sauvegardé dès maintenant !",
       "Eckhart": "Il devrait être sauvegardé dès maintenant !"
     },
@@ -168,7 +173,7 @@
     "backup__not_recommend": "Nous ne recommandons pas d'ignorer la création de la sauvegarde du portefeuille.",
     "backup__recover_anytime": {
       "Bolt": "Utiliser votre sauv. pour restaurer votre portef. à tout moment.",
-      "Caesar": "Vous pouvez utiliser votre sauvegarde pour récupérer votre portefeuille à tout moment.",
+      "Caesar": "Utiliser votre sauv. pour restaurer votre portef. à tout moment.",
       "Delizia": "Vous pouvez utiliser votre sauvegarde pour récupérer votre portefeuille à tout moment.",
       "Eckhart": "Vous pouvez utiliser votre sauvegarde pour récupérer votre portefeuille à tout moment."
     },
@@ -1180,7 +1185,12 @@
       "Delizia": "Plus de fragments requis",
       "Eckhart": "Plus de fragments requis."
     },
-    "recovery__num_of_words": "Sélectionnez le nombre de mots de votre sauvegarde.",
+    "recovery__num_of_words": {
+      "Bolt": "Nombre de mots de votre sauvegarde.",
+      "Caesar": "Sélectionnez le nombre de mots de votre sauvegarde.",
+      "Delizia": "Sélectionnez le nombre de mots de votre sauvegarde.",
+      "Eckhart": "Sélectionnez le nombre de mots de votre sauvegarde."
+    },
     "recovery__only_first_n_letters": "Vous n'aurez qu'à sélectionner les 2 à 4 premières lettres de chaque mot.",
     "recovery__progress_will_be_lost": "Toute progression sera perdue.",
     "recovery__share_already_entered": {
@@ -1202,7 +1212,12 @@
     "recovery__title": "Récupérer un portefeuille",
     "recovery__title_cancel_dry_run": "Annuler la vérif. de la sauveg.",
     "recovery__title_cancel_recovery": "Annuler la récupération",
-    "recovery__title_dry_run": "Vérification de la sauvegarde",
+    "recovery__title_dry_run": {
+      "Bolt": "Vérif. sauvegarde",
+      "Caesar": "Vérification de la sauvegarde",
+      "Delizia": "Vérification de la sauvegarde",
+      "Eckhart": "Vérification de la sauvegarde"
+    },
     "recovery__title_recover": "Récupérer un portefeuille",
     "recovery__title_remaining_shares": "Fragments restants",
     "recovery__title_unlock_repeated_backup": "Sauvegarde multi-fragments",
@@ -1248,12 +1263,32 @@
     "reset__cancel_create_wallet": "Annuler la création du portefeuille",
     "reset__check_backup_instructions": "Vérifions rapidement votre sauvegarde.",
     "reset__check_backup_title": "Vérifier la sauvegarde",
-    "reset__check_group_share_title_template": "Vérifier g{0} - fragment {1}",
+    "reset__check_group_share_title_template": {
+      "Bolt": "Verif. g{0} - f{1}",
+      "Caesar": "Vérifier g{0} - fragment {1}",
+      "Delizia": "Vérifier g{0} - fragm. {1}",
+      "Eckhart": "Vérifier g{0} - fragment {1}"
+    },
     "reset__check_share_backup_template": "Vérifions rapidement le Fragment #{0}.",
-    "reset__check_share_title_template": "Vérifier le fragment #{0}",
-    "reset__check_wallet_backup_title": "Vérifier la sauvegarde du portefeuille",
+    "reset__check_share_title_template": {
+      "Bolt": "Vérifier fragm. #{0}",
+      "Caesar": "Vérifier le fragment #{0}",
+      "Delizia": "Vérifier le fragm. #{0}",
+      "Eckhart": "Vérifier le fragment #{0}"
+    },
+    "reset__check_wallet_backup_title": {
+      "Bolt": "Vérif. la sauvegarde",
+      "Caesar": "Vérifier la sauvegarde du portefeuille",
+      "Delizia": "Vérif. la sauvegarde",
+      "Eckhart": "Vérifier la sauvegarde du portefeuille"
+    },
     "reset__continue_with_next_share": "Continuez avec le fragment suivant.",
-    "reset__continue_with_share_template": "Continuez avec le fragment #{0}.",
+    "reset__continue_with_share_template": {
+      "Bolt": "Continuez avec le fragm #{0}.",
+      "Caesar": "Continuez avec le fragment #{0}.",
+      "Delizia": "Continuez avec le fragment #{0}.",
+      "Eckhart": "Continuez avec le fragment #{0}."
+    },
     "reset__create_x_of_y_multi_share_backup_template": "Voulez-vous créer une sauvegarde multi-fragments de {0} sur {1} ?",
     "reset__finished_verifying_group_template": "Vous avez terminé la vérification de vos fragments de récupération du groupe {0}.",
     "reset__finished_verifying_shares": "Vous avez terminé la vérification de vos fragments de récupération.",
@@ -1286,7 +1321,12 @@
     "reset__only_one_share_will_be_created": "Un seul fragment sera créé.",
     "reset__recovery_share_description": "Un fragment de récupération est une liste de mots que vous avez écrit lors de la configuration de votre Trezor.",
     "reset__recovery_share_number": "Votre sauvegarde de portefeuille se compose de 1 à 16 fragments.",
-    "reset__recovery_share_title_template": "Fragment de récupération #{0}",
+    "reset__recovery_share_title_template": {
+      "Bolt": "Fragm. de récup. #{0}",
+      "Caesar": "Fragment de récupération #{0}",
+      "Delizia": "Fragment de récupération #{0}",
+      "Eckhart": "Fragment de récupération #{0}"
+    },
     "reset__recovery_wallet_backup_title": "Sauvegarde du portefeuille",
     "reset__repeat_for_all_shares": "Répéter pour tous les fragments.",
     "reset__required_number_of_groups": "Le nombre de groupes requis pour la récupération.",
@@ -1299,7 +1339,12 @@
       "Delizia": "Sélectionner {0} mot",
       "Eckhart": "Sélectionnez le mot #{0} de la sauvegarde de votre portefeuille"
     },
-    "reset__select_word_x_of_y_template": "Sélectionnez le mot {0} sur {1} :",
+    "reset__select_word_x_of_y_template": {
+      "Bolt": "Mot {0} sur {1} :",
+      "Caesar": "Sélectionnez le mot {0} sur {1} :",
+      "Delizia": "Mot {0} sur {1} :",
+      "Eckhart": "Sélectionnez le mot {0} sur {1} :"
+    },
     "reset__set_it_to_count_template": "Définissez-le sur {0} et vous aurez besoin ",
     "reset__share_checked_successfully_template": "Fragment #{0} vérifié avec succès.",
     "reset__share_completed_template": "Fragment de récupération #{0} complété",
@@ -1349,7 +1394,12 @@
     "reset__use_your_backup": "Utilisez votre sauvegarde lorsque vous avez besoin de récupérer votre portefeuille.",
     "reset__words_may_repeat": "Les mots peuvent se répéter.",
     "reset__words_written_down_template": "J'ai noté les {0} mots dans l'ordre.",
-    "reset__write_down_words_template": "Écrivez les {0} mots suivants dans l'ordre sur la carte de sauvegarde de portefeuille.",
+    "reset__write_down_words_template": {
+      "Bolt": "Écrivez les {0} mots suivants dans l'ordre sur la carte de sauvegarde de portefeuille.",
+      "Caesar": "Écrivez les {0} mots suivants dans l'ordre.",
+      "Delizia": "Écrivez les {0} mots suivants dans l'ordre sur la carte de sauvegarde de portefeuille.",
+      "Eckhart": "Écrivez les {0} mots suivants dans l'ordre sur la carte de sauvegarde de portefeuille."
+    },
     "reset__wrong_word_selected": "Mauvais mot sélectionné !",
     "reset__you_need_one_share": "Pour la récupération, un fragment est requis.",
     "reset__your_backup_is_done": "Votre sauvegarde est terminée.",
@@ -1559,11 +1609,11 @@
     "tutorial__middle_click": "Appuyez simultanément sur les boutons de gauche et de droite\npour confirmer",
     "tutorial__navigation_ts7": "Utilisez les boutons du bas pour naviguer et confirmer vos actions.",
     "tutorial__one_more_step": "Encore une étape",
-    "tutorial__press_and_hold": "Maintenez enfoncé le bouton de droite\npour accepter les opérations importantes.",
+    "tutorial__press_and_hold": "Maintenez enfoncé le bouton de droite pour accepter les opérations importantes.",
     "tutorial__ready_to_use": "Vous êtes prêt à\nutiliser votre Trezor.",
     "tutorial__ready_to_use_safe5": "Vous êtes prêt à utiliser votre appareil !",
     "tutorial__restart_tutorial": "Recommencer le tutoriel",
-    "tutorial__scroll_down": "Appuyez sur le bouton droit pour lire tout le contenu lorsqu'il dépasse de l'écran.\n\nAppuyez sur le bouton gauch pour faire défiler l'écran vers le haut.",
+    "tutorial__scroll_down": "Appuyez sur le bouton droit pour lire tout le contenu lorsqu'il dépasse de l'écran.\nAppuyez sur le bouton gauch pour défiler vers le haut.",
     "tutorial__suite_restart": "Rejouez ce tutoriel à tout moment depuis l'app Trezor Suite.",
     "tutorial__sure_you_want_skip": "Voulez-vous vraiment\nignorer le tutoriel ?",
     "tutorial__swipe_up_and_down": "Appuyez sur la moitié inférieure de l'écran pour continuer, ou glissez vers le bas pour revenir en arrière.",
@@ -1574,7 +1624,7 @@
     "tutorial__title_hold": {
       "Bolt": "Maintenez pour confirmer les actions importantes",
       "Caesar": "Maintenez pour confirmer les actions importantes",
-      "Delizia": "Maintenez pour confirmer les actions importantes",
+      "Delizia": "Maintenez pour confirmer actions imp.",
       "Eckhart": "Maintenez le bouton pour confirmer les actions importantes."
     },
     "tutorial__title_lets_begin": "Commençons",
@@ -1593,7 +1643,12 @@
       "Delizia": "TROPIC01 est une nouvelle génération de puce Secure Element open-source conçue pour une sécurité matérielle transparente et vérifiable.",
       "Eckhart": "TROPIC01 est une nouvelle génération de puce Secure Element open-source conçue pour une sécurité matérielle transparente et vérifiable."
     },
-    "tutorial__use_trezor": "Utilisez votre Trezor avec\nles boutons de gauche et de droite.\n\nContinuez avec le bouton de droite.",
+    "tutorial__use_trezor": {
+      "Bolt": "Utilisez votre Trezor avec\nles boutons de gauche et de droite.\n\nContinuez avec le bouton de droite.",
+      "Caesar": "Utilisez votre Trezor avec les boutons de gauche et de droite.\nContinuez avec droite.",
+      "Delizia": "Utilisez votre Trezor avec\nles boutons de gauche et de droite.\n\nContinuez avec le bouton de droite.",
+      "Eckhart": "Utilisez votre Trezor avec\nles boutons de gauche et de droite.\n\nContinuez avec le bouton de droite."
+    },
     "tutorial__welcome_press_right": "Bienvenue sur votre Trezor. Appuyez sur le bouton de droite pour continuer.",
     "tutorial__welcome_safe5": "Bienvenue sur votre\nTrezor Safe 5",
     "tutorial__welcome_safe7": "Bienvenue\nsur votre Trezor\nSafe 7",
