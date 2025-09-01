@@ -1126,5 +1126,6 @@
   "1124": "ble__forget_all",
   "1125": "words__connect",
   "1126": "words__forget",
-  "1127": "words__power"
+  "1127": "words__power",
+  "1128": "ble__limit_reached"
 }
