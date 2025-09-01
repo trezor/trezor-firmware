@@ -51,7 +51,7 @@ secbool generate_random_secret(uint8_t* secret, size_t length) {
 
   uint8_t buffer[length];
 #ifdef USE_OPTIGA
-  if (OPTIGA_SUCCESS != optiga_random_buffer(buffer, length)) {
+  if (!optiga_random_buffer(buffer, length)) {
     return secfalse;
   }
   for (size_t i = 0; i < length; i++) {
