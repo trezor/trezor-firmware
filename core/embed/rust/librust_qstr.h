@@ -55,6 +55,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_PinRemove;
   MP_QSTR_RESUME;
   MP_QSTR_RX_PACKET_LEN;
+  MP_QSTR_Reboot;
+  MP_QSTR_RebootToBootloader;
   MP_QSTR_SWIPE_DOWN;
   MP_QSTR_SWIPE_LEFT;
   MP_QSTR_SWIPE_RIGHT;
@@ -64,6 +66,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_TRANSITIONING;
   MP_QSTR_TX_PACKET_LEN;
   MP_QSTR_TranslationsHeader;
+  MP_QSTR_TurnOff;
   MP_QSTR_WipeCode;
   MP_QSTR_WipeDevice;
   MP_QSTR_WipeRemove;
@@ -965,6 +968,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__pay_attention;
   MP_QSTR_words__please_check_again;
   MP_QSTR_words__please_try_again;
+  MP_QSTR_words__power;
   MP_QSTR_words__provider;
   MP_QSTR_words__really_wanna;
   MP_QSTR_words__receive;

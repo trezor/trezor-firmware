@@ -24,6 +24,13 @@ def suspend() -> int:
 
 
 # upymod/modtrezorio/modtrezorio-pm.h
+def hibernate() -> None:
+    """
+    Hibernates the device. Raises RuntimeError on failure.
+    """
+
+
+# upymod/modtrezorio/modtrezorio-pm.h
 def is_usb_connected() -> bool:
     """
     Returns True if USB is connected, False otherwise. Raises RuntimeError
