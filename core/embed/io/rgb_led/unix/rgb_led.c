@@ -89,8 +89,6 @@ void rgb_led_set_color(uint32_t color) {
   display_rgb_led(color);
 }
 
-void rgb_led_set_color(uint32_t color) { display_rgb_led(color); }
-
 void rgb_led_effect_start(rgb_led_effect_type_t effect_type,
                           uint32_t requested_cycles) {
   // RGB effect not supported in unix yet
