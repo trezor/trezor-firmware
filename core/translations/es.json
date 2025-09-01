@@ -381,7 +381,7 @@
     "ethereum__approve_to": "Aprobar a",
     "ethereum__approve_unlimited_template": "Aprobando una cantidad ilimitada de {0}",
     "ethereum__contract": "Contrato:",
-    "ethereum__contract_address": "Dirección del contrato del proveedor",
+    "ethereum__contract_address": "Dir. del contrato del proveedor",
     "ethereum__data_size_template": "Tamaño: {0} bytes",
     "ethereum__gas_limit": "Límite de gas",
     "ethereum__gas_price": "Precio de gas",
