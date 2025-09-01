@@ -62,7 +62,7 @@
       "Eckhart": "Chemin de dérivation incorrect pour le compte sélectionné."
     },
     "addr_mismatch__xpub_mismatch": "XPUB incorrecte ?",
-    "address__cancel_contact_support": "Si l'adresse de réception ne correspond pas, contactez le support Trezor à trezor.io/support.",
+    "address__cancel_contact_support": "Si l'adresse ne correspond pas, contactez le support à trezor.io/support.",
     "address__cancel_receive": {
       "Bolt": "Annuler réception",
       "Caesar": "Annuler la réception",
