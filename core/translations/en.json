@@ -110,6 +110,7 @@
     "ble__disable": "Turn Bluetooth off?",
     "ble__enable": "Turn Bluetooth on?",
     "ble__forget_all": "Forget all",
+    "ble__limit_reached": "Limit of paired devices reached",
     "ble__manage_paired": "Manage paired devices",
     "ble__pair_new": "Pair new device",
     "ble__pair_title": "Pair & connect",

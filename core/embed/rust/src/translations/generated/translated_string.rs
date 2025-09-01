@@ -1516,6 +1516,7 @@ pub enum TranslatedString {
     words__connect = 1125,  // "Connect"
     words__forget = 1126,  // "Forget"
     words__power = 1127,  // "Power"
+    ble__limit_reached = 1128,  // "Limit of paired devices reached"
 }
 
 impl TranslatedString {
@@ -3358,6 +3359,7 @@ impl TranslatedString {
             (Self::words__connect, "Connect"),
             (Self::words__forget, "Forget"),
             (Self::words__power, "Power"),
+            (Self::ble__limit_reached, "Limit of paired devices reached"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3438,6 +3440,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ble__disable, Self::ble__disable),
         (Qstr::MP_QSTR_ble__enable, Self::ble__enable),
         (Qstr::MP_QSTR_ble__forget_all, Self::ble__forget_all),
+        (Qstr::MP_QSTR_ble__limit_reached, Self::ble__limit_reached),
         (Qstr::MP_QSTR_ble__manage_paired, Self::ble__manage_paired),
         (Qstr::MP_QSTR_ble__pair_new, Self::ble__pair_new),
         (Qstr::MP_QSTR_ble__pair_title, Self::ble__pair_title),

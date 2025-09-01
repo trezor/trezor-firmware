@@ -78,6 +78,7 @@ class TR:
     ble__disable: str = "Turn Bluetooth off?"
     ble__enable: str = "Turn Bluetooth on?"
     ble__forget_all: str = "Forget all"
+    ble__limit_reached: str = "Limit of paired devices reached"
     ble__manage_paired: str = "Manage paired devices"
     ble__pair_new: str = "Pair new device"
     ble__pair_title: str = "Pair & connect"
