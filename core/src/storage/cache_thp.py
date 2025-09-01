@@ -1,5 +1,6 @@
 import builtins
 from micropython import const
+from typing import Sequence
 
 from storage.cache_common import (
     CHANNEL_HOST_STATIC_PUBKEY,
@@ -345,9 +346,7 @@ def _is_cid_unique() -> bool:
     return True
 
 
-def _get_least_recently_used_item(
-    list: list[ChannelCache] | list[SessionThpCache], max_count: int
-) -> int:
+def _get_least_recently_used_item(list: Sequence[ThpDataCache], max_count: int) -> int:
     global _usage_counter
     lru_counter = _usage_counter + 1
     lru_item_index = 0
