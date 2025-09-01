@@ -275,5 +275,20 @@ async def handle_device_menu() -> None:
         from apps.management.wipe_device import wipe_device
 
         await wipe_device(WipeDevice())
+    # Power settings
+    elif menu_result is DeviceMenuResult.TurnOff:
+        from trezor import io
+
+        io.pm.hibernate()
+    elif menu_result is DeviceMenuResult.Reboot:
+        from trezor.utils import reboot_to_bootloader
+
+        # Empty boot command results to a normal reboot
+        reboot_to_bootloader()
+    elif menu_result is DeviceMenuResult.RebootToBootloader:
+        from trezor.enums import BootCommand
+        from trezor.utils import reboot_to_bootloader
+
+        reboot_to_bootloader(BootCommand.STOP_AND_WAIT)
     else:
         raise RuntimeError(f"Unknown menu {menu_result}")

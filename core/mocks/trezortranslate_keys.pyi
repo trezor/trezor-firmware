@@ -1054,6 +1054,7 @@ class TR:
     words__pay_attention: str = "Pay attention"
     words__please_check_again: str = "Please check again"
     words__please_try_again: str = "Please try again"
+    words__power: str = "Power"
     words__provider: str = "Provider"
     words__really_wanna: str = "Do you really want to"
     words__receive: str = "Receive"

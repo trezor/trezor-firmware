@@ -1515,6 +1515,7 @@ pub enum TranslatedString {
     ble__forget_all = 1124,  // "Forget all"
     words__connect = 1125,  // "Connect"
     words__forget = 1126,  // "Forget"
+    words__power = 1127,  // "Power"
 }
 
 impl TranslatedString {
@@ -3356,6 +3357,7 @@ impl TranslatedString {
             (Self::ble__forget_all, "Forget all"),
             (Self::words__connect, "Connect"),
             (Self::words__forget, "Forget"),
+            (Self::words__power, "Power"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4830,6 +4832,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__pay_attention, Self::words__pay_attention),
         (Qstr::MP_QSTR_words__please_check_again, Self::words__please_check_again),
         (Qstr::MP_QSTR_words__please_try_again, Self::words__please_try_again),
+        (Qstr::MP_QSTR_words__power, Self::words__power),
         (Qstr::MP_QSTR_words__provider, Self::words__provider),
         (Qstr::MP_QSTR_words__really_wanna, Self::words__really_wanna),
         (Qstr::MP_QSTR_words__receive, Self::words__receive),

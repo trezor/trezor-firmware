@@ -869,3 +869,6 @@ class DeviceMenuResult:
     HapticFeedback: ClassVar[DeviceMenuResult]
     LedEnabled: ClassVar[DeviceMenuResult]
     WipeDevice: ClassVar[DeviceMenuResult]
+    Reboot: ClassVar[DeviceMenuResult]
+    RebootToBootloader: ClassVar[DeviceMenuResult]
+    TurnOff: ClassVar[DeviceMenuResult]
