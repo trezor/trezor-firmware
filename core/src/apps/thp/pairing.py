@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from storage.cache_thp import cache_host_name
 from trezor import protobuf
 from trezor.crypto import random
 from trezor.crypto.hashlib import sha256
@@ -115,9 +116,13 @@ async def handle_pairing_request(
     if not message.host_name:
         raise DataError("Missing host_name.")
 
+    peer_addr = ctx.channel_ctx.iface_ctx.connected_addr()
+    await ui.show_pairing_dialog(message.host_name, message.app_name)
     ctx.host_name = message.host_name
     ctx.app_name = message.app_name
-    await ui.show_pairing_dialog(ctx.host_name, ctx.app_name)
+    if peer_addr is not None:
+        cache_host_name(peer_addr, ctx.host_name)
+
     await ctx.write(ThpPairingRequestApproved())
     assert ThpSelectMethod.MESSAGE_WIRE_TYPE is not None
     select_method_msg = await ctx.read(

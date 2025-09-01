@@ -120,6 +120,18 @@ cid_counter: int = 0
 _usage_counter = 0
 
 
+# TODO: use pre-allocated memory, to avoid heap fragmentation
+_RECENT_HOST_NAMES: dict[bytes, str] = {}
+
+
+def cache_host_name(peer_addr: bytes, value: str) -> None:
+    _RECENT_HOST_NAMES[peer_addr] = value
+
+
+def get_cached_host_name(peer_addr: bytes) -> str | None:
+    return _RECENT_HOST_NAMES.get(peer_addr)
+
+
 def initialize() -> None:
     global _CHANNELS
     global _SESSIONS

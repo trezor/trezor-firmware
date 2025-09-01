@@ -1,6 +1,7 @@
 import storage.device as storage_device
 import trezorble as ble
 import trezorui_api
+from storage.cache_thp import get_cached_host_name
 from trezor import TR, config, log, utils
 from trezor.ui.layouts import interact
 from trezorui_api import DeviceMenuResult
@@ -8,7 +9,9 @@ from trezorui_api import DeviceMenuResult
 MAX_PAIRED_DEVICES = 4
 
 
-def _format_mac(ble_addr: bytes) -> str:
+def _get_host_name(ble_addr: bytes) -> str:
+    if (name := get_cached_host_name(ble_addr)) is not None:
+        return name
     return ":".join(f"{byte:02X}" for byte in ble_addr)
 
 
@@ -37,7 +40,7 @@ async def handle_device_menu() -> None:
     connected_idx = _find_device(connected_addr, bonds)
     if __debug__:
         log.debug(__name__, "connected: %s (%s)", connected_addr, connected_idx)
-    paired_devices = [_format_mac(bond) for bond in bonds]
+    paired_devices = [_get_host_name(bond) for bond in bonds]
 
     bluetooth_version = "2.3.1.1"
     # ###
