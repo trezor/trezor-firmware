@@ -34,6 +34,7 @@ from ..translations import (
     prepare_blob,
     set_language,
     sign_blob,
+    translate,
 )
 
 pytestmark = pytest.mark.models("core")
@@ -48,14 +49,12 @@ MAX_DATA_LENGTH = {
 }
 
 
-def get_ping_button(lang: str) -> str:
-    content = get_lang_json(lang)
-    return content["translations"]["buttons__confirm"]
+def get_ping_button() -> str:
+    return translate("buttons__confirm")
 
 
-def get_ping_title(lang: str) -> str:
-    content = get_lang_json(lang)
-    return content["translations"]["words__confirm"]
+def get_ping_title() -> str:
+    return translate("words__confirm")
 
 
 @pytest.fixture
@@ -89,7 +88,7 @@ def _check_ping_screen_texts(session: Session, title: str, right_button: str) ->
         assert layout.button_contents()[-1].upper() == right_button.upper()
         session.client.debug.press_yes()
 
-    # TT does not have a right button text (but a green OK tick)
+    # T2T1 does not have a right button text (but a green OK tick)
     if session.model in (models.T2T1, models.T3T1):
         right_button = "-"
 
@@ -111,7 +110,7 @@ def test_error_too_long(session: Session):
         bad_data = (max_length + 1) * b"a"
         device.change_language(session, language_data=bad_data)
     assert session.features.language == "en-US"
-    _check_ping_screen_texts(session, get_ping_title("en"), get_ping_button("en"))
+    _check_ping_screen_texts(session, get_ping_title(), get_ping_button())
 
 
 def test_error_invalid_data_length(session: Session):
@@ -125,7 +124,7 @@ def test_error_invalid_data_length(session: Session):
         bad_data = good_data + b"abcd"
         device.change_language(session, language_data=bad_data)
     assert session.features.language == "en-US"
-    _check_ping_screen_texts(session, get_ping_title("en"), get_ping_button("en"))
+    _check_ping_screen_texts(session, get_ping_title(), get_ping_button())
 
 
 def test_error_invalid_header_magic(session: Session):
@@ -139,7 +138,7 @@ def test_error_invalid_header_magic(session: Session):
         bad_data = 4 * b"a" + good_data[4:]
         device.change_language(session, language_data=bad_data)
     assert session.features.language == "en-US"
-    _check_ping_screen_texts(session, get_ping_title("en"), get_ping_button("en"))
+    _check_ping_screen_texts(session, get_ping_title(), get_ping_button())
 
 
 def test_error_invalid_data_hash(session: Session):
@@ -156,7 +155,7 @@ def test_error_invalid_data_hash(session: Session):
             language_data=bad_data,
         )
     assert session.features.language == "en-US"
-    _check_ping_screen_texts(session, get_ping_title("en"), get_ping_button("en"))
+    _check_ping_screen_texts(session, get_ping_title(), get_ping_button())
 
 
 def test_error_version_mismatch(session: Session):
@@ -172,7 +171,7 @@ def test_error_version_mismatch(session: Session):
             language_data=sign_blob(blob),
         )
     assert session.features.language == "en-US"
-    _check_ping_screen_texts(session, get_ping_title("en"), get_ping_button("en"))
+    _check_ping_screen_texts(session, get_ping_title(), get_ping_button())
 
 
 def test_error_invalid_signature(session: Session):
@@ -193,7 +192,7 @@ def test_error_invalid_signature(session: Session):
             language_data=blob.build(),
         )
     assert session.features.language == "en-US"
-    _check_ping_screen_texts(session, get_ping_title("en"), get_ping_button("en"))
+    _check_ping_screen_texts(session, get_ping_title(), get_ping_button())
 
 
 @pytest.mark.parametrize("lang", LANGUAGES)
@@ -205,26 +204,26 @@ def test_full_language_change(session: Session, lang: str):
     set_language(session, lang)
     assert session.features.language[:2] == lang
     assert session.features.language_version_matches is True
-    _check_ping_screen_texts(session, get_ping_title(lang), get_ping_button(lang))
+    _check_ping_screen_texts(session, get_ping_title(), get_ping_button())
 
     # Setting the default language via empty data
     set_language(session, "en")
     assert session.features.language == "en-US"
     assert session.features.language_version_matches is True
-    _check_ping_screen_texts(session, get_ping_title("en"), get_ping_button("en"))
+    _check_ping_screen_texts(session, get_ping_title(), get_ping_button())
 
 
 def test_language_is_removed_after_wipe(client: Client):
     session = client.get_session()
     assert session.features.language == "en-US"
 
-    _check_ping_screen_texts(session, get_ping_title("en"), get_ping_button("en"))
+    _check_ping_screen_texts(session, get_ping_title(), get_ping_button())
 
     # Setting cs language
     set_language(session, "cs")
     assert session.features.language == "cs-CZ"
 
-    _check_ping_screen_texts(session, get_ping_title("cs"), get_ping_button("cs"))
+    _check_ping_screen_texts(session, get_ping_title(), get_ping_button())
 
     # Wipe device
     device.wipe(session)
@@ -242,7 +241,7 @@ def test_language_is_removed_after_wipe(client: Client):
     )
     assert session.features.language == "en-US"
 
-    _check_ping_screen_texts(session, get_ping_title("en"), get_ping_button("en"))
+    _check_ping_screen_texts(session, get_ping_title(), get_ping_button())
 
 
 def test_translations_renders_on_screen(session: Session):
@@ -253,12 +252,12 @@ def test_translations_renders_on_screen(session: Session):
     assert session.features.language == "en-US"
 
     # Normal english
-    _check_ping_screen_texts(session, get_ping_title("en"), get_ping_button("en"))
+    _check_ping_screen_texts(session, get_ping_title(), get_ping_button())
     # Normal czech
     set_language(session, "cs")
 
     assert session.features.language == "cs-CZ"
-    _check_ping_screen_texts(session, get_ping_title("cs"), get_ping_button("cs"))
+    _check_ping_screen_texts(session, get_ping_title(), get_ping_button())
 
     # Modified czech - changed value
     czech_data_copy = deepcopy(czech_data)
@@ -268,7 +267,7 @@ def test_translations_renders_on_screen(session: Session):
         session,
         language_data=build_and_sign_blob(czech_data_copy, session),
     )
-    _check_ping_screen_texts(session, new_czech_confirm, get_ping_button("cs"))
+    _check_ping_screen_texts(session, new_czech_confirm, get_ping_button())
 
     # Modified czech - key deleted completely, english is shown
     czech_data_copy = deepcopy(czech_data)
@@ -277,7 +276,7 @@ def test_translations_renders_on_screen(session: Session):
         session,
         language_data=build_and_sign_blob(czech_data_copy, session),
     )
-    _check_ping_screen_texts(session, get_ping_title("en"), get_ping_button("cs"))
+    _check_ping_screen_texts(session, get_ping_title(), get_ping_button())
 
 
 def test_reject_update(session: Session):
@@ -296,7 +295,7 @@ def test_reject_update(session: Session):
 
     assert session.features.language == "en-US"
 
-    _check_ping_screen_texts(session, get_ping_title("en"), get_ping_button("en"))
+    _check_ping_screen_texts(session, get_ping_title(), get_ping_button())
 
 
 def _maybe_confirm_set_language(
@@ -412,5 +411,6 @@ def test_header_trailing_data(session: Session):
     language_data = sign_blob(blob)
 
     device.change_language(session, language_data)
+    set_language(session, "cs")
     assert session.features.language == "cs-CZ"
-    _check_ping_screen_texts(session, get_ping_title(lang), get_ping_button(lang))
+    _check_ping_screen_texts(session, get_ping_title(), get_ping_button())
