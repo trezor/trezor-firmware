@@ -308,6 +308,69 @@ impl ufmt::uDebug for TString<'_> {
     }
 }
 
+pub fn interpolate(fmt: &str) -> impl Iterator<Item = Part> {
+    Interpolate::new(fmt).filter(|part| !matches!(part, Part::Text("")))
+}
+
+pub struct Interpolate<'a> {
+    text: &'a str,
+    escape: bool,
+}
+
+impl<'a> Interpolate<'a> {
+    fn new(text: &'a str) -> Self {
+        Self {
+            text,
+            escape: false,
+        }
+    }
+}
+
+#[derive(PartialEq, Debug)]
+pub enum Part<'a> {
+    Text(&'a str),
+    Arg(u32),
+}
+
+impl<'a> Iterator for Interpolate<'a> {
+    type Item = Part<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.text.is_empty() {
+            if self.escape {
+                self.escape = false;
+                return Some(Part::Text("$"));
+            }
+            return None;
+        }
+        if self.escape {
+            self.escape = false;
+            let first_char = self.text.chars().next();
+            return Some(match first_char {
+                Some(c) if c.is_ascii_digit() => {
+                    self.text = &self.text[1..]; // drop it from text
+                    Part::Arg(unwrap!(c.to_digit(10)))
+                }
+                Some('$') => Part::Text(""), // "$$" => "$"
+                _ => Part::Text("$"),        // no valid escaping
+            });
+        }
+        match self.text.find('$') {
+            None => {
+                let part = Part::Text(self.text);
+                self.text = "";
+                return Some(part);
+            }
+            Some(offset) => {
+                self.escape = true;
+                let part = Part::Text(&self.text[..offset]);
+                self.text = &self.text[offset + 1..];
+                return Some(part);
+            }
+        };
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -352,5 +415,50 @@ mod tests {
         assert_eq!(plural_form("den|dny|dní", 1).as_str(), "den");
         assert_eq!(plural_form("den|dny|dní", 3).as_str(), "dny");
         assert_eq!(plural_form("den|dny|dní", 5).as_str(), "dní");
+    }
+
+    #[test]
+    fn test_interpolation() {
+        use super::*;
+        assert_eq!(interpolate("").collect::<Vec<_>>(), vec![]);
+        assert_eq!(interpolate("$").collect::<Vec<_>>(), vec![Part::Text("$")]);
+        assert_eq!(
+            interpolate("123").collect::<Vec<_>>(),
+            vec![Part::Text("123")]
+        );
+        assert_eq!(
+            interpolate("A $1").collect::<Vec<_>>(),
+            vec![Part::Text("A "), Part::Arg(1)]
+        );
+        assert_eq!(
+            interpolate("$1 A").collect::<Vec<_>>(),
+            vec![Part::Arg(1), Part::Text(" A")]
+        );
+        assert_eq!(
+            interpolate("$1$2$3").collect::<Vec<_>>(),
+            vec![Part::Arg(1), Part::Arg(2), Part::Arg(3)]
+        );
+        assert_eq!(
+            interpolate("A $1 B $2 C$$").collect::<Vec<_>>(),
+            vec![
+                Part::Text("A "),
+                Part::Arg(1),
+                Part::Text(" B "),
+                Part::Arg(2),
+                Part::Text(" C"),
+                Part::Text("$"),
+            ]
+        );
+        assert_eq!(
+            interpolate("$x$0$$abc$").collect::<Vec<_>>(),
+            vec![
+                Part::Text("$"),
+                Part::Text("x"),
+                Part::Arg(0),
+                Part::Text("$"),
+                Part::Text("abc"),
+                Part::Text("$")
+            ]
+        );
     }
 }
