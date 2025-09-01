@@ -42,6 +42,8 @@ if utils.USE_THP:
 # _BRIGHTNESS                = const(0x19)  # int
 _DISABLE_HAPTIC_FEEDBACK   = const(0x20)  # bool (0x01 or empty)
 _DISABLE_RGB_LED           = const(0x21)  # bool (0x01 or empty)
+if utils.USE_THP:
+    _THP_PAIRED_CACHE    = const(0x22)  # bytes
 
 
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
@@ -408,3 +410,18 @@ def get_rgb_led() -> bool:
     Get RGB LED enable, default to true if not set.
     """
     return not common.get_bool(_NAMESPACE, _DISABLE_RGB_LED, True)
+
+
+if utils.USE_THP:
+
+    def set_thp_paired_cache(blob: bytes) -> None:
+        """
+        Set THP paired entries' cache (using protobuf serialization).
+        """
+        common.set(_NAMESPACE, _THP_PAIRED_CACHE, blob)
+
+    def get_thp_paired_cache() -> bytes | None:
+        """
+        Get THP paired entries' cache (using protobuf serialization).
+        """
+        return common.get(_NAMESPACE, _THP_PAIRED_CACHE)
