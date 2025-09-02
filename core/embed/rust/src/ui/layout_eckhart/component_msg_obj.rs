@@ -183,7 +183,8 @@ impl ComponentMsgObj for DeviceMenuScreen {
             DeviceMenuMsg::TurnOff => Ok(TURN_OFF.as_obj()),
             DeviceMenuMsg::Reboot => Ok(REBOOT.as_obj()),
             DeviceMenuMsg::RebootToBootloader => Ok(REBOOT_TO_BOOTLOADER.as_obj()),
-            // nothing selected
+            // Misc
+            DeviceMenuMsg::Refresh => Ok(REFRESH.as_obj()),
             DeviceMenuMsg::Close => Ok(CANCELLED.as_obj()),
         }
     }

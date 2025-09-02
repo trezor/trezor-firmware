@@ -20,6 +20,9 @@ use crate::{
     },
 };
 
+#[cfg(feature = "ble")]
+use crate::ui::event::BLEEvent;
+
 use super::{
     super::{
         component::{Button, ButtonStyleSheet, FuelGauge},
@@ -89,7 +92,8 @@ pub enum DeviceMenuMsg {
     LedEnabled,
     WipeDevice,
 
-    // nothing selected
+    // Misc
+    Refresh,
     Close,
 }
 
@@ -762,6 +766,14 @@ impl Component for DeviceMenuScreen {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        #[cfg(feature = "ble")]
+        if matches!(
+            event,
+            Event::BLE(BLEEvent::Connected | BLEEvent::Disconnected | BLEEvent::ConnectionChanged)
+        ) {
+            return Some(DeviceMenuMsg::Refresh);
+        }
+
         // Handle the event for the active menu
         let subscreen = &self.subscreens[self.active_subscreen];
         match (subscreen, self.active_screen.deref_mut()) {

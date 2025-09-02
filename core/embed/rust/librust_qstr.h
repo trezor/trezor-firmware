@@ -55,6 +55,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_RX_PACKET_LEN;
   MP_QSTR_Reboot;
   MP_QSTR_RebootToBootloader;
+  MP_QSTR_Refresh;
   MP_QSTR_SWIPE_DOWN;
   MP_QSTR_SWIPE_LEFT;
   MP_QSTR_SWIPE_RIGHT;
