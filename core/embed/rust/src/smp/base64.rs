@@ -127,7 +127,6 @@ extern crate std;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::vec::Vec;
 
     #[test]
     fn test_encode_decode() {
