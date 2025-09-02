@@ -141,6 +141,7 @@ pub fn plural_form(template: &str, count: u32) -> ShortString {
 }
 
 #[derive(Copy, Clone)]
+#[cfg_attr(test, derive(Debug))]
 pub enum TString<'a> {
     #[cfg(feature = "micropython")]
     Allocated(StrBuffer),

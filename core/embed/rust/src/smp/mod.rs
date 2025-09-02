@@ -61,7 +61,7 @@ static SMP_RECEIVER: ReceiverStorage = ReceiverStorage(UnsafeCell::new(None));
 /// SMP_RECEIVER without locking IRQ, data races could occur.
 unsafe impl Sync for ReceiverStorage {}
 
-#[derive(Debug)]
+#[cfg_attr(test, derive(Debug))]
 pub enum SmpError {
     Timeout,
     WrongMessage,
