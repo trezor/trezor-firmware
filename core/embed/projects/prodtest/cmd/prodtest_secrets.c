@@ -224,14 +224,23 @@ static void prodtest_secrets_test_siggen(cli_t* cli) {
     const uint8_t* context = siggen_contexts[idx];
     size_t ctx_len = siggen_ctx_lens[idx];
     
-    // Generate random bytes (in real ACVP this would be deterministic)
-    uint8_t rnd[32] = {0}; // For deterministic testing, use zero
+    // Prepare pre array like crypto_sign_signature does: (0, ctxlen, ctx)
+    uint8_t pre[257]; // Maximum context length is 255 + 2 bytes for header
+    pre[0] = 0;
+    pre[1] = ctx_len;
+    if (ctx_len > 0) {
+      memcpy(pre + 2, context, ctx_len);
+    }
+    size_t prelen = 2 + ctx_len;
     
-    // Generate signature
+    // Use zero randomness for deterministic ACVP tests
+    uint8_t rnd[MLDSA_RNDBYTES] = {0};
+    
+    // Generate signature using internal function with proper parameters
     int result = crypto_sign_signature_internal(
         signature, &siglen, 
         message, msg_len,
-        context, ctx_len,
+        pre, prelen,
         rnd, secret_key, 0);
     
     if (result != 0) {
@@ -245,10 +254,14 @@ static void prodtest_secrets_test_siggen(cli_t* cli) {
       continue;
     }
     
-    // Compare with expected signature
-    // Note: ACVP sigGen tests are deterministic only if rnd is from the test vector
-    // For now we just verify the signature generation doesn't crash and produces correct length
-    cli_trace(cli, "SigGen test %d: signature generated successfully, length %d", idx, siglen);
+    // Compare with expected signature from ACVP test vector
+    const uint8_t* expected_signature = siggen_expected_sigs[idx];
+    if (memcmp(signature, expected_signature, CRYPTO_BYTES) != 0) {
+      cli_error(cli, CLI_ERROR, "SigGen test %d: Generated signature does not match expected ACVP signature", idx);
+      continue;
+    }
+    
+    cli_trace(cli, "SigGen test %d: signature matches expected ACVP value, length %d", idx, siglen);
     
     // Verify the signature is valid using the public key
     const uint8_t* public_key = siggen_pks[idx];
