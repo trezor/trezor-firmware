@@ -26,10 +26,21 @@
 #include <zephyr/bluetooth/gatt.h>
 #include <zephyr/bluetooth/hci.h>
 #include <zephyr/bluetooth/uuid.h>
+#include <zephyr/settings/settings.h>
+
+#include <app_version.h>
+
 #include "ble_internal.h"
 
 #define LOG_MODULE_NAME ble
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
+
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+
+#define APP_VERSION_STR  \
+  STR(APP_VERSION_MAJOR) \
+  "." STR(APP_VERSION_MINOR) "." STR(APP_PATCHLEVEL) "." STR(APP_TWEAK)
 
 static K_SEM_DEFINE(ble_init_ok, 0, 1);
 
@@ -72,6 +83,13 @@ bool ble_init(void) {
   if (IS_ENABLED(CONFIG_SETTINGS)) {
     settings_load();
   }
+
+#if defined(CONFIG_BT_DIS_FW_REV)
+  settings_runtime_set("bt/dis/fw", APP_VERSION_STR, sizeof(APP_VERSION_STR));
+#endif
+#if defined(CONFIG_BT_DIS_SW_REV)
+  settings_runtime_set("bt/dis/sw", APP_VERSION_STR, sizeof(APP_VERSION_STR));
+#endif
 
   err = service_init(bt_receive_cb);
   if (err) {
