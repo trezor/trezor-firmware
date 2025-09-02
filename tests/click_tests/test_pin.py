@@ -77,6 +77,14 @@ class Situation(Enum):
     PIN_INPUT_CANCEL = 5
 
 
+def scroll_through_pages(page_count, debug):
+    for _ in range(page_count - 1):
+        if debug.layout_type is LayoutType.Eckhart:
+            debug.click(debug.screen_buttons.ok())
+        else:
+            debug.swipe_up()
+
+
 @contextmanager
 def prepare(
     device_handler: "BackgroundDeviceHandler",
@@ -101,7 +109,10 @@ def prepare(
     elif situation == Situation.PIN_SETUP:
         # Set new PIN
         device_handler.run_with_provided_session(device_handler.client.get_seedless_session(), device.change_pin)  # type: ignore
-        debug.synchronize_at([TR.pin__turn_on, TR.pin__info, TR.pin__title_settings])
+        pin_turn_on = debug.synchronize_at(
+            [TR.pin__turn_on, TR.pin__info, TR.pin__title_settings]
+        )
+        scroll_through_pages(pin_turn_on.page_count(), debug)
         if debug.layout_type in (
             LayoutType.Bolt,
             LayoutType.Delizia,
@@ -129,9 +140,10 @@ def prepare(
         if old_pin:
             _assert_pin_entry(debug)
             _input_see_confirm(debug, old_pin)
-        debug.synchronize_at(
+        wipe_code_info = debug.synchronize_at(
             [TR.wipe_code__turn_on, TR.wipe_code__info, TR.wipe_code__title_settings]
         )
+        scroll_through_pages(wipe_code_info.page_count(), debug)
         go_next(debug)
         if debug.layout_type is LayoutType.Caesar:
             go_next(debug)
