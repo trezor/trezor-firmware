@@ -184,7 +184,10 @@ impl ComponentMsgObj for DeviceMenuScreen {
             DeviceMenuMsg::Reboot => Ok(REBOOT.as_obj()),
             DeviceMenuMsg::RebootToBootloader => Ok(REBOOT_TO_BOOTLOADER.as_obj()),
             // Misc
-            DeviceMenuMsg::Refresh => Ok(REFRESH.as_obj()),
+            DeviceMenuMsg::Refresh(submenu_id) => {
+                let submenu_idx: u8 = submenu_id.into();
+                Ok(new_tuple(&[REFRESH.as_obj(), submenu_idx.into()])?)
+            }
             DeviceMenuMsg::Close => Ok(CANCELLED.as_obj()),
         }
     }

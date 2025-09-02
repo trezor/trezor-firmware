@@ -140,6 +140,9 @@ async def handle_device_menu() -> None:
             if result_type is DeviceMenuResult.DeviceUnpair and index < len(bonds):
 
                 await unpair(BleUnpair(addr=bonds[index]))
+            # Refresh only
+            elif result_type is DeviceMenuResult.Refresh:
+                continue
             else:
                 raise RuntimeError(f"Unknown menu {result_type}, {index}")
         # Security settings
@@ -268,8 +271,5 @@ async def handle_device_menu() -> None:
             from trezor.utils import reboot_to_bootloader
 
             reboot_to_bootloader(BootCommand.STOP_AND_WAIT)
-        # Refresh only
-        elif menu_result is DeviceMenuResult.Refresh:
-            continue
         else:
             raise RuntimeError(f"Unknown menu {menu_result}")

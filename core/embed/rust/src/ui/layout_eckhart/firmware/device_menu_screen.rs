@@ -1,4 +1,7 @@
-use core::ops::{Deref, DerefMut};
+use core::{
+    convert::TryFrom,
+    ops::{Deref, DerefMut},
+};
 
 use crate::{
     error::Error,
@@ -36,6 +39,7 @@ use super::{
 };
 use heapless::Vec;
 
+#[repr(u8)]
 #[derive(Copy, Clone, Debug)]
 pub enum DeviceMenuId {
     Root = 0,
@@ -46,6 +50,30 @@ pub enum DeviceMenuId {
     WipeCode,
     Device,
     Power,
+}
+
+impl TryFrom<usize> for DeviceMenuId {
+    type Error = ();
+    fn try_from(v: usize) -> Result<Self, Self::Error> {
+        match v {
+            0 => Ok(DeviceMenuId::Root),
+            1 => Ok(DeviceMenuId::PairAndConnect),
+            2 => Ok(DeviceMenuId::Settings),
+            3 => Ok(DeviceMenuId::Security),
+            4 => Ok(DeviceMenuId::PinCode),
+            5 => Ok(DeviceMenuId::WipeCode),
+            6 => Ok(DeviceMenuId::Device),
+            7 => Ok(DeviceMenuId::Power),
+            _ => Err(()),
+        }
+    }
+}
+
+impl From<DeviceMenuId> for u8 {
+    #[inline]
+    fn from(id: DeviceMenuId) -> Self {
+        id as u8
+    }
 }
 
 // FIXME: use mem::variant_count when it becomes stable
@@ -100,7 +128,7 @@ pub enum DeviceMenuMsg {
     WipeDevice,
 
     // Misc
-    Refresh,
+    Refresh(DeviceMenuId),
     Close,
 }
 
@@ -297,6 +325,14 @@ impl DeviceMenuScreen {
     #[inline]
     fn has_submenu(&self, id: DeviceMenuId) -> bool {
         self.try_resolve_submenu(id).is_some()
+    }
+
+    #[inline]
+    fn try_resolve_menu_id(&self, subscreen_idx: usize) -> Option<DeviceMenuId> {
+        self.submenu_index
+            .iter()
+            .position(|&x| x == Some(subscreen_idx))
+            .and_then(|i| DeviceMenuId::try_from(i).ok())
     }
 
     fn register_pair_and_connect_menu(
@@ -800,7 +836,16 @@ impl Component for DeviceMenuScreen {
             event,
             Event::BLE(BLEEvent::Connected | BLEEvent::Disconnected | BLEEvent::ConnectionChanged)
         ) {
-            return Some(DeviceMenuMsg::Refresh);
+            let submenu_idx = match self.active_screen.deref_mut() {
+                ActiveScreen::Menu(_) => self
+                    .try_resolve_menu_id(self.active_subscreen)
+                    .unwrap_or(DeviceMenuId::Root),
+                ActiveScreen::Device(_) => DeviceMenuId::PairAndConnect,
+                ActiveScreen::Regulatory(_) | &mut ActiveScreen::About(_) => DeviceMenuId::Device,
+                ActiveScreen::Empty => DeviceMenuId::Root,
+            };
+
+            return Some(DeviceMenuMsg::Refresh(submenu_idx));
         }
 
         // Handle the event for the active menu
