@@ -21,6 +21,7 @@ use super::ffi;
 /// substring slices while keeping the head pointer as required by GC.
 #[repr(C)]
 #[derive(Copy, Clone)]
+#[cfg_attr(test, derive(Debug))]
 pub struct StrBuffer {
     ptr: *const u8,
     len: u16,

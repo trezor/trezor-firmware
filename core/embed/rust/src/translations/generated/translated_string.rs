@@ -8,6 +8,7 @@ use crate::micropython::qstr::Qstr;
 
 #[derive(Copy, Clone, FromPrimitive, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
+#[cfg_attr(test, derive(Debug))]
 #[repr(u16)]
 #[allow(non_camel_case_types)]
 pub enum TranslatedString {

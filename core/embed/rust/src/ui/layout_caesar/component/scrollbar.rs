@@ -16,7 +16,7 @@ pub struct ScrollBar {
 }
 
 /// Carrying the appearance of the scrollbar dot.
-#[derive(Debug)]
+#[cfg_attr(test, derive(Debug))]
 enum DotType {
     BigFull, // *
     Big,     // O
