@@ -38,6 +38,7 @@
 #ifdef USE_TROPIC
 #include <libtropic.h>
 #include <sec/tropic.h>
+#include "prodtest_tropic.h"
 #endif
 
 #ifndef TREZOR_EMULATOR
@@ -114,6 +115,17 @@ static void prodtest_secrets_init(cli_t* cli) {
     cli_error_arg_count(cli);
     return;
   }
+
+#ifdef USE_TROPIC
+  // Ensure that a session with Tropic is established so that we can include
+  // randomness from the chip when generating the secrets. At this point in
+  // provisioning the factory pairing key should still be valid.
+  if (!prodtest_tropic_factory_session_start(tropic_get_handle())) {
+    cli_error(cli, CLI_ERROR,
+              "`prodtest_tropic_factory_session_start` failed.");
+    return;
+  }
+#endif
 
 #ifdef SECRET_PRIVILEGED_MASTER_KEY_SLOT
   if (set_random_secret(SECRET_PRIVILEGED_MASTER_KEY_SLOT,
