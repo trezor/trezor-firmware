@@ -1,7 +1,7 @@
 use crate::{
     error::Error,
     io::BinaryData,
-    micropython::{gc::Gc, list::List, obj::Obj},
+    micropython::{buffer::StrBuffer, gc::Gc, list::List, obj::Obj},
     strutil::TString,
 };
 use heapless::Vec;
@@ -392,6 +392,11 @@ pub trait FirmwareUI {
         title: TString<'static>,
         description: TString<'static>,
         code: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error>;
+
+    fn confirm_thp_pairing(
+        title: TString<'static>,
+        description: (StrBuffer, Obj),
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_info(
