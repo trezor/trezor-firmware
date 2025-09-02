@@ -66,7 +66,7 @@ workflow_result_t workflow_empty_device(void) {
 #ifdef USE_BLE
     if (res == WF_OK_UI_ACTION && ui_result == WELCOME_PAIRING_MODE) {
 #ifdef USE_RGB_LED
-      rgb_led_effect_start(RGB_LED_EFFECT_BOOTLOADER_BREATHE, 0);
+      rgb_led_effect_start(RGB_LED_EFFECT_PAIRING, 0);
 #endif
 
       res = workflow_wireless_setup(NULL, NULL, &ios);
