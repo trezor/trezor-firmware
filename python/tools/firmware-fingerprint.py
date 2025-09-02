@@ -33,10 +33,22 @@ def firmware_fingerprint(filename: BinaryIO, output: TextIO) -> None:
 
     orig_err = None
     try:
-        click.echo(firmware_headers.parse_image(data).digest().hex(), file=output)
-        return
+        fw = firmware_headers.parse_image(data)
     except Exception as e:
         orig_err = e
+    else:
+        if isinstance(fw, firmware_headers.VendorFirmware):
+            try:
+                # try to parse code as secmon
+                # if it succeeds, the image is secmon-only and the fingerprint
+                # relevant for signing is that of the secmon
+                secmon = firmware_headers.SecmonImage.parse(fw.firmware.code)
+                click.echo(secmon.digest().hex(), file=output)
+                return
+            except Exception:
+                pass
+        click.echo(fw.digest().hex(), file=output)
+        return
 
     try:
         click.echo(
