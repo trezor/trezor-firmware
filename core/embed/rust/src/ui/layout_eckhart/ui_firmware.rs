@@ -1200,6 +1200,7 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_device_menu(
+        init_submenu: Option<usize>,
         failed_backup: bool,
         paired_devices: heapless::Vec<TString<'static>, MAX_PAIRED_DEVICES>,
         connected_idx: Option<usize>,
@@ -1214,6 +1215,7 @@ impl FirmwareUI for UIEckhart {
         about_items: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let layout = RootComponent::new(DeviceMenuScreen::new(
+            init_submenu,
             failed_backup,
             paired_devices,
             connected_idx,

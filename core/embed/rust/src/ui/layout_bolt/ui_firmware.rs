@@ -934,6 +934,7 @@ impl FirmwareUI for UIBolt {
     }
 
     fn show_device_menu(
+        _init_submenu: Option<usize>,
         _failed_backup: bool,
         _paired_devices: heapless::Vec<TString<'static>, MAX_PAIRED_DEVICES>,
         _connected_idx: Option<usize>,

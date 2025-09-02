@@ -44,6 +44,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_MAX;
   MP_QSTR_MESSAGE_NAME;
   MP_QSTR_MESSAGE_WIRE_TYPE;
+  MP_QSTR_MenuRefresh;
   MP_QSTR_MessageType;
   MP_QSTR_Msg;
   MP_QSTR_MsgDef;
@@ -373,6 +374,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_info;
   MP_QSTR_info_button;
   MP_QSTR_init;
+  MP_QSTR_init_submenu;
   MP_QSTR_inputs__back;
   MP_QSTR_inputs__cancel;
   MP_QSTR_inputs__delete;
