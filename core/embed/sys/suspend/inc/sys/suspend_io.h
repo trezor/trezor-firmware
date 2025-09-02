@@ -23,6 +23,10 @@
 #include <io/ble.h>
 #endif
 
+#ifdef USE_RGB_LED
+#include <io/rgb_led.h>
+#endif
+
 /**
  * @brief Switches the CPU to STOP2 low-power mode.
  *
@@ -43,6 +47,10 @@ typedef struct {
 #ifdef USE_BLE
   /** State of the ble driver */
   ble_wakeup_params_t ble;
+#endif
+#ifdef USE_RGB_LED
+  /** State of the rgb_led driver */
+  rgb_led_wakeup_params_t rgb_led;
 #endif
 } power_save_wakeup_params_t;
 
