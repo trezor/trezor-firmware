@@ -148,7 +148,7 @@ pub enum TString<'a> {
     #[cfg(feature = "translations")]
     Translation {
         tr: TR,
-        offset: u16,
+        offset_len: Option<(u16, u16)>,
     },
     Str(&'a str),
 }
@@ -178,25 +178,58 @@ impl TString<'_> {
             #[cfg(feature = "micropython")]
             Self::Allocated(buf) => fun(buf.as_ref()),
             #[cfg(feature = "translations")]
-            Self::Translation { tr, offset } => tr.map_translated(|s| fun(&s[*offset as usize..])),
+            Self::Translation { tr, offset_len } => tr.map_translated(|s| {
+                let slice = match offset_len {
+                    Some((offset, len)) => &s[usize::from(*offset)..usize::from(*offset + *len)],
+                    None => s,
+                };
+                fun(slice)
+            }),
             Self::Str(s) => fun(s),
         }
     }
 
     pub fn skip_prefix(&self, skip_bytes: usize) -> Self {
-        self.map(|s| {
-            assert!(skip_bytes <= s.len());
+        let len = self.map(|s| {
+            let len = s.len();
+            assert!(skip_bytes <= len);
             assert!(s.is_char_boundary(skip_bytes));
+            len
         });
         match self {
             #[cfg(feature = "micropython")]
             Self::Allocated(s) => Self::Allocated(s.skip_prefix(skip_bytes)),
             #[cfg(feature = "translations")]
-            Self::Translation { tr, offset } => Self::Translation {
-                tr: *tr,
-                offset: offset + skip_bytes as u16,
-            },
+            Self::Translation { tr, offset_len } => {
+                let (offset, len) = offset_len.unwrap_or_else(|| (0, len as u16));
+                let offset_len = Some((offset + skip_bytes as u16, len - skip_bytes as u16));
+                Self::Translation {
+                    tr: *tr,
+                    offset_len,
+                }
+            }
             Self::Str(s) => Self::Str(&s[skip_bytes..]),
+        }
+    }
+
+    pub fn prefix(&self, bytes: usize) -> Self {
+        let new_len = self.map(|s| {
+            assert!(bytes <= s.len());
+            assert!(s.is_char_boundary(bytes));
+            bytes as u16
+        });
+        match self {
+            #[cfg(feature = "micropython")]
+            Self::Allocated(s) => Self::Allocated(s.prefix(bytes)),
+            #[cfg(feature = "translations")]
+            Self::Translation { tr, offset_len } => {
+                let offset = offset_len.map(|(offset, _len)| offset).unwrap_or(0);
+                Self::Translation {
+                    tr: *tr,
+                    offset_len: Some((offset, new_len)),
+                }
+            }
+            Self::Str(s) => Self::Str(&s[..bytes]),
         }
     }
 }
@@ -204,7 +237,10 @@ impl TString<'_> {
 impl TString<'static> {
     #[cfg(feature = "translations")]
     pub const fn from_translation(tr: TR) -> Self {
-        Self::Translation { tr, offset: 0 }
+        Self::Translation {
+            tr,
+            offset_len: None,
+        }
     }
 
     #[cfg(feature = "micropython")]
@@ -292,11 +328,15 @@ impl ufmt::uDebug for TString<'_> {
                 f.write_str(")")?;
             }
             #[cfg(feature = "translations")]
-            TString::Translation { tr, offset } => {
+            TString::Translation { tr, offset_len } => {
                 f.write_str("Translation(")?;
                 tr.fmt(f)?;
-                f.write_str(", ")?;
-                offset.fmt(f)?;
+                if let Some((offset, len)) = offset_len {
+                    f.write_str(", ")?;
+                    offset.fmt(f)?;
+                    f.write_str(", ")?;
+                    len.fmt(f)?;
+                }
                 f.write_str(")")?;
             }
             TString::Str(s) => {
@@ -311,6 +351,56 @@ impl ufmt::uDebug for TString<'_> {
 
 #[cfg(test)]
 mod tests {
+    use crate::{strutil::TString, translations::TR};
+
+    use super::*;
+
+    #[test]
+    fn test_strbuffer_slices() {
+        let data = "Hello World!";
+        let buf = unsafe { StrBuffer::from_ptr_and_len(data.as_ptr(), data.len()) };
+
+        assert_eq!(buf.prefix(buf.len()).as_ref(), data);
+        assert_eq!(buf.prefix(5).as_ref(), "Hello");
+        assert_eq!(buf.prefix(5).skip_prefix(3).as_ref(), "lo");
+        assert_eq!(buf.prefix(5).skip_prefix(3).skip_prefix(2).as_ref(), "");
+
+        assert_eq!(buf.skip_prefix(0).as_ref(), data);
+        assert_eq!(buf.skip_prefix(5).as_ref(), " World!");
+        assert_eq!(buf.skip_prefix(5).prefix(3).as_ref(), " Wo");
+        assert_eq!(buf.skip_prefix(5).prefix(3).prefix(2).as_ref(), " W");
+        assert_eq!(
+            buf.skip_prefix(5)
+                .prefix(3)
+                .prefix(2)
+                .skip_prefix(1)
+                .as_ref(),
+            "W"
+        );
+        assert_eq!(
+            buf.skip_prefix(5)
+                .prefix(3)
+                .prefix(2)
+                .skip_prefix(1)
+                .prefix(0)
+                .as_ref(),
+            ""
+        );
+    }
+
+    #[test]
+    fn test_translated_slices() {
+        let tr = TString::from_translation(TR::words__good_to_know);
+        tr.map(|s| assert_eq!(s, "Good to know"));
+
+        tr.prefix(tr.len()).map(|s| assert_eq!(s, "Good to know"));
+        tr.prefix(7).map(|s| assert_eq!(s, "Good to"));
+        tr.prefix(7).skip_prefix(5).map(|s| assert_eq!(s, "to"));
+
+        tr.skip_prefix(0).map(|s| assert_eq!(s, "Good to know"));
+        tr.skip_prefix(5).map(|s| assert_eq!(s, "to know"));
+        tr.skip_prefix(5).prefix(3).map(|s| assert_eq!(s, "to "));
+    }
 
     #[test]
     fn test_format_code() {
