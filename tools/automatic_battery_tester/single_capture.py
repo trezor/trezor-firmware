@@ -1,3 +1,4 @@
+import argparse
 import sys
 import time
 from pathlib import Path
@@ -18,8 +19,20 @@ log file. User can also select to log the temepertature readings from an
 external thermocouple sensor connected to the GDM8351 multimeter.
 """
 
+parser = argparse.ArgumentParser()
+
+parser.add_argument(
+    "-t",
+    "--external_temp",
+    default=False,
+    action="store_true",
+    help="Enable GDM8351 temperature logging",
+)
+
 
 def main():
+
+    args = parser.parse_args()
 
     print("**********************************************************")
     print("  DUT port selection ")
@@ -59,29 +72,35 @@ def main():
         sys.exit(1)
     # Initialize DUT
 
-    print("**********************************************************")
-    print("  GDM8351 port selection (temp measurement) ")
-    print("**********************************************************")
+    if args.external_temp:
 
-    # Initialize the GDM8351 multimeter
-    gdm8351 = GDM8351()
+        gdm8351 = GDM8351()
 
-    # Get the device ID to confirm connection
-    try:
-        device_id = gdm8351.get_id()
-        print(f"Connected to device: {device_id}")
-    except Exception as e:
-        print(f"Error getting device ID: {e}")
-        return
+        print("**********************************************************")
+        print("  GDM8351 port selection (temp measurement) ")
+        print("**********************************************************")
 
-    # Configure temperature sensing
-    try:
-        gdm8351.configure_temperature_sensing(sensor_type="K", junction_temp_deg=29.0)
-        print("Temperature sensing configured successfully.")
-    except ValueError as ve:
-        print(f"Configuration error: {ve}")
-    except Exception as e:
-        print(f"Error configuring temperature sensing: {e}")
+        # Initialize the GDM8351 multimeter
+        gdm8351 = GDM8351()
+
+        # Get the device ID to confirm connection
+        try:
+            device_id = gdm8351.get_id()
+            print(f"Connected to device: {device_id}")
+        except Exception as e:
+            print(f"Error getting device ID: {e}")
+            return
+
+        # Configure temperature sensing
+        try:
+            gdm8351.configure_temperature_sensing(
+                sensor_type="K", junction_temp_deg=29.0
+            )
+            print("Temperature sensing configured successfully.")
+        except ValueError as ve:
+            print(f"Configuration error: {ve}")
+        except Exception as e:
+            print(f"Error configuring temperature sensing: {e}")
 
     # Creat test time ID
     test_time_id = f"{time.strftime('%y%m%d%H%M')}"
@@ -117,12 +136,13 @@ def main():
                 verbose=True,
             )
 
-            # Read temperature from GDM8351
-            gdm8351.log_temperature(
-                output_directory=output_directory,
-                test_time_id=test_time_id,
-                verbose=True,
-            )
+            if args.external_temp:
+                # Read temperature from GDM8351
+                gdm8351.log_temperature(
+                    output_directory=output_directory,
+                    test_time_id=test_time_id,
+                    verbose=True,
+                )
 
             time.sleep(1)
 
@@ -133,7 +153,8 @@ def main():
     finally:
 
         dut.close()
-        gdm8351.close()
+        if args.external_temp:
+            gdm8351.close()
 
 
 if __name__ == "__main__":
