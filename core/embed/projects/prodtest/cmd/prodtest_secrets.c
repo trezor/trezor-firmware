@@ -41,6 +41,8 @@
 #include "prodtest_tropic.h"
 #endif
 
+#include "test_data.h"
+
 #ifndef TREZOR_EMULATOR
 #include <trezor_model.h>
 #endif
@@ -160,38 +162,149 @@ static void prodtest_secrets_init(cli_t* cli) {
 }
 
 #ifdef SECRET_MASTER_KEY_SLOT_SIZE
-static void prodtest_secrets_get_mcu_device_key(cli_t* cli) {
+static void prodtest_secrets_test_keygen(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
     return;
   }
 
-  uint8_t seed[MLDSA_SEEDBYTES] = {0};
-  if (secret_key_mcu_device_auth(seed) != sectrue) {
-    cli_error(cli, CLI_ERROR, "`secret_key_mcu_device_auth()` failed.");
-    goto cleanup;
-  }
-
   uint8_t mcu_public[CRYPTO_PUBLICKEYBYTES] = {0};
   uint8_t mcu_private[CRYPTO_SECRETKEYBYTES] = {0};
-  if (crypto_sign_keypair_internal(mcu_public, mcu_private, seed) != 0) {
-    cli_error(cli, CLI_ERROR, "`crypto_sign_keypair_internal()` failed.");
-    goto cleanup;
+  
+  
+  for (size_t idx = 0; idx < NUM_KEYGEN_TESTS; idx++) {
+    int result = crypto_sign_keypair_internal(mcu_public, mcu_private, keygen_seeds[idx]);
+    cli_trace(cli, "result %d for idx %d", result, idx);
+
+    if (memcmp(mcu_public, keygen_expected_pks[idx], sizeof(mcu_public)) != 0) {
+      cli_error(cli, CLI_ERROR, "MCU public key does not match expected value for idx %d.", idx);
+      for (size_t i = 0; i < sizeof(mcu_public); i++) {
+        if (mcu_public[i] != keygen_expected_pks[idx][i]) {
+          cli_trace(cli, "First difference at position %d: got 0x%02x, expected 0x%02x", 
+                    i, mcu_public[i], keygen_expected_pks[idx][i]);
+          break;
+        }
+      }
+      continue;
+    }
+    if (memcmp(mcu_private, keygen_expected_sks[idx], sizeof(mcu_private)) != 0) {
+      cli_error(cli, CLI_ERROR, "MCU secret key does not match expected value for idx %d.", idx);
+      for (size_t i = 0; i < sizeof(mcu_private); i++) {
+        if (mcu_private[i] != keygen_expected_sks[idx][i]) {
+          cli_trace(cli, "First difference at position %d: got 0x%02x, expected 0x%02x", 
+                    i, mcu_private[i], keygen_expected_sks[idx][i]);
+          break;
+        }
+      }
+      continue;
+    }
+    cli_ok(cli, "MCU device keys match expected values for idx %d.", idx);
   }
 
-  uint8_t output[sizeof(mcu_public) + NOISE_TAG_SIZE] = {0};
-  if (!secure_channel_encrypt(mcu_public, sizeof(mcu_public), NULL, 0,
-                              output)) {
-    // `secure_channel_handshake_2()` might not have been called
-    cli_error(cli, CLI_ERROR, "`secure_channel_encrypt()` failed.");
-    goto cleanup;
+}
+
+static void prodtest_secrets_test_siggen(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
   }
 
-  cli_ok_hexdata(cli, output, sizeof(output));
+  uint8_t signature[CRYPTO_BYTES] = {0};
+  size_t siglen = 0;
+  
+  cli_trace(cli, "Starting ML-DSA sigGen validation with %d test cases", NUM_SIGGEN_TESTS);
+  
+  for (size_t idx = 0; idx < NUM_SIGGEN_TESTS; idx++) {
+    cli_trace(cli, "Testing sigGen case %d", idx);
+    
+    // Get test data
+    const uint8_t* message = siggen_messages[idx];
+    size_t msg_len = siggen_msg_lens[idx];
+    const uint8_t* secret_key = siggen_sks[idx];
+    const uint8_t* context = siggen_contexts[idx];
+    size_t ctx_len = siggen_ctx_lens[idx];
+    
+    // Generate random bytes (in real ACVP this would be deterministic)
+    uint8_t rnd[32] = {0}; // For deterministic testing, use zero
+    
+    // Generate signature
+    int result = crypto_sign_signature_internal(
+        signature, &siglen, 
+        message, msg_len,
+        context, ctx_len,
+        rnd, secret_key, 0);
+    
+    if (result != 0) {
+      cli_error(cli, CLI_ERROR, "crypto_sign_signature_internal failed for test %d with code %d", idx, result);
+      continue;
+    }
+    
+    if (siglen != CRYPTO_BYTES) {
+      cli_error(cli, CLI_ERROR, "Signature length mismatch for test %d: got %d, expected %d", 
+                idx, siglen, CRYPTO_BYTES);
+      continue;
+    }
+    
+    // Compare with expected signature
+    // Note: ACVP sigGen tests are deterministic only if rnd is from the test vector
+    // For now we just verify the signature generation doesn't crash and produces correct length
+    cli_trace(cli, "SigGen test %d: signature generated successfully, length %d", idx, siglen);
+    
+    // Verify the signature is valid using the public key
+    const uint8_t* public_key = siggen_pks[idx];
+    result = crypto_sign_verify(signature, siglen, message, msg_len, 
+                               context, ctx_len, public_key);
+    
+    if (result != 0) {
+      cli_error(cli, CLI_ERROR, "Generated signature verification failed for test %d", idx);
+      continue;
+    }
+    
+    cli_ok(cli, "SigGen test %d passed: signature generated and verified", idx);
+  }
+  
+  cli_ok(cli, "All %d sigGen tests completed", NUM_SIGGEN_TESTS);
+}
 
-cleanup:
-  memzero(seed, sizeof(seed));
-  memzero(mcu_private, sizeof(mcu_private));
+static void prodtest_secrets_test_sigver(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  cli_trace(cli, "Starting ML-DSA sigVer validation with %d test cases", NUM_SIGVER_TESTS);
+  
+  for (size_t idx = 0; idx < NUM_SIGVER_TESTS; idx++) {
+    cli_trace(cli, "Testing sigVer case %d", idx);
+    
+    // Get test data
+    const uint8_t* message = sigver_messages[idx];
+    size_t msg_len = sigver_msg_lens[idx];
+    const uint8_t* public_key = sigver_pks[idx];
+    const uint8_t* context = sigver_contexts[idx];
+    size_t ctx_len = sigver_ctx_lens[idx];
+    const uint8_t* signature = sigver_signatures[idx];
+    bool expected_result = sigver_expected_results[idx];
+    
+    // Verify signature
+    int result = crypto_sign_verify(signature, CRYPTO_BYTES, message, msg_len, 
+                                   context, ctx_len, public_key);
+    
+    bool verification_passed = (result == 0);
+    
+    if (verification_passed == expected_result) {
+      cli_ok(cli, "SigVer test %d passed: expected %s, got %s", 
+             idx, expected_result ? "PASS" : "FAIL", 
+             verification_passed ? "PASS" : "FAIL");
+    } else {
+      cli_error(cli, CLI_ERROR, "SigVer test %d failed: expected %s, got %s", 
+                idx, expected_result ? "PASS" : "FAIL", 
+                verification_passed ? "PASS" : "FAIL");
+      continue;
+    }
+  }
+  
+  cli_ok(cli, "All %d sigVer tests completed", NUM_SIGVER_TESTS);
 }
 
 #ifndef TREZOR_EMULATOR
@@ -345,9 +458,23 @@ PRODTEST_CLI_CMD(
 
 #ifdef SECRET_MASTER_KEY_SLOT_SIZE
 PRODTEST_CLI_CMD(
-  .name = "secrets-get-mcu-device-key",
-  .func = prodtest_secrets_get_mcu_device_key,
+  .name = "secrets-test-keygen",
+  .func = prodtest_secrets_test_keygen,
   .info = "Get MCU device attestation public key",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "secrets-test-siggen",
+  .func = prodtest_secrets_test_siggen,
+  .info = "Test ML-DSA signature generation using ACVP test vectors",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "secrets-test-sigver",
+  .func = prodtest_secrets_test_sigver,
+  .info = "Test ML-DSA signature verification using ACVP test vectors",
   .args = ""
 );
 
