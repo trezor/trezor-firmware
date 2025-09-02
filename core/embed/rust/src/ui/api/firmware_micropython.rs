@@ -1,6 +1,7 @@
 use crate::{
     io::BinaryData,
     micropython::{
+        buffer::StrBuffer,
         gc::Gc,
         list::List,
         macros::{obj_fn_0, obj_fn_1, obj_fn_kw, obj_module},
@@ -1027,6 +1028,18 @@ extern "C" fn new_show_thp_pairing_code(n_args: usize, args: *const Obj, kwargs:
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_confirm_thp_pairing(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let fmt: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let args: Obj = kwargs.get(Qstr::MP_QSTR_args)?;
+        let layout = ModelUI::confirm_thp_pairing(title, (fmt, args))?;
+        let layout_obj = LayoutObj::new_root(layout)?;
+        Ok(layout_obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -1931,6 +1944,15 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     """BLE pairing: second screen (pairing code).
     ///     Returns on BLEEvent::{PairingCanceled, Disconnected}."""
     Qstr::MP_QSTR_show_ble_pairing_code => obj_fn_kw!(0, new_show_ble_pairing_code).as_obj(),
+
+    /// def confirm_thp_pairing(
+    ///     *,
+    ///     title: str,
+    ///     description: str,
+    ///     args: Iterable[str],
+    /// ) -> LayoutObj[UiResult]:
+    ///     """THP pairing: first screen (host and app names)."""
+    Qstr::MP_QSTR_confirm_thp_pairing => obj_fn_kw!(0, new_confirm_thp_pairing).as_obj(),
 
     /// def show_thp_pairing_code(
     ///     *,

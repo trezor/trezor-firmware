@@ -1,56 +1,76 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from typing import Awaitable
+
     from trezorui_api import UiResult
 
 
-def _app_on_host(app_name: str | None, host_name: str | None) -> str:
+def confirm_pairing(
+    br_name: str,
+    title: str,
+    app_name: str | None,
+    host_name: str | None,
+    short_text: str,
+    long_text: str,
+) -> Awaitable[None]:
+    from trezor.ui.layouts.common import raise_if_cancelled
+    from trezorui_api import confirm_thp_pairing
+
     if app_name and host_name:
-        return f"{app_name} on {host_name}"
-    elif not app_name and not host_name:
-        return "(unknown)"
+        args = (app_name, host_name)
+        description = long_text
     else:
-        return (app_name or "") + (host_name or "")
+        args = (app_name or host_name or "(unknown)",)
+        description = short_text
+
+    return raise_if_cancelled(
+        confirm_thp_pairing(title=title, description=description, args=args),
+        br_name=br_name,
+    )
 
 
-async def show_autoconnect_credential_confirmation_screen(
+def show_autoconnect_credential_confirmation_screen(
     host_name: str | None,
     app_name: str | None,
-) -> None:
-    from trezor.ui.layouts import confirm_action
+) -> Awaitable[None]:
+    from trezor import TR
 
-    subject = _app_on_host(app_name, host_name)
-    action_string = f"Allow {subject} to connect automatically to this Trezor?"
-
-    await confirm_action(
+    return confirm_pairing(
         br_name="thp_autoconnect_credential_request",
         title="Autoconnect credential",
-        action=action_string,
+        app_name=app_name,
+        host_name=host_name,
+        short_text=TR.thp__autoconnect,
+        long_text=TR.thp__autoconnect_app,
     )
 
 
-async def show_pairing_dialog(host_name: str | None, app_name: str | None) -> None:
-    from trezor.ui.layouts import confirm_action
+def show_pairing_dialog(host_name: str | None, app_name: str | None) -> Awaitable[None]:
+    from trezor import TR
 
-    subject = _app_on_host(app_name, host_name)
-    action_string = f"Allow {subject} to pair with this Trezor?"
-    await confirm_action(
+    return confirm_pairing(
         br_name="thp_pairing_request",
         title="Before you continue",
-        action=action_string,
+        app_name=app_name,
+        host_name=host_name,
+        short_text=TR.thp__pair,
+        long_text=TR.thp__pair_app,
     )
 
 
-async def show_connection_dialog(host_name: str | None, app_name: str | None) -> None:
-    from trezor.ui.layouts import confirm_action
+def show_connection_dialog(
+    host_name: str | None, app_name: str | None
+) -> Awaitable[None]:
+    from trezor import TR
 
-    subject = _app_on_host(app_name, host_name)
-    action_string = f"Allow {subject} to connect with this Trezor?"
-
-    await confirm_action(
+    return confirm_pairing(
         br_name="thp_connection_request",
         title="Connection dialog",
-        action=action_string,
+        app_name=app_name,
+        host_name=host_name,
+        short_text=TR.thp__connect,
+        long_text=TR.thp__connect_app,
     )
 
 

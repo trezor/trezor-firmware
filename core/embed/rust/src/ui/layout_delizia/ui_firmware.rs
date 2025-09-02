@@ -3,7 +3,7 @@ use core::cmp::Ordering;
 use crate::{
     error::{value_error, Error},
     io::BinaryData,
-    micropython::{gc::Gc, iter::IterBuf, list::List, obj::Obj, util},
+    micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, obj::Obj, util},
     storage,
     strutil::TString,
     translations::TR,
@@ -1074,6 +1074,15 @@ impl FirmwareUI for UIDelizia {
             None,
             false,
         )
+    }
+
+    fn confirm_thp_pairing(
+        _title: TString<'static>,
+        _description: (StrBuffer, Obj),
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
+            c"confirm_thp_pairing not supported",
+        ))
     }
 
     fn show_info(

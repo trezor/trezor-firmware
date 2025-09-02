@@ -1191,6 +1191,15 @@ impl FirmwareUI for UICaesar {
         )
     }
 
+    fn confirm_thp_pairing(
+        _title: TString<'static>,
+        _description: (StrBuffer, Obj),
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
+            c"confirm_thp_pairing not supported",
+        ))
+    }
+
     fn show_info(
         title: TString<'static>,
         description: TString<'static>,

@@ -1133,5 +1133,11 @@
   "1131": "ble__forget_all_success",
   "1132": "ble__forget_this_description",
   "1133": "ble__forget_this_device",
-  "1134": "ble__forget_this_success"
+  "1134": "ble__forget_this_success",
+  "1135": "thp__autoconnect",
+  "1136": "thp__autoconnect_app",
+  "1137": "thp__connect",
+  "1138": "thp__connect_app",
+  "1139": "thp__pair",
+  "1140": "thp__pair_app"
 }

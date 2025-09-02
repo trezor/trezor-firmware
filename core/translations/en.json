@@ -1162,6 +1162,42 @@
     "tezos__submit_ballot": "Submit ballot",
     "tezos__submit_proposal": "Submit proposal",
     "tezos__submit_proposals": "Submit proposals",
+    "thp__autoconnect": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Allow {0} to connect automatically to this Trezor?"
+    },
+    "thp__autoconnect_app": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Allow {0} on {1} to connect automatically to this Trezor?"
+    },
+    "thp__connect": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Allow {0} to connect with this Trezor?"
+    },
+    "thp__connect_app": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Allow {0} on {1} to connect with this Trezor?"
+    },
+    "thp__pair": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Allow {0} to pair with this Trezor?"
+    },
+    "thp__pair_app": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Allow {0} on {1} to pair with this Trezor?"
+    },
     "tutorial__continue": "Continue tutorial",
     "tutorial__did_you_know": "Did you know?",
     "tutorial__exit": "Exit tutorial",

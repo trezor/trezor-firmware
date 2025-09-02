@@ -3,7 +3,7 @@ use core::cmp::Ordering;
 use crate::{
     error::Error,
     io::BinaryData,
-    micropython::{gc::Gc, iter::IterBuf, list::List, obj::Obj, util},
+    micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, obj::Obj, util},
     storage,
     strutil::TString,
     time::Duration,
@@ -31,6 +31,7 @@ use crate::{
         },
         ModelUI,
     },
+    util::interpolate,
 };
 
 use super::{
@@ -1282,6 +1283,35 @@ impl FirmwareUI for UIEckhart {
         let flow =
             flow::show_thp_pairing_code::new_show_thp_pairing_code(title, description, code)?;
         Ok(flow)
+    }
+
+    fn confirm_thp_pairing(
+        title: TString<'static>,
+        description: (StrBuffer, Obj),
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let (format, args_obj) = description;
+        let args: heapless::Vec<TString<'static>, 2> = util::iter_into_vec(args_obj)?;
+        let style = theme::firmware::TEXT_REGULAR;
+        let mut ops = OpTextLayout::new(style);
+        for part in interpolate::parse(format) {
+            match part {
+                interpolate::Item::Text(s) => {
+                    ops.add_text_with_font(s, style.text_font);
+                }
+                interpolate::Item::Arg(i) => match args.get(i) {
+                    Some(&s) => {
+                        ops.add_color(theme::YELLOW);
+                        ops.add_text_with_font(s, style.text_font);
+                        ops.add_color(style.text_color);
+                    }
+                    None => return Err(Error::OutOfRange),
+                },
+            };
+        }
+        let screen = TextScreen::new(FormattedText::new(ops))
+            .with_header(Header::new(title))
+            .with_action_bar(ActionBar::new_cancel_confirm());
+        Ok(RootComponent::new(screen))
     }
 
     fn show_info(
