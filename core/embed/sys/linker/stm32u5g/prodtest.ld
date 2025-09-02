@@ -69,8 +69,8 @@ SECTIONS {
   } >FLASH AT>FLASH
 
   .stack : ALIGN(8) {
-    . = 95K; /* Overflow causes UsageFault */
-  } >MAIN_RAM
+    . = 128K; /* Overflow causes UsageFault */
+  } >AUX1_RAM
 
   .data : ALIGN(4) {
     *(.data*);
