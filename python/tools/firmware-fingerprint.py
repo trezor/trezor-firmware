@@ -31,10 +31,23 @@ def firmware_fingerprint(filename: BinaryIO, output: TextIO) -> None:
     """Display fingerprint of a firmware file."""
     data = filename.read()
 
+    orig_err = None
     try:
         click.echo(firmware_headers.parse_image(data).digest().hex(), file=output)
+        return
     except Exception as e:
-        click.echo(e, err=True)
+        orig_err = e
+
+    try:
+        click.echo(
+            firmware_headers.BootloaderV2Image.parse(data).merkle_root().hex(),
+            file=output,
+        )
+    except Exception as e:
+        if orig_err is not None:
+            click.echo(orig_err, err=True)
+        else:
+            click.echo(e, err=True)
         sys.exit(2)
 
 
