@@ -41,13 +41,13 @@
 #include "prodtest_tropic.h"
 #endif
 
-#include "test_data.h"
 
 #ifndef TREZOR_EMULATOR
 #include <trezor_model.h>
 #endif
 
 #include <../vendor/mldsa-native/mldsa/sign.h>
+#include "test_data.h"
 
 secbool generate_random_secret(uint8_t* secret, size_t length) {
   random_buffer(secret, length);
