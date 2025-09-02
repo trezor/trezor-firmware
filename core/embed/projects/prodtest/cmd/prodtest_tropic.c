@@ -572,7 +572,7 @@ static void prodtest_tropic_get_chip_id(cli_t* cli) {
   cli_ok_hexdata(cli, &chip_id, sizeof(chip_id));
 }
 
-static bool cache_tropic_cert_chain(lt_handle_t* handle) {
+static bool cache_tropic_cert_chain(void) {
   if (tropic_cert_chain_length > 0) {
     return true;
   }
@@ -586,7 +586,7 @@ static bool cache_tropic_cert_chain(lt_handle_t* handle) {
 
   lt_ret_t ret = LT_FAIL;
 
-  ret = lt_get_info_cert_store(handle, &cert_store);
+  ret = lt_get_info_cert_store(tropic_get_handle(), &cert_store);
   if (ret != LT_OK) {
     return false;
   }
@@ -609,13 +609,20 @@ static bool cache_tropic_cert_chain(lt_handle_t* handle) {
   return true;
 }
 
+static const curve25519_key *prodtest_tropic_get_tropic_public(void) {
+  if (!cache_tropic_cert_chain()) {
+    return NULL;
+  }
+  return &tropic_public_cached;
+}
+
 static void prodtest_tropic_certtropic_read(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
     return;
   }
 
-  if (!cache_tropic_cert_chain(tropic_get_handle())) {
+  if (!cache_tropic_cert_chain()) {
     cli_error(cli, CLI_ERROR, "`cache_tropic_cert_chain()` failed");
     return;
   }
@@ -798,6 +805,40 @@ cleanup:
   return ret == LT_OK;
 }
 
+bool prodtest_tropic_factory_session_start(lt_handle_t* tropic_handle) {
+#ifdef TREZOR_EMULATOR
+  curve25519_key factory_private = {
+      0xf0, 0xc4, 0xaa, 0x04, 0x8f, 0x00, 0x13, 0xa0, 0x96, 0x84, 0xdf,
+      0x05, 0xe8, 0xa2, 0x2e, 0xf7, 0x21, 0x38, 0x98, 0x28, 0x2b, 0xa9,
+      0x43, 0x12, 0xf3, 0x13, 0xdf, 0x2d, 0xce, 0x8d, 0x41, 0x64};
+#else
+#ifdef TROPIC_TESTING_KEYS
+  // Testing keys (used in TROPIC01-P2S-P001)
+  curve25519_key factory_private = {
+      0xd0, 0x99, 0x92, 0xb1, 0xf1, 0x7a, 0xbc, 0x4d, 0xb9, 0x37, 0x17,
+      0x68, 0xa2, 0x7d, 0xa0, 0x5b, 0x18, 0xfa, 0xb8, 0x56, 0x13, 0xa7,
+      0x84, 0x2c, 0xa6, 0x4c, 0x79, 0x10, 0xf2, 0x2e, 0x71, 0x6b};
+#else
+  // Production keys
+  curve25519_key factory_private = {
+      0x28, 0x3f, 0x5a, 0x0f, 0xfc, 0x41, 0xcf, 0x50, 0x98, 0xa8, 0xe1,
+      0x7d, 0xb6, 0x37, 0x2c, 0x3c, 0xaa, 0xd1, 0xee, 0xee, 0xdf, 0x0f,
+      0x75, 0xbc, 0x3f, 0xbf, 0xcd, 0x9c, 0xab, 0x3d, 0xe9, 0x72};
+#endif
+#endif
+  curve25519_key factory_public = {0};
+  curve25519_scalarmult_basepoint(factory_public, factory_private);
+
+  const curve25519_key *tropic_public = prodtest_tropic_get_tropic_public();
+  if (tropic_public == NULL) {
+    return false;
+  }
+
+  // Try to establish a session using the factory pairing key.
+  return LT_OK == lt_session_start(tropic_handle, *tropic_public, FACTORY_PAIRING_KEY_SLOT,
+                         factory_private, factory_public);
+}
+
 static void prodtest_tropic_pair(cli_t* cli) {
   // If this functions successfully completes, it is ensured that:
   //  * The public tropic key is written to MCU's flash.
@@ -824,61 +865,36 @@ static void prodtest_tropic_pair(cli_t* cli) {
 
   lt_handle_t* tropic_handle = tropic_get_handle();
 
-  // Ensure that tropic_public_cached is cached.
-  if (!cache_tropic_cert_chain(tropic_handle)) {
-    cli_error(cli, CLI_ERROR, "`cache_tropic_cert_chain()` failed");
+  // Get the Tropic01 public pairing key from the chip's certificate.
+  const curve25519_key *tropic_public_cert = prodtest_tropic_get_tropic_public();
+  if (tropic_public_cert == NULL) {
+    cli_error(cli, CLI_ERROR, "`prodtest_tropic_get_tropic_public()` failed");
     goto cleanup;
   }
 
   // Retrieve the tropic public key and write it to MCU's flash if it has not
   // been written yet.
-  curve25519_key tropic_public_read = {0};
-  if (secret_key_tropic_public(tropic_public_read) != sectrue) {
+  curve25519_key tropic_public_flash = {0};
+  if (secret_key_tropic_public(tropic_public_flash) != sectrue) {
 #ifdef SECRET_TROPIC_TROPIC_PUBKEY_SLOT
     // This is skipped in the prodtest emulator.
-    if (secret_key_set(SECRET_TROPIC_TROPIC_PUBKEY_SLOT, tropic_public_cached,
-                       sizeof(tropic_public_cached)) != sectrue) {
+    if (secret_key_set(SECRET_TROPIC_TROPIC_PUBKEY_SLOT, *tropic_public_cert,
+                       sizeof(curve25519_key)) != sectrue) {
       cli_error(cli, CLI_ERROR,
                 "`secret_key_set()` failed for tropic public key.");
       goto cleanup;
     }
 #endif
-    if (secret_key_tropic_public(tropic_public_read) != sectrue) {
+    if (secret_key_tropic_public(tropic_public_flash) != sectrue) {
       cli_error(cli, CLI_ERROR, "`secret_key_tropic_public()` failed.");
       goto cleanup;
     }
   }
-  if (memcmp(tropic_public_cached, tropic_public_read, sizeof(tropic_public_cached)) != 0) {
+  if (memcmp(*tropic_public_cert, tropic_public_flash, sizeof(curve25519_key)) != 0) {
     cli_error(cli, CLI_ERROR,
               "Tropic public key does not match the expected value.");
     goto cleanup;
   }
-
-  lt_ret_t ret = LT_FAIL;
-
-  // Retrieve the factory pairing key pair.
-#ifdef TREZOR_EMULATOR
-  curve25519_key factory_private = {
-      0xf0, 0xc4, 0xaa, 0x04, 0x8f, 0x00, 0x13, 0xa0, 0x96, 0x84, 0xdf,
-      0x05, 0xe8, 0xa2, 0x2e, 0xf7, 0x21, 0x38, 0x98, 0x28, 0x2b, 0xa9,
-      0x43, 0x12, 0xf3, 0x13, 0xdf, 0x2d, 0xce, 0x8d, 0x41, 0x64};
-#else
-#ifdef TROPIC_TESTING_KEYS
-  // Testing keys (used in TROPIC01-P2S-P001)
-  curve25519_key factory_private = {
-      0xd0, 0x99, 0x92, 0xb1, 0xf1, 0x7a, 0xbc, 0x4d, 0xb9, 0x37, 0x17,
-      0x68, 0xa2, 0x7d, 0xa0, 0x5b, 0x18, 0xfa, 0xb8, 0x56, 0x13, 0xa7,
-      0x84, 0x2c, 0xa6, 0x4c, 0x79, 0x10, 0xf2, 0x2e, 0x71, 0x6b};
-#else
-  // Production keys
-  curve25519_key factory_private = {
-      0x28, 0x3f, 0x5a, 0x0f, 0xfc, 0x41, 0xcf, 0x50, 0x98, 0xa8, 0xe1,
-      0x7d, 0xb6, 0x37, 0x2c, 0x3c, 0xaa, 0xd1, 0xee, 0xee, 0xdf, 0x0f,
-      0x75, 0xbc, 0x3f, 0xbf, 0xcd, 0x9c, 0xab, 0x3d, 0xe9, 0x72};
-#endif
-#endif
-  curve25519_key factory_public = {0};
-  curve25519_scalarmult_basepoint(factory_public, factory_private);
 
   // Retrieve the unprivileged pairing key pair.
   curve25519_key unprivileged_private = {0};
@@ -900,13 +916,10 @@ static void prodtest_tropic_pair(cli_t* cli) {
   curve25519_key privileged_public = {0};
   curve25519_scalarmult_basepoint(privileged_public, privileged_private);
 
-  // Try to establish a session using the factory pairing key.
-  ret = lt_session_start(tropic_handle, tropic_public_cached, FACTORY_PAIRING_KEY_SLOT,
-                         factory_private, factory_public);
-  if (ret == LT_OK) {
+  if (prodtest_tropic_factory_session_start(tropic_handle)) {
     // Write the privileged pairing key to the tropic's pairing key slot if it
     // has not been written yet.
-    ret = pairing_key_write(tropic_handle, PRIVILEGED_PAIRING_KEY_SLOT,
+    lt_ret_t ret = pairing_key_write(tropic_handle, PRIVILEGED_PAIRING_KEY_SLOT,
                             privileged_public);
     // If the pairing key has already been written, `pairing_key_write()`
     // returns `LT_OK`.
@@ -971,15 +984,16 @@ static void prodtest_tropic_get_access_credential(cli_t* cli) {
     goto cleanup;
   }
 
-  if (!cache_tropic_cert_chain(tropic_get_handle())) {
-    cli_error(cli, CLI_ERROR, "`cache_tropic_cert_chain()` failed");
+  const curve25519_key *tropic_public = prodtest_tropic_get_tropic_public();
+  if (tropic_public == NULL) {
+    cli_error(cli, CLI_ERROR, "`prodtest_tropic_get_tropic_public()` failed");
     goto cleanup;
   }
 
   uint8_t output[sizeof(unprivileged_private) + NOISE_TAG_SIZE] = {0};
   if (!secure_channel_encrypt((uint8_t*)unprivileged_private,
-                              sizeof(unprivileged_private), tropic_public_cached,
-                              sizeof(tropic_public_cached), output)) {
+                              sizeof(unprivileged_private), *tropic_public,
+                              sizeof(curve25519_key), output)) {
     // `secure_channel_handshake_2()` might not have been called
     cli_error(cli, CLI_ERROR, "`secure_channel_encrypt()` failed.");
     goto cleanup;
