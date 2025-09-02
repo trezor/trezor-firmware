@@ -29,6 +29,10 @@
 #include <sys/pmic.h>
 #include <sys/power_manager.h>
 
+#ifdef USE_RGB_LED
+#include <io/rgb_led.h>
+#endif
+
 static wakeup_flags_t g_wakeup_flags = 0;
 
 static void background_tasks_suspend(void);
@@ -64,12 +68,43 @@ wakeup_flags_t system_suspend(void) {
   // (e.g., USB, display, touch, haptic, etc.).
   suspend_drivers(&wakeup_params);
 
+  wakeup_flags_t wakeup_flags = 0;
+  wakeup_flags_get(&wakeup_flags);
+
+  // If the device is requested to go in suspend, but the battery is charging,
+  // Keep in this loop until the the external power got diconnected or the
+  // device is woke up. This state is signaled with RGB LED charging effect
+  bool charging_in_suspend;
+  do {
+    pm_state_t pm_state;
+    pm_get_state(&pm_state);
+
+    if (pm_state.usb_connected || pm_state.wireless_connected) {
+      charging_in_suspend = true;
+
+#ifdef USE_RGB_LED
+      if (!rgb_led_effect_ongoing()) {
+        rgb_led_effect_start(RGB_LED_EFFECT_CHARGING, 0);
+      }
+#endif
+
+    } else {
+      charging_in_suspend = false;
+    }
+
+    wakeup_flags_get(&wakeup_flags);
+
+  } while (charging_in_suspend && (wakeup_flags == 0));
+
+#ifdef USE_RGB_LED
+  rgb_led_suspend();
+#endif
+
   // In the following loop, the system will attempt to enter low-power mode.
   // Low-power mode may be exited for various reasons, but the loop will
   // terminate only if a wakeup flag is set, indicating that user interaction
   // is required or the user needs to be notified.
 
-  wakeup_flags_t wakeup_flags = 0;
   wakeup_flags_get(&wakeup_flags);
 
   while (wakeup_flags == 0) {
