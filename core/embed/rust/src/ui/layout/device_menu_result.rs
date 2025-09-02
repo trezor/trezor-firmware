@@ -31,6 +31,8 @@ pub static WIPE_DEVICE: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_B
 pub static TURN_OFF: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static REBOOT: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static REBOOT_TO_BOOTLOADER: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+// Misc
+pub static MENU_REFRESH: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 
 // Create a DeviceMenuResult class that contains all result types
 static DEVICE_MENU_RESULT_TYPE: Type = obj_type! {
@@ -55,6 +57,7 @@ static DEVICE_MENU_RESULT_TYPE: Type = obj_type! {
         Qstr::MP_QSTR_TurnOff => TURN_OFF.as_obj(),
         Qstr::MP_QSTR_Reboot => REBOOT.as_obj(),
         Qstr::MP_QSTR_RebootToBootloader => REBOOT_TO_BOOTLOADER.as_obj(),
+        Qstr::MP_QSTR_MenuRefresh => MENU_REFRESH.as_obj(),
     } },
 };
 

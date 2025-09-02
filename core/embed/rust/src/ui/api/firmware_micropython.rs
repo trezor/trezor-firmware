@@ -936,6 +936,8 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
 
 extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
+        let init_submenu: Option<usize> =
+            kwargs.get(Qstr::MP_QSTR_init_submenu)?.try_into_option()?;
         let failed_backup: bool = kwargs.get(Qstr::MP_QSTR_failed_backup)?.try_into()?;
         let paired_devices: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
         let paired_devices: Vec<TString, MAX_PAIRED_DEVICES> = util::iter_into_vec(paired_devices)?;
@@ -958,6 +960,7 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
         let led_enabled: Option<bool> = kwargs.get(Qstr::MP_QSTR_led_enabled)?.try_into_option()?;
         let about_items: Obj = kwargs.get(Qstr::MP_QSTR_about_items)?;
         let layout = ModelUI::show_device_menu(
+            init_submenu,
             failed_backup,
             paired_devices,
             connected_idx,
@@ -1913,6 +1916,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
 
     /// def show_device_menu(
     ///     *,
+    ///     init_submenu: int | None,
     ///     failed_backup: bool,
     ///     paired_devices: Iterable[str],
     ///     connected_idx: int | None,
@@ -2149,5 +2153,6 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     Reboot: ClassVar[DeviceMenuResult]
     ///     RebootToBootloader: ClassVar[DeviceMenuResult]
     ///     TurnOff: ClassVar[DeviceMenuResult]
+    ///     MenuRefresh: ClassVar[DeviceMenuResult]
     Qstr::MP_QSTR_DeviceMenuResult => DEVICE_MENU_RESULT.as_obj(),
 };
