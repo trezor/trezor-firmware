@@ -204,12 +204,14 @@ static bool check_device_cert_chain(cli_t* cli, const uint8_t* chain,
   random_buffer(rnd, sizeof(rnd));
 
   // The challenge is intentionally constant zero.
+  const uint8_t ENCODED_EMPTY_CONTEXT_STRING[] = {0, 0};
   uint8_t challenge[CHALLENGE_SIZE] = {0};
   uint8_t signature[CRYPTO_BYTES] = {0};
   size_t siglen = 0;
-  if (crypto_sign_signature_internal(signature, &siglen, challenge,
-                                     sizeof(challenge), (const uint8_t*)"\0\0",
-                                     2, rnd, mcu_private, 0) != 0) {
+  if (crypto_sign_signature_internal(
+          signature, &siglen, challenge, sizeof(challenge),
+          ENCODED_EMPTY_CONTEXT_STRING, sizeof(ENCODED_EMPTY_CONTEXT_STRING),
+          rnd, mcu_private, 0) != 0) {
     cli_error(cli, CLI_ERROR, "`crypto_sign_signature()` failed.");
     goto cleanup;
   }
