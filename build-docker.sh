@@ -52,7 +52,7 @@ function help_and_die() {
   echo "  --skip-normal - do not build regular firmwares"
   echo "  --repository path/to/repo - checkout the repository from the given path/url"
   echo "  --no-init - do not recreate docker environments"
-  echo "  --models - comma-separated list of models. default: --models T1B1,T2B1,T2T1,T3T1"
+  echo "  --models - comma-separated list of models. default: --models T1B1,T2B1,T2T1,T3T1,T3W1"
   echo "  --targets - comma-separated list of targets for core build. default: --targets boardloader,bootloader,firmware"
   echo "  --nrf - build nRF bootloader and firmware (for bluetooth devices, i.e. T3W1)"
   echo "  --help"
@@ -67,7 +67,7 @@ OPT_BUILD_NORMAL=1
 OPT_BUILD_BITCOINONLY=1
 OPT_BUILD_NRF=0
 INIT=1
-MODELS=(T1B1 T2B1 T2T1 T3T1)
+MODELS=(T1B1 T2B1 T2T1 T3T1 T3W1)
 CORE_TARGETS=(boardloader bootloader firmware)
 
 REPOSITORY="file:///local"
