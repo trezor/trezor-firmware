@@ -47,6 +47,14 @@ typedef enum {
   RGB_LED_NUM_OF_EFFECTS,
 } rgb_led_effect_type_t;
 
+/**
+ * @brief RGB LED wakeup parameters
+ */
+typedef struct {
+  bool ongoing_effect;
+  rgb_led_effect_type_t effect_type;
+} rgb_led_wakeup_params_t;
+
 #ifdef KERNEL_MODE
 
 /**
@@ -108,3 +116,22 @@ void rgb_led_effect_stop(void);
  * @return true if an effect is currently running, false otherwise
  */
 bool rgb_led_effect_ongoing(void);
+
+/**
+ * @brief set RGB LED wakeup parameters
+ *
+ * @param params: Pointer to the wakeup parameters structure
+ */
+void rgb_led_set_wakeup_params(rgb_led_wakeup_params_t *params);
+
+/**
+ * @brief Suspend RGB LED driver
+ */
+void rgb_led_suspend(void);
+
+/**
+ * @brief Resume RGB LED driver
+ *
+ * @param params: Pointer to the wakeup parameters structure
+ */
+void rgb_led_resume(const rgb_led_wakeup_params_t *params);
