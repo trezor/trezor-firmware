@@ -27,12 +27,68 @@
 #include "der.h"
 #include "ecdsa.h"
 #include "ed25519-donna/ed25519.h"
+#include "hsm_keys.h"
 #include "memzero.h"
 #include "nist256p1.h"
 #include "sha2.h"
 #include "string.h"
 
 #include <../vendor/mldsa-native/mldsa/sign.h>
+
+// HSM root certification authority public keys.
+const uint8_t ROOT_KEYS_P256[][ECDSA_PUBLIC_KEY_SIZE] = {
+#if PRODUCTION
+#ifdef DEV_AUTH_ROOT_PROD_P256
+    DEV_AUTH_ROOT_PROD_P256,
+#endif
+#ifdef DEV_AUTH_ROOT_PROD_BACKUP_P256
+    DEV_AUTH_ROOT_PROD_BACKUP_P256,
+#endif
+#else
+#ifdef DEV_AUTH_ROOT_DEBUG_P256
+    DEV_AUTH_ROOT_DEBUG_P256,
+#endif
+#ifdef DEV_AUTH_ROOT_STAGING_P256
+    DEV_AUTH_ROOT_STAGING_P256,
+#endif
+#endif
+};
+
+const ed25519_public_key ROOT_KEYS_ED25519[] = {
+#if PRODUCTION
+#ifdef DEV_AUTH_ROOT_PROD_ED25519
+    DEV_AUTH_ROOT_PROD_ED25519,
+#endif
+#ifdef DEV_AUTH_ROOT_PROD_BACKUP_ED25519
+    DEV_AUTH_ROOT_PROD_BACKUP_ED25519,
+#endif
+#else
+#ifdef DEV_AUTH_ROOT_DEBUG_ED25519
+    DEV_AUTH_ROOT_DEBUG_ED25519,
+#endif
+#ifdef DEV_AUTH_ROOT_STAGING_ED25519
+    DEV_AUTH_ROOT_STAGING_ED25519,
+#endif
+#endif
+};
+
+const uint8_t ROOT_KEYS_MLDSA44[][CRYPTO_PUBLICKEYBYTES] = {
+#if PRODUCTION
+#ifdef DEV_AUTH_ROOT_PROD_MLDSA44
+    DEV_AUTH_ROOT_PROD_MLDSA44,
+#endif
+#ifdef DEV_AUTH_ROOT_PROD_BACKUP_MLDSA44
+    DEV_AUTH_ROOT_PROD_BACKUP_MLDSA44,
+#endif
+#else
+#ifdef DEV_AUTH_ROOT_DEBUG_MLDSA44
+    DEV_AUTH_ROOT_DEBUG_MLDSA44,
+#endif
+#ifdef DEV_AUTH_ROOT_STAGING_MLDSA44
+    DEV_AUTH_ROOT_STAGING_MLDSA44,
+#endif
+#endif
+};
 
 // Identifier of context-specific constructed tag 3, which is used for
 // extensions in X.509.
@@ -309,6 +365,47 @@ static bool verify_signature(alg_id_t alg_id, const uint8_t* pub_key,
   return false;
 }
 
+static bool get_root_public_key(
+    alg_id_t alg_id, const uint8_t authority_key_digest[SHA1_DIGEST_LENGTH],
+    const uint8_t** pub_key, size_t* pub_key_size) {
+  const uint8_t* root_keys = NULL;
+  int root_key_count = 0;
+  size_t root_key_size = 0;
+  switch (alg_id) {
+    case ALG_ID_ECDSA_P256_WITH_SHA256:
+      root_keys = (const uint8_t*)ROOT_KEYS_P256;
+      root_key_count = sizeof(ROOT_KEYS_P256) / sizeof(ROOT_KEYS_P256[0]);
+      root_key_size = sizeof(ROOT_KEYS_P256[0]);
+      break;
+    case ALG_ID_EDDSA_25519:
+      root_keys = (const uint8_t*)ROOT_KEYS_ED25519;
+      root_key_count = sizeof(ROOT_KEYS_ED25519) / sizeof(ROOT_KEYS_ED25519[0]);
+      root_key_size = sizeof(ROOT_KEYS_ED25519[0]);
+      break;
+    case ALG_ID_MLDSA44:
+      root_keys = (const uint8_t*)ROOT_KEYS_MLDSA44;
+      root_key_count = sizeof(ROOT_KEYS_MLDSA44) / sizeof(ROOT_KEYS_MLDSA44[0]);
+      root_key_size = sizeof(ROOT_KEYS_MLDSA44[0]);
+      break;
+    default:
+      return false;
+  }
+
+  for (int i = 0; i < root_key_count; ++i) {
+    uint8_t pub_key_digest[SHA1_DIGEST_LENGTH] = {0};
+    const uint8_t* root_key = root_keys + i * root_key_size;
+    sha1_Raw(root_key, root_key_size, pub_key_digest);
+    if (memcmp(authority_key_digest, pub_key_digest, sizeof(pub_key_digest)) ==
+        0) {
+      *pub_key = root_key;
+      *pub_key_size = root_key_size;
+      return true;
+    }
+  }
+
+  return false;
+}
+
 bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
                       const uint8_t* sig, size_t sig_size,
                       const uint8_t challenge[CHALLENGE_SIZE]) {
@@ -355,7 +452,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
       return false;
     }
 
-    // Skip the version, serialNumber, signature, issuer and validity
+    // Skip the version, serialNumber, signature algorithm, issuer and validity
     DER_ITEM der_item = {0};
     for (int i = 0; i < 5; ++i) {
       if (!der_read_item(&tbs_cert.buf, &der_item)) {
@@ -501,7 +598,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
   if (alg_id == ALG_ID_ECDSA_P256_WITH_SHA256) {
     // Verify that the signature of the last certificate in the chain matches
     // its own AuthorityKeyIdentifier to verify the integrity of the certificate
-    // data. This is done only for ECDSA, since EdDSA does not allow to recover
+    // data. This is done only for ECDSA, since EdDSA does not allow recovery of
     // the public key from the signature.
     uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
     sha256_Raw(message, message_size, digest);
@@ -513,6 +610,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
       return false;
     }
 
+    bool matches = false;
     for (int recid = 0; recid < 4; ++recid) {
       uint8_t recovered_pub_key[65] = {0};
       if (ecdsa_recover_pub_from_sig(&nist256p1, recovered_pub_key, decoded_sig,
@@ -521,12 +619,39 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
         sha1_Raw(recovered_pub_key, sizeof(recovered_pub_key), pub_key_digest);
         if (memcmp(authority_key_digest, pub_key_digest,
                    sizeof(pub_key_digest)) == 0) {
-          return true;
+          matches = true;
+          break;
         }
       }
     }
+    if (!matches) {
+      cli_error(cli, CLI_ERROR,
+                "check_device_cert_chain, ecdsa_verify_digest root.");
+      return false;
+    }
+  }
+
+  if (!get_root_public_key(alg_id, authority_key_digest, &pub_key,
+                           &pub_key_size)) {
+    const char msg[] =
+        "check_device_cert_chain, failed to get root public key.";
+#if PRODUCTION
+    cli_error(cli, CLI_ERROR, msg);
+    return false;
+#else
+    // In non-production mode we succeed and write the certificate even if the
+    // root key is unknown, but we at least emit a warning.
+    cli_trace(cli, msg);
+    return true;
+#endif
+  }
+
+  // Verify the last signature.
+  if (!verify_signature(alg_id, pub_key, pub_key_size, sig, sig_size, message,
+                        message_size)) {
     cli_error(cli, CLI_ERROR,
-              "check_device_cert_chain, ecdsa_verify_digest root.");
+              "check_device_cert_chain, verify_signature, cert %d.",
+              cert_count);
     return false;
   }
 
