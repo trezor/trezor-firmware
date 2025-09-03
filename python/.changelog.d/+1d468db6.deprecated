@@ -1,0 +1,1 @@
+`trezorlib.__version__` is deprecated, use `importlib.metadata.version("trezor")`.

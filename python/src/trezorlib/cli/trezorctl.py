@@ -16,6 +16,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import importlib.metadata
 import json
 import logging
 import os
@@ -24,7 +25,7 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional, TypeVar, ca
 
 import click
 
-from .. import __version__, log, messages, protobuf
+from .. import log, messages, protobuf
 from ..transport import DeviceIsBusy, enumerate_devices
 from ..transport.session import Session
 from ..transport.udp import UdpTransport
@@ -141,7 +142,7 @@ class TrezorctlGroup(AliasedGroup):
         # This means that there is no reasonable way to use `hasattr` to detect where we
         # are, unless we want to look at the private `_result_callback` attribute.
         # Instead, we look at Click version and hope for the best.
-        from click import __version__ as click_version
+        click_version = importlib.metadata.version("click")
 
         if click_version.startswith("7."):
             return super().resultcallback()  # type: ignore [Cannot access attribute]
@@ -194,7 +195,7 @@ def configure_logging(verbose: int) -> None:
     "--record",
     help="Record screen changes into a specified directory.",
 )
-@click.version_option(version=__version__)
+@click.version_option(package_name="trezor")
 @click.pass_context
 def cli_main(
     ctx: click.Context,
@@ -310,7 +311,7 @@ def list_devices(no_resolve: bool) -> Optional[Iterable["Transport"]]:
 @cli.command()
 def version() -> str:
     """Show version of trezorctl/trezorlib."""
-    return __version__
+    return importlib.metadata.version("trezor")
 
 
 #
