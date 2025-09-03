@@ -52,7 +52,6 @@
 // hibernation
 #define PM_AUTO_HIBERNATE_TIMEOUT_S (2 * 60 * 60)  // 2 hours
 
-#define PM_SUSPENDED_CHARGING_TIMEOUT_S 60
 #define PM_STABILIZATION_TIMEOUT_MS 2000
 // Temperature controller parameters
 #define PM_TEMP_CONTROL_IDLE_PERIOD_MS 2 * 60 * 1000  // 2 minutes
