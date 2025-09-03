@@ -40,8 +40,9 @@ use super::{
 use heapless::Vec;
 
 #[repr(u8)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Default)]
 pub enum DeviceMenuId {
+    #[default]
     Root = 0,
     PairAndConnect,
     Settings,
@@ -255,6 +256,7 @@ pub struct DeviceMenuScreen {
 impl DeviceMenuScreen {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
+        init_submenu: Option<usize>,
         failed_backup: bool,
         paired_devices: Vec<TString<'static>, MAX_PAIRED_DEVICES>,
         connected_idx: Option<usize>,
@@ -301,11 +303,13 @@ impl DeviceMenuScreen {
         let pin_unset = pin_code == Some(false);
         screen.register_root_menu(failed_backup, pin_unset, connected_subtext);
 
-        // Activate root via the mapping
-        let root = screen
-            .try_resolve_submenu(DeviceMenuId::Root)
-            .expect("Root submenu must be registered");
-        screen.set_active_subscreen(root);
+        // Activate the init submenu
+        let init_submenu_id = init_submenu
+            .and_then(|v| DeviceMenuId::try_from(v).ok())
+            .unwrap_or_default();
+
+        let init_submenu_idx = unwrap!(screen.try_resolve_submenu(init_submenu_id));
+        screen.set_active_subscreen(init_submenu_idx);
 
         Ok(screen)
     }

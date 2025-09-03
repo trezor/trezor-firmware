@@ -623,6 +623,7 @@ def show_homescreen(
 # rust/src/ui/api/firmware_micropython.rs
 def show_device_menu(
     *,
+    init_submenu: int | None,
     failed_backup: bool,
     paired_devices: Iterable[str],
     connected_idx: int | None,
