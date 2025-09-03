@@ -1,15 +1,19 @@
 from typing import TYPE_CHECKING
 
-from apps.common.keychain import auto_keychain
+from apps.common.keychain import with_slip44_keychain
+
+from . import CURVE, PATTERN, SLIP44_ID
 
 if TYPE_CHECKING:
     from trezor.messages import StellarSignedTx, StellarSignTx
 
-    from apps.common.keychain import Keychain
+    from apps.common.keychain import Keychain as Slip21Keychain
 
 
-@auto_keychain(__name__)
-async def sign_tx(msg: StellarSignTx, keychain: Keychain) -> StellarSignedTx:
+@with_slip44_keychain(
+    *[PATTERN], slip44_id=SLIP44_ID, curve=CURVE, slip21_namespaces=[[b"SLIP-0024"]]
+)
+async def sign_tx(msg: StellarSignTx, keychain: Slip21Keychain) -> StellarSignedTx:
     from ubinascii import hexlify
 
     from trezor import TR
@@ -102,13 +106,28 @@ async def sign_tx(msg: StellarSignTx, keychain: Keychain) -> StellarSignedTx:
         raise ProcessError("Stellar invalid memo type")
     await layout.require_confirm_memo(memo_type, memo_confirm_text)
 
+    if msg.payment_req:
+        from apps.common.payment_request import PaymentRequestVerifier
+
+        verifier = PaymentRequestVerifier(msg.payment_req, SLIP44_ID, keychain)
+    else:
+        verifier = None
+
     # ---------------------------------
     # OPERATION
     # ---------------------------------
+
+    # these two are used in case of payment requests, where we allow only one output, hence we have a single output address and asset
+    output_address = None
+    output_asset = None
+
     writers.write_uint32(w, num_operations)
     for _ in range(num_operations):
         op = await call_any(StellarTxOpRequest(), *consts.op_codes.keys())
-        await process_operation(w, op, current_output_index)  # type: ignore [Argument of type "MessageType" cannot be assigned to parameter "op" of type "StellarMessageType" in function "process_operation"]
+
+        # Note: in case of payment requests we don't confirm each operation individually
+        # but rather we confirm the whole payment request afterwards
+        await process_operation(w, op, current_output_index, confirm=not msg.payment_req)  # type: ignore [Argument of type "MessageType" cannot be assigned to parameter "op" of type "StellarMessageType" in function "process_operation"]
 
         if op.source_account is not None and op.source_account != address:  # type: ignore [Cannot access attribute "source_account" for class "MessageType"]
             # if the operation source account does not match the Trezor account
@@ -124,6 +143,17 @@ async def sign_tx(msg: StellarSignTx, keychain: Keychain) -> StellarSignedTx:
                 StellarPathPaymentStrictReceiveOp,
             ]
         ):
+            if msg.payment_req:
+                assert verifier is not None
+                if current_output_index != 0:
+                    raise ProcessError(
+                        "Multiple operations not supported for payment requests"
+                    )
+                if StellarPaymentOp.is_type_of(op):
+                    verifier.add_output(op.amount, op.destination_account)
+                    output_address = op.destination_account
+                    output_asset = op.asset
+
             current_output_index += 1
 
     # ---------------------------------
@@ -131,6 +161,22 @@ async def sign_tx(msg: StellarSignTx, keychain: Keychain) -> StellarSignedTx:
     # ---------------------------------
     # 4 null bytes representing a (currently unused) empty union
     writers.write_uint32(w, 0)
+
+    if msg.payment_req:
+        assert verifier is not None
+
+        verifier.verify()
+
+        assert output_address
+        assert output_asset
+
+        await layout.require_confirm_payment_request(
+            output_address,
+            msg.payment_req,
+            msg.address_n,
+            output_asset,
+        )
+
     # final confirm
     await layout.require_confirm_final(
         msg.address_n,
