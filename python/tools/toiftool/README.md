@@ -4,7 +4,7 @@ A helpful CLI tool to work with TOIFs.
 
 ## Installation
 
-The command `toiftool` is available within firmware repository's Poetry shell.
+The command `toiftool` is available within firmware repository's uv environment.
 
 To install the tool separate from the firmware repository, run:
 
