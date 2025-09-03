@@ -1,20 +1,14 @@
-[tool.poetry]
+[project]
 name = "trezor_core_tools"
 version = "0.1.4"
 description = "Collection of CLI tools for trezor-core development"
-authors = ["matejcik <jan.matejek@satoshilabs.com>"]
-license = "GPLv3+"
+authors = [{ name = "matejcik", email = "jan.matejek@satoshilabs.com" }]
+requires-python = ">=3.9,<4"
 readme = "README.md"
+license = "GPL-3.0-or-later"
+dependencies = ["trezor>=0.14,<0.15"]
 
-[tool.poetry.dependencies]
-python = ">=3.9,<4"
-trezor = "^0.14"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.poetry.scripts]
+[project.scripts]
 headertool = "trezor_core_tools.headertool:cli"
 headertool_pq = "trezor_core_tools.headertool_pq:cli"
 layout_parser = "trezor_core_tools.layout_parser:main"
@@ -23,3 +17,12 @@ hash_signer = "trezor_core_tools.hash_signer:main"
 combine_firmware = "trezor_core_tools.combine_firmware:main"
 bootloader_hashes = "trezor_core_tools.bootloader_hashes:main"
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = true
+
+[tool.uv.sources]
+trezor = { path = "../../python", editable = true }
