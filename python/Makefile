@@ -1,20 +1,11 @@
 PYTHON=python3
-SETUP=$(PYTHON) setup.py
+UV=uv
 
 EXCLUDES=.vscode
-STYLE_TARGETS=src tests tools helper-scripts setup.py
-
-all: build
-
-build:
-	$(SETUP) build
-
-install:
-	$(SETUP) install
+STYLE_TARGETS=src tests tools helper-scripts
 
 dist: doc clean
-	$(SETUP) sdist
-	$(SETUP) bdist_wheel
+	$(UV) build
 
 doc:
 	$(PYTHON) helper-scripts/make-options-rst.py
