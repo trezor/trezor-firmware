@@ -29,10 +29,42 @@
 #include "ed25519-donna/ed25519.h"
 #include "memzero.h"
 #include "nist256p1.h"
+#include "root_keys.h"
 #include "sha2.h"
 #include "string.h"
 
 #include <../vendor/mldsa-native/mldsa/sign.h>
+
+// HSM root certification authority public keys.
+const uint8_t ROOT_KEYS_P256[][ECDSA_PUBLIC_KEY_SIZE] = {
+#if PRODUCTION
+    DEV_AUTH_ROOT_T2B1_PROD_P256,        DEV_AUTH_ROOT_T3B1_PROD_P256,
+    DEV_AUTH_ROOT_T3T1_PROD_P256,        DEV_AUTH_ROOT_T3W1_PROD_P256,
+    DEV_AUTH_ROOT_T3W1_PROD_BACKUP_P256,
+#else
+    DEV_AUTH_ROOT_T2B1_DEBUG_P256, DEV_AUTH_ROOT_T3B1_DEBUG_P256,
+    DEV_AUTH_ROOT_T3T1_DEBUG_P256, DEV_AUTH_ROOT_T3W1_DEBUG_P256,
+    DEV_AUTH_ROOT_T3W1_STAGING_P256
+#endif
+};
+
+const uint8_t ROOT_KEYS_ED25519[][sizeof(ed25519_public_key)] = {
+#if PRODUCTION
+    DEV_AUTH_ROOT_T3W1_PROD_ED25519,
+    DEV_AUTH_ROOT_T3W1_PROD_BACKUP_ED25519,
+#else
+    DEV_AUTH_ROOT_T3W1_STAGING_ED25519,
+#endif
+};
+
+const uint8_t ROOT_KEYS_MLDSA44[][CRYPTO_PUBLICKEYBYTES] = {
+#if PRODUCTION
+    DEV_AUTH_ROOT_T3W1_PROD_MLDSA44,
+    DEV_AUTH_ROOT_T3W1_PROD_BACKUP_MLDSA44,
+#else
+    DEV_AUTH_ROOT_T3W1_STAGING_MLDSA44,
+#endif
+};
 
 // Identifier of context-specific constructed tag 3, which is used for
 // extensions in X.509.
@@ -309,6 +341,47 @@ static bool verify_signature(alg_id_t alg_id, const uint8_t* pub_key,
   return false;
 }
 
+static bool get_root_public_key(
+    alg_id_t alg_id, const uint8_t authority_key_digest[SHA1_DIGEST_LENGTH],
+    const uint8_t** pub_key, size_t* pub_key_size) {
+  const uint8_t* root_keys = NULL;
+  int root_key_count = 0;
+  size_t root_key_size = 0;
+  switch (alg_id) {
+    case ALG_ID_ECDSA_P256_WITH_SHA256:
+      root_keys = (const uint8_t*)ROOT_KEYS_P256;
+      root_key_count = sizeof(ROOT_KEYS_P256) / sizeof(ROOT_KEYS_P256[0]);
+      root_key_size = sizeof(ROOT_KEYS_P256[0]);
+      break;
+    case ALG_ID_EDDSA_25519:
+      root_keys = (const uint8_t*)ROOT_KEYS_ED25519;
+      root_key_count = sizeof(ROOT_KEYS_ED25519) / sizeof(ROOT_KEYS_ED25519[0]);
+      root_key_size = sizeof(ROOT_KEYS_ED25519[0]);
+      break;
+    case ALG_ID_MLDSA44:
+      root_keys = (const uint8_t*)ROOT_KEYS_MLDSA44;
+      root_key_count = sizeof(ROOT_KEYS_MLDSA44) / sizeof(ROOT_KEYS_MLDSA44[0]);
+      root_key_size = sizeof(ROOT_KEYS_MLDSA44[0]);
+      break;
+    default:
+      return false;
+  }
+
+  for (int i = 0; i < root_key_count; ++i) {
+    uint8_t pub_key_digest[SHA1_DIGEST_LENGTH] = {0};
+    const uint8_t* root_key = root_keys + i * root_key_size;
+    sha1_Raw(root_key, root_key_size, pub_key_digest);
+    if (memcmp(authority_key_digest, pub_key_digest, sizeof(pub_key_digest)) ==
+        0) {
+      *pub_key = root_key;
+      *pub_key_size = root_key_size;
+      return true;
+    }
+  }
+
+  return false;
+}
+
 bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
                       const uint8_t* sig, size_t sig_size,
                       const uint8_t challenge[CHALLENGE_SIZE]) {
@@ -355,7 +428,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
       return false;
     }
 
-    // Skip the version, serialNumber, signature, issuer and validity
+    // Skip the version, serialNumber, signature algorithm, issuer and validity
     DER_ITEM der_item = {0};
     for (int i = 0; i < 5; ++i) {
       if (!der_read_item(&tbs_cert.buf, &der_item)) {
@@ -527,6 +600,22 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
     }
     cli_error(cli, CLI_ERROR,
               "check_device_cert_chain, ecdsa_verify_digest root.");
+    return false;
+  }
+
+  if (!get_root_public_key(alg_id, authority_key_digest, &pub_key,
+                           &pub_key_size)) {
+    cli_error(cli, CLI_ERROR,
+              "check_device_cert_chain, failed to get root public key.");
+    return false;
+  }
+
+  // Verify the last signature.
+  if (!verify_signature(alg_id, pub_key, pub_key_size, sig, sig_size, message,
+                        message_size)) {
+    cli_error(cli, CLI_ERROR,
+              "check_device_cert_chain, verify_signature, cert %d.",
+              cert_count);
     return false;
   }
 
