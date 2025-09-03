@@ -1216,7 +1216,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__approve_revoke_from;
   MP_QSTR_ethereum__approve_to;
   MP_QSTR_ethereum__approve_unlimited_template;
-  MP_QSTR_ethereum__contract;
   MP_QSTR_ethereum__contract_address;
   MP_QSTR_ethereum__data_size_template;
   MP_QSTR_ethereum__gas_limit;
