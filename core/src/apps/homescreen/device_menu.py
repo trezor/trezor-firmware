@@ -193,10 +193,7 @@ async def handle_device_menu() -> None:
             except (ActionCancelled, PinCancelled):
                 pass
             finally:
-                if config.has_pin():
-                    init_submenu = SubmenuId.PIN_CODE
-                else:
-                    init_submenu = SubmenuId.SECURITY
+                init_submenu = SubmenuId.SECURITY
         elif menu_result is DeviceMenuResult.PinRemove and config.has_pin():
             from trezor.messages import ChangePin
 
@@ -207,10 +204,7 @@ async def handle_device_menu() -> None:
             except (ActionCancelled, PinCancelled):
                 pass
             finally:
-                if config.has_pin():
-                    init_submenu = SubmenuId.PIN_CODE
-                else:
-                    init_submenu = SubmenuId.SECURITY
+                init_submenu = SubmenuId.SECURITY
         elif menu_result is DeviceMenuResult.AutoLockDelay and config.has_pin():
             from trezor.messages import ApplySettings
 
@@ -248,10 +242,7 @@ async def handle_device_menu() -> None:
             except (ActionCancelled, PinCancelled):
                 pass
             finally:
-                if config.has_wipe_code():
-                    init_submenu = SubmenuId.WIPE_CODE
-                else:
-                    init_submenu = SubmenuId.SECURITY
+                init_submenu = SubmenuId.SECURITY
         elif menu_result is DeviceMenuResult.WipeRemove and config.has_wipe_code():
             from trezor.messages import ChangeWipeCode
 
@@ -262,10 +253,7 @@ async def handle_device_menu() -> None:
             except (ActionCancelled, PinCancelled):
                 pass
             finally:
-                if config.has_wipe_code():
-                    init_submenu = SubmenuId.WIPE_CODE
-                else:
-                    init_submenu = SubmenuId.SECURITY
+                init_submenu = SubmenuId.SECURITY
         elif menu_result is DeviceMenuResult.CheckBackup and is_initialized:
             from trezor.enums import RecoveryType
             from trezor.messages import RecoveryDevice
