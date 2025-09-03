@@ -40,7 +40,8 @@ use super::{
 use heapless::Vec;
 
 #[repr(u8)]
-#[derive(Copy, Clone, Debug, Default)]
+#[derive(Copy, Clone, Default)]
+#[cfg_attr(test, derive(Debug))]
 pub enum DeviceMenuId {
     #[default]
     Root = 0,
