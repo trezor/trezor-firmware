@@ -230,8 +230,6 @@ async def confirm_change_label(
         verb=None,
     )
 
-    show_continue_in_app(TR.device_name__changed)
-
 
 def confirm_change_passphrase(use: bool) -> Awaitable[None]:
     description = TR.passphrase__turn_on if use else TR.passphrase__turn_off
