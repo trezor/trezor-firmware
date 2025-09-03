@@ -210,6 +210,13 @@ pm_status_t pm_charging_set_max_current(uint16_t current_ma);
 pm_status_t pm_set_soc_target(uint8_t target);
 
 /**
+ * @brief Check if the device is currently charging the battery
+ *
+ * @return true if the device is charging, false otherwise
+ */
+bool pm_is_charging(void);
+
+/**
  * @brief Suspends driver activity so the CPU can enter low-power mode.
  *
  * Suspending may take some time if the driver is currently

@@ -120,10 +120,13 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
                         drv->pmic_data.ntc_temp);
     }
 
-    // Charging completed
+    // Charging completed flag from PMIC controller
     if (drv->pmic_data.charge_status & 0x2) {
       // Force fuel gauge to 100%, keep the covariance
+      drv->fully_charged = true;
       fuel_gauge_set_soc(&drv->fuel_gauge, 1.0f, drv->fuel_gauge.P);
+    } else {
+      drv->fully_charged = false;
     }
 
     // Ceil the float soc to user-friendly integer
