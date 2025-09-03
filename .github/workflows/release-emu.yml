@@ -80,9 +80,9 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run make -C core build_bootloader_emu"
+      - run: nix-shell --run "uv run make -C core build_bootloader_emu"
         if: matrix.coins == 'universal'
-      - run: nix-shell --run "poetry run make -C core build_unix_frozen"
+      - run: nix-shell --run "uv run make -C core build_unix_frozen"
       - run: cp core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-${{ matrix.model }}-v${{ needs.get_models.outputs.version }}
 
       - name: Configure aws credentials
@@ -130,9 +130,9 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run make -C core build_bootloader_emu"
+      - run: nix-shell --run "uv run make -C core build_bootloader_emu"
         if: matrix.coins == 'universal'
-      - run: nix-shell --run "poetry run make -C core build_unix_frozen"
+      - run: nix-shell --run "uv run make -C core build_unix_frozen"
       - run: mv core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-${{ matrix.model }}-v${{ needs.get_models.outputs.version }}-arm
 
       - name: Configure aws credentials
@@ -175,7 +175,7 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run legacy/script/cibuild"
+      - run: nix-shell --run "uv run legacy/script/cibuild"
       - run: mv legacy/firmware/trezor.elf legacy/firmware/trezor-emu-legacy-T1B1-v${{ needs.get_models.outputs.version }}
 
       - name: Configure aws credentials
@@ -210,7 +210,7 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run legacy/script/cibuild"
+      - run: nix-shell --run "uv run legacy/script/cibuild"
       - run: mv legacy/firmware/trezor.elf legacy/firmware/trezor-emu-legacy-T1B1-v${{ needs.get_models.outputs.version }}-arm
 
       - name: Configure aws credentials

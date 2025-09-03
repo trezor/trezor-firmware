@@ -1,5 +1,5 @@
 name: 'Download dependencies'
-description: 'Nixpkgs and poetry'
+description: 'Nixpkgs and uv'
 inputs:
   full-deps:
     description: 'Pass --arg fullDeps true to nix-shell?'
@@ -15,6 +15,6 @@ runs:
     - name: Dependencies nixpkgs
       run: timeout -v --kill-after=10 500 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "true"
       shell: sh
-    - name: Dependencies poetry
-      run: timeout -v --kill-after=10 200 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "poetry install"
+    - name: Dependencies uv
+      run: timeout -v --kill-after=10 200 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "uv sync"
       shell: sh

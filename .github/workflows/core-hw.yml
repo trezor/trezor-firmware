@@ -57,13 +57,13 @@ jobs:
           submodules: recursive
       - uses: ./.github/actions/environment
       - run: nix-shell --arg hardwareTest true --run uhubctl
-      - run: nix-shell --run "poetry run make -C core build_firmware"
-      - run: nix-shell --arg hardwareTest true --run "poetry run python ci/hardware_tests/bootstrap.py ${{ matrix.model }} core/build/firmware/firmware.bin"
-      - run: nix-shell --run "poetry run trezorctl list"
-      - run: nix-shell --run "poetry run trezorctl get-features"
+      - run: nix-shell --run "uv run make -C core build_firmware"
+      - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py ${{ matrix.model }} core/build/firmware/firmware.bin"
+      - run: nix-shell --run "uv run trezorctl list"
+      - run: nix-shell --run "uv run trezorctl get-features"
       - run: |
           nix-shell --arg hardwareTest true --run "./tools/read-device-log.sh /dev/ttyTREZOR &> trezor.log" &
-          nix-shell --run "poetry run pytest -v --verbose-log-file pytest.log tests/device_tests $TESTOPTS"
+          nix-shell --run "uv run pytest -v --verbose-log-file pytest.log tests/device_tests $TESTOPTS"
       - run: tail -n50 trezor.log || true
         if: failure()
       - uses: actions/upload-artifact@v4
@@ -100,10 +100,10 @@ jobs:
           submodules: recursive
       - uses: ./.github/actions/environment
       - run: nix-shell --arg hardwareTest true --run uhubctl
-      - run: nix-shell --run "poetry run make -C core build_firmware"
-      - run: nix-shell --arg hardwareTest true --run "poetry run python ci/hardware_tests/bootstrap.py ${{ matrix.model }} core/build/firmware/firmware.bin"
-      - run: nix-shell --run "poetry run trezorctl list"
-      - run: nix-shell --run "poetry run trezorctl get-features"
+      - run: nix-shell --run "uv run make -C core build_firmware"
+      - run: nix-shell --arg hardwareTest true --run "uv run python ci/hardware_tests/bootstrap.py ${{ matrix.model }} core/build/firmware/firmware.bin"
+      - run: nix-shell --run "uv run trezorctl list"
+      - run: nix-shell --run "uv run trezorctl get-features"
       - run: |
           nix-shell --arg hardwareTest true --run "./tools/read-device-log.sh /dev/ttyTREZOR &> trezor.log" &
           nix-shell --arg fullDeps true --run "./core/tests/run_tests_device_emu_monero.sh --trezor-path webusb:"
@@ -139,8 +139,8 @@ jobs:
           submodules: recursive
       - uses: ./.github/actions/environment
       - run: nix-shell --arg hardwareTest true --run uhubctl
-      - run: nix-shell --run "poetry run legacy/script/setup"
-      - run: nix-shell --run "export PRODUCTION=0 && poetry run legacy/script/cibuild"
+      - run: nix-shell --run "uv run legacy/script/setup"
+      - run: nix-shell --run "export PRODUCTION=0 && uv run legacy/script/cibuild"
       - run: nix-shell --arg hardwareTest true --run "ci/hardware_tests/t1_hw_test.sh"
       - uses: actions/upload-artifact@v4
         with:

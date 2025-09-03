@@ -3,7 +3,7 @@
 # Script builds, signs, and/or flashes Nordic board with optional debug or production overlays
 
 # Run this in `nordic/trezor` to sign and mergehex final image with mcuboot
-# This charade serves to differentiate commands run under poetry shell and ncs shell since their pythons are not compatible
+# This charade serves to differentiate commands run under uv shell and ncs shell since their pythons are not compatible
 
 # Update the OPTSTRING to include 'a:'
 OPTSTRING=":b:a:pdsfc"

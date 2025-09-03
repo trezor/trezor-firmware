@@ -1,9 +1,10 @@
 # Running Upgrade Tests
 
-1. As always, use poetry environment:
+1. As always, use uv environment:
 
 ```sh
-poetry shell
+uv sync
+source .venv/bin/activate
 ```
 
 2. Download the emulators, if you have not already:
