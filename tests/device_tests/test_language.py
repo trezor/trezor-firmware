@@ -105,9 +105,10 @@ def test_error_too_long(session: Session):
     # Translations too long
     # Sending more than allowed by the flash capacity
     max_length = MAX_DATA_LENGTH[session.model]
-    with pytest.raises(
-        exceptions.TrezorFailure, match="Translations too long"
-    ), session.client:
+    with (
+        pytest.raises(exceptions.TrezorFailure, match="Translations too long"),
+        session.client,
+    ):
         bad_data = (max_length + 1) * b"a"
         device.change_language(session, language_data=bad_data)
     assert session.features.language == "en-US"
@@ -118,9 +119,10 @@ def test_error_invalid_data_length(session: Session):
     assert session.features.language == "en-US"
     # Invalid data length
     # Sending more data than advertised in the header
-    with pytest.raises(
-        exceptions.TrezorFailure, match="Invalid data length"
-    ), session.client:
+    with (
+        pytest.raises(exceptions.TrezorFailure, match="Invalid data length"),
+        session.client,
+    ):
         good_data = build_and_sign_blob("cs", session)
         bad_data = good_data + b"abcd"
         device.change_language(session, language_data=bad_data)
@@ -132,9 +134,10 @@ def test_error_invalid_header_magic(session: Session):
     assert session.features.language == "en-US"
     # Invalid header magic
     # Does not match the expected magic
-    with pytest.raises(
-        exceptions.TrezorFailure, match="Invalid translations data"
-    ), session.client:
+    with (
+        pytest.raises(exceptions.TrezorFailure, match="Invalid translations data"),
+        session.client,
+    ):
         good_data = build_and_sign_blob("cs", session)
         bad_data = 4 * b"a" + good_data[4:]
         device.change_language(session, language_data=bad_data)
@@ -146,9 +149,12 @@ def test_error_invalid_data_hash(session: Session):
     assert session.features.language == "en-US"
     # Invalid data hash
     # Changing the data after their hash has been calculated
-    with pytest.raises(
-        exceptions.TrezorFailure, match="Translation data verification failed"
-    ), session.client:
+    with (
+        pytest.raises(
+            exceptions.TrezorFailure, match="Translation data verification failed"
+        ),
+        session.client,
+    ):
         good_data = build_and_sign_blob("cs", session)
         bad_data = good_data[:-8] + 8 * b"a"
         device.change_language(
@@ -163,9 +169,10 @@ def test_error_version_mismatch(session: Session):
     assert session.features.language == "en-US"
     # Translations version mismatch
     # Change the version to one not matching the current device
-    with pytest.raises(
-        exceptions.TrezorFailure, match="Translations version mismatch"
-    ), session.client:
+    with (
+        pytest.raises(exceptions.TrezorFailure, match="Translations version mismatch"),
+        session.client,
+    ):
         blob = prepare_blob("cs", session.model, (3, 5, 4, 0))
         device.change_language(
             session,
@@ -179,9 +186,10 @@ def test_error_invalid_signature(session: Session):
     assert session.features.language == "en-US"
     # Invalid signature
     # Changing the data in the signature section
-    with pytest.raises(
-        exceptions.TrezorFailure, match="Invalid translations data"
-    ), session.client:
+    with (
+        pytest.raises(exceptions.TrezorFailure, match="Invalid translations data"),
+        session.client,
+    ):
         blob = prepare_blob("cs", session.model, session.version)
         blob.proof = translations.Proof(
             merkle_proof=[],

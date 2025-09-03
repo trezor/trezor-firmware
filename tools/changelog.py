@@ -131,9 +131,10 @@ def filter_changelog(changelog_file: Path, internal_name: str):
             return None
 
     destination_file = changelog_file.with_suffix(f".{internal_name}.md")
-    with open(changelog_file, "r") as changelog, open(
-        destination_file, "w"
-    ) as destination:
+    with (
+        open(changelog_file, "r") as changelog,
+        open(destination_file, "w") as destination,
+    ):
         for line in changelog:
             res = filter_line(line)
             if res is not None:

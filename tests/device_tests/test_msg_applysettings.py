@@ -390,9 +390,10 @@ def test_safety_checks(session: Session):
 
     assert session.features.safety_checks == messages.SafetyCheckLevel.Strict
 
-    with pytest.raises(
-        exceptions.TrezorFailure, match="Forbidden key path"
-    ), session.client as client:
+    with (
+        pytest.raises(exceptions.TrezorFailure, match="Forbidden key path"),
+        session.client as client,
+    ):
         client.set_expected_responses([messages.Failure])
         get_bad_address()
 
@@ -419,9 +420,10 @@ def test_safety_checks(session: Session):
 
     assert session.features.safety_checks == messages.SafetyCheckLevel.Strict
 
-    with pytest.raises(
-        exceptions.TrezorFailure, match="Forbidden key path"
-    ), session.client as client:
+    with (
+        pytest.raises(exceptions.TrezorFailure, match="Forbidden key path"),
+        session.client as client,
+    ):
         client.set_expected_responses([messages.Failure])
         get_bad_address()
 
@@ -459,9 +461,10 @@ def test_experimental_features(session: Session):
 
     assert not session.features.experimental_features
 
-    with pytest.raises(
-        exceptions.TrezorFailure, match="DataError"
-    ), session.client as client:
+    with (
+        pytest.raises(exceptions.TrezorFailure, match="DataError"),
+        session.client as client,
+    ):
         client.set_expected_responses([messages.Failure])
         experimental_call()
 

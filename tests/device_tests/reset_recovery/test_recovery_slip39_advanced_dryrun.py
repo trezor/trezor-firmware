@@ -57,8 +57,11 @@ def test_2of3_dryrun(session: Session):
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_20)
 def test_2of3_invalid_seed_dryrun(session: Session):
     # test fails because of different seed on device
-    with session.client as client, pytest.raises(
-        TrezorFailure, match=r"The seed does not match the one in the device"
+    with (
+        session.client as client,
+        pytest.raises(
+            TrezorFailure, match=r"The seed does not match the one in the device"
+        ),
     ):
         IF = InputFlowSlip39AdvancedRecoveryDryRun(
             session.client, INVALID_SHARES_SLIP39_ADVANCED_20, mismatch=True

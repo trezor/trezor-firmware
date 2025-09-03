@@ -43,7 +43,7 @@ def test_norcow_update():
     data = n._dump()[0][:256]
     assert data[:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\x00" * 8
     assert data[16:18] == b"\x01\x00"  # app + key
-    assert data[18:20] == b"\x0B\x00"  # length
+    assert data[18:20] == b"\x0b\x00"  # length
     assert data[20:31] == b"1234567890A"  # data
     assert data[31:32] == bytes([0] * 1)  # alignment
     assert common.all_ff_bytes(data[32:])
@@ -54,7 +54,7 @@ def test_norcow_update():
     assert data[16:32] == bytes([0] * 16)  # empty data
 
     assert data[32:34] == b"\x01\x00"  # app + key
-    assert data[34:36] == b"\x0B\x00"  # length
+    assert data[34:36] == b"\x0b\x00"  # length
     assert data[36:47] == b"A0987654321"  # data
     assert data[47:48] == bytes([0] * 1)  # alignment
     assert common.all_ff_bytes(data[48:])
@@ -64,7 +64,7 @@ def test_norcow_update():
     data = n._dump()[0][:256]
     assert data[:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\x00" * 8
     assert data[16:18] == b"\x01\x00"  # app + key
-    assert data[18:20] == b"\x0C\x00"  # length
+    assert data[18:20] == b"\x0c\x00"  # length
     assert data[20:32] == b"1234567890AB"  # data
     assert common.all_ff_bytes(data[32:])
 
@@ -74,7 +74,7 @@ def test_norcow_update():
     assert data[16:32] == bytes([0] * 16)  # empty data
 
     assert data[32:34] == b"\x01\x00"  # app + key
-    assert data[34:36] == b"\x0C\x00"  # length
+    assert data[34:36] == b"\x0c\x00"  # length
     assert data[36:48] == b"BA0987654321"  # data
     assert common.all_ff_bytes(data[48:])
 
@@ -84,19 +84,19 @@ def test_norcow_update():
     n.set(0x0102, b"world!_world!")
     data = n._dump()[0][:256]
     assert data[offset : offset + 2] == b"\x02\x01"  # app + key
-    assert data[offset + 2 : offset + 4] == b"\x0D\x00"  # length
+    assert data[offset + 2 : offset + 4] == b"\x0d\x00"  # length
     assert data[offset + 16 : offset + 16 + 13] == b"world!_world!"  # data
     assert data[offset + 16 + 13 : offset + 32] == b"\xff\xff\xff"  # alignment
     assert common.all_ff_bytes(data[offset + 32 :])
 
     n.set(0x0102, b"hello!_hello!")
     data = n._dump()[0][:256]
-    assert data[offset : offset + 4] == b"\x02\x01\x0D\x00"  # app + key + length
+    assert data[offset : offset + 4] == b"\x02\x01\x0d\x00"  # app + key + length
     assert data[offset + 4 : offset + 32] == bytes([0] * 28)
 
     offset += 32
 
-    assert data[offset + 0 : offset + 4] == b"\x02\x01\x0D\x00"  # app + key + length
+    assert data[offset + 0 : offset + 4] == b"\x02\x01\x0d\x00"  # app + key + length
     assert data[offset + 4 : offset + 16] == b"\x00" * 12  # alignment
     assert data[offset + 16 : offset + 16 + 13] == b"hello!_hello!"  # data
     assert data[offset + 16 + 13 : offset + 32] == b"\xff\xff\xff"  # alignment
@@ -110,7 +110,7 @@ def test_norcow_set_qw_long():
     n.set(0x0001, b"1234567890abc")
     data = n._dump()[0][:256]
     assert data[:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\x00" * 8
-    assert data[16:20] == b"\x01\x00\x0D\x00"  # app + key + length
+    assert data[16:20] == b"\x01\x00\x0d\x00"  # app + key + length
     assert data[32:45] == b"1234567890abc"  # data
     assert common.all_ff_bytes(data[45:])
 
@@ -118,14 +118,14 @@ def test_norcow_set_qw_long():
     n.set(0x0901, b"hello_hello__")
     data = n._dump()[0][:256]
     assert data[:16] == consts.NORCOW_MAGIC_AND_VERSION + b"\x00" * 8
-    assert data[16:20] == b"\x01\x09\x0D\x00"  # app + key + length
+    assert data[16:20] == b"\x01\x09\x0d\x00"  # app + key + length
     assert data[32:45] == b"hello_hello__"  # data
     assert common.all_ff_bytes(data[45:])
 
     offset = 48
     n.set(0x0102, b"world!_world!")
     data = n._dump()[0][:256]
-    assert data[offset : offset + 4] == b"\x02\x01\x0D\x00"  # app + key + length
+    assert data[offset : offset + 4] == b"\x02\x01\x0d\x00"  # app + key + length
     assert data[offset + 16 : offset + 16 + 13] == b"world!_world!"  # data
     assert data[offset + 16 + 13 : offset + 32] == b"\xff\xff\xff"  # alignment
     assert common.all_ff_bytes(data[offset + 32 :])

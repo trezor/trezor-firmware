@@ -11,7 +11,7 @@ def test_init_pin(nc_class):
     sc, sp = common.init(nc_class, uid=b"\x00\x00\x00\x00\x00\x00")
     assert common.memory_equals(sc, sp)
 
-    sc, sp = common.init(nc_class, uid=b"\x22\x00\xDD\x00\x00\xBE")
+    sc, sp = common.init(nc_class, uid=b"\x22\x00\xdd\x00\x00\xbe")
     assert common.memory_equals(sc, sp)
 
 

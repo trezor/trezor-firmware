@@ -71,7 +71,7 @@ VALID_CHECKSUM = [
 INVALID_CHECKSUM = [
     # BIP-173
     " 1nwldj5",
-    "\x7F" + "1axkwrx",
+    "\x7f" + "1axkwrx",
     "\x80" + "1eym55h",
     "an84characterslonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio1569pvx",
     "pzry9x0s0muk",
@@ -84,7 +84,7 @@ INVALID_CHECKSUM = [
     "1qzzfhee",
     # BIP-350
     " 1xj0phk",
-    "\x7F" + "1g6xzxy",
+    "\x7f" + "1g6xzxy",
     "\x80" + "1vctc34",
     "an84characterslonghumanreadablepartthatcontainsthetheexcludedcharactersbioandnumber11d6pts4",
     "qyrz8wqd2c9m",
