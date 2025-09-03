@@ -128,7 +128,7 @@ pub enum DeviceMenuMsg {
     WipeDevice,
 
     // Misc
-    Refresh(DeviceMenuId),
+    MenuRefresh(DeviceMenuId),
     Close,
 }
 
@@ -856,7 +856,7 @@ impl Component for DeviceMenuScreen {
                 ActiveScreen::Empty => DeviceMenuId::Root,
             };
 
-            return Some(DeviceMenuMsg::Refresh(submenu_idx));
+            return Some(DeviceMenuMsg::MenuRefresh(submenu_idx));
         }
 
         // Handle the event for the active menu

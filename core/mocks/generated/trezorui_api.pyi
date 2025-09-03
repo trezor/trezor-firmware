@@ -870,4 +870,4 @@ class DeviceMenuResult:
     Reboot: ClassVar[DeviceMenuResult]
     RebootToBootloader: ClassVar[DeviceMenuResult]
     TurnOff: ClassVar[DeviceMenuResult]
-    Refresh: ClassVar[DeviceMenuResult]
+    MenuRefresh: ClassVar[DeviceMenuResult]

@@ -44,6 +44,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_MAX;
   MP_QSTR_MESSAGE_NAME;
   MP_QSTR_MESSAGE_WIRE_TYPE;
+  MP_QSTR_MenuRefresh;
   MP_QSTR_MessageType;
   MP_QSTR_Msg;
   MP_QSTR_MsgDef;
@@ -55,7 +56,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_RX_PACKET_LEN;
   MP_QSTR_Reboot;
   MP_QSTR_RebootToBootloader;
-  MP_QSTR_Refresh;
   MP_QSTR_SWIPE_DOWN;
   MP_QSTR_SWIPE_LEFT;
   MP_QSTR_SWIPE_RIGHT;

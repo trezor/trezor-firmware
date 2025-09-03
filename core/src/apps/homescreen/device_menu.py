@@ -178,7 +178,7 @@ async def handle_device_menu() -> None:
                 finally:
                     init_submenu = SubmenuId.PAIR_AND_CONNECT
             # Refresh only
-            elif result_type is DeviceMenuResult.Refresh:
+            elif result_type is DeviceMenuResult.MenuRefresh:
                 init_submenu = index
             else:
                 raise RuntimeError(f"Unknown menu {result_type}, {index}")
