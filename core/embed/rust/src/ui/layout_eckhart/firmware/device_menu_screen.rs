@@ -87,7 +87,7 @@ const DISCONNECT_DEVICE_MENU_INDEX: usize = 0;
 
 #[derive(Clone)]
 enum Action {
-    /// Go to a known submenu by id (static)
+    /// Go to a registered submenu by id (static)
     GoToSubmenu(DeviceMenuId),
     /// Go to an arbitrary subscreen index (kept for device/about/regulatory)
     GoTo(usize),
