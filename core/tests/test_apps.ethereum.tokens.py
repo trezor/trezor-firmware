@@ -16,7 +16,7 @@ class TestEthereumTokens(unittest.TestCase):
         self.assertEqual(token.symbol, "AAVE")
 
         # invalid adress, invalid chain
-        token = tokens.token_by_chain_address(999, b"\x00\xFF")
+        token = tokens.token_by_chain_address(999, b"\x00\xff")
         self.assertIs(token, None)
 
         self.assertEqual(tokens.UNKNOWN_TOKEN.symbol, "Wei UNKN")

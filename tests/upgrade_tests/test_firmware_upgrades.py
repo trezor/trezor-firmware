@@ -368,9 +368,10 @@ def test_upgrade_reset_no_backup(gen: str, tag: str):
 @for_all("core", core_minimum_version=(2, 1, 9))
 @lower_models_minimum_version
 def test_upgrade_shamir_recovery(gen: str, tag: Optional[str]):
-    with EmulatorWrapper(gen, tag) as emu, BackgroundDeviceHandler(
-        emu.client
-    ) as device_handler:
+    with (
+        EmulatorWrapper(gen, tag) as emu,
+        BackgroundDeviceHandler(emu.client) as device_handler,
+    ):
         assert emu.client.features.recovery_status == RecoveryStatus.Nothing
         emu.client.watch_layout(True)
         debug = device_handler.debuglink()

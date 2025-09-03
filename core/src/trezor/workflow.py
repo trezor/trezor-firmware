@@ -110,7 +110,6 @@ def start_default() -> None:
     If a default task is already running, nothing will happen.
     """
     global default_task
-    global default_constructor
     global autolock_interrupts_workflow
 
     assert default_constructor is not None

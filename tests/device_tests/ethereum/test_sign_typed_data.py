@@ -130,8 +130,9 @@ def test_ethereum_sign_typed_data_cancel(session: Session):
 
 @pytest.mark.models("core")
 def test_ethereum_sign_typed_data_bad_show_message_hash(session: Session):
-    with session.client, pytest.raises(
-        exceptions.TrezorFailure, match="Message hash mismatch"
+    with (
+        session.client,
+        pytest.raises(exceptions.TrezorFailure, match="Message hash mismatch"),
     ):
         ethereum.sign_typed_data(
             session,

@@ -42,7 +42,7 @@ def pad_to_size(data, size):
         raise ValueError("Chunk too big already")
     if len(data) == size:
         return data
-    return data + b"\xFF" * (size - len(data))
+    return data + b"\xff" * (size - len(data))
 
 
 # see memory.h for details

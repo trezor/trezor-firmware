@@ -191,8 +191,8 @@ async def show_payment_request_details(
             )
             trades.append(
                 (
-                    f"-\u00A0{total_amount}",
-                    f"+\u00A0{memo.coin_purchase_memo.amount}",
+                    f"-\u00a0{total_amount}",
+                    f"+\u00a0{memo.coin_purchase_memo.amount}",
                     memo.coin_purchase_memo.address,
                     coin_purchase_account,
                     coin_purchase_account_path,
