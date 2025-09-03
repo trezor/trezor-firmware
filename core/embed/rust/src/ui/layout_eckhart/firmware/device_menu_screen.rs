@@ -79,7 +79,6 @@ impl From<DeviceMenuId> for u8 {
 
 // FIXME: use mem::variant_count when it becomes stable
 const MAX_SUBMENUS: usize = 8;
-const MAX_DEPTH: usize = 3;
 // submenus, device screens, regulatory and about screens
 const MAX_SUBSCREENS: usize = MAX_SUBMENUS + MAX_PAIRED_DEVICES + 2;
 
@@ -249,8 +248,6 @@ pub struct DeviceMenuScreen {
 
     // index of the current subscreen in the list of subscreens
     active_subscreen: usize,
-    // stack of parents that led to the current subscreen
-    parent_subscreens: Vec<usize, MAX_DEPTH>,
 }
 
 impl DeviceMenuScreen {
@@ -278,7 +275,6 @@ impl DeviceMenuScreen {
             submenus: GcBox::new(Vec::new())?,
             subscreens: Vec::new(),
             submenu_index: [None; MAX_SUBMENUS],
-            parent_subscreens: Vec::new(),
         };
 
         if pin_code.is_some() || auto_lock_delay.is_some() || wipe_code.is_some() || check_backup {
@@ -761,7 +757,6 @@ impl DeviceMenuScreen {
                 match self.submenus[*submenu_index].items[idx].action {
                     Some(Action::GoToSubmenu(id)) => {
                         if let Some(menu) = self.try_resolve_submenu(id) {
-                            unwrap!(self.parent_subscreens.push(self.active_subscreen));
                             self.set_active_subscreen(menu);
                             self.place(self.bounds);
                             if let ActiveScreen::Menu(screen) = self.active_screen.deref_mut() {
@@ -771,7 +766,6 @@ impl DeviceMenuScreen {
                         return None;
                     }
                     Some(Action::GoTo(menu)) => {
-                        unwrap!(self.parent_subscreens.push(self.active_subscreen));
                         self.set_active_subscreen(menu);
                         self.place(self.bounds);
                         if let ActiveScreen::Menu(screen) = self.active_screen.deref_mut() {
@@ -792,16 +786,29 @@ impl DeviceMenuScreen {
     }
 
     fn go_back(&mut self, ctx: &mut EventCtx) -> Option<DeviceMenuMsg> {
-        if let Some(parent) = self.parent_subscreens.pop() {
-            self.set_active_subscreen(parent);
-            self.place(self.bounds);
-            if let ActiveScreen::Menu(screen) = self.active_screen.deref_mut() {
-                screen.initialize_screen(ctx);
+        let parent = match self.subscreens[self.active_subscreen] {
+            Subscreen::Submenu(..) => {
+                match unwrap!(self.try_resolve_menu_id(self.active_subscreen)) {
+                    DeviceMenuId::Root => return Some(DeviceMenuMsg::Close),
+                    DeviceMenuId::PairAndConnect => DeviceMenuId::Root,
+                    DeviceMenuId::Settings => DeviceMenuId::Root,
+                    DeviceMenuId::Security => DeviceMenuId::Settings,
+                    DeviceMenuId::PinCode => DeviceMenuId::Security,
+                    DeviceMenuId::WipeCode => DeviceMenuId::Security,
+                    DeviceMenuId::Device => DeviceMenuId::Settings,
+                    DeviceMenuId::Power => DeviceMenuId::Root,
+                }
             }
-            None
-        } else {
-            Some(DeviceMenuMsg::Close)
+            Subscreen::DeviceScreen(..) => DeviceMenuId::PairAndConnect,
+            Subscreen::AboutScreen | Subscreen::RegulatoryScreen => DeviceMenuId::Device,
+        };
+
+        self.set_active_subscreen(unwrap!(self.try_resolve_submenu(parent)));
+        self.place(self.bounds);
+        if let ActiveScreen::Menu(screen) = self.active_screen.deref_mut() {
+            screen.initialize_screen(ctx);
         }
+        None
     }
 }
 
