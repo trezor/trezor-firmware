@@ -40,7 +40,7 @@ async def handle_device_menu() -> None:
 
     init_submenu = None
 
-    # Remain in the device loop if the until the menu is explicitly closed
+    # Remain in the device loop until the menu is explicitly closed
     while True:
 
         is_initialized = storage_device.is_initialized()
