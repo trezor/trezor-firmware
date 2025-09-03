@@ -112,7 +112,6 @@ typedef struct {
   uint32_t pmic_sampling_period_ms;
   bool pmic_measurement_ready;
   bool woke_up_from_suspend;
-  bool suspended_charging;
 
   // Power source logical state
   bool usb_connected;
