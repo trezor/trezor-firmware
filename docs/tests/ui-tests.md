@@ -2,27 +2,26 @@
 
 ## 1. Running the full test suite
 
-_Note: You need Poetry, as mentioned in the core's [documentation](https://docs.trezor.io/trezor-firmware/core/) section._
+_Note: You need Uv, as mentioned in the core's [documentation](https://docs.trezor.io/trezor-firmware/core/) section._
 
 In the `trezor-firmware` checkout, in the root of the monorepo, install the environment:
 
 ```sh
-poetry install
+uv sync
 ```
 
 And run the tests:
 
 ```sh
-poetry run make -C core test_emu_ui
+uv run make -C core test_emu_ui
 ```
 
 ## 2. Running tests manually
 
-Install the poetry environment as outlined above. Then switch to a shell inside the
-environment:
+Install the `uv` environment as outlined above. Then activate the environment:
 
 ```sh
-poetry shell
+source .venv/bin/activate
 ```
 
 If you want to test against the emulator, run it with disabled animation in a separate terminal:
@@ -45,7 +44,7 @@ pytest tests/device_tests --ui=test --ui-check-missing
 
 Short version:
 ```sh
-poetry run make -C core test_emu_ui_record
+uv run make -C core test_emu_ui_record
 ```
 
 Long version:

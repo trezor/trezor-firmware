@@ -2,27 +2,26 @@
 
 ## 1. Running the full test suite
 
-_Note: You need Poetry, as mentioned in the core's [documentation](https://docs.trezor.io/trezor-firmware/core/) section._
+_Note: You need Uv, as mentioned in the core's [documentation](https://docs.trezor.io/trezor-firmware/core/) section._
 
 In the `trezor-firmware` checkout, in the root of the monorepo, install the environment:
 
 ```sh
-poetry install
+uv sync
 ```
 
 And run the automated tests:
 
 ```sh
-poetry run make -C core test_emu
+uv run make -C core test_emu
 ```
 
 ## 2. Running tests manually
 
-Install the poetry environment as outlined above. Then switch to a shell inside the
-environment:
+Install the `uv` environment as outlined above. Then activate the environment:
 
 ```sh
-poetry shell
+source .venv/bin/activate
 ```
 
 If you want to test against the emulator, run it in a separate terminal:
@@ -146,7 +145,7 @@ The final executable is significantly slower due to ASAN(Address Sanitizer) inte
 If you want to catch some memory errors use this.
 
 ```sh
-time ASAN_OPTIONS=verbosity=1:detect_invalid_pointer_pairs=1:strict_init_order=true:strict_string_checks=true TREZOR_PROFILE="" poetry run make test_emu
+time ASAN_OPTIONS=verbosity=1:detect_invalid_pointer_pairs=1:strict_init_order=true:strict_string_checks=true TREZOR_PROFILE="" uv run make test_emu
 ```
 
 ### Coverage (Emulator only)

@@ -28,8 +28,8 @@ jobs:
           submodules: recursive
       - uses: ./.github/actions/environment
       - run: cp -r crypto crypto_noasan
-      - run: nix-shell --run "poetry run make -C crypto"
-      - run: nix-shell --run "export ADDRESS_SANITIZER=0; poetry run make -C crypto_noasan"
+      - run: nix-shell --run "uv run make -C crypto"
+      - run: nix-shell --run "export ADDRESS_SANITIZER=0; uv run make -C crypto_noasan"
       - run: mv crypto_noasan/tests/test_check crypto/tests/test_check_noasan
       - uses: actions/upload-artifact@v4
         with:
@@ -62,7 +62,7 @@ jobs:
       - run: ./crypto/tests/aestst
       - run: ./crypto/tests/test_check
       - run: ./crypto/tests/test_openssl 1000
-      - run: nix-shell --run "cd crypto && ITERS=10 poetry run pytest tests"
+      - run: nix-shell --run "cd crypto && ITERS=10 uv run pytest tests"
       - run: nix-shell --run "CK_TIMEOUT_MULTIPLIER=20 valgrind -q --error-exitcode=1 ./crypto/tests/test_check_noasan"
 
   python_test:
@@ -77,7 +77,7 @@ jobs:
           submodules: recursive
       - uses: ./.github/actions/environment
       # LD_LIBRARY_PATH workaround: https://discourse.nixos.org/t/nixpkgs-nixos-unstable-many-package-fail-with-glibc-2-38-not-found/35078 https://github.com/NixOS/nixpkgs/issues/287764
-      - run: nix-shell --arg fullDeps true --run "unset LD_LIBRARY_PATH && cd python && poetry run tox"
+      - run: nix-shell --arg fullDeps true --run "unset LD_LIBRARY_PATH && cd python && uv run tox"
 
   python_support_test:
     name: Python support test
@@ -87,7 +87,7 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run make python_support_check"
+      - run: nix-shell --run "uv run make python_support_check"
 
   storage_test:
     name: Storage test
@@ -99,8 +99,8 @@ jobs:
           submodules: recursive
       - uses: ./.github/actions/environment
       - run: unset PYTEST_TIMEOUT
-      - run: nix-shell --run "poetry run make -C storage/tests build"
-      - run: nix-shell --run "poetry run make -C storage/tests tests_all"
+      - run: nix-shell --run "uv run make -C storage/tests build"
+      - run: nix-shell --run "uv run make -C storage/tests tests_all"
 
   docker_build:
     name: Firmware docker build

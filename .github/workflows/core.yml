@@ -76,22 +76,22 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run make -C core build_boardloader"
+      - run: nix-shell --run "uv run make -C core build_boardloader"
         if: matrix.coins == 'universal' && matrix.type != 'debuglink'
-      - run: nix-shell --run "poetry run make -C core build_bootloader"
+      - run: nix-shell --run "uv run make -C core build_bootloader"
         if: matrix.coins == 'universal' && matrix.type != 'debuglink'
-      - run: nix-shell --run "poetry run make -C core build_bootloader_ci"
+      - run: nix-shell --run "uv run make -C core build_bootloader_ci"
         if: matrix.coins == 'universal' && matrix.type != 'debuglink' && matrix.model == 'T2T1'
-      - run: nix-shell --run "poetry run make -C core build_prodtest"
+      - run: nix-shell --run "uv run make -C core build_prodtest"
         if: matrix.coins == 'universal' && matrix.type != 'debuglink'
-      - run: nix-shell --run "poetry run make -C core build_prodtest_emu"
+      - run: nix-shell --run "uv run make -C core build_prodtest_emu"
         if: matrix.coins == 'universal' && matrix.type != 'debuglink' && matrix.model == 'T3W1'
-      - run: nix-shell --run "poetry run make -C core build_firmware"
-      - run: nix-shell --run "poetry run ./tools/print-rust-stack-sizes.py | sort -k1 -n | tail -n 50"
-      - run: nix-shell --run "poetry run ./tools/print-rust-type-sizes.sh core/build/firmware/rust-type-sizes.log" | awk '$1 >= 1000' | sort -k1 -n
-      - run: nix-shell --run "poetry run make -C core sizecheck"
+      - run: nix-shell --run "uv run make -C core build_firmware"
+      - run: nix-shell --run "uv run ./tools/print-rust-stack-sizes.py | sort -k1 -n | tail -n 50"
+      - run: nix-shell --run "uv run ./tools/print-rust-type-sizes.sh core/build/firmware/rust-type-sizes.log" | awk '$1 >= 1000' | sort -k1 -n
+      - run: nix-shell --run "uv run make -C core sizecheck"
         if: matrix.coins == 'universal' && matrix.type != 'debuglink'
-      - run: nix-shell --run "poetry run ./tools/check-bitcoin-only core/build/firmware/firmware.bin"
+      - run: nix-shell --run "uv run ./tools/check-bitcoin-only core/build/firmware/firmware.bin"
         if: matrix.coins == 'btconly' && matrix.type != 'debuglink'
       - uses: actions/upload-artifact@v4
         with:
@@ -134,10 +134,10 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run make -C core build_bootloader_emu"
+      - run: nix-shell --run "uv run make -C core build_bootloader_emu"
         if: matrix.coins == 'universal' && matrix.asan == 'noasan'
-      - run: nix-shell --run "poetry run make -C core build_unix_frozen"
-      - run: nix-shell --run "poetry run make -C core test_emu_sanity"
+      - run: nix-shell --run "uv run make -C core build_unix_frozen"
+      - run: nix-shell --run "uv run make -C core test_emu_sanity"
       - run: cp core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-${{ matrix.model }}-${{ matrix.coins }}
       - uses: actions/upload-artifact@v4
         with:
@@ -174,9 +174,9 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run make -C core build_bootloader_emu"
+      - run: nix-shell --run "uv run make -C core build_bootloader_emu"
         if: matrix.coins == 'universal'
-      - run: nix-shell --run "poetry run make -C core build_unix_frozen"
+      - run: nix-shell --run "uv run make -C core build_unix_frozen"
       - run: mv core/build/unix/trezor-emu-core core/build/unix/trezor-emu-arm-core-${{ matrix.model }}-${{ matrix.coins }}
       - uses: actions/upload-artifact@v4
         with:
@@ -205,10 +205,10 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run make -C core build_unix"
+      - run: nix-shell --run "uv run make -C core build_unix"
       - run: nix-shell --arg fullDeps true --run "cd vendor/ts-tvl/model_configs/example_config && poetry env use 3.12 && poetry install && poetry run model_server tcp -c example_config.yml &"
-      - run: nix-shell --run "poetry run make -C core test"
-      - run: nix-shell --run "poetry run make -C core test_emu_sanity"  # sanity check non-frozen emulator
+      - run: nix-shell --run "uv run make -C core test"
+      - run: nix-shell --run "uv run make -C core test_emu_sanity"  # sanity check non-frozen emulator
 
   core_unit_rust_test:
     name: Rust unit tests (${{ matrix.model }}, ${{ matrix.asan }})
@@ -232,14 +232,14 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run make -C core build_unix"
+      - run: nix-shell --run "uv run make -C core build_unix"
       # Ensure that "cargo build" works when NOT executed through our makefiles,
       # indicating that it does not rely on particular envvars or other flags.
       # This makes sure that rust-analyzer will work on our codebase.
       - run: nix-shell --run "cd core/embed/rust && cargo build"
         if: matrix.asan == 'noasan'
-      - run: nix-shell --run "poetry run make -C core clippy"
-      - run: nix-shell --run "poetry run make -C core test_rust"
+      - run: nix-shell --run "uv run make -C core clippy"
+      - run: nix-shell --run "uv run make -C core test_rust"
 
   core_rust_client_test:
     name: Rust trezor-client tests
@@ -259,7 +259,7 @@ jobs:
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run core/emu.py --headless -q --temporary-profile --slip0014 --command cargo test --manifest-path rust/trezor-client/Cargo.toml"
+      - run: nix-shell --run "uv run core/emu.py --headless -q --temporary-profile --slip0014 --command cargo test --manifest-path rust/trezor-client/Cargo.toml"
 
   # Device tests for Core. Running device tests and also comparing screens
   # with the expected UI result.
@@ -297,7 +297,7 @@ jobs:
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run make -C core ${{ env.ACTIONS_DO_UI_TEST == 'true' && 'test_emu_ui_multicore' || 'test_emu' }}"
+      - run: nix-shell --run "uv run make -C core ${{ env.ACTIONS_DO_UI_TEST == 'true' && 'test_emu_ui_multicore' || 'test_emu' }}"
       - run: tail -v -n50 tests/trezor*.log || true
         if: failure()
       - uses: actions/upload-artifact@v4
@@ -345,9 +345,9 @@ jobs:
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run make -C core test_emu_click_ui_multicore"
+      - run: nix-shell --run "uv run make -C core test_emu_click_ui_multicore"
         if: ${{ matrix.asan == 'noasan' }}
-      - run: nix-shell --run "poetry run make -C core test_emu_click"
+      - run: nix-shell --run "uv run make -C core test_emu_click"
         if: ${{ matrix.asan == 'asan' }}
       - uses: actions/upload-artifact@v4
         with:
@@ -394,7 +394,7 @@ jobs:
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
       - run: nix-shell --run "tests/download_emulators.sh"
-      - run: nix-shell --run "poetry run pytest tests/upgrade_tests"
+      - run: nix-shell --run "uv run pytest tests/upgrade_tests"
       - uses: actions/upload-artifact@v4
         with:
           name: core-test-upgrade-${{ matrix.model }}-${{ matrix.asan }}
@@ -429,9 +429,9 @@ jobs:
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run make -C core test_emu_persistence_ui"
+      - run: nix-shell --run "uv run make -C core test_emu_persistence_ui"
         if: ${{ matrix.asan == 'noasan' }}
-      - run: nix-shell --run "poetry run make -C core test_emu_persistence"
+      - run: nix-shell --run "uv run make -C core test_emu_persistence"
         if: ${{ matrix.asan == 'asan' }}
       - uses: ./.github/actions/ui-report
         with:
@@ -491,10 +491,10 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run make -C core build_unix_frozen"
-      - run: nix-shell --run "poetry run make -C core test_emu"
+      - run: nix-shell --run "uv run make -C core build_unix_frozen"
+      - run: nix-shell --run "uv run make -C core test_emu"
       - run: nix-shell --run "mkdir core/prof/memperf-html"
-      - run: nix-shell --run "poetry run core/tools/alloc.py --alloc-data=core/src/alloc_data.txt html core/prof/memperf-html"
+      - run: nix-shell --run "uv run core/tools/alloc.py --alloc-data=core/src/alloc_data.txt html core/prof/memperf-html"
       - uses: actions/upload-artifact@v4
         with:
           name: core-memperf-${{ matrix.model }}
@@ -525,7 +525,7 @@ jobs:
           name: core-firmware-${{ matrix.model }}-universal-normal  # FIXME: s/normal/debuglink/
           path: core/build
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run core/tools/size/checker.py core/build/firmware/firmware.elf"
+      - run: nix-shell --run "uv run core/tools/size/checker.py core/build/firmware/firmware.elf"
 
   # Monero tests.
   core_monero_test:
@@ -554,7 +554,7 @@ jobs:
       - uses: ./.github/actions/environment
         with:
           full-deps: true
-      - run: nix-shell --arg fullDeps true --run "poetry run make -C core test_emu_monero"
+      - run: nix-shell --arg fullDeps true --run "uv run make -C core test_emu_monero"
       - uses: actions/upload-artifact@v4
         with:
           name: core-test-monero-${{ matrix.model }}-${{ matrix.asan }}
@@ -591,8 +591,8 @@ jobs:
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run make -C tests/fido_tests/u2f-tests-hid"
-      - run: nix-shell --run "poetry run make -C core test_emu_u2f"
+      - run: nix-shell --run "uv run make -C tests/fido_tests/u2f-tests-hid"
+      - run: nix-shell --run "uv run make -C core test_emu_u2f"
       - uses: actions/upload-artifact@v4
         with:
           name: core-test-u2f-${{ matrix.model }}-${{ matrix.asan }}
@@ -626,7 +626,7 @@ jobs:
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run make -C core test_emu_fido2"
+      - run: nix-shell --run "uv run make -C core test_emu_fido2"
       - uses: actions/upload-artifact@v4
         with:
           name: core-test-fido2-${{ matrix.model }}-${{ matrix.asan }}
@@ -662,7 +662,7 @@ jobs:
           path: core
           merge-multiple: true
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run make -C core coverage"
+      - run: nix-shell --run "uv run make -C core coverage"
       - uses: actions/upload-artifact@v4
         with:
           name: core-coverage-report-${{ matrix.model }}

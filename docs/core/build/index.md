@@ -9,7 +9,7 @@ Run the following to checkout the project:
 ```sh
 git clone --recurse-submodules https://github.com/trezor/trezor-firmware.git
 cd trezor-firmware
-poetry install
+uv sync
 cd core
 ```
 
@@ -21,19 +21,21 @@ run on your computer. See [Emulator](../emulator/index.md) for more information.
 ## Existing Project
 
 If you are building from an existing checkout, do not forget to refresh the submodules
- and the poetry environment:
+and sync the `uv` environment:
 
 ```sh
 git submodule update --init --recursive --force
-poetry install --sync
+uv sync
 ```
 
-## Poetry
+## Uv
 
-We use [Poetry](https://python-poetry.org/) to install and track Python dependencies. You need to install it, sync the packages and then use `poetry run` for every command or enter `poetry shell` before typing any commands. **The commands in this section suppose you are in a `poetry shell` environment!**
+We use [uv](https://docs.astral.sh/uv/) to install and track Python dependencies. You
+need to install it, sync the packages and then use `uv run` for every command or
+activate the `uv` environment before typing any commands. **The commands in this section
+suppose you are in a `uv` environment!**
 
 ```sh
-sudo pip3 install poetry
-poetry install
-poetry shell
+uv sync
+source .venv/bin/activate
 ```
