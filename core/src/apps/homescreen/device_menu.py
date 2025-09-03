@@ -318,32 +318,21 @@ async def handle_device_menu() -> None:
             finally:
                 init_submenu = SubmenuId.DEVICE
         elif menu_result is DeviceMenuResult.HapticFeedback and haptic_configurable:
-            from trezor.messages import ApplySettings
-
-            from apps.management.apply_settings import apply_settings
+            from trezor import io
 
             try:
-                await apply_settings(
-                    ApplySettings(
-                        haptic_feedback=not storage_device.get_haptic_feedback(),
-                    )
-                )
+                enable = not storage_device.get_haptic_feedback()
+                io.haptic.haptic_set_enabled(enable)
+                storage_device.set_haptic_feedback(enable)
             except ActionCancelled:
                 pass
             finally:
                 init_submenu = SubmenuId.DEVICE
         elif menu_result is DeviceMenuResult.LedEnabled and led_configurable:
             from trezor import io
-            from trezor.ui.layouts import confirm_action
 
             try:
                 enable = not storage_device.get_rgb_led()
-                await confirm_action(
-                    "led__settings",
-                    TR.led__title,
-                    TR.led__enable if enable else TR.led__disable,
-                )
-
                 io.rgb_led.rgb_led_set_enabled(enable)
                 storage_device.set_rgb_led(enable)
             except ActionCancelled:
