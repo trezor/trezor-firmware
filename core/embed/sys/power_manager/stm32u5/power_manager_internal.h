@@ -117,6 +117,7 @@ typedef struct {
   // Power source logical state
   bool usb_connected;
   bool wireless_connected;
+  bool fully_charged;
   bool battery_low;
   bool battery_critical;
 

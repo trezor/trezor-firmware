@@ -628,6 +628,26 @@ bool pm_schedule_rtc_wakeup(void) {
   return true;
 }
 
+bool pm_is_charging(void) {
+  pm_driver_t* drv = &g_pm;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  bool is_charging = false;
+
+  irq_key_t irq_key = irq_lock();
+  if (drv->charging_enabled &&
+      (!drv->fully_charged && !drv->soc_target_reached) &&
+      (drv->usb_connected || drv->wireless_connected)) {
+    is_charging = true;
+  }
+  irq_unlock(irq_key);
+
+  return is_charging;
+}
+
 bool pm_driver_resume(void) {
   pm_driver_t* drv = &g_pm;
 

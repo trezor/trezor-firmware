@@ -76,10 +76,7 @@ wakeup_flags_t system_suspend(void) {
   // device is woke up. This state is signaled with RGB LED charging effect
   bool charging_in_suspend;
   do {
-    pm_state_t pm_state;
-    pm_get_state(&pm_state);
-
-    if (pm_state.usb_connected || pm_state.wireless_connected) {
+    if (pm_is_charging()) {
       charging_in_suspend = true;
 
 #ifdef USE_RGB_LED
