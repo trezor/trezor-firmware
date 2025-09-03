@@ -14,4 +14,15 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-__version__ = "0.14.0"
+import importlib.metadata
+import warnings
+
+
+def __getattr__(name: str) -> str:
+    if name == "__version__":
+        warnings.warn(
+            "__version__ is deprecated and will be removed in 0.15.0, use importlib.metadata.version('trezor') instead",
+            DeprecationWarning,
+        )
+        return importlib.metadata.version("trezor")
+    raise AttributeError(f"module {__name__} has no attribute {name}")
