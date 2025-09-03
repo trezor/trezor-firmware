@@ -292,7 +292,7 @@ class NorcowBlockwise(Norcow):
                 data = align_data(
                     pack("<HH", key, len(new_value)), self.block_size, b"\x00"
                 )
-                data += align_data(new_value + bytes([0xFF]), self.block_size, b"\xFF")
+                data += align_data(new_value + bytes([0xFF]), self.block_size, b"\xff")
 
             if pos + len(data) > consts.NORCOW_SECTOR_SIZE:
                 raise RuntimeError("Norcow: item too big")

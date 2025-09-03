@@ -70,7 +70,6 @@ def initialize() -> None:
     # sized bytearrays, then call `clear()` on all existing objects, which
     # resets them to zero length. The `clear()` function uses `arr[:]`, which
     # allocates a slice.
-    global _SESSIONS
     for _ in range(_MAX_SESSIONS_COUNT):
         _SESSIONS.append(SessionCache())
 

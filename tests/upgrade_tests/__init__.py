@@ -60,7 +60,7 @@ def version_from_tag(tag: str | None) -> tuple | None:
 def for_all(
     *args: str,
     legacy_minimum_version: Tuple[int, int, int] = (1, 0, 0),
-    core_minimum_version: Tuple[int, int, int] = (2, 0, 0)
+    core_minimum_version: Tuple[int, int, int] = (2, 0, 0),
 ) -> "MarkDecorator":
     """Parametrizing decorator for test cases.
 

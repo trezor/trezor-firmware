@@ -116,7 +116,6 @@ def _start_progress() -> None:
 
 
 def _render_progress(progress: int, total: int) -> None:
-    global _progress_obj
     if _progress_obj is not None:
         _progress_obj.report(1000 * progress // total)
 
