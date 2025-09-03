@@ -1502,6 +1502,12 @@ static void cert_write(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
     goto cleanup;
   }
 
+  if (first_slot == TROPIC_DEVICE_CERT_FIRST_SLOT &&
+      !check_device_cert_chain(cli, certificate, certificate_length)) {
+    // Error returned by check_device_cert_chain().
+    goto cleanup;
+  }
+
   ret = data_write(tropic_handle, first_slot, slots_count, certificate,
                    certificate_length);
   if (ret != LT_OK) {
@@ -1518,11 +1524,6 @@ static void cert_write(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
     goto cleanup;
   }
 
-  if (first_slot == TROPIC_DEVICE_CERT_FIRST_SLOT &&
-      !check_device_cert_chain(cli, certificate, certificate_length)) {
-    // Error returned by check_device_cert_chain().
-    return;
-  }
   // TODO: call `check_device_cert_chain()` for FIDO certificate
 
   cli_ok(cli, "");
