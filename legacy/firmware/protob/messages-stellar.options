@@ -10,6 +10,7 @@ StellarSignTx.address_n                                 max_count:10
 StellarSignTx.network_passphrase                        max_size:1024
 StellarSignTx.memo_text                                 max_size:29
 StellarSignTx.memo_hash                                 max_size:32
+StellarSignTx.payment_req                               type:FT_IGNORE
 
 StellarPaymentOp.source_account                         max_size:57
 StellarPaymentOp.destination_account                    max_size:57
