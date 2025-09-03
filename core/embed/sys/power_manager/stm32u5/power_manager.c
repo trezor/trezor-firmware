@@ -595,30 +595,18 @@ bool pm_schedule_rtc_wakeup(void) {
     return false;
   }
 
-  if (drv->usb_connected || drv->wireless_connected) {
-    drv->suspended_charging = true;
-
-    // External power source is connected, wake up early to update the fuel
-    // gauge
-    rtc_wakeup_timer_start(PM_SUSPENDED_CHARGING_TIMEOUT_S,
-                           pm_rtc_wakeup_callback, NULL);
-
-  } else {
-    if ((drv->last_active_timestamp - drv->suspend_timestamp) >=
-        PM_AUTO_HIBERNATE_TIMEOUT_S) {
-      // Device is very long time in suspend mode without external power source,
-      // hibernate it to save power.
-      pm_hibernate();
-    }
-
-    uint32_t time_to_hibernate =
-        PM_AUTO_HIBERNATE_TIMEOUT_S -
-        (drv->last_active_timestamp - drv->suspend_timestamp);
-
-    drv->suspended_charging = false;
-
-    rtc_wakeup_timer_start(time_to_hibernate, pm_rtc_wakeup_callback, NULL);
+  if ((drv->last_active_timestamp - drv->suspend_timestamp) >=
+      PM_AUTO_HIBERNATE_TIMEOUT_S) {
+    // Device is very long time in suspend mode without external power source,
+    // hibernate it to save power.
+    pm_hibernate();
   }
+
+  uint32_t time_to_hibernate =
+      PM_AUTO_HIBERNATE_TIMEOUT_S -
+      (drv->last_active_timestamp - drv->suspend_timestamp);
+
+  rtc_wakeup_timer_start(time_to_hibernate, pm_rtc_wakeup_callback, NULL);
 
 #endif
 
