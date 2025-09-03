@@ -7283,6 +7283,7 @@ class StellarSignTx(protobuf.MessageType):
         12: protobuf.Field("memo_id", "uint64", repeated=False, required=False, default=None),
         13: protobuf.Field("memo_hash", "bytes", repeated=False, required=False, default=None),
         14: protobuf.Field("num_operations", "uint32", repeated=False, required=True),
+        15: protobuf.Field("payment_req", "PaymentRequest", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -7300,6 +7301,7 @@ class StellarSignTx(protobuf.MessageType):
         memo_text: Optional["str"] = None,
         memo_id: Optional["int"] = None,
         memo_hash: Optional["bytes"] = None,
+        payment_req: Optional["PaymentRequest"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.network_passphrase = network_passphrase
@@ -7313,6 +7315,7 @@ class StellarSignTx(protobuf.MessageType):
         self.memo_text = memo_text
         self.memo_id = memo_id
         self.memo_hash = memo_hash
+        self.payment_req = payment_req
 
 
 class StellarTxOpRequest(protobuf.MessageType):

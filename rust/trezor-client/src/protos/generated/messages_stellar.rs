@@ -721,6 +721,8 @@ pub struct StellarSignTx {
     pub memo_hash: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSignTx.num_operations)
     pub num_operations: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.stellar.StellarSignTx.payment_req)
+    pub payment_req: ::protobuf::MessageField<super::messages_common::PaymentRequest>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.stellar.StellarSignTx.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1018,7 +1020,7 @@ impl StellarSignTx {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(12);
+        let mut fields = ::std::vec::Vec::with_capacity(13);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "address_n",
@@ -1080,6 +1082,11 @@ impl StellarSignTx {
             |m: &StellarSignTx| { &m.num_operations },
             |m: &mut StellarSignTx| { &mut m.num_operations },
         ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, super::messages_common::PaymentRequest>(
+            "payment_req",
+            |m: &StellarSignTx| { &m.payment_req },
+            |m: &mut StellarSignTx| { &mut m.payment_req },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<StellarSignTx>(
             "StellarSignTx",
             fields,
@@ -1116,6 +1123,11 @@ impl ::protobuf::Message for StellarSignTx {
         if self.num_operations.is_none() {
             return false;
         }
+        for v in &self.payment_req {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
         true
     }
 
@@ -1160,6 +1172,9 @@ impl ::protobuf::Message for StellarSignTx {
                 },
                 112 => {
                     self.num_operations = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                122 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.payment_req)?;
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -1209,6 +1224,10 @@ impl ::protobuf::Message for StellarSignTx {
         if let Some(v) = self.num_operations {
             my_size += ::protobuf::rt::uint32_size(14, v);
         }
+        if let Some(v) = self.payment_req.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -1251,6 +1270,9 @@ impl ::protobuf::Message for StellarSignTx {
         if let Some(v) = self.num_operations {
             os.write_uint32(14, v)?;
         }
+        if let Some(v) = self.payment_req.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(15, v, os)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -1280,6 +1302,7 @@ impl ::protobuf::Message for StellarSignTx {
         self.memo_id = ::std::option::Option::None;
         self.memo_hash = ::std::option::Option::None;
         self.num_operations = ::std::option::Option::None;
+        self.payment_req.clear();
         self.special_fields.clear();
     }
 
@@ -1297,6 +1320,7 @@ impl ::protobuf::Message for StellarSignTx {
             memo_id: ::std::option::Option::None,
             memo_hash: ::std::option::Option::None,
             num_operations: ::std::option::Option::None,
+            payment_req: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -6311,108 +6335,110 @@ impl StellarAssetType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x16messages-stellar.proto\x12\x1ahw.trezor.messages.stellar\"|\n\x0cS\
-    tellarAsset\x12@\n\x04type\x18\x01\x20\x02(\x0e2,.hw.trezor.messages.ste\
-    llar.StellarAssetTypeR\x04type\x12\x12\n\x04code\x18\x02\x20\x01(\tR\x04\
-    code\x12\x16\n\x06issuer\x18\x03\x20\x01(\tR\x06issuer\"o\n\x11StellarGe\
-    tAddress\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12!\n\x0c\
-    show_display\x18\x02\x20\x01(\x08R\x0bshowDisplay\x12\x1a\n\x08chunkify\
-    \x18\x03\x20\x01(\x08R\x08chunkify\"<\n\x0eStellarAddress\x12\x18\n\x07a\
-    ddress\x18\x01\x20\x02(\tR\x07address\x12\x10\n\x03mac\x18\x02\x20\x01(\
-    \x0cR\x03mac\"\xa6\x04\n\rStellarSignTx\x12\x1b\n\taddress_n\x18\x02\x20\
-    \x03(\rR\x08addressN\x12-\n\x12network_passphrase\x18\x03\x20\x02(\tR\
-    \x11networkPassphrase\x12%\n\x0esource_account\x18\x04\x20\x02(\tR\rsour\
-    ceAccount\x12\x10\n\x03fee\x18\x05\x20\x02(\rR\x03fee\x12'\n\x0fsequence\
-    _number\x18\x06\x20\x02(\x04R\x0esequenceNumber\x12)\n\x10timebounds_sta\
-    rt\x18\x08\x20\x02(\rR\x0ftimeboundsStart\x12%\n\x0etimebounds_end\x18\t\
-    \x20\x02(\rR\rtimeboundsEnd\x12V\n\tmemo_type\x18\n\x20\x02(\x0e29.hw.tr\
-    ezor.messages.stellar.StellarSignTx.StellarMemoTypeR\x08memoType\x12\x1b\
-    \n\tmemo_text\x18\x0b\x20\x01(\tR\x08memoText\x12\x17\n\x07memo_id\x18\
-    \x0c\x20\x01(\x04R\x06memoId\x12\x1b\n\tmemo_hash\x18\r\x20\x01(\x0cR\
-    \x08memoHash\x12%\n\x0enum_operations\x18\x0e\x20\x02(\rR\rnumOperations\
-    \"C\n\x0fStellarMemoType\x12\x08\n\x04NONE\x10\0\x12\x08\n\x04TEXT\x10\
-    \x01\x12\x06\n\x02ID\x10\x02\x12\x08\n\x04HASH\x10\x03\x12\n\n\x06RETURN\
-    \x10\x04\"\x14\n\x12StellarTxOpRequest\"\xc2\x01\n\x10StellarPaymentOp\
-    \x12%\n\x0esource_account\x18\x01\x20\x01(\tR\rsourceAccount\x12/\n\x13d\
-    estination_account\x18\x02\x20\x02(\tR\x12destinationAccount\x12>\n\x05a\
-    sset\x18\x03\x20\x02(\x0b2(.hw.trezor.messages.stellar.StellarAssetR\x05\
-    asset\x12\x16\n\x06amount\x18\x04\x20\x02(\x12R\x06amount\"\x8b\x01\n\
-    \x16StellarCreateAccountOp\x12%\n\x0esource_account\x18\x01\x20\x01(\tR\
-    \rsourceAccount\x12\x1f\n\x0bnew_account\x18\x02\x20\x02(\tR\nnewAccount\
-    \x12)\n\x10starting_balance\x18\x03\x20\x02(\x12R\x0fstartingBalance\"\
-    \xa5\x03\n!StellarPathPaymentStrictReceiveOp\x12%\n\x0esource_account\
-    \x18\x01\x20\x01(\tR\rsourceAccount\x12G\n\nsend_asset\x18\x02\x20\x02(\
-    \x0b2(.hw.trezor.messages.stellar.StellarAssetR\tsendAsset\x12\x19\n\x08\
-    send_max\x18\x03\x20\x02(\x12R\x07sendMax\x12/\n\x13destination_account\
-    \x18\x04\x20\x02(\tR\x12destinationAccount\x12U\n\x11destination_asset\
-    \x18\x05\x20\x02(\x0b2(.hw.trezor.messages.stellar.StellarAssetR\x10dest\
-    inationAsset\x12-\n\x12destination_amount\x18\x06\x20\x02(\x12R\x11desti\
-    nationAmount\x12>\n\x05paths\x18\x07\x20\x03(\x0b2(.hw.trezor.messages.s\
-    tellar.StellarAssetR\x05paths\"\xa2\x03\n\x1eStellarPathPaymentStrictSen\
-    dOp\x12%\n\x0esource_account\x18\x01\x20\x01(\tR\rsourceAccount\x12G\n\n\
-    send_asset\x18\x02\x20\x02(\x0b2(.hw.trezor.messages.stellar.StellarAsse\
-    tR\tsendAsset\x12\x1f\n\x0bsend_amount\x18\x03\x20\x02(\x12R\nsendAmount\
-    \x12/\n\x13destination_account\x18\x04\x20\x02(\tR\x12destinationAccount\
-    \x12U\n\x11destination_asset\x18\x05\x20\x02(\x0b2(.hw.trezor.messages.s\
-    tellar.StellarAssetR\x10destinationAsset\x12'\n\x0fdestination_min\x18\
-    \x06\x20\x02(\x12R\x0edestinationMin\x12>\n\x05paths\x18\x07\x20\x03(\
-    \x0b2(.hw.trezor.messages.stellar.StellarAssetR\x05paths\"\xc2\x02\n\x18\
-    StellarManageSellOfferOp\x12%\n\x0esource_account\x18\x01\x20\x01(\tR\rs\
-    ourceAccount\x12M\n\rselling_asset\x18\x02\x20\x02(\x0b2(.hw.trezor.mess\
-    ages.stellar.StellarAssetR\x0csellingAsset\x12K\n\x0cbuying_asset\x18\
-    \x03\x20\x02(\x0b2(.hw.trezor.messages.stellar.StellarAssetR\x0bbuyingAs\
-    set\x12\x16\n\x06amount\x18\x04\x20\x02(\x12R\x06amount\x12\x17\n\x07pri\
-    ce_n\x18\x05\x20\x02(\rR\x06priceN\x12\x17\n\x07price_d\x18\x06\x20\x02(\
-    \rR\x06priceD\x12\x19\n\x08offer_id\x18\x07\x20\x02(\x04R\x07offerId\"\
-    \xc1\x02\n\x17StellarManageBuyOfferOp\x12%\n\x0esource_account\x18\x01\
-    \x20\x01(\tR\rsourceAccount\x12M\n\rselling_asset\x18\x02\x20\x02(\x0b2(\
-    .hw.trezor.messages.stellar.StellarAssetR\x0csellingAsset\x12K\n\x0cbuyi\
-    ng_asset\x18\x03\x20\x02(\x0b2(.hw.trezor.messages.stellar.StellarAssetR\
-    \x0bbuyingAsset\x12\x16\n\x06amount\x18\x04\x20\x02(\x12R\x06amount\x12\
-    \x17\n\x07price_n\x18\x05\x20\x02(\rR\x06priceN\x12\x17\n\x07price_d\x18\
-    \x06\x20\x02(\rR\x06priceD\x12\x19\n\x08offer_id\x18\x07\x20\x02(\x04R\
-    \x07offerId\"\xae\x02\n\x1fStellarCreatePassiveSellOfferOp\x12%\n\x0esou\
-    rce_account\x18\x01\x20\x01(\tR\rsourceAccount\x12M\n\rselling_asset\x18\
-    \x02\x20\x02(\x0b2(.hw.trezor.messages.stellar.StellarAssetR\x0csellingA\
-    sset\x12K\n\x0cbuying_asset\x18\x03\x20\x02(\x0b2(.hw.trezor.messages.st\
-    ellar.StellarAssetR\x0bbuyingAsset\x12\x16\n\x06amount\x18\x04\x20\x02(\
-    \x12R\x06amount\x12\x17\n\x07price_n\x18\x05\x20\x02(\rR\x06priceN\x12\
-    \x17\n\x07price_d\x18\x06\x20\x02(\rR\x06priceD\"\xdd\x04\n\x13StellarSe\
-    tOptionsOp\x12%\n\x0esource_account\x18\x01\x20\x01(\tR\rsourceAccount\
-    \x12B\n\x1dinflation_destination_account\x18\x02\x20\x01(\tR\x1binflatio\
-    nDestinationAccount\x12\x1f\n\x0bclear_flags\x18\x03\x20\x01(\rR\nclearF\
-    lags\x12\x1b\n\tset_flags\x18\x04\x20\x01(\rR\x08setFlags\x12#\n\rmaster\
-    _weight\x18\x05\x20\x01(\rR\x0cmasterWeight\x12#\n\rlow_threshold\x18\
-    \x06\x20\x01(\rR\x0clowThreshold\x12)\n\x10medium_threshold\x18\x07\x20\
-    \x01(\rR\x0fmediumThreshold\x12%\n\x0ehigh_threshold\x18\x08\x20\x01(\rR\
-    \rhighThreshold\x12\x1f\n\x0bhome_domain\x18\t\x20\x01(\tR\nhomeDomain\
-    \x12b\n\x0bsigner_type\x18\n\x20\x01(\x0e2A.hw.trezor.messages.stellar.S\
-    tellarSetOptionsOp.StellarSignerTypeR\nsignerType\x12\x1d\n\nsigner_key\
-    \x18\x0b\x20\x01(\x0cR\tsignerKey\x12#\n\rsigner_weight\x18\x0c\x20\x01(\
-    \rR\x0csignerWeight\"8\n\x11StellarSignerType\x12\x0b\n\x07ACCOUNT\x10\0\
-    \x12\x0c\n\x08PRE_AUTH\x10\x01\x12\x08\n\x04HASH\x10\x02\"\x93\x01\n\x14\
-    StellarChangeTrustOp\x12%\n\x0esource_account\x18\x01\x20\x01(\tR\rsourc\
-    eAccount\x12>\n\x05asset\x18\x02\x20\x02(\x0b2(.hw.trezor.messages.stell\
-    ar.StellarAssetR\x05asset\x12\x14\n\x05limit\x18\x03\x20\x02(\x04R\x05li\
-    mit\"\xf6\x01\n\x13StellarAllowTrustOp\x12%\n\x0esource_account\x18\x01\
-    \x20\x01(\tR\rsourceAccount\x12'\n\x0ftrusted_account\x18\x02\x20\x02(\t\
-    R\x0etrustedAccount\x12K\n\nasset_type\x18\x03\x20\x02(\x0e2,.hw.trezor.\
-    messages.stellar.StellarAssetTypeR\tassetType\x12\x1d\n\nasset_code\x18\
-    \x04\x20\x01(\tR\tassetCode\x12#\n\ris_authorized\x18\x05\x20\x02(\x08R\
-    \x0cisAuthorized\"o\n\x15StellarAccountMergeOp\x12%\n\x0esource_account\
-    \x18\x01\x20\x01(\tR\rsourceAccount\x12/\n\x13destination_account\x18\
-    \x02\x20\x02(\tR\x12destinationAccount\"d\n\x13StellarManageDataOp\x12%\
-    \n\x0esource_account\x18\x01\x20\x01(\tR\rsourceAccount\x12\x10\n\x03key\
-    \x18\x02\x20\x02(\tR\x03key\x12\x14\n\x05value\x18\x03\x20\x01(\x0cR\x05\
-    value\"W\n\x15StellarBumpSequenceOp\x12%\n\x0esource_account\x18\x01\x20\
-    \x01(\tR\rsourceAccount\x12\x17\n\x07bump_to\x18\x02\x20\x02(\x04R\x06bu\
-    mpTo\"f\n\x1eStellarClaimClaimableBalanceOp\x12%\n\x0esource_account\x18\
-    \x01\x20\x01(\tR\rsourceAccount\x12\x1d\n\nbalance_id\x18\x02\x20\x02(\
-    \x0cR\tbalanceId\"N\n\x0fStellarSignedTx\x12\x1d\n\npublic_key\x18\x01\
-    \x20\x02(\x0cR\tpublicKey\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsi\
-    gnature*=\n\x10StellarAssetType\x12\n\n\x06NATIVE\x10\0\x12\r\n\tALPHANU\
-    M4\x10\x01\x12\x0e\n\nALPHANUM12\x10\x02B;\n#com.satoshilabs.trezor.lib.\
-    protobufB\x14TrezorMessageStellar\
+    \n\x16messages-stellar.proto\x12\x1ahw.trezor.messages.stellar\x1a\x15me\
+    ssages-common.proto\x1a\roptions.proto\"|\n\x0cStellarAsset\x12@\n\x04ty\
+    pe\x18\x01\x20\x02(\x0e2,.hw.trezor.messages.stellar.StellarAssetTypeR\
+    \x04type\x12\x12\n\x04code\x18\x02\x20\x01(\tR\x04code\x12\x16\n\x06issu\
+    er\x18\x03\x20\x01(\tR\x06issuer\"o\n\x11StellarGetAddress\x12\x1b\n\tad\
+    dress_n\x18\x01\x20\x03(\rR\x08addressN\x12!\n\x0cshow_display\x18\x02\
+    \x20\x01(\x08R\x0bshowDisplay\x12\x1a\n\x08chunkify\x18\x03\x20\x01(\x08\
+    R\x08chunkify\"<\n\x0eStellarAddress\x12\x18\n\x07address\x18\x01\x20\
+    \x02(\tR\x07address\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"\xf8\
+    \x04\n\rStellarSignTx\x12\x1b\n\taddress_n\x18\x02\x20\x03(\rR\x08addres\
+    sN\x12-\n\x12network_passphrase\x18\x03\x20\x02(\tR\x11networkPassphrase\
+    \x12%\n\x0esource_account\x18\x04\x20\x02(\tR\rsourceAccount\x12\x10\n\
+    \x03fee\x18\x05\x20\x02(\rR\x03fee\x12'\n\x0fsequence_number\x18\x06\x20\
+    \x02(\x04R\x0esequenceNumber\x12)\n\x10timebounds_start\x18\x08\x20\x02(\
+    \rR\x0ftimeboundsStart\x12%\n\x0etimebounds_end\x18\t\x20\x02(\rR\rtimeb\
+    oundsEnd\x12V\n\tmemo_type\x18\n\x20\x02(\x0e29.hw.trezor.messages.stell\
+    ar.StellarSignTx.StellarMemoTypeR\x08memoType\x12\x1b\n\tmemo_text\x18\
+    \x0b\x20\x01(\tR\x08memoText\x12\x17\n\x07memo_id\x18\x0c\x20\x01(\x04R\
+    \x06memoId\x12\x1b\n\tmemo_hash\x18\r\x20\x01(\x0cR\x08memoHash\x12%\n\
+    \x0enum_operations\x18\x0e\x20\x02(\rR\rnumOperations\x12P\n\x0bpayment_\
+    req\x18\x0f\x20\x01(\x0b2).hw.trezor.messages.common.PaymentRequestR\npa\
+    ymentReqB\x04\xc8\xf0\x19\x01\"C\n\x0fStellarMemoType\x12\x08\n\x04NONE\
+    \x10\0\x12\x08\n\x04TEXT\x10\x01\x12\x06\n\x02ID\x10\x02\x12\x08\n\x04HA\
+    SH\x10\x03\x12\n\n\x06RETURN\x10\x04\"\x14\n\x12StellarTxOpRequest\"\xc2\
+    \x01\n\x10StellarPaymentOp\x12%\n\x0esource_account\x18\x01\x20\x01(\tR\
+    \rsourceAccount\x12/\n\x13destination_account\x18\x02\x20\x02(\tR\x12des\
+    tinationAccount\x12>\n\x05asset\x18\x03\x20\x02(\x0b2(.hw.trezor.message\
+    s.stellar.StellarAssetR\x05asset\x12\x16\n\x06amount\x18\x04\x20\x02(\
+    \x12R\x06amount\"\x8b\x01\n\x16StellarCreateAccountOp\x12%\n\x0esource_a\
+    ccount\x18\x01\x20\x01(\tR\rsourceAccount\x12\x1f\n\x0bnew_account\x18\
+    \x02\x20\x02(\tR\nnewAccount\x12)\n\x10starting_balance\x18\x03\x20\x02(\
+    \x12R\x0fstartingBalance\"\xa5\x03\n!StellarPathPaymentStrictReceiveOp\
+    \x12%\n\x0esource_account\x18\x01\x20\x01(\tR\rsourceAccount\x12G\n\nsen\
+    d_asset\x18\x02\x20\x02(\x0b2(.hw.trezor.messages.stellar.StellarAssetR\
+    \tsendAsset\x12\x19\n\x08send_max\x18\x03\x20\x02(\x12R\x07sendMax\x12/\
+    \n\x13destination_account\x18\x04\x20\x02(\tR\x12destinationAccount\x12U\
+    \n\x11destination_asset\x18\x05\x20\x02(\x0b2(.hw.trezor.messages.stella\
+    r.StellarAssetR\x10destinationAsset\x12-\n\x12destination_amount\x18\x06\
+    \x20\x02(\x12R\x11destinationAmount\x12>\n\x05paths\x18\x07\x20\x03(\x0b\
+    2(.hw.trezor.messages.stellar.StellarAssetR\x05paths\"\xa2\x03\n\x1eStel\
+    larPathPaymentStrictSendOp\x12%\n\x0esource_account\x18\x01\x20\x01(\tR\
+    \rsourceAccount\x12G\n\nsend_asset\x18\x02\x20\x02(\x0b2(.hw.trezor.mess\
+    ages.stellar.StellarAssetR\tsendAsset\x12\x1f\n\x0bsend_amount\x18\x03\
+    \x20\x02(\x12R\nsendAmount\x12/\n\x13destination_account\x18\x04\x20\x02\
+    (\tR\x12destinationAccount\x12U\n\x11destination_asset\x18\x05\x20\x02(\
+    \x0b2(.hw.trezor.messages.stellar.StellarAssetR\x10destinationAsset\x12'\
+    \n\x0fdestination_min\x18\x06\x20\x02(\x12R\x0edestinationMin\x12>\n\x05\
+    paths\x18\x07\x20\x03(\x0b2(.hw.trezor.messages.stellar.StellarAssetR\
+    \x05paths\"\xc2\x02\n\x18StellarManageSellOfferOp\x12%\n\x0esource_accou\
+    nt\x18\x01\x20\x01(\tR\rsourceAccount\x12M\n\rselling_asset\x18\x02\x20\
+    \x02(\x0b2(.hw.trezor.messages.stellar.StellarAssetR\x0csellingAsset\x12\
+    K\n\x0cbuying_asset\x18\x03\x20\x02(\x0b2(.hw.trezor.messages.stellar.St\
+    ellarAssetR\x0bbuyingAsset\x12\x16\n\x06amount\x18\x04\x20\x02(\x12R\x06\
+    amount\x12\x17\n\x07price_n\x18\x05\x20\x02(\rR\x06priceN\x12\x17\n\x07p\
+    rice_d\x18\x06\x20\x02(\rR\x06priceD\x12\x19\n\x08offer_id\x18\x07\x20\
+    \x02(\x04R\x07offerId\"\xc1\x02\n\x17StellarManageBuyOfferOp\x12%\n\x0es\
+    ource_account\x18\x01\x20\x01(\tR\rsourceAccount\x12M\n\rselling_asset\
+    \x18\x02\x20\x02(\x0b2(.hw.trezor.messages.stellar.StellarAssetR\x0csell\
+    ingAsset\x12K\n\x0cbuying_asset\x18\x03\x20\x02(\x0b2(.hw.trezor.message\
+    s.stellar.StellarAssetR\x0bbuyingAsset\x12\x16\n\x06amount\x18\x04\x20\
+    \x02(\x12R\x06amount\x12\x17\n\x07price_n\x18\x05\x20\x02(\rR\x06priceN\
+    \x12\x17\n\x07price_d\x18\x06\x20\x02(\rR\x06priceD\x12\x19\n\x08offer_i\
+    d\x18\x07\x20\x02(\x04R\x07offerId\"\xae\x02\n\x1fStellarCreatePassiveSe\
+    llOfferOp\x12%\n\x0esource_account\x18\x01\x20\x01(\tR\rsourceAccount\
+    \x12M\n\rselling_asset\x18\x02\x20\x02(\x0b2(.hw.trezor.messages.stellar\
+    .StellarAssetR\x0csellingAsset\x12K\n\x0cbuying_asset\x18\x03\x20\x02(\
+    \x0b2(.hw.trezor.messages.stellar.StellarAssetR\x0bbuyingAsset\x12\x16\n\
+    \x06amount\x18\x04\x20\x02(\x12R\x06amount\x12\x17\n\x07price_n\x18\x05\
+    \x20\x02(\rR\x06priceN\x12\x17\n\x07price_d\x18\x06\x20\x02(\rR\x06price\
+    D\"\xdd\x04\n\x13StellarSetOptionsOp\x12%\n\x0esource_account\x18\x01\
+    \x20\x01(\tR\rsourceAccount\x12B\n\x1dinflation_destination_account\x18\
+    \x02\x20\x01(\tR\x1binflationDestinationAccount\x12\x1f\n\x0bclear_flags\
+    \x18\x03\x20\x01(\rR\nclearFlags\x12\x1b\n\tset_flags\x18\x04\x20\x01(\r\
+    R\x08setFlags\x12#\n\rmaster_weight\x18\x05\x20\x01(\rR\x0cmasterWeight\
+    \x12#\n\rlow_threshold\x18\x06\x20\x01(\rR\x0clowThreshold\x12)\n\x10med\
+    ium_threshold\x18\x07\x20\x01(\rR\x0fmediumThreshold\x12%\n\x0ehigh_thre\
+    shold\x18\x08\x20\x01(\rR\rhighThreshold\x12\x1f\n\x0bhome_domain\x18\t\
+    \x20\x01(\tR\nhomeDomain\x12b\n\x0bsigner_type\x18\n\x20\x01(\x0e2A.hw.t\
+    rezor.messages.stellar.StellarSetOptionsOp.StellarSignerTypeR\nsignerTyp\
+    e\x12\x1d\n\nsigner_key\x18\x0b\x20\x01(\x0cR\tsignerKey\x12#\n\rsigner_\
+    weight\x18\x0c\x20\x01(\rR\x0csignerWeight\"8\n\x11StellarSignerType\x12\
+    \x0b\n\x07ACCOUNT\x10\0\x12\x0c\n\x08PRE_AUTH\x10\x01\x12\x08\n\x04HASH\
+    \x10\x02\"\x93\x01\n\x14StellarChangeTrustOp\x12%\n\x0esource_account\
+    \x18\x01\x20\x01(\tR\rsourceAccount\x12>\n\x05asset\x18\x02\x20\x02(\x0b\
+    2(.hw.trezor.messages.stellar.StellarAssetR\x05asset\x12\x14\n\x05limit\
+    \x18\x03\x20\x02(\x04R\x05limit\"\xf6\x01\n\x13StellarAllowTrustOp\x12%\
+    \n\x0esource_account\x18\x01\x20\x01(\tR\rsourceAccount\x12'\n\x0ftruste\
+    d_account\x18\x02\x20\x02(\tR\x0etrustedAccount\x12K\n\nasset_type\x18\
+    \x03\x20\x02(\x0e2,.hw.trezor.messages.stellar.StellarAssetTypeR\tassetT\
+    ype\x12\x1d\n\nasset_code\x18\x04\x20\x01(\tR\tassetCode\x12#\n\ris_auth\
+    orized\x18\x05\x20\x02(\x08R\x0cisAuthorized\"o\n\x15StellarAccountMerge\
+    Op\x12%\n\x0esource_account\x18\x01\x20\x01(\tR\rsourceAccount\x12/\n\
+    \x13destination_account\x18\x02\x20\x02(\tR\x12destinationAccount\"d\n\
+    \x13StellarManageDataOp\x12%\n\x0esource_account\x18\x01\x20\x01(\tR\rso\
+    urceAccount\x12\x10\n\x03key\x18\x02\x20\x02(\tR\x03key\x12\x14\n\x05val\
+    ue\x18\x03\x20\x01(\x0cR\x05value\"W\n\x15StellarBumpSequenceOp\x12%\n\
+    \x0esource_account\x18\x01\x20\x01(\tR\rsourceAccount\x12\x17\n\x07bump_\
+    to\x18\x02\x20\x02(\x04R\x06bumpTo\"f\n\x1eStellarClaimClaimableBalanceO\
+    p\x12%\n\x0esource_account\x18\x01\x20\x01(\tR\rsourceAccount\x12\x1d\n\
+    \nbalance_id\x18\x02\x20\x02(\x0cR\tbalanceId\"N\n\x0fStellarSignedTx\
+    \x12\x1d\n\npublic_key\x18\x01\x20\x02(\x0cR\tpublicKey\x12\x1c\n\tsigna\
+    ture\x18\x02\x20\x02(\x0cR\tsignature*=\n\x10StellarAssetType\x12\n\n\
+    \x06NATIVE\x10\0\x12\r\n\tALPHANUM4\x10\x01\x12\x0e\n\nALPHANUM12\x10\
+    \x02B;\n#com.satoshilabs.trezor.lib.protobufB\x14TrezorMessageStellar\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -6429,7 +6455,9 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     static file_descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::FileDescriptor> = ::protobuf::rt::Lazy::new();
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
-            let mut deps = ::std::vec::Vec::with_capacity(0);
+            let mut deps = ::std::vec::Vec::with_capacity(2);
+            deps.push(super::messages_common::file_descriptor().clone());
+            deps.push(super::options::file_descriptor().clone());
             let mut messages = ::std::vec::Vec::with_capacity(20);
             messages.push(StellarAsset::generated_message_descriptor_data());
             messages.push(StellarGetAddress::generated_message_descriptor_data());
