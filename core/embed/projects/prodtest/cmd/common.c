@@ -605,9 +605,17 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
 
   if (!get_root_public_key(alg_id, authority_key_digest, &pub_key,
                            &pub_key_size)) {
-    cli_error(cli, CLI_ERROR,
-              "check_device_cert_chain, failed to get root public key.");
+    const char msg[] =
+        "check_device_cert_chain, failed to get root public key.";
+#if PRODUCTION
+    cli_error(cli, CLI_ERROR, msg);
     return false;
+#else
+    // In non-production mode we succeed and write the certificate even if the
+    // root key is unknown, but we at least emit a warning.
+    cli_trace(cli, msg);
+    return true;
+#endif
   }
 
   // Verify the last signature.

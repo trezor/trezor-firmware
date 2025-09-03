@@ -412,6 +412,11 @@ static void cert_write(cli_t* cli, uint16_t oid) {
     return;
   }
 
+  if (oid == OID_CERT_DEV && !check_device_cert_chain(cli, data_bytes, len)) {
+    // Error returned by check_device_cert_chain().
+    return;
+  }
+
   optiga_result ret = optiga_set_data_object(oid, false, data_bytes, len);
   if (OPTIGA_SUCCESS != ret) {
     cli_error(cli, CLI_ERROR, "optiga_set_data error %d for 0x%04x.", ret, oid);
@@ -426,11 +431,6 @@ static void cert_write(cli_t* cli, uint16_t oid) {
       memcmp(data_bytes, cert, len) != 0) {
     cli_error(cli, CLI_ERROR, "optiga_get_data_object error %d for 0x%04x.",
               ret, oid);
-    return;
-  }
-
-  if (oid == OID_CERT_DEV && !check_device_cert_chain(cli, cert, cert_size)) {
-    // Error returned by check_device_cert_chain().
     return;
   }
 
