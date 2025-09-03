@@ -62,13 +62,6 @@ build-backend = "uv_build"
 
 [tool.uv]
 package = true
-conflicts = [
-    [
-        {group = "tox-click80"},
-        {group = "tox-click81"},
-        {group = "tox-click82"},
-    ],
-]
 
 [tool.uv.build-backend]
 module-name = "trezorlib"
