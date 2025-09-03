@@ -108,6 +108,7 @@ stdenvNoCC.mkDerivation ({
     ps
     oldNixpkgs.protobuf3_19
     pyright
+    python3
     (mkBinOnlyWrapper rustNightly)
     uv
     wget
