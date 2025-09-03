@@ -49,10 +49,10 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "export PRODUCTION=1 && poetry run legacy/script/cibuild"
-      - run: nix-shell --run "poetry run legacy/script/setup"
-      - run: nix-shell --run "export PRODUCTION=0 && poetry run legacy/script/cibuild"
-      - run: nix-shell --run "poetry run make -C legacy/demo"
+      - run: nix-shell --run "export PRODUCTION=1 && uv run legacy/script/cibuild"
+      - run: nix-shell --run "uv run legacy/script/setup"
+      - run: nix-shell --run "export PRODUCTION=0 && uv run legacy/script/cibuild"
+      - run: nix-shell --run "uv run make -C legacy/demo"
         if: matrix.coins == 'universal' && matrix.type == 'normal'
       - uses: actions/upload-artifact@v4
         with:
@@ -80,7 +80,7 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run legacy/script/cibuild"
+      - run: nix-shell --run "uv run legacy/script/cibuild"
       - run: cp legacy/firmware/trezor.elf legacy/firmware/trezor-emu-legacy-T1B1-${{ matrix.coins }}
       - uses: actions/upload-artifact@v4
         with:
@@ -109,7 +109,7 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run legacy/script/cibuild"
+      - run: nix-shell --run "uv run legacy/script/cibuild"
       - run: mv legacy/firmware/trezor.elf legacy/firmware/trezor-emu-arm-legacy-T1B1-${{ matrix.coins }}
       - uses: actions/upload-artifact@v4
         with:
@@ -140,9 +140,9 @@ jobs:
           path: legacy/firmware
       - run: chmod +x legacy/firmware/*.elf
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run make -C legacy test_emu_ui"
+      - run: nix-shell --run "uv run make -C legacy test_emu_ui"
         if: matrix.coins == 'universal'
-      - run: nix-shell --run "poetry run make -C legacy test_emu"
+      - run: nix-shell --run "uv run make -C legacy test_emu"
         if: matrix.coins != 'universal'
       - uses: ./.github/actions/ui-report
         with:
@@ -176,7 +176,7 @@ jobs:
       - run: chmod +x legacy/firmware/*.elf
       - uses: ./.github/actions/environment
       - run: nix-shell --run "tests/download_emulators.sh"
-      - run: nix-shell --run "poetry run pytest tests/upgrade_tests"
+      - run: nix-shell --run "uv run pytest tests/upgrade_tests"
 
   legacy_hwi_test:
     name: HWI test

@@ -31,14 +31,14 @@ If you prefer to install the requirements manually, look into the shell.nix file
 
 ## Python Dependencies
 
-All Python dependencies and packages are handled with Poetry. If you work in nix-shell, Poetry will be installed automatically. Then, you can install the dependencies and run the Poetry shell in the repository root.
+All Python dependencies and packages are handled with `uv`. If you work in nix-shell, `uv` will be installed automatically. Then, you can install the dependencies and run the `uv` shell in the repository root.
 
 ```sh
-poetry install
-poetry shell
+uv sync
+source .venv/bin/activate
 ```
 
-**Note: The recommended way of initializing your environment is to first run nix-shell and then initialize the Poetry shell within it.**
+**Note: The recommended way of initializing your environment is to first run nix-shell and then initialize the `uv` shell within it.**
 
 ## Protobuf Compiler
 

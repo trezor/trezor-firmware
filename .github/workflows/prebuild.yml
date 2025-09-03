@@ -41,9 +41,9 @@ jobs:
           git submodule update --init --recursive vendor/ts-tvl
       - uses: ./.github/actions/environment
       - name: "Run style check"
-        run: nix-shell --run "poetry run make style_check"
+        run: nix-shell --run "uv run make style_check"
       - name: "Run .editorconfig check"
-        run: nix-shell --run "poetry run make editor_check"
+        run: nix-shell --run "uv run make editor_check"
 
   # Check validity of coin definitions and protobuf files.
   defs_check:
@@ -55,7 +55,7 @@ jobs:
           submodules: "recursive"
       - uses: ./.github/actions/environment
       - name: "Run defs check"
-        run: nix-shell --run "poetry run make defs_check"
+        run: nix-shell --run "uv run make defs_check"
 
   # Check validity of auto-generated files.
   gen_check:
@@ -67,7 +67,7 @@ jobs:
           submodules: "recursive"
       - uses: ./.github/actions/environment
       - name: "Run gen check"
-        run: nix-shell --run "poetry run make gen_check"
+        run: nix-shell --run "uv run make gen_check"
 
   # Verifying that all commits changing some functionality have a changelog entry
   # or contain `[no changelog]` in the commit message.

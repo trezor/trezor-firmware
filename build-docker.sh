@@ -213,7 +213,7 @@ fi  # init
 cat <<EOF >> "$SCRIPT_NAME"
   $GIT_CLEAN_REPO
   git submodule update --init --recursive
-  poetry install -v --no-ansi --no-interaction
+  uv sync
   cd core/embed/rust
   cargo fetch
 
@@ -276,10 +276,10 @@ for TREZOR_MODEL in ${MODELS[@]}; do
       set -e -o pipefail
       cd /reproducible-build/trezor-firmware/core
       $GIT_CLEAN_REPO
-      poetry run make clean vendor $MAKE_TARGETS QUIET_MODE=1
+      uv run make clean vendor $MAKE_TARGETS QUIET_MODE=1
       for item in bootloader firmware prodtest; do
         if [ -f build/\$item/\$item.bin ]; then
-          poetry run ../python/tools/firmware-fingerprint.py \
+          uv run ../python/tools/firmware-fingerprint.py \
                       -o build/\$item/\$item.bin.fingerprint \
                       build/\$item/\$item.bin
         fi
@@ -330,17 +330,17 @@ if [ "$OPT_BUILD_NRF" -eq 1 ]; then
     $GIT_CLEAN_REPO
     echo "=== west initializing workspace ==="
     cd /reproducible-build/trezor-firmware/nordic
-    poetry run west init -l ./trezor || echo "West already initialized"
+    uv run west init -l ./trezor || echo "West already initialized"
     echo "=== west update ==="
-    poetry run west update
+    uv run west update
 
     # Build using the script
     echo "=== running build_sign_flash ==="
     cd /reproducible-build/trezor-firmware/nordic/trezor
     if [ "$PRODUCTION" = "1" ]; then
-      poetry run scripts/build_sign_flash.sh -b t3w1_revA_nrf52832 -p -c -s
+      uv run scripts/build_sign_flash.sh -b t3w1_revA_nrf52832 -p -c -s
     else
-      poetry run scripts/build_sign_flash.sh -b t3w1_revA_nrf52832 -d -c -s
+      uv run scripts/build_sign_flash.sh -b t3w1_revA_nrf52832 -d -c -s
     fi
 
     # Generate fingerprints
@@ -435,14 +435,14 @@ if echo "${MODELS[@]}" | grep -q T1B1 ; then
       cd /reproducible-build/trezor-firmware/legacy
       $GIT_CLEAN_REPO
       ln -s /build build
-      poetry run script/cibuild
+      uv run script/cibuild
       mkdir -p build/bootloader build/firmware build/intermediate_fw
       cp bootloader/bootloader.bin build/bootloader/bootloader.bin
       cp intermediate_fw/trezor.bin build/intermediate_fw/inter.bin
       cp firmware/trezor.bin build/firmware/firmware.bin
       cp firmware/firmware*.bin build/firmware/ || true  # ignore missing file as it will not be present in old tags
       cp firmware/trezor.elf build/firmware/firmware.elf
-      poetry run ../python/tools/firmware-fingerprint.py \
+      uv run ../python/tools/firmware-fingerprint.py \
                  -o build/firmware/firmware.bin.fingerprint \
                  build/firmware/firmware.bin
       chown -R $USER:$GROUP /build

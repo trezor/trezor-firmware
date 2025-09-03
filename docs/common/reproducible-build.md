@@ -4,7 +4,7 @@ We want to invite the wider community to participate in the verification of the 
 built by Trezor Company. With reasonable effort you should be able to build the firmware
 and verify that it's identical to the official firmware.
 
-Trezor Firmware uses [Nix](https://nixos.org/), [Poetry](https://python-poetry.org/) and
+Trezor Firmware uses [Nix](https://nixos.org/), [uv](https://docs.astral.sh/uv/) and
 [Cargo](https://doc.rust-lang.org/cargo/) to make the build environment deterministic.
 We also provide a Docker-based script so that the build can be performed with a single
 command on usual x86 Linux system.

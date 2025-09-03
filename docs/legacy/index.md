@@ -38,7 +38,7 @@ For firmwares older than 1.8.1, please clone the archived [trezor-mcu](https://g
 
 ## Local development build
 
-Make sure you have Python 3.8 or later and [Poetry](https://python-poetry.org/)
+Make sure you have Python 3.9 or later and [uv](https://docs.astral.sh/uv/)
 installed.
 
 If you want to build device firmware, also make sure that you have the [GNU ARM Embedded toolchain](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) installed.
@@ -57,14 +57,14 @@ To run the build process, execute the following commands:
 ```sh
 # enter the legacy subdirectory
 cd legacy
-# set up poetry
-poetry install
+# set up uv
+uv sync
 # set up environment variables. For example, to build emulator with debuglink:
 export EMULATOR=1 DEBUG_LINK=1
 # clear build artifacts
-poetry run ./script/setup
+uv run ./script/setup
 # run build process
-poetry run ./script/cibuild
+uv run ./script/cibuild
 ```
 
 A built device firmware will be located in `legacy/firmware/trezor.bin`. A built emulator will be
