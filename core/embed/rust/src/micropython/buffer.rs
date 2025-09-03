@@ -105,6 +105,17 @@ impl StrBuffer {
             off: self.off + off,
         }
     }
+
+    pub fn prefix(&self, bytes: usize) -> Self {
+        let new_len: u16 = unwrap!(bytes.try_into());
+        assert!(new_len <= self.len);
+        assert!(self.as_ref().is_char_boundary(bytes));
+        Self {
+            ptr: self.ptr,
+            len: new_len,
+            off: self.off,
+        }
+    }
 }
 
 impl Default for StrBuffer {
