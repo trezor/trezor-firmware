@@ -1,5 +1,6 @@
 from typing import *
 from trezor import utils
+from trezor.enums import ButtonRequestType
 PropertyType = tuple[str | None, str | bytes | None, bool | None]
 T = TypeVar("T")
 
@@ -58,7 +59,7 @@ class LayoutObj(Generic[T]):
             """Paint bounds of individual components on screen."""
     def page_count(self) -> int:
         """Return the number of pages in the layout object."""
-    def button_request(self) -> tuple[int, str] | None:
+    def button_request(self) -> tuple[ButtonRequestType, str] | None:
         """Return (code, type) of button request made during the last event or timer pass."""
     def get_transition_out(self) -> AttachType:
         """Return the transition type."""
