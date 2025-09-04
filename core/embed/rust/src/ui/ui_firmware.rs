@@ -18,8 +18,6 @@ pub const MAX_MENU_ITEMS: usize = 5;
 
 pub const MAX_PAIRED_DEVICES: usize = 8; // Maximum number of paired devices in the device menu
 
-pub const ERROR_NOT_IMPLEMENTED: Error = Error::ValueError(c"not implemented");
-
 pub trait FirmwareUI {
     #[allow(clippy::too_many_arguments)]
     fn confirm_action(

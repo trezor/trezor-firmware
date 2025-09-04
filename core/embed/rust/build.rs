@@ -285,6 +285,7 @@ fn generate_micropython_bindings() {
         .allowlist_var("mp_type_ValueError")
         .allowlist_var("mp_type_TypeError")
         .allowlist_var("mp_type_RuntimeError")
+        .allowlist_var("mp_type_NotImplementedError")
         // time
         .allowlist_function("mp_hal_ticks_ms")
         .allowlist_function("mp_hal_delay_ms")
