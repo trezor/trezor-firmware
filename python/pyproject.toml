@@ -57,30 +57,25 @@ Documentation = "https://github.com/trezor/trezor-firmware/tree/main/python"
 trezorctl = "trezorlib.cli.trezorctl:cli"
 
 [build-system]
-requires = ["uv_build>=0.8.14,<0.9.0"]
-build-backend = "uv_build"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.uv]
 package = true
 
-[tool.uv.build-backend]
-module-name = "trezorlib"
-source-include = [
-    "README.md",
-    "AUTHORS",
-    "COPYING",
-    "CHANGELOG.md",
-    "setup.cfg",
-    "tests/**",
-    "tools/**",
-    "stubs/**",
-    "bash_completion.d/**",
-    "tox.ini",
-    "pyrightconfig.json",
-]
-source-exclude = [
-    "src/trezorlib/_proto_messages.mako",
+[tool.hatch.build.targets.wheel]
+packages = ["src/trezorlib"]
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "/.*",
+    "/helper-scripts",
+    "/CHANGELOG.unreleased",
+    "/default.nix",
+    "/Makefile",
+    "/towncrier.toml",
     "tests/*.bin",
+    "src/trezorlib/_proto_messages.mako",
 ]
 
 [dependency-groups]
