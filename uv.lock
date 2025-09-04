@@ -2234,7 +2234,7 @@ requires-dist = [
     { name = "isort", specifier = ">=5,<6" },
     { name = "mako", specifier = ">=1.0.7,<2" },
     { name = "mnemonic", specifier = ">=0.21,<0.22" },
-    { name = "munch", specifier = ">=4,<5" },
+    { name = "munch", specifier = ">=4" },
     { name = "nanopb", specifier = ">=0.4.3,<0.5" },
     { name = "noiseprotocol", specifier = ">=0.3.1,<0.4" },
     { name = "pillow", specifier = ">=11" },

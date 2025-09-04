@@ -29,7 +29,7 @@ dependencies = [
     "flake8>=7",
     "black>=24.2",
     "mako>=1.0.7,<2",
-    "munch>=4,<5",
+    "munch>=4",
     "autoflake",
     "flake8-requirements>=2.1.0",
     "pylint~=2.11",
