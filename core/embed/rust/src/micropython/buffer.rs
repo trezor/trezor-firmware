@@ -282,3 +282,28 @@ pub fn hexlify_bytes(obj: Obj, offset: usize, max_len: usize) -> Result<StrBuffe
     let result = StrBuffer::alloc_with(hex_len, move |buffer| hexlify(bin_slice, buffer))?;
     Ok(result.skip_prefix(hex_off))
 }
+
+#[cfg(test)]
+mod tests {
+
+    #[test]
+    fn test_slicing() {
+        use super::StrBuffer;
+
+        let data = "abcdef";
+        // SAFETY: data is static.
+        let buf = unsafe { StrBuffer::from_ptr_and_len(data.as_ptr(), data.len()) };
+
+        assert_eq!(buf.prefix(0).as_ref(), "");
+        assert_eq!(buf.prefix(3).as_ref(), "abc");
+        assert_eq!(buf.prefix(buf.len()).as_ref(), data);
+
+        assert_eq!(buf.skip_prefix(0).as_ref(), data);
+        assert_eq!(buf.skip_prefix(3).as_ref(), "def");
+        assert_eq!(buf.skip_prefix(1).skip_prefix(2).as_ref(), "def");
+        assert_eq!(buf.skip_prefix(buf.len()).as_ref(), "");
+
+        assert_eq!(buf.skip_prefix(2).prefix(2).as_ref(), "cd");
+        assert_eq!(buf.prefix(4).skip_prefix(2).as_ref(), "cd");
+    }
+}
