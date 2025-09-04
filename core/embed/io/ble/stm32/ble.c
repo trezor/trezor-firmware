@@ -660,7 +660,7 @@ void ble_suspend(ble_wakeup_params_t *wakeup_params) {
 
   if (drv->initialized) {
     bool connected = drv->connected;
-    wakeup_params->accept_msgs = connected;
+    wakeup_params->accept_msgs = drv->accept_msgs;
     wakeup_params->mode_requested = drv->mode_requested;
     wakeup_params->peer_count = drv->peer_count;
     wakeup_params->high_speed = drv->high_speed;
