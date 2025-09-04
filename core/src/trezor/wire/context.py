@@ -218,6 +218,6 @@ def cache_delete(key: int) -> None:
 def _get_cache_for_key(key: int) -> DataCache:
     if key & SESSIONLESS_FLAG:
         return cache.get_sessionless_cache()
-    if CURRENT_CONTEXT:
-        return CURRENT_CONTEXT.cache
-    raise Exception("No wire context")
+    if CURRENT_CONTEXT is None:
+        raise NoWireContext
+    return CURRENT_CONTEXT.cache
