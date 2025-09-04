@@ -7,7 +7,7 @@ use crate::{
     strutil::TString,
     time::{Duration, ShortDuration},
     ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Timer},
+        component::{text::TextStyle, Component, Event, Marquee, EventCtx, Timer},
         constant,
         display::{toif::Icon, Color, Font},
         event::TouchEvent,
@@ -45,6 +45,8 @@ pub struct Button {
     long_press_danger: bool,
     long_timer: Timer,
     haptic: bool,
+
+    subtext_marquee: Option<Marquee>,
 }
 
 impl Button {
@@ -72,6 +74,7 @@ impl Button {
             long_press_danger: false,
             long_timer: Timer::new(),
             haptic: true,
+            subtext_marquee: None, //Marquee::new("", theme::FONT_HEADER, theme::FG, theme::BG),
         }
     }
 
@@ -104,17 +107,29 @@ impl Button {
             .with_radius(Self::MENU_ITEM_RADIUS)
     }
 
-    pub fn new_single_line_menu_item_with_overflowing_subtext(
+    pub fn new_menu_item_with_subtext_marquee(
         text: TString<'static>,
         stylesheet: ButtonStyleSheet,
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
     ) -> Self {
-        Self::with_single_line_text_and_overflowing_subtext(text, subtext, subtext_style, None)
+        Self::with_text_and_subtext_marquee(text, subtext, subtext_style, None)
             .with_text_align(Self::MENU_ITEM_ALIGNMENT)
             .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
             .styled(stylesheet)
             .with_radius(Self::MENU_ITEM_RADIUS)
+            .with_subtext_marquee()
+    }
+
+    pub fn with_subtext_marquee(mut self) -> Self {
+        match &self.content {
+            ButtonContent::TextAndSubtext { subtext, subtext_style, .. } => {
+
+        self.subtext_marquee = Some(Marquee::new(*subtext, subtext_style.text_font, subtext_style.text_color, subtext_style.background_color));
+            }
+            _ => unreachable!(),
+        }
+        self
     }
 
     #[cfg(feature = "micropython")]
@@ -173,11 +188,12 @@ impl Button {
             text,
             subtext,
             subtext_style,
+            subtext_marquee: false,
             icon,
         ))
     }
 
-    pub fn with_single_line_text_and_overflowing_subtext(
+    pub fn with_text_and_subtext_marquee(
         text: TString<'static>,
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
@@ -187,6 +203,7 @@ impl Button {
             text,
             subtext,
             subtext_style,
+            subtext_marquee: true,
             icon,
         ))
     }
@@ -499,7 +516,7 @@ impl Button {
                 single_line,
                 subtext,
                 subtext_style,
-                subtext_overflow,
+                subtext_marquee,
                 icon,
             } => {
                 let text_baseline_height = self.baseline_text_height();
@@ -541,11 +558,15 @@ impl Button {
                     #[cfg(feature = "ui_debug")]
                     {
                         if subtext_style.text_font.text_width(subtext) > available_width
-                            && !subtext_overflow
+                            && !subtext_marquee
                         {
                             fatal_error!(&uformat!(len: 128, "Subtext too long: '{}'", subtext));
                         }
                     }
+                    if let Some(marquee) = &self.subtext_marquee {
+                        marquee.render(target);
+                    }
+                    /*
                     shape::Text::new(
                         render_origin(if single_line_text {
                             text_baseline_height / 2
@@ -563,6 +584,7 @@ impl Button {
                     .with_align(self.text_align)
                     .with_alpha(alpha)
                     .render(target);
+                    */
                 });
 
                 if let Some((icon, icon_color)) = icon {
@@ -775,7 +797,7 @@ pub enum ButtonContent {
         single_line: bool,
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
-        subtext_overflow: bool,
+        subtext_marquee: bool,
         icon: Option<(Icon, Color)>,
     },
     Icon(Icon),
