@@ -67,6 +67,7 @@ secbool secret_key_nrf_pairing(uint8_t dest[NRF_PAIRING_SECRET_SIZE]);
 
 secbool secret_key_storage_salt(uint16_t fw_type,
                                 uint8_t dest[SECRET_KEY_STORAGE_SALT_SIZE]);
+secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
 
 #endif  // SECURE_MODE
 

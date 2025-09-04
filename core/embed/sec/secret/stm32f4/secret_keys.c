@@ -32,4 +32,9 @@ secbool secret_key_optiga_pairing(uint8_t dest[OPTIGA_PAIRING_SECRET_SIZE]) {
 }
 #endif
 
+secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+  // TODO
+  return secfalse;
+}
+
 #endif

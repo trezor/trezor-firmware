@@ -41,6 +41,7 @@
 #define KEY_INDEX_TROPIC_MASKING 5
 #define KEY_INDEX_NRF_PAIRING 6
 #define KEY_INDEX_STORAGE_SALT 7
+#define KEY_INDEX_DELEGATED_IDENTITY 8
 
 static secbool secret_key_derive_sym(uint8_t slot, uint16_t index,
                                      uint16_t subindex,
@@ -215,6 +216,11 @@ secbool secret_key_storage_salt(uint16_t fw_type,
                                KEY_INDEX_STORAGE_SALT, fw_type, dest);
 }
 
+secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+  return secret_key_derive_nist256p1(SECRET_UNPRIVILEGED_MASTER_KEY_SLOT,
+                                     KEY_INDEX_DELEGATED_IDENTITY, dest);
+}
+
 #else  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
 
 #ifdef USE_OPTIGA
@@ -222,6 +228,14 @@ secbool secret_key_optiga_pairing(uint8_t dest[OPTIGA_PAIRING_SECRET_SIZE]) {
   return secret_key_get(SECRET_OPTIGA_SLOT, dest, OPTIGA_PAIRING_SECRET_SIZE);
 }
 #endif  // USE_OPTIGA
+
+secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+  storage_salt_t salt = {0};
+  storage_salt_get(&salt);
+  // TODO process storage salt in a way that is independent from the way it is
+  // used in storage or use another OTP slot.
+  return secfalse;
+}
 
 #endif  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
 
