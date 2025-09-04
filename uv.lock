@@ -360,12 +360,9 @@ wheels = [
 
 [[package]]
 name = "construct"
-version = "2.10.70"
+version = "2.10.68"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/02/77/8c84b98eca70d245a2a956452f21d57930d22ab88cbeed9290ca630cf03f/construct-2.10.70.tar.gz", hash = "sha256:4d2472f9684731e58cc9c56c463be63baa1447d674e0d66aeb5627b22f512c29", size = 86337, upload-time = "2023-11-29T08:44:49.545Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b2/fb/08b3f4bf05da99aba8ffea52a558758def16e8516bc75ca94ff73587e7d3/construct-2.10.70-py3-none-any.whl", hash = "sha256:c80be81ef595a1a821ec69dc16099550ed22197615f4320b57cc9ce2a672cb30", size = 63020, upload-time = "2023-11-29T08:44:46.876Z" },
-]
+sdist = { url = "https://files.pythonhosted.org/packages/e0/b7/a4a032e94bcfdff481f2e6fecd472794d9da09f474a2185ed33b2c7cad64/construct-2.10.68.tar.gz", hash = "sha256:7b2a3fd8e5f597a5aa1d614c3bd516fa065db01704c72a1efaaeec6ef23d8b45", size = 57856, upload-time = "2022-02-21T23:09:15.1Z" }
 
 [[package]]
 name = "construct-classes"
@@ -397,6 +394,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/75/6f/e2e98ed52e94fd9db21a7f816061e0d47fef9b13077b5a9940a7b55e0b98/construct_classes-0.2.2.tar.gz", hash = "sha256:c644026fef4d082fd6632efa974376d77e8be7d95e4e57a6df74407fc0954efd", size = 4622, upload-time = "2025-08-26T14:32:47.955Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/9e/9a/bfe55ec4afaecb64512cc39f3a801e76fcc5660b5a98d6c193af527b5f23/construct_classes-0.2.2-py3-none-any.whl", hash = "sha256:bf616b174ad53adbd388beb4fc1a5af4ba42289b186e6a741142262ead337b3f", size = 4149, upload-time = "2025-08-26T14:32:46.945Z" },
+]
+
+[[package]]
+name = "construct-typing"
+version = "0.6.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "construct" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f1/13/c609e60a687252813aa4b69f989f42754ccd5e217717216fc852eefedfd7/construct-typing-0.6.2.tar.gz", hash = "sha256:948e998cfc003681dc34f2d071c3a688cf35b805cbe107febbc488ef967ccba1", size = 22029, upload-time = "2023-08-03T07:31:06.205Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b2/0b/ab3ce2b27dd74b6a6703065bd304ea8211ff4de3b1c304446ed95234177b/construct_typing-0.6.2-py3-none-any.whl", hash = "sha256:ebea6989ac622d0c4eb457092cef0c7bfbcfa110bd018670fea7064d0bc09e47", size = 23298, upload-time = "2023-08-03T07:31:04.545Z" },
 ]
 
 [[package]]
@@ -1005,14 +1015,11 @@ wheels = [
 
 [[package]]
 name = "munch"
-version = "2.5.0"
+version = "4.0.0"
 source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "six" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/43/a1/ec48010724eedfe2add68eb7592a0d238590e14e08b95a4ffb3c7b2f0808/munch-2.5.0.tar.gz", hash = "sha256:2d735f6f24d4dba3417fa448cae40c6e896ec1fdab6cdb5e6510999758a4dbd2", size = 17015, upload-time = "2019-10-30T09:56:08.621Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e7/2b/45098135b5f9f13221820d90f9e0516e11a2a0f55012c13b081d202b782a/munch-4.0.0.tar.gz", hash = "sha256:542cb151461263216a4e37c3fd9afc425feeaf38aaa3025cd2a981fadb422235", size = 19089, upload-time = "2023-07-01T09:49:35.98Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/cc/ab/85d8da5c9a45e072301beb37ad7f833cd344e04c817d97e0cc75681d248f/munch-2.5.0-py2.py3-none-any.whl", hash = "sha256:6f44af89a2ce4ed04ff8de41f70b226b984db10a91dcc7b9ac2efc1c77022fdd", size = 10347, upload-time = "2019-10-30T09:56:06.835Z" },
+    { url = "https://files.pythonhosted.org/packages/56/b3/7c69b37f03260a061883bec0e7b05be7117c1b1c85f5212c72c8c2bc3c8c/munch-4.0.0-py2.py3-none-any.whl", hash = "sha256:71033c45db9fb677a0b7eb517a4ce70ae09258490e419b0e7f00d1e386ecb1b4", size = 9950, upload-time = "2023-07-01T09:49:34.472Z" },
 ]
 
 [[package]]
@@ -1965,7 +1972,7 @@ dev = [
 
 [[package]]
 name = "trezor-core-tools"
-version = "0.1.4"
+version = "0.1.5"
 source = { editable = "core/tools" }
 dependencies = [
     { name = "trezor" },
@@ -1984,6 +1991,7 @@ dependencies = [
     { name = "black" },
     { name = "cbor2" },
     { name = "click" },
+    { name = "construct-typing" },
     { name = "coverage" },
     { name = "cryptography" },
     { name = "demjson3" },
@@ -2050,6 +2058,7 @@ requires-dist = [
     { name = "black", specifier = ">=24.2" },
     { name = "cbor2", specifier = "==5.6.5" },
     { name = "click", specifier = ">=8,<9" },
+    { name = "construct-typing", specifier = ">=0.6.2" },
     { name = "coverage", specifier = "==5.5" },
     { name = "cryptography" },
     { name = "demjson3" },
@@ -2067,7 +2076,7 @@ requires-dist = [
     { name = "isort", specifier = ">=5,<6" },
     { name = "mako", specifier = ">=1.0.7,<2" },
     { name = "mnemonic", specifier = ">=0.21,<0.22" },
-    { name = "munch", specifier = ">=2.3.2,<3" },
+    { name = "munch", specifier = ">=4" },
     { name = "nanopb", specifier = ">=0.4.3,<0.5" },
     { name = "noiseprotocol", specifier = ">=0.3.1,<0.4" },
     { name = "pillow", specifier = ">=11" },
