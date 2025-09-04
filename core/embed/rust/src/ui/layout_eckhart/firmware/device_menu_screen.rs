@@ -663,6 +663,14 @@ impl DeviceMenuScreen {
         self.build_active_subscreen();
     }
 
+    fn activate_subscreen(&mut self, idx: usize, ctx: &mut EventCtx) {
+        self.set_active_subscreen(idx);
+        self.place(self.bounds);
+        if let ActiveScreen::Menu(screen) = self.active_screen.deref_mut() {
+            screen.initialize_screen(ctx);
+        }
+    }
+
     fn build_active_subscreen(&mut self) {
         match self.subscreens[self.active_subscreen] {
             Subscreen::Submenu(ref mut submenu_index) => {
@@ -758,20 +766,12 @@ impl DeviceMenuScreen {
                 match self.submenus[*submenu_index].items[idx].action {
                     Some(Action::GoToSubmenu(id)) => {
                         if let Some(menu) = self.try_resolve_submenu(id) {
-                            self.set_active_subscreen(menu);
-                            self.place(self.bounds);
-                            if let ActiveScreen::Menu(screen) = self.active_screen.deref_mut() {
-                                screen.initialize_screen(ctx);
-                            }
+                            self.activate_subscreen(menu, ctx);
                         }
                         return None;
                     }
                     Some(Action::GoTo(menu)) => {
-                        self.set_active_subscreen(menu);
-                        self.place(self.bounds);
-                        if let ActiveScreen::Menu(screen) = self.active_screen.deref_mut() {
-                            screen.initialize_screen(ctx);
-                        }
+                        self.activate_subscreen(menu, ctx);
                         return None;
                     }
                     Some(Action::Return(msg)) => return Some(msg),
@@ -804,11 +804,7 @@ impl DeviceMenuScreen {
             Subscreen::AboutScreen | Subscreen::RegulatoryScreen => DeviceMenuId::Device,
         };
 
-        self.set_active_subscreen(unwrap!(self.try_resolve_submenu(parent)));
-        self.place(self.bounds);
-        if let ActiveScreen::Menu(screen) = self.active_screen.deref_mut() {
-            screen.initialize_screen(ctx);
-        }
+        self.activate_subscreen(unwrap!(self.try_resolve_submenu(parent)), ctx);
         None
     }
 }
