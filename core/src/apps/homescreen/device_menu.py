@@ -9,7 +9,8 @@ BLE_MAX_BONDS = 8
 
 
 def _format_mac(ble_addr: bytes) -> str:
-    return ":".join(f"{byte:02X}" for byte in ble_addr)
+    """Internal MAC address representation is using reversed byte order."""
+    return ":".join(f"{byte:02X}" for byte in reversed(ble_addr))
 
 
 def _find_device(connected_addr: bytes | None, bonds: list[bytes]) -> int | None:
