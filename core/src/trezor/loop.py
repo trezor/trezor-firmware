@@ -14,13 +14,18 @@ from typing import TYPE_CHECKING
 from trezor import io, log
 
 if TYPE_CHECKING:
-    from typing import Any, Awaitable, Callable, Coroutine, Generator
+    from typing import Any, Awaitable, Callable, Coroutine, Generator, Generic, TypeVar
 
     from .loop import wait
 
-    Task = Coroutine | Generator | wait
-    AwaitableTask = Task | Awaitable
+    T = TypeVar("T")
+    Task = Coroutine[Any, Any, T] | Generator[Any, Any, T] | wait
+    AwaitableTask = Task[T] | Awaitable[T]
     Finalizer = Callable[[Task, Any], None]
+else:
+    # typechecker cheat: Generic[T] will be `object` which is a valid parent type
+    Generic = [object]
+    T = 0
 
 # tasks scheduled for execution in the future
 _queue = utimeq.utimeq(64)
@@ -122,7 +127,7 @@ def run() -> None:
             # timeout occurred, run the first scheduled task
             if _queue:
                 _queue.pop(task_entry)
-                _step(task_entry[1], task_entry[2])  # type: ignore [Argument of type "int" cannot be assigned to parameter "task" of type "Task" in function "_step"]
+                _step(task_entry[1], task_entry[2])  # type: ignore [Argument of type "int" cannot be assigned to parameter "task" of type "Task[Unknown]" in function "_step"]
                 # error: Argument 1 to "_step" has incompatible type "int"; expected "Coroutine[Any, Any, Any]"
                 # rationale: We use untyped lists here, because that is what the C API supports.
 
@@ -171,7 +176,7 @@ def _step(task: Task, value: Any) -> None:
             log.exception(__name__, e)
         finalize(task, e)
     else:
-        if isinstance(result, Syscall):
+        if isinstance(result, _RealSyscall):
             result.handle(task)
         elif result is None:
             schedule(task)
@@ -180,7 +185,7 @@ def _step(task: Task, value: Any) -> None:
                 log.error(__name__, "unknown syscall: %s", result)
 
 
-class Syscall:
+class _RealSyscall(Generic[T]):
     """
     When tasks want to perform any I/O, or do any sort of communication with the
     scheduler, they do so through instances of a class derived from `Syscall`.
@@ -192,18 +197,26 @@ class Syscall:
 
     if TYPE_CHECKING:
 
-        def __await__(self) -> Generator[Any, Any, Any]:
+        def __await__(self) -> Generator[Any, Any, T]:
             return self.__iter__()
 
     def handle(self, task: Task) -> None:
         pass
+
+    ...
+
+
+if TYPE_CHECKING:
+    Syscall = _RealSyscall
+else:
+    Syscall = {T: _RealSyscall, int: _RealSyscall}
 
 
 class Timeout(Exception):
     pass
 
 
-class sleep(Syscall):
+class sleep(Syscall[int]):
     """Pause current task and resume it after given delay.
 
     Result value is the calculated deadline.
@@ -222,7 +235,7 @@ class sleep(Syscall):
         schedule(task, deadline, deadline)
 
 
-class wait(Syscall):
+class wait(Syscall[T]):
     """
     Pause current task, and resume only after a message on `msg_iface` is
     received.  Messages are received either from an USB interface, or the
@@ -234,7 +247,7 @@ class wait(Syscall):
     >>> event, x, y = await loop.wait(io.TOUCH)  # await touch event
     """
 
-    _DO_NOT_RESCHEDULE = Syscall()
+    _DO_NOT_RESCHEDULE = Syscall[T]()
 
     def __init__(self, msg_iface: int, timeout_ms: int | None = None) -> None:
         self.msg_iface = msg_iface
@@ -263,7 +276,7 @@ class wait(Syscall):
             if not _paused[self.msg_iface]:
                 del _paused[self.msg_iface]
 
-    def __iter__(self) -> Generator:
+    def __iter__(self) -> Generator[Any, Any, T]:
         try:
             return (yield self)
         finally:
@@ -274,7 +287,7 @@ class wait(Syscall):
 _type_gen: type[Generator] = type((lambda: (yield))())
 
 
-class race(Syscall):
+class race(Syscall[T]):
     """
     Given a list of either children tasks or syscalls, `race` waits until one of
     them completes (tasks are executed in parallel, syscalls are waited upon,
@@ -295,7 +308,7 @@ class race(Syscall):
     `race.__iter__` for explanation.  Always use `await`.
     """
 
-    def __init__(self, *children: AwaitableTask) -> None:
+    def __init__(self, *children: AwaitableTask[T]) -> None:
         self.children = children
         self.finished = False
         self.scheduled: list[Task] = []  # scheduled wrapper tasks
@@ -322,7 +335,7 @@ class race(Syscall):
                 # child is a layout -- type-wise, it is an Awaitable, but
                 # implementation-wise it is an Iterable and we know that its __iter__
                 # will return a Generator.
-                child_task = child.__iter__()  # type: ignore [Cannot access attribute "__iter__" for class "Awaitable[Unknown]";;Cannot access attribute "__iter__" for class "Coroutine[Unknown, Unknown, Unknown]"]
+                child_task = child.__iter__()  # type: ignore [Cannot access attribute "__iter__" for class "Awaitable[T@race]";;Cannot access attribute "__iter__" for class "Coroutine[Any, Any, T@race]"]
             schedule(child_task, None, None, finalizer)
             scheduled.append(child_task)
 
@@ -349,7 +362,7 @@ class race(Syscall):
             raise
 
 
-class mailbox(Syscall):
+class mailbox(Syscall[T]):
     """
     Wait to receive a value.
 
@@ -384,7 +397,7 @@ class mailbox(Syscall):
 
     _NO_VALUE = object()
 
-    def __init__(self, initial_value: Any = _NO_VALUE) -> None:
+    def __init__(self, initial_value: T | object = _NO_VALUE) -> None:
         self.value = initial_value
         self.taker: Task | None = None
 
@@ -397,7 +410,7 @@ class mailbox(Syscall):
         assert self.taker is None
         self.value = self._NO_VALUE
 
-    def put(self, value: Any, replace: bool = False) -> None:
+    def put(self, value: T, replace: bool = False) -> None:
         """Put a value into the mailbox.
 
         If there is another task waiting for the value, it will be scheduled to resume.
@@ -452,7 +465,7 @@ class mailbox(Syscall):
             taker.close()
 
 
-class spawn(Syscall):
+class spawn(Syscall[T]):
     """Spawn a task asynchronously and get an awaitable reference to it.
 
     Abstraction over `loop.schedule` and `loop.close`. Useful when you need to start
@@ -482,7 +495,7 @@ class spawn(Syscall):
     the original return value (or raise the original exception).
     """
 
-    def __init__(self, task: Task) -> None:
+    def __init__(self, task: Task[T]) -> None:
         self.task = task
         self.callback: Task | None = None
         self.finalizer_callback: Callable[["spawn"], None] | None = None
@@ -516,7 +529,7 @@ class spawn(Syscall):
         if self.finalizer_callback is not None:
             self.finalizer_callback(self)
 
-    def __iter__(self) -> Task:
+    def __iter__(self) -> Task[T]:
         if self.finished:
             # exit immediately if we already have a return value
             if isinstance(self.return_value, BaseException):
