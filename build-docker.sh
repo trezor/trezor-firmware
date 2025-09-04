@@ -337,64 +337,23 @@ if [ "$OPT_BUILD_NRF" -eq 1 ]; then
     # Build using the script
     echo "=== running build_sign_flash ==="
     cd /reproducible-build/trezor-firmware/nordic/trezor
-    if [ "$PRODUCTION" = "1" ]; then
-      uv run scripts/build_sign_flash.sh -b t3w1_revA_nrf52832 -p -c -s
-    else
-      uv run scripts/build_sign_flash.sh -b t3w1_revA_nrf52832 -d -c -s
-    fi
+    uv run scripts/build_sign_flash.sh -b t3w1_revA_nrf52832 -c
 
     # Generate fingerprints
-    echo "=== Generating fingerprints for nrf binary files ==="
-    cd /reproducible-build/trezor-firmware/nordic/trezor
+    echo "=== copying built files to host ==="
+    cp -r build/* /build
 
     # Generate fingerprint for bootloader
-    if [ -f "build/mcuboot/zephyr/zephyr.bin" ]; then
-        echo "Generating fingerprint for: build/mcuboot/zephyr/zephyr.bin"
-        sha256sum "build/mcuboot/zephyr/zephyr.bin" | cut -d' ' -f1 > "build/mcuboot/zephyr/zephyr.bin.fingerprint"
-        echo "Created: build/mcuboot/zephyr/zephyr.bin.fingerprint"
-    else
-        echo "File not found: build/mcuboot/zephyr/zephyr.bin"
+    if [ -f "/build/mcuboot/zephyr/zephyr.bin" ]; then
+        cp /build/mcuboot/zephyr/zephyr.bin /build/nrf-bootloader.bin
+        sha256sum "/build/nrf-bootloader.bin" | cut -d' ' -f1 > "build/nrf-bootloader.bin.fingerprint"
     fi
 
     # Generate fingerprint for firmware
-    if [ -f "build/trezor-ble/zephyr/zephyr.signed_trz.bin" ]; then
-        echo "Generating fingerprint for: build/trezor-ble/zephyr/zephyr.signed_trz.bin"
-        sha256sum "build/trezor-ble/zephyr/zephyr.signed_trz.bin" | cut -d' ' -f1 > "build/trezor-ble/zephyr/zephyr.signed_trz.bin.fingerprint"
-        echo "Created: build/trezor-ble/zephyr/zephyr.signed_trz.bin.fingerprint"
-    else
-        echo "File not found: build/trezor-ble/zephyr/zephyr.signed_trz.bin"
+    if [ -f "/build/trezor-ble/zephyr/zephyr.signed_trz.bin" ]; then
+        cp /build/trezor-ble/zephyr/zephyr.signed_trz.bin /build/nrf-firmware.bin
+        uv run nrftool digest "/build/nrf-firmware.bin" > "/build/nrf-firmware.bin.fingerprint"
     fi
-
-    # Create output directory structure and copy artifacts
-    echo "=== Copy built files back to host ==="
-    mkdir -p /build/bootloader /build/firmware
-    cd /reproducible-build/trezor-firmware/nordic/trezor
-
-    # Copy nRF bootloader (MCUboot)
-    if [ -f build/mcuboot/zephyr/zephyr.hex ]; then
-      cp build/mcuboot/zephyr/zephyr.hex /build/bootloader/nrf-bootloader.hex
-      cp build/mcuboot/zephyr/zephyr.bin /build/bootloader/nrf-bootloader.bin
-      cp build/mcuboot/zephyr/zephyr.bin.fingerprint /build/bootloader/nrf-bootloader.bin.fingerprint 2>/dev/null || true
-    fi
-
-    # Copy signed nRF application firmware
-    if [ -f build/trezor-ble/zephyr/zephyr.signed_trz.hex ]; then
-      cp build/trezor-ble/zephyr/zephyr.signed_trz.hex /build/firmware/nrf-firmware.hex
-      cp build/trezor-ble/zephyr/zephyr.signed_trz.bin /build/firmware/nrf-firmware.bin
-      cp build/trezor-ble/zephyr/zephyr.signed_trz.bin.fingerprint /build/firmware/nrf-firmware.bin.fingerprint 2>/dev/null || true
-    fi
-
-    # Copy nRF ELF file (from unsigned build)
-    if [ -f build/trezor-ble/zephyr/zephyr.elf ]; then
-      cp build/trezor-ble/zephyr/zephyr.elf /build/firmware/nrf-firmware.elf
-    fi
-
-    # Copy merged signed nRF firmware
-    if [ -f build/zephyr.merged.signed_trz.hex ]; then
-      cp build/zephyr.merged.signed_trz.hex /build/firmware/nrf-firmware.merged.hex
-    fi
-
-    echo "=== NRF repro build DONE ==="
 
     chown -R $USER:$GROUP /build
 EOF
