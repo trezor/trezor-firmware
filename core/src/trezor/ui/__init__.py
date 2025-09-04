@@ -22,10 +22,11 @@ if utils.USE_POWER_MANAGER:
 if TYPE_CHECKING:
     from typing import Any, Callable, Generator, Generic, Iterator, TypeVar
 
+    from trezor.enums import ButtonRequestType
     from trezorui_api import LayoutObj, UiResult  # noqa: F401
 
     T = TypeVar("T", covariant=True)
-
+    ButtonRequestTuple = tuple[ButtonRequestType, str]
 else:
     T = 0
     Generic = {T: object}
@@ -152,8 +153,8 @@ class Layout(Generic[T]):
         self.layout = layout
         self.tasks: set[loop.Task] = set()
         self.timers: dict[int, loop.Task] = {}
-        self.result_box = loop.mailbox()
-        self.button_request_box = loop.mailbox()
+        self.result_box: loop.mailbox[Any] = loop.mailbox()
+        self.button_request_box: loop.mailbox[ButtonRequestTuple] = loop.mailbox()
         self.button_request_ack_pending: bool = False
         self.transition_out: AttachType | None = None
         self.backlight_level = BacklightLevels.NORMAL
@@ -431,10 +432,12 @@ class Layout(Generic[T]):
             return
         while True:
             try:
-                br_code, br_name = await loop.race(
+                result = await loop.race(
                     self.context.read(()),
                     self.button_request_box,
                 )
+                assert isinstance(result, tuple)
+                br_code, br_name = result
 
                 if __debug__:
                     log.info(__name__, "ButtonRequest sent: %s", br_name)
