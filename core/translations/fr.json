@@ -116,12 +116,7 @@
       "Delizia": "Réception sur",
       "Eckhart": "Réception sur"
     },
-    "authenticate__confirm_template": {
-      "Bolt": "Autoriser l'ord. connecté à conf. que votre {0} est auth. ?",
-      "Caesar": "Autoriser l'ordinateur connecté à confirmer que votre {0} est authentique ?",
-      "Delizia": "Autoriser l'ordinateur connecté à confirmer que votre {0} est authentique ?",
-      "Eckhart": "Autoriser l'ordinateur connecté à confirmer que votre {0} est authentique ?"
-    },
+    "authenticate__confirm_template": "Autoriser l'ordinateur connecté à confirmer que votre {0} est authentique ?",
     "authenticate__header": "Authentifier l'appareil",
     "auto_lock__change_template": {
       "Bolt": "Auto-verrouiller Trezor après {0} d'inactivité ?",
@@ -173,7 +168,7 @@
     "backup__not_recommend": "Nous ne recommandons pas d'ignorer la création de la sauvegarde du portefeuille.",
     "backup__recover_anytime": {
       "Bolt": "Utiliser votre sauv. pour restaurer votre portef. à tout moment.",
-      "Caesar": "Utiliser votre sauv. pour restaurer votre portef. à tout moment.",
+      "Caesar": "Utilisez votre sauveg. pour récup. votre portef. à tout moment.",
       "Delizia": "Vous pouvez utiliser votre sauvegarde pour récupérer votre portefeuille à tout moment.",
       "Eckhart": "Vous pouvez utiliser votre sauvegarde pour récupérer votre portefeuille à tout moment."
     },
@@ -183,12 +178,7 @@
       "Delizia": "Sauvegarde du portefeuille terminée",
       "Eckhart": "Sauvegarde du portefeuille terminée."
     },
-    "backup__title_backup_wallet": {
-      "Bolt": "Sauveg. portef.",
-      "Caesar": "Sauvegarder le portefeuille",
-      "Delizia": "Sauvegarder le portefeuille",
-      "Eckhart": "Sauvegarder le portefeuille"
-    },
+    "backup__title_backup_wallet": "Sauvegarder le portefeuille",
     "backup__title_create_wallet_backup": "Créez une sauvegarde de portefeuille",
     "backup__title_skip": {
       "Bolt": "Ignorer sauvegarde",
@@ -256,12 +246,7 @@
       "Delizia": "Finaliser la transaction",
       "Eckhart": "Finaliser la transaction"
     },
-    "bitcoin__title_high_mining_fee": {
-      "Bolt": "Frais de min. élevés",
-      "Caesar": "Frais de minage élevés",
-      "Delizia": "Frais de minage élevés",
-      "Eckhart": "Frais de minage élevés"
-    },
+    "bitcoin__title_high_mining_fee": "Frais de minage élevés",
     "bitcoin__title_meld_transaction": "Fusionner la transaction",
     "bitcoin__title_modify_amount": "Modifier le montant",
     "bitcoin__title_payjoin": "Payjoin",
@@ -292,6 +277,13 @@
     "ble__disable": "",
     "ble__enable": "",
     "ble__forget_all": "",
+    "ble__forget_all_description": "",
+    "ble__forget_all_devices": "",
+    "ble__forget_all_success": "",
+    "ble__forget_this_description": "",
+    "ble__forget_this_device": "",
+    "ble__forget_this_success": "",
+    "ble__limit_reached": "",
     "ble__manage_paired": "Gérer les appareils appairés",
     "ble__pair_new": "Appairer un nouvel appareil",
     "ble__pair_title": "Appairer et connecter",
@@ -344,7 +336,7 @@
     "buttons__format": "Formater",
     "buttons__go_back": "Retour",
     "buttons__hold_to_confirm": {
-      "Bolt": "Appui pour conf",
+      "Bolt": "Appuyez pr conf",
       "Caesar": "Maintenez pour confirmer",
       "Delizia": "Maintenez pour confirmer",
       "Eckhart": "Maintenez pour confirmer"
@@ -369,7 +361,7 @@
     "buttons__show_words": "Afficher les mots",
     "buttons__skip": "Ignorer",
     "buttons__try_again": "Réessayer",
-    "buttons__turn_off": "Désactiver",
+    "buttons__turn_off": "Éteindre",
     "buttons__turn_on": "Activer",
     "buttons__view": "Afficher",
     "buttons__view_all_data": "Voir toutes les données",
@@ -461,12 +453,7 @@
     "cardano__reference_script": "Script de référence",
     "cardano__required_signer": "Signataire requis",
     "cardano__reward": "récompense",
-    "cardano__reward_address": {
-      "Bolt": "L'adr. est une adr. de récompense.",
-      "Caesar": "L'adresse est une adresse de récompense.",
-      "Delizia": "L'adresse est une adresse de récompense.",
-      "Eckhart": "L'adresse est une adresse de récompense."
-    },
+    "cardano__reward_address": "L'adresse est une adresse de récompense.",
     "cardano__reward_eligibility_warning": {
       "Bolt": "Avertissement : l'adr. n'est pas une adr. de paiement, elle n'est pas éligible aux récompenses.",
       "Caesar": "Avertissement : l'adresse n'est pas une adresse de paiement, elle n'est pas éligible aux récompenses.",
@@ -750,12 +737,6 @@
     "ethereum__approve_revoke_from": "Révoquer de",
     "ethereum__approve_to": "Approuver à",
     "ethereum__approve_unlimited_template": "Autoriser un montant illimité de {0}",
-    "ethereum__contract": {
-      "Bolt": "Contrat :",
-      "Caesar": "Contrat :",
-      "Delizia": "Contrat :",
-      "Eckhart": "Appel de contrat"
-    },
     "ethereum__contract_address": "Adresse de contrat du fournisseur",
     "ethereum__data_size_template": "Taille : {0} octets",
     "ethereum__gas_limit": "Limite de gas",
@@ -1186,7 +1167,7 @@
       "Eckhart": "Plus de fragments requis."
     },
     "recovery__num_of_words": {
-      "Bolt": "Nombre de mots de votre sauvegarde.",
+      "Bolt": "Définir le nb de mots de la sauveg.",
       "Caesar": "Sélectionnez le nombre de mots de votre sauvegarde.",
       "Delizia": "Sélectionnez le nombre de mots de votre sauvegarde.",
       "Eckhart": "Sélectionnez le nombre de mots de votre sauvegarde."
@@ -1266,7 +1247,7 @@
     "reset__check_group_share_title_template": {
       "Bolt": "Verif. g{0} - f{1}",
       "Caesar": "Vérifier g{0} - fragment {1}",
-      "Delizia": "Vérifier g{0} - fragm. {1}",
+      "Delizia": "Vérifier g{0} - fragment {1}",
       "Eckhart": "Vérifier g{0} - fragment {1}"
     },
     "reset__check_share_backup_template": "Vérifions rapidement le Fragment #{0}.",
@@ -1277,14 +1258,14 @@
       "Eckhart": "Vérifier le fragment #{0}"
     },
     "reset__check_wallet_backup_title": {
-      "Bolt": "Vérif. la sauvegarde",
+      "Bolt": "Vérifiez la sauveg.",
       "Caesar": "Vérifier la sauvegarde du portefeuille",
-      "Delizia": "Vérif. la sauvegarde",
+      "Delizia": "Vérifiez la sauveg.",
       "Eckhart": "Vérifier la sauvegarde du portefeuille"
     },
     "reset__continue_with_next_share": "Continuez avec le fragment suivant.",
     "reset__continue_with_share_template": {
-      "Bolt": "Continuez avec le fragm #{0}.",
+      "Bolt": "Continuez avec le fragm. #{0}.",
       "Caesar": "Continuez avec le fragment #{0}.",
       "Delizia": "Continuez avec le fragment #{0}.",
       "Eckhart": "Continuez avec le fragment #{0}."
@@ -1609,7 +1590,12 @@
     "tutorial__middle_click": "Appuyez simultanément sur les boutons de gauche et de droite\npour confirmer",
     "tutorial__navigation_ts7": "Utilisez les boutons du bas pour naviguer et confirmer vos actions.",
     "tutorial__one_more_step": "Encore une étape",
-    "tutorial__press_and_hold": "Maintenez enfoncé le bouton de droite pour accepter les opérations importantes.",
+    "tutorial__press_and_hold": {
+      "Bolt": "Maintenez enfoncé le bouton de droite\npour accepter les opérations importantes.",
+      "Caesar": "Maintenez enfoncé le bouton de droite pour accepter les opérations importantes.",
+      "Delizia": "Maintenez enfoncé le bouton de droite pour accepter les opérations importantes.",
+      "Eckhart": "Maintenez enfoncé le bouton de droite pour accepter les opérations importantes."
+    },
     "tutorial__ready_to_use": "Vous êtes prêt à\nutiliser votre Trezor.",
     "tutorial__ready_to_use_safe5": "Vous êtes prêt à utiliser votre appareil !",
     "tutorial__restart_tutorial": "Recommencer le tutoriel",
@@ -1624,7 +1610,7 @@
     "tutorial__title_hold": {
       "Bolt": "Maintenez pour confirmer les actions importantes",
       "Caesar": "Maintenez pour confirmer les actions importantes",
-      "Delizia": "Maintenez pour confirmer actions imp.",
+      "Delizia": "Maintenir pr conf. les actions importantes",
       "Eckhart": "Maintenez le bouton pour confirmer les actions importantes."
     },
     "tutorial__title_lets_begin": "Commençons",
@@ -1733,6 +1719,7 @@
     "words__pay_attention": "Faites attention",
     "words__please_check_again": "Veuillez revérifier",
     "words__please_try_again": "Veuillez réessayer",
+    "words__power": "",
     "words__provider": "Fournisseur",
     "words__really_wanna": "Voulez-vous vraiment",
     "words__receive": "Recevoir",
