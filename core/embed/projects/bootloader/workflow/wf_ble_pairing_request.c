@@ -29,6 +29,10 @@
 #include "wire/wire_iface_ble.h"
 #include "workflow.h"
 
+#ifdef USE_RGB_LED
+#include <io/rgb_led.h>
+#endif
+
 static bool encode_pairing_code(uint32_t code, uint8_t *outbuf) {
   if (code > 999999) {
     return false;
@@ -49,6 +53,10 @@ workflow_result_t workflow_ble_pairing_request(const vendor_header *const vhdr,
   char name[BLE_ADV_NAME_LEN + 1] = {0};
   ble_get_advertising_name(name, sizeof(name));
 
+#ifdef USE_RGB_LED
+  rgb_led_effect_start(RGB_LED_EFFECT_PAIRING, 0);
+#endif
+
   c_layout_t layout;
   memset(&layout, 0, sizeof(layout));
   screen_pairing_mode(ui_get_initial_setup(), name, strlen(name), &layout);
@@ -56,6 +64,10 @@ workflow_result_t workflow_ble_pairing_request(const vendor_header *const vhdr,
   uint32_t code = 0;
   workflow_result_t res =
       workflow_host_control(vhdr, hdr, &layout, &code, NULL);
+
+#ifdef USE_RGB_LED
+  rgb_led_effect_stop();
+#endif
 
   if (res != WF_OK_UI_ACTION) {
     ble_iface_end_pairing();
@@ -129,12 +141,20 @@ workflow_result_t workflow_wireless_setup(const vendor_header *const vhdr,
   char name[BLE_ADV_NAME_LEN + 1] = {0};
   ble_get_advertising_name(name, sizeof(name));
 
+#ifdef USE_RGB_LED
+  rgb_led_effect_start(RGB_LED_EFFECT_PAIRING, 0);
+#endif
+
   c_layout_t layout;
   memset(&layout, 0, sizeof(layout));
   screen_wireless_setup(name, strlen(name), &layout);
 
   uint32_t code = 0;
   workflow_result_t res = workflow_host_control(vhdr, hdr, &layout, &code, ios);
+
+#ifdef USE_RGB_LED
+  rgb_led_effect_stop();
+#endif
 
   if (res != WF_OK_UI_ACTION) {
     ble_iface_end_pairing();
