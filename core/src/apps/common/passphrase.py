@@ -10,16 +10,34 @@ _MAX_PASSPHRASE_LEN = const(50)
 if TYPE_CHECKING:
     from trezor.messages import ThpCreateNewSession
 
+if __debug__:
+    from trezor import log
+
 
 def is_enabled() -> bool:
     return storage_device.is_passphrase_enabled()
 
 
-async def get_passphrase(msg: ThpCreateNewSession) -> str:
-    if not is_enabled():
-        return ""
+def is_always_on_device() -> bool:
+    return storage_device.get_passphrase_always_on_device()
 
-    if msg.on_device or storage_device.get_passphrase_always_on_device():
+
+async def get_passphrase(msg: ThpCreateNewSession) -> str:
+    # Device setting "disabled passphrase protection" is ignored
+    if __debug__:
+        if not is_enabled() and msg.passphrase:
+            log.warning(
+                __name__,
+                "Creating new session with passphrase, ignoring device settings.",
+            )
+
+    # When always_on_device is True, messages with passphrase raise a DataError
+    if is_always_on_device() and msg.passphrase is not None:
+        raise DataError(
+            "Providing passphrase in message is not allowed when PASSPHRASE_ALWAYS_ON_DEVICE is True."
+        )
+
+    if msg.on_device or is_always_on_device():
         passphrase = await _get_on_device()
     else:
         passphrase = msg.passphrase or ""
