@@ -26,8 +26,8 @@ use crate::{
             util::{ConfirmValueParams, ContentType, PropsList, RecoveryType, StrOrBytes},
         },
         ui_firmware::{
-            FirmwareUI, ERROR_NOT_IMPLEMENTED, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
-            MAX_MENU_ITEMS, MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS,
+            FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS,
+            MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS,
         },
         ModelUI,
     },
@@ -126,7 +126,7 @@ impl FirmwareUI for UIEckhart {
         _info_button: bool,
         _chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(ERROR_NOT_IMPLEMENTED)
+        Err::<Gc<LayoutObj>, Error>(Error::NotImplementedError)
     }
 
     fn confirm_homescreen(
@@ -209,9 +209,7 @@ impl FirmwareUI for UIEckhart {
         #[cfg(feature = "universal_fw")]
         return flow::confirm_fido::new_confirm_fido(title, app_name, icon, accounts);
         #[cfg(not(feature = "universal_fw"))]
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"confirm_fido not used in bitcoin-only firmware",
-        ))
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn confirm_firmware_update(
@@ -324,7 +322,7 @@ impl FirmwareUI for UIEckhart {
         _hold: bool,
         _items: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn confirm_reset_device(recovery: bool) -> Result<impl LayoutMaybeTrace, Error> {
@@ -867,7 +865,7 @@ impl FirmwareUI for UIEckhart {
         _verb: TString<'static>,
         _items: Gc<List>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn prompt_backup() -> Result<impl LayoutMaybeTrace, Error> {
@@ -1074,7 +1072,7 @@ impl FirmwareUI for UIEckhart {
         _path: Option<TString<'static>>,
         _xpubs: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn show_checklist(
@@ -1491,9 +1489,7 @@ impl FirmwareUI for UIEckhart {
         _words: heapless::Vec<TString<'static>, 33>,
         _title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"use show_share_words_extended instead",
-        ))
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn show_share_words_extended(
@@ -1530,7 +1526,7 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_remaining_shares(_pages_iterable: Obj) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn show_simple(
