@@ -118,7 +118,7 @@ class HexFileSource(FileSource):
         return bytes(ih.tobinarray())
 
     def write(self, data: bytes, offset: int | None = None) -> None:
-        ih = intelhex.IntelHex(str(self.path))
+        ih = intelhex.IntelHex()
         if offset is None:
             offset = self.base_addr
         ih.frombytes(data, offset)
