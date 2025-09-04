@@ -46,9 +46,10 @@ void rgb_led_init(void) {
   driver->enabled = true;
 }
 
-void rgb_led_deinit(void) {
+void rgb_led_deinit() {
   rgb_led_driver_t *driver = &g_rgb_led_driver;
-
+  // ULTRA
+  // DLOUHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
   // turn the LED off
   rgb_led_set_color(0);
 

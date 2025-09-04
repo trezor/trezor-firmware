@@ -212,7 +212,7 @@ void rgb_led_set_color(uint32_t color) {
   rgb_led_t* drv = &g_rgb_led;
 
   if (!drv->initialized || !drv->enabled) {
-    return;
+    return true;
   }
 
   if (drv->ongoing_effect) {
