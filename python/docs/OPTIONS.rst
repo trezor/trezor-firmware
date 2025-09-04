@@ -47,6 +47,7 @@ on one page here.
     device             Device management commands - setup, recover seed, wipe, etc.
     eos                EOS commands.
     ethereum           Ethereum commands.
+    evolu              Evolu commands.
     fido               FIDO2, U2F and WebAuthN management commands.
     firmware           Firmware commands.
     get-features       Retrieve device features and settings.
@@ -148,6 +149,7 @@ Cardano commands.
     get-address             Get Cardano address.
     get-native-script-hash  Get Cardano native script hash.
     get-public-key          Get Cardano public key.
+    sign-message            Sign Cardano message containing arbitrary data.
     sign-tx                 Sign Cardano transaction.
 
 Miscellaneous cryptography features.
@@ -283,6 +285,25 @@ Ethereum commands.
     sign-typed-data       Sign typed data (EIP-712) with Ethereum address.
     sign-typed-data-hash  Sign hash of typed data (EIP-712) with Ethereum address.
     verify-message        Verify message signed with Ethereum address.
+
+Evolu commands.
+~~~~~~~~~~~~~~~
+
+.. code::
+
+  trezorctl evolu --help
+
+.. code::
+
+  Usage: trezorctl evolu [OPTIONS] COMMAND [ARGS]...
+
+    Evolu commands. Evolu is a local first storage framework. See https://github.com/evoluhq/evolu
+
+  Options:
+    --help  Show this message and exit.
+
+  Commands:
+    get-node  Return the SLIP-21 node for Evolu.
 
 FIDO2, U2F and WebAuthN management commands.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
