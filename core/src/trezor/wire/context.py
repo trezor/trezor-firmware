@@ -151,7 +151,10 @@ def try_get_ctx_ids() -> tuple[bytes, bytes] | None:
     if utils.USE_THP:
         from trezor.wire.thp.session_context import GenericSessionContext
 
-        ctx = get_context()
+        try:
+            ctx = get_context()
+        except NoWireContext:
+            return None
         if isinstance(ctx, GenericSessionContext):
             ids = (ctx.channel_id, ctx.session_id.to_bytes(1, "big"))
     return ids

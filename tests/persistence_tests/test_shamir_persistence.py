@@ -83,6 +83,9 @@ def test_abort(core_emulator: Emulator):
             common.go_next(debug)
 
     assert debug.read_layout().main_component() == "Homescreen"
+
+    # create a new client, since the existing THP channel state has been wiped
+    device_handler = BackgroundDeviceHandler(core_emulator.client.get_new_client())
     features = device_handler.features()
     assert features.recovery_status == RecoveryStatus.Nothing
 
