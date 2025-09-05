@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "sec/optiga_common.h"
 #ifdef SECURE_MODE
 
 #include <trezor_rtl.h>
@@ -37,16 +38,15 @@
 // 0xF1D0).
 #define OID_PIN_SECRET (OPTIGA_OID_DATA + 0)
 
-// Digest of the stretched PIN (OID 0xF1D4).
-#define OID_STRETCHED_PIN (OPTIGA_OID_DATA + 4)
-
+// TODO: Maybe rename to OID_STRETCHING_SECRET
 // Counter-protected key for HMAC-SHA256 PIN stretching step (OID 0xF1D8).
 #define OID_PIN_HMAC (OPTIGA_OID_DATA + 8)
 
-// Counter which limits the guesses at OID_STRETCHED_PIN (OID 0xE120).
+// Counter which limits the guesses at OID_STRETCHED_PINS (OID 0xE120).
 #define OID_STRETCHED_PIN_CTR (OPTIGA_OID_COUNTER + 0)
 
 // Counter which limits the use of OID_PIN_HMAC (OID 0xE122).
+// TODO: Maybe rename to OID_STRETCHING_CTR
 #define OID_PIN_HMAC_CTR (OPTIGA_OID_COUNTER + 2)
 
 // Counter which limits the total number of PIN stretching operations over the
@@ -69,12 +69,24 @@
 // The throttling delay when the security event counter is at its maximum.
 #define OPTIGA_T_MAX_MS 5000
 
-// Value of the PIN counter when it is reset.
-static const uint8_t COUNTER_RESET[] = {0, 0, 0, 0, 0, 0, 0, PIN_MAX_TRIES};
+// Stretched PINs
+static const uint16_t OID_STRETCHED_PINS[] = {
+    OPTIGA_OID_DATA + 4,  OPTIGA_OID_DATA + 1, OPTIGA_OID_DATA + 2,
+    OPTIGA_OID_DATA + 3,  OPTIGA_OID_DATA + 5, OPTIGA_OID_DATA + 6,
+    OPTIGA_OID_DATA + 7,  OPTIGA_OID_DATA + 9, OPTIGA_OID_DATA + 10,
+    OPTIGA_OID_DATA + 11, OPTIGA_OID_DATA + 12};
 
-// Value of the PIN counter with one extra attempt needed in optiga_pin_set().
-static const uint8_t COUNTER_RESET_EXTRA[] = {0, 0, 0, 0,
-                                              0, 0, 0, PIN_MAX_TRIES + 1};
+// Value of the PIN counter when it is reset.
+static const uint8_t HMAC_COUNTER_RESET[] = {0, 0, 0, 0,
+                                             0, 0, 0, PIN_MAX_TRIES};
+
+// Value of the PIN counter with one extra attempt
+static const uint8_t STRETCHED_PIN_COUNTER_RESET_1[] = {
+    0, 0, 0, 0, 0, 0, 0, PIN_MAX_TRIES + 1};
+
+// Value of the PIN counter with OPTIGA_STRETCHED_PINS_COUNT extra attempts
+static const uint8_t STRETCHED_PIN_COUNTER_RESET_2[] = {
+    0, 0, 0, 0, 0, 0, 0, OPTIGA_STRETCHED_PINS_COUNT + PIN_MAX_TRIES};
 
 // Initial value of the counter which limits the total number of PIN stretching
 // operations. The limit is 600000 stretching operations, which equates to
@@ -86,8 +98,12 @@ static const optiga_metadata_item TYPE_AUTOREF =
     OPTIGA_META_VALUE(OPTIGA_DATA_TYPE_AUTOREF);
 static const optiga_metadata_item TYPE_PRESSEC =
     OPTIGA_META_VALUE(OPTIGA_DATA_TYPE_PRESSEC);
-static const optiga_metadata_item ACCESS_STRETCHED_PIN =
-    OPTIGA_ACCESS_CONDITION(OPTIGA_ACCESS_COND_AUTO, OID_STRETCHED_PIN);
+static const optiga_metadata_item ACCESS_FIRST_STRETCHED_PIN =
+    OPTIGA_ACCESS_CONDITION(OPTIGA_ACCESS_COND_AUTO, OID_STRETCHED_PINS[0]);
+static const optiga_metadata_item ACCESS_LAST_STRETCHED_PIN =
+    OPTIGA_ACCESS_CONDITION(
+        OPTIGA_ACCESS_COND_AUTO,
+        OID_STRETCHED_PINS[OPTIGA_STRETCHED_PINS_COUNT - 1]);
 static const optiga_metadata_item ACCESS_PIN_SECRET =
     OPTIGA_ACCESS_CONDITION(OPTIGA_ACCESS_COND_AUTO, OID_PIN_SECRET);
 static const optiga_metadata_item ACCESS_STRETCHED_PIN_CTR =
@@ -363,26 +379,67 @@ static bool optiga_pin_init_metadata(void) {
   // Set metadata for counter-protected PIN secret.
   memzero(&metadata, sizeof(metadata));
   metadata.change = OPTIGA_META_ACCESS_ALWAYS;
-  metadata.read = ACCESS_STRETCHED_PIN;
+  metadata.read = ACCESS_LAST_STRETCHED_PIN;
   metadata.execute = OPTIGA_META_ACCESS_ALWAYS;
   metadata.data_type = TYPE_AUTOREF;
   if (!optiga_set_metadata(OID_PIN_SECRET, &metadata)) {
     return false;
   }
 
-  // Set metadata for stretched PIN.
+// TODO: Try to remove the if
+#if OPTIGA_STRETCHED_PINS == 1
+  // Set metadata for the stretched PIN.
   memzero(&metadata, sizeof(metadata));
   metadata.change = ACCESS_PIN_SECRET;
   metadata.read = OPTIGA_META_ACCESS_NEVER;
   metadata.execute = ACCESS_STRETCHED_PIN_CTR;
   metadata.data_type = TYPE_AUTOREF;
-  if (!optiga_set_metadata(OID_STRETCHED_PIN, &metadata)) {
+  if (!optiga_set_metadata(OID_STRETCHED_PINS[0], &metadata)) {
+    return false;
+  }
+#else
+  // Set metadata for the first stretched PIN.
+  memzero(&metadata, sizeof(metadata));
+  metadata.change =
+      OPTIGA_ACCESS_CONDITION(OPTIGA_ACCESS_COND_AUTO, OID_STRETCHED_PINS[1]);
+  metadata.read = OPTIGA_META_ACCESS_NEVER;
+  metadata.execute = ACCESS_STRETCHED_PIN_CTR;
+  metadata.data_type = TYPE_AUTOREF;
+  if (!optiga_set_metadata(OID_STRETCHED_PINS[0], &metadata)) {
     return false;
   }
 
+  // Set metadata for the rest of the stretched PINs.
+  for (int i = 1; i < OPTIGA_STRETCHED_PINS_COUNT - 1; i++) {
+    memzero(&metadata, sizeof(metadata));
+    metadata.change = OPTIGA_ACCESS_CONDITION(OPTIGA_ACCESS_COND_AUTO,
+                                              OID_STRETCHED_PINS[i + 1]);
+    metadata.read = OPTIGA_ACCESS_CONDITION(OPTIGA_ACCESS_COND_AUTO,
+                                            OID_STRETCHED_PINS[i - 1]);
+    metadata.execute = ACCESS_STRETCHED_PIN_CTR;
+    metadata.data_type = TYPE_AUTOREF;
+    if (!optiga_set_metadata(OID_STRETCHED_PINS[i], &metadata)) {
+      return false;
+    }
+  }
+
+  // Set metadata for the last stretched PIN.
+  memzero(&metadata, sizeof(metadata));
+  metadata.change = ACCESS_PIN_SECRET;
+  metadata.read = OPTIGA_ACCESS_CONDITION(
+      OPTIGA_ACCESS_COND_AUTO,
+      OID_STRETCHED_PINS[OPTIGA_STRETCHED_PINS_COUNT - 2]);
+  metadata.execute = ACCESS_STRETCHED_PIN_CTR;
+  metadata.data_type = TYPE_AUTOREF;
+  if (!optiga_set_metadata(OID_STRETCHED_PINS[OPTIGA_STRETCHED_PINS_COUNT - 1],
+                           &metadata)) {
+    return false;
+  }
+#endif
+
   // Set metadata for HMAC-SHA256 PIN stretching secret.
   memzero(&metadata, sizeof(metadata));
-  metadata.change = ACCESS_STRETCHED_PIN;
+  metadata.change = ACCESS_FIRST_STRETCHED_PIN;
   metadata.read = OPTIGA_META_ACCESS_NEVER;
   metadata.execute = ACCESS_PIN_HMAC_CTR;
   metadata.data_type = TYPE_PRESSEC;
@@ -390,7 +447,7 @@ static bool optiga_pin_init_metadata(void) {
     return false;
   }
 
-  // Set metadata for the counter of guesses at OID_STRETCHED_PIN.
+  // Set metadata for the counter of guesses at OID_STRETCHED_PINS.
   memzero(&metadata, sizeof(metadata));
   metadata.change = ACCESS_PIN_SECRET;
   metadata.read = OPTIGA_META_ACCESS_ALWAYS;
@@ -401,7 +458,7 @@ static bool optiga_pin_init_metadata(void) {
 
   // Set metadata for the counter of OID_PIN_HMAC uses.
   memzero(&metadata, sizeof(metadata));
-  metadata.change = ACCESS_STRETCHED_PIN;
+  metadata.change = ACCESS_FIRST_STRETCHED_PIN;
   metadata.read = OPTIGA_META_ACCESS_ALWAYS;
   metadata.execute = OPTIGA_META_ACCESS_ALWAYS;
   if (!optiga_set_metadata(OID_PIN_HMAC_CTR, &metadata)) {
@@ -602,26 +659,21 @@ end:
   return ret;
 }
 
-bool optiga_pin_set(optiga_ui_progress_t ui_progress,
-                    uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
+bool optiga_pin_init(void) {
+  return optiga_pin_init_metadata() && optiga_pin_init_stretch();
+}
+
+bool optiga_pin_set(
+    optiga_ui_progress_t ui_progress,
+    uint8_t stretching_secret[OPTIGA_PIN_SECRET_SIZE],
+    uint8_t stretched_pins[OPTIGA_STRETCHED_PINS_COUNT][OPTIGA_PIN_SECRET_SIZE],
+    uint8_t reset_key[OPTIGA_PIN_SECRET_SIZE]) {
+  // TODO: Fix ui progress
   optiga_set_ui_progress(ui_progress);
 
   bool ret = true;
-  if (!optiga_pin_init_metadata() || !optiga_pin_init_stretch()) {
-    ret = false;
-    goto end;
-  }
 
   ui_progress();
-
-  // Stretch the PIN more with stretching secrets from the Optiga. This step
-  // ensures that if an attacker extracts the value of OID_STRETCHED_PIN or
-  // OID_PIN_SECRET, then it cannot be used to conduct an offline brute-force
-  // search for the PIN.
-  if (!optiga_pin_stretch_cmac_ecdh(ui_progress, stretched_pin)) {
-    ret = false;
-    goto end;
-  }
 
   // Generate and store the counter-protected PIN secret.
   uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE] = {0};
@@ -629,6 +681,7 @@ bool optiga_pin_set(optiga_ui_progress_t ui_progress,
     ret = false;
     goto end;
   }
+  // TODO: Use also entropy from tropic
   random_xor(pin_secret, sizeof(pin_secret));
 
   if (optiga_set_data_object(OID_PIN_SECRET, false, pin_secret,
@@ -637,101 +690,88 @@ bool optiga_pin_set(optiga_ui_progress_t ui_progress,
     goto end;
   }
 
-  // Generate the key for the HMAC-SHA256 PIN stretching step.
-  uint8_t pin_hmac[OPTIGA_PIN_SECRET_SIZE] = {0};
-  if (optiga_get_random(pin_hmac, sizeof(pin_hmac)) != OPTIGA_SUCCESS) {
-    ret = false;
-    goto end;
-  }
-  random_xor(pin_hmac, sizeof(pin_hmac));
-
-  // Authorise using OID_PIN_SECRET so that we can write to OID_STRETCHED_PIN
-  // and OID_STRETCHED_PIN_CTR.
+  // Authorise using OID_PIN_SECRET so that we can write to the last stretched
+  // PIN
   if (optiga_set_auto_state(OPTIGA_OID_SESSION_CTX, OID_PIN_SECRET, pin_secret,
                             sizeof(pin_secret)) != OPTIGA_SUCCESS) {
     ret = false;
     goto end;
   }
 
-  // Process the stretched PIN using a one-way function before using it in the
-  // operation that will be executed in Optiga during verification. This ensures
-  // that in the unlikely case of an attacker recording communication between
-  // the MCU and Optiga, they will not gain knowledge of the stretched PIN.
+  // Initialize the counter that limits the guesses at OID_STRETCHED_PINS with
+  // OPTIGA_STRETCHED_PINS_COUNT + PIN_MAX_TRIES, of which
+  // OPTIGA_STRETCHED_PINS_COUNT will be used when setting stretched PINs.
+  if (optiga_set_data_object(
+          OID_STRETCHED_PIN_CTR, false, STRETCHED_PIN_COUNTER_RESET_2,
+          sizeof(STRETCHED_PIN_COUNTER_RESET_2)) != OPTIGA_SUCCESS) {
+    ret = false;
+    goto end;
+  }
+
   uint8_t digest[OPTIGA_PIN_SECRET_SIZE] = {0};
-  hmac_sha256(stretched_pin, OPTIGA_PIN_SECRET_SIZE, NULL, 0, digest);
 
-  // Compute the operation that will be executed in Optiga during verification.
-  uint8_t hmac_buffer[ENCRYPT_SYM_PREFIX_SIZE + OPTIGA_PIN_SECRET_SIZE] = {
-      0x61, 0x00, 0x20};
-  hmac_sha256(pin_hmac, sizeof(pin_hmac), digest, sizeof(digest),
-              &hmac_buffer[ENCRYPT_SYM_PREFIX_SIZE]);
+  for (int i = OPTIGA_STRETCHED_PINS_COUNT - 1; i >= 0; i--) {
+    // Process the stretched PIN using a one-way function before sending it to
+    // the Optiga. This ensures that in the unlikely case of an attacker
+    // recording communication between the MCU and Optiga, they will not gain
+    // knowledge of the stretched PIN.
+    hmac_sha256(stretched_pins[i], OPTIGA_PIN_SECRET_SIZE, NULL, 0, digest);
 
-  // Stretch the PIN with the result.
-  hmac_sha256(stretched_pin, OPTIGA_PIN_SECRET_SIZE, hmac_buffer,
-              sizeof(hmac_buffer), stretched_pin);
+    if (i == 0) {
+      memcpy(reset_key, digest, sizeof(digest));
+    }
 
-  // Process the stretched PIN using a one-way function before sending it to the
-  // Optiga. This ensures that in the unlikely case of an attacker recording
-  // communication between the MCU and Optiga, they will not gain knowledge of
-  // the stretched PIN.
-  hmac_sha256(stretched_pin, OPTIGA_PIN_SECRET_SIZE, NULL, 0, digest);
+    // Store the digest of the stretched PIN in OID_STRETCHED_PINS[i].
+    if (optiga_set_data_object(OID_STRETCHED_PINS[i], false, digest,
+                               sizeof(digest)) != OPTIGA_SUCCESS) {
+      ret = false;
+      goto end;
+    }
 
-  // Store the digest of the stretched PIN in OID_STRETCHED_PIN.
-  if (optiga_set_data_object(OID_STRETCHED_PIN, false, digest,
-                             sizeof(digest)) != OPTIGA_SUCCESS) {
-    ret = false;
-    goto end;
-  }
+    // Stretch the PIN more with the counter-protected PIN secret. This method
+    // ensures that if the user chooses a high-entropy PIN, then even if the
+    // Optiga and its communication link is completely compromised, it will not
+    // reduce the security of their device any more than if the Optiga was not
+    // integrated into the device in the first place.
+    hmac_sha256(stretched_pins[i], OPTIGA_PIN_SECRET_SIZE, pin_secret,
+                sizeof(pin_secret), stretched_pins[i]);
 
-  // Initialize the counter which limits the guesses at OID_STRETCHED_PIN with
-  // one extra attempt that we will use up in the next step.
-  if (optiga_set_data_object(OID_STRETCHED_PIN_CTR, false, COUNTER_RESET_EXTRA,
-                             sizeof(COUNTER_RESET_EXTRA)) != OPTIGA_SUCCESS) {
-    ret = false;
-    goto end;
-  }
+    ui_progress();
 
-  ui_progress();
-
-  // Authorise using OID_STRETCHED_PIN so that we can write to OID_PIN_HMAC and
-  // OID_PIN_HMAC_CTR.
-  if (optiga_set_auto_state(OPTIGA_OID_SESSION_CTX, OID_STRETCHED_PIN, digest,
-                            sizeof(digest)) != OPTIGA_SUCCESS) {
-    ret = false;
-    goto end;
+    // Authorise using OID_STRETCHED_PINS[i] so that we can write to
+    //  * OID_STRETCHED_PINS[i + 1], if i < OPTIGA_STRETCHED_PINS_COUNT - 1;
+    //  * OID_PIN_HMAC and OID_PIN_HMAC_CTR, if i == OPTIGA_STRETCHED_PINS_COUNT
+    //  - 1.
+    if (optiga_set_auto_state(OPTIGA_OID_SESSION_CTX, OID_STRETCHED_PINS[i],
+                              digest, sizeof(digest)) != OPTIGA_SUCCESS) {
+      ret = false;
+      goto end;
+    }
   }
 
   // Initialize the key for HMAC-SHA256 PIN stretching.
-  if (optiga_set_data_object(OID_PIN_HMAC, false, pin_hmac, sizeof(pin_hmac)) !=
-      OPTIGA_SUCCESS) {
+  if (optiga_set_data_object(OID_PIN_HMAC, false, stretching_secret,
+                             OPTIGA_PIN_SECRET_SIZE) != OPTIGA_SUCCESS) {
     ret = false;
     goto end;
   }
 
   // Initialize the PIN counter which limits the use of OID_PIN_HMAC.
-  if (optiga_set_data_object(OID_PIN_HMAC_CTR, false, COUNTER_RESET,
-                             sizeof(COUNTER_RESET)) != OPTIGA_SUCCESS) {
+  if (optiga_set_data_object(OID_PIN_HMAC_CTR, false, HMAC_COUNTER_RESET,
+                             sizeof(HMAC_COUNTER_RESET)) != OPTIGA_SUCCESS) {
     ret = false;
     goto end;
   }
 
   ui_progress();
 
-  // Stretch the PIN more with the counter-protected PIN secret. This method
-  // ensures that if the user chooses a high-entropy PIN, then even if the
-  // Optiga and its communication link is completely compromised, it will not
-  // reduce the security of their device any more than if the Optiga was not
-  // integrated into the device in the first place.
-  hmac_sha256(stretched_pin, OPTIGA_PIN_SECRET_SIZE, pin_secret,
-              sizeof(pin_secret), stretched_pin);
-
 end:
-  memzero(hmac_buffer, sizeof(hmac_buffer));
-  memzero(pin_hmac, sizeof(pin_hmac));
   memzero(pin_secret, sizeof(pin_secret));
   memzero(digest, sizeof(digest));
   optiga_clear_auto_state(OID_PIN_SECRET);
-  optiga_clear_auto_state(OID_STRETCHED_PIN);
+  for (int i = 0; i < OPTIGA_STRETCHED_PINS_COUNT; i++) {
+    optiga_clear_auto_state(OID_STRETCHED_PINS[i]);
+  }
   optiga_set_ui_progress(NULL);
   return ret;
 }
@@ -756,9 +796,10 @@ optiga_pin_result optiga_pin_verify_v4(
     goto end;
   }
 
-  // Authorise using OID_STRETCHED_PIN so that we can read from OID_PIN_SECRET.
+  // Authorise using OID_STRETCHED_PINS[0] so that we can read from
+  // OID_PIN_SECRET.
   optiga_result res =
-      optiga_set_auto_state(OPTIGA_OID_SESSION_CTX, OID_STRETCHED_PIN,
+      optiga_set_auto_state(OPTIGA_OID_SESSION_CTX, OID_STRETCHED_PINS[0],
                             stretched_pin, sizeof(stretched_pin));
   if (res != OPTIGA_SUCCESS) {
     uint8_t error_code = 0;
@@ -818,7 +859,7 @@ optiga_pin_result optiga_pin_verify_v4(
 
 end:
   memzero(stretched_pin, sizeof(stretched_pin));
-  optiga_clear_auto_state(OID_STRETCHED_PIN);
+  optiga_clear_auto_state(OID_STRETCHED_PINS[0]);
   optiga_set_ui_progress(NULL);
   return ret;
 }
@@ -860,32 +901,79 @@ end:
   return ret;
 }
 
-optiga_pin_result optiga_pin_verify(
+optiga_pin_result optiga_stretch_pin(
     optiga_ui_progress_t ui_progress,
     uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
+  if (!optiga_pin_stretch_cmac_ecdh(ui_progress, stretched_pin)) {
+    return OPTIGA_PIN_ERROR;
+  }
+
+  return optiga_pin_stretch_hmac(stretched_pin);
+}
+
+static void optiga_stretch_hmac_offline(
+    uint8_t stretching_secret[OPTIGA_PIN_SECRET_SIZE],
+    uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
+  uint8_t hmac_buffer[ENCRYPT_SYM_PREFIX_SIZE + OPTIGA_PIN_SECRET_SIZE] = {
+      0x61, 0x00, 0x20};
+  uint8_t digest[OPTIGA_PIN_SECRET_SIZE] = {0};
+
+  // Process the stretched PIN using a one-way function before using it in the
+  // operation that will be executed in Optiga during verification. This
+  // ensures that in the unlikely case of an attacker recording communication
+  // between the MCU and Optiga, they will not gain knowledge of the stretched
+  // PIN.
+  hmac_sha256(stretched_pin, OPTIGA_PIN_SECRET_SIZE, NULL, 0, digest);
+
+  // Compute the operation that will be executed in Optiga during
+  // verification.
+  hmac_sha256(stretching_secret, OPTIGA_PIN_SECRET_SIZE, digest, sizeof(digest),
+              &hmac_buffer[ENCRYPT_SYM_PREFIX_SIZE]);
+
+  // Stretch the PIN with the result.
+  hmac_sha256(stretched_pin, OPTIGA_PIN_SECRET_SIZE, hmac_buffer,
+              sizeof(hmac_buffer), stretched_pin);
+
+  memzero(digest, sizeof(digest));
+  memzero(hmac_buffer, sizeof(hmac_buffer));
+}
+
+bool optiga_stretch_pin_offline(
+    optiga_ui_progress_t ui_progress,
+    uint8_t stretching_secret[OPTIGA_PIN_SECRET_SIZE],
+    uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
+  // TODO: Fix progress
+  // Stretch the PIN more with stretching secrets from the Optiga.
+
+  // Stretch the PIN more with stretching secrets from the Optiga. This step
+  // ensures that if an attacker extracts the value of OID_STRETCHED_PINS[i]
+  // or OID_PIN_SECRET, then it cannot be used to conduct an offline
+  // brute-force search for the PIN.
+  if (!optiga_pin_stretch_cmac_ecdh(ui_progress, stretched_pin)) {
+    return false;
+  }
+
+  optiga_stretch_hmac_offline(stretching_secret, stretched_pin);
+
+  return true;
+}
+
+optiga_pin_result optiga_pin_verify(
+    optiga_ui_progress_t ui_progress, int index,
+    uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
+  // TODO: Fix progress
   optiga_set_ui_progress(ui_progress);
   optiga_pin_result ret = OPTIGA_PIN_SUCCESS;
-
-  // Stretch the PIN more with stretching secrets from the Optiga.
-  if (!optiga_pin_stretch_cmac_ecdh(ui_progress, stretched_pin)) {
-    ret = OPTIGA_PIN_ERROR;
-    goto end;
-  }
-
-  ret = optiga_pin_stretch_hmac(stretched_pin);
-  if (ret != OPTIGA_PIN_SUCCESS) {
-    goto end;
-  }
 
   // Process the stretched PIN using a one-way function before sending it to the
   // Optiga.
   uint8_t digest[OPTIGA_PIN_SECRET_SIZE] = {0};
   hmac_sha256(stretched_pin, OPTIGA_PIN_SECRET_SIZE, NULL, 0, digest);
 
-  // Authorise using OID_STRETCHED_PIN so that we can read from OID_PIN_SECRET
-  // and reset OID_PIN_HMAC_CTR.
-  optiga_result res = optiga_set_auto_state(
-      OPTIGA_OID_SESSION_CTX, OID_STRETCHED_PIN, digest, sizeof(digest));
+  // Authorise using OID_STRETCHED_PINS[index]
+  optiga_result res =
+      optiga_set_auto_state(OPTIGA_OID_SESSION_CTX, OID_STRETCHED_PINS[index],
+                            digest, sizeof(digest));
   if (res != OPTIGA_SUCCESS) {
     uint8_t error_code = 0;
     if (res != OPTIGA_ERR_CMD ||
@@ -907,14 +995,22 @@ optiga_pin_result optiga_pin_verify(
     goto end;
   }
 
-  ui_progress();
-
-  // Reset the counter which limits the use of OID_PIN_HMAC.
-  if (optiga_set_data_object(OID_PIN_HMAC_CTR, false, COUNTER_RESET,
-                             sizeof(COUNTER_RESET)) != OPTIGA_SUCCESS) {
-    ret = OPTIGA_PIN_ERROR;
-    goto end;
+  for (int i = index + 1; i < OPTIGA_STRETCHED_PINS_COUNT; i++) {
+    size_t size = 0;
+    if (optiga_get_data_object(OID_STRETCHED_PINS[i], false, digest,
+                               OPTIGA_PIN_SECRET_SIZE,
+                               &size) != OPTIGA_SUCCESS) {
+      ret = OPTIGA_PIN_ERROR;
+      goto end;
+    }
+    if (optiga_set_auto_state(OPTIGA_OID_SESSION_CTX, OID_STRETCHED_PINS[i],
+                              digest, sizeof(digest)) != OPTIGA_SUCCESS) {
+      ret = OPTIGA_PIN_ERROR;
+      goto end;
+    }
   }
+
+  ui_progress();
 
   // Read the counter-protected PIN secret from OID_PIN_SECRET.
   uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE] = {0};
@@ -936,9 +1032,14 @@ optiga_pin_result optiga_pin_verify(
     goto end;
   }
 
-  // Reset the counter which limits the guesses at OID_STRETCHED_PIN.
-  if (optiga_set_data_object(OID_STRETCHED_PIN_CTR, false, COUNTER_RESET,
-                             sizeof(COUNTER_RESET)) != OPTIGA_SUCCESS) {
+  // Reset the counter which limits the guesses at OID_STRETCHED_PINS.
+  // The one extra attempt is used to authorize using the first stretched PIN in
+  // optiga_reset_counter().
+  // TODO: If this is the first attempt, we can reset both counters to
+  // PIN_MAX_TRIES
+  if (optiga_set_data_object(
+          OID_STRETCHED_PIN_CTR, false, STRETCHED_PIN_COUNTER_RESET_1,
+          sizeof(STRETCHED_PIN_COUNTER_RESET_1)) != OPTIGA_SUCCESS) {
     ret = OPTIGA_PIN_ERROR;
     goto end;
   }
@@ -948,10 +1049,30 @@ optiga_pin_result optiga_pin_verify(
 end:
   memzero(pin_secret, sizeof(pin_secret));
   memzero(digest, sizeof(digest));
-  optiga_clear_auto_state(OID_STRETCHED_PIN);
+  for (int i = 0; i < OPTIGA_STRETCHED_PINS_COUNT; i++) {
+    optiga_clear_auto_state(OID_STRETCHED_PINS[i]);
+  }
   optiga_clear_auto_state(OID_PIN_SECRET);
   optiga_set_ui_progress(NULL);
   return ret;
+}
+
+bool optiga_reset_counter(optiga_ui_progress_t ui_progress,
+                          uint8_t reset_key[OPTIGA_PIN_SECRET_SIZE]) {
+  // Authorize using the first stretched PIN.
+  if (optiga_set_auto_state(OPTIGA_OID_SESSION_CTX, OID_STRETCHED_PINS[0],
+                            reset_key,
+                            OPTIGA_PIN_SECRET_SIZE) != OPTIGA_SUCCESS) {
+    return false;
+  }
+
+  // Reset the counter.
+  if (optiga_set_data_object(OID_PIN_HMAC_CTR, false, HMAC_COUNTER_RESET,
+                             sizeof(HMAC_COUNTER_RESET)) != OPTIGA_SUCCESS) {
+    return false;
+  }
+
+  return true;
 }
 
 static uint32_t uint32_from_be(uint8_t buf[4]) {

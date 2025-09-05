@@ -160,4 +160,86 @@ bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
   return true;
 }
 
+bool tropic_stretch_pin(tropic_ui_progress_t ui_progress, int slot_index,
+                        uint8_t stretched_pin[MAC_AND_DESTROY_DATA_SIZE]) {
+  // TODO: Fix ui progress
+  tropic_driver_t *drv = &g_tropic_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  return lt_mac_and_destroy(&drv->handle, slot_index, stretched_pin,
+                            stretched_pin) == LT_OK;
+}
+
+bool tropic_reset_slots(tropic_ui_progress_t ui_progress, int slot_index,
+                        const uint8_t reset_key[MAC_AND_DESTROY_DATA_SIZE]) {
+  // TODO: Fix ui progress
+  tropic_driver_t *drv = &g_tropic_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  lt_ret_t res = LT_FAIL;
+  uint8_t output[MAC_AND_DESTROY_DATA_SIZE] = {0};
+
+  for (int i = 0; i <= slot_index; i++) {
+    res = lt_mac_and_destroy(&drv->handle, i, reset_key, output);
+    if (res != LT_OK) {
+      goto cleanup;
+    }
+  }
+
+cleanup:
+  memzero(output, sizeof(output));
+
+  return res == LT_OK;
+}
+
+bool tropic_pin_set(
+    tropic_ui_progress_t ui_progress,
+    uint8_t stretched_pins[PIN_MAX_TRIES][MAC_AND_DESTROY_DATA_SIZE],
+    uint8_t reset_key[MAC_AND_DESTROY_DATA_SIZE]) {
+  // TODO: Fix ui progress
+  tropic_driver_t *drv = &g_tropic_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  lt_ret_t res = LT_FAIL;
+  uint8_t output[MAC_AND_DESTROY_DATA_SIZE] = {0};
+
+  // TODO: Use entropy from Optiga and MCU
+  res = lt_random_value_get(&drv->handle, reset_key, MAC_AND_DESTROY_DATA_SIZE);
+  if (res != LT_OK) {
+    goto cleanup;
+  }
+
+  for (int i = 0; i < PIN_MAX_TRIES; i++) {
+    res = lt_mac_and_destroy(&drv->handle, i, reset_key, output);
+    if (res != LT_OK) {
+      goto cleanup;
+    }
+
+    res = lt_mac_and_destroy(&drv->handle, i, stretched_pins[i],
+                             stretched_pins[i]);
+    if (res != LT_OK) {
+      goto cleanup;
+    }
+
+    res = lt_mac_and_destroy(&drv->handle, i, reset_key, output);
+    if (res != LT_OK) {
+      goto cleanup;
+    }
+  }
+
+cleanup:
+  memzero(output, sizeof(output));
+
+  return res == LT_OK;
+}
+
 #endif  // SECURE_MODE
