@@ -117,9 +117,9 @@ async def apply_settings(msg: ApplySettings) -> Success:
         storage_device.set_passphrase_always_on_device(passphrase_always_on_device)
 
     if auto_lock_delay_ms is not None:
-        if auto_lock_delay_ms < storage_device.AUTOLOCK_DELAY_MINIMUM:
+        if auto_lock_delay_ms < storage_device.AUTOLOCK_DELAY_USB_MIN_MS:
             raise ProcessError("Auto-lock delay too short")
-        if auto_lock_delay_ms > storage_device.AUTOLOCK_DELAY_MAXIMUM:
+        if auto_lock_delay_ms > storage_device.AUTOLOCK_DELAY_USB_MAX_MS:
             raise ProcessError("Auto-lock delay too long")
         await _require_confirm_change_autolock_delay(auto_lock_delay_ms)
         storage_device.set_autolock_delay_ms(auto_lock_delay_ms)
