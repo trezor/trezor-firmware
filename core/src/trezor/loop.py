@@ -14,11 +14,25 @@ from typing import TYPE_CHECKING
 from trezor import io, log
 
 if TYPE_CHECKING:
-    from typing import Any, Awaitable, Callable, Coroutine, Generator, Union
+    from typing import (
+        Any,
+        Awaitable,
+        Callable,
+        Coroutine,
+        Generator,
+        Generic,
+        TypeVar,
+        Union,
+    )
 
-    Task = Union[Coroutine, Generator, "wait"]
-    AwaitableTask = Task | Awaitable
+    T = TypeVar("T")
+    Task = Union[Coroutine[Any, Any, T], Generator[Any, Any, T], "wait"]
+    AwaitableTask = Task[T] | Awaitable[T]
     Finalizer = Callable[[Task, Any], None]
+else:
+    # typechecker cheat: Generic[T] will be `object` which is a valid parent type
+    Generic = [object]
+    T = 0
 
 # tasks scheduled for execution in the future
 _queue = utimeq.utimeq(64)
@@ -120,7 +134,7 @@ def run() -> None:
             # timeout occurred, run the first scheduled task
             if _queue:
                 _queue.pop(task_entry)
-                _step(task_entry[1], task_entry[2])  # type: ignore [Argument of type "int" cannot be assigned to parameter "task" of type "Task" in function "_step"]
+                _step(task_entry[1], task_entry[2])  # type: ignore [Argument of type "int" cannot be assigned to parameter "task" of type "Task[Unknown]" in function "_step"]
                 # error: Argument 1 to "_step" has incompatible type "int"; expected "Coroutine[Any, Any, Any]"
                 # rationale: We use untyped lists here, because that is what the C API supports.
 
@@ -219,6 +233,11 @@ class sleep(Syscall):
         deadline = utime.ticks_add(utime.ticks_ms(), self.delay_ms)
         schedule(task, deadline, deadline)
 
+    if TYPE_CHECKING:
+
+        def __await__(self) -> Generator[Any, None, int]:
+            return super().__await__()
+
 
 class wait(Syscall):
     """
@@ -272,7 +291,7 @@ class wait(Syscall):
 _type_gen: type[Generator] = type((lambda: (yield))())
 
 
-class race(Syscall):
+class race(Syscall, Generic[T]):
     """
     Given a list of either children tasks or syscalls, `race` waits until one of
     them completes (tasks are executed in parallel, syscalls are waited upon,
@@ -293,7 +312,7 @@ class race(Syscall):
     `race.__iter__` for explanation.  Always use `await`.
     """
 
-    def __init__(self, *children: AwaitableTask) -> None:
+    def __init__(self, *children: AwaitableTask[T]) -> None:
         self.children = children
         self.finished = False
         self.scheduled: list[Task] = []  # scheduled wrapper tasks
@@ -320,7 +339,7 @@ class race(Syscall):
                 # child is a layout -- type-wise, it is an Awaitable, but
                 # implementation-wise it is an Iterable and we know that its __iter__
                 # will return a Generator.
-                child_task = child.__iter__()  # type: ignore [Cannot access attribute "__iter__" for class "Awaitable[Unknown]";;Cannot access attribute "__iter__" for class "Coroutine[Unknown, Unknown, Unknown]"]
+                child_task = child.__iter__()  # type: ignore [Cannot access attribute "__iter__" for class "Awaitable[T@race]";;Cannot access attribute "__iter__" for class "Coroutine[Any, Any, T@race]"]
             schedule(child_task, None, None, finalizer)
             scheduled.append(child_task)
 
@@ -345,6 +364,11 @@ class race(Syscall):
             self.finished = True
             self.exit()
             raise
+
+    if TYPE_CHECKING:
+
+        def __await__(self) -> Generator[Any, None, T]:
+            return self.__iter__()  # type: ignore [Expression of type "Task[Unknown]" is incompatible with return type "Generator[Any, None, T@race]"]
 
 
 class mailbox(Syscall):
@@ -450,7 +474,7 @@ class mailbox(Syscall):
             taker.close()
 
 
-class spawn(Syscall):
+class spawn(Syscall, Generic[T]):
     """Spawn a task asynchronously and get an awaitable reference to it.
 
     Abstraction over `loop.schedule` and `loop.close`. Useful when you need to start
@@ -480,7 +504,7 @@ class spawn(Syscall):
     the original return value (or raise the original exception).
     """
 
-    def __init__(self, task: Task) -> None:
+    def __init__(self, task: Task[T]) -> None:
         self.task = task
         self.callback: Task | None = None
         self.finalizer_callback: Callable[["spawn"], None] | None = None
@@ -514,7 +538,7 @@ class spawn(Syscall):
         if self.finalizer_callback is not None:
             self.finalizer_callback(self)
 
-    def __iter__(self) -> Task:
+    def __iter__(self) -> Task[T]:
         if self.finished:
             # exit immediately if we already have a return value
             if isinstance(self.return_value, BaseException):
@@ -531,6 +555,11 @@ class spawn(Syscall):
             assert self.task is not this_task  # closing parent from child :(
             close(self.task)
             raise
+
+    if TYPE_CHECKING:
+
+        def __await__(self) -> Generator[Any, None, T]:
+            return self.__iter__()  # type: ignore Expression of type "Task[T@spawn]" is incompatible with return type "Generator[Any, None, T@spawn]"
 
     def handle(self, caller: Task) -> None:
         # the same spawn should not be awaited multiple times
