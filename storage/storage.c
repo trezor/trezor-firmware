@@ -30,6 +30,7 @@
 #include "pbkdf2.h"
 #include "rand.h"
 #include "random_delays.h"
+#include "rtl/secbool.h"
 #include "sha2.h"
 #include "storage.h"
 #include "storage_utils.h"
@@ -37,6 +38,10 @@
 
 #if USE_OPTIGA
 #include "optiga.h"
+#endif
+
+#if USE_TROPIC
+#include <sec/tropic.h>
 #endif
 
 #ifdef USE_STORAGE_HWKEY
@@ -72,6 +77,10 @@
 // Unauthenticated storage version. Introduced in storage version 3.
 // NOTE: This should always equal the value in VERSION_KEY.
 #define UNAUTH_VERSION_KEY ((APP_STORAGE << 8) | 0x08)
+
+// TODO
+#define KEK_MASKS ((APP_STORAGE << 8) | 0x09)
+#define RESET_KEYS ((APP_STORAGE << 8) | 0x0A)
 
 // The PIN value corresponding to an empty PIN.
 const uint8_t *PIN_EMPTY = (const uint8_t *)"";
@@ -221,6 +230,67 @@ static secbool secequal32(const void *ptr1, const void *ptr2, size_t n) {
   }
 
   return diff ? secfalse : sectrue;
+}
+
+secbool set_kek(const uint8_t kek[SHA256_DIGEST_LENGTH],
+                const uint8_t stretched_pins[OPTIGA_STRETCHED_PINS_COUNT]
+                                            [SHA256_DIGEST_LENGTH]) {
+  uint8_t masks[OPTIGA_STRETCHED_PINS_COUNT][SHA256_DIGEST_LENGTH] = {0};
+  for (int i = 0; i < OPTIGA_STRETCHED_PINS_COUNT; i++) {
+    for (int j = 0; j < SHA256_DIGEST_LENGTH; j++) {
+      masks[i][j] = kek[j] ^ stretched_pins[i][j];
+    }
+  }
+
+  secbool ret = norcow_set(KEK_MASKS, &masks, sizeof(masks));
+
+  memzero(masks, sizeof(masks));
+  return ret;
+}
+
+secbool get_kek(const uint8_t stretched_pin[SHA256_DIGEST_LENGTH], int index,
+                uint8_t kek[SHA256_DIGEST_LENGTH]) {
+  const void *val = NULL;
+  uint8_t masks[OPTIGA_STRETCHED_PINS_COUNT][SHA256_DIGEST_LENGTH] = {0};
+  uint16_t len = 0;
+  if (norcow_get(KEK_MASKS, &val, &len) != sectrue || len != sizeof(masks)) {
+    return secfalse;
+  }
+  memcpy(masks, val, sizeof(masks));  // TODO
+  for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+    kek[i] = masks[index][i] ^ stretched_pin[i];
+  }
+  return sectrue;
+}
+
+secbool set_reset_keys(const uint8_t kek[SHA256_DIGEST_LENGTH],
+                       const uint8_t optiga_reset_key[SHA256_DIGEST_LENGTH],
+                       const uint8_t tropic_reset_key[SHA256_DIGEST_LENGTH]) {
+  uint8_t reset_keys[2][SHA256_DIGEST_LENGTH] = {0};
+  for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+    // TODO: Maybe better encryption
+    reset_keys[0][i] = kek[i] ^ optiga_reset_key[i];
+    reset_keys[1][i] = kek[i] ^ tropic_reset_key[i];
+  }
+
+  return norcow_set(RESET_KEYS, &reset_keys, sizeof(reset_keys));
+}
+
+secbool get_reset_keys(const uint8_t kek[SHA256_DIGEST_LENGTH],
+                       uint8_t optiga_reset_key[SHA256_DIGEST_LENGTH],
+                       uint8_t tropic_reset_key[SHA256_DIGEST_LENGTH]) {
+  const void *val = NULL;
+  uint8_t reset_keys[2][SHA256_DIGEST_LENGTH] = {0};
+  uint16_t len = 0;
+  if (!norcow_get(RESET_KEYS, &val, &len) || len != sizeof(reset_keys)) {
+    return secfalse;
+  }
+  memcpy(reset_keys, val, sizeof(reset_keys));
+  for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+    optiga_reset_key[i] = reset_keys[0][i] ^ kek[i];
+    tropic_reset_key[i] = reset_keys[1][i] ^ kek[i];
+  }
+  return sectrue;
 }
 
 static secbool is_protected(uint16_t key) {
@@ -588,6 +658,8 @@ static void derive_kek_v4(const uint8_t *pin, size_t pin_len,
 #endif
 #endif
 
+// TODO: Maybe rename to make clear this stretches the pin using MCU secrets
+// TODO: Maybe refactor so it itself retrieves the storage salt
 static void stretch_pin(const uint8_t *pin, size_t pin_len,
                         const uint8_t storage_salt[STORAGE_SALT_SIZE],
                         const uint8_t *ext_salt,
@@ -662,17 +734,67 @@ static void derive_kek_optiga_v4(
 #endif
 #endif
 
-static secbool __wur derive_kek_set(
-    const uint8_t *pin, size_t pin_len, const uint8_t *storage_salt,
-    const uint8_t *ext_salt, uint8_t stretched_pin[SHA256_DIGEST_LENGTH]) {
-  stretch_pin(pin, pin_len, storage_salt, ext_salt, stretched_pin, sectrue);
+static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
+                                    const uint8_t *storage_salt,
+                                    const uint8_t *ext_salt,
+                                    uint8_t kek[SHA256_DIGEST_LENGTH]) {
+  secbool ret = secfalse;
+  stretch_pin(pin, pin_len, storage_salt, ext_salt, kek, sectrue);
 #if USE_OPTIGA
-  if (!optiga_pin_set(ui_progress, stretched_pin)) {
-    memzero(stretched_pin, SHA256_DIGEST_LENGTH);
-    return secfalse;
+  uint8_t stretching_secret[SHA256_DIGEST_LENGTH] = {0};
+  // TODO: Use entropy from Optiga and Tropic
+  random_buffer(stretching_secret, sizeof(stretching_secret));
+  if (!optiga_pin_init()) {
+    goto cleanup;
+  }
+  if (!optiga_stretch_pin_offline(ui_progress, stretching_secret, kek)) {
+    goto cleanup;
   }
 #endif
-  return sectrue;
+#if USE_TROPIC || USE_OPTIGA
+  uint8_t stretched_pins[OPTIGA_STRETCHED_PINS_COUNT][SHA256_DIGEST_LENGTH] = {
+      0};
+  for (int i = 0; i < OPTIGA_STRETCHED_PINS_COUNT; i++) {
+    memcpy(stretched_pins[i], kek, SHA256_DIGEST_LENGTH);
+  }
+#endif
+#if USE_TROPIC
+  uint8_t tropic_reset_key[SHA256_DIGEST_LENGTH] = {0};
+  if (!tropic_pin_set(ui_progress, stretched_pins, tropic_reset_key)) {
+    goto cleanup;
+  }
+#endif
+#if USE_OPTIGA
+  uint8_t optiga_reset_key[SHA256_DIGEST_LENGTH] = {0};
+  if (!optiga_pin_set(ui_progress, stretching_secret, stretched_pins,
+                      optiga_reset_key)) {
+    goto cleanup;
+  }
+#endif
+#if USE_TROPIC
+  random_buffer(kek, SHA256_DIGEST_LENGTH);
+  if (set_kek(kek, stretched_pins) != sectrue) {
+    goto cleanup;
+  }
+#endif
+#if USE_TROPIC && USE_OPTIGA
+  if (set_reset_keys(kek, optiga_reset_key, tropic_reset_key) != sectrue) {
+    goto cleanup;
+  }
+#endif
+  ret = sectrue;
+#if USE_TROPIC || USE_OPTIGA
+cleanup:
+#endif
+  // memzero(kek, SHA256_DIGEST_LENGTH);
+#if USE_TROPIC && USE_OPTIGA
+  memzero(tropic_reset_key, SHA256_DIGEST_LENGTH);
+  memzero(optiga_reset_key, SHA256_DIGEST_LENGTH);
+#endif
+#if USE_TROPIC || USE_OPTIGA
+  memzero(stretched_pins, sizeof(stretched_pins));
+#endif
+  return ret;
 }
 
 #if NORCOW_MIN_VERSION <= 4
@@ -713,24 +835,71 @@ static secbool __wur derive_kek_unlock(
     const uint8_t *pin, size_t pin_len, const uint8_t *storage_salt,
     const uint8_t *ext_salt, uint8_t stretched_pin[SHA256_DIGEST_LENGTH],
     secbool privileged_bhk) {
+  secbool ret = secfalse;
   stretch_pin(pin, pin_len, storage_salt, ext_salt, stretched_pin,
               privileged_bhk);
+#if USE_TROPIC && USE_OPTIGA
+  uint32_t pin_fails = 0;
+  if (sectrue != pin_get_fails(&pin_fails)) {
+    goto cleanup;
+  }
+  int pin_index =
+      pin_fails - 1;  // At the point the counter has already been incremented
+#endif
+#ifdef USE_OPTIGA
+  if (optiga_stretch_pin(ui_progress, stretched_pin) != OPTIGA_PIN_SUCCESS) {
+    goto cleanup;
+  }
+#endif
+#if USE_TROPIC
+  if (!tropic_stretch_pin(ui_progress, pin_index, stretched_pin)) {
+    goto cleanup;
+  }
+#endif
 #if USE_OPTIGA
-  optiga_pin_result ret = optiga_pin_verify(ui_progress, stretched_pin);
-  if (ret != OPTIGA_PIN_SUCCESS) {
+  optiga_pin_result optiga_ret =
+      optiga_pin_verify(ui_progress, pin_index, stretched_pin);
+  if (optiga_ret != OPTIGA_PIN_SUCCESS) {
     memzero(stretched_pin, SHA256_DIGEST_LENGTH);
 
-    if (ret == OPTIGA_PIN_COUNTER_EXCEEDED) {
+    if (optiga_ret == OPTIGA_PIN_COUNTER_EXCEEDED) {
       // Unreachable code. Wipe should have already been triggered in unlock().
       storage_wipe();
       show_pin_too_many_screen();
     }
-    ensure(ret == OPTIGA_PIN_INVALID ? sectrue : secfalse,
+    ensure(optiga_ret == OPTIGA_PIN_INVALID ? sectrue : secfalse,
            "optiga_pin_verify failed");
-    return secfalse;
+    goto cleanup;
   }
 #endif
-  return sectrue;
+#if USE_TROPIC
+  if (get_kek(stretched_pin, pin_index, stretched_pin) != sectrue) {
+    goto cleanup;
+  }
+#endif
+#if USE_TROPIC && USE_OPTIGA
+  uint8_t optiga_reset_key[SHA256_DIGEST_LENGTH] = {0};
+  uint8_t tropic_reset_key[SHA256_DIGEST_LENGTH] = {0};
+  if (get_reset_keys(stretched_pin, optiga_reset_key, tropic_reset_key) !=
+      sectrue) {
+    goto cleanup;
+  }
+  if (!optiga_reset_counter(ui_progress, optiga_reset_key)) {
+    goto cleanup;
+  }
+  if (!tropic_reset_slots(ui_progress, pin_index, tropic_reset_key)) {
+    goto cleanup;
+  }
+#endif
+  ret = sectrue;
+#if USE_TROPIC
+cleanup:
+#endif
+#if USE_TROPIC && USE_OPTIGA
+  memzero(optiga_reset_key, SHA256_DIGEST_LENGTH);
+  memzero(tropic_reset_key, SHA256_DIGEST_LENGTH);
+#endif
+  return ret;
 }
 
 static secbool set_pin(const uint8_t *pin, size_t pin_len,

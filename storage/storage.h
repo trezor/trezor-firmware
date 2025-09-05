@@ -44,7 +44,18 @@ extern const uint8_t *PIN_EMPTY;
 // Maximum number of failed unlock attempts.
 // NOTE: The PIN counter logic relies on this constant being less than or equal
 // to 16.
+#if USE_TROPIC
+#define PIN_MAX_TRIES 3  // TODO
+#else
 #define PIN_MAX_TRIES 16
+#endif
+
+// The number of slots configured as stretched PINs.
+#if USE_TROPIC
+#define OPTIGA_STRETCHED_PINS_COUNT PIN_MAX_TRIES
+#else
+#define OPTIGA_STRETCHED_PINS_COUNT 1
+#endif
 
 // The length of the random salt in bytes.
 #if USE_OPTIGA
@@ -52,6 +63,9 @@ extern const uint8_t *PIN_EMPTY;
 #else
 #define STORAGE_SALT_SIZE 4
 #endif
+
+// The size of the stretched PIN.
+#define STRETCHED_PIN_SIZE 32
 
 enum storage_ui_message_t {
   NO_MSG = 0,

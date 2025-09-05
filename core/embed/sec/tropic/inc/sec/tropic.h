@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <sec/storage.h>
 #include <trezor_types.h>
 
 #ifdef KERNEL_MODE
@@ -34,9 +35,24 @@ lt_handle_t* tropic_get_handle(void);
 
 #endif
 
+#include "libtropic_common.h"
+
+typedef secbool (*tropic_ui_progress_t)(void);
+
 bool tropic_ping(const uint8_t* msg_out, uint8_t* msg_in, uint16_t msg_len);
 
 bool tropic_ecc_key_generate(uint16_t slot_index);
 
 bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t* dig,
                      uint16_t dig_len, uint8_t* sig);
+
+bool tropic_stretch_pin(tropic_ui_progress_t ui_progress, int index,
+                        uint8_t stretched_pin[MAC_AND_DESTROY_DATA_SIZE]);
+
+bool tropic_reset_slots(tropic_ui_progress_t ui_progress, int index,
+                        const uint8_t reset_key[MAC_AND_DESTROY_DATA_SIZE]);
+
+bool tropic_pin_set(
+    tropic_ui_progress_t ui_progresss,
+    uint8_t stretched_pins[PIN_MAX_TRIES][MAC_AND_DESTROY_DATA_SIZE],
+    uint8_t reset_key[MAC_AND_DESTROY_DATA_SIZE]);
