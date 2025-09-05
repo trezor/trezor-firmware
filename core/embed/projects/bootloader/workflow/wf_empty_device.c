@@ -33,6 +33,10 @@
 #include <sys/backup_ram.h>
 #endif
 
+#ifdef USE_RGB_LED
+#include <io/rgb_led.h>
+#endif
+
 #include "bootui.h"
 #include "rust_ui_bootloader.h"
 #include "workflow.h"
@@ -62,6 +66,7 @@ workflow_result_t workflow_empty_device(void) {
 #ifdef USE_BLE
     if (res == WF_OK_UI_ACTION && ui_result == WELCOME_PAIRING_MODE) {
       res = workflow_wireless_setup(NULL, NULL, &ios);
+
       if (res == WF_OK_PAIRING_COMPLETED || res == WF_OK_PAIRING_FAILED) {
         res = WF_CANCELLED;
         ui_result = WELCOME_CANCEL;

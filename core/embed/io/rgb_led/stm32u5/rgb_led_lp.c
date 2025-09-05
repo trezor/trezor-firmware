@@ -287,6 +287,21 @@ bool rgb_led_effect_ongoing(void) {
   return ongoing;
 }
 
+rgb_led_effect_type_t rgb_led_effect_get_type(void) {
+  rgb_led_t* drv = &g_rgb_led;
+
+  if (!drv->initialized || !drv->ongoing_effect) {
+    return RGB_LED_EFFECT_NONE;
+  }
+
+  rgb_led_effect_type_t effect_type;
+  irq_key_t irq_key = irq_lock();
+  effect_type = drv->effect.type;
+  irq_unlock(irq_key);
+
+  return effect_type;
+}
+
 static void rgb_led_apply_color(rgb_led_t* drv, rgb_led_color_fs_t* color_fs) {
   // Check color settings is in range
   if (color_fs->red > RGB_LED_TIMER_PERIOD ||
@@ -340,6 +355,35 @@ static void rgb_led_systimer_callback(void* context) {
   if (drv->effect.data.requested_cycles &&
       drv->effect.data.cycles >= drv->effect.data.requested_cycles) {
     rgb_led_effect_stop();
+  }
+}
+
+void rgb_led_set_wakeup_params(rgb_led_wakeup_params_t* params) {
+  rgb_led_t* drv = &g_rgb_led;
+
+  memset(params, 0, sizeof(rgb_led_wakeup_params_t));
+
+  if (!drv->initialized) {
+    return;
+  }
+
+  // Store the ongoing effect into the wakeup params if it was requested
+  // for indefinite number of cycles.
+  if (drv->ongoing_effect && drv->effect.data.requested_cycles == 0) {
+    irq_key_t key = irq_lock();
+    params->ongoing_effect = drv->ongoing_effect;
+    params->effect_type = drv->effect.type;
+    irq_unlock(key);
+  }
+}
+
+void rgb_led_suspend() { rgb_led_deinit(); }
+
+void rgb_led_resume(const rgb_led_wakeup_params_t* params) {
+  rgb_led_init();
+
+  if (params->ongoing_effect) {
+    rgb_led_effect_start(params->effect_type, 0);
   }
 }
 
