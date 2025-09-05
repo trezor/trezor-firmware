@@ -37,8 +37,17 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define ADV_FLAG_DEV_CONNECTED 0x04
 #define ADV_FLAG_USER_DISCONNECT 0x08
 
-#define ADV_INTERVAL_FAST ((int)(20 / 0.625))
-#define ADV_INTERVAL_SLOW ((int)(152.5 / 0.625))
+#define ADV_INTERVAL_FAST_MIN_MS 20
+#define ADV_INTERVAL_FAST_MAX_MS 25
+#define ADV_INTERVAL_SLOW_MIN_MS 152.5
+#define ADV_INTERVAL_SLOW_MAX_MS 211.25
+
+#define ADV_INTERVAL_MS_TO_UNITS(x) ((int)(x / 0.625))
+
+#define ADV_INTERVAL_FAST_MIN ADV_INTERVAL_MS_TO_UNITS(ADV_INTERVAL_FAST_MIN_MS)
+#define ADV_INTERVAL_FAST_MAX ADV_INTERVAL_MS_TO_UNITS(ADV_INTERVAL_FAST_MAX_MS)
+#define ADV_INTERVAL_SLOW_MIN ADV_INTERVAL_MS_TO_UNITS(ADV_INTERVAL_SLOW_MIN_MS)
+#define ADV_INTERVAL_SLOW_MAX ADV_INTERVAL_MS_TO_UNITS(ADV_INTERVAL_SLOW_MAX_MS)
 
 bool advertising = false;
 bool advertising_wl = false;
@@ -93,7 +102,7 @@ static void change_adv_work_handler(struct k_work *work) {
 
   int err;
   LOG_INF("30s timer expired. Switching to slow advertising interval (%d ms).",
-          ADV_INTERVAL_SLOW);
+          ADV_INTERVAL_SLOW_MIN);
 
   // Stop current advertising
   err = bt_le_adv_stop();
@@ -104,10 +113,10 @@ static void change_adv_work_handler(struct k_work *work) {
   }
 
   // Restart advertising with new parameters
-  err = bt_le_adv_start(
-      BT_LE_ADV_PARAM(adv_options, ADV_INTERVAL_SLOW, ADV_INTERVAL_SLOW, NULL),
-      advertising_data, ARRAY_SIZE(advertising_data), scan_response_data,
-      ARRAY_SIZE(scan_response_data));
+  err = bt_le_adv_start(BT_LE_ADV_PARAM(adv_options, ADV_INTERVAL_SLOW_MIN,
+                                        ADV_INTERVAL_SLOW_MAX, NULL),
+                        advertising_data, ARRAY_SIZE(advertising_data),
+                        scan_response_data, ARRAY_SIZE(scan_response_data));
 
   if (err) {
     LOG_ERR("Failed to restart advertising with slow interval (err %d)", err);
@@ -181,10 +190,10 @@ void advertising_start(bool wl, bool user_disconnect, uint8_t color,
 
     adv_options = options;
 
-    err = bt_le_adv_start(
-        BT_LE_ADV_PARAM(options, ADV_INTERVAL_FAST, ADV_INTERVAL_FAST, NULL),
-        advertising_data, ARRAY_SIZE(advertising_data), scan_response_data,
-        ARRAY_SIZE(scan_response_data));
+    err = bt_le_adv_start(BT_LE_ADV_PARAM(options, ADV_INTERVAL_FAST_MIN,
+                                          ADV_INTERVAL_FAST_MAX, NULL),
+                          advertising_data, ARRAY_SIZE(advertising_data),
+                          scan_response_data, ARRAY_SIZE(scan_response_data));
   } else {
     LOG_INF("Advertising no whitelist");
 
@@ -198,10 +207,10 @@ void advertising_start(bool wl, bool user_disconnect, uint8_t color,
 
     adv_options = options;
 
-    err = bt_le_adv_start(
-        BT_LE_ADV_PARAM(options, ADV_INTERVAL_FAST, ADV_INTERVAL_FAST, NULL),
-        advertising_data, ARRAY_SIZE(advertising_data), scan_response_data,
-        ARRAY_SIZE(scan_response_data));
+    err = bt_le_adv_start(BT_LE_ADV_PARAM(options, ADV_INTERVAL_FAST_MIN,
+                                          ADV_INTERVAL_FAST_MAX, NULL),
+                          advertising_data, ARRAY_SIZE(advertising_data),
+                          scan_response_data, ARRAY_SIZE(scan_response_data));
   }
   if (err) {
     LOG_ERR("Advertising failed to start (err %d)", err);
