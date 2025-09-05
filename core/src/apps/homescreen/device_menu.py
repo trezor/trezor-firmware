@@ -3,7 +3,7 @@ import trezorble as ble
 import trezorui_api
 from trezor import TR, config, log, utils
 from trezor.ui.layouts import interact
-from trezorui_api import DeviceMenuResult
+from trezorui_api import CANCELLED, DeviceMenuResult
 
 BLE_MAX_BONDS = 8
 
@@ -83,6 +83,7 @@ async def handle_device_menu() -> None:
             ],
         ),
         "device_menu",
+        raise_on_cancel=None,
     )
     # Root menu
     if menu_result is DeviceMenuResult.BackupFailed and failed_backup:
@@ -267,5 +268,7 @@ async def handle_device_menu() -> None:
         from trezor.utils import reboot_to_bootloader
 
         reboot_to_bootloader(BootCommand.STOP_AND_WAIT)
+    elif menu_result is CANCELLED:
+        return
     else:
         raise RuntimeError(f"Unknown menu {menu_result}")
