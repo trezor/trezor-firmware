@@ -39,10 +39,7 @@ pub type BootloaderString = String<128>;
 const RESTART_MESSAGE: &str = "Restart";
 
 const SCREEN: Rect = UIEckhart::SCREEN;
-const PROGRESS_TEXT_ORIGIN: Point = SCREEN.top_left().ofs(Offset::new(
-    theme::PADDING,
-    38 + FONT_SATOSHI_REGULAR_38.text_height(),
-));
+const PROGRESS_TEXT_ORIGIN: Point = SCREEN.top_left().ofs(Offset::new(theme::PADDING, 38));
 const PROGRESS_WAIT_ORIGIN: Point = SCREEN.bottom_center().ofs(Offset::new(0, -35));
 const SCREEN_BORDER_BLUE: ScreenBorder = ScreenBorder::new(BLUE);
 const SCREEN_BORDER_RED: ScreenBorder = ScreenBorder::new(RED);
@@ -61,12 +58,19 @@ impl UIEckhart {
         }
         display::sync();
 
+        let mut label = Label::new(text.into(), Alignment::Start, TEXT_NORMAL);
         render_on_display(None, Some(BLD_BG), |target| {
             render_loader(loader_progress, border, target);
-            shape::Text::new(PROGRESS_TEXT_ORIGIN, text, FONT_SATOSHI_REGULAR_38)
-                .with_align(Alignment::Start)
-                .with_fg(GREY_LIGHT)
-                .render(target);
+
+            label.place(Rect::from_top_left_and_size(
+                PROGRESS_TEXT_ORIGIN,
+                Offset::new(
+                    SCREEN.width() - 2 * theme::PADDING,
+                    4 * FONT_SATOSHI_REGULAR_38.text_height(),
+                ),
+            ));
+            label.render(target);
+
             shape::Text::new(PROGRESS_WAIT_ORIGIN, wait_msg, FONT_SATOSHI_MEDIUM_26)
                 .with_align(Alignment::Center)
                 .with_fg(GREY)
@@ -384,7 +388,7 @@ impl BootloaderUI for UIEckhart {
             &SCREEN_BORDER_BLUE
         };
         Self::screen_progress(
-            "Installing firmware",
+            "Installing\nfirmware...",
             WAIT_MESSAGE,
             initialize,
             progress,
@@ -535,7 +539,7 @@ impl BootloaderUI for UIEckhart {
     #[cfg(feature = "power_manager")]
     fn screen_bootloader_entry_progress(progress: u16, initialize: bool) {
         Self::screen_progress(
-            "Starting bootloader...",
+            "Starting\nbootloader...",
             "Release the button",
             initialize,
             progress,
