@@ -235,8 +235,8 @@ async def handle_device_menu() -> None:
                     trezorui_api.request_duration(
                         title=TR.auto_lock__title,
                         duration_ms=storage_device.get_autolock_delay_ms(),
-                        min_ms=storage_device.AUTOLOCK_DELAY_MINIMUM,
-                        max_ms=storage_device.AUTOLOCK_DELAY_MAXIMUM,
+                        min_ms=storage_device.AUTOLOCK_DELAY_USB_MIN_MS,
+                        max_ms=storage_device.AUTOLOCK_DELAY_USB_MAX_MS,
                         description=TR.auto_lock__description,
                     ),
                     br_name=None,

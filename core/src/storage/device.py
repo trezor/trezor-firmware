@@ -44,6 +44,8 @@ _DISABLE_HAPTIC_FEEDBACK   = const(0x20)  # bool (0x01 or empty)
 _DISABLE_RGB_LED           = const(0x21)  # bool (0x01 or empty)
 if utils.USE_THP:
     _THP_PAIRED_CACHE    = const(0x22)  # bytes
+if utils.USE_POWER_MANAGER:
+    _AUTOLOCK_DELAY_BATT_MS    = const(0x23)  # int
 
 
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
@@ -56,12 +58,19 @@ if TYPE_CHECKING:
 LABEL_MAXLENGTH = const(32)
 
 if __debug__:
-    AUTOLOCK_DELAY_MINIMUM = 10 * 1000  # 10 seconds
+    AUTOLOCK_DELAY_USB_MIN_MS = 10 * 1000  # 10 seconds
 else:
-    AUTOLOCK_DELAY_MINIMUM = 60 * 1000  # 1 minute
-AUTOLOCK_DELAY_DEFAULT = const(10 * 60 * 1000)  # 10 minutes
+    AUTOLOCK_DELAY_USB_MIN_MS = 60 * 1000  # 1 minute
+
+AUTOLOCK_DELAY_USB_DEFAULT_MS = const(10 * 60 * 1000)  # 10 minutes
 # autolock intervals larger than AUTOLOCK_DELAY_MAXIMUM cause issues in the scheduler
-AUTOLOCK_DELAY_MAXIMUM = const(0x2000_0000)  # ~6 days
+AUTOLOCK_DELAY_USB_MAX_MS = const(0x2000_0000)  # ~6 days
+
+if utils.USE_POWER_MANAGER:
+    AUTOLOCK_DELAY_BATT_MIN_MS = 30 * 1000  # 30 seconds
+    AUTOLOCK_DELAY_BATT_DEFAULT_MS = const(40 * 1000)  # 40 seconds
+    AUTOLOCK_DELAY_BATT_MAX_MS = const(10 * 60 * 1000)  # 10 minutes
+
 
 # Length of SD salt auth tag.
 # Other SD-salt-related constants are in sd_salt.py
@@ -244,16 +253,20 @@ def set_flags(flags: int) -> None:
         common.set(_NAMESPACE, _FLAGS, flags.to_bytes(4, "big"))
 
 
-def _normalize_autolock_delay(delay_ms: int) -> int:
-    delay_ms = max(delay_ms, AUTOLOCK_DELAY_MINIMUM)
-    delay_ms = min(delay_ms, AUTOLOCK_DELAY_MAXIMUM)
+def _normalize_autolock_delay(
+    delay_ms: int,
+    min_ms: int = AUTOLOCK_DELAY_USB_MIN_MS,
+    max_ms: int = AUTOLOCK_DELAY_USB_MAX_MS,
+) -> int:
+    delay_ms = max(delay_ms, min_ms)
+    delay_ms = min(delay_ms, max_ms)
     return delay_ms
 
 
 def get_autolock_delay_ms() -> int:
     b = common.get(_NAMESPACE, _AUTOLOCK_DELAY_MS)
     if b is None:
-        return AUTOLOCK_DELAY_DEFAULT
+        return AUTOLOCK_DELAY_USB_DEFAULT_MS
     else:
         return _normalize_autolock_delay(int.from_bytes(b, "big"))
 
@@ -261,6 +274,28 @@ def get_autolock_delay_ms() -> int:
 def set_autolock_delay_ms(delay_ms: int) -> None:
     delay_ms = _normalize_autolock_delay(delay_ms)
     common.set(_NAMESPACE, _AUTOLOCK_DELAY_MS, delay_ms.to_bytes(4, "big"))
+
+
+if utils.USE_POWER_MANAGER:
+
+    def get_autolock_delay_battery_ms() -> int:
+        b = common.get(_NAMESPACE, _AUTOLOCK_DELAY_BATT_MS)
+        if b is None:
+            return AUTOLOCK_DELAY_BATT_DEFAULT_MS
+        else:
+            return _normalize_autolock_delay(
+                int.from_bytes(b, "big"),
+                min_ms=AUTOLOCK_DELAY_BATT_MIN_MS,
+                max_ms=AUTOLOCK_DELAY_BATT_MAX_MS,
+            )
+
+    def set_autolock_delay_battery_ms(delay_ms: int) -> None:
+        delay_ms = _normalize_autolock_delay(
+            delay_ms,
+            min_ms=AUTOLOCK_DELAY_BATT_MIN_MS,
+            max_ms=AUTOLOCK_DELAY_BATT_MAX_MS,
+        )
+        common.set(_NAMESPACE, _AUTOLOCK_DELAY_BATT_MS, delay_ms.to_bytes(4, "big"))
 
 
 def next_u2f_counter() -> int:
