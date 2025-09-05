@@ -50,6 +50,14 @@ typedef enum {
 #ifdef KERNEL_MODE
 
 /**
+ * @brief RGB LED wakeup parameters
+ */
+typedef struct {
+  bool ongoing_effect;
+  rgb_led_effect_type_t effect_type;
+} rgb_led_wakeup_params_t;
+
+/**
  * @brief Initialize RGB LED driver
  */
 void rgb_led_init(void);
@@ -58,6 +66,25 @@ void rgb_led_init(void);
  * @brief Deinitialize RGB LED driver
  */
 void rgb_led_deinit(void);
+
+/**
+ * @brief set RGB LED wakeup parameters
+ *
+ * @param params: Pointer to the wakeup parameters structure
+ */
+void rgb_led_set_wakeup_params(rgb_led_wakeup_params_t *params);
+
+/**
+ * @brief Suspend RGB LED driver
+ */
+void rgb_led_suspend(void);
+
+/**
+ * @brief Resume RGB LED driver
+ *
+ * @param params: Pointer to the wakeup parameters structure
+ */
+void rgb_led_resume(const rgb_led_wakeup_params_t *params);
 
 #endif  // KERNEL_MODE
 

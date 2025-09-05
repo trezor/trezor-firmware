@@ -343,4 +343,33 @@ static void rgb_led_systimer_callback(void* context) {
   }
 }
 
+void rgb_led_set_wakeup_params(rgb_led_wakeup_params_t* params) {
+  rgb_led_t* drv = &g_rgb_led;
+
+  memset(params, 0, sizeof(rgb_led_wakeup_params_t));
+
+  if (!drv->initialized) {
+    return;
+  }
+
+  // Store the ongoing effect into the wakeup params if it was requested
+  // for indefinite number of cycles.
+  if (drv->ongoing_effect && drv->effect.data.requested_cycles == 0) {
+    irq_key_t key = irq_lock();
+    params->ongoing_effect = drv->ongoing_effect;
+    params->effect_type = drv->effect.type;
+    irq_unlock(key);
+  }
+}
+
+void rgb_led_suspend() { rgb_led_deinit(); }
+
+void rgb_led_resume(const rgb_led_wakeup_params_t* params) {
+  rgb_led_init();
+
+  if (params->ongoing_effect) {
+    rgb_led_effect_start(params->effect_type, 0);
+  }
+}
+
 #endif

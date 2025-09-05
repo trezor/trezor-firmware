@@ -215,10 +215,10 @@ pm_status_t pm_get_state(pm_state_t* state) {
   state->usb_connected = drv->usb_connected;
   state->wireless_connected = drv->wireless_connected;
 
-  if (drv->pmic_data.ibat > 0.0f) {
-    state->charging_status = PM_BATTERY_DISCHARGING;
-  } else if (drv->pmic_data.ibat < 0.0f) {
+  if (pm_is_charging()) {
     state->charging_status = PM_BATTERY_CHARGING;
+  } else if (drv->pmic_data.ibat > 0.0f) {
+    state->charging_status = PM_BATTERY_DISCHARGING;
   } else {
     state->charging_status = PM_BATTERY_IDLE;
   }
@@ -595,30 +595,18 @@ bool pm_schedule_rtc_wakeup(void) {
     return false;
   }
 
-  if (drv->usb_connected || drv->wireless_connected) {
-    drv->suspended_charging = true;
-
-    // External power source is connected, wake up early to update the fuel
-    // gauge
-    rtc_wakeup_timer_start(PM_SUSPENDED_CHARGING_TIMEOUT_S,
-                           pm_rtc_wakeup_callback, NULL);
-
-  } else {
-    if ((drv->last_active_timestamp - drv->suspend_timestamp) >=
-        PM_AUTO_HIBERNATE_TIMEOUT_S) {
-      // Device is very long time in suspend mode without external power source,
-      // hibernate it to save power.
-      pm_hibernate();
-    }
-
-    uint32_t time_to_hibernate =
-        PM_AUTO_HIBERNATE_TIMEOUT_S -
-        (drv->last_active_timestamp - drv->suspend_timestamp);
-
-    drv->suspended_charging = false;
-
-    rtc_wakeup_timer_start(time_to_hibernate, pm_rtc_wakeup_callback, NULL);
+  if ((drv->last_active_timestamp - drv->suspend_timestamp) >=
+      PM_AUTO_HIBERNATE_TIMEOUT_S) {
+    // Device is very long time in suspend mode without external power source,
+    // hibernate it to save power.
+    pm_hibernate();
   }
+
+  uint32_t time_to_hibernate =
+      PM_AUTO_HIBERNATE_TIMEOUT_S -
+      (drv->last_active_timestamp - drv->suspend_timestamp);
+
+  rtc_wakeup_timer_start(time_to_hibernate, pm_rtc_wakeup_callback, NULL);
 
 #endif
 
@@ -626,6 +614,26 @@ bool pm_schedule_rtc_wakeup(void) {
 
   drv->suspended = true;
   return true;
+}
+
+bool pm_is_charging(void) {
+  pm_driver_t* drv = &g_pm;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  bool is_charging = false;
+
+  irq_key_t irq_key = irq_lock();
+  if (drv->charging_enabled &&
+      (!drv->fully_charged && !drv->soc_target_reached) &&
+      (drv->usb_connected || drv->wireless_connected)) {
+    is_charging = true;
+  }
+  irq_unlock(irq_key);
+
+  return is_charging;
 }
 
 bool pm_driver_resume(void) {
