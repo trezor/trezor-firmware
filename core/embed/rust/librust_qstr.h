@@ -118,6 +118,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_amount_new;
   MP_QSTR_app_name;
   MP_QSTR_area_bytesize;
+  MP_QSTR_args;
   MP_QSTR_attach_timer_fn;
   MP_QSTR_attempts;
   MP_QSTR_authenticate__confirm_template;
@@ -272,6 +273,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_properties;
   MP_QSTR_confirm_reset_device;
   MP_QSTR_confirm_summary;
+  MP_QSTR_confirm_thp_pairing;
   MP_QSTR_confirm_total__fee_rate;
   MP_QSTR_confirm_total__fee_rate_colon;
   MP_QSTR_confirm_total__sending_from_account;

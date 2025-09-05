@@ -660,6 +660,16 @@ def show_ble_pairing_code(
 
 
 # rust/src/ui/api/firmware_micropython.rs
+def confirm_thp_pairing(
+    *,
+    title: str,
+    description: str,
+    args: Iterable[str],
+) -> LayoutObj[UiResult]:
+    """THP pairing: first screen (host and app names)."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
 def show_thp_pairing_code(
     *,
     title: str,
