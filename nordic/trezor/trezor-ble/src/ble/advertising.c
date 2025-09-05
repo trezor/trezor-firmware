@@ -80,6 +80,15 @@ void advertising_start(bool wl, bool user_disconnect, uint8_t color,
     name_len = DEVICE_NAME_LEN;
   }
 
+
+  err = ble_set_tx_power(0);
+  if (err) {
+    LOG_ERR("Failed to set advertising TX power (err %d)\n", err);
+  } else {
+    LOG_INF("Advertising TX power set to +0\n");
+  }
+
+
   int bonds_count = bonds_get_count();
 
   manufacturer_data[2] = 0;
