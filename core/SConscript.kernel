@@ -70,6 +70,7 @@ if BITCOIN_ONLY == '0':
 
 if PYOPT == '0':
     DBG_CONSOLE = DBG_CONSOLE or "VCP"
+    FEATURES_WANTED += ["usb_iface_debug"]
 
 if DBG_CONSOLE != "":
     FEATURES_WANTED += ["dbg_console"]
