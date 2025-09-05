@@ -30,6 +30,10 @@
 #include <sys/backup_ram.h>
 #endif
 
+#ifdef USE_RGB_LED
+#include <io/rgb_led.h>
+#endif
+
 #include <sys/systick.h>
 
 #include "bootui.h"
@@ -87,7 +91,16 @@ workflow_result_t workflow_wipe_device(protob_io_t* iface) {
     recv_msg_wipe_device(iface, &msg_recv);
   }
 
+#ifdef USE_RGB_LED
+  rgb_led_set_color(RGBLED_RED);
+#endif
+
   confirm_result_t response = ui_screen_wipe_confirm();
+
+#ifdef USE_RGB_LED
+  rgb_led_set_color(RGBLED_OFF);
+#endif
+
   if (CONFIRM != response) {
     if (iface != NULL) {
       send_user_abort(iface, "Wipe cancelled");
