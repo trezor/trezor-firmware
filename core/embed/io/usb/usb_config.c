@@ -213,8 +213,10 @@ static secbool usb_webauthn_iface_init(uint8_t *iface_num) {
 }
 #endif  // USE_USB_IFACE_WEBAUTHN
 
-#if defined(USE_USB_HS)
-#define VCP_PACKET_LEN 512
+#if defined(USE_USB_HS) && !defined(USE_USB_HS_IN_FS)
+#define VCP_PACKET_LEN 512  // HS periperal in HS mode
+#elif defined(USE_USB_HS) && defined(USE_USB_HS_IN_FS)
+#define VCP_PACKET_LEN 64  // HS peripheral in FS mode
 #elif defined(USE_USB_FS)
 #define VCP_PACKET_LEN 64
 #elif defined(TREZOR_EMULATOR)
