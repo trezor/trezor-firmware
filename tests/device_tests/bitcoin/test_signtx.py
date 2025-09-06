@@ -870,8 +870,9 @@ def test_attack_change_outputs(session: Session):
 
         return msg
 
-    with client, pytest.raises(
-        TrezorFailure, match="Transaction has changed during signing"
+    with (
+        client,
+        pytest.raises(TrezorFailure, match="Transaction has changed during signing"),
     ):
         # Set up attack processors
         client.set_filter(messages.TxAck, attack_processor)
@@ -925,8 +926,9 @@ def test_attack_modify_change_address(session: Session):
 
         return msg
 
-    with session.client as client, pytest.raises(
-        TrezorFailure, match="Transaction has changed during signing"
+    with (
+        session.client as client,
+        pytest.raises(TrezorFailure, match="Transaction has changed during signing"),
     ):
         # Set up attack processors
         client.set_filter(messages.TxAck, attack_processor)

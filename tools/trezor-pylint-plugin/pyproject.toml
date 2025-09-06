@@ -1,15 +1,15 @@
-[tool.poetry]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
 name = "trezor-pylint-plugin"
 version = "0.1.0"
 description = ""
-authors = ["matejcik <ja@matejcik.cz>"]
+authors = [{ name = "matejcik", email = "ja@matejcik.cz" }]
+requires-python = ">=3.9,<4"
 readme = "README.md"
-
-[tool.poetry.dependencies]
-python = "^3.8"
-pylint = "*"
-astroid = "*"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+dependencies = [
+    "pylint",
+    "astroid",
+]

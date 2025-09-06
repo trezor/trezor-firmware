@@ -115,8 +115,6 @@ class Bitcoin:
         from . import approvers
         from .tx_info import TxInfo
 
-        global _SERIALIZED_TX_BUFFER
-
         self.tx_info = TxInfo(self, helpers.sanitize_sign_tx(tx, coin))
         self.keychain = keychain
         self.coin = coin

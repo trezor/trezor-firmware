@@ -154,7 +154,7 @@ class Storage:
         counter = val.to_bytes(4, sys.byteorder)
 
         if self.nc.is_byte_access():
-            counter += bytearray(b"\xFF" * consts.COUNTER_TAIL_SIZE)
+            counter += bytearray(b"\xff" * consts.COUNTER_TAIL_SIZE)
         self.set(key, counter)
 
     def next_counter(self, key: int) -> int:
@@ -234,7 +234,7 @@ class Storage:
     def _set_encrypt(self, key: int, val: bytes):
         # In C, data are preallocated beforehand for encrypted values,
         # to match the behaviour we do the same.
-        preallocate = b"\xFF" * (
+        preallocate = b"\xff" * (
             consts.CHACHA_IV_SIZE + len(val) + consts.POLY1305_MAC_SIZE
         )
         self.nc.set(key, preallocate)

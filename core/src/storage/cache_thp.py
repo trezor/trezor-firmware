@@ -122,8 +122,6 @@ _usage_counter = 0
 
 
 def initialize() -> None:
-    global _CHANNELS
-    global _SESSIONS
     global cid_counter
 
     for _ in range(_MAX_CHANNELS_COUNT):
@@ -338,7 +336,6 @@ def get_next_channel_id() -> bytes:
 
 
 def _is_cid_unique() -> bool:
-    global cid_counter
     cid_counter_bytes = cid_counter.to_bytes(_CHANNEL_ID_LENGTH, "big")
     for channel in _CHANNELS:
         if channel.channel_id == cid_counter_bytes:
@@ -347,7 +344,6 @@ def _is_cid_unique() -> bool:
 
 
 def _get_least_recently_used_item(list: Sequence[ThpDataCache], max_count: int) -> int:
-    global _usage_counter
     lru_counter = _usage_counter + 1
     lru_item_index = 0
     for i in range(max_count):

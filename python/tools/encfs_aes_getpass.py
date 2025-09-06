@@ -25,6 +25,7 @@ encfs --standard --extpass=./encfs_aes_getpass.py ~/.crypt ~/crypt
 """
 
 import hashlib
+import importlib.metadata
 import json
 import os
 import sys
@@ -36,7 +37,8 @@ from trezorlib.client import TrezorClient
 from trezorlib.tools import Address
 from trezorlib.transport import enumerate_devices
 
-version_tuple = tuple(map(int, trezorlib.__version__.split(".")))
+trezor_version = importlib.metadata.version("trezor")
+version_tuple = tuple(map(int, trezor_version.split(".")))
 if not (0, 11) <= version_tuple < (0, 14):
     raise RuntimeError("trezorlib version mismatch (required: 0.13, 0.12, or 0.11)")
 

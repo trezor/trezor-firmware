@@ -82,7 +82,7 @@ class TestTrezorHostProtocolCredentialManager(unittest.TestCase):
         expected = b"\x0a\x0b\x0a\x09\x68\x6f\x73\x74\x5f\x6e\x61\x6d\x65\x12\x20\xf4\x44\x86\x2d\x00\x23\x1d\x02\xf3\x20\xbb\x58\xed\x13\x8f\xc6\x84\x9b\x6b\x73\x7a\x33\x25\xc4\x71\x79\x3b\x45\x15\xe4\x76\x67"
 
         # Use hard-coded bytes as a "credential auth key" when issuing a credential
-        credential_manager.derive_cred_auth_key = lambda: b"\xBE\xEF"
+        credential_manager.derive_cred_auth_key = lambda: b"\xbe\xef"
 
         credential = _issue_credential(HOST_NAME_1, DUMMY_KEY_1)
         self.assertEqual(credential, expected)

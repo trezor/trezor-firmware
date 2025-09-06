@@ -8,7 +8,6 @@ import click
 
 VERSION_RE = re.compile(r"^(\d+)[.](\d+)[.](\d+)$")
 HEADER_LINE_RE = re.compile(r"^#define ([A-Z_]+) \S+$")
-PYTHON_VERSION_RE = re.compile(r'^__version__ = "\d+[.]\d+[.]\d+"$', flags=re.MULTILINE)
 
 
 def bump_header(filename, **kwargs):
@@ -29,14 +28,8 @@ def bump_header(filename, **kwargs):
             fh.write(line)
 
 
-def bump_python(filename, new_version):
-    with open(filename, "r+") as fh:
-        contents = fh.read()
-        result = PYTHON_VERSION_RE.sub(f'__version__ = "{new_version}"', contents)
-
-        fh.seek(0)
-        fh.truncate(0)
-        fh.write(result)
+def bump_python(subdir: Path, new_version: str):
+    subprocess.check_call(["uv", "version", new_version], cwd=subdir)
 
 
 def hex_lit(version):
@@ -89,9 +82,7 @@ def cli(project, version):
             VERSION_PATCH=patch,
         )
     elif parts[-1] == "python":
-        bump_python(
-            project / "src" / "trezorlib" / "__init__.py", f"{major}.{minor}.{patch}"
-        )
+        bump_python(project / "python", f"{major}.{minor}.{patch}")
     else:
         raise click.ClickException(f"Unknown project {project}.")
 

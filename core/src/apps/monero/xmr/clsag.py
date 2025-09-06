@@ -153,7 +153,9 @@ def _generate_clsag(
     hsh_C.update(_HASH_KEY_CLSAG_AGG_1)
 
     def hsh_PC(x):
-        nonlocal hsh_P, hsh_C
+        nonlocal hsh_P, hsh_C  # noqa: F824
+        # TODO flake8 is confused here, without the nonlocal declaration it complains
+        # that `hsh_P/C` is undefined, and with it it complains about useless nonlocal
         hsh_P.update(x)
         hsh_C.update(x)
 

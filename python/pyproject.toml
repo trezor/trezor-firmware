@@ -1,0 +1,91 @@
+[project]
+name = "trezor"
+version = "0.14.0"
+description = "Python library for communicating with Trezor Hardware Wallet"
+readme = "README.md"
+license = "LGPL-3.0-only"
+license-files = ["COPYING"]
+authors = [
+    {name = "Trezor", email = "info@trezor.io"}
+]
+maintainers = [
+    {name = "matejcik", email = "jan.matejek@satoshilabs.com"}
+]
+keywords = ["trezor", "hardware", "wallet", "cryptocurrency", "bitcoin", "ethereum"]
+classifiers = [
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS :: MacOS X",
+    "Programming Language :: Python :: 3 :: Only",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "ecdsa>=0.9",
+    "mnemonic>=0.20",
+    "shamir-mnemonic>=0.3.0",
+    "slip10>=1.0.1",
+    "requests>=2.4.0",
+    "click>=8,<8.3",
+    "libusb1>=1.6.4",
+    "construct>=2.9,!=2.10.55",
+    "typing_extensions>=4.7.1",
+    "construct-classes>=0.1.2",
+    "cryptography>=41",
+    "noiseprotocol>=0.3.1,<0.4.0",
+]
+
+[project.optional-dependencies]
+hidapi = ["hidapi>=0.7.99.post20"]
+ethereum = ["web3>=5"]
+qt-widgets = ["PyQt5"]
+extra = ["Pillow>=10"]
+stellar = ["stellar-sdk>=6"]
+full = [
+    "hidapi>=0.7.99.post20",
+    "web3>=5",
+    "PyQt5",
+    "Pillow>=10",
+    "stellar-sdk>=6",
+]
+
+[project.urls]
+Homepage = "https://github.com/trezor/trezor-firmware/tree/main/python"
+Repository = "https://github.com/trezor/trezor-firmware"
+Documentation = "https://github.com/trezor/trezor-firmware/tree/main/python"
+
+[project.scripts]
+trezorctl = "trezorlib.cli.trezorctl:cli"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/trezorlib"]
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "/.*",
+    "/helper-scripts",
+    "/CHANGELOG.unreleased",
+    "/default.nix",
+    "/Makefile",
+    "/towncrier.toml",
+    "tests/*.bin",
+    "src/trezorlib/_proto_messages.mako",
+]
+
+[dependency-groups]
+dev = [
+    "autoflake>=2.3.1",
+    "black>=25",
+    "flake8>=2.3.0",
+    "isort>=5.13.2",
+    "pytest>=8.3.5",
+    "pytest-random-order>=1.2.0",
+    "tox>=4.25.0",
+    "tox-uv>=1.13.1",
+]

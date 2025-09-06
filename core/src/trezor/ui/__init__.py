@@ -184,8 +184,6 @@ class Layout(Generic[T]):
 
         If the layout is already RUNNING, do nothing. If the layout is FINISHED, fail.
         """
-        global CURRENT_LAYOUT
-
         # do nothing if we are already running
         if self.is_running():
             return
@@ -229,8 +227,6 @@ class Layout(Generic[T]):
         set to False to indicate that a result became available and that the taker
         should be allowed to pick it up.
         """
-        global CURRENT_LAYOUT
-
         # stop all running timers and spawned tasks
         for timer in self.timers.values():
             loop.close(timer)
@@ -585,8 +581,6 @@ class ProgressLayout:
         self.value = value
 
     def start(self) -> None:
-        global CURRENT_LAYOUT
-
         if CURRENT_LAYOUT is not self and CURRENT_LAYOUT is not None:
             CURRENT_LAYOUT.stop()
 
@@ -598,7 +592,5 @@ class ProgressLayout:
         backlight_fade(BacklightLevels.NORMAL)
 
     def stop(self) -> None:
-        global CURRENT_LAYOUT
-
         if CURRENT_LAYOUT is self:
             set_current_layout(None)

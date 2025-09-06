@@ -8,3 +8,5 @@ MANIFEST
 *.py.cache
 /.tox
 mypy_report
+uv.lock
+/.venv
