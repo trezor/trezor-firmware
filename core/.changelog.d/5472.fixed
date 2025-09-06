@@ -1,0 +1,1 @@
+Fixed out-of-memory error when Bitcoin transaction with many outputs.
