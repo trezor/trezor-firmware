@@ -26,8 +26,8 @@ use crate::{
             util::{ConfirmValueParams, RecoveryType},
         },
         ui_firmware::{
-            FirmwareUI, ERROR_NOT_IMPLEMENTED, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
-            MAX_MENU_ITEMS, MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS,
+            FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_MENU_ITEMS,
+            MAX_PAIRED_DEVICES, MAX_WORD_QUIZ_ITEMS,
         },
         ModelUI,
     },
@@ -141,7 +141,7 @@ impl FirmwareUI for UICaesar {
         _buy_amount: TString<'static>,
         _back_button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn confirm_value(
@@ -199,7 +199,7 @@ impl FirmwareUI for UICaesar {
         _hold: bool,
         _chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(ERROR_NOT_IMPLEMENTED)
+        Err::<Gc<LayoutObj>, Error>(Error::NotImplementedError)
     }
 
     fn confirm_homescreen(
@@ -239,7 +239,7 @@ impl FirmwareUI for UICaesar {
         _items: Obj,
         _verb: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn confirm_fido(
@@ -505,9 +505,7 @@ impl FirmwareUI for UICaesar {
             unwrap!(info_pages.push((account_title, info)));
         }
         if external_menu && !info_pages.is_empty() {
-            return Err(Error::ValueError(
-                c"Cannot use both info pages and external menu",
-            ));
+            return Err(Error::NotImplementedError);
         }
 
         // button layouts and actions
@@ -724,14 +722,14 @@ impl FirmwareUI for UICaesar {
         _summary_br_name: Option<TString<'static>>,
         _cancel_text: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn flow_confirm_set_new_pin(
         _title: TString<'static>,
         _description: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn flow_get_address(
@@ -749,7 +747,7 @@ impl FirmwareUI for UICaesar {
         _br_code: u16,
         _br_name: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn flow_get_pubkey(
@@ -763,7 +761,7 @@ impl FirmwareUI for UICaesar {
         _br_code: u16,
         _br_name: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn multiple_pages_texts(
@@ -902,7 +900,7 @@ impl FirmwareUI for UICaesar {
         _max_ms: u32,
         _description: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn request_pin(
@@ -933,7 +931,7 @@ impl FirmwareUI for UICaesar {
         _allow_empty: bool,
         _prefill: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn select_menu(
@@ -996,7 +994,7 @@ impl FirmwareUI for UICaesar {
     }
 
     fn set_brightness(_current_brightness: Option<u8>) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn show_address_details(
@@ -1093,7 +1091,7 @@ impl FirmwareUI for UICaesar {
         _allow_cancel: bool,
         _time_ms: u32,
     ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(ERROR_NOT_IMPLEMENTED)
+        Err::<Gc<LayoutObj>, Error>(Error::NotImplementedError)
     }
 
     fn show_group_share_success(
@@ -1141,17 +1139,13 @@ impl FirmwareUI for UICaesar {
         _led_enabled: Option<bool>,
         _about_items: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"show_device_menu not supported",
-        ))
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn show_pairing_device_name(
         _device_name: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"show_pairing_device_name not supported",
-        ))
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     #[cfg(feature = "ble")]
@@ -1160,9 +1154,7 @@ impl FirmwareUI for UICaesar {
         _description: TString<'static>,
         _code: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"show_ble_pairing_code not supported",
-        ))
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn show_thp_pairing_code(
@@ -1190,9 +1182,7 @@ impl FirmwareUI for UICaesar {
         _title: TString<'static>,
         _description: (StrBuffer, Obj),
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"confirm_thp_pairing not supported",
-        ))
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn show_info(
@@ -1223,7 +1213,7 @@ impl FirmwareUI for UICaesar {
         _horizontal: bool,
         _chunkify: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn show_lockscreen(
@@ -1350,11 +1340,11 @@ impl FirmwareUI for UICaesar {
         _text_confirm: TString<'static>,
         _text_check: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn show_remaining_shares(_pages_iterable: Obj) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
     fn show_simple(
@@ -1375,7 +1365,7 @@ impl FirmwareUI for UICaesar {
         _allow_cancel: bool,
         _time_ms: u32,
     ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(ERROR_NOT_IMPLEMENTED)
+        Err::<Gc<LayoutObj>, Error>(Error::NotImplementedError)
     }
 
     fn show_wait_text(text: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
