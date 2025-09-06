@@ -1,4 +1,5 @@
 pub mod bip39;
+pub mod label;
 pub mod mnemonic;
 pub mod passphrase;
 pub mod pin;
