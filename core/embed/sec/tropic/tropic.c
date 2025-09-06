@@ -36,8 +36,6 @@
 #include "ed25519-donna/ed25519.h"
 #include "memzero.h"
 
-#define PKEY_INDEX_BYTE PAIRING_KEY_SLOT_INDEX_0
-
 typedef struct {
   bool initialized;
   bool sec_chan_established;
@@ -77,7 +75,7 @@ bool tropic_init(void) {
     curve25519_scalarmult_basepoint(trezor_pubkey, trezor_privkey);
 
     lt_ret_t ret =
-        lt_session_start(&drv->handle, tropic_pubkey, PKEY_INDEX_BYTE,
+        lt_session_start(&drv->handle, tropic_pubkey, PAIRING_KEY_SLOT_INDEX_2,
                          trezor_privkey, trezor_pubkey);
 
     drv->sec_chan_established = (ret == LT_OK);
