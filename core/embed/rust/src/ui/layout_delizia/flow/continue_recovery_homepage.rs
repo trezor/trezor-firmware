@@ -208,7 +208,7 @@ pub fn new_continue_recovery_homepage(
     )
     .with_cancel_button()
     .with_footer(TR::instructions__tap_to_confirm.into(), None)
-    .with_swipe(Direction::Down, SwipeSettings::default())
+    .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);
 
     let res = if show_instructions {
@@ -253,7 +253,7 @@ pub fn new_continue_recovery_homepage(
             TR::instructions__swipe_down.into(),
         )
         .register_footer_update_fn(footer_update_fn)
-        .with_swipe(Direction::Up, SwipeSettings::default())
+        .with_swipe(Direction::Up, SwipeSettings::Default)
         .with_vertical_pages()
         .map_to_button_msg()
         .repeated_button_request(ButtonRequest::new(

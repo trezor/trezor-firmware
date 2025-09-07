@@ -268,15 +268,15 @@ impl ConfirmValue {
         }
 
         if self.swipe_up {
-            frame = frame.with_swipe(Direction::Up, SwipeSettings::default());
+            frame = frame.with_swipe(Direction::Up, SwipeSettings::Default);
         }
 
         if self.swipe_down {
-            frame = frame.with_swipe(Direction::Down, SwipeSettings::default());
+            frame = frame.with_swipe(Direction::Down, SwipeSettings::Default);
         }
 
         if self.swipe_right {
-            frame = frame.with_swipe(Direction::Right, SwipeSettings::default());
+            frame = frame.with_swipe(Direction::Right, SwipeSettings::Default);
         }
 
         frame = frame.with_vertical_pages();
@@ -455,7 +455,7 @@ impl ShowInfoParams {
         if self.cancel_button {
             frame = frame
                 .with_cancel_button()
-                .with_swipe(Direction::Right, SwipeSettings::immediate());
+                .with_swipe(Direction::Right, SwipeSettings::Immediate);
         } else if self.menu_button {
             frame = frame.with_menu_button()
         }
@@ -464,11 +464,11 @@ impl ShowInfoParams {
         }
 
         if self.swipe_up {
-            frame = frame.with_swipe(Direction::Up, SwipeSettings::default());
+            frame = frame.with_swipe(Direction::Up, SwipeSettings::Default);
         }
 
         if self.swipe_down {
-            frame = frame.with_swipe(Direction::Down, SwipeSettings::default());
+            frame = frame.with_swipe(Direction::Down, SwipeSettings::Default);
         }
 
         frame = frame.with_vertical_pages();

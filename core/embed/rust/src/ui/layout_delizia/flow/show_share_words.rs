@@ -106,8 +106,8 @@ pub fn new_show_share_words(
         title,
         InternallySwipableContent::new(ShareWords::new(share_words_vec, subtitle)),
     )
-    .with_swipe(Direction::Up, SwipeSettings::default())
-    .with_swipe(Direction::Down, SwipeSettings::default())
+    .with_swipe(Direction::Up, SwipeSettings::Default)
+    .with_swipe(Direction::Down, SwipeSettings::Default)
     .with_vertical_pages()
     .with_subtitle(subtitle)
     .register_header_update_fn(header_updating_func)
@@ -120,7 +120,7 @@ pub fn new_show_share_words(
         SwipeContent::new(PromptScreen::new_hold_to_confirm()),
     )
     .with_footer(TR::instructions__hold_to_confirm.into(), None)
-    .with_swipe(Direction::Down, SwipeSettings::default())
+    .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(|_| Some(FlowMsg::Confirmed));
 
     let content_check_backup_intro = Frame::left_aligned(

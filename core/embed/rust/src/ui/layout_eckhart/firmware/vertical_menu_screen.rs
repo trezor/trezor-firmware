@@ -54,8 +54,8 @@ impl<T: MenuItems> VerticalMenuScreen<T> {
             offset_base: 0,
             swipe: None,
             swipe_config: SwipeConfig::new()
-                .with_swipe(Direction::Up, SwipeSettings::default())
-                .with_swipe(Direction::Down, SwipeSettings::default()),
+                .with_swipe(Direction::Up, SwipeSettings::Default)
+                .with_swipe(Direction::Down, SwipeSettings::Default),
         }
     }
 

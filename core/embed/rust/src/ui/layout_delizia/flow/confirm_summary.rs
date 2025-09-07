@@ -90,7 +90,7 @@ pub fn new_confirm_summary(
     )
     .with_menu_button()
     .with_footer(TR::instructions__hold_to_sign.into(), None)
-    .with_swipe(Direction::Down, SwipeSettings::default())
+    .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);
 
     // ExtraInfo

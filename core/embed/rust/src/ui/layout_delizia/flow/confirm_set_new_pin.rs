@@ -93,7 +93,7 @@ pub fn new_set_new_pin(
     )
     .with_cancel_button()
     .with_footer(TR::instructions__tap_to_confirm.into(), None)
-    .with_swipe(Direction::Down, SwipeSettings::default())
+    .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);
 
     let mut res = SwipeFlow::new(&SetNewPin::Intro)?;

@@ -213,7 +213,7 @@ where
         use crate::translations::TR;
 
         self.with_footer(TR::instructions__tap.into(), description)
-            .with_swipe(Direction::Up, SwipeSettings::default())
+            .with_swipe(Direction::Up, SwipeSettings::Default)
     }
 
     #[cfg(feature = "translations")]
@@ -221,7 +221,7 @@ where
         use crate::translations::TR;
 
         self.with_footer(TR::instructions__tap_to_continue.into(), description)
-            .with_swipe(Direction::Up, SwipeSettings::default())
+            .with_swipe(Direction::Up, SwipeSettings::Default)
     }
 
     #[inline(never)]
