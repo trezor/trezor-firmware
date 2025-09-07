@@ -14,7 +14,7 @@ if __debug__:
     from trezorlog import debug, error, info, warning  # noqa: F401
 
     _levels = [debug, info, warning, error]
-    _min_level = 0  # can be used for manually disabling low-priority logging levels
+    _min_level = 1  # can be used for manually disabling low-priority logging levels
     debug, info, warning, error = [_no_op] * _min_level + _levels[_min_level:]
 else:
     # logging is disabled in non-debug builds
