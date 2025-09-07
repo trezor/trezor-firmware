@@ -141,6 +141,11 @@ extern "C" fn screen_boot_stage_1(fading: bool) {
 }
 
 #[no_mangle]
+extern "C" fn screen_boot_empty() {
+    ModelUI::screen_boot_empty()
+}
+
+#[no_mangle]
 extern "C" fn screen_boot(
     warning: bool,
     vendor_str: *const cty::c_char,

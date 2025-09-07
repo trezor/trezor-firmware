@@ -44,6 +44,10 @@ pub trait BootloaderUI {
 
     fn screen_boot_stage_1(fading: bool);
 
+    fn screen_boot_empty() {
+        unimplemented!();
+    }
+
     fn screen_wipe_progress(progress: u16, initialize: bool);
 
     fn screen_install_progress(progress: u16, initialize: bool, initial_setup: bool);
