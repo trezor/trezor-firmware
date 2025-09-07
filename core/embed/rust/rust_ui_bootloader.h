@@ -35,6 +35,7 @@ void screen_bootloader_entry_progress(uint16_t progress, bool initialize);
 // simple screens with no interaction
 
 void screen_boot_stage_1(bool fading);
+void screen_boot_empty(void);
 void screen_boot(bool warning, const char* vendor_str, size_t vendor_str_len,
                  uint32_t version, const void* vendor_img,
                  size_t vendor_img_len, int wait);

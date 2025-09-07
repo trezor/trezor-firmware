@@ -16,7 +16,7 @@ use super::{
         BldActionBar, BldHeader, BldHeaderMsg, BldMenuScreen, BldTextScreen, BldWelcomeScreen,
         ConnectScreen, WirelessSetupScreen,
     },
-    component::Button,
+    component::{render_logo, Button},
     cshape::{render_loader, ScreenBorder},
     fonts::{FONT_SATOSHI_MEDIUM_26, FONT_SATOSHI_REGULAR_38},
     theme::{
@@ -120,7 +120,7 @@ impl BootloaderLayoutType for BootloaderLayout {
 
     fn show(&mut self) -> u32 {
         match self {
-            BootloaderLayout::Welcome(f) => show(f, true),
+            BootloaderLayout::Welcome(f) => show(f, false),
             BootloaderLayout::Menu(f) => show(f, true),
             BootloaderLayout::Connect(f) => show(f, true),
             #[cfg(feature = "ble")]
@@ -366,6 +366,15 @@ impl BootloaderUI for UIEckhart {
     }
 
     fn screen_boot_stage_1(_fading: bool) {}
+
+    fn screen_boot_empty() {
+        render_on_display(None, Some(BLACK), |target| {
+            render_logo(target);
+        });
+
+        display::refresh();
+        Self::fadein();
+    }
 
     fn screen_wipe_progress(progress: u16, initialize: bool) {
         Self::screen_progress(

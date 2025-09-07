@@ -33,6 +33,10 @@
 #include <sys/backup_ram.h>
 #endif
 
+#ifdef USE_BLE
+#include <io/ble.h>
+#endif
+
 #include "bootui.h"
 #include "rust_ui_bootloader.h"
 #include "workflow.h"
@@ -46,6 +50,18 @@ workflow_result_t workflow_empty_device(void) {
   ensure(erase_storage(NULL), NULL);
 #ifdef USE_BACKUP_RAM
   ensure(backup_ram_erase_protected() * sectrue, NULL);
+#endif
+
+#ifdef USE_BLE
+  screen_boot_empty();
+  uint32_t timeout = ticks_timeout(5000);
+  ble_state_t state = {0};
+  do {
+    ble_get_state(&state);
+    if (state.state_known) {
+      break;
+    }
+  } while (!ticks_expired(timeout));
 #endif
 
   protob_ios_t ios;
