@@ -38,6 +38,11 @@ else:
         MessageType.SetBusy,
         MessageType.Ping,
     )
+if utils.USE_POWER_MANAGER:
+    NO_SUSPEND_IN_THIS_WORKFLOW = (
+        MessageType.ResetDevice,
+        MessageType.SetBusy,
+    )
 
 
 # Set of workflow tasks.  Multiple workflows can be running at the same time.
@@ -52,6 +57,9 @@ default_constructor: Callable[[], loop.Task] | None = None
 
 # Determines whether idle timer firing closes currently running workflow. Storage is locked always.
 autolock_interrupts_workflow: bool = True
+
+if utils.USE_POWER_MANAGER:
+    suspend_interrupts_workflow: bool = True
 
 
 def _on_start(workflow: loop.spawn) -> None:
@@ -124,6 +132,10 @@ def start_default() -> None:
             log.debug(__name__, "default already started")
 
     autolock_interrupts_workflow = True
+
+    if utils.USE_POWER_MANAGER:
+        global suspend_interrupts_workflow
+        suspend_interrupts_workflow = True
 
 
 def set_default(constructor: Callable[[], loop.Task], restart: bool = False) -> None:

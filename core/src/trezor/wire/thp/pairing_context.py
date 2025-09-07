@@ -182,6 +182,9 @@ async def handle_message(
     if msg.type in workflow.ALLOW_WHILE_LOCKED:
         workflow.autolock_interrupts_workflow = False
 
+    if msg.type in workflow.NO_SUSPEND_IN_THIS_WORKFLOW:
+        workflow.suspend_interrupts_workflow = False
+
     # Here we make sure we always respond with a Failure response
     # in case of any errors.
     try:

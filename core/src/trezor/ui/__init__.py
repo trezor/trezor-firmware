@@ -105,18 +105,11 @@ if utils.USE_POWER_MANAGER:
 
     def _handle_power_button_press() -> None:
         """Handle power button press event during firmware operation."""
-        from trezor import config
+        from apps.base import lock_device_if_unlocked
 
-        from apps.base import lock_device
-        from apps.management.pm.suspend import suspend_device
-
-        if config.has_pin() and config.is_unlocked():
-            lock_device(interrupt_workflow=True)
-            raise Shutdown()
-        else:
-            suspend_device()
-            if CURRENT_LAYOUT is not None:
-                CURRENT_LAYOUT.layout.request_complete_repaint()
+        lock_device_if_unlocked()
+        # suspend closed the workflow so shutdown the layout task
+        raise Shutdown()
 
 
 class Layout(Generic[T]):
@@ -489,7 +482,7 @@ class Layout(Generic[T]):
                 while True:
                     flags = yield pm
                     if flags & io.pm.EVENT_USB_CONNECTED_CHANGED:
-                        # disconnecting from charger restarts autodim/autosuspend timer
+                        # disconnecting from charger restarts autodim/autolock timer
                         # connecting to charger clears autodim state
                         workflow.idle_timer.touch()
                         autodim_clear()

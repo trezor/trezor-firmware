@@ -11,6 +11,11 @@ from trezor.wire.message_handler import filters, remove_filter
 
 from . import workflow_handlers
 
+if utils.USE_POWER_MANAGER:
+    from trezor import io
+
+    from apps.management.pm.autodim import autodim_display
+
 if TYPE_CHECKING:
     from typing import NoReturn
 
@@ -571,6 +576,26 @@ def lock_device_if_unlocked() -> None:
     elif config.is_unlocked():
         lock_device(interrupt_workflow=workflow.autolock_interrupts_workflow)
 
+    if utils.USE_POWER_MANAGER:
+        from apps.management.pm.suspend import suspend_device
+
+        if (
+            workflow.autolock_interrupts_workflow
+            and workflow.suspend_interrupts_workflow
+        ):
+            workflow.close_others()
+
+        _wakeup_flag = suspend_device()
+        # TODO: Handle the wakeup flag
+
+
+if utils.USE_POWER_MANAGER:
+
+    def lock_device_if_unlocked_on_battery() -> None:
+        """Lock the device if it is unlocked and running on battery or wireless charger."""
+        if not io.pm.is_usb_connected():
+            lock_device_if_unlocked()
+
 
 async def unlock_device() -> None:
     """Ensure the device is in unlocked state.
@@ -609,6 +634,14 @@ def reload_settings_from_storage() -> None:
     workflow.idle_timer.set(
         storage_device.get_autolock_delay_ms(), lock_device_if_unlocked
     )
+
+    if utils.USE_POWER_MANAGER:
+        # autodim setting is not from storage but keeping it here for simplicity
+        workflow.idle_timer.set(10_000, autodim_display)  # TODO: change back to 30s
+        workflow.idle_timer.set(
+            storage_device.get_autolock_battery_delay_ms(),
+            lock_device_if_unlocked_on_battery,
+        )
     wire.message_handler.EXPERIMENTAL_ENABLED = (
         storage_device.get_experimental_features()
     )
@@ -642,11 +675,6 @@ def boot() -> None:
         workflow_handlers.register(msg_type, handler)
 
     reload_settings_from_storage()
-    if utils.USE_POWER_MANAGER:
-        from apps.management.pm.autodim import autodim_display
-
-        workflow.idle_timer.set(30_000, autodim_display)
-
     if backup.repeated_backup_enabled():
         backup.activate_repeated_backup()
     if not config.is_unlocked():
