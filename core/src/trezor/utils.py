@@ -49,8 +49,7 @@ if __debug__:
         update_gc_info,
     )
 
-    if LOG_STACK_USAGE:
-        from trezorutils import estimate_unused_stack, zero_unused_stack  # noqa: F401
+    from trezorutils import estimate_unused_stack, zero_unused_stack  # noqa: F401
 
     if EMULATOR:
         import uos

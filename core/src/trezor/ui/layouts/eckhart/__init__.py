@@ -621,6 +621,8 @@ async def confirm_output(
     else:
         title = TR.send__title_sending_to
 
+    if __debug__:
+        utils.zero_unused_stack()
     await raise_if_cancelled(
         trezorui_api.flow_confirm_output(
             title=TR.words__send,
