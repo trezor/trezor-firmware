@@ -470,6 +470,8 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("irq_unlock_fn")
         // nrf
         .allowlist_function("nrf_send_uart_data")
+        // stack
+        .allowlist_function("clear_unused_stack")
         // c_layout
         .allowlist_type("c_layout_t");
 

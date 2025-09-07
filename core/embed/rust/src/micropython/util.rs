@@ -10,12 +10,16 @@ use super::{
     qstr::Qstr,
     runtime::{catch_exception, raise_exception},
 };
-use crate::error::{value_error, Error};
+use crate::{
+    error::{value_error, Error},
+    trezorhal::stack::clear_unused_stack,
+};
 
 /// Perform a call and convert errors into a raised MicroPython exception.
 /// Should only called when returning from Rust to C. See `raise_exception` for
 /// details.
 pub unsafe fn try_or_raise<T>(func: impl FnOnce() -> Result<T, Error>) -> T {
+    clear_unused_stack();
     func().unwrap_or_else(|err| unsafe {
         raise_exception(err);
     })

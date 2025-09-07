@@ -8,6 +8,7 @@
 #include <io/usb.h>
 #include <rtl/secbool.h>
 #include <sys/irq.h>
+#include <sys/stack_utils.h>
 #include <sys/sysevent.h>
 #include <sys/systick.h>
 #include <util/flash.h>

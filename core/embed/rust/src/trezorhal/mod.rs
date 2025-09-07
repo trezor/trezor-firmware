@@ -35,6 +35,8 @@ pub mod wordlist;
 
 pub mod secbool;
 
+pub mod stack;
+
 pub mod time;
 
 #[cfg(feature = "ui")]
