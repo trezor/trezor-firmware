@@ -123,7 +123,7 @@ pub fn new_receive(
     let content_tap =
         Frame::left_aligned(title, SwipeContent::new(PromptScreen::new_tap_to_confirm()))
             .with_footer(TR::instructions__tap_to_confirm.into(), None)
-            .with_swipe(Direction::Down, SwipeSettings::default())
+            .with_swipe(Direction::Down, SwipeSettings::Default)
             .map(super::util::map_to_confirm);
 
     // Menu
@@ -175,7 +175,7 @@ pub fn new_receive(
         Frame::left_aligned(cancel_title.into(), PromptScreen::new_tap_to_cancel())
             .with_cancel_button()
             .with_footer(TR::instructions__tap_to_confirm.into(), None)
-            .with_swipe(Direction::Down, SwipeSettings::default())
+            .with_swipe(Direction::Down, SwipeSettings::Default)
             .map(super::util::map_to_confirm);
 
     let mut res = SwipeFlow::new(&Receive::Content)?;

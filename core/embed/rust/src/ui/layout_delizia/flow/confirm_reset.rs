@@ -131,7 +131,7 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
         )
         .with_menu_button()
         .with_footer(TR::instructions__hold_to_confirm.into(), None)
-        .with_swipe(Direction::Down, SwipeSettings::default())
+        .with_swipe(Direction::Down, SwipeSettings::Default)
         .map(super::util::map_to_confirm)
         .one_button_request(ButtonRequestCode::ResetDevice.with_name("confirm_setup_device"));
 

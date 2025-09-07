@@ -1291,7 +1291,7 @@ impl FirmwareUI for UIDelizia {
                 SwipeContent::new(content).with_no_attach_anim(),
             )
             .with_footer(instruction, description)
-            .with_swipe(Direction::Up, SwipeSettings::default())
+            .with_swipe(Direction::Up, SwipeSettings::Default)
             .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREEN_LIGHT),
         ))?;
         Ok(layout)

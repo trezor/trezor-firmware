@@ -413,7 +413,7 @@ fn create_confirm(
 
         let mut content_confirm = Frame::left_aligned(prompt_title, SwipeContent::new(prompt))
             .with_footer(prompt_action, None)
-            .with_swipe(Direction::Down, SwipeSettings::default());
+            .with_swipe(Direction::Down, SwipeSettings::Default);
 
         if matches!(extra, ConfirmActionExtra::Menu(_)) {
             content_confirm = content_confirm.with_menu_button();
