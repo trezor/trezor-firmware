@@ -1,4 +1,5 @@
 # pylint: disable=wrong-import-position
+import gc
 import utime
 from micropython import const
 from trezorui import Display
@@ -98,6 +99,9 @@ def set_current_layout(layout: "Layout | ProgressLayout | None") -> None:
     assert (CURRENT_LAYOUT is None) == (layout is not None)
 
     CURRENT_LAYOUT = layout
+    if layout is None:
+        # Deallocate stopped layout memory
+        gc.collect()
 
 
 if utils.USE_POWER_MANAGER:
