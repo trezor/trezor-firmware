@@ -328,11 +328,17 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_estimate_unused_stack_obj,
 
 #endif  // LOG_STACK_USAGE
 
+extern bool gc_collect_debug;
+
 #if MICROPY_OOM_CALLBACK
 static void gc_oom_callback(void) {
   gc_dump_info();
 #if BLOCK_ON_VCP
-  dump_meminfo_json(NULL);  // dump to stdout
+  // uncomment to dump heap analysis data to stdout
+  // dump_meminfo_json(NULL);
+  gc_collect_debug = true;
+  gc_collect();
+  gc_collect_debug = false;
 #endif
 }
 
