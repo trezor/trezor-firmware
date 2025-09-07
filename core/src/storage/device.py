@@ -68,7 +68,7 @@ AUTOLOCK_DELAY_USB_MAX_MS = const(0x2000_0000)  # ~6 days
 
 if utils.USE_POWER_MANAGER:
     AUTOLOCK_DELAY_BATT_MIN_MS = 30 * 1000  # 30 seconds
-    AUTOLOCK_DELAY_BATT_DEFAULT_MS = const(40 * 1000)  # 40 seconds
+    AUTOLOCK_DELAY_BATT_DEFAULT_MS = const(20 * 1000)  # 40 seconds TODO: change to 40s
     AUTOLOCK_DELAY_BATT_MAX_MS = const(10 * 60 * 1000)  # 10 minutes
 
 
