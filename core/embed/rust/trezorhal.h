@@ -11,6 +11,7 @@
 #include <sys/flash.h>
 #include <sys/irq.h>
 #include <sys/logging.h>
+#include <sys/stack_utils.h>
 #include <sys/sysevent.h>
 #include <sys/systick.h>
 #include "rust_types.h"
