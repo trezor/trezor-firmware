@@ -16,7 +16,7 @@ use heapless::Vec;
 
 // So that there is only one implementation, and not multiple generic ones
 // as would be via `const N: usize` generics.
-const MAX_OPS: usize = 40;
+const MAX_OPS: usize = 50;
 
 /// To account for operations that are not made of characters
 /// but need to be accounted for somehow.
@@ -71,7 +71,11 @@ impl<'a> OpTextLayout<'a> {
         let mut layout = self.layout;
 
         // Do something when it was not skipped
-        for op in Self::filter_skipped_ops(self.ops.iter(), skip_bytes) {
+        for filtered_op in Self::filter_skipped_ops(self.ops.iter(), skip_bytes) {
+            let (op, continues_from_prev_page) = match filtered_op {
+                FilteredOp::Continued(text) => (Op::Text(text), true),
+                FilteredOp::Op(op) => (op, false),
+            };
             match op {
                 // Changing color
                 Op::Color(color) => {
@@ -111,13 +115,13 @@ impl<'a> OpTextLayout<'a> {
                     };
                 }
                 // Drawing text
-                Op::Text(text, continued) => {
+                Op::Text(text) => {
                     // Try to fit text on the current page and if they do not fit,
                     // return the appropriate OutOfBounds message
 
                     // Inserting the ellipsis at the very beginning of the text if needed
                     // (just for incomplete texts that were separated)
-                    layout.continues_from_prev_page = continued;
+                    layout.continues_from_prev_page = continues_from_prev_page;
 
                     let fit = text.map(|t| layout.layout_text(t, cursor, sink));
 
@@ -154,7 +158,7 @@ impl<'a> OpTextLayout<'a> {
     fn filter_skipped_ops<'b, I>(
         ops_iter: I,
         skip_bytes: usize,
-    ) -> impl Iterator<Item = Op<'a>> + 'b
+    ) -> impl Iterator<Item = FilteredOp<'a>> + 'b
     where
         I: Iterator<Item = &'b Op<'a>> + 'b,
         'a: 'b,
@@ -162,16 +166,15 @@ impl<'a> OpTextLayout<'a> {
         let mut skipped = 0;
         ops_iter.filter_map(move |op| {
             match op {
-                Op::Text(text, _continued) if skipped < skip_bytes => {
+                Op::Text(text) if skipped < skip_bytes => {
                     let skip_text_bytes_if_fits_partially = skip_bytes - skipped;
                     skipped = skipped.saturating_add(text.len());
                     if skipped > skip_bytes {
                         // Fits partially
                         // Skipping some bytes at the beginning, leaving rest
                         // Signifying that the text continues from previous page
-                        Some(Op::Text(
+                        Some(FilteredOp::Continued(
                             text.skip_prefix(skip_text_bytes_if_fits_partially),
-                            true,
                         ))
                     } else {
                         // Does not fit at all
@@ -186,7 +189,7 @@ impl<'a> OpTextLayout<'a> {
                     // Skip any offsets
                     None
                 }
-                op_to_pass_through => Some(op_to_pass_through.clone()),
+                op_to_pass_through => Some(FilteredOp::Op(op_to_pass_through.clone())),
             }
         })
     }
@@ -206,7 +209,7 @@ impl<'a> OpTextLayout<'a> {
             self.next_op_font = font;
             self.add_new_item(Op::Font(font));
         }
-        self.add_new_item(Op::Text(text.into(), false))
+        self.add_new_item(Op::Text(text.into()))
     }
 
     pub fn add_color(&mut self, color: Color) -> &mut Self {
@@ -256,12 +259,17 @@ impl<'a> OpTextLayout<'a> {
     }
 }
 
+enum FilteredOp<'a> {
+    Continued(TString<'a>),
+    Op(Op<'a>),
+}
+
 #[derive(Clone)]
 pub enum Op<'a> {
     /// Render text with current color and font.
     /// Bool signifies whether this is a split Text Op continued from previous
     /// page. If true, a leading ellipsis will be rendered.
-    Text(TString<'a>, bool),
+    Text(TString<'a>),
     /// Set current text color.
     Color(Color),
     /// Set currently used font.
