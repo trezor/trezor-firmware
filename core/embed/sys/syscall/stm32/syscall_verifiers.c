@@ -723,12 +723,25 @@ access_violation:
 // ---------------------------------------------------------------------
 
 #ifdef USE_BLE
-bool ble_issue_command__verified(ble_command_t *command) {
-  if (!probe_read_access(command, sizeof(*command))) {
+
+bool ble_enter_pairing_mode__verified(const uint8_t *name, size_t name_len) {
+  if (!probe_read_access(name, name_len)) {
     goto access_violation;
   }
 
-  return ble_issue_command(command);
+  return ble_enter_pairing_mode(name, name_len);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+bool ble_allow_pairing__verified(const uint8_t *pairing_code) {
+  if (!probe_read_access(pairing_code, BLE_PAIRING_CODE_LEN)) {
+    goto access_violation;
+  }
+
+  return ble_allow_pairing(pairing_code);
 
 access_violation:
   apptask_access_violation();

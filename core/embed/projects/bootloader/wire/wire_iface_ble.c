@@ -113,15 +113,8 @@ wire_iface_t* ble_iface_init(void) {
 
   if (!state.connectable && !state.pairing) {
     if (state.peer_count > 0) {
-      ble_command_t cmd = {
-          .cmd_type = BLE_SWITCH_ON,
-          .data = {.adv_start =
-                       {
-                           .name = MODEL_FULL_NAME,
-                           .static_mac = false,
-                       }},
-      };
-      ble_issue_command(&cmd);
+      ble_set_name((const uint8_t*)MODEL_FULL_NAME, sizeof(MODEL_FULL_NAME));
+      ble_switch_on();
     }
   }
 
@@ -137,11 +130,7 @@ void ble_iface_deinit(void) {
     return;
   }
 
-  ble_command_t cmd = {
-      .cmd_type = BLE_KEEP_CONNECTION,
-  };
-  ble_issue_command(&cmd);
-
+  ble_keep_connection();
   ble_stop();
 
   memset(iface, 0, sizeof(wire_iface_t));
@@ -150,23 +139,15 @@ void ble_iface_deinit(void) {
 void ble_iface_end_pairing(void) {
   ble_state_t state = {0};
 
-  ble_command_t reject_cmd = {
-      .cmd_type = BLE_REJECT_PAIRING,
-  };
-  ble_issue_command(&reject_cmd);
-
+  ble_reject_pairing();
   ble_set_name((const uint8_t*)MODEL_FULL_NAME, sizeof(MODEL_FULL_NAME));
 
   ble_get_state(&state);
 
   if (state.peer_count > 0) {
-    ble_command_t cmd = {.cmd_type = BLE_SWITCH_ON};
-    memcpy(cmd.data.adv_start.name, MODEL_FULL_NAME,
-           MIN(sizeof(MODEL_FULL_NAME), BLE_ADV_NAME_LEN));
-    ble_issue_command(&cmd);
+    ble_switch_on();
   } else {
-    ble_command_t cmd = {.cmd_type = BLE_SWITCH_OFF};
-    ble_issue_command(&cmd);
+    ble_switch_off();
   }
 }
 
@@ -187,16 +168,8 @@ bool ble_iface_start_pairing(void) {
   char adv_name[BLE_ADV_NAME_LEN];
   mini_snprintf(adv_name, sizeof(adv_name), "%s (%c%c%c)", MODEL_FULL_NAME,
                 get_random_char(), get_random_char(), get_random_char());
-
-  ble_command_t cmd = {
-      .cmd_type = BLE_PAIRING_MODE,
-      .data = {.adv_start =
-                   {
-                       .static_mac = false,
-                   }},
-  };
-  memcpy(cmd.data.adv_start.name, adv_name, BLE_ADV_NAME_LEN);
-  if (!ble_issue_command(&cmd)) {
+  if (!ble_enter_pairing_mode((const uint8_t*)adv_name,
+                              strnlen(adv_name, BLE_ADV_NAME_LEN))) {
     return false;
   }
 

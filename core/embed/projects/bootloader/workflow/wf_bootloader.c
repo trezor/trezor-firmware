@@ -64,9 +64,7 @@ workflow_result_t workflow_menu(const fw_info_t* fw, protob_ios_t* ios) {
       workflow_ifaces_resume(ios);
       if (ios == NULL) {
         // in case we were not in connected-mode, stop advertising
-        ble_command_t cmd = {0};
-        cmd.cmd_type = BLE_KEEP_CONNECTION;
-        ble_issue_command(&cmd);
+        ble_keep_connection();
       }
       continue;
     }

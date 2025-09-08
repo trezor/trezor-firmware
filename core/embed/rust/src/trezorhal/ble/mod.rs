@@ -6,7 +6,7 @@ use crate::ui::event::BLEEvent;
 
 use super::ffi;
 use crate::{error::Error, trezorhal::ffi::bt_le_addr_t};
-use core::{mem::size_of, ptr};
+use core::ptr;
 
 pub const ADV_NAME_LEN: usize = ffi::BLE_ADV_NAME_LEN as usize;
 pub const BLE_MAX_BONDS: usize = ffi::BLE_MAX_BONDS as usize;
@@ -24,6 +24,14 @@ fn prefix_utf8_bytes(text: &str, max_len: usize) -> &[u8] {
         i -= 1;
     }
     &text.as_bytes()[..i]
+}
+
+pub fn res_to_result(res: bool) -> Result<(), Error> {
+    if res {
+        Ok(())
+    } else {
+        Err(COMMAND_FAILED)
+    }
 }
 
 #[cfg(feature = "ui")]
@@ -75,79 +83,43 @@ fn state() -> ffi::ble_state_t {
     state
 }
 
-fn issue_command(
-    cmd_type: ffi::ble_command_type_t,
-    cmd_data: ffi::ble_command_data_t,
-) -> Result<(), Error> {
-    let data_len = match cmd_type {
-        ffi::ble_command_type_t_BLE_ALLOW_PAIRING => PAIRING_CODE_LEN,
-        ffi::ble_command_type_t_BLE_PAIRING_MODE | ffi::ble_command_type_t_BLE_SWITCH_ON => {
-            size_of::<ffi::ble_adv_start_cmd_data_t>()
-        }
-        _ => 0,
-    };
-    let mut cmd = ffi::ble_command_t {
-        cmd_type,
-        data_len: unwrap!(data_len.try_into()),
-        data: cmd_data,
-    };
-    if unsafe { ffi::ble_issue_command(&mut cmd as _) } {
-        Ok(())
-    } else {
-        Err(COMMAND_FAILED)
-    }
-}
-
-fn data_advname(name: &str) -> ffi::ble_command_data_t {
-    let mut data = ffi::ble_command_data_t {
-        adv_start: ffi::ble_adv_start_cmd_data_t {
-            name: [0u8; ADV_NAME_LEN],
-            static_mac: false,
-        },
-    };
-    let bytes = prefix_utf8_bytes(name, ADV_NAME_LEN);
-    unsafe {
-        data.adv_start.name[..bytes.len()].copy_from_slice(bytes);
-    }
-    data
-}
-
-fn data_code(mut code: u32) -> ffi::ble_command_data_t {
-    let mut pairing_code: [u8; PAIRING_CODE_LEN] = [0; PAIRING_CODE_LEN];
-    for i in (0..PAIRING_CODE_LEN).rev() {
-        let digit = b'0' + ((code % 10) as u8);
-        code /= 10;
-        pairing_code[i] = digit;
-    }
-    ffi::ble_command_data_t { pairing_code }
-}
-
-const fn data_none() -> ffi::ble_command_data_t {
-    ffi::ble_command_data_t { raw: [0; 32] }
-}
-
 pub fn pairing_mode(name: &str) -> Result<(), Error> {
-    issue_command(ffi::ble_command_type_t_BLE_PAIRING_MODE, data_advname(name))
+    let res = unsafe { ffi::ble_enter_pairing_mode(name.as_ptr(), name.len()) };
+    res_to_result(res)
 }
 
 pub fn switch_on(name: &str) -> Result<(), Error> {
-    issue_command(ffi::ble_command_type_t_BLE_SWITCH_ON, data_advname(name))
+    unsafe { ffi::ble_set_name(name.as_ptr(), name.len()) };
+    let res = unsafe { ffi::ble_switch_on() };
+    res_to_result(res)
 }
 
 pub fn switch_off() -> Result<(), Error> {
-    issue_command(ffi::ble_command_type_t_BLE_SWITCH_OFF, data_none())
+    let res = unsafe { ffi::ble_switch_off() };
+    res_to_result(res)
 }
 
 pub fn allow_pairing(code: u32) -> Result<(), Error> {
-    issue_command(ffi::ble_command_type_t_BLE_ALLOW_PAIRING, data_code(code))
+    let mut tmp_code = code;
+    let mut pairing_code: [u8; PAIRING_CODE_LEN] = [0; PAIRING_CODE_LEN];
+    for i in (0..PAIRING_CODE_LEN).rev() {
+        let digit = b'0' + ((tmp_code % 10) as u8);
+        tmp_code /= 10;
+        pairing_code[i] = digit;
+    }
+
+    let res = unsafe { ffi::ble_allow_pairing(pairing_code.as_ptr()) };
+    res_to_result(res)
 }
 
 pub fn reject_pairing() -> Result<(), Error> {
-    issue_command(ffi::ble_command_type_t_BLE_REJECT_PAIRING, data_none())
+    let res = unsafe { ffi::ble_reject_pairing() };
+    res_to_result(res)
 }
 
 pub fn erase_bonds() -> Result<(), Error> {
-    issue_command(ffi::ble_command_type_t_BLE_ERASE_BONDS, data_none())
+    let res = unsafe { ffi::ble_erase_bonds() };
+    res_to_result(res)
 }
 
 pub fn unpair(addr: Option<&bt_le_addr_t>) -> Result<(), Error> {
@@ -163,7 +135,8 @@ pub fn unpair(addr: Option<&bt_le_addr_t>) -> Result<(), Error> {
 }
 
 pub fn disconnect() -> Result<(), Error> {
-    issue_command(ffi::ble_command_type_t_BLE_DISCONNECT, data_none())
+    let res = unsafe { ffi::ble_disconnect() };
+    res_to_result(res)
 }
 
 pub fn set_name(name: &str) {
