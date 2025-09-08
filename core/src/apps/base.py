@@ -179,6 +179,11 @@ def get_features() -> Features:
 
     f.initialized = storage_device.is_initialized()
 
+    if utils.USE_POWER_MANAGER:
+        from trezorio import pm
+
+        f.soc = pm.soc()
+
     # private fields:
     if config.is_unlocked():
         # passphrase_protection is private, see #1807
