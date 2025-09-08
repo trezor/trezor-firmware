@@ -874,6 +874,8 @@ if EVERYTHING:
     features.append('universal_fw')
 if UI_PERFORMANCE_OVERLAY:
     features.append('ui_performance_overlay')
+if PRODUCTION:
+    features.append('production')
 
 
 rust = tools.add_rust_lib(
