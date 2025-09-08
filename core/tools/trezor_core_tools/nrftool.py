@@ -44,6 +44,11 @@ def _format_tlv(tlv: nrf.TlvTable) -> str:
     return "\n".join(output)
 
 
+def get_partition_info() -> munch.Munch:
+    ret: t.Any = munch.munchify(yaml.safe_load(PARTITION_FILE.read_text()))
+    return ret
+
+
 class NrfImage(nrf.NrfImage):
     NAME: t.ClassVar[str] = "nrf"
 
@@ -109,20 +114,22 @@ class HexFileSource(FileSource):
     def __init__(self, path: Path) -> None:
         super().__init__(path)
         self.base_addr = 0
+        if path.exists():
+            self.ih = intelhex.IntelHex(str(self.path))
+        else:
+            self.ih = intelhex.IntelHex()
 
     def read(self) -> bytes:
-        ih = intelhex.IntelHex(str(self.path))
-        minaddr = ih.minaddr()
+        minaddr = self.ih.minaddr()
         assert minaddr is not None
         self.base_addr = minaddr
-        return bytes(ih.tobinarray())
+        return bytes(self.ih.tobinarray())
 
     def write(self, data: bytes, offset: int | None = None) -> None:
-        ih = intelhex.IntelHex()
         if offset is None:
             offset = self.base_addr
-        ih.frombytes(data, offset)
-        ih.write_hex_file(str(self.path))
+        self.ih.frombytes(data, offset)
+        self.ih.write_hex_file(str(self.path))
 
 
 def get_version() -> tuple[int, int, int, int]:
@@ -187,7 +194,7 @@ def wrap(binary_file: Path, output_file: Path, board: str) -> None:
         raise click.ClickException("This file already has a valid mcuboot header")
 
     version = get_version()
-    pm: t.Any = munch.munchify(yaml.safe_load(PARTITION_FILE.read_text()))
+    pm = get_partition_info()
 
     img_data = infile.read()
 
@@ -289,3 +296,66 @@ def sign_dev(binary_file: Path) -> None:
     image.set_signatures((sig1, sig2))
     image.verify(dev_keys=True)
     binary_source.write(image.build())
+
+
+@cli.command()
+@click.argument(
+    "bootloader_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
+)
+@click.argument(
+    "firmware_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
+)
+@click.option(
+    "-o",
+    "--output-file",
+    type=click.Path(exists=False, file_okay=True, dir_okay=False, path_type=Path),
+    required=True,
+)
+def merge(bootloader_file: Path, firmware_file: Path, output_file: Path) -> None:
+    """Merge a bootloader and firmware file into a single file."""
+    bootloader_source = FileSource.from_path(bootloader_file)
+    firmware_source = FileSource.from_path(firmware_file)
+
+    output_source = FileSource.from_path(output_file)
+    pm = get_partition_info()
+
+    output_source.write(bootloader_source.read(), pm.mcuboot.address)
+    output_source.write(firmware_source.read(), pm.mcuboot_primary.address)
+
+
+@cli.command()
+@click.argument(
+    "from_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
+)
+@click.argument(
+    "to_file",
+    type=click.Path(exists=False, file_okay=True, dir_okay=False, path_type=Path),
+)
+@click.option("--offset", type=int, help="Offset to write to in a HEX file")
+def convert(from_file: Path, to_file: Path, offset: int | None) -> None:
+    """Convert from BIN to HEX or vice versa.
+
+    When converting to HEX, the default offset is either `mcuboot_primary` (in case
+    a header is detected) or `app` (in case a raw file is detected). To specify a
+    different offset, use --offset.
+    """
+    from_source = FileSource.from_path(from_file)
+    to_source = FileSource.from_path(to_file)
+    if type(from_source) is type(to_source):
+        raise click.ClickException("From and to file types should usually be different")
+
+    if offset is None:
+        pm = get_partition_info()
+        try:
+            NrfImage.parse(from_source.read())
+        except Exception:
+            # this is a raw file -- probably should go to `app` offset
+            offset = pm.app.address
+        else:
+            # this is a file with a header -- probably should go to `mcuboot_primary` offset
+            offset = pm.mcuboot_primary.address
+
+    to_source.write(from_source.read(), offset)
