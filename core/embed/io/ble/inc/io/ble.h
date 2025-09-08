@@ -34,18 +34,6 @@
 #define BLE_MAX_BONDS 8
 
 typedef enum {
-  BLE_SWITCH_OFF = 0,      // Turn off BLE advertising, disconnect
-  BLE_SWITCH_ON = 1,       // Turn on BLE advertising
-  BLE_PAIRING_MODE = 2,    // Enter pairing mode
-  BLE_DISCONNECT = 3,      // Disconnect from the connected device
-  BLE_ERASE_BONDS = 4,     // Erase all bonding information
-  BLE_ALLOW_PAIRING = 5,   // Accept pairing request
-  BLE_REJECT_PAIRING = 6,  // Reject pairing request
-  BLE_KEEP_CONNECTION =
-      7,  // Keep connection to the connected device, but do not advertise
-} ble_command_type_t;
-
-typedef enum {
   BLE_MODE_OFF,
   BLE_MODE_KEEP_CONNECTION,
   BLE_MODE_CONNECTABLE,
@@ -77,32 +65,16 @@ typedef struct {
 } bt_le_addr_t;
 
 typedef struct {
-  uint8_t name[BLE_ADV_NAME_LEN];
-  bool static_mac;
-} ble_adv_start_cmd_data_t;
-
-typedef union {
-  uint8_t raw[32];
-  ble_adv_start_cmd_data_t adv_start;
-  uint8_t pairing_code[BLE_PAIRING_CODE_LEN];
-} ble_command_data_t;
-
-typedef struct {
-  ble_command_type_t cmd_type;
-  uint8_t data_len;
-  ble_command_data_t data;
-} ble_command_t;
-
-typedef struct {
   bool accept_msgs;
   bool reboot_on_resume;
   bool high_speed;
   uint8_t peer_count;
   ble_mode_t mode_requested;
   bt_le_addr_t connected_addr;
-  ble_adv_start_cmd_data_t adv_data;
   bool restart_adv_on_disconnect;
   bool next_adv_with_disconnect;
+  uint8_t name[BLE_ADV_NAME_LEN];
+  bool static_mac;
 } ble_wakeup_params_t;
 
 typedef enum {
@@ -164,12 +136,50 @@ void ble_start(void);
 // Flushes any queued messages
 void ble_stop(void);
 
-// Issues a command to the BLE module
+// Turns off BLE advertising and disconnects from devices
 //
-// Sends a specific command to the BLE module for execution.
+// Returns `true` if the command was successfully executed.
+bool ble_switch_off(void);
+
+// Turns on BLE advertising
 //
-// Returns `true` if the command was successfully issued.
-bool ble_issue_command(ble_command_t *command);
+// Returns `true` if the command was successfully executed.
+bool ble_switch_on(void);
+
+// Enters pairing mode
+//
+// Returns `true` if the command was successfully executed.
+bool ble_enter_pairing_mode(const uint8_t *name, size_t name_len);
+
+// Disconnects from the currently connected device
+//
+// Returns `true` if the command was successfully executed.
+bool ble_disconnect(void);
+
+// Erases all bonding information
+//
+// Returns `true` if the command was successfully executed.
+bool ble_erase_bonds(void);
+
+// Accepts a pairing request with the provided pairing code
+//
+// Returns `true` if the command was successfully executed.
+bool ble_allow_pairing(const uint8_t *pairing_code);
+
+// Rejects a pairing request
+//
+// Returns `true` if the command was successfully executed.
+bool ble_reject_pairing(void);
+
+// Keeps connection to the connected device but stops advertising
+//
+// Returns `true` if the command was successfully executed.
+bool ble_keep_connection(void);
+
+// Set static ble MAC
+//
+// Returns `true` if the command was successfully executed.
+bool ble_set_static_mac(bool static_mac);
 
 // Sets the BLE advertising name, but does not affect advertising
 void ble_set_name(const uint8_t *name, size_t len);

@@ -18,6 +18,8 @@
  */
 
 #ifdef KERNEL
+#include <stdint.h>
+#include "embed/io/ble/inc/io/ble.h"
 
 #include <trezor_rtl.h>
 
@@ -598,9 +600,35 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       ble_start();
     } break;
 
-    case SYSCALL_BLE_ISSUE_COMMAND: {
-      ble_command_t *command = (ble_command_t *)args[0];
-      args[0] = ble_issue_command__verified(command);
+    case SYSCALL_BLE_SWITCH_ON: {
+      args[0] = ble_switch_on();
+    } break;
+
+    case SYSCALL_BLE_SWITCH_OFF: {
+      args[0] = ble_switch_off();
+    } break;
+
+    case SYSCALL_BLE_ENTER_PAIRING_MODE: {
+      const uint8_t *name = (const uint8_t *)args[0];
+      size_t name_len = (size_t)args[1];
+      args[0] = ble_enter_pairing_mode__verified(name, name_len);
+    } break;
+
+    case SYSCALL_BLE_DISCONNECT: {
+      args[0] = ble_disconnect();
+    } break;
+
+    case SYSCALL_BLE_ERASE_BONDS: {
+      args[0] = ble_erase_bonds();
+    } break;
+
+    case SYSCALL_BLE_ALLOW_PAIRING: {
+      const uint8_t *code = (const uint8_t *)args[0];
+      args[0] = ble_allow_pairing__verified(code);
+    } break;
+
+    case SYSCALL_BLE_REJECT_PAIRING: {
+      args[0] = ble_reject_pairing();
     } break;
 
     case SYSCALL_BLE_GET_STATE: {

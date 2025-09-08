@@ -593,8 +593,34 @@ int firmware_hash_continue(uint8_t *hash, size_t hash_len) {
 
 void ble_start(void) { syscall_invoke0(SYSCALL_BLE_START); }
 
-bool ble_issue_command(ble_command_t *command) {
-  return (bool)syscall_invoke1((uint32_t)command, SYSCALL_BLE_ISSUE_COMMAND);
+bool ble_switch_off(void) {
+  return (bool)syscall_invoke0(SYSCALL_BLE_SWITCH_OFF);
+}
+
+bool ble_switch_on(void) {
+  return (bool)syscall_invoke0(SYSCALL_BLE_SWITCH_ON);
+}
+
+bool ble_enter_pairing_mode(const uint8_t *name, size_t name_len) {
+  return (bool)syscall_invoke2((uint32_t)name, name_len,
+                               SYSCALL_BLE_ENTER_PAIRING_MODE);
+}
+
+bool ble_disconnect(void) {
+  return (bool)syscall_invoke0(SYSCALL_BLE_DISCONNECT);
+}
+
+bool ble_erase_bonds(void) {
+  return (bool)syscall_invoke0(SYSCALL_BLE_ERASE_BONDS);
+}
+
+bool ble_allow_pairing(const uint8_t *pairing_code) {
+  return (bool)syscall_invoke1((uint32_t)pairing_code,
+                               SYSCALL_BLE_ALLOW_PAIRING);
+}
+
+bool ble_reject_pairing(void) {
+  return (bool)syscall_invoke0(SYSCALL_BLE_REJECT_PAIRING);
 }
 
 bool ble_get_event(ble_event_t *event) {

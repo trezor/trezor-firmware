@@ -32,17 +32,13 @@
 
 void ble_timer_cb(void* context) {
   ble_event_t e = {0};
-  ble_command_t cmd = {0};
 
   bool event_received = ble_get_event(&e);
 
   if (event_received) {
     switch (e.type) {
       case BLE_PAIRING_REQUEST:
-        cmd.cmd_type = BLE_ALLOW_PAIRING;
-        memcpy(cmd.data.raw, e.data, BLE_PAIRING_CODE_LEN);
-        cmd.data_len = BLE_PAIRING_CODE_LEN;
-        ble_issue_command(&cmd);
+        ble_allow_pairing(e.data);
       default:
         break;
     }
@@ -85,13 +81,8 @@ static void prodtest_ble_adv_start(cli_t* cli) {
   uint16_t name_len =
       strlen(name) > BLE_ADV_NAME_LEN ? BLE_ADV_NAME_LEN : strlen(name);
 
-  ble_command_t cmd = {0};
-  cmd.cmd_type = BLE_PAIRING_MODE;
-  cmd.data_len = sizeof(cmd.data.adv_start);
-  cmd.data.adv_start.static_mac = true;
-  memcpy(cmd.data.adv_start.name, name, name_len);
-
-  if (!ble_issue_command(&cmd)) {
+  ble_set_static_mac(true);
+  if (!ble_enter_pairing_mode((const uint8_t*)name, name_len)) {
     cli_error(cli, CLI_ERROR, "Could not start advertising.");
     return;
   }
@@ -128,11 +119,7 @@ static void prodtest_ble_adv_stop(cli_t* cli) {
     return;
   }
 
-  ble_command_t cmd = {0};
-  cmd.cmd_type = BLE_SWITCH_OFF;
-  cmd.data_len = 0;
-
-  if (!ble_issue_command(&cmd)) {
+  if (!ble_switch_off()) {
     cli_error(cli, CLI_ERROR, "Could not stop advertising.");
     return;
   }
@@ -182,11 +169,8 @@ static void prodtest_ble_info(cli_t* cli) {
 }
 
 bool prodtest_ble_erase_bonds(cli_t* cli) {
-  ble_command_t cmd = {0};
-  cmd.cmd_type = BLE_ERASE_BONDS;
-
   ble_state_t state = {0};
-  ble_issue_command(&cmd);
+  ble_erase_bonds();
 
   uint32_t timeout = ticks_timeout(100);
 

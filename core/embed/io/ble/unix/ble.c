@@ -9,7 +9,23 @@ void ble_start(void) {}
 
 void ble_stop(void) {}
 
-bool ble_issue_command(ble_command_t *command) { return true; }
+bool ble_switch_off(void) { return true; }
+
+bool ble_switch_on(void) { return true; }
+
+bool ble_enter_pairing_mode(const uint8_t *name, size_t name_len) {
+  return true;
+}
+
+bool ble_disconnect(void) { return true; }
+
+bool ble_erase_bonds(void) { return true; }
+
+bool ble_allow_pairing(const uint8_t *pairing_code) { return true; }
+
+bool ble_reject_pairing(void) { return true; }
+
+bool ble_keep_connection(void) { return true; }
 
 void ble_set_name(const uint8_t *name, size_t len) {}
 
