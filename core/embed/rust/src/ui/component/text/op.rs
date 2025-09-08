@@ -200,7 +200,7 @@ impl<'a> OpTextLayout<'a> {
         self
     }
 
-    pub fn add_text(&mut self, text: impl Into<TString<'a>>, font: Font) -> &mut Self {
+    pub fn add_text_with_font(&mut self, text: impl Into<TString<'a>>, font: Font) -> &mut Self {
         self.add_new_item(Op::Text(text.into(), font, false))
     }
 
@@ -210,12 +210,12 @@ impl<'a> OpTextLayout<'a> {
 
     pub fn add_newline(&mut self) -> &mut Self {
         let font = self.layout.style.text_font;
-        self.add_text("\n", font)
+        self.add_text_with_font("\n", font)
     }
 
     pub fn add_newline_half(&mut self) -> &mut Self {
         let font = self.layout.style.text_font;
-        self.add_text("\r", font)
+        self.add_text_with_font("\r", font)
     }
 
     pub fn add_next_page(&mut self) -> &mut Self {

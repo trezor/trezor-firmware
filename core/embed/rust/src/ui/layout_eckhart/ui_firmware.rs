@@ -172,16 +172,16 @@ impl FirmwareUI for UIEckhart {
 
         for item in IterBuf::new().try_iterate(items)? {
             if item.is_str() {
-                ops.add_text(TString::try_from(item)?, font);
+                ops.add_text_with_font(TString::try_from(item)?, font);
             } else {
                 let [emphasis, text]: [Obj; 2] = util::iter_into_array(item)?;
                 let text: TString = text.try_into()?;
                 if emphasis.try_into()? {
                     ops.add_color(theme::WHITE)
-                        .add_text(text, font)
+                        .add_text_with_font(text, font)
                         .add_color(text_style.text_color);
                 } else {
-                    ops.add_text(text, font);
+                    ops.add_text_with_font(text, font);
                 }
             }
         }
@@ -408,11 +408,11 @@ impl FirmwareUI for UIEckhart {
         let mut ops = OpTextLayout::new(theme::firmware::TEXT_REGULAR);
         ops.add_offset(Offset::y(16))
             .add_color(theme::RED)
-            .add_text(sell_amount, font)
+            .add_text_with_font(sell_amount, font)
             .add_offset(Offset::y(44))
             .add_newline()
             .add_color(theme::GREEN_LIME)
-            .add_text(buy_amount, font);
+            .add_text_with_font(buy_amount, font);
         let screen = TextScreen::new(FormattedText::new(ops))
             .with_subtitle(subtitle)
             .with_header(Header::new(title).with_menu_button())
@@ -612,12 +612,12 @@ impl FirmwareUI for UIEckhart {
                 op_layout
                     .add_line_spacing(3)
                     .add_color(theme::GREY_EXTRA_LIGHT)
-                    .add_text(title, fonts::FONT_SATOSHI_MEDIUM_26)
+                    .add_text_with_font(title, fonts::FONT_SATOSHI_MEDIUM_26)
                     .add_newline()
                     .add_offset(Offset::y(24))
                     .add_color(theme::GREY_LIGHT)
                     .add_line_spacing(16)
-                    .add_text(description, fonts::FONT_MONO_MEDIUM_38);
+                    .add_text_with_font(description, fonts::FONT_MONO_MEDIUM_38);
             }
 
             Some((op_layout, n_pages))
@@ -1239,9 +1239,9 @@ impl FirmwareUI for UIEckhart {
         let mut ops = OpTextLayout::new(text_style);
         let text: TString = " is your Trezor's name.".into();
         ops.add_color(theme::GREEN)
-            .add_text(device_name, font)
+            .add_text_with_font(device_name, font)
             .add_color(text_style.text_color)
-            .add_text(text, font);
+            .add_text_with_font(text, font);
         let screen = TextScreen::new(FormattedText::new(ops))
             .with_header(Header::new("Pair with new device".into()).with_close_button())
             .with_action_bar(ActionBar::new_text_only("Continue on host".into()));
@@ -1258,12 +1258,12 @@ impl FirmwareUI for UIEckhart {
         code: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut ops = OpTextLayout::new(theme::firmware::TEXT_REGULAR);
-        ops.add_text(description, fonts::FONT_SATOSHI_REGULAR_38)
+        ops.add_text_with_font(description, fonts::FONT_SATOSHI_REGULAR_38)
             .add_newline()
             .add_newline()
             .add_newline()
             .add_alignment(Alignment::Center)
-            .add_text(code, fonts::FONT_SATOSHI_EXTRALIGHT_72);
+            .add_text_with_font(code, fonts::FONT_SATOSHI_EXTRALIGHT_72);
         let screen = crate::ui::component::BLEHandler::new(
             TextScreen::new(FormattedText::new(ops))
                 .with_header(Header::new(title))
@@ -1355,8 +1355,8 @@ impl FirmwareUI for UIEckhart {
 
         let text_style = theme::TEXT_REGULAR;
         let mut ops = OpTextLayout::new(text_style);
-        ops.add_text(description, text_style.text_font)
-            .add_text(url, theme::TEXT_MONO_MEDIUM.text_font);
+        ops.add_text_with_font(description, text_style.text_font)
+            .add_text_with_font(url, theme::TEXT_MONO_MEDIUM.text_font);
 
         let screen = TextScreen::new(FormattedText::new(ops))
             .with_header(Header::new(title))
