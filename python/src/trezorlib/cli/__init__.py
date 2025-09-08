@@ -139,11 +139,13 @@ class TrezorConnection:
         session_id: bytes | None,
         passphrase_on_host: bool,
         script: bool,
+        ble_enabled: bool,
     ) -> None:
         self.path = path
         self.session_id = session_id
         self.passphrase_on_host = passphrase_on_host
         self.script = script
+        self.ble_enabled = ble_enabled
 
     def get_session(
         self,
@@ -208,7 +210,9 @@ class TrezorConnection:
 
         try:
             # look for transport without prefix search
-            _TRANSPORT = transport.get_transport(self.path, prefix_search=False)
+            _TRANSPORT = transport.get_transport(
+                self.path, prefix_search=False, ble_enabled=self.ble_enabled
+            )
         except Exception:
             # most likely not found. try again below.
             pass
@@ -216,7 +220,9 @@ class TrezorConnection:
         # look for transport with prefix search
         # if this fails, we want the exception to bubble up to the caller
         if not _TRANSPORT:
-            _TRANSPORT = transport.get_transport(self.path, prefix_search=True)
+            _TRANSPORT = transport.get_transport(
+                self.path, prefix_search=True, ble_enabled=self.ble_enabled
+            )
 
         _TRANSPORT.open()
         atexit.register(_TRANSPORT.close)

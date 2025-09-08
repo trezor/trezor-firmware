@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import typing as t
 
 from ..exceptions import TrezorException
@@ -95,7 +96,7 @@ class Transport:
     CHUNK_SIZE: t.ClassVar[int | None]
 
 
-def all_transports() -> t.Iterable[t.Type["Transport"]]:
+def all_transports(ble_enabled: bool | None = None) -> t.Iterable[t.Type["Transport"]]:
     from .ble import BleTransport
     from .bridge import BridgeTransport
     from .hid import HidTransport
@@ -107,16 +108,20 @@ def all_transports() -> t.Iterable[t.Type["Transport"]]:
         HidTransport,
         UdpTransport,
         WebUsbTransport,
-        BleTransport,
     )
+    if ble_enabled is None:
+        ble_enabled = os.environ.get("TREZOR_BLE") == "1"
+    if ble_enabled:
+        transports += (BleTransport,)
     return set(t for t in transports if t.ENABLED)
 
 
 def enumerate_devices(
     models: t.Iterable[TrezorModel] | None = None,
+    ble_enabled: bool | None = None,
 ) -> t.Sequence[Transport]:
     devices: t.List[Transport] = []
-    for transport in all_transports():
+    for transport in all_transports(ble_enabled=ble_enabled):
         name = transport.__name__
         try:
             found = list(transport.enumerate(models))
@@ -130,10 +135,14 @@ def enumerate_devices(
     return devices
 
 
-def get_transport(path: str | None = None, prefix_search: bool = False) -> Transport:
+def get_transport(
+    path: str | None = None,
+    prefix_search: bool = False,
+    ble_enabled: bool | None = None,
+) -> Transport:
     if path is None:
         try:
-            return next(iter(enumerate_devices()))
+            return next(iter(enumerate_devices(ble_enabled=ble_enabled)))
         except StopIteration:
             raise TransportException("No Trezor device found") from None
 
@@ -148,7 +157,11 @@ def get_transport(path: str | None = None, prefix_search: bool = False) -> Trans
             "prefix" if prefix_search else "full path", path
         )
     )
-    transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
+    transports = [
+        t
+        for t in all_transports(ble_enabled=ble_enabled)
+        if match_prefix(path, t.PATH_PREFIX)
+    ]
     if transports:
         return transports[0].find_by_path(path, prefix_search=prefix_search)
 
