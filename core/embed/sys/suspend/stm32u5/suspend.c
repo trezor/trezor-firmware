@@ -89,6 +89,8 @@ wakeup_flags_t system_suspend(void) {
       charging_in_suspend = false;
     }
 
+    __WFI();
+
     wakeup_flags_get(&wakeup_flags);
 
   } while (charging_in_suspend && (wakeup_flags == 0));
