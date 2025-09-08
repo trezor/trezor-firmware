@@ -57,15 +57,15 @@ pub struct TextLayout {
 #[derive(PartialEq, Eq, Copy, Clone)]
 pub struct Chunks {
     /// How many characters will be grouped in one chunk.
-    pub chunk_size: usize,
+    pub chunk_size: u8,
     /// How big will be the space between chunks (in pixels).
     pub x_offset: i16,
     /// Maximum amount of rows on one page, if any.
-    pub max_rows: Option<usize>,
+    pub max_rows: Option<u8>,
 }
 
 impl Chunks {
-    pub const fn new(chunk_size: usize, x_offset: i16) -> Self {
+    pub const fn new(chunk_size: u8, x_offset: i16) -> Self {
         Chunks {
             chunk_size,
             x_offset,
@@ -73,7 +73,7 @@ impl Chunks {
         }
     }
 
-    pub const fn with_max_rows(mut self, max_rows: usize) -> Self {
+    pub const fn with_max_rows(mut self, max_rows: u8) -> Self {
         self.max_rows = Some(max_rows);
         self
     }
@@ -299,7 +299,7 @@ impl TextLayout {
                 // Assuming mono-font, so all the letters have the same width
                 let letter_size = self.style.text_font.text_width("a");
                 let icon_offset = self.style.prev_page_ellipsis_icon_width() + 2;
-                cursor.x += chunk_config.chunk_size as i16 * letter_size - icon_offset;
+                cursor.x += i16::from(chunk_config.chunk_size) * letter_size - icon_offset;
                 sink.prev_page_ellipsis(*cursor, self);
                 cursor.x += icon_offset + chunk_config.x_offset;
             } else {
@@ -341,7 +341,10 @@ impl TextLayout {
                 // Last chunk on the page should not be rendered, put just ellipsis there
                 // Chunks is last when the next chunk would not fit on the page horizontally
                 let is_last_chunk = (2 * span.advance.x - chunk_config.x_offset) > remaining_width;
-                if is_last_line && is_last_chunk && remaining_text.len() > chunk_config.chunk_size {
+                if is_last_line
+                    && is_last_chunk
+                    && remaining_text.len() > chunk_config.chunk_size.into()
+                {
                     // Making sure no text is rendered here, and that we force a line break
                     span.length = 0;
                     span.advance.x = 2; // To start at the same horizontal line as the chunk itself
@@ -732,7 +735,7 @@ impl Span {
             // When there is a set chunk size and we reach it,
             // adjust the line advances and return the line.
             if let Some(chunkify_config) = chunks {
-                if i == chunkify_config.chunk_size {
+                if i == usize::from(chunkify_config.chunk_size) {
                     line.advance.y = 0;
                     line.advance.x += chunkify_config.x_offset;
                     return line;
