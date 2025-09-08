@@ -203,14 +203,14 @@ impl FirmwareUI for UIBolt {
         let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
         for item in IterBuf::new().try_iterate(items)? {
             if item.is_str() {
-                ops.add_text(TString::try_from(item)?, fonts::FONT_NORMAL);
+                ops.add_text_with_font(TString::try_from(item)?, fonts::FONT_NORMAL);
             } else {
                 let [emphasis, text]: [Obj; 2] = util::iter_into_array(item)?;
                 let text: TString = text.try_into()?;
                 if emphasis.try_into()? {
-                    ops.add_text(text, fonts::FONT_DEMIBOLD);
+                    ops.add_text_with_font(text, fonts::FONT_DEMIBOLD);
                 } else {
-                    ops.add_text(text, fonts::FONT_NORMAL);
+                    ops.add_text_with_font(text, fonts::FONT_NORMAL);
                 }
             }
         }
@@ -1493,11 +1493,11 @@ mod tests {
         );
 
         let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
-        ops.add_text(
+        ops.add_text_with_font(
             "Testing text layout, with some text, and some more text. And ",
             fonts::FONT_NORMAL,
         )
-        .add_text("parameters!", fonts::FONT_BOLD_UPPER);
+        .add_text_with_font("parameters!", fonts::FONT_BOLD_UPPER);
         let formatted = FormattedText::new(ops);
         let mut layout = Dialog::new(formatted, buttons);
         layout.place(SCREEN);
