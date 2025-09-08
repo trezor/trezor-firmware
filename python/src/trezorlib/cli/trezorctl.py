@@ -167,6 +167,13 @@ def configure_logging(verbose: int) -> None:
     help="Select device by specific path.",
     default=os.environ.get("TREZOR_PATH"),
 )
+@click.option(
+    "-B",
+    "--ble/--no-ble",
+    help="Enable/disable support for Bluetooth Low Energy.",
+    is_flag=True,
+    default=(os.environ.get("TREZOR_BLE") == "1"),
+)
 @click.option("-v", "--verbose", count=True, help="Show communication messages.")
 @click.option(
     "-j", "--json", "is_json", is_flag=True, help="Print result as JSON object"
@@ -200,6 +207,7 @@ def configure_logging(verbose: int) -> None:
 def cli_main(
     ctx: click.Context,
     path: str,
+    ble: bool,
     verbose: int,
     is_json: bool,
     passphrase_on_host: bool,
@@ -216,7 +224,9 @@ def cli_main(
         except ValueError:
             raise click.ClickException(f"Not a valid session id: {session_id}")
 
-    ctx.obj = TrezorConnection(path, bytes_session_id, passphrase_on_host, script)
+    ctx.obj = TrezorConnection(
+        path, bytes_session_id, passphrase_on_host, script, ble_enabled=ble
+    )
 
     # Optionally record the screen into a specified directory.
     if record:
@@ -284,16 +294,19 @@ def format_device_name(features: messages.Features) -> str:
 
 @cli.command(name="list")
 @click.option("-n", "no_resolve", is_flag=True, help="Do not resolve Trezor names")
-def list_devices(no_resolve: bool) -> Optional[Iterable["Transport"]]:
+@click.pass_obj
+def list_devices(
+    obj: TrezorConnection, no_resolve: bool
+) -> Optional[Iterable["Transport"]]:
     """List connected Trezor devices."""
     if no_resolve:
-        for d in enumerate_devices():
+        for d in enumerate_devices(ble_enabled=obj.ble_enabled):
             click.echo(d.get_path())
         return
 
     from . import get_client
 
-    for transport in enumerate_devices():
+    for transport in enumerate_devices(ble_enabled=obj.ble_enabled):
         try:
             transport.open()
             client = get_client(transport)
