@@ -16,7 +16,7 @@ use heapless::Vec;
 
 // So that there is only one implementation, and not multiple generic ones
 // as would be via `const N: usize` generics.
-const MAX_OPS: usize = 30;
+const MAX_OPS: usize = 40;
 
 /// To account for operations that are not made of characters
 /// but need to be accounted for somehow.
@@ -29,6 +29,8 @@ const PROCESSED_CHARS_ONE: usize = 1;
 pub struct OpTextLayout<'a> {
     pub layout: TextLayout,
     ops: Vec<Op<'a>, MAX_OPS>,
+    // used internally to skip unneeded `Op::Font`
+    next_op_font: Font,
 }
 
 impl<'a> OpTextLayout<'a> {
@@ -36,6 +38,7 @@ impl<'a> OpTextLayout<'a> {
         Self {
             layout: TextLayout::new(style),
             ops: Vec::new(),
+            next_op_font: style.text_font,
         }
     }
 
@@ -108,14 +111,13 @@ impl<'a> OpTextLayout<'a> {
                     };
                 }
                 // Drawing text
-                Op::Text(text, font, continued) => {
+                Op::Text(text, continued) => {
                     // Try to fit text on the current page and if they do not fit,
                     // return the appropriate OutOfBounds message
 
                     // Inserting the ellipsis at the very beginning of the text if needed
                     // (just for incomplete texts that were separated)
                     layout.continues_from_prev_page = continued;
-                    layout.style.text_font = font;
 
                     let fit = text.map(|t| layout.layout_text(t, cursor, sink));
 
@@ -160,7 +162,7 @@ impl<'a> OpTextLayout<'a> {
         let mut skipped = 0;
         ops_iter.filter_map(move |op| {
             match op {
-                Op::Text(text, font, _continued) if skipped < skip_bytes => {
+                Op::Text(text, _continued) if skipped < skip_bytes => {
                     let skip_text_bytes_if_fits_partially = skip_bytes - skipped;
                     skipped = skipped.saturating_add(text.len());
                     if skipped > skip_bytes {
@@ -169,7 +171,6 @@ impl<'a> OpTextLayout<'a> {
                         // Signifying that the text continues from previous page
                         Some(Op::Text(
                             text.skip_prefix(skip_text_bytes_if_fits_partially),
-                            font,
                             true,
                         ))
                     } else {
@@ -201,7 +202,11 @@ impl<'a> OpTextLayout<'a> {
     }
 
     pub fn add_text_with_font(&mut self, text: impl Into<TString<'a>>, font: Font) -> &mut Self {
-        self.add_new_item(Op::Text(text.into(), font, false))
+        if self.next_op_font != font {
+            self.next_op_font = font;
+            self.add_new_item(Op::Font(font));
+        }
+        self.add_new_item(Op::Text(text.into(), false))
     }
 
     pub fn add_color(&mut self, color: Color) -> &mut Self {
@@ -253,10 +258,10 @@ impl<'a> OpTextLayout<'a> {
 
 #[derive(Clone)]
 pub enum Op<'a> {
-    /// Render text with current color and specified font.
+    /// Render text with current color and font.
     /// Bool signifies whether this is a split Text Op continued from previous
     /// page. If true, a leading ellipsis will be rendered.
-    Text(TString<'a>, Font, bool),
+    Text(TString<'a>, bool),
     /// Set current text color.
     Color(Color),
     /// Set currently used font.
