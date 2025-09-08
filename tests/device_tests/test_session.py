@@ -18,17 +18,20 @@ import pytest
 
 from trezorlib import cardano, exceptions, messages, models
 from trezorlib.client import ProtocolVersion
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import Address, parse_path
-from trezorlib.transport.session import Session, SessionV1
+from trezorlib.transport.session import SessionV1
 
 from ..common import get_test_address
 
 ADDRESS_N = parse_path("m/44h/0h/0h")
 XPUB = "xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy"
-
+XPUB_XYZ = "xpub6CzEwks5KV5kxxUTWtG9frJeoWMTPs6ZX4bSABMHry16MFXukicyRmau446SzcMUZh3wVABJir3PMNhQbw1N3PJDDos6BBGogCDHScx5Nkq"
 PIN4 = "1234"
+DATA_ERROR_INVALID_MESSAGE = "Passphrase provided when it shouldn't be!"
+DATA_ERROR_ON_DEVICE = "Providing passphrase in message is not allowed when PASSPHRASE_ALWAYS_ON_DEVICE is True."
 
 
 def _get_public_node(
@@ -255,3 +258,83 @@ def test_derive_cardano_running_session(client: Client):
 
     with pytest.raises(TrezorFailure, match="not enabled"):
         cardano.get_public_key(session_3, parse_path("m/44h/1815h/0h"))
+
+
+def _create_session_passphrase_on_device(
+    session: Session,
+    passphrase_on_device: str = "",
+    passphrase_in_message: str | None = None,
+    on_device: bool = True,
+    error_message: str | None = None,
+) -> None:
+
+    res = session.call_raw(
+        messages.ThpCreateNewSession(
+            passphrase=passphrase_in_message, on_device=on_device
+        )
+    )
+
+    if error_message is not None:
+        # Failed to create session - expected
+        assert isinstance(res, messages.Failure)
+        assert res.code == messages.FailureType.DataError
+        assert res.message == error_message
+        return
+
+    # Device waits for passphrase entry on device
+    assert isinstance(res, messages.ButtonRequest)
+    assert res.code == messages.ButtonRequestType.PassphraseEntry
+
+    # Input passphrase on device
+    # TODO handle empty passphrase better - check that confirm screen is displayed
+    session.debug_client.debug.input(passphrase_on_device)
+    session._write(messages.ButtonAck())
+    response_success = session._read()
+
+    # Session was Successfully created
+    assert isinstance(response_success, messages.Success)
+
+
+@pytest.mark.models("core")
+@pytest.mark.protocol("protocol_v2")
+@pytest.mark.setup_client(passphrase=True)
+def test_create_session_with_passphrase_on_device(session: Session):
+
+    # Set always_on_device to True
+    msg = messages.ApplySettings(passphrase_always_on_device=True)
+    session.call(msg, expect=messages.Success)
+
+    # Assert session works
+    res = session.ping("PING")
+    assert res == "PING"
+
+    _create_session_passphrase_on_device(session, passphrase_on_device="XYZ")
+    assert _get_public_node(session, ADDRESS_N).xpub == XPUB_XYZ
+
+    _create_session_passphrase_on_device(session)
+    assert _get_public_node(session, ADDRESS_N).xpub == XPUB
+
+    # Cannot use passphrase in-message when always_on_device
+    _create_session_passphrase_on_device(
+        session,
+        passphrase_in_message="xyz",
+        on_device=False,
+        error_message=DATA_ERROR_ON_DEVICE,
+    )
+    # Cannot use empty passphrase in-message when always_on_device
+    _create_session_passphrase_on_device(
+        session,
+        passphrase_in_message="",
+        on_device=False,
+        error_message=DATA_ERROR_ON_DEVICE,
+    )
+    # Message with both on_device and passphrase in-message is invalid
+    _create_session_passphrase_on_device(
+        session,
+        passphrase_in_message="",
+        on_device=True,
+        error_message=DATA_ERROR_INVALID_MESSAGE,
+    )
+
+    _create_session_passphrase_on_device(session, passphrase_on_device="XYZ")
+    assert _get_public_node(session, ADDRESS_N).xpub == XPUB_XYZ
