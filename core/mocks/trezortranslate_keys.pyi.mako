@@ -12,8 +12,8 @@ class TR:
 % for name, value in sorted(en_data.items()):
 <%
     if isinstance(value, dict):
-        # For simplicity, use the first model's text for the stubs.
-        value, *_ = value.values()
+        # For simplicity, use the first non-empty model's text for the stubs.
+        value = next(v for v in value.values() if v)
 %>\
     ${name}: str = ${json.dumps(value)}
 % endfor
