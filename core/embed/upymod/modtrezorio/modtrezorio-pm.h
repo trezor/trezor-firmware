@@ -35,6 +35,22 @@
 /// EVENT_WIRELESS_CONNECTED_CHANGED: int
 /// EVENT_SOC_UPDATED: int
 
+/// def soc() -> int:
+///    """
+///    Returns the state of charge (SoC) in percent (0-100). Raises RuntimeError
+///    on failure.
+///    """
+STATIC mp_obj_t mod_trezorio_pm_soc() {
+  pm_state_t state = {0};
+  pm_status_t res = pm_get_state(&state);
+  if (res != PM_OK) {
+    mp_raise_msg(&mp_type_RuntimeError,
+                 MP_ERROR_TEXT("Failed to get power manager state"));
+  }
+  return mp_obj_new_int(state.soc);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_pm_soc_obj, mod_trezorio_pm_soc);
+
 /// def suspend() -> int:
 ///     """
 ///     Suspends the device. Returns wakeup flag. Raises RuntimeError on
@@ -85,6 +101,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_pm_is_usb_connected_obj,
 
 STATIC const mp_rom_map_elem_t mod_trezorio_pm_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_pm)},
+    {MP_ROM_QSTR(MP_QSTR_soc), MP_ROM_PTR(&mod_trezorio_pm_soc_obj)},
     {MP_ROM_QSTR(MP_QSTR_suspend), MP_ROM_PTR(&mod_trezorio_pm_suspend_obj)},
     {MP_ROM_QSTR(MP_QSTR_hibernate),
      MP_ROM_PTR(&mod_trezorio_pm_hibernate_obj)},
