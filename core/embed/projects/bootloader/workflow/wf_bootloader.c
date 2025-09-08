@@ -65,9 +65,7 @@ workflow_result_t workflow_menu(const vendor_header* const vhdr,
       workflow_ifaces_resume(ios);
       if (ios == NULL) {
         // in case we were not in connected-mode, stop advertising
-        ble_command_t cmd = {0};
-        cmd.cmd_type = BLE_KEEP_CONNECTION;
-        ble_issue_command(&cmd);
+        ble_keep_connection();
       }
       continue;
     }
