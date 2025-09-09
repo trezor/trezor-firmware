@@ -5,9 +5,9 @@ use crate::trezorhal::haptic::{play, HapticEffect};
 
 use crate::{
     strutil::TString,
-    time::{Duration, ShortDuration},
+    time::{Duration, Instant, ShortDuration},
     ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Timer},
+        component::{text::TextStyle, Component, Event, EventCtx, Marquee, Timer},
         constant,
         display::{toif::Icon, Color, Font},
         event::TouchEvent,
@@ -45,6 +45,8 @@ pub struct Button {
     long_press_danger: bool,
     long_timer: Timer,
     haptic: bool,
+
+    subtext_marquee: Option<Marquee>,
 }
 
 impl Button {
@@ -59,6 +61,19 @@ impl Button {
     const DEFAULT_STYLESHEET: ButtonStyleSheet = theme::bootloader::button_default();
 
     pub const fn new(content: ButtonContent) -> Self {
+        let subtext_marquee = match content {
+            ButtonContent::TextAndSubtext {
+                subtext,
+                subtext_style,
+                ..
+            } => Some(Marquee::new(
+                subtext,
+                subtext_style.text_font,
+                subtext_style.text_color,
+                subtext_style.background_color,
+            )),
+            _ => None,
+        };
         Self {
             content,
             content_offset: Offset::zero(),
@@ -72,6 +87,7 @@ impl Button {
             long_press_danger: false,
             long_timer: Timer::new(),
             haptic: true,
+            subtext_marquee,
         }
     }
 
@@ -104,13 +120,13 @@ impl Button {
             .with_radius(Self::MENU_ITEM_RADIUS)
     }
 
-    pub fn new_single_line_menu_item_with_overflowing_subtext(
+    pub fn new_single_line_menu_item_with_subtext_marquee(
         text: TString<'static>,
         stylesheet: ButtonStyleSheet,
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
     ) -> Self {
-        Self::with_single_line_text_and_overflowing_subtext(text, subtext, subtext_style, None)
+        Self::with_single_line_text_and_subtext_marquee(text, subtext, subtext_style, None)
             .with_text_align(Self::MENU_ITEM_ALIGNMENT)
             .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
             .styled(stylesheet)
@@ -143,16 +159,11 @@ impl Button {
             }
         });
 
-        Self::with_single_line_text_and_overflowing_subtext(
-            text,
-            subtext,
-            subtext_style,
-            Some(icon),
-        )
-        .with_text_align(Self::MENU_ITEM_ALIGNMENT)
-        .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
-        .styled(stylesheet)
-        .with_radius(Self::MENU_ITEM_RADIUS)
+        Self::with_single_line_text_and_subtext_marquee(text, subtext, subtext_style, Some(icon))
+            .with_text_align(Self::MENU_ITEM_ALIGNMENT)
+            .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
+            .styled(stylesheet)
+            .with_radius(Self::MENU_ITEM_RADIUS)
     }
 
     pub const fn with_single_line_text(text: TString<'static>) -> Self {
@@ -177,13 +188,13 @@ impl Button {
         ))
     }
 
-    pub fn with_single_line_text_and_overflowing_subtext(
+    pub fn with_single_line_text_and_subtext_marquee(
         text: TString<'static>,
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
         icon: Option<(Icon, Color)>,
     ) -> Self {
-        Self::new(ButtonContent::single_line_text_and_overflowing_subtext(
+        Self::new(ButtonContent::single_line_text_and_marquee_subtext(
             text,
             subtext,
             subtext_style,
@@ -270,10 +281,16 @@ impl Button {
     }
 
     pub fn enable(&mut self, ctx: &mut EventCtx) {
+        if let Some(m) = &mut self.subtext_marquee {
+            m.start(ctx, Instant::now());
+        }
         self.set(ctx, State::Initial)
     }
 
     pub fn disable(&mut self, ctx: &mut EventCtx) {
+        if let Some(m) = &mut self.subtext_marquee {
+            m.reset();
+        }
         self.set(ctx, State::Disabled)
     }
 
@@ -499,7 +516,7 @@ impl Button {
                 single_line,
                 subtext,
                 subtext_style,
-                subtext_overflow,
+                subtext_is_marquee,
                 icon,
             } => {
                 let text_baseline_height = self.baseline_text_height();
@@ -538,31 +555,35 @@ impl Button {
                 });
 
                 subtext.map(|subtext| {
+                    let subtext_fits =
+                        subtext_style.text_font.text_width(subtext) <= available_width;
                     #[cfg(feature = "ui_debug")]
                     {
-                        if subtext_style.text_font.text_width(subtext) > available_width
-                            && !subtext_overflow
-                        {
+                        if !subtext_fits && !subtext_is_marquee {
                             fatal_error!(&uformat!(len: 128, "Subtext too long: '{}'", subtext));
                         }
                     }
-                    shape::Text::new(
-                        render_origin(if single_line_text {
-                            text_baseline_height / 2
-                                + constant::LINE_SPACE
-                                + self.baseline_subtext_height()
-                        } else {
-                            text_baseline_height
-                                + constant::LINE_SPACE * 2
-                                + self.baseline_subtext_height()
-                        }),
-                        subtext,
-                        subtext_style.text_font,
-                    )
-                    .with_fg(subtext_style.text_color)
-                    .with_align(self.text_align)
-                    .with_alpha(alpha)
-                    .render(target);
+                    if subtext_fits || !subtext_is_marquee || self.subtext_marquee.is_none() {
+                        shape::Text::new(
+                            render_origin(if single_line_text {
+                                text_baseline_height / 2
+                                    + constant::LINE_SPACE
+                                    + self.baseline_subtext_height()
+                            } else {
+                                text_baseline_height
+                                    + constant::LINE_SPACE * 2
+                                    + self.baseline_subtext_height()
+                            }),
+                            subtext,
+                            subtext_style.text_font,
+                        )
+                        .with_fg(subtext_style.text_color)
+                        .with_align(self.text_align)
+                        .with_alpha(alpha)
+                        .render(target);
+                    } else if let Some(m) = &self.subtext_marquee {
+                        m.render(target);
+                    }
                 });
 
                 if let Some((icon, icon_color)) = icon {
@@ -624,10 +645,23 @@ impl Component for Button {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
+        let subtext_start =
+            self.baseline_text_height() * 2 + constant::LINE_SPACE + self.baseline_subtext_height();
+        if let Some(m) = &mut self.subtext_marquee {
+            m.set_y_offset(subtext_start);
+            m.place(
+                self.area
+                    .inset(Insets::top(subtext_start))
+                    .inset(Insets::sides(self.content_offset.x)),
+            );
+        }
         self.area
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        if let Some(m) = &mut self.subtext_marquee {
+            m.event(ctx, event);
+        }
         let touch_area = self.touch_area();
         match event {
             Event::Touch(TouchEvent::TouchStart(pos)) => {
@@ -718,6 +752,7 @@ impl Component for Button {
             }
             _ => {}
         };
+
         None
     }
 
@@ -775,7 +810,7 @@ pub enum ButtonContent {
         single_line: bool,
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
-        subtext_overflow: bool,
+        subtext_is_marquee: bool,
         icon: Option<(Icon, Color)>,
     },
     Icon(Icon),
@@ -809,12 +844,12 @@ impl ButtonContent {
             single_line: false,
             subtext,
             subtext_style,
-            subtext_overflow: false,
+            subtext_is_marquee: false,
             icon,
         }
     }
 
-    pub const fn single_line_text_and_overflowing_subtext(
+    pub const fn single_line_text_and_marquee_subtext(
         text: TString<'static>,
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
@@ -825,7 +860,7 @@ impl ButtonContent {
             single_line: true,
             subtext,
             subtext_style,
-            subtext_overflow: true,
+            subtext_is_marquee: true,
             icon,
         }
     }

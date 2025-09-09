@@ -96,7 +96,7 @@ pub enum DeviceMenuMsg {
 struct MenuItem {
     text: TString<'static>,
     subtext: Option<(TString<'static>, Option<&'static TextStyle>)>,
-    allow_overflow: bool,
+    subtext_marquee: bool,
     stylesheet: &'static ButtonStyleSheet,
     connection_status: Option<bool>,
     action: Option<Action>,
@@ -111,7 +111,7 @@ impl MenuItem {
         Self {
             text,
             subtext: None,
-            allow_overflow: false,
+            subtext_marquee: false,
             stylesheet: MENU_ITEM_NORMAL,
             action,
             connection_status: None,
@@ -123,12 +123,11 @@ impl MenuItem {
         subtext: Option<(TString<'static>, Option<&'static TextStyle>)>,
     ) -> &mut Self {
         self.subtext = subtext;
-        self.allow_overflow = false;
         self
     }
 
-    pub fn allow_overflow(&mut self) -> &mut Self {
-        self.allow_overflow = true;
+    pub fn with_subtext_marquee(&mut self) -> &mut Self {
+        self.subtext_marquee = true;
         self
     }
 
@@ -473,7 +472,7 @@ impl DeviceMenuScreen {
             );
             item_device_name
                 .with_subtext(Some((device_name, None)))
-                .allow_overflow();
+                .with_subtext_marquee();
             unwrap!(items.push(item_device_name));
         }
 
@@ -620,8 +619,8 @@ impl DeviceMenuScreen {
                     } else if let Some((subtext, subtext_style)) = item.subtext {
                         let subtext_style =
                             subtext_style.unwrap_or(&theme::TEXT_MENU_ITEM_SUBTITLE);
-                        let ctor = if item.allow_overflow {
-                            Button::new_single_line_menu_item_with_overflowing_subtext
+                        let ctor = if item.subtext_marquee {
+                            Button::new_single_line_menu_item_with_subtext_marquee
                         } else {
                             Button::new_menu_item_with_subtext
                         };
