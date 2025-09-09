@@ -81,8 +81,7 @@ def get_field_type(type_name: str, types: dict) -> EFT:
 
     if is_array(type_name):
         data_type = EDT.ARRAY
-        array_size = parse_array_n(type_name)
-        size = None if array_size == "dynamic" else array_size
+        size = parse_array_n(type_name)
         member_typename = typeof_array(type_name)
         entry_type = get_field_type(member_typename, types)
     elif type_name.startswith("uint"):
@@ -138,10 +137,10 @@ def parse_type_n(type_name: str) -> int:
     raise ValueError(f"Invalid type name: {type_name}")
 
 
-def parse_array_n(type_name: str) -> Union[int, str]:
+def parse_array_n(type_name: str) -> int | None:
     """Parse N in type[<N>] where "type" can itself be an array type."""
     if type_name.endswith("[]"):
-        return "dynamic"
+        return None
 
     start_idx = type_name.rindex("[") + 1
     return int(type_name[start_idx:-1])

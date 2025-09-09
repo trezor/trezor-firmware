@@ -97,7 +97,7 @@ BUTTON_RELEASED: int  # button up event
 BUTTON_LEFT: int  # button number of left button
 BUTTON_RIGHT: int  # button number of right button
 USB_EVENT: int # interface id for USB events
-WireInterface = Union[USBIF, BLEIF]
+WireInterface = USBIF | BLEIF
 USBIF_WIRE: int  # interface id of the USB wire interface
 USBIF_DEBUG: int  # interface id of the USB debug interface
 USBIF_WEBAUTHN: int  # interface id of the USB WebAuthn
