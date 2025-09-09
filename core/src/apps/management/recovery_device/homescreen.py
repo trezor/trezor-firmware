@@ -134,6 +134,8 @@ async def _continue_recovery_process() -> Success:
 
         # if they were invalid or some checks failed we continue and request them again
         if not words:
+            if not is_first_step:
+                await _request_share_next_screen()
             continue
 
         try:

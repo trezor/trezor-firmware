@@ -56,9 +56,12 @@ async def request_mnemonic(
 
         if not word:
             # User has decided to go back
-            if i > 0:
-                words[i] = ""
-                i -= 1
+            if i == 0:
+                # Already at the first word; treat as cancel.
+                return None
+
+            words[i] = ""
+            i -= 1
             continue
 
         words[i] = word

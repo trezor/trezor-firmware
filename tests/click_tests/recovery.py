@@ -163,6 +163,17 @@ def select_number_of_words(
         )
 
 
+def go_back_from_mnemonic(debug: "DebugLink") -> None:
+    layout = debug.read_layout()
+    assert "MnemonicKeyboard" in layout.all_components()
+
+    if debug.layout_type is LayoutType.Eckhart:
+        while "MnemonicKeyboard" in debug.read_layout().all_components():
+            debug.click(debug.screen_buttons.mnemonic_erase())
+    else:
+        raise ValueError("Unknown model")
+
+
 def enter_share(
     debug: "DebugLink",
     share: str,
@@ -196,40 +207,49 @@ def enter_share(
     return layout
 
 
+def check_share_success(
+    debug: "DebugLink",
+    index: int,
+    shares: list[str],
+    enter_share_before_title: str = "recovery__title_recover",
+) -> None:
+    # FIXME: when ui-t3t1 done for shamir, we want to check the template below
+    if debug.layout_type is LayoutType.Eckhart:
+        assert (
+            TR.translate("recovery__x_of_y_entered_template").format(
+                index + 1, len(shares)
+            )
+            in debug.read_layout().text_content()
+        )
+    else:
+        assert TR.translate(enter_share_before_title) in debug.read_layout().title()
+
+
 def enter_shares(
     debug: "DebugLink",
     shares: list[str],
     enter_share_before_title: str = "recovery__title_recover",
     text: str = "recovery__enter_any_share",
-    after_layout_text: str = "recovery__wallet_recovered",
+    after_layout_text: str | None = "recovery__wallet_recovered",
+    start_idx: int = 0,
 ) -> None:
-    assert (
-        TR.recovery__enter_backup in debug.read_layout().text_content()
-        or TR.recovery__enter_any_share in debug.read_layout().text_content()
-        or TR.recovery__only_first_n_letters in debug.read_layout().text_content()
-        or TR.recovery__enter_each_word in debug.read_layout().text_content()
-        or TR.translate(text) in debug.read_layout().text_content()
-    )
-    for index, share in enumerate(shares):
+    if start_idx == 0:
+        assert (
+            TR.recovery__enter_backup in debug.read_layout().text_content()
+            or TR.recovery__enter_any_share in debug.read_layout().text_content()
+            or TR.recovery__only_first_n_letters in debug.read_layout().text_content()
+            or TR.recovery__enter_each_word in debug.read_layout().text_content()
+            or TR.translate(text) in debug.read_layout().text_content()
+        )
+    for index, share in enumerate(shares, start=start_idx):
         enter_share(
             debug, share, is_first=index == 0, before_title=enter_share_before_title
         )
         if index < len(shares) - 1:
-            # FIXME: when ui-t3t1 done for shamir, we want to check the template below
-            if debug.layout_type is LayoutType.Eckhart:
-                assert (
-                    TR.translate("recovery__x_of_y_entered_template").format(
-                        index + 1, len(shares)
-                    )
-                    in debug.read_layout().text_content()
-                )
-            else:
-                assert (
-                    TR.translate(enter_share_before_title)
-                    in debug.read_layout().title()
-                )
+            check_share_success(debug, index, shares, enter_share_before_title)
 
-    assert TR.translate(after_layout_text) in debug.read_layout().text_content()
+    if after_layout_text is not None:
+        assert TR.translate(after_layout_text) in debug.read_layout().text_content()
 
 
 def enter_seed(
