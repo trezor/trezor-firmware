@@ -153,3 +153,16 @@ def format_autolock_duration(auto_lock_ms: int) -> str:
         auto_lock_label = TR.plurals__lock_after_x_seconds
 
     return format_plural("{count} {plural}", auto_lock_num, auto_lock_label)
+
+
+def trim_str(s: str, max_bytes: int) -> str:
+    """
+    Trim a string, so the result's byte size will be less or equal to `max_bytes`.
+    """
+    assert max_bytes >= 0
+    for i, char in enumerate(s):
+        char_size = len(char.encode())
+        if max_bytes < char_size:
+            return s[:i]
+        max_bytes -= char_size
+    return s
