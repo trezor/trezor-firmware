@@ -10,7 +10,7 @@ from .. import translations as TR
 if t.TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink, LayoutContent
 
-    AllActionsType = t.List[t.Union[str, t.Tuple[str, ...]]]
+    AllActionsType = list[str | tuple[str, ...]]
 
 
 # Passphrases and addresses for both models
