@@ -6,12 +6,9 @@ from trezor.wire import ProcessError
 from trezor.wire.context import call as ctx_call
 
 if TYPE_CHECKING:
-    from typing import Generic, TypeVar, Union
+    from typing import Generic, TypeVar
 
-    Chunk = Union[
-        messages.CardanoTxInlineDatumChunk,
-        messages.CardanoTxReferenceScriptChunk,
-    ]
+    Chunk = messages.CardanoTxInlineDatumChunk | messages.CardanoTxReferenceScriptChunk
 
     C = TypeVar("C", bound=Chunk)
 else:
