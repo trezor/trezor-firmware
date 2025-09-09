@@ -49,6 +49,6 @@ async def unpair(msg: BleUnpair) -> None:
     else:
         await show_success(
             br_name=None,
-            content=TR.ble__forget_this_device,
+            content=TR.ble__forget_this_success,
             button=TR.buttons__close,
         )
