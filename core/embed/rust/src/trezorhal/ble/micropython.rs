@@ -293,7 +293,7 @@ pub static mp_module_trezorble: Module = obj_module! {
     ///     """
     Qstr::MP_QSTR_erase_bonds => obj_fn_0!(py_erase_bonds).as_obj(),
 
-    /// def unpair(addr: bytes | None = None):
+    /// def unpair(addr: bytes | None):
     ///     """
     ///     Erases the bond for the given address or for current connection if addr is None.
     ///     Raises exception if BLE driver reports an error.

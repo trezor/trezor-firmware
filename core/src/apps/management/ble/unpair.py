@@ -37,10 +37,8 @@ async def unpair(msg: BleUnpair) -> None:
 
     if msg.all:
         ble.erase_bonds()
-    elif msg.addr is not None:
-        ble.unpair(msg.addr)
     else:
-        ble.unpair()
+        ble.unpair(msg.addr)
 
     if msg.all:
         await show_success(
