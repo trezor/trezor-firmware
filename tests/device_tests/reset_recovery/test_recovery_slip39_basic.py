@@ -29,6 +29,7 @@ from ...input_flows import (
     InputFlowSlip39BasicRecovery,
     InputFlowSlip39BasicRecoveryAbort,
     InputFlowSlip39BasicRecoveryAbortBetweenShares,
+    InputFlowSlip39BasicRecoveryAbortOnMnemonic,
     InputFlowSlip39BasicRecoveryAbortOnNumberOfWords,
     InputFlowSlip39BasicRecoveryInvalidFirstShare,
     InputFlowSlip39BasicRecoveryInvalidSecondShare,
@@ -138,6 +139,28 @@ def test_abort_between_shares(session: Session):
     with session.client as client:
         IF = InputFlowSlip39BasicRecoveryAbortBetweenShares(
             session.client, MNEMONIC_SLIP39_BASIC_20_3of6
+        )
+        client.set_input_flow(IF.get())
+        with pytest.raises(exceptions.Cancelled):
+            device.recover(session, pin_protection=False, label="label")
+        session.refresh_features()
+        assert session.features.initialized is False
+        assert session.features.recovery_status is messages.RecoveryStatus.Nothing
+
+
+@pytest.mark.parametrize(
+    "first_share",
+    [True, False],
+    ids=["first_share", "second_share"],
+)
+@pytest.mark.models(
+    "eckhart", reason="Other core models do not support returning from mnemonic"
+)
+@pytest.mark.setup_client(uninitialized=True)
+def test_abort_on_mnemonic(session: Session, first_share: bool):
+    with session.client as client:
+        IF = InputFlowSlip39BasicRecoveryAbortOnMnemonic(
+            session.client, MNEMONIC_SLIP39_BASIC_20_3of6, first_share
         )
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):

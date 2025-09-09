@@ -2674,6 +2674,28 @@ class InputFlowSlip39BasicRecoveryAbortBetweenShares(InputFlowBase):
         yield from self.REC.abort_recovery_between_shares()
 
 
+class InputFlowSlip39BasicRecoveryAbortOnMnemonic(InputFlowBase):
+    def __init__(self, client: Client, shares: list[str], cancel_first: bool):
+        super().__init__(client)
+        self.first_share = shares[0].split(" ")
+        self.word_count = len(self.first_share)
+        self.cancel_first = cancel_first
+
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        yield from self.REC.confirm_recovery()
+        yield from self.REC.input_number_of_words(20)
+        yield from self.REC.enter_any_share()
+        if not self.cancel_first:
+            yield from self.REC.input_mnemonic(self.first_share)
+            yield from self.REC.success_more_shares_needed()
+        yield from self.REC.go_back_from_mnemonic_first_word()
+
+        if self.cancel_first:
+            yield from self.REC.abort_recovery_select_number_of_words()
+        else:
+            yield from self.REC.abort_recovery_between_shares()
+
+
 class InputFlowSlip39BasicRecoveryShareInfoBetweenShares(InputFlowBase):
 
     def __init__(self, session: Session, shares: list[str]):

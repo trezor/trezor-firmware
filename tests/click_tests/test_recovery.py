@@ -90,6 +90,31 @@ def test_recovery_slip39_basic(device_handler: "BackgroundDeviceHandler"):
 
 
 @pytest.mark.setup_client(uninitialized=True)
+@pytest.mark.models(
+    "eckhart",
+    reason="Other core models do not support returning from the MenemonicKeyboard",
+)
+def test_recovery_slip39_reenter_second(device_handler: "BackgroundDeviceHandler"):
+    with prepare_recovery_and_evaluate(device_handler) as debug:
+        recovery.confirm_recovery(debug)
+        recovery.select_number_of_words(debug)
+        # Enter the 1st share
+        recovery.enter_shares(
+            debug, [MNEMONIC_SLIP39_BASIC_20_3of6[0]], after_layout_text=None
+        )
+        recovery.check_share_success(debug, 0, MNEMONIC_SLIP39_BASIC_20_3of6)
+        # Enter several words of the 2nd share
+        recovery.enter_share(debug, "extra extend")
+        # Remove the entered words
+        recovery.go_back_from_mnemonic(debug)
+        # Make sure the success screen of the 1st share is shown
+        recovery.check_share_success(debug, 0, MNEMONIC_SLIP39_BASIC_20_3of6)
+        # Enter remaining shares
+        recovery.enter_shares(debug, MNEMONIC_SLIP39_BASIC_20_3of6[1:], start_idx=1)
+        recovery.finalize(debug)
+
+
+@pytest.mark.setup_client(uninitialized=True)
 def test_recovery_cancel_number_of_words(device_handler: "BackgroundDeviceHandler"):
     with prepare_recovery_and_evaluate_cancel(device_handler) as debug:
         recovery.confirm_recovery(debug)
@@ -101,6 +126,31 @@ def test_recovery_bip39(device_handler: "BackgroundDeviceHandler"):
     with prepare_recovery_and_evaluate(device_handler) as debug:
         recovery.confirm_recovery(debug)
         recovery.select_number_of_words(debug, num_of_words=12)
+        recovery.enter_seed(debug, MNEMONIC12.split())
+        recovery.finalize(debug)
+
+
+@pytest.mark.setup_client(uninitialized=True)
+@pytest.mark.models(
+    "eckhart",
+    reason="Other core models do not support returning from the MenemonicKeyboard",
+)
+def test_recovery_bip39_reenter(
+    device_handler: "BackgroundDeviceHandler",
+):
+    with prepare_recovery_and_evaluate(device_handler) as debug:
+        recovery.confirm_recovery(debug)
+        # Select wrong number of words
+        recovery.select_number_of_words(debug, num_of_words=20)
+        # Enter several wrong words
+        recovery.enter_seed(
+            debug, MNEMONIC12.split()[3:4], after_layout_text="recovery__start_entering"
+        )
+        # Remove the words and go back to number of words selection
+        recovery.go_back_from_mnemonic(debug)
+        # Select correct number of words
+        recovery.select_number_of_words(debug, num_of_words=12)
+        # Enter the seed
         recovery.enter_seed(debug, MNEMONIC12.split())
         recovery.finalize(debug)
 
