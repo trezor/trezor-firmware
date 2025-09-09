@@ -42,13 +42,13 @@ async def unpair(msg: BleUnpair) -> None:
 
     if msg.all:
         await show_success(
-            br_name="device_unpair_all_success",
+            br_name=None,
             content=TR.ble__forget_all_success,
             button=TR.buttons__close,
         )
     else:
         await show_success(
-            br_name="device_unpair_success",
+            br_name=None,
             content=TR.ble__forget_this_device,
             button=TR.buttons__close,
         )
