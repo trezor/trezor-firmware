@@ -17,6 +17,7 @@ from .helpers import (
 )
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Awaitable, Iterable
 
     from trezor.messages import (
@@ -30,7 +31,7 @@ if TYPE_CHECKING:
 
 
 async def require_confirm_approve(
-    to_bytes: bytes,
+    to_bytes: AnyBytes,
     value: int | None,
     address_n: list[int],
     maximum_fee: str,
@@ -38,7 +39,7 @@ async def require_confirm_approve(
     chain_id: int,
     network: EthereumNetworkInfo,
     token: EthereumTokenInfo,
-    token_address: bytes,
+    token_address: AnyBytes,
     chunkify: bool,
 ) -> None:
     from trezor.ui.layouts import confirm_ethereum_approve
@@ -298,7 +299,7 @@ def require_confirm_address(
     )
 
 
-def require_confirm_other_data(data: bytes, data_total: int) -> Awaitable[None]:
+def require_confirm_other_data(data: AnyBytes, data_total: int) -> Awaitable[None]:
     return confirm_blob(
         "confirm_data",
         TR.ethereum__title_input_data,
@@ -351,7 +352,7 @@ def confirm_empty_typed_message() -> Awaitable[None]:
     )
 
 
-async def should_show_domain(name: bytes, version: bytes) -> bool:
+async def should_show_domain(name: AnyBytes, version: AnyBytes) -> bool:
     domain_name = decode_typed_data(name, "string")
     domain_version = decode_typed_data(version, "string")
 
@@ -418,7 +419,7 @@ async def should_show_array(
 
 async def confirm_typed_value(
     name: str,
-    value: bytes,
+    value: AnyBytes,
     parent_objects: list[str],
     field: EthereumFieldType,
     array_index: int | None = None,

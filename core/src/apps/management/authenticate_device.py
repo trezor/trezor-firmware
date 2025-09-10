@@ -1,11 +1,13 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import AuthenticateDevice, AuthenticityProof
     from trezor.utils import BufferReader
 
 
-def parse_cert_chain(r: BufferReader) -> list[bytes]:
+def parse_cert_chain(r: BufferReader) -> list[AnyBytes]:
     from trezor import wire
     from trezor.crypto.der import read_length
 

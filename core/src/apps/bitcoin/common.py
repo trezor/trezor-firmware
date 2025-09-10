@@ -9,6 +9,7 @@ from trezor.messages import MultisigRedeemScriptType
 from trezor.utils import ensure
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from enum import IntEnum
 
     from trezor.crypto import bip32
@@ -105,7 +106,7 @@ NONSEGWIT_INPUT_SCRIPT_TYPES = (
 )
 
 
-def ecdsa_sign(node: bip32.HDNode, digest: bytes) -> bytes:
+def ecdsa_sign(node: bip32.HDNode, digest: bytes) -> AnyBytes:
     from trezor.crypto import der
     from trezor.crypto.curve import secp256k1
 
@@ -120,7 +121,7 @@ def bip340_sign(node: bip32.HDNode, digest: bytes) -> bytes:
     return bip340.sign(output_private_key, digest)
 
 
-def ecdsa_hash_pubkey(pubkey: bytes, coin: CoinInfo) -> bytes:
+def ecdsa_hash_pubkey(pubkey: AnyBytes, coin: CoinInfo) -> bytes:
     ensure(
         coin.curve_name.startswith("secp256k1")
     )  # The following code makes sense only for Weiersrass curves

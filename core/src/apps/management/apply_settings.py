@@ -8,9 +8,10 @@ from trezor.ui.layouts import confirm_action
 from trezor.wire import DataError
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.enums import SafetyCheckLevel
     from trezor.messages import ApplySettings, Success
-
 
 BRT_PROTECT_CALL = ButtonRequestType.ProtectCall  # CACHE
 
@@ -35,7 +36,7 @@ async def _load_homescreen(length: int) -> bytearray:
     return buf
 
 
-def _validate_homescreen(homescreen: bytes) -> None:
+def _validate_homescreen(homescreen: AnyBytes) -> None:
     if homescreen == b"":
         return
 
@@ -164,7 +165,7 @@ async def apply_settings(msg: ApplySettings) -> Success:
     return Success(message="Settings applied")
 
 
-async def _require_confirm_change_homescreen(homescreen: bytes) -> None:
+async def _require_confirm_change_homescreen(homescreen: AnyBytes) -> None:
     from trezor.ui.layouts import confirm_homescreen
 
     await confirm_homescreen(homescreen)

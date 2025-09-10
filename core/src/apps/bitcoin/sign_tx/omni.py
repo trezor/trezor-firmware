@@ -1,4 +1,9 @@
 from micropython import const
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
 
 _OMNI_DECIMALS = const(8)
 
@@ -10,11 +15,11 @@ currencies = {
 }
 
 
-def is_valid(data: bytes) -> bool:
+def is_valid(data: AnyBytes) -> bool:
     return len(data) >= 8 and data[:4] == b"omni"
 
 
-def parse(data: bytes) -> str:
+def parse(data: AnyBytes) -> str:
     from ustruct import unpack
 
     from trezor import TR

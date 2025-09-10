@@ -1,4 +1,5 @@
 from typing import *
+from buffer_types import *
 # Wakeup flags:
 WAKEUP_FLAG_BUTTON: int
 WAKEUP_FLAG_POWER: int

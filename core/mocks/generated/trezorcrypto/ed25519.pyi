@@ -1,4 +1,5 @@
 from typing import *
+from buffer_types import *
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-ed25519.h
@@ -9,14 +10,16 @@ def generate_secret() -> bytes:
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-ed25519.h
-def publickey(secret_key: bytes) -> bytes:
+def publickey(secret_key: AnyBytes) -> bytes:
     """
     Computes public key from secret key.
     """
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-ed25519.h
-def sign(secret_key: bytes, message: bytes, hasher: str = "") -> bytes:
+def sign(
+    secret_key: AnyBytes, message: AnyBytes, hasher: str = ""
+) -> bytes:
     """
     Uses secret key to produce the signature of message.
     """
@@ -24,7 +27,7 @@ def sign(secret_key: bytes, message: bytes, hasher: str = "") -> bytes:
 
 # upymod/modtrezorcrypto/modtrezorcrypto-ed25519.h
 def sign_ext(
-    secret_scalar: bytes, secret_extension: bytes, message: bytes
+    secret_scalar: AnyBytes, secret_extension: AnyBytes, message: AnyBytes
 ) -> bytes:
     """
     Uses extended secret key to produce the cardano signature of message.
@@ -32,7 +35,9 @@ def sign_ext(
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-ed25519.h
-def verify(public_key: bytes, signature: bytes, message: bytes) -> bool:
+def verify(
+    public_key: AnyBytes, signature: AnyBytes, message: AnyBytes
+) -> bool:
     """
     Uses public key to verify the signature of the message.
     Returns True on success.
@@ -40,14 +45,16 @@ def verify(public_key: bytes, signature: bytes, message: bytes) -> bool:
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-ed25519.h
-def cosi_combine_publickeys(public_keys: list[bytes]) -> bytes:
+def cosi_combine_publickeys(public_keys: Sequence[AnyBytes]) -> bytes:
     """
     Combines a list of public keys used in COSI cosigning scheme.
     """
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-ed25519.h
-def cosi_combine_signatures(R: bytes, signatures: list[bytes]) -> bytes:
+def cosi_combine_signatures(
+    R: AnyBytes, signatures: Sequence[AnyBytes]
+) -> bytes:
     """
     Combines a list of signatures used in COSI cosigning scheme.
     """
@@ -62,11 +69,11 @@ def cosi_commit() -> tuple[bytes, bytes]:
 
 # upymod/modtrezorcrypto/modtrezorcrypto-ed25519.h
 def cosi_sign(
-    secret_key: bytes,
-    message: bytes,
-    nonce: bytes,
-    sigR: bytes,
-    combined_pubkey: bytes,
+    secret_key: AnyBytes,
+    message: AnyBytes,
+    nonce: AnyBytes,
+    sigR: AnyBytes,
+    combined_pubkey: AnyBytes,
 ) -> bytes:
     """
     Produce signature of message using COSI cosigning scheme.

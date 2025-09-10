@@ -83,6 +83,7 @@ trezor-core-tools = { path = "./core/tools", editable = true }
 [tool.isort]
 profile = "black"
 extra_standard_library = [
+  "buffer_types",
   "micropython",
   "ubinascii",
   "ustruct",

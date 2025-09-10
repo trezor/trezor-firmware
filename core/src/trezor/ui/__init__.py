@@ -385,7 +385,7 @@ class Layout(Generic[T]):
 
     if utils.USE_BUTTON:
 
-        def _handle_button_events(self) -> Generator:
+        def _handle_button_events(self) -> Generator[Any, tuple[int, int], None]:
             """Task that is waiting for the user button input."""
             button = loop.wait(io.BUTTON)
             try:
@@ -406,7 +406,7 @@ class Layout(Generic[T]):
 
     if utils.USE_TOUCH:
 
-        def _handle_touch_events(self) -> Generator:
+        def _handle_touch_events(self) -> Generator[Any, tuple[int, int, int], None]:
             """Task that is waiting for the user touch input."""
             touch = loop.wait(io.TOUCH)
             try:
@@ -479,7 +479,7 @@ class Layout(Generic[T]):
 
     if utils.USE_POWER_MANAGER:
 
-        def _handle_power_manager(self) -> Generator:
+        def _handle_power_manager(self) -> Generator[Any, int, None]:
             pm = loop.wait(io.PM_EVENT)
             try:
                 while True:

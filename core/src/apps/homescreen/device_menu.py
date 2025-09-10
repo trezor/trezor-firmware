@@ -10,6 +10,8 @@ from trezor.wire import ActionCancelled, PinCancelled
 from trezorui_api import CANCELLED, DeviceMenuResult
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import ThpPairedCacheEntry
 
 BLE_MAX_BONDS = 8
@@ -29,7 +31,7 @@ class SubmenuId:
 
 
 def _get_hostinfo(
-    ble_addr: bytes, hostname_map: dict[bytes, ThpPairedCacheEntry]
+    ble_addr: AnyBytes, hostname_map: dict[AnyBytes, ThpPairedCacheEntry]
 ) -> tuple[str, tuple[str, str] | None]:
     # Internal MAC address representation is using reversed byte order.
     mac = ":".join(f"{byte:02X}" for byte in reversed(ble_addr))
@@ -39,7 +41,7 @@ def _get_hostinfo(
 
 
 def _get_hostname(
-    ble_addr: bytes, hostname_map: dict[bytes, ThpPairedCacheEntry]
+    ble_addr: AnyBytes, hostname_map: dict[AnyBytes, ThpPairedCacheEntry]
 ) -> str:
     mac, hostinfo = _get_hostinfo(ble_addr, hostname_map)
     return mac if hostinfo is None else hostinfo[0]

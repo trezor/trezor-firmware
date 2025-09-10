@@ -14,6 +14,8 @@ from trezor.enums import InputScriptType
 from .. import common
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import TxInput
 
 # transaction header size: 4 byte version
@@ -136,7 +138,7 @@ class TxWeightCalculator:
         else:
             raise wire.DataError("Invalid script type")
 
-    def add_output(self, script: bytes) -> None:
+    def add_output(self, script: AnyBytes) -> None:
         self.outputs_count += 1
         script_size = self.compact_size_len(len(script)) + len(script)
         self.counter += 4 * (_TXSIZE_OUTPUT + script_size)

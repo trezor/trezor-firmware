@@ -290,7 +290,7 @@ class PathSchema:
                     # Which in practice it is, the only non-Collection is Interval.
                     # But we're not going to introduce an additional type requirement
                     # for the sake of __repr__ that doesn't exist in production anyway
-                    collection: Collection[int] = component  # type: ignore [Expression of type "Container[int]" is incompatible with declared type "Collection[int]"]
+                    collection: Collection[int] = component  # type: ignore [Type "Container[int]" is not assignable to declared type "Collection[int]"]
                     component_str = ",".join(str(unharden(i)) for i in collection)
                     if len(collection) > 1:
                         component_str = "[" + component_str + "]"

@@ -191,7 +191,7 @@ class _RealSyscall(Generic[T]):
     scheduler, they do so through instances of a class derived from `Syscall`.
     """
 
-    def __iter__(self) -> Generator:
+    def __iter__(self) -> Generator[Any, Any, T]:
         # support `yield from` or `await` on syscalls
         return (yield self)
 
@@ -440,14 +440,16 @@ class mailbox(Syscall[T]):
         else:
             self.taker = task
 
-    def __iter__(self) -> Generator:
+    def __iter__(self) -> Generator[Any, Any, T]:
         assert self.taker is None
 
         # short-circuit if there is a value already
         if not self.is_empty():
             value = self.value
             self.clear()
-            return value
+            # XXX self.value is of type T | object, but we are returning it as T
+            # what we want to say is `assert isinstance(value, T)` but that doesn't work
+            return value  # type: ignore [Type "T@mailbox | object" is not assignable to type "T@mailbox"]
 
         # otherwise, wait for a value
         try:

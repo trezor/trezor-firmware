@@ -1,4 +1,5 @@
 from typing import *
+from buffer_types import *
 from trezorcrypto.bip32 import HDNode
 
 
@@ -18,21 +19,21 @@ def derive_icarus(
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-cardano.h
-def from_secret(secret: bytes) -> HDNode:
+def from_secret(secret: AnyBytes) -> HDNode:
     """
     Creates a Cardano HD node from a master secret.
     """
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-cardano.h
-def from_seed_slip23(seed: bytes) -> HDNode:
+def from_seed_slip23(seed: AnyBytes) -> HDNode:
    """
    Creates a Cardano HD node from a seed via SLIP-23 derivation.
    """
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-cardano.h
-def from_seed_ledger(seed: bytes) -> HDNode:
+def from_seed_ledger(seed: AnyBytes) -> HDNode:
     """
     Creates a Cardano HD node from a seed via Ledger derivation.
     """

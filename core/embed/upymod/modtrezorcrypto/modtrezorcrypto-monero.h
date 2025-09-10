@@ -223,12 +223,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(
 ///     XMR hasher
 ///     """
 
-///     def __init__(self, x: bytes | None = None):
+///     def __init__(self, x: AnyBytes | None = None):
 ///         """
 ///         Constructor
 ///         """
 
-///     def update(self, buffer: bytes) -> None:
+///     def update(self, buffer: AnyBytes) -> None:
 ///         """
 ///         Update hasher
 ///         """
@@ -466,7 +466,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_monero_sc_inv_into_obj,
                                  mod_trezorcrypto_monero_sc_inv_into);
 
 /// def encodeint_into(
-///     r: bytes | None, a: Scalar, offset: int | None = 0
+///     r: AnyBytes | None, a: Scalar, offset: int | None = 0
 /// ) -> bytes:
 ///     """
 ///     Scalar compression
@@ -497,7 +497,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_monero_encodeint_into);
 
 /// def decodeint_into(
-///     r: Scalar | None, a: bytes, offset: int = 0
+///     r: Scalar | None, a: AnyBytes, offset: int = 0
 /// ) -> Scalar:
 ///     """
 ///     Scalar decompression
@@ -515,7 +515,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_monero_decodeint_into);
 
 /// def decodeint_into_noreduce(
-///     r: Scalar | None, a: bytes, offset: int = 0
+///     r: Scalar | None, a: AnyBytes, offset: int = 0
 /// ) -> Scalar:
 ///     """
 ///     Scalar decompression, raw, without modular reduction
@@ -725,7 +725,9 @@ STATIC mp_obj_t mod_trezorcrypto_monero_scalarmult_into(const mp_obj_t dest,
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_monero_scalarmult_into_obj,
                                  mod_trezorcrypto_monero_scalarmult_into);
 
-/// def encodepoint_into(r: bytes | None, p: Point, offset: int = 0) -> bytes:
+/// def encodepoint_into(
+///     r: AnyBytes | None, p: Point, offset: int = 0
+/// ) -> bytes:
 ///     """
 ///     Point compression
 ///     """
@@ -755,7 +757,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_monero_encodepoint_into);
 
 /// def decodepoint_into(
-///     r: Point | None, buff: bytes, offset: int = 0
+///     r: Point | None, buff: AnyBytes, offset: int = 0
 /// ) -> Point:
 ///     """
 ///     Point decompression
@@ -776,7 +778,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 // XMR defs
 //
 
-/// def xmr_base58_addr_encode_check(tag: int, buff: bytes) -> str:
+/// def xmr_base58_addr_encode_check(tag: int, buff: AnyBytes) -> str:
 ///     """
 ///     Monero block base 58 encoding
 ///     """
@@ -801,7 +803,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(
     mod_trezorcrypto_monero_xmr_base58_addr_encode_check_obj,
     mod_trezorcrypto_monero_xmr_base58_addr_encode_check);
 
-/// def xmr_base58_addr_decode_check(buff: bytes) -> tuple[bytes, int]:
+/// def xmr_base58_addr_decode_check(buff: AnyBytes) -> tuple[bytes, int]:
 ///     """
 ///     Monero block base 58 decoding, returning (decoded, tag) or raising on
 ///     error.
@@ -847,8 +849,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_monero_random_scalar);
 
 /// def fast_hash_into(
-///    r: bytes | None,
-///    buff: bytes,
+///    r: AnyBytes | None,
+///    buff: AnyBytes,
 ///    length: int | None = None,
 ///    offset: int = 0,
 /// ) -> bytes:
@@ -893,7 +895,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 
 /// def hash_to_point_into(
 ///     r: Point | None,
-///     buff: bytes,
+///     buff: AnyBytes,
 ///     length: int | None = None,
 ///     offset: int = 0,
 /// ) -> Point:
@@ -923,7 +925,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 
 /// def hash_to_scalar_into(
 ///    r: Scalar | None,
-///    buff: bytes,
+///    buff: AnyBytes,
 ///    length: int | None = None,
 ///    offset: int = 0,
 /// ) -> Scalar:
@@ -1108,7 +1110,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(
     mod_trezorcrypto_monero_gen_commitment_into_obj,
     mod_trezorcrypto_monero_gen_commitment_into);
 
-/// def ct_equals(a: bytes, b: bytes) -> bool:
+/// def ct_equals(a: AnyBytes, b: AnyBytes) -> bool:
 ///     """
 ///     Constant time buffer comparison
 ///     """

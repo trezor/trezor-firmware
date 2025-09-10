@@ -2,6 +2,8 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.utils import Writer
 
     # The intention below is basically:
@@ -12,8 +14,8 @@ if TYPE_CHECKING:
     # a generic `Sequence` (because we do isinstance checks for a list). We are however
     # only reading from the list and passing into things that consume a RLPItem. Hence
     # we have to enumerate single-type lists as well as the universal list[RLPItem].
-    RLPList = list[int] | list[bytes] | list["RLPItem"]
-    RLPItem = RLPList | bytes | int
+    RLPList = list[int] | list[AnyBytes] | list["RLPItem"]
+    RLPItem = RLPList | AnyBytes | int
 
 
 STRING_HEADER_BYTE = const(0x80)
@@ -38,7 +40,7 @@ def write_header(
     w: Writer,
     length: int,
     header_byte: int,
-    data_start: bytes | None = None,
+    data_start: AnyBytes | None = None,
 ) -> None:
     if length == 1 and data_start is not None and data_start[0] <= 0x7F:
         # no header when encoding one byte below 0x80
@@ -53,7 +55,7 @@ def write_header(
         w.extend(encoded_length)
 
 
-def header_length(length: int, data_start: bytes | None = None) -> int:
+def header_length(length: int, data_start: AnyBytes | None = None) -> int:
     if length == 1 and data_start is not None and data_start[0] <= 0x7F:
         # no header when encoding one byte below 0x80
         return 0
@@ -65,11 +67,11 @@ def header_length(length: int, data_start: bytes | None = None) -> int:
 
 
 def length(item: RLPItem) -> int:
-    data: bytes | None = None
+    data: AnyBytes | None = None
     if isinstance(item, int):
         data = int_to_bytes(item)
         item_length = len(data)
-    elif isinstance(item, (bytes, bytearray)):
+    elif isinstance(item, (bytes, bytearray, memoryview)):
         data = item
         item_length = len(item)
     elif isinstance(item, list):
@@ -80,7 +82,7 @@ def length(item: RLPItem) -> int:
     return header_length(item_length, data) + item_length
 
 
-def _write_string(w: Writer, string: bytes) -> None:
+def _write_string(w: Writer, string: AnyBytes) -> None:
     write_header(w, len(string), STRING_HEADER_BYTE, string)
     w.extend(string)
 
@@ -95,7 +97,7 @@ def _write_list(w: Writer, lst: RLPList) -> None:
 def write(w: Writer, item: RLPItem) -> None:
     if isinstance(item, int):
         _write_string(w, int_to_bytes(item))
-    elif isinstance(item, (bytes, bytearray)):
+    elif isinstance(item, (bytes, bytearray, memoryview)):
         _write_string(w, item)
     elif isinstance(item, list):
         _write_list(w, item)

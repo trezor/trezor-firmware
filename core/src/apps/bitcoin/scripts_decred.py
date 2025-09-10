@@ -24,6 +24,8 @@ _OP_SSTXCHANGE = const(0xBD)
 _STAKE_TREE = const(1)
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.enums import InputScriptType
     from trezor.messages import MultisigRedeemScriptType
 
@@ -40,7 +42,7 @@ def write_input_script_prefixed(
     coin: CoinInfo,
     sighash_type: SigHashType,
     pubkey: bytes,
-    signature: bytes,
+    signature: AnyBytes,
 ) -> None:
     from trezor import wire
     from trezor.enums import InputScriptType
@@ -66,7 +68,7 @@ def write_input_script_prefixed(
 def _write_input_script_multisig_prefixed(
     w: Writer,
     multisig: MultisigRedeemScriptType,
-    signature: bytes,
+    signature: AnyBytes,
     signature_index: int,
     sighash_type: SigHashType,
     coin: CoinInfo,
@@ -143,7 +145,7 @@ def write_output_script_ssgen_prefixed(w: Writer, pkh: bytes) -> None:
 
 
 # Stake commitment OPRETURN.
-def sstxcommitment_pkh(pkh: bytes, amount: int) -> bytes:
+def sstxcommitment_pkh(pkh: bytes, amount: int) -> AnyBytes:
     from apps.common.writers import write_bytes_fixed, write_uint64_le
 
     w = utils.empty_bytearray(30)
@@ -172,7 +174,7 @@ def output_script_p2sh(scripthash: bytes) -> bytearray:
 
 def output_derive_script(
     tree: int | None, stakeType: int | None, addr: str, coin: CoinInfo
-) -> bytes:
+) -> AnyBytes:
     from trezor.crypto import base58
 
     from apps.common import address_type

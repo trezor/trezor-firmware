@@ -13,6 +13,9 @@ from .multisig import multisig_get_pubkeys, multisig_pubkey_index
 from .scripts import output_script_native_segwit, write_output_script_multisig
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+    from typing import Sequence
+
     from trezor.crypto import bip32
     from trezor.messages import MultisigRedeemScriptType
 
@@ -87,7 +90,7 @@ def get_address(
         raise ProcessError("Invalid script type")
 
 
-def _address_multisig_p2sh(pubkeys: list[bytes], m: int, coin: CoinInfo) -> str:
+def _address_multisig_p2sh(pubkeys: Sequence[AnyBytes], m: int, coin: CoinInfo) -> str:
     if coin.address_type_p2sh is None:
         raise ProcessError("Multisig not enabled on this coin")
     redeem_script = HashWriter(coin.script_hash())
@@ -96,7 +99,7 @@ def _address_multisig_p2sh(pubkeys: list[bytes], m: int, coin: CoinInfo) -> str:
 
 
 def _address_multisig_p2wsh_in_p2sh(
-    pubkeys: list[bytes], m: int, coin: CoinInfo
+    pubkeys: Sequence[AnyBytes], m: int, coin: CoinInfo
 ) -> str:
     if coin.address_type_p2sh is None:
         raise ProcessError("Multisig not enabled on this coin")
@@ -105,7 +108,7 @@ def _address_multisig_p2wsh_in_p2sh(
     return _address_p2wsh_in_p2sh(witness_script_h.get_digest(), coin)
 
 
-def _address_multisig_p2wsh(pubkeys: list[bytes], m: int, hrp: str) -> str:
+def _address_multisig_p2wsh(pubkeys: Sequence[AnyBytes], m: int, hrp: str) -> str:
     if not hrp:
         raise ProcessError("Multisig not enabled on this coin")
     witness_script_h = HashWriter(sha256())

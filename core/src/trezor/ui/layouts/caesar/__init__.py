@@ -8,6 +8,7 @@ from trezor.wire import ActionCancelled
 from ..common import draw_simple, interact, raise_if_cancelled
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes, StrOrBytes
     from typing import Awaitable, Callable, Iterable, List, NoReturn, Sequence
 
     from trezor.messages import StellarAsset
@@ -220,7 +221,7 @@ def lock_time_disabled_warning() -> Awaitable[ui.UiResult]:
     )
 
 
-def confirm_homescreen(image: bytes) -> Awaitable[None]:
+def confirm_homescreen(image: AnyBytes) -> Awaitable[None]:
     return raise_if_cancelled(
         trezorui_api.confirm_homescreen(
             title=TR.homescreen__title_set,
@@ -735,7 +736,7 @@ async def should_show_more(
 def confirm_blob(
     br_name: str,
     title: str,
-    data: bytes | str,
+    data: StrOrBytes,
     description: str | None = None,
     subtitle: str | None = None,
     verb: str | None = None,
@@ -778,7 +779,7 @@ def confirm_blob(
 async def _confirm_ask_pagination(
     br_name: str,
     title: str,
-    data: bytes | str,
+    data: StrOrBytes,
     description: str,
     br_code: ButtonRequestType,
     extra_confirmation_if_not_read: bool = False,
@@ -889,7 +890,7 @@ def confirm_properties(
     verb: str | None = None,
 ) -> Awaitable[None]:
 
-    items: list[tuple[str | None, str | bytes | None, bool | None]] = [
+    items = [
         (
             prop[0],
             (utils.hexlify_if_bytes(prop[1]) if prop[1] else None),
@@ -1757,8 +1758,7 @@ async def request_pin_on_device(
         raise_on_cancel=wire.PinCancelled,
     )
 
-    assert isinstance(result, str)
-    return result
+    return result  # type: ignore ["UiResult" is not assignable to "str"]
 
 
 def confirm_reenter_pin(is_wipe_code: bool = False) -> Awaitable[None]:
@@ -1805,7 +1805,7 @@ def pin_mismatch_popup(is_wipe_code: bool = False) -> Awaitable[None]:
         TR.buttons__check_again,
         br_code=BR_CODE_OTHER,
     )
-    return layout  # type: ignore ["UiResult" is incompatible with "None"]
+    return layout  # type: ignore ["UiResult" is not assignable to "None"]
 
 
 def wipe_code_same_as_pin_popup() -> Awaitable[None]:
