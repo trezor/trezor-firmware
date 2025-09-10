@@ -24,6 +24,7 @@
 
 #include <sec/secret_keys.h>
 #include <sec/tropic.h>
+#include <sys/systick.h>
 
 #include <libtropic.h>
 
@@ -35,8 +36,6 @@
 
 #include "ed25519-donna/ed25519.h"
 #include "memzero.h"
-
-#define PKEY_INDEX_BYTE PAIRING_KEY_SLOT_INDEX_0
 
 typedef struct {
   bool initialized;
@@ -66,18 +65,23 @@ bool tropic_init(void) {
     goto cleanup;
   }
 
-  curve25519_key tropic_pubkey = {0};
   curve25519_key trezor_privkey = {0};
-
-  secbool pubkey_ok = secret_key_tropic_public(tropic_pubkey);
+  pkey_index_t pairing_key_slot = TROPIC_PRIVILEGED_PAIRING_KEY_SLOT;
   secbool privkey_ok = secret_key_tropic_pairing_privileged(trezor_privkey);
+  if (privkey_ok != sectrue) {
+    pairing_key_slot = TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT;
+    privkey_ok = secret_key_tropic_pairing_unprivileged(trezor_privkey);
+  }
 
+  curve25519_key tropic_pubkey = {0};
+  secbool pubkey_ok = secret_key_tropic_public(tropic_pubkey);
   if (pubkey_ok == sectrue && privkey_ok == sectrue) {
     curve25519_key trezor_pubkey = {0};
     curve25519_scalarmult_basepoint(trezor_pubkey, trezor_privkey);
 
+    hal_delay(100);
     lt_ret_t ret =
-        lt_session_start(&drv->handle, tropic_pubkey, PKEY_INDEX_BYTE,
+        lt_session_start(&drv->handle, tropic_pubkey, pairing_key_slot,
                          trezor_privkey, trezor_pubkey);
 
     drv->sec_chan_established = (ret == LT_OK);
