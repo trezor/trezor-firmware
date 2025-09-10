@@ -3626,18 +3626,24 @@ class AuthenticateDevice(protobuf.MessageType):
 class AuthenticityProof(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 98
     FIELDS = {
-        1: protobuf.Field("certificates", "bytes", repeated=True, required=False, default=None),
-        2: protobuf.Field("signature", "bytes", repeated=False, required=True),
+        1: protobuf.Field("optiga_certificates", "bytes", repeated=True, required=False, default=None),
+        2: protobuf.Field("optiga_signature", "bytes", repeated=False, required=True),
+        3: protobuf.Field("tropic_certificates", "bytes", repeated=True, required=False, default=None),
+        4: protobuf.Field("tropic_signature", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
-        signature: "bytes",
-        certificates: Optional[Sequence["bytes"]] = None,
+        optiga_signature: "bytes",
+        optiga_certificates: Optional[Sequence["bytes"]] = None,
+        tropic_certificates: Optional[Sequence["bytes"]] = None,
+        tropic_signature: Optional["bytes"] = None,
     ) -> None:
-        self.certificates: Sequence["bytes"] = certificates if certificates is not None else []
-        self.signature = signature
+        self.optiga_certificates: Sequence["bytes"] = optiga_certificates if optiga_certificates is not None else []
+        self.tropic_certificates: Sequence["bytes"] = tropic_certificates if tropic_certificates is not None else []
+        self.optiga_signature = optiga_signature
+        self.tropic_signature = tropic_signature
 
 
 class WipeDevice(protobuf.MessageType):
