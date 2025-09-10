@@ -206,6 +206,25 @@ class RecoveryFlow:
         else:
             raise ValueError("Unknown model!")
 
+    def go_back_from_mnemonic_first_word(self) -> BRGeneratorType:
+        yield
+        if self.client.layout_type is LayoutType.Eckhart:
+            # Go back from the first word input screen
+            assert "MnemonicKeyboard" in self.debug.read_layout().all_components()
+            self.debug.click(self.debug.screen_buttons.mnemonic_erase())
+        else:
+            raise ValueError("Unknown model!")
+
+    def abort_recovery_select_number_of_words(self) -> BRGeneratorType:
+        yield
+        if self.client.layout_type is LayoutType.Eckhart:
+            # Cancel the word count screen
+            assert "SelectWordCountScreen" in self.debug.read_layout().all_components()
+            self.debug.click(self.debug.screen_buttons.word_count_all_cancel())
+
+        else:
+            raise ValueError("Unknown model!")
+
     def share_info_between_shares(self) -> BRGeneratorType:
         yield
         if self.client.layout_type is LayoutType.Eckhart:
