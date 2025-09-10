@@ -22,6 +22,8 @@
 #include <sec/secret.h>
 #include <sec/tropic.h>
 
+#include "ed25519-donna/ed25519.h"
+
 /// package: trezorcrypto.tropic
 
 /// class TropicError(Exception):
@@ -96,12 +98,9 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_sign(mp_obj_t key_index,
 
   mp_buffer_info_t dig = {0};
   mp_get_buffer_raise(digest, &dig, MP_BUFFER_READ);
-  if (dig.len != 32) {
-    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of digest."));
-  }
 
   vstr_t sig = {0};
-  vstr_init_len(&sig, ECDSA_RAW_SIGNATURE_SIZE);
+  vstr_init_len(&sig, sizeof(ed25519_signature));
 
   bool ret = tropic_ecc_sign(idx, (const uint8_t *)dig.buf, dig.len,
                              ((uint8_t *)sig.buf));
@@ -111,14 +110,19 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_sign(mp_obj_t key_index,
                  MP_ERROR_TEXT("lt_ecc_eddsa_sign failed."));
   }
 
-  sig.len = ECDSA_RAW_SIGNATURE_SIZE;
+  sig.len = sizeof(ed25519_signature);
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_tropic_sign_obj,
                                  mod_trezorcrypto_tropic_sign);
 
+/// DEVICE_KEY_SLOT: int
+/// FIDO_KEY_SLOT: int
+
 STATIC const mp_rom_map_elem_t mod_trezorcrypto_tropic_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_tropic)},
+    {MP_ROM_QSTR(MP_QSTR_DEVICE_KEY_SLOT), MP_ROM_INT(TROPIC_DEVICE_KEY_SLOT)},
+    {MP_ROM_QSTR(MP_QSTR_FIDO_KEY_SLOT), MP_ROM_INT(TROPIC_FIDO_KEY_SLOT)},
     {MP_ROM_QSTR(MP_QSTR_ping), MP_ROM_PTR(&mod_trezorcrypto_tropic_ping_obj)},
     {MP_ROM_QSTR(MP_QSTR_key_generate),
      MP_ROM_PTR(&mod_trezorcrypto_tropic_key_generate_obj)},
