@@ -54,17 +54,7 @@ jobs:
         model: ${{ fromJSON(startsWith(github.ref, 'refs/heads/release/') && '["T2B1", "T2T1", "T3B1", "T3T1", "T3W1"]' || '["T2T1", "T3B1", "T3T1", "T3W1"]') }}
         coins: [universal, btconly]
         type: ${{ fromJSON(github.event_name == 'schedule' && '["normal", "debuglink", "production"]' || '["normal", "debuglink"]') }}
-        more: [0, 1, 2, 3, 4]
-        include:
-          - model: D001
-            coins: universal
-            type: normal
-          - model: T2B1
-            coins: universal
-            type: normal
-        exclude:
-          - model: T3W1
-            type: production
+        more: [0, 1, 2, 3, 4, 6, 7, 8, 9]
     env:
       TREZOR_MODEL: ${{ matrix.model }}
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
@@ -77,4 +67,5 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: "nix install success"
+      - run: "nix --version"
+      - run: "echo nix install success"

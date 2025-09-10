@@ -16,7 +16,7 @@ runs:
       run: sudo apt install strace
       shell: sh
     - name: Dependencies nixpkgs
-      run: strace -o strace.log -t -f timeout -v --kill-after=10 600 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "true"
+      run: strace -o strace.log -t -f timeout -v --kill-after=10 666 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "true"
       shell: sh
     - name: strace logs
       if: failure()
