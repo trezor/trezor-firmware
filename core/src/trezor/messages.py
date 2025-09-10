@@ -2405,14 +2405,18 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class AuthenticityProof(protobuf.MessageType):
-        certificates: "list[bytes]"
-        signature: "bytes"
+        optiga_certificates: "list[bytes]"
+        optiga_signature: "bytes"
+        tropic_certificates: "list[bytes]"
+        tropic_signature: "bytes | None"
 
         def __init__(
             self,
             *,
-            signature: "bytes",
-            certificates: "list[bytes] | None" = None,
+            optiga_signature: "bytes",
+            optiga_certificates: "list[bytes] | None" = None,
+            tropic_certificates: "list[bytes] | None" = None,
+            tropic_signature: "bytes | None" = None,
         ) -> None:
             pass
 
