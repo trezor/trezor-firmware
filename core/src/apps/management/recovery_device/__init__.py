@@ -30,7 +30,7 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
     from apps.common.request_pin import (
         error_pin_invalid,
         request_pin_and_sd_salt,
-        request_pin_confirm,
+        request_new_pin_confirm,
     )
 
     from .homescreen import recovery_homescreen, recovery_process
@@ -75,7 +75,7 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
 
         # set up pin if requested
         if msg.pin_protection:
-            newpin = await request_pin_confirm(allow_cancel=False)
+            newpin = await request_new_pin_confirm(allow_cancel=False)
             config.change_pin("", newpin, None, None)
 
         storage_device.set_passphrase_enabled(bool(msg.passphrase_protection))
