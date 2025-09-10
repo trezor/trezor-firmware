@@ -16,9 +16,16 @@ use crate::trezorhal::sysevent::{sysevents_poll, Syshandle};
 #[cfg(feature = "power_manager")]
 use crate::{
     time::{Duration, Instant},
-    trezorhal::power_manager::{hibernate, is_usb_connected, suspend},
+    trezorhal::power_manager::{
+        charging_state, hibernate, is_usb_connected, suspend, ChargingState,
+    },
     ui::display::fade_backlight_duration,
     ui::event::PhysicalButton,
+};
+
+#[cfg(feature = "rgb_led")]
+use crate::trezorhal::rgb_led::{
+    effect_get_type, effect_ongoing, effect_start, effect_stop, RgbLedEffect,
 };
 
 #[cfg(all(feature = "haptic", feature = "power_manager"))]
@@ -185,6 +192,19 @@ pub fn run(frame: &mut impl Component<Msg = impl ReturnToC>) -> u32 {
                                 button_pressed_time = None;
                                 start = Instant::now();
                             }
+                        }
+                    }
+                }
+
+                #[cfg(feature = "rgb_led")]
+                {
+                    if charging_state() == ChargingState::Charging {
+                        if !effect_ongoing() {
+                            effect_start(RgbLedEffect::Charging, 0);
+                        }
+                    } else {
+                        if effect_get_type() == RgbLedEffect::Charging {
+                            effect_stop();
                         }
                     }
                 }
