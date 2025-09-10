@@ -23,6 +23,7 @@ async def request_word_count(recovery_type: RecoveryType) -> int:
         "recovery_word_count",
         ButtonRequestType.MnemonicWordCount,
     )
+    assert isinstance(count, (int, str))
     return int(count)
 
 

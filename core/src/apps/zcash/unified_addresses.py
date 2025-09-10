@@ -104,8 +104,8 @@ def decode(addr_str: str, coin: CoinInfo) -> dict[int, bytes]:
     if encoding != Encoding.BECH32M:
         raise DataError("Bech32m encoding required.")
 
-    decoded = bytearray(convertbits(data, 5, 8, False))
-    f4unjumble(memoryview(decoded))
+    decoded = memoryview(bytearray(convertbits(data, 5, 8, False)))
+    f4unjumble(decoded)
 
     # check trailing padding bytes
     if decoded[-16:] != padding(hrp):

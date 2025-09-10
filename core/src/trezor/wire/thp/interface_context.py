@@ -30,6 +30,7 @@ if __debug__:
     from trezor import log
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBuffer, AnyBytes
     from trezorio import WireInterface
     from typing import Awaitable, Generator, Iterable, NoReturn
 
@@ -97,7 +98,7 @@ class InterfaceContext:
         packet_len = yield self._read
         return self, packet_len
 
-    async def handle_packet(self, packet: memoryview) -> Channel | None:
+    async def handle_packet(self, packet: AnyBuffer) -> Channel | None:
         """
         Reassemble a valid THP payload and return its channel, if reassembly succeeds.
         Otherwise, returns `None` and should be called again (with the next packet).
@@ -131,18 +132,18 @@ class InterfaceContext:
             update_channel_last_used(channel.channel_id)
             return channel
 
-    def write_payload(self, header: PacketHeader, payload: bytes) -> Awaitable[None]:
+    def write_payload(self, header: PacketHeader, payload: AnyBytes) -> Awaitable[None]:
         checksum = crc.crc32(payload, crc.crc32(header.to_bytes()))
         checksum_bytes = checksum.to_bytes(CHECKSUM_LENGTH, "big")
         return self._write_payload_chunks(header, payload, checksum_bytes)
 
     def _write_payload_chunks(
-        self, header: PacketHeader, *chunks: bytes
+        self, header: PacketHeader, *chunks: AnyBytes
     ) -> Awaitable[None]:
         fragments = header.fragment_payload(self._iface.TX_PACKET_LEN, *chunks)
         return self._write_packets(fragments)
 
-    async def _write_packets(self, fragments: Iterable[bytes]) -> None:
+    async def _write_packets(self, fragments: Iterable[AnyBytes]) -> None:
         packet_len = self._iface.TX_PACKET_LEN
         for packet in fragments:
             assert len(packet) == packet_len
@@ -154,7 +155,7 @@ class InterfaceContext:
 
             assert n_written == packet_len
 
-    async def _handle_codec_v1(self, packet: bytes) -> None:
+    async def _handle_codec_v1(self, packet: AnyBytes) -> None:
         # If the received packet is not an initial codec_v1 packet, do not send error message
         if packet[1:3] == b"##":
             response = bytearray(self._iface.TX_PACKET_LEN)
@@ -163,7 +164,7 @@ class InterfaceContext:
             utils.memcpy(response, 0, b"?##\x00\x03\x00\x00\x00\x14\x08\x11", 0)
             await self._write_packets([response])
 
-    async def _handle_broadcast(self, packet: bytes) -> None:
+    async def _handle_broadcast(self, packet: AnyBytes) -> None:
         ctrl_byte, _, payload_length = ustruct.unpack(">BHH", packet)
 
         packet = packet[: PacketHeader.INIT_LENGTH + payload_length]
@@ -219,5 +220,5 @@ class InterfaceContext:
         return None
 
 
-def _get_ctrl_byte(packet: bytes) -> int:
+def _get_ctrl_byte(packet: AnyBytes) -> int:
     return packet[0]

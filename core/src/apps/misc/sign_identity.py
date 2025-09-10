@@ -5,6 +5,8 @@ from trezor.crypto.hashlib import sha256
 from apps.common import coininfo
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import IdentityType, SignedIdentity, SignIdentity
 
     from apps.common.paths import Bip32Path
@@ -100,7 +102,7 @@ def get_identity_path(identity: str, index: int, num: int) -> Bip32Path:
 
 def sign_challenge(
     seckey: bytes,
-    challenge_hidden: bytes,
+    challenge_hidden: AnyBytes,
     challenge_visual: str,
     sigtype: str | coininfo.CoinInfo,
     curve: str,

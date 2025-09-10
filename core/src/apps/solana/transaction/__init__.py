@@ -21,6 +21,8 @@ from .instructions import (
 from .parse import parse_block_hash, parse_pubkey, parse_var_int
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from ..types import Account, Address, AddressReference, RawInstruction
 
 
@@ -53,12 +55,12 @@ class Transaction:
     address_lookup_tables_rw_addresses: list[AddressReference]
     address_lookup_tables_ro_addresses: list[AddressReference]
 
-    def __init__(self, serialized_tx: bytes) -> None:
+    def __init__(self, serialized_tx: AnyBytes) -> None:
         self._parse_transaction(serialized_tx)
         self._create_instructions()
         self._determine_if_blind_signing()
 
-    def _parse_transaction(self, serialized_tx: bytes) -> None:
+    def _parse_transaction(self, serialized_tx: AnyBytes) -> None:
         serialized_tx_reader = BufferReader(serialized_tx)
         self._parse_header(serialized_tx_reader)
 
@@ -74,8 +76,6 @@ class Transaction:
             raise DataError("Invalid transaction")
 
     def _parse_header(self, serialized_tx_reader: BufferReader) -> None:
-        self.version: int | None = None
-
         if serialized_tx_reader.peek() & 0b10000000:
             self.version = serialized_tx_reader.get() & 0b01111111
             # only version 0 is supported

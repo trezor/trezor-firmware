@@ -10,6 +10,7 @@ from .errors import ActionCancelled, DataError, Error, UnexpectedMessage
 from .protocol_common import Context, Message
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Any, Callable, Container
 
     from trezor.wire import Handler, LoadedMessageType, WireInterface
@@ -22,7 +23,7 @@ EXPERIMENTAL_ENABLED = False
 
 
 def wrap_protobuf_load(
-    buffer: bytes,
+    buffer: AnyBytes,
     expected_type: type[LoadedMessageType],
 ) -> LoadedMessageType:
     try:

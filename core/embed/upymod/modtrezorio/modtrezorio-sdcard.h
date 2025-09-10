@@ -93,7 +93,7 @@ STATIC mp_obj_t mod_trezorio_sdcard_read(mp_obj_t block_num, mp_obj_t buf) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_sdcard_read_obj,
                                  mod_trezorio_sdcard_read);
 
-/// def write(block_num: int, buf: bytes) -> None:
+/// def write(block_num: int, buf: AnyBytes) -> None:
 ///     """
 ///     Writes blocks starting with block_num from buf to the SD card.
 ///     Number of bytes written is length of buf rounded down to multiply of

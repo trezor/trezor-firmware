@@ -6,6 +6,7 @@ from trezor import io, utils
 from trezor.sdcard import with_filesystem
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Callable, TypeVar
 
     T = TypeVar("T", bound=Callable)
@@ -25,7 +26,7 @@ def is_enabled() -> bool:
     return storage.device.get_sd_salt_auth_key() is not None
 
 
-def compute_auth_tag(salt: bytes, auth_key: bytes) -> bytes:
+def compute_auth_tag(salt: AnyBytes, auth_key: AnyBytes) -> bytes:
     from trezor.crypto import hmac
 
     digest = hmac(hmac.SHA256, auth_key, salt).digest()

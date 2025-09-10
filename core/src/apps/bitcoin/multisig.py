@@ -4,6 +4,9 @@ from trezor.enums import MultisigPubkeysOrder
 from trezor.wire import DataError
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+    from typing import Sequence
+
     from trezor.messages import HDNodeType, MultisigRedeemScriptType
 
     from apps.common import paths
@@ -31,7 +34,7 @@ def multisig_fingerprint(multisig: MultisigRedeemScriptType) -> bytes:
 
     if multisig.pubkeys_order == MultisigPubkeysOrder.LEXICOGRAPHIC:
         # If the order of pubkeys is lexicographic, we don't want the fingerprint to depend on the order of the pubnodes, so we sort the pubnodes before hashing.
-        pubnodes.sort(key=lambda n: n.public_key + n.chain_code)
+        pubnodes.sort(key=lambda n: n.public_key + n.chain_code)  # type: ignore [Operator "+" not supported]
 
     h = HashWriter(sha256())
     write_uint32(h, m)
@@ -94,7 +97,7 @@ def multisig_get_pubkey(n: HDNodeType, p: paths.Bip32Path) -> bytes:
     return node.public_key()
 
 
-def multisig_get_pubkeys(multisig: MultisigRedeemScriptType) -> list[bytes]:
+def multisig_get_pubkeys(multisig: MultisigRedeemScriptType) -> Sequence[AnyBytes]:
     validate_multisig(multisig)
     if multisig.nodes:
         pubkeys = [multisig_get_pubkey(hd, multisig.address_n) for hd in multisig.nodes]

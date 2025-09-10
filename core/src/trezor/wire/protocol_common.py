@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from trezor import protobuf
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from trezorio import WireInterface
     from typing import Awaitable, Container, TypeVar, overload
 
@@ -22,7 +23,7 @@ class Message:
     def __init__(
         self,
         message_type: int,
-        message_data: bytes,
+        message_data: AnyBytes,
     ) -> None:
         self.data = message_data
         self.type = message_type
@@ -36,12 +37,12 @@ class Context:
     single Bluetooth connection, etc.).
     """
 
-    channel_id: bytes
+    channel_id: AnyBytes
 
     def __init__(
         self,
         iface: WireInterface,
-        channel_id: bytes | None = None,
+        channel_id: AnyBytes | None = None,
         message_type_enum_name: str = "MessageType",
     ) -> None:
         self.iface: WireInterface = iface

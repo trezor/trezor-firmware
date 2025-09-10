@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 import storage.device as storage_device
 import trezorble as ble
@@ -7,6 +8,9 @@ from trezor import TR, config, log, utils
 from trezor.ui.layouts import interact, raise_if_cancelled
 from trezor.wire import ActionCancelled, PinCancelled
 from trezorui_api import CANCELLED, DeviceMenuResult
+
+if TYPE_CHECKING:
+    from buffer_types import AnyBytes
 
 BLE_MAX_BONDS = 8
 
@@ -22,7 +26,7 @@ class SubmenuId:
     POWER = const(7)
 
 
-def _get_hostname(ble_addr: bytes, hostname_map: dict[bytes, str]) -> str:
+def _get_hostname(ble_addr: AnyBytes, hostname_map: dict[AnyBytes, str]) -> str:
     if (hostname := hostname_map.get(ble_addr)) is None:
         # Internal MAC address representation is using reversed byte order.
         return ":".join(f"{byte:02X}" for byte in reversed(ble_addr))

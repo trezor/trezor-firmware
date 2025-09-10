@@ -47,8 +47,8 @@ STATIC mp_obj_t mod_trezorcrypto_Hmac_update(mp_obj_t self, mp_obj_t data);
 /// def __init__(
 ///     self,
 ///     hashtype: int,
-///     key: bytes,
-///     message: bytes | None = None,
+///     key: AnyBytes,
+///     message: AnyBytes | None = None,
 /// ) -> None:
 ///     """
 ///     Create a HMAC context.
@@ -83,7 +83,7 @@ STATIC mp_obj_t mod_trezorcrypto_Hmac_make_new(const mp_obj_type_t *type,
   return MP_OBJ_FROM_PTR(o);
 }
 
-/// def update(self, message: bytes) -> None:
+/// def update(self, message: AnyBytes) -> None:
 ///     """
 ///     Update a HMAC context.
 ///     """

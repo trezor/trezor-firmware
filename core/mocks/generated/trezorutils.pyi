@@ -1,4 +1,5 @@
 from typing import *
+from buffer_types import *
 
 
 # upymod/modtrezorutils/modtrezorutils-meminfo.h
@@ -9,7 +10,7 @@ def meminfo(filename: str | None) -> None:
 
 
 # upymod/modtrezorutils/modtrezorutils.c
-def consteq(sec: bytes, pub: bytes) -> bool:
+def consteq(sec: AnyBytes, pub: AnyBytes) -> bool:
     """
     Compares the private information in `sec` with public, user-provided
     information in `pub`.  Runs in constant time, corresponding to a length
@@ -20,9 +21,9 @@ def consteq(sec: bytes, pub: bytes) -> bool:
 
 # upymod/modtrezorutils/modtrezorutils.c
 def memcpy(
-    dst: bytearray | memoryview,
+    dst: AnyBuffer,
     dst_ofs: int,
-    src: bytes,
+    src: AnyBytes,
     src_ofs: int,
     n: int | None = None,
 ) -> int:
@@ -36,7 +37,7 @@ def memcpy(
 
 # upymod/modtrezorutils/modtrezorutils.c
 def memzero(
-    dst: bytearray | memoryview,
+    dst: AnyBuffer,
 ) -> None:
     """
     Zeroes all bytes at `dst`.
@@ -52,7 +53,7 @@ def halt(msg: str | None = None) -> None:
 
 # upymod/modtrezorutils/modtrezorutils.c
 def firmware_hash(
-    challenge: bytes | None = None,
+    challenge: AnyBytes | None = None,
     callback: Callable[[int, int], None] | None = None,
 ) -> bytes:
     """
@@ -152,7 +153,7 @@ if __debug__:
 # upymod/modtrezorutils/modtrezorutils.c
 def reboot_to_bootloader(
     boot_command : int = 0,
-    boot_args : bytes | None = None,
+    boot_args : AnyBytes | None = None,
 ) -> None:
     """
     Reboots to bootloader.
@@ -164,12 +165,12 @@ VersionTuple = Tuple[int, int, int, int]
 class FirmwareHeaderInfo(NamedTuple):
     version: VersionTuple
     vendor: str
-    fingerprint: bytes
-    hash: bytes
+    fingerprint: AnyBytes
+    hash: AnyBytes
 
 
 # upymod/modtrezorutils/modtrezorutils.c
-def check_firmware_header(header : bytes) -> FirmwareHeaderInfo:
+def check_firmware_header(header : AnyBytes) -> FirmwareHeaderInfo:
     """Parses incoming firmware header and returns information about it."""
 
 

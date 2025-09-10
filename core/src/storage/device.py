@@ -5,6 +5,8 @@ from storage import common
 from trezor import utils
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.enums import BackupType, DisplayRotation
     from typing_extensions import Literal
 
@@ -172,7 +174,7 @@ def set_passphrase_enabled(enable: bool) -> None:
         set_passphrase_always_on_device(False)
 
 
-def set_homescreen(homescreen: bytes) -> None:
+def set_homescreen(homescreen: AnyBytes) -> None:
     if len(homescreen) > utils.HOMESCREEN_MAXSIZE:
         raise ValueError  # homescreen too large
     common.set(_NAMESPACE, _HOMESCREEN, homescreen, public=True)
@@ -414,7 +416,7 @@ def get_rgb_led() -> bool:
 
 if utils.USE_THP:
 
-    def set_thp_paired_cache(blob: bytes) -> None:
+    def set_thp_paired_cache(blob: AnyBytes) -> None:
         """
         Set THP paired entries' cache (using protobuf serialization).
         """

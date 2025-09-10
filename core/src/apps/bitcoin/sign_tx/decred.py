@@ -26,6 +26,7 @@ OUTPUT_SCRIPT_NULL_SSTXCHANGE = (
 )
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Sequence
 
     from trezor.crypto import bip32
@@ -88,7 +89,7 @@ class DecredApprover(BasicApprover):
         self.weight = DecredTxWeightCalculator()
 
     async def add_decred_sstx_submission(
-        self, txo: TxOutput, script_pubkey: bytes
+        self, txo: TxOutput, script_pubkey: AnyBytes
     ) -> None:
         # NOTE: The following calls Approver.add_external_output(), not BasicApprover.add_external_output().
         # This is needed to skip calling helpers.confirm_output(), which is what BasicApprover would do.
@@ -102,16 +103,16 @@ class DecredSigHasher:
     def __init__(self, h_prefix: HashWriter) -> None:
         self.h_prefix = h_prefix
 
-    def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
+    def add_input(self, txi: TxInput, script_pubkey: AnyBytes) -> None:
         Decred.write_tx_input(self.h_prefix, txi, bytes())
 
-    def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+    def add_output(self, txo: TxOutput, script_pubkey: AnyBytes) -> None:
         Decred.write_tx_output(self.h_prefix, txo, script_pubkey)
 
     def hash143(
         self,
         txi: TxInput,
-        public_keys: Sequence[bytes | memoryview],
+        public_keys: Sequence[AnyBytes],
         threshold: int,
         tx: SignTx | PrevTx,
         coin: CoinInfo,
@@ -130,7 +131,7 @@ class DecredSigHasher:
     def hash_zip244(
         self,
         txi: TxInput | None,
-        script_pubkey: bytes | None,
+        script_pubkey: AnyBytes | None,
     ) -> bytes:
         raise NotImplementedError
 
@@ -316,7 +317,7 @@ class Decred(Bitcoin):
     def write_tx_output(
         w: Writer,
         txo: TxOutput | PrevOutput,
-        script_pubkey: bytes,
+        script_pubkey: AnyBytes,
     ) -> None:
         from trezor.messages import PrevOutput
 
@@ -409,7 +410,7 @@ class Decred(Bitcoin):
         write_uint32(w, tx.expiry)
 
     def write_tx_input_witness(
-        self, w: Writer, txi: TxInput, pubkey: bytes, signature: bytes
+        self, w: Writer, txi: TxInput, pubkey: bytes, signature: AnyBytes
     ) -> None:
         writers.write_uint64(w, txi.amount)
         write_uint32(w, 0)  # block height fraud proof
@@ -429,7 +430,7 @@ class Decred(Bitcoin):
 
     def input_derive_script(
         self, txi: TxInput, node: bip32.HDNode | None = None
-    ) -> bytes:
+    ) -> AnyBytes:
         if input_is_external(txi):
             assert txi.script_pubkey is not None  # checked in _sanitize_tx_input
             return txi.script_pubkey

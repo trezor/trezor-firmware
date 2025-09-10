@@ -12,6 +12,7 @@ from . import helpers, tx_weight
 from .tx_info import OriginalTxInfo
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Optional
 
     from trezor.crypto import bip32
@@ -84,7 +85,7 @@ class Approver:
             if txi.orig_hash:
                 self.orig_external_in += txi.amount
 
-    async def _add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+    async def _add_output(self, txo: TxOutput, script_pubkey: AnyBytes) -> None:
         self.weight.add_output(script_pubkey)
         self.total_out += txo.amount
 
@@ -107,7 +108,7 @@ class Approver:
             self.payment_req_verifier.verify()
         self.payment_req_verifier = None
 
-    async def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+    async def add_change_output(self, txo: TxOutput, script_pubkey: AnyBytes) -> None:
         await self._add_output(txo, script_pubkey)
         self.change_out += txo.amount
         if self.payment_req_verifier:
@@ -122,7 +123,7 @@ class Approver:
     async def add_external_output(
         self,
         txo: TxOutput,
-        script_pubkey: bytes,
+        script_pubkey: AnyBytes,
         tx_info: TxInfo | None,
         orig_txo: TxOutput | None = None,
     ) -> None:
@@ -177,7 +178,7 @@ class BasicApprover(Approver):
         ):
             raise ProcessError("Transaction has changed during signing")
 
-    async def _add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+    async def _add_output(self, txo: TxOutput, script_pubkey: AnyBytes) -> None:
         if txo.address_n and not validate_path_against_script_type(
             self.coin,
             address_n=txo.address_n,
@@ -188,14 +189,14 @@ class BasicApprover(Approver):
 
         await super()._add_output(txo, script_pubkey)
 
-    async def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+    async def add_change_output(self, txo: TxOutput, script_pubkey: AnyBytes) -> None:
         await super().add_change_output(txo, script_pubkey)
         self.change_count += 1
 
     async def add_external_output(
         self,
         txo: TxOutput,
-        script_pubkey: bytes,
+        script_pubkey: AnyBytes,
         tx_info: TxInfo | None,
         orig_txo: TxOutput | None = None,
     ) -> None:
