@@ -8396,6 +8396,37 @@ class ThpAuthenticatedCredentialData(protobuf.MessageType):
         self.cred_metadata = cred_metadata
 
 
+class ThpPairedCache(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("entries", "ThpPairedCacheEntry", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        entries: Optional[Sequence["ThpPairedCacheEntry"]] = None,
+    ) -> None:
+        self.entries: Sequence["ThpPairedCacheEntry"] = entries if entries is not None else []
+
+
+class ThpPairedCacheEntry(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("mac_addr", "bytes", repeated=False, required=True),
+        2: protobuf.Field("host_name", "string", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        mac_addr: "bytes",
+        host_name: "str",
+    ) -> None:
+        self.mac_addr = mac_addr
+        self.host_name = host_name
+
+
 class WebAuthnListResidentCredentials(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 800
 
