@@ -404,6 +404,7 @@ static void ble_process_rx_msg_pairing_completed(const uint8_t *data,
   tsqueue_enqueue(&drv->event_queue, (uint8_t *)&event, sizeof(event), NULL);
   drv->pairing_allowed = false;
   drv->pairing_requested = false;
+  drv->peer_count += 1;
 }
 
 static void ble_process_rx_msg_mac(const uint8_t *data, uint32_t len) {
