@@ -14,7 +14,11 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import struct
+
+from typing_extensions import Self
 
 CODEC_V1 = 0x3F
 CONTINUATION_PACKET = 0x80
@@ -77,13 +81,13 @@ class MessageHeader:
     def is_ack(self) -> bool:
         return self.ctrl_byte & ACK_MASK == ACK_MESSAGE
 
-    def is_channel_allocation_response(self):
+    def is_channel_allocation_response(self) -> bool:
         return (
             self.cid == BROADCAST_CHANNEL_ID
             and self.ctrl_byte == _CHANNEL_ALLOCATION_RES
         )
 
-    def is_pong(self):
+    def is_pong(self) -> bool:
         return self.cid == BROADCAST_CHANNEL_ID and self.ctrl_byte == PONG
 
     def is_handshake_init_response(self) -> bool:
@@ -96,13 +100,13 @@ class MessageHeader:
         return self.ctrl_byte & DATA_MASK == ENCRYPTED_TRANSPORT
 
     @classmethod
-    def get_error_header(cls, cid: int, length: int):
+    def get_error_header(cls, cid: int, length: int) -> Self:
         return cls(_ERROR, cid, length)
 
     @classmethod
-    def get_channel_allocation_request_header(cls, length: int):
+    def get_channel_allocation_request_header(cls, length: int) -> Self:
         return cls(CHANNEL_ALLOCATION_REQ, BROADCAST_CHANNEL_ID, length)
 
     @classmethod
-    def get_ping_header(cls, length: int):
+    def get_ping_header(cls, length: int) -> Self:
         return cls(PING, BROADCAST_CHANNEL_ID, length)

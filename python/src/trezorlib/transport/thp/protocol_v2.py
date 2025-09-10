@@ -112,7 +112,7 @@ class ProtocolV2Channel(Channel):
         self,
         message: protobuf.MessageType,
         session_id: int = DEFAULT_SESSION_ID,
-    ):
+    ) -> None:
         message_type, message_data = self.mapping.encode(message)
         self._encrypt_and_write(session_id, message_type, message_data)
         self._read_ack()
@@ -153,7 +153,7 @@ class ProtocolV2Channel(Channel):
         self.channel_id = cid
         self.device_properties = dp
 
-    def _send_channel_allocation_request(self, nonce: bytes):
+    def _send_channel_allocation_request(self, nonce: bytes) -> None:
         thp_io.write_payload_to_wire_and_add_checksum(
             self.transport,
             MessageHeader.get_channel_allocation_request_header(
@@ -273,12 +273,12 @@ class ProtocolV2Channel(Channel):
         self._send_ack_bit(bit=1)
         self._is_paired = bool(int.from_bytes(trezor_state, "big"))
 
-    def _read_ack(self):
+    def _read_ack(self) -> None:
         header, payload = self._read_until_valid_crc_check()
         if not header.is_ack() or len(payload) > 0:
             LOG.error("Received message is not a valid ACK")
 
-    def _send_ack_bit(self, bit: int):
+    def _send_ack_bit(self, bit: int) -> None:
         if bit not in (0, 1):
             raise ValueError("Invalid ACK bit")
         LOG.debug(f"sending ack {bit}")

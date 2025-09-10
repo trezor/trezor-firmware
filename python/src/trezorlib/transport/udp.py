@@ -125,7 +125,7 @@ class UdpTransport(Transport):
         LOG.log(DUMP_PACKETS, f"received packet: {chunk.hex()}")
         if len(chunk) != 64:
             raise TransportException(f"Unexpected chunk size: {len(chunk)}")
-        return bytearray(chunk)
+        return chunk
 
     def find_debug(self) -> "UdpTransport":
         host, port = self.device
