@@ -18,17 +18,17 @@ from __future__ import annotations
 import asyncio
 import atexit
 import logging
+import typing as t
 from dataclasses import dataclass
 from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
-from typing import TYPE_CHECKING, Any, Iterable
 
 from ..log import DUMP_PACKETS
 from ..models import T3W1
 from . import Timeout, Transport, TransportException
 from .udp import UdpTransport
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from ..models import TrezorModel
 
 try:
@@ -71,8 +71,8 @@ class BleTransport(Transport):
 
     @classmethod
     def enumerate(
-        cls, models: Iterable[TrezorModel] | None = None
-    ) -> Iterable[BleTransport]:
+        cls, models: t.Iterable[TrezorModel] | None = None
+    ) -> t.Iterable[BleTransport]:
         # TODO use manufacturer_data
         if models and T3W1 not in models:
             return []
@@ -114,7 +114,7 @@ class BleTransport(Transport):
         LOG.log(DUMP_PACKETS, f"received packet: {chunk.hex()}")
         if len(chunk) not in (64, 244):
             LOG.error(f"{__name__}: unexpected chunk size: {len(chunk)}")
-        return bytearray(chunk)
+        return bytes(chunk)
 
     @classmethod
     def ble_proxy(cls) -> BleProxy:
@@ -124,10 +124,10 @@ class BleTransport(Transport):
 
 
 class BleProxy:
-    pipe: Connection | None = None
+    pipe: Connection[t.Any, t.Any] | None = None
     process: Process | None = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         if not BLEAK_IMPORTED:
             raise RuntimeError("Bleak library not available, BLE support disabled")
 
@@ -141,8 +141,8 @@ class BleProxy:
 
         atexit.register(self._shutdown)
 
-    def __getattr__(self, name: str):
-        def f(*args: Any, **kwargs: Any):
+    def __getattr__(self, name: str) -> t.Callable[..., t.Any]:
+        def f(*args: t.Any, **kwargs: t.Any) -> t.Any:
             assert self.pipe is not None
             self.pipe.send((name, args, kwargs))
             result = self.pipe.recv()
@@ -152,7 +152,7 @@ class BleProxy:
 
         return f
 
-    def _shutdown(self):
+    def _shutdown(self) -> None:
         if self.pipe is not None:
             try:
                 self.pipe.send(("shutdown", [], {}))
@@ -172,7 +172,7 @@ class Peripheral:
     queue: asyncio.Queue | None = None
 
     @property
-    def address(self):
+    def address(self) -> str:
         return self.device.address
 
 
@@ -180,10 +180,10 @@ class BleAsync:
     class Shutdown(Exception):
         pass
 
-    def __init__(self, pipe: Connection):
+    def __init__(self, pipe: Connection) -> None:
         asyncio.run(self.main(pipe))
 
-    async def main(self, pipe: Connection):
+    async def main(self, pipe: Connection) -> None:
         self.devices = {}
         self.did_scan = False
         LOG.debug("async BLE process started")
@@ -195,7 +195,7 @@ class BleAsync:
                 await self.disconnect(address)
 
     # returns after shutdown, or raises an exception
-    async def _main_loop(self, pipe: Connection):
+    async def _main_loop(self, pipe: Connection) -> None:
         while True:
             await ready(pipe)
             cmd, args, kwargs = pipe.recv()
@@ -247,7 +247,7 @@ class BleAsync:
             (periph.address, periph.device.name) for periph in self.devices.values()
         ]
 
-    async def connect(self, address: str):
+    async def connect(self, address: str) -> None:
         if not self.did_scan:
             await self.scan()
 
@@ -259,7 +259,7 @@ class BleAsync:
             LOG.debug(f"Already connected to {periph.address}")
             return
 
-        async def disconnect_callback(client: BleakClient):
+        async def disconnect_callback(client: BleakClient) -> None:
             LOG.error(f"Got disconnected from {periph.address}")
             self.devices[address].client = None
             self.devices[address].queue = None
@@ -289,7 +289,9 @@ class BleAsync:
 
         queue = asyncio.Queue()
 
-        async def read_callback(characteristic: BleakGATTCharacteristic, data: bytes):
+        async def read_callback(
+            characteristic: BleakGATTCharacteristic, data: bytearray
+        ) -> None:
             await queue.put(data)
 
         await client.start_notify(TREZOR_CHARACTERISTIC_TX, read_callback)
@@ -297,7 +299,7 @@ class BleAsync:
         periph.queue = queue
         LOG.info(f"Connected to {client.address}")
 
-    async def disconnect(self, address: str):
+    async def disconnect(self, address: str) -> None:
         periph = self.devices.get(address)
         if not periph or not periph.client:
             return
@@ -315,24 +317,24 @@ class BleAsync:
             periph.client = None
             periph.queue = None
 
-    async def read(self, address: str, timeout: float | None):
+    async def read(self, address: str, timeout: float | None) -> bytes:
         periph = self.devices[address]
         try:
             return await asyncio.wait_for(periph.queue.get(), timeout=timeout)
         except (TimeoutError, asyncio.TimeoutError):
             raise Timeout(f"Timeout reading BLE packet ({timeout}s)")
 
-    async def write(self, address: str, chunk: bytes):
+    async def write(self, address: str, chunk: bytes) -> None:
         periph = self.devices[address]
         await periph.client.write_gatt_char(
             TREZOR_CHARACTERISTIC_RX, chunk, response=False
         )
 
-    async def shutdown(self):
+    async def shutdown(self) -> None:
         raise self.Shutdown
 
 
-async def ready(f: Any, write: bool = False):
+async def ready(f: Connection, write: bool = False) -> None:
     """Asynchronously wait for file-like object to become ready for reading or writing."""
     fd = f.fileno()
     loop = asyncio.get_event_loop()
@@ -340,14 +342,14 @@ async def ready(f: Any, write: bool = False):
 
     if write:
 
-        def callback():
+        def callback() -> None:
             event.set()
             loop.remove_writer(fd)
 
         loop.add_writer(fd, callback)
     else:
 
-        def callback():
+        def callback() -> None:
             event.set()
             loop.remove_reader(fd)
 

@@ -14,7 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from typing import Tuple
+from __future__ import annotations
 
 p = 2**255 - 19
 J = 486662
@@ -65,13 +65,13 @@ def get_public_key(private_key: bytes) -> bytes:
     return multiply(private_key, base_point)
 
 
-def multiply(private_scalar: bytes, public_point: bytes):
+def multiply(private_scalar: bytes, public_point: bytes) -> bytes:
     # X25519 from
     # https://datatracker.ietf.org/doc/html/rfc7748#section-5
 
     def ladder_operation(
         x1: int, x2: int, z2: int, x3: int, z3: int
-    ) -> Tuple[int, int, int, int]:
+    ) -> tuple[int, int, int, int]:
         # https://hyperelliptic.org/EFD/g1p/auto-montgom-xz.html#ladder-ladd-1987-m-3
         # (x4, z4) = 2 * (x2, z2)
         # (x5, z5) = (x2, z2) + (x3, z3)
@@ -98,7 +98,7 @@ def multiply(private_scalar: bytes, public_point: bytes):
 
         return x4, z4, x5, z5
 
-    def conditional_swap(first: int, second: int, condition: int):
+    def conditional_swap(first: int, second: int, condition: int) -> tuple[int, int]:
         # Returns (second, first) if condition is true and (first, second) otherwise
         # Must be implemented in a way that it is constant time
         true_mask = -condition
@@ -136,7 +136,7 @@ def elligator2(point: bytes) -> bytes:
     # map_to_curve_elligator2_curve25519 from
     # https://www.rfc-editor.org/rfc/rfc9380.html#ell2-opt
 
-    def conditional_move(first: int, second: int, condition: bool):
+    def conditional_move(first: int, second: int, condition: bool) -> int:
         # Returns second if condition is true and first otherwise
         # Must be implemented in a way that it is constant time
         true_mask = -condition
