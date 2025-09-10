@@ -63,7 +63,7 @@ static bool wipe_bonds(protob_io_t* iface) {
     return false;
   }
 
-  uint32_t deadline = ticks_timeout(100);
+  uint32_t deadline = ticks_timeout(300);
 
   while (true) {
     ble_get_state(&state);
