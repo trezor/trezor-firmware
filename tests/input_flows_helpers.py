@@ -27,8 +27,12 @@ class PinFlow:
         self.debug.input(pin)
         if self.client.layout_type is LayoutType.Caesar:
             assert (yield).name == f"{what}/repeat/prompt"  # Reenter PIN
+            if what == "wipecode":
+                tr = TR.wipe_code__reenter_to_confirm
+            else:
+                tr = TR.pin__reenter_to_confirm
             assert (
-                TR.translate(f"{what}__reenter_to_confirm")
+                TR.translate(tr)
                 in self.debug.read_layout().text_content()
             )
             self.debug.press_yes()

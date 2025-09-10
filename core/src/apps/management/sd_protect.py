@@ -67,7 +67,7 @@ async def _sd_protect_enable(msg: SdProtect) -> Success:
 
     # Get the current PIN.
     if config.has_pin():
-        pin = await request_pin(TR.pin__enter, config.get_pin_rem())
+        pin = await request_pin("pin/current", TR.pin__enter, config.get_pin_rem())
     else:
         pin = ""
 

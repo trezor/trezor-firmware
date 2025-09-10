@@ -1734,7 +1734,7 @@ def request_pin_on_device(
     attempts_remaining: int | None,
     allow_cancel: bool,
     wrong_pin: bool = False,
-) -> str:
+) -> Awaitable[str]:
     from trezor import wire
 
     # Not showing the prompt in case user did not enter it badly yet

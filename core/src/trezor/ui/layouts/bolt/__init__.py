@@ -1734,7 +1734,7 @@ def request_pin_on_device(
     attempts_remaining: int | None,
     allow_cancel: bool,
     wrong_pin: bool = False,
-) -> str:
+) -> Awaitable[str]:
     from trezor.wire import PinCancelled
 
     if attempts_remaining is None:
