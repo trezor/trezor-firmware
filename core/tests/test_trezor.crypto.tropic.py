@@ -15,8 +15,10 @@ class TestCryptoTropic(unittest.TestCase):
         try:
             tropic.sign(0, "ASD")
             assert False
-        except ValueError as e:
-            self.assertIn("invalid length", str(e).lower())
+        except tropic.TropicError as e:
+            # key is not generated yet
+            self.assertIn("lt_ecc_eddsa_sign failed", str(e).lower())
+
 
         tropic.key_generate(0)
 

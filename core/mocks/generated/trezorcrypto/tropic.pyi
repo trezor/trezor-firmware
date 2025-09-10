@@ -24,3 +24,5 @@ class TropicError(Exception):
         """
         Uses the private key at key_index to produce a signature of the digest.
         """
+    DEVICE_KEY_SLOT: int
+    FIDO_KEY_SLOT: int
