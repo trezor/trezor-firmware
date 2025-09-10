@@ -69,7 +69,9 @@ STATIC mp_obj_t mod_trezorui_Display_orientation(size_t n_args,
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_orientation_obj,
                                            1, 2,
                                            mod_trezorui_Display_orientation);
-/// def record_start(self, target_directory: bytes, refresh_index: int) -> None:
+/// def record_start(
+///     self, target_directory: AnyBytes, refresh_index: int
+/// ) -> None:
 ///     """
 ///     Starts screen recording with specified target directory and refresh
 ///     index.

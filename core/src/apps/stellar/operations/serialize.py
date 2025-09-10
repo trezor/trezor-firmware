@@ -13,6 +13,8 @@ from ..writers import (
 )
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import (
         StellarAccountMergeOp,
         StellarAllowTrustOp,
@@ -230,7 +232,7 @@ def _write_asset(w: Writer, asset: StellarAsset) -> None:
     write_pubkey(w, asset.issuer)
 
 
-def _write_claimable_balance_id(w: Writer, claimable_balance_id: bytes) -> None:
+def _write_claimable_balance_id(w: Writer, claimable_balance_id: AnyBytes) -> None:
     if len(claimable_balance_id) != 36:  # 4 bytes type + 32 bytes data
         raise DataError("Stellar: invalid claimable balance id length")
     if claimable_balance_id[:4] != b"\x00\x00\x00\x00":  # CLAIMABLE_BALANCE_ID_TYPE_V0

@@ -1,4 +1,5 @@
 from typing import *
+from buffer_types import *
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-monero.h
@@ -28,11 +29,11 @@ class Hasher:
     """
     XMR hasher
     """
-    def __init__(self, x: bytes | None = None):
+    def __init__(self, x: AnyBytes | None = None):
         """
         Constructor
         """
-    def update(self, buffer: bytes) -> None:
+    def update(self, buffer: AnyBytes) -> None:
         """
         Update hasher
         """
@@ -124,7 +125,7 @@ def sc_inv_into(r: Scalar | None, a: Scalar) -> Scalar:
 
 # upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def encodeint_into(
-    r: bytes | None, a: Scalar, offset: int | None = 0
+    r: AnyBytes | None, a: Scalar, offset: int | None = 0
 ) -> bytes:
     """
     Scalar compression
@@ -133,7 +134,7 @@ def encodeint_into(
 
 # upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def decodeint_into(
-    r: Scalar | None, a: bytes, offset: int = 0
+    r: Scalar | None, a: AnyBytes, offset: int = 0
 ) -> Scalar:
     """
     Scalar decompression
@@ -142,7 +143,7 @@ def decodeint_into(
 
 # upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def decodeint_into_noreduce(
-    r: Scalar | None, a: bytes, offset: int = 0
+    r: Scalar | None, a: AnyBytes, offset: int = 0
 ) -> Scalar:
     """
     Scalar decompression, raw, without modular reduction
@@ -226,7 +227,9 @@ def scalarmult_into(
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-monero.h
-def encodepoint_into(r: bytes | None, p: Point, offset: int = 0) -> bytes:
+def encodepoint_into(
+    r: AnyBytes | None, p: Point, offset: int = 0
+) -> bytes:
     """
     Point compression
     """
@@ -234,7 +237,7 @@ def encodepoint_into(r: bytes | None, p: Point, offset: int = 0) -> bytes:
 
 # upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def decodepoint_into(
-    r: Point | None, buff: bytes, offset: int = 0
+    r: Point | None, buff: AnyBytes, offset: int = 0
 ) -> Point:
     """
     Point decompression
@@ -242,14 +245,14 @@ def decodepoint_into(
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-monero.h
-def xmr_base58_addr_encode_check(tag: int, buff: bytes) -> str:
+def xmr_base58_addr_encode_check(tag: int, buff: AnyBytes) -> str:
     """
     Monero block base 58 encoding
     """
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-monero.h
-def xmr_base58_addr_decode_check(buff: bytes) -> tuple[bytes, int]:
+def xmr_base58_addr_decode_check(buff: AnyBytes) -> tuple[bytes, int]:
     """
     Monero block base 58 decoding, returning (decoded, tag) or raising on
     error.
@@ -265,8 +268,8 @@ def random_scalar(r: Scalar | None = None) -> Scalar:
 
 # upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def fast_hash_into(
-   r: bytes | None,
-   buff: bytes,
+   r: AnyBytes | None,
+   buff: AnyBytes,
    length: int | None = None,
    offset: int = 0,
 ) -> bytes:
@@ -278,7 +281,7 @@ def fast_hash_into(
 # upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def hash_to_point_into(
     r: Point | None,
-    buff: bytes,
+    buff: AnyBytes,
     length: int | None = None,
     offset: int = 0,
 ) -> Point:
@@ -290,7 +293,7 @@ def hash_to_point_into(
 # upymod/modtrezorcrypto/modtrezorcrypto-monero.h
 def hash_to_scalar_into(
    r: Scalar | None,
-   buff: bytes,
+   buff: AnyBytes,
    length: int | None = None,
    offset: int = 0,
 ) -> Scalar:
@@ -370,7 +373,7 @@ def gen_commitment_into(r: Point | None, a: Scalar, amount: int) -> Point:
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-monero.h
-def ct_equals(a: bytes, b: bytes) -> bool:
+def ct_equals(a: AnyBytes, b: AnyBytes) -> bool:
     """
     Constant time buffer comparison
     """

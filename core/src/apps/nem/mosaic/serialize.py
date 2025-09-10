@@ -8,6 +8,8 @@ from ..writers import (
 )
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import (
         NEMMosaicCreation,
         NEMMosaicSupplyChange,
@@ -17,8 +19,8 @@ if TYPE_CHECKING:
 
 
 def serialize_mosaic_creation(
-    common: NEMTransactionCommon, creation: NEMMosaicCreation, public_key: bytes
-) -> bytes:
+    common: NEMTransactionCommon, creation: NEMMosaicCreation, public_key: AnyBytes
+) -> bytearray:
     from ..helpers import NEM_TRANSACTION_TYPE_MOSAIC_CREATION
 
     w = serialize_tx_common(common, public_key, NEM_TRANSACTION_TYPE_MOSAIC_CREATION)
@@ -70,8 +72,8 @@ def serialize_mosaic_creation(
 
 
 def serialize_mosaic_supply_change(
-    common: NEMTransactionCommon, change: NEMMosaicSupplyChange, public_key: bytes
-) -> bytes:
+    common: NEMTransactionCommon, change: NEMMosaicSupplyChange, public_key: AnyBytes
+) -> bytearray:
     from ..helpers import NEM_TRANSACTION_TYPE_MOSAIC_SUPPLY_CHANGE
 
     w = serialize_tx_common(

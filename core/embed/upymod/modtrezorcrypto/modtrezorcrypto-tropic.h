@@ -88,7 +88,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_tropic_key_generate_obj,
 
 /// def sign(
 ///     key_index: int,
-///     digest: bytes,
+///     digest: AnyBytes,
 /// ) -> bytes:
 ///     """
 ///     Uses the private key at key_index to produce a signature of the digest.

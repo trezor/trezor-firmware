@@ -12,6 +12,8 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import RippleSignTx
     from trezor.utils import Writer
 
@@ -26,8 +28,8 @@ _FIELD_TYPE_ACCOUNT = const(8)
 def serialize(
     msg: RippleSignTx,
     source_address: str,
-    pubkey: bytes,
-    signature: bytes | None = None,
+    pubkey: AnyBytes,
+    signature: AnyBytes | None = None,
 ) -> bytearray:
     # must be sorted numerically first by type and then by name
     fields_to_write = (  # field_type, field_key, value
@@ -51,7 +53,7 @@ def serialize(
 
 
 def _write(
-    w: Writer, field_type: int, field_key: int, value: int | bytes | str | None
+    w: Writer, field_type: int, field_key: int, value: int | AnyBytes | str | None
 ) -> None:
     from . import helpers
 
@@ -89,13 +91,14 @@ def _write(
         assert isinstance(value, str)
         write_bytes_varint(w, helpers.decode_address(value))
     elif field_type == _FIELD_TYPE_VL:
-        assert isinstance(value, (bytes, bytearray))
+        # XXX this should be AnyBytes, but that doesn't exist at runtime
+        assert isinstance(value, (bytes, bytearray, memoryview))
         write_bytes_varint(w, value)
     else:
         raise ValueError("Unknown field type")
 
 
-def write_bytes_varint(w: Writer, value: bytes) -> None:
+def write_bytes_varint(w: Writer, value: AnyBytes) -> None:
     """Serialize a variable length bytes."""
     append = w.append  # local_cache_attribute
 

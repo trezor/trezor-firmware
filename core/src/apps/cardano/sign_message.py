@@ -12,6 +12,7 @@ from apps.common import cbor
 from . import addresses, seed
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Any
 
     from trezor.messages import CardanoMessageSignature, CardanoSignMessageInit
@@ -78,7 +79,7 @@ async def _get_payload_data(
     payload_size: int,
     chunk_length: int,
     chunk_offset: int,
-) -> bytes:
+) -> AnyBytes:
     """Returns payload data using length+offset pattern."""
     from trezor.messages import CardanoMessageDataRequest, CardanoMessageDataResponse
 
@@ -94,7 +95,7 @@ async def _get_payload_data(
     return response.data
 
 
-async def _get_confirmed_payload(size: int, prefer_hex_display: bool) -> bytes:
+async def _get_confirmed_payload(size: int, prefer_hex_display: bool) -> AnyBytes:
     from . import layout
 
     # Request the entire payload at once for now, regardless of RAM constraints.
@@ -120,7 +121,7 @@ async def _get_confirmed_payload(size: int, prefer_hex_display: bool) -> bytes:
 
 
 def _cborize_sig_structure(
-    payload: bytes,
+    payload: AnyBytes,
     protected_headers: Headers,
     external_aad: bytes | None = None,
 ) -> CborSequence:

@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 from .keychain import with_keychain
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import GetOwnershipProof, OwnershipProof
 
     from apps.common.coininfo import CoinInfo
@@ -31,7 +33,7 @@ async def get_ownership_proof(
     from .ownership import generate_proof, get_identifier
 
     script_type = msg.script_type  # local_cache_attribute
-    ownership_ids = msg.ownership_ids  # local_cache_attribute
+    ownership_ids: list[AnyBytes] = msg.ownership_ids  # local_cache_attribute
 
     if authorization:
         if not authorization.check_get_ownership_proof(msg):

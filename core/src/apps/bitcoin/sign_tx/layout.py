@@ -18,6 +18,8 @@ from ..common import (
 from ..keychain import address_n_to_name
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.enums import AmountUnit
     from trezor.messages import PaymentRequest, TxOutput
     from trezor.ui.layouts import PropertyType
@@ -222,7 +224,7 @@ async def show_payment_request_details(
     )
 
 
-async def confirm_replacement(title: str, txid: bytes) -> None:
+async def confirm_replacement(title: str, txid: AnyBytes) -> None:
     from ubinascii import hexlify
 
     await layouts.confirm_replacement(

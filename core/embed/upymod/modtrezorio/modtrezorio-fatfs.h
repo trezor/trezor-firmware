@@ -223,7 +223,7 @@ STATIC mp_obj_t mod_trezorio_FatFSFile_read(mp_obj_t self, mp_obj_t data) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFSFile_read_obj,
                                  mod_trezorio_FatFSFile_read);
 
-/// def write(self, data: bytes | bytearray) -> int:
+/// def write(self, data: AnyBytes) -> int:
 ///     """
 ///     Write data to the file
 ///     """

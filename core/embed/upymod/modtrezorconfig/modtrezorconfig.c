@@ -67,7 +67,7 @@ STATIC mp_obj_t mod_trezorconfig_init(size_t n_args, const mp_obj_t *args) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_init_obj, 0, 1,
                                            mod_trezorconfig_init);
 
-/// def unlock(pin: str, ext_salt: bytes | None) -> bool:
+/// def unlock(pin: str, ext_salt: AnyBytes | None) -> bool:
 ///     """
 ///     Attempts to unlock the storage with the given PIN and external salt.
 ///     Returns True on success, False on failure.
@@ -93,7 +93,7 @@ STATIC mp_obj_t mod_trezorconfig_unlock(mp_obj_t pin, mp_obj_t ext_salt) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_unlock_obj,
                                  mod_trezorconfig_unlock);
 
-/// def check_pin(pin: str, ext_salt: bytes | None) -> bool:
+/// def check_pin(pin: str, ext_salt: AnyBytes | None) -> bool:
 ///     """
 ///     Check the given PIN with the given external salt.
 ///     Returns True on success, False on failure.
@@ -154,8 +154,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_get_pin_rem_obj,
 /// def change_pin(
 ///     oldpin: str,
 ///     newpin: str,
-///     old_ext_salt: bytes | None,
-///     new_ext_salt: bytes | None,
+///     old_ext_salt: AnyBytes | None,
+///     new_ext_salt: AnyBytes | None,
 /// ) -> bool:
 ///     """
 ///     Change PIN and external salt. Returns True on success, False on failure.
@@ -223,7 +223,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_has_wipe_code_obj,
 
 /// def change_wipe_code(
 ///     pin: str,
-///     ext_salt: bytes | None,
+///     ext_salt: AnyBytes | None,
 ///     wipe_code: str,
 /// ) -> bool:
 ///     """
@@ -292,7 +292,7 @@ STATIC mp_obj_t mod_trezorconfig_get(size_t n_args, const mp_obj_t *args) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_get_obj, 2, 3,
                                            mod_trezorconfig_get);
 
-/// def set(app: int, key: int, value: bytes, public: bool = False) -> None:
+/// def set(app: int, key: int, value: AnyBytes, public: bool = False) -> None:
 ///     """
 ///     Sets a value of given key for given app.
 ///     """

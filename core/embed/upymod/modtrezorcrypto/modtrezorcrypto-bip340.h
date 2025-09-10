@@ -57,7 +57,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip340_generate_secret() {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_bip340_generate_secret_obj,
                                  mod_trezorcrypto_bip340_generate_secret);
 
-/// def publickey(secret_key: bytes) -> bytes:
+/// def publickey(secret_key: AnyBytes) -> bytes:
 ///     """
 ///     Computes public key from secret key.
 ///     """
@@ -82,8 +82,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_bip340_publickey_obj,
                                  mod_trezorcrypto_bip340_publickey);
 
 /// def sign(
-///     secret_key: bytes,
-///     digest: bytes,
+///     secret_key: AnyBytes,
+///     digest: AnyBytes,
 /// ) -> bytes:
 ///     """
 ///     Uses secret key to produce the signature of the digest.
@@ -115,7 +115,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip340_sign(mp_obj_t secret_key,
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_bip340_sign_obj,
                                  mod_trezorcrypto_bip340_sign);
 
-/// def verify_publickey(public_key: bytes) -> bool:
+/// def verify_publickey(public_key: AnyBytes) -> bool:
 ///     """
 ///     Verifies whether the public key is valid.
 ///     Returns True on success.
@@ -132,7 +132,9 @@ STATIC mp_obj_t mod_trezorcrypto_bip340_verify_publickey(mp_obj_t public_key) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_bip340_verify_publickey_obj,
                                  mod_trezorcrypto_bip340_verify_publickey);
 
-/// def verify(public_key: bytes, signature: bytes, digest: bytes) -> bool:
+/// def verify(
+///     public_key: AnyBytes, signature: AnyBytes, digest: AnyBytes
+/// ) -> bool:
 ///     """
 ///     Uses public key to verify the signature of the digest.
 ///     Returns True on success.
@@ -162,8 +164,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_bip340_verify_obj,
                                  mod_trezorcrypto_bip340_verify);
 
 /// def tweak_public_key(
-///     public_key: bytes,
-///     root_hash: bytes | None = None,
+///     public_key: AnyBytes,
+///     root_hash: AnyBytes | None = None,
 /// ) -> bytes:
 ///     """
 ///     Tweaks the public key with the specified root_hash.
@@ -202,8 +204,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_bip340_tweak_public_key);
 
 /// def tweak_secret_key(
-///     secret_key: bytes,
-///     root_hash: bytes | None = None,
+///     secret_key: AnyBytes,
+///     root_hash: AnyBytes | None = None,
 /// ) -> bytes:
 ///     """
 ///     Tweaks the secret key with the specified root_hash.

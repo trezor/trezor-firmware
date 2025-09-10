@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 from .keychain import PATTERNS_ADDRESS, with_keychain_from_path
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import EthereumMessageSignature, EthereumSignMessage
 
     from apps.common.keychain import Keychain
@@ -10,7 +12,7 @@ if TYPE_CHECKING:
     from .definitions import Definitions
 
 
-def message_digest(message: bytes) -> bytes:
+def message_digest(message: AnyBytes) -> bytes:
     from trezor.crypto.hashlib import sha3_256
     from trezor.utils import HashWriter
 

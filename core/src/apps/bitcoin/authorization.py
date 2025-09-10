@@ -34,7 +34,7 @@ class CoinJoinAuthorization:
             and msg.address_n[:-BIP32_WALLET_DEPTH] == params.address_n
             and msg.coin_name == params.coin_name
             and msg.script_type == params.script_type
-            and msg.commitment_data.startswith(bytes(coordinator))
+            and bytes(msg.commitment_data).startswith(bytes(coordinator))
         )
 
     def check_internal_input(self, txi: TxInput) -> bool:

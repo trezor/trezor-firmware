@@ -43,7 +43,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(
     mod_trezorcrypto_curve25519_generate_secret_obj,
     mod_trezorcrypto_curve25519_generate_secret);
 
-/// def publickey(secret_key: bytes) -> bytes:
+/// def publickey(secret_key: AnyBytes) -> bytes:
 ///     """
 ///     Computes public key from secret key.
 ///     """
@@ -61,7 +61,7 @@ STATIC mp_obj_t mod_trezorcrypto_curve25519_publickey(mp_obj_t secret_key) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_curve25519_publickey_obj,
                                  mod_trezorcrypto_curve25519_publickey);
 
-/// def multiply(secret_key: bytes, public_key: bytes) -> bytes:
+/// def multiply(secret_key: AnyBytes, public_key: AnyBytes) -> bytes:
 ///     """
 ///     Multiplies point defined by public_key with scalar defined by
 ///     secret_key. Useful for ECDH.

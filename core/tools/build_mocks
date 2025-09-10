@@ -86,7 +86,7 @@ def store_to_file(dest, parts):
             sys.exit(1)
 
         if not filepath.exists():
-            filepath.write_text("from typing import *\n")
+            filepath.write_text("from typing import *\nfrom buffer_types import *\n")
 
         with open(filepath, "a") as f:
             f.write(line)

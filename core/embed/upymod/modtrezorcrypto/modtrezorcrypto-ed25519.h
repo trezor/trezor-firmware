@@ -39,7 +39,7 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_generate_secret() {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_ed25519_generate_secret_obj,
                                  mod_trezorcrypto_ed25519_generate_secret);
 
-/// def publickey(secret_key: bytes) -> bytes:
+/// def publickey(secret_key: AnyBytes) -> bytes:
 ///     """
 ///     Computes public key from secret key.
 ///     """
@@ -58,7 +58,9 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_publickey(mp_obj_t secret_key) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_ed25519_publickey_obj,
                                  mod_trezorcrypto_ed25519_publickey);
 
-/// def sign(secret_key: bytes, message: bytes, hasher: str = "") -> bytes:
+/// def sign(
+///     secret_key: AnyBytes, message: AnyBytes, hasher: str = ""
+/// ) -> bytes:
 ///     """
 ///     Uses secret key to produce the signature of message.
 ///     """
@@ -100,7 +102,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_ed25519_sign_obj, 2,
 #if !BITCOIN_ONLY
 
 /// def sign_ext(
-///     secret_scalar: bytes, secret_extension: bytes, message: bytes
+///     secret_scalar: AnyBytes, secret_extension: AnyBytes, message: AnyBytes
 /// ) -> bytes:
 ///     """
 ///     Uses extended secret key to produce the cardano signature of message.
@@ -134,7 +136,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_ed25519_sign_ext_obj,
 
 #endif
 
-/// def verify(public_key: bytes, signature: bytes, message: bytes) -> bool:
+/// def verify(
+///     public_key: AnyBytes, signature: AnyBytes, message: AnyBytes
+/// ) -> bool:
 ///     """
 ///     Uses public key to verify the signature of the message.
 ///     Returns True on success.
@@ -164,7 +168,7 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_verify(mp_obj_t public_key,
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_ed25519_verify_obj,
                                  mod_trezorcrypto_ed25519_verify);
 
-/// def cosi_combine_publickeys(public_keys: list[bytes]) -> bytes:
+/// def cosi_combine_publickeys(public_keys: Sequence[AnyBytes]) -> bytes:
 ///     """
 ///     Combines a list of public keys used in COSI cosigning scheme.
 ///     """
@@ -200,7 +204,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(
     mod_trezorcrypto_ed25519_cosi_combine_publickeys_obj,
     mod_trezorcrypto_ed25519_cosi_combine_publickeys);
 
-/// def cosi_combine_signatures(R: bytes, signatures: list[bytes]) -> bytes:
+/// def cosi_combine_signatures(
+///     R: AnyBytes, signatures: Sequence[AnyBytes]
+/// ) -> bytes:
 ///     """
 ///     Combines a list of signatures used in COSI cosigning scheme.
 ///     """
@@ -259,11 +265,11 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_ed25519_cosi_commit_obj,
                                  mod_trezorcrypto_ed25519_cosi_commit);
 
 /// def cosi_sign(
-///     secret_key: bytes,
-///     message: bytes,
-///     nonce: bytes,
-///     sigR: bytes,
-///     combined_pubkey: bytes,
+///     secret_key: AnyBytes,
+///     message: AnyBytes,
+///     nonce: AnyBytes,
+///     sigR: AnyBytes,
+///     combined_pubkey: AnyBytes,
 /// ) -> bytes:
 ///     """
 ///     Produce signature of message using COSI cosigning scheme.

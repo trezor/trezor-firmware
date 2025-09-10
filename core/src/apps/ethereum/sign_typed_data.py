@@ -9,6 +9,8 @@ from .keychain import PATTERNS_ADDRESS, with_keychain_from_path
 from .layout import should_show_struct
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import (
         EthereumFieldType,
         EthereumSignTypedData,
@@ -61,7 +63,7 @@ async def sign_typed_data(
 async def _generate_typed_data_hash(
     primary_type: str,
     metamask_v4_compat: bool = True,
-    show_message_hash: bytes | None = None,
+    show_message_hash: AnyBytes | None = None,
 ) -> bytes:
     """
     Generate typed data hash according to EIP-712 specification
@@ -130,7 +132,7 @@ def get_hash_writer() -> HashWriter:
     return HashWriter(sha3_256(keccak=True))
 
 
-def keccak256(message: bytes) -> bytes:
+def keccak256(message: AnyBytes) -> bytes:
     h = get_hash_writer()
     h.extend(message)
     return h.get_digest()
@@ -368,7 +370,7 @@ class TypedDataEnvelope:
 def encode_field(
     w: HashWriter,
     field: EthereumFieldType,
-    value: bytes,
+    value: AnyBytes,
 ) -> None:
     """
     SPEC:
@@ -413,7 +415,7 @@ def encode_field(
         raise ValueError  # Unsupported data type for field encoding
 
 
-def write_leftpad32(w: HashWriter, value: bytes, signed: bool = False) -> None:
+def write_leftpad32(w: HashWriter, value: AnyBytes, signed: bool = False) -> None:
     assert len(value) <= 32
 
     # Values need to be sign-extended, so accounting for negative ints
@@ -427,7 +429,7 @@ def write_leftpad32(w: HashWriter, value: bytes, signed: bool = False) -> None:
     w.extend(value)
 
 
-def _validate_value(field: EthereumFieldType, value: bytes) -> None:
+def _validate_value(field: EthereumFieldType, value: AnyBytes) -> None:
     """
     Make sure the byte data we receive are not corrupted or incorrect.
 
@@ -449,7 +451,7 @@ def _validate_value(field: EthereumFieldType, value: bytes) -> None:
             raise DataError("Invalid address")
     elif field.data_type == EthereumDataType.STRING:
         try:
-            value.decode()
+            bytes(value).decode()
         except UnicodeError:
             raise DataError("Invalid UTF-8")
 
@@ -518,7 +520,7 @@ async def _get_array_size(member_path: list[int]) -> int:
 async def get_value(
     field: EthereumFieldType,
     member_value_path: list[int],
-) -> bytes:
+) -> AnyBytes:
     """Get a single value from the client and perform its validation."""
     from trezor.messages import EthereumTypedDataValueAck, EthereumTypedDataValueRequest
 
@@ -535,7 +537,7 @@ async def get_value(
 
 async def _get_name_and_version_for_domain(
     typed_data_envelope: TypedDataEnvelope,
-) -> tuple[bytes, bytes]:
+) -> tuple[AnyBytes, AnyBytes]:
     domain_name = b"unknown"
     domain_version = b"unknown"
 

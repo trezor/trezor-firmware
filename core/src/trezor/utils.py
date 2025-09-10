@@ -77,6 +77,7 @@ else:
     LOG_STACK_USAGE = False
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBuffer, AnyBytes
     from typing import Any, Iterator, Protocol, Sequence, TypeVar
 
     from trezor.protobuf import MessageType
@@ -178,19 +179,19 @@ def chunks(items: Chunkable, size: int) -> Iterator[Chunkable]:
 if TYPE_CHECKING:
 
     class HashContext(Protocol):
-        def update(self, __buf: bytes) -> None: ...
+        def update(self, __buf: AnyBytes) -> None: ...
 
         def digest(self) -> bytes: ...
 
     class HashContextInitable(HashContext, Protocol):
         def __init__(  # pylint: disable=super-init-not-called
-            self, __data: bytes | None = None
+            self, __data: AnyBytes | None = None
         ) -> None: ...
 
     class Writer(Protocol):
         def append(self, __b: int) -> None: ...
 
-        def extend(self, __buf: bytes) -> None: ...
+        def extend(self, __buf: AnyBytes) -> None: ...
 
 
 if False:  # noqa
@@ -239,24 +240,20 @@ class HashWriter:
         self.buf[0] = b
         self.ctx.update(self.buf)
 
-    def extend(self, buf: bytes) -> None:
-        self.ctx.update(buf)
+    def extend(self, __buf: AnyBytes) -> None:
+        self.ctx.update(__buf)
 
-    def write(self, buf: bytes) -> None:  # alias for extend()
-        self.ctx.update(buf)
+    def write(self, __buf: AnyBytes) -> None:  # alias for extend()
+        self.ctx.update(__buf)
 
     def get_digest(self) -> bytes:
         return self.ctx.digest()
 
 
-if TYPE_CHECKING:
-    BufferType = bytearray | memoryview
-
-
 class BufferReader:
     """Seekable and readable view into a buffer."""
 
-    def __init__(self, buffer: bytes | memoryview) -> None:
+    def __init__(self, buffer: AnyBytes) -> None:
         if isinstance(buffer, memoryview):
             self.buffer = buffer
         else:
@@ -272,7 +269,7 @@ class BufferReader:
         offset = max(offset, 0)
         self.offset = offset
 
-    def readinto(self, dst: BufferType) -> int:
+    def readinto(self, dst: AnyBuffer) -> int:
         """Read exactly `len(dst)` bytes into `dst`, or raise EOFError.
 
         Returns number of bytes read.

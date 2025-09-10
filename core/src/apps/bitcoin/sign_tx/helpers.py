@@ -18,6 +18,7 @@ from ..writers import TX_HASH_SIZE
 from . import layout
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Any, Awaitable
 
     from trezor.enums import AmountUnit
@@ -115,7 +116,7 @@ class UiConfirmPaymentRequest(UiConfirm):
 
 
 class UiConfirmReplacement(UiConfirm):
-    def __init__(self, title: str, txid: bytes) -> None:
+    def __init__(self, title: str, txid: AnyBytes) -> None:
         self.title = title
         self.txid = txid
 
@@ -278,7 +279,7 @@ def show_payment_request_details(provider_address: str, payment_req: PaymentRequ
     return (yield UiConfirmPaymentRequest(provider_address, payment_req, coin, amount_unit, address_n))  # type: ignore [awaitable-return-type]
 
 
-def confirm_replacement(description: str, txid: bytes) -> Awaitable[Any]:  # type: ignore [awaitable-return-type]
+def confirm_replacement(description: str, txid: AnyBytes) -> Awaitable[Any]:  # type: ignore [awaitable-return-type]
     return (yield UiConfirmReplacement(description, txid))  # type: ignore [awaitable-return-type]
 
 
@@ -326,7 +327,7 @@ def confirm_multiple_accounts() -> Awaitable[Any]:  # type: ignore [awaitable-re
     return (yield UiConfirmMultipleAccounts())  # type: ignore [awaitable-return-type]
 
 
-def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[PrevTx]:  # type: ignore [awaitable-return-type]
+def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: AnyBytes | None = None) -> Awaitable[PrevTx]:  # type: ignore [awaitable-return-type]
     assert tx_req.details is not None
     tx_req.request_type = RequestType.TXMETA
     tx_req.details.tx_hash = tx_hash
@@ -336,7 +337,7 @@ def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes | None = N
 
 
 def request_tx_extra_data(
-    tx_req: TxRequest, offset: int, size: int, tx_hash: bytes | None = None
+    tx_req: TxRequest, offset: int, size: int, tx_hash: AnyBytes | None = None
 ) -> Awaitable[bytearray]:  # type: ignore [awaitable-return-type]
     details = tx_req.details  # local_cache_attribute
 
@@ -350,7 +351,7 @@ def request_tx_extra_data(
     return ack.tx.extra_data_chunk
 
 
-def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[TxInput]:  # type: ignore [awaitable-return-type]
+def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: AnyBytes | None = None) -> Awaitable[TxInput]:  # type: ignore [awaitable-return-type]
     assert tx_req.details is not None
     if tx_hash:
         tx_req.request_type = RequestType.TXORIGINPUT
@@ -363,7 +364,7 @@ def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes |
     return _sanitize_tx_input(ack.tx.input, coin)
 
 
-def request_tx_prev_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[PrevInput]:  # type: ignore [awaitable-return-type]
+def request_tx_prev_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: AnyBytes | None = None) -> Awaitable[PrevInput]:  # type: ignore [awaitable-return-type]
     assert tx_req.details is not None
     tx_req.request_type = RequestType.TXINPUT
     tx_req.details.request_index = i
@@ -373,7 +374,7 @@ def request_tx_prev_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: by
     return _sanitize_tx_prev_input(ack.tx.input, coin)
 
 
-def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[TxOutput]:  # type: ignore [awaitable-return-type]
+def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: AnyBytes | None = None) -> Awaitable[TxOutput]:  # type: ignore [awaitable-return-type]
     assert tx_req.details is not None
     if tx_hash:
         tx_req.request_type = RequestType.TXORIGOUTPUT
@@ -386,7 +387,7 @@ def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes 
     return _sanitize_tx_output(ack.tx.output, coin)
 
 
-def request_tx_prev_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[PrevOutput]:  # type: ignore [awaitable-return-type]
+def request_tx_prev_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: AnyBytes | None = None) -> Awaitable[PrevOutput]:  # type: ignore [awaitable-return-type]
     assert tx_req.details is not None
     tx_req.request_type = RequestType.TXOUTPUT
     tx_req.details.request_index = i

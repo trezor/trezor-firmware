@@ -1,4 +1,5 @@
 from typing import *
+from buffer_types import *
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-tropic.h
@@ -25,7 +26,7 @@ def key_generate(
 # upymod/modtrezorcrypto/modtrezorcrypto-tropic.h
 def sign(
     key_index: int,
-    digest: bytes,
+    digest: AnyBytes,
 ) -> bytes:
     """
     Uses the private key at key_index to produce a signature of the digest.

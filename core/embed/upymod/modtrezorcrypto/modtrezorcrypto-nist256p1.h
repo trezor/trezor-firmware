@@ -55,7 +55,7 @@ STATIC mp_obj_t mod_trezorcrypto_nist256p1_generate_secret() {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_nist256p1_generate_secret_obj,
                                  mod_trezorcrypto_nist256p1_generate_secret);
 
-/// def publickey(secret_key: bytes, compressed: bool = True) -> bytes:
+/// def publickey(secret_key: AnyBytes, compressed: bool = True) -> bytes:
 ///     """
 ///     Computes public key from secret key.
 ///     """
@@ -88,7 +88,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_nist256p1_publickey);
 
 /// def sign(
-///     secret_key: bytes, digest: bytes, compressed: bool = True
+///     secret_key: AnyBytes, digest: AnyBytes, compressed: bool = True
 /// ) -> bytes:
 ///     """
 ///     Uses secret key to produce the signature of the digest.
@@ -122,7 +122,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_nist256p1_sign_obj,
                                            2, 3,
                                            mod_trezorcrypto_nist256p1_sign);
 
-/// def verify(public_key: bytes, signature: bytes, digest: bytes) -> bool:
+/// def verify(
+///     public_key: AnyBytes, signature: AnyBytes, digest: AnyBytes
+/// ) -> bool:
 ///     """
 ///     Uses public key to verify the signature of the digest.
 ///     Returns True on success.
@@ -152,7 +154,7 @@ STATIC mp_obj_t mod_trezorcrypto_nist256p1_verify(mp_obj_t public_key,
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_nist256p1_verify_obj,
                                  mod_trezorcrypto_nist256p1_verify);
 
-/// def verify_recover(signature: bytes, digest: bytes) -> bytes:
+/// def verify_recover(signature: AnyBytes, digest: AnyBytes) -> bytes:
 ///     """
 ///     Uses signature of the digest to verify the digest and recover the public
 ///     key. Returns public key on success, None if the signature is invalid.
@@ -191,7 +193,7 @@ STATIC mp_obj_t mod_trezorcrypto_nist256p1_verify_recover(mp_obj_t signature,
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_nist256p1_verify_recover_obj,
                                  mod_trezorcrypto_nist256p1_verify_recover);
 
-/// def multiply(secret_key: bytes, public_key: bytes) -> bytes:
+/// def multiply(secret_key: AnyBytes, public_key: AnyBytes) -> bytes:
 ///     """
 ///     Multiplies point defined by public_key with scalar defined by
 ///     secret_key. Useful for ECDH.
