@@ -6636,6 +6636,36 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["ThpAuthenticatedCredentialData"]:
             return isinstance(msg, cls)
 
+    class ThpPairedCache(protobuf.MessageType):
+        entries: "list[ThpPairedCacheEntry]"
+
+        def __init__(
+            self,
+            *,
+            entries: "list[ThpPairedCacheEntry] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpPairedCache"]:
+            return isinstance(msg, cls)
+
+    class ThpPairedCacheEntry(protobuf.MessageType):
+        mac_addr: "bytes"
+        host_name: "str"
+
+        def __init__(
+            self,
+            *,
+            mac_addr: "bytes",
+            host_name: "str",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpPairedCacheEntry"]:
+            return isinstance(msg, cls)
+
     class WebAuthnListResidentCredentials(protobuf.MessageType):
 
         @classmethod

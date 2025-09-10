@@ -4085,6 +4085,355 @@ impl ::protobuf::reflect::ProtobufValue for ThpAuthenticatedCredentialData {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.thp.ThpPairedCache)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct ThpPairedCache {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpPairedCache.entries)
+    pub entries: ::std::vec::Vec<thp_paired_cache::ThpPairedCacheEntry>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.thp.ThpPairedCache.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a ThpPairedCache {
+    fn default() -> &'a ThpPairedCache {
+        <ThpPairedCache as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl ThpPairedCache {
+    pub fn new() -> ThpPairedCache {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "entries",
+            |m: &ThpPairedCache| { &m.entries },
+            |m: &mut ThpPairedCache| { &mut m.entries },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ThpPairedCache>(
+            "ThpPairedCache",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for ThpPairedCache {
+    const NAME: &'static str = "ThpPairedCache";
+
+    fn is_initialized(&self) -> bool {
+        for v in &self.entries {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.entries.push(is.read_message()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        for value in &self.entries {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        };
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        for v in &self.entries {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        };
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> ThpPairedCache {
+        ThpPairedCache::new()
+    }
+
+    fn clear(&mut self) {
+        self.entries.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static ThpPairedCache {
+        static instance: ThpPairedCache = ThpPairedCache {
+            entries: ::std::vec::Vec::new(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for ThpPairedCache {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("ThpPairedCache").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for ThpPairedCache {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for ThpPairedCache {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+/// Nested message and enums of message `ThpPairedCache`
+pub mod thp_paired_cache {
+    // @@protoc_insertion_point(message:hw.trezor.messages.thp.ThpPairedCache.ThpPairedCacheEntry)
+    #[derive(PartialEq,Clone,Default,Debug)]
+    pub struct ThpPairedCacheEntry {
+        // message fields
+        // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpPairedCache.ThpPairedCacheEntry.mac_addr)
+        pub mac_addr: ::std::option::Option<::std::vec::Vec<u8>>,
+        // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpPairedCache.ThpPairedCacheEntry.host_name)
+        pub host_name: ::std::option::Option<::std::string::String>,
+        // special fields
+        // @@protoc_insertion_point(special_field:hw.trezor.messages.thp.ThpPairedCache.ThpPairedCacheEntry.special_fields)
+        pub special_fields: ::protobuf::SpecialFields,
+    }
+
+    impl<'a> ::std::default::Default for &'a ThpPairedCacheEntry {
+        fn default() -> &'a ThpPairedCacheEntry {
+            <ThpPairedCacheEntry as ::protobuf::Message>::default_instance()
+        }
+    }
+
+    impl ThpPairedCacheEntry {
+        pub fn new() -> ThpPairedCacheEntry {
+            ::std::default::Default::default()
+        }
+
+        // required bytes mac_addr = 1;
+
+        pub fn mac_addr(&self) -> &[u8] {
+            match self.mac_addr.as_ref() {
+                Some(v) => v,
+                None => &[],
+            }
+        }
+
+        pub fn clear_mac_addr(&mut self) {
+            self.mac_addr = ::std::option::Option::None;
+        }
+
+        pub fn has_mac_addr(&self) -> bool {
+            self.mac_addr.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_mac_addr(&mut self, v: ::std::vec::Vec<u8>) {
+            self.mac_addr = ::std::option::Option::Some(v);
+        }
+
+        // Mutable pointer to the field.
+        // If field is not initialized, it is initialized with default value first.
+        pub fn mut_mac_addr(&mut self) -> &mut ::std::vec::Vec<u8> {
+            if self.mac_addr.is_none() {
+                self.mac_addr = ::std::option::Option::Some(::std::vec::Vec::new());
+            }
+            self.mac_addr.as_mut().unwrap()
+        }
+
+        // Take field
+        pub fn take_mac_addr(&mut self) -> ::std::vec::Vec<u8> {
+            self.mac_addr.take().unwrap_or_else(|| ::std::vec::Vec::new())
+        }
+
+        // required string host_name = 2;
+
+        pub fn host_name(&self) -> &str {
+            match self.host_name.as_ref() {
+                Some(v) => v,
+                None => "",
+            }
+        }
+
+        pub fn clear_host_name(&mut self) {
+            self.host_name = ::std::option::Option::None;
+        }
+
+        pub fn has_host_name(&self) -> bool {
+            self.host_name.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_host_name(&mut self, v: ::std::string::String) {
+            self.host_name = ::std::option::Option::Some(v);
+        }
+
+        // Mutable pointer to the field.
+        // If field is not initialized, it is initialized with default value first.
+        pub fn mut_host_name(&mut self) -> &mut ::std::string::String {
+            if self.host_name.is_none() {
+                self.host_name = ::std::option::Option::Some(::std::string::String::new());
+            }
+            self.host_name.as_mut().unwrap()
+        }
+
+        // Take field
+        pub fn take_host_name(&mut self) -> ::std::string::String {
+            self.host_name.take().unwrap_or_else(|| ::std::string::String::new())
+        }
+
+        pub(in super) fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+            let mut fields = ::std::vec::Vec::with_capacity(2);
+            let mut oneofs = ::std::vec::Vec::with_capacity(0);
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "mac_addr",
+                |m: &ThpPairedCacheEntry| { &m.mac_addr },
+                |m: &mut ThpPairedCacheEntry| { &mut m.mac_addr },
+            ));
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "host_name",
+                |m: &ThpPairedCacheEntry| { &m.host_name },
+                |m: &mut ThpPairedCacheEntry| { &mut m.host_name },
+            ));
+            ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ThpPairedCacheEntry>(
+                "ThpPairedCache.ThpPairedCacheEntry",
+                fields,
+                oneofs,
+            )
+        }
+    }
+
+    impl ::protobuf::Message for ThpPairedCacheEntry {
+        const NAME: &'static str = "ThpPairedCacheEntry";
+
+        fn is_initialized(&self) -> bool {
+            if self.mac_addr.is_none() {
+                return false;
+            }
+            if self.host_name.is_none() {
+                return false;
+            }
+            true
+        }
+
+        fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+            while let Some(tag) = is.read_raw_tag_or_eof()? {
+                match tag {
+                    10 => {
+                        self.mac_addr = ::std::option::Option::Some(is.read_bytes()?);
+                    },
+                    18 => {
+                        self.host_name = ::std::option::Option::Some(is.read_string()?);
+                    },
+                    tag => {
+                        ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                    },
+                };
+            }
+            ::std::result::Result::Ok(())
+        }
+
+        // Compute sizes of nested messages
+        #[allow(unused_variables)]
+        fn compute_size(&self) -> u64 {
+            let mut my_size = 0;
+            if let Some(v) = self.mac_addr.as_ref() {
+                my_size += ::protobuf::rt::bytes_size(1, &v);
+            }
+            if let Some(v) = self.host_name.as_ref() {
+                my_size += ::protobuf::rt::string_size(2, &v);
+            }
+            my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+            self.special_fields.cached_size().set(my_size as u32);
+            my_size
+        }
+
+        fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+            if let Some(v) = self.mac_addr.as_ref() {
+                os.write_bytes(1, v)?;
+            }
+            if let Some(v) = self.host_name.as_ref() {
+                os.write_string(2, v)?;
+            }
+            os.write_unknown_fields(self.special_fields.unknown_fields())?;
+            ::std::result::Result::Ok(())
+        }
+
+        fn special_fields(&self) -> &::protobuf::SpecialFields {
+            &self.special_fields
+        }
+
+        fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+            &mut self.special_fields
+        }
+
+        fn new() -> ThpPairedCacheEntry {
+            ThpPairedCacheEntry::new()
+        }
+
+        fn clear(&mut self) {
+            self.mac_addr = ::std::option::Option::None;
+            self.host_name = ::std::option::Option::None;
+            self.special_fields.clear();
+        }
+
+        fn default_instance() -> &'static ThpPairedCacheEntry {
+            static instance: ThpPairedCacheEntry = ThpPairedCacheEntry {
+                mac_addr: ::std::option::Option::None,
+                host_name: ::std::option::Option::None,
+                special_fields: ::protobuf::SpecialFields::new(),
+            };
+            &instance
+        }
+    }
+
+    impl ::protobuf::MessageFull for ThpPairedCacheEntry {
+        fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().message_by_package_relative_name("ThpPairedCache.ThpPairedCacheEntry").unwrap()).clone()
+        }
+    }
+
+    impl ::std::fmt::Display for ThpPairedCacheEntry {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::protobuf::text_format::fmt(self, f)
+        }
+    }
+
+    impl ::protobuf::reflect::ProtobufValue for ThpPairedCacheEntry {
+        type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+    }
+}
+
 #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
 // @@protoc_insertion_point(enum:hw.trezor.messages.thp.ThpMessageType)
 pub enum ThpMessageType {
@@ -4381,31 +4730,35 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x0cR\x03mac:\x04\x98\xb2\x19\x01\"\xaf\x01\n\x1eThpAuthenticatedCredent\
     ialData\x123\n\x16host_static_public_key\x18\x01\x20\x02(\x0cR\x13hostSt\
     aticPublicKey\x12R\n\rcred_metadata\x18\x02\x20\x02(\x0b2-.hw.trezor.mes\
-    sages.thp.ThpCredentialMetadataR\x0ccredMetadata:\x04\x98\xb2\x19\x01*\
-    \xfb\x06\n\x0eThpMessageType\x12\x19\n\x15ThpMessageType_Cancel\x10\x14\
-    \x12\x20\n\x1cThpMessageType_ButtonRequest\x10\x1a\x12\x1c\n\x18ThpMessa\
-    geType_ButtonAck\x10\x1b\x12%\n\x20ThpMessageType_ThpPairingRequest\x10\
-    \xf0\x07\x12-\n(ThpMessageType_ThpPairingRequestApproved\x10\xf1\x07\x12\
-    #\n\x1eThpMessageType_ThpSelectMethod\x10\xf2\x07\x122\n-ThpMessageType_\
-    ThpPairingPreparationsFinished\x10\xf3\x07\x12(\n#ThpMessageType_ThpCred\
-    entialRequest\x10\xf8\x07\x12)\n$ThpMessageType_ThpCredentialResponse\
-    \x10\xf9\x07\x12!\n\x1cThpMessageType_ThpEndRequest\x10\xfa\x07\x12\"\n\
-    \x1dThpMessageType_ThpEndResponse\x10\xfb\x07\x12*\n%ThpMessageType_ThpC\
-    odeEntryCommitment\x10\x80\x08\x12)\n$ThpMessageType_ThpCodeEntryChallen\
-    ge\x10\x81\x08\x12+\n&ThpMessageType_ThpCodeEntryCpaceTrezor\x10\x82\x08\
-    \x12,\n'ThpMessageType_ThpCodeEntryCpaceHostTag\x10\x83\x08\x12&\n!ThpMe\
-    ssageType_ThpCodeEntrySecret\x10\x84\x08\x12\x20\n\x1bThpMessageType_Thp\
-    QrCodeTag\x10\x88\x08\x12#\n\x1eThpMessageType_ThpQrCodeSecret\x10\x89\
-    \x08\x12!\n\x1cThpMessageType_ThpNfcTagHost\x10\x90\x08\x12#\n\x1eThpMes\
-    sageType_ThpNfcTagTrezor\x10\x91\x08\x1a\x04\xd0\xf3\x18\x01\"\x04\x08\0\
-    \x10\x13\"\x04\x08\x15\x10\x19\"\x05\x08\x1c\x10\xe7\x07\"\x06\x08\xe8\
-    \x07\x10\xe8\x07\"\x06\x08\xe9\x07\x10\xef\x07\"\x06\x08\xf4\x07\x10\xf7\
-    \x07\"\x06\x08\xfc\x07\x10\xff\x07\"\x06\x08\x85\x08\x10\x87\x08\"\x06\
-    \x08\x8a\x08\x10\x8f\x08\"\x06\x08\x92\x08\x10\xcb\x08\"\t\x08\xcc\x08\
-    \x10\xff\xff\xff\xff\x07*G\n\x10ThpPairingMethod\x12\x0f\n\x0bSkipPairin\
-    g\x10\x01\x12\r\n\tCodeEntry\x10\x02\x12\n\n\x06QrCode\x10\x03\x12\x07\n\
-    \x03NFC\x10\x04B;\n#com.satoshilabs.trezor.lib.protobufB\x10TrezorMessag\
-    eThp\x80\xa6\x1d\x01\
+    sages.thp.ThpCredentialMetadataR\x0ccredMetadata:\x04\x98\xb2\x19\x01\"\
+    \xc1\x01\n\x0eThpPairedCache\x12T\n\x07entries\x18\x01\x20\x03(\x0b2:.hw\
+    .trezor.messages.thp.ThpPairedCache.ThpPairedCacheEntryR\x07entries\x1aS\
+    \n\x13ThpPairedCacheEntry\x12\x19\n\x08mac_addr\x18\x01\x20\x02(\x0cR\
+    \x07macAddr\x12\x1b\n\thost_name\x18\x02\x20\x02(\tR\x08hostName:\x04\
+    \x98\xb2\x19\x01:\x04\x98\xb2\x19\x01*\xfb\x06\n\x0eThpMessageType\x12\
+    \x19\n\x15ThpMessageType_Cancel\x10\x14\x12\x20\n\x1cThpMessageType_Butt\
+    onRequest\x10\x1a\x12\x1c\n\x18ThpMessageType_ButtonAck\x10\x1b\x12%\n\
+    \x20ThpMessageType_ThpPairingRequest\x10\xf0\x07\x12-\n(ThpMessageType_T\
+    hpPairingRequestApproved\x10\xf1\x07\x12#\n\x1eThpMessageType_ThpSelectM\
+    ethod\x10\xf2\x07\x122\n-ThpMessageType_ThpPairingPreparationsFinished\
+    \x10\xf3\x07\x12(\n#ThpMessageType_ThpCredentialRequest\x10\xf8\x07\x12)\
+    \n$ThpMessageType_ThpCredentialResponse\x10\xf9\x07\x12!\n\x1cThpMessage\
+    Type_ThpEndRequest\x10\xfa\x07\x12\"\n\x1dThpMessageType_ThpEndResponse\
+    \x10\xfb\x07\x12*\n%ThpMessageType_ThpCodeEntryCommitment\x10\x80\x08\
+    \x12)\n$ThpMessageType_ThpCodeEntryChallenge\x10\x81\x08\x12+\n&ThpMessa\
+    geType_ThpCodeEntryCpaceTrezor\x10\x82\x08\x12,\n'ThpMessageType_ThpCode\
+    EntryCpaceHostTag\x10\x83\x08\x12&\n!ThpMessageType_ThpCodeEntrySecret\
+    \x10\x84\x08\x12\x20\n\x1bThpMessageType_ThpQrCodeTag\x10\x88\x08\x12#\n\
+    \x1eThpMessageType_ThpQrCodeSecret\x10\x89\x08\x12!\n\x1cThpMessageType_\
+    ThpNfcTagHost\x10\x90\x08\x12#\n\x1eThpMessageType_ThpNfcTagTrezor\x10\
+    \x91\x08\x1a\x04\xd0\xf3\x18\x01\"\x04\x08\0\x10\x13\"\x04\x08\x15\x10\
+    \x19\"\x05\x08\x1c\x10\xe7\x07\"\x06\x08\xe8\x07\x10\xe8\x07\"\x06\x08\
+    \xe9\x07\x10\xef\x07\"\x06\x08\xf4\x07\x10\xf7\x07\"\x06\x08\xfc\x07\x10\
+    \xff\x07\"\x06\x08\x85\x08\x10\x87\x08\"\x06\x08\x8a\x08\x10\x8f\x08\"\
+    \x06\x08\x92\x08\x10\xcb\x08\"\t\x08\xcc\x08\x10\xff\xff\xff\xff\x07*G\n\
+    \x10ThpPairingMethod\x12\x0f\n\x0bSkipPairing\x10\x01\x12\r\n\tCodeEntry\
+    \x10\x02\x12\n\n\x06QrCode\x10\x03\x12\x07\n\x03NFC\x10\x04B;\n#com.sato\
+    shilabs.trezor.lib.protobufB\x10TrezorMessageThp\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -4424,7 +4777,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(super::options::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(23);
+            let mut messages = ::std::vec::Vec::with_capacity(25);
             messages.push(ThpDeviceProperties::generated_message_descriptor_data());
             messages.push(ThpHandshakeCompletionReqNoisePayload::generated_message_descriptor_data());
             messages.push(ThpCreateNewSession::generated_message_descriptor_data());
@@ -4448,6 +4801,8 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(ThpCredentialMetadata::generated_message_descriptor_data());
             messages.push(ThpPairingCredential::generated_message_descriptor_data());
             messages.push(ThpAuthenticatedCredentialData::generated_message_descriptor_data());
+            messages.push(ThpPairedCache::generated_message_descriptor_data());
+            messages.push(thp_paired_cache::ThpPairedCacheEntry::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(2);
             enums.push(ThpMessageType::generated_enum_descriptor_data());
             enums.push(ThpPairingMethod::generated_enum_descriptor_data());
