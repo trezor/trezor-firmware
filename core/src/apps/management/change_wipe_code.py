@@ -25,7 +25,7 @@ async def change_wipe_code(msg: ChangeWipeCode) -> Success:
     await _require_confirm_action(msg, has_wipe_code)
 
     # Get the unlocking PIN.
-    pin, salt = await request_pin_and_sd_salt("pin/current", TR.pin__enter)
+    pin, salt = await request_pin_and_sd_salt()
 
     if not msg.remove:
         # Pre-check the entered PIN.

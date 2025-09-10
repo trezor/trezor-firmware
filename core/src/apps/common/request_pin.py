@@ -73,8 +73,8 @@ async def request_new_pin_confirm(
 
 
 async def request_pin_and_sd_salt(
-    br_name: str,
-    prompt: str,
+    prompt: str = TR.pin__enter,
+    br_name: str = "pin/current",
     allow_cancel: bool = True,
 ) -> tuple[str, bytearray | None]:
     if config.has_pin():

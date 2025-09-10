@@ -89,7 +89,7 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
     elif recovery_type in (RecoveryType.DryRun, RecoveryType.UnlockRepeatedBackup):
         await prompt_recovery_check(recovery_type)
 
-        curpin, salt = await request_pin_and_sd_salt(TR.pin__enter)
+        curpin, salt = await request_pin_and_sd_salt()
         if not config.check_pin(curpin, salt):
             await error_pin_invalid()
 
