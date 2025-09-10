@@ -40,7 +40,7 @@ STATIC mp_obj_t mod_trezorcrypto_nem_validate_address(mp_obj_t address,
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_nem_validate_address_obj,
                                  mod_trezorcrypto_nem_validate_address);
 
-/// def compute_address(public_key: bytes, network: int) -> str:
+/// def compute_address(public_key: AnyBytes, network: int) -> str:
 ///     """
 ///     Compute a NEM address from a public key
 ///     """

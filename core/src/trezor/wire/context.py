@@ -22,6 +22,7 @@ from trezor import loop, protobuf, utils
 from .protocol_common import Context, Message
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Any, Callable, Coroutine, Generator, TypeVar, overload
 
     from storage.cache_common import DataCache
@@ -146,7 +147,7 @@ def with_context(ctx: Context, workflow: loop.Task) -> Generator:
             send_exc = None
 
 
-def try_get_ctx_ids() -> tuple[bytes, bytes] | None:
+def try_get_ctx_ids() -> tuple[AnyBytes, AnyBytes] | None:
     ids = None
     if utils.USE_THP:
         from trezor.wire.thp.session_context import GenericSessionContext
@@ -198,7 +199,7 @@ def cache_is_set(key: int) -> bool:
     return cache.is_set(key)
 
 
-def cache_set(key: int, value: bytes) -> None:
+def cache_set(key: int, value: AnyBytes) -> None:
     cache = _get_cache_for_key(key)
     cache.set(key, value)
 

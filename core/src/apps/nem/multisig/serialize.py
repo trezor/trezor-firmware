@@ -3,13 +3,15 @@ from typing import TYPE_CHECKING
 from ..writers import serialize_tx_common, write_bytes_with_len, write_uint32_le
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import NEMAggregateModification, NEMTransactionCommon
     from trezor.utils import Writer
 
 
 def serialize_multisig(
-    common: NEMTransactionCommon, public_key: bytes, inner: bytes
-) -> bytes:
+    common: NEMTransactionCommon, public_key: AnyBytes, inner: AnyBytes
+) -> bytearray:
     from ..helpers import NEM_TRANSACTION_TYPE_MULTISIG
 
     w = serialize_tx_common(common, public_key, NEM_TRANSACTION_TYPE_MULTISIG)
@@ -19,10 +21,10 @@ def serialize_multisig(
 
 def serialize_multisig_signature(
     common: NEMTransactionCommon,
-    public_key: bytes,
-    inner: bytes,
-    address_public_key: bytes,
-) -> bytes:
+    public_key: AnyBytes,
+    inner: AnyBytes,
+    address_public_key: AnyBytes,
+) -> bytearray:
     from trezor.crypto import hashlib, nem
 
     from ..helpers import NEM_TRANSACTION_TYPE_MULTISIG_SIGNATURE
@@ -38,7 +40,7 @@ def serialize_multisig_signature(
 
 
 def serialize_aggregate_modification(
-    common: NEMTransactionCommon, mod: NEMAggregateModification, public_key: bytes
+    common: NEMTransactionCommon, mod: NEMAggregateModification, public_key: AnyBytes
 ) -> bytearray:
     from ..helpers import NEM_TRANSACTION_TYPE_AGGREGATE_MODIFICATION
 
@@ -54,7 +56,7 @@ def serialize_aggregate_modification(
 
 
 def write_cosignatory_modification(
-    w: Writer, cosignatory_type: int, cosignatory_pubkey: bytes
+    w: Writer, cosignatory_type: int, cosignatory_pubkey: AnyBytes
 ) -> None:
     write_uint32_le(w, 4 + 4 + len(cosignatory_pubkey))
     write_uint32_le(w, cosignatory_type)

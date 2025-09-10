@@ -12,7 +12,8 @@ if __debug__:
 if TYPE_CHECKING:
     from typing import Any, Awaitable, Callable, Coroutine, TypeVar
 
-    PropertyType = tuple[str | None, str | bytes | None, bool | None]
+    from trezorui_api import PropertyType  # noqa: F401
+
     ExceptionType = BaseException | type[BaseException]
 
     InfoFunc = Callable[[], Awaitable[None]]
@@ -64,7 +65,7 @@ def raise_if_cancelled(
     exc: ExceptionType = ActionCancelled,
 ) -> Coroutine[Any, Any, None]:
     action = interact(layout_obj, br_name, br_code, exc)
-    return action  # type: ignore ["UiResult" is incompatible with "None"]
+    return action  # type: ignore ["UiResult" is not assignable to "None"]
 
 
 async def with_info(

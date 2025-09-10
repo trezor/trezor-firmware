@@ -4,6 +4,8 @@ from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo
 from trezor.wire import DataError
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from typing_extensions import Self
 
 
@@ -21,8 +23,8 @@ class Definitions:
     @classmethod
     def from_encoded(
         cls,
-        encoded_network: bytes | None,
-        encoded_token: bytes | None,
+        encoded_network: AnyBytes | None,
+        encoded_token: AnyBytes | None,
         chain_id: int | None = None,
         slip44: int | None = None,
     ) -> Self:
@@ -61,7 +63,7 @@ class Definitions:
             # This might help us in the future if we allow multiple networks/tokens
             # in the same message.
             if token.chain_id == network.chain_id:
-                tokens[token.address] = token
+                tokens[bytes(token.address)] = token
 
         return cls(network, tokens)
 

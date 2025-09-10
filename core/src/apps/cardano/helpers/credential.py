@@ -6,6 +6,8 @@ from trezor.enums import CardanoAddressType
 from .paths import SCHEMA_PAYMENT
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor import messages
     from trezor.ui.layouts import PropertyType
 
@@ -24,8 +26,8 @@ class Credential:
     type_name: str
     address_type: CardanoAddressType
     path: list[int]
-    key_hash: bytes | None
-    script_hash: bytes | None
+    key_hash: AnyBytes | None
+    script_hash: AnyBytes | None
     pointer: messages.CardanoBlockchainPointerType | None
 
     is_reward: bool = False
@@ -39,8 +41,8 @@ class Credential:
         type_name: str,
         address_type: CardanoAddressType,
         path: list[int],
-        key_hash: bytes | None,
-        script_hash: bytes | None,
+        key_hash: AnyBytes | None,
+        script_hash: AnyBytes | None,
         pointer: messages.CardanoBlockchainPointerType | None,
     ) -> None:
         self.type_name = type_name

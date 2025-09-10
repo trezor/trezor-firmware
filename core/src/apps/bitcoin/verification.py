@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from trezor.wire import DataError
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Sequence
 
     from apps.common.coininfo import CoinInfo
@@ -13,9 +14,9 @@ if TYPE_CHECKING:
 class SignatureVerifier:
     def __init__(
         self,
-        script_pubkey: bytes,
-        script_sig: bytes | None,
-        witness: bytes | None,
+        script_pubkey: AnyBytes,
+        script_sig: AnyBytes | None,
+        witness: AnyBytes | None,
         coin: CoinInfo,
     ) -> None:
         from trezor import utils

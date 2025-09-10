@@ -3,6 +3,7 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import NoReturn
 
     from trezor.enums import BootCommand
@@ -13,8 +14,8 @@ _REBOOT_SUCCESS_TIMEOUT_MS = const(500)
 
 
 async def install_upgrade(
-    firmware_header: bytes, language_data_length: int
-) -> tuple[BootCommand, bytes]:
+    firmware_header: AnyBytes, language_data_length: int
+) -> tuple[BootCommand, AnyBytes]:
     from ubinascii import hexlify
 
     from trezor import TR, utils, wire

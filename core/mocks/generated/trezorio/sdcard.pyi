@@ -1,4 +1,5 @@
 from typing import *
+from buffer_types import *
 BLOCK_SIZE: int  # size of SD card block
 
 
@@ -42,7 +43,7 @@ def read(block_num: int, buf: bytearray) -> None:
 
 
 # upymod/modtrezorio/modtrezorio-sdcard.h
-def write(block_num: int, buf: bytes) -> None:
+def write(block_num: int, buf: AnyBytes) -> None:
     """
     Writes blocks starting with block_num from buf to the SD card.
     Number of bytes written is length of buf rounded down to multiply of

@@ -11,6 +11,7 @@ from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
 from .helpers.utils import get_public_key_hash
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Any
 
     from trezor import messages
@@ -212,7 +213,7 @@ def _validate_address_parameters_structure(
 
 def _validate_base_address_staking_info(
     staking_path: list[int],
-    staking_key_hash: bytes | None,
+    staking_key_hash: AnyBytes | None,
 ) -> None:
     from .helpers import ADDRESS_KEY_HASH_SIZE
 
@@ -226,7 +227,7 @@ def _validate_base_address_staking_info(
         raise ProcessError("Invalid address parameters")
 
 
-def _validate_script_hash(script_hash: bytes | None) -> None:
+def _validate_script_hash(script_hash: AnyBytes | None) -> None:
     from .helpers import SCRIPT_HASH_SIZE
 
     assert_params_cond(script_hash is not None and len(script_hash) == SCRIPT_HASH_SIZE)
@@ -412,7 +413,7 @@ def _derive_shelley_address(
 
 def _get_payment_part(
     keychain: Keychain, parameters: messages.CardanoAddressParametersType
-) -> bytes:
+) -> AnyBytes:
     if parameters.address_n:
         return get_public_key_hash(keychain, parameters.address_n)
     elif parameters.script_payment_hash:
@@ -423,7 +424,7 @@ def _get_payment_part(
 
 def _get_staking_part(
     keychain: Keychain, parameters: messages.CardanoAddressParametersType
-) -> bytes:
+) -> AnyBytes:
     from .helpers.utils import variable_length_encode
 
     if parameters.staking_key_hash:

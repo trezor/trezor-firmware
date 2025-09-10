@@ -15,6 +15,7 @@ def __getattr__(name: str) -> Any:
 
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import TypeGuard
 % for enum in sorted(enums, key=lambda e: e.name):
     from trezor.enums import ${enum.name}  # noqa: F401
@@ -26,14 +27,23 @@ required_fields = [f for f in message.fields if f.required]
 repeated_fields = [f for f in message.fields if f.repeated]
 optional_fields = [f for f in message.fields if f.optional]
 
+
+def python_type(field):
+    python_type = field.python_type
+    if python_type == "bytes":
+        python_type = "AnyBytes"
+    return python_type
+
+
 def member_type(field):
+    typename = python_type(field)
     if field.required:
-        return field.python_type
+        return typename
     if field.optional and field.default_value is not None:
-        return field.python_type
+        return typename
     if field.repeated:
-        return f"list[{field.python_type}]"
-    return f"{field.python_type} | None"
+        return f"list[{typename}]"
+    return f"{typename} | None"
 
 %>\
     class ${message.name}(protobuf.MessageType):
@@ -46,13 +56,13 @@ def member_type(field):
             self,
             *,
 % for field in required_fields:
-            ${field.name}: "${field.python_type}",
+            ${field.name}: "${python_type(field)}",
 % endfor
 % for field in repeated_fields:
-            ${field.name}: "list[${field.python_type}] | None" = None,
+            ${field.name}: "list[${python_type(field)}] | None" = None,
 % endfor
 % for field in optional_fields:
-            ${field.name}: "${field.python_type} | None" = None,
+            ${field.name}: "${python_type(field)} | None" = None,
 % endfor
         ) -> None:
             pass

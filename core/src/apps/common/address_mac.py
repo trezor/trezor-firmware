@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 from trezor import utils
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from apps.common.keychain import Keychain
     from apps.common.paths import Bip32Path
 
@@ -10,7 +12,7 @@ _ADDRESS_MAC_KEY_PATH = [b"SLIP-0024", b"Address MAC key"]
 
 
 def check_address_mac(
-    address: str, mac: bytes, slip44: int, address_n: Bip32Path, keychain: Keychain
+    address: str, mac: AnyBytes, slip44: int, address_n: Bip32Path, keychain: Keychain
 ) -> None:
     from trezor import wire
     from trezor.crypto import hashlib

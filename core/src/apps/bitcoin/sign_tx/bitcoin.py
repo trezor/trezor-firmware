@@ -20,6 +20,7 @@ from .progress import progress
 from .tx_info import OriginalTxInfo
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Sequence
 
     from trezor.crypto import bip32
@@ -366,7 +367,9 @@ class Bitcoin:
             ):
                 raise DataError("Invalid external input")
 
-    async def process_original_input(self, txi: TxInput, script_pubkey: bytes) -> None:
+    async def process_original_input(
+        self, txi: TxInput, script_pubkey: AnyBytes
+    ) -> None:
         orig_hash = txi.orig_hash  # local_cache_attribute
         orig_index = txi.orig_index  # local_cache_attribute
 
@@ -413,7 +416,7 @@ class Bitcoin:
         orig.index += 1
 
     async def fetch_removed_original_outputs(
-        self, orig: OriginalTxInfo, orig_hash: bytes, last_index: int
+        self, orig: OriginalTxInfo, orig_hash: AnyBytes, last_index: int
     ) -> None:
         while orig.index < last_index:
             txo = await request_tx_output(self.tx_req, orig.index, self.coin, orig_hash)
@@ -431,7 +434,7 @@ class Bitcoin:
             orig.index += 1
 
     async def get_original_output(
-        self, txo: TxOutput, script_pubkey: bytes
+        self, txo: TxOutput, script_pubkey: AnyBytes
     ) -> TxOutput:
         orig_hash = txo.orig_hash  # local_cache_attribute
         orig_index = txo.orig_index  # local_cache_attribute
@@ -508,7 +511,7 @@ class Bitcoin:
     async def approve_output(
         self,
         txo: TxOutput,
-        script_pubkey: bytes,
+        script_pubkey: AnyBytes,
         orig_txo: TxOutput | None,
     ) -> None:
         payment_req_index = txo.payment_req_index  # local_cache_attribute
@@ -541,9 +544,9 @@ class Bitcoin:
         i: int,
         txi: TxInput,
         tx_info: TxInfo | OriginalTxInfo,
-        public_keys: Sequence[bytes | memoryview],
+        public_keys: Sequence[AnyBytes],
         threshold: int,
-        script_pubkey: bytes,
+        script_pubkey: AnyBytes,
     ) -> bytes:
         if txi.witness:
             if common.input_is_taproot(txi):
@@ -566,7 +569,7 @@ class Bitcoin:
             return digest
 
     async def verify_presigned_external_input(
-        self, i: int, txi: TxInput, script_pubkey: bytes
+        self, i: int, txi: TxInput, script_pubkey: AnyBytes
     ) -> None:
         verifier = SignatureVerifier(
             script_pubkey, txi.script_sig, txi.witness, self.coin
@@ -610,7 +613,7 @@ class Bitcoin:
 
         self.write_tx_input_derived(self.serialized_tx, txi, key_sign_pub, b"")
 
-    def sign_bip143_input(self, i: int, txi: TxInput) -> tuple[bytes, bytes]:
+    def sign_bip143_input(self, i: int, txi: TxInput) -> tuple[bytes, AnyBytes]:
         if self.taproot_only:
             # Prevents an attacker from bypassing prev tx checking by providing a different
             # script type than the one that was provided during the confirmation phase.
@@ -694,7 +697,7 @@ class Bitcoin:
         self,
         index: int,
         tx_info: TxInfo | OriginalTxInfo,
-        script_pubkey: bytes | None = None,
+        script_pubkey: AnyBytes | None = None,
     ) -> tuple[bytes, TxInput, bip32.HDNode | None]:
         tx = tx_info.tx  # local_cache_attribute
         coin = self.coin  # local_cache_attribute
@@ -793,8 +796,8 @@ class Bitcoin:
         self.write_tx_output(self.serialized_tx, txo, script_pubkey)
 
     async def get_prevtx_output(
-        self, prev_hash: bytes, prev_index: int
-    ) -> tuple[int, bytes]:
+        self, prev_hash: AnyBytes, prev_index: int
+    ) -> tuple[int, AnyBytes]:
         coin = self.coin  # local_cache_attribute
 
         amount_out = 0  # output amount
@@ -820,7 +823,7 @@ class Bitcoin:
 
         write_compact_size(txh, tx.outputs_count)
 
-        script_pubkey: bytes | None = None
+        script_pubkey: AnyBytes | None = None
         for i in range(tx.outputs_count):
             # STAGE_REQUEST_3_PREV_OUTPUT in legacy
             progress.advance_prev_tx()
@@ -868,7 +871,7 @@ class Bitcoin:
         w: Writer,
         txi: TxInput,
         pubkey: bytes,
-        signature: bytes,
+        signature: AnyBytes,
     ) -> None:
         writers.write_bytes_reversed(w, txi.prev_hash, writers.TX_HASH_SIZE)
         writers.write_uint32(w, txi.prev_index)
@@ -887,7 +890,7 @@ class Bitcoin:
     def write_tx_input(
         w: Writer,
         txi: TxInput | PrevInput,
-        script: bytes,
+        script: AnyBytes,
     ) -> None:
         writers.write_tx_input(w, txi, script)
 
@@ -895,7 +898,7 @@ class Bitcoin:
     def write_tx_output(
         w: Writer,
         txo: TxOutput | PrevOutput,
-        script_pubkey: bytes,
+        script_pubkey: AnyBytes,
     ) -> None:
         writers.write_tx_output(w, txo, script_pubkey)
 
@@ -914,11 +917,11 @@ class Bitcoin:
         writers.write_uint32(w, tx.lock_time)
 
     async def write_prev_tx_footer(
-        self, w: Writer, tx: PrevTx, prev_hash: bytes
+        self, w: Writer, tx: PrevTx, prev_hash: AnyBytes
     ) -> None:
         self.write_tx_footer(w, tx)
 
-    def set_serialized_signature(self, index: int, signature: bytes) -> None:
+    def set_serialized_signature(self, index: int, signature: AnyBytes) -> None:
         serialized = self.tx_req.serialized  # local_cache_attribute
 
         # Only one signature per TxRequest can be serialized.
@@ -933,7 +936,7 @@ class Bitcoin:
 
     def input_derive_script(
         self, txi: TxInput, node: bip32.HDNode | None = None
-    ) -> bytes:
+    ) -> AnyBytes:
         if input_is_external(txi):
             assert txi.script_pubkey is not None  # checked in _sanitize_tx_input
             return txi.script_pubkey
@@ -944,7 +947,7 @@ class Bitcoin:
         address = addresses.get_address(txi.script_type, self.coin, node, txi.multisig)
         return scripts.output_derive_script(address, self.coin)
 
-    def output_derive_script(self, txo: TxOutput) -> bytes:
+    def output_derive_script(self, txo: TxOutput) -> AnyBytes:
         if txo.script_type == OutputScriptType.PAYTOOPRETURN:
             assert txo.op_return_data is not None  # checked in _sanitize_tx_output
             return scripts.output_script_paytoopreturn(txo.op_return_data)

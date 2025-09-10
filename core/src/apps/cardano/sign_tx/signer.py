@@ -26,6 +26,7 @@ from ..helpers.paths import SCHEMA_STAKING, SLIP44_ID
 from ..helpers.utils import derive_public_key
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from enum import IntEnum
     from typing import Any, Awaitable, ClassVar
 
@@ -194,7 +195,7 @@ class Signer:
                 await self._process_certificates(certificates_set)
 
         if msg.withdrawals_count > 0:
-            withdrawals_dict: HashBuilderDict[bytes, int] = HashBuilderDict(
+            withdrawals_dict: HashBuilderDict[AnyBytes, int] = HashBuilderDict(
                 msg.withdrawals_count, ProcessError("Invalid withdrawal")
             )
             with add(_TX_BODY_KEY_WITHDRAWALS, withdrawals_dict):
@@ -207,7 +208,7 @@ class Signer:
             add(_TX_BODY_KEY_VALIDITY_INTERVAL_START, msg.validity_interval_start)
 
         if msg.minting_asset_groups_count > 0:
-            minting_dict: HashBuilderDict[bytes, HashBuilderDict] = HashBuilderDict(
+            minting_dict: HashBuilderDict[AnyBytes, HashBuilderDict] = HashBuilderDict(
                 msg.minting_asset_groups_count,
                 ProcessError("Invalid mint token bundle"),
             )
@@ -218,14 +219,14 @@ class Signer:
             await self._process_script_data_hash()
 
         if msg.collateral_inputs_count > 0:
-            collateral_inputs_set: HashBuilderSet[tuple[bytes, int]] = HBS(
+            collateral_inputs_set: HashBuilderSet[tuple[AnyBytes, int]] = HBS(
                 msg.collateral_inputs_count, tagged=self.msg.tag_cbor_sets
             )
             with add(_TX_BODY_KEY_COLLATERAL_INPUTS, collateral_inputs_set):
                 await self._process_collateral_inputs(collateral_inputs_set)
 
         if msg.required_signers_count > 0:
-            required_signers_set: HashBuilderSet[bytes] = HBS(
+            required_signers_set: HashBuilderSet[AnyBytes] = HBS(
                 msg.required_signers_count, tagged=self.msg.tag_cbor_sets
             )
             with add(_TX_BODY_KEY_REQUIRED_SIGNERS, required_signers_set):
@@ -241,7 +242,7 @@ class Signer:
             add(_TX_BODY_KEY_TOTAL_COLLATERAL, msg.total_collateral)
 
         if msg.reference_inputs_count > 0:
-            reference_inputs_set: HashBuilderSet[tuple[bytes, int]] = HBS(
+            reference_inputs_set: HashBuilderSet[tuple[AnyBytes, int]] = HBS(
                 msg.reference_inputs_count, tagged=self.msg.tag_cbor_sets
             )
             with add(_TX_BODY_KEY_REFERENCE_INPUTS, reference_inputs_set):
@@ -277,7 +278,7 @@ class Signer:
     # inputs
 
     async def _process_inputs(
-        self, inputs_list: HashBuilderList[tuple[bytes, int]]
+        self, inputs_list: HashBuilderList[tuple[AnyBytes, int]]
     ) -> None:
         for _ in range(self.msg.inputs_count):
             input: messages.CardanoTxInput = await ctx_call(
@@ -577,7 +578,7 @@ class Signer:
 
         output_value_list.append(output.amount)
 
-        asset_groups_dict: HashBuilderDict[bytes, HashBuilderDict[bytes, int]] = (
+        asset_groups_dict: HashBuilderDict[AnyBytes, HashBuilderDict[AnyBytes, int]] = (
             HashBuilderDict(
                 output.asset_groups_count,
                 ProcessError("Invalid token bundle in output"),
@@ -594,7 +595,7 @@ class Signer:
 
     async def _process_asset_groups(
         self,
-        asset_groups_dict: HashBuilderDict[bytes, HashBuilderDict[bytes, int]],
+        asset_groups_dict: HashBuilderDict[AnyBytes, HashBuilderDict[AnyBytes, int]],
         asset_groups_count: int,
         should_show_tokens: bool,
     ) -> None:
@@ -604,7 +605,7 @@ class Signer:
             )
             self._validate_asset_group(asset_group)
 
-            tokens: HashBuilderDict[bytes, int] = HashBuilderDict(
+            tokens: HashBuilderDict[AnyBytes, int] = HashBuilderDict(
                 asset_group.tokens_count,
                 ProcessError("Invalid token bundle in output"),
             )
@@ -634,8 +635,8 @@ class Signer:
 
     async def _process_tokens(
         self,
-        tokens_dict: HashBuilderDict[bytes, int],
-        policy_id: bytes,
+        tokens_dict: HashBuilderDict[AnyBytes, int],
+        policy_id: AnyBytes,
         tokens_count: int,
         should_show_tokens: bool,
     ) -> None:
@@ -834,7 +835,7 @@ class Signer:
     # withdrawals
 
     async def _process_withdrawals(
-        self, withdrawals_dict: HashBuilderDict[bytes, int]
+        self, withdrawals_dict: HashBuilderDict[AnyBytes, int]
     ) -> None:
         for _ in range(self.msg.withdrawals_count):
             withdrawal: messages.CardanoTxWithdrawal = await ctx_call(
@@ -899,7 +900,7 @@ class Signer:
     # minting
 
     async def _process_minting(
-        self, minting_dict: HashBuilderDict[bytes, HashBuilderDict]
+        self, minting_dict: HashBuilderDict[AnyBytes, HashBuilderDict]
     ) -> None:
         token_minting: messages.CardanoTxMint = await ctx_call(
             CardanoTxItemAck(), messages.CardanoTxMint
@@ -913,7 +914,7 @@ class Signer:
             )
             self._validate_asset_group(asset_group, is_mint=True)
 
-            tokens: HashBuilderDict[bytes, int] = HashBuilderDict(
+            tokens: HashBuilderDict[AnyBytes, int] = HashBuilderDict(
                 asset_group.tokens_count, ProcessError("Invalid mint token bundle")
             )
             with minting_dict.add(asset_group.policy_id, tokens):
@@ -927,8 +928,8 @@ class Signer:
 
     async def _process_minting_tokens(
         self,
-        tokens: HashBuilderDict[bytes, int],
-        policy_id: bytes,
+        tokens: HashBuilderDict[AnyBytes, int],
+        policy_id: AnyBytes,
         tokens_count: int,
     ) -> None:
         for _ in range(tokens_count):
@@ -961,7 +962,7 @@ class Signer:
     # collateral inputs
 
     async def _process_collateral_inputs(
-        self, collateral_inputs_list: HashBuilderList[tuple[bytes, int]]
+        self, collateral_inputs_list: HashBuilderList[tuple[AnyBytes, int]]
     ) -> None:
         for _ in range(self.msg.collateral_inputs_count):
             collateral_input: messages.CardanoTxCollateralInput = await ctx_call(
@@ -990,7 +991,7 @@ class Signer:
     # required signers
 
     async def _process_required_signers(
-        self, required_signers_set: HashBuilderSet[bytes]
+        self, required_signers_set: HashBuilderSet[AnyBytes]
     ) -> None:
         from ..helpers.utils import get_public_key_hash
 
@@ -1123,7 +1124,7 @@ class Signer:
     # reference inputs
 
     async def _process_reference_inputs(
-        self, reference_inputs_list: HashBuilderList[tuple[bytes, int]]
+        self, reference_inputs_list: HashBuilderList[tuple[AnyBytes, int]]
     ) -> None:
         for _ in range(self.msg.reference_inputs_count):
             reference_input: messages.CardanoTxReferenceInput = await ctx_call(
@@ -1145,7 +1146,9 @@ class Signer:
 
     # witness requests
 
-    async def _process_witness_requests(self, tx_hash: bytes) -> CardanoTxResponseType:
+    async def _process_witness_requests(
+        self, tx_hash: AnyBytes
+    ) -> CardanoTxResponseType:
         response: CardanoTxResponseType = CardanoTxItemAck()
 
         for _ in range(self.msg.witness_requests_count):
@@ -1234,7 +1237,7 @@ class Signer:
         )
 
     def _get_byron_witness(
-        self, path: list[int], tx_hash: bytes
+        self, path: list[int], tx_hash: AnyBytes
     ) -> messages.CardanoTxWitnessResponse:
         node = self.keychain.derive(path)
         return messages.CardanoTxWitnessResponse(
@@ -1245,7 +1248,7 @@ class Signer:
         )
 
     def _get_shelley_witness(
-        self, path: list[int], tx_hash: bytes
+        self, path: list[int], tx_hash: AnyBytes
     ) -> messages.CardanoTxWitnessResponse:
         return messages.CardanoTxWitnessResponse(
             type=CardanoTxWitnessType.SHELLEY_WITNESS,
@@ -1253,7 +1256,7 @@ class Signer:
             signature=self._sign_tx_hash(tx_hash, path),
         )
 
-    def _sign_tx_hash(self, tx_body_hash: bytes, path: list[int]) -> bytes:
+    def _sign_tx_hash(self, tx_body_hash: AnyBytes, path: list[int]) -> bytes:
         from trezor.crypto.curve import ed25519
 
         node = self.keychain.derive(path)

@@ -16,6 +16,8 @@ from .helpers import (  # symbols used more than once
 )
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import (
         TezosContractID,
         TezosDelegationOp,
@@ -163,7 +165,7 @@ async def sign_tx(msg: TezosSignTx, keychain: Keychain) -> TezosSignedTx:
     )
 
 
-def _get_address_by_tag(address_hash: bytes) -> str:
+def _get_address_by_tag(address_hash: AnyBytes) -> str:
     prefixes = ["tz1", "tz2", "tz3"]
     tag = int(address_hash[0])
 
@@ -343,7 +345,7 @@ def _encode_common(
 
 
 def _encode_data_with_bool_prefix(
-    w: Writer, data: bytes | None, expected_length: int
+    w: Writer, data: AnyBytes | None, expected_length: int
 ) -> None:
     if data:
         helpers.write_bool(w, True)

@@ -68,7 +68,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_optiga_get_certificate_obj,
 
 /// def sign(
 ///     key_index: int,
-///     digest: bytes,
+///     digest: AnyBytes,
 /// ) -> bytes:
 ///     """
 ///     Uses the private key at key_index to produce a DER-encoded signature of
