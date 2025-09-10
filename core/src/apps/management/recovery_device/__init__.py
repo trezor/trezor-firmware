@@ -21,7 +21,7 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
     import storage
     import storage.device as storage_device
     import storage.recovery as storage_recovery
-    from trezor import TR, config, wire, workflow
+    from trezor import config, wire, workflow
     from trezor.enums import BackupType
     from trezor.ui.layouts import confirm_reset_device, prompt_recovery_check
     from trezor.wire.context import try_get_ctx_ids
@@ -29,8 +29,8 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
     from apps.common import mnemonic
     from apps.common.request_pin import (
         error_pin_invalid,
+        request_new_pin_confirm,
         request_pin_and_sd_salt,
-        request_pin_confirm,
     )
 
     from .homescreen import recovery_homescreen, recovery_process
@@ -75,7 +75,7 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
 
         # set up pin if requested
         if msg.pin_protection:
-            newpin = await request_pin_confirm(allow_cancel=False)
+            newpin = await request_new_pin_confirm(allow_cancel=False)
             config.change_pin("", newpin, None, None)
 
         storage_device.set_passphrase_enabled(bool(msg.passphrase_protection))
@@ -89,7 +89,7 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
     elif recovery_type in (RecoveryType.DryRun, RecoveryType.UnlockRepeatedBackup):
         await prompt_recovery_check(recovery_type)
 
-        curpin, salt = await request_pin_and_sd_salt(TR.pin__enter)
+        curpin, salt = await request_pin_and_sd_salt()
         if not config.check_pin(curpin, salt):
             await error_pin_invalid()
 

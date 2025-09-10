@@ -25,7 +25,7 @@ async def change_wipe_code(msg: ChangeWipeCode) -> Success:
     await _require_confirm_action(msg, has_wipe_code)
 
     # Get the unlocking PIN.
-    pin, salt = await request_pin_and_sd_salt(TR.pin__enter)
+    pin, salt = await request_pin_and_sd_salt()
 
     if not msg.remove:
         # Pre-check the entered PIN.
@@ -39,20 +39,23 @@ async def change_wipe_code(msg: ChangeWipeCode) -> Success:
 
     # Write into storage.
     if not config.change_wipe_code(pin, salt, wipe_code):
-        await error_pin_invalid()
+        await error_pin_invalid("wipecode/err-invalid")
 
     if wipe_code:
         if has_wipe_code:
             msg_screen = TR.wipe_code__changed
             msg_wire = "Wipe code changed"
+            br_name = "wipecode/ok-changed"
         else:
             msg_screen = TR.wipe_code__enabled
             msg_wire = "Wipe code set"
+            br_name = "wipecode/ok-enabled"
     else:
         msg_screen = TR.wipe_code__disabled
         msg_wire = "Wipe code removed"
+        br_name = "wipecode/ok-disabled"
 
-    await show_success("success_wipe_code", msg_screen)
+    await show_success(br_name, msg_screen)
     return Success(message=msg_wire)
 
 
@@ -64,7 +67,7 @@ def _require_confirm_action(
 
     if msg.remove and has_wipe_code:
         return confirm_action(
-            "disable_wipe_code",
+            "wipecode/disable",
             TR.wipe_code__title_settings,
             description=TR.wipe_code__turn_off,
             verb=TR.buttons__turn_off,
@@ -73,7 +76,7 @@ def _require_confirm_action(
 
     if not msg.remove and has_wipe_code:
         return confirm_action(
-            "change_wipe_code",
+            "wipecode/change",
             TR.wipe_code__title_settings,
             description=TR.wipe_code__change_question,
             verb=TR.buttons__change,
@@ -81,7 +84,7 @@ def _require_confirm_action(
 
     if not msg.remove and not has_wipe_code:
         return confirm_set_new_pin(
-            "set_wipe_code",
+            "wipecode/enable",
             TR.wipe_code__title_settings,
             TR.wipe_code__turn_on,
             TR.wipe_code__info,
@@ -101,12 +104,12 @@ async def _request_wipe_code_confirm(pin: str) -> str:
     from apps.common.request_pin import request_pin
 
     while True:
-        code1 = await request_pin(TR.wipe_code__enter_new)
+        code1 = await request_pin("wipecode/new", TR.wipe_code__enter_new)
         if code1 == pin:
             await wipe_code_same_as_pin_popup()
             continue
         await confirm_reenter_pin(is_wipe_code=True)
-        code2 = await request_pin(TR.wipe_code__reenter)
+        code2 = await request_pin("wipecode/repeat", TR.wipe_code__reenter)
         if code1 == code2:
             return code1
         await pin_mismatch_popup(is_wipe_code=True)

@@ -43,7 +43,9 @@ def _check_pin(session: Session, pin: str):
         session.lock()
         assert session.features.pin_protection is True
         assert session.features.unlocked is False
-        client.set_expected_responses([messages.ButtonRequest, messages.Address])
+        client.set_expected_responses(
+            [messages.ButtonRequest(name="pin/unlock"), messages.Address]
+        )
         btc.get_address(session, "Testnet", PASSPHRASE_TEST_PATH)
 
 

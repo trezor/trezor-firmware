@@ -1729,12 +1729,13 @@ async def request_passphrase_on_device(max_len: int) -> str:
     return result
 
 
-async def request_pin_on_device(
+def request_pin_on_device(
+    br_name: str,
     prompt: str,
     attempts_remaining: int | None,
     allow_cancel: bool,
     wrong_pin: bool = False,
-) -> str:
+) -> Awaitable[str]:
     from trezor.wire import PinCancelled
 
     if attempts_remaining is None:
@@ -1744,14 +1745,14 @@ async def request_pin_on_device(
     else:
         attempts = f"{attempts_remaining} {TR.pin__tries_left}"
 
-    result = await interact(
+    result = interact(
         trezorui_api.request_pin(
             prompt=prompt,
             attempts=attempts,
             allow_cancel=allow_cancel,
             wrong_pin=wrong_pin,
         ),
-        "pin_device",
+        br_name,
         ButtonRequestType.PinEntry,
         raise_on_cancel=PinCancelled,
     )
@@ -1765,7 +1766,7 @@ async def confirm_reenter_pin(is_wipe_code: bool = False) -> None:
 
 def pin_mismatch_popup(is_wipe_code: bool = False) -> Awaitable[None]:
     title = TR.wipe_code__wipe_code_mismatch if is_wipe_code else TR.pin__pin_mismatch
-    br_name = "wipe_code_mismatch" if is_wipe_code else "pin_mismatch"
+    br_name = "wipecode/err-mismatch" if is_wipe_code else "pin/err-mismatch"
     description = TR.wipe_code__mismatch if is_wipe_code else TR.pin__mismatch
     return interact(
         error_popup(
@@ -1786,7 +1787,7 @@ def wipe_code_same_as_pin_popup() -> Awaitable[None]:
             TR.wipe_code__diff_from_pin,
             button=TR.buttons__try_again,
         ),
-        "wipe_code_same_as_pin",
+        "wipecode/err-matches-pin",
         BR_CODE_OTHER,
         raise_on_cancel=None,
     )
@@ -1839,16 +1840,19 @@ def confirm_remove_pin(
     )
 
 
-async def success_pin_change(curpin: str | None, newpin: str | None) -> None:
+def success_pin_change(curpin: str | None, newpin: str | None) -> Awaitable[None]:
     if newpin:
         if curpin:
             msg_screen = TR.pin__changed
+            br_name = "pin/ok-changed"
         else:
             msg_screen = TR.pin__enabled
+            br_name = "pin/ok-enabled"
     else:
         msg_screen = TR.pin__disabled
+        br_name = "pin/ok-disabled"
 
-    await show_success("success_pin", msg_screen)
+    return show_success(br_name, msg_screen)
 
 
 async def confirm_firmware_update(description: str, fingerprint: str) -> None:
