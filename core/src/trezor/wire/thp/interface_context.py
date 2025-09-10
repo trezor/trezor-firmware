@@ -204,6 +204,20 @@ class InterfaceContext:
         header = PacketHeader.get_error_header(cid, length)
         return self.write_payload(header, msg_data)
 
+    def connected_addr(self) -> bytes | None:
+        """
+        Return peer MAC address (if connected).
+
+        Currently supported by BLE (used for caching THP host names).
+        """
+        if utils.USE_BLE:
+            import trezorble as ble
+
+            if self._iface is ble.interface:
+                return ble.connected_addr()
+
+        return None
+
 
 def _get_ctrl_byte(packet: bytes) -> int:
     return packet[0]

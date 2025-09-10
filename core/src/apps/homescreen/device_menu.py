@@ -8,9 +8,11 @@ from trezorui_api import CANCELLED, DeviceMenuResult
 BLE_MAX_BONDS = 8
 
 
-def _format_mac(ble_addr: bytes) -> str:
-    """Internal MAC address representation is using reversed byte order."""
-    return ":".join(f"{byte:02X}" for byte in reversed(ble_addr))
+def _get_hostname(ble_addr: bytes, hostname_map: dict[bytes, str]) -> str:
+    if (hostname := hostname_map.get(ble_addr)) is None:
+        # Internal MAC address representation is using reversed byte order.
+        return ":".join(f"{byte:02X}" for byte in reversed(ble_addr))
+    return hostname
 
 
 def _find_device(connected_addr: bytes | None, bonds: list[bytes]) -> int | None:
@@ -25,6 +27,8 @@ def _find_device(connected_addr: bytes | None, bonds: list[bytes]) -> int | None
 async def handle_device_menu() -> None:
     from trezor import strings
 
+    from ..thp import paired_cache
+
     is_initialized = storage_device.is_initialized()
     led_configurable = is_initialized and utils.USE_RGB_LED
     haptic_configurable = is_initialized and utils.USE_HAPTIC
@@ -38,7 +42,12 @@ async def handle_device_menu() -> None:
     connected_idx = _find_device(connected_addr, bonds)
     if __debug__:
         log.debug(__name__, "connected: %s (%s)", connected_addr, connected_idx)
-    paired_devices = [_format_mac(bond) for bond in bonds]
+
+    hostname_map = {e.mac_addr: e.host_name for e in paired_cache.load()}
+    if __debug__:
+        log.debug(__name__, "hostname_map: %s", hostname_map)
+
+    paired_devices = [_get_hostname(bond, hostname_map) for bond in bonds]
 
     bluetooth_version = "2.3.1.1"
     # ###

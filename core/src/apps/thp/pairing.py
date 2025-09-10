@@ -115,9 +115,13 @@ async def handle_pairing_request(
     if not message.host_name:
         raise DataError("Missing host_name.")
 
+    peer_addr = ctx.channel_ctx.iface_ctx.connected_addr()
+    await ui.show_pairing_dialog(message.host_name, message.app_name)
     ctx.host_name = message.host_name
     ctx.app_name = message.app_name
-    await ui.show_pairing_dialog(ctx.host_name, ctx.app_name)
+    if peer_addr is not None:
+        _cache_host_name(peer_addr, ctx.host_name)
+
     await ctx.write(ThpPairingRequestApproved())
     assert ThpSelectMethod.MESSAGE_WIRE_TYPE is not None
     select_method_msg = await ctx.read(
@@ -474,3 +478,19 @@ def _check_method_is_allowed(ctx: PairingContext, method: ThpPairingMethod) -> N
 def _check_method_is_selected(ctx: PairingContext, method: ThpPairingMethod) -> None:
     if method is not ctx.selected_method:
         raise ThpError("Not selected pairing method")
+
+
+def _cache_host_name(mac_addr: bytes, host_name: str) -> None:
+    from trezor.messages import ThpPairedCacheEntry
+    from trezor.strings import trim_str
+
+    from . import paired_cache
+
+    entries = paired_cache.load()
+    if any(mac_addr == e.mac_addr for e in entries):
+        # skip writing to flash if this MAC address is already cached
+        return
+
+    host_name = trim_str(host_name, max_bytes=32)
+    entries.append(ThpPairedCacheEntry(mac_addr=mac_addr, host_name=host_name))
+    paired_cache.store(entries)
