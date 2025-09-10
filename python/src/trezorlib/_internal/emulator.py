@@ -32,7 +32,7 @@ EMULATOR_WAIT_TIME = 60
 _RUNNING_PIDS = set()
 
 
-def _cleanup_pids():
+def _cleanup_pids() -> None:
     for process in _RUNNING_PIDS:
         process.kill()
 

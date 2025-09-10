@@ -81,7 +81,7 @@ def update(
     session: Session,
     data: bytes,
     progress_update: t.Callable[[int], t.Any] = lambda _: None,
-):
+) -> None:
     if session.features.bootloader_mode is False:
         raise RuntimeError("Device must be in bootloader mode")
 
@@ -89,12 +89,10 @@ def update(
 
     # TREZORv1 method
     if isinstance(resp, messages.Success):
-        resp = session.call(messages.FirmwareUpload(payload=data))
+        resp = session.call(
+            messages.FirmwareUpload(payload=data), expect=messages.Success
+        )
         progress_update(len(data))
-        if isinstance(resp, messages.Success):
-            return
-        else:
-            raise RuntimeError(f"Unexpected result {resp}")
 
     # TREZORv2 method
     while isinstance(resp, messages.FirmwareRequest):
@@ -104,10 +102,7 @@ def update(
         resp = session.call(messages.FirmwareUpload(payload=payload, hash=digest))
         progress_update(length)
 
-    if isinstance(resp, messages.Success):
-        return
-    else:
-        raise RuntimeError(f"Unexpected message {resp}")
+    messages.Success.ensure_isinstance(resp)
 
 
 def get_hash(session: Session, challenge: bytes | None) -> bytes:

@@ -231,7 +231,7 @@ def recover(
     return _deprecation_retval_helper(res)
 
 
-def is_slip39_backup_type(backup_type: messages.BackupType):
+def is_slip39_backup_type(backup_type: messages.BackupType) -> bool:
     return backup_type in (
         messages.BackupType.Slip39_Basic,
         messages.BackupType.Slip39_Advanced,
