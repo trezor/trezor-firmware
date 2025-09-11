@@ -837,10 +837,17 @@ static void _librust_qstrs(void) {
   MP_QSTR_text_mono;
   MP_QSTR_thp__autoconnect;
   MP_QSTR_thp__autoconnect_app;
+  MP_QSTR_thp__autoconnect_title;
+  MP_QSTR_thp__code_entry;
+  MP_QSTR_thp__code_title;
   MP_QSTR_thp__connect;
   MP_QSTR_thp__connect_app;
+  MP_QSTR_thp__connect_title;
+  MP_QSTR_thp__nfc_text;
   MP_QSTR_thp__pair;
   MP_QSTR_thp__pair_app;
+  MP_QSTR_thp__pair_title;
+  MP_QSTR_thp__qr_title;
   MP_QSTR_time_ms;
   MP_QSTR_timer;
   MP_QSTR_title;

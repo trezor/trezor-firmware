@@ -38,7 +38,7 @@ def show_autoconnect_credential_confirmation_screen(
 
     return confirm_pairing(
         br_name="thp_autoconnect_credential_request",
-        title="Autoconnect credential",
+        title=TR.thp__autoconnect_title,
         app_name=app_name,
         host_name=host_name,
         short_text=TR.thp__autoconnect,
@@ -51,7 +51,7 @@ def show_pairing_dialog(host_name: str | None, app_name: str | None) -> Awaitabl
 
     return confirm_pairing(
         br_name="thp_pairing_request",
-        title="Before you continue",
+        title=TR.thp__pair_title,
         app_name=app_name,
         host_name=host_name,
         short_text=TR.thp__pair,
@@ -66,7 +66,7 @@ def show_connection_dialog(
 
     return confirm_pairing(
         br_name="thp_connection_request",
-        title="Connection dialog",
+        title=TR.thp__connect_title,
         app_name=app_name,
         host_name=host_name,
         short_text=TR.thp__connect,
@@ -77,13 +77,14 @@ def show_connection_dialog(
 async def show_code_entry_screen(
     code_entry_str: str, host_name: str | None
 ) -> UiResult:
+    from trezor import TR
     from trezor.ui.layouts.common import interact
     from trezorui_api import show_thp_pairing_code
 
     return await interact(
         show_thp_pairing_code(
-            title="One more step",
-            description=f"Enter this one-time security code on {host_name}",
+            title=TR.thp__code_title,
+            description=TR.thp__code_entry.format(host_name),
             code=code_entry_str,
         ),
         br_name=None,
@@ -91,26 +92,28 @@ async def show_code_entry_screen(
 
 
 async def show_nfc_screen() -> UiResult:
+    from trezor import TR
     from trezor.ui.layouts.common import interact
     from trezorui_api import show_simple
 
     return await interact(
         show_simple(
             title=None,
-            text="Keep your Trezor near your phone to complete the setup.",
-            button="Cancel",
+            text=TR.thp__nfc_text,
+            button=TR.buttons__cancel,
         ),
         br_name=None,
     )
 
 
 async def show_qr_code_screen(qr_code_str: str) -> UiResult:
+    from trezor import TR
     from trezor.ui.layouts.common import interact
     from trezorui_api import show_address_details
 
     return await interact(
         show_address_details(  # noqa
-            qr_title="Scan QR code to pair",
+            qr_title=TR.thp__qr_title,
             address=qr_code_str,
             case_sensitive=True,
             details_title="",

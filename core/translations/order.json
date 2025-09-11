@@ -1139,5 +1139,12 @@
   "1137": "thp__connect",
   "1138": "thp__connect_app",
   "1139": "thp__pair",
-  "1140": "thp__pair_app"
+  "1140": "thp__pair_app",
+  "1141": "thp__autoconnect_title",
+  "1142": "thp__code_entry",
+  "1143": "thp__code_title",
+  "1144": "thp__connect_title",
+  "1145": "thp__nfc_text",
+  "1146": "thp__pair_title",
+  "1147": "thp__qr_title"
 }

@@ -1174,6 +1174,24 @@
       "Delizia": "",
       "Eckhart": "Allow {0} on {1} to connect automatically to this Trezor?"
     },
+    "thp__autoconnect_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Autoconnect credential"
+    },
+    "thp__code_entry": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Enter this one-time security code on {0}"
+    },
+    "thp__code_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "One more step"
+    },
     "thp__connect": {
       "Bolt": "",
       "Caesar": "",
@@ -1186,6 +1204,18 @@
       "Delizia": "",
       "Eckhart": "Allow {0} on {1} to connect with this Trezor?"
     },
+    "thp__connect_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Connection dialog"
+    },
+    "thp__nfc_text": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Keep your Trezor near your phone to complete the setup."
+    },
     "thp__pair": {
       "Bolt": "",
       "Caesar": "",
@@ -1197,6 +1227,18 @@
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Allow {0} on {1} to pair with this Trezor?"
+    },
+    "thp__pair_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Before you continue"
+    },
+    "thp__qr_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Scan QR code to pair"
     },
     "tutorial__continue": "Continue tutorial",
     "tutorial__did_you_know": "Did you know?",

@@ -1530,6 +1530,13 @@ pub enum TranslatedString {
     thp__connect_app = 1138,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Allow {0} on {1} to connect with this Trezor?"}
     thp__pair = 1139,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Allow {0} to pair with this Trezor?"}
     thp__pair_app = 1140,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Allow {0} on {1} to pair with this Trezor?"}
+    thp__autoconnect_title = 1141,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Autoconnect credential"}
+    thp__code_entry = 1142,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Enter this one-time security code on {0}"}
+    thp__code_title = 1143,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "One more step"}
+    thp__connect_title = 1144,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Connection dialog"}
+    thp__nfc_text = 1145,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Keep your Trezor near your phone to complete the setup."}
+    thp__pair_title = 1146,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Before you continue"}
+    thp__qr_title = 1147,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Scan QR code to pair"}
 }
 
 impl TranslatedString {
@@ -3427,6 +3434,62 @@ impl TranslatedString {
             (Self::thp__pair_app, ""),
             #[cfg(feature = "layout_eckhart")]
             (Self::thp__pair_app, "Allow {0} on {1} to pair with this Trezor?"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::thp__autoconnect_title, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::thp__autoconnect_title, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::thp__autoconnect_title, ""),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::thp__autoconnect_title, "Autoconnect credential"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::thp__code_entry, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::thp__code_entry, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::thp__code_entry, ""),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::thp__code_entry, "Enter this one-time security code on {0}"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::thp__code_title, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::thp__code_title, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::thp__code_title, ""),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::thp__code_title, "One more step"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::thp__connect_title, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::thp__connect_title, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::thp__connect_title, ""),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::thp__connect_title, "Connection dialog"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::thp__nfc_text, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::thp__nfc_text, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::thp__nfc_text, ""),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::thp__nfc_text, "Keep your Trezor near your phone to complete the setup."),
+            #[cfg(feature = "layout_bolt")]
+            (Self::thp__pair_title, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::thp__pair_title, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::thp__pair_title, ""),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::thp__pair_title, "Before you continue"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::thp__qr_title, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::thp__qr_title, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::thp__qr_title, ""),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::thp__qr_title, "Scan QR code to pair"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4790,10 +4853,17 @@ impl TranslatedString {
         (Qstr::MP_QSTR_tezos__submit_proposals, Self::tezos__submit_proposals),
         (Qstr::MP_QSTR_thp__autoconnect, Self::thp__autoconnect),
         (Qstr::MP_QSTR_thp__autoconnect_app, Self::thp__autoconnect_app),
+        (Qstr::MP_QSTR_thp__autoconnect_title, Self::thp__autoconnect_title),
+        (Qstr::MP_QSTR_thp__code_entry, Self::thp__code_entry),
+        (Qstr::MP_QSTR_thp__code_title, Self::thp__code_title),
         (Qstr::MP_QSTR_thp__connect, Self::thp__connect),
         (Qstr::MP_QSTR_thp__connect_app, Self::thp__connect_app),
+        (Qstr::MP_QSTR_thp__connect_title, Self::thp__connect_title),
+        (Qstr::MP_QSTR_thp__nfc_text, Self::thp__nfc_text),
         (Qstr::MP_QSTR_thp__pair, Self::thp__pair),
         (Qstr::MP_QSTR_thp__pair_app, Self::thp__pair_app),
+        (Qstr::MP_QSTR_thp__pair_title, Self::thp__pair_title),
+        (Qstr::MP_QSTR_thp__qr_title, Self::thp__qr_title),
         (Qstr::MP_QSTR_tutorial__continue, Self::tutorial__continue),
         (Qstr::MP_QSTR_tutorial__did_you_know, Self::tutorial__did_you_know),
         (Qstr::MP_QSTR_tutorial__exit, Self::tutorial__exit),
