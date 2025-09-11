@@ -2629,28 +2629,6 @@ class InputFlowSlip39BasicRecoveryAbortOnNumberOfWords(InputFlowBase):
             yield from self.REC.input_number_of_words(None)
 
 
-class InputFlowSlip39BasicRecoveryAbortOnFirstShare(InputFlowBase):
-    def __init__(self, client: Client):
-        super().__init__(client)
-
-    def input_flow_common(self) -> BRGeneratorType:
-        yield from self.REC.confirm_recovery()
-        if self.client.layout_type in (
-            LayoutType.Bolt,
-            LayoutType.Delizia,
-            LayoutType.Eckhart,
-        ):
-            yield from self.REC.input_number_of_words(20)
-
-        yield
-        self.debug.click(self.debug.screen_buttons.ok())
-        # yield
-        # self.debug.click(self.debug.screen_buttons.mnemonic_erase())
-        # yield
-        # assert False
-        # yield
-
-
 class InputFlowSlip39BasicRecoveryAbort(InputFlowBase):
     def __init__(self, client: Client):
         super().__init__(client)
@@ -2663,9 +2641,7 @@ class InputFlowSlip39BasicRecoveryAbort(InputFlowBase):
             LayoutType.Eckhart,
         ):
             yield from self.REC.input_number_of_words(20)
-            yield from self.REC.enter_your_backup()
-            yield from self.REC.back_from_first_word()
-        # yield from self.REC.abort_recovery(True)
+        yield from self.REC.abort_recovery(True)
 
 
 class InputFlowSlip39BasicRecoveryAbortBetweenShares(InputFlowBase):
