@@ -1149,6 +1149,7 @@ access_violation:
 #endif
 
 #ifdef USE_TROPIC
+#include <libtropic_common.h>
 #include <sec/tropic.h>
 #include "ecdsa.h"
 
@@ -1183,6 +1184,22 @@ bool tropic_ecc_sign__verified(uint16_t key_slot_index, const uint8_t *dig,
   }
 
   return tropic_ecc_sign(key_slot_index, dig, dig_len, sig);
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+bool tropic_data_read__verified(uint16_t udata_slot, uint8_t *data,
+                                uint16_t *size) {
+  if (!probe_write_access(data, R_MEM_DATA_SIZE_MAX)) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(size, sizeof(*size))) {
+    goto access_violation;
+  }
+
+  return tropic_data_read(udata_slot, data, size);
 access_violation:
   apptask_access_violation();
   return false;

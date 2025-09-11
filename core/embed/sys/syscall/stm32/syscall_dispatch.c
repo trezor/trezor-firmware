@@ -798,6 +798,13 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       uint8_t *sig = (uint8_t *)args[3];
       args[0] = tropic_ecc_sign__verified(key_slot_index, dig, dig_len, sig);
     } break;
+
+    case SYSCALL_TROPIC_DATA_READ: {
+      uint16_t udata_slot = (uint16_t)args[0];
+      uint8_t *data = (uint8_t *)args[1];
+      uint16_t *size = (uint16_t *)args[2];
+      args[0] = tropic_data_read__verified(udata_slot, data, size);
+    } break;
 #endif
 
     default:

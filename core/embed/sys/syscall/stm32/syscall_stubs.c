@@ -789,6 +789,11 @@ bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
                                (uint32_t)sig, SYSCALL_TROPIC_ECC_SIGN);
 }
 
+bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
+  return (bool)syscall_invoke3((uint32_t)udata_slot, (uint32_t)data,
+                               (uint32_t)size, SYSCALL_TROPIC_DATA_READ);
+}
+
 #endif
 
 #endif  // KERNEL_MODE
