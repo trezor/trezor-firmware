@@ -100,9 +100,14 @@ void rgb_led_effect_stop(void) {
   return;
 }
 
-bool rgb_led_get_effect_ongoing(void) {
+bool rgb_led_effect_ongoing(void) {
   // RGB effect not supported in unix yet
   return false;
+}
+
+rgb_led_effect_type_t rgb_led_effect_get_type(void) {
+  // RGB effect not supported in unix yet
+  return RGB_LED_EFFECT_NONE;
 }
 
 #endif /* KERNEL_MODE */
