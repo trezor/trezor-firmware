@@ -212,6 +212,12 @@ static void process_command(uint8_t *data, uint16_t len) {
     case INTERNAL_CMD_SET_SPEED_LOW: {
       connection_set_low_speed();
     } break;
+    case INTERNAL_CMD_NOTIFY: {
+      struct bt_conn *conn = connection_get_current();
+      if (conn != NULL) {
+        service_notify(conn, &data[1], len - 1);
+      }
+    } break;
     default:
       break;
   }

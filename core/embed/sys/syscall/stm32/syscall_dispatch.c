@@ -28,6 +28,7 @@
 #include <sec/secret.h>
 #include <sys/bootutils.h>
 #include <sys/irq.h>
+#include <sys/notify.h>
 #include <sys/sysevent.h>
 #include <sys/systask.h>
 #include <sys/system.h>
@@ -202,6 +203,11 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     case SYSCALL_REBOOT_AND_UPGRADE: {
       const uint8_t *hash = (const uint8_t *)args[0];
       reboot_and_upgrade__verified(hash);
+    } break;
+
+    case SYSCALL_NOTIFY_SEND: {
+      notification_event_t event = (notification_event_t)args[0];
+      notify_send(event);
     } break;
 
     case SYSCALL_DISPLAY_SET_BACKLIGHT: {
