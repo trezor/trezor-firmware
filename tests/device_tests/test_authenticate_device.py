@@ -46,7 +46,7 @@ def test_authenticate_device(session: Session, challenge: bytes) -> None:
 
     # Issue an AuthenticateDevice challenge to Trezor.
     proof = device.authenticate(session, challenge)
-    certs = [x509.load_der_x509_certificate(cert) for cert in proof.certificates]
+    certs = [x509.load_der_x509_certificate(cert) for cert in proof.optiga_certificates]
 
     # Verify the last certificate in the certificate chain against trust anchor.
     root_public_key = ec.EllipticCurvePublicKey.from_encoded_point(
@@ -88,4 +88,6 @@ def test_authenticate_device(session: Session, challenge: bytes) -> None:
 
     # Verify the signature of the challenge.
     data = b"\x13AuthenticateDevice:" + compact_size(len(challenge)) + challenge
-    certs[0].public_key().verify(proof.signature, data, ec.ECDSA(hashes.SHA256()))
+    certs[0].public_key().verify(
+        proof.optiga_signature, data, ec.ECDSA(hashes.SHA256())
+    )
