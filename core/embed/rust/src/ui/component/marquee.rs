@@ -24,7 +24,6 @@ enum State {
 
 pub struct Marquee {
     area: Rect,
-    y_offset: i16,
     pause_timer: Timer,
     min_offset: i16,
     max_offset: i16,
@@ -41,7 +40,6 @@ impl Marquee {
     pub const fn new(text: TString<'static>, font: Font, fg: Color, bg: Color) -> Self {
         Self {
             area: Rect::zero(),
-            y_offset: 0,
             pause_timer: Timer::new(),
             min_offset: 0,
             max_offset: 0,
@@ -53,10 +51,6 @@ impl Marquee {
             duration: Duration::from_millis(ANIMATION_DURATION_MS),
             pause: Duration::from_millis(PAUSE_DURATION_MS),
         }
-    }
-
-    pub fn set_y_offset(&mut self, y_offset: i16) {
-        self.y_offset = y_offset;
     }
 
     pub fn set_text(&mut self, text: TString<'static>) {
@@ -126,9 +120,9 @@ impl Marquee {
     }
 
     pub fn render_anim<'s>(&'s self, target: &mut impl Renderer<'s>, offset: i16) {
-        target.in_window(self.area, &|target| {
+        target.in_clip(self.area, &|target| {
             let text_height = self.font.text_height();
-            let pos = self.area.top_left() + Offset::new(offset, text_height - 1 + self.y_offset);
+            let pos = self.area.top_left() + Offset::new(offset, text_height - 1);
             self.text.map(|t| {
                 shape::Text::new(pos, t, self.font)
                     .with_fg(self.fg)

@@ -648,7 +648,6 @@ impl Component for Button {
         let subtext_start =
             self.baseline_text_height() * 2 + constant::LINE_SPACE + self.baseline_subtext_height();
         if let Some(m) = &mut self.subtext_marquee {
-            m.set_y_offset(subtext_start);
             m.place(
                 self.area
                     .inset(Insets::top(subtext_start))
