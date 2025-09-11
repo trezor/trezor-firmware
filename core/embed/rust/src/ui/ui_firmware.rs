@@ -361,10 +361,10 @@ pub trait FirmwareUI {
 
     #[allow(clippy::too_many_arguments)]
     fn show_device_menu(
-        init_submenu: Option<usize>,
+        init_submenu: Option<u8>,
         failed_backup: bool,
         paired_devices: heapless::Vec<TString<'static>, MAX_PAIRED_DEVICES>,
-        connected_idx: Option<usize>,
+        connected_idx: Option<u8>,
         pin_code: Option<bool>,
         auto_lock_delay: Option<TString<'static>>,
         wipe_code: Option<bool>,

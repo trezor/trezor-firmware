@@ -1131,10 +1131,10 @@ impl FirmwareUI for UICaesar {
     }
 
     fn show_device_menu(
-        _init_submenu: Option<usize>,
+        _init_submenu: Option<u8>,
         _failed_backup: bool,
         _paired_devices: heapless::Vec<TString<'static>, MAX_PAIRED_DEVICES>,
-        _connected_idx: Option<usize>,
+        _connected_idx: Option<u8>,
         _pin_code: Option<bool>,
         _auto_lock_delay: Option<TString<'static>>,
         _wipe_code: Option<bool>,

@@ -163,7 +163,7 @@ impl ComponentMsgObj for DeviceMenuScreen {
             DeviceMenuMsg::DevicePair => Ok(DEVICE_PAIR.as_obj()),
             DeviceMenuMsg::DeviceDisconnect => Ok(DEVICE_DISCONNECT.as_obj()),
             DeviceMenuMsg::DeviceUnpair(index) => {
-                Ok(new_tuple(&[DEVICE_UNPAIR.as_obj(), index.try_into()?])?)
+                Ok(new_tuple(&[DEVICE_UNPAIR.as_obj(), index.into()])?)
             }
             DeviceMenuMsg::DeviceUnpairAll => Ok(DEVICE_UNPAIR_ALL.as_obj()),
             // Security menu
