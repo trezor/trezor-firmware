@@ -975,6 +975,7 @@ class TR:
     tutorial__middle_click: str = "Press both left and right at the same\ntime to confirm."
     tutorial__navigation_ts7: str = "Use buttons at the bottom to navigate and confirm your actions."
     tutorial__one_more_step: str = "One more step"
+    tutorial__power: str = "Use the power button on the side to turn your device on or off."
     tutorial__press_and_hold: str = "Press and hold the right button to\napprove important operations."
     tutorial__ready_to_use: str = "You're ready to\nuse Trezor."
     tutorial__ready_to_use_safe5: str = "You're all set to start using your device!"
