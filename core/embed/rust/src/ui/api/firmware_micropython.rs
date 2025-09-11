@@ -936,12 +936,11 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
 
 extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let init_submenu: Option<usize> =
-            kwargs.get(Qstr::MP_QSTR_init_submenu)?.try_into_option()?;
+        let init_submenu: Option<u8> = kwargs.get(Qstr::MP_QSTR_init_submenu)?.try_into_option()?;
         let failed_backup: bool = kwargs.get(Qstr::MP_QSTR_failed_backup)?.try_into()?;
         let paired_devices: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
         let paired_devices: Vec<TString, MAX_PAIRED_DEVICES> = util::iter_into_vec(paired_devices)?;
-        let connected_idx: Option<usize> =
+        let connected_idx: Option<u8> =
             kwargs.get(Qstr::MP_QSTR_connected_idx)?.try_into_option()?;
         let pin_code: Option<bool> = kwargs.get(Qstr::MP_QSTR_pin_code)?.try_into_option()?;
         let auto_lock_delay: Option<TString> = kwargs
