@@ -25,12 +25,15 @@ def _default_ble_name() -> str:
 
 
 async def pair_new_device() -> None:
+    from trezor import TR
+
     label = storage_device.get_label() or _default_ble_name()
     ble.start_advertising(False, label)
     result = None
     try:
         code = await interact(
             trezorui_api.show_pairing_device_name(
+                description=TR.thp__pair_name,
                 device_name=label,
             ),
             None,
@@ -41,8 +44,8 @@ async def pair_new_device() -> None:
         try:
             result = await interact(
                 trezorui_api.show_ble_pairing_code(
-                    title="Bluetooth pairing",
-                    description="Pairing code match?",
+                    title=TR.ble__pairing_title,
+                    description=TR.ble__pairing_match,
                     code=f"{code:0>6}",
                 ),
                 None,

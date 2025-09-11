@@ -258,7 +258,7 @@ impl DeviceMenuScreen {
 
         let is_connected = connected_idx.is_some_and(|idx| idx < paired_devices.len());
         let connected_subtext: Option<TString<'static>> =
-            is_connected.then_some("1 device connected".into());
+            is_connected.then_some(TR::words__connected.into());
 
         let mut submenu_indices: Vec<usize, MAX_PAIRED_DEVICES> = Vec::new();
         for (i, device) in paired_devices.iter().enumerate() {

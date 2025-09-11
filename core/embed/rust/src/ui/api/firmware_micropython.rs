@@ -984,8 +984,9 @@ extern "C" fn new_show_pairing_device_name(
     kwargs: *mut Map,
 ) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
+        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let device_name: TString = kwargs.get(Qstr::MP_QSTR_device_name)?.try_into()?;
-        let layout = ModelUI::show_pairing_device_name(device_name)?;
+        let layout = ModelUI::show_pairing_device_name(description, device_name)?;
         let layout_obj = LayoutObj::new_root(layout)?;
         Ok(layout_obj.into())
     };
@@ -1930,6 +1931,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
 
     /// def show_pairing_device_name(
     ///     *,
+    ///     description: str,
     ///     device_name: str,
     /// ) -> LayoutObj[UiResult]:
     ///     """Pairing device: first screen (device name).

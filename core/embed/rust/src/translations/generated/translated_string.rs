@@ -1537,6 +1537,11 @@ pub enum TranslatedString {
     thp__nfc_text = 1145,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Keep your Trezor near your phone to complete the setup."}
     thp__pair_title = 1146,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Before you continue"}
     thp__qr_title = 1147,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Scan QR code to pair"}
+    ble__pairing_match = 1148,  // "Pairing code match?"
+    ble__pairing_title = 1149,  // "Bluetooth pairing"
+    thp__continue_on_host = 1150,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Continue on host"}
+    thp__pair_name = 1151,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "{0} is your Trezor's name."}
+    thp__pair_new_device = 1152,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Pair with new device"}
 }
 
 impl TranslatedString {
@@ -3490,6 +3495,32 @@ impl TranslatedString {
             (Self::thp__qr_title, ""),
             #[cfg(feature = "layout_eckhart")]
             (Self::thp__qr_title, "Scan QR code to pair"),
+            (Self::ble__pairing_match, "Pairing code match?"),
+            (Self::ble__pairing_title, "Bluetooth pairing"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::thp__continue_on_host, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::thp__continue_on_host, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::thp__continue_on_host, ""),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::thp__continue_on_host, "Continue on host"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::thp__pair_name, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::thp__pair_name, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::thp__pair_name, ""),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::thp__pair_name, "{0} is your Trezor's name."),
+            #[cfg(feature = "layout_bolt")]
+            (Self::thp__pair_new_device, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::thp__pair_new_device, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::thp__pair_new_device, ""),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::thp__pair_new_device, "Pair with new device"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3580,6 +3611,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ble__manage_paired, Self::ble__manage_paired),
         (Qstr::MP_QSTR_ble__pair_new, Self::ble__pair_new),
         (Qstr::MP_QSTR_ble__pair_title, Self::ble__pair_title),
+        (Qstr::MP_QSTR_ble__pairing_match, Self::ble__pairing_match),
+        (Qstr::MP_QSTR_ble__pairing_title, Self::ble__pairing_title),
         (Qstr::MP_QSTR_ble__unpair_all, Self::ble__unpair_all),
         (Qstr::MP_QSTR_ble__unpair_current, Self::ble__unpair_current),
         (Qstr::MP_QSTR_ble__unpair_title, Self::ble__unpair_title),
@@ -4859,9 +4892,12 @@ impl TranslatedString {
         (Qstr::MP_QSTR_thp__connect, Self::thp__connect),
         (Qstr::MP_QSTR_thp__connect_app, Self::thp__connect_app),
         (Qstr::MP_QSTR_thp__connect_title, Self::thp__connect_title),
+        (Qstr::MP_QSTR_thp__continue_on_host, Self::thp__continue_on_host),
         (Qstr::MP_QSTR_thp__nfc_text, Self::thp__nfc_text),
         (Qstr::MP_QSTR_thp__pair, Self::thp__pair),
         (Qstr::MP_QSTR_thp__pair_app, Self::thp__pair_app),
+        (Qstr::MP_QSTR_thp__pair_name, Self::thp__pair_name),
+        (Qstr::MP_QSTR_thp__pair_new_device, Self::thp__pair_new_device),
         (Qstr::MP_QSTR_thp__pair_title, Self::thp__pair_title),
         (Qstr::MP_QSTR_thp__qr_title, Self::thp__qr_title),
         (Qstr::MP_QSTR_tutorial__continue, Self::tutorial__continue),

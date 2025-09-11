@@ -187,6 +187,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_ble__manage_paired;
   MP_QSTR_ble__pair_new;
   MP_QSTR_ble__pair_title;
+  MP_QSTR_ble__pairing_match;
+  MP_QSTR_ble__pairing_title;
   MP_QSTR_ble__unpair_all;
   MP_QSTR_ble__unpair_current;
   MP_QSTR_ble__unpair_title;
@@ -843,9 +845,12 @@ static void _librust_qstrs(void) {
   MP_QSTR_thp__connect;
   MP_QSTR_thp__connect_app;
   MP_QSTR_thp__connect_title;
+  MP_QSTR_thp__continue_on_host;
   MP_QSTR_thp__nfc_text;
   MP_QSTR_thp__pair;
   MP_QSTR_thp__pair_app;
+  MP_QSTR_thp__pair_name;
+  MP_QSTR_thp__pair_new_device;
   MP_QSTR_thp__pair_title;
   MP_QSTR_thp__qr_title;
   MP_QSTR_time_ms;

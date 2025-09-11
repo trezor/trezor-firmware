@@ -643,6 +643,7 @@ def show_device_menu(
 # rust/src/ui/api/firmware_micropython.rs
 def show_pairing_device_name(
     *,
+    description: str,
     device_name: str,
 ) -> LayoutObj[UiResult]:
     """Pairing device: first screen (device name).
