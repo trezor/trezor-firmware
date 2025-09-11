@@ -175,6 +175,9 @@
 #define MICROPY_PY_USOCKET          (0)
 #define MICROPY_PY_NETWORK          (0)
 
+// allocate traceback data only on debug builds
+#define MICROPY_PY_SYS_TRACEBACK_DISABLE (PYOPT)
+
 // Debugging and interactive functionality.
 #define MICROPY_DEBUG_PRINTERS      (1)
 // Printing debug to stderr may give tests which
