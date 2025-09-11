@@ -443,6 +443,22 @@ access_violation:
   apptask_access_violation();
   return false;
 }
+
+bool tropic_data_read__verified(uint16_t udata_slot, uint8_t *data,
+                                uint16_t *size) {
+  if (!probe_write_access(data, R_MEM_DATA_SIZE_MAX)) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(size, sizeof(*size))) {
+    goto access_violation;
+  }
+
+  return tropic_data_read(udata_slot, data, size);
+access_violation:
+  apptask_access_violation();
+  return false;
+}
 #endif
 
 #ifdef USE_BACKUP_RAM

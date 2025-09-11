@@ -162,4 +162,19 @@ bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
   return true;
 }
 
+bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
+  tropic_driver_t *drv = &g_tropic_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  if (udata_slot > R_MEM_DATA_SLOT_MAX) {
+    return false;
+  }
+
+  lt_ret_t res = lt_r_mem_data_read(&drv->handle, udata_slot, data, size);
+  return res == LT_OK;
+}
+
 #endif  // SECURE_MODE

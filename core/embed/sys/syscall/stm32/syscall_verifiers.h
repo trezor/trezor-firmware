@@ -285,6 +285,9 @@ bool tropic_ecc_key_generate__verified(uint16_t slot_index);
 bool tropic_ecc_sign__verified(uint16_t key_slot_index, const uint8_t *dig,
                                uint16_t dig_len, uint8_t *sig);
 
+bool tropic_data_read__verified(uint16_t udata_slot, uint8_t *data,
+                                uint16_t *size);
+
 #endif
 
 #endif  // KERNEL
