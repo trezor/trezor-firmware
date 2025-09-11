@@ -1542,6 +1542,7 @@ pub enum TranslatedString {
     thp__continue_on_host = 1150,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Continue on host"}
     thp__pair_name = 1151,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "{0} is your Trezor's name."}
     thp__pair_new_device = 1152,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Pair with new device"}
+    tutorial__power = 1153,  // "Use the power button on the side to turn your device on or off."
 }
 
 impl TranslatedString {
@@ -3521,6 +3522,7 @@ impl TranslatedString {
             (Self::thp__pair_new_device, ""),
             #[cfg(feature = "layout_eckhart")]
             (Self::thp__pair_new_device, "Pair with new device"),
+            (Self::tutorial__power, "Use the power button on the side to turn your device on or off."),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4912,6 +4914,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_tutorial__middle_click, Self::tutorial__middle_click),
         (Qstr::MP_QSTR_tutorial__navigation_ts7, Self::tutorial__navigation_ts7),
         (Qstr::MP_QSTR_tutorial__one_more_step, Self::tutorial__one_more_step),
+        (Qstr::MP_QSTR_tutorial__power, Self::tutorial__power),
         (Qstr::MP_QSTR_tutorial__press_and_hold, Self::tutorial__press_and_hold),
         (Qstr::MP_QSTR_tutorial__ready_to_use, Self::tutorial__ready_to_use),
         (Qstr::MP_QSTR_tutorial__ready_to_use_safe5, Self::tutorial__ready_to_use_safe5),

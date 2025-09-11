@@ -19,8 +19,8 @@ use super::super::{
     component::Button,
     firmware::{
         ActionBar, Header, HeaderMsg, Hint, ShortMenuVec, TextScreen, TextScreenMsg,
-        TutorialWelcomeScreen, TutorialWelcomeScreenMsg, VerticalMenu, VerticalMenuScreen,
-        VerticalMenuScreenMsg,
+        TutorialPowerScreen, TutorialPowerScreenMsg, TutorialWelcomeScreen,
+        TutorialWelcomeScreenMsg, VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
     },
     theme::{self, Gradient, ScreenBackground},
 };
@@ -34,6 +34,7 @@ pub enum ShowTutorial {
     StepWelcome,
     StepBegin,
     StepNavigation,
+    StepPower,
     StepMenu,
     Menu,
     MenuTropic,
@@ -60,8 +61,10 @@ impl FlowController for ShowTutorial {
         match (self, msg) {
             (Self::StepWelcome, FlowMsg::Confirmed) => Self::StepBegin.goto(),
             (Self::StepBegin, FlowMsg::Confirmed) => Self::StepNavigation.goto(),
-            (Self::StepNavigation, FlowMsg::Confirmed) => Self::StepMenu.goto(),
+            (Self::StepNavigation, FlowMsg::Confirmed) => Self::StepPower.goto(),
             (Self::StepNavigation, FlowMsg::Cancelled) => Self::StepBegin.goto(),
+            (Self::StepPower, FlowMsg::Confirmed) => Self::StepMenu.goto(),
+            (Self::StepPower, FlowMsg::Cancelled) => Self::StepNavigation.goto(),
             (Self::StepMenu, FlowMsg::Info) => Self::Menu.goto(),
             (Self::Menu, FlowMsg::Choice(0)) => Self::StepHold.goto(),
             (Self::Menu, FlowMsg::Choice(1)) => Self::MenuTropic.goto(),
@@ -134,6 +137,11 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
             TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
             _ => None,
         });
+
+    let content_step_power = TutorialPowerScreen::new().map(|msg| match msg {
+        TutorialPowerScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
+        TutorialPowerScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
+    });
 
     let step_menu_paragraphs = Paragraphs::new([
         Paragraph::new(&theme::TEXT_REGULAR, TR::tutorial__menu),
@@ -288,6 +296,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
     res.add_page(&ShowTutorial::StepWelcome, content_step_welcome)?
         .add_page(&ShowTutorial::StepBegin, content_step_begin)?
         .add_page(&ShowTutorial::StepNavigation, content_step_navigation)?
+        .add_page(&ShowTutorial::StepPower, content_step_power)?
         .add_page(&ShowTutorial::StepMenu, content_step_menu)?
         .add_page(&ShowTutorial::Menu, content_menu)?
         .add_page(&ShowTutorial::MenuTropic, content_tropic())?

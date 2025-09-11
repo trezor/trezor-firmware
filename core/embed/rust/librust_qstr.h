@@ -880,6 +880,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_tutorial__middle_click;
   MP_QSTR_tutorial__navigation_ts7;
   MP_QSTR_tutorial__one_more_step;
+  MP_QSTR_tutorial__power;
   MP_QSTR_tutorial__press_and_hold;
   MP_QSTR_tutorial__ready_to_use;
   MP_QSTR_tutorial__ready_to_use_safe5;
