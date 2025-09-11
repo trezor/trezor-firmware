@@ -27,6 +27,7 @@ def _find_device(connected_addr: bytes | None, bonds: list[bytes]) -> int | None
 async def handle_device_menu() -> None:
     from trezor import strings
 
+    assert utils.USE_THP and utils.USE_BLE
     from ..thp import paired_cache
 
     is_initialized = storage_device.is_initialized()
