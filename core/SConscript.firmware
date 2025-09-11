@@ -26,6 +26,7 @@ DISABLE_ANIMATION = ARGUMENTS.get('TREZOR_DISABLE_ANIMATION', '0') == '1'
 BLOCK_ON_VCP = ARGUMENTS.get('BLOCK_ON_VCP', '0') == '1'
 UI_PERFORMANCE_OVERLAY = ARGUMENTS.get('UI_PERFORMANCE_OVERLAY', '0') == '1'
 DBG_CONSOLE = ARGUMENTS.get('DBG_CONSOLE', '')
+DEV_KEYS = ARGUMENTS.get('DEV_KEYS', '0') == '1'
 
 STORAGE_INSECURE_TESTING_MODE = ARGUMENTS.get('STORAGE_INSECURE_TESTING_MODE', '0') == '1'
 if STORAGE_INSECURE_TESTING_MODE and PRODUCTION:
@@ -874,8 +875,8 @@ if EVERYTHING:
     features.append('universal_fw')
 if UI_PERFORMANCE_OVERLAY:
     features.append('ui_performance_overlay')
-if PRODUCTION:
-    features.append('production')
+if DEV_KEYS and not PRODUCTION:
+    features.append('dev_keys')
 
 
 rust = tools.add_rust_lib(

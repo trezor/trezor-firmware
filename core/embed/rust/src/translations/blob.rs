@@ -501,7 +501,7 @@ impl<'a> TranslationsHeader<'a> {
         #[allow(unused_mut)]
         let mut result = self.verify_with_keys(&public_keys::PUBLIC_KEYS);
 
-        #[cfg(not(feature = "production"))]
+        #[cfg(feature = "dev_keys")]
         if result.is_err() {
             // allow development keys
             result = self.verify_with_keys(&public_keys::PUBLIC_KEYS_DEVEL);

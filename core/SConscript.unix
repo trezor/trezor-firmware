@@ -18,6 +18,7 @@ PYOPT = ARGUMENTS.get('PYOPT', '1')
 FROZEN = ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0)
 RASPI = os.getenv('TREZOR_EMULATOR_RASPI') == '1'
 MICROPY_ENABLE_SOURCE_LINE = ARGUMENTS.get('MICROPY_ENABLE_SOURCE_LINE', '1')
+DEV_KEYS = ARGUMENTS.get('DEV_KEYS', '0') == '1'
 
 if BENCHMARK and PYOPT != '0':
   print("BENCHMARK=1 works only with PYOPT=0.")
@@ -893,8 +894,8 @@ if PYOPT == '0':
     features.append('ui_debug_overlay')
 if EVERYTHING:
     features.append('universal_fw')
-if PRODUCTION:
-    features.append('production')
+if DEV_KEYS and not PRODUCTION:
+    features.append('dev_keys')
 
 rust = tools.add_rust_lib(
     env=env,
