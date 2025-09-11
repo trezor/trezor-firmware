@@ -1033,6 +1033,7 @@ impl FirmwareUI for UIDelizia {
     }
 
     fn show_pairing_device_name(
+        _description: StrBuffer,
         _device_name: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)

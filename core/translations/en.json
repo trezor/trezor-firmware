@@ -120,6 +120,8 @@
     "ble__manage_paired": "Manage paired devices",
     "ble__pair_new": "Pair new device",
     "ble__pair_title": "Pair & connect",
+    "ble__pairing_match": "Pairing code match?",
+    "ble__pairing_title": "Bluetooth pairing",
     "ble__unpair_all": "Unpair all bluetooth devices",
     "ble__unpair_current": "Unpair connected device",
     "ble__unpair_title": "Unpair",
@@ -1210,6 +1212,12 @@
       "Delizia": "",
       "Eckhart": "Connection dialog"
     },
+    "thp__continue_on_host": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Continue on host"
+    },
     "thp__nfc_text": {
       "Bolt": "",
       "Caesar": "",
@@ -1227,6 +1235,18 @@
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Allow {0} on {1} to pair with this Trezor?"
+    },
+    "thp__pair_name": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "{0} is your Trezor's name."
+    },
+    "thp__pair_new_device": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Pair with new device"
     },
     "thp__pair_title": {
       "Bolt": "",

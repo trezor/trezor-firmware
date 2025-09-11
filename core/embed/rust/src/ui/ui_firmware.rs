@@ -376,6 +376,7 @@ pub trait FirmwareUI {
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_pairing_device_name(
+        description: StrBuffer,
         device_name: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 

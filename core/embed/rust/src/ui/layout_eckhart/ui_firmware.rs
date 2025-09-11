@@ -1231,19 +1231,28 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_pairing_device_name(
+        description: StrBuffer,
         device_name: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let font = fonts::FONT_SATOSHI_REGULAR_38;
         let text_style = theme::firmware::TEXT_REGULAR;
+        let font = text_style.text_font;
         let mut ops = OpTextLayout::new(text_style);
-        let text: TString = " is your Trezor's name.".into();
-        ops.add_color(theme::GREEN)
-            .add_text_with_font(device_name, font)
-            .add_color(text_style.text_color)
-            .add_text_with_font(text, font);
+        for part in interpolate::parse(description) {
+            match part {
+                interpolate::Item::Text(s) => {
+                    ops.add_color(text_style.text_color);
+                    ops.add_text_with_font(s, font);
+                }
+                interpolate::Item::Arg(0) => {
+                    ops.add_color(theme::GREEN);
+                    ops.add_text_with_font(device_name, font);
+                }
+                _ => return Err(Error::OutOfRange),
+            };
+        }
         let screen = TextScreen::new(FormattedText::new(ops))
-            .with_header(Header::new("Pair with new device".into()).with_close_button())
-            .with_action_bar(ActionBar::new_text_only("Continue on host".into()));
+            .with_header(Header::new(TR::thp__pair_new_device.into()).with_close_button())
+            .with_action_bar(ActionBar::new_text_only(TR::thp__continue_on_host.into()));
         #[cfg(feature = "ble")]
         let screen = crate::ui::component::BLEHandler::new(screen, true);
         let layout = RootComponent::new(screen);
