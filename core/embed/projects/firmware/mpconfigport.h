@@ -161,6 +161,9 @@
 #define MICROPY_PY_USOCKET          (0)
 #define MICROPY_PY_NETWORK          (0)
 
+// allocate traceback data only on debug builds
+#define MICROPY_PY_SYS_TRACEBACK_DISABLE (PYOPT)
+
 #define MICROPY_PY_TREZORCONFIG     (1)
 #define MICROPY_PY_TREZORCRYPTO     (1)
 #define MICROPY_PY_TREZORIO         (1)

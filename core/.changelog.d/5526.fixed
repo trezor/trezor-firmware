@@ -1,0 +1,1 @@
+Don't allocate tracebacks in optimized builds.
