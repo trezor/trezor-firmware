@@ -64,3 +64,9 @@ bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t* dig,
                      uint16_t dig_len, uint8_t* sig);
 
 bool tropic_data_read(uint16_t udata_slot, uint8_t* data, uint16_t* size);
+
+bool tropic_data_multi_size(uint16_t first_slot, size_t* data_length);
+
+bool tropic_data_multi_read(uint16_t first_slot, uint16_t slot_count,
+                            uint8_t* data, size_t max_data_length,
+                            size_t* data_length);

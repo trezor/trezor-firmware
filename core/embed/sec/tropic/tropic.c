@@ -17,8 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef SECURE_MODE
-
 #include <trezor_rtl.h>
 #include <trezor_types.h>
 
@@ -36,6 +34,8 @@
 
 #include "ed25519-donna/ed25519.h"
 #include "memzero.h"
+
+#ifdef SECURE_MODE
 
 typedef struct {
   bool initialized;
@@ -178,3 +178,66 @@ bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
 }
 
 #endif  // SECURE_MODE
+
+bool tropic_data_multi_size(uint16_t first_slot, size_t *data_length) {
+  if (first_slot > R_MEM_DATA_SLOT_MAX) {
+    return false;
+  }
+
+  uint8_t prefixed_data[R_MEM_DATA_SIZE_MAX];
+  uint16_t slot_length = 0;
+  if (!tropic_data_read(first_slot, prefixed_data, &slot_length)) {
+    return false;
+  }
+
+  const size_t prefix_length = 2;
+  if (slot_length < prefix_length) {
+    return false;
+  }
+
+  *data_length = prefixed_data[0] << 8 | prefixed_data[1];
+  return true;
+}
+
+bool tropic_data_multi_read(uint16_t first_slot, uint16_t slot_count,
+                            uint8_t *data, size_t max_data_length,
+                            size_t *data_length) {
+  const uint16_t last_data_slot = first_slot + slot_count - 1;
+  if (slot_count == 0 || last_data_slot > R_MEM_DATA_SLOT_MAX) {
+    return false;
+  }
+
+  // The following code can be further optimized:
+  //   * It uses unnecessary amount of memory.
+  //   * It reads from a data slot even if there is no data to be read.
+
+  const size_t total_slots_length = R_MEM_DATA_SIZE_MAX * slot_count;
+  uint8_t prefixed_data[total_slots_length];
+  size_t position = 0;
+  uint16_t slot = first_slot;
+
+  while (slot <= last_data_slot) {
+    uint16_t slot_length = 0;
+    if (!tropic_data_read(slot, prefixed_data + position, &slot_length)) {
+      return false;
+    }
+
+    if (slot_length != R_MEM_DATA_SIZE_MAX) {
+      return false;
+    }
+
+    position += R_MEM_DATA_SIZE_MAX;
+    slot += 1;
+  }
+
+  const size_t prefix_length = 2;
+  size_t length = prefixed_data[0] << 8 | prefixed_data[1];
+  if (length > max_data_length || length + prefix_length > total_slots_length) {
+    return false;
+  }
+
+  *data_length = length;
+  memcpy(data, prefixed_data + prefix_length, length);
+
+  return true;
+}
