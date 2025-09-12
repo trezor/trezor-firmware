@@ -117,6 +117,14 @@ static void prodtest_secrets_init(cli_t* cli) {
   }
 
 #ifdef USE_TROPIC
+  // Make sure that Tropic pairing hasn't started so that we don't overwrite the
+  // MCU's pairing secrets.
+  curve25519_key tropic_public = {0};
+  if (secret_key_tropic_public(tropic_public) == sectrue) {
+    cli_error(cli, CLI_ERROR, "Tropic pairing has already started.");
+    return;
+  }
+
   // Ensure that a session with Tropic is established so that we can include
   // randomness from the chip when generating the secrets. At this point in
   // provisioning the factory pairing key should still be valid.
