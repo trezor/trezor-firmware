@@ -1270,7 +1270,7 @@
     "tutorial__menu": "Find context-specific actions and options in the menu.",
     "tutorial__menu_appendix": "View more info, quit flow, ...",
     "tutorial__middle_click": "Press both left and right at the same\ntime to confirm.",
-    "tutorial__navigation_ts7": "Use buttons at the bottom to navigate and confirm your actions.",
+    "tutorial__navigation_ts7": "Use the on-screen buttons to navigate and confirm your actions.",
     "tutorial__one_more_step": "One more step",
     "tutorial__power": "Use the power button on the side to turn your device on or off.",
     "tutorial__press_and_hold": "Press and hold the right button to\napprove important operations.",
@@ -1289,7 +1289,7 @@
       "Bolt": "Hold to confirm important actions",
       "Caesar": "Hold to confirm important actions",
       "Delizia": "Hold to confirm important actions",
-      "Eckhart": "Hold the button to confirm important actions."
+      "Eckhart": "Hold the on-screen button at the bottom to confirm important actions."
     },
     "tutorial__title_lets_begin": "Let's begin",
     "tutorial__title_screen_scroll": "Screen scroll",
