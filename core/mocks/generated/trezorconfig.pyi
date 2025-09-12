@@ -1,4 +1,5 @@
 from typing import *
+from buffer_types import *
 
 
 # upymod/modtrezorconfig/modtrezorconfig.c
@@ -14,7 +15,7 @@ def init(
 
 
 # upymod/modtrezorconfig/modtrezorconfig.c
-def unlock(pin: str, ext_salt: bytes | None) -> bool:
+def unlock(pin: str, ext_salt: AnyBytes | None) -> bool:
     """
     Attempts to unlock the storage with the given PIN and external salt.
     Returns True on success, False on failure.
@@ -22,7 +23,7 @@ def unlock(pin: str, ext_salt: bytes | None) -> bool:
 
 
 # upymod/modtrezorconfig/modtrezorconfig.c
-def check_pin(pin: str, ext_salt: bytes | None) -> bool:
+def check_pin(pin: str, ext_salt: AnyBytes | None) -> bool:
     """
     Check the given PIN with the given external salt.
     Returns True on success, False on failure.
@@ -61,8 +62,8 @@ def get_pin_rem() -> int:
 def change_pin(
     oldpin: str,
     newpin: str,
-    old_ext_salt: bytes | None,
-    new_ext_salt: bytes | None,
+    old_ext_salt: AnyBytes | None,
+    new_ext_salt: AnyBytes | None,
 ) -> bool:
     """
     Change PIN and external salt. Returns True on success, False on failure.
@@ -86,7 +87,7 @@ def has_wipe_code() -> bool:
 # upymod/modtrezorconfig/modtrezorconfig.c
 def change_wipe_code(
     pin: str,
-    ext_salt: bytes | None,
+    ext_salt: AnyBytes | None,
     wipe_code: str,
 ) -> bool:
     """
@@ -104,7 +105,7 @@ def get(app: int, key: int, public: bool = False) -> bytes | None:
 
 
 # upymod/modtrezorconfig/modtrezorconfig.c
-def set(app: int, key: int, value: bytes, public: bool = False) -> None:
+def set(app: int, key: int, value: AnyBytes, public: bool = False) -> None:
     """
     Sets a value of given key for given app.
     """

@@ -25,6 +25,7 @@ from .helpers.utils import (
 )
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Callable, Literal
 
     from trezor import messages
@@ -261,7 +262,9 @@ async def confirm_sending(
     )
 
 
-async def confirm_sending_token(policy_id: bytes, token: messages.CardanoToken) -> None:
+async def confirm_sending_token(
+    policy_id: AnyBytes, token: messages.CardanoToken
+) -> None:
     assert token.amount is not None  # _validate_token
 
     await confirm_properties(
@@ -286,7 +289,7 @@ async def confirm_sending_token(policy_id: bytes, token: messages.CardanoToken) 
     )
 
 
-async def confirm_datum_hash(datum_hash: bytes) -> None:
+async def confirm_datum_hash(datum_hash: AnyBytes) -> None:
     await confirm_properties(
         "confirm_datum_hash",
         TR.cardano__confirm_transaction,
@@ -301,7 +304,7 @@ async def confirm_datum_hash(datum_hash: bytes) -> None:
     )
 
 
-async def confirm_inline_datum(first_chunk: bytes, inline_datum_size: int) -> None:
+async def confirm_inline_datum(first_chunk: AnyBytes, inline_datum_size: int) -> None:
     await _confirm_tx_data_chunk(
         "confirm_inline_datum",
         TR.cardano__inline_datum,
@@ -311,7 +314,7 @@ async def confirm_inline_datum(first_chunk: bytes, inline_datum_size: int) -> No
 
 
 async def confirm_reference_script(
-    first_chunk: bytes, reference_script_size: int
+    first_chunk: AnyBytes, reference_script_size: int
 ) -> None:
     await _confirm_tx_data_chunk(
         "confirm_reference_script",
@@ -322,7 +325,7 @@ async def confirm_reference_script(
 
 
 async def confirm_message_payload(
-    payload: bytes,
+    payload: AnyBytes,
     payload_size: int,
     prefer_hex_display: bool,
 ) -> None:
@@ -341,7 +344,7 @@ async def confirm_message_payload(
             first_chunk=payload,
             data_size=payload_size,
             max_displayed_size=None,
-            decoder=lambda chunk: chunk.decode("ascii"),
+            decoder=lambda chunk: bytes(chunk).decode("ascii"),
         )
     else:
         props = _get_data_chunk_props(
@@ -361,10 +364,10 @@ async def confirm_message_payload(
 
 def _get_data_chunk_props(
     title: str,
-    first_chunk: bytes,
+    first_chunk: AnyBytes,
     data_size: int,
     max_displayed_size: int | None = _DEFAULT_MAX_DISPLAYED_CHUNK_SIZE,
-    decoder: Callable[[bytes], bytes | str] | None = None,
+    decoder: Callable[[AnyBytes], AnyBytes | str] | None = None,
 ) -> list[PropertyType]:
     displayed_bytes = (
         first_chunk[:max_displayed_size]
@@ -386,7 +389,7 @@ def _get_data_chunk_props(
 
 
 async def _confirm_tx_data_chunk(
-    br_name: str, title: str, first_chunk: bytes, data_size: int
+    br_name: str, title: str, first_chunk: AnyBytes, data_size: int
 ) -> None:
     await confirm_properties(
         br_name,
@@ -914,7 +917,7 @@ async def confirm_withdrawal(
 
 
 def _format_stake_credential(
-    path: list[int], script_hash: bytes | None, key_hash: bytes | None
+    path: list[int], script_hash: AnyBytes | None, key_hash: AnyBytes | None
 ) -> PropertyType:
     from .helpers.paths import ADDRESS_INDEX_PATH_INDEX, RECOMMENDED_ADDRESS_INDEX
 
@@ -1052,7 +1055,7 @@ async def confirm_cvote_registration(
     )
 
 
-async def show_auxiliary_data_hash(auxiliary_data_hash: bytes) -> None:
+async def show_auxiliary_data_hash(auxiliary_data_hash: AnyBytes) -> None:
     await confirm_properties(
         "confirm_auxiliary_data",
         TR.cardano__confirm_transaction,
@@ -1061,7 +1064,9 @@ async def show_auxiliary_data_hash(auxiliary_data_hash: bytes) -> None:
     )
 
 
-async def confirm_token_minting(policy_id: bytes, token: messages.CardanoToken) -> None:
+async def confirm_token_minting(
+    policy_id: AnyBytes, token: messages.CardanoToken
+) -> None:
     assert token.mint_amount is not None  # _validate_token
     await confirm_properties(
         "confirm_mint",
@@ -1098,7 +1103,7 @@ async def warn_tx_network_unverifiable() -> None:
     )
 
 
-async def confirm_script_data_hash(script_data_hash: bytes) -> None:
+async def confirm_script_data_hash(script_data_hash: AnyBytes) -> None:
     await confirm_properties(
         "confirm_script_data_hash",
         TR.cardano__confirm_transaction,

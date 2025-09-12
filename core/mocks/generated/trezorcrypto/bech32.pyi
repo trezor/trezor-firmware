@@ -1,4 +1,5 @@
 from typing import *
+from buffer_types import *
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-bech32.h

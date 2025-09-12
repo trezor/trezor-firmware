@@ -15,6 +15,8 @@ from trezor.wire import DataError, ProcessError
 from ..layout import format_amount
 
 if TYPE_CHECKING:
+    from buffer_types import StrOrBytes
+
     from trezor.messages import (
         StellarAccountMergeOp,
         StellarAllowTrustOp,
@@ -140,18 +142,22 @@ async def _confirm_offer(
     buying_asset = op.buying_asset  # local_cache_attribute
     selling_asset = op.selling_asset  # local_cache_attribute
 
+    buying: PropertyType
+    selling: PropertyType
+    price: PropertyType
+
     if StellarManageBuyOfferOp.is_type_of(op):
-        buying: PropertyType = (
+        buying = (
             TR.stellar__buying,
             format_amount(op.amount, buying_asset),
             False,
         )
-        selling: PropertyType = (
+        selling = (
             TR.stellar__selling,
             format_asset(selling_asset),
             False,
         )
-        price: PropertyType = (
+        price = (
             TR.stellar__price_per_template.format(format_asset(selling_asset)),
             str(op.price_n / op.price_d),
             False,
@@ -162,13 +168,13 @@ async def _confirm_offer(
             (buying, selling, price),
         )
     else:
-        selling: PropertyType = (
+        selling = (
             TR.stellar__selling,
             format_amount(op.amount, selling_asset),
             False,
         )
-        buying: PropertyType = (TR.stellar__buying, format_asset(buying_asset), False)
-        price: PropertyType = (
+        buying = (TR.stellar__buying, format_asset(buying_asset), False)
+        price = (
             TR.stellar__price_per_template.format(format_asset(buying_asset)),
             str(op.price_n / op.price_d),
             False,
@@ -304,7 +310,7 @@ async def confirm_set_options_op(op: StellarSetOptionsOp) -> None:
             title = TR.stellar__add_signer
         else:
             title = TR.stellar__remove_signer
-        data: str | bytes = ""
+        data: StrOrBytes = ""
         if signer_type == StellarSignerType.ACCOUNT:
             description = TR.words__account
             data = helpers.address_from_public_key(signer_key)

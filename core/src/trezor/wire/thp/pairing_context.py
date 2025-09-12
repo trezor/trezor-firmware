@@ -9,6 +9,7 @@ from trezor.wire.protocol_common import Context, Message
 from trezor.wire.thp import ChannelState, get_enabled_pairing_methods, ui
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Awaitable, Container
 
     from trezor.enums import ThpPairingMethod
@@ -28,18 +29,18 @@ class PairingContext(Context):
     def __init__(self, channel_ctx: Channel) -> None:
         super().__init__(channel_ctx.iface, channel_ctx.channel_id, "ThpMessageType")
         self.channel_ctx: Channel = channel_ctx
-        self.nfc_secret: bytes | None = None
-        self.qr_code_secret: bytes | None = None
-        self.code_entry_secret: bytes | None = None
+        self.nfc_secret: AnyBytes | None = None
+        self.qr_code_secret: AnyBytes | None = None
+        self.code_entry_secret: AnyBytes | None = None
 
         self.selected_method: ThpPairingMethod
 
         self.code_code_entry: int | None = None
-        self.code_qr_code: bytes | None = None
-        self.code_nfc: bytes | None = None
+        self.code_qr_code: AnyBytes | None = None
+        self.code_nfc: AnyBytes | None = None
         # The 2 following attributes are important for NFC pairing
-        self.nfc_secret_host: bytes | None = None
-        self.handshake_hash_host: bytes | None = None
+        self.nfc_secret_host: AnyBytes | None = None
+        self.handshake_hash_host: AnyBytes | None = None
 
         self.cpace: Cpace
         self.host_name: str | None

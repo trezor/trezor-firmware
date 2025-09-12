@@ -503,6 +503,7 @@ async def handle_UnlockPath(msg: UnlockPath) -> protobuf.MessageType:
     req = await call_any(UnlockedPathRequest(mac=expected_mac), *wire_types)
 
     assert req.MESSAGE_WIRE_TYPE in wire_types
+    assert req.MESSAGE_WIRE_TYPE is not None
     handler = workflow_handlers.find_registered_handler(req.MESSAGE_WIRE_TYPE)
     assert handler is not None
     return await handler(req, msg)  # type: ignore [Expected 1 positional argument]

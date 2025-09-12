@@ -1,4 +1,5 @@
 from typing import *
+from buffer_types import *
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-bip32.h
@@ -12,9 +13,9 @@ class HDNode:
         depth: int,
         fingerprint: int,
         child_num: int,
-        chain_code: bytes,
-        private_key: bytes | None = None,
-        public_key: bytes | None = None,
+        chain_code: AnyBytes,
+        private_key: AnyBytes | None = None,
+        public_key: AnyBytes | None = None,
         curve_name: str | None = None,
     ) -> None:
         """
@@ -87,7 +88,7 @@ class HDNode:
         """
 
     def nem_encrypt(
-        self, transfer_public_key: bytes, iv: bytes, salt: bytes, payload: bytes
+        self, transfer_public_key: AnyBytes, iv: AnyBytes, salt: AnyBytes, payload: AnyBytes
     ) -> bytes:
         """
         Encrypts payload using the transfer's public key
@@ -105,7 +106,7 @@ class HDNode:
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-bip32.h
-def from_seed(seed: bytes, curve_name: str) -> HDNode:
+def from_seed(seed: AnyBytes, curve_name: str) -> HDNode:
     """
     Construct a BIP0032 HD node from a BIP0039 seed value.
     """

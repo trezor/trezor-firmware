@@ -1,8 +1,9 @@
 from typing import *
+from buffer_types import *
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-crc.h
-def crc32(data: bytes, crc: int = 0) -> int:
+def crc32(data: AnyBytes, crc: int = 0) -> int:
     """
     Computes a CRC32 checksum of `data`.
 

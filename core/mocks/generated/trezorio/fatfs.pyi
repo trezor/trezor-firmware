@@ -1,4 +1,5 @@
 from typing import *
+from buffer_types import *
 FR_OK: int                   # (0) Succeeded
 FR_DISK_ERR: int             # (1) A hard error occurred in the low level disk I/O layer
 FR_INT_ERR: int              # (2) Assertion failed
@@ -69,7 +70,7 @@ class FatFSFile:
         Read data from the file
         """
 
-    def write(self, data: bytes | bytearray) -> int:
+    def write(self, data: AnyBytes) -> int:
         """
         Write data to the file
         """

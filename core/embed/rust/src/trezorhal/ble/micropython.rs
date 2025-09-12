@@ -272,12 +272,12 @@ pub static mp_module_trezorble: Module = obj_module! {
     ///     Returns the configured number of this interface.
     ///     """
     ///
-    /// def write(self, msg: bytes) -> int:
+    /// def write(self, msg: AnyBytes) -> int:
     ///     """
     ///     Sends message over BLE
     ///     """
     ///
-    /// def read(self, buf: bytearray, offset: int = 0) -> int:
+    /// def read(self, buf: AnyBuffer, offset: int = 0) -> int:
     ///     """
     ///     Reads message using BLE (device).
     ///     """
@@ -297,7 +297,7 @@ pub static mp_module_trezorble: Module = obj_module! {
     ///     """
     Qstr::MP_QSTR_erase_bonds => obj_fn_0!(py_erase_bonds).as_obj(),
 
-    /// def unpair(addr: bytes | None):
+    /// def unpair(addr: AnyBytes | None):
     ///     """
     ///     Erases the bond for the given address or for current connection if addr is None.
     ///     Raises exception if BLE driver reports an error.

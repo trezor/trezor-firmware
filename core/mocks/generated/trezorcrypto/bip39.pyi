@@ -1,8 +1,9 @@
 from typing import *
+from buffer_types import *
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-bip39.h
-def from_data(data: bytes) -> str:
+def from_data(data: AnyBytes) -> str:
     """
     Generate a mnemonic from given data (of 16, 20, 24, 28 and 32 bytes).
     """

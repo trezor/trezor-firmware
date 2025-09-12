@@ -6,14 +6,13 @@ from trezor.wire import DataError
 from trezor.wire.context import call
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Callable
-
-    pass
 
 _CHUNK_SIZE = const(1024)
 
 
-async def get_data_chunk(data_left: int, offset: int) -> bytes:
+async def get_data_chunk(data_left: int, offset: int) -> AnyBytes:
     data_length = min(data_left, _CHUNK_SIZE)
     req = DataChunkRequest(data_length=data_length, data_offset=offset)
     res = await call(req, DataChunkAck)

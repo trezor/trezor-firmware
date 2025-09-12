@@ -47,6 +47,7 @@ if __debug__:
     from trezor import log
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from trezorio import WireInterface
     from typing import Any, Callable, Coroutine, Generic, TypeVar
 
@@ -85,7 +86,7 @@ if utils.USE_THP:
     if __debug__:
         _THP_CHANNELS = []
 
-        def find_thp_channel(channel_id: bytes) -> Channel | None:
+        def find_thp_channel(channel_id: AnyBytes) -> Channel | None:
             """Used by `DebugLinkGetPairingInfo` (only for tests)."""
             key = int.from_bytes(channel_id, "big")
             for channels in _THP_CHANNELS:

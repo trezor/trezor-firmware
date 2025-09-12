@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import typing as t
 from copy import copy
 from dataclasses import asdict
@@ -85,7 +87,7 @@ def _format_container(
     truncate_after: t.Optional[int] = 64,
     truncate_to: t.Optional[int] = 32,
 ) -> str:
-    def mostly_printable(bytes: bytes) -> bool:
+    def mostly_printable(bytes: bytes | bytearray) -> bool:
         if not bytes:
             return True
         printable = sum(1 for byte in bytes if 0x20 <= byte <= 0x7E)

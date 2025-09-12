@@ -476,12 +476,12 @@ class EnumAdapter(construct.Adapter):
         self.enum = enum
         super().__init__(subcon)
 
-    def _encode(self, obj: Any, ctx: Any, path: Any):
+    def _encode(self, obj: Any, ctx: Any, path: Any) -> Any:
         if isinstance(obj, self.enum):
             return obj.value
         return obj
 
-    def _decode(self, obj: Any, ctx: Any, path: Any):
+    def _decode(self, obj: Any, ctx: Any, path: Any) -> Any:
         try:
             return self.enum(obj)
         except ValueError:
@@ -492,8 +492,8 @@ class TupleAdapter(construct.Adapter):
     def __init__(self, *subcons: Any) -> None:
         super().__init__(construct.Sequence(*subcons))
 
-    def _encode(self, obj: Any, ctx: Any, path: Any):
+    def _encode(self, obj: Any, ctx: Any, path: Any) -> Any:
         return obj
 
-    def _decode(self, obj: Any, ctx: Any, path: Any):
+    def _decode(self, obj: Any, ctx: Any, path: Any) -> Any:
         return tuple(obj)

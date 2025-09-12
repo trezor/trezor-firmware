@@ -16,6 +16,8 @@ if __debug__:
     import storage.debug
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import ResetDevice, Success
 
 
@@ -321,7 +323,7 @@ def _validate_reset_device(msg: ResetDevice) -> None:
 
 
 def _compute_secret_from_entropy(
-    int_entropy: bytes, ext_entropy: bytes, strength_bits: int
+    int_entropy: AnyBytes, ext_entropy: AnyBytes, strength_bits: int
 ) -> bytes:
     from trezor.crypto import hashlib
 

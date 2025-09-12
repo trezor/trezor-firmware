@@ -143,7 +143,7 @@ FILE_SPECIFIC_IGNORES: FileSpecificIgnores = {}
 ALIASES: dict[str, str] = {
     "awaitable-return-type": 'Return type of generator function must be compatible with "Generator',
     "obscured-by-same-name": "is obscured by a declaration of the same name",
-    "int-into-enum": 'Expression of type "int.*" is incompatible with return type ".*"',
+    "int-into-enum": r'Type "int.*" is not assignable to return type ".*"',
 }
 
 

@@ -1,9 +1,13 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from storage.cache_thp import SESSION_ID_LENGTH
 from trezor import protobuf, utils
 
 from .writer import MESSAGE_TYPE_LENGTH
+
+if TYPE_CHECKING:
+    from buffer_types import AnyBuffer
 
 _PROTOBUF_BUFFER_SIZE = const(8192)
 
@@ -18,7 +22,7 @@ class ThpBuffer:
 
 
 def encode_into_buffer(
-    buffer: utils.BufferType, msg: protobuf.MessageType, session_id: int
+    buffer: AnyBuffer, msg: protobuf.MessageType, session_id: int
 ) -> int:
     """Encode protobuf message `msg` into the `buffer`, including session id
     an messages's wire type. Will fail if provided message has no wire type."""
@@ -41,20 +45,20 @@ def encode_into_buffer(
 
 
 def _encode_session_into_buffer(
-    buffer: memoryview, session_id: int, buffer_offset: int = 0
+    buffer: AnyBuffer, session_id: int, buffer_offset: int = 0
 ) -> None:
     session_id_bytes = int.to_bytes(session_id, SESSION_ID_LENGTH, "big")
     utils.memcpy(buffer, buffer_offset, session_id_bytes, 0)
 
 
 def _encode_message_type_into_buffer(
-    buffer: memoryview, message_type: int, offset: int = 0
+    buffer: AnyBuffer, message_type: int, offset: int = 0
 ) -> None:
     msg_type_bytes = int.to_bytes(message_type, MESSAGE_TYPE_LENGTH, "big")
     utils.memcpy(buffer, offset, msg_type_bytes, 0)
 
 
 def _encode_message_into_buffer(
-    buffer: memoryview, message: protobuf.MessageType, buffer_offset: int = 0
+    buffer: AnyBuffer, message: protobuf.MessageType, buffer_offset: int = 0
 ) -> None:
     protobuf.encode(memoryview(buffer[buffer_offset:]), message)

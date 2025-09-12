@@ -17,7 +17,6 @@
 from __future__ import annotations
 
 import struct
-from typing import Tuple
 
 from ...exceptions import ThpError
 from .. import Transport
@@ -33,28 +32,29 @@ CONTINUATION_PACKET = 0x80
 
 
 def write_payload_to_wire_and_add_checksum(
-    transport: Transport, header: MessageHeader, transport_payload: bytes
-):
-    chksum: bytes = checksum.compute(header.to_bytes_init() + transport_payload)
-    data = transport_payload + chksum
+    transport: Transport, header: MessageHeader, payload: bytes
+) -> None:
+    chksum = checksum.compute(header.to_bytes_init() + payload)
+    data = payload + chksum
     if len(data) > MAX_PAYLOAD_LEN:
         raise RuntimeError("Message too large")
     write_payload_to_wire(transport, header, data)
 
 
 def write_payload_to_wire(
-    transport: Transport, header: MessageHeader, transport_payload: bytes
-):
-    buffer = bytearray(transport_payload)
+    transport: Transport, header: MessageHeader, payload: bytes
+) -> None:
     if transport.CHUNK_SIZE is None:
-        transport.write_chunk(buffer)
+        transport.write_chunk(payload)
         return
 
-    chunk = header.to_bytes_init() + buffer[: transport.CHUNK_SIZE - INIT_HEADER_LENGTH]
+    chunk = (
+        header.to_bytes_init() + payload[: transport.CHUNK_SIZE - INIT_HEADER_LENGTH]
+    )
     chunk = chunk.ljust(transport.CHUNK_SIZE, b"\x00")
     transport.write_chunk(chunk)
 
-    buffer = buffer[transport.CHUNK_SIZE - INIT_HEADER_LENGTH :]
+    buffer = payload[transport.CHUNK_SIZE - INIT_HEADER_LENGTH :]
     while buffer:
         chunk = (
             header.to_bytes_cont() + buffer[: transport.CHUNK_SIZE - CONT_HEADER_LENGTH]
@@ -66,7 +66,7 @@ def write_payload_to_wire(
 
 def read(
     transport: Transport, timeout: float | None = None
-) -> Tuple[MessageHeader, bytes, bytes]:
+) -> tuple[MessageHeader, bytes, bytes]:
     """
     Reads from the given wire transport.
 
@@ -90,12 +90,12 @@ def read(
     msg_data = buffer[:data_len]
     chksum = buffer[data_len : data_len + checksum.CHECKSUM_LENGTH]
 
-    return (header, msg_data, chksum)
+    return (header, bytes(msg_data), bytes(chksum))
 
 
 def read_first(
     transport: Transport, timeout: float | None = None
-) -> Tuple[MessageHeader, bytes]:
+) -> tuple[MessageHeader, bytes]:
     chunk = transport.read_chunk(timeout)
     try:
         ctrl_byte, cid, data_length = struct.unpack(

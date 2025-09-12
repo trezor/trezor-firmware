@@ -46,6 +46,7 @@ if __debug__:
     from . import state_to_str
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBuffer, AnyBytes
     from typing import Any, Awaitable, Callable
 
     from trezor.messages import ThpPairingCredential
@@ -321,7 +322,7 @@ class Channel:
         assert msg is not None
         return msg
 
-    def reassemble(self, packet: utils.BufferType) -> bool:
+    def reassemble(self, packet: AnyBuffer) -> bool:
         """
         Process current packet, returning `True` when a valid message is reassembled.
         The parsed message can retrieved via the `message` field (if it's not `None`).
@@ -405,11 +406,11 @@ class Channel:
         return await self.write_encrypted_payload(ENCRYPTED, buffer[:payload_length])
 
     def write_handshake_message(
-        self, ctrl_byte: int, payload: bytes
+        self, ctrl_byte: int, payload: AnyBytes
     ) -> Awaitable[None]:
         return self.write_encrypted_payload(ctrl_byte, payload)
 
-    async def write_encrypted_payload(self, ctrl_byte: int, payload: bytes) -> None:
+    async def write_encrypted_payload(self, ctrl_byte: int, payload: AnyBytes) -> None:
         if __debug__:
             self._log("write_encrypted_payload_loop")
 
@@ -452,7 +453,7 @@ class Channel:
         # restart event loop due to unresponsive channel
         raise Timeout("THP retransmission timeout")
 
-    def _encrypt(self, buffer: utils.BufferType, noise_payload_len: int) -> None:
+    def _encrypt(self, buffer: AnyBuffer, noise_payload_len: int) -> None:
         if __debug__:
             self._log("encrypt")
 

@@ -11,9 +11,11 @@ from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
 from .helpers.utils import derive_public_key
 
 if TYPE_CHECKING:
-    Delegations = list[tuple[bytes, int]]
-    CVoteRegistrationPayload = dict[int, Delegations | bytes | int]
-    SignedCVoteRegistrationPayload = tuple[CVoteRegistrationPayload, bytes]
+    from buffer_types import AnyBytes
+
+    Delegations = list[tuple[AnyBytes, int]]
+    CVoteRegistrationPayload = dict[int, Delegations | AnyBytes | int]
+    SignedCVoteRegistrationPayload = tuple[CVoteRegistrationPayload, AnyBytes]
 
     from trezor import messages
 
@@ -91,7 +93,7 @@ def _validate_cvote_registration_parameters(
         assert_cond(parameters.format == CardanoCVoteRegistrationFormat.CIP36)
 
 
-def _validate_vote_public_key(key: bytes) -> None:
+def _validate_vote_public_key(key: AnyBytes) -> None:
     assert_cond(len(key) == _CVOTE_PUBLIC_KEY_LENGTH)
 
 
@@ -115,7 +117,7 @@ def _get_voting_purpose_to_serialize(
 
 async def show(
     keychain: seed.Keychain,
-    auxiliary_data_hash: bytes,
+    auxiliary_data_hash: AnyBytes,
     parameters: messages.CardanoCVoteRegistrationParametersType | None,
     protocol_magic: int,
     network_id: int,
@@ -204,7 +206,7 @@ def get_hash_and_supplement(
     auxiliary_data: messages.CardanoTxAuxiliaryData,
     protocol_magic: int,
     network_id: int,
-) -> tuple[bytes, messages.CardanoTxAuxiliaryDataSupplement]:
+) -> tuple[AnyBytes, messages.CardanoTxAuxiliaryDataSupplement]:
     from trezor import messages
     from trezor.enums import CardanoTxAuxiliaryDataSupplementType
 
@@ -233,7 +235,7 @@ def get_hash_and_supplement(
 
 def _get_cvote_registration_hash(
     cvote_registration_payload: CVoteRegistrationPayload,
-    cvote_registration_payload_signature: bytes,
+    cvote_registration_payload_signature: AnyBytes,
 ) -> bytes:
     # _cborize_catalyst_registration
     cvote_registration_signature = {1: cvote_registration_payload_signature}
@@ -262,7 +264,7 @@ def _get_signed_cvote_registration_payload(
     protocol_magic: int,
     network_id: int,
 ) -> SignedCVoteRegistrationPayload:
-    delegations_or_key: Delegations | bytes
+    delegations_or_key: Delegations | AnyBytes
     if len(parameters.delegations) > 0:
         delegations_or_key = [
             (delegation.vote_public_key, delegation.weight)

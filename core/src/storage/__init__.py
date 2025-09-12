@@ -4,9 +4,7 @@ from typing import TYPE_CHECKING
 from storage import cache, common, device
 
 if TYPE_CHECKING:
-    from typing import Tuple
-
-    pass
+    from buffer_types import AnyBytes
 
 
 def wipe(clear_cache: bool = True) -> None:
@@ -22,7 +20,7 @@ def wipe(clear_cache: bool = True) -> None:
         cache.clear_all()
 
 
-def wipe_cache(excluded: Tuple[bytes, bytes] | None = None) -> None:
+def wipe_cache(excluded: tuple[AnyBytes, AnyBytes] | None = None) -> None:
     cache.clear_all(excluded)
 
 
@@ -38,7 +36,7 @@ def init_unlocked() -> None:
         common.set_bool(common.APP_DEVICE, device.INITIALIZED, True, public=True)
 
 
-def reset(excluded: Tuple[bytes, bytes] | None) -> None:
+def reset(excluded: tuple[AnyBytes, AnyBytes] | None) -> None:
     """
     Wipes storage but keeps the device id, device secret, and credential counter unchanged.
     """

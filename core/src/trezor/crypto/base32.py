@@ -1,6 +1,10 @@
 # Base32 implementation taken from the micropython-lib's base64 module
 # https://github.com/micropython/micropython-lib/blob/master/base64/base64.py
 #
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from buffer_types import AnyBytes
 
 
 _b32alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
@@ -9,9 +13,10 @@ _b32tab = [ord(c) for c in _b32alphabet]
 _b32rev = {ord(v): k for k, v in enumerate(_b32alphabet)}
 
 
-def encode(s: bytes) -> str:
+def encode(s: AnyBytes) -> str:
     from ustruct import unpack
 
+    s = bytes(s)
     quanta, leftover = divmod(len(s), 5)
     # Pad the last quantum with zero bits if necessary
     if leftover:

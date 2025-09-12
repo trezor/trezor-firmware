@@ -1,11 +1,15 @@
 import ustruct
 from micropython import const
 from trezorcrypto import aesgcm, bip32, curve25519, hmac
+from typing import TYPE_CHECKING
 
 from storage import device
 from trezor import log, utils
 from trezor.crypto.hashlib import sha256
 from trezor.wire.thp import ThpDecryptionError
+
+if TYPE_CHECKING:
+    from buffer_types import AnyBuffer, AnyBytes
 
 # The HARDENED flag is taken from apps.common.paths
 # It is not imported to save on resources
@@ -16,9 +20,7 @@ if __debug__:
     from trezor.utils import hexlify_if_bytes
 
 
-def enc(
-    buffer: utils.BufferType, key: bytes, nonce: int, auth_data: bytes = b""
-) -> bytes:
+def enc(buffer: AnyBuffer, key: bytes, nonce: int, auth_data: bytes = b"") -> bytes:
     """
     Encrypts the provided `buffer` with AES-GCM (in place).
     Returns a 16-byte long encryption tag.
@@ -33,7 +35,11 @@ def enc(
 
 
 def dec(
-    buffer: utils.BufferType, tag: bytes, key: bytes, nonce: int, auth_data: bytes = b""
+    buffer: AnyBuffer,
+    tag: AnyBytes,
+    key: AnyBytes,
+    nonce: int,
+    auth_data: AnyBytes = b"",
 ) -> bool:
     """
     Decrypts the provided buffer (in place). Returns `True` if the provided authentication `tag` is the same as
@@ -56,7 +62,7 @@ class BusyDecoder:
         self.aes_ctx = aesgcm(key, iv)
         self.aes_ctx.auth(auth_data)
 
-    def decrypt_part(self, part: utils.BufferType) -> None:
+    def decrypt_part(self, part: AnyBuffer) -> None:
         self.aes_ctx.decrypt_in_place(part)
 
     def finish_and_check_tag(self, tag: bytes) -> bool:
@@ -88,8 +94,8 @@ class Handshake:
 
     def handle_th1_crypto(
         self,
-        device_properties: bytes,
-        host_ephemeral_public_key: bytes,
+        device_properties: AnyBytes,
+        host_ephemeral_public_key: AnyBytes,
     ) -> tuple[bytes, bytes, bytes]:
 
         trezor_static_private_key, trezor_static_public_key = _derive_static_key_pair()
@@ -140,8 +146,8 @@ class Handshake:
 
     def handle_th2_crypto(
         self,
-        encrypted_host_static_public_key: utils.BufferType,
-        encrypted_payload: utils.BufferType,
+        encrypted_host_static_public_key: AnyBuffer,
+        encrypted_payload: AnyBuffer,
     ) -> None:
 
         aes_ctx = aesgcm(self.k, IV_2)
@@ -228,7 +234,7 @@ def _hkdf(chaining_key: bytes, input: bytes) -> tuple[bytes, bytes]:
     return (output_1, output_2)
 
 
-def _hash_of_two(part_1: bytes, part_2: bytes) -> bytes:
+def _hash_of_two(part_1: AnyBytes, part_2: AnyBytes) -> bytes:
     ctx = sha256(part_1)
     ctx.update(part_2)
     return ctx.digest()

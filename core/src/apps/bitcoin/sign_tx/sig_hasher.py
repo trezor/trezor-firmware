@@ -11,6 +11,7 @@ from ..writers import (
 )
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Protocol, Sequence
 
     from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
@@ -20,14 +21,14 @@ if TYPE_CHECKING:
     from ..common import SigHashType
 
     class SigHasher(Protocol):
-        def add_input(self, txi: TxInput, script_pubkey: bytes) -> None: ...
+        def add_input(self, txi: TxInput, script_pubkey: AnyBytes) -> None: ...
 
-        def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None: ...
+        def add_output(self, txo: TxOutput, script_pubkey: AnyBytes) -> None: ...
 
         def hash143(
             self,
             txi: TxInput,
-            public_keys: Sequence[bytes | memoryview],
+            public_keys: Sequence[AnyBytes],
             threshold: int,
             tx: SignTx | PrevTx,
             coin: coininfo.CoinInfo,
@@ -44,7 +45,7 @@ if TYPE_CHECKING:
         def hash_zip244(
             self,
             txi: TxInput | None,
-            script_pubkey: bytes | None,
+            script_pubkey: AnyBytes | None,
         ) -> bytes: ...
 
 
@@ -60,20 +61,20 @@ class BitcoinSigHasher:
         self.h_sequences = HashWriter(sha256())
         self.h_outputs = HashWriter(sha256())
 
-    def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
+    def add_input(self, txi: TxInput, script_pubkey: AnyBytes) -> None:
         write_bytes_reversed(self.h_prevouts, txi.prev_hash, TX_HASH_SIZE)
         write_uint32(self.h_prevouts, txi.prev_index)
         write_uint64(self.h_amounts, txi.amount)
         write_bytes_prefixed(self.h_scriptpubkeys, script_pubkey)
         write_uint32(self.h_sequences, txi.sequence)
 
-    def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+    def add_output(self, txo: TxOutput, script_pubkey: AnyBytes) -> None:
         write_tx_output(self.h_outputs, txo, script_pubkey)
 
     def hash143(
         self,
         txi: TxInput,
-        public_keys: Sequence[bytes | memoryview],
+        public_keys: Sequence[AnyBytes],
         threshold: int,
         tx: SignTx | PrevTx,
         coin: coininfo.CoinInfo,
@@ -174,6 +175,6 @@ class BitcoinSigHasher:
     def hash_zip244(
         self,
         txi: TxInput | None,
-        script_pubkey: bytes | None,
+        script_pubkey: AnyBytes | None,
     ) -> bytes:
         raise NotImplementedError

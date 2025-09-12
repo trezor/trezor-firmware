@@ -6,9 +6,7 @@ from storage.cache_common import SESSIONLESS_FLAG, SessionlessCache
 from trezor import utils
 
 if TYPE_CHECKING:
-    from typing import Tuple
-
-    pass
+    from buffer_types import AnyBytes
 
 # Cache initialization
 _SESSIONLESS_CACHE = SessionlessCache()
@@ -29,7 +27,7 @@ _SESSIONLESS_CACHE.clear()
 gc.collect()
 
 
-def clear_all(excluded: Tuple[bytes, bytes] | None = None) -> None:
+def clear_all(excluded: tuple[AnyBytes, AnyBytes] | None = None) -> None:
     """
     Clears all data from both the protocol cache and the sessionless cache.
     """

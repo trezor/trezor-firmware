@@ -4,6 +4,7 @@ from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo, SolanaTokenI
 from trezor.wire import DataError
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import TypeVar
 
     # NOTE: it's important all DefType variants can't be cross-parsed
@@ -12,7 +13,7 @@ if TYPE_CHECKING:
     )
 
 
-def decode_definition(definition: bytes, expected_type: type[DefType]) -> DefType:
+def decode_definition(definition: AnyBytes, expected_type: type[DefType]) -> DefType:
     from trezor.crypto.cosi import verify as cosi_verify
     from trezor.crypto.hashlib import sha256
     from trezor.enums import DefinitionType
@@ -58,8 +59,8 @@ def decode_definition(definition: bytes, expected_type: type[DefType]) -> DefTyp
         proof_length = r.get()
         for _ in range(proof_length):
             proof_entry = r.read_memoryview(32)
-            hash_a = min(hash, proof_entry)
-            hash_b = max(hash, proof_entry)
+            hash_a = min(hash, proof_entry)  # type: ignore [not assignable to "bytes"]
+            hash_b = max(hash, proof_entry)  # type: ignore [not assignable to "bytes"]
             hasher = sha256(b"\x01")
             hasher.update(hash_a)
             hasher.update(hash_b)

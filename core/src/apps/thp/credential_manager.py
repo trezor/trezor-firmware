@@ -10,6 +10,8 @@ from trezor.messages import (
 from trezor.wire.message_handler import wrap_protobuf_load
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from apps.common.paths import Slip21Path
 
 _THP_CREDENTIAL_KEY_PATH_PREFIX = [b"TREZOR", b"THP credential authentication key"]
@@ -44,7 +46,7 @@ def invalidate_cred_auth_key() -> None:
 
 
 def issue_credential(
-    host_static_public_key: bytes,
+    host_static_public_key: AnyBytes,
     credential_metadata: ThpCredentialMetadata,
 ) -> bytes:
     """
@@ -65,7 +67,7 @@ def issue_credential(
 
 
 def decode_credential(
-    encoded_pairing_credential_message: bytes,
+    encoded_pairing_credential_message: AnyBytes,
 ) -> ThpPairingCredential:
     """
     Decode a protobuf encoded pairing credential.
@@ -78,7 +80,7 @@ def decode_credential(
 
 def validate_credential(
     credential: ThpPairingCredential,
-    host_static_public_key: bytes,
+    host_static_public_key: AnyBytes,
 ) -> bool:
     """
     Validate a pairing credential binded to the provided host static public key.
@@ -94,8 +96,8 @@ def validate_credential(
 
 
 def decode_and_validate_credential(
-    encoded_pairing_credential_message: bytes,
-    host_static_public_key: bytes,
+    encoded_pairing_credential_message: AnyBytes,
+    host_static_public_key: AnyBytes,
 ) -> bool:
     """
     Decode a protobuf encoded pairing credential and validate it

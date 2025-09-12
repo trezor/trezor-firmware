@@ -6,6 +6,7 @@ from trezor import io, loop, utils
 from trezor.wire.protocol_common import Message, WireError
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBuffer, AnyBytes
     from trezorio import WireInterface
     from typing import Callable
 
@@ -47,7 +48,7 @@ async def read_message(
     if msize > len(buffer):
         # allocate a new buffer to fit the message
         try:
-            mdata: utils.BufferType = bytearray(msize)
+            mdata: AnyBuffer = bytearray(msize)
         except MemoryError:
             mdata = bytearray(iface.RX_PACKET_LEN)
             read_and_throw_away = True
@@ -78,7 +79,7 @@ async def read_message(
     return Message(mtype, mdata)
 
 
-async def write_message(iface: WireInterface, mtype: int, mdata: bytes) -> None:
+async def write_message(iface: WireInterface, mtype: int, mdata: AnyBytes) -> None:
     write = loop.wait(iface.iface_num() | io.POLL_WRITE)
 
     # gather data from msg

@@ -68,7 +68,7 @@ STATIC mp_obj_t mod_trezorio_USBIF_iface_num(mp_obj_t self) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_USBIF_iface_num_obj,
                                  mod_trezorio_USBIF_iface_num);
 
-/// def write(self, msg: bytes) -> int:
+/// def write(self, msg: AnyBytes) -> int:
 ///     """
 ///     Sends message using USB interface.
 ///     """
@@ -93,7 +93,7 @@ STATIC mp_obj_t mod_trezorio_USBIF_write(mp_obj_t self, mp_obj_t msg) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_USBIF_write_obj,
                                  mod_trezorio_USBIF_write);
 
-/// def write_blocking(self, msg: bytes, timeout_ms: int) -> int:
+/// def write_blocking(self, msg: AnyBytes, timeout_ms: int) -> int:
 ///     """
 ///     Sends message using USB interface.
 ///     """

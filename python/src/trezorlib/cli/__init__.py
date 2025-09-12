@@ -244,7 +244,9 @@ class TrezorConnection:
         seedless_session = client.get_seedless_session()
         return seedless_session
 
-    def _connection_context(self, connect_fn: t.Callable[[], t.Any]):
+    def _connection_context(
+        self, connect_fn: t.Callable[[], R]
+    ) -> t.Generator[R, None, None]:
         try:
             conn = connect_fn()
         except Exception as e:
@@ -263,7 +265,7 @@ class TrezorConnection:
             # other exceptions may cause a traceback
 
     @contextmanager
-    def client_context(self):
+    def client_context(self) -> t.Generator[TrezorClient, None, None]:
         """Get a client instance as a context manager. Handle errors in a manner
         appropriate for end-users.
 
@@ -280,7 +282,7 @@ class TrezorConnection:
         derive_cardano: bool = False,
         seedless: bool = False,
         must_resume: bool = False,
-    ):
+    ) -> t.Generator[Session, None, None]:
         yield from self._connection_context(
             self.get_seedless_session
             if seedless
@@ -291,7 +293,7 @@ class TrezorConnection:
             )
         )
 
-    def _print_exception(self, exc: Exception, message: str):
+    def _print_exception(self, exc: Exception, message: str) -> None:
         LOG.debug(message, exc_info=True)
         message = f"{message}: {exc.__class__.__name__}"
         if description := str(exc):

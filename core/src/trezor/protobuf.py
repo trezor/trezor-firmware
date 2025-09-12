@@ -9,11 +9,13 @@ type_for_name = trezorproto.type_for_name
 type_for_wire = trezorproto.type_for_wire
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     MessageType = trezorproto.MessageType
 
 
 def load_message_buffer(
-    buffer: bytes,
+    buffer: AnyBytes,
     msg_wire_type: int,
     experimental_enabled: bool = True,
 ) -> MessageType:

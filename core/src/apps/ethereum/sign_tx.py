@@ -11,6 +11,7 @@ from .helpers import address_from_bytes, bytes_from_address
 from .keychain import with_keychain_from_chain_id
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Iterable
 
     from trezor.messages import (
@@ -305,7 +306,9 @@ async def _handle_erc20(
     msg: MsgInSignTx,
     definitions: Definitions,
     address_bytes: bytes,
-) -> tuple[EthereumTokenInfo | None, bytes | None, bytes | None, bytes, int | None]:
+) -> tuple[
+    EthereumTokenInfo | None, AnyBytes | None, AnyBytes | None, AnyBytes, int | None
+]:
     # local_cache_attribute
     data_initial_chunk = msg.data_initial_chunk
     SC_FUNC_SIG_BYTES = constants.SC_FUNC_SIG_BYTES

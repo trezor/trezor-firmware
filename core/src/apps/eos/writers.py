@@ -11,6 +11,8 @@ from apps.common.writers import (
 )
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import (
         EosActionBuyRam,
         EosActionBuyRamBytes,
@@ -163,6 +165,6 @@ def write_asset(w: Writer, asset: EosAsset) -> None:
     write_uint64_le(w, asset.symbol)
 
 
-def write_bytes_prefixed(w: Writer, data: bytes) -> None:
+def write_bytes_prefixed(w: Writer, data: AnyBytes) -> None:
     write_uvarint(w, len(data))
     write_bytes_unchecked(w, data)

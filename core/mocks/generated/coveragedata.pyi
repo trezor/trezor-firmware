@@ -1,4 +1,5 @@
 from typing import *
+from buffer_types import *
 
 
 # rust/src/coverage/mod.rs

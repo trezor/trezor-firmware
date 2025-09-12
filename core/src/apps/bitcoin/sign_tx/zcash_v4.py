@@ -9,6 +9,7 @@ from ..writers import TX_HASH_SIZE, write_bytes_reversed, write_uint32, write_ui
 from .bitcoinlike import Bitcoinlike
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Sequence
 
     from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
@@ -31,12 +32,12 @@ class Zip243SigHasher:
         self.h_sequence = HashWriter(blake2b(outlen=32, personal=b"ZcashSequencHash"))
         self.h_outputs = HashWriter(blake2b(outlen=32, personal=b"ZcashOutputsHash"))
 
-    def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
+    def add_input(self, txi: TxInput, script_pubkey: AnyBytes) -> None:
         write_bytes_reversed(self.h_prevouts, txi.prev_hash, TX_HASH_SIZE)
         write_uint32(self.h_prevouts, txi.prev_index)
         write_uint32(self.h_sequence, txi.sequence)
 
-    def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+    def add_output(self, txo: TxOutput, script_pubkey: AnyBytes) -> None:
         from ..writers import write_tx_output
 
         write_tx_output(self.h_outputs, txo, script_pubkey)
@@ -44,7 +45,7 @@ class Zip243SigHasher:
     def hash143(
         self,
         txi: TxInput,
-        public_keys: Sequence[bytes | memoryview],
+        public_keys: Sequence[AnyBytes],
         threshold: int,
         tx: SignTx | PrevTx,
         coin: CoinInfo,
@@ -113,7 +114,7 @@ class Zip243SigHasher:
     def hash_zip244(
         self,
         txi: TxInput | None,
-        script_pubkey: bytes | None,
+        script_pubkey: AnyBytes | None,
     ) -> bytes:
         raise NotImplementedError
 

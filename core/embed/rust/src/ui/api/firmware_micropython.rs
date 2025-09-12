@@ -1306,9 +1306,9 @@ pub extern "C" fn upy_backlight_fade(_level: Obj) -> Obj {
 #[no_mangle]
 pub static mp_module_trezorui_api: Module = obj_module! {
     /// from trezor import utils
-    /// from trezor.enums import ButtonRequestType
+    /// from trezor.enums import ButtonRequestType, RecoveryType
     ///
-    /// PropertyType = tuple[str | None, str | bytes | None, bool | None]
+    /// PropertyType = tuple[str | None, StrOrBytes | None, bool | None]
     /// T = TypeVar("T")
     ///
     /// class LayoutObj(Generic[T]):
@@ -1414,7 +1414,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// INFO: UiResult
     Qstr::MP_QSTR_INFO => INFO.as_obj(),
 
-    /// def check_homescreen_format(data: bytes) -> bool:
+    /// def check_homescreen_format(data: AnyBytes) -> bool:
     ///     """Check homescreen format and dimensions."""
     Qstr::MP_QSTR_check_homescreen_format => obj_fn_1!(upy_check_homescreen_format).as_obj(),
 
@@ -1455,7 +1455,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def confirm_address(
     ///     *,
     ///     title: str,
-    ///     address: str | bytes,
+    ///     address: StrOrBytes,
     ///     address_label: str | None = None,
     ///     verb: str | None = None,
     ///     info_button: bool = False,
@@ -1479,7 +1479,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def confirm_value(
     ///     *,
     ///     title: str,
-    ///     value: str | bytes,
+    ///     value: StrOrBytes,
     ///     description: str | None,
     ///     is_data: bool = True,
     ///     extra: str | None = None,
@@ -1505,7 +1505,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def confirm_value_intro(
     ///     *,
     ///     title: str,
-    ///     value: str | bytes,
+    ///     value: StrOrBytes,
     ///     subtitle: str | None = None,
     ///     verb: str | None = None,
     ///     verb_cancel: str | None = None,
@@ -1541,7 +1541,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     title: str,
     ///     app_name: str,
     ///     icon_name: str | None,
-    ///     accounts: list[str | None],
+    ///     accounts: Sequence[str | None],
     /// ) -> LayoutObj[int | UiResult]:
     ///     """FIDO confirmation.
     ///
@@ -1560,7 +1560,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def confirm_homescreen(
     ///     *,
     ///     title: str,
-    ///     image: bytes,
+    ///     image: AnyBytes,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm homescreen."""
     Qstr::MP_QSTR_confirm_homescreen => obj_fn_kw!(0, new_confirm_homescreen).as_obj(),
@@ -1591,7 +1591,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     button: str,
     ///     button_style_confirm: bool = False,
     ///     hold: bool = False,
-    ///     items: Iterable[tuple[str | bytes, bool]],
+    ///     items: Iterable[tuple[StrOrBytes, bool]],
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm long content with the possibility to go back from any page.
     ///     Meant to be used with confirm_with_info on UI Bolt and Caesar."""
@@ -1601,7 +1601,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     subtitle: str | None = None,
-    ///     items: list[PropertyType],
+    ///     items: Sequence[PropertyType],
     ///     hold: bool = False,
     ///     verb: str | None = None,
     ///     external_menu: bool = False,
@@ -1621,9 +1621,9 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     fee: str,
     ///     fee_label: str,
     ///     title: str | None = None,
-    ///     account_items: list[PropertyType] | None = None,
+    ///     account_items: Sequence[PropertyType] | None = None,
     ///     account_title: str | None = None,
-    ///     extra_items: list[PropertyType] | None = None,
+    ///     extra_items: Sequence[PropertyType] | None = None,
     ///     extra_title: str | None = None,
     ///     verb_cancel: str | None = None,
     ///     back_button: bool = False,
@@ -1636,7 +1636,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     subtitle: str | None = None,
-    ///     items: Iterable[tuple[str | bytes, bool]],
+    ///     items: Iterable[tuple[StrOrBytes, bool]],
     ///     verb: str,
     ///     verb_info: str,
     ///     verb_cancel: str | None = None,
@@ -1676,8 +1676,8 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     br_name: str,
     ///     address_item: PropertyType | None,
     ///     extra_item: PropertyType | None,
-    ///     summary_items: list[PropertyType] | None = None,
-    ///     fee_items: list[PropertyType] | None = None,
+    ///     summary_items: Sequence[PropertyType] | None = None,
+    ///     fee_items: Sequence[PropertyType] | None = None,
     ///     summary_title: str | None = None,
     ///     summary_br_code: ButtonRequestType | None = None,
     ///     summary_br_name: str | None = None,
@@ -1708,7 +1708,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     case_sensitive: bool,
     ///     account: str | None,
     ///     path: str | None,
-    ///     xpubs: list[tuple[str, str]],
+    ///     xpubs: Sequence[tuple[str, str]],
     ///     br_code: ButtonRequestType,
     ///     br_name: str,
     /// ) -> LayoutObj[UiResult]:
@@ -1737,7 +1737,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     verb: str,
-    ///     items: list[str],
+    ///     items: Sequence[str],
     /// ) -> LayoutObj[UiResult]:
     ///     """Show multiple texts, each on its own page. TR specific."""
     Qstr::MP_QSTR_multiple_pages_texts => obj_fn_kw!(0, new_multiple_pages_texts).as_obj(),
@@ -1840,7 +1840,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def select_word_count(
     ///     *,
     ///     recovery_type: RecoveryType,
-    /// ) -> LayoutObj[int | str | UIResult]:  # TR returns str
+    /// ) -> LayoutObj[int | str | UiResult]:  # TR returns str
     ///     """Select a mnemonic word count from the options: 12, 18, 20, 24, or 33.
     ///     For unlocking a repeated backup, select between 20 and 33."""
     Qstr::MP_QSTR_select_word_count => obj_fn_kw!(0, new_select_word_count).as_obj(),
@@ -1857,7 +1857,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     details_title: str,
     ///     account: str | None,
     ///     path: str | None,
-    ///     xpubs: list[tuple[str, str]],
+    ///     xpubs: Sequence[tuple[str, str]],
     /// ) -> LayoutObj[UiResult]:
     ///     """Show address details - QR code, account, path, cosigner xpubs."""
     Qstr::MP_QSTR_show_address_details => obj_fn_kw!(0, new_show_address_details).as_obj(),
@@ -1927,7 +1927,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     screen_brightness: str | None,
     ///     haptic_feedback: bool | None,
     ///     led_enabled: bool | None,
-    ///     about_items: list[tuple[str | None, str | bytes | None, bool | None]],
+    ///     about_items: Sequence[tuple[str | None, StrOrBytes | None, bool | None]],
     /// ) -> LayoutObj[UiResult | DeviceMenuResult | tuple[DeviceMenuResult, int]]:
     ///     """Show the device menu."""
     Qstr::MP_QSTR_show_device_menu => obj_fn_kw!(0, new_show_device_menu).as_obj(),
@@ -1982,7 +1982,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def show_info_with_cancel(
     ///     *,
     ///     title: str,
-    ///     items: list[PropertyType],
+    ///     items: Sequence[PropertyType],
     ///     horizontal: bool = False,
     ///     chunkify: bool = False,
     /// ) -> LayoutObj[UiResult]:
@@ -2029,7 +2029,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def show_properties(
     ///     *,
     ///     title: str,
-    ///     value: list[PropertyType] | str,
+    ///     value: Sequence[PropertyType] | str,
     /// ) -> LayoutObj[None]:
     ///     """Show a list of key-value pairs, or a monospace string."""
     Qstr::MP_QSTR_show_properties => obj_fn_kw!(0, new_show_properties).as_obj(),

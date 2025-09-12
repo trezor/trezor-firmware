@@ -12,6 +12,8 @@ from apps.common.readers import read_compact_size
 from .scripts import read_bip322_signature_proof
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.crypto import bip32
     from trezor.enums import InputScriptType
     from trezor.messages import MultisigRedeemScriptType
@@ -35,10 +37,10 @@ def generate_proof(
     multisig: MultisigRedeemScriptType | None,
     coin: CoinInfo,
     user_confirmed: bool,
-    ownership_ids: list[bytes],
-    script_pubkey: bytes,
-    commitment_data: bytes,
-) -> tuple[bytes, bytes]:
+    ownership_ids: list[AnyBytes],
+    script_pubkey: AnyBytes,
+    commitment_data: AnyBytes,
+) -> tuple[AnyBytes, AnyBytes]:
     from trezor.enums import InputScriptType
 
     from apps.bitcoin.writers import write_bytes_fixed, write_compact_size, write_uint8
@@ -81,9 +83,9 @@ def generate_proof(
 
 
 def verify_nonownership(
-    proof: bytes,
-    script_pubkey: bytes,
-    commitment_data: bytes | None,
+    proof: AnyBytes,
+    script_pubkey: AnyBytes,
+    commitment_data: AnyBytes | None,
     keychain: Keychain,
     coin: CoinInfo,
 ) -> bool:
@@ -128,7 +130,7 @@ def verify_nonownership(
     return not_owned
 
 
-def read_scriptsig_witness(ownership_proof: bytes) -> tuple[memoryview, memoryview]:
+def read_scriptsig_witness(ownership_proof: AnyBytes) -> tuple[memoryview, memoryview]:
     try:
         r = utils.BufferReader(ownership_proof)
         if r.read_memoryview(4) != _VERSION_MAGIC:
@@ -148,7 +150,7 @@ def read_scriptsig_witness(ownership_proof: bytes) -> tuple[memoryview, memoryvi
         raise DataError("Invalid proof of ownership")
 
 
-def get_identifier(script_pubkey: bytes, keychain: Keychain) -> bytes:
+def get_identifier(script_pubkey: AnyBytes, keychain: Keychain) -> bytes:
     from trezor.crypto import hmac
 
     # k = Key(m/"SLIP-0019"/"Ownership identification key")
