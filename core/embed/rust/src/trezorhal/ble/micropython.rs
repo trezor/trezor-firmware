@@ -140,6 +140,10 @@ extern "C" fn py_is_pairing_requested() -> Obj {
     is_pairing_requested().into()
 }
 
+extern "C" fn py_is_started() -> Obj {
+    is_started().into()
+}
+
 extern "C" fn py_connection_flags() -> Obj {
     let block = || {
         let mut result = List::with_capacity(4)?;
@@ -362,6 +366,12 @@ pub static mp_module_trezorble: Module = obj_module! {
     ///     True if BLE pairing request was received.
     ///     """
     Qstr::MP_QSTR_is_pairing_requested => obj_fn_0!(py_is_pairing_requested).as_obj(),
+
+    /// def is_started() -> bool:
+    ///     """
+    ///     True if BLE subsystem is started.
+    ///     """
+    Qstr::MP_QSTR_is_started => obj_fn_0!(py_is_started).as_obj(),
 
     /// def connection_flags() -> list[str]:
     ///     """

@@ -410,6 +410,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_is_data;
   MP_QSTR_is_pairing;
   MP_QSTR_is_pairing_requested;
+  MP_QSTR_is_started;
   MP_QSTR_is_type_of;
   MP_QSTR_items;
   MP_QSTR_joint__title;

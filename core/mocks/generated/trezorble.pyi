@@ -119,6 +119,13 @@ def is_pairing_requested() -> bool:
 
 
 # rust/src/trezorhal/ble/micropython.rs
+def is_started() -> bool:
+    """
+    True if BLE subsystem is started.
+    """
+
+
+# rust/src/trezorhal/ble/micropython.rs
 def connection_flags() -> list[str]:
     """
     Returns current connection state as a list of string flags.
