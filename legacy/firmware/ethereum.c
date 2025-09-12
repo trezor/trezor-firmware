@@ -332,13 +332,11 @@ static void ethereumFormatAmount(const bignum256 *amnt,
       // "per gas" fees should always use Gwei
       strlcpy(suffix + 1, "Gwei", sizeof(suffix) - 1);
       decimals = 9;
+    } else if (bn_is_less(amnt, &bn1e9)) {
+      strlcpy(suffix + 1, "Wei", sizeof(suffix) - 1);
+      decimals = 0;
     } else {
-      if (bn_is_less(amnt, &bn1e9)) {
-        strlcpy(suffix + 1, "Wei", sizeof(suffix) - 1);
-        decimals = 0;
-      } else {
-        strlcpy(suffix + 1, chain_suffix, sizeof(suffix) - 1);
-      }
+      strlcpy(suffix + 1, chain_suffix, sizeof(suffix) - 1);
     }
   }
   bn_format(amnt, NULL, suffix, decimals, 0, false, ',', buf, buflen);
