@@ -1,12 +1,20 @@
 # BLE setup - called from main.py near the end of firmware startup
 # please note BLE may already be set up by bootloader
 
+import utime
+
 import storage.device
 import trezorble as ble
 from trezor import log
 
 try:
     ble.start_comm()
+
+    start_ms = utime.ticks_ms()
+
+    while utime.ticks_diff(utime.ticks_ms(), start_ms) < 5000:
+        if ble.is_started():
+            break
 
     # allow connections from bonded peers if any
     if ble.peer_count() > 0:
