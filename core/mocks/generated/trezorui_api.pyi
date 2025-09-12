@@ -881,5 +881,5 @@ class DeviceMenuResult:
     WipeDevice: ClassVar[DeviceMenuResult]
     Reboot: ClassVar[DeviceMenuResult]
     RebootToBootloader: ClassVar[DeviceMenuResult]
-    TurnOff: ClassVar[DeviceMenuResult]
+    PowerOff: ClassVar[DeviceMenuResult]
     MenuRefresh: ClassVar[DeviceMenuResult]

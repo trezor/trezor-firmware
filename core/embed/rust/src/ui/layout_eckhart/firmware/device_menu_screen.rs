@@ -116,7 +116,7 @@ pub enum DeviceMenuMsg {
     DeviceUnpairAll,
 
     // Power
-    TurnOff,
+    PowerOff,
     Reboot,
     RebootToBootloader,
 
@@ -421,12 +421,12 @@ impl DeviceMenuScreen {
     fn register_power_menu(&mut self) {
         let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
         items.add(MenuItem::return_msg(
-            TR::buttons__turn_off.into(),
-            DeviceMenuMsg::TurnOff,
+            TR::buttons__reboot.into(),
+            DeviceMenuMsg::Reboot,
         ));
         items.add(MenuItem::return_msg(
-            TR::buttons__restart.into(),
-            DeviceMenuMsg::Reboot,
+            TR::buttons__power_off.into(),
+            DeviceMenuMsg::PowerOff,
         ));
         items.add(MenuItem::return_msg(
             TR::reboot_to_bootloader__title.into(),

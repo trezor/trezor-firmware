@@ -1542,6 +1542,8 @@ pub enum TranslatedString {
     thp__continue_on_host = 1150,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Continue on host"}
     thp__pair_name = 1151,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "{0} is your Trezor's name."}
     thp__pair_new_device = 1152,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Pair with new device"}
+    buttons__power_off = 1153,  // "Power off"
+    buttons__reboot = 1154,  // "Reboot"
 }
 
 impl TranslatedString {
@@ -3521,6 +3523,8 @@ impl TranslatedString {
             (Self::thp__pair_new_device, ""),
             #[cfg(feature = "layout_eckhart")]
             (Self::thp__pair_new_device, "Pair with new device"),
+            (Self::buttons__power_off, "Power off"),
+            (Self::buttons__reboot, "Reboot"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3646,8 +3650,10 @@ impl TranslatedString {
         (Qstr::MP_QSTR_buttons__install, Self::buttons__install),
         (Qstr::MP_QSTR_buttons__more_info, Self::buttons__more_info),
         (Qstr::MP_QSTR_buttons__ok_i_understand, Self::buttons__ok_i_understand),
+        (Qstr::MP_QSTR_buttons__power_off, Self::buttons__power_off),
         (Qstr::MP_QSTR_buttons__purchase, Self::buttons__purchase),
         (Qstr::MP_QSTR_buttons__quit, Self::buttons__quit),
+        (Qstr::MP_QSTR_buttons__reboot, Self::buttons__reboot),
         (Qstr::MP_QSTR_buttons__restart, Self::buttons__restart),
         (Qstr::MP_QSTR_buttons__retry, Self::buttons__retry),
         (Qstr::MP_QSTR_buttons__select, Self::buttons__select),

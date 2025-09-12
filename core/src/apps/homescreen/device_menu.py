@@ -349,7 +349,7 @@ async def handle_device_menu() -> None:
             else:
                 break
         # Power settings
-        elif menu_result is DeviceMenuResult.TurnOff:
+        elif menu_result is DeviceMenuResult.PowerOff:
             from trezor import io
 
             io.pm.hibernate()

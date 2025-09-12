@@ -1151,5 +1151,7 @@
   "1149": "ble__pairing_title",
   "1150": "thp__continue_on_host",
   "1151": "thp__pair_name",
-  "1152": "thp__pair_new_device"
+  "1152": "thp__pair_new_device",
+  "1153": "buttons__power_off",
+  "1154": "buttons__reboot"
 }

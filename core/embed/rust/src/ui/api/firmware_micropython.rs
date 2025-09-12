@@ -2151,7 +2151,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     WipeDevice: ClassVar[DeviceMenuResult]
     ///     Reboot: ClassVar[DeviceMenuResult]
     ///     RebootToBootloader: ClassVar[DeviceMenuResult]
-    ///     TurnOff: ClassVar[DeviceMenuResult]
+    ///     PowerOff: ClassVar[DeviceMenuResult]
     ///     MenuRefresh: ClassVar[DeviceMenuResult]
     Qstr::MP_QSTR_DeviceMenuResult => DEVICE_MENU_RESULT.as_obj(),
 };

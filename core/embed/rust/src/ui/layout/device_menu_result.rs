@@ -28,7 +28,7 @@ pub static HAPTIC_FEEDBACK: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESU
 pub static LED_ENABLED: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static WIPE_DEVICE: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 // Power settings
-pub static TURN_OFF: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static POWER_OFF: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static REBOOT: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static REBOOT_TO_BOOTLOADER: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 // Misc
@@ -54,7 +54,7 @@ static DEVICE_MENU_RESULT_TYPE: Type = obj_type! {
         Qstr::MP_QSTR_HapticFeedback => HAPTIC_FEEDBACK.as_obj(),
         Qstr::MP_QSTR_LedEnabled => LED_ENABLED.as_obj(),
         Qstr::MP_QSTR_WipeDevice => WIPE_DEVICE.as_obj(),
-        Qstr::MP_QSTR_TurnOff => TURN_OFF.as_obj(),
+        Qstr::MP_QSTR_PowerOff => POWER_OFF.as_obj(),
         Qstr::MP_QSTR_Reboot => REBOOT.as_obj(),
         Qstr::MP_QSTR_RebootToBootloader => REBOOT_TO_BOOTLOADER.as_obj(),
         Qstr::MP_QSTR_MenuRefresh => MENU_REFRESH.as_obj(),

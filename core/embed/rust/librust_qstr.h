@@ -52,6 +52,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_NORMAL;
   MP_QSTR_PinCode;
   MP_QSTR_PinRemove;
+  MP_QSTR_PowerOff;
   MP_QSTR_RESUME;
   MP_QSTR_RX_PACKET_LEN;
   MP_QSTR_Reboot;
@@ -65,7 +66,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_TRANSITIONING;
   MP_QSTR_TX_PACKET_LEN;
   MP_QSTR_TranslationsHeader;
-  MP_QSTR_TurnOff;
   MP_QSTR_WipeCode;
   MP_QSTR_WipeDevice;
   MP_QSTR_WipeRemove;
@@ -231,8 +231,10 @@ static void _librust_qstrs(void) {
   MP_QSTR_buttons__install;
   MP_QSTR_buttons__more_info;
   MP_QSTR_buttons__ok_i_understand;
+  MP_QSTR_buttons__power_off;
   MP_QSTR_buttons__purchase;
   MP_QSTR_buttons__quit;
+  MP_QSTR_buttons__reboot;
   MP_QSTR_buttons__restart;
   MP_QSTR_buttons__retry;
   MP_QSTR_buttons__select;
