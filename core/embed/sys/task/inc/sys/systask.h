@@ -140,6 +140,10 @@ typedef struct {
   // Original stack end
   uint32_t stack_end;
 
+  // GOT (global offset table) address
+  // (used with dynamically linked apps, otherwise set to 0)
+  uint32_t got_addr;
+
   // Set if the task is processing the kernel callback
   bool in_callback;
 
@@ -163,7 +167,7 @@ void systask_yield_to(systask_t* task);
 //
 // The task must be not be running when the function is called
 bool systask_init(systask_t* task, uint32_t stack_base, uint32_t stack_size,
-                  void* context);
+                  uint32_t got_addr, void* context);
 
 // Returns true if the task is alive (not terminated, killed or crashed)
 bool systask_is_alive(const systask_t* task);
