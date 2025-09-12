@@ -39,7 +39,9 @@
  */
 
 typedef enum {
-  NOTIFY_BOOT = 0, /**< Device boot/startup notification */
+  NOTIFY_BOOT = 0,   /**< Device boot/startup notification */
+  NOTIFY_UNLOCK = 1, /**< Device unlocked and ready to accept messages */
+  NOTIFY_LOCK = 2    /**< Device hard-locked and won't accept messages */
   // Additional notification types can be added here as needed
 } notification_event_t;
 

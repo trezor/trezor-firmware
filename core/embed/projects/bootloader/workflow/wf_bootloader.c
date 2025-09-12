@@ -20,6 +20,7 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <sys/notify.h>
 #include <sys/types.h>
 #include <util/image.h>
 
@@ -141,6 +142,8 @@ static screen_t handle_wait_for_host(const vendor_header* vhdr,
   protob_ios_t ios;
   workflow_ifaces_init(secfalse, &ios);
 
+  notify_send(NOTIFY_UNLOCK);
+
   screen_t next_screen = SCREEN_WAIT_FOR_HOST;
 
   while (next_screen == SCREEN_WAIT_FOR_HOST) {
@@ -205,7 +208,9 @@ static screen_t handle_wait_for_host(const vendor_header* vhdr,
     }
   }
 
+  notify_send(NOTIFY_LOCK);
   workflow_ifaces_deinit(&ios);
+
   return next_screen;
 }
 
