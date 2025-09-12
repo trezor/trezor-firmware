@@ -7,6 +7,7 @@ import tools, models, ui
 
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 EVERYTHING = BITCOIN_ONLY != '1'
+PRODUCTION = ARGUMENTS.get('PRODUCTION', '0') == '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 HW_REVISION ='emulator'
@@ -892,6 +893,8 @@ if PYOPT == '0':
     features.append('ui_debug_overlay')
 if EVERYTHING:
     features.append('universal_fw')
+if not PRODUCTION:
+    features.append('dev_keys')
 
 rust = tools.add_rust_lib(
     env=env,
