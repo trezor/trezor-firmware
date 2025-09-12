@@ -334,7 +334,7 @@
     "buttons__go_back": "Retour",
     "buttons__hold_to_confirm": {
       "Bolt": "Appuyez pr conf",
-      "Caesar": "Maintenez pour confirmer",
+      "Caesar": "Maintenez pour conf.",
       "Delizia": "Maintenez pour confirmer",
       "Eckhart": "Maintenez pour confirmer"
     },
@@ -1320,7 +1320,12 @@
       "Delizia": "Fragm. de récupération #{0}",
       "Eckhart": "Fragment de récupération #{0}"
     },
-    "reset__recovery_wallet_backup_title": "Sauvegarde du portefeuille",
+    "reset__recovery_wallet_backup_title": {
+      "Bolt": "Sauvegarde du portefeuille",
+      "Caesar": "Sauvegarde du portefeuille",
+      "Delizia": "Sauvegarde du portef.",
+      "Eckhart": "Sauvegarde du portefeuille"
+    },
     "reset__repeat_for_all_shares": "Répéter pour tous les fragments.",
     "reset__required_number_of_groups": "Le nombre de groupes requis pour la récupération.",
     "reset__select_correct_word": "Sélectionnez le bon mot pour chaque position.",
