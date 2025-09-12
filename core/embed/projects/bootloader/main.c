@@ -174,6 +174,26 @@ static secbool boot_sequence(void) {
     turn_on = false;
   }
 
+  if (cmd == BOOT_COMMAND_POWER_OFF) {
+#ifdef USE_BLE
+    ble_init();
+
+    uint32_t timeout = ticks_timeout(5000);
+    ble_state_t state = {0};
+    do {
+      ble_get_state(&state);
+      if (state.state_known) {
+        break;
+      }
+    } while (!ticks_expired(timeout));
+
+    ble_command_t stop_cmd = {
+        .data_len = BLE_SWITCH_OFF,
+    };
+    ble_issue_command(&stop_cmd);
+#endif
+  }
+
   uint32_t press_start = 0;
   bool turn_on_locked = false;
   bool bld_locked = false;
