@@ -36,6 +36,7 @@
 
 #include <io/usb.h>
 #include <sys/bootutils.h>
+#include <sys/notify.h>
 #include <util/fwutils.h>
 #include <util/scm_revision.h>
 #include <util/unit_properties.h>
@@ -561,6 +562,21 @@ STATIC mp_obj_t mod_trezorutils_bootloader_locked() {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_bootloader_locked_obj,
                                  mod_trezorutils_bootloader_locked);
 
+/// def notify_send(event: int) -> None:
+///     """
+///     Sends a notification to host
+///     """
+STATIC mp_obj_t mod_trezorutils_notify_send(const mp_obj_t event) {
+  mp_int_t value = mp_obj_get_int(event);
+  if (value < 0) {
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid event."));
+  }
+  notify_send((notification_event_t)value);
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_notify_send_obj,
+                                 mod_trezorutils_notify_send);
+
 STATIC mp_obj_str_t mod_trezorutils_revision_obj = {
     {&mp_type_bytes}, 0, sizeof(SCM_REVISION), (const byte *)SCM_REVISION};
 
@@ -635,6 +651,12 @@ STATIC mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """UI layout identifier ("BOLT"-T, "CAESAR"-TS3, "DELIZIA"-TS5)."""
 /// USE_THP: bool
 /// """Whether the firmware supports Trezor-Host Protocol (version 2)."""
+/// NOTIFY_BOOT: int
+/// """Notification event: boot completed."""
+/// NOTIFY_UNLOCK: int
+/// """Notification event: device unlocked from hardlock"""
+/// NOTIFY_LOCK: int
+/// """Notification event: device locked to hardlock"""
 /// if __debug__:
 ///     DISABLE_ANIMATION: bool
 ///     """Whether the firmware should disable animations."""
@@ -657,6 +679,12 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
      MP_ROM_PTR(&mod_trezorutils_check_firmware_header_obj)},
     {MP_ROM_QSTR(MP_QSTR_bootloader_locked),
      MP_ROM_PTR(&mod_trezorutils_bootloader_locked_obj)},
+    {MP_ROM_QSTR(MP_QSTR_notify_send),
+     MP_ROM_PTR(&mod_trezorutils_notify_send_obj)},
+    {MP_ROM_QSTR(MP_QSTR_NOTIFY_BOOT), MP_ROM_INT(NOTIFY_BOOT)},
+    {MP_ROM_QSTR(MP_QSTR_NOTIFY_UNLOCK), MP_ROM_INT(NOTIFY_UNLOCK)},
+    {MP_ROM_QSTR(MP_QSTR_NOTIFY_LOCK), MP_ROM_INT(NOTIFY_LOCK)},
+
     {MP_ROM_QSTR(MP_QSTR_unit_color),
      MP_ROM_PTR(&mod_trezorutils_unit_color_obj)},
     {MP_ROM_QSTR(MP_QSTR_unit_packaging),

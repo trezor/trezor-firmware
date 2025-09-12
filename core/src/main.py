@@ -53,6 +53,8 @@ if utils.USE_BLE:
         import ble  # noqa: F401
         del ble
 
+# send unlock notification
+utils.notify_send(utils.NOTIFY_UNLOCK)
 
 # run the endless loop
 unimport_manager = utils.unimport()

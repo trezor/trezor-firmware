@@ -21,6 +21,7 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <sys/notify.h>
 #include <util/image.h>
 
 #include "bootui.h"
@@ -36,7 +37,9 @@ workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
   uint32_t ui_result = CONNECT_CANCEL;
 
   protob_ios_t ios;
+
   workflow_ifaces_init(secfalse, &ios);
+  notify_send(NOTIFY_UNLOCK);
 
   c_layout_t layout;
   memset(&layout, 0, sizeof(layout));
@@ -45,10 +48,10 @@ workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
 
   if (res == WF_OK_UI_ACTION && ui_result == CONNECT_CANCEL) {
     bootargs_set(BOOT_COMMAND_NONE, NULL, 0);
-    workflow_ifaces_deinit(&ios);
-    return WF_OK_REBOOT_SELECTED;
+    res = WF_OK_REBOOT_SELECTED;
   }
 
+  notify_send(NOTIFY_LOCK);
   workflow_ifaces_deinit(&ios);
   return res;
 }
