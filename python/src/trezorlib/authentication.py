@@ -23,7 +23,8 @@ import typing as t
 
 from cryptography import exceptions, x509
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import ec, utils
+from cryptography.hazmat.primitives.asymmetric import ec, ed25519, utils
+from cryptography.x509.oid import NameOID, ObjectIdentifier, SignatureAlgorithmOID
 
 from . import device
 from .transport.session import Session
@@ -37,14 +38,30 @@ def _pk_p256(pubkey_hex: str) -> ec.EllipticCurvePublicKey:
     )
 
 
+def _pk_ed25519(pubkey_hex: str) -> ed25519.Ed25519PublicKey:
+    return ed25519.Ed25519PublicKey.from_public_bytes(bytes.fromhex(pubkey_hex))
+
+
 CHALLENGE_HEADER = b"AuthenticateDevice:"
+
+OID_TO_NAME = {
+    NameOID.COMMON_NAME: "CN",
+    NameOID.LOCALITY_NAME: "L",
+    NameOID.STATE_OR_PROVINCE_NAME: "ST",
+    NameOID.ORGANIZATION_NAME: "O",
+    NameOID.ORGANIZATIONAL_UNIT_NAME: "OU",
+    NameOID.COUNTRY_NAME: "C",
+    NameOID.SERIAL_NUMBER: "SERIALNUMBER",
+    NameOID.DN_QUALIFIER: "DNQ",
+}
 
 
 class RootCertificate(t.NamedTuple):
     name: str
     device: str
     devel: bool
-    pubkey: ec.EllipticCurvePublicKey
+    p256_pubkey: ec.EllipticCurvePublicKey
+    ed25519_pubkey: ed25519.Ed25519PublicKey | None = None
 
 
 ROOT_PUBLIC_KEYS = [
@@ -67,6 +84,28 @@ ROOT_PUBLIC_KEYS = [
         ),
     ),
     RootCertificate(
+        # Root production keys for T3W1.
+        "Trezor Company",
+        "Trezor T3W1",
+        False,
+        _pk_p256(
+            "040dde0d3e0d4da593fac6fd02a461d0e7eef238aca55c7c50b4e9ec37f387330"
+            "3b6429ef1c9b78b4411a7dcbbc5dde5225979c1c2da3b073e82b1ed3f5f9825bb"
+        ),
+        _pk_ed25519("59237acd17134061d655b3f8d624573ca06ce8d862f38ba4e05140ce1d3d609d"),
+    ),
+    RootCertificate(
+        # Root backup production keys for T3W1.
+        "Trezor Company",
+        "Trezor T3W1",
+        False,
+        _pk_p256(
+            "04c6a673af4ec44b10441b1d78676e15173ad0e36df9f7f2fa1cd819955f20fe3"
+            "2917b60da5fed3b3aa54a9ab8b3ed27d198b3768cad26eef5935cd87af0af065e"
+        ),
+        _pk_ed25519("5612606584ee7e0bc313b13f7ac94156bb4cb75bd77585ddbe579301306e85f1"),
+    ),
+    RootCertificate(
         "TESTING ENVIRONMENT. DO NOT USE THIS DEVICE",
         "Trezor Safe 3",
         True,
@@ -85,6 +124,7 @@ ROOT_PUBLIC_KEYS = [
         ),
     ),
     RootCertificate(
+        # Root debug keys for T3W1.
         "TESTING ENVIRONMENT. DO NOT USE THIS DEVICE",
         "Trezor T3W1",
         True,
@@ -92,6 +132,17 @@ ROOT_PUBLIC_KEYS = [
             "04521192e173a9da4e3023f747d836563725372681eba3079c56ff11b2fc137ab"
             "189eb4155f371127651b5594f8c332fc1e9c0f3b80d4212822668b63189706578"
         ),
+    ),
+    RootCertificate(
+        # Root staging keys for T3W1.
+        "TESTING ENVIRONMENT. DO NOT USE THIS DEVICE",
+        "Trezor T3W1",
+        False,
+        _pk_p256(
+            "0465e88f9b2cea67e8364f0cfcfacd500af24e9040b357beee629ccc4fce1704d"
+            "1a7ef7284f387708f92ef14600e2caad6894016fee819d623b95d66210c3e7519"
+        ),
+        _pk_ed25519("cd318dc8405ae4f4144e3284dcb7b0cb0f0c2195c2ca14a0f6fccd9104e32a4b"),
     ),
 ]
 
@@ -106,31 +157,60 @@ class Certificate:
         self.cert = x509.load_der_x509_certificate(cert_bytes)
 
     def __str__(self) -> str:
-        return self.cert.subject.rfc4514_string()
+        return self.cert.subject.rfc4514_string(OID_TO_NAME)
 
     def public_key_bytes(self) -> bytes:
-        return self.cert.public_key().public_bytes(
-            serialization.Encoding.X962,
-            serialization.PublicFormat.UncompressedPoint,
-        )
+        cert_pubkey = self.cert.public_key()
+        if isinstance(cert_pubkey, ec.EllipticCurvePublicKey):
+            return cert_pubkey.public_bytes(
+                serialization.Encoding.X962,
+                serialization.PublicFormat.UncompressedPoint,
+            )
+        elif isinstance(cert_pubkey, ed25519.Ed25519PublicKey):
+            return cert_pubkey.public_bytes(
+                serialization.Encoding.Raw,
+                serialization.PublicFormat.Raw,
+            )
+        else:
+            raise ValueError("Unsupported key type.")
 
     def verify(self, signature: bytes, message: bytes) -> None:
         cert_pubkey = self.cert.public_key()
-        assert isinstance(cert_pubkey, ec.EllipticCurvePublicKey)
-        cert_pubkey.verify(
-            self.fix_signature(signature),
-            message,
-            ec.ECDSA(hashes.SHA256()),
-        )
+        if isinstance(cert_pubkey, ec.EllipticCurvePublicKey):
+            cert_pubkey.verify(
+                self.fix_signature(signature),
+                message,
+                ec.ECDSA(hashes.SHA256()),
+            )
+        elif isinstance(cert_pubkey, ed25519.Ed25519PublicKey):
+            cert_pubkey.verify(
+                signature,
+                message,
+            )
+        else:
+            raise ValueError("Unsupported key type.")
 
-    def verify_by(self, pubkey: ec.EllipticCurvePublicKey) -> None:
-        algo_params = self.cert.signature_algorithm_parameters
-        assert isinstance(algo_params, ec.ECDSA)
-        pubkey.verify(
-            self.fix_signature(self.cert.signature),
-            self.cert.tbs_certificate_bytes,
-            algo_params,
-        )
+    def verify_by(
+        self, pubkey: ec.EllipticCurvePublicKey | ed25519.Ed25519PublicKey
+    ) -> None:
+        if isinstance(pubkey, ec.EllipticCurvePublicKey):
+            algo_params = self.cert.signature_algorithm_parameters
+            assert isinstance(algo_params, ec.ECDSA)
+            pubkey.verify(
+                self.fix_signature(self.cert.signature),
+                self.cert.tbs_certificate_bytes,
+                algo_params,
+            )
+        elif isinstance(pubkey, ed25519.Ed25519PublicKey):
+            pubkey.verify(
+                self.cert.signature,
+                self.cert.tbs_certificate_bytes,
+            )
+        else:
+            raise ValueError("Unsupported key type.")
+
+    def signature_algorithm_oid(self) -> ObjectIdentifier:
+        return self.cert.signature_algorithm_oid
 
     def _check_ca_extensions(self) -> bool:
         """Check that this certificate is a valid Trezor CA.
@@ -209,7 +289,9 @@ class Certificate:
 
         try:
             pubkey = issuer.cert.public_key()
-            assert isinstance(pubkey, ec.EllipticCurvePublicKey)
+            assert isinstance(
+                pubkey, (ec.EllipticCurvePublicKey, ed25519.Ed25519PublicKey)
+            )
             self.verify_by(pubkey)
             return True
         except exceptions.InvalidSignature:
@@ -265,8 +347,10 @@ def verify_authentication_response(
     *,
     whitelist: t.Collection[bytes] | None,
     allow_development_devices: bool = False,
-    root_pubkey: bytes | ec.EllipticCurvePublicKey | None = None,
-) -> None:
+    root_pubkey: (
+        bytes | ec.EllipticCurvePublicKey | ed25519.Ed25519PublicKey | None
+    ) = None,
+) -> RootCertificate | None:
     """Evaluate the response to an AuthenticateDevice call.
 
     Performs all steps and logs their results via the logging facility. (The log can be
@@ -278,11 +362,6 @@ def verify_authentication_response(
     as an `ec.EllipticCurvePublicKey` object or as a byte-string representing P-256
     public key.
     """
-    if isinstance(root_pubkey, (bytes, bytearray, memoryview)):
-        root_pubkey = ec.EllipticCurvePublicKey.from_encoded_point(
-            ec.SECP256R1(), root_pubkey
-        )
-
     challenge_bytes = (
         len(CHALLENGE_HEADER).to_bytes(1, "big")
         + CHALLENGE_HEADER
@@ -332,7 +411,18 @@ def verify_authentication_response(
         cert = ca_cert
         cert_label = f"CA #{i} certificate"
 
+    if isinstance(root_pubkey, (bytes, bytearray, memoryview)):
+        if cert.signature_algorithm_oid() == SignatureAlgorithmOID.ECDSA_WITH_SHA256:
+            root_pubkey = ec.EllipticCurvePublicKey.from_encoded_point(
+                ec.SECP256R1(), root_pubkey
+            )
+        elif cert.signature_algorithm_oid() == SignatureAlgorithmOID.ED25519:
+            root_pubkey = ed25519.Ed25519PublicKey.from_public_bytes(root_pubkey)
+        else:
+            raise ValueError("Unsupported key type.")
+
     if root_pubkey is not None:
+        root = None
         try:
             cert.verify_by(root_pubkey)
         except Exception:
@@ -344,7 +434,18 @@ def verify_authentication_response(
     else:
         for root in ROOT_PUBLIC_KEYS:
             try:
-                cert.verify_by(root.pubkey)
+                if (
+                    cert.signature_algorithm_oid()
+                    == SignatureAlgorithmOID.ECDSA_WITH_SHA256
+                ):
+                    cert.verify_by(root.p256_pubkey)
+                elif (
+                    cert.signature_algorithm_oid() == SignatureAlgorithmOID.ED25519
+                    and root.ed25519_pubkey is not None
+                ):
+                    cert.verify_by(root.ed25519_pubkey)
+                else:
+                    continue
             except Exception:
                 continue
             else:
@@ -372,6 +473,8 @@ def verify_authentication_response(
     if failed:
         raise DeviceNotAuthentic
 
+    return root
+
 
 def authenticate_device(
     session: Session,
@@ -379,18 +482,33 @@ def authenticate_device(
     *,
     whitelist: t.Collection[bytes] | None = None,
     allow_development_devices: bool = False,
-    root_pubkey: bytes | ec.EllipticCurvePublicKey | None = None,
+    p256_root_pubkey: bytes | ec.EllipticCurvePublicKey | None = None,
+    ed25519_root_pubkey: bytes | ed25519.Ed25519PublicKey | None = None,
 ) -> None:
     if challenge is None:
         challenge = secrets.token_bytes(16)
 
     resp = device.authenticate(session, challenge)
 
-    return verify_authentication_response(
+    optiga_root = verify_authentication_response(
         challenge,
-        resp.signature,
-        resp.certificates,
+        resp.optiga_signature,
+        resp.optiga_certificates,
         whitelist=whitelist,
         allow_development_devices=allow_development_devices,
-        root_pubkey=root_pubkey,
+        root_pubkey=p256_root_pubkey,
     )
+
+    if resp.tropic_signature:
+        tropic_root = verify_authentication_response(
+            challenge,
+            resp.tropic_signature,
+            resp.tropic_certificates,
+            whitelist=whitelist,
+            allow_development_devices=allow_development_devices,
+            root_pubkey=ed25519_root_pubkey,
+        )
+
+        if optiga_root is not tropic_root:
+            LOG.error("Certificates issued by different root authorities.")
+            raise DeviceNotAuthentic
