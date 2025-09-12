@@ -1,6 +1,5 @@
 use crate::{
     strutil::TString,
-    time::Duration,
     ui::{
         component::{
             text::{
@@ -8,13 +7,12 @@ use crate::{
                 layout::{LayoutFit, LineBreaking},
                 TextStyle,
             },
-            Component, Event, EventCtx, TextLayout, Timer,
+            Component, Event, EventCtx, TextLayout,
         },
-        display::Icon,
         event::TouchEvent,
-        geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
-        shape::{Bar, Renderer, Text, ToifImage},
-        util::DisplayStyle,
+        geometry::{Alignment, Insets, Offset, Rect},
+        shape::{Bar, Renderer, Text},
+        util::long_line_content_with_ellipsis,
     },
 };
 
@@ -22,19 +20,29 @@ use super::super::{
     constant::SCREEN,
     keyboard::{
         common::{
-            render_pending_marker, MultiTapKeyboard, FADING_ICON_COLORS, FADING_ICON_COUNT,
-            KEYBOARD_INPUT_INSETS, KEYBOARD_INPUT_RADIUS, SHOWN_INSETS,
+            render_pending_marker, MultiTapKeyboard, KEYBOARD_INPUT_INSETS, KEYBOARD_INPUT_RADIUS,
+            SHOWN_INSETS,
         },
         keypad::{ButtonState, KeypadState},
     },
     theme, StringInput, StringInputMsg,
 };
 
-pub struct PassphraseInput {
+#[derive(PartialEq, Debug, Copy, Clone)]
+#[cfg_attr(feature = "ui_debug", derive(ufmt::derive::uDebug))]
+enum LabelDisplayStyle {
+    /// A part that fits on one line
+    OneLine,
+    /// One line with the last pending character.
+    OneLineWithMarker,
+    /// The complete string is shown in the input area.
+    Complete,
+}
+
+pub struct LabelInput {
     area: Rect,
     textbox: TextBox,
-    display_style: DisplayStyle,
-    last_char_timer: Timer,
+    display_style: LabelDisplayStyle,
     shown_area: Rect,
     max_len: usize,
     multi_tap: MultiTapKeyboard,
@@ -42,23 +50,32 @@ pub struct PassphraseInput {
     allow_empty: bool,
 }
 
-impl PassphraseInput {
-    const TWITCH: i16 = 4;
+impl LabelInput {
     const STYLE: TextStyle =
         theme::TEXT_REGULAR.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
     const SHOWN_TOUCH_OUTSET: Insets = Insets::bottom(200);
-    const ICON: Icon = theme::ICON_DASH_VERTICAL;
-    const ICON_WIDTH: i16 = Self::ICON.toif.width();
-    const ICON_SPACE: i16 = 12;
-    const MAX_SHOWN_LEN: usize = 13; // max number of icons per line
-    const LAST_DIGIT_TIMEOUT: Duration = Duration::from_secs(1);
+    const ONE_LINE_INSETS: Insets = Insets::new(
+        KEYBOARD_INPUT_INSETS.top,
+        0,
+        KEYBOARD_INPUT_INSETS.bottom,
+        KEYBOARD_INPUT_INSETS.left,
+    );
 
-    pub fn new(max_len: usize, allow_cancel: bool, allow_empty: bool) -> Self {
+    pub fn new(
+        max_len: usize,
+        prefill: Option<TString<'static>>,
+        allow_cancel: bool,
+        allow_empty: bool,
+    ) -> Self {
+        let textbox = if let Some(prefill) = prefill {
+            prefill.map(|s| TextBox::new(s, max_len))
+        } else {
+            TextBox::empty(max_len)
+        };
         Self {
             area: Rect::zero(),
-            textbox: TextBox::empty(max_len),
-            display_style: DisplayStyle::Hidden,
-            last_char_timer: Timer::new(),
+            textbox,
+            display_style: LabelDisplayStyle::OneLine,
             shown_area: Rect::zero(),
             max_len,
             multi_tap: MultiTapKeyboard::new(),
@@ -68,7 +85,7 @@ impl PassphraseInput {
     }
 
     fn update_shown_area(&mut self) {
-        // The area where the passphrase is shown
+        // The area where the label is shown
         let mut shown_area = Rect::from_top_left_and_size(
             self.area.top_left(),
             Offset::new(SCREEN.width(), self.area.height()),
@@ -87,9 +104,9 @@ impl PassphraseInput {
         self.shown_area = shown_area;
     }
 
-    fn render_shown<'s>(&self, target: &mut impl Renderer<'s>) {
-        // Make sure the pin should be shown
-        debug_assert_eq!(self.display_style, DisplayStyle::Shown);
+    fn render_complete<'s>(&self, target: &mut impl Renderer<'s>) {
+        // Make sure the entire label should be shown
+        debug_assert_eq!(self.display_style, LabelDisplayStyle::Complete);
 
         Bar::new(self.shown_area)
             .with_bg(theme::GREY_SUPER_DARK)
@@ -102,94 +119,54 @@ impl PassphraseInput {
             .render_text(self.content(), target, true);
     }
 
-    fn render_hidden<'s>(&self, target: &mut impl Renderer<'s>) {
-        debug_assert_ne!(self.display_style, DisplayStyle::Shown);
+    fn render_one_line<'s>(&self, target: &mut impl Renderer<'s>) {
+        debug_assert_ne!(self.display_style, LabelDisplayStyle::Complete);
 
-        let hidden_area: Rect = self.area.inset(KEYBOARD_INPUT_INSETS);
-        let pp_len = self.content().len();
-        let last_char = self.display_style != DisplayStyle::Hidden;
+        let area: Rect = self.area.inset(Self::ONE_LINE_INSETS);
 
-        let mut cursor = hidden_area.left_center().ofs(Offset::x(12));
+        // Find out how much text can fit into the textbox.
+        // Accounting for the pending marker, which draws itself one pixel longer than
+        // the last character
+        let available_area_width = area.width() - 1;
+        let text_to_display = long_line_content_with_ellipsis(
+            self.content(),
+            "...",
+            Self::STYLE.text_font,
+            available_area_width,
+        );
 
-        // Render only when there are characters
-        if pp_len == 0 {
-            return;
-        }
-        // Number of visible icons + characters
-        let visible_len = pp_len.min(Self::MAX_SHOWN_LEN);
-        // Number of visible icons
-        let visible_icons = visible_len - last_char as usize;
+        let cursor = area.left_center().ofs(Offset::new(
+            8,
+            Self::STYLE.text_font.visible_text_height("1") / 2,
+        ));
 
-        // Jiggle when overflowed.
-        if pp_len > visible_len && pp_len % 2 == 0 && self.display_style != DisplayStyle::Shown {
-            cursor.x += Self::TWITCH;
-        }
+        Text::new(cursor, &text_to_display, Self::STYLE.text_font)
+            .with_fg(Self::STYLE.text_color)
+            .render(target);
 
-        let mut char_idx = 0;
-
-        // Greyed out overflowing icons
-        for (i, &fg_color) in FADING_ICON_COLORS.iter().enumerate() {
-            if pp_len > visible_len + (FADING_ICON_COUNT - 1 - i) {
-                ToifImage::new(cursor, Self::ICON.toif)
-                    .with_align(Alignment2D::CENTER_LEFT)
-                    .with_fg(fg_color)
-                    .render(target);
-                cursor.x += Self::ICON_SPACE + Self::ICON_WIDTH;
-                char_idx += 1;
-            }
-        }
-
-        if visible_icons > 0 {
-            // Classical dot(s)
-            for _ in char_idx..visible_icons {
-                ToifImage::new(cursor, Self::ICON.toif)
-                    .with_align(Alignment2D::CENTER_LEFT)
-                    .with_fg(Self::STYLE.text_color)
-                    .render(target);
-                cursor.x += Self::ICON_SPACE + Self::ICON_WIDTH;
-            }
-        }
-
-        if last_char {
-            // This should not fail because pp_len > 0
-            let last = &self.content()[(pp_len - 1)..pp_len];
-
-            // Adapt x and y positions for the character
-            cursor.y += Self::STYLE.text_font.visible_text_height("1") / 2;
-
-            // Paint the last character
-            Text::new(cursor, last, Self::STYLE.text_font)
-                .with_align(Alignment::Start)
-                .with_fg(Self::STYLE.text_color)
-                .render(target);
-
-            // Paint the pending marker.
-            if self.display_style == DisplayStyle::LastWithMarker {
-                render_pending_marker(
-                    target,
-                    cursor,
-                    last,
-                    Self::STYLE.text_font,
-                    Self::STYLE.text_color,
-                );
-            }
+        // Paint the pending marker.
+        if self.display_style == LabelDisplayStyle::OneLineWithMarker {
+            render_pending_marker(
+                target,
+                cursor,
+                &text_to_display,
+                Self::STYLE.text_font,
+                Self::STYLE.text_color,
+            );
         }
     }
 }
 
-impl StringInput for PassphraseInput {
+impl StringInput for LabelInput {
     fn on_key_click(&mut self, ctx: &mut EventCtx, idx: usize, text: TString<'static>) {
         let edit = text.map(|c| self.multi_tap.click_key(ctx, idx, c));
         self.textbox.apply(ctx, edit);
         if text.len() == 1 {
-            // If the key has just one character, it is immediately applied and the last
-            // digit timer should be started
-            self.display_style = DisplayStyle::LastOnly;
-            self.last_char_timer.start(ctx, Self::LAST_DIGIT_TIMEOUT);
+            // If the key has just one character, it is immediately applied
+            self.display_style = LabelDisplayStyle::OneLine;
         } else {
-            // multi tap timer is runnig, the last digit timer should be stopped
-            self.last_char_timer.stop();
-            self.display_style = DisplayStyle::LastWithMarker;
+            // multi tap timer is running, the marker should be shown
+            self.display_style = LabelDisplayStyle::OneLineWithMarker;
         }
     }
 
@@ -200,11 +177,11 @@ impl StringInput for PassphraseInput {
         } else {
             self.textbox.delete_last(ctx);
         }
-        self.display_style = DisplayStyle::Hidden;
+        self.display_style = LabelDisplayStyle::OneLine;
     }
 
     fn get_keypad_state(&self) -> KeypadState {
-        if self.display_style == DisplayStyle::Shown {
+        if self.display_style == LabelDisplayStyle::Complete {
             // Disable the entire active keypad
             KeypadState {
                 back: ButtonState::Hidden,
@@ -260,13 +237,9 @@ impl StringInput for PassphraseInput {
     }
 
     fn on_page_change(&mut self, ctx: &mut EventCtx) {
-        if self.multi_tap.pending_key().is_some() {
-            // Clear the pending state.
-            self.multi_tap.clear_pending_state(ctx);
-            self.display_style = DisplayStyle::LastOnly;
-            // the character has been added, show it for a bit and then hide it
-            self.last_char_timer.start(ctx, Self::LAST_DIGIT_TIMEOUT);
-        }
+        // Clear the pending state.
+        self.multi_tap.clear_pending_state(ctx);
+        self.display_style = LabelDisplayStyle::OneLine;
     }
 
     fn content(&self) -> &str {
@@ -278,13 +251,12 @@ impl StringInput for PassphraseInput {
     }
 
     fn might_overlap_keypad(&self) -> bool {
-        self.display_style == DisplayStyle::Shown
+        self.display_style == LabelDisplayStyle::Complete
     }
 }
 
-impl Component for PassphraseInput {
+impl Component for LabelInput {
     type Msg = StringInputMsg;
-
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
         bounds
@@ -306,46 +278,42 @@ impl Component for PassphraseInput {
         match event {
             Event::Timer(_) if self.multi_tap.timeout_event(event) => {
                 self.multi_tap.clear_pending_state(ctx);
-                self.last_char_timer.start(ctx, Self::LAST_DIGIT_TIMEOUT);
-                self.display_style = DisplayStyle::LastOnly;
-                // Disable keypad when the passphrase reached the max length
+                self.display_style = LabelDisplayStyle::OneLine;
+                // Return update message to disable keypad when the passphrase reached the max
+                // length
                 if self.is_full() {
                     return Some(StringInputMsg::UpdateKeypad);
                 }
                 return None;
             }
-            // Return touch start if the touch is detected inside the touchable area
+            // Return update message to to disable keypad if the touch is detected inside the
+            // touchable area
             Event::Touch(TouchEvent::TouchStart(pos)) if self.area.contains(pos) => {
                 self.multi_tap.clear_pending_state(ctx);
-                // Stop the last char timer
-                self.last_char_timer.stop();
-                // Show the entire passphrase on the touch start
-                self.display_style = DisplayStyle::Shown;
+                // Show the entire label on the touch start
+                self.display_style = LabelDisplayStyle::Complete;
                 self.update_shown_area();
                 return Some(StringInputMsg::UpdateKeypad);
             }
-            // Return touch end if the touch end is detected inside the visible area
+            // Return update message to to re-enable keypad if the touch end is detected inside the
+            // touchable area
             Event::Touch(TouchEvent::TouchEnd(pos))
                 if extended_shown_area.contains(pos)
-                    && self.display_style == DisplayStyle::Shown =>
+                    && self.display_style == LabelDisplayStyle::Complete =>
             {
                 self.multi_tap.clear_pending_state(ctx);
-                self.display_style = DisplayStyle::Hidden;
+                self.display_style = LabelDisplayStyle::OneLine;
                 return Some(StringInputMsg::UpdateKeypad);
             }
-            // Return touch end if the touch moves out of the visible area
+            // Return update message to to re-enable keypad if the touch moves out of the visible
+            // area
             Event::Touch(TouchEvent::TouchMove(pos))
                 if !extended_shown_area.contains(pos)
-                    && self.display_style == DisplayStyle::Shown =>
+                    && self.display_style == LabelDisplayStyle::Complete =>
             {
                 self.multi_tap.clear_pending_state(ctx);
-                self.display_style = DisplayStyle::Hidden;
+                self.display_style = LabelDisplayStyle::OneLine;
                 return Some(StringInputMsg::UpdateKeypad);
-            }
-            // Timeout for showing the last char.
-            Event::Timer(_) if self.last_char_timer.expire(event) => {
-                self.display_style = DisplayStyle::Hidden;
-                ctx.request_paint();
             }
             _ => {}
         };
@@ -359,16 +327,16 @@ impl Component for PassphraseInput {
         }
 
         match self.display_style {
-            DisplayStyle::Shown => self.render_shown(target),
-            _ => self.render_hidden(target),
+            LabelDisplayStyle::Complete => self.render_complete(target),
+            _ => self.render_one_line(target),
         }
     }
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for PassphraseInput {
+impl crate::trace::Trace for LabelInput {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.component("PassphraseInput");
+        t.component("LabelInput");
         t.string("content", self.content().into());
         let display_style = uformat!("{:?}", self.display_style);
         t.string("display_style", display_style.as_str().into());
