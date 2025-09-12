@@ -17,9 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <trezor_types.h>
-
 #ifndef KERNEL_MODE
+
+#pragma GCC optimize("no-stack-protector")
+
+#include <trezor_types.h>
 
 #include "syscall_internal.h"
 
