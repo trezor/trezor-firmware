@@ -34,10 +34,10 @@ impl BldMenuScreen {
         let bluetooth = Button::with_text("Pair new device".into())
             .styled(theme::bootloader::button_bld_menu())
             .with_text_align(Alignment::Start);
-        let reboot = Button::with_text("Reboot".into())
+        let reboot = Button::with_text("Restart".into())
             .styled(theme::bootloader::button_bld_menu())
             .with_text_align(Alignment::Start);
-        let turnoff = Button::with_text("Power off".into())
+        let turnoff = Button::with_text("Turn off".into())
             .styled(theme::bootloader::button_bld_menu())
             .with_text_align(Alignment::Start);
         let reset = Button::with_text("Factory reset".into())
