@@ -406,7 +406,7 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
                               sizeof(OID_SERIAL_NUMBER), &subject_sn,
                               &subject_sn_size)) {
         cli_error(cli, CLI_ERROR,
-                  "check_device_cert_chain, device_sn not set.");
+                  "check_device_cert_chain, serialNumber not set.");
       }
 
       if (subject_sn_size != device_sn_size ||

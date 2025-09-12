@@ -33,6 +33,7 @@
 
 #ifdef USE_OPTIGA
 #include <sec/optiga.h>
+#include "prodtest_optiga.h"
 #endif
 
 #ifdef USE_TROPIC
@@ -116,7 +117,40 @@ static void prodtest_secrets_init(cli_t* cli) {
     return;
   }
 
+#ifdef SECRET_LOCK_SLOT_OFFSET
+  // Make sure that the secrets sector isn't locked so that we don't overwrite
+  // the MCU's nRF pairing secret.
+  if (secfalse != secret_is_locked()) {
+    cli_error(cli, CLI_ERROR, "Secret sector is already locked");
+    return;
+  }
+#endif
+
+#ifdef USE_OPTIGA
+  // Make sure that Optiga isn't locked so that we don't overwrite the MCU's
+  // pairing secrets.
+  optiga_locked_status optiga_status = get_optiga_locked_status(cli);
+
+  if (optiga_status == OPTIGA_LOCKED_TRUE) {
+    cli_error(cli, CLI_ERROR, "Optiga is already locked");
+    return;
+  }
+
+  if (optiga_status != OPTIGA_LOCKED_FALSE) {
+    // Error reported by get_optiga_locked_status().
+    return;
+  }
+#endif
+
 #ifdef USE_TROPIC
+  // Make sure that Tropic pairing hasn't started so that we don't overwrite the
+  // MCU's pairing secrets.
+  curve25519_key tropic_public = {0};
+  if (secret_key_tropic_public(tropic_public) == sectrue) {
+    cli_error(cli, CLI_ERROR, "Tropic pairing has already started.");
+    return;
+  }
+
   // Ensure that a session with Tropic is established so that we can include
   // randomness from the chip when generating the secrets. At this point in
   // provisioning the factory pairing key should still be valid.

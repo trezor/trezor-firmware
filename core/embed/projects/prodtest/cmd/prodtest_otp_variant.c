@@ -29,6 +29,10 @@
 #include <stdlib.h>
 #include "prodtest_optiga.h"
 
+#ifdef USE_TROPIC
+#include "prodtest_tropic.h"
+#endif
+
 static void prodtest_otp_variant_read(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
