@@ -145,6 +145,13 @@ typedef struct {
   // (used with dynamically linked apps, otherwise set to 0)
   uint32_t got_addr;
 
+  // Address of the global TLS area
+  void* tls_addr;
+  // Number of bytes used in the TLS area
+  size_t tls_size;
+  // TLS copy if the task is inactive
+  uint32_t tls_copy[20];
+
   // Set if the task is processing the kernel callback
   bool in_callback;
 
@@ -160,6 +167,9 @@ systask_t* systask_active(void);
 
 // Returns the kernel task
 systask_t* systask_kernel(void);
+
+// Enables TLS area swapping for the given task
+void systask_enable_tls(systask_t* task, mpu_area_t tls);
 
 // Makes the given task the currently running task.
 void systask_yield_to(systask_t* task);
