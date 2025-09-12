@@ -20,6 +20,7 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <sys/notify.h>
 #include <sys/systick.h>
 #include <sys/types.h>
 #include <util/flash_utils.h>
@@ -66,6 +67,7 @@ workflow_result_t workflow_empty_device(void) {
 
   protob_ios_t ios;
   workflow_ifaces_init(sectrue, &ios);
+  notify_send(NOTIFY_UNLOCK);
 
   workflow_result_t res = WF_CANCELLED;
   uint32_t ui_result = WELCOME_CANCEL;
@@ -100,6 +102,7 @@ workflow_result_t workflow_empty_device(void) {
       return res;
     }
   }
+  notify_send(NOTIFY_LOCK);
   workflow_ifaces_deinit(&ios);
   return res;
 }
