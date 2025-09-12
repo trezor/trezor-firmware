@@ -92,6 +92,8 @@ typedef struct {
   ble_mode_t mode_requested;
   bt_le_addr_t connected_addr;
   ble_adv_start_cmd_data_t adv_data;
+  bool restart_adv_on_disconnect;
+  bool next_adv_with_disconnect;
 } ble_wakeup_params_t;
 
 typedef enum {
