@@ -27,6 +27,8 @@
 
 #include <libtropic.h>
 
+#include <sys/systick.h>
+
 #ifdef TREZOR_EMULATOR
 #include <arpa/inet.h>
 #include <libtropic/hal/port/unix/lt_port_unix_tcp.h>
@@ -66,22 +68,22 @@ bool tropic_init(void) {
     goto cleanup;
   }
 
-  curve25519_key tropic_pubkey = {0};
-  curve25519_key trezor_privkey = {0};
+  // TODO: Revert
+  curve25519_key trezor_privkey = {
+      0x28, 0x3f, 0x5a, 0x0f, 0xfc, 0x41, 0xcf, 0x50, 0x98, 0xa8, 0xe1,
+      0x7d, 0xb6, 0x37, 0x2c, 0x3c, 0xaa, 0xd1, 0xee, 0xee, 0xdf, 0x0f,
+      0x75, 0xbc, 0x3f, 0xbf, 0xcd, 0x9c, 0xab, 0x3d, 0xe9, 0x72};
 
-  secbool pubkey_ok = secret_key_tropic_public(tropic_pubkey);
-  secbool privkey_ok = secret_key_tropic_pairing_privileged(trezor_privkey);
+  curve25519_key trezor_pubkey = {0};
+  curve25519_scalarmult_basepoint(trezor_pubkey, trezor_privkey);
 
-  if (pubkey_ok == sectrue && privkey_ok == sectrue) {
-    curve25519_key trezor_pubkey = {0};
-    curve25519_scalarmult_basepoint(trezor_pubkey, trezor_privkey);
+  hal_delay(100);
 
-    lt_ret_t ret =
-        lt_session_start(&drv->handle, tropic_pubkey, PKEY_INDEX_BYTE,
-                         trezor_privkey, trezor_pubkey);
+  lt_ret_t ret = lt_verify_chip_and_start_secure_session(
+      &drv->handle, trezor_privkey, trezor_pubkey, 0);
 
-    drv->sec_chan_established = (ret == LT_OK);
-  }
+  drv->sec_chan_established = (ret == LT_OK);
+  ensure(sectrue * drv->sec_chan_established, "lt_session_start failed");
 
   memzero(trezor_privkey, sizeof(trezor_privkey));
 
