@@ -33,11 +33,12 @@ pub use hold_to_confirm::HoldToConfirmAnim;
 pub use homescreen::{check_homescreen_format, Homescreen, HomescreenMsg};
 pub use keyboard::{
     bip39::Bip39Input,
+    label::LabelInput,
     mnemonic::{MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg},
-    passphrase::{PassphraseKeyboard, PassphraseKeyboardMsg},
+    passphrase::PassphraseInput,
     pin::{PinKeyboard, PinKeyboardMsg},
     slip39::Slip39Input,
-    string::{StringKeyboard, StringKeyboardMsg},
+    string::{StringInput, StringInputMsg, StringKeyboard, StringKeyboardMsg},
     word_count_screen::{SelectWordCountMsg, SelectWordCountScreen},
 };
 pub use progress_screen::ProgressScreen;

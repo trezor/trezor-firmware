@@ -770,8 +770,9 @@ impl crate::trace::Trace for Button {
             ButtonContent::Empty => {}
             ButtonContent::Text { text, .. } => t.string("text", *text),
             ButtonContent::Icon(_) => t.bool("icon", true),
-            ButtonContent::TextAndSubtext { text, .. } => {
+            ButtonContent::TextAndSubtext { text, subtext, .. } => {
                 t.string("text", *text);
+                t.string("subtext", *subtext);
             }
             #[cfg(feature = "micropython")]
             ButtonContent::HomeBar(text) => {
