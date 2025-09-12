@@ -74,6 +74,7 @@ typedef enum {
   INTERNAL_CMD_GET_BOND_LIST = 0x0B,
   INTERNAL_CMD_SET_SPEED_HIGH = 0x0C,
   INTERNAL_CMD_SET_SPEED_LOW = 0x0D,
+  INTERNAL_CMD_NOTIFY = 0x0E,
 } internal_cmd_t;
 
 typedef struct {

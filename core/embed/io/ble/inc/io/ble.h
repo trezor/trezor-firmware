@@ -216,3 +216,8 @@ bool ble_get_mac(bt_le_addr_t *addr);
 // When enabled, the connection parameters will be set to achieve
 // higher data throughput, at the cost of increased power consumption.
 void ble_set_high_speed(bool enable);
+
+// BLE notify
+//
+// Sends notification to host over BLE
+void ble_notify(const uint8_t *data, size_t len);

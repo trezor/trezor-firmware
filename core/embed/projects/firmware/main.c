@@ -35,6 +35,7 @@
 
 #include <io/display.h>
 #include <sys/linker_utils.h>
+#include <sys/notify.h>
 #include <sys/systask.h>
 #include <sys/system.h>
 #include <util/boot_image.h>
@@ -47,6 +48,10 @@
 
 #ifdef USE_SECP256K1_ZKP
 #include "zkp_context.h"
+#endif
+
+#ifdef USE_BLE
+#include <io/ble.h>
 #endif
 
 #ifdef USE_NRF
@@ -105,6 +110,8 @@ int main_func(uint32_t cmd, void *arg) {
 #endif
 
   screen_boot_stage_2(fading);
+
+  notify_send(NOTIFY_BOOT);
 
 #ifdef USE_SECP256K1_ZKP
   ensure(sectrue * (zkp_context_init() == 0), NULL);

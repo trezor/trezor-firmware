@@ -43,9 +43,14 @@
 #define BT_UUID_TRZ_RX_VAL \
   BT_UUID_128_ENCODE(0x8c000002, 0xa59b, 0x4d58, 0xa9ad, 0x073df69fa1b1)
 
+/** @brief UUID of the Notify Characteristic. **/
+#define BT_UUID_TRZ_NOTIFY_VAL \
+  BT_UUID_128_ENCODE(0x8c000004, 0xa59b, 0x4d58, 0xa9ad, 0x073df69fa1b1)
+
 #define BT_UUID_TRZ_SERVICE BT_UUID_DECLARE_128(BT_UUID_TRZ_VAL)
 #define BT_UUID_TRZ_RX BT_UUID_DECLARE_128(BT_UUID_TRZ_RX_VAL)
 #define BT_UUID_TRZ_TX BT_UUID_DECLARE_128(BT_UUID_TRZ_TX_VAL)
+#define BT_UUID_TRZ_NOTIFY BT_UUID_DECLARE_128(BT_UUID_TRZ_NOTIFY_VAL)
 
 #define BLE_TX_PACKET_SIZE 244
 #define BLE_RX_PACKET_SIZE 244
@@ -105,6 +110,7 @@ typedef enum {
   INTERNAL_CMD_GET_BOND_LIST = 0x0B,
   INTERNAL_CMD_SET_SPEED_HIGH = 0x0C,
   INTERNAL_CMD_SET_SPEED_LOW = 0x0D,
+  INTERNAL_CMD_NOTIFY = 0x0E,
 } internal_cmd_t;
 
 typedef struct {
@@ -208,5 +214,7 @@ typedef void (*service_received_cb)(struct bt_conn *conn,
 int service_init(service_received_cb callbacks);
 // Send data to the connected device
 int service_send(struct bt_conn *conn, trz_packet_t *data);
+// Notify listener of device state change
+int service_notify(struct bt_conn *conn, uint8_t *data, size_t len);
 // Send hard-coded error response
 void service_send_busy(void);

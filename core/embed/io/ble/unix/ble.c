@@ -40,3 +40,5 @@ bool ble_unpair(const bt_le_addr_t *addr) { return false; }
 uint8_t ble_get_bond_list(bt_le_addr_t *bonds, size_t count) { return 0; }
 
 void ble_set_high_speed(bool enable){};
+
+void ble_notify(const uint8_t *data, size_t len){};

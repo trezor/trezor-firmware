@@ -18,6 +18,8 @@
  */
 
 #ifdef KERNEL_MODE
+#include <stdint.h>
+#include <string.h>
 
 #include <trezor_bsp.h>
 #include <trezor_model.h>
@@ -1178,6 +1180,19 @@ void ble_set_high_speed(bool enable) {
   irq_key_t key = irq_lock();
   drv->high_speed = enable;
   irq_unlock(key);
+}
+
+void ble_notify(const uint8_t *data, size_t len) {
+  ble_driver_t *drv = &g_ble_driver;
+  if (!drv->initialized) {
+    return;
+  }
+
+  uint8_t cmd[32] = {0};
+  cmd[0] = INTERNAL_CMD_NOTIFY;
+  memcpy(&cmd[1], data, MIN(len, sizeof(data) - 1));
+
+  nrf_send_msg(NRF_SERVICE_BLE_MANAGER, cmd, MIN(32, len + 1), NULL, NULL);
 }
 
 static void on_ble_iface_event_poll(void *context, bool read_awaited,

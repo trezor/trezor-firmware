@@ -27,6 +27,7 @@
 #include <sec/secret.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
+#include <sys/notify.h>
 #include <sys/system.h>
 #include <sys/systick.h>
 #include <sys/types.h>
@@ -691,6 +692,8 @@ int bootloader_main(void) {
 
   ensure(dont_optimize_out_true * (firmware_present == firmware_present_backup),
          NULL);
+
+  notify_send(NOTIFY_BOOT);
 
   // start the bootloader ...
   // ... if user touched the screen on start
