@@ -34,6 +34,7 @@
 #include <sys/systick.h>
 #include <util/board_capabilities.h>
 #include <util/boot_image.h>
+#include <util/elf_loader.h>
 #include <util/option_bytes.h>
 #include <util/rsod.h>
 #include <util/unit_properties.h>
@@ -290,6 +291,8 @@ int main(void) {
 
   // Run the applet
   applet_run(&coreapp);
+
+  elf_test();
 
   // Loop until the coreapp is terminated
   kernel_loop(&coreapp);
