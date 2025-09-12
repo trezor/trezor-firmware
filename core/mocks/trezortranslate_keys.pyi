@@ -973,7 +973,7 @@ class TR:
     tutorial__menu: str = "Find context-specific actions and options in the menu."
     tutorial__menu_appendix: str = "View more info, quit flow, ..."
     tutorial__middle_click: str = "Press both left and right at the same\ntime to confirm."
-    tutorial__navigation_ts7: str = "Use buttons at the bottom to navigate and confirm your actions."
+    tutorial__navigation_ts7: str = "Use the on-screen buttons to navigate and confirm your actions."
     tutorial__one_more_step: str = "One more step"
     tutorial__power: str = "Use the power button on the side to turn your device on or off."
     tutorial__press_and_hold: str = "Press and hold the right button to\napprove important operations."
