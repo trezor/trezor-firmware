@@ -1290,7 +1290,7 @@ pub enum TranslatedString {
     tutorial__first_wallet = 944,  // "The Trezor Model One, created in 2013,\nwas the world's first hardware wallet."
     tutorial__restart_tutorial = 945,  // "Restart tutorial"
     tutorial__title_handy_menu = 946,  // "Handy menu"
-    tutorial__title_hold = 947,  // {"Bolt": "Hold to confirm important actions", "Caesar": "Hold to confirm important actions", "Delizia": "Hold to confirm important actions", "Eckhart": "Hold the button to confirm important actions."}
+    tutorial__title_hold = 947,  // {"Bolt": "Hold to confirm important actions", "Caesar": "Hold to confirm important actions", "Delizia": "Hold to confirm important actions", "Eckhart": "Hold the on-screen button at the bottom to confirm important actions."}
     tutorial__title_well_done = 948,  // "Well done!"
     tutorial__lets_begin = 949,  // "Learn how to use and navigate this device with ease."
     tutorial__get_started = 950,  // "Get started!"
@@ -1442,7 +1442,7 @@ pub enum TranslatedString {
     instructions__menu_to_continue = 1058,  // "Use menu to continue"
     tutorial__last_one = 1059,  // "Last one"
     tutorial__menu_appendix = 1060,  // "View more info, quit flow, ..."
-    tutorial__navigation_ts7 = 1061,  // "Use buttons at the bottom to navigate and confirm your actions."
+    tutorial__navigation_ts7 = 1061,  // "Use the on-screen buttons to navigate and confirm your actions."
     tutorial__suite_restart = 1062,  // "Replay this tutorial anytime from the Trezor Suite app."
     tutorial__welcome_safe7 = 1067,  // "Welcome\nto Trezor\nSafe 7"
     tutorial__what_is_tropic = 1068,  // "What is TROPIC01?"
@@ -3121,7 +3121,7 @@ impl TranslatedString {
             #[cfg(feature = "layout_delizia")]
             (Self::tutorial__title_hold, "Hold to confirm important actions"),
             #[cfg(feature = "layout_eckhart")]
-            (Self::tutorial__title_hold, "Hold the button to confirm important actions."),
+            (Self::tutorial__title_hold, "Hold the on-screen button at the bottom to confirm important actions."),
             (Self::tutorial__title_well_done, "Well done!"),
             (Self::tutorial__lets_begin, "Learn how to use and navigate this device with ease."),
             (Self::tutorial__get_started, "Get started!"),
@@ -3310,7 +3310,7 @@ impl TranslatedString {
             (Self::instructions__menu_to_continue, "Use menu to continue"),
             (Self::tutorial__last_one, "Last one"),
             (Self::tutorial__menu_appendix, "View more info, quit flow, ..."),
-            (Self::tutorial__navigation_ts7, "Use buttons at the bottom to navigate and confirm your actions."),
+            (Self::tutorial__navigation_ts7, "Use the on-screen buttons to navigate and confirm your actions."),
             (Self::tutorial__suite_restart, "Replay this tutorial anytime from the Trezor Suite app."),
             (Self::tutorial__welcome_safe7, "Welcome\nto Trezor\nSafe 7"),
             (Self::tutorial__what_is_tropic, "What is TROPIC01?"),
