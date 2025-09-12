@@ -665,6 +665,8 @@ void ble_suspend(ble_wakeup_params_t *wakeup_params) {
     wakeup_params->mode_requested = drv->mode_requested;
     wakeup_params->peer_count = drv->peer_count;
     wakeup_params->high_speed = drv->high_speed;
+    wakeup_params->next_adv_with_disconnect = drv->next_adv_with_disconnect;
+    wakeup_params->restart_adv_on_disconnect = drv->restart_adv_on_disconnect;
     memcpy(&wakeup_params->adv_data, &drv->adv_cmd, sizeof(drv->adv_cmd));
 
     ble_deinit_common(drv);
@@ -708,6 +710,8 @@ bool ble_resume(const ble_wakeup_params_t *wakeup_params) {
          sizeof(drv->connected_addr));
   memcpy(&drv->adv_cmd, &wakeup_params->adv_data, sizeof(drv->adv_cmd));
   drv->mode_requested = wakeup_params->mode_requested;
+  drv->next_adv_with_disconnect = wakeup_params->next_adv_with_disconnect;
+  drv->restart_adv_on_disconnect = wakeup_params->restart_adv_on_disconnect;
 
   irq_unlock(key);
 
