@@ -141,9 +141,11 @@ void systask_yield_to(systask_t* task) {
 }
 
 static systask_id_t systask_get_unused_id(void) {
+  systask_scheduler_t* scheduler = &g_systask_scheduler;
   systask_id_t id = 0;
   while (++id < SYSTASK_MAX_TASKS) {
-    if ((g_systask_scheduler.task_id_map & (1 << id)) == 0) {
+    if ((scheduler->task_id_map & (1 << id)) == 0) {
+      scheduler->task_id_map |= (1 << id);
       break;
     }
   }
@@ -296,6 +298,13 @@ void systask_set_r0r1(systask_t* task, uint32_t r0, uint32_t r1) {
     stack += 16;  // Skip the FP context S16-S32
     stack += 8;   // Skip R4-R11
   }
+
+#ifdef KERNEL
+  if (task->applet != NULL) {
+    applet_t* applet = (applet_t*)task->applet;
+    mpu_set_active_applet(&applet->layout);
+  }
+#endif
 
   stack[STK_FRAME_R0] = r0;
   stack[STK_FRAME_R1] = r1;
