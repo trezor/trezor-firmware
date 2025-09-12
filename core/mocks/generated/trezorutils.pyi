@@ -179,6 +179,13 @@ def bootloader_locked() -> bool | None:
     Returns True/False if the the bootloader is locked/unlocked and None if
     the feature is not supported.
     """
+
+
+# upymod/modtrezorutils/modtrezorutils.c
+def notify_send(event: int) -> None:
+    """
+    Sends a notification to host
+    """
 SCM_REVISION: bytes
 """Git commit hash of the firmware."""
 VERSION: VersionTuple
