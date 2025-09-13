@@ -17,7 +17,7 @@ from trezorui_api import (
 )
 
 if utils.USE_POWER_MANAGER:
-    from apps.management.pm.autodim import autodim_clear
+    from trezor.power_management.autodim import autodim_clear
 
 if TYPE_CHECKING:
     from typing import Any, Callable, Generator, Generic, Iterator, TypeVar
