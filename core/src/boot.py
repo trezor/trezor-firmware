@@ -23,6 +23,11 @@ from apps.common.request_pin import can_lock_device, verify_user_pin
 if utils.USE_OPTIGA:
     from trezor.crypto import optiga
 
+if utils.USE_POWER_MANAGER:
+    from trezor import workflow
+    from trezor.power_management.autodim import autodim_display
+    from apps.base import lock_device_if_unlocked_on_battery
+
 # have to use "==" over "in (list)" so that it can be statically replaced
 # with the correct value during the build process
 if (  # pylint: disable-next=consider-using-in
@@ -55,6 +60,14 @@ async def bootscreen() -> None:
     Any non-PIN loaders are ignored during this function.
     Allowing all of them before returning.
     """
+    if utils.USE_POWER_MANAGER:
+        workflow.idle_timer.set(30_000, autodim_display)
+        workflow.idle_timer.set(
+            storage.device.get_autolock_delay_battery_ms(),
+            lock_device_if_unlocked_on_battery,
+        )
+        workflow.autolock_interrupts_workflow = False
+
     while True:
         try:
 
@@ -75,7 +88,7 @@ async def bootscreen() -> None:
                 await verify_user_pin()
                 storage.init_unlocked()
                 allow_all_loader_messages()
-                return
+                break
             else:
                 # Even if PIN is not configured, storage needs to be unlocked, unless it has just been initialized.
                 if not config.is_unlocked():
@@ -93,7 +106,7 @@ async def bootscreen() -> None:
                         ui.backlight_fade(ui.BacklightLevels.NONE)
                     ui.display.orientation(rotation)
                 allow_all_loader_messages()
-                return
+                break
         except wire.PinCancelled:
             # verify_user_pin will convert a SdCardUnavailable (in case of sd salt)
             # to PinCancelled exception.
@@ -104,6 +117,11 @@ async def bootscreen() -> None:
             if __debug__:
                 log.exception(__name__, e)
             utils.halt(e.__class__.__name__)
+
+    if utils.USE_POWER_MANAGER:
+        workflow.idle_timer.remove(autodim_display)
+        workflow.idle_timer.remove(lock_device_if_unlocked_on_battery)
+        workflow.autolock_interrupts_workflow = True
 
 
 # Display emulator warning.
