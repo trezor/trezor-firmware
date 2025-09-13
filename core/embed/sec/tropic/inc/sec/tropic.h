@@ -21,6 +21,29 @@
 
 #include <trezor_types.h>
 
+#include "libtropic.h"
+
+// FIDO attestation key and certificate.
+#define TROPIC_FIDO_CERT_FIRST_SLOT 0
+#define TROPIC_FIDO_CERT_SLOT_COUNT 3
+#define TROPIC_FIDO_KEY_SLOT ECC_SLOT_1
+
+// Device attestation key and certificate.
+#define TROPIC_DEVICE_CERT_FIRST_SLOT 3
+#define TROPIC_DEVICE_CERT_SLOT_COUNT 3
+#define TROPIC_DEVICE_KEY_SLOT ECC_SLOT_0
+
+// Pairing key used by prodtest to inject the privileged and unprivileged
+// pairing keys.
+#define TROPIC_FACTORY_PAIRING_KEY_SLOT PAIRING_KEY_SLOT_INDEX_0
+
+// Pairing key used by HSM to inject the attestation FIDO key and generate the
+// device key, and by unofficial firwmare with an unlocked bootloader.
+#define TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT PAIRING_KEY_SLOT_INDEX_1
+
+// Pairing key used by official firmware.
+#define TROPIC_PRIVILEGED_PAIRING_KEY_SLOT PAIRING_KEY_SLOT_INDEX_2
+
 #ifdef KERNEL_MODE
 
 bool tropic_init(void);
@@ -28,7 +51,6 @@ bool tropic_init(void);
 void tropic_deinit(void);
 
 #ifdef TREZOR_PRODTEST
-#include "libtropic.h"
 lt_handle_t* tropic_get_handle(void);
 #endif
 
@@ -40,3 +62,11 @@ bool tropic_ecc_key_generate(uint16_t slot_index);
 
 bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t* dig,
                      uint16_t dig_len, uint8_t* sig);
+
+bool tropic_data_read(uint16_t udata_slot, uint8_t* data, uint16_t* size);
+
+bool tropic_data_multi_size(uint16_t first_slot, size_t* data_length);
+
+bool tropic_data_multi_read(uint16_t first_slot, uint16_t slot_count,
+                            uint8_t* data, size_t max_data_length,
+                            size_t* data_length);

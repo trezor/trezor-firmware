@@ -17,13 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef SECURE_MODE
-
 #include <trezor_rtl.h>
 #include <trezor_types.h>
 
 #include <sec/secret_keys.h>
 #include <sec/tropic.h>
+#include <sys/systick.h>
 
 #include <libtropic.h>
 
@@ -36,7 +35,7 @@
 #include "ed25519-donna/ed25519.h"
 #include "memzero.h"
 
-#define PKEY_INDEX_BYTE PAIRING_KEY_SLOT_INDEX_0
+#ifdef SECURE_MODE
 
 typedef struct {
   bool initialized;
@@ -66,18 +65,23 @@ bool tropic_init(void) {
     goto cleanup;
   }
 
-  curve25519_key tropic_pubkey = {0};
   curve25519_key trezor_privkey = {0};
-
-  secbool pubkey_ok = secret_key_tropic_public(tropic_pubkey);
+  pkey_index_t pairing_key_slot = TROPIC_PRIVILEGED_PAIRING_KEY_SLOT;
   secbool privkey_ok = secret_key_tropic_pairing_privileged(trezor_privkey);
+  if (privkey_ok != sectrue) {
+    pairing_key_slot = TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT;
+    privkey_ok = secret_key_tropic_pairing_unprivileged(trezor_privkey);
+  }
 
+  curve25519_key tropic_pubkey = {0};
+  secbool pubkey_ok = secret_key_tropic_public(tropic_pubkey);
   if (pubkey_ok == sectrue && privkey_ok == sectrue) {
     curve25519_key trezor_pubkey = {0};
     curve25519_scalarmult_basepoint(trezor_pubkey, trezor_privkey);
 
+    hal_delay(100);
     lt_ret_t ret =
-        lt_session_start(&drv->handle, tropic_pubkey, PKEY_INDEX_BYTE,
+        lt_session_start(&drv->handle, tropic_pubkey, pairing_key_slot,
                          trezor_privkey, trezor_pubkey);
 
     drv->sec_chan_established = (ret == LT_OK);
@@ -158,4 +162,82 @@ bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
   return true;
 }
 
+bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
+  tropic_driver_t *drv = &g_tropic_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  if (udata_slot > R_MEM_DATA_SLOT_MAX) {
+    return false;
+  }
+
+  lt_ret_t res = lt_r_mem_data_read(&drv->handle, udata_slot, data, size);
+  return res == LT_OK;
+}
+
 #endif  // SECURE_MODE
+
+bool tropic_data_multi_size(uint16_t first_slot, size_t *data_length) {
+  if (first_slot > R_MEM_DATA_SLOT_MAX) {
+    return false;
+  }
+
+  uint8_t prefixed_data[R_MEM_DATA_SIZE_MAX];
+  uint16_t slot_length = 0;
+  if (!tropic_data_read(first_slot, prefixed_data, &slot_length)) {
+    return false;
+  }
+
+  const size_t prefix_length = 2;
+  if (slot_length < prefix_length) {
+    return false;
+  }
+
+  *data_length = prefixed_data[0] << 8 | prefixed_data[1];
+  return true;
+}
+
+bool tropic_data_multi_read(uint16_t first_slot, uint16_t slot_count,
+                            uint8_t *data, size_t max_data_length,
+                            size_t *data_length) {
+  const uint16_t last_data_slot = first_slot + slot_count - 1;
+  if (slot_count == 0 || last_data_slot > R_MEM_DATA_SLOT_MAX) {
+    return false;
+  }
+
+  // The following code can be further optimized:
+  //   * It uses unnecessary amount of memory.
+  //   * It reads from a data slot even if there is no data to be read.
+
+  const size_t total_slots_length = R_MEM_DATA_SIZE_MAX * slot_count;
+  uint8_t prefixed_data[total_slots_length];
+  size_t position = 0;
+  uint16_t slot = first_slot;
+
+  while (slot <= last_data_slot) {
+    uint16_t slot_length = 0;
+    if (!tropic_data_read(slot, prefixed_data + position, &slot_length)) {
+      return false;
+    }
+
+    if (slot_length != R_MEM_DATA_SIZE_MAX) {
+      return false;
+    }
+
+    position += R_MEM_DATA_SIZE_MAX;
+    slot += 1;
+  }
+
+  const size_t prefix_length = 2;
+  size_t length = prefixed_data[0] << 8 | prefixed_data[1];
+  if (length > max_data_length || length + prefix_length > total_slots_length) {
+    return false;
+  }
+
+  *data_length = length;
+  memcpy(data, prefixed_data + prefix_length, length);
+
+  return true;
+}

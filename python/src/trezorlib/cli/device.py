@@ -366,9 +366,21 @@ PUBKEY_WHITELIST_URL_TEMPLATE = (
 )
 
 
+def _print_auth_data(signature: bytes, certificates: t.Sequence[bytes]) -> None:
+    click.echo(f"Signature of challenge: {signature.hex()}")
+    click.echo(f"Device certificate: {certificates[0].hex()}")
+    for cert in certificates[1:]:
+        click.echo(f"CA certificate: {cert.hex()}")
+
+
 @cli.command()
 @click.argument("hex_challenge", required=False)
-@click.option("-R", "--root", type=click.File("rb"), help="Custom root certificate.")
+@click.option(
+    "-R", "--p256_root", type=click.File("rb"), help="Custom root P-256 public key."
+)
+@click.option(
+    "--ed25519_root", type=click.File("rb"), help="Custom root Ed25519 public key."
+)
 @click.option(
     "-r", "--raw", is_flag=True, help="Print raw cryptographic data and exit."
 )
@@ -382,7 +394,8 @@ PUBKEY_WHITELIST_URL_TEMPLATE = (
 def authenticate(
     session: "Session",
     hex_challenge: str | None,
-    root: t.BinaryIO | None,
+    p256_root: t.BinaryIO | None,
+    ed25519_root: t.BinaryIO | None,
     raw: bool | None,
     skip_whitelist: bool | None,
 ) -> None:
@@ -404,16 +417,20 @@ def authenticate(
         msg = device.authenticate(session, challenge)
 
         click.echo(f"Challenge: {hex_challenge}")
-        click.echo(f"Signature of challenge: {msg.signature.hex()}")
-        click.echo(f"Device certificate: {msg.certificates[0].hex()}")
-        for cert in msg.certificates[1:]:
-            click.echo(f"CA certificate: {cert.hex()}")
+        _print_auth_data(msg.optiga_signature, msg.optiga_certificates)
+        if msg.tropic_signature is not None:
+            _print_auth_data(msg.tropic_signature, msg.tropic_certificates)
         return
 
-    if root is not None:
-        root_bytes = root.read()
+    if p256_root is not None:
+        p256_root_bytes = p256_root.read()
     else:
-        root_bytes = None
+        p256_root_bytes = None
+
+    if ed25519_root is not None:
+        ed25519_root_bytes = ed25519_root.read()
+    else:
+        ed25519_root_bytes = None
 
     class ColoredFormatter(logging.Formatter):
         LEVELS = {
@@ -447,7 +464,11 @@ def authenticate(
 
     try:
         authentication.authenticate_device(
-            session, challenge, root_pubkey=root_bytes, whitelist=whitelist
+            session,
+            challenge,
+            p256_root_pubkey=p256_root_bytes,
+            ed25519_root_pubkey=ed25519_root_bytes,
+            whitelist=whitelist,
         )
     except authentication.DeviceNotAuthentic:
         click.echo("Device is not authentic.")

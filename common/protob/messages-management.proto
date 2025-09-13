@@ -380,8 +380,10 @@ message AuthenticateDevice {
  * @end
  */
 message AuthenticityProof {
-    repeated bytes certificates = 1;  // A certificate chain starting with the device certificate, followed by intermediate CA certificates, the last of which is signed by Trezor company's root CA.
-    required bytes signature = 2;     // A DER-encoded signature of "\0x13AuthenticateDevice:" + length-prefixed challenge that should be verified using the device certificate.
+    repeated bytes optiga_certificates = 1;  // A certificate chain starting with the Optiga device certificate, followed by intermediate CA certificates, the last of which is signed by Trezor company's root CA.
+    required bytes optiga_signature = 2;     // A DER-encoded signature of "\0x13AuthenticateDevice:" + length-prefixed challenge that should be verified using the Optiga device certificate.
+    repeated bytes tropic_certificates = 3;  // A certificate chain starting with the Tropic device certificate, followed by intermediate CA certificates, the last of which is signed by Trezor company's root CA.
+    optional bytes tropic_signature = 4;     // A DER-encoded signature of "\0x13AuthenticateDevice:" + length-prefixed challenge that should be verified using the Tropic device certificate.
 }
 
 /**
