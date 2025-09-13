@@ -163,6 +163,7 @@ include_icon!(ICON_SECURED, "layout_eckhart/res/secured.toif");
 
 // Regulatory screen icons
 include_icon!(ICON_UKRAINE, "layout_eckhart/res/ukraine.toif");
+include_icon!(ICON_JAPAN, "layout_eckhart/res/japan.toif");
 include_icon!(ICON_KOREA, "layout_eckhart/res/korea_full.toif");
 include_icon!(ICON_EUROPE, "layout_eckhart/res/europe.toif");
 include_icon!(ICON_RCM, "layout_eckhart/res/rcm.toif");
