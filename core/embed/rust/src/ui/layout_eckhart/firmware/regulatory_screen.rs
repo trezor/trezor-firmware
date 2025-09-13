@@ -140,22 +140,36 @@ struct RegulatoryContent {
 }
 
 impl RegulatoryContent {
-    const ZONES_NUM: usize = 6;
-    const ZONES: [(&'static str, &'static str, Option<Icon>); RegulatoryContent::ZONES_NUM] = [
-        ("United States", "FCC ID: VUI-TS7A01", Some(theme::ICON_FCC)),
-        ("Canada", "IC: 7582A-TS7A01", None),
+    const SCREENS: usize = 8;
+    const ZONES: [(Option<&'static str>, &'static str, Option<Icon>); RegulatoryContent::SCREENS] = [
         (
-            "Europe / UK",
+            Some("United States"),
+            "FCC ID: VUI-TS7A01",
+            Some(theme::ICON_FCC),
+        ),
+        (
+            None,
+            "This device complies with Part 15 of the FCC Rules. Operation is subject to two conditions: (1) it may not cause harmful interference, and (2) it must accept any interference, including that which causes undesired operation.",
+            None,
+        ),
+        (
+            Some("Canada"),
+            "IC: 7582A-TS7A01\nCAN ICES-003(B) /\nNMB-003(B)",
+            None,
+        ),
+        (
+            Some("Europe / UK"),
             "Trezor Company s.r.o.\nKundratka 2359/17a\nPrague 8, Czech Republic",
             Some(theme::ICON_EUROPE),
         ),
-        ("Australia /\nNew Zealand", "", Some(theme::ICON_RCM)),
-        ("Ukraine", "", Some(theme::ICON_UKRAINE)),
-        ("South Korea", "", Some(theme::ICON_KOREA)),
+        (Some("Australia /\nNew Zealand"), "", Some(theme::ICON_RCM)),
+        (Some("Ukraine"), "", Some(theme::ICON_UKRAINE)),
+        (Some("Japan"), "", Some(theme::ICON_JAPAN)),
+        (Some("South Korea"), "", Some(theme::ICON_KOREA)),
     ];
 
     pub fn new() -> Self {
-        let pager = Pager::new(Self::ZONES_NUM as u16);
+        let pager = Pager::new(Self::SCREENS as u16);
         Self {
             area: Rect::zero(),
             pager,
@@ -219,14 +233,18 @@ impl Component for RegulatoryContent {
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let (title, content, icon) = Self::ZONES[self.pager.current() as usize];
-        let rest = self.render_from_top(
-            self.area,
-            theme::TEXT_REGULAR,
-            Alignment::Start,
-            title,
-            theme::TEXT_VERTICAL_SPACING,
-            target,
-        );
+        let rest = if let Some(title) = title {
+            self.render_from_top(
+                self.area,
+                theme::TEXT_REGULAR,
+                Alignment::Start,
+                title,
+                theme::TEXT_VERTICAL_SPACING,
+                target,
+            )
+        } else {
+            self.area
+        };
 
         let rest = self.render_from_top(
             rest,
