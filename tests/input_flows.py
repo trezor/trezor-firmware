@@ -105,7 +105,7 @@ class InputFlowNewCodeMismatch(InputFlowBase):
         self.what = what
 
     def input_flow_common(self) -> BRGeneratorType:
-        assert (yield).name == f"set_{self.what}"
+        assert (yield).name == f"{self.what}/enable"
         self.debug.press_yes()
 
         if self.client.layout_type is LayoutType.Caesar:
@@ -121,15 +121,15 @@ class InputFlowNewCodeMismatch(InputFlowBase):
 
         yield from input_two_different_pins()
 
-        assert (yield).name == f"{self.what}_mismatch"  # PIN mismatch
+        assert (yield).name == f"{self.what}/err-mismatch"  # PIN mismatch
         self.debug.press_yes()  # try again
 
         yield from input_two_different_pins()
 
-        assert (yield).name == f"{self.what}_mismatch"  # PIN mismatch
+        assert (yield).name == f"{self.what}/err-mismatch"  # PIN mismatch
         self.debug.press_yes()  # try again
 
-        assert (yield).name == "pin_device"  # PIN entry again
+        assert (yield).name == f"{self.what}/new"  # PIN entry again
 
         self.debug.press_no()  # cancel
 

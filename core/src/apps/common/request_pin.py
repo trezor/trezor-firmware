@@ -1,5 +1,5 @@
 import utime
-from typing import Any, NoReturn
+from typing import NoReturn
 
 from storage.cache_common import APP_COMMON_REQUEST_PIN_LAST_UNLOCK
 from trezor import TR, config, utils, wire
@@ -41,32 +41,44 @@ def can_lock_device() -> bool:
 
 
 async def request_pin(
+    br_name: str,
     prompt: str,
     attempts_remaining: int | None = None,
     allow_cancel: bool = True,
 ) -> str:
     from trezor.ui.layouts import request_pin_on_device
 
-    return await request_pin_on_device(prompt, attempts_remaining, allow_cancel)
+    return await request_pin_on_device(
+        br_name, prompt, attempts_remaining, allow_cancel
+    )
 
 
-async def request_pin_confirm(*args: Any, **kwargs: Any) -> str:
+async def request_new_pin_confirm(
+    attempts_remaining: int | None = None,
+    allow_cancel: bool = True,
+) -> str:
     from trezor.ui.layouts import confirm_reenter_pin, pin_mismatch_popup
 
     while True:
-        pin1 = await request_pin(TR.pin__enter_new, *args, **kwargs)
+        pin1 = await request_pin(
+            "pin/new", TR.pin__enter_new, attempts_remaining, allow_cancel
+        )
         await confirm_reenter_pin()
-        pin2 = await request_pin(TR.pin__reenter_new, *args, **kwargs)
+        pin2 = await request_pin(
+            "pin/repeat", TR.pin__reenter_new, attempts_remaining, allow_cancel
+        )
         if pin1 == pin2:
             return pin1
         await pin_mismatch_popup()
 
 
 async def request_pin_and_sd_salt(
-    prompt: str, allow_cancel: bool = True
+    prompt: str = TR.pin__enter,
+    br_name: str = "pin/current",
+    allow_cancel: bool = True,
 ) -> tuple[str, bytearray | None]:
     if config.has_pin():
-        pin = await request_pin(prompt, config.get_pin_rem(), allow_cancel)
+        pin = await request_pin(br_name, prompt, config.get_pin_rem(), allow_cancel)
         config.ensure_not_wipe_code(pin)
     else:
         pin = ""
@@ -106,7 +118,9 @@ async def verify_user_pin(
     if config.has_pin():
         from trezor.ui.layouts import request_pin_on_device
 
-        pin = await request_pin_on_device(prompt, config.get_pin_rem(), allow_cancel)
+        pin = await request_pin_on_device(
+            "pin/unlock", prompt, config.get_pin_rem(), allow_cancel
+        )
         config.ensure_not_wipe_code(pin)
     else:
         pin = ""
@@ -120,7 +134,11 @@ async def verify_user_pin(
 
     while retry:
         pin = await request_pin_on_device(
-            TR.pin__enter, config.get_pin_rem(), allow_cancel, wrong_pin=True
+            "pin/unlock",
+            TR.pin__enter,
+            config.get_pin_rem(),
+            allow_cancel,
+            wrong_pin=True,
         )
         if config.unlock(pin, salt):
             _set_last_unlock_time()
@@ -129,9 +147,9 @@ async def verify_user_pin(
     raise wire.PinInvalid
 
 
-async def error_pin_invalid() -> NoReturn:
+async def error_pin_invalid(br_name: str = "pin/err-invalid") -> NoReturn:
     await show_error_and_raise(
-        "warning_wrong_pin",
+        br_name,
         TR.pin__entered_not_valid,
         TR.pin__wrong_pin,  # header
         exc=wire.PinInvalid,
@@ -141,7 +159,7 @@ async def error_pin_invalid() -> NoReturn:
 
 async def error_pin_matches_wipe_code() -> NoReturn:
     await show_error_and_raise(
-        "warning_invalid_new_pin",
+        "pin/err-matches-wipecode",
         TR.pin__diff_from_wipe_code,
         TR.pin__invalid_pin,  # header
         exc=wire.PinInvalid,
