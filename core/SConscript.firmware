@@ -656,6 +656,9 @@ if FROZEN:
         ] if PYOPT != '0' else []
     ))
 
+    if 'power_manager' in FEATURES_AVAILABLE:
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/power_management/*.py'))
+
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'storage/*.py',
         exclude=(
             ([SOURCE_PY_DIR + 'storage/sd_salt.py'] if not SDCARD else []) +
@@ -717,8 +720,7 @@ if FROZEN:
     )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py',
         exclude=(
-            ([SOURCE_PY_DIR + 'apps/management/ble/*.py'] if "ble" not in FEATURES_AVAILABLE else []) +
-            ([SOURCE_PY_DIR + 'apps/management/pm/*.py'] if "power_manager" not in FEATURES_AVAILABLE else [])
+            ([SOURCE_PY_DIR + 'apps/management/ble/*.py'] if "ble" not in FEATURES_AVAILABLE else [])
         ))
     )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/misc/*.py'))
