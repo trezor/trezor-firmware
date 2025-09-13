@@ -95,7 +95,11 @@ async def handle_device_menu() -> None:
                 connected_idx=connected_idx,
                 pin_code=config.has_pin() if is_initialized else None,
                 auto_lock_delay=get_auto_lock_delay(),
-                wipe_code=config.has_wipe_code() if is_initialized else None,
+                wipe_code=(
+                    config.has_wipe_code()
+                    if (is_initialized and config.has_pin())
+                    else None
+                ),
                 check_backup=is_initialized,
                 device_name=(
                     (storage_device.get_label() or utils.MODEL_FULL_NAME)
