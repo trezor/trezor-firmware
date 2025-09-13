@@ -192,10 +192,15 @@ impl TString<'_> {
             #[cfg(feature = "micropython")]
             Self::Allocated(s) => Self::Allocated(s.skip_prefix(skip_bytes)),
             #[cfg(feature = "translations")]
-            Self::Translation { tr, offset } => Self::Translation {
-                tr: *tr,
-                offset: offset + skip_bytes as u16,
-            },
+            Self::Translation { tr, offset } => {
+                // Avoid slicing translated strings, since they are loaded from flash and may
+                // change later. See https://github.com/trezor/trezor-firmware/pull/5685#discussion_r2316266438 for more details.
+                debug_assert_eq!(skip_bytes, 0);
+                Self::Translation {
+                    tr: *tr,
+                    offset: offset + skip_bytes as u16,
+                }
+            }
             Self::Str(s) => Self::Str(&s[skip_bytes..]),
         }
     }
