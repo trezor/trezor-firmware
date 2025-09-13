@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 async def change_pin(msg: ChangePin) -> Success:
     from storage.device import is_initialized
     from trezor.messages import Success
-    from trezor.ui.layouts import success_pin_change
+    from trezor.ui.layouts import pin_wipe_code_exists_popup, success_pin_change
 
     from apps.common.request_pin import (
         error_pin_invalid,
@@ -25,6 +25,15 @@ async def change_pin(msg: ChangePin) -> Success:
 
     # confirm that user wants to change the pin
     await _require_confirm_change_pin(msg)
+
+    # Do not allow to remove the PIN if the wipe code is set.
+    if msg.remove and config.has_wipe_code():
+        await pin_wipe_code_exists_popup(
+            TR.pin__wipe_code_exists_title,
+            TR.pin__wipe_code_exists_description,
+            TR.buttons__continue,
+        )
+        raise RuntimeError  # should be unreachable
 
     # get old pin
     curpin, salt = await request_pin_and_sd_salt(TR.pin__enter)

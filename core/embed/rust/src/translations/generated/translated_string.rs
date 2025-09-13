@@ -1545,6 +1545,9 @@ pub enum TranslatedString {
     tutorial__power = 1153,  // "Use the power button on the side to turn your device on or off."
     auto_lock__on_battery = 1154,  // "on battery / wireless charger"
     auto_lock__on_usb = 1155,  // "connected to USB"
+    pin__wipe_code_exists_description = 1156,  // "Wipe code must be turned off before turning off PIN protection."
+    pin__wipe_code_exists_title = 1157,  // "Wipe code set"
+    wipe_code__pin_not_set_description = 1158,  // "PIN must be set before enabling wipe code."
 }
 
 impl TranslatedString {
@@ -3527,6 +3530,9 @@ impl TranslatedString {
             (Self::tutorial__power, "Use the power button on the side to turn your device on or off."),
             (Self::auto_lock__on_battery, "on battery / wireless charger"),
             (Self::auto_lock__on_usb, "connected to USB"),
+            (Self::pin__wipe_code_exists_description, "Wipe code must be turned off before turning off PIN protection."),
+            (Self::pin__wipe_code_exists_title, "Wipe code set"),
+            (Self::wipe_code__pin_not_set_description, "PIN must be set before enabling wipe code."),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4434,6 +4440,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_pin__tries_left, Self::pin__tries_left),
         (Qstr::MP_QSTR_pin__turn_off, Self::pin__turn_off),
         (Qstr::MP_QSTR_pin__turn_on, Self::pin__turn_on),
+        (Qstr::MP_QSTR_pin__wipe_code_exists_description, Self::pin__wipe_code_exists_description),
+        (Qstr::MP_QSTR_pin__wipe_code_exists_title, Self::pin__wipe_code_exists_title),
         (Qstr::MP_QSTR_pin__wrong_pin, Self::pin__wrong_pin),
         (Qstr::MP_QSTR_plurals__contains_x_keys, Self::plurals__contains_x_keys),
         (Qstr::MP_QSTR_plurals__lock_after_x_days, Self::plurals__lock_after_x_days),
@@ -4967,6 +4975,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_wipe_code__info, Self::wipe_code__info),
         (Qstr::MP_QSTR_wipe_code__invalid, Self::wipe_code__invalid),
         (Qstr::MP_QSTR_wipe_code__mismatch, Self::wipe_code__mismatch),
+        (Qstr::MP_QSTR_wipe_code__pin_not_set_description, Self::wipe_code__pin_not_set_description),
         (Qstr::MP_QSTR_wipe_code__reenter, Self::wipe_code__reenter),
         (Qstr::MP_QSTR_wipe_code__reenter_to_confirm, Self::wipe_code__reenter_to_confirm),
         (Qstr::MP_QSTR_wipe_code__remove, Self::wipe_code__remove),
