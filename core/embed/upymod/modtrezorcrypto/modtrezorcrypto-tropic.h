@@ -22,7 +22,7 @@
 #include <sec/secret.h>
 #include <sec/tropic.h>
 
-#include "ed25519.h"
+#include "ed25519-donna/ed25519.h"
 
 /// package: trezorcrypto.tropic
 
