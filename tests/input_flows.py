@@ -98,15 +98,22 @@ class InputFlowNewCodeMismatch(InputFlowBase):
         first_code: str,
         second_code: str,
         what: str,
+        pin: str | None = None,
     ):
         super().__init__(client)
         self.first_code = first_code
         self.second_code = second_code
         self.what = what
+        self.pin = pin
 
     def input_flow_common(self) -> BRGeneratorType:
         assert (yield).name == f"set_{self.what}"
         self.debug.press_yes()
+
+        if self.pin:
+            assert (yield).name == "pin_device"
+            assert "PinKeyboard" in self.debug.read_layout().all_components()
+            self.debug.input(self.pin)
 
         if self.client.layout_type is LayoutType.Caesar:
             layout = self.debug.read_layout()

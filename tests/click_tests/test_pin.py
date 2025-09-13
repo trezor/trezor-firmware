@@ -25,7 +25,7 @@ from trezorlib import device, exceptions
 from trezorlib.debuglink import DisplayStyle, LayoutType
 
 from .. import translations as TR
-from .common import go_back, go_next, navigate_to_action_and_press
+from .common import go_next, navigate_to_action_and_press
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink
@@ -413,15 +413,6 @@ def test_wipe_code_same_as_pin(device_handler: "BackgroundDeviceHandler"):
         # Try again
         go_next(debug)
         _enter_two_times(debug, "2", "2")
-
-
-@pytest.mark.setup_client()
-def test_pin_same_as_wipe_code(device_handler: "BackgroundDeviceHandler"):
-    with prepare(device_handler, Situation.WIPE_CODE_SETUP) as debug:
-        _enter_two_times(debug, "1", "1")
-    with PIN_INVALID, prepare(device_handler, Situation.PIN_SETUP) as debug:
-        _enter_two_times(debug, "1", "1")
-        go_back(debug, r_middle=True)
 
 
 @pytest.mark.models("t2t1", "delizia", "eckhart")

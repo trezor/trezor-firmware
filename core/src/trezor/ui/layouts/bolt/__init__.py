@@ -1792,6 +1792,28 @@ def wipe_code_same_as_pin_popup() -> Awaitable[None]:
     )
 
 
+async def wipe_code_pin_not_set_popup(
+    title: str, description: str, button: str
+) -> NoReturn:
+    await show_error_and_raise(
+        "warning_pin_not_set",
+        description,
+        title,
+        button,
+    )
+
+
+async def pin_wipe_code_exists_popup(
+    title: str, description: str, button: str
+) -> NoReturn:
+    await show_error_and_raise(
+        "wipe_code_exists",
+        description,
+        title,
+        button,
+    )
+
+
 def confirm_set_new_pin(
     br_name: str,
     title: str,
