@@ -362,12 +362,6 @@
     "ethereum__approve_revoke_from": "Revoke from",
     "ethereum__approve_to": "Approve to",
     "ethereum__approve_unlimited_template": "Approving unlimited amount of {0}",
-    "ethereum__contract": {
-      "Bolt": "Contract",
-      "Caesar": "Contract",
-      "Delizia": "Contract",
-      "Eckhart": "Call contract"
-    },
     "ethereum__contract_address": "Provider contract address",
     "ethereum__data_size_template": "Size: {0} bytes",
     "ethereum__gas_limit": "Gas limit",

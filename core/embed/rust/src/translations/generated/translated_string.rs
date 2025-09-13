@@ -418,8 +418,6 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__amount_sent = 271,  // "Amount sent:"
     #[cfg(feature = "universal_fw")]
-    ethereum__contract = 272,  // {"Bolt": "Contract", "Caesar": "Contract", "Delizia": "Contract", "Eckhart": "Call contract"}
-    #[cfg(feature = "universal_fw")]
     ethereum__data_size_template = 273,  // "Size: {0} bytes"
     #[cfg(feature = "universal_fw")]
     ethereum__gas_limit = 274,  // "Gas limit"
@@ -1965,18 +1963,6 @@ impl TranslatedString {
             (Self::eos__voter, "Voter:"),
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__amount_sent, "Amount sent:"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_bolt")]
-            (Self::ethereum__contract, "Contract"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_caesar")]
-            (Self::ethereum__contract, "Contract"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_delizia")]
-            (Self::ethereum__contract, "Contract"),
-            #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_eckhart")]
-            (Self::ethereum__contract, "Call contract"),
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__data_size_template, "Size: {0} bytes"),
             #[cfg(feature = "universal_fw")]
@@ -4026,8 +4012,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__approve_to, Self::ethereum__approve_to),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__approve_unlimited_template, Self::ethereum__approve_unlimited_template),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_ethereum__contract, Self::ethereum__contract),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__contract_address, Self::ethereum__contract_address),
         #[cfg(feature = "universal_fw")]
