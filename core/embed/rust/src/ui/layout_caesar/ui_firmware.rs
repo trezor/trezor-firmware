@@ -1132,18 +1132,18 @@ impl FirmwareUI for UICaesar {
     }
 
     fn show_device_menu(
-        _init_submenu: Option<u8>,
-        _failed_backup: bool,
-        _needs_backup: bool,
+        _init_submenu_idx: Option<u8>,
+        _backup_failed: bool,
+        _backup_needed: bool,
         _paired_devices: heapless::Vec<TString<'static>, MAX_PAIRED_DEVICES>,
         _connected_idx: Option<u8>,
-        _pin_code: Option<bool>,
-        _auto_lock_delay: Option<[TString<'static>; 2]>,
-        _wipe_code: Option<bool>,
-        _check_backup: bool,
+        _pin_enabled: Option<bool>,
+        _auto_lock: Option<[TString<'static>; 2]>,
+        _wipe_code_enabled: Option<bool>,
+        _backup_check_allowed: bool,
         _device_name: Option<TString<'static>>,
-        _screen_brightness: Option<TString<'static>>,
-        _haptic_feedback: Option<bool>,
+        _brightness: Option<TString<'static>>,
+        _haptics_enabled: Option<bool>,
         _led_enabled: Option<bool>,
         _about_items: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {

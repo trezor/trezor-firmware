@@ -625,18 +625,18 @@ def show_homescreen(
 # rust/src/ui/api/firmware_micropython.rs
 def show_device_menu(
     *,
-    init_submenu: int | None,
-    failed_backup: bool,
-    needs_backup: bool,
+    init_submenu_idx: int | None,
+    backup_failed: bool,
+    backup_needed: bool,
     paired_devices: Iterable[str],
     connected_idx: int | None,
-    pin_code: bool | None,
-    auto_lock_delay: tuple[str, str] | None,
-    wipe_code: bool | None,
-    check_backup: bool,
+    pin_enabled: bool | None,
+    auto_lock: tuple[str, str] | None,
+    wipe_code_enabled: bool | None,
+    backup_check_allowed: bool,
     device_name: str | None,
-    screen_brightness: str | None,
-    haptic_feedback: bool | None,
+    brightness: str | None,
+    haptics_enabled: bool | None,
     led_enabled: bool | None,
     about_items: list[tuple[str | None, str | bytes | None, bool | None]],
 ) -> LayoutObj[UiResult | DeviceMenuResult | tuple[DeviceMenuResult, int]]:
@@ -865,25 +865,25 @@ class LayoutState:
 # rust/src/ui/api/firmware_micropython.rs
 class DeviceMenuResult:
     """Result of a device menu operation."""
-    BackupFailed: ClassVar[DeviceMenuResult]
+    ReviewFailedBackup: ClassVar[DeviceMenuResult]
     BackupDevice: ClassVar[DeviceMenuResult]
-    DeviceDisconnect: ClassVar[DeviceMenuResult]
-    DevicePair: ClassVar[DeviceMenuResult]
-    DeviceUnpair: ClassVar[DeviceMenuResult]
-    DeviceUnpairAll: ClassVar[DeviceMenuResult]
-    PinCode: ClassVar[DeviceMenuResult]
-    PinRemove: ClassVar[DeviceMenuResult]
-    AutoLockBattery: ClassVar[DeviceMenuResult]
-    AutoLockUSB: ClassVar[DeviceMenuResult]
-    WipeCode: ClassVar[DeviceMenuResult]
-    WipeRemove: ClassVar[DeviceMenuResult]
+    DisconnectDevice: ClassVar[DeviceMenuResult]
+    PairDevice: ClassVar[DeviceMenuResult]
+    UnpairDevice: ClassVar[DeviceMenuResult]
+    UnpairAllDevices: ClassVar[DeviceMenuResult]
+    SetOrChangePin: ClassVar[DeviceMenuResult]
+    RemovePin: ClassVar[DeviceMenuResult]
+    SetAutoLockBattery: ClassVar[DeviceMenuResult]
+    SetAutoLockUSB: ClassVar[DeviceMenuResult]
+    SetOrChangeWipeCode: ClassVar[DeviceMenuResult]
+    RemoveWipeCode: ClassVar[DeviceMenuResult]
     CheckBackup: ClassVar[DeviceMenuResult]
-    DeviceName: ClassVar[DeviceMenuResult]
-    ScreenBrightness: ClassVar[DeviceMenuResult]
-    HapticFeedback: ClassVar[DeviceMenuResult]
-    LedEnabled: ClassVar[DeviceMenuResult]
+    SetDeviceName: ClassVar[DeviceMenuResult]
+    SetBrightness: ClassVar[DeviceMenuResult]
+    ToggleHaptics: ClassVar[DeviceMenuResult]
+    ToggleLed: ClassVar[DeviceMenuResult]
     WipeDevice: ClassVar[DeviceMenuResult]
     Reboot: ClassVar[DeviceMenuResult]
     RebootToBootloader: ClassVar[DeviceMenuResult]
     TurnOff: ClassVar[DeviceMenuResult]
-    MenuRefresh: ClassVar[DeviceMenuResult]
+    RefreshMenu: ClassVar[DeviceMenuResult]
