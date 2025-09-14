@@ -82,6 +82,7 @@ async def handle_device_menu() -> None:
         led_configurable = is_initialized and utils.USE_RGB_LED
         haptic_configurable = is_initialized and utils.USE_HAPTIC
         failed_backup = is_initialized and storage_device.unfinished_backup()
+        needs_backup = is_initialized and storage_device.needs_backup()
 
         bonds = ble.get_bonds()
         if __debug__:
@@ -112,6 +113,7 @@ async def handle_device_menu() -> None:
             trezorui_api.show_device_menu(
                 init_submenu=init_submenu,
                 failed_backup=failed_backup,
+                needs_backup=needs_backup,
                 paired_devices=paired_devices,
                 connected_idx=connected_idx,
                 pin_code=config.has_pin() if is_initialized else None,
@@ -162,6 +164,17 @@ async def handle_device_menu() -> None:
                     "prompt_device_wipe",
                 )
                 await wipe_device(WipeDevice())
+            except ActionCancelled:
+                init_submenu = SubmenuId.ROOT
+            else:
+                break
+        elif menu_result is DeviceMenuResult.BackupDevice and needs_backup:
+            from trezor.messages import BackupDevice
+
+            from apps.management.backup_device import backup_device
+
+            try:
+                await backup_device(BackupDevice())
             except ActionCancelled:
                 init_submenu = SubmenuId.ROOT
             else:

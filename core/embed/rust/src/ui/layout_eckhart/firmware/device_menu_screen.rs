@@ -108,6 +108,7 @@ enum Action {
 pub enum DeviceMenuMsg {
     // Root menu
     BackupFailed,
+    BackupDevice,
 
     // "Pair & Connect"
     DevicePair,       // pair a new device
@@ -306,6 +307,7 @@ impl DeviceMenuScreen {
     pub fn new(
         init_submenu: Option<u8>,
         failed_backup: bool,
+        needs_backup: bool,
         paired_devices: Vec<TString<'static>, MAX_PAIRED_DEVICES>,
         connected_idx: Option<u8>,
         pin_code: Option<bool>,
@@ -348,7 +350,7 @@ impl DeviceMenuScreen {
 
         screen.register_pair_and_connect_menu(paired_devices, submenu_indices, connected_idx);
         let pin_unset = pin_code == Some(false);
-        screen.register_root_menu(failed_backup, pin_unset, connected_subtext);
+        screen.register_root_menu(failed_backup, needs_backup, pin_unset, connected_subtext);
 
         // Activate the init submenu
         let init_submenu_id = init_submenu
@@ -627,6 +629,7 @@ impl DeviceMenuScreen {
     fn register_root_menu(
         &mut self,
         failed_backup: bool,
+        needs_backup: bool,
         pin_unset: bool,
         connected_subtext: Option<TString<'static>>,
     ) {
@@ -639,6 +642,16 @@ impl DeviceMenuScreen {
             )
             .with_subtext(Some((TR::words__review.into(), None)))
             .error();
+            items.add(item);
+        }
+
+        if needs_backup {
+            let item = MenuItem::return_msg(
+                TR::homescreen__title_backup_needed.into(),
+                DeviceMenuMsg::BackupDevice,
+            )
+            .with_subtext(Some((TR::words__review.into(), None)))
+            .light_warn();
             items.add(item);
         }
 

@@ -627,6 +627,7 @@ def show_device_menu(
     *,
     init_submenu: int | None,
     failed_backup: bool,
+    needs_backup: bool,
     paired_devices: Iterable[str],
     connected_idx: int | None,
     pin_code: bool | None,
@@ -865,6 +866,7 @@ class LayoutState:
 class DeviceMenuResult:
     """Result of a device menu operation."""
     BackupFailed: ClassVar[DeviceMenuResult]
+    BackupDevice: ClassVar[DeviceMenuResult]
     DeviceDisconnect: ClassVar[DeviceMenuResult]
     DevicePair: ClassVar[DeviceMenuResult]
     DeviceUnpair: ClassVar[DeviceMenuResult]
