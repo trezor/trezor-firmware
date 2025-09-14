@@ -8,60 +8,61 @@ use crate::micropython::{
 static DEVICE_MENU_RESULT_BASE_TYPE: Type = obj_type! { name: Qstr::MP_QSTR_DeviceMenuResult, };
 
 // Root menu
-pub static BACKUP_FAILED: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static REVIEW_FAILED_BACKUP: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static BACKUP_DEVICE: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 // "Pair & Connect"
-pub static DEVICE_PAIR: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
-pub static DEVICE_DISCONNECT: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
-pub static DEVICE_UNPAIR: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
-pub static DEVICE_UNPAIR_ALL: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static PAIR_DEVICE: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static DISCONNECT_DEVICE: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static UNPAIR_DEVICE: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static UNPAIR_ALL_DEVICES: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 // Security menu
-pub static PIN_CODE: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
-pub static PIN_REMOVE: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
-pub static AUTO_LOCK_BATTERY: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
-pub static AUTO_LOCK_USB: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
-pub static WIPE_CODE: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
-pub static WIPE_REMOVE: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static SET_OR_CHANGE_PIN: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static REMOVE_PIN: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static SET_AUTO_LOCK_BATTERY: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static SET_AUTO_LOCK_USB: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static SET_OR_CHANGE_WIPE_CODE: SimpleTypeObj =
+    SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static REMOVE_WIPE_CODE: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static CHECK_BACKUP: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 // Device menu
-pub static DEVICE_NAME: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
-pub static SCREEN_BRIGHTNESS: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
-pub static HAPTIC_FEEDBACK: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
-pub static LED_ENABLED: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static SET_DEVICE_NAME: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static SET_BRIGHTNESS: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static TOGGLE_HAPTICS: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static TOGGLE_LED: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static WIPE_DEVICE: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 // Power settings
 pub static TURN_OFF: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static REBOOT: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static REBOOT_TO_BOOTLOADER: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 // Misc
-pub static MENU_REFRESH: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static REFRESH_MENU: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 
 // Create a DeviceMenuResult class that contains all result types
 static DEVICE_MENU_RESULT_TYPE: Type = obj_type! {
     name: Qstr::MP_QSTR_DeviceMenuResult,
     locals: &obj_dict! { obj_map! {
-        Qstr::MP_QSTR_BackupFailed => BACKUP_FAILED.as_obj(),
+        Qstr::MP_QSTR_ReviewFailedBackup => REVIEW_FAILED_BACKUP.as_obj(),
         Qstr::MP_QSTR_BackupDevice => BACKUP_DEVICE.as_obj(),
-        Qstr::MP_QSTR_DevicePair => DEVICE_PAIR.as_obj(),
-        Qstr::MP_QSTR_DeviceDisconnect => DEVICE_DISCONNECT.as_obj(),
-        Qstr::MP_QSTR_DeviceUnpair => DEVICE_UNPAIR.as_obj(),
-        Qstr::MP_QSTR_DeviceUnpairAll => DEVICE_UNPAIR_ALL.as_obj(),
-        Qstr::MP_QSTR_PinCode => PIN_CODE.as_obj(),
-        Qstr::MP_QSTR_PinRemove => PIN_REMOVE.as_obj(),
-        Qstr::MP_QSTR_AutoLockBattery => AUTO_LOCK_BATTERY.as_obj(),
-        Qstr::MP_QSTR_AutoLockUSB => AUTO_LOCK_USB.as_obj(),
-        Qstr::MP_QSTR_WipeCode => WIPE_CODE.as_obj(),
-        Qstr::MP_QSTR_WipeRemove => WIPE_REMOVE.as_obj(),
+        Qstr::MP_QSTR_PairDevice => PAIR_DEVICE.as_obj(),
+        Qstr::MP_QSTR_DisconnectDevice => DISCONNECT_DEVICE.as_obj(),
+        Qstr::MP_QSTR_UnpairDevice => UNPAIR_DEVICE.as_obj(),
+        Qstr::MP_QSTR_UnpairAllDevices => UNPAIR_ALL_DEVICES.as_obj(),
+        Qstr::MP_QSTR_SetOrChangePin => SET_OR_CHANGE_PIN.as_obj(),
+        Qstr::MP_QSTR_RemovePin => REMOVE_PIN.as_obj(),
+        Qstr::MP_QSTR_SetAutoLockBattery => SET_AUTO_LOCK_BATTERY.as_obj(),
+        Qstr::MP_QSTR_SetAutoLockUSB => SET_AUTO_LOCK_USB.as_obj(),
+        Qstr::MP_QSTR_SetOrChangeWipeCode => SET_OR_CHANGE_WIPE_CODE.as_obj(),
+        Qstr::MP_QSTR_RemoveWipeCode => REMOVE_WIPE_CODE.as_obj(),
         Qstr::MP_QSTR_CheckBackup => CHECK_BACKUP.as_obj(),
-        Qstr::MP_QSTR_DeviceName => DEVICE_NAME.as_obj(),
-        Qstr::MP_QSTR_ScreenBrightness => SCREEN_BRIGHTNESS.as_obj(),
-        Qstr::MP_QSTR_HapticFeedback => HAPTIC_FEEDBACK.as_obj(),
-        Qstr::MP_QSTR_LedEnabled => LED_ENABLED.as_obj(),
+        Qstr::MP_QSTR_SetDeviceName => SET_DEVICE_NAME.as_obj(),
+        Qstr::MP_QSTR_SetBrightness => SET_BRIGHTNESS.as_obj(),
+        Qstr::MP_QSTR_ToggleHaptics => TOGGLE_HAPTICS.as_obj(),
+        Qstr::MP_QSTR_ToggleLed => TOGGLE_LED.as_obj(),
         Qstr::MP_QSTR_WipeDevice => WIPE_DEVICE.as_obj(),
         Qstr::MP_QSTR_TurnOff => TURN_OFF.as_obj(),
         Qstr::MP_QSTR_Reboot => REBOOT.as_obj(),
         Qstr::MP_QSTR_RebootToBootloader => REBOOT_TO_BOOTLOADER.as_obj(),
-        Qstr::MP_QSTR_MenuRefresh => MENU_REFRESH.as_obj(),
+        Qstr::MP_QSTR_RefreshMenu => REFRESH_MENU.as_obj(),
     } },
 };
 

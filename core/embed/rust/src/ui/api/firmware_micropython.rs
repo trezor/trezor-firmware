@@ -937,44 +937,48 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
 
 extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let init_submenu: Option<u8> = kwargs.get(Qstr::MP_QSTR_init_submenu)?.try_into_option()?;
-        let failed_backup: bool = kwargs.get(Qstr::MP_QSTR_failed_backup)?.try_into()?;
-        let needs_backup: bool = kwargs.get(Qstr::MP_QSTR_needs_backup)?.try_into()?;
+        let init_submenu_idx: Option<u8> = kwargs
+            .get(Qstr::MP_QSTR_init_submenu_idx)?
+            .try_into_option()?;
+        let backup_failed: bool = kwargs.get(Qstr::MP_QSTR_backup_failed)?.try_into()?;
+        let backup_needed: bool = kwargs.get(Qstr::MP_QSTR_backup_needed)?.try_into()?;
         let paired_devices: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
         let paired_devices: Vec<TString, MAX_PAIRED_DEVICES> = util::iter_into_vec(paired_devices)?;
         let connected_idx: Option<u8> =
             kwargs.get(Qstr::MP_QSTR_connected_idx)?.try_into_option()?;
-        let pin_code: Option<bool> = kwargs.get(Qstr::MP_QSTR_pin_code)?.try_into_option()?;
-        let auto_lock_delay: Option<[TString; 2]> = kwargs
-            .get(Qstr::MP_QSTR_auto_lock_delay)?
+        let pin_enabled: Option<bool> = kwargs.get(Qstr::MP_QSTR_pin_enabled)?.try_into_option()?;
+        let auto_lock: Option<[TString; 2]> = kwargs
+            .get(Qstr::MP_QSTR_auto_lock)?
             .try_into_option()?
             .map(util::iter_into_array)
             .transpose()?;
-        let wipe_code: Option<bool> = kwargs.get(Qstr::MP_QSTR_wipe_code)?.try_into_option()?;
-        let check_backup: bool = kwargs.get(Qstr::MP_QSTR_check_backup)?.try_into()?;
+        let wipe_code_enabled: Option<bool> = kwargs
+            .get(Qstr::MP_QSTR_wipe_code_enabled)?
+            .try_into_option()?;
+        let backup_check_allowed: bool =
+            kwargs.get(Qstr::MP_QSTR_backup_check_allowed)?.try_into()?;
         let device_name: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_device_name)?.try_into_option()?;
-        let screen_brightness: Option<TString> = kwargs
-            .get(Qstr::MP_QSTR_screen_brightness)?
-            .try_into_option()?;
-        let haptic_feedback: Option<bool> = kwargs
-            .get(Qstr::MP_QSTR_haptic_feedback)?
+        let brightness: Option<TString> =
+            kwargs.get(Qstr::MP_QSTR_brightness)?.try_into_option()?;
+        let haptics_enabled: Option<bool> = kwargs
+            .get(Qstr::MP_QSTR_haptics_enabled)?
             .try_into_option()?;
         let led_enabled: Option<bool> = kwargs.get(Qstr::MP_QSTR_led_enabled)?.try_into_option()?;
         let about_items: Obj = kwargs.get(Qstr::MP_QSTR_about_items)?;
         let layout = ModelUI::show_device_menu(
-            init_submenu,
-            failed_backup,
-            needs_backup,
+            init_submenu_idx,
+            backup_failed,
+            backup_needed,
             paired_devices,
             connected_idx,
-            pin_code,
-            auto_lock_delay,
-            wipe_code,
-            check_backup,
+            pin_enabled,
+            auto_lock,
+            wipe_code_enabled,
+            backup_check_allowed,
             device_name,
-            screen_brightness,
-            haptic_feedback,
+            brightness,
+            haptics_enabled,
             led_enabled,
             about_items,
         )?;
@@ -1919,18 +1923,18 @@ pub static mp_module_trezorui_api: Module = obj_module! {
 
     /// def show_device_menu(
     ///     *,
-    ///     init_submenu: int | None,
-    ///     failed_backup: bool,
-    ///     needs_backup: bool,
+    ///     init_submenu_idx: int | None,
+    ///     backup_failed: bool,
+    ///     backup_needed: bool,
     ///     paired_devices: Iterable[str],
     ///     connected_idx: int | None,
-    ///     pin_code: bool | None,
-    ///     auto_lock_delay: tuple[str, str] | None,
-    ///     wipe_code: bool | None,
-    ///     check_backup: bool,
+    ///     pin_enabled: bool | None,
+    ///     auto_lock: tuple[str, str] | None,
+    ///     wipe_code_enabled: bool | None,
+    ///     backup_check_allowed: bool,
     ///     device_name: str | None,
-    ///     screen_brightness: str | None,
-    ///     haptic_feedback: bool | None,
+    ///     brightness: str | None,
+    ///     haptics_enabled: bool | None,
     ///     led_enabled: bool | None,
     ///     about_items: list[tuple[str | None, str | bytes | None, bool | None]],
     /// ) -> LayoutObj[UiResult | DeviceMenuResult | tuple[DeviceMenuResult, int]]:
@@ -2138,27 +2142,27 @@ pub static mp_module_trezorui_api: Module = obj_module! {
 
     /// class DeviceMenuResult:
     ///     """Result of a device menu operation."""
-    ///     BackupFailed: ClassVar[DeviceMenuResult]
+    ///     ReviewFailedBackup: ClassVar[DeviceMenuResult]
     ///     BackupDevice: ClassVar[DeviceMenuResult]
-    ///     DeviceDisconnect: ClassVar[DeviceMenuResult]
-    ///     DevicePair: ClassVar[DeviceMenuResult]
-    ///     DeviceUnpair: ClassVar[DeviceMenuResult]
-    ///     DeviceUnpairAll: ClassVar[DeviceMenuResult]
-    ///     PinCode: ClassVar[DeviceMenuResult]
-    ///     PinRemove: ClassVar[DeviceMenuResult]
-    ///     AutoLockBattery: ClassVar[DeviceMenuResult]
-    ///     AutoLockUSB: ClassVar[DeviceMenuResult]
-    ///     WipeCode: ClassVar[DeviceMenuResult]
-    ///     WipeRemove: ClassVar[DeviceMenuResult]
+    ///     DisconnectDevice: ClassVar[DeviceMenuResult]
+    ///     PairDevice: ClassVar[DeviceMenuResult]
+    ///     UnpairDevice: ClassVar[DeviceMenuResult]
+    ///     UnpairAllDevices: ClassVar[DeviceMenuResult]
+    ///     SetOrChangePin: ClassVar[DeviceMenuResult]
+    ///     RemovePin: ClassVar[DeviceMenuResult]
+    ///     SetAutoLockBattery: ClassVar[DeviceMenuResult]
+    ///     SetAutoLockUSB: ClassVar[DeviceMenuResult]
+    ///     SetOrChangeWipeCode: ClassVar[DeviceMenuResult]
+    ///     RemoveWipeCode: ClassVar[DeviceMenuResult]
     ///     CheckBackup: ClassVar[DeviceMenuResult]
-    ///     DeviceName: ClassVar[DeviceMenuResult]
-    ///     ScreenBrightness: ClassVar[DeviceMenuResult]
-    ///     HapticFeedback: ClassVar[DeviceMenuResult]
-    ///     LedEnabled: ClassVar[DeviceMenuResult]
+    ///     SetDeviceName: ClassVar[DeviceMenuResult]
+    ///     SetBrightness: ClassVar[DeviceMenuResult]
+    ///     ToggleHaptics: ClassVar[DeviceMenuResult]
+    ///     ToggleLed: ClassVar[DeviceMenuResult]
     ///     WipeDevice: ClassVar[DeviceMenuResult]
     ///     Reboot: ClassVar[DeviceMenuResult]
     ///     RebootToBootloader: ClassVar[DeviceMenuResult]
     ///     TurnOff: ClassVar[DeviceMenuResult]
-    ///     MenuRefresh: ClassVar[DeviceMenuResult]
+    ///     RefreshMenu: ClassVar[DeviceMenuResult]
     Qstr::MP_QSTR_DeviceMenuResult => DEVICE_MENU_RESULT.as_obj(),
 };

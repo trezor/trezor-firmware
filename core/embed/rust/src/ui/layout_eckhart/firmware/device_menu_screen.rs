@@ -107,16 +107,16 @@ enum Action {
 #[derive(Copy, Clone)]
 pub enum DeviceMenuMsg {
     // Root menu
-    BackupFailed,
+    ReviewFailedBackup,
     BackupDevice,
 
     // "Pair & Connect"
-    DevicePair,       // pair a new device
-    DeviceDisconnect, // disconnect a device
-    DeviceUnpair(
+    PairDevice,       // pair a new device
+    DisconnectDevice, // disconnect a device
+    UnpairDevice(
         u8, /* which device to unpair, index in the list of devices */
     ),
-    DeviceUnpairAll,
+    UnpairAllDevices,
 
     // Power
     TurnOff,
@@ -124,23 +124,23 @@ pub enum DeviceMenuMsg {
     RebootToBootloader,
 
     // Security menu
-    PinCode,
-    PinRemove,
-    AutoLockBattery,
-    AutoLockUSB,
-    WipeCode,
-    WipeRemove,
+    SetOrChangePin,
+    RemovePin,
+    SetAutoLockBattery,
+    SetAutoLockUSB,
+    SetOrChangeWipeCode,
+    RemoveWipeCode,
     CheckBackup,
 
     // Device menu
-    DeviceName,
-    ScreenBrightness,
-    HapticFeedback,
-    LedEnabled,
+    SetDeviceName,
+    SetBrightness,
+    ToggleHaptics,
+    ToggleLed,
     WipeDevice,
 
     // Misc
-    MenuRefresh(DeviceMenuId),
+    RefreshMenu(DeviceMenuId),
     Close,
 }
 
@@ -305,18 +305,18 @@ pub struct DeviceMenuScreen {
 impl DeviceMenuScreen {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        init_submenu: Option<u8>,
-        failed_backup: bool,
-        needs_backup: bool,
+        init_submenu_idx: Option<u8>,
+        backup_failed: bool,
+        backup_needed: bool,
         paired_devices: Vec<TString<'static>, MAX_PAIRED_DEVICES>,
         connected_idx: Option<u8>,
-        pin_code: Option<bool>,
-        auto_lock_delay: Option<[TString<'static>; 2]>,
-        wipe_code: Option<bool>,
-        check_backup: bool,
+        pin_enabled: Option<bool>,
+        auto_lock: Option<[TString<'static>; 2]>,
+        wipe_code_enabled: Option<bool>,
+        backup_check_allowed: bool,
         device_name: Option<TString<'static>>,
-        screen_brightness: Option<TString<'static>>,
-        haptic_feedback: Option<bool>,
+        brightness: Option<TString<'static>>,
+        haptics_enabled: Option<bool>,
         led_enabled: Option<bool>,
         about_items: Obj,
     ) -> Result<Self, Error> {
@@ -330,10 +330,19 @@ impl DeviceMenuScreen {
             submenu_index: [None; MAX_SUBMENUS],
         };
 
-        if pin_code.is_some() || auto_lock_delay.is_some() || wipe_code.is_some() || check_backup {
-            screen.register_security_menu(pin_code, auto_lock_delay, wipe_code, check_backup);
+        if pin_enabled.is_some()
+            || auto_lock.is_some()
+            || wipe_code_enabled.is_some()
+            || backup_check_allowed
+        {
+            screen.register_security_menu(
+                pin_enabled,
+                auto_lock,
+                wipe_code_enabled,
+                backup_check_allowed,
+            );
         }
-        screen.register_device_menu(device_name, screen_brightness, haptic_feedback, led_enabled);
+        screen.register_device_menu(device_name, brightness, haptics_enabled, led_enabled);
         screen.register_settings_menu();
         screen.register_power_menu();
 
@@ -349,11 +358,11 @@ impl DeviceMenuScreen {
         }
 
         screen.register_pair_and_connect_menu(paired_devices, submenu_indices, connected_idx);
-        let pin_unset = pin_code == Some(false);
-        screen.register_root_menu(failed_backup, needs_backup, pin_unset, connected_subtext);
+        let pin_unset = pin_enabled == Some(false);
+        screen.register_root_menu(backup_failed, backup_needed, pin_unset, connected_subtext);
 
         // Activate the init submenu
-        let init_submenu_id = init_submenu
+        let init_submenu_id = init_submenu_idx
             .and_then(|v| DeviceMenuId::try_from(v).ok())
             .unwrap_or_default();
 
@@ -401,10 +410,11 @@ impl DeviceMenuScreen {
 
         items.add(MenuItem::return_msg(
             TR::ble__pair_new.into(),
-            DeviceMenuMsg::DevicePair,
+            DeviceMenuMsg::PairDevice,
         ));
         let unpair_all_item =
-            MenuItem::return_msg(TR::ble__forget_all.into(), DeviceMenuMsg::DeviceUnpairAll).warn();
+            MenuItem::return_msg(TR::ble__forget_all.into(), DeviceMenuMsg::UnpairAllDevices)
+                .warn();
         items.add(unpair_all_item);
 
         self.register_submenu(DeviceMenuId::PairAndConnect, Submenu::new(items));
@@ -456,8 +466,8 @@ impl DeviceMenuScreen {
         }
         .into();
         let change_msg = match wipe_code {
-            true => DeviceMenuMsg::WipeCode,
-            false => DeviceMenuMsg::PinCode,
+            true => DeviceMenuMsg::SetOrChangeWipeCode,
+            false => DeviceMenuMsg::SetOrChangePin,
         };
         let change_pin_item = MenuItem::return_msg(change_text, change_msg);
         items.add(change_pin_item);
@@ -468,8 +478,8 @@ impl DeviceMenuScreen {
         }
         .into();
         let remove_msg = match wipe_code {
-            true => DeviceMenuMsg::WipeRemove,
-            false => DeviceMenuMsg::PinRemove,
+            true => DeviceMenuMsg::RemoveWipeCode,
+            false => DeviceMenuMsg::RemovePin,
         };
         let remove_pin_item = MenuItem::return_msg(remove_text, remove_msg).warn();
         items.add(remove_pin_item);
@@ -485,14 +495,14 @@ impl DeviceMenuScreen {
         let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
         let battery_delay = MenuItem::new(
             auto_lock_delay[0],
-            Some(Action::Return(DeviceMenuMsg::AutoLockBattery)),
+            Some(Action::Return(DeviceMenuMsg::SetAutoLockBattery)),
         )
         .with_subtext(Some((TR::auto_lock__on_battery.into(), None)));
         items.add(battery_delay);
 
         let usb_delay = MenuItem::new(
             auto_lock_delay[1],
-            Some(Action::Return(DeviceMenuMsg::AutoLockUSB)),
+            Some(Action::Return(DeviceMenuMsg::SetAutoLockUSB)),
         )
         .with_subtext(Some((TR::auto_lock__on_usb.into(), None)));
         items.add(usb_delay);
@@ -519,7 +529,7 @@ impl DeviceMenuScreen {
                     )),
                 )
             } else {
-                MenuItem::return_msg(TR::pin__title.into(), DeviceMenuMsg::PinCode)
+                MenuItem::return_msg(TR::pin__title.into(), DeviceMenuMsg::SetOrChangePin)
                     .with_subtext(Some((TR::words__disabled.into(), None)))
             };
             items.add(item);
@@ -541,8 +551,11 @@ impl DeviceMenuScreen {
                         Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
                     )))
             } else {
-                MenuItem::return_msg(TR::wipe_code__title.into(), DeviceMenuMsg::WipeCode)
-                    .with_subtext(Some((TR::words__disabled.into(), None)))
+                MenuItem::return_msg(
+                    TR::wipe_code__title.into(),
+                    DeviceMenuMsg::SetOrChangeWipeCode,
+                )
+                .with_subtext(Some((TR::words__disabled.into(), None)))
             };
             items.add(item);
         }
@@ -560,26 +573,26 @@ impl DeviceMenuScreen {
     fn register_device_menu(
         &mut self,
         device_name: Option<TString<'static>>,
-        screen_brightness: Option<TString<'static>>,
-        haptic_feedback: Option<bool>,
+        brightness: Option<TString<'static>>,
+        haptics_enabled: Option<bool>,
         led_enabled: Option<bool>,
     ) {
         let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
         if let Some(device_name) = device_name {
             let item_device_name =
-                MenuItem::return_msg(TR::words__name.into(), DeviceMenuMsg::DeviceName)
+                MenuItem::return_msg(TR::words__name.into(), DeviceMenuMsg::SetDeviceName)
                     .with_subtext(Some((device_name, None)))
                     .with_subtext_marquee();
             items.add(item_device_name);
         }
 
-        if let Some(brightness) = screen_brightness {
-            let brightness_item = MenuItem::return_msg(brightness, DeviceMenuMsg::ScreenBrightness);
+        if let Some(brightness) = brightness {
+            let brightness_item = MenuItem::return_msg(brightness, DeviceMenuMsg::SetBrightness);
             items.add(brightness_item);
         }
 
-        if let Some(haptic_feedback) = haptic_feedback {
-            let subtext = match haptic_feedback {
+        if let Some(haptics_enabled) = haptics_enabled {
+            let subtext = match haptics_enabled {
                 true => (
                     TR::words__on.into(),
                     Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
@@ -588,7 +601,7 @@ impl DeviceMenuScreen {
             };
             let haptic_item = MenuItem::return_msg(
                 TR::haptic_feedback__title.into(),
-                DeviceMenuMsg::HapticFeedback,
+                DeviceMenuMsg::ToggleHaptics,
             )
             .with_subtext(Some(subtext));
             items.add(haptic_item);
@@ -602,7 +615,7 @@ impl DeviceMenuScreen {
                 ),
                 _ => (TR::words__off.into(), None),
             };
-            let led_item = MenuItem::return_msg(TR::words__led.into(), DeviceMenuMsg::LedEnabled)
+            let led_item = MenuItem::return_msg(TR::words__led.into(), DeviceMenuMsg::ToggleLed)
                 .with_subtext(Some(subtext));
             items.add(led_item);
         }
@@ -628,24 +641,24 @@ impl DeviceMenuScreen {
 
     fn register_root_menu(
         &mut self,
-        failed_backup: bool,
-        needs_backup: bool,
+        backup_failed: bool,
+        backup_needed: bool,
         pin_unset: bool,
         connected_subtext: Option<TString<'static>>,
     ) {
         let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
 
-        if failed_backup {
+        if backup_failed {
             let item = MenuItem::return_msg(
                 TR::homescreen__title_backup_failed.into(),
-                DeviceMenuMsg::BackupFailed,
+                DeviceMenuMsg::ReviewFailedBackup,
             )
             .with_subtext(Some((TR::words__review.into(), None)))
             .error();
             items.add(item);
         }
 
-        if needs_backup {
+        if backup_needed {
             let item = MenuItem::return_msg(
                 TR::homescreen__title_backup_needed.into(),
                 DeviceMenuMsg::BackupDevice,
@@ -658,7 +671,7 @@ impl DeviceMenuScreen {
         if pin_unset {
             let item = MenuItem::return_msg(
                 TR::homescreen__title_pin_not_set.into(),
-                DeviceMenuMsg::PinCode,
+                DeviceMenuMsg::SetOrChangePin,
             )
             .with_subtext(Some((TR::words__set.into(), None)))
             .light_warn();
@@ -900,7 +913,7 @@ impl Component for DeviceMenuScreen {
                 ActiveScreen::Empty => DeviceMenuId::Root,
             };
 
-            return Some(DeviceMenuMsg::MenuRefresh(submenu_idx));
+            return Some(DeviceMenuMsg::RefreshMenu(submenu_idx));
         }
 
         // Handle the event for the active menu
@@ -924,10 +937,10 @@ impl Component for DeviceMenuScreen {
                 match menu.event(ctx, event) {
                     Some(VerticalMenuScreenMsg::Selected(button_idx)) => match button_idx {
                         DISCONNECT_DEVICE_MENU_INDEX if *connected => {
-                            return Some(DeviceMenuMsg::DeviceDisconnect);
+                            return Some(DeviceMenuMsg::DisconnectDevice);
                         }
                         _ => {
-                            return Some(DeviceMenuMsg::DeviceUnpair(*device_idx));
+                            return Some(DeviceMenuMsg::UnpairDevice(*device_idx));
                         }
                     },
                     Some(VerticalMenuScreenMsg::Back) => {

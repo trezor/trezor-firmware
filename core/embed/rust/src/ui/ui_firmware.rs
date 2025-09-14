@@ -362,18 +362,18 @@ pub trait FirmwareUI {
 
     #[allow(clippy::too_many_arguments)]
     fn show_device_menu(
-        init_submenu: Option<u8>,
-        failed_backup: bool,
-        needs_backup: bool,
+        init_submenu_idx: Option<u8>,
+        backup_failed: bool,
+        backup_needed: bool,
         paired_devices: heapless::Vec<TString<'static>, MAX_PAIRED_DEVICES>,
         connected_idx: Option<u8>,
-        pin_code: Option<bool>,
-        auto_lock_delay: Option<[TString<'static>; 2]>,
-        wipe_code: Option<bool>,
-        check_backup: bool,
+        pin_enabled: Option<bool>,
+        auto_lock: Option<[TString<'static>; 2]>,
+        wipe_code_enabled: Option<bool>,
+        backup_check_allowed: bool,
         device_name: Option<TString<'static>>,
-        screen_brightness: Option<TString<'static>>,
-        haptic_feedback: Option<bool>,
+        brightness: Option<TString<'static>>,
+        haptics_enabled: Option<bool>,
         led_enabled: Option<bool>,
         about_items: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error>;

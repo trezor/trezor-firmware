@@ -158,37 +158,37 @@ impl ComponentMsgObj for DeviceMenuScreen {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             // Root menu
-            DeviceMenuMsg::BackupFailed => Ok(BACKUP_FAILED.as_obj()),
+            DeviceMenuMsg::ReviewFailedBackup => Ok(REVIEW_FAILED_BACKUP.as_obj()),
             DeviceMenuMsg::BackupDevice => Ok(BACKUP_DEVICE.as_obj()),
             // "Pair & Connect"
-            DeviceMenuMsg::DevicePair => Ok(DEVICE_PAIR.as_obj()),
-            DeviceMenuMsg::DeviceDisconnect => Ok(DEVICE_DISCONNECT.as_obj()),
-            DeviceMenuMsg::DeviceUnpair(index) => {
-                Ok(new_tuple(&[DEVICE_UNPAIR.as_obj(), index.into()])?)
+            DeviceMenuMsg::PairDevice => Ok(PAIR_DEVICE.as_obj()),
+            DeviceMenuMsg::DisconnectDevice => Ok(DISCONNECT_DEVICE.as_obj()),
+            DeviceMenuMsg::UnpairDevice(index) => {
+                Ok(new_tuple(&[UNPAIR_DEVICE.as_obj(), index.into()])?)
             }
-            DeviceMenuMsg::DeviceUnpairAll => Ok(DEVICE_UNPAIR_ALL.as_obj()),
+            DeviceMenuMsg::UnpairAllDevices => Ok(UNPAIR_ALL_DEVICES.as_obj()),
             // Security menu
-            DeviceMenuMsg::PinCode => Ok(PIN_CODE.as_obj()),
-            DeviceMenuMsg::PinRemove => Ok(PIN_REMOVE.as_obj()),
-            DeviceMenuMsg::AutoLockBattery => Ok(AUTO_LOCK_BATTERY.as_obj()),
-            DeviceMenuMsg::AutoLockUSB => Ok(AUTO_LOCK_USB.as_obj()),
-            DeviceMenuMsg::WipeCode => Ok(WIPE_CODE.as_obj()),
-            DeviceMenuMsg::WipeRemove => Ok(WIPE_REMOVE.as_obj()),
+            DeviceMenuMsg::SetOrChangePin => Ok(SET_OR_CHANGE_PIN.as_obj()),
+            DeviceMenuMsg::RemovePin => Ok(REMOVE_PIN.as_obj()),
+            DeviceMenuMsg::SetAutoLockBattery => Ok(SET_AUTO_LOCK_BATTERY.as_obj()),
+            DeviceMenuMsg::SetAutoLockUSB => Ok(SET_AUTO_LOCK_USB.as_obj()),
+            DeviceMenuMsg::SetOrChangeWipeCode => Ok(SET_OR_CHANGE_WIPE_CODE.as_obj()),
+            DeviceMenuMsg::RemoveWipeCode => Ok(REMOVE_WIPE_CODE.as_obj()),
             DeviceMenuMsg::CheckBackup => Ok(CHECK_BACKUP.as_obj()),
             // Device menu
-            DeviceMenuMsg::DeviceName => Ok(DEVICE_NAME.as_obj()),
-            DeviceMenuMsg::ScreenBrightness => Ok(SCREEN_BRIGHTNESS.as_obj()),
-            DeviceMenuMsg::HapticFeedback => Ok(HAPTIC_FEEDBACK.as_obj()),
-            DeviceMenuMsg::LedEnabled => Ok(LED_ENABLED.as_obj()),
+            DeviceMenuMsg::SetDeviceName => Ok(SET_DEVICE_NAME.as_obj()),
+            DeviceMenuMsg::SetBrightness => Ok(SET_BRIGHTNESS.as_obj()),
+            DeviceMenuMsg::ToggleHaptics => Ok(TOGGLE_HAPTICS.as_obj()),
+            DeviceMenuMsg::ToggleLed => Ok(TOGGLE_LED.as_obj()),
             DeviceMenuMsg::WipeDevice => Ok(WIPE_DEVICE.as_obj()),
             // Power settings
             DeviceMenuMsg::TurnOff => Ok(TURN_OFF.as_obj()),
             DeviceMenuMsg::Reboot => Ok(REBOOT.as_obj()),
             DeviceMenuMsg::RebootToBootloader => Ok(REBOOT_TO_BOOTLOADER.as_obj()),
             // Misc
-            DeviceMenuMsg::MenuRefresh(submenu_id) => {
+            DeviceMenuMsg::RefreshMenu(submenu_id) => {
                 let submenu_idx: u8 = submenu_id.into();
-                Ok(new_tuple(&[MENU_REFRESH.as_obj(), submenu_idx.into()])?)
+                Ok(new_tuple(&[REFRESH_MENU.as_obj(), submenu_idx.into()])?)
             }
             DeviceMenuMsg::Close => Ok(CANCELLED.as_obj()),
         }
