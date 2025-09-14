@@ -78,6 +78,12 @@ async def handle_device_menu() -> None:
         haptic_configurable = is_initialized and utils.USE_HAPTIC
         backup_failed = is_initialized and storage_device.unfinished_backup()
         backup_needed = is_initialized and storage_device.needs_backup()
+        backup_finished = (
+            is_initialized
+            and not storage_device.needs_backup()
+            and not storage_device.unfinished_backup()
+            and not storage_device.no_backup()
+        )
 
         bonds = ble.get_bonds()
         if __debug__:
@@ -118,7 +124,7 @@ async def handle_device_menu() -> None:
                     if (is_initialized and config.has_pin())
                     else None
                 ),
-                backup_check_allowed=is_initialized,
+                backup_check_allowed=backup_finished,
                 device_name=(
                     (storage_device.get_label() or utils.MODEL_FULL_NAME)
                     if is_initialized

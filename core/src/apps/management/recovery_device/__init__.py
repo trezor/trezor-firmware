@@ -39,14 +39,19 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
 
     # --------------------------------------------------------
     # validate
-    if recovery_type == RecoveryType.NormalRecovery:
+    if recovery_type is RecoveryType.NormalRecovery:
         if storage_device.is_initialized():
             raise wire.UnexpectedMessage("Already initialized")
     elif recovery_type in (RecoveryType.DryRun, RecoveryType.UnlockRepeatedBackup):
         if not storage_device.is_initialized():
             raise wire.NotInitialized("Device is not initialized")
-        if (
-            recovery_type == RecoveryType.UnlockRepeatedBackup
+        elif recovery_type is RecoveryType.DryRun:
+            if storage_device.no_backup():
+                raise wire.ProcessError("Dry-run not available for seedless devices")
+            elif storage_device.needs_backup() or storage_device.unfinished_backup():
+                raise wire.ProcessError("Cannot do dry-run without backed-up seed")
+        elif (
+            recovery_type is RecoveryType.UnlockRepeatedBackup
             and mnemonic.get_type() == BackupType.Bip39
         ):
             raise wire.ProcessError("Repeated Backup not available for BIP39 backups")
