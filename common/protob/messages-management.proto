@@ -220,6 +220,7 @@ message ApplySettings {
     optional bool hide_passphrase_from_host = 11;  // do not show passphrase coming from host
     optional bool haptic_feedback = 13;  // enable haptic feedback
     optional uint32 homescreen_length = 14;  // byte length of new homescreen, device will request chunks
+    optional uint32 auto_lock_delay_battery_ms = 15; // time in ms after which device locks when on battery or wireless charger
 }
 
 /**
