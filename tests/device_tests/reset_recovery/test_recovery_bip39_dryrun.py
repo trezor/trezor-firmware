@@ -154,3 +154,44 @@ def test_bad_parameters(session: Session, field_name: str, field_value: Any):
         match="Forbidden field set in dry-run",
     ):
         session.call(msg)
+
+
+@pytest.mark.setup_client(no_backup=True)
+@pytest.mark.models("core")
+def test_no_backup_fails(session: Session):
+    session.ensure_unlocked()
+    assert session.features.initialized is True
+    assert session.features.no_backup is True
+    assert (
+        session.features.backup_availability == messages.BackupAvailability.NotAvailable
+    )
+
+    msg = messages.RecoveryDevice(
+        type=messages.RecoveryType.DryRun,
+        word_count=12,
+        enforce_wordlist=True,
+        input_method=messages.RecoveryDeviceInputMethod.ScrambledWords,
+    )
+    with pytest.raises(
+        exceptions.TrezorFailure,
+        match="not available for seedless devices",
+    ):
+        session.call(msg)
+
+
+@pytest.mark.setup_client(needs_backup=True)
+@pytest.mark.models("core")
+def test_backup_needed_fails(session: Session):
+    assert session.features.backup_availability == messages.BackupAvailability.Required
+
+    msg = messages.RecoveryDevice(
+        type=messages.RecoveryType.DryRun,
+        word_count=12,
+        enforce_wordlist=True,
+        input_method=messages.RecoveryDeviceInputMethod.ScrambledWords,
+    )
+    with pytest.raises(
+        exceptions.TrezorFailure,
+        match="Cannot do dry-run without backed-up seed",
+    ):
+        session.call(msg)
