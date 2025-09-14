@@ -98,6 +98,8 @@ async def bootscreen() -> None:
                 rotation = storage.device.get_rotation()
                 if utils.USE_HAPTIC:
                     io.haptic.haptic_set_enabled(storage.device.get_haptic_feedback())
+                if utils.USE_RGB_LED:
+                    io.rgb_led.rgb_led_set_enabled(storage.device.get_rgb_led())
 
                 if rotation != ui.display.orientation():
                     # there is a slight delay before next screen is shown,
