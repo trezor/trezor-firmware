@@ -23,6 +23,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_BACK;
   MP_QSTR_BLEIF;
   MP_QSTR_BacklightLevels;
+  MP_QSTR_BackupDevice;
   MP_QSTR_BackupFailed;
   MP_QSTR_CANCELLED;
   MP_QSTR_CONFIRMED;
@@ -465,6 +466,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_modify_fee__transaction_fee;
   MP_QSTR_more_info_callback;
   MP_QSTR_multiple_pages_texts;
+  MP_QSTR_needs_backup;
   MP_QSTR_notification;
   MP_QSTR_notification_level;
   MP_QSTR_page_count;

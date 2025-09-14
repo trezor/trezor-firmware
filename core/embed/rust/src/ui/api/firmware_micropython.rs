@@ -939,6 +939,7 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
     let block = move |_args: &[Obj], kwargs: &Map| {
         let init_submenu: Option<u8> = kwargs.get(Qstr::MP_QSTR_init_submenu)?.try_into_option()?;
         let failed_backup: bool = kwargs.get(Qstr::MP_QSTR_failed_backup)?.try_into()?;
+        let needs_backup: bool = kwargs.get(Qstr::MP_QSTR_needs_backup)?.try_into()?;
         let paired_devices: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
         let paired_devices: Vec<TString, MAX_PAIRED_DEVICES> = util::iter_into_vec(paired_devices)?;
         let connected_idx: Option<u8> =
@@ -964,6 +965,7 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
         let layout = ModelUI::show_device_menu(
             init_submenu,
             failed_backup,
+            needs_backup,
             paired_devices,
             connected_idx,
             pin_code,
@@ -1919,6 +1921,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     init_submenu: int | None,
     ///     failed_backup: bool,
+    ///     needs_backup: bool,
     ///     paired_devices: Iterable[str],
     ///     connected_idx: int | None,
     ///     pin_code: bool | None,
@@ -2136,6 +2139,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// class DeviceMenuResult:
     ///     """Result of a device menu operation."""
     ///     BackupFailed: ClassVar[DeviceMenuResult]
+    ///     BackupDevice: ClassVar[DeviceMenuResult]
     ///     DeviceDisconnect: ClassVar[DeviceMenuResult]
     ///     DevicePair: ClassVar[DeviceMenuResult]
     ///     DeviceUnpair: ClassVar[DeviceMenuResult]

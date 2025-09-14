@@ -9,6 +9,7 @@ static DEVICE_MENU_RESULT_BASE_TYPE: Type = obj_type! { name: Qstr::MP_QSTR_Devi
 
 // Root menu
 pub static BACKUP_FAILED: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static BACKUP_DEVICE: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 // "Pair & Connect"
 pub static DEVICE_PAIR: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static DEVICE_DISCONNECT: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
@@ -40,6 +41,7 @@ static DEVICE_MENU_RESULT_TYPE: Type = obj_type! {
     name: Qstr::MP_QSTR_DeviceMenuResult,
     locals: &obj_dict! { obj_map! {
         Qstr::MP_QSTR_BackupFailed => BACKUP_FAILED.as_obj(),
+        Qstr::MP_QSTR_BackupDevice => BACKUP_DEVICE.as_obj(),
         Qstr::MP_QSTR_DevicePair => DEVICE_PAIR.as_obj(),
         Qstr::MP_QSTR_DeviceDisconnect => DEVICE_DISCONNECT.as_obj(),
         Qstr::MP_QSTR_DeviceUnpair => DEVICE_UNPAIR.as_obj(),
