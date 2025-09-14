@@ -45,10 +45,13 @@ def get_auto_lock_delay() -> tuple[str, str] | None:
 
     if not config.has_pin():
         return None
-    delay = storage_device.get_autolock_delay_ms()
-    #  TODO: the second value is mocked by using the same value
-    formatted = strings.format_autolock_duration(delay)
-    return (formatted, formatted)
+    autolock_delay_batt = storage_device.get_autolock_delay_battery_ms()
+    autolock_delay_usb = storage_device.get_autolock_delay_ms()
+
+    autolock_delay_batt_fmg = strings.format_autolock_duration(autolock_delay_batt)
+    autolock_delay_usb_fmt = strings.format_autolock_duration(autolock_delay_usb)
+
+    return (autolock_delay_batt_fmg, autolock_delay_usb_fmt)
 
 
 async def handle_device_menu() -> None:
@@ -231,23 +234,36 @@ async def handle_device_menu() -> None:
             from apps.management.apply_settings import apply_settings
 
             try:
+                if menu_result is DeviceMenuResult.AutoLockUSB:
+                    duration_ms = storage_device.get_autolock_delay_ms()
+                    min_ms = storage_device.AUTOLOCK_DELAY_USB_MIN_MS
+                    max_ms = storage_device.AUTOLOCK_DELAY_USB_MAX_MS
+                else:
+                    duration_ms = storage_device.get_autolock_delay_battery_ms()
+                    min_ms = storage_device.AUTOLOCK_DELAY_BATT_MIN_MS
+                    max_ms = storage_device.AUTOLOCK_DELAY_BATT_MAX_MS
+
                 auto_lock_delay_ms = await interact(
                     trezorui_api.request_duration(
                         title=TR.auto_lock__title,
-                        duration_ms=storage_device.get_autolock_delay_ms(),
-                        min_ms=storage_device.AUTOLOCK_DELAY_USB_MIN_MS,
-                        max_ms=storage_device.AUTOLOCK_DELAY_USB_MAX_MS,
+                        duration_ms=duration_ms,
+                        min_ms=min_ms,
+                        max_ms=max_ms,
                         description=TR.auto_lock__description,
                     ),
                     br_name=None,
                 )
                 # Necessary for the style check not to raise type error
                 assert isinstance(auto_lock_delay_ms, int)
-                await apply_settings(
-                    ApplySettings(
+                if menu_result is DeviceMenuResult.AutoLockUSB:
+                    settings = ApplySettings(
                         auto_lock_delay_ms=auto_lock_delay_ms,
                     )
-                )
+                else:
+                    settings = ApplySettings(
+                        auto_lock_delay_battery_ms=auto_lock_delay_ms,
+                    )
+                await apply_settings(settings)
             except ActionCancelled:
                 pass
             finally:
