@@ -61,6 +61,7 @@ async def apply_settings(msg: ApplySettings) -> Success:
     homescreen_length = msg.homescreen_length  # local_cache_attribute
     label = msg.label  # local_cache_attribute
     auto_lock_delay_ms = msg.auto_lock_delay_ms  # local_cache_attribute
+    auto_lock_delay_battery_ms = msg.auto_lock_delay_battery_ms
     use_passphrase = msg.use_passphrase  # local_cache_attribute
     passphrase_always_on_device = (
         msg.passphrase_always_on_device
@@ -79,6 +80,7 @@ async def apply_settings(msg: ApplySettings) -> Success:
         and passphrase_always_on_device is None
         and display_rotation is None
         and auto_lock_delay_ms is None
+        and auto_lock_delay_battery_ms is None
         and msg_safety_checks is None
         and experimental_features is None
         and hide_passphrase_from_host is None
@@ -123,6 +125,14 @@ async def apply_settings(msg: ApplySettings) -> Success:
             raise ProcessError("Auto-lock delay too long")
         await _require_confirm_change_autolock_delay(auto_lock_delay_ms)
         storage_device.set_autolock_delay_ms(auto_lock_delay_ms)
+
+    if auto_lock_delay_battery_ms is not None and utils.USE_POWER_MANAGER:
+        if auto_lock_delay_battery_ms < storage_device.AUTOLOCK_DELAY_BATT_MIN_MS:
+            raise ProcessError("Auto-lock delay too short")
+        if auto_lock_delay_battery_ms > storage_device.AUTOLOCK_DELAY_BATT_MAX_MS:
+            raise ProcessError("Auto-lock delay too long")
+        await _require_confirm_change_autolock_delay(auto_lock_delay_battery_ms)
+        storage_device.set_autolock_delay_battery_ms(auto_lock_delay_battery_ms)
 
     if msg_safety_checks is not None:
         await _require_confirm_safety_checks(msg_safety_checks)
