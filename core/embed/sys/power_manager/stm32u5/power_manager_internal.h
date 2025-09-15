@@ -31,8 +31,7 @@
 #define PM_TIMER_PERIOD_MS 100
 #define PM_SHUTDOWN_TIMEOUT_MS 15000
 #define PM_BATTERY_UNDERVOLT_THR_V 3.0f
-#define PM_BATTERY_UNDERVOLT_RECOVERY_THR_V 3.1f
-#define PM_BATTERY_UNDERVOLT_RECOVERY_WPC_THR_V 3.2f
+#define PM_BATTERY_CRITICAL_RECOVERY_SOC 0.02f
 #define PM_BATTERY_LOW_THRESHOLD_SOC 15
 #define PM_BATTERY_CHARGING_CURRENT_MAX PMIC_CHARGING_LIMIT_MAX
 #define PM_BATTERY_CHARGING_CURRENT_MIN PMIC_CHARGING_LIMIT_MIN
@@ -88,8 +87,6 @@ typedef struct {
   uint8_t bat_sampling_buf_tail_idx;
   uint8_t bat_sampling_buf_head_idx;
   uint8_t soc_ceiled;
-
-  float vbat_tau;
 
   uint8_t soc_target;
   bool soc_target_reached;

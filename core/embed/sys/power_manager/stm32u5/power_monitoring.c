@@ -57,16 +57,12 @@ void pm_pmic_data_ready(void* context, pmic_report_t* report) {
   // Store measurement timestamp
   if (drv->pmic_last_update_us == 0) {
     drv->pmic_sampling_period_ms = PM_TIMER_PERIOD_MS;
-    drv->vbat_tau = report->vbat;
   } else {
     // Calculate the time since the last PMIC update
     drv->pmic_sampling_period_ms =
         (systick_us() - drv->pmic_last_update_us) / 1000;
   }
   drv->pmic_last_update_us = systick_us();
-
-  drv->vbat_tau = (drv->vbat_tau * 0.95f) + (report->vbat * 0.05f);
-
   // Copy pmic data
   memcpy(&drv->pmic_data, report, sizeof(pmic_report_t));
 
@@ -301,13 +297,16 @@ static void pm_parse_power_source_state(pm_driver_t* drv) {
   }
 
   // Check battery voltage for critical (undervoltage) threshold
-  if ((drv->vbat_tau < PM_BATTERY_UNDERVOLT_THR_V) && !drv->battery_critical) {
+  if ((drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_THR_V) &&
+      !drv->battery_critical && !drv->usb_connected) {
     // Force Fuel gauge to 0, keep the covariance
     fuel_gauge_set_soc(&drv->fuel_gauge, 0.0f, drv->fuel_gauge.P);
-
     drv->battery_critical = true;
-  } else if (drv->vbat_tau > (PM_BATTERY_UNDERVOLT_RECOVERY_THR_V) &&
-             drv->battery_critical) {
+
+  } else if (drv->fuel_gauge.soc_latched >=
+                 (PM_BATTERY_CRITICAL_RECOVERY_SOC) ||
+             drv->usb_connected) {
+    // Restore the battery critical state
     drv->battery_critical = false;
   }
 }
