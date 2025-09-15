@@ -24,7 +24,7 @@ import typing as t
 from cryptography import exceptions, x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec, ed25519, utils
-from cryptography.x509.oid import ObjectIdentifier, SignatureAlgorithmOID
+from cryptography.x509.oid import NameOID, ObjectIdentifier, SignatureAlgorithmOID
 
 from . import device
 from .transport.session import Session
@@ -43,6 +43,17 @@ def _pk_ed25519(pubkey_hex: str) -> ed25519.Ed25519PublicKey:
 
 
 CHALLENGE_HEADER = b"AuthenticateDevice:"
+
+OID_TO_NAME = {
+    NameOID.COMMON_NAME: "CN",
+    NameOID.LOCALITY_NAME: "L",
+    NameOID.STATE_OR_PROVINCE_NAME: "ST",
+    NameOID.ORGANIZATION_NAME: "O",
+    NameOID.ORGANIZATIONAL_UNIT_NAME: "OU",
+    NameOID.COUNTRY_NAME: "C",
+    NameOID.SERIAL_NUMBER: "SERIALNUMBER",
+    NameOID.DN_QUALIFIER: "DNQ",
+}
 
 
 class RootCertificate(t.NamedTuple):
@@ -146,7 +157,7 @@ class Certificate:
         self.cert = x509.load_der_x509_certificate(cert_bytes)
 
     def __str__(self) -> str:
-        return self.cert.subject.rfc4514_string()
+        return self.cert.subject.rfc4514_string(OID_TO_NAME)
 
     def public_key_bytes(self) -> bytes:
         cert_pubkey = self.cert.public_key()
