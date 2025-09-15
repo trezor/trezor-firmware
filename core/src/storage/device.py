@@ -279,7 +279,7 @@ def set_autolock_delay_ms(delay_ms: int) -> None:
 if utils.USE_POWER_MANAGER:
 
     def get_autolock_delay_battery_ms() -> int:
-        b = common.get(_NAMESPACE, _AUTOLOCK_DELAY_BATT_MS)
+        b = common.get(_NAMESPACE, _AUTOLOCK_DELAY_BATT_MS, public=True)
         if b is None:
             return AUTOLOCK_DELAY_BATT_DEFAULT_MS
         else:
@@ -295,7 +295,12 @@ if utils.USE_POWER_MANAGER:
             min_ms=AUTOLOCK_DELAY_BATT_MIN_MS,
             max_ms=AUTOLOCK_DELAY_BATT_MAX_MS,
         )
-        common.set(_NAMESPACE, _AUTOLOCK_DELAY_BATT_MS, delay_ms.to_bytes(4, "big"))
+        common.set(
+            _NAMESPACE,
+            _AUTOLOCK_DELAY_BATT_MS,
+            delay_ms.to_bytes(4, "big"),
+            public=True,
+        )
 
 
 def next_u2f_counter() -> int:
