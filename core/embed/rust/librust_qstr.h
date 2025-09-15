@@ -190,7 +190,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_ble__forget_this_description;
   MP_QSTR_ble__forget_this_device;
   MP_QSTR_ble__forget_this_success;
+  MP_QSTR_ble__host_info;
   MP_QSTR_ble__limit_reached;
+  MP_QSTR_ble__mac_address;
   MP_QSTR_ble__manage_paired;
   MP_QSTR_ble__pair_new;
   MP_QSTR_ble__pair_title;

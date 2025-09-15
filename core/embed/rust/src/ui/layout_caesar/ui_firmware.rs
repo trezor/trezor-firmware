@@ -1135,7 +1135,10 @@ impl FirmwareUI for UICaesar {
         _init_submenu_idx: Option<u8>,
         _backup_failed: bool,
         _backup_needed: bool,
-        _paired_devices: heapless::Vec<TString<'static>, MAX_PAIRED_DEVICES>,
+        _paired_devices: heapless::Vec<
+            (TString<'static>, Option<TString<'static>>),
+            MAX_PAIRED_DEVICES,
+        >,
         _connected_idx: Option<u8>,
         _pin_enabled: Option<bool>,
         _auto_lock: Option<[TString<'static>; 2]>,

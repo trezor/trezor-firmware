@@ -1204,7 +1204,10 @@ impl FirmwareUI for UIEckhart {
         init_submenu_idx: Option<u8>,
         backup_failed: bool,
         backup_needed: bool,
-        paired_devices: heapless::Vec<TString<'static>, MAX_PAIRED_DEVICES>,
+        paired_devices: heapless::Vec<
+            (TString<'static>, Option<TString<'static>>),
+            MAX_PAIRED_DEVICES,
+        >,
         connected_idx: Option<u8>,
         pin_enabled: Option<bool>,
         auto_lock: Option<[TString<'static>; 2]>,

@@ -1548,6 +1548,8 @@ pub enum TranslatedString {
     wipe_code__pin_not_set_description = 1158,  // "PIN must be set before enabling wipe code."
     wipe_code__cancel_setup = 1159,  // {"Bolt": "Cancel wipe code setup", "Caesar": "Cancel wipe code setup", "Delizia": "Cancel wipe code setup", "Eckhart": "Cancel wipe code setup?"}
     homescreen__backup_needed_info = 1160,  // "Open Trezor Suite and create a wallet backup. This is the only way to recover access to your assets."
+    ble__host_info = 1161,  // "Host info"
+    ble__mac_address = 1162,  // "MAC address"
 }
 
 impl TranslatedString {
@@ -3530,6 +3532,8 @@ impl TranslatedString {
             #[cfg(feature = "layout_eckhart")]
             (Self::wipe_code__cancel_setup, "Cancel wipe code setup?"),
             (Self::homescreen__backup_needed_info, "Open Trezor Suite and create a wallet backup. This is the only way to recover access to your assets."),
+            (Self::ble__host_info, "Host info"),
+            (Self::ble__mac_address, "MAC address"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3618,7 +3622,9 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ble__forget_this_description, Self::ble__forget_this_description),
         (Qstr::MP_QSTR_ble__forget_this_device, Self::ble__forget_this_device),
         (Qstr::MP_QSTR_ble__forget_this_success, Self::ble__forget_this_success),
+        (Qstr::MP_QSTR_ble__host_info, Self::ble__host_info),
         (Qstr::MP_QSTR_ble__limit_reached, Self::ble__limit_reached),
+        (Qstr::MP_QSTR_ble__mac_address, Self::ble__mac_address),
         (Qstr::MP_QSTR_ble__manage_paired, Self::ble__manage_paired),
         (Qstr::MP_QSTR_ble__pair_new, Self::ble__pair_new),
         (Qstr::MP_QSTR_ble__pair_title, Self::ble__pair_title),

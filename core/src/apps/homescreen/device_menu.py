@@ -40,13 +40,6 @@ def _get_hostinfo(
     return (mac, None)
 
 
-def _get_hostname(
-    ble_addr: AnyBytes, hostname_map: dict[AnyBytes, ThpPairedCacheEntry]
-) -> str:
-    mac, hostinfo = _get_hostinfo(ble_addr, hostname_map)
-    return mac if hostinfo is None else hostinfo[0]
-
-
 def _find_device(connected_addr: bytes | None, bonds: list[bytes]) -> int | None:
     if connected_addr is None:
         return None
@@ -97,7 +90,7 @@ async def handle_device_menu() -> None:
         hostname_map = {e.mac_addr: e for e in paired_cache.load()}
         if __debug__:
             log.debug(__name__, "hostname_map: %s", hostname_map)
-        paired_devices = [_get_hostname(bond, hostname_map) for bond in bonds]
+        paired_devices = [_get_hostinfo(bond, hostname_map) for bond in bonds]
 
         if utils.USE_NRF:
             nrf_version = utils.nrf_get_version()
