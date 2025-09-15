@@ -10,12 +10,13 @@ async def get_evolu_node(msg: EvoluGetNode) -> EvoluNode:
     from storage.device import is_initialized
     from trezor.messages import EvoluNode
     from trezor.wire import NotInitialized
-    from .common import check_delegetad_identity_key
+
+    from .common import check_delegated_identity_key
 
     if not is_initialized():
         raise NotInitialized("Device is not initialized")
 
-    if not check_delegetad_identity_key(msg.proof, header=b"EvoluGetNode"):
+    if not check_delegated_identity_key(msg.proof, header=b"EvoluGetNode"):
         raise ValueError("Invalid proof")
 
     # TODO: adjust copy when the usage is exposed via Trezor Suite

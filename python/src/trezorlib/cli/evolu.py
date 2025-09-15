@@ -79,7 +79,7 @@ def get_delegated_identity_key(
 ) -> dict[str, str]:
     """Request the device for the delegated identity key pair for Evolu."""
 
-    key_pair: messages.EvoluDelegatedIdentityKey = evolu.get_delegetad_identity_key(
+    key_pair: messages.EvoluDelegatedIdentityKey = evolu.get_delegated_identity_key(
         session=session
     )
     return {
