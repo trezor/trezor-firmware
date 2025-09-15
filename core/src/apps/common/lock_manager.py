@@ -29,21 +29,21 @@ else:
     _SHOULD_SUSPEND = False
     _notify_power_button: loop.mailbox[None] = loop.mailbox()
 
-    def _prepare_suspend() -> None:
-        """Signal that the device should be suspended by the default task.
+    def _schedule_suspend_after_workflow() -> None:
+        """Signal that the device should be suspended by the default task after the
+        running workflows finish.
 
-        Sets a suspend homescreen for next time the default task is invoked."""
-        if not utils.EMULATOR:
-            # FIXME: suspend not implemented on emulator
-            _SHOULD_SUSPEND = True
-            set_homescreen()
+        Sets a suspend homescreen for next time the default task is invoked.
+        """
+        _SHOULD_SUSPEND = True
+        set_homescreen()
 
     def notify_suspend() -> None:
         """Signal that the the device should be suspended in the next cycle.
 
         Notifies an asynchronous task to perform the suspend in a separate thread.
         """
-        _notify_power_button.put(None)
+        _notify_power_button.put(None, replace=True)
 
     async def _power_handler() -> None:
         """Handler for the notify_suspend signal."""
@@ -51,26 +51,42 @@ else:
             await _notify_power_button
             lock_device_if_unlocked()
 
-    async def _suspend_and_resume() -> None:
-        """Default task that suspends the device and invokes resumption.
+    def suspend_and_resume() -> None:
+        """Suspend Trezor and handle wakeup.
 
-        Must be async (or more precisely a generator) so that we can schedule it
-        via set_default."""
+        The function will only return after Trezor has woken up.
+        """
         from trezor.ui import CURRENT_LAYOUT
 
         wakeup_flag = suspend_device()
 
         if wakeup_flag == io.pm.WAKEUP_FLAG_BUTTON:
+            workflow.idle_timer.touch()
             if CURRENT_LAYOUT is not None:
                 CURRENT_LAYOUT.layout.request_complete_repaint()
 
         _SHOULD_SUSPEND = False
         set_homescreen()
 
+    async def _suspend_and_resume_task() -> None:
+        """Task to suspend Trezor and handle wakeup.
+
+        Must be async so that we can schedule it via set_default.
+        """
+        suspend_and_resume()
+
     def lock_device_if_unlocked_on_battery() -> None:
         """Lock the device if it is unlocked and running on battery or wireless charger."""
         if not io.pm.is_usb_connected():
             lock_device_if_unlocked()
+
+    def configure_autodim() -> None:
+        """Configure the autodim setting via idle timer."""
+        workflow.idle_timer.set(storage_device.AUTODIM_DELAY_MS, autodim_display)
+        workflow.idle_timer.set(
+            storage_device.get_autolock_delay_battery_ms(),
+            lock_device_if_unlocked_on_battery,
+        )
 
 
 def set_homescreen() -> None:
@@ -81,7 +97,7 @@ def set_homescreen() -> None:
     set_default = workflow.set_default  # local_cache_attribute
 
     if utils.USE_POWER_MANAGER and _SHOULD_SUSPEND:
-        set_default(_suspend_and_resume)
+        set_default(_suspend_and_resume_task)
 
     elif context.cache_is_set(APP_COMMON_BUSY_DEADLINE_MS):
         from apps.homescreen import busyscreen
@@ -133,7 +149,12 @@ def lock_device_if_unlocked() -> None:
         lock_device(interrupt_workflow=workflow.autolock_interrupts_workflow)
 
     if utils.USE_POWER_MANAGER:
-        _prepare_suspend()
+        if workflow.autolock_interrupts_workflow:
+            # suspend immediately
+            suspend_and_resume()
+        else:
+            # set a suspending homescreen
+            _schedule_suspend_after_workflow()
 
 
 async def unlock_device() -> None:
@@ -175,12 +196,8 @@ def reload_settings_from_storage() -> None:
     )
 
     if utils.USE_POWER_MANAGER:
-        # autodim setting is not from storage but keeping it here for simplicity
-        workflow.idle_timer.set(30_000, autodim_display)
-        workflow.idle_timer.set(
-            storage_device.get_autolock_delay_battery_ms(),
-            lock_device_if_unlocked_on_battery,
-        )
+        configure_autodim()
+
     wire.message_handler.EXPERIMENTAL_ENABLED = (
         storage_device.get_experimental_features()
     )

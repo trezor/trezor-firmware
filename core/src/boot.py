@@ -25,8 +25,7 @@ if utils.USE_OPTIGA:
 
 if utils.USE_POWER_MANAGER:
     from trezor import workflow
-    from trezor.power_management.autodim import autodim_display
-    from apps.common.lock_manager import lock_device_if_unlocked_on_battery
+    from apps.common.lock_manager import configure_autodim, boot as boot_power_manager
 
 # have to use "==" over "in (list)" so that it can be statically replaced
 # with the correct value during the build process
@@ -61,12 +60,7 @@ async def bootscreen() -> None:
     Allowing all of them before returning.
     """
     if utils.USE_POWER_MANAGER:
-        workflow.idle_timer.set(30_000, autodim_display)
-        workflow.idle_timer.set(
-            storage.device.get_autolock_delay_battery_ms(),
-            lock_device_if_unlocked_on_battery,
-        )
-        workflow.autolock_interrupts_workflow = False
+        configure_autodim()
 
     while True:
         try:
@@ -120,10 +114,8 @@ async def bootscreen() -> None:
                 log.exception(__name__, e)
             utils.halt(e.__class__.__name__)
 
-    if utils.USE_POWER_MANAGER:
-        workflow.idle_timer.remove(autodim_display)
-        workflow.idle_timer.remove(lock_device_if_unlocked_on_battery)
-        workflow.autolock_interrupts_workflow = True
+    workflow.idle_timer.clear()
+    loop.clear()
 
 
 # Display emulator warning.
@@ -136,6 +128,8 @@ if not utils.USE_OPTIGA or (optiga.get_sec() or 0) < 150:
 
 config.init(show_pin_timeout)
 translations.init()
+if utils.USE_POWER_MANAGER:
+    boot_power_manager()
 
 if __debug__ and not utils.EMULATOR:
     config.wipe()
