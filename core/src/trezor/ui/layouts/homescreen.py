@@ -145,7 +145,7 @@ class Busyscreen(HomescreenBase):
     async def get_result(self) -> Any:
         from trezor.wire import context
 
-        from apps.base import set_homescreen
+        from apps.common.lock_manager import set_homescreen
 
         # Handle timeout.
         result = await super().get_result()

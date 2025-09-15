@@ -51,8 +51,8 @@ async def apply_settings(msg: ApplySettings) -> Success:
     from trezor.messages import Success
     from trezor.wire import NotInitialized, ProcessError
 
-    from apps.base import reload_settings_from_storage
     from apps.common import safety_checks
+    from apps.common.lock_manager import reload_settings_from_storage
 
     if not storage_device.is_initialized():
         raise NotInitialized("Device is not initialized")
