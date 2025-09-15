@@ -34,6 +34,10 @@
 #include <util/tsqueue.h>
 #include <util/unit_properties.h>
 
+#ifdef USE_POWER_MANAGER
+#include <sys/power_manager.h>
+#endif
+
 #include "ble_comm_defs.h"
 
 static bool ble_start_pairing(ble_command_t *command);
@@ -91,6 +95,12 @@ typedef struct {
 
   systimer_t *timer;
   uint16_t ping_cntr;
+
+#ifdef USE_POWER_MANAGER
+  uint8_t soc;
+  bool soc_send;
+#endif
+
 } ble_driver_t;
 
 static ble_driver_t g_ble_driver = {0};
@@ -206,6 +216,13 @@ static bool ble_send_bond_list_request(ble_driver_t *drv) {
 
   return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL);
 }
+#ifdef USE_POWER_MANAGER
+static bool ble_send_battery_update(uint8_t level) {
+  uint8_t cmd[2] = {INTERNAL_CMD_BATTERY_UPDATE, level};
+
+  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, cmd, sizeof(cmd), NULL, NULL);
+}
+#endif
 
 static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
   ble_driver_t *drv = &g_ble_driver;
@@ -568,6 +585,18 @@ static void ble_loop(void *context) {
         ble_send_advertising_on(drv, false);
       }
     }
+
+#ifdef USE_POWER_MANAGER
+    pm_state_t state = {0};
+    if (PM_OK == pm_get_state(&state)) {
+      if (state.soc != drv->soc || !drv->soc_send) {
+        ble_send_battery_update(state.soc);
+        drv->soc = state.soc;
+        drv->soc_send = true;
+      }
+    }
+#endif
+
   } else {
     drv->status_valid = false;
   }

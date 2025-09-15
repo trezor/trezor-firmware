@@ -23,6 +23,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/types.h>
 
+#include <zephyr/bluetooth/services/bas.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/crc.h>
 
@@ -144,6 +145,10 @@ static void management_send_bonds(void) {
                     sizeof(tx_data));
 }
 
+static void management_update_battery(uint8_t level) {
+  bt_bas_set_battery_level(level);
+}
+
 static void process_command(uint8_t *data, uint16_t len) {
   uint8_t cmd = data[0];
   bool success = true;
@@ -218,6 +223,10 @@ static void process_command(uint8_t *data, uint16_t len) {
         service_notify(conn, &data[1], len - 1);
       }
     } break;
+    case INTERNAL_CMD_BATTERY_UPDATE: {
+      management_update_battery(data[1]);
+    } break;
+      ;
     default:
       break;
   }
