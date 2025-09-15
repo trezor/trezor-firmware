@@ -45,7 +45,7 @@ extern const uint8_t *PIN_EMPTY;
 // NOTE: The PIN counter logic relies on this constant being less than or equal
 // to 16.
 #if USE_TROPIC
-#define PIN_MAX_TRIES 3  // TODO
+#define PIN_MAX_TRIES 10  // TODO
 #else
 #define PIN_MAX_TRIES 16
 #endif

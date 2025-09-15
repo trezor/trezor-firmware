@@ -768,6 +768,7 @@ static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
   uint8_t optiga_reset_key[SHA256_DIGEST_LENGTH] = {0};
   if (!optiga_pin_set(ui_progress, stretching_secret, stretched_pins,
                       optiga_reset_key)) {
+    ensure(secfalse, "optiga_pin_set failed");
     goto cleanup;
   }
 #endif

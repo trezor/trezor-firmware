@@ -70,11 +70,15 @@
 #define OPTIGA_T_MAX_MS 5000
 
 // Stretched PINs
+// The first stretched PIN is OPTIGA_OID_DATA + 4 to preserve compatiblity with
+// Trezors without Tropics.
+// OPTIGA_OID_DATA + 4 and OPTIGA_OID_DATA + 8 are not used since they are
+// occupied by the PIN secret and PIN HMAC secret.
 static const uint16_t OID_STRETCHED_PINS[] = {
-    OPTIGA_OID_DATA + 4,  OPTIGA_OID_DATA + 1, OPTIGA_OID_DATA + 2,
-    OPTIGA_OID_DATA + 3,  OPTIGA_OID_DATA + 5, OPTIGA_OID_DATA + 6,
-    OPTIGA_OID_DATA + 7,  OPTIGA_OID_DATA + 9, OPTIGA_OID_DATA + 10,
-    OPTIGA_OID_DATA + 11, OPTIGA_OID_DATA + 12};
+    OPTIGA_OID_DATA + 4, OPTIGA_OID_DATA + 1, OPTIGA_OID_DATA + 2,
+    OPTIGA_OID_DATA + 3, OPTIGA_OID_DATA + 5, OPTIGA_OID_DATA + 6,
+    OPTIGA_OID_DATA + 7, OPTIGA_OID_DATA + 9, OPTIGA_OID_DATA + 10,
+    OPTIGA_OID_DATA + 11};
 
 // Value of the PIN counter when it is reset.
 static const uint8_t HMAC_COUNTER_RESET[] = {0, 0, 0, 0,
@@ -728,6 +732,14 @@ bool optiga_pin_set(
       goto end;
     }
 
+    // Proactively clear the auto state, as Optiga will return
+    // OPTIGA_ERR_CODE_MEMORY if it holds too many authorizations.
+    if (i == OPTIGA_STRETCHED_PINS_COUNT - 1) {
+      optiga_clear_auto_state(OID_PIN_SECRET);
+    } else {
+      optiga_clear_auto_state(OID_STRETCHED_PINS[i + 1]);
+    }
+
     // Stretch the PIN more with the counter-protected PIN secret. This method
     // ensures that if the user chooses a high-entropy PIN, then even if the
     // Optiga and its communication link is completely compromised, it will not
@@ -763,11 +775,15 @@ bool optiga_pin_set(
     goto end;
   }
 
+  optiga_clear_auto_state(OID_STRETCHED_PINS[0]);
+
   ui_progress();
 
 end:
   memzero(pin_secret, sizeof(pin_secret));
   memzero(digest, sizeof(digest));
+  // TODO: The clearing of auto states can be optimized, as it is unnecessary to
+  // clear all the auto states.
   optiga_clear_auto_state(OID_PIN_SECRET);
   for (int i = 0; i < OPTIGA_STRETCHED_PINS_COUNT; i++) {
     optiga_clear_auto_state(OID_STRETCHED_PINS[i]);
@@ -1003,6 +1019,11 @@ optiga_pin_result optiga_pin_verify(
       ret = OPTIGA_PIN_ERROR;
       goto end;
     }
+
+    // Proactively clear the auto state, as Optiga will return
+    // OPTIGA_ERR_CODE_MEMORY if it holds too many authorizations.
+    optiga_clear_auto_state(OID_STRETCHED_PINS[i - 1]);
+
     if (optiga_set_auto_state(OPTIGA_OID_SESSION_CTX, OID_STRETCHED_PINS[i],
                               digest, sizeof(digest)) != OPTIGA_SUCCESS) {
       ret = OPTIGA_PIN_ERROR;
@@ -1044,15 +1065,19 @@ optiga_pin_result optiga_pin_verify(
     goto end;
   }
 
+  optiga_clear_auto_state(OID_PIN_SECRET);
+
   ui_progress();
 
 end:
   memzero(pin_secret, sizeof(pin_secret));
   memzero(digest, sizeof(digest));
+  // TODO: The clearing of auto states can be optimized, as it is unnecessary to
+  // clear all the auto states.
+  optiga_clear_auto_state(OID_PIN_SECRET);
   for (int i = 0; i < OPTIGA_STRETCHED_PINS_COUNT; i++) {
     optiga_clear_auto_state(OID_STRETCHED_PINS[i]);
   }
-  optiga_clear_auto_state(OID_PIN_SECRET);
   optiga_set_ui_progress(NULL);
   return ret;
 }
