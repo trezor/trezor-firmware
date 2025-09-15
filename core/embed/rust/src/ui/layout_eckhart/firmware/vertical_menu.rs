@@ -108,6 +108,8 @@ pub enum VerticalMenuMsg {
 impl<T: MenuItems> VerticalMenu<T> {
     const SIDE_INSETS: Insets = Insets::sides(12);
     const MENU_ITEM_CONTENT_PADDING: i16 = 32;
+    #[cfg(test)]
+    pub const TEST_MENU_ITEM_CONTENT_PADDING: i16 = 32;
 
     fn new(buttons: T) -> Self {
         Self {

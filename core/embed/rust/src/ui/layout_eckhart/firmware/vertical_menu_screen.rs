@@ -6,6 +6,7 @@ use crate::{
             text::{layout::LayoutFit, TextStyle},
             Component, Event, EventCtx, Label, SwipeDetect, TextLayout,
         },
+        display::Icon,
         event::SwipeEvent,
         flow::Swipable,
         geometry::{Alignment2D, Direction, Offset, Rect},
@@ -45,6 +46,8 @@ impl<T: MenuItems> VerticalMenuScreen<T> {
     const SUBTITLE_STYLE: TextStyle = theme::TEXT_MEDIUM_GREY;
     const SUBTITLE_HEIGHT: i16 = 68;
     const SUBTITLE_DOUBLE_HEIGHT: i16 = 100;
+    const OVERFLOW_ARROW_Y_OFFSET: i16 = 18;
+    const OVERFLOW_ARROW_ICON: Icon = theme::ICON_CHEVRON_DOWN_MINI;
 
     pub fn new(menu: VerticalMenu<T>) -> Self {
         Self {
@@ -170,10 +173,15 @@ impl<T: MenuItems> VerticalMenuScreen<T> {
 
         // Render the down arrow if the menu overflows and can be scrolled further down
         if self.swipe.is_some() && !self.menu.is_max_offset() {
-            ToifImage::new(SCREEN.bottom_center(), theme::ICON_CHEVRON_DOWN_MINI.toif)
-                .with_align(Alignment2D::BOTTOM_CENTER)
-                .with_fg(theme::GREY_LIGHT)
-                .render(target);
+            ToifImage::new(
+                SCREEN
+                    .bottom_center()
+                    .ofs(Offset::y(Self::OVERFLOW_ARROW_Y_OFFSET).neg()),
+                Self::OVERFLOW_ARROW_ICON.toif,
+            )
+            .with_align(Alignment2D::BOTTOM_CENTER)
+            .with_fg(theme::GREY_LIGHT)
+            .render(target);
         }
     }
 }
@@ -265,5 +273,23 @@ impl<T: MenuItems> crate::trace::Trace for VerticalMenuScreen<T> {
         t.component("VerticalMenuScreen");
         t.child("Header", &self.header);
         t.child("Menu", &self.menu);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{super::VerticalMenu, *};
+
+    #[test]
+    fn test_min_offset() {
+        // The top of the overflow arrow must be less than the bottom padding to avoid
+        // hiding the button content
+        debug_assert!(
+            VerticalMenuScreen::<ShortMenuVec>::OVERFLOW_ARROW_Y_OFFSET
+                + VerticalMenuScreen::<ShortMenuVec>::OVERFLOW_ARROW_ICON
+                    .toif
+                    .height()
+                < VerticalMenu::<ShortMenuVec>::TEST_MENU_ITEM_CONTENT_PADDING
+        );
     }
 }
