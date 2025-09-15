@@ -41,7 +41,7 @@ def evolu_sign_registration_request(
     )
 
 
-def get_delegetad_identity_key(
+def get_delegated_identity_key(
     session: "Session",
 ) -> messages.EvoluDelegatedIdentityKey:
     return session.call(

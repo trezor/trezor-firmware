@@ -1,21 +1,17 @@
-def check_delegetad_identity_key(
-    proposed_value: bytes, header: bytes, arguments: list[bytes] = []
+def check_delegated_identity_key(
+    proposed_value: bytes, header: bytes, arguments: list[bytes] | None = None
 ) -> bool:
-    return compute_proof_sought_value(header, arguments) == proposed_value
+    return compute_proof_value(header, arguments) == proposed_value
 
 
-def compute_proof_sought_value(header: bytes, arguments: list[bytes] = []) -> bytes:
+def compute_proof_value(header: bytes, arguments: list[bytes] | None = None) -> bytes:
+    from trezor.crypto import hmac
     from trezor.utils import delegated_identity
-    from trezor import utils
-    from trezor.crypto.hashlib import sha256
 
     private_key = delegated_identity()
-    h = utils.HashWriter(sha256())
-    h.extend(header)
-    h.extend(b"|")
-    h.extend(private_key)
+    message = header
     if arguments:
         for arg in arguments:
-            h.extend(b"|")
-            h.extend(arg)
-    return h.get_digest()
+            message += b"\x00" + arg
+    mac = hmac(hmac.SHA256, private_key, message).digest()
+    return mac

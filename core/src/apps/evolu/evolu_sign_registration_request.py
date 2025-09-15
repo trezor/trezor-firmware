@@ -1,22 +1,23 @@
 from typing import TYPE_CHECKING
 
-
 if TYPE_CHECKING:
-    from trezor.messages import EvoluSignRegistrationRequest, EvoluRegistrationRequest
+    from trezor.messages import EvoluRegistrationRequest, EvoluSignRegistrationRequest
 
 
 async def evolu_sign_registration_request(
     msg: EvoluSignRegistrationRequest,
 ) -> EvoluRegistrationRequest:
-    from trezor.messages import EvoluRegistrationRequest
+    from ubinascii import hexlify
 
-    from trezor import wire, utils
-    from trezor.crypto.hashlib import sha256
-    from trezor import utils
-    from apps.common.writers import write_compact_size
-    from trezor.utils import BufferReader, bootloader_locked
+    from trezor import utils, wire
     from trezor.crypto.der import read_length
-    from .common import check_delegetad_identity_key
+    from trezor.crypto.hashlib import sha256
+    from trezor.messages import EvoluRegistrationRequest
+    from trezor.utils import BufferReader, bootloader_locked
+
+    from apps.common.writers import write_compact_size
+
+    from .common import check_delegated_identity_key
 
     if not bootloader_locked():
         raise wire.ProcessError(
@@ -28,18 +29,18 @@ async def evolu_sign_registration_request(
     else:
         raise RuntimeError("Optiga is not available")
 
-    if not check_delegetad_identity_key(
+    if not check_delegated_identity_key(
         proposed_value=msg.proof,
         header=b"EvoluSignRegistrationRequest",
         arguments=[msg.challenge.to_bytes(16, "big"), msg.size.to_bytes(16, "big")],
     ):
         raise ValueError("Invalid proof")
 
-    private_key = get_delegetad_identity_key()
+    private_key = get_delegated_identity_key()
     public_key = get_public_key_from_private_key(private_key)
 
     registration_request = {
-        "public_key": bytes_to_hex(public_key),  # device identifier
+        "public_key": hexlify(public_key).decode(),  # device identifier
         "challenge": str(msg.challenge),
         "size": str(msg.size),
     }
@@ -77,7 +78,7 @@ async def evolu_sign_registration_request(
     )
 
 
-def get_delegetad_identity_key() -> bytes:
+def get_delegated_identity_key() -> bytes:
     from trezor.utils import delegated_identity
 
     key = delegated_identity()
@@ -89,7 +90,3 @@ def get_public_key_from_private_key(private_key: bytes) -> bytes:
 
     public_key = secp256k1.publickey(private_key, False)
     return bytes(public_key)
-
-
-def bytes_to_hex(data: bytes) -> str:
-    return "".join("{:02x}".format(byte) for byte in data)
