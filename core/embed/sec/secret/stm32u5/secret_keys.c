@@ -41,6 +41,7 @@
 #define KEY_INDEX_TROPIC_MASKING 5
 #define KEY_INDEX_NRF_PAIRING 6
 #define KEY_INDEX_STORAGE_SALT 7
+#define KEY_INDEX_DELEGATED_IDENTITY 8
 
 static secbool secret_key_derive_sym(uint8_t slot, uint16_t index,
                                      uint16_t subindex,
@@ -213,13 +214,26 @@ cleanup:
   return result;
 }
 
-#endif
+#endif // USE_NRF
 
 secbool secret_key_storage_salt(uint16_t fw_type,
                                 uint8_t dest[SECRET_KEY_STORAGE_SALT_SIZE]) {
   _Static_assert(SECRET_KEY_STORAGE_SALT_SIZE == SHA256_DIGEST_LENGTH);
   return secret_key_derive_sym(SECRET_UNPRIVILEGED_MASTER_KEY_SLOT,
                                KEY_INDEX_STORAGE_SALT, fw_type, dest);
+}
+
+secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+  // return secret_key_derive_nist256p1(SECRET_UNPRIVILEGED_MASTER_KEY_SLOT,
+  //                                    KEY_INDEX_DELEGATED_IDENTITY, dest);
+  static const uint8_t key[32] = {
+    0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+    0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10,
+    0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
+    0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20
+  };
+  memcpy(dest, key, ECDSA_PRIVATE_KEY_SIZE);
+  return sectrue;
 }
 
 #else  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
@@ -229,6 +243,21 @@ secbool secret_key_optiga_pairing(uint8_t dest[OPTIGA_PAIRING_SECRET_SIZE]) {
   return secret_key_get(SECRET_OPTIGA_SLOT, dest, OPTIGA_PAIRING_SECRET_SIZE);
 }
 #endif  // USE_OPTIGA
+
+secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+  // storage_salt_t salt = {0};
+  // storage_salt_get(&salt);
+  // TODO process storage salt in a way that is independent from the way it is
+  // used in storage or use another OTP slot.
+  static const uint8_t key[32] = {
+    0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+    0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10,
+    0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
+    0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20
+  };
+  memcpy(dest, key, ECDSA_PRIVATE_KEY_SIZE);
+  return sectrue;
+}
 
 #endif  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
 

@@ -54,6 +54,7 @@
 #if !PYOPT && LOG_STACK_USAGE
 #include <sys/stack_utils.h>
 #endif
+#include <sec/secret_keys.h>
 
 /// def consteq(sec: AnyBytes, pub: AnyBytes) -> bool:
 ///     """
@@ -228,6 +229,47 @@ STATIC mp_obj_t mod_trezorutils_firmware_vendor(void) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_firmware_vendor_obj,
                                  mod_trezorutils_firmware_vendor);
+
+
+
+
+
+// TODO: THIS HAS NO BUSINESS BEING HERE. BUT IT DOESN'T GET RECOGNIZED WHERE IT IS SUPPOSED TO BE SO I TEST IT HERE.
+#include <ecdsa.h>
+secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+  // storage_salt_t salt = {0};
+  // storage_salt_get(&salt);
+  // TODO process storage salt in a way that is independent from the way it is
+  // used in storage or use another OTP slot.
+  static const uint8_t key[32] = {
+    0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+    0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10,
+    0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
+    0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20
+  };
+  memcpy(dest, key, ECDSA_PRIVATE_KEY_SIZE);
+  return sectrue;
+}
+
+
+/// def delegated_identity() -> bytes:
+///     """
+///     Returns the delegated identity key used for registration and space management at Evolu.
+///     """
+STATIC mp_obj_t mod_trezorutils_delegated_identity(void) {
+  uint8_t private_key[32];
+  if (secret_key_delegated_identity(private_key) != sectrue) {
+    mp_raise_msg(&mp_type_RuntimeError,
+                 MP_ERROR_TEXT("Failed to read delegated identity."));
+  }
+  return mp_obj_new_bytes(private_key, sizeof(private_key));
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_delegated_identity_obj,
+                                 mod_trezorutils_delegated_identity);
+
+
+
+
 
 /// def unit_color() -> int | None:
 ///     """
@@ -701,6 +743,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
      MP_ROM_PTR(&mod_trezorutils_firmware_hash_obj)},
     {MP_ROM_QSTR(MP_QSTR_firmware_vendor),
      MP_ROM_PTR(&mod_trezorutils_firmware_vendor_obj)},
+    {MP_ROM_QSTR(MP_QSTR_delegated_identity),
+     MP_ROM_PTR(&mod_trezorutils_delegated_identity_obj)},
     {MP_ROM_QSTR(MP_QSTR_reboot_to_bootloader),
      MP_ROM_PTR(&mod_trezorutils_reboot_to_bootloader_obj)},
     {MP_ROM_QSTR(MP_QSTR_check_firmware_header),

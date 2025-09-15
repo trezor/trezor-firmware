@@ -115,7 +115,7 @@ class ProtobufMapping:
 
             if msg_class.MESSAGE_WIRE_TYPE != entry.value:
                 raise ValueError(
-                    f"Inconsistent wire type and MessageType record for '{entry.name}'"
+                    f"Inconsistent wire type and MessageType record for '{entry.name}'   ({msg_class}) != ({entry})"
                 )
 
             mapping.register(msg_class)

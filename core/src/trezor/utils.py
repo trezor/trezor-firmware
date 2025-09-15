@@ -32,6 +32,7 @@ from trezorutils import (  # noqa: F401
     consteq,
     firmware_hash,
     firmware_vendor,
+    delegated_identity,
     halt,
     memcpy,
     memzero,
