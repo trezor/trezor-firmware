@@ -84,6 +84,8 @@ bool tropic_init(void) {
     curve25519_key trezor_pubkey = {0};
     curve25519_scalarmult_basepoint(trezor_pubkey, trezor_privkey);
 
+    // Note: Without the delay below Tropic01 may return LT_L1_CHIP_BUSY. The
+    // length was chosen arbitrarily. A shorter delay may be sufficient.
     hal_delay(100);
     lt_ret_t ret =
         lt_session_start(&drv->handle, tropic_pubkey, pairing_key_slot,
