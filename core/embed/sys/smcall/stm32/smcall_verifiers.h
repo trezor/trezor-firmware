@@ -134,7 +134,10 @@ bool backup_ram_write__verified(uint16_t key, backup_ram_item_type_t type,
 
 #endif  // USE_BACKUP_RAM
 
-#ifdef USE_NRF
+#ifdef USE_NRF_AUTH
+
+#include <sec/secret_keys.h>
+
 secbool secret_validate_nrf_pairing__verified(const uint8_t *message,
                                               size_t msg_len,
                                               const uint8_t *mac,

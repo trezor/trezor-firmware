@@ -132,7 +132,7 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
     } break;
 #endif
 
-#ifdef USE_NRF
+#ifdef USE_NRF_AUTH
     case SMCALL_SECRET_VALIDATE_NRF_PAIRING: {
       const uint8_t *message = (const uint8_t *)args[0];
       size_t message_len = args[1];
@@ -141,8 +141,7 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       args[0] = secret_validate_nrf_pairing__verified(message, message_len, mac,
                                                       mac_len);
     } break;
-
-#endif  // USE_NRF
+#endif  // USE_NRF_AUTH
 
     case SMCALL_WAIT_RANDOM: {
       wait_random();

@@ -137,6 +137,8 @@ def configure(
             "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_uart.c",
             "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_uart_ex.c",
         ]
+    if "nrf_auth" in features_wanted or "ble" in features_wanted:
+        defines += [("USE_NRF_AUTH", "1")]
 
     if "ble" in features_wanted and "smp" in features_wanted:
         sources += ["embed/io/nrf/stm32u5/nrf_uart.c"]
