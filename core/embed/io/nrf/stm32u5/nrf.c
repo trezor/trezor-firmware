@@ -551,6 +551,15 @@ bool nrf_authenticate(void) {
     return false;
   }
 
+  uint32_t timeout = ticks_timeout(5000);
+
+  // check that nRF communication is running prior to auth check
+  while (!ticks_expired(timeout)) {
+    if (nrf_get_info(&drv->info)) {
+      break;
+    }
+  }
+
   drv->info_valid = false;
 
   uint32_t challenge[8] = {0};
@@ -572,7 +581,7 @@ bool nrf_authenticate(void) {
     return false;
   }
 
-  uint32_t timeout = ticks_timeout(100);
+  timeout = ticks_timeout(100);
 
   while (!ticks_expired(timeout)) {
     if (drv->auth_data_valid) {

@@ -42,6 +42,7 @@ FEATURES_WANTED = [
     "storage",
     "suspend",
     "tropic",
+    "nrf_auth"
     ]
 
 if DISABLE_OPTIGA:

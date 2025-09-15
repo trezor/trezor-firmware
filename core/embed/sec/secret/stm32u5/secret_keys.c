@@ -158,7 +158,7 @@ secbool secret_key_tropic_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
 
 #endif  // USE_TROPIC
 
-#ifdef USE_NRF
+#ifdef USE_NRF_AUTH
 
 static secbool secequal(const void *ptr1, const void *ptr2, size_t n) {
   const uint8_t *p1 = ptr1;

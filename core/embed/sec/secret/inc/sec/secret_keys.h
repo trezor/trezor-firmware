@@ -56,7 +56,7 @@ secbool secret_key_tropic_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
 
 #endif  // USE_TROPIC
 
-#ifdef USE_NRF
+#ifdef USE_NRF_AUTH
 
 #define NRF_PAIRING_SECRET_SIZE 32
 secbool secret_key_nrf_pairing(uint8_t dest[NRF_PAIRING_SECRET_SIZE]);
@@ -71,7 +71,7 @@ secbool secret_key_storage_salt(uint16_t fw_type,
 #endif  // SECURE_MODE
 
 #ifdef KERNEL_MODE
-#ifdef USE_NRF
+#ifdef USE_NRF_AUTH
 secbool secret_validate_nrf_pairing(const uint8_t *message, size_t msg_len,
                                     const uint8_t *mac, size_t mac_len);
 
