@@ -269,6 +269,13 @@ class IdleTimer:
         if task is not None:
             loop.close(task)
 
+    def clear(self) -> None:
+        """Clear all idle callbacks."""
+        for _, task in self.tasks.items():
+            loop.close(task)
+        self.timeouts.clear()
+        self.tasks.clear()
+
 
 idle_timer = IdleTimer()
 """Global idle timer."""
