@@ -128,6 +128,7 @@ pm_status_t pm_init(bool inherit_state) {
 
 #endif
 
+    drv->battery_critical = recovery.bat_critical;
     fuel_gauge_set_soc(&drv->fuel_gauge, recovery.soc, recovery.P);
   } else {
     pm_battery_initial_soc_guess();
