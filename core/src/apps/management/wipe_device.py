@@ -20,7 +20,7 @@ async def wipe_device(msg: WipeDevice) -> NoReturn:
     from trezor.pin import render_empty_loader
     from trezor.ui.layouts import confirm_action
 
-    from apps.base import reload_settings_from_storage
+    from apps.common.lock_manager import reload_settings_from_storage
 
     await confirm_action(
         "confirm_wipe",
