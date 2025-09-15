@@ -1308,48 +1308,48 @@ static void prodtest_tropic_lock(cli_t* cli) {
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR, "`lt_r_config_erase()` failed with error %d",
               ret);
-    return;
+    goto cleanup;
   }
 
   ret = lt_write_whole_R_config(tropic_handle, &reversible_configuration);
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR,
               "`lt_write_whole_R_config()` failed with error %d", ret);
-    return;
+    goto cleanup;
   }
 
   ret = lt_read_whole_R_config(tropic_handle, &configuration_read);
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR, "`lt_read_whole_R_config()` failed with error %d",
               ret);
-    return;
+    goto cleanup;
   }
 
   if (memcmp(&reversible_configuration, (uint8_t*)&configuration_read,
              sizeof(reversible_configuration)) != 0) {
     cli_error(cli, CLI_ERROR, "Reversible configuration mismatch after write.");
-    return;
+    goto cleanup;
   }
 
   ret = lt_write_whole_I_config(tropic_handle, &irreversible_configuration);
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR,
               "`lt_write_whole_I_config()` failed with error %d", ret);
-    return;
+    goto cleanup;
   }
 
   ret = lt_read_whole_I_config(tropic_handle, &configuration_read);
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR, "`lt_read_whole_I_config()` failed with error %d",
               ret);
-    return;
+    goto cleanup;
   }
 
   if (memcmp(&irreversible_configuration, (uint8_t*)&configuration_read,
              sizeof(irreversible_configuration)) != 0) {
     cli_error(cli, CLI_ERROR,
               "Irreversible configuration mismatch after write.");
-    return;
+    goto cleanup;
   }
 
   cli_ok(cli, "");
