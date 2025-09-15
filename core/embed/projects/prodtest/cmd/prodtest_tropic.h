@@ -19,4 +19,16 @@
 
 #pragma once
 
+#include <rtl/cli.h>
+
+#include <libtropic.h>
+
+typedef enum {
+  TROPIC_LOCKED_TRUE,
+  TROPIC_LOCKED_FALSE,
+  TROPIC_LOCKED_ERROR,
+} tropic_locked_status;
+
+tropic_locked_status get_tropic_locked_status(cli_t* cli);
+
 bool prodtest_tropic_factory_session_start(lt_handle_t* tropic_handle);
