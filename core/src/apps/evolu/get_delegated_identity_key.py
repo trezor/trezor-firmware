@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 async def get_delegated_identity_key(
     _msg: EvoluGetDelegatedIdentityKey,
 ) -> EvoluDelegatedIdentityKey:
-    from trezor import wire, TR
+    from trezor import wire
     from trezor.messages import EvoluDelegatedIdentityKey
     from trezor.ui.layouts import confirm_action
     from trezor.utils import bootloader_locked
