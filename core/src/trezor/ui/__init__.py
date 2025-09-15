@@ -17,7 +17,6 @@ from trezorui_api import (
 )
 
 if utils.USE_POWER_MANAGER:
-    from trezor import config
     from trezor.power_management.autodim import autodim_clear
 
 if TYPE_CHECKING:
@@ -106,14 +105,9 @@ if utils.USE_POWER_MANAGER:
 
     def _handle_power_button_press() -> None:
         """Handle power button press event during firmware operation."""
-        from apps.base import lock_device_if_unlocked
+        from apps.common.lock_manager import notify_suspend
 
-        will_close_workflow = config.has_pin() and workflow.autolock_interrupts_workflow
-        lock_device_if_unlocked()
-
-        if will_close_workflow:
-            # prevent further layout interaction
-            raise Shutdown()
+        notify_suspend()
 
 
 class Layout(Generic[T]):

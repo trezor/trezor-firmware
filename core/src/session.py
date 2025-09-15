@@ -2,6 +2,7 @@
 from trezor import log, loop, utils, wire, workflow
 
 import apps.base
+from apps.common import lock_manager
 import usb
 
 apps.base.boot()
@@ -17,7 +18,7 @@ if __debug__:
     apps.debug.boot()
 
 # run main event loop and specify which screen is the default
-apps.base.set_homescreen()
+lock_manager.boot()
 workflow.start_default()
 
 if utils.USE_BLE:
