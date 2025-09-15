@@ -629,7 +629,7 @@ def show_device_menu(
     init_submenu_idx: int | None,
     backup_failed: bool,
     backup_needed: bool,
-    paired_devices: Iterable[str],
+    paired_devices: Iterable[tuple[str, str | None]],
     connected_idx: int | None,
     pin_enabled: bool | None,
     auto_lock: tuple[str, str] | None,

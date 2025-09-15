@@ -3,6 +3,7 @@ use crate::{
     micropython::{
         buffer::StrBuffer,
         gc::Gc,
+        iter::IterBuf,
         list::List,
         macros::{obj_fn_0, obj_fn_1, obj_fn_kw, obj_module},
         map::Map,
@@ -942,8 +943,17 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
             .try_into_option()?;
         let backup_failed: bool = kwargs.get(Qstr::MP_QSTR_backup_failed)?.try_into()?;
         let backup_needed: bool = kwargs.get(Qstr::MP_QSTR_backup_needed)?.try_into()?;
-        let paired_devices: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
-        let paired_devices: Vec<TString, MAX_PAIRED_DEVICES> = util::iter_into_vec(paired_devices)?;
+        let paired_obj: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
+        let mut paired_devices: heapless::Vec<
+            (TString<'static>, Option<TString<'static>>),
+            MAX_PAIRED_DEVICES,
+        > = heapless::Vec::new();
+        for device in IterBuf::new().try_iterate(paired_obj)? {
+            let [mac, name]: [Obj; 2] = util::iter_into_array(device)?;
+            let mac: TString<'static> = mac.try_into()?;
+            let name: Option<TString<'static>> = name.try_into_option()?;
+            unwrap!(paired_devices.push((mac, name)));
+        }
         let connected_idx: Option<u8> =
             kwargs.get(Qstr::MP_QSTR_connected_idx)?.try_into_option()?;
         let pin_enabled: Option<bool> = kwargs.get(Qstr::MP_QSTR_pin_enabled)?.try_into_option()?;
@@ -1926,7 +1936,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     init_submenu_idx: int | None,
     ///     backup_failed: bool,
     ///     backup_needed: bool,
-    ///     paired_devices: Iterable[str],
+    ///     paired_devices: Iterable[tuple[str, str | None]],
     ///     connected_idx: int | None,
     ///     pin_enabled: bool | None,
     ///     auto_lock: tuple[str, str] | None,
