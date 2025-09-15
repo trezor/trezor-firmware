@@ -26,7 +26,7 @@ if utils.USE_OPTIGA:
 if utils.USE_POWER_MANAGER:
     from trezor import workflow
     from trezor.power_management.autodim import autodim_display
-    from apps.base import lock_device_if_unlocked_on_battery
+    from apps.common.lock_manager import lock_device_if_unlocked_on_battery
 
 # have to use "==" over "in (list)" so that it can be statically replaced
 # with the correct value during the build process

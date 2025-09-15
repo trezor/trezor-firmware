@@ -1,15 +1,15 @@
 from typing import Coroutine
 
 import storage
-import storage.cache
 import storage.device
 import trezorui_api
 from trezor import config, utils, wire
 from trezor.enums import MessageType
 from trezor.ui.layouts.homescreen import Busyscreen, Homescreen, Lockscreen
 
-from apps.base import busy_expiry_ms, lock_device
+from apps.base import busy_expiry_ms
 from apps.common.authorization import is_set_any_session
+from apps.common.lock_manager import lock_device
 
 
 async def busyscreen() -> None:
@@ -71,7 +71,7 @@ async def homescreen() -> None:
 
 
 async def _lockscreen(screensaver: bool = False) -> None:
-    from apps.base import unlock_device
+    from apps.common.lock_manager import unlock_device
     from apps.common.request_pin import can_lock_device
 
     # Only show the lockscreen UI if the device can in fact be locked, or if it is
