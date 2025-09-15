@@ -13,7 +13,7 @@ runs:
       with:
         nix_path: nixpkgs=channel:nixos-unstable
     - name: Dependencies nixpkgs
-      run: timeout -v --kill-after=10 500 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "true"
+      run: timeout -v --kill-after=10 500 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "echo nixpkgs deps preinstalled" || echo "NIXPKGS PREINSTALL FAILURE"
       shell: sh
     - name: Dependencies uv
       run: timeout -v --kill-after=10 200 nix-shell --arg fullDeps "${{ inputs.full-deps }}" --run "uv sync"
