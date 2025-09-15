@@ -70,6 +70,13 @@ void connected(struct bt_conn *conn, uint8_t err) {
     return;
   }
 
+  int tx_err = ble_set_tx_power(4);
+  if (tx_err) {
+    LOG_ERR("Failed to set connected TX power (err %d)\n", tx_err);
+  } else {
+    LOG_INF("Connected TX power set to +4 dBm\n");
+  }
+
   show_params(conn);
 
   const struct bt_le_conn_param *param =

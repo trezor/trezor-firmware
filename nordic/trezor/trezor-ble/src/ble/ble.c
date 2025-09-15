@@ -20,11 +20,13 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/settings/settings.h>
 #include <zephyr/sys/atomic.h>
+#include <zephyr/sys/byteorder.h>
 
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/conn.h>
 #include <zephyr/bluetooth/gatt.h>
 #include <zephyr/bluetooth/hci.h>
+#include <zephyr/bluetooth/hci_vs.h>
 #include <zephyr/bluetooth/uuid.h>
 #include <zephyr/settings/settings.h>
 
@@ -150,6 +152,40 @@ void ble_write_thread(void) {
 void ble_set_busy_flag(uint8_t flag) { atomic_set(&g_busy_flag, flag); }
 
 uint8_t ble_get_busy_flag(void) { return atomic_get(&g_busy_flag); }
+
+int ble_set_tx_power(int8_t tx_power_level) {
+  struct bt_hci_cp_vs_write_tx_power_level *cp;
+  struct bt_hci_rp_vs_write_tx_power_level *rp;
+  struct net_buf *buf, *rsp = NULL;
+  int err;
+
+  buf = bt_hci_cmd_create(BT_HCI_OP_VS_WRITE_TX_POWER_LEVEL, sizeof(*cp));
+  if (!buf) {
+    LOG_ERR("Unable to allocate command buffer for TX power");
+    return -ENOMEM;
+  }
+
+  cp = net_buf_add(buf, sizeof(*cp));
+  cp->handle = sys_cpu_to_le16(0);  // Handle 0 for advertising
+  cp->handle_type = BT_HCI_VS_LL_HANDLE_TYPE_ADV; // Advertising handle type
+  cp->tx_power_level = tx_power_level;
+
+  err = bt_hci_cmd_send_sync(BT_HCI_OP_VS_WRITE_TX_POWER_LEVEL, buf, &rsp);
+  if (err) {
+    LOG_ERR("Set TX power failed: %d", err);
+    return err;
+  }
+
+  if (rsp) {
+    rp = (void *)rsp->data;
+    LOG_INF("Actual TX Power set to: %d dBm", rp->selected_tx_power);
+    net_buf_unref(rsp);
+  }
+
+  return 0;
+}
+
+
 
 K_THREAD_DEFINE(ble_write_thread_id, CONFIG_DEFAULT_THREAD_STACK_SIZE,
                 ble_write_thread, NULL, NULL, NULL, 7, 0, 0);

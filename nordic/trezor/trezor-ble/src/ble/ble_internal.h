@@ -142,6 +142,8 @@ void ble_set_busy_flag(uint8_t flag);
 
 uint8_t ble_get_busy_flag(void);
 
+int ble_set_tx_power(int8_t tx_power_level);
+
 // BLE management functions
 // Initialization
 void ble_management_init(void);
