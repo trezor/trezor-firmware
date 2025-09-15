@@ -254,8 +254,6 @@ static void ft6x36_panel_correction(uint16_t x, uint16_t y, uint16_t* x_new,
   lx154a2422cpt23_touch_correction(x, y, x_new, y_new);
 #elif defined TOUCH_PANEL_LHS200KB_IF21
   lhs200kb_if21_touch_correction(x, y, x_new, y_new);
-#elif defined TOUCH_PANEL_LX250A2410A
-  lx250a2410a_touch_correction(x, y, x_new, y_new);
 #else
   *x_new = x;
   *y_new = y;
