@@ -142,6 +142,20 @@ static void prodtest_otp_variant_write(cli_t* cli) {
   }
 #endif
 
+#ifdef USE_TROPIC
+  tropic_locked_status tropic_status = get_tropic_locked_status(cli);
+
+  if (tropic_status == TROPIC_LOCKED_FALSE) {
+    cli_error(cli, CLI_ERROR, "Tropic not locked");
+    return;
+  }
+
+  if (tropic_status != TROPIC_LOCKED_TRUE) {
+    // Error reported by get_optiga_locked_status().
+    return;
+  }
+#endif
+
   if (sectrue == flash_otp_is_locked(FLASH_OTP_BLOCK_DEVICE_VARIANT)) {
     cli_error(cli, CLI_ERROR_LOCKED,
               "OTP block is locked and cannot be written again.");

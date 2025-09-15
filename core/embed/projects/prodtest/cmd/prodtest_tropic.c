@@ -18,6 +18,7 @@
  */
 
 #ifdef USE_TROPIC
+#include "prodtest_tropic.h"
 
 #include <trezor_model.h>
 #include <trezor_rtl.h>
@@ -636,6 +637,22 @@ static void prodtest_tropic_lock_check(cli_t* cli) {
     return;
   }
 
+  tropic_locked_status status = get_tropic_locked_status(cli);
+  switch (status) {
+    case TROPIC_LOCKED_TRUE:
+      cli_ok(cli, "YES");
+      break;
+    case TROPIC_LOCKED_FALSE:
+      cli_ok(cli, "NO");
+      break;
+    default:
+      // Error reported by get_tropic_locked_status.
+      break;
+  }
+}
+
+tropic_locked_status get_tropic_locked_status(cli_t* cli) {
+  tropic_locked_status locked_status = TROPIC_LOCKED_ERROR;
   tropic_handshake_state = TROPIC_HANDSHAKE_STATE_0;
 
   lt_handle_t* tropic_handle = tropic_get_handle();
@@ -644,7 +661,7 @@ static void prodtest_tropic_lock_check(cli_t* cli) {
   curve25519_key tropic_public = {0};
   if (secret_key_tropic_public(tropic_public) != sectrue) {
     // The Tropic pairing process was not initiated.
-    cli_ok(cli, "NO");
+    locked_status = TROPIC_LOCKED_FALSE;
     goto cleanup;
   }
 
@@ -652,6 +669,7 @@ static void prodtest_tropic_lock_check(cli_t* cli) {
   if (secret_key_tropic_pairing_privileged(privileged_private) != sectrue) {
     cli_error(cli, CLI_ERROR,
               "`secret_key_tropic_pairing_privileged()` failed.");
+    locked_status = TROPIC_LOCKED_ERROR;
     goto cleanup;
   }
   curve25519_key privileged_public = {0};
@@ -662,7 +680,7 @@ static void prodtest_tropic_lock_check(cli_t* cli) {
                          privileged_public);
   if (ret != LT_OK) {
     // The Tropic pairing process was initiated but probably failed midway.
-    cli_ok(cli, "NO");
+    locked_status = TROPIC_LOCKED_FALSE;
     goto cleanup;
   }
 
@@ -672,12 +690,13 @@ static void prodtest_tropic_lock_check(cli_t* cli) {
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR, "`lt_read_whole_R_config()` failed with error %d",
               ret);
+    locked_status = TROPIC_LOCKED_ERROR;
     goto cleanup;
   }
 
   if (memcmp(&reversible_configuration, (uint8_t*)&configuration_read,
              sizeof(reversible_configuration)) != 0) {
-    cli_ok(cli, "NO");
+    locked_status = TROPIC_LOCKED_FALSE;
     goto cleanup;
   }
 
@@ -685,19 +704,21 @@ static void prodtest_tropic_lock_check(cli_t* cli) {
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR, "`lt_read_whole_I_config()` failed with error %d",
               ret);
+    locked_status = TROPIC_LOCKED_ERROR;
     goto cleanup;
   }
 
   if (memcmp(&irreversible_configuration, (uint8_t*)&configuration_read,
              sizeof(irreversible_configuration)) != 0) {
-    cli_ok(cli, "NO");
+    locked_status = TROPIC_LOCKED_FALSE;
     goto cleanup;
   }
 
-  cli_ok(cli, "YES");
+  locked_status = TROPIC_LOCKED_TRUE;
 
 cleanup:
   memzero(privileged_private, sizeof(privileged_private));
+  return locked_status;
 }
 
 static lt_ret_t pairing_key_write(lt_handle_t* handle, pkey_index_t slot,
