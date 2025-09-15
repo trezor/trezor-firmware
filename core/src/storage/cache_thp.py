@@ -16,15 +16,18 @@ from storage.cache_common import (
 _MAX_CHANNELS_COUNT = const(10)
 _MAX_SESSIONS_COUNT = const(20)
 
-
 _CHANNEL_ID_LENGTH = const(2)
 SESSION_ID_LENGTH = const(1)
-BROADCAST_CHANNEL_ID = const(0xFFFF)
 KEY_LENGTH = const(32)
 TAG_LENGTH = const(16)
+
 _UNALLOCATED_STATE = const(0)
 _ALLOCATED_STATE = const(1)
 _SEEDLESS_STATE = const(2)
+
+_MAX_CHANNEL_ID = const(0xFFEF)
+# Channel IDs from 0xFFF0 to 0xFFFE, and 0x0000, are reserved for future use
+BROADCAST_CHANNEL_ID = const(0xFFFF)
 
 
 class ThpDataCache(DataCache):
@@ -136,7 +139,7 @@ def initialize() -> None:
 
     from trezorcrypto import random
 
-    cid_counter = random.uniform(0xFFFE)
+    cid_counter = random.uniform(_MAX_CHANNEL_ID)
 
 
 def get_new_channel() -> ChannelCache:
@@ -328,7 +331,7 @@ def get_next_channel_id() -> bytes:
     global cid_counter
     while True:
         cid_counter += 1
-        if cid_counter >= BROADCAST_CHANNEL_ID:
+        if cid_counter > _MAX_CHANNEL_ID:
             cid_counter = 1
         if _is_cid_unique():
             break
