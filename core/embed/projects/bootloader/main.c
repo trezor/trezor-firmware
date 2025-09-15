@@ -236,21 +236,22 @@ static secbool boot_sequence(void) {
     pm_state_t state;
     pm_get_state(&state);
 
-    if (state.charging_status == PM_BATTERY_CHARGING) {
-      // charing screen
+    if (pm_is_charging()) {
+      // charging indication
 #ifdef USE_RGB_LED
       if (!rgb_led_effect_ongoing()) {
         rgb_led_effect_start(RGB_LED_EFFECT_CHARGING, 0);
       }
 #endif
     } else {
+#ifdef USE_RGB_LED
+      rgb_led_set_color(0);
+#endif
       if (!btn_down && !state.usb_connected && !state.wireless_connected) {
         // device in just intended to be turned off
         pm_hibernate();
         systick_delay_ms(1000);
         reboot_to_off();
-      } else {
-        // todo signal full battery if conditions are met
       }
     }
   }

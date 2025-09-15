@@ -72,4 +72,6 @@ pm_status_t pm_get_state(pm_state_t* state) {
   return PM_OK;
 }
 
+bool pm_is_charging(void) { return false; }
+
 pm_status_t pm_set_soc_target(uint8_t target) { return PM_OK; }
