@@ -65,8 +65,13 @@ bool tropic_init(void) {
     goto cleanup;
   }
 
-  curve25519_key trezor_privkey = {0};
+#ifdef TREZOR_EMULATOR
+  pkey_index_t pairing_key_slot = TROPIC_FACTORY_PAIRING_KEY_SLOT;
+#else
   pkey_index_t pairing_key_slot = TROPIC_PRIVILEGED_PAIRING_KEY_SLOT;
+#endif
+
+  curve25519_key trezor_privkey = {0};
   secbool privkey_ok = secret_key_tropic_pairing_privileged(trezor_privkey);
   if (privkey_ok != sectrue) {
     pairing_key_slot = TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT;
