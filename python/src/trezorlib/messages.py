@@ -676,6 +676,10 @@ class MessageType(IntEnum):
     NostrEventSignature = 2004
     EvoluGetNode = 2100
     EvoluNode = 2101
+    EvoluSignRegistrationRequest = 2102
+    EvoluRegistrationRequest = 2103
+    EvoluGetDelegatedIdentityKey = 2104
+    EvoluDelegatedIdentityKey = 2105
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -5521,6 +5525,16 @@ class EthereumFieldType(protobuf.MessageType):
 
 class EvoluGetNode(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2100
+    FIELDS = {
+        1: protobuf.Field("proof", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        proof: "bytes",
+    ) -> None:
+        self.proof = proof
 
 
 class EvoluNode(protobuf.MessageType):
@@ -5535,6 +5549,67 @@ class EvoluNode(protobuf.MessageType):
         data: "bytes",
     ) -> None:
         self.data = data
+
+
+class EvoluSignRegistrationRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2102
+    FIELDS = {
+        1: protobuf.Field("challenge", "uint32", repeated=False, required=True),
+        2: protobuf.Field("size", "uint32", repeated=False, required=True),
+        3: protobuf.Field("proof", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        challenge: "int",
+        size: "int",
+        proof: "bytes",
+    ) -> None:
+        self.challenge = challenge
+        self.size = size
+        self.proof = proof
+
+
+class EvoluRegistrationRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2103
+    FIELDS = {
+        1: protobuf.Field("registration_request", "string", repeated=False, required=True),
+        2: protobuf.Field("certificates", "bytes", repeated=True, required=False, default=None),
+        3: protobuf.Field("signature", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        registration_request: "str",
+        signature: "bytes",
+        certificates: Optional[Sequence["bytes"]] = None,
+    ) -> None:
+        self.certificates: Sequence["bytes"] = certificates if certificates is not None else []
+        self.registration_request = registration_request
+        self.signature = signature
+
+
+class EvoluGetDelegatedIdentityKey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2104
+
+
+class EvoluDelegatedIdentityKey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2105
+    FIELDS = {
+        1: protobuf.Field("private_key", "bytes", repeated=False, required=True),
+        2: protobuf.Field("public_key", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        private_key: "bytes",
+        public_key: "bytes",
+    ) -> None:
+        self.private_key = private_key
+        self.public_key = public_key
 
 
 class MoneroTransactionSourceEntry(protobuf.MessageType):

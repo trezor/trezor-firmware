@@ -70,6 +70,13 @@ def firmware_vendor() -> str:
 
 
 # upymod/modtrezorutils/modtrezorutils.c
+def delegated_identity() -> bytes:
+    """
+    Returns the delegated identity key used for registration and space management at Evolu.
+    """
+
+
+# upymod/modtrezorutils/modtrezorutils.c
 def unit_color() -> int | None:
     """
     Returns the color of the unit.

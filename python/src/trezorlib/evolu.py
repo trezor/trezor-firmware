@@ -23,8 +23,28 @@ if TYPE_CHECKING:
     from .transport.session import Session
 
 
-def get_evolu_node(session: "Session") -> messages.EvoluNode:
+def get_evolu_node(session: "Session", proof: bytes) -> messages.EvoluNode:
     return session.call(
-        messages.EvoluGetNode(),
+        messages.EvoluGetNode(proof=proof),
         expect=messages.EvoluNode,
+    )
+
+
+def evolu_sign_registration_request(
+    session: "Session", challenge: int, size: int, proof: bytes
+) -> messages.EvoluRegistrationRequest:
+    return session.call(
+        messages.EvoluSignRegistrationRequest(
+            challenge=challenge, size=size, proof=proof
+        ),
+        expect=messages.EvoluRegistrationRequest,
+    )
+
+
+def get_delegetad_identity_key(
+    session: "Session",
+) -> messages.EvoluDelegatedIdentityKey:
+    return session.call(
+        messages.EvoluGetDelegatedIdentityKey(),
+        expect=messages.EvoluDelegatedIdentityKey,
     )
