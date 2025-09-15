@@ -199,45 +199,72 @@ bool tropic_data_multi_size(uint16_t first_slot, size_t *data_length) {
   return true;
 }
 
+static size_t min(size_t x, size_t y) { return (x < y) ? x : y; }
+
 bool tropic_data_multi_read(uint16_t first_slot, uint16_t slot_count,
                             uint8_t *data, size_t max_data_length,
                             size_t *data_length) {
-  const uint16_t last_data_slot = first_slot + slot_count - 1;
-  if (slot_count == 0 || last_data_slot > R_MEM_DATA_SLOT_MAX) {
+  if (first_slot > R_MEM_DATA_SLOT_MAX || slot_count == 0 ||
+      slot_count > R_MEM_DATA_SLOT_MAX + 1 - first_slot) {
     return false;
   }
 
-  // The following code can be further optimized:
-  //   * It uses unnecessary amount of memory.
-  //   * It reads from a data slot even if there is no data to be read.
-
-  const size_t total_slots_length = R_MEM_DATA_SIZE_MAX * slot_count;
-  uint8_t prefixed_data[total_slots_length];
-  size_t position = 0;
   uint16_t slot = first_slot;
+  uint8_t slot_buffer[R_MEM_DATA_SIZE_MAX] = {0};
+  uint16_t slot_length = 0;
+  if (!tropic_data_read(slot, slot_buffer, &slot_length)) {
+    return false;
+  }
 
-  while (slot <= last_data_slot) {
-    uint16_t slot_length = 0;
-    if (!tropic_data_read(slot, prefixed_data + position, &slot_length)) {
-      return false;
-    }
+  const size_t prefix_length = 2;
+  if (slot_length < prefix_length) {
+    return false;
+  }
 
+  size_t out_length = slot_buffer[0] << 8 | slot_buffer[1];
+  uint16_t occupied_slot_count =
+      (out_length + prefix_length + R_MEM_DATA_SIZE_MAX - 1) /
+      R_MEM_DATA_SIZE_MAX;
+  if (out_length > max_data_length || occupied_slot_count > slot_count) {
+    return false;
+  }
+
+  size_t out_pos = 0;
+  // Terminal slots may be padded. Make sure not to copy beyond the actual data
+  // length.
+  size_t copy_length = min(slot_length - prefix_length, out_length - out_pos);
+  if (out_pos + copy_length > max_data_length) {
+    false;
+  }
+  memcpy(&data[out_pos], &slot_buffer[prefix_length], copy_length);
+  out_pos += copy_length;
+
+  uint16_t last_data_slot = first_slot + occupied_slot_count - 1;
+  while (slot < last_data_slot) {
+    // Non-terminal slots must be used to their full capacity.
     if (slot_length != R_MEM_DATA_SIZE_MAX) {
       return false;
     }
 
-    position += R_MEM_DATA_SIZE_MAX;
+    // Read next slot.
     slot += 1;
+    if (!tropic_data_read(slot, slot_buffer, &slot_length)) {
+      return false;
+    }
+
+    // Terminal slots may be padded. Make sure not to copy beyond the actual
+    // data length.
+    copy_length = min(slot_length, out_length - out_pos);
+    memcpy(&data[out_pos], slot_buffer, copy_length);
+    out_pos += copy_length;
   }
 
-  const size_t prefix_length = 2;
-  size_t length = prefixed_data[0] << 8 | prefixed_data[1];
-  if (length > max_data_length || length + prefix_length > total_slots_length) {
+  if (out_pos != out_length) {
+    // The terminal slot had less data than expected.
     return false;
   }
 
-  *data_length = length;
-  memcpy(data, prefixed_data + prefix_length, length);
+  *data_length = out_length;
 
   return true;
 }
