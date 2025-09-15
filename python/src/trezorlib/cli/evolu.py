@@ -33,15 +33,54 @@ def cli() -> None:
 
 
 @cli.command()
+@click.argument("proof", type=str)
 @with_session
 def get_node(
     session: "Session",
+    proof: str,
 ) -> dict[str, str]:
     """Return the SLIP-21 node for Evolu."""
-
-    node: messages.EvoluNode = evolu.get_evolu_node(
-        session,
-    )
+    node: messages.EvoluNode = evolu.get_evolu_node(session, proof=bytes.fromhex(proof))
     return {
         "data": node.data.hex(),
+    }
+
+
+@cli.command()
+@click.argument("proof", type=str)
+@click.argument("challenge", type=str)
+@click.option("--size", "-s", type=int, default=10)
+@with_session
+def evolu_sign_registration_request(
+    session: "Session",
+    proof: str,
+    challenge: str,
+    size: int,
+) -> dict[str, str]:
+    """Test request that signs a challenge and a size and returns a key."""
+
+    response: messages.EvoluRegistrationRequest = evolu.evolu_sign_registration_request(
+        session=session,
+        challenge=bytes.fromhex(challenge),
+        size=size,
+        proof=bytes.fromhex(proof),
+    )
+    return {
+        "certificates": ",".join([cert.hex() for cert in response.certificate_chain]),
+        "signature": response.signature.hex(),
+    }
+
+
+@cli.command()
+@with_session
+def get_delegated_identity_key(
+    session: "Session",
+) -> dict[str, str]:
+    """Request the device for the delegated identity key pair for Evolu."""
+
+    key_pair: messages.EvoluDelegatedIdentityKey = evolu.get_delegated_identity_key(
+        session=session
+    )
+    return {
+        "private_key": key_pair.private_key.hex(),
     }

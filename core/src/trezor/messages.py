@@ -4073,6 +4073,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EvoluGetNode(protobuf.MessageType):
+        proof_of_delegated_identity: "bytes"
+
+        def __init__(
+            self,
+            *,
+            proof_of_delegated_identity: "bytes",
+        ) -> None:
+            pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["EvoluGetNode"]:
@@ -4090,6 +4098,60 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["EvoluNode"]:
+            return isinstance(msg, cls)
+
+    class EvoluSignRegistrationRequest(protobuf.MessageType):
+        challenge_from_server: "bytes"
+        size_to_acquire: "int"
+        proof_of_delegated_identity: "bytes"
+
+        def __init__(
+            self,
+            *,
+            challenge_from_server: "bytes",
+            size_to_acquire: "int",
+            proof_of_delegated_identity: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EvoluSignRegistrationRequest"]:
+            return isinstance(msg, cls)
+
+    class EvoluRegistrationRequest(protobuf.MessageType):
+        certificate_chain: "list[bytes]"
+        signature: "bytes"
+
+        def __init__(
+            self,
+            *,
+            signature: "bytes",
+            certificate_chain: "list[bytes] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EvoluRegistrationRequest"]:
+            return isinstance(msg, cls)
+
+    class EvoluGetDelegatedIdentityKey(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EvoluGetDelegatedIdentityKey"]:
+            return isinstance(msg, cls)
+
+    class EvoluDelegatedIdentityKey(protobuf.MessageType):
+        private_key: "bytes"
+
+        def __init__(
+            self,
+            *,
+            private_key: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["EvoluDelegatedIdentityKey"]:
             return isinstance(msg, cls)
 
     class MoneroTransactionSourceEntry(protobuf.MessageType):
