@@ -75,6 +75,7 @@ typedef enum {
   INTERNAL_CMD_SET_SPEED_HIGH = 0x0C,
   INTERNAL_CMD_SET_SPEED_LOW = 0x0D,
   INTERNAL_CMD_NOTIFY = 0x0E,
+  INTERNAL_CMD_BATTERY_UPDATE = 0x0F,
 } internal_cmd_t;
 
 typedef struct {
