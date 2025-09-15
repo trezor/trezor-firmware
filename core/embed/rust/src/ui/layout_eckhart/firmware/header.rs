@@ -129,6 +129,13 @@ impl Header {
         ctx.request_paint();
     }
 
+    /// Whether any of the buttons is currently pressed
+    /// Used for defining the order of rendering of overlapping components
+    pub fn pressed(&self) -> bool {
+        self.left_button.as_ref().is_some_and(|b| b.is_pressed())
+            || self.right_button.as_ref().is_some_and(|b| b.is_pressed())
+    }
+
     /// Calculates the width needed for the right button
     fn right_button_width(&self) -> i16 {
         if let Some(b) = &self.right_button {

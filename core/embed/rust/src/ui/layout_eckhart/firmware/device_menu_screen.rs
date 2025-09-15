@@ -699,6 +699,8 @@ impl DeviceMenuScreen {
         self.place(self.bounds);
         if let ActiveScreen::Menu(screen, ..) = self.active_screen.deref_mut() {
             screen.initialize_screen(ctx);
+        } else if let ActiveScreen::Device(screen) = self.active_screen.deref_mut() {
+            screen.initialize_screen(ctx);
         }
     }
 
