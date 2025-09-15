@@ -99,6 +99,10 @@ pub struct VerticalMenu<T = ShortMenuVec> {
     offset_y: i16,
     /// Maximum vertical offset.
     offset_y_max: i16,
+    /// Whether the first button touch area should be shrunk.
+    /// If true, the first button will overlap the header.
+    /// When using subtitle, the overlap should be disabled.
+    first_item_shrink: bool,
 }
 
 pub enum VerticalMenuMsg {
@@ -111,6 +115,10 @@ impl<T: MenuItems> VerticalMenu<T> {
     #[cfg(test)]
     pub const TEST_MENU_ITEM_CONTENT_PADDING: i16 = 32;
 
+    // Overlap with the header. Must be lower than MENU_ITEM_CONTENT_PADDING so the
+    // content is not clipped.
+    pub const BUTTON_TOP_SHRINK: i16 = 24;
+
     fn new(buttons: T) -> Self {
         Self {
             bounds: Rect::zero(),
@@ -118,6 +126,7 @@ impl<T: MenuItems> VerticalMenu<T> {
             total_height: 0,
             offset_y: 0,
             offset_y_max: 0,
+            first_item_shrink: true,
         }
     }
 
@@ -132,6 +141,11 @@ impl<T: MenuItems> VerticalMenu<T> {
 
     pub fn item(&mut self, button: Button) -> &mut Self {
         self.buttons.push(button);
+        self
+    }
+
+    pub fn no_first_item_shrink(&mut self) -> &mut Self {
+        self.first_item_shrink = false;
         self
     }
 
@@ -185,7 +199,11 @@ impl<T: MenuItems> VerticalMenu<T> {
 
         // The offset could reach only discrete values of cumsum of button heights
         let current = self.offset_y;
-        let mut cumsum = 0;
+        let mut cumsum = if self.first_item_shrink {
+            -Self::BUTTON_TOP_SHRINK
+        } else {
+            0
+        };
 
         for button in self
             .buttons
@@ -214,23 +232,38 @@ impl<T: MenuItems> VerticalMenu<T> {
         // The menu is scrollable until the last button is visible
         #[cfg(feature = "ui_debug")]
         if animation_disabled() {
-            self.offset_y_max = self.total_height
+            let offset_y_base = self.total_height
                 - self
                     .buttons
                     .get_last()
                     .unwrap_or(&Button::empty())
                     .area()
                     .height();
+            self.offset_y_max = if self.first_item_shrink {
+                offset_y_base - Self::BUTTON_TOP_SHRINK
+            } else {
+                offset_y_base
+            };
             return;
         }
 
         // Calculate the overflow of the menu area
-        let menu_overflow = (self.total_height - self.bounds.height()).max(0);
+        let overflow_base = (self.total_height - self.bounds.height()).max(0);
+        let menu_overflow = if self.first_item_shrink {
+            (overflow_base - Self::BUTTON_TOP_SHRINK).max(0)
+        } else {
+            overflow_base
+        };
 
         // Find the first button from the top that would completely fit in the menu area
         // in the bottom position
         for button in self.buttons.iter() {
-            let offset = button.area().top_left().y - self.bounds.top_left().y;
+            let offset_base = (button.area().top_left().y - self.bounds.top_left().y).max(0);
+            let offset = if self.first_item_shrink {
+                (offset_base - Self::BUTTON_TOP_SHRINK).max(0)
+            } else {
+                offset_base
+            };
             if offset > menu_overflow {
                 self.offset_y_max = offset;
                 return;
@@ -263,20 +296,34 @@ impl<T: MenuItems> VerticalMenu<T> {
     }
 
     fn render_separators<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        #[inline]
+        fn button_separator(button: &Button) -> Rect {
+            Rect::from_top_left_and_size(
+                button
+                    .area()
+                    .top_left()
+                    .ofs(Offset::x(button.content_offset().x)),
+                Offset::new(button.area().width() - 2 * button.content_offset().x, 1),
+            )
+        }
+
+        if !self.first_item_shrink {
+            if let Some(button) = self.buttons.iter().next() {
+                if !button.is_pressed() {
+                    Bar::new(button_separator(button))
+                        .with_fg(theme::GREY_EXTRA_DARK)
+                        .render(target);
+                }
+            }
+        }
+
         for pair in self.buttons.iter().as_slice().windows(2) {
             let [button_prev, button] = pair else {
                 continue;
             };
 
             if !button.is_pressed() && !button_prev.is_pressed() {
-                let separator = Rect::from_top_left_and_size(
-                    button
-                        .area()
-                        .top_left()
-                        .ofs(Offset::x(button.content_offset().x)),
-                    Offset::new(button.area().width() - 2 * button.content_offset().x, 1),
-                );
-                Bar::new(separator)
+                Bar::new(button_separator(button))
                     .with_fg(theme::GREY_EXTRA_DARK)
                     .render(target);
             }
@@ -295,13 +342,17 @@ impl<T: MenuItems> Component for VerticalMenu<T> {
         let mut top_left = self.bounds.top_left();
 
         // Place each button (might overflow the menu bounds)
-        for button in self.buttons.iter_mut() {
+        for (i, button) in self.buttons.iter_mut().enumerate() {
             let button_height =
                 button.content_height(button_width) + 2 * Self::MENU_ITEM_CONTENT_PADDING;
             let button_bounds =
                 Rect::from_top_left_and_size(top_left, Offset::new(button_width, button_height));
 
             button.place(button_bounds);
+            if i == 0 && self.first_item_shrink {
+                // Negative value because the param is the expand insets
+                button.set_expanded_touch_area(Insets::top(-Self::BUTTON_TOP_SHRINK));
+            }
 
             top_left = top_left + Offset::y(button_height);
         }
@@ -351,5 +402,19 @@ impl<T: MenuItems> crate::trace::Trace for VerticalMenu<T> {
                 button_list.child(button);
             }
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_overlap_limit() {
+        // The overlap must be smaller than the padding so that the text is not clipped
+        debug_assert!(
+            VerticalMenu::<ShortMenuVec>::BUTTON_TOP_SHRINK
+                < VerticalMenu::<ShortMenuVec>::TEST_MENU_ITEM_CONTENT_PADDING
+        );
     }
 }
