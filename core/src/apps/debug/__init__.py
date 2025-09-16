@@ -355,8 +355,7 @@ if __debug__:
             # (doing it this way also clears the red square, because the repaint is
             # happening with screenshotting already enabled)
             assert isinstance(ui.CURRENT_LAYOUT, ui.Layout)
-            ui.CURRENT_LAYOUT.request_complete_repaint()
-            ui.CURRENT_LAYOUT._paint()
+            ui.CURRENT_LAYOUT.repaint()
 
         else:
             print("stopping recording")

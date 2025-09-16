@@ -261,6 +261,16 @@ class Layout(Generic[T]):
         msg = self.layout.request_complete_repaint()
         assert msg is None
 
+    def repaint(self) -> None:
+        """Repaint the layout. Forces drawing at this moment.
+
+        Useful for recovering from an externally cleared screen, such as on resume
+        from suspend.
+        """
+        self.request_complete_repaint()
+        self.layout.paint()
+        backlight_fade(self.backlight_level)
+
     def _event(self, event_call: Callable[..., LayoutState | None], *args: Any) -> None:
         """Process an event coming out of the Rust layout. Set is as a result and shut
         down the layout if appropriate, do nothing otherwise."""
@@ -323,12 +333,7 @@ class Layout(Generic[T]):
         This is a separate call in order for homescreens to be able to override and not
         paint when the screen contents are still valid.
         """
-        # Clear the screen of any leftovers.
-        self.request_complete_repaint()
-        self._paint()
-
-        # Turn the brightness on.
-        backlight_fade(self.backlight_level)
+        self.repaint()
 
     def _set_timer(self, token: int, duration_ms: int) -> None:
         """Timer callback for Rust layouts."""
@@ -581,10 +586,18 @@ class ProgressLayout:
         assert CURRENT_LAYOUT is None
         set_current_layout(self)
 
-        self.layout.request_complete_repaint()
-        self.layout.paint()
-        backlight_fade(BacklightLevels.NORMAL)
+        self.repaint()
 
     def stop(self) -> None:
         if CURRENT_LAYOUT is self:
             set_current_layout(None)
+
+    def repaint(self) -> None:
+        """Repaint the layout. Forces drawing at this moment.
+
+        Useful for recovering from an externally cleared screen, such as on resume
+        from suspend.
+        """
+        self.layout.request_complete_repaint()
+        self.layout.paint()
+        backlight_fade(BacklightLevels.NORMAL)

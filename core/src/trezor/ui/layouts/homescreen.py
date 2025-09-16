@@ -124,6 +124,7 @@ class Lockscreen(HomescreenBase):
     async def get_result(self) -> Any:
         result = await super().get_result()
         if self.bootscreen:
+            # todo: should this be repaint()?
             self.request_complete_repaint()
         return result
 
