@@ -157,7 +157,7 @@ def lock_device_if_unlocked() -> None:
     elif config.is_unlocked():
         lock_device(interrupt_workflow=workflow.autolock_interrupts_workflow)
 
-    if utils.USE_POWER_MANAGER:
+    if utils.USE_POWER_MANAGER and not utils.EMULATOR:
         if workflow.autolock_interrupts_workflow:
             # suspend immediately
             suspend_and_resume()
