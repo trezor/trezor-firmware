@@ -46,10 +46,10 @@ bool tropic_ecc_key_generate(uint16_t slot_index);
 bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t* dig,
                      uint16_t dig_len, uint8_t* sig);
 
-bool tropic_stretch_pin(tropic_ui_progress_t ui_progress, int index,
+bool tropic_stretch_pin(tropic_ui_progress_t ui_progress, uint8_t index,
                         uint8_t stretched_pin[MAC_AND_DESTROY_DATA_SIZE]);
 
-bool tropic_reset_slots(tropic_ui_progress_t ui_progress, int index,
+bool tropic_reset_slots(tropic_ui_progress_t ui_progress, uint8_t index,
                         const uint8_t reset_key[MAC_AND_DESTROY_DATA_SIZE]);
 
 bool tropic_pin_set(

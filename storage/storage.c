@@ -739,7 +739,8 @@ static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
                                     const uint8_t *ext_salt,
                                     uint8_t kek[SHA256_DIGEST_LENGTH]) {
   secbool ret = secfalse;
-  stretch_pin(pin, pin_len, storage_salt, ext_salt, kek, sectrue);
+  uint8_t stretched_pin[SHA256_DIGEST_LENGTH] = {0};
+  stretch_pin(pin, pin_len, storage_salt, ext_salt, stretched_pin, sectrue);
 #if USE_OPTIGA
   uint8_t stretching_secret[SHA256_DIGEST_LENGTH] = {0};
   // TODO: Use entropy from Optiga and Tropic
@@ -747,7 +748,8 @@ static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
   if (!optiga_pin_init()) {
     goto cleanup;
   }
-  if (!optiga_stretch_pin_offline(ui_progress, stretching_secret, kek)) {
+  if (!optiga_stretch_pin_offline(ui_progress, stretching_secret,
+                                  stretched_pin)) {
     goto cleanup;
   }
 #endif
@@ -755,7 +757,7 @@ static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
   uint8_t stretched_pins[OPTIGA_STRETCHED_PINS_COUNT][SHA256_DIGEST_LENGTH] = {
       0};
   for (int i = 0; i < OPTIGA_STRETCHED_PINS_COUNT; i++) {
-    memcpy(stretched_pins[i], kek, SHA256_DIGEST_LENGTH);
+    memcpy(stretched_pins[i], stretched_pin, SHA256_DIGEST_LENGTH);
   }
 #endif
 #if USE_TROPIC
@@ -789,12 +791,13 @@ cleanup:
 #endif
   // memzero(kek, SHA256_DIGEST_LENGTH);
 #if USE_TROPIC && USE_OPTIGA
-  memzero(tropic_reset_key, SHA256_DIGEST_LENGTH);
-  memzero(optiga_reset_key, SHA256_DIGEST_LENGTH);
+  memzero(tropic_reset_key, sizeof(tropic_reset_key));
+  memzero(optiga_reset_key, sizeof(optiga_reset_key));
 #endif
 #if USE_TROPIC || USE_OPTIGA
   memzero(stretched_pins, sizeof(stretched_pins));
 #endif
+  memzero(stretched_pin, sizeof(stretched_pin));
   return ret;
 }
 
@@ -847,6 +850,9 @@ static secbool __wur derive_kek_unlock(
   int pin_index =
       pin_fails - 1;  // At the point the counter has already been incremented
 #endif
+#if USE_OPTIGA && !USE_TROPIC
+  int pin_index = 0;
+#endif
 #ifdef USE_OPTIGA
   if (optiga_stretch_pin(ui_progress, stretched_pin) != OPTIGA_PIN_SUCCESS) {
     goto cleanup;
@@ -885,20 +891,22 @@ static secbool __wur derive_kek_unlock(
       sectrue) {
     goto cleanup;
   }
-  if (!optiga_reset_counter(ui_progress, optiga_reset_key)) {
-    goto cleanup;
+  if (pin_index != 0) {
+    if (!optiga_reset_counter(ui_progress, optiga_reset_key)) {
+      goto cleanup;
+    }
   }
   if (!tropic_reset_slots(ui_progress, pin_index, tropic_reset_key)) {
     goto cleanup;
   }
 #endif
   ret = sectrue;
-#if USE_TROPIC
+#if USE_TROPIC || USE_OPTIGA
 cleanup:
 #endif
 #if USE_TROPIC && USE_OPTIGA
-  memzero(optiga_reset_key, SHA256_DIGEST_LENGTH);
-  memzero(tropic_reset_key, SHA256_DIGEST_LENGTH);
+  memzero(optiga_reset_key, sizeof(optiga_reset_key));
+  memzero(tropic_reset_key, sizeof(tropic_reset_key));
 #endif
   return ret;
 }

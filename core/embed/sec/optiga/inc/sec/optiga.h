@@ -87,7 +87,7 @@ bool optiga_reset_counter(optiga_ui_progress_t ui_progress,
 uint32_t optiga_estimate_time_ms(storage_pin_op_t op);
 
 optiga_pin_result __wur
-optiga_pin_verify(optiga_ui_progress_t ui_progress, int index,
+optiga_pin_verify(optiga_ui_progress_t ui_progress, uint8_t index,
                   uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]);
 
 optiga_pin_result __wur

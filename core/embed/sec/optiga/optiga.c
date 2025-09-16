@@ -80,6 +80,7 @@ static const uint16_t OID_STRETCHED_PINS[] = {
     OPTIGA_OID_DATA + 7, OPTIGA_OID_DATA + 9, OPTIGA_OID_DATA + 10,
     OPTIGA_OID_DATA + 11};
 
+// TODO: Rename the the counter resets
 // Value of the PIN counter when it is reset.
 static const uint8_t HMAC_COUNTER_RESET[] = {0, 0, 0, 0,
                                              0, 0, 0, PIN_MAX_TRIES};
@@ -975,8 +976,12 @@ bool optiga_stretch_pin_offline(
 }
 
 optiga_pin_result optiga_pin_verify(
-    optiga_ui_progress_t ui_progress, int index,
+    optiga_ui_progress_t ui_progress, uint8_t index,
     uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
+  if (index >= OPTIGA_STRETCHED_PINS_COUNT) {
+    return OPTIGA_PIN_ERROR;
+  }
+
   // TODO: Fix progress
   optiga_set_ui_progress(ui_progress);
   optiga_pin_result ret = OPTIGA_PIN_SUCCESS;
@@ -1011,6 +1016,17 @@ optiga_pin_result optiga_pin_verify(
     goto end;
   }
 
+  if (index == 0) {
+    //  If this is the first PIN attempt or there is only one stretched PIN
+    //  slot, the HMAC counter can be reset immediately. Otherwise, the counter
+    //  is reset in optiga_reset_counter.
+    if (optiga_set_data_object(OID_PIN_HMAC_CTR, false, HMAC_COUNTER_RESET,
+                               sizeof(HMAC_COUNTER_RESET)) != OPTIGA_SUCCESS) {
+      ret = OPTIGA_PIN_ERROR;
+      goto end;
+    }
+  }
+
   for (int i = index + 1; i < OPTIGA_STRETCHED_PINS_COUNT; i++) {
     size_t size = 0;
     if (optiga_get_data_object(OID_STRETCHED_PINS[i], false, digest,
@@ -1042,6 +1058,8 @@ optiga_pin_result optiga_pin_verify(
     goto end;
   }
 
+  optiga_clear_auto_state(OID_STRETCHED_PINS[OPTIGA_STRETCHED_PINS_COUNT - 1]);
+
   // Stretch the PIN more with the counter-protected PIN secret.
   hmac_sha256(stretched_pin, OPTIGA_PIN_SECRET_SIZE, pin_secret, size,
               stretched_pin);
@@ -1054,15 +1072,21 @@ optiga_pin_result optiga_pin_verify(
   }
 
   // Reset the counter which limits the guesses at OID_STRETCHED_PINS.
-  // The one extra attempt is used to authorize using the first stretched PIN in
-  // optiga_reset_counter().
-  // TODO: If this is the first attempt, we can reset both counters to
-  // PIN_MAX_TRIES
-  if (optiga_set_data_object(
-          OID_STRETCHED_PIN_CTR, false, STRETCHED_PIN_COUNTER_RESET_1,
-          sizeof(STRETCHED_PIN_COUNTER_RESET_1)) != OPTIGA_SUCCESS) {
-    ret = OPTIGA_PIN_ERROR;
-    goto end;
+  if (index == 0) {
+    if (optiga_set_data_object(OID_STRETCHED_PIN_CTR, false, HMAC_COUNTER_RESET,
+                               sizeof(HMAC_COUNTER_RESET)) != OPTIGA_SUCCESS) {
+      ret = OPTIGA_PIN_ERROR;
+      goto end;
+    }
+  } else {
+    // The one extra attempt is used to authorize using the first stretched PIN
+    // in optiga_reset_counter().
+    if (optiga_set_data_object(
+            OID_STRETCHED_PIN_CTR, false, STRETCHED_PIN_COUNTER_RESET_1,
+            sizeof(STRETCHED_PIN_COUNTER_RESET_1)) != OPTIGA_SUCCESS) {
+      ret = OPTIGA_PIN_ERROR;
+      goto end;
+    }
   }
 
   optiga_clear_auto_state(OID_PIN_SECRET);

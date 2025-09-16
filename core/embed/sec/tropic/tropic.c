@@ -160,8 +160,12 @@ bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
   return true;
 }
 
-bool tropic_stretch_pin(tropic_ui_progress_t ui_progress, int slot_index,
+bool tropic_stretch_pin(tropic_ui_progress_t ui_progress, uint8_t slot_index,
                         uint8_t stretched_pin[MAC_AND_DESTROY_DATA_SIZE]) {
+  if (slot_index >= PIN_MAX_TRIES) {
+    return false;
+  }
+
   // TODO: Fix ui progress
   tropic_driver_t *drv = &g_tropic_driver;
 
@@ -173,8 +177,12 @@ bool tropic_stretch_pin(tropic_ui_progress_t ui_progress, int slot_index,
                             stretched_pin) == LT_OK;
 }
 
-bool tropic_reset_slots(tropic_ui_progress_t ui_progress, int slot_index,
+bool tropic_reset_slots(tropic_ui_progress_t ui_progress, uint8_t slot_index,
                         const uint8_t reset_key[MAC_AND_DESTROY_DATA_SIZE]) {
+  if (slot_index >= PIN_MAX_TRIES) {
+    return false;
+  }
+
   // TODO: Fix ui progress
   tropic_driver_t *drv = &g_tropic_driver;
 
