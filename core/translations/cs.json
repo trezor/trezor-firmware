@@ -36,7 +36,12 @@
     "version": "2.9.2"
   },
   "translations": {
-    "addr_mismatch__contact_support_at": "Kontaktujte naši podporu na",
+    "addr_mismatch__contact_support_at": {
+      "Bolt": "Kontaktujte naši podporu na",
+      "Caesar": "Kontaktujte naši podporu na",
+      "Delizia": "Kontaktujte naši podporu na",
+      "Eckhart": "Prosím, kontaktujte naši podporu na"
+    },
     "addr_mismatch__key_mismatch": "Neshoda klíče?",
     "addr_mismatch__mismatch": "Neshoduje se adresa?",
     "addr_mismatch__support_url": "trezor.io/support",
@@ -124,12 +129,81 @@
     "bitcoin__unverified_external_inputs": "Transakce obsahuje neověřené externí vstupy.",
     "bitcoin__valid_signature": "Podpis je platný.",
     "bitcoin__voting_rights": "Hlasovací práva",
-    "ble__disable": "",
-    "ble__enable": "",
-    "ble__forget_all": "",
+    "ble__disable": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Vypnout Bluetooth?"
+    },
+    "ble__enable": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Zapnout Bluetooth?"
+    },
+    "ble__forget_all": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Zapomenout vše"
+    },
+    "ble__forget_all_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Budou odstraněny a před použitím je budete muset znovu spárovat."
+    },
+    "ble__forget_all_devices": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Zapomenout všechna zařízení?"
+    },
+    "ble__forget_all_success": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Všichni hostitelé odstraněni."
+    },
+    "ble__forget_this_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Bude odstraněno a před použitím jej budete muset znovu spárovat."
+    },
+    "ble__forget_this_device": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Zapomenout toto zařízení?"
+    },
+    "ble__forget_this_success": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Hostitel odstraněn."
+    },
+    "ble__limit_reached": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Limit spárovaných zařízení dosažen"
+    },
     "ble__manage_paired": "Spravovat spárovaná zařízení",
     "ble__pair_new": "Spárovat nové zařízení",
     "ble__pair_title": "Spárovat a připojit",
+    "ble__pairing_match": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Shoduje se párovací kód?"
+    },
+    "ble__pairing_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Párování Bluetooth"
+    },
     "ble__unpair_all": "Zrušit spárování všech zařízení Bluetooth",
     "ble__unpair_current": "Zrušit spárování připojeného zařízení",
     "ble__unpair_title": "Zrušit spárování",
@@ -509,7 +583,12 @@
     "lockscreen__tap_to_unlock": "Klepnutím odemknete",
     "lockscreen__title_locked": "Uzamčeno",
     "lockscreen__title_not_connected": "Nepřipojeno",
-    "lockscreen__unlock": "",
+    "lockscreen__unlock": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Odemknout"
+    },
     "misc__decrypt_value": "Dešifrovat hodnotu",
     "misc__enable_labeling": "Povolit popisky?",
     "misc__encrypt_value": "Zašifrovat hodnotu",
@@ -687,10 +766,20 @@
     "pin__reenter": "Znovu zadejte PIN",
     "pin__reenter_new": "Zopakujte PIN",
     "pin__reenter_to_confirm": "Znovu zadejte PIN pro potvrzení.",
-    "pin__remove": "",
+    "pin__remove": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Odstranit PIN kód"
+    },
     "pin__setup_completed": "Nastavení PIN dokončeno.",
     "pin__should_be_long": "PIN musí mít 4-50 číslic.",
-    "pin__title": "",
+    "pin__title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "PIN kód"
+    },
     "pin__title_check_pin": "Zkontrolovat PIN",
     "pin__title_settings": "Nastavení PIN kódu",
     "pin__title_wrong_pin": "Nesprávný PIN kód",
@@ -783,7 +872,12 @@
       "Delizia": "Část {0}",
       "Eckhart": "Podíl #{0}"
     },
-    "recovery__start_entering": "",
+    "recovery__start_entering": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Začněte zadávat"
+    },
     "recovery__title": "Obnovit peněženku",
     "recovery__title_cancel_dry_run": "Zruš. kontr. zálohy",
     "recovery__title_cancel_recovery": "Zrušit obnovení",
@@ -802,7 +896,7 @@
       "Bolt": "Slovo {0} z {1}",
       "Caesar": "Slovo {0} z {1}",
       "Delizia": "Slovo {0} z {1}",
-      "Eckhart": ""
+      "Eckhart": "Slovo {0} \nz {1}"
     },
     "recovery__x_more_items_starting_template_plural": {
       "Bolt": "Zahajuje se dalších {count} {plural}",
@@ -1102,6 +1196,102 @@
     "tezos__submit_ballot": "Odeslat hlas",
     "tezos__submit_proposal": "Odeslat návrh",
     "tezos__submit_proposals": "Odeslat návrhy",
+    "thp__autoconnect": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Povolit {0} automatické připojení k tomuto Trezoru?"
+    },
+    "thp__autoconnect_app": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Povolit {0} na {1} se automaticky připojit k tomuto Trezoru?"
+    },
+    "thp__autoconnect_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Údaje automatického připojení"
+    },
+    "thp__code_entry": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Zadejte jednorázový bezpečnostní kód na {0}"
+    },
+    "thp__code_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Ještě jeden krok"
+    },
+    "thp__connect": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Povolit {0} připojení k tomuto Trezoru?"
+    },
+    "thp__connect_app": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Povolit {0} na {1} se připojit k tomuto Trezoru?"
+    },
+    "thp__connect_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Dialog připojení"
+    },
+    "thp__continue_on_host": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Pokračovat na hostiteli"
+    },
+    "thp__nfc_text": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Ponechte Trezor blízko svého telefonu pro dokončení nastavení."
+    },
+    "thp__pair": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Povolit {0} spárování s tímto Trezorem?"
+    },
+    "thp__pair_app": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Povolit {0} na {1} spárování s tímto Trezorem?"
+    },
+    "thp__pair_name": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "{0} je název vašeho Trezoru."
+    },
+    "thp__pair_new_device": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Spárovat s novým zařízením"
+    },
+    "thp__pair_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Než budete pokračovat"
+    },
+    "thp__qr_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Naskenujte QR kód pro spárování"
+    },
     "tutorial__continue": "Pokračovat v tutoriálu",
     "tutorial__did_you_know": "Věděli jste, že...",
     "tutorial__exit": "Ukončit tutoriál",
@@ -1148,7 +1338,12 @@
     "u2f__title_get": "Získat čítač U2F",
     "u2f__title_set": "Nastavit čítač U2F",
     "wipe__info": "Všechna data budou smazána.",
-    "wipe__start_again": "",
+    "wipe__start_again": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Vymazejte celý Trezor a začněte proces nastavení znovu."
+    },
     "wipe__title": "Vymazat zařízení",
     "wipe__want_to_wipe": "Opravdu chcete vymazat zařízení?\n",
     "wipe_code__change": "Změnit kód pro vymazání",
@@ -1163,8 +1358,18 @@
     "wipe_code__mismatch": "Zadané kódy pro vymazání se neshodují.",
     "wipe_code__reenter": "Zopakujte kód vymaz.",
     "wipe_code__reenter_to_confirm": "Potvrďte dalším zadáním kódu vymazání.",
-    "wipe_code__remove": "",
-    "wipe_code__title": "",
+    "wipe_code__remove": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Odstranit kód pro vymazání"
+    },
+    "wipe_code__title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Kód pro vymazání"
+    },
     "wipe_code__title_check": "Zkont. kód vymazání",
     "wipe_code__title_invalid": "Nesprávný kód pro vymazání",
     "wipe_code__title_settings": "Nast. kódu vymazání",
@@ -1183,27 +1388,57 @@
     "words__assets": "Portfolia",
     "words__authenticate": "Ověřit",
     "words__blockhash": "Blockhash",
-    "words__bluetooth": "",
+    "words__bluetooth": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Bluetooth"
+    },
     "words__buying": "Nákup",
     "words__cancel_and_exit": "Zrušit a ukončit",
     "words__cancel_question": "Zrušit?",
     "words__chain": "Řetězec",
     "words__confirm": "Potvrdit",
     "words__confirm_fee": "Potvrdit poplatek",
-    "words__connect": "",
+    "words__connect": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Připojit"
+    },
     "words__connected": "Připojeno",
     "words__contains": "Obsahuje",
     "words__continue_anyway": "Přesto pokračovat",
     "words__continue_anyway_question": "Přesto pokračovat?",
     "words__continue_with": "Pokračovat s",
     "words__device": "Zařízení",
-    "words__disabled": "",
+    "words__disabled": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Vypnuto"
+    },
     "words__disconnect": "Odpojit",
-    "words__disconnected": "",
-    "words__enabled": "",
+    "words__disconnected": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Odpojen"
+    },
+    "words__enabled": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Zapnuto"
+    },
     "words__error": "Chyba",
     "words__fee": "Poplatek",
-    "words__forget": "",
+    "words__forget": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Zapomenout"
+    },
     "words__from": "od",
     "words__good_to_know": "Dobré vědět",
     "words__important": "Důležité",
@@ -1223,6 +1458,12 @@
     "words__pay_attention": "Pozor",
     "words__please_check_again": "Zkontrolujte to znovu",
     "words__please_try_again": "Zkuste to znovu",
+    "words__power": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Napájení"
+    },
     "words__provider": "Poskytovatel",
     "words__really_wanna": "Opravdu chcete",
     "words__receive": "Přijmout",
@@ -1231,7 +1472,12 @@
     "words__review": "Zkontrolovat",
     "words__security": "Zabezpečení",
     "words__send": "Odeslat",
-    "words__set": "",
+    "words__set": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Nastavit"
+    },
     "words__settings": "Nastavení",
     "words__sign": "Podepsat",
     "words__signer": "Podepisující osoba",
@@ -1254,7 +1500,12 @@
     "words__unlocked": "Odemčeno",
     "words__wallet": "Peněženka",
     "words__warning": "Varování",
-    "words__wipe": "",
+    "words__wipe": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Vymazat"
+    },
     "words__writable": "Zapisovatelné",
     "words__yes": "Ano"
   }

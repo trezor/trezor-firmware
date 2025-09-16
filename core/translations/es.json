@@ -129,12 +129,81 @@
     "bitcoin__unverified_external_inputs": "La transacción contiene entradas externas sin verificar.",
     "bitcoin__valid_signature": "La firma es válida.",
     "bitcoin__voting_rights": "Derechos de voto de",
-    "ble__disable": "",
-    "ble__enable": "",
-    "ble__forget_all": "",
+    "ble__disable": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "¿Desactivar Bluetooth?"
+    },
+    "ble__enable": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "¿Activar Bluetooth?"
+    },
+    "ble__forget_all": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Olvidar todo"
+    },
+    "ble__forget_all_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Serán eliminados, tendrás que emparejarlos de nuevo antes de usarlos."
+    },
+    "ble__forget_all_devices": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "¿Olvidar dispositivos?"
+    },
+    "ble__forget_all_success": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Dispositivos eliminados."
+    },
+    "ble__forget_this_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Será removido, tendrás que emparejarlo de nuevo antes de usarlo."
+    },
+    "ble__forget_this_device": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "¿Olvidar este dispositivo?"
+    },
+    "ble__forget_this_success": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Dispositivo eliminado."
+    },
+    "ble__limit_reached": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Límite de dispositivos alcanzado"
+    },
     "ble__manage_paired": "Gestionar dispositivos emparejados",
     "ble__pair_new": "Emparejar nuevo dispositivo",
     "ble__pair_title": "Emparejar y conectar",
+    "ble__pairing_match": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "¿Coincide el código de emparejamiento?"
+    },
+    "ble__pairing_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Emparejamiento Bluetooth"
+    },
     "ble__unpair_all": "Desvincular todos dispositivos Bluetooth",
     "ble__unpair_current": "Desvincular dispositivo conectado",
     "ble__unpair_title": "Desvincular",
@@ -524,7 +593,12 @@
     "lockscreen__tap_to_unlock": "Toca para desbloquear",
     "lockscreen__title_locked": "Bloqueado",
     "lockscreen__title_not_connected": "No conectado",
-    "lockscreen__unlock": "",
+    "lockscreen__unlock": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Desbloquear"
+    },
     "misc__decrypt_value": "Descifrar valor",
     "misc__enable_labeling": "¿Habilitar el etiquetado?",
     "misc__encrypt_value": "Cifrar valor",
@@ -697,10 +771,20 @@
     "pin__reenter": "Reintroducir PIN",
     "pin__reenter_new": "Reintroducir PIN.",
     "pin__reenter_to_confirm": "Vuelve a introducir el PIN para confirmar.",
-    "pin__remove": "",
+    "pin__remove": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Eliminar PIN"
+    },
     "pin__setup_completed": "Configuración del PIN completada.",
     "pin__should_be_long": "El PIN debe tener 4-50 dígitos.",
-    "pin__title": "",
+    "pin__title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Código PIN"
+    },
     "pin__title_check_pin": "Revisar PIN",
     "pin__title_settings": "Ajustes PIN",
     "pin__title_wrong_pin": "PIN incorrecto",
@@ -793,7 +877,12 @@
       "Delizia": "Recurso compartido {0}",
       "Eckhart": "Fragmento #{0}"
     },
-    "recovery__start_entering": "",
+    "recovery__start_entering": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Ingresar"
+    },
     "recovery__title": "Recuperar monedero",
     "recovery__title_cancel_dry_run": "Anular rev. c. seg.",
     "recovery__title_cancel_recovery": "Anular recuperación",
@@ -808,12 +897,7 @@
     "recovery__wanna_cancel_dry_run": "¿Quieres anular la revisión de la copia de seguridad?",
     "recovery__wanna_cancel_recovery": "¿Quieres anular el proceso de recuperación?",
     "recovery__word_count_template": "({0} palabras)",
-    "recovery__word_x_of_y_template": {
-      "Bolt": "Palabra {0} de {1}",
-      "Caesar": "Palabra {0} de {1}",
-      "Delizia": "Palabra {0} de {1}",
-      "Eckhart": ""
-    },
+    "recovery__word_x_of_y_template": "Palabra {0} de {1}",
     "recovery__x_more_items_starting_template_plural": {
       "Bolt": "Necesita {count} {plural} más comenzando",
       "Caesar": "Necesita {count} {plural} más comenzando",
@@ -1122,6 +1206,102 @@
     "tezos__submit_ballot": "Enviar papeleta",
     "tezos__submit_proposal": "Enviar propuesta",
     "tezos__submit_proposals": "Enviar propuestas",
+    "thp__autoconnect": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "¿Permitir que {0} se conecte automáticamente a este Trezor?"
+    },
+    "thp__autoconnect_app": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "¿Permitir que {0} en {1} se conecte automáticamente a este Trezor?"
+    },
+    "thp__autoconnect_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Credencial de conexión automática"
+    },
+    "thp__code_entry": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Ingresa este código de seguridad de un solo uso en {0}"
+    },
+    "thp__code_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Un paso más"
+    },
+    "thp__connect": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "¿Permitir que {0} se conecte a este Trezor?"
+    },
+    "thp__connect_app": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "¿Permitir que {0} en {1} se conecte a este Trezor?"
+    },
+    "thp__connect_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Diálogo de conexión"
+    },
+    "thp__continue_on_host": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Continuar en el dispositivo"
+    },
+    "thp__nfc_text": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Mantén tu Trezor cerca de tu teléfono para completar la configuración."
+    },
+    "thp__pair": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "¿Permitir que {0} se empareje con este Trezor?"
+    },
+    "thp__pair_app": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "¿Permitir que {0} en {1} se empareje con este Trezor?"
+    },
+    "thp__pair_name": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "{0} es el nombre de tu Trezor."
+    },
+    "thp__pair_new_device": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Emparejar nuevo dispositivo"
+    },
+    "thp__pair_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Antes de continuar"
+    },
+    "thp__qr_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Escanea el QR para emparejar"
+    },
     "tutorial__continue": "Continuar con el tutorial",
     "tutorial__did_you_know": "¿Sabías que?",
     "tutorial__exit": "Salir del tutorial",
@@ -1168,7 +1348,12 @@
     "u2f__title_get": "Recibir cont. U2F",
     "u2f__title_set": "Config. cont. U2F",
     "wipe__info": "Se borrarán todos los datos.",
-    "wipe__start_again": "",
+    "wipe__start_again": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Restablece tu Trezor y reinicia la configuración."
+    },
     "wipe__title": "Borrar dispositivo",
     "wipe__want_to_wipe": "¿Quieres borrar el dispositivo?\n",
     "wipe_code__change": "Cambiar el código de borrar",
@@ -1183,8 +1368,18 @@
     "wipe_code__mismatch": "Los códigos de borrar no coinciden.",
     "wipe_code__reenter": "Reingresar cód. bor.",
     "wipe_code__reenter_to_confirm": "Reingresar cód.borrar para confirmar.",
-    "wipe_code__remove": "",
-    "wipe_code__title": "",
+    "wipe_code__remove": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Eliminar código de restablecimiento"
+    },
+    "wipe_code__title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Código de restablecimiento"
+    },
     "wipe_code__title_check": "Revisar cód. borrar",
     "wipe_code__title_invalid": "Cód. borrar no válido",
     "wipe_code__title_settings": "Config. cód. borrar",
@@ -1203,27 +1398,57 @@
     "words__assets": "Activos",
     "words__authenticate": "Autenticar",
     "words__blockhash": "Hash del bloque\n",
-    "words__bluetooth": "",
+    "words__bluetooth": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Bluetooth"
+    },
     "words__buying": "Comprar",
     "words__cancel_and_exit": "Cancelar y salir",
     "words__cancel_question": "¿Cancelar?",
     "words__chain": "Cadena",
     "words__confirm": "Confirmar",
     "words__confirm_fee": "Confirmar comisión",
-    "words__connect": "",
+    "words__connect": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Conectar"
+    },
     "words__connected": "Conectado",
     "words__contains": "Contiene",
     "words__continue_anyway": "Continuar",
     "words__continue_anyway_question": "¿Continuar?",
     "words__continue_with": "Continuar con",
     "words__device": "Dispositivo",
-    "words__disabled": "",
+    "words__disabled": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Deshabilitar"
+    },
     "words__disconnect": "Desconectar",
-    "words__disconnected": "",
-    "words__enabled": "",
+    "words__disconnected": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Desconectado"
+    },
+    "words__enabled": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Activado"
+    },
     "words__error": "Error",
     "words__fee": "Comisión",
-    "words__forget": "",
+    "words__forget": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Olvidar"
+    },
     "words__from": "de",
     "words__good_to_know": "Información importante",
     "words__important": "Importante",
@@ -1243,6 +1468,12 @@
     "words__pay_attention": "Presta atención",
     "words__please_check_again": "Vuelve a comprobarlo",
     "words__please_try_again": "Inténtalo de nuevo",
+    "words__power": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Encendido"
+    },
     "words__provider": "Proveedor",
     "words__really_wanna": "¿Seguro que quieres",
     "words__receive": "Recibir",
@@ -1251,7 +1482,12 @@
     "words__review": "Revisar",
     "words__security": "Seguridad",
     "words__send": "Enviar",
-    "words__set": "",
+    "words__set": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Establecer"
+    },
     "words__settings": "Configuración",
     "words__sign": "Firmar",
     "words__signer": "Firmante",
@@ -1274,7 +1510,12 @@
     "words__unlocked": "Desbloqueado",
     "words__wallet": "Billetera",
     "words__warning": "Advertencia",
-    "words__wipe": "",
+    "words__wipe": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Restablecer"
+    },
     "words__writable": "Modificable",
     "words__yes": "Sí"
   }
