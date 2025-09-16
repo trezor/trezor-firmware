@@ -1,6 +1,11 @@
-from typing import Sequence
+from typing import TYPE_CHECKING
 
 from .curve import ed25519
+
+if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+    from typing import Sequence
+
 
 commit = ed25519.cosi_commit
 sign = ed25519.cosi_sign
@@ -8,7 +13,7 @@ combine_publickeys = ed25519.cosi_combine_publickeys
 combine_signatures = ed25519.cosi_combine_signatures
 
 
-def select_keys(sigmask: int, keys: Sequence[bytes]) -> list[bytes]:
+def select_keys(sigmask: int, keys: Sequence[AnyBytes]) -> list[AnyBytes]:
     selected_keys = []
     for key in keys:
         if sigmask & 1:
@@ -20,10 +25,10 @@ def select_keys(sigmask: int, keys: Sequence[bytes]) -> list[bytes]:
 
 
 def verify(
-    signature: bytes,
-    data: bytes,
+    signature: AnyBytes,
+    data: AnyBytes,
     threshold: int,
-    keys: Sequence[bytes],
+    keys: Sequence[AnyBytes],
     sigmask: int,
 ) -> bool:
     if threshold < 1:

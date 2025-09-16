@@ -93,7 +93,7 @@ class FailedSessionResumption(TrezorException):
     Raised when `trezorctl -s <sesssion_id>` is used or `TREZOR_SESSION_ID = <session_id>`
     is set and resumption of session with the `session_id` fails."""
 
-    def __init__(self, received_session_id: bytes | None = None):
+    def __init__(self, received_session_id: bytes | None = None) -> None:
         # We keep the session id that was received from Trezor for test purposes
         self.received_session_id = received_session_id
         super().__init__("Failed to resume session")

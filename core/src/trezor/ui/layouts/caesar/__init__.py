@@ -8,6 +8,7 @@ from trezor.wire import ActionCancelled
 from ..common import draw_simple, interact, raise_if_cancelled
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes, StrOrBytes
     from typing import Awaitable, Callable, Iterable, List, NoReturn, Sequence
 
     from trezor.messages import StellarAsset
@@ -220,7 +221,7 @@ def lock_time_disabled_warning() -> Awaitable[ui.UiResult]:
     )
 
 
-def confirm_homescreen(image: bytes) -> Awaitable[None]:
+def confirm_homescreen(image: AnyBytes) -> Awaitable[None]:
     return raise_if_cancelled(
         trezorui_api.confirm_homescreen(
             title=TR.homescreen__title_set,
@@ -735,7 +736,7 @@ async def should_show_more(
 def confirm_blob(
     br_name: str,
     title: str,
-    data: bytes | str,
+    data: StrOrBytes,
     description: str | None = None,
     subtitle: str | None = None,
     verb: str | None = None,
@@ -778,7 +779,7 @@ def confirm_blob(
 async def _confirm_ask_pagination(
     br_name: str,
     title: str,
-    data: bytes | str,
+    data: StrOrBytes,
     description: str,
     br_code: ButtonRequestType,
     extra_confirmation_if_not_read: bool = False,
@@ -889,7 +890,7 @@ def confirm_properties(
     verb: str | None = None,
 ) -> Awaitable[None]:
 
-    items: list[tuple[str | None, str | bytes | None, bool | None]] = [
+    items = [
         (
             prop[0],
             (utils.hexlify_if_bytes(prop[1]) if prop[1] else None),
@@ -1728,12 +1729,13 @@ async def request_passphrase_on_device(max_len: int) -> str:
     return result
 
 
-async def request_pin_on_device(
+def request_pin_on_device(
+    br_name: str,
     prompt: str,
     attempts_remaining: int | None,
     allow_cancel: bool,
     wrong_pin: bool = False,
-) -> str:
+) -> Awaitable[str]:
     from trezor import wire
 
     # Not showing the prompt in case user did not enter it badly yet
@@ -1745,24 +1747,23 @@ async def request_pin_on_device(
     else:
         attempts = f"{attempts_remaining} {TR.pin__tries_left}"
 
-    result = await interact(
+    result = interact(
         trezorui_api.request_pin(
             prompt=prompt,
             attempts=attempts,
             allow_cancel=allow_cancel,
             wrong_pin=wrong_pin,
         ),
-        "pin_device",
+        br_name,
         ButtonRequestType.PinEntry,
         raise_on_cancel=wire.PinCancelled,
     )
 
-    assert isinstance(result, str)
-    return result
+    return result  # type: ignore ["UiResult" is not assignable to "str"]
 
 
 def confirm_reenter_pin(is_wipe_code: bool = False) -> Awaitable[None]:
-    br_name = "reenter_wipe_code" if is_wipe_code else "reenter_pin"
+    br_name = "wipecode/repeat/prompt" if is_wipe_code else "pin/repeat/prompt"
     title = TR.wipe_code__title_check if is_wipe_code else TR.pin__title_check_pin
     description = (
         TR.wipe_code__reenter_to_confirm if is_wipe_code else TR.pin__reenter_to_confirm
@@ -1797,7 +1798,7 @@ def _confirm_multiple_pages_texts(
 
 def pin_mismatch_popup(is_wipe_code: bool = False) -> Awaitable[None]:
     description = TR.wipe_code__mismatch if is_wipe_code else TR.pin__mismatch
-    br_name = "wipe_code_mismatch" if is_wipe_code else "pin_mismatch"
+    br_name = "wipecode/err-mismatch" if is_wipe_code else "pin/err-mismatch"
     layout = show_warning(
         br_name,
         description,
@@ -1805,12 +1806,12 @@ def pin_mismatch_popup(is_wipe_code: bool = False) -> Awaitable[None]:
         TR.buttons__check_again,
         br_code=BR_CODE_OTHER,
     )
-    return layout  # type: ignore ["UiResult" is incompatible with "None"]
+    return layout  # type: ignore ["UiResult" is not assignable to "None"]
 
 
 def wipe_code_same_as_pin_popup() -> Awaitable[None]:
     return confirm_action(
-        "wipe_code_same_as_pin",
+        "wipecode/err-matches-pin",
         TR.wipe_code__title_invalid,
         description=TR.wipe_code__diff_from_pin,
         verb=TR.buttons__try_again,
@@ -1878,16 +1879,19 @@ def confirm_remove_pin(
     )
 
 
-async def success_pin_change(curpin: str | None, newpin: str | None) -> None:
+def success_pin_change(curpin: str | None, newpin: str | None) -> Awaitable[None]:
     if newpin:
         if curpin:
             msg_screen = TR.pin__changed
+            br_name = "pin/ok-changed"
         else:
             msg_screen = TR.pin__enabled
+            br_name = "pin/ok-enabled"
     else:
         msg_screen = TR.pin__disabled
+        br_name = "pin/ok-disabled"
 
-    await show_success("success_pin", msg_screen)
+    return show_success(br_name, msg_screen)
 
 
 def confirm_firmware_update(description: str, fingerprint: str) -> Awaitable[None]:

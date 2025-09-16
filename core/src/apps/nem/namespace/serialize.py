@@ -1,12 +1,14 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import NEMProvisionNamespace, NEMTransactionCommon
 
 
 def serialize_provision_namespace(
-    common: NEMTransactionCommon, namespace: NEMProvisionNamespace, public_key: bytes
-) -> bytes:
+    common: NEMTransactionCommon, namespace: NEMProvisionNamespace, public_key: AnyBytes
+) -> bytearray:
     from ..helpers import NEM_TRANSACTION_TYPE_PROVISION_NAMESPACE
     from ..writers import (
         serialize_tx_common,

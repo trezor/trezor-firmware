@@ -89,7 +89,7 @@ class ProtocolV1Channel(Channel):
             self.transport.write_chunk(chunk)
             buffer = buffer[chunk_size - 1 :]
 
-    def _read(self, timeout: float | None = None) -> t.Tuple[int, bytes]:
+    def _read(self, timeout: float | None = None) -> tuple[int, bytes]:
         if timeout is None:
             timeout = self._DEFAULT_READ_TIMEOUT
 
@@ -105,14 +105,14 @@ class ProtocolV1Channel(Channel):
         while len(buffer) < datalen:
             buffer.extend(self.read_next(timeout=timeout))
 
-        return msg_type, buffer[:datalen]
+        return msg_type, bytes(buffer[:datalen])
 
-    def read_chunkless(self, timeout: float | None = None) -> t.Tuple[int, bytes]:
+    def read_chunkless(self, timeout: float | None = None) -> tuple[int, bytes]:
         data = self.transport.read_chunk(timeout=timeout)
         msg_type, datalen = struct.unpack(">HL", data[: self.HEADER_LEN])
         return msg_type, data[self.HEADER_LEN : self.HEADER_LEN + datalen]
 
-    def read_first(self, timeout: float | None = None) -> t.Tuple[int, int, bytes]:
+    def read_first(self, timeout: float | None = None) -> tuple[int, int, bytes]:
         chunk = self.transport.read_chunk(timeout=timeout)
         if chunk[:3] != b"?##":
             raise UnexpectedMagicError(chunk.hex())

@@ -1,4 +1,9 @@
+from typing import TYPE_CHECKING
+
 from trezor.crypto import base32
+
+if TYPE_CHECKING:
+    from buffer_types import AnyBytes
 
 
 def public_key_from_address(address: str) -> bytes:
@@ -15,7 +20,7 @@ def public_key_from_address(address: str) -> bytes:
     return b[1:-2]
 
 
-def address_from_public_key(pubkey: bytes) -> str:
+def address_from_public_key(pubkey: AnyBytes) -> str:
     """Returns the base32-encoded version of public key bytes (G...)"""
     address = bytearray()
     address.append(6 << 3)  # version -> 'G'
@@ -25,7 +30,7 @@ def address_from_public_key(pubkey: bytes) -> str:
     return base32.encode(address)
 
 
-def _crc16_checksum(data: bytes) -> bytes:
+def _crc16_checksum(data: AnyBytes) -> bytes:
     """Returns the CRC-16 checksum of bytearray bytes
 
     Ported from Java implementation at: http://introcs.cs.princeton.edu/java/61data/CRC16CCITT.java.html

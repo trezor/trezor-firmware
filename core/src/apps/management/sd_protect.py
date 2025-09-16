@@ -67,7 +67,7 @@ async def _sd_protect_enable(msg: SdProtect) -> Success:
 
     # Get the current PIN.
     if config.has_pin():
-        pin = await request_pin(TR.pin__enter, config.get_pin_rem())
+        pin = await request_pin("pin/current", TR.pin__enter, config.get_pin_rem())
     else:
         pin = ""
 
@@ -103,7 +103,7 @@ async def _sd_protect_disable(msg: SdProtect) -> Success:
     await require_confirm_sd_protect(msg)
 
     # Get the current PIN and salt from the SD card.
-    pin, salt = await request_pin_and_sd_salt(TR.pin__enter)
+    pin, salt = await request_pin_and_sd_salt()
 
     # Check PIN and remove salt.
     if not config.change_pin(pin, pin, salt, None):
@@ -135,7 +135,7 @@ async def _sd_protect_refresh(msg: SdProtect) -> Success:
     await ensure_sdcard()
 
     # Get the current PIN and salt from the SD card.
-    pin, old_salt = await request_pin_and_sd_salt(TR.pin__enter)
+    pin, old_salt = await request_pin_and_sd_salt()
 
     # Check PIN and change salt.
     new_salt, new_auth_key, new_salt_tag = _make_salt()

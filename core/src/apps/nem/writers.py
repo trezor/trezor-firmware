@@ -3,13 +3,15 @@ from typing import TYPE_CHECKING
 from apps.common.writers import write_bytes_unchecked, write_uint32_le, write_uint64_le
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import NEMTransactionCommon
     from trezor.utils import Writer
 
 
 def serialize_tx_common(
     common: NEMTransactionCommon,
-    public_key: bytes,
+    public_key: AnyBytes,
     transaction_type: int,
     version: int | None = None,
 ) -> bytearray:
@@ -28,6 +30,6 @@ def serialize_tx_common(
     return w
 
 
-def write_bytes_with_len(w: Writer, buf: bytes) -> None:
+def write_bytes_with_len(w: Writer, buf: AnyBytes) -> None:
     write_uint32_le(w, len(buf))
     write_bytes_unchecked(w, buf)

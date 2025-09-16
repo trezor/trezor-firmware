@@ -47,7 +47,7 @@ MAX_FIELD_SIZE = 1024 * 1024  # 1 MB
 
 
 class Reader(tx.Protocol):
-    def readinto(self, __buf: bytearray) -> int:
+    def readinto(self, buf: bytearray, /) -> int:
         """
         Reads exactly `len(buffer)` bytes into `buffer`. Returns number of bytes read,
         or 0 if it cannot read that much.
@@ -56,7 +56,7 @@ class Reader(tx.Protocol):
 
 
 class Writer(tx.Protocol):
-    def write(self, __buf: bytes) -> int:
+    def write(self, buf: bytes | bytearray | memoryview, /) -> int:
         """
         Writes all bytes from `buffer`, or raises `EOFError`
         """
@@ -165,8 +165,7 @@ class Field:
     def py_type(self) -> type:
         if self._py_type is None:
             self._py_type = self._resolve_type()
-        # pyright issue https://github.com/microsoft/pyright/issues/8136
-        return self._py_type  # type: ignore [Type "Unknown | None"]
+        return self._py_type
 
     def _resolve_type(self) -> type:
         # look for a type in the builtins
@@ -341,7 +340,7 @@ class LimitedReader:
         self.reader = reader
         self.limit = limit
 
-    def readinto(self, buf: bytearray) -> int:
+    def readinto(self, buf: bytearray, /) -> int:
         if self.limit < len(buf):
             return 0
         else:
@@ -354,7 +353,7 @@ class CountingWriter:
     def __init__(self) -> None:
         self.size = 0
 
-    def write(self, buf: bytes) -> int:
+    def write(self, buf: bytes | bytearray | memoryview, /) -> int:
         nwritten = len(buf)
         self.size += nwritten
         return nwritten
@@ -562,7 +561,7 @@ def format_message(
     truncate_after: int | None = 256,
     truncate_to: int | None = 64,
 ) -> str:
-    def mostly_printable(bytes: bytes) -> bool:
+    def mostly_printable(bytes: bytes | bytearray) -> bool:
         if not bytes:
             return True
         printable = sum(1 for byte in bytes if 0x20 <= byte <= 0x7E)

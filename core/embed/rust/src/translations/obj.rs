@@ -195,11 +195,11 @@ pub static mp_module_trezortranslate: Module = obj_module! {
     ///     """Erase the translations blob from flash."""
     Qstr::MP_QSTR_erase => obj_fn_0!(erase).as_obj(),
 
-    /// def write(data: bytes, offset: int) -> None:
+    /// def write(data: AnyBytes, offset: int) -> None:
     ///     """Write data to the translations blob in flash."""
     Qstr::MP_QSTR_write => obj_fn_2!(write).as_obj(),
 
-    /// def verify(data: bytes) -> None:
+    /// def verify(data: AnyBytes) -> None:
     ///     """Verify the translations blob."""
     Qstr::MP_QSTR_verify => obj_fn_1!(verify).as_obj(),
 
@@ -209,10 +209,10 @@ pub static mp_module_trezortranslate: Module = obj_module! {
     ///     language: str
     ///     version: tuple[int, int, int, int]
     ///     data_len: int
-    ///     data_hash: bytes
+    ///     data_hash: AnyBytes
     ///     total_len: int
     ///
-    ///     def __init__(self, header_bytes: bytes) -> None:
+    ///     def __init__(self, header_bytes: AnyBytes) -> None:
     ///         """Parse header from bytes.
     ///         The header has variable length.
     ///         """

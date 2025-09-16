@@ -25,7 +25,7 @@
 
 /// package: trezorcrypto.elligator2
 
-/// def map_to_curve25519(input: bytes) -> bytes:
+/// def map_to_curve25519(input: AnyBytes) -> bytes:
 ///     """
 ///     Maps a 32-byte input to a curve25519 point.
 ///     """

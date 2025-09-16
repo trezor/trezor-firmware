@@ -10,6 +10,7 @@ from trezor.messages import ThpDeviceProperties
 from ..protocol_common import WireError
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from enum import IntEnum
     from typing import Iterable
 
@@ -120,7 +121,9 @@ class PacketHeader:
             self.CONT_FORMAT, buffer, buffer_offset, CONTINUATION_PACKET, self.cid
         )
 
-    def fragment_payload(self, packet_size: int, *items: bytes) -> Iterable[bytes]:
+    def fragment_payload(
+        self, packet_size: int, *items: AnyBytes
+    ) -> Iterable[AnyBytes]:
         """Fragment payload into THP transport packets."""
         packet = bytearray(packet_size)
         self.pack_to_init_buffer(packet)
@@ -206,7 +209,7 @@ def _get_device_properties(iface: WireInterface) -> ThpDeviceProperties:
     )
 
 
-def get_encoded_device_properties(iface: WireInterface) -> bytes:
+def get_encoded_device_properties(iface: WireInterface) -> AnyBytes:
     props = _get_device_properties(iface)
     length = protobuf.encoded_length(props)
     encoded_properties = bytearray(length)
@@ -215,10 +218,10 @@ def get_encoded_device_properties(iface: WireInterface) -> bytes:
 
 
 def get_channel_allocation_response(
-    nonce: bytes, new_cid: bytes, iface: WireInterface
+    nonce: AnyBytes, new_cid: AnyBytes, iface: WireInterface
 ) -> bytes:
     props_msg = get_encoded_device_properties(iface)
-    return nonce + new_cid + props_msg
+    return bytes(nonce) + bytes(new_cid) + props_msg
 
 
 if __debug__:

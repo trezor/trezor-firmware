@@ -1,4 +1,5 @@
 from typing import *
+from buffer_types import *
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-aes.h
@@ -15,19 +16,19 @@ class aes:
     def __init__(
         self,
         mode: int,
-        key: bytes,
-        iv: bytes | None = None,
+        key: AnyBytes,
+        iv: AnyBytes | None = None,
     ) -> None:
         """
         Initialize AES context.
         """
 
-    def encrypt(self, data: bytes) -> bytes:
+    def encrypt(self, data: AnyBytes) -> bytes:
         """
         Encrypt data and update AES context.
         """
 
-    def decrypt(self, data: bytes) -> bytes:
+    def decrypt(self, data: AnyBytes) -> bytes:
         """
         Decrypt data and update AES context.
         """
@@ -39,37 +40,37 @@ class aesgcm:
     AES-GCM context.
     """
 
-    def __init__(self, key: bytes, iv: bytes) -> None:
+    def __init__(self, key: AnyBytes, iv: AnyBytes) -> None:
         """
         Initialize the AES-GCM context for encryption or decryption.
         """
 
-    def reset(self, iv: bytes) -> None:
+    def reset(self, iv: AnyBytes) -> None:
         """
         Reset the IV for encryption or decryption.
         """
 
-    def encrypt(self, data: bytes) -> bytes:
+    def encrypt(self, data: AnyBytes) -> bytes:
         """
         Encrypt data chunk.
         """
 
-    def encrypt_in_place(self, data: bytearray | memoryview) -> int:
+    def encrypt_in_place(self, data: AnyBuffer) -> int:
         """
         Encrypt data chunk in place. Returns the length of the encrypted data.
         """
 
-    def decrypt(self, data: bytes) -> bytes:
+    def decrypt(self, data: AnyBytes) -> bytes:
         """
         Decrypt data chunk.
         """
 
-    def decrypt_in_place(self, data: bytearray | memoryview) -> int:
+    def decrypt_in_place(self, data: AnyBuffer) -> int:
         """
         Decrypt data chunk in place. Returns the length of the decrypted data.
         """
 
-    def auth(self, data: bytes) -> None:
+    def auth(self, data: AnyBytes) -> None:
         """
         Include authenticated data chunk in the GCM authentication tag. This can
         be called repeatedly to add authenticated data at any point before
@@ -90,12 +91,12 @@ class blake256:
     block_size: int
     digest_size: int
 
-    def __init__(self, __data: AnyStr | None = None) -> None:
+    def __init__(self, __data: StrOrBytes | None = None) -> None:
         """
         Creates a hash context object.
         """
 
-    def update(self, __data: AnyStr) -> None:
+    def update(self, __data: StrOrBytes) -> None:
         """
         Update the hash context with hashed data.
         """
@@ -116,16 +117,16 @@ class blake2b:
 
     def __init__(
         self,
-        data: bytes | None = None,
+        data: AnyBytes | None = None,
         outlen: int = blake2b.digest_size,
-        key: bytes | None = None,
-        personal: bytes | None = None,
+        key: AnyBytes | None = None,
+        personal: AnyBytes | None = None,
     ) -> None:
         """
         Creates a hash context object.
         """
 
-    def update(self, __data: AnyStr) -> None:
+    def update(self, __data: StrOrBytes) -> None:
         """
         Update the hash context with hashed data.
         """
@@ -146,16 +147,16 @@ class blake2s:
 
     def __init__(
         self,
-        data: bytes | None = None,
+        data: AnyBytes | None = None,
         outlen: int = blake2s.digest_size,
-        key: bytes | None = None,
-        personal: bytes | None = None,
+        key: AnyBytes | None = None,
+        personal: AnyBytes | None = None,
     ) -> None:
         """
         Creates a hash context object.
         """
 
-    def update(self, __data: AnyStr) -> None:
+    def update(self, __data: StrOrBytes) -> None:
         """
         Update the hash context with hashed data.
         """
@@ -172,25 +173,25 @@ class chacha20poly1305:
     ChaCha20Poly1305 context.
     """
 
-    def __init__(self, key: bytes, nonce: bytes) -> None:
+    def __init__(self, key: AnyBytes, nonce: AnyBytes) -> None:
         """
         Initialize the ChaCha20 + Poly1305 context for encryption or decryption
         using a 32 byte key and 12 byte nonce as in the RFC 7539 style.
         """
 
-    def encrypt(self, data: bytes) -> bytes:
+    def encrypt(self, data: AnyBytes) -> bytes:
         """
         Encrypt data (length of data must be divisible by 64 except for the
         final value).
         """
 
-    def decrypt(self, data: bytes) -> bytes:
+    def decrypt(self, data: AnyBytes) -> bytes:
         """
         Decrypt data (length of data must be divisible by 64 except for the
         final value).
         """
 
-    def auth(self, data: bytes) -> None:
+    def auth(self, data: AnyBytes) -> None:
         """
         Include authenticated data in the Poly1305 MAC using the RFC 7539
         style with 16 byte padding. This must only be called once and prior
@@ -211,12 +212,12 @@ class groestl512:
     block_size: int
     digest_size: int
 
-    def __init__(self, __data: AnyStr | None = None) -> None:
+    def __init__(self, __data: StrOrBytes | None = None) -> None:
         """
         Creates a hash context object.
         """
 
-    def update(self, __data: AnyStr) -> None:
+    def update(self, __data: StrOrBytes) -> None:
         """
         Update the hash context with hashed data.
         """
@@ -238,14 +239,14 @@ class hmac:
     def __init__(
         self,
         hashtype: int,
-        key: bytes,
-        message: bytes | None = None,
+        key: AnyBytes,
+        message: AnyBytes | None = None,
     ) -> None:
         """
         Create a HMAC context.
         """
 
-    def update(self, message: bytes) -> None:
+    def update(self, message: AnyBytes) -> None:
         """
         Update a HMAC context.
         """
@@ -267,8 +268,8 @@ class pbkdf2:
     def __init__(
         self,
         prf: int,
-        password: bytes,
-        salt: bytes,
+        password: AnyBytes,
+        salt: AnyBytes,
         iterations: int | None = None,
         blocknr: int = 1,
     ) -> None:
@@ -295,12 +296,12 @@ class ripemd160:
     block_size: int
     digest_size: int
 
-    def __init__(self, __data: AnyStr | None = None) -> None:
+    def __init__(self, __data: StrOrBytes | None = None) -> None:
         """
         Creates a hash context object.
         """
 
-    def update(self, __data: AnyStr) -> None:
+    def update(self, __data: StrOrBytes) -> None:
         """
         Update the hash context with hashed data.
         """
@@ -319,12 +320,12 @@ class sha1:
     block_size: int
     digest_size: int
 
-    def __init__(self, __data: AnyStr | None = None) -> None:
+    def __init__(self, __data: StrOrBytes | None = None) -> None:
         """
         Creates a hash context object.
         """
 
-    def update(self, __data: AnyStr) -> None:
+    def update(self, __data: StrOrBytes) -> None:
         """
         Update the hash context with hashed data.
         """
@@ -343,12 +344,12 @@ class sha256:
     block_size: int
     digest_size: int
 
-    def __init__(self, __data: AnyStr | None = None) -> None:
+    def __init__(self, __data: StrOrBytes | None = None) -> None:
         """
         Creates a hash context object.
         """
 
-    def update(self, __data: AnyStr) -> None:
+    def update(self, __data: StrOrBytes) -> None:
         """
         Update the hash context with hashed data.
         """
@@ -369,14 +370,14 @@ class sha3_256:
 
     def __init__(
         self,
-        data: bytes | None = None,
+        data: AnyBytes | None = None,
         keccak: bool = False,
     ) -> None:
         """
         Creates a hash context object.
         """
 
-    def update(self, __data: AnyStr) -> None:
+    def update(self, __data: StrOrBytes) -> None:
         """
         Update the hash context with hashed data.
         """
@@ -402,14 +403,14 @@ class sha3_512:
 
     def __init__(
         self,
-        data: bytes | None = None,
+        data: AnyBytes | None = None,
         keccak: bool = False,
     ) -> None:
         """
         Creates a hash context object.
         """
 
-    def update(self, __data: AnyStr) -> None:
+    def update(self, __data: StrOrBytes) -> None:
         """
         Update the hash context with hashed data.
         """
@@ -433,12 +434,12 @@ class sha512:
     block_size: int
     digest_size: int
 
-    def __init__(self, __data: AnyStr | None = None) -> None:
+    def __init__(self, __data: StrOrBytes | None = None) -> None:
         """
         Creates a hash context object.
         """
 
-    def update(self, __data: AnyStr) -> None:
+    def update(self, __data: StrOrBytes) -> None:
         """
         Update the hash context with hashed data.
         """

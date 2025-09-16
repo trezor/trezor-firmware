@@ -24,6 +24,7 @@ APP_RECOVERY_REPEATED_BACKUP_UNLOCKED = const(6 | SESSIONLESS_FLAG)
 
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Sequence, TypeVar, overload
 
     T = TypeVar("T")
@@ -76,7 +77,7 @@ class DataCache:
         utils.ensure(key < len(self.fields))
         return self.data[key][0] == 1
 
-    def set(self, key: int, value: bytes | memoryview) -> None:
+    def set(self, key: int, value: AnyBytes) -> None:
         utils.ensure(key < len(self.fields))
         utils.ensure(len(value) <= self.fields[key])
         self.data[key][0] = 1

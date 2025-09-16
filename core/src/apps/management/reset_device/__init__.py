@@ -16,6 +16,8 @@ if __debug__:
     import storage.debug
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import ResetDevice, Success
 
 
@@ -40,7 +42,7 @@ async def reset_device(msg: ResetDevice) -> Success:
     )
     from trezor.wire.context import call, try_get_ctx_ids
 
-    from apps.common.request_pin import request_pin_confirm
+    from apps.common.request_pin import request_new_pin_confirm
 
     backup_type = msg.backup_type  # local_cache_attribute
 
@@ -75,7 +77,7 @@ async def reset_device(msg: ResetDevice) -> Success:
 
     # request and set new PIN
     if msg.pin_protection:
-        newpin = await request_pin_confirm()
+        newpin = await request_new_pin_confirm()
         if not config.change_pin("", newpin, None, None):
             raise ProcessError("Failed to set PIN")
 
@@ -321,7 +323,7 @@ def _validate_reset_device(msg: ResetDevice) -> None:
 
 
 def _compute_secret_from_entropy(
-    int_entropy: bytes, ext_entropy: bytes, strength_bits: int
+    int_entropy: AnyBytes, ext_entropy: AnyBytes, strength_bits: int
 ) -> bytes:
     from trezor.crypto import hashlib
 

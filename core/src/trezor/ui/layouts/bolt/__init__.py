@@ -8,6 +8,7 @@ from trezor.wire import ActionCancelled
 from ..common import draw_simple, interact, raise_if_cancelled, with_info
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes, StrOrBytes
     from typing import Awaitable, Iterable, List, NoReturn, Sequence
 
     from trezor.messages import StellarAsset
@@ -202,7 +203,7 @@ def lock_time_disabled_warning() -> Awaitable[None]:
     )
 
 
-def confirm_homescreen(image: bytes) -> Awaitable[None]:
+def confirm_homescreen(image: AnyBytes) -> Awaitable[None]:
     return raise_if_cancelled(
         trezorui_api.confirm_homescreen(
             title=TR.homescreen__title_set,
@@ -669,7 +670,7 @@ async def should_show_more(
 async def _confirm_ask_pagination(
     br_name: str,
     title: str,
-    data: bytes | str,
+    data: StrOrBytes,
     description: str,
     br_code: ButtonRequestType,
     extra_confirmation_if_not_read: bool = False,
@@ -721,7 +722,7 @@ async def _confirm_ask_pagination(
 def confirm_blob(
     br_name: str,
     title: str,
-    data: bytes | str,
+    data: StrOrBytes,
     description: str | None = None,
     subtitle: str | None = None,
     verb: str | None = None,
@@ -1697,7 +1698,7 @@ def error_popup(
         time_ms=timeout_ms,
         allow_cancel=False,
     )
-    return layout  # type: ignore [Expression of type "LayoutObj[UiResult]" is incompatible with return type "LayoutObj[None]"]
+    return layout  # type: ignore ["LayoutObj[UiResult]" is not assignable to "LayoutObj[None]"]
 
 
 def request_passphrase_on_host() -> None:
@@ -1728,12 +1729,13 @@ async def request_passphrase_on_device(max_len: int) -> str:
     return result
 
 
-async def request_pin_on_device(
+def request_pin_on_device(
+    br_name: str,
     prompt: str,
     attempts_remaining: int | None,
     allow_cancel: bool,
     wrong_pin: bool = False,
-) -> str:
+) -> Awaitable[str]:
     from trezor.wire import PinCancelled
 
     if attempts_remaining is None:
@@ -1743,19 +1745,18 @@ async def request_pin_on_device(
     else:
         attempts = f"{attempts_remaining} {TR.pin__tries_left}"
 
-    result = await interact(
+    result = interact(
         trezorui_api.request_pin(
             prompt=prompt,
             attempts=attempts,
             allow_cancel=allow_cancel,
             wrong_pin=wrong_pin,
         ),
-        "pin_device",
+        br_name,
         ButtonRequestType.PinEntry,
         raise_on_cancel=PinCancelled,
     )
-    assert isinstance(result, str)
-    return result
+    return result  # type: ignore ["UiResult" is not assignable to "str"]
 
 
 async def confirm_reenter_pin(is_wipe_code: bool = False) -> None:
@@ -1765,7 +1766,7 @@ async def confirm_reenter_pin(is_wipe_code: bool = False) -> None:
 
 def pin_mismatch_popup(is_wipe_code: bool = False) -> Awaitable[None]:
     title = TR.wipe_code__wipe_code_mismatch if is_wipe_code else TR.pin__pin_mismatch
-    br_name = "wipe_code_mismatch" if is_wipe_code else "pin_mismatch"
+    br_name = "wipecode/err-mismatch" if is_wipe_code else "pin/err-mismatch"
     description = TR.wipe_code__mismatch if is_wipe_code else TR.pin__mismatch
     return interact(
         error_popup(
@@ -1786,7 +1787,7 @@ def wipe_code_same_as_pin_popup() -> Awaitable[None]:
             TR.wipe_code__diff_from_pin,
             button=TR.buttons__try_again,
         ),
-        "wipe_code_same_as_pin",
+        "wipecode/err-matches-pin",
         BR_CODE_OTHER,
         raise_on_cancel=None,
     )
@@ -1839,16 +1840,19 @@ def confirm_remove_pin(
     )
 
 
-async def success_pin_change(curpin: str | None, newpin: str | None) -> None:
+def success_pin_change(curpin: str | None, newpin: str | None) -> Awaitable[None]:
     if newpin:
         if curpin:
             msg_screen = TR.pin__changed
+            br_name = "pin/ok-changed"
         else:
             msg_screen = TR.pin__enabled
+            br_name = "pin/ok-enabled"
     else:
         msg_screen = TR.pin__disabled
+        br_name = "pin/ok-disabled"
 
-    await show_success("success_pin", msg_screen)
+    return show_success(br_name, msg_screen)
 
 
 async def confirm_firmware_update(description: str, fingerprint: str) -> None:

@@ -1,4 +1,5 @@
 from typing import *
+from buffer_types import *
 
 
 # upymod/modtrezorio/modtrezorio-poll.h
@@ -37,12 +38,12 @@ class USBIF:
         Returns the configured number of this interface.
         """
 
-    def write(self, msg: bytes) -> int:
+    def write(self, msg: AnyBytes) -> int:
         """
         Sends message using USB interface.
         """
 
-    def write_blocking(self, msg: bytes, timeout_ms: int) -> int:
+    def write_blocking(self, msg: AnyBytes, timeout_ms: int) -> int:
         """
         Sends message using USB interface.
         """

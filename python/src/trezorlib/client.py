@@ -82,7 +82,7 @@ class TrezorClient:
         LOG.info(f"creating client instance for device: {transport.get_path()}")
         # Here, self.model could be set to None. Unless _init_device is False, it will
         # get correctly reconfigured as part of the init_device flow.
-        self._model = model  # type: ignore ["None" is incompatible with "TrezorModel"]
+        self._model = model  # type: ignore ["None" is not assignable to "TrezorModel"]
         if self._model:
             self.mapping = self.model.default_mapping
         else:
@@ -327,7 +327,7 @@ class TrezorClient:
                 protocol = ProtocolV2Channel(self.transport, self.mapping)
         return protocol
 
-    def reset_protocol(self):
+    def reset_protocol(self) -> None:
         if self._protocol_version == ProtocolVersion.V1:
             self.protocol = ProtocolV1Channel(self.transport, self.mapping)
         elif self._protocol_version == ProtocolVersion.V2:

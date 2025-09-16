@@ -7,6 +7,8 @@ from trezor.wire import DataError
 from apps.common.readers import read_uint32_be
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.utils import Writer
 
 
@@ -80,7 +82,7 @@ OP_TAG_DELEGATION = const(110)
 _EP_TAG_NAMED = const(255)
 
 
-def base58_encode_check(payload: bytes, prefix: str | None = None) -> str:
+def base58_encode_check(payload: AnyBytes, prefix: str | None = None) -> str:
     from trezor.crypto import base58
 
     result = payload
@@ -101,7 +103,7 @@ def write_instruction(w: Writer, instruction: str) -> None:
     write_bytes_unchecked(w, MICHELSON_INSTRUCTION_BYTES[instruction])
 
 
-def check_script_size(script: bytes) -> None:
+def check_script_size(script: AnyBytes) -> None:
     try:
         r = BufferReader(script)
         n = read_uint32_be(r)
@@ -112,7 +114,7 @@ def check_script_size(script: bytes) -> None:
         raise DataError("Invalid script")
 
 
-def check_tx_params_size(params: bytes) -> None:
+def check_tx_params_size(params: AnyBytes) -> None:
     try:
         r = BufferReader(params)
         tag = r.get()

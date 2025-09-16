@@ -1,4 +1,5 @@
 from typing import *
+from buffer_types import *
 
 
 # upymod/modtrezorui/modtrezorui-display.h
@@ -22,7 +23,7 @@ class Display:
         value.
         """
 
-    def record_start(self, target_directory: bytes, refresh_index: int) -> None:
+    def record_start(self, target_directory: AnyBytes, refresh_index: int) -> None:
         """
         Starts screen recording with specified target directory and refresh
         index.

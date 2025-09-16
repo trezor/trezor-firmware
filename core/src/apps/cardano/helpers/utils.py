@@ -6,6 +6,8 @@ from . import ADDRESS_KEY_HASH_SIZE, bech32
 from .paths import ACCOUNT_PATH_INDEX
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.wire import ProcessError
 
     from .. import seed
@@ -48,11 +50,11 @@ def format_optional_int(number: int | None) -> str:
     return str(number)
 
 
-def format_stake_pool_id(pool_id_bytes: bytes) -> str:
+def format_stake_pool_id(pool_id_bytes: AnyBytes) -> str:
     return bech32.encode("pool", pool_id_bytes)
 
 
-def format_asset_fingerprint(policy_id: bytes, asset_name_bytes: bytes) -> str:
+def format_asset_fingerprint(policy_id: AnyBytes, asset_name_bytes: AnyBytes) -> str:
     fingerprint = hashlib.blake2b(
         # bytearrays are being promoted to bytes: https://github.com/python/mypy/issues/654
         # but bytearrays are not concatenable, this casting works around this limitation
@@ -80,8 +82,8 @@ def derive_public_key(
 
 def validate_stake_credential(
     path: list[int],
-    script_hash: bytes | None,
-    key_hash: bytes | None,
+    script_hash: AnyBytes | None,
+    key_hash: AnyBytes | None,
     error: ProcessError,
 ) -> None:
     from . import SCRIPT_HASH_SIZE
@@ -115,12 +117,12 @@ def validate_network_info(network_id: int, protocol_magic: int) -> None:
         raise wire.ProcessError("Invalid network id/protocol magic combination!")
 
 
-def is_printable_ascii(bytestring: bytes) -> bool:
+def is_printable_ascii(bytestring: AnyBytes) -> bool:
     """Includes space character."""
     return all(32 <= b <= 126 for b in bytestring)
 
 
-def is_unambiguous_ascii(bytestring: bytes) -> bool:
+def is_unambiguous_ascii(bytestring: AnyBytes) -> bool:
     """
     Checks whether the bytestring can be printed as ASCII without confusion.
     Based on https://github.com/vacuumlabs/ledger-app-cardano-shelley/blob/6ddc60e8fdff13e35bff5cdf108b84b81a79f10c/src/textUtils.c#L274

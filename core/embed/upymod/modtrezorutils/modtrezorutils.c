@@ -51,7 +51,7 @@
 #include <sys/stack_utils.h>
 #endif
 
-/// def consteq(sec: bytes, pub: bytes) -> bool:
+/// def consteq(sec: AnyBytes, pub: AnyBytes) -> bool:
 ///     """
 ///     Compares the private information in `sec` with public, user-provided
 ///     information in `pub`.  Runs in constant time, corresponding to a length
@@ -81,9 +81,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorutils_consteq_obj,
                                  mod_trezorutils_consteq);
 
 /// def memcpy(
-///     dst: bytearray | memoryview,
+///     dst: AnyBuffer,
 ///     dst_ofs: int,
-///     src: bytes,
+///     src: AnyBytes,
 ///     src_ofs: int,
 ///     n: int | None = None,
 /// ) -> int:
@@ -123,7 +123,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_memcpy_obj, 4, 5,
                                            mod_trezorutils_memcpy);
 
 /// def memzero(
-///     dst: bytearray | memoryview,
+///     dst: AnyBuffer,
 /// ) -> None:
 ///     """
 ///     Zeroes all bytes at `dst`.
@@ -154,7 +154,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_halt_obj, 0, 1,
                                            mod_trezorutils_halt);
 
 /// def firmware_hash(
-///     challenge: bytes | None = None,
+///     challenge: AnyBytes | None = None,
 ///     callback: Callable[[int, int], None] | None = None,
 /// ) -> bytes:
 ///     """
@@ -456,7 +456,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_check_heap_fragmentation_obj,
 
 /// def reboot_to_bootloader(
 ///     boot_command : int = 0,
-///     boot_args : bytes | None = None,
+///     boot_args : AnyBytes | None = None,
 /// ) -> None:
 ///     """
 ///     Reboots to bootloader.
@@ -508,12 +508,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 /// class FirmwareHeaderInfo(NamedTuple):
 ///     version: VersionTuple
 ///     vendor: str
-///     fingerprint: bytes
-///     hash: bytes
+///     fingerprint: AnyBytes
+///     hash: AnyBytes
 
 /// mock:global
 
-/// def check_firmware_header(header : bytes) -> FirmwareHeaderInfo:
+/// def check_firmware_header(header : AnyBytes) -> FirmwareHeaderInfo:
 ///     """Parses incoming firmware header and returns information about it."""
 STATIC mp_obj_t mod_trezorutils_check_firmware_header(mp_obj_t header) {
   mp_buffer_info_t header_buf = {0};

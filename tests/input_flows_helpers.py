@@ -22,17 +22,18 @@ class PinFlow:
         second_different_pin: str | None = None,
         what: str = "pin",
     ) -> BRGeneratorType:
-        assert (yield).name == "pin_device"  # Enter PIN
+        assert (yield).name == f"{what}/new"  # Enter PIN
         assert "PinKeyboard" in self.debug.read_layout().all_components()
         self.debug.input(pin)
         if self.client.layout_type is LayoutType.Caesar:
-            assert (yield).name == f"reenter_{what}"  # Reenter PIN
-            assert (
-                TR.translate(f"{what}__reenter_to_confirm")
-                in self.debug.read_layout().text_content()
-            )
+            assert (yield).name == f"{what}/repeat/prompt"  # Reenter PIN
+            if what == "wipecode":
+                tr = TR.wipe_code__reenter_to_confirm
+            else:
+                tr = TR.pin__reenter_to_confirm
+            assert TR.translate(tr) in self.debug.read_layout().text_content()
             self.debug.press_yes()
-        assert (yield).name == "pin_device"  # Enter PIN again
+        assert (yield).name == f"{what}/repeat"  # Enter PIN again
         assert "PinKeyboard" in self.debug.read_layout().all_components()
         if second_different_pin is not None:
             self.debug.input(second_different_pin)

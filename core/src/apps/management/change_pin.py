@@ -16,8 +16,8 @@ async def change_pin(msg: ChangePin) -> Success:
     from apps.common.request_pin import (
         error_pin_invalid,
         error_pin_matches_wipe_code,
+        request_new_pin_confirm,
         request_pin_and_sd_salt,
-        request_pin_confirm,
     )
 
     if not is_initialized():
@@ -27,7 +27,7 @@ async def change_pin(msg: ChangePin) -> Success:
     await _require_confirm_change_pin(msg)
 
     # get old pin
-    curpin, salt = await request_pin_and_sd_salt(TR.pin__enter)
+    curpin, salt = await request_pin_and_sd_salt()
 
     # if changing pin, pre-check the entered pin before getting new pin
     if curpin and not msg.remove:
@@ -36,7 +36,7 @@ async def change_pin(msg: ChangePin) -> Success:
 
     # get new pin
     if not msg.remove:
-        newpin = await request_pin_confirm()
+        newpin = await request_new_pin_confirm()
     else:
         newpin = ""
 
@@ -70,21 +70,21 @@ def _require_confirm_change_pin(msg: ChangePin) -> Awaitable[None]:
 
     if msg.remove and has_pin:  # removing pin
         return confirm_remove_pin(
-            "disable_pin",
+            "pin/disable",
             TR.pin__title_settings,
             description=TR.pin__turn_off,
         )
 
     if not msg.remove and has_pin:  # changing pin
         return confirm_change_pin(
-            "change_pin",
+            "pin/change",
             TR.pin__title_settings,
             description=TR.pin__change_question,
         )
 
     if not msg.remove and not has_pin:  # setting new pin
         return confirm_set_new_pin(
-            "set_pin",
+            "pin/enable",
             TR.pin__title_settings,
             TR.pin__turn_on,
             TR.pin__info,

@@ -1,6 +1,11 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import config
+
+if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
 
 # Namespaces:
 # fmt: off
@@ -17,7 +22,7 @@ STORAGE_VERSION_01 = b"\x01"
 STORAGE_VERSION_CURRENT = b"\x02"
 
 
-def set(app: int, key: int, data: bytes, public: bool = False) -> None:
+def set(app: int, key: int, data: AnyBytes, public: bool = False) -> None:
     config.set(app, key, data, public)
 
 

@@ -6,6 +6,7 @@ from trezor import TR
 from . import networks
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Iterable
 
     from trezor.messages import EthereumFieldType, EthereumTokenInfo
@@ -17,7 +18,7 @@ RSKIP60_NETWORKS = (30, 31)
 
 
 def address_from_bytes(
-    address_bytes: bytes, network: EthereumNetworkInfo = networks.UNKNOWN_NETWORK
+    address_bytes: AnyBytes, network: EthereumNetworkInfo = networks.UNKNOWN_NETWORK
 ) -> str:
     """
     Converts address in bytes to a checksummed string as defined
@@ -111,12 +112,12 @@ def get_type_name(field: EthereumFieldType) -> str:
         return TYPE_TRANSLATION_DICT[data_type]
 
 
-def decode_typed_data(data: bytes, type_name: str) -> str:
+def decode_typed_data(data: AnyBytes, type_name: str) -> str:
     """Used by sign_typed_data module to show data to user."""
     if type_name.startswith("bytes"):
         return hexlify(data).decode()
     elif type_name == "string":
-        return data.decode()
+        return bytes(data).decode()
     elif type_name == "address":
         return address_from_bytes(data)
     elif type_name == "bool":
@@ -212,7 +213,7 @@ def get_account_and_path(address_n: list[int]) -> tuple[str | None, str | None]:
     return (account, account_path)
 
 
-def _from_bytes_bigendian_signed(b: bytes) -> int:
+def _from_bytes_bigendian_signed(b: AnyBytes) -> int:
     negative = b[0] & 0x80
     if negative:
         neg_b = bytearray(b)

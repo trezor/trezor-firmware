@@ -280,7 +280,7 @@ def _read_operation(op: "Operation") -> "StellarMessageType":
     raise ValueError(f"Unknown operation type: {op.__class__.__name__}")
 
 
-def _raise_if_account_muxed_id_exists(account: "MuxedAccount"):
+def _raise_if_account_muxed_id_exists(account: "MuxedAccount") -> None:
     # Currently Trezor firmware does not support MuxedAccount,
     # so we throw an exception here.
     if account.account_muxed_id is not None:

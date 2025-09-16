@@ -8,6 +8,7 @@ from trezor.wire import ActionCancelled
 from ..common import draw_simple, interact, raise_if_cancelled, with_info
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes, StrOrBytes
     from typing import (
         Any,
         Awaitable,
@@ -217,7 +218,7 @@ def lock_time_disabled_warning() -> Awaitable[None]:
 
 
 def confirm_homescreen(
-    image: bytes,
+    image: AnyBytes,
 ) -> Awaitable[None]:
 
     from trezor import workflow
@@ -666,7 +667,7 @@ async def should_show_more(
 def confirm_blob(
     br_name: str,
     title: str,
-    data: bytes | str,
+    data: StrOrBytes,
     description: str | None = None,
     subtitle: str | None = None,
     verb: str | None = None,
@@ -1647,10 +1648,11 @@ def request_passphrase_on_device(max_len: int) -> Awaitable[str]:
         ButtonRequestType.PassphraseEntry,
         raise_on_cancel=ActionCancelled("Passphrase entry cancelled"),
     )
-    return result  # type: ignore ["UiResult" is incompatible with "str"]
+    return result  # type: ignore ["UiResult" is not assignable to "str"]
 
 
 def request_pin_on_device(
+    br_name: str,
     prompt: str,
     attempts_remaining: int | None,
     allow_cancel: bool,
@@ -1672,11 +1674,11 @@ def request_pin_on_device(
             allow_cancel=allow_cancel,
             wrong_pin=wrong_pin,
         ),
-        "pin_device",
+        br_name,
         ButtonRequestType.PinEntry,
         raise_on_cancel=PinCancelled,
     )
-    return result  # type: ignore ["UiResult" is incompatible with "str"]
+    return result  # type: ignore ["UiResult" is not assignable to "str"]
 
 
 async def confirm_reenter_pin(is_wipe_code: bool = False) -> None:
@@ -1687,7 +1689,7 @@ async def confirm_reenter_pin(is_wipe_code: bool = False) -> None:
 def pin_mismatch_popup(is_wipe_code: bool = False) -> Awaitable[ui.UiResult]:
     title = TR.wipe_code__mismatch if is_wipe_code else TR.pin__mismatch
     description = TR.wipe_code__enter_new if is_wipe_code else TR.pin__reenter_new
-    br_name = "wipe_code_mismatch" if is_wipe_code else "pin_mismatch"
+    br_name = "wipecode/err-mismatch" if is_wipe_code else "pin/err-mismatch"
 
     return interact(
         error_popup(
@@ -1707,7 +1709,7 @@ def wipe_code_same_as_pin_popup() -> Awaitable[ui.UiResult]:
             TR.wipe_code__diff_from_pin,
             button=TR.buttons__try_again,
         ),
-        "wipe_code_same_as_pin",
+        "wipecode/err-matches-pin",
         BR_CODE_OTHER,
     )
 
@@ -1753,16 +1755,19 @@ def confirm_remove_pin(
     )
 
 
-async def success_pin_change(curpin: str | None, newpin: str | None) -> None:
+def success_pin_change(curpin: str | None, newpin: str | None) -> Awaitable[None]:
     if newpin:
         if curpin:
             msg_screen = TR.pin__changed
+            br_name = "pin/ok-changed"
         else:
             msg_screen = TR.pin__enabled
+            br_name = "pin/ok-enabled"
     else:
         msg_screen = TR.pin__disabled
+        br_name = "pin/ok-disabled"
 
-    await show_success("success_pin", msg_screen)
+    return show_success(br_name, msg_screen)
 
 
 def confirm_firmware_update(description: str, fingerprint: str) -> Awaitable[None]:

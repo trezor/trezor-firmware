@@ -42,9 +42,9 @@
 ///     depth: int,
 ///     fingerprint: int,
 ///     child_num: int,
-///     chain_code: bytes,
-///     private_key: bytes | None = None,
-///     public_key: bytes | None = None,
+///     chain_code: AnyBytes,
+///     private_key: AnyBytes | None = None,
+///     public_key: AnyBytes | None = None,
 ///     curve_name: str | None = None,
 /// ) -> None:
 ///     """
@@ -386,7 +386,11 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_nem_address_obj,
                                  mod_trezorcrypto_HDNode_nem_address);
 
 /// def nem_encrypt(
-///     self, transfer_public_key: bytes, iv: bytes, salt: bytes, payload: bytes
+///     self,
+///     transfer_public_key: AnyBytes,
+///     iv: AnyBytes,
+///     salt: AnyBytes,
+///     payload: AnyBytes,
 /// ) -> bytes:
 ///     """
 ///     Encrypts payload using the transfer's public key
@@ -514,7 +518,7 @@ const mp_obj_type_t mod_trezorcrypto_HDNode_type = {
 
 /// mock:global
 
-/// def from_seed(seed: bytes, curve_name: str) -> HDNode:
+/// def from_seed(seed: AnyBytes, curve_name: str) -> HDNode:
 ///     """
 ///     Construct a BIP0032 HD node from a BIP0039 seed value.
 ///     """

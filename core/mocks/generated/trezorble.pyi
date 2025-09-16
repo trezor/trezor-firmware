@@ -1,4 +1,5 @@
 from typing import *
+from buffer_types import *
 
 
 # rust/src/trezorhal/ble/micropython.rs
@@ -16,12 +17,12 @@ class BLEIF:
         Returns the configured number of this interface.
         """
 
-    def write(self, msg: bytes) -> int:
+    def write(self, msg: AnyBytes) -> int:
         """
         Sends message over BLE
         """
 
-    def read(self, buf: bytearray, offset: int = 0) -> int:
+    def read(self, buf: AnyBuffer, offset: int = 0) -> int:
         """
         Reads message using BLE (device).
         """
@@ -38,7 +39,7 @@ def erase_bonds():
 
 
 # rust/src/trezorhal/ble/micropython.rs
-def unpair(addr: bytes | None):
+def unpair(addr: AnyBytes | None):
     """
     Erases the bond for the given address or for current connection if addr is None.
     Raises exception if BLE driver reports an error.
