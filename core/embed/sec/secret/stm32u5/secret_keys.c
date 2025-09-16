@@ -175,6 +175,11 @@ static secbool secequal(const void *ptr1, const void *ptr2, size_t n) {
 
 secbool secret_key_nrf_pairing(uint8_t dest[NRF_PAIRING_SECRET_SIZE]) {
   _Static_assert(NRF_PAIRING_SECRET_SIZE == SHA256_DIGEST_LENGTH);
+
+  if (secfalse != secret_is_locked()) {
+    return secfalse;
+  }
+
   return secret_key_derive_sym(SECRET_UNPRIVILEGED_MASTER_KEY_SLOT,
                                KEY_INDEX_NRF_PAIRING, 0, dest);
 }
@@ -184,7 +189,9 @@ secbool secret_validate_nrf_pairing(const uint8_t *message, size_t msg_len,
   secbool result = secfalse;
 
   uint8_t key[NRF_PAIRING_SECRET_SIZE] = {0};
-  if (sectrue != secret_key_nrf_pairing(key)) {
+
+  if (sectrue != secret_key_derive_sym(SECRET_UNPRIVILEGED_MASTER_KEY_SLOT,
+                                       KEY_INDEX_NRF_PAIRING, 0, key)) {
     return secfalse;
   }
 
