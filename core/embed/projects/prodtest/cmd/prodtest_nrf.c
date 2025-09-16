@@ -88,6 +88,12 @@ static void prodtest_nrf_pair(cli_t* cli) {
   }
 
   if (secfalse != secret_is_locked()) {
+    if (nrf_authenticate()) {
+      cli_trace(cli, "Already paired");
+      cli_ok(cli, "");
+      return;
+    }
+
     cli_error(cli, CLI_ERROR,
               "Secrets sector is locked. Pairing is not allowed.");
     return;
