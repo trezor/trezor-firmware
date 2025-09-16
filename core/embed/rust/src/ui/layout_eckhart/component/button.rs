@@ -493,7 +493,7 @@ impl Button {
                         let (t1, t2) = split_two_lines(
                             t,
                             stylesheet.font,
-                            self.area.width() - 2 * self.content_offset.x,
+                            self.area.width() - 2 * self.content_offset.x.abs(),
                         );
 
                         if t1.is_empty() || t2.is_empty() {
