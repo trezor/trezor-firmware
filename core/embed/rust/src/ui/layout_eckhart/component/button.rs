@@ -159,7 +159,7 @@ impl Button {
             }
         });
 
-        Self::with_single_line_text_and_subtext_marquee(text, subtext, subtext_style, Some(icon))
+        Self::with_text_and_subtext(text, subtext, subtext_style, Some(icon))
             .with_text_align(Self::MENU_ITEM_ALIGNMENT)
             .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
             .styled(stylesheet)
