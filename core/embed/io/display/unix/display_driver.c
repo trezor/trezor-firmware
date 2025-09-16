@@ -19,6 +19,8 @@
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#include "SDL_blendmode.h"
+#include "SDL_render.h"
 #endif
 
 #include <trezor_bsp.h>
@@ -32,6 +34,10 @@
 #include <SDL_image.h>
 
 #include "profile.h"
+
+#ifdef USE_POWER_MANAGER
+#include "suspend_overlay.h"
+#endif
 
 #define EMULATOR_BORDER 16
 
@@ -386,6 +392,17 @@ void draw_rgb_led() {
 }
 #endif  // USE_RGB_LED
 
+static SDL_Rect screen_rect(void) {
+  display_driver_t *drv = &g_display_driver;
+  if (drv->background) {
+    return (SDL_Rect){TOUCH_OFFSET_X, TOUCH_OFFSET_Y, DISPLAY_RESX,
+                      DISPLAY_RESY};
+  } else {
+    return (SDL_Rect){EMULATOR_BORDER, EMULATOR_BORDER, DISPLAY_RESX,
+                      DISPLAY_RESY};
+  }
+}
+
 void display_refresh(void) {
   display_driver_t *drv = &g_display_driver;
 
@@ -409,17 +426,9 @@ void display_refresh(void) {
 #define BACKLIGHT_NORMAL 150
   SDL_SetTextureAlphaMod(
       drv->texture, MIN(255, 255 * drv->backlight_level / BACKLIGHT_NORMAL));
-  if (drv->background) {
-    const SDL_Rect r = {TOUCH_OFFSET_X, TOUCH_OFFSET_Y, DISPLAY_RESX,
-                        DISPLAY_RESY};
-    SDL_RenderCopyEx(drv->renderer, drv->texture, NULL, &r,
-                     drv->orientation_angle, NULL, 0);
-  } else {
-    const SDL_Rect r = {EMULATOR_BORDER, EMULATOR_BORDER, DISPLAY_RESX,
-                        DISPLAY_RESY};
-    SDL_RenderCopyEx(drv->renderer, drv->texture, NULL, &r,
-                     drv->orientation_angle, NULL, 0);
-  }
+  const SDL_Rect r = screen_rect();
+  SDL_RenderCopyEx(drv->renderer, drv->texture, NULL, &r,
+                   drv->orientation_angle, NULL, 0);
 #ifdef USE_RGB_LED
   draw_rgb_led();
 #endif
@@ -563,3 +572,46 @@ void display_clear_save(void) {
   SDL_FreeSurface(drv->prev_saved);
   drv->prev_saved = NULL;
 }
+
+#ifdef USE_POWER_MANAGER
+void display_draw_suspend_overlay(void) {
+  display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
+
+  SDL_Rect screen = screen_rect();
+  // create a blue texture
+  SDL_Texture *overlay =
+      SDL_CreateTexture(drv->renderer, SDL_PIXELFORMAT_RGBA8888,
+                        SDL_TEXTUREACCESS_STATIC, screen.w, screen.h);
+  SDL_SetTextureBlendMode(overlay, SDL_BLENDMODE_BLEND);
+  SDL_SetRenderTarget(drv->renderer, overlay);
+
+  // set texture to all blue
+  SDL_SetRenderDrawColor(drv->renderer, 0, 0, 255, 255);
+  SDL_RenderClear(drv->renderer);
+
+  // draw the suspend overlay png in the middle of the texture
+  SDL_Texture *suspend_text = IMG_LoadTexture_RW(
+      drv->renderer,
+      SDL_RWFromMem(_suspend_overlay_text_data, _suspend_overlay_text_len), 0);
+  int text_width, text_height;
+  SDL_QueryTexture(suspend_text, NULL, NULL, &text_width, &text_height);
+  SDL_Rect middle = {(screen.w - text_width) / 2, (screen.h - text_height) / 2,
+                     text_width, text_height};
+  SDL_RenderCopy(drv->renderer, suspend_text, NULL, &middle);
+  SDL_RenderPresent(drv->renderer);
+
+  // render to the screen
+  SDL_SetRenderTarget(drv->renderer, NULL);
+  SDL_RenderCopy(drv->renderer, overlay, NULL, &screen);
+  SDL_RenderPresent(drv->renderer);
+
+  // cleanup
+  SDL_DestroyTexture(suspend_text);
+  SDL_DestroyTexture(overlay);
+  SDL_SetRenderDrawColor(drv->renderer, 0, 0, 0, 255);
+}
+#endif
