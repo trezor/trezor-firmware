@@ -1734,15 +1734,18 @@ async def pin_wipe_code_exists_popup(
     )
 
 
-def confirm_set_new_pin(
+def confirm_set_new_code(
     br_name: str,
     title: str,
     description: str,
     information: str,
+    is_wipe_code: bool,
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
     return raise_if_cancelled(
-        trezorui_api.flow_confirm_set_new_pin(title=title, description=description),
+        trezorui_api.flow_confirm_set_new_code(
+            title=title, description=description, is_wipe_code=is_wipe_code
+        ),
         br_name,
         br_code,
     )

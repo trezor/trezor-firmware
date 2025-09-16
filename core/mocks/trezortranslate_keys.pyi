@@ -1012,6 +1012,7 @@ class TR:
     wipe__start_again: str = "Wipe your Trezor and start the setup process again."
     wipe__title: str = "Wipe device"
     wipe__want_to_wipe: str = "Do you really want to wipe the device?\n"
+    wipe_code__cancel_setup: str = "Cancel wipe code setup"
     wipe_code__change: str = "Change wipe code"
     wipe_code__change_question: str = "Change wipe code?"
     wipe_code__changed: str = "Wipe code changed."

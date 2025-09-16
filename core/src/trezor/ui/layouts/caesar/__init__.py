@@ -1841,11 +1841,12 @@ async def pin_wipe_code_exists_popup(
     )
 
 
-async def confirm_set_new_pin(
+async def confirm_set_new_code(
     br_name: str,
     title: str,
     description: str,
     information: str,
+    is_wipe_code: bool,
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> None:
     await _confirm_multiple_pages_texts(
@@ -1857,7 +1858,7 @@ async def confirm_set_new_pin(
     )
 
     # Not showing extra info for wipe code
-    if "wipe_code" in br_name:
+    if is_wipe_code:
         return
 
     # Additional information for the user to know about PIN

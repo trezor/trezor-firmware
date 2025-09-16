@@ -1548,6 +1548,7 @@ pub enum TranslatedString {
     pin__wipe_code_exists_description = 1156,  // "Wipe code must be turned off before turning off PIN protection."
     pin__wipe_code_exists_title = 1157,  // "Wipe code set"
     wipe_code__pin_not_set_description = 1158,  // "PIN must be set before enabling wipe code."
+    wipe_code__cancel_setup = 1159,  // {"Bolt": "Cancel wipe code setup", "Caesar": "Cancel wipe code setup", "Delizia": "Cancel wipe code setup", "Eckhart": "Cancel wipe code setup?"}
 }
 
 impl TranslatedString {
@@ -3533,6 +3534,14 @@ impl TranslatedString {
             (Self::pin__wipe_code_exists_description, "Wipe code must be turned off before turning off PIN protection."),
             (Self::pin__wipe_code_exists_title, "Wipe code set"),
             (Self::wipe_code__pin_not_set_description, "PIN must be set before enabling wipe code."),
+            #[cfg(feature = "layout_bolt")]
+            (Self::wipe_code__cancel_setup, "Cancel wipe code setup"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::wipe_code__cancel_setup, "Cancel wipe code setup"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::wipe_code__cancel_setup, "Cancel wipe code setup"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::wipe_code__cancel_setup, "Cancel wipe code setup?"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4965,6 +4974,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_wipe__start_again, Self::wipe__start_again),
         (Qstr::MP_QSTR_wipe__title, Self::wipe__title),
         (Qstr::MP_QSTR_wipe__want_to_wipe, Self::wipe__want_to_wipe),
+        (Qstr::MP_QSTR_wipe_code__cancel_setup, Self::wipe_code__cancel_setup),
         (Qstr::MP_QSTR_wipe_code__change, Self::wipe_code__change),
         (Qstr::MP_QSTR_wipe_code__change_question, Self::wipe_code__change_question),
         (Qstr::MP_QSTR_wipe_code__changed, Self::wipe_code__changed),

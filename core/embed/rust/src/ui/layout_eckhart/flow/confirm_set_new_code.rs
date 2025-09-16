@@ -25,13 +25,13 @@ use super::super::{
 };
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub enum SetNewPin {
+pub enum SetNewCode {
     Intro,
     Menu,
     Cancel,
 }
 
-impl FlowController for SetNewPin {
+impl FlowController for SetNewCode {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize
@@ -54,9 +54,10 @@ impl FlowController for SetNewPin {
     }
 }
 
-pub fn new_set_new_pin(
+pub fn new_set_new_code(
     title: TString<'static>,
     description: TString<'static>,
+    is_wipe_code: bool,
 ) -> Result<SwipeFlow, error::Error> {
     let paragraphs = Paragraphs::new(Paragraph::new(&theme::firmware::TEXT_REGULAR, description))
         .with_placement(LinearPlacement::vertical());
@@ -82,10 +83,17 @@ pub fn new_set_new_pin(
         _ => None,
     });
 
-    let paragraphs_cancel_intro = ParagraphVecShort::from_iter([
-        Paragraph::new(&theme::firmware::TEXT_REGULAR, TR::pin__cancel_setup),
-        Paragraph::new(&theme::firmware::TEXT_REGULAR, TR::pin__cancel_info),
-    ])
+    let paragraphs_cancel_intro = ParagraphVecShort::from_iter(if is_wipe_code {
+        [
+            Paragraph::new(&theme::firmware::TEXT_REGULAR, TR::wipe_code__cancel_setup),
+            Paragraph::new(&theme::firmware::TEXT_REGULAR, TString::empty()),
+        ]
+    } else {
+        [
+            Paragraph::new(&theme::firmware::TEXT_REGULAR, TR::pin__cancel_setup),
+            Paragraph::new(&theme::firmware::TEXT_REGULAR, TR::pin__cancel_info),
+        ]
+    })
     .into_paragraphs()
     .with_placement(LinearPlacement::vertical())
     .with_spacing(theme::TEXT_VERTICAL_SPACING);
@@ -109,9 +117,9 @@ pub fn new_set_new_pin(
             _ => None,
         });
 
-    let mut res = SwipeFlow::new(&SetNewPin::Intro)?;
-    res.add_page(&SetNewPin::Intro, content_intro)?
-        .add_page(&SetNewPin::Menu, content_menu)?
-        .add_page(&SetNewPin::Cancel, content_cancel)?;
+    let mut res = SwipeFlow::new(&SetNewCode::Intro)?;
+    res.add_page(&SetNewCode::Intro, content_intro)?
+        .add_page(&SetNewCode::Menu, content_menu)?
+        .add_page(&SetNewCode::Cancel, content_cancel)?;
     Ok(res)
 }

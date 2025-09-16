@@ -790,11 +790,12 @@ impl FirmwareUI for UIEckhart {
         Ok(flow)
     }
 
-    fn flow_confirm_set_new_pin(
+    fn flow_confirm_set_new_code(
         title: TString<'static>,
         description: TString<'static>,
+        is_wipe_code: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let flow = flow::confirm_set_new_pin::new_set_new_pin(title, description)?;
+        let flow = flow::confirm_set_new_code::new_set_new_code(title, description, is_wipe_code)?;
         Ok(flow)
     }
 

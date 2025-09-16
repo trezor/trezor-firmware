@@ -21,14 +21,14 @@ use super::super::{
 };
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub enum SetNewPin {
+pub enum SetNewCode {
     Intro,
     Menu,
-    CancelPinIntro,
-    CancelPinConfirm,
+    CancelIntro,
+    CancelConfirm,
 }
 
-impl FlowController for SetNewPin {
+impl FlowController for SetNewCode {
     #[inline]
     fn index(&'static self) -> usize {
         *self as usize
@@ -37,8 +37,8 @@ impl FlowController for SetNewPin {
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
             (Self::Intro, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
-            (Self::CancelPinIntro, Direction::Up) => Self::CancelPinConfirm.swipe(direction),
-            (Self::CancelPinConfirm, Direction::Down) => Self::CancelPinIntro.swipe(direction),
+            (Self::CancelIntro, Direction::Up) => Self::CancelConfirm.swipe(direction),
+            (Self::CancelConfirm, Direction::Down) => Self::CancelIntro.swipe(direction),
             _ => self.do_nothing(),
         }
     }
@@ -46,21 +46,21 @@ impl FlowController for SetNewPin {
     fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
             (Self::Intro, FlowMsg::Info) => Self::Menu.goto(),
-            (Self::Menu, FlowMsg::Choice(0)) => Self::CancelPinIntro.swipe_left(),
+            (Self::Menu, FlowMsg::Choice(0)) => Self::CancelIntro.swipe_left(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Intro.swipe_right(),
-            (Self::CancelPinIntro, FlowMsg::Cancelled) => Self::Intro.swipe_right(),
-            (Self::CancelPinConfirm, FlowMsg::Cancelled) => Self::CancelPinIntro.swipe_right(),
-            (Self::CancelPinConfirm, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Cancelled),
+            (Self::CancelIntro, FlowMsg::Cancelled) => Self::Intro.swipe_right(),
+            (Self::CancelConfirm, FlowMsg::Cancelled) => Self::CancelIntro.swipe_right(),
+            (Self::CancelConfirm, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Cancelled),
             _ => self.do_nothing(),
         }
     }
 }
 
-pub fn new_set_new_pin(
+pub fn new_set_new_code(
     title: TString<'static>,
     description: TString<'static>,
+    _is_wipe_code: bool,
 ) -> Result<SwipeFlow, error::Error> {
-    // TODO: supply more arguments for Wipe code setting when figma done
     let paragraphs = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description));
     let content_intro = Frame::left_aligned(title, SwipeContent::new(paragraphs))
         .with_menu_button()
@@ -96,10 +96,10 @@ pub fn new_set_new_pin(
     .with_swipe(Direction::Down, SwipeSettings::Default)
     .map(super::util::map_to_confirm);
 
-    let mut res = SwipeFlow::new(&SetNewPin::Intro)?;
-    res.add_page(&SetNewPin::Intro, content_intro)?
-        .add_page(&SetNewPin::Menu, content_menu)?
-        .add_page(&SetNewPin::CancelPinIntro, content_cancel_intro)?
-        .add_page(&SetNewPin::CancelPinConfirm, content_cancel_confirm)?;
+    let mut res = SwipeFlow::new(&SetNewCode::Intro)?;
+    res.add_page(&SetNewCode::Intro, content_intro)?
+        .add_page(&SetNewCode::Menu, content_menu)?
+        .add_page(&SetNewCode::CancelIntro, content_cancel_intro)?
+        .add_page(&SetNewCode::CancelConfirm, content_cancel_confirm)?;
     Ok(res)
 }
