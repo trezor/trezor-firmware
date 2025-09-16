@@ -554,7 +554,14 @@ void secret_unlock_bootloader(void) {
 
 secbool secret_lock(void) {
   uint8_t lock_data[SECRET_LOCK_SLOT_LEN] = {0};
-  return secret_write(lock_data, SECRET_LOCK_SLOT_OFFSET, sizeof(lock_data));
+  secbool result =
+      secret_write(lock_data, SECRET_LOCK_SLOT_OFFSET, sizeof(lock_data));
+
+  if (sectrue == result) {
+    secret_disable_access();
+  }
+
+  return result;
 }
 
 secbool secret_is_locked(void) {
