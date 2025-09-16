@@ -10,6 +10,7 @@ if utils.USE_POWER_MANAGER:
     from trezor import io
     from trezor.power_management.autodim import autodim_display
     from trezor.power_management.suspend import suspend_device
+    from trezorui_api import BacklightLevels, backlight_fade
 
 if TYPE_CHECKING:
     from trezor import protobuf
@@ -37,6 +38,7 @@ else:
         """
         global _SHOULD_SUSPEND
 
+        backlight_fade(BacklightLevels.NONE)
         _SHOULD_SUSPEND = True
         set_homescreen()
 
@@ -59,7 +61,6 @@ else:
         The function will only return after Trezor has woken up.
         """
         from trezor.ui import CURRENT_LAYOUT
-        from trezorui_api import BacklightLevels, backlight_fade
 
         global _SHOULD_SUSPEND
 
