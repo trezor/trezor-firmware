@@ -8,7 +8,7 @@ from trezor.wire.message_handler import filters, remove_filter
 
 if utils.USE_POWER_MANAGER:
     from trezor import io
-    from trezor.power_management.autodim import autodim_display
+    from trezor.power_management.autodim import autodim_display, autodim_clear
     from trezor.power_management.suspend import suspend_device
 
 if TYPE_CHECKING:
@@ -35,6 +35,8 @@ else:
 
         Sets a suspend homescreen for next time the default task is invoked.
         """
+        global _SHOULD_SUSPEND
+
         _SHOULD_SUSPEND = True
         set_homescreen()
 
@@ -58,9 +60,12 @@ else:
         """
         from trezor.ui import CURRENT_LAYOUT
 
+        global _SHOULD_SUSPEND
+
         wakeup_flag = suspend_device()
 
         if wakeup_flag == io.pm.WAKEUP_FLAG_BUTTON:
+            autodim_clear()
             workflow.idle_timer.touch()
             if CURRENT_LAYOUT is not None:
                 CURRENT_LAYOUT.layout.request_complete_repaint()
