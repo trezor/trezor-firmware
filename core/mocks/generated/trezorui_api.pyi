@@ -375,12 +375,13 @@ def flow_confirm_output(
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def flow_confirm_set_new_pin(
+def flow_confirm_set_new_code(
     *,
     title: str,
     description: str,
+    is_wipe_code: bool,
 ) -> LayoutObj[UiResult]:
-    """Confirm new PIN setup with an option to cancel action."""
+    """Confirm new PIN/wipe code setup with an option to cancel action."""
 
 
 # rust/src/ui/api/firmware_micropython.rs

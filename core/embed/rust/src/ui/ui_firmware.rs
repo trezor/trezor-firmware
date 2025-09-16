@@ -205,9 +205,10 @@ pub trait FirmwareUI {
         cancel_text: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
-    fn flow_confirm_set_new_pin(
+    fn flow_confirm_set_new_code(
         title: TString<'static>,
         description: TString<'static>,
+        is_wipe_code: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     #[allow(clippy::too_many_arguments)]
@@ -240,7 +241,7 @@ pub trait FirmwareUI {
         br_name: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
-    // TODO: this is TR specific and used only in confirm_set_new_pin
+    // TODO: this is TR specific and used only in confirm_set_new_code
     fn multiple_pages_texts(
         title: TString<'static>,
         verb: TString<'static>,

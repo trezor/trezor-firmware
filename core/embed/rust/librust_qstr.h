@@ -338,7 +338,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_firmware_update__title;
   MP_QSTR_firmware_update__title_fingerprint;
   MP_QSTR_flow_confirm_output;
-  MP_QSTR_flow_confirm_set_new_pin;
+  MP_QSTR_flow_confirm_set_new_code;
   MP_QSTR_flow_get_address;
   MP_QSTR_flow_get_pubkey;
   MP_QSTR_get;
@@ -415,6 +415,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_is_pairing_requested;
   MP_QSTR_is_started;
   MP_QSTR_is_type_of;
+  MP_QSTR_is_wipe_code;
   MP_QSTR_items;
   MP_QSTR_joint__title;
   MP_QSTR_joint__to_the_total_amount;
@@ -928,6 +929,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_wipe__title;
   MP_QSTR_wipe__want_to_wipe;
   MP_QSTR_wipe_code;
+  MP_QSTR_wipe_code__cancel_setup;
   MP_QSTR_wipe_code__change;
   MP_QSTR_wipe_code__change_question;
   MP_QSTR_wipe_code__changed;

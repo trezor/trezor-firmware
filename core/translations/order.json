@@ -1157,5 +1157,6 @@
   "1155": "auto_lock__on_usb",
   "1156": "pin__wipe_code_exists_description",
   "1157": "pin__wipe_code_exists_title",
-  "1158": "wipe_code__pin_not_set_description"
+  "1158": "wipe_code__pin_not_set_description",
+  "1159": "wipe_code__cancel_setup"
 }

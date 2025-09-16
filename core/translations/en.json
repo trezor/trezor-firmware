@@ -1314,6 +1314,12 @@
     "wipe__start_again": "Wipe your Trezor and start the setup process again.",
     "wipe__title": "Wipe device",
     "wipe__want_to_wipe": "Do you really want to wipe the device?\n",
+    "wipe_code__cancel_setup": {
+      "Bolt": "Cancel wipe code setup",
+      "Caesar": "Cancel wipe code setup",
+      "Delizia": "Cancel wipe code setup",
+      "Eckhart": "Cancel wipe code setup?"
+    },
     "wipe_code__change": "Change wipe code",
     "wipe_code__change_question": "Change wipe code?",
     "wipe_code__changed": "Wipe code changed.",
