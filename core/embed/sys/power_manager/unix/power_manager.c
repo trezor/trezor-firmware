@@ -19,9 +19,12 @@
 
 #include <trezor_rtl.h>
 
+#include <io/display.h>
+#include <io/unix/sdl_display.h>
 #include <sys/power_manager.h>
 
 #include <SDL.h>
+#include "SDL_events.h"
 
 pm_status_t pm_init(bool inherit_state) { return PM_OK; }
 
@@ -32,7 +35,24 @@ pm_status_t pm_hibernate(void) {
   return PM_OK;
 }
 
-pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) { exit(1); }
+pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
+  display_draw_suspend_overlay();
+
+  SDL_Event event;
+  while (SDL_WaitEvent(&event)) {
+    if (event.type == SDL_QUIT) {
+      exit(1);
+    }
+    if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP ||
+        event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) {
+      *wakeup_reason = WAKEUP_FLAG_BUTTON;
+      break;
+    }
+    SDL_Delay(50);
+  }
+  display_refresh();
+  return PM_OK;
+}
 
 pm_status_t pm_turn_on(void) { return PM_OK; }
 pm_status_t pm_charging_enable(void) { return PM_OK; }
