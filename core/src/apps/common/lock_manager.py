@@ -8,7 +8,7 @@ from trezor.wire.message_handler import filters, remove_filter
 
 if utils.USE_POWER_MANAGER:
     from trezor import io
-    from trezor.power_management.autodim import autodim_display, autodim_clear
+    from trezor.power_management.autodim import autodim_display
     from trezor.power_management.suspend import suspend_device
 
 if TYPE_CHECKING:
@@ -59,16 +59,19 @@ else:
         The function will only return after Trezor has woken up.
         """
         from trezor.ui import CURRENT_LAYOUT
+        from trezorui_api import BacklightLevels, backlight_fade
 
         global _SHOULD_SUSPEND
 
+        # fadeout the screen
+        backlight_fade(BacklightLevels.NONE)
+        # suspend the device
         wakeup_flag = suspend_device()
 
         if wakeup_flag == io.pm.WAKEUP_FLAG_BUTTON:
-            autodim_clear()
             workflow.idle_timer.touch()
             if CURRENT_LAYOUT is not None:
-                CURRENT_LAYOUT.layout.request_complete_repaint()
+                CURRENT_LAYOUT.repaint()
 
         _SHOULD_SUSPEND = False
         set_homescreen()
