@@ -184,16 +184,120 @@
     "bitcoin__unverified_external_inputs": "Die Transaktion enthält nicht verifizierte externe Eingaben.",
     "bitcoin__valid_signature": "Die Signatur ist gültig.",
     "bitcoin__voting_rights": "Stimmrechte an",
-    "ble__disable": "",
-    "ble__enable": "",
-    "ble__forget_all": "",
-    "ble__manage_paired": "Gekoppelte Geräte verwalten",
-    "ble__pair_new": "Neues Gerät koppeln",
-    "ble__pair_title": "Koppeln & verbinden",
-    "ble__unpair_all": "Alle Bluetooth-Geräte entkoppeln",
-    "ble__unpair_current": "Verbundenes Gerät entkoppeln",
-    "ble__unpair_title": "Entkoppeln",
-    "ble__version": "Bluetooth-Version",
+    "ble__disable": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Bluetooth ausschalten?"
+    },
+    "ble__enable": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Bluetooth einschalten?"
+    },
+    "ble__forget_all": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Alles vergessen"
+    },
+    "ble__forget_all_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Sie werden entfernt und du musst sie vor dem Nutzen wieder koppeln."
+    },
+    "ble__forget_all_devices": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Alle Geräte vergessen?"
+    },
+    "ble__forget_all_success": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Alle Hosts entfernen."
+    },
+    "ble__forget_this_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Es wird entfernt und du musst es vor dem Nutzen wieder koppeln."
+    },
+    "ble__forget_this_device": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Dieses Gerät vergessen?"
+    },
+    "ble__forget_this_success": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Host entfernt."
+    },
+    "ble__limit_reached": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Limit der verbundenen Geräte erreicht"
+    },
+    "ble__manage_paired": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Gekoppelte Geräte verwalten"
+    },
+    "ble__pair_new": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Neues Gerät koppeln"
+    },
+    "ble__pair_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Koppeln & verbinden"
+    },
+    "ble__pairing_match": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Stimmt der Kopplungscode?"
+    },
+    "ble__pairing_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Bluetooth Kopplung"
+    },
+    "ble__unpair_all": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Alle Bluetooth-Geräte entkoppeln"
+    },
+    "ble__unpair_current": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Verbundenes Gerät entkoppeln"
+    },
+    "ble__unpair_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Entkoppeln"
+    },
+    "ble__version": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Bluetooth-Version"
+    },
     "brightness__change_title": "Display-Helligkeit ändern",
     "brightness__changed_title": "Display-Helligkeit geändert",
     "brightness__title": "Helligkeit einstellen",
@@ -222,7 +326,7 @@
       "Bolt": "Halten z. Best.",
       "Caesar": "Z. best. halten",
       "Delizia": "Z. best. halten",
-      "Eckhart": "Zum Bestät. halten"
+      "Eckhart": "Zum Bestätigen halten"
     },
     "buttons__info": "Info",
     "buttons__install": "Installieren",
@@ -250,7 +354,7 @@
       "Bolt": "Wörteransicht",
       "Caesar": "Wörter anz.",
       "Delizia": "Wörter anz.",
-      "Eckhart": "Wörteransicht"
+      "Eckhart": "Zeige die Wörter"
     },
     "buttons__skip": {
       "Bolt": "Überspr.",
@@ -657,8 +761,8 @@
     "inputs__show": "ANZEIGEN",
     "inputs__space": "LEER",
     "instructions__continue_holding": {
-      "Bolt": "[empty string]",
-      "Caesar": "[empty string]",
+      "Bolt": "",
+      "Caesar": "",
       "Delizia": "Weiter\nhalten",
       "Eckhart": "Weiter\nhalten"
     },
@@ -1043,7 +1147,12 @@
       "Delizia": "Share {0}",
       "Eckhart": "Share #{0}"
     },
-    "recovery__start_entering": "",
+    "recovery__start_entering": {
+      "Bolt": "Starte die Eingabe",
+      "Caesar": "Beginne mit der Eingabe",
+      "Delizia": "Beginne mit der Eingabe",
+      "Eckhart": "Beginne mit der Eingabe"
+    },
     "recovery__title": "Wallet wiederherst.",
     "recovery__title_cancel_dry_run": "Backup-Prüfung abbr.",
     "recovery__title_cancel_recovery": "Wiederherst. abbr.",
@@ -1067,7 +1176,7 @@
       "Bolt": "Wort {0} von {1}",
       "Caesar": "Wort {0} von {1}",
       "Delizia": "Wort {0} von {1}",
-      "Eckhart": ""
+      "Eckhart": "Wort {0}\nvon {1}"
     },
     "recovery__x_more_items_starting_template_plural": {
       "Bolt": "{count} mehr {plural} gestartet",
@@ -1452,6 +1561,102 @@
     "tezos__submit_ballot": "Abstimmung senden",
     "tezos__submit_proposal": "Vorschlag senden",
     "tezos__submit_proposals": "Vorschläge senden",
+    "thp__autoconnect": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Automatisches Verbinden von {0} zu diesem Trezor erlauben?"
+    },
+    "thp__autoconnect_app": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Automatisches Verbinden von {0} an {1} zu diesem Trezor erlauben?"
+    },
+    "thp__autoconnect_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Anmeldeinformationen zur automatischen Verbindung"
+    },
+    "thp__code_entry": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Gebe diesen einmaligen Sicherheitscode ein {0}"
+    },
+    "thp__code_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Ein weiterer Schritt"
+    },
+    "thp__connect": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Verbinden von {0} mit diesem Trezor erlauben?"
+    },
+    "thp__connect_app": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Verbinden von {0} an {1} mit diesem Trezor erlauben?"
+    },
+    "thp__connect_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Verbindungsdialog"
+    },
+    "thp__continue_on_host": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Fahre auf dem Host fort"
+    },
+    "thp__nfc_text": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Behalte deinen Trezor in der Nähe deines Handys, um die Einrichtung zu vervollständigen."
+    },
+    "thp__pair": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Koppeln von {0} mit diesem Trezor?"
+    },
+    "thp__pair_app": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Koppeln von {0} auf {1} mit diesem Trezor erlauben?"
+    },
+    "thp__pair_name": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "{0} ist der Name deines Trezors."
+    },
+    "thp__pair_new_device": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Koppeln mit neuem Gerät"
+    },
+    "thp__pair_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Bevor du fortfährst"
+    },
+    "thp__qr_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Scanne den QR-Code um zu koppeln"
+    },
     "tutorial__continue": "Tutorial fortsetzen",
     "tutorial__did_you_know": "Wussten sie?",
     "tutorial__exit": "Tutorial schließen",
@@ -1467,7 +1672,12 @@
     "tutorial__menu": "Finde kontextspezifische Aktionen und Optionen im Menü.",
     "tutorial__menu_appendix": "Mehr Infos ansehen, Ablauf beenden, ...",
     "tutorial__middle_click": "Drücke gleichzeitig rechts und links,\num zu bestätigen.",
-    "tutorial__navigation_ts7": "Nutze die Tasten unten zur Navigation und Bestätigung.",
+    "tutorial__navigation_ts7": {
+      "Bolt": "Nutze die Tasten unten zum Navigieren und Bestätigen.",
+      "Caesar": "Nutze die Tasten unten zur Navigation und Bestätigung.",
+      "Delizia": "Nutze die Tasten unten zur Navigation und Bestätigung.",
+      "Eckhart": "Nutze die Tasten unten zur Navigation und Bestätigung."
+    },
     "tutorial__one_more_step": "Noch ein Schritt",
     "tutorial__press_and_hold": "Halte die rechte Taste gedrückt,\num wichtige Vorgänge zu genehmigen.",
     "tutorial__ready_to_use": "Du kannst jetzt\nTrezor verwenden.",
@@ -1518,7 +1728,12 @@
     "u2f__title_get": "U2F-zähler erhalten",
     "u2f__title_set": "U2F-zähler wählen",
     "wipe__info": "Alle Daten werden gelöscht.",
-    "wipe__start_again": "",
+    "wipe__start_again": {
+      "Bolt": "Lösche deinen Trezor und beginne noch einmal mit dem Einrichtungsprozess.",
+      "Caesar": "Wische über deinen Trezor und starte den Einrichtungsprozess noch einmal.",
+      "Delizia": "Lösche deinen Trezor und fange noch einmal mit dem Einrichtungsprozess an.",
+      "Eckhart": "Lösche deinen Trezor und starte den Einrichtungsprozess erneut."
+    },
     "wipe__title": "Gerät löschen",
     "wipe__want_to_wipe": "Möchtest du die Gerätedaten wirklich löschen?\n",
     "wipe_code__change": "Löschcode ändern",
@@ -1533,8 +1748,8 @@
     "wipe_code__mismatch": "Die Löschcodes stimmen nicht überein.",
     "wipe_code__reenter": "Löschcode neu wählen",
     "wipe_code__reenter_to_confirm": "Gib den Löschcode zur Bestätigung erneut ein.",
-    "wipe_code__remove": "",
-    "wipe_code__title": "",
+    "wipe_code__remove": "Entferne den Löschcode",
+    "wipe_code__title": "Löschcode",
     "wipe_code__title_check": "Löschcode prüfen",
     "wipe_code__title_invalid": "Ungültiger löschcode",
     "wipe_code__title_settings": "Löschcode-einstell.",
@@ -1553,27 +1768,32 @@
     "words__assets": "Assets",
     "words__authenticate": "Authentifizieren",
     "words__blockhash": "Blockhash",
-    "words__bluetooth": "",
+    "words__bluetooth": "Bluetooth",
     "words__buying": "Kaufen",
     "words__cancel_and_exit": "Abbrechen und schließen",
     "words__cancel_question": "Abbrechen?",
     "words__chain": "Chain",
     "words__confirm": "Bestätigen",
     "words__confirm_fee": "Gebühr bestätigen",
-    "words__connect": "",
+    "words__connect": "Verbinden",
     "words__connected": "Verbunden",
     "words__contains": "Enthält",
     "words__continue_anyway": "Trotzdem fortfahren",
     "words__continue_anyway_question": "Trotzdem fortfahren?",
     "words__continue_with": "Weiter mit",
     "words__device": "Gerät",
-    "words__disabled": "",
+    "words__disabled": {
+      "Bolt": "Deaktiviert",
+      "Caesar": "Deaktivieren",
+      "Delizia": "Deaktiviert",
+      "Eckhart": "Deaktiviert"
+    },
     "words__disconnect": "Trennen",
-    "words__disconnected": "",
-    "words__enabled": "",
+    "words__disconnected": "Getrennt",
+    "words__enabled": "Aktiviert",
     "words__error": "Fehler",
     "words__fee": "Gebühr",
-    "words__forget": "",
+    "words__forget": "Vergessen",
     "words__from": "von",
     "words__good_to_know": "Gut zu wissen",
     "words__important": "Wichtig",
@@ -1593,6 +1813,7 @@
     "words__pay_attention": "Bitte beachten",
     "words__please_check_again": "Noch einmal prüfen",
     "words__please_try_again": "Noch einmal versuchen",
+    "words__power": "Energie",
     "words__provider": "Anbieter",
     "words__really_wanna": "Möchtest du wirklich",
     "words__receive": "Empfangen",
@@ -1601,7 +1822,12 @@
     "words__review": "Prüfen",
     "words__security": "Sicherheit",
     "words__send": "Senden",
-    "words__set": "",
+    "words__set": {
+      "Bolt": "Einstellen",
+      "Caesar": "Festlegen",
+      "Delizia": "setzen",
+      "Eckhart": "Festlegen"
+    },
     "words__settings": "Einstellungen",
     "words__sign": "Signieren",
     "words__signer": "Unterzeichner",
@@ -1624,7 +1850,12 @@
     "words__unlocked": "Entsperrt",
     "words__wallet": "Wallet",
     "words__warning": "Warnung",
-    "words__wipe": "",
+    "words__wipe": {
+      "Bolt": "Wischen",
+      "Caesar": "Löschen",
+      "Delizia": "Löschen",
+      "Eckhart": "Löschen"
+    },
     "words__writable": "Beschreibbar",
     "words__yes": "Ja"
   }
