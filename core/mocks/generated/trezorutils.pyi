@@ -186,6 +186,13 @@ def notify_send(event: int) -> None:
     """
     Sends a notification to host
     """
+
+
+# upymod/modtrezorutils/modtrezorutils.c
+def nrf_get_version() -> VersionTuple:
+    """
+    Reads version of nRF firmware
+    """
 SCM_REVISION: bytes
 """Git commit hash of the firmware."""
 VERSION: VersionTuple
@@ -210,6 +217,8 @@ USE_BUTTON: bool
 """Whether the hardware supports two-button input."""
 USE_POWER_MANAGER: bool
 """Whether the hardware has a battery."""
+USE_NRF: bool
+"""Whether the hardware has a nRF chip."""
 MODEL: str
 """Model name."""
 MODEL_FULL_NAME: str

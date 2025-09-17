@@ -18,6 +18,7 @@ from trezorutils import (  # noqa: F401
     USE_BLE,
     USE_BUTTON,
     USE_HAPTIC,
+    USE_NRF,
     USE_OPTIGA,
     USE_POWER_MANAGER,
     USE_RGB_LED,
@@ -42,6 +43,11 @@ from trezorutils import (  # noqa: F401
     unit_color,
     unit_packaging,
 )
+
+if USE_NRF:
+    from trezorutils import nrf_get_version  # noqa: F401
+
+
 from typing import TYPE_CHECKING
 
 if __debug__:

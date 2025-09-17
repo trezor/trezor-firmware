@@ -82,7 +82,14 @@ async def handle_device_menu() -> None:
             log.debug(__name__, "hostname_map: %s", hostname_map)
         paired_devices = [_get_hostname(bond, hostname_map) for bond in bonds]
 
-        bluetooth_version = "2.3.1.1"
+        if utils.USE_NRF:
+            nrf_version = utils.nrf_get_version()
+            bluetooth_version = (
+                f"{nrf_version[0]}.{nrf_version[1]}.{nrf_version[2]}.{nrf_version[3]}"
+            )
+        else:
+            bluetooth_version = "0.0.0.0"
+
         # ###
         firmware_version = ".".join(map(str, utils.VERSION))
         firmware_type = "Bitcoin-only" if utils.BITCOIN_ONLY else "Universal"
