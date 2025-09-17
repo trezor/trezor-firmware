@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import logging
 import os
+import socket
 import typing as t
 import warnings
 from enum import IntEnum
@@ -72,11 +73,18 @@ class TrezorClient:
         transport: Transport,
         protocol: Channel | None = None,
         model: models.TrezorModel | None = None,
+        app_name: str | None = None,
+        host_name: str | None = None,
     ) -> None:
         """
         Transport needs to be opened before calling a method (or accessing
         an attribute) for the first time. It should be closed after you're
         done using the client.
+
+        The parameters app_name and host_name are only used for protocol
+        version 2 (THP). Because they are displayed on Trezor during the
+        pairing phase, it is recommended to provide app_name matching the
+        name of your application.
         """
 
         LOG.info(f"creating client instance for device: {transport.get_path()}")
@@ -90,6 +98,8 @@ class TrezorClient:
 
         self._is_invalidated: bool = False
         self.transport = transport
+        self.app_name = app_name
+        self.host_name = host_name
 
         if protocol is None:
             self.protocol = self._get_protocol()
@@ -122,8 +132,10 @@ class TrezorClient:
                 )
         LOG.debug("Starting pairing: %r", pairing_method)
         session = SessionV2.seedless(self)
+        app_name = self.app_name or "trezorlib"
+        host_name = self.host_name or socket.gethostname()
         session.call(
-            messages.ThpPairingRequest(host_name="Trezorlib"),
+            messages.ThpPairingRequest(host_name=host_name, app_name=app_name),
             expect=messages.ThpPairingRequestApproved,
             skip_firmware_version_check=True,
         )
