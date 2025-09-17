@@ -98,8 +98,8 @@ message ThpCreateNewSession {
  * @next ThpPairingRequestApproved
  */
 message ThpPairingRequest {
-    optional string host_name = 1;     // Human-readable host name (browser name for web apps)
-    optional string app_name = 2;      // Human-readable application name
+    required string host_name = 1;     // Human-readable host name (browser name for web apps)
+    required string app_name = 2;      // Human-readable application name
 }
 
 /**

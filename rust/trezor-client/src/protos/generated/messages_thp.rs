@@ -737,7 +737,7 @@ impl ThpPairingRequest {
         ::std::default::Default::default()
     }
 
-    // optional string host_name = 1;
+    // required string host_name = 1;
 
     pub fn host_name(&self) -> &str {
         match self.host_name.as_ref() {
@@ -773,7 +773,7 @@ impl ThpPairingRequest {
         self.host_name.take().unwrap_or_else(|| ::std::string::String::new())
     }
 
-    // optional string app_name = 2;
+    // required string app_name = 2;
 
     pub fn app_name(&self) -> &str {
         match self.app_name.as_ref() {
@@ -834,6 +834,12 @@ impl ::protobuf::Message for ThpPairingRequest {
     const NAME: &'static str = "ThpPairingRequest";
 
     fn is_initialized(&self) -> bool {
+        if self.host_name.is_none() {
+            return false;
+        }
+        if self.app_name.is_none() {
+            return false;
+        }
         true
     }
 
@@ -4699,8 +4705,8 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     ateNewSession\x12\x1e\n\npassphrase\x18\x01\x20\x01(\tR\npassphrase\x12\
     \"\n\ton_device\x18\x02\x20\x01(\x08:\x05falseR\x08onDevice\x12,\n\x0ede\
     rive_cardano\x18\x03\x20\x01(\x08:\x05falseR\rderiveCardano\"K\n\x11ThpP\
-    airingRequest\x12\x1b\n\thost_name\x18\x01\x20\x01(\tR\x08hostName\x12\
-    \x19\n\x08app_name\x18\x02\x20\x01(\tR\x07appName\"\x1b\n\x19ThpPairingR\
+    airingRequest\x12\x1b\n\thost_name\x18\x01\x20\x02(\tR\x08hostName\x12\
+    \x19\n\x08app_name\x18\x02\x20\x02(\tR\x07appName\"\x1b\n\x19ThpPairingR\
     equestApproved\"s\n\x0fThpSelectMethod\x12`\n\x17selected_pairing_method\
     \x18\x01\x20\x02(\x0e2(.hw.trezor.messages.thp.ThpPairingMethodR\x15sele\
     ctedPairingMethod\"\x20\n\x1eThpPairingPreparationsFinished\"8\n\x16ThpC\

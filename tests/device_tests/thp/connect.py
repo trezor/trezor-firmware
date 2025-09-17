@@ -42,9 +42,9 @@ def get_encrypted_transport_protocol(
 
 
 def handle_pairing_request(
-    client: Client, protocol: ProtocolV2Channel, host_name: str | None = None
+    client: Client, protocol: ProtocolV2Channel, app_name: str | None = None
 ) -> None:
-    protocol._send_message(ThpPairingRequest(host_name=host_name))
+    protocol._send_message(ThpPairingRequest(host_name="localhost", app_name=app_name))
     button_req = protocol._read_message(ButtonRequest)
     assert button_req.name == "thp_pairing_request"
 

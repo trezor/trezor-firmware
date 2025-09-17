@@ -111,9 +111,10 @@ async def handle_pairing_request(
     if not ThpPairingRequest.is_type_of(message):
         raise UnexpectedMessage("Unexpected message")
 
-    # TODO: make app_name required eventually
     if not message.host_name:
         raise DataError("Missing host_name.")
+    if not message.app_name:
+        raise DataError("Missing app_name.")
 
     peer_addr = ctx.channel_ctx.iface_ctx.connected_addr()
     await ui.show_pairing_dialog(message.host_name, message.app_name)
