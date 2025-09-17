@@ -8,8 +8,12 @@ use ffi::{DISPLAY_RESX_, DISPLAY_RESY_};
 pub const DISPLAY_RESX: u32 = DISPLAY_RESX_;
 pub const DISPLAY_RESY: u32 = DISPLAY_RESY_;
 
-pub fn backlight(val: i32) -> i32 {
+pub fn set_backlight(val: u8) -> bool {
     unsafe { ffi::display_set_backlight(val) }
+}
+
+pub fn get_backlight() -> u8 {
+    unsafe { ffi::display_get_backlight() }
 }
 
 pub fn sync() {

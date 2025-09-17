@@ -113,7 +113,15 @@ impl VerticalSlider {
 
     fn handle_touch(&mut self, pos: Point, ctx: &mut EventCtx) {
         self.update_value(pos, ctx);
-        display::backlight(self.value.into());
+        // TODO: needs more analysis; why is "self.value" u16? Can it be changed to u8?
+        // Original code: display::set_backlight(self.value.into());
+        // Possible solution: display::set_backlight(self.value.try_into().unwrap());
+        // It's not save. To rather use unwrap!() macro? Another solution below.
+        if let Ok(val) = self.value.try_into() {
+            display::set_backlight(val);
+        } else {
+            display::set_backlight(255);
+        }
         ctx.request_paint();
     }
 
