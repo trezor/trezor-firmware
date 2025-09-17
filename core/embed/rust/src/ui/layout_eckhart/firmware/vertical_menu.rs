@@ -102,7 +102,7 @@ pub struct VerticalMenu<T = ShortMenuVec> {
     /// Whether the first button touch area should be shrunk.
     /// If true, the first button will overlap the header.
     /// When using subtitle, the overlap should be disabled.
-    first_item_shrink: bool,
+    top_component_overlap: bool,
 }
 
 pub enum VerticalMenuMsg {
@@ -113,7 +113,7 @@ impl<T: MenuItems> VerticalMenu<T> {
     const SIDE_INSETS: Insets = Insets::sides(12);
     const MENU_ITEM_CONTENT_PADDING: i16 = 32;
     #[cfg(test)]
-    pub const TEST_MENU_ITEM_CONTENT_PADDING: i16 = 32;
+    pub const TEST_MENU_ITEM_CONTENT_PADDING: i16 = Self::MENU_ITEM_CONTENT_PADDING;
 
     // Overlap with the header. Must be lower than MENU_ITEM_CONTENT_PADDING so the
     // content is not clipped.
@@ -126,7 +126,7 @@ impl<T: MenuItems> VerticalMenu<T> {
             total_height: 0,
             offset_y: 0,
             offset_y_max: 0,
-            first_item_shrink: true,
+            top_component_overlap: true,
         }
     }
 
@@ -144,8 +144,8 @@ impl<T: MenuItems> VerticalMenu<T> {
         self
     }
 
-    pub fn no_first_item_shrink(&mut self) -> &mut Self {
-        self.first_item_shrink = false;
+    pub fn no_top_component_overlap(&mut self) -> &mut Self {
+        self.top_component_overlap = false;
         self
     }
 
@@ -170,17 +170,49 @@ impl<T: MenuItems> VerticalMenu<T> {
     }
 
     /// Update state of menu buttons based on the current offset.
-    /// Enable only buttons that are fully visible in the menu area.
-    /// Meaningful only if the menu is scrollable.
-    /// If the menu fits its area, all buttons are enabled.
+    /// Disable only buttons that are fully hidden from the menu view.
+    /// Shrink the top button's touch area if it overlaps with the header.
     pub fn update_button_states(&mut self, ctx: &mut EventCtx) {
         for button in self.buttons.iter_mut() {
-            let in_bounds = button
-                .area()
-                .translate(Offset::y(-self.offset_y))
-                .union(self.bounds)
-                == self.bounds;
-            button.enable_if(ctx, in_bounds);
+            let button_shifted_area = button.area().translate(Offset::y(-self.offset_y));
+            let intersection = button_shifted_area.clamp(self.bounds);
+            let intersection_no_overlap =
+                button_shifted_area.clamp(self.bounds.inset(Insets::top(Self::BUTTON_TOP_SHRINK)));
+            let fully_hidden = intersection.is_empty();
+            // overlap is in the top no-touch overlap area
+            let only_in_no_touch_area = self.top_component_overlap
+                && intersection.height() <= Self::BUTTON_TOP_SHRINK
+                && intersection.top_left() == self.bounds.top_left();
+            // Disable button if it is fully outside the menu area or only in the no-touch
+            // area
+            button.enable_if(ctx, !fully_hidden && !only_in_no_touch_area);
+
+            let is_fully_visible_non_overlap =
+                !self.top_component_overlap && intersection.eq(&button_shifted_area);
+            let is_fully_visible_overlap =
+                self.top_component_overlap && intersection.eq(&intersection_no_overlap);
+            let is_bottom_edge_item =
+                intersection.bottom_left() != button_shifted_area.bottom_left();
+
+            // Start with a normal touch area
+            button.set_expanded_touch_area(Insets::zero());
+
+            // Skip the cases where no shrinking is needed
+            if fully_hidden
+                || is_fully_visible_non_overlap
+                || is_fully_visible_overlap
+                || is_bottom_edge_item
+                || only_in_no_touch_area
+            {
+                continue;
+            }
+
+            let mut top_shrink = button_shifted_area.height() - intersection.height();
+            if self.top_component_overlap {
+                top_shrink += Self::BUTTON_TOP_SHRINK;
+            }
+
+            button.set_expanded_touch_area(Insets::top(-top_shrink));
         }
     }
 
@@ -199,7 +231,7 @@ impl<T: MenuItems> VerticalMenu<T> {
 
         // The offset could reach only discrete values of cumsum of button heights
         let current = self.offset_y;
-        let mut cumsum = if self.first_item_shrink {
+        let mut cumsum = if self.top_component_overlap {
             -Self::BUTTON_TOP_SHRINK
         } else {
             0
@@ -239,7 +271,7 @@ impl<T: MenuItems> VerticalMenu<T> {
                     .unwrap_or(&Button::empty())
                     .area()
                     .height();
-            self.offset_y_max = if self.first_item_shrink {
+            self.offset_y_max = if self.top_component_overlap {
                 offset_y_base - Self::BUTTON_TOP_SHRINK
             } else {
                 offset_y_base
@@ -249,7 +281,7 @@ impl<T: MenuItems> VerticalMenu<T> {
 
         // Calculate the overflow of the menu area
         let overflow_base = (self.total_height - self.bounds.height()).max(0);
-        let menu_overflow = if self.first_item_shrink {
+        let menu_overflow = if self.top_component_overlap {
             (overflow_base - Self::BUTTON_TOP_SHRINK).max(0)
         } else {
             overflow_base
@@ -259,7 +291,7 @@ impl<T: MenuItems> VerticalMenu<T> {
         // in the bottom position
         for button in self.buttons.iter() {
             let offset_base = (button.area().top_left().y - self.bounds.top_left().y).max(0);
-            let offset = if self.first_item_shrink {
+            let offset = if self.top_component_overlap {
                 (offset_base - Self::BUTTON_TOP_SHRINK).max(0)
             } else {
                 offset_base
@@ -307,7 +339,7 @@ impl<T: MenuItems> VerticalMenu<T> {
             )
         }
 
-        if !self.first_item_shrink {
+        if !self.top_component_overlap {
             if let Some(button) = self.buttons.iter().next() {
                 if !button.is_pressed() {
                     Bar::new(button_separator(button))
@@ -342,18 +374,13 @@ impl<T: MenuItems> Component for VerticalMenu<T> {
         let mut top_left = self.bounds.top_left();
 
         // Place each button (might overflow the menu bounds)
-        for (i, button) in self.buttons.iter_mut().enumerate() {
+        for button in self.buttons.iter_mut() {
             let button_height =
                 button.content_height(button_width) + 2 * Self::MENU_ITEM_CONTENT_PADDING;
             let button_bounds =
                 Rect::from_top_left_and_size(top_left, Offset::new(button_width, button_height));
 
             button.place(button_bounds);
-            if i == 0 && self.first_item_shrink {
-                // Negative value because the param is the expand insets
-                button.set_expanded_touch_area(Insets::top(-Self::BUTTON_TOP_SHRINK));
-            }
-
             top_left = top_left + Offset::y(button_height);
         }
 
