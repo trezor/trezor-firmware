@@ -338,8 +338,8 @@ enum MessageType {
     MessageType_NostrEventSignature = 2004 [(wire_out) = true];
 
     // Evolu
-    MessageType_EvoluGetNode = 2100 [(wire_in) = true];
-    MessageType_EvoluNode = 2101 [(wire_out) = true];
+    MessageType_EvoluGetNode = 2100 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_EvoluNode = 2101 [(bitcoin_only) = true, (wire_out) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

@@ -289,9 +289,10 @@ impl ::protobuf::reflect::ProtobufValue for EvoluNode {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x14messages-evolu.proto\x12\x18hw.trezor.messages.evolu\"\x0e\n\x0cEv\
-    oluGetNode\"\x1f\n\tEvoluNode\x12\x12\n\x04data\x18\x01\x20\x02(\x0cR\
-    \x04dataB9\n#com.satoshilabs.trezor.lib.protobufB\x12TrezorMessageEvolu\
+    \n\x14messages-evolu.proto\x12\x18hw.trezor.messages.evolu\x1a\roptions.\
+    proto\"\x0e\n\x0cEvoluGetNode\"\x1f\n\tEvoluNode\x12\x12\n\x04data\x18\
+    \x01\x20\x02(\x0cR\x04dataB=\n#com.satoshilabs.trezor.lib.protobufB\x12T\
+    rezorMessageEvolu\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -308,7 +309,8 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     static file_descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::FileDescriptor> = ::protobuf::rt::Lazy::new();
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
-            let mut deps = ::std::vec::Vec::with_capacity(0);
+            let mut deps = ::std::vec::Vec::with_capacity(1);
+            deps.push(super::options::file_descriptor().clone());
             let mut messages = ::std::vec::Vec::with_capacity(2);
             messages.push(EvoluGetNode::generated_message_descriptor_data());
             messages.push(EvoluNode::generated_message_descriptor_data());
