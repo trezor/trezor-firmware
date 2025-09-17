@@ -299,10 +299,10 @@
     "ble__unpair_current": "Dissocier l'appareil connecté",
     "ble__unpair_title": "Dissocier",
     "ble__version": "Version Bluetooth",
-    "brightness__change_title": "Ajuster la luminosité de l’écran",
-    "brightness__changed_title": "Luminosité de l’écran ajustée",
+    "brightness__change_title": "Ajuster la luminosité de l'écran",
+    "brightness__changed_title": "Luminosité de l'écran ajustée",
     "brightness__title": {
-      "Bolt": "Luminosité de l’écran",
+      "Bolt": "Luminosité de l'écran",
       "Caesar": "Luminosité de l'écran",
       "Delizia": "Luminosité de l'écran",
       "Eckhart": "Luminosité de l'écran"
@@ -827,20 +827,20 @@
       "Eckhart": "Effacer tous les identifiants enregistrés ?"
     },
     "fido__export_credentials": "Exporter les informations des identifiants enregistrées sur cet appareil ?",
-    "fido__more_credentials": "Plus d’identifiants",
+    "fido__more_credentials": "Plus d'identifiants",
     "fido__not_registered": "Non enregistré",
     "fido__not_registered_with_template": "Cet appareil n'est pas enregistré avec\n{0}.",
     "fido__please_enable_pin_protection": "Veuillez activer la protection par code PIN.",
-    "fido__select_intro": "Sélectionnez l’identifiant que vous souhaitez utiliser pour l’authentification.",
+    "fido__select_intro": "Sélectionnez l'identifiant que vous souhaitez utiliser pour l'authentification.",
     "fido__title_authenticate": "Authentifier FIDO2",
-    "fido__title_credential_details": "Détails de l’identifiant",
-    "fido__title_for_authentication": "pour l’authentification",
+    "fido__title_credential_details": "Détails de l'identifiant",
+    "fido__title_for_authentication": "pour l'authentification",
     "fido__title_import_credential": "Importer l'identifiant",
     "fido__title_list_credentials": "Lister les identifiants",
     "fido__title_register": "Enregistrer FIDO2",
     "fido__title_remove_credential": "Supprimer l'identifiant",
     "fido__title_reset": "Réinitialiser FIDO2",
-    "fido__title_select_credential": "Sélectionner l’identifiant",
+    "fido__title_select_credential": "Sélectionner l'identifiant",
     "fido__title_u2f_auth": "Authentification U2F",
     "fido__title_u2f_register": "Enregistrer U2F",
     "fido__title_verify_user": "Vérifier l'utilisateur FIDO2",
@@ -924,7 +924,12 @@
     "lockscreen__tap_to_unlock": "Appuyez pour déverrouiller",
     "lockscreen__title_locked": "Verrouillé",
     "lockscreen__title_not_connected": "Non connecté",
-    "lockscreen__unlock": "",
+    "lockscreen__unlock": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Déverrouiller"
+    },
     "misc__decrypt_value": "Déchiffrer la valeur",
     "misc__enable_labeling": "Activer l'étiquetage ?",
     "misc__encrypt_value": "Chiffrer la valeur",
@@ -1127,6 +1132,18 @@
     "pin__tries_left": "essais restants",
     "pin__turn_off": "Voulez-vous vraiment désactiver la protection par PIN ?",
     "pin__turn_on": "Activer la protection par code PIN ?",
+    "pin__wipe_code_exists_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Désact. le code d'effac. avant de désactiver la protection par PIN."
+    },
+    "pin__wipe_code_exists_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Code d'effacement défini"
+    },
     "pin__wrong_pin": "PIN incorrect",
     "plurals__contains_x_keys": "touche|touches",
     "plurals__lock_after_x_days": "jour|jours",
@@ -1518,11 +1535,11 @@
       "Delizia": "Mettre en staking des SOL ?",
       "Eckhart": "Mettre en staking des SOL ?"
     },
-    "solana__stake_withdrawal_warning": "Le portefeuille actuel n’est pas l’autorité de retrait du staking SOL.",
+    "solana__stake_withdrawal_warning": "Le portefeuille actuel n'est pas l'autorité de retrait du staking SOL.",
     "solana__stake_withdrawal_warning_title": {
-      "Bolt": "Adresse de l’autorité de retrait",
-      "Caesar": "Adresse de l’autorité de retrait",
-      "Delizia": "Adresse de l’autorité de retrait",
+      "Bolt": "Adresse de l'autorité de retrait",
+      "Caesar": "Adresse de l'autorité de retrait",
+      "Delizia": "Adresse de l'autorité de retrait",
       "Eckhart": "Adresse de l'autorité de retrait"
     },
     "solana__transaction_contains_unknown_instructions": "La transaction contient des instructions inconnues.",
@@ -1716,11 +1733,27 @@
     "tutorial__last_one": "Dernier",
     "tutorial__lets_begin": "Apprenez à utiliser et naviguer facilement sur cet appareil.",
     "tutorial__menu": "Trouvez des actions et options spécifiques au contexte dans le menu.",
-    "tutorial__menu_appendix": "Afficher plus d’infos, quitter le flux, ...",
+    "tutorial__menu_appendix": "Afficher plus d'infos, quitter le flux, ...",
     "tutorial__middle_click": "Appuyez simultanément sur les boutons de gauche et de droite\npour confirmer",
-    "tutorial__navigation_ts7": "Utilisez les boutons du bas pour naviguer et confirmer vos actions.",
+    "tutorial__navigation_ts7": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Utilisez les boutons à l'écran pour naviguer et confirmer vos actions."
+    },
     "tutorial__one_more_step": "Encore une étape",
-    "tutorial__press_and_hold": "Maintenez enfoncé le bouton de droite pour accepter les opérations importantes.",
+    "tutorial__power": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Utilisez le bouton d'alimentation sur le côté pour allumer ou éteindre l'appareil."
+    },
+    "tutorial__press_and_hold": {
+      "Bolt": "Maintenez enfoncé le bouton de droite\npour accepter les opérations importantes.",
+      "Caesar": "Maintenez enfoncé le bouton de droite pour accepter les opérations importantes.",
+      "Delizia": "Maintenez enfoncé le bouton de droite pour accepter les opérations importantes.",
+      "Eckhart": "Maintenez enfoncé le bouton de droite pour accepter les opérations importantes."
+    },
     "tutorial__ready_to_use": "Vous êtes prêt à\nutiliser votre Trezor.",
     "tutorial__ready_to_use_safe5": "Vous êtes prêt à utiliser votre appareil !",
     "tutorial__restart_tutorial": "Recommencer le tutoriel",
@@ -1735,8 +1768,8 @@
     "tutorial__title_hold": {
       "Bolt": "Maintenez pour confirmer les actions importantes",
       "Caesar": "Maintenez pour confirmer les actions importantes",
-      "Delizia": "Maintenez pour confirmer actions imp.",
-      "Eckhart": "Maintenez le bouton pour confirmer les actions importantes."
+      "Delizia": "Maintenir pr conf. les actions importantes",
+      "Eckhart": "Maintenez le bouton à l'écran en bas pour confirmer les actions importantes."
     },
     "tutorial__title_lets_begin": "Commençons",
     "tutorial__title_screen_scroll": "Défilement de l'écran",
@@ -1763,7 +1796,7 @@
     "tutorial__welcome_press_right": "Bienvenue sur votre Trezor. Appuyez sur le bouton de droite pour continuer.",
     "tutorial__welcome_safe5": "Bienvenue sur votre\nTrezor Safe 5",
     "tutorial__welcome_safe7": "Bienvenue\nsur votre Trezor\nSafe 7",
-    "tutorial__what_is_tropic": "Qu’est-ce que TROPIC01 ?",
+    "tutorial__what_is_tropic": "Qu'est-ce que TROPIC01 ?",
     "u2f__get": "Augmenter et récupérer le compteur U2F ?",
     "u2f__set_template": "Définir le compteur U2F à {0} ?",
     "u2f__title_get": "Obtenir le compteur U2F",
@@ -1787,13 +1820,19 @@
     "wipe_code__info": "Le code d'effacement peut être utilisé pour effacer toutes les données de cet appareil.",
     "wipe_code__invalid": "Code invalide",
     "wipe_code__mismatch": "Les codes d'effacement que vous avez saisis ne correspondent pas.",
+    "wipe_code__pin_not_set_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Le code PIN doit être défini avant d'activer le code d'effacement."
+    },
     "wipe_code__reenter": "Ressaisissez le code d'effacement",
     "wipe_code__reenter_to_confirm": "Veuillez ressaisir le code d'effacement pour confirmer.",
     "wipe_code__remove": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Supprimer code d’effacement"
+      "Eckhart": "Supprimer code d'effacement"
     },
     "wipe_code__title": {
       "Bolt": "",

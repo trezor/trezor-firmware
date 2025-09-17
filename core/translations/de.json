@@ -770,10 +770,20 @@
     "instructions__enter_next_share": "Nächsten Share eingeben",
     "instructions__hold_to_confirm": "Zum Bestätigen halten",
     "instructions__hold_to_continue": "Zum Fortfahren halten",
-    "instructions__hold_to_exit_tutorial": "Zum Verlassen halten",
+    "instructions__hold_to_exit_tutorial": {
+      "Bolt": "Zum Verlassen halten",
+      "Caesar": "Zum Verlassen halten",
+      "Delizia": "Zum Verlassen halten",
+      "Eckhart": "Zum Verlassen des Tutorials halten"
+    },
     "instructions__hold_to_sign": "Zum Signieren halten",
     "instructions__learn_more": "Mehr erfahren",
-    "instructions__menu_to_continue": "Über Menü fortfahren",
+    "instructions__menu_to_continue": {
+      "Bolt": "Über Menü fortfahren",
+      "Caesar": "Über Menü fortfahren",
+      "Delizia": "Über Menü fortfahren",
+      "Eckhart": "Nutze das Menü um fortfahren"
+    },
     "instructions__shares_continue_with_x_template": "Mit Share #{0} fortfahren",
     "instructions__shares_start_with_1": "Mit Share #1 beginnen",
     "instructions__shares_start_with_x_template": "Mit Share #{0} beginnen",
@@ -813,7 +823,7 @@
     "lockscreen__tap_to_unlock": "Zum Entsperren tippen",
     "lockscreen__title_locked": "Gesperrt",
     "lockscreen__title_not_connected": "Nicht verbunden",
-    "lockscreen__unlock": "",
+    "lockscreen__unlock": "Entsperren",
     "misc__decrypt_value": "Wert entschlüsseln",
     "misc__enable_labeling": {
       "Bolt": "Label aktivieren?",
@@ -980,9 +990,19 @@
     "passphrase__please_enter": "Gib deine Passphrase ein.",
     "passphrase__revoke_on_device": "Möchtest du die Passphrase auf dem Gerät widerrufen?",
     "passphrase__show": "Passphrase anzeigen",
-    "passphrase__title_confirm": "Passphr. bestätigen",
+    "passphrase__title_confirm": {
+      "Bolt": "Passphr. bestätigen",
+      "Caesar": "Passphr. bestätigen",
+      "Delizia": "Passphr. bestätigen",
+      "Eckhart": "Passphrase bestätigen"
+    },
     "passphrase__title_enter": "Passphrase eingeben",
-    "passphrase__title_hide": "Passphr. ausblenden",
+    "passphrase__title_hide": {
+      "Bolt": "Passphr. ausblenden",
+      "Caesar": "Passphr. ausblenden",
+      "Delizia": "Passphr. ausblenden",
+      "Eckhart": "Passphrase ausblenden"
+    },
     "passphrase__title_passphrase": "Passphrase",
     "passphrase__title_settings": {
       "Bolt": "Passphrasen-einst.",
@@ -990,12 +1010,7 @@
       "Delizia": "Passphrasen-einst.",
       "Eckhart": "Passphrasen-einst."
     },
-    "passphrase__title_source": {
-      "Bolt": "Passphrasen-Quelle",
-      "Caesar": "Passphrasen-Quelle",
-      "Delizia": "Passphrasen-quelle",
-      "Eckhart": "Passphrasen-quelle"
-    },
+    "passphrase__title_source": "Passphrasen-Quelle",
     "passphrase__turn_off": "Passphrasenschutz deaktivieren?",
     "passphrase__turn_on": "Passphrasenschutz aktivieren?",
     "passphrase__wallet": "Passphrase Wallet",
@@ -1029,23 +1044,55 @@
       "Bolt": "Die eingegebenen PINs stimmen nicht überein!",
       "Caesar": "Die eingegebenen PINs stimmen nicht überein.",
       "Delizia": "Die eingegebenen PINs stimmen nicht überein.",
-      "Eckhart": "Die eingegebenen PINs stimmen nicht überein."
+      "Eckhart": "Die eingegebenen PINs stimmen nicht überein!"
     },
     "pin__pin_mismatch": "PIN stimmt nicht",
     "pin__please_check_again": "Bitte noch einmal prüfen.",
-    "pin__reenter": "PIN neu eingeben",
-    "pin__reenter_new": "PIN neu eingeben",
+    "pin__reenter": {
+      "Bolt": "PIN neu eingeben",
+      "Caesar": "PIN neu eingeben",
+      "Delizia": "PIN neu eingeben",
+      "Eckhart": "PIN noch einmal eingeben"
+    },
+    "pin__reenter_new": {
+      "Bolt": "PIN neu eingeben",
+      "Caesar": "PIN neu eingeben",
+      "Delizia": "PIN neu eingeben",
+      "Eckhart": "Neue PIN noch einmal eingeben"
+    },
     "pin__reenter_to_confirm": "Gib die PIN zur Bestätigung erneut ein.",
-    "pin__remove": "",
+    "pin__remove": {
+      "Bolt": "PIN entfernen",
+      "Caesar": "PIN entfernen",
+      "Delizia": "PIN entfernen",
+      "Eckhart": "Entferne PIN"
+    },
     "pin__setup_completed": "PIN-Einrichtung abgeschlossen.",
     "pin__should_be_long": "PIN sollte aus 4-50 Ziffern bestehen.",
-    "pin__title": "",
+    "pin__title": {
+      "Bolt": "PIN-Code",
+      "Caesar": "PIN-Code",
+      "Delizia": "PIN-Code",
+      "Eckhart": "PIN Code"
+    },
     "pin__title_check_pin": "PIN prüfen",
     "pin__title_settings": "PIN-einstellungen",
     "pin__title_wrong_pin": "Falsche PIN",
     "pin__tries_left": "übrig",
     "pin__turn_off": "Möchtest du den PIN-Schutz wirklich deaktivieren?",
     "pin__turn_on": "PIN-Schutz aktivieren?",
+    "pin__wipe_code_exists_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Deaktiviere den Wipe-Code, bevor du den PIN-Schutz ausschaltest."
+    },
+    "pin__wipe_code_exists_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Löschcode gesetzt"
+    },
     "pin__wrong_pin": "Falsche PIN",
     "plurals__contains_x_keys": "Key|Keys",
     "plurals__lock_after_x_days": "Tag|Tage",
@@ -1673,12 +1720,18 @@
     "tutorial__menu_appendix": "Mehr Infos ansehen, Ablauf beenden, ...",
     "tutorial__middle_click": "Drücke gleichzeitig rechts und links,\num zu bestätigen.",
     "tutorial__navigation_ts7": {
-      "Bolt": "Nutze die Tasten unten zum Navigieren und Bestätigen.",
-      "Caesar": "Nutze die Tasten unten zur Navigation und Bestätigung.",
-      "Delizia": "Nutze die Tasten unten zur Navigation und Bestätigung.",
-      "Eckhart": "Nutze die Tasten unten zur Navigation und Bestätigung."
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Nutze die Tasten auf dem Bildschirm zur Navigation und Bestätigung."
     },
     "tutorial__one_more_step": "Noch ein Schritt",
+    "tutorial__power": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Verwende die seitliche Taste, um das Gerät ein- oder auszuschalten."
+    },
     "tutorial__press_and_hold": "Halte die rechte Taste gedrückt,\num wichtige Vorgänge zu genehmigen.",
     "tutorial__ready_to_use": "Du kannst jetzt\nTrezor verwenden.",
     "tutorial__ready_to_use_safe5": "Du bist bereit dieses Gerät zu verwenden!",
@@ -1700,14 +1753,19 @@
       "Bolt": "Halte den Bildschirm um Schritte bestätigen",
       "Caesar": "Halte den Bildschirm um Schritte bestätigen",
       "Delizia": "Halte den Bildschirm um Schritte bestätigen",
-      "Eckhart": "Halte die Taste gedrückt, um wichtige Aktionen zu bestätigen."
+      "Eckhart": "Halte die Taste unten auf dem Bildschirm gedrückt, um wichtige Aktionen zu bestätigen."
     },
     "tutorial__title_lets_begin": "Lass uns beginnen",
     "tutorial__title_screen_scroll": "Bildschirm scrollen",
     "tutorial__title_skip": "Tutorial überspr.",
     "tutorial__title_tutorial_complete": "Tutorial beendet",
     "tutorial__title_well_done": "Gut gemacht!",
-    "tutorial__tropic_info": "TROPIC01 ist eine neue Generation von Open-Source Secure-Element-Chips, entwickelt für transparente und auditierbare Hardware-Sicherheit.",
+    "tutorial__tropic_info": {
+      "Bolt": "TROPIC01 ist ein next Gen Open-Source Sicherheitselement-Chip, entwickelt für transparente und überprüfbare Hardware-Sicherheit.",
+      "Caesar": "TROPIC01 ist ein Open-Source Secure Element Chip der nächsten Generation, der für transparente und überprüfbare Hardware-Sicherheit entwickelt wurde.",
+      "Delizia": "TROPIC01 ist ein Open-Source Sicherheitselementchip der nächsten Generation, der für eine transparente und überprüfbare Sicherheit entwickelt wurde.",
+      "Eckhart": "TROPIC01 ist eine neue Generation von Open-Source Secure-Element-Chips, entwickelt für transparente und auditierbare Hardware-Sicherheit."
+    },
     "tutorial__use_trezor": {
       "Bolt": "Verwende Trezor durch\nDrücken der linken und rechten Tasten.\n\nWeiter rechts.",
       "Caesar": "Verwende Trezor durch\ndrücken der linken und rechten Tasten.\n\rWeiter rechts.",
@@ -1746,17 +1804,38 @@
     "wipe_code__info": "Der Löschcode löscht alle Daten von diesem Gerät.",
     "wipe_code__invalid": "Ungültiger Löschcode",
     "wipe_code__mismatch": "Die Löschcodes stimmen nicht überein.",
+    "wipe_code__pin_not_set_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Du musst zuerst eine PIN setzen, um den Löschcode zu aktivieren."
+    },
     "wipe_code__reenter": "Löschcode neu wählen",
     "wipe_code__reenter_to_confirm": "Gib den Löschcode zur Bestätigung erneut ein.",
     "wipe_code__remove": "Entferne den Löschcode",
     "wipe_code__title": "Löschcode",
     "wipe_code__title_check": "Löschcode prüfen",
-    "wipe_code__title_invalid": "Ungültiger löschcode",
-    "wipe_code__title_settings": "Löschcode-einstell.",
+    "wipe_code__title_invalid": {
+      "Bolt": "Ungültiger Löschcode",
+      "Caesar": "Ungültiger Löschcode",
+      "Delizia": "Ungültiger Löschcode",
+      "Eckhart": "Ungültiger löschcode"
+    },
+    "wipe_code__title_settings": {
+      "Bolt": "Löschcode-Einstell.",
+      "Caesar": "Löschcode-Einstell.",
+      "Delizia": "Löschcode-Einstell.",
+      "Eckhart": "Löschcode-einstell."
+    },
     "wipe_code__turn_off": "Löschcode-Schutz deaktivieren?",
     "wipe_code__turn_on": "Löschcode-Schutz aktivieren?",
     "wipe_code__wipe_code_mismatch": "Löschcode-Konflikt",
-    "word_count__title": "Anzahl der wörter",
+    "word_count__title": {
+      "Bolt": "Anzahl der Wörter",
+      "Caesar": "Anzahl der Wörter",
+      "Delizia": "Anzahl der Wörter",
+      "Eckhart": "Anzahl der wörter"
+    },
     "words__about": "Über",
     "words__account": "Konto",
     "words__account_colon": "Konto:",

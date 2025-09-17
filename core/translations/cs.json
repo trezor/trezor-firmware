@@ -85,6 +85,18 @@
     "authenticate__header": "Ověřit zařízení",
     "auto_lock__change_template": "Automaticky zamknout Trezor po {0} nečinnosti?",
     "auto_lock__description": "Nastavte dobu, po které se Trezor automaticky uzamkne.",
+    "auto_lock__on_battery": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "na baterii / bezdrátové nabíječce"
+    },
+    "auto_lock__on_usb": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "připojeno k USB"
+    },
     "auto_lock__title": "Prodleva auto zámku",
     "auto_lock__turned_on": "Automatické uzamčení zapnuto",
     "backup__can_back_up_anytime": "Svůj Trezor můžete kdykoli zálohovat.",
@@ -786,6 +798,18 @@
     "pin__tries_left": "pok.",
     "pin__turn_off": "Opravdu chcete vypnout ochranu PIN kódem?",
     "pin__turn_on": "Zapnout ochranu PIN kódem?",
+    "pin__wipe_code_exists_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Před vypnutím PINu je nutné vypnout kód pro vymazání."
+    },
+    "pin__wipe_code_exists_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Kód pro vymazání nastaven"
+    },
     "pin__wrong_pin": "Nesprávný PIN",
     "plurals__contains_x_keys": "klíč|klíčů",
     "plurals__lock_after_x_days": "den|dny",
@@ -1302,8 +1326,19 @@
     "tutorial__menu": "Nabídka obsahuje kontextové akce a možnosti.",
     "tutorial__menu_appendix": "Zobrazit více info, ukončit proces ...",
     "tutorial__middle_click": "Stiskněte současně levé i pravé tlačítko\npro potvrzení.",
-    "tutorial__navigation_ts7": "Použijte dolní tlačítka k navigaci a potvrzení akcí.",
+    "tutorial__navigation_ts7": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Použijte dolní tlačítka na displeji k navigaci a potvrzení akcí."
+    },
     "tutorial__one_more_step": "Ještě jeden krok",
+    "tutorial__power": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Použijte tlačítko na boku k zapnutí nebo vypnutí zařízení."
+    },
     "tutorial__press_and_hold": "Podržením pravého tlačítka\nschválíte důležité operace.",
     "tutorial__ready_to_use": "Nyní můžete\npoužívat Trezor.",
     "tutorial__ready_to_use_safe5": "Vše hotovo, můžete začít používat svoje zařízení!",
@@ -1320,7 +1355,7 @@
       "Bolt": "Držením potvrdíte důležité akce",
       "Caesar": "Držením potvrdíte důležité akce",
       "Delizia": "Držením potvrdíte důležité akce",
-      "Eckhart": "Podržte tlačítko pro potvrzení důležitých akcí."
+      "Eckhart": "Podržte tlačítko dole na displeji pro potvrzení důležitých akcí."
     },
     "tutorial__title_lets_begin": "Můžeme začít",
     "tutorial__title_screen_scroll": "Posunutí obrazovky",
@@ -1356,6 +1391,12 @@
     "wipe_code__info": "Kód pro vymazání lze použít k vymazání všech dat ze zařízení.",
     "wipe_code__invalid": "Chybný kód vymazání",
     "wipe_code__mismatch": "Zadané kódy pro vymazání se neshodují.",
+    "wipe_code__pin_not_set_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Před aktivací kódu pro vymazání je nutné nastavit PIN."
+    },
     "wipe_code__reenter": "Zopakujte kód vymaz.",
     "wipe_code__reenter_to_confirm": "Potvrďte dalším zadáním kódu vymazání.",
     "wipe_code__remove": {
