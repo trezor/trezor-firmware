@@ -75,6 +75,18 @@
     "authenticate__header": "Autenticar dispositivo",
     "auto_lock__change_template": "Bloquear o Tezor após {0} de inatividade?",
     "auto_lock__description": "Defina o tempo antes que seu Trezor seja bloqueado automaticamente.",
+    "auto_lock__on_battery": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "com bateria / carregador sem fio"
+    },
+    "auto_lock__on_usb": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "conectado ao USB"
+    },
     "auto_lock__title": "Atraso do bloqueio",
     "auto_lock__turned_on": "Bloqueio automático ativado",
     "backup__can_back_up_anytime": "Você pode fazer um backup do Trezor por vez.",
@@ -766,6 +778,18 @@
     "pin__tries_left": "tentativas restantes",
     "pin__turn_off": "Deseja desligar a proteção por PIN?",
     "pin__turn_on": "Ligar proteção por PIN?",
+    "pin__wipe_code_exists_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "O código de limpeza deve ser desativado antes de desativar a proteção por PIN."
+    },
+    "pin__wipe_code_exists_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Código de limpeza definido"
+    },
     "pin__wrong_pin": "PIN incorreto",
     "plurals__contains_x_keys": "tecla|teclas",
     "plurals__lock_after_x_days": "dia|dias",
@@ -1287,8 +1311,19 @@
     "tutorial__menu": "Encontre ações e opções específicas de contexto no menu.",
     "tutorial__menu_appendix": "Ver mais info, sair do fluxo, ...",
     "tutorial__middle_click": "Pressione ambos os botões esquerdo e direito ao mesmo tempo\nhora de confirmar.",
-    "tutorial__navigation_ts7": "Use os botões abaixo para navegar e confirmar suas ações.",
+    "tutorial__navigation_ts7": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Use os botões abaixo na tela para navegar e confirmar suas ações."
+    },
     "tutorial__one_more_step": "Mais um passo",
+    "tutorial__power": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Use o botão lateral para ligar ou desligar o dipositivo."
+    },
     "tutorial__press_and_hold": "Mantenha pressionado o botão direito para\naprovar operações importantes.",
     "tutorial__ready_to_use": "Seu Tezor já está pronto\npara ser usado.",
     "tutorial__ready_to_use_safe5": "Você está pronto para começar a usar o dispositivo!",
@@ -1305,7 +1340,7 @@
       "Bolt": "Mantenha pressionado para confirmar",
       "Caesar": "Mantenha pressionado para confirmar",
       "Delizia": "Mantenha pressionado para confirmar",
-      "Eckhart": "Segure o botão para confirmar ações importantes."
+      "Eckhart": "Segure o botão na parte inferior da tela para confirmar ações importantes."
     },
     "tutorial__title_lets_begin": "Vamos começar",
     "tutorial__title_screen_scroll": "Rolar tela",
@@ -1341,6 +1376,12 @@
     "wipe_code__info": "O cód. limpeza pode apagar todos os dados deste dispositivo.",
     "wipe_code__invalid": "Cód. limpeza inválido",
     "wipe_code__mismatch": "Cód. limpeza não coincidem.",
+    "wipe_code__pin_not_set_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Defina um PIN antes de ativar o código de limpeza."
+    },
     "wipe_code__reenter": "Reins. cód. limpeza",
     "wipe_code__reenter_to_confirm": "Reins. cód. limpeza para confirmar.",
     "wipe_code__remove": {

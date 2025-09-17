@@ -85,6 +85,18 @@
     "authenticate__header": "Autenticar dispositivo",
     "auto_lock__change_template": "¿Autobloquear tras {0} de inactividad?",
     "auto_lock__description": "Configura el tiempo antes de que tu Trezor se bloquee automáticamente.",
+    "auto_lock__on_battery": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "con batería / cargador inalámbrico"
+    },
+    "auto_lock__on_usb": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "conectado a USB"
+    },
     "auto_lock__title": "Tiempo autobloqueo.",
     "auto_lock__turned_on": "Bloqueo automático activado",
     "backup__can_back_up_anytime": "Puedes hacer una copia de seguridad del Trezor cuando quieras.",
@@ -791,6 +803,18 @@
     "pin__tries_left": "rest.",
     "pin__turn_off": "¿Quieres desactivar la protección con PIN?",
     "pin__turn_on": "¿Activar la protección con PIN?",
+    "pin__wipe_code_exists_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "El código de borrado debe estar desactivado antes de desactivar el PIN."
+    },
+    "pin__wipe_code_exists_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Código de borrado configurado"
+    },
     "pin__wrong_pin": "PIN incorrecto",
     "plurals__contains_x_keys": "clave|claves",
     "plurals__lock_after_x_days": "día|días",
@@ -1312,8 +1336,19 @@
     "tutorial__menu": "Encuentra acciones y opciones específicas del contexto en el menú.",
     "tutorial__menu_appendix": "Ver más info, salir del flujo, ...",
     "tutorial__middle_click": "Pulsa ambos botones a la vez\npara confirmar.",
-    "tutorial__navigation_ts7": "Usa los botones de abajo para navegar y confirmar sus acciones.",
+    "tutorial__navigation_ts7": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Usa los botones de abajo en pantalla para navegar y confirmar sus acciones."
+    },
     "tutorial__one_more_step": "Un paso más",
+    "tutorial__power": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Usa el botón de encendido en el lateral para encender o apagar tu dispositivo."
+    },
     "tutorial__press_and_hold": "Mantén pulsado el botón derecho para\naprobar operaciones importantes.",
     "tutorial__ready_to_use": "Ya puedes\nusar Trezor.",
     "tutorial__ready_to_use_safe5": "¡Estás listo para comenzar a usar tu dispositivo!",
@@ -1330,7 +1365,7 @@
       "Bolt": "Mantén presionado el botón para confirmar acciones importantes",
       "Caesar": "Mantén presionado para confirmar",
       "Delizia": "Mantén presionado para confirmar",
-      "Eckhart": "Mantén presionado el botón para confirmar acciones importantes."
+      "Eckhart": "Mantén presionado el botón en pantalla inferior para conf. acciones importantes."
     },
     "tutorial__title_lets_begin": "Comencemos",
     "tutorial__title_screen_scroll": "Desplazarse",
@@ -1356,8 +1391,18 @@
     },
     "wipe__title": "Borrar dispositivo",
     "wipe__want_to_wipe": "¿Quieres borrar el dispositivo?\n",
-    "wipe_code__change": "Cambiar el código de borrar",
-    "wipe_code__change_question": "¿Cambiar el código de borrar?",
+    "wipe_code__change": {
+      "Bolt": "Cambiar el código de borrar",
+      "Caesar": "Cambiar el código de borrar",
+      "Delizia": "Cambiar el código de borrar",
+      "Eckhart": "Cambiar el código de restablecimiento"
+    },
+    "wipe_code__change_question": {
+      "Bolt": "¿Cambiar el código de borrar?",
+      "Caesar": "¿Cambiar el código de borrar?",
+      "Delizia": "¿Cambiar el código de borrar?",
+      "Eckhart": "¿Cambiar el código de restablecimiento?"
+    },
     "wipe_code__changed": "El código de borrar se ha cambiado.",
     "wipe_code__diff_from_pin": "El código de borrar debe ser diferente del PIN.",
     "wipe_code__disabled": "El código de borrar se ha desactivado.",
@@ -1366,6 +1411,12 @@
     "wipe_code__info": "Con el código de borrar eliminarás todos los datos del dispositivo.",
     "wipe_code__invalid": "Cód. borrar no válido",
     "wipe_code__mismatch": "Los códigos de borrar no coinciden.",
+    "wipe_code__pin_not_set_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Debe configurar un PIN antes de activar el código de borrado."
+    },
     "wipe_code__reenter": "Reingresar cód. bor.",
     "wipe_code__reenter_to_confirm": "Reingresar cód.borrar para confirmar.",
     "wipe_code__remove": {
