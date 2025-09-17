@@ -451,12 +451,7 @@ pm_status_t pm_store_data_to_backup_ram() {
 
   pm_recovery_data_t recovery = {.version = PM_RECOVERY_DATA_VERSION};
 
-  // Fuel gauge state
-  if (drv->battery_critical) {
-    recovery.soc = 0;
-  } else {
-    recovery.soc = drv->fuel_gauge.soc;
-  }
+  recovery.soc = drv->fuel_gauge.soc;
   recovery.P = drv->fuel_gauge.P;
 
   // Power manager state
