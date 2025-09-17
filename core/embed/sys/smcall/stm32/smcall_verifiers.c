@@ -26,6 +26,8 @@
 
 #include <sys/systask.h>
 
+#include <libtropic_common.h>
+
 #include "smcall_probe.h"
 #include "smcall_verifiers.h"
 

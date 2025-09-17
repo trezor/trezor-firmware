@@ -25,6 +25,8 @@
 
 #include <sys/systask.h>
 
+#include <libtropic_common.h>
+
 #include "syscall_probe.h"
 #include "syscall_verifiers.h"
 
