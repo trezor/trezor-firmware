@@ -163,9 +163,9 @@ _Static_assert(NORCOW_SECTOR_SIZE == STORAGE_2_MAXSIZE, "norcow misconfigured");
 #define OTP_AND_ID_SIZE 0x800
 
 #ifdef SECMON
-extern uint32_t _codelen;
+extern uint32_t _secmon_size;
 #define SECMON_START FIRMWARE_START_S
-#define SECMON_SIZE (uint32_t) & _codelen
+#define SECMON_SIZE (uint32_t) & _secmon_size
 #endif
 
 #ifdef KERNEL
