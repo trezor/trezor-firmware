@@ -1842,19 +1842,25 @@ async def pin_wipe_code_exists_popup(
 
 
 async def confirm_set_new_code(
-    br_name: str,
-    title: str,
-    description: str,
-    information: str,
     is_wipe_code: bool,
-    br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> None:
+    if is_wipe_code:
+        title = TR.wipe_code__title_settings
+        description = TR.wipe_code__turn_on
+        information = TR.wipe_code__info
+        br_name = "set_wipe_code"
+    else:
+        title = TR.pin__title_settings
+        description = TR.pin__turn_on
+        information = TR.pin__info
+        br_name = "set_pin"
+
     await _confirm_multiple_pages_texts(
         br_name,
         title,
         [description, information],
         TR.buttons__turn_on,
-        br_code,
+        BR_CODE_OTHER,
     )
 
     # Not showing extra info for wipe code
@@ -1871,7 +1877,7 @@ async def confirm_set_new_code(
         title,
         next_info,
         TR.buttons__continue,
-        br_code,
+        BR_CODE_OTHER,
     )
 
 

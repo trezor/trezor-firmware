@@ -579,11 +579,9 @@ extern "C" fn new_flow_confirm_set_new_code(
     kwargs: *mut Map,
 ) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let is_wipe_code: bool = kwargs.get(Qstr::MP_QSTR_is_wipe_code)?.try_into()?;
 
-        let layout = ModelUI::flow_confirm_set_new_code(title, description, is_wipe_code)?;
+        let layout = ModelUI::flow_confirm_set_new_code(is_wipe_code)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1714,8 +1712,6 @@ pub static mp_module_trezorui_api: Module = obj_module! {
 
     /// def flow_confirm_set_new_code(
     ///     *,
-    ///     title: str,
-    ///     description: str,
     ///     is_wipe_code: bool,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm new PIN/wipe code setup with an option to cancel action."""

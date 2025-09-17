@@ -1815,13 +1815,19 @@ async def pin_wipe_code_exists_popup(
 
 
 def confirm_set_new_code(
-    br_name: str,
-    title: str,
-    description: str,
-    information: str,
     is_wipe_code: bool,
-    br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
+    if is_wipe_code:
+        title = TR.wipe_code__title_settings
+        description = TR.wipe_code__turn_on
+        information = TR.wipe_code__info
+        br_name = "set_wipe_code"
+    else:
+        title = TR.pin__title_settings
+        description = TR.pin__turn_on
+        information = TR.pin__info
+        br_name = "set_pin"
+
     return raise_if_cancelled(
         trezorui_api.confirm_emphasized(
             title=title,
@@ -1832,7 +1838,7 @@ def confirm_set_new_code(
             verb=TR.buttons__turn_on,
         ),
         br_name,
-        br_code,
+        BR_CODE_OTHER,
     )
 
 

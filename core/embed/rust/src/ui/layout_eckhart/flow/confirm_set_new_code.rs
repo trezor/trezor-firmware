@@ -54,15 +54,17 @@ impl FlowController for SetNewCode {
     }
 }
 
-pub fn new_set_new_code(
-    title: TString<'static>,
-    description: TString<'static>,
-    is_wipe_code: bool,
-) -> Result<SwipeFlow, error::Error> {
+pub fn new_set_new_code(is_wipe_code: bool) -> Result<SwipeFlow, error::Error> {
+    let (title, description) = if is_wipe_code {
+        (TR::wipe_code__title_settings, TR::wipe_code__info)
+    } else {
+        (TR::pin__title_settings, TR::pin__info)
+    };
+
     let paragraphs = Paragraphs::new(Paragraph::new(&theme::firmware::TEXT_REGULAR, description))
         .with_placement(LinearPlacement::vertical());
     let content_intro = TextScreen::new(paragraphs)
-        .with_header(Header::new(title).with_menu_button())
+        .with_header(Header::new(title.into()).with_menu_button())
         .with_action_bar(ActionBar::new_single(Button::with_text(
             TR::buttons__continue.into(),
         )))
@@ -76,7 +78,7 @@ pub fn new_set_new_code(
     let content_menu = VerticalMenuScreen::new(VerticalMenu::<ShortMenuVec>::empty().with_item(
         Button::new_menu_item(TR::buttons__cancel.into(), theme::menu_item_title_orange()),
     ))
-    .with_header(Header::new(title).with_close_button())
+    .with_header(Header::new(title.into()).with_close_button())
     .map(|msg| match msg {
         VerticalMenuScreenMsg::Close => Some(FlowMsg::Cancelled),
         VerticalMenuScreenMsg::Selected(i) => Some(FlowMsg::Choice(i)),

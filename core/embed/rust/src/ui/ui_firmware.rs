@@ -205,11 +205,7 @@ pub trait FirmwareUI {
         cancel_text: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
-    fn flow_confirm_set_new_code(
-        title: TString<'static>,
-        description: TString<'static>,
-        is_wipe_code: bool,
-    ) -> Result<impl LayoutMaybeTrace, Error>;
+    fn flow_confirm_set_new_code(is_wipe_code: bool) -> Result<impl LayoutMaybeTrace, Error>;
 
     #[allow(clippy::too_many_arguments)]
     fn flow_get_address(
