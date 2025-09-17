@@ -25,7 +25,7 @@
  * @param end Target backlight level (0-255)
  * @param delay Total duration of the fade effect in milliseconds
  */
-void display_fade(int start, int end, int delay);
+void display_fade(uint8_t start, uint8_t end, int delay);
 
 /**
  * @brief Starts recording the display output to files
