@@ -65,13 +65,20 @@ impl Button {
             ButtonContent::TextAndSubtext {
                 subtext,
                 subtext_style,
+                subtext_is_marquee,
                 ..
-            } => Some(Marquee::new(
-                subtext,
-                subtext_style.text_font,
-                subtext_style.text_color,
-                subtext_style.background_color,
-            )),
+            } => {
+                if subtext_is_marquee {
+                    Some(Marquee::new(
+                        subtext,
+                        subtext_style.text_font,
+                        subtext_style.text_color,
+                        subtext_style.background_color,
+                    ))
+                } else {
+                    None
+                }
+            }
             _ => None,
         };
         Self {
