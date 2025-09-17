@@ -36,7 +36,9 @@ impl Component for SetBrightnessDialog {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         match self.0.event(ctx, event) {
             Some(NumberInputSliderDialogMsg::Changed(value)) => {
-                display::backlight(value.into());
+                // TODO: needs more analysis; why is "value" u16? Can it be changed to u8?
+                //display::set_backlight(value.into());
+                display::set_backlight(value.try_into().unwrap());
                 None
             }
             Some(NumberInputSliderDialogMsg::Cancelled) => Some(CancelConfirmMsg::Cancelled),
