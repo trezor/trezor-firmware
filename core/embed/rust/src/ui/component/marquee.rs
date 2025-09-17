@@ -70,6 +70,11 @@ impl Marquee {
             self.min_offset = 0;
             self.max_offset = max_offset;
 
+            // If text fits completely, don't start animation
+            if max_offset >= 0 {
+                return;
+            }
+
             let anim = Animation::new(self.min_offset, max_offset, self.duration, now);
 
             self.state = State::Left(anim);
@@ -141,8 +146,9 @@ impl Component for Marquee {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // Not doing anything if animations are disabled.
-        if animation_disabled() {
+        // Not doing anything if animations are disabled or if we never started (text
+        // fits)
+        if animation_disabled() || matches!(self.state, State::Initial) {
             return None;
         }
 
