@@ -49,14 +49,14 @@ typedef struct {
   bool initialized;
 
   // Level requested (0-255)
-  int requested_level;
-  int current_level;
+  uint8_t requested_level;
+  uint8_t current_level;
 
   // Current step in range 0-32
   int current_step;
 
   // Max backlight level
-  int max_level;
+  uint8_t max_level;
 
   DMA_HandleTypeDef dma;
   TIM_HandleTypeDef tim;
@@ -189,29 +189,24 @@ void backlight_deinit(backlight_action_t action) {
   drv->initialized = false;
 }
 
-int backlight_set(int val) {
+bool backlight_set(uint8_t val) {
   backlight_driver_t *drv = &g_backlight_driver;
 
   if (!drv->initialized) {
-    return 0;
-  }
-
-  // Requested level out of range
-  if (val < BACKLIGHT_MIN_LEVEL || val > BACKLIGHT_MAX_LEVEL) {
-    return drv->current_level;
+    return false;
   }
 
   // Capture requested level.
   drv->requested_level = val;
 
-  int requested_level_limited = drv->requested_level;
+  uint8_t requested_level_limited = drv->requested_level;
   if (drv->requested_level > drv->max_level) {
     requested_level_limited = drv->max_level;
   }
 
   // No action required
   if (requested_level_limited == drv->current_level) {
-    return drv->current_level;
+    return true;
   }
 
   // New backlight level
@@ -222,7 +217,7 @@ int backlight_set(int val) {
   if (set_step == 0) {
     backlight_shutdown();
     drv->current_step = 0;
-    return drv->current_level;
+    return true;
   }
 
   if (HAL_DMA_GetState(&drv->dma) == HAL_DMA_STATE_BUSY) {
@@ -261,10 +256,10 @@ int backlight_set(int val) {
 
   drv->current_step = set_step;
 
-  return drv->current_level;
+  return true;
 }
 
-int backlight_get(void) {
+uint8_t backlight_get(void) {
   backlight_driver_t *drv = &g_backlight_driver;
 
   if (!drv->initialized) {
@@ -275,25 +270,18 @@ int backlight_get(void) {
 }
 
 // Set maximal backlight level
-int backlight_set_max_level(int max_level) {
+bool backlight_set_max_level(uint8_t max_level) {
   backlight_driver_t *drv = &g_backlight_driver;
 
   if (!drv->initialized) {
-    return 0;
-  }
-
-  if (max_level < BACKLIGHT_MIN_LEVEL) {
-    max_level = BACKLIGHT_MIN_LEVEL;
-  }
-
-  if (max_level > BACKLIGHT_MAX_LEVEL) {
-    max_level = BACKLIGHT_MAX_LEVEL;
+    return false;
   }
 
   drv->max_level = max_level;
-  backlight_set(drv->requested_level);
 
-  return drv->current_level;
+  // TODO: are we sure that "drv->requested_level" shall be passed as an
+  // argument, here? Shouldn't it raher be "drv->max_level"?
+  return backlight_set(drv->requested_level);
 }
 
 static void backlight_control_up(uint32_t *data, int steps) {

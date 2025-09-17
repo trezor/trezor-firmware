@@ -26,7 +26,7 @@ typedef struct {
   // Set if driver is initialized
   bool initialized;
   // Current backlight level in range 0-255
-  int current_level;
+  uint8_t current_level;
 
 } backlight_driver_t;
 
@@ -79,10 +79,11 @@ void backlight_deinit(backlight_action_t action) {
   }
 }
 
-int backlight_set(int val) {
+bool backlight_set(uint8_t val) {
   backlight_driver_t *drv = &g_backlight_driver;
+
   if (!drv->initialized) {
-    return 0;
+    return false;
   }
 
   if (val > 0) {
@@ -90,11 +91,13 @@ int backlight_set(int val) {
   } else {
     backlight_off();
   }
+
   drv->current_level = val;
-  return val;
+
+  return true;
 }
 
-int backlight_get(void) {
+uint8_t backlight_get(void) {
   backlight_driver_t *drv = &g_backlight_driver;
   if (!drv->initialized) {
     return 0;
