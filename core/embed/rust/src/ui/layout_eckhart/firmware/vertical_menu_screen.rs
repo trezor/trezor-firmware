@@ -77,7 +77,7 @@ impl<T: MenuItems> VerticalMenuScreen<T> {
             self.subtitle =
                 Some(Label::left_aligned(subtitle, Self::SUBTITLE_STYLE).vertically_centered());
             // The menu shouldn't overlap the subtitle area
-            self.menu.no_first_item_shrink();
+            self.menu.no_top_component_overlap();
         }
         self
     }
