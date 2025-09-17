@@ -151,7 +151,7 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_get_user_data(mp_obj_t index) {
 
   size_t data_size = 0;
   if (!tropic_data_multi_size(first_slot, &data_size)) {
-    mp_raise_msg(&mp_type_OptigaError,
+    mp_raise_msg(&mp_type_TropicError,
                  MP_ERROR_TEXT("Failed to read user data size."));
   }
 
