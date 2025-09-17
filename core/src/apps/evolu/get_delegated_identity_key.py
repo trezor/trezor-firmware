@@ -7,13 +7,16 @@ if TYPE_CHECKING:
 async def get_delegated_identity_key(
     _msg: EvoluGetDelegatedIdentityKey,
 ) -> EvoluDelegatedIdentityKey:
-    from trezor import wire
+    from trezor import wire, utils
     from trezor.messages import EvoluDelegatedIdentityKey
     from trezor.ui.layouts import confirm_action
     from trezor.utils import bootloader_locked
 
     if not bootloader_locked():
         raise wire.ProcessError("Cannot enable labeling since bootloader is unlocked.")
+
+    if not utils.USE_OPTIGA:
+        raise RuntimeError("Optiga is not available")
 
     await confirm_action(
         "Enable labeling",
