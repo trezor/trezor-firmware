@@ -30,7 +30,7 @@
 secbool secret_key_optiga_pairing(uint8_t dest[OPTIGA_PAIRING_SECRET_SIZE]) {
   return secret_key_get(SECRET_OPTIGA_SLOT, dest, OPTIGA_PAIRING_SECRET_SIZE);
 }
-#endif
+#endif // USE_OPTIGA
 
 secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   // TODO: this is a placeholder value
@@ -42,4 +42,4 @@ secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   return sectrue;
 }
 
-#endif
+#endif // SECURE_MODE
