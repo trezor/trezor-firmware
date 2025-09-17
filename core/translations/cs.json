@@ -1381,6 +1381,12 @@
     },
     "wipe__title": "Vymazat zařízení",
     "wipe__want_to_wipe": "Opravdu chcete vymazat zařízení?\n",
+    "wipe_code__cancel_setup": {
+      "Bolt": "Zrušit nastavení kódu pro vymazání",
+      "Caesar": "Zrušit nastavení kódu pro vymazání",
+      "Delizia": "Zrušit nastavení kódu pro vymazání",
+      "Eckhart": "Zrušit nastavení kódu pro vymazání?"
+    },
     "wipe_code__change": "Změnit kód pro vymazání",
     "wipe_code__change_question": "Změnit kód pro vymazání?",
     "wipe_code__changed": "Kód pro vymazání změněn.",

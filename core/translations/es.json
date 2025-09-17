@@ -1391,6 +1391,12 @@
     },
     "wipe__title": "Borrar dispositivo",
     "wipe__want_to_wipe": "¿Quieres borrar el dispositivo?\n",
+    "wipe_code__cancel_setup": {
+      "Bolt": "Cancelar la configuración del código de borrado",
+      "Caesar": "Cancelar la configuración del código de borrado",
+      "Delizia": "Cancelar la configuración del código de borrado",
+      "Eckhart": "¿Cancelar la configuración del código de borrado?"
+    },
     "wipe_code__change": {
       "Bolt": "Cambiar el código de borrar",
       "Caesar": "Cambiar el código de borrar",

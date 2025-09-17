@@ -1366,6 +1366,12 @@
     },
     "wipe__title": "Limpar dispositivo",
     "wipe__want_to_wipe": "Deseja mesmo limpar o dispositivo?\n",
+    "wipe_code__cancel_setup": {
+      "Bolt": "Cancelar configuração do código de limpeza",
+      "Caesar": "Cancelar configuração do código de limpeza",
+      "Delizia": "Cancelar configuração do código de limpeza",
+      "Eckhart": "Cancelar configuração do código de limpeza?"
+    },
     "wipe_code__change": "Alterar código de limpeza",
     "wipe_code__change_question": "Alterar código de limpeza?",
     "wipe_code__changed": "O código de limpeza foi alterado.",
