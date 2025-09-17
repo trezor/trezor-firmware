@@ -21,28 +21,26 @@
 
 #include <trezor_types.h>
 
-#include "libtropic.h"
-
 // FIDO attestation key and certificate.
 #define TROPIC_FIDO_CERT_FIRST_SLOT 0
 #define TROPIC_FIDO_CERT_SLOT_COUNT 3
-#define TROPIC_FIDO_KEY_SLOT ECC_SLOT_1
+#define TROPIC_FIDO_KEY_SLOT 1  // ECC_SLOT_1
 
 // Device attestation key and certificate.
 #define TROPIC_DEVICE_CERT_FIRST_SLOT 3
 #define TROPIC_DEVICE_CERT_SLOT_COUNT 3
-#define TROPIC_DEVICE_KEY_SLOT ECC_SLOT_0
+#define TROPIC_DEVICE_KEY_SLOT 0  // ECC_SLOT_0
 
 // Pairing key used by prodtest to inject the privileged and unprivileged
 // pairing keys.
-#define TROPIC_FACTORY_PAIRING_KEY_SLOT PAIRING_KEY_SLOT_INDEX_0
+#define TROPIC_FACTORY_PAIRING_KEY_SLOT 0  // PAIRING_KEY_SLOT_INDEX_0
 
-// Pairing key used by HSM to inject the attestation FIDO key and generate the
-// device key, and by unofficial firwmare with an unlocked bootloader.
-#define TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT PAIRING_KEY_SLOT_INDEX_1
+// Pairing key used by the HSM to inject the attestation FIDO key and generate
+// the device key, and by unofficial firwmare.
+#define TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT 1  // PAIRING_KEY_SLOT_INDEX_1
 
 // Pairing key used by official firmware.
-#define TROPIC_PRIVILEGED_PAIRING_KEY_SLOT PAIRING_KEY_SLOT_INDEX_2
+#define TROPIC_PRIVILEGED_PAIRING_KEY_SLOT 2  // PAIRING_KEY_SLOT_INDEX_2
 
 #ifdef KERNEL_MODE
 
@@ -51,6 +49,7 @@ bool tropic_init(void);
 void tropic_deinit(void);
 
 #ifdef TREZOR_PRODTEST
+#include "libtropic.h"
 lt_handle_t* tropic_get_handle(void);
 #endif
 
