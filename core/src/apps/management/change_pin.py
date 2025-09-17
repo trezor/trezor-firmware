@@ -93,10 +93,6 @@ def _require_confirm_change_pin(msg: ChangePin) -> Awaitable[None]:
 
     if not msg.remove and not has_pin:  # setting new pin
         return confirm_set_new_code(
-            "set_pin",
-            TR.pin__title_settings,
-            TR.pin__turn_on,
-            TR.pin__info,
             is_wipe_code=False,
         )
 

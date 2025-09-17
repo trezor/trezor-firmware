@@ -90,10 +90,6 @@ def _require_confirm_action(
 
     if not msg.remove and not has_wipe_code:  # setting new wipe code
         return confirm_set_new_code(
-            "set_wipe_code",
-            TR.wipe_code__title_settings,
-            TR.wipe_code__turn_on,
-            TR.wipe_code__info,
             is_wipe_code=True,
         )
 

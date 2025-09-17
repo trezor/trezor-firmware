@@ -601,11 +601,7 @@ impl FirmwareUI for UIBolt {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
-    fn flow_confirm_set_new_code(
-        _title: TString<'static>,
-        _description: TString<'static>,
-        _is_wipe_code: bool,
-    ) -> Result<impl LayoutMaybeTrace, Error> {
+    fn flow_confirm_set_new_code(_is_wipe_code: bool) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
