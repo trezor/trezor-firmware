@@ -366,7 +366,7 @@ pub trait FirmwareUI {
         backup_failed: bool,
         backup_needed: bool,
         paired_devices: heapless::Vec<
-            (TString<'static>, Option<TString<'static>>),
+            (TString<'static>, Option<[TString<'static>; 2]>),
             MAX_PAIRED_DEVICES,
         >,
         connected_idx: Option<u8>,

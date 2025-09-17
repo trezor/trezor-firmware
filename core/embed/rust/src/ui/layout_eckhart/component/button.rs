@@ -147,30 +147,35 @@ impl Button {
         subtext: Option<TString<'static>>,
         connected: bool,
     ) -> Self {
-        let (icon, subtext_style) = if connected {
+        let icon_color = if connected {
+            theme::GREEN_LIGHT
+        } else {
+            theme::GREY_DARK
+        };
+        let (subtext, subtext_style) = if let Some(subtext) = subtext {
+            (subtext, &theme::TEXT_MENU_ITEM_SUBTITLE)
+        } else if connected {
             (
-                (theme::ICON_SQUARE, theme::GREEN_LIGHT),
+                TR::words__connected.into(),
                 &theme::TEXT_MENU_ITEM_SUBTITLE_GREEN,
             )
         } else {
             (
-                (theme::ICON_SQUARE, theme::GREY_DARK),
+                TR::words__disconnected.into(),
                 &theme::TEXT_MENU_ITEM_SUBTITLE,
             )
         };
-        let subtext = subtext.unwrap_or_else(|| {
-            if connected {
-                TR::words__connected.into()
-            } else {
-                TR::words__disconnected.into()
-            }
-        });
 
-        Self::with_text_and_subtext(text, subtext, subtext_style, Some(icon))
-            .with_text_align(Self::MENU_ITEM_ALIGNMENT)
-            .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
-            .styled(stylesheet)
-            .with_radius(Self::MENU_ITEM_RADIUS)
+        Self::with_text_and_subtext_marquee(
+            text,
+            subtext,
+            subtext_style,
+            Some((theme::ICON_SQUARE, icon_color)),
+        )
+        .with_text_align(Self::MENU_ITEM_ALIGNMENT)
+        .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
+        .styled(stylesheet)
+        .with_radius(Self::MENU_ITEM_RADIUS)
     }
 
     pub const fn with_single_line_text(text: TString<'static>) -> Self {
@@ -202,6 +207,20 @@ impl Button {
         icon: Option<(Icon, Color)>,
     ) -> Self {
         Self::new(ButtonContent::single_line_text_and_marquee_subtext(
+            text,
+            subtext,
+            subtext_style,
+            icon,
+        ))
+    }
+
+    pub fn with_text_and_subtext_marquee(
+        text: TString<'static>,
+        subtext: TString<'static>,
+        subtext_style: &'static TextStyle,
+        icon: Option<(Icon, Color)>,
+    ) -> Self {
+        Self::new(ButtonContent::text_and_marquee_subtext(
             text,
             subtext,
             subtext_style,
@@ -652,15 +671,22 @@ impl Component for Button {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
-        let subtext_start =
-            self.baseline_text_height() * 2 + constant::LINE_SPACE + self.baseline_subtext_height();
-        if let Some(m) = &mut self.subtext_marquee {
-            m.place(
-                self.area
+
+        if let ButtonContent::TextAndSubtext { icon, .. } = self.content {
+            let subtext_start = (bounds.height() + self.content_height(bounds.width())) / 2
+                - self.baseline_subtext_height();
+            if let Some(m) = self.subtext_marquee.as_mut() {
+                let mut marquee_area = self
+                    .area
                     .inset(Insets::top(subtext_start))
-                    .inset(Insets::sides(self.content_offset.x)),
-            );
+                    .inset(Insets::sides(self.content_offset.x));
+                if icon.is_some() {
+                    marquee_area = marquee_area.inset(Insets::right(Self::CONN_ICON_WIDTH));
+                }
+                m.place(marquee_area);
+            }
         }
+
         self.area
     }
 
@@ -864,6 +890,22 @@ impl ButtonContent {
         Self::TextAndSubtext {
             text,
             single_line: true,
+            subtext,
+            subtext_style,
+            subtext_is_marquee: true,
+            icon,
+        }
+    }
+
+    pub const fn text_and_marquee_subtext(
+        text: TString<'static>,
+        subtext: TString<'static>,
+        subtext_style: &'static TextStyle,
+        icon: Option<(Icon, Color)>,
+    ) -> Self {
+        Self::TextAndSubtext {
+            text,
+            single_line: false,
             subtext,
             subtext_style,
             subtext_is_marquee: true,

@@ -257,14 +257,14 @@ enum Subscreen {
 
     // A screen allowing the user to to disconnect a device
     DeviceScreen(
-        TString<'static>, /* device name */
+        TString<'static>, /* device main text */
         bool,             /* is the device connected? */
         u8,               /* index in the list of devices */
         u8,               /* host info screen index */
     ),
 
     HostInfoScreen(
-        TString<'static>, /* device name */
+        TString<'static>, /* host name */
         TString<'static>, /* MAC address */
         u8,               /* parent screen index */
     ),
@@ -316,10 +316,7 @@ impl DeviceMenuScreen {
         init_submenu_idx: Option<u8>,
         backup_failed: bool,
         backup_needed: bool,
-        paired_devices: heapless::Vec<
-            (TString<'static>, Option<TString<'static>>),
-            MAX_PAIRED_DEVICES,
-        >,
+        paired_devices: Vec<(TString<'static>, Option<[TString<'static>; 2]>), MAX_PAIRED_DEVICES>,
         connected_idx: Option<u8>,
         pin_enabled: Option<bool>,
         auto_lock: Option<[TString<'static>; 2]>,
@@ -362,33 +359,40 @@ impl DeviceMenuScreen {
             is_connected.then_some(TR::words__connected.into());
 
         let mut submenu_indices: Vec<u8, MAX_PAIRED_DEVICES> = Vec::new();
-        for (i, (mac, name)) in (0u8..).zip(paired_devices.iter()) {
+        for (i, (mac, host_info)) in (0u8..).zip(paired_devices.iter()) {
             let connected = connected_idx == Some(i);
-            let device_name = if let Some(name) = name { *name } else { *mac };
-            // Add the host info subscreen first, so that we can reference it from the device subscreen
-            let host_info = screen.add_subscreen(Subscreen::HostInfoScreen(
-                device_name,
-                *mac,
+
+            // Add the host info subscreen first, so that we can reference it from the
+            // device subscreen
+            let host_name = if let Some([host_name, _app_name]) = host_info {
+                *host_name
+            } else {
+                TR::words__unknown.into()
+            };
+            let info_subscreen = screen.add_subscreen(Subscreen::HostInfoScreen(
+                host_name, *mac,
                 0, /* dummy value because the device subscreen doesn't exist yet */
             ));
             // Add the device subscreen with the reference to the host info subscreen
-            let device = screen.add_subscreen(Subscreen::DeviceScreen(
-                device_name,
-                connected,
-                i,
-                host_info,
-            ));
+            let text = if let Some([host_name, _]) = host_info {
+                *host_name
+            } else {
+                *mac
+            };
+            let device_subscreen =
+                screen.add_subscreen(Subscreen::DeviceScreen(text, connected, i, info_subscreen));
 
-            // Update the parent index in the host info screen to break the circular dependency
+            // Update the parent index in the host info screen to break the circular
+            // dependency
             if let Subscreen::HostInfoScreen(_, _, parent_idx) =
-                &mut screen.subscreens[usize::from(host_info)]
+                &mut screen.subscreens[usize::from(info_subscreen)]
             {
-                *parent_idx = device;
+                *parent_idx = device_subscreen;
             } else {
                 unreachable!();
             }
 
-            unwrap!(submenu_indices.push(device));
+            unwrap!(submenu_indices.push(device_subscreen));
         }
 
         screen.register_pair_and_connect_menu(paired_devices, submenu_indices, connected_idx);
@@ -425,19 +429,33 @@ impl DeviceMenuScreen {
 
     fn register_pair_and_connect_menu(
         &mut self,
-        paired_devices: Vec<(TString<'static>, Option<TString<'static>>), MAX_PAIRED_DEVICES>,
+        paired_devices: Vec<(TString<'static>, Option<[TString<'static>; 2]>), MAX_PAIRED_DEVICES>,
         submenu_indices: Vec<u8, MAX_PAIRED_DEVICES>,
         connected_idx: Option<u8>,
     ) {
         let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
-        for (i, ((mac, name), device)) in (0u8..).zip(paired_devices.iter().zip(submenu_indices)) {
+        for (i, ((mac, host_info), device)) in
+            (0u8..).zip(paired_devices.iter().zip(submenu_indices))
+        {
             let connection_status = match connected_idx {
                 Some(idx) if idx == i => Some(true),
                 _ => Some(false),
             };
-            let device_title = if let Some(name) = name { *name } else { *mac };
-            let item_device = MenuItem::go_to_subscreen(device_title, device)
-                .with_connection_status(connection_status);
+
+            let (text, subtext) = if let Some([host_name, app_name]) = host_info {
+                (*app_name, Some(*host_name))
+            } else {
+                (*mac, None)
+            };
+            let mut item_device =
+                MenuItem::go_to_subscreen(text, device).with_connection_status(connection_status);
+
+            if let Some(subtext) = subtext {
+                item_device = item_device
+                    .with_subtext(Some((subtext, None)))
+                    .with_subtext_marquee();
+            }
+
             items.add(item_device);
         }
 
@@ -835,18 +853,13 @@ impl DeviceMenuScreen {
                         .with_subtitle(device),
                 );
             }
-            Subscreen::HostInfoScreen(name, mac, ..) => {
-                let show_name = if name == mac {
-                    TR::words__unknown.into()
-                } else {
-                    name
-                };
+            Subscreen::HostInfoScreen(host_name, mac, ..) => {
                 *self.active_screen.deref_mut() = ActiveScreen::HostInfo(
                     TextScreen::new(
                         Paragraphs::new([
                             Paragraph::new(&theme::TEXT_MEDIUM_EXTRA_LIGHT, TR::words__name)
                                 .with_bottom_padding(theme::PROP_INNER_SPACING),
-                            Paragraph::new(&theme::TEXT_MONO_LIGHT, show_name)
+                            Paragraph::new(&theme::TEXT_MONO_LIGHT, host_name)
                                 .with_bottom_padding(theme::TEXT_VERTICAL_SPACING),
                             Paragraph::new(&theme::TEXT_MEDIUM_EXTRA_LIGHT, TR::ble__mac_address)
                                 .with_bottom_padding(theme::PROP_INNER_SPACING),
