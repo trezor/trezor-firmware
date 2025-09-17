@@ -48,7 +48,7 @@ async def evolu_sign_registration_request(
         "{" + ",".join(f"{k}:{v}" for k, v in registration_request.items()) + "}"
     )
 
-    header = b"EvoluSignRegistrationRequest:"
+    header = b"EvoluSignRegistrationRequest:"  # tady bude verze
     h = utils.HashWriter(sha256())
     write_compact_size(h, len(header))
     h.extend(header)

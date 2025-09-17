@@ -17,7 +17,7 @@ async def get_evolu_node(msg: EvoluGetNode) -> EvoluNode:
     if not is_initialized():
         raise NotInitialized("Device is not initialized")
 
-    if utils.USE_OPTIGA:
+    if not utils.USE_OPTIGA:
         raise RuntimeError("Optiga is not available")
 
     if not check_delegated_identity_key(msg.proof, header=b"EvoluGetNode"):
