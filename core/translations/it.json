@@ -1166,6 +1166,7 @@
     "wipe__start_again": "",
     "wipe__title": "Elimina dati disp.",
     "wipe__want_to_wipe": "Vuoi eliminare i dati dal dispositivo?\n",
+    "wipe_code__cancel_setup": "",
     "wipe_code__change": "",
     "wipe_code__change_question": "",
     "wipe_code__changed": "Codice di eliminazione modificato.",

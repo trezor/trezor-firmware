@@ -1794,6 +1794,12 @@
     },
     "wipe__title": "Gerät löschen",
     "wipe__want_to_wipe": "Möchtest du die Gerätedaten wirklich löschen?\n",
+    "wipe_code__cancel_setup": {
+      "Bolt": "Löschcode-Einrichtung abbrechen",
+      "Caesar": "Löschcode-Einrichtung abbrechen",
+      "Delizia": "Löschcode-Einrichtung abbrechen",
+      "Eckhart": "Löschcode-Einrichtung abbrechen?"
+    },
     "wipe_code__change": "Löschcode ändern",
     "wipe_code__change_question": "Löschcode ändern?",
     "wipe_code__changed": "Löschcode geändert.",
