@@ -6377,14 +6377,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ThpPairingRequest(protobuf.MessageType):
-        host_name: "str | None"
-        app_name: "str | None"
+        host_name: "str"
+        app_name: "str"
 
         def __init__(
             self,
             *,
-            host_name: "str | None" = None,
-            app_name: "str | None" = None,
+            host_name: "str",
+            app_name: "str",
         ) -> None:
             pass
 

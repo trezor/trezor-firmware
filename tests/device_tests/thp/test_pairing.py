@@ -209,7 +209,9 @@ def test_pairing_code_entry_cancel(
 def test_pairing_cancel_1(client: Client) -> None:
     protocol = prepare_protocol_for_pairing(client)
 
-    protocol._send_message(ThpPairingRequest(host_name="TestTrezor Cancel 1"))
+    protocol._send_message(
+        ThpPairingRequest(host_name="localhost", app_name="TestTrezor Cancel 1")
+    )
     button_req = protocol._read_message(ButtonRequest)
     assert button_req.name == "thp_pairing_request"
 
@@ -224,7 +226,9 @@ def test_pairing_cancel_1(client: Client) -> None:
 def test_pairing_cancel_2(client: Client) -> None:
     protocol = prepare_protocol_for_pairing(client)
 
-    protocol._send_message(ThpPairingRequest(host_name="TestTrezor Cancel 2"))
+    protocol._send_message(
+        ThpPairingRequest(host_name="localhost", app_name="TestTrezor Cancel 2")
+    )
     button_req = protocol._read_message(ButtonRequest)
     assert button_req.name == "thp_pairing_request"
 
