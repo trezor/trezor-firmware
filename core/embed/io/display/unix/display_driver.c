@@ -63,7 +63,7 @@ typedef struct {
   // Current display orientation (0 or 180)
   int orientation_angle;
   // Current backlight level ranging from 0 to 255
-  int backlight_level;
+  uint8_t backlight_level;
 
   SDL_Window *window;
   SDL_Renderer *renderer;
@@ -223,26 +223,26 @@ void display_deinit(display_content_mode_t mode) {
   drv->initialized = false;
 }
 
-int display_set_backlight(int level) {
+bool display_set_backlight(uint8_t level) {
   display_driver_t *drv = &g_display_driver;
 
   if (!drv->initialized) {
-    return 0;
+    return false;
   }
 
 #if !USE_BACKLIGHT
   level = 255;
 #endif
 
-  if (drv->backlight_level != level && level >= 0 && level <= 255) {
+  if (drv->backlight_level != level) {
     drv->backlight_level = level;
     display_refresh();
   }
 
-  return drv->backlight_level;
+  return true;
 }
 
-int display_get_backlight(void) {
+uint8_t display_get_backlight(void) {
   display_driver_t *drv = &g_display_driver;
 
   if (!drv->initialized) {
