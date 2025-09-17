@@ -1279,6 +1279,8 @@ class TrezorClientDebugLink(TrezorClient):
         auto_interact: bool = True,
         open_transport: bool = True,
         debug_transport: Transport | None = None,
+        app_name: str = "trezorlib-debug",
+        host_name: str = "testhost",
     ) -> None:
         try:
             debug_transport = debug_transport or transport.find_debug()
@@ -1312,7 +1314,7 @@ class TrezorClientDebugLink(TrezorClient):
         self.pin_callback = get_pin
         self.button_callback = self.ui.button_request
 
-        super().__init__(transport)
+        super().__init__(transport, app_name=app_name, host_name=host_name)
         self.sync_responses()
 
         # So that we can choose right screenshotting logic (T1 vs TT)
