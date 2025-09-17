@@ -1,4 +1,5 @@
 use crate::{
+    error::Error,
     io::BinaryData,
     micropython::{
         buffer::StrBuffer,
@@ -945,14 +946,20 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
         let backup_needed: bool = kwargs.get(Qstr::MP_QSTR_backup_needed)?.try_into()?;
         let paired_obj: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
         let mut paired_devices: heapless::Vec<
-            (TString<'static>, Option<TString<'static>>),
+            (TString<'static>, Option<[TString; 2]>),
             MAX_PAIRED_DEVICES,
         > = heapless::Vec::new();
         for device in IterBuf::new().try_iterate(paired_obj)? {
-            let [mac, name]: [Obj; 2] = util::iter_into_array(device)?;
+            let [mac, host_info]: [Obj; 2] = util::iter_into_array(device)?;
             let mac: TString<'static> = mac.try_into()?;
-            let name: Option<TString<'static>> = name.try_into_option()?;
-            unwrap!(paired_devices.push((mac, name)));
+            let host_info: Option<[TString<'static>; 2]> = host_info
+                .try_into_option()?
+                .map(util::iter_into_array)
+                .transpose()?;
+
+            if paired_devices.push((mac, host_info)).is_err() {
+                return Err(Error::OutOfRange);
+            }
         }
         let connected_idx: Option<u8> =
             kwargs.get(Qstr::MP_QSTR_connected_idx)?.try_into_option()?;
@@ -1936,7 +1943,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     init_submenu_idx: int | None,
     ///     backup_failed: bool,
     ///     backup_needed: bool,
-    ///     paired_devices: Iterable[tuple[str, str | None]],
+    ///     paired_devices: Iterable[tuple[str, tuple[str, str] | None]],
     ///     connected_idx: int | None,
     ///     pin_enabled: bool | None,
     ///     auto_lock: tuple[str, str] | None,
