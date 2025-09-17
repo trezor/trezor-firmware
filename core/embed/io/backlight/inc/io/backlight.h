@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <trezor_types.h>
+
 #define BACKLIGHT_MAX_LEVEL 255
 #define BACKLIGHT_MIN_LEVEL 0
 
@@ -34,7 +36,9 @@ typedef enum {
 // If the action is set to `BACKLIGHT_RESET`, the backlight level
 // is set to zero level. If the action is set to `BACKLIGHT_RETAIN`,
 // the backlight level is not changed (if possible).
-void backlight_init(backlight_action_t action);
+//
+// Returns `true` if the initialization was successful.
+bool backlight_init(backlight_action_t action);
 
 // Deinitialize the backlight driver
 //
@@ -44,20 +48,20 @@ void backlight_init(backlight_action_t action);
 // is kept on.
 void backlight_deinit(backlight_action_t action);
 
-// Request the backlight level in range 0-255 and returns the actual level set.
-// The requested level may be limited if its above the max_level limit.
+// Requests the backlight level in range 0-255 and returns whether
+// the function executed successfully or not. The requested level
+// may be limited if it's above the max_level limit.
 //
-// If the level is outside the range, the function has no effect
-// and just returns the actual level set. If the backlight driver
-// is not initialized, the function returns 0.
-int backlight_set(int val);
+// If the backlight driver is not initialized, the function
+// returns "False".
+bool backlight_set(uint8_t val);
 
 // Gets the backlight level in range 0-255
 //
 // Returns 0 if the backlight driver is not initialized.
-int backlight_get(void);
+uint8_t backlight_get(void);
 
 // Set maximal backlight limit, limits the requested level to max_level value.
 //
-// Returns 0 if the backlight driver is not initialized.
-int backlight_set_max_level(int max_level);
+// Returns "False" if the backlight driver is not initialized.
+bool backlight_set_max_level(uint8_t max_level);
