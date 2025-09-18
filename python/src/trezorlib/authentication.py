@@ -23,7 +23,7 @@ import typing as t
 
 from cryptography import exceptions, x509
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import ec, ed25519, utils, types
+from cryptography.hazmat.primitives.asymmetric import ec, ed25519, types, utils
 from cryptography.x509.oid import NameOID, ObjectIdentifier, SignatureAlgorithmOID
 
 from . import device
@@ -92,7 +92,7 @@ class EcdsaPublicKey(PublicKey):
         self.pubkey = pubkey
 
     def default_algo_params(self) -> ec.ECDSA:
-        if self.pubkey.curve == ec.SECP256R1():
+        if isinstance(self.pubkey.curve, ec.SECP256R1):
             return ec.ECDSA(hashes.SHA256())
         raise ValueError("Unsupported curve.")
 
@@ -187,7 +187,7 @@ class Ed25519PublicKey(PublicKey):
         )
 
     def verify_certificate(self, certificate: x509.Certificate) -> None:
-        self.verify_message(certificate.tbs_certificate_bytes, certificate.signature)
+        self.verify_message(certificate.signature, certificate.tbs_certificate_bytes)
 
 
 class RootCertificate(t.NamedTuple):
