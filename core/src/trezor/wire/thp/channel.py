@@ -115,7 +115,7 @@ class Reassembler:
         if self.bytes_read > self.buffer_len:
             raise ThpError("read more bytes than expected")
 
-        if not verify_checksum(buffer):
+        if not is_checksum_valid(buffer):
             return False
 
         assert self.message is None
@@ -128,16 +128,16 @@ class Reassembler:
         self.bytes_read += utils.memcpy(payload_buffer, self.bytes_read, packet, offset)
 
 
-def verify_checksum(buffer: memoryview) -> memoryview | None:
+def is_checksum_valid(buffer: memoryview) -> bool:
     """
-    Return the buffer if the checksum is valid, otherwise return `None`.
+    Returns `True` if the checksum is valid, otherwise returns `False`.
     """
     if is_valid(buffer[-CHECKSUM_LENGTH:], buffer[:-CHECKSUM_LENGTH]):
-        return buffer
+        return True
     # ignore invalid payloads
     if __debug__:
         log.warning("Invalid payload checksum: %s", utils.hexlify_if_bytes(buffer))
-    return None
+    return False
 
 
 class ChannelPreemptedException(UnexpectedMessageException):
