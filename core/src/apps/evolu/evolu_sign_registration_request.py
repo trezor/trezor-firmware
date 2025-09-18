@@ -28,9 +28,9 @@ async def evolu_sign_registration_request(
         raise RuntimeError("Optiga is not available")
 
     if not check_delegated_identity_proof(
-        proposed_value=msg.proof,
+        proposed_value=msg.proof_of_delegated_identity,
         header=b"EvoluSignRegistrationRequest",
-        arguments=[msg.challenge, msg.size.to_bytes(4, "big")],
+        arguments=[msg.challenge_from_server, msg.size_to_acquire.to_bytes(4, "big")],
     ):
         raise ValueError("Invalid proof")
 
@@ -38,7 +38,12 @@ async def evolu_sign_registration_request(
     public_key = get_public_key_from_private_key(private_key)
 
     header = b"EvoluSignRegistrationRequestV1:"
-    components = [header, public_key, msg.challenge, msg.size.to_bytes(4, "big")]
+    components = [
+        header,
+        public_key,
+        msg.challenge_from_server,
+        msg.size_to_acquire.to_bytes(4, "big"),
+    ]
     h = utils.HashWriter(sha256())
     for component in components:
         write_compact_size(h, len(component))
@@ -61,7 +66,7 @@ async def evolu_sign_registration_request(
         certificates.append(r.read_memoryview(cert_len))
 
     return EvoluRegistrationRequest(
-        certificates=certificates,
+        certificate_chain=certificates,
         signature=signature,
     )
 

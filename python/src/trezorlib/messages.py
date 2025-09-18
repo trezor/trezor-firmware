@@ -5526,15 +5526,15 @@ class EthereumFieldType(protobuf.MessageType):
 class EvoluGetNode(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2100
     FIELDS = {
-        1: protobuf.Field("proof", "bytes", repeated=False, required=True),
+        1: protobuf.Field("proof_of_delegated_identity", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        proof: "bytes",
+        proof_of_delegated_identity: "bytes",
     ) -> None:
-        self.proof = proof
+        self.proof_of_delegated_identity = proof_of_delegated_identity
 
 
 class EvoluNode(protobuf.MessageType):
@@ -5554,27 +5554,27 @@ class EvoluNode(protobuf.MessageType):
 class EvoluSignRegistrationRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2102
     FIELDS = {
-        1: protobuf.Field("challenge", "bytes", repeated=False, required=True),
-        2: protobuf.Field("size", "uint32", repeated=False, required=True),
-        3: protobuf.Field("proof", "bytes", repeated=False, required=True),
+        1: protobuf.Field("challenge_from_server", "bytes", repeated=False, required=True),
+        2: protobuf.Field("size_to_acquire", "uint32", repeated=False, required=True),
+        3: protobuf.Field("proof_of_delegated_identity", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        challenge: "bytes",
-        size: "int",
-        proof: "bytes",
+        challenge_from_server: "bytes",
+        size_to_acquire: "int",
+        proof_of_delegated_identity: "bytes",
     ) -> None:
-        self.challenge = challenge
-        self.size = size
-        self.proof = proof
+        self.challenge_from_server = challenge_from_server
+        self.size_to_acquire = size_to_acquire
+        self.proof_of_delegated_identity = proof_of_delegated_identity
 
 
 class EvoluRegistrationRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2103
     FIELDS = {
-        1: protobuf.Field("certificates", "bytes", repeated=True, required=False, default=None),
+        1: protobuf.Field("certificate_chain", "bytes", repeated=True, required=False, default=None),
         2: protobuf.Field("signature", "bytes", repeated=False, required=True),
     }
 
@@ -5582,9 +5582,9 @@ class EvoluRegistrationRequest(protobuf.MessageType):
         self,
         *,
         signature: "bytes",
-        certificates: Optional[Sequence["bytes"]] = None,
+        certificate_chain: Optional[Sequence["bytes"]] = None,
     ) -> None:
-        self.certificates: Sequence["bytes"] = certificates if certificates is not None else []
+        self.certificate_chain: Sequence["bytes"] = certificate_chain if certificate_chain is not None else []
         self.signature = signature
 
 

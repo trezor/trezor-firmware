@@ -4076,12 +4076,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EvoluGetNode(protobuf.MessageType):
-        proof: "bytes"
+        proof_of_delegated_identity: "bytes"
 
         def __init__(
             self,
             *,
-            proof: "bytes",
+            proof_of_delegated_identity: "bytes",
         ) -> None:
             pass
 
@@ -4104,16 +4104,16 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EvoluSignRegistrationRequest(protobuf.MessageType):
-        challenge: "bytes"
-        size: "int"
-        proof: "bytes"
+        challenge_from_server: "bytes"
+        size_to_acquire: "int"
+        proof_of_delegated_identity: "bytes"
 
         def __init__(
             self,
             *,
-            challenge: "bytes",
-            size: "int",
-            proof: "bytes",
+            challenge_from_server: "bytes",
+            size_to_acquire: "int",
+            proof_of_delegated_identity: "bytes",
         ) -> None:
             pass
 
@@ -4122,14 +4122,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EvoluRegistrationRequest(protobuf.MessageType):
-        certificates: "list[bytes]"
+        certificate_chain: "list[bytes]"
         signature: "bytes"
 
         def __init__(
             self,
             *,
             signature: "bytes",
-            certificates: "list[bytes] | None" = None,
+            certificate_chain: "list[bytes] | None" = None,
         ) -> None:
             pass
 

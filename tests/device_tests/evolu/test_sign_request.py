@@ -54,4 +54,4 @@ def test_evolu_sign_request(session: "Session"):
         ),
     ]
     assert response.signature == check_signature
-    assert response.certificates == check_certificates
+    assert response.certificate_chain == check_certificates
