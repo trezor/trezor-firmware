@@ -203,16 +203,16 @@ class Dut:
         response = self.send_command("pm-charge-disable")
         return response.OK
 
-    def set_soc_limit(self, soc_limit: int):
+    def set_soc_target(self, soc_target: int):
         """
-        Set the state of charge (SoC) limit for the DUT.
-        :param soc_limit: The SoC limit to set (0-100).
+        Set the state of charge (SoC) target for the DUT.
+        :param soc_target: The SoC target to set (0-100).
         :return: True if the command was successful, False otherwise.
         """
-        if not 0 <= soc_limit <= 100:
-            raise ValueError("SoC limit must be between 0 and 100.")
+        if not 0 <= soc_target <= 100:
+            raise ValueError("SoC target must be between 0 and 100.")
 
-        response = self.send_command("pm-set-soc-limit", soc_limit)
+        response = self.send_command("pm-set-soc-target", soc_target)
         return response.OK
 
     def set_backlight(self, value: int):
