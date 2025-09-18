@@ -160,8 +160,8 @@ void unit_properties_get(unit_properties_t* props) {
   *props = drv->cache;
 }
 
-bool get_device_sn(uint8_t* device_sn, size_t max_device_sn_size,
-                   size_t* device_sn_size) {
+bool unit_properties_get_sn(uint8_t* device_sn, size_t max_device_sn_size,
+                            size_t* device_sn_size) {
   uint8_t block[FLASH_OTP_BLOCK_SIZE] = {0};
   // The OTP block should contain a null-terminated string when set.
   if (sectrue !=

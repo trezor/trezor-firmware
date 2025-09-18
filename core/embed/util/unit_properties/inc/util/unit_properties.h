@@ -30,7 +30,7 @@
 // Returns `true` if the properties are successfully detected
 bool unit_properties_init(void);
 
-#endif  // KERNEL_MODE
+#endif  // SECURE_MODE
 
 typedef struct {
   // Set to true if the unit properties are locked and cannot be changed
@@ -67,5 +67,5 @@ void unit_properties_get(unit_properties_t* props);
 // Gets a pointer to the static unit properties structure
 const unit_properties_t* unit_properties(void);
 
-bool get_device_sn(uint8_t* device_sn, size_t max_device_sn_size,
-                   size_t* device_sn_size);
+bool unit_properties_get_sn(uint8_t* device_sn, size_t max_device_sn_size,
+                            size_t* device_sn_size);
