@@ -252,6 +252,7 @@ pub fn show(frame: &mut impl Component<Msg = impl ReturnToC>, fading: bool) -> u
         return message.return_to_c();
     }
 
+    #[cfg(feature = "backlight")]
     if fading && display::get_backlight() > 0 {
         ModelUI::fadeout()
     };

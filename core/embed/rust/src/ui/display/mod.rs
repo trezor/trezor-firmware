@@ -24,7 +24,7 @@ pub use font::{Font, Glyph, GlyphMetrics};
 pub const LOADER_MIN: u16 = 0;
 pub const LOADER_MAX: u16 = 1000;
 
-//#[cfg(feature = "backlight")]
+#[cfg(feature = "backlight")]
 pub fn get_backlight() -> u8 {
     display::get_backlight()
 }
