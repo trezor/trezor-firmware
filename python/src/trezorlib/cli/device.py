@@ -376,10 +376,10 @@ def _print_auth_data(signature: bytes, certificates: t.Sequence[bytes]) -> None:
 @cli.command()
 @click.argument("hex_challenge", required=False)
 @click.option(
-    "-R", "--p256_root", type=click.File("rb"), help="Custom root P-256 public key."
+    "-R", "--p256-root", type=click.File("rb"), help="Custom root P-256 public key."
 )
 @click.option(
-    "--ed25519_root", type=click.File("rb"), help="Custom root Ed25519 public key."
+    "--ed25519-root", type=click.File("rb"), help="Custom root Ed25519 public key."
 )
 @click.option(
     "-r", "--raw", is_flag=True, help="Print raw cryptographic data and exit."
