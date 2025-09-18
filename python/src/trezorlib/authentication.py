@@ -193,8 +193,8 @@ class Certificate:
     def verify_by(
         self, pubkey: ec.EllipticCurvePublicKey | ed25519.Ed25519PublicKey
     ) -> None:
-        algo_params = self.cert.signature_algorithm_parameters
         if isinstance(pubkey, ec.EllipticCurvePublicKey):
+            algo_params = self.cert.signature_algorithm_parameters
             assert isinstance(algo_params, ec.ECDSA)
             pubkey.verify(
                 self.fix_signature(self.cert.signature),
@@ -350,7 +350,7 @@ def verify_authentication_response(
     root_pubkey: (
         bytes | ec.EllipticCurvePublicKey | ed25519.Ed25519PublicKey | None
     ) = None,
-) -> None:
+) -> RootCertificate | None:
     """Evaluate the response to an AuthenticateDevice call.
 
     Performs all steps and logs their results via the logging facility. (The log can be
@@ -422,6 +422,7 @@ def verify_authentication_response(
             raise ValueError("Unsupported key type.")
 
     if root_pubkey is not None:
+        root = None
         try:
             cert.verify_by(root_pubkey)
         except Exception:
@@ -472,6 +473,8 @@ def verify_authentication_response(
     if failed:
         raise DeviceNotAuthentic
 
+    return root
+
 
 def authenticate_device(
     session: Session,
@@ -487,7 +490,7 @@ def authenticate_device(
 
     resp = device.authenticate(session, challenge)
 
-    verify_authentication_response(
+    optiga_root = verify_authentication_response(
         challenge,
         resp.optiga_signature,
         resp.optiga_certificates,
@@ -497,7 +500,7 @@ def authenticate_device(
     )
 
     if resp.tropic_signature:
-        verify_authentication_response(
+        tropic_root = verify_authentication_response(
             challenge,
             resp.tropic_signature,
             resp.tropic_certificates,
@@ -505,3 +508,7 @@ def authenticate_device(
             allow_development_devices=allow_development_devices,
             root_pubkey=ed25519_root_pubkey,
         )
+
+        if optiga_root is not tropic_root:
+            LOG.error("Certificates issued by different root authorities.")
+            raise DeviceNotAuthentic
