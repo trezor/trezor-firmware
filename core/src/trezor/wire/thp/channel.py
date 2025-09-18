@@ -435,8 +435,8 @@ class Channel:
                     log.error(__name__, "Sending is stuck for %d ms", _WRITE_TIMEOUT_MS)
                 break
 
-            # starting from 100ms till ~3.42s
-            timeout_ms = round(10200 - 1010000 / (100 + i))
+            # starting from 200ms till ~3.52s
+            timeout_ms = round(10300 - 1010000 / (100 + i))
             try:
                 # wait and return after receiving an ACK, or raise in case of an unexpected message.
                 await self.recv_payload(expected_ctrl_byte=None, timeout_ms=timeout_ms)
