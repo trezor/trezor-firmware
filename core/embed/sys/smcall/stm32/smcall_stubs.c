@@ -133,6 +133,13 @@ void unit_properties_get(unit_properties_t *props) {
   smcall_invoke1((uint32_t)props, SMCALL_UNIT_PROPERTIES_GET);
 }
 
+bool unit_properties_get_sn(uint8_t *device_sn, size_t max_device_sn_size,
+                            size_t *device_sn_size) {
+  return (bool)smcall_invoke3((uint32_t)device_sn, max_device_sn_size,
+                              (uint32_t)device_sn_size,
+                              SMCALL_UNIT_PROPERTIES_GET_SN);
+}
+
 // =============================================================================
 // secret.h
 // =============================================================================
