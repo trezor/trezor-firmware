@@ -23,7 +23,7 @@ import typing as t
 
 from cryptography import exceptions, x509
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import ec, ed25519, utils
+from cryptography.hazmat.primitives.asymmetric import ec, ed25519, utils, types
 from cryptography.x509.oid import NameOID, ObjectIdentifier, SignatureAlgorithmOID
 
 from . import device
@@ -32,14 +32,12 @@ from .transport.session import Session
 LOG = logging.getLogger(__name__)
 
 
-def _pk_p256(pubkey_hex: str) -> ec.EllipticCurvePublicKey:
-    return ec.EllipticCurvePublicKey.from_encoded_point(
-        ec.SECP256R1(), bytes.fromhex(pubkey_hex)
-    )
+def _pk_p256(pubkey_hex: str) -> PublicKey:
+    return EcdsaPublicKey.from_bytes(bytes.fromhex(pubkey_hex), ec.SECP256R1())
 
 
-def _pk_ed25519(pubkey_hex: str) -> ed25519.Ed25519PublicKey:
-    return ed25519.Ed25519PublicKey.from_public_bytes(bytes.fromhex(pubkey_hex))
+def _pk_ed25519(pubkey_hex: str) -> PublicKey:
+    return Ed25519PublicKey.from_bytes(bytes.fromhex(pubkey_hex))
 
 
 CHALLENGE_HEADER = b"AuthenticateDevice:"
@@ -56,12 +54,158 @@ OID_TO_NAME = {
 }
 
 
+class DeviceNotAuthentic(Exception):
+    pass
+
+
+class PublicKey:
+    @staticmethod
+    def from_bytes_and_oid(data: bytes, oid: ObjectIdentifier) -> PublicKey:
+        if oid == SignatureAlgorithmOID.ECDSA_WITH_SHA256:
+            return EcdsaPublicKey.from_bytes(data, ec.SECP256R1())
+        elif oid == SignatureAlgorithmOID.ED25519:
+            return Ed25519PublicKey.from_bytes(data)
+        else:
+            raise ValueError("Unsupported key type.")
+
+    @staticmethod
+    def from_public_key(pubkey: types.CertificatePublicKeyTypes) -> PublicKey:
+        if isinstance(pubkey, ec.EllipticCurvePublicKey):
+            return EcdsaPublicKey(pubkey)
+        elif isinstance(pubkey, ed25519.Ed25519PublicKey):
+            return Ed25519PublicKey(pubkey)
+        else:
+            raise ValueError("Unsupported key type.")
+
+    def to_bytes(self) -> bytes:
+        raise NotImplementedError
+
+    def verify_message(self, message: bytes, signature: bytes) -> None:
+        raise NotImplementedError
+
+    def verify_certificate(self, certificate: x509.Certificate) -> None:
+        raise NotImplementedError
+
+
+class EcdsaPublicKey(PublicKey):
+    def __init__(self, pubkey: ec.EllipticCurvePublicKey) -> None:
+        self.pubkey = pubkey
+
+    def default_algo_params(self) -> ec.ECDSA:
+        if self.pubkey.curve == ec.SECP256R1():
+            return ec.ECDSA(hashes.SHA256())
+        raise ValueError("Unsupported curve.")
+
+    @classmethod
+    def from_bytes(
+        cls, data: bytes, curve: ec.EllipticCurve = ec.SECP256R1()
+    ) -> EcdsaPublicKey:
+        return cls(ec.EllipticCurvePublicKey.from_encoded_point(curve, data))
+
+    def to_bytes(self) -> bytes:
+        return self.pubkey.public_bytes(
+            serialization.Encoding.X962,
+            serialization.PublicFormat.UncompressedPoint,
+        )
+
+    def verify_message(self, signature: bytes, message: bytes) -> None:
+        self.pubkey.verify(
+            signature,
+            message,
+            self.default_algo_params(),
+        )
+
+    def verify_certificate(self, certificate: x509.Certificate) -> None:
+        fixed_signature = self.fix_signature(certificate.signature)
+        algo_params = certificate.signature_algorithm_parameters
+        assert isinstance(algo_params, ec.ECDSA)
+        self.pubkey.verify(
+            fixed_signature,
+            certificate.tbs_certificate_bytes,
+            algo_params,
+        )
+
+    @staticmethod
+    def _decode_signature_permissive(sig_bytes: bytes) -> tuple[int, int]:
+        if len(sig_bytes) > 73:
+            raise ValueError("Unsupported DER signature: too long.")
+
+        reader = io.BytesIO(sig_bytes)
+        tag = reader.read(1)
+        if tag != b"\x30":
+            raise ValueError("Invalid DER signature: not a sequence.")
+        length = reader.read(1)[0]
+        if length != len(sig_bytes) - 2:
+            raise ValueError("Invalid DER signature: invalid length.")
+
+        def read_int() -> int:
+            tag = reader.read(1)
+            if tag != b"\x02":
+                raise ValueError("Invalid DER signature: not an integer.")
+            length = reader.read(1)[0]
+            if length > 33:
+                raise ValueError("Invalid DER signature: integer too long.")
+            return int.from_bytes(reader.read(length), "big")
+
+        r = read_int()
+        s = read_int()
+        if reader.tell() != len(sig_bytes):
+            raise ValueError("Invalid DER signature: trailing data.")
+        return r, s
+
+    @staticmethod
+    def fix_signature(sig_bytes: bytes) -> bytes:
+        r, s = EcdsaPublicKey._decode_signature_permissive(sig_bytes)
+        reencoded = utils.encode_dss_signature(r, s)
+        if reencoded != sig_bytes:
+            LOG.info(
+                "Re-encoding malformed signature: %s -> %s",
+                sig_bytes.hex(),
+                reencoded.hex(),
+            )
+        return reencoded
+
+
+class Ed25519PublicKey(PublicKey):
+    def __init__(self, pubkey: ed25519.Ed25519PublicKey) -> None:
+        self.pubkey = pubkey
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> Ed25519PublicKey:
+        return cls(ed25519.Ed25519PublicKey.from_public_bytes(data))
+
+    def to_bytes(self) -> bytes:
+        return self.pubkey.public_bytes(
+            serialization.Encoding.Raw,
+            serialization.PublicFormat.Raw,
+        )
+
+    def verify_message(self, signature: bytes, message: bytes) -> None:
+        self.pubkey.verify(
+            signature,
+            message,
+        )
+
+    def verify_certificate(self, certificate: x509.Certificate) -> None:
+        self.verify_message(certificate.tbs_certificate_bytes, certificate.signature)
+
+
 class RootCertificate(t.NamedTuple):
     name: str
     device: str
     devel: bool
-    p256_pubkey: ec.EllipticCurvePublicKey
-    ed25519_pubkey: ed25519.Ed25519PublicKey | None = None
+    p256_pubkey: PublicKey
+    ed25519_pubkey: PublicKey | None = None
+
+    def pubkey_for_oid(self, oid: ObjectIdentifier) -> PublicKey:
+        if oid == SignatureAlgorithmOID.ECDSA_WITH_SHA256:
+            return self.p256_pubkey
+        elif oid == SignatureAlgorithmOID.ED25519:
+            if self.ed25519_pubkey is None:
+                raise ValueError("ED25519 public key not set.")
+            return self.ed25519_pubkey
+        else:
+            raise ValueError("Unsupported key type.")
 
 
 ROOT_PUBLIC_KEYS = [
@@ -147,67 +291,14 @@ ROOT_PUBLIC_KEYS = [
 ]
 
 
-class DeviceNotAuthentic(Exception):
-    pass
-
-
 class Certificate:
     def __init__(self, cert_bytes: bytes) -> None:
         self.cert_bytes = cert_bytes
         self.cert = x509.load_der_x509_certificate(cert_bytes)
+        self.public_key = PublicKey.from_public_key(self.cert.public_key())
 
     def __str__(self) -> str:
         return self.cert.subject.rfc4514_string(OID_TO_NAME)
-
-    def public_key_bytes(self) -> bytes:
-        cert_pubkey = self.cert.public_key()
-        if isinstance(cert_pubkey, ec.EllipticCurvePublicKey):
-            return cert_pubkey.public_bytes(
-                serialization.Encoding.X962,
-                serialization.PublicFormat.UncompressedPoint,
-            )
-        elif isinstance(cert_pubkey, ed25519.Ed25519PublicKey):
-            return cert_pubkey.public_bytes(
-                serialization.Encoding.Raw,
-                serialization.PublicFormat.Raw,
-            )
-        else:
-            raise ValueError("Unsupported key type.")
-
-    def verify(self, signature: bytes, message: bytes) -> None:
-        cert_pubkey = self.cert.public_key()
-        if isinstance(cert_pubkey, ec.EllipticCurvePublicKey):
-            cert_pubkey.verify(
-                self.fix_signature(signature),
-                message,
-                ec.ECDSA(hashes.SHA256()),
-            )
-        elif isinstance(cert_pubkey, ed25519.Ed25519PublicKey):
-            cert_pubkey.verify(
-                signature,
-                message,
-            )
-        else:
-            raise ValueError("Unsupported key type.")
-
-    def verify_by(
-        self, pubkey: ec.EllipticCurvePublicKey | ed25519.Ed25519PublicKey
-    ) -> None:
-        if isinstance(pubkey, ec.EllipticCurvePublicKey):
-            algo_params = self.cert.signature_algorithm_parameters
-            assert isinstance(algo_params, ec.ECDSA)
-            pubkey.verify(
-                self.fix_signature(self.cert.signature),
-                self.cert.tbs_certificate_bytes,
-                algo_params,
-            )
-        elif isinstance(pubkey, ed25519.Ed25519PublicKey):
-            pubkey.verify(
-                self.cert.signature,
-                self.cert.tbs_certificate_bytes,
-            )
-        else:
-            raise ValueError("Unsupported key type.")
 
     def signature_algorithm_oid(self) -> ObjectIdentifier:
         return self.cert.signature_algorithm_oid
@@ -288,56 +379,12 @@ class Certificate:
             return False
 
         try:
-            pubkey = issuer.cert.public_key()
-            assert isinstance(
-                pubkey, (ec.EllipticCurvePublicKey, ed25519.Ed25519PublicKey)
-            )
-            self.verify_by(pubkey)
+            issuer.public_key.verify_certificate(self.cert)
             return True
         except exceptions.InvalidSignature:
             LOG.error("Issuer %s did not sign certificate %s.", issuer, self)
 
         return False
-
-    @staticmethod
-    def _decode_signature_permissive(sig_bytes: bytes) -> tuple[int, int]:
-        if len(sig_bytes) > 73:
-            raise ValueError("Unsupported DER signature: too long.")
-
-        reader = io.BytesIO(sig_bytes)
-        tag = reader.read(1)
-        if tag != b"\x30":
-            raise ValueError("Invalid DER signature: not a sequence.")
-        length = reader.read(1)[0]
-        if length != len(sig_bytes) - 2:
-            raise ValueError("Invalid DER signature: invalid length.")
-
-        def read_int() -> int:
-            tag = reader.read(1)
-            if tag != b"\x02":
-                raise ValueError("Invalid DER signature: not an integer.")
-            length = reader.read(1)[0]
-            if length > 33:
-                raise ValueError("Invalid DER signature: integer too long.")
-            return int.from_bytes(reader.read(length), "big")
-
-        r = read_int()
-        s = read_int()
-        if reader.tell() != len(sig_bytes):
-            raise ValueError("Invalid DER signature: trailing data.")
-        return r, s
-
-    @staticmethod
-    def fix_signature(sig_bytes: bytes) -> bytes:
-        r, s = Certificate._decode_signature_permissive(sig_bytes)
-        reencoded = utils.encode_dss_signature(r, s)
-        if reencoded != sig_bytes:
-            LOG.info(
-                "Re-encoding malformed signature: %s -> %s",
-                sig_bytes.hex(),
-                reencoded.hex(),
-            )
-        return reencoded
 
 
 def verify_authentication_response(
@@ -347,9 +394,7 @@ def verify_authentication_response(
     *,
     whitelist: t.Collection[bytes] | None,
     allow_development_devices: bool = False,
-    root_pubkey: (
-        bytes | ec.EllipticCurvePublicKey | ed25519.Ed25519PublicKey | None
-    ) = None,
+    root_pubkey: bytes | PublicKey | None = None,
 ) -> RootCertificate | None:
     """Evaluate the response to an AuthenticateDevice call.
 
@@ -380,7 +425,7 @@ def verify_authentication_response(
         raise DeviceNotAuthentic
 
     try:
-        cert.verify(signature, challenge_bytes)
+        cert.public_key.verify_message(signature, challenge_bytes)
     except exceptions.InvalidSignature:
         LOG.error("Challenge verification failed.")
         failed = True
@@ -399,7 +444,7 @@ def verify_authentication_response(
         if whitelist is None:
             LOG.warning("Skipping public key whitelist check.")
         else:
-            if ca_cert.public_key_bytes() not in whitelist:
+            if ca_cert.public_key.to_bytes() not in whitelist:
                 LOG.error(f"CA certificate #{i} not in whitelist: %s", ca_cert)
                 failed = True
 
@@ -412,19 +457,14 @@ def verify_authentication_response(
         cert_label = f"CA #{i} certificate"
 
     if isinstance(root_pubkey, (bytes, bytearray, memoryview)):
-        if cert.signature_algorithm_oid() == SignatureAlgorithmOID.ECDSA_WITH_SHA256:
-            root_pubkey = ec.EllipticCurvePublicKey.from_encoded_point(
-                ec.SECP256R1(), root_pubkey
-            )
-        elif cert.signature_algorithm_oid() == SignatureAlgorithmOID.ED25519:
-            root_pubkey = ed25519.Ed25519PublicKey.from_public_bytes(root_pubkey)
-        else:
-            raise ValueError("Unsupported key type.")
+        root_pubkey = PublicKey.from_bytes_and_oid(
+            root_pubkey, cert.signature_algorithm_oid()
+        )
 
     if root_pubkey is not None:
         root = None
         try:
-            cert.verify_by(root_pubkey)
+            root_pubkey.verify_certificate(cert.cert)
         except Exception:
             LOG.error(f"{cert_label} was not issued by the specified root.")
             failed = True
@@ -434,18 +474,8 @@ def verify_authentication_response(
     else:
         for root in ROOT_PUBLIC_KEYS:
             try:
-                if (
-                    cert.signature_algorithm_oid()
-                    == SignatureAlgorithmOID.ECDSA_WITH_SHA256
-                ):
-                    cert.verify_by(root.p256_pubkey)
-                elif (
-                    cert.signature_algorithm_oid() == SignatureAlgorithmOID.ED25519
-                    and root.ed25519_pubkey is not None
-                ):
-                    cert.verify_by(root.ed25519_pubkey)
-                else:
-                    continue
+                root_pubkey = root.pubkey_for_oid(cert.signature_algorithm_oid())
+                root_pubkey.verify_certificate(cert.cert)
             except Exception:
                 continue
             else:
@@ -482,8 +512,8 @@ def authenticate_device(
     *,
     whitelist: t.Collection[bytes] | None = None,
     allow_development_devices: bool = False,
-    p256_root_pubkey: bytes | ec.EllipticCurvePublicKey | None = None,
-    ed25519_root_pubkey: bytes | ed25519.Ed25519PublicKey | None = None,
+    p256_root_pubkey: bytes | PublicKey | None = None,
+    ed25519_root_pubkey: bytes | PublicKey | None = None,
 ) -> None:
     if challenge is None:
         challenge = secrets.token_bytes(16)
