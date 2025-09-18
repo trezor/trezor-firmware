@@ -168,17 +168,6 @@ async def handle_device_menu() -> None:
                 init_submenu_idx = SubmenuId.ROOT
             else:
                 break
-        elif menu_result is DeviceMenuResult.BackupDevice and backup_needed:
-            from trezor.messages import BackupDevice
-
-            from apps.management.backup_device import backup_device
-
-            try:
-                await backup_device(BackupDevice())
-            except ActionCancelled:
-                init_submenu_idx = SubmenuId.ROOT
-            else:
-                break
         # Pair & Connect
         elif menu_result is DeviceMenuResult.DisconnectDevice and ble.is_connected():
             init_submenu_idx = SubmenuId.PAIR_AND_CONNECT

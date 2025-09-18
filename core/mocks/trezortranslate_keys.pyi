@@ -405,6 +405,7 @@ class TR:
     haptic_feedback__enable: str = "Enable haptic feedback?"
     haptic_feedback__subtitle: str = "Setting"
     haptic_feedback__title: str = "Haptic feedback"
+    homescreen__backup_needed_info: str = "Open Trezor Suite and create a wallet backup. This is the only way to recover access to your assets."
     homescreen__click_to_connect: str = "Click to Connect"
     homescreen__click_to_unlock: str = "Click to Unlock"
     homescreen__firmware_type: str = "Firmware type"

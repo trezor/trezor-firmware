@@ -1549,6 +1549,7 @@ pub enum TranslatedString {
     pin__wipe_code_exists_title = 1157,  // "Wipe code set"
     wipe_code__pin_not_set_description = 1158,  // "PIN must be set before enabling wipe code."
     wipe_code__cancel_setup = 1159,  // {"Bolt": "Cancel wipe code setup", "Caesar": "Cancel wipe code setup", "Delizia": "Cancel wipe code setup", "Eckhart": "Cancel wipe code setup?"}
+    homescreen__backup_needed_info = 1160,  // "Open Trezor Suite and create a wallet backup. This is the only way to recover access to your assets."
 }
 
 impl TranslatedString {
@@ -3542,6 +3543,7 @@ impl TranslatedString {
             (Self::wipe_code__cancel_setup, "Cancel wipe code setup"),
             #[cfg(feature = "layout_eckhart")]
             (Self::wipe_code__cancel_setup, "Cancel wipe code setup?"),
+            (Self::homescreen__backup_needed_info, "Open Trezor Suite and create a wallet backup. This is the only way to recover access to your assets."),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4185,6 +4187,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_haptic_feedback__enable, Self::haptic_feedback__enable),
         (Qstr::MP_QSTR_haptic_feedback__subtitle, Self::haptic_feedback__subtitle),
         (Qstr::MP_QSTR_haptic_feedback__title, Self::haptic_feedback__title),
+        (Qstr::MP_QSTR_homescreen__backup_needed_info, Self::homescreen__backup_needed_info),
         (Qstr::MP_QSTR_homescreen__click_to_connect, Self::homescreen__click_to_connect),
         (Qstr::MP_QSTR_homescreen__click_to_unlock, Self::homescreen__click_to_unlock),
         (Qstr::MP_QSTR_homescreen__firmware_type, Self::homescreen__firmware_type),

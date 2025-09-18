@@ -2143,7 +2143,6 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// class DeviceMenuResult:
     ///     """Result of a device menu operation."""
     ///     ReviewFailedBackup: ClassVar[DeviceMenuResult]
-    ///     BackupDevice: ClassVar[DeviceMenuResult]
     ///     DisconnectDevice: ClassVar[DeviceMenuResult]
     ///     PairDevice: ClassVar[DeviceMenuResult]
     ///     UnpairDevice: ClassVar[DeviceMenuResult]

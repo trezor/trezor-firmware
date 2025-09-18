@@ -21,7 +21,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_BACK;
   MP_QSTR_BLEIF;
   MP_QSTR_BacklightLevels;
-  MP_QSTR_BackupDevice;
   MP_QSTR_CANCELLED;
   MP_QSTR_CONFIRMED;
   MP_QSTR_CheckBackup;
@@ -356,6 +355,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_hint;
   MP_QSTR_hold;
   MP_QSTR_hold_danger;
+  MP_QSTR_homescreen__backup_needed_info;
   MP_QSTR_homescreen__click_to_connect;
   MP_QSTR_homescreen__click_to_unlock;
   MP_QSTR_homescreen__firmware_type;
