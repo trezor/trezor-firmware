@@ -20,7 +20,7 @@ option (include_in_bitcoin_only) = true;
  * @next EvoluNode
  */
 message EvoluGetNode {
-    required bytes proof = 1; 
+    required bytes proof_of_delegated_identity = 1; 
 }
 
 /**
@@ -31,7 +31,6 @@ message EvoluNode {
     required bytes data = 1;
 }
 
-
 /**
  * Request: Request the device to sign a registration request for Evolu.
  * @start
@@ -39,23 +38,23 @@ message EvoluNode {
  * @next Failure
  */
 message EvoluSignRegistrationRequest {
-    required bytes challenge = 1;
-    required uint32 size = 2;  
-    required bytes proof = 3; 
+    required bytes challenge_from_server = 1;  /* replay attack protection */
+    required uint32 size_to_acquire = 2;  
+    required bytes proof_of_delegated_identity = 3; 
 }
 
 /**
- * Response: Evolu registration request containing the original request, its signature
- * and private-public key pair used for signing space allocations.
+ * Response: The signature of the registration request with the Optiga's 
+ * certificate chain.
  * @end
  */
 message EvoluRegistrationRequest {
-    repeated bytes certificates = 1;
+    repeated bytes certificate_chain = 1;
     required bytes signature = 2;
 }
 
 /**
- * Request: Request the device for the delegated identity key pair for Evolu.
+ * Request: Request the device for the delegated identity key.
  * @start
  * @next EvoluDelegatedIdentityKey
  * @next Failure
@@ -64,7 +63,7 @@ message EvoluGetDelegatedIdentityKey {
 }
 
 /**
- * Response: The delegated identity key pair for Evolu.
+ * Response: The delegated identity key for Evolu.
  * @end
  */
 message EvoluDelegatedIdentityKey {

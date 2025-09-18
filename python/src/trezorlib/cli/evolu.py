@@ -66,7 +66,7 @@ def evolu_sign_registration_request(
         proof=bytes.fromhex(proof),
     )
     return {
-        "certificates": ",".join([cert.hex() for cert in response.certificates]),
+        "certificates": ",".join([cert.hex() for cert in response.certificate_chain]),
         "signature": response.signature.hex(),
     }
 

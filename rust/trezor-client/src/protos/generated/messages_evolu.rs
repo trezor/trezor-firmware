@@ -28,8 +28,8 @@ const _PROTOBUF_VERSION_CHECK: () = ::protobuf::VERSION_3_7_2;
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct EvoluGetNode {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.evolu.EvoluGetNode.proof)
-    pub proof: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.evolu.EvoluGetNode.proof_of_delegated_identity)
+    pub proof_of_delegated_identity: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.evolu.EvoluGetNode.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -46,49 +46,49 @@ impl EvoluGetNode {
         ::std::default::Default::default()
     }
 
-    // required bytes proof = 1;
+    // required bytes proof_of_delegated_identity = 1;
 
-    pub fn proof(&self) -> &[u8] {
-        match self.proof.as_ref() {
+    pub fn proof_of_delegated_identity(&self) -> &[u8] {
+        match self.proof_of_delegated_identity.as_ref() {
             Some(v) => v,
             None => &[],
         }
     }
 
-    pub fn clear_proof(&mut self) {
-        self.proof = ::std::option::Option::None;
+    pub fn clear_proof_of_delegated_identity(&mut self) {
+        self.proof_of_delegated_identity = ::std::option::Option::None;
     }
 
-    pub fn has_proof(&self) -> bool {
-        self.proof.is_some()
+    pub fn has_proof_of_delegated_identity(&self) -> bool {
+        self.proof_of_delegated_identity.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_proof(&mut self, v: ::std::vec::Vec<u8>) {
-        self.proof = ::std::option::Option::Some(v);
+    pub fn set_proof_of_delegated_identity(&mut self, v: ::std::vec::Vec<u8>) {
+        self.proof_of_delegated_identity = ::std::option::Option::Some(v);
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_proof(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.proof.is_none() {
-            self.proof = ::std::option::Option::Some(::std::vec::Vec::new());
+    pub fn mut_proof_of_delegated_identity(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.proof_of_delegated_identity.is_none() {
+            self.proof_of_delegated_identity = ::std::option::Option::Some(::std::vec::Vec::new());
         }
-        self.proof.as_mut().unwrap()
+        self.proof_of_delegated_identity.as_mut().unwrap()
     }
 
     // Take field
-    pub fn take_proof(&mut self) -> ::std::vec::Vec<u8> {
-        self.proof.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    pub fn take_proof_of_delegated_identity(&mut self) -> ::std::vec::Vec<u8> {
+        self.proof_of_delegated_identity.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
         let mut fields = ::std::vec::Vec::with_capacity(1);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "proof",
-            |m: &EvoluGetNode| { &m.proof },
-            |m: &mut EvoluGetNode| { &mut m.proof },
+            "proof_of_delegated_identity",
+            |m: &EvoluGetNode| { &m.proof_of_delegated_identity },
+            |m: &mut EvoluGetNode| { &mut m.proof_of_delegated_identity },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<EvoluGetNode>(
             "EvoluGetNode",
@@ -102,7 +102,7 @@ impl ::protobuf::Message for EvoluGetNode {
     const NAME: &'static str = "EvoluGetNode";
 
     fn is_initialized(&self) -> bool {
-        if self.proof.is_none() {
+        if self.proof_of_delegated_identity.is_none() {
             return false;
         }
         true
@@ -112,7 +112,7 @@ impl ::protobuf::Message for EvoluGetNode {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
                 10 => {
-                    self.proof = ::std::option::Option::Some(is.read_bytes()?);
+                    self.proof_of_delegated_identity = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -126,7 +126,7 @@ impl ::protobuf::Message for EvoluGetNode {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        if let Some(v) = self.proof.as_ref() {
+        if let Some(v) = self.proof_of_delegated_identity.as_ref() {
             my_size += ::protobuf::rt::bytes_size(1, &v);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
@@ -135,7 +135,7 @@ impl ::protobuf::Message for EvoluGetNode {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let Some(v) = self.proof.as_ref() {
+        if let Some(v) = self.proof_of_delegated_identity.as_ref() {
             os.write_bytes(1, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
@@ -155,13 +155,13 @@ impl ::protobuf::Message for EvoluGetNode {
     }
 
     fn clear(&mut self) {
-        self.proof = ::std::option::Option::None;
+        self.proof_of_delegated_identity = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static EvoluGetNode {
         static instance: EvoluGetNode = EvoluGetNode {
-            proof: ::std::option::Option::None,
+            proof_of_delegated_identity: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -350,12 +350,12 @@ impl ::protobuf::reflect::ProtobufValue for EvoluNode {
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct EvoluSignRegistrationRequest {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.evolu.EvoluSignRegistrationRequest.challenge)
-    pub challenge: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.evolu.EvoluSignRegistrationRequest.size)
-    pub size: ::std::option::Option<u32>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.evolu.EvoluSignRegistrationRequest.proof)
-    pub proof: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.evolu.EvoluSignRegistrationRequest.challenge_from_server)
+    pub challenge_from_server: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.evolu.EvoluSignRegistrationRequest.size_to_acquire)
+    pub size_to_acquire: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.evolu.EvoluSignRegistrationRequest.proof_of_delegated_identity)
+    pub proof_of_delegated_identity: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.evolu.EvoluSignRegistrationRequest.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -372,114 +372,114 @@ impl EvoluSignRegistrationRequest {
         ::std::default::Default::default()
     }
 
-    // required bytes challenge = 1;
+    // required bytes challenge_from_server = 1;
 
-    pub fn challenge(&self) -> &[u8] {
-        match self.challenge.as_ref() {
+    pub fn challenge_from_server(&self) -> &[u8] {
+        match self.challenge_from_server.as_ref() {
             Some(v) => v,
             None => &[],
         }
     }
 
-    pub fn clear_challenge(&mut self) {
-        self.challenge = ::std::option::Option::None;
+    pub fn clear_challenge_from_server(&mut self) {
+        self.challenge_from_server = ::std::option::Option::None;
     }
 
-    pub fn has_challenge(&self) -> bool {
-        self.challenge.is_some()
+    pub fn has_challenge_from_server(&self) -> bool {
+        self.challenge_from_server.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_challenge(&mut self, v: ::std::vec::Vec<u8>) {
-        self.challenge = ::std::option::Option::Some(v);
+    pub fn set_challenge_from_server(&mut self, v: ::std::vec::Vec<u8>) {
+        self.challenge_from_server = ::std::option::Option::Some(v);
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_challenge(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.challenge.is_none() {
-            self.challenge = ::std::option::Option::Some(::std::vec::Vec::new());
+    pub fn mut_challenge_from_server(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.challenge_from_server.is_none() {
+            self.challenge_from_server = ::std::option::Option::Some(::std::vec::Vec::new());
         }
-        self.challenge.as_mut().unwrap()
+        self.challenge_from_server.as_mut().unwrap()
     }
 
     // Take field
-    pub fn take_challenge(&mut self) -> ::std::vec::Vec<u8> {
-        self.challenge.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    pub fn take_challenge_from_server(&mut self) -> ::std::vec::Vec<u8> {
+        self.challenge_from_server.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
-    // required uint32 size = 2;
+    // required uint32 size_to_acquire = 2;
 
-    pub fn size(&self) -> u32 {
-        self.size.unwrap_or(0)
+    pub fn size_to_acquire(&self) -> u32 {
+        self.size_to_acquire.unwrap_or(0)
     }
 
-    pub fn clear_size(&mut self) {
-        self.size = ::std::option::Option::None;
+    pub fn clear_size_to_acquire(&mut self) {
+        self.size_to_acquire = ::std::option::Option::None;
     }
 
-    pub fn has_size(&self) -> bool {
-        self.size.is_some()
+    pub fn has_size_to_acquire(&self) -> bool {
+        self.size_to_acquire.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_size(&mut self, v: u32) {
-        self.size = ::std::option::Option::Some(v);
+    pub fn set_size_to_acquire(&mut self, v: u32) {
+        self.size_to_acquire = ::std::option::Option::Some(v);
     }
 
-    // required bytes proof = 3;
+    // required bytes proof_of_delegated_identity = 3;
 
-    pub fn proof(&self) -> &[u8] {
-        match self.proof.as_ref() {
+    pub fn proof_of_delegated_identity(&self) -> &[u8] {
+        match self.proof_of_delegated_identity.as_ref() {
             Some(v) => v,
             None => &[],
         }
     }
 
-    pub fn clear_proof(&mut self) {
-        self.proof = ::std::option::Option::None;
+    pub fn clear_proof_of_delegated_identity(&mut self) {
+        self.proof_of_delegated_identity = ::std::option::Option::None;
     }
 
-    pub fn has_proof(&self) -> bool {
-        self.proof.is_some()
+    pub fn has_proof_of_delegated_identity(&self) -> bool {
+        self.proof_of_delegated_identity.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_proof(&mut self, v: ::std::vec::Vec<u8>) {
-        self.proof = ::std::option::Option::Some(v);
+    pub fn set_proof_of_delegated_identity(&mut self, v: ::std::vec::Vec<u8>) {
+        self.proof_of_delegated_identity = ::std::option::Option::Some(v);
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_proof(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.proof.is_none() {
-            self.proof = ::std::option::Option::Some(::std::vec::Vec::new());
+    pub fn mut_proof_of_delegated_identity(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.proof_of_delegated_identity.is_none() {
+            self.proof_of_delegated_identity = ::std::option::Option::Some(::std::vec::Vec::new());
         }
-        self.proof.as_mut().unwrap()
+        self.proof_of_delegated_identity.as_mut().unwrap()
     }
 
     // Take field
-    pub fn take_proof(&mut self) -> ::std::vec::Vec<u8> {
-        self.proof.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    pub fn take_proof_of_delegated_identity(&mut self) -> ::std::vec::Vec<u8> {
+        self.proof_of_delegated_identity.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
         let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "challenge",
-            |m: &EvoluSignRegistrationRequest| { &m.challenge },
-            |m: &mut EvoluSignRegistrationRequest| { &mut m.challenge },
+            "challenge_from_server",
+            |m: &EvoluSignRegistrationRequest| { &m.challenge_from_server },
+            |m: &mut EvoluSignRegistrationRequest| { &mut m.challenge_from_server },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "size",
-            |m: &EvoluSignRegistrationRequest| { &m.size },
-            |m: &mut EvoluSignRegistrationRequest| { &mut m.size },
+            "size_to_acquire",
+            |m: &EvoluSignRegistrationRequest| { &m.size_to_acquire },
+            |m: &mut EvoluSignRegistrationRequest| { &mut m.size_to_acquire },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "proof",
-            |m: &EvoluSignRegistrationRequest| { &m.proof },
-            |m: &mut EvoluSignRegistrationRequest| { &mut m.proof },
+            "proof_of_delegated_identity",
+            |m: &EvoluSignRegistrationRequest| { &m.proof_of_delegated_identity },
+            |m: &mut EvoluSignRegistrationRequest| { &mut m.proof_of_delegated_identity },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<EvoluSignRegistrationRequest>(
             "EvoluSignRegistrationRequest",
@@ -493,13 +493,13 @@ impl ::protobuf::Message for EvoluSignRegistrationRequest {
     const NAME: &'static str = "EvoluSignRegistrationRequest";
 
     fn is_initialized(&self) -> bool {
-        if self.challenge.is_none() {
+        if self.challenge_from_server.is_none() {
             return false;
         }
-        if self.size.is_none() {
+        if self.size_to_acquire.is_none() {
             return false;
         }
-        if self.proof.is_none() {
+        if self.proof_of_delegated_identity.is_none() {
             return false;
         }
         true
@@ -509,13 +509,13 @@ impl ::protobuf::Message for EvoluSignRegistrationRequest {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
                 10 => {
-                    self.challenge = ::std::option::Option::Some(is.read_bytes()?);
+                    self.challenge_from_server = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 16 => {
-                    self.size = ::std::option::Option::Some(is.read_uint32()?);
+                    self.size_to_acquire = ::std::option::Option::Some(is.read_uint32()?);
                 },
                 26 => {
-                    self.proof = ::std::option::Option::Some(is.read_bytes()?);
+                    self.proof_of_delegated_identity = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -529,13 +529,13 @@ impl ::protobuf::Message for EvoluSignRegistrationRequest {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        if let Some(v) = self.challenge.as_ref() {
+        if let Some(v) = self.challenge_from_server.as_ref() {
             my_size += ::protobuf::rt::bytes_size(1, &v);
         }
-        if let Some(v) = self.size {
+        if let Some(v) = self.size_to_acquire {
             my_size += ::protobuf::rt::uint32_size(2, v);
         }
-        if let Some(v) = self.proof.as_ref() {
+        if let Some(v) = self.proof_of_delegated_identity.as_ref() {
             my_size += ::protobuf::rt::bytes_size(3, &v);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
@@ -544,13 +544,13 @@ impl ::protobuf::Message for EvoluSignRegistrationRequest {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let Some(v) = self.challenge.as_ref() {
+        if let Some(v) = self.challenge_from_server.as_ref() {
             os.write_bytes(1, v)?;
         }
-        if let Some(v) = self.size {
+        if let Some(v) = self.size_to_acquire {
             os.write_uint32(2, v)?;
         }
-        if let Some(v) = self.proof.as_ref() {
+        if let Some(v) = self.proof_of_delegated_identity.as_ref() {
             os.write_bytes(3, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
@@ -570,17 +570,17 @@ impl ::protobuf::Message for EvoluSignRegistrationRequest {
     }
 
     fn clear(&mut self) {
-        self.challenge = ::std::option::Option::None;
-        self.size = ::std::option::Option::None;
-        self.proof = ::std::option::Option::None;
+        self.challenge_from_server = ::std::option::Option::None;
+        self.size_to_acquire = ::std::option::Option::None;
+        self.proof_of_delegated_identity = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static EvoluSignRegistrationRequest {
         static instance: EvoluSignRegistrationRequest = EvoluSignRegistrationRequest {
-            challenge: ::std::option::Option::None,
-            size: ::std::option::Option::None,
-            proof: ::std::option::Option::None,
+            challenge_from_server: ::std::option::Option::None,
+            size_to_acquire: ::std::option::Option::None,
+            proof_of_delegated_identity: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -608,8 +608,8 @@ impl ::protobuf::reflect::ProtobufValue for EvoluSignRegistrationRequest {
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct EvoluRegistrationRequest {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.evolu.EvoluRegistrationRequest.certificates)
-    pub certificates: ::std::vec::Vec<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.evolu.EvoluRegistrationRequest.certificate_chain)
+    pub certificate_chain: ::std::vec::Vec<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.evolu.EvoluRegistrationRequest.signature)
     pub signature: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
@@ -668,9 +668,9 @@ impl EvoluRegistrationRequest {
         let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
-            "certificates",
-            |m: &EvoluRegistrationRequest| { &m.certificates },
-            |m: &mut EvoluRegistrationRequest| { &mut m.certificates },
+            "certificate_chain",
+            |m: &EvoluRegistrationRequest| { &m.certificate_chain },
+            |m: &mut EvoluRegistrationRequest| { &mut m.certificate_chain },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "signature",
@@ -699,7 +699,7 @@ impl ::protobuf::Message for EvoluRegistrationRequest {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
                 10 => {
-                    self.certificates.push(is.read_bytes()?);
+                    self.certificate_chain.push(is.read_bytes()?);
                 },
                 18 => {
                     self.signature = ::std::option::Option::Some(is.read_bytes()?);
@@ -716,7 +716,7 @@ impl ::protobuf::Message for EvoluRegistrationRequest {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        for value in &self.certificates {
+        for value in &self.certificate_chain {
             my_size += ::protobuf::rt::bytes_size(1, &value);
         };
         if let Some(v) = self.signature.as_ref() {
@@ -728,7 +728,7 @@ impl ::protobuf::Message for EvoluRegistrationRequest {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        for v in &self.certificates {
+        for v in &self.certificate_chain {
             os.write_bytes(1, &v)?;
         };
         if let Some(v) = self.signature.as_ref() {
@@ -751,14 +751,14 @@ impl ::protobuf::Message for EvoluRegistrationRequest {
     }
 
     fn clear(&mut self) {
-        self.certificates.clear();
+        self.certificate_chain.clear();
         self.signature = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static EvoluRegistrationRequest {
         static instance: EvoluRegistrationRequest = EvoluRegistrationRequest {
-            certificates: ::std::vec::Vec::new(),
+            certificate_chain: ::std::vec::Vec::new(),
             signature: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
@@ -1049,16 +1049,18 @@ impl ::protobuf::reflect::ProtobufValue for EvoluDelegatedIdentityKey {
 
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x14messages-evolu.proto\x12\x18hw.trezor.messages.evolu\x1a\roptions.\
-    proto\"$\n\x0cEvoluGetNode\x12\x14\n\x05proof\x18\x01\x20\x02(\x0cR\x05p\
-    roof\"\x1f\n\tEvoluNode\x12\x12\n\x04data\x18\x01\x20\x02(\x0cR\x04data\
-    \"f\n\x1cEvoluSignRegistrationRequest\x12\x1c\n\tchallenge\x18\x01\x20\
-    \x02(\x0cR\tchallenge\x12\x12\n\x04size\x18\x02\x20\x02(\rR\x04size\x12\
-    \x14\n\x05proof\x18\x03\x20\x02(\x0cR\x05proof\"\\\n\x18EvoluRegistratio\
-    nRequest\x12\"\n\x0ccertificates\x18\x01\x20\x03(\x0cR\x0ccertificates\
-    \x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsignature\"\x1e\n\x1cEvoluG\
-    etDelegatedIdentityKey\"<\n\x19EvoluDelegatedIdentityKey\x12\x1f\n\x0bpr\
-    ivate_key\x18\x01\x20\x02(\x0cR\nprivateKeyB=\n#com.satoshilabs.trezor.l\
-    ib.protobufB\x12TrezorMessageEvolu\x80\xa6\x1d\x01\
+    proto\"M\n\x0cEvoluGetNode\x12=\n\x1bproof_of_delegated_identity\x18\x01\
+    \x20\x02(\x0cR\x18proofOfDelegatedIdentity\"\x1f\n\tEvoluNode\x12\x12\n\
+    \x04data\x18\x01\x20\x02(\x0cR\x04data\"\xb9\x01\n\x1cEvoluSignRegistrat\
+    ionRequest\x122\n\x15challenge_from_server\x18\x01\x20\x02(\x0cR\x13chal\
+    lengeFromServer\x12&\n\x0fsize_to_acquire\x18\x02\x20\x02(\rR\rsizeToAcq\
+    uire\x12=\n\x1bproof_of_delegated_identity\x18\x03\x20\x02(\x0cR\x18proo\
+    fOfDelegatedIdentity\"e\n\x18EvoluRegistrationRequest\x12+\n\x11certific\
+    ate_chain\x18\x01\x20\x03(\x0cR\x10certificateChain\x12\x1c\n\tsignature\
+    \x18\x02\x20\x02(\x0cR\tsignature\"\x1e\n\x1cEvoluGetDelegatedIdentityKe\
+    y\"<\n\x19EvoluDelegatedIdentityKey\x12\x1f\n\x0bprivate_key\x18\x01\x20\
+    \x02(\x0cR\nprivateKeyB=\n#com.satoshilabs.trezor.lib.protobufB\x12Trezo\
+    rMessageEvolu\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

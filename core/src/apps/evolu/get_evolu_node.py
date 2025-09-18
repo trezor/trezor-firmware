@@ -20,7 +20,9 @@ async def get_evolu_node(msg: EvoluGetNode) -> EvoluNode:
     if not utils.USE_OPTIGA:
         raise RuntimeError("Optiga is not available")
 
-    if not check_delegated_identity_proof(msg.proof, header=b"EvoluGetNode"):
+    if not check_delegated_identity_proof(
+        msg.proof_of_delegated_identity, header=b"EvoluGetNode"
+    ):
         raise ValueError("Invalid proof")
 
     # TODO: adjust copy when the usage is exposed via Trezor Suite

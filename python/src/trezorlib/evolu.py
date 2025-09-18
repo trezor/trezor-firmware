@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 def get_evolu_node(session: "Session", proof: bytes) -> messages.EvoluNode:
     return session.call(
-        messages.EvoluGetNode(proof=proof),
+        messages.EvoluGetNode(proof_of_delegated_identity=proof),
         expect=messages.EvoluNode,
     )
 
@@ -35,7 +35,9 @@ def evolu_sign_registration_request(
 ) -> messages.EvoluRegistrationRequest:
     return session.call(
         messages.EvoluSignRegistrationRequest(
-            challenge=challenge, size=size, proof=proof
+            challenge_from_server=challenge,
+            size_to_acquire=size,
+            proof_of_delegated_identity=proof,
         ),
         expect=messages.EvoluRegistrationRequest,
     )
