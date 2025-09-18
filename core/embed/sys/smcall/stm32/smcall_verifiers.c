@@ -29,6 +29,8 @@
 #include "smcall_probe.h"
 #include "smcall_verifiers.h"
 
+#include "util/unit_properties.h"
+
 #ifdef SECMON
 
 // ---------------------------------------------------------------------
@@ -125,6 +127,24 @@ void unit_properties_get__verified(unit_properties_t *props) {
 
 access_violation:
   apptask_access_violation();
+}
+
+bool unit_properties_get_sn__verified(uint8_t *device_sn,
+                                      size_t max_device_sn_size,
+                                      size_t *device_sn_size) {
+  if (!probe_write_access(device_sn, max_device_sn_size)) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(device_sn_size, sizeof(*device_sn_size))) {
+    goto access_violation;
+  }
+
+  return unit_properties_get_sn(device_sn, max_device_sn_size, device_sn_size);
+
+access_violation:
+  apptask_access_violation();
+  return false;
 }
 
 // ---------------------------------------------------------------------
