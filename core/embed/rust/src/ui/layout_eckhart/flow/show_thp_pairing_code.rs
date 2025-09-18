@@ -67,6 +67,7 @@ pub fn new_show_thp_pairing_code(
         TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
         TextScreenMsg::Menu => Some(FlowMsg::Info),
+        _ => None,
     });
 
     let mut menu = VerticalMenu::<ShortMenuVec>::empty();

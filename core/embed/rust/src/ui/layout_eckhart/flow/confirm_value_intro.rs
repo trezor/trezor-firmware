@@ -110,6 +110,7 @@ pub fn new_confirm_value_intro(
         // special case for the "view all data" button
         TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
         TextScreenMsg::Menu => Some(FlowMsg::Info),
+        _ => None,
     });
 
     let menu_items = VerticalMenu::<ShortMenuVec>::empty()

@@ -140,6 +140,7 @@ pub fn new_receive(
             TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
             TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
             TextScreenMsg::Menu => Some(FlowMsg::Info),
+            _ => None,
         })
         .one_button_request(ButtonRequest::from_num(br_code, br_name));
 

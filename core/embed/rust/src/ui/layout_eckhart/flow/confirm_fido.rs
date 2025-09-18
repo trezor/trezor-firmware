@@ -160,6 +160,7 @@ pub fn new_confirm_fido(
                 TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
                 TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
                 TextScreenMsg::Menu => Some(FlowMsg::Info),
+                _ => None,
             });
 
     // Menu screen

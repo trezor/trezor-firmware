@@ -295,6 +295,7 @@ pub fn new_confirm_output(
             TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
             TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
             TextScreenMsg::Menu => Some(FlowMsg::Info),
+            _ => None,
         })
         .one_button_request(ButtonRequest::from_num(br_code, br_name));
 
@@ -332,6 +333,7 @@ pub fn new_confirm_output(
             TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
             TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
             TextScreenMsg::Menu => Some(FlowMsg::Info),
+            _ => None,
         })
         .one_button_request(ButtonRequest::from_num(br_code, br_name));
 
@@ -402,6 +404,7 @@ pub fn new_confirm_output(
             TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
             TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
             TextScreenMsg::Menu => Some(FlowMsg::Info),
+            _ => None,
         })
         .one_button_request(ButtonRequest::from_num(
             summary_br_code.unwrap(),

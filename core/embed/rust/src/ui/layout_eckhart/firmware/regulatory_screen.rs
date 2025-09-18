@@ -18,6 +18,7 @@ use crate::{
 };
 
 use super::super::{
+    component::Button,
     constant::SCREEN,
     firmware::{ActionBar, ActionBarMsg, Header, HeaderMsg},
     theme,
@@ -31,7 +32,10 @@ pub struct RegulatoryScreen {
 }
 
 pub enum RegulatoryMsg {
+    /// Right header button clicked
     Cancelled,
+    /// Left header button clicked
+    Back,
 }
 
 impl RegulatoryScreen {
@@ -42,7 +46,9 @@ impl RegulatoryScreen {
         action_bar.update(content.pager());
 
         Self {
-            header: Header::new(TR::regulatory_certification__title.into()).with_close_button(),
+            header: Header::new(TR::regulatory_certification__title.into())
+                .with_close_button()
+                .with_left_button(Button::with_icon(theme::ICON_CHEVRON_LEFT), HeaderMsg::Back),
             content,
             action_bar,
         }
@@ -96,8 +102,10 @@ impl Component for RegulatoryScreen {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Some(HeaderMsg::Cancelled) = self.header.event(ctx, event) {
-            return Some(RegulatoryMsg::Cancelled);
+        match self.header.event(ctx, event) {
+            Some(HeaderMsg::Cancelled) => return Some(RegulatoryMsg::Cancelled),
+            Some(HeaderMsg::Back) => return Some(RegulatoryMsg::Back),
+            _ => {}
         }
 
         if let Some(msg) = self.action_bar.event(ctx, event) {

@@ -111,6 +111,7 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
             TextScreenMsg::Menu => Some(FlowMsg::Cancelled),
             TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
             TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
+            _ => None,
         });
 
     let mut res = SwipeFlow::new(&PromptBackup::Intro)?;

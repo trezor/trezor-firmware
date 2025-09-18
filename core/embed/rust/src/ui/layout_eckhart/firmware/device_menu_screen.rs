@@ -786,7 +786,14 @@ impl DeviceMenuScreen {
                         .into_paragraphs()
                         .with_placement(LinearPlacement::vertical()),
                     )
-                    .with_header(Header::new(TR::words__about.into()).with_close_button()),
+                    .with_header(
+                        Header::new(TR::words__about.into())
+                            .with_close_button()
+                            .with_left_button(
+                                Button::with_icon(theme::ICON_CHEVRON_LEFT),
+                                HeaderMsg::Back,
+                            ),
+                    ),
                 );
             }
             Subscreen::RegulatoryScreen => {
@@ -924,14 +931,16 @@ impl Component for DeviceMenuScreen {
                     _ => {}
                 }
             }
-            (Subscreen::AboutScreen, ActiveScreen::About(about)) => {
-                if let Some(TextScreenMsg::Cancelled) = about.event(ctx, event) {
-                    return self.go_back(ctx);
-                }
-            }
+            (Subscreen::AboutScreen, ActiveScreen::About(about)) => match about.event(ctx, event) {
+                Some(TextScreenMsg::Cancelled) => return Some(DeviceMenuMsg::Close),
+                Some(TextScreenMsg::Back) => return self.go_back(ctx),
+                _ => {}
+            },
             (Subscreen::RegulatoryScreen, ActiveScreen::Regulatory(regulatory)) => {
-                if let Some(RegulatoryMsg::Cancelled) = regulatory.event(ctx, event) {
-                    return self.go_back(ctx);
+                match regulatory.event(ctx, event) {
+                    Some(RegulatoryMsg::Cancelled) => return Some(DeviceMenuMsg::Close),
+                    Some(RegulatoryMsg::Back) => return self.go_back(ctx),
+                    _ => {}
                 }
             }
             _ => {}

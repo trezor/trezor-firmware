@@ -113,6 +113,7 @@ pub fn new_show_share_words_flow(
             TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
             TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
             TextScreenMsg::Menu => Some(FlowMsg::Cancelled),
+            _ => None,
         });
 
     let check_backup_paragraphs = Paragraph::new(&theme::TEXT_REGULAR, text_check)

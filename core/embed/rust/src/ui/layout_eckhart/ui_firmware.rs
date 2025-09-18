@@ -431,6 +431,7 @@ impl FirmwareUI for UIEckhart {
                 }),
                 TextScreenMsg::Menu => Some(FlowMsg::Info),
                 TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
+                _ => None,
             });
         flow::util::single_page(screen)
     }

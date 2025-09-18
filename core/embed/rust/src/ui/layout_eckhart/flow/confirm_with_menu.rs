@@ -91,6 +91,7 @@ pub fn new_confirm_with_menu<T: AllowedTextContent + MaybeTrace + 'static>(
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
         TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
         TextScreenMsg::Menu => Some(FlowMsg::Info),
+        _ => None,
     });
 
     let mut menu_items = VerticalMenu::<ShortMenuVec>::empty();

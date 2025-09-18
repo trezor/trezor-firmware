@@ -43,8 +43,13 @@ pub struct TextScreen<T> {
 }
 
 pub enum TextScreenMsg {
+    /// Left header button clicked
+    Back,
+    /// Right header/ left action bar button clicked
     Cancelled,
+    /// Right action bar button clicked
     Confirmed,
+    /// Menu item selected
     Menu,
 }
 
@@ -199,7 +204,7 @@ where
             match msg {
                 HeaderMsg::Cancelled => return Some(TextScreenMsg::Cancelled),
                 HeaderMsg::Menu => return Some(TextScreenMsg::Menu),
-                _ => {}
+                HeaderMsg::Back => return Some(TextScreenMsg::Back),
             }
         }
         if let Some(msg) = self.action_bar.event(ctx, event) {

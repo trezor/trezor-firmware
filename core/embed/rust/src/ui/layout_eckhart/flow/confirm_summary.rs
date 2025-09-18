@@ -140,6 +140,7 @@ pub fn new_confirm_summary(
             FlowMsg::Cancelled
         }),
         TextScreenMsg::Menu => Some(FlowMsg::Info),
+        _ => None,
     });
 
     // Menu

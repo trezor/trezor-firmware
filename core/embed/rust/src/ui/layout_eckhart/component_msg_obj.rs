@@ -104,6 +104,8 @@ where
             TextScreenMsg::Cancelled => Ok(CANCELLED.as_obj()),
             TextScreenMsg::Confirmed => Ok(CONFIRMED.as_obj()),
             TextScreenMsg::Menu => Ok(INFO.as_obj()),
+            // back message is handled only in the flow
+            TextScreenMsg::Back => unreachable!(),
         }
     }
 }
