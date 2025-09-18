@@ -126,6 +126,14 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       unit_properties_get__verified(props);
     } break;
 
+    case SMCALL_UNIT_PROPERTIES_GET_SN: {
+      uint8_t *device_sn = (uint8_t *)args[0];
+      size_t max_device_sn_size = args[1];
+      size_t *device_sn_size = (size_t *)args[2];
+      args[0] = unit_properties_get_sn__verified(device_sn, max_device_sn_size,
+                                                 device_sn_size);
+    } break;
+
 #ifdef LOCKABLE_BOOTLOADER
     case SMCALL_SECRET_BOOTLOADER_LOCKED: {
       args[0] = secret_bootloader_locked();
