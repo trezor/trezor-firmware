@@ -279,8 +279,6 @@ bool backlight_set_max_level(uint8_t max_level) {
 
   drv->max_level = max_level;
 
-  // TODO: are we sure that "drv->requested_level" shall be passed as an
-  // argument, here? Shouldn't it raher be "drv->max_level"?
   return backlight_set(drv->requested_level);
 }
 
