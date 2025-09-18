@@ -4104,14 +4104,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EvoluSignRegistrationRequest(protobuf.MessageType):
-        challenge: "int"
+        challenge: "bytes"
         size: "int"
         proof: "bytes"
 
         def __init__(
             self,
             *,
-            challenge: "int",
+            challenge: "bytes",
             size: "int",
             proof: "bytes",
         ) -> None:
@@ -4122,14 +4122,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EvoluRegistrationRequest(protobuf.MessageType):
-        registration_request: "str"
         certificates: "list[bytes]"
         signature: "bytes"
 
         def __init__(
             self,
             *,
-            registration_request: "str",
             signature: "bytes",
             certificates: "list[bytes] | None" = None,
         ) -> None:
@@ -4147,13 +4145,11 @@ if TYPE_CHECKING:
 
     class EvoluDelegatedIdentityKey(protobuf.MessageType):
         private_key: "bytes"
-        public_key: "bytes"
 
         def __init__(
             self,
             *,
             private_key: "bytes",
-            public_key: "bytes",
         ) -> None:
             pass
 

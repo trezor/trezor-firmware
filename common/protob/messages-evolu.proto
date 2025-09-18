@@ -39,7 +39,7 @@ message EvoluNode {
  * @next Failure
  */
 message EvoluSignRegistrationRequest {
-    required uint32 challenge = 1;  /* bytes */ 
+    required bytes challenge = 1;
     required uint32 size = 2;  
     required bytes proof = 3; 
 }
@@ -50,9 +50,8 @@ message EvoluSignRegistrationRequest {
  * @end
  */
 message EvoluRegistrationRequest {
-    required string registration_request = 1;  /* odendat*/
-    repeated bytes certificates = 2;
-    required bytes signature = 3;
+    repeated bytes certificates = 1;
+    required bytes signature = 2;
 }
 
 /**
@@ -70,5 +69,4 @@ message EvoluGetDelegatedIdentityKey {
  */
 message EvoluDelegatedIdentityKey {
     required bytes private_key = 1;
-    required bytes public_key = 2;  /* odendat */
 }

@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 async def get_delegated_identity_key(
     _msg: EvoluGetDelegatedIdentityKey,
 ) -> EvoluDelegatedIdentityKey:
-    from trezor import wire, utils
+    from trezor import utils, wire
     from trezor.messages import EvoluDelegatedIdentityKey
     from trezor.ui.layouts import confirm_action
     from trezor.utils import bootloader_locked
@@ -26,9 +26,8 @@ async def get_delegated_identity_key(
     )
 
     private_key = get_delegated_private_key()
-    public_key = get_public_key_from_private_key(private_key)
 
-    return EvoluDelegatedIdentityKey(private_key=private_key, public_key=public_key)
+    return EvoluDelegatedIdentityKey(private_key=private_key)
 
 
 def get_delegated_private_key() -> bytes:
@@ -36,10 +35,3 @@ def get_delegated_private_key() -> bytes:
 
     key = delegated_identity()
     return bytes(key)
-
-
-def get_public_key_from_private_key(private_key: bytes) -> bytes:
-    from trezor.crypto.curve import secp256k1
-
-    public_key = secp256k1.publickey(private_key, False)
-    return bytes(public_key)

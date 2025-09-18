@@ -40,9 +40,6 @@ def get_node(
     proof: str,
 ) -> dict[str, str]:
     """Return the SLIP-21 node for Evolu."""
-    if not proof or len(proof) != 64:
-        raise ValueError("invalid proof")
-
     node: messages.EvoluNode = evolu.get_evolu_node(session, proof=bytes.fromhex(proof))
     return {
         "data": node.data.hex(),
@@ -51,22 +48,24 @@ def get_node(
 
 @cli.command()
 @click.argument("proof", type=str)
-@click.argument("challenge", type=int)
+@click.argument("challenge", type=str)
 @click.option("--size", "-s", type=int, default=10)
 @with_session
 def evolu_sign_registration_request(
     session: "Session",
     proof: str,
-    challenge: int,
+    challenge: str,
     size: int,
 ) -> dict[str, str]:
     """Test request that signs a challenge and a size and returns a key."""
 
     response: messages.EvoluRegistrationRequest = evolu.evolu_sign_registration_request(
-        session=session, challenge=challenge, size=size, proof=bytes.fromhex(proof)
+        session=session,
+        challenge=bytes.fromhex(challenge),
+        size=size,
+        proof=bytes.fromhex(proof),
     )
     return {
-        "registration_request": response.registration_request,
         "certificates": ",".join([cert.hex() for cert in response.certificates]),
         "signature": response.signature.hex(),
     }
@@ -84,5 +83,4 @@ def get_delegated_identity_key(
     )
     return {
         "private_key": key_pair.private_key.hex(),
-        "public_key": key_pair.public_key.hex(),
     }

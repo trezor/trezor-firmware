@@ -31,7 +31,7 @@ def get_evolu_node(session: "Session", proof: bytes) -> messages.EvoluNode:
 
 
 def evolu_sign_registration_request(
-    session: "Session", challenge: int, size: int, proof: bytes
+    session: "Session", challenge: bytes, size: int, proof: bytes
 ) -> messages.EvoluRegistrationRequest:
     return session.call(
         messages.EvoluSignRegistrationRequest(

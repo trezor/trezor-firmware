@@ -7,8 +7,6 @@ if TYPE_CHECKING:
 async def evolu_sign_registration_request(
     msg: EvoluSignRegistrationRequest,
 ) -> EvoluRegistrationRequest:
-    from ubinascii import hexlify
-
     from trezor import utils, wire
     from trezor.crypto.der import read_length
     from trezor.crypto.hashlib import sha256
@@ -17,7 +15,7 @@ async def evolu_sign_registration_request(
 
     from apps.common.writers import write_compact_size
 
-    from .common import check_delegated_identity_key
+    from .common import check_delegated_identity_proof
 
     if not bootloader_locked():
         raise wire.ProcessError(
@@ -29,31 +27,22 @@ async def evolu_sign_registration_request(
     else:
         raise RuntimeError("Optiga is not available")
 
-    if not check_delegated_identity_key(
+    if not check_delegated_identity_proof(
         proposed_value=msg.proof,
         header=b"EvoluSignRegistrationRequest",
-        arguments=[msg.challenge.to_bytes(16, "big"), msg.size.to_bytes(16, "big")],
+        arguments=[msg.challenge, msg.size.to_bytes(4, "big")],
     ):
         raise ValueError("Invalid proof")
 
     private_key = get_delegated_identity_key()
     public_key = get_public_key_from_private_key(private_key)
 
-    registration_request = {
-        "public_key": hexlify(public_key).decode(),  # device identifier
-        "challenge": str(msg.challenge),
-        "size": str(msg.size),
-    }
-    registration_request_str = (
-        "{" + ",".join(f"{k}:{v}" for k, v in registration_request.items()) + "}"
-    )
-
-    header = b"EvoluSignRegistrationRequest:"  # tady bude verze
+    header = b"EvoluSignRegistrationRequestV1:"
+    components = [header, public_key, msg.challenge, msg.size.to_bytes(4, "big")]
     h = utils.HashWriter(sha256())
-    write_compact_size(h, len(header))
-    h.extend(header)
-    write_compact_size(h, len(registration_request_str))
-    h.extend(registration_request_str.encode())
+    for component in components:
+        write_compact_size(h, len(component))
+        h.extend(component)
 
     try:
         signature = optiga.sign(optiga.DEVICE_ECC_KEY_INDEX, h.get_digest())
@@ -72,7 +61,6 @@ async def evolu_sign_registration_request(
         certificates.append(r.read_memoryview(cert_len))
 
     return EvoluRegistrationRequest(
-        registration_request=registration_request_str,
         certificates=certificates,
         signature=signature,
     )
