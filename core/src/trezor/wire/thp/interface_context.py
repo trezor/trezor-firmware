@@ -1,6 +1,5 @@
 import ustruct
 from micropython import const
-from trezorcrypto import crc
 from typing import TYPE_CHECKING
 
 from storage.cache_thp import (
@@ -132,8 +131,9 @@ class InterfaceContext:
             return channel
 
     def write_payload(self, header: PacketHeader, payload: bytes) -> Awaitable[None]:
-        checksum = crc.crc32(payload, crc.crc32(header.to_bytes()))
-        checksum_bytes = checksum.to_bytes(CHECKSUM_LENGTH, "big")
+        checksum_bytes = checksum.compute(
+            payload, checksum.compute_int(header.to_bytes())
+        )
         return self._write_payload_chunks(header, payload, checksum_bytes)
 
     def _write_payload_chunks(
