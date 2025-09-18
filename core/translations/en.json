@@ -467,6 +467,7 @@
     "haptic_feedback__enable": "Enable haptic feedback?",
     "haptic_feedback__subtitle": "Setting",
     "haptic_feedback__title": "Haptic feedback",
+    "homescreen__backup_needed_info": "Open Trezor Suite and create a wallet backup. This is the only way to recover access to your assets.",
     "homescreen__click_to_connect": "Click to Connect",
     "homescreen__click_to_unlock": "Click to Unlock",
     "homescreen__firmware_type": "Firmware type",

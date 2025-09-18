@@ -42,7 +42,6 @@ static DEVICE_MENU_RESULT_TYPE: Type = obj_type! {
     name: Qstr::MP_QSTR_DeviceMenuResult,
     locals: &obj_dict! { obj_map! {
         Qstr::MP_QSTR_ReviewFailedBackup => REVIEW_FAILED_BACKUP.as_obj(),
-        Qstr::MP_QSTR_BackupDevice => BACKUP_DEVICE.as_obj(),
         Qstr::MP_QSTR_PairDevice => PAIR_DEVICE.as_obj(),
         Qstr::MP_QSTR_DisconnectDevice => DISCONNECT_DEVICE.as_obj(),
         Qstr::MP_QSTR_UnpairDevice => UNPAIR_DEVICE.as_obj(),

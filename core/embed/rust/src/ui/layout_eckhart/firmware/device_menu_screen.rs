@@ -11,7 +11,7 @@ use crate::{
     ui::{
         component::{
             text::{
-                paragraphs::{ParagraphSource, Paragraphs},
+                paragraphs::{Paragraph, ParagraphSource, Paragraphs},
                 TextStyle,
             },
             Component, Event, EventCtx,
@@ -108,7 +108,6 @@ enum Action {
 pub enum DeviceMenuMsg {
     // Root menu
     ReviewFailedBackup,
-    BackupDevice,
 
     // "Pair & Connect"
     PairDevice,       // pair a new device
@@ -269,6 +268,8 @@ enum Subscreen {
     AboutScreen,
     // A screen showing the regulatory information
     RegulatoryScreen,
+    // A screen showing information about the backup
+    BackupInfoScreen,
 }
 
 // Used to preallocate memory for the largest enum variant
@@ -277,6 +278,7 @@ enum ActiveScreen {
     Menu(VerticalMenuScreen<MediumMenuVec>, DeviceMenuId),
     Device(VerticalMenuScreen<ShortMenuVec>),
     About(TextScreen<Paragraphs<PropsList>>),
+    BackupInfo(TextScreen<Paragraphs<Paragraph<'static>>>),
     Regulatory(RegulatoryScreen),
 
     // used only during `DeviceMenuScreen::new`
@@ -659,12 +661,11 @@ impl DeviceMenuScreen {
         }
 
         if backup_needed {
-            let item = MenuItem::return_msg(
-                TR::homescreen__title_backup_needed.into(),
-                DeviceMenuMsg::BackupDevice,
-            )
-            .with_subtext(Some((TR::words__review.into(), None)))
-            .light_warn();
+            let backup_idx = self.add_subscreen(Subscreen::BackupInfoScreen);
+            let item =
+                MenuItem::go_to_subscreen(TR::homescreen__title_backup_needed.into(), backup_idx)
+                    .with_subtext(Some((TR::words__review.into(), None)))
+                    .light_warn();
             items.add(item);
         }
 
@@ -820,6 +821,21 @@ impl DeviceMenuScreen {
             Subscreen::RegulatoryScreen => {
                 *self.active_screen.deref_mut() = ActiveScreen::Regulatory(RegulatoryScreen::new());
             }
+            Subscreen::BackupInfoScreen => {
+                *self.active_screen.deref_mut() = ActiveScreen::BackupInfo(
+                    TextScreen::new(
+                        Paragraph::new(&theme::TEXT_REGULAR, TR::homescreen__backup_needed_info)
+                            .into_paragraphs()
+                            .with_placement(LinearPlacement::vertical()),
+                    )
+                    .with_header(
+                        Header::new(TR::homescreen__title_backup_needed.into())
+                            .with_icon(theme::ICON_INFO, theme::YELLOW)
+                            .with_text_style(theme::label_title_warning())
+                            .with_close_button(),
+                    ),
+                );
+            }
         }
     }
 
@@ -864,6 +880,7 @@ impl DeviceMenuScreen {
             },
             Subscreen::DeviceScreen(..) => DeviceMenuId::PairAndConnect,
             Subscreen::AboutScreen | Subscreen::RegulatoryScreen => DeviceMenuId::Device,
+            Subscreen::BackupInfoScreen => DeviceMenuId::Root,
         };
 
         self.activate_subscreen(unwrap!(self.try_resolve_submenu(parent)), ctx);
@@ -894,6 +911,9 @@ impl Component for DeviceMenuScreen {
             ActiveScreen::Regulatory(regulatory) => {
                 regulatory.place(bounds);
             }
+            ActiveScreen::BackupInfo(backup_info) => {
+                backup_info.place(bounds);
+            }
             ActiveScreen::Empty => {}
         };
 
@@ -910,7 +930,7 @@ impl Component for DeviceMenuScreen {
                 ActiveScreen::Menu(_, id) => *id,
                 ActiveScreen::Device(_) => DeviceMenuId::PairAndConnect,
                 ActiveScreen::Regulatory(_) | ActiveScreen::About(_) => DeviceMenuId::Device,
-                ActiveScreen::Empty => DeviceMenuId::Root,
+                ActiveScreen::Empty | ActiveScreen::BackupInfo(_) => DeviceMenuId::Root,
             };
 
             return Some(DeviceMenuMsg::RefreshMenu(submenu_idx));
@@ -962,6 +982,11 @@ impl Component for DeviceMenuScreen {
                     return self.go_back(ctx);
                 }
             }
+            (Subscreen::BackupInfoScreen, ActiveScreen::BackupInfo(backup_info)) => {
+                if let Some(TextScreenMsg::Cancelled) = backup_info.event(ctx, event) {
+                    return self.go_back(ctx);
+                }
+            }
             _ => {}
         }
 
@@ -974,6 +999,7 @@ impl Component for DeviceMenuScreen {
             ActiveScreen::Device(device) => device.render(target),
             ActiveScreen::About(about) => about.render(target),
             ActiveScreen::Regulatory(regulatory) => regulatory.render(target),
+            ActiveScreen::BackupInfo(backup_info) => backup_info.render(target),
             ActiveScreen::Empty => {}
         };
     }
@@ -996,6 +1022,9 @@ impl crate::trace::Trace for DeviceMenuScreen {
             }
             ActiveScreen::Regulatory(ref screen) => {
                 t.child("Regulatory", screen);
+            }
+            ActiveScreen::BackupInfo(ref screen) => {
+                t.child("BackupInfo", screen);
             }
             ActiveScreen::Empty => {
                 t.null("ActiveScreen");

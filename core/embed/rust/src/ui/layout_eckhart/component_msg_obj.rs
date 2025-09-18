@@ -159,7 +159,6 @@ impl ComponentMsgObj for DeviceMenuScreen {
         match msg {
             // Root menu
             DeviceMenuMsg::ReviewFailedBackup => Ok(REVIEW_FAILED_BACKUP.as_obj()),
-            DeviceMenuMsg::BackupDevice => Ok(BACKUP_DEVICE.as_obj()),
             // "Pair & Connect"
             DeviceMenuMsg::PairDevice => Ok(PAIR_DEVICE.as_obj()),
             DeviceMenuMsg::DisconnectDevice => Ok(DISCONNECT_DEVICE.as_obj()),
