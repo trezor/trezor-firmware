@@ -230,13 +230,15 @@ STATIC mp_obj_t mod_trezorutils_firmware_vendor(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_firmware_vendor_obj,
                                  mod_trezorutils_firmware_vendor);
 
-// // TODO: THIS HAS NO BUSINESS BEING HERE. BUT IT DOESN'T GET RECOGNIZED WHERE IT
+// // TODO: THIS HAS NO BUSINESS BEING HERE. BUT IT DOESN'T GET RECOGNIZED WHERE
+// IT
 // // IS SUPPOSED TO BE SO I TEST IT HERE.
 // #include <ecdsa.h>
 // secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
 //   // storage_salt_t salt = {0};
 //   // storage_salt_get(&salt);
-//   // TODO process storage salt in a way that is independent from the way it is
+//   // TODO process storage salt in a way that is independent from the way it
+//   is
 //   // used in storage or use another OTP slot.
 //   static const uint8_t key[32] = {
 //       0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,

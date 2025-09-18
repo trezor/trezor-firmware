@@ -72,7 +72,8 @@ def firmware_vendor() -> str:
 # upymod/modtrezorutils/modtrezorutils.c
 def delegated_identity() -> bytes:
     """
-    Returns the delegated identity key used for registration and space management at Evolu.
+    Returns the delegated identity key used for registration and space
+    management at Evolu.
     """
 
 

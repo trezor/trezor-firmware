@@ -8,11 +8,11 @@ _EVOLU_KEY_PATH_PREFIX = [b"TREZOR", b"Evolu"]
 
 async def get_evolu_node(msg: EvoluGetNode) -> EvoluNode:
     from storage.device import is_initialized
+    from trezor import utils
     from trezor.messages import EvoluNode
     from trezor.wire import NotInitialized
-    from trezor import utils
 
-    from .common import check_delegated_identity_key
+    from .common import check_delegated_identity_proof
 
     if not is_initialized():
         raise NotInitialized("Device is not initialized")
@@ -20,7 +20,7 @@ async def get_evolu_node(msg: EvoluGetNode) -> EvoluNode:
     if not utils.USE_OPTIGA:
         raise RuntimeError("Optiga is not available")
 
-    if not check_delegated_identity_key(msg.proof, header=b"EvoluGetNode"):
+    if not check_delegated_identity_proof(msg.proof, header=b"EvoluGetNode"):
         raise ValueError("Invalid proof")
 
     # TODO: adjust copy when the usage is exposed via Trezor Suite

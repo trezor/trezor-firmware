@@ -5551,7 +5551,7 @@ class EvoluNode(protobuf.MessageType):
 class EvoluSignRegistrationRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2102
     FIELDS = {
-        1: protobuf.Field("challenge", "uint32", repeated=False, required=True),
+        1: protobuf.Field("challenge", "bytes", repeated=False, required=True),
         2: protobuf.Field("size", "uint32", repeated=False, required=True),
         3: protobuf.Field("proof", "bytes", repeated=False, required=True),
     }
@@ -5559,7 +5559,7 @@ class EvoluSignRegistrationRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        challenge: "int",
+        challenge: "bytes",
         size: "int",
         proof: "bytes",
     ) -> None:
@@ -5571,20 +5571,17 @@ class EvoluSignRegistrationRequest(protobuf.MessageType):
 class EvoluRegistrationRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2103
     FIELDS = {
-        1: protobuf.Field("registration_request", "string", repeated=False, required=True),
-        2: protobuf.Field("certificates", "bytes", repeated=True, required=False, default=None),
-        3: protobuf.Field("signature", "bytes", repeated=False, required=True),
+        1: protobuf.Field("certificates", "bytes", repeated=True, required=False, default=None),
+        2: protobuf.Field("signature", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        registration_request: "str",
         signature: "bytes",
         certificates: Optional[Sequence["bytes"]] = None,
     ) -> None:
         self.certificates: Sequence["bytes"] = certificates if certificates is not None else []
-        self.registration_request = registration_request
         self.signature = signature
 
 
@@ -5596,17 +5593,14 @@ class EvoluDelegatedIdentityKey(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2105
     FIELDS = {
         1: protobuf.Field("private_key", "bytes", repeated=False, required=True),
-        2: protobuf.Field("public_key", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
         private_key: "bytes",
-        public_key: "bytes",
     ) -> None:
         self.private_key = private_key
-        self.public_key = public_key
 
 
 class MoneroTransactionSourceEntry(protobuf.MessageType):
