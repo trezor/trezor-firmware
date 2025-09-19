@@ -1221,21 +1221,19 @@ access_violation:
 #endif
 
 
-// #ifndef ECDSA_PRIVATE_KEY_SIZE
-// #include <ecdsa.h>
-// #endif
-// #include <sec/secret_keys.h>
 
-// bool secret_key_delegated_identity__verified(uint8_t* dest) {
-//   if (!probe_read_access(dest, ECDSA_PRIVATE_KEY_SIZE)) {
-//     goto access_violation;
-//   }
+#include <sec/secret_keys.h>
 
-//   return secret_key_delegated_identity(dest);
-// access_violation:
-//   apptask_access_violation();
-//   return false;
-// }
+bool secret_key_delegated_identity__verified(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+  if (!probe_read_access(dest, ECDSA_PRIVATE_KEY_SIZE)) {
+    goto access_violation;
+  }
+
+  return secret_key_delegated_identity(dest);
+access_violation:
+  apptask_access_violation();
+  return false;
+}
 
 
 #endif  // KERNEL

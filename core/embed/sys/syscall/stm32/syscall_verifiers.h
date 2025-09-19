@@ -295,8 +295,8 @@ bool tropic_data_read__verified(uint16_t udata_slot, uint8_t *data,
 
 #endif
 
-// #include <sec/secret_keys.h>
+#include <sec/secret_keys.h>
 
-// bool secret_key_delegated_identity__verified(uint8_t* dest);
+bool secret_key_delegated_identity__verified(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
 
 #endif  // KERNEL
