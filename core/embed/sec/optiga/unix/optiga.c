@@ -99,15 +99,27 @@ bool optiga_read_sec(uint8_t *sec) {
 
 void optiga_set_sec_max(void) {}
 
-uint32_t optiga_estimate_time_ms(storage_pin_op_t op) { return 0; }
+bool optiga_pin_init(optiga_ui_progress_t ui_progress) { return true; }
+
+bool optiga_pin_stretch_cmac_ecdh(
+    optiga_ui_progress_t ui_progress,
+    uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
+  return true;
+}
+
+uint32_t optiga_estimate_time_ms(storage_pin_op_t op, uint8_t slot_index) {
+  return 0;
+}
 
 bool optiga_random_buffer(uint8_t *dest, size_t size) {
   rng_fill_buffer(dest, size);
   return true;
 }
 
-bool optiga_pin_set(optiga_ui_progress_t ui_progress,
-                    uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
+bool optiga_pin_set(
+    optiga_ui_progress_t ui_progress,
+    uint8_t stretched_pins[STRETCHED_PIN_COUNT][OPTIGA_PIN_SECRET_SIZE],
+    uint8_t hmac_reset_key[OPTIGA_PIN_SECRET_SIZE]) {
   return true;
 }
 
@@ -120,9 +132,15 @@ optiga_pin_result optiga_pin_verify_v4(
 }
 
 optiga_pin_result optiga_pin_verify(
-    optiga_ui_progress_t ui_progress,
+    optiga_ui_progress_t ui_progress, uint8_t pin_index,
     uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
   return OPTIGA_PIN_SUCCESS;
+}
+
+bool optiga_pin_reset_hmac_counter(
+    optiga_ui_progress_t ui_progress,
+    const uint8_t hmac_reset_key[OPTIGA_PIN_SECRET_SIZE]) {
+  return true;
 }
 
 bool optiga_pin_get_rem_v4(uint32_t *ctr) {

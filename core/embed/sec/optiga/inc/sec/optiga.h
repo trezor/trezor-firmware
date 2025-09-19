@@ -62,13 +62,25 @@ void optiga_set_sec_max(void);
 
 bool __wur optiga_random_buffer(uint8_t *dest, size_t size);
 
-bool __wur optiga_pin_set(optiga_ui_progress_t ui_progress,
-                          uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]);
+bool __wur optiga_pin_init(optiga_ui_progress_t ui_progress);
 
-uint32_t optiga_estimate_time_ms(storage_pin_op_t op);
+bool optiga_pin_stretch_cmac_ecdh(
+    optiga_ui_progress_t ui_progress,
+    uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]);
+
+bool __wur optiga_pin_set(
+    optiga_ui_progress_t ui_progress,
+    uint8_t stretched_pins[STRETCHED_PIN_COUNT][OPTIGA_PIN_SECRET_SIZE],
+    uint8_t hmac_reset_key[OPTIGA_PIN_SECRET_SIZE]);
+
+bool __wur
+optiga_pin_reset_hmac_counter(optiga_ui_progress_t ui_progress,
+                              const uint8_t reset_key[OPTIGA_PIN_SECRET_SIZE]);
+
+uint32_t optiga_estimate_time_ms(storage_pin_op_t op, uint8_t slot_index);
 
 optiga_pin_result __wur
-optiga_pin_verify(optiga_ui_progress_t ui_progress,
+optiga_pin_verify(optiga_ui_progress_t ui_progress, uint8_t index,
                   uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]);
 
 optiga_pin_result __wur
