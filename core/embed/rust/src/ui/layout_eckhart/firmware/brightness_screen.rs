@@ -25,7 +25,7 @@ pub struct SetBrightnessScreen {
 
 impl SetBrightnessScreen {
     const SLIDER_HEIGHT: i16 = 392;
-    pub fn new(min: u16, max: u16, init_value: u16) -> Self {
+    pub fn new(min: u8, max: u8, init_value: u8) -> Self {
         Self {
             header: Header::new(TR::brightness__title.into()).with_right_button(
                 Button::with_icon(theme::ICON_CHECKMARK).styled(theme::button_header()),
@@ -87,17 +87,17 @@ impl crate::trace::Trace for SetBrightnessScreen {
 struct VerticalSlider {
     area: Rect,
     touch_area: Rect,
-    min: u16,
-    max: u16,
-    value: u16,
-    val_pct: u16,
+    min: u8,
+    max: u8,
+    value: u8,
+    val_pct: u8,
     touching: bool,
 }
 
 impl VerticalSlider {
     const SLIDER_WIDTH: i16 = 120;
 
-    pub fn new(min: u16, max: u16, value: u16) -> Self {
+    pub fn new(min: u8, max: u8, value: u8) -> Self {
         debug_assert!(min < max);
         let value = value.clamp(min, max);
         Self {
@@ -113,15 +113,7 @@ impl VerticalSlider {
 
     fn handle_touch(&mut self, pos: Point, ctx: &mut EventCtx) {
         self.update_value(pos, ctx);
-        // TODO: needs more analysis; why is "self.value" u16? Can it be changed to u8?
-        // Original code: display::set_backlight(self.value.into());
-        // Possible solution: display::set_backlight(self.value.try_into().unwrap());
-        // It's not save. To rather use unwrap!() macro? Another solution below.
-        if let Ok(val) = self.value.try_into() {
-            display::set_backlight(val);
-        } else {
-            display::set_backlight(255);
-        }
+        display::set_backlight(self.value);
         ctx.request_paint();
     }
 
@@ -136,7 +128,7 @@ impl VerticalSlider {
 
         let filled = (proportional_area.y1 - pos.y).clamp(0, proportional_area.height());
         let val_pct = (filled as u16 * 100) / proportional_area.height() as u16;
-        let val = (val_pct * (self.max - self.min)) / 100 + self.min;
+        let val = ((val_pct * (self.max - self.min) as u16) / 100) as u8 + self.min;
 
         if val != self.value {
             ctx.request_paint();
@@ -184,7 +176,8 @@ impl Component for VerticalSlider {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let val_pct = ((100 * (self.value - self.min)) / (self.max - self.min)).clamp(0, 100);
+        let val_pct =
+            ((100 * (self.value - self.min) as u16) / (self.max - self.min) as u16).clamp(0, 100);
 
         // Square area for the slider
         let (_, small_area) = self.area.split_bottom(Self::SLIDER_WIDTH);
