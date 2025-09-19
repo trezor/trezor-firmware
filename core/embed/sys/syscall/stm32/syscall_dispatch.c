@@ -26,6 +26,7 @@
 #include <io/usb.h>
 #include <sec/rng.h>
 #include <sec/secret.h>
+#include <sec/secret_keys.h>
 #include <sys/bootutils.h>
 #include <sys/irq.h>
 #include <sys/notify.h>
@@ -813,6 +814,13 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       args[0] = tropic_data_read__verified(udata_slot, data, size);
     } break;
 #endif
+
+    case SYSCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY: {
+      uint8_t* dest = (uint8_t*)args[0];
+      args[0] = secret_key_delegated_identity(dest);
+    } break;
+
+
 
     default:
       system_exit_fatal("Invalid syscall", __FILE__, __LINE__);
