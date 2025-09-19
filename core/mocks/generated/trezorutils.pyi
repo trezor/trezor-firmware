@@ -184,7 +184,7 @@ def check_firmware_header(header : bytes) -> FirmwareHeaderInfo:
 # upymod/modtrezorutils/modtrezorutils.c
 def bootloader_locked() -> bool | None:
     """
-    Returns True/False if the the bootloader is locked/unlocked and None if
+    Returns True/False if the bootloader is locked/unlocked and None if
     the feature is not supported.
     """
 
