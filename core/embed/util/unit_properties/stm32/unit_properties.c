@@ -92,20 +92,32 @@ static bool get_production_date(int* year) {
 static bool detect_properties(unit_properties_t* props) {
   uint8_t otp_data[FLASH_OTP_BLOCK_SIZE];
 
-  props->locked = flash_otp_is_locked(FLASH_OTP_BLOCK_DEVICE_VARIANT);
+  props->locked =
+      sectrue == flash_otp_is_locked(FLASH_OTP_BLOCK_DEVICE_VARIANT);
 
   if (sectrue != flash_otp_read(FLASH_OTP_BLOCK_DEVICE_VARIANT, 0, otp_data,
                                 FLASH_OTP_BLOCK_SIZE)) {
     return false;
   }
 
+  if (sectrue == flash_otp_is_locked(FLASH_OTP_BLOCK_DEVICE_VARIANT_REWORK)) {
+    uint8_t otp_rework_data[FLASH_OTP_BLOCK_SIZE];
+    if (sectrue != flash_otp_read(FLASH_OTP_BLOCK_DEVICE_VARIANT_REWORK, 0,
+                                  otp_rework_data, FLASH_OTP_BLOCK_SIZE)) {
+      return false;
+    }
+    if (otp_rework_data[0] != 0xFF) {
+      memcpy(otp_data, otp_rework_data, sizeof(otp_rework_data));
+    }
+  }
+
   switch (otp_data[0]) {
     case 0xFF:
-      // OTP block were not written yet, keep the defaults
+      // OTP block was not written yet, keep the defaults
       break;
 
     case 0x01:
-      // The field were gradually added to the OTP block over time.
+      // The fields were gradually added to the OTP block over time.
       // Unused trailing bytes were always set to 0x00.
       props->color = otp_data[1];
       props->color_is_valid = true;
