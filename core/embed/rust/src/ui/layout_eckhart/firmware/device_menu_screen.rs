@@ -157,8 +157,8 @@ impl<const N: usize> VecExt for Vec<MenuItem, N> {
 
 struct MenuItem {
     text: TString<'static>,
+    single_line: bool,
     subtext: Option<(TString<'static>, Option<&'static TextStyle>)>,
-    subtext_marquee: bool,
     stylesheet: &'static ButtonStyleSheet,
     connection_status: Option<bool>,
     action: Option<Action>,
@@ -172,8 +172,8 @@ impl MenuItem {
     fn new(text: TString<'static>, action: Option<Action>) -> Self {
         Self {
             text,
+            single_line: false,
             subtext: None,
-            subtext_marquee: false,
             stylesheet: MENU_ITEM_NORMAL,
             action,
             connection_status: None,
@@ -198,8 +198,8 @@ impl MenuItem {
         self
     }
 
-    pub fn with_subtext_marquee(mut self) -> Self {
-        self.subtext_marquee = true;
+    pub fn with_single_line(mut self) -> Self {
+        self.single_line = true;
         self
     }
 
@@ -451,9 +451,7 @@ impl DeviceMenuScreen {
                 MenuItem::go_to_subscreen(text, device).with_connection_status(connection_status);
 
             if let Some(subtext) = subtext {
-                item_device = item_device
-                    .with_subtext(Some((subtext, None)))
-                    .with_subtext_marquee();
+                item_device = item_device.with_subtext(Some((subtext, None)));
             }
 
             items.add(item_device);
@@ -632,8 +630,8 @@ impl DeviceMenuScreen {
         if let Some(device_name) = device_name {
             let item_device_name =
                 MenuItem::return_msg(TR::words__name.into(), DeviceMenuMsg::SetDeviceName)
-                    .with_subtext(Some((device_name, None)))
-                    .with_subtext_marquee();
+                    .with_single_line()
+                    .with_subtext(Some((device_name, None)));
             items.add(item_device_name);
         }
 
@@ -796,8 +794,8 @@ impl DeviceMenuScreen {
                     } else if let Some((subtext, subtext_style)) = item.subtext {
                         let subtext_style =
                             subtext_style.unwrap_or(&theme::TEXT_MENU_ITEM_SUBTITLE);
-                        let ctor = if item.subtext_marquee {
-                            Button::new_single_line_menu_item_with_subtext_marquee
+                        let ctor = if item.single_line {
+                            Button::new_single_line_menu_item_with_subtext
                         } else {
                             Button::new_menu_item_with_subtext
                         };
