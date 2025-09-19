@@ -25,6 +25,10 @@
 #include <sec/random_delays.h>
 #include <sys/sysevent_source.h>
 
+#ifdef USE_SUSPEND
+#include <sys/suspend.h>
+#endif
+
 #include "usb_internal.h"
 
 #define USB_CLASS_WEBUSB 0xFF
@@ -249,6 +253,9 @@ static uint8_t usb_webusb_class_data_out(USBD_HandleTypeDef *dev,
     // Save the report length to indicate we have read something, but don't
     // schedule next reading until user reads this one
     state->last_read_len = USBD_LL_GetRxDataSize(dev, ep_num);
+#ifdef USE_SUSPEND
+    wakeup_flags_set(WAKEUP_FLAG_USB);
+#endif
   }
 
   return USBD_OK;

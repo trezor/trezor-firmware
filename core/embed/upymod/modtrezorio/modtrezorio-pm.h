@@ -27,6 +27,7 @@
 /// WAKEUP_FLAG_BLE: int
 /// WAKEUP_FLAG_NFC: int
 /// WAKEUP_FLAG_RTC: int
+/// WAKEUP_FLAG_USB: int
 ///
 /// # Power manager event flags:
 /// EVENT_POWER_STATUS_CHANGED: int
@@ -114,6 +115,7 @@ STATIC const mp_rom_map_elem_t mod_trezorio_pm_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_WAKEUP_FLAG_BLE), MP_ROM_INT(WAKEUP_FLAG_BLE)},
     {MP_ROM_QSTR(MP_QSTR_WAKEUP_FLAG_NFC), MP_ROM_INT(WAKEUP_FLAG_NFC)},
     {MP_ROM_QSTR(MP_QSTR_WAKEUP_FLAG_RTC), MP_ROM_INT(WAKEUP_FLAG_RTC)},
+    {MP_ROM_QSTR(MP_QSTR_WAKEUP_FLAG_USB), MP_ROM_INT(WAKEUP_FLAG_USB)},
 
     // Power manager event flags
     {MP_ROM_QSTR(MP_QSTR_EVENT_POWER_STATUS_CHANGED), MP_ROM_INT(1 << 0)},
