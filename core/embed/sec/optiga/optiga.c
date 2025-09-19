@@ -728,8 +728,7 @@ end:
   memzero(pin_hmac, sizeof(pin_hmac));
   memzero(pin_secret, sizeof(pin_secret));
   memzero(digest, sizeof(digest));
-  optiga_clear_auto_state(OID_PIN_SECRET);
-  optiga_clear_auto_state(OID_STRETCHED_PIN);
+  optiga_clear_all_auto_states();
   optiga_set_ui_progress(NULL);
   return ret;
 }
@@ -816,7 +815,7 @@ optiga_pin_result optiga_pin_verify_v4(
 
 end:
   memzero(stretched_pin, sizeof(stretched_pin));
-  optiga_clear_auto_state(OID_STRETCHED_PIN);
+  optiga_clear_all_auto_states();
   optiga_set_ui_progress(NULL);
   return ret;
 }
@@ -946,8 +945,7 @@ optiga_pin_result optiga_pin_verify(
 end:
   memzero(pin_secret, sizeof(pin_secret));
   memzero(digest, sizeof(digest));
-  optiga_clear_auto_state(OID_STRETCHED_PIN);
-  optiga_clear_auto_state(OID_PIN_SECRET);
+  optiga_clear_all_auto_states();
   optiga_set_ui_progress(NULL);
   return ret;
 }
