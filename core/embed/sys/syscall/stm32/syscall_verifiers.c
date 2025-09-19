@@ -1206,7 +1206,6 @@ access_violation:
 }
 #endif
 
-
 // #ifndef ECDSA_PRIVATE_KEY_SIZE
 // #include <ecdsa.h>
 // #endif
@@ -1222,6 +1221,5 @@ access_violation:
 //   apptask_access_violation();
 //   return false;
 // }
-
 
 #endif  // KERNEL
