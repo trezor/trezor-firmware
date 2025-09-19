@@ -147,8 +147,8 @@ secbool secret_validate_nrf_pairing__verified(const uint8_t *message,
                                               size_t mac_len);
 #endif
 
-// #include <sec/secret_keys.h>
+#include <sec/secret_keys.h>
 
-// bool secret_key_delegated_identity__verified(uint8_t* dest);
+bool secret_key_delegated_identity__verified(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
 
 #endif  // SECMON
