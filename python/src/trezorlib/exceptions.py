@@ -121,10 +121,6 @@ class DecryptionFailed(ThpError):
     pass
 
 
-class InvalidData(ThpError):
-    pass
-
-
 class DeviceLocked(ThpError):
     pass
 

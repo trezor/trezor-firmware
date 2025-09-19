@@ -412,6 +412,5 @@ _ERRORS_MAP = {
     1: exceptions.TransportBusy,
     2: exceptions.UnallocatedChannel,
     3: exceptions.DecryptionFailed,
-    4: exceptions.InvalidData,
     5: exceptions.DeviceLocked,
 }
