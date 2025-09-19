@@ -583,7 +583,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_check_firmware_header_obj,
 
 /// def bootloader_locked() -> bool | None:
 ///     """
-///     Returns True/False if the the bootloader is locked/unlocked and None if
+///     Returns True/False if the bootloader is locked/unlocked and None if
 ///     the feature is not supported.
 ///     """
 STATIC mp_obj_t mod_trezorutils_bootloader_locked() {

@@ -168,6 +168,8 @@ typedef enum {
 
   SYSCALL_STORAGE_GET,
 
+  SYSCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY,
+
   // ------------------------------------------------------
   // Following syscalls are executed in kernel thread mode
 
