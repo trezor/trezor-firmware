@@ -43,7 +43,7 @@ else:
         set_homescreen()
 
     def notify_suspend() -> None:
-        """Signal that the the device should be suspended in the next cycle.
+        """Signal that the device should be suspended in the next cycle.
 
         Notifies an asynchronous task to perform the suspend in a separate thread.
         """
@@ -76,6 +76,7 @@ else:
 
         _SHOULD_SUSPEND = False
         set_homescreen()
+        backlight_fade(BacklightLevels.NORMAL)
 
     async def _suspend_and_resume_task() -> None:
         """Task to suspend Trezor and handle wakeup.

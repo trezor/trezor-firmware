@@ -3,6 +3,7 @@ from trezor import io, log
 _HANDLED_WAKEUP_FLAGS = (
     io.pm.WAKEUP_FLAG_BUTTON,
     io.pm.WAKEUP_FLAG_BLE,
+    io.pm.WAKEUP_FLAG_USB,
     io.pm.WAKEUP_FLAG_POWER,
 )
 
@@ -13,6 +14,7 @@ if __debug__:
         io.pm.WAKEUP_FLAG_POWER: "POWER",
         io.pm.WAKEUP_FLAG_NFC: "NFC",
         io.pm.WAKEUP_FLAG_RTC: "RTC",
+        io.pm.WAKEUP_FLAG_USB: "USB",
     }
 
 
