@@ -77,7 +77,7 @@ int main_func(uint32_t cmd, void *arg) {
 
   bool update_required = false;
 
-#if PRODUCTION || BOOTLOADER_QA
+#if PRODUCTION || FORCE_BOOTLOADER_UPGRADE
   // Check if the bootloader is valid and replace it if not
   bool bl_update_required = boot_image_check(boot_image_get_embdata());
   update_required = update_required || bl_update_required;
@@ -93,7 +93,7 @@ int main_func(uint32_t cmd, void *arg) {
     screen_update();
     fading = true;
 
-#if PRODUCTION || BOOTLOADER_QA
+#if PRODUCTION || FORCE_BOOTLOADER_UPGRADE
     if (bl_update_required) {
       boot_image_replace(boot_image_get_embdata());
     }
@@ -106,7 +106,7 @@ int main_func(uint32_t cmd, void *arg) {
 #endif
   }
 
-#if PRODUCTION || BOOTLOADER_QA
+#if PRODUCTION || FORCE_BOOTLOADER_UPGRADE
   if (bl_update_required) {
     reboot_device();
   }
