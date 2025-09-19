@@ -169,7 +169,11 @@ void advertising_start(bool wl, bool user_disconnect, uint8_t color,
   /* Fill second element for the name */
   advertising_data[1].type = BT_DATA_NAME_COMPLETE;
   advertising_data[1].data_len = name_len;
-  advertising_data[1].data = (const uint8_t *)name;
+
+  static char adv_name[BLE_ADV_NAME_LEN + 1] = {0};
+  memset(adv_name, 0, BLE_ADV_NAME_LEN + 1);
+  memcpy(adv_name, name, name_len);
+  advertising_data[1].data = (const uint8_t *)adv_name;
 
   char gap_name[BLE_ADV_NAME_LEN + 1] = {0};
   memcpy(gap_name, name, name_len);

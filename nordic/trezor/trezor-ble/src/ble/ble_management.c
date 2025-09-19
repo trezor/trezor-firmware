@@ -253,5 +253,5 @@ void ble_management_thread(void) {
   }
 }
 
-K_THREAD_DEFINE(ble_management_thread_id, CONFIG_DEFAULT_THREAD_STACK_SIZE,
-                ble_management_thread, NULL, NULL, NULL, 7, 0, 0);
+K_THREAD_DEFINE(ble_management_thread_id, 2048, ble_management_thread, NULL,
+                NULL, NULL, 7, 0, 0);
