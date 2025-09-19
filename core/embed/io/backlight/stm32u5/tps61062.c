@@ -73,11 +73,11 @@ static void backlight_control_up(uint32_t *data, int steps);
 static void backlight_control_down(uint32_t *data, int steps);
 static void backlight_shutdown();
 
-void backlight_init(backlight_action_t action) {
+bool backlight_init(backlight_action_t action) {
   backlight_driver_t *drv = &g_backlight_driver;
 
   if (drv->initialized) {
-    return;
+    return false;
   }
 
   memset(drv, 0, sizeof(backlight_driver_t));
@@ -161,6 +161,8 @@ void backlight_init(backlight_action_t action) {
   drv->requested_level = BACKLIGHT_MIN_LEVEL;
 
   drv->initialized = true;
+
+  return true;
 }
 
 void backlight_deinit(backlight_action_t action) {

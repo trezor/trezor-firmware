@@ -36,7 +36,9 @@ typedef enum {
 // If the action is set to `BACKLIGHT_RESET`, the backlight level
 // is set to zero level. If the action is set to `BACKLIGHT_RETAIN`,
 // the backlight level is not changed (if possible).
-void backlight_init(backlight_action_t action);
+//
+// Returns `true` if the initialization was successful.
+bool backlight_init(backlight_action_t action);
 
 // Deinitialize the backlight driver
 //

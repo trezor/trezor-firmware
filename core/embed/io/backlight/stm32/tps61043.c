@@ -45,11 +45,11 @@ static backlight_driver_t g_backlight_driver = {
     .initialized = false,
 };
 
-void backlight_init(backlight_action_t action) {
+bool backlight_init(backlight_action_t action) {
   backlight_driver_t *drv = &g_backlight_driver;
 
   if (drv->initialized) {
-    return;
+    return false;
   }
 
   memset(drv, 0, sizeof(backlight_driver_t));
@@ -188,6 +188,8 @@ void backlight_init(backlight_action_t action) {
   drv->initialized = true;
 
   backlight_set(initial_level);
+
+  return true;
 }
 
 void backlight_deinit(backlight_action_t action) {
