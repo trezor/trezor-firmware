@@ -22,7 +22,7 @@ from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import Cancelled, TrezorFailure
 
-from ..input_flows import InputFlowNewCodeMismatch
+from ..input_flows import InputFlowNewCodeCancel, InputFlowNewCodeMismatch
 
 PIN4 = "1234"
 WIPE_CODE4 = "4321"
@@ -122,6 +122,13 @@ def test_set_wipe_code_mismatch(session: Session):
     # Check that there's still no wipe code protection now
     # session.init_device()
     assert session.features.wipe_code_protection is False
+
+
+def test_set_wipe_code_cancel(session: Session):
+    with session.client as client, pytest.raises(Cancelled):
+        IF = InputFlowNewCodeCancel(session.client)
+        client.set_input_flow(IF.get())
+        device.change_wipe_code(session)
 
 
 @pytest.mark.setup_client(pin=PIN4)
