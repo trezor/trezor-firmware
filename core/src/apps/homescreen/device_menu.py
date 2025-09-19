@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 import storage.device as storage_device
 import trezorble as ble
@@ -7,6 +8,9 @@ from trezor import TR, config, log, utils
 from trezor.ui.layouts import interact, raise_if_cancelled
 from trezor.wire import ActionCancelled, PinCancelled
 from trezorui_api import CANCELLED, DeviceMenuResult
+
+if TYPE_CHECKING:
+    from trezor.messages import ThpPairedCacheEntry
 
 BLE_MAX_BONDS = 8
 
@@ -24,11 +28,21 @@ class SubmenuId:
     POWER = const(8)
 
 
-def _get_hostname(ble_addr: bytes, hostname_map: dict[bytes, str]) -> str:
-    if (hostname := hostname_map.get(ble_addr)) is None:
-        # Internal MAC address representation is using reversed byte order.
-        return ":".join(f"{byte:02X}" for byte in reversed(ble_addr))
-    return hostname
+def _get_hostinfo(
+    ble_addr: bytes, hostname_map: dict[bytes, ThpPairedCacheEntry]
+) -> tuple[str, tuple[str, str] | None]:
+    # Internal MAC address representation is using reversed byte order.
+    mac = ":".join(f"{byte:02X}" for byte in reversed(ble_addr))
+    if hostinfo := hostname_map.get(ble_addr):
+        return (mac, (hostinfo.host_name, hostinfo.app_name))
+    return (mac, None)
+
+
+def _get_hostname(
+    ble_addr: bytes, hostname_map: dict[bytes, ThpPairedCacheEntry]
+) -> str:
+    mac, hostinfo = _get_hostinfo(ble_addr, hostname_map)
+    return mac if hostinfo is None else hostinfo[0]
 
 
 def _find_device(connected_addr: bytes | None, bonds: list[bytes]) -> int | None:
@@ -77,7 +91,7 @@ async def handle_device_menu() -> None:
         connected_idx = _find_device(connected_addr, bonds)
         if __debug__:
             log.debug(__name__, "connected: %s (%s)", connected_addr, connected_idx)
-        hostname_map = {e.mac_addr: e.host_name for e in paired_cache.load()}
+        hostname_map = {e.mac_addr: e for e in paired_cache.load()}
         if __debug__:
             log.debug(__name__, "hostname_map: %s", hostname_map)
         paired_devices = [_get_hostname(bond, hostname_map) for bond in bonds]

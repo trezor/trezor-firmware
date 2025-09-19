@@ -288,5 +288,6 @@ message ThpPairedCache {
         option (internal_only) = true;
         required bytes mac_addr = 1;    // 6-byte MAC address
         required string host_name = 2;  // Human-readable host name (≤32 bytes)
+        required string app_name = 3;   // Human-readable application name (≤32 bytes)
     }
 }

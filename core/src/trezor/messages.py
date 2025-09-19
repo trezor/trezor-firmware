@@ -6659,12 +6659,14 @@ if TYPE_CHECKING:
     class ThpPairedCacheEntry(protobuf.MessageType):
         mac_addr: "bytes"
         host_name: "str"
+        app_name: "str"
 
         def __init__(
             self,
             *,
             mac_addr: "bytes",
             host_name: "str",
+            app_name: "str",
         ) -> None:
             pass
 

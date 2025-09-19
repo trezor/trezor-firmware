@@ -8424,6 +8424,7 @@ class ThpPairedCacheEntry(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("mac_addr", "bytes", repeated=False, required=True),
         2: protobuf.Field("host_name", "string", repeated=False, required=True),
+        3: protobuf.Field("app_name", "string", repeated=False, required=True),
     }
 
     def __init__(
@@ -8431,9 +8432,11 @@ class ThpPairedCacheEntry(protobuf.MessageType):
         *,
         mac_addr: "bytes",
         host_name: "str",
+        app_name: "str",
     ) -> None:
         self.mac_addr = mac_addr
         self.host_name = host_name
+        self.app_name = app_name
 
 
 class WebAuthnListResidentCredentials(protobuf.MessageType):
