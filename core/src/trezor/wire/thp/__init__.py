@@ -58,7 +58,6 @@ class ThpErrorType(IntEnum):
     TRANSPORT_BUSY = 1
     UNALLOCATED_CHANNEL = 2
     DECRYPTION_FAILED = 3
-    INVALID_DATA = 4
     DEVICE_LOCKED = 5
 
 
