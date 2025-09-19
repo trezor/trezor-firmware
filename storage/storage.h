@@ -46,6 +46,11 @@ extern const uint8_t *PIN_EMPTY;
 // to 16.
 #define PIN_MAX_TRIES 16
 
+// The number of slots configured as stretched PINs.
+#if USE_OPTIGA
+#define OPTIGA_STRETCHED_PINS_COUNT 1
+#endif
+
 // The length of the random salt in bytes.
 #if USE_OPTIGA
 #define STORAGE_SALT_SIZE 32
