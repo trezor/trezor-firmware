@@ -65,7 +65,7 @@ if DBG_CONSOLE != "":
 
 env = Environment(
     ENV=os.environ,
-    CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')),
+    CFLAGS=f'{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={ARGUMENTS.get('PRODUCTION', '0')} -DBOOTLOADER_DEVEL={int(BOOTLOADER_DEVEL)}',
     CPPDEFINES_IMPLICIT=[],
     CPPDEFPREFIX="-D'",
     CPPDEFSUFFIX="'",
