@@ -36,9 +36,17 @@
 #include "nist256p1.h"
 #include "sha2.h"
 
+#define AUTO_STATES_MAX_COUNT 5
+
 // Static buffer for commands and responses.
 static uint8_t tx_buffer[OPTIGA_MAX_APDU_SIZE] = {0};
 static size_t tx_size = 0;
+
+// List of all OIDs with auto-state.
+// Optiga can hold a limited number of auto-states. Once this limit is reached,
+// it returns OPTIGA_ERR_CODE_MEMORY.
+static uint16_t auto_states[AUTO_STATES_MAX_COUNT] = {0};
+static size_t auto_states_count = 0;
 
 const optiga_metadata_item OPTIGA_META_LCS_OPERATIONAL =
     OPTIGA_META_VALUE(OPTIGA_LCS_OP);
@@ -63,6 +71,16 @@ void optiga_command_set_log_hex(optiga_log_hex_t f) { log_hex = f; }
     log_hex(prefix, data, data_size);       \
   }
 #endif
+
+static bool auto_states_add(optiga_oid oid) {
+  if (auto_states_count >= AUTO_STATES_MAX_COUNT) {
+    return false;
+  }
+
+  auto_states[auto_states_count] = oid;
+  auto_states_count++;
+  return true;
+}
 
 static optiga_result process_output(uint8_t **out_data, size_t *out_size) {
   // Check that there is no trailing output data in the response.
@@ -515,6 +533,13 @@ optiga_result optiga_set_auto_state(uint16_t nonce_oid, uint16_t key_oid,
   hmac_sha256(key, key_size, nonce, sizeof(nonce), ptr);
 
   OPTIGA_LOG(__func__, tx_buffer, tx_size)
+  // The auto-state is added before the command is actually executed. Otherwise,
+  // it could happen that the command succeeded, but an error occurred during
+  // the receipt of the response. In such a case, the auto-state couldn't be
+  // cleared using optiga_clear_all_auto_states().
+  if (!auto_states_add(key_oid)) {
+    return OPTIGA_ERR_CODE_MEMORY;
+  }
   ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer, sizeof(tx_buffer),
                                &tx_size);
   if (ret != OPTIGA_SUCCESS) {
@@ -961,6 +986,17 @@ optiga_result optiga_set_priv_key(uint16_t oid, const uint8_t priv_key[32]) {
   }
 
   return process_output_fixedlen(NULL, 0);
+}
+
+optiga_result optiga_clear_all_auto_states(void) {
+  for (int i = auto_states_count - 1; i >= 0; i--) {
+    optiga_result ret = optiga_clear_auto_state(auto_states[i]);
+    if (ret != OPTIGA_SUCCESS) {
+      return ret;
+    }
+    auto_states_count--;
+  }
+  return OPTIGA_SUCCESS;
 }
 
 #endif  // SECURE_MODE
