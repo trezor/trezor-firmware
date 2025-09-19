@@ -91,6 +91,43 @@ class InputFlowBase:
         return self.debug.read_layout().title()
 
 
+class InputFlowNewCodeCancel(InputFlowBase):
+    def input_flow_bolt(self) -> BRGeneratorType:
+        br = yield
+        assert br.name == "set_wipe_code"
+        self.debug.press_no()
+
+    def input_flow_caesar(self) -> BRGeneratorType:
+        br = yield
+        assert br.name == "set_wipe_code"
+        self.debug.press_no()
+
+    def input_flow_delizia(self) -> BRGeneratorType:
+        br = yield
+        assert br.name == "set_wipe_code"
+
+        self.debug.click(self.debug.screen_buttons.menu())
+        self.debug.synchronize_at("VerticalMenu")
+        self.debug.button_actions.navigate_to_menu_item(0)
+
+        self.debug.read_layout().title == TR.wipe_code__cancel_setup
+        self.debug.swipe_up()
+        self.debug.read_layout()
+        self.debug.synchronize_at("PromptScreen")
+        self.debug.click(self.debug.screen_buttons.tap_to_confirm())
+
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        br = yield
+        assert br.name == "set_wipe_code"
+
+        self.debug.click(self.debug.screen_buttons.menu())
+        self.debug.synchronize_at("VerticalMenu")
+        self.debug.button_actions.navigate_to_menu_item(0)
+
+        self.debug.read_layout().title == TR.wipe_code__cancel_setup
+        self.debug.press_no()
+
+
 class InputFlowNewCodeMismatch(InputFlowBase):
     def __init__(
         self,
