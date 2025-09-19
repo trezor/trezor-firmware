@@ -28,6 +28,7 @@
 #include <io/notify.h>
 #include <io/translations.h>
 #include <io/usb.h>
+#include <sec/boot_image.h>
 #include <sec/fwutils.h>
 #include <sec/rng_strong.h>
 #include <sec/unit_properties.h>
@@ -84,10 +85,6 @@
 
 #ifdef USE_TELEMETRY
 #include <sec/telemetry.h>
-#endif
-
-#if PRODUCTION || BOOTLOADER_QA
-#include <sec/boot_image.h>
 #endif
 
 #include "syscall_context.h"
