@@ -589,11 +589,11 @@ static void derive_kek_v4(const uint8_t *pin, size_t pin_len,
 #endif
 #endif
 
-static void stretch_pin(const uint8_t *pin, size_t pin_len,
-                        const uint8_t storage_salt[STORAGE_SALT_SIZE],
-                        const uint8_t *ext_salt,
-                        uint8_t stretched_pin[SHA256_DIGEST_LENGTH],
-                        secbool privileged_bhk) {
+static void mcu_pin_stretch(const uint8_t *pin, size_t pin_len,
+                            const uint8_t storage_salt[STORAGE_SALT_SIZE],
+                            const uint8_t *ext_salt,
+                            uint8_t stretched_pin[SHA256_DIGEST_LENGTH],
+                            secbool privileged_bhk) {
   // Combining the PIN with the storage salt aims to ensure that if the
   // MCU-Optiga communication is compromised, then a user with a low-entropy PIN
   // remains protected against an attacker who is not able to read the contents
@@ -666,7 +666,7 @@ static void derive_kek_optiga_v4(
 static secbool __wur derive_kek_set(
     const uint8_t *pin, size_t pin_len, const uint8_t *storage_salt,
     const uint8_t *ext_salt, uint8_t stretched_pin[SHA256_DIGEST_LENGTH]) {
-  stretch_pin(pin, pin_len, storage_salt, ext_salt, stretched_pin, sectrue);
+  mcu_pin_stretch(pin, pin_len, storage_salt, ext_salt, stretched_pin, sectrue);
 #if USE_OPTIGA
   if (!optiga_pin_set(ui_progress, stretched_pin)) {
     memzero(stretched_pin, SHA256_DIGEST_LENGTH);
@@ -686,7 +686,8 @@ static secbool __wur derive_kek_unlock_v4(const uint8_t *pin, size_t pin_len,
 #if USE_OPTIGA
   uint8_t optiga_secret[OPTIGA_PIN_SECRET_SIZE] = {0};
   uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE] = {0};
-  stretch_pin(pin, pin_len, storage_salt, ext_salt, stretched_pin, secfalse);
+  mcu_pin_stretch(pin, pin_len, storage_salt, ext_salt, stretched_pin,
+                  secfalse);
   optiga_pin_result ret =
       optiga_pin_verify_v4(ui_progress, stretched_pin, optiga_secret);
   memzero(stretched_pin, sizeof(stretched_pin));
@@ -714,8 +715,8 @@ static secbool __wur derive_kek_unlock(
     const uint8_t *pin, size_t pin_len, const uint8_t *storage_salt,
     const uint8_t *ext_salt, uint8_t stretched_pin[SHA256_DIGEST_LENGTH],
     secbool privileged_bhk) {
-  stretch_pin(pin, pin_len, storage_salt, ext_salt, stretched_pin,
-              privileged_bhk);
+  mcu_pin_stretch(pin, pin_len, storage_salt, ext_salt, stretched_pin,
+                  privileged_bhk);
 #if USE_OPTIGA
   optiga_pin_result ret = optiga_pin_verify(ui_progress, stretched_pin);
   if (ret != OPTIGA_PIN_SUCCESS) {
