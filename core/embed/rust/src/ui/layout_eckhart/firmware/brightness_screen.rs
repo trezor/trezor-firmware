@@ -113,7 +113,7 @@ impl VerticalSlider {
 
     fn handle_touch(&mut self, pos: Point, ctx: &mut EventCtx) {
         self.update_value(pos, ctx);
-        display::set_backlight(self.value.into());
+        display::set_backlight(self.value);
         ctx.request_paint();
     }
 

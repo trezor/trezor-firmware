@@ -1051,12 +1051,12 @@ impl FirmwareUI for UIEckhart {
                 // Set the brightness immediately so it is applied in the `_first_paint` UI
                 // layout function
                 unwrap!(storage::set_brightness(value));
-                value.into()
+                value
             }
-            None => theme::backlight::get_backlight_normal().into(),
+            None => theme::backlight::get_backlight_normal(),
         };
-        let min = theme::backlight::get_backlight_min().into();
-        let max = theme::backlight::get_backlight_max().into();
+        let min = theme::backlight::get_backlight_min();
+        let max = theme::backlight::get_backlight_max();
 
         let screen = SetBrightnessScreen::new(min, max, init_value);
         let layout = RootComponent::new(screen);
