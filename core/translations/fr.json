@@ -301,21 +301,81 @@
       "Eckhart": "La signature est valide."
     },
     "bitcoin__voting_rights": "Droits de vote pour",
-    "ble__disable": "",
-    "ble__enable": "",
-    "ble__forget_all": "",
-    "ble__manage_paired": "Gérer les appareils appairés",
-    "ble__pair_new": "Appairer un nouvel appareil",
-    "ble__pair_title": "Appairer et connecter",
-    "ble__unpair_all": "Dissocier tous les appareils Bluetooth",
-    "ble__unpair_current": "Dissocier l'appareil connecté",
-    "ble__unpair_title": "Dissocier",
-    "ble__version": "Version Bluetooth",
-    "brightness__change_title": "Ajuster la luminosité de l'écran",
-    "brightness__changed_title": "Luminosité de l'écran ajustée",
+    "ble__disable": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "ble__enable": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "ble__forget_all": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "ble__manage_paired": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Gérer les appareils appairés"
+    },
+    "ble__pair_new": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Appairer un nouvel appareil"
+    },
+    "ble__pair_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Appairer et connecter"
+    },
+    "ble__unpair_all": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Dissocier tous les appareils Bluetooth"
+    },
+    "ble__unpair_current": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Dissocier l'appareil connecté"
+    },
+    "ble__unpair_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Dissocier"
+    },
+    "ble__version": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Version Bluetooth"
+    },
+    "brightness__change_title": {
+      "Bolt": "Ajuster la luminosité de l'écran",
+      "Caesar": "",
+      "Delizia": "Ajuster la luminosité de l'écran",
+      "Eckhart": "Ajuster la luminosité de l'écran"
+    },
+    "brightness__changed_title": {
+      "Bolt": "Luminosité de l'écran ajustée",
+      "Caesar": "",
+      "Delizia": "Luminosité de l'écran ajustée",
+      "Eckhart": "Luminosité de l'écran ajustée"
+    },
     "brightness__title": {
       "Bolt": "Luminosité de l'écran",
-      "Caesar": "Luminosité de l'écran",
+      "Caesar": "",
       "Delizia": "Luminosité de l'écran",
       "Eckhart": "Luminosité de l'écran"
     },
@@ -581,144 +641,239 @@
       "Delizia": "Confirmer l'entropie",
       "Eckhart": "Confirmer l'entropie"
     },
-    "eos__about_to_sign_template": "Vous êtes sur le point de signer {0}.",
+    "eos__about_to_sign_template": {
+      "Bolt": "Vous êtes sur le point de signer {0}.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "eos__action_name": {
       "Bolt": "Nom de l'action:",
-      "Caesar": "Nom de l'action :",
-      "Delizia": "Nom de l'action :",
-      "Eckhart": "Nom de l'action :"
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
-    "eos__arbitrary_data": "Données arbitraires",
-    "eos__buy_ram": "Acheter de la RAM",
+    "eos__arbitrary_data": {
+      "Bolt": "Données arbitraires",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__buy_ram": {
+      "Bolt": "Acheter de la RAM",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "eos__bytes": {
       "Bolt": "Octets:",
-      "Caesar": "Octets :",
-      "Delizia": "Octets :",
-      "Eckhart": "Octets :"
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
-    "eos__cancel_vote": "Annuler le vote",
+    "eos__cancel_vote": {
+      "Bolt": "Annuler le vote",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "eos__checksum": {
       "Bolt": "Somme de contrôle:",
-      "Caesar": "Checksum :",
-      "Delizia": "Checksum :",
-      "Eckhart": "Checksum :"
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
-    "eos__code": "Code :",
+    "eos__code": {
+      "Bolt": "Code :",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "eos__contract": {
       "Bolt": "Contrat:",
-      "Caesar": "Contrat :",
-      "Delizia": "Contrat :",
-      "Eckhart": "Contrat :"
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
-    "eos__cpu": "CPU :",
+    "eos__cpu": {
+      "Bolt": "CPU :",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "eos__creator": {
       "Bolt": "Créateur:",
-      "Caesar": "Créateur :",
-      "Delizia": "Créateur :",
-      "Eckhart": "Créateur :"
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
-    "eos__delegate": "Déléguer",
-    "eos__delete_auth": "Supprimer l'autorisation",
-    "eos__from": "De:",
+    "eos__delegate": {
+      "Bolt": "Déléguer",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__delete_auth": {
+      "Bolt": "Supprimer l'autorisation",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__from": {
+      "Bolt": "De:",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "eos__link_auth": {
       "Bolt": "Lier auth.",
-      "Caesar": "Associer l'autorisation",
-      "Delizia": "Associer l'autorisation",
-      "Eckhart": "Associer l'autorisation"
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
-    "eos__memo": "Mémo",
+    "eos__memo": {
+      "Bolt": "Mémo",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "eos__name": {
       "Bolt": "Nom:",
-      "Caesar": "Nom :",
-      "Delizia": "Nom :",
-      "Eckhart": "Nom :"
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
-    "eos__net": "NET :",
-    "eos__new_account": "Nouveau compte",
+    "eos__net": {
+      "Bolt": "NET :",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__new_account": {
+      "Bolt": "Nouveau compte",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "eos__owner": {
       "Bolt": "Propriétaire:",
-      "Caesar": "Propriétaire :",
-      "Delizia": "Propriétaire :",
-      "Eckhart": "Propriétaire :"
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
-    "eos__parent": "Parent :",
+    "eos__parent": {
+      "Bolt": "Parent :",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "eos__payer": {
       "Bolt": "Payeur:",
-      "Caesar": "Payeur :",
-      "Delizia": "Payeur :",
-      "Eckhart": "Payeur :"
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
     "eos__permission": {
       "Bolt": "Autorisation:",
-      "Caesar": "Permissions :",
-      "Delizia": "Permissions :",
-      "Eckhart": "Permissions :"
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
     "eos__proxy": {
       "Bolt": "Mandataire:",
-      "Caesar": "Proxy :",
-      "Delizia": "Proxy :",
-      "Eckhart": "Proxy :"
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
     "eos__receiver": {
       "Bolt": "Destinataire:",
-      "Caesar": "Destinataire :",
-      "Delizia": "Destinataire :",
-      "Eckhart": "Destinataire :"
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
-    "eos__refund": "Rembourser",
+    "eos__refund": {
+      "Bolt": "Rembourser",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "eos__requirement": {
       "Bolt": "Exigence:",
-      "Caesar": "Condition :",
-      "Delizia": "Condition :",
-      "Eckhart": "Condition :"
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
-    "eos__sell_ram": "Vendre de la RAM",
+    "eos__sell_ram": {
+      "Bolt": "Vendre de la RAM",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "eos__sender": {
       "Bolt": "Expéditeur:",
-      "Caesar": "Expéditeur :",
-      "Delizia": "Expéditeur :",
-      "Eckhart": "Expéditeur :"
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
     "eos__threshold": {
       "Bolt": "Seuil:",
-      "Caesar": "Seuil :",
-      "Delizia": "Seuil :",
-      "Eckhart": "Seuil :"
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
     "eos__to": {
       "Bolt": "À:",
-      "Caesar": "À :",
-      "Delizia": "À :",
-      "Eckhart": "À :"
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
     "eos__transfer": {
       "Bolt": "Transfert:",
-      "Caesar": "Transfert :",
-      "Delizia": "Transfert :",
-      "Eckhart": "Transfert :"
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
-    "eos__type": "Type :",
+    "eos__type": {
+      "Bolt": "Type :",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "eos__undelegate": {
       "Bolt": "Annuler la délégation",
-      "Caesar": "Révoquer la délégation",
-      "Delizia": "Révoquer la délégation",
-      "Eckhart": "Révoquer la délégation"
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
-    "eos__unlink_auth": "Dissocier l'autorisation",
-    "eos__update_auth": "Mettre à jour l'autorisation",
-    "eos__vote_for_producers": "Voter pour les producteurs",
+    "eos__unlink_auth": {
+      "Bolt": "Dissocier l'autorisation",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__update_auth": {
+      "Bolt": "Mettre à jour l'autorisation",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "eos__vote_for_producers": {
+      "Bolt": "Voter pour les producteurs",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "eos__vote_for_proxy": {
       "Bolt": "Voter pour le mandataire",
-      "Caesar": "Voter pour le proxy",
-      "Delizia": "Voter pour le proxy",
-      "Eckhart": "Voter pour le proxy"
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
     "eos__voter": {
       "Bolt": "Votant:",
-      "Caesar": "Votant :",
-      "Delizia": "Votant :",
-      "Eckhart": "Votant :"
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
     },
     "ethereum__amount_sent": {
       "Bolt": "Montant envoyé:",
@@ -866,10 +1021,30 @@
     },
     "firmware_update__title": "Mettre à jour le firmware",
     "firmware_update__title_fingerprint": "Empreinte du firmware",
-    "haptic_feedback__disable": "Désactiver le retour haptique ?",
-    "haptic_feedback__enable": "Activer le retour haptique ?",
-    "haptic_feedback__subtitle": "Paramètre",
-    "haptic_feedback__title": "Retour haptique",
+    "haptic_feedback__disable": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Désactiver le retour haptique ?",
+      "Eckhart": "Désactiver le retour haptique ?"
+    },
+    "haptic_feedback__enable": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Activer le retour haptique ?",
+      "Eckhart": "Activer le retour haptique ?"
+    },
+    "haptic_feedback__subtitle": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Paramètre",
+      "Eckhart": "Paramètre"
+    },
+    "haptic_feedback__title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Retour haptique",
+      "Eckhart": "Retour haptique"
+    },
     "homescreen__click_to_connect": "Cliquer pour se connecter",
     "homescreen__click_to_unlock": "Cliquez pour déverrouiller",
     "homescreen__firmware_type": "Type de firmware",
@@ -929,9 +1104,24 @@
       "Eckhart": "Changement de la langue"
     },
     "language__title": "Paramètres de langue",
-    "led__disable": "Désactiver la LED ?",
-    "led__enable": "Activer la LED ?",
-    "led__title": "LED",
+    "led__disable": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Désactiver la LED ?"
+    },
+    "led__enable": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Activer la LED ?"
+    },
+    "led__title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "LED"
+    },
     "lockscreen__tap_to_connect": "Appuyez pour vous connecter",
     "lockscreen__tap_to_unlock": "Appuyez pour déverrouiller",
     "lockscreen__title_locked": "Verrouillé",
@@ -1020,57 +1210,312 @@
     "monero__wanna_export_watchkey": "Voulez-vous vraiment exporter les identifiants en lecture seule ?",
     "monero__wanna_start_refresh": "Voulez-vous vraiment\ndémarrer l'actualisation ?",
     "monero__wanna_sync_key_images": "Voulez-vous vraiment\nsynchroniser les images clés ?",
-    "nem__absolute": "absolu(e)(s)",
-    "nem__activate": "Activer",
-    "nem__add": "Ajouter",
-    "nem__confirm_action": "Confirmer action",
-    "nem__confirm_address": "Confirmer adresse",
-    "nem__confirm_creation_fee": "Confirmer les frais de création",
-    "nem__confirm_mosaic": "Confirmer la mosaïque",
-    "nem__confirm_multisig_fee": "Confirmer les frais de multi-signature",
-    "nem__confirm_namespace": "Confirmer l'espace de noms",
-    "nem__confirm_payload": "Confirmer la payload",
-    "nem__confirm_properties": "Confirmer les propriétés",
-    "nem__confirm_rental_fee": "Confirmer les frais de location",
-    "nem__confirm_transfer_of": "Confirmer le transfert de",
-    "nem__convert_account_to_multisig": "Convertir le compte en compte multisig ?",
-    "nem__cosign_transaction_for": "Cosigner la transaction pour",
-    "nem__cosignatory": " cosignataire",
-    "nem__create_mosaic": "Créer une mosaïque",
-    "nem__create_namespace": "Créer un espace de noms",
-    "nem__deactivate": "Désactiver",
-    "nem__decrease": "Diminuer",
-    "nem__description": "Description :",
-    "nem__divisibility_and_levy_cannot_be_shown": "La divisibilité et la commission ne peuvent pas être affichés pour les mosaïques inconnues.",
-    "nem__encrypted": "Chiffré",
-    "nem__final_confirm": "Confirmation finale",
-    "nem__immutable": "non modifiable",
-    "nem__increase": "Augmenter",
-    "nem__initial_supply": "Offre initiale :",
-    "nem__initiate_transaction_for": "Initier une transaction pour",
-    "nem__levy_divisibility": "Divisibilité de la commission :",
-    "nem__levy_fee": "Frais de la commission :",
-    "nem__levy_fee_of": "Confirmer la commission de la mosaïque de",
-    "nem__levy_mosaic": "Mosaïque de la commission :",
-    "nem__levy_namespace": "Espace de noms de la commission :",
-    "nem__levy_recipient": "Bénéficiaire de la commission :",
-    "nem__levy_type": "Type de commission :",
-    "nem__modify_supply_for": "Modifier l'offre pour",
-    "nem__modify_the_number_of_cosignatories_by": "Modifier le nombre de cosignataires de ",
-    "nem__mutable": "modifiable",
-    "nem__of": "de",
-    "nem__percentile": "percentile",
-    "nem__raw_units_template": "{0} unités brutes",
-    "nem__remote_harvesting": " récolte à distance ?",
-    "nem__remove": "Supprimer",
-    "nem__set_minimum_cosignatories_to": "Définir le nombre min de cosignataires à ",
-    "nem__sign_tx_fee_template": "Signer cette transaction\net payer {0}\nde frais de réseau ?",
-    "nem__supply_change": "Modification de l'offre",
-    "nem__supply_units_template": "{0} l'offre de {1} unités entières ?",
-    "nem__transferable": "Transférable ?",
-    "nem__under_namespace": "sous l'espace de noms",
-    "nem__unencrypted": "Non chiffré(e)(s)",
-    "nem__unknown_mosaic": "Mosaïque inconnue !",
+    "nem__absolute": {
+      "Bolt": "absolu(e)(s)",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__activate": {
+      "Bolt": "Activer",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__add": {
+      "Bolt": "Ajouter",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__confirm_action": {
+      "Bolt": "Confirmer action",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__confirm_address": {
+      "Bolt": "Confirmer adresse",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__confirm_creation_fee": {
+      "Bolt": "Confirmer les frais de création",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__confirm_mosaic": {
+      "Bolt": "Confirmer la mosaïque",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__confirm_multisig_fee": {
+      "Bolt": "Confirmer les frais de multi-signature",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__confirm_namespace": {
+      "Bolt": "Confirmer l'espace de noms",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__confirm_payload": {
+      "Bolt": "Confirmer la payload",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__confirm_properties": {
+      "Bolt": "Confirmer les propriétés",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__confirm_rental_fee": {
+      "Bolt": "Confirmer les frais de location",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__confirm_transfer_of": {
+      "Bolt": "Confirmer le transfert de",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__convert_account_to_multisig": {
+      "Bolt": "Convertir le compte en compte multisig ?",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__cosign_transaction_for": {
+      "Bolt": "Cosigner la transaction pour",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__cosignatory": {
+      "Bolt": " cosignataire",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__create_mosaic": {
+      "Bolt": "Créer une mosaïque",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__create_namespace": {
+      "Bolt": "Créer un espace de noms",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__deactivate": {
+      "Bolt": "Désactiver",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__decrease": {
+      "Bolt": "Diminuer",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__description": {
+      "Bolt": "Description :",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__divisibility_and_levy_cannot_be_shown": {
+      "Bolt": "La divisibilité et la commission ne peuvent pas être affichés pour les mosaïques inconnues.",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__encrypted": {
+      "Bolt": "Chiffré",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__final_confirm": {
+      "Bolt": "Confirmation finale",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__immutable": {
+      "Bolt": "non modifiable",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__increase": {
+      "Bolt": "Augmenter",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__initial_supply": {
+      "Bolt": "Offre initiale :",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__initiate_transaction_for": {
+      "Bolt": "Initier une transaction pour",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__levy_divisibility": {
+      "Bolt": "Divisibilité de la commission :",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__levy_fee": {
+      "Bolt": "Frais de la commission :",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__levy_fee_of": {
+      "Bolt": "Confirmer la commission de la mosaïque de",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__levy_mosaic": {
+      "Bolt": "Mosaïque de la commission :",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__levy_namespace": {
+      "Bolt": "Espace de noms de la commission :",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__levy_recipient": {
+      "Bolt": "Bénéficiaire de la commission :",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__levy_type": {
+      "Bolt": "Type de commission :",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__modify_supply_for": {
+      "Bolt": "Modifier l'offre pour",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__modify_the_number_of_cosignatories_by": {
+      "Bolt": "Modifier le nombre de cosignataires de ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__mutable": {
+      "Bolt": "modifiable",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__of": {
+      "Bolt": "de",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__percentile": {
+      "Bolt": "percentile",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__raw_units_template": {
+      "Bolt": "{0} unités brutes",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__remote_harvesting": {
+      "Bolt": " récolte à distance ?",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__remove": {
+      "Bolt": "Supprimer",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__set_minimum_cosignatories_to": {
+      "Bolt": "Définir le nombre min de cosignataires à ",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__sign_tx_fee_template": {
+      "Bolt": "Signer cette transaction\net payer {0}\nde frais de réseau ?",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__supply_change": {
+      "Bolt": "Modification de l'offre",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__supply_units_template": {
+      "Bolt": "{0} l'offre de {1} unités entières ?",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__transferable": {
+      "Bolt": "Transférable ?",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__under_namespace": {
+      "Bolt": "sous l'espace de noms",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__unencrypted": {
+      "Bolt": "Non chiffré(e)(s)",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
+    "nem__unknown_mosaic": {
+      "Bolt": "Mosaïque inconnue !",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": ""
+    },
     "nostr__event_kind_template": "Type d'événement : {0}",
     "passphrase__access_hidden_wallet": "Accéder au portefeuille caché",
     "passphrase__access_wallet": "Accéder à la passphrase du portefeuille ?",
@@ -1460,28 +1905,138 @@
     "safety_checks__enforce_strict": "Voulez-vous vraiment appliquer des contrôles de sécurité rigoureux (recommandé) ?",
     "safety_checks__title": "Vérifications de sécurité",
     "safety_checks__title_safety_override": "Contournement de sécurité",
-    "sd_card__all_data_will_be_lost": "Toutes les données sur la carte SD seront perdues.",
-    "sd_card__card_required": "Carte SD requise.",
-    "sd_card__disable": "Voulez-vous vraiment supprimer la protection par carte SD de votre appareil ?",
-    "sd_card__disabled": "Vous avez désactivé la protection par carte SD avec succès.",
-    "sd_card__enable": "Voulez-vous vraiment sécuriser votre appareil avec la protection par carte SD ?",
-    "sd_card__enabled": "Vous avez activé la protection par carte SD avec succès.",
-    "sd_card__error": "Erreur de carte SD",
-    "sd_card__format_card": "Formater la carte SD",
-    "sd_card__insert_correct_card": "Veuillez insérer la bonne carte SD pour cet appareil.",
-    "sd_card__please_insert": "Veuillez insérer votre carte SD.",
-    "sd_card__please_unplug_and_insert": "Veuillez débrancher l'appareil et insérer votre carte SD.",
-    "sd_card__problem_accessing": "Un problème est survenu lors de l'accès à la carte SD.",
-    "sd_card__refresh": "Voulez-vous vraiment remplacer le code secret actuel de la carte SD par un nouveau ?",
-    "sd_card__refreshed": "Vous avez actualisé la protection par carte SD avec succès.",
-    "sd_card__restart": "Voulez-vous redémarrer votre Trezor en mode bootloader ?",
-    "sd_card__title": "Protection par carte SD",
-    "sd_card__title_problem": "Problème de carte SD",
-    "sd_card__unknown_filesystem": "Système de fichiers inconnu.",
-    "sd_card__unplug_and_insert_correct": "Veuillez débrancher l'appareil et insérer la bonne carte SD.",
-    "sd_card__use_different_card": "Utilisez une autre carte ou formatez la carte SD en FAT32.",
-    "sd_card__wanna_format": "Voulez-vous vraiment formater la carte SD ?",
-    "sd_card__wrong_sd_card": "Mauvaise carte SD.",
+    "sd_card__all_data_will_be_lost": {
+      "Bolt": "Toutes les données sur la carte SD seront perdues.",
+      "Caesar": "",
+      "Delizia": "Toutes les données sur la carte SD seront perdues.",
+      "Eckhart": ""
+    },
+    "sd_card__card_required": {
+      "Bolt": "Carte SD requise.",
+      "Caesar": "",
+      "Delizia": "Carte SD requise.",
+      "Eckhart": ""
+    },
+    "sd_card__disable": {
+      "Bolt": "Voulez-vous vraiment supprimer la protection par carte SD de votre appareil ?",
+      "Caesar": "",
+      "Delizia": "Voulez-vous vraiment supprimer la protection par carte SD de votre appareil ?",
+      "Eckhart": ""
+    },
+    "sd_card__disabled": {
+      "Bolt": "Vous avez désactivé la protection par carte SD avec succès.",
+      "Caesar": "",
+      "Delizia": "Vous avez désactivé la protection par carte SD avec succès.",
+      "Eckhart": ""
+    },
+    "sd_card__enable": {
+      "Bolt": "Voulez-vous vraiment sécuriser votre appareil avec la protection par carte SD ?",
+      "Caesar": "",
+      "Delizia": "Voulez-vous vraiment sécuriser votre appareil avec la protection par carte SD ?",
+      "Eckhart": ""
+    },
+    "sd_card__enabled": {
+      "Bolt": "Vous avez activé la protection par carte SD avec succès.",
+      "Caesar": "",
+      "Delizia": "Vous avez activé la protection par carte SD avec succès.",
+      "Eckhart": ""
+    },
+    "sd_card__error": {
+      "Bolt": "Erreur de carte SD",
+      "Caesar": "",
+      "Delizia": "Erreur de carte SD",
+      "Eckhart": ""
+    },
+    "sd_card__format_card": {
+      "Bolt": "Formater la carte SD",
+      "Caesar": "",
+      "Delizia": "Formater la carte SD",
+      "Eckhart": ""
+    },
+    "sd_card__insert_correct_card": {
+      "Bolt": "Veuillez insérer la bonne carte SD pour cet appareil.",
+      "Caesar": "",
+      "Delizia": "Veuillez insérer la bonne carte SD pour cet appareil.",
+      "Eckhart": ""
+    },
+    "sd_card__please_insert": {
+      "Bolt": "Veuillez insérer votre carte SD.",
+      "Caesar": "",
+      "Delizia": "Veuillez insérer votre carte SD.",
+      "Eckhart": ""
+    },
+    "sd_card__please_unplug_and_insert": {
+      "Bolt": "Veuillez débrancher l'appareil et insérer votre carte SD.",
+      "Caesar": "",
+      "Delizia": "Veuillez débrancher l'appareil et insérer votre carte SD.",
+      "Eckhart": ""
+    },
+    "sd_card__problem_accessing": {
+      "Bolt": "Un problème est survenu lors de l'accès à la carte SD.",
+      "Caesar": "",
+      "Delizia": "Un problème est survenu lors de l'accès à la carte SD.",
+      "Eckhart": ""
+    },
+    "sd_card__refresh": {
+      "Bolt": "Voulez-vous vraiment remplacer le code secret actuel de la carte SD par un nouveau ?",
+      "Caesar": "",
+      "Delizia": "Voulez-vous vraiment remplacer le code secret actuel de la carte SD par un nouveau ?",
+      "Eckhart": ""
+    },
+    "sd_card__refreshed": {
+      "Bolt": "Vous avez actualisé la protection par carte SD avec succès.",
+      "Caesar": "",
+      "Delizia": "Vous avez actualisé la protection par carte SD avec succès.",
+      "Eckhart": ""
+    },
+    "sd_card__restart": {
+      "Bolt": "Voulez-vous redémarrer votre Trezor en mode bootloader ?",
+      "Caesar": "",
+      "Delizia": "Voulez-vous redémarrer votre Trezor en mode bootloader ?",
+      "Eckhart": ""
+    },
+    "sd_card__title": {
+      "Bolt": "Protection par carte SD",
+      "Caesar": "",
+      "Delizia": "Protection par carte SD",
+      "Eckhart": ""
+    },
+    "sd_card__title_problem": {
+      "Bolt": "Problème de carte SD",
+      "Caesar": "",
+      "Delizia": "Problème de carte SD",
+      "Eckhart": ""
+    },
+    "sd_card__unknown_filesystem": {
+      "Bolt": "Système de fichiers inconnu.",
+      "Caesar": "",
+      "Delizia": "Système de fichiers inconnu.",
+      "Eckhart": ""
+    },
+    "sd_card__unplug_and_insert_correct": {
+      "Bolt": "Veuillez débrancher l'appareil et insérer la bonne carte SD.",
+      "Caesar": "",
+      "Delizia": "Veuillez débrancher l'appareil et insérer la bonne carte SD.",
+      "Eckhart": ""
+    },
+    "sd_card__use_different_card": {
+      "Bolt": "Utilisez une autre carte ou formatez la carte SD en FAT32.",
+      "Caesar": "",
+      "Delizia": "Utilisez une autre carte ou formatez la carte SD en FAT32.",
+      "Eckhart": ""
+    },
+    "sd_card__wanna_format": {
+      "Bolt": "Voulez-vous vraiment formater la carte SD ?",
+      "Caesar": "",
+      "Delizia": "Voulez-vous vraiment formater la carte SD ?",
+      "Eckhart": ""
+    },
+    "sd_card__wrong_sd_card": {
+      "Bolt": "Mauvaise carte SD.",
+      "Caesar": "",
+      "Delizia": "Mauvaise carte SD.",
+      "Eckhart": ""
+    },
     "send__cancel_sign": "Annuler la signature",
     "send__cancel_transaction": "Annuler la transaction",
     "send__confirm_sending": "Montant de l'envoi",
@@ -1767,12 +2322,22 @@
       "Eckhart": "Maintenez enfoncé le bouton de droite pour accepter les opérations importantes."
     },
     "tutorial__ready_to_use": "Vous êtes prêt à\nutiliser votre Trezor.",
-    "tutorial__ready_to_use_safe5": "Vous êtes prêt à utiliser votre appareil !",
+    "tutorial__ready_to_use_safe5": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Vous êtes prêt à utiliser votre appareil !",
+      "Eckhart": "Vous êtes prêt à utiliser votre appareil !"
+    },
     "tutorial__restart_tutorial": "Recommencer le tutoriel",
     "tutorial__scroll_down": "Appuyez sur le bouton droit pour lire tout le contenu lorsqu'il dépasse de l'écran.\nAppuyez sur le bouton gauch pour défiler vers le haut.",
     "tutorial__suite_restart": "Rejouez ce tutoriel à tout moment depuis l'app Trezor Suite.",
     "tutorial__sure_you_want_skip": "Voulez-vous vraiment\nignorer le tutoriel ?",
-    "tutorial__swipe_up_and_down": "Appuyez sur la moitié inférieure de l'écran pour continuer, ou glissez vers le bas pour revenir en arrière.",
+    "tutorial__swipe_up_and_down": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Appuyez sur la moitié inférieure de l'écran pour continuer, ou glissez vers le bas pour revenir en arrière.",
+      "Eckhart": ""
+    },
     "tutorial__tap_to_start": "Appuyez pour démarrer le tutoriel",
     "tutorial__title_easy_navigation": "Navigation facile",
     "tutorial__title_handy_menu": "Menu pratique",
@@ -1794,9 +2359,9 @@
       "Eckhart": "Bravo !"
     },
     "tutorial__tropic_info": {
-      "Bolt": "TROPIC01 est une puce Secure Element open-source de nouvelle génération conçue pour une sécurité matérielle transparente et vérifiable.",
-      "Caesar": "TROPIC01 est une nouvelle génération de puce Secure Element open-source conçue pour une sécurité matérielle transparente et vérifiable.",
-      "Delizia": "TROPIC01 est une nouvelle génération de puce Secure Element open-source conçue pour une sécurité matérielle transparente et vérifiable.",
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
       "Eckhart": "TROPIC01 est une nouvelle génération de puce Secure Element open-source conçue pour une sécurité matérielle transparente et vérifiable."
     },
     "tutorial__use_trezor": {
@@ -1806,9 +2371,24 @@
       "Eckhart": "Utilisez votre Trezor avec\nles boutons de gauche et de droite.\n\nContinuez avec le bouton de droite."
     },
     "tutorial__welcome_press_right": "Bienvenue sur votre Trezor. Appuyez sur le bouton de droite pour continuer.",
-    "tutorial__welcome_safe5": "Bienvenue sur votre\nTrezor Safe 5",
-    "tutorial__welcome_safe7": "Bienvenue\nsur votre Trezor\nSafe 7",
-    "tutorial__what_is_tropic": "Qu'est-ce que TROPIC01 ?",
+    "tutorial__welcome_safe5": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Bienvenue sur votre\nTrezor Safe 5",
+      "Eckhart": ""
+    },
+    "tutorial__welcome_safe7": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Bienvenue\nsur votre Trezor\nSafe 7"
+    },
+    "tutorial__what_is_tropic": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Qu'est-ce que TROPIC01 ?"
+    },
     "u2f__get": "Augmenter et récupérer le compteur U2F ?",
     "u2f__set_template": "Définir le compteur U2F à {0} ?",
     "u2f__title_get": "Obtenir le compteur U2F",
