@@ -366,7 +366,6 @@
     "ethereum__approve_revoke_from": "Revoca da",
     "ethereum__approve_to": "Approva a",
     "ethereum__approve_unlimited_template": "Approvando importo illimitato di {0}",
-    "ethereum__contract": "Contratto:",
     "ethereum__contract_address": "",
     "ethereum__data_size_template": "",
     "ethereum__gas_limit": "Limite gas:",

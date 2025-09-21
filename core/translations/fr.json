@@ -185,7 +185,7 @@
     "backup__not_recommend": "Nous ne recommandons pas d'ignorer la création de la sauvegarde du portefeuille.",
     "backup__recover_anytime": {
       "Bolt": "Utiliser votre sauv. pour restaurer votre portef. à tout moment.",
-      "Caesar": "Utiliser votre sauv. pour restaurer votre portef. à tout moment.",
+      "Caesar": "Utilisez votre sauveg. pour récup. votre portef. à tout moment.",
       "Delizia": "Vous pouvez utiliser votre sauvegarde pour récupérer votre portefeuille à tout moment.",
       "Eckhart": "Vous pouvez utiliser votre sauvegarde pour récupérer votre portefeuille à tout moment."
     },
@@ -301,32 +301,126 @@
       "Eckhart": "La signature est valide."
     },
     "bitcoin__voting_rights": "Droits de vote pour",
-    "ble__disable": "",
-    "ble__enable": "",
-    "ble__forget_all": "",
-    "ble__manage_paired": "Gérer les appareils appairés",
-    "ble__pair_new": "Appairer un nouvel appareil",
-    "ble__pair_title": "Appairer et connecter",
-    "ble__unpair_all": "Dissocier tous les appareils Bluetooth",
-    "ble__unpair_current": "Dissocier l'appareil connecté",
-    "ble__unpair_title": "Dissocier",
-    "ble__version": "Version Bluetooth",
+    "ble__disable": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Désactiver le Bluetooth ?"
+    },
+    "ble__enable": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Activer le Bluetooth ?"
+    },
+    "ble__forget_all": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Tout oublier"
+    },
+    "ble__forget_all_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Ils seront retirés et vous devrez les associer de nouveau pour les utiliser."
+    },
+    "ble__forget_all_devices": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Supprimer tous les appareils ?"
+    },
+    "ble__forget_all_success": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Tous les hôtes ont été retirés."
+    },
+    "ble__forget_this_description": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Il sera retiré et vous devrez l'appairer de nouveau pour l'utiliser."
+    },
+    "ble__forget_this_device": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Oublier cet appareil ?"
+    },
+    "ble__forget_this_success": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Hôte supprimé."
+    },
+    "ble__limit_reached": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Limite d'appareils appairé atteinte"
+    },
+    "ble__manage_paired": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Gérer les appareils appairés"
+    },
+    "ble__pair_new": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Appairer un nouvel appareil"
+    },
+    "ble__pair_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Appairer et connecter"
+    },
+    "ble__pairing_match": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Le code correspond-il ?"
+    },
+    "ble__pairing_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Appairage par Bluetooth"
+    },
+    "ble__unpair_all": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Dissocier tous les appareils Bluetooth"
+    },
+    "ble__unpair_current": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Dissocier l'appareil connecté"
+    },
+    "ble__unpair_title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Dissocier"
+    },
+    "ble__version": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Version Bluetooth"
+    },
     "brightness__change_title": "Ajuster la luminosité de l'écran",
     "brightness__changed_title": "Luminosité de l'écran ajustée",
-    "brightness__title": {
-      "Bolt": "Luminosité de l'écran",
-      "Caesar": "Luminosité de l'écran",
-      "Delizia": "Luminosité de l'écran",
-      "Eckhart": "Luminosité de l'écran"
-    },
+    "brightness__title": "Luminosité de l'écran",
     "buttons__abort": "Annuler",
     "buttons__access": "Accéder",
-    "buttons__again": {
-      "Bolt": "Encore",
-      "Caesar": "Tuto",
-      "Delizia": "Tuto",
-      "Eckhart": "Tuto"
-    },
+    "buttons__again": "Refaire",
     "buttons__allow": "Autoriser",
     "buttons__back": "Retour",
     "buttons__back_up": "Sauvegarder",
@@ -572,7 +666,7 @@
     },
     "device_name__changed": "Nom de l'appareil modifié.",
     "device_name__continue_with_empty_label": "Continuer sans nom d'appareil ?",
-    "device_name__enter": "Entrer nom appareil",
+    "device_name__enter": "Saisissez le nom",
     "device_name__title": "Nom de l'appareil",
     "entropy__send": "Voulez-vous vraiment envoyer l'entropie ?",
     "entropy__title_confirm": {
@@ -762,12 +856,6 @@
     "ethereum__approve_revoke_from": "Révoquer de",
     "ethereum__approve_to": "Approuver à",
     "ethereum__approve_unlimited_template": "Autoriser un montant illimité de {0}",
-    "ethereum__contract": {
-      "Bolt": "Contrat :",
-      "Caesar": "Contrat :",
-      "Delizia": "Contrat :",
-      "Eckhart": "Appel de contrat"
-    },
     "ethereum__contract_address": "Adresse de contrat du fournisseur",
     "ethereum__data_size_template": "Taille : {0} octets",
     "ethereum__gas_limit": "Limite de gas",
@@ -778,7 +866,7 @@
     "ethereum__new_contract": "Le nouveau contrat sera déployé",
     "ethereum__no_message_field": "Aucun champ de message",
     "ethereum__priority_fee": "Frais de priorité max",
-    "ethereum__show_full_array": "Afficher le tableau complet",
+    "ethereum__show_full_array": "Voir liste complète",
     "ethereum__show_full_domain": "Afficher le domaine complet",
     "ethereum__show_full_message": "Afficher le message complet",
     "ethereum__show_full_struct": "Afficher le struct complet",
@@ -839,7 +927,12 @@
       "Eckhart": "Effacer tous les identifiants enregistrés ?"
     },
     "fido__export_credentials": "Exporter les informations des identifiants enregistrées sur cet appareil ?",
-    "fido__more_credentials": "Plus d'identifiants",
+    "fido__more_credentials": {
+      "Bolt": "Plus d’identifiants",
+      "Caesar": "Plus d'identifiants",
+      "Delizia": "Plus d'identifiants",
+      "Eckhart": "Plus d'identifiants"
+    },
     "fido__not_registered": "Non enregistré",
     "fido__not_registered_with_template": "Cet appareil n'est pas enregistré avec\n{0}.",
     "fido__please_enable_pin_protection": "Veuillez activer la protection par code PIN.",
@@ -918,7 +1011,7 @@
     "instructions__tap_to_start": "Appuyez pour démarrer",
     "instructions__view_all_data": "Voir toutes les données dans le menu.",
     "joint__title": "Transaction conjointe",
-    "joint__to_the_total_amount": "Au montant total:",
+    "joint__to_the_total_amount": "Pour un total de :",
     "joint__you_are_contributing": "Vous contribuez :",
     "language__change_to_template": "Changer la langue en {0} ?",
     "language__changed": "La langue a été changée avec succès",
@@ -1321,14 +1414,14 @@
       "Eckhart": "Vérifier le fragment #{0}"
     },
     "reset__check_wallet_backup_title": {
-      "Bolt": "Vérif. la sauvegarde",
+      "Bolt": "Vérifiez la sauveg.",
       "Caesar": "Vérifier la sauvegarde du portefeuille",
-      "Delizia": "Vérif. la sauvegarde",
+      "Delizia": "Vérifiez la sauveg.",
       "Eckhart": "Vérifier la sauvegarde du portefeuille"
     },
     "reset__continue_with_next_share": "Continuez avec le fragment suivant.",
     "reset__continue_with_share_template": {
-      "Bolt": "Continuez avec le fragm #{0}.",
+      "Bolt": "Continuez avec le fragm. #{0}.",
       "Caesar": "Continuez avec le fragment #{0}.",
       "Delizia": "Continuez avec le fragment #{0}.",
       "Eckhart": "Continuez avec le fragment #{0}."
@@ -1368,10 +1461,15 @@
     "reset__recovery_share_title_template": {
       "Bolt": "Fragm. de récup. #{0}",
       "Caesar": "Fragment de récupération #{0}",
-      "Delizia": "Fragment de récupération #{0}",
+      "Delizia": "Fragm. de récupération #{0}",
       "Eckhart": "Fragment de récupération #{0}"
     },
-    "reset__recovery_wallet_backup_title": "Sauvegarde du portefeuille",
+    "reset__recovery_wallet_backup_title": {
+      "Bolt": "Sauvegarde du portefeuille",
+      "Caesar": "Sauvegarde du portefeuille",
+      "Delizia": "Sauvegarde du portef.",
+      "Eckhart": "Sauvegarde du portefeuille"
+    },
     "reset__repeat_for_all_shares": "Répéter pour tous les fragments.",
     "reset__required_number_of_groups": "Le nombre de groupes requis pour la récupération.",
     "reset__select_correct_word": "Sélectionnez le bon mot pour chaque position.",
@@ -1501,7 +1599,7 @@
     "send__title_sending": "Envoi",
     "send__title_sending_amount": "Montant de l'envoi",
     "send__title_sending_to": "Envoi à",
-    "send__to_the_total_amount": "Au montant total :",
+    "send__to_the_total_amount": "Pour un total de :",
     "send__total_amount": "Montant total",
     "send__transaction_id": "ID de transaction",
     "send__transaction_signed": "Transaction signée",
@@ -1548,12 +1646,7 @@
       "Eckhart": "Mettre en staking des SOL ?"
     },
     "solana__stake_withdrawal_warning": "Le portefeuille actuel n'est pas l'autorité de retrait du staking SOL.",
-    "solana__stake_withdrawal_warning_title": {
-      "Bolt": "Adresse de l'autorité de retrait",
-      "Caesar": "Adresse de l'autorité de retrait",
-      "Delizia": "Adresse de l'autorité de retrait",
-      "Eckhart": "Adresse de l'autorité de retrait"
-    },
+    "solana__stake_withdrawal_warning_title": "Adresse de l'autorité de retrait",
     "solana__transaction_contains_unknown_instructions": "La transaction contient des instructions inconnues.",
     "solana__transaction_requires_x_signers_template": "La transaction nécessite {0} signataires, ce qui augmente les frais.",
     "solana__unknown_token": "Jeton inconnu",
@@ -1586,7 +1679,7 @@
     "stellar__exchanges_require_memo": "Mémo non défini.\nGénéralement requis pour un envoi vers une plateforme d'échange.",
     "stellar__final_confirm": "Confirmation finale",
     "stellar__hash": "Hash",
-    "stellar__high": "Élevé:",
+    "stellar__high": "Élevé :",
     "stellar__home_domain": "Domaine d'origine",
     "stellar__inflation": "Inflation",
     "stellar__issuer_template": "{0} émetteur",
@@ -1594,7 +1687,7 @@
     "stellar__limit": "Limite",
     "stellar__low": "Faible :",
     "stellar__master_weight": "Poids de la clé principale :",
-    "stellar__medium": "Moyen:",
+    "stellar__medium": "Moyen :",
     "stellar__new_offer": "Nouvelle offre",
     "stellar__new_passive_offer": "Nouvelle offre passive",
     "stellar__no_memo_set": "Aucun mémo défini !",
@@ -1974,7 +2067,7 @@
     "words__title_done": "Terminé",
     "words__title_group": "Groupe",
     "words__title_information": "Information",
-    "words__title_remember": "Rappel",
+    "words__title_remember": "Mémoriser",
     "words__title_share": "Fragment",
     "words__title_shares": "Fragments",
     "words__title_success": "Succès",
@@ -1990,7 +2083,12 @@
     },
     "words__unknown": "Inconnu(e)(s)",
     "words__unlimited": "Illimité(e)(s)",
-    "words__unlocked": "Déverrouillé(e)(s)",
+    "words__unlocked": {
+      "Bolt": "Déverrouillé(e)(s)",
+      "Caesar": "Déverrouillé(e)(s)",
+      "Delizia": "Déverrouillé",
+      "Eckhart": "Déverrouillé(e)(s)"
+    },
     "words__wallet": "Portefeuille",
     "words__warning": "Avertissement",
     "words__wipe": {
