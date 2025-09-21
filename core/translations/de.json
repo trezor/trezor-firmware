@@ -67,12 +67,7 @@
     "address__qr_code": "QR-Code",
     "address__title_cosigner": "Mitunterzeich.",
     "address__title_provider_address": "Anbieteradresse",
-    "address__title_receive_address": {
-      "Bolt": "Empfangsadresse",
-      "Caesar": "Empfangsadresse",
-      "Delizia": "Empfäng-adresse",
-      "Eckhart": "Empfangsadresse"
-    },
+    "address__title_receive_address": "Empfangsadresse",
     "address__title_refund_address": "Refund-Adresse",
     "address__title_yours": {
       "Bolt": "Deine",
@@ -89,12 +84,7 @@
     "address_details__account_info": "Konto-Info",
     "address_details__derivation_path": "Ableitungspfad",
     "address_details__derivation_path_colon": "Ableitungspfad:",
-    "address_details__title_receive_address": {
-      "Bolt": "Empfangsadresse",
-      "Caesar": "Empfangsadresse",
-      "Delizia": "Empfäng-adresse",
-      "Eckhart": "Empfangsadresse"
-    },
+    "address_details__title_receive_address": "Empfangsadresse",
     "address_details__title_receiving_to": {
       "Bolt": "Empfangen an",
       "Caesar": "Empfangen an",
@@ -105,6 +95,18 @@
     "authenticate__header": "Gerät authentifizieren",
     "auto_lock__change_template": "Trezor nach {0} Inaktivität automatisch sperren?",
     "auto_lock__description": "Die Zeit, bevor das Gerät automatisch gesperrt wird.",
+    "auto_lock__on_battery": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "mit Akku / kabelloses Laden"
+    },
+    "auto_lock__on_usb": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "mit USB verbunden"
+    },
     "auto_lock__title": {
       "Bolt": "Auto-Sperre Timer",
       "Caesar": "Auto-Sperre-Verzöger.",
@@ -138,12 +140,7 @@
       "Delizia": "Wallet-Backup abgeschlossen",
       "Eckhart": "Wallet-Backup abgeschlossen."
     },
-    "backup__title_backup_wallet": {
-      "Bolt": "Wallet-Backup",
-      "Caesar": "Wallet-Backup",
-      "Delizia": "Wallet-backup",
-      "Eckhart": "Wallet-Backup"
-    },
+    "backup__title_backup_wallet": "Wallet-Backup",
     "backup__title_create_wallet_backup": "Wallet-Backup erstellen",
     "backup__title_skip": "Backup überspringen",
     "backup__want_to_skip": "Möchtest du das Backup wirklich überspringen?",
@@ -166,12 +163,7 @@
     "bitcoin__ticket_amount": "Ticketbetrag",
     "bitcoin__title_confirm_details": "Details bestätigen",
     "bitcoin__title_finalize_transaction": "Transaktion abschliessen",
-    "bitcoin__title_high_mining_fee": {
-      "Bolt": "Hohe Mining-Gebühr",
-      "Caesar": "Hohe mining-gebühr",
-      "Delizia": "Hohe mining-gebühr",
-      "Eckhart": "Hohe Mining-Gebühr"
-    },
+    "bitcoin__title_high_mining_fee": "Hohe Mining-Gebühr",
     "bitcoin__title_meld_transaction": "Transakt. vereinen",
     "bitcoin__title_modify_amount": "Betrag ändern",
     "bitcoin__title_payjoin": "Payjoin",
@@ -331,12 +323,7 @@
     "buttons__info": "Info",
     "buttons__install": "Installieren",
     "buttons__more_info": "Weitere infos",
-    "buttons__ok_i_understand": {
-      "Bolt": "OK, verstanden",
-      "Caesar": "ICH VERSTEHE",
-      "Delizia": "ICH VERSTEHE",
-      "Eckhart": "OK, verstanden"
-    },
+    "buttons__ok_i_understand": "OK, verstanden",
     "buttons__purchase": "Kaufen",
     "buttons__quit": "Beenden",
     "buttons__restart": "Neu starten",
@@ -412,18 +399,8 @@
       "Eckhart": "Bezugspunkt-Hash:"
     },
     "cardano__delegating_to": "Delegieren an:",
-    "cardano__delegating_to_key_hash": {
-      "Bolt": "Delegieren an Key-Hash:",
-      "Caesar": "Delegieren an Key-Hash:",
-      "Delizia": "Deligieren an Key-Hash:",
-      "Eckhart": "Delegieren an Key-Hash:"
-    },
-    "cardano__delegating_to_script": {
-      "Bolt": "Delegieren an Skript:",
-      "Caesar": "Delegieren an Skript:",
-      "Delizia": "Deligieren an Skript:",
-      "Eckhart": "Delegieren an Skript:"
-    },
+    "cardano__delegating_to_key_hash": "Delegieren an Key-Hash:",
+    "cardano__delegating_to_script": "Delegieren an Skript:",
     "cardano__deposit": "Einzahlung:",
     "cardano__empty_message": "Leere Nachricht",
     "cardano__for_account_and_index_template": "für Konto {0} und Index {1}:",
@@ -624,7 +601,6 @@
     "ethereum__approve_revoke_from": "Entziehen von",
     "ethereum__approve_to": "Zulassen für",
     "ethereum__approve_unlimited_template": "Unbegrenzten Betrag von {0} zulassen",
-    "ethereum__contract": "Kontrakt:",
     "ethereum__contract_address": "{provider} Kontraktadresse",
     "ethereum__data_size_template": "Größe: {0} Bytes",
     "ethereum__gas_limit": "Gas-Grenze",
@@ -717,7 +693,7 @@
     "fido__wanna_erase_credentials": "Möchtest du wirklich alle Daten löschen?",
     "firmware_update__restart": "Trezor startet nach Update neu.",
     "firmware_update__title": "Firmware updaten",
-    "firmware_update__title_fingerprint": "Fw fingerabdruck",
+    "firmware_update__title_fingerprint": "FW Fingerabdruck",
     "haptic_feedback__disable": "Haptisches Feedback deaktivieren?",
     "haptic_feedback__enable": "Haptisches Feedback aktivieren?",
     "haptic_feedback__subtitle": "Einstellung",
@@ -764,7 +740,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "Weiter\nhalten",
-      "Eckhart": "Weiter\nhalten"
+      "Eckhart": "Weiter halten"
     },
     "instructions__continue_in_app": "In der App fortfahren",
     "instructions__enter_next_share": "Nächsten Share eingeben",
@@ -972,12 +948,7 @@
     "nem__transferable": "Übertragbar?",
     "nem__under_namespace": "unter Namespace",
     "nem__unencrypted": "Unverschlüsselt",
-    "nem__unknown_mosaic": {
-      "Bolt": "Unbekanntes Mosaik!",
-      "Caesar": "Unbekanntes Mosaik!",
-      "Delizia": "Unbekanntes Mosaik.",
-      "Eckhart": "Unbekanntes Mosaik!"
-    },
+    "nem__unknown_mosaic": "Unbekanntes Mosaik!",
     "nostr__event_kind_template": "Event-Art: {0}",
     "passphrase__access_hidden_wallet": "Zugriff auf Passphrase Wallet",
     "passphrase__access_wallet": "Passphr. Wall. öffnen?",
@@ -1183,7 +1154,7 @@
     "recovery__share_does_not_match": {
       "Bolt": "Share stimmt nicht überein.",
       "Caesar": "Share stimmt nicht überein",
-      "Delizia": "Share stimmt nicht überein.",
+      "Delizia": "Share stimmt nicht überein",
       "Eckhart": "Share stimmt nicht überein."
     },
     "recovery__share_from_another_multi_share_backup": "Du hast den Share eines anderen Backups eingegeben.",
@@ -1208,7 +1179,7 @@
     "recovery__title_remaining_shares": {
       "Bolt": "Verbleibende shares",
       "Caesar": "Verbleibende Shares",
-      "Delizia": "Verbleibende shares",
+      "Delizia": "Verbleibende Shares",
       "Eckhart": "Verbleibende shares"
     },
     "recovery__title_unlock_repeated_backup": "Multi-Share-Backup",

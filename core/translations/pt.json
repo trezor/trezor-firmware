@@ -446,7 +446,6 @@
     "ethereum__approve_revoke_from": "Revogar de",
     "ethereum__approve_to": "Aprovar a",
     "ethereum__approve_unlimited_template": "Aprovando quantia ilimitada de {0}",
-    "ethereum__contract": "Contrato:",
     "ethereum__contract_address": "End. de contrato do provedor",
     "ethereum__data_size_template": "Tamanho: {0} bytes",
     "ethereum__gas_limit": "Limite de gás:",
