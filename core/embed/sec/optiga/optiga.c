@@ -69,13 +69,6 @@
 // The throttling delay when the security event counter is at its maximum.
 #define OPTIGA_T_MAX_MS 5000
 
-// Value of the PIN counter when it is reset.
-static const uint8_t COUNTER_RESET[] = {0, 0, 0, 0, 0, 0, 0, PIN_MAX_TRIES};
-
-// Value of the PIN counter with one extra attempt needed in optiga_pin_set().
-static const uint8_t COUNTER_RESET_EXTRA[] = {0, 0, 0, 0,
-                                              0, 0, 0, PIN_MAX_TRIES + 1};
-
 // Initial value of the counter which limits the total number of PIN stretching
 // operations. The limit is 600000 stretching operations, which equates to
 // 300000 / PIN_STRETCH_ITERATIONS unlock operations over the lifetime of the
@@ -683,8 +676,8 @@ bool optiga_pin_set(optiga_ui_progress_t ui_progress,
 
   // Initialize the counter which limits the guesses at OID_STRETCHED_PIN with
   // one extra attempt that we will use up in the next step.
-  if (optiga_set_data_object(OID_STRETCHED_PIN_CTR, false, COUNTER_RESET_EXTRA,
-                             sizeof(COUNTER_RESET_EXTRA)) != OPTIGA_SUCCESS) {
+  if (optiga_reset_counter(OID_STRETCHED_PIN_CTR, PIN_MAX_TRIES + 1) !=
+      OPTIGA_SUCCESS) {
     ret = false;
     goto end;
   }
@@ -707,8 +700,7 @@ bool optiga_pin_set(optiga_ui_progress_t ui_progress,
   }
 
   // Initialize the PIN counter which limits the use of OID_PIN_HMAC.
-  if (optiga_set_data_object(OID_PIN_HMAC_CTR, false, COUNTER_RESET,
-                             sizeof(COUNTER_RESET)) != OPTIGA_SUCCESS) {
+  if (optiga_reset_counter(OID_PIN_HMAC_CTR, PIN_MAX_TRIES) != OPTIGA_SUCCESS) {
     ret = false;
     goto end;
   }
@@ -907,8 +899,7 @@ optiga_pin_result optiga_pin_verify(
   ui_progress();
 
   // Reset the counter which limits the use of OID_PIN_HMAC.
-  if (optiga_set_data_object(OID_PIN_HMAC_CTR, false, COUNTER_RESET,
-                             sizeof(COUNTER_RESET)) != OPTIGA_SUCCESS) {
+  if (optiga_reset_counter(OID_PIN_HMAC_CTR, PIN_MAX_TRIES) != OPTIGA_SUCCESS) {
     ret = OPTIGA_PIN_ERROR;
     goto end;
   }
@@ -934,8 +925,8 @@ optiga_pin_result optiga_pin_verify(
   }
 
   // Reset the counter which limits the guesses at OID_STRETCHED_PIN.
-  if (optiga_set_data_object(OID_STRETCHED_PIN_CTR, false, COUNTER_RESET,
-                             sizeof(COUNTER_RESET)) != OPTIGA_SUCCESS) {
+  if (optiga_reset_counter(OID_STRETCHED_PIN_CTR, PIN_MAX_TRIES) !=
+      OPTIGA_SUCCESS) {
     ret = OPTIGA_PIN_ERROR;
     goto end;
   }
