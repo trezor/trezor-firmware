@@ -91,7 +91,7 @@ class InputFlowBase:
         return self.debug.read_layout().title()
 
 
-class InputFlowNewCodeCancel(InputFlowBase):
+class InputFlowNewWipeCodeCancel(InputFlowBase):
     def input_flow_bolt(self) -> BRGeneratorType:
         br = yield
         assert br.name == "set_wipe_code"

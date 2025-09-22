@@ -22,7 +22,7 @@ from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import Cancelled, TrezorFailure
 
-from ..input_flows import InputFlowNewCodeCancel, InputFlowNewCodeMismatch
+from ..input_flows import InputFlowNewCodeMismatch, InputFlowNewWipeCodeCancel
 
 PIN4 = "1234"
 WIPE_CODE4 = "4321"
@@ -126,7 +126,7 @@ def test_set_wipe_code_mismatch(session: Session):
 
 def test_set_wipe_code_cancel(session: Session):
     with session.client as client, pytest.raises(Cancelled):
-        IF = InputFlowNewCodeCancel(session.client)
+        IF = InputFlowNewWipeCodeCancel(session.client)
         client.set_input_flow(IF.get())
         device.change_wipe_code(session)
 
