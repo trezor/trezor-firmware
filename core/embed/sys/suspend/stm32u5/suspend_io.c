@@ -115,12 +115,9 @@ void resume_secure_drivers() {
 
 #endif  // SECURE_MODE
 
-void suspend_drivers(power_save_wakeup_params_t *wakeup_params) {
+void suspend_drivers_phase1(power_save_wakeup_params_t *wakeup_params) {
   suspend_secure_drivers();
 
-#ifdef USE_USB
-  usb_stop();
-#endif
 #ifdef USE_HAPTIC
   haptic_deinit();
 #endif
@@ -138,6 +135,16 @@ void suspend_drivers(power_save_wakeup_params_t *wakeup_params) {
 #ifdef USE_DISPLAY
   wakeup_params->backlight_level = display_get_backlight();
   display_deinit(DISPLAY_RESET_CONTENT);
+#endif
+}
+
+void suspend_drivers_phase2(void) {
+#ifdef USE_USB
+  usb_stop();
+#endif
+
+#ifdef USE_RGB_LED
+  rgb_led_suspend();
 #endif
 }
 
