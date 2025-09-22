@@ -1000,4 +1000,9 @@ optiga_result optiga_clear_all_auto_states(void) {
   return OPTIGA_SUCCESS;
 }
 
+optiga_result optiga_set_counter(uint16_t oid, uint8_t value) {
+  uint8_t value_array[8] = {0, 0, 0, 0, 0, 0, 0, value};
+  return optiga_set_data_object(oid, false, value_array, sizeof(value_array));
+}
+
 #endif  // SECURE_MODE
