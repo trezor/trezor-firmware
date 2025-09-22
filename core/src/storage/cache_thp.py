@@ -63,6 +63,7 @@ class ChannelCache(ThpDataCache):
             8,  # CHANNEL_NONCE_RECEIVE
             8,  # CHANNEL_NONCE_SEND
             32,  # CHANNEL_HOST_STATIC_PUBKEY
+            2,  # CHANNEL_ACK_LATENCY_MS
         )
         super().__init__()
         self.set_int(CHANNEL_SYNC, 0x80)

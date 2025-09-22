@@ -4,6 +4,7 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 from storage.cache_common import (
+    CHANNEL_ACK_LATENCY_MS,
     CHANNEL_HANDSHAKE_HASH,
     CHANNEL_HOST_STATIC_PUBKEY,
     CHANNEL_IFACE,
@@ -416,8 +417,9 @@ class Channel:
         return self.write_encrypted_payload(ctrl_byte, payload)
 
     async def write_encrypted_payload(self, ctrl_byte: int, payload: AnyBytes) -> None:
+        ack_latency_ms = self.channel_cache.get_int(CHANNEL_ACK_LATENCY_MS) or 0
         if __debug__:
-            self._log("write_encrypted_payload_loop")
+            self._log(f"Sending {len(payload)} bytes, latency: {ack_latency_ms} ms")
 
         assert ABP.is_sending_allowed(self.channel_cache)
 
@@ -441,8 +443,8 @@ class Channel:
                     log.error(__name__, "Sending is stuck for %d ms", _WRITE_TIMEOUT_MS)
                 break
 
-            # starting from 200ms till ~3.52s
-            timeout_ms = round(10300 - 1010000 / (100 + i))
+            # Channel's estimated latency + a variable delay (from 200ms till ~3.52s)
+            timeout_ms = ack_latency_ms + round(10300 - 1010000 / (100 + i))
             try:
                 # wait and return after receiving an ACK, or raise in case of an unexpected message.
                 await self.recv_payload(expected_ctrl_byte=None, timeout_ms=timeout_ms)
@@ -450,6 +452,12 @@ class Channel:
                 if __debug__:
                     log.warning(__name__, "Retransmit after %d ms", timeout_ms)
                 continue
+
+            ack_latency_ms = utime.ticks_diff(utime.ticks_ms(), self.last_write_ms)
+            # Limit estimated latency to avoid integer overflows and too long delays
+            ack_latency_ms = max(0, min(800, ack_latency_ms))
+            self.channel_cache.set_int(CHANNEL_ACK_LATENCY_MS, ack_latency_ms)
+
             # `ABP.set_sending_allowed()` will be called after a valid ACK
             if ABP.is_sending_allowed(self.channel_cache):
                 ABP.set_send_seq_bit_to_opposite(self.channel_cache)
