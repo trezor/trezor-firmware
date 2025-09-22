@@ -639,6 +639,11 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       size_t list_size = args[1];
       args[0] = ble_get_bond_list__verified(list, list_size);
     } break;
+
+    case SYSCALL_BLE_SET_HIGH_SPEED: {
+      bool enable = args[0];
+      ble_set_high_speed(enable);
+    } break;
 #endif
 
 #ifdef USE_NRF

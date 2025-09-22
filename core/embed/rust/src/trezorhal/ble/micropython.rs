@@ -87,6 +87,17 @@ extern "C" fn py_set_name(name: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
+extern "C" fn py_set_high_speed(enable: Obj) -> Obj {
+    let block = || {
+        let enable: bool = enable.try_into()?;
+
+        set_high_speed(enable);
+
+        Ok(Obj::const_none())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
 extern "C" fn py_switch_off() -> Obj {
     let block = || {
         switch_off()?;
@@ -322,6 +333,12 @@ pub static mp_module_trezorble: Module = obj_module! {
     ///     Set advertising name.
     ///     """
     Qstr::MP_QSTR_set_name => obj_fn_1!(py_set_name).as_obj(),
+
+    /// def set_high_speed(enable: bool):
+    ///     """
+    ///     Set high speed connection.
+    ///     """
+    Qstr::MP_QSTR_set_high_speed => obj_fn_1!(py_set_high_speed).as_obj(),
 
     /// def switch_off():
     ///     """

@@ -430,6 +430,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("ble_set_name")
         .allowlist_function("ble_unpair")
         .allowlist_function("ble_get_bond_list")
+        .allowlist_function("ble_set_high_speed")
         .allowlist_type("ble_command_t")
         .allowlist_type("ble_state_t")
         .allowlist_type("ble_event_t")
