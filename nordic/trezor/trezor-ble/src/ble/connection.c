@@ -83,6 +83,8 @@ void connected(struct bt_conn *conn, uint8_t err) {
 
   connection_update_params();
 
+  ble_reconfigure_tx_power();
+
   // Prefer 2M both directions; 0 options = no specific constraints
   // const struct bt_conn_le_phy_param phy_2m = {
   //    .options = 0,
