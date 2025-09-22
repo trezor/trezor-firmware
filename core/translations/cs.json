@@ -99,11 +99,31 @@
     },
     "auto_lock__title": "Prodleva auto zámku",
     "auto_lock__turned_on": "Automatické uzamčení zapnuto",
-    "backup__can_back_up_anytime": "Svůj Trezor můžete kdykoli zálohovat.",
+    "backup__can_back_up_anytime": {
+      "Bolt": "Svůj Trezor můžete kdykoli zálohovat.",
+      "Caesar": "Svůj Trezor můžete kdykoli zálohovat.",
+      "Delizia": "Svůj Trezor můžete kdykoli zálohovat.",
+      "Eckhart": "Svůj Trezor můžete zálohovat kdykoliv."
+    },
     "backup__create_backup_to_prevent_loss": "Vytvořte si zálohu, abyste neztratili přístup ke svým prostředkům.",
-    "backup__info_multi_share_backup": "Záloha peněženky obsahuje několik seznamů slov v určitém pořadí (části).",
-    "backup__info_single_share_backup": "Záloha peněženky obsahuje slova ({0}) v určitém pořadí.",
-    "backup__it_should_be_backed_up": "Novou peněženku byste si měli ihned zálohovat.",
+    "backup__info_multi_share_backup": {
+      "Bolt": "Záloha peněženky obsahuje několik seznamů slov v určitém pořadí (části).",
+      "Caesar": "Záloha peněženky obsahuje několik seznamů slov v určitém pořadí (části).",
+      "Delizia": "Záloha peněženky obsahuje několik seznamů slov v určitém pořadí (části).",
+      "Eckhart": "Vaše záloha peněženky obsahuje několik seznamů slov v určitém pořadí (podílů)."
+    },
+    "backup__info_single_share_backup": {
+      "Bolt": "Záloha peněženky obsahuje slova ({0}) v určitém pořadí.",
+      "Caesar": "Záloha peněženky obsahuje slova ({0}) v určitém pořadí.",
+      "Delizia": "Záloha peněženky obsahuje slova ({0}) v určitém pořadí.",
+      "Eckhart": "Vaše záloha peněženky obsahuje {0} slov v určitém pořadí."
+    },
+    "backup__it_should_be_backed_up": {
+      "Bolt": "Novou peněženku byste si měli ihned zálohovat.",
+      "Caesar": "Novou peněženku byste si měli ihned zálohovat.",
+      "Delizia": "Novou peněženku byste si měli ihned zálohovat.",
+      "Eckhart": "Novou peněženku byste měli ihned zálohovat."
+    },
     "backup__it_should_be_backed_up_now": "Měli byste ji hned zálohovat!",
     "backup__new_wallet_created": "Peněženka byla vytvořena.\n",
     "backup__new_wallet_successfully_created": "Peněženka byla vytvořena.",
@@ -141,6 +161,12 @@
     "bitcoin__unverified_external_inputs": "Transakce obsahuje neověřené externí vstupy.",
     "bitcoin__valid_signature": "Podpis je platný.",
     "bitcoin__voting_rights": "Hlasovací práva",
+    "ble__apps_connected": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Aplikace připojeny"
+    },
     "ble__disable": {
       "Bolt": "",
       "Caesar": "",
@@ -195,11 +221,23 @@
       "Delizia": "",
       "Eckhart": "Hostitel odstraněn."
     },
+    "ble__host_info": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Více o hostiteli"
+    },
     "ble__limit_reached": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Limit spárovaných zařízení dosažen"
+    },
+    "ble__mac_address": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "MAC Adresa"
     },
     "ble__manage_paired": "Spravovat spárovaná zařízení",
     "ble__pair_new": "Spárovat nové zařízení",
@@ -220,6 +258,12 @@
     "ble__unpair_current": "Zrušit spárování připojeného zařízení",
     "ble__unpair_title": "Zrušit spárování",
     "ble__version": "Verze Bluetooth",
+    "ble__waiting_for_host": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Čekání na hostitele..."
+    },
     "brightness__change_title": "Změnit jas displeje",
     "brightness__changed_title": "Jas displeje byl změněn",
     "brightness__title": "Nastavení jasu",
