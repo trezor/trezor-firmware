@@ -72,13 +72,28 @@ secbool secret_key_tropic_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
 
 #endif  // USE_TROPIC
 
+#include <sec/storage.h>
+#include "../../storage/storage_salt.h"
+#include "memzero.h"
+#include "pbkdf2.h"
+#define DELEGATED_IDENTITY_KEY_ITER_COUNT 20000
+#define DELEGATED_IDENTITY_KEY_HEADER_LENGTH 21
 secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
-  // TODO: this is a placeholder value
-  static const uint8_t key[32] = {
-      0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16,
-      0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,
-      0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20};
-  memcpy(dest, key, ECDSA_PRIVATE_KEY_SIZE);
+  storage_salt_t salt = {0};
+  storage_salt_get(&salt);
+
+  const uint8_t header[DELEGATED_IDENTITY_KEY_HEADER_LENGTH] =
+      "DelegatedIdentityKey";
+  PBKDF2_HMAC_SHA256_CTX ctx = {0};
+  pbkdf2_hmac_sha256_Init(&ctx, header, DELEGATED_IDENTITY_KEY_HEADER_LENGTH,
+                          salt.bytes, STORAGE_SALT_SIZE, 1);
+
+  for (int i = 1; i <= 10; i++) {
+    pbkdf2_hmac_sha256_Update(&ctx, DELEGATED_IDENTITY_KEY_ITER_COUNT / 10);
+  }
+  pbkdf2_hmac_sha256_Final(&ctx, dest);
+  memzero(&salt, sizeof(salt));
+  memzero(&ctx, sizeof(ctx));
   return sectrue;
 }
 

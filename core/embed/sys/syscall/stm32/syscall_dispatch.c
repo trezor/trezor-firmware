@@ -816,11 +816,9 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 #endif
 
     case SYSCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY: {
-      uint8_t* dest = (uint8_t*)args[0];
+      uint8_t *dest = (uint8_t *)args[0];
       args[0] = secret_key_delegated_identity(dest);
     } break;
-
-
 
     default:
       system_exit_fatal("Invalid syscall", __FILE__, __LINE__);

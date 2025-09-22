@@ -189,7 +189,7 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       optiga_set_sec_max();
     } break;
 #endif
-#endif // USE_OPTIGA
+#endif  // USE_OPTIGA
 
     case SMCALL_STORAGE_SETUP: {
       PIN_UI_WAIT_CALLBACK callback = (PIN_UI_WAIT_CALLBACK)args[0];
@@ -375,13 +375,12 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       size_t data_size = (size_t)args[3];
       args[0] = backup_ram_write__verified(key, type, data, data_size);
     } break;
-#endif // USE_BACKUP_RAM
+#endif  // USE_BACKUP_RAM
 
     case SMCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY: {
-      uint8_t* dest = (uint8_t*)args[0];
+      uint8_t *dest = (uint8_t *)args[0];
       args[0] = secret_key_delegated_identity(dest);
     } break;
-      
 
     default:
       system_exit_fatal("Invalid smcall", __FILE__, __LINE__);
