@@ -62,6 +62,15 @@ static void le_param_updated(struct bt_conn *conn, uint16_t interval,
           interval_ms, (interval * 125) % 100, latency, timeout_ms);
 }
 
+static void connection_update_params(void) {
+  struct bt_conn *conn = connection_get_current();
+  if (conn != NULL) {
+    const struct bt_le_conn_param *param =
+        high_speed_requested ? PPCP_HIGH_SPEED : PPCP_LOW_SPEED;
+    bt_conn_le_param_update(conn, param);
+  }
+}
+
 void connected(struct bt_conn *conn, uint8_t err) {
   char addr[BT_ADDR_LE_STR_LEN];
 
@@ -72,9 +81,7 @@ void connected(struct bt_conn *conn, uint8_t err) {
 
   show_params(conn);
 
-  const struct bt_le_conn_param *param =
-      high_speed_requested ? PPCP_HIGH_SPEED : PPCP_LOW_SPEED;
-  bt_conn_le_param_update(conn, param);
+  connection_update_params();
 
   // Prefer 2M both directions; 0 options = no specific constraints
   // const struct bt_conn_le_phy_param phy_2m = {
@@ -182,20 +189,20 @@ void connection_suspend(void) {
   }
 }
 
-void connection_resume(void) {
-  struct bt_conn *conn = connection_get_current();
-
-  if (conn != NULL) {
-    const struct bt_le_conn_param *param =
-        high_speed_requested ? PPCP_HIGH_SPEED : PPCP_LOW_SPEED;
-    bt_conn_le_param_update(conn, param);
-  }
-}
+void connection_resume(void) { connection_update_params(); }
 
 bool connection_is_bonded(void) { return bonded_connection; }
 
 bool connection_is_high_speed(void) { return high_speed_requested; }
 
-void connection_set_high_speed(void) { high_speed_requested = true; }
+void connection_set_high_speed(void) {
+  high_speed_requested = true;
 
-void connection_set_low_speed(void) { high_speed_requested = false; }
+  connection_update_params();
+}
+
+void connection_set_low_speed(void) {
+  high_speed_requested = false;
+
+  connection_update_params();
+}
