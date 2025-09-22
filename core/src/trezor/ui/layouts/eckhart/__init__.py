@@ -1282,6 +1282,7 @@ if not utils.BITCOIN_ONLY:
             br_code=br_code,
             verb=TR.buttons__continue,
             info_items=items,
+            cancel=True,
         )
 
     def confirm_solana_tx(
