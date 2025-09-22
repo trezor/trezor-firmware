@@ -127,8 +127,8 @@ impl VerticalSlider {
         ));
 
         let filled = (proportional_area.y1 - pos.y).clamp(0, proportional_area.height());
-        let val_pct = ((filled as u16 * 100) / proportional_area.height() as u16) as u8;
-        let val = (val_pct * (self.max - self.min)) / 100 + self.min;
+        let val_pct = (filled as u16 * 100) / proportional_area.height() as u16;
+        let val = ((val_pct * (self.max - self.min) as u16) / 100) as u8 + self.min;
 
         if val != self.value {
             ctx.request_paint();
@@ -176,7 +176,9 @@ impl Component for VerticalSlider {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let val_pct = ((100 * (self.value - self.min)) / (self.max - self.min)).clamp(0, 100);
+        let val_pct = ((100 as u16 * (self.value - self.min) as u16)
+            / (self.max - self.min) as u16)
+            .clamp(0, 100);
 
         // Square area for the slider
         let (_, small_area) = self.area.split_bottom(Self::SLIDER_WIDTH);

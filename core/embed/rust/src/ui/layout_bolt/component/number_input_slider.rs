@@ -113,8 +113,8 @@ impl NumberInputSlider {
         if self.touch_area.contains(pos) {
             let filled = pos.x - self.area.x0;
             let filled = filled.clamp(0, self.area.width());
-            let val_pct = ((filled as u16 * 100) / self.area.width() as u16) as u8;
-            let val = (val_pct * (self.max - self.min)) / 100 + self.min;
+            let val_pct = (filled as u16 * 100) / self.area.width() as u16;
+            let val = ((val_pct * (self.max - self.min) as u16) / 100) as u8 + self.min;
 
             if val != self.value {
                 self.value = val;
@@ -147,7 +147,7 @@ impl Component for NumberInputSlider {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let val_pct = (100 * (self.value - self.min)) / (self.max - self.min);
+        let val_pct = (100 as u16 * (self.value - self.min) as u16) / (self.max - self.min) as u16;
 
         shape::Bar::new(self.area)
             .with_radius(2)
