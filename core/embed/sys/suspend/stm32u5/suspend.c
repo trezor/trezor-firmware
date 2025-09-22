@@ -75,13 +75,17 @@ wakeup_flags_t system_suspend(void) {
   // Keep in this loop until the external power got disconnected or the
   // device is waked up. Also, if the battery is charging, the state is signaled
   // with RGB LED charging effect.
+
+  bool charging_in_suspend = false;
   do {
 #ifdef USE_RGB_LED
     if (pm_is_charging()) {
+      charging_in_suspend = true;
       if (!rgb_led_effect_ongoing()) {
         rgb_led_effect_start(RGB_LED_EFFECT_CHARGING, 0);
       }
     } else {
+      charging_in_suspend = false;
       rgb_led_effect_stop();
     }
 #endif
@@ -90,7 +94,8 @@ wakeup_flags_t system_suspend(void) {
 
     wakeup_flags_get(&wakeup_flags);
 
-  } while (pm_usb_is_connected() && (wakeup_flags == 0));
+  } while ((pm_usb_is_connected() || charging_in_suspend) &&
+           (wakeup_flags == 0));
 
   if (wakeup_flags == 0) {
     // Deinitialize rest of the drivers before entering low-power mode
