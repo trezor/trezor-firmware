@@ -621,6 +621,10 @@ uint8_t ble_get_bond_list(bt_le_addr_t *bonds, size_t count) {
                                   SYSCALL_BLE_GET_BOND_LIST);
 }
 
+void ble_set_high_speed(bool enable) {
+  syscall_invoke1((uint32_t)enable, SYSCALL_BLE_SET_HIGH_SPEED);
+}
+
 #endif
 
 #ifdef USE_NRF

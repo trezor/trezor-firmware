@@ -170,6 +170,10 @@ pub fn set_name(name: &str) {
     unsafe { ffi::ble_set_name(bytes.as_ptr(), bytes.len()) }
 }
 
+pub fn set_high_speed(enable: bool) {
+    unsafe { ffi::ble_set_high_speed(enable) }
+}
+
 pub fn start_comm() {
     unsafe { ffi::ble_start() }
 }

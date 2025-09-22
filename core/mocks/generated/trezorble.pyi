@@ -69,6 +69,13 @@ def set_name(name: str | None):
 
 
 # rust/src/trezorhal/ble/micropython.rs
+def set_high_speed(enable: bool):
+    """
+    Set high speed connection.
+    """
+
+
+# rust/src/trezorhal/ble/micropython.rs
 def switch_off():
     """
     Stop advertising and disconnect any connected devices.

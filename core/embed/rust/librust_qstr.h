@@ -792,6 +792,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_send__transaction_signed;
   MP_QSTR_send__you_are_contributing;
   MP_QSTR_set_brightness;
+  MP_QSTR_set_high_speed;
   MP_QSTR_set_name;
   MP_QSTR_setting__adjust;
   MP_QSTR_setting__apply;
