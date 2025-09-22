@@ -82,6 +82,7 @@ typedef struct {
   uint8_t connected_addr[6];  // MAC address of the connected device
   uint8_t connected_addr_type;
 
+  int8_t power_level;
 } event_status_msg_t;
 
 typedef enum {
@@ -112,6 +113,7 @@ typedef enum {
   INTERNAL_CMD_SET_SPEED_LOW = 0x0D,
   INTERNAL_CMD_NOTIFY = 0x0E,
   INTERNAL_CMD_BATTERY_UPDATE = 0x0F,
+  INTERNAL_CMD_SET_TX_POWER = 0x10,
 } internal_cmd_t;
 
 typedef struct {
@@ -142,6 +144,12 @@ typedef struct {
 void ble_set_busy_flag(uint8_t flag);
 
 uint8_t ble_get_busy_flag(void);
+
+int ble_set_tx_power(int8_t tx_power_level);
+
+int8_t ble_get_tx_power(void);
+
+int ble_reconfigure_tx_power(void);
 
 // BLE management functions
 // Initialization

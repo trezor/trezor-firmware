@@ -73,6 +73,8 @@ void ble_management_send_status_event(void) {
     msg.connected_addr_type = 0;
   }
 
+  msg.power_level = ble_get_tx_power();
+
   trz_comm_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t *)&msg, sizeof(msg));
 }
 
@@ -226,7 +228,12 @@ static void process_command(uint8_t *data, uint16_t len) {
     case INTERNAL_CMD_BATTERY_UPDATE: {
       management_update_battery(data[1]);
     } break;
-      ;
+    case INTERNAL_CMD_SET_TX_POWER: {
+      int8_t tx_power = (int8_t)data[1];
+      if (ble_set_tx_power(tx_power) != 0) {
+        success = false;
+      }
+    } break;
     default:
       break;
   }

@@ -20,11 +20,13 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/settings/settings.h>
 #include <zephyr/sys/atomic.h>
+#include <zephyr/sys/byteorder.h>
 
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/conn.h>
 #include <zephyr/bluetooth/gatt.h>
 #include <zephyr/bluetooth/hci.h>
+#include <zephyr/bluetooth/hci_vs.h>
 #include <zephyr/bluetooth/uuid.h>
 #include <zephyr/settings/settings.h>
 
@@ -45,6 +47,14 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 static K_SEM_DEFINE(ble_init_ok, 0, 1);
 
 atomic_t g_busy_flag = ATOMIC_INIT(0);
+
+#if IS_ENABLED(CONFIG_BT_CTLR_TX_PWR_PLUS_4)
+static int8_t g_act_tx_power_level = 4;
+static int8_t g_set_tx_power_level = 4;
+#else
+static int8_t g_act_tx_power_level = 0;
+static int8_t g_set_tx_power_level = 0;
+#endif
 
 static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data,
                           uint16_t len) {
@@ -150,6 +160,72 @@ void ble_write_thread(void) {
 void ble_set_busy_flag(uint8_t flag) { atomic_set(&g_busy_flag, flag); }
 
 uint8_t ble_get_busy_flag(void) { return atomic_get(&g_busy_flag); }
+
+static int ble_configure_tx_power(int8_t tx_power_level, struct bt_conn *conn) {
+  struct bt_hci_cp_vs_write_tx_power_level *cp;
+  struct bt_hci_rp_vs_write_tx_power_level *rp;
+  struct net_buf *buf, *rsp = NULL;
+  int err;
+
+  buf = bt_hci_cmd_create(BT_HCI_OP_VS_WRITE_TX_POWER_LEVEL, sizeof(*cp));
+  if (!buf) {
+    LOG_ERR("Unable to allocate command buffer for TX power");
+    return -ENOMEM;
+  }
+
+  cp = net_buf_add(buf, sizeof(*cp));
+
+  if (conn == NULL) {
+    // No connection, set for advertising
+    cp->handle = sys_cpu_to_le16(0);                 // Handle 0 for advertising
+    cp->handle_type = BT_HCI_VS_LL_HANDLE_TYPE_ADV;  // Advertising handle type
+  } else {
+    uint16_t handle = 0;
+    bt_hci_get_conn_handle(conn, &handle);
+    cp->handle = handle;                              // Connection handle
+    cp->handle_type = BT_HCI_VS_LL_HANDLE_TYPE_CONN;  // Connection handle type
+  }
+  cp->tx_power_level = tx_power_level;
+
+  err = bt_hci_cmd_send_sync(BT_HCI_OP_VS_WRITE_TX_POWER_LEVEL, buf, &rsp);
+  if (err) {
+    LOG_ERR("Set TX power failed: %d", err);
+    return err;
+  }
+
+  if (rsp) {
+    rp = (void *)rsp->data;
+    LOG_INF("Actual TX Power set to: %d dBm", rp->selected_tx_power);
+    net_buf_unref(rsp);
+    g_act_tx_power_level = rp->selected_tx_power;
+  }
+  return 0;
+}
+
+int8_t ble_get_tx_power(void) { return g_act_tx_power_level; }
+
+int ble_set_tx_power(int8_t tx_power_level) {
+  g_set_tx_power_level = tx_power_level;
+
+  int8_t res = ble_configure_tx_power(tx_power_level, NULL);
+
+  struct bt_conn *conn = connection_get_current();
+
+  if (conn != NULL) {
+    return ble_configure_tx_power(tx_power_level, conn);
+  }
+  return res;
+}
+
+int ble_reconfigure_tx_power(void) {
+  struct bt_conn *conn = connection_get_current();
+
+  if (conn != NULL) {
+    return ble_configure_tx_power(g_set_tx_power_level, conn);
+  }
+
+  return -1;
+}
 
 K_THREAD_DEFINE(ble_write_thread_id, CONFIG_DEFAULT_THREAD_STACK_SIZE,
                 ble_write_thread, NULL, NULL, NULL, 7, 0, 0);

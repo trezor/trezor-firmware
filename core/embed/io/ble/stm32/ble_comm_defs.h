@@ -46,6 +46,8 @@ typedef struct {
 
   uint8_t connected_addr[6];  // MAC address of the connected device
   uint8_t connected_addr_type;
+
+  int8_t power_level;
 } event_status_msg_t;
 
 typedef enum {
@@ -76,6 +78,7 @@ typedef enum {
   INTERNAL_CMD_SET_SPEED_LOW = 0x0D,
   INTERNAL_CMD_NOTIFY = 0x0E,
   INTERNAL_CMD_BATTERY_UPDATE = 0x0F,
+  INTERNAL_CMD_SET_TX_POWER = 0x10,
 } internal_cmd_t;
 
 typedef struct {

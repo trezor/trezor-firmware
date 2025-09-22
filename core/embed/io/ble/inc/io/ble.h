@@ -53,6 +53,15 @@ typedef enum {
   BLE_MODE_DFU,
 } ble_mode_t;
 
+typedef enum {
+  BLE_TX_POWER_PLUS_4_DBM = 4,
+  BLE_TX_POWER_PLUS_0_DBM = 0,
+  BLE_TX_POWER_MINUS_4_DBM = -4,
+  BLE_TX_POWER_MINUS_8_DBM = -8,
+  BLE_TX_POWER_MINUS_12_DBM = -12,
+  BLE_TX_POWER_MINUS_16_DBM = -16,
+} ble_tx_power_level_t;
+
 /*
  * Address types:
  * BT_ADDR_LE_PUBLIC       0x00
@@ -216,6 +225,11 @@ bool ble_get_mac(bt_le_addr_t *addr);
 // When enabled, the connection parameters will be set to achieve
 // higher data throughput, at the cost of increased power consumption.
 void ble_set_high_speed(bool enable);
+
+// Set TX power
+//
+// Set TX power level
+void ble_set_tx_power(ble_tx_power_level_t level);
 
 // BLE notify
 //

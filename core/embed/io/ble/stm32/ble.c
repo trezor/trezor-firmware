@@ -85,6 +85,7 @@ typedef struct {
   bt_le_addr_t mac;
   bool mac_ready;
   bool high_speed;
+  ble_tx_power_level_t power_level;
 
   uint8_t bond_count;
   bt_le_addr_t bonds[BLE_MAX_BONDS];
@@ -150,6 +151,14 @@ static bool ble_send_speed_request(ble_driver_t *drv, bool high_speed) {
   uint8_t cmd =
       high_speed ? INTERNAL_CMD_SET_SPEED_HIGH : INTERNAL_CMD_SET_SPEED_LOW;
   return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL) >=
+         0;
+}
+
+static bool ble_send_power_level_request(ble_driver_t *drv,
+                                         ble_tx_power_level_t power_level) {
+  (void)drv;
+  uint8_t cmd[2] = {INTERNAL_CMD_SET_TX_POWER, (uint8_t)power_level};
+  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, cmd, sizeof(cmd), NULL, NULL) >=
          0;
 }
 
@@ -367,6 +376,11 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
   // in case connection speed differs from request, send a command
   if (msg.flags.high_speed != drv->high_speed) {
     ble_send_speed_request(drv, drv->high_speed);
+  }
+
+  // in case power level differs from request, send a command
+  if ((ble_tx_power_level_t)msg.power_level != drv->power_level) {
+    ble_send_power_level_request(drv, drv->power_level);
   }
 
   drv->status_valid = true;
@@ -645,6 +659,7 @@ bool ble_init(void) {
     goto cleanup;
   }
 
+  drv->power_level = BLE_TX_POWER_PLUS_4_DBM;
   drv->initialized = true;
   return true;
 
@@ -1208,6 +1223,17 @@ void ble_set_high_speed(bool enable) {
 
   irq_key_t key = irq_lock();
   drv->high_speed = enable;
+  irq_unlock(key);
+}
+
+void ble_set_tx_power(ble_tx_power_level_t level) {
+  ble_driver_t *drv = &g_ble_driver;
+  if (!drv->initialized) {
+    return;
+  }
+
+  irq_key_t key = irq_lock();
+  drv->power_level = level;
   irq_unlock(key);
 }
 
