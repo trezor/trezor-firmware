@@ -42,6 +42,10 @@
 #include "optiga.h"
 #endif
 
+#if USE_TROPIC
+#include <sec/tropic.h>
+#endif
+
 #ifdef USE_STORAGE_HWKEY
 #include "secure_aes.h"
 #endif
@@ -75,6 +79,11 @@
 // Unauthenticated storage version. Introduced in storage version 3.
 // NOTE: This should always equal the value in VERSION_KEY.
 #define UNAUTH_VERSION_KEY ((APP_STORAGE << 8) | 0x08)
+
+#if USE_TROPIC
+// Key that is used to reset the M&D slots in Tropic after successfull unlock.
+#define TROPIC_HMAC_RESET_KEY ((APP_STORAGE << 8) | 0x09)
+#endif
 
 #if USE_OPTIGA && OPTIGA_STRETCHED_PINS_COUNT > 1
 // Key that is used to reset the HMAC counter in Optiga after successfull
@@ -464,7 +473,7 @@ static secbool is_not_wipe_code(const uint8_t *pin, size_t pin_len) {
 
 static uint32_t ui_estimate_time_ms(storage_pin_op_t op) {
   uint32_t time_ms = 0;
-#if USE_OPTIGA
+#if USE_OPTIGA || USE_TROPIC
   uint32_t pin_index = 0;
 #if OPTIGA_STRETCHED_PINS_COUNT > 1
   if (sectrue != pin_get_fails(&pin_index)) {
@@ -474,6 +483,9 @@ static uint32_t ui_estimate_time_ms(storage_pin_op_t op) {
 #endif
 #if USE_OPTIGA
   time_ms += optiga_estimate_time_ms(op, pin_index);
+#endif
+#if USE_TROPIC
+  time_ms += tropic_estimate_time_ms(op, pin_index);
 #endif
 
   uint32_t pbkdf2_ms = time_estimate_pbkdf2_ms(PIN_ITER_COUNT);
@@ -700,11 +712,19 @@ static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
     goto cleanup;
   }
 #endif
-#if USE_OPTIGA
+#if USE_TROPIC || USE_OPTIGA
   uint8_t stretched_pins[OPTIGA_STRETCHED_PINS_COUNT][SHA256_DIGEST_LENGTH] = {
       0};
   for (int i = 0; i < OPTIGA_STRETCHED_PINS_COUNT; i++) {
     memcpy(stretched_pins[i], stretched_pin, SHA256_DIGEST_LENGTH);
+  }
+#endif
+#if USE_TROPIC
+  _Static_assert(SHA256_DIGEST_LENGTH == MAC_AND_DESTROY_DATA_SIZE);
+  uint8_t tropic_mac_and_destroy_reset_key[MAC_AND_DESTROY_DATA_SIZE] = {0};
+  if (!tropic_pin_set(ui_progress, stretched_pins,
+                      tropic_mac_and_destroy_reset_key)) {
+    goto cleanup;
   }
 #endif
 #if USE_OPTIGA
@@ -715,10 +735,23 @@ static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
     goto cleanup;
   }
 #endif
-#if USE_OPTIGA
+#if USE_TROPIC
+  if (!rng_fill_buffer_strong(kek, SHA256_DIGEST_LENGTH)) {
+    goto cleanup;
+  }
+  if (tropic_set_kek(ui_progress, kek, stretched_pins) != true) {
+    goto cleanup;
+  }
+  if (storage_set_encrypted(
+          TROPIC_HMAC_RESET_KEY, tropic_mac_and_destroy_reset_key,
+          sizeof(tropic_mac_and_destroy_reset_key)) != sectrue) {
+    goto cleanup;
+  }
+#endif
+#if USE_OPTIGA && !USE_TROPIC
   memcpy(kek, stretched_pins[0], SHA256_DIGEST_LENGTH);
 #endif
-#if !USE_OPTIGA
+#if !USE_OPTIGA && !USE_TROPIC
   memcpy(kek, stretched_pin, SHA256_DIGEST_LENGTH);
 #endif
 #if USE_OPTIGA && OPTIGA_STRETCHED_PINS_COUNT > 1
@@ -728,13 +761,17 @@ static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
   }
 #endif
   ret = sectrue;
-#if USE_OPTIGA
+#if USE_TROPIC || USE_OPTIGA
 cleanup:
+#endif
+#if USE_TROPIC
+  memzero(tropic_mac_and_destroy_reset_key,
+          sizeof(tropic_mac_and_destroy_reset_key));
 #endif
 #if USE_OPTIGA
   memzero(optiga_hmac_reset_key, sizeof(optiga_hmac_reset_key));
 #endif
-#if USE_OPTIGA
+#if USE_TROPIC || USE_OPTIGA
   memzero(stretched_pins, sizeof(stretched_pins));
 #endif
   memzero(stretched_pin, sizeof(stretched_pin));
@@ -783,7 +820,7 @@ static secbool __wur derive_kek_unlock(
   secbool ret = secfalse;
   mcu_stretch_pin(pin, pin_len, storage_salt, ext_salt, stretched_pin,
                   privileged_bhk);
-#if USE_OPTIGA
+#if USE_OPTIGA || USE_TROPIC
   uint32_t pin_index = 0;
 #if OPTIGA_STRETCHED_PINS_COUNT > 1
   uint32_t pin_fails = 0;
@@ -793,11 +830,13 @@ static secbool __wur derive_kek_unlock(
   pin_index = pin_fails - 1;  // The counter has already been incremented
 #endif
 #endif
-#if USE_OPTIGA && STRETCHED_PINS_COUNT == 0
-  pin_index = 0;
-#endif
 #if USE_OPTIGA
   if (optiga_stretch_pin(ui_progress, stretched_pin) != OPTIGA_PIN_SUCCESS) {
+    goto cleanup;
+  }
+#endif
+#if USE_TROPIC
+  if (!tropic_stretch_pin(ui_progress, pin_index, stretched_pin)) {
     goto cleanup;
   }
 #endif
@@ -817,8 +856,14 @@ static secbool __wur derive_kek_unlock(
     goto cleanup;
   }
 #endif
+#if USE_TROPIC
+  if (tropic_get_kek(ui_progress, stretched_pin, pin_index, stretched_pin) !=
+      true) {
+    goto cleanup;
+  }
+#endif
   ret = sectrue;
-#if USE_OPTIGA
+#if USE_TROPIC || USE_OPTIGA
 cleanup:
 #endif
   return ret;
@@ -1216,6 +1261,25 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
     }
     memzero(optiga_hmac_reset_key, sizeof(optiga_hmac_reset_key));
   }
+#endif
+
+#if USE_TROPIC
+  uint8_t tropic_mac_and_destroy_reset_key[SHA256_DIGEST_LENGTH] = {0};
+  uint16_t tropic_mac_and_destroy_reset_key_len = 0;
+  if (storage_get_encrypted(TROPIC_HMAC_RESET_KEY,
+                            &tropic_mac_and_destroy_reset_key,
+                            sizeof(tropic_mac_and_destroy_reset_key),
+                            &tropic_mac_and_destroy_reset_key_len) != sectrue ||
+      tropic_mac_and_destroy_reset_key_len != SHA256_DIGEST_LENGTH) {
+    return secfalse;
+  }
+  if (!tropic_reset_slots(ui_progress, ctr, tropic_mac_and_destroy_reset_key)) {
+    memzero(tropic_mac_and_destroy_reset_key,
+            sizeof(tropic_mac_and_destroy_reset_key));
+    return secfalse;
+  }
+  memzero(tropic_mac_and_destroy_reset_key,
+          sizeof(tropic_mac_and_destroy_reset_key));
 #endif
 
   // Finally set the counter to 0 to indicate success.

@@ -44,11 +44,22 @@ extern const uint8_t *PIN_EMPTY;
 // Maximum number of failed unlock attempts.
 // NOTE: The PIN counter logic relies on this constant being less than or equal
 // to 16.
+#if USE_TROPIC && USE_OPTIGA
+// If both Optiga and Tropic are used, every PIN attempt requires a stretched
+// PIN slot on Optiga. This restricts the total number of PIN
+// attempts.
+#define PIN_MAX_TRIES 10
+#else
 #define PIN_MAX_TRIES 16
+#endif
 
 // The number of slots configured as stretched PINs.
 #if USE_OPTIGA
+#if USE_TROPIC
+#define OPTIGA_STRETCHED_PINS_COUNT PIN_MAX_TRIES
+#else
 #define OPTIGA_STRETCHED_PINS_COUNT 1
+#endif
 #endif
 
 // The length of the random salt in bytes.
