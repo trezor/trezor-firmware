@@ -446,7 +446,6 @@
     "ethereum__approve_revoke_from": "Revogar de",
     "ethereum__approve_to": "Aprovar a",
     "ethereum__approve_unlimited_template": "Aprovando quantia ilimitada de {0}",
-    "ethereum__contract": "Contrato:",
     "ethereum__contract_address": "End. de contrato do provedor",
     "ethereum__data_size_template": "Tamanho: {0} bytes",
     "ethereum__gas_limit": "Limite de gás:",
@@ -475,7 +474,12 @@
     "ethereum__title_confirm_message": "Confirmar mensagem",
     "ethereum__title_confirm_message_hash": "Confirmar hash da mensagem",
     "ethereum__title_confirm_struct": "Conf. estrutura",
-    "ethereum__title_confirm_typed_data": "Conf. dados",
+    "ethereum__title_confirm_typed_data": {
+      "Bolt": "Conf. dados",
+      "Caesar": "Conf. dados",
+      "Delizia": "Conf. dados",
+      "Eckhart": "Conf. dados inseridos"
+    },
     "ethereum__title_input_data": "Dados entrados",
     "ethereum__title_signing_address": "End. assinatura",
     "ethereum__token_contract": "Contrato Token",
@@ -519,6 +523,7 @@
     "haptic_feedback__enable": "Ativar feedback tátil?",
     "haptic_feedback__subtitle": "Configuração",
     "haptic_feedback__title": "Feedback tátil",
+    "homescreen__backup_needed_info": "",
     "homescreen__click_to_connect": "Clique para conectar",
     "homescreen__click_to_unlock": "Clique para desbloq.",
     "homescreen__firmware_type": "Tipo de firmware",
@@ -1163,7 +1168,12 @@
     "stellar__new_passive_offer": "Nova oferta passiva",
     "stellar__no_memo_set": "Nenhum(a) memo/etiqueta definido(a)!",
     "stellar__no_restriction": "[sem restrição]",
-    "stellar__path_pay": "Pagamento por caminho",
+    "stellar__path_pay": {
+      "Bolt": "Pagamento por caminho",
+      "Caesar": "Pagamento por caminho",
+      "Delizia": "Pagamento por caminho",
+      "Eckhart": "Caminho de Pagamento"
+    },
     "stellar__path_pay_at_least": "Pagamento por caminho pelo menos",
     "stellar__pay": "Pagamento",
     "stellar__pay_at_most": "Pagar no máximo",
