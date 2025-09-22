@@ -176,9 +176,8 @@ impl Component for VerticalSlider {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let val_pct = ((100 as u16 * (self.value - self.min) as u16)
-            / (self.max - self.min) as u16)
-            .clamp(0, 100);
+        let val_pct =
+            ((100 * (self.value - self.min) as u16) / (self.max - self.min) as u16).clamp(0, 100);
 
         // Square area for the slider
         let (_, small_area) = self.area.split_bottom(Self::SLIDER_WIDTH);

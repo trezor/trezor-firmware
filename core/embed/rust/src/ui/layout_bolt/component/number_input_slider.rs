@@ -147,7 +147,7 @@ impl Component for NumberInputSlider {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let val_pct = (100 as u16 * (self.value - self.min) as u16) / (self.max - self.min) as u16;
+        let val_pct = (100 * (self.value - self.min) as u16) / (self.max - self.min) as u16;
 
         shape::Bar::new(self.area)
             .with_radius(2)
