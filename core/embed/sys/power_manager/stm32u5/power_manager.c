@@ -625,6 +625,21 @@ bool pm_is_charging(void) {
   return is_charging;
 }
 
+bool pm_usb_is_connected(void) {
+  pm_driver_t* drv = &g_pm;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  bool usb_connected;
+  irq_key_t irq_key = irq_lock();
+  usb_connected = drv->usb_connected;
+  irq_unlock(irq_key);
+
+  return usb_connected;
+}
+
 bool pm_driver_resume(void) {
   pm_driver_t* drv = &g_pm;
 

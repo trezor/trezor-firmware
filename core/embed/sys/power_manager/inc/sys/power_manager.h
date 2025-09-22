@@ -217,6 +217,13 @@ pm_status_t pm_set_soc_target(uint8_t target);
 bool pm_is_charging(void);
 
 /**
+ * @brief Check if the USB is connected
+ *
+ * @return true if USB is connected, false otherwise
+ */
+bool pm_usb_is_connected(void);
+
+/**
  * @brief Suspends driver activity so the CPU can enter low-power mode.
  *
  * Suspending may take some time if the driver is currently

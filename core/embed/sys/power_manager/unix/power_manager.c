@@ -74,4 +74,6 @@ pm_status_t pm_get_state(pm_state_t* state) {
 
 bool pm_is_charging(void) { return false; }
 
+bool pm_usb_connected(void) { return true; }
+
 pm_status_t pm_set_soc_target(uint8_t target) { return PM_OK; }

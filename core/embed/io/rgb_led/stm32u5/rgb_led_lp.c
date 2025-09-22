@@ -382,6 +382,8 @@ void rgb_led_suspend() { rgb_led_deinit(); }
 void rgb_led_resume(const rgb_led_wakeup_params_t* params) {
   rgb_led_init();
 
+  rgb_led_effect_stop();
+
   if (params->ongoing_effect) {
     rgb_led_effect_start(params->effect_type, 0);
   }
