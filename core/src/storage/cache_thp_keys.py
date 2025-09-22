@@ -14,6 +14,7 @@ if utils.USE_THP:
     CHANNEL_NONCE_RECEIVE = const(7)
     CHANNEL_NONCE_SEND = const(8)
     CHANNEL_HOST_STATIC_PUBKEY = const(9)
+    CHANNEL_ACK_LATENCY_MS = const(10)
 
     # Cache keys for THP session
     # CHANNEL_ID = const(0)
