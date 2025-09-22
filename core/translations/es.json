@@ -347,7 +347,12 @@
     "cardano__rewards_go_to": "Las recompensas van a:",
     "cardano__script": "script",
     "cardano__script_all": "Todo",
-    "cardano__script_any": "Parte",
+    "cardano__script_any": {
+      "Bolt": "Parte",
+      "Caesar": "Parte",
+      "Delizia": "Parte",
+      "Eckhart": "Cualquier/a"
+    },
     "cardano__script_data_hash": "Hash de datos de script:",
     "cardano__script_hash": "Hash de script:",
     "cardano__script_invalid_before": "No válido antes",
@@ -538,6 +543,7 @@
     "haptic_feedback__enable": "¿Activar respuesta háptica?",
     "haptic_feedback__subtitle": "Ajustes",
     "haptic_feedback__title": "Respuesta háptica",
+    "homescreen__backup_needed_info": "",
     "homescreen__click_to_connect": "Clic para conectar",
     "homescreen__click_to_unlock": "Clic para desbloquear",
     "homescreen__firmware_type": "Tipo de firmware",
@@ -1187,7 +1193,12 @@
     "stellar__new_passive_offer": "Nueva oferta pasiva",
     "stellar__no_memo_set": "No se ha dejado ninguna nota.",
     "stellar__no_restriction": "[sin restricciones]",
-    "stellar__path_pay": "Path payment",
+    "stellar__path_pay": {
+      "Bolt": "Path payment",
+      "Caesar": "Path payment",
+      "Delizia": "Path payment",
+      "Eckhart": "Pago con ruta"
+    },
     "stellar__path_pay_at_least": "Path payment por un mínimo de",
     "stellar__pay": "Pago",
     "stellar__pay_at_most": "Pago máximo",
