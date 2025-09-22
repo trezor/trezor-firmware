@@ -1206,11 +1206,10 @@ access_violation:
 }
 #endif
 
-
-
 #include <sec/secret_keys.h>
 
-bool secret_key_delegated_identity__verified(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+bool secret_key_delegated_identity__verified(
+    uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   if (!probe_read_access(dest, ECDSA_PRIVATE_KEY_SIZE)) {
     goto access_violation;
   }
@@ -1220,6 +1219,5 @@ access_violation:
   apptask_access_violation();
   return false;
 }
-
 
 #endif  // KERNEL
