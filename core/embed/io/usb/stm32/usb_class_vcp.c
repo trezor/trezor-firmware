@@ -24,6 +24,10 @@
 #include <io/usb_vcp.h>
 #include <sys/sysevent_source.h>
 
+#ifdef USE_SUSPEND
+#include <sys/suspend.h>
+#endif
+
 #include "usb_internal.h"
 
 // Communications Device Class Code (bFunctionClass, bInterfaceClass)
@@ -493,6 +497,10 @@ static uint8_t usb_vcp_class_data_out(USBD_HandleTypeDef *dev, uint8_t ep_num) {
     // Prepare the OUT EP to receive next packet
     USBD_LL_PrepareReceive(dev, state->ep_out, state->rx_packet,
                            state->max_packet_len);
+
+#ifdef USE_SUSPEND
+    wakeup_flags_set(WAKEUP_FLAG_USB);
+#endif
   }
 
   return USBD_OK;
