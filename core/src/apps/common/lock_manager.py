@@ -67,12 +67,12 @@ else:
         # fadeout the screen
         backlight_fade(BacklightLevels.NONE)
         # suspend the device
-        wakeup_flag = suspend_device()
+        suspend_device()
 
-        if wakeup_flag == io.pm.WAKEUP_FLAG_BUTTON:
-            workflow.idle_timer.touch()
-            if CURRENT_LAYOUT is not None:
-                CURRENT_LAYOUT.repaint()
+        # redraw the screen and touch idle timer
+        workflow.idle_timer.touch()
+        if CURRENT_LAYOUT is not None:
+            CURRENT_LAYOUT.repaint()
 
         _SHOULD_SUSPEND = False
         set_homescreen()
