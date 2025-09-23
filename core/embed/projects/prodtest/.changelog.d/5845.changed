@@ -1,0 +1,1 @@
+Make `tropic-lock()` restrict access to 64 MAC-and-destroy slots.
