@@ -251,7 +251,7 @@ class Layout(Generic[T]):
         # else we are (a) still running or (b) already finished
         try:
             if self.context is not None and self.result_box.is_empty():
-                self._start_task(self._handle_usb_iface())
+                self._start_task(self._handle_button_requests())
             return await self.result_box
         finally:
             self.stop()
@@ -423,15 +423,14 @@ class Layout(Generic[T]):
             finally:
                 touch.close()
 
-    async def _handle_usb_iface(self) -> None:
+    async def _handle_button_requests(self) -> None:
         if self.context is None:
             return
         while True:
             try:
-                result = await loop.race(
-                    self.context.read(()),
-                    self.button_request_box,
-                )
+                # The following task will raise `UnexpectedMessageException` on any message.
+                unexpected_read = self.context.read(())
+                result = await loop.race(unexpected_read, self.button_request_box)
                 assert isinstance(result, tuple)
                 br_code, br_name = result
 
