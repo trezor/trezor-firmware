@@ -265,11 +265,11 @@ static struct lt_config_t irreversible_configuration = {
         // # CFG_UAP_MAC_AND_DESTROY (0x160)
         // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
         // |--------------------------|---------------|---------------|---------------|---------------|
-        // | MACANDD_0_31             | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
-        // | MACANDD_32_63            | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
+        // | MACANDD_0_31             | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 1 (bit 3)     |
+        // | MACANDD_32_63            | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
         // | MACANDD_64_95            | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
         // | MACANDD_96_127           | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
-        ~0U & ~BIT(0) & ~BIT(8) & ~BIT(16) & ~BIT(24),
+        ~0U & ~BIT(0) & ~BIT(1) & ~BIT(8) & ~BIT(9) & ~BIT(16) & ~BIT(24),
     }};
 
 // TODO: Adjust the configuration to match the revision of the provisioned
@@ -474,11 +474,11 @@ static struct lt_config_t reversible_configuration = {
         // # CFG_UAP_MAC_AND_DESTROY (0x160)
         // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
         // |--------------------------|---------------|---------------|---------------|---------------|
-        // | MACANDD_0_31             | 0 (bit 0)     | 1 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
-        // | MACANDD_32_63            | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
+        // | MACANDD_0_31             | 0 (bit 0)     | 0 (bit 1)     | 1 (bit 2)     | 0 (bit 3)     |
+        // | MACANDD_32_63            | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
         // | MACANDD_64_95            | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
         // | MACANDD_96_127           | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
+        BIT(2) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
     }};
 // clang-format on
 
