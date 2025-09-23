@@ -116,8 +116,7 @@ static struct lt_config_t irreversible_configuration = {
         // | WRITE_PKEY_SLOT_1        | 0 (bit 8)     | 0 (bit 9)     | 1 (bit 10)    | 1 (bit 11)    |
         // | WRITE_PKEY_SLOT_2        | 0 (bit 16)    | 0 (bit 17)    | 1 (bit 18)    | 1 (bit 19)    |
         // | WRITE_PKEY_SLOT_3        | 0 (bit 24)    | 0 (bit 25)    | 1 (bit 26)    | 1 (bit 27)    |
-        ~0U & ~BIT(0) & ~BIT(1) & ~BIT(8) & ~BIT(9) & ~BIT(16) & ~BIT(17) &
-            ~BIT(24) & ~BIT(25),
+        ~0U & ~BIT(0) & ~BIT(1) & ~BIT(8) & ~BIT(9) & ~BIT(16) & ~BIT(17) & ~BIT(24) & ~BIT(25),
         // # CFG_UAP_PAIRING_KEY_READ (0x24)
         // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
         // |--------------------------|---------------|---------------|---------------|---------------|
@@ -334,8 +333,7 @@ static struct lt_config_t reversible_configuration = {
         // | READ_PKEY_SLOT_1         | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
         // | READ_PKEY_SLOT_2         | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
         // | READ_PKEY_SLOT_3         | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) |
-            BIT(26),
+        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
         // # CFG_UAP_PAIRING_KEY_INVALIDATE (0x28)
         // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
         // |--------------------------|---------------|---------------|---------------|---------------|
@@ -343,8 +341,7 @@ static struct lt_config_t reversible_configuration = {
         // | INVALIDATE_PKEY_SLOT_1   |   0 (bit 8)   |   1 (bit 9)   |   1 (bit 10)  |   0 (bit 11)  |
         // | INVALIDATE_PKEY_SLOT_2   |   0 (bit 16)  |   1 (bit 17)  |   1 (bit 18)  |   0 (bit 19)  |
         // | INVALIDATE_PKEY_SLOT_3   |   0 (bit 24)  |   1 (bit 25)  |   1 (bit 26)  |   0 (bit 27)  |
-        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) |
-            BIT(26),
+        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
         // # CFG_UAP_R_CONFIG_WRITE_ERASE (0x30)
         // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
         // |--------------------------|---------------|---------------|---------------|---------------|
@@ -425,8 +422,7 @@ static struct lt_config_t reversible_configuration = {
         // | READ_ECCKEY_SLOT_8_15    | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
         // | READ_ECCKEY_SLOT_16_23   | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
         // | READ_ECCKEY_SLOT_24_31   | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) |
-            BIT(26),
+        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
         // # CFG_UAP_ECC_KEY_ERASE (0x13c)
         // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
         // |--------------------------|---------------|---------------|---------------|---------------|
@@ -434,8 +430,7 @@ static struct lt_config_t reversible_configuration = {
         // | ERASE_ECCKEY_SLOT_8_15   | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
         // | ERASE_ECCKEY_SLOT_16_23  | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
         // | ERASE_ECCKEY_SLOT_24_31  | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) |
-            BIT(26),
+        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
         // # CFG_UAP_ECDSA_SIGN (0x140)
         // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
         // |--------------------------|---------------|---------------|---------------|---------------|
@@ -467,8 +462,7 @@ static struct lt_config_t reversible_configuration = {
         // | MCOUNTER_GET_4_7         | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
         // | MCOUNTER_GET_8_11        | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
         // | MCOUNTER_GET_12_15       | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) |
-            BIT(26),
+        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
         // # CFG_UAP_MCOUNTER_UPDATE (0x158)
         // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
         // |--------------------------|---------------|---------------|---------------|---------------|
@@ -476,8 +470,7 @@ static struct lt_config_t reversible_configuration = {
         // | MCOUNTER_UPDATE_4_7      | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
         // | MCOUNTER_UPDATE_8_11     | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
         // | MCOUNTER_UPDATE_12_15    | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) |
-            BIT(26),
+        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
         // # CFG_UAP_MAC_AND_DESTROY (0x160)
         // | Setting                  | Pairing Key 0 | Pairing Key 1 | Pairing Key 2 | Pairing Key 3 |
         // |--------------------------|---------------|---------------|---------------|---------------|
@@ -485,8 +478,7 @@ static struct lt_config_t reversible_configuration = {
         // | MACANDD_32_63            | 0 (bit 8)     | 1 (bit 9)     | 1 (bit 10)    | 0 (bit 11)    |
         // | MACANDD_64_95            | 0 (bit 16)    | 1 (bit 17)    | 1 (bit 18)    | 0 (bit 19)    |
         // | MACANDD_96_127           | 0 (bit 24)    | 1 (bit 25)    | 1 (bit 26)    | 0 (bit 27)    |
-        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) |
-            BIT(26),
+        BIT(1) | BIT(2) | BIT(9) | BIT(10) | BIT(17) | BIT(18) | BIT(25) | BIT(26),
     }};
 // clang-format on
 
