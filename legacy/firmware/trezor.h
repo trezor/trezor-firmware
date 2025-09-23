@@ -20,6 +20,7 @@
 #ifndef __TREZOR_H__
 #define __TREZOR_H__
 
+#include <stdbool.h>
 #include <stdint.h>
 #include "version.h"
 
@@ -38,6 +39,7 @@
 extern uint32_t system_millis_lock_start;
 
 /* Busyscreen timeout */
-extern uint32_t system_millis_busy_deadline;
+void trezor_set_busy(uint32_t length_ms);
+bool trezor_is_busy(void);
 
 #endif

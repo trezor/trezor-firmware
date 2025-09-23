@@ -75,7 +75,7 @@ bool get_features(Features *resp) {
   resp->has_safety_checks = true;
   resp->safety_checks = config_getSafetyCheckLevel();
   resp->has_busy = true;
-  resp->busy = (system_millis_busy_deadline > timer_ms());
+  resp->busy = trezor_is_busy();
   if (session_isUnlocked()) {
     resp->has_wipe_code_protection = true;
     resp->wipe_code_protection = config_hasWipeCode();
@@ -592,9 +592,9 @@ void fsm_msgGetFirmwareHash(const GetFirmwareHash *msg) {
 
 void fsm_msgSetBusy(const SetBusy *msg) {
   if (msg->has_expiry_ms) {
-    system_millis_busy_deadline = timer_ms() + msg->expiry_ms;
+    trezor_set_busy(msg->expiry_ms);
   } else {
-    system_millis_busy_deadline = 0;
+    trezor_set_busy(0);
   }
   fsm_sendSuccess(NULL);
   layoutHome();
