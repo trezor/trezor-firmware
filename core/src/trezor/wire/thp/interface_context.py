@@ -27,6 +27,11 @@ from .checksum import CHECKSUM_LENGTH
 if __debug__:
     from trezor import log
 
+
+if utils.USE_BLE:
+    import trezorble as ble
+    from trezor.workflow import idle_timer
+
 if TYPE_CHECKING:
     from buffer_types import AnyBuffer, AnyBytes
     from trezorio import WireInterface
@@ -94,6 +99,9 @@ class InterfaceContext:
         """
         # Uses `yield` instead of `await` to avoid allocations.
         packet_len = yield self._read
+        if utils.USE_BLE and self._iface is ble.interface:
+            # prevent auto-lock while handling longer workflows on Bluetooth
+            idle_timer.touch()
         return self, packet_len
 
     async def handle_packet(self, packet: AnyBuffer) -> Channel | None:
@@ -227,8 +235,6 @@ class InterfaceContext:
         Currently supported by BLE (used for caching THP host names).
         """
         if utils.USE_BLE:
-            import trezorble as ble
-
             if self._iface is ble.interface:
                 return ble.connected_addr()
 
