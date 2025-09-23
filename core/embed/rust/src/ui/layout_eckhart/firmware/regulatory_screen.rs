@@ -34,6 +34,13 @@ pub enum RegulatoryMsg {
     Cancelled,
 }
 
+struct RegulatoryZone {
+    name: Option<&'static str>,
+    content: &'static str,
+    icon1: Option<Icon>,
+    icon2: Option<Icon>,
+}
+
 impl RegulatoryScreen {
     pub fn new() -> Self {
         let content = RegulatoryContent::new();
@@ -140,32 +147,62 @@ struct RegulatoryContent {
 }
 
 impl RegulatoryContent {
-    const SCREENS: usize = 8;
-    const ZONES: [(Option<&'static str>, &'static str, Option<Icon>); RegulatoryContent::SCREENS] = [
-        (
-            Some("United States"),
-            "FCC ID: VUI-TS7A01",
-            Some(theme::ICON_FCC),
-        ),
-        (
-            None,
-            "This device complies with Part 15 of the FCC Rules. Operation is subject to two conditions: (1) it may not cause harmful interference, and (2) it must accept any interference, including that which causes undesired operation.",
-            None,
-        ),
-        (
-            Some("Canada"),
-            "IC: 7582A-TS7A01\nCAN ICES-003(B) /\nNMB-003(B)",
-            None,
-        ),
-        (
-            Some("Europe / UK"),
-            "Trezor Company s.r.o.\nKundratka 2359/17a\nPrague 8, Czech Republic",
-            Some(theme::ICON_EUROPE),
-        ),
-        (Some("Australia /\nNew Zealand"), "", Some(theme::ICON_RCM)),
-        (Some("Ukraine"), "", Some(theme::ICON_UKRAINE)),
-        (Some("Japan"), "", Some(theme::ICON_JAPAN)),
-        (Some("South Korea"), "", Some(theme::ICON_KOREA)),
+    const SCREENS: usize = 9;
+    const ZONES: [RegulatoryZone; RegulatoryContent::SCREENS] = [
+        RegulatoryZone {
+            name: Some("United States"),
+            content: "FCC ID: VUI-TS7A01",
+            icon1: Some(theme::ICON_FCC),
+            icon2: None,
+        },
+        RegulatoryZone {
+            name: None,
+            content: "This device complies with Part 15 of the FCC Rules. Operation is subject to two conditions: (1) it may not cause harmful interference, and (2) it must accept any interference, including that which causes undesired operation.",
+            icon1: None,
+            icon2: None,
+        },
+        RegulatoryZone {
+            name: Some("Canada"),
+            content: "IC: 7582A-TS7A01\nCAN ICES-003(B) /\nNMB-003(B)",
+            icon1: None,
+            icon2: None,
+        },
+        RegulatoryZone {
+            name: Some("Europe / UK"),
+            content: "Trezor Company s.r.o.\nKundratka 2359/17a\nPrague 8, Czech Republic",
+            icon1: Some(theme::ICON_EUROPE),
+            icon2: None,
+        },
+        RegulatoryZone {
+            name: Some("Australia /\nNew Zealand"),
+            content: "",
+            icon1: Some(theme::ICON_RCM),
+            icon2: None,
+        },
+        RegulatoryZone {
+            name: Some("Ukraine"),
+            content: "",
+            icon1: Some(theme::ICON_UKRAINE),
+            icon2: None,
+        },
+        RegulatoryZone {
+            name: Some("Japan"),
+            content: "",
+            icon1: Some(theme::ICON_JAPAN),
+            icon2: Some(theme::ICON_JAPAN_2),
+        },
+        RegulatoryZone {
+            name: Some("South Korea"),
+            content: "",
+            icon1: Some(theme::ICON_KOREA),
+            icon2: None,
+        },
+        RegulatoryZone {
+            name: Some("Taiwan"),
+            content: "",
+            icon1: Some(theme::ICON_TAIWAN),
+            icon2: None,
+        },
     ];
 
     pub fn new() -> Self {
@@ -232,8 +269,8 @@ impl Component for RegulatoryContent {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let (title, content, icon) = Self::ZONES[self.pager.current() as usize];
-        let rest = if let Some(title) = title {
+        let zone = &Self::ZONES[self.pager.current() as usize];
+        let rest = if let Some(title) = zone.name {
             self.render_from_top(
                 self.area,
                 theme::TEXT_REGULAR,
@@ -250,13 +287,24 @@ impl Component for RegulatoryContent {
             rest,
             theme::TEXT_MEDIUM,
             Alignment::Start,
-            content,
+            zone.content,
             theme::TEXT_VERTICAL_SPACING,
             target,
         );
 
-        if let Some(icon) = icon {
-            ToifImage::new(rest.top_left(), icon.toif)
+        let rest = if let Some(icon1) = zone.icon1 {
+            ToifImage::new(rest.top_left(), icon1.toif)
+                .with_align(Alignment2D::TOP_LEFT)
+                .with_fg(theme::GREY_LIGHT)
+                .render(target);
+            rest.split_top(icon1.toif.height() + theme::TEXT_VERTICAL_SPACING)
+                .1
+        } else {
+            rest
+        };
+
+        if let Some(icon2) = zone.icon2 {
+            ToifImage::new(rest.top_left(), icon2.toif)
                 .with_align(Alignment2D::TOP_LEFT)
                 .with_fg(theme::GREY_LIGHT)
                 .render(target);
