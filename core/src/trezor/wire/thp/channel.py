@@ -411,11 +411,6 @@ class Channel:
 
         return await self.write_encrypted_payload(ENCRYPTED, buffer[:payload_length])
 
-    def write_handshake_message(
-        self, ctrl_byte: int, payload: AnyBytes
-    ) -> Awaitable[None]:
-        return self.write_encrypted_payload(ctrl_byte, payload)
-
     async def write_encrypted_payload(self, ctrl_byte: int, payload: AnyBytes) -> None:
         ack_latency_ms = self.channel_cache.get_int(CHANNEL_ACK_LATENCY_MS) or 0
         if __debug__:
