@@ -37,6 +37,8 @@
 #include "cash_addr.h"
 #endif
 
+#define MAX_MULTISIG_PUBKEY_COUNT 15
+
 uint32_t ser_length(uint32_t len, uint8_t *out) {
   if (len < 253) {
     out[0] = len & 0xFF;
@@ -378,7 +380,7 @@ uint32_t cryptoMultisigPubkeys(const CoinInfo *coin,
                                const MultisigRedeemScriptType *multisig,
                                uint8_t *pubkeys) {
   const uint32_t n = cryptoMultisigPubkeyCount(multisig);
-  if (n < 1 || n > 15) {
+  if (n < 1 || n > MAX_MULTISIG_PUBKEY_COUNT) {
     return 0;
   }
 
@@ -401,13 +403,12 @@ uint32_t cryptoMultisigPubkeys(const CoinInfo *coin,
 int cryptoMultisigPubkeyIndex(const CoinInfo *coin,
                               const MultisigRedeemScriptType *multisig,
                               const uint8_t *pubkey) {
-  uint32_t n = cryptoMultisigPubkeyCount(multisig);
-
-  uint8_t pubkeys[33 * n];
+  uint8_t pubkeys[33 * MAX_MULTISIG_PUBKEY_COUNT];
   if (!cryptoMultisigPubkeys(coin, multisig, pubkeys)) {
     return -1;
   }
 
+  uint32_t n = cryptoMultisigPubkeyCount(multisig);
   for (size_t i = 0; i < n; i++) {
     if (memcmp(pubkeys + i * 33, pubkey, 33) == 0) {
       return i;
@@ -436,12 +437,12 @@ static int comparePubnodesLexicographically(const void *first,
 
 int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig,
                               uint8_t *hash) {
-  static const HDNodeType *pubnodes[15];
+  static const HDNodeType *pubnodes[MAX_MULTISIG_PUBKEY_COUNT];
   const uint32_t n = cryptoMultisigPubkeyCount(multisig);
-  if (n < 1 || n > 15) {
+  if (n < 1 || n > MAX_MULTISIG_PUBKEY_COUNT) {
     return 0;
   }
-  if (multisig->m < 1 || multisig->m > 15) {
+  if (multisig->m < 1 || multisig->m > MAX_MULTISIG_PUBKEY_COUNT) {
     return 0;
   }
   for (uint32_t i = 0; i < n; i++) {
