@@ -300,7 +300,7 @@ void layoutProgressSwipe(const char *desc, int permil) {
 }
 
 void layoutScreensaver(void) {
-  if (system_millis_busy_deadline > timer_ms()) {
+  if (trezor_is_busy()) {
     // Busy screen overrides the screensaver.
     layoutBusyscreen();
   } else {
@@ -316,7 +316,7 @@ void layoutHome(void) {
     system_millis_lock_start = timer_ms();
   }
 
-  if (system_millis_busy_deadline > timer_ms()) {
+  if (trezor_is_busy()) {
     layoutBusyscreen();
   } else {
     layoutHomescreen();
