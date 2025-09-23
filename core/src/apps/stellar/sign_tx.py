@@ -30,6 +30,7 @@ async def sign_tx(msg: StellarSignTx, keychain: Slip21Keychain) -> StellarSigned
         StellarTxOpRequest,
     )
     from trezor.ui.layouts import show_continue_in_app
+    from trezor.ui.layouts.progress import progress
     from trezor.wire import DataError, ProcessError
     from trezor.wire.context import call_any
 
@@ -121,8 +122,10 @@ async def sign_tx(msg: StellarSignTx, keychain: Slip21Keychain) -> StellarSigned
     output_address = None
     output_asset = None
 
+    progress_obj = progress(indeterminate=True)
     writers.write_uint32(w, num_operations)
-    for _ in range(num_operations):
+    for i in range(num_operations):
+        progress_obj.report(int(i / num_operations * 900))
         op = await call_any(StellarTxOpRequest(), *consts.op_codes.keys())
 
         # Note: in case of payment requests we don't confirm each operation individually
@@ -155,6 +158,7 @@ async def sign_tx(msg: StellarSignTx, keychain: Slip21Keychain) -> StellarSigned
                     output_asset = op.asset
 
             current_output_index += 1
+    progress_obj.stop()
 
     # ---------------------------------
     # FINAL
