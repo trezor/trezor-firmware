@@ -53,6 +53,7 @@ secbool secret_key_tropic_public(curve25519_key dest);
 secbool secret_key_tropic_pairing_unprivileged(curve25519_key dest);
 secbool secret_key_tropic_pairing_privileged(curve25519_key dest);
 secbool secret_key_tropic_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
+secbool secret_key_is_privileged_accessible(void);
 
 #endif  // USE_TROPIC
 
