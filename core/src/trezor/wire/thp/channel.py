@@ -386,6 +386,8 @@ class Channel:
         msg: protobuf.MessageType,
         session_id: int = 0,
     ) -> None:
+        assert ABP.is_sending_allowed(self.channel_cache)
+
         if __debug__:
             self._log(
                 f"write message: {msg.MESSAGE_NAME}",
