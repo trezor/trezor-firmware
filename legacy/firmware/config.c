@@ -815,7 +815,7 @@ bool config_containsMnemonic(const char *mnemonic) {
 }
 
 /* Check whether pin matches storage.  The pin must be
- * a null-terminated string with at most 9 characters.
+ * a null-terminated string with at most 50 characters.
  */
 bool config_unlock(const char *pin) {
   char oldTiny = usbTiny(1);

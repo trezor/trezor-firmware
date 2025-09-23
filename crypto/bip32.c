@@ -204,6 +204,10 @@ int hdnode_private_ckd_bip32(HDNode *inout, uint32_t i) {
   }
 #endif
 
+  if (inout->depth == UINT32_MAX) {
+    return 0;
+  }
+
   if (i & 0x80000000) {  // private derivation
     data[0] = 0;
     memcpy(data + 1, inout->private_key, 32);
@@ -286,6 +290,10 @@ int hdnode_public_ckd(HDNode *inout, uint32_t i) {
     // SLIP-10 doesn't support public key to public key derivation for
     // curve25519 and ed25519, Cardano BIP32-ed22519 public key to public key
     // derivation is not implemented
+    return 0;
+  }
+
+  if (inout->depth == UINT32_MAX) {
     return 0;
   }
 

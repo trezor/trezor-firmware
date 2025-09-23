@@ -581,11 +581,18 @@ static bool formatComputedFeeRate(uint64_t fee, uint64_t tx_weight,
   // Compute fee rate and modify it in place for the bn_format_amount()
   // function. We multiply by 100, because we want bn_format_amount() to display
   // two decimal digits.
-  uint64_t fee_rate_multiplied = div_round(100 * fee, tx_size);
+  int decimals = 2;
+  int multiplier = 100;
+  if (fee > (UINT64_MAX / multiplier)) {
+    // Value overflow. Omit the decimal digits.
+    decimals = 0;
+    multiplier = 1;
+  }
+  uint64_t fee_rate_multiplied = div_round(multiplier * fee, tx_size);
 
-  size_t length =
-      bn_format_amount(fee_rate_multiplied, parentheses ? "(" : NULL,
-                       segwit ? " sat/vB" : " sat/B", 2, output, output_length);
+  size_t length = bn_format_amount(
+      fee_rate_multiplied, parentheses ? "(" : NULL,
+      segwit ? " sat/vB" : " sat/B", decimals, output, output_length);
   if (length == 0) {
     return false;
   }

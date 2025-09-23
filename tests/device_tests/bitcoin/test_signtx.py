@@ -732,6 +732,47 @@ def test_fee_high_hardfail(session: Session):
     )
 
 
+@pytest.mark.models("legacy")
+def test_fee_rate_overflow(session: Session):
+    # Adds a UI fixture for a transaction that used to cause a fee rate overflow on T1.
+    inp1 = messages.TxInputType(
+        # tb1pn2d0yjeedavnkd8z8lhm566p0f2utm3lgvxrsdehnl94y34txmts5s7t4c
+        address_n=parse_path("m/86h/1h/0h/1/0"),
+        amount=185_000_000_000_000_000,
+        prev_hash=TXHASH_ec5194,
+        prev_index=0,
+        script_type=messages.InputScriptType.SPENDTAPROOT,
+    )
+    out1 = messages.TxOutputType(
+        # 86'/1'/1'/0/0
+        address="tb1paxhjl357yzctuf3fe58fcdx6nul026hhh6kyldpfsf3tckj9a3wslqd7zd",
+        amount=100_000_000,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+    with session.client as client:
+        client.set_expected_responses(
+            [
+                request_input(0),
+                request_output(0),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
+                messages.ButtonRequest(code=B.FeeOverThreshold),
+                messages.ButtonRequest(code=B.SignTx),
+                request_input(0),
+                request_output(0),
+                request_input(0),
+                request_finished(),
+            ]
+        )
+        btc.sign_tx(
+            session,
+            "Testnet",
+            [inp1],
+            [out1],
+            prev_txes=TX_CACHE_TESTNET,
+        )
+
+
 def test_not_enough_funds(session: Session):
     # input tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
 
