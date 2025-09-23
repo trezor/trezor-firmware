@@ -92,7 +92,7 @@ async def sign_tx(
     )
 
     progress_obj = progress(title=TR.progress__signing_transaction)
-    progress_obj.report(30)
+    progress_obj.report(100)
 
     # sign
     data = bytearray()
@@ -116,12 +116,16 @@ async def sign_tx(
         rlp.write_header(sha, data_total, rlp.STRING_HEADER_BYTE, data)
         sha.extend(data)
 
-    progress_obj.report(60)
+    progress_obj.report(500)
 
+    initial_data_left = data_left
     while data_left > 0:
         resp = await send_request_chunk(data_left)
         data_left -= len(resp.data_chunk)
         sha.extend(resp.data_chunk)
+        progress_obj.report(
+            500 + int((initial_data_left - data_left) / initial_data_left * 400)
+        )
 
     # eip 155 replay protection
     rlp.write(sha, msg.chain_id)
@@ -390,7 +394,6 @@ async def send_request_chunk(data_left: int) -> EthereumTxAck:
     from trezor.messages import EthereumTxAck
     from trezor.wire.context import call
 
-    # TODO: layoutProgress ?
     req = EthereumTxRequest()
     req.data_length = min(data_left, 1024)
     return await call(req, EthereumTxAck)
