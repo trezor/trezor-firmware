@@ -342,7 +342,7 @@ impl FontInfo {
                     // Another character would not fit => split at the previous word boundary
                     return &text[0..prev_word_boundary];
                 }
-                if c == ' ' || c == ':' {
+                if c == ' ' || c == ':' || c == '-' {
                     prev_word_boundary = i;
                 }
                 text_width += c_width;
