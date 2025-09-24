@@ -26,7 +26,13 @@ from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import SessionDebugWrapper as Session
 
 from ..common import TEST_ADDRESS_N
-from .common import CommonPass, PassphraseCategory, get_char_category
+from .common import (  # KEYBOARD_CATEGORY,
+    CommonPass,
+    KeyboardCategory,
+    delete_char,
+    go_to_category,
+    press_char,
+)
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink
@@ -35,25 +41,6 @@ if TYPE_CHECKING:
 
 
 pytestmark = pytest.mark.models("t2t1", "delizia", "eckhart")
-
-KEYBOARD_CATEGORIES_BOLT = [
-    PassphraseCategory.Numeric,
-    PassphraseCategory.LettersLower,
-    PassphraseCategory.LettersUpper,
-    PassphraseCategory.Special,
-]
-
-# Common for Delizia and Eckhart
-KEYBOARD_CATEGORIES_DE = [
-    PassphraseCategory.LettersLower,
-    PassphraseCategory.LettersUpper,
-    PassphraseCategory.Numeric,
-    PassphraseCategory.Special,
-]
-
-# TODO: better read this from the trace
-KEYBOARD_CATEGORY = PassphraseCategory.LettersLower
-COORDS_PREV: tuple[int, int] = (0, 0)
 
 # Testing the maximum length is really 50
 
@@ -94,10 +81,6 @@ def prepare_passphrase_dialogue(
     device_handler.get_session(passphrase=PASSPHRASE_ON_DEVICE)
     debug.synchronize_at(["PassphraseKeyboard", "StringKeyboard"])
 
-    # Resetting the category as it could have been changed by previous tests
-    global KEYBOARD_CATEGORY
-    KEYBOARD_CATEGORY = PassphraseCategory.LettersLower  # type: ignore
-
     yield debug
     session = device_handler.result()
 
@@ -105,83 +88,6 @@ def prepare_passphrase_dialogue(
     result = device_handler.result()
     if address is not None:
         assert result == address
-
-
-def keyboard_categories(layout_type: LayoutType) -> list[PassphraseCategory]:
-    if layout_type is LayoutType.Bolt:
-        return KEYBOARD_CATEGORIES_BOLT
-    elif layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
-        return KEYBOARD_CATEGORIES_DE
-    else:
-        raise ValueError("Wrong layout type")
-
-
-def go_to_category(
-    debug: "DebugLink", category: PassphraseCategory, verify_layout: bool = False
-) -> None:
-    """
-    Go to a specific category on the passphrase keyboard.
-
-    Navigates through the on-screen categories by swiping left or right
-    until the desired category is reached. If `verify_layout` is set to True,
-    the function will assert that the category change has been correctly applied
-    by reading and validating the current layout from the debug interface.
-    """
-    global KEYBOARD_CATEGORY
-    global COORDS_PREV
-
-    # Already there
-    if KEYBOARD_CATEGORY == category:
-        return
-
-    current_index = keyboard_categories(debug.layout_type).index(KEYBOARD_CATEGORY)
-    target_index = keyboard_categories(debug.layout_type).index(category)
-    if target_index > current_index:
-        for _ in range(target_index - current_index):
-            debug.swipe_left()
-    else:
-        for _ in range(current_index - target_index):
-            debug.swipe_right()
-    if verify_layout:
-        layout = debug.read_layout().find_unique_value_by_key(
-            "active_layout", default="", only_type=str
-        )
-        # do the check if Rust debug string exists
-        if layout:
-            assert (
-                layout in PassphraseCategory.__members__
-            ), f"Unknown layout name from debug: {layout}"
-            assert (
-                PassphraseCategory[layout] == category
-            ), f"Layout mismatch: expected {category}, got {PassphraseCategory[layout]}"
-
-    KEYBOARD_CATEGORY = category  # type: ignore
-    # Category changed, reset coordinates
-    COORDS_PREV = (0, 0)  # type: ignore
-
-
-def press_char(debug: "DebugLink", char: str) -> None:
-    """Press a character"""
-    global COORDS_PREV
-
-    # Space and couple others are a special case
-    if char in " *#":
-        char_category = PassphraseCategory.LettersLower
-    else:
-        char_category = get_char_category(char)
-
-    go_to_category(debug, char_category)
-
-    coords, amount = debug.button_actions.passphrase(char)
-    # If the button is the same as for the previous char,
-    # waiting a second before pressing it again.
-    # (not for a space in Bolt layout)
-    is_bolt_space = debug.layout_type is LayoutType.Bolt and char == " "
-    if coords == COORDS_PREV and not is_bolt_space:
-        time.sleep(1.1)
-    COORDS_PREV = coords  # type: ignore
-    for _ in range(amount):
-        debug.click(coords)
 
 
 def input_passphrase(debug: "DebugLink", passphrase: str, check: bool = True) -> None:
@@ -201,11 +107,6 @@ def enter_passphrase(debug: "DebugLink") -> None:
     debug.click(debug.screen_buttons.passphrase_confirm())
     if is_empty and debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
         debug.click(debug.screen_buttons.ui_yes())
-
-
-def delete_char(debug: "DebugLink") -> None:
-    """Deletes the last char"""
-    debug.click(debug.screen_buttons.pin_passphrase_erase())
 
 
 VECTORS = (  # passphrase, address
@@ -267,10 +168,10 @@ def test_passphrase_delete_all(
 def test_passphrase_loop_all_characters(device_handler: "BackgroundDeviceHandler"):
     with prepare_passphrase_dialogue(device_handler, CommonPass.EMPTY_ADDRESS) as debug:
         for category in (
-            PassphraseCategory.Numeric,
-            PassphraseCategory.LettersLower,
-            PassphraseCategory.LettersUpper,
-            PassphraseCategory.Special,
+            KeyboardCategory.Numeric,
+            KeyboardCategory.LettersLower,
+            KeyboardCategory.LettersUpper,
+            KeyboardCategory.Special,
         ):
             go_to_category(debug, category, True)
         if debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):

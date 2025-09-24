@@ -1127,6 +1127,11 @@ impl crate::trace::Trace for DeviceMenuScreen {
         match self.active_screen.deref() {
             ActiveScreen::Menu(ref screen, ..) => {
                 t.child("Menu", screen);
+                if let Subscreen::Submenu(_, id) =
+                    self.subscreens[usize::from(self.active_subscreen)]
+                {
+                    t.int("MenuId", u8::from(id).into());
+                }
             }
             ActiveScreen::Device(ref screen) => {
                 t.child("Device", screen);

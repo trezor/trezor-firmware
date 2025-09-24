@@ -234,7 +234,16 @@ impl crate::trace::Trace for Header {
         t.component("Header");
         t.child("title", &self.title);
         if let Some(button) = &self.right_button {
-            t.child("button", button);
+            t.child("right_button", button);
+        }
+        if let Some(button) = &self.left_button {
+            t.child("left_button", button);
+        }
+        if let Some(icon) = &self.icon {
+            t.string("icon", icon.name.into());
+        }
+        if let Some(fuel_gauge) = &self.fuel_gauge {
+            t.child("fuel_gauge", fuel_gauge);
         }
     }
 }

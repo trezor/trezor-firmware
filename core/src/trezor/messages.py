@@ -2088,6 +2088,7 @@ if TYPE_CHECKING:
         soc: "int | None"
         firmware_corrupted: "bool | None"
         auto_lock_delay_battery_ms: "int | None"
+        led: "bool | None"
 
         def __init__(
             self,
@@ -2146,6 +2147,7 @@ if TYPE_CHECKING:
             soc: "int | None" = None,
             firmware_corrupted: "bool | None" = None,
             auto_lock_delay_battery_ms: "int | None" = None,
+            led: "bool | None" = None,
         ) -> None:
             pass
 

@@ -49,6 +49,36 @@ const KEYBOARD: [[&str; KEY_COUNT]; PAGE_COUNT] = [
     ["_<>", ".:@", "/|\\", "!()", "+%&", "-[]", "?{}", ",'`", ";\"~", "$^="],
     ];
 
+/// Enum keeping track of which keyboard is shown and which comes next. Keep the
+/// number of values and the constant PAGE_COUNT in sync.
+#[repr(u32)]
+#[derive(Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "ui_debug", derive(ufmt::derive::uDebug))]
+pub(crate) enum KeyboardLayout {
+    Numeric = 0,
+    LettersLower = 1,
+    LettersUpper = 2,
+    Special = 3,
+}
+
+impl KeyboardLayout {
+    /// Number of variants (kept in sync with the enum by using the last
+    /// discriminant).
+    pub const VARIANT_COUNT: usize = KeyboardLayout::Special as usize + 1;
+
+    /// Map page index -> layout (bounds must be valid).
+    pub const fn from_page_unchecked(page: usize) -> Self {
+        // Order must match KEYBOARD rows.
+        const MAP: [KeyboardLayout; KeyboardLayout::VARIANT_COUNT] = [
+            KeyboardLayout::Numeric,
+            KeyboardLayout::LettersLower,
+            KeyboardLayout::LettersUpper,
+            KeyboardLayout::Special,
+        ];
+        MAP[page]
+    }
+}
+
 const INPUT_AREA_HEIGHT: i16 = ScrollBar::DOT_SIZE + 9;
 
 impl PassphraseKeyboard {
@@ -377,7 +407,11 @@ impl Component for Input {
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for PassphraseKeyboard {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        let page = self.scrollbar.pager().current();
+        debug_assert!(page < PAGE_COUNT as u16);
+        let active_layout = uformat!("{:?}", KeyboardLayout::from_page_unchecked(page.into()));
         t.component("PassphraseKeyboard");
+        t.string("active_layout", active_layout.as_str().into());
         t.string("passphrase", self.passphrase().into());
     }
 }
