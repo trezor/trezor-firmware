@@ -325,6 +325,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_erase;
   MP_QSTR_erase_bonds;
   MP_QSTR_error;
+  MP_QSTR_evolu__enable_labeling_header;
+  MP_QSTR_evolu__enable_labeling_message;
   MP_QSTR_experimental_mode__enable;
   MP_QSTR_experimental_mode__only_for_dev;
   MP_QSTR_experimental_mode__title;

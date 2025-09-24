@@ -1550,6 +1550,8 @@ pub enum TranslatedString {
     homescreen__backup_needed_info = 1160,  // "Open Trezor Suite and create a wallet backup. This is the only way to recover access to your assets."
     ble__host_info = 1161,  // "Host info"
     ble__mac_address = 1162,  // "MAC address"
+    evolu__enable_labeling_header = 1163,  // "Enable Labeling"
+    evolu__enable_labeling_message = 1164,  // "Do you really want to enable labeling on this Suite?"
 }
 
 impl TranslatedString {
@@ -3531,9 +3533,6 @@ impl TranslatedString {
             (Self::wipe_code__cancel_setup, "Cancel wipe code setup"),
             #[cfg(feature = "layout_eckhart")]
             (Self::wipe_code__cancel_setup, "Cancel wipe code setup?"),
-            (Self::homescreen__backup_needed_info, "Open Trezor Suite and create a wallet backup. This is the only way to recover access to your assets."),
-            (Self::ble__host_info, "Host info"),
-            (Self::ble__mac_address, "MAC address"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4115,6 +4114,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__unknown_token, Self::ethereum__unknown_token),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__valid_signature, Self::ethereum__valid_signature),
+        (Qstr::MP_QSTR_evolu__enable_labeling_header, Self::evolu__enable_labeling_header),
+        (Qstr::MP_QSTR_evolu__enable_labeling_message, Self::evolu__enable_labeling_message),
         (Qstr::MP_QSTR_experimental_mode__enable, Self::experimental_mode__enable),
         (Qstr::MP_QSTR_experimental_mode__only_for_dev, Self::experimental_mode__only_for_dev),
         (Qstr::MP_QSTR_experimental_mode__title, Self::experimental_mode__title),

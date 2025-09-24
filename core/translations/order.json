@@ -1161,5 +1161,7 @@
   "1159": "wipe_code__cancel_setup",
   "1160": "homescreen__backup_needed_info",
   "1161": "ble__host_info",
-  "1162": "ble__mac_address"
+  "1162": "ble__mac_address",
+  "1163": "evolu__enable_labeling_header",
+  "1164": "evolu__enable_labeling_message"
 }
