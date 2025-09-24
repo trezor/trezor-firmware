@@ -3533,6 +3533,11 @@ impl TranslatedString {
             (Self::wipe_code__cancel_setup, "Cancel wipe code setup"),
             #[cfg(feature = "layout_eckhart")]
             (Self::wipe_code__cancel_setup, "Cancel wipe code setup?"),
+            (Self::homescreen__backup_needed_info, "Open Trezor Suite and create a wallet backup. This is the only way to recover access to your assets."),
+            (Self::ble__host_info, "Host info"),
+            (Self::ble__mac_address, "MAC address"),
+            (Self::evolu__enable_labeling_header, "Enable Labeling"),
+            (Self::evolu__enable_labeling_message, "Do you really want to enable labeling on this Suite?"),
     ];
 
     #[cfg(feature = "micropython")]
