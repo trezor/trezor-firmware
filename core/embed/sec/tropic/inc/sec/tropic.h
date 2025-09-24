@@ -21,6 +21,8 @@
 
 #include <trezor_types.h>
 
+#include "ed25519-donna/ed25519.h"
+
 // FIDO attestation key and certificate.
 #define TROPIC_FIDO_CERT_FIRST_SLOT 0
 #define TROPIC_FIDO_CERT_SLOT_COUNT 3
@@ -54,6 +56,8 @@ lt_handle_t* tropic_get_handle(void);
 #endif
 
 #endif
+
+void tropic_get_factory_privkey(curve25519_key privkey);
 
 bool tropic_ping(const uint8_t* msg_out, uint8_t* msg_in, uint16_t msg_len);
 
