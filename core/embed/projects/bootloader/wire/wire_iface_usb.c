@@ -82,6 +82,7 @@ wire_iface_t* usb_iface_init(secbool usb21_landing) {
   iface->read = &usb_read;
   iface->error = &usb_error;
   iface->initialized = true;
+  iface->wireless = false;
 
   return iface;
 }

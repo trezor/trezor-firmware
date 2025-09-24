@@ -395,7 +395,12 @@ impl BootloaderUI for UIDelizia {
         )
     }
 
-    fn screen_install_progress(progress: u16, initialize: bool, initial_setup: bool) {
+    fn screen_install_progress(
+        progress: u16,
+        initialize: bool,
+        initial_setup: bool,
+        _wireless: bool,
+    ) {
         let bg_color = if initial_setup { WELCOME_COLOR } else { BLD_BG };
         let fg_color = if initial_setup { GREEN_LIGHT } else { BLD_FG };
         let icon_color = BLD_FG;

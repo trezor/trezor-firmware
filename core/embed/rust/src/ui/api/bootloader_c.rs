@@ -172,8 +172,13 @@ extern "C" fn screen_wipe_progress(progress: u16, initialize: bool) {
 }
 
 #[no_mangle]
-extern "C" fn screen_install_progress(progress: u16, initialize: bool, initial_setup: bool) {
-    ModelUI::screen_install_progress(progress, initialize, initial_setup)
+extern "C" fn screen_install_progress(
+    progress: u16,
+    initialize: bool,
+    initial_setup: bool,
+    wireless: bool,
+) {
+    ModelUI::screen_install_progress(progress, initialize, initial_setup, wireless)
 }
 
 #[no_mangle]

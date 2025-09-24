@@ -103,6 +103,7 @@ wire_iface_t* ble_iface_init(void) {
   iface->write = &ble_write_;
   iface->read = &ble_read_;
   iface->error = &ble_error;
+  iface->wireless = true;
 
   ble_start();
 

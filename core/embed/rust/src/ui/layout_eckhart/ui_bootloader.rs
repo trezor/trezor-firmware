@@ -40,7 +40,11 @@ const RESTART_MESSAGE: &str = "Restart";
 
 const SCREEN: Rect = UIEckhart::SCREEN;
 const PROGRESS_TEXT_ORIGIN: Point = SCREEN.top_left().ofs(Offset::new(theme::PADDING, 38));
-const PROGRESS_WAIT_ORIGIN: Point = SCREEN.bottom_center().ofs(Offset::new(0, -35));
+const PROGRESS_WAIT_HEIGHT: i16 = 70;
+const PROGRESS_WAIT_ORIGIN: Point = SCREEN
+    .bottom_left()
+    .ofs(Offset::new(0, -PROGRESS_WAIT_HEIGHT));
+
 const SCREEN_BORDER_BLUE: ScreenBorder = ScreenBorder::new(BLUE);
 const SCREEN_BORDER_RED: ScreenBorder = ScreenBorder::new(RED);
 const SCREEN_BORDER_GREEN_LIGHT: ScreenBorder = ScreenBorder::new(GREEN_LIGHT);
@@ -59,6 +63,8 @@ impl UIEckhart {
         display::sync();
 
         let mut label = Label::new(text.into(), Alignment::Start, TEXT_NORMAL);
+        let mut wait_msg =
+            Label::new(wait_msg.into(), Alignment::Center, TEXT_SMALL_GREY).vertically_centered();
         render_on_display(None, Some(BLD_BG), |target| {
             render_loader(loader_progress, border, target);
 
@@ -71,10 +77,11 @@ impl UIEckhart {
             ));
             label.render(target);
 
-            shape::Text::new(PROGRESS_WAIT_ORIGIN, wait_msg, FONT_SATOSHI_MEDIUM_26)
-                .with_align(Alignment::Center)
-                .with_fg(GREY)
-                .render(target);
+            wait_msg.place(Rect::from_top_left_and_size(
+                PROGRESS_WAIT_ORIGIN,
+                Offset::new(SCREEN.width(), PROGRESS_WAIT_HEIGHT),
+            ));
+            wait_msg.render(target);
         });
 
         display::refresh();
@@ -390,19 +397,25 @@ impl BootloaderUI for UIEckhart {
         )
     }
 
-    fn screen_install_progress(progress: u16, initialize: bool, initial_setup: bool) {
+    fn screen_install_progress(
+        progress: u16,
+        initialize: bool,
+        initial_setup: bool,
+        wireless: bool,
+    ) {
         let border = if initial_setup {
             &SCREEN_BORDER_GREEN_LIGHT
         } else {
             &SCREEN_BORDER_BLUE
         };
-        Self::screen_progress(
-            "Installing\nfirmware...",
-            WAIT_MESSAGE,
-            initialize,
-            progress,
-            border,
-        )
+
+        let msg = if wireless {
+            "Keep your Trezor close to\nthe host device"
+        } else {
+            "Do not disconnect\nyour Trezor"
+        };
+
+        Self::screen_progress("Installing\nfirmware...", msg, initialize, progress, border)
     }
 
     fn screen_wipe_success() {

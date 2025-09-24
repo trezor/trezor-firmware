@@ -314,7 +314,12 @@ impl BootloaderUI for UICaesar {
         );
     }
 
-    fn screen_install_progress(progress: u16, initialize: bool, _initial_setup: bool) {
+    fn screen_install_progress(
+        progress: u16,
+        initialize: bool,
+        _initial_setup: bool,
+        _wireless: bool,
+    ) {
         Self::screen_progress(
             "Installing",
             "firmware",
