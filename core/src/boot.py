@@ -131,8 +131,8 @@ translations.init()
 if utils.USE_POWER_MANAGER:
     boot_power_manager()
 
-if __debug__ and not utils.EMULATOR:
-    config.wipe()
+# if __debug__ and not utils.EMULATOR:
+#     config.wipe()
 
 loop.schedule(bootscreen())
 loop.run()
