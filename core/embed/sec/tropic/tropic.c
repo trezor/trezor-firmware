@@ -48,6 +48,11 @@ typedef struct {
 
 static tropic_driver_t g_tropic_driver = {0};
 
+#if !PRODUCTION
+static bool tropic_get_tropic_pubkey(lt_handle_t *handle,
+                                     curve25519_key pubkey);
+#endif
+
 bool tropic_init(void) {
   tropic_driver_t *drv = &g_tropic_driver;
 
@@ -65,6 +70,10 @@ bool tropic_init(void) {
     goto cleanup;
   }
 
+  // Note: Without the delay below Tropic01 may return LT_L1_CHIP_BUSY. The
+  // length was chosen arbitrarily. A shorter delay may be sufficient.
+  hal_delay(100);
+
 #ifdef TREZOR_EMULATOR
   pkey_index_t pairing_key_slot = TROPIC_FACTORY_PAIRING_KEY_SLOT;
 #else
@@ -80,13 +89,29 @@ bool tropic_init(void) {
 
   curve25519_key tropic_pubkey = {0};
   secbool pubkey_ok = secret_key_tropic_public(tropic_pubkey);
+
+#if !PRODUCTION
+  // Allow running with default factory keys in non-production fw
+  if (privkey_ok != sectrue) {
+    static const curve25519_key factory_private = {
+        0x28, 0x3f, 0x5a, 0x0f, 0xfc, 0x41, 0xcf, 0x50, 0x98, 0xa8, 0xe1,
+        0x7d, 0xb6, 0x37, 0x2c, 0x3c, 0xaa, 0xd1, 0xee, 0xee, 0xdf, 0x0f,
+        0x75, 0xbc, 0x3f, 0xbf, 0xcd, 0x9c, 0xab, 0x3d, 0xe9, 0x72};
+
+    pairing_key_slot = TROPIC_FACTORY_PAIRING_KEY_SLOT;
+    memcpy(trezor_privkey, factory_private, sizeof(trezor_privkey));
+    privkey_ok = sectrue;
+  }
+
+  if (pubkey_ok != sectrue) {
+    pubkey_ok = tropic_get_tropic_pubkey(&drv->handle, tropic_pubkey) * sectrue;
+  }
+#endif
+
   if (pubkey_ok == sectrue && privkey_ok == sectrue) {
     curve25519_key trezor_pubkey = {0};
     curve25519_scalarmult_basepoint(trezor_pubkey, trezor_privkey);
 
-    // Note: Without the delay below Tropic01 may return LT_L1_CHIP_BUSY. The
-    // length was chosen arbitrarily. A shorter delay may be sufficient.
-    hal_delay(100);
     lt_ret_t ret =
         lt_session_start(&drv->handle, tropic_pubkey, pairing_key_slot,
                          trezor_privkey, trezor_pubkey);
@@ -183,6 +208,33 @@ bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
   lt_ret_t res = lt_r_mem_data_read(&drv->handle, udata_slot, data, size);
   return res == LT_OK;
 }
+
+#if !PRODUCTION
+static bool tropic_get_tropic_pubkey(lt_handle_t *handle,
+                                     curve25519_key pubkey) {
+  uint8_t buffer[LT_NUM_CERTIFICATES * LT_L2_GET_INFO_REQ_CERT_SIZE_SINGLE];
+
+  struct lt_cert_store_t cert_store = {0};
+  for (size_t i = 0; i < LT_NUM_CERTIFICATES; i++) {
+    cert_store.certs[i] = &buffer[i * LT_L2_GET_INFO_REQ_CERT_SIZE_SINGLE];
+    cert_store.buf_len[i] = LT_L2_GET_INFO_REQ_CERT_SIZE_SINGLE;
+  }
+
+  lt_ret_t ret = LT_FAIL;
+
+  ret = lt_get_info_cert_store(handle, &cert_store);
+  if (ret != LT_OK) {
+    return false;
+  }
+
+  ret = lt_get_st_pub(&cert_store, pubkey, sizeof(curve25519_key));
+  if (ret != LT_OK) {
+    return false;
+  }
+
+  return true;
+}
+#endif  // !PRODUCTION
 
 #endif  // SECURE_MODE
 
