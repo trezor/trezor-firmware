@@ -54,7 +54,7 @@ void storage_salt_get(storage_salt_t* salt) {
   salt->size = SECRET_KEY_STORAGE_SALT_SIZE;
 }
 
-#else
+#else  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
 
 // Legacy entropy generated from CPUID & radnom data in OTP
 void storage_salt_get(storage_salt_t* salt) {
@@ -86,6 +86,24 @@ void storage_salt_get(storage_salt_t* salt) {
   salt->size = 12 + FLASH_OTP_BLOCK_SIZE;
 }
 
-#endif
+
+void delegated_salt_get(delegated_salt_t* salt) {
+
+  // set entropy in the OTP randomness block
+  if (secfalse == flash_otp_is_locked(FLASH_OTP_BLOCK_DELEGATED_IDENTITY)) {
+    uint8_t rnd_bytes[FLASH_OTP_BLOCK_SIZE];
+    random_buffer(rnd_bytes, FLASH_OTP_BLOCK_SIZE);
+    ensure(flash_otp_write(FLASH_OTP_BLOCK_DELEGATED_IDENTITY, 0, rnd_bytes,
+                           FLASH_OTP_BLOCK_SIZE),
+           NULL);
+  }
+  ensure(flash_otp_read(FLASH_OTP_BLOCK_DELEGATED_IDENTITY, 0, &salt->bytes[0],
+                        FLASH_OTP_BLOCK_SIZE),
+         NULL);
+
+  salt->size = FLASH_OTP_BLOCK_SIZE;
+}
+
+#endif  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
 
 #endif  // SECURE_MODE

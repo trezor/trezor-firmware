@@ -31,3 +31,9 @@ void storage_salt_get(storage_salt_t* salt) {
   salt->size = 32 + 12;  // Legacy
 #endif
 }
+
+
+void delegated_salt_get(delegated_salt_t* salt) {
+  memset(salt, 0, sizeof(*salt));
+  salt->size = 32;
+}

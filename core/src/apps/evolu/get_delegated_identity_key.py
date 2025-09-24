@@ -12,8 +12,8 @@ async def get_delegated_identity_key(
     from trezor.ui.layouts import confirm_action
     from trezor.utils import bootloader_locked
 
-    if not bootloader_locked():
-        raise wire.ProcessError("Cannot enable labeling since bootloader is unlocked.")
+    # if not bootloader_locked():
+    #     raise wire.ProcessError("Cannot enable labeling since bootloader is unlocked.")
 
     if not utils.USE_OPTIGA:
         raise RuntimeError("Optiga is not available")
@@ -22,7 +22,6 @@ async def get_delegated_identity_key(
         "enable_labeling",
         TR.evolu__enable_labeling_header,
         TR.evolu__enable_labeling_message,
-        prompt_screen=True,
     )
 
     private_key = get_delegated_private_key()
