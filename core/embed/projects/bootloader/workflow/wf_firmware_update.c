@@ -43,6 +43,8 @@
 #include "emulator.h"
 #endif
 
+#define MESSAGE_RX_TIMEOUT 10000
+
 typedef enum {
   UPLOAD_OK = 0,
   UPLOAD_IN_PROGRESS = 1,
@@ -635,6 +637,8 @@ workflow_result_t workflow_firmware_update(protob_io_t *iface) {
 
   upload_status_t s = UPLOAD_IN_PROGRESS;
 
+  uint32_t msg_deadline = ticks_timeout(MESSAGE_RX_TIMEOUT);
+
   while (true) {
     sysevents_t awaited = {0};
     sysevents_t signalled = {0};
@@ -644,6 +648,11 @@ workflow_result_t workflow_firmware_update(protob_io_t *iface) {
     sysevents_poll(&awaited, &signalled, ticks_timeout(100));
 
     if (awaited.read_ready != signalled.read_ready) {
+      if (ticks_expired(msg_deadline)) {
+        // timeout
+        ui_screen_fail();
+        return WF_ERROR;
+      }
       continue;
     }
 
@@ -654,6 +663,8 @@ workflow_result_t workflow_firmware_update(protob_io_t *iface) {
       return WF_ERROR;
     }
     s = process_msg_FirmwareUpload(iface, &ctx);
+
+    msg_deadline = ticks_timeout(MESSAGE_RX_TIMEOUT);
 
     if (s < 0 && s != UPLOAD_ERR_USER_ABORT) {  // error, but not user abort
       if (s == UPLOAD_ERR_BOOTLOADER_LOCKED) {
