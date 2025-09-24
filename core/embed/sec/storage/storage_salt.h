@@ -44,3 +44,18 @@ typedef struct {
  * @param salt structure filled with the generated data.
  */
 void storage_salt_get(storage_salt_t* salt);
+
+
+
+
+
+
+#define DELEGATED_SALT_MAX_SIZE 32
+
+typedef struct {
+  size_t size;
+  uint8_t bytes[DELEGATED_SALT_MAX_SIZE];
+} delegated_salt_t;
+
+
+void delegated_salt_get(delegated_salt_t* salt);
