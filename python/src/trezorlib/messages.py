@@ -3241,6 +3241,7 @@ class Features(protobuf.MessageType):
         55: protobuf.Field("soc", "uint32", repeated=False, required=False, default=None),
         56: protobuf.Field("firmware_corrupted", "bool", repeated=False, required=False, default=None),
         57: protobuf.Field("auto_lock_delay_battery_ms", "uint32", repeated=False, required=False, default=None),
+        58: protobuf.Field("led", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3301,6 +3302,7 @@ class Features(protobuf.MessageType):
         soc: Optional["int"] = None,
         firmware_corrupted: Optional["bool"] = None,
         auto_lock_delay_battery_ms: Optional["int"] = None,
+        led: Optional["bool"] = None,
     ) -> None:
         self.capabilities: Sequence["Capability"] = capabilities if capabilities is not None else []
         self.major_version = major_version
@@ -3357,6 +3359,7 @@ class Features(protobuf.MessageType):
         self.soc = soc
         self.firmware_corrupted = firmware_corrupted
         self.auto_lock_delay_battery_ms = auto_lock_delay_battery_ms
+        self.led = led
 
 
 class LockDevice(protobuf.MessageType):

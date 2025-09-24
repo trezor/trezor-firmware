@@ -26,7 +26,7 @@ from trezorlib.transport.session import SessionV1
 from ..common import TEST_ADDRESS_N
 from .common import (
     CommonPass,
-    PassphraseCategory,
+    KeyboardCategory,
     get_char_category,
     navigate_to_action_and_press,
 )
@@ -81,11 +81,11 @@ SPECIAL_ACTIONS = [
 
 
 CATEGORY_ACTIONS = {
-    PassphraseCategory.Menu: MENU_ACTIONS,
-    PassphraseCategory.Numeric: DIGITS_ACTIONS,
-    PassphraseCategory.LettersLower: LOWERCASE_ACTIONS,
-    PassphraseCategory.LettersUpper: UPPERCASE_ACTIONS,
-    PassphraseCategory.Special: SPECIAL_ACTIONS,
+    KeyboardCategory.Menu: MENU_ACTIONS,
+    KeyboardCategory.Numeric: DIGITS_ACTIONS,
+    KeyboardCategory.LettersLower: LOWERCASE_ACTIONS,
+    KeyboardCategory.LettersUpper: UPPERCASE_ACTIONS,
+    KeyboardCategory.Special: SPECIAL_ACTIONS,
 }
 
 
@@ -114,7 +114,7 @@ def prepare_passphrase_dialogue(
     device_handler.run_with_provided_session(session, _get_test_address)  # type: ignore
     layout = debug.synchronize_at("PassphraseKeyboard")
     assert layout.passphrase() == ""
-    assert _current_category(debug) == PassphraseCategory.Menu
+    assert _current_category(debug) == KeyboardCategory.Menu
 
     yield debug
 
@@ -123,11 +123,11 @@ def prepare_passphrase_dialogue(
         assert result == address
 
 
-def _current_category(debug: "DebugLink") -> PassphraseCategory:
+def _current_category(debug: "DebugLink") -> KeyboardCategory:
     """What is the current category we are in"""
     layout = debug.read_layout()
     category = layout.find_unique_value_by_key("current_category", "")
-    return PassphraseCategory(category)
+    return KeyboardCategory(category)
 
 
 def _current_actions(debug: "DebugLink") -> list[str]:
@@ -137,7 +137,7 @@ def _current_actions(debug: "DebugLink") -> list[str]:
 
 
 def go_to_category(
-    debug: "DebugLink", category: PassphraseCategory, use_carousel: bool = True
+    debug: "DebugLink", category: KeyboardCategory, use_carousel: bool = True
 ) -> None:
     """Go to a specific category"""
     # Already there
@@ -145,15 +145,15 @@ def go_to_category(
         return
 
     # Need to be in MENU anytime to change category
-    if _current_category(debug) != PassphraseCategory.Menu:
+    if _current_category(debug) != KeyboardCategory.Menu:
         navigate_to_action_and_press(
             debug, BACK, _current_actions(debug), is_carousel=use_carousel
         )
 
-    assert _current_category(debug) == PassphraseCategory.Menu
+    assert _current_category(debug) == KeyboardCategory.Menu
 
     # Go to the right one, unless we want MENU
-    if category != PassphraseCategory.Menu:
+    if category != KeyboardCategory.Menu:
         navigate_to_action_and_press(
             debug, category.value, _current_actions(debug), is_carousel=use_carousel
         )
@@ -165,7 +165,7 @@ def press_char(debug: "DebugLink", char: str) -> None:
     """Press a character"""
     # Space is a special case
     if char == " ":
-        go_to_category(debug, PassphraseCategory.Menu)
+        go_to_category(debug, KeyboardCategory.Menu)
         navigate_to_action_and_press(debug, SPACE, _current_actions(debug))
     else:
         char_category = get_char_category(char)
@@ -184,19 +184,19 @@ def input_passphrase(debug: "DebugLink", passphrase: str) -> None:
 
 def show_passphrase(debug: "DebugLink") -> None:
     """Show a passphrase"""
-    go_to_category(debug, PassphraseCategory.Menu)
+    go_to_category(debug, KeyboardCategory.Menu)
     navigate_to_action_and_press(debug, SHOW, _current_actions(debug))
 
 
 def enter_passphrase(debug: "DebugLink") -> None:
     """Enter a passphrase"""
-    go_to_category(debug, PassphraseCategory.Menu)
+    go_to_category(debug, KeyboardCategory.Menu)
     navigate_to_action_and_press(debug, ENTER, _current_actions(debug))
 
 
 def delete_char(debug: "DebugLink") -> None:
     """Deletes the last char"""
-    go_to_category(debug, PassphraseCategory.Menu)
+    go_to_category(debug, KeyboardCategory.Menu)
     navigate_to_action_and_press(debug, CANCEL_OR_DELETE, _current_actions(debug))
 
 
@@ -277,9 +277,9 @@ def test_cancel(device_handler: "BackgroundDeviceHandler"):
 @pytest.mark.setup_client(passphrase=True)
 def test_passphrase_loop_all_characters(device_handler: "BackgroundDeviceHandler"):
     with prepare_passphrase_dialogue(device_handler, CommonPass.EMPTY_ADDRESS) as debug:
-        for category in PassphraseCategory:
+        for category in KeyboardCategory:
             go_to_category(debug, category)
             # use_carousel=False because we want to reach BACK at the end of the list
-            go_to_category(debug, PassphraseCategory.Menu, use_carousel=False)
+            go_to_category(debug, KeyboardCategory.Menu, use_carousel=False)
 
         enter_passphrase(debug)

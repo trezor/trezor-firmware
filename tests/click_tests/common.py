@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 import typing as t
 from enum import Enum
 
@@ -27,7 +28,8 @@ class CommonPass:
     EMPTY_ADDRESS = "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q"
 
 
-class PassphraseCategory(Enum):
+# Passphrase/Label keyboard layouts
+class KeyboardCategory(Enum):
     Menu = "MENU"
     Numeric = "123"
     LettersLower = "abc"
@@ -35,15 +37,33 @@ class PassphraseCategory(Enum):
     Special = "#$!"
 
 
-def get_char_category(char: str) -> PassphraseCategory:
+KEYBOARD_CATEGORIES_BOLT = [
+    KeyboardCategory.Numeric,
+    KeyboardCategory.LettersLower,
+    KeyboardCategory.LettersUpper,
+    KeyboardCategory.Special,
+]
+
+# Common for Delizia and Eckhart
+KEYBOARD_CATEGORIES_DE = [
+    KeyboardCategory.LettersLower,
+    KeyboardCategory.LettersUpper,
+    KeyboardCategory.Numeric,
+    KeyboardCategory.Special,
+]
+
+COORDS_PREV: tuple[int, int] = (0, 0)
+
+
+def get_char_category(char: str) -> KeyboardCategory:
     """What is the category of a character"""
     if char.isdigit():
-        return PassphraseCategory.Numeric
+        return KeyboardCategory.Numeric
     if char.islower():
-        return PassphraseCategory.LettersLower
+        return KeyboardCategory.LettersLower
     if char.isupper():
-        return PassphraseCategory.LettersUpper
-    return PassphraseCategory.Special
+        return KeyboardCategory.LettersUpper
+    return KeyboardCategory.Special
 
 
 def go_next(debug: "DebugLink") -> LayoutContent:
@@ -141,3 +161,86 @@ def _get_action_index(wanted_action: str, all_actions: AllActionsType) -> int:
                 return index
 
     raise ValueError(f"Action {wanted_action} is not supported in {all_actions}")
+
+
+def keyboard_categories(layout_type: LayoutType) -> list[KeyboardCategory]:
+    if layout_type is LayoutType.Bolt:
+        return KEYBOARD_CATEGORIES_BOLT
+    elif layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
+        return KEYBOARD_CATEGORIES_DE
+    else:
+        raise ValueError("Wrong layout type")
+
+
+def get_category(debug: "DebugLink") -> KeyboardCategory:
+    category = debug.read_layout().find_unique_value_by_key(
+        "active_layout", default="", only_type=str
+    )
+    assert (
+        category in KeyboardCategory.__members__
+    ), f"Unknown layout name from debug: {category}"
+    return KeyboardCategory[category]
+
+
+def go_to_category(
+    debug: "DebugLink", category: KeyboardCategory, verify_layout: bool = False
+) -> None:
+    """
+    Go to a specific category on the passphrase/label keyboard.
+
+    Navigates through the on-screen categories by swiping left or right
+    until the desired category is reached. If `verify_layout` is set to True,
+    the function will assert that the category change has been correctly applied
+    by reading and validating the current layout from the debug interface.
+    """
+    global COORDS_PREV
+
+    keyboard_category = get_category(debug)
+
+    # Already there
+    if keyboard_category == category:
+        return
+
+    current_index = keyboard_categories(debug.layout_type).index(keyboard_category)
+    target_index = keyboard_categories(debug.layout_type).index(category)
+    if target_index > current_index:
+        for _ in range(target_index - current_index):
+            debug.swipe_left()
+    else:
+        for _ in range(current_index - target_index):
+            debug.swipe_right()
+    if verify_layout:
+        layout = get_category(debug)
+        assert layout == category, f"Layout mismatch: expected {category}, got {layout}"
+
+    # Category changed, reset coordinates
+    COORDS_PREV = (0, 0)  # type: ignore
+
+
+def press_char(debug: "DebugLink", char: str) -> None:
+    """Press a character on the passphrase/label keyboard."""
+    global COORDS_PREV
+
+    # Space and couple others are a special case
+    if char in " *#":
+        char_category = KeyboardCategory.LettersLower
+    else:
+        char_category = get_char_category(char)
+
+    go_to_category(debug, char_category)
+
+    coords, amount = debug.button_actions.passphrase(char)
+    # If the button is the same as for the previous char,
+    # waiting a second before pressing it again.
+    # (not for a space in Bolt layout)
+    is_bolt_space = debug.layout_type is LayoutType.Bolt and char == " "
+    if coords == COORDS_PREV and not is_bolt_space:
+        time.sleep(1.1)
+    COORDS_PREV = coords  # type: ignore
+    for _ in range(amount):
+        debug.click(coords)
+
+
+def delete_char(debug: "DebugLink") -> None:
+    """Deletes the last char"""
+    debug.click(debug.screen_buttons.pin_passphrase_erase())
