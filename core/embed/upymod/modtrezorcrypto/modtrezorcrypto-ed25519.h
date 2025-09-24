@@ -17,12 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <sec/rng.h>
+
 #include "py/objstr.h"
 
 #include "ed25519-donna/ed25519-keccak.h"
 #include "ed25519-donna/ed25519.h"
-
-#include "rand.h"
 
 /// package: trezorcrypto.ed25519
 
@@ -33,7 +33,7 @@
 STATIC mp_obj_t mod_trezorcrypto_ed25519_generate_secret() {
   vstr_t sk = {0};
   vstr_init_len(&sk, 32);
-  random_buffer((uint8_t *)sk.buf, sk.len);
+  rng_fill_buffer((uint8_t *)sk.buf, sk.len);
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &sk);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_ed25519_generate_secret_obj,

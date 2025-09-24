@@ -32,13 +32,6 @@ void rng_init(void);
 #endif
 
 /**
- * @brief Gets 32 bits of random data using from the hardware RNG.
- *
- * @return uint32_t Random data.
- */
-uint32_t rng_get(void);
-
-/**
  * @brief Fills a buffer with random bytes using the hardware RNG
  *
  * This function uses only single source of entropy - the hardware RNG
@@ -49,6 +42,17 @@ uint32_t rng_get(void);
  * @param buffer_size Size of the buffer in bytes.
  */
 void rng_fill_buffer(void* buffer, size_t buffer_size);
+
+/**
+ * @brief Gets 32 bits of random data using from the hardware RNG.
+ *
+ * @return uint32_t Random data.
+ */
+static inline uint32_t rng_get(void) {
+  uint32_t r = 0;
+  rng_fill_buffer((uint8_t*)&r, sizeof(r));
+  return r;
+}
 
 /**
  * @brief Fills a buffer with random bytes using the hardware RNG and

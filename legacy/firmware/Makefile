@@ -81,6 +81,9 @@ OBJS += ../vendor/trezor-crypto/nist256p1.o
 OBJS += ../vendor/trezor-crypto/hmac_drbg.o
 OBJS += ../vendor/trezor-crypto/rfc6979.o
 OBJS += ../vendor/trezor-crypto/rand.o
+ifeq ($(EMULATOR),1)
+OBJS += ../vendor/trezor-crypto/rand_insecure.o
+endif
 OBJS += ../vendor/trezor-crypto/memzero.o
 
 OBJS += ../vendor/trezor-crypto/ed25519-donna/curve25519-donna-32bit.o

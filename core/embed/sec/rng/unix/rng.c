@@ -23,25 +23,21 @@
 
 #include "rand.h"
 
+void rng_fill_buffer(void* buffer, size_t buffer_size) {
 #ifdef USE_INSECURE_PRNG
 
-uint32_t rng_get(void) {
-  // Uses PRNG implemented in crypto/rand.c
-  return random32();
-}
+  // Use PRNG implemented in crypto/rand_insecure.c
+  random_buffer((uint8_t*)buffer, buffer_size);
 
 #else
 
-uint32_t rng_get(void) {
-  static FILE *frand = NULL;
+  static FILE* frand = NULL;
   if (!frand) {
     frand = fopen("/dev/urandom", "r");
   }
   ensure(sectrue * (frand != NULL), "fopen failed");
-  uint32_t r;
-  ensure(sectrue * (sizeof(r) == fread(&r, 1, sizeof(r), frand)),
+  ensure(sectrue * (buffer_size == fread(buffer, 1, buffer_size, frand)),
          "fread failed");
-  return r;
-}
 
-#endif  // USE_INSECURE_PRNG
+#endif
+}

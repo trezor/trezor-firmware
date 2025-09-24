@@ -17,11 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <sec/rng.h>
+
 #include "py/objstr.h"
 
 #include "ed25519-donna/ed25519.h"
-
-#include "rand.h"
 
 /// package: trezorcrypto.curve25519
 
@@ -32,7 +32,7 @@
 STATIC mp_obj_t mod_trezorcrypto_curve25519_generate_secret() {
   vstr_t sk = {0};
   vstr_init_len(&sk, 32);
-  random_buffer((uint8_t *)sk.buf, sk.len);
+  rng_fill_buffer((uint8_t *)sk.buf, sk.len);
   // taken from https://cr.yp.to/ecdh.html
   sk.buf[0] &= 248;
   sk.buf[31] &= 127;
