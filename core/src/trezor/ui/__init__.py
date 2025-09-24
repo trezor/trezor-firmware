@@ -248,7 +248,12 @@ class Layout(Generic[T]):
             set_current_layout(None)
             if __debug__:
                 if self.button_request_ack_pending:
-                    raise wire.FirmwareError("button request ack pending")
+                    msg = "button request ack pending"
+                    if utils.USE_THP:
+                        # Don't raise to avoid THP desync
+                        log.error(__name__, msg)
+                    else:
+                        raise wire.FirmwareError(msg)
                 self.notify_debuglink(None)
 
     async def get_result(self) -> T:
