@@ -126,16 +126,16 @@ confirm_result_t ui_screen_install_confirm(const vendor_header *const vhdr,
                                 is_newinstall == sectrue, version_cmp);
 }
 
-void ui_screen_install_start() {
-  screen_install_progress(0, true, initial_setup);
+void ui_screen_install_start(bool wireless) {
+  screen_install_progress(0, true, initial_setup, wireless);
 }
 
-void ui_screen_install_progress_erase(int pos, int len) {
-  screen_install_progress(250 * pos / len, false, initial_setup);
+void ui_screen_install_progress_erase(int pos, int len, bool wireless) {
+  screen_install_progress(250 * pos / len, false, initial_setup, wireless);
 }
 
-void ui_screen_install_progress_upload(int pos) {
-  screen_install_progress(pos, false, initial_setup);
+void ui_screen_install_progress_upload(int pos, bool wireless) {
+  screen_install_progress(pos, false, initial_setup, wireless);
 }
 
 // wipe UI

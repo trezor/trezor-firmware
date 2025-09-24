@@ -60,9 +60,9 @@ confirm_result_t ui_screen_install_confirm(const vendor_header* const vhdr,
                                            secbool is_newvendor,
                                            secbool is_newinstall,
                                            int version_cmp);
-void ui_screen_install_start();
-void ui_screen_install_progress_erase(int pos, int len);
-void ui_screen_install_progress_upload(int pos);
+void ui_screen_install_start(bool wireless);
+void ui_screen_install_progress_erase(int pos, int len, bool wireless);
+void ui_screen_install_progress_upload(int pos, bool wireless);
 
 confirm_result_t ui_screen_wipe_confirm(void);
 void ui_screen_wipe(void);

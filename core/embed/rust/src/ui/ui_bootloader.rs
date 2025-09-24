@@ -50,7 +50,12 @@ pub trait BootloaderUI {
 
     fn screen_wipe_progress(progress: u16, initialize: bool);
 
-    fn screen_install_progress(progress: u16, initialize: bool, initial_setup: bool);
+    fn screen_install_progress(
+        progress: u16,
+        initialize: bool,
+        initial_setup: bool,
+        wireless: bool,
+    );
 
     fn screen_wipe_success();
 

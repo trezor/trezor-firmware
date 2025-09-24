@@ -27,7 +27,7 @@ void screen_unlock_bootloader_success(void);
 
 // progress screens
 void screen_install_progress(uint16_t progress, bool initialize,
-                             bool initial_setup);
+                             bool initial_setup, bool wireless);
 void screen_wipe_progress(uint16_t progress, bool initialize);
 
 void screen_bootloader_entry_progress(uint16_t progress, bool initialize);
