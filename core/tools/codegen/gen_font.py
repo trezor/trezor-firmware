@@ -247,6 +247,7 @@ class FaceProcessor:
         ext: str = "ttf",
         gen_normal: bool = True,  # generate font with all the letters
         gen_upper: bool = False,  # generate font with only upper-cased letters
+        gen_kernings: bool = False,  # generate kerning data
         font_idx: int | None = None,  # idx to UTF-8 foreign chars data
         font_idx_upper: int | None = None,  # idx to UTF-8 upper-cased foreign chars
     ):
@@ -265,6 +266,7 @@ class FaceProcessor:
         self.ext = ext
         self.gen_normal = gen_normal
         self.gen_upper = gen_upper
+        self.gen_kernings = gen_kernings
 
         self.face = freetype.Face(str(FONTS_DIR / f"{name}-{style}.{ext}"))
         self.face.set_pixel_sizes(0, size)  # type: ignore
@@ -490,6 +492,7 @@ class FaceProcessor:
             "kernings": kernings,
             "gen_normal": self.gen_normal,
             "gen_upper": self.gen_upper,
+            "gen_kernings": self.gen_kernings,
             "font_info": font_info,
             "font_info_upper": font_info_upper,
         }
