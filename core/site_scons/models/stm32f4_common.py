@@ -68,6 +68,7 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/monoctr/stm32f4/monoctr.c",
         "embed/sec/random_delays/stm32/random_delays.c",
         "embed/sec/rng/stm32/rng.c",
+        "embed/sec/rng/rng_common.c",
         "embed/sec/secret/stm32f4/secret.c",
         "embed/sec/secret/stm32f4/secret_keys.c",
         "embed/sec/storage/stm32f4/storage_salt.c",

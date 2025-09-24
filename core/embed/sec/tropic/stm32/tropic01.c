@@ -27,8 +27,6 @@
 #include <sec/tropic.h>
 #include <sys/systick.h>
 
-#include "rand.h"
-
 typedef struct {
   bool initialized;
   SPI_HandleTypeDef spi;
@@ -187,7 +185,8 @@ lt_ret_t lt_port_delay(lt_handle_t *h, uint32_t ms) {
 
 lt_ret_t lt_port_random_bytes(lt_l2_state_t *s2, void *buff, size_t count) {
   (void)s2;
-  random_buffer((uint8_t *)buff, count);
+
+  rng_fill_buffer((uint8_t *)buff, count);
 
   return LT_OK;
 }

@@ -413,11 +413,6 @@ bool optiga_read_sec(uint8_t *sec) {
   return (bool)syscall_invoke1((uint32_t)sec, SYSCALL_OPTIGA_READ_SEC);
 }
 
-bool optiga_random_buffer(uint8_t *dest, size_t size) {
-  return (bool)syscall_invoke2((uint32_t)dest, size,
-                               SYSCALL_OPTIGA_RANDOM_BUFFER);
-}
-
 #if PYOPT == 0
 void optiga_set_sec_max(void) { syscall_invoke0(SYSCALL_OPTIGA_SET_SEC_MAX); }
 
@@ -551,7 +546,14 @@ uint32_t translations_area_bytesize(void) {
 
 #include <sec/rng.h>
 
-uint32_t rng_get(void) { return syscall_invoke0(SYSCALL_RNG_GET); }
+void rng_fill_buffer(void *buffer, size_t buffer_size) {
+  syscall_invoke2((uint32_t)buffer, buffer_size, SYSCALL_RNG_FILL_BUFFER);
+}
+
+bool rng_fill_buffer_strong(void *buffer, size_t buffer_size) {
+  return (bool)syscall_invoke2((uint32_t)buffer, buffer_size,
+                               SYSCALL_RNG_FILL_BUFFER_STRONG);
+}
 
 // =============================================================================
 // fwutils.h

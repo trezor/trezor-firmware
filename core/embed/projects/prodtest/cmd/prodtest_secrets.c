@@ -22,6 +22,7 @@
 #include <string.h>
 
 #include <rtl/cli.h>
+#include <sec/rng.h>
 #include <sec/secret.h>
 #include <sec/secret_keys.h>
 
@@ -48,32 +49,6 @@
 
 #include <../vendor/mldsa-native/mldsa/sign.h>
 
-secbool generate_random_secret(uint8_t* secret, size_t length) {
-  random_buffer(secret, length);
-
-  uint8_t buffer[length];
-#ifdef USE_OPTIGA
-  if (!optiga_random_buffer(buffer, length)) {
-    return secfalse;
-  }
-  for (size_t i = 0; i < length; i++) {
-    secret[i] ^= buffer[i];
-  }
-#endif
-
-#ifdef USE_TROPIC
-  if (LT_OK != lt_random_value_get(tropic_get_handle(), buffer, length)) {
-    return secfalse;
-  }
-  for (size_t i = 0; i < length; i++) {
-    secret[i] ^= buffer[i];
-  }
-#endif
-
-  memzero(buffer, sizeof(buffer));
-  return sectrue;
-}
-
 secbool set_random_secret(uint8_t slot, size_t length) {
   uint8_t secret[length];
   uint8_t secret_read[length];
@@ -87,7 +62,7 @@ secbool set_random_secret(uint8_t slot, size_t length) {
     goto cleanup;
   }
 
-  if (generate_random_secret(secret, sizeof(secret)) != sectrue) {
+  if (!rng_fill_buffer_strong(secret, sizeof(secret))) {
     goto cleanup;
   }
 

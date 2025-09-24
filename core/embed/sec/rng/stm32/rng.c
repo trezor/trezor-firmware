@@ -17,15 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma GCC optimize( \
+    "no-stack-protector")  // applies to all functions in this file
+
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
 #include <sec/rng.h>
 
-#if SECURE_MODE
+#include "rand.h"
 
-#pragma GCC optimize( \
-    "no-stack-protector")  // applies to all functions in this file
+#if SECURE_MODE
 
 void rng_init(void) {
   // enable TRNG peripheral clock
@@ -35,7 +37,17 @@ void rng_init(void) {
   RNG->CR = RNG_CR_RNGEN;  // enable TRNG
 }
 
-uint32_t rng_read(const uint32_t previous, const uint32_t compare_previous) {
+#ifdef USE_INSECURE_PRNG
+
+uint32_t rng_get(void) {
+  // Uses PRNG implemented in crypto/rand.c
+  return random32();
+}
+
+#else
+
+static uint32_t rng_read(const uint32_t previous,
+                         const uint32_t compare_previous) {
   uint32_t temp = previous;
   do {
     while ((RNG->SR & (RNG_SR_SECS | RNG_SR_CECS | RNG_SR_DRDY)) != RNG_SR_DRDY)
@@ -59,5 +71,7 @@ uint32_t rng_get(void) {
   current = rng_read(previous, 1);
   return current;
 }
+
+#endif  // USE_INSECURE_PRNG
 
 #endif  // SECURE_MODE

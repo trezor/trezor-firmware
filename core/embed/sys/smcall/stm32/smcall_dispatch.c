@@ -183,12 +183,6 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       args[0] = optiga_read_sec__verified(sec);
     } break;
 
-    case SMCALL_OPTIGA_RANDOM_BUFFER: {
-      uint8_t *dest = (uint8_t *)args[0];
-      size_t size = args[1];
-      args[0] = optiga_random_buffer__verified(dest, size);
-    } break;
-
 #if PYOPT == 0
     case SMCALL_OPTIGA_SET_SEC_MAX: {
       optiga_set_sec_max();
@@ -300,8 +294,16 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
       args[0] = storage_next_counter__verified(key, count);
     } break;
 
-    case SMCALL_RNG_GET: {
-      args[0] = rng_get();
+    case SMCALL_RNG_FILL_BUFFER: {
+      uint8_t *buffer = (uint8_t *)args[0];
+      size_t buffer_size = args[1];
+      rng_fill_buffer__verified(buffer, buffer_size);
+    } break;
+
+    case SMCALL_RNG_FILL_BUFFER_STRONG: {
+      uint8_t *buffer = (uint8_t *)args[0];
+      size_t buffer_size = args[1];
+      args[0] = rng_fill_buffer_strong__verified(buffer, buffer_size);
     } break;
 
     case SMCALL_FIRMWARE_GET_VENDOR: {

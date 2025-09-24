@@ -236,6 +236,20 @@ static bool tropic_get_tropic_pubkey(lt_handle_t *handle,
 }
 #endif  // !PRODUCTION
 
+bool tropic_random_buffer(void *buffer, size_t length) {
+  tropic_driver_t *drv = &g_tropic_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  if (LT_OK != lt_random_value_get(&drv->handle, buffer, length)) {
+    return false;
+  }
+
+  return true;
+}
+
 #endif  // SECURE_MODE
 
 bool tropic_data_multi_size(uint16_t first_slot, size_t *data_length) {

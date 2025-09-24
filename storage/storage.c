@@ -20,6 +20,7 @@
 #include <assert.h>
 #include <string.h>
 
+#include <sec/rng.h>
 #include <sys/mpu.h>
 
 #include "chacha20poly1305/rfc7539.h"
@@ -779,14 +780,9 @@ static void init_wiped_storage(void) {
     return;
   }
 
-#if USE_OPTIGA
-  ensure(optiga_random_buffer(cached_keys, sizeof(cached_keys)) ? sectrue
-                                                                : secfalse,
-         "optiga_random_buffer failed");
-  random_xor(cached_keys, sizeof(cached_keys));
-#else
-  random_buffer(cached_keys, sizeof(cached_keys));
-#endif
+  ensure(rng_fill_buffer_strong(cached_keys, sizeof(cached_keys)) ? sectrue
+                                                                  : secfalse,
+         "rng_fill_buffer_strong failed");
   unlocked = sectrue;
   uint32_t version = NORCOW_VERSION;
   ensure(auth_init(), "set_storage_auth_tag failed");

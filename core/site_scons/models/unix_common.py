@@ -40,6 +40,7 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/storage/unix/storage_salt.c",
         "embed/sec/monoctr/unix/monoctr.c",
         "embed/sec/rng/unix/rng.c",
+        "embed/sec/rng/rng_common.c",
         "embed/sec/time_estimate/unix/time_estimate.c",
         "embed/sys/dbg/dbg_console.c",
         "embed/sys/dbg/unix/dbg_console_backend.c",
