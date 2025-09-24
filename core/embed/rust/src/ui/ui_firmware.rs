@@ -389,6 +389,9 @@ pub trait FirmwareUI {
         code: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
+    #[cfg(feature = "ble")]
+    fn wait_ble_host_confirmation() -> Result<impl LayoutMaybeTrace, Error>;
+
     fn show_thp_pairing_code(
         title: TString<'static>,
         description: TString<'static>,

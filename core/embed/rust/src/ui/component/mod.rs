@@ -35,7 +35,7 @@ pub mod timeout;
 pub use bar::Bar;
 pub use base::{Child, Component, ComponentExt, Event, EventCtx, FlowMsg, Never, Timer};
 #[cfg(feature = "ble")]
-pub use ble::{BLEHandler, BLEHandlerMsg};
+pub use ble::{BLEHandler, BLEHandlerMode, BLEHandlerMsg};
 pub use border::Border;
 pub use button_request::{ButtonRequestExt, SendButtonRequest};
 #[cfg(all(

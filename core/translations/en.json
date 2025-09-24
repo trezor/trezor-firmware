@@ -130,6 +130,7 @@
     "ble__unpair_current": "Unpair connected device",
     "ble__unpair_title": "Unpair",
     "ble__version": "Bluetooth version",
+    "ble__waiting_for_host": "Waiting for host...",
     "brightness__change_title": "Change display brightness",
     "brightness__changed_title": "Display brightness changed",
     "brightness__title": "Display brightness",
