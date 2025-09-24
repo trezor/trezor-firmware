@@ -41,7 +41,7 @@ void tropic01_reset(void) {
   systick_delay_ms(10);
 }
 
-lt_ret_t lt_port_init(lt_handle_t *h) {
+lt_ret_t lt_port_init(lt_l2_state_t *s2) {
   tropic01_hal_driver_t *drv = &g_tropic01_hal_driver;
 
   if (drv->initialized) {
@@ -121,7 +121,7 @@ lt_ret_t lt_port_init(lt_handle_t *h) {
   return LT_OK;
 }
 
-lt_ret_t lt_port_deinit(lt_handle_t *h) {
+lt_ret_t lt_port_deinit(lt_l2_state_t *s2) {
   tropic01_hal_driver_t *drv = &g_tropic01_hal_driver;
 
   if (drv->spi.Instance != NULL) {
@@ -142,8 +142,8 @@ lt_ret_t lt_port_deinit(lt_handle_t *h) {
   return LT_OK;
 }
 
-lt_ret_t lt_port_spi_csn_low(lt_handle_t *h) {
-  UNUSED(h);
+lt_ret_t lt_port_spi_csn_low(lt_l2_state_t *s2) {
+  UNUSED(s2);
 
   HAL_GPIO_WritePin(TROPIC01_SPI_NSS_PORT, TROPIC01_SPI_NSS_PIN,
                     GPIO_PIN_RESET);
@@ -151,23 +151,23 @@ lt_ret_t lt_port_spi_csn_low(lt_handle_t *h) {
   return LT_OK;
 }
 
-lt_ret_t lt_port_spi_csn_high(lt_handle_t *h) {
-  UNUSED(h);
+lt_ret_t lt_port_spi_csn_high(lt_l2_state_t *s2) {
+  UNUSED(s2);
 
   HAL_GPIO_WritePin(TROPIC01_SPI_NSS_PORT, TROPIC01_SPI_NSS_PIN, GPIO_PIN_SET);
 
   return LT_OK;
 }
 
-lt_ret_t lt_port_spi_transfer(lt_handle_t *h, uint8_t offset, uint16_t tx_len,
-                              uint32_t timeout_ms) {
+lt_ret_t lt_port_spi_transfer(lt_l2_state_t *s2, uint8_t offset,
+                              uint16_t tx_len, uint32_t timeout_ms) {
   tropic01_hal_driver_t *drv = &g_tropic01_hal_driver;
 
   if (offset + tx_len > LT_L1_LEN_MAX) {
     return LT_L1_DATA_LEN_ERROR;
   }
-  int ret = HAL_SPI_TransmitReceive(&drv->spi, h->l2.buff + offset,
-                                    h->l2.buff + offset, tx_len, timeout_ms);
+  int ret = HAL_SPI_TransmitReceive(&drv->spi, s2->buff + offset,
+                                    s2->buff + offset, tx_len, timeout_ms);
   if (ret != HAL_OK) {
     return LT_FAIL;
   }
@@ -175,8 +175,8 @@ lt_ret_t lt_port_spi_transfer(lt_handle_t *h, uint8_t offset, uint16_t tx_len,
   return LT_OK;
 }
 
-lt_ret_t lt_port_delay(lt_handle_t *h, uint32_t ms) {
-  UNUSED(h);
+lt_ret_t lt_port_delay(lt_l2_state_t *s2, uint32_t ms) {
+  UNUSED(s2);
 
   systick_delay_ms(ms);
 
