@@ -160,14 +160,14 @@ lt_ret_t lt_port_spi_csn_high(lt_handle_t *h) {
 }
 
 lt_ret_t lt_port_spi_transfer(lt_handle_t *h, uint8_t offset, uint16_t tx_len,
-                              uint32_t timeout) {
+                              uint32_t timeout_ms) {
   tropic01_hal_driver_t *drv = &g_tropic01_hal_driver;
 
   if (offset + tx_len > LT_L1_LEN_MAX) {
     return LT_L1_DATA_LEN_ERROR;
   }
   int ret = HAL_SPI_TransmitReceive(&drv->spi, h->l2.buff + offset,
-                                    h->l2.buff + offset, tx_len, timeout);
+                                    h->l2.buff + offset, tx_len, timeout_ms);
   if (ret != HAL_OK) {
     return LT_FAIL;
   }
