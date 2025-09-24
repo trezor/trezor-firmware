@@ -710,10 +710,12 @@ int bootloader_main(void) {
 #endif
 
     if (header_present == sectrue) {
+      fw_info_t fw = {
+          .vhdr = &vhdr, .hdr = hdr, .firmware_present = firmware_present};
       if (auto_upgrade == sectrue && firmware_present == sectrue) {
-        result = workflow_auto_update(&vhdr, hdr, firmware_present);
+        result = workflow_auto_update(&fw);
       } else {
-        result = workflow_bootloader(&vhdr, hdr, firmware_present);
+        result = workflow_bootloader(&fw);
       }
     } else {
       result = workflow_empty_device();

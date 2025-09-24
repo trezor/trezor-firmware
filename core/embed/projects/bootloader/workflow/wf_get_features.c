@@ -24,11 +24,9 @@
 #include "workflow.h"
 
 workflow_result_t workflow_get_features(protob_io_t *iface,
-                                        const vendor_header *const vhdr,
-                                        const image_header *const hdr,
-                                        secbool firmware_present) {
+                                        const fw_info_t *fw) {
   GetFeatures msg_recv;
   recv_msg_get_features(iface, &msg_recv);
-  send_msg_features(iface, vhdr, hdr, firmware_present);
+  send_msg_features(iface, fw);
   return WF_OK;
 }

@@ -23,12 +23,9 @@
 #include "protob.h"
 #include "workflow.h"
 
-workflow_result_t workflow_initialize(protob_io_t *iface,
-                                      const vendor_header *const vhdr,
-                                      const image_header *const hdr,
-                                      secbool firmware_present) {
+workflow_result_t workflow_initialize(protob_io_t *iface, const fw_info_t *fw) {
   Initialize msg_recv;
   recv_msg_initialize(iface, &msg_recv);
-  send_msg_features(iface, vhdr, hdr, firmware_present);
+  send_msg_features(iface, fw);
   return WF_OK;
 }
