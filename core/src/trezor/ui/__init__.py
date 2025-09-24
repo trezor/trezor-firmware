@@ -262,14 +262,16 @@ class Layout(Generic[T]):
                 is_done = loop.mailbox()
                 self.button_request_task = self._handle_button_requests(is_done)
                 self._start_task(self.button_request_task)
+
             result = await self.result_box
 
             if is_done is not None:
                 # Make sure ButtonRequest is ACKed, before the result is returned.
                 # Otherwise, THP channel may become desynced (due to two consecutive writes).
+                if __debug__:
+                    log.debug(__name__, "waiting for %s", self.button_request_task)
                 try:
-                    if self.button_request_box.is_empty():
-                        self.button_request_box.put(None)
+                    self.button_request_box.put(None, replace=True)
                     await is_done
                 except Exception as e:
                     log.exception(__name__, e)
