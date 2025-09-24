@@ -32,9 +32,9 @@
 #define LOG_MODULE_NAME ble_connection
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-#define PPCP_SUSPEND BT_LE_CONN_PARAM(200, 400, 1, 600)
+#define PPCP_SUSPEND BT_LE_CONN_PARAM(50, 100, 0, 600)
 #define PPCP_HIGH_SPEED BT_LE_CONN_PARAM(12, 12, 0, 400)
-#define PPCP_LOW_SPEED BT_LE_CONN_PARAM(24, 100, 0, 400)
+#define PPCP_LOW_SPEED BT_LE_CONN_PARAM(24, 36, 0, 400)
 
 static struct bt_conn *current_conn = NULL;
 static struct bt_conn *next_conn = NULL;
