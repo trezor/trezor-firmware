@@ -505,8 +505,7 @@ static void prodtest_tropic_get_riscv_fw_version(cli_t* cli) {
   lt_handle_t* tropic_handle = tropic_get_handle();
 
   uint8_t version[LT_L2_GET_INFO_RISCV_FW_SIZE] = {0};
-  if (lt_get_info_riscv_fw_ver(tropic_handle, version, sizeof(version)) !=
-      LT_OK) {
+  if (lt_get_info_riscv_fw_ver(tropic_handle, version) != LT_OK) {
     cli_error(cli, CLI_ERROR, "Unable to get RISCV FW version");
     return;
   }
@@ -524,8 +523,7 @@ static void prodtest_tropic_get_spect_fw_version(cli_t* cli) {
   lt_handle_t* tropic_handle = tropic_get_handle();
 
   uint8_t version[LT_L2_GET_INFO_SPECT_FW_SIZE];
-  if (lt_get_info_spect_fw_ver(tropic_handle, version, sizeof(version)) !=
-      LT_OK) {
+  if (lt_get_info_spect_fw_ver(tropic_handle, version) != LT_OK) {
     cli_error(cli, CLI_ERROR, "Unable to get SPECT FW version");
     return;
   }
@@ -1736,7 +1734,7 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
   cli_trace(cli, "Reading RISC-V FW version");
 
   uint8_t risc_fw_ver[LT_L2_GET_INFO_RISCV_FW_SIZE] = {0};
-  ret = lt_get_info_riscv_fw_ver(h, risc_fw_ver, LT_L2_GET_INFO_RISCV_FW_SIZE);
+  ret = lt_get_info_riscv_fw_ver(h, risc_fw_ver);
 
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR, "Failed to get RISC-V FW version, ret=%s",
@@ -1750,7 +1748,7 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
 
   cli_trace(cli, "Reading SPECT FW version");
   uint8_t spect_fw_ver[LT_L2_GET_INFO_SPECT_FW_SIZE] = {0};
-  ret = lt_get_info_spect_fw_ver(h, spect_fw_ver, LT_L2_GET_INFO_SPECT_FW_SIZE);
+  ret = lt_get_info_spect_fw_ver(h, spect_fw_ver);
 
   if (ret != LT_OK) {
     cli_error(cli, CLI_ERROR, "Failed to get SPECT FW version, ret=%s",
