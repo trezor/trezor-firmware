@@ -24,7 +24,7 @@
 #include "rng.h"
 
 #if !EMULATOR
-uint32_t random32(void) {
+static uint32_t rng_get_u32(void) {
   static uint32_t last = 0, new = 0;
   while (new == last) {
     if ((RNG_SR & (RNG_SR_SECS | RNG_SR_CECS | RNG_SR_DRDY)) == RNG_SR_DRDY) {
@@ -33,5 +33,15 @@ uint32_t random32(void) {
   }
   last = new;
   return new;
+}
+
+void random_buffer(uint8_t *buf, size_t len) {
+  uint32_t r = 0;
+  for (size_t i = 0; i < len; i++) {
+    if (i % 4 == 0) {
+      r = rng_get_u32();
+    }
+    buf[i] = (r >> ((i % 4) * 8)) & 0xFF;
+  }
 }
 #endif

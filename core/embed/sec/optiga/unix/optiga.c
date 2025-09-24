@@ -21,11 +21,11 @@
 
 #include <sec/optiga.h>
 #include <sec/optiga_common.h>
+#include <sec/rng.h>
 #include <sec/storage.h>
 
 #include "ecdsa.h"
 #include "nist256p1.h"
-#include "rand.h"
 
 #if defined(TREZOR_MODEL_T2B1)
 #include "certs/T2B1.h"
@@ -102,7 +102,7 @@ void optiga_set_sec_max(void) {}
 uint32_t optiga_estimate_time_ms(storage_pin_op_t op) { return 0; }
 
 bool optiga_random_buffer(uint8_t *dest, size_t size) {
-  random_buffer(dest, size);
+  rng_fill_buffer(dest, size);
   return true;
 }
 

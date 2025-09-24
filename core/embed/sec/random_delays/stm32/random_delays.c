@@ -22,10 +22,11 @@
 #include <stdatomic.h>
 
 #include <sec/random_delays.h>
+#include <sec/rng.h>
 #include <sys/systimer.h>
+
 #include "chacha_drbg.h"
 #include "memzero.h"
-#include "rand.h"
 
 #ifdef SECURE_MODE
 
@@ -43,7 +44,7 @@ static secbool rdi_disabled = sectrue;
 
 static void drbg_init() {
   uint8_t entropy[DRBG_TRNG_ENTROPY_LENGTH] = {0};
-  random_buffer(entropy, sizeof(entropy));
+  rng_fill_buffer(entropy, sizeof(entropy));
   chacha_drbg_init(&drbg_ctx, entropy, sizeof(entropy), NULL, 0);
   memzero(entropy, sizeof(entropy));
 
@@ -54,7 +55,7 @@ static void drbg_reseed() {
   ensure(drbg_initialized, NULL);
 
   uint8_t entropy[DRBG_TRNG_ENTROPY_LENGTH] = {0};
-  random_buffer(entropy, sizeof(entropy));
+  rng_fill_buffer(entropy, sizeof(entropy));
   chacha_drbg_reseed(&drbg_ctx, entropy, sizeof(entropy), NULL, 0);
   memzero(entropy, sizeof(entropy));
 }

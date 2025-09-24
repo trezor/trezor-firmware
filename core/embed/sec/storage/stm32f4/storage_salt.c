@@ -22,10 +22,10 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <sec/rng.h>
 #include <sys/mpu.h>
 #include <util/flash_otp.h>
 
-#include "rand.h"
 #include "stm32f4xx_ll_utils.h"
 
 #include "../storage_salt.h"
@@ -46,7 +46,7 @@ void storage_salt_get(storage_salt_t* salt) {
   // set entropy in the OTP randomness block
   if (secfalse == flash_otp_is_locked(FLASH_OTP_BLOCK_RANDOMNESS)) {
     uint8_t rnd_bytes[FLASH_OTP_BLOCK_SIZE];
-    random_buffer(rnd_bytes, FLASH_OTP_BLOCK_SIZE);
+    rng_fill_buffer(rnd_bytes, FLASH_OTP_BLOCK_SIZE);
     ensure(flash_otp_write(FLASH_OTP_BLOCK_RANDOMNESS, 0, rnd_bytes,
                            FLASH_OTP_BLOCK_SIZE),
            NULL);

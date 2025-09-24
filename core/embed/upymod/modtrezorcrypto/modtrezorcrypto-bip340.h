@@ -19,9 +19,10 @@
 
 #if USE_SECP256K1_ZKP
 
+#include <sec/rng.h>
+
 #include "py/objstr.h"
 
-#include "rand.h"
 #include "zkp_bip340.h"
 
 /// package: trezorcrypto.bip340
@@ -34,7 +35,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip340_generate_secret() {
   vstr_t sk = {0};
   vstr_init_len(&sk, 32);
   for (;;) {
-    random_buffer((uint8_t *)sk.buf, sk.len);
+    rng_fill_buffer((uint8_t *)sk.buf, sk.len);
     // check whether secret > 0 && secret < curve_order
     if (0 ==
         memcmp(

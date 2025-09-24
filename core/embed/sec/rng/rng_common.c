@@ -21,7 +21,7 @@
 
 #include <sec/rng.h>
 
-#if SECURE_MODE
+#ifdef SECURE_MODE
 
 #ifdef USE_OPTIGA
 #include <sec/optiga.h>
@@ -33,21 +33,6 @@
 
 #include "memzero.h"
 #include "rand.h"
-
-void rng_fill_buffer(void* buffer, size_t buffer_size) {
-  uint32_t* dst = (uint32_t*)buffer;
-  size_t remaining = buffer_size;
-
-  while (remaining >= sizeof(uint32_t)) {
-    *dst++ = rng_get();
-    remaining -= sizeof(uint32_t);
-  }
-
-  if (remaining > 0) {
-    uint32_t r = rng_get();
-    memcpy(dst, &r, remaining);
-  }
-}
 
 bool rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
   rng_fill_buffer(buffer, buffer_size);
@@ -88,23 +73,3 @@ bool rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
 }
 
 #endif  // SECURE_MODE
-
-#ifndef SECURE_MODE
-uint32_t rng_get(void) {
-  uint32_t temp = 0;
-  // Note: In non-secure mode we use rng_fill_buffer() since rng_get() is not
-  // available as a smcall/syscall.
-  rng_fill_buffer(&temp, sizeof(temp));
-  return temp;
-}
-#endif  // !SECURE_MODE
-
-#ifndef USE_INSECURE_PRNG
-// Re-implementation of random32() function declared in crypto/rand.h
-// to use MCU TRNG instead of crypto library PRNG.
-uint32_t random32(void) { return rng_get(); }
-#endif
-
-// Re-implementation of weak random_buffer() function defined in crypto/rand.c
-// to be the same as rng_fill_buffer() function.
-void random_buffer(uint8_t* buf, size_t len) { rng_fill_buffer(buf, len); }

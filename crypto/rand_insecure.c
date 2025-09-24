@@ -21,27 +21,32 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __RAND_H__
-#define __RAND_H__
-
-#include <stdint.h>
-#include <stdlib.h>
+#include "rand.h"
 
 #ifdef USE_INSECURE_PRNG
-void random_reseed(const uint32_t value);
-#endif
 
-void random_buffer(uint8_t *buf, size_t len);
+#pragma message( \
+    "NOT SUITABLE FOR PRODUCTION USE! Replace random_buffer() function with your own secure code.")
 
-static inline uint32_t random32(void) {
-  uint32_t r = 0;
-  random_buffer((uint8_t *)&r, sizeof(r));
-  return r;
+static uint32_t seed = 0;
+
+void random_reseed(const uint32_t value) { seed = value; }
+
+static uint32_t lcg_get_u32(void) {
+  // Linear congruential generator from Numerical Recipes
+  // https://en.wikipedia.org/wiki/Linear_congruential_generator
+  seed = 1664525 * seed + 1013904223;
+  return seed;
 }
 
-void random_xor(uint8_t *buf, size_t len);
+void random_buffer(uint8_t *buf, size_t len) {
+  uint32_t r = 0;
+  for (size_t i = 0; i < len; i++) {
+    if (i % 4 == 0) {
+      r = lcg_get_u32();
+    }
+    buf[i] = (r >> ((i % 4) * 8)) & 0xFF;
+  }
+}
 
-uint32_t random_uniform(uint32_t n);
-void random_permute(char *buf, size_t len);
-
-#endif
+#endif /* USE_INSECURE_PRNG */

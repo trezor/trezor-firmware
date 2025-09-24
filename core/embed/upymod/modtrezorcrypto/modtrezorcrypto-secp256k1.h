@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <sec/rng.h>
+
 #include "py/objstr.h"
 
 #include "vendor/trezor-crypto/ecdsa.h"
@@ -32,7 +34,7 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_generate_secret() {
   vstr_t sk = {0};
   vstr_init_len(&sk, 32);
   for (;;) {
-    random_buffer((uint8_t *)sk.buf, sk.len);
+    rng_fill_buffer((uint8_t *)sk.buf, sk.len);
     // check whether secret > 0 && secret < curve_order
     if (0 ==
         memcmp(

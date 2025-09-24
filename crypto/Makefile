@@ -98,7 +98,7 @@ ifdef SMALL
 CFLAGS += -DUSE_PRECOMPUTED_CP=0
 endif
 
-SRCS   = bignum.c ecdsa.c curves.c secp256k1.c nist256p1.c rand.c hmac.c bip32.c bip39.c bip39_english.c pbkdf2.c base58.c base32.c
+SRCS   = bignum.c ecdsa.c curves.c secp256k1.c nist256p1.c rand.c rand_insecure.c hmac.c bip32.c bip39.c bip39_english.c pbkdf2.c base58.c base32.c
 SRCS  += address.c
 SRCS  += script.c
 SRCS  += ripemd160.c

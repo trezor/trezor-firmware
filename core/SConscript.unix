@@ -149,6 +149,7 @@ SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/nist256p1.c',
     'vendor/trezor-crypto/pbkdf2.c',
     'vendor/trezor-crypto/rand.c',
+    'vendor/trezor-crypto/rand_insecure.c',
     'vendor/trezor-crypto/rfc6979.c',
     'vendor/trezor-crypto/ripemd160.c',
     'vendor/trezor-crypto/secp256k1.c',

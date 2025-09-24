@@ -28,7 +28,6 @@
 
 #include "common.h"
 #include "memzero.h"
-#include "rand.h"
 #include "secbool.h"
 #include "secure_channel.h"
 
@@ -222,7 +221,7 @@ static bool check_device_cert_chain(cli_t* cli, const uint8_t* chain,
   }
 
   uint8_t rnd[MLDSA_RNDBYTES] = {0};
-  random_buffer(rnd, sizeof(rnd));
+  rng_fill_buffer(rnd, sizeof(rnd));
 
   // The challenge is intentionally constant zero.
   const uint8_t ENCODED_EMPTY_CONTEXT_STRING[] = {0, 0};
