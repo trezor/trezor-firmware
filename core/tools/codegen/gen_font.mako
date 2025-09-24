@@ -35,6 +35,16 @@ const Font_${name}_upper: [&[u8]; ${len(glyph_array_upper)}] = [
 % endif
 % if gen_normal:
 
+/// Array of kerning tripples
+const Font_${name}_kernings: [(u8, u8, i8); ${len(kernings)}] = [
+% for ref in kernings:
+    ${ref}, // ${chr(ref[0])} + ${chr(ref[1])}
+%endfor
+];
+% endif
+% if gen_normal:
+
+
 /// FontInfo struct for normal ASCII usage
 pub const Font_${name}_info: FontInfo = FontInfo {
     translation_blob_idx: ${font_info["translation_blob_idx"]},
@@ -43,6 +53,7 @@ pub const Font_${name}_info: FontInfo = FontInfo {
     baseline: ${font_info["baseline"]},
     glyph_data: &${font_info["glyph_array"]},
     glyph_nonprintable: &${font_info["nonprintable"]},
+    kernings: &${font_info["kernings"]},
 };
 % endif
 % if gen_upper:
@@ -55,5 +66,6 @@ pub const Font_${name}_upper_info: FontInfo = FontInfo {
     baseline: ${font_info_upper["baseline"]},
     glyph_data: &${font_info_upper["glyph_array"]},
     glyph_nonprintable: &${font_info_upper["nonprintable"]},
+    kernings: &${font_info_upper["kernings"]},
 };
 % endif
