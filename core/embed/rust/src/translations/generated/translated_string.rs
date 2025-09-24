@@ -3540,6 +3540,8 @@ impl TranslatedString {
             (Self::ble__mac_address, "MAC address"),
             (Self::ble__waiting_for_host, "Waiting for host..."),
             (Self::ble__apps_connected, "Apps connected"),
+            (Self::evolu__enable_labeling_header, "Enable Labeling"),
+            (Self::evolu__enable_labeling_message, "Do you really want to enable labeling on this Suite?"),
     ];
 
     #[cfg(feature = "micropython")]
