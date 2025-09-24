@@ -2087,6 +2087,7 @@ if TYPE_CHECKING:
         optiga_sec: "int | None"
         soc: "int | None"
         firmware_corrupted: "bool | None"
+        auto_lock_delay_battery_ms: "int | None"
 
         def __init__(
             self,
@@ -2144,6 +2145,7 @@ if TYPE_CHECKING:
             optiga_sec: "int | None" = None,
             soc: "int | None" = None,
             firmware_corrupted: "bool | None" = None,
+            auto_lock_delay_battery_ms: "int | None" = None,
         ) -> None:
             pass
 
