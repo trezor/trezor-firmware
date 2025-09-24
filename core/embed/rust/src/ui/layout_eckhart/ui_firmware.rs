@@ -34,6 +34,9 @@ use crate::{
     util::interpolate,
 };
 
+#[cfg(feature = "ble")]
+use crate::ui::component::{BLEHandler, BLEHandlerMode};
+
 use super::{
     component::Button,
     firmware::{
@@ -1259,7 +1262,7 @@ impl FirmwareUI for UIEckhart {
             .with_header(Header::new(TR::thp__pair_new_device.into()).with_close_button())
             .with_action_bar(ActionBar::new_text_only(TR::thp__continue_on_host.into()));
         #[cfg(feature = "ble")]
-        let screen = crate::ui::component::BLEHandler::new(screen, true);
+        let screen = BLEHandler::new(screen, BLEHandlerMode::WaitingForPairingRequest);
         let layout = RootComponent::new(screen);
         Ok(layout)
     }
@@ -1277,11 +1280,26 @@ impl FirmwareUI for UIEckhart {
             .add_newline()
             .add_alignment(Alignment::Center)
             .add_text_with_font(code, fonts::FONT_SATOSHI_EXTRALIGHT_72);
-        let screen = crate::ui::component::BLEHandler::new(
+        let screen = BLEHandler::new(
             TextScreen::new(FormattedText::new(ops))
                 .with_header(Header::new(title))
                 .with_action_bar(ActionBar::new_cancel_confirm()),
-            false,
+            BLEHandlerMode::WaitingForPairingCancel,
+        );
+        let layout = RootComponent::new(screen);
+        Ok(layout)
+    }
+
+    #[cfg(feature = "ble")]
+    fn wait_ble_host_confirmation() -> Result<impl LayoutMaybeTrace, Error> {
+        let screen = BLEHandler::new(
+            TextScreen::new(
+                Paragraph::new(&theme::TEXT_REGULAR, TR::ble__waiting_for_host)
+                    .into_paragraphs()
+                    .with_placement(LinearPlacement::vertical()),
+            )
+            .with_header(Header::new(TR::ble__pairing_title.into()).with_close_button()),
+            BLEHandlerMode::WaitingForPairingCompletion,
         );
         let layout = RootComponent::new(screen);
         Ok(layout)

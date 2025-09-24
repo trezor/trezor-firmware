@@ -98,6 +98,7 @@ class TR:
     ble__unpair_current: str = "Unpair connected device"
     ble__unpair_title: str = "Unpair"
     ble__version: str = "Bluetooth version"
+    ble__waiting_for_host: str = "Waiting for host..."
     brightness__change_title: str = "Change display brightness"
     brightness__changed_title: str = "Display brightness changed"
     brightness__title: str = "Display brightness"

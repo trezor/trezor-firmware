@@ -664,6 +664,14 @@ def show_ble_pairing_code(
 
 
 # rust/src/ui/api/firmware_micropython.rs
+def wait_ble_host_confirmation(
+    *,
+) -> LayoutObj[UiResult]:
+    """Pairing device: third screen (waiting for host confirmation).
+    Returns on BLEEvent::{PairingCanceled, Disconnected}."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
 def confirm_thp_pairing(
     *,
     title: str,

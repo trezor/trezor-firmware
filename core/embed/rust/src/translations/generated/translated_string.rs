@@ -1550,6 +1550,7 @@ pub enum TranslatedString {
     homescreen__backup_needed_info = 1160,  // "Open Trezor Suite and create a wallet backup. This is the only way to recover access to your assets."
     ble__host_info = 1161,  // "Host info"
     ble__mac_address = 1162,  // "MAC address"
+    ble__waiting_for_host = 1163,  // "Waiting for host..."
 }
 
 impl TranslatedString {
@@ -3534,6 +3535,7 @@ impl TranslatedString {
             (Self::homescreen__backup_needed_info, "Open Trezor Suite and create a wallet backup. This is the only way to recover access to your assets."),
             (Self::ble__host_info, "Host info"),
             (Self::ble__mac_address, "MAC address"),
+            (Self::ble__waiting_for_host, "Waiting for host..."),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3634,6 +3636,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ble__unpair_current, Self::ble__unpair_current),
         (Qstr::MP_QSTR_ble__unpair_title, Self::ble__unpair_title),
         (Qstr::MP_QSTR_ble__version, Self::ble__version),
+        (Qstr::MP_QSTR_ble__waiting_for_host, Self::ble__waiting_for_host),
         (Qstr::MP_QSTR_brightness__change_title, Self::brightness__change_title),
         (Qstr::MP_QSTR_brightness__changed_title, Self::brightness__changed_title),
         (Qstr::MP_QSTR_brightness__title, Self::brightness__title),

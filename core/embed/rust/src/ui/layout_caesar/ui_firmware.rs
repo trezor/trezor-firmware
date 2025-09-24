@@ -1165,6 +1165,11 @@ impl FirmwareUI for UICaesar {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
     }
 
+    #[cfg(feature = "ble")]
+    fn wait_ble_host_confirmation() -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::NotImplementedError)
+    }
+
     fn show_thp_pairing_code(
         title: TString<'static>,
         description: TString<'static>,

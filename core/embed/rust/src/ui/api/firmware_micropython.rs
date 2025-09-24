@@ -1021,6 +1021,27 @@ extern "C" fn new_show_pairing_device_name(
 
 // Prefix parameters with `_` to avoid unused variable warning when building
 // without "ble".
+extern "C" fn new_wait_ble_host_confirmation(
+    _n_args: usize,
+    _args: *const Obj,
+    _kwargs: *mut Map,
+) -> Obj {
+    #[cfg(feature = "ble")]
+    {
+        let block = move |_args: &[Obj], _kwargs: &Map| {
+            let layout = ModelUI::wait_ble_host_confirmation()?;
+            let layout_obj = LayoutObj::new_root(layout)?;
+            Ok(layout_obj.into())
+        };
+        unsafe { util::try_with_args_and_kwargs(_n_args, _args, _kwargs, block) }
+    }
+
+    #[cfg(not(feature = "ble"))]
+    unimplemented!()
+}
+
+// Prefix parameters with `_` to avoid unused variable warning when building
+// without "ble".
 extern "C" fn new_show_ble_pairing_code(
     _n_args: usize,
     _args: *const Obj,
@@ -1972,6 +1993,13 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     """BLE pairing: second screen (pairing code).
     ///     Returns on BLEEvent::{PairingCanceled, Disconnected}."""
     Qstr::MP_QSTR_show_ble_pairing_code => obj_fn_kw!(0, new_show_ble_pairing_code).as_obj(),
+
+    /// def wait_ble_host_confirmation(
+    ///     *,
+    /// ) -> LayoutObj[UiResult]:
+    ///     """Pairing device: third screen (waiting for host confirmation).
+    ///     Returns on BLEEvent::{PairingCanceled, Disconnected}."""
+    Qstr::MP_QSTR_wait_ble_host_confirmation => obj_fn_kw!(0, new_wait_ble_host_confirmation).as_obj(),
 
     /// def confirm_thp_pairing(
     ///     *,

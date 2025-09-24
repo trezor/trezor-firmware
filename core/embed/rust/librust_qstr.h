@@ -202,6 +202,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ble__unpair_current;
   MP_QSTR_ble__unpair_title;
   MP_QSTR_ble__version;
+  MP_QSTR_ble__waiting_for_host;
   MP_QSTR_ble_event;
   MP_QSTR_bootscreen;
   MP_QSTR_br_code;
@@ -927,6 +928,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_verb_info;
   MP_QSTR_verify;
   MP_QSTR_version;
+  MP_QSTR_wait_ble_host_confirmation;
   MP_QSTR_warning;
   MP_QSTR_warning_footer;
   MP_QSTR_wipe__info;
