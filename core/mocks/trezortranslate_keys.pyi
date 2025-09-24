@@ -372,6 +372,8 @@ class TR:
     ethereum__unknown_contract_address: str = "Unknown contract address"
     ethereum__unknown_token: str = "Unknown token"
     ethereum__valid_signature: str = "The signature is valid."
+    evolu__enable_labeling_header: str = "Enable Labeling"
+    evolu__enable_labeling_message: str = "Do you really want to enable labeling on this Suite?"
     experimental_mode__enable: str = "Enable experimental features?"
     experimental_mode__only_for_dev: str = "Only for development and beta testing!"
     experimental_mode__title: str = "Experimental mode"
