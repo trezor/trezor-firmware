@@ -24,6 +24,7 @@
 #include <sec/optiga.h>
 #include <sec/optiga_commands.h>
 #include <sec/optiga_transport.h>
+#include <sec/rng.h>
 #include <sec/secret_keys.h>
 #include <sec/storage.h>
 #include "ecdsa.h"
@@ -31,7 +32,6 @@
 #include "hmac.h"
 #include "memzero.h"
 #include "nist256p1.h"
-#include "rand.h"
 
 // Counter-protected PIN secret and reset key for OID_STRETCHED_PIN_CTR (OID
 // 0xF1D0).
@@ -625,11 +625,10 @@ bool optiga_pin_set(optiga_ui_progress_t ui_progress,
 
   // Generate and store the counter-protected PIN secret.
   uint8_t pin_secret[OPTIGA_PIN_SECRET_SIZE] = {0};
-  if (optiga_get_random(pin_secret, sizeof(pin_secret)) != OPTIGA_SUCCESS) {
+  if (!rng_fill_buffer_strong(pin_secret, sizeof(pin_secret))) {
     ret = false;
     goto end;
   }
-  random_xor(pin_secret, sizeof(pin_secret));
 
   if (optiga_set_data_object(OID_PIN_SECRET, false, pin_secret,
                              sizeof(pin_secret)) != OPTIGA_SUCCESS) {
@@ -639,11 +638,10 @@ bool optiga_pin_set(optiga_ui_progress_t ui_progress,
 
   // Generate the key for the HMAC-SHA256 PIN stretching step.
   uint8_t pin_hmac[OPTIGA_PIN_SECRET_SIZE] = {0};
-  if (optiga_get_random(pin_hmac, sizeof(pin_hmac)) != OPTIGA_SUCCESS) {
+  if (!rng_fill_buffer_strong(pin_hmac, sizeof(pin_hmac))) {
     ret = false;
     goto end;
   }
-  random_xor(pin_hmac, sizeof(pin_hmac));
 
   // Authorise using OID_PIN_SECRET so that we can write to OID_STRETCHED_PIN
   // and OID_STRETCHED_PIN_CTR.
