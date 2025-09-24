@@ -25,7 +25,7 @@ use super::{
             button_cancel, button_confirm, button_default, button_wipe_confirm, BLD_BG, BLD_FG,
             TEXT_FW_FINGERPRINT, TEXT_WARNING, WELCOME_COLOR,
         },
-        BLACK, BLUE, GREEN_LIGHT, GREY, GREY_LIGHT, ICON_CHECKMARK, ICON_CROSS, RED, TEXT_NORMAL,
+        BLACK, BLUE, GREEN_LIGHT, GREY, ICON_CHECKMARK, ICON_CROSS, RED, TEXT_NORMAL,
         TEXT_SMALL_GREY, WHITE,
     },
     UIEckhart, CANCEL_MESSAGE, WAIT_FOR_RESTART_MESSAGE, WAIT_MESSAGE,
