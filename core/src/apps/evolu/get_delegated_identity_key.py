@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 async def get_delegated_identity_key(
     _msg: EvoluGetDelegatedIdentityKey,
 ) -> EvoluDelegatedIdentityKey:
-    from trezor import utils, wire
+    from trezor import utils, wire, TR
     from trezor.messages import EvoluDelegatedIdentityKey
     from trezor.ui.layouts import confirm_action
     from trezor.utils import bootloader_locked
@@ -19,9 +19,9 @@ async def get_delegated_identity_key(
         raise RuntimeError("Optiga is not available")
 
     await confirm_action(
-        "Enable labeling",
-        "Enable labeling",
-        action="Do you want to enable labeling on this Suite?",
+        "enable_labeling",
+        TR.evolu__enable_labeling_header,
+        TR.evolu__enable_labeling_message,
         prompt_screen=True,
     )
 
