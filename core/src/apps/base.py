@@ -222,6 +222,11 @@ def get_features() -> Features:
         f.experimental_features = storage_device.get_experimental_features()
         f.hide_passphrase_from_host = storage_device.get_hide_passphrase_from_host()
 
+        if utils.USE_POWER_MANAGER:
+            f.auto_lock_delay_battery_ms = (
+                storage_device.get_autolock_delay_battery_ms()
+            )
+
     return f
 
 
