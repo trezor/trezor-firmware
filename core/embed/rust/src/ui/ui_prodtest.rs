@@ -16,6 +16,8 @@ pub trait ProdtestUI {
 
     fn screen_prodtest_show_text(text: &str);
 
+    fn screen_large_label(text1: &str, text2: &str, text3: &str);
+
     fn screen_prodtest_border();
 
     fn screen_prodtest_bars(colors: &str);

@@ -16,6 +16,10 @@ void screen_prodtest_bars(const char* colors, size_t color_count);
 
 void screen_prodtest_show_text(const char* text, uint8_t text_len);
 
+void screen_prodtest_large_label(const char* text1, uint8_t text_len1,
+                                const char* text2, uint8_t text_len2,
+                                const char* text3, uint8_t text_len3);
+
 void screen_prodtest_touch(int16_t x0, int16_t y0, int16_t w, int16_t h);
 
 void screen_prodtest_border(void);

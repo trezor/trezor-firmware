@@ -4,8 +4,7 @@ use crate::{
         sysevent::{parse_event, sysevents_t},
     },
     ui::{
-        ui_prodtest::{ProdtestLayoutType, ProdtestUI},
-        ModelUI,
+        component::text, ui_prodtest::{ProdtestLayoutType, ProdtestUI}, ModelUI
     },
     util::from_c_array,
 };
@@ -51,6 +50,17 @@ extern "C" fn screen_prodtest_show_text(text: *const cty::c_char, text_len: u8) 
     let text = unwrap!(unsafe { from_c_array(text, text_len as usize) });
 
     ModelUI::screen_prodtest_show_text(text);
+}
+
+#[no_mangle]
+extern "C" fn screen_prodtest_large_label(text1: *const cty::c_char, text_len1: u8,
+                                           text2: *const cty::c_char, text_len2: u8,
+                                           text3: *const cty::c_char, text_len3: u8) {
+    let text1 = unwrap!(unsafe { from_c_array(text1, text_len1 as usize) });
+    let text2 = unwrap!(unsafe { from_c_array(text2, text_len2 as usize) });
+    let text3 = unwrap!(unsafe { from_c_array(text3, text_len3 as usize) });
+
+    ModelUI::screen_large_label(text1, text2, text3);
 }
 
 #[no_mangle]

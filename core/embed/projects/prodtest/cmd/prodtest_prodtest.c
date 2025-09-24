@@ -51,6 +51,35 @@ static void prodtest_prodtest_version(cli_t* cli) {
          VERSION_BUILD);
 }
 
+static void prodtest_show_text(cli_t* cli){
+
+  if(cli_arg_count(cli) != 1){
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  const char* text = cli_arg(cli, "text");
+  screen_prodtest_show_text(text, strlen(text));
+
+  cli_ok(cli, "");
+
+}
+
+static void prodtest_show_large_label(cli_t* cli){
+
+  if(cli_arg_count(cli) != 3){
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  const char* text1 = cli_arg(cli, "text1");
+  const char* text2 = cli_arg(cli, "text2");
+  const char* text3 = cli_arg(cli, "text3");
+  screen_prodtest_large_label(text1, strlen(text1), text2, strlen(text2), text3, strlen(text3));
+
+  cli_ok(cli, "");
+}
+
 static void prodtest_prodtest_wipe(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -92,6 +121,20 @@ PRODTEST_CLI_CMD(
   .func = prodtest_prodtest_intro,
   .info = "",
   .args = "",
+);
+
+PRODTEST_CLI_CMD(
+  .name = "prodtest-show-text",
+  .func = prodtest_show_text,
+  .info = "Show text on the screen",
+  .args = "<text>"
+)
+
+PRODTEST_CLI_CMD(
+  .name = "prodtest-show-large-label",
+  .func = prodtest_show_large_label,
+  .info = "Show large label on the screen",
+  .args = "<text1> <text2> <text3>"
 );
 
 PRODTEST_CLI_CMD(

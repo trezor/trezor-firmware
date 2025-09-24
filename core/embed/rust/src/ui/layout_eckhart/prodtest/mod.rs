@@ -1,7 +1,7 @@
 mod welcome;
 
 use crate::ui::{
-    component::Event,
+    component::{base::Component, Event, Label},
     constant::screen,
     display,
     display::Color,
@@ -9,14 +9,22 @@ use crate::ui::{
         TouchEvent,
         TouchEvent::{TouchEnd, TouchMove, TouchStart},
     },
-    geometry::{Alignment, Offset, Rect},
-    layout::simplified::{process_frame_event, show},
+    geometry::{Alignment, Offset, Rect, Point},
+    layout::simplified::{process_frame_event, render, show},
     shape::{self, render_on_display},
     ui_prodtest::{ProdtestLayoutType, ProdtestUI},
+    CommonUI,
 };
 use heapless::Vec;
 
-use super::{cshape::ScreenBorder, fonts, prodtest::welcome::Welcome, UIEckhart};
+use super::{
+    cshape::ScreenBorder, fonts, prodtest::welcome::Welcome, theme, theme::TEXT_NORMAL, UIEckhart,
+};
+
+const SCREEN: Rect = UIEckhart::SCREEN;
+const PROGRESS_TEXT_ORIGIN: Point = SCREEN.top_left().ofs(Offset::new(theme::PADDING, 38));
+const PROGRESS_TEXT_ORIGIN2: Point = SCREEN.top_left().ofs(Offset::new(theme::PADDING, 38 * 2));
+const PROGRESS_TEXT_ORIGIN3: Point = SCREEN.top_left().ofs(Offset::new(theme::PADDING, 38 * 3));
 
 #[allow(clippy::large_enum_variant)]
 pub enum ProdtestLayout {
@@ -51,6 +59,46 @@ impl ProdtestUI for UIEckhart {
                 .with_fg(Color::white())
                 .with_align(Alignment::Center)
                 .render(target);
+        });
+
+        display::refresh();
+    }
+
+    fn screen_large_label(text1: &str, text2: &str, text3: &str) {
+
+        display::sync();
+
+        let mut label1 = Label::new(text1.into(), Alignment::Start, TEXT_NORMAL);
+        let mut label2 = Label::new(text2.into(), Alignment::Start, TEXT_NORMAL);
+        let mut label3 = Label::new(text3.into(), Alignment::Start, TEXT_NORMAL);
+        render_on_display(None, Some(Color::black()), |target| {
+            label1.place(Rect::from_top_left_and_size(
+                PROGRESS_TEXT_ORIGIN,
+                Offset::new(
+                    SCREEN.width() - 2 * theme::PADDING,
+                    4 * fonts::FONT_SATOSHI_REGULAR_38.text_height(),
+                ),
+            ));
+            label1.render(target);
+
+            label2.place(Rect::from_top_left_and_size(
+                PROGRESS_TEXT_ORIGIN2,
+                Offset::new(
+                    SCREEN.width() - 2 * theme::PADDING,
+                    4 * fonts::FONT_SATOSHI_REGULAR_38.text_height(),
+                ),
+            ));
+            label2.render(target);
+
+            label3.place(Rect::from_top_left_and_size(
+                PROGRESS_TEXT_ORIGIN3,
+                Offset::new(
+                    SCREEN.width() - 2 * theme::PADDING,
+                    4 * fonts::FONT_SATOSHI_REGULAR_38.text_height(),
+                ),
+            ));
+            label3.render(target);
+
         });
 
         display::refresh();
