@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from trezorui_api import LayoutObj, UiResult  # noqa: F401
 
     T = TypeVar("T", covariant=True)
-    ButtonRequestTuple = tuple[ButtonRequestType, str]
+    ButtonRequestMsg = tuple[ButtonRequestType, str] | None
 else:
     T = 0
     Generic = {T: object}
@@ -145,8 +145,9 @@ class Layout(Generic[T]):
         self.tasks: set[loop.Task] = set()
         self.timers: dict[int, loop.Task] = {}
         self.result_box: loop.mailbox[Any] = loop.mailbox()
-        self.button_request_box: loop.mailbox[ButtonRequestTuple] = loop.mailbox()
         self.button_request_ack_pending: bool = False
+        self.button_request_box: loop.mailbox[ButtonRequestMsg] = loop.mailbox()
+        self.button_request_task: loop.Task | None = None
         self.transition_out: AttachType | None = None
         self.backlight_level = BacklightLevels.NORMAL
         self.context: Context | None = None
@@ -207,7 +208,7 @@ class Layout(Generic[T]):
         for task in self.create_tasks():
             self._start_task(task)
 
-    def stop(self, _kill_taker: bool = True) -> None:
+    def stop(self, _close_all: bool = True) -> None:
         """Stop the layout, moving out of RUNNING state and unsetting self as the
         current layout.
 
@@ -215,23 +216,29 @@ class Layout(Generic[T]):
         FINISHED.
 
         When called externally, this kills any tasks that wait for the result, assuming
-        that the external `stop()` is a kill. When called internally, `_kill_taker` is
+        that the external `stop()` is a kill. When called internally, `_close_all` is
         set to False to indicate that a result became available and that the taker
         should be allowed to pick it up.
         """
         # stop all running timers and spawned tasks
         for timer in self.timers.values():
             loop.close(timer)
+
+        not_closed = set()
         for task in self.tasks:
+            if not _close_all and task is self.button_request_task:
+                # keep `ButtonRequest` handler alive to avoid THP desync
+                not_closed.add(task)
+                continue
             if task != loop.this_task:
                 loop.close(task)
         self.timers.clear()
-        self.tasks.clear()
+        self.tasks = not_closed
 
         self.transition_out = self.layout.get_transition_out()
 
         # shut down anyone who is waiting for the result
-        if _kill_taker:
+        if _close_all:
             self.result_box.maybe_close()
 
         if CURRENT_LAYOUT is self:
@@ -249,11 +256,27 @@ class Layout(Generic[T]):
         if self.is_ready():
             self.start()
         # else we are (a) still running or (b) already finished
+        is_done = None
         try:
             if self.context is not None and self.result_box.is_empty():
-                self._start_task(self._handle_button_requests())
-            return await self.result_box
+                is_done = loop.mailbox()
+                self.button_request_task = self._handle_button_requests(is_done)
+                self._start_task(self.button_request_task)
+            result = await self.result_box
+
+            if is_done is not None:
+                # Make sure ButtonRequest is ACKed, before the result is returned.
+                # Otherwise, THP channel may become desynced (due to two consecutive writes).
+                try:
+                    if self.button_request_box.is_empty():
+                        self.button_request_box.put(None)
+                    await is_done
+                except Exception as e:
+                    log.exception(__name__, e)
+
+            return result
         finally:
+            # Close all tasks (including ButtonRequest handler)
             self.stop()
 
     def request_complete_repaint(self) -> None:
@@ -362,7 +385,7 @@ class Layout(Generic[T]):
         down the layout if appropriate, do nothing otherwise."""
         # when emitting a message, there should not be another one already waiting
         assert self.result_box.is_empty()
-        self.stop(_kill_taker=False)
+        self.stop(_close_all=False)
         self.result_box.put(msg)
         raise Shutdown()
 
@@ -423,38 +446,43 @@ class Layout(Generic[T]):
             finally:
                 touch.close()
 
-    async def _handle_button_requests(self) -> None:
-        if self.context is None:
-            return
-        while True:
-            try:
-                # The following task will raise `UnexpectedMessageException` on any message.
-                unexpected_read = self.context.read(())
-                result = await loop.race(unexpected_read, self.button_request_box)
-                assert isinstance(result, tuple)
-                br_code, br_name = result
+    async def _handle_button_requests(self, is_done: loop.mailbox[None]) -> None:
+        try:
+            if self.context is None:
+                return
+            while True:
+                try:
+                    # The following task will raise `UnexpectedMessageException` on any message.
+                    unexpected_read = self.context.read(())
+                    result = await loop.race(unexpected_read, self.button_request_box)
+                    if result is None:
+                        return  # exit the loop when the layout is done.
+                    assert isinstance(result, tuple)
+                    br_code, br_name = result
 
-                if __debug__:
-                    log.info(__name__, "ButtonRequest sent: %s", br_name)
-                await self.context.call(
-                    ButtonRequest(
-                        code=br_code, pages=self.layout.page_count(), name=br_name
-                    ),
-                    ButtonAck,
-                )
-                if __debug__:
-                    log.info(__name__, "ButtonRequest acked: %s", br_name)
-
-                if (
-                    self.button_request_ack_pending
-                    and self.state is LayoutState.TRANSITIONING
-                ):
-                    self.button_request_ack_pending = False
-                    self.state = LayoutState.ATTACHED
                     if __debug__:
-                        self.notify_debuglink(self)
-            except Exception:
-                raise
+                        log.info(__name__, "ButtonRequest sent: %s", br_name)
+                    await self.context.call(
+                        ButtonRequest(
+                            code=br_code, pages=self.layout.page_count(), name=br_name
+                        ),
+                        ButtonAck,
+                    )
+                    if __debug__:
+                        log.info(__name__, "ButtonRequest acked: %s", br_name)
+
+                    if (
+                        self.button_request_ack_pending
+                        and self.state is LayoutState.TRANSITIONING
+                    ):
+                        self.button_request_ack_pending = False
+                        self.state = LayoutState.ATTACHED
+                        if __debug__:
+                            self.notify_debuglink(self)
+                except Exception:
+                    raise
+        finally:
+            is_done.put(None)
 
     if utils.USE_BLE:
 
