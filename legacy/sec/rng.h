@@ -17,7 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "rand.h"
-#include <sec/rng.h>
+#pragma once
 
-uint32_t random32(void) { return rng_get(); }
+#include <stdbool.h>
+
+#include "rand.h"
+
+// Minimal implementation of sec/rng.h from core/embed
+
+static inline bool rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
+  random_buffer((uint8_t*)buffer, buffer_size);
+  return true;
+}

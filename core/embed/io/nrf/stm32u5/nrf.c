@@ -567,9 +567,7 @@ bool nrf_authenticate(void) {
   uint8_t data[1 + sizeof(challenge)] = {MGMT_CMD_AUTH_CHALLENGE};
 
   // generate random challenge
-  for (int i = 0; i < ARRAY_LENGTH(challenge); i++) {
-    challenge[i] = rng_get();
-  }
+  rng_fill_buffer(challenge, sizeof(challenge));
 
   memcpy(data + 1, challenge, sizeof(challenge));
 

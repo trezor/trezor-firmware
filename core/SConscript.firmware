@@ -124,7 +124,6 @@ SOURCE_MOD += [
     'embed/upymod/trezorobj.c',
     'embed/upymod/modtrezorcrypto/crc.c',
     'embed/upymod/modtrezorcrypto/modtrezorcrypto.c',
-    'embed/upymod/modtrezorcrypto/rand.c',
 ]
 SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/address.c',

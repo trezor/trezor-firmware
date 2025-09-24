@@ -195,18 +195,6 @@ access_violation:
   return false;
 }
 
-bool __wur optiga_random_buffer__verified(uint8_t *dest, size_t size) {
-  if (!probe_write_access(dest, size)) {
-    goto access_violation;
-  }
-
-  return optiga_random_buffer(dest, size);
-
-access_violation:
-  apptask_access_violation();
-  return false;
-}
-
 #endif  // USE_OPTIGA
 
 // ---------------------------------------------------------------------
@@ -361,6 +349,34 @@ secbool storage_next_counter__verified(const uint16_t key, uint32_t *count) {
 access_violation:
   apptask_access_violation();
   return secfalse;
+}
+
+// ---------------------------------------------------------------------
+
+#include <sec/rng.h>
+
+void rng_fill_buffer__verified(void *buffer, size_t buffer_size) {
+  if (!probe_write_access(buffer, buffer_size)) {
+    goto access_violation;
+  }
+
+  rng_fill_buffer(buffer, buffer_size);
+  return;
+
+access_violation:
+  apptask_access_violation();
+}
+
+bool rng_fill_buffer_strong__verified(void *buffer, size_t buffer_size) {
+  if (!probe_write_access(buffer, buffer_size)) {
+    goto access_violation;
+  }
+
+  return rng_fill_buffer_strong(buffer, buffer_size);
+
+access_violation:
+  apptask_access_violation();
+  return false;
 }
 
 // ---------------------------------------------------------------------

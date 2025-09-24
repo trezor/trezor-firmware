@@ -17,31 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <trezor_rtl.h>
+#pragma once
 
-#include <sec/rng.h>
+#include <stdbool.h>
 
 #include "rand.h"
 
-#ifdef USE_INSECURE_PRNG
+// Minimal implementation of rng.h for the storage tests
 
-uint32_t rng_get(void) {
-  // Uses PRNG implemented in crypto/rand.c
-  return random32();
+static inline bool rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
+  random_buffer((uint8_t*)buffer, buffer_size);
+  return true;
 }
-
-#else
-
-uint32_t rng_get(void) {
-  static FILE *frand = NULL;
-  if (!frand) {
-    frand = fopen("/dev/urandom", "r");
-  }
-  ensure(sectrue * (frand != NULL), "fopen failed");
-  uint32_t r;
-  ensure(sectrue * (sizeof(r) == fread(&r, 1, sizeof(r), frand)),
-         "fread failed");
-  return r;
-}
-
-#endif  // USE_INSECURE_PRNG

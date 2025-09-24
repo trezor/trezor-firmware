@@ -210,7 +210,6 @@ SOURCE_MOD += [
     'embed/util/image/image.c',
     'embed/rtl/error_handling.c',
     'embed/rtl/mini_printf.c',
-    'embed/upymod/modtrezorcrypto/rand.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',

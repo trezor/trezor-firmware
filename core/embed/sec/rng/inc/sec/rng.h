@@ -17,19 +17,54 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_RNG_H
-#define TREZORHAL_RNG_H
+#pragma once
 
 #include <trezor_types.h>
 
-#ifdef KERNEL_MODE
+#ifdef SECURE_MODE
 
+/**
+ * @brief Initializes the hardware random number generator.
+ *
+ */
 void rng_init(void);
 
-uint32_t rng_read(const uint32_t previous, const uint32_t compare_previous);
+#endif
 
-#endif  // KERNEL_MODE
-
+/**
+ * @brief Gets 32 bits of random data using from the hardware RNG.
+ *
+ * @return uint32_t Random data.
+ */
 uint32_t rng_get(void);
 
-#endif
+/**
+ * @brief Fills a buffer with random bytes using the hardware RNG
+ *
+ * This function uses only single source of entropy - the hardware RNG
+ * available on the microcontroller. It is fast but less suitable for
+ * generating critical secrets.
+ *
+ * @param buffer Buffer to fill with random bytes.
+ * @param buffer_size Size of the buffer in bytes.
+ */
+void rng_fill_buffer(void* buffer, size_t buffer_size);
+
+/**
+ * @brief Fills a buffer with random bytes using the hardware RNG and
+ * combines it with other entropy sources (e.g., Optiga, Tropic) if
+ * available.
+ *
+ * This function is suitable for generating critical secrets since it
+ * combines multiple sources of entropy, but it is slower than
+ * `rng_fill_buffer()` since it may use external chips on I2C/SPI.
+ *
+ * The function requires that Optiga and/or Tropic to be initialized
+ * if they are enabled by USE_OPTIGA/USE_TROPIC.
+ *
+ * @param buffer Buffer to fill with random bytes.
+ * @param buffer_size Size of the buffer in bytes.
+ *
+ * @return True on success, false on failure.
+ */
+bool __wur rng_fill_buffer_strong(void* buffer, size_t buffer_size);

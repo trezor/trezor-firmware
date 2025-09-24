@@ -21,11 +21,8 @@
 
 #include "embed/upymod/trezorobj.h"
 
+#include <sec/rng.h>
 #include "rand.h"
-
-#if USE_OPTIGA
-#include <sec/optiga.h>
-#endif
 
 /// package: trezorcrypto.random
 
@@ -57,19 +54,14 @@ STATIC mp_obj_t mod_trezorcrypto_random_bytes(size_t n_args,
   }
   vstr_t vstr = {0};
   vstr_init_len(&vstr, len);
-#if USE_OPTIGA
   if (n_args > 1 && mp_obj_is_true(args[1])) {
-    if (!optiga_random_buffer((uint8_t *)vstr.buf, len)) {
+    if (!rng_fill_buffer_strong((uint8_t *)vstr.buf, len)) {
       vstr_clear(&vstr);
       mp_raise_msg(&mp_type_RuntimeError,
-                   MP_ERROR_TEXT("Failed to get randomness from Optiga."));
+                   MP_ERROR_TEXT("Failed to get strong randomness."));
     }
-
-    random_xor((uint8_t *)vstr.buf, len);
-  } else
-#endif
-  {
-    random_buffer((uint8_t *)vstr.buf, len);
+  } else {
+    rng_fill_buffer((uint8_t *)vstr.buf, len);
   }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }

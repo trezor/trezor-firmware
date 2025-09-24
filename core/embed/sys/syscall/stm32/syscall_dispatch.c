@@ -423,12 +423,6 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       args[0] = optiga_read_sec__verified(sec);
     } break;
 
-    case SYSCALL_OPTIGA_RANDOM_BUFFER: {
-      uint8_t *dest = (uint8_t *)args[0];
-      size_t size = args[1];
-      args[0] = optiga_random_buffer__verified(dest, size);
-    } break;
-
 #if PYOPT == 0
     case SYSCALL_OPTIGA_SET_SEC_MAX: {
       optiga_set_sec_max();
@@ -561,8 +555,16 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       args[0] = translations_area_bytesize();
     } break;
 
-    case SYSCALL_RNG_GET: {
-      args[0] = rng_get();
+    case SYSCALL_RNG_FILL_BUFFER: {
+      void *buffer = (void *)args[0];
+      size_t buffer_size = (size_t)args[1];
+      rng_fill_buffer__verified(buffer, buffer_size);
+    } break;
+
+    case SYSCALL_RNG_FILL_BUFFER_STRONG: {
+      void *buffer = (void *)args[0];
+      size_t buffer_size = (size_t)args[1];
+      args[0] = rng_fill_buffer_strong__verified(buffer, buffer_size);
     } break;
 
     case SYSCALL_FIRMWARE_GET_VENDOR: {

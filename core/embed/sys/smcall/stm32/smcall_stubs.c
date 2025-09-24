@@ -188,11 +188,6 @@ bool optiga_read_sec(uint8_t *sec) {
   return (bool)smcall_invoke1((uint32_t)sec, SMCALL_OPTIGA_READ_SEC);
 }
 
-bool optiga_random_buffer(uint8_t *dest, size_t size) {
-  return (bool)smcall_invoke2((uint32_t)dest, size,
-                              SMCALL_OPTIGA_RANDOM_BUFFER);
-}
-
 #if PYOPT == 0
 void optiga_set_sec_max(void) { smcall_invoke0(SMCALL_OPTIGA_SET_SEC_MAX); }
 
@@ -294,7 +289,14 @@ secbool storage_next_counter(const uint16_t key, uint32_t *count) {
 
 #include <sec/rng.h>
 
-uint32_t rng_get(void) { return smcall_invoke0(SMCALL_RNG_GET); }
+void rng_fill_buffer(void *buffer, size_t buffer_size) {
+  smcall_invoke2((uint32_t)buffer, buffer_size, SMCALL_RNG_FILL_BUFFER);
+}
+
+bool rng_fill_buffer_strong(void *buffer, size_t buffer_size) {
+  return (bool)smcall_invoke2((uint32_t)buffer, buffer_size,
+                              SMCALL_RNG_FILL_BUFFER_STRONG);
+}
 
 // =============================================================================
 // fwutils.h

@@ -65,8 +65,6 @@ bool __wur optiga_read_cert__verified(uint8_t index, uint8_t *cert,
 
 bool __wur optiga_read_sec__verified(uint8_t *sec);
 
-bool __wur optiga_random_buffer__verified(uint8_t *dest, size_t size);
-
 #endif  // USE_OPTIGA
 
 // ---------------------------------------------------------------------
@@ -96,6 +94,13 @@ secbool storage_set__verified(const uint16_t key, const void *val,
                               const uint16_t len);
 
 secbool storage_next_counter__verified(const uint16_t key, uint32_t *count);
+
+// ---------------------------------------------------------------------
+#include <sec/rng.h>
+
+void rng_fill_buffer__verified(void *buffer, size_t buffer_size);
+
+bool rng_fill_buffer_strong__verified(void *buffer, size_t buffer_size);
 
 // ---------------------------------------------------------------------
 #include <util/fwutils.h>
