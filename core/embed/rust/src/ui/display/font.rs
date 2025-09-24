@@ -21,6 +21,7 @@ pub struct FontInfo {
     pub baseline: i16,
     pub glyph_data: &'static [&'static [u8]],
     pub glyph_nonprintable: &'static [u8],
+    pub kernings: &'static [(u8, u8, i8)],
 }
 /// Convenience type for font references defined in the `fonts` module.
 pub type Font = &'static FontInfo;
@@ -208,12 +209,17 @@ fn calculate_glyph_size(header: &[u8]) -> usize {
 impl FontInfo {
     /// Supports UTF8 characters
     pub fn text_width(&'static self, text: &str) -> i16 {
-        self.with_glyph_data(|data| {
-            text.chars().fold(0, |acc, c| {
-                let char_width = data.get_glyph(c).adv;
-                acc + char_width
-            })
-        })
+        let mut width = 0;
+        let mut prev_char: Option<char> = None;
+
+        for c in text.chars() {
+            if let Some(left) = prev_char {
+                width += self.get_kerning(left, c) as i16;
+            }
+            width += self.char_width(c);
+            prev_char = Some(c);
+        }
+        width
     }
 
     /// Width of the text that is visible.
@@ -255,6 +261,17 @@ impl FontInfo {
             }
         });
         ascent + descent
+    }
+
+    pub fn get_kerning(&self, left_ch: char, right_ch: char) -> i8 {
+        let left: u8 = left_ch as u8;
+        let right = right_ch as u8;
+        for &(l, r, v) in self.kernings {
+            if l == left && r == right {
+                return v;
+            }
+        }
+        0
     }
 
     /// Calculates the height of text containing both uppercase
