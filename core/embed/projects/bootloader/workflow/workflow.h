@@ -53,15 +53,17 @@ workflow_result_t workflow_ping(protob_io_t *iface);
 
 workflow_result_t workflow_initialize(protob_io_t *iface,
                                       const vendor_header *const vhdr,
-                                      const image_header *const hdr);
+                                      const image_header *const hdr,
+                                      secbool firmware_present);
 
 workflow_result_t workflow_get_features(protob_io_t *iface,
                                         const vendor_header *const vhdr,
-                                        const image_header *const hdr);
+                                        const image_header *const hdr,
+                                        secbool firmware_present);
 
 workflow_result_t workflow_menu(const vendor_header *const vhdr,
                                 const image_header *const hdr,
-                                protob_ios_t *ios);
+                                secbool firmware_present, protob_ios_t *ios);
 
 workflow_result_t workflow_bootloader(const vendor_header *const vhdr,
                                       const image_header *const hdr,
@@ -71,19 +73,23 @@ workflow_result_t workflow_empty_device(void);
 
 workflow_result_t workflow_host_control(const vendor_header *const vhdr,
                                         const image_header *const hdr,
+                                        secbool firmware_present,
                                         c_layout_t *wait_layout,
                                         uint32_t *ui_action_result,
                                         protob_ios_t *ios);
 
 workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
-                                       const image_header *const hdr);
+                                       const image_header *const hdr,
+                                       secbool firmware_present);
 
 #ifdef USE_BLE
 workflow_result_t workflow_ble_pairing_request(const vendor_header *const vhdr,
-                                               const image_header *const hdr);
+                                               const image_header *const hdr,
+                                               secbool firmware_present);
 
 workflow_result_t workflow_wireless_setup(const vendor_header *const vhdr,
                                           const image_header *const hdr,
+                                          secbool firmware_present,
                                           protob_ios_t *ios);
 #endif
 

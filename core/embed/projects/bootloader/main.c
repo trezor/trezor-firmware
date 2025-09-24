@@ -711,7 +711,7 @@ int bootloader_main(void) {
 
     if (header_present == sectrue) {
       if (auto_upgrade == sectrue && firmware_present == sectrue) {
-        result = workflow_auto_update(&vhdr, hdr);
+        result = workflow_auto_update(&vhdr, hdr, firmware_present);
       } else {
         result = workflow_bootloader(&vhdr, hdr, firmware_present);
       }

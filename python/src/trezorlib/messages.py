@@ -3239,6 +3239,7 @@ class Features(protobuf.MessageType):
         53: protobuf.Field("recovery_type", "RecoveryType", repeated=False, required=False, default=None),
         54: protobuf.Field("optiga_sec", "uint32", repeated=False, required=False, default=None),
         55: protobuf.Field("soc", "uint32", repeated=False, required=False, default=None),
+        56: protobuf.Field("firmware_corrupted", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3297,6 +3298,7 @@ class Features(protobuf.MessageType):
         recovery_type: Optional["RecoveryType"] = None,
         optiga_sec: Optional["int"] = None,
         soc: Optional["int"] = None,
+        firmware_corrupted: Optional["bool"] = None,
     ) -> None:
         self.capabilities: Sequence["Capability"] = capabilities if capabilities is not None else []
         self.major_version = major_version
@@ -3351,6 +3353,7 @@ class Features(protobuf.MessageType):
         self.recovery_type = recovery_type
         self.optiga_sec = optiga_sec
         self.soc = soc
+        self.firmware_corrupted = firmware_corrupted
 
 
 class LockDevice(protobuf.MessageType):
