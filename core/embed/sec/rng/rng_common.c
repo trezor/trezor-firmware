@@ -55,10 +55,12 @@ bool rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
   uint8_t* dst = (uint8_t*)buffer;
   size_t remaining = buffer_size;
 
-  uint8_t block[32];
+  static const int bumper = 4;  // !@# workaround
+
+  uint8_t block[32 + bumper];
 
   while (remaining > 0) {
-    size_t block_size = MIN(remaining, sizeof(block));
+    size_t block_size = MIN(remaining, sizeof(block) - bumper);
 #ifdef USE_OPTIGA
     if (!optiga_random_buffer(block, block_size)) {
       return false;
