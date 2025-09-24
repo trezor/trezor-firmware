@@ -395,6 +395,11 @@ const Font_RobotoMono_Light_30: [&[u8]; 95] = [
     &Font_RobotoMono_Light_30_glyph_126,
 ];
 
+/// Array of kerning tripples
+const Font_RobotoMono_Light_30_kernings: [(u8, u8, i8); 0] = [
+];
+
+
 /// FontInfo struct for normal ASCII usage
 pub const Font_RobotoMono_Light_30_info: FontInfo = FontInfo {
     translation_blob_idx: 6,
@@ -403,4 +408,5 @@ pub const Font_RobotoMono_Light_30_info: FontInfo = FontInfo {
     baseline: 7,
     glyph_data: &Font_RobotoMono_Light_30,
     glyph_nonprintable: &Font_RobotoMono_Light_30_glyph_nonprintable,
+    kernings: &Font_RobotoMono_Light_30_kernings,
 };
