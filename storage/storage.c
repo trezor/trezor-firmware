@@ -408,7 +408,9 @@ static secbool set_wipe_code(const uint8_t *wipe_code, size_t wipe_code_len) {
   uint8_t *tag = salt + WIPE_CODE_SALT_SIZE;
   memcpy(data, wipe_code, wipe_code_len);
 
-  random_buffer(salt, WIPE_CODE_SALT_SIZE);
+  if (!rng_fill_buffer_strong(salt, WIPE_CODE_SALT_SIZE)) {
+    return secfalse;
+  }
   hmac_sha256(salt, WIPE_CODE_SALT_SIZE, wipe_code, wipe_code_len, tag);
 
   secbool ret =
@@ -857,7 +859,9 @@ static secbool set_pin(const uint8_t *pin, size_t pin_len,
   uint8_t kek[SHA256_DIGEST_LENGTH] = {0};
   uint8_t keiv[12] = {0};
   chacha20poly1305_ctx ctx = {0};
-  random_buffer(rand_salt, STORAGE_SALT_SIZE);
+  ensure(
+      rng_fill_buffer_strong(rand_salt, STORAGE_SALT_SIZE) ? sectrue : secfalse,
+      "rng_fill_buffer_strong failed");
   ensure(derive_kek_set(pin, pin_len, rand_salt, ext_salt, kek),
          "derive_kek_set failed");
   rfc7539_init(&ctx, kek, keiv);
@@ -1409,7 +1413,7 @@ static secbool storage_set_encrypted(const uint16_t key, const void *val,
 
   // Write the IV to the flash.
   uint8_t buffer[CHACHA20_BLOCK_SIZE] = {0};
-  random_buffer(buffer, CHACHA20_IV_SIZE);
+  rng_fill_buffer(buffer, CHACHA20_IV_SIZE);
 
   if (sectrue != norcow_update_bytes(key, buffer, CHACHA20_IV_SIZE)) {
     return secfalse;
@@ -1859,7 +1863,9 @@ static secbool storage_upgrade(void) {
   const uint16_t V0_PIN_FAIL_KEY = 0x0001;
   secbool ret = secfalse;
   if (norcow_active_version == 0) {
-    random_buffer(cached_keys, sizeof(cached_keys));
+    if (!rng_fill_buffer_strong(cached_keys, sizeof(cached_keys))) {
+      return secfalse;
+    }
 
     // Initialize the storage authentication tag.
     auth_init();
