@@ -21,7 +21,7 @@ pub struct FontInfo {
     pub baseline: i16,
     pub glyph_data: &'static [&'static [u8]],
     pub glyph_nonprintable: &'static [u8],
-    pub kernings: &'static [(u8, u8, i8)],
+    pub kernings: Option<&'static [(u8, u8, i8)]>,
 }
 /// Convenience type for font references defined in the `fonts` module.
 pub type Font = &'static FontInfo;
@@ -266,9 +266,11 @@ impl FontInfo {
     pub fn get_kerning(&self, left_ch: char, right_ch: char) -> i8 {
         let left: u8 = left_ch as u8;
         let right = right_ch as u8;
-        for &(l, r, v) in self.kernings {
-            if l == left && r == right {
-                return v;
+        if let Some(kernings) = self.kernings {
+            for &(l, r, v) in kernings {
+                if l == left && r == right {
+                    return v;
+                }
             }
         }
         0
