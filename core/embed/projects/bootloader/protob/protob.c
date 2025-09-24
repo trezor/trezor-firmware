@@ -105,9 +105,7 @@ secbool send_msg_success(protob_io_t *iface, const char *msg) {
   return MSG_SEND(Success);
 }
 
-secbool send_msg_features(protob_io_t *iface, const vendor_header *const vhdr,
-                          const image_header *const hdr,
-                          secbool firmware_present) {
+secbool send_msg_features(protob_io_t *iface, const fw_info_t *fw) {
   MSG_SEND_INIT(Features);
   MSG_SEND_ASSIGN_STRING(vendor, "trezor.io");
   MSG_SEND_ASSIGN_REQUIRED_VALUE(major_version, VERSION_MAJOR);
@@ -116,13 +114,13 @@ secbool send_msg_features(protob_io_t *iface, const vendor_header *const vhdr,
   MSG_SEND_ASSIGN_VALUE(bootloader_mode, true);
   MSG_SEND_ASSIGN_STRING(model, MODEL_NAME);
   MSG_SEND_ASSIGN_STRING(internal_model, MODEL_INTERNAL_NAME);
-  if (vhdr && hdr) {
+  if (fw != NULL && fw->vhdr != NULL && fw->hdr != NULL) {
     MSG_SEND_ASSIGN_VALUE(firmware_present, true);
-    MSG_SEND_ASSIGN_VALUE(fw_major, (hdr->version & 0xFF));
-    MSG_SEND_ASSIGN_VALUE(fw_minor, ((hdr->version >> 8) & 0xFF));
-    MSG_SEND_ASSIGN_VALUE(fw_patch, ((hdr->version >> 16) & 0xFF));
-    MSG_SEND_ASSIGN_STRING_LEN(fw_vendor, vhdr->vstr, vhdr->vstr_len);
-    MSG_SEND_ASSIGN_VALUE(firmware_corrupted, sectrue != firmware_present);
+    MSG_SEND_ASSIGN_VALUE(fw_major, (fw->hdr->version & 0xFF));
+    MSG_SEND_ASSIGN_VALUE(fw_minor, ((fw->hdr->version >> 8) & 0xFF));
+    MSG_SEND_ASSIGN_VALUE(fw_patch, ((fw->hdr->version >> 16) & 0xFF));
+    MSG_SEND_ASSIGN_STRING_LEN(fw_vendor, fw->vhdr->vstr, fw->vhdr->vstr_len);
+    MSG_SEND_ASSIGN_VALUE(firmware_corrupted, sectrue != fw->firmware_present);
   } else {
     MSG_SEND_ASSIGN_VALUE(firmware_present, false);
     MSG_SEND_ASSIGN_VALUE(firmware_corrupted, false);

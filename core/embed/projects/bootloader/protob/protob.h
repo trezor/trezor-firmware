@@ -41,9 +41,13 @@ typedef struct {
 
 secbool send_user_abort(protob_io_t *iface, const char *msg);
 
-secbool send_msg_features(protob_io_t *iface, const vendor_header *const vhdr,
-                          const image_header *const hdr,
-                          secbool firmware_present);
+typedef struct {
+  const vendor_header *vhdr;
+  const image_header *hdr;
+  secbool firmware_present;
+} fw_info_t;
+
+secbool send_msg_features(protob_io_t *iface, const fw_info_t *fw);
 
 secbool send_msg_failure(protob_io_t *iface, FailureType type, const char *msg);
 
