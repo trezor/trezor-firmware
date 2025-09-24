@@ -60,7 +60,7 @@ message Features {
     optional string label = 10;                 // device description label
     optional bool initialized = 12;             // does device contain seed?
     optional bytes revision = 13;               // SCM revision of firmware
-    optional bool firmware_present = 18;        // is valid firmware loaded?
+    optional bool firmware_present = 18;        // is firmware loaded?
     optional string model = 21;                 // device hardware model
     optional uint32 fw_major = 22;              // reported firmware version if in bootloader mode
     optional uint32 fw_minor = 23;              // reported firmware version if in bootloader mode
@@ -73,6 +73,7 @@ message Features {
     optional bool bootloader_locked = 49;       // bootloader is locked
     optional uint32 unit_packaging = 51;      // unit/device packaging version
     optional uint32 soc = 55;                   // Battery state of charge (0 - 100%)
+    optional bool firmware_corrupted = 56;     // is firmware corrupted?
 }
 
 /**

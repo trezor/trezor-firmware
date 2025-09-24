@@ -55,6 +55,7 @@
 
 workflow_result_t workflow_host_control(const vendor_header *const vhdr,
                                         const image_header *const hdr,
+                                        secbool firmware_present,
                                         c_layout_t *wait_layout,
                                         uint32_t *ui_action_result,
                                         protob_ios_t *ios) {
@@ -228,7 +229,7 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
 
     switch (msg_id) {
       case MessageType_MessageType_Initialize:
-        workflow_initialize(active_iface, vhdr, hdr);
+        workflow_initialize(active_iface, vhdr, hdr, firmware_present);
         // whatever the result, we stay here and continue
         break;
       case MessageType_MessageType_Ping:
@@ -236,7 +237,7 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
         // whatever the result, we stay here and continue
         break;
       case MessageType_MessageType_GetFeatures:
-        workflow_get_features(active_iface, vhdr, hdr);
+        workflow_get_features(active_iface, vhdr, hdr, firmware_present);
         // whatever the result, we stay here and continue
         break;
       case MessageType_MessageType_WipeDevice:

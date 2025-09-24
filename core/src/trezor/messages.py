@@ -2086,6 +2086,7 @@ if TYPE_CHECKING:
         recovery_type: "RecoveryType | None"
         optiga_sec: "int | None"
         soc: "int | None"
+        firmware_corrupted: "bool | None"
 
         def __init__(
             self,
@@ -2142,6 +2143,7 @@ if TYPE_CHECKING:
             recovery_type: "RecoveryType | None" = None,
             optiga_sec: "int | None" = None,
             soc: "int | None" = None,
+            firmware_corrupted: "bool | None" = None,
         ) -> None:
             pass
 

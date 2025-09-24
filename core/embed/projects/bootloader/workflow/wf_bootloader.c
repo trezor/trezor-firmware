@@ -41,14 +41,14 @@
 
 workflow_result_t workflow_menu(const vendor_header* const vhdr,
                                 const image_header* const hdr,
-                                protob_ios_t* ios) {
+                                secbool firmware_present, protob_ios_t* ios) {
   while (true) {
     c_layout_t layout;
     memset(&layout, 0, sizeof(layout));
     screen_menu(ui_get_initial_setup(), &layout);
     uint32_t ui_result = 0;
-    workflow_result_t result =
-        workflow_host_control(vhdr, hdr, &layout, &ui_result, ios);
+    workflow_result_t result = workflow_host_control(
+        vhdr, hdr, firmware_present, &layout, &ui_result, ios);
 
     if (result != WF_OK_UI_ACTION) {
       return result;
@@ -62,7 +62,7 @@ workflow_result_t workflow_menu(const vendor_header* const vhdr,
 #ifdef USE_BLE
     if (menu_result == MENU_BLUETOOTH) {
       workflow_ifaces_pause(ios);
-      workflow_ble_pairing_request(vhdr, hdr);
+      workflow_ble_pairing_request(vhdr, hdr, firmware_present);
       workflow_ifaces_resume(ios);
       if (ios == NULL) {
         // in case we were not in connected-mode, stop advertising
@@ -119,8 +119,9 @@ static screen_t handle_intro(const vendor_header* vhdr, const image_header* hdr,
 }
 
 static screen_t handle_menu(const vendor_header* vhdr, const image_header* hdr,
+                            secbool firmware_present,
                             workflow_result_t* out_result) {
-  workflow_result_t res = workflow_menu(vhdr, hdr, NULL);
+  workflow_result_t res = workflow_menu(vhdr, hdr, firmware_present, NULL);
   switch (res) {
     case WF_OK:
       return SCREEN_INTRO;  // back to intro
@@ -134,6 +135,7 @@ static screen_t handle_menu(const vendor_header* vhdr, const image_header* hdr,
 
 static screen_t handle_wait_for_host(const vendor_header* vhdr,
                                      const image_header* hdr,
+                                     secbool firmware_present,
                                      workflow_result_t* out_result) {
   c_layout_t layout;
   memset(&layout, 0, sizeof(layout));
@@ -148,8 +150,8 @@ static screen_t handle_wait_for_host(const vendor_header* vhdr,
 
   while (next_screen == SCREEN_WAIT_FOR_HOST) {
     screen_connect(false, true, &layout);
-    workflow_result_t res =
-        workflow_host_control(vhdr, hdr, &layout, &ui_res, &ios);
+    workflow_result_t res = workflow_host_control(vhdr, hdr, firmware_present,
+                                                  &layout, &ui_res, &ios);
 
     switch (res) {
       case WF_OK_UI_ACTION: {
@@ -160,7 +162,8 @@ static screen_t handle_wait_for_host(const vendor_header* vhdr,
 #ifdef USE_BLE
           case CONNECT_PAIRING_MODE: {
             workflow_ifaces_pause(&ios);
-            workflow_result_t ble = workflow_ble_pairing_request(vhdr, hdr);
+            workflow_result_t ble =
+                workflow_ble_pairing_request(vhdr, hdr, firmware_present);
             workflow_ifaces_resume(&ios);
             if (ble == WF_OK_PAIRING_COMPLETED || ble == WF_OK_PAIRING_FAILED) {
               next_screen = SCREEN_WAIT_FOR_HOST;
@@ -176,7 +179,7 @@ static screen_t handle_wait_for_host(const vendor_header* vhdr,
           case CONNECT_MENU: {
             workflow_result_t menu_result = WF_CANCELLED;
             while (menu_result == WF_CANCELLED) {
-              menu_result = workflow_menu(vhdr, hdr, &ios);
+              menu_result = workflow_menu(vhdr, hdr, firmware_present, &ios);
               switch (menu_result) {
                 case WF_OK:
                   next_screen = SCREEN_WAIT_FOR_HOST;
@@ -227,10 +230,10 @@ workflow_result_t workflow_bootloader(const vendor_header* vhdr,
         screen = handle_intro(vhdr, hdr, firmware_present, &final_res);
         break;
       case SCREEN_MENU:
-        screen = handle_menu(vhdr, hdr, &final_res);
+        screen = handle_menu(vhdr, hdr, firmware_present, &final_res);
         break;
       case SCREEN_WAIT_FOR_HOST:
-        screen = handle_wait_for_host(vhdr, hdr, &final_res);
+        screen = handle_wait_for_host(vhdr, hdr, firmware_present, &final_res);
         break;
       default:
         // shouldn’t happen

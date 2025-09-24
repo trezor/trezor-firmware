@@ -106,7 +106,8 @@ secbool send_msg_success(protob_io_t *iface, const char *msg) {
 }
 
 secbool send_msg_features(protob_io_t *iface, const vendor_header *const vhdr,
-                          const image_header *const hdr) {
+                          const image_header *const hdr,
+                          secbool firmware_present) {
   MSG_SEND_INIT(Features);
   MSG_SEND_ASSIGN_STRING(vendor, "trezor.io");
   MSG_SEND_ASSIGN_REQUIRED_VALUE(major_version, VERSION_MAJOR);
@@ -121,8 +122,10 @@ secbool send_msg_features(protob_io_t *iface, const vendor_header *const vhdr,
     MSG_SEND_ASSIGN_VALUE(fw_minor, ((hdr->version >> 8) & 0xFF));
     MSG_SEND_ASSIGN_VALUE(fw_patch, ((hdr->version >> 16) & 0xFF));
     MSG_SEND_ASSIGN_STRING_LEN(fw_vendor, vhdr->vstr, vhdr->vstr_len);
+    MSG_SEND_ASSIGN_VALUE(firmware_corrupted, sectrue != firmware_present);
   } else {
     MSG_SEND_ASSIGN_VALUE(firmware_present, false);
+    MSG_SEND_ASSIGN_VALUE(firmware_corrupted, false);
   }
   if (unit_properties()->color_is_valid) {
     MSG_SEND_ASSIGN_VALUE(unit_color, unit_properties()->color);
