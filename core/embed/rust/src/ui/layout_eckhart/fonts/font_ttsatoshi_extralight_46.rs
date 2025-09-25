@@ -403,4 +403,5 @@ pub const Font_TTSatoshi_ExtraLight_46_info: FontInfo = FontInfo {
     baseline: 10,
     glyph_data: &Font_TTSatoshi_ExtraLight_46,
     glyph_nonprintable: &Font_TTSatoshi_ExtraLight_46_glyph_nonprintable,
+    kernings: None,
 };

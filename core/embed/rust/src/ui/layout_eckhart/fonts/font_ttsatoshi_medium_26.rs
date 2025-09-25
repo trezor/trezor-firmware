@@ -403,4 +403,5 @@ pub const Font_TTSatoshi_Medium_26_info: FontInfo = FontInfo {
     baseline: 6,
     glyph_data: &Font_TTSatoshi_Medium_26,
     glyph_nonprintable: &Font_TTSatoshi_Medium_26_glyph_nonprintable,
+    kernings: None,
 };

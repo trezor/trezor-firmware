@@ -504,6 +504,7 @@ pub const Font_TTSatoshi_ExtraLight_72_info: FontInfo = FontInfo {
     baseline: 15,
     glyph_data: &Font_TTSatoshi_ExtraLight_72,
     glyph_nonprintable: &Font_TTSatoshi_ExtraLight_72_glyph_nonprintable,
+    kernings: None,
 };
 
 /// FontInfo struct for numeral-only ASCII usage
@@ -514,4 +515,5 @@ pub const Font_TTSatoshi_ExtraLight_72_NumsOnly_info: FontInfo = FontInfo {
     baseline: 15,
     glyph_data: &Font_TTSatoshi_ExtraLight_72_nums,
     glyph_nonprintable: &Font_TTSatoshi_ExtraLight_72_glyph_nonprintable,
+    kernings: None,
 };
