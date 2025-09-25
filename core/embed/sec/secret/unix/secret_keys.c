@@ -70,6 +70,8 @@ secbool secret_key_tropic_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   return sectrue;
 }
 
+secbool secret_key_is_privileged_accessible(void) { return sectrue; }
+
 #endif
 
 #endif

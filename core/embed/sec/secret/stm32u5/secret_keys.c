@@ -156,6 +156,13 @@ secbool secret_key_tropic_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
                                      KEY_INDEX_TROPIC_MASKING, dest);
 }
 
+secbool secret_key_is_privileged_accessible(void) {
+  curve25519_key key = {0};
+  secbool result = secret_key_tropic_pairing_privileged(key);
+  memzero(key, sizeof(key));
+  return result;
+}
+
 #endif  // USE_TROPIC
 
 #ifdef USE_NRF_AUTH
