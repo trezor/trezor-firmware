@@ -170,6 +170,8 @@ async def apply_settings(msg: ApplySettings) -> Success:
 
     reload_settings_from_storage()
 
+    utils.notify_send(utils.NOTIFY_SETTING_CHANGE)
+
     return Success(message="Settings applied")
 
 

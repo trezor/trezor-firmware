@@ -143,6 +143,7 @@ def lock_device(interrupt_workflow: bool = True) -> None:
         if interrupt_workflow:
             workflow.close_others()
         # TODO: should we suspend the device here?
+        utils.notify_send(utils.NOTIFY_SOFTLOCK)
 
 
 def lock_device_if_unlocked() -> None:
@@ -184,6 +185,7 @@ async def unlock_device() -> None:
     _SCREENSAVER_IS_ON = False
     set_homescreen()
     remove_filter(_pinlock_filter)
+    utils.notify_send(utils.NOTIFY_SOFTUNLOCK)
 
 
 def _pinlock_filter(msg_type: int, prev_handler: Handler[Msg]) -> Handler[Msg]:

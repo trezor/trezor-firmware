@@ -246,6 +246,17 @@ NOTIFY_UNLOCK: int
 """Notification event: device unlocked from hardlock"""
 NOTIFY_LOCK: int
 """Notification event: device locked to hardlock"""
+NOTIFY_DISCONNECT: int
+"""Notification event: user-initiated disconnect from host"""
+NOTIFY_SETTING_CHANGE: int
+"""Notification event: change of settings"""
+NOTIFY_SOFTLOCK: int
+"""Notification event: device soft-locked (e.g., after pressing power
+button)""" NOTIFY_SOFTUNLOCK: int
+"""Notification event: device soft-unlocked (e.g., after successful PIN
+entry)""" NOTIFY_PIN_CHANGE: int
+"""Notification event: PIN changed on the device"""
+
 if __debug__:
     DISABLE_ANIMATION: bool
     """Whether the firmware should disable animations."""

@@ -685,6 +685,17 @@ STATIC mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Notification event: device unlocked from hardlock"""
 /// NOTIFY_LOCK: int
 /// """Notification event: device locked to hardlock"""
+/// NOTIFY_DISCONNECT: int
+/// """Notification event: user-initiated disconnect from host"""
+/// NOTIFY_SETTING_CHANGE: int
+/// """Notification event: change of settings"""
+/// NOTIFY_SOFTLOCK: int
+/// """Notification event: device soft-locked (e.g., after pressing power
+/// button)""" NOTIFY_SOFTUNLOCK: int
+/// """Notification event: device soft-unlocked (e.g., after successful PIN
+/// entry)""" NOTIFY_PIN_CHANGE: int
+/// """Notification event: PIN changed on the device"""
+///
 /// if __debug__:
 ///     DISABLE_ANIMATION: bool
 ///     """Whether the firmware should disable animations."""
@@ -712,6 +723,12 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_NOTIFY_BOOT), MP_ROM_INT(NOTIFY_BOOT)},
     {MP_ROM_QSTR(MP_QSTR_NOTIFY_UNLOCK), MP_ROM_INT(NOTIFY_UNLOCK)},
     {MP_ROM_QSTR(MP_QSTR_NOTIFY_LOCK), MP_ROM_INT(NOTIFY_LOCK)},
+    {MP_ROM_QSTR(MP_QSTR_NOTIFY_DISCONNECT), MP_ROM_INT(NOTIFY_DISCONNECT)},
+    {MP_ROM_QSTR(MP_QSTR_NOTIFY_SETTING_CHANGE),
+     MP_ROM_INT(NOTIFY_SETTING_CHANGE)},
+    {MP_ROM_QSTR(MP_QSTR_NOTIFY_SOFTLOCK), MP_ROM_INT(NOTIFY_SOFTLOCK)},
+    {MP_ROM_QSTR(MP_QSTR_NOTIFY_SOFTUNLOCK), MP_ROM_INT(NOTIFY_SOFTUNLOCK)},
+    {MP_ROM_QSTR(MP_QSTR_NOTIFY_PIN_CHANGE), MP_ROM_INT(NOTIFY_PIN_CHANGE)},
 #ifdef USE_NRF
     {MP_ROM_QSTR(MP_QSTR_nrf_get_version),
      MP_ROM_PTR(&mod_trezorutils_nrf_get_version_obj)},
