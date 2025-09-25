@@ -41,6 +41,7 @@ from trezor.wire.thp import (
     get_enabled_pairing_methods,
     ui,
 )
+from trezor.wire.thp.paired_cache import cache_host_info
 from trezor.wire.thp.pairing_context import PairingContext
 
 from .credential_manager import is_credential_autoconnect, issue_credential
@@ -120,8 +121,7 @@ async def handle_pairing_request(
     await ui.show_pairing_dialog(message.host_name, message.app_name)
     ctx.host_name = message.host_name
     ctx.app_name = message.app_name
-    if peer_addr is not None:
-        _cache_host_info(peer_addr, ctx.host_name, ctx.app_name)
+    cache_host_info(peer_addr, host_name=ctx.host_name, app_name=ctx.app_name)
 
     await ctx.write(ThpPairingRequestApproved())
     assert ThpSelectMethod.MESSAGE_WIRE_TYPE is not None
@@ -479,22 +479,3 @@ def _check_method_is_allowed(ctx: PairingContext, method: ThpPairingMethod) -> N
 def _check_method_is_selected(ctx: PairingContext, method: ThpPairingMethod) -> None:
     if method is not ctx.selected_method:
         raise ThpError("Not selected pairing method")
-
-
-def _cache_host_info(mac_addr: bytes, host_name: str, app_name: str) -> None:
-    from trezor.messages import ThpPairedCacheEntry
-    from trezor.strings import trim_str
-
-    from . import paired_cache
-
-    entries = paired_cache.load()
-    if any(mac_addr == e.mac_addr for e in entries):
-        # skip writing to flash if this MAC address is already cached
-        return
-
-    host_name = trim_str(host_name, max_bytes=32)
-    app_name = trim_str(app_name, max_bytes=32)
-    entries.append(
-        ThpPairedCacheEntry(mac_addr=mac_addr, host_name=host_name, app_name=app_name)
-    )
-    paired_cache.store(entries)
