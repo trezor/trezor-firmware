@@ -282,8 +282,14 @@ static void prodtest_secrets_certdev_write(cli_t* cli) {
     return;
   }
 
-  secret_write(prefixed_certificate, SECRET_MCU_DEVICE_CERT_OFFSET,
-               sizeof(prefixed_certificate));
+  secbool result =
+      secret_write(prefixed_certificate, SECRET_MCU_DEVICE_CERT_OFFSET,
+                   sizeof(prefixed_certificate));
+
+  if (sectrue != result) {
+    cli_error(cli, CLI_ERROR, "secret_write() failed.");
+    return;
+  }
 
   cli_ok(cli, "");
 #endif
