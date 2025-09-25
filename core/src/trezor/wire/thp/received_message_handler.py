@@ -31,6 +31,8 @@ from .crypto import PUBKEY_LENGTH, Handshake
 from .session_context import SeedlessSessionContext
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
     from trezor.messages import ThpHandshakeCompletionReqNoisePayload
 
     from .channel import Channel
@@ -125,6 +127,9 @@ async def _handle_state_handshake(
 
     payload = await ctx.recv_payload(control_byte.is_handshake_comp_req)
 
+    # will be `None` on USB interface, to be ignored by `cache_host_info()`
+    mac_addr: AnyBytes | None = ctx.iface_ctx.connected_addr()
+
     if not config.is_unlocked():
         raise ThpDeviceLockedError
 
@@ -175,6 +180,13 @@ async def _handle_state_handshake(
                 host_static_public_key,
             )
             if paired:
+                from trezor.wire.thp.paired_cache import cache_host_info
+
+                cache_host_info(
+                    mac_addr=mac_addr,
+                    host_name=credential.cred_metadata.host_name,
+                    app_name=credential.cred_metadata.app_name,
+                )
                 trezor_state = _TREZOR_STATE_PAIRED
                 ctx.credential = credential
             else:
