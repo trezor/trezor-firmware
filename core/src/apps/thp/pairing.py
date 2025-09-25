@@ -50,6 +50,7 @@ if __debug__:
     from trezor import log
 
 if TYPE_CHECKING:
+    from buffer_types import AnyBytes
     from typing import Any, Callable, Concatenate, ParamSpec
 
     from trezorui_api import UiResult
@@ -117,7 +118,8 @@ async def handle_pairing_request(
     if not message.app_name:
         raise DataError("Missing app_name.")
 
-    peer_addr = ctx.channel_ctx.iface_ctx.connected_addr()
+    # will be `None` on USB interface, to be ignored by `cache_host_info()`
+    peer_addr: AnyBytes | None = ctx.channel_ctx.iface_ctx.connected_addr()
     await ui.show_pairing_dialog(message.host_name, message.app_name)
     ctx.host_name = message.host_name
     ctx.app_name = message.app_name
