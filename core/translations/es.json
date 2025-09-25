@@ -538,6 +538,12 @@
     "haptic_feedback__enable": "¿Activar respuesta háptica?",
     "haptic_feedback__subtitle": "Ajustes",
     "haptic_feedback__title": "Respuesta háptica",
+    "homescreen__backup_needed_info": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Abre Trezor Suite y crea una c. seg. de tu billetera. Esta es la única forma de recuperar tus activos."
+    },
     "homescreen__click_to_connect": "Clic para conectar",
     "homescreen__click_to_unlock": "Clic para desbloquear",
     "homescreen__firmware_type": "Tipo de firmware",
