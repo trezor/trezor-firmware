@@ -234,7 +234,7 @@ class InterfaceContext:
         header = PacketHeader.get_error_header(cid, length)
         return self.write_payload(header, msg_data)
 
-    def connected_addr(self) -> bytes | None:
+    def connected_addr(self) -> AnyBytes | None:
         """
         Return peer MAC address (if connected).
 
