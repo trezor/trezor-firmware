@@ -139,6 +139,8 @@ lt_ret_t lt_port_deinit(lt_l2_state_t *s2) {
   HAL_GPIO_DeInit(TROPIC01_SPI_MOSI_PORT, TROPIC01_SPI_MOSI_PIN);
   HAL_GPIO_DeInit(TROPIC01_PWR_PORT, TROPIC01_PWR_PIN);
 
+  drv->initialized = false;
+
   return LT_OK;
 }
 
