@@ -328,6 +328,8 @@ impl TextLayout {
             };
 
             let remaining_width = self.bounds.x1 - cursor.x;
+
+            // spits out chunks when chunkification is enabled
             let mut span = Span::fit_horizontally(
                 remaining_text,
                 remaining_width,
@@ -338,13 +340,29 @@ impl TextLayout {
             );
 
             if let Some(chunk_config) = self.style.chunks {
-                // Last chunk on the page should not be rendered, put just ellipsis there
-                // Chunks is last when the next chunk would not fit on the page horizontally
-                let is_last_chunk = (2 * span.advance.x - chunk_config.x_offset) > remaining_width;
-                if is_last_line
-                    && is_last_chunk
-                    && remaining_text.len() > chunk_config.chunk_size.into()
+                let mut is_last_chunk = true; // of the line
+
+                if remaining_text.len() > span.length
+                // any character remain after the last chunk
                 {
+                    let next_chunk_start = chunk_config.chunk_size as usize;
+                    let next_chunk_end =
+                        (2 * chunk_config.chunk_size as usize).min(remaining_text.len());
+                    let next_chunk = &remaining_text[next_chunk_start..next_chunk_end];
+
+                    // The next chunk would not fit on the line.
+                    if self.style.text_font.text_width(next_chunk)
+                        <= remaining_width - span.advance.x - chunk_config.x_offset
+                    {
+                        span.advance.x += chunk_config.x_offset;
+                        is_last_chunk = false;
+                    } else {
+                        // Last chunk so line break after this
+                        span.advance.y = self.style.text_font.line_height();
+                    }
+                }
+                // Replace (second-to-last) chunk with ellipsis if we are on the last line
+                if is_last_line && is_last_chunk && remaining_text.len() > span.length {
                     // Making sure no text is rendered here, and that we force a line break
                     span.length = 0;
                     span.advance.x = 2; // To start at the same horizontal line as the chunk itself
@@ -353,7 +371,6 @@ impl TextLayout {
                     span.skip_next_chars = 0;
                 }
             }
-
             cursor.x += match self.align {
                 Alignment::Start => 0,
                 Alignment::Center => (remaining_width - span.advance.x) / 2,
@@ -367,7 +384,6 @@ impl TextLayout {
             if span.length > 0 {
                 sink.text(*cursor, self, &remaining_text[..span.length]);
             }
-
             // Continue with the rest of the remaining_text.
             remaining_text = &remaining_text[span.length + span.skip_next_chars..];
 
@@ -735,10 +751,24 @@ impl Span {
             // When there is a set chunk size and we reach it,
             // adjust the line advances and return the line.
             if let Some(chunkify_config) = chunks {
-                if i == usize::from(chunkify_config.chunk_size) {
-                    line.advance.y = 0;
-                    line.advance.x += chunkify_config.x_offset;
-                    return line;
+                // check if the current character can form a chunk, if yes, throw it.
+                let final_index = text.len().min(usize::from(chunkify_config.chunk_size));
+                let chunk_width = text_font.text_width(&text[..final_index]);
+                if chunk_width <= max_width {
+                    return Self {
+                        length: final_index,
+                        advance: Offset::x(chunk_width),
+                        insert_hyphen_before_line_break: false,
+                        skip_next_chars: 0,
+                    };
+                } else {
+                    // We cannot fit the next chunk on this line, return what we have so far.
+                    return Self {
+                        length: 0,
+                        advance: Offset::y(text_font.line_height()),
+                        insert_hyphen_before_line_break: false,
+                        skip_next_chars: 0,
+                    };
                 }
             }
 
