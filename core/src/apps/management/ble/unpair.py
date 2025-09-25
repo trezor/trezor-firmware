@@ -36,6 +36,11 @@ async def unpair(msg: BleUnpair) -> None:
         await ctx.write(Success(message="Erasing..."))
 
     if msg.all:
+        from apps.thp.credential_manager import invalidate_cred_auth_key
+
+        # THP credentials should be invalidated when "Forget all" is handled.
+        # Otherwise, the device will not ask for THP confirmation after reconnecting.
+        invalidate_cred_auth_key()
         ble.erase_bonds()
     else:
         ble.unpair(msg.addr)
