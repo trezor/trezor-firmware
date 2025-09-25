@@ -60,7 +60,7 @@ else:
 
         The function will only return after Trezor has woken up.
         """
-        from trezor.ui import CURRENT_LAYOUT
+        from trezor.ui import CURRENT_LAYOUT, display
 
         global _SHOULD_SUSPEND
 
@@ -68,6 +68,13 @@ else:
         backlight_fade(BacklightLevels.NONE)
         # suspend the device
         suspend_device()
+
+        # reconfigure drivers
+        display.orientation(storage_device.get_rotation())
+        if utils.USE_HAPTIC:
+            io.haptic.haptic_set_enabled(storage_device.get_haptic_feedback())
+        if utils.USE_RGB_LED:
+            io.rgb_led.rgb_led_set_enabled(storage_device.get_rgb_led())
 
         # redraw the screen and touch idle timer
         workflow.idle_timer.touch()
