@@ -39,9 +39,16 @@
  */
 
 typedef enum {
-  NOTIFY_BOOT = 0,   /**< Device boot/startup notification */
-  NOTIFY_UNLOCK = 1, /**< Device unlocked and ready to accept messages */
-  NOTIFY_LOCK = 2    /**< Device hard-locked and won't accept messages */
+  NOTIFY_BOOT = 0,       /**< Device boot/startup notification */
+  NOTIFY_UNLOCK = 1,     /**< Device unlocked and ready to accept messages */
+  NOTIFY_LOCK = 2,       /**< Device hard-locked and won't accept messages */
+  NOTIFY_DISCONNECT = 3, /**< User-initiated disconnect from host */
+  NOTIFY_SETTING_CHANGE = 4, /**< Change of settings */
+  NOTIFY_SOFTLOCK =
+      5, /**< Device soft-locked (e.g., after clicking power button) */
+  NOTIFY_SOFTUNLOCK =
+      6, /**< Device soft-unlocked (e.g., after successful pin entry) */
+  NOTIFY_PIN_CHANGE = 7 /**< Pin changed on the device */
   // Additional notification types can be added here as needed
 } notification_event_t;
 

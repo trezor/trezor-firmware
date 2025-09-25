@@ -1,3 +1,4 @@
+import utime
 from micropython import const
 from typing import TYPE_CHECKING
 
@@ -173,6 +174,8 @@ async def handle_device_menu() -> None:
         elif menu_result is DeviceMenuResult.DisconnectDevice and ble.is_connected():
             init_submenu_idx = SubmenuId.PAIR_AND_CONNECT
             try:
+                utils.notify_send(utils.NOTIFY_DISCONNECT)
+                utime.sleep_ms(300)
                 ble.disconnect()
             except ActionCancelled:
                 pass
@@ -185,6 +188,8 @@ async def handle_device_menu() -> None:
 
             try:
                 if ble.is_connected():
+                    utils.notify_send(utils.NOTIFY_DISCONNECT)
+                    utime.sleep_ms(300)
                     ble.disconnect()
 
                 if len(paired_devices) < BLE_MAX_BONDS:
@@ -365,6 +370,7 @@ async def handle_device_menu() -> None:
 
             try:
                 await set_brightness(SetBrightness())
+                utils.notify_send(utils.NOTIFY_SETTING_CHANGE)
             except ActionCancelled:
                 pass
             finally:
@@ -376,6 +382,7 @@ async def handle_device_menu() -> None:
                 enable = not storage_device.get_haptic_feedback()
                 io.haptic.haptic_set_enabled(enable)
                 storage_device.set_haptic_feedback(enable)
+                utils.notify_send(utils.NOTIFY_SETTING_CHANGE)
             except ActionCancelled:
                 pass
             finally:
@@ -387,6 +394,7 @@ async def handle_device_menu() -> None:
                 enable = not storage_device.get_rgb_led()
                 io.rgb_led.rgb_led_set_enabled(enable)
                 storage_device.set_rgb_led(enable)
+                utils.notify_send(utils.NOTIFY_SETTING_CHANGE)
             except ActionCancelled:
                 pass
             finally:
