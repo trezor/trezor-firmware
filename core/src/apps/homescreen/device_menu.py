@@ -66,7 +66,8 @@ def get_auto_lock_delay() -> tuple[str, str] | None:
 async def handle_device_menu() -> None:
 
     assert utils.USE_THP and utils.USE_BLE
-    from ..thp import paired_cache
+
+    from trezor.wire.thp import paired_cache
 
     init_submenu_idx = None
 
@@ -94,8 +95,6 @@ async def handle_device_menu() -> None:
         if __debug__:
             log.debug(__name__, "connected: %s (%s)", connected_addr, connected_idx)
         hostname_map = {e.mac_addr: e for e in paired_cache.load()}
-        if __debug__:
-            log.debug(__name__, "hostname_map: %s", hostname_map)
         paired_devices = [_get_hostinfo(bond, hostname_map) for bond in bonds]
 
         if utils.USE_NRF:

@@ -5,8 +5,7 @@ from trezor import config, utils
 if utils.USE_THP:
     from storage.device import get_thp_paired_cache
     from trezor.messages import ThpPairedCacheEntry
-
-    from apps.thp import paired_cache
+    from trezor.wire.thp import paired_cache
 
     ALL_ENTRIES = [
         ThpPairedCacheEntry(
