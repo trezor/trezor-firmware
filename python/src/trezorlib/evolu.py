@@ -15,7 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from . import messages
 
@@ -45,8 +45,14 @@ def evolu_sign_registration_request(
 
 def get_delegated_identity_key(
     session: "Session",
+    thp_credentials: Optional[bytes] = None,
+    host_static_public_key: Optional[bytes] = None,
 ) -> messages.EvoluDelegatedIdentityKey:
+
     return session.call(
-        messages.EvoluGetDelegatedIdentityKey(),
+        messages.EvoluGetDelegatedIdentityKey(
+            thp_credentials=thp_credentials,
+            host_static_public_key=host_static_public_key,
+        ),
         expect=messages.EvoluDelegatedIdentityKey,
     )

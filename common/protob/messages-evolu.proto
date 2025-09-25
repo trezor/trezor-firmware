@@ -58,6 +58,8 @@ message EvoluRegistrationRequest {
  * @next Failure
  */
 message EvoluGetDelegatedIdentityKey {
+    optional bytes thp_credentials = 1; /* THP credentials so that we can display the host on the device */ 
+    optional bytes host_static_public_key = 2; /* Host static public key for THP so that we can validate the credentials */
 }
 
 /**

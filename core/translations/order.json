@@ -1163,5 +1163,6 @@
   "1161": "ble__host_info",
   "1162": "ble__mac_address",
   "1163": "evolu__enable_labeling_header",
-  "1164": "evolu__enable_labeling_message"
+  "1164": "evolu__enable_labeling_message",
+  "1165": "evolu__enable_labeling_message_no_thp"
 }

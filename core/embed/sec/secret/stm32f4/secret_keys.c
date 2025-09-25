@@ -41,7 +41,7 @@ secbool secret_key_optiga_pairing(uint8_t dest[OPTIGA_PAIRING_SECRET_SIZE]) {
 secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   delegated_salt_t salt = {0};
   delegated_salt_get(&salt);
-  
+
   const uint8_t header[DELEGATED_IDENTITY_KEY_HEADER_LENGTH] =
       "DelegatedIdentityKey";
   PBKDF2_HMAC_SHA256_CTX ctx = {0};

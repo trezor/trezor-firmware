@@ -5587,6 +5587,19 @@ class EvoluRegistrationRequest(protobuf.MessageType):
 
 class EvoluGetDelegatedIdentityKey(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2104
+    FIELDS = {
+        1: protobuf.Field("thp_credentials", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("host_static_public_key", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        thp_credentials: Optional["bytes"] = None,
+        host_static_public_key: Optional["bytes"] = None,
+    ) -> None:
+        self.thp_credentials = thp_credentials
+        self.host_static_public_key = host_static_public_key
 
 
 class EvoluDelegatedIdentityKey(protobuf.MessageType):
