@@ -403,4 +403,5 @@ pub const Font_TTSatoshi_Regular_38_info: FontInfo = FontInfo {
     baseline: 9,
     glyph_data: &Font_TTSatoshi_Regular_38,
     glyph_nonprintable: &Font_TTSatoshi_Regular_38_glyph_nonprintable,
+    kernings: None,
 };
