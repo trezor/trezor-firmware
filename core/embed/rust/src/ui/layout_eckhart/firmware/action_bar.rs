@@ -38,6 +38,8 @@ pub struct ActionBar {
     prev_button: Button,
     /// Right button for paginated content
     next_button: Button,
+    /// Whether we are waiting for the finalize animation to complete
+    awaiting_finalize: bool,
 }
 
 pub enum ActionBarMsg {
@@ -265,6 +267,7 @@ impl ActionBar {
             next_button: Button::with_icon(theme::ICON_CHEVRON_DOWN)
                 .with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)
                 .with_content_offset(Self::BUTTON_CONTENT_OFFSET.neg()),
+            awaiting_finalize: false,
         }
     }
 
@@ -367,20 +370,8 @@ impl ActionBar {
             }
         }
     }
-}
 
-impl Component for ActionBar {
-    type Msg = ActionBarMsg;
-
-    fn place(&mut self, bounds: Rect) -> Rect {
-        debug_assert_eq!(bounds.height(), Self::ACTION_BAR_HEIGHT);
-        self.place_buttons(bounds);
-        self.area = bounds;
-        bounds
-    }
-
-    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.htc_anim.event(ctx, event);
+    fn handle_event_buttons(&mut self, ctx: &mut EventCtx, event: Event) -> Option<ActionBarMsg> {
         match &self.mode {
             Mode::Timeout => {
                 if self
@@ -469,8 +460,46 @@ impl Component for ActionBar {
                     }
                 }
             }
-        }
+        };
         None
+    }
+}
+
+impl Component for ActionBar {
+    type Msg = ActionBarMsg;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        debug_assert_eq!(bounds.height(), Self::ACTION_BAR_HEIGHT);
+        self.place_buttons(bounds);
+        self.area = bounds;
+        bounds
+    }
+
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        let htc_event = self.htc_anim.event(ctx, event);
+
+        if let Some(super::HoldToConfirmMsg::Finalized) = htc_event {
+            return Some(ActionBarMsg::Confirmed);
+        }
+
+        if self.awaiting_finalize {
+            // Ignore button input while finalizing animation runs
+            return None;
+        }
+
+        let result = self.handle_event_buttons(ctx, event);
+
+        match (result, self.htc_anim.as_mut()) {
+            (Some(ActionBarMsg::Confirmed), Some(htc_anim)) => {
+                self.awaiting_finalize = true;
+                htc_anim.finalize();
+                ctx.request_anim_frame();
+                ctx.request_paint();
+                None
+            }
+            (Some(msg), _) => Some(msg),
+            _ => None,
+        }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
