@@ -11,7 +11,7 @@ use crate::{
     ui::{
         component::{
             text::{
-                paragraphs::{Paragraph, ParagraphSource, Paragraphs},
+                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
                 TextStyle,
             },
             Component, Event, EventCtx,
@@ -141,11 +141,11 @@ pub enum DeviceMenuMsg {
     Close,
 }
 
-trait VecExt {
+trait MenuVecExt {
     fn add(&mut self, item: MenuItem) -> &mut Self;
 }
 
-impl<const N: usize> VecExt for Vec<MenuItem, N> {
+impl<const N: usize> MenuVecExt for Vec<MenuItem, N> {
     fn add(&mut self, item: MenuItem) -> &mut Self {
         if self.push(item).is_err() {
             #[cfg(feature = "ui_debug")]
@@ -264,9 +264,10 @@ enum Subscreen {
     ),
 
     HostInfoScreen(
-        TString<'static>, /* host name */
-        TString<'static>, /* MAC address */
-        u8,               /* parent screen index */
+        TString<'static>,         /* host name */
+        TString<'static>,         /* MAC address */
+        Option<TString<'static>>, /* app name */
+        u8,                       /* parent screen index */
     ),
 
     // The about screen
@@ -282,7 +283,7 @@ enum Subscreen {
 enum ActiveScreen {
     Menu(VerticalMenuScreen<MediumMenuVec>, DeviceMenuId),
     Device(VerticalMenuScreen<ShortMenuVec>),
-    HostInfo(TextScreen<Paragraphs<[Paragraph<'static>; 4]>>),
+    HostInfo(TextScreen<Paragraphs<ParagraphVecShort<'static>>>),
     About(TextScreen<Paragraphs<PropsList>>),
     BackupInfo(TextScreen<Paragraphs<Paragraph<'static>>>),
     Regulatory(RegulatoryScreen),
@@ -364,13 +365,13 @@ impl DeviceMenuScreen {
 
             // Add the host info subscreen first, so that we can reference it from the
             // device subscreen
-            let host_name = if let Some([host_name, _app_name]) = host_info {
-                *host_name
+            let (host_name, app_name) = if let Some([host_name, app_name]) = host_info {
+                (*host_name, Some(*app_name))
             } else {
-                TR::words__unknown.into()
+                (TR::words__unknown.into(), None)
             };
             let info_subscreen = screen.add_subscreen(Subscreen::HostInfoScreen(
-                host_name, *mac,
+                host_name, *mac, app_name,
                 0, /* dummy value because the device subscreen doesn't exist yet */
             ));
             // Add the device subscreen with the reference to the host info subscreen
@@ -384,7 +385,7 @@ impl DeviceMenuScreen {
 
             // Update the parent index in the host info screen to break the circular
             // dependency
-            if let Subscreen::HostInfoScreen(_, _, parent_idx) =
+            if let Subscreen::HostInfoScreen(_, _, _, parent_idx) =
                 &mut screen.subscreens[usize::from(info_subscreen)]
             {
                 *parent_idx = device_subscreen;
@@ -434,7 +435,7 @@ impl DeviceMenuScreen {
         connected_idx: Option<u8>,
     ) {
         let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
-        for (i, ((mac, host_info), device)) in
+        for (i, ((_mac, host_info), device)) in
             (0u8..).zip(paired_devices.iter().zip(submenu_indices))
         {
             let connection_status = match connected_idx {
@@ -442,17 +443,14 @@ impl DeviceMenuScreen {
                 _ => Some(false),
             };
 
-            let (text, subtext) = if let Some([host_name, app_name]) = host_info {
-                (*app_name, Some(*host_name))
+            let text = if let Some([host_name, _app_name]) = host_info {
+                *host_name
             } else {
-                (*mac, None)
+                TR::words__unknown.into()
             };
-            let mut item_device =
-                MenuItem::go_to_subscreen(text, device).with_connection_status(connection_status);
 
-            if let Some(subtext) = subtext {
-                item_device = item_device.with_subtext(Some((subtext, None)));
-            }
+            let item_device =
+                MenuItem::go_to_subscreen(text, device).with_connection_status(connection_status);
 
             items.add(item_device);
         }
@@ -785,12 +783,7 @@ impl DeviceMenuScreen {
                 let mut menu = VerticalMenu::<MediumMenuVec>::empty();
                 for item in &submenu.items {
                     let button = if let Some(connected) = item.connection_status {
-                        Button::new_connection_item(
-                            item.text,
-                            *item.stylesheet,
-                            item.subtext.map(|(t, _)| t),
-                            connected,
-                        )
+                        Button::new_connection_item(item.text, *item.stylesheet, connected)
                     } else if let Some((subtext, subtext_style)) = item.subtext {
                         let subtext_style =
                             subtext_style.unwrap_or(&theme::TEXT_MENU_ITEM_SUBTITLE);
@@ -851,19 +844,35 @@ impl DeviceMenuScreen {
                         .with_subtitle(device),
                 );
             }
-            Subscreen::HostInfoScreen(host_name, mac, ..) => {
+            Subscreen::HostInfoScreen(host_name, mac, app_name, ..) => {
+                let mut para = ParagraphVecShort::new();
+                para.add(
+                    Paragraph::new(&theme::TEXT_MEDIUM_EXTRA_LIGHT, TR::words__name)
+                        .with_bottom_padding(theme::PROP_INNER_SPACING),
+                );
+                para.add(
+                    Paragraph::new(&theme::TEXT_MONO_LIGHT, host_name)
+                        .with_bottom_padding(theme::TEXT_VERTICAL_SPACING),
+                );
+                para.add(
+                    Paragraph::new(&theme::TEXT_MEDIUM_EXTRA_LIGHT, TR::ble__mac_address)
+                        .with_bottom_padding(theme::PROP_INNER_SPACING),
+                );
+                para.add(
+                    Paragraph::new(&theme::TEXT_MONO_LIGHT, mac)
+                        .with_bottom_padding(theme::TEXT_VERTICAL_SPACING),
+                );
+                if let Some(app_name) = app_name {
+                    para.add(
+                        Paragraph::new(&theme::TEXT_MEDIUM_EXTRA_LIGHT, TR::ble__app_connected)
+                            .with_bottom_padding(theme::PROP_INNER_SPACING),
+                    );
+                    para.add(Paragraph::new(&theme::TEXT_MONO_LIGHT, app_name));
+                }
                 *self.active_screen.deref_mut() = ActiveScreen::HostInfo(
                     TextScreen::new(
-                        Paragraphs::new([
-                            Paragraph::new(&theme::TEXT_MEDIUM_EXTRA_LIGHT, TR::words__name)
-                                .with_bottom_padding(theme::PROP_INNER_SPACING),
-                            Paragraph::new(&theme::TEXT_MONO_LIGHT, host_name)
-                                .with_bottom_padding(theme::TEXT_VERTICAL_SPACING),
-                            Paragraph::new(&theme::TEXT_MEDIUM_EXTRA_LIGHT, TR::ble__mac_address)
-                                .with_bottom_padding(theme::PROP_INNER_SPACING),
-                            Paragraph::new(&theme::TEXT_MONO_LIGHT, mac),
-                        ])
-                        .with_placement(LinearPlacement::vertical()),
+                        para.into_paragraphs()
+                            .with_placement(LinearPlacement::vertical()),
                     )
                     .with_header(Header::new(TR::ble__host_info.into()).with_close_button()),
                 );
@@ -935,7 +944,7 @@ impl DeviceMenuScreen {
 
     fn go_back(&mut self, ctx: &mut EventCtx) -> Option<DeviceMenuMsg> {
         let active_subscreen = &self.subscreens[usize::from(self.active_subscreen)];
-        if let Subscreen::HostInfoScreen(_name, _mac, parent_idx) = active_subscreen {
+        if let Subscreen::HostInfoScreen(_, _, _, parent_idx) = active_subscreen {
             // Handle going back from the HostInfoScreen
             self.activate_subscreen(*parent_idx, ctx);
             return None;
