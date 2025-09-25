@@ -8354,21 +8354,21 @@ class ThpEndResponse(protobuf.MessageType):
 class ThpCredentialMetadata(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("host_name", "string", repeated=False, required=False, default=None),
+        1: protobuf.Field("host_name", "string", repeated=False, required=True),
         2: protobuf.Field("autoconnect", "bool", repeated=False, required=False, default=None),
-        3: protobuf.Field("app_name", "string", repeated=False, required=False, default=None),
+        3: protobuf.Field("app_name", "string", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        host_name: Optional["str"] = None,
+        host_name: "str",
+        app_name: "str",
         autoconnect: Optional["bool"] = None,
-        app_name: Optional["str"] = None,
     ) -> None:
         self.host_name = host_name
-        self.autoconnect = autoconnect
         self.app_name = app_name
+        self.autoconnect = autoconnect
 
 
 class ThpPairingCredential(protobuf.MessageType):

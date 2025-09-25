@@ -46,7 +46,7 @@ def show_autoconnect_credential_confirmation_screen(
     )
 
 
-def show_pairing_dialog(host_name: str | None, app_name: str | None) -> Awaitable[None]:
+def show_pairing_dialog(host_name: str, app_name: str) -> Awaitable[None]:
     from trezor import TR
 
     return confirm_pairing(

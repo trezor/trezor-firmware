@@ -3492,7 +3492,7 @@ impl ThpCredentialMetadata {
         ::std::default::Default::default()
     }
 
-    // optional string host_name = 1;
+    // required string host_name = 1;
 
     pub fn host_name(&self) -> &str {
         match self.host_name.as_ref() {
@@ -3547,7 +3547,7 @@ impl ThpCredentialMetadata {
         self.autoconnect = ::std::option::Option::Some(v);
     }
 
-    // optional string app_name = 3;
+    // required string app_name = 3;
 
     pub fn app_name(&self) -> &str {
         match self.app_name.as_ref() {
@@ -3613,6 +3613,12 @@ impl ::protobuf::Message for ThpCredentialMetadata {
     const NAME: &'static str = "ThpCredentialMetadata";
 
     fn is_initialized(&self) -> bool {
+        if self.host_name.is_none() {
+            return false;
+        }
+        if self.app_name.is_none() {
+            return false;
+        }
         true
     }
 
@@ -4785,8 +4791,8 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     r_static_public_key\x18\x01\x20\x02(\x0cR\x15trezorStaticPublicKey\x12\
     \x1e\n\ncredential\x18\x02\x20\x02(\x0cR\ncredential\"\x0f\n\rThpEndRequ\
     est\"\x10\n\x0eThpEndResponse\"w\n\x15ThpCredentialMetadata\x12\x1b\n\th\
-    ost_name\x18\x01\x20\x01(\tR\x08hostName\x12\x20\n\x0bautoconnect\x18\
-    \x02\x20\x01(\x08R\x0bautoconnect\x12\x19\n\x08app_name\x18\x03\x20\x01(\
+    ost_name\x18\x01\x20\x02(\tR\x08hostName\x12\x20\n\x0bautoconnect\x18\
+    \x02\x20\x01(\x08R\x0bautoconnect\x12\x19\n\x08app_name\x18\x03\x20\x02(\
     \tR\x07appName:\x04\x98\xb2\x19\x01\"\x82\x01\n\x14ThpPairingCredential\
     \x12R\n\rcred_metadata\x18\x01\x20\x02(\x0b2-.hw.trezor.messages.thp.Thp\
     CredentialMetadataR\x0ccredMetadata\x12\x10\n\x03mac\x18\x02\x20\x02(\
