@@ -8,7 +8,7 @@ if utils.USE_THP:
     from apps.thp import credential_manager
 
     def _issue_credential(host_name: str, host_static_public_key: bytes) -> bytes:
-        metadata = ThpCredentialMetadata(host_name=host_name)
+        metadata = ThpCredentialMetadata(host_name=host_name, app_name="APP")
         return credential_manager.issue_credential(host_static_public_key, metadata)
 
     def _dummy_log(name: str, msg: str, *args):
@@ -79,7 +79,7 @@ class TestTrezorHostProtocolCredentialManager(unittest.TestCase):
         When the test fails, it might be necessary to create custom parser
         of credentials to ensure that credentials remain valid after FW update.
         """
-        expected = b"\x0a\x0b\x0a\x09\x68\x6f\x73\x74\x5f\x6e\x61\x6d\x65\x12\x20\xf4\x44\x86\x2d\x00\x23\x1d\x02\xf3\x20\xbb\x58\xed\x13\x8f\xc6\x84\x9b\x6b\x73\x7a\x33\x25\xc4\x71\x79\x3b\x45\x15\xe4\x76\x67"
+        expected = b"\n\x10\n\thost_name\x1a\x03APP\x12 p\x08Lv#\x185\xcd\x07sF\xb6f\x8e?P\x8d\x88\xf5\xa0\xd4\x16''\x90\x97$\xa4AQ@\x95"
 
         # Use hard-coded bytes as a "credential auth key" when issuing a credential
         credential_manager.derive_cred_auth_key = lambda: b"\xbe\xef"

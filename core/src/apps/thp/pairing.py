@@ -431,6 +431,9 @@ async def _handle_credential_request(
         )
 
     trezor_static_public_key = crypto.get_trezor_static_public_key()
+
+    assert ctx.host_name is not None
+    assert ctx.app_name is not None
     credential_metadata = ThpCredentialMetadata(
         host_name=ctx.host_name,
         app_name=ctx.app_name,

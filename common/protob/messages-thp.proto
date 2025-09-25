@@ -246,9 +246,9 @@ message ThpEndResponse {}
  */
  message ThpCredentialMetadata {
     option (internal_only) = true;
-    optional string host_name = 1;     // Human-readable host name (browser name for web apps)
+    required string host_name = 1;     // Human-readable host name (browser name for web apps)
     optional bool autoconnect = 2;     // Whether host is allowed to autoconnect without user confirmation
-    optional string app_name = 3;      // Human-readable application name
+    required string app_name = 3;      // Human-readable application name
 }
 
 /**
