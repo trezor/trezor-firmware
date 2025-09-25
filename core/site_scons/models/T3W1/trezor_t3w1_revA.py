@@ -84,8 +84,8 @@ def configure(
         paths += ["embed/io/backlight/inc"]
 
     if "input" in features_wanted:
-        sources += ["embed/io/touch/ft6x36/ft6x36.c"]
-        sources += ["embed/io/touch/ft6x36/panels/lx250a2410a.c"]
+        sources += ["embed/io/touch/ft3168/ft3168.c"]
+        sources += ["embed/io/touch/ft3168/panels/lx250a2410a.c"]
         sources += ["embed/io/touch/touch_poll.c"]
         paths += ["embed/io/touch/inc"]
         features_available.append("touch")

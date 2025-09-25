@@ -25,12 +25,10 @@
 #include <io/i2c_bus.h>
 #include <io/touch.h>
 #include <sys/systick.h>
-#include "ft6x36.h"
+#include "ft3168.h"
 
-#ifdef TOUCH_PANEL_LX154A2422CPT23
-#include "panels/lx154a2422cpt23.h"
-#elif defined TOUCH_PANEL_LHS200KB_IF21
-#include "panels/lhs200kb-if21.h"
+#ifdef TOUCH_PANEL_LX250A2410A
+#include "panels/lx250a2410a.h"
 #endif
 
 #include "../touch_poll.h"
@@ -43,7 +41,7 @@ typedef struct {
   // I2c bus where the touch controller is connected
   i2c_bus_t* i2c_bus;
   // Set if the driver is ready to report touches.
-  // FT6X36 needs about 300ms after power-up to stabilize.
+  // FT3168 needs about 300ms after power-up to stabilize.
   secbool ready;
   // Captured tick counter when `touch_init()` was called
   uint32_t init_ticks;
@@ -59,14 +57,14 @@ static touch_driver_t g_touch_driver = {
     .initialized = secfalse,
 };
 
-// Reads a subsequent registers from the FT6X36.
+// Reads a subsequent registers from the FT3168.
 //
 // Returns: `sectrue` if the register was read
 // successfully, `secfalse` otherwise.
 //
 // If the I2C bus is busy, the function will cycle the
 // bus and retry the operation.
-static secbool ft6x36_read_regs(i2c_bus_t* bus, uint8_t reg, uint8_t* value,
+static secbool ft3168_read_regs(i2c_bus_t* bus, uint8_t reg, uint8_t* value,
                                 size_t count) {
   i2c_op_t ops[] = {
       {
@@ -82,7 +80,7 @@ static secbool ft6x36_read_regs(i2c_bus_t* bus, uint8_t reg, uint8_t* value,
   };
 
   i2c_packet_t pkt = {
-      .address = FT6X36_I2C_ADDR,
+      .address = FT3168_I2C_ADDR,
       .op_count = ARRAY_LENGTH(ops),
       .ops = ops,
   };
@@ -94,14 +92,14 @@ static secbool ft6x36_read_regs(i2c_bus_t* bus, uint8_t reg, uint8_t* value,
   return sectrue;
 }
 
-// Writes a register to the FT6X36.
+// Writes a register to the FT3168.
 //
 // Returns: `sectrue` if the register was written
 // successfully, `secfalse` otherwise.
 //
 // If the I2C bus is busy, the function will cycle the
 // bus and retry the operation.
-static secbool ft6x36_write_reg(i2c_bus_t* bus, uint8_t reg, uint8_t value) {
+static secbool ft3168_write_reg(i2c_bus_t* bus, uint8_t reg, uint8_t value) {
   i2c_op_t ops[] = {
       {
           .flags = I2C_FLAG_TX | I2C_FLAG_EMBED,
@@ -111,7 +109,7 @@ static secbool ft6x36_write_reg(i2c_bus_t* bus, uint8_t reg, uint8_t value) {
   };
 
   i2c_packet_t pkt = {
-      .address = FT6X36_I2C_ADDR,
+      .address = FT3168_I2C_ADDR,
       .op_count = ARRAY_LENGTH(ops),
       .ops = ops,
   };
@@ -123,9 +121,28 @@ static secbool ft6x36_write_reg(i2c_bus_t* bus, uint8_t reg, uint8_t value) {
   return sectrue;
 }
 
+// Wake up the touch controller from monitor mode.
+//
+// The FT3168 touch controller switches from active mode to monitor mode
+// after a period of inactivity (the default setting is ~12s).
+// This feature cannot be disabled (at least in the current controller
+// firmware). When in this mode, it fails to respond to the first I2C command —
+// writes are not ACKed, and reads return 0x00 or garbage data.
+// To avoid this issue, we need to wake up the controller before
+// sending any commands to it.
+static void ft3168_wake_up(i2c_bus_t* bus) {
+  uint8_t temp;
+  // Wake up the touch controller by reading one of its registers
+  // (the specific register does not matter)
+  ft3168_read_regs(bus, 0x00, &temp, 1);
+  // Wait for the touch controller to wake up
+  // (not sure if this is necessary, but it's safer to include it)
+  systick_delay_ms(1);
+}
+
 // Powers down the touch controller and puts all
 // the pins in the proper state to save power.
-static void ft6x36_power_down(void) {
+static void ft3168_power_down(void) {
 #ifdef TOUCH_ON_PIN
   GPIO_PinState state = HAL_GPIO_ReadPin(TOUCH_ON_PORT, TOUCH_ON_PIN);
 
@@ -172,9 +189,9 @@ static void ft6x36_power_down(void) {
 
 // Powers up the touch controller and do proper reset sequence
 //
-// `ft6x36_power_down()` must be called before calling this first time function
+// `ft3168_power_down()` must be called before calling this first time function
 // to properly initialize the GPIO pins.
-static void ft6x36_power_up(void) {
+static void ft3168_power_up(void) {
 #ifdef TOUCH_RST_PIN
   // Ensure the touch controller is in reset state
   HAL_GPIO_WritePin(TOUCH_RST_PORT, TOUCH_RST_PIN, GPIO_PIN_RESET);
@@ -214,7 +231,7 @@ static void ft6x36_power_up(void) {
 //
 // The function clears the interrupt flag if it was set so the
 // next call returns `false` if no new impulses were detected.
-static bool ft6x36_test_and_clear_interrupt(void) {
+static bool ft3168_test_and_clear_interrupt(void) {
   uint32_t event = __HAL_GPIO_EXTI_GET_FLAG(TOUCH_INT_PIN);
   if (event != 0) {
     __HAL_GPIO_EXTI_CLEAR_FLAG(TOUCH_INT_PIN);
@@ -224,13 +241,13 @@ static bool ft6x36_test_and_clear_interrupt(void) {
 }
 
 // Configures the touch controller to the functional state.
-static secbool ft6x36_configure(i2c_bus_t* i2c_bus) {
+static secbool ft3168_configure(i2c_bus_t* i2c_bus) {
   const static uint8_t config[] = {
       // Set touch controller to the interrupt trigger mode.
       // Basically, CTPM generates a pulse when new data is available.
-      FT6X36_REG_G_MODE,
+      FT3168_REG_G_MODE,
       0x01,
-      FT6X36_REG_TH_GROUP,
+      FT3168_REG_TH_GROUP,
       TOUCH_SENSITIVITY,
   };
 
@@ -240,7 +257,7 @@ static secbool ft6x36_configure(i2c_bus_t* i2c_bus) {
     uint8_t reg = config[i];
     uint8_t value = config[i + 1];
 
-    if (sectrue != ft6x36_write_reg(i2c_bus, reg, value)) {
+    if (sectrue != ft3168_write_reg(i2c_bus, reg, value)) {
       return secfalse;
     }
   }
@@ -248,12 +265,10 @@ static secbool ft6x36_configure(i2c_bus_t* i2c_bus) {
   return sectrue;
 }
 
-static void ft6x36_panel_correction(uint16_t x, uint16_t y, uint16_t* x_new,
+static void ft3168_panel_correction(uint16_t x, uint16_t y, uint16_t* x_new,
                                     uint16_t* y_new) {
-#ifdef TOUCH_PANEL_LX154A2422CPT23
-  lx154a2422cpt23_touch_correction(x, y, x_new, y_new);
-#elif defined TOUCH_PANEL_LHS200KB_IF21
-  lhs200kb_if21_touch_correction(x, y, x_new, y_new);
+#ifdef TOUCH_PANEL_LX250A2410A
+  lx250a2410a_touch_correction(x, y, x_new, y_new);
 #else
   *x_new = x;
   *y_new = y;
@@ -272,18 +287,20 @@ secbool touch_init(void) {
 
   // Initialize GPIO to the default configuration
   // (touch controller is powered down)
-  ft6x36_power_down();
+  ft3168_power_down();
 
   // Power up the touch controller and perform the reset sequence
-  ft6x36_power_up();
+  ft3168_power_up();
 
   driver->i2c_bus = i2c_bus_open(TOUCH_I2C_INSTANCE);
   if (driver->i2c_bus == NULL) {
     goto cleanup;
   }
 
+  ft3168_wake_up(driver->i2c_bus);
+
   // Configure the touch controller
-  if (sectrue != ft6x36_configure(driver->i2c_bus)) {
+  if (sectrue != ft3168_configure(driver->i2c_bus)) {
     goto cleanup;
   }
 
@@ -307,17 +324,17 @@ void touch_deinit(void) {
   touch_poll_deinit();
   i2c_bus_close(driver->i2c_bus);
   if (sectrue == driver->initialized) {
-    ft6x36_power_down();
+    ft3168_power_down();
   }
   memset(driver, 0, sizeof(touch_driver_t));
 }
 
 void touch_power_set(bool on) {
   if (on) {
-    ft6x36_power_up();
+    ft3168_power_up();
   } else {
     touch_deinit();
-    ft6x36_power_down();
+    ft3168_power_down();
   }
 }
 
@@ -325,7 +342,7 @@ secbool touch_ready(void) {
   touch_driver_t* driver = &g_touch_driver;
 
   if (sectrue == driver->initialized && sectrue != driver->ready) {
-    // FT6X36 does not report events for 300ms
+    // FT3168 does not report events for 300ms
     // after it is released from the reset state
     if ((int)(systick_ms() - driver->init_ticks) >= 310) {
       driver->ready = sectrue;
@@ -339,7 +356,8 @@ secbool touch_set_sensitivity(uint8_t value) {
   touch_driver_t* driver = &g_touch_driver;
 
   if (sectrue == driver->initialized) {
-    return ft6x36_write_reg(driver->i2c_bus, FT6X36_REG_TH_GROUP, value);
+    ft3168_wake_up(driver->i2c_bus);
+    return ft3168_write_reg(driver->i2c_bus, FT3168_REG_TH_GROUP, value);
   } else {
     return secfalse;
   }
@@ -360,11 +378,13 @@ uint8_t touch_get_version(void) {
     systick_delay_ms(1);
   }
 
+  ft3168_wake_up(driver->i2c_bus);
+
   uint8_t fw_version = 0;
 
   if (sectrue !=
-      ft6x36_read_regs(driver->i2c_bus, FT6X36_REG_FIRMID, &fw_version, 1)) {
-    ft6x36_power_down();
+      ft3168_read_regs(driver->i2c_bus, FT3168_REG_FIRMID, &fw_version, 1)) {
+    ft3168_power_down();
     return secfalse;
   }
 
@@ -375,7 +395,7 @@ secbool touch_activity(void) {
   touch_driver_t* driver = &g_touch_driver;
 
   if (sectrue == driver->initialized) {
-    if (ft6x36_test_and_clear_interrupt()) {
+    if (ft3168_test_and_clear_interrupt()) {
       return sectrue;
     }
   }
@@ -385,27 +405,27 @@ secbool touch_activity(void) {
 
 #ifdef TOUCH_TRACE_REGS
 void trace_regs(uint8_t* regs) {
-  // Extract gesture ID (FT6X63_GESTURE_xxx)
-  uint8_t gesture = regs[FT6X63_REG_GEST_ID];
+  // Extract gesture ID (FT3168_GESTURE_xxx)
+  uint8_t gesture = regs[FT3168_REG_GEST_ID];
 
   // Extract number of touches (0, 1, 2) or 0x0F before
   // the first touch (tested with FT6206)
-  uint8_t nb_touches = regs[FT6X63_REG_TD_STATUS] & 0x0F;
+  uint8_t nb_touches = regs[FT3168_REG_TD_STATUS] & 0x0F;
 
   // Extract event flags (one of press down, contact, lift up)
-  uint8_t flags = regs[FT6X63_REG_P1_XH] & FT6X63_EVENT_MASK;
+  uint8_t flags = regs[FT3168_REG_P1_XH] & FT3168_EVENT_MASK;
 
   // Extract touch coordinates
-  uint16_t x = ((regs[FT6X63_REG_P1_XH] & 0x0F) << 8) | regs[FT6X63_REG_P1_XL];
-  uint16_t y = ((regs[FT6X63_REG_P1_YH] & 0x0F) << 8) | regs[FT6X63_REG_P1_YL];
+  uint16_t x = ((regs[FT3168_REG_P1_XH] & 0x0F) << 8) | regs[FT3168_REG_P1_XL];
+  uint16_t y = ((regs[FT3168_REG_P1_YH] & 0x0F) << 8) | regs[FT3168_REG_P1_YL];
 
   char event;
 
-  if (flags == FT6X63_EVENT_PRESS_DOWN) {
+  if (flags == FT3168_EVENT_PRESS_DOWN) {
     event = 'D';
-  } else if (flags == FT6X63_EVENT_CONTACT) {
+  } else if (flags == FT3168_EVENT_CONTACT) {
     event = 'C';
-  } else if (flags == FT6X63_EVENT_LIFT_UP) {
+  } else if (flags == FT3168_EVENT_LIFT_UP) {
     event = 'U';
   } else {
     event = '-';
@@ -431,12 +451,12 @@ uint32_t touch_get_state(void) {
   uint8_t regs[7];
 
   // Ensure the registers are within the bounds
-  _Static_assert(sizeof(regs) > FT6X63_REG_GEST_ID);
-  _Static_assert(sizeof(regs) > FT6X63_REG_TD_STATUS);
-  _Static_assert(sizeof(regs) > FT6X63_REG_P1_XH);
-  _Static_assert(sizeof(regs) > FT6X63_REG_P1_XL);
-  _Static_assert(sizeof(regs) > FT6X63_REG_P1_YH);
-  _Static_assert(sizeof(regs) > FT6X63_REG_P1_YL);
+  _Static_assert(sizeof(regs) > FT3168_REG_GEST_ID);
+  _Static_assert(sizeof(regs) > FT3168_REG_TD_STATUS);
+  _Static_assert(sizeof(regs) > FT3168_REG_P1_XH);
+  _Static_assert(sizeof(regs) > FT3168_REG_P1_XL);
+  _Static_assert(sizeof(regs) > FT3168_REG_P1_YH);
+  _Static_assert(sizeof(regs) > FT3168_REG_P1_YL);
 
   uint32_t ticks = hal_ticks_ms();
 
@@ -448,14 +468,14 @@ uint32_t touch_get_state(void) {
   // is not touched, we do not need to read the registers
   bool pressed = (driver->state & TOUCH_START) || (driver->state & TOUCH_MOVE);
 
-  if (!ft6x36_test_and_clear_interrupt() && (!pressed || toofast)) {
+  if (!ft3168_test_and_clear_interrupt() && (!pressed || toofast)) {
     return driver->state;
   }
 
   driver->read_ticks = ticks;
 
   // Read the set of registers containing touch event and coordinates
-  if (sectrue != ft6x36_read_regs(driver->i2c_bus, 0x00, regs, sizeof(regs))) {
+  if (sectrue != ft3168_read_regs(driver->i2c_bus, 0x00, regs, sizeof(regs))) {
     // Failed to read the touch registers
     return driver->state;
   }
@@ -464,39 +484,39 @@ uint32_t touch_get_state(void) {
   trace_regs(regs);
 #endif
 
-  // Extract gesture ID (FT6X63_GESTURE_xxx)
-  uint8_t gesture = regs[FT6X63_REG_GEST_ID];
+  // Extract gesture ID (FT3168_GESTURE_xxx)
+  uint8_t gesture = regs[FT3168_REG_GEST_ID];
 
-  if (gesture != FT6X36_GESTURE_NONE) {
+  if (gesture != FT3168_GESTURE_NONE) {
     // This is here for unknown historical reasons
-    // It seems we can't get here with FT6X36
+    // It seems we can't get here with FT3168
     return driver->state;
   }
 
   // Extract number of touches (0, 1, 2) or 0x0F before
   // the first touch (tested with FT6206)
-  uint8_t nb_touches = regs[FT6X63_REG_TD_STATUS] & 0x0F;
+  uint8_t nb_touches = regs[FT3168_REG_TD_STATUS] & 0x0F;
 
   // Extract event flags (one of press down, contact, lift up)
-  uint8_t flags = regs[FT6X63_REG_P1_XH] & FT6X63_EVENT_MASK;
+  uint8_t flags = regs[FT3168_REG_P1_XH] & FT3168_EVENT_MASK;
 
   // Extract touch coordinates
   uint16_t x_raw =
-      ((regs[FT6X63_REG_P1_XH] & 0x0F) << 8) | regs[FT6X63_REG_P1_XL];
+      ((regs[FT3168_REG_P1_XH] & 0x0F) << 8) | regs[FT3168_REG_P1_XL];
   uint16_t y_raw =
-      ((regs[FT6X63_REG_P1_YH] & 0x0F) << 8) | regs[FT6X63_REG_P1_YL];
+      ((regs[FT3168_REG_P1_YH] & 0x0F) << 8) | regs[FT3168_REG_P1_YL];
 
   uint16_t x, y;
 
-  ft6x36_panel_correction(x_raw, y_raw, &x, &y);
+  ft3168_panel_correction(x_raw, y_raw, &x, &y);
 
   uint32_t xy = touch_pack_xy(x, y);
 
-  if ((nb_touches == 1) && (flags == FT6X63_EVENT_PRESS_DOWN)) {
+  if ((nb_touches == 1) && (flags == FT3168_EVENT_PRESS_DOWN)) {
     driver->state = TOUCH_START | xy;
-  } else if ((nb_touches == 1) && (flags == FT6X63_EVENT_CONTACT)) {
+  } else if ((nb_touches == 1) && (flags == FT3168_EVENT_CONTACT)) {
     driver->state = TOUCH_MOVE | xy;
-  } else if ((nb_touches == 0) && (flags == FT6X63_EVENT_LIFT_UP)) {
+  } else if ((nb_touches == 0) && (flags == FT3168_EVENT_LIFT_UP)) {
     driver->state = TOUCH_END | xy;
   }
 
