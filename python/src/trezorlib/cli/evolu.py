@@ -16,14 +16,14 @@
 
 from __future__ import annotations
 
-import typing as t
+from typing import TYPE_CHECKING, Optional
 
 import click
 
 from .. import evolu, messages
 from . import with_session
 
-if t.TYPE_CHECKING:
+if TYPE_CHECKING:
     from ..transport.session import Session
 
 
@@ -33,15 +33,63 @@ def cli() -> None:
 
 
 @cli.command()
+@click.argument("proof", type=str)
 @with_session
 def get_node(
     session: "Session",
+    proof: str,
 ) -> dict[str, str]:
     """Return the SLIP-21 node for Evolu."""
-
-    node: messages.EvoluNode = evolu.get_evolu_node(
-        session,
-    )
+    node: messages.EvoluNode = evolu.get_evolu_node(session, proof=bytes.fromhex(proof))
     return {
         "data": node.data.hex(),
+    }
+
+
+@cli.command()
+@click.argument("proof", type=str)
+@click.argument("challenge", type=str)
+@click.option("--size", "-s", type=int, default=10)
+@with_session
+def evolu_sign_registration_request(
+    session: "Session",
+    proof: str,
+    challenge: str,
+    size: int,
+) -> dict[str, str]:
+    """Test request that signs a challenge and a size and returns a key."""
+
+    response: messages.EvoluRegistrationRequest = evolu.evolu_sign_registration_request(
+        session=session,
+        challenge=bytes.fromhex(challenge),
+        size=size,
+        proof=bytes.fromhex(proof),
+    )
+    return {
+        "certificates": ",".join([cert.hex() for cert in response.certificate_chain]),
+        "signature": response.signature.hex(),
+    }
+
+
+@click.option("--credential", "-c", type=str)
+@click.option("--pubkey", "-p", type=str)
+@cli.command()
+@with_session
+def get_delegated_identity_key(
+    session: "Session",
+    credential: Optional[str] = None,
+    pubkey: Optional[str] = None,
+) -> dict[str, str]:
+    """Request the device for the delegated identity key for Evolu."""
+
+    thp_credentials = bytes.fromhex(credential) if credential else None
+    host_static_public_key = bytes.fromhex(pubkey) if pubkey else None
+
+    key_pair: messages.EvoluDelegatedIdentityKey = evolu.get_delegated_identity_key(
+        session=session,
+        thp_credentials=thp_credentials,
+        host_static_public_key=host_static_public_key,
+    )
+    return {
+        "private_key": key_pair.private_key.hex(),
     }
