@@ -20,6 +20,7 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <sys/notify.h>
 #include <util/flash_utils.h>
 
 #ifdef USE_BLE
@@ -108,6 +109,9 @@ workflow_result_t workflow_wipe_device(protob_io_t* iface) {
     return WF_CANCELLED;
   }
   ui_screen_wipe();
+
+  notify_send(NOTIFY_WIPE);
+
   secbool wipe_result = erase_device(ui_screen_wipe_progress);
 
   if (sectrue != wipe_result) {

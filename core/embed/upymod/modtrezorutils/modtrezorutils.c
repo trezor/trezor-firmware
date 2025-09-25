@@ -690,11 +690,15 @@ STATIC mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// NOTIFY_SETTING_CHANGE: int
 /// """Notification event: change of settings"""
 /// NOTIFY_SOFTLOCK: int
-/// """Notification event: device soft-locked (e.g., after pressing power
-/// button)""" NOTIFY_SOFTUNLOCK: int
-/// """Notification event: device soft-unlocked (e.g., after successful PIN
-/// entry)""" NOTIFY_PIN_CHANGE: int
+/// """Notification event: device soft-locked"""
+/// NOTIFY_SOFTUNLOCK: int
+/// """Notification event: device soft-unlocked"""
+/// NOTIFY_PIN_CHANGE: int
 /// """Notification event: PIN changed on the device"""
+/// NOTIFY_WIPE: int
+/// """Notification event: factory reset (wipe) invoked"""
+/// NOTIFY_UNPAIR: int
+/// """Notification event: BLE bonding for current connection deleted"""
 ///
 /// if __debug__:
 ///     DISABLE_ANIMATION: bool
@@ -729,6 +733,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_NOTIFY_SOFTLOCK), MP_ROM_INT(NOTIFY_SOFTLOCK)},
     {MP_ROM_QSTR(MP_QSTR_NOTIFY_SOFTUNLOCK), MP_ROM_INT(NOTIFY_SOFTUNLOCK)},
     {MP_ROM_QSTR(MP_QSTR_NOTIFY_PIN_CHANGE), MP_ROM_INT(NOTIFY_PIN_CHANGE)},
+    {MP_ROM_QSTR(MP_QSTR_NOTIFY_WIPE), MP_ROM_INT(NOTIFY_WIPE)},
+    {MP_ROM_QSTR(MP_QSTR_NOTIFY_UNPAIR), MP_ROM_INT(NOTIFY_UNPAIR)},
 #ifdef USE_NRF
     {MP_ROM_QSTR(MP_QSTR_nrf_get_version),
      MP_ROM_PTR(&mod_trezorutils_nrf_get_version_obj)},
