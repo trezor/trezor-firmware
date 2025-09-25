@@ -533,6 +533,12 @@
     "haptic_feedback__enable": "Zapnout haptickou zpětnou vazbu?",
     "haptic_feedback__subtitle": "Nastavení",
     "haptic_feedback__title": "Haptická zpětná vazba",
+    "homescreen__backup_needed_info": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Otevřete Trezor Suite a vytvořte si zálohu peněženky. Toto je jediný způsob jak obnovit přístup k vašemu kryptu."
+    },
     "homescreen__click_to_connect": "Kliknutím se připojíte",
     "homescreen__click_to_unlock": "Kliknutím odemknete",
     "homescreen__firmware_type": "Typ firmwaru",

@@ -518,6 +518,12 @@
     "haptic_feedback__enable": "Ativar feedback tátil?",
     "haptic_feedback__subtitle": "Configuração",
     "haptic_feedback__title": "Feedback tátil",
+    "homescreen__backup_needed_info": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Abra o Trezor Suite e crie um backup da carteira. Este é o único modo de recuperar o acesso aos seus ativos."
+    },
     "homescreen__click_to_connect": "Clique para conectar",
     "homescreen__click_to_unlock": "Clique para desbloq.",
     "homescreen__firmware_type": "Tipo de firmware",

@@ -698,6 +698,12 @@
     "haptic_feedback__enable": "Haptisches Feedback aktivieren?",
     "haptic_feedback__subtitle": "Einstellung",
     "haptic_feedback__title": "Haptisches Feedback",
+    "homescreen__backup_needed_info": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Öffne Trezor Suite und erstelle ein Wallet-Backup. Dies ist der einzige Weg, um den Zugriff auf deine Assets wiederherzustellen."
+    },
     "homescreen__click_to_connect": "Zum Verbinden klicken",
     "homescreen__click_to_unlock": "Zum Entsperren klicken",
     "homescreen__firmware_type": "Firmware-Typ",

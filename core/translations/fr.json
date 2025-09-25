@@ -963,6 +963,12 @@
     "haptic_feedback__enable": "Activer le retour haptique ?",
     "haptic_feedback__subtitle": "Paramètre",
     "haptic_feedback__title": "Retour haptique",
+    "homescreen__backup_needed_info": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Ouvrez Trezor Suite et créez une sauv. de portefeuille. C'est le seul moyen de récupérer vos actifs."
+    },
     "homescreen__click_to_connect": "Cliquer pour se connecter",
     "homescreen__click_to_unlock": "Cliquez pour déverrouiller",
     "homescreen__firmware_type": "Type de firmware",
