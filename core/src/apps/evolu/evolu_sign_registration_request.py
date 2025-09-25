@@ -28,9 +28,12 @@ async def evolu_sign_registration_request(
         raise RuntimeError("Optiga is not available")
 
     if not check_delegated_identity_proof(
-        proposed_value=msg.proof_of_delegated_identity,
+        proposed_value=bytes(msg.proof_of_delegated_identity),
         header=b"EvoluSignRegistrationRequest",
-        arguments=[msg.challenge_from_server, msg.size_to_acquire.to_bytes(4, "big")],
+        arguments=[
+            bytes(msg.challenge_from_server),
+            msg.size_to_acquire.to_bytes(4, "big"),
+        ],
     ):
         raise ValueError("Invalid proof")
 

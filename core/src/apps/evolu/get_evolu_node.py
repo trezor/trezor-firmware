@@ -21,7 +21,7 @@ async def get_evolu_node(msg: EvoluGetNode) -> EvoluNode:
         raise RuntimeError("Optiga is not available")
 
     if not check_delegated_identity_proof(
-        msg.proof_of_delegated_identity, header=b"EvoluGetNode"
+        bytes(msg.proof_of_delegated_identity), header=b"EvoluGetNode"
     ):
         raise ValueError("Invalid proof")
 

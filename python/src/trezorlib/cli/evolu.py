@@ -16,14 +16,14 @@
 
 from __future__ import annotations
 
-import typing as t
+from typing import TYPE_CHECKING, Optional
 
 import click
 
 from .. import evolu, messages
 from . import with_session
 
-if t.TYPE_CHECKING:
+if TYPE_CHECKING:
     from ..transport.session import Session
 
 
@@ -71,15 +71,24 @@ def evolu_sign_registration_request(
     }
 
 
+@click.option("--credential", "-c", type=str)
+@click.option("--pubkey", "-p", type=str)
 @cli.command()
 @with_session
 def get_delegated_identity_key(
     session: "Session",
+    credential: Optional[str] = None,
+    pubkey: Optional[str] = None,
 ) -> dict[str, str]:
-    """Request the device for the delegated identity key pair for Evolu."""
+    """Request the device for the delegated identity key for Evolu."""
+
+    thp_credentials = bytes.fromhex(credential) if credential else None
+    host_static_public_key = bytes.fromhex(pubkey) if pubkey else None
 
     key_pair: messages.EvoluDelegatedIdentityKey = evolu.get_delegated_identity_key(
-        session=session
+        session=session,
+        thp_credentials=thp_credentials,
+        host_static_public_key=host_static_public_key,
     )
     return {
         "private_key": key_pair.private_key.hex(),

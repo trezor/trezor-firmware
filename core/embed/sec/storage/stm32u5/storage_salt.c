@@ -86,10 +86,7 @@ void storage_salt_get(storage_salt_t* salt) {
   salt->size = 12 + FLASH_OTP_BLOCK_SIZE;
 }
 
-
 void delegated_salt_get(delegated_salt_t* salt) {
-
-  // set entropy in the OTP randomness block
   if (secfalse == flash_otp_is_locked(FLASH_OTP_BLOCK_DELEGATED_IDENTITY)) {
     uint8_t rnd_bytes[FLASH_OTP_BLOCK_SIZE];
     random_buffer(rnd_bytes, FLASH_OTP_BLOCK_SIZE);

@@ -1554,6 +1554,7 @@ pub enum TranslatedString {
     ble__apps_connected = 1164,  // "Apps connected"
     evolu__enable_labeling_header = 1165,  // "Enable Labeling"
     evolu__enable_labeling_message = 1166,  // "Do you really want to enable labeling on this Suite?"
+    evolu__enable_labeling_message_no_thp = 1167,  // "Do you really want to enable labeling on this Suite?"
 }
 
 impl TranslatedString {
@@ -3541,7 +3542,8 @@ impl TranslatedString {
             (Self::ble__waiting_for_host, "Waiting for host..."),
             (Self::ble__apps_connected, "Apps connected"),
             (Self::evolu__enable_labeling_header, "Enable Labeling"),
-            (Self::evolu__enable_labeling_message, "Do you really want to enable labeling on this Suite?"),
+            (Self::evolu__enable_labeling_message, "Do you really want to enable labeling for {0} on {1}?"),
+            (Self::evolu__enable_labeling_message_no_thp, "Do you really want to enable labeling on this Suite?"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4127,6 +4129,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__valid_signature, Self::ethereum__valid_signature),
         (Qstr::MP_QSTR_evolu__enable_labeling_header, Self::evolu__enable_labeling_header),
         (Qstr::MP_QSTR_evolu__enable_labeling_message, Self::evolu__enable_labeling_message),
+        (Qstr::MP_QSTR_evolu__enable_labeling_message_no_thp, Self::evolu__enable_labeling_message_no_thp),
         (Qstr::MP_QSTR_experimental_mode__enable, Self::experimental_mode__enable),
         (Qstr::MP_QSTR_experimental_mode__only_for_dev, Self::experimental_mode__only_for_dev),
         (Qstr::MP_QSTR_experimental_mode__title, Self::experimental_mode__title),

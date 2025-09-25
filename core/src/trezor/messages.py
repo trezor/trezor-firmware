@@ -4076,12 +4076,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EvoluGetNode(protobuf.MessageType):
-        proof_of_delegated_identity: "bytes"
+        proof_of_delegated_identity: "AnyBytes"
 
         def __init__(
             self,
             *,
-            proof_of_delegated_identity: "bytes",
+            proof_of_delegated_identity: "AnyBytes",
         ) -> None:
             pass
 
@@ -4104,16 +4104,16 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EvoluSignRegistrationRequest(protobuf.MessageType):
-        challenge_from_server: "bytes"
+        challenge_from_server: "AnyBytes"
         size_to_acquire: "int"
-        proof_of_delegated_identity: "bytes"
+        proof_of_delegated_identity: "AnyBytes"
 
         def __init__(
             self,
             *,
-            challenge_from_server: "bytes",
+            challenge_from_server: "AnyBytes",
             size_to_acquire: "int",
-            proof_of_delegated_identity: "bytes",
+            proof_of_delegated_identity: "AnyBytes",
         ) -> None:
             pass
 
@@ -4122,14 +4122,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EvoluRegistrationRequest(protobuf.MessageType):
-        certificate_chain: "list[bytes]"
-        signature: "bytes"
+        certificate_chain: "list[AnyBytes]"
+        signature: "AnyBytes"
 
         def __init__(
             self,
             *,
-            signature: "bytes",
-            certificate_chain: "list[bytes] | None" = None,
+            signature: "AnyBytes",
+            certificate_chain: "list[AnyBytes] | None" = None,
         ) -> None:
             pass
 
@@ -4138,18 +4138,28 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EvoluGetDelegatedIdentityKey(protobuf.MessageType):
+        thp_credentials: "AnyBytes | None"
+        host_static_public_key: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            thp_credentials: "AnyBytes | None" = None,
+            host_static_public_key: "AnyBytes | None" = None,
+        ) -> None:
+            pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["EvoluGetDelegatedIdentityKey"]:
             return isinstance(msg, cls)
 
     class EvoluDelegatedIdentityKey(protobuf.MessageType):
-        private_key: "bytes"
+        private_key: "AnyBytes"
 
         def __init__(
             self,
             *,
-            private_key: "bytes",
+            private_key: "AnyBytes",
         ) -> None:
             pass
 

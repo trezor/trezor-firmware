@@ -45,11 +45,6 @@ typedef struct {
  */
 void storage_salt_get(storage_salt_t* salt);
 
-
-
-
-
-
 #define DELEGATED_SALT_MAX_SIZE 32
 
 typedef struct {
@@ -57,5 +52,15 @@ typedef struct {
   uint8_t bytes[DELEGATED_SALT_MAX_SIZE];
 } delegated_salt_t;
 
-
+/**
+ * Retrieves the generated buffer with delegated salt.
+ *
+ * If delegated salt has not yet been generated for the device, 
+ * it is generated now. 
+ * This salt is similar to storage salt, but it is used for 
+ * delegated credentials (e.g. Evolu). We do not use storage 
+ * salt for this purpose to avoid any possible attack.
+ *
+ * @param salt structure filled with the generated data.
+ */
 void delegated_salt_get(delegated_salt_t* salt);
