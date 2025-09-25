@@ -1,7 +1,8 @@
+import utime
 from typing import TYPE_CHECKING
 
 import trezorble as ble
-from trezor import TR
+from trezor import TR, utils
 
 if TYPE_CHECKING:
     from trezor.messages import BleUnpair
@@ -38,11 +39,19 @@ async def unpair(msg: BleUnpair) -> None:
     if msg.all:
         from apps.thp.credential_manager import invalidate_cred_auth_key
 
+        if ble.is_connected():
+            utils.notify_send(utils.NOTIFY_UNPAIR)
+            utime.sleep_ms(300)
+
         # THP credentials should be invalidated when "Forget all" is handled.
         # Otherwise, the device will not ask for THP confirmation after reconnecting.
         invalidate_cred_auth_key()
         ble.erase_bonds()
     else:
+        if msg.addr == ble.connected_addr():
+            utils.notify_send(utils.NOTIFY_UNPAIR)
+            utime.sleep_ms(300)
+
         ble.unpair(msg.addr)
 
     if msg.all:

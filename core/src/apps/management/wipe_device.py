@@ -1,3 +1,4 @@
+import utime
 from typing import TYPE_CHECKING
 
 from trezor import utils
@@ -58,8 +59,14 @@ async def wipe_device(msg: WipeDevice) -> None:
     # reload settings
     reload_settings_from_storage()
 
+    # notify host about the wipe
+    utils.notify_send(utils.NOTIFY_WIPE)
+
     if utils.USE_BLE:
         from trezorble import erase_bonds
+
+        # wait for the notification to be sent
+        utime.sleep_ms(300)
 
         # raise an exception if bonds erasing fails
         erase_bonds()

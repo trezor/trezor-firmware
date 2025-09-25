@@ -17,6 +17,8 @@ from trezorutils import (  # noqa: F401
     NOTIFY_SOFTLOCK,
     NOTIFY_SOFTUNLOCK,
     NOTIFY_UNLOCK,
+    NOTIFY_UNPAIR,
+    NOTIFY_WIPE,
     SCM_REVISION,
     UI_LAYOUT,
     USE_BACKLIGHT,
@@ -51,7 +53,6 @@ from trezorutils import (  # noqa: F401
 
 if USE_NRF:
     from trezorutils import nrf_get_version  # noqa: F401
-
 
 from typing import TYPE_CHECKING
 
