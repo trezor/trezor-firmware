@@ -29,7 +29,7 @@ pub use device_menu_screen::{DeviceMenuMsg, DeviceMenuScreen};
 pub use fido::{FidoAccountName, FidoCredential};
 pub use header::{Header, HeaderMsg};
 pub use hint::Hint;
-pub use hold_to_confirm::HoldToConfirmAnim;
+pub use hold_to_confirm::{HoldToConfirmAnim, HoldToConfirmMsg};
 pub use homescreen::{check_homescreen_format, Homescreen, HomescreenMsg};
 pub use keyboard::{
     bip39::Bip39Input,
