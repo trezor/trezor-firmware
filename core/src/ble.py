@@ -19,5 +19,9 @@ try:
     # allow connections from bonded peers if any
     if ble.peer_count() > 0:
         ble.start_advertising(True, storage.device.get_label())
+
+    # TEST ONLY - DO NOT MERGE!
+    ble.set_high_speed(True)
+
 except Exception as e:
     log.exception(__name__, e)

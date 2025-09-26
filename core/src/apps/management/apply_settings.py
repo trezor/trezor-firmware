@@ -92,16 +92,8 @@ async def apply_settings(msg: ApplySettings) -> Success:
     if homescreen_length is not None:
         if homescreen is not None:
             raise ProcessError("Mutually exclusive settings")
-        if utils.USE_BLE:
-            from trezorble import set_high_speed
 
-            set_high_speed(True)
-
-        try:
-            homescreen = await _load_homescreen(homescreen_length)
-        finally:
-            if utils.USE_BLE:
-                set_high_speed(False)
+        homescreen = await _load_homescreen(homescreen_length)
 
     if homescreen is not None:
         _validate_homescreen(homescreen)
