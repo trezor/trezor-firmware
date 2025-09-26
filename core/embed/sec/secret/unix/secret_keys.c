@@ -79,8 +79,8 @@ secbool secret_key_tropic_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
 #define DELEGATED_IDENTITY_KEY_ITER_COUNT 20000
 #define DELEGATED_IDENTITY_KEY_HEADER_LENGTH 21
 secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
-  delegated_salt_t salt = {0};
-  delegated_salt_get(&salt);
+  additional_salt_t salt = {0};
+  additional_salt_get(&salt);
 
   const uint8_t header[DELEGATED_IDENTITY_KEY_HEADER_LENGTH] =
       "DelegatedIdentityKey";

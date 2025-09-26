@@ -60,20 +60,23 @@ void storage_salt_get(storage_salt_t* salt) {
   salt->size = 12 + FLASH_OTP_BLOCK_SIZE;
 }
 
-void delegated_salt_get(delegated_salt_t* salt) {
-  if (secfalse == flash_otp_is_locked(FLASH_OTP_BLOCK_DELEGATED_IDENTITY)) {
+#ifdef USE_OPTIGA
+
+void additional_salt_get(additional_salt_t* salt) {
+  if (secfalse == flash_otp_is_locked(FLASH_OTP_BLOCK_ADDITIONAL_RANDOMNESS)) {
     uint8_t rnd_bytes[FLASH_OTP_BLOCK_SIZE];
     random_buffer(rnd_bytes, FLASH_OTP_BLOCK_SIZE);
-    ensure(flash_otp_write(FLASH_OTP_BLOCK_DELEGATED_IDENTITY, 0, rnd_bytes,
+    ensure(flash_otp_write(FLASH_OTP_BLOCK_ADDITIONAL_RANDOMNESS, 0, rnd_bytes,
                            FLASH_OTP_BLOCK_SIZE),
            NULL);
-    ensure(flash_otp_lock(FLASH_OTP_BLOCK_DELEGATED_IDENTITY), NULL);
+    ensure(flash_otp_lock(FLASH_OTP_BLOCK_ADDITIONAL_RANDOMNESS), NULL);
   }
-  ensure(flash_otp_read(FLASH_OTP_BLOCK_DELEGATED_IDENTITY, 0, &salt->bytes[0],
-                        FLASH_OTP_BLOCK_SIZE),
+  ensure(flash_otp_read(FLASH_OTP_BLOCK_ADDITIONAL_RANDOMNESS, 0,
+                        &salt->bytes[0], FLASH_OTP_BLOCK_SIZE),
          NULL);
 
   salt->size = FLASH_OTP_BLOCK_SIZE;
 }
+#endif  // USE_OPTIGA
 
 #endif  // SECURE_MODE

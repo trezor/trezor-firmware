@@ -30,7 +30,6 @@
 secbool secret_key_optiga_pairing(uint8_t dest[OPTIGA_PAIRING_SECRET_SIZE]) {
   return secret_key_get(SECRET_OPTIGA_SLOT, dest, OPTIGA_PAIRING_SECRET_SIZE);
 }
-#endif  // USE_OPTIGA
 
 #include <sec/storage.h>
 #include "../../storage/storage_salt.h"
@@ -38,9 +37,10 @@ secbool secret_key_optiga_pairing(uint8_t dest[OPTIGA_PAIRING_SECRET_SIZE]) {
 #include "pbkdf2.h"
 #define DELEGATED_IDENTITY_KEY_ITER_COUNT 20000
 #define DELEGATED_IDENTITY_KEY_HEADER_LENGTH 21
+
 secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
-  delegated_salt_t salt = {0};
-  delegated_salt_get(&salt);
+  additional_salt_t salt = {0};
+  additional_salt_get(&salt);
 
   const uint8_t header[DELEGATED_IDENTITY_KEY_HEADER_LENGTH] =
       "DelegatedIdentityKey";
@@ -56,5 +56,5 @@ secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   memzero(&ctx, sizeof(ctx));
   return sectrue;
 }
-
+#endif  // USE_OPTIGA
 #endif  // SECURE_MODE

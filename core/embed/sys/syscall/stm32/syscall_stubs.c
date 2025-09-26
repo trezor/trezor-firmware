@@ -285,17 +285,6 @@ secbool secret_bootloader_locked(void) {
 #endif
 
 // =============================================================================
-// secret_keys.h
-// =============================================================================
-
-#include <sec/secret_keys.h>
-
-secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
-  return (secbool)syscall_invoke1(
-      (uint32_t)dest, SYSCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY);
-}
-
-// =============================================================================
 // button.h
 // =============================================================================
 
@@ -427,6 +416,17 @@ bool optiga_read_sec(uint8_t *sec) {
 bool optiga_random_buffer(uint8_t *dest, size_t size) {
   return (bool)syscall_invoke2((uint32_t)dest, size,
                                SYSCALL_OPTIGA_RANDOM_BUFFER);
+}
+
+// =============================================================================
+// secret_keys.h
+// =============================================================================
+
+#include <sec/secret_keys.h>
+
+secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+  return (secbool)syscall_invoke1(
+      (uint32_t)dest, SYSCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY);
 }
 
 #if PYOPT == 0
