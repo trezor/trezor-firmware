@@ -43,7 +43,7 @@
 
 // Mac-and-destroy slots used in PIN verification
 #define TROPIC_FIRST_MAC_AND_DESTROY_SLOT_PRIVILEGED 0
-#define TROPIC_FIRST_MAC_AND_DESTROY_SLOT_UNPRIVILEGED 32
+#define TROPIC_FIRST_MAC_AND_DESTROY_SLOT_UNPRIVILEGED 64
 #endif
 
 // Pairing key used by prodtest to inject the privileged and unprivileged
