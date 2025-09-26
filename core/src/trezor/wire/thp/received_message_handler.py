@@ -224,29 +224,6 @@ async def _handle_pairing(ctx: Channel) -> None:
     await ctx.connection_context.handle(message)
 
 
-def _should_have_ctrl_byte_encrypted_transport(ctx: Channel) -> bool:
-    return ctx.get_channel_state() not in (
-        ChannelState.UNALLOCATED,
-        ChannelState.TH1,
-        ChannelState.TH2,
-    )
-
-
-def _decode_message(
-    buffer: bytes,
-    msg_type: int,
-    message_name: str | None = None,
-    wire_enum: str = "ThpMessageType",
-) -> protobuf.MessageType:
-    if __debug__:
-        log.debug(__name__, "decode message")
-    if message_name is not None:
-        expected_type = protobuf.type_for_name(message_name)
-    else:
-        expected_type = protobuf.type_for_wire(wire_enum, msg_type)
-    return message_handler.wrap_protobuf_load(buffer, expected_type)
-
-
 def _is_channel_state_pairing(state: int) -> bool:
     return state in (
         ChannelState.TP0,
