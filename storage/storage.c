@@ -833,7 +833,17 @@ static secbool __wur derive_kek_unlock(
 #endif
 #endif
 #if USE_OPTIGA
-  if (optiga_stretch_pin(ui_progress, stretched_pin) != OPTIGA_PIN_SUCCESS) {
+  optiga_pin_result optiga_ret = optiga_stretch_pin(ui_progress, stretched_pin);
+  if (optiga_ret != OPTIGA_PIN_SUCCESS) {
+    memzero(stretched_pin, SHA256_DIGEST_LENGTH);
+
+    if (optiga_ret == OPTIGA_PIN_COUNTER_EXCEEDED) {
+      // Unreachable code. Wipe should have already been triggered in unlock().
+      storage_wipe();
+      show_pin_too_many_screen();
+    }
+    ensure(optiga_ret == OPTIGA_PIN_INVALID ? sectrue : secfalse,
+           "optiga_stretch_pin failed");
     goto cleanup;
   }
 #endif
@@ -843,8 +853,7 @@ static secbool __wur derive_kek_unlock(
   }
 #endif
 #if USE_OPTIGA
-  optiga_pin_result optiga_ret =
-      optiga_pin_verify(ui_progress, pin_index, stretched_pin);
+  optiga_ret = optiga_pin_verify(ui_progress, pin_index, stretched_pin);
   if (optiga_ret != OPTIGA_PIN_SUCCESS) {
     memzero(stretched_pin, SHA256_DIGEST_LENGTH);
 
