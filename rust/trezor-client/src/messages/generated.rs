@@ -89,6 +89,7 @@ trezor_message_impl! {
     DebugLinkGcInfo => MessageType_DebugLinkGcInfo,
     DebugLinkGetPairingInfo => MessageType_DebugLinkGetPairingInfo,
     DebugLinkPairingInfo => MessageType_DebugLinkPairingInfo,
+    RestartEventLoop => MessageType_RestartEventLoop,
     ThpCreateNewSession => MessageType_ThpCreateNewSession,
     ThpCredentialRequest => MessageType_ThpCredentialRequest,
     ThpCredentialResponse => MessageType_ThpCredentialResponse,

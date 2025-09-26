@@ -104,6 +104,8 @@ class ProtocolV2Channel(Channel):
             raise exceptions.TrezorException("ACK expected")
         _, msg_type, msg_data = self.read_and_decrypt(timeout)
         features = self.mapping.decode(msg_type, msg_data)
+        print(features)
+        print(type(features))
         if not isinstance(features, messages.Features):
             raise exceptions.TrezorException("Unexpected response to GetFeatures")
         self._features = features

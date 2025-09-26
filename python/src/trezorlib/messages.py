@@ -529,6 +529,7 @@ class MessageType(IntEnum):
     DebugLinkGcInfo = 9010
     DebugLinkGetPairingInfo = 9011
     DebugLinkPairingInfo = 9012
+    RestartEventLoop = 9013
     EthereumGetPublicKey = 450
     EthereumPublicKey = 451
     EthereumGetAddress = 56
@@ -3651,6 +3652,10 @@ class AuthenticityProof(protobuf.MessageType):
 
 class WipeDevice(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 5
+
+
+class RestartEventLoop(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9013
 
 
 class LoadDevice(protobuf.MessageType):

@@ -150,6 +150,12 @@ def wipe(session: "Session") -> str | None:
     return _return_success(ret)
 
 
+def restart_event_loop(session: "Session") -> str | None:
+    ret = session.call(messages.RestartEventLoop(), expect=messages.Success)
+    session.invalidate()
+    return _return_success(ret)
+
+
 def recover(
     session: "Session",
     word_count: int = 24,

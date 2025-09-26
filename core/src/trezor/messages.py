@@ -2433,6 +2433,12 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["WipeDevice"]:
             return isinstance(msg, cls)
 
+    class RestartEventLoop(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["RestartEventLoop"]:
+            return isinstance(msg, cls)
+
     class LoadDevice(protobuf.MessageType):
         mnemonics: "list[str]"
         pin: "str | None"

@@ -398,6 +398,15 @@ message WipeDevice {
 }
 
 /**
+ * Request: Request device to restart the event loop
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message RestartEventLoop {
+}
+
+/**
  * Request: Load seed and related internal settings from the computer
  * @start
  * @next Success

@@ -34,6 +34,7 @@ if __debug__:
             DebugLinkReseedRandom,
             DebugLinkState,
             WipeDevice,
+            RestartEventLoop,
         )
         from trezor.ui import Layout
         from trezor.wire import WireInterface
@@ -48,7 +49,7 @@ if __debug__:
     _DEADLOCK_SLEEP_MS = const(3000)
     _DEADLOCK_DETECT_SLEEP = loop.sleep(_DEADLOCK_SLEEP_MS)
 
-    class RestartEventLoop(Exception):
+    class RestartEventLoopException(Exception):
         pass
 
     def notify_layout_change(layout: Layout | None) -> None:
@@ -418,8 +419,12 @@ if __debug__:
             ]
         )
 
+    async def dispatch_RestartEventLoop(msg: RestartEventLoop) -> None:
+        """Restart the event loop."""
+        raise RestartEventLoopException
+
     async def dispatch_WipeDevice(msg: WipeDevice) -> None:
-        """Wipe the device and restart the event loop."""
+        """Restart the event loop."""
         from storage import wipe
 
         try:
@@ -427,7 +432,7 @@ if __debug__:
             assert DEBUG_CONTEXT is not None
             await DEBUG_CONTEXT.write(Success())
         finally:
-            raise RestartEventLoop
+            raise RestartEventLoopException
 
     async def _no_op(_msg: Any) -> Success:
         return Success()
@@ -516,7 +521,7 @@ if __debug__:
                 req_msg = message_handler.wrap_protobuf_load(msg.data, req_type)
                 try:
                     res_msg = await WORKFLOW_HANDLERS[msg.type](req_msg)
-                except RestartEventLoop:
+                except RestartEventLoopException:
                     loop.clear()
                     return
                 except Exception as exc:
@@ -544,6 +549,7 @@ if __debug__:
         MessageType.DebugLinkResetDebugEvents: _no_op,
         MessageType.DebugLinkGetGcInfo: dispatch_DebugLinkGetGcInfo,
         MessageType.WipeDevice: dispatch_WipeDevice,
+        MessageType.RestartEventLoop: dispatch_RestartEventLoop,
     }
 
     def boot() -> None:

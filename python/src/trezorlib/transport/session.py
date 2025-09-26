@@ -62,7 +62,11 @@ class Session:
                 resp = self.call_raw(_passphrase_ack)
             elif isinstance(resp, messages.ButtonRequest):
                 resp = self._callback_button(resp)
+            elif isinstance(resp, messages.RestartEventLoop):
+                resp = self.call_raw(resp)
             elif isinstance(resp, messages.Failure):
+                print (resp)
+                print (type(resp))
                 if resp.code == messages.FailureType.ActionCancelled:
                     raise exceptions.Cancelled
                 raise exceptions.TrezorFailure(resp)

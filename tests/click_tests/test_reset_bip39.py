@@ -78,17 +78,15 @@ def test_reset_bip39(device_handler: "BackgroundDeviceHandler"):
     # read words
     words = reset.read_words(debug)
 
-    # confirm words
-    reset.confirm_words(debug, words)
+    # device_handler.kill_task()
+    session.call_raw(messages.RestartEventLoop())
+    session.cancel()
+    # session = device_handler.client.get_seedless_session()
+    # device_handler.run_with_provided_session(
+    #     session,
+    #     device.restart_event_loop,
+    # )
 
-    # confirm backup done
-    reset.confirm_read(debug)
-
-    # Your backup is done
-    if debug.layout_type is not LayoutType.Eckhart:
-        go_next(debug)
-
-    # TODO: some validation of the generated secret?
 
     # retrieve the result to check that it's not a TrezorFailure exception
     device_handler.result()

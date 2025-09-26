@@ -84,6 +84,7 @@ SignedIdentity = 54
 GetECDHSessionKey = 61
 ECDHSessionKey = 62
 PaymentNotification = 52
+RestartEventLoop = 9013
 EvoluGetNode = 2100
 EvoluNode = 2101
 BenchmarkListNames = 9100
