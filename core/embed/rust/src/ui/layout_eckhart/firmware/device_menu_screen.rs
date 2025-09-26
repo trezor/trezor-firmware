@@ -250,26 +250,28 @@ impl Submenu {
     }
 }
 
+struct HostInfoScreen {
+    host_name: TString<'static>,
+    mac: TString<'static>,
+    app_name: Option<TString<'static>>,
+    parent_screen: u8,
+}
+
+struct DeviceScreen {
+    title: TString<'static>,
+    connected: bool,
+    device_index: u8,
+    host_info_screen: u8,
+}
+
 // Each subscreen of the DeviceMenuScreen is one of these
 enum Subscreen {
     // A registered submenu
     Submenu(u8, DeviceMenuId),
 
     // A screen allowing the user to to disconnect a device
-    DeviceScreen(
-        TString<'static>, /* device main text */
-        bool,             /* is the device connected? */
-        u8,               /* index in the list of devices */
-        u8,               /* host info screen index */
-    ),
-
-    HostInfoScreen(
-        TString<'static>,         /* host name */
-        TString<'static>,         /* MAC address */
-        Option<TString<'static>>, /* app name */
-        u8,                       /* parent screen index */
-    ),
-
+    DeviceScreen(DeviceScreen),
+    HostInfoScreen(HostInfoScreen),
     // The about screen
     AboutScreen,
     // A screen showing the regulatory information
@@ -360,8 +362,8 @@ impl DeviceMenuScreen {
             is_connected.then_some(TR::words__connected.into());
 
         let mut submenu_indices: Vec<u8, MAX_PAIRED_DEVICES> = Vec::new();
-        for (i, (mac, host_info)) in (0u8..).zip(paired_devices.iter()) {
-            let connected = connected_idx == Some(i);
+        for (device_index, (mac, host_info)) in (0u8..).zip(paired_devices.iter()) {
+            let connected = connected_idx == Some(device_index);
 
             // Add the host info subscreen first, so that we can reference it from the
             // device subscreen
@@ -370,25 +372,31 @@ impl DeviceMenuScreen {
             } else {
                 (TR::words__unknown.into(), None)
             };
-            let info_subscreen = screen.add_subscreen(Subscreen::HostInfoScreen(
-                host_name, *mac, app_name,
-                0, /* dummy value because the device subscreen doesn't exist yet */
-            ));
+            let host_info_screen = screen.add_subscreen(Subscreen::HostInfoScreen(HostInfoScreen {
+                host_name,
+                mac: *mac,
+                app_name,
+                parent_screen: 0, /* dummy value because the device subscreen doesn't exist yet */
+            }));
             // Add the device subscreen with the reference to the host info subscreen
-            let text = if let Some([host_name, _]) = host_info {
+            let title = if let Some([host_name, _]) = host_info {
                 *host_name
             } else {
                 *mac
             };
-            let device_subscreen =
-                screen.add_subscreen(Subscreen::DeviceScreen(text, connected, i, info_subscreen));
+            let device_subscreen = screen.add_subscreen(Subscreen::DeviceScreen(DeviceScreen {
+                title,
+                connected,
+                device_index,
+                host_info_screen,
+            }));
 
             // Update the parent index in the host info screen to break the circular
             // dependency
-            if let Subscreen::HostInfoScreen(_, _, _, parent_idx) =
-                &mut screen.subscreens[usize::from(info_subscreen)]
+            if let Subscreen::HostInfoScreen(ref mut host_info) =
+                screen.subscreens[usize::from(host_info_screen)]
             {
-                *parent_idx = device_subscreen;
+                host_info.parent_screen = device_subscreen;
             } else {
                 unreachable!();
             }
@@ -815,9 +823,9 @@ impl DeviceMenuScreen {
                     id,
                 );
             }
-            Subscreen::DeviceScreen(device, connected, ..) => {
+            Subscreen::DeviceScreen(ref device_screen) => {
                 let mut menu = VerticalMenu::empty();
-                if connected {
+                if device_screen.connected {
                     menu.item(Button::new_menu_item(
                         TR::words__disconnect.into(),
                         theme::menu_item_title(),
@@ -841,17 +849,17 @@ impl DeviceMenuScreen {
                                     HeaderMsg::Back,
                                 ),
                         )
-                        .with_subtitle(device),
+                        .with_subtitle(device_screen.title),
                 );
             }
-            Subscreen::HostInfoScreen(host_name, mac, app_name, ..) => {
+            Subscreen::HostInfoScreen(ref host_info) => {
                 let mut para = ParagraphVecShort::new();
                 para.add(
                     Paragraph::new(&theme::TEXT_MEDIUM_EXTRA_LIGHT, TR::words__name)
                         .with_bottom_padding(theme::PROP_INNER_SPACING),
                 );
                 para.add(
-                    Paragraph::new(&theme::TEXT_MONO_LIGHT, host_name)
+                    Paragraph::new(&theme::TEXT_MONO_LIGHT, host_info.host_name)
                         .with_bottom_padding(theme::TEXT_VERTICAL_SPACING),
                 );
                 para.add(
@@ -859,10 +867,10 @@ impl DeviceMenuScreen {
                         .with_bottom_padding(theme::PROP_INNER_SPACING),
                 );
                 para.add(
-                    Paragraph::new(&theme::TEXT_MONO_LIGHT, mac)
+                    Paragraph::new(&theme::TEXT_MONO_LIGHT, host_info.mac)
                         .with_bottom_padding(theme::TEXT_VERTICAL_SPACING),
                 );
-                if let Some(app_name) = app_name {
+                if let Some(app_name) = host_info.app_name {
                     para.add(
                         Paragraph::new(&theme::TEXT_MEDIUM_EXTRA_LIGHT, TR::ble__app_connected)
                             .with_bottom_padding(theme::PROP_INNER_SPACING),
@@ -944,9 +952,9 @@ impl DeviceMenuScreen {
 
     fn go_back(&mut self, ctx: &mut EventCtx) -> Option<DeviceMenuMsg> {
         let active_subscreen = &self.subscreens[usize::from(self.active_subscreen)];
-        if let Subscreen::HostInfoScreen(_, _, _, parent_idx) = active_subscreen {
+        if let Subscreen::HostInfoScreen(ref host_info) = active_subscreen {
             // Handle going back from the HostInfoScreen
-            self.activate_subscreen(*parent_idx, ctx);
+            self.activate_subscreen(host_info.parent_screen, ctx);
             return None;
         }
 
@@ -1042,33 +1050,32 @@ impl Component for DeviceMenuScreen {
                     _ => {}
                 }
             }
-            (
-                Subscreen::DeviceScreen(_, connected, device_idx, host_info_idx),
-                ActiveScreen::Device(menu),
-            ) => match menu.event(ctx, event) {
-                Some(VerticalMenuScreenMsg::Selected(button_idx)) => {
-                    match (button_idx, *connected) {
-                        (0, true) => {
-                            return Some(DeviceMenuMsg::DisconnectDevice);
+            (Subscreen::DeviceScreen(ref device_screen), ActiveScreen::Device(menu)) => {
+                match menu.event(ctx, event) {
+                    Some(VerticalMenuScreenMsg::Selected(button_idx)) => {
+                        match (button_idx, device_screen.connected) {
+                            (0, true) => {
+                                return Some(DeviceMenuMsg::DisconnectDevice);
+                            }
+                            (0, false) | (1, true) => {
+                                self.activate_subscreen(device_screen.host_info_screen, ctx);
+                                return None;
+                            }
+                            (1, false) | (2, true) => {
+                                return Some(DeviceMenuMsg::UnpairDevice(device_screen.device_index));
+                            }
+                            _ => {}
                         }
-                        (0, false) | (1, true) => {
-                            self.activate_subscreen(*host_info_idx, ctx);
-                            return None;
-                        }
-                        (1, false) | (2, true) => {
-                            return Some(DeviceMenuMsg::UnpairDevice(*device_idx));
-                        }
-                        _ => {}
                     }
+                    Some(VerticalMenuScreenMsg::Back) => {
+                        return self.go_back(ctx);
+                    }
+                    Some(VerticalMenuScreenMsg::Close) => {
+                        return Some(DeviceMenuMsg::Close);
+                    }
+                    _ => {}
                 }
-                Some(VerticalMenuScreenMsg::Back) => {
-                    return self.go_back(ctx);
-                }
-                Some(VerticalMenuScreenMsg::Close) => {
-                    return Some(DeviceMenuMsg::Close);
-                }
-                _ => {}
-            },
+            }
             (Subscreen::AboutScreen, ActiveScreen::About(about)) => {
                 if let Some(TextScreenMsg::Cancelled) = about.event(ctx, event) {
                     return self.go_back(ctx);
