@@ -741,7 +741,7 @@ static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
   if (!rng_fill_buffer_strong(kek, SHA256_DIGEST_LENGTH)) {
     goto cleanup;
   }
-  if (tropic_set_kek(ui_progress, kek, stretched_pins) != true) {
+  if (tropic_set_kek_masks(ui_progress, kek, stretched_pins) != true) {
     goto cleanup;
   }
   if (storage_set_encrypted(
@@ -859,8 +859,8 @@ static secbool __wur derive_kek_unlock(
   }
 #endif
 #if USE_TROPIC
-  if (tropic_get_kek(ui_progress, stretched_pin, pin_index, stretched_pin) !=
-      true) {
+  if (tropic_unmask_kek(ui_progress, , pin_index, stretched_pin,
+                        stretched_pin) != true) {
     goto cleanup;
   }
 #endif

@@ -105,14 +105,14 @@ bool tropic_pin_set(
     uint8_t stretched_pins[PIN_MAX_TRIES][MAC_AND_DESTROY_DATA_SIZE],
     uint8_t reset_key[MAC_AND_DESTROY_DATA_SIZE]);
 
-bool tropic_set_kek(
+bool tropic_set_kek_masks(
     tropic_ui_progress_t ui_progress,
     const uint8_t kek[MAC_AND_DESTROY_DATA_SIZE],
     const uint8_t stretched_pins[PIN_MAX_TRIES][MAC_AND_DESTROY_DATA_SIZE]);
 
-bool tropic_get_kek(tropic_ui_progress_t ui_progress,
-                    const uint8_t stretched_pin[MAC_AND_DESTROY_DATA_SIZE],
-                    uint16_t pin_index, uint8_t kek[MAC_AND_DESTROY_DATA_SIZE]);
+bool tropic_unmask_kek(tropic_ui_progress_t ui_progress, uint16_t pin_index,
+                       const uint8_t stretched_pin[MAC_AND_DESTROY_DATA_SIZE],
+                       uint8_t kek[MAC_AND_DESTROY_DATA_SIZE]);
 
 uint32_t tropic_estimate_time_ms(storage_pin_op_t op, uint16_t pin_index);
 #endif
