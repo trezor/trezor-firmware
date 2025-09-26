@@ -41,6 +41,7 @@
 typedef struct {
   bool initialized;
   bool sec_chan_established;
+  pkey_index_t pairing_key_index;
   lt_handle_t handle;
 #ifdef TREZOR_EMULATOR
   lt_dev_unix_tcp_t device;
@@ -53,6 +54,49 @@ static tropic_driver_t g_tropic_driver = {0};
 static bool tropic_get_tropic_pubkey(lt_handle_t *handle,
                                      curve25519_key pubkey);
 #endif
+
+static bool session_start(tropic_driver_t *drv,
+                          pkey_index_t pairing_key_index) {
+  curve25519_key trezor_private = {0};
+  if (pairing_key_index == TROPIC_FACTORY_PAIRING_KEY_SLOT) {
+    tropic_get_factory_privkey(trezor_private);
+  }
+  if (pairing_key_index == TROPIC_PRIVILEGED_PAIRING_KEY_SLOT) {
+    if (secret_key_tropic_pairing_privileged(trezor_private) != sectrue) {
+      return false;
+    }
+  }
+  if (pairing_key_index == TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT) {
+    if (secret_key_tropic_pairing_unprivileged(trezor_private) != sectrue) {
+      return false;
+    }
+  }
+
+  curve25519_key trezor_public = {0};
+  curve25519_scalarmult_basepoint(trezor_public, trezor_private);
+
+  curve25519_key tropic_public = {0};
+  if (secret_key_tropic_public(tropic_public) != sectrue) {
+#if !PRODUCTION
+    if (!tropic_get_tropic_pubkey(&drv->handle, tropic_public))
+#endif
+    {
+      memzero(trezor_private, sizeof(trezor_private));
+      return false;
+    }
+  }
+
+  if (lt_session_start(&drv->handle, tropic_public, pairing_key_index,
+                       trezor_private, trezor_public) != LT_OK) {
+    memzero(trezor_private, sizeof(trezor_private));
+    return false;
+  }
+
+  drv->pairing_key_index = pairing_key_index;
+  drv->initialized = true;
+
+  return true;
+}
 
 bool tropic_init(void) {
   tropic_driver_t *drv = &g_tropic_driver;
@@ -75,49 +119,19 @@ bool tropic_init(void) {
   // length was chosen arbitrarily. A shorter delay may be sufficient.
   hal_delay(100);
 
-#ifdef TREZOR_EMULATOR
-  pkey_index_t pairing_key_slot = TROPIC_FACTORY_PAIRING_KEY_SLOT;
-#else
-  pkey_index_t pairing_key_slot = TROPIC_PRIVILEGED_PAIRING_KEY_SLOT;
-#endif
-
-  curve25519_key trezor_privkey = {0};
-  secbool privkey_ok = secret_key_tropic_pairing_privileged(trezor_privkey);
-  if (privkey_ok != sectrue) {
-    pairing_key_slot = TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT;
-    privkey_ok = secret_key_tropic_pairing_unprivileged(trezor_privkey);
+#ifndef TREZOR_EMULATOR
+  if (session_start(drv, TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT)) {
+    return true;
   }
-
-  curve25519_key tropic_pubkey = {0};
-  secbool pubkey_ok = secret_key_tropic_public(tropic_pubkey);
-
+  if (session_start(drv, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT)) {
+    return true;
+  }
+#endif
 #if !PRODUCTION
-  // Allow running with default factory keys in non-production fw
-  if (privkey_ok != sectrue) {
-    tropic_get_factory_privkey(trezor_privkey);
-    pairing_key_slot = TROPIC_FACTORY_PAIRING_KEY_SLOT;
-    privkey_ok = sectrue;
-  }
-
-  if (pubkey_ok != sectrue) {
-    pubkey_ok = tropic_get_tropic_pubkey(&drv->handle, tropic_pubkey) * sectrue;
+  if (session_start(drv, TROPIC_FACTORY_PAIRING_KEY_SLOT)) {
+    return true;
   }
 #endif
-
-  if (pubkey_ok == sectrue && privkey_ok == sectrue) {
-    curve25519_key trezor_pubkey = {0};
-    curve25519_scalarmult_basepoint(trezor_pubkey, trezor_privkey);
-
-    lt_ret_t ret =
-        lt_session_start(&drv->handle, tropic_pubkey, pairing_key_slot,
-                         trezor_privkey, trezor_pubkey);
-
-    drv->sec_chan_established = (ret == LT_OK);
-  }
-
-  memzero(trezor_privkey, sizeof(trezor_privkey));
-
-  drv->initialized = true;
 
   return true;
 
@@ -284,9 +298,10 @@ bool tropic_stretch_pin(tropic_ui_progress_t ui_progress, uint16_t pin_index,
     return false;
   }
 
-  int first_slot_index = secret_key_is_privileged_accessible() == sectrue
-                             ? TROPIC_FIRST_MAC_AND_DESTROY_SLOT_PRIVILEGED
-                             : TROPIC_FIRST_MAC_AND_DESTROY_SLOT_UNPRIVILEGED;
+  int first_slot_index =
+      drv->pairing_key_index == TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT
+          ? TROPIC_FIRST_MAC_AND_DESTROY_SLOT_UNPRIVILEGED
+          : TROPIC_FIRST_MAC_AND_DESTROY_SLOT_PRIVILEGED;
 
   ui_progress();
 
@@ -313,9 +328,10 @@ bool tropic_reset_slots(tropic_ui_progress_t ui_progress, uint16_t pin_index,
   lt_ret_t res = LT_FAIL;
   uint8_t output[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
 
-  int first_slot_index = secret_key_is_privileged_accessible() == sectrue
-                             ? TROPIC_FIRST_MAC_AND_DESTROY_SLOT_PRIVILEGED
-                             : TROPIC_FIRST_MAC_AND_DESTROY_SLOT_UNPRIVILEGED;
+  int first_slot_index =
+      drv->pairing_key_index == TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT
+          ? TROPIC_FIRST_MAC_AND_DESTROY_SLOT_UNPRIVILEGED
+          : TROPIC_FIRST_MAC_AND_DESTROY_SLOT_PRIVILEGED;
 
   for (int i = 0; i <= pin_index; i++) {
     ui_progress();
@@ -352,9 +368,10 @@ bool tropic_pin_set(
   lt_ret_t res = LT_FAIL;
   uint8_t output[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
 
-  int first_slot_index = secret_key_is_privileged_accessible() == sectrue
-                             ? TROPIC_FIRST_MAC_AND_DESTROY_SLOT_PRIVILEGED
-                             : TROPIC_FIRST_MAC_AND_DESTROY_SLOT_UNPRIVILEGED;
+  int first_slot_index =
+      drv->pairing_key_index == TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT
+          ? TROPIC_FIRST_MAC_AND_DESTROY_SLOT_UNPRIVILEGED
+          : TROPIC_FIRST_MAC_AND_DESTROY_SLOT_PRIVILEGED;
 
   ui_progress();
 
@@ -409,9 +426,10 @@ bool tropic_set_kek_masks(
 
   ui_progress();
 
-  uint16_t masked_kek_slot = secret_key_is_privileged_accessible() == sectrue
-                                 ? TROPIC_KEK_MASKS_PRIVILEGED_SLOT
-                                 : TROPIC_KEK_MASKS_UNPRIVILEGED_SLOT;
+  uint16_t masked_kek_slot =
+      drv->pairing_key_index == TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT
+          ? TROPIC_KEK_MASKS_UNPRIVILEGED_SLOT
+          : TROPIC_KEK_MASKS_PRIVILEGED_SLOT;
 
   ret = lt_r_mem_data_erase(&drv->handle, masked_kek_slot);
   if (ret != LT_OK) {
@@ -437,20 +455,23 @@ cleanup:
 bool tropic_unmask_kek(tropic_ui_progress_t ui_progress, uint16_t pin_index,
                        const uint8_t stretched_pin[TROPIC_MAC_AND_DESTROY_SIZE],
                        uint8_t kek[TROPIC_MAC_AND_DESTROY_SIZE]) {
+  tropic_driver_t *drv = &g_tropic_driver;
+
   uint8_t masks[R_MEM_DATA_SIZE_MAX] = {0};
   _Static_assert(
       R_MEM_DATA_SIZE_MAX >= PIN_MAX_TRIES * TROPIC_MAC_AND_DESTROY_SIZE,
       "R_MEM_DATA_SIZE_MAX too small");
   uint16_t length = 0;
 
-  uint16_t masked_kek_slot = secret_key_is_privileged_accessible() == sectrue
-                                 ? TROPIC_KEK_MASKS_PRIVILEGED_SLOT
-                                 : TROPIC_KEK_MASKS_UNPRIVILEGED_SLOT;
+  uint16_t masked_kek_slot =
+      drv->pairing_key_index == TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT
+          ? TROPIC_KEK_MASKS_UNPRIVILEGED_SLOT
+          : TROPIC_KEK_MASKS_PRIVILEGED_SLOT;
 
   ui_progress();
 
-  if (lt_r_mem_data_read(&g_tropic_driver.handle, masked_kek_slot, masks,
-                         &length) != LT_OK) {
+  if (lt_r_mem_data_read(&drv->handle, masked_kek_slot, masks, &length) !=
+      LT_OK) {
     return false;
   }
 
