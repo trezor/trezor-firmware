@@ -114,9 +114,6 @@ bool optiga_stretch_pin_offline(
   return true;
 }
 
-bool optiga_reset_hmac_counter(optiga_ui_progress_t ui_progress,
-                               const uint8_t reset_key[OPTIGA_PIN_SECRET_SIZE]);
-
 uint32_t optiga_estimate_time_ms(storage_pin_op_t op, uint8_t slot_index) {
   return 0;
 }
