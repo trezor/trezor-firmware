@@ -199,8 +199,8 @@ void prodtest_show_homescreen(void) {
 
   static char device_sn[MAX_DEVICE_SN_SIZE] = {0};
   size_t device_sn_size = 0;
-  if (get_device_sn((uint8_t *)device_sn, sizeof(device_sn) - 1,
-                    &device_sn_size)) {
+  if (unit_properties_get_sn((uint8_t *)device_sn, sizeof(device_sn) - 1,
+                             &device_sn_size)) {
     screen_prodtest_welcome(&g_layout.layout, device_sn, device_sn_size);
   } else {
     screen_prodtest_welcome(&g_layout.layout, NULL, 0);

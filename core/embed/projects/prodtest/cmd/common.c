@@ -491,7 +491,8 @@ bool check_cert_chain(cli_t* cli, const uint8_t* chain, size_t chain_size,
       // Check that the serial number of the subject, matches the device.
       uint8_t device_sn[MAX_DEVICE_SN_SIZE] = {0};
       size_t device_sn_size = 0;
-      if (!get_device_sn(device_sn, sizeof(device_sn), &device_sn_size) ||
+      if (!unit_properties_get_sn(device_sn, sizeof(device_sn),
+                                  &device_sn_size) ||
           device_sn_size == 0) {
         cli_error(cli, CLI_ERROR,
                   "check_device_cert_chain, device_sn not set.");

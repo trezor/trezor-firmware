@@ -49,6 +49,10 @@ void reboot_with_rsod__verified(const systask_postmortem_t *pminfo);
 
 void unit_properties_get__verified(unit_properties_t *props);
 
+bool unit_properties_get_sn__verified(uint8_t *device_sn,
+                                      size_t max_device_sn_size,
+                                      size_t *device_sn_size);
+
 // ---------------------------------------------------------------------
 #ifdef USE_OPTIGA
 
