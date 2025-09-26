@@ -57,6 +57,8 @@
 // Pairing key used by official firmware.
 #define TROPIC_PRIVILEGED_PAIRING_KEY_SLOT 2  // PAIRING_KEY_SLOT_INDEX_2
 
+#define TROPIC_MAC_AND_DESTROY_SIZE 32
+
 #ifdef KERNEL_MODE
 
 bool tropic_init(void);
@@ -69,8 +71,6 @@ lt_handle_t* tropic_get_handle(void);
 #endif
 
 #endif
-
-#include "libtropic_common.h"
 
 typedef secbool (*tropic_ui_progress_t)(void);
 
@@ -95,24 +95,24 @@ bool tropic_random_buffer(void* buffer, size_t length);
 
 #ifdef USE_STORAGE
 bool tropic_stretch_pin(tropic_ui_progress_t ui_progress, uint16_t pin_index,
-                        uint8_t stretched_pin[MAC_AND_DESTROY_DATA_SIZE]);
+                        uint8_t stretched_pin[TROPIC_MAC_AND_DESTROY_SIZE]);
 
 bool tropic_reset_slots(tropic_ui_progress_t ui_progress, uint16_t pin_index,
-                        const uint8_t reset_key[MAC_AND_DESTROY_DATA_SIZE]);
+                        const uint8_t reset_key[TROPIC_MAC_AND_DESTROY_SIZE]);
 
 bool tropic_pin_set(
     tropic_ui_progress_t ui_progress,
-    uint8_t stretched_pins[PIN_MAX_TRIES][MAC_AND_DESTROY_DATA_SIZE],
-    uint8_t reset_key[MAC_AND_DESTROY_DATA_SIZE]);
+    uint8_t stretched_pins[PIN_MAX_TRIES][TROPIC_MAC_AND_DESTROY_SIZE],
+    uint8_t reset_key[TROPIC_MAC_AND_DESTROY_SIZE]);
 
 bool tropic_set_kek_masks(
     tropic_ui_progress_t ui_progress,
-    const uint8_t kek[MAC_AND_DESTROY_DATA_SIZE],
-    const uint8_t stretched_pins[PIN_MAX_TRIES][MAC_AND_DESTROY_DATA_SIZE]);
+    const uint8_t kek[TROPIC_MAC_AND_DESTROY_SIZE],
+    const uint8_t stretched_pins[PIN_MAX_TRIES][TROPIC_MAC_AND_DESTROY_SIZE]);
 
 bool tropic_unmask_kek(tropic_ui_progress_t ui_progress, uint16_t pin_index,
-                       const uint8_t stretched_pin[MAC_AND_DESTROY_DATA_SIZE],
-                       uint8_t kek[MAC_AND_DESTROY_DATA_SIZE]);
+                       const uint8_t stretched_pin[TROPIC_MAC_AND_DESTROY_SIZE],
+                       uint8_t kek[TROPIC_MAC_AND_DESTROY_SIZE]);
 
 uint32_t tropic_estimate_time_ms(storage_pin_op_t op, uint16_t pin_index);
 #endif

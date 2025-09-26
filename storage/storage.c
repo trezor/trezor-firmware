@@ -722,8 +722,8 @@ static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
   }
 #endif
 #if USE_TROPIC
-  _Static_assert(SHA256_DIGEST_LENGTH == MAC_AND_DESTROY_DATA_SIZE);
-  uint8_t tropic_mac_and_destroy_reset_key[MAC_AND_DESTROY_DATA_SIZE] = {0};
+  _Static_assert(SHA256_DIGEST_LENGTH == TROPIC_MAC_AND_DESTROY_SIZE);
+  uint8_t tropic_mac_and_destroy_reset_key[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
   if (!tropic_pin_set(ui_progress, stretched_pins,
                       tropic_mac_and_destroy_reset_key)) {
     goto cleanup;

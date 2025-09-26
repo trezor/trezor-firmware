@@ -273,7 +273,7 @@ bool tropic_random_buffer(void *buffer, size_t length) {
 #ifdef USE_STORAGE
 
 bool tropic_stretch_pin(tropic_ui_progress_t ui_progress, uint16_t pin_index,
-                        uint8_t stretched_pin[MAC_AND_DESTROY_DATA_SIZE]) {
+                        uint8_t stretched_pin[TROPIC_MAC_AND_DESTROY_SIZE]) {
   if (pin_index >= PIN_MAX_TRIES) {
     return false;
   }
@@ -299,7 +299,7 @@ bool tropic_stretch_pin(tropic_ui_progress_t ui_progress, uint16_t pin_index,
 }
 
 bool tropic_reset_slots(tropic_ui_progress_t ui_progress, uint16_t pin_index,
-                        const uint8_t reset_key[MAC_AND_DESTROY_DATA_SIZE]) {
+                        const uint8_t reset_key[TROPIC_MAC_AND_DESTROY_SIZE]) {
   if (pin_index >= PIN_MAX_TRIES) {
     return false;
   }
@@ -311,7 +311,7 @@ bool tropic_reset_slots(tropic_ui_progress_t ui_progress, uint16_t pin_index,
   }
 
   lt_ret_t res = LT_FAIL;
-  uint8_t output[MAC_AND_DESTROY_DATA_SIZE] = {0};
+  uint8_t output[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
 
   int first_slot_index = secret_key_is_privileged_accessible() == sectrue
                              ? TROPIC_FIRST_MAC_AND_DESTROY_SLOT_PRIVILEGED
@@ -337,20 +337,20 @@ cleanup:
 
 bool tropic_pin_set(
     tropic_ui_progress_t ui_progress,
-    uint8_t stretched_pins[PIN_MAX_TRIES][MAC_AND_DESTROY_DATA_SIZE],
-    uint8_t reset_key[MAC_AND_DESTROY_DATA_SIZE]) {
+    uint8_t stretched_pins[PIN_MAX_TRIES][TROPIC_MAC_AND_DESTROY_SIZE],
+    uint8_t reset_key[TROPIC_MAC_AND_DESTROY_SIZE]) {
   tropic_driver_t *drv = &g_tropic_driver;
 
   if (!drv->initialized) {
     return false;
   }
 
-  if (!rng_fill_buffer_strong(reset_key, MAC_AND_DESTROY_DATA_SIZE)) {
+  if (!rng_fill_buffer_strong(reset_key, TROPIC_MAC_AND_DESTROY_SIZE)) {
     return false;
   }
 
   lt_ret_t res = LT_FAIL;
-  uint8_t output[MAC_AND_DESTROY_DATA_SIZE] = {0};
+  uint8_t output[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
 
   int first_slot_index = secret_key_is_privileged_accessible() == sectrue
                              ? TROPIC_FIRST_MAC_AND_DESTROY_SLOT_PRIVILEGED
@@ -394,15 +394,16 @@ cleanup:
 
 bool tropic_set_kek_masks(
     tropic_ui_progress_t ui_progress,
-    const uint8_t kek[MAC_AND_DESTROY_DATA_SIZE],
-    const uint8_t stretched_pins[PIN_MAX_TRIES][MAC_AND_DESTROY_DATA_SIZE]) {
+    const uint8_t kek[TROPIC_MAC_AND_DESTROY_SIZE],
+    const uint8_t stretched_pins[PIN_MAX_TRIES][TROPIC_MAC_AND_DESTROY_SIZE]) {
   tropic_driver_t *drv = &g_tropic_driver;
   lt_ret_t ret = LT_FAIL;
 
-  uint8_t masks[PIN_MAX_TRIES * MAC_AND_DESTROY_DATA_SIZE] = {0};
+  uint8_t masks[PIN_MAX_TRIES * TROPIC_MAC_AND_DESTROY_SIZE] = {0};
   for (int i = 0; i < PIN_MAX_TRIES; i++) {
-    for (int j = 0; j < MAC_AND_DESTROY_DATA_SIZE; j++) {
-      masks[i * MAC_AND_DESTROY_DATA_SIZE + j] = kek[j] ^ stretched_pins[i][j];
+    for (int j = 0; j < TROPIC_MAC_AND_DESTROY_SIZE; j++) {
+      masks[i * TROPIC_MAC_AND_DESTROY_SIZE + j] =
+          kek[j] ^ stretched_pins[i][j];
     }
   }
 
@@ -434,11 +435,11 @@ cleanup:
 }
 
 bool tropic_get_kek(tropic_ui_progress_t ui_progress, uint16_t pin_index,
-                    const uint8_t stretched_pin[MAC_AND_DESTROY_DATA_SIZE],
-                    uint8_t kek[MAC_AND_DESTROY_DATA_SIZE]) {
+                    const uint8_t stretched_pin[TROPIC_MAC_AND_DESTROY_SIZE],
+                    uint8_t kek[TROPIC_MAC_AND_DESTROY_SIZE]) {
   uint8_t masks[R_MEM_DATA_SIZE_MAX] = {0};
   _Static_assert(
-      R_MEM_DATA_SIZE_MAX >= PIN_MAX_TRIES * MAC_AND_DESTROY_DATA_SIZE,
+      R_MEM_DATA_SIZE_MAX >= PIN_MAX_TRIES * TROPIC_MAC_AND_DESTROY_SIZE,
       "R_MEM_DATA_SIZE_MAX too small");
   uint16_t length = 0;
 
@@ -453,15 +454,15 @@ bool tropic_get_kek(tropic_ui_progress_t ui_progress, uint16_t pin_index,
     return false;
   }
 
-  if (length != OPTIGA_STRETCHED_PINS_COUNT * MAC_AND_DESTROY_DATA_SIZE) {
+  if (length != OPTIGA_STRETCHED_PINS_COUNT * TROPIC_MAC_AND_DESTROY_SIZE) {
     return false;
   }
 
   ui_progress();
 
-  for (int i = 0; i < MAC_AND_DESTROY_DATA_SIZE; i++) {
+  for (int i = 0; i < TROPIC_MAC_AND_DESTROY_SIZE; i++) {
     kek[i] =
-        masks[pin_index * MAC_AND_DESTROY_DATA_SIZE + i] ^ stretched_pin[i];
+        masks[pin_index * TROPIC_MAC_AND_DESTROY_SIZE + i] ^ stretched_pin[i];
   }
   return true;
 }
