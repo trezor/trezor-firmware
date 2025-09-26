@@ -469,18 +469,18 @@ bool tropic_unmask_kek(tropic_ui_progress_t ui_progress, uint16_t pin_index,
 
 uint32_t tropic_estimate_time_ms(storage_pin_op_t op, uint16_t pin_index) {
   const int mac_and_destroy_time_ms = 30;
-  const int pin_set_mac_and_destroys_count = 3 * PIN_MAX_TRIES;
-  const int pin_verify_mac_and_destroys_count = pin_index + 2;
-  const int pin_change_mac_and_destroys_count =
-      pin_set_mac_and_destroys_count + pin_verify_mac_and_destroys_count;
+  const int pin_set_mac_and_destroy_count = 3 * PIN_MAX_TRIES;
+  const int pin_verify_mac_and_destroy_count = pin_index + 2;
+  const int pin_change_mac_and_destroy_count =
+      pin_set_mac_and_destroy_count + pin_verify_mac_and_destroy_count;
 
   switch (op) {
     case STORAGE_PIN_OP_SET:
-      return pin_set_mac_and_destroys_count * mac_and_destroy_time_ms;
+      return pin_set_mac_and_destroy_count * mac_and_destroy_time_ms;
     case STORAGE_PIN_OP_VERIFY:
-      return pin_verify_mac_and_destroys_count * mac_and_destroy_time_ms;
+      return pin_verify_mac_and_destroy_count * mac_and_destroy_time_ms;
     case STORAGE_PIN_OP_CHANGE:
-      return pin_change_mac_and_destroys_count * mac_and_destroy_time_ms;
+      return pin_change_mac_and_destroy_count * mac_and_destroy_time_ms;
     default:
       return 0;
   }
