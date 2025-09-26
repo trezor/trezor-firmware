@@ -735,10 +735,23 @@ impl Span {
             // When there is a set chunk size and we reach it,
             // adjust the line advances and return the line.
             if let Some(chunkify_config) = chunks {
-                if i == usize::from(chunkify_config.chunk_size) {
-                    line.advance.y = 0;
-                    line.advance.x += chunkify_config.x_offset;
+
+                // Now that you are in a chunk, just 'peek' the full lenth of the chunk
+                // and see if it fits on the line.
+                let chunk = &text[i..(i + usize::from(chunkify_config.chunk_size)).min(text.len())];
+                if text_font.text_width(chunk) + span_width > max_width {
+                    // We cannot fit the next chunk on this line, return what we have so far.
                     return line;
+                }
+
+                // Chunk boundary
+                if i == usize::from(chunkify_config.chunk_size) {
+                    return Self {
+                        length: i,
+                        advance: Offset::x(span_width + chunkify_config.x_offset),
+                        insert_hyphen_before_line_break: false,
+                        skip_next_chars: 0,
+                    };
                 }
             }
 
