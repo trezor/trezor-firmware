@@ -110,7 +110,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T1B1, T2T1, T2B1, T3B1, T3T1]
+        model: [T1B1, T2T1, T2B1, T3B1, T3T1, T3W1]
     steps:
       - uses: actions/checkout@v4
         with:
