@@ -16,6 +16,9 @@ _data_section_end = ADDR(.data) + SIZEOF(.data);
 _bss_section_start = ADDR(.bss);
 _bss_section_end = ADDR(.bss) + SIZEOF(.bss);
 
+_tls_section_start = ADDR(.tls);
+_tls_section_size = SIZEOF(.tls);
+
 _confidential_section_loadaddr = LOADADDR(.confidential);
 _confidential_section_start = ADDR(.confidential);
 _confidential_section_end = ADDR(.confidential) + SIZEOF(.confidential);
@@ -68,7 +71,12 @@ SECTIONS {
     *(.ARM.exidx*);
   }
 
-  .bss : ALIGN(4) {
+  .tls : ALIGN(512) {
+    *(.tls*);
+    . = ALIGN(512);
+  } > AUX1_RAM
+
+  .bss : ALIGN(512) {
     *(.no_dma_buffers*);
     *(.bss*);
     . = ALIGN(4);

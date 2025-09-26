@@ -58,6 +58,7 @@ typedef struct {
   systask_t* waiting_task;
   // Bitmap of used task IDs
   uint32_t task_id_map;
+
 } systask_scheduler_t;
 
 // Global task manager state
@@ -100,6 +101,12 @@ void systask_scheduler_init(systask_error_handler_t error_handler) {
   // Enable SecureFault handler
   SCB->SHCSR |= SCB_SHCSR_SECUREFAULTENA_Msk;
 #endif
+}
+
+void systask_enable_tls(systask_t* task, mpu_area_t tls) {
+  ensure((tls.size <= sizeof(task->tls_copy)) * sectrue, "TLS area too large");
+  task->tls_addr = (void*)tls.start;
+  task->tls_size = tls.size;
 }
 
 systask_t* systask_active(void) {
@@ -561,6 +568,18 @@ __attribute((no_stack_protector, used)) static uint32_t scheduler_pendsv(
   prev_task->exc_return = exc_return;
   prev_task->mpu_mode = mpu_get_mode();
 
+  if (prev_task->tls_size != 0) {
+#ifdef KERNEL
+    if (prev_task->applet != NULL) {
+      applet_t* applet = (applet_t*)prev_task->applet;
+      mpu_set_active_applet(&applet->layout);
+    }
+#endif
+
+    // Save the TLS of the previous task
+    memcpy(prev_task->tls_copy, prev_task->tls_addr, prev_task->tls_size);
+  }
+
   // Switch to the next task
   scheduler->active_task = scheduler->waiting_task;
 
@@ -583,6 +602,11 @@ __attribute((no_stack_protector, used)) static uint32_t scheduler_pendsv(
   if (next_task->applet != NULL) {
     applet_t* applet = (applet_t*)next_task->applet;
     mpu_set_active_applet(&applet->layout);
+  }
+
+  if (next_task->tls_size != 0) {
+    // Restore the TLS of the next task
+    memcpy(next_task->tls_addr, next_task->tls_copy, next_task->tls_size);
   }
 #endif
 
