@@ -82,7 +82,7 @@
 
 #if USE_TROPIC
 // Key that is used to reset the M&D slots in Tropic after successfull unlock.
-#define TROPIC_HMAC_RESET_KEY ((APP_STORAGE << 8) | 0x09)
+#define TROPIC_MAC_AND_DESTROY_RESET_KEY ((APP_STORAGE << 8) | 0x09)
 #endif
 
 #if USE_OPTIGA && OPTIGA_STRETCHED_PINS_COUNT > 1
@@ -745,7 +745,7 @@ static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
     goto cleanup;
   }
   if (storage_set_encrypted(
-          TROPIC_HMAC_RESET_KEY, tropic_mac_and_destroy_reset_key,
+          TROPIC_MAC_AND_DESTROY_RESET_KEY, tropic_mac_and_destroy_reset_key,
           sizeof(tropic_mac_and_destroy_reset_key)) != sectrue) {
     goto cleanup;
   }
@@ -1270,7 +1270,7 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
 #if USE_TROPIC
   uint8_t tropic_mac_and_destroy_reset_key[SHA256_DIGEST_LENGTH] = {0};
   uint16_t tropic_mac_and_destroy_reset_key_len = 0;
-  if (storage_get_encrypted(TROPIC_HMAC_RESET_KEY,
+  if (storage_get_encrypted(TROPIC_MAC_AND_DESTROY_RESET_KEY,
                             &tropic_mac_and_destroy_reset_key,
                             sizeof(tropic_mac_and_destroy_reset_key),
                             &tropic_mac_and_destroy_reset_key_len) != sectrue ||
