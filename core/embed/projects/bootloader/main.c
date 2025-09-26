@@ -188,10 +188,7 @@ static secbool boot_sequence(void) {
       }
     } while (!ticks_expired(timeout));
 
-    ble_command_t stop_cmd = {
-        .data_len = BLE_SWITCH_OFF,
-    };
-    ble_issue_command(&stop_cmd);
+    ble_switch_off();
 #endif
   }
 

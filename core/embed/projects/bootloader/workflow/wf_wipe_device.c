@@ -60,9 +60,7 @@ static bool wipe_bonds(protob_io_t* iface) {
     return false;
   }
 
-  ble_command_t ble_command = {0};
-  ble_command.cmd_type = BLE_ERASE_BONDS;
-  if (!ble_issue_command(&ble_command)) {
+  if (!ble_erase_bonds()) {
     send_error_conditionally(iface, "Could not issue BLE command");
     screen_wipe_fail();
     return false;

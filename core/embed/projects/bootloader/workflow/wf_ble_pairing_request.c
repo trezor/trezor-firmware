@@ -86,12 +86,7 @@ workflow_result_t workflow_ble_pairing_request(const fw_info_t *fw) {
     return WF_OK_PAIRING_FAILED;
   }
 
-  ble_command_t cmd = {
-      .cmd_type = BLE_ALLOW_PAIRING,
-      .data_len = sizeof(pairing_code),
-  };
-  memcpy(cmd.data.raw, pairing_code, sizeof(pairing_code));
-  ble_issue_command(&cmd);
+  ble_allow_pairing(pairing_code);
 
   bool skip_finalization = false;
 
@@ -118,8 +113,7 @@ workflow_result_t workflow_ble_pairing_request(const fw_info_t *fw) {
       return WF_OK_PAIRING_FAILED;
     }
     if (r == PAIRING_FINALIZATION_CANCEL) {
-      ble_command_t disconnect = {.cmd_type = BLE_DISCONNECT};
-      ble_issue_command(&disconnect);
+      ble_disconnect();
       ble_iface_end_pairing();
       return WF_OK_PAIRING_FAILED;
     }
@@ -172,12 +166,7 @@ workflow_result_t workflow_wireless_setup(const fw_info_t *fw,
     return WF_OK_PAIRING_FAILED;
   }
 
-  ble_command_t cmd = {
-      .cmd_type = BLE_ALLOW_PAIRING,
-      .data_len = sizeof(pairing_code),
-  };
-  memcpy(cmd.data.raw, pairing_code, sizeof(pairing_code));
-  ble_issue_command(&cmd);
+  ble_allow_pairing(pairing_code);
 
   bool skip_finalization = false;
 
@@ -204,8 +193,7 @@ workflow_result_t workflow_wireless_setup(const fw_info_t *fw,
       return WF_OK_PAIRING_FAILED;
     }
     if (r == PAIRING_FINALIZATION_CANCEL) {
-      ble_command_t disconnect = {.cmd_type = BLE_DISCONNECT};
-      ble_issue_command(&disconnect);
+      ble_disconnect();
       ble_iface_end_pairing();
       return WF_OK_PAIRING_FAILED;
     }
