@@ -136,6 +136,7 @@ impl crate::trace::Trace for RegulatoryScreen {
         t.child("Header", &self.header);
         t.child("Content", &self.content);
         t.child("ActionBar", &self.action_bar);
+        t.int("page_count", self.content.pager().total() as i64);
     }
 }
 
@@ -316,5 +317,11 @@ impl Component for RegulatoryContent {
 impl crate::trace::Trace for RegulatoryContent {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("RegulatoryContent");
+
+        let current = self.pager.current();
+        let zone = &RegulatoryContent::ZONES[current as usize];
+
+        t.string("subtitle", zone.name.unwrap_or_default().into());
+        t.string("content", zone.content.into());
     }
 }
