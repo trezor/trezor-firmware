@@ -39,6 +39,7 @@ async def sign_tx_eip1559(
     from trezor.crypto import rlp  # local_cache_global
     from trezor.crypto.hashlib import sha3_256
     from trezor.ui.layouts import show_continue_in_app
+    from trezor.ui.layouts.progress import progress
     from trezor.utils import HashWriter
 
     from apps.common import paths
@@ -90,6 +91,9 @@ async def sign_tx_eip1559(
         payment_req_verifier,
     )
 
+    progress_obj = progress(title=TR.progress__signing_transaction)
+    progress_obj.report(100)
+
     # transaction data confirmed, proceed with signing
     data = bytearray()
     data += msg.data_initial_chunk
@@ -121,10 +125,16 @@ async def sign_tx_eip1559(
         rlp.write_header(sha, data_total, rlp.STRING_HEADER_BYTE, data)
         sha.extend(data)
 
+    progress_obj.report(500)
+
+    initial_data_left = data_left
     while data_left > 0:
         resp = await send_request_chunk(data_left)
         data_left -= len(resp.data_chunk)
         sha.extend(resp.data_chunk)
+        progress_obj.report(
+            500 + int((initial_data_left - data_left) / initial_data_left * 400)
+        )
 
     # write_access_list
     payload_length = sum(access_list_item_length(i) for i in msg.access_list)
@@ -139,6 +149,8 @@ async def sign_tx_eip1559(
 
     digest = sha.get_digest()
     result = _sign_digest(msg, keychain, digest)
+
+    progress_obj.stop()
 
     show_continue_in_app(TR.send__transaction_signed)
     return result
