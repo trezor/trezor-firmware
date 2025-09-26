@@ -264,13 +264,14 @@ class Layout(Generic[T]):
         is_done = None
         try:
             if self.context is not None and self.result_box.is_empty():
-                is_done = loop.mailbox()
+                if utils.USE_THP:
+                    is_done = loop.mailbox()  # (see below)
                 self.button_request_task = self._handle_button_requests(is_done)
                 self._start_task(self.button_request_task)
 
             result = await self.result_box
 
-            if is_done is not None:
+            if utils.USE_THP and is_done is not None:
                 # Make sure ButtonRequest is ACKed, before the result is returned.
                 # Otherwise, THP channel may become desynced (due to two consecutive writes).
                 if __debug__:
@@ -453,7 +454,7 @@ class Layout(Generic[T]):
             finally:
                 touch.close()
 
-    async def _handle_button_requests(self, is_done: loop.mailbox[None]) -> None:
+    async def _handle_button_requests(self, is_done: loop.mailbox[None] | None) -> None:
         try:
             if self.context is None:
                 return
@@ -489,7 +490,8 @@ class Layout(Generic[T]):
                 except Exception:
                     raise
         finally:
-            is_done.put(None)
+            if is_done is not None:
+                is_done.put(None)
 
     if utils.USE_BLE:
 
