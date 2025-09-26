@@ -24,7 +24,7 @@
 #ifndef TREZOR_EMULATOR
 // Stack check guard value set in startup code.
 // This is used if stack protection is enabled.
-uint32_t __stack_chk_guard = 0;
+THREAD_LOCAL uint32_t __stack_chk_guard = 0;
 #endif
 
 #define ALL_DATA_ERASED_MESSAGE "All data has been erased from the device"
