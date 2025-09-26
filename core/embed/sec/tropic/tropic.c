@@ -454,7 +454,7 @@ bool tropic_unmask_kek(tropic_ui_progress_t ui_progress, uint16_t pin_index,
     return false;
   }
 
-  if (length != OPTIGA_STRETCHED_PINS_COUNT * TROPIC_MAC_AND_DESTROY_SIZE) {
+  if (length != PIN_MAX_TRIES * TROPIC_MAC_AND_DESTROY_SIZE) {
     return false;
   }
 
