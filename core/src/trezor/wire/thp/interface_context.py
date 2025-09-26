@@ -223,6 +223,8 @@ class InterfaceContext:
         await self.write_payload(response_header, response_data)
 
     def write_error(self, cid: int, err_type: ThpErrorType) -> Awaitable[None]:
+        if __debug__:
+            log.error(__name__, "(cid: %04x) THP error #%d", cid, err_type)
         msg_data = err_type.to_bytes(1, "big")
         length = len(msg_data) + CHECKSUM_LENGTH
         header = PacketHeader.get_error_header(cid, length)
