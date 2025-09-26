@@ -9,7 +9,7 @@ use crate::ui::{
 use super::{theme, Button, ButtonMsg};
 
 pub enum NumberInputSliderDialogMsg {
-    Changed(u16),
+    Changed(u8),
     Confirmed,
     Cancelled,
 }
@@ -22,7 +22,8 @@ pub struct NumberInputSliderDialog {
 }
 
 impl NumberInputSliderDialog {
-    pub fn new(min: u16, max: u16, init_value: u16) -> Self {
+    pub fn new(min: u8, max: u8, init_value: u8) -> Self {
+        debug_assert!(min < max);
         Self {
             area: Rect::zero(),
             input: NumberInputSlider::new(min, max, init_value).into_child(),
@@ -35,7 +36,7 @@ impl NumberInputSliderDialog {
         }
     }
 
-    pub fn value(&self) -> u16 {
+    pub fn value(&self) -> u8 {
         self.input.inner().value
     }
 }
@@ -91,13 +92,13 @@ impl crate::trace::Trace for NumberInputSliderDialog {
 pub struct NumberInputSlider {
     area: Rect,
     touch_area: Rect,
-    min: u16,
-    max: u16,
-    value: u16,
+    min: u8,
+    max: u8,
+    value: u8,
 }
 
 impl NumberInputSlider {
-    pub fn new(min: u16, max: u16, value: u16) -> Self {
+    pub fn new(min: u8, max: u8, value: u8) -> Self {
         let value = value.clamp(min, max);
         Self {
             area: Rect::zero(),
@@ -108,12 +109,12 @@ impl NumberInputSlider {
         }
     }
 
-    pub fn slider_eval(&mut self, pos: Point, ctx: &mut EventCtx) -> Option<u16> {
+    pub fn slider_eval(&mut self, pos: Point, ctx: &mut EventCtx) -> Option<u8> {
         if self.touch_area.contains(pos) {
             let filled = pos.x - self.area.x0;
             let filled = filled.clamp(0, self.area.width());
             let val_pct = (filled as u16 * 100) / self.area.width() as u16;
-            let val = (val_pct * (self.max - self.min)) / 100 + self.min;
+            let val = ((val_pct * (self.max - self.min) as u16) / 100) as u8 + self.min;
 
             if val != self.value {
                 self.value = val;
@@ -126,7 +127,7 @@ impl NumberInputSlider {
 }
 
 impl Component for NumberInputSlider {
-    type Msg = u16;
+    type Msg = u8;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
@@ -146,7 +147,7 @@ impl Component for NumberInputSlider {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let val_pct = (100 * (self.value - self.min)) / (self.max - self.min);
+        let val_pct = (100 * (self.value - self.min) as u16) / (self.max - self.min) as u16;
 
         shape::Bar::new(self.area)
             .with_radius(2)

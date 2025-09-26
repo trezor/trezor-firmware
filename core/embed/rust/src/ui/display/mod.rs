@@ -24,13 +24,14 @@ pub use font::{Font, Glyph, GlyphMetrics};
 pub const LOADER_MIN: u16 = 0;
 pub const LOADER_MAX: u16 = 1000;
 
-pub fn backlight() -> u8 {
-    display::backlight(-1) as u8
+#[cfg(feature = "backlight")]
+pub fn get_backlight() -> u8 {
+    display::get_backlight()
 }
 
 #[cfg(feature = "backlight")]
 pub fn set_backlight(val: u8) {
-    display::backlight(val as i32);
+    display::set_backlight(val);
 }
 
 #[cfg(feature = "backlight")]
@@ -41,7 +42,7 @@ pub fn fade_backlight(target: u8) {
 
 #[cfg(feature = "backlight")]
 pub fn fade_backlight_duration(target: u8, duration_ms: u32) {
-    let current = backlight();
+    let current = get_backlight();
     let duration = Duration::from_millis(duration_ms);
 
     if animation_disabled() {
