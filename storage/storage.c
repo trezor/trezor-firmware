@@ -1434,9 +1434,7 @@ static secbool storage_set_encrypted(const uint16_t key, const void *val,
 
   // Write the IV to the flash.
   uint8_t buffer[CHACHA20_BLOCK_SIZE] = {0};
-  if (!rng_fill_buffer_strong(buffer, CHACHA20_IV_SIZE)) {
-    return secfalse;
-  }
+  rng_fill_buffer(buffer, CHACHA20_IV_SIZE);
 
   if (sectrue != norcow_update_bytes(key, buffer, CHACHA20_IV_SIZE)) {
     return secfalse;
