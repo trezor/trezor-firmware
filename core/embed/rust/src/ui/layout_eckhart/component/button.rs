@@ -519,21 +519,19 @@ impl Button {
             ButtonContent::TextAndSubtext {
                 text,
                 single_line,
-                subtext,
-                subtext_style,
                 icon,
+                ..
             } => {
                 let text_baseline_height = self.baseline_text_height();
                 let available_width = self.area.width()
                     - 2 * self.content_offset.x
                     - icon.map_or(0, |_| Self::CONN_ICON_WIDTH);
-                let single_line_text = text.map(|t| {
+                text.map(|t| {
                     if *single_line {
                         show_text(
                             t,
                             render_origin(text_baseline_height / 2 - constant::LINE_SPACE * 2),
                         );
-                        true
                     } else {
                         let (t1, t2) = split_two_lines(t, stylesheet.font, available_width);
                         if t1.is_empty() || t2.is_empty() {
@@ -541,7 +539,6 @@ impl Button {
                                 t,
                                 render_origin(text_baseline_height / 2 - constant::LINE_SPACE * 2),
                             );
-                            true
                         } else {
                             show_text(
                                 t1,
@@ -553,39 +550,15 @@ impl Button {
                                 t2,
                                 render_origin(text_baseline_height - constant::LINE_SPACE * 2),
                             );
-                            false
                         }
                     }
                 });
 
-                subtext.map(|subtext| {
-                    let subtext_fits =
-                        subtext_style.text_font.text_width(subtext) <= available_width;
-                    if self.subtext_marquee.is_some() && !subtext_fits {
-                        let Some(m) = &self.subtext_marquee else {
-                            unreachable!();
-                        };
-                        m.render(target);
-                    } else {
-                        shape::Text::new(
-                            render_origin(if single_line_text {
-                                text_baseline_height / 2
-                                    + constant::LINE_SPACE
-                                    + self.baseline_subtext_height()
-                            } else {
-                                text_baseline_height
-                                    + constant::LINE_SPACE * 2
-                                    + self.baseline_subtext_height()
-                            }),
-                            subtext,
-                            subtext_style.text_font,
-                        )
-                        .with_fg(subtext_style.text_color)
-                        .with_align(self.text_align)
-                        .with_alpha(alpha)
-                        .render(target);
-                    }
-                });
+                if let Some(m) = &self.subtext_marquee {
+                    m.render(target);
+                } else {
+                    unreachable!();
+                };
 
                 if let Some((icon, icon_color)) = icon {
                     shape::ToifImage::new(
