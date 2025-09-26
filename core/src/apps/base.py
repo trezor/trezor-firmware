@@ -227,6 +227,9 @@ def get_features() -> Features:
                 storage_device.get_autolock_delay_battery_ms()
             )
 
+        if utils.USE_RGB_LED:
+            f.led = storage_device.get_rgb_led()
+
     return f
 
 

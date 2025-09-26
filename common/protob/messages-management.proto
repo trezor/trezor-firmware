@@ -129,6 +129,7 @@ message Features {
     optional uint32 soc = 55;                   // Battery state of charge (0 - 100%)
     optional bool firmware_corrupted = 56;     // true if the firmware is corrupted
     optional uint32 auto_lock_delay_battery_ms = 57;    // number of milliseconds after which the battery-powered device locks itself
+    optional bool led = 58;         // RGB LED settings
 
     enum BackupAvailability {
         /// Device is already backed up, or a previous backup has failed.
