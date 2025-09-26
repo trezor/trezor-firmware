@@ -372,12 +372,14 @@ impl DeviceMenuScreen {
             } else {
                 (TR::words__unknown.into(), None)
             };
-            let host_info_screen = screen.add_subscreen(Subscreen::HostInfoScreen(HostInfoScreen {
-                host_name,
-                mac: *mac,
-                app_name,
-                parent_screen: 0, /* dummy value because the device subscreen doesn't exist yet */
-            }));
+            let host_info_screen =
+                screen.add_subscreen(Subscreen::HostInfoScreen(HostInfoScreen {
+                    host_name,
+                    mac: *mac,
+                    app_name,
+                    parent_screen: 0, /* dummy value because the device subscreen doesn't exist
+                                       * yet */
+                }));
             // Add the device subscreen with the reference to the host info subscreen
             let title = if let Some([host_name, _]) = host_info {
                 *host_name
@@ -1062,7 +1064,9 @@ impl Component for DeviceMenuScreen {
                                 return None;
                             }
                             (1, false) | (2, true) => {
-                                return Some(DeviceMenuMsg::UnpairDevice(device_screen.device_index));
+                                return Some(DeviceMenuMsg::UnpairDevice(
+                                    device_screen.device_index,
+                                ));
                             }
                             _ => {}
                         }
