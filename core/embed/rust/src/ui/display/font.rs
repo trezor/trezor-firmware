@@ -342,13 +342,25 @@ impl FontInfo {
                     // Another character would not fit => split at the previous word boundary
                     return &text[0..prev_word_boundary];
                 }
-                if c == ' ' || c == ':' {
+                if c == ' ' {
                     prev_word_boundary = i;
                 }
                 text_width += c_width;
             }
             text // the whole text fits
         })
+    }
+
+    /// Get the longest prefix of a given `text` (breaking at letter boundaries)
+    /// that will fit into the area `width` pixels wide.
+    pub fn longest_prefix_break_words<'a>(&'static self, width: i16, text: &'a str) -> &'a str {
+        for (i, _c) in text.char_indices() {
+            if self.text_width(text[..text.len() - i].as_ref()) <= width {
+                return &text[0..text.len() - i];
+            }
+        }
+
+        ""
     }
 
     /// Get the length of the longest suffix from a given `text`
