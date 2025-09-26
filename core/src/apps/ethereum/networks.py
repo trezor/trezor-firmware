@@ -97,20 +97,20 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Base",  # name
         )
         yield (
-            17000,  # chain_id
-            1,  # slip44
-            "tHOL",  # symbol
-            "Holesky",  # name
-        )
-        yield (
             42161,  # chain_id
             9001,  # slip44
             "ETH",  # symbol
             "Arbitrum One",  # name
         )
         yield (
+            560048,  # chain_id
+            60,  # slip44
+            "tHOD",  # symbol
+            "Hoodi",  # name
+        )
+        yield (
             11155111,  # chain_id
-            1,  # slip44
+            60,  # slip44
             "tSEP",  # symbol
             "Sepolia",  # name
         )
@@ -152,20 +152,20 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Base",  # name
         )
         yield (
-            17000,  # chain_id
-            1,  # slip44
-            "tHOL",  # symbol
-            "Holesky",  # name
-        )
-        yield (
             42161,  # chain_id
             9001,  # slip44
             "ETH",  # symbol
             "Arbitrum One",  # name
         )
         yield (
+            560048,  # chain_id
+            60,  # slip44
+            "tHOD",  # symbol
+            "Hoodi",  # name
+        )
+        yield (
             11155111,  # chain_id
-            1,  # slip44
+            60,  # slip44
             "tSEP",  # symbol
             "Sepolia",  # name
         )
@@ -207,20 +207,20 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Base",  # name
         )
         yield (
-            17000,  # chain_id
-            1,  # slip44
-            "tHOL",  # symbol
-            "Holesky",  # name
-        )
-        yield (
             42161,  # chain_id
             9001,  # slip44
             "ETH",  # symbol
             "Arbitrum One",  # name
         )
         yield (
+            560048,  # chain_id
+            60,  # slip44
+            "tHOD",  # symbol
+            "Hoodi",  # name
+        )
+        yield (
             11155111,  # chain_id
-            1,  # slip44
+            60,  # slip44
             "tSEP",  # symbol
             "Sepolia",  # name
         )
@@ -262,20 +262,20 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Base",  # name
         )
         yield (
-            17000,  # chain_id
-            1,  # slip44
-            "tHOL",  # symbol
-            "Holesky",  # name
-        )
-        yield (
             42161,  # chain_id
             9001,  # slip44
             "ETH",  # symbol
             "Arbitrum One",  # name
         )
         yield (
+            560048,  # chain_id
+            60,  # slip44
+            "tHOD",  # symbol
+            "Hoodi",  # name
+        )
+        yield (
             11155111,  # chain_id
-            1,  # slip44
+            60,  # slip44
             "tSEP",  # symbol
             "Sepolia",  # name
         )
@@ -317,20 +317,20 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Base",  # name
         )
         yield (
-            17000,  # chain_id
-            1,  # slip44
-            "tHOL",  # symbol
-            "Holesky",  # name
-        )
-        yield (
             42161,  # chain_id
             9001,  # slip44
             "ETH",  # symbol
             "Arbitrum One",  # name
         )
         yield (
+            560048,  # chain_id
+            60,  # slip44
+            "tHOD",  # symbol
+            "Hoodi",  # name
+        )
+        yield (
             11155111,  # chain_id
-            1,  # slip44
+            60,  # slip44
             "tSEP",  # symbol
             "Sepolia",  # name
         )
@@ -372,20 +372,20 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Base",  # name
         )
         yield (
-            17000,  # chain_id
-            1,  # slip44
-            "tHOL",  # symbol
-            "Holesky",  # name
-        )
-        yield (
             42161,  # chain_id
             9001,  # slip44
             "ETH",  # symbol
             "Arbitrum One",  # name
         )
         yield (
+            560048,  # chain_id
+            60,  # slip44
+            "tHOD",  # symbol
+            "Hoodi",  # name
+        )
+        yield (
             11155111,  # chain_id
-            1,  # slip44
+            60,  # slip44
             "tSEP",  # symbol
             "Sepolia",  # name
         )
@@ -427,20 +427,20 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Base",  # name
         )
         yield (
-            17000,  # chain_id
-            1,  # slip44
-            "tHOL",  # symbol
-            "Holesky",  # name
-        )
-        yield (
             42161,  # chain_id
             9001,  # slip44
             "ETH",  # symbol
             "Arbitrum One",  # name
         )
         yield (
+            560048,  # chain_id
+            60,  # slip44
+            "tHOD",  # symbol
+            "Hoodi",  # name
+        )
+        yield (
             11155111,  # chain_id
-            1,  # slip44
+            60,  # slip44
             "tSEP",  # symbol
             "Sepolia",  # name
         )

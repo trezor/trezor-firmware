@@ -5,13 +5,13 @@
     },
     "tests": [
         {
-            "name": "stake_holesky",
+            "name": "stake_hoodi",
             "parameters": {
-                "comment": "Stake transaction - Holesky testnet",
+                "comment": "Stake transaction - Hoodi testnet",
                 "data": "3a29dbae0000000000000000000000000000000000000000000000000000000000000001",
                 "path": "m/44'/60'/0'/0/0",
                 "to_address": "0xAFA848357154a6a624686b348303EF9a13F63264",
-                "chain_id": 1,
+                "chain_id": 560048,
                 "nonce": "0x0",
                 "gas_price": "0x14",
                 "gas_limit": "0x14",
@@ -19,9 +19,9 @@
                 "value": "0x16345785D8A0000"
             },
             "result": {
-                "sig_v": 37,
-                "sig_r": "1a43606f1a3e9a61c4986cc9b324dd74f84557942cddf2e4ffccea82c2c54824",
-                "sig_s": "63e8595bfa1e383a1fea7205bff5afcf3b3d3513b45a2f792396f2f4251f4c55"
+                "sig_v": 1120132,
+                "sig_r": "c2d3df7945281e1eb3147ca4cb1d1cd3d128d4e194f915cad8a94377e9637e3e",
+                "sig_s": "7368c340ca60aca22729c47dfd832e33a5f54cc0664a7be874f0e49f09327383"
             }
         },
         {
@@ -45,13 +45,13 @@
             }
         },
         {
-            "name": "unstake_holesky",
+            "name": "unstake_hoodi",
             "parameters": {
-                "comment": "Unstake transaction - Holesky testnet",
+                "comment": "Unstake transaction - Hoodi testnet",
                 "data": "76ec871c000000000000000000000000000000000000000000000000016345785d8a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
                 "path": "m/44'/60'/0'/0/0",
                 "to_address": "0xAFA848357154a6a624686b348303EF9a13F63264",
-                "chain_id": 1,
+                "chain_id": 560048,
                 "nonce": "0x0",
                 "gas_price": "0x14",
                 "gas_limit": "0x14",
@@ -59,9 +59,9 @@
                 "value": "0x0"
             },
             "result": {
-                "sig_v": 38,
-                "sig_r": "f6553486737da2ceb42067047d0e8dd0add8e82f49b524cf657215e1d2487d16",
-                "sig_s": "21336e4c53537bcdf06a71ed6cbefc3374461476d8da6e988e6cf4957b6a8bb1"
+                "sig_v": 1120132,
+                "sig_r": "52f130eabe5bf803bb1b8e0ee3da21495bd313310293176e7a431959fe28d7e2",
+                "sig_s": "58eefc8a896265d09f70123065a8a9d2324839aa118218d243ac740e158d4c35"
             }
         },
         {
@@ -85,13 +85,13 @@
             }
         },
         {
-            "name": "claim_holesky",
+            "name": "hoodi",
             "parameters": {
-                "comment": "Claim transaction - Holesky testnet",
+                "comment": "Claim transaction - Hoodi testnet",
                 "data": "33986ffa",
                 "path": "m/44'/60'/0'/0/0",
                 "to_address": "0x624087DD1904ab122A32878Ce9e933C7071F53B9",
-                "chain_id": 1,
+                "chain_id": 560048,
                 "nonce": "0x0",
                 "gas_price": "0x14",
                 "gas_limit": "0x14",
@@ -99,9 +99,9 @@
                 "value": "0x0"
             },
             "result": {
-                "sig_v": 37,
-                "sig_r": "4a77a5f7437c4744c8dc4e48f968a6fedccd86db0ee15ce6a832e71b17f11a9a",
-                "sig_s": "75e8efc0ecf1484ce745bbcd19899fbc458677869f3008be5ddb9c8ad8766d40"
+                "sig_v": 1120131,
+                "sig_r": "38eef3f395f3a2020250bb9c7027ea299816cef80d9dd6a9e10c4a8f350d7d81",
+                "sig_s": "072ac2a37378a552e84f5c189e4ad55f02da7898b3c143dc0edea1a94b2a17f6"
             }
         },
         {

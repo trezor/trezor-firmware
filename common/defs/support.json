@@ -87,7 +87,7 @@
       "eth:ETH:1": "1.6.2",
       "eth:OP:10": "1.9.4",
       "eth:POL:137": "1.9.4",
-      "eth:tHOL:17000": "1.11.3",
+      "eth:tHOD:560048": "2.9.3",
       "eth:tSEP:11155111": "1.11.3",
       "misc:MAID": "1.7.2",
       "misc:OMNI": "1.7.2",
@@ -114,7 +114,8 @@
       "misc:XRP": "not implemented",
       "misc:XTZ": "not implemented",
       "misc:tADA": "not implemented",
-      "misc:tXRP": "not implemented"
+      "misc:tXRP": "not implemented",
+      "eth:tHOL:17000": "Deprecated testnet"
     }
   },
   "T2B1": {
@@ -196,7 +197,7 @@
       "eth:ETH:1": "2.6.1",
       "eth:OP:10": "2.6.1",
       "eth:POL:137": "2.6.1",
-      "eth:tHOL:17000": "2.6.4",
+      "eth:tHOD:560048": "2.9.3",
       "eth:tSEP:11155111": "2.6.4",
       "misc:ADA": "2.6.1",
       "misc:BNB": "2.6.1",
@@ -232,7 +233,8 @@
       "nem:DIMTOK": "not for T2B1 (#2793)",
       "nem:PAC:CHS": "not for T2B1 (#2793)",
       "nem:PAC:HRT": "not for T2B1 (#2793)",
-      "nem:XEM": "not for T2B1 (#2793)"
+      "nem:XEM": "not for T2B1 (#2793)",
+      "eth:tHOL:17000": "Deprecated testnet"
     }
   },
   "T2T1": {
@@ -323,7 +325,7 @@
       "eth:ETH:1": "2.0.7",
       "eth:OP:10": "2.3.5",
       "eth:POL:137": "2.3.5",
-      "eth:tHOL:17000": "2.5.4",
+      "eth:tHOD:560048": "2.9.3",
       "eth:tSEP:11155111": "2.5.4",
       "misc:ADA": "2.0.8",
       "misc:BNB": "2.1.5",
@@ -350,7 +352,8 @@
       "bitcoin:PART": "incompatible fork",
       "bitcoin:TRC": "address_type collides with Bitcoin",
       "bitcoin:tPART": "incompatible fork",
-      "misc:LSK": "Incompatible mainnet hard-fork"
+      "misc:LSK": "Incompatible mainnet hard-fork",
+      "eth:tHOL:17000": "Deprecated testnet"
     }
   },
   "T3B1": {
@@ -432,7 +435,7 @@
       "eth:ETH:1": "2.8.1",
       "eth:OP:10": "2.8.1",
       "eth:POL:137": "2.8.1",
-      "eth:tHOL:17000": "2.8.1",
+      "eth:tHOD:560048": "2.9.3",
       "eth:tSEP:11155111": "2.8.1",
       "misc:ADA": "2.8.1",
       "misc:BNB": "2.8.1",
@@ -468,7 +471,8 @@
       "nem:DIMTOK": "not for T3B1 (#2793)",
       "nem:PAC:CHS": "not for T3B1 (#2793)",
       "nem:PAC:HRT": "not for T3B1 (#2793)",
-      "nem:XEM": "not for T3B1 (#2793)"
+      "nem:XEM": "not for T3B1 (#2793)",
+      "eth:tHOL:17000": "Deprecated testnet"
     }
   },
   "T3T1": {
@@ -550,7 +554,7 @@
       "eth:ETH:1": "2.6.1",
       "eth:OP:10": "2.6.1",
       "eth:POL:137": "2.6.1",
-      "eth:tHOL:17000": "2.6.1",
+      "eth:tHOD:560048": "2.9.3",
       "eth:tSEP:11155111": "2.6.1",
       "misc:ADA": "2.6.1",
       "misc:BNB": "2.6.1",
@@ -586,7 +590,8 @@
       "nem:DIMTOK": "not for T3T1 (#2793)",
       "nem:PAC:CHS": "not for T3T1 (#2793)",
       "nem:PAC:HRT": "not for T3T1 (#2793)",
-      "nem:XEM": "not for T3T1 (#2793)"
+      "nem:XEM": "not for T3T1 (#2793)",
+      "eth:tHOL:17000": "Deprecated testnet"
     }
   },
   "T3W1": {
@@ -668,7 +673,7 @@
       "eth:ETH:1": "2.6.1",
       "eth:OP:10": "2.6.1",
       "eth:POL:137": "2.6.1",
-      "eth:tHOL:17000": "2.6.1",
+      "eth:tHOD:560048": "2.9.3",
       "eth:tSEP:11155111": "2.6.1",
       "misc:ADA": "2.6.1",
       "misc:BNB": "2.6.1",
@@ -704,7 +709,8 @@
       "nem:DIMTOK": "not for T3W1 (#2793)",
       "nem:PAC:CHS": "not for T3W1 (#2793)",
       "nem:PAC:HRT": "not for T3W1 (#2793)",
-      "nem:XEM": "not for T3W1 (#2793)"
+      "nem:XEM": "not for T3W1 (#2793)",
+      "eth:tHOL:17000": "Deprecated testnet"
     }
   },
 
@@ -787,7 +793,7 @@
       "eth:ETH:1": "2.6.1",
       "eth:OP:10": "2.6.1",
       "eth:POL:137": "2.6.1",
-      "eth:tHOL:17000": "2.6.1",
+      "eth:tHOD:560048": "2.9.3",
       "eth:tSEP:11155111": "2.6.1",
       "misc:ADA": "2.6.1",
       "misc:BNB": "2.6.1",
@@ -823,7 +829,8 @@
       "nem:DIMTOK": "not for T3W1 (#2793)",
       "nem:PAC:CHS": "not for T3W1 (#2793)",
       "nem:PAC:HRT": "not for T3W1 (#2793)",
-      "nem:XEM": "not for T3W1 (#2793)"
+      "nem:XEM": "not for T3W1 (#2793)",
+      "eth:tHOL:17000": "Deprecated testnet"
     }
   },
 
@@ -906,7 +913,7 @@
       "eth:ETH:1": "2.6.1",
       "eth:OP:10": "2.6.1",
       "eth:POL:137": "2.6.1",
-      "eth:tHOL:17000": "2.6.1",
+      "eth:tHOD:560048": "2.9.3",
       "eth:tSEP:11155111": "2.6.1",
       "misc:ADA": "2.6.1",
       "misc:BNB": "2.6.1",
@@ -942,7 +949,8 @@
       "nem:DIMTOK": "not for T3W1 (#2793)",
       "nem:PAC:CHS": "not for T3W1 (#2793)",
       "nem:PAC:HRT": "not for T3W1 (#2793)",
-      "nem:XEM": "not for T3W1 (#2793)"
+      "nem:XEM": "not for T3W1 (#2793)",
+      "eth:tHOL:17000": "Deprecated testnet"
     }
   }
 }

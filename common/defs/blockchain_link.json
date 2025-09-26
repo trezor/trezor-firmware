@@ -277,9 +277,9 @@
     "type": "blockbook",
     "url": ["https://pol1.trezor.io", "https://pol2.trezor.io", "https://pol3.trezor.io", "https://pol4.trezor.io"]
   },
-  "eth:tHOL:17000": {
+  "eth:tHOD:560048": {
     "type": "blockbook",
-    "url": ["https://holesky1.trezor.io", "https://holesky2.trezor.io"]
+    "url": ["https://hoodi1.trezor.io", "https://hoodi2.trezor.io"]
   },
   "eth:tSEP:11155111": {
     "type": "blockbook",

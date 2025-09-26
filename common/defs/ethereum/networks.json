@@ -16,7 +16,16 @@
         "name": "Holesky",
         "shortcut": "tHOL",
         "symbol": "tHOL",
-        "slip44": 1
+        "slip44": 60
+    },
+    {
+        "chain": "hod",
+        "chain_id": 560048,
+        "is_testnet": true,
+        "name": "Hoodi",
+        "shortcut": "tHOD",
+        "symbol": "tHOD",
+        "slip44": 60
     },
     {
         "chain": "sep",
@@ -25,7 +34,7 @@
         "name": "Sepolia",
         "shortcut": "tSEP",
         "symbol": "tSEP",
-        "slip44": 1
+        "slip44": 60
     },
     {
         "chain": "bsc",
