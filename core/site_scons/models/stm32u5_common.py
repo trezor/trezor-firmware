@@ -152,6 +152,7 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
 
     if "applet" in features_wanted:
         sources += ["embed/sys/task/stm32/applet.c"]
+        sources += ["embed/sys/task/stm32/coreapp.c"]
 
     if "usb" in features_wanted:
         sources += [
