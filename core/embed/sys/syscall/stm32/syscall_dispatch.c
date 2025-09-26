@@ -424,6 +424,18 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       args[0] = optiga_read_sec__verified(sec);
     } break;
 
+    case SYSCALL_OPTIGA_RANDOM_BUFFER: {
+      uint8_t *dest = (uint8_t *)args[0];
+      size_t size = args[1];
+      args[0] = optiga_random_buffer__verified(dest, size);
+    } break;
+
+    case SYSCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY: {
+      uint8_t *dest = (uint8_t *)args[0];
+      args[0] = secret_key_delegated_identity(dest);
+    } break;
+
+
 #if PYOPT == 0
     case SYSCALL_OPTIGA_SET_SEC_MAX: {
       optiga_set_sec_max();
@@ -814,11 +826,6 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       args[0] = tropic_data_read__verified(udata_slot, data, size);
     } break;
 #endif
-
-    case SYSCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY: {
-      uint8_t *dest = (uint8_t *)args[0];
-      args[0] = secret_key_delegated_identity(dest);
-    } break;
 
     default:
       system_exit_fatal("Invalid syscall", __FILE__, __LINE__);

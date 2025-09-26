@@ -123,6 +123,14 @@ bool __wur optiga_read_cert__verified(uint8_t index, uint8_t *cert,
 
 bool __wur optiga_read_sec__verified(uint8_t *sec);
 
+bool __wur optiga_random_buffer__verified(uint8_t *dest, size_t size);
+
+#include <sec/secret_keys.h>
+
+bool secret_key_delegated_identity__verified(
+    uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
+
+
 #endif  // USE_OPTIGA
 
 // ---------------------------------------------------------------------
@@ -294,10 +302,5 @@ bool tropic_data_read__verified(uint16_t udata_slot, uint8_t *data,
                                 uint16_t *size);
 
 #endif
-
-#include <sec/secret_keys.h>
-
-bool secret_key_delegated_identity__verified(
-    uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
 
 #endif  // KERNEL
