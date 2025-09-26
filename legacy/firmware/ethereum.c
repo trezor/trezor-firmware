@@ -583,13 +583,13 @@ static const uint8_t SC_FUNC_SIG_UNSTAKE[] = {0x76, 0xec, 0x87, 0x1c};
 static const uint8_t SC_FUNC_SIG_CLAIM[] = {0x33, 0x98, 0x6f, 0xfa};
 
 // addresses for pool (stake/unstake) and accounting (claim) operations
-static const uint8_t POOL_HOLESKY_TESTNET[] = {
+static const uint8_t POOL_HOODI_TESTNET[] = {
     0xaf, 0xa8, 0x48, 0x35, 0x71, 0x54, 0xa6, 0xa6, 0x24, 0x68,
     0x6b, 0x34, 0x83, 0x3,  0xef, 0x9a, 0x13, 0xf6, 0x32, 0x64};
 static const uint8_t POOL_MAINNET[] = {0xd5, 0x23, 0x79, 0x4c, 0x87, 0x9d, 0x9e,
                                        0xc0, 0x28, 0x96, 0xa,  0x23, 0x1f, 0x86,
                                        0x67, 0x58, 0xe4, 0x5,  0xbe, 0x34};
-static const uint8_t ACCOUNTING_HOLESKY_TESTNET[] = {
+static const uint8_t ACCOUNTING_HOODI_TESTNET[] = {
     0x62, 0x40, 0x87, 0xdd, 0x19, 0x4,  0xab, 0x12, 0x2a, 0x32,
     0x87, 0x8c, 0xe9, 0xe9, 0x33, 0xc7, 0x7,  0x1f, 0x53, 0xb9};
 static const uint8_t ACCOUNTING_MAINNET[] = {
@@ -612,7 +612,7 @@ static bool isEthereumStakingTx(const struct signing_params *params,
   const uint8_t *pubkeyhash = params->pubkeyhash;
   const uint8_t *data_chunk = params->data_initial_chunk_bytes;
   bool is_address_pool =
-      ((memcmp(pubkeyhash, POOL_HOLESKY_TESTNET, PUBKEYHASH_LEN) == 0) ||
+      ((memcmp(pubkeyhash, POOL_HOODI_TESTNET, PUBKEYHASH_LEN) == 0) ||
        (memcmp(pubkeyhash, POOL_MAINNET, PUBKEYHASH_LEN) == 0));
   if (is_address_pool) {
     if (memcmp(data_chunk, SC_FUNC_SIG_STAKE, SC_FUNC_SIG_BYTES) == 0) {
@@ -625,7 +625,7 @@ static bool isEthereumStakingTx(const struct signing_params *params,
     }
   }
   bool is_address_accounting =
-      ((memcmp(pubkeyhash, ACCOUNTING_HOLESKY_TESTNET, PUBKEYHASH_LEN) == 0) ||
+      ((memcmp(pubkeyhash, ACCOUNTING_HOODI_TESTNET, PUBKEYHASH_LEN) == 0) ||
        (memcmp(pubkeyhash, ACCOUNTING_MAINNET, PUBKEYHASH_LEN) == 0));
   if (is_address_accounting) {
     if (memcmp(data_chunk, SC_FUNC_SIG_CLAIM, SC_FUNC_SIG_BYTES) == 0) {

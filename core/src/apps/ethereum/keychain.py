@@ -108,7 +108,8 @@ def _schemas_from_network(
         # allow cross-signing with Ethereum for all non-mainnet networks
         slip44_id = (network_info.slip44, 60)
     else:
-        slip44_id = (network_info.slip44,)
+        # legacy testnet slip44 = 1
+        slip44_id = (network_info.slip44, 1)
 
     schemas = [paths.PathSchema.parse(pattern, slip44_id) for pattern in patterns]
     return [s.copy() for s in schemas]

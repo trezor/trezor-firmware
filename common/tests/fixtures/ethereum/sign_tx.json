@@ -158,12 +158,12 @@
             }
         },
         {
-            "name": "Holesky Testnet, testnet path",
+            "name": "Hoodi Testnet, testnet path",
             "parameters": {
                 "data": "",
                 "path": "m/44'/1'/0'/0/1",
                 "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
-                "chain_id": 17000,
+                "chain_id": 560048,
                 "nonce": "0x0",
                 "gas_price": "0x14",
                 "gas_limit": "0x14",
@@ -171,19 +171,19 @@
                 "value": "0x64"
             },
             "result": {
-                "sig_v": 34036,
-                "sig_r": "625c39532fc756305519227d700c979259f35a615668f866c3ea45c32771fcf6",
-                "sig_s": "79ae3f247f107b92a4ab3ced52345924f46fbee2a2fc6af31fb341debdc18ab4"
+                "sig_v": 1120132,
+                "sig_r": "6f8af79a48a022476b2837d2155f82cf9b93da7464b20a54b16c4d9760f8511a",
+                "sig_s": "77ebd93a6795947c4e273edd6620d085443c4744feca908b39ddb41ffcc3f150"
             },
             "skip_models": ["t1"]
         },
         {
-            "name": "Holesky Testnet, mainnet path",
+            "name": "Hoodi Testnet, mainnet path",
             "parameters": {
                 "data": "",
                 "path": "m/44'/60'/0'/0/1",
                 "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
-                "chain_id": 17000,
+                "chain_id": 560048,
                 "nonce": "0x0",
                 "gas_price": "0x14",
                 "gas_limit": "0x14",
@@ -191,9 +191,9 @@
                 "value": "0x64"
             },
             "result": {
-                "sig_v": 34035,
-                "sig_r": "711890c8ad19cf06b1e18319d1f377bf0f04ba23a1a0110b18a0000eed1418ad",
-                "sig_s": "235417e17d3bf0584bc2ac46fb493e0a7049e10a978b106c12a9a4310592c63a"
+                "sig_v": 1120131,
+                "sig_r": "7b6895910a73fcd71fbd4451304670fa1477b430552de35c746f140c9c8f5d77",
+                "sig_s": "7365f33b29cbfbec637982b4e3967c3d70c8aa29d36d67f52109dcd6fc162562"
             },
             "skip_models": ["t1"]
         }
