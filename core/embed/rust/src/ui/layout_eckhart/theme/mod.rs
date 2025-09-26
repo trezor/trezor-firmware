@@ -60,6 +60,18 @@ pub const LED_ORANGE: Color = Color::rgb(0xBC, 0x2A, 0x06);
 pub const LED_RED: Color = Color::rgb(0x64, 0x06, 0x03);
 pub const LED_YELLOW: Color = Color::rgb(0x16, 0x10, 0x00);
 pub const LED_BLUE: Color = Color::rgb(0x05, 0x05, 0x32);
+pub const fn color_to_led_color(color: Color) -> Color {
+    match color {
+        WHITE => LED_WHITE,
+        GREEN_LIME => LED_GREEN_LIME,
+        GREEN_LIGHT => LED_GREEN_LIGHT,
+        ORANGE => LED_ORANGE,
+        RED => LED_RED,
+        YELLOW => LED_YELLOW,
+        BLUE => LED_BLUE,
+        _ => color,
+    }
+}
 
 // Common constants
 pub const PADDING: i16 = 24; // [px]
