@@ -91,6 +91,7 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/syscall/stm32/syscall_stubs.c",
         "embed/sys/syscall/stm32/syscall_verifiers.c",
         "embed/sys/task/stm32/applet.c",
+        "embed/sys/task/stm32/coreapp.c",
         "embed/sys/task/stm32/systask.c",
         "embed/sys/task/stm32/system.c",
         "embed/sys/time/stm32/systick.c",

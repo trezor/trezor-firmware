@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <trezor_model.h>
 #include <trezor_rtl.h>
 
 #include <gfx/gfx_bitblt.h>
@@ -24,8 +25,8 @@
 #include <sec/random_delays.h>
 #include <sec/secret.h>
 #include <sec/secure_aes.h>
-#include <sys/applet.h>
 #include <sys/bootutils.h>
+#include <sys/coreapp.h>
 #include <sys/mpu.h>
 #include <sys/syscall_ipc.h>
 #include <sys/sysevent.h>
@@ -33,7 +34,6 @@
 #include <sys/systick.h>
 #include <util/board_capabilities.h>
 #include <util/boot_image.h>
-#include <util/image.h>
 #include <util/option_bytes.h>
 #include <util/rsod.h>
 #include <util/unit_properties.h>
@@ -52,6 +52,10 @@
 
 #ifdef USE_HAPTIC
 #include <io/haptic.h>
+#endif
+
+#ifdef USE_HASH_PROCESSOR
+#include <sec/hash_processor.h>
 #endif
 
 #ifdef USE_OPTIGA
@@ -212,42 +216,6 @@ static void kernel_loop(applet_t *coreapp) {
   } while (applet_is_alive(coreapp));
 }
 
-// defined in linker script
-extern uint32_t _kernel_flash_end;
-#define KERNEL_END COREAPP_CODE_ALIGN((uint32_t) & _kernel_flash_end)
-
-// Initializes coreapp applet
-static void coreapp_init(applet_t *applet) {
-  const uint32_t CODE1_START = KERNEL_END;
-
-#ifdef FIRMWARE_P1_START
-  const uint32_t CODE1_END = FIRMWARE_P1_START + FIRMWARE_P1_MAXSIZE;
-#else
-  const uint32_t CODE1_END = FIRMWARE_START + FIRMWARE_MAXSIZE;
-#endif
-
-  const applet_layout_t coreapp_layout = {
-      .data1.start = (uint32_t)AUX1_RAM_START,
-      .data1.size = (uint32_t)AUX1_RAM_SIZE,
-#ifdef AUX2_RAM_START
-      .data2.start = (uint32_t)AUX2_RAM_START,
-      .data2.size = (uint32_t)AUX2_RAM_SIZE,
-#endif
-      .code1.start = CODE1_START,
-      .code1.size = CODE1_END - CODE1_START,
-#ifdef FIRMWARE_P2_START
-      .code2.start = FIRMWARE_P2_START,
-      .code2.size = FIRMWARE_P2_MAXSIZE,
-#endif
-  };
-
-  applet_privileges_t coreapp_privileges = {
-      .assets_area_access = true,
-  };
-
-  applet_init(applet, &coreapp_layout, &coreapp_privileges);
-}
-
 #ifndef USE_BOOTARGS_RSOD
 
 // Shows RSOD (Red Screen of Death)
@@ -257,7 +225,7 @@ static void show_rsod(const systask_postmortem_t *pminfo) {
   coreapp_init(&coreapp);
 
   // Reset and run the coreapp in RSOD mode
-  if (applet_reset(&coreapp, 1, pminfo, sizeof(systask_postmortem_t))) {
+  if (coreapp_reset(&coreapp, 1, pminfo, sizeof(systask_postmortem_t))) {
     // Run the applet & wait for it to finish
     applet_run(&coreapp);
     // Loop until the coreapp is terminated
@@ -320,12 +288,13 @@ int main(void) {
   coreapp_init(&coreapp);
 
   // Reset and run the coreapp
-  if (!applet_reset(&coreapp, 0, NULL, 0)) {
+  if (!coreapp_reset(&coreapp, 0, NULL, 0)) {
     error_shutdown("Cannot start coreapp");
   }
 
   // Run the applet
   applet_run(&coreapp);
+
   // Loop until the coreapp is terminated
   kernel_loop(&coreapp);
   // Release the coreapp resources
