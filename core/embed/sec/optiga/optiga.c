@@ -91,9 +91,8 @@ static const optiga_metadata_item TYPE_PRESSEC =
 static const optiga_metadata_item ACCESS_FIRST_STRETCHED_PIN =
     OPTIGA_ACCESS_CONDITION(OPTIGA_ACCESS_COND_AUTO, OID_STRETCHED_PINS[0]);
 static const optiga_metadata_item ACCESS_LAST_STRETCHED_PIN =
-    OPTIGA_ACCESS_CONDITION(
-        OPTIGA_ACCESS_COND_AUTO,
-        OID_STRETCHED_PINS[OPTIGA_STRETCHED_PINS_COUNT - 1]);
+    OPTIGA_ACCESS_CONDITION(OPTIGA_ACCESS_COND_AUTO,
+                            OID_STRETCHED_PINS[STRETCHED_PIN_COUNT - 1]);
 static const optiga_metadata_item ACCESS_PIN_SECRET =
     OPTIGA_ACCESS_CONDITION(OPTIGA_ACCESS_COND_AUTO, OID_PIN_SECRET);
 static const optiga_metadata_item ACCESS_STRETCHED_PIN_CTR =
@@ -266,10 +265,9 @@ uint32_t optiga_estimate_time_ms(storage_pin_op_t op, uint8_t slot_index) {
   // To estimate the overall time of the PIN operation we multiply the
   // throttling delay by the number of protected Optiga commands and add the
   // time required to execute all Optiga commands without throttling delays.
-  const int pin_set_protected_commands_count =
-      OPTIGA_STRETCHED_PINS_COUNT * 2 + 2;
+  const int pin_set_protected_commands_count = STRETCHED_PIN_COUNT * 2 + 2;
   const int pin_verify_protected_commands_count =
-      2 * (OPTIGA_STRETCHED_PINS_COUNT - slot_index) + 4;
+      2 * (STRETCHED_PIN_COUNT - slot_index) + 4;
   const int pin_stretch_protected_commands_count =
       2 * PIN_STRETCH_ITERATIONS + 1;
   const int pin_stretch_offline_protected_commands_count =
@@ -429,7 +427,7 @@ static bool optiga_pin_init_metadata(optiga_ui_progress_t ui_progress) {
   ui_progress();
 
   // Set metadata for the rest of the stretched PINs.
-  for (int i = 1; i < OPTIGA_STRETCHED_PINS_COUNT - 1; i++) {
+  for (int i = 1; i < STRETCHED_PIN_COUNT - 1; i++) {
     memzero(&metadata, sizeof(metadata));
     metadata.change = OPTIGA_ACCESS_CONDITION(OPTIGA_ACCESS_COND_AUTO,
                                               OID_STRETCHED_PINS[i + 1]);
@@ -448,11 +446,10 @@ static bool optiga_pin_init_metadata(optiga_ui_progress_t ui_progress) {
   memzero(&metadata, sizeof(metadata));
   metadata.change = ACCESS_PIN_SECRET;
   metadata.read = OPTIGA_ACCESS_CONDITION(
-      OPTIGA_ACCESS_COND_AUTO,
-      OID_STRETCHED_PINS[OPTIGA_STRETCHED_PINS_COUNT - 2]);
+      OPTIGA_ACCESS_COND_AUTO, OID_STRETCHED_PINS[STRETCHED_PIN_COUNT - 2]);
   metadata.execute = ACCESS_STRETCHED_PIN_CTR;
   metadata.data_type = TYPE_AUTOREF;
-  if (!optiga_set_metadata(OID_STRETCHED_PINS[OPTIGA_STRETCHED_PINS_COUNT - 1],
+  if (!optiga_set_metadata(OID_STRETCHED_PINS[STRETCHED_PIN_COUNT - 1],
                            &metadata)) {
     return false;
   }
@@ -718,7 +715,7 @@ bool optiga_pin_init(optiga_ui_progress_t ui_progress) {
 bool optiga_pin_set(
     optiga_ui_progress_t ui_progress,
     const uint8_t hmac_stretching_secret[OPTIGA_PIN_SECRET_SIZE],
-    uint8_t stretched_pins[OPTIGA_STRETCHED_PINS_COUNT][OPTIGA_PIN_SECRET_SIZE],
+    uint8_t stretched_pins[STRETCHED_PIN_COUNT][OPTIGA_PIN_SECRET_SIZE],
     uint8_t hmac_reset_key[OPTIGA_PIN_SECRET_SIZE]) {
   optiga_set_ui_progress(ui_progress);
 
@@ -757,7 +754,7 @@ bool optiga_pin_set(
   // OPTIGA_STRETCHED_PINS_COUNT + PIN_MAX_TRIES, of which
   // OPTIGA_STRETCHED_PINS_COUNT will be used when setting stretched PINs.
   if (optiga_reset_counter(OID_STRETCHED_PIN_CTR,
-                           OPTIGA_STRETCHED_PINS_COUNT + PIN_MAX_TRIES) !=
+                           STRETCHED_PIN_COUNT + PIN_MAX_TRIES) !=
       OPTIGA_SUCCESS) {
     ret = false;
     goto end;
@@ -767,7 +764,7 @@ bool optiga_pin_set(
 
   uint8_t digest[OPTIGA_PIN_SECRET_SIZE] = {0};
 
-  for (int i = OPTIGA_STRETCHED_PINS_COUNT - 1; i >= 0; i--) {
+  for (int i = STRETCHED_PIN_COUNT - 1; i >= 0; i--) {
     // Process the stretched PIN using a one-way function before sending it to
     // the Optiga. This ensures that in the unlikely case of an attacker
     // recording communication between the MCU and Optiga, they will not gain
@@ -805,9 +802,8 @@ bool optiga_pin_set(
     ui_progress();
 
     // Authorise using OID_STRETCHED_PINS[i] so that we can write to
-    //  * OID_STRETCHED_PINS[i + 1], if i < OPTIGA_STRETCHED_PINS_COUNT - 1;
-    //  * OID_PIN_HMAC and OID_PIN_HMAC_CTR, if i == OPTIGA_STRETCHED_PINS_COUNT
-    //  - 1.
+    //  * OID_STRETCHED_PINS[i + 1], if i < STRETCHED_PIN_COUNT - 1;
+    //  * OID_PIN_HMAC and OID_PIN_HMAC_CTR, if i == STRETCHED_PIN_COUNT - 1.
     if (optiga_set_auto_state(OPTIGA_OID_SESSION_CTX, OID_STRETCHED_PINS[i],
                               digest, sizeof(digest)) != OPTIGA_SUCCESS) {
       ret = false;
@@ -1033,7 +1029,7 @@ bool optiga_stretch_pin_offline(
 optiga_pin_result optiga_pin_verify(
     optiga_ui_progress_t ui_progress, uint8_t pin_index,
     uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
-  if (pin_index >= OPTIGA_STRETCHED_PINS_COUNT) {
+  if (pin_index >= STRETCHED_PIN_COUNT) {
     return OPTIGA_PIN_ERROR;
   }
 
@@ -1085,7 +1081,7 @@ optiga_pin_result optiga_pin_verify(
     }
   }
 
-  for (int i = pin_index + 1; i < OPTIGA_STRETCHED_PINS_COUNT; i++) {
+  for (int i = pin_index + 1; i < STRETCHED_PIN_COUNT; i++) {
     size_t size = 0;
     if (optiga_get_data_object(OID_STRETCHED_PINS[i], false, digest,
                                OPTIGA_PIN_SECRET_SIZE,

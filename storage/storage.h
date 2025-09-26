@@ -54,11 +54,11 @@ extern const uint8_t *PIN_EMPTY;
 #endif
 
 // The number of slots configured as stretched PINs.
-#if USE_OPTIGA
 #if USE_TROPIC
-#define OPTIGA_STRETCHED_PINS_COUNT PIN_MAX_TRIES
+#define STRETCHED_PIN_COUNT PIN_MAX_TRIES
 #else
-#define OPTIGA_STRETCHED_PINS_COUNT 1
+#if USE_OPTIGA
+#define STRETCHED_PIN_COUNT 1
 #endif
 #endif
 

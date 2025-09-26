@@ -85,7 +85,7 @@
 #define TROPIC_MAC_AND_DESTROY_RESET_KEY ((APP_STORAGE << 8) | 0x09)
 #endif
 
-#if USE_OPTIGA && OPTIGA_STRETCHED_PINS_COUNT > 1
+#if USE_OPTIGA && STRETCHED_PIN_COUNT > 1
 // Key that is used to reset the HMAC counter in Optiga after successfull
 // unlock.
 #define OPTIGA_HMAC_RESET_KEY ((APP_STORAGE << 8) | 0x0A)
@@ -477,7 +477,7 @@ static uint32_t ui_estimate_time_ms(storage_pin_op_t op) {
   uint32_t time_ms = 0;
 #if USE_OPTIGA || USE_TROPIC
   uint32_t pin_index = 0;
-#if OPTIGA_STRETCHED_PINS_COUNT > 1
+#if STRETCHED_PIN_COUNT > 1
   if (sectrue != pin_get_fails(&pin_index)) {
     return 0;
   }
@@ -715,9 +715,8 @@ static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
   }
 #endif
 #if USE_TROPIC || USE_OPTIGA
-  uint8_t stretched_pins[OPTIGA_STRETCHED_PINS_COUNT][SHA256_DIGEST_LENGTH] = {
-      0};
-  for (int i = 0; i < OPTIGA_STRETCHED_PINS_COUNT; i++) {
+  uint8_t stretched_pins[STRETCHED_PIN_COUNT][SHA256_DIGEST_LENGTH] = {0};
+  for (int i = 0; i < STRETCHED_PIN_COUNT; i++) {
     memcpy(stretched_pins[i], stretched_pin, SHA256_DIGEST_LENGTH);
   }
 #endif
@@ -756,7 +755,7 @@ static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
 #if !USE_OPTIGA && !USE_TROPIC
   memcpy(kek, stretched_pin, SHA256_DIGEST_LENGTH);
 #endif
-#if USE_OPTIGA && OPTIGA_STRETCHED_PINS_COUNT > 1
+#if USE_OPTIGA && STRETCHED_PIN_COUNT > 1
   if (storage_set_encrypted(OPTIGA_HMAC_RESET_KEY, optiga_hmac_reset_key,
                             sizeof(optiga_hmac_reset_key)) != sectrue) {
     goto cleanup;
@@ -824,7 +823,7 @@ static secbool __wur derive_kek_unlock(
                   privileged_bhk);
 #if USE_OPTIGA || USE_TROPIC
   uint32_t pin_index = 0;
-#if OPTIGA_STRETCHED_PINS_COUNT > 1
+#if STRETCHED_PIN_COUNT > 1
   uint32_t pin_fails = 0;
   if (sectrue != pin_get_fails(&pin_fails)) {
     goto cleanup;
@@ -1258,7 +1257,7 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
 
   unlocked = sectrue;
 
-#if USE_OPTIGA && OPTIGA_STRETCHED_PINS_COUNT > 1
+#if USE_OPTIGA && STRETCHED_PIN_COUNT > 1
   if (ctr != 0) {
     uint8_t optiga_hmac_reset_key[SHA256_DIGEST_LENGTH] = {0};
     uint16_t optiga_hmac_reset_key_len = 0;

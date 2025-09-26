@@ -76,7 +76,7 @@ bool __wur optiga_stretch_pin_offline(
 bool __wur optiga_pin_set(
     optiga_ui_progress_t ui_progress,
     const uint8_t hmac_stretching_secret[OPTIGA_PIN_SECRET_SIZE],
-    uint8_t stretched_pins[OPTIGA_STRETCHED_PINS_COUNT][OPTIGA_PIN_SECRET_SIZE],
+    uint8_t stretched_pins[STRETCHED_PIN_COUNT][OPTIGA_PIN_SECRET_SIZE],
     uint8_t hmac_reset_key[OPTIGA_PIN_SECRET_SIZE]);
 
 bool __wur
