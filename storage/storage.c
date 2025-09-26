@@ -859,8 +859,8 @@ static secbool __wur derive_kek_unlock(
   }
 #endif
 #if USE_TROPIC
-  if (tropic_unmask_kek(ui_progress, , pin_index, stretched_pin,
-                        stretched_pin) != true) {
+  if (tropic_unmask_kek(ui_progress, pin_index, stretched_pin, stretched_pin) !=
+      true) {
     goto cleanup;
   }
 #endif

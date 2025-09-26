@@ -434,9 +434,9 @@ cleanup:
   return ret == LT_OK;
 }
 
-bool tropic_get_kek(tropic_ui_progress_t ui_progress, uint16_t pin_index,
-                    const uint8_t stretched_pin[TROPIC_MAC_AND_DESTROY_SIZE],
-                    uint8_t kek[TROPIC_MAC_AND_DESTROY_SIZE]) {
+bool tropic_unmask_kek(tropic_ui_progress_t ui_progress, uint16_t pin_index,
+                       const uint8_t stretched_pin[TROPIC_MAC_AND_DESTROY_SIZE],
+                       uint8_t kek[TROPIC_MAC_AND_DESTROY_SIZE]) {
   uint8_t masks[R_MEM_DATA_SIZE_MAX] = {0};
   _Static_assert(
       R_MEM_DATA_SIZE_MAX >= PIN_MAX_TRIES * TROPIC_MAC_AND_DESTROY_SIZE,
