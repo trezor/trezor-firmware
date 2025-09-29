@@ -895,11 +895,11 @@ env.Depends(rust, protobuf_blobs)
 env.Depends(rust, TRANSLATION_DATA)
 
 BOOTLOADER_SUFFIX = TREZOR_MODEL
-if BOOTLOADER_QA or BOOTLOADER_DEVEL:
+if BOOTLOADER_DEVEL:
     BOOTLOADER_SUFFIX += '_qa'
 
 # select vendor header
-if BOOTLOADER_QA or BOOTLOADER_DEVEL:
+if BOOTLOADER_DEVEL:
     if UNSAFE_FW:
         vendor = "unsafe_signed_dev"
     else:
