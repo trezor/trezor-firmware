@@ -71,12 +71,12 @@ SECTIONS {
     *(.ARM.exidx*);
   }
 
-  .tls : ALIGN(512) {
-    *(.tls*);
-    . = ALIGN(512);
+  .tls : ALIGN(32) {
+    *(.tls*);  /* 32-byte alignment required by MPU */
+    . = ALIGN(32);
   } > AUX1_RAM
 
-  .bss : ALIGN(512) {
+  .bss : ALIGN(4) {
     *(.no_dma_buffers*);
     *(.bss*);
     . = ALIGN(4);
