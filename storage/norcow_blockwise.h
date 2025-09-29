@@ -274,7 +274,7 @@ secbool norcow_update_bytes(const uint16_t key, const uint8_t *data,
   }
 
   uint16_t tmp_len = len;
-  uint16_t flash_offset = sector_offset + norcow_write_buffer_flashed;
+  uint32_t flash_offset = sector_offset + norcow_write_buffer_flashed;
 
   ensure(flash_unlock_write(), NULL);
   while (tmp_len > 0) {
