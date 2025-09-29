@@ -89,7 +89,7 @@ void storage_salt_get(storage_salt_t* salt) {
 void additional_salt_get(additional_salt_t* salt) {
   if (secfalse == flash_otp_is_locked(FLASH_OTP_BLOCK_ADDITIONAL_RANDOMNESS)) {
     uint8_t rnd_bytes[FLASH_OTP_BLOCK_SIZE];
-    random_buffer(rnd_bytes, FLASH_OTP_BLOCK_SIZE);
+    rng_fill_buffer(rnd_bytes, FLASH_OTP_BLOCK_SIZE);
     ensure(flash_otp_write(FLASH_OTP_BLOCK_ADDITIONAL_RANDOMNESS, 0, rnd_bytes,
                            FLASH_OTP_BLOCK_SIZE),
            NULL);

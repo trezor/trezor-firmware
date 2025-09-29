@@ -188,11 +188,6 @@ bool optiga_read_sec(uint8_t *sec) {
   return (bool)smcall_invoke1((uint32_t)sec, SMCALL_OPTIGA_READ_SEC);
 }
 
-bool optiga_random_buffer(uint8_t *dest, size_t size) {
-  return (bool)smcall_invoke2((uint32_t)dest, size,
-                              SMCALL_OPTIGA_RANDOM_BUFFER);
-}
-
 // =============================================================================
 // secret_keys.h
 // =============================================================================

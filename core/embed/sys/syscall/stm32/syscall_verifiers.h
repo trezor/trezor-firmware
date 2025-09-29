@@ -123,8 +123,6 @@ bool __wur optiga_read_cert__verified(uint8_t index, uint8_t *cert,
 
 bool __wur optiga_read_sec__verified(uint8_t *sec);
 
-bool __wur optiga_random_buffer__verified(uint8_t *dest, size_t size);
-
 #include <sec/secret_keys.h>
 
 bool secret_key_delegated_identity__verified(

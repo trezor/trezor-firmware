@@ -457,17 +457,6 @@ access_violation:
   return false;
 }
 
-bool __wur optiga_random_buffer__verified(uint8_t *dest, size_t size) {
-  if (!probe_write_access(dest, size)) {
-    goto access_violation;
-  }
-
-  return optiga_random_buffer(dest, size);
-
-access_violation:
-  apptask_access_violation();
-  return false;
-}
 
 #include <sec/secret_keys.h>
 
