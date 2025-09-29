@@ -113,7 +113,7 @@ impl Button {
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
     ) -> Self {
-        Self::with_text_and_subtext(text, subtext, subtext_style, None)
+        Self::with_text_and_subtext(text, subtext, subtext_style)
             .with_text_align(Self::MENU_ITEM_ALIGNMENT)
             .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
             .styled(stylesheet)
@@ -126,7 +126,7 @@ impl Button {
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
     ) -> Self {
-        Self::with_single_line_text_and_subtext(text, subtext, subtext_style, None)
+        Self::with_single_line_text_and_subtext(text, subtext, subtext_style)
             .with_text_align(Self::MENU_ITEM_ALIGNMENT)
             .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
             .styled(stylesheet)
@@ -137,17 +137,9 @@ impl Button {
     pub fn new_connection_item(
         text: TString<'static>,
         stylesheet: ButtonStyleSheet,
-        subtext: Option<TString<'static>>,
         connected: bool,
     ) -> Self {
-        let icon_color = if connected {
-            theme::GREEN_LIGHT
-        } else {
-            theme::GREY_DARK
-        };
-        let (subtext, subtext_style) = if let Some(subtext) = subtext {
-            (subtext, &theme::TEXT_MENU_ITEM_SUBTITLE)
-        } else if connected {
+        let (subtext, subtext_style) = if connected {
             (
                 TR::words__connected.into(),
                 &theme::TEXT_MENU_ITEM_SUBTITLE_GREEN,
@@ -159,16 +151,11 @@ impl Button {
             )
         };
 
-        Self::with_text_and_subtext(
-            text,
-            subtext,
-            subtext_style,
-            Some((theme::ICON_SQUARE, icon_color)),
-        )
-        .with_text_align(Self::MENU_ITEM_ALIGNMENT)
-        .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
-        .styled(stylesheet)
-        .with_radius(Self::MENU_ITEM_RADIUS)
+        Self::with_clipped_text_and_subtext(text, subtext, subtext_style)
+            .with_text_align(Self::MENU_ITEM_ALIGNMENT)
+            .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
+            .styled(stylesheet)
+            .with_radius(Self::MENU_ITEM_RADIUS)
     }
 
     pub const fn with_single_line_text(text: TString<'static>) -> Self {
@@ -183,13 +170,23 @@ impl Button {
         text: TString<'static>,
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
-        icon: Option<(Icon, Color)>,
     ) -> Self {
         Self::new(ButtonContent::text_and_subtext(
             text,
             subtext,
             subtext_style,
-            icon,
+        ))
+    }
+
+    pub fn with_clipped_text_and_subtext(
+        text: TString<'static>,
+        subtext: TString<'static>,
+        subtext_style: &'static TextStyle,
+    ) -> Self {
+        Self::new(ButtonContent::clipped_text_and_subtext(
+            text,
+            subtext,
+            subtext_style,
         ))
     }
 
@@ -197,13 +194,11 @@ impl Button {
         text: TString<'static>,
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
-        icon: Option<(Icon, Color)>,
     ) -> Self {
         Self::new(ButtonContent::single_line_text_and_subtext(
             text,
             subtext,
             subtext_style,
-            icon,
         ))
     }
 
@@ -361,9 +356,15 @@ impl Button {
         }
     }
 
-    fn text_height(&self, text: &str, single_line: bool, width: i16) -> i16 {
+    fn text_height(&self, text: &str, single_line: bool, break_words: bool, width: i16) -> i16 {
         if single_line {
             self.style().font.line_height()
+        } else if break_words {
+            if self.stylesheet.normal.font.text_width(text) <= width {
+                return self.style().font.line_height();
+            } else {
+                self.style().font.line_height() * 2 - constant::LINE_SPACE
+            }
         } else {
             let (t1, t2) = split_two_lines(text, self.stylesheet.normal.font, width);
             if t1.is_empty() || t2.is_empty() {
@@ -379,24 +380,18 @@ impl Button {
         match &self.content {
             ButtonContent::Empty => 0,
             ButtonContent::Text { text, single_line } => {
-                text.map(|t| self.text_height(t, *single_line, width))
+                text.map(|t| self.text_height(t, *single_line, false, width))
             }
             ButtonContent::Icon(icon) => icon.toif.height(),
             ButtonContent::TextAndSubtext {
                 text,
                 single_line,
-                icon,
+                break_words,
                 ..
-            } => {
-                let width = if icon.is_some() {
-                    width - Self::CONN_ICON_WIDTH
-                } else {
-                    width
-                };
-                text.map(|t| {
-                    self.text_height(t, *single_line, width) + self.baseline_subtext_height()
-                })
-            }
+            } => text.map(|t| {
+                self.text_height(t, *single_line, *break_words, width)
+                    + self.baseline_subtext_height()
+            }),
             #[cfg(feature = "micropython")]
             ButtonContent::HomeBar(..) => theme::ACTION_BAR_HEIGHT,
         }
@@ -478,13 +473,13 @@ impl Button {
                 .with_alpha(alpha)
                 .render(target)
         };
-        let render_origin = |y_offset: i16| {
+        let render_origin = |offset: Offset| {
             match self.text_align {
                 Alignment::Start => self.area.left_center().ofs(self.content_offset),
                 Alignment::Center => self.area.center().ofs(self.content_offset),
                 Alignment::End => self.area.right_center().ofs(self.content_offset.neg()),
             }
-            .ofs(Offset::y(y_offset))
+            .ofs(offset)
         };
 
         match &self.content {
@@ -493,7 +488,7 @@ impl Button {
                 let text_baseline_height = self.baseline_text_height();
                 text.map(|t| {
                     if *single_line {
-                        show_text(t, render_origin(text_baseline_height / 2));
+                        show_text(t, render_origin(Offset::y(text_baseline_height / 2)));
                     } else {
                         let (t1, t2) = split_two_lines(
                             t,
@@ -502,15 +497,19 @@ impl Button {
                         );
 
                         if t1.is_empty() || t2.is_empty() {
-                            show_text(t, render_origin(text_baseline_height / 2));
+                            show_text(t, render_origin(Offset::y(text_baseline_height / 2)));
                         } else {
                             show_text(
                                 t1,
-                                render_origin(-(text_baseline_height / 2 + constant::LINE_SPACE)),
+                                render_origin(Offset::y(
+                                    -(text_baseline_height / 2 + constant::LINE_SPACE),
+                                )),
                             );
                             show_text(
                                 t2,
-                                render_origin(text_baseline_height + constant::LINE_SPACE * 2),
+                                render_origin(Offset::y(
+                                    text_baseline_height + constant::LINE_SPACE * 2,
+                                )),
                             );
                         }
                     }
@@ -519,36 +518,90 @@ impl Button {
             ButtonContent::TextAndSubtext {
                 text,
                 single_line,
-                icon,
+                break_words,
                 ..
             } => {
                 let text_baseline_height = self.baseline_text_height();
-                let available_width = self.area.width()
-                    - 2 * self.content_offset.x
-                    - icon.map_or(0, |_| Self::CONN_ICON_WIDTH);
+                let available_width = self.area.width() - 2 * self.content_offset.x;
                 text.map(|t| {
                     if *single_line {
                         show_text(
                             t,
-                            render_origin(text_baseline_height / 2 - constant::LINE_SPACE * 2),
+                            render_origin(Offset::y(
+                                text_baseline_height / 2 - constant::LINE_SPACE * 2,
+                            )),
                         );
+                    } else if *break_words {
+                        let first = stylesheet
+                            .font
+                            .longest_prefix_break_words(available_width, t);
+
+                        if first == t {
+                            // The first line fits
+                            show_text(
+                                first,
+                                render_origin(Offset::y(
+                                    text_baseline_height / 2 - constant::LINE_SPACE * 2,
+                                )),
+                            );
+                        } else {
+                            show_text(
+                                first,
+                                render_origin(Offset::y(
+                                    -(text_baseline_height / 2 + constant::LINE_SPACE * 3),
+                                )),
+                            );
+                            let remaining = t[first.len()..].trim();
+                            if stylesheet.font.text_width(remaining) <= available_width {
+                                // The second line fits
+                                show_text(
+                                    remaining,
+                                    render_origin(Offset::y(
+                                        text_baseline_height - constant::LINE_SPACE * 2,
+                                    )),
+                                );
+                            } else {
+                                // Break the second line and add the ellipsis
+                                let ellipsis = "...";
+                                let width = available_width - stylesheet.font.text_width(ellipsis);
+                                let second =
+                                    stylesheet.font.longest_prefix_break_words(width, remaining);
+                                show_text(
+                                    second,
+                                    render_origin(Offset::y(
+                                        text_baseline_height - constant::LINE_SPACE * 2,
+                                    )),
+                                );
+                                show_text(
+                                    ellipsis,
+                                    render_origin(Offset::new(
+                                        stylesheet.font.text_width(second),
+                                        text_baseline_height - constant::LINE_SPACE * 2,
+                                    )),
+                                );
+                            }
+                        }
                     } else {
                         let (t1, t2) = split_two_lines(t, stylesheet.font, available_width);
                         if t1.is_empty() || t2.is_empty() {
                             show_text(
                                 t,
-                                render_origin(text_baseline_height / 2 - constant::LINE_SPACE * 2),
+                                render_origin(Offset::y(
+                                    text_baseline_height / 2 - constant::LINE_SPACE * 2,
+                                )),
                             );
                         } else {
                             show_text(
                                 t1,
-                                render_origin(
+                                render_origin(Offset::y(
                                     -(text_baseline_height / 2 + constant::LINE_SPACE * 3),
-                                ),
+                                )),
                             );
                             show_text(
                                 t2,
-                                render_origin(text_baseline_height - constant::LINE_SPACE * 2),
+                                render_origin(Offset::y(
+                                    text_baseline_height - constant::LINE_SPACE * 2,
+                                )),
                             );
                         }
                     }
@@ -559,19 +612,6 @@ impl Button {
                 } else {
                     unreachable!();
                 };
-
-                if let Some((icon, icon_color)) = icon {
-                    shape::ToifImage::new(
-                        self.area
-                            .right_center()
-                            .ofs(Offset::x(Self::CONN_ICON_WIDTH / 2).neg())
-                            .ofs(self.content_offset.neg()),
-                        icon.toif,
-                    )
-                    .with_align(Alignment2D::CENTER)
-                    .with_fg(*icon_color)
-                    .render(target);
-                }
             }
             ButtonContent::Icon(icon) => {
                 shape::ToifImage::new(self.area.center() + self.content_offset, icon.toif)
@@ -620,17 +660,14 @@ impl Component for Button {
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
 
-        if let ButtonContent::TextAndSubtext { icon, .. } = self.content {
+        if let ButtonContent::TextAndSubtext { .. } = self.content {
             let subtext_start = (bounds.height() + self.content_height(bounds.width())) / 2
                 - self.baseline_subtext_height();
             if let Some(m) = self.subtext_marquee.as_mut() {
-                let mut marquee_area = self
+                let marquee_area = self
                     .area
                     .inset(Insets::top(subtext_start))
                     .inset(Insets::sides(self.content_offset.x));
-                if icon.is_some() {
-                    marquee_area = marquee_area.inset(Insets::right(Self::CONN_ICON_WIDTH));
-                }
                 m.place(marquee_area);
             }
         }
@@ -788,9 +825,9 @@ pub enum ButtonContent {
     TextAndSubtext {
         text: TString<'static>,
         single_line: bool,
+        break_words: bool,
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
-        icon: Option<(Icon, Color)>,
     },
     Icon(Icon),
     #[cfg(feature = "micropython")]
@@ -816,14 +853,27 @@ impl ButtonContent {
         text: TString<'static>,
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
-        icon: Option<(Icon, Color)>,
     ) -> Self {
         Self::TextAndSubtext {
             text,
             single_line: false,
+            break_words: false,
             subtext,
             subtext_style,
-            icon,
+        }
+    }
+
+    pub const fn clipped_text_and_subtext(
+        text: TString<'static>,
+        subtext: TString<'static>,
+        subtext_style: &'static TextStyle,
+    ) -> Self {
+        Self::TextAndSubtext {
+            text,
+            single_line: false,
+            break_words: true,
+            subtext,
+            subtext_style,
         }
     }
 
@@ -831,14 +881,13 @@ impl ButtonContent {
         text: TString<'static>,
         subtext: TString<'static>,
         subtext_style: &'static TextStyle,
-        icon: Option<(Icon, Color)>,
     ) -> Self {
         Self::TextAndSubtext {
             text,
             single_line: true,
+            break_words: false,
             subtext,
             subtext_style,
-            icon,
         }
     }
 }

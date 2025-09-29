@@ -181,6 +181,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_bitcoin__unverified_external_inputs;
   MP_QSTR_bitcoin__valid_signature;
   MP_QSTR_bitcoin__voting_rights;
+  MP_QSTR_ble__apps_connected;
   MP_QSTR_ble__disable;
   MP_QSTR_ble__enable;
   MP_QSTR_ble__forget_all;

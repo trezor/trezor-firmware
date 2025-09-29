@@ -109,6 +109,7 @@
     "bitcoin__unverified_external_inputs": "The transaction contains unverified external inputs.",
     "bitcoin__valid_signature": "The signature is valid.",
     "bitcoin__voting_rights": "Voting rights to",
+    "ble__apps_connected": "Apps connected",
     "ble__disable": "Turn Bluetooth off?",
     "ble__enable": "Turn Bluetooth on?",
     "ble__forget_all": "Forget all",
