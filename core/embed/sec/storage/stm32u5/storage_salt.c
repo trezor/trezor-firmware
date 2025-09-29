@@ -86,6 +86,8 @@ void storage_salt_get(storage_salt_t* salt) {
   salt->size = 12 + FLASH_OTP_BLOCK_SIZE;
 }
 
+#ifdef USE_OPTIGA
+
 void additional_salt_get(additional_salt_t* salt) {
   if (secfalse == flash_otp_is_locked(FLASH_OTP_BLOCK_ADDITIONAL_RANDOMNESS)) {
     uint8_t rnd_bytes[FLASH_OTP_BLOCK_SIZE];
@@ -100,6 +102,8 @@ void additional_salt_get(additional_salt_t* salt) {
 
   salt->size = FLASH_OTP_BLOCK_SIZE;
 }
+
+#endif  // USE_OPTIGA
 
 #endif  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
 
