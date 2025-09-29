@@ -286,6 +286,7 @@ jobs:
       ACTIONS_DO_UI_TEST: ${{ matrix.coins == 'universal' && matrix.asan == 'noasan' }}
       TEST_LANG: ${{ matrix.lang }}
       TESTOPTS: "--durations 10 --session-timeout 1800"  # 30m pytest global timeout
+      DISABLE_TROPIC: 0
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
@@ -298,6 +299,7 @@ jobs:
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
       - run: nix-shell --run "uv run make -C core ${{ env.ACTIONS_DO_UI_TEST == 'true' && 'test_emu_ui_multicore' || 'test_emu' }}"
+      - run: nix-shell --arg fullDeps true --run "cd vendor/ts-tvl/model_configs/example_config && poetry env use 3.12 && poetry install && poetry run model_server tcp -c example_config.yml &"
       - run: tail -v -n50 tests/trezor*.log || true
         if: failure()
       - uses: actions/upload-artifact@v4
