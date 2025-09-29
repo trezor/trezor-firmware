@@ -123,9 +123,7 @@ impl Obj {
         // SAFETY:
         //  - Each of `args` has no lifetime bounds.
         // EXCEPTION: Calls Python code so can raise arbitrarily.
-        catch_exception(|| unsafe {
-            ffi::mp_call_function_n_kw(self, args.len(), 0, args.as_ptr())
-        })
+        catch_exception!(unsafe { ffi::mp_call_function_n_kw } => { self, args.len(), 0, args.as_ptr() })
     }
 }
 
@@ -141,8 +139,7 @@ impl TryFrom<Obj> for bool {
         // SAFETY:
         //  - `obj` can be anything uPy understands.
         // EXCEPTION: Can call Python code (on custom instances) and therefore raise.
-        let is_true = catch_exception(|| unsafe { ffi::mp_obj_is_true(obj) })?;
-        Ok(is_true)
+        catch_exception!(unsafe { ffi::mp_obj_is_true } => { obj })
     }
 }
 
@@ -158,7 +155,7 @@ impl TryFrom<Obj> for i32 {
         //  - `obj` can be anything uPy understands.
         // EXCEPTION: Can raise if `obj` is int but cannot fit into `cty::mp_int_t`.
         let result =
-            catch_exception(|| unsafe { ffi::mp_obj_get_int_maybe(obj.as_ptr(), &mut int) })?;
+            catch_exception!(unsafe { ffi::mp_obj_get_int_maybe } => { obj.as_ptr(), &mut int })?;
         if result {
             Ok(int.try_into()?)
         } else {
@@ -208,7 +205,7 @@ impl TryFrom<i32> for Obj {
         // conversion type as `i32`, but convert through `into()` if the types differ.
 
         // EXCEPTION: Can raise if `val` is larger than smallint and allocation fails.
-        catch_exception(|| unsafe { ffi::mp_obj_new_int(val.into()) })
+        catch_exception!(unsafe { ffi::mp_obj_new_int } => { val.into() })
     }
 }
 
@@ -221,7 +218,7 @@ impl TryFrom<i64> for Obj {
         match i32::try_from(val) {
             Ok(smaller_val) => smaller_val.try_into(),
             // EXCEPTION: Will raise if allocation fails.
-            Err(_) => catch_exception(|| unsafe { ffi::mp_obj_new_int_from_ll(val) }),
+            Err(_) => catch_exception!(unsafe { ffi::mp_obj_new_int_from_ll } => { val }),
         }
     }
 }
@@ -236,7 +233,7 @@ impl TryFrom<u32> for Obj {
         // if the types differ.
 
         // EXCEPTION: Can raise if `val` is larger than smallint and allocation fails.
-        catch_exception(|| unsafe { ffi::mp_obj_new_int_from_uint(val.into()) })
+        catch_exception!(unsafe { ffi::mp_obj_new_int_from_uint } => { val.into() })
     }
 }
 
@@ -249,7 +246,7 @@ impl TryFrom<u64> for Obj {
         match u32::try_from(val) {
             Ok(smaller_val) => smaller_val.try_into(),
             // EXCEPTION: Will raise if allocation fails.
-            Err(_) => catch_exception(|| unsafe { ffi::mp_obj_new_int_from_ull(val) }),
+            Err(_) => catch_exception!(unsafe { ffi::mp_obj_new_int_from_ull } => { val }),
         }
     }
 }
@@ -263,7 +260,7 @@ impl TryFrom<&[u8]> for Obj {
         // SAFETY:
         //  - Should work with any data
         // EXCEPTION: Will raise if allocation fails.
-        catch_exception(|| unsafe { ffi::mp_obj_new_bytes(val.as_ptr(), val.len()) })
+        catch_exception!(unsafe { ffi::mp_obj_new_bytes } => { val.as_ptr(), val.len() })
     }
 }
 
@@ -277,7 +274,7 @@ impl TryFrom<&str> for Obj {
         // SAFETY:
         //  - `str` is guaranteed to be UTF-8.
         // EXCEPTION: Will raise if allocation fails.
-        catch_exception(|| unsafe { ffi::mp_obj_new_str(val.as_ptr().cast(), val.len()) })
+        catch_exception!(unsafe { ffi::mp_obj_new_str } => { val.as_ptr().cast(), val.len() })
     }
 }
 
@@ -308,7 +305,7 @@ impl TryFrom<(Obj, Obj)> for Obj {
         //  - Should work with any micropython objects.
         // EXCEPTION: Will raise if allocation fails.
         let values = [val.0, val.1];
-        let obj = catch_exception(|| unsafe { ffi::mp_obj_new_tuple(2, values.as_ptr()) })?;
+        let obj = catch_exception!(unsafe { ffi::mp_obj_new_tuple } => { 2, values.as_ptr() })?;
         if obj.is_null() {
             Err(Error::AllocationFailed)
         } else {
@@ -325,7 +322,7 @@ impl TryFrom<(Obj, Obj, Obj)> for Obj {
         //  - Should work with any micropython objects.
         // EXCEPTION: Will raise if allocation fails.
         let values = [val.0, val.1, val.2];
-        let obj = catch_exception(|| unsafe { ffi::mp_obj_new_tuple(3, values.as_ptr()) })?;
+        let obj = catch_exception!(unsafe { ffi::mp_obj_new_tuple } => { 3, values.as_ptr() })?;
         if obj.is_null() {
             Err(Error::AllocationFailed)
         } else {
