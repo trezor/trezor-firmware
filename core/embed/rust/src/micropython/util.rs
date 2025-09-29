@@ -104,14 +104,7 @@ pub fn new_attrtuple(field_qstrs: &'static [Qstr], values: &[Obj]) -> Result<Obj
     //   usize. (py/qstr.h:48). This is valid for as long as Qstr is
     //   repr(transparent) and the only field is a usize. Check generated qstr.rs.
     // EXCEPTION: Raises if allocation fails, does not return NULL.
-    let obj = catch_exception(|| unsafe {
-        ffi::mp_obj_new_attrtuple(
-            field_qstrs.as_ptr() as *const _,
-            values.len(),
-            values.as_ptr(),
-        )
-    })?;
-    Ok(obj)
+    catch_exception!(unsafe { ffi::mp_obj_new_attrtuple } => { field_qstrs.as_ptr() as *const _, values.len(), values.as_ptr() })
 }
 
 pub fn iter_into_array<T, E, const N: usize>(iterable: Obj) -> Result<[T; N], Error>
@@ -139,9 +132,7 @@ where
 }
 
 pub fn modulo_format(format: Obj, args: &[Obj]) -> Result<Obj, Error> {
-    catch_exception(|| unsafe {
-        ffi::str_modulo_format(format, args.len(), args.as_ptr(), Obj::const_none())
-    })
+    catch_exception!(unsafe { ffi::str_modulo_format } => { format, args.len(), args.as_ptr(), Obj::const_none() })
 }
 
 /// Return `obj[offset : offset + len]`.
@@ -149,10 +140,8 @@ pub fn get_slice(obj: Obj, offset: u16, len: u16) -> Result<Obj, Error> {
     let start = Obj::small_int(offset);
     let stop = Obj::small_int(offset.checked_add(len).ok_or(Error::OutOfRange)?);
     let step = Obj::small_int(1);
-    catch_exception(|| unsafe {
-        let slice_obj = ffi::mp_obj_new_slice(start, stop, step);
-        ffi::mp_obj_subscr(obj, slice_obj, Obj::const_sentinel())
-    })
+    let slice_obj = catch_exception!(unsafe { ffi::mp_obj_new_slice } => { start, stop, step })?;
+    catch_exception!(unsafe { ffi::mp_obj_subscr } => { obj, slice_obj, Obj::const_sentinel() })
 }
 
 pub static EXTERNAL_DATA_ERROR: exception::ExceptionType = exception::ExceptionType::new(

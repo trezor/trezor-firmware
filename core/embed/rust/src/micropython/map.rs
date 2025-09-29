@@ -60,9 +60,7 @@ impl Map {
         // the backing storage for `capacity` items on the heap.
         unsafe {
             // EXCEPTION: Will raise if allocation fails.
-            catch_exception(|| {
-                ffi::mp_map_init(map.as_mut_ptr(), capacity);
-            })?;
+            catch_exception!(ffi::mp_map_init => { map.as_mut_ptr(), capacity })?;
             Ok(map.assume_init())
         }
     }
@@ -123,26 +121,18 @@ impl Map {
     }
 
     pub fn set_obj(&mut self, index: Obj, value: Obj) -> Result<(), Error> {
+        let map = self as *mut Self;
         // SAFETY:
-        //  - `mp_map_lookup` with `_mp_map_lookup_kind_t_MP_MAP_LOOKUP_ADD_IF_NOT_FOUND
-        //    returns a pointer to a `mp_map_elem_t` value with a lifetime valid for the
-        //    whole lifetime of `&mut self`.
+        //  - `mp_map_lookup` with `MP_MAP_LOOKUP_ADD_IF_NOT_FOUND` returns a non-null
+        //    pointer to a `mp_map_elem_t` value with a lifetime valid for the whole
+        //    lifetime of `&mut self`.
         //  - adding an element is an allocation, so it might raise.
         //  - the original `elem.value` might be an `Obj` that will get GCd when we
         //    replace it.
-        unsafe {
-            let map = self as *mut Self;
-            // EXCEPTION: Will raise if allocation fails.
-            let elem = unwrap!(catch_exception(|| {
-                ffi::mp_map_lookup(
-                    map,
-                    index,
-                    ffi::_mp_map_lookup_kind_t_MP_MAP_LOOKUP_ADD_IF_NOT_FOUND,
-                )
-            })?
-            .as_mut()); // `MP_MAP_LOOKUP_ADD_IF_NOT_FOUND` should always return a non-null pointer.
-            elem.value = value;
-        }
+        // EXCEPTION: Will raise if allocation fails.
+        let elem_ptr = catch_exception!(unsafe { ffi::mp_map_lookup } => { map, index, ffi::_mp_map_lookup_kind_t_MP_MAP_LOOKUP_ADD_IF_NOT_FOUND })?;
+        let elem = unwrap!(unsafe { elem_ptr.as_mut() });
+        elem.value = value;
         Ok(())
     }
 

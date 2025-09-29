@@ -26,10 +26,9 @@ impl Tuple {
         // SAFETY: Although `values` are copied into the new tuple and not mutated,
         // `mp_obj_new_tuple` is taking them through a mut pointer.
         // EXCEPTION: Will raise if allocation fails.
-        catch_exception(|| unsafe {
-            let tuple = ffi::mp_obj_new_tuple(values.len(), values.as_ptr() as *mut Obj);
-            Gc::from_raw(tuple.as_ptr().cast())
-        })
+        let tuple = catch_exception!(unsafe { ffi::mp_obj_new_tuple } => { values.len(), values.as_ptr() as *mut Obj })?;
+        // SAFETY: The tuple is valid and allocated by MicroPython.
+        Ok(unsafe { Gc::from_raw(tuple.as_ptr().cast()) })
     }
 
     pub fn as_slice(&self) -> &[Obj] {
