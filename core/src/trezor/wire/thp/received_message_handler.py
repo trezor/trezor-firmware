@@ -75,6 +75,7 @@ async def handle_received_message(channel: Channel) -> bool:
         await channel.iface_ctx.write_error(
             channel.get_channel_id_int(), ThpErrorType.DEVICE_LOCKED
         )
+        channel.clear()
     return False
 
 
