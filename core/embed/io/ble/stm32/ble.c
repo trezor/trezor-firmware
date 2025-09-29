@@ -338,6 +338,10 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
   if (msg.connected && msg.flags.bonded_connection &&
       drv->mode_requested == BLE_MODE_PAIRING) {
     // bonded device connected in pairing mode - end pairing
+
+    ble_event_t event = {.type = BLE_PAIRING_NOT_NEEDED};
+    tsqueue_enqueue(&drv->event_queue, (uint8_t *)&event, sizeof(event), NULL);
+
     ble_pairing_end(drv);
   }
 

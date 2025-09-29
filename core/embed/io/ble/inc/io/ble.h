@@ -106,14 +106,15 @@ typedef struct {
 } ble_wakeup_params_t;
 
 typedef enum {
-  BLE_NONE = 0,               // No event
-  BLE_CONNECTED = 1,          // Connected to a device
-  BLE_DISCONNECTED = 2,       // Disconnected from a device
-  BLE_PAIRING_REQUEST = 3,    // Pairing request received
-  BLE_PAIRING_CANCELLED = 4,  // Pairing was canceled by host
-  BLE_PAIRING_COMPLETED = 5,  // Pairing was completed successfully
+  BLE_NONE = 0,                // No event
+  BLE_CONNECTED = 1,           // Connected to a device
+  BLE_DISCONNECTED = 2,        // Disconnected from a device
+  BLE_PAIRING_REQUEST = 3,     // Pairing request received
+  BLE_PAIRING_CANCELLED = 4,   // Pairing was canceled by host
+  BLE_PAIRING_COMPLETED = 5,   // Pairing was completed successfully
+  BLE_PAIRING_NOT_NEEDED = 6,  // Pairing is not needed
   BLE_CONNECTION_CHANGED =
-      6,  // Connection change (e.g. different device connected)
+      7,  // Connection change (e.g. different device connected)
 } ble_event_type_t;
 
 typedef struct {

@@ -42,6 +42,7 @@ pub fn ble_parse_event(event: ffi::ble_event_t) -> BLEEvent {
         }
         ffi::ble_event_type_t_BLE_PAIRING_CANCELLED => BLEEvent::PairingCanceled,
         ffi::ble_event_type_t_BLE_PAIRING_COMPLETED => BLEEvent::PairingCompleted,
+        ffi::ble_event_type_t_BLE_PAIRING_NOT_NEEDED => BLEEvent::PairingNotNeeded,
         ffi::ble_event_type_t_BLE_CONNECTION_CHANGED => BLEEvent::ConnectionChanged,
         _ => panic!(),
     }
