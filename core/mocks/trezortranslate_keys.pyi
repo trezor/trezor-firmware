@@ -77,6 +77,7 @@ class TR:
     bitcoin__unverified_external_inputs: str = "The transaction contains unverified external inputs."
     bitcoin__valid_signature: str = "The signature is valid."
     bitcoin__voting_rights: str = "Voting rights to"
+    ble__apps_connected: str = "Apps connected"
     ble__disable: str = "Turn Bluetooth off?"
     ble__enable: str = "Turn Bluetooth on?"
     ble__forget_all: str = "Forget all"

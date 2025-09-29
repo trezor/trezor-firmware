@@ -1551,6 +1551,7 @@ pub enum TranslatedString {
     ble__host_info = 1161,  // "Host info"
     ble__mac_address = 1162,  // "MAC address"
     ble__waiting_for_host = 1163,  // "Waiting for host..."
+    ble__apps_connected = 1164,  // "Apps connected"
 }
 
 impl TranslatedString {
@@ -3536,6 +3537,7 @@ impl TranslatedString {
             (Self::ble__host_info, "Host info"),
             (Self::ble__mac_address, "MAC address"),
             (Self::ble__waiting_for_host, "Waiting for host..."),
+            (Self::ble__apps_connected, "Apps connected"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3615,6 +3617,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_bitcoin__unverified_external_inputs, Self::bitcoin__unverified_external_inputs),
         (Qstr::MP_QSTR_bitcoin__valid_signature, Self::bitcoin__valid_signature),
         (Qstr::MP_QSTR_bitcoin__voting_rights, Self::bitcoin__voting_rights),
+        (Qstr::MP_QSTR_ble__apps_connected, Self::ble__apps_connected),
         (Qstr::MP_QSTR_ble__disable, Self::ble__disable),
         (Qstr::MP_QSTR_ble__enable, Self::ble__enable),
         (Qstr::MP_QSTR_ble__forget_all, Self::ble__forget_all),
