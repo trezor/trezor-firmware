@@ -347,7 +347,7 @@ build_cross: ## build mpy-cross port
 ## clean commands:
 
 clean: clean_boardloader clean_bootloader clean_bootloader_emu clean_bootloader_ci \
-	clean_prodtest clean_firmware clean_kernel clean_secmon clean_unix clean_cross ## clean all
+	clean_prodtest clean_prodtest_emu clean_firmware clean_kernel clean_secmon clean_unix clean_cross ## clean all
 	rm -f ".sconsign.dblite"
 
 clean_boardloader: ## clean boardloader build
@@ -364,6 +364,9 @@ clean_bootloader_emu: ## clean bootloader_emu build
 
 clean_prodtest: ## clean prodtest build
 	rm -rf $(PRODTEST_BUILD_DIR)
+
+clean_prodtest_emu: ## clean prodtest_emu build
+	rm -rf $(PRODTEST_EMU_BUILD_DIR)
 
 clean_secmon: ## clean security monitor build
 	rm -rf $(SECMON_BUILD_DIR)
