@@ -11,7 +11,8 @@ class TestCheckDelegatedIdentityKey(unittest.TestCase):
 
         from trezor.crypto.curve import secp256k1
         from trezor.crypto.hashlib import sha256
-        from trezor.utils import HashWriter, delegated_identity
+        from trezor.utils import HashWriter
+        from trezorutils import delegated_identity
 
         from apps.common.writers import write_compact_size
         from apps.evolu.common import check_delegated_identity_proof
@@ -44,7 +45,8 @@ class TestCheckDelegatedIdentityKey(unittest.TestCase):
     def test_get_evolu_node(self):
         from trezor.crypto.curve import secp256k1
         from trezor.crypto.hashlib import sha256
-        from trezor.utils import HashWriter, delegated_identity
+        from trezor.utils import HashWriter
+        from trezorutils import delegated_identity
 
         from apps.common.writers import write_compact_size
         from apps.evolu.common import check_delegated_identity_proof

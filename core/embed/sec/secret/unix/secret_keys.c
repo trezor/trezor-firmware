@@ -72,6 +72,7 @@ secbool secret_key_tropic_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
 
 #endif  // USE_TROPIC
 
+#ifdef  USE_OPTIGA
 #include <sec/storage.h>
 #include "../../storage/storage_salt.h"
 #include "memzero.h"
@@ -96,5 +97,6 @@ secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   memzero(&ctx, sizeof(ctx));
   return sectrue;
 }
+#endif  // USE_OPTIGA
 
 #endif  // SECURE_MODE
