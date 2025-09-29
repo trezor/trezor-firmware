@@ -35,7 +35,6 @@ def derive_cred_auth_key() -> bytes:
     symmetric_key_node: Slip21Node = Slip21Node(thp_secret)
     symmetric_key_node.derive_path(path)
     cred_auth_key = symmetric_key_node.key()
-
     return cred_auth_key
 
 

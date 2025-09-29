@@ -37,7 +37,6 @@ from trezorutils import (  # noqa: F401
     bootloader_locked,
     check_firmware_header,
     consteq,
-    delegated_identity,
     firmware_hash,
     firmware_vendor,
     halt,

@@ -166,46 +166,46 @@ void wait_random(void) { smcall_invoke0(SMCALL_WAIT_RANDOM); }
 #include <sec/optiga.h>
 
 optiga_sign_result optiga_sign(uint8_t index, const uint8_t *digest,
-  size_t digest_size, uint8_t *signature,
-  size_t max_sig_size, size_t *sig_size) {
+                               size_t digest_size, uint8_t *signature,
+                               size_t max_sig_size, size_t *sig_size) {
   return (optiga_sign_result)smcall_invoke6(
-    index, (uint32_t)digest, digest_size, (uint32_t)signature, max_sig_size,
-    (uint32_t)sig_size, SMCALL_OPTIGA_SIGN);
+      index, (uint32_t)digest, digest_size, (uint32_t)signature, max_sig_size,
+      (uint32_t)sig_size, SMCALL_OPTIGA_SIGN);
 }
 
 bool optiga_cert_size(uint8_t index, size_t *cert_size) {
   return (bool)smcall_invoke2(index, (uint32_t)cert_size,
-  SMCALL_OPTIGA_CERT_SIZE);
+                              SMCALL_OPTIGA_CERT_SIZE);
 }
 
 bool optiga_read_cert(uint8_t index, uint8_t *cert, size_t max_cert_size,
-  size_t *cert_size) {
-    return (bool)smcall_invoke4(index, (uint32_t)cert, max_cert_size,
-    (uint32_t)cert_size, SMCALL_OPTIGA_READ_CERT);
-  }
-  
-  bool optiga_read_sec(uint8_t *sec) {
-    return (bool)smcall_invoke1((uint32_t)sec, SMCALL_OPTIGA_READ_SEC);
-  }
-  
-  bool optiga_random_buffer(uint8_t *dest, size_t size) {
-    return (bool)smcall_invoke2((uint32_t)dest, size,
-    SMCALL_OPTIGA_RANDOM_BUFFER);
-  }
-  
-  // =============================================================================
-  // secret_keys.h
-  // =============================================================================
-  
-  #include <sec/secret_keys.h>
-  
-  secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
-    return (secbool)smcall_invoke1((uint32_t)dest,
-                                   SMCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY);
-  }
-  
-  #if PYOPT == 0
-  void optiga_set_sec_max(void) { smcall_invoke0(SMCALL_OPTIGA_SET_SEC_MAX); }
+                      size_t *cert_size) {
+  return (bool)smcall_invoke4(index, (uint32_t)cert, max_cert_size,
+                              (uint32_t)cert_size, SMCALL_OPTIGA_READ_CERT);
+}
+
+bool optiga_read_sec(uint8_t *sec) {
+  return (bool)smcall_invoke1((uint32_t)sec, SMCALL_OPTIGA_READ_SEC);
+}
+
+bool optiga_random_buffer(uint8_t *dest, size_t size) {
+  return (bool)smcall_invoke2((uint32_t)dest, size,
+                              SMCALL_OPTIGA_RANDOM_BUFFER);
+}
+
+// =============================================================================
+// secret_keys.h
+// =============================================================================
+
+#include <sec/secret_keys.h>
+
+secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+  return (secbool)smcall_invoke1((uint32_t)dest,
+                                 SMCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY);
+}
+
+#if PYOPT == 0
+void optiga_set_sec_max(void) { smcall_invoke0(SMCALL_OPTIGA_SET_SEC_MAX); }
 
 #endif
 

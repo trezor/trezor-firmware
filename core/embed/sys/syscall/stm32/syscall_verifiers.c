@@ -1246,5 +1246,4 @@ access_violation:
 }
 #endif
 
-
 #endif  // KERNEL

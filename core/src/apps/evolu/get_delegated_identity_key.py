@@ -28,7 +28,7 @@ async def get_delegated_identity_key(
 
 
 def get_delegated_private_key() -> bytes:
-    from trezor.utils import delegated_identity
+    from trezorutils import delegated_identity
 
     key = delegated_identity()
     return bytes(key)
@@ -54,7 +54,7 @@ async def confirm_thp(msg: EvoluGetDelegatedIdentityKey) -> None:
     app_name = credentials_received.cred_metadata.app_name
     host_name = credentials_received.cred_metadata.host_name
     await confirm_action(
-        "enable_labeling",
+        "secure_sync",
         TR.evolu__enable_labeling_header,
         TR.evolu__enable_labeling_message.format(app_name, host_name),
     )
@@ -65,7 +65,7 @@ async def confirm_no_thp() -> None:
     from trezor.ui.layouts import confirm_action
 
     await confirm_action(
-        "enable_labeling",
+        "secure_sync",
         TR.evolu__enable_labeling_header,
         TR.evolu__enable_labeling_message_no_thp,
     )

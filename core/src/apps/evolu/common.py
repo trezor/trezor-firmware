@@ -1,9 +1,11 @@
 def check_delegated_identity_proof(
     proposed_value: bytes, header: bytes, arguments: list[bytes] | None = None
 ) -> bool:
+    from trezorutils import delegated_identity
+
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import sha256
-    from trezor.utils import HashWriter, delegated_identity
+    from trezor.utils import HashWriter
 
     from apps.common.writers import write_compact_size
 

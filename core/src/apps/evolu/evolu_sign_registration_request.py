@@ -75,7 +75,7 @@ async def evolu_sign_registration_request(
 
 
 def get_delegated_identity_key() -> bytes:
-    from trezor.utils import delegated_identity
+    from trezorutils import delegated_identity
 
     key = delegated_identity()
     return bytes(key)

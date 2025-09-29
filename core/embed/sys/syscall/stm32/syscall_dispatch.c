@@ -435,7 +435,6 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       args[0] = secret_key_delegated_identity(dest);
     } break;
 
-
 #if PYOPT == 0
     case SYSCALL_OPTIGA_SET_SEC_MAX: {
       optiga_set_sec_max();

@@ -162,5 +162,4 @@ secbool secret_validate_nrf_pairing__verified(const uint8_t *message,
                                               size_t mac_len);
 #endif
 
-
 #endif  // SECMON

@@ -18,7 +18,7 @@ option java_outer_classname = "TrezorMessageEvolu";
  * @next EvoluNode
  */
 message EvoluGetNode {
-    required bytes proof_of_delegated_identity = 1; 
+    optional bytes proof_of_delegated_identity = 1; 
 }
 
 /**

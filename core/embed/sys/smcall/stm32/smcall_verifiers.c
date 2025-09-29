@@ -545,5 +545,4 @@ access_violation:
 
 #endif
 
-
 #endif  // SECMON

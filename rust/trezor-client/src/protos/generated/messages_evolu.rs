@@ -46,7 +46,7 @@ impl EvoluGetNode {
         ::std::default::Default::default()
     }
 
-    // required bytes proof_of_delegated_identity = 1;
+    // optional bytes proof_of_delegated_identity = 1;
 
     pub fn proof_of_delegated_identity(&self) -> &[u8] {
         match self.proof_of_delegated_identity.as_ref() {
@@ -102,9 +102,6 @@ impl ::protobuf::Message for EvoluGetNode {
     const NAME: &'static str = "EvoluGetNode";
 
     fn is_initialized(&self) -> bool {
-        if self.proof_of_delegated_identity.is_none() {
-            return false;
-        }
         true
     }
 
@@ -1159,7 +1156,7 @@ impl ::protobuf::reflect::ProtobufValue for EvoluDelegatedIdentityKey {
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x14messages-evolu.proto\x12\x18hw.trezor.messages.evolu\x1a\roptions.\
     proto\"M\n\x0cEvoluGetNode\x12=\n\x1bproof_of_delegated_identity\x18\x01\
-    \x20\x02(\x0cR\x18proofOfDelegatedIdentity\"\x1f\n\tEvoluNode\x12\x12\n\
+    \x20\x01(\x0cR\x18proofOfDelegatedIdentity\"\x1f\n\tEvoluNode\x12\x12\n\
     \x04data\x18\x01\x20\x02(\x0cR\x04data\"\xb9\x01\n\x1cEvoluSignRegistrat\
     ionRequest\x122\n\x15challenge_from_server\x18\x01\x20\x02(\x0cR\x13chal\
     lengeFromServer\x12&\n\x0fsize_to_acquire\x18\x02\x20\x02(\rR\rsizeToAcq\

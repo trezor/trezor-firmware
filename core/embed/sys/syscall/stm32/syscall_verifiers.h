@@ -130,7 +130,6 @@ bool __wur optiga_random_buffer__verified(uint8_t *dest, size_t size);
 bool secret_key_delegated_identity__verified(
     uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
 
-
 #endif  // USE_OPTIGA
 
 // ---------------------------------------------------------------------

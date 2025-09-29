@@ -33,14 +33,15 @@ def cli() -> None:
 
 
 @cli.command()
-@click.argument("proof", type=str)
+@click.option("--proof", "-p", type=str)
 @with_session
 def get_node(
     session: "Session",
     proof: str,
 ) -> dict[str, str]:
     """Return the SLIP-21 node for Evolu."""
-    node: messages.EvoluNode = evolu.get_evolu_node(session, proof=bytes.fromhex(proof))
+    proof_bytes = bytes.fromhex(proof) if proof else None
+    node: messages.EvoluNode = evolu.get_evolu_node(session, proof=proof_bytes)
     return {
         "data": node.data.hex(),
     }
