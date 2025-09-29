@@ -1,18 +1,20 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
+from trezor import utils
 
 # make -C core test TESTOPTS=test_apps.evolu.check_evolu.py
 
 
+@unittest.skipUnless(utils.USE_OPTIGA, "only needed with Optiga")
 class TestCheckDelegatedIdentityKey(unittest.TestCase):
 
     def test_sign_registration_request(self):
+        from trezorutils import delegated_identity
         from ubinascii import unhexlify
 
         from trezor.crypto.curve import secp256k1
         from trezor.crypto.hashlib import sha256
         from trezor.utils import HashWriter
-        from trezorutils import delegated_identity
 
         from apps.common.writers import write_compact_size
         from apps.evolu.common import check_delegated_identity_proof
@@ -43,10 +45,11 @@ class TestCheckDelegatedIdentityKey(unittest.TestCase):
         )
 
     def test_get_evolu_node(self):
+        from trezorutils import delegated_identity
+
         from trezor.crypto.curve import secp256k1
         from trezor.crypto.hashlib import sha256
         from trezor.utils import HashWriter
-        from trezorutils import delegated_identity
 
         from apps.common.writers import write_compact_size
         from apps.evolu.common import check_delegated_identity_proof

@@ -72,7 +72,7 @@ secbool secret_key_tropic_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
 
 #endif  // USE_TROPIC
 
-#ifdef  USE_OPTIGA
+#ifdef USE_OPTIGA
 #include <sec/storage.h>
 #include "../../storage/storage_salt.h"
 #include "memzero.h"

@@ -457,7 +457,6 @@ access_violation:
   return false;
 }
 
-
 #include <sec/secret_keys.h>
 
 bool secret_key_delegated_identity__verified(

@@ -121,6 +121,13 @@ secbool secret_key_optiga_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   return secret_key_derive_nist256p1(SECRET_PRIVILEGED_MASTER_KEY_SLOT,
                                      KEY_INDEX_OPTIGA_MASKING, dest);
 }
+
+secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+  return secret_key_derive_nist256p1(SECRET_UNPRIVILEGED_MASTER_KEY_SLOT,
+                                     KEY_INDEX_DELEGATED_IDENTITY, dest);
+  return sectrue;
+}
+
 #endif  // USE_OPTIGA
 
 #ifdef USE_TROPIC
@@ -221,12 +228,6 @@ secbool secret_key_storage_salt(uint16_t fw_type,
   _Static_assert(SECRET_KEY_STORAGE_SALT_SIZE == SHA256_DIGEST_LENGTH);
   return secret_key_derive_sym(SECRET_UNPRIVILEGED_MASTER_KEY_SLOT,
                                KEY_INDEX_STORAGE_SALT, fw_type, dest);
-}
-
-secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
-  return secret_key_derive_nist256p1(SECRET_UNPRIVILEGED_MASTER_KEY_SLOT,
-                                     KEY_INDEX_DELEGATED_IDENTITY, dest);
-  return sectrue;
 }
 
 #else  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
