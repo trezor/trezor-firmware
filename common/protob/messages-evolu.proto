@@ -18,7 +18,7 @@ option java_outer_classname = "TrezorMessageEvolu";
  * @next EvoluNode
  */
 message EvoluGetNode {
-    optional bytes proof_of_delegated_identity = 1; 
+    optional bytes proof_of_delegated_identity = 1;
 }
 
 /**
@@ -37,12 +37,12 @@ message EvoluNode {
  */
 message EvoluSignRegistrationRequest {
     required bytes challenge_from_server = 1;  /* replay attack protection */
-    required uint32 size_to_acquire = 2;  
-    required bytes proof_of_delegated_identity = 3; 
+    required uint32 size_to_acquire = 2;
+    required bytes proof_of_delegated_identity = 3;
 }
 
 /**
- * Response: The signature of the registration request with the Optiga's 
+ * Response: The signature of the registration request with the Optiga's
  * certificate chain.
  * @end
  */
@@ -58,7 +58,7 @@ message EvoluRegistrationRequest {
  * @next Failure
  */
 message EvoluGetDelegatedIdentityKey {
-    optional bytes thp_credentials = 1; /* THP credentials so that we can display the host on the device */ 
+    optional bytes thp_credentials = 1; /* THP credentials so that we can display the host on the device */
     optional bytes host_static_public_key = 2; /* Host static public key for THP so that we can validate the credentials */
 }
 
