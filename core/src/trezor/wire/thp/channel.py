@@ -66,8 +66,7 @@ _PREEMPT_TIMEOUT_MS = const(1_000)
 
 
 class Reassembler:
-    def __init__(self, cid: int, read_buf: ThpBuffer) -> None:
-        self.cid = cid
+    def __init__(self, read_buf: ThpBuffer) -> None:
         self.thp_read_buf = read_buf
         self.reset()
 
@@ -173,7 +172,7 @@ class Channel:
 
         # Shared variables
         self.sessions: dict[int, GenericSessionContext] = {}
-        self.reassembler = Reassembler(self.get_channel_id_int(), self.read_buf)
+        self.reassembler = Reassembler(self.read_buf)
         self.last_write_ms: int = utime.ticks_ms()
 
         # Temporary objects
