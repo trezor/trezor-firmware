@@ -53,9 +53,12 @@ where
                 Event::BLE(BLEEvent::PairingCompleted),
                 BLEHandlerMode::WaitingForPairingCompletion,
             ) => return Some(BLEHandlerMsg::PairingCompleted),
-            (Event::BLE(BLEEvent::PairingCanceled | BLEEvent::Disconnected), _) => {
-                return Some(BLEHandlerMsg::Cancelled)
-            }
+            (
+                Event::BLE(
+                    BLEEvent::PairingCanceled | BLEEvent::Disconnected | BLEEvent::PairingNotNeeded,
+                ),
+                _,
+            ) => return Some(BLEHandlerMsg::Cancelled),
             _ => {}
         }
         self.inner.event(ctx, event).map(BLEHandlerMsg::Content)
