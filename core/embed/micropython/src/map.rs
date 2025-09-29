@@ -58,9 +58,7 @@ impl Map {
         // the backing storage for `capacity` items on the heap.
         unsafe {
             // EXCEPTION: Will raise if allocation fails.
-            catch_exception(|| {
-                ffi::mp_map_init(map.as_mut_ptr(), capacity);
-            })?;
+            catch_exception!(ffi::mp_map_init => { map.as_mut_ptr(), capacity })?;
             Ok(map.assume_init())
         }
     }
@@ -131,16 +129,9 @@ impl Map {
         unsafe {
             let map = self as *mut Self;
             // EXCEPTION: Will raise if allocation fails.
-            let elem = catch_exception(|| {
-                ffi::mp_map_lookup(
-                    map,
-                    index,
-                    ffi::_mp_map_lookup_kind_t_MP_MAP_LOOKUP_ADD_IF_NOT_FOUND,
-                )
-            })?
-            .as_mut()
+            let maybe_elem = catch_exception!(ffi::mp_map_lookup => { map, index, ffi::_mp_map_lookup_kind_t_MP_MAP_LOOKUP_ADD_IF_NOT_FOUND })?;
             // `MP_MAP_LOOKUP_ADD_IF_NOT_FOUND` should always return a non-null pointer.
-            .unwrap();
+            let elem = maybe_elem.as_mut().unwrap();
             elem.value = value;
         }
         Ok(())

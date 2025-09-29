@@ -153,14 +153,14 @@ mod tests {
     fn new_i64(value: i64) -> Obj {
         // SAFETY: just ffi
         // EXCEPTION: raises if allocation fails
-        catch_exception(|| unsafe { ffi::mp_obj_new_int_from_ll(value) })
+        catch_exception!(unsafe { ffi::mp_obj_new_int_from_ll } => { value })
             .expect("Failed to create i64 object")
     }
 
     fn new_u64(value: u64) -> Obj {
         // SAFETY: just ffi
         // EXCEPTION: raises if allocation fails
-        catch_exception(|| unsafe { ffi::mp_obj_new_int_from_ull(value) })
+        catch_exception!(unsafe { ffi::mp_obj_new_int_from_ull } => { value })
             .expect("Failed to create u64 object")
     }
 

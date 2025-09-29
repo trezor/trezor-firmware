@@ -82,8 +82,7 @@ pub unsafe fn try_with_args_and_kwargs_inline(
 pub fn new_tuple(args: &[Obj]) -> Result<Obj, Error> {
     // SAFETY: Safe.
     // EXCEPTION: Raises if allocation fails, does not return NULL.
-    let obj = catch_exception(|| unsafe { ffi::mp_obj_new_tuple(args.len(), args.as_ptr()) })?;
-    Ok(obj)
+    catch_exception!(unsafe { ffi::mp_obj_new_tuple } => { args.len(), args.as_ptr() })
 }
 
 /// Create a new "attrtuple", which is essentially a namedtuple / ad-hoc object.
@@ -107,18 +106,11 @@ pub fn new_attrtuple(fields: &'static [Attribute], values: &[Obj]) -> Result<Obj
     // * we cast `field_qstrs` to the required type `ffi::qstr`, of which Attribute
     //   is a `#[repr(transparent)]` wrapper.
     // EXCEPTION: Raises if allocation fails, does not return NULL.
-    let obj = catch_exception(|| unsafe {
-        ffi::mp_obj_new_attrtuple(
-            fields.as_ptr() as *const _,
-            values.len(),
-            values.as_ptr(),
-        )
-    })?;
-    Ok(obj)
+    catch_exception!(unsafe { ffi::mp_obj_new_attrtuple } =>
+        {fields.as_ptr() as *const _, values.len(), values.as_ptr() })
 }
 
 pub fn modulo_format(format: Obj, args: &[Obj]) -> Result<Obj, Error> {
-    catch_exception(|| unsafe {
-        ffi::str_modulo_format(format, args.len(), args.as_ptr(), Obj::const_none())
-    })
+    catch_exception!(unsafe { ffi::str_modulo_format } =>
+        { format, args.len(), args.as_ptr(), Obj::const_none() })
 }
