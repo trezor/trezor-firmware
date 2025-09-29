@@ -1552,9 +1552,9 @@ pub enum TranslatedString {
     ble__mac_address = 1162,  // "MAC address"
     ble__waiting_for_host = 1163,  // "Waiting for host..."
     ble__apps_connected = 1164,  // "Apps connected"
-    evolu__enable_labeling_header = 1165,  // "Enable Labeling"
-    evolu__enable_labeling_message = 1166,  // "Do you really want to enable labeling on this Suite?"
-    evolu__enable_labeling_message_no_thp = 1167,  // "Do you really want to enable labeling on this Suite?"
+    evolu__enable_labeling_header = 1165,  // "Secure Sync"
+    evolu__enable_labeling_message = 1166,  // "Allow {0} on {1} to use Secure Sync with this Trezor?"
+    evolu__enable_labeling_message_no_thp = 1167,  // "Allow this Trezor Suite use Secure Sync with this passphrase?"
 }
 
 impl TranslatedString {
@@ -3541,9 +3541,9 @@ impl TranslatedString {
             (Self::ble__mac_address, "MAC address"),
             (Self::ble__waiting_for_host, "Waiting for host..."),
             (Self::ble__apps_connected, "Apps connected"),
-            (Self::evolu__enable_labeling_header, "Enable Labeling"),
-            (Self::evolu__enable_labeling_message, "Do you really want to enable labeling for {0} on {1}?"),
-            (Self::evolu__enable_labeling_message_no_thp, "Do you really want to enable labeling on this Suite?"),
+            (Self::evolu__enable_labeling_header, "Secure Sync"),
+            (Self::evolu__enable_labeling_message, "Allow {0} on {1} to use Secure Sync with this Trezor?"),
+            (Self::evolu__enable_labeling_message_no_thp, "Allow this Trezor Suite use Secure Sync with this passphrase?"),
     ];
 
     #[cfg(feature = "micropython")]
