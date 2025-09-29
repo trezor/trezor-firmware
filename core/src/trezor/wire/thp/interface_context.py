@@ -135,6 +135,10 @@ class InterfaceContext:
             channel = self._channels[cid] = Channel(cache, self, buffers)
 
         if channel.reassemble(packet):
+            if __debug__ and channel.reassembler.message is not None:
+                msg_type = "ACK" if control_byte.is_ack(ctrl_byte) else "message"
+                msg = channel.reassembler.message
+                channel._log(f"reassembled valid {msg_type}: {len(msg)} bytes")
             update_channel_last_used(channel.channel_id)
             return channel
 
