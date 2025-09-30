@@ -91,6 +91,7 @@ typedef struct {
   bool next_adv_with_disconnect;
   uint8_t name[BLE_ADV_NAME_LEN]; /**< Advertising name */
   bool static_mac;                /**< Use static MAC address */
+  bool enabled;                   /**< BLE functionality enabled */
 } ble_wakeup_params_t;
 
 /**
@@ -379,3 +380,17 @@ void ble_set_tx_power(ble_tx_power_level_t level);
  * @param len Length of data
  */
 void ble_notify(const uint8_t *data, size_t len);
+
+/**
+ * @brief Set BLE enabled state
+ *
+ * @param enabled: true to enable, false to disable
+ */
+void ble_set_enabled(bool enabled);
+
+/**
+ * @brief Get BLE enabled state
+ *
+ * @return true if enabled, false otherwise
+ */
+bool ble_get_enabled(void);

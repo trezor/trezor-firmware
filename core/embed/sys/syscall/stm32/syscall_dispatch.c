@@ -682,6 +682,16 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       bool enable = args[0];
       ble_set_high_speed(enable);
     } break;
+
+    case SYSCALL_BLE_SET_ENABLED: {
+      bool enabled = (args[0] != 0);
+      ble_set_enabled(enabled);
+    } break;
+
+    case SYSCALL_BLE_GET_ENABLED: {
+      args[0] = ble_get_enabled();
+    } break;
+
 #endif
 
 #ifdef USE_NRF

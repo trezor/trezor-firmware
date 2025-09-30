@@ -171,3 +171,17 @@ def reject_pairing():
     Reject BLE pairing request.
     Raises exception if BLE driver reports an error.
     """
+
+
+# rust/src/trezorhal/ble/micropython.rs
+def set_enabled(bool):
+    """
+    Enable/Disable BLE.
+    """
+
+
+# rust/src/trezorhal/ble/micropython.rs
+def get_enabled() -> bool:
+    """
+    True if BLE is enabled.
+    """

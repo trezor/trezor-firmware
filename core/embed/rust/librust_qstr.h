@@ -349,6 +349,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_flow_get_pubkey;
   MP_QSTR_get;
   MP_QSTR_get_bonds;
+  MP_QSTR_get_enabled;
   MP_QSTR_get_language;
   MP_QSTR_get_transition_out;
   MP_QSTR_haptic_feedback__disable;
@@ -796,6 +797,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_send__transaction_signed;
   MP_QSTR_send__you_are_contributing;
   MP_QSTR_set_brightness;
+  MP_QSTR_set_enabled;
   MP_QSTR_set_high_speed;
   MP_QSTR_set_name;
   MP_QSTR_setting__adjust;
