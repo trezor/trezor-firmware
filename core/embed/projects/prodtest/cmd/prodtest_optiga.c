@@ -334,26 +334,11 @@ static void cert_read(cli_t* cli, uint16_t oid) {
 
   size_t offset = 0;
   if (cert[0] == 0xC0) {
-    // TLS identity certificate chain.
-    size_t tls_identity_size = (cert[1] << 8) + cert[2];
-    size_t cert_chain_size = (cert[3] << 16) + (cert[4] << 8) + cert[5];
-    size_t first_cert_size = (cert[6] << 16) + (cert[7] << 8) + cert[8];
-    if (tls_identity_size + 3 > cert_size ||
-        cert_chain_size + 3 > tls_identity_size ||
-        first_cert_size > cert_chain_size) {
-      cli_error(cli, CLI_ERROR, "invalid TLS identity in 0x%04x.", oid);
-      return;
-    }
+    // TLS identity certificate chain. We assume there is only one certificate.
     offset = 9;
-    cert_size = first_cert_size;
   }
 
-  if (cert_size == 0) {
-    cli_error(cli, CLI_ERROR, "no certificate in 0x%04x.", oid);
-    return;
-  }
-
-  cli_ok_hexdata(cli, cert + offset, cert_size);
+  cli_ok_hexdata(cli, cert + offset, cert_size - offset);
 }
 
 static bool check_device_cert_chain(cli_t* cli, const uint8_t* chain,
