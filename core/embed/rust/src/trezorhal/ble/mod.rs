@@ -99,6 +99,14 @@ pub fn switch_off() -> Result<(), Error> {
     res_to_result(res)
 }
 
+pub fn set_enabled(enabled: bool) {
+    unsafe { ffi::ble_set_enabled(enabled) };
+}
+
+pub fn get_enabled() -> bool {
+    unsafe { ffi::ble_get_enabled() }
+}
+
 pub fn allow_pairing(code: u32) -> Result<(), Error> {
     let mut tmp_code = code;
     let mut pairing_code: [u8; PAIRING_CODE_LEN] = [0; PAIRING_CODE_LEN];

@@ -58,6 +58,7 @@ typedef struct {
   bt_le_addr_t connected_addr;
   uint8_t peer_count;
   bool initialized;
+  bool enabled;
   bool status_valid;
   bool accept_msgs;
   bool reboot_on_resume;
@@ -517,11 +518,7 @@ static bool ble_connected_add_match(ble_driver_t *drv, const uint8_t *addr) {
 static void ble_process_data(const uint8_t *data, uint32_t len) {
   ble_driver_t *drv = &g_ble_driver;
 
-  if (!drv->initialized) {
-    return;
-  }
-
-  if (!drv->accept_msgs) {
+  if (!drv->initialized || !drv->enabled || !drv->accept_msgs) {
     return;
   }
 
@@ -663,6 +660,7 @@ bool ble_init(void) {
   }
 
   drv->power_level = BLE_TX_POWER_PLUS_4_DBM;
+  drv->enabled = true;
   drv->initialized = true;
   return true;
 
@@ -717,6 +715,7 @@ void ble_suspend(ble_wakeup_params_t *wakeup_params) {
     wakeup_params->next_adv_with_disconnect = drv->next_adv_with_disconnect;
     wakeup_params->restart_adv_on_disconnect = drv->restart_adv_on_disconnect;
     wakeup_params->static_mac = drv->static_mac;
+    wakeup_params->enabled = drv->enabled;
     memcpy(wakeup_params->name, drv->adv_name, sizeof(drv->adv_name));
     ble_deinit_common(drv);
 
@@ -755,6 +754,7 @@ bool ble_resume(const ble_wakeup_params_t *wakeup_params) {
   drv->peer_count = wakeup_params->peer_count;
   drv->high_speed = wakeup_params->high_speed;
   drv->static_mac = wakeup_params->static_mac;
+  drv->enabled = wakeup_params->enabled;
 
   memcpy(&drv->connected_addr, &wakeup_params->connected_addr,
          sizeof(drv->connected_addr));
@@ -826,7 +826,7 @@ bool ble_can_write(void) {
 
   irq_key_t key = irq_lock();
 
-  if (!drv->connected || !drv->accept_msgs) {
+  if (!drv->connected || !drv->accept_msgs || !drv->enabled) {
     irq_unlock(key);
     return false;
   }
@@ -847,7 +847,7 @@ bool ble_write(const uint8_t *data, uint16_t len) {
 
   irq_key_t key = irq_lock();
 
-  if (!drv->connected || !drv->accept_msgs) {
+  if (!drv->connected || !drv->accept_msgs || !drv->enabled) {
     irq_unlock(key);
     return false;
   }
@@ -940,7 +940,7 @@ bool ble_switch_off(void) {
 bool ble_switch_on(void) {
   ble_driver_t *drv = &g_ble_driver;
 
-  if (!drv->initialized) {
+  if (!drv->initialized || !drv->enabled) {
     return false;
   }
 
@@ -995,7 +995,7 @@ bool ble_enter_pairing_mode(const uint8_t *name, size_t name_len) {
 
   ble_driver_t *drv = &g_ble_driver;
 
-  if (!drv->initialized) {
+  if (!drv->initialized || !drv->enabled) {
     return false;
   }
 
@@ -1343,6 +1343,28 @@ void ble_notify(const uint8_t *data, size_t len) {
   memcpy(&cmd[1], data, MIN(len, sizeof(data) - 1));
 
   nrf_send_msg(NRF_SERVICE_BLE_MANAGER, cmd, MIN(32, len + 1), NULL, NULL);
+}
+
+void ble_set_enabled(bool enabled) {
+  ble_driver_t *drv = &g_ble_driver;
+  if (!drv->initialized) {
+    return;
+  }
+
+  if (!enabled) {
+    ble_switch_off();
+    return;
+  }
+
+  drv->enabled = enabled;
+}
+
+bool ble_get_enabled(void) {
+  ble_driver_t *drv = &g_ble_driver;
+  if (!drv->initialized) {
+    return false;
+  }
+  return drv->enabled;
 }
 
 static void on_ble_iface_event_poll(void *context, bool read_awaited,

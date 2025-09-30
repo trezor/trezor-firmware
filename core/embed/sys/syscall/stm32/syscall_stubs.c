@@ -660,6 +660,14 @@ void ble_set_high_speed(bool enable) {
   syscall_invoke1((uint32_t)enable, SYSCALL_BLE_SET_HIGH_SPEED);
 }
 
+void ble_set_enabled(bool enabled) {
+  syscall_invoke1((uint32_t)enabled, SYSCALL_BLE_SET_ENABLED);
+}
+
+bool ble_get_enabled(void) {
+  return (bool)syscall_invoke0(SYSCALL_BLE_GET_ENABLED);
+}
+
 #endif
 
 #ifdef USE_NRF

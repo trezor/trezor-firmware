@@ -209,6 +209,21 @@ extern "C" fn py_get_bonds() -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
+extern "C" fn py_set_enabled(enable: Obj) -> Obj {
+    let block = || {
+        let enable: bool = enable.try_into()?;
+
+        set_enabled(enable);
+
+        Ok(Obj::const_none())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn py_get_enabled() -> Obj {
+    get_enabled().into()
+}
+
 extern "C" fn py_iface_num(_self: Obj) -> Obj {
     Obj::small_int(unwrap!(ffi::syshandle_t_SYSHANDLE_BLE_IFACE_0.try_into()))
 }
@@ -424,4 +439,17 @@ pub static mp_module_trezorble: Module = obj_module! {
     ///     Raises exception if BLE driver reports an error.
     ///     """
     Qstr::MP_QSTR_reject_pairing => obj_fn_0!(py_reject_pairing).as_obj(),
+
+    /// def set_enabled(bool):
+    ///     """
+    ///     Enable/Disable BLE.
+    ///     """
+    Qstr::MP_QSTR_set_enabled => obj_fn_1!(py_set_enabled).as_obj(),
+
+    /// def get_enabled() -> bool:
+    ///     """
+    ///     True if BLE is enabled.
+    ///     """
+    Qstr::MP_QSTR_get_enabled => obj_fn_0!(py_get_enabled).as_obj(),
+
 };
