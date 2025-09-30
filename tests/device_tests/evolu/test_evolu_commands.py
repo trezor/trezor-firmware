@@ -8,7 +8,7 @@ from trezorlib.debuglink import SessionDebugWrapper as Session
 pytestmark = pytest.mark.models("safe")
 
 
-@pytest.mark.models(skip="thp")
+@pytest.mark.protocol("protocol_v1")
 def test_evolu_get_delegated_identity_is_constant(session: "Session"):
     response = evolu.get_delegated_identity_key(session)
     private_key = response.private_key
@@ -18,7 +18,7 @@ def test_evolu_get_delegated_identity_is_constant(session: "Session"):
     assert response_2.private_key == private_key
 
 
-@pytest.mark.models(skip="thp")
+@pytest.mark.protocol("protocol_v1")
 def test_evolu_get_delegated_identity_test_vector(session: "Session"):
     # on emulator, the additional salt is all zeroes. So the delegated identity key is constant.
     response = evolu.get_delegated_identity_key(session)

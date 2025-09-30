@@ -13,7 +13,7 @@ from trezorlib.transport.thp import curve25519
 
 # make -C core test_emu TESTOPTS="-k test_evolu_commands_THP.py"
 
-pytestmark = pytest.mark.models("thp")
+pytestmark = pytest.mark.protocol("protocol_v2")
 
 TEST_host_static_private_key = curve25519.get_private_key(os.urandom(32))
 TEST_host_static_public_key = curve25519.get_public_key(TEST_host_static_private_key)
