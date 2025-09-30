@@ -35,6 +35,7 @@ typedef enum {
   SYSHANDLE_USB,
   SYSHANDLE_BLE,
   SYSHANDLE_SYSCALL,
+  SYSHANDLE_IPC,
   SYSHANDLE_COUNT,
 } syshandle_t;
 

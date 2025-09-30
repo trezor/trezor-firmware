@@ -150,6 +150,14 @@ def stm32u5_common_files(env, features_wanted, defines, sources, paths):
             features_wanted += ["system_view"]
             defines += ["USE_DBG_CONSOLE_SYSTEM_VIEW"]
 
+    if "ipc" in features_wanted:
+        sources += [
+            "embed/sys/ipc/ipc.c",
+            "embed/sys/ipc/stm32u5/ipc_memcpy.c",
+        ]
+        defines += [("USE_IPC", "1")]
+        paths += ["embed/sys/ipc/inc"]
+
     if "applet" in features_wanted:
         sources += ["embed/sys/task/stm32/applet.c"]
         sources += ["embed/sys/task/stm32/coreapp.c"]
