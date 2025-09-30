@@ -12,7 +12,9 @@ async def get_delegated_identity_key(
     from trezor.utils import bootloader_locked
 
     if not bootloader_locked():
-        raise wire.ProcessError("Cannot enable labeling since bootloader is unlocked.")
+        raise wire.ProcessError(
+            "Cannot enable Secure Sync since bootloader is unlocked."
+        )
 
     if not utils.USE_OPTIGA:
         raise RuntimeError("Optiga is not available")

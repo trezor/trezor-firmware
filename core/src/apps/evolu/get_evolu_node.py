@@ -8,12 +8,20 @@ _EVOLU_KEY_PATH_PREFIX = [b"TREZOR", b"Evolu"]
 
 async def get_evolu_node(msg: EvoluGetNode) -> EvoluNode:
     from storage.device import is_initialized
-    from trezor import TR, utils
+    from trezor import TR, utils, wire
     from trezor.messages import EvoluNode
     from trezor.ui.layouts import confirm_action
     from trezor.wire import NotInitialized
+    from trezor.utils import bootloader_locked
 
     from .common import check_delegated_identity_proof
+
+    if (
+        bootloader_locked() == False
+    ):  # cannot use `if not bootloader_locked()` since on None we do not want to raise an error
+        raise wire.ProcessError(
+            "Cannot provide Evolu node since bootloader is unlocked."
+        )
 
     if not is_initialized():
         raise NotInitialized("Device is not initialized")
