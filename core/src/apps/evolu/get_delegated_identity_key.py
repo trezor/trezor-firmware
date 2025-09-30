@@ -7,9 +7,35 @@ if TYPE_CHECKING:
 async def get_delegated_identity_key(
     msg: EvoluGetDelegatedIdentityKey,
 ) -> EvoluDelegatedIdentityKey:
+    """
+    Retrieves the delegated identity private key for this device.
+    This key is used
+
+    a) to provide identity of this devicee to the Gate server
+
+    and b) as a token of user's trust in this Trezor - Suite communication. Subsequent Secure Sync requests
+    to this Trezor will be authenticated using this key so we can skip more user confirmations.
+
+    This function does not work if the bootloader is unlocked.
+
+    On devices with THP, we require valid THP credential to be provided in the `msg`. The metadata from the credential
+    are then displayed to the user during the confirmation. On devices without THP a generinc confirmation dialog is shown.
+
+    Args:
+        msg (EvoluGetDelegatedIdentityKey): The incoming request message containing parameters for the operation.
+        THP credential is required if THP is available on the device.
+    Returns:
+        EvoluDelegatedIdentityKey: The response message containing the delegated identity private key.
+    Raises:
+        wire.ProcessError: If the bootloader is unlocked.
+        RuntimeError: If Optiga is not available.
+        ValueError: If THP is enabled but the credential is missing or invalid.
+    """
+
     from trezor import utils, wire
     from trezor.messages import EvoluDelegatedIdentityKey
     from trezor.utils import bootloader_locked
+
     from .common import get_delegated_identity_key
 
     if not bootloader_locked():
@@ -51,8 +77,8 @@ async def confirm_thp(msg: EvoluGetDelegatedIdentityKey) -> None:
     host_name = credentials_received.cred_metadata.host_name
     await confirm_action(
         "secure_sync",
-        TR.evolu__enable_labeling_header,
-        TR.evolu__enable_labeling_message.format(app_name, host_name),
+        TR.evolu__secure_sync_header,
+        TR.evolu__secure_sync_message.format(app_name, host_name),
     )
 
 
@@ -62,6 +88,6 @@ async def confirm_no_thp() -> None:
 
     await confirm_action(
         "secure_sync",
-        TR.evolu__enable_labeling_header,
-        TR.evolu__enable_labeling_message_no_thp,
+        TR.evolu__secure_sync_header,
+        TR.evolu__secure_sync_message_no_optiga,
     )
