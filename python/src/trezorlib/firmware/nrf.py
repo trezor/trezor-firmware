@@ -130,7 +130,7 @@ class NrfHeader(Struct):
         return self._trailing_data
 
     @trailing_data.setter
-    def trailing_data(self, value: bytes):
+    def trailing_data(self, value: bytes) -> None:
         self._trailing_data = value
         self.hdr_size = len(self.build())
 
@@ -154,8 +154,9 @@ class NrfHeader(Struct):
                 version=version,
             )
         )
-        reparsed = cls.SUBCON.parse(header_empty)
         # re-parsing will pick out the default value
+        reparsed = cls.SUBCON.parse(header_empty)
+        # ...which we can use to figure out the correct length
         padding_bytes = bytearray(padding_byte * len(reparsed["_trailing_data"]))
         # XXX hack to get binary identical with imgtool:
         padding_bytes[0:4] = b"\x00\x00\x00\x00"
@@ -166,8 +167,7 @@ class NrfHeader(Struct):
             img_size=0,
             flags=flags,
             version=version,
-            # ...which we can use to figure out the correct length
-            _trailing_data=padding_bytes,
+            _trailing_data=bytes(padding_bytes),
         )
 
 
