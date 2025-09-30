@@ -10,6 +10,7 @@ async def get_delegated_identity_key(
     from trezor import utils, wire
     from trezor.messages import EvoluDelegatedIdentityKey
     from trezor.utils import bootloader_locked
+    from .common import get_delegated_identity_key
 
     if not bootloader_locked():
         raise wire.ProcessError(
@@ -24,16 +25,9 @@ async def get_delegated_identity_key(
     else:
         await confirm_no_thp()
 
-    private_key = get_delegated_private_key()
+    private_key = get_delegated_identity_key()
 
     return EvoluDelegatedIdentityKey(private_key=private_key)
-
-
-def get_delegated_private_key() -> bytes:
-    from trezorutils import delegated_identity
-
-    key = delegated_identity()
-    return bytes(key)
 
 
 async def confirm_thp(msg: EvoluGetDelegatedIdentityKey) -> None:

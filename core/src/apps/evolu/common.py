@@ -33,3 +33,10 @@ def get_public_key_from_private_key(private_key: bytes) -> bytes:
 
     public_key = secp256k1.publickey(private_key, False)
     return bytes(public_key)
+
+
+def get_delegated_identity_key() -> bytes:
+    from trezorutils import delegated_identity
+
+    key = delegated_identity()
+    return bytes(key)

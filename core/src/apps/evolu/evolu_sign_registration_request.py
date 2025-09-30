@@ -15,7 +15,11 @@ async def evolu_sign_registration_request(
 
     from apps.common.writers import write_compact_size
 
-    from .common import check_delegated_identity_proof
+    from .common import (
+        check_delegated_identity_proof,
+        get_public_key_from_private_key,
+        get_delegated_identity_key,
+    )
 
     if not bootloader_locked():
         raise wire.ProcessError(
@@ -79,10 +83,3 @@ def get_delegated_identity_key() -> bytes:
 
     key = delegated_identity()
     return bytes(key)
-
-
-def get_public_key_from_private_key(private_key: bytes) -> bytes:
-    from trezor.crypto.curve import secp256k1
-
-    public_key = secp256k1.publickey(private_key, False)
-    return bytes(public_key)
