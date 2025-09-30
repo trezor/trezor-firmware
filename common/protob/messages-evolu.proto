@@ -34,7 +34,7 @@ message EvoluNode {
  * @next Failure
  */
 message EvoluSignRegistrationRequest {
-    required bytes challenge_from_server = 1;  /* replay attack protection */
+    required bytes challenge_from_server = 1;  // replay attack protection
     required uint32 size_to_acquire = 2;
     required bytes proof_of_delegated_identity = 3;
 }
@@ -56,8 +56,8 @@ message EvoluRegistrationRequest {
  * @next Failure
  */
 message EvoluGetDelegatedIdentityKey {
-    optional bytes thp_credentials = 1; /* THP credentials so that we can display the host on the device */
-    optional bytes host_static_public_key = 2; /* Host static public key for THP so that we can validate the credentials */
+    optional bytes thp_credentials = 1; // THP credentials so that we can display the host on the device
+    optional bytes host_static_public_key = 2; // Host static public key for THP so that we can validate the credentials
 }
 
 /**
