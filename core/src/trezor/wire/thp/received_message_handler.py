@@ -189,6 +189,9 @@ async def _handle_state_handshake(
                 )
                 trezor_state = _TREZOR_STATE_PAIRED
                 ctx.credential = credential
+                if ctx.is_channel_to_replace():
+                    # When replacing existing channel, user confirmation is not needed
+                    trezor_state = _TREZOR_STATE_PAIRED_AUTOCONNECT
             else:
                 ctx.credential = None
         except DataError as e:
