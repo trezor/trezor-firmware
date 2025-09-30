@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from typing import Any
 
 
-def _no_op(*args: Any, **kwargs: Any) -> None:
+def _no_op(name: str, msg: str, *args: Any, iface: WireInterface | None = None) -> None:
     return None
 
 
