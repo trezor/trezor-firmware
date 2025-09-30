@@ -221,7 +221,7 @@ cleanup:
   return result;
 }
 
-#endif  // USE_NRF
+#endif  // USE_NRF_AUTH
 
 secbool secret_key_storage_salt(uint16_t fw_type,
                                 uint8_t dest[SECRET_KEY_STORAGE_SALT_SIZE]) {
