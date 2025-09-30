@@ -35,14 +35,12 @@ class TestCheckDelegatedIdentityKey(unittest.TestCase):
         for arg in arguments:
             write_compact_size(h, len(arg))
             h.extend(arg)
-        proposed_value = secp256k1.sign(
+        proof = secp256k1.sign(
             delegated_identity(),
             h.get_digest(),
         )
 
-        self.assertEqual(
-            check_delegated_identity_proof(proposed_value, header, arguments), True
-        )
+        self.assertEqual(check_delegated_identity_proof(proof, header, arguments), True)
 
     def test_get_evolu_node(self):
         from trezorutils import delegated_identity
@@ -62,15 +60,15 @@ class TestCheckDelegatedIdentityKey(unittest.TestCase):
         write_compact_size(h, len(header))
         h.extend(header)
 
-        proposed_value = secp256k1.sign(
+        proof = secp256k1.sign(
             delegated_identity(),
             h.get_digest(),
         )
 
         self.assertEqual(
-            check_delegated_identity_proof(proposed_value, header, arguments=[]), True
+            check_delegated_identity_proof(proof, header, arguments=[]), True
         )
-        self.assertEqual(check_delegated_identity_proof(proposed_value, header), True)
+        self.assertEqual(check_delegated_identity_proof(proof, header), True)
 
 
 if __name__ == "__main__":

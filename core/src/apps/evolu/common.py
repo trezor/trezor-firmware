@@ -1,5 +1,5 @@
 def check_delegated_identity_proof(
-    proposed_value: bytes, header: bytes, arguments: list[bytes] | None = None
+    provided_proof: bytes, header: bytes, arguments: list[bytes] | None = None
 ) -> bool:
     from trezorutils import delegated_identity
 
@@ -23,7 +23,7 @@ def check_delegated_identity_proof(
 
     return secp256k1.verify(
         public_key,
-        proposed_value,
+        provided_proof,
         hash_writer.get_digest(),
     )
 
