@@ -243,6 +243,7 @@ secbool secret_key_optiga_pairing(uint8_t dest[OPTIGA_PAIRING_SECRET_SIZE]) {
 #include "pbkdf2.h"
 #define DELEGATED_IDENTITY_KEY_ITER_COUNT 20000
 #define DELEGATED_IDENTITY_KEY_HEADER_LENGTH 21
+
 secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   additional_salt_t salt = {0};
   additional_salt_get(&salt);
