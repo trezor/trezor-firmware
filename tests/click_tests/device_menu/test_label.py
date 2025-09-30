@@ -20,7 +20,13 @@ import pytest
 
 from ... import translations as TR
 from ..common import KeyboardCategory, delete_char, go_to_category, press_char
-from .common import Menu, assert_device_screen, close_device_menu, open_device_menu
+from .common import (
+    Menu,
+    MenuItemNotFound,
+    assert_device_screen,
+    close_device_menu,
+    open_device_menu,
+)
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink
@@ -77,7 +83,8 @@ def cancel_label(debug: "DebugLink") -> None:
 
 def prepare_label_dialogue(debug: "DebugLink", features: "Features") -> None:
     label_title = TR.words__name
-    assert label_title in Menu.DEVICE.content(features)
+    if label_title not in Menu.DEVICE.content(features):
+        raise MenuItemNotFound(label_title)
 
     # Open device menu
     open_device_menu(debug)
@@ -100,7 +107,7 @@ def test_label_uninitialized(device_handler: "BackgroundDeviceHandler"):
     assert features.unfinished_backup is False
 
     # device is uninitialized, device name is not accessible in the device menu
-    with pytest.raises(AssertionError, match=f"'{TR.words__name}' in"):
+    with pytest.raises(MenuItemNotFound, match=TR.words__name):
         prepare_label_dialogue(debug, features)
 
 

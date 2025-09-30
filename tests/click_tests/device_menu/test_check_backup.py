@@ -22,7 +22,14 @@ from trezorlib import messages
 
 from ... import translations as TR
 from ...common import MNEMONIC12
-from .common import Menu, assert_device_screen, close_device_menu, open_device_menu
+from .common import (
+    Menu,
+    MenuItemNotFound,
+    NoSecuritySettings,
+    assert_device_screen,
+    close_device_menu,
+    open_device_menu,
+)
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink
@@ -33,17 +40,14 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.models("eckhart")]
 
 
-class NoSecuritySettings(Exception):
-    pass
-
-
 def prepare_check_backup(debug: "DebugLink", features: "Features") -> None:
     check_backup_title = TR.reset__check_backup_title
     security_content = Menu.SECURITY.content(features)
     if security_content is None:
         raise NoSecuritySettings
 
-    assert check_backup_title in Menu.SECURITY.content(features)
+    if check_backup_title not in Menu.SECURITY.content(features):
+        raise MenuItemNotFound(check_backup_title)
 
     # Open device menu
     open_device_menu(debug)
@@ -77,7 +81,7 @@ def test_backup_needed_fails(device_handler: "BackgroundDeviceHandler"):
     assert features.backup_availability == messages.BackupAvailability.Required
 
     # Device needs backup, check backup is not accessible in the security settings
-    with pytest.raises(AssertionError, match=f"'{TR.reset__check_backup_title}' in"):
+    with pytest.raises(MenuItemNotFound, match=TR.reset__check_backup_title):
         prepare_check_backup(debug, features)
 
 
@@ -88,7 +92,7 @@ def test_no_backup_fails(device_handler: "BackgroundDeviceHandler"):
     assert features.no_backup is True
 
     # Device has no backup, check backup is not accessible in the security settings
-    with pytest.raises(AssertionError, match=f"'{TR.reset__check_backup_title}' in"):
+    with pytest.raises(MenuItemNotFound, match=TR.reset__check_backup_title):
         prepare_check_backup(debug, features)
 
 

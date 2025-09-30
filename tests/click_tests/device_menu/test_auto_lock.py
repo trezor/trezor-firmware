@@ -22,6 +22,7 @@ from ... import translations as TR
 from ..test_pin import PIN4
 from .common import (
     Menu,
+    MenuItemNotFound,
     assert_device_screen,
     close_device_menu,
     enter_pin,
@@ -60,7 +61,7 @@ def test_auto_lock_uninitialized(device_handler: "BackgroundDeviceHandler"):
     assert features.pin_protection is False
 
     # device is uninitialized, security menu is not accessible
-    with pytest.raises(ValueError, match=f"'{TR.words__security}' is not in"):
+    with pytest.raises(MenuItemNotFound, match=TR.words__security):
         prepare_auto_lock(debug, features)
 
 
@@ -72,7 +73,7 @@ def test_auto_lock_pin_not_set(device_handler: "BackgroundDeviceHandler"):
     assert features.pin_protection is False
 
     # device is uninitialized, auto-lock menu is not accessible
-    with pytest.raises(ValueError, match=f"'{TR.auto_lock__title}' is not in"):
+    with pytest.raises(MenuItemNotFound, match=TR.auto_lock__title):
         prepare_auto_lock(debug, features)
 
 
