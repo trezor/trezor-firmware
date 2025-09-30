@@ -1919,7 +1919,7 @@
       "Delizia": "",
       "Eckhart": "Effacez votre Trezor et recommencez la configuration."
     },
-    "wipe__title": "Effacer les données de l'appareil",
+    "wipe__title": "Effacer l'appareil",
     "wipe__want_to_wipe": "Voulez-vous vraiment effacer toutes les données de l'appareil ?\n",
     "wipe_code__cancel_setup": {
       "Bolt": "Annuler la configuration du code d'effacement",
