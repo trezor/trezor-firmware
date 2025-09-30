@@ -12,19 +12,19 @@ def check_delegated_identity_proof(
     private_key = delegated_identity()
     public_key = get_public_key_from_private_key(private_key)
 
-    h = HashWriter(sha256())
-    write_compact_size(h, len(header))
-    h.extend(header)
+    hash_writer = HashWriter(sha256())
+    write_compact_size(hash_writer, len(header))
+    hash_writer.extend(header)
 
     if arguments:
         for arg in arguments:
-            write_compact_size(h, len(arg))
-            h.extend(arg)
+            write_compact_size(hash_writer, len(arg))
+            hash_writer.extend(arg)
 
     return secp256k1.verify(
         public_key,
         proposed_value,
-        h.get_digest(),
+        hash_writer.get_digest(),
     )
 
 
