@@ -1402,18 +1402,8 @@
       "Delizia": "Cancelar la configuración del código de borrado",
       "Eckhart": "¿Cancelar la configuración del código de borrado?"
     },
-    "wipe_code__change": {
-      "Bolt": "Cambiar el código de borrar",
-      "Caesar": "Cambiar el código de borrar",
-      "Delizia": "Cambiar el código de borrar",
-      "Eckhart": "Cambiar el código de restablecimiento"
-    },
-    "wipe_code__change_question": {
-      "Bolt": "¿Cambiar el código de borrar?",
-      "Caesar": "¿Cambiar el código de borrar?",
-      "Delizia": "¿Cambiar el código de borrar?",
-      "Eckhart": "¿Cambiar el código de restablecimiento?"
-    },
+    "wipe_code__change": "Cambiar el código de borrar",
+    "wipe_code__change_question": "¿Cambiar el código de borrar?",
     "wipe_code__changed": "El código de borrar se ha cambiado.",
     "wipe_code__diff_from_pin": "El código de borrar debe ser diferente del PIN.",
     "wipe_code__disabled": "El código de borrar se ha desactivado.",
@@ -1434,13 +1424,13 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Eliminar código de restablecimiento"
+      "Eckhart": "Eliminar código de borrar"
     },
     "wipe_code__title": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Código de restablecimiento"
+      "Eckhart": "Código de borrar"
     },
     "wipe_code__title_check": "Revisar cód. borrar",
     "wipe_code__title_invalid": "Cód. borrar no válido",

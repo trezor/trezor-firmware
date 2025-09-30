@@ -23,7 +23,14 @@ from trezorlib import device, messages
 from ... import translations as TR
 from .. import reset
 from ..test_pin import PIN4, _assert_pin_entry, _enter_two_times
-from .common import Menu, assert_device_screen, close_device_menu, open_device_menu
+from .common import (
+    Menu,
+    MenuItemNotFound,
+    assert_device_screen,
+    close_device_menu,
+    menu_idx,
+    open_device_menu,
+)
 
 if TYPE_CHECKING:
 
@@ -113,8 +120,8 @@ def test_seedless(device_handler: "BackgroundDeviceHandler"):
     layout = debug.read_layout()
 
     # No "Backup needed" notification should be present
-    with pytest.raises(ValueError, match=f"'{backup_notification}' is not in"):
-        layout.vertical_menu_content().index(backup_notification)
+    with pytest.raises(MenuItemNotFound, match=backup_notification):
+        menu_idx(backup_notification, layout.vertical_menu_content())
 
 
 @pytest.mark.setup_client(needs_backup=True)

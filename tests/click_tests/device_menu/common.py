@@ -269,13 +269,17 @@ class Menu(Enum):
         menu = debug.read_layout().vertical_menu_content()
         path = self.path_from_root()
         matches = [(idx, x) for idx, x in enumerate(path) if x in menu]
-        assert len(matches) == 1
+
+        if len(matches) < 1:
+            raise PathNotFound(self.name)
+        elif len(matches) > 1:
+            raise PathNotUnique(self.name)
         start_idx = matches[0][0]
 
         # Follow the path
         for label in self.path_from_root()[start_idx:]:
             menu = debug.read_layout().vertical_menu_content()
-            idx = menu.index(label)
+            idx = menu_idx(label, menu)
             debug.button_actions.navigate_to_menu_item(idx)
         assert_device_screen(debug, self)
 
@@ -284,9 +288,11 @@ class Menu(Enum):
         expected = self.content(features)
         if self == Menu.PAIR_AND_CONNECT:
             # The connection menu has two permanent items at the end
-            assert menu[-2:] == expected
+            if menu[-2:] != expected:
+                raise MenuContentNotMatching(menu[-2:], expected)
         else:
-            assert menu == expected
+            if menu != expected:
+                raise MenuContentNotMatching(menu, expected)
         return menu
 
     @classmethod
@@ -425,6 +431,43 @@ class Menu(Enum):
             menu = root_child.navigate_back(debug, features)
 
 
+class NoSecuritySettings(Exception):
+    pass
+
+
+class MenuItemNotFound(Exception):
+    def __init__(self, item_name: str):
+        self.item_name = item_name
+
+    def __str__(self):
+        return f"Menu item '{self.item_name}' not found"
+
+
+class PathNotFound(Exception):
+    def __init__(self, item_name: str):
+        self.item_name = item_name
+
+    def __str__(self):
+        return f"Path to '{self.item_name}' not found"
+
+
+class PathNotUnique(Exception):
+    def __init__(self, item_name: str):
+        self.item_name = item_name
+
+    def __str__(self):
+        return f"Path to '{self.item_name}' is not unique"
+
+
+class MenuContentNotMatching(Exception):
+    def __init__(self, actual: list[str] | None, expected: list[str] | None):
+        self.actual = actual
+        self.expected = expected
+
+    def __str__(self):
+        return f"Menu content for '{self.actual}' does not match expected '{self.expected}'"
+
+
 def open_device_menu(debug: "DebugLink"):
     # Start at homescreen
     debug.synchronize_at("Homescreen")
@@ -448,6 +491,12 @@ def assert_device_screen(debug: "DebugLink", menu: Menu):
         debug.read_layout().find_unique_value_by_key("MenuId", default=0, only_type=int)
         == menu.value
     )
+
+
+def menu_idx(item: str, menu: list[str]) -> int:
+    if item not in menu:
+        raise MenuItemNotFound(item)
+    return menu.index(item)
 
 
 def enter_pin(device_handler: "BackgroundDeviceHandler", pin: str = PIN4):

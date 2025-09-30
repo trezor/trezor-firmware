@@ -42,6 +42,7 @@ PIN_INVALID = pytest.raises(exceptions.TrezorFailure, match="PIN invalid")
 DELAY_S = 1.1
 
 PIN4 = "1234"
+PIN1 = "1"
 PIN24 = "875163065288639289952973"
 PIN50 = "31415926535897932384626433832795028841971693993751"
 PIN60 = PIN50 + "9" * 10
@@ -171,8 +172,8 @@ def _assert_pin_entry(debug: "DebugLink") -> None:
     assert "PinKeyboard" in debug.read_layout().all_components()
 
 
-def _input_pin(debug: "DebugLink", pin: str, check: bool = False) -> None:
-    """Input the PIN"""
+def _input_code(debug: "DebugLink", pin: str, check: bool = False) -> None:
+    """Input the PIN or Wipe code"""
     before = debug.read_layout().pin()
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
         digits_order = debug.read_layout().tt_pin_digits_order()
@@ -193,7 +194,7 @@ def _input_pin(debug: "DebugLink", pin: str, check: bool = False) -> None:
         assert before + pin == after
 
 
-def _see_pin(debug: "DebugLink") -> None:
+def _see_code(debug: "DebugLink") -> None:
     """Navigate to "SHOW" and press it"""
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
 
@@ -209,7 +210,7 @@ def _see_pin(debug: "DebugLink") -> None:
         raise RuntimeError("Unknown model")
 
 
-def _delete_pin(debug: "DebugLink", digits_to_delete: int, check: bool = True) -> None:
+def _delete_code(debug: "DebugLink", digits_to_delete: int, check: bool = True) -> None:
     """Navigate to "DELETE" and press it how many times requested"""
     if check:
         before = debug.read_layout().pin()
@@ -248,11 +249,11 @@ def _delete_all(debug: "DebugLink", check: bool = True) -> None:
         assert after == ""
 
 
-def _cancel_pin(debug: "DebugLink") -> None:
+def _cancel_code(debug: "DebugLink") -> None:
     """Navigate to "CANCEL" and press it"""
     # It is the same button as DELETE
     # TODO: implement cancel PIN for TR?
-    _delete_pin(debug, 1, check=False)
+    _delete_code(debug, 1, check=False)
 
     # Note: `prepare()` context manager will send a tap after PIN cancellation,
     # so we make sure the lockscreen is already up to receive it -- otherwise
@@ -271,8 +272,8 @@ def _confirm_pin(debug: "DebugLink") -> None:
 
 
 def _input_see_confirm(debug: "DebugLink", pin: str) -> None:
-    _input_pin(debug, pin)
-    _see_pin(debug)
+    _input_code(debug, pin)
+    _see_code(debug)
     _confirm_pin(debug)
 
 
@@ -308,11 +309,11 @@ def test_pin_empty_cannot_send(device_handler: "BackgroundDeviceHandler"):
 @pytest.mark.setup_client(pin=PIN24)
 def test_pin_long_delete(device_handler: "BackgroundDeviceHandler"):
     with prepare(device_handler) as debug:
-        _input_pin(debug, PIN24)
-        _see_pin(debug)
+        _input_code(debug, PIN24)
+        _see_code(debug)
 
-        _delete_pin(debug, 10)
-        _see_pin(debug)
+        _delete_code(debug, 10)
+        _see_code(debug)
 
         _input_see_confirm(debug, PIN24[-10:])
 
@@ -320,8 +321,8 @@ def test_pin_long_delete(device_handler: "BackgroundDeviceHandler"):
 @pytest.mark.setup_client(pin=PIN4)
 def test_pin_delete_hold(device_handler: "BackgroundDeviceHandler"):
     with prepare(device_handler) as debug:
-        _input_pin(debug, PIN4)
-        _see_pin(debug)
+        _input_code(debug, PIN4)
+        _see_code(debug)
 
         _delete_all(debug)
 
@@ -331,13 +332,13 @@ def test_pin_delete_hold(device_handler: "BackgroundDeviceHandler"):
 @pytest.mark.setup_client(pin=PIN60[:MAX_PIN_LEN])
 def test_pin_longer_than_max(device_handler: "BackgroundDeviceHandler"):
     with prepare(device_handler) as debug:
-        _input_pin(debug, PIN60, check=False)
+        _input_code(debug, PIN60, check=False)
 
         # What is over 50 digits was not entered
         # TODO: do some UI change when limit is reached?
         assert debug.read_layout().pin() == PIN60[:MAX_PIN_LEN]
 
-        _see_pin(debug)
+        _see_code(debug)
         _confirm_pin(debug)
 
 
@@ -352,11 +353,11 @@ def test_pin_incorrect(device_handler: "BackgroundDeviceHandler"):
 @pytest.mark.setup_client(pin=PIN4)
 def test_pin_cancel(device_handler: "BackgroundDeviceHandler"):
     with PIN_CANCELLED, prepare(device_handler, Situation.PIN_INPUT_CANCEL) as debug:
-        _input_pin(debug, PIN4)
-        _see_pin(debug)
-        _delete_pin(debug, len(PIN4))
-        _see_pin(debug)
-        _cancel_pin(debug)
+        _input_code(debug, PIN4)
+        _see_code(debug)
+        _delete_code(debug, len(PIN4))
+        _see_code(debug)
+        _cancel_code(debug)
 
 
 @pytest.mark.setup_client()
@@ -375,7 +376,7 @@ def test_pin_setup_mismatch(device_handler: "BackgroundDeviceHandler"):
             LayoutType.Eckhart,
         ):
             go_next(debug)
-            _cancel_pin(debug)
+            _cancel_code(debug)
         elif debug.layout_type is LayoutType.Caesar:
             debug.press_middle()
             debug.press_no()
@@ -419,12 +420,12 @@ def test_wipe_code_same_as_pin(device_handler: "BackgroundDeviceHandler"):
 @pytest.mark.setup_client(pin=PIN4)
 def test_last_digit_timeout(device_handler: "BackgroundDeviceHandler"):
     with prepare(device_handler) as debug:
-        _input_pin(debug, PIN4)
+        _input_code(debug, PIN4)
         # wait until the last digit is hidden
         time.sleep(DELAY_S)
         assert debug.read_layout().display_style() is DisplayStyle.Hidden
         # show the entire PIN
-        _see_pin(debug)
+        _see_code(debug)
         _confirm_pin(debug)
 
 
@@ -432,7 +433,7 @@ def test_last_digit_timeout(device_handler: "BackgroundDeviceHandler"):
 @pytest.mark.setup_client(pin=PIN4)
 def test_show_pin_issue5328(device_handler: "BackgroundDeviceHandler"):
     with prepare(device_handler) as debug:
-        _input_pin(debug, PIN4)
+        _input_code(debug, PIN4)
         pos = debug.screen_buttons.pin_passphrase_input()
         assert debug.read_layout().display_style() is DisplayStyle.LastOnly
         # Hold the PIN area to show the PIN
@@ -455,7 +456,7 @@ def test_long_press_digit(device_handler: "BackgroundDeviceHandler"):
     with prepare(device_handler) as debug:
 
         # Input the PIN except the last digit
-        _input_pin(debug, PIN4[:-1])
+        _input_code(debug, PIN4[:-1])
 
         # Prepare last digit for long press
         digits_order = debug.read_layout().tt_pin_digits_order()
