@@ -44,9 +44,7 @@ async def evolu_sign_registration_request(
             "Cannot sign registration request since bootloader is unlocked."
         )
 
-    if utils.USE_OPTIGA:
-        from trezor.crypto import optiga
-    else:
+    if not utils.USE_OPTIGA:
         raise RuntimeError("Optiga is not available")
 
     challenge_bytes, size_bytes = _check_data(
@@ -72,12 +70,12 @@ async def evolu_sign_registration_request(
     )
 
 
-def _check_data(challenge: bytes, size: int) -> tuple[bytes, bytes]:
+def _check_data(challenge: AnyBytes, size: int) -> tuple[AnyBytes, bytes]:
     from trezor import wire
 
-    if not (1 <= len(challenge) <= 255):
+    if not 1 <= len(challenge) <= 255:
         raise wire.DataError("Invalid challenge length")
-    if size < 0 or size > 256**4 - 1:
+    if not 0 <= size < 256**4:
         raise wire.DataError("Invalid size_to_acquire")
 
     size_to_acquire_bytes = size.to_bytes(4, "big")
@@ -104,7 +102,7 @@ def _get_certificates() -> list[AnyBytes]:
     return certificates
 
 
-def _get_signature(challenge_bytes: bytes, size_bytes: bytes) -> bytes:
+def _get_signature(challenge_bytes: AnyBytes, size_bytes: bytes) -> bytes:
     from trezorutils import delegated_identity
 
     from trezor import utils, wire

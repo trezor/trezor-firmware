@@ -51,7 +51,7 @@ def get_delegated_identity_key(
 
     return session.call(
         messages.EvoluGetDelegatedIdentityKey(
-            thp_credentials=thp_credentials,
+            thp_credential=thp_credentials,
             host_static_public_key=host_static_public_key,
         ),
         expect=messages.EvoluDelegatedIdentityKey,
