@@ -78,6 +78,13 @@ void ble_management_send_status_event(void) {
   trz_comm_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t *)&msg, sizeof(msg));
 }
 
+void ble_management_send_battery_request(void) {
+  uint8_t tx_data[] = {
+      INTERNAL_EVENT_BATTERY_STATE_REQUEST,
+  };
+  trz_comm_send_msg(NRF_SERVICE_BLE_MANAGER, tx_data, sizeof(tx_data));
+}
+
 static void management_send_success_event(void) {
   uint8_t tx_data[] = {
       INTERNAL_EVENT_SUCCESS,
@@ -147,8 +154,15 @@ static void management_send_bonds(void) {
                     sizeof(tx_data));
 }
 
-static void management_update_battery(uint8_t level) {
-  bt_bas_set_battery_level(level);
+static void management_update_battery(const cmd_update_battery_t *state) {
+  bt_bas_set_battery_level(state->battery_level);
+  bt_bas_bls_set_battery_present(state->battery_present);
+  bt_bas_bls_set_wired_external_power_source(state->wired_source_state);
+  bt_bas_bls_set_wireless_external_power_source(state->wireless_source_state);
+  bt_bas_bls_set_battery_charge_state(state->charging_state);
+  bt_bas_bls_set_battery_charge_level(state->charge_level);
+  bt_bas_bls_set_battery_charge_type(state->charge_type);
+  bt_bas_bls_set_charging_fault_reason(state->fault_reason);
 }
 
 static void process_command(uint8_t *data, uint16_t len) {
@@ -226,7 +240,14 @@ static void process_command(uint8_t *data, uint16_t len) {
       }
     } break;
     case INTERNAL_CMD_BATTERY_UPDATE: {
-      management_update_battery(data[1]);
+      if (len >= sizeof(cmd_update_battery_t)) {
+        cmd_update_battery_t *cmd = (cmd_update_battery_t *)data;
+        management_update_battery(cmd);
+      } else if (len >= 2) {
+        cmd_update_battery_t state = {0};
+        state.battery_level = data[1];
+        management_update_battery(&state);
+      }
     } break;
     case INTERNAL_CMD_SET_TX_POWER: {
       int8_t tx_power = (int8_t)data[1];

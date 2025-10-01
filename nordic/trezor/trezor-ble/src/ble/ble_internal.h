@@ -94,6 +94,7 @@ typedef enum {
   INTERNAL_EVENT_MAC = 0x06,
   INTERNAL_EVENT_PAIRING_COMPLETED = 0x07,
   INTERNAL_EVENT_BOND_LIST = 0x08,
+  INTERNAL_EVENT_BATTERY_STATE_REQUEST = 0x09,
 } internal_event_t;
 
 typedef enum {
@@ -140,6 +141,18 @@ typedef struct {
   uint8_t flag;
 } cmd_set_busy_t;
 
+typedef struct {
+  uint8_t cmd_id;
+  uint8_t battery_level;
+  uint8_t battery_present;
+  uint8_t wired_source_state;
+  uint8_t wireless_source_state;
+  uint8_t charging_state;
+  uint8_t charge_level;
+  uint8_t charge_type;
+  uint8_t fault_reason;
+} cmd_update_battery_t;
+
 // Set device to busy state, autoresponse
 void ble_set_busy_flag(uint8_t flag);
 
@@ -162,6 +175,8 @@ void ble_management_send_pairing_request_event(uint8_t *data, uint16_t len);
 void ble_management_send_pairing_cancelled_event(void);
 // Send Pairing Completed event
 void ble_management_send_pairing_completed(void);
+// Ask for battery state update
+void ble_management_send_battery_request(void);
 
 // Bonds
 // Erase all bonds

@@ -51,6 +51,52 @@
 #define BLE_DATA_HEADER_SIZE 7
 #define BLE_DATA_SIZE (BLE_RX_PACKET_SIZE + BLE_DATA_HEADER_SIZE)
 
+enum bt_bas_bls_battery_present {
+  BT_BAS_BLS_BATTERY_NOT_PRESENT = 0,
+  BT_BAS_BLS_BATTERY_PRESENT = 1
+};
+
+enum bt_bas_bls_wired_power_source {
+  BT_BAS_BLS_WIRED_POWER_NOT_CONNECTED = 0,
+  BT_BAS_BLS_WIRED_POWER_CONNECTED = 1,
+  BT_BAS_BLS_WIRED_POWER_UNKNOWN = 2
+};
+
+enum bt_bas_bls_wireless_power_source {
+  BT_BAS_BLS_WIRELESS_POWER_NOT_CONNECTED = 0,
+  BT_BAS_BLS_WIRELESS_POWER_CONNECTED = 1,
+  BT_BAS_BLS_WIRELESS_POWER_UNKNOWN = 2
+};
+
+enum bt_bas_bls_battery_charge_state {
+  BT_BAS_BLS_CHARGE_STATE_UNKNOWN = 0,
+  BT_BAS_BLS_CHARGE_STATE_CHARGING = 1,
+  BT_BAS_BLS_CHARGE_STATE_DISCHARGING_ACTIVE = 2,
+  BT_BAS_BLS_CHARGE_STATE_DISCHARGING_INACTIVE = 3
+};
+
+enum bt_bas_bls_battery_charge_level {
+  BT_BAS_BLS_CHARGE_LEVEL_UNKNOWN = 0,
+  BT_BAS_BLS_CHARGE_LEVEL_GOOD = 1,
+  BT_BAS_BLS_CHARGE_LEVEL_LOW = 2,
+  BT_BAS_BLS_CHARGE_LEVEL_CRITICAL = 3
+};
+
+enum bt_bas_bls_battery_charge_type {
+  BT_BAS_BLS_CHARGE_TYPE_UNKNOWN = 0,
+  BT_BAS_BLS_CHARGE_TYPE_CONSTANT_CURRENT = 1,
+  BT_BAS_BLS_CHARGE_TYPE_CONSTANT_VOLTAGE = 2,
+  BT_BAS_BLS_CHARGE_TYPE_TRICKLE = 3,
+  BT_BAS_BLS_CHARGE_TYPE_FLOAT = 4
+};
+
+enum bt_bas_bls_charging_fault_reason {
+  BT_BAS_BLS_FAULT_REASON_NONE = 0,
+  BT_BAS_BLS_FAULT_REASON_BATTERY = 1,
+  BT_BAS_BLS_FAULT_REASON_EXTERNAL_POWER = 2,
+  BT_BAS_BLS_FAULT_REASON_OTHER = 4
+};
+
 typedef struct {
   ble_mode_t mode_requested;
   ble_mode_t mode_current;
@@ -98,8 +144,8 @@ typedef struct {
   uint16_t ping_cntr;
 
 #ifdef USE_POWER_MANAGER
-  uint8_t soc;
-  bool soc_send;
+  cmd_update_battery_t battery_state;
+  bool battery_update_request;
 #endif
 
 } ble_driver_t;
@@ -226,10 +272,9 @@ static bool ble_send_bond_list_request(ble_driver_t *drv) {
   return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL);
 }
 #ifdef USE_POWER_MANAGER
-static bool ble_send_battery_update(uint8_t level) {
-  uint8_t cmd[2] = {INTERNAL_CMD_BATTERY_UPDATE, level};
-
-  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, cmd, sizeof(cmd), NULL, NULL);
+static bool ble_send_battery_update(cmd_update_battery_t *battery_state) {
+  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t *)battery_state,
+                      sizeof(cmd_update_battery_t), NULL, NULL);
 }
 #endif
 
@@ -504,6 +549,9 @@ static void ble_process_rx_msg(const uint8_t *data, uint32_t len) {
       drv->result_ready = true;
       drv->result = false;
       break;
+    case INTERNAL_EVENT_BATTERY_STATE_REQUEST:
+      drv->battery_update_request = true;
+      break;
     default:
       break;
   }
@@ -603,10 +651,53 @@ static void ble_loop(void *context) {
 #ifdef USE_POWER_MANAGER
     pm_state_t state = {0};
     if (PM_OK == pm_get_state(&state)) {
-      if (state.soc != drv->soc || !drv->soc_send) {
-        ble_send_battery_update(state.soc);
-        drv->soc = state.soc;
-        drv->soc_send = true;
+      cmd_update_battery_t battery_state = {
+          .cmd_id = INTERNAL_CMD_BATTERY_UPDATE,
+          .battery_level = state.soc,
+          .battery_present = BT_BAS_BLS_BATTERY_PRESENT,
+          .charge_level = BT_BAS_BLS_CHARGE_LEVEL_UNKNOWN,
+          .charge_type = BT_BAS_BLS_CHARGE_TYPE_UNKNOWN,
+          .fault_reason = BT_BAS_BLS_FAULT_REASON_NONE,
+      };
+
+      if (state.wireless_connected) {
+        battery_state.wireless_source_state =
+            BT_BAS_BLS_WIRELESS_POWER_CONNECTED;
+      } else {
+        battery_state.wireless_source_state =
+            BT_BAS_BLS_WIRELESS_POWER_NOT_CONNECTED;
+      }
+
+      if (state.usb_connected) {
+        battery_state.wired_source_state = BT_BAS_BLS_WIRED_POWER_CONNECTED;
+      } else {
+        battery_state.wired_source_state = BT_BAS_BLS_WIRED_POWER_NOT_CONNECTED;
+      }
+
+      switch (state.charging_status) {
+        case PM_BATTERY_IDLE:
+          battery_state.charging_state =
+              BT_BAS_BLS_CHARGE_STATE_DISCHARGING_INACTIVE;
+          break;
+        case PM_BATTERY_CHARGING:
+          battery_state.charging_state = BT_BAS_BLS_CHARGE_STATE_CHARGING;
+          break;
+        case PM_BATTERY_DISCHARGING:
+          battery_state.charging_state =
+              BT_BAS_BLS_CHARGE_STATE_DISCHARGING_ACTIVE;
+          break;
+        default:
+          battery_state.charging_state = BT_BAS_BLS_CHARGE_STATE_UNKNOWN;
+          break;
+      }
+
+      if ((memcmp(&drv->battery_state, &battery_state,
+                  sizeof(cmd_update_battery_t)) != 0) ||
+          drv->battery_update_request) {
+        ble_send_battery_update(&battery_state);
+        memcpy(&drv->battery_state, &battery_state,
+               sizeof(cmd_update_battery_t));
+        drv->battery_update_request = false;
       }
     }
 #endif
@@ -661,6 +752,7 @@ bool ble_init(void) {
 
   drv->power_level = BLE_TX_POWER_PLUS_4_DBM;
   drv->enabled = true;
+  drv->battery_update_request = true;
   drv->initialized = true;
   return true;
 
