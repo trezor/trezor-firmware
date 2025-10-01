@@ -4138,13 +4138,13 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EvoluGetDelegatedIdentityKey(protobuf.MessageType):
-        thp_credentials: "AnyBytes | None"
+        thp_credential: "AnyBytes | None"
         host_static_public_key: "AnyBytes | None"
 
         def __init__(
             self,
             *,
-            thp_credentials: "AnyBytes | None" = None,
+            thp_credential: "AnyBytes | None" = None,
             host_static_public_key: "AnyBytes | None" = None,
         ) -> None:
             pass

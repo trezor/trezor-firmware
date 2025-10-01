@@ -62,19 +62,18 @@ async def confirm_thp(msg: EvoluGetDelegatedIdentityKey) -> None:
 
     from apps.thp.credential_manager import decode_credential, validate_credential
 
-    print(msg.thp_credentials)
-    if msg.thp_credentials is None:
+    if msg.thp_credential is None:
         raise ValueError("THP credentials must be provided when THP is enabled")
     if msg.host_static_public_key is None:
         raise ValueError("Host static public key must be provided when THP is enabled")
 
-    credentials_received = decode_credential(msg.thp_credentials)
+    credential_received = decode_credential(msg.thp_credential)
 
-    if not validate_credential(credentials_received, msg.host_static_public_key):
+    if not validate_credential(credential_received, msg.host_static_public_key):
         raise ValueError("Invalid credential")
 
-    app_name = credentials_received.cred_metadata.app_name
-    host_name = credentials_received.cred_metadata.host_name
+    app_name = credential_received.cred_metadata.app_name
+    host_name = credential_received.cred_metadata.host_name
     await confirm_action(
         "secure_sync",
         TR.evolu__secure_sync_header,
