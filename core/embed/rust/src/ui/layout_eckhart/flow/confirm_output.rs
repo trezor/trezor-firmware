@@ -287,10 +287,11 @@ pub fn new_confirm_output(
             LinearPlacement::vertical().with_spacing(theme::TEXT_VERTICAL_SPACING),
         ))
         .with_header(Header::new(title.unwrap_or(TString::empty())).with_menu_button())
+        .with_subtitle(subtitle.unwrap_or(TString::empty()))
+        .with_pagination_hint()
         .with_action_bar(ActionBar::new_single(Button::with_text(
             TR::buttons__continue.into(),
         )))
-        .with_subtitle(subtitle.unwrap_or(TString::empty()))
         .map(|msg| match msg {
             TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
             TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
