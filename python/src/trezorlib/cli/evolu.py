@@ -57,7 +57,7 @@ def evolu_sign_registration_request(
 ) -> dict[str, str]:
     """Sign a registration request for this device to be registred at the Gate server."""
 
-    response: messages.EvoluRegistrationRequest = evolu.evolu_sign_registration_request(
+    response = evolu.evolu_sign_registration_request(
         session=session,
         challenge=bytes.fromhex(challenge),
         size=size,
