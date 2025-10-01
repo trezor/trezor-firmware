@@ -934,6 +934,7 @@ impl FirmwareUI for UIBolt {
         _init_submenu_idx: Option<u8>,
         _backup_failed: bool,
         _backup_needed: bool,
+        _ble_enabled: bool,
         _paired_devices: heapless::Vec<
             (TString<'static>, Option<[TString<'static>; 2]>),
             MAX_PAIRED_DEVICES,

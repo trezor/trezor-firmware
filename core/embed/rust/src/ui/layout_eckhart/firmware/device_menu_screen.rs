@@ -120,6 +120,9 @@ pub enum DeviceMenuMsg {
     Reboot,
     RebootToBootloader,
 
+    // Settings menu
+    ToggleBluetooth,
+
     // Security menu
     SetOrChangePin,
     RemovePin,
@@ -319,6 +322,7 @@ impl DeviceMenuScreen {
         init_submenu_idx: Option<u8>,
         backup_failed: bool,
         backup_needed: bool,
+        ble_enabled: bool,
         paired_devices: Vec<(TString<'static>, Option<[TString<'static>; 2]>), MAX_PAIRED_DEVICES>,
         connected_idx: Option<u8>,
         pin_enabled: Option<bool>,
@@ -354,7 +358,7 @@ impl DeviceMenuScreen {
             );
         }
         screen.register_device_menu(device_name, brightness, haptics_enabled, led_enabled);
-        screen.register_settings_menu();
+        screen.register_settings_menu(ble_enabled);
         screen.register_power_menu();
 
         let is_connected = connected_idx.is_some_and(|idx| usize::from(idx) < paired_devices.len());
@@ -477,8 +481,20 @@ impl DeviceMenuScreen {
         self.register_submenu(DeviceMenuId::PairAndConnect, Submenu::new(items));
     }
 
-    fn register_settings_menu(&mut self) {
+    fn register_settings_menu(&mut self, ble_enabled: bool) {
         let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
+
+        let ble_subtext = match ble_enabled {
+            true => Some((
+                TString::from_translation(TR::words__on),
+                Some(&theme::TEXT_MENU_ITEM_SUBTITLE_GREEN),
+            )),
+            _ => Some((TString::from_translation(TR::words__off), None)),
+        };
+        items.add(
+            MenuItem::return_msg(TR::words__bluetooth.into(), DeviceMenuMsg::ToggleBluetooth)
+                .with_subtext(ble_subtext),
+        );
 
         if self.has_submenu(DeviceMenuId::Security) {
             items.add(MenuItem::go_to_submenu(

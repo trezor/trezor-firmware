@@ -123,6 +123,7 @@
     "ble__limit_reached": "Limit of paired devices reached",
     "ble__mac_address": "MAC address",
     "ble__manage_paired": "Manage paired devices",
+    "ble__must_be_enabled": "The Bluetooth must be turned on to pair with a new device.",
     "ble__pair_new": "Pair new device",
     "ble__pair_title": "Pair & connect",
     "ble__pairing_match": "Pairing code match?",

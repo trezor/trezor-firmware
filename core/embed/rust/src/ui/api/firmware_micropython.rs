@@ -942,6 +942,7 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
             .try_into_option()?;
         let backup_failed: bool = kwargs.get(Qstr::MP_QSTR_backup_failed)?.try_into()?;
         let backup_needed: bool = kwargs.get(Qstr::MP_QSTR_backup_needed)?.try_into()?;
+        let ble_enabled: bool = kwargs.get(Qstr::MP_QSTR_ble_enabled)?.try_into()?;
         let paired_obj: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
         let mut paired_devices: heapless::Vec<
             (TString<'static>, Option<[TString; 2]>),
@@ -985,6 +986,7 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
             init_submenu_idx,
             backup_failed,
             backup_needed,
+            ble_enabled,
             paired_devices,
             connected_idx,
             pin_enabled,
@@ -1960,6 +1962,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     init_submenu_idx: int | None,
     ///     backup_failed: bool,
     ///     backup_needed: bool,
+    ///     ble_enabled: bool,
     ///     paired_devices: Iterable[tuple[str, tuple[str, str] | None]],
     ///     connected_idx: int | None,
     ///     pin_enabled: bool | None,
@@ -2188,6 +2191,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     PairDevice: ClassVar[DeviceMenuResult]
     ///     UnpairDevice: ClassVar[DeviceMenuResult]
     ///     UnpairAllDevices: ClassVar[DeviceMenuResult]
+    ///     ToggleBluetooth: ClassVar[DeviceMenuResult]
     ///     SetOrChangePin: ClassVar[DeviceMenuResult]
     ///     RemovePin: ClassVar[DeviceMenuResult]
     ///     SetAutoLockBattery: ClassVar[DeviceMenuResult]

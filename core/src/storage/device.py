@@ -48,6 +48,7 @@ if utils.USE_THP:
     _THP_PAIRED_CACHE    = const(0x22)  # bytes
 if utils.USE_POWER_MANAGER:
     _AUTOLOCK_DELAY_BATT_MS    = const(0x23)  # int
+_DISABLE_BLUETOOTH        = const(0x24)  # bool (0x01 or empty)
 
 
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
@@ -439,6 +440,20 @@ def get_haptic_feedback() -> bool:
     Get haptic feedback enable, default to true if not set.
     """
     return not common.get_bool(_NAMESPACE, _DISABLE_HAPTIC_FEEDBACK, True)
+
+
+def set_ble(enable: bool) -> None:
+    """
+    Enable or disable Bluetooth.
+    """
+    common.set_bool(_NAMESPACE, _DISABLE_BLUETOOTH, not enable, True)
+
+
+def get_ble() -> bool:
+    """
+    Get Bluetooth enable, default to true if not set.
+    """
+    return not common.get_bool(_NAMESPACE, _DISABLE_BLUETOOTH, True)
 
 
 def set_rgb_led(enable: bool) -> None:

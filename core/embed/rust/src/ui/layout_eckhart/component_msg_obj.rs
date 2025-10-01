@@ -166,6 +166,9 @@ impl ComponentMsgObj for DeviceMenuScreen {
                 Ok(new_tuple(&[UNPAIR_DEVICE.as_obj(), index.into()])?)
             }
             DeviceMenuMsg::UnpairAllDevices => Ok(UNPAIR_ALL_DEVICES.as_obj()),
+            // Settings
+            DeviceMenuMsg::ToggleBluetooth => Ok(TOGGLE_BLUETOOTH.as_obj()),
+
             // Security menu
             DeviceMenuMsg::SetOrChangePin => Ok(SET_OR_CHANGE_PIN.as_obj()),
             DeviceMenuMsg::RemovePin => Ok(REMOVE_PIN.as_obj()),

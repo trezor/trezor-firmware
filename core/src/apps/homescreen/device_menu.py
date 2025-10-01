@@ -64,6 +64,11 @@ def get_auto_lock_delay() -> tuple[str, str] | None:
     return (autolock_delay_batt_fmg, autolock_delay_usb_fmt)
 
 
+def ble_enable(enable: bool) -> None:
+    ble.set_enabled(enable)
+    storage_device.set_ble(enable)
+
+
 async def handle_device_menu() -> None:
 
     assert utils.USE_THP and utils.USE_BLE
@@ -90,9 +95,9 @@ async def handle_device_menu() -> None:
         bonds = ble.get_bonds()
         if __debug__:
             log.debug(__name__, "bonds: %s", bonds)
-
+        ble_enabled = ble.get_enabled()
         connected_addr = ble.connected_addr()
-        connected_idx = _find_device(connected_addr, bonds)
+        connected_idx = _find_device(connected_addr, bonds) if ble_enabled else None
         if __debug__:
             log.debug(__name__, "connected: %s (%s)", connected_addr, connected_idx)
         hostname_map = {e.mac_addr: e for e in paired_cache.load()}
@@ -115,6 +120,7 @@ async def handle_device_menu() -> None:
                 init_submenu_idx=init_submenu_idx,
                 backup_failed=backup_failed,
                 backup_needed=backup_needed,
+                ble_enabled=ble_enabled,
                 paired_devices=paired_devices,
                 connected_idx=connected_idx,
                 pin_enabled=config.has_pin() if is_initialized else None,
@@ -185,6 +191,25 @@ async def handle_device_menu() -> None:
 
             from apps.management.ble.pair_new_device import pair_new_device
 
+            init_submenu_idx = SubmenuId.PAIR_AND_CONNECT
+            # Show warning if Bluetooth is not enabled
+            if not ble_enabled:
+                try:
+                    await interact(
+                        trezorui_api.show_warning(
+                            title=TR.words__important,
+                            description=TR.ble__must_be_enabled,
+                            button=TR.buttons__turn_on,
+                            allow_cancel=True,
+                            danger=False,
+                        ),
+                        "enable_bluetooth",
+                    )
+                except ActionCancelled:
+                    continue
+                else:
+                    ble_enable(True)
+
             try:
                 if ble.is_connected():
                     utils.notify_send(utils.NOTIFY_DISCONNECT)
@@ -201,8 +226,6 @@ async def handle_device_menu() -> None:
                     )
             except ActionCancelled:
                 pass
-            finally:
-                init_submenu_idx = SubmenuId.PAIR_AND_CONNECT
         elif menu_result is DeviceMenuResult.UnpairAllDevices:
             from trezor.messages import BleUnpair
 
@@ -233,6 +256,11 @@ async def handle_device_menu() -> None:
                 init_submenu_idx = index
             else:
                 raise RuntimeError(f"Unknown menu {result_type}, {index}")
+        # Settings
+        elif menu_result is DeviceMenuResult.ToggleBluetooth:
+            init_submenu_idx = SubmenuId.SETTINGS
+            # Toggle Bluetooth
+            ble_enable(not ble_enabled)
         # Security settings
         elif menu_result is DeviceMenuResult.SetOrChangePin and is_initialized:
             from trezor.messages import ChangePin
