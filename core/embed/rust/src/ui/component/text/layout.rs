@@ -1,8 +1,7 @@
 use crate::ui::{
     display::{toif::Icon, Color, Font, GlyphMetrics},
     geometry::{Alignment, Alignment2D, Dimensions, Offset, Point, Rect},
-    shape,
-    shape::Renderer,
+    shape::{self, Renderer},
 };
 
 const ELLIPSIS: &str = "...";
@@ -186,11 +185,11 @@ impl TextStyle {
         }
     }
 
-    fn prev_page_ellipsis_icon_width(&self) -> i16 {
+    fn prev_page_ellipsis_width_no_margin(&self) -> i16 {
         if let Some((icon, _)) = self.prev_page_ellipsis_icon {
             icon.toif.width()
         } else {
-            0
+            self.text_font.text_width(ELLIPSIS)
         }
     }
 }
@@ -298,7 +297,7 @@ impl TextLayout {
                 // Showing the arrow at the last chunk position
                 // Assuming mono-font, so all the letters have the same width
                 let letter_size = self.style.text_font.text_width("a");
-                let icon_offset = self.style.prev_page_ellipsis_icon_width() + 2;
+                let icon_offset = self.style.prev_page_ellipsis_width_no_margin() + 2;
                 cursor.x += i16::from(chunk_config.chunk_size) * letter_size - icon_offset;
                 sink.prev_page_ellipsis(*cursor, self);
                 cursor.x += icon_offset + chunk_config.x_offset;
@@ -339,9 +338,11 @@ impl TextLayout {
 
             if let Some(chunk_config) = self.style.chunks {
                 // Last chunk on the page should not be rendered, put just ellipsis there
-                // Chunks is last when the next chunk would not fit on the page horizontally
-                let is_last_chunk = (2 * span.advance.x - chunk_config.x_offset) > remaining_width;
-                if is_last_line
+                // Chunks is last when the next chunk would not fit on the page horizontally or
+                // the span doesn't cover the whole chunk size
+                let is_last_chunk = (2 * span.advance.x - chunk_config.x_offset) > remaining_width
+                    || span.length < usize::from(chunk_config.chunk_size);
+                if (is_last_line || force_next_page)
                     && is_last_chunk
                     && remaining_text.len() > chunk_config.chunk_size.into()
                 {
