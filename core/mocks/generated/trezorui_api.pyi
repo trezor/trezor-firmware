@@ -627,6 +627,7 @@ def show_device_menu(
     init_submenu_idx: int | None,
     backup_failed: bool,
     backup_needed: bool,
+    ble_enabled: bool,
     paired_devices: Iterable[tuple[str, tuple[str, str] | None]],
     connected_idx: int | None,
     pin_enabled: bool | None,
@@ -877,6 +878,7 @@ class DeviceMenuResult:
     PairDevice: ClassVar[DeviceMenuResult]
     UnpairDevice: ClassVar[DeviceMenuResult]
     UnpairAllDevices: ClassVar[DeviceMenuResult]
+    ToggleBluetooth: ClassVar[DeviceMenuResult]
     SetOrChangePin: ClassVar[DeviceMenuResult]
     RemovePin: ClassVar[DeviceMenuResult]
     SetAutoLockBattery: ClassVar[DeviceMenuResult]

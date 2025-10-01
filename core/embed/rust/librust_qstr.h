@@ -63,6 +63,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_TR;
   MP_QSTR_TRANSITIONING;
   MP_QSTR_TX_PACKET_LEN;
+  MP_QSTR_ToggleBluetooth;
   MP_QSTR_ToggleHaptics;
   MP_QSTR_ToggleLed;
   MP_QSTR_TranslationsHeader;
@@ -195,6 +196,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ble__limit_reached;
   MP_QSTR_ble__mac_address;
   MP_QSTR_ble__manage_paired;
+  MP_QSTR_ble__must_be_enabled;
   MP_QSTR_ble__pair_new;
   MP_QSTR_ble__pair_title;
   MP_QSTR_ble__pairing_match;
@@ -204,6 +206,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ble__unpair_title;
   MP_QSTR_ble__version;
   MP_QSTR_ble__waiting_for_host;
+  MP_QSTR_ble_enabled;
   MP_QSTR_ble_event;
   MP_QSTR_bootscreen;
   MP_QSTR_br_code;

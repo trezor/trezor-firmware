@@ -15,6 +15,9 @@ pub static PAIR_DEVICE: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_B
 pub static DISCONNECT_DEVICE: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static UNPAIR_DEVICE: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static UNPAIR_ALL_DEVICES: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+// Settings
+pub static TOGGLE_BLUETOOTH: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+
 // Security menu
 pub static SET_OR_CHANGE_PIN: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static REMOVE_PIN: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
@@ -46,6 +49,7 @@ static DEVICE_MENU_RESULT_TYPE: Type = obj_type! {
         Qstr::MP_QSTR_DisconnectDevice => DISCONNECT_DEVICE.as_obj(),
         Qstr::MP_QSTR_UnpairDevice => UNPAIR_DEVICE.as_obj(),
         Qstr::MP_QSTR_UnpairAllDevices => UNPAIR_ALL_DEVICES.as_obj(),
+        Qstr::MP_QSTR_ToggleBluetooth => TOGGLE_BLUETOOTH.as_obj(),
         Qstr::MP_QSTR_SetOrChangePin => SET_OR_CHANGE_PIN.as_obj(),
         Qstr::MP_QSTR_RemovePin => REMOVE_PIN.as_obj(),
         Qstr::MP_QSTR_SetAutoLockBattery => SET_AUTO_LOCK_BATTERY.as_obj(),
