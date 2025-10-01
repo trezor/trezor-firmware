@@ -42,6 +42,41 @@ class TestCheckDelegatedIdentityKey(unittest.TestCase):
 
         self.assertEqual(check_delegated_identity_proof(proof, header, arguments), True)
 
+    def test_sign_registration_request_invalid_size(self):
+        from ubinascii import unhexlify
+
+        from trezor.wire import DataError
+
+        from apps.evolu.evolu_sign_registration_request import (
+            _check_data,
+        )
+
+        sign_request_challenge = unhexlify("1234")
+        sign_request_size: int = 256**4 + 5  # invalid size
+
+        with self.assertRaises(DataError):
+            _check_data(sign_request_challenge, sign_request_size)
+
+        sign_request_size: int = -1  # invalid size
+
+        with self.assertRaises(DataError):
+            _check_data(sign_request_challenge, sign_request_size)
+
+    def test_sign_registration_request_invalid_challenge(self):
+        from ubinascii import unhexlify
+
+        from trezor.wire import DataError
+
+        from apps.evolu.evolu_sign_registration_request import (
+            _check_data,
+        )
+
+        sign_request_challenge = unhexlify("")  # invalid length
+        sign_request_size: int = 10
+
+        with self.assertRaises(DataError):
+            _check_data(sign_request_challenge, sign_request_size)
+
     def test_get_evolu_node(self):
         from trezorutils import delegated_identity
 

@@ -32,17 +32,11 @@ async def evolu_sign_registration_request(
 
     """
     from trezor import utils, wire
-    from trezor.crypto.der import read_length
-    from trezor.crypto.hashlib import sha256
     from trezor.messages import EvoluRegistrationRequest
-    from trezor.utils import BufferReader, bootloader_locked
-
-    from apps.common.writers import write_compact_size
+    from trezor.utils import bootloader_locked
 
     from .common import (
         check_delegated_identity_proof,
-        get_delegated_identity_key,
-        get_public_key_from_private_key,
     )
 
     if not bootloader_locked():
@@ -55,35 +49,47 @@ async def evolu_sign_registration_request(
     else:
         raise RuntimeError("Optiga is not available")
 
+    challenge_bytes, size_bytes = _check_data(
+        msg.challenge_from_server, msg.size_to_acquire
+    )
+
     if not check_delegated_identity_proof(
         provided_proof=bytes(msg.proof_of_delegated_identity),
         header=b"EvoluSignRegistrationRequest",
         arguments=[
-            bytes(msg.challenge_from_server),
-            msg.size_to_acquire.to_bytes(4, "big"),
+            challenge_bytes,
+            size_bytes,
         ],
     ):
         raise ValueError("Invalid proof")
 
-    private_key = get_delegated_identity_key()
-    public_key = get_public_key_from_private_key(private_key)
+    signature = _get_signature(challenge_bytes, size_bytes)
+    certificates = _get_certificates()
 
-    header = b"EvoluSignRegistrationRequestV1:"
-    components = [
-        header,
-        public_key,
-        msg.challenge_from_server,
-        msg.size_to_acquire.to_bytes(4, "big"),
-    ]
-    h = utils.HashWriter(sha256())
-    for component in components:
-        write_compact_size(h, len(component))
-        h.extend(component)
+    return EvoluRegistrationRequest(
+        certificate_chain=certificates,
+        signature=signature,
+    )
 
-    try:
-        signature = optiga.sign(optiga.DEVICE_ECC_KEY_INDEX, h.get_digest())
-    except optiga.SigningInaccessible:
-        raise wire.ProcessError("Signing inaccessible.")
+
+def _check_data(challenge: bytes, size: int) -> tuple[bytes, bytes]:
+    from trezor import wire
+
+    if not (1 <= len(challenge) <= 255):
+        raise wire.DataError("Invalid challenge length")
+    if size < 0 or size > 256**4 - 1:
+        raise wire.DataError("Invalid size_to_acquire")
+
+    size_to_acquire_bytes = size.to_bytes(4, "big")
+
+    return challenge, size_to_acquire_bytes
+
+
+def _get_certificates() -> list[bytes]:
+    from trezor.utils import BufferReader
+    from trezor.crypto.der import read_length
+    from trezor.crypto import optiga
+    from trezor import wire
 
     certificates = []
     r = BufferReader(optiga.get_certificate(optiga.DEVICE_CERT_INDEX))
@@ -95,8 +101,38 @@ async def evolu_sign_registration_request(
         cert_len = r.offset - cert_begin + n
         r.seek(cert_begin)
         certificates.append(r.read_memoryview(cert_len))
+    return certificates
 
-    return EvoluRegistrationRequest(
-        certificate_chain=certificates,
-        signature=signature,
+
+def _get_signature(challenge_bytes: bytes, size_bytes: bytes) -> bytes:
+    from trezor import utils, wire
+    from trezor.crypto.hashlib import sha256
+    from trezor.crypto import optiga
+
+    from apps.common.writers import write_compact_size
+
+    from .common import (
+        get_delegated_identity_key,
+        get_public_key_from_private_key,
     )
+
+    private_key = get_delegated_identity_key()
+    public_key = get_public_key_from_private_key(private_key)
+
+    header = b"EvoluSignRegistrationRequestV1:"
+    components = [
+        header,
+        public_key,
+        challenge_bytes,
+        size_bytes,
+    ]
+    hash_writer = utils.HashWriter(sha256())
+    for component in components:
+        write_compact_size(hash_writer, len(component))
+        hash_writer.extend(component)
+
+    try:
+        signature = optiga.sign(optiga.DEVICE_ECC_KEY_INDEX, hash_writer.get_digest())
+    except optiga.SigningInaccessible:
+        raise wire.ProcessError("Signing inaccessible.")
+    return signature
