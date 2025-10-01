@@ -30,9 +30,6 @@ use super::super::{
     theme::{self, gradient::Gradient},
 };
 
-const ITEM_PADDING: i16 = 16;
-const GROUP_PADDING: i16 = 20;
-
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Receive {
     Content,
@@ -109,7 +106,8 @@ pub fn new_receive(
     let mut paragraphs = ParagraphVecShort::new();
     if let Some(description) = description {
         paragraphs.add(
-            Paragraph::new(&theme::TEXT_SMALL_LIGHT, description).with_bottom_padding(ITEM_PADDING),
+            Paragraph::new(&theme::TEXT_SMALL_LIGHT, description)
+                .with_bottom_padding(theme::PROP_INNER_SPACING),
         );
     }
     paragraphs.add(Paragraph::new(text_style, content));
@@ -177,7 +175,10 @@ pub fn new_receive(
             &theme::TEXT_SMALL_LIGHT,
             TR::words__account.into(),
         ));
-        para.add(Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, a).with_top_padding(ITEM_PADDING));
+        para.add(
+            Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, a)
+                .with_top_padding(theme::PROP_INNER_SPACING),
+        );
     }
 
     if let Some(p) = path {
@@ -186,12 +187,12 @@ pub fn new_receive(
                 &theme::TEXT_SMALL_LIGHT,
                 TR::address_details__derivation_path.into(),
             )
-            .with_top_padding(GROUP_PADDING)
+            .with_top_padding(theme::PROPS_SPACING)
             .no_break(),
         );
         para.add(
             Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, p)
-                .with_top_padding(ITEM_PADDING)
+                .with_top_padding(theme::PROP_INNER_SPACING)
                 .break_after(),
         );
     }
@@ -202,7 +203,7 @@ pub fn new_receive(
         para.add(Paragraph::new(&theme::TEXT_SMALL_LIGHT, label).no_break());
         para.add(
             Paragraph::new(&theme::TEXT_MONO_LIGHT, value)
-                .with_top_padding(ITEM_PADDING)
+                .with_top_padding(theme::PROP_INNER_SPACING)
                 .break_after(),
         );
     }
