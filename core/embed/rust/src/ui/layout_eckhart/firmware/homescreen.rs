@@ -19,15 +19,13 @@ use crate::{
 
 use super::{
     super::{
-        component::{Button, ButtonContent, ButtonMsg, FuelGauge},
+        component::{Button, ButtonContent, FuelGauge},
         fonts,
     },
     constant::{HEIGHT, SCREEN, WIDTH},
     theme::{self, firmware::button_homebar_style, ScreenBackground},
     ActionBar, ActionBarMsg, Hint,
 };
-
-const LOCK_HOLD_DURATION: ShortDuration = ShortDuration::from_millis(3000);
 
 /// Full-screen component for the homescreen and lockscreen.
 pub struct Homescreen {
@@ -103,7 +101,7 @@ impl Homescreen {
             led_color,
             locked,
             bootscreen,
-            fuel_gauge: FuelGauge::on_charging_change_or_attach()
+            fuel_gauge: FuelGauge::homescreen_bar()
                 .with_alignment(Alignment::Center)
                 .with_font(fonts::FONT_SATOSHI_MEDIUM_26),
             swipe: Swipe::new().up(),

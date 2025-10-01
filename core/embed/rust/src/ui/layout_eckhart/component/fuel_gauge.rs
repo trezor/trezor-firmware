@@ -50,9 +50,9 @@ pub enum FuelGaugeMode {
     /// Show the fuel gauge only when charging state changes
     #[cfg(feature = "micropython")]
     OnChargingChange(Timer),
-    /// Show the fuel gauge when charging state changes or when attached
+    /// Show only icon when charging state changes or when attached
     #[cfg(feature = "micropython")]
-    OnChargingChangeOrAttach(Timer),
+    HomescreenBar(Timer),
 }
 
 impl FuelGauge {
@@ -70,8 +70,8 @@ impl FuelGauge {
     }
 
     #[cfg(feature = "micropython")]
-    pub const fn on_charging_change_or_attach() -> Self {
-        Self::new(FuelGaugeMode::OnChargingChangeOrAttach(Timer::new()))
+    pub const fn homescreen_bar() -> Self {
+        Self::new(FuelGaugeMode::HomescreenBar(Timer::new()))
     }
 
     pub const fn with_alignment(mut self, alignment: Alignment) -> Self {
@@ -94,8 +94,9 @@ impl FuelGauge {
             FuelGaugeMode::Always => true,
             FuelGaugeMode::ChargingIconOnly => self.charging_state == ChargingState::Charging,
             #[cfg(feature = "micropython")]
-            FuelGaugeMode::OnChargingChange(timer)
-            | FuelGaugeMode::OnChargingChangeOrAttach(timer) => timer.is_running(),
+            FuelGaugeMode::OnChargingChange(timer) | FuelGaugeMode::HomescreenBar(timer) => {
+                timer.is_running()
+            }
         }
     }
 
@@ -152,7 +153,7 @@ impl Component for FuelGauge {
                     self.update_pm_state();
                 }
                 #[cfg(feature = "micropython")]
-                if let FuelGaugeMode::OnChargingChangeOrAttach(timer) = &mut self.mode {
+                if let FuelGaugeMode::HomescreenBar(timer) = &mut self.mode {
                     if !animation_disabled() {
                         timer.start(ctx, FUEL_GAUGE_DURATION.into());
                     }
@@ -172,7 +173,7 @@ impl Component for FuelGauge {
                     }
                     #[cfg(feature = "micropython")]
                     FuelGaugeMode::OnChargingChange(timer)
-                    | FuelGaugeMode::OnChargingChangeOrAttach(timer) => {
+                    | FuelGaugeMode::HomescreenBar(timer) => {
                         if _e.charging_status_changed {
                             timer.start(ctx, FUEL_GAUGE_DURATION.into());
                             ctx.request_paint();
@@ -182,8 +183,7 @@ impl Component for FuelGauge {
             }
             #[cfg(feature = "micropython")]
             Event::Timer(_) => match &mut self.mode {
-                FuelGaugeMode::OnChargingChange(timer)
-                | FuelGaugeMode::OnChargingChangeOrAttach(timer) => {
+                FuelGaugeMode::OnChargingChange(timer) | FuelGaugeMode::HomescreenBar(timer) => {
                     if timer.expire(event) {
                         ctx.request_paint();
                     }
@@ -235,6 +235,13 @@ impl Component for FuelGauge {
                         .with_align(Alignment2D::CENTER_LEFT)
                         .render(target);
                 }
+            }
+            #[cfg(feature = "micropython")]
+            FuelGaugeMode::HomescreenBar(_) => {
+                shape::ToifImage::new(area.center(), icon.toif)
+                    .with_fg(color_icon)
+                    .with_align(Alignment2D::CENTER)
+                    .render(target);
             }
             _ => {
                 shape::ToifImage::new(area.left_center(), icon.toif)
