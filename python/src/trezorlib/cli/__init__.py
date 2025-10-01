@@ -203,11 +203,20 @@ class TrezorConnection:
         )
         return session
 
-    def get_transport(self) -> "Transport":
+    def get_transport(self, _clear_cache: bool = False) -> "Transport":
         global _TRANSPORT
         if _TRANSPORT is not None:
-            return _TRANSPORT
+            if not _clear_cache:
+                return _TRANSPORT
 
+            # remove previously cached transport
+            try:
+                atexit.unregister(_TRANSPORT.close)
+                _TRANSPORT.close()
+            except Exception as e:
+                self._print_exception(e, "Failed to close transport")
+            finally:
+                _TRANSPORT = None
         try:
             # look for transport without prefix search
             _TRANSPORT = transport.get_transport(

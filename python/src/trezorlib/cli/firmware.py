@@ -736,7 +736,8 @@ def update(
             while True:
                 time.sleep(0.5)
                 try:
-                    obj.get_transport()
+                    # uncache previous transport to force re-connection attempt
+                    obj.get_transport(_clear_cache=True)
                     break
                 except Exception:
                     pass
