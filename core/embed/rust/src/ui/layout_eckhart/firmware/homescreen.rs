@@ -41,14 +41,10 @@ pub struct Homescreen {
     image: Option<BinaryData<'static>>,
     /// LED color
     led_color: Option<Color>,
-    /// Whether the PIN is set and device can be locked
-    lockable: bool,
     /// Whether the homescreen is locked
     locked: bool,
     /// Whether the homescreen is a boot screen
     bootscreen: bool,
-    /// Hold to lock button placed everywhere except the `action_bar`
-    virtual_locking_button: Button,
     /// Fuel gauge (battery status indicator) rendered in the `action_bar` area
     fuel_gauge: FuelGauge,
     /// Swipe component for vertical swiping
@@ -66,7 +62,7 @@ impl Homescreen {
 
     pub fn new(
         label: TString<'static>,
-        lockable: bool,
+        _lockable: bool,
         locked: bool,
         bootscreen: bool,
         coinjoin_authorized: bool,
@@ -105,10 +101,8 @@ impl Homescreen {
             action_bar: ActionBar::new_single(btn),
             image,
             led_color,
-            lockable,
             locked,
             bootscreen,
-            virtual_locking_button: Button::empty().with_long_press(LOCK_HOLD_DURATION),
             fuel_gauge: FuelGauge::on_charging_change_or_attach()
                 .with_alignment(Alignment::Center)
                 .with_font(fonts::FONT_SATOSHI_MEDIUM_26),
@@ -159,13 +153,6 @@ impl Homescreen {
             b.set_content(bar_content)
         }
     }
-
-    fn event_hold(&mut self, ctx: &mut EventCtx, event: Event) -> bool {
-        if let Some(ButtonMsg::LongPressed) = self.virtual_locking_button.event(ctx, event) {
-            return true;
-        }
-        false
-    }
 }
 
 impl Drop for Homescreen {
@@ -199,9 +186,6 @@ impl Component for Homescreen {
         self.fuel_gauge.place(bar_area);
         // Swipe component is placed in the action bar touch area
         self.swipe.place(self.action_bar.touch_area());
-        // Locking button is placed everywhere except the action bar
-        let locking_area = bounds.inset(Insets::bottom(self.action_bar.touch_area().height()));
-        self.virtual_locking_button.place(locking_area);
         bounds
     }
 
@@ -222,11 +206,7 @@ impl Component for Homescreen {
             };
         }
 
-        if self.lockable {
-            Self::event_hold(self, ctx, event).then_some(HomescreenMsg::Dismissed)
-        } else {
-            None
-        }
+        None
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
