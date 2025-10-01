@@ -15,7 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from . import messages
 
@@ -23,8 +23,36 @@ if TYPE_CHECKING:
     from .transport.session import Session
 
 
-def get_evolu_node(session: "Session") -> messages.EvoluNode:
+def get_evolu_node(session: "Session", proof: Optional[bytes]) -> messages.EvoluNode:
     return session.call(
-        messages.EvoluGetNode(),
+        messages.EvoluGetNode(proof_of_delegated_identity=proof),
         expect=messages.EvoluNode,
+    )
+
+
+def evolu_sign_registration_request(
+    session: "Session", challenge: bytes, size: int, proof: bytes
+) -> messages.EvoluRegistrationRequest:
+    return session.call(
+        messages.EvoluSignRegistrationRequest(
+            challenge_from_server=challenge,
+            size_to_acquire=size,
+            proof_of_delegated_identity=proof,
+        ),
+        expect=messages.EvoluRegistrationRequest,
+    )
+
+
+def get_delegated_identity_key(
+    session: "Session",
+    thp_credentials: Optional[bytes] = None,
+    host_static_public_key: Optional[bytes] = None,
+) -> messages.EvoluDelegatedIdentityKey:
+
+    return session.call(
+        messages.EvoluGetDelegatedIdentityKey(
+            thp_credentials=thp_credentials,
+            host_static_public_key=host_static_public_key,
+        ),
+        expect=messages.EvoluDelegatedIdentityKey,
     )

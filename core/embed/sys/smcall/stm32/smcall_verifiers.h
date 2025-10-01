@@ -65,6 +65,16 @@ bool __wur optiga_read_cert__verified(uint8_t index, uint8_t *cert,
 
 bool __wur optiga_read_sec__verified(uint8_t *sec);
 
+#include <sec/secret_keys.h>
+
+bool secret_key_delegated_identity__verified(
+    uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
+
+#include <sec/secret_keys.h>
+
+bool secret_key_delegated_identity__verified(
+    uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
+
 #endif  // USE_OPTIGA
 
 // ---------------------------------------------------------------------
@@ -151,4 +161,5 @@ secbool secret_validate_nrf_pairing__verified(const uint8_t *message,
                                               const uint8_t *mac,
                                               size_t mac_len);
 #endif
+
 #endif  // SECMON

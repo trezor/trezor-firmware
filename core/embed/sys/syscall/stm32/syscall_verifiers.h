@@ -123,6 +123,11 @@ bool __wur optiga_read_cert__verified(uint8_t index, uint8_t *cert,
 
 bool __wur optiga_read_sec__verified(uint8_t *sec);
 
+#include <sec/secret_keys.h>
+
+bool secret_key_delegated_identity__verified(
+    uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
+
 #endif  // USE_OPTIGA
 
 // ---------------------------------------------------------------------

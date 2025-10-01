@@ -1552,6 +1552,9 @@ pub enum TranslatedString {
     ble__mac_address = 1162,  // "MAC address"
     ble__waiting_for_host = 1163,  // "Waiting for host..."
     ble__apps_connected = 1164,  // "Apps connected"
+    evolu__secure_sync_header = 1165,  // "Secure Sync"
+    evolu__secure_sync_message = 1166,  // "Allow {0} on {1} to use Secure Sync with this Trezor?"
+    evolu__secure_sync_message_no_optiga = 1167,  // "Allow this Trezor Suite use Secure Sync with this passphrase?"
 }
 
 impl TranslatedString {
@@ -3538,6 +3541,9 @@ impl TranslatedString {
             (Self::ble__mac_address, "MAC address"),
             (Self::ble__waiting_for_host, "Waiting for host..."),
             (Self::ble__apps_connected, "Apps connected"),
+            (Self::evolu__secure_sync_header, "Secure Sync"),
+            (Self::evolu__secure_sync_message, "Allow {0} on {1} to use Secure Sync with this Trezor?"),
+            (Self::evolu__secure_sync_message_no_optiga, "Allow this Trezor Suite use Secure Sync with this passphrase?"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4121,6 +4127,9 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ethereum__unknown_token, Self::ethereum__unknown_token),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__valid_signature, Self::ethereum__valid_signature),
+        (Qstr::MP_QSTR_evolu__secure_sync_header, Self::evolu__secure_sync_header),
+        (Qstr::MP_QSTR_evolu__secure_sync_message, Self::evolu__secure_sync_message),
+        (Qstr::MP_QSTR_evolu__secure_sync_message_no_optiga, Self::evolu__secure_sync_message_no_optiga),
         (Qstr::MP_QSTR_experimental_mode__enable, Self::experimental_mode__enable),
         (Qstr::MP_QSTR_experimental_mode__only_for_dev, Self::experimental_mode__only_for_dev),
         (Qstr::MP_QSTR_experimental_mode__title, Self::experimental_mode__title),
