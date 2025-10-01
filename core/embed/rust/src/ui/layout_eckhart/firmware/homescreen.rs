@@ -10,16 +10,15 @@ use crate::{
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Label, Never, Swipe},
         display::{image::ImageInfo, Color},
-        geometry::{Alignment, Direction, Insets, Offset, Rect},
+        geometry::{Direction, Insets, Offset, Rect},
         layout::util::get_user_custom_image,
         shape::{self, Renderer},
-        util::animation_disabled,
     },
 };
 
 use super::{
     super::{
-        component::{Button, ButtonContent, ButtonMsg, FuelGauge},
+        component::{Button, ButtonContent, ButtonMsg},
         fonts,
     },
     constant::{HEIGHT, SCREEN, WIDTH},
@@ -49,8 +48,6 @@ pub struct Homescreen {
     bootscreen: bool,
     /// Hold to lock button placed everywhere except the `action_bar`
     virtual_locking_button: Button,
-    /// Fuel gauge (battery status indicator) rendered in the `action_bar` area
-    fuel_gauge: FuelGauge,
     /// Swipe component for vertical swiping
     swipe: Swipe,
     // swipe_config: SwipeConfig,
@@ -109,9 +106,6 @@ impl Homescreen {
             locked,
             bootscreen,
             virtual_locking_button: Button::empty().with_long_press(LOCK_HOLD_DURATION),
-            fuel_gauge: FuelGauge::on_charging_change_or_attach()
-                .with_alignment(Alignment::Center)
-                .with_font(fonts::FONT_SATOSHI_MEDIUM_26),
             swipe: Swipe::new().up(),
         })
     }
@@ -140,23 +134,6 @@ impl Homescreen {
                 theme::LED_WHITE,
                 Hint::new_instruction(text, Some(theme::ICON_INFO)),
             ),
-        }
-    }
-
-    fn event_fuel_gauge(&mut self, ctx: &mut EventCtx, event: Event) {
-        if animation_disabled() {
-            return;
-        }
-
-        self.fuel_gauge.event(ctx, event);
-        let bar_content = if self.fuel_gauge.should_be_shown() {
-            ButtonContent::Empty
-        } else {
-            Self::homebar_content(self.bootscreen, self.locked)
-        };
-
-        if let Some(b) = self.action_bar.right_button_mut() {
-            b.set_content(bar_content)
         }
     }
 
@@ -196,7 +173,6 @@ impl Component for Homescreen {
 
         self.label.place(label_area);
         self.action_bar.place(bar_area);
-        self.fuel_gauge.place(bar_area);
         // Swipe component is placed in the action bar touch area
         self.swipe.place(self.action_bar.touch_area());
         // Locking button is placed everywhere except the action bar
@@ -206,8 +182,6 @@ impl Component for Homescreen {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.event_fuel_gauge(ctx, event);
-
         let swipe_up = matches!(self.swipe.event(ctx, event), Some(Direction::Up));
         let homebar_tap = matches!(
             self.action_bar.event(ctx, event),
@@ -240,9 +214,6 @@ impl Component for Homescreen {
         self.label.render(target);
         self.hint.render(target);
         self.action_bar.render(target);
-        if self.fuel_gauge.should_be_shown() {
-            self.fuel_gauge.render(target);
-        }
 
         #[cfg(feature = "rgb_led")]
         if let Some(rgb_led) = self.led_color {
