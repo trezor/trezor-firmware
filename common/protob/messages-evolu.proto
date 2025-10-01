@@ -65,5 +65,5 @@ message EvoluGetDelegatedIdentityKey {
  * @end
  */
 message EvoluDelegatedIdentityKey {
-    required bytes private_key = 1;
+    required bytes private_key = 1; // secp256k1 private key
 }
