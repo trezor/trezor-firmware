@@ -478,7 +478,8 @@ impl FirmwareUI for UIEckhart {
             extra_font: &theme::TEXT_SMALL,
         }
         .into_paragraphs()
-        .with_placement(LinearPlacement::vertical());
+        .with_placement(LinearPlacement::vertical())
+        .with_spacing(theme::PROP_INNER_SPACING);
 
         let mut right_button = if hold {
             let verb = verb.unwrap_or(TR::buttons__hold_to_confirm.into());
