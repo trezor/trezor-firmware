@@ -467,8 +467,7 @@ impl FirmwareUI for UIEckhart {
                 StrOrBytes::Str("".into())
             },
             font: if chunkify {
-                let value: TString = value.try_into()?;
-                theme::get_chunkified_text_style(value.len())
+                &theme::TEXT_MONO_ADDRESS_CHUNKS
             } else if is_data {
                 &theme::TEXT_MONO_ADDRESS
             } else {
