@@ -311,7 +311,6 @@ impl TextLayout {
         }
 
         while !remaining_text.is_empty() {
-            let is_last_line = cursor.y + self.style.text_font.line_height() > self.bottom_y();
             let mut force_next_page = false;
 
             // Check if we have not reached the maximum number of lines we want to draw.
@@ -320,6 +319,11 @@ impl TextLayout {
                     force_next_page = true;
                 }
             }
+
+            let is_last_line =
+                (cursor.y + self.style.text_font.line_height() + self.style.line_spacing
+                    > self.bottom_y())
+                    || force_next_page;
 
             let line_ending_space = if is_last_line {
                 self.style.ellipsis_width()
@@ -360,15 +364,16 @@ impl TextLayout {
                         // Last chunk so line break after this
                         span.advance.y = self.style.text_font.line_height();
                     }
-                }
-                // Replace (second-to-last) chunk with ellipsis if we are on the last line
-                if is_last_line && is_last_chunk && remaining_text.len() > span.length {
-                    // Making sure no text is rendered here, and that we force a line break
-                    span.length = 0;
-                    span.advance.x = 2; // To start at the same horizontal line as the chunk itself
-                    span.advance.y = self.bounds.y1;
-                    span.insert_hyphen_before_line_break = false;
-                    span.skip_next_chars = 0;
+
+                    // Replace (second-to-last) chunk with ellipsis if we are on the last line
+                    if is_last_line && is_last_chunk {
+                        // Making sure no text is rendered here, and that we force a line break
+                        span.length = 0;
+                        span.advance.x = 2; // To start at the same horizontal line as the chunk itself
+                        span.advance.y = self.bounds.y1;
+                        span.insert_hyphen_before_line_break = false;
+                        span.skip_next_chars = 0;
+                    }
                 }
             }
             cursor.x += match self.align {
@@ -401,8 +406,7 @@ impl TextLayout {
                 if span.insert_hyphen_before_line_break {
                     sink.hyphen(*cursor, self);
                 }
-                // Check the amount of vertical space we have left --- or manually force the
-                // next page.
+
                 if force_next_page || cursor.y + span.advance.y > self.bottom_y() {
                     // Not enough space on this page.
                     if !remaining_text.is_empty() {
@@ -416,9 +420,6 @@ impl TextLayout {
                         if should_append_ellipsis {
                             sink.ellipsis(*cursor, self);
                         }
-                        // TODO: This does not work in case we are the last
-                        // fitting text token on the line, with more text tokens
-                        // following and `text.is_empty() == true`.
                     }
 
                     // Report we are out of bounds and quit.
