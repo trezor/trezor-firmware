@@ -1,8 +1,9 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from trezor.messages import EvoluRegistrationRequest, EvoluSignRegistrationRequest
     from buffer_types import AnyBytes
+
+    from trezor.messages import EvoluRegistrationRequest, EvoluSignRegistrationRequest
 
 
 async def evolu_sign_registration_request(
@@ -36,9 +37,7 @@ async def evolu_sign_registration_request(
     from trezor.messages import EvoluRegistrationRequest
     from trezor.utils import bootloader_locked
 
-    from .common import (
-        check_delegated_identity_proof,
-    )
+    from .common import check_delegated_identity_proof
 
     if not bootloader_locked():
         raise wire.ProcessError(
@@ -55,7 +54,7 @@ async def evolu_sign_registration_request(
     )
 
     if not check_delegated_identity_proof(
-        provided_proof=bytes(msg.proof_of_delegated_identity),
+        provided_proof=msg.proof_of_delegated_identity,
         header=b"EvoluSignRegistrationRequest",
         arguments=[
             challenge_bytes,
@@ -87,10 +86,10 @@ def _check_data(challenge: bytes, size: int) -> tuple[bytes, bytes]:
 
 
 def _get_certificates() -> list[AnyBytes]:
-    from trezor.utils import BufferReader
-    from trezor.crypto.der import read_length
-    from trezor.crypto import optiga
     from trezor import wire
+    from trezor.crypto import optiga
+    from trezor.crypto.der import read_length
+    from trezor.utils import BufferReader
 
     certificates = []
     r = BufferReader(optiga.get_certificate(optiga.DEVICE_CERT_INDEX))
@@ -106,18 +105,17 @@ def _get_certificates() -> list[AnyBytes]:
 
 
 def _get_signature(challenge_bytes: bytes, size_bytes: bytes) -> bytes:
+    from trezorutils import delegated_identity
+
     from trezor import utils, wire
-    from trezor.crypto.hashlib import sha256
     from trezor.crypto import optiga
+    from trezor.crypto.hashlib import sha256
 
     from apps.common.writers import write_compact_size
 
-    from .common import (
-        get_delegated_identity_key,
-        get_public_key_from_private_key,
-    )
+    from .common import get_public_key_from_private_key
 
-    private_key = get_delegated_identity_key()
+    private_key = delegated_identity()
     public_key = get_public_key_from_private_key(private_key)
 
     header = b"EvoluSignRegistrationRequestV1:"

@@ -47,9 +47,7 @@ class TestCheckDelegatedIdentityKey(unittest.TestCase):
 
         from trezor.wire import DataError
 
-        from apps.evolu.evolu_sign_registration_request import (
-            _check_data,
-        )
+        from apps.evolu.evolu_sign_registration_request import _check_data
 
         sign_request_challenge = unhexlify("1234")
         sign_request_size: int = 256**4 + 5  # invalid size
@@ -67,9 +65,7 @@ class TestCheckDelegatedIdentityKey(unittest.TestCase):
 
         from trezor.wire import DataError
 
-        from apps.evolu.evolu_sign_registration_request import (
-            _check_data,
-        )
+        from apps.evolu.evolu_sign_registration_request import _check_data
 
         sign_request_challenge = unhexlify("")  # invalid length
         sign_request_size: int = 10

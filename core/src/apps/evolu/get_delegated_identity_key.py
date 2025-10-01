@@ -32,11 +32,11 @@ async def get_delegated_identity_key(
         ValueError: If THP is enabled but the credential is missing or invalid.
     """
 
+    from trezorutils import delegated_identity
+
     from trezor import utils, wire
     from trezor.messages import EvoluDelegatedIdentityKey
     from trezor.utils import bootloader_locked
-
-    from .common import get_delegated_identity_key
 
     if not bootloader_locked():
         raise wire.ProcessError(
@@ -51,7 +51,7 @@ async def get_delegated_identity_key(
     else:
         await confirm_no_thp()
 
-    private_key = get_delegated_identity_key()
+    private_key = delegated_identity()
 
     return EvoluDelegatedIdentityKey(private_key=private_key)
 
