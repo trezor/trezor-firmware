@@ -41,7 +41,7 @@ def get_node(
 ) -> str:
     """Return the SLIP-21 node for Evolu."""
     proof_bytes = bytes.fromhex(proof) if proof else None
-    return evolu.get_evolu_node(session, proof=proof_bytes).data.hex()
+    return evolu.get_evolu_node(session, proof=proof_bytes).hex()
 
 
 @cli.command()
@@ -91,4 +91,4 @@ def get_delegated_identity_key(
         session=session,
         thp_credentials=thp_credentials,
         host_static_public_key=host_static_public_key,
-    ).private_key.hex()
+    ).hex()

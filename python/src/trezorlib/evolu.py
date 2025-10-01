@@ -23,11 +23,11 @@ if TYPE_CHECKING:
     from .transport.session import Session
 
 
-def get_evolu_node(session: "Session", proof: Optional[bytes]) -> messages.EvoluNode:
+def get_evolu_node(session: "Session", proof: Optional[bytes]) -> bytes:
     return session.call(
         messages.EvoluGetNode(proof_of_delegated_identity=proof),
         expect=messages.EvoluNode,
-    )
+    ).data
 
 
 def evolu_sign_registration_request(
@@ -47,7 +47,7 @@ def get_delegated_identity_key(
     session: "Session",
     thp_credentials: Optional[bytes] = None,
     host_static_public_key: Optional[bytes] = None,
-) -> messages.EvoluDelegatedIdentityKey:
+) -> bytes:
 
     return session.call(
         messages.EvoluGetDelegatedIdentityKey(
@@ -55,4 +55,4 @@ def get_delegated_identity_key(
             host_static_public_key=host_static_public_key,
         ),
         expect=messages.EvoluDelegatedIdentityKey,
-    )
+    ).private_key
