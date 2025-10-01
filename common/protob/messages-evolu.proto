@@ -50,7 +50,7 @@ message EvoluRegistrationRequest {
 }
 
 /**
- * Request: Request the device for the delegated identity key.
+ * Request: Request the delegated identity key from the device.
  * @start
  * @next EvoluDelegatedIdentityKey
  * @next Failure
