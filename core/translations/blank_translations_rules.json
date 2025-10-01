@@ -1,0 +1,96 @@
+[
+  {
+    "prefix": "ble__",
+    "allowedLayouts": ["Eckhart"],
+    "description": "BLE related strings only in Eckhart"
+  },
+  {
+    "prefix": "thp__",
+    "allowedLayouts": ["Eckhart"],
+    "description": "THP related strings only in Eckhart"
+  },
+  {
+    "prefix": "sd_card__",
+    "allowedLayouts": ["Bolt", "Delizia"],
+    "description": "Only Bolt and Delizia have SD card support"
+  },
+  {
+    "exact": ["auto_lock__on_battery", "auto_lock__on_usb"],
+    "allowedLayouts": ["Eckhart"],
+    "description": "Auto-lock distinction only in battery-powered devices."
+  },
+  {
+    "exact": ["sn__title", "sn__action"],
+    "allowedLayouts": ["Eckhart"],
+    "description": "Extracting serial number only in Eckhart"
+  },
+  {
+    "prefix": "led__",
+    "allowedLayouts": ["Eckhart"],
+    "description": "Only Eckhart has LED"
+  },
+  {
+    "prefix": "haptic_feedback__",
+    "allowedLayouts": ["Delizia", "Eckhart"],
+    "description": "Only Delizia and Eckhart have haptic feedback"
+  },
+  {
+    "prefix": "eos__",
+    "allowedLayouts": ["Bolt"],
+    "description": "Only Bolt has EOS support"
+  },
+  {
+    "prefix": "nem__",
+    "allowedLayouts": ["Bolt"],
+    "description": "Only Bolt has NEM support"
+  },
+  {
+    "prefix": "inputs__",
+    "allowedLayouts": ["Caesar"],
+    "description": "Theese are used only in Caesar input keyboard methods"
+  },
+  {
+    "exact": "tutorial__swipe_up_and_down",
+    "allowedLayouts": ["Delizia"],
+    "description": "Only Delizia has swipe up and down navigation"
+  },
+  {
+    "exact": ["tutorial__tropic_info", "tutorial__what_is_tropic"],
+    "allowedLayouts": ["Eckhart"],
+    "description": "Only Eckhart has tropic"
+  },
+  {
+    "exact": "tutorial__welcome_safe5",
+    "allowedLayouts": ["Delizia"]
+  },
+  {
+    "exact": "backup__title_backup_wallet",
+    "allowedLayouts": ["Caesar"]
+  },
+  {
+    "exact": [
+      "tutorial__welcome_safe7",
+      "tutorial__navigation_ts7",
+      "tutorial__power"
+    ],
+    "allowedLayouts": ["Eckhart"]
+  },
+  {
+    "exact": [
+      "reset__all_x_of_y_template",
+      "reset__any_x_of_y_template",
+      "reset__need_all_share_template",
+      "reset__need_any_share_template",
+      "reset__needed_to_form_a_group",
+      "reset__needed_to_recover_your_wallet",
+      "reset__num_of_shares_basic_info_template",
+      "reset__one_share",
+      "reset__set_it_to_count_template",
+      "reset__the_threshold_sets_the_number_of_shares",
+      "reset__to_form_group_template",
+      "reset__you_need_one_share"
+    ],
+    "allowedLayouts": ["Bolt"],
+    "description": "These are specific to Bolt layout"
+  }
+]
