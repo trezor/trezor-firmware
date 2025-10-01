@@ -38,13 +38,10 @@ def cli() -> None:
 def get_node(
     session: "Session",
     proof: str,
-) -> dict[str, str]:
+) -> str:
     """Return the SLIP-21 node for Evolu."""
     proof_bytes = bytes.fromhex(proof) if proof else None
-    node: messages.EvoluNode = evolu.get_evolu_node(session, proof=proof_bytes)
-    return {
-        "data": node.data.hex(),
-    }
+    return evolu.get_evolu_node(session, proof=proof_bytes).data.hex()
 
 
 @cli.command()
@@ -58,7 +55,7 @@ def evolu_sign_registration_request(
     challenge: str,
     size: int,
 ) -> dict[str, str]:
-    """Test request that signs a challenge and a size and returns a key."""
+    """Sign a registration request for this device to be registred at the Gate server."""
 
     response: messages.EvoluRegistrationRequest = evolu.evolu_sign_registration_request(
         session=session,
@@ -81,7 +78,11 @@ def get_delegated_identity_key(
     credential: Optional[str] = None,
     pubkey: Optional[str] = None,
 ) -> dict[str, str]:
-    """Request the device for the delegated identity key for Evolu."""
+    """
+    Request the device for the delegated identity key.
+    This key is used to prove the identity of the device at the Gate server and to prove
+    to Trezor that this Suite has been given trust by user to manage the Secure Sync.
+    """
 
     thp_credentials = bytes.fromhex(credential) if credential else None
     host_static_public_key = bytes.fromhex(pubkey) if pubkey else None
