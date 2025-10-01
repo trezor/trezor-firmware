@@ -1,5 +1,11 @@
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from buffer_types import AnyBytes
+
+
 def check_delegated_identity_proof(
-    provided_proof: bytes, header: bytes, arguments: list[bytes] | None = None
+    provided_proof: AnyBytes, header: AnyBytes, arguments: list[AnyBytes] | None = None
 ) -> bool:
     from trezorutils import delegated_identity
 

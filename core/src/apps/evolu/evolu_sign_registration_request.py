@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from trezor.messages import EvoluRegistrationRequest, EvoluSignRegistrationRequest
+    from buffer_types import AnyBytes
 
 
 async def evolu_sign_registration_request(
@@ -85,7 +86,7 @@ def _check_data(challenge: bytes, size: int) -> tuple[bytes, bytes]:
     return challenge, size_to_acquire_bytes
 
 
-def _get_certificates() -> list[bytes]:
+def _get_certificates() -> list[AnyBytes]:
     from trezor.utils import BufferReader
     from trezor.crypto.der import read_length
     from trezor.crypto import optiga
