@@ -11,8 +11,6 @@ from trezorlib.messages import (
 )
 from trezorlib.transport.thp import curve25519
 
-# make -C core test_emu TESTOPTS="-k test_evolu_commands_THP.py"
-
 pytestmark = pytest.mark.protocol("protocol_v2")
 
 TEST_host_static_private_key = curve25519.get_private_key(os.urandom(32))
@@ -62,7 +60,7 @@ def test_evolu_get_delegated_identity_is_constant_ts7(client: Client):
 
     response = session.call(
         EvoluGetDelegatedIdentityKey(
-            thp_credentials=credential_data.credential,
+            thp_credential=credential_data.credential,
             host_static_public_key=TEST_host_static_public_key,
         ),
         expect=EvoluDelegatedIdentityKey,
@@ -73,7 +71,7 @@ def test_evolu_get_delegated_identity_is_constant_ts7(client: Client):
 
     response_2 = session.call(
         EvoluGetDelegatedIdentityKey(
-            thp_credentials=credential_data.credential,
+            thp_credential=credential_data.credential,
             host_static_public_key=TEST_host_static_public_key,
         ),
         expect=EvoluDelegatedIdentityKey,
@@ -90,7 +88,7 @@ def test_evolu_get_delegated_identity_test_vector_ts7(client: Client):
 
     response = session.call(
         EvoluGetDelegatedIdentityKey(
-            thp_credentials=credential_data.credential,
+            thp_credential=credential_data.credential,
             host_static_public_key=TEST_host_static_public_key,
         ),
         expect=EvoluDelegatedIdentityKey,

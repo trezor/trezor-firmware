@@ -3,8 +3,6 @@ import pytest
 from trezorlib import evolu
 from trezorlib.debuglink import SessionDebugWrapper as Session
 
-# make -C core test_emu TESTOPTS="-k test_evolu_commands.py"
-
 pytestmark = pytest.mark.models("safe")
 
 

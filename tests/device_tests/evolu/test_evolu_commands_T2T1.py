@@ -4,8 +4,6 @@ from trezorlib import evolu
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 
-# make -C core test_emu TESTOPTS="-k test_evolu_commands_T2T1.py"
-
 pytestmark = pytest.mark.models("t2t1")
 
 
