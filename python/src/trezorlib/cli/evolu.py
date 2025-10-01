@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Optional
 
 import click
 
-from .. import evolu, messages
+from .. import evolu
 from . import with_session
 
 if TYPE_CHECKING:
@@ -77,7 +77,7 @@ def get_delegated_identity_key(
     session: "Session",
     credential: Optional[str] = None,
     pubkey: Optional[str] = None,
-) -> dict[str, str]:
+) -> str:
     """
     Request the device for the delegated identity key.
     This key is used to prove the identity of the device at the Gate server and to prove
@@ -87,11 +87,8 @@ def get_delegated_identity_key(
     thp_credentials = bytes.fromhex(credential) if credential else None
     host_static_public_key = bytes.fromhex(pubkey) if pubkey else None
 
-    key_pair: messages.EvoluDelegatedIdentityKey = evolu.get_delegated_identity_key(
+    return evolu.get_delegated_identity_key(
         session=session,
         thp_credentials=thp_credentials,
         host_static_public_key=host_static_public_key,
-    )
-    return {
-        "private_key": key_pair.private_key.hex(),
-    }
+    ).private_key.hex()
