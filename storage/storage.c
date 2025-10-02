@@ -709,7 +709,7 @@ static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
     goto cleanup;
   }
 #endif
-#if USE_TROPIC || USE_OPTIGA
+#if STRETCHED_PIN_COUNT > 1
   for (int i = 1; i < STRETCHED_PIN_COUNT; i++) {
     memcpy(stretched_pins[i], stretched_pins[0], SHA256_DIGEST_LENGTH);
   }
@@ -748,6 +748,7 @@ static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
     goto cleanup;
   }
 #else
+  _Static_assert(STRETCHED_PIN_COUNT == 1, "KEK masks not defined");
   memcpy(kek, stretched_pins[0], SHA256_DIGEST_LENGTH);
 #endif
   ret = sectrue;

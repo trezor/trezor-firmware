@@ -101,6 +101,12 @@ void optiga_set_sec_max(void) {}
 
 bool optiga_pin_init(optiga_ui_progress_t ui_progress) { return true; }
 
+bool optiga_pin_stretch_cmac_ecdh(
+    optiga_ui_progress_t ui_progress,
+    uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
+  return true;
+}
+
 uint32_t optiga_estimate_time_ms(storage_pin_op_t op, uint8_t slot_index) {
   return 0;
 }
