@@ -100,7 +100,7 @@ async def _handle_state_handshake(
 
     host_ephemeral_public_key = payload[:PUBKEY_LENGTH]
     # a non-zero value will show the PIN keyboard to allow the user to unlock the device
-    try_to_unlock = payload[PUBKEY_LENGTH] != 0
+    try_to_unlock = payload[PUBKEY_LENGTH] & 0x01 == 1
 
     async def _check_unlocked() -> None:
         if config.is_unlocked():
