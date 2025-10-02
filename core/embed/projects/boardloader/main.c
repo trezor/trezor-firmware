@@ -32,6 +32,8 @@
 #include <util/option_bytes.h>
 #include <util/rsod.h>
 
+#include <io/backlight.h>
+
 #ifdef USE_BOOT_UCB
 #include <util/boot_header.h>
 #include <util/boot_ucb.h>
@@ -317,6 +319,19 @@ int main(void) {
 
   // Initialize drivers needed in the boardloader
   drivers_init();
+
+  // while (1)
+  // {
+  //   for (uint8_t i = 1; i < 255; i++) {
+  //     backlight_set(i);
+  //     hal_delay(10);
+  //   }
+
+  //   for (uint8_t i = 255; i > 0; i--) {
+  //     backlight_set(i);
+  //     hal_delay(10);
+  //   }
+  // }
 
 #ifdef USE_SD_CARD
   // Try to update the bootloader form the SD card
