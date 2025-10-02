@@ -837,6 +837,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_sign_message__message_size;
   MP_QSTR_sign_message__verify_address;
   MP_QSTR_skip_first_paint;
+  MP_QSTR_sn__action;
+  MP_QSTR_sn__title;
   MP_QSTR_start_advertising;
   MP_QSTR_start_comm;
   MP_QSTR_storage_msg__processing;

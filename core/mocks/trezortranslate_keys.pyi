@@ -845,6 +845,8 @@ class TR:
     sign_message__confirm_without_review: str = "Confirm without review"
     sign_message__message_size: str = "Message size"
     sign_message__verify_address: str = "Verify address"
+    sn__action: str = "Allow connected host to get serial number of your Trezor Safe 7?"
+    sn__title: str = "Serial number"
     solana__account_index: str = "Account index"
     solana__associated_token_account: str = "Associated token account"
     solana__base_fee: str = "Base fee"

@@ -30,6 +30,7 @@ from trezorutils import (  # noqa: F401
     USE_POWER_MANAGER,
     USE_RGB_LED,
     USE_SD_CARD,
+    USE_SERIAL_NUMBER,
     USE_THP,
     USE_TOUCH,
     USE_TROPIC,
@@ -53,6 +54,9 @@ from trezorutils import (  # noqa: F401
 
 if USE_NRF:
     from trezorutils import nrf_get_version  # noqa: F401
+
+if USE_SERIAL_NUMBER:
+    from trezorutils import serial_number  # noqa: F401
 
 from typing import TYPE_CHECKING
 

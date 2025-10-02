@@ -61,6 +61,7 @@ FEATURES_WANTED = [
     "rgb_led",
     "sd_card",
     "secmon_layout",
+    "serial_number",
     "storage",
     "suspend",
     "tropic",
@@ -448,10 +449,8 @@ SOURCE_FIRMWARE = [
     'embed/projects/firmware/nlrthumb.c',
 ]
 
-if 'sd_card' in FEATURES_AVAILABLE:
-    SDCARD = True
-else:
-    SDCARD = False
+SDCARD = ('sd_card' in FEATURES_AVAILABLE)
+SERIAL_NUMBER = ('serial_number' in FEATURES_AVAILABLE)
 
 env.Tool('micropython')
 
@@ -713,10 +712,11 @@ if FROZEN:
         ] if TREZOR_MODEL != "T3W1" else [])
     )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py',
-        exclude=[
-            SOURCE_PY_DIR + 'apps/management/sd_protect.py',
-        ] if not SDCARD else [])
-    )
+        exclude=(
+            ([SOURCE_PY_DIR + 'apps/management/sd_protect.py'] if not SDCARD else []) +
+            ([SOURCE_PY_DIR + 'apps/management/get_serial_number.py'] if not SERIAL_NUMBER else [])
+        )
+    ))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py',
         exclude=(
             ([SOURCE_PY_DIR + 'apps/management/ble/*.py'] if "ble" not in FEATURES_AVAILABLE else [])

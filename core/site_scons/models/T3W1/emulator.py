@@ -137,4 +137,7 @@ def configure(
         "embed/gfx/jpegdec/unix/jpegdec.c",
     ]
 
+    if "serial_number" in features_wanted:
+        defines += [("USE_SERIAL_NUMBER", "1")]
+
     return features_available

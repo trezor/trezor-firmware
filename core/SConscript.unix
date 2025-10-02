@@ -34,6 +34,7 @@ FEATURES_WANTED = [
     "rgb_led",
     "sd_card",
     "secure_mode",
+    "serial_number",
     "storage",
     "usb",
     "usb_iface_wire",
@@ -729,7 +730,9 @@ if FROZEN:
             SOURCE_PY_DIR + 'apps/management/sd_protect.py',
         ] if "sd_card" not in FEATURES_AVAILABLE else [] + [
             SOURCE_PY_DIR + 'apps/management/authenticate_device.py',
-        ] if "optiga" not in FEATURES_AVAILABLE else [])
+        ] if "optiga" not in FEATURES_AVAILABLE else [] + [
+            SOURCE_PY_DIR + 'apps/management/get_serial_number.py',
+        ] if "serial_number" not in FEATURES_AVAILABLE else [])
     )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py',
         exclude=(

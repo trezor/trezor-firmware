@@ -56,6 +56,8 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.management.change_wipe_code"
     if msg_type == MessageType.GetNonce:
         return "apps.management.get_nonce"
+    if utils.USE_SERIAL_NUMBER and msg_type == MessageType.GetSerialNumber:
+        return "apps.management.get_serial_number"
     if msg_type == MessageType.RebootToBootloader:
         return "apps.management.reboot_to_bootloader"
 
