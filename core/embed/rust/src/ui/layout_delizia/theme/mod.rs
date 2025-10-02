@@ -763,7 +763,7 @@ pub const TEXT_MONO_GREY_LIGHT: TextStyle = TextStyle {
 /// Makes sure that the displayed text (usually address) will get divided into
 /// smaller chunks.
 pub const TEXT_MONO_ADDRESS_CHUNKS: TextStyle = TEXT_MONO_DATA
-    .with_chunks(Chunks::new(4, 10))
+    .with_chunks(Chunks::new(4, 10).with_max_rows(4))
     .with_line_spacing(4);
 
 // TODO: remove TextStyles below when ui-t3t1 done
