@@ -89,19 +89,48 @@ async def _handle_state_handshake(
 
     payload = await ctx.recv_payload(control_byte.is_handshake_init_req)
 
-    if len(payload) != PUBKEY_LENGTH:
-        log.error(__name__, "Message received is not a valid handshake init request!")
+    if len(payload) != PUBKEY_LENGTH + 1:
+        if __debug__:
+            log.error(
+                __name__,
+                "Message received is not a valid handshake init request: %d bytes",
+                len(payload),
+            )
         return
 
-    if not config.is_unlocked():
+    host_ephemeral_public_key = payload[:PUBKEY_LENGTH]
+    # show the PIN keyboard to allow the user to unlock the device
+    try_to_unlock = payload[PUBKEY_LENGTH] & 0x01 == 1
+
+    async def _check_unlocked() -> None:
+        if config.is_unlocked():
+            return
+
+        if try_to_unlock:
+            from trezor import workflow
+
+            from apps.common.lock_manager import unlock_device
+
+            # Register the unlock prompt with the workflow management system
+            # (in order to avoid immediately respawning the lockscreen task)
+            try:
+                return await workflow.spawn(unlock_device())
+            except Exception as e:
+                if __debug__:
+                    log.exception(__name__, e)
+
+        # Fail pairing if still locked
         raise ThpDeviceLockedError
+
+    await _check_unlocked()
 
     handshake = Handshake()
 
     trezor_ephemeral_public_key, encrypted_trezor_static_public_key, tag = (
         handshake.handle_th1_crypto(
             get_encoded_device_properties(ctx.iface),
-            host_ephemeral_public_key=payload,
+            host_ephemeral_public_key=host_ephemeral_public_key,
+            payload=payload[PUBKEY_LENGTH:],
         )
     )
 
@@ -130,8 +159,7 @@ async def _handle_state_handshake(
     # will be `None` on USB interface, to be ignored by `cache_host_info()`
     mac_addr: AnyBytes | None = ctx.iface_ctx.connected_addr()
 
-    if not config.is_unlocked():
-        raise ThpDeviceLockedError
+    await _check_unlocked()
 
     host_encrypted_static_public_key = payload[: KEY_LENGTH + TAG_LENGTH]
     handshake_completion_request_noise_payload = payload[KEY_LENGTH + TAG_LENGTH :]
