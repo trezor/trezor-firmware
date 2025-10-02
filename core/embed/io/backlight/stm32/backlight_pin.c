@@ -56,7 +56,7 @@ bool backlight_init(backlight_action_t action) {
   backlight_driver_t *drv = &g_backlight_driver;
 
   if (drv->initialized) {
-    return false;
+    return true;
   }
 
   BACKLIGHT_PIN_CLK_ENABLE();
