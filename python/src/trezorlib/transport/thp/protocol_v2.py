@@ -225,12 +225,15 @@ class ProtocolV2Channel(Channel):
         self._read_ack()
         return self._read_handshake_completion_response()
 
-    def _send_handshake_init_request(self) -> None:
-        ha_init_req_header = MessageHeader(0, self.channel_id, 36)
+    def _send_handshake_init_request(self, try_to_unlock: bool = True) -> None:
         host_ephemeral_pubkey = self._noise.write_message()
+        payload = host_ephemeral_pubkey + bytes([try_to_unlock])
+        ha_init_req_header = MessageHeader(
+            0, self.channel_id, len(payload) + CHECKSUM_LENGTH
+        )
 
         thp_io.write_payload_to_wire_and_add_checksum(
-            self.transport, ha_init_req_header, host_ephemeral_pubkey
+            self.transport, ha_init_req_header, payload
         )
 
     def _read_handshake_init_response(self) -> bytes:
