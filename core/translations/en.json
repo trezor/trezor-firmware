@@ -1057,6 +1057,18 @@
     "sign_message__confirm_without_review": "Confirm without review",
     "sign_message__message_size": "Message size",
     "sign_message__verify_address": "Verify address",
+    "sn__action": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Allow connected host to get serial number of your Trezor Safe 7?"
+    },
+    "sn__title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Serial number"
+    },
     "solana__account_index": "Account index",
     "solana__associated_token_account": "Associated token account",
     "solana__base_fee": "Base fee",

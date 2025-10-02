@@ -1552,6 +1552,8 @@ pub enum TranslatedString {
     ble__mac_address = 1162,  // "MAC address"
     ble__waiting_for_host = 1163,  // "Waiting for host..."
     ble__apps_connected = 1164,  // "Apps connected"
+    sn__action = 1165,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Allow connected host to get serial number of your Trezor Safe 7?"}
+    sn__title = 1166,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Serial number"}
 }
 
 impl TranslatedString {
@@ -3538,6 +3540,22 @@ impl TranslatedString {
             (Self::ble__mac_address, "MAC address"),
             (Self::ble__waiting_for_host, "Waiting for host..."),
             (Self::ble__apps_connected, "Apps connected"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::sn__action, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sn__action, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sn__action, ""),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sn__action, "Allow connected host to get serial number of your Trezor Safe 7?"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::sn__title, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sn__title, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sn__title, ""),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sn__title, "Serial number"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -4692,6 +4710,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_sign_message__confirm_without_review, Self::sign_message__confirm_without_review),
         (Qstr::MP_QSTR_sign_message__message_size, Self::sign_message__message_size),
         (Qstr::MP_QSTR_sign_message__verify_address, Self::sign_message__verify_address),
+        (Qstr::MP_QSTR_sn__action, Self::sn__action),
+        (Qstr::MP_QSTR_sn__title, Self::sn__title),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__account_index, Self::solana__account_index),
         #[cfg(feature = "universal_fw")]

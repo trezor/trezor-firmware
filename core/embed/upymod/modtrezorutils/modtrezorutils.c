@@ -55,6 +55,8 @@
 #include <sys/stack_utils.h>
 #endif
 
+/// from trezor import utils
+
 /// def consteq(sec: AnyBytes, pub: AnyBytes) -> bool:
 ///     """
 ///     Compares the private information in `sec` with public, user-provided
@@ -267,6 +269,27 @@ STATIC mp_obj_t mod_trezorutils_unit_packaging(void) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_unit_packaging_obj,
                                  mod_trezorutils_unit_packaging);
+
+#if USE_SERIAL_NUMBER
+
+/// if utils.USE_SERIAL_NUMBER:
+///     def serial_number() -> str:
+///         """
+///         Returns unit serial number.
+///         """
+STATIC mp_obj_t mod_trezorutils_serial_number(void) {
+  uint8_t device_sn[MAX_DEVICE_SN_SIZE] = {0};
+  size_t device_sn_size = 0;
+  if (!unit_properties_get_sn(device_sn, MAX_DEVICE_SN_SIZE, &device_sn_size)) {
+    mp_raise_msg(&mp_type_RuntimeError,
+                 MP_ERROR_TEXT("Failed to read serial number."));
+  }
+  return mp_obj_new_str_copy(&mp_type_str, device_sn, device_sn_size);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_serial_number_obj,
+                                 mod_trezorutils_serial_number);
+
+#endif  // USE_SERIAL_NUMBER
 
 /// def sd_hotswap_enabled() -> bool:
 ///     """
@@ -641,6 +664,8 @@ STATIC mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """Whether the hardware supports BLE."""
 /// USE_SD_CARD: bool
 /// """Whether the hardware supports SD card."""
+/// USE_SERIAL_NUMBER: bool
+/// """Whether the hardware support exporting its serial number."""
 /// USE_BACKLIGHT: bool
 /// """Whether the hardware supports backlight brightness control."""
 /// USE_HAPTIC: bool
@@ -746,6 +771,13 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
      MP_ROM_PTR(&mod_trezorutils_unit_packaging_obj)},
     {MP_ROM_QSTR(MP_QSTR_unit_btconly),
      MP_ROM_PTR(&mod_trezorutils_unit_btconly_obj)},
+#if USE_SERIAL_NUMBER
+    {MP_ROM_QSTR(MP_QSTR_serial_number),
+     MP_ROM_PTR(&mod_trezorutils_serial_number_obj)},
+    {MP_ROM_QSTR(MP_QSTR_USE_SERIAL_NUMBER), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_SERIAL_NUMBER), mp_const_false},
+#endif
 #if !PYOPT
 #if LOG_STACK_USAGE
     {MP_ROM_QSTR(MP_QSTR_zero_unused_stack),

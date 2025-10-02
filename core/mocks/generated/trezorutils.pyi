@@ -7,6 +7,7 @@ def meminfo(filename: str | None) -> None:
     """Dumps map of micropython GC arena to a file.
     The JSON file can be decoded by analyze-memory-dump.py
      """
+from trezor import utils
 
 
 # upymod/modtrezorutils/modtrezorutils.c
@@ -88,6 +89,11 @@ def unit_packaging() -> int | None:
     """
     Returns the packaging version of the unit.
     """
+if utils.USE_SERIAL_NUMBER:
+    def serial_number() -> str:
+        """
+        Returns unit serial number.
+        """
 
 
 # upymod/modtrezorutils/modtrezorutils.c
@@ -202,6 +208,8 @@ USE_BLE: bool
 """Whether the hardware supports BLE."""
 USE_SD_CARD: bool
 """Whether the hardware supports SD card."""
+USE_SERIAL_NUMBER: bool
+"""Whether the hardware support exporting its serial number."""
 USE_BACKLIGHT: bool
 """Whether the hardware supports backlight brightness control."""
 USE_HAPTIC: bool
