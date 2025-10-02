@@ -14,8 +14,8 @@ use crate::ui::{component::Timer, util::animation_disabled};
 use super::super::{
     fonts,
     theme::{
-        GREY_LIGHT, ICON_BATTERY_EMPTY, ICON_BATTERY_FULL, ICON_BATTERY_LOW, ICON_BATTERY_MID,
-        ICON_BATTERY_ZAP, RED, YELLOW,
+        GREY_LIGHT, ICON_BATTERY_EMPTY, ICON_BATTERY_FULL, ICON_BATTERY_LOW,
+        ICON_BATTERY_MID_MINUS, ICON_BATTERY_MID_PLUS, ICON_BATTERY_ZAP, RED, YELLOW,
     },
 };
 
@@ -117,21 +117,26 @@ impl FuelGauge {
     /// Returns the icon, color for the icon, and color for the text based on
     /// the charging state and state of charge (soc).
     fn battery_indication(&self, charging_state: ChargingState, soc: u8) -> (Icon, Color, Color) {
-        const SOC_THRESHOLD_FULL: u8 = 80;
-        const SOC_THRESHOLD_MID: u8 = 25;
-        const SOC_THRESHOLD_LOW: u8 = 9;
+        const SOC_THRESHOLD_FULL: u8 = 90;
+        const SOC_THRESHOLD_MID_PLUS: u8 = 40;
+        const SOC_THRESHOLD_MID_MINUS: u8 = 20;
+        const SOC_THRESHOLD_LOW: u8 = 10;
         match charging_state {
             ChargingState::Charging => (ICON_BATTERY_ZAP, YELLOW, GREY_LIGHT),
             ChargingState::Discharging | ChargingState::Idle => {
-                if soc > SOC_THRESHOLD_FULL {
-                    (ICON_BATTERY_FULL, GREY_LIGHT, GREY_LIGHT)
-                } else if soc > SOC_THRESHOLD_MID {
-                    (ICON_BATTERY_MID, GREY_LIGHT, GREY_LIGHT)
-                } else if soc > SOC_THRESHOLD_LOW {
-                    (ICON_BATTERY_LOW, YELLOW, GREY_LIGHT)
-                } else {
-                    (ICON_BATTERY_EMPTY, RED, RED)
-                }
+                let icon = match soc {
+                    x if x >= SOC_THRESHOLD_FULL => ICON_BATTERY_FULL,
+                    x if x >= SOC_THRESHOLD_MID_PLUS => ICON_BATTERY_MID_PLUS,
+                    x if x >= SOC_THRESHOLD_MID_MINUS => ICON_BATTERY_MID_MINUS,
+                    x if x >= SOC_THRESHOLD_LOW => ICON_BATTERY_LOW,
+                    _ => ICON_BATTERY_EMPTY,
+                };
+                let (icon_color, text_color) = match soc {
+                    x if x >= SOC_THRESHOLD_MID_MINUS => (GREY_LIGHT, GREY_LIGHT),
+                    x if x >= SOC_THRESHOLD_LOW => (YELLOW, GREY_LIGHT),
+                    _ => (RED, RED),
+                };
+                (icon, icon_color, text_color)
             }
         }
     }
@@ -260,5 +265,43 @@ impl crate::trace::Trace for FuelGauge {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("FuelGauge");
         t.int("soc", self.soc.unwrap_or(0) as i64);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn charging_icon_constant() {
+        let gauge = FuelGauge::always();
+        for soc in [0u8, 1, 50, 100] {
+            let (icon, ic, tc) = gauge.battery_indication(ChargingState::Charging, soc);
+            assert!(icon == ICON_BATTERY_ZAP);
+            assert!(ic == YELLOW);
+            assert!(tc == GREY_LIGHT);
+        }
+    }
+
+    #[test]
+    fn discharging_threshold_boundaries() {
+        let gauge = FuelGauge::always();
+        // soc, expected icon, icon color, text color
+        let cases = [
+            (9, ICON_BATTERY_EMPTY, RED, RED),
+            (10, ICON_BATTERY_LOW, YELLOW, GREY_LIGHT),
+            (19, ICON_BATTERY_LOW, YELLOW, GREY_LIGHT),
+            (20, ICON_BATTERY_MID_MINUS, GREY_LIGHT, GREY_LIGHT),
+            (39, ICON_BATTERY_MID_MINUS, GREY_LIGHT, GREY_LIGHT),
+            (40, ICON_BATTERY_MID_PLUS, GREY_LIGHT, GREY_LIGHT),
+            (89, ICON_BATTERY_MID_PLUS, GREY_LIGHT, GREY_LIGHT),
+            (90, ICON_BATTERY_FULL, GREY_LIGHT, GREY_LIGHT),
+        ];
+        for (soc, exp_icon, exp_ic, exp_tc) in cases {
+            let (icon, ic, tc) = gauge.battery_indication(ChargingState::Discharging, soc);
+            assert!(icon == exp_icon, "icon soc={}", soc);
+            assert!(ic == exp_ic, "icon color soc={}", soc);
+            assert!(tc == exp_tc, "text color soc={}", soc);
+        }
     }
 }

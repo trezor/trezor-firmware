@@ -143,7 +143,14 @@ include_icon!(
 // Battery icons
 include_icon!(ICON_BATTERY_ZAP, "layout_eckhart/res/battery/zap.toif");
 include_icon!(ICON_BATTERY_FULL, "layout_eckhart/res/battery/full.toif");
-include_icon!(ICON_BATTERY_MID, "layout_eckhart/res/battery/mid.toif");
+include_icon!(
+    ICON_BATTERY_MID_PLUS,
+    "layout_eckhart/res/battery/mid_plus.toif"
+);
+include_icon!(
+    ICON_BATTERY_MID_MINUS,
+    "layout_eckhart/res/battery/mid_minus.toif"
+);
 include_icon!(ICON_BATTERY_LOW, "layout_eckhart/res/battery/low.toif");
 include_icon!(ICON_BATTERY_EMPTY, "layout_eckhart/res/battery/empty.toif");
 
