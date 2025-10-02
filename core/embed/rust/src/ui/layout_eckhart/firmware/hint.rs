@@ -36,8 +36,6 @@ impl<'a> Hint<'a> {
     pub const HEIGHT_MINIMAL: i16 = 40;
     /// height of the multi line component [px]
     pub const HEIGHT_MAXIMAL: i16 = 66;
-    /// margins from the edges of the screen [px]
-    const HINT_INSETS: Insets = Insets::new(16, 24, 24, 24);
 
     fn from_content(content: HintContent<'a>) -> Self {
         Self {
@@ -106,7 +104,8 @@ impl<'a> Hint<'a> {
     /// Returns the height of the content including padding. In case of the
     /// instruction, the height is calculated based on the text length.
     pub fn height(&self) -> i16 {
-        self.content.height() + Self::HINT_INSETS.top + Self::HINT_INSETS.bottom
+        let insets = self.content.insets();
+        self.content.height() + insets.top + insets.bottom
     }
 }
 
@@ -117,12 +116,14 @@ impl<'a> Component for Hint<'a> {
         debug_assert!(bounds.width() == screen().width());
         debug_assert!(bounds.height() == self.height());
 
+        let insets = self.content.insets();
+
         let pad_area = bounds
-            .inset(Insets::top(Self::HINT_INSETS.top))
-            .inset(Insets::bottom(Self::HINT_INSETS.bottom));
+            .inset(Insets::top(insets.top))
+            .inset(Insets::bottom(insets.bottom));
         self.pad.place(pad_area);
 
-        let bounds = bounds.inset(Self::HINT_INSETS);
+        let bounds = bounds.inset(insets);
 
         if let HintContent::Instruction(instruction) = &mut self.content {
             let text_area = match instruction.icon {
@@ -164,6 +165,13 @@ impl<'a> HintContent<'a> {
             HintContent::PageCounter(page_counter) => page_counter.render(target, area),
         }
     }
+
+    fn insets(&self) -> Insets {
+        match self {
+            HintContent::Instruction(_) => Instruction::INSETS,
+            HintContent::PageCounter(_) => PageCounter::INSETS,
+        }
+    }
 }
 
 // Helper componet used within Hint for instruction/hint rendering.
@@ -178,6 +186,8 @@ struct Instruction<'a> {
 impl<'a> Instruction<'a> {
     /// default style for instruction text
     const STYLE_INSTRUCTION: &'static TextStyle = &theme::firmware::TEXT_SMALL;
+    /// margins from the edges of the screen [px]
+    const INSETS: Insets = Insets::new(16, 24, 24, 24);
 
     fn new(
         text: TString<'a>,
@@ -203,7 +213,7 @@ impl<'a> Instruction<'a> {
 
     /// Calculates the height needed for the Instruction text to be rendered.
     fn height(&self) -> i16 {
-        let text_area_width = screen().inset(Hint::HINT_INSETS).width() - self.icon_width();
+        let text_area_width = screen().inset(Self::INSETS).width() - self.icon_width();
         let calculated_height = self.label.text_height(text_area_width);
         debug_assert!(calculated_height <= Hint::HEIGHT_MAXIMAL);
         calculated_height
@@ -229,6 +239,9 @@ struct PageCounter {
 }
 
 impl PageCounter {
+    /// margins from the edges of the screen [px]
+    const INSETS: Insets = Insets::new(16, 24, 14, 12);
+
     fn new() -> Self {
         Self {
             pager: Pager::single_page(),
@@ -259,7 +272,7 @@ impl PageCounter {
         let width_num_max = font.text_width(&string_max);
         let width_total = width_num_curr + width_foreslash + width_num_max + 2 * offset_x.x;
 
-        let counter_area = area.inset(Hint::HINT_INSETS);
+        let counter_area = area.inset(Self::INSETS);
         let counter_start_x = counter_area.bottom_left().x;
         let counter_y = font.vert_center(counter_area.y0, counter_area.y1, "0");
         let counter_end_x = counter_start_x + width_total;
@@ -307,7 +320,7 @@ mod tests {
         // FIXME: this test is fine but the `screen()` is not returning the right value
         // for eckhart println!("screen size: {:?}", screen().width());
 
-        let with_padding = |h: i16| h + Hint::HINT_INSETS.top + Hint::HINT_INSETS.bottom;
+        let with_padding = |h: i16| h + Instruction::INSETS.top + Instruction::INSETS.bottom;
         let hint_1line = Hint::new_instruction("Test", None);
         assert_eq!(hint_1line.content.height(), Hint::HEIGHT_MINIMAL);
         assert_eq!(hint_1line.height(), with_padding(Hint::HEIGHT_MINIMAL));
