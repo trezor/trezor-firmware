@@ -114,7 +114,7 @@ pub const TEXT_SMALL_LIGHT: TextStyle =
 /// Makes sure that the displayed text (usually address) will get divided into
 /// smaller chunks.
 pub const TEXT_MONO_ADDRESS_CHUNKS: TextStyle = TEXT_MONO_LIGHT
-    .with_chunks(Chunks::new(4, 13))
+    .with_chunks(Chunks::new(4, 13).with_max_rows(4))
     .with_line_spacing(16)
     .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth);
 
