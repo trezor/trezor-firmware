@@ -53,7 +53,6 @@ bool rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
       dst[i] ^= block[i];
     }
 #endif
-#if PRODUCTION  // // HOTFIX -- DELETE IT --
 #ifdef USE_TROPIC
     if (!tropic_random_buffer(block, block_size)) {
       return false;
@@ -62,7 +61,6 @@ bool rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
     for (size_t i = 0; i < block_size; i++) {
       dst[i] ^= block[i];
     }
-#endif
 #endif
     dst += block_size;
     remaining -= block_size;
