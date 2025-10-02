@@ -186,6 +186,7 @@ enum MessageType {
     MessageType_LiskPublicKey = 122 [(wire_out) = true];
     */
     reserved 114 to 122;
+    reserved 123 to 149;  // reserved for internal use
 
     // Tezos
     MessageType_TezosGetAddress = 150 [(wire_in) = true];
