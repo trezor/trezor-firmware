@@ -101,7 +101,7 @@ pub fn new_receive(
         extra: "".into(),
         value: content.into(),
         font: if chunkify {
-            theme::get_chunkified_text_style(content.len())
+            &theme::TEXT_MONO_ADDRESS_CHUNKS
         } else {
             &theme::TEXT_MONO_DATA
         },
