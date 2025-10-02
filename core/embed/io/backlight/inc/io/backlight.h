@@ -49,7 +49,7 @@ bool backlight_init(backlight_action_t action);
 void backlight_deinit(backlight_action_t action);
 
 // Requests the backlight level in range 0-255 and returns whether
-// the function executed successfuly or not. The requested level
+// the function executed successfully or not. The requested level
 // may be limited if it's above the max_level limit.
 //
 // If the backlight driver is not initialized, the function
