@@ -112,8 +112,7 @@ bool optiga_random_buffer(uint8_t *dest, size_t size) {
 
 bool optiga_pin_set(
     optiga_ui_progress_t ui_progress,
-    const uint8_t hmac_stretching_secret[OPTIGA_PIN_SECRET_SIZE],
-    uint8_t stretched_pins[OPTIGA_STRETCHED_PINS_COUNT][OPTIGA_PIN_SECRET_SIZE],
+    uint8_t stretched_pins[STRETCHED_PIN_COUNT][OPTIGA_PIN_SECRET_SIZE],
     uint8_t hmac_reset_key[OPTIGA_PIN_SECRET_SIZE]) {
   return true;
 }
@@ -127,7 +126,7 @@ optiga_pin_result optiga_pin_verify_v4(
 }
 
 optiga_pin_result optiga_pin_verify(
-    optiga_ui_progress_t ui_progress, uint8_t index,
+    optiga_ui_progress_t ui_progress, uint8_t pin_index,
     uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE]) {
   return OPTIGA_PIN_SUCCESS;
 }
