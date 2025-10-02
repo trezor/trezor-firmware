@@ -116,7 +116,8 @@ async def _handle_state_handshake(
             try:
                 return await workflow.spawn(unlock_device())
             except Exception as e:
-                log.exception(__name__, e)
+                if __debug__:
+                    log.exception(__name__, e)
 
         # Fail pairing if still locked
         raise ThpDeviceLockedError
