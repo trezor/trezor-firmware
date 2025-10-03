@@ -145,7 +145,7 @@ typedef struct {
 
 #ifdef USE_POWER_MANAGER
   cmd_update_battery_t battery_state;
-  bool battery_update_sent;
+  bool battery_update_request;
 #endif
 
 } ble_driver_t;
@@ -550,7 +550,7 @@ static void ble_process_rx_msg(const uint8_t *data, uint32_t len) {
       drv->result = false;
       break;
     case INTERNAL_EVENT_BATTERY_STATE_REQUEST:
-      drv->battery_update_sent = false;
+      drv->battery_update_request = true;
       break;
     default:
       break;
@@ -697,11 +697,11 @@ static void ble_loop(void *context) {
 
       if ((memcmp(&drv->battery_state, &battery_state,
                   sizeof(cmd_update_battery_t)) != 0) ||
-          !drv->battery_update_sent) {
+          drv->battery_update_request) {
         ble_send_battery_update(&battery_state);
         memcpy(&drv->battery_state, &battery_state,
                sizeof(cmd_update_battery_t));
-        drv->battery_update_sent = true;
+        drv->battery_update_request = false;
       }
     }
 #endif
@@ -755,6 +755,7 @@ bool ble_init(void) {
   }
 
   drv->power_level = BLE_TX_POWER_PLUS_4_DBM;
+  drv->battery_update_request = true;
   drv->initialized = true;
   return true;
 
