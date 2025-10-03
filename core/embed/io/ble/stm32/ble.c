@@ -1353,7 +1353,6 @@ void ble_set_enabled(bool enabled) {
 
   if (!enabled) {
     ble_switch_off();
-    return;
   }
 
   drv->enabled = enabled;
