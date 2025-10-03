@@ -538,8 +538,7 @@ optiga_result optiga_set_auto_state(uint16_t nonce_oid, uint16_t key_oid,
   // the receipt of the response. In such a case, the auto-state couldn't be
   // cleared using optiga_clear_all_auto_states().
   if (!auto_states_add(key_oid)) {
-    // This should never happen.
-    return OPTIGA_ERR_UNEXPECTED;
+    return OPTIGA_ERR_CODE_MEMORY;
   }
   ret = optiga_execute_command(tx_buffer, tx_size, tx_buffer, sizeof(tx_buffer),
                                &tx_size);
