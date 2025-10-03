@@ -19,7 +19,7 @@ use crate::{
 
 use super::{
     super::{
-        component::{Button, ButtonContent, ButtonMsg, FuelGauge},
+        component::{Button, ButtonContent, FuelGauge},
         fonts,
     },
     constant::{HEIGHT, SCREEN, WIDTH},
