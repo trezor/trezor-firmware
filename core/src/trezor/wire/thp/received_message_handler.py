@@ -130,6 +130,7 @@ async def _handle_state_handshake(
         handshake.handle_th1_crypto(
             get_encoded_device_properties(ctx.iface),
             host_ephemeral_public_key=host_ephemeral_public_key,
+            payload=payload[PUBKEY_LENGTH:],
         )
     )
 

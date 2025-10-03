@@ -226,8 +226,7 @@ class ProtocolV2Channel(Channel):
         return self._read_handshake_completion_response()
 
     def _send_handshake_init_request(self, try_to_unlock: bool = True) -> None:
-        host_ephemeral_pubkey = self._noise.write_message()
-        payload = host_ephemeral_pubkey + bytes([try_to_unlock])
+        payload = self._noise.write_message(bytes([try_to_unlock]))
         ha_init_req_header = MessageHeader(
             0, self.channel_id, len(payload) + CHECKSUM_LENGTH
         )
