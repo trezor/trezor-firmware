@@ -355,9 +355,9 @@ bool tropic_pin_reset_slots(
 
   mac_and_destroy_slot_t first_slot_index = get_first_mac_and_destroy_slot(drv);
 
-  for (int i = 0; i <= pin_index; i++) {
-    ui_progress();
+  ui_progress();
 
+  for (int i = 0; i <= pin_index; i++) {
     res = lt_mac_and_destroy(&drv->handle, first_slot_index + i, reset_key,
                              output);
     if (res != LT_OK) {
@@ -396,8 +396,6 @@ bool tropic_pin_set(
   ui_progress();
 
   for (int i = 0; i < PIN_MAX_TRIES; i++) {
-    ui_progress();
-
     res = lt_mac_and_destroy(&drv->handle, first_slot_index + i, reset_key,
                              output);
     if (res != LT_OK) {
@@ -462,8 +460,8 @@ bool tropic_pin_set_kek_masks(
 
   ui_progress();
 
-  ret = lt_r_mem_data_write(&drv->handle, masked_kek_slot, (uint8_t *)masks,
-                            sizeof(masks));
+  ret =
+      lt_r_mem_data_write(&drv->handle, masked_kek_slot, masks, sizeof(masks));
   if (ret != LT_OK) {
     goto cleanup;
   }
