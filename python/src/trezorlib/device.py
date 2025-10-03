@@ -650,3 +650,8 @@ def authenticate(session: "Session", challenge: bytes) -> messages.AuthenticityP
 def set_brightness(session: "Session", value: Optional[int] = None) -> str | None:
     ret = session.call(messages.SetBrightness(value=value), expect=messages.Success)
     return _return_success(ret)
+
+
+def get_serial_number(session: "Session") -> str:
+    ret = session.call(messages.GetSerialNumber(), expect=messages.SerialNumber)
+    return ret.serial_number
