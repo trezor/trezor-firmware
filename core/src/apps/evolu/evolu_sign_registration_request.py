@@ -77,7 +77,7 @@ def _check_data(challenge: AnyBytes, size: int) -> tuple[AnyBytes, bytes]:
 
     if not 1 <= len(challenge) <= 255:
         raise wire.DataError("Invalid challenge length")
-    if not 0 <= size < 256**4:
+    if not 0 <= size <= 0xFFFFFFFF:
         raise wire.DataError("Invalid size_to_acquire")
 
     size_to_acquire_bytes = size.to_bytes(4, "big")
