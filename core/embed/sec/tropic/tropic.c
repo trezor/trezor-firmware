@@ -25,6 +25,8 @@
 #include <sec/tropic.h>
 #include <sys/systick.h>
 
+#include "hmac.h"
+
 #include <libtropic.h>
 
 #ifdef TREZOR_EMULATOR
@@ -317,13 +319,21 @@ bool tropic_pin_stretch(tropic_ui_progress_t ui_progress, uint16_t pin_index,
 
   mac_and_destroy_slot_t first_slot_index = get_first_mac_and_destroy_slot(drv);
 
+  uint8_t digest[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
+
+  hmac_sha256(stretched_pin, TROPIC_MAC_AND_DESTROY_SIZE, NULL, 0, digest);
+
   ui_progress();
 
   lt_ret_t res = lt_mac_and_destroy(&drv->handle, first_slot_index + pin_index,
-                                    stretched_pin, stretched_pin);
+                                    digest, digest);
 
   ui_progress();
 
+  hmac_sha256(stretched_pin, TROPIC_MAC_AND_DESTROY_SIZE, digest,
+              sizeof(digest), stretched_pin);
+
+  memzero(digest, sizeof(digest));
   return res == LT_OK;
 }
 
@@ -379,6 +389,7 @@ bool tropic_pin_set(
 
   lt_ret_t res = LT_FAIL;
   uint8_t output[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
+  uint8_t digest[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
 
   mac_and_destroy_slot_t first_slot_index = get_first_mac_and_destroy_slot(drv);
 
@@ -393,15 +404,21 @@ bool tropic_pin_set(
       goto cleanup;
     }
 
+    hmac_sha256(stretched_pins[i], TROPIC_MAC_AND_DESTROY_SIZE, NULL, 0,
+                digest);
+
     ui_progress();
 
-    res = lt_mac_and_destroy(&drv->handle, first_slot_index + i,
-                             stretched_pins[i], stretched_pins[i]);
+    res =
+        lt_mac_and_destroy(&drv->handle, first_slot_index + i, digest, digest);
     if (res != LT_OK) {
       goto cleanup;
     }
 
     ui_progress();
+
+    hmac_sha256(stretched_pins[i], TROPIC_MAC_AND_DESTROY_SIZE, digest,
+                sizeof(digest), stretched_pins[i]);
 
     res = lt_mac_and_destroy(&drv->handle, first_slot_index + i, reset_key,
                              output);
@@ -414,6 +431,7 @@ bool tropic_pin_set(
 
 cleanup:
   memzero(output, sizeof(output));
+  memzero(digest, sizeof(digest));
 
   return res == LT_OK;
 }
