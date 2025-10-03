@@ -62,7 +62,11 @@
 #define OID_PIN_ECDH (OPTIGA_OID_ECC_KEY + 3)
 
 // The number of times that PIN stretching is repeated.
+#if STRETCHED_PIN_COUNT > 1
+#define PIN_STRETCH_ITERATIONS 1
+#else
 #define PIN_STRETCH_ITERATIONS 2
+#endif
 
 // The throttling delay when the security event counter is at its maximum.
 #define OPTIGA_T_MAX_MS 5000
@@ -987,6 +991,7 @@ optiga_pin_result optiga_pin_verify(
     goto end;
   }
 
+  uint8_t stretched_pin_ctr_limit = PIN_MAX_TRIES;
   if (pin_index == 0) {
     //  If this is the first PIN attempt or there is only one stretched PIN
     //  slot, the HMAC counter can be reset immediately. Otherwise, the counter
@@ -996,6 +1001,10 @@ optiga_pin_result optiga_pin_verify(
       ret = OPTIGA_PIN_ERROR;
       goto end;
     }
+  } else {
+    // An extra attempt will be needed to authorize using OID_STRETCHED_PIN[0]
+    // in optiga_pin_reset_hmac_counter().
+    stretched_pin_ctr_limit += 1;
   }
 
   for (int i = pin_index + 1; i < STRETCHED_PIN_COUNT; i++) {
@@ -1038,21 +1047,10 @@ optiga_pin_result optiga_pin_verify(
     goto end;
   }
 
-  // Reset the counter which limits the guesses at OID_STRETCHED_PINS.
-  if (pin_index == 0) {
-    if (optiga_reset_counter(OID_STRETCHED_PIN_CTR, PIN_MAX_TRIES) !=
-        OPTIGA_SUCCESS) {
-      ret = OPTIGA_PIN_ERROR;
-      goto end;
-    }
-  } else {
-    // The one extra attempt is used to authorize using the first stretched PIN
-    // in optiga_pin_reset_hmac_counter().
-    if (optiga_reset_counter(OID_STRETCHED_PIN_CTR, PIN_MAX_TRIES + 1) !=
-        OPTIGA_SUCCESS) {
-      ret = OPTIGA_PIN_ERROR;
-      goto end;
-    }
+  if (optiga_reset_counter(OID_STRETCHED_PIN_CTR, stretched_pin_ctr_limit) !=
+      OPTIGA_SUCCESS) {
+    ret = OPTIGA_PIN_ERROR;
+    goto end;
   }
 
 end:
