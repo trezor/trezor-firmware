@@ -52,6 +52,8 @@ trezor_message_impl! {
     DataChunkRequest => MessageType_DataChunkRequest,
     DataChunkAck => MessageType_DataChunkAck,
     SetBrightness => MessageType_SetBrightness,
+    GetSerialNumber => MessageType_GetSerialNumber,
+    SerialNumber => MessageType_SerialNumber,
     SetU2FCounter => MessageType_SetU2FCounter,
     GetNextU2FCounter => MessageType_GetNextU2FCounter,
     NextU2FCounter => MessageType_NextU2FCounter,

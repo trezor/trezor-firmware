@@ -477,6 +477,8 @@ class MessageType(IntEnum):
     DataChunkRequest = 991
     DataChunkAck = 992
     SetBrightness = 993
+    GetSerialNumber = 996
+    SerialNumber = 997
     SetU2FCounter = 63
     GetNextU2FCounter = 80
     NextU2FCounter = 81
@@ -4003,6 +4005,24 @@ class SetBrightness(protobuf.MessageType):
         value: Optional["int"] = None,
     ) -> None:
         self.value = value
+
+
+class GetSerialNumber(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 996
+
+
+class SerialNumber(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 997
+    FIELDS = {
+        1: protobuf.Field("serial_number", "string", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        serial_number: "str",
+    ) -> None:
+        self.serial_number = serial_number
 
 
 class Slip39Group(protobuf.MessageType):
