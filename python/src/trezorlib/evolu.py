@@ -45,13 +45,13 @@ def evolu_sign_registration_request(
 
 def get_delegated_identity_key(
     session: "Session",
-    thp_credentials: Optional[bytes] = None,
+    thp_credential: Optional[bytes] = None,
     host_static_public_key: Optional[bytes] = None,
 ) -> bytes:
 
     return session.call(
         messages.EvoluGetDelegatedIdentityKey(
-            thp_credential=thp_credentials,
+            thp_credential=thp_credential,
             host_static_public_key=host_static_public_key,
         ),
         expect=messages.EvoluDelegatedIdentityKey,

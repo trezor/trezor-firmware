@@ -84,11 +84,11 @@ def get_delegated_identity_key(
     to Trezor that this Suite has been given trust by user to manage the Secure Sync.
     """
 
-    thp_credentials = bytes.fromhex(credential) if credential else None
+    thp_credential = bytes.fromhex(credential) if credential else None
     host_static_public_key = bytes.fromhex(pubkey) if pubkey else None
 
     return evolu.get_delegated_identity_key(
         session=session,
-        thp_credentials=thp_credentials,
+        thp_credential=thp_credential,
         host_static_public_key=host_static_public_key,
     ).hex()
