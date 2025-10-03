@@ -39,7 +39,9 @@ async def evolu_sign_registration_request(
 
     from .common import check_delegated_identity_proof
 
-    if not bootloader_locked():
+    if (
+        bootloader_locked() is False
+    ):  # cannot use `if not bootloader_locked()` since on None we do not want to raise an error
         raise wire.ProcessError(
             "Cannot sign registration request since bootloader is unlocked."
         )

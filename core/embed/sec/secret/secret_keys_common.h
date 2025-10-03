@@ -19,12 +19,20 @@
 
 #pragma once
 
-// OTP blocks allocation
-#define FLASH_OTP_BLOCK_BATCH 0
-#define FLASH_OTP_BLOCK_BOOTLOADER_VERSION 1
-#define FLASH_OTP_BLOCK_VENDOR_HEADER_LOCK 2
-#define FLASH_OTP_BLOCK_RANDOMNESS 3
-#define FLASH_OTP_BLOCK_DEVICE_VARIANT 4
-#define FLASH_OTP_BLOCK_FIRMWARE_VERSION 5
-#define FLASH_OTP_BLOCK_DEVICE_SN 6
-#define FLASH_OTP_BLOCK_MASTER_KEY 7
+#include <trezor_types.h>
+
+#ifdef SECURE_MODE
+
+#ifndef SECRET_PRIVILEGED_MASTER_KEY_SLOT
+
+#define KEY_INDEX_DELEGATED_IDENTITY 1
+
+#endif  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
+
+secbool secret_key_derive_sym(uint8_t slot, uint16_t index, uint16_t subindex,
+                              uint8_t dest[SHA256_DIGEST_LENGTH]);
+
+secbool secret_key_derive_nist256p1(uint8_t slot, uint16_t index,
+                                    uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
+
+#endif  // SECURE_MODE

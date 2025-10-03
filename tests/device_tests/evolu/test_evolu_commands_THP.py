@@ -80,7 +80,7 @@ def test_evolu_get_delegated_identity_is_constant_ts7(client: Client):
 
 
 def test_evolu_get_delegated_identity_test_vector_ts7(client: Client):
-    # on emulator, the additional salt is all zeroes. So the delegated identity key is constant.
+    # on emulator, the master key is all zeroes. So the delegated identity key is constant.
 
     pairing_data = pair_and_get_credential(client)
     credential_data = pairing_data.credential
@@ -96,5 +96,5 @@ def test_evolu_get_delegated_identity_test_vector_ts7(client: Client):
 
     private_key = response.private_key
     assert private_key == bytes.fromhex(
-        "0e71b5d486a6738f85db46d4dfc8446ccb4d9804aa48e7624620f7cea291f278"
+        "c6389a1a662218ce2ff8db74dd2e2e428a23e9388ae3279466fedfcbd82efb34"
     )

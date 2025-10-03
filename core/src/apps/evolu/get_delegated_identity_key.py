@@ -38,13 +38,12 @@ async def get_delegated_identity_key(
     from trezor.messages import EvoluDelegatedIdentityKey
     from trezor.utils import bootloader_locked
 
-    if not bootloader_locked():
+    if (
+        bootloader_locked() is False
+    ):  # cannot use `if not bootloader_locked()` since on None we do not want to raise an error
         raise wire.ProcessError(
             "Cannot enable Secure Sync since bootloader is unlocked."
         )
-
-    if not utils.USE_OPTIGA:
-        raise RuntimeError("Optiga is not available")
 
     if utils.USE_THP:
         await confirm_thp(msg)

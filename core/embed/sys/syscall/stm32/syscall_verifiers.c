@@ -457,6 +457,10 @@ access_violation:
   return false;
 }
 
+#endif  // USE_OPTIGA
+
+// ---------------------------------------------------------------------
+
 #include <sec/secret_keys.h>
 
 bool secret_key_delegated_identity__verified(
@@ -470,8 +474,6 @@ access_violation:
   apptask_access_violation();
   return false;
 }
-
-#endif  // USE_OPTIGA
 
 // ---------------------------------------------------------------------
 

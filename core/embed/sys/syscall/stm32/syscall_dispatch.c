@@ -424,17 +424,17 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       args[0] = optiga_read_sec__verified(sec);
     } break;
 
-    case SYSCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY: {
-      uint8_t *dest = (uint8_t *)args[0];
-      args[0] = secret_key_delegated_identity(dest);
-    } break;
-
 #if PYOPT == 0
     case SYSCALL_OPTIGA_SET_SEC_MAX: {
       optiga_set_sec_max();
     } break;
 #endif
-#endif
+#endif  // USE_OPTIGA
+
+    case SYSCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY: {
+      uint8_t *dest = (uint8_t *)args[0];
+      args[0] = secret_key_delegated_identity(dest);
+    } break;
 
     case SYSCALL_STORAGE_SETUP: {
       PIN_UI_WAIT_CALLBACK callback = (PIN_UI_WAIT_CALLBACK)args[0];

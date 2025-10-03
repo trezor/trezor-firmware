@@ -230,7 +230,6 @@ STATIC mp_obj_t mod_trezorutils_firmware_vendor(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_firmware_vendor_obj,
                                  mod_trezorutils_firmware_vendor);
 
-#ifdef USE_OPTIGA
 /// def delegated_identity() -> bytes:
 ///     """
 ///     Returns the delegated identity key used for registration and space
@@ -246,7 +245,6 @@ STATIC mp_obj_t mod_trezorutils_delegated_identity(void) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_delegated_identity_obj,
                                  mod_trezorutils_delegated_identity);
-#endif
 
 /// def unit_color() -> int | None:
 ///     """
@@ -758,11 +756,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_nrf_get_version),
      MP_ROM_PTR(&mod_trezorutils_nrf_get_version_obj)},
 #endif
-#ifdef USE_OPTIGA
     {MP_ROM_QSTR(MP_QSTR_delegated_identity),
      MP_ROM_PTR(&mod_trezorutils_delegated_identity_obj)},
-#endif
-
     {MP_ROM_QSTR(MP_QSTR_unit_color),
      MP_ROM_PTR(&mod_trezorutils_unit_color_obj)},
     {MP_ROM_QSTR(MP_QSTR_unit_packaging),

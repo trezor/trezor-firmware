@@ -17,16 +17,16 @@ def test_evolu_get_delegated_identity_is_constant(session: "Session"):
 
 @pytest.mark.protocol("protocol_v1")
 def test_evolu_get_delegated_identity_test_vector(session: "Session"):
-    # on emulator, the additional salt is all zeroes. So the delegated identity key is constant.
+    # on emulator, the master key is all zeroes. So the delegated identity key is constant.
     private_key = evolu.get_delegated_identity_key(session)
     assert private_key == bytes.fromhex(
-        "0e71b5d486a6738f85db46d4dfc8446ccb4d9804aa48e7624620f7cea291f278"
+        "c6389a1a662218ce2ff8db74dd2e2e428a23e9388ae3279466fedfcbd82efb34"
     )
 
 
 def test_evolu_get_node(session: "Session"):
     proof = bytes.fromhex(
-        "1fc2775112bbaa1018b1211037a8100f8be4b338c8a58e24cb1f2e314f57a5f0443bf6813d9035e0e8390fef66eefb6cc6249439a24cfb5b50a4ff026e7aeebe92"
+        "1b161be2bfc622b4ffd9943138ab5931e77b4c6835e29b1ac25221c74492495a912c00f488fd5f95b43085f721f36574813785c011c60cf81877ccd057df6bed0c"
     )
     node = evolu.get_evolu_node(session, proof=proof)
 
@@ -40,7 +40,7 @@ def test_evolu_sign_request(session: "Session"):
     challenge = "1234"
     size = 10
     proposed_value = bytes.fromhex(
-        "1f8edb0ea453a16538fd36aa556c84a96f8bdfaa22625081347be10942c250874d798bb910e8b542d54500d2e846bc84a838127d9c91c1c26a73ecef1ffda0eb69"
+        "1c551ff04b45f68eb42352fd0f3bf311fc6c971132150412a3d3d052c19500b9097ceb0dfcb779b431547eda0b65be04055ee2620606c2be77a0e0e6e3055b4d53"
     )
     response = evolu.evolu_sign_registration_request(
         session,
@@ -50,7 +50,7 @@ def test_evolu_sign_request(session: "Session"):
     )
 
     check_signature = bytes.fromhex(
-        "3045022100d53f7ffc3a3e35e4f4e0dad909b81e99640f520067fdc50f860c758ea9ef7c910220507de3adf5238a8c3c1debccda21773d1ea7b07c249227d6e727ae78f97dab5c"
+        "304402201c841f9844ee8b6869b571cfb8cd0589ff6a17f82b345b750c3a79384317b6310220259965c99279cb2295cc71c59ca57ee2bebf52a08ab83d1e778908888f0355e0"
     )
 
     assert response.signature == check_signature

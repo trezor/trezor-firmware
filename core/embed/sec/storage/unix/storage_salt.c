@@ -32,7 +32,7 @@ void storage_salt_get(storage_salt_t* salt) {
 #endif
 }
 
-void additional_salt_get(additional_salt_t* salt) {
+void master_key_get(master_key_t* salt) {
   memset(salt, 0, sizeof(*salt));
   salt->size = 32;
 }
