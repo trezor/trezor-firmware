@@ -467,8 +467,7 @@ impl FirmwareUI for UIEckhart {
                 StrOrBytes::Str("".into())
             },
             font: if chunkify {
-                let value: TString = value.try_into()?;
-                theme::get_chunkified_text_style(value.len())
+                &theme::TEXT_MONO_ADDRESS_CHUNKS
             } else if is_data {
                 &theme::TEXT_MONO_ADDRESS
             } else {
@@ -478,7 +477,8 @@ impl FirmwareUI for UIEckhart {
             extra_font: &theme::TEXT_SMALL,
         }
         .into_paragraphs()
-        .with_placement(LinearPlacement::vertical());
+        .with_placement(LinearPlacement::vertical())
+        .with_spacing(theme::PROP_INNER_SPACING);
 
         let mut right_button = if hold {
             let verb = verb.unwrap_or(TR::buttons__hold_to_confirm.into());

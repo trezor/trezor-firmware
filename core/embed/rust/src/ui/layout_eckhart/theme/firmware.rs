@@ -87,8 +87,9 @@ pub const TEXT_MONO_MEDIUM_LIGHT: TextStyle =
     TextStyle::new(fonts::FONT_MONO_MEDIUM_38, GREY_LIGHT, BG, GREY, GREY)
         .with_line_breaking(LineBreaking::BreakAtWhitespace);
 
-pub const TEXT_MONO_MEDIUM_LIGHT_DATA: TextStyle =
-    TEXT_MONO_MEDIUM_LIGHT.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
+pub const TEXT_MONO_MEDIUM_LIGHT_DATA: TextStyle = TEXT_MONO_MEDIUM_LIGHT
+    .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
+    .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth);
 
 /// Roboto Mono Light - 30 (Address, data)
 pub const TEXT_MONO_LIGHT: TextStyle =
@@ -113,17 +114,13 @@ pub const TEXT_SMALL_LIGHT: TextStyle =
 /// Makes sure that the displayed text (usually address) will get divided into
 /// smaller chunks.
 pub const TEXT_MONO_ADDRESS_CHUNKS: TextStyle = TEXT_MONO_LIGHT
-    .with_chunks(Chunks::new(4, 8))
-    .with_line_spacing(24);
+    .with_chunks(Chunks::new(4, 13).with_max_rows(4))
+    .with_line_spacing(16)
+    .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth);
 
 pub const TEXT_MONO_ADDRESS: TextStyle = TEXT_MONO_LIGHT
     .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
     .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth);
-
-/// Decide the text style of chunkified text according to its length.
-pub fn get_chunkified_text_style(_character_length: usize) -> &'static TextStyle {
-    &TEXT_MONO_ADDRESS_CHUNKS
-}
 
 pub const TEXT_MONO_EXTRA_LIGHT: TextStyle = TextStyle::new(
     fonts::FONT_MONO_LIGHT_30,
