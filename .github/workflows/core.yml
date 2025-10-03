@@ -302,6 +302,7 @@ jobs:
         if: ${{ env.TREZOR_MODEL == 'T3W1' }}
         run: |
           mkdir -p vendor/ts-tvl/logs && cp vendor/ts-tvl/model_configs/example_config/tropic01_ese_* tests/tropic_model
+          python core/tools/generate_tropic_model_config.py -k tests/tropic_model/tropic_key.pem -c tests/tropic_model/tropic_cert.pem -r tests/tropic_model/root_cert.pem > tests/tropic_model/config.yml
           nix-shell --arg fullDeps true --run "cd vendor/ts-tvl && poetry env use 3.12 && poetry install && poetry run model_server tcp -c ../../tests/tropic_model/config.yml >logs/server.log 2>&1 &"
       - run: nix-shell --run "uv run make -C core ${{ env.ACTIONS_DO_UI_TEST == 'true' && 'test_emu_ui_multicore' || 'test_emu' }}"
       - name: Show Tropic model logs

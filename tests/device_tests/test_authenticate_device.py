@@ -26,9 +26,11 @@ OPTIGA_ROOT_PUBLIC_KEY = {
     ),
 }
 
-TROPIC_ROOT_PUBLIC_KEY = bytes.fromhex(
-    "fde32b1037a8d4c7d6db710fe73204d41ec8a733baff65f866f9104ae96355f1"
-)
+TROPIC_ROOT_PUBLIC_KEY = {
+    models.T3W1: bytes.fromhex(
+        "fde32b1037a8d4c7d6db710fe73204d41ec8a733baff65f866f9104ae96355f1"
+    ),
+}
 
 
 def verify_cert_chain(certs, model_name):
@@ -136,7 +138,7 @@ def test_authenticate_device_tropic(session: Session, challenge: bytes) -> None:
     assert len(certs) >= 2  # at least one root and one device cert from Tropic
 
     # Verify the last certificate in the certificate chain against trust anchor.
-    root_public_key = ed25519.Ed25519PublicKey.from_public_bytes(TROPIC_ROOT_PUBLIC_KEY)
+    root_public_key = ed25519.Ed25519PublicKey.from_public_bytes(TROPIC_ROOT_PUBLIC_KEY[session.model])
     root_public_key.verify(
         certs[-1].signature,
         certs[-1].tbs_certificate_bytes,
