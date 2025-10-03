@@ -473,3 +473,10 @@ def authenticate(
     except authentication.DeviceNotAuthentic:
         click.echo("Device is not authentic.")
         sys.exit(5)
+
+
+@cli.command()
+@with_session(seedless=True)
+def serial_number(session: "Session") -> str:
+    """Get serial number."""
+    return device.get_serial_number(session)
