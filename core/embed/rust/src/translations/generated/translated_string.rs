@@ -1554,7 +1554,7 @@ pub enum TranslatedString {
     ble__apps_connected = 1164,  // "Apps connected"
     evolu__secure_sync_header = 1165,  // "Secure Sync"
     evolu__secure_sync_message = 1166,  // "Allow {0} on {1} to use Secure Sync with this Trezor?"
-    evolu__secure_sync_message_no_optiga = 1167,  // "Allow this Trezor Suite use Secure Sync with this passphrase?"
+    evolu__secure_sync_message_no_optiga = 1167,  // "Allow Trezor Suite to use Secure Sync with this passphrase?"
 }
 
 impl TranslatedString {
@@ -3543,7 +3543,7 @@ impl TranslatedString {
             (Self::ble__apps_connected, "Apps connected"),
             (Self::evolu__secure_sync_header, "Secure Sync"),
             (Self::evolu__secure_sync_message, "Allow {0} on {1} to use Secure Sync with this Trezor?"),
-            (Self::evolu__secure_sync_message_no_optiga, "Allow this Trezor Suite use Secure Sync with this passphrase?"),
+            (Self::evolu__secure_sync_message_no_optiga, "Allow Trezor Suite to use Secure Sync with this passphrase?"),
     ];
 
     #[cfg(feature = "micropython")]

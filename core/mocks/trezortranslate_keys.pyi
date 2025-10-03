@@ -374,7 +374,7 @@ class TR:
     ethereum__valid_signature: str = "The signature is valid."
     evolu__secure_sync_header: str = "Secure Sync"
     evolu__secure_sync_message: str = "Allow {0} on {1} to use Secure Sync with this Trezor?"
-    evolu__secure_sync_message_no_optiga: str = "Allow this Trezor Suite use Secure Sync with this passphrase?"
+    evolu__secure_sync_message_no_optiga: str = "Allow Trezor Suite to use Secure Sync with this passphrase?"
     experimental_mode__enable: str = "Enable experimental features?"
     experimental_mode__only_for_dev: str = "Only for development and beta testing!"
     experimental_mode__title: str = "Experimental mode"
