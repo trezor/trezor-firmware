@@ -60,6 +60,7 @@ void rsod_terminal(const systask_postmortem_t* pminfo) {
                     pminfo->exit.code);
       message = message_buf;
       break;
+    case TASK_TERM_REASON_WIPE:
     case TASK_TERM_REASON_ERROR:
       if (pminfo->error.title[0] != '\0') {
         title = pminfo->error.title;
@@ -124,7 +125,7 @@ void rsod_gui(const systask_postmortem_t* pminfo) {
                     pminfo->exit.code);
       message = message_buf;
       break;
-
+    case TASK_TERM_REASON_WIPE:
     case TASK_TERM_REASON_ERROR:
       if (pminfo->error.title[0] != '\0') {
         title = pminfo->error.title;

@@ -225,6 +225,10 @@ __attribute__((noreturn)) void reboot_with_rsod(
   // Set bootargs area to the new command and arguments
   reboot_with_args(BOOT_COMMAND_SHOW_RSOD, pminfo, sizeof(*pminfo));
 }
+__attribute__((noreturn)) void reboot_and_wipe(
+    const systask_postmortem_t* pminfo) {
+  reboot_with_args(BOOT_COMMAND_WIPE, pminfo, sizeof(*pminfo));
+}
 
 __attribute__((noreturn)) void reboot_or_halt_after_rsod(void) {
 #ifndef RSOD_INFINITE_LOOP

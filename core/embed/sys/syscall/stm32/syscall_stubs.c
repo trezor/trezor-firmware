@@ -52,6 +52,15 @@ void system_exit_fatal_ex(const char *message, size_t message_len,
     ;
 }
 
+void system_exit_wipe_ex(const char *title, size_t title_len,
+                         const char *message, size_t message_len,
+                         const char *footer, size_t footer_len) {
+  syscall_invoke6((uint32_t)title, title_len, (uint32_t)message, message_len,
+                  (uint32_t)footer, footer_len, SYSCALL_SYSTEM_EXIT_WIPE);
+  while (1)
+    ;
+}
+
 // =============================================================================
 // systick.h
 // =============================================================================

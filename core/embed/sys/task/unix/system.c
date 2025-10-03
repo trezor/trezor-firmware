@@ -96,6 +96,23 @@ void system_exit_error(const char* title, const char* message,
                        footer_len);
 }
 
+void system_exit_wipe_ex(const char* title, size_t title_len,
+                         const char* message, size_t message_len,
+                         const char* footer, size_t footer_len) {
+  system_exit_error_ex(title, title_len, message, message_len, footer,
+                       footer_len);
+}
+
+void system_exit_wipe(const char* title, const char* message,
+                      const char* footer) {
+  size_t title_len = title != NULL ? strlen(title) : 0;
+  size_t message_len = message != NULL ? strlen(message) : 0;
+  size_t footer_len = footer != NULL ? strlen(footer) : 0;
+
+  system_exit_wipe_ex(title, title_len, message, message_len, footer,
+                      footer_len);
+}
+
 void system_exit_fatal_ex(const char* message, size_t message_len,
                           const char* file, size_t file_len, int line) {
   fprintf(stderr, "ERROR: %s\n", message);
