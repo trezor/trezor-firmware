@@ -98,10 +98,12 @@ OK
 ### ping
 The `ping` command serves as a no-operation request, and the device responds with `OK` to acknowledge receipt.
 
+`ping [<text>]`
+
 Example:
 ```
-ping
-OK
+ping ABC
+OK ABC
 ```
 
 ### reboot

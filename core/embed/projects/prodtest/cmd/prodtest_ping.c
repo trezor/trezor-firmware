@@ -22,13 +22,13 @@
 #include <rtl/cli.h>
 
 static void prodtest_ping(cli_t* cli) {
-  if (cli_arg_count(cli) > 0) {
+  if (cli_arg_count(cli) > 1) {
     cli_error_arg_count(cli);
     return;
   }
 
   // Respond with an OK message
-  cli_ok(cli, "");
+  cli_ok(cli, "%s", cli_arg(cli, "text"));
 }
 
 // clang-format off
@@ -37,5 +37,5 @@ PRODTEST_CLI_CMD(
   .name = "ping",
   .func = prodtest_ping,
   .info = "Send a ping to the device",
-  .args = ""
+  .args = "[<text>]"
 );
