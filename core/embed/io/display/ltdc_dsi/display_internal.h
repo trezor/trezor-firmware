@@ -52,7 +52,7 @@ typedef struct {
   // Current display orientation (0, 90, 180, 270)
   int orientation_angle;
   // Current backlight level ranging from 0 to 255
-  int backlight_level;
+  uint8_t backlight_level;
   // The current frame buffer selector
 
   DSI_HandleTypeDef hlcd_dsi;

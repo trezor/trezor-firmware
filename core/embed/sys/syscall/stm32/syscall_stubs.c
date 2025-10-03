@@ -166,12 +166,12 @@ void notify_send(notification_event_t event) {
 
 #include <io/display.h>
 
-int display_set_backlight(int level) {
-  return (int)syscall_invoke1((uint32_t)level, SYSCALL_DISPLAY_SET_BACKLIGHT);
+bool display_set_backlight(uint8_t level) {
+  return (bool)syscall_invoke1((uint32_t)level, SYSCALL_DISPLAY_SET_BACKLIGHT);
 }
 
-int display_get_backlight(void) {
-  return (int)syscall_invoke0(SYSCALL_DISPLAY_GET_BACKLIGHT);
+uint8_t display_get_backlight(void) {
+  return (uint8_t)syscall_invoke0(SYSCALL_DISPLAY_GET_BACKLIGHT);
 }
 
 int display_set_orientation(int angle) {
