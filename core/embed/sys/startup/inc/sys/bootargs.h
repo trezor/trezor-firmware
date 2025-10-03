@@ -20,6 +20,7 @@
 #ifndef TREZORHAL_BOOTARGS_H
 #define TREZORHAL_BOOTARGS_H
 
+#include <sys/bootutils.h>
 #include <sys/systask.h>
 #include <trezor_types.h>
 
@@ -33,6 +34,8 @@ typedef enum {
   BOOT_COMMAND_INSTALL_UPGRADE = 0xFA4A5C8D,
   // Show RSOD and wait for user input
   BOOT_COMMAND_SHOW_RSOD = 0x7CD945A0,
+  // Wipe the device
+  BOOT_COMMAND_WIPE = 0xD965CE36,
   // Reboot the device as if it was powered on
   BOOT_COMMAND_REBOOT = 0xA5C3D4E2,
   // Power of the device
@@ -48,6 +51,8 @@ typedef union {
   uint8_t hash[32];
   // error information, BOOT_COMMAND_SHOW_RSOD
   systask_postmortem_t pminfo;
+  // wipe information, BOOT_COMMAND_WIPE
+  bootutils_wipe_info_t wipeinfo;
 } boot_args_t;
 
 _Static_assert(sizeof(boot_args_t) == BOOT_ARGS_MAX_SIZE,

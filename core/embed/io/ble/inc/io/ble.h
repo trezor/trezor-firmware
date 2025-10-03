@@ -394,3 +394,10 @@ void ble_set_enabled(bool enabled);
  * @return true if enabled, false otherwise
  */
 bool ble_get_enabled(void);
+
+/**
+ * @brief Wait until BLE driver is ready or timeout occurs
+ *
+ * @return true if BLE driver is ready, false if timeout occurred
+ */
+bool ble_wait_until_ready(void);

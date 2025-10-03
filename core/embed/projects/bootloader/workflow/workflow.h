@@ -70,6 +70,9 @@ workflow_result_t workflow_host_control(const fw_info_t *fw,
 workflow_result_t workflow_auto_update(const fw_info_t *fw);
 
 #ifdef USE_BLE
+
+bool wipe_bonds(protob_io_t *iface);
+
 workflow_result_t workflow_ble_pairing_request(const fw_info_t *fw);
 
 workflow_result_t workflow_wireless_setup(const fw_info_t *fw,

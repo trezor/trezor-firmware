@@ -50,7 +50,7 @@ static void send_error_conditionally(protob_io_t* iface, char* msg) {
 }
 
 #ifdef USE_BLE
-static bool wipe_bonds(protob_io_t* iface) {
+bool wipe_bonds(protob_io_t* iface) {
   ble_state_t state = {0};
   ble_get_state(&state);
 
