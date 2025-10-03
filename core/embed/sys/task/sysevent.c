@@ -325,10 +325,35 @@ ssize_t syshandle_read_blocking(syshandle_t handle, void *buffer,
 
 ssize_t syshandle_write_blocking(syshandle_t handle, const void *data,
                                  size_t data_size, uint32_t timeout) {
-  if (timeout > 0) {
-    sysevents_t awaited = {.write_ready = 1 << handle};
-    sysevents_t signalled = {0};
-    sysevents_poll(&awaited, &signalled, ticks_timeout(timeout));
+  if (timeout == 0) {
+    return syshandle_write(handle, data, data_size);
+  } else {
+    ticks_t deadline = ticks_timeout(timeout);
+
+    const uint8_t *ptr = (const uint8_t *)data;
+    size_t remaining = data_size;
+
+    // Send data in a loop until all data is sent or timeout occurs
+    while (remaining > 0) {
+      sysevents_t awaited = {.write_ready = 1 << handle};
+      sysevents_t signalled = {0};
+      sysevents_poll(&awaited, &signalled, deadline);
+
+      if (signalled.write_ready == 0) {
+        // Timeout
+        break;
+      }
+
+      ssize_t written = syshandle_write(handle, ptr, remaining);
+
+      if (written < 0) {
+        return remaining == data_size ? written : data_size - remaining;
+      }
+
+      ptr += written;
+      remaining -= written;
+    }
+
+    return data_size - remaining;
   }
-  return syshandle_write(handle, data, data_size);
 }
