@@ -32,7 +32,8 @@ void storage_salt_get(storage_salt_t* salt) {
 #endif
 }
 
-void master_key_get(master_key_t* salt) {
+secbool master_key_get(master_key_t* salt) {
   memset(salt, 0, sizeof(*salt));
   salt->size = 32;
+  return sectrue;
 }

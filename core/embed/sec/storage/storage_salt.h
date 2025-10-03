@@ -62,4 +62,4 @@ typedef struct {
  *
  * @param salt structure filled with the generated data.
  */
-void master_key_get(master_key_t* salt);
+secbool master_key_get(master_key_t* salt);

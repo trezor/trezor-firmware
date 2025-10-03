@@ -19,7 +19,10 @@
 
 #ifdef SECURE_MODE
 
+#include <sec/secret.h>
 #include <sec/secret_keys.h>
+#include <trezor_model.h>
+#include <trezor_rtl.h>
 
 #include "../storage/storage_salt.h"
 #include "hmac.h"
@@ -29,9 +32,8 @@
 
 static void diversify_and_derive(uint16_t index, uint16_t subindex,
                                  uint8_t dest[SHA256_DIGEST_LENGTH],
-                                uint8_t master_key[SHA256_DIGEST_LENGTH],
-                                uint8_t master_key_length){
-
+                                 uint8_t master_key[SHA256_DIGEST_LENGTH],
+                                 uint8_t master_key_length) {
   // The diversifier consists of:
   // - the key derivation index (2 bytes big-endian), which identifies the
   //   purpose of the key,
@@ -72,13 +74,19 @@ secbool secret_key_derive_sym(uint8_t slot, uint16_t index, uint16_t subindex,
   (void)slot;  // `slot` argument is not used unless
                // SECRET_PRIVILEGED_MASTER_KEY_SLOT is defined
 
+  secbool ret = sectrue;
   master_key_t master_key = {0};
-  master_key_get(&master_key);
+  ret = master_key_get(&master_key);
+  if (ret != sectrue) {
+    goto cleanup;
+  }
 
-  diversify_and_derive(index, subindex, dest, master_key.bytes, master_key.size);
+  diversify_and_derive(index, subindex, dest, master_key.bytes,
+                       master_key.size);
 
+cleanup:
   memzero(master_key.bytes, master_key.size);
-  return sectrue;
+  return ret;
 }
 
 #endif  // SECRET_PRIVILEGED_MASTER_KEY_SLOT

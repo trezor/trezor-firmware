@@ -23,6 +23,9 @@
 
 #ifdef SECURE_MODE
 
+#include <trezor_model.h>
+#include <trezor_rtl.h>
+
 #ifndef SECRET_PRIVILEGED_MASTER_KEY_SLOT
 
 #define KEY_INDEX_DELEGATED_IDENTITY 1
