@@ -239,6 +239,8 @@ optiga_result optiga_derive_key(optiga_key_derivation deriv, uint16_t oid,
                                 size_t key_size);
 optiga_result optiga_set_trust_anchor(void);
 optiga_result optiga_set_priv_key(uint16_t oid, const uint8_t priv_key[32]);
+optiga_result optiga_clear_all_auto_states(void);
+optiga_result optiga_reset_counter(uint16_t oid, uint8_t limit);
 
 #if !PRODUCTION
 void optiga_command_set_log_hex(optiga_log_hex_t f);

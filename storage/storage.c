@@ -18,6 +18,8 @@
  */
 
 #include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 
 #include <sec/rng.h>
@@ -38,6 +40,10 @@
 
 #if USE_OPTIGA
 #include "optiga.h"
+#endif
+
+#if USE_TROPIC
+#include <sec/tropic.h>
 #endif
 
 #ifdef USE_STORAGE_HWKEY
@@ -74,6 +80,17 @@
 // NOTE: This should always equal the value in VERSION_KEY.
 #define UNAUTH_VERSION_KEY ((APP_STORAGE << 8) | 0x08)
 
+#if USE_TROPIC
+// Key that is used to reset the M&D slots in Tropic after successfull unlock.
+#define TROPIC_MAC_AND_DESTROY_RESET_KEY ((APP_STORAGE << 8) | 0x09)
+#endif
+
+#if USE_OPTIGA && STRETCHED_PIN_COUNT > 1
+// Key that is used to reset the HMAC counter in Optiga after successfull
+// unlock.
+#define OPTIGA_HMAC_RESET_KEY ((APP_STORAGE << 8) | 0x0A)
+#endif
+
 // The PIN value corresponding to an empty PIN.
 const uint8_t *PIN_EMPTY = (const uint8_t *)"";
 
@@ -89,7 +106,7 @@ const uint32_t V0_PIN_EMPTY = 1;
 // up constant storage space.
 #define MAX_WIPE_CODE_LEN 50
 
-#if STORAGE_INSECURE_TESTING_MODE && !PRODUCTION
+#if (STORAGE_INSECURE_TESTING_MODE && !PRODUCTION) || STRETCHED_PIN_COUNT > 1
 #define PIN_ITER_COUNT 1
 #else
 // The total number of iterations to use in PBKDF2.
@@ -391,7 +408,9 @@ static secbool set_wipe_code(const uint8_t *wipe_code, size_t wipe_code_len) {
   uint8_t *tag = salt + WIPE_CODE_SALT_SIZE;
   memcpy(data, wipe_code, wipe_code_len);
 
-  random_buffer(salt, WIPE_CODE_SALT_SIZE);
+  if (!rng_fill_buffer_strong(salt, WIPE_CODE_SALT_SIZE)) {
+    return secfalse;
+  }
   hmac_sha256(salt, WIPE_CODE_SALT_SIZE, wipe_code, wipe_code_len, tag);
 
   secbool ret =
@@ -456,8 +475,19 @@ static secbool is_not_wipe_code(const uint8_t *pin, size_t pin_len) {
 
 static uint32_t ui_estimate_time_ms(storage_pin_op_t op) {
   uint32_t time_ms = 0;
+#if USE_OPTIGA || USE_TROPIC
+  uint32_t pin_index = 0;
+#if STRETCHED_PIN_COUNT > 1
+  if (sectrue != pin_get_fails(&pin_index)) {
+    return 0;
+  }
+#endif
+#endif
 #if USE_OPTIGA
-  time_ms += optiga_estimate_time_ms(op);
+  time_ms += optiga_estimate_time_ms(op, pin_index);
+#endif
+#if USE_TROPIC
+  time_ms += tropic_estimate_time_ms(op, pin_index);
 #endif
 
   uint32_t pbkdf2_ms = time_estimate_pbkdf2_ms(PIN_ITER_COUNT);
@@ -589,11 +619,11 @@ static void derive_kek_v4(const uint8_t *pin, size_t pin_len,
 #endif
 #endif
 
-static void stretch_pin(const uint8_t *pin, size_t pin_len,
-                        const uint8_t storage_salt[STORAGE_SALT_SIZE],
-                        const uint8_t *ext_salt,
-                        uint8_t stretched_pin[SHA256_DIGEST_LENGTH],
-                        secbool privileged_bhk) {
+static void mcu_pin_stretch(const uint8_t *pin, size_t pin_len,
+                            const uint8_t storage_salt[STORAGE_SALT_SIZE],
+                            const uint8_t *ext_salt,
+                            uint8_t stretched_pin[SHA256_DIGEST_LENGTH],
+                            secbool privileged_bhk) {
   // Combining the PIN with the storage salt aims to ensure that if the
   // MCU-Optiga communication is compromised, then a user with a low-entropy PIN
   // remains protected against an attacker who is not able to read the contents
@@ -663,17 +693,77 @@ static void derive_kek_optiga_v4(
 #endif
 #endif
 
-static secbool __wur derive_kek_set(
-    const uint8_t *pin, size_t pin_len, const uint8_t *storage_salt,
-    const uint8_t *ext_salt, uint8_t stretched_pin[SHA256_DIGEST_LENGTH]) {
-  stretch_pin(pin, pin_len, storage_salt, ext_salt, stretched_pin, sectrue);
+static secbool __wur derive_kek_set(const uint8_t *pin, size_t pin_len,
+                                    const uint8_t *storage_salt,
+                                    const uint8_t *ext_salt,
+                                    uint8_t kek[SHA256_DIGEST_LENGTH]) {
+  secbool ret = secfalse;
+  uint8_t stretched_pins[STRETCHED_PIN_COUNT][SHA256_DIGEST_LENGTH] = {0};
+  mcu_pin_stretch(pin, pin_len, storage_salt, ext_salt, stretched_pins[0],
+                  sectrue);
 #if USE_OPTIGA
-  if (!optiga_pin_set(ui_progress, stretched_pin)) {
-    memzero(stretched_pin, SHA256_DIGEST_LENGTH);
-    return secfalse;
+  if (!optiga_pin_init(ui_progress)) {
+    goto cleanup;
+  }
+  if (!optiga_pin_stretch_cmac_ecdh(ui_progress, stretched_pins[0])) {
+    goto cleanup;
   }
 #endif
-  return sectrue;
+#if STRETCHED_PIN_COUNT > 1
+  for (int i = 1; i < STRETCHED_PIN_COUNT; i++) {
+    memcpy(stretched_pins[i], stretched_pins[0], SHA256_DIGEST_LENGTH);
+  }
+#endif
+#if USE_TROPIC
+  _Static_assert(SHA256_DIGEST_LENGTH == TROPIC_MAC_AND_DESTROY_SIZE);
+  uint8_t tropic_mac_and_destroy_reset_key[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
+  if (!tropic_pin_set(ui_progress, stretched_pins,
+                      tropic_mac_and_destroy_reset_key)) {
+    goto cleanup;
+  }
+  if (storage_set_encrypted(
+          TROPIC_MAC_AND_DESTROY_RESET_KEY, tropic_mac_and_destroy_reset_key,
+          sizeof(tropic_mac_and_destroy_reset_key)) != sectrue) {
+    goto cleanup;
+  }
+#endif
+#if USE_OPTIGA
+  _Static_assert(SHA256_DIGEST_LENGTH == OPTIGA_PIN_SECRET_SIZE);
+  uint8_t optiga_hmac_reset_key[SHA256_DIGEST_LENGTH] = {0};
+  if (!optiga_pin_set(ui_progress, stretched_pins, optiga_hmac_reset_key)) {
+    goto cleanup;
+  }
+#if STRETCHED_PIN_COUNT > 1
+  if (storage_set_encrypted(OPTIGA_HMAC_RESET_KEY, optiga_hmac_reset_key,
+                            sizeof(optiga_hmac_reset_key)) != sectrue) {
+    goto cleanup;
+  }
+#endif
+#endif
+#if USE_TROPIC
+  if (!rng_fill_buffer_strong(kek, SHA256_DIGEST_LENGTH)) {
+    goto cleanup;
+  }
+  if (tropic_pin_set_kek_masks(ui_progress, kek, stretched_pins) != true) {
+    goto cleanup;
+  }
+#else
+  _Static_assert(STRETCHED_PIN_COUNT == 1, "KEK masks not defined");
+  memcpy(kek, stretched_pins[0], SHA256_DIGEST_LENGTH);
+#endif
+  ret = sectrue;
+#if USE_TROPIC || USE_OPTIGA
+cleanup:
+#endif
+#if USE_TROPIC
+  memzero(tropic_mac_and_destroy_reset_key,
+          sizeof(tropic_mac_and_destroy_reset_key));
+#endif
+#if USE_OPTIGA
+  memzero(optiga_hmac_reset_key, sizeof(optiga_hmac_reset_key));
+#endif
+  memzero(stretched_pins, sizeof(stretched_pins));
+  return ret;
 }
 
 #if NORCOW_MIN_VERSION <= 4
@@ -686,7 +776,8 @@ static secbool __wur derive_kek_unlock_v4(const uint8_t *pin, size_t pin_len,
 #if USE_OPTIGA
   uint8_t optiga_secret[OPTIGA_PIN_SECRET_SIZE] = {0};
   uint8_t stretched_pin[OPTIGA_PIN_SECRET_SIZE] = {0};
-  stretch_pin(pin, pin_len, storage_salt, ext_salt, stretched_pin, secfalse);
+  mcu_pin_stretch(pin, pin_len, storage_salt, ext_salt, stretched_pin,
+                  secfalse);
   optiga_pin_result ret =
       optiga_pin_verify_v4(ui_progress, stretched_pin, optiga_secret);
   memzero(stretched_pin, sizeof(stretched_pin));
@@ -714,22 +805,45 @@ static secbool __wur derive_kek_unlock(
     const uint8_t *pin, size_t pin_len, const uint8_t *storage_salt,
     const uint8_t *ext_salt, uint8_t stretched_pin[SHA256_DIGEST_LENGTH],
     secbool privileged_bhk) {
-  stretch_pin(pin, pin_len, storage_salt, ext_salt, stretched_pin,
-              privileged_bhk);
+  mcu_pin_stretch(pin, pin_len, storage_salt, ext_salt, stretched_pin,
+                  privileged_bhk);
+#if USE_OPTIGA || USE_TROPIC
+  uint32_t pin_index = 0;
+#if STRETCHED_PIN_COUNT > 1
+  uint32_t pin_fails = 0;
+  ensure(pin_get_fails(&pin_fails), "pin_get_fails failed");
+  pin_index = pin_fails - 1;  // The counter has already been incremented
+#endif
+#endif
 #if USE_OPTIGA
-  optiga_pin_result ret = optiga_pin_verify(ui_progress, stretched_pin);
-  if (ret != OPTIGA_PIN_SUCCESS) {
+  ensure(optiga_pin_stretch_cmac_ecdh(ui_progress, stretched_pin) * sectrue,
+         "optiga_pin_stretch_cmac_ecdh failed");
+#endif
+#if USE_TROPIC
+  ensure(tropic_pin_stretch(ui_progress, pin_index, stretched_pin) * sectrue,
+         "tropic_pin_stretch failed");
+#endif
+#if USE_OPTIGA
+  optiga_pin_result optiga_ret =
+      optiga_pin_verify(ui_progress, pin_index, stretched_pin);
+  if (optiga_ret != OPTIGA_PIN_SUCCESS) {
     memzero(stretched_pin, SHA256_DIGEST_LENGTH);
 
-    if (ret == OPTIGA_PIN_COUNTER_EXCEEDED) {
+    if (optiga_ret == OPTIGA_PIN_COUNTER_EXCEEDED) {
       // Unreachable code. Wipe should have already been triggered in unlock().
       storage_wipe();
       show_pin_too_many_screen();
     }
-    ensure(ret == OPTIGA_PIN_INVALID ? sectrue : secfalse,
+    ensure(optiga_ret == OPTIGA_PIN_INVALID ? sectrue : secfalse,
            "optiga_pin_verify failed");
     return secfalse;
   }
+#endif
+#if USE_TROPIC
+  ensure(tropic_pin_unmask_kek(ui_progress, pin_index, stretched_pin,
+                               stretched_pin) *
+             sectrue,
+         "tropic_pin_unmask_kek failed");
 #endif
   return sectrue;
 }
@@ -745,7 +859,9 @@ static secbool set_pin(const uint8_t *pin, size_t pin_len,
   uint8_t kek[SHA256_DIGEST_LENGTH] = {0};
   uint8_t keiv[12] = {0};
   chacha20poly1305_ctx ctx = {0};
-  random_buffer(rand_salt, STORAGE_SALT_SIZE);
+  ensure(
+      rng_fill_buffer_strong(rand_salt, STORAGE_SALT_SIZE) ? sectrue : secfalse,
+      "rng_fill_buffer_strong failed");
   ensure(derive_kek_set(pin, pin_len, rand_salt, ext_salt, kek),
          "derive_kek_set failed");
   rfc7539_init(&ctx, kek, keiv);
@@ -1110,6 +1226,45 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
 
   unlocked = sectrue;
 
+#if USE_OPTIGA && STRETCHED_PIN_COUNT > 1
+  if (ctr != 0) {
+    uint8_t optiga_hmac_reset_key[SHA256_DIGEST_LENGTH] = {0};
+    uint16_t optiga_hmac_reset_key_len = 0;
+    if (storage_get_encrypted(OPTIGA_HMAC_RESET_KEY, &optiga_hmac_reset_key,
+                              sizeof(optiga_hmac_reset_key),
+                              &optiga_hmac_reset_key_len) != sectrue ||
+        optiga_hmac_reset_key_len != SHA256_DIGEST_LENGTH) {
+      return secfalse;
+    }
+    if (!optiga_pin_reset_hmac_counter(ui_progress, optiga_hmac_reset_key)) {
+      memzero(optiga_hmac_reset_key, sizeof(optiga_hmac_reset_key));
+      return secfalse;
+    }
+    memzero(optiga_hmac_reset_key, sizeof(optiga_hmac_reset_key));
+  }
+#endif
+
+#if USE_TROPIC
+  uint8_t tropic_mac_and_destroy_reset_key[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
+  uint16_t tropic_mac_and_destroy_reset_key_len = 0;
+  if (storage_get_encrypted(TROPIC_MAC_AND_DESTROY_RESET_KEY,
+                            &tropic_mac_and_destroy_reset_key,
+                            sizeof(tropic_mac_and_destroy_reset_key),
+                            &tropic_mac_and_destroy_reset_key_len) != sectrue ||
+      tropic_mac_and_destroy_reset_key_len !=
+          sizeof(tropic_mac_and_destroy_reset_key)) {
+    return secfalse;
+  }
+  if (!tropic_pin_reset_slots(ui_progress, ctr,
+                              tropic_mac_and_destroy_reset_key)) {
+    memzero(tropic_mac_and_destroy_reset_key,
+            sizeof(tropic_mac_and_destroy_reset_key));
+    return secfalse;
+  }
+  memzero(tropic_mac_and_destroy_reset_key,
+          sizeof(tropic_mac_and_destroy_reset_key));
+#endif
+
   // Finally set the counter to 0 to indicate success.
   return pin_fails_reset();
 }
@@ -1119,6 +1274,8 @@ secbool storage_unlock(const uint8_t *pin, size_t pin_len,
   if (sectrue != initialized || pin == NULL) {
     return secfalse;
   }
+
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
 
   ui_progress_init(STORAGE_PIN_OP_VERIFY);
   if (pin_len == 0) {
@@ -1131,7 +1288,6 @@ secbool storage_unlock(const uint8_t *pin, size_t pin_len,
     ui_message = VERIFYING_PIN_MSG;
   }
 
-  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
   secbool ret = unlock(pin, pin_len, ext_salt);
   mpu_restore(mpu_mode);
 
@@ -1257,7 +1413,7 @@ static secbool storage_set_encrypted(const uint16_t key, const void *val,
 
   // Write the IV to the flash.
   uint8_t buffer[CHACHA20_BLOCK_SIZE] = {0};
-  random_buffer(buffer, CHACHA20_IV_SIZE);
+  rng_fill_buffer(buffer, CHACHA20_IV_SIZE);
 
   if (sectrue != norcow_update_bytes(key, buffer, CHACHA20_IV_SIZE)) {
     return secfalse;
@@ -1461,11 +1617,11 @@ secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
     return secfalse;
   }
 
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
+
   ui_progress_init(STORAGE_PIN_OP_CHANGE);
   ui_message =
       (oldpin_len != 0 && newpin_len == 0) ? VERIFYING_PIN_MSG : PROCESSING_MSG;
-
-  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
 
   secbool ret = unlock(oldpin, oldpin_len, old_ext_salt);
   if (sectrue != ret) {
@@ -1707,7 +1863,9 @@ static secbool storage_upgrade(void) {
   const uint16_t V0_PIN_FAIL_KEY = 0x0001;
   secbool ret = secfalse;
   if (norcow_active_version == 0) {
-    random_buffer(cached_keys, sizeof(cached_keys));
+    if (!rng_fill_buffer_strong(cached_keys, sizeof(cached_keys))) {
+      return secfalse;
+    }
 
     // Initialize the storage authentication tag.
     auth_init();

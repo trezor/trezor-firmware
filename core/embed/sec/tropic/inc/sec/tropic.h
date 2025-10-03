@@ -19,6 +19,9 @@
 
 #pragma once
 
+#ifdef USE_STORAGE
+#include <sec/storage.h>
+#endif
 #include <trezor_types.h>
 
 #include "ed25519-donna/ed25519.h"
@@ -33,6 +36,16 @@
 #define TROPIC_DEVICE_CERT_SLOT_COUNT 3
 #define TROPIC_DEVICE_KEY_SLOT 0  // ECC_SLOT_0
 
+#ifdef USE_STORAGE
+// KEK masks used in PIN verification
+#define TROPIC_KEK_MASKS_PRIVILEGED_SLOT 128
+#define TROPIC_KEK_MASKS_UNPRIVILEGED_SLOT 256
+
+// Mac-and-destroy slots used in PIN verification
+#define TROPIC_FIRST_MAC_AND_DESTROY_SLOT_PRIVILEGED 0
+#define TROPIC_FIRST_MAC_AND_DESTROY_SLOT_UNPRIVILEGED 64
+#endif
+
 // Pairing key used by prodtest to inject the privileged and unprivileged
 // pairing keys.
 #define TROPIC_FACTORY_PAIRING_KEY_SLOT 0  // PAIRING_KEY_SLOT_INDEX_0
@@ -43,6 +56,8 @@
 
 // Pairing key used by official firmware.
 #define TROPIC_PRIVILEGED_PAIRING_KEY_SLOT 2  // PAIRING_KEY_SLOT_INDEX_2
+
+#define TROPIC_MAC_AND_DESTROY_SIZE 32
 
 #ifdef KERNEL_MODE
 
@@ -56,6 +71,8 @@ lt_handle_t* tropic_get_handle(void);
 #endif
 
 #endif
+
+typedef secbool (*tropic_ui_progress_t)(void);
 
 void tropic_get_factory_privkey(curve25519_key privkey);
 
@@ -75,3 +92,29 @@ bool tropic_data_multi_read(uint16_t first_slot, uint16_t slot_count,
                             size_t* data_length);
 
 bool tropic_random_buffer(void* buffer, size_t length);
+
+#ifdef USE_STORAGE
+bool tropic_pin_stretch(tropic_ui_progress_t ui_progress, uint16_t pin_index,
+                        uint8_t stretched_pin[TROPIC_MAC_AND_DESTROY_SIZE]);
+
+bool tropic_pin_reset_slots(
+    tropic_ui_progress_t ui_progress, uint16_t pin_index,
+    const uint8_t reset_key[TROPIC_MAC_AND_DESTROY_SIZE]);
+
+bool tropic_pin_set(
+    tropic_ui_progress_t ui_progress,
+    uint8_t stretched_pins[PIN_MAX_TRIES][TROPIC_MAC_AND_DESTROY_SIZE],
+    uint8_t reset_key[TROPIC_MAC_AND_DESTROY_SIZE]);
+
+bool tropic_pin_set_kek_masks(
+    tropic_ui_progress_t ui_progress,
+    const uint8_t kek[TROPIC_MAC_AND_DESTROY_SIZE],
+    const uint8_t stretched_pins[PIN_MAX_TRIES][TROPIC_MAC_AND_DESTROY_SIZE]);
+
+bool tropic_pin_unmask_kek(
+    tropic_ui_progress_t ui_progress, uint16_t pin_index,
+    const uint8_t stretched_pin[TROPIC_MAC_AND_DESTROY_SIZE],
+    uint8_t kek[TROPIC_MAC_AND_DESTROY_SIZE]);
+
+uint32_t tropic_estimate_time_ms(storage_pin_op_t op, uint16_t pin_index);
+#endif
