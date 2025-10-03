@@ -114,7 +114,8 @@ async def bootscreen() -> None:
                 log.exception(__name__, e)
             utils.halt(e.__class__.__name__)
 
-    workflow.idle_timer.clear()
+    if utils.USE_POWER_MANAGER:
+        workflow.idle_timer.clear()
     loop.clear()
 
 
