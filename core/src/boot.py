@@ -17,6 +17,7 @@ from trezor.pin import (
     show_pin_timeout,
 )
 from trezor.ui.layouts.homescreen import Lockscreen
+from micropython import const
 
 from apps.common.request_pin import can_lock_device, verify_user_pin
 
@@ -25,7 +26,7 @@ if utils.USE_OPTIGA:
 
 if utils.USE_POWER_MANAGER:
     from trezor import workflow
-    from apps.common.lock_manager import configure_autodim, boot as boot_power_manager
+    import apps.common.lock_manager as lock_manager
 
 # have to use "==" over "in (list)" so that it can be statically replaced
 # with the correct value during the build process
@@ -50,6 +51,35 @@ def enforce_welcome_screen_duration() -> None:
         utime.sleep_ms(100)
 
 
+if not utils.USE_POWER_MANAGER:
+
+    async def pin_unlock_sequence() -> None:
+        lockscreen = Lockscreen(label=storage.device.get_label(), bootscreen=True)
+        await lockscreen.get_result()
+        lockscreen.__del__()
+        await verify_user_pin()
+
+else:
+    _SUSPEND_MARKER: int = const(1)
+
+    async def wait_for_suspend() -> int:
+        lock_manager.notify_bootscreen.clear()
+        await lock_manager.notify_bootscreen
+        return _SUSPEND_MARKER
+
+    async def pin_unlock_sequence() -> None:
+        while True:
+            lockscreen = Lockscreen(label=storage.device.get_label(), bootscreen=True)
+            await lockscreen.get_result()
+            lockscreen.__del__()
+            res = await loop.race(verify_user_pin(), wait_for_suspend())
+            if res is _SUSPEND_MARKER:
+                # make some delay for the suspend
+                await loop.sleep(100)
+                continue
+            return
+
+
 async def bootscreen() -> None:
     """Sequence of actions to be done on boot (after device is connected).
 
@@ -60,7 +90,7 @@ async def bootscreen() -> None:
     Allowing all of them before returning.
     """
     if utils.USE_POWER_MANAGER:
-        configure_autodim()
+        lock_manager.configure_autodim()
 
     while True:
         try:
@@ -74,12 +104,7 @@ async def bootscreen() -> None:
                     io.haptic.haptic_set_enabled(storage.device.get_haptic_feedback())
                 if utils.USE_RGB_LED:
                     io.rgb_led.rgb_led_set_enabled(storage.device.get_rgb_led())
-                lockscreen = Lockscreen(
-                    label=storage.device.get_label(), bootscreen=True
-                )
-                await lockscreen.get_result()
-                lockscreen.__del__()
-                await verify_user_pin()
+                await pin_unlock_sequence()
                 storage.init_unlocked()
                 allow_all_loader_messages()
                 break
@@ -129,7 +154,7 @@ if not utils.USE_OPTIGA or (optiga.get_sec() or 0) < 150:
 config.init(show_pin_timeout)
 translations.init()
 if utils.USE_POWER_MANAGER:
-    boot_power_manager()
+    lock_manager.boot()
 
 if __debug__ and not utils.EMULATOR:
     config.wipe()
