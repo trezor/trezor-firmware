@@ -76,33 +76,6 @@ def confirm_action(
     )
 
 
-def confirm_single(
-    br_name: str,
-    title: str,
-    description: str,
-    description_param: str | None = None,
-    verb: str | None = None,
-) -> Awaitable[None]:
-    description_param = description_param or ""
-
-    # Placeholders are coming from translations in form of {0}
-    template_str = "{0}"
-    assert template_str in description
-
-    begin, _separator, end = description.partition(template_str)
-    return raise_if_cancelled(
-        trezorui_api.confirm_emphasized(
-            title=title,
-            items=(begin, (True, description_param), end),
-            verb=None,
-        ),
-        br_name,
-        ButtonRequestType.ProtectCall,
-    )
-
-    show_continue_in_app(TR.address__confirmed)
-
-
 def confirm_reset_device(recovery: bool = False) -> Awaitable[None]:
     return raise_if_cancelled(
         trezorui_api.confirm_reset_device(recovery=recovery), None
