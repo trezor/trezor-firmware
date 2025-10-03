@@ -11,7 +11,6 @@ try:
 
     enable = storage.device.get_ble()
     ble.set_enabled(enable)
-
     if enable:
         ble.start_comm()
 
