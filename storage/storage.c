@@ -1245,13 +1245,14 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
 #endif
 
 #if USE_TROPIC
-  uint8_t tropic_mac_and_destroy_reset_key[SHA256_DIGEST_LENGTH] = {0};
+  uint8_t tropic_mac_and_destroy_reset_key[TROPIC_MAC_AND_DESTROY_SIZE] = {0};
   uint16_t tropic_mac_and_destroy_reset_key_len = 0;
   if (storage_get_encrypted(TROPIC_MAC_AND_DESTROY_RESET_KEY,
                             &tropic_mac_and_destroy_reset_key,
                             sizeof(tropic_mac_and_destroy_reset_key),
                             &tropic_mac_and_destroy_reset_key_len) != sectrue ||
-      tropic_mac_and_destroy_reset_key_len != SHA256_DIGEST_LENGTH) {
+      tropic_mac_and_destroy_reset_key_len !=
+          sizeof(tropic_mac_and_destroy_reset_key)) {
     return secfalse;
   }
   if (!tropic_pin_reset_slots(ui_progress, ctr,
