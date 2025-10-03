@@ -91,6 +91,7 @@ class TR:
     ble__limit_reached: str = "Limit of paired devices reached"
     ble__mac_address: str = "MAC address"
     ble__manage_paired: str = "Manage paired devices"
+    ble__must_be_enabled: str = "The Bluetooth must be turned on to pair with a new device."
     ble__pair_new: str = "Pair new device"
     ble__pair_title: str = "Pair & connect"
     ble__pairing_match: str = "Pairing code match?"

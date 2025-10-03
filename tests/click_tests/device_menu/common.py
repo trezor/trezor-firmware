@@ -157,7 +157,7 @@ class Menu(Enum):
             return [TR.ble__pair_new, TR.ble__forget_all]
 
         def settings_content():
-            content = []
+            content = [TR.words__bluetooth]
             if initialized:
                 content.append(TR.words__security)
             content.append(TR.words__device)

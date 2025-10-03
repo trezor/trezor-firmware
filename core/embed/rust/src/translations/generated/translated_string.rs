@@ -1554,6 +1554,7 @@ pub enum TranslatedString {
     ble__apps_connected = 1164,  // "Apps connected"
     sn__action = 1165,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Allow connected host to get serial number of your Trezor Safe 7?"}
     sn__title = 1166,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Serial number"}
+    ble__must_be_enabled = 1167,  // "The Bluetooth must be turned on to pair with a new device."
 }
 
 impl TranslatedString {
@@ -3556,6 +3557,7 @@ impl TranslatedString {
             (Self::sn__title, ""),
             #[cfg(feature = "layout_eckhart")]
             (Self::sn__title, "Serial number"),
+            (Self::ble__must_be_enabled, "The Bluetooth must be turned on to pair with a new device."),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3649,6 +3651,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ble__limit_reached, Self::ble__limit_reached),
         (Qstr::MP_QSTR_ble__mac_address, Self::ble__mac_address),
         (Qstr::MP_QSTR_ble__manage_paired, Self::ble__manage_paired),
+        (Qstr::MP_QSTR_ble__must_be_enabled, Self::ble__must_be_enabled),
         (Qstr::MP_QSTR_ble__pair_new, Self::ble__pair_new),
         (Qstr::MP_QSTR_ble__pair_title, Self::ble__pair_title),
         (Qstr::MP_QSTR_ble__pairing_match, Self::ble__pairing_match),
