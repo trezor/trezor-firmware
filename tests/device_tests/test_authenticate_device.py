@@ -29,7 +29,7 @@ OPTIGA_ROOT_PUBLIC_KEY = {
 TROPIC_ROOT_PUBLIC_KEY = bytes.fromhex(
     "fde32b1037a8d4c7d6db710fe73204d41ec8a733baff65f866f9104ae96355f1"
 )
-MODELS_WITHOUT_TROPIC = ["T2B1", "T3B1", "T3T1"]
+
 
 def verify_cert_chain(certs, model_name):
     for cert, ca_cert in zip(certs, certs[1:]):
@@ -78,7 +78,7 @@ def verify_cert_chain(certs, model_name):
         ),
     ),
 )
-def test_authenticate_device(session: Session, challenge: bytes) -> None:
+def test_authenticate_device_optiga(session: Session, challenge: bytes) -> None:
     # NOTE Applications must generate a random challenge for each request.
 
     if not session.features.bootloader_locked:
@@ -87,11 +87,9 @@ def test_authenticate_device(session: Session, challenge: bytes) -> None:
     # Issue an AuthenticateDevice challenge to Trezor.
     proof = device.authenticate(session, challenge)
 
-    data = b"\x13AuthenticateDevice:" + compact_size(len(challenge)) + challenge
-
-    # Optiga
-
     certs = [x509.load_der_x509_certificate(cert) for cert in proof.optiga_certificates]
+
+    assert len(certs) >= 2  # at least one root and one device cert from Optiga
 
     # Verify the last certificate in the certificate chain against trust anchor.
     root_public_key = ec.EllipticCurvePublicKey.from_encoded_point(
@@ -106,16 +104,34 @@ def test_authenticate_device(session: Session, challenge: bytes) -> None:
     verify_cert_chain(certs, session.model.internal_name)
 
     # Verify the signature of the challenge.
+    data = b"\x13AuthenticateDevice:" + compact_size(len(challenge)) + challenge
     certs[0].public_key().verify(
         proof.optiga_signature, data, ec.ECDSA(hashes.SHA256())
     )
 
-    # Tropic
+
+@pytest.mark.parametrize(
+    "challenge",
+    (
+        b"",
+        b"hello world",
+        b"\x00" * 1024,
+        bytes.fromhex(
+            "21f3d40e63c304d0312f62eb824113efd72ba1ee02bef6777e7f8a7b6f67ba16"
+        ),
+    ),
+)
+@pytest.mark.models("core", skip=["safe3", "safe5"], reason="Not using Tropic")
+def test_authenticate_device_tropic(session: Session, challenge: bytes) -> None:
+    # NOTE Applications must generate a random challenge for each request.
+
+    if not session.features.bootloader_locked:
+        pytest.xfail("unlocked bootloader")
+
+    # Issue an AuthenticateDevice challenge to Trezor.
+    proof = device.authenticate(session, challenge)
 
     certs = [x509.load_der_x509_certificate(cert) for cert in proof.tropic_certificates]
-
-    if session.model.internal_name in MODELS_WITHOUT_TROPIC:
-        pytest.xfail(f"{session.model.internal_name} does not support Tropic")
 
     assert len(certs) >= 2  # at least one root and one device cert from Tropic
 
@@ -129,4 +145,5 @@ def test_authenticate_device(session: Session, challenge: bytes) -> None:
     verify_cert_chain(certs, session.model.internal_name)
 
     # Verify the signature of the challenge.
+    data = b"\x13AuthenticateDevice:" + compact_size(len(challenge)) + challenge
     certs[0].public_key().verify(proof.tropic_signature, data)
