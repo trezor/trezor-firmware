@@ -116,7 +116,7 @@ class TestTrezorHostProtocolCrypto(unittest.TestCase):
 
         host_ephemeral_private_key = curve25519.generate_secret()
         host_ephemeral_public_key = curve25519.publickey(host_ephemeral_private_key)
-        handshake.handle_th1_crypto(b"", host_ephemeral_public_key)
+        handshake.handle_th1_crypto(b"", host_ephemeral_public_key, payload=b"\x00")
 
     def test_th2_crypto(self):
         handshake = self.handshake

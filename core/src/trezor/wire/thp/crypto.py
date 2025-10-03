@@ -96,6 +96,7 @@ class Handshake:
         self,
         device_properties: AnyBytes,
         host_ephemeral_public_key: AnyBytes,
+        payload: AnyBytes,
     ) -> tuple[bytes, bytes, bytes]:
 
         trezor_static_private_key, trezor_static_public_key = _derive_static_key_pair()
@@ -105,7 +106,7 @@ class Handshake:
         )
         self.h = _hash_of_two(PROTOCOL_NAME, device_properties)
         self.h = _hash_of_two(self.h, host_ephemeral_public_key)
-        self.h = _hash_of_two(self.h, b"")
+        self.h = _hash_of_two(self.h, payload)
         self.h = _hash_of_two(self.h, trezor_ephemeral_public_key)
         point = curve25519.multiply(
             self.trezor_ephemeral_private_key, host_ephemeral_public_key
