@@ -21,6 +21,13 @@
 
 #include <sys/systask.h>
 
+// Wipe information structure
+typedef struct {
+  char title[64];
+  char message[64];
+  char footer[64];
+} bootutils_wipe_info_t;
+
 // Immediately resets the device and initiates the normal boot sequence as if
 // the device was powered on
 void __attribute__((noreturn)) reboot_device(void);
@@ -47,6 +54,11 @@ void __attribute__((noreturn)) reboot_and_upgrade(const uint8_t hash[32]);
 void __attribute__((noreturn))
 reboot_with_rsod(const systask_postmortem_t *pminfo);
 #endif
+
+// Resets the device and wipes all the user data.
+// RSOD with wipe information is displayed.
+void __attribute__((noreturn))
+reboot_and_wipe(const bootutils_wipe_info_t *info);
 
 // Allows the user to read the displayed error message and then
 // reboots the device or waits for power-off.

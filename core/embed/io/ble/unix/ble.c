@@ -62,3 +62,5 @@ void ble_notify(const uint8_t *data, size_t len){};
 void ble_set_enabled(bool enabled) {}
 
 bool ble_get_enabled(void) { return false; }
+
+bool ble_wait_until_ready(void) { return true; }

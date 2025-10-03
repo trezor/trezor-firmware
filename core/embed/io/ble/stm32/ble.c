@@ -1449,4 +1449,17 @@ static const syshandle_vmt_t ble_handle_vmt = {
     .poll = on_ble_poll,
 };
 
+bool ble_wait_until_ready(void) {
+  uint32_t timeout = ticks_timeout(5000);
+  ble_state_t state = {0};
+  do {
+    ble_get_state(&state);
+    if (state.state_known) {
+      return true;
+    }
+  } while (!ticks_expired(timeout));
+
+  return false;
+}
+
 #endif

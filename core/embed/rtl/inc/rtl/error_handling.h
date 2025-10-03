@@ -17,8 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIB_ERROR_HANDLING_H
-#define LIB_ERROR_HANDLING_H
+#pragma once
+
+#include <sys/bootutils.h>
 
 // Shows an error message and shuts down the device.
 //
@@ -51,4 +52,5 @@ void __attribute__((noreturn)) show_pin_too_many_screen(void);
 // Shows INSTALL RESTRICTED screen and shuts down the device.
 void __attribute__((noreturn)) show_install_restricted_screen(void);
 
-#endif  // LIB_ERRORS_H
+// Shows wipe information screen
+void show_wipe_info(const bootutils_wipe_info_t *info);

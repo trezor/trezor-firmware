@@ -165,7 +165,8 @@ static secbool boot_sequence(void) {
 
   bool turn_on =
       (cmd == BOOT_COMMAND_INSTALL_UPGRADE || cmd == BOOT_COMMAND_REBOOT ||
-       cmd == BOOT_COMMAND_SHOW_RSOD || cmd == BOOT_COMMAND_STOP_AND_WAIT);
+       cmd == BOOT_COMMAND_SHOW_RSOD || cmd == BOOT_COMMAND_WIPE ||
+       cmd == BOOT_COMMAND_STOP_AND_WAIT);
 
   if (cmd != BOOT_COMMAND_POWER_OFF) {
     turn_on = true;
@@ -178,16 +179,7 @@ static secbool boot_sequence(void) {
   if (cmd == BOOT_COMMAND_POWER_OFF) {
 #ifdef USE_BLE
     ble_init();
-
-    uint32_t timeout = ticks_timeout(5000);
-    ble_state_t state = {0};
-    do {
-      ble_get_state(&state);
-      if (state.state_known) {
-        break;
-      }
-    } while (!ticks_expired(timeout));
-
+    ble_wait_until_ready();
     ble_switch_off();
 #endif
   }
@@ -529,6 +521,27 @@ int bootloader_main(void) {
     reboot_or_halt_after_rsod();
   }
 #endif  // USE_BOOTARGS_RSOD
+
+  if (bootargs_get_command() == BOOT_COMMAND_WIPE) {
+#ifdef LAZY_DISPLAY_INIT
+    display_init(DISPLAY_RESET_CONTENT);
+#endif
+
+    erase_storage(NULL);
+
+#ifdef USE_BLE
+    ble_init();
+    ble_wait_until_ready();
+    wipe_bonds(NULL);
+#endif
+
+    // wipe info was left in bootargs
+    boot_args_t args;
+    bootargs_get_args(&args);
+
+    show_wipe_info(&args.wipeinfo);
+    reboot_or_halt_after_rsod();
+  }
 
   ui_screen_boot_stage_1(false);
 

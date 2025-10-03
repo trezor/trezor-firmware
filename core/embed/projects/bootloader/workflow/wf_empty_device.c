@@ -36,6 +36,8 @@
 
 #ifdef USE_BLE
 #include <io/ble.h>
+
+#include "wire/wire_iface_ble.h"
 #endif
 
 #include "bootui.h"
@@ -55,14 +57,7 @@ workflow_result_t workflow_empty_device(void) {
 
 #ifdef USE_BLE
   screen_boot_empty();
-  uint32_t timeout = ticks_timeout(5000);
-  ble_state_t state = {0};
-  do {
-    ble_get_state(&state);
-    if (state.state_known) {
-      break;
-    }
-  } while (!ticks_expired(timeout));
+  ble_wait_until_ready();
 #endif
 
   protob_ios_t ios;

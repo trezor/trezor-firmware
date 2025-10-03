@@ -73,6 +73,17 @@ __attribute__((noreturn)) void reboot_to_off(void) {
   exit(3);
 }
 
+__attribute__((noreturn)) void reboot_and_wipe(
+    const bootutils_wipe_info_t* info) {
+  show_wipe_info(info);
+
+  printf("reboot (wipe)\n");
+
+  systick_delay_ms(3000);
+
+  exit(3);
+}
+
 __attribute__((noreturn)) void reboot_or_halt_after_rsod(void) {
   printf("reboot (with timeout)\n");
 
