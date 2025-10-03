@@ -27,11 +27,10 @@
 #include "nist256p1.h"
 #include "secret_keys_common.h"
 
-#ifdef SECRET_PRIVILEGED_MASTER_KEY_SLOT
-
-secbool secret_key_derive_sym(uint8_t slot, uint16_t index, uint16_t subindex,
-                              uint8_t dest[SHA256_DIGEST_LENGTH]) {
-  secbool ret = sectrue;
+static void diversify_and_derive(uint16_t index, uint16_t subindex,
+                                 uint8_t dest[SHA256_DIGEST_LENGTH],
+                                uint8_t master_key[SHA256_DIGEST_LENGTH],
+                                uint8_t master_key_length){
 
   // The diversifier consists of:
   // - the key derivation index (2 bytes big-endian), which identifies the
@@ -43,14 +42,23 @@ secbool secret_key_derive_sym(uint8_t slot, uint16_t index, uint16_t subindex,
   uint8_t diversifier[] = {index >> 8, index & 0xff, subindex >> 8,
                            subindex & 0xff, 0};
 
+  hmac_sha256(master_key, master_key_length, diversifier, sizeof(diversifier),
+              dest);
+}
+
+#ifdef SECRET_PRIVILEGED_MASTER_KEY_SLOT
+
+secbool secret_key_derive_sym(uint8_t slot, uint16_t index, uint16_t subindex,
+                              uint8_t dest[SHA256_DIGEST_LENGTH]) {
+  secbool ret = sectrue;
+
   uint8_t master_key[32] = {0};
   ret = secret_key_get(slot, master_key, sizeof(master_key));
   if (ret != sectrue) {
     goto cleanup;
   }
 
-  hmac_sha256(master_key, sizeof(master_key), diversifier, sizeof(diversifier),
-              dest);
+  diversify_and_derive(index, subindex, dest, master_key, sizeof(master_key));
 
 cleanup:
   memzero(master_key, sizeof(master_key));
@@ -64,26 +72,13 @@ secbool secret_key_derive_sym(uint8_t slot, uint16_t index, uint16_t subindex,
   (void)slot;  // `slot` argument is not used unless
                // SECRET_PRIVILEGED_MASTER_KEY_SLOT is defined
 
-  secbool ret = sectrue;
-
-  // The diversifier consists of:
-  // - the key derivation index (2 bytes big-endian), which identifies the
-  //   purpose of the key,
-  // - the subindex (2 bytes big-endian), which is incremented until the derived
-  //   key meets required criteria, and
-  // - the block index (1 byte), which can be used to produce outputs that are
-  //   longer than 32 bytes.
-  uint8_t diversifier[] = {index >> 8, index & 0xff, subindex >> 8,
-                           subindex & 0xff, 0};
-
   master_key_t master_key = {0};
   master_key_get(&master_key);
 
-  hmac_sha256(master_key.bytes, master_key.size, diversifier,
-              sizeof(diversifier), dest);
+  diversify_and_derive(index, subindex, dest, master_key.bytes, master_key.size);
 
   memzero(master_key.bytes, master_key.size);
-  return ret;
+  return sectrue;
 }
 
 #endif  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
