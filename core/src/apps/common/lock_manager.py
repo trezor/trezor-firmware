@@ -29,6 +29,7 @@ else:
 
     _SHOULD_SUSPEND = False
     _notify_power_button: loop.mailbox[None] = loop.mailbox()
+    notify_bootscreen: loop.mailbox[None] = loop.mailbox()
 
     def _schedule_suspend_after_workflow() -> None:
         """Signal that the device should be suspended by the default task after the
@@ -47,6 +48,7 @@ else:
 
         Notifies an asynchronous task to perform the suspend in a separate thread.
         """
+        notify_bootscreen.put(None, replace=True)
         _notify_power_button.put(None, replace=True)
 
     async def _power_handler() -> None:
