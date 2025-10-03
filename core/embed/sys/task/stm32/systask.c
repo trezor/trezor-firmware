@@ -23,6 +23,7 @@
 #include <trezor_rtl.h>
 
 #include <sys/applet.h>
+#include <sys/bootargs.h>
 #include <sys/bootutils.h>
 #include <sys/irq.h>
 #include <sys/linker_utils.h>
@@ -415,6 +416,40 @@ void systask_exit_fatal(systask_t* task, const char* message,
   pminfo->fatal.line = line;
 
   systask_kill(task);
+}
+
+void systask_exit_wipe(systask_t* task, const char* title, size_t title_len,
+                       const char* message, size_t message_len,
+                       const char* footer, size_t footer_len) {
+  systask_scheduler_t* scheduler = &g_systask_scheduler;
+
+  if (task == NULL) {
+    bool handler_mode = (__get_IPSR() & IPSR_ISR_Msk) != 0;
+    task = handler_mode ? &scheduler->kernel_task : scheduler->active_task;
+  }
+
+  systask_postmortem_t* pminfo = &task->pminfo;
+
+  memset(pminfo, 0, sizeof(systask_postmortem_t));
+  pminfo->reason = TASK_TERM_REASON_WIPE;
+  pminfo->privileged = (task == &scheduler->kernel_task);
+
+  if (title != NULL) {
+    size_t len = MIN(title_len, sizeof(pminfo->error.title) - 1);
+    strncpy(pminfo->error.title, title, len);
+  }
+
+  if (message != NULL) {
+    size_t len = MIN(message_len, sizeof(pminfo->error.message) - 1);
+    strncpy(pminfo->error.message, message, len);
+  }
+
+  if (footer != NULL) {
+    size_t len = MIN(footer_len, sizeof(pminfo->error.footer) - 1);
+    strncpy(pminfo->error.footer, footer, len);
+  }
+
+  reboot_and_wipe(&task->pminfo);
 }
 
 static uint32_t get_return_addr(bool secure, bool privileged, uint32_t sp) {
