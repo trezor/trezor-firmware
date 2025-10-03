@@ -424,6 +424,8 @@ if TYPE_CHECKING:
         DataChunkRequest = 991
         DataChunkAck = 992
         SetBrightness = 993
+        GetSerialNumber = 996
+        SerialNumber = 997
         SetU2FCounter = 63
         GetNextU2FCounter = 80
         NextU2FCounter = 81

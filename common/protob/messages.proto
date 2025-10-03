@@ -75,6 +75,8 @@ enum MessageType {
     MessageType_DataChunkRequest = 991 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_DataChunkAck = 992 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_SetBrightness = 993 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_GetSerialNumber = 996 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_SerialNumber = 997 [(bitcoin_only) = true, (wire_out) = true];
 
     MessageType_SetU2FCounter = 63 [(wire_in) = true];
     MessageType_GetNextU2FCounter = 80 [(wire_in) = true];

@@ -2759,6 +2759,26 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["SetBrightness"]:
             return isinstance(msg, cls)
 
+    class GetSerialNumber(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["GetSerialNumber"]:
+            return isinstance(msg, cls)
+
+    class SerialNumber(protobuf.MessageType):
+        serial_number: "str"
+
+        def __init__(
+            self,
+            *,
+            serial_number: "str",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["SerialNumber"]:
+            return isinstance(msg, cls)
+
     class Slip39Group(protobuf.MessageType):
         member_threshold: "int"
         member_count: "int"

@@ -689,3 +689,20 @@ message UnlockBootloader {
 message SetBrightness {
     optional uint32 value = 1;  // if not specified, let the user choose
 }
+
+
+/**
+ * Request: Get unit serial number
+ * @start
+ * @next SerialNumber
+ */
+ message GetSerialNumber {
+ }
+
+ /**
+ * Response: contains unit serial number
+ * @end
+ */
+ message SerialNumber {
+    required string serial_number = 1;
+ }
