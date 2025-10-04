@@ -247,6 +247,7 @@ class FaceProcessor:
         ext: str = "ttf",
         gen_normal: bool = True,  # generate font with all the letters
         gen_upper: bool = False,  # generate font with only upper-cased letters
+        gen_kernings: bool = False,  # generate kerning data
         font_idx: int | None = None,  # idx to UTF-8 foreign chars data
         font_idx_upper: int | None = None,  # idx to UTF-8 upper-cased foreign chars
     ):
@@ -265,6 +266,7 @@ class FaceProcessor:
         self.ext = ext
         self.gen_normal = gen_normal
         self.gen_upper = gen_upper
+        self.gen_kernings = gen_kernings
 
         self.face = freetype.Face(str(FONTS_DIR / f"{name}-{style}.{ext}"))
         self.face.set_pixel_sizes(0, size)  # type: ignore
@@ -430,6 +432,22 @@ class FaceProcessor:
             self.font_ymin = min(self.font_ymin, yMin)
             self.font_ymax = max(self.font_ymax, yMax)
 
+        kernings = []
+        for left in range(MIN_GLYPH, MAX_GLYPH + 1):
+            for right in range(MIN_GLYPH, MAX_GLYPH + 1):
+                kerning = self.face.get_kerning(
+                    left, right, freetype.FT_KERNING_DEFAULT
+                )
+                if kerning.x != 0:
+                    kernings.append((left, right, kerning.x // 64))
+                    print(
+                        f"left glyph: {chr(left)} right glyph:{chr(right)} kerning {kerning.x // 64}"
+                    )
+
+        print(
+            f"Font: {self._name_style_size} {self.style} {self.size} : Num of kernirngs {len(kernings)}"
+        )
+
         # 5) Build FontInfo definitions.
         font_info = None
         font_info_upper = None
@@ -446,6 +464,7 @@ class FaceProcessor:
                 "baseline": -self.font_ymin,
                 "glyph_array": f"Font_{self._name_style_size}",
                 "nonprintable": f"Font_{self._name_style_size}_glyph_nonprintable",
+                "kernings": f"Font_{self._name_style_size}_kernings",
             }
         if self.gen_upper:
             if self.font_idx_upper is None:
@@ -460,6 +479,7 @@ class FaceProcessor:
                 "baseline": -self.font_ymin,
                 "glyph_array": f"Font_{self._name_style_size}_upper",
                 "nonprintable": f"Font_{self._name_style_size}_glyph_nonprintable",
+                "kernings": f"Font_{self._name_style_size}_kernings",
             }
 
         data = {
@@ -469,8 +489,10 @@ class FaceProcessor:
             "nonprintable": nonprintable,
             "glyph_array": glyph_array,
             "glyph_array_upper": glyph_array_upper,
+            "kernings": kernings,
             "gen_normal": self.gen_normal,
             "gen_upper": self.gen_upper,
+            "gen_kernings": self.gen_kernings,
             "font_info": font_info,
             "font_info_upper": font_info_upper,
         }
