@@ -131,6 +131,7 @@
     "bitcoin__unverified_external_inputs": "A transação contém entradas externas não verificadas.",
     "bitcoin__valid_signature": "A assinatura é válida.",
     "bitcoin__voting_rights": "Direitos de voto para",
+    "ble__apps_connected": "",
     "ble__disable": {
       "Bolt": "",
       "Caesar": "",
@@ -185,12 +186,14 @@
       "Delizia": "",
       "Eckhart": "Host removido."
     },
+    "ble__host_info": "",
     "ble__limit_reached": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Limite de dispositivos pareados atingido"
     },
+    "ble__mac_address": "",
     "ble__manage_paired": "Gerenciar disp. pareados",
     "ble__pair_new": "Parear novo disp.",
     "ble__pair_title": "Parear e conectar",
@@ -210,6 +213,7 @@
     "ble__unpair_current": "Desemparelhar dispositivo conectado",
     "ble__unpair_title": "Desemparelhar",
     "ble__version": "Versão Bluetooth",
+    "ble__waiting_for_host": "",
     "brightness__change_title": "Alterar brilho da tela",
     "brightness__changed_title": "Exibir brilho alterado",
     "brightness__title": "Exibir brilho",
@@ -474,7 +478,12 @@
     "ethereum__title_confirm_message": "Confirmar mensagem",
     "ethereum__title_confirm_message_hash": "Confirmar hash da mensagem",
     "ethereum__title_confirm_struct": "Conf. estrutura",
-    "ethereum__title_confirm_typed_data": "Conf. dados",
+    "ethereum__title_confirm_typed_data": {
+      "Bolt": "Conf. dados",
+      "Caesar": "Conf. dados",
+      "Delizia": "Conf. dados",
+      "Eckhart": "Conf. dados inseridos"
+    },
     "ethereum__title_input_data": "Dados entrados",
     "ethereum__title_signing_address": "End. assinatura",
     "ethereum__token_contract": "Contrato Token",
@@ -1168,7 +1177,12 @@
     "stellar__new_passive_offer": "Nova oferta passiva",
     "stellar__no_memo_set": "Nenhum(a) memo/etiqueta definido(a)!",
     "stellar__no_restriction": "[sem restrição]",
-    "stellar__path_pay": "Pagamento por caminho",
+    "stellar__path_pay": {
+      "Bolt": "Pagamento por caminho",
+      "Caesar": "Pagamento por caminho",
+      "Delizia": "Pagamento por caminho",
+      "Eckhart": "Caminho de Pagamento"
+    },
     "stellar__path_pay_at_least": "Pagamento por caminho pelo menos",
     "stellar__pay": "Pagamento",
     "stellar__pay_at_most": "Pagar no máximo",
