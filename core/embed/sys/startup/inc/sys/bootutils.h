@@ -48,6 +48,11 @@ void __attribute__((noreturn))
 reboot_with_rsod(const systask_postmortem_t *pminfo);
 #endif
 
+// Resets the device and wipes all the user data.
+// RSOD with post-mortem information is displayed.
+void __attribute__((noreturn))
+reboot_and_wipe(const systask_postmortem_t *pminfo);
+
 // Allows the user to read the displayed error message and then
 // reboots the device or waits for power-off.
 //

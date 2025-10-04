@@ -61,13 +61,17 @@ __fatal_error(const char *msg, const char *file, int line) {
 }
 
 void __attribute__((noreturn)) show_wipe_code_screen(void) {
-  error_shutdown_ex("Wipe code entered", ALL_DATA_ERASED_MESSAGE,
-                    RECONNECT_DEVICE_MESSAGE);
+  system_exit_wipe("Wipe code entered", ALL_DATA_ERASED_MESSAGE,
+                   RECONNECT_DEVICE_MESSAGE);
+  while (1)
+    ;
 }
 
 void __attribute__((noreturn)) show_pin_too_many_screen(void) {
-  error_shutdown_ex("Pin attempts exceeded", ALL_DATA_ERASED_MESSAGE,
-                    RECONNECT_DEVICE_MESSAGE);
+  system_exit_wipe("Pin attempts exceeded", ALL_DATA_ERASED_MESSAGE,
+                   RECONNECT_DEVICE_MESSAGE);
+  while (1)
+    ;
 }
 
 void __attribute__((noreturn)) show_install_restricted_screen(void) {

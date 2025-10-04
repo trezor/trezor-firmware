@@ -28,3 +28,5 @@ void ble_iface_deinit(void);
 bool ble_iface_start_pairing(void);
 
 void ble_iface_end_pairing(void);
+
+bool ble_wait_until_ready(void);
