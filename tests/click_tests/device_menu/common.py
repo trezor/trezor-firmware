@@ -36,7 +36,7 @@ REGULATORY_AREAS = [
     "Europe",
     "Australia",
     "Ukraine",
-    "Japan",
+    # "Japan",
     "South Korea",
     "Taiwan",
 ]
