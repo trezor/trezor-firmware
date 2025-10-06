@@ -151,7 +151,7 @@ static systask_id_t systask_get_unused_id(void) {
 }
 
 bool systask_init(systask_t* task, uint32_t stack_base, uint32_t stack_size,
-                  void* applet) {
+                  uint32_t sb_addr, void* applet) {
   systask_id_t id = systask_get_unused_id();
   if (id >= SYSTASK_MAX_TASKS) {
     return false;
@@ -170,6 +170,7 @@ bool systask_init(systask_t* task, uint32_t stack_base, uint32_t stack_size,
   task->stack_base = stack_base;
   task->stack_end = stack_base + stack_size;
   task->applet = applet;
+  task->sb_addr = sb_addr;
 
   // Notify all event sources about the task creation
   sysevents_notify_task_created(task);
@@ -224,9 +225,12 @@ bool systask_push_call(systask_t* task, void* entrypoint, uint32_t arg1,
   }
 
   // Registers r4-r11
-  if (systask_push_data(task, NULL, 0x20) == NULL) {
+  uint32_t regs[8] = {0};
+  regs[9 - 4] = task->sb_addr;  // r9 = Static base address
+  if (systask_push_data(task, regs, 0x20) == NULL) {
     goto cleanup;
   }
+
   // Registers s16-s31
   if (systask_push_data(task, NULL, 0x40) == NULL) {
     goto cleanup;
