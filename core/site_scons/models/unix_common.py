@@ -79,4 +79,12 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         if "usb_iface_vcp" in features_wanted:
             defines += [("USE_USB_IFACE_VCP", "1")]
 
+    if "ipc" in features_wanted:
+        sources += [
+            "embed/sys/ipc/ipc.c",
+            "embed/sys/ipc/unix/ipc_memcpy.c",
+        ]
+        defines += [("USE_IPC", "1")]
+        paths += ["embed/sys/ipc/inc"]
+
     return features_available
