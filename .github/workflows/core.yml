@@ -129,6 +129,7 @@ jobs:
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
       QUIET_MODE: 1
+      DISABLE_TROPIC: 0
     steps:
       - uses: actions/checkout@v4
         with:
@@ -137,6 +138,7 @@ jobs:
       - run: nix-shell --run "uv run make -C core build_bootloader_emu"
         if: matrix.coins == 'universal' && matrix.asan == 'noasan'
       - run: nix-shell --run "uv run make -C core build_unix_frozen"
+      - run: nix-shell --arg fullDeps true --run "cd vendor/ts-tvl/model_configs/example_config && poetry env use 3.12 && poetry install && poetry run model_server tcp -c example_config.yml &"
       - run: nix-shell --run "uv run make -C core test_emu_sanity"
       - run: cp core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-${{ matrix.model }}-${{ matrix.coins }}
       - uses: actions/upload-artifact@v4
@@ -297,6 +299,10 @@ jobs:
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
+      - name: Start Tropic model
+        if: ${{ env.TREZOR_MODEL == 'T3W1' }}
+        run: |
+          nix-shell --arg fullDeps true --run "cd vendor/ts-tvl && poetry env use 3.12 && poetry install && poetry run model_server tcp -c ../../tests/tropic_model/config.yml > ../../tests/trezor-tropic-model.log 2>&1 &"
       - run: nix-shell --run "uv run make -C core ${{ env.ACTIONS_DO_UI_TEST == 'true' && 'test_emu_ui_multicore' || 'test_emu' }}"
       - run: tail -v -n50 tests/trezor*.log || true
         if: failure()
@@ -430,6 +436,9 @@ jobs:
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
+      - name: Start Tropic model
+        if: ${{ matrix.model == 'T3W1' }}
+        run: nix-shell --arg fullDeps true --run "cd vendor/ts-tvl && poetry env use 3.12 && poetry install && poetry run model_server tcp -c ../../tests/tropic_model/config.yml > ../../tests/trezor-tropic-model.log 2>&1 &"
       - run: nix-shell --run "uv run make -C core test_emu_persistence_ui"
         if: ${{ matrix.asan == 'noasan' }}
       - run: nix-shell --run "uv run make -C core test_emu_persistence"
@@ -592,6 +601,9 @@ jobs:
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
+      - name: Start Tropic model
+        if: ${{ matrix.model == 'T3W1' }}
+        run: nix-shell --arg fullDeps true --run "cd vendor/ts-tvl && poetry env use 3.12 && poetry install && poetry run model_server tcp -c ../../tests/tropic_model/config.yml > ../../tests/trezor-tropic-model.log 2>&1 &"
       - run: nix-shell --run "uv run make -C tests/fido_tests/u2f-tests-hid"
       - run: nix-shell --run "uv run make -C core test_emu_u2f"
       - uses: actions/upload-artifact@v4
@@ -627,6 +639,9 @@ jobs:
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
+      - name: Start Tropic model
+        if: ${{ matrix.model == 'T3W1' }}
+        run: nix-shell --arg fullDeps true --run "cd vendor/ts-tvl && poetry env use 3.12 && poetry install && poetry run model_server tcp -c ../../tests/tropic_model/config.yml > ../../tests/trezor-tropic-model.log 2>&1 &"
       - run: nix-shell --run "uv run make -C core test_emu_fido2"
       - uses: actions/upload-artifact@v4
         with:
