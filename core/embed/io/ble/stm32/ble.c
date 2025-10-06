@@ -27,6 +27,7 @@
 
 #include <io/ble.h>
 #include <io/nrf.h>
+#include <sys/backup_ram.h>
 #include <sys/irq.h>
 #include <sys/sysevent_source.h>
 #include <sys/systick.h>
@@ -50,6 +51,11 @@
 
 #define BLE_DATA_HEADER_SIZE 7
 #define BLE_DATA_SIZE (BLE_RX_PACKET_SIZE + BLE_DATA_HEADER_SIZE)
+
+typedef struct {
+  uint8_t version;
+  bool enabled;
+} ble_recovery_data_t;
 
 typedef struct {
   ble_mode_t mode_requested;
@@ -659,8 +665,16 @@ bool ble_init(void) {
     goto cleanup;
   }
 
-  drv->power_level = BLE_TX_POWER_PLUS_4_DBM;
   drv->enabled = true;
+  ble_recovery_data_t backup_data;
+  if (backup_ram_read(BACKUP_RAM_KEY_BLE_SETTINGS, &backup_data,
+                      sizeof(backup_data), NULL)) {
+    if (backup_data.version == 1) {
+      drv->enabled = backup_data.enabled;
+    }
+  }
+
+  drv->power_level = BLE_TX_POWER_PLUS_4_DBM;
   drv->initialized = true;
   return true;
 
@@ -1357,6 +1371,11 @@ void ble_set_enabled(bool enabled) {
   }
 
   drv->enabled = enabled;
+
+  ble_recovery_data_t data = {.version = 1, .enabled = enabled};
+
+  backup_ram_write(BACKUP_RAM_KEY_BLE_SETTINGS, BACKUP_RAM_ITEM_PROTECTED,
+                   &data, sizeof(data));
 }
 
 bool ble_get_enabled(void) {

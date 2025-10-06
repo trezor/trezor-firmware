@@ -45,6 +45,8 @@ static bool encode_pairing_code(uint32_t code, uint8_t *outbuf) {
 }
 
 workflow_result_t workflow_ble_pairing_request(const fw_info_t *fw) {
+  ble_set_enabled(true);
+
   if (!ble_iface_start_pairing()) {
     return WF_OK_PAIRING_FAILED;
   }
@@ -125,6 +127,8 @@ workflow_result_t workflow_ble_pairing_request(const fw_info_t *fw) {
 
 workflow_result_t workflow_wireless_setup(const fw_info_t *fw,
                                           protob_ios_t *ios) {
+  ble_set_enabled(true);
+
   if (!ble_iface_start_pairing()) {
     return WF_OK_PAIRING_FAILED;
   }
