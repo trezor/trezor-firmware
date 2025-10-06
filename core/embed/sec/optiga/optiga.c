@@ -62,7 +62,11 @@
 #define OID_PIN_ECDH (OPTIGA_OID_ECC_KEY + 3)
 
 // The number of times that PIN stretching is repeated.
+#if STRETCHED_PIN_COUNT > 1
+#define PIN_STRETCH_ITERATIONS 1
+#else
 #define PIN_STRETCH_ITERATIONS 2
+#endif
 
 // The throttling delay when the security event counter is at its maximum.
 #define OPTIGA_T_MAX_MS 5000
