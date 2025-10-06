@@ -280,7 +280,8 @@ class Layout(Generic[T]):
                     self.button_request_box.put(None, replace=True)
                     await is_done
                 except Exception as e:
-                    log.exception(__name__, e)
+                    if __debug__:
+                        log.exception(__name__, e)
 
             return result
         finally:

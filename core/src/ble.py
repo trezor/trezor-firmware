@@ -23,4 +23,5 @@ try:
         if ble.peer_count() > 0:
             ble.start_advertising(True, storage.device.get_label())
 except Exception as e:
-    log.exception(__name__, e)
+    if __debug__:
+        log.exception(__name__, e)
