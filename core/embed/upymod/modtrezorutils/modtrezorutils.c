@@ -377,7 +377,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_enable_oom_dump_obj,
                                  mod_trezorutils_enable_oom_dump);
 #endif  // MICROPY_OOM_CALLBACK
 
-static gc_info_t current_gc_info = {0};
+static MP_THREAD_LOCAL gc_info_t current_gc_info;
 
 /// if __debug__:
 ///     def clear_gc_info() -> None:
