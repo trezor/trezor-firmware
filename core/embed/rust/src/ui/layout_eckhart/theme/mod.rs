@@ -12,7 +12,7 @@ pub use firmware::*;
 use crate::ui::{
     component::text::TextStyle,
     display::Color,
-    geometry::{Grid, Insets, Offset, Rect},
+    geometry::{Grid, Insets, Offset, Point, Rect},
     util::include_icon,
 };
 
@@ -212,3 +212,10 @@ pub const TEXT_SMALL_GREY_EXTRA_LIGHT: TextStyle = TextStyle {
     text_color: GREY_EXTRA_LIGHT,
     ..TEXT_SMALL
 };
+
+/// Where to place main content if no Header is used on the Screen
+pub const CONTENT_INSETS_NO_HEADER: Insets = Insets::new(38, PADDING, ACTION_BAR_HEIGHT, PADDING);
+/// Where to place main text of progress screens of bootloader and firmware
+pub const PROGRESS_TEXT_ORIGIN: Point = super::constant::SCREEN
+    .top_left()
+    .ofs(Offset::new(PADDING, CONTENT_INSETS_NO_HEADER.top));

@@ -11,14 +11,14 @@ use crate::{
             Component, Event, EventCtx, FormattedText, Label, Paginate, TextLayout,
         },
         flow::Swipable,
-        geometry::{Insets, Offset, Rect},
+        geometry::{Offset, Rect},
         shape::Renderer,
         util::Pager,
     },
 };
 
 use super::{
-    theme::{self, ScreenBackground, SIDE_INSETS},
+    theme::{self, ScreenBackground, CONTENT_INSETS_NO_HEADER, SIDE_INSETS},
     ActionBar, ActionBarMsg, FidoAccountName, FidoCredential, Header, HeaderMsg, Hint,
 };
 
@@ -55,7 +55,6 @@ where
     const SUBTITLE_HEIGHT: i16 = 44;
     const SUBTITLE_DOUBLE_HEIGHT: i16 = 76;
     const SUBTITLE_STYLE: TextStyle = theme::TEXT_MEDIUM_EXTRA_LIGHT;
-    const CONTENT_INSETS_NO_HEADER: Insets = Insets::top(38);
 
     pub fn new(content: T) -> Self {
         Self {
@@ -177,11 +176,10 @@ where
         };
 
         // Introduce side insets + top padding if the header is not present
-        content_area = content_area.inset(SIDE_INSETS);
         content_area = if self.header.is_none() {
-            content_area.inset(Self::CONTENT_INSETS_NO_HEADER)
+            content_area.inset(CONTENT_INSETS_NO_HEADER)
         } else {
-            content_area
+            content_area.inset(SIDE_INSETS)
         };
 
         self.content.place(content_area);
