@@ -129,6 +129,7 @@ jobs:
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
       QUIET_MODE: 1
+      DISABLE_TROPIC: 0
     steps:
       - uses: actions/checkout@v4
         with:
@@ -297,7 +298,18 @@ jobs:
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
+      - name: Start Tropic model
+        if: ${{ env.TREZOR_MODEL == 'T3W1' }}
+        run: |
+          mkdir -p vendor/ts-tvl/logs && cp vendor/ts-tvl/model_configs/example_config/tropic01_ese_* tests/tropic_model
+          python core/tools/generate_tropic_model_config.py -k tests/tropic_model/tropic_key.pem -c tests/tropic_model/tropic_cert.pem -r tests/tropic_model/root_cert.pem > tests/tropic_model/config.yml
+          nix-shell --arg fullDeps true --run "cd vendor/ts-tvl && poetry env use 3.12 && poetry install && poetry run model_server tcp -c ../../tests/tropic_model/config.yml >logs/server.log 2>&1 &"
       - run: nix-shell --run "uv run make -C core ${{ env.ACTIONS_DO_UI_TEST == 'true' && 'test_emu_ui_multicore' || 'test_emu' }}"
+      - name: Show Tropic model logs
+        if: ${{ env.TREZOR_MODEL == 'T3W1' }}
+        run: |
+          echo "==== MODEL SERVER LOG ===="
+          cat vendor/ts-tvl/logs/server.log
       - run: tail -v -n50 tests/trezor*.log || true
         if: failure()
       - uses: actions/upload-artifact@v4
