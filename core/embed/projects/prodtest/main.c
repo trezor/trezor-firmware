@@ -129,7 +129,12 @@ static ssize_t console_read(void *context, char *buf, size_t size) {
 }
 
 static ssize_t console_write(void *context, const char *buf, size_t size) {
-  return syshandle_write_blocking(SYSHANDLE_USB_VCP, buf, size, 100);
+  static uint32_t timeout = 2000;
+  int rc = syshandle_write_blocking(SYSHANDLE_USB_VCP, buf, size, timeout);
+  // Do not wait too long if the host is not connected.
+  // This is a workaround that needs to be fixed properly later.
+  timeout = rc < size ? 100 : 2000;
+  return rc;
 }
 
 static void usb_vcp_intr_callback(void) { cli_abort(&g_cli); }
