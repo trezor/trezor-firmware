@@ -148,7 +148,7 @@ struct RegulatoryContent {
 }
 
 impl RegulatoryContent {
-    const SCREENS: usize = 9;
+    const SCREENS: usize = 8;
     const ZONES: [RegulatoryZone; RegulatoryContent::SCREENS] = [
         RegulatoryZone {
             name: Some("United States"),
@@ -186,12 +186,13 @@ impl RegulatoryContent {
             icon1: Some(theme::ICON_UKRAINE),
             icon2: None,
         },
-        RegulatoryZone {
-            name: Some("Japan"),
-            content: "",
-            icon1: Some(theme::ICON_JAPAN),
-            icon2: Some(theme::ICON_JAPAN_2),
-        },
+        // TODO: add Japan when certification completed
+        // RegulatoryZone {
+        //     name: Some("Japan"),
+        //     content: "",
+        //     icon1: Some(theme::ICON_JAPAN),
+        //     icon2: Some(theme::ICON_JAPAN_2),
+        // },
         RegulatoryZone {
             name: Some("South Korea"),
             content: "",
