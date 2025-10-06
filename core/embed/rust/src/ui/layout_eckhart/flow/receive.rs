@@ -129,6 +129,7 @@ pub fn new_receive(
     )
     .with_header(Header::new(title).with_menu_button())
     .with_subtitle(subtitle.unwrap_or(TString::empty()))
+    .with_pagination_hint()
     .with_action_bar(ActionBar::new_single(button));
     if let Some(hint) = hint {
         address_screen = address_screen.with_hint(Hint::new_warning_caution(hint));

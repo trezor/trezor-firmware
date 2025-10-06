@@ -11,7 +11,7 @@ use crate::{
             Component, Event, EventCtx, FormattedText, Label, Paginate, TextLayout,
         },
         flow::Swipable,
-        geometry::{Offset, Rect},
+        geometry::{Insets, Offset, Rect},
         shape::Renderer,
         util::Pager,
     },
@@ -38,6 +38,7 @@ pub struct TextScreen<T> {
     action_bar: Option<ActionBar>,
     page_limit: Option<u16>,
     background: Option<ScreenBackground>,
+    pagination_hint: bool,
     // TODO: swipe handling
     // TODO: animations
 }
@@ -65,6 +66,7 @@ where
             action_bar: Some(ActionBar::new_paginate_only()),
             page_limit: None,
             background: None,
+            pagination_hint: false,
         }
     }
 
@@ -82,6 +84,11 @@ where
 
     pub fn with_hint(mut self, hint: Hint<'static>) -> Self {
         self.hint = Some(hint);
+        self
+    }
+
+    pub fn with_pagination_hint(mut self) -> Self {
+        self.pagination_hint = true;
         self
     }
 
@@ -167,7 +174,7 @@ where
             rest
         };
 
-        let mut content_area = if let Some(hint) = &mut self.hint {
+        let rest = if let Some(hint) = &mut self.hint {
             let (rest, hint_area) = rest.split_bottom(hint.height());
             hint.place(hint_area);
             rest
@@ -175,16 +182,29 @@ where
             rest
         };
 
-        // Introduce side insets + top padding if the header is not present
-        content_area = if self.header.is_none() {
-            content_area.inset(CONTENT_INSETS_NO_HEADER)
-        } else {
-            content_area.inset(SIDE_INSETS)
+        let compute_content_area = |area: Rect, has_header: bool| {
+            let mut area = area.inset(SIDE_INSETS);
+            if !has_header {
+                area = area.inset(Insets::top(CONTENT_INSETS_NO_HEADER.top));
+            }
+            area
         };
 
+        // Introduce side insets + top padding if the header is not present
+        let content_area = compute_content_area(rest, self.header.is_some());
         self.content.place(content_area);
-
         self.update_page(0);
+
+        if self.pagination_hint && self.hint.is_none() && self.content.pager().total() > 1 {
+            let mut hint = Hint::new_page_counter();
+            let (rest, hint_area) = rest.split_bottom(hint.height());
+            hint.place(hint_area);
+            self.hint = Some(hint);
+            let content_area = compute_content_area(rest, self.header.is_some());
+            self.content.place(content_area);
+            self.update_page(0);
+        }
+
         bounds
     }
 
