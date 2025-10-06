@@ -669,6 +669,7 @@ jobs:
           path: core/htmlcov
           retention-days: 7
           include-hidden-files: true
+        if: always()
 
   core_ui_comment:
     name: Post comment with UI diff URLs
