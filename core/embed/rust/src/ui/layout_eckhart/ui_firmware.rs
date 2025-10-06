@@ -1262,7 +1262,9 @@ impl FirmwareUI for UIEckhart {
         }
         let screen = TextScreen::new(FormattedText::new(ops))
             .with_header(Header::new(TR::thp__pair_new_device.into()).with_close_button())
-            .with_action_bar(ActionBar::new_text_only(TR::thp__continue_on_host.into()));
+            .with_action_bar(ActionBar::new_text_only(
+                TR::instructions__continue_in_app.into(),
+            ));
         #[cfg(feature = "ble")]
         let screen = BLEHandler::new(screen, BLEHandlerMode::WaitingForPairingRequest);
         let layout = RootComponent::new(screen);

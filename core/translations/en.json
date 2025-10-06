@@ -39,7 +39,7 @@
     "address_details__derivation_path_colon": "Derivation path:",
     "address_details__title_receive_address": "Receive address",
     "address_details__title_receiving_to": "Receiving to",
-    "authenticate__confirm_template": "Allow connected computer to confirm your {0} is genuine?",
+    "authenticate__confirm_template": "Allow connected app to check the authenticity of your {0}?",
     "authenticate__header": "Authenticate device",
     "auto_lock__change_template": "Auto-lock Trezor after {0} of inactivity?",
     "auto_lock__description": "Set the time before your Trezor locks automatically.",
@@ -115,11 +115,11 @@
     "ble__forget_all": "Forget all",
     "ble__forget_all_description": "They'll be removed, and you'll need to pair them again before use.",
     "ble__forget_all_devices": "Forget all devices?",
-    "ble__forget_all_success": "All hosts removed.",
+    "ble__forget_all_success": "All connections removed.",
     "ble__forget_this_description": "It will be removed, and you'll need to pair it again before use.",
     "ble__forget_this_device": "Forget this device?",
-    "ble__forget_this_success": "Host removed.",
-    "ble__host_info": "Host info",
+    "ble__forget_this_success": "Connection removed.",
+    "ble__host_info": "Connection info",
     "ble__limit_reached": "Limit of paired devices reached",
     "ble__mac_address": "MAC address",
     "ble__manage_paired": "Manage paired devices",
@@ -132,7 +132,7 @@
     "ble__unpair_current": "Unpair connected device",
     "ble__unpair_title": "Unpair",
     "ble__version": "Bluetooth version",
-    "ble__waiting_for_host": "Waiting for host...",
+    "ble__waiting_for_host": "Waiting for connection...",
     "brightness__change_title": "Change display brightness",
     "brightness__changed_title": "Display brightness changed",
     "brightness__title": "Display brightness",
@@ -658,13 +658,13 @@
     "passphrase__access_wallet": "Access passphrase wallet?",
     "passphrase__always_on_device": "Always enter your passphrase on Trezor?",
     "passphrase__continue_with_empty_passphrase": "Continue with empty passphrase?",
-    "passphrase__from_host_not_shown": "Passphrase provided by host will be used but will not be displayed due to the device settings.",
+    "passphrase__from_host_not_shown": "Passphrase provided by connected app will be used but will not be displayed due to the device settings.",
     "passphrase__hidden_wallet": "Hidden wallet",
     "passphrase__hide": {
-      "Bolt": "Hide passphrase coming from host?",
-      "Caesar": "Hide passphrase coming from host?",
-      "Delizia": "Hide passphrase coming from host?",
-      "Eckhart": "Hide your passphrase on Trezor entered on host device?"
+      "Bolt": "Hide passphrase coming from app?",
+      "Caesar": "Hide passphrase coming from app?",
+      "Delizia": "Hide passphrase coming from app?",
+      "Eckhart": "Hide your passphrase on Trezor entered on connected app?"
     },
     "passphrase__next_screen_will_show_passphrase": "The next screen shows your passphrase.",
     "passphrase__please_enter": "Please enter your passphrase.",
@@ -1062,7 +1062,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Allow connected host to get serial number of your Trezor Safe 7?"
+      "Eckhart": "Allow connected device to get serial number of your Trezor Safe 7?"
     },
     "sn__title": {
       "Bolt": "",
@@ -1227,12 +1227,6 @@
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Connection dialog"
-    },
-    "thp__continue_on_host": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Continue on host"
     },
     "thp__nfc_text": {
       "Bolt": "",
