@@ -1,12 +1,11 @@
+use heapless::String;
+
 use crate::{
     strutil::{ShortString, TString},
     time::Duration,
     ui::{
         component::{
-            text::{
-                layout::{Chunks, LayoutFit},
-                LineBreaking, TextStyle,
-            },
+            text::{layout::LayoutFit, LineBreaking, TextStyle},
             Component, Event, EventCtx, Label, TextLayout, Timer,
         },
         display::Icon,
@@ -286,9 +285,8 @@ impl PinInput {
     const MAX_SHOWN_LEN: usize = 19; // max number of icons per line
 
     const TWITCH: i16 = 4;
-    const SHOWN_STYLE: TextStyle = theme::TEXT_REGULAR
-        .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
-        .with_chunks(Chunks::new(1, 8));
+    const SHOWN_STYLE: TextStyle =
+        theme::TEXT_REGULAR.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
     const HIDDEN_STYLE: TextStyle = theme::TEXT_REGULAR;
     const SHOWN_TOUCH_OUTSET: Insets = Insets::bottom(200);
     const PIN_ICON: Icon = theme::ICON_DASH_VERTICAL;
@@ -338,6 +336,20 @@ impl PinInput {
         &self.digits
     }
 
+    /// Adds spaces between characters. Output length is capped at 99 since
+    /// PIN_MAX_LEN is 50. Example: "12345" becomes "1 2 3 4 5"
+    /// TODO: Switch to ShortString if and when we can increase its size PR#4531
+    fn space_out_pin(pin: &str) -> String<99> {
+        let mut spaced_out_pin: String<99> = String::new();
+        for (i, c) in pin.chars().enumerate() {
+            unwrap!(spaced_out_pin.push(c));
+            if i < pin.len() - 1 {
+                unwrap!(spaced_out_pin.push(' '));
+            }
+        }
+        spaced_out_pin
+    }
+
     fn update_shown_area(&mut self) {
         // The area where the pin is shown
         let mut shown_area = self.area.inset(KEYBOARD_INPUT_INSETS);
@@ -346,7 +358,7 @@ impl PinInput {
         while let LayoutFit::OutOfBounds { .. } = TextLayout::new(Self::SHOWN_STYLE)
             .with_align(Alignment::Start)
             .with_bounds(shown_area.inset(SHOWN_INSETS))
-            .fit_text(self.pin())
+            .fit_text(&Self::space_out_pin(self.pin()))
         {
             shown_area =
                 shown_area.outset(Insets::bottom(Self::SHOWN_STYLE.text_font.line_height()));
@@ -365,8 +377,7 @@ impl PinInput {
             // Multi-line pin is left aligned
             Alignment::Start
         } else {
-            // FIXME: because of #5623, the chunkified PINs cannot be centered
-            Alignment::Start
+            Alignment::Center
         };
 
         Bar::new(self.shown_area)
@@ -377,7 +388,7 @@ impl PinInput {
         TextLayout::new(Self::SHOWN_STYLE)
             .with_bounds(self.shown_area.inset(SHOWN_INSETS))
             .with_align(alignment)
-            .render_text(self.pin(), target, true);
+            .render_text(&Self::space_out_pin(self.pin()), target, true);
     }
 
     fn render_hidden<'s>(&self, target: &mut impl Renderer<'s>) {
