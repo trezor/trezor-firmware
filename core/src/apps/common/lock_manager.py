@@ -2,15 +2,17 @@ from typing import TYPE_CHECKING
 
 import storage.device as storage_device
 from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS
-from trezor import config, utils, wire, workflow
+from trezor import config, io, utils, wire, workflow
 from trezor.wire import context
 from trezor.wire.message_handler import filters, remove_filter
 
 if utils.USE_POWER_MANAGER:
-    from trezor import io
     from trezor.power_management.autodim import autodim_display
     from trezor.power_management.suspend import suspend_device
     from trezorui_api import BacklightLevels, backlight_fade
+
+if utils.USE_BLE:
+    import trezorble as ble
 
 if TYPE_CHECKING:
     from trezor import protobuf
@@ -216,6 +218,15 @@ def reload_settings_from_storage() -> None:
 
     if utils.USE_POWER_MANAGER:
         configure_autodim()
+
+    if utils.USE_HAPTIC:
+        io.haptic.haptic_set_enabled(storage_device.get_haptic_feedback())
+
+    if utils.USE_RGB_LED:
+        io.rgb_led.rgb_led_set_enabled(storage_device.get_rgb_led())
+
+    if utils.USE_BLE:
+        ble.set_enabled(storage_device.get_ble())
 
     wire.message_handler.EXPERIMENTAL_ENABLED = (
         storage_device.get_experimental_features()
