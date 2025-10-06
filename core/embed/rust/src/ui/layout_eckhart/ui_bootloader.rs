@@ -362,7 +362,7 @@ impl BootloaderUI for UIEckhart {
         ))
         .with_header(BldHeader::new(title_str.as_str().into()).with_menu_button())
         .with_action_bar(BldActionBar::new_single(
-            Button::with_text("Connect to host device".into()).styled(button_confirm()),
+            Button::with_text("Initiate connection".into()).styled(button_confirm()),
         ))
         .with_screen_border(SCREEN_BORDER_BLUE);
 
@@ -410,7 +410,7 @@ impl BootloaderUI for UIEckhart {
         };
 
         let msg = if wireless {
-            "Keep your Trezor close to\nthe host device"
+            "Keep your Trezor close to\nthe connected device"
         } else {
             "Do not disconnect\nyour Trezor"
         };

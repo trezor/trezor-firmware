@@ -868,7 +868,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_thp__connect;
   MP_QSTR_thp__connect_app;
   MP_QSTR_thp__connect_title;
-  MP_QSTR_thp__continue_on_host;
   MP_QSTR_thp__nfc_text;
   MP_QSTR_thp__pair;
   MP_QSTR_thp__pair_app;

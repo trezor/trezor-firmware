@@ -25,7 +25,7 @@ pub enum TranslatedString {
     address_details__derivation_path_colon = 10,  // "Derivation path:"
     address_details__title_receive_address = 11,  // "Receive address"
     address_details__title_receiving_to = 12,  // "Receiving to"
-    authenticate__confirm_template = 13,  // "Allow connected computer to confirm your {0} is genuine?"
+    authenticate__confirm_template = 13,  // "Allow connected app to check the authenticity of your {0}?"
     authenticate__header = 14,  // "Authenticate device"
     auto_lock__change_template = 15,  // "Auto-lock Trezor after {0} of inactivity?"
     auto_lock__title = 16,  // {"Bolt": "Auto-lock delay", "Caesar": "Auto-lock delay", "Delizia": "Auto-lock delay", "Eckhart": "Auto-lock"}
@@ -690,9 +690,9 @@ pub enum TranslatedString {
     nem__unknown_mosaic = 431,  // "Unknown mosaic!"
     passphrase__access_wallet = 432,  // "Access passphrase wallet?"
     passphrase__always_on_device = 433,  // "Always enter your passphrase on Trezor?"
-    passphrase__from_host_not_shown = 434,  // "Passphrase provided by host will be used but will not be displayed due to the device settings."
+    passphrase__from_host_not_shown = 434,  // "Passphrase provided by connected app will be used but will not be displayed due to the device settings."
     passphrase__wallet = 435,  // "Passphrase wallet"
-    passphrase__hide = 436,  // {"Bolt": "Hide passphrase coming from host?", "Caesar": "Hide passphrase coming from host?", "Delizia": "Hide passphrase coming from host?", "Eckhart": "Hide your passphrase on Trezor entered on host device?"}
+    passphrase__hide = 436,  // {"Bolt": "Hide passphrase coming from app?", "Caesar": "Hide passphrase coming from app?", "Delizia": "Hide passphrase coming from app?", "Eckhart": "Hide your passphrase on Trezor entered on connected app?"}
     passphrase__next_screen_will_show_passphrase = 437,  // "The next screen shows your passphrase."
     passphrase__please_enter = 438,  // "Please enter your passphrase."
     passphrase__revoke_on_device = 439,  // "Do you want to revoke the passphrase on device setting?"
@@ -1518,10 +1518,10 @@ pub enum TranslatedString {
     ble__limit_reached = 1128,  // "Limit of paired devices reached"
     ble__forget_all_description = 1129,  // "They'll be removed, and you'll need to pair them again before use."
     ble__forget_all_devices = 1130,  // "Forget all devices?"
-    ble__forget_all_success = 1131,  // "All hosts removed."
+    ble__forget_all_success = 1131,  // "All connections removed."
     ble__forget_this_description = 1132,  // "It will be removed, and you'll need to pair it again before use."
     ble__forget_this_device = 1133,  // "Forget this device?"
-    ble__forget_this_success = 1134,  // "Host removed."
+    ble__forget_this_success = 1134,  // "Connection removed."
     thp__autoconnect = 1135,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Allow {0} to connect automatically to this Trezor?"}
     thp__autoconnect_app = 1136,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Allow {0} on {1} to connect automatically to this Trezor?"}
     thp__connect = 1137,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Allow {0} to connect with this Trezor?"}
@@ -1537,7 +1537,6 @@ pub enum TranslatedString {
     thp__qr_title = 1147,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Scan QR code to pair"}
     ble__pairing_match = 1148,  // "Pairing code match?"
     ble__pairing_title = 1149,  // "Bluetooth pairing"
-    thp__continue_on_host = 1150,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Continue on host"}
     thp__pair_name = 1151,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "{0} is your Trezor's name."}
     thp__pair_new_device = 1152,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Pair with new device"}
     tutorial__power = 1153,  // "Use the power button on the side to turn your device on or off."
@@ -1548,11 +1547,11 @@ pub enum TranslatedString {
     wipe_code__pin_not_set_description = 1158,  // "PIN must be set before enabling wipe code."
     wipe_code__cancel_setup = 1159,  // {"Bolt": "Cancel wipe code setup", "Caesar": "Cancel wipe code setup", "Delizia": "Cancel wipe code setup", "Eckhart": "Cancel wipe code setup?"}
     homescreen__backup_needed_info = 1160,  // "Open Trezor Suite and create a wallet backup. This is the only way to recover access to your assets."
-    ble__host_info = 1161,  // "Host info"
+    ble__host_info = 1161,  // "Connection info"
     ble__mac_address = 1162,  // "MAC address"
-    ble__waiting_for_host = 1163,  // "Waiting for host..."
+    ble__waiting_for_host = 1163,  // "Waiting for connection..."
     ble__apps_connected = 1164,  // "Apps connected"
-    sn__action = 1165,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Allow connected host to get serial number of your Trezor Safe 7?"}
+    sn__action = 1165,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Allow connected device to get serial number of your Trezor Safe 7?"}
     sn__title = 1166,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Serial number"}
     ble__must_be_enabled = 1167,  // "The Bluetooth must be turned on to pair with a new device."
 }
@@ -1572,7 +1571,7 @@ impl TranslatedString {
             (Self::address_details__derivation_path_colon, "Derivation path:"),
             (Self::address_details__title_receive_address, "Receive address"),
             (Self::address_details__title_receiving_to, "Receiving to"),
-            (Self::authenticate__confirm_template, "Allow connected computer to confirm your {0} is genuine?"),
+            (Self::authenticate__confirm_template, "Allow connected app to check the authenticity of your {0}?"),
             (Self::authenticate__header, "Authenticate device"),
             (Self::auto_lock__change_template, "Auto-lock Trezor after {0} of inactivity?"),
             #[cfg(feature = "layout_bolt")]
@@ -2327,16 +2326,16 @@ impl TranslatedString {
             (Self::nem__unknown_mosaic, "Unknown mosaic!"),
             (Self::passphrase__access_wallet, "Access passphrase wallet?"),
             (Self::passphrase__always_on_device, "Always enter your passphrase on Trezor?"),
-            (Self::passphrase__from_host_not_shown, "Passphrase provided by host will be used but will not be displayed due to the device settings."),
+            (Self::passphrase__from_host_not_shown, "Passphrase provided by connected app will be used but will not be displayed due to the device settings."),
             (Self::passphrase__wallet, "Passphrase wallet"),
             #[cfg(feature = "layout_bolt")]
-            (Self::passphrase__hide, "Hide passphrase coming from host?"),
+            (Self::passphrase__hide, "Hide passphrase coming from app?"),
             #[cfg(feature = "layout_caesar")]
-            (Self::passphrase__hide, "Hide passphrase coming from host?"),
+            (Self::passphrase__hide, "Hide passphrase coming from app?"),
             #[cfg(feature = "layout_delizia")]
-            (Self::passphrase__hide, "Hide passphrase coming from host?"),
+            (Self::passphrase__hide, "Hide passphrase coming from app?"),
             #[cfg(feature = "layout_eckhart")]
-            (Self::passphrase__hide, "Hide your passphrase on Trezor entered on host device?"),
+            (Self::passphrase__hide, "Hide your passphrase on Trezor entered on connected app?"),
             (Self::passphrase__next_screen_will_show_passphrase, "The next screen shows your passphrase."),
             (Self::passphrase__please_enter, "Please enter your passphrase."),
             (Self::passphrase__revoke_on_device, "Do you want to revoke the passphrase on device setting?"),
@@ -3388,10 +3387,10 @@ impl TranslatedString {
             (Self::ble__limit_reached, "Limit of paired devices reached"),
             (Self::ble__forget_all_description, "They'll be removed, and you'll need to pair them again before use."),
             (Self::ble__forget_all_devices, "Forget all devices?"),
-            (Self::ble__forget_all_success, "All hosts removed."),
+            (Self::ble__forget_all_success, "All connections removed."),
             (Self::ble__forget_this_description, "It will be removed, and you'll need to pair it again before use."),
             (Self::ble__forget_this_device, "Forget this device?"),
-            (Self::ble__forget_this_success, "Host removed."),
+            (Self::ble__forget_this_success, "Connection removed."),
             #[cfg(feature = "layout_bolt")]
             (Self::thp__autoconnect, ""),
             #[cfg(feature = "layout_caesar")]
@@ -3499,14 +3498,6 @@ impl TranslatedString {
             (Self::ble__pairing_match, "Pairing code match?"),
             (Self::ble__pairing_title, "Bluetooth pairing"),
             #[cfg(feature = "layout_bolt")]
-            (Self::thp__continue_on_host, ""),
-            #[cfg(feature = "layout_caesar")]
-            (Self::thp__continue_on_host, ""),
-            #[cfg(feature = "layout_delizia")]
-            (Self::thp__continue_on_host, ""),
-            #[cfg(feature = "layout_eckhart")]
-            (Self::thp__continue_on_host, "Continue on host"),
-            #[cfg(feature = "layout_bolt")]
             (Self::thp__pair_name, ""),
             #[cfg(feature = "layout_caesar")]
             (Self::thp__pair_name, ""),
@@ -3537,9 +3528,9 @@ impl TranslatedString {
             #[cfg(feature = "layout_eckhart")]
             (Self::wipe_code__cancel_setup, "Cancel wipe code setup?"),
             (Self::homescreen__backup_needed_info, "Open Trezor Suite and create a wallet backup. This is the only way to recover access to your assets."),
-            (Self::ble__host_info, "Host info"),
+            (Self::ble__host_info, "Connection info"),
             (Self::ble__mac_address, "MAC address"),
-            (Self::ble__waiting_for_host, "Waiting for host..."),
+            (Self::ble__waiting_for_host, "Waiting for connection..."),
             (Self::ble__apps_connected, "Apps connected"),
             #[cfg(feature = "layout_bolt")]
             (Self::sn__action, ""),
@@ -3548,7 +3539,7 @@ impl TranslatedString {
             #[cfg(feature = "layout_delizia")]
             (Self::sn__action, ""),
             #[cfg(feature = "layout_eckhart")]
-            (Self::sn__action, "Allow connected host to get serial number of your Trezor Safe 7?"),
+            (Self::sn__action, "Allow connected device to get serial number of your Trezor Safe 7?"),
             #[cfg(feature = "layout_bolt")]
             (Self::sn__title, ""),
             #[cfg(feature = "layout_caesar")]
@@ -4939,7 +4930,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_thp__connect, Self::thp__connect),
         (Qstr::MP_QSTR_thp__connect_app, Self::thp__connect_app),
         (Qstr::MP_QSTR_thp__connect_title, Self::thp__connect_title),
-        (Qstr::MP_QSTR_thp__continue_on_host, Self::thp__continue_on_host),
         (Qstr::MP_QSTR_thp__nfc_text, Self::thp__nfc_text),
         (Qstr::MP_QSTR_thp__pair, Self::thp__pair),
         (Qstr::MP_QSTR_thp__pair_app, Self::thp__pair_app),

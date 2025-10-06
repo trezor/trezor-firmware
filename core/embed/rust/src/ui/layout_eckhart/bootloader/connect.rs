@@ -36,7 +36,10 @@ impl ConnectScreen {
 
         Self {
             header: None,
-            message: Label::left_aligned("Waiting for host...".into(), theme::TEXT_NORMAL),
+            message: Label::left_aligned(
+                "Waiting for connected device...".into(),
+                theme::TEXT_NORMAL,
+            ),
             action_bar: BldActionBar::new_single(btn),
             screen_border: None,
         }

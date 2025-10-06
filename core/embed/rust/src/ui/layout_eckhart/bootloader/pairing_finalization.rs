@@ -36,7 +36,7 @@ impl PairingFinalizationScreen {
         Self {
             header: BldHeader::new("Bluetooth pairing".into()),
             message: Label::left_aligned(
-                "Waiting for confirmation on host device.".into(),
+                "Waiting for Bluetooth pairing confirmation on your other device.".into(),
                 theme::TEXT_NORMAL,
             ),
             action_bar: BldActionBar::new_single(btn),
