@@ -130,6 +130,7 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
             "embed/io/usb/stm32/usb_class_vcp.c",
             "embed/io/usb/stm32/usb_class_webusb.c",
             "embed/io/usb/stm32/usb.c",
+            "embed/io/usb/stm32/usb_rbuf.c",
             "embed/io/usb/stm32/usbd_conf.c",
             "embed/io/usb/stm32/usbd_core.c",
             "embed/io/usb/stm32/usbd_ctlreq.c",
