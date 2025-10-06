@@ -8,8 +8,8 @@ use crate::{
             text::paragraphs::{Paragraph, ParagraphSource as _, ParagraphVecShort, Paragraphs},
             Component, Event, EventCtx, Label, Never,
         },
-        geometry::{Alignment, Alignment2D, LinearPlacement, Offset, Rect},
-        shape::{self, Renderer},
+        geometry::{Alignment2D, LinearPlacement, Offset, Rect},
+        shape::Renderer,
         util::animation_disabled,
     },
 };
@@ -17,7 +17,7 @@ use crate::{
 use super::super::{
     constant::SCREEN,
     cshape::{render_loader, render_loader_indeterminate, ScreenBorder},
-    fonts, theme,
+    theme,
 };
 
 const LOADER_SPEED: u16 = 5;
@@ -143,27 +143,12 @@ impl Component for ProgressScreen {
             render_loader_indeterminate(progress_val, &self.border, target);
         } else {
             render_loader(progress_val, &self.border, target);
-            if !self.coinjoin_progress {
-                render_percentage(progress_val, target);
-            }
         }
         if self.coinjoin_progress {
             self.coinjoin_do_not_disconnect.render(target);
         }
         self.text.render(target);
     }
-}
-
-fn render_percentage<'s>(progress: u16, target: &mut impl Renderer<'s>) {
-    let progress_percent = uformat!("{}%", (progress as f32 / 10.0) as i16);
-    shape::Text::new(
-        SCREEN.center(),
-        &progress_percent,
-        fonts::FONT_SATOSHI_EXTRALIGHT_72,
-    )
-    .with_align(Alignment::Center)
-    .with_fg(theme::GREY_LIGHT)
-    .render(target);
 }
 
 #[cfg(feature = "ui_debug")]
