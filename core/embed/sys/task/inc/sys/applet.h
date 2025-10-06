@@ -38,6 +38,10 @@ typedef struct {
   applet_privileges_t privileges;
   // Applet task
   systask_t task;
+#ifdef TREZOR_EMULATOR
+  // Handle returned by `dlopen()`
+  void* handle;
+#endif
 } applet_t;
 
 // Initializes the applet structure

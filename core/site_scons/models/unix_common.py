@@ -91,4 +91,7 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         sources += ["embed/sys/task/unix/applet.c"]
         sources += ["embed/sys/task/unix/coreapp.c"]
 
+        sources += ["embed/util/elf_loader/unix/elf_loader.c"]
+        paths += ["embed/util/elf_loader/inc"]
+
     return features_available
