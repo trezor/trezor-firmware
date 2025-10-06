@@ -144,9 +144,11 @@ secbool secure_aes_unpriv_encrypt(const uint8_t *input, size_t size,
 
   applet_t *applet = secure_aes_unpriv_applet;
 
-  void *unpriv_input = applet->header->coreapp.saes_input;
-  void *unpriv_output = applet->header->coreapp.saes_output;
-  void *unpriv_callback = applet->header->coreapp.saes_callback;
+  const applet_header_t *header = (applet_header_t *)applet->layout.code1.start;
+
+  void *unpriv_input = header->coreapp.saes_input;
+  void *unpriv_output = header->coreapp.saes_output;
+  void *unpriv_callback = header->coreapp.saes_callback;
 
   memzero(unpriv_input, SAES_DATA_SIZE_WITH_UNPRIV_KEY);
   memzero(unpriv_output, SAES_DATA_SIZE_WITH_UNPRIV_KEY);
