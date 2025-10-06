@@ -74,6 +74,8 @@ mpu_area_t coreapp_get_tls_area(void);
 
 #endif  // TREZOR_EMULATOR
 
+#ifdef USE_APP_LOADING
 void* coreapp_get_api_getter(void);
+#endif
 
 #endif  // KERNEL_MODE
