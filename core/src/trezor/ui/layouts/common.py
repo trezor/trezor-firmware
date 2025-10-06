@@ -3,11 +3,7 @@ from typing import TYPE_CHECKING
 import trezorui_api
 from trezor import ui, workflow
 from trezor.enums import ButtonRequestType
-from trezor.messages import ButtonAck, ButtonRequest
-from trezor.wire import ActionCancelled, context
-
-if __debug__:
-    from trezor import log
+from trezor.wire import ActionCancelled
 
 if TYPE_CHECKING:
     from typing import Any, Awaitable, Callable, Coroutine, TypeVar
@@ -19,21 +15,6 @@ if TYPE_CHECKING:
     InfoFunc = Callable[[], Awaitable[None]]
 
     T = TypeVar("T")
-
-
-async def _button_request(
-    br_name: str,
-    code: ButtonRequestType = ButtonRequestType.Other,
-    pages: int = 0,
-) -> None:
-    workflow.close_others()
-    if __debug__:
-        log.info(__name__, "ButtonRequest sent: %s", br_name)
-    await context.maybe_call(
-        ButtonRequest(code=code, pages=pages or None, name=br_name), ButtonAck
-    )
-    if __debug__:
-        log.info(__name__, "ButtonRequest acked: %s", br_name)
 
 
 async def interact(
@@ -49,7 +30,7 @@ async def interact(
     layout.start()
     # send the button request
     if br_name is not None:
-        await _button_request(br_name, br_code, layout_obj.page_count())
+        layout.button_request_box.put((br_code, br_name))
     # wait for the layout result
     result = await layout.get_result()
     # raise an exception if the user cancelled the action
