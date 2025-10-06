@@ -85,6 +85,9 @@ typedef struct {
   mpu_area_t code1;
   // Read-only code area #2
   mpu_area_t code2;
+  // Thread-local storage area
+  // (used only if not a part of data1 or data2)
+  mpu_area_t tls;
 
 } applet_layout_t;
 
