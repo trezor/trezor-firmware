@@ -48,6 +48,9 @@
 #include "zkp_context.h"
 #endif
 
+// !@# temp
+#include <util/elf_loader.h>
+
 static void drivers_init() {
   flash_init();
   flash_otp_init();
@@ -104,6 +107,14 @@ int main(int argc, char **argv) {
   }
 
   applet_run(&coreapp);
+
+  applet_t extapp;
+  {
+    if (!elf_load(&extapp, "../../../../trezor-app-emu/build/libtest_app.so")) {
+      return -1;
+    }
+    applet_run(&extapp);
+  }
 
   kernel_loop(&coreapp);
 
