@@ -322,7 +322,7 @@ pub enum TranslatedString {
     coinjoin__max_mining_fee = 214,  // "Max mining fee"
     coinjoin__max_rounds = 215,  // "Max rounds"
     coinjoin__title = 216,  // "Authorize coinjoin"
-    coinjoin__title_progress = 218,  // "Coinjoin in progress"
+    coinjoin__title_progress = 218,  // {"Bolt": "Coinjoin in progress", "Caesar": "Coinjoin in progress", "Delizia": "Coinjoin in progress", "Eckhart": "Coinjoin in progress..."}
     coinjoin__waiting_for_others = 219,  // "Waiting for others"
     confirm_total__fee_rate_colon = 220,  // "Fee rate:"
     confirm_total__sending_from_account = 221,  // "Sending from account:"
@@ -530,7 +530,7 @@ pub enum TranslatedString {
     joint__you_are_contributing = 340,  // "You are contributing:"
     language__change_to_template = 341,  // "Change language to {0}?"
     language__changed = 342,  // "Language changed successfully"
-    language__progress = 343,  // "Changing language"
+    language__progress = 343,  // {"Bolt": "Changing language", "Caesar": "Changing language", "Delizia": "Changing language", "Eckhart": "Changing language..."}
     language__title = 344,  // "Language settings"
     lockscreen__tap_to_connect = 345,  // "Tap to connect"
     lockscreen__tap_to_unlock = 346,  // "Tap to unlock"
@@ -742,8 +742,8 @@ pub enum TranslatedString {
     progress__loading_transaction = 483,  // "Loading transaction..."
     progress__locking_device = 484,  // "Locking the device..."
     progress__one_second_left = 485,  // "1 second left"
-    progress__please_wait = 486,  // "Please wait"
-    storage_msg__processing = 487,  // "Processing"
+    progress__please_wait = 486,  // {"Bolt": "Please wait", "Caesar": "Please wait", "Delizia": "Please wait", "Eckhart": "Please wait..."}
+    storage_msg__processing = 487,  // {"Bolt": "Processing", "Caesar": "Processing", "Delizia": "Processing", "Eckhart": "Processing..."}
     progress__refreshing = 488,  // "Refreshing..."
     progress__signing_transaction = 489,  // "Signing transaction..."
     progress__syncing = 490,  // "Syncing..."
@@ -1183,7 +1183,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__staking_unstake_intro = 841,  // "Unstake ETH from Everstake?"
     storage_msg__starting = 842,  // "Starting up"
-    storage_msg__verifying_pin = 843,  // "Verifying PIN"
+    storage_msg__verifying_pin = 843,  // {"Bolt": "Verifying PIN", "Caesar": "Verifying PIN", "Delizia": "Verifying PIN", "Eckhart": "Verifying PIN..."}
     storage_msg__wrong_pin = 844,  // "Wrong PIN"
     reset__create_x_of_y_multi_share_backup_template = 845,  // "Do you want to create a {0} of {1} multi-share backup?"
     reset__title_shamir_backup = 846,  // "Multi-share backup"
@@ -1882,7 +1882,14 @@ impl TranslatedString {
             (Self::coinjoin__max_mining_fee, "Max mining fee"),
             (Self::coinjoin__max_rounds, "Max rounds"),
             (Self::coinjoin__title, "Authorize coinjoin"),
+            #[cfg(feature = "layout_bolt")]
             (Self::coinjoin__title_progress, "Coinjoin in progress"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::coinjoin__title_progress, "Coinjoin in progress"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::coinjoin__title_progress, "Coinjoin in progress"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::coinjoin__title_progress, "Coinjoin in progress..."),
             (Self::coinjoin__waiting_for_others, "Waiting for others"),
             (Self::confirm_total__fee_rate_colon, "Fee rate:"),
             (Self::confirm_total__sending_from_account, "Sending from account:"),
@@ -2110,7 +2117,14 @@ impl TranslatedString {
             (Self::joint__you_are_contributing, "You are contributing:"),
             (Self::language__change_to_template, "Change language to {0}?"),
             (Self::language__changed, "Language changed successfully"),
+            #[cfg(feature = "layout_bolt")]
             (Self::language__progress, "Changing language"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::language__progress, "Changing language"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::language__progress, "Changing language"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::language__progress, "Changing language..."),
             (Self::language__title, "Language settings"),
             (Self::lockscreen__tap_to_connect, "Tap to connect"),
             (Self::lockscreen__tap_to_unlock, "Tap to unlock"),
@@ -2392,8 +2406,22 @@ impl TranslatedString {
             (Self::progress__loading_transaction, "Loading transaction..."),
             (Self::progress__locking_device, "Locking the device..."),
             (Self::progress__one_second_left, "1 second left"),
+            #[cfg(feature = "layout_bolt")]
             (Self::progress__please_wait, "Please wait"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::progress__please_wait, "Please wait"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::progress__please_wait, "Please wait"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::progress__please_wait, "Please wait..."),
+            #[cfg(feature = "layout_bolt")]
             (Self::storage_msg__processing, "Processing"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::storage_msg__processing, "Processing"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::storage_msg__processing, "Processing"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::storage_msg__processing, "Processing..."),
             (Self::progress__refreshing, "Refreshing..."),
             (Self::progress__signing_transaction, "Signing transaction..."),
             (Self::progress__syncing, "Syncing..."),
@@ -2945,7 +2973,14 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__staking_unstake_intro, "Unstake ETH from Everstake?"),
             (Self::storage_msg__starting, "Starting up"),
+            #[cfg(feature = "layout_bolt")]
             (Self::storage_msg__verifying_pin, "Verifying PIN"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::storage_msg__verifying_pin, "Verifying PIN"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::storage_msg__verifying_pin, "Verifying PIN"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::storage_msg__verifying_pin, "Verifying PIN..."),
             (Self::storage_msg__wrong_pin, "Wrong PIN"),
             (Self::reset__create_x_of_y_multi_share_backup_template, "Do you want to create a {0} of {1} multi-share backup?"),
             (Self::reset__title_shamir_backup, "Multi-share backup"),

@@ -649,7 +649,12 @@
     },
     "coinjoin__max_rounds": "Nombre max de tours",
     "coinjoin__title": "Autoriser le Coinjoin",
-    "coinjoin__title_progress": "Coinjoin en cours",
+    "coinjoin__title_progress": {
+      "Bolt": "Coinjoin en cours",
+      "Caesar": "Coinjoin en cours",
+      "Delizia": "Coinjoin en cours",
+      "Eckhart": "Coinjoin en cours..."
+    },
     "coinjoin__waiting_for_others": "En attente des autres",
     "confirm_total__fee_rate": "Taux des frais",
     "confirm_total__fee_rate_colon": "Taux des frais :",
@@ -1025,7 +1030,7 @@
       "Bolt": "Changement de langue",
       "Caesar": "Changement de\nla langue",
       "Delizia": "Changement de langue",
-      "Eckhart": "Changement de la langue"
+      "Eckhart": "Changement de la langue..."
     },
     "language__title": "Paramètres de langue",
     "led__disable": "Désactiver la LED ?",
@@ -1271,7 +1276,12 @@
     "progress__loading_transaction": "Chargement de la transaction...",
     "progress__locking_device": "Verrouillage de l'appareil...",
     "progress__one_second_left": "1 seconde restante",
-    "progress__please_wait": "Veuillez patienter",
+    "progress__please_wait": {
+      "Bolt": "Veuillez patienter",
+      "Caesar": "Veuillez patienter",
+      "Delizia": "Veuillez patienter",
+      "Eckhart": "Veuillez patienter..."
+    },
     "progress__refreshing": "Actualisation en cours...",
     "progress__signing_transaction": "Signature de la transaction en cours...",
     "progress__syncing": "Synchronisation en cours...",
@@ -1724,9 +1734,19 @@
     "stellar__valid_to": "Valide jusqu'à (UTC)",
     "stellar__value_sha256": "Valeur (SHA-256) :",
     "stellar__wanna_clean_value_key_template": "Voulez-vous effacer la clé de valeur {0} ?",
-    "storage_msg__processing": "Traitement",
+    "storage_msg__processing": {
+      "Bolt": "Traitement",
+      "Caesar": "Traitement",
+      "Delizia": "Traitement",
+      "Eckhart": "Traitement..."
+    },
     "storage_msg__starting": "Démarrage en cours",
-    "storage_msg__verifying_pin": "Vérification du PIN",
+    "storage_msg__verifying_pin": {
+      "Bolt": "Vérification du PIN",
+      "Caesar": "Vérification du PIN",
+      "Delizia": "Vérification du PIN",
+      "Eckhart": "Vérification du PIN..."
+    },
     "storage_msg__wrong_pin": "PIN incorrect",
     "tezos__baker_address": "Adresse du Baker",
     "tezos__balance": "Solde :",

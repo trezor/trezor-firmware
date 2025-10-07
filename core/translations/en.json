@@ -302,7 +302,12 @@
     "coinjoin__max_mining_fee": "Max mining fee",
     "coinjoin__max_rounds": "Max rounds",
     "coinjoin__title": "Authorize coinjoin",
-    "coinjoin__title_progress": "Coinjoin in progress",
+    "coinjoin__title_progress": {
+      "Bolt": "Coinjoin in progress",
+      "Caesar": "Coinjoin in progress",
+      "Delizia": "Coinjoin in progress",
+      "Eckhart": "Coinjoin in progress..."
+    },
     "coinjoin__waiting_for_others": "Waiting for others",
     "confirm_total__fee_rate": "Fee rate",
     "confirm_total__fee_rate_colon": "Fee rate:",
@@ -519,7 +524,12 @@
     "joint__you_are_contributing": "You are contributing:",
     "language__change_to_template": "Change language to {0}?",
     "language__changed": "Language changed successfully",
-    "language__progress": "Changing language",
+    "language__progress": {
+      "Bolt": "Changing language",
+      "Caesar": "Changing language",
+      "Delizia": "Changing language",
+      "Eckhart": "Changing language..."
+    },
     "language__title": "Language settings",
     "led__disable": "Disable LED?",
     "led__enable": "Enable LED?",
@@ -739,7 +749,12 @@
     "progress__loading_transaction": "Loading transaction...",
     "progress__locking_device": "Locking the device...",
     "progress__one_second_left": "1 second left",
-    "progress__please_wait": "Please wait",
+    "progress__please_wait": {
+      "Bolt": "Please wait",
+      "Caesar": "Please wait",
+      "Delizia": "Please wait",
+      "Eckhart": "Please wait..."
+    },
     "progress__refreshing": "Refreshing...",
     "progress__signing_transaction": "Signing transaction...",
     "progress__syncing": "Syncing...",
@@ -1164,9 +1179,19 @@
     "stellar__valid_to": "Valid to (UTC)",
     "stellar__value_sha256": "Value (SHA-256):",
     "stellar__wanna_clean_value_key_template": "Do you want to clear value key {0}?",
-    "storage_msg__processing": "Processing",
+    "storage_msg__processing": {
+      "Bolt": "Processing",
+      "Caesar": "Processing",
+      "Delizia": "Processing",
+      "Eckhart": "Processing..."
+    },
     "storage_msg__starting": "Starting up",
-    "storage_msg__verifying_pin": "Verifying PIN",
+    "storage_msg__verifying_pin": {
+      "Bolt": "Verifying PIN",
+      "Caesar": "Verifying PIN",
+      "Delizia": "Verifying PIN",
+      "Eckhart": "Verifying PIN..."
+    },
     "storage_msg__wrong_pin": "Wrong PIN",
     "tezos__baker_address": "Baker address",
     "tezos__balance": "Balance:",

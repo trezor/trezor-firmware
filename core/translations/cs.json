@@ -389,7 +389,12 @@
     "coinjoin__max_mining_fee": "Max. poplatek za těžbu",
     "coinjoin__max_rounds": "Maximum kol",
     "coinjoin__title": "Schválit coinjoin",
-    "coinjoin__title_progress": "Probíhá coinjoin",
+    "coinjoin__title_progress": {
+      "Bolt": "Probíhá coinjoin",
+      "Caesar": "Probíhá coinjoin",
+      "Delizia": "Probíhá coinjoin",
+      "Eckhart": "Probíhá coinjoin..."
+    },
     "coinjoin__waiting_for_others": "Čeká se na ostatní",
     "confirm_total__fee_rate": "Výše poplatku",
     "confirm_total__fee_rate_colon": "Výše poplatku:",
@@ -591,7 +596,12 @@
     "joint__you_are_contributing": "Přispíváte:",
     "language__change_to_template": "Změnit jazyk na {0}?",
     "language__changed": "Jazyk byl změněn",
-    "language__progress": "Změna jazyka",
+    "language__progress": {
+      "Bolt": "Změna jazyka",
+      "Caesar": "Změna jazyka",
+      "Delizia": "Změna jazyka",
+      "Eckhart": "Změna jazyka..."
+    },
     "language__title": "Nastavení jazyka",
     "led__disable": "Vypnout LED?",
     "led__enable": "Zapnout LED?",
@@ -831,7 +841,12 @@
     "progress__loading_transaction": "Načítání transakce...",
     "progress__locking_device": "Zamykání zařízení...",
     "progress__one_second_left": "Zbývá 1 s",
-    "progress__please_wait": "Počkejte",
+    "progress__please_wait": {
+      "Bolt": "Počkejte",
+      "Caesar": "Počkejte",
+      "Delizia": "Počkejte",
+      "Eckhart": "Počkejte..."
+    },
     "progress__refreshing": "Obnovování...",
     "progress__signing_transaction": "Podpis transakce...",
     "progress__syncing": "Synchronizace...",
@@ -1209,9 +1224,19 @@
     "stellar__valid_to": "Platí do (UTC)",
     "stellar__value_sha256": "Hodnota (SHA-256):",
     "stellar__wanna_clean_value_key_template": "Chcete vymazat klíč hodnoty {0}?",
-    "storage_msg__processing": "Zpracovávání",
+    "storage_msg__processing": {
+      "Bolt": "Zpracovávání",
+      "Caesar": "Zpracovávání",
+      "Delizia": "Zpracovávání",
+      "Eckhart": "Zpracovávání..."
+    },
     "storage_msg__starting": "Spouštění",
-    "storage_msg__verifying_pin": "Ověřování PINu",
+    "storage_msg__verifying_pin": {
+      "Bolt": "Ověřování PINu",
+      "Caesar": "Ověřování PINu",
+      "Delizia": "Ověřování PINu",
+      "Eckhart": "Ověřování PINu..."
+    },
     "storage_msg__wrong_pin": "Špatný PIN",
     "tezos__baker_address": "Adresa bakera",
     "tezos__balance": "Zůstatek:",
