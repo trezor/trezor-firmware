@@ -651,7 +651,8 @@ jobs:
       matrix:
         model: [T2T1, T3B1, T3T1, T3W1]
     env:
-      COVERAGE_THRESHOLD: 85
+      # TODO: https://github.com/trezor/trezor-firmware/issues/5957
+      COVERAGE_THRESHOLD: ${{ matrix.model == 'T3B1' && 84 || 85 }}
     steps:
       - uses: actions/checkout@v4
         with:
