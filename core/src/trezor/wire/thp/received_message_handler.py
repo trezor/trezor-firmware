@@ -191,7 +191,7 @@ async def _handle_state_handshake(
             iface=ctx.iface,
         )
 
-    # key is decoded in handshake._handle_th2_crypto
+    # key is decoded in handshake.handle_th2_crypto()
     host_static_public_key = host_encrypted_static_public_key[:PUBKEY_LENGTH]
     ctx.channel_cache.set_host_static_public_key(host_static_public_key)
 
