@@ -5,7 +5,6 @@ use crate::{
     error::Error,
     io::BinaryData,
     strutil::TString,
-    time::ShortDuration,
     translations::TR,
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Label, Never, Swipe},
