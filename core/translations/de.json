@@ -528,7 +528,7 @@
       "Bolt": "CoinJoin läuft",
       "Caesar": "Coinjoin läuft",
       "Delizia": "Coinjoin läuft",
-      "Eckhart": "Coinjoin läuft"
+      "Eckhart": "Coinjoin läuft..."
     },
     "coinjoin__waiting_for_others": "Auf andere warten",
     "confirm_total__fee_rate": "Gebührensatz",
@@ -791,7 +791,12 @@
       "Delizia": "Die Sprache änderte sich erfolgreich",
       "Eckhart": "Sprache erfolgreich geändert"
     },
-    "language__progress": "Sprache ändern",
+    "language__progress": {
+      "Bolt": "Sprache ändern",
+      "Caesar": "Sprache ändern",
+      "Delizia": "Sprache ändern",
+      "Eckhart": "Sprache ändern..."
+    },
     "language__title": {
       "Bolt": "Spracheinstellungen",
       "Caesar": "Spracheinstellungen",
@@ -1086,7 +1091,12 @@
     "progress__loading_transaction": "Transakt. lädt...",
     "progress__locking_device": "Das Gerät sperren...",
     "progress__one_second_left": "1 Sekunde verbleibend",
-    "progress__please_wait": "Bitte warten",
+    "progress__please_wait": {
+      "Bolt": "Bitte warten",
+      "Caesar": "Bitte warten",
+      "Delizia": "Bitte warten",
+      "Eckhart": "Bitte warten..."
+    },
     "progress__refreshing": "Wird aktualisiert...",
     "progress__signing_transaction": "Transakt. wird signiert",
     "progress__syncing": "Wird synchronisiert...",
@@ -1569,9 +1579,19 @@
     "stellar__valid_to": "Gültig bis (UTC)",
     "stellar__value_sha256": "Wert (SHA-256):",
     "stellar__wanna_clean_value_key_template": "Möchtest du den Wert-Key {0} löschen?",
-    "storage_msg__processing": "Verarbeitung",
+    "storage_msg__processing": {
+      "Bolt": "Verarbeitung",
+      "Caesar": "Verarbeitung",
+      "Delizia": "Verarbeitung",
+      "Eckhart": "Verarbeitung..."
+    },
     "storage_msg__starting": "Startvorgang",
-    "storage_msg__verifying_pin": "PIN überprüfen",
+    "storage_msg__verifying_pin": {
+      "Bolt": "PIN überprüfen",
+      "Caesar": "PIN überprüfen",
+      "Delizia": "PIN überprüfen",
+      "Eckhart": "PIN überprüfen..."
+    },
     "storage_msg__wrong_pin": "Falscher PIN",
     "tezos__baker_address": "Baker-Adresse",
     "tezos__balance": "Guthaben:",
