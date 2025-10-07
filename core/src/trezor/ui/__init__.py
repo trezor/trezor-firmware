@@ -460,36 +460,33 @@ class Layout(Generic[T]):
             if self.context is None:
                 return
             while True:
-                try:
-                    # The following task will raise `UnexpectedMessageException` on any message.
-                    unexpected_read = self.context.read(())
-                    result = await loop.race(unexpected_read, self.button_request_box)
-                    if result is None:
-                        return  # exit the loop when the layout is done.
-                    assert isinstance(result, tuple)
-                    br_code, br_name = result
+                # The following task will raise `UnexpectedMessageException` on any message.
+                unexpected_read = self.context.read(())
+                result = await loop.race(unexpected_read, self.button_request_box)
+                if result is None:
+                    return  # exit the loop when the layout is done.
+                assert isinstance(result, tuple)
+                br_code, br_name = result
 
-                    if __debug__:
-                        log.info(__name__, "ButtonRequest sent: %s", br_name)
-                    await self.context.call(
-                        ButtonRequest(
-                            code=br_code, pages=self.layout.page_count(), name=br_name
-                        ),
-                        ButtonAck,
-                    )
-                    if __debug__:
-                        log.info(__name__, "ButtonRequest acked: %s", br_name)
+                if __debug__:
+                    log.info(__name__, "ButtonRequest sent: %s", br_name)
+                await self.context.call(
+                    ButtonRequest(
+                        code=br_code, pages=self.layout.page_count(), name=br_name
+                    ),
+                    ButtonAck,
+                )
+                if __debug__:
+                    log.info(__name__, "ButtonRequest acked: %s", br_name)
 
-                    if (
-                        self.button_request_ack_pending
-                        and self.state is LayoutState.TRANSITIONING
-                    ):
-                        self.button_request_ack_pending = False
-                        self.state = LayoutState.ATTACHED
-                        if __debug__:
-                            self.notify_debuglink(self)
-                except Exception:
-                    raise
+                if (
+                    self.button_request_ack_pending
+                    and self.state is LayoutState.TRANSITIONING
+                ):
+                    self.button_request_ack_pending = False
+                    self.state = LayoutState.ATTACHED
+                    if __debug__:
+                        self.notify_debuglink(self)
         finally:
             if is_done is not None:
                 is_done.put(None)
