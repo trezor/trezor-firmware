@@ -29,9 +29,14 @@
 #include "../stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
 
+#ifdef PM_ENABLE_TEMP_CONTROL
 static void pm_temperature_controller(pm_driver_t* drv);
+#endif
+
 static void pm_battery_sampling(float vbat, float ibat, float ntc_temp);
 static void pm_parse_power_source_state(pm_driver_t* drv);
+
+#ifdef PM_ENABLE_TEMP_CONTROL
 
 // Temperature controller LUT
 static const struct {
@@ -43,6 +48,8 @@ static const struct {
     {PM_TEMP_CONTROL_BAND_3_MAX_TEMP, 0.5},
     {PM_TEMP_CONTROL_BAND_4_MAX_TEMP, 0.3},
 };
+
+#endif
 
 void pm_monitor_power_sources(void) {
   // Periodically called timer to request PMIC measurements. PMIC will call
@@ -168,7 +175,9 @@ void pm_charging_controller(pm_driver_t* drv) {
     drv->i_chg_target_ma = drv->i_chg_max_limit_ma;
   }
 
+#ifdef PM_ENABLE_TEMP_CONTROL
   pm_temperature_controller(drv);
+#endif
 
   if (drv->soc_target == 100) {
     drv->soc_target_reached = false;
@@ -222,6 +231,8 @@ void pm_charging_controller(pm_driver_t* drv) {
   }
 }
 
+#ifdef PM_ENABLE_TEMP_CONTROL
+
 static void pm_temperature_controller(pm_driver_t* drv) {
   if (ticks_expired(drv->temp_control_timeout)) {
     uint16_t i_chg_temp_limit_ma = 0;
@@ -248,6 +259,8 @@ static void pm_temperature_controller(pm_driver_t* drv) {
     drv->i_chg_target_ma = drv->i_chg_temp_limit_ma;
   }
 }
+
+#endif
 
 static void pm_battery_sampling(float vbat, float ibat, float ntc_temp) {
   pm_driver_t* drv = &g_pm;
