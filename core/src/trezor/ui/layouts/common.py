@@ -26,7 +26,6 @@ async def _button_request(
     code: ButtonRequestType = ButtonRequestType.Other,
     pages: int = 0,
 ) -> None:
-    workflow.close_others()
     if __debug__:
         log.info(__name__, "ButtonRequest sent: %s", br_name)
     await context.maybe_call(
