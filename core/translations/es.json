@@ -141,6 +141,12 @@
     "bitcoin__unverified_external_inputs": "La transacción contiene entradas externas sin verificar.",
     "bitcoin__valid_signature": "La firma es válida.",
     "bitcoin__voting_rights": "Derechos de voto de",
+    "ble__apps_connected": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Apps conectadas"
+    },
     "ble__disable": {
       "Bolt": "",
       "Caesar": "",
@@ -195,11 +201,23 @@
       "Delizia": "",
       "Eckhart": "Dispositivo eliminado."
     },
+    "ble__host_info": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Info. dispositivo"
+    },
     "ble__limit_reached": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Límite de dispositivos alcanzado"
+    },
+    "ble__mac_address": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Dirección MAC"
     },
     "ble__manage_paired": "Gestionar dispositivos emparejados",
     "ble__pair_new": "Emparejar nuevo dispositivo",
@@ -220,6 +238,12 @@
     "ble__unpair_current": "Desvincular dispositivo conectado",
     "ble__unpair_title": "Desvincular",
     "ble__version": "Versión de Bluetooth",
+    "ble__waiting_for_host": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Esperando al dispositivo..."
+    },
     "brightness__change_title": "Cambiar brillo de la pantalla",
     "brightness__changed_title": "Brillo de la pantalla cambiado",
     "brightness__title": "Ajustar brillo",
@@ -347,7 +371,12 @@
     "cardano__rewards_go_to": "Las recompensas van a:",
     "cardano__script": "script",
     "cardano__script_all": "Todo",
-    "cardano__script_any": "Parte",
+    "cardano__script_any": {
+      "Bolt": "Parte",
+      "Caesar": "Parte",
+      "Delizia": "Parte",
+      "Eckhart": "Cualquier/a"
+    },
     "cardano__script_data_hash": "Hash de datos de script:",
     "cardano__script_hash": "Hash de script:",
     "cardano__script_invalid_before": "No válido antes",
@@ -1193,7 +1222,12 @@
     "stellar__new_passive_offer": "Nueva oferta pasiva",
     "stellar__no_memo_set": "No se ha dejado ninguna nota.",
     "stellar__no_restriction": "[sin restricciones]",
-    "stellar__path_pay": "Path payment",
+    "stellar__path_pay": {
+      "Bolt": "Path payment",
+      "Caesar": "Path payment",
+      "Delizia": "Path payment",
+      "Eckhart": "Pago con ruta"
+    },
     "stellar__path_pay_at_least": "Path payment por un mínimo de",
     "stellar__pay": "Pago",
     "stellar__pay_at_most": "Pago máximo",
