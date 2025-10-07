@@ -131,6 +131,12 @@
     "bitcoin__unverified_external_inputs": "A transação contém entradas externas não verificadas.",
     "bitcoin__valid_signature": "A assinatura é válida.",
     "bitcoin__voting_rights": "Direitos de voto para",
+    "ble__apps_connected": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Apps conectados"
+    },
     "ble__disable": {
       "Bolt": "",
       "Caesar": "",
@@ -185,11 +191,23 @@
       "Delizia": "",
       "Eckhart": "Host removido."
     },
+    "ble__host_info": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Info. do host"
+    },
     "ble__limit_reached": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Limite de dispositivos pareados atingido"
+    },
+    "ble__mac_address": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Endereço MAC"
     },
     "ble__manage_paired": "Gerenciar disp. pareados",
     "ble__pair_new": "Parear novo disp.",
@@ -210,6 +228,12 @@
     "ble__unpair_current": "Desemparelhar dispositivo conectado",
     "ble__unpair_title": "Desemparelhar",
     "ble__version": "Versão Bluetooth",
+    "ble__waiting_for_host": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Aguardando o host..."
+    },
     "brightness__change_title": "Alterar brilho da tela",
     "brightness__changed_title": "Exibir brilho alterado",
     "brightness__title": "Exibir brilho",

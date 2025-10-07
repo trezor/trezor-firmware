@@ -301,6 +301,12 @@
       "Eckhart": "La signature est valide."
     },
     "bitcoin__voting_rights": "Droits de vote pour",
+    "ble__apps_connected": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Applis connectées"
+    },
     "ble__disable": {
       "Bolt": "",
       "Caesar": "",
@@ -355,11 +361,23 @@
       "Delizia": "",
       "Eckhart": "Hôte supprimé."
     },
+    "ble__host_info": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Infos de l'hôte"
+    },
     "ble__limit_reached": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Limite d'appareils appairé atteinte"
+    },
+    "ble__mac_address": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Adresse MAC"
     },
     "ble__manage_paired": {
       "Bolt": "",
@@ -414,6 +432,12 @@
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Version Bluetooth"
+    },
+    "ble__waiting_for_host": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "En attente de l'hôte..."
     },
     "brightness__change_title": "Ajuster la luminosité de l'écran",
     "brightness__changed_title": "Luminosité de l'écran ajustée",
