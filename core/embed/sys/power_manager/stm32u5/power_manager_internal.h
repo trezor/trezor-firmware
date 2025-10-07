@@ -52,6 +52,10 @@
 #define PM_AUTO_HIBERNATE_TIMEOUT_S (2 * 60 * 60)  // 2 hours
 
 #define PM_STABILIZATION_TIMEOUT_MS 2000
+
+// Thermal controller switch, comment out to disable the thermal controller
+#define PM_ENABLE_TEMP_CONTROL
+
 // Temperature controller parameters
 #define PM_TEMP_CONTROL_IDLE_PERIOD_MS 2 * 60 * 1000  // 2 minutes
 #define PM_TEMP_CONTROL_BAND_1_MAX_TEMP 39.0f
@@ -97,9 +101,11 @@ typedef struct {
   uint16_t i_chg_target_ma;
   uint16_t i_chg_max_limit_ma;
 
+#ifdef PM_ENABLE_TEMP_CONTROL
   // Temp controller
   uint32_t temp_control_timeout;
   uint16_t i_chg_temp_limit_ma;
+#endif
 
   // Power source hardware state
   pmic_report_t pmic_data;
