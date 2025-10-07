@@ -141,6 +141,12 @@
     "bitcoin__unverified_external_inputs": "Transakce obsahuje neověřené externí vstupy.",
     "bitcoin__valid_signature": "Podpis je platný.",
     "bitcoin__voting_rights": "Hlasovací práva",
+    "ble__apps_connected": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Aplikace připojeny"
+    },
     "ble__disable": {
       "Bolt": "",
       "Caesar": "",
@@ -195,14 +201,36 @@
       "Delizia": "",
       "Eckhart": "Hostitel odstraněn."
     },
+    "ble__host_info": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Více o hostiteli"
+    },
     "ble__limit_reached": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Limit spárovaných zařízení dosažen"
     },
-    "ble__manage_paired": "Spravovat spárovaná zařízení",
-    "ble__pair_new": "Spárovat nové zařízení",
+    "ble__mac_address": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "MAC Adresa"
+    },
+    "ble__manage_paired": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Spravovat spárovaná zařízení"
+    },
+    "ble__pair_new": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Spárovat nové zařízení"
+    },
     "ble__pair_title": "Spárovat a připojit",
     "ble__pairing_match": {
       "Bolt": "",
@@ -220,6 +248,12 @@
     "ble__unpair_current": "Zrušit spárování připojeného zařízení",
     "ble__unpair_title": "Zrušit spárování",
     "ble__version": "Verze Bluetooth",
+    "ble__waiting_for_host": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Čekání na hostitele..."
+    },
     "brightness__change_title": "Změnit jas displeje",
     "brightness__changed_title": "Jas displeje byl změněn",
     "brightness__title": "Nastavení jasu",

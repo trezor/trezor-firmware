@@ -176,6 +176,12 @@
     "bitcoin__unverified_external_inputs": "Die Transaktion enthält nicht verifizierte externe Eingaben.",
     "bitcoin__valid_signature": "Die Signatur ist gültig.",
     "bitcoin__voting_rights": "Stimmrechte an",
+    "ble__apps_connected": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "verbundene Apps"
+    },
     "ble__disable": {
       "Bolt": "",
       "Caesar": "",
@@ -230,11 +236,23 @@
       "Delizia": "",
       "Eckhart": "Host entfernt."
     },
+    "ble__host_info": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Host-Info"
+    },
     "ble__limit_reached": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Limit der verbundenen Geräte erreicht"
+    },
+    "ble__mac_address": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "MAC Adresse"
     },
     "ble__manage_paired": {
       "Bolt": "",
@@ -289,6 +307,12 @@
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Bluetooth-Version"
+    },
+    "ble__waiting_for_host": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Warten auf Host"
     },
     "brightness__change_title": "Display-Helligkeit ändern",
     "brightness__changed_title": "Display-Helligkeit geändert",
