@@ -7,13 +7,15 @@ use crate::{
     strutil::TString,
     time::{Duration, Instant, ShortDuration},
     ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Marquee, Timer},
-        constant,
+        component::{
+            text::{layout::LayoutFit, TextStyle},
+            Component, Event, EventCtx, LineBreaking, Marquee, TextLayout, Timer,
+        },
+        constant::{self, SCREEN},
         display::{toif::Icon, Color, Font},
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         shape::{self, Renderer},
-        util::split_two_lines,
     },
 };
 
@@ -341,46 +343,59 @@ impl Button {
         self.content_offset
     }
 
-    fn baseline_text_height(&self) -> i16 {
-        // Use static string for the content height calculation to avoid misalignment
-        // among keyboard buttons.
-        self.style().font.visible_text_height("1")
-    }
-
     fn baseline_subtext_height(&self) -> i16 {
         match &self.content {
             ButtonContent::TextAndSubtext { subtext_style, .. } => {
-                subtext_style.text_font.visible_text_height("1")
+                subtext_style.text_font.text_height()
             }
             _ => 0,
         }
     }
 
-    fn text_height(&self, text: &str, single_line: bool, break_words: bool, width: i16) -> i16 {
-        if single_line {
-            self.style().font.line_height()
-        } else if break_words {
-            if self.stylesheet.normal.font.text_width(text) <= width {
-                return self.style().font.line_height();
-            } else {
-                self.style().font.line_height() * 2 - constant::LINE_SPACE
-            }
+    /// Compute the height required to render the given text at the given width.
+    /// Must be functional before placing the button.
+    fn text_height(&self, text: &str, width: i16, single_line: bool, break_words: bool) -> i16 {
+        let textstyle = self.text_style();
+
+        // Adjust text style line breaking
+        let textstyle = if break_words {
+            textstyle.with_line_breaking(LineBreaking::BreakWordsNoHyphen)
         } else {
-            let (t1, t2) = split_two_lines(text, self.stylesheet.normal.font, width);
-            if t1.is_empty() || t2.is_empty() {
-                self.style().font.line_height()
-            } else {
-                self.style().font.line_height() * 2 - constant::LINE_SPACE
-            }
+            textstyle.with_line_breaking(LineBreaking::BreakAtWhitespace)
+        };
+
+        // Limit the maximum height
+        let max_height = if single_line {
+            textstyle.text_font.text_height()
+        } else {
+            2 * textstyle.text_font.text_height()
+        };
+
+        // Create rect with precise width and a large enough height to fit the text.
+        let bounds = Rect::from_size(Offset::new(width, SCREEN.height()));
+        let layout_fit = TextLayout::new(textstyle)
+            .with_bounds(bounds)
+            .fit_text(text);
+
+        if let LayoutFit::OutOfBounds { .. } = layout_fit {
+            debug_assert!(
+                false,
+                "TextLayout::fit_text returned OutOfBounds, this should not happen"
+            );
         }
+
+        layout_fit.height().min(max_height)
     }
 
+    /// Returns the height required to render the button content at the given
+    /// button width (including the padding). Must be functional before placing the
+    /// button.
     pub fn content_height(&self, width: i16) -> i16 {
         let width = width - 2 * Self::MENU_ITEM_CONTENT_OFFSET.x;
         match &self.content {
             ButtonContent::Empty => 0,
             ButtonContent::Text { text, single_line } => {
-                text.map(|t| self.text_height(t, *single_line, false, width))
+                text.map(|t| self.text_height(t, width, *single_line, false))
             }
             ButtonContent::Icon(icon) => icon.toif.height(),
             ButtonContent::TextAndSubtext {
@@ -389,7 +404,8 @@ impl Button {
                 break_words,
                 ..
             } => text.map(|t| {
-                self.text_height(t, *single_line, *break_words, width)
+                self.text_height(t, width, *single_line, *break_words)
+                    + constant::LINE_SPACE
                     + self.baseline_subtext_height()
             }),
             #[cfg(feature = "micropython")]
@@ -403,12 +419,23 @@ impl Button {
         }
     }
 
-    pub fn style(&self) -> &ButtonStyle {
+    pub fn button_style(&self) -> &ButtonStyle {
         match self.state {
             State::Initial | State::Released => self.stylesheet.normal,
             State::Pressed => self.stylesheet.active,
             State::Disabled => self.stylesheet.disabled,
         }
+    }
+
+    fn text_style(&self) -> TextStyle {
+        let stylesheet = self.button_style();
+        TextStyle::new(
+            stylesheet.font,
+            stylesheet.text_color,
+            stylesheet.button_color,
+            stylesheet.text_color,
+            stylesheet.text_color,
+        )
     }
 
     pub fn stylesheet(&self) -> &ButtonStyleSheet {
@@ -460,59 +487,49 @@ impl Button {
         }
     }
 
+    /// Returns the vertical padding required to center the button content.
+    /// Functional only after placing the button.
+    fn vertical_padding(&self) -> i16 {
+        (self.area.height() - self.content_height(self.area.width())) / 2
+    }
+
+    fn render_text<'s>(
+        &'s self,
+        text: &str,
+        target: &mut impl Renderer<'s>,
+        alpha: u8,
+        single_line: bool,
+        break_words: bool,
+    ) {
+        let vertical_padding = self.vertical_padding();
+        let width = self.area.width() - 2 * self.content_offset.x;
+        let bounds = self
+            .area()
+            .inset(Insets::new(
+                vertical_padding,
+                self.content_offset.x,
+                0,
+                self.content_offset.x,
+            ))
+            .with_height(self.text_height(text, width, single_line, break_words));
+
+        TextLayout::new(self.text_style())
+            .with_bounds(bounds)
+            .with_align(self.text_align)
+            .render_text_with_alpha(text, target, alpha, !break_words);
+    }
+
     fn render_content<'s>(
         &'s self,
         target: &mut impl Renderer<'s>,
         stylesheet: &ButtonStyle,
         alpha: u8,
     ) {
-        let mut show_text = |text: &str, render_origin: Point| {
-            shape::Text::new(render_origin, text, stylesheet.font)
-                .with_fg(stylesheet.text_color)
-                .with_align(self.text_align)
-                .with_alpha(alpha)
-                .render(target)
-        };
-        let render_origin = |offset: Offset| {
-            match self.text_align {
-                Alignment::Start => self.area.left_center().ofs(self.content_offset),
-                Alignment::Center => self.area.center().ofs(self.content_offset),
-                Alignment::End => self.area.right_center().ofs(self.content_offset.neg()),
-            }
-            .ofs(offset)
-        };
-
         match &self.content {
             ButtonContent::Empty => {}
             ButtonContent::Text { text, single_line } => {
-                let text_baseline_height = self.baseline_text_height();
                 text.map(|t| {
-                    if *single_line {
-                        show_text(t, render_origin(Offset::y(text_baseline_height / 2)));
-                    } else {
-                        let (t1, t2) = split_two_lines(
-                            t,
-                            stylesheet.font,
-                            self.area.width() - 2 * self.content_offset.x.abs(),
-                        );
-
-                        if t1.is_empty() || t2.is_empty() {
-                            show_text(t, render_origin(Offset::y(text_baseline_height / 2)));
-                        } else {
-                            show_text(
-                                t1,
-                                render_origin(Offset::y(
-                                    -(text_baseline_height / 2 + constant::LINE_SPACE),
-                                )),
-                            );
-                            show_text(
-                                t2,
-                                render_origin(Offset::y(
-                                    text_baseline_height + constant::LINE_SPACE * 2,
-                                )),
-                            );
-                        }
-                    }
+                    self.render_text(t, target, alpha, *single_line, false);
                 });
             }
             ButtonContent::TextAndSubtext {
@@ -521,90 +538,8 @@ impl Button {
                 break_words,
                 ..
             } => {
-                let text_baseline_height = self.baseline_text_height();
-                let available_width = self.area.width() - 2 * self.content_offset.x;
                 text.map(|t| {
-                    if *single_line {
-                        show_text(
-                            t,
-                            render_origin(Offset::y(
-                                text_baseline_height / 2 - constant::LINE_SPACE * 2,
-                            )),
-                        );
-                    } else if *break_words {
-                        let first = stylesheet
-                            .font
-                            .longest_prefix_break_words(available_width, t);
-
-                        if first == t {
-                            // The first line fits
-                            show_text(
-                                first,
-                                render_origin(Offset::y(
-                                    text_baseline_height / 2 - constant::LINE_SPACE * 2,
-                                )),
-                            );
-                        } else {
-                            show_text(
-                                first,
-                                render_origin(Offset::y(
-                                    -(text_baseline_height / 2 + constant::LINE_SPACE * 3),
-                                )),
-                            );
-                            let remaining = t[first.len()..].trim();
-                            if stylesheet.font.text_width(remaining) <= available_width {
-                                // The second line fits
-                                show_text(
-                                    remaining,
-                                    render_origin(Offset::y(
-                                        text_baseline_height - constant::LINE_SPACE * 2,
-                                    )),
-                                );
-                            } else {
-                                // Break the second line and add the ellipsis
-                                let ellipsis = "...";
-                                let width = available_width - stylesheet.font.text_width(ellipsis);
-                                let second =
-                                    stylesheet.font.longest_prefix_break_words(width, remaining);
-                                show_text(
-                                    second,
-                                    render_origin(Offset::y(
-                                        text_baseline_height - constant::LINE_SPACE * 2,
-                                    )),
-                                );
-                                show_text(
-                                    ellipsis,
-                                    render_origin(Offset::new(
-                                        stylesheet.font.text_width(second),
-                                        text_baseline_height - constant::LINE_SPACE * 2,
-                                    )),
-                                );
-                            }
-                        }
-                    } else {
-                        let (t1, t2) = split_two_lines(t, stylesheet.font, available_width);
-                        if t1.is_empty() || t2.is_empty() {
-                            show_text(
-                                t,
-                                render_origin(Offset::y(
-                                    text_baseline_height / 2 - constant::LINE_SPACE * 2,
-                                )),
-                            );
-                        } else {
-                            show_text(
-                                t1,
-                                render_origin(Offset::y(
-                                    -(text_baseline_height / 2 + constant::LINE_SPACE * 3),
-                                )),
-                            );
-                            show_text(
-                                t2,
-                                render_origin(Offset::y(
-                                    text_baseline_height - constant::LINE_SPACE * 2,
-                                )),
-                            );
-                        }
-                    }
+                    self.render_text(t, target, alpha, *single_line, *break_words);
                 });
 
                 if let Some(m) = &self.subtext_marquee {
@@ -648,7 +583,7 @@ impl Button {
     }
 
     pub fn render_with_alpha<'s>(&'s self, target: &mut impl Renderer<'s>, alpha: u8) {
-        let style = self.style();
+        let style = self.button_style();
         self.render_background(target, style, alpha);
         self.render_content(target, style, alpha);
     }
@@ -661,13 +596,16 @@ impl Component for Button {
         self.area = bounds;
 
         if let ButtonContent::TextAndSubtext { .. } = self.content {
-            let subtext_start = (bounds.height() + self.content_height(bounds.width())) / 2
-                - self.baseline_subtext_height();
+            let content_height = self.content_height(bounds.width());
+            let vertical_padding = (bounds.height() - content_height) / 2;
+            let subtext_height = self.baseline_subtext_height();
             if let Some(m) = self.subtext_marquee.as_mut() {
-                let marquee_area = self
-                    .area
-                    .inset(Insets::top(subtext_start))
-                    .inset(Insets::sides(self.content_offset.x));
+                let marquee_area = self.area.inset(Insets::new(
+                    vertical_padding + content_height - subtext_height,
+                    self.content_offset.x,
+                    vertical_padding,
+                    self.content_offset.x,
+                ));
                 m.place(marquee_area);
             }
         }
@@ -774,7 +712,7 @@ impl Component for Button {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let style = self.style();
+        let style = self.button_style();
         self.render_background(target, style, 0xFF);
         self.render_content(target, style, 0xFF);
     }
@@ -925,36 +863,54 @@ impl IconText {
         }
     }
 
+    fn text_style(&self, style: &ButtonStyle) -> TextStyle {
+        TextStyle::new(
+            style.font,
+            style.text_color,
+            style.button_color,
+            style.text_color,
+            style.text_color,
+        )
+    }
+
+    /// Compute the height required to render the given text at the given width.
+    /// Must be functional before placing the button.
+    fn text_height(&self, text: &str, width: i16, textstyle: TextStyle) -> i16 {
+        // Create rect with precise width and a large enough height to fit the text.
+        let bounds = Rect::from_size(Offset::new(width, constant::SCREEN.height()));
+        let layout_fit = TextLayout::new(textstyle)
+            .with_bounds(bounds)
+            .fit_text(text);
+
+        if let LayoutFit::OutOfBounds { .. } = layout_fit {
+            debug_assert!(
+                false,
+                "TextLayout::fit_text returned OutOfBounds, this should not happen"
+            );
+        }
+
+        layout_fit.height()
+    }
+
     pub fn render<'s>(
         &self,
         target: &mut impl Renderer<'s>,
         area: Rect,
         style: &ButtonStyle,
-        baseline_offset: Offset,
+        _baseline_offset: Offset,
         alpha: u8,
     ) {
-        let mut show_text = |text: &str, rect: Rect| {
-            let text_pos = rect.left_center() + baseline_offset;
-            let text_pos = Point::new(rect.top_left().x + Self::ICON_SPACE, text_pos.y);
-            shape::Text::new(text_pos, text, style.font)
-                .with_fg(style.text_color)
-                .with_alpha(alpha)
-                .render(target)
-        };
-
+        let text_width = area.width() - Self::ICON_SPACE;
         self.text.map(|t| {
-            let (t1, t2) = split_two_lines(
-                t,
-                style.font,
-                area.width() - Self::ICON_SPACE - Self::TEXT_MARGIN,
-            );
+            let text_height = self
+                .text_height(t, text_width, self.text_style(style))
+                .min(area.height());
+            let top_padding = (area.height() - text_height) / 2;
 
-            if t1.is_empty() || t2.is_empty() {
-                show_text(t, area);
-            } else {
-                show_text(t1, Rect::new(area.top_left(), area.right_center()));
-                show_text(t2, Rect::new(area.left_center(), area.bottom_right()));
-            }
+            TextLayout::new(self.text_style(style))
+                .with_top_padding(top_padding)
+                .with_bounds(area.inset(Insets::left(area.width() - text_width)))
+                .render_text_with_alpha(t, target, alpha, true);
         });
 
         let icon_pos = Point::new(
