@@ -4,7 +4,7 @@ use crate::{
     strutil::TString,
     translations::TR,
     ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Label, Never},
+        component::{Component, Event, EventCtx, Label, Never},
         geometry::{Alignment2D, Offset, Rect},
         shape::Renderer,
         util::animation_disabled,
@@ -14,7 +14,7 @@ use crate::{
 use super::super::{
     constant::SCREEN,
     cshape::{render_loader, render_loader_indeterminate, ScreenBorder},
-    fonts, theme,
+    theme,
 };
 
 const LOADER_SPEED: u16 = 5;
