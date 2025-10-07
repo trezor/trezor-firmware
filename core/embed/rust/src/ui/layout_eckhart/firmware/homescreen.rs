@@ -9,7 +9,7 @@ use crate::{
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Label, Never, Swipe},
         display::{image::ImageInfo, Color},
-        geometry::{Alignment, Direction, Insets, Offset, Rect},
+        geometry::{Alignment, Direction, Offset, Rect},
         layout::util::get_user_custom_image,
         shape::{self, Renderer},
         util::animation_disabled,
