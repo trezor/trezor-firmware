@@ -658,6 +658,7 @@ bool pm_driver_resume(void) {
   drv->suspended = false;
   drv->suspending = false;
   drv->woke_up_from_suspend = true;
+  drv->state_machine_stabilized = false;
 
 #ifdef USE_RTC
   rtc_wakeup_timer_stop();
