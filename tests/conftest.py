@@ -130,6 +130,7 @@ def emulator(request: pytest.FixtureRequest) -> t.Generator["Emulator", None, No
         headless=True,
         auto_interact=not interact,
         main_args=_emulator_wrapper_main_args(),
+        launch_tropic_model=True,
     ) as emu:
         yield emu
 
