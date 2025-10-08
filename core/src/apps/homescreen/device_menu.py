@@ -211,11 +211,6 @@ async def handle_device_menu() -> None:
                     ble_enable(True)
 
             try:
-                if ble.is_connected():
-                    utils.notify_send(utils.NOTIFY_DISCONNECT)
-                    utime.sleep_ms(300)
-                    ble.disconnect()
-
                 if len(paired_devices) < BLE_MAX_BONDS:
                     await pair_new_device()
                 else:
