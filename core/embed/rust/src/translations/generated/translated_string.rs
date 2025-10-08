@@ -337,84 +337,84 @@ pub enum TranslatedString {
     entropy__send = 228,  // "Do you really want to send entropy?"
     entropy__title_confirm = 230,  // "Confirm entropy"
     #[cfg(feature = "universal_fw")]
-    eos__about_to_sign_template = 231,  // "You are about to sign {0}."
+    eos__about_to_sign_template = 231,  // {"Bolt": "You are about to sign {0}.", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__action_name = 232,  // "Action Name:"
+    eos__action_name = 232,  // {"Bolt": "Action Name:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__arbitrary_data = 233,  // "Arbitrary data"
+    eos__arbitrary_data = 233,  // {"Bolt": "Arbitrary data", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__buy_ram = 234,  // "Buy RAM"
+    eos__buy_ram = 234,  // {"Bolt": "Buy RAM", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__bytes = 235,  // "Bytes:"
+    eos__bytes = 235,  // {"Bolt": "Bytes:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__cancel_vote = 236,  // "Cancel vote"
+    eos__cancel_vote = 236,  // {"Bolt": "Cancel vote", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__checksum = 237,  // "Checksum:"
+    eos__checksum = 237,  // {"Bolt": "Checksum:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__code = 238,  // "Code:"
+    eos__code = 238,  // {"Bolt": "Code:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__contract = 239,  // "Contract:"
+    eos__contract = 239,  // {"Bolt": "Contract:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__cpu = 240,  // "CPU:"
+    eos__cpu = 240,  // {"Bolt": "CPU:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__creator = 241,  // "Creator:"
+    eos__creator = 241,  // {"Bolt": "Creator:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__delegate = 242,  // "Delegate"
+    eos__delegate = 242,  // {"Bolt": "Delegate", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__delete_auth = 243,  // "Delete Auth"
+    eos__delete_auth = 243,  // {"Bolt": "Delete Auth", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__from = 244,  // "From:"
+    eos__from = 244,  // {"Bolt": "From:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__link_auth = 245,  // "Link Auth"
+    eos__link_auth = 245,  // {"Bolt": "Link Auth", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__memo = 246,  // "Memo"
+    eos__memo = 246,  // {"Bolt": "Memo", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__name = 247,  // "Name:"
+    eos__name = 247,  // {"Bolt": "Name:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__net = 248,  // "NET:"
+    eos__net = 248,  // {"Bolt": "NET:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__new_account = 249,  // "New account"
+    eos__new_account = 249,  // {"Bolt": "New account", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__owner = 250,  // "Owner:"
+    eos__owner = 250,  // {"Bolt": "Owner:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__parent = 251,  // "Parent:"
+    eos__parent = 251,  // {"Bolt": "Parent:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__payer = 252,  // "Payer:"
+    eos__payer = 252,  // {"Bolt": "Payer:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__permission = 253,  // "Permission:"
+    eos__permission = 253,  // {"Bolt": "Permission:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__proxy = 254,  // "Proxy:"
+    eos__proxy = 254,  // {"Bolt": "Proxy:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__receiver = 255,  // "Receiver:"
+    eos__receiver = 255,  // {"Bolt": "Receiver:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__refund = 256,  // "Refund"
+    eos__refund = 256,  // {"Bolt": "Refund", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__requirement = 257,  // "Requirement:"
+    eos__requirement = 257,  // {"Bolt": "Requirement:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__sell_ram = 258,  // "Sell RAM"
+    eos__sell_ram = 258,  // {"Bolt": "Sell RAM", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__sender = 259,  // "Sender:"
+    eos__sender = 259,  // {"Bolt": "Sender:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     send__sign_transaction = 260,  // "Sign transaction"
     #[cfg(feature = "universal_fw")]
-    eos__threshold = 261,  // "Threshold:"
+    eos__threshold = 261,  // {"Bolt": "Threshold:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__to = 262,  // "To:"
+    eos__to = 262,  // {"Bolt": "To:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__transfer = 263,  // "Transfer:"
+    eos__transfer = 263,  // {"Bolt": "Transfer:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__type = 264,  // "Type:"
+    eos__type = 264,  // {"Bolt": "Type:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__undelegate = 265,  // "Undelegate"
+    eos__undelegate = 265,  // {"Bolt": "Undelegate", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__unlink_auth = 266,  // "Unlink Auth"
+    eos__unlink_auth = 266,  // {"Bolt": "Unlink Auth", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__update_auth = 267,  // "Update Auth"
+    eos__update_auth = 267,  // {"Bolt": "Update Auth", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__vote_for_producers = 268,  // "Vote for producers"
+    eos__vote_for_producers = 268,  // {"Bolt": "Vote for producers", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__vote_for_proxy = 269,  // "Vote for proxy"
+    eos__vote_for_proxy = 269,  // {"Bolt": "Vote for proxy", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    eos__voter = 270,  // "Voter:"
+    eos__voter = 270,  // {"Bolt": "Voter:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
     ethereum__amount_sent = 271,  // "Amount sent:"
     #[cfg(feature = "universal_fw")]
@@ -518,13 +518,13 @@ pub enum TranslatedString {
     homescreen__title_pin_not_set = 328,  // "PIN not set"
     homescreen__title_seedless = 329,  // "Seedless"
     homescreen__title_set = 330,  // "Change wallpaper"
-    inputs__back = 331,  // "BACK"
-    inputs__cancel = 332,  // "CANCEL"
-    inputs__delete = 333,  // "DELETE"
-    inputs__enter = 334,  // "ENTER"
-    inputs__return = 335,  // "RETURN"
-    inputs__show = 336,  // "SHOW"
-    inputs__space = 337,  // "SPACE"
+    inputs__back = 331,  // {"Bolt": "", "Caesar": "BACK", "Delizia": "", "Eckhart": ""}
+    inputs__cancel = 332,  // {"Bolt": "", "Caesar": "CANCEL", "Delizia": "", "Eckhart": ""}
+    inputs__delete = 333,  // {"Bolt": "", "Caesar": "DELETE", "Delizia": "", "Eckhart": ""}
+    inputs__enter = 334,  // {"Bolt": "", "Caesar": "ENTER", "Delizia": "", "Eckhart": ""}
+    inputs__return = 335,  // {"Bolt": "", "Caesar": "RETURN", "Delizia": "", "Eckhart": ""}
+    inputs__show = 336,  // {"Bolt": "", "Caesar": "SHOW", "Delizia": "", "Eckhart": ""}
+    inputs__space = 337,  // {"Bolt": "", "Caesar": "SPACE", "Delizia": "", "Eckhart": ""}
     joint__title = 338,  // "Joint transaction"
     joint__to_the_total_amount = 339,  // "To the total amount:"
     joint__you_are_contributing = 340,  // "You are contributing:"
@@ -587,107 +587,107 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     monero__wanna_sync_key_images = 380,  // "Do you really want to\nsync key images?"
     #[cfg(feature = "universal_fw")]
-    nem__absolute = 381,  // "absolute"
+    nem__absolute = 381,  // {"Bolt": "absolute", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__activate = 382,  // "Activate"
+    nem__activate = 382,  // {"Bolt": "Activate", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__add = 383,  // "Add"
+    nem__add = 383,  // {"Bolt": "Add", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__confirm_action = 384,  // "Confirm action"
+    nem__confirm_action = 384,  // {"Bolt": "Confirm action", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__confirm_address = 385,  // "Confirm address"
+    nem__confirm_address = 385,  // {"Bolt": "Confirm address", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__confirm_creation_fee = 386,  // "Confirm creation fee"
+    nem__confirm_creation_fee = 386,  // {"Bolt": "Confirm creation fee", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__confirm_mosaic = 387,  // "Confirm mosaic"
+    nem__confirm_mosaic = 387,  // {"Bolt": "Confirm mosaic", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__confirm_multisig_fee = 388,  // "Confirm multisig fee"
+    nem__confirm_multisig_fee = 388,  // {"Bolt": "Confirm multisig fee", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__confirm_namespace = 389,  // "Confirm namespace"
+    nem__confirm_namespace = 389,  // {"Bolt": "Confirm namespace", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__confirm_payload = 390,  // "Confirm payload"
+    nem__confirm_payload = 390,  // {"Bolt": "Confirm payload", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__confirm_properties = 391,  // "Confirm properties"
+    nem__confirm_properties = 391,  // {"Bolt": "Confirm properties", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__confirm_rental_fee = 392,  // "Confirm rental fee"
+    nem__confirm_rental_fee = 392,  // {"Bolt": "Confirm rental fee", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__confirm_transfer_of = 393,  // "Confirm transfer of"
+    nem__confirm_transfer_of = 393,  // {"Bolt": "Confirm transfer of", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__convert_account_to_multisig = 394,  // "Convert account to multisig account?"
+    nem__convert_account_to_multisig = 394,  // {"Bolt": "Convert account to multisig account?", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__cosign_transaction_for = 395,  // "Cosign transaction for"
+    nem__cosign_transaction_for = 395,  // {"Bolt": "Cosign transaction for", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__cosignatory = 396,  // " cosignatory"
+    nem__cosignatory = 396,  // {"Bolt": " cosignatory", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__create_mosaic = 397,  // "Create mosaic"
+    nem__create_mosaic = 397,  // {"Bolt": "Create mosaic", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__create_namespace = 398,  // "Create namespace"
+    nem__create_namespace = 398,  // {"Bolt": "Create namespace", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__deactivate = 399,  // "Deactivate"
+    nem__deactivate = 399,  // {"Bolt": "Deactivate", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__decrease = 400,  // "Decrease"
+    nem__decrease = 400,  // {"Bolt": "Decrease", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__description = 401,  // "Description:"
+    nem__description = 401,  // {"Bolt": "Description:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__divisibility_and_levy_cannot_be_shown = 402,  // "Divisibility and levy cannot be shown for unknown mosaics"
+    nem__divisibility_and_levy_cannot_be_shown = 402,  // {"Bolt": "Divisibility and levy cannot be shown for unknown mosaics", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__encrypted = 403,  // "Encrypted"
+    nem__encrypted = 403,  // {"Bolt": "Encrypted", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__final_confirm = 404,  // "Final confirm"
+    nem__final_confirm = 404,  // {"Bolt": "Final confirm", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__immutable = 405,  // "immutable"
+    nem__immutable = 405,  // {"Bolt": "immutable", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__increase = 406,  // "Increase"
+    nem__increase = 406,  // {"Bolt": "Increase", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__initial_supply = 407,  // "Initial supply:"
+    nem__initial_supply = 407,  // {"Bolt": "Initial supply:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__initiate_transaction_for = 408,  // "Initiate transaction for"
+    nem__initiate_transaction_for = 408,  // {"Bolt": "Initiate transaction for", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__levy_divisibility = 409,  // "Levy divisibility:"
+    nem__levy_divisibility = 409,  // {"Bolt": "Levy divisibility:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__levy_fee = 410,  // "Levy fee:"
+    nem__levy_fee = 410,  // {"Bolt": "Levy fee:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__levy_fee_of = 411,  // "Confirm mosaic levy fee of"
+    nem__levy_fee_of = 411,  // {"Bolt": "Confirm mosaic levy fee of", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__levy_mosaic = 412,  // "Levy mosaic:"
+    nem__levy_mosaic = 412,  // {"Bolt": "Levy mosaic:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__levy_namespace = 413,  // "Levy namespace:"
+    nem__levy_namespace = 413,  // {"Bolt": "Levy namespace:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__levy_recipient = 414,  // "Levy recipient:"
+    nem__levy_recipient = 414,  // {"Bolt": "Levy recipient:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__levy_type = 415,  // "Levy type:"
+    nem__levy_type = 415,  // {"Bolt": "Levy type:", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__modify_supply_for = 416,  // "Modify supply for"
+    nem__modify_supply_for = 416,  // {"Bolt": "Modify supply for", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__modify_the_number_of_cosignatories_by = 417,  // "Modify the number of cosignatories by "
+    nem__modify_the_number_of_cosignatories_by = 417,  // {"Bolt": "Modify the number of cosignatories by ", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__mutable = 418,  // "mutable"
+    nem__mutable = 418,  // {"Bolt": "mutable", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__of = 419,  // "of"
+    nem__of = 419,  // {"Bolt": "of", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__percentile = 420,  // "percentile"
+    nem__percentile = 420,  // {"Bolt": "percentile", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__raw_units_template = 421,  // "{0} raw units"
+    nem__raw_units_template = 421,  // {"Bolt": "{0} raw units", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__remote_harvesting = 422,  // " remote harvesting?"
+    nem__remote_harvesting = 422,  // {"Bolt": " remote harvesting?", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__remove = 423,  // "Remove"
+    nem__remove = 423,  // {"Bolt": "Remove", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__set_minimum_cosignatories_to = 424,  // "Set minimum cosignatories to "
+    nem__set_minimum_cosignatories_to = 424,  // {"Bolt": "Set minimum cosignatories to ", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__sign_tx_fee_template = 425,  // "Sign this transaction\nand pay {0}\nfor network fee?"
+    nem__sign_tx_fee_template = 425,  // {"Bolt": "Sign this transaction\nand pay {0}\nfor network fee?", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__supply_change = 426,  // "Supply change"
+    nem__supply_change = 426,  // {"Bolt": "Supply change", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__supply_units_template = 427,  // "{0} supply by {1} whole units?"
+    nem__supply_units_template = 427,  // {"Bolt": "{0} supply by {1} whole units?", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__transferable = 428,  // "Transferable?"
+    nem__transferable = 428,  // {"Bolt": "Transferable?", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__under_namespace = 429,  // "under namespace"
+    nem__under_namespace = 429,  // {"Bolt": "under namespace", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__unencrypted = 430,  // "Unencrypted"
+    nem__unencrypted = 430,  // {"Bolt": "Unencrypted", "Caesar": "", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
-    nem__unknown_mosaic = 431,  // "Unknown mosaic!"
+    nem__unknown_mosaic = 431,  // {"Bolt": "Unknown mosaic!", "Caesar": "", "Delizia": "", "Eckhart": ""}
     passphrase__access_wallet = 432,  // "Access passphrase wallet?"
     passphrase__always_on_device = 433,  // "Always enter your passphrase on Trezor?"
     passphrase__from_host_not_shown = 434,  // "Passphrase provided by connected app will be used but will not be displayed due to the device settings."
@@ -874,28 +874,28 @@ pub enum TranslatedString {
     safety_checks__enforce_strict = 615,  // "Do you really want to enforce strict safety checks (recommended)?"
     safety_checks__title = 616,  // "Safety checks"
     safety_checks__title_safety_override = 617,  // "Safety override"
-    sd_card__all_data_will_be_lost = 618,  // "All data on the SD card will be lost."
-    sd_card__card_required = 619,  // "SD card required."
-    sd_card__disable = 620,  // "Do you really want to remove SD card protection from your device?"
-    sd_card__disabled = 621,  // "You have successfully disabled SD protection."
-    sd_card__enable = 622,  // "Do you really want to secure your device with SD card protection?"
-    sd_card__enabled = 623,  // "You have successfully enabled SD protection."
-    sd_card__error = 624,  // "SD card error"
-    sd_card__format_card = 625,  // "Format SD card"
-    sd_card__insert_correct_card = 626,  // "Please insert the correct SD card for this device."
-    sd_card__please_insert = 627,  // "Please insert your SD card."
-    sd_card__please_unplug_and_insert = 628,  // "Please unplug the device and insert your SD card."
-    sd_card__problem_accessing = 629,  // "There was a problem accessing the SD card."
-    sd_card__refresh = 630,  // "Do you really want to replace the current SD card secret with a newly generated one?"
-    sd_card__refreshed = 631,  // "You have successfully refreshed SD protection."
-    sd_card__restart = 632,  // "Do you want to restart Trezor in bootloader mode?"
-    sd_card__title = 633,  // "SD card protection"
-    sd_card__title_problem = 634,  // "SD card problem"
-    sd_card__unknown_filesystem = 635,  // "Unknown filesystem."
-    sd_card__unplug_and_insert_correct = 636,  // "Please unplug the device and insert the correct SD card."
-    sd_card__use_different_card = 637,  // "Use a different card or format the SD card to the FAT32 filesystem."
-    sd_card__wanna_format = 638,  // "Do you really want to format the SD card?"
-    sd_card__wrong_sd_card = 639,  // "Wrong SD card."
+    sd_card__all_data_will_be_lost = 618,  // {"Bolt": "All data on the SD card will be lost.", "Caesar": "", "Delizia": "All data on the SD card will be lost.", "Eckhart": ""}
+    sd_card__card_required = 619,  // {"Bolt": "SD card required.", "Caesar": "", "Delizia": "SD card required.", "Eckhart": ""}
+    sd_card__disable = 620,  // {"Bolt": "Do you really want to remove SD card protection from your device?", "Caesar": "", "Delizia": "Do you really want to remove SD card protection from your device?", "Eckhart": ""}
+    sd_card__disabled = 621,  // {"Bolt": "You have successfully disabled SD protection.", "Caesar": "", "Delizia": "You have successfully disabled SD protection.", "Eckhart": ""}
+    sd_card__enable = 622,  // {"Bolt": "Do you really want to secure your device with SD card protection?", "Caesar": "", "Delizia": "Do you really want to secure your device with SD card protection?", "Eckhart": ""}
+    sd_card__enabled = 623,  // {"Bolt": "You have successfully enabled SD protection.", "Caesar": "", "Delizia": "You have successfully enabled SD protection.", "Eckhart": ""}
+    sd_card__error = 624,  // {"Bolt": "SD card error", "Caesar": "", "Delizia": "SD card error", "Eckhart": ""}
+    sd_card__format_card = 625,  // {"Bolt": "Format SD card", "Caesar": "", "Delizia": "Format SD card", "Eckhart": ""}
+    sd_card__insert_correct_card = 626,  // {"Bolt": "Please insert the correct SD card for this device.", "Caesar": "", "Delizia": "Please insert the correct SD card for this device.", "Eckhart": ""}
+    sd_card__please_insert = 627,  // {"Bolt": "Please insert your SD card.", "Caesar": "", "Delizia": "Please insert your SD card.", "Eckhart": ""}
+    sd_card__please_unplug_and_insert = 628,  // {"Bolt": "Please unplug the device and insert your SD card.", "Caesar": "", "Delizia": "Please unplug the device and insert your SD card.", "Eckhart": ""}
+    sd_card__problem_accessing = 629,  // {"Bolt": "There was a problem accessing the SD card.", "Caesar": "", "Delizia": "There was a problem accessing the SD card.", "Eckhart": ""}
+    sd_card__refresh = 630,  // {"Bolt": "Do you really want to replace the current SD card secret with a newly generated one?", "Caesar": "", "Delizia": "Do you really want to replace the current SD card secret with a newly generated one?", "Eckhart": ""}
+    sd_card__refreshed = 631,  // {"Bolt": "You have successfully refreshed SD protection.", "Caesar": "", "Delizia": "You have successfully refreshed SD protection.", "Eckhart": ""}
+    sd_card__restart = 632,  // {"Bolt": "Do you want to restart Trezor in bootloader mode?", "Caesar": "", "Delizia": "Do you want to restart Trezor in bootloader mode?", "Eckhart": ""}
+    sd_card__title = 633,  // {"Bolt": "SD card protection", "Caesar": "", "Delizia": "SD card protection", "Eckhart": ""}
+    sd_card__title_problem = 634,  // {"Bolt": "SD card problem", "Caesar": "", "Delizia": "SD card problem", "Eckhart": ""}
+    sd_card__unknown_filesystem = 635,  // {"Bolt": "Unknown filesystem.", "Caesar": "", "Delizia": "Unknown filesystem.", "Eckhart": ""}
+    sd_card__unplug_and_insert_correct = 636,  // {"Bolt": "Please unplug the device and insert the correct SD card.", "Caesar": "", "Delizia": "Please unplug the device and insert the correct SD card.", "Eckhart": ""}
+    sd_card__use_different_card = 637,  // {"Bolt": "Use a different card or format the SD card to the FAT32 filesystem.", "Caesar": "", "Delizia": "Use a different card or format the SD card to the FAT32 filesystem.", "Eckhart": ""}
+    sd_card__wanna_format = 638,  // {"Bolt": "Do you really want to format the SD card?", "Caesar": "", "Delizia": "Do you really want to format the SD card?", "Eckhart": ""}
+    sd_card__wrong_sd_card = 639,  // {"Bolt": "Wrong SD card.", "Caesar": "", "Delizia": "Wrong SD card.", "Eckhart": ""}
     send__confirm_sending = 641,  // "Sending amount"
     send__from_multiple_accounts = 642,  // "Sending from multiple accounts."
     send__including_fee = 643,  // "Including fee:"
@@ -1165,7 +1165,7 @@ pub enum TranslatedString {
     words__writable = 830,  // "Writable"
     words__yes = 831,  // "Yes"
     reboot_to_bootloader__just_a_moment = 832,  // "Just a moment..."
-    inputs__previous = 833,  // "PREVIOUS"
+    inputs__previous = 833,  // {"Bolt": "", "Caesar": "PREVIOUS", "Delizia": "", "Eckhart": ""}
     #[cfg(feature = "universal_fw")]
     ethereum__staking_claim = 834,  // "Claim"
     #[cfg(feature = "universal_fw")]
@@ -1229,10 +1229,10 @@ pub enum TranslatedString {
     backup__info_single_share_backup = 881,  // "Your wallet backup contains {0} words in a specific order."
     backup__title_backup_completed = 882,  // {"Bolt": "Wallet backup completed", "Caesar": "Wallet backup completed", "Delizia": "Wallet backup completed", "Eckhart": "Wallet backup completed."}
     backup__title_create_wallet_backup = 883,  // "Create wallet backup"
-    haptic_feedback__disable = 884,  // "Disable haptic feedback?"
-    haptic_feedback__enable = 885,  // "Enable haptic feedback?"
-    haptic_feedback__subtitle = 886,  // "Setting"
-    haptic_feedback__title = 887,  // "Haptic feedback"
+    haptic_feedback__disable = 884,  // {"Bolt": "", "Caesar": "", "Delizia": "Disable haptic feedback?", "Eckhart": "Disable haptic feedback?"}
+    haptic_feedback__enable = 885,  // {"Bolt": "", "Caesar": "", "Delizia": "Enable haptic feedback?", "Eckhart": "Enable haptic feedback?"}
+    haptic_feedback__subtitle = 886,  // {"Bolt": "", "Caesar": "", "Delizia": "Setting", "Eckhart": "Setting"}
+    haptic_feedback__title = 887,  // {"Bolt": "", "Caesar": "", "Delizia": "Haptic feedback", "Eckhart": "Haptic feedback"}
     instructions__continue_holding = 888,  // {"Bolt": "", "Caesar": "", "Delizia": "Continue\nholding", "Eckhart": "Keep holding"}
     instructions__enter_next_share = 889,  // "Enter next share"
     instructions__hold_to_continue = 890,  // "Hold to continue"
@@ -1265,9 +1265,9 @@ pub enum TranslatedString {
     tutorial__menu = 920,  // "Find context-specific actions and options in the menu."
     tutorial__one_more_step = 921,  // "One more step"
     tutorial__ready_to_use_safe5 = 922,  // "You're all set to start using your device!"
-    tutorial__swipe_up_and_down = 924,  // "Tap the lower half of the screen to continue, or swipe down to go back."
+    tutorial__swipe_up_and_down = 924,  // {"Bolt": "", "Caesar": "", "Delizia": "Tap the lower half of the screen to continue, or swipe down to go back.", "Eckhart": ""}
     tutorial__title_easy_navigation = 925,  // "Easy navigation"
-    tutorial__welcome_safe5 = 926,  // "Welcome to\nTrezor Safe 5"
+    tutorial__welcome_safe5 = 926,  // {"Bolt": "", "Caesar": "", "Delizia": "Welcome to\nTrezor Safe 5", "Eckhart": ""}
     words__good_to_know = 927,  // "Good to know"
     words__operation_cancelled = 928,  // "Operation cancelled"
     words__settings = 929,  // "Settings"
@@ -1356,9 +1356,9 @@ pub enum TranslatedString {
     instructions__tap_to_continue = 991,  // "Tap to continue"
     #[cfg(feature = "universal_fw")]
     nostr__event_kind_template = 992,  // "Event kind: {0}"
-    ble__unpair_all = 993,  // "Unpair all bluetooth devices"
-    ble__unpair_current = 994,  // "Unpair connected device"
-    ble__unpair_title = 995,  // "Unpair"
+    ble__unpair_all = 993,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Unpair all bluetooth devices"}
+    ble__unpair_current = 994,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Unpair connected device"}
+    ble__unpair_title = 995,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Unpair"}
     words__unlocked = 996,  // "Unlocked"
     #[cfg(feature = "universal_fw")]
     solana__max_fees_rent = 997,  // "Max fees and rent"
@@ -1442,10 +1442,10 @@ pub enum TranslatedString {
     tutorial__menu_appendix = 1060,  // "View more info, quit flow, ..."
     tutorial__navigation_ts7 = 1061,  // "Use the on-screen buttons to navigate and confirm your actions."
     tutorial__suite_restart = 1062,  // "Replay this tutorial anytime from the Trezor Suite app."
-    tutorial__welcome_safe7 = 1067,  // "Welcome\nto Trezor\nSafe 7"
-    tutorial__what_is_tropic = 1068,  // "What is TROPIC01?"
+    tutorial__welcome_safe7 = 1067,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Welcome\nto Trezor\nSafe 7"}
+    tutorial__what_is_tropic = 1068,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "What is TROPIC01?"}
     tutorial__tap_to_start = 1069,  // "Tap to start tutorial"
-    tutorial__tropic_info = 1070,  // "TROPIC01 is a next-gen open-source secure element chip designed for transparent and auditable hardware security."
+    tutorial__tropic_info = 1070,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "TROPIC01 is a next-gen open-source secure element chip designed for transparent and auditable hardware security."}
     #[cfg(feature = "universal_fw")]
     stellar__sign_with = 1071,  // "Sign with"
     #[cfg(feature = "universal_fw")]
@@ -1475,15 +1475,15 @@ pub enum TranslatedString {
     cardano__sign_message_hash_path_template = 1086,  // "Sign message hash with {0}"
     #[cfg(feature = "universal_fw")]
     cardano__sign_message_path_template = 1087,  // "Sign message with {0}"
-    ble__manage_paired = 1088,  // "Manage paired devices"
-    ble__pair_new = 1089,  // "Pair new device"
-    ble__pair_title = 1090,  // "Pair & connect"
-    ble__version = 1091,  // "Bluetooth version"
+    ble__manage_paired = 1088,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Manage paired devices"}
+    ble__pair_new = 1089,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Pair new device"}
+    ble__pair_title = 1090,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Pair & connect"}
+    ble__version = 1091,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Bluetooth version"}
     homescreen__firmware_type = 1092,  // "Firmware type"
     homescreen__firmware_version = 1093,  // "Firmware version"
-    led__disable = 1094,  // "Disable LED?"
-    led__enable = 1095,  // "Enable LED?"
-    led__title = 1096,  // "LED"
+    led__disable = 1094,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Disable LED?"}
+    led__enable = 1095,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Enable LED?"}
+    led__title = 1096,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "LED"}
     words__about = 1097,  // "About"
     words__connected = 1098,  // "Connected"
     words__device = 1099,  // "Device"
@@ -1502,8 +1502,8 @@ pub enum TranslatedString {
     wipe_code__title = 1112,  // "Wipe code"
     words__disabled = 1113,  // "Disabled"
     words__enabled = 1114,  // "Enabled"
-    ble__disable = 1115,  // "Turn Bluetooth off?"
-    ble__enable = 1116,  // "Turn Bluetooth on?"
+    ble__disable = 1115,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Turn Bluetooth off?"}
+    ble__enable = 1116,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Turn Bluetooth on?"}
     words__bluetooth = 1117,  // "Bluetooth"
     wipe__start_again = 1118,  // "Wipe your Trezor and start the setup process again."
     words__set = 1119,  // "Set"
@@ -1511,17 +1511,17 @@ pub enum TranslatedString {
     lockscreen__unlock = 1121,  // "Unlock"
     recovery__start_entering = 1122,  // "Start entering"
     words__disconnected = 1123,  // "Disconnected"
-    ble__forget_all = 1124,  // "Forget all"
+    ble__forget_all = 1124,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Forget all"}
     words__connect = 1125,  // "Connect"
     words__forget = 1126,  // "Forget"
     words__power = 1127,  // "Power"
-    ble__limit_reached = 1128,  // "Limit of paired devices reached"
-    ble__forget_all_description = 1129,  // "They'll be removed, and you'll need to pair them again before use."
-    ble__forget_all_devices = 1130,  // "Forget all devices?"
-    ble__forget_all_success = 1131,  // "All connections removed."
-    ble__forget_this_description = 1132,  // "It will be removed, and you'll need to pair it again before use."
-    ble__forget_this_device = 1133,  // "Forget this device?"
-    ble__forget_this_success = 1134,  // "Connection removed."
+    ble__limit_reached = 1128,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Limit of paired devices reached"}
+    ble__forget_all_description = 1129,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "They'll be removed, and you'll need to pair them again before use."}
+    ble__forget_all_devices = 1130,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Forget all devices?"}
+    ble__forget_all_success = 1131,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "All connections removed."}
+    ble__forget_this_description = 1132,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "It will be removed, and you'll need to pair it again before use."}
+    ble__forget_this_device = 1133,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Forget this device?"}
+    ble__forget_this_success = 1134,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Connection removed."}
     thp__autoconnect = 1135,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Allow {0} to connect automatically to this Trezor?"}
     thp__autoconnect_app = 1136,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Allow {0} on {1} to connect automatically to this Trezor?"}
     thp__connect = 1137,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Allow {0} to connect with this Trezor?"}
@@ -1535,8 +1535,8 @@ pub enum TranslatedString {
     thp__nfc_text = 1145,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Keep your Trezor near your phone to complete the setup."}
     thp__pair_title = 1146,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Before you continue"}
     thp__qr_title = 1147,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Scan QR code to pair"}
-    ble__pairing_match = 1148,  // "Pairing code match?"
-    ble__pairing_title = 1149,  // "Bluetooth pairing"
+    ble__pairing_match = 1148,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Pairing code match?"}
+    ble__pairing_title = 1149,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Bluetooth pairing"}
     thp__pair_name = 1151,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "{0} is your Trezor's name."}
     thp__pair_new_device = 1152,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Pair with new device"}
     tutorial__power = 1153,  // "Use the power button on the side to turn your device on or off."
@@ -1547,13 +1547,13 @@ pub enum TranslatedString {
     wipe_code__pin_not_set_description = 1158,  // "PIN must be set before enabling wipe code."
     wipe_code__cancel_setup = 1159,  // {"Bolt": "Cancel wipe code setup", "Caesar": "Cancel wipe code setup", "Delizia": "Cancel wipe code setup", "Eckhart": "Cancel wipe code setup?"}
     homescreen__backup_needed_info = 1160,  // "Open Trezor Suite and create a wallet backup. This is the only way to recover access to your assets."
-    ble__host_info = 1161,  // "Connection info"
-    ble__mac_address = 1162,  // "MAC address"
-    ble__waiting_for_host = 1163,  // "Waiting for connection..."
-    ble__apps_connected = 1164,  // "Apps connected"
+    ble__host_info = 1161,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Connection info"}
+    ble__mac_address = 1162,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "MAC address"}
+    ble__waiting_for_host = 1163,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Waiting for connection..."}
+    ble__apps_connected = 1164,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Apps connected"}
     sn__action = 1165,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Allow connected device to get serial number of your Trezor Safe 7?"}
     sn__title = 1166,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Serial number"}
-    ble__must_be_enabled = 1167,  // "The Bluetooth must be turned on to pair with a new device."
+    ble__must_be_enabled = 1167,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "The Bluetooth must be turned on to pair with a new device."}
 }
 
 impl TranslatedString {
@@ -1904,84 +1904,474 @@ impl TranslatedString {
             (Self::entropy__send, "Do you really want to send entropy?"),
             (Self::entropy__title_confirm, "Confirm entropy"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__about_to_sign_template, "You are about to sign {0}."),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__about_to_sign_template, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__about_to_sign_template, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__about_to_sign_template, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__action_name, "Action Name:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__action_name, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__action_name, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__action_name, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__arbitrary_data, "Arbitrary data"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__arbitrary_data, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__arbitrary_data, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__arbitrary_data, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__buy_ram, "Buy RAM"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__buy_ram, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__buy_ram, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__buy_ram, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__bytes, "Bytes:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__bytes, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__bytes, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__bytes, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__cancel_vote, "Cancel vote"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__cancel_vote, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__cancel_vote, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__cancel_vote, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__checksum, "Checksum:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__checksum, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__checksum, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__checksum, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__code, "Code:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__code, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__code, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__code, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__contract, "Contract:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__contract, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__contract, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__contract, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__cpu, "CPU:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__cpu, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__cpu, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__cpu, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__creator, "Creator:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__creator, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__creator, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__creator, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__delegate, "Delegate"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__delegate, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__delegate, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__delegate, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__delete_auth, "Delete Auth"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__delete_auth, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__delete_auth, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__delete_auth, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__from, "From:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__from, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__from, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__from, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__link_auth, "Link Auth"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__link_auth, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__link_auth, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__link_auth, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__memo, "Memo"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__memo, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__memo, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__memo, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__name, "Name:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__name, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__name, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__name, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__net, "NET:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__net, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__net, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__net, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__new_account, "New account"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__new_account, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__new_account, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__new_account, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__owner, "Owner:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__owner, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__owner, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__owner, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__parent, "Parent:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__parent, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__parent, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__parent, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__payer, "Payer:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__payer, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__payer, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__payer, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__permission, "Permission:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__permission, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__permission, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__permission, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__proxy, "Proxy:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__proxy, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__proxy, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__proxy, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__receiver, "Receiver:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__receiver, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__receiver, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__receiver, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__refund, "Refund"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__refund, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__refund, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__refund, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__requirement, "Requirement:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__requirement, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__requirement, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__requirement, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__sell_ram, "Sell RAM"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__sell_ram, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__sell_ram, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__sell_ram, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__sender, "Sender:"),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__sender, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__sender, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__sender, ""),
             (Self::send__sign_transaction, "Sign transaction"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__threshold, "Threshold:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__threshold, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__threshold, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__threshold, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__to, "To:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__to, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__to, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__to, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__transfer, "Transfer:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__transfer, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__transfer, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__transfer, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__type, "Type:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__type, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__type, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__type, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__undelegate, "Undelegate"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__undelegate, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__undelegate, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__undelegate, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__unlink_auth, "Unlink Auth"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__unlink_auth, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__unlink_auth, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__unlink_auth, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__update_auth, "Update Auth"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__update_auth, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__update_auth, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__update_auth, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__vote_for_producers, "Vote for producers"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__vote_for_producers, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__vote_for_producers, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__vote_for_producers, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__vote_for_proxy, "Vote for proxy"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__vote_for_proxy, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__vote_for_proxy, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__vote_for_proxy, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::eos__voter, "Voter:"),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::eos__voter, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::eos__voter, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::eos__voter, ""),
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__amount_sent, "Amount sent:"),
             #[cfg(feature = "universal_fw")]
@@ -2105,13 +2495,62 @@ impl TranslatedString {
             (Self::homescreen__title_pin_not_set, "PIN not set"),
             (Self::homescreen__title_seedless, "Seedless"),
             (Self::homescreen__title_set, "Change wallpaper"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::inputs__back, ""),
+            #[cfg(feature = "layout_caesar")]
             (Self::inputs__back, "BACK"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::inputs__back, ""),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::inputs__back, ""),
+            #[cfg(feature = "layout_bolt")]
+            (Self::inputs__cancel, ""),
+            #[cfg(feature = "layout_caesar")]
             (Self::inputs__cancel, "CANCEL"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::inputs__cancel, ""),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::inputs__cancel, ""),
+            #[cfg(feature = "layout_bolt")]
+            (Self::inputs__delete, ""),
+            #[cfg(feature = "layout_caesar")]
             (Self::inputs__delete, "DELETE"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::inputs__delete, ""),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::inputs__delete, ""),
+            #[cfg(feature = "layout_bolt")]
+            (Self::inputs__enter, ""),
+            #[cfg(feature = "layout_caesar")]
             (Self::inputs__enter, "ENTER"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::inputs__enter, ""),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::inputs__enter, ""),
+            #[cfg(feature = "layout_bolt")]
+            (Self::inputs__return, ""),
+            #[cfg(feature = "layout_caesar")]
             (Self::inputs__return, "RETURN"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::inputs__return, ""),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::inputs__return, ""),
+            #[cfg(feature = "layout_bolt")]
+            (Self::inputs__show, ""),
+            #[cfg(feature = "layout_caesar")]
             (Self::inputs__show, "SHOW"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::inputs__show, ""),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::inputs__show, ""),
+            #[cfg(feature = "layout_bolt")]
+            (Self::inputs__space, ""),
+            #[cfg(feature = "layout_caesar")]
             (Self::inputs__space, "SPACE"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::inputs__space, ""),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::inputs__space, ""),
             (Self::joint__title, "Joint transaction"),
             (Self::joint__to_the_total_amount, "To the total amount:"),
             (Self::joint__you_are_contributing, "You are contributing:"),
@@ -2237,107 +2676,617 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             (Self::monero__wanna_sync_key_images, "Do you really want to\nsync key images?"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__absolute, "absolute"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__absolute, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__absolute, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__absolute, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__activate, "Activate"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__activate, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__activate, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__activate, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__add, "Add"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__add, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__add, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__add, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__confirm_action, "Confirm action"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__confirm_action, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__confirm_action, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__confirm_action, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__confirm_address, "Confirm address"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__confirm_address, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__confirm_address, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__confirm_address, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__confirm_creation_fee, "Confirm creation fee"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__confirm_creation_fee, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__confirm_creation_fee, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__confirm_creation_fee, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__confirm_mosaic, "Confirm mosaic"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__confirm_mosaic, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__confirm_mosaic, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__confirm_mosaic, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__confirm_multisig_fee, "Confirm multisig fee"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__confirm_multisig_fee, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__confirm_multisig_fee, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__confirm_multisig_fee, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__confirm_namespace, "Confirm namespace"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__confirm_namespace, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__confirm_namespace, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__confirm_namespace, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__confirm_payload, "Confirm payload"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__confirm_payload, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__confirm_payload, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__confirm_payload, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__confirm_properties, "Confirm properties"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__confirm_properties, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__confirm_properties, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__confirm_properties, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__confirm_rental_fee, "Confirm rental fee"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__confirm_rental_fee, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__confirm_rental_fee, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__confirm_rental_fee, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__confirm_transfer_of, "Confirm transfer of"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__confirm_transfer_of, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__confirm_transfer_of, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__confirm_transfer_of, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__convert_account_to_multisig, "Convert account to multisig account?"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__convert_account_to_multisig, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__convert_account_to_multisig, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__convert_account_to_multisig, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__cosign_transaction_for, "Cosign transaction for"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__cosign_transaction_for, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__cosign_transaction_for, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__cosign_transaction_for, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__cosignatory, " cosignatory"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__cosignatory, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__cosignatory, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__cosignatory, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__create_mosaic, "Create mosaic"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__create_mosaic, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__create_mosaic, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__create_mosaic, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__create_namespace, "Create namespace"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__create_namespace, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__create_namespace, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__create_namespace, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__deactivate, "Deactivate"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__deactivate, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__deactivate, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__deactivate, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__decrease, "Decrease"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__decrease, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__decrease, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__decrease, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__description, "Description:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__description, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__description, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__description, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__divisibility_and_levy_cannot_be_shown, "Divisibility and levy cannot be shown for unknown mosaics"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__divisibility_and_levy_cannot_be_shown, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__divisibility_and_levy_cannot_be_shown, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__divisibility_and_levy_cannot_be_shown, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__encrypted, "Encrypted"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__encrypted, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__encrypted, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__encrypted, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__final_confirm, "Final confirm"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__final_confirm, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__final_confirm, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__final_confirm, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__immutable, "immutable"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__immutable, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__immutable, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__immutable, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__increase, "Increase"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__increase, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__increase, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__increase, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__initial_supply, "Initial supply:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__initial_supply, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__initial_supply, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__initial_supply, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__initiate_transaction_for, "Initiate transaction for"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__initiate_transaction_for, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__initiate_transaction_for, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__initiate_transaction_for, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__levy_divisibility, "Levy divisibility:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__levy_divisibility, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__levy_divisibility, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__levy_divisibility, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__levy_fee, "Levy fee:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__levy_fee, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__levy_fee, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__levy_fee, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__levy_fee_of, "Confirm mosaic levy fee of"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__levy_fee_of, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__levy_fee_of, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__levy_fee_of, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__levy_mosaic, "Levy mosaic:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__levy_mosaic, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__levy_mosaic, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__levy_mosaic, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__levy_namespace, "Levy namespace:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__levy_namespace, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__levy_namespace, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__levy_namespace, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__levy_recipient, "Levy recipient:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__levy_recipient, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__levy_recipient, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__levy_recipient, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__levy_type, "Levy type:"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__levy_type, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__levy_type, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__levy_type, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__modify_supply_for, "Modify supply for"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__modify_supply_for, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__modify_supply_for, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__modify_supply_for, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__modify_the_number_of_cosignatories_by, "Modify the number of cosignatories by "),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__modify_the_number_of_cosignatories_by, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__modify_the_number_of_cosignatories_by, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__modify_the_number_of_cosignatories_by, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__mutable, "mutable"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__mutable, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__mutable, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__mutable, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__of, "of"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__of, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__of, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__of, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__percentile, "percentile"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__percentile, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__percentile, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__percentile, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__raw_units_template, "{0} raw units"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__raw_units_template, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__raw_units_template, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__raw_units_template, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__remote_harvesting, " remote harvesting?"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__remote_harvesting, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__remote_harvesting, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__remote_harvesting, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__remove, "Remove"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__remove, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__remove, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__remove, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__set_minimum_cosignatories_to, "Set minimum cosignatories to "),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__set_minimum_cosignatories_to, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__set_minimum_cosignatories_to, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__set_minimum_cosignatories_to, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__sign_tx_fee_template, "Sign this transaction\nand pay {0}\nfor network fee?"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__sign_tx_fee_template, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__sign_tx_fee_template, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__sign_tx_fee_template, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__supply_change, "Supply change"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__supply_change, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__supply_change, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__supply_change, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__supply_units_template, "{0} supply by {1} whole units?"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__supply_units_template, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__supply_units_template, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__supply_units_template, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__transferable, "Transferable?"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__transferable, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__transferable, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__transferable, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__under_namespace, "under namespace"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__under_namespace, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__under_namespace, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__under_namespace, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__unencrypted, "Unencrypted"),
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__unencrypted, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__unencrypted, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__unencrypted, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             (Self::nem__unknown_mosaic, "Unknown mosaic!"),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            (Self::nem__unknown_mosaic, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            (Self::nem__unknown_mosaic, ""),
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            (Self::nem__unknown_mosaic, ""),
             (Self::passphrase__access_wallet, "Access passphrase wallet?"),
             (Self::passphrase__always_on_device, "Always enter your passphrase on Trezor?"),
             (Self::passphrase__from_host_not_shown, "Passphrase provided by connected app will be used but will not be displayed due to the device settings."),
@@ -2664,28 +3613,182 @@ impl TranslatedString {
             (Self::safety_checks__enforce_strict, "Do you really want to enforce strict safety checks (recommended)?"),
             (Self::safety_checks__title, "Safety checks"),
             (Self::safety_checks__title_safety_override, "Safety override"),
+            #[cfg(feature = "layout_bolt")]
             (Self::sd_card__all_data_will_be_lost, "All data on the SD card will be lost."),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sd_card__all_data_will_be_lost, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sd_card__all_data_will_be_lost, "All data on the SD card will be lost."),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sd_card__all_data_will_be_lost, ""),
+            #[cfg(feature = "layout_bolt")]
             (Self::sd_card__card_required, "SD card required."),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sd_card__card_required, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sd_card__card_required, "SD card required."),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sd_card__card_required, ""),
+            #[cfg(feature = "layout_bolt")]
             (Self::sd_card__disable, "Do you really want to remove SD card protection from your device?"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sd_card__disable, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sd_card__disable, "Do you really want to remove SD card protection from your device?"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sd_card__disable, ""),
+            #[cfg(feature = "layout_bolt")]
             (Self::sd_card__disabled, "You have successfully disabled SD protection."),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sd_card__disabled, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sd_card__disabled, "You have successfully disabled SD protection."),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sd_card__disabled, ""),
+            #[cfg(feature = "layout_bolt")]
             (Self::sd_card__enable, "Do you really want to secure your device with SD card protection?"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sd_card__enable, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sd_card__enable, "Do you really want to secure your device with SD card protection?"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sd_card__enable, ""),
+            #[cfg(feature = "layout_bolt")]
             (Self::sd_card__enabled, "You have successfully enabled SD protection."),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sd_card__enabled, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sd_card__enabled, "You have successfully enabled SD protection."),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sd_card__enabled, ""),
+            #[cfg(feature = "layout_bolt")]
             (Self::sd_card__error, "SD card error"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sd_card__error, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sd_card__error, "SD card error"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sd_card__error, ""),
+            #[cfg(feature = "layout_bolt")]
             (Self::sd_card__format_card, "Format SD card"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sd_card__format_card, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sd_card__format_card, "Format SD card"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sd_card__format_card, ""),
+            #[cfg(feature = "layout_bolt")]
             (Self::sd_card__insert_correct_card, "Please insert the correct SD card for this device."),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sd_card__insert_correct_card, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sd_card__insert_correct_card, "Please insert the correct SD card for this device."),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sd_card__insert_correct_card, ""),
+            #[cfg(feature = "layout_bolt")]
             (Self::sd_card__please_insert, "Please insert your SD card."),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sd_card__please_insert, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sd_card__please_insert, "Please insert your SD card."),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sd_card__please_insert, ""),
+            #[cfg(feature = "layout_bolt")]
             (Self::sd_card__please_unplug_and_insert, "Please unplug the device and insert your SD card."),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sd_card__please_unplug_and_insert, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sd_card__please_unplug_and_insert, "Please unplug the device and insert your SD card."),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sd_card__please_unplug_and_insert, ""),
+            #[cfg(feature = "layout_bolt")]
             (Self::sd_card__problem_accessing, "There was a problem accessing the SD card."),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sd_card__problem_accessing, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sd_card__problem_accessing, "There was a problem accessing the SD card."),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sd_card__problem_accessing, ""),
+            #[cfg(feature = "layout_bolt")]
             (Self::sd_card__refresh, "Do you really want to replace the current SD card secret with a newly generated one?"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sd_card__refresh, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sd_card__refresh, "Do you really want to replace the current SD card secret with a newly generated one?"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sd_card__refresh, ""),
+            #[cfg(feature = "layout_bolt")]
             (Self::sd_card__refreshed, "You have successfully refreshed SD protection."),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sd_card__refreshed, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sd_card__refreshed, "You have successfully refreshed SD protection."),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sd_card__refreshed, ""),
+            #[cfg(feature = "layout_bolt")]
             (Self::sd_card__restart, "Do you want to restart Trezor in bootloader mode?"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sd_card__restart, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sd_card__restart, "Do you want to restart Trezor in bootloader mode?"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sd_card__restart, ""),
+            #[cfg(feature = "layout_bolt")]
             (Self::sd_card__title, "SD card protection"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sd_card__title, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sd_card__title, "SD card protection"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sd_card__title, ""),
+            #[cfg(feature = "layout_bolt")]
             (Self::sd_card__title_problem, "SD card problem"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sd_card__title_problem, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sd_card__title_problem, "SD card problem"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sd_card__title_problem, ""),
+            #[cfg(feature = "layout_bolt")]
             (Self::sd_card__unknown_filesystem, "Unknown filesystem."),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sd_card__unknown_filesystem, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sd_card__unknown_filesystem, "Unknown filesystem."),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sd_card__unknown_filesystem, ""),
+            #[cfg(feature = "layout_bolt")]
             (Self::sd_card__unplug_and_insert_correct, "Please unplug the device and insert the correct SD card."),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sd_card__unplug_and_insert_correct, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sd_card__unplug_and_insert_correct, "Please unplug the device and insert the correct SD card."),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sd_card__unplug_and_insert_correct, ""),
+            #[cfg(feature = "layout_bolt")]
             (Self::sd_card__use_different_card, "Use a different card or format the SD card to the FAT32 filesystem."),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sd_card__use_different_card, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sd_card__use_different_card, "Use a different card or format the SD card to the FAT32 filesystem."),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sd_card__use_different_card, ""),
+            #[cfg(feature = "layout_bolt")]
             (Self::sd_card__wanna_format, "Do you really want to format the SD card?"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sd_card__wanna_format, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sd_card__wanna_format, "Do you really want to format the SD card?"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sd_card__wanna_format, ""),
+            #[cfg(feature = "layout_bolt")]
             (Self::sd_card__wrong_sd_card, "Wrong SD card."),
+            #[cfg(feature = "layout_caesar")]
+            (Self::sd_card__wrong_sd_card, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::sd_card__wrong_sd_card, "Wrong SD card."),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::sd_card__wrong_sd_card, ""),
             (Self::send__confirm_sending, "Sending amount"),
             (Self::send__from_multiple_accounts, "Sending from multiple accounts."),
             (Self::send__including_fee, "Including fee:"),
@@ -2955,7 +4058,14 @@ impl TranslatedString {
             (Self::words__writable, "Writable"),
             (Self::words__yes, "Yes"),
             (Self::reboot_to_bootloader__just_a_moment, "Just a moment..."),
+            #[cfg(feature = "layout_bolt")]
+            (Self::inputs__previous, ""),
+            #[cfg(feature = "layout_caesar")]
             (Self::inputs__previous, "PREVIOUS"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::inputs__previous, ""),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::inputs__previous, ""),
             #[cfg(feature = "universal_fw")]
             (Self::ethereum__staking_claim, "Claim"),
             #[cfg(feature = "universal_fw")]
@@ -3054,9 +4164,37 @@ impl TranslatedString {
             #[cfg(feature = "layout_eckhart")]
             (Self::backup__title_backup_completed, "Wallet backup completed."),
             (Self::backup__title_create_wallet_backup, "Create wallet backup"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::haptic_feedback__disable, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::haptic_feedback__disable, ""),
+            #[cfg(feature = "layout_delizia")]
             (Self::haptic_feedback__disable, "Disable haptic feedback?"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::haptic_feedback__disable, "Disable haptic feedback?"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::haptic_feedback__enable, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::haptic_feedback__enable, ""),
+            #[cfg(feature = "layout_delizia")]
             (Self::haptic_feedback__enable, "Enable haptic feedback?"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::haptic_feedback__enable, "Enable haptic feedback?"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::haptic_feedback__subtitle, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::haptic_feedback__subtitle, ""),
+            #[cfg(feature = "layout_delizia")]
             (Self::haptic_feedback__subtitle, "Setting"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::haptic_feedback__subtitle, "Setting"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::haptic_feedback__title, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::haptic_feedback__title, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::haptic_feedback__title, "Haptic feedback"),
+            #[cfg(feature = "layout_eckhart")]
             (Self::haptic_feedback__title, "Haptic feedback"),
             #[cfg(feature = "layout_bolt")]
             (Self::instructions__continue_holding, ""),
@@ -3111,9 +4249,23 @@ impl TranslatedString {
             (Self::tutorial__menu, "Find context-specific actions and options in the menu."),
             (Self::tutorial__one_more_step, "One more step"),
             (Self::tutorial__ready_to_use_safe5, "You're all set to start using your device!"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::tutorial__swipe_up_and_down, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::tutorial__swipe_up_and_down, ""),
+            #[cfg(feature = "layout_delizia")]
             (Self::tutorial__swipe_up_and_down, "Tap the lower half of the screen to continue, or swipe down to go back."),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::tutorial__swipe_up_and_down, ""),
             (Self::tutorial__title_easy_navigation, "Easy navigation"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::tutorial__welcome_safe5, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::tutorial__welcome_safe5, ""),
+            #[cfg(feature = "layout_delizia")]
             (Self::tutorial__welcome_safe5, "Welcome to\nTrezor Safe 5"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::tutorial__welcome_safe5, ""),
             (Self::words__good_to_know, "Good to know"),
             (Self::words__operation_cancelled, "Operation cancelled"),
             (Self::words__settings, "Settings"),
@@ -3253,8 +4405,29 @@ impl TranslatedString {
             (Self::instructions__tap_to_continue, "Tap to continue"),
             #[cfg(feature = "universal_fw")]
             (Self::nostr__event_kind_template, "Event kind: {0}"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__unpair_all, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__unpair_all, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__unpair_all, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__unpair_all, "Unpair all bluetooth devices"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__unpair_current, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__unpair_current, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__unpair_current, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__unpair_current, "Unpair connected device"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__unpair_title, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__unpair_title, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__unpair_title, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__unpair_title, "Unpair"),
             (Self::words__unlocked, "Unlocked"),
             #[cfg(feature = "universal_fw")]
@@ -3346,9 +4519,30 @@ impl TranslatedString {
             (Self::tutorial__menu_appendix, "View more info, quit flow, ..."),
             (Self::tutorial__navigation_ts7, "Use the on-screen buttons to navigate and confirm your actions."),
             (Self::tutorial__suite_restart, "Replay this tutorial anytime from the Trezor Suite app."),
+            #[cfg(feature = "layout_bolt")]
+            (Self::tutorial__welcome_safe7, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::tutorial__welcome_safe7, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::tutorial__welcome_safe7, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::tutorial__welcome_safe7, "Welcome\nto Trezor\nSafe 7"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::tutorial__what_is_tropic, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::tutorial__what_is_tropic, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::tutorial__what_is_tropic, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::tutorial__what_is_tropic, "What is TROPIC01?"),
             (Self::tutorial__tap_to_start, "Tap to start tutorial"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::tutorial__tropic_info, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::tutorial__tropic_info, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::tutorial__tropic_info, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::tutorial__tropic_info, "TROPIC01 is a next-gen open-source secure element chip designed for transparent and auditable hardware security."),
             #[cfg(feature = "universal_fw")]
             (Self::stellar__sign_with, "Sign with"),
@@ -3379,14 +4573,63 @@ impl TranslatedString {
             (Self::cardano__sign_message_hash_path_template, "Sign message hash with {0}"),
             #[cfg(feature = "universal_fw")]
             (Self::cardano__sign_message_path_template, "Sign message with {0}"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__manage_paired, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__manage_paired, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__manage_paired, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__manage_paired, "Manage paired devices"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__pair_new, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__pair_new, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__pair_new, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__pair_new, "Pair new device"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__pair_title, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__pair_title, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__pair_title, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__pair_title, "Pair & connect"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__version, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__version, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__version, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__version, "Bluetooth version"),
             (Self::homescreen__firmware_type, "Firmware type"),
             (Self::homescreen__firmware_version, "Firmware version"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::led__disable, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::led__disable, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::led__disable, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::led__disable, "Disable LED?"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::led__enable, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::led__enable, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::led__enable, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::led__enable, "Enable LED?"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::led__title, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::led__title, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::led__title, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::led__title, "LED"),
             (Self::words__about, "About"),
             (Self::words__connected, "Connected"),
@@ -3406,7 +4649,21 @@ impl TranslatedString {
             (Self::wipe_code__title, "Wipe code"),
             (Self::words__disabled, "Disabled"),
             (Self::words__enabled, "Enabled"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__disable, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__disable, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__disable, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__disable, "Turn Bluetooth off?"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__enable, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__enable, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__enable, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__enable, "Turn Bluetooth on?"),
             (Self::words__bluetooth, "Bluetooth"),
             (Self::wipe__start_again, "Wipe your Trezor and start the setup process again."),
@@ -3415,16 +4672,72 @@ impl TranslatedString {
             (Self::lockscreen__unlock, "Unlock"),
             (Self::recovery__start_entering, "Start entering"),
             (Self::words__disconnected, "Disconnected"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__forget_all, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__forget_all, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__forget_all, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__forget_all, "Forget all"),
             (Self::words__connect, "Connect"),
             (Self::words__forget, "Forget"),
             (Self::words__power, "Power"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__limit_reached, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__limit_reached, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__limit_reached, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__limit_reached, "Limit of paired devices reached"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__forget_all_description, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__forget_all_description, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__forget_all_description, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__forget_all_description, "They'll be removed, and you'll need to pair them again before use."),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__forget_all_devices, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__forget_all_devices, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__forget_all_devices, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__forget_all_devices, "Forget all devices?"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__forget_all_success, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__forget_all_success, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__forget_all_success, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__forget_all_success, "All connections removed."),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__forget_this_description, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__forget_this_description, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__forget_this_description, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__forget_this_description, "It will be removed, and you'll need to pair it again before use."),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__forget_this_device, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__forget_this_device, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__forget_this_device, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__forget_this_device, "Forget this device?"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__forget_this_success, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__forget_this_success, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__forget_this_success, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__forget_this_success, "Connection removed."),
             #[cfg(feature = "layout_bolt")]
             (Self::thp__autoconnect, ""),
@@ -3530,7 +4843,21 @@ impl TranslatedString {
             (Self::thp__qr_title, ""),
             #[cfg(feature = "layout_eckhart")]
             (Self::thp__qr_title, "Scan QR code to pair"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__pairing_match, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__pairing_match, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__pairing_match, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__pairing_match, "Pairing code match?"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__pairing_title, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__pairing_title, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__pairing_title, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__pairing_title, "Bluetooth pairing"),
             #[cfg(feature = "layout_bolt")]
             (Self::thp__pair_name, ""),
@@ -3563,9 +4890,37 @@ impl TranslatedString {
             #[cfg(feature = "layout_eckhart")]
             (Self::wipe_code__cancel_setup, "Cancel wipe code setup?"),
             (Self::homescreen__backup_needed_info, "Open Trezor Suite and create a wallet backup. This is the only way to recover access to your assets."),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__host_info, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__host_info, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__host_info, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__host_info, "Connection info"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__mac_address, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__mac_address, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__mac_address, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__mac_address, "MAC address"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__waiting_for_host, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__waiting_for_host, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__waiting_for_host, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__waiting_for_host, "Waiting for connection..."),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__apps_connected, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__apps_connected, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__apps_connected, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__apps_connected, "Apps connected"),
             #[cfg(feature = "layout_bolt")]
             (Self::sn__action, ""),
@@ -3583,6 +4938,13 @@ impl TranslatedString {
             (Self::sn__title, ""),
             #[cfg(feature = "layout_eckhart")]
             (Self::sn__title, "Serial number"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__must_be_enabled, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__must_be_enabled, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__must_be_enabled, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::ble__must_be_enabled, "The Bluetooth must be turned on to pair with a new device."),
     ];
 
