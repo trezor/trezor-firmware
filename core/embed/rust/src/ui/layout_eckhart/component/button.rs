@@ -511,13 +511,6 @@ impl Button {
             (Alignment::Center, x) => Insets::new(0, x.abs(), 0, 0),
             (_, x) => Insets::new(0, x.max(0), 0, x.max(0)),
         };
-        dbg_println!(
-            "is center align {:?}, content offset x {:?}, left inset {:?}, right inset {:?}",
-            self.text_align == Alignment::Center,
-            self.content_offset.x,
-            side_insets.left,
-            side_insets.right
-        );
         let bounds = self.area().inset(side_insets);
 
         TextLayout::new(self.text_style())
