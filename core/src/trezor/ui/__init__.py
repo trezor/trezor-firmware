@@ -333,18 +333,18 @@ class Layout(Generic[T]):
 
     def _button_request(self) -> bool:
         """Process a button request coming out of the Rust layout."""
-        if __debug__ and not self.button_request_box.is_empty():
-            raise wire.FirmwareError(
-                "button request already pending -- "
-                "don't forget to yield your input flow from time to time ^_^"
-            )
-
         res = self.layout.button_request()
         if res is None:
             return False
 
         if self.context is None:
             return False
+
+        if __debug__ and not self.button_request_box.is_empty():
+            raise wire.FirmwareError(
+                "button request already pending -- "
+                "don't forget to yield your input flow from time to time ^_^"
+            )
 
         # in production, we don't want this to fail, hence replace=True
         self.button_request_box.put(res, replace=True)
