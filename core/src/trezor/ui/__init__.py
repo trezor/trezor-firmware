@@ -227,7 +227,8 @@ class Layout(Generic[T]):
         not_closed = set()
         for task in self.tasks:
             if not _close_all and task is self.button_request_task:
-                # keep `ButtonRequest` handler alive to avoid THP desync
+                # Keep `ButtonRequest` handler alive.
+                # It will be awaited and closed in `get_result()`.
                 not_closed.add(task)
                 continue
             if task != loop.this_task:
@@ -264,14 +265,14 @@ class Layout(Generic[T]):
         is_done = None
         try:
             if self.context is not None and self.result_box.is_empty():
-                if utils.USE_THP:
-                    is_done = loop.mailbox()  # (see below)
+                is_done = loop.mailbox()  # (see below)
                 self.button_request_task = self._handle_button_requests(is_done)
                 self._start_task(self.button_request_task)
 
             result = await self.result_box
+            assert CURRENT_LAYOUT is None  # the screen is blank now
 
-            if utils.USE_THP and is_done is not None:
+            if is_done is not None:
                 # Make sure ButtonRequest is ACKed, before the result is returned.
                 # Otherwise, THP channel may become desynced (due to two consecutive writes).
                 if __debug__:
