@@ -50,6 +50,9 @@ if BITCOIN_ONLY == '0':
 if not DISABLE_TROPIC:
     FEATURES_WANTED.append('tropic')
 
+if TREZOR_MODEL in ['T3W1']:
+    FEATURES_WANTED += ["app_loading"]
+
 if not models.has_emulator(TREZOR_MODEL):
     # skip unix build
     env = Environment()
@@ -410,6 +413,10 @@ SOURCE_UNIX = [
     'vendor/micropython/ports/unix/unix_mphal.c',
     'vendor/micropython/shared/runtime/gchelper_generic.c',
 ]
+
+if "app_loading" in FEATURES_WANTED:
+    SOURCE_UNIX += ['embed/api/trezor_api_v1_impl.c']
+
 
 TRANSLATION_DATA = [
     "translations/en.json",
