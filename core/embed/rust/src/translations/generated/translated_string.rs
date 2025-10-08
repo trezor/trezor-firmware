@@ -1556,6 +1556,7 @@ pub enum TranslatedString {
     ble__must_be_enabled = 1167,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "The Bluetooth must be turned on to pair with a new device."}
     #[cfg(feature = "universal_fw")]
     ripple__destination_tag_missing = 1168,  // "Destination tag is not set. Typically needed when sending to exchanges."
+    words__comm_trouble = 1169,  // "Your Trezor is having trouble communicating with your connected device."
 }
 
 impl TranslatedString {
@@ -4978,6 +4979,7 @@ impl TranslatedString {
             (Self::ble__must_be_enabled, "The Bluetooth must be turned on to pair with a new device."),
             #[cfg(feature = "universal_fw")]
             (Self::ripple__destination_tag_missing, "Destination tag is not set. Typically needed when sending to exchanges."),
+            (Self::words__comm_trouble, "Your Trezor is having trouble communicating with your connected device."),
     ];
 
     #[cfg(feature = "micropython")]
@@ -6456,6 +6458,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__cancel_and_exit, Self::words__cancel_and_exit),
         (Qstr::MP_QSTR_words__cancel_question, Self::words__cancel_question),
         (Qstr::MP_QSTR_words__chain, Self::words__chain),
+        (Qstr::MP_QSTR_words__comm_trouble, Self::words__comm_trouble),
         (Qstr::MP_QSTR_words__confirm, Self::words__confirm),
         (Qstr::MP_QSTR_words__confirm_fee, Self::words__confirm_fee),
         (Qstr::MP_QSTR_words__connect, Self::words__connect),

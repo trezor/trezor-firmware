@@ -275,14 +275,12 @@ class Layout(Generic[T]):
             if is_done is not None:
                 # Make sure ButtonRequest is ACKed, before the result is returned.
                 # Otherwise, THP channel may become desynced (due to two consecutive writes).
-                if __debug__:
-                    log.debug(__name__, "waiting for %s", self.button_request_task)
+                self.button_request_box.put(None, replace=True)
+                task = loop.spawn(_waiting_screen())
                 try:
-                    self.button_request_box.put(None, replace=True)
                     await is_done
-                except Exception as e:
-                    if __debug__:
-                        log.exception(__name__, e)
+                finally:
+                    task.close()
 
             return result
         finally:
@@ -636,3 +634,14 @@ class ProgressLayout:
         self.layout.request_complete_repaint()
         self.layout.paint()
         backlight_fade(BacklightLevels.NORMAL)
+
+
+_UNRESPONSIVE_WARNING_TIMEOUT_MS = const(300)
+
+
+async def _waiting_screen() -> None:
+    from trezor import TR
+    from trezor.ui.layouts import show_wait_text
+
+    await loop.sleep(_UNRESPONSIVE_WARNING_TIMEOUT_MS)
+    show_wait_text(TR.words__comm_trouble)

@@ -2190,6 +2190,7 @@
     "words__cancel_and_exit": "Cancel and exit",
     "words__cancel_question": "Cancel?",
     "words__chain": "Chain",
+    "words__comm_trouble": "Your Trezor is having trouble communicating with your connected device.",
     "words__confirm": "Confirm",
     "words__confirm_fee": "Confirm fee",
     "words__connect": "Connect",

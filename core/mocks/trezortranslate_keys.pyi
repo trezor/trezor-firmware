@@ -1058,6 +1058,7 @@ class TR:
     words__cancel_and_exit: str = "Cancel and exit"
     words__cancel_question: str = "Cancel?"
     words__chain: str = "Chain"
+    words__comm_trouble: str = "Your Trezor is having trouble communicating with your connected device."
     words__confirm: str = "Confirm"
     words__confirm_fee: str = "Confirm fee"
     words__connect: str = "Connect"
