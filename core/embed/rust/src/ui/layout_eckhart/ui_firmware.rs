@@ -1616,7 +1616,9 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_wait_text(text: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
-        let paragraphs = Paragraph::new(&theme::TEXT_REGULAR, text).into_paragraphs();
+        let paragraphs = Paragraph::new(&theme::TEXT_REGULAR, text)
+            .into_paragraphs()
+            .with_placement(LinearPlacement::vertical());
         let screen = TextScreen::new(paragraphs);
         let layout = RootComponent::new(screen);
         Ok(layout)

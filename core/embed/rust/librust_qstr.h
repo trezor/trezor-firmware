@@ -984,6 +984,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__cancel_and_exit;
   MP_QSTR_words__cancel_question;
   MP_QSTR_words__chain;
+  MP_QSTR_words__comm_trouble;
   MP_QSTR_words__confirm;
   MP_QSTR_words__confirm_fee;
   MP_QSTR_words__connect;
