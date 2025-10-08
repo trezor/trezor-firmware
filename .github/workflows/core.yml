@@ -300,7 +300,7 @@ jobs:
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
       - name: Start Tropic model
-        if: ${{ env.TREZOR_MODEL == 'T3W1' }}
+        if: ${{ env.TREZOR_MODEL == 'T3W1' && env.ACTIONS_DO_UI_TEST != 'true' }}  # ACTIONS_DO_UI_TEST refers to the test_emu_ui_multicore below which uses --control-emulators and starts tvl internally
         run: |
           nix-shell --arg fullDeps true --run "cd vendor/ts-tvl && poetry env use 3.12 && poetry install && poetry run model_server tcp -c ../../tests/tropic_model/config.yml > ../../tests/trezor-tropic-model.log 2>&1 &"
       - run: nix-shell --run "uv run make -C core ${{ env.ACTIONS_DO_UI_TEST == 'true' && 'test_emu_ui_multicore' || 'test_emu' }}"

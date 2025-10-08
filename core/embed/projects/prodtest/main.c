@@ -191,7 +191,11 @@ static void drivers_init(void) {
   ble_init();
 #endif
 #ifdef USE_TROPIC
+#if TREZOR_EMULATOR
+  tropic_init(28992);
+#else
   tropic_init();
+#endif
 #endif
 #ifdef USE_HW_REVISION
   hw_revision_init();

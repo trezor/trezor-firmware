@@ -34,6 +34,8 @@ CORE_SRC_DIR = ROOT / "core" / "src"
 
 ENV = {"SDL_VIDEODRIVER": "dummy"}
 
+TROPIC_MODEL_CONFIGFILE = ROOT / "tests" / "tropic_model" / "config.yml"
+
 
 def check_version(tag: str, version_tuple: Tuple[int, int, int]) -> None:
     if tag is not None and tag.startswith("v") and len(tag.split(".")) == 3:
@@ -65,6 +67,14 @@ def get_tags() -> Dict[str, List[str]]:
 
 
 ALL_TAGS = get_tags()
+
+
+def _get_tropic_model_port(worker_id: int) -> int:
+    """Get a unique port for this worker process' Tropic model.
+
+    Guarantees to be unique because each worker has a unique ID.
+    """
+    return 28992 + worker_id  # 28992 is the default port tvl server listens to
 
 
 def _get_port(worker_id: int) -> int:
@@ -105,8 +115,12 @@ class EmulatorWrapper:
 
         logs_dir = os.environ.get("TREZOR_PYTEST_LOGS_DIR")
         logfile = None
+        tropic_model_logfile = None
         if logs_dir:
             logfile = Path(logs_dir) / f"trezor-{worker_id}.log"
+            tropic_model_logfile = (
+                Path(logs_dir) / f"trezor-tropic-model-{worker_id}.log"
+            )
 
         if gen == "legacy":
             self.emulator = LegacyEmulator(
@@ -123,6 +137,9 @@ class EmulatorWrapper:
                 self.profile_dir.name,
                 storage=storage,
                 workdir=workdir,
+                tropic_model_port=_get_tropic_model_port(worker_id),
+                tropic_model_configfile=str(TROPIC_MODEL_CONFIGFILE),
+                tropic_model_logfile=tropic_model_logfile,
                 port=_get_port(worker_id),
                 headless=headless,
                 auto_interact=auto_interact,

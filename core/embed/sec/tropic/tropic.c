@@ -109,7 +109,11 @@ cleanup:
   return ret;
 }
 
+#ifdef TREZOR_EMULATOR
+bool tropic_init(uint16_t port) {
+#else
 bool tropic_init(void) {
+#endif
   tropic_driver_t *drv = &g_tropic_driver;
 
   if (drv->initialized) {
@@ -118,7 +122,7 @@ bool tropic_init(void) {
 
 #ifdef TREZOR_EMULATOR
   drv->device.addr = inet_addr("127.0.0.1");
-  drv->device.port = 28992;
+  drv->device.port = port;
   drv->handle.l2.device = &drv->device;
 #endif
 
