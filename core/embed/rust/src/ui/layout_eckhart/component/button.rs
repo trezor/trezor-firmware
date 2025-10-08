@@ -387,9 +387,9 @@ impl Button {
         layout_fit.height().min(max_height)
     }
 
-    /// Returns the height required to render the button content at the given full
-    /// button width (including the padding). Must be functional before placing the
-    /// button.
+    /// Returns the height required to render the button content at the given
+    /// full button width (including the padding). Must be functional before
+    /// placing the button.
     pub fn content_height(&self, button_width: i16) -> i16 {
         let width = match self.text_align {
             Alignment::Center => button_width - self.content_offset.x.abs(),
