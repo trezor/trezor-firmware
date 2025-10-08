@@ -61,7 +61,7 @@ static bool tropic_get_tropic_pubkey(lt_handle_t *handle,
 
 static bool session_start(tropic_driver_t *drv,
                           pkey_index_t pairing_key_index) {
-  drv->initialized = false;
+  bool ret = false;
 
   curve25519_key trezor_private = {0};
   switch (pairing_key_index) {
@@ -101,12 +101,12 @@ static bool session_start(tropic_driver_t *drv,
   }
 
   drv->pairing_key_index = pairing_key_index;
-  drv->initialized = true;
+  ret = true;
 
 cleanup:
   memzero(trezor_private, sizeof(trezor_private));
 
-  return drv->initialized;
+  return ret;
 }
 
 bool tropic_init(void) {
@@ -123,8 +123,9 @@ bool tropic_init(void) {
 #endif
 
   if (lt_init(&drv->handle) != LT_OK) {
-    goto cleanup;
+    return false;
   }
+  drv->initialized = true;
 
   // Wait for Tropic to boot before issuing any session commands.
   uint32_t boot_start_ms = hal_ticks_ms();
@@ -149,8 +150,6 @@ bool tropic_init(void) {
   }
 #endif
 
-cleanup:
-  tropic_deinit();
   return false;
 }
 
