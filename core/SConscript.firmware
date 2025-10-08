@@ -246,6 +246,7 @@ CPPPATH_MOD += [
 ]
 SOURCE_MOD += [
     'embed/upymod/modtrezorui/modtrezorui.c',
+    'embed/api/trezor_api_v1_impl.c',
     'embed/gfx/bitblt/gfx_bitblt.c',
     'embed/gfx/bitblt/gfx_bitblt_rgb565.c',
     'embed/gfx/bitblt/gfx_bitblt_rgba8888.c',
@@ -476,6 +477,7 @@ env.Replace(
 
 ALLPATHS = [
         '.',
+        'embed/api',
         'embed/rust',
         'embed/projects/firmware',
         'embed/rtl/inc',

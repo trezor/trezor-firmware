@@ -26,6 +26,7 @@
 #include <sys/systask.h>
 
 extern int coreapp_emu(int argc, char** argv);
+extern const void* coreapp_api_get(uint32_t version);
 
 bool coreapp_init(applet_t* applet, int argc, char** argv) {
   const applet_layout_t coreapp_layout = {0};
@@ -44,5 +45,7 @@ bool coreapp_init(applet_t* applet, int argc, char** argv) {
 
   return true;
 }
+
+void* coreapp_get_api_getter(void) { return (void*)coreapp_api_get; }
 
 #endif  // KERNEL
