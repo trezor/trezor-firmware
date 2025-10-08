@@ -231,13 +231,7 @@ impl Button {
                     .render(target);
             }
             ButtonContent::IconAndText(child) => {
-                child.render(
-                    target,
-                    self.area,
-                    self.button_style(),
-                    Self::BASELINE_OFFSET,
-                    alpha,
-                );
+                child.render(target, self.area, self.button_style(), alpha);
             }
         }
     }
@@ -459,18 +453,16 @@ impl IconText {
         target: &mut impl Renderer<'s>,
         area: Rect,
         style: &ButtonStyle,
-        _baseline_offset: Offset,
         alpha: u8,
     ) {
         let text_width = area.width() - Self::ICON_SPACE;
         self.text.map(|t| {
-            let text_height = self
-                .text_height(t, text_width, self.text_style(style))
-                .min(area.height());
-            let top_padding = (area.height() - text_height) / 2;
+            let text_height = self.text_height(t, text_width, self.text_style(style));
+            let vertical_padding = ((area.height() - text_height) / 2).max(0);
 
             TextLayout::new(self.text_style(style))
-                .with_top_padding(top_padding)
+                .with_top_padding(vertical_padding)
+                .with_bottom_padding(vertical_padding)
                 .with_bounds(area.inset(Insets::left(area.width() - text_width)))
                 .render_text_with_alpha(t, target, alpha, true);
         });

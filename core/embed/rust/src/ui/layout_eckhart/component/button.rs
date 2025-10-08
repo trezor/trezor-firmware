@@ -14,7 +14,7 @@ use crate::{
         constant::{self, SCREEN},
         display::{toif::Icon, Color, Font},
         event::TouchEvent,
-        geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
+        geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
         shape::{self, Renderer},
     },
 };
@@ -366,9 +366,9 @@ impl Button {
 
         // Limit the maximum height
         let max_height = if single_line {
-            textstyle.text_font.text_height()
+            textstyle.text_font.text_max_height()
         } else {
-            2 * textstyle.text_font.text_height()
+            2 * textstyle.text_font.text_max_height()
         };
 
         // Create rect with precise width and a large enough height to fit the text.
@@ -387,11 +387,15 @@ impl Button {
         layout_fit.height().min(max_height)
     }
 
-    /// Returns the height required to render the button content at the given
+    /// Returns the height required to render the button content at the given full
     /// button width (including the padding). Must be functional before placing the
     /// button.
-    pub fn content_height(&self, width: i16) -> i16 {
-        let width = width - 2 * Self::MENU_ITEM_CONTENT_OFFSET.x;
+    pub fn content_height(&self, button_width: i16) -> i16 {
+        let width = match self.text_align {
+            Alignment::Center => button_width - self.content_offset.x.abs(),
+            _ => button_width - 2 * self.content_offset.x.max(0),
+        };
+
         match &self.content {
             ButtonContent::Empty => 0,
             ButtonContent::Text { text, single_line } => {
@@ -490,7 +494,7 @@ impl Button {
     /// Returns the vertical padding required to center the button content.
     /// Functional only after placing the button.
     fn vertical_padding(&self) -> i16 {
-        (self.area.height() - self.content_height(self.area.width())) / 2
+        ((self.area.height() - self.content_height(self.area.width())) / 2).max(0)
     }
 
     fn render_text<'s>(
@@ -498,25 +502,30 @@ impl Button {
         text: &str,
         target: &mut impl Renderer<'s>,
         alpha: u8,
-        single_line: bool,
-        break_words: bool,
+        must_fit: bool,
     ) {
         let vertical_padding = self.vertical_padding();
-        let width = self.area.width() - 2 * self.content_offset.x;
-        let bounds = self
-            .area()
-            .inset(Insets::new(
-                vertical_padding,
-                self.content_offset.x,
-                0,
-                self.content_offset.x,
-            ))
-            .with_height(self.text_height(text, width, single_line, break_words));
+
+        let side_insets = match (self.text_align, self.content_offset.x) {
+            (Alignment::Center, x) if x >= 0 => Insets::new(0, 0, 0, x),
+            (Alignment::Center, x) => Insets::new(0, x.abs(), 0, 0),
+            (_, x) => Insets::new(0, x.max(0), 0, x.max(0)),
+        };
+        dbg_println!(
+            "is center align {:?}, content offset x {:?}, left inset {:?}, right inset {:?}",
+            self.text_align == Alignment::Center,
+            self.content_offset.x,
+            side_insets.left,
+            side_insets.right
+        );
+        let bounds = self.area().inset(side_insets);
 
         TextLayout::new(self.text_style())
             .with_bounds(bounds)
+            .with_top_padding(vertical_padding)
+            .with_bottom_padding(vertical_padding)
             .with_align(self.text_align)
-            .render_text_with_alpha(text, target, alpha, !break_words);
+            .render_text_with_alpha(text, target, alpha, must_fit);
     }
 
     fn render_content<'s>(
@@ -529,7 +538,7 @@ impl Button {
             ButtonContent::Empty => {}
             ButtonContent::Text { text, single_line } => {
                 text.map(|t| {
-                    self.render_text(t, target, alpha, *single_line, false);
+                    self.render_text(t, target, alpha, *single_line);
                 });
             }
             ButtonContent::TextAndSubtext {
@@ -539,7 +548,7 @@ impl Button {
                 ..
             } => {
                 text.map(|t| {
-                    self.render_text(t, target, alpha, *single_line, *break_words);
+                    self.render_text(t, target, alpha, *single_line || !*break_words);
                 });
 
                 if let Some(m) = &self.subtext_marquee {
@@ -843,84 +852,4 @@ pub struct ButtonStyle {
     pub text_color: Color,
     pub button_color: Color,
     pub icon_color: Color,
-}
-
-#[derive(PartialEq, Eq, Clone)]
-pub struct IconText {
-    text: TString<'static>,
-    icon: Icon,
-}
-
-impl IconText {
-    const ICON_SPACE: i16 = 46;
-    const ICON_MARGIN: i16 = 4;
-    const TEXT_MARGIN: i16 = 6;
-
-    pub fn new(text: impl Into<TString<'static>>, icon: Icon) -> Self {
-        Self {
-            text: text.into(),
-            icon,
-        }
-    }
-
-    fn text_style(&self, style: &ButtonStyle) -> TextStyle {
-        TextStyle::new(
-            style.font,
-            style.text_color,
-            style.button_color,
-            style.text_color,
-            style.text_color,
-        )
-    }
-
-    /// Compute the height required to render the given text at the given width.
-    /// Must be functional before placing the button.
-    fn text_height(&self, text: &str, width: i16, textstyle: TextStyle) -> i16 {
-        // Create rect with precise width and a large enough height to fit the text.
-        let bounds = Rect::from_size(Offset::new(width, constant::SCREEN.height()));
-        let layout_fit = TextLayout::new(textstyle)
-            .with_bounds(bounds)
-            .fit_text(text);
-
-        if let LayoutFit::OutOfBounds { .. } = layout_fit {
-            debug_assert!(
-                false,
-                "TextLayout::fit_text returned OutOfBounds, this should not happen"
-            );
-        }
-
-        layout_fit.height()
-    }
-
-    pub fn render<'s>(
-        &self,
-        target: &mut impl Renderer<'s>,
-        area: Rect,
-        style: &ButtonStyle,
-        _baseline_offset: Offset,
-        alpha: u8,
-    ) {
-        let text_width = area.width() - Self::ICON_SPACE;
-        self.text.map(|t| {
-            let text_height = self
-                .text_height(t, text_width, self.text_style(style))
-                .min(area.height());
-            let top_padding = (area.height() - text_height) / 2;
-
-            TextLayout::new(self.text_style(style))
-                .with_top_padding(top_padding)
-                .with_bounds(area.inset(Insets::left(area.width() - text_width)))
-                .render_text_with_alpha(t, target, alpha, true);
-        });
-
-        let icon_pos = Point::new(
-            area.top_left().x + ((Self::ICON_SPACE + Self::ICON_MARGIN) / 2),
-            area.center().y,
-        );
-        shape::ToifImage::new(icon_pos, self.icon.toif)
-            .with_align(Alignment2D::CENTER)
-            .with_fg(style.icon_color)
-            .with_alpha(alpha)
-            .render(target);
-    }
 }
