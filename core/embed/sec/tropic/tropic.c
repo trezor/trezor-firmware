@@ -40,6 +40,9 @@
 
 #ifdef SECURE_MODE
 
+// Maximum time to wait for Tropic to boot. Chosen arbitrarily.
+#define TROPIC_BOOT_TIMEOUT_MS 1000
+
 typedef struct {
   bool initialized;
   pkey_index_t pairing_key_index;
@@ -123,9 +126,14 @@ bool tropic_init(void) {
     goto cleanup;
   }
 
-  // Note: Without the delay below Tropic01 may return LT_L1_CHIP_BUSY. The
-  // length was chosen arbitrarily. A shorter delay may be sufficient.
-  hal_delay(100);
+  // Wait for Tropic to boot before issuing any session commands.
+  uint32_t boot_start_ms = hal_ticks_ms();
+  while (hal_ticks_ms() - boot_start_ms < TROPIC_BOOT_TIMEOUT_MS) {
+    uint8_t ver[LT_L2_GET_INFO_RISCV_FW_SIZE] = {0};
+    if (lt_get_info_riscv_fw_ver(&drv->handle, ver) != LT_L1_CHIP_BUSY) {
+      break;
+    }
+  }
 
 #ifndef TREZOR_EMULATOR
   if (session_start(drv, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT)) {
