@@ -472,7 +472,7 @@ if __debug__:
         read_wait = loop.wait(iface.iface_num() | io.POLL_READ)
 
         while not _EXIT_FLAG:
-            await loop.race(read_wait, _EXIT_BOX)
+            await loop.race(read_wait, _EXIT_BOX, no_schedule=True)
             if _EXIT_FLAG:
                 # in case both `read_wait` and `_EXIT_BOX` are ready,
                 # don't handle the message and exit the loop.
