@@ -355,14 +355,7 @@ impl Button {
     /// Compute the height required to render the given text at the given width.
     /// Must be functional before placing the button.
     fn text_height(&self, text: &str, width: i16, single_line: bool, break_words: bool) -> i16 {
-        let textstyle = self.text_style();
-
-        // Adjust text style line breaking
-        let textstyle = if break_words {
-            textstyle.with_line_breaking(LineBreaking::BreakWordsNoHyphen)
-        } else {
-            textstyle.with_line_breaking(LineBreaking::BreakAtWhitespace)
-        };
+        let textstyle = self.text_style(break_words);
 
         // Limit the maximum height
         let max_height = if single_line {
@@ -431,15 +424,19 @@ impl Button {
         }
     }
 
-    fn text_style(&self) -> TextStyle {
+    fn text_style(&self, break_words: bool) -> TextStyle {
         let stylesheet = self.button_style();
-        TextStyle::new(
+        let mut textstyle = TextStyle::new(
             stylesheet.font,
             stylesheet.text_color,
             stylesheet.button_color,
             stylesheet.text_color,
             stylesheet.text_color,
-        )
+        );
+        if break_words {
+            textstyle = textstyle.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
+        }
+        textstyle
     }
 
     pub fn stylesheet(&self) -> &ButtonStyleSheet {
@@ -502,10 +499,9 @@ impl Button {
         text: &str,
         target: &mut impl Renderer<'s>,
         alpha: u8,
-        must_fit: bool,
+        break_words: bool,
     ) {
         let vertical_padding = self.vertical_padding();
-
         let side_insets = match (self.text_align, self.content_offset.x) {
             (Alignment::Center, x) if x >= 0 => Insets::new(0, 0, 0, x),
             (Alignment::Center, x) => Insets::new(0, x.abs(), 0, 0),
@@ -513,12 +509,12 @@ impl Button {
         };
         let bounds = self.area().inset(side_insets);
 
-        TextLayout::new(self.text_style())
+        TextLayout::new(self.text_style(break_words))
             .with_bounds(bounds)
             .with_top_padding(vertical_padding)
             .with_bottom_padding(vertical_padding)
             .with_align(self.text_align)
-            .render_text_with_alpha(text, target, alpha, must_fit);
+            .render_text_with_alpha(text, target, alpha, !break_words);
     }
 
     fn render_content<'s>(
@@ -529,19 +525,16 @@ impl Button {
     ) {
         match &self.content {
             ButtonContent::Empty => {}
-            ButtonContent::Text { text, single_line } => {
+            ButtonContent::Text { text, .. } => {
                 text.map(|t| {
-                    self.render_text(t, target, alpha, *single_line);
+                    self.render_text(t, target, alpha, false);
                 });
             }
             ButtonContent::TextAndSubtext {
-                text,
-                single_line,
-                break_words,
-                ..
+                text, break_words, ..
             } => {
                 text.map(|t| {
-                    self.render_text(t, target, alpha, *single_line || !*break_words);
+                    self.render_text(t, target, alpha, *break_words);
                 });
 
                 if let Some(m) = &self.subtext_marquee {
