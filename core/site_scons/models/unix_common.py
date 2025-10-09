@@ -37,6 +37,7 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/sec/random_delays/unix/random_delays.c",
         "embed/sec/secret/unix/secret.c",
         "embed/sec/secret/unix/secret_keys.c",
+        "embed/sec/secret/secret_keys_common.c",
         "embed/sec/storage/unix/storage_salt.c",
         "embed/sec/monoctr/unix/monoctr.c",
         "embed/sec/rng/unix/rng.c",

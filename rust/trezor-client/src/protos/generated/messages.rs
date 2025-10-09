@@ -535,6 +535,14 @@ pub enum MessageType {
     MessageType_EvoluGetNode = 2100,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_EvoluNode)
     MessageType_EvoluNode = 2101,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_EvoluSignRegistrationRequest)
+    MessageType_EvoluSignRegistrationRequest = 2102,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_EvoluRegistrationRequest)
+    MessageType_EvoluRegistrationRequest = 2103,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_EvoluGetDelegatedIdentityKey)
+    MessageType_EvoluGetDelegatedIdentityKey = 2104,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_EvoluDelegatedIdentityKey)
+    MessageType_EvoluDelegatedIdentityKey = 2105,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkListNames)
     MessageType_BenchmarkListNames = 9100,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkNames)
@@ -808,6 +816,10 @@ impl ::protobuf::Enum for MessageType {
             2004 => ::std::option::Option::Some(MessageType::MessageType_NostrEventSignature),
             2100 => ::std::option::Option::Some(MessageType::MessageType_EvoluGetNode),
             2101 => ::std::option::Option::Some(MessageType::MessageType_EvoluNode),
+            2102 => ::std::option::Option::Some(MessageType::MessageType_EvoluSignRegistrationRequest),
+            2103 => ::std::option::Option::Some(MessageType::MessageType_EvoluRegistrationRequest),
+            2104 => ::std::option::Option::Some(MessageType::MessageType_EvoluGetDelegatedIdentityKey),
+            2105 => ::std::option::Option::Some(MessageType::MessageType_EvoluDelegatedIdentityKey),
             9100 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             9101 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             9102 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1072,6 +1084,10 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_NostrEventSignature" => ::std::option::Option::Some(MessageType::MessageType_NostrEventSignature),
             "MessageType_EvoluGetNode" => ::std::option::Option::Some(MessageType::MessageType_EvoluGetNode),
             "MessageType_EvoluNode" => ::std::option::Option::Some(MessageType::MessageType_EvoluNode),
+            "MessageType_EvoluSignRegistrationRequest" => ::std::option::Option::Some(MessageType::MessageType_EvoluSignRegistrationRequest),
+            "MessageType_EvoluRegistrationRequest" => ::std::option::Option::Some(MessageType::MessageType_EvoluRegistrationRequest),
+            "MessageType_EvoluGetDelegatedIdentityKey" => ::std::option::Option::Some(MessageType::MessageType_EvoluGetDelegatedIdentityKey),
+            "MessageType_EvoluDelegatedIdentityKey" => ::std::option::Option::Some(MessageType::MessageType_EvoluDelegatedIdentityKey),
             "MessageType_BenchmarkListNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             "MessageType_BenchmarkNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             "MessageType_BenchmarkRun" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1335,6 +1351,10 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_NostrEventSignature,
         MessageType::MessageType_EvoluGetNode,
         MessageType::MessageType_EvoluNode,
+        MessageType::MessageType_EvoluSignRegistrationRequest,
+        MessageType::MessageType_EvoluRegistrationRequest,
+        MessageType::MessageType_EvoluGetDelegatedIdentityKey,
+        MessageType::MessageType_EvoluDelegatedIdentityKey,
         MessageType::MessageType_BenchmarkListNames,
         MessageType::MessageType_BenchmarkNames,
         MessageType::MessageType_BenchmarkRun,
@@ -1604,10 +1624,14 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_NostrEventSignature => 251,
             MessageType::MessageType_EvoluGetNode => 252,
             MessageType::MessageType_EvoluNode => 253,
-            MessageType::MessageType_BenchmarkListNames => 254,
-            MessageType::MessageType_BenchmarkNames => 255,
-            MessageType::MessageType_BenchmarkRun => 256,
-            MessageType::MessageType_BenchmarkResult => 257,
+            MessageType::MessageType_EvoluSignRegistrationRequest => 254,
+            MessageType::MessageType_EvoluRegistrationRequest => 255,
+            MessageType::MessageType_EvoluGetDelegatedIdentityKey => 256,
+            MessageType::MessageType_EvoluDelegatedIdentityKey => 257,
+            MessageType::MessageType_BenchmarkListNames => 258,
+            MessageType::MessageType_BenchmarkNames => 259,
+            MessageType::MessageType_BenchmarkRun => 260,
+            MessageType::MessageType_BenchmarkResult => 261,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1626,7 +1650,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xffY\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xdc[\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\x80\xa6\
     \x1d\x01\xb0\xb5\x18\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -1917,16 +1941,22 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     eType_NostrEventSignature\x10\xd4\x0f\x1a\x04\x98\xb5\x18\x01\x12'\n\x18\
     MessageType_EvoluGetNode\x10\xb4\x10\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\
     \x01\x12$\n\x15MessageType_EvoluNode\x10\xb5\x10\x1a\x08\x80\xa6\x1d\x01\
-    \x98\xb5\x18\x01\x12)\n\x1eMessageType_BenchmarkListNames\x10\x8cG\x1a\
-    \x04\x80\xa6\x1d\x01\x12%\n\x1aMessageType_BenchmarkNames\x10\x8dG\x1a\
-    \x04\x80\xa6\x1d\x01\x12#\n\x18MessageType_BenchmarkRun\x10\x8eG\x1a\x04\
-    \x80\xa6\x1d\x01\x12&\n\x1bMessageType_BenchmarkResult\x10\x8fG\x1a\x04\
-    \x80\xa6\x1d\x01\x1a\x08\xc8\xf3\x18\x01\xd0\xf3\x18\x01\"\x04\x08Z\x10\
-    \\\"\x04\x08G\x10J\"\x04\x08r\x10z\"\x05\x08{\x10\x95\x01\"\x06\x08\xdb\
-    \x01\x10\xdb\x01\"\x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xac\x02\x10\xb0\
-    \x02\"\x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\x06\
-    \x08\xe9\x07\x10\xf7\x07\"\x06\x08\xfa\x07\x10\xcb\x08B8\n#com.satoshila\
-    bs.trezor.lib.protobufB\rTrezorMessage\x80\xa6\x1d\x01\
+    \x98\xb5\x18\x01\x127\n(MessageType_EvoluSignRegistrationRequest\x10\xb6\
+    \x10\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x123\n$MessageType_EvoluReg\
+    istrationRequest\x10\xb7\x10\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12\
+    7\n(MessageType_EvoluGetDelegatedIdentityKey\x10\xb8\x10\x1a\x08\x80\xa6\
+    \x1d\x01\x90\xb5\x18\x01\x124\n%MessageType_EvoluDelegatedIdentityKey\
+    \x10\xb9\x10\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12)\n\x1eMessageTy\
+    pe_BenchmarkListNames\x10\x8cG\x1a\x04\x80\xa6\x1d\x01\x12%\n\x1aMessage\
+    Type_BenchmarkNames\x10\x8dG\x1a\x04\x80\xa6\x1d\x01\x12#\n\x18MessageTy\
+    pe_BenchmarkRun\x10\x8eG\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bMessageType_B\
+    enchmarkResult\x10\x8fG\x1a\x04\x80\xa6\x1d\x01\x1a\x08\xc8\xf3\x18\x01\
+    \xd0\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08G\x10J\"\x04\x08r\x10z\"\x05\
+    \x08{\x10\x95\x01\"\x06\x08\xdb\x01\x10\xdb\x01\"\x06\x08\xe0\x01\x10\
+    \xe0\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\x06\x08\xb5\x02\x10\xb8\x02\"\
+    \x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\xe9\x07\x10\xf7\x07\"\x06\x08\xfa\
+    \x07\x10\xcb\x08B8\n#com.satoshilabs.trezor.lib.protobufB\rTrezorMessage\
+    \x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

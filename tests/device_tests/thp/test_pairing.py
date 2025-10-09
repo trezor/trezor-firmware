@@ -241,14 +241,14 @@ def test_pairing_cancel_2(client: Client) -> None:
 def test_pairing_nfc(client: Client) -> None:
     protocol = prepare_protocol_for_pairing(client)
 
-    _nfc_pairing(client, protocol)
+    nfc_pairing(client, protocol)
 
     protocol._send_message(ThpEndRequest())
     protocol._read_message(ThpEndResponse)
     protocol._is_paired = True
 
 
-def _nfc_pairing(client: Client, protocol: ProtocolV2Channel) -> None:
+def nfc_pairing(client: Client, protocol: ProtocolV2Channel) -> None:
 
     handle_pairing_request(client, protocol, "TestTrezor NfcPairing")
 
@@ -291,7 +291,7 @@ def _nfc_pairing(client: Client, protocol: ProtocolV2Channel) -> None:
 
 def test_connection_confirmation_cancel(client: Client) -> None:
     protocol = prepare_protocol_for_pairing(client)
-    _nfc_pairing(client, protocol)
+    nfc_pairing(client, protocol)
 
     # Request credential with confirmation after pairing
     randomness_static = os.urandom(32)
@@ -335,7 +335,7 @@ def test_connection_confirmation_cancel(client: Client) -> None:
 
 def test_autoconnect_credential_request_cancel(client: Client) -> None:
     protocol = prepare_protocol_for_pairing(client)
-    _nfc_pairing(client, protocol)
+    nfc_pairing(client, protocol)
 
     # Request credential with confirmation after pairing
     randomness_static = os.urandom(32)
@@ -376,7 +376,7 @@ def test_autoconnect_credential_request_cancel(client: Client) -> None:
 
 def test_credential_phase(client: Client) -> None:
     protocol = prepare_protocol_for_pairing(client)
-    _nfc_pairing(client, protocol)
+    nfc_pairing(client, protocol)
 
     # Request credential with confirmation after pairing
     randomness_static = os.urandom(32)
@@ -474,7 +474,7 @@ def test_credential_phase(client: Client) -> None:
 def test_credential_request_in_encrypted_transport_phase(client: Client) -> None:
     randomness_static = os.urandom(32)
     protocol = prepare_protocol_for_pairing(client, randomness_static)
-    _nfc_pairing(client, protocol)
+    nfc_pairing(client, protocol)
 
     # Request credential with confirmation after pairing
     host_static_private_key = curve25519.get_private_key(randomness_static)
