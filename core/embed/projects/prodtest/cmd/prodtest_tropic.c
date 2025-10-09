@@ -650,9 +650,9 @@ tropic_locked_status get_tropic_locked_status(cli_t* cli) {
   curve25519_key privileged_public = {0};
   curve25519_scalarmult_basepoint(privileged_public, privileged_private);
 
-  ret = lt_session_start(tropic_handle, tropic_public,
-                         TROPIC_PRIVILEGED_PAIRING_KEY_SLOT, privileged_private,
-                         privileged_public);
+  ret = tropic_start_custom_session(tropic_public,
+                                    TROPIC_PRIVILEGED_PAIRING_KEY_SLOT,
+                                    privileged_private, privileged_public);
   if (ret != LT_OK) {
     // The Tropic pairing process was initiated but probably failed midway.
     locked_status = TROPIC_LOCKED_FALSE;
@@ -747,15 +747,15 @@ static bool tropic_is_paired(cli_t* cli) {
   }
   curve25519_key unprivileged_public = {0};
   curve25519_scalarmult_basepoint(unprivileged_public, unprivileged_private);
-  ret = lt_session_start(tropic_handle, tropic_public,
-                         TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT,
-                         unprivileged_private, unprivileged_public);
+  ret = tropic_start_custom_session(tropic_public,
+                                    TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT,
+                                    unprivileged_private, unprivileged_public);
   if (ret != LT_OK) {
     if (cli != NULL) {
-      cli_error(
-          cli, CLI_ERROR,
-          "`lt_session_start()` for unprivileged key failed with error %d",
-          ret);
+      cli_error(cli, CLI_ERROR,
+                "`tropic_lt_session_start()` for unprivileged key failed with "
+                "error %d",
+                ret);
     }
     goto cleanup;
   }
@@ -772,14 +772,15 @@ static bool tropic_is_paired(cli_t* cli) {
   curve25519_key privileged_public = {0};
   curve25519_scalarmult_basepoint(privileged_public, privileged_private);
 
-  ret = lt_session_start(tropic_handle, tropic_public,
-                         TROPIC_PRIVILEGED_PAIRING_KEY_SLOT, privileged_private,
-                         privileged_public);
+  ret = tropic_start_custom_session(tropic_public,
+                                    TROPIC_PRIVILEGED_PAIRING_KEY_SLOT,
+                                    privileged_private, privileged_public);
   if (ret != LT_OK) {
     if (cli != NULL) {
-      cli_error(cli, CLI_ERROR,
-                "`lt_session_start()` for privileged key failed with error %d",
-                ret);
+      cli_error(
+          cli, CLI_ERROR,
+          "`tropic_lt_session_start()` for privileged key failed with error %d",
+          ret);
     }
     goto cleanup;
   }
@@ -833,9 +834,9 @@ bool prodtest_tropic_factory_session_start(lt_handle_t* tropic_handle) {
   }
 
   // Try to establish a session using the factory pairing key.
-  return LT_OK == lt_session_start(tropic_handle, *tropic_public,
-                                   TROPIC_FACTORY_PAIRING_KEY_SLOT,
-                                   factory_private, factory_public);
+  return LT_OK == tropic_start_custom_session(*tropic_public,
+                                              TROPIC_FACTORY_PAIRING_KEY_SLOT,
+                                              factory_private, factory_public);
 }
 
 static void prodtest_tropic_pair(cli_t* cli) {
@@ -1272,13 +1273,14 @@ static void prodtest_tropic_lock(cli_t* cli) {
   curve25519_key privileged_public = {0};
   curve25519_scalarmult_basepoint(privileged_public, privileged_private);
 
-  ret = lt_session_start(tropic_handle, tropic_public,
-                         TROPIC_PRIVILEGED_PAIRING_KEY_SLOT, privileged_private,
-                         privileged_public);
+  ret = tropic_start_custom_session(tropic_public,
+                                    TROPIC_PRIVILEGED_PAIRING_KEY_SLOT,
+                                    privileged_private, privileged_public);
   if (ret != LT_OK) {
-    cli_error(cli, CLI_ERROR,
-              "`lt_session_start()` for privileged key failed with error %d",
-              ret);
+    cli_error(
+        cli, CLI_ERROR,
+        "`tropic_lt_session_start()` for privileged key failed with error %d",
+        ret);
     goto cleanup;
   }
 
@@ -1492,13 +1494,14 @@ static void cert_write(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
   curve25519_key privileged_public = {0};
   curve25519_scalarmult_basepoint(privileged_public, privileged_private);
 
-  ret = lt_session_start(tropic_handle, tropic_public,
-                         TROPIC_PRIVILEGED_PAIRING_KEY_SLOT, privileged_private,
-                         privileged_public);
+  ret = tropic_start_custom_session(tropic_public,
+                                    TROPIC_PRIVILEGED_PAIRING_KEY_SLOT,
+                                    privileged_private, privileged_public);
   if (ret != LT_OK) {
-    cli_error(cli, CLI_ERROR,
-              "`lt_session_start()` for privileged key failed with error %d",
-              ret);
+    cli_error(
+        cli, CLI_ERROR,
+        "`tropic_lt_session_start()` for privileged key failed with error %d",
+        ret);
     goto cleanup;
   }
 
@@ -1560,13 +1563,14 @@ static void cert_read(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
   curve25519_key privileged_public = {0};
   curve25519_scalarmult_basepoint(privileged_public, privileged_private);
 
-  ret = lt_session_start(tropic_handle, tropic_public,
-                         TROPIC_PRIVILEGED_PAIRING_KEY_SLOT, privileged_private,
-                         privileged_public);
+  ret = tropic_start_custom_session(tropic_public,
+                                    TROPIC_PRIVILEGED_PAIRING_KEY_SLOT,
+                                    privileged_private, privileged_public);
   if (ret != LT_OK) {
-    cli_error(cli, CLI_ERROR,
-              "`lt_session_start()` for privileged key failed with error %d",
-              ret);
+    cli_error(
+        cli, CLI_ERROR,
+        "`tropic_lt_session_start()` for privileged key failed with error %d",
+        ret);
     goto cleanup;
   }
 
@@ -1650,8 +1654,6 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
     cli_error_arg_count(cli);
     return;
   }
-
-  tropic_init();
 
   lt_handle_t* h = tropic_get_handle();
 
