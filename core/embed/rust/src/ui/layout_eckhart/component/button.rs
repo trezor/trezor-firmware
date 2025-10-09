@@ -109,6 +109,17 @@ impl Button {
             .with_radius(Self::MENU_ITEM_RADIUS)
     }
 
+    pub fn new_clipped_single_line_menu_item(
+        text: TString<'static>,
+        stylesheet: ButtonStyleSheet,
+    ) -> Self {
+        Self::with_clipped_single_line_text(text)
+            .with_text_align(Self::MENU_ITEM_ALIGNMENT)
+            .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
+            .styled(stylesheet)
+            .with_radius(Self::MENU_ITEM_RADIUS)
+    }
+
     pub fn new_menu_item_with_subtext(
         text: TString<'static>,
         stylesheet: ButtonStyleSheet,
@@ -162,6 +173,10 @@ impl Button {
 
     pub const fn with_single_line_text(text: TString<'static>) -> Self {
         Self::new(ButtonContent::single_line_text(text))
+    }
+
+    pub const fn with_clipped_single_line_text(text: TString<'static>) -> Self {
+        Self::new(ButtonContent::clipped_single_line_text(text))
     }
 
     pub const fn with_text(text: TString<'static>) -> Self {
@@ -391,9 +406,11 @@ impl Button {
 
         match &self.content {
             ButtonContent::Empty => 0,
-            ButtonContent::Text { text, single_line } => {
-                text.map(|t| self.text_height(t, width, *single_line, false))
-            }
+            ButtonContent::Text {
+                text,
+                single_line,
+                break_words,
+            } => text.map(|t| self.text_height(t, width, *single_line, *break_words)),
             ButtonContent::Icon(icon) => icon.toif.height(),
             ButtonContent::TextAndSubtext {
                 text,
@@ -525,9 +542,11 @@ impl Button {
     ) {
         match &self.content {
             ButtonContent::Empty => {}
-            ButtonContent::Text { text, .. } => {
+            ButtonContent::Text {
+                text, break_words, ..
+            } => {
                 text.map(|t| {
-                    self.render_text(t, target, alpha, false);
+                    self.render_text(t, target, alpha, *break_words);
                 });
             }
             ButtonContent::TextAndSubtext {
@@ -754,6 +773,7 @@ pub enum ButtonContent {
     Text {
         text: TString<'static>,
         single_line: bool,
+        break_words: bool,
     },
     TextAndSubtext {
         text: TString<'static>,
@@ -772,6 +792,7 @@ impl ButtonContent {
         Self::Text {
             text,
             single_line: false,
+            break_words: false,
         }
     }
 
@@ -779,6 +800,15 @@ impl ButtonContent {
         Self::Text {
             text,
             single_line: true,
+            break_words: false,
+        }
+    }
+
+    pub const fn clipped_single_line_text(text: TString<'static>) -> Self {
+        Self::Text {
+            text,
+            single_line: true,
+            break_words: true,
         }
     }
 

@@ -117,7 +117,7 @@ pub fn new_confirm_fido(
         let label = account
             .try_into()
             .unwrap_or_else(|_| TString::from_str("-"));
-        credentials.item(Button::new_single_line_menu_item(
+        credentials.item(Button::new_clipped_single_line_menu_item(
             label,
             theme::menu_item_title(),
         ));
