@@ -24,6 +24,7 @@ if BENCHMARK and PYOPT != '0':
   exit(1)
 
 FEATURES_WANTED = [
+    "applet",
     "ble",
     "display",
     "dma2d",
@@ -250,6 +251,7 @@ SOURCE_MOD += [
 ]
 
 CPPDEFINES_MOD += [
+    'KERNEL',
     'TRANSLATIONS',
     'FANCY_FATAL_ERROR',
     ]
@@ -401,7 +403,8 @@ SOURCE_MICROPYTHON = [
 ]
 
 SOURCE_UNIX = [
-    'embed/projects/unix/main_main.c',
+    'embed/api/trezor_api_v1_impl.c',
+    'embed/projects/unix/coreapp_main.c',
     'embed/projects/unix/main.c',
     'embed/projects/unix/profile.c',
     'vendor/micropython/ports/unix/alloc.c',
