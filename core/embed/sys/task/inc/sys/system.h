@@ -57,6 +57,14 @@ __attribute__((noreturn)) void system_emergency_rescue(
 
 #endif  // KERNEL_MODE
 
+#ifdef TREZOR_EMULATOR
+// Sets a callback that is called when the task terminating.
+//
+// The callback is called in the context of the killed task just
+// before the task is terminated.
+void system_set_exit_handler(systask_exit_handler_t handler);
+#endif
+
 // Terminates the current task normally with the given exit code.
 //
 // If the current task is the kernel task, the error handler is called with the
