@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from hashlib import sha256
 
-from ecdsa import SECP256k1, SigningKey
+from ecdsa import NIST256p, SigningKey
 
 from trezorlib import messages
 from trezorlib.transport.session import Session
@@ -36,8 +36,8 @@ class CoinPurchaseMemo:
 
 
 payment_req_signer = SigningKey.from_string(
-    b"?S\ti\x8b\xc5o{,\xab\x03\x194\xea\xa8[_:\xeb\xdf\xce\xef\xe50\xf17D\x98`\xb9dj",
-    curve=SECP256k1,
+    b"\x05\x62\x35\xb0\x47\x6f\x05\x7f\x27\x65\x21\x97\x24\xf7\xf1\x80\x7d\x58\x80\x2b\x55\x0e\xd5\xbf\x6f\x73\x05\x0a\xf5\x45\x63\x00",
+    curve=NIST256p,
 )
 
 
