@@ -46,7 +46,7 @@
 #define STK_FRAME_RET_ADDR 6
 #define STK_FRAME_XPSR 7
 
-// Task manager state
+// Task scheduler state
 typedef struct {
   // Error handler called when a kernel task terminates
   systask_error_handler_t error_handler;
@@ -61,7 +61,6 @@ typedef struct {
 
 } systask_scheduler_t;
 
-// Global task manager state
 static systask_scheduler_t g_systask_scheduler = {
     // This static initialization is required for exception handling
     // to function correctly before the scheduler is initialized.
@@ -215,8 +214,8 @@ uint32_t* systask_push_data(systask_t* task, const void* data, size_t size) {
 
 void systask_pop_data(systask_t* task, size_t size) { task->sp += size; }
 
-bool systask_push_call(systask_t* task, void* entrypoint, uint32_t arg1,
-                       uint32_t arg2, uint32_t arg3) {
+bool systask_push_call(systask_t* task, void* entrypoint, uintptr_t arg1,
+                       uintptr_t arg2, uintptr_t arg3) {
 #ifdef KERNEL
   if (task->applet != NULL) {
     applet_t* applet = (applet_t*)task->applet;
@@ -272,8 +271,9 @@ cleanup:
   return false;
 }
 
-uint32_t systask_invoke_callback(systask_t* task, uint32_t arg1, uint32_t arg2,
-                                 uint32_t arg3, void* callback) {
+uint32_t systask_invoke_callback(systask_t* task, uintptr_t arg1,
+                                 uintptr_t arg2, uintptr_t arg3,
+                                 void* callback) {
   uint32_t original_sp = task->sp;
   if (!systask_push_call(task, callback, arg1, arg2, arg3)) {
     // There is not enough space on the unprivileged stack
