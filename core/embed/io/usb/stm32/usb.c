@@ -24,6 +24,7 @@
 
 #include <io/usb.h>
 #include <sec/random_delays.h>
+#include <sys/irq.h>
 #include <sys/sysevent_source.h>
 #include <sys/systick.h>
 
@@ -295,18 +296,24 @@ static secbool usb_configured(void) {
     ready = sectrue;
   }
 
-  // This is a workaround to handle the glitches in the USB connection,
-  // especially for USB-powered-only devices. This should be
-  // revisited and probably fixed elsewhere.
-
-  uint32_t ticks = hal_ticks_ms();
+  uint32_t now = hal_ticks_ms();
 
   if (ready == sectrue) {
-    drv->ready_time = ticks;
-  } else if ((drv->was_ready == sectrue) && (ticks - drv->ready_time) < 2000) {
-    // NOTE: When the timer overflows the timeout is shortened.
-    //       We are ignoring it for now.
-    ready = sectrue;
+    irq_key_t irq_key = irq_lock();
+    drv->ready_time = now;
+    irq_unlock(irq_key);
+  } else {
+    // This is a workaround to handle the glitches in the USB connection,
+    // especially for USB-powered-only devices. This should be
+    // revisited and probably fixed elsewhere.
+
+    irq_key_t irq_key = irq_lock();
+    bool ready_recently = (int32_t)(now - drv->ready_time) < 2000;
+    irq_unlock(irq_key);
+
+    if ((drv->was_ready == sectrue) && ready_recently) {
+      ready = sectrue;
+    }
   }
 
   return ready;
@@ -727,6 +734,8 @@ static uint8_t usb_class_data_out(USBD_HandleTypeDef *dev, uint8_t ep_num) {
 
 static uint8_t usb_class_sof(USBD_HandleTypeDef *dev) {
   usb_driver_t *drv = &g_usb_driver;
+
+  drv->ready_time = hal_ticks_ms();
 
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
     usb_iface_t *iface = &drv->ifaces[i];
