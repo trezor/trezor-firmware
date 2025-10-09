@@ -110,6 +110,7 @@ __attribute((no_stack_protector)) void saes_unpriv_callback(void) {
 
 #ifdef KERNEL
 
+#include <sys/coreapp.h>
 #include <sys/mpu.h>
 #include <sys/systask.h>
 
@@ -144,9 +145,12 @@ secbool secure_aes_unpriv_encrypt(const uint8_t *input, size_t size,
 
   applet_t *applet = secure_aes_unpriv_applet;
 
-  void *unpriv_input = applet->header->coreapp.saes_input;
-  void *unpriv_output = applet->header->coreapp.saes_output;
-  void *unpriv_callback = applet->header->coreapp.saes_callback;
+  const coreapp_header_t *header =
+      (coreapp_header_t *)applet->layout.code1.start;
+
+  void *unpriv_input = header->saes_input;
+  void *unpriv_output = header->saes_output;
+  void *unpriv_callback = header->saes_callback;
 
   memzero(unpriv_input, SAES_DATA_SIZE_WITH_UNPRIV_KEY);
   memzero(unpriv_output, SAES_DATA_SIZE_WITH_UNPRIV_KEY);
