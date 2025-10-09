@@ -18,8 +18,8 @@ _MEMO_TYPE_TEXT_DETAILS = const(4)
 
 class PaymentRequestVerifier:
     if __debug__:
-        # secp256k1 public key of m/0h for "all all ... all" seed.
-        PUBLIC_KEY = b"\x03\x0f\xdf^(\x9bZ\xefSb\x90\x95:\xe8\x1c\xe6\x0e\x84\x1f\xf9V\xf3f\xac\x12?\xa6\x9d\xb3\xc7\x9f!\xb0"
+        # nist256p1 public key of m/0h for "all all ... all" seed.
+        PUBLIC_KEY = b"\x03\xd9\xd9\x3f\x89\xc6\x96\x3b\x94\xbb\xd7\xa5\x11\x88\x28\xe4\x4c\x1c\x39\x59\x15\xac\xe8\x48\x88\x71\x7f\x56\x8c\xb0\x19\x74\xc3"
     else:
         PUBLIC_KEY = b""
 
@@ -85,7 +85,7 @@ class PaymentRequestVerifier:
         writers.write_uint32_le(self.h_pr, slip44_id)
 
     def verify(self) -> None:
-        from trezor.crypto.curve import secp256k1
+        from trezor.crypto.curve import nist256p1
 
         if self.expected_amount is not None and self.amount != self.expected_amount:
             raise DataError("Invalid amount in payment request.")
@@ -93,7 +93,7 @@ class PaymentRequestVerifier:
         hash_outputs = self.h_outputs.get_digest()
         writers.write_bytes_fixed(self.h_pr, hash_outputs, 32)
 
-        if not secp256k1.verify(
+        if not nist256p1.verify(
             self.PUBLIC_KEY, self.signature, self.h_pr.get_digest()
         ):
             raise DataError("Invalid signature in payment request.")
