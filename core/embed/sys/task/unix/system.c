@@ -33,6 +33,7 @@ void system_init(systask_error_handler_t error_handler) {
   g_error_handler = error_handler;
   systick_init();
   systimer_init();
+  systask_scheduler_init(error_handler);
   dbg_console_init();
 }
 

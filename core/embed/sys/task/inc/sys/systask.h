@@ -23,6 +23,10 @@
 
 #include <sys/mpu.h>
 
+#ifdef TREZOR_EMULATOR
+#include <pthread.h>
+#endif
+
 // Termination reason for the task
 typedef enum {
   TASK_TERM_REASON_EXIT = 0,
@@ -155,6 +159,17 @@ typedef struct {
   // Set if the task is processing the kernel callback
   bool in_callback;
 
+#ifdef TREZOR_EMULATOR
+  pthread_t pthread;
+  pthread_cond_t cv;
+  struct {
+    void (*fn)(uintptr_t, uintptr_t, uintptr_t);
+    uintptr_t arg1;
+    uintptr_t arg2;
+    uintptr_t arg3;
+  } entrypoint;
+#endif
+
 } systask_t;
 
 // Initializes the scheduler for tasks
@@ -200,13 +215,14 @@ void systask_pop_data(systask_t* task, size_t size);
 //
 // The task must be not be running when the function is called
 // Return `true` in case of success, `false` otherwise
-bool systask_push_call(systask_t* task, void* fn, uint32_t arg1, uint32_t arg2,
-                       uint32_t arg3);
+bool systask_push_call(systask_t* task, void* fn, uintptr_t arg1,
+                       uintptr_t arg2, uintptr_t arg3);
 
 // Invokes the callback function in the context of the given task
 //   uint32_t callback(uint32_t arg1, uint32_t arg2, uint32_t arg3);
-uint32_t systask_invoke_callback(systask_t* task, uint32_t arg1, uint32_t arg2,
-                                 uint32_t arg3, void* callback);
+uint32_t systask_invoke_callback(systask_t* task, uintptr_t arg1,
+                                 uintptr_t arg2, uintptr_t arg3,
+                                 void* callback);
 
 // Sets R0 and R1 registers of the suspended task
 void systask_set_r0r1(systask_t* task, uint32_t r0, uint32_t r1);
