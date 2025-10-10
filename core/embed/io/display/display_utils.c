@@ -22,7 +22,7 @@
 #include <io/display.h>
 #include <sys/systick.h>
 
-void display_fade(int start, int end, int delay) {
+void display_fade(uint8_t start, uint8_t end, int delay) {
 #ifdef USE_BACKLIGHT
   if (display_get_backlight() == end) {
     return;
