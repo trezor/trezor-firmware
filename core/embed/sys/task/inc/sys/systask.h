@@ -29,7 +29,6 @@ typedef enum {
   TASK_TERM_REASON_ERROR,
   TASK_TERM_REASON_FATAL,
   TASK_TERM_REASON_FAULT,
-  TASK_TERM_REASON_WIPE,
 
 } systask_term_reason_t;
 
@@ -225,12 +224,5 @@ void systask_exit_error(systask_t* task, const char* title, size_t title_len,
 void systask_exit_fatal(systask_t* task, const char* message,
                         size_t message_len, const char* file, size_t file_len,
                         int line);
-
-// Terminates the task with an error message and wipes user data
-//
-// (see `systask_exit()` for more details)
-void systask_exit_wipe(systask_t* task, const char* title, size_t title_len,
-                       const char* message, size_t message_len,
-                       const char* footer, size_t footer_len);
 
 #endif  // KERNEL_MODE

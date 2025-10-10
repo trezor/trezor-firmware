@@ -19,7 +19,10 @@
 
 #include <trezor_rtl.h>
 
+#include <rtl/mini_printf.h>
 #include <sys/system.h>
+
+#include "sys/bootutils.h"
 
 #ifndef TREZOR_EMULATOR
 // Stack check guard value set in startup code.
@@ -61,15 +64,34 @@ __fatal_error(const char *msg, const char *file, int line) {
 }
 
 void __attribute__((noreturn)) show_wipe_code_screen(void) {
-  system_exit_wipe("Wipe code entered", ALL_DATA_ERASED_MESSAGE,
-                   RECONNECT_DEVICE_MESSAGE);
+  bootutils_wipe_info_t info = {0};
+
+  const char *title = "Wipe code entered";
+
+  mini_snprintf(info.title, sizeof(info.title), "%s", title);
+  mini_snprintf(info.message, sizeof(info.message), "%s",
+                ALL_DATA_ERASED_MESSAGE);
+  mini_snprintf(info.footer, sizeof(info.footer), "%s",
+                RECONNECT_DEVICE_MESSAGE);
+
+  reboot_and_wipe(&info);
+
   while (1)
     ;
 }
 
 void __attribute__((noreturn)) show_pin_too_many_screen(void) {
-  system_exit_wipe("Pin attempts exceeded", ALL_DATA_ERASED_MESSAGE,
-                   RECONNECT_DEVICE_MESSAGE);
+  bootutils_wipe_info_t info = {0};
+
+  const char *title = "Pin attempts exceeded";
+
+  mini_snprintf(info.title, sizeof(info.title), "%s", title);
+  mini_snprintf(info.message, sizeof(info.message), "%s",
+                ALL_DATA_ERASED_MESSAGE);
+  mini_snprintf(info.footer, sizeof(info.footer), "%s",
+                RECONNECT_DEVICE_MESSAGE);
+
+  reboot_and_wipe(&info);
   while (1)
     ;
 }

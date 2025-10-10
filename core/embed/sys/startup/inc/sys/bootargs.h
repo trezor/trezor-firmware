@@ -20,6 +20,7 @@
 #ifndef TREZORHAL_BOOTARGS_H
 #define TREZORHAL_BOOTARGS_H
 
+#include <sys/bootutils.h>
 #include <sys/systask.h>
 #include <trezor_types.h>
 
@@ -50,6 +51,8 @@ typedef union {
   uint8_t hash[32];
   // error information, BOOT_COMMAND_SHOW_RSOD
   systask_postmortem_t pminfo;
+  // wipe information, BOOT_COMMAND_WIPE
+  bootutils_wipe_info_t wipeinfo;
 } boot_args_t;
 
 _Static_assert(sizeof(boot_args_t) == BOOT_ARGS_MAX_SIZE,

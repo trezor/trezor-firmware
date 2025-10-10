@@ -97,13 +97,6 @@ void system_exit_fatal_ex(const char* message, size_t message_len,
   systask_exit_fatal(NULL, message, message_len, file, file_len, line);
 }
 
-void system_exit_wipe_ex(const char* title, size_t title_len,
-                         const char* message, size_t message_len,
-                         const char* footer, size_t footer_len) {
-  systask_exit_wipe(NULL, title, title_len, message, message_len, footer,
-                    footer_len);
-}
-
 __attribute((noreturn, no_stack_protector)) static void
 system_emergency_rescue_phase_2(uint32_t arg1, uint32_t arg2) {
   systask_error_handler_t error_handler = (systask_error_handler_t)arg1;
@@ -253,13 +246,4 @@ void system_exit_fatal(const char* message, const char* file, int line) {
   size_t message_len = message != NULL ? strlen(message) : 0;
   size_t file_len = file != NULL ? strlen(file) : 0;
   system_exit_fatal_ex(message, message_len, file, file_len, line);
-}
-
-void system_exit_wipe(const char* title, const char* message,
-                      const char* footer) {
-  size_t title_len = title != NULL ? strlen(title) : 0;
-  size_t message_len = message != NULL ? strlen(message) : 0;
-  size_t footer_len = footer != NULL ? strlen(footer) : 0;
-  system_exit_wipe_ex(title, title_len, message, message_len, footer,
-                      footer_len);
 }

@@ -226,8 +226,8 @@ __attribute__((noreturn)) void reboot_with_rsod(
   reboot_with_args(BOOT_COMMAND_SHOW_RSOD, pminfo, sizeof(*pminfo));
 }
 __attribute__((noreturn)) void reboot_and_wipe(
-    const systask_postmortem_t* pminfo) {
-  reboot_with_args(BOOT_COMMAND_WIPE, pminfo, sizeof(*pminfo));
+    const bootutils_wipe_info_t* info) {
+  reboot_with_args(BOOT_COMMAND_WIPE, info, sizeof(*info));
 }
 
 __attribute__((noreturn)) void reboot_or_halt_after_rsod(void) {

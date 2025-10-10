@@ -84,17 +84,6 @@ void system_exit_fatal(const char* message, const char* file, int line);
 void system_exit_fatal_ex(const char* message, size_t message_len,
                           const char* file, size_t file_len, int line);
 
-// Terminates the current task, reboots the device and wipes all user data
-//
-// See the notes for `system_exit` regarding the behavior of the error handler
-void system_exit_wipe(const char* title, const char* message,
-                      const char* footer);
-
-// Like `system_exit_wipe`, but with explicit lengths for the strings.
-void system_exit_wipe_ex(const char* title, size_t title_len,
-                         const char* message, size_t message_len,
-                         const char* footer, size_t footer_len);
-
 // Returns string representation of the system fault.
 const char* system_fault_message(const system_fault_t* fault);
 

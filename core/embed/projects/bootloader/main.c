@@ -86,6 +86,7 @@
 #endif
 
 #include "bootui.h"
+#include "rust_ui_common.h"
 #include "version_check.h"
 #include "wire/wire_iface_usb.h"
 #include "workflow/workflow.h"
@@ -538,7 +539,8 @@ int bootloader_main(void) {
     // post mortem info was left in bootargs
     boot_args_t args;
     bootargs_get_args(&args);
-    rsod_gui(&args.pminfo);
+    display_rsod_rust(args.wipeinfo.title, args.wipeinfo.message,
+                      args.wipeinfo.footer);
     reboot_or_halt_after_rsod();
   }
 
