@@ -68,7 +68,7 @@ FROZEN = True
 
 env = Environment(
     ENV=os.environ,
-    CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DPYOPT={PYOPT} -DBOOTLOADER_QA={int(BOOTLOADER_QA)} -DBITCOIN_ONLY={BITCOIN_ONLY} -USCM_REVISION_INIT",
+    CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DPYOPT={PYOPT} -DBOOTLOADER_QA={int(BOOTLOADER_QA)} -DBOOTLOADER_DEVEL={int(BOOTLOADER_DEVEL)} -DBITCOIN_ONLY={BITCOIN_ONLY} -USCM_REVISION_INIT",
     CPPDEFINES_IMPLICIT=[],
     CPPDEFPREFIX="-D'",
     CPPDEFSUFFIX="'",
@@ -421,7 +421,7 @@ if TREZOR_MODEL in ('T3B1', 'T3T1'):
 else:
     action_bin=[
         '$OBJCOPY -O binary -j .secmon_header -j .flash -j .data -j .confidential -j .gnu.sgstubs $SOURCE ${TARGET}',
-        '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
+        '$HEADERTOOL -h $TARGET ' + ('-D' if not (BOOTLOADER_DEVEL or not PRODUCTION) else ''),
         '$CP $TARGET ' + BINARY_NAME,
     ]
 
