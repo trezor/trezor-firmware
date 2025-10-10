@@ -42,8 +42,8 @@ pub struct ValueInputScreen<T: ValueInput> {
 }
 
 impl<T: ValueInput> ValueInputScreen<T> {
-    const DESCRIPTION_HEIGHT: i16 = 123;
-    const INPUT_HEIGHT: i16 = 170;
+    const DESCRIPTION_HEIGHT: i16 = 108;
+    const INPUT_HEIGHT: i16 = 202;
     pub fn new(value: T, text: TString<'static>) -> Self {
         Self {
             header: Header::new(TString::empty()),
@@ -398,9 +398,9 @@ impl<T: ValueInput> Component for ValueInputDialog<T> {
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.render_borders(target);
-        self.render_number(target);
         self.dec.render(target);
         self.inc.render(target);
+        self.render_number(target);
     }
 }
 
