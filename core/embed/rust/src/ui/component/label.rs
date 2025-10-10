@@ -86,12 +86,6 @@ impl<'a> Label<'a> {
         self.layout.align
     }
 
-    pub fn max_size(&self) -> Offset {
-        let font = self.font();
-        let width = self.text.map(|c| font.text_width(c));
-        Offset::new(width, font.text_max_height())
-    }
-
     pub fn text_height(&self, width: i16) -> i16 {
         let bounds = Rect::from_top_left_and_size(Point::zero(), Offset::new(width, i16::MAX));
 
