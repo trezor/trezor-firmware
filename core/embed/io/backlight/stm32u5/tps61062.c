@@ -77,7 +77,7 @@ bool backlight_init(backlight_action_t action) {
   backlight_driver_t *drv = &g_backlight_driver;
 
   if (drv->initialized) {
-    return false;
+    return true;
   }
 
   memset(drv, 0, sizeof(backlight_driver_t));
