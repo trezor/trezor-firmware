@@ -300,7 +300,10 @@ class VendorHeader(firmware.VendorHeader, CosiSignedMixin):
     NAME: t.ClassVar[str] = "vendorheader"
     DEV_KEYS = _make_dev_keys(b"\x44", b"\x45")
 
-    SUBCON = c.Struct(*firmware.VendorHeader.SUBCON.subcons, c.Terminated)
+    SUBCON = c.Struct(
+        *firmware.VendorHeader.SUBCON.subcons,  # type: ignore  [Cannot access attribute]
+        c.Terminated,
+    )
 
     def get_header(self) -> CosiSignatureHeaderProto:
         return self
