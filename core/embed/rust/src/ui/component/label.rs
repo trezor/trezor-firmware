@@ -1,9 +1,9 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{Component, Event, EventCtx, Never},
+        component::{text::layout::LayoutFit, Component, Event, EventCtx, Never},
         display::Font,
-        geometry::{Alignment, Insets, Offset, Point, Rect},
+        geometry::{Alignment, Offset, Point, Rect},
         shape::Renderer,
     },
 };
@@ -62,6 +62,10 @@ impl<'a> Label<'a> {
         &self.text
     }
 
+    pub fn style(&self) -> &TextStyle {
+        &self.layout.style
+    }
+
     pub fn set_text(&mut self, text: TString<'a>) {
         self.text = text;
     }
@@ -82,31 +86,13 @@ impl<'a> Label<'a> {
         self.layout.align
     }
 
-    pub fn max_size(&self) -> Offset {
-        let font = self.font();
-        let width = self.text.map(|c| font.text_width(c));
-        Offset::new(width, font.text_max_height())
-    }
-
     pub fn text_height(&self, width: i16) -> i16 {
         let bounds = Rect::from_top_left_and_size(Point::zero(), Offset::new(width, i16::MAX));
-
-        self.text
-            .map(|c| self.layout.with_bounds(bounds).fit_text(c).height())
-    }
-
-    pub fn text_area(&self) -> Rect {
-        // XXX only works on single-line labels
-        let available_width = self.layout.bounds.width();
-        let width = self.text.map(|c| self.font().text_width(c));
-        let height = self.font().text_height();
-        let cursor = self.layout.initial_cursor();
-        let baseline = match self.alignment() {
-            Alignment::Start => cursor,
-            Alignment::Center => cursor + Offset::x(available_width / 2) - Offset::x(width / 2),
-            Alignment::End => cursor + Offset::x(available_width) - Offset::x(width),
-        };
-        Rect::from_bottom_left_and_size(baseline, Offset::new(width, height))
+        let layout_fit = self
+            .text
+            .map(|c| self.layout.with_bounds(bounds).fit_text(c));
+        debug_assert!(matches!(layout_fit, LayoutFit::Fitting { .. }));
+        layout_fit.height()
     }
 
     pub fn render_with_alpha<'s>(&self, target: &mut impl Renderer<'s>, alpha: u8) {
@@ -119,16 +105,19 @@ impl Component for Label<'_> {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let height = self
+        let layout_fit = self
             .text
-            .map(|c| self.layout.with_bounds(bounds).fit_text(c).height());
-        let diff = bounds.height() - height;
-        let insets = match self.vertical {
-            Alignment::Start => Insets::bottom(diff),
-            Alignment::Center => Insets::new(diff / 2, 0, diff / 2 + diff % 2, 0),
-            Alignment::End => Insets::top(diff),
+            .map(|c| self.layout.with_bounds(bounds).fit_text(c));
+        debug_assert!(matches!(layout_fit, LayoutFit::Fitting { .. }));
+        let diff = (bounds.height() - layout_fit.height()).max(0);
+        let (padding_top, padding_bottom) = match self.vertical {
+            Alignment::Start => (0, diff),
+            Alignment::Center => (diff / 2, diff / 2),
+            Alignment::End => (diff, 0),
         };
-        self.layout.bounds = bounds.inset(insets);
+        self.layout.padding_top = padding_top;
+        self.layout.padding_bottom = padding_bottom;
+        self.layout.bounds = bounds;
         self.layout.bounds
     }
 

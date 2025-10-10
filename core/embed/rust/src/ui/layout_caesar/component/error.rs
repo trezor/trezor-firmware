@@ -47,7 +47,11 @@ impl Component for ErrorScreen<'_> {
     fn place(&mut self, _bounds: Rect) -> Rect {
         self.bg.place(screen());
 
-        let text_width = self.title.inner().max_size().x;
+        let text_width = self
+            .title
+            .inner()
+            .text()
+            .map(|t| self.title.inner().style().text_font.text_width(t));
         if text_width > screen().width() - 2 * TITLE_AREA_HEIGHT {
             // if the title is too long, don't show the icons
             self.show_icons = false;
