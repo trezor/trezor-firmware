@@ -10,12 +10,12 @@
         "slip44": 60
     },
     {
-        "chain": "hol",
-        "chain_id": 17000,
+        "chain": "hod",
+        "chain_id": 560048,
         "is_testnet": true,
-        "name": "Holesky",
-        "shortcut": "tHOL",
-        "symbol": "tHOL",
+        "name": "Hoodi",
+        "shortcut": "tHOD",
+        "symbol": "tHOD",
         "slip44": 1
     },
     {
