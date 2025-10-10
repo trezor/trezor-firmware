@@ -335,6 +335,7 @@ jobs:
       # MULTICORE: 4  # more could interfere with other jobs
       PYTEST_TIMEOUT: 400
       TEST_LANG: ${{ matrix.lang }}
+      TESTOPTS: "--durations 10"
     steps:
       - uses: actions/checkout@v4
         with:
