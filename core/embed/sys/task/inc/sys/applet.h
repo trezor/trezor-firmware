@@ -36,10 +36,8 @@ typedef struct {
   applet_layout_t layout;
   // Applet privileges
   applet_privileges_t privileges;
-
   // Applet task
   systask_t task;
-
 } applet_t;
 
 // Initializes the applet structure
