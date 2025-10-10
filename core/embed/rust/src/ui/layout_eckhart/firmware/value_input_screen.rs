@@ -42,8 +42,8 @@ pub struct ValueInputScreen<T: ValueInput> {
 }
 
 impl<T: ValueInput> ValueInputScreen<T> {
-    const DESCRIPTION_HEIGHT: i16 = 123;
-    const INPUT_HEIGHT: i16 = 170;
+    const DESCRIPTION_HEIGHT: i16 = 108;
+    const INPUT_HEIGHT: i16 = 202;
     pub fn new(value: T, text: TString<'static>) -> Self {
         Self {
             header: Header::new(TString::empty()),
