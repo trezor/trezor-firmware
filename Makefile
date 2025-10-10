@@ -163,6 +163,12 @@ lsgen: ## generate linker scripts
 lsgen_check: ## check generated linker scripts
 	lsgen --check
 
-gen:  templates mocks icons protobuf vendorheader solana_templates bootloader_hashes lsgen ## regenerate auto-generated files from sources
+tropic_model_config:
+	./core/tools/generate_tropic_model_config.py
 
-gen_check: templates_check mocks_check icons_check protobuf_check vendorheader_check solana_templates_check bootloader_hashes_check lsgen_check ## check validity of auto-generated files
+tropic_model_config_check:
+	./core/tools/generate_tropic_model_config.py --check
+
+gen:  templates mocks icons protobuf vendorheader solana_templates bootloader_hashes lsgen tropic_model_config ## regenerate auto-generated files from sources
+
+gen_check: templates_check mocks_check icons_check protobuf_check vendorheader_check solana_templates_check bootloader_hashes_check lsgen_check tropic_model_config_check ## check validity of auto-generated files

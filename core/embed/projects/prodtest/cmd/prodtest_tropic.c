@@ -1651,7 +1651,11 @@ static void prodtest_tropic_update_fw(cli_t* cli) {
     return;
   }
 
+#if TREZOR_EMULATOR
+  tropic_init(28992);
+#else
   tropic_init();
+#endif
 
   lt_handle_t* h = tropic_get_handle();
 
