@@ -274,12 +274,6 @@
       "Delizia": "",
       "Eckhart": "Versão do Bluetooth"
     },
-    "ble__waiting_for_host": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Aguardando a conexão..."
-    },
     "brightness__change_title": "Alterar brilho da tela",
     "brightness__changed_title": "Exibir brilho alterado",
     "brightness__title": "Exibir brilho",
@@ -2291,6 +2285,7 @@
     "words__unknown": "Desconhecido",
     "words__unlimited": "Ilimitado",
     "words__unlocked": "Desbloqueado",
+    "words__waiting_for_host": "Aguardando a conexão...",
     "words__wallet": "Carteira",
     "words__warning": "Aviso",
     "words__wipe": {

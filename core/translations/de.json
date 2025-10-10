@@ -314,12 +314,6 @@
       "Delizia": "",
       "Eckhart": "Bluetooth-Version"
     },
-    "ble__waiting_for_host": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Warten auf Verbindung..."
-    },
     "brightness__change_title": "Display-Helligkeit ändern",
     "brightness__changed_title": "Display-Helligkeit geändert",
     "brightness__title": "Helligkeit einstellen",
@@ -2601,6 +2595,7 @@
     "words__unknown": "Unbekannt",
     "words__unlimited": "Unbegrenzt",
     "words__unlocked": "Entsperrt",
+    "words__waiting_for_host": "Warten auf Verbindung",
     "words__wallet": "Wallet",
     "words__warning": "Warnung",
     "words__wipe": {
