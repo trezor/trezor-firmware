@@ -1684,11 +1684,11 @@ secbool storage_change_wipe_code(const uint8_t *pin, size_t pin_len,
     return secfalse;
   }
 
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
+
   ui_progress_init(STORAGE_PIN_OP_VERIFY);
   ui_message =
       (pin_len != 0 && wipe_code_len == 0) ? VERIFYING_PIN_MSG : PROCESSING_MSG;
-
-  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
 
   secbool ret = unlock(pin, pin_len, ext_salt);
   if (sectrue != ret) {
