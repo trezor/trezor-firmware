@@ -129,12 +129,7 @@
       "Delizia": "Verrouillage auto de votre Trezor après {0} d'inactivité ?",
       "Eckhart": "Verrouillage auto de votre Trezor après {0} d'inactivité ?"
     },
-    "auto_lock__description": {
-      "Bolt": "Définissez le délai avant que votre Trezor se verrouille automatiquement.",
-      "Caesar": "Définissez le délai avant que votre Trezor se verrouille automatiquement.",
-      "Delizia": "Définissez le délai avant que votre Trezor se verrouille automatiquement.",
-      "Eckhart": "Définissez le délai avant que votre Trezor se verrouille automatiquement.le délai avant verrouillage auto de votre Trezor."
-    },
+    "auto_lock__description": "Définissez le délai avant que votre Trezor se verrouille automatiquement.",
     "auto_lock__on_battery": {
       "Bolt": "",
       "Caesar": "",
@@ -1269,7 +1264,12 @@
     "pin__title_check_pin": "Vérifier le PIN",
     "pin__title_settings": "Paramètres du code PIN",
     "pin__title_wrong_pin": "PIN incorrect",
-    "pin__tries_left": "essais restants",
+    "pin__tries_left": {
+      "Bolt": "essais restants",
+      "Caesar": "essais restants",
+      "Delizia": "essais restants",
+      "Eckhart": "essais"
+    },
     "pin__turn_off": "Voulez-vous vraiment désactiver la protection par PIN ?",
     "pin__turn_on": "Activer la protection par code PIN ?",
     "pin__wipe_code_exists_description": {
@@ -1519,7 +1519,7 @@
       "Bolt": "Sélectionner {0} mot",
       "Caesar": "Sélectionner {0} mot",
       "Delizia": "Sélectionner {0} mot",
-      "Eckhart": "Sélectionnez le mot #{0} de la sauvegarde de votre portefeuille"
+      "Eckhart": "Sélectionnez le mot #{0} de la sauvegarde."
     },
     "reset__select_word_x_of_y_template": {
       "Bolt": "Mot {0} sur {1} :",

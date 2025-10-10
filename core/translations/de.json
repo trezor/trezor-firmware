@@ -1339,7 +1339,12 @@
     "reset__required_number_of_groups": "Zur Wiederherstellung erforderliche Anzahl von Gruppen.",
     "reset__select_correct_word": "Wähle für jede Position das richtige Wort.",
     "reset__select_threshold": "Wähle die Mindestzahl Shares zur Wiederherstellung.",
-    "reset__select_word_from_share_template": "Wählen Sie das Wort #{0} von\nShare #{1}",
+    "reset__select_word_from_share_template": {
+      "Bolt": "Wählen Sie das Wort #{0} von\nShare #{1}",
+      "Caesar": "Wählen Sie das Wort #{0} von\nShare #{1}",
+      "Delizia": "Wählen Sie das Wort #{0} von\nShare #{1}",
+      "Eckhart": "Wählen Sie das Wort #{0} von Share #{1}"
+    },
     "reset__select_word_template": {
       "Bolt": "{0} Wort auswählen",
       "Caesar": "{0} wort auswählen",
