@@ -98,6 +98,7 @@ class EmulatorWrapper:
         headless: bool = True,
         auto_interact: bool = True,
         main_args: Sequence[str] = ("-m", "main"),
+        launch_tropic_model: bool = False,
     ) -> None:
         if tag is not None:
             executable = filename_from_tag(gen, tag)
@@ -137,6 +138,7 @@ class EmulatorWrapper:
                 self.profile_dir.name,
                 storage=storage,
                 workdir=workdir,
+                launch_tropic_model=launch_tropic_model,
                 tropic_model_port=_get_tropic_model_port(worker_id),
                 tropic_model_configfile=str(TROPIC_MODEL_CONFIGFILE),
                 tropic_model_logfile=tropic_model_logfile,
