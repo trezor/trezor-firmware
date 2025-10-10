@@ -279,12 +279,6 @@
       "Delizia": "",
       "Eckhart": "Verze Bluetooth"
     },
-    "ble__waiting_for_host": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Čekání na připojení..."
-    },
     "brightness__change_title": "Změnit jas displeje",
     "brightness__changed_title": "Jas displeje byl změněn",
     "brightness__title": "Nastavení jasu",
@@ -2311,6 +2305,7 @@
     "words__unknown": "Neznámé",
     "words__unlimited": "Neomezeně",
     "words__unlocked": "Odemčeno",
+    "words__waiting_for_host": "Čekání na připojení...",
     "words__wallet": "Peněženka",
     "words__warning": "Varování",
     "words__wipe": {
