@@ -36,7 +36,7 @@ typedef struct {
   // Set if driver is initialized
   bool initialized;
   // Current backlight level in range 0-255
-  int current_level;
+  uint8_t current_level;
 
 } backlight_driver_t;
 
@@ -45,11 +45,11 @@ static backlight_driver_t g_backlight_driver = {
     .initialized = false,
 };
 
-void backlight_init(backlight_action_t action) {
+bool backlight_init(backlight_action_t action) {
   backlight_driver_t *drv = &g_backlight_driver;
 
   if (drv->initialized) {
-    return;
+    return true;
   }
 
   memset(drv, 0, sizeof(backlight_driver_t));
@@ -188,6 +188,8 @@ void backlight_init(backlight_action_t action) {
   drv->initialized = true;
 
   backlight_set(initial_level);
+
+  return true;
 }
 
 void backlight_deinit(backlight_action_t action) {
@@ -265,30 +267,28 @@ static void backlight_wakeup_pulse(void) {
   HAL_GPIO_Init(TPS61043_PORT, &GPIO_InitStructure);
 }
 
-int backlight_set(int level) {
+bool backlight_set(uint8_t level) {
   backlight_driver_t *drv = &g_backlight_driver;
 
   if (!drv->initialized) {
-    return 0;
+    return false;
   }
 
-  if (level >= 0 && level <= 255) {
-    // TPS61043 goes to shutdown when duty cycle is 0 (after 32ms),
-    // so we need to set GPIO to high for at least 500us
-    // to wake it up.
-    if (TPS61043_TIM->TPS61043_TIM_CCR == 0 && level != 0) {
-      backlight_wakeup_pulse();
-    }
-
-    TPS61043_TIM->CCR1 = (LED_PWM_TIM_PERIOD * level) / 255;
-
-    drv->current_level = level;
+  // TPS61043 goes to shutdown when duty cycle is 0 (after 32ms),
+  // so we need to set GPIO to high for at least 500us
+  // to wake it up.
+  if (TPS61043_TIM->TPS61043_TIM_CCR == 0 && level != 0) {
+    backlight_wakeup_pulse();
   }
 
-  return drv->current_level;
+  TPS61043_TIM->CCR1 = (LED_PWM_TIM_PERIOD * level) / 255;
+
+  drv->current_level = level;
+
+  return true;
 }
 
-int backlight_get(void) {
+uint8_t backlight_get(void) {
   backlight_driver_t *drv = &g_backlight_driver;
 
   if (!drv->initialized) {

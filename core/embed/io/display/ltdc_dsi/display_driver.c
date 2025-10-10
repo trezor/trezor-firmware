@@ -442,11 +442,11 @@ void display_deinit(display_content_mode_t mode) {
   memset(drv, 0, sizeof(display_driver_t));
 }
 
-int display_set_backlight(int level) {
+bool display_set_backlight(uint8_t level) {
   display_driver_t *drv = &g_display_driver;
 
   if (!drv->initialized) {
-    return 0;
+    return false;
   }
 
 #ifdef USE_BACKLIGHT
@@ -458,11 +458,11 @@ int display_set_backlight(int level) {
 #else
   // Just emulation, not doing anything
   drv->backlight_level = level;
-  return level;
+  return true;
 #endif
 }
 
-int display_get_backlight(void) {
+uint8_t display_get_backlight(void) {
   display_driver_t *drv = &g_display_driver;
 
   if (!drv->initialized) {

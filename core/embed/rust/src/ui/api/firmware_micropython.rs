@@ -35,7 +35,7 @@ use crate::{
 use heapless::Vec;
 
 #[cfg(feature = "backlight")]
-use crate::ui::display::{backlight, fade_backlight_duration, set_backlight};
+use crate::ui::display::{fade_backlight_duration, get_backlight, set_backlight};
 
 /// Dummy implementation so that we can use `Empty` in a return type of
 /// unimplemented trait function
@@ -1319,7 +1319,7 @@ pub extern "C" fn upy_backlight_get() -> Obj {
     let block = || {
         #[cfg(feature = "backlight")]
         {
-            let backlight_level = backlight();
+            let backlight_level = get_backlight();
             Ok(Obj::from(backlight_level))
         }
         #[cfg(not(feature = "backlight"))]
