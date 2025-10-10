@@ -87,7 +87,6 @@ else:
 
         _SHOULD_SUSPEND = False
         set_homescreen()
-        backlight_fade(BacklightLevels.NORMAL)
 
     async def _suspend_and_resume_task() -> None:
         """Task to suspend Trezor and handle wakeup.
