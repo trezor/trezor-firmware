@@ -398,9 +398,9 @@ impl<T: ValueInput> Component for ValueInputDialog<T> {
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.render_borders(target);
-        self.render_number(target);
         self.dec.render(target);
         self.inc.render(target);
+        self.render_number(target);
     }
 }
 
