@@ -63,7 +63,6 @@ secbool secret_key_optiga_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
 secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   return secret_key_derive_nist256p1(SECRET_UNPRIVILEGED_MASTER_KEY_SLOT,
                                      KEY_INDEX_DELEGATED_IDENTITY, dest);
-  return sectrue;
 }
 
 #endif  // USE_OPTIGA
@@ -177,8 +176,7 @@ secbool secret_key_optiga_pairing(uint8_t dest[OPTIGA_PAIRING_SECRET_SIZE]) {
 #endif  // USE_OPTIGA
 
 secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
-  secret_key_derive_nist256p1(0, KEY_INDEX_DELEGATED_IDENTITY, dest);
-  return sectrue;
+  return secret_key_derive_nist256p1(0, KEY_INDEX_DELEGATED_IDENTITY, dest);
 }
 
 #endif  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
