@@ -5,15 +5,15 @@ from trezorcrypto.bip32 import HDNode
 
 # upymod/modtrezorcrypto/modtrezorcrypto-cardano.h
 def derive_icarus(
-    mnemonic: str,
+    mnemonic: bytes,
     passphrase: str,
     trezor_derivation: bool,
     callback: Callable[[int, int], None] | None = None,
 ) -> bytes:
     """
-    Derives a Cardano master secret from a mnemonic and passphrase using the
-    Icarus derivation scheme.
-    If `trezor_derivation` is True, the Icarus-Trezor variant is used (see
+    Derives a Cardano master secret from a mnemonic representation in bits
+    and a passphrase using the Icarus derivation scheme. If
+    `trezor_derivation` is True, the Icarus-Trezor variant is used (see
     CIP-3).
     """
 
