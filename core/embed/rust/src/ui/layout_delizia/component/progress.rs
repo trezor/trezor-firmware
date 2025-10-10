@@ -59,7 +59,7 @@ impl Component for Progress {
             .inner()
             .content()
             .map(|t| t.chars().filter(|c| *c == '\n').count() as i16);
-        let (title, rest) = Self::AREA.split_top(self.title.max_size().y);
+        let (title, rest) = Self::AREA.split_top(self.title.style().text_font.text_max_height());
         let (loader, description) =
             rest.split_bottom(fonts::FONT_DEMIBOLD.line_height() * description_lines);
         let loader = loader.inset(Insets::top(theme::CONTENT_BORDER));

@@ -88,7 +88,8 @@ impl Component for Progress {
         let no_title_case = (Rect::zero(), Self::AREA, LOADER_Y_OFFSET_NO_TITLE);
         let (title, rest, loader_y_offset) = if let Some(self_title) = &self.title {
             if !self_title.inner().text().is_empty() {
-                let (title, rest) = Self::AREA.split_top(self_title.inner().max_size().y);
+                let (title, rest) =
+                    Self::AREA.split_top(self_title.inner().style().text_font.text_max_height());
                 (title, rest, LOADER_Y_OFFSET_TITLE)
             } else {
                 no_title_case

@@ -154,9 +154,16 @@ impl Homescreen {
         // the margin at top is bigger (caused by text-height vs line-height?)
         // compensate by shrinking the outset
         outset.top -= 5;
-        shape::Bar::new(self.label.text_area().outset(outset))
-            .with_bg(theme::BG)
-            .render(target);
+
+        let text_size = self.label.text().map(|t| {
+            Offset::new(
+                theme::TEXT_BIG.text_font.text_width(t),
+                self.label.style().text_font.text_max_height(),
+            )
+        });
+        let text_area =
+            Rect::snap(self.label.area().center(), text_size, Alignment2D::CENTER).outset(outset);
+        shape::Bar::new(text_area).with_bg(theme::BG).render(target);
 
         self.label.render(target);
     }

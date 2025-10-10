@@ -62,6 +62,10 @@ impl<'a> Label<'a> {
         &self.text
     }
 
+    pub fn style(&self) -> &TextStyle {
+        &self.layout.style
+    }
+
     pub fn set_text(&mut self, text: TString<'a>) {
         self.text = text;
     }
@@ -82,31 +86,11 @@ impl<'a> Label<'a> {
         self.layout.align
     }
 
-    pub fn max_size(&self) -> Offset {
-        let font = self.font();
-        let width = self.text.map(|c| font.text_width(c));
-        Offset::new(width, font.text_max_height())
-    }
-
     pub fn text_height(&self, width: i16) -> i16 {
         let bounds = Rect::from_top_left_and_size(Point::zero(), Offset::new(width, i16::MAX));
 
         self.text
             .map(|c| self.layout.with_bounds(bounds).fit_text(c).height())
-    }
-
-    pub fn text_area(&self) -> Rect {
-        // XXX only works on single-line labels
-        let available_width = self.layout.bounds.width();
-        let width = self.text.map(|c| self.font().text_width(c));
-        let height = self.font().text_height();
-        let cursor = self.layout.initial_cursor();
-        let baseline = match self.alignment() {
-            Alignment::Start => cursor,
-            Alignment::Center => cursor + Offset::x(available_width / 2) - Offset::x(width / 2),
-            Alignment::End => cursor + Offset::x(available_width) - Offset::x(width),
-        };
-        Rect::from_bottom_left_and_size(baseline, Offset::new(width, height))
     }
 
     pub fn render_with_alpha<'s>(&self, target: &mut impl Renderer<'s>, alpha: u8) {
