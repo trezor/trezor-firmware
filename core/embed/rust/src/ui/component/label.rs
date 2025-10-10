@@ -3,7 +3,7 @@ use crate::{
     ui::{
         component::{text::layout::LayoutFit, Component, Event, EventCtx, Never},
         display::Font,
-        geometry::{Alignment, Insets, Offset, Point, Rect},
+        geometry::{Alignment, Offset, Point, Rect},
         shape::Renderer,
     },
 };
@@ -110,12 +110,14 @@ impl Component for Label<'_> {
             .map(|c| self.layout.with_bounds(bounds).fit_text(c));
         debug_assert!(matches!(layout_fit, LayoutFit::Fitting { .. }));
         let diff = (bounds.height() - layout_fit.height()).max(0);
-        let insets = match self.vertical {
-            Alignment::Start => Insets::bottom(diff),
-            Alignment::Center => Insets::new(diff / 2, 0, diff / 2 + diff % 2, 0),
-            Alignment::End => Insets::top(diff),
+        let (padding_top, padding_bottom) = match self.vertical {
+            Alignment::Start => (0, diff),
+            Alignment::Center => (diff / 2, diff / 2),
+            Alignment::End => (diff, 0),
         };
-        self.layout.bounds = bounds.inset(insets);
+        self.layout.padding_top = padding_top;
+        self.layout.padding_bottom = padding_bottom;
+        self.layout.bounds = bounds;
         self.layout.bounds
     }
 
