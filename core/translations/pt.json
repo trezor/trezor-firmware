@@ -1374,7 +1374,12 @@
     "pin__title_check_pin": "Verificar PIN",
     "pin__title_settings": "Config. PIN",
     "pin__title_wrong_pin": "PIN incorreto",
-    "pin__tries_left": "tentativas restantes",
+    "pin__tries_left": {
+      "Bolt": "tentativas restantes",
+      "Caesar": "tentativas restantes",
+      "Delizia": "tentativas restantes",
+      "Eckhart": "tent."
+    },
     "pin__turn_off": "Deseja desligar a proteção por PIN?",
     "pin__turn_on": "Ligar proteção por PIN?",
     "pin__wipe_code_exists_description": {
