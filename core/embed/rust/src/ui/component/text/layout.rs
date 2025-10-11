@@ -257,6 +257,7 @@ impl TextLayout {
         #[cfg(feature = "ui_debug")]
         if _must_fit && matches!(fit, LayoutFit::OutOfBounds { .. }) {
             target.raise_overflow_exception();
+            fatal_error!(&uformat!(len: 128, "Text too long: '{}'", text));
         }
 
         fit

@@ -1604,7 +1604,12 @@
     "reset__required_number_of_groups": "El nro.de grupos necesario para la recuperación.",
     "reset__select_correct_word": "Selecciona la palabra correcta para cada posición.",
     "reset__select_threshold": "Selecciona los recursos mínimos para recuperar el monedero.",
-    "reset__select_word_from_share_template": "Seleccionar la palabra #{0} del\nFragmento #{1}",
+    "reset__select_word_from_share_template": {
+      "Bolt": "Seleccionar la palabra #{0} del\nFragmento #{1}",
+      "Caesar": "Seleccionar la palabra #{0} del\nFragmento #{1}",
+      "Delizia": "Seleccionar la palabra #{0} del\nFragmento #{1}",
+      "Eckhart": "Seleccionar la palabra #{0} del Fragmento #{1}"
+    },
     "reset__select_word_template": "Usar {0} palabra",
     "reset__select_word_x_of_y_template": "Palabra {0} de {1}:",
     "reset__set_it_to_count_template": "Ajústalo en {0} y necesitarás ",
