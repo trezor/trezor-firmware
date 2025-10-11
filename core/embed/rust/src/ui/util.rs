@@ -47,28 +47,6 @@ pub fn char_to_string(ch: char) -> ShortString {
     s
 }
 
-/// Splits `text` in two lines:
-/// the first line has to fit in the `available_width`,
-/// while the 2nd line contains the rest of the text.
-pub fn split_two_lines(text: &str, text_font: Font, available_width: i16) -> (&str, &str) {
-    let p = text_font.longest_prefix(available_width, text);
-    let (first_line, second_line) = if p.is_empty() {
-        // If we cannot find a space to split on, we won't split at all.
-        // It is the caller's responsibility to deal with the extra long 2nd line.
-        // (Remember, 2nd line can always be longer than the width, anyway!)
-        ("", text)
-    } else {
-        (p, text[p.len()..].trim())
-    };
-
-    #[cfg(feature = "ui_debug")]
-    if text_font.text_width(second_line) > available_width {
-        fatal_error!(&uformat!(len: 128, "Text too long: '{}'", text));
-    }
-
-    (first_line, second_line)
-}
-
 /// Returns text to be fit on one line of a given length.
 /// When the text is too long to fit, it is truncated with ellipsis
 /// on the left side.

@@ -4,12 +4,14 @@ use crate::{
     strutil::TString,
     time::ShortDuration,
     ui::{
-        component::{Component, Event, EventCtx, Timer},
+        component::{
+            text::{layout::LayoutFit, TextStyle},
+            Component, Event, EventCtx, TextLayout, Timer,
+        },
         display::{toif::Icon, Color, Font},
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         shape::{self, Renderer},
-        util::split_two_lines,
     },
 };
 
@@ -26,7 +28,7 @@ pub struct Button {
     area: Rect,
     touch_expand: Insets,
     content: ButtonContent,
-    styles: ButtonStyleSheet,
+    stylesheet: ButtonStyleSheet,
     text_align: Alignment,
     radius: Option<u8>,
     state: State,
@@ -46,7 +48,7 @@ impl Button {
             content,
             area: Rect::zero(),
             touch_expand: Insets::zero(),
-            styles: theme::button_default(),
+            stylesheet: theme::button_default(),
             text_align: Alignment::Start,
             radius: None,
             state: State::Initial,
@@ -72,8 +74,8 @@ impl Button {
         Self::new(ButtonContent::Empty)
     }
 
-    pub const fn styled(mut self, styles: ButtonStyleSheet) -> Self {
-        self.styles = styles;
+    pub const fn styled(mut self, stylesheet: ButtonStyleSheet) -> Self {
+        self.stylesheet = stylesheet;
         self
     }
 
@@ -147,18 +149,18 @@ impl Button {
         &self.content
     }
 
-    pub fn set_stylesheet(&mut self, ctx: &mut EventCtx, styles: ButtonStyleSheet) {
-        if self.styles != styles {
-            self.styles = styles;
+    pub fn set_stylesheet(&mut self, ctx: &mut EventCtx, stylesheet: ButtonStyleSheet) {
+        if self.stylesheet != stylesheet {
+            self.stylesheet = stylesheet;
             ctx.request_paint();
         }
     }
 
-    pub fn style(&self) -> &ButtonStyle {
+    pub fn button_style(&self) -> &ButtonStyle {
         match self.state {
-            State::Initial | State::Released => self.styles.normal,
-            State::Pressed => self.styles.active,
-            State::Disabled => self.styles.disabled,
+            State::Initial | State::Released => self.stylesheet.normal,
+            State::Pressed => self.stylesheet.active,
+            State::Disabled => self.stylesheet.disabled,
         }
     }
 
@@ -205,7 +207,7 @@ impl Button {
         match &self.content {
             ButtonContent::Empty => {}
             ButtonContent::Text(text) => {
-                let y_offset = Offset::y(self.style().font.text_height() / 2);
+                let y_offset = Offset::y(self.button_style().font.text_height() / 2);
                 let start_of_baseline = match self.text_align {
                     Alignment::Start => {
                         self.area.left_center() + Offset::x(Self::BASELINE_OFFSET.x)
@@ -229,19 +231,13 @@ impl Button {
                     .render(target);
             }
             ButtonContent::IconAndText(child) => {
-                child.render(
-                    target,
-                    self.area,
-                    self.style(),
-                    Self::BASELINE_OFFSET,
-                    alpha,
-                );
+                child.render(target, self.area, self.button_style(), alpha);
             }
         }
     }
 
     pub fn render_with_alpha<'s>(&self, target: &mut impl Renderer<'s>, alpha: u8) {
-        let style = self.style();
+        let style = self.button_style();
         self.render_background(target, style, alpha);
         self.render_content(target, style, alpha);
     }
@@ -351,7 +347,7 @@ impl Component for Button {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let style = self.style();
+        let style = self.button_style();
         self.render_background(target, style, 0xFF);
         self.render_content(target, style, 0xFF);
     }
@@ -423,36 +419,52 @@ impl IconText {
         }
     }
 
+    fn text_style(&self, style: &ButtonStyle) -> TextStyle {
+        TextStyle::new(
+            style.font,
+            style.text_color,
+            style.button_color,
+            style.text_color,
+            style.text_color,
+        )
+    }
+
+    /// Compute the height required to render the given text at the given width.
+    /// Must be functional before placing the button.
+    fn text_height(&self, text: &str, width: i16, textstyle: TextStyle) -> i16 {
+        // Create rect with precise width and a large enough height to fit the text.
+        let bounds = Rect::from_size(Offset::new(width, 200));
+        let layout_fit = TextLayout::new(textstyle)
+            .with_bounds(bounds)
+            .fit_text(text);
+
+        if let LayoutFit::OutOfBounds { .. } = layout_fit {
+            debug_assert!(
+                false,
+                "TextLayout::fit_text returned OutOfBounds, this should not happen"
+            );
+        }
+
+        layout_fit.height()
+    }
+
     pub fn render<'s>(
         &self,
         target: &mut impl Renderer<'s>,
         area: Rect,
         style: &ButtonStyle,
-        baseline_offset: Offset,
         alpha: u8,
     ) {
-        let mut show_text = |text: &str, rect: Rect| {
-            let text_pos = rect.left_center() + baseline_offset;
-            let text_pos = Point::new(rect.top_left().x + Self::ICON_SPACE, text_pos.y);
-            shape::Text::new(text_pos, text, style.font)
-                .with_fg(style.text_color)
-                .with_alpha(alpha)
-                .render(target)
-        };
-
+        let text_width = area.width() - Self::ICON_SPACE;
         self.text.map(|t| {
-            let (t1, t2) = split_two_lines(
-                t,
-                style.font,
-                area.width() - Self::ICON_SPACE - Self::TEXT_MARGIN,
-            );
+            let text_height = self.text_height(t, text_width, self.text_style(style));
+            let vertical_padding = ((area.height() - text_height) / 2).max(0);
 
-            if t1.is_empty() || t2.is_empty() {
-                show_text(t, area);
-            } else {
-                show_text(t1, Rect::new(area.top_left(), area.right_center()));
-                show_text(t2, Rect::new(area.left_center(), area.bottom_right()));
-            }
+            TextLayout::new(self.text_style(style))
+                .with_top_padding(vertical_padding)
+                .with_bottom_padding(vertical_padding)
+                .with_bounds(area.inset(Insets::left(area.width() - text_width)))
+                .render_text_with_alpha(t, target, alpha, true);
         });
 
         let icon_pos = Point::new(

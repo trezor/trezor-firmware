@@ -126,7 +126,7 @@ impl Component for Slip39Input {
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let area = self.button.area();
-        let style = self.button.style();
+        let style = self.button.button_style();
         let y_offset = style.font.visible_text_height("1") / 2;
 
         if let Some(word) = self.final_word {

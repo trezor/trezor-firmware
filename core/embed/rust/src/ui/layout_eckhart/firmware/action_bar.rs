@@ -71,7 +71,7 @@ impl ActionBar {
     const SPACER_WIDTH: i16 = 4; // [px]
     const LEFT_SMALL_BUTTON_WIDTH: i16 = 120; // [px]
     /// offset for button content to move it towards center
-    const BUTTON_CONTENT_OFFSET: Offset = Offset::x(12); // [px]
+    const BUTTON_CONTENT_OFFSET: Offset = Offset::x(18); // [px]
     const BUTTON_EXPAND_TOUCH: Insets = Insets::top(Self::ACTION_BAR_HEIGHT);
 
     /// Create action bar with single button confirming the layout. The

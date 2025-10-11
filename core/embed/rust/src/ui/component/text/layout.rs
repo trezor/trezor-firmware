@@ -218,6 +218,16 @@ impl TextLayout {
         self
     }
 
+    pub const fn with_top_padding(mut self, padding: i16) -> Self {
+        self.padding_top = padding;
+        self
+    }
+
+    pub const fn with_bottom_padding(mut self, padding: i16) -> Self {
+        self.padding_bottom = padding;
+        self
+    }
+
     /// Baseline `Point` where we are starting to draw the text.
     pub fn initial_cursor(&self) -> Point {
         let font = &self.style.text_font;
@@ -257,6 +267,7 @@ impl TextLayout {
         #[cfg(feature = "ui_debug")]
         if _must_fit && matches!(fit, LayoutFit::OutOfBounds { .. }) {
             target.raise_overflow_exception();
+            fatal_error!(&uformat!(len: 128, "Text too long: '{}'", text));
         }
 
         fit
