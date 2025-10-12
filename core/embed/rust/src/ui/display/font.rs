@@ -263,13 +263,32 @@ impl FontInfo {
         ascent + descent
     }
 
-    pub fn get_kerning(&self, left_ch: char, right_ch: char) -> i8 {
-        let left: u8 = left_ch as u8;
-        let right = right_ch as u8;
-        if let Some(kernings) = self.kernings {
-            for &(l, r, v) in kernings {
-                if l == left && r == right {
-                    return v;
+    pub fn get_kerning(&'static self, left_ch: char, right_ch: char) -> i8 {
+        let left: u16 = left_ch as u16;
+        let right: u16 = right_ch as u16;
+
+        if left >= 0x7F || right >= 0x7F {
+            #[cfg(feature = "translations")]
+            {
+                return self.with_glyph_data(|data| {
+                    data.translations_guard
+                        .as_ref()
+                        .and_then(|guard| guard.as_ref())
+                        .and_then(|translations| {
+                            translations.get_utf8_kernings(left, right, self.translation_blob_idx)
+                        })
+                        .unwrap_or(0)
+                });
+            }
+        } else {
+            let left = left as u8;
+            let right = right as u8;
+
+            if let Some(kernings) = self.kernings {
+                for &(l, r, v) in kernings {
+                    if l == left && r == right {
+                        return v;
+                    }
                 }
             }
         }
