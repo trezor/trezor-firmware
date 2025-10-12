@@ -60,6 +60,28 @@ fn validate_offset_table(
     Ok(())
 }
 
+pub struct KerningTable<'a> {
+    triplets: &'a [(u16, u16, i8, u8)],
+}
+
+impl<'a> KerningTable<'a> {
+    pub fn new(mut reader: InputStream<'a>) -> Result<Self, Error> {
+        let count = reader.read_u16_le()?;
+        let triplets_len: usize = count.into();
+        let triplets_data =
+            reader.read((triplets_len / 6) * mem::size_of::<(u16, u16, i8, u8)>())?;
+
+        // SAFETY: (u16, u16, i8, u8) is repr(packed) of 6 bytes, so any 6 bytes are
+        // a valid (u16, u16, i8, u8) value.
+        let (_prefix, triplets, _suffix) =
+            unsafe { triplets_data.align_to::<(u16, u16, i8, u8)>() };
+        if !_prefix.is_empty() || !_suffix.is_empty() {
+            return Err(INVALID_TRANSLATIONS_BLOB);
+        }
+        Ok(Self { triplets })
+    }
+}
+
 impl<'a> Table<'a> {
     pub fn new(mut reader: InputStream<'a>) -> Result<Self, Error> {
         let count = reader.read_u16_le()?;
@@ -166,6 +188,7 @@ pub struct Translations<'a> {
     header: TranslationsHeader<'a>,
     chunks: Vec<TranslationStringsChunk<'a>, MAX_TRANSLATION_CHUNKS>,
     fonts: Table<'a>,
+    kernings: Table<'a>,
 }
 
 fn read_u16_prefixed_block<'a>(reader: &mut InputStream<'a>) -> Result<InputStream<'a>, Error> {
@@ -199,10 +222,6 @@ impl<'a> Translations<'a> {
         let chunks = header.parse_translation_chunks(&mut payload_reader)?;
         let fonts_reader = read_u16_prefixed_block(&mut payload_reader)?;
 
-        if payload_reader.remaining() > 0 {
-            return Err(INVALID_TRANSLATIONS_BLOB);
-        }
-
         // construct and validate font table
         let fonts = Table::new(fonts_reader)?;
         fonts.validate()?;
@@ -211,10 +230,34 @@ impl<'a> Translations<'a> {
             let font_table = Table::new(reader)?;
             font_table.validate()?;
         }
+
+        let kernings = if payload_reader.remaining() > 0 {
+            let kerning_reader = read_u16_prefixed_block(&mut payload_reader)?;
+
+            // construct and validate kerning table
+            let kernings = Table::new(kerning_reader)?;
+            kernings.validate()?;
+
+            // Validate by parsing the kernings table
+            for (_, kern_data) in kernings.iter() {
+                let reader = InputStream::new(kern_data);
+                KerningTable::new(reader)?;
+            }
+
+            kernings
+        } else {
+            // Create empty kerning table when no kerning data is present
+            Table {
+                offsets: &[],
+                data: &[],
+            }
+        };
+
         Ok(Self {
             header,
             chunks,
             fonts,
+            kernings,
         })
     }
 
@@ -290,6 +333,35 @@ impl<'a> Translations<'a> {
     pub fn get_utf8_glyph<'b>(&'b self, codepoint: u16, font_index: u16) -> Option<&'b [u8]> {
         self.font(font_index).and_then(|t| t.get(codepoint))
     }
+
+    /// Return the kerning value for the given pair of codepoints in the
+    /// specified font.
+    ///
+    /// SAFETY: Do not mess with the lifetimes in this signature.
+    ///
+    /// The lifetimes are a useful lie that bind the lifetime of the returned
+    /// string not to the underlying data, but to the _reference_ to the
+    /// translations object. This is to facilitate safe interface to
+    /// flash-based translations. See docs for `flash::get` for details.
+    #[allow(clippy::needless_lifetimes)]
+    pub fn get_utf8_kernings<'b>(
+        &'b self,
+        left_codepoint: u16,
+        right_codepoint: u16,
+        font_index: u16,
+    ) -> Option<i8> {
+        self.kernings.get(font_index).and_then(|data: &'a [u8]| {
+            let reader = InputStream::new(data);
+            let kern_table = KerningTable::new(reader).ok()?;
+
+            for triplet in kern_table.triplets {
+                if triplet.0 == left_codepoint && triplet.1 == right_codepoint {
+                    return Some(triplet.2);
+                }
+            }
+            None
+        })
+    }
 }
 
 pub struct TranslationsHeader<'a> {
@@ -323,13 +395,14 @@ fn read_fixedsize_str<'a>(reader: &mut InputStream<'a>, len: usize) -> Result<&'
 enum BlobMagic {
     V0,
     V1,
+    V2,
 }
 
 impl BlobMagic {
     fn parse_length(&self, reader: &mut InputStream<'_>) -> Result<usize, Error> {
         Ok(match self {
             Self::V0 => reader.read_u16_le()?.into(),
-            Self::V1 => reader
+            Self::V1 | Self::V2 => reader
                 .read_u32_le()?
                 .try_into() // can fail only on 16-bit system
                 .map_err(|_| Error::OutOfRange)?,
@@ -350,6 +423,7 @@ impl ContainerPrefix {
         let blob_magic = match data {
             b"TRTR00" => BlobMagic::V0,
             b"TRTR01" => BlobMagic::V1,
+            b"TRTR02" => BlobMagic::V2,
             _ => return Err(Error::ValueError(c"Unknown blob magic")),
         };
         let container_length = blob_magic.parse_length(reader)?;
@@ -474,6 +548,7 @@ impl<'a> TranslationsHeader<'a> {
         let chunks_count = match self.blob_magic {
             BlobMagic::V0 => 1,
             BlobMagic::V1 => reader.read_u16_le()?.into(),
+            BlobMagic::V2 => reader.read_u16_le()?.into(),
         };
         if chunks_count > MAX_TRANSLATION_CHUNKS {
             return Err(Error::OutOfRange);

@@ -302,7 +302,9 @@ class FaceProcessor:
 
     def write_foreign_json(self, upper_cased=False) -> None:
         for lang, language_chars in all_languages.items():
-            fontdata = {}
+
+            fontdata = {"glyphs": {}, "kernings": []}
+
             for item in language_chars:
                 c = _normalize(item)
                 map_from = c
@@ -325,7 +327,54 @@ class FaceProcessor:
                 self._load_char(c)
                 glyph = Glyph.from_face(self.face, c, self.shaveX)
                 glyph.print_metrics()
-                fontdata[map_from] = glyph.to_bytes(self.bpp).hex()
+                fontdata["glyphs"][map_from] = glyph.to_bytes(self.bpp).hex()
+
+            # Find kernings across all language characters and ASCII
+            all_lang_chars = list(language_chars) + [
+                chr(i) for i in range(MIN_GLYPH, MAX_GLYPH + 1)
+            ]
+
+            for left_char in all_lang_chars:
+
+                left_c = _normalize(left_char)
+
+                if not self._char_supported(left_c):
+                    continue
+
+                if left_c.islower() and upper_cased and left_c != "ß":
+                    left_c = left_c.upper()
+                if not self._char_supported(left_c):
+                    continue
+                left_idx = self.face.get_char_index(ord(left_c))
+
+                for right_char in all_lang_chars:
+
+                    right_c = _normalize(right_char)
+                    if right_c.islower() and upper_cased and right_c != "ß":
+                        right_c = right_c.upper()
+                    if not self._char_supported(right_c):
+                        continue
+                    right_idx = self.face.get_char_index(ord(right_c))
+
+                    # skip if both are ASCII
+                    if left_idx in range(
+                        MIN_GLYPH, MAX_GLYPH + 1
+                    ) and right_idx in range(MIN_GLYPH, MAX_GLYPH + 1):
+                        continue
+
+                    kerning = self.face.get_kerning(
+                        left_idx, right_idx, freetype.FT_KERNING_DEFAULT
+                    )
+                    if kerning.x != 0:
+
+                        fontdata["kernings"].append(
+                            (left_char, right_char, kerning.x // 64)
+                        )
+                        key = f"{left_char}{right_char}"
+                        print(
+                            f"Special Lang character kerning for '{key}' : {kerning.x // 64} pixels"
+                        )
+
             file_name = self._foreign_json_name(upper_cased, lang)
             file = JSON_FONTS_DEST / file_name
             json_content = json.dumps(fontdata, indent=2, ensure_ascii=False)
