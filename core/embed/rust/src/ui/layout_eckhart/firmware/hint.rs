@@ -107,6 +107,10 @@ impl<'a> Hint<'a> {
         let insets = self.content.insets();
         self.content.height() + insets.top + insets.bottom
     }
+
+    pub fn is_page_counter(&self) -> bool {
+        matches!(self.content, HintContent::PageCounter(_))
+    }
 }
 
 impl<'a> Component for Hint<'a> {
