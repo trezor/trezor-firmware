@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from trezor import TR, translations
-from trezor.wire import DataError
+from trezor.wire import DataError, high_speed
 
 if TYPE_CHECKING:
     from typing import Callable
@@ -109,9 +109,11 @@ async def do_change_language(
 
     # Requesting the data in chunks and storing them in the blob
     data_to_fetch = data_length - len(header_data)
-    await chunked.get_all_chunks(
-        blob, data_to_fetch, offset=len(header_data), report=report
-    )
+
+    with high_speed:
+        await chunked.get_all_chunks(
+            blob, data_to_fetch, offset=len(header_data), report=report
+        )
 
     # When the data do not match the hash, do not write anything
     try:

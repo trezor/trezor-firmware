@@ -49,7 +49,8 @@ if __debug__:
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from trezorio import WireInterface
-    from typing import Any, Callable, Coroutine, Generic, TypeVar
+    from types import TracebackType
+    from typing import Any, Callable, Coroutine, Generic, Optional, Type, TypeVar
 
     from trezor.wire.thp.channel import Channel
 
@@ -62,6 +63,30 @@ if TYPE_CHECKING:
 else:
     Generic = (object,)
     T = 0
+
+
+class _HighSpeed:
+    def __enter__(self) -> "_HighSpeed":
+        if utils.USE_BLE:
+            from trezorble import set_high_speed
+
+            set_high_speed(True)
+        return self
+
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc: Optional[BaseException],
+        tb: Optional[TracebackType],
+    ) -> bool:
+        if utils.USE_BLE:
+            from trezorble import set_high_speed
+
+            set_high_speed(False)
+        return False
+
+
+high_speed: "_HighSpeed" = _HighSpeed()
 
 
 class Provider(Generic[T]):
