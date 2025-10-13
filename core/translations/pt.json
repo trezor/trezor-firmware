@@ -39,7 +39,7 @@
     "addr_mismatch__contact_support_at": "Entre em contato com o suporte Trezor em",
     "addr_mismatch__key_mismatch": "Chave não coincide?",
     "addr_mismatch__mismatch": "Endereço não coincide?",
-    "addr_mismatch__support_url": "trezor.io/suporte",
+    "addr_mismatch__support_url": "trezor.io/support",
     "addr_mismatch__wrong_derivation_path": "Caminho de derivação incorreto para a conta.",
     "addr_mismatch__xpub_mismatch": "XPUB não coincide?",
     "address__cancel_contact_support": {
@@ -141,25 +141,25 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Desligar Bluetooth?"
+      "Eckhart": "Desativar o Bluetooth?"
     },
     "ble__enable": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Ligar Bluetooth?"
+      "Eckhart": "Ligar o Bluetooth?"
     },
     "ble__forget_all": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Esquecer tudo"
+      "Eckhart": "Esquecer todos"
     },
     "ble__forget_all_description": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Eles serão removidos e você precisará emparelhá-los novamente antes de usar."
+      "Eckhart": "Eles serão removidos, e você terá que pareá-los novamente para usá-los."
     },
     "ble__forget_all_devices": {
       "Bolt": "",
@@ -171,13 +171,13 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Todos os hosts foram removidos."
+      "Eckhart": "Removidas todas as conexões."
     },
     "ble__forget_this_description": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Será removido, e você precisará emparelhá-lo novamente antes de usar."
+      "Eckhart": "Ele será removido, e você terá que pareá-lo novamente para usá-lo."
     },
     "ble__forget_this_device": {
       "Bolt": "",
@@ -189,13 +189,13 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Host removido."
+      "Eckhart": "Conexão removida."
     },
     "ble__host_info": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Info. do host"
+      "Eckhart": "Inform. da conexão"
     },
     "ble__limit_reached": {
       "Bolt": "",
@@ -210,6 +210,12 @@
       "Eckhart": "Endereço MAC"
     },
     "ble__manage_paired": "Gerenciar disp. pareados",
+    "ble__must_be_enabled": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "O Bluetooth deve estar ativado para parear com um novo dispositivo."
+    },
     "ble__pair_new": "Parear novo disp.",
     "ble__pair_title": "Parear e conectar",
     "ble__pairing_match": {
@@ -222,7 +228,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Emparelhamento Bluetooth"
+      "Eckhart": "Pareamento Bluetooth"
     },
     "ble__unpair_all": "Desemparelhar todos os dispositivos Bluetooth",
     "ble__unpair_current": "Desemparelhar dispositivo conectado",
@@ -232,7 +238,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Aguardando o host..."
+      "Eckhart": "Aguardando a conexão..."
     },
     "brightness__change_title": "Alterar brilho da tela",
     "brightness__changed_title": "Exibir brilho alterado",
@@ -1144,6 +1150,18 @@
     "sign_message__confirm_without_review": "Confirmar sem revisão",
     "sign_message__message_size": "Tam. mensagem",
     "sign_message__verify_address": "Verificar endereço",
+    "sn__action": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Permitir que o dispositivo conectado leia o nº de série do seu Trezor Safe 7?"
+    },
+    "sn__title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Número de série"
+    },
     "solana__account_index": "Índice da conta",
     "solana__associated_token_account": "Conta de token associada",
     "solana__base_fee": "Taxa de base",
@@ -1298,7 +1316,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Permitir que {0} se conecte com este Trezor?"
+      "Eckhart": "Permitir que {0} se conecte a este Trezor?"
     },
     "thp__connect_app": {
       "Bolt": "",
@@ -1310,25 +1328,25 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Informações da conexão"
+      "Eckhart": "Diálogo de conexão"
     },
     "thp__nfc_text": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Mantenha o seu Trezor próximo do seu telefone para concluir a configuração."
+      "Eckhart": "Mantenha o seu Trezor junto ao seu telefone para concluir a configuração."
     },
     "thp__pair": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Permitir que {0} seja pareado com este Trezor?"
+      "Eckhart": "Permitir parear {0} com este Trezor?"
     },
     "thp__pair_app": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Permitir que {0} em {1} se conecte a este Trezor?"
+      "Eckhart": "Permitir parear {0} em {1} com este Trezor?"
     },
     "thp__pair_name": {
       "Bolt": "",
@@ -1340,7 +1358,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Parear com um dispositivo novo"
+      "Eckhart": "Parear com novo dispositivo"
     },
     "thp__pair_title": {
       "Bolt": "",
@@ -1352,7 +1370,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Escaneie o código QR para parear"
+      "Eckhart": "Escaneie o QR code para parear"
     },
     "tutorial__continue": "Continuar tutorial",
     "tutorial__did_you_know": "Você sabia?",

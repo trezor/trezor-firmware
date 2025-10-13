@@ -81,7 +81,7 @@
     "address_details__derivation_path_colon": "Ruta de derivación:",
     "address_details__title_receive_address": "Dirección destino",
     "address_details__title_receiving_to": "Recibir en",
-    "authenticate__confirm_template": "¿Confirmar con el ordenador conectado que tu {0} es original?",
+    "authenticate__confirm_template": "¿Permitir que la aplicación conectada verifique que tu {0} es original?",
     "authenticate__header": "Autenticar dispositivo",
     "auto_lock__change_template": "¿Autobloquear tras {0} de inactividad?",
     "auto_lock__description": "Configura el tiempo antes de que tu Trezor se bloquee automáticamente.",
@@ -169,7 +169,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Serán eliminados, tendrás que emparejarlos de nuevo antes de usarlos."
+      "Eckhart": "Serán eliminados, tendrás que vincularlos de nuevo antes de usarlos."
     },
     "ble__forget_all_devices": {
       "Bolt": "",
@@ -181,13 +181,13 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Dispositivos eliminados."
+      "Eckhart": "Conexiones eliminadas."
     },
     "ble__forget_this_description": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Será removido, tendrás que emparejarlo de nuevo antes de usarlo."
+      "Eckhart": "Será removido, tendrás que vincularlo de nuevo antes de usarlo."
     },
     "ble__forget_this_device": {
       "Bolt": "",
@@ -199,13 +199,13 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Dispositivo eliminado."
+      "Eckhart": "Conexión eliminada."
     },
     "ble__host_info": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Info. dispositivo"
+      "Eckhart": "Info. de la conexión"
     },
     "ble__limit_reached": {
       "Bolt": "",
@@ -220,13 +220,19 @@
       "Eckhart": "Dirección MAC"
     },
     "ble__manage_paired": "Gestionar dispositivos emparejados",
+    "ble__must_be_enabled": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "El Bluetooth debe estar activado para vincular un nuevo dispositivo."
+    },
     "ble__pair_new": "Emparejar nuevo dispositivo",
     "ble__pair_title": "Emparejar y conectar",
     "ble__pairing_match": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "¿Coincide el código de emparejamiento?"
+      "Eckhart": "¿El código de emparejamiento coincide?"
     },
     "ble__pairing_title": {
       "Bolt": "",
@@ -242,7 +248,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Esperando al dispositivo..."
+      "Eckhart": "Esperando la conexión..."
     },
     "brightness__change_title": "Cambiar brillo de la pantalla",
     "brightness__changed_title": "Brillo de la pantalla cambiado",
@@ -1615,12 +1621,7 @@
     "words__unlocked": "Desbloqueado",
     "words__wallet": "Billetera",
     "words__warning": "Advertencia",
-    "words__wipe": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Restablecer"
-    },
+    "words__wipe": "Borrar",
     "words__writable": "Modificable",
     "words__yes": "Sí"
   }

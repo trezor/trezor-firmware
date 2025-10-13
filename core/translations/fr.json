@@ -117,10 +117,10 @@
       "Eckhart": "Réception sur"
     },
     "authenticate__confirm_template": {
-      "Bolt": "Autoriser l'ord. connecté à conf. que votre {0} est auth. ?",
-      "Caesar": "Autoriser l'ordinateur connecté à confirmer que votre {0} est authentique ?",
-      "Delizia": "Autoriser l'ordinateur connecté à confirmer que votre {0} est authentique ?",
-      "Eckhart": "Autoriser l'ordinateur connecté à confirmer que votre {0} est authentique ?"
+      "Bolt": "Autoriser l'app connectée à vérifier l'authenticité de votre {0} ?",
+      "Caesar": "Autoriser l'app connectée à confirmer l'authenticité de votre {0} ?",
+      "Delizia": "Autoriser l'app connectée à confirmer l'authenticité de votre {0} ?",
+      "Eckhart": "Autoriser l'app connectée à confirmer l'authenticité de votre {0} ?"
     },
     "authenticate__header": "Authentifier l'appareil",
     "auto_lock__change_template": {
@@ -330,13 +330,13 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Supprimer tous les appareils ?"
+      "Eckhart": "Oublier tous les appareils ?"
     },
     "ble__forget_all_success": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Tous les hôtes ont été retirés."
+      "Eckhart": "Les connexions ont été retirées."
     },
     "ble__forget_this_description": {
       "Bolt": "",
@@ -354,19 +354,19 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Hôte supprimé."
+      "Eckhart": "Connexion supprimée."
     },
     "ble__host_info": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Infos de l'hôte"
+      "Eckhart": "Infos de connexion"
     },
     "ble__limit_reached": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Limite d'appareils appairé atteinte"
+      "Eckhart": "Limite d'appareils appairés atteinte"
     },
     "ble__mac_address": {
       "Bolt": "",
@@ -379,6 +379,12 @@
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Gérer les appareils appairés"
+    },
+    "ble__must_be_enabled": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Le Bluetooth doit être activé pour appairer un nouvel appareil."
     },
     "ble__pair_new": {
       "Bolt": "",
@@ -432,7 +438,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "En attente de l'hôte..."
+      "Eckhart": "En attente de connexion..."
     },
     "brightness__change_title": "Ajuster la luminosité de l'écran",
     "brightness__changed_title": "Luminosité de l'écran ajustée",
