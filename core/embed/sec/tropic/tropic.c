@@ -47,7 +47,8 @@ typedef struct {
   bool initialized;
   bool session_started;
   bool chip_ready;
-  pkey_index_t pairing_key_index;
+  pkey_index_t pairing_key_index;  // This field is valid only if
+                                   // session_started is true.
   lt_handle_t handle;
 #ifdef TREZOR_EMULATOR
   lt_dev_unix_tcp_t device;
@@ -85,30 +86,24 @@ bool tropic_wait_for_ready(void) {
   return false;
 }
 
-lt_ret_t tropic_start_custom_session(const uint8_t *stpub,
-                                     const pkey_index_t pkey_index,
-                                     const uint8_t *shipriv,
-                                     const uint8_t *shipub) {
+lt_ret_t tropic_session_invalidate(void) {
+  lt_ret_t ret = lt_session_abort(&g_tropic_driver.handle);
+  if (ret != LT_OK) {
+    return ret;
+  }
+  g_tropic_driver.session_started = false;
+  return LT_OK;
+}
+
+lt_ret_t tropic_custom_session_start(pkey_index_t pairing_key_index) {
   tropic_driver_t *drv = &g_tropic_driver;
 
   if (!drv->initialized) {
     return LT_FAIL;
   }
 
-  tropic_wait_for_ready();
 
-  lt_ret_t ret =
-      lt_session_start(&drv->handle, stpub, pkey_index, shipriv, shipub);
-
-  drv->pairing_key_index = pkey_index;
-  drv->session_started = (ret == LT_OK);
-
-  return ret;
-}
-
-static bool session_start(tropic_driver_t *drv,
-                          pkey_index_t pairing_key_index) {
-  bool ret = false;
+  lt_ret_t ret = LT_FAIL;
 
   curve25519_key trezor_private = {0};
   switch (pairing_key_index) {
@@ -134,20 +129,22 @@ static bool session_start(tropic_driver_t *drv,
 
   curve25519_key tropic_public = {0};
   if (secret_key_tropic_public(tropic_public) != sectrue) {
-#if !PRODUCTION
-    if (!tropic_get_tropic_pubkey(&drv->handle, tropic_public))
+#if !PRODUCTION || defined(TREZOR_PRODTEST)
+    if (pairing_key_index != TROPIC_FACTORY_PAIRING_KEY_SLOT ||
+        !tropic_get_tropic_pubkey(&drv->handle, tropic_public))
 #endif
     {
       goto cleanup;
     }
   }
 
-  if (tropic_start_custom_session(tropic_public, pairing_key_index,
-                                  trezor_private, trezor_public) != LT_OK) {
-    goto cleanup;
-  }
+  tropic_wait_for_ready();
 
-  ret = true;
+  ret = lt_session_start(&drv->handle, tropic_public, pairing_key_index,
+                         trezor_private, trezor_public);
+
+  drv->session_started = (ret == LT_OK);
+  drv->pairing_key_index = pairing_key_index;
 
 cleanup:
   memzero(trezor_private, sizeof(trezor_private));
@@ -166,18 +163,18 @@ bool tropic_session_start(void) {
     return true;
   }
 
-  tropic_wait_for_ready();
-
 #ifndef TREZOR_EMULATOR
-  if (session_start(drv, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT)) {
+  if (tropic_custom_session_start(TROPIC_PRIVILEGED_PAIRING_KEY_SLOT) ==
+      LT_OK) {
     return true;
   }
-  if (session_start(drv, TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT)) {
+  if (tropic_custom_session_start(TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT) ==
+      LT_OK) {
     return true;
   }
 #endif
 #if !PRODUCTION
-  if (session_start(drv, TROPIC_FACTORY_PAIRING_KEY_SLOT)) {
+  if (tropic_custom_session_start(TROPIC_FACTORY_PAIRING_KEY_SLOT) == LT_OK) {
     return true;
   }
 #endif
