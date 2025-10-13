@@ -30,5 +30,3 @@ typedef enum {
 } tropic_locked_status;
 
 tropic_locked_status get_tropic_locked_status(cli_t* cli);
-
-bool prodtest_tropic_factory_session_start(lt_handle_t* tropic_handle);

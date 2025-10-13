@@ -73,10 +73,9 @@ void tropic_deinit(void);
 #include "libtropic.h"
 lt_handle_t* tropic_get_handle(void);
 
-lt_ret_t tropic_start_custom_session(const uint8_t* stpub,
-                                     const pkey_index_t pkey_index,
-                                     const uint8_t* shipriv,
-                                     const uint8_t* shipub);
+lt_ret_t tropic_custom_session_start(pkey_index_t pairing_key_index);
+
+lt_ret_t tropic_session_invalidate(void);
 
 bool tropic_wait_for_ready(void);
 #endif
