@@ -1416,8 +1416,6 @@ static void cert_write(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
     return;
   }
 
-  // TODO: call `check_device_cert_chain()` for FIDO certificate
-
   cli_ok(cli, "");
 }
 
