@@ -15,8 +15,9 @@ async def sign_tx(msg: RippleSignTx, keychain: Keychain) -> RippleSignedTx:
     from trezor.crypto import der
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import sha512
+    from trezor.enums import ButtonRequestType
     from trezor.messages import RippleSignedTx
-    from trezor.ui.layouts import show_continue_in_app
+    from trezor.ui.layouts import show_continue_in_app, show_warning
     from trezor.wire import ProcessError
 
     from apps.common import paths
@@ -62,6 +63,13 @@ async def sign_tx(msg: RippleSignTx, keychain: Keychain) -> RippleSignedTx:
     else:
         if payment.destination_tag is not None:
             await layout.require_confirm_destination_tag(payment.destination_tag)
+        else:
+            await show_warning(
+                br_name="confirm_destination_tag",
+                content=TR.ripple__destination_tag_missing,
+                br_code=ButtonRequestType.ConfirmOutput,
+            )
+
         await layout.require_confirm_tx(
             payment.destination, payment.amount, chunkify=bool(msg.chunkify)
         )
