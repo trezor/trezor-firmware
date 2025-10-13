@@ -86,6 +86,7 @@
 #endif
 
 #include "bootui.h"
+#include "ui_helpers.h"
 #include "version_check.h"
 #include "wire/wire_iface_usb.h"
 #include "workflow/workflow.h"
