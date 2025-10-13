@@ -47,44 +47,6 @@ void ui_set_initial_setup(bool initial) { initial_setup = initial; }
 
 bool ui_get_initial_setup(void) { return initial_setup; }
 
-#if defined USE_TOUCH
-#include <io/touch.h>
-
-void ui_click(void) {
-  // flush touch events if any
-  while (touch_get_event()) {
-  }
-  // wait for TOUCH_START
-  while ((touch_get_event() & TOUCH_START) == 0) {
-  }
-  // wait for TOUCH_END
-  while ((touch_get_event() & TOUCH_END) == 0) {
-  }
-  // flush touch events if any
-  while (touch_get_event()) {
-  }
-}
-
-#elif defined USE_BUTTON
-#include <io/button.h>
-
-void ui_click(void) {
-  for (;;) {
-    if (button_is_down(BTN_LEFT) && button_is_down(BTN_RIGHT)) {
-      break;
-    }
-  }
-  for (;;) {
-    if (!button_is_down(BTN_LEFT) && !button_is_down(BTN_RIGHT)) {
-      break;
-    }
-  }
-}
-
-#else
-#error "No input method defined"
-#endif
-
 void ui_screen_boot(const vendor_header *const vhdr,
                     const image_header *const hdr, int wait) {
   bool show_string = ((vhdr->vtrust & VTRUST_NO_STRING) == 0);
