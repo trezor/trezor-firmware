@@ -59,6 +59,12 @@ pub trait Renderer<'a> {
         self.set_viewport(original);
     }
 
+    #[cfg(feature = "rgb_led")]
+    fn set_led_color(&mut self, color: Color);
+
+    #[cfg(feature = "rgb_led")]
+    fn led_color(&self) -> Color;
+
     #[cfg(feature = "ui_debug")]
     fn raise_overflow_exception(&mut self);
 
@@ -79,6 +85,9 @@ where
     canvas: &'a mut C,
     /// Drawing cache (decompression context, scratch-pad memory)
     cache: &'a DrawingCache<'alloc>,
+
+    #[cfg(feature = "rgb_led")]
+    led_color: Option<Color>,
 
     #[cfg(feature = "ui_debug")]
     overflow: bool,
@@ -104,6 +113,8 @@ where
         Self {
             canvas,
             cache,
+            #[cfg(feature = "rgb_led")]
+            led_color: None,
             #[cfg(feature = "ui_debug")]
             overflow: false,
         }
@@ -130,6 +141,18 @@ where
             shape.draw(self.canvas, self.cache);
             shape.cleanup(self.cache);
         }
+    }
+
+    #[cfg(feature = "rgb_led")]
+    fn set_led_color(&mut self, color: Color) {
+        // LED color should be set once per rendered frame.
+        debug_assert!(self.led_color.is_none_or(|current| current == color));
+        self.led_color = Some(color);
+    }
+
+    #[cfg(feature = "rgb_led")]
+    fn led_color(&self) -> Color {
+        self.led_color.unwrap_or_else(Color::black)
     }
 
     #[cfg(feature = "ui_debug")]
@@ -187,6 +210,16 @@ where
         S: Shape<'alloc> + ShapeClone<'alloc>,
     {
         self.renderer.render_shape(shape);
+    }
+
+    #[cfg(feature = "rgb_led")]
+    fn set_led_color(&mut self, color: Color) {
+        self.renderer.set_led_color(color);
+    }
+
+    #[cfg(feature = "rgb_led")]
+    fn led_color(&self) -> Color {
+        self.renderer.led_color()
     }
 
     #[cfg(feature = "ui_debug")]

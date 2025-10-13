@@ -21,9 +21,6 @@ use pareen;
 #[cfg(feature = "haptic")]
 use crate::trezorhal::haptic;
 
-#[cfg(feature = "rgb_led")]
-use crate::trezorhal::rgb_led;
-
 /// A component that displays a border that grows from the bottom of the screen
 /// to the top. The animation is parametrizable by color and duration.
 pub struct HoldToConfirmAnim {
@@ -37,6 +34,8 @@ pub struct HoldToConfirmAnim {
     header_overlay: Option<TString<'static>>,
     /// Animation state
     state: AnimState,
+    #[cfg(feature = "rgb_led")]
+    led_color: Color,
 }
 
 pub enum HoldToConfirmMsg {
@@ -85,6 +84,8 @@ impl HoldToConfirmAnim {
             border: ScreenBorder::new(default_color),
             header_overlay: None,
             state: AnimState::Idle,
+            #[cfg(feature = "rgb_led")]
+            led_color: Color::black(),
         }
     }
 
@@ -122,10 +123,15 @@ impl HoldToConfirmAnim {
 
     pub fn finalize(&mut self) {
         #[cfg(feature = "rgb_led")]
-        rgb_led::set_color(theme::color_to_led_color(self.color).into());
+        self.update_led_color(theme::color_to_led_color(self.color));
         self.state = AnimState::Finalizing {
             stopwatch: Stopwatch::new_started(),
         };
+    }
+
+    #[cfg(feature = "rgb_led")]
+    fn update_led_color(&mut self, led_color: Color) {
+        self.led_color = led_color;
     }
 
     fn is_animating(&self) -> bool {
@@ -164,7 +170,7 @@ impl Component for HoldToConfirmAnim {
                 if stopwatch.is_running() && !stopwatch.is_running_within(Self::FINALIZING_DURATION)
                 {
                     #[cfg(feature = "rgb_led")]
-                    rgb_led::set_color(0);
+                    self.update_led_color(Color::black());
                     return Some(HoldToConfirmMsg::Finalized);
                 }
             }
@@ -206,6 +212,8 @@ impl Component for HoldToConfirmAnim {
                 self.border.render(alpha, target);
             }
         }
+        #[cfg(feature = "rgb_led")]
+        target.set_led_color(self.led_color);
     }
 }
 

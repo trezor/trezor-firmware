@@ -11,9 +11,6 @@ use crate::{
     },
 };
 
-#[cfg(feature = "rgb_led")]
-use crate::trezorhal::rgb_led;
-
 use super::{
     super::{
         component::Button,
@@ -44,6 +41,8 @@ pub struct TutorialWelcomeScreen {
     /// Timer for the led color change
     #[cfg(feature = "rgb_led")]
     timer: Timeout,
+    #[cfg(feature = "rgb_led")]
+    led_color: Color,
     /// Stopwatch for the loader animation
     stopwatch: Stopwatch,
     border: ScreenBorder,
@@ -65,6 +64,8 @@ impl TutorialWelcomeScreen {
             } else {
                 LOADER_DURATION.to_millis()
             }),
+            #[cfg(feature = "rgb_led")]
+            led_color: Color::black(),
             stopwatch: Stopwatch::new_started(),
             border: ScreenBorder::new(theme::GREEN_LIME),
         }
@@ -88,15 +89,12 @@ impl Component for TutorialWelcomeScreen {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if let Some(ActionBarMsg::Confirmed) = self.action_bar.event(ctx, event) {
-            // Turn off the LED when the screen is destroyed
-            #[cfg(feature = "rgb_led")]
-            rgb_led::set_color(0);
             return Some(TutorialWelcomeScreenMsg::Confirmed);
         }
 
         #[cfg(feature = "rgb_led")]
         if self.timer.event(ctx, event).is_some() {
-            rgb_led::set_color(LED_COLOR.to_u32());
+            self.led_color = LED_COLOR;
             return None;
         }
 
@@ -152,6 +150,9 @@ impl Component for TutorialWelcomeScreen {
             let loader_val = (progress * LOADER_MAX_VAL as f32) as u16;
             render_loader_indeterminate(loader_val, &self.border, target);
         }
+
+        #[cfg(feature = "rgb_led")]
+        target.set_led_color(self.led_color);
     }
 }
 

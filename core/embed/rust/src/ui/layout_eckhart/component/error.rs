@@ -1,6 +1,3 @@
-#[cfg(feature = "rgb_led")]
-use crate::trezorhal::rgb_led;
-
 use crate::{
     strutil::TString,
     ui::{
@@ -88,6 +85,6 @@ impl<'a> Component for ErrorScreen<'a> {
         self.wait_for_restart.render(target);
         self.screen_border.render(u8::MAX, target);
         #[cfg(feature = "rgb_led")]
-        rgb_led::set_color(LED_RED.into());
+        target.set_led_color(LED_RED);
     }
 }
