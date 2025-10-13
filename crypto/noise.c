@@ -338,7 +338,7 @@ bool noise_receive_message(noise_context_t *ctx, const uint8_t *associated_data,
 
 bool noise_handle_handshake_response_multiple_keys(
     noise_context_t *ctx, const curve25519_key initiator_private_key,
-    const curve25519_key responder_public_keys[],
+    const curve25519_key *responder_public_keys,
     size_t responder_public_keys_count, const noise_response_t *response) {
   curve25519_key ephemeral_key_backup = {0};
   memcpy(ephemeral_key_backup, ctx->initiator_ephemeral_private_key,
