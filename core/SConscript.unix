@@ -24,6 +24,7 @@ if BENCHMARK and PYOPT != '0':
   exit(1)
 
 FEATURES_WANTED = [
+    "applet",
     "ble",
     "display",
     "dma2d",
@@ -253,6 +254,7 @@ SOURCE_MOD += [
 ]
 
 CPPDEFINES_MOD += [
+    'KERNEL',
     'TRANSLATIONS',
     'FANCY_FATAL_ERROR',
     ]

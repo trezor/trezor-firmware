@@ -26,42 +26,22 @@
 
 #include <trezor_rtl.h>
 
-#include <SDL.h>
+#include <sys/dbg_console.h>
+#include <sys/system.h>
 
 #include <ctype.h>
 #include <errno.h>
 #include <signal.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <io/display.h>
-#include <io/usb_config.h>
-#include <sec/secret.h>
-#include <sys/dbg_console.h>
-#include <sys/system.h>
-#include <sys/systimer.h>
-#include <util/flash.h>
-#include <util/flash_otp.h>
-#include <util/rsod.h>
-#include <util/unit_properties.h>
 #include "extmod/misc.h"
 #include "extmod/vfs_posix.h"
 #include "genhdr/mpversion.h"
 #include "input.h"
-
-#ifdef USE_BUTTON
-#include <io/button.h>
-#endif
-
-#ifdef USE_TOUCH
-#include <io/touch.h>
-#endif
-
-#ifdef USE_TROPIC
-#include <sec/tropic.h>
-#endif
 
 #include "py/builtin.h"
 #include "py/compile.h"
@@ -423,19 +403,6 @@ STATIC void set_sys_argv(char *argv[], int argc, int start_arg) {
   }
 }
 
-// Inject SystemExit exception. This is primarily needed by `prof/__main__.py`
-// to run the flush the coverage data.
-static void __attribute__((noreturn)) main_clean_exit() {
-  const int status = 3;
-  fflush(stdout);
-  fflush(stderr);
-  // sys.exit is disabled, so raise a SystemExit exception directly
-  nlr_raise(mp_obj_new_exception_arg1(&mp_type_SystemExit,
-                                      MP_OBJ_NEW_SMALL_INT(status)));
-  // the above shouldn't return, but make sure we exit just in case
-  exit(status);
-}
-
 #ifdef _WIN32
 #define PATHLIST_SEP_CHAR ';'
 #else
@@ -482,56 +449,15 @@ reimport:
   return 0;
 }
 
-static int sdl_event_filter(void *userdata, SDL_Event *event) {
-  switch (event->type) {
-    case SDL_QUIT:
-      main_clean_exit();
-      return 0;
-    case SDL_KEYUP:
-      if (event->key.repeat) {
-        return 0;
-      }
-      switch (event->key.keysym.sym) {
-        case SDLK_ESCAPE:
-          main_clean_exit();
-          return 0;
-        case SDLK_s:
-          display_save("emu");
-          return 0;
-      }
-      break;
-  }
-  return 1;
-}
-
-void drivers_init() {
-  flash_init();
-  flash_otp_init();
-
-  unit_properties_init();
-
-  display_init(DISPLAY_RESET_CONTENT);
-
-#if USE_TOUCH
-  touch_init();
-#endif
-
-#ifdef USE_BUTTON
-  button_init();
-#endif
-
-#ifdef USE_TROPIC
-  tropic_init();
-#endif
-
-  usb_configure(NULL);
-}
-
-// Initialize the system and drivers for running tests in the Rust code.
-// The function is called from the Rust before the test main function is run.
-void rust_tests_c_setup(void) {
-  system_init(NULL);
-  drivers_init();
+// Inject SystemExit exception. This is primarily needed by `prof/__main__.py`
+// to run the flush the coverage data.
+static void __attribute__((noreturn)) clean_exit_handler() {
+  const int status = 0;
+  // sys.exit is disabled, so raise a SystemExit exception directly
+  nlr_raise(mp_obj_new_exception_arg1(&mp_type_SystemExit,
+                                      MP_OBJ_NEW_SMALL_INT(status)));
+  // the above shouldn't return, but make sure we exit just in case
+  exit(status);
 }
 
 MP_NOINLINE int main_(int argc, char **argv) {
@@ -553,16 +479,6 @@ MP_NOINLINE int main_(int argc, char **argv) {
 
   pre_process_options(argc, argv);
 
-#ifdef LOCKABLE_BOOTLOADER
-  secret_lock_bootloader();
-#endif
-
-  system_init(&rsod_panic_handler);
-
-  drivers_init();
-
-  SDL_SetEventFilter(sdl_event_filter, NULL);
-
 #if MICROPY_ENABLE_GC
   char *heap = malloc(heap_size);
   gc_init(heap, heap + heap_size);
@@ -574,6 +490,8 @@ MP_NOINLINE int main_(int argc, char **argv) {
 #endif
 
   mp_init();
+
+  system_set_exit_handler(clean_exit_handler);
 
   char *home = getenv("HOME");
   char *path = getenv("MICROPYPATH");
@@ -757,6 +675,19 @@ MP_NOINLINE int main_(int argc, char **argv) {
 
   // printf("total bytes = %d\n", m_get_total_bytes_allocated());
   return ret & 0xff;
+}
+
+int coreapp_emu(int argc, char **argv) {
+#if MICROPY_PY_THREAD
+  mp_thread_init();
+#endif
+  // We should capture stack top ASAP after start, and it should be
+  // captured guaranteedly before any other stack variables are allocated.
+  // For this, actual main (renamed main_) should not be inlined into
+  // this function. main_() itself may have other functions inlined (with
+  // their own stack variables), that's why we need this main/main_ split.
+  mp_stack_ctrl_init();
+  return main_(argc, argv);
 }
 
 #if !MICROPY_VFS
