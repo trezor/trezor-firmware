@@ -1554,6 +1554,8 @@ pub enum TranslatedString {
     sn__action = 1165,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Allow connected device to get serial number of your Trezor Safe 7?"}
     sn__title = 1166,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Serial number"}
     ble__must_be_enabled = 1167,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "The Bluetooth must be turned on to pair with a new device."}
+    #[cfg(feature = "universal_fw")]
+    ripple__destination_tag_missing = 1168,  // "Destination tag is not set. Typically needed when sending to exchanges."
 }
 
 impl TranslatedString {
@@ -4974,6 +4976,8 @@ impl TranslatedString {
             (Self::ble__must_be_enabled, ""),
             #[cfg(feature = "layout_eckhart")]
             (Self::ble__must_be_enabled, "The Bluetooth must be turned on to pair with a new device."),
+            #[cfg(feature = "universal_fw")]
+            (Self::ripple__destination_tag_missing, "Destination tag is not set. Typically needed when sending to exchanges."),
     ];
 
     #[cfg(feature = "micropython")]
@@ -6060,6 +6064,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_reset__your_backup_is_done, Self::reset__your_backup_is_done),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ripple__confirm_tag, Self::ripple__confirm_tag),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ripple__destination_tag_missing, Self::ripple__destination_tag_missing),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ripple__destination_tag_template, Self::ripple__destination_tag_template),
         (Qstr::MP_QSTR_rotation__change_template, Self::rotation__change_template),

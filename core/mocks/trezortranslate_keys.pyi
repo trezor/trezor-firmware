@@ -778,6 +778,7 @@ class TR:
     reset__you_need_one_share: str = "For recovery you need 1 share."
     reset__your_backup_is_done: str = "Your backup is done."
     ripple__confirm_tag: str = "Confirm tag"
+    ripple__destination_tag_missing: str = "Destination tag is not set. Typically needed when sending to exchanges."
     ripple__destination_tag_template: str = "Destination tag:\n{0}"
     rotation__change_template: str = "Change display orientation to {0}?"
     rotation__east: str = "east"

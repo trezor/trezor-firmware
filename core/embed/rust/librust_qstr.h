@@ -1361,6 +1361,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_nem__unknown_mosaic;
   MP_QSTR_nostr__event_kind_template;
   MP_QSTR_ripple__confirm_tag;
+  MP_QSTR_ripple__destination_tag_missing;
   MP_QSTR_ripple__destination_tag_template;
   MP_QSTR_solana__account_index;
   MP_QSTR_solana__associated_token_account;
