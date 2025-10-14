@@ -22,7 +22,18 @@
 // The number of CPU cycles required to execute one iteration of PBKDF2.
 #define PIN_PBKDF2_CYCLES_PER_ITER 11100
 
-uint32_t time_estimate_pbkdf2_ms(uint32_t iterations) {
+// The number of CPU cycles required to execute hash_to_curve_optiga()
+#define HASH_TO_CURVE_CYCLES_PER_ITER 9450000
+
+uint32_t clock_cycles_to_ms(uint32_t cycles) {
   extern uint32_t SystemCoreClock;
-  return PIN_PBKDF2_CYCLES_PER_ITER * iterations / (SystemCoreClock / 1000);
+  return cycles / (SystemCoreClock / 1000);
+}
+
+uint32_t time_estimate_pbkdf2_ms(uint32_t iterations) {
+  return clock_cycles_to_ms(PIN_PBKDF2_CYCLES_PER_ITER * iterations);
+}
+
+uint32_t time_estimate_hash_to_curve_ms() {
+  return clock_cycles_to_ms(HASH_TO_CURVE_CYCLES_PER_ITER);
 }

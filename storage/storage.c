@@ -473,34 +473,35 @@ static secbool is_not_wipe_code(const uint8_t *pin, size_t pin_len) {
   return sectrue;
 }
 
+void set_pin_time(uint32_t *time, uint8_t *sec, bool is_first_time);
+void unlock_time(uint32_t *time, uint8_t *sec, uint16_t pin_index);
+
 static uint32_t ui_estimate_time_ms(storage_pin_op_t op) {
   uint32_t time_ms = 0;
-#if USE_OPTIGA || USE_TROPIC
+
   uint32_t pin_index = 0;
 #if STRETCHED_PIN_COUNT > 1
-  if (sectrue != pin_get_fails(&pin_index)) {
+  ensure(pin_get_fails(&pin_index), "pin_get_fails failed");
+#endif
+
+  uint8_t sec = 0;
+#if USE_OPTIGA
+  if (!optiga_read_sec(&sec)) {
     return 0;
   }
 #endif
-#endif
-#if USE_OPTIGA
-  time_ms += optiga_estimate_time_ms(op, pin_index);
-#endif
-#if USE_TROPIC
-  time_ms += tropic_estimate_time_ms(op, pin_index);
-#endif
 
-  uint32_t pbkdf2_ms = time_estimate_pbkdf2_ms(PIN_ITER_COUNT);
   switch (op) {
     case STORAGE_PIN_OP_SET:
+      set_pin_time(&time_ms, &sec, optiga_is_first_time());
+      break;
     case STORAGE_PIN_OP_VERIFY:
-      time_ms += pbkdf2_ms;
+      unlock_time(&time_ms, &sec, pin_index);
       break;
     case STORAGE_PIN_OP_CHANGE:
-      time_ms += 2 * pbkdf2_ms;
+      set_pin_time(&time_ms, &sec, false);
+      unlock_time(&time_ms, &sec, pin_index);
       break;
-    default:
-      return 1;
   }
 
   return time_ms;
@@ -882,6 +883,28 @@ static secbool set_pin(const uint8_t *pin, size_t pin_len,
   }
 
   return ret;
+}
+
+void set_pin_time(uint32_t *time, uint8_t *sec, bool is_first_time) {
+  rng_fill_buffer_strong_time(time);  // rand_salt
+
+  {  // From derive_kek_set()
+    *time += time_estimate_pbkdf2_ms(PIN_ITER_COUNT);
+#if USE_OPTIGA
+    optiga_pin_init_time(time, is_first_time);
+    optiga_pin_stretch_cmac_ecdh_time(time, sec);
+#endif
+#if USE_TROPIC
+    tropic_pin_set_time(time);
+#endif
+#if USE_OPTIGA
+    optiga_pin_set_time(time, sec);
+#endif
+#if USE_TROPIC
+    rng_fill_buffer_strong_time(time);  // kek
+    tropic_pin_set_kek_masks_time(time);
+#endif
+  }
 }
 
 /*
@@ -1273,6 +1296,32 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
 
   // Finally set the counter to 0 to indicate success.
   return pin_fails_reset();
+}
+
+void unlock_time(uint32_t *time, uint8_t *sec, uint16_t pin_index) {
+  *time += time_estimate_pbkdf2_ms(PIN_ITER_COUNT);
+#if USE_OPTIGA
+  optiga_pin_stretch_cmac_ecdh_time(time, sec);
+#endif
+#if USE_TROPIC
+  tropic_pin_stretch_time(time);
+#endif
+#if USE_OPTIGA
+  optiga_pin_verify_time(time, sec, pin_index);
+#endif
+#if USE_TROPIC
+  tropic_pin_unmask_kek_time(time);
+#endif
+
+#if USE_OPTIGA && STRETCHED_PIN_COUNT > 1
+  if (pin_index != 0) {
+    optiga_pin_reset_hmac_counter_time(time, sec);
+  }
+#endif
+
+#if USE_TROPIC
+  tropic_pin_reset_slots_time(time, pin_index);
+#endif
 }
 
 secbool storage_unlock(const uint8_t *pin, size_t pin_len,
