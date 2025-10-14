@@ -72,3 +72,5 @@ static inline uint32_t rng_get(void) {
  * @return True on success, false on failure.
  */
 bool __wur rng_fill_buffer_strong(void* buffer, size_t buffer_size);
+
+void rng_fill_buffer_strong_time(uint32_t* time_ms);

@@ -22,6 +22,8 @@
 
 #include <trezor_types.h>
 
+uint32_t time_estimate_clock_cycles_ms(uint32_t cycles);
 uint32_t time_estimate_pbkdf2_ms(uint32_t iterations);
+uint32_t time_estimate_hash_to_curve_ms();
 
 #endif
