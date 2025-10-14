@@ -78,7 +78,10 @@ async def sign_tx(
 
         slip44_id = paths.unharden(msg.address_n[1])
         payment_req_verifier = PaymentRequestVerifier(
-            msg.payment_req, slip44_id, keychain
+            msg.payment_req,
+            slip44_id,
+            keychain,
+            amount_size_bytes=32,
         )
 
     await confirm_tx_data(

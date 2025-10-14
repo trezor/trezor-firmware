@@ -253,7 +253,7 @@ if TYPE_CHECKING:
         nonce: "AnyBytes | None"
         recipient_name: "str"
         memos: "list[PaymentRequestMemo]"
-        amount: "int | None"
+        amount: "AnyBytes | None"
         signature: "AnyBytes"
 
         def __init__(
@@ -263,7 +263,7 @@ if TYPE_CHECKING:
             signature: "AnyBytes",
             memos: "list[PaymentRequestMemo] | None" = None,
             nonce: "AnyBytes | None" = None,
-            amount: "int | None" = None,
+            amount: "AnyBytes | None" = None,
         ) -> None:
             pass
 

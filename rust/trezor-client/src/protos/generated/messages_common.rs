@@ -2512,7 +2512,7 @@ pub struct PaymentRequest {
     // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.memos)
     pub memos: ::std::vec::Vec<payment_request::PaymentRequestMemo>,
     // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.amount)
-    pub amount: ::std::option::Option<u64>,
+    pub amount: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.signature)
     pub signature: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
@@ -2603,10 +2603,13 @@ impl PaymentRequest {
         self.recipient_name.take().unwrap_or_else(|| ::std::string::String::new())
     }
 
-    // optional uint64 amount = 4;
+    // optional bytes amount = 6;
 
-    pub fn amount(&self) -> u64 {
-        self.amount.unwrap_or(0)
+    pub fn amount(&self) -> &[u8] {
+        match self.amount.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
     }
 
     pub fn clear_amount(&mut self) {
@@ -2618,8 +2621,22 @@ impl PaymentRequest {
     }
 
     // Param is passed by value, moved
-    pub fn set_amount(&mut self, v: u64) {
+    pub fn set_amount(&mut self, v: ::std::vec::Vec<u8>) {
         self.amount = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_amount(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.amount.is_none() {
+            self.amount = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.amount.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_amount(&mut self) -> ::std::vec::Vec<u8> {
+        self.amount.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
     // required bytes signature = 5;
@@ -2724,8 +2741,8 @@ impl ::protobuf::Message for PaymentRequest {
                 26 => {
                     self.memos.push(is.read_message()?);
                 },
-                32 => {
-                    self.amount = ::std::option::Option::Some(is.read_uint64()?);
+                50 => {
+                    self.amount = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 42 => {
                     self.signature = ::std::option::Option::Some(is.read_bytes()?);
@@ -2752,8 +2769,8 @@ impl ::protobuf::Message for PaymentRequest {
             let len = value.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         };
-        if let Some(v) = self.amount {
-            my_size += ::protobuf::rt::uint64_size(4, v);
+        if let Some(v) = self.amount.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(6, &v);
         }
         if let Some(v) = self.signature.as_ref() {
             my_size += ::protobuf::rt::bytes_size(5, &v);
@@ -2773,8 +2790,8 @@ impl ::protobuf::Message for PaymentRequest {
         for v in &self.memos {
             ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
         };
-        if let Some(v) = self.amount {
-            os.write_uint64(4, v)?;
+        if let Some(v) = self.amount.as_ref() {
+            os.write_bytes(6, v)?;
         }
         if let Some(v) = self.signature.as_ref() {
             os.write_bytes(5, v)?;
@@ -4043,11 +4060,11 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     gerprint\x18\x02\x20\x02(\rR\x0bfingerprint\x12\x1b\n\tchild_num\x18\x03\
     \x20\x02(\rR\x08childNum\x12\x1d\n\nchain_code\x18\x04\x20\x02(\x0cR\tch\
     ainCode\x12\x1f\n\x0bprivate_key\x18\x05\x20\x01(\x0cR\nprivateKey\x12\
-    \x1d\n\npublic_key\x18\x06\x20\x02(\x0cR\tpublicKey\"\xb4\x07\n\x0ePayme\
+    \x1d\n\npublic_key\x18\x06\x20\x02(\x0cR\tpublicKey\"\xba\x07\n\x0ePayme\
     ntRequest\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12%\n\x0ere\
     cipient_name\x18\x02\x20\x02(\tR\rrecipientName\x12R\n\x05memos\x18\x03\
     \x20\x03(\x0b2<.hw.trezor.messages.common.PaymentRequest.PaymentRequestM\
-    emoR\x05memos\x12\x16\n\x06amount\x18\x04\x20\x01(\x04R\x06amount\x12\
+    emoR\x05memos\x12\x16\n\x06amount\x18\x06\x20\x01(\x0cR\x06amount\x12\
     \x1c\n\tsignature\x18\x05\x20\x02(\x0cR\tsignature\x1a\x8d\x03\n\x12Paym\
     entRequestMemo\x12O\n\ttext_memo\x18\x01\x20\x01(\x0b22.hw.trezor.messag\
     es.common.PaymentRequest.TextMemoR\x08textMemo\x12U\n\x0brefund_memo\x18\
@@ -4065,8 +4082,8 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x12\x16\n\x06amount\x18\x02\x20\x02(\tR\x06amount\x12\x18\n\x07address\
     \x18\x03\x20\x02(\tR\x07address\x12\x1b\n\taddress_n\x18\x04\x20\x03(\rR\
     \x08addressN\x12\x10\n\x03mac\x18\x05\x20\x02(\x0cR\x03mac:\x04\x88\xb2\
-    \x19\x01B>\n#com.satoshilabs.trezor.lib.protobufB\x13TrezorMessageCommon\
-    \x80\xa6\x1d\x01\
+    \x19\x01J\x04\x08\x04\x10\x05B>\n#com.satoshilabs.trezor.lib.protobufB\
+    \x13TrezorMessageCommon\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

@@ -163,8 +163,9 @@ async def show_payment_request_details(
 ) -> None:
     from trezor import wire
 
-    assert payment_request.amount is not None  # required for non-CoinJoin
-    total_amount = format_coin_amount(payment_request.amount, coin, amount_unit)
+    from apps.common.payment_request import parse_amount
+
+    total_amount = format_coin_amount(parse_amount(payment_request), coin, amount_unit)
 
     texts = []
     refunds = []
