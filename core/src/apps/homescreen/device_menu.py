@@ -6,7 +6,7 @@ import storage.device as storage_device
 import trezorble as ble
 import trezorui_api
 from trezor import TR, config, log, utils
-from trezor.ui.layouts import interact, raise_if_cancelled
+from trezor.ui.layouts import interact, raise_if_not_confirmed
 from trezor.wire import ActionCancelled, PinCancelled
 from trezorui_api import CANCELLED, DeviceMenuResult
 
@@ -164,7 +164,7 @@ async def handle_device_menu() -> None:
             from apps.management.wipe_device import wipe_device
 
             try:
-                await raise_if_cancelled(
+                await raise_if_not_confirmed(
                     trezorui_api.show_warning(
                         title=TR.homescreen__title_backup_failed,
                         button=TR.words__wipe,

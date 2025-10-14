@@ -4,7 +4,7 @@ import trezorui_api
 from trezor import TR
 from trezor.enums import ButtonRequestType
 
-from ..common import interact, raise_if_cancelled
+from ..common import interact, raise_if_not_confirmed
 
 CONFIRMED = trezorui_api.CONFIRMED  # global_import_cache
 
@@ -23,7 +23,7 @@ def show_share_words(
             group_index + 1, share_index + 1
         )
 
-    return raise_if_cancelled(
+    return raise_if_not_confirmed(
         trezorui_api.show_share_words(
             words=share_words,
             title=title,
@@ -92,7 +92,7 @@ def slip39_show_checklist(
         )
     )
 
-    return raise_if_cancelled(
+    return raise_if_not_confirmed(
         trezorui_api.show_checklist(
             title=TR.reset__slip39_checklist_title,
             button=TR.buttons__continue,
@@ -286,7 +286,7 @@ def show_intro_backup(single_share: bool, num_of_words: int | None) -> Awaitable
     else:
         description = TR.backup__info_multi_share_backup
 
-    return raise_if_cancelled(
+    return raise_if_not_confirmed(
         trezorui_api.show_info(
             title="",
             description=description,

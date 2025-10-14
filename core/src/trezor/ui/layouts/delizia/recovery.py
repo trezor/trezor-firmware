@@ -7,7 +7,7 @@ from trezor.enums import ButtonRequestType, RecoveryType
 from apps.common import backup_types
 
 from ..common import interact
-from . import raise_if_cancelled
+from . import raise_if_not_confirmed
 
 CONFIRMED = trezorui_api.CONFIRMED  # global_import_cache
 CANCELLED = trezorui_api.CANCELLED  # global_import_cache
@@ -91,7 +91,7 @@ def format_remaining_shares_info(
 
 
 async def show_group_share_success(share_index: int, group_index: int) -> None:
-    await raise_if_cancelled(
+    await raise_if_not_confirmed(
         trezorui_api.show_group_share_success(
             lines=[
                 TR.recovery__you_have_entered,
@@ -180,7 +180,7 @@ async def show_recovery_warning(
     br_code: ButtonRequestType = ButtonRequestType.Warning,
 ) -> None:
     button = button or TR.buttons__try_again  # def_arg
-    await raise_if_cancelled(
+    await raise_if_not_confirmed(
         trezorui_api.show_warning(
             title=content or TR.words__warning,
             value=subheader or "",
