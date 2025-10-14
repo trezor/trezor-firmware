@@ -122,7 +122,7 @@ class BridgeTransport(Transport):
     """
 
     PATH_PREFIX = "bridge"
-    ENABLED: bool = True
+    ENABLED = True
     CHUNK_SIZE = None
 
     def __init__(
