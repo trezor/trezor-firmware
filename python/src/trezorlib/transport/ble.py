@@ -53,6 +53,7 @@ SHUTDOWN_TIMEOUT_SECONDS = 10
 
 
 class BleTransport(Transport):
+
     ENABLED = BLEAK_IMPORTED
     PATH_PREFIX = "ble"
     CHUNK_SIZE = 244
