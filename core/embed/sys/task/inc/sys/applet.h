@@ -25,41 +25,66 @@
 
 #include <sys/systask.h>
 
-// Applet privileges
+/** Applet privileges */
 typedef struct {
   bool assets_area_access;
 } applet_privileges_t;
 
 typedef struct {
-  // Applet memory layout describing the memory areas
-  // the applet is allowed to use
+  /** Applet memory layout describing the memory areas
+   * the applet is allowed to use */
   applet_layout_t layout;
-  // Applet privileges
+  /** Applet privileges */
   applet_privileges_t privileges;
-  // Applet task
+  /** Task associated with the applet */
   systask_t task;
 #ifdef TREZOR_EMULATOR
-  // Handle returned by `dlopen()`
+  /** Handle returned by `dlopen()` */
   void* handle;
 #endif
 } applet_t;
 
-// Initializes the applet structure
+/**
+ * @brief Initializes the applet structure
+ *
+ * Does just basic initialization of the applet structure without
+ * initializing the task associated with the applet.
+ *
+ * @param applet Pointer to the applet to initialize.
+ * @param layout Pointer to the applet memory layout.
+ * @param privileges Pointer to the applet privileges.
+ */
 void applet_init(applet_t* applet, const applet_layout_t* layout,
                  const applet_privileges_t* privileges);
 
-// Runs the applet and waits until it finishes.
+/**
+ * @brief Runs the applet task first time.
+ *
+ * When calling this function, the applet task must be initialized
+ * and not running. The function does not return until the applet
+ * gives up control (by being rescheduled out or terminated).
+ *
+ * @param applet Pointer to the applet to run.
+ */
 void applet_run(applet_t* applet);
 
-// Release all resources help by the applet
+/**
+ * @brief Release all resources held by the applet
+ * @param applet Pointer to the applet to stop.
+ */
 void applet_stop(applet_t* applet);
 
-// Returns `true` if the applet task is alive.
+/**
+ * @brief Returns `true` if the applet task is alive.
+ * @param applet Pointer to the applet to query.
+ * @return true if the applet task is alive, false otherwise.
+ */
 bool applet_is_alive(applet_t* applet);
 
-// Returns the currently active applet.
-//
-// Returns `NULL` if no applet is currently active.
+/**
+ * @brief Returns the currently active applet.
+ * @return Pointer to the currently active applet, or NULL if none.
+ */
 applet_t* applet_active(void);
 
 #endif  // KERNEL
