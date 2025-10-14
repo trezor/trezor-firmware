@@ -34,6 +34,7 @@
 #include "ports/stm32/pendsv.h"
 
 #include <io/display.h>
+#include <sys/ipc.h>
 #include <sys/linker_utils.h>
 #include <sys/notify.h>
 #include <sys/systask.h>
@@ -63,9 +64,13 @@ extern const void nrf_app_size;
 
 #endif
 
+uint8_t ipc_buffer[4096];
+
 static mp_state_ctx_t mp_state_ctx_data;
 
 int main_func(uint32_t cmd, void *arg) {
+  ipc_register(2, ipc_buffer, sizeof(ipc_buffer));
+
   if (cmd == 1) {
     systask_postmortem_t *info = (systask_postmortem_t *)arg;
     rsod_gui(info);

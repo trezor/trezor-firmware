@@ -34,6 +34,7 @@
 #include <sys/systick.h>
 #include <util/board_capabilities.h>
 #include <util/boot_image.h>
+#include <util/elf_loader.h>
 #include <util/option_bytes.h>
 #include <util/rsod.h>
 #include <util/unit_properties.h>
@@ -275,6 +276,31 @@ static void kernel_panic(const systask_postmortem_t *pminfo) {
   // We never get here
 }
 
+// ------------------------------------- TEST
+extern uint32_t _kernel_flash_end;
+#define COREAPP_START COREAPP_CODE_ALIGN((uint32_t) & _kernel_flash_end)
+#define COREAPP_END (FIRMWARE_START + FIRMWARE_MAXSIZE)
+
+static void elf_test(void) {
+  static applet_t applet;
+
+  applet_layout_t temp_layout = {
+      .code1 = {.start = APPCODE_START, .size = APPCODE_MAXSIZE},
+      .data1 = {.start = APPDATA_RAM_START, .size = APPDATA_RAM_SIZE},
+  };
+
+  mpu_set_active_applet(&temp_layout);
+
+  if (!elf_load((const void *)APPCODE_START, APPCODE_MAXSIZE,
+                (void *)APPDATA_RAM_START, APPDATA_RAM_SIZE, &applet)) {
+    return;
+  }
+
+  // Test the ELF applet
+  applet_run(&applet);
+}
+// ------------------------------------- TEST
+
 int main(void) {
   // Initialize system's core services
   system_init(&kernel_panic);
@@ -292,6 +318,8 @@ int main(void) {
 
   // Run the applet
   applet_run(&coreapp);
+
+  elf_test();
 
   // Loop until the coreapp is terminated
   kernel_loop(&coreapp);

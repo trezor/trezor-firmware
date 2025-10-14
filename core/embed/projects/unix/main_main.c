@@ -50,6 +50,8 @@
 
 #include <SDL.h>
 
+#include <util/elf_loader.h>  // !@# for tests
+
 static applet_t coreapp;
 
 static void drivers_init() {
@@ -130,6 +132,14 @@ int main(int argc, char **argv) {
   }
 
   applet_run(&coreapp);
+
+  applet_t extapp;
+  {
+    if (!elf_load(&extapp, "../../../../trezor-app-emu/build/libtest_app.so")) {
+      return -1;
+    }
+    applet_run(&extapp);
+  }
 
   kernel_loop(&coreapp);
 
