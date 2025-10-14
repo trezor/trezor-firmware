@@ -28,6 +28,7 @@ import click
 from .. import log, messages, protobuf
 from ..transport import DeviceIsBusy, enumerate_devices
 from ..transport.session import Session
+from ..transport.ble import BleTransport
 from ..transport.udp import UdpTransport
 from . import (
     AliasedGroup,
@@ -174,7 +175,6 @@ def configure_logging(verbose: int) -> None:
     "--ble/--no-ble",
     help="Enable/disable support for Bluetooth Low Energy.",
     is_flag=True,
-    default=(os.environ.get("TREZOR_BLE") == "1"),
 )
 @click.option("-v", "--verbose", count=True, help="Show communication messages.")
 @click.option(
@@ -209,7 +209,7 @@ def configure_logging(verbose: int) -> None:
 def cli_main(
     ctx: click.Context,
     path: str,
-    ble: bool,
+    ble: bool | None,
     verbose: int,
     is_json: bool,
     passphrase_on_host: bool,
@@ -219,6 +219,12 @@ def cli_main(
 ) -> None:
     configure_logging(verbose)
 
+    # if BLE was explicitly enabled, raise an error if it's not available
+    if ble and not BleTransport.ENABLED:
+        raise click.ClickException("BLE support is unavailable")
+
+    BleTransport.ENABLED = ble or (os.environ.get("TREZOR_BLE") == "1")
+
     bytes_session_id: Optional[bytes] = None
     if session_id is not None:
         try:
@@ -226,9 +232,7 @@ def cli_main(
         except ValueError:
             raise click.ClickException(f"Not a valid session id: {session_id}")
 
-    ctx.obj = TrezorConnection(
-        path, bytes_session_id, passphrase_on_host, script, ble_enabled=ble
-    )
+    ctx.obj = TrezorConnection(path, bytes_session_id, passphrase_on_host, script)
 
     # Optionally record the screen into a specified directory.
     if record:
@@ -302,13 +306,13 @@ def list_devices(
 ) -> Optional[Iterable["Transport"]]:
     """List connected Trezor devices."""
     if no_resolve:
-        for d in enumerate_devices(ble_enabled=obj.ble_enabled):
+        for d in enumerate_devices():
             click.echo(d.get_path())
         return
 
     from . import get_client
 
-    for transport in enumerate_devices(ble_enabled=obj.ble_enabled):
+    for transport in enumerate_devices():
         try:
             transport.open()
             client = get_client(transport)
