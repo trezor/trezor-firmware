@@ -54,6 +54,7 @@ def make_payment_request(
     change_addresses=None,
     memos=None,
     nonce=None,
+    amount_size_bytes=8,
 ):
     h_pr = sha256(b"SL\x00\x24")
 
@@ -116,7 +117,7 @@ def make_payment_request(
     change_address = iter(change_addresses or [])
     h_outputs = sha256()
     for amount, address in outputs:
-        h_outputs.update(amount.to_bytes(8, "little"))
+        h_outputs.update(amount.to_bytes(amount_size_bytes, "little"))
         if not address:
             address = next(change_address)
         h_outputs.update(len(address).to_bytes(1, "little"))
@@ -124,9 +125,11 @@ def make_payment_request(
 
     h_pr.update(h_outputs.digest())
 
+    amount = sum(amount for amount, address in outputs if address)
+
     return messages.PaymentRequest(
         recipient_name=recipient_name,
-        amount=sum(amount for amount, address in outputs if address),
+        amount=amount.to_bytes(amount_size_bytes, "little"),
         memos=msg_memos,
         nonce=nonce,
         signature=payment_req_signer.sign_digest_deterministic(h_pr.digest()),

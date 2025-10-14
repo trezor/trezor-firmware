@@ -568,7 +568,7 @@ def test_signtx_staking_eip1559(session: Session, parameters: dict, result: dict
 def test_signtx_payment_req(
     session: Session, has_refund: bool, has_text: bool, has_multiple_purchases: bool
 ):
-    from trezorlib import btc, misc
+    from trezorlib import btc, ethereum, misc
 
     from ..payment_req import (
         CoinPurchaseMemo,
@@ -624,6 +624,7 @@ def test_signtx_payment_req(
         outputs=[(int(params["value"], 16), params["to_address"])],
         memos=memos,
         nonce=nonce,
+        amount_size_bytes=32,
     )
 
     _do_test_signtx(
@@ -664,6 +665,7 @@ def test_signtx_payment_req_long_value(
         outputs=[(int(params["value"], 16), params["to_address"])],
         memos=memos,
         nonce=nonce,
+        amount_size_bytes=32,
     )
 
     _do_test_signtx(

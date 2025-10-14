@@ -6,14 +6,22 @@ from trezor.wire import DataError, context
 from . import writers
 
 if TYPE_CHECKING:
+    from typing import Literal
+
     from trezor.messages import PaymentRequest
 
     from apps.common.keychain import Keychain
+
 
 _MEMO_TYPE_TEXT = const(1)
 _MEMO_TYPE_REFUND = const(2)
 _MEMO_TYPE_COIN_PURCHASE = const(3)
 _MEMO_TYPE_TEXT_DETAILS = const(4)
+
+
+def parse_amount(payment_request: PaymentRequest) -> int:
+    assert payment_request.amount is not None
+    return int.from_bytes(payment_request.amount, "little")
 
 
 class PaymentRequestVerifier:
@@ -23,7 +31,15 @@ class PaymentRequestVerifier:
     else:
         PUBLIC_KEY = b""
 
-    def __init__(self, msg: PaymentRequest, slip44_id: int, keychain: Keychain) -> None:
+    def __init__(
+        self,
+        payment_request: PaymentRequest,
+        slip44_id: int,
+        keychain: Keychain,
+        amount_size_bytes: Literal[
+            8, 32
+        ] = 8,  # amount is normally 8 bytes, but for EVM assets it is 32 bytes
+    ) -> None:
         from storage.cache_common import APP_COMMON_NONCE
         from trezor.crypto.hashlib import sha256
         from trezor.utils import HashWriter
@@ -34,25 +50,32 @@ class PaymentRequestVerifier:
 
         self.h_outputs = HashWriter(sha256())
         self.amount = 0
-        self.expected_amount = msg.amount
-        self.signature = msg.signature
         self.h_pr = HashWriter(sha256())
 
-        if msg.nonce:
-            nonce = bytes(msg.nonce)
+        if payment_request.amount is None:
+            self.expected_amount = None
+        else:
+            if len(payment_request.amount) != amount_size_bytes:
+                raise DataError(f"amount must be exactly {amount_size_bytes} bytes")
+            self.expected_amount = parse_amount(payment_request)
+        self.amount_size_bytes = amount_size_bytes
+        self.signature = payment_request.signature
+
+        if payment_request.nonce:
+            nonce = bytes(payment_request.nonce)
             if context.cache_get(APP_COMMON_NONCE) != nonce:
                 raise DataError("Invalid nonce in payment request.")
             context.cache_delete(APP_COMMON_NONCE)
         else:
             nonce = b""
-            if msg.memos:
+            if payment_request.memos:
                 DataError("Missing nonce in payment request.")
 
         writers.write_bytes_fixed(self.h_pr, b"SL\x00\x24", 4)
         writers.write_bytes_prefixed(self.h_pr, nonce)
-        writers.write_bytes_prefixed(self.h_pr, msg.recipient_name.encode())
-        writers.write_compact_size(self.h_pr, len(msg.memos))
-        for m in msg.memos:
+        writers.write_bytes_prefixed(self.h_pr, payment_request.recipient_name.encode())
+        writers.write_compact_size(self.h_pr, len(payment_request.memos))
+        for m in payment_request.memos:
             if m.text_memo is not None:
                 memo = m.text_memo
                 writers.write_uint32_le(self.h_pr, _MEMO_TYPE_TEXT)
@@ -99,7 +122,11 @@ class PaymentRequestVerifier:
             raise DataError("Invalid signature in payment request.")
 
     def add_output(self, amount: int, address: str, change: bool = False) -> None:
-        writers.write_uint64_le(self.h_outputs, amount)
+        encoded_amount = amount.to_bytes(self.amount_size_bytes, "little")
+        # Ensure that the amount fits on amount_size_bytes.
+        # Note that Micropython's int.to_bytes() doesn't raise OverflowError!
+        assert int.from_bytes(encoded_amount, "little") == amount
+        writers.write_bytes_unchecked(self.h_outputs, encoded_amount)
         writers.write_bytes_prefixed(self.h_outputs, address.encode())
         if not change:
             self.amount += amount

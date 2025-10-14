@@ -903,7 +903,7 @@ class PaymentRequest(protobuf.MessageType):
         1: protobuf.Field("nonce", "bytes", repeated=False, required=False, default=None),
         2: protobuf.Field("recipient_name", "string", repeated=False, required=True),
         3: protobuf.Field("memos", "PaymentRequestMemo", repeated=True, required=False, default=None),
-        4: protobuf.Field("amount", "uint64", repeated=False, required=False, default=None),
+        6: protobuf.Field("amount", "bytes", repeated=False, required=False, default=None),
         5: protobuf.Field("signature", "bytes", repeated=False, required=True),
     }
 
@@ -914,7 +914,7 @@ class PaymentRequest(protobuf.MessageType):
         signature: "bytes",
         memos: Optional[Sequence["PaymentRequestMemo"]] = None,
         nonce: Optional["bytes"] = None,
-        amount: Optional["int"] = None,
+        amount: Optional["bytes"] = None,
     ) -> None:
         self.memos: Sequence["PaymentRequestMemo"] = memos if memos is not None else []
         self.recipient_name = recipient_name

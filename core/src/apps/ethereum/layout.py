@@ -124,10 +124,11 @@ async def require_confirm_payment_request(
     from trezor import wire
     from trezor.ui.layouts import confirm_payment_request
 
-    assert (
-        verified_payment_req.amount is not None
-    )  # amount is required for non-CoinJoin transactions
-    total_amount = format_ethereum_amount(verified_payment_req.amount, token, network)
+    from apps.common.payment_request import parse_amount
+
+    total_amount = format_ethereum_amount(
+        parse_amount(verified_payment_req), token, network
+    )
 
     texts = []
     refunds = []

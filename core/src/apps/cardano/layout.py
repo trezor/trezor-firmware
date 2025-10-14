@@ -1215,8 +1215,11 @@ async def require_confirm_payment_request(
 ) -> None:
     from trezor.ui.layouts import confirm_payment_request
 
-    assert verified_payment_request.amount is not None  # required for non-CoinJoin
-    total_amount = format_coin_amount(verified_payment_request.amount, network_id)
+    from apps.common.payment_request import parse_amount
+
+    total_amount = format_coin_amount(
+        parse_amount(verified_payment_request), network_id
+    )
 
     texts: list[tuple[str | None, str]] = []
     refunds: list[tuple[str, str | None, str | None]] = []

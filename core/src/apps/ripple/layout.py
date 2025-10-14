@@ -49,10 +49,11 @@ async def require_confirm_payment_request(
     from trezor.ui.layouts import confirm_payment_request
 
     from apps.common.paths import address_n_to_str
+    from apps.common.payment_request import parse_amount
 
-    assert verified_payment_request.amount is not None  # required for non-CoinJoin
     total_amount = format_amount_unit(
-        format_amount(verified_payment_request.amount, DECIMALS), "XRP"
+        format_amount(parse_amount(verified_payment_request), DECIMALS),
+        "XRP",
     )
 
     texts = []

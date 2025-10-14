@@ -293,7 +293,9 @@ def test_payment_req_wrong_amount(session: Session):
     )
 
     # Decrease the total amount of the payment request.
-    payment_req.amount -= 1
+    payment_req.amount = (int.from_bytes(payment_req.amount, "little") - 1).to_bytes(
+        8, "little"
+    )
 
     with pytest.raises(TrezorFailure, match="Invalid amount in payment request"):
         btc.sign_tx(
