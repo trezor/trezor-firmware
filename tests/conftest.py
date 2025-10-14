@@ -33,6 +33,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.device import apply_settings
 from trezorlib.device import wipe as wipe_device
 from trezorlib.transport import Timeout, enumerate_devices, get_transport
+from trezorlib.transport.ble import BleTransport
 from trezorlib.transport.thp.protocol_v1 import ProtocolV1Channel, UnexpectedMagicError
 
 # register rewrites before importing from local package
@@ -177,6 +178,9 @@ def _client_from_path(
 
 
 def _find_client(request: pytest.FixtureRequest, interact: bool) -> Client:
+    if os.environ.get("TREZOR_BLE") != "1":
+        BleTransport.ENABLED = False
+
     devices = enumerate_devices()
     for device in devices:
         return Client(device, auto_interact=not interact, open_transport=True)
