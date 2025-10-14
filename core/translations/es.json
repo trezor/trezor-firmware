@@ -81,7 +81,7 @@
     "address_details__derivation_path_colon": "Ruta de derivación:",
     "address_details__title_receive_address": "Dirección destino",
     "address_details__title_receiving_to": "Recibir en",
-    "authenticate__confirm_template": "¿Confirmar con el ordenador conectado que tu {0} es original?",
+    "authenticate__confirm_template": "¿Permitir que la aplicación conectada verifique que tu {0} es original?",
     "authenticate__header": "Autenticar dispositivo",
     "auto_lock__change_template": "¿Autobloquear tras {0} de inactividad?",
     "auto_lock__description": "Configura el tiempo antes de que tu Trezor se bloquee automáticamente.",
@@ -169,7 +169,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Serán eliminados, tendrás que emparejarlos de nuevo antes de usarlos."
+      "Eckhart": "Serán eliminados, tendrás que vincularlos de nuevo antes de usarlos."
     },
     "ble__forget_all_devices": {
       "Bolt": "",
@@ -181,13 +181,13 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Dispositivos eliminados."
+      "Eckhart": "Conexiones eliminadas."
     },
     "ble__forget_this_description": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Será removido, tendrás que emparejarlo de nuevo antes de usarlo."
+      "Eckhart": "Será removido, tendrás que vincularlo de nuevo antes de usarlo."
     },
     "ble__forget_this_device": {
       "Bolt": "",
@@ -199,13 +199,13 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Dispositivo eliminado."
+      "Eckhart": "Conexión eliminada."
     },
     "ble__host_info": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Info. dispositivo"
+      "Eckhart": "Info. de la conexión"
     },
     "ble__limit_reached": {
       "Bolt": "",
@@ -225,6 +225,12 @@
       "Delizia": "",
       "Eckhart": "Gestionar dispositivos emparejados"
     },
+    "ble__must_be_enabled": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "El Bluetooth debe estar activado para vincular un nuevo dispositivo."
+    },
     "ble__pair_new": {
       "Bolt": "",
       "Caesar": "",
@@ -241,7 +247,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "¿Coincide el código de emparejamiento?"
+      "Eckhart": "¿El código de emparejamiento coincide?"
     },
     "ble__pairing_title": {
       "Bolt": "",
@@ -277,7 +283,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Esperando al dispositivo..."
+      "Eckhart": "Esperando la conexión..."
     },
     "brightness__change_title": "Cambiar brillo de la pantalla",
     "brightness__changed_title": "Brillo de la pantalla cambiado",
@@ -921,10 +927,10 @@
     "language__change_to_template": "Cambiar el idioma a {0}?",
     "language__changed": "El lenguaje cambió con éxito",
     "language__progress": {
-      "Bolt": "Lenguaje cambiante",
-      "Caesar": "Lenguaje cambiante",
-      "Delizia": "Lenguaje cambiante",
-      "Eckhart": "Lenguaje cambiante..."
+      "Bolt": "Cambiando lenguaje",
+      "Caesar": "Cambiando lenguaje",
+      "Delizia": "Cambiando lenguaje",
+      "Eckhart": "Cambiando lenguaje..."
     },
     "language__title": "Ajustes de idioma",
     "led__disable": {
@@ -1370,18 +1376,18 @@
     "pin__diff_from_wipe_code": "El nuevo PIN no debe ser el código de borrar.",
     "pin__disabled": "Protección con PIN\ndesactivada.",
     "pin__enabled": "Protección con PIN\nactivada.",
-    "pin__enter": "Intr. el PIN.",
+    "pin__enter": "Ingr. el PIN",
     "pin__enter_new": "Intr. un nuevo PIN.",
     "pin__entered_not_valid": "El PIN introducido no es válido.",
     "pin__info": "Necesitarás un PIN para acceder al dispositivo.",
-    "pin__invalid_pin": "La PIN no es válida.",
+    "pin__invalid_pin": "PIN inválido",
     "pin__last_attempt": "Último intento",
     "pin__mismatch": "Los PIN introducidos no coinciden.",
     "pin__pin_mismatch": "El PIN no coincide.",
     "pin__please_check_again": "Vuelve a comprobarlo.",
     "pin__reenter": "Reintroducir PIN",
     "pin__reenter_new": "Reintroducir PIN.",
-    "pin__reenter_to_confirm": "Vuelve a introducir el PIN para confirmar.",
+    "pin__reenter_to_confirm": "Reingresa el PIN para confirmar.",
     "pin__remove": {
       "Bolt": "",
       "Caesar": "",
@@ -1834,6 +1840,18 @@
     "sign_message__confirm_without_review": "Confirmar sin revisar",
     "sign_message__message_size": "Tamaño del mensaje",
     "sign_message__verify_address": "Verificar dirección",
+    "sn__action": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "¿Permitir que el dispositivo conectado obtenga el núm. serie de tu Trezor Safe 7?"
+    },
+    "sn__title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Número de serie"
+    },
     "solana__account_index": "Índice de la cuenta",
     "solana__associated_token_account": "Cuenta de token asociada",
     "solana__base_fee": "Comisión base",
@@ -2088,7 +2106,7 @@
       "Bolt": "Mantén presionado el botón para confirmar acciones importantes",
       "Caesar": "Mantén presionado para confirmar",
       "Delizia": "Mantén presionado para confirmar",
-      "Eckhart": "Mantén presionado el botón en pantalla inferior para conf. acciones importantes."
+      "Eckhart": "Mantén presionado el botón inferior en pantalla para conf. acciones importantes."
     },
     "tutorial__title_lets_begin": "Comencemos",
     "tutorial__title_screen_scroll": "Desplazarse",
@@ -2099,7 +2117,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "TROPIC01 es una nueva generación de chip elemento seguro open-source diseñado para la seguridad de hardware transparente y auditable."
+      "Eckhart": "TROPIC01 es una nueva generación de chip open-source con Elemento Seguro, diseñado para la seguridad de hardware transparente y auditable."
     },
     "tutorial__use_trezor": "Maneja Trezor pulsando\nderecha e izquierda.\n\rContinúa con la derecha.",
     "tutorial__welcome_press_right": "Te damos la bienvenida a Trezor. Pulsa el botón derecho para continuar.",

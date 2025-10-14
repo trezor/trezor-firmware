@@ -1298,7 +1298,7 @@ pub enum TranslatedString {
     brightness__changed_title = 954,  // "Display brightness changed"
     brightness__change_title = 955,  // "Change display brightness"
     words__title_done = 956,  // "Done"
-    reset__slip39_checklist_more_info_threshold = 957,  // "The threshold sets the minumum number of shares needed to recover your wallet."
+    reset__slip39_checklist_more_info_threshold = 957,  // "The threshold sets the minimum number of shares needed to recover your wallet."
     reset__slip39_checklist_more_info_threshold_example_template = 958,  // "If you set {0} out of {1} shares, you'll need {2} backup shares to recover your wallet."
     passphrase__continue_with_empty_passphrase = 959,  // "Continue with empty passphrase?"
     #[cfg(feature = "universal_fw")]
@@ -1440,7 +1440,7 @@ pub enum TranslatedString {
     instructions__menu_to_continue = 1058,  // "Use menu to continue"
     tutorial__last_one = 1059,  // "Last one"
     tutorial__menu_appendix = 1060,  // "View more info, quit flow, ..."
-    tutorial__navigation_ts7 = 1061,  // "Use the on-screen buttons to navigate and confirm your actions."
+    tutorial__navigation_ts7 = 1061,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Use the on-screen buttons to navigate and confirm your actions."}
     tutorial__suite_restart = 1062,  // "Replay this tutorial anytime from the Trezor Suite app."
     tutorial__welcome_safe7 = 1067,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Welcome\nto Trezor\nSafe 7"}
     tutorial__what_is_tropic = 1068,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "What is TROPIC01?"}
@@ -1539,9 +1539,9 @@ pub enum TranslatedString {
     ble__pairing_title = 1149,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Bluetooth pairing"}
     thp__pair_name = 1151,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "{0} is your Trezor's name."}
     thp__pair_new_device = 1152,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Pair with new device"}
-    tutorial__power = 1153,  // "Use the power button on the side to turn your device on or off."
-    auto_lock__on_battery = 1154,  // "on battery / wireless charger"
-    auto_lock__on_usb = 1155,  // "connected to USB"
+    tutorial__power = 1153,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Use the power button on the side to turn your device on or off."}
+    auto_lock__on_battery = 1154,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "on battery / wireless charger"}
+    auto_lock__on_usb = 1155,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "connected to USB"}
     pin__wipe_code_exists_description = 1156,  // "Wipe code must be turned off before turning off PIN protection."
     pin__wipe_code_exists_title = 1157,  // "Wipe code set"
     wipe_code__pin_not_set_description = 1158,  // "PIN must be set before enabling wipe code."
@@ -4317,7 +4317,7 @@ impl TranslatedString {
             (Self::brightness__changed_title, "Display brightness changed"),
             (Self::brightness__change_title, "Change display brightness"),
             (Self::words__title_done, "Done"),
-            (Self::reset__slip39_checklist_more_info_threshold, "The threshold sets the minumum number of shares needed to recover your wallet."),
+            (Self::reset__slip39_checklist_more_info_threshold, "The threshold sets the minimum number of shares needed to recover your wallet."),
             (Self::reset__slip39_checklist_more_info_threshold_example_template, "If you set {0} out of {1} shares, you'll need {2} backup shares to recover your wallet."),
             (Self::passphrase__continue_with_empty_passphrase, "Continue with empty passphrase?"),
             #[cfg(feature = "universal_fw")]
@@ -4517,6 +4517,13 @@ impl TranslatedString {
             (Self::instructions__menu_to_continue, "Use menu to continue"),
             (Self::tutorial__last_one, "Last one"),
             (Self::tutorial__menu_appendix, "View more info, quit flow, ..."),
+            #[cfg(feature = "layout_bolt")]
+            (Self::tutorial__navigation_ts7, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::tutorial__navigation_ts7, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::tutorial__navigation_ts7, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::tutorial__navigation_ts7, "Use the on-screen buttons to navigate and confirm your actions."),
             (Self::tutorial__suite_restart, "Replay this tutorial anytime from the Trezor Suite app."),
             #[cfg(feature = "layout_bolt")]
@@ -4875,8 +4882,29 @@ impl TranslatedString {
             (Self::thp__pair_new_device, ""),
             #[cfg(feature = "layout_eckhart")]
             (Self::thp__pair_new_device, "Pair with new device"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::tutorial__power, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::tutorial__power, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::tutorial__power, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::tutorial__power, "Use the power button on the side to turn your device on or off."),
+            #[cfg(feature = "layout_bolt")]
+            (Self::auto_lock__on_battery, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::auto_lock__on_battery, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::auto_lock__on_battery, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::auto_lock__on_battery, "on battery / wireless charger"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::auto_lock__on_usb, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::auto_lock__on_usb, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::auto_lock__on_usb, ""),
+            #[cfg(feature = "layout_eckhart")]
             (Self::auto_lock__on_usb, "connected to USB"),
             (Self::pin__wipe_code_exists_description, "Wipe code must be turned off before turning off PIN protection."),
             (Self::pin__wipe_code_exists_title, "Wipe code set"),

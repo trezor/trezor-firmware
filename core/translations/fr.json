@@ -129,12 +129,7 @@
       "Delizia": "Verrouillage auto de votre Trezor après {0} d'inactivité ?",
       "Eckhart": "Verrouillage auto de votre Trezor après {0} d'inactivité ?"
     },
-    "auto_lock__description": {
-      "Bolt": "Définissez le délai avant que votre Trezor se verrouille automatiquement.",
-      "Caesar": "Définissez le délai avant que votre Trezor se verrouille automatiquement.",
-      "Delizia": "Définissez le délai avant que votre Trezor se verrouille automatiquement.",
-      "Eckhart": "Définissez le délai avant que votre Trezor se verrouille automatiquement.le délai avant verrouillage auto de votre Trezor."
-    },
+    "auto_lock__description": "Définissez le délai avant que votre Trezor se verrouille automatiquement.",
     "auto_lock__on_battery": {
       "Bolt": "",
       "Caesar": "",
@@ -335,13 +330,13 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Supprimer tous les appareils ?"
+      "Eckhart": "Oublier tous les appareils ?"
     },
     "ble__forget_all_success": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Tous les hôtes ont été retirés."
+      "Eckhart": "Les connexions ont été retirées."
     },
     "ble__forget_this_description": {
       "Bolt": "",
@@ -359,19 +354,19 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Hôte supprimé."
+      "Eckhart": "Connexion supprimée."
     },
     "ble__host_info": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Infos de l'hôte"
+      "Eckhart": "Infos de connexion"
     },
     "ble__limit_reached": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Limite d'appareils appairé atteinte"
+      "Eckhart": "Limite d'appareils appairés atteinte"
     },
     "ble__mac_address": {
       "Bolt": "",
@@ -384,6 +379,12 @@
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Gérer les appareils appairés"
+    },
+    "ble__must_be_enabled": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Le Bluetooth doit être activé pour appairer un nouvel appareil."
     },
     "ble__pair_new": {
       "Bolt": "",
@@ -437,7 +438,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "En attente de l'hôte..."
+      "Eckhart": "En attente de connexion..."
     },
     "brightness__change_title": "Ajuster la luminosité de l'écran",
     "brightness__changed_title": "Luminosité de l'écran ajustée",
@@ -499,7 +500,7 @@
     "buttons__show_words": "Afficher les mots",
     "buttons__skip": "Ignorer",
     "buttons__try_again": "Réessayer",
-    "buttons__turn_off": "Désactiver",
+    "buttons__turn_off": "Éteindre",
     "buttons__turn_on": "Activer",
     "buttons__view": "Afficher",
     "buttons__view_all_data": "Voir toutes les données",
@@ -2189,6 +2190,18 @@
     "sign_message__confirm_without_review": "Confirmer sans vérifier",
     "sign_message__message_size": "Taille du message",
     "sign_message__verify_address": "Vérifier l'adresse",
+    "sn__action": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Autoriser cet appareil à obtenir le num. de série de votre Trezor Safe 7 ?"
+    },
+    "sn__title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Numéro de série"
+    },
     "solana__account_index": "Index du compte",
     "solana__associated_token_account": "Compte jeton associé",
     "solana__base_fee": "Frais de base",
@@ -2383,7 +2396,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Autoriser {0} sur {1} à s'apparier avec ce Trezor ?"
+      "Eckhart": "Autoriser {0} sur {1} à s'appairer avec ce Trezor ?"
     },
     "thp__pair_name": {
       "Bolt": "",
@@ -2430,7 +2443,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Utilisez le bouton d'alimentation sur le côté pour allumer ou éteindre l'appareil."
+      "Eckhart": "Utilisez le bouton latéral pour allumer ou éteindre l'appareil."
     },
     "tutorial__press_and_hold": {
       "Bolt": "Maintenez enfoncé le bouton de droite\npour accepter les opérations importantes.",
