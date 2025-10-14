@@ -176,7 +176,6 @@ message HDNodeType {
 
 /**
  * Structure representing a SLIP-0024 payment request.
- * @next TxRequest
  * @embed
  */
 message PaymentRequest {
