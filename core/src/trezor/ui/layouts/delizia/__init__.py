@@ -296,7 +296,6 @@ async def show_passphrase_from_host(passphrase: str | None) -> None:
         "passphrase_host2",
         TR.passphrase__title_confirm,
         passphrase or "",
-        info=False,
     )
 
 
@@ -672,7 +671,6 @@ def confirm_blob(
     subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
-    info: bool = True,
     hold: bool = False,
     br_code: ButtonRequestType = BR_CODE_OTHER,
     ask_pagination: bool = False,
@@ -721,7 +719,6 @@ def confirm_blob(
             subtitle=subtitle,
             verb=verb,
             verb_cancel=verb_cancel,
-            info=info,
             hold=hold,
             chunkify=chunkify,
             prompt_screen=prompt_screen,
@@ -1429,7 +1426,6 @@ def confirm_replacement(title: str, txid: str) -> Awaitable[None]:
         txid,
         TR.send__transaction_id,
         verb=TR.buttons__continue,
-        info=False,
         br_code=ButtonRequestType.SignTx,
         prompt_screen=False,
     )

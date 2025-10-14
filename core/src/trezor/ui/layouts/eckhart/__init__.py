@@ -668,7 +668,6 @@ def confirm_blob(
     subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
-    info: bool = True,
     hold: bool = False,
     br_code: ButtonRequestType = BR_CODE_OTHER,
     ask_pagination: bool = False,
@@ -713,7 +712,6 @@ def confirm_blob(
             description=description,
             subtitle=subtitle,
             verb=verb,
-            info=info,
             hold=hold,
             chunkify=chunkify,
             cancel=True,
@@ -1452,7 +1450,6 @@ def confirm_replacement(title: str, txid: str) -> Awaitable[None]:
         txid,
         subtitle=TR.send__transaction_id,
         verb=TR.buttons__continue,
-        info=False,
         br_code=ButtonRequestType.SignTx,
     )
 
