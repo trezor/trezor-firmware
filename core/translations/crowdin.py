@@ -32,11 +32,11 @@ def split() -> None:
     for lang in tdir.all_languages():
         blob_json = tdir.load_lang(lang)
         for layout_type in translations.ALL_LAYOUTS:
-            # extract translations specific to this layout
-            layout_specific_translations = {
-                key: translations.get_translation(blob_json, key, layout_type)
-                for key in blob_json["translations"].keys()
-            }
+            # extract translations specific to this layout and drop empty values
+            layout_specific_translations = {}
+            for key in blob_json["translations"].keys():
+                if value := translations.get_translation(blob_json, key, layout_type):
+                    layout_specific_translations[key] = value
             # create a JSON file with only the "translations" item
             result = {"translations": layout_specific_translations}
             with open(CROWDIN_DIR / f"{lang}_{layout_type.name}.json", "w") as f:
@@ -59,22 +59,32 @@ def merge() -> None:
 
     for lang in sorted(tdir.all_languages()):
         merged_translations: dict[str, str | dict[str, str]] = collections.defaultdict(dict)
+
         for layout_type in translations.ALL_LAYOUTS:
             with open(CROWDIN_DIR / f"{lang}_{layout_type.name}.json", "r") as f:
                 blob_json = json.load(f)
 
             # mapping string name to its translation (for the current layout)
-            layout_specific_translations: dict[str, str] = blob_json["translations"]
+            layout_specific_translations: dict[str, str] = blob_json.get("translations", {})
             for key, value in layout_specific_translations.items():
-                # Clean the translation value
                 cleaned_value = clean_translation(value)
                 merged_translations[key][layout_type.name] = cleaned_value
 
-        for key in merged_translations.keys():
-            # deduplicate entries if all translations are the same
-            unique_translations = set(merged_translations[key].values())
-            if len(unique_translations) == 1:
-                merged_translations[key] = unique_translations.pop()
+        # Ensure all layouts are present per key, fill missing with empty strings
+        for key, layout_map in merged_translations.items():
+            if isinstance(layout_map, dict):
+                for layout_type in translations.ALL_LAYOUTS:
+                    layout_name = layout_type.name
+                    if layout_name not in layout_map:
+                        layout_map[layout_name] = ""
+
+        # Deduplicate entries if all translations are the same
+        for key in list(merged_translations.keys()):
+            values = merged_translations[key]
+            if isinstance(values, dict):
+                unique_translations = set(values.values())
+                if len(unique_translations) == 1:
+                    merged_translations[key] = unique_translations.pop()
 
         blob_json = tdir.load_lang(lang)
         blob_json["translations"] = merged_translations
