@@ -39,7 +39,7 @@
     "addr_mismatch__contact_support_at": "Entre em contato com o suporte Trezor em",
     "addr_mismatch__key_mismatch": "Chave não coincide?",
     "addr_mismatch__mismatch": "Endereço não coincide?",
-    "addr_mismatch__support_url": "trezor.io/suporte",
+    "addr_mismatch__support_url": "trezor.io/support",
     "addr_mismatch__wrong_derivation_path": "Caminho de derivação incorreto para a conta.",
     "addr_mismatch__xpub_mismatch": "XPUB não coincide?",
     "address__cancel_contact_support": {
@@ -73,21 +73,26 @@
     "address_details__title_receiving_to": "Recebendo para",
     "authenticate__confirm_template": "Permitir ao computador confirmar se {0} é original?",
     "authenticate__header": "Autenticar dispositivo",
-    "auto_lock__change_template": "Bloquear o Tezor após {0} de inatividade?",
-    "auto_lock__description": "Defina o tempo antes que seu Trezor seja bloqueado automaticamente.",
+    "auto_lock__change_template": "Bloquear o Trezor após {0} de inatividade?",
+    "auto_lock__description": "Defina o intervalo para bloqueio automático do seu Trezor.",
     "auto_lock__on_battery": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "com bateria / carregador sem fio"
+      "Eckhart": "na bateria / carregador sem fio"
     },
     "auto_lock__on_usb": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "conectado ao USB"
+      "Eckhart": "conectado via USB"
     },
-    "auto_lock__title": "Atraso do bloqueio",
+    "auto_lock__title": {
+      "Bolt": "Bloqueio automático após",
+      "Caesar": "Bloqueio automático após",
+      "Delizia": "Bloqueio automático após",
+      "Eckhart": "Bloqueio automático"
+    },
     "auto_lock__turned_on": "Bloqueio automático ativado",
     "backup__can_back_up_anytime": "Você pode fazer um backup do Trezor por vez.",
     "backup__create_backup_to_prevent_loss": "Crie um backup para evitar perder acesso aos seus fundos",
@@ -141,25 +146,25 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Desligar Bluetooth?"
+      "Eckhart": "Desativar o Bluetooth?"
     },
     "ble__enable": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Ligar Bluetooth?"
+      "Eckhart": "Ligar o Bluetooth?"
     },
     "ble__forget_all": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Esquecer tudo"
+      "Eckhart": "Esquecer todos"
     },
     "ble__forget_all_description": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Eles serão removidos e você precisará emparelhá-los novamente antes de usar."
+      "Eckhart": "Eles serão removidos, e você terá que pareá-los novamente para usá-los."
     },
     "ble__forget_all_devices": {
       "Bolt": "",
@@ -171,13 +176,13 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Todos os hosts foram removidos."
+      "Eckhart": "Removidas todas as conexões."
     },
     "ble__forget_this_description": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Será removido, e você precisará emparelhá-lo novamente antes de usar."
+      "Eckhart": "Ele será removido, e você terá que pareá-lo novamente para usá-lo."
     },
     "ble__forget_this_device": {
       "Bolt": "",
@@ -189,13 +194,13 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Host removido."
+      "Eckhart": "Conexão removida."
     },
     "ble__host_info": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Info. do host"
+      "Eckhart": "Inform. da conexão"
     },
     "ble__limit_reached": {
       "Bolt": "",
@@ -214,6 +219,12 @@
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Gerenciar disp. pareados"
+    },
+    "ble__must_be_enabled": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "O Bluetooth deve estar ativado para parear com um novo dispositivo."
     },
     "ble__pair_new": {
       "Bolt": "",
@@ -237,37 +248,37 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Emparelhamento Bluetooth"
+      "Eckhart": "Pareamento Bluetooth"
     },
     "ble__unpair_all": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Desemparelhar todos os dispositivos Bluetooth"
+      "Eckhart": "Desvincular todos os dispositivos Bluetooth"
     },
     "ble__unpair_current": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Desemparelhar dispositivo conectado"
+      "Eckhart": "Desvincular dispositivo conectado"
     },
     "ble__unpair_title": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Desemparelhar"
+      "Eckhart": "Desvincular"
     },
     "ble__version": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Versão Bluetooth"
+      "Eckhart": "Versão do Bluetooth"
     },
     "ble__waiting_for_host": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Aguardando o host..."
+      "Eckhart": "Aguardando a conexão..."
     },
     "brightness__change_title": "Alterar brilho da tela",
     "brightness__changed_title": "Exibir brilho alterado",
@@ -776,14 +787,14 @@
     "haptic_feedback__disable": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Desativar feedback tátil?",
-      "Eckhart": "Desativar feedback tátil?"
+      "Delizia": "Desativar resposta tátil?",
+      "Eckhart": "Desativar resposta tátil?"
     },
     "haptic_feedback__enable": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Ativar feedback tátil?",
-      "Eckhart": "Ativar feedback tátil?"
+      "Delizia": "Ativar resposta tátil?",
+      "Eckhart": "Ativar resposta tátil?"
     },
     "haptic_feedback__subtitle": {
       "Bolt": "",
@@ -794,15 +805,10 @@
     "haptic_feedback__title": {
       "Bolt": "",
       "Caesar": "",
-      "Delizia": "Feedback tátil",
-      "Eckhart": "Feedback tátil"
+      "Delizia": "Resposta tátil",
+      "Eckhart": "Resposta tátil"
     },
-    "homescreen__backup_needed_info": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Abra o Trezor Suite e crie um backup da carteira. Este é o único modo de recuperar o acesso aos seus ativos."
-    },
+    "homescreen__backup_needed_info": "Abra o Trezor Suite e crie um backup da carteira. Este é o único modo de recuperar o acesso aos seus ativos.",
     "homescreen__click_to_connect": "Clique para conectar",
     "homescreen__click_to_unlock": "Clique para desbloq.",
     "homescreen__firmware_type": "Tipo de firmware",
@@ -896,10 +902,10 @@
     "language__change_to_template": "Alterar idioma para {0}?",
     "language__changed": "Idioma alterado com sucesso",
     "language__progress": {
-      "Bolt": "Alteração de idioma",
-      "Caesar": "Alteração de idioma",
-      "Delizia": "Alteração de idioma",
-      "Eckhart": "Alteração de idioma..."
+      "Bolt": "Alterando idioma",
+      "Caesar": "Alterando idioma",
+      "Delizia": "Alterando idioma",
+      "Eckhart": "Alterando idioma..."
     },
     "language__title": "Config. de idioma",
     "led__disable": {
@@ -1809,6 +1815,18 @@
     "sign_message__confirm_without_review": "Confirmar sem revisão",
     "sign_message__message_size": "Tam. mensagem",
     "sign_message__verify_address": "Verificar endereço",
+    "sn__action": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Permitir que o dispositivo conectado leia o nº de série do seu Trezor Safe 7?"
+    },
+    "sn__title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Número de série"
+    },
     "solana__account_index": "Índice da conta",
     "solana__associated_token_account": "Conta de token associada",
     "solana__base_fee": "Taxa de base",
@@ -1933,13 +1951,13 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Permitir que {0} conecte automaticamente a este Trezor?"
+      "Eckhart": "Permitir que {0} se conecte automaticamente a este Trezor?"
     },
     "thp__autoconnect_app": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Permitir que {0} em {1} conecte automaticamente a este Trezor?"
+      "Eckhart": "Permitir que {0} em {1} se conecte automaticamente a este Trezor?"
     },
     "thp__autoconnect_title": {
       "Bolt": "",
@@ -1963,7 +1981,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Permitir que {0} se conecte com este Trezor?"
+      "Eckhart": "Permitir que {0} se conecte a este Trezor?"
     },
     "thp__connect_app": {
       "Bolt": "",
@@ -1975,25 +1993,25 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Informações da conexão"
+      "Eckhart": "Diálogo de conexão"
     },
     "thp__nfc_text": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Mantenha o seu Trezor próximo do seu telefone para concluir a configuração."
+      "Eckhart": "Mantenha o seu Trezor junto ao seu telefone para concluir a configuração."
     },
     "thp__pair": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Permitir que {0} seja pareado com este Trezor?"
+      "Eckhart": "Permitir parear {0} com este Trezor?"
     },
     "thp__pair_app": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Permitir que {0} em {1} se conecte a este Trezor?"
+      "Eckhart": "Permitir parear {0} em {1} com este Trezor?"
     },
     "thp__pair_name": {
       "Bolt": "",
@@ -2005,7 +2023,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Parear com um dispositivo novo"
+      "Eckhart": "Parear com novo dispositivo"
     },
     "thp__pair_title": {
       "Bolt": "",
@@ -2017,7 +2035,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Escaneie o código QR para parear"
+      "Eckhart": "Escaneie o QR code para parear"
     },
     "tutorial__continue": "Continuar tutorial",
     "tutorial__did_you_know": "Você sabia?",
@@ -2033,14 +2051,14 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Use os botões abaixo na tela para navegar e confirmar suas ações."
+      "Eckhart": "Use os botões na tela para navegar e confirmar suas ações."
     },
     "tutorial__one_more_step": "Mais um passo",
     "tutorial__power": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Use o botão lateral para ligar ou desligar o dipositivo."
+      "Eckhart": "Use o botão liga/desliga na lateral para ligar ou desligar seu dispositivo."
     },
     "tutorial__press_and_hold": "Mantenha pressionado o botão direito para\naprovar operações importantes.",
     "tutorial__ready_to_use": "Seu Tezor já está pronto\npara ser usado.",

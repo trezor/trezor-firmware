@@ -216,7 +216,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Alle Hosts entfernen."
+      "Eckhart": "Alle Verbindungen entfernt."
     },
     "ble__forget_this_description": {
       "Bolt": "",
@@ -234,13 +234,13 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Host entfernt."
+      "Eckhart": "Verbindung entfernt."
     },
     "ble__host_info": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Host-Info"
+      "Eckhart": "Verbindungsinfo"
     },
     "ble__limit_reached": {
       "Bolt": "",
@@ -259,6 +259,12 @@
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Gekoppelte Geräte verwalten"
+    },
+    "ble__must_be_enabled": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Bluetooth muss aktiviert sein, um sich mit neuem Gerät zu koppeln."
     },
     "ble__pair_new": {
       "Bolt": "",
@@ -312,7 +318,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Warten auf Host"
+      "Eckhart": "Warten auf Verbindung..."
     },
     "brightness__change_title": "Display-Helligkeit ändern",
     "brightness__changed_title": "Display-Helligkeit geändert",
@@ -2114,6 +2120,18 @@
     "sign_message__confirm_without_review": "Unüberprüft bestätigen",
     "sign_message__message_size": "Größe der Nachricht",
     "sign_message__verify_address": "Adresse verifizieren",
+    "sn__action": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Verbundenem Gerät erlauben, die Seriennummer des Trezor Safe 7 abzurufen?"
+    },
+    "sn__title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Seriennummer"
+    },
     "solana__account_index": "Konto-Index",
     "solana__associated_token_account": "Zugehöriges Token-Konto",
     "solana__base_fee": "Grundgebühr",

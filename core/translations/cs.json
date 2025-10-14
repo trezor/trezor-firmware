@@ -81,7 +81,7 @@
     "address_details__derivation_path_colon": "Derivační cesta:",
     "address_details__title_receive_address": "Přijímací adresa",
     "address_details__title_receiving_to": "Příjem",
-    "authenticate__confirm_template": "Povolit připojenému počítači potvrdit pravost vašeho {0}?",
+    "authenticate__confirm_template": "Povolit připojené aplikaci potvrdit pravost vašeho {0}?",
     "authenticate__header": "Ověřit zařízení",
     "auto_lock__change_template": "Automaticky zamknout Trezor po {0} nečinnosti?",
     "auto_lock__description": "Nastavte dobu, po které se Trezor automaticky uzamkne.",
@@ -181,7 +181,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Všichni hostitelé odstraněni."
+      "Eckhart": "Všechna připojení odstraněna."
     },
     "ble__forget_this_description": {
       "Bolt": "",
@@ -199,13 +199,13 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Hostitel odstraněn."
+      "Eckhart": "Propojení odstraněno."
     },
     "ble__host_info": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Více o hostiteli"
+      "Eckhart": "Více o připojení"
     },
     "ble__limit_reached": {
       "Bolt": "",
@@ -217,13 +217,19 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "MAC Adresa"
+      "Eckhart": "MAC adresa"
     },
     "ble__manage_paired": {
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
       "Eckhart": "Spravovat spárovaná zařízení"
+    },
+    "ble__must_be_enabled": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Zapněte Bluetooth pro připojení nového zařízení."
     },
     "ble__pair_new": {
       "Bolt": "",
@@ -277,7 +283,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Čekání na hostitele..."
+      "Eckhart": "Čekání na připojení..."
     },
     "brightness__change_title": "Změnit jas displeje",
     "brightness__changed_title": "Jas displeje byl změněn",
@@ -1331,7 +1337,7 @@
     "passphrase__continue_with_empty_passphrase": "Pokračovat s prázdnou passphrase?",
     "passphrase__from_host_not_shown": "Použije se passphrase zadaná hostitelem, ale vzhledem k nastavení zařízení se nezobrazí.",
     "passphrase__hidden_wallet": "Skrytá peněženka",
-    "passphrase__hide": "Skrýt passphrase od hostitele?",
+    "passphrase__hide": "Skrýt passphrase z aplikace?",
     "passphrase__next_screen_will_show_passphrase": "Na další obrazovce se zobrazí vaše passphrase.",
     "passphrase__please_enter": "Zadejte passphrase.",
     "passphrase__revoke_on_device": "Chcete zrušit passphrase v nastavení zařízení?",
@@ -1599,7 +1605,12 @@
     "reset__required_number_of_groups": "Požadovaný počet skupin pro obnovení.",
     "reset__select_correct_word": "Pro každou pozici vyberte správné slovo.",
     "reset__select_threshold": "Vyberte minimální počet částí potřebných k obnovení peněženky.",
-    "reset__select_word_from_share_template": "Vyberte slovo #{0} z\npodílu #{1}",
+    "reset__select_word_from_share_template": {
+      "Bolt": "Vyberte slovo #{0} z\npodílu #{1}",
+      "Caesar": "Vyberte slovo #{0} z\npodílu #{1}",
+      "Delizia": "Vyberte slovo #{0} z\npodílu #{1}",
+      "Eckhart": "Vyberte slovo #{0} z podílu #{1}"
+    },
     "reset__select_word_template": "Vybrat slovo {0}",
     "reset__select_word_x_of_y_template": "Vyb. slovo {0} z {1}:",
     "reset__set_it_to_count_template": "Nastavte {0} a budete potřebovat ",
@@ -1824,6 +1835,18 @@
     "sign_message__confirm_without_review": "Potvrdit bez kontroly",
     "sign_message__message_size": "Velikost zprávy",
     "sign_message__verify_address": "Ověřit adresu",
+    "sn__action": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Povolit připojenému zařízení získat sériové číslo vašeho Trezor Safe 7?"
+    },
+    "sn__title": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "Sériové číslo"
+    },
     "solana__account_index": "Index účtu",
     "solana__associated_token_account": "Přidružený tokenový účet",
     "solana__base_fee": "Základní poplatek",
@@ -2048,7 +2071,7 @@
       "Bolt": "",
       "Caesar": "",
       "Delizia": "",
-      "Eckhart": "Použijte dolní tlačítka na displeji k navigaci a potvrzení akcí."
+      "Eckhart": "Použijte tlačítka na displeji k navigaci a potvrzení akcí."
     },
     "tutorial__one_more_step": "Ještě jeden krok",
     "tutorial__power": {
