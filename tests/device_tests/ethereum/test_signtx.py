@@ -137,15 +137,34 @@ example_input_data_long_value = {
         "nonce": "0x0",
         "gas_price": "0x4a817c800",
         "gas_limit": "0x125208",
-        "value": "0xab54a98ceb1f0ad2",
+        "value": "0x59b09a229d59205d2",  # 103.405359019777459666 ETH - a value that will not fit in 8 bytes, but ETH allows 32 bytes
         "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
         "tx_type": None,
         "data": "",
     },
     "result": {
         "sig_v": 37,
-        "sig_r": "a396a13c67594d0df54a2cea8579f69eb185ab0b69bfa30a4c15fd9ac44eb88d",
-        "sig_s": "0eb91df671c175ecfe60e4ab5a02e9627b94a19dd252f75344ea679934581f39",
+        "sig_r": "e398a281bab316c5d0192b8e1f6d7a9f1698f6ba2ada4efd8337d4dd2ac7fca4",
+        "sig_s": "5e5caa4a8b51bd5d9b4d7ad4c2c5a62875fbbbf9dc71eb1fb2f76807e5aa23db",
+    },
+}
+
+example_input_data_too_long_value = {
+    "parameters": {
+        "chain_id": 1,
+        "path": "m/44'/60'/0'/0/0",
+        "nonce": "0x0",
+        "gas_price": "0x4a817c800",
+        "gas_limit": "0x125208",
+        "value": "0x10000000000000000000000000000000000000000000000000000000000000000",  # > 32 bytes
+        "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
+        "tx_type": None,
+        "data": "",
+    },
+    "result": {
+        "sig_v": 37,
+        "sig_r": "e398a281bab316c5d0192b8e1f6d7a9f1698f6ba2ada4efd8337d4dd2ac7fca4",
+        "sig_s": "5e5caa4a8b51bd5d9b4d7ad4c2c5a62875fbbbf9dc71eb1fb2f76807e5aa23db",
     },
 }
 
@@ -673,3 +692,22 @@ def test_signtx_payment_req_long_value(
         params,
         example_input_data_long_value["result"],
     )
+
+    params = dict(example_input_data_too_long_value["parameters"])
+    params["payment_req"] = make_payment_request(
+        session,
+        recipient_name="trezor.io",
+        slip44=60,
+        outputs=[(int(params["value"], 16), params["to_address"])],
+        memos=memos,
+        nonce=nonce,
+        amount_size_bytes=64,
+    )
+
+    with pytest.raises(exceptions.TrezorFailure) as e:
+        _do_test_signtx(
+            session,
+            params,
+            example_input_data_long_value["result"],
+        )
+    assert str(e.value.message) == "amount must be exactly 32 bytes"
