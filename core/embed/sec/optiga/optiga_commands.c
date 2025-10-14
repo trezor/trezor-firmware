@@ -36,6 +36,9 @@
 #include "nist256p1.h"
 #include "sha2.h"
 
+// The throttling delay when the security event counter is at its maximum.
+#define OPTIGA_T_MAX_MS 5000
+
 #define AUTO_STATES_MAX_COUNT 5
 
 // Static buffer for commands and responses.
@@ -80,6 +83,38 @@ static bool auto_states_add(optiga_oid oid) {
   auto_states[auto_states_count] = oid;
   auto_states_count++;
   return true;
+}
+
+static void operation_add_time(uint32_t *total_time_ms, uint8_t *optiga_sec,
+                               uint32_t *optiga_last_time_decreased_ms,
+                               uint32_t operation_time_ms) {
+  if (optiga_sec && optiga_last_time_decreased_ms) {
+    // Every OPTIGA_T_MAX_MS, the SEC counter decreases by 1. Contrary to the
+    // documentation, this occurs even if a security event happens during this
+    // interval.
+    int decrease =
+        (*total_time_ms - *optiga_last_time_decreased_ms) / OPTIGA_T_MAX_MS;
+    *optiga_last_time_decreased_ms += decrease * OPTIGA_T_MAX_MS;
+    if (decrease > *optiga_sec) {
+      *optiga_sec = 0;
+    } else {
+      *optiga_sec -= decrease;
+    }
+
+    // The maximum value of SEC is 255.
+    if (*optiga_sec < 255) {
+      *optiga_sec += 1;
+    }
+
+    // If the SEC is above 127, then Optiga introduces a throttling delay before
+    // the execution of each protected command. The delay grows propotionally to
+    // the SEC value up to a maximum delay of OPTIGA_T_MAX_MS.
+    if (*optiga_sec > 127) {
+      *total_time_ms += (*optiga_sec - 127) * OPTIGA_T_MAX_MS / 128;
+    }
+  }
+
+  *total_time_ms += operation_time_ms;
 }
 
 static optiga_result process_output(uint8_t **out_data, size_t *out_size) {
@@ -357,6 +392,15 @@ optiga_result optiga_get_data_object(uint16_t oid, bool get_metadata,
   return process_output_varlen(data, max_data_size, data_size);
 }
 
+void optiga_get_data_object_time(bool is_metadata, uint32_t *time_ms) {
+  if (is_metadata) {
+    operation_add_time(time_ms, NULL, NULL, 17);
+  } else {
+    // Assuming the data size is 32 bytes
+    operation_add_time(time_ms, NULL, NULL, 23);
+  }
+}
+
 /*
  * https://github.com/Infineon/optiga-trust-m/blob/develop/documents/OPTIGA%E2%84%A2%20Trust%20M%20Solution%20Reference%20Manual.md#setdataobject
  */
@@ -390,6 +434,15 @@ optiga_result optiga_set_data_object(uint16_t oid, bool set_metadata,
   ret = process_output_fixedlen(NULL, 0);
   memzero(tx_buffer + 8, data_size);
   return ret;
+}
+
+void optiga_set_data_object_time(bool is_metadata, uint32_t *time_ms) {
+  if (is_metadata) {
+    operation_add_time(time_ms, NULL, NULL, 49);
+  } else {
+    // Assuming the data size is 32 bytes
+    operation_add_time(time_ms, NULL, NULL, 35);
+  }
 }
 
 /*
@@ -452,6 +505,11 @@ optiga_result optiga_get_random(uint8_t *random, size_t random_size) {
   return process_output_fixedlen(random, random_size);
 }
 
+void optiga_get_random_time(uint32_t *time_ms) {
+  // Assuming the random size is 32 bytes
+  operation_add_time(time_ms, NULL, NULL, 16);
+}
+
 /*
  * https://github.com/Infineon/optiga-trust-m/blob/develop/documents/OPTIGA%E2%84%A2%20Trust%20M%20Solution%20Reference%20Manual.md#encryptsym
  * Returns 0x61, mac_size (2 bytes), mac.
@@ -484,6 +542,24 @@ optiga_result optiga_encrypt_sym(optiga_sym_mode mode, uint16_t oid,
 
   memzero(tx_buffer + 7, input_size);
   return ret;
+}
+
+void optiga_encrypt_sym_time(optiga_sym_mode mode, uint32_t *time_ms,
+                             uint8_t *optiga_sec,
+                             uint32_t *optiga_last_time_decreased_ms) {
+  switch (mode) {
+    case OPTIGA_SYM_MODE_CMAC:
+      operation_add_time(time_ms, optiga_sec, optiga_last_time_decreased_ms,
+                         56);
+      break;
+    case OPTIGA_SYM_MODE_HMAC_SHA256:
+      operation_add_time(time_ms, optiga_sec, optiga_last_time_decreased_ms,
+                         122);
+      break;
+    default:
+      assert(false);
+      break;
+  }
 }
 
 /*
@@ -549,6 +625,12 @@ optiga_result optiga_set_auto_state(uint16_t nonce_oid, uint16_t key_oid,
   return process_output_fixedlen(NULL, 0);
 }
 
+void optiga_set_auto_state_time(uint32_t *time_ms, uint8_t *optiga_sec,
+                                uint32_t *optiga_last_time_decreased_ms) {
+  // Assuming the key size is 32 bytes
+  operation_add_time(time_ms, optiga_sec, optiga_last_time_decreased_ms, 131);
+}
+
 optiga_result optiga_clear_auto_state(uint16_t key_oid) {
   tx_size = 12;
   uint8_t *ptr = tx_buffer;
@@ -578,6 +660,10 @@ optiga_result optiga_clear_auto_state(uint16_t key_oid) {
   }
 
   return OPTIGA_SUCCESS;
+}
+
+void optiga_clear_auto_state_time(uint32_t *time_ms) {
+  operation_add_time(time_ms, NULL, NULL, 13);
 }
 
 /*
@@ -716,6 +802,11 @@ optiga_result optiga_gen_key_pair(optiga_curve curve, optiga_key_usage usage,
                                public_key_size);
 }
 
+void optiga_gen_key_pair_time(uint32_t *time_ms) {
+  // Assuming the curve is OPTIGA_CURVE_P256
+  operation_add_time(time_ms, NULL, NULL, 151);
+}
+
 /*
  * https://github.com/Infineon/optiga-trust-m/blob/develop/documents/OPTIGA%E2%84%A2%20Trust%20M%20Solution%20Reference%20Manual.md#gensymkey
  */
@@ -743,6 +834,11 @@ optiga_result optiga_gen_sym_key(optiga_aes algorithm, optiga_key_usage usage,
   }
 
   return process_output_fixedlen(NULL, 0);
+}
+
+void optiga_gen_sym_key_time(uint32_t *time_ms) {
+  // Assuming the key type is OPTIGA_AES_256
+  operation_add_time(time_ms, NULL, NULL, 36);
 }
 
 /*
@@ -788,6 +884,12 @@ optiga_result optiga_calc_ssec(optiga_curve curve, uint16_t oid,
   }
 
   return process_output_varlen(secret, max_secret_size, secret_size);
+}
+
+void optiga_calc_ssec_time(uint32_t *time_ms, uint8_t *optiga_sec,
+                           uint32_t *optiga_last_time_decreased_ms) {
+  // Assuming the curve is OPTIGA_CURVE_P256
+  operation_add_time(time_ms, optiga_sec, optiga_last_time_decreased_ms, 150);
 }
 
 /*
@@ -1006,6 +1108,10 @@ optiga_result optiga_reset_counter(uint16_t oid, uint32_t limit) {
     limit >>= 8;
   }
   return optiga_set_data_object(oid, false, value_array, sizeof(value_array));
+}
+
+void optiga_reset_counter_time(uint32_t *time_ms) {
+  operation_add_time(time_ms, NULL, NULL, 24);
 }
 
 #endif  // SECURE_MODE
