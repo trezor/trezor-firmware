@@ -6,7 +6,7 @@ from trezor.enums import ButtonRequestType
 from trezor.wire import ActionCancelled
 
 if TYPE_CHECKING:
-    from typing import Any, Awaitable, Callable, Coroutine, TypeVar
+    from typing import Any, Awaitable, Callable, Coroutine, Literal, TypeVar, overload
 
     from trezorui_api import PropertyType  # noqa: F401
 
@@ -16,13 +16,48 @@ if TYPE_CHECKING:
 
     T = TypeVar("T")
 
+    @overload
+    async def interact(
+        layout_obj: ui.LayoutObj[Any],
+        br_name: str | None,
+        br_code: ButtonRequestType = ButtonRequestType.Other,
+        raise_on_cancel: ExceptionType | None = ActionCancelled,
+        *,
+        confirm_only: Literal[True],
+    ) -> None: ...
+
+    @overload
+    async def interact(
+        layout_obj: ui.LayoutObj[T],
+        br_name: str | None,
+        br_code: ButtonRequestType = ButtonRequestType.Other,
+        raise_on_cancel: ExceptionType | None = ActionCancelled,
+        *,
+        confirm_only: bool = False,
+    ) -> T: ...
+
 
 async def interact(
     layout_obj: ui.LayoutObj[T],
     br_name: str | None,
     br_code: ButtonRequestType = ButtonRequestType.Other,
     raise_on_cancel: ExceptionType | None = ActionCancelled,
-) -> T:
+    *,
+    confirm_only: bool = False,
+) -> T | None:
+    """Return the result of user interaction with the layout.
+
+    If the result is CANCELLED, raise the specified exception (`ActionCancelled`
+    by default), unless `raise_on_cancel` is explicitly set to None.
+
+    Specify `confirm_only=True` to invoke "raise if not confirmed" behavior,
+    that is:
+    * if the result is CONFIRMED, return None
+    * if the result is CANCELLED, raise the `raise_on_cancel` exception
+    * on any other result (indicating a bug in the caller), raise a RuntimeError
+    Setting `raise_on_cancel=None` together with `confirm_only=True` invalid,
+    and a RuntimeError will be raised in the cancel case.
+    """
     # shut down other workflows to prevent them from interfering with the current one
     workflow.close_others()
     # start the layout
@@ -33,20 +68,29 @@ async def interact(
         layout.button_request_box.put((br_code, br_name))
     # wait for the layout result
     result = await layout.get_result()
+
     # raise an exception if the user cancelled the action
     if raise_on_cancel is not None and result is trezorui_api.CANCELLED:
         raise raise_on_cancel
+
+    if confirm_only:
+        # raise_if_not_confirmed behavior: return None if the user confirmed the action
+        if result is trezorui_api.CONFIRMED:
+            return None
+        # if the result was CANCELLED, the earlier branch should have raised
+        # ...raise otherwise
+        raise RuntimeError  # unexpected result
+
     return result
 
 
-def raise_if_cancelled(
+def raise_if_not_confirmed(
     layout_obj: ui.LayoutObj[ui.UiResult],
     br_name: str | None,
     br_code: ButtonRequestType = ButtonRequestType.Other,
     exc: ExceptionType = ActionCancelled,
 ) -> Coroutine[Any, Any, None]:
-    action = interact(layout_obj, br_name, br_code, exc)
-    return action  # type: ignore ["UiResult" is not assignable to "None"]
+    return interact(layout_obj, br_name, br_code, exc, confirm_only=True)
 
 
 async def with_info(

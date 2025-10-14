@@ -4,7 +4,7 @@ import trezorui_api
 from trezor import TR
 from trezor.enums import ButtonRequestType
 
-from ..common import interact, raise_if_cancelled
+from ..common import interact, raise_if_not_confirmed
 from . import confirm_action, show_success, show_warning
 
 CONFIRMED = trezorui_api.CONFIRMED  # global_import_cache
@@ -121,7 +121,7 @@ def slip39_show_checklist(
         )
     )
 
-    return raise_if_cancelled(
+    return raise_if_not_confirmed(
         trezorui_api.show_checklist(
             title=TR.reset__slip39_checklist_title,
             button=TR.buttons__continue,

@@ -14,7 +14,7 @@ def confirm_pairing(
     short_text: str,
     long_text: str,
 ) -> Awaitable[None]:
-    from trezor.ui.layouts.common import raise_if_cancelled
+    from trezor.ui.layouts.common import raise_if_not_confirmed
     from trezorui_api import confirm_thp_pairing
 
     if app_name and host_name:
@@ -24,7 +24,7 @@ def confirm_pairing(
         args = (app_name or host_name or "(unknown)",)
         description = short_text
 
-    return raise_if_cancelled(
+    return raise_if_not_confirmed(
         confirm_thp_pairing(title=title, description=description, args=args),
         br_name=br_name,
     )
