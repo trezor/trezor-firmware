@@ -308,6 +308,35 @@ def test_payment_req_wrong_amount(session: Session):
         )
 
 
+def test_payment_req_amount_encoding_bytes(session: Session):
+    # Test payment request with amount encoded on too many bytes
+    outputs[0].payment_req_index = 0
+    outputs[1].payment_req_index = 0
+    outputs[2].payment_req_index = None
+    payment_req = make_payment_request(
+        session,
+        recipient_name="trezor.io",
+        slip44=1,
+        outputs=[(txo.amount, txo.address) for txo in outputs[:2]],
+        nonce=misc.get_nonce(session),
+    )
+
+    # BTC amounts are supposed to be 8 bytes, here we re-encode the amount on more bytes
+    payment_req.amount = (int.from_bytes(payment_req.amount, "little")).to_bytes(
+        16, "little"
+    )
+
+    with pytest.raises(TrezorFailure, match="amount must be exactly 8 bytes"):
+        btc.sign_tx(
+            session,
+            "Testnet",
+            inputs,
+            outputs,
+            prev_txes=PREV_TXES,
+            payment_reqs=[payment_req],
+        )
+
+
 def test_payment_req_wrong_mac_refund(session: Session):
     # Test wrong MAC in payment request memo.
     memo = RefundMemo(parse_path("m/44h/1h/0h/1/0"))
