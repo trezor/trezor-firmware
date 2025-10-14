@@ -17,7 +17,6 @@
 from __future__ import annotations
 
 import logging
-import os
 import typing as t
 
 from ..exceptions import TrezorException
@@ -52,16 +51,18 @@ class Timeout(TransportException):
 
 
 class Transport:
-    PATH_PREFIX: str
+    PATH_PREFIX: t.ClassVar[str]
+    CHUNK_SIZE: t.ClassVar[int | None]
+    ENABLED: t.ClassVar[bool]
 
     @classmethod
     def enumerate(
-        cls: t.Type[T], models: t.Iterable[TrezorModel] | None = None
-    ) -> t.Iterable[T]:
+        cls, models: t.Iterable[TrezorModel] | None = None
+    ) -> t.Iterable[t.Self]:
         raise NotImplementedError
 
     @classmethod
-    def find_by_path(cls: t.Type[T], path: str, prefix_search: bool = False) -> T:
+    def find_by_path(cls, path: str, prefix_search: bool = False) -> t.Self:
         for device in cls.enumerate():
 
             if device.get_path() == path:
@@ -75,7 +76,8 @@ class Transport:
     def get_path(self) -> str:
         raise NotImplementedError
 
-    def find_debug(self: T) -> T:
+    # find_debug is allowed to return a different type than Self
+    def find_debug(self) -> Transport:
         raise NotImplementedError
 
     def open(self) -> None:
@@ -92,8 +94,6 @@ class Transport:
 
     def ping(self) -> bool:
         raise NotImplementedError
-
-    CHUNK_SIZE: t.ClassVar[int | None]
 
 
 def all_transports() -> t.Iterable[type[Transport]]:
@@ -116,7 +116,7 @@ def all_transports() -> t.Iterable[type[Transport]]:
 def enumerate_devices(
     models: t.Iterable[TrezorModel] | None = None,
 ) -> t.Sequence[Transport]:
-    devices: t.List[Transport] = []
+    devices: list[Transport] = []
     for transport in all_transports():
         name = transport.__name__
         try:
