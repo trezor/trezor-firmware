@@ -199,6 +199,8 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
                     uint32_t deadline) {
   sysevent_dispatcher_t *dispatcher = &g_sysevent_dispatcher;
 
+  memset(signalled, 0, sizeof(*signalled));
+
   systask_t *kernel_task = systask_kernel();
   systask_t *active_task = systask_active();
 
