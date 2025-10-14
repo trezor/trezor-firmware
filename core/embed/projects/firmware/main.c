@@ -63,6 +63,8 @@ extern const void nrf_app_size;
 
 #endif
 
+static mp_state_ctx_t mp_state_ctx_data;
+
 int main_func(uint32_t cmd, void *arg) {
   if (cmd == 1) {
     systask_postmortem_t *info = (systask_postmortem_t *)arg;
@@ -124,6 +126,8 @@ int main_func(uint32_t cmd, void *arg) {
 #ifdef USE_SECP256K1_ZKP
   ensure(sectrue * (zkp_context_init() == 0), NULL);
 #endif
+
+  mp_state_init(&mp_state_ctx_data);
 
   printf("CORE: Preparing stack\n");
   // Stack limit should be less than real stack size, so we have a chance

@@ -37,7 +37,7 @@
 
 #include <io/usb.h>
 
-uint32_t last_touch_sample_time = 0;
+MP_THREAD_LOCAL uint32_t last_touch_sample_time;
 
 #define CHECK_PARAM_RANGE(value, minimum, maximum) \
   if (value < minimum || value > maximum) {        \
