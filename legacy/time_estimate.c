@@ -25,11 +25,15 @@
 // MCU clock 120 MHz
 #define MCU_CLOCK 120000000
 
+uint32_t clock_cycles_to_ms(uint32_t cycles) {
+  return cycles / (MCU_CLOCK / 1000);
+}
+
 uint32_t time_estimate_pbkdf2_ms(uint32_t iterations) {
 #if EMULATOR
   (void)iterations;
   return 500;
 #else
-  return PIN_PBKDF2_CYCLES_PER_ITER * iterations / (MCU_CLOCK / 1000);
+  return clock_cycles_to_ms(PIN_PBKDF2_CYCLES_PER_ITER * iterations);
 #endif
 }
