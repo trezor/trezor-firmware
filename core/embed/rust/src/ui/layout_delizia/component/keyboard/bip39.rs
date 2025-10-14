@@ -105,7 +105,7 @@ impl Component for Bip39Input {
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let area = self.button.area();
-        let style = self.button.style();
+        let style = self.button.button_style();
 
         // Paint the entered content (the prefix of the suggested word).
         let text = self.textbox.content();
@@ -148,7 +148,7 @@ impl Component for Bip39Input {
             .render(target);
         if let Some(word) = self.suggested_word.and_then(|w| w.get(text.len()..)) {
             let word_baseline = text_base + Offset::x(width);
-            let style = self.button_suggestion.style();
+            let style = self.button_suggestion.button_style();
             shape::Text::new(word_baseline, word, style.font)
                 .with_fg(style.text_color)
                 .with_align(Alignment::Start)

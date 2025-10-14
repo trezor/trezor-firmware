@@ -51,7 +51,7 @@ impl<T: MenuItems> VerticalMenuScreen<T> {
     const SUBTITLE_HEIGHT: i16 = 68;
     const SUBTITLE_DOUBLE_HEIGHT: i16 = 100;
     const SUBTITLE_PADDING: i16 = 20;
-    const OVERFLOW_ARROW_Y_OFFSET: i16 = 18;
+    const OVERFLOW_ARROW_Y_OFFSET: i16 = 16;
     const OVERFLOW_ARROW_ICON: Icon = theme::ICON_CHEVRON_DOWN_MINI;
 
     pub fn new(menu: VerticalMenu<T>) -> Self {

@@ -119,8 +119,8 @@ impl Component for Bip39Input {
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let area = self.button.area();
-        let style = self.button.style();
-        let suggestion_style = self.button_suggestion.style();
+        let style = self.button.button_style();
+        let suggestion_style = self.button_suggestion.button_style();
         let entered = self.textbox.content();
         let entered_width = style.font.text_width(entered);
 
