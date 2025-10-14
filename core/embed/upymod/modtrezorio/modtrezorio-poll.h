@@ -21,6 +21,7 @@
 #include <trezor_types.h>
 
 #include <io/display.h>
+#include <sys/ipc.h>
 #include <sys/sysevent.h>
 #include <sys/systick.h>
 
@@ -111,6 +112,8 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
     }
   }
 
+  awaited.read_ready |= (1 << SYSHANDLE_IPC2);
+
   // The value `timeout_ms` can be negative in a minority of cases, indicating a
   // deadline overrun. This is not a problem because we use the `timeout` only
   // to calculate a `deadline`, and having deadline in the past works fine
@@ -127,6 +130,20 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
 
     if (signalled.read_ready == 0 && signalled.write_ready == 0) {
       return mp_const_false;
+    }
+
+    if (signalled.read_ready & (1 << SYSHANDLE_IPC2)) {
+      ipc_message_t req = {.remote = 2};
+      if (ipc_try_receive(&req)) {
+        const ipc_message_t rsp = {
+            .remote = req.remote,
+            .fn = req.fn | IPC_FN_RETURN,
+            .data = req.data,
+            .size = req.size,
+        };
+        ipc_send(&rsp);
+        ipc_message_free(&req);
+      }
     }
 
 #ifdef USE_TOUCH

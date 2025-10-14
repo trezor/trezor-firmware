@@ -51,6 +51,8 @@
 
 #include <SDL.h>
 
+#include <util/elf_loader.h>  // !@# for tests
+
 static void drivers_deinit(void) { flash_deinit(); }
 
 static void drivers_init(void) {
@@ -148,6 +150,14 @@ int main(int argc, char **argv) {
 
   // Run the coreapp task
   applet_run(&coreapp);
+
+  applet_t extapp;
+  {
+    if (!elf_load(&extapp, "../../../../trezor-app-emu/build/libtest_app.so")) {
+      return -1;
+    }
+    applet_run(&extapp);
+  }
 
   // Loop until the coreapp task is terminated
   kernel_loop(&coreapp);
