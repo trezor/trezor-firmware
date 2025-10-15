@@ -18,8 +18,11 @@ def get_secret() -> bytes | None:
     return storage_device.get_mnemonic_secret()
 
 
-def get_secret_bits() -> bytes | None:
-    return storage_device.get_mnemonic_secret_bits()
+def _get_secret_bits() -> bytes | None:
+    secret_bits = storage_device.get_mnemonic_secret_bits()
+    if secret_bits is None:
+        secret_bits = storage_device.update_mnemonic_bits()
+    return secret_bits
 
 
 def get_type() -> BackupType:
@@ -86,11 +89,9 @@ if not utils.BITCOIN_ONLY:
         if not is_bip39():
             raise ValueError  # should not be called for SLIP-39
 
-        mnemonic_secret_bits = get_secret_bits()
+        mnemonic_secret_bits = _get_secret_bits()
         if mnemonic_secret_bits is None:
-            mnemonic_secret_bits = storage_device.update_mnemonic_bits()
-            if mnemonic_secret_bits is None:
-                raise RuntimeError("Failed to update mnemonic bits")
+            raise RuntimeError("Failed to get mnemonic bits")
 
         render_func = None
         if progress_bar and not utils.DISABLE_ANIMATION:
