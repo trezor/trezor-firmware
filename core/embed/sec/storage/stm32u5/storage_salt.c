@@ -87,24 +87,6 @@ void storage_salt_get(storage_salt_t* salt) {
   salt->size = 12 + FLASH_OTP_BLOCK_SIZE;
 }
 
-secbool master_key_get(master_key_t* salt) {
-  if (secfalse == flash_otp_is_locked(FLASH_OTP_BLOCK_MASTER_KEY)) {
-    uint8_t rnd_bytes[FLASH_OTP_BLOCK_SIZE];
-    if (!rng_fill_buffer_strong(rnd_bytes, FLASH_OTP_BLOCK_SIZE)) {
-      memzero(rnd_bytes, sizeof(rnd_bytes));
-      return secfalse;
-    }
-    ensure(flash_otp_write(FLASH_OTP_BLOCK_MASTER_KEY, 0, rnd_bytes,
-                           FLASH_OTP_BLOCK_SIZE),
-           NULL);
-  }
-  ensure(flash_otp_read(FLASH_OTP_BLOCK_MASTER_KEY, 0, &salt->bytes[0],
-                        FLASH_OTP_BLOCK_SIZE),
-         NULL);
-
-  salt->size = FLASH_OTP_BLOCK_SIZE;
-  return sectrue;
-}
 #endif  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
 
 #endif  // SECURE_MODE

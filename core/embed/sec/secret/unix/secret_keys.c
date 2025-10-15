@@ -77,4 +77,10 @@ secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   return secret_key_derive_nist256p1(0, 1, dest);
 }
 
+secbool master_key_get(master_key_t* salt) {
+  memset(salt, 0, sizeof(*salt));
+  salt->size = 32;
+  return sectrue;
+}
+
 #endif  // SECURE_MODE

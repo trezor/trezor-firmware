@@ -48,35 +48,18 @@ static void diversify_and_derive(uint16_t index, uint16_t subindex,
               dest);
 }
 
+secbool secret_key_derive_sym(uint8_t slot, uint16_t index, uint16_t subindex,
+                              uint8_t dest[SHA256_DIGEST_LENGTH]) {
+  secbool ret = sectrue;
+
+  master_key_t master_key = {.bytes = {0}, .size = MASTER_KEY_MAX_SIZE};
+
 #ifdef SECRET_PRIVILEGED_MASTER_KEY_SLOT
-
-secbool secret_key_derive_sym(uint8_t slot, uint16_t index, uint16_t subindex,
-                              uint8_t dest[SHA256_DIGEST_LENGTH]) {
-  secbool ret = sectrue;
-
-  uint8_t master_key[32] = {0};
-  ret = secret_key_get(slot, master_key, sizeof(master_key));
-  if (ret != sectrue) {
-    goto cleanup;
-  }
-
-  diversify_and_derive(index, subindex, master_key, sizeof(master_key), dest);
-
-cleanup:
-  memzero(master_key, sizeof(master_key));
-  return ret;
-}
-
-#else  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
-
-secbool secret_key_derive_sym(uint8_t slot, uint16_t index, uint16_t subindex,
-                              uint8_t dest[SHA256_DIGEST_LENGTH]) {
-  (void)slot;  // `slot` argument is not used unless
-               // SECRET_PRIVILEGED_MASTER_KEY_SLOT is defined
-
-  secbool ret = sectrue;
-  master_key_t master_key = {0};
+  ret = secret_key_get(slot, master_key.bytes, master_key.size);
+#else   // SECRET_PRIVILEGED_MASTER_KEY_SLOT
   ret = master_key_get(&master_key);
+#endif  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
+
   if (ret != sectrue) {
     goto cleanup;
   }
@@ -88,8 +71,6 @@ cleanup:
   memzero(master_key.bytes, master_key.size);
   return ret;
 }
-
-#endif  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
 
 secbool secret_key_derive_nist256p1(uint8_t slot, uint16_t index,
                                     uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {

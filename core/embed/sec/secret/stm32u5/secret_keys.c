@@ -168,12 +168,34 @@ secbool secret_key_storage_salt(uint16_t fw_type,
 }
 
 #else  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
+#include <sec/rng.h>
+#include <sys/mpu.h>
+#include <util/flash_otp.h>
 
 #ifdef USE_OPTIGA
 secbool secret_key_optiga_pairing(uint8_t dest[OPTIGA_PAIRING_SECRET_SIZE]) {
   return secret_key_get(SECRET_OPTIGA_SLOT, dest, OPTIGA_PAIRING_SECRET_SIZE);
 }
 #endif  // USE_OPTIGA
+
+secbool master_key_get(master_key_t* master_key) {
+  if (secfalse == flash_otp_is_locked(FLASH_OTP_BLOCK_MASTER_KEY)) {
+    uint8_t rnd_bytes[MASTER_KEY_MAX_SIZE];
+    if (!rng_fill_buffer_strong(rnd_bytes, MASTER_KEY_MAX_SIZE)) {
+      memzero(rnd_bytes, sizeof(rnd_bytes));
+      return secfalse;
+    }
+    ensure(flash_otp_write(FLASH_OTP_BLOCK_MASTER_KEY, 0, rnd_bytes,
+                           MASTER_KEY_MAX_SIZE),
+           NULL);
+  }
+  ensure(flash_otp_read(FLASH_OTP_BLOCK_MASTER_KEY, 0, &master_key->bytes[0],
+                        MASTER_KEY_MAX_SIZE),
+         NULL);
+
+  master_key->size = MASTER_KEY_MAX_SIZE;
+  return sectrue;
+}
 
 secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   return secret_key_derive_nist256p1(0, KEY_INDEX_DELEGATED_IDENTITY, dest);

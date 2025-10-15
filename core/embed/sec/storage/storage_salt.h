@@ -44,22 +44,3 @@ typedef struct {
  * @param salt structure filled with the generated data.
  */
 void storage_salt_get(storage_salt_t* salt);
-
-#define MASTER_KEY_MAX_SIZE 32
-
-typedef struct {
-  size_t size;
-  uint8_t bytes[MASTER_KEY_MAX_SIZE];
-} master_key_t;
-
-/**
- * Retrieves the generated buffer with the master key.
- *
- * If master key has not yet been generated for the device,
- * it is generated now.
- *
- * This key is used to derive additional credential keys (e.g. Evolu).
- *
- * @param salt structure filled with the generated data.
- */
-secbool master_key_get(master_key_t* salt);
