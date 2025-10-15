@@ -30,5 +30,5 @@ def seed(
 # upymod/modtrezorcrypto/modtrezorcrypto-bip39.h
 def mnemonic_to_bits(mnemonic: str) -> bytes:
     """
-    Convert mnemonic to its underlying entropy bits.
+    Convert the mnemonic to its underlying entropy bits.
     """
