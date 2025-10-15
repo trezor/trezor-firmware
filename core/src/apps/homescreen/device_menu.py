@@ -103,16 +103,19 @@ async def handle_device_menu() -> None:
         hostname_map = {e.mac_addr: e for e in paired_cache.load()}
         paired_devices = [_get_hostinfo(bond, hostname_map) for bond in bonds]
 
-        if utils.USE_NRF:
+        # versions used in "About" screen, emulator uses dummy versions for fixtures
+        if utils.EMULATOR or not utils.USE_NRF:
+            bluetooth_version = "0.0.0.0"
+        else:
             nrf_version = utils.nrf_get_version()
             bluetooth_version = (
                 f"{nrf_version[0]}.{nrf_version[1]}.{nrf_version[2]}.{nrf_version[3]}"
             )
+        if utils.EMULATOR:
+            firmware_version = "0.0.0.0"
         else:
-            bluetooth_version = "0.0.0.0"
+            firmware_version = ".".join(map(str, utils.VERSION))
 
-        # ###
-        firmware_version = ".".join(map(str, utils.VERSION))
         firmware_type = "Bitcoin-only" if utils.BITCOIN_ONLY else "Universal"
 
         menu_result = await interact(
