@@ -54,12 +54,11 @@ from bottle import post, request, response, run
 
 import trezorlib.mapping
 import trezorlib.messages
-import trezorlib.models
 import trezorlib.transport
-from trezorlib.client import TrezorClient
+from trezorlib import protocol_v1
+from trezorlib.client import AppManifest
 from trezorlib.protobuf import format_message
 from trezorlib.transport.bridge import BridgeTransport
-from trezorlib.transport.thp.protocol_v1 import ProtocolV1Channel
 
 # ignore bridge. we are the bridge
 BridgeTransport.ENABLED = False
@@ -105,6 +104,9 @@ class Session:
         return id
 
 
+APP = AppManifest(app_name="pybridge")
+
+
 class Transport:
     TRANSPORT_COUNTER = 0
     TRANSPORTS: dict[str, Transport] = {}
@@ -113,15 +115,9 @@ class Transport:
         self.path = transport.get_path()
         self.session: Session | None = None
         self.transport = transport
-        self.protocol = ProtocolV1Channel(transport, trezorlib.mapping.DEFAULT_MAPPING)
-
-        transport.open()
-        client = TrezorClient(transport)
-        client.pin_callback = pin_callback
-        self.model = client.model
-
-        client.get_seedless_session().end()
-        transport.close()
+        self.model = protocol_v1.TrezorClientV1(
+            APP, transport, model=None, mapping=None
+        ).model
 
     def acquire(self, sid: str) -> str:
         if self.session_id() != sid:
@@ -130,11 +126,9 @@ class Transport:
             self.session.release()
 
         self.session = Session(self)
-        self.transport.open()
         return self.session.id
 
     def release(self) -> None:
-        self.transport.close()
         self.session = None
 
     def session_id(self) -> str | None:
@@ -155,10 +149,12 @@ class Transport:
         }
 
     def write(self, msg_id: int, data: bytes) -> None:
-        self.protocol._write(msg_id, data)
+        with self.transport:
+            protocol_v1.write(self.transport, msg_id, data)
 
     def read(self) -> tuple[int, bytes]:
-        return self.protocol._read()
+        with self.transport:
+            return protocol_v1.read(self.transport)
 
     @classmethod
     def find(cls, path: str) -> Transport | None:

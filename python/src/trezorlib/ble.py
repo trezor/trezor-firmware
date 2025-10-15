@@ -17,10 +17,12 @@
 import typing as t
 
 from . import messages
+from .tools import workflow
 
 if t.TYPE_CHECKING:
-    from .transport.session import Session
+    from .client import Session
 
 
+@workflow(capability=messages.Capability.BLE)
 def unpair(session: "Session", all: bool) -> None:
     session.call(messages.BleUnpair(all=all), expect=messages.Success)

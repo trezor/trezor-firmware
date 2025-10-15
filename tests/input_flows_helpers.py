@@ -2,7 +2,7 @@ import typing as t
 
 from trezorlib import messages
 from trezorlib.debuglink import LayoutType
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import TrezorTestContext as Client
 
 from . import translations as TR
 from .click_tests.common import go_next

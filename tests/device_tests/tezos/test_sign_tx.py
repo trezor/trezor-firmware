@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import messages, tezos
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.protobuf import dict_to_proto
 from trezorlib.tools import parse_path
 
@@ -29,7 +29,7 @@ pytestmark = [pytest.mark.altcoin, pytest.mark.tezos, pytest.mark.models("core")
 
 
 def test_tezos_sign_tx_proposal(session: Session):
-    with session.client:
+    with session.test_ctx:
         resp = tezos.sign_tx(
             session,
             TEZOS_PATH_10,
@@ -60,7 +60,7 @@ def test_tezos_sign_tx_proposal(session: Session):
 
 
 def test_tezos_sign_tx_multiple_proposals(session: Session):
-    with session.client:
+    with session.test_ctx:
         resp = tezos.sign_tx(
             session,
             TEZOS_PATH_10,

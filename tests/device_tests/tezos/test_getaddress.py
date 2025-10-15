@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tezos import get_address
 from trezorlib.tools import parse_path
 
@@ -40,8 +40,8 @@ def test_tezos_get_address(session: Session, path: str, expected_address: str):
 def test_tezos_get_address_chunkify_details(
     session: Session, path: str, expected_address: str
 ):
-    with session.client as client:
-        IF = InputFlowShowAddressQRCode(session.client)
+    with session.test_ctx as client:
+        IF = InputFlowShowAddressQRCode(session)
         client.set_input_flow(IF.get())
         address = get_address(
             session, parse_path(path), show_display=True, chunkify=True
