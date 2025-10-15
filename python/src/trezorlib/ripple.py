@@ -18,11 +18,11 @@ from typing import TYPE_CHECKING, Any, Optional
 
 from . import messages
 from .protobuf import dict_to_proto
-from .tools import dict_from_camelcase
+from .tools import dict_from_camelcase, workflow
 
 if TYPE_CHECKING:
+    from .client import Session
     from .tools import Address
-    from .transport.session import Session
 
 REQUIRED_FIELDS = ("Fee", "Sequence", "TransactionType", "Payment")
 REQUIRED_PAYMENT_FIELDS = ("Amount", "Destination")
@@ -32,6 +32,7 @@ def get_address(*args: Any, **kwargs: Any) -> str:
     return get_authenticated_address(*args, **kwargs).address
 
 
+@workflow(capability=messages.Capability.Ripple)
 def get_authenticated_address(
     session: "Session",
     address_n: "Address",
@@ -46,6 +47,7 @@ def get_authenticated_address(
     )
 
 
+@workflow(capability=messages.Capability.Ripple)
 def sign_tx(
     session: "Session",
     address_n: "Address",

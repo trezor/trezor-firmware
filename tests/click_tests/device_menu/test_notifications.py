@@ -125,7 +125,6 @@ def test_seedless(device_handler: "BackgroundDeviceHandler"):
 
 
 @pytest.mark.setup_client(needs_backup=True)
-@pytest.mark.invalidate_client
 def test_backup_failed(
     device_handler: "BackgroundDeviceHandler",
 ):
@@ -184,8 +183,11 @@ def test_backup_failed(
     # Wait for the homescreen to appear
     debug.synchronize_at("Homescreen")
 
+    # THP channel must be re-created after wipe
+    test_ctx = device_handler.client
+    test_ctx.client._invalidate()
+
     # Refresh features and check wiped state
-    device_handler.client = device_handler.client.get_new_client()
     features = device_handler.features()
     assert features.initialized is False
     assert features.pin_protection is False

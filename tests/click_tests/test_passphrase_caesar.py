@@ -20,8 +20,8 @@ from typing import TYPE_CHECKING, Generator, Optional
 import pytest
 
 from trezorlib import exceptions, messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
-from trezorlib.transport.session import SessionV1
+from trezorlib.client import PassphraseSetting
+from trezorlib.debuglink import DebugSession as Session
 
 from ..common import TEST_ADDRESS_N
 from .common import (
@@ -89,16 +89,16 @@ CATEGORY_ACTIONS = {
 }
 
 
-def _get_test_address(session: Session) -> None:
+def _get_test_address(session: Session) -> str:
     resp = session.call_raw(
         messages.GetAddress(address_n=TEST_ADDRESS_N, coin_name="Testnet")
     )
     if isinstance(resp, messages.ButtonRequest):
-        resp = session._callback_button(resp)
+        resp = session.client.app._callback_button(resp)
     if isinstance(resp, messages.PassphraseRequest):
         resp = session.call_raw(messages.PassphraseAck(on_device=True))
     if isinstance(resp, messages.ButtonRequest):
-        resp = session._callback_button(resp)
+        resp = session.client.app._callback_button(resp)
     if isinstance(resp, messages.Address):
         return resp.address
     else:
@@ -110,14 +110,15 @@ def prepare_passphrase_dialogue(
     device_handler: "BackgroundDeviceHandler", address: Optional[str] = None
 ) -> Generator["DebugLink", None, None]:
     debug = device_handler.debuglink()
-    session = SessionV1.new(device_handler.client)
-    device_handler.run_with_provided_session(session, _get_test_address)  # type: ignore
+    device_handler.get_session(passphrase=PassphraseSetting.ON_DEVICE)
     layout = debug.synchronize_at("PassphraseKeyboard")
     assert layout.passphrase() == ""
     assert _current_category(debug) == KeyboardCategory.Menu
 
     yield debug
+    session = device_handler.result()
 
+    device_handler.run_with_provided_session(session, _get_test_address)  # type: ignore
     result = device_handler.result()
     if address is not None:
         assert result == address

@@ -28,7 +28,6 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.models("eckhart")]
 
 
-@pytest.mark.invalidate_client
 @pytest.mark.setup_client(pin=PIN4)
 def test_wipe(device_handler: "BackgroundDeviceHandler"):
     enter_pin(device_handler)
@@ -58,7 +57,10 @@ def test_wipe(device_handler: "BackgroundDeviceHandler"):
     # Wait for the homescreen to appear
     debug.synchronize_at("Homescreen")
 
-    device_handler.client = device_handler.client.get_new_client()
+    # THP channel must be re-created after wipe
+    test_ctx = device_handler.client
+    test_ctx.client._invalidate()
+
     features = device_handler.features()
     assert features.initialized is False
     assert features.pin_protection is False

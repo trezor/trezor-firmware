@@ -4,7 +4,7 @@ from hashlib import sha256
 from ecdsa import NIST256p, SigningKey
 
 from trezorlib import messages
-from trezorlib.transport.session import Session
+from trezorlib.client import Session
 
 from ..common import compact_size
 
@@ -30,7 +30,7 @@ class RefundMemo:
 
 @dataclass
 class CoinPurchaseMemo:
-    amount: int
+    amount: str
     coin_name: str
     slip44: int
     address_n: list[int]

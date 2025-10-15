@@ -19,7 +19,7 @@ import time
 import pytest
 
 from trezorlib import messages, models
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import PinException
 
 from ..common import check_pin_backoff_time, get_test_address
@@ -33,13 +33,13 @@ pytestmark = pytest.mark.setup_client(pin=PIN4)
 
 @pytest.mark.setup_client(pin=None)
 def test_no_protection(session: Session):
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses([messages.Address])
         get_test_address(session)
 
 
 def test_correct_pin(session: Session):
-    with session.client as client:
+    with session.test_ctx as client:
         client.use_pin_sequence([PIN4])
         # Expected responses differ between T1 and TT
         is_t1 = session.model is models.T1B1
@@ -59,13 +59,13 @@ def test_correct_pin(session: Session):
 @pytest.mark.models("legacy")
 def test_incorrect_pin_t1(session: Session):
     with pytest.raises(PinException):
-        session.client.use_pin_sequence([BAD_PIN])
+        session.test_ctx.use_pin_sequence([BAD_PIN])
         get_test_address(session)
 
 
 @pytest.mark.models("core")
 def test_incorrect_pin_t2(session: Session):
-    with session.client as client:
+    with session.test_ctx as client:
         # After first incorrect attempt, TT will not raise an error, but instead ask for another attempt
         client.use_pin_sequence([BAD_PIN, PIN4])
         client.set_expected_responses(
@@ -82,7 +82,7 @@ def test_incorrect_pin_t2(session: Session):
 def test_exponential_backoff_t1(session: Session):
     for attempt in range(3):
         start = time.time()
-        with session.client as client, pytest.raises(PinException):
+        with session.test_ctx as client, pytest.raises(PinException):
             client.use_pin_sequence([BAD_PIN])
             get_test_address(session)
         check_pin_backoff_time(attempt, start)
@@ -90,7 +90,7 @@ def test_exponential_backoff_t1(session: Session):
 
 @pytest.mark.models("core")
 def test_exponential_backoff_t2(session: Session):
-    with session.client as client:
+    with session.test_ctx as client:
         IF = InputFlowPINBackoff(client, BAD_PIN, PIN4)
         client.set_input_flow(IF.get())
         get_test_address(session)

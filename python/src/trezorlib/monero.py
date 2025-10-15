@@ -17,10 +17,11 @@
 from typing import TYPE_CHECKING
 
 from . import messages
+from .tools import workflow
 
 if TYPE_CHECKING:
+    from .client import Session
     from .tools import Address
-    from .transport.session import Session
 
 
 # MAINNET = 0
@@ -29,6 +30,7 @@ if TYPE_CHECKING:
 # FAKECHAIN = 3
 
 
+@workflow(capability=messages.Capability.Monero)
 def get_address(
     session: "Session",
     n: "Address",
@@ -47,6 +49,7 @@ def get_address(
     ).address
 
 
+@workflow(capability=messages.Capability.Monero)
 def get_watch_key(
     session: "Session",
     n: "Address",

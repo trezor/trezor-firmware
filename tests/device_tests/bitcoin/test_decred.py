@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
 
 from ...common import is_core
@@ -76,7 +76,7 @@ def test_send_decred(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -133,7 +133,7 @@ def test_purchase_ticket_decred(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -197,7 +197,7 @@ def test_spend_from_stake_generation_and_revocation_decred(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -278,7 +278,7 @@ def test_send_decred_change(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -384,7 +384,7 @@ def test_decred_multisig_change(session: Session):
             script_type=messages.OutputScriptType.PAYTOADDRESS,
         )
 
-        with session.client as client:
+        with session.test_ctx as client:
             client.set_expected_responses(
                 [
                     request_input(0),

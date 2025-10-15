@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib.cardano import get_public_key
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import CardanoDerivationType as D
 from trezorlib.tools import parse_path

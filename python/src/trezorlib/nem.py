@@ -18,10 +18,11 @@ import json
 from typing import TYPE_CHECKING
 
 from . import exceptions, messages
+from .tools import workflow
 
 if TYPE_CHECKING:
+    from .client import Session
     from .tools import Address
-    from .transport.session import Session
 
 TYPE_TRANSACTION_TRANSFER = 0x0101
 TYPE_IMPORTANCE_TRANSFER = 0x0801
@@ -194,6 +195,7 @@ def create_sign_tx(transaction: dict, chunkify: bool = False) -> messages.NEMSig
 # ====== Client functions ====== #
 
 
+@workflow(capability=messages.Capability.NEM)
 def get_address(
     session: "Session",
     n: "Address",
@@ -209,6 +211,7 @@ def get_address(
     ).address
 
 
+@workflow(capability=messages.Capability.NEM)
 def sign_tx(
     session: "Session", n: "Address", transaction: dict, chunkify: bool = False
 ) -> messages.NEMSignedTx:

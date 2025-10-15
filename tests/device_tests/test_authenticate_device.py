@@ -1,7 +1,7 @@
 import pytest
 
 from trezorlib import device
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 
 from ..common import compact_size
 from .certificate import check_signature_optiga, check_signature_tropic

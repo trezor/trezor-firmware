@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -63,7 +63,7 @@ def test_opreturn(session: Session):
         script_type=messages.OutputScriptType.PAYTOOPRETURN,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -110,7 +110,7 @@ def test_nonzero_opreturn(session: Session):
         script_type=messages.OutputScriptType.PAYTOOPRETURN,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [request_input(0), request_output(0), messages.Failure()]
         )
@@ -136,7 +136,7 @@ def test_opreturn_address(session: Session):
         script_type=messages.OutputScriptType.PAYTOOPRETURN,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [request_input(0), request_output(0), messages.Failure()]
         )

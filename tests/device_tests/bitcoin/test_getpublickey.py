@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import Cancelled, TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -124,7 +124,7 @@ def test_get_public_node_cancel_show(
         yield
         session.cancel()
 
-    with pytest.raises(Cancelled), session.client as client:
+    with pytest.raises(Cancelled), session.test_ctx as client:
         client.set_input_flow(input_flow)
         btc.get_public_node(session, path, coin_name=coin_name, show_display=True)
 
@@ -132,8 +132,8 @@ def test_get_public_node_cancel_show(
 @pytest.mark.models("core")
 @pytest.mark.parametrize("coin_name, xpub_magic, path, xpub", VECTORS_BITCOIN)
 def test_get_public_node_show(session: Session, coin_name, xpub_magic, path, xpub):
-    with session.client as client:
-        IF = InputFlowShowXpubQRCode(session.client)
+    with session.test_ctx as client:
+        IF = InputFlowShowXpubQRCode(session)
         client.set_input_flow(IF.get())
         res = btc.get_public_node(session, path, coin_name=coin_name, show_display=True)
         assert res.xpub == xpub
@@ -152,26 +152,24 @@ def test_invalid_path(session: Session, coin_name, path):
 def test_get_public_node_show_legacy(
     session: Session, coin_name, xpub_magic, path, xpub
 ):
-    client = session.client
-
     def input_flow():
         yield
-        client.debug.press_no()  # show QR code
+        session.debug.press_no()  # show QR code
         yield
-        client.debug.press_no()  # back to text
+        session.debug.press_no()  # back to text
         yield
-        client.debug.press_no()  # show QR code
+        session.debug.press_no()  # show QR code
         yield
-        client.debug.press_yes()  # next xpub page
+        session.debug.press_yes()  # next xpub page
         yield
-        client.debug.press_no()  # show QR code again
+        session.debug.press_no()  # show QR code again
         yield
-        client.debug.press_no()  # back to text
+        session.debug.press_no()  # back to text
         yield
-        client.debug.press_yes()  # finish the flow
+        session.debug.press_yes()  # finish the flow
         yield
 
-    with session.client as client:
+    with session.test_ctx as client:
         # test XPUB display flow (without showing QR code)
         res = btc.get_public_node(session, path, coin_name=coin_name, show_display=True)
         assert res.xpub == xpub
