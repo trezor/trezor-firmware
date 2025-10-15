@@ -140,6 +140,23 @@ def test_autolock_cancels_ui(session: Session):
     assert isinstance(resp, messages.Failure)
     assert resp.code == messages.FailureType.ActionCancelled
 
+    debug = session.debug_client.debug
+    debug.press_yes()
+    debug.synchronize_at("PinKeyboard")
+    debug.input(PIN4)
+    # re-trigger auto-lock
+    time.sleep(10.5)
+    resp = session.call_raw(
+        messages.GetAddress(
+            coin_name="Testnet",
+            address_n=TEST_ADDRESS_N,
+            script_type=messages.InputScriptType.SPENDADDRESS,
+        )
+    )
+    # the device should be auto-locked
+    assert isinstance(resp, messages.ButtonRequest)
+    assert resp.code == messages.ButtonRequestType.PinEntry
+
 
 def test_autolock_ignores_initialize(session: Session):
     set_autolock_delay(session, 10 * 1000)

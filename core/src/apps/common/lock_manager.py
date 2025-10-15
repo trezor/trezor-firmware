@@ -194,6 +194,8 @@ async def unlock_device() -> None:
     if not config.is_unlocked():
         # verify_user_pin will raise if the PIN was invalid
         await verify_user_pin()
+        # non-public config settings are now available
+        reload_settings_from_storage()
 
     _SCREENSAVER_IS_ON = False
     set_homescreen()
