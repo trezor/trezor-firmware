@@ -94,7 +94,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_bip39_seed_obj, 2,
 #if !BITCOIN_ONLY
 /// def mnemonic_to_bits(mnemonic: str) -> bytes:
 ///     """
-///     Convert mnemonic to its underlying entropy bits.
+///     Convert the mnemonic to its underlying entropy bits.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_bip39_mnemonic_to_bits(mp_obj_t mnemonic) {
   mp_buffer_info_t text = {0};
