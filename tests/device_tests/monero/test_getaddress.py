@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import monero
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
 
 from ...common import MNEMONIC12
@@ -56,8 +56,8 @@ def test_monero_getaddress(session: Session, path: str, expected_address: bytes)
 def test_monero_getaddress_chunkify_details(
     session: Session, path: str, expected_address: bytes
 ):
-    with session.client as client:
-        IF = InputFlowShowAddressQRCode(session.client)
+    with session.test_ctx as client:
+        IF = InputFlowShowAddressQRCode(session)
         client.set_input_flow(IF.get())
         address = monero.get_address(
             session, parse_path(path), show_display=True, chunkify=True

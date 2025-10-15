@@ -20,10 +20,9 @@ import pytest
 
 from trezorlib import btc, device, mapping, messages, models, protobuf
 from trezorlib._internal.emulator import Emulator
-from trezorlib.client import ProtocolVersion
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.client import ProtocolVersion, SessionV1
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
-from trezorlib.transport.session import SessionV1
 
 from ..emulators import EmulatorWrapper
 from . import for_all

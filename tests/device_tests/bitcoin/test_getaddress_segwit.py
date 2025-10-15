@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -74,9 +74,9 @@ def test_show_segwit(session: Session):
 
 @pytest.mark.altcoin
 def test_show_segwit_altcoin(session: Session):
-    with session.client as client:
+    with session.test_ctx as client:
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(session.client)
+            IF = InputFlowConfirmAllWarnings(session)
             client.set_input_flow(IF.get())
         assert (
             btc.get_address(

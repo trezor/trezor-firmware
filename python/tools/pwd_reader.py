@@ -27,10 +27,8 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 from trezorlib import misc
-from trezorlib.client import TrezorClient
+from trezorlib.client import Session, get_default_client, get_default_session
 from trezorlib.tools import parse_path
-from trezorlib.transport import get_transport
-from trezorlib.transport.session import Session
 
 # Return path by BIP-32
 BIP32_PATH = parse_path("10016h/0")
@@ -140,53 +138,49 @@ def printEntries(entries: dict) -> None:
 
 def main() -> None:
     try:
-        transport = get_transport()
+        client = get_default_client("pwd_reader")
+        session = get_default_session(client)
     except Exception as e:
         print(e)
         return
-
-    transport.open()
-    client = TrezorClient(transport=transport)
-    session = client.get_seedless_session()
 
     print()
     print("Confirm operation on Trezor")
     print()
 
-    masterKey = getMasterKey(session)
-    # print('master key:', masterKey)
+    with session:
+        masterKey = getMasterKey(session)
+        # print('master key:', masterKey)
 
-    fileName = getFileEncKey(masterKey)[0]
-    # print('file name:', fileName)
+        fileName = getFileEncKey(masterKey)[0]
+        # print('file name:', fileName)
 
-    home = os.path.expanduser("~")
-    path = os.path.join(home, "Dropbox", "Apps", "TREZOR Password Manager")
-    # print('path to file:', path)
+        home = os.path.expanduser("~")
+        path = os.path.join(home, "Dropbox", "Apps", "TREZOR Password Manager")
+        # print('path to file:', path)
 
-    encKey = getFileEncKey(masterKey)[2]
-    # print('enckey:', encKey)
+        encKey = getFileEncKey(masterKey)[2]
+        # print('enckey:', encKey)
 
-    full_path = os.path.join(path, fileName)
-    parsed_json = decryptStorage(full_path, encKey)
+        full_path = os.path.join(path, fileName)
+        parsed_json = decryptStorage(full_path, encKey)
 
-    # list entries
-    entries = parsed_json["entries"]
-    printEntries(entries)
+        # list entries
+        entries = parsed_json["entries"]
+        printEntries(entries)
 
-    entry_id = input("Select entry number to decrypt: ")
-    entry_id = str(entry_id)
+        entry_id = input("Select entry number to decrypt: ")
+        entry_id = str(entry_id)
 
-    plain_nonce = getDecryptedNonce(session, entries[entry_id])
+        plain_nonce = getDecryptedNonce(session, entries[entry_id])
 
-    pwdArr = entries[entry_id]["password"]["data"]
-    pwdHex = "".join([hex(x)[2:].zfill(2) for x in pwdArr])
-    print("password: ", decryptEntryValue(plain_nonce, bytes.fromhex(pwdHex)))
+        pwdArr = entries[entry_id]["password"]["data"]
+        pwdHex = "".join([hex(x)[2:].zfill(2) for x in pwdArr])
+        print("password: ", decryptEntryValue(plain_nonce, bytes.fromhex(pwdHex)))
 
-    safeNoteArr = entries[entry_id]["safe_note"]["data"]
-    safeNoteHex = "".join([hex(x)[2:].zfill(2) for x in safeNoteArr])
-    print("safe_note:", decryptEntryValue(plain_nonce, bytes.fromhex(safeNoteHex)))
-
-    client.transport.close()
+        safeNoteArr = entries[entry_id]["safe_note"]["data"]
+        safeNoteHex = "".join([hex(x)[2:].zfill(2) for x in safeNoteArr])
+        print("safe_note:", decryptEntryValue(plain_nonce, bytes.fromhex(safeNoteHex)))
 
 
 if __name__ == "__main__":

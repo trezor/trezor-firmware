@@ -15,7 +15,7 @@
 import time
 
 from trezorlib import messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 
 
 def test_delayed_ack(session: Session):

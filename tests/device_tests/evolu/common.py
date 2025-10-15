@@ -5,15 +5,10 @@ from typing import List
 from ecdsa import NIST256p, SigningKey
 
 from trezorlib import evolu
-from trezorlib.debuglink import SessionDebugWrapper as Session
-from trezorlib.debuglink import TrezorClientDebugLink as Client
-from trezorlib.messages import (
-    ThpCredentialRequest,
-    ThpCredentialResponse,
-    ThpEndRequest,
-    ThpEndResponse,
-)
-from trezorlib.transport.thp import curve25519
+from trezorlib.debuglink import DebugSession as Session
+from trezorlib.debuglink import TrezorTestContext as Client
+from trezorlib.messages import ThpCredentialResponse
+from trezorlib.thp import curve25519
 
 from ...common import compact_size
 from ..thp.connect import prepare_protocol_for_pairing
@@ -55,23 +50,15 @@ class ThpPairingResult:
 
 
 def pair_and_get_credential(client: Client) -> ThpPairingResult:
-    protocol = prepare_protocol_for_pairing(client, TEST_randomness)
-    nfc_pairing(client, protocol)
-    protocol._send_message(
-        ThpCredentialRequest(
-            host_static_public_key=TEST_host_static_public_key,
-            autoconnect=False,
-        )
-    )
-    credential_response = protocol._read_message(ThpCredentialResponse)
+    from ..thp.connect import prepare_channel_for_pairing
+    from ..thp.test_pairing import _nfc_pairing
 
-    protocol._send_message(ThpEndRequest())
-    protocol._read_message(ThpEndResponse)
-    protocol._is_paired = True
+    prepare_channel_for_pairing(client, host_static_privkey=TEST_host_static_private_key)
+    _nfc_pairing(client)
+    credential = client.pairing.request_credential(autoconnect=False)
+    client.pairing.finish()
 
-    client.protocol = protocol
-    session = client.get_session()
-    return ThpPairingResult(session, credential_response)
+    return ThpPairingResult(client.get_session(), credential)
 
 
 def pair_and_get_invalid_credential(client: Client) -> ThpPairingResult:
@@ -89,13 +76,13 @@ def pair_and_get_invalid_credential(client: Client) -> ThpPairingResult:
 
 
 def get_delegated_identity_key(client: Client) -> bytes:
-    if client.protocol_version == 2:
+    if client.is_thp():
         pairing_data = pair_and_get_credential(client)
         return evolu.get_delegated_identity_key(
             client.get_session(),
             thp_credential=pairing_data.credential.credential,
         )
-    elif client.protocol_version == 1:
+    elif client.is_protocol_v1():
         return evolu.get_delegated_identity_key(client.get_session())
     else:
         raise ValueError("Unsupported protocol version")

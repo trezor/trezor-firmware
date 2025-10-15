@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import device, exceptions, messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 
 from ...common import MNEMONIC_SLIP39_ADVANCED_20, MNEMONIC_SLIP39_ADVANCED_33
 from ...input_flows import (
@@ -28,7 +28,7 @@ from ...input_flows import (
     InputFlowSlip39AdvancedRecoveryThresholdReached,
 )
 
-pytestmark = [pytest.mark.models("core"), pytest.mark.uninitialized_session]
+pytestmark = [pytest.mark.models("core"), pytest.mark.setup_client(uninitialized=True)]
 
 EXTRA_GROUP_SHARE = [
     "eraser senior decision smug corner ruin rescue cubic angel tackle skin skunk program roster trash rumor slush angel flea amazing"
@@ -48,10 +48,8 @@ VECTORS = (
 def _test_secret(
     session: Session, shares: list[str], secret: str, click_info: bool = False
 ):
-    with session.client as client:
-        IF = InputFlowSlip39AdvancedRecovery(
-            session.client, shares, click_info=click_info
-        )
+    with session.test_ctx as client:
+        IF = InputFlowSlip39AdvancedRecovery(session, shares, click_info=click_info)
         client.set_input_flow(IF.get())
         device.recover(
             session,
@@ -64,23 +62,20 @@ def _test_secret(
     assert session.features.pin_protection is False
     assert session.features.passphrase_protection is False
     assert session.features.backup_type is messages.BackupType.Slip39_Advanced
-    assert session.client.debug.state().mnemonic_secret.hex() == secret
+    assert session.debug.state().mnemonic_secret.hex() == secret
 
 
 @pytest.mark.parametrize("shares, secret", VECTORS)
-@pytest.mark.setup_client(uninitialized=True)
 def test_secret(session: Session, shares: list[str], secret: str):
     _test_secret(session, shares, secret)
 
 
 @pytest.mark.parametrize("shares, secret", VECTORS)
-@pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.models(skip="safe3", reason="safe3 does not have info button")
 def test_secret_click_info_button(session: Session, shares: list[str], secret: str):
     _test_secret(session, shares, secret, click_info=True)
 
 
-@pytest.mark.setup_client(uninitialized=True)
 def test_extra_share_entered(session: Session):
     _test_secret(
         session,
@@ -89,10 +84,9 @@ def test_extra_share_entered(session: Session):
     )
 
 
-@pytest.mark.setup_client(uninitialized=True)
 def test_abort(session: Session):
-    with session.client as client:
-        IF = InputFlowSlip39AdvancedRecoveryAbort(session.client)
+    with session.test_ctx as client:
+        IF = InputFlowSlip39AdvancedRecoveryAbort(session)
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(session, pin_protection=False, label="label")
@@ -100,11 +94,10 @@ def test_abort(session: Session):
         assert session.features.initialized is False
 
 
-@pytest.mark.setup_client(uninitialized=True)
 def test_noabort(session: Session):
-    with session.client as client:
+    with session.test_ctx as client:
         IF = InputFlowSlip39AdvancedRecoveryNoAbort(
-            session.client, EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20
+            session, EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20
         )
         client.set_input_flow(IF.get())
         device.recover(session, pin_protection=False, label="label")
@@ -112,7 +105,6 @@ def test_noabort(session: Session):
         assert session.features.initialized is True
 
 
-@pytest.mark.setup_client(uninitialized=True)
 def test_same_share(session: Session):
     # we choose the second share from the fixture because
     # the 1st is 1of1 and group threshold condition is reached first
@@ -120,7 +112,7 @@ def test_same_share(session: Session):
     # second share is first 4 words of first
     second_share = MNEMONIC_SLIP39_ADVANCED_20[1].split(" ")[:4]
 
-    with session.client as client:
+    with session.test_ctx as client:
         IF = InputFlowSlip39AdvancedRecoveryShareAlreadyEntered(
             session, first_share, second_share
         )
@@ -129,14 +121,13 @@ def test_same_share(session: Session):
             device.recover(session, pin_protection=False, label="label")
 
 
-@pytest.mark.setup_client(uninitialized=True)
 def test_group_threshold_reached(session: Session):
     # first share in the fixture is 1of1 so we choose that
     first_share = MNEMONIC_SLIP39_ADVANCED_20[0].split(" ")
     # second share is first 3 words of first
     second_share = MNEMONIC_SLIP39_ADVANCED_20[0].split(" ")[:3]
 
-    with session.client as client:
+    with session.test_ctx as client:
         IF = InputFlowSlip39AdvancedRecoveryThresholdReached(
             session, first_share, second_share
         )

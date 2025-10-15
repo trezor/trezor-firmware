@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import device, messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 
 from ...input_flows import InputFlowSlip39BasicRecoveryDryRun
@@ -38,8 +38,8 @@ INVALID_SHARES_20_2of3 = [
 
 @pytest.mark.setup_client(mnemonic=SHARES_20_2of3[0:2])
 def test_2of3_dryrun(session: Session):
-    with session.client as client:
-        IF = InputFlowSlip39BasicRecoveryDryRun(session.client, SHARES_20_2of3[1:3])
+    with session.test_ctx as client:
+        IF = InputFlowSlip39BasicRecoveryDryRun(session, SHARES_20_2of3[1:3])
         client.set_input_flow(IF.get())
         device.recover(
             session,
@@ -54,13 +54,13 @@ def test_2of3_dryrun(session: Session):
 def test_2of3_invalid_seed_dryrun(session: Session):
     # test fails because of different seed on device
     with (
-        session.client as client,
+        session.test_ctx as client,
         pytest.raises(
             TrezorFailure, match=r"The seed does not match the one in the device"
         ),
     ):
         IF = InputFlowSlip39BasicRecoveryDryRun(
-            session.client, INVALID_SHARES_20_2of3, mismatch=True
+            session, INVALID_SHARES_20_2of3, mismatch=True
         )
         client.set_input_flow(IF.get())
         device.recover(

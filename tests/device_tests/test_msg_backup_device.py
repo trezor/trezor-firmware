@@ -19,9 +19,8 @@ import pytest
 import shamir_mnemonic as shamir
 
 from trezorlib import device, messages
-from trezorlib.client import ProtocolVersion
 from trezorlib.debuglink import LayoutType
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 
 from ..common import (
@@ -45,8 +44,8 @@ from ..input_flows import (
 def test_backup_bip39(session: Session):
     assert session.features.backup_availability == messages.BackupAvailability.Required
 
-    with session.client as client:
-        IF = InputFlowBip39Backup(session.client)
+    with session.test_ctx as client:
+        IF = InputFlowBip39Backup(session)
         client.set_input_flow(IF.get())
         device.backup(session)
 
@@ -67,13 +66,13 @@ def test_backup_bip39(session: Session):
     "click_info", [True, False], ids=["click_info", "no_click_info"]
 )
 def test_backup_slip39_basic(session: Session, click_info: bool):
-    if click_info and session.client.layout_type is LayoutType.Caesar:
+    if click_info and session.layout_type is LayoutType.Caesar:
         pytest.skip("click_info not implemented on T2B1")
 
     assert session.features.backup_availability == messages.BackupAvailability.Required
 
-    with session.client as client:
-        IF = InputFlowSlip39BasicBackup(session.client, click_info)
+    with session.test_ctx as client:
+        IF = InputFlowSlip39BasicBackup(session, click_info)
         client.set_input_flow(IF.get())
         device.backup(session)
 
@@ -96,11 +95,11 @@ def test_backup_slip39_basic(session: Session, click_info: bool):
 def test_backup_slip39_single(session: Session):
     assert session.features.backup_availability == messages.BackupAvailability.Required
 
-    with session.client as client:
+    with session.test_ctx as client:
         IF = InputFlowBip39Backup(
-            session.client,
+            session,
             confirm_success=(
-                session.client.layout_type
+                session.layout_type
                 not in (LayoutType.Delizia, LayoutType.Eckhart)
             ),
         )
@@ -126,13 +125,13 @@ def test_backup_slip39_single(session: Session):
     "click_info", [True, False], ids=["click_info", "no_click_info"]
 )
 def test_backup_slip39_advanced(session: Session, click_info: bool):
-    if click_info and session.client.layout_type is LayoutType.Caesar:
+    if click_info and session.layout_type is LayoutType.Caesar:
         pytest.skip("click_info not implemented on T2B1")
 
     assert session.features.backup_availability == messages.BackupAvailability.Required
 
-    with session.client as client:
-        IF = InputFlowSlip39AdvancedBackup(session.client, click_info)
+    with session.test_ctx as client:
+        IF = InputFlowSlip39AdvancedBackup(session, click_info)
         client.set_input_flow(IF.get())
         device.backup(session)
 
@@ -162,8 +161,8 @@ def test_backup_slip39_advanced(session: Session, click_info: bool):
 def test_backup_slip39_custom(session: Session, share_threshold, share_count):
     assert session.features.backup_availability == messages.BackupAvailability.Required
 
-    with session.client as client:
-        IF = InputFlowSlip39CustomBackup(session.client, share_count)
+    with session.test_ctx as client:
+        IF = InputFlowSlip39CustomBackup(session, share_count)
         client.set_input_flow(IF.get())
         device.backup(
             session, group_threshold=1, groups=[(share_threshold, share_count)]
@@ -212,14 +211,10 @@ def test_interrupt_backup_fails(session: Session):
     resp = session.call_raw(messages.BackupDevice())
     assert isinstance(resp, messages.ButtonRequest)
 
-    if session.protocol_version is ProtocolVersion.V1:
-        # interupt backup by sending initialize
-        session = session.client.get_session()
-    else:
-        # interrupt backup by sending cancel
-        session.cancel()
-        resp = session._read()
-        assert isinstance(resp, messages.Failure)
+    # interrupt backup by sending cancel
+    session.cancel()
+    resp = session.read()
+    assert isinstance(resp, messages.Failure)
 
     # check that device state is as expected
     assert session.features.initialized is True

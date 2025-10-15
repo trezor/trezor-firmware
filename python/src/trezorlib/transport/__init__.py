@@ -18,6 +18,9 @@ from __future__ import annotations
 
 import logging
 import typing as t
+from abc import ABCMeta, abstractmethod
+
+import typing_extensions as tx
 
 from ..exceptions import TrezorException
 
@@ -50,19 +53,21 @@ class Timeout(TransportException):
     pass
 
 
-class Transport:
+class Transport(metaclass=ABCMeta):
     PATH_PREFIX: t.ClassVar[str]
     CHUNK_SIZE: t.ClassVar[int | None]
     ENABLED: t.ClassVar[bool]
 
+    _opened: int = 0
+
     @classmethod
     def enumerate(
         cls, models: t.Iterable[TrezorModel] | None = None
-    ) -> t.Iterable[t.Self]:
+    ) -> t.Iterable[tx.Self]:
         raise NotImplementedError
 
     @classmethod
-    def find_by_path(cls, path: str, prefix_search: bool = False) -> t.Self:
+    def find_by_path(cls, path: str, prefix_search: bool = False) -> tx.Self:
         for device in cls.enumerate():
 
             if device.get_path() == path:
@@ -81,18 +86,50 @@ class Transport:
         raise NotImplementedError
 
     def open(self) -> None:
-        raise NotImplementedError
+        LOG.info(f"Opening transport: {self}")
+        self._open()
+        self._opened = max(self._opened, 1)
 
     def close(self) -> None:
+        LOG.info(f"Closing transport: {self}")
+        self._close()
+        self._opened = 0
+
+    def __enter__(self) -> Transport:
+        if self._opened == 0:
+            self.open()
+        self._opened += 1
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: t.Any,
+    ) -> None:
+        if self._opened > 0:
+            self._opened -= 1
+            if self._opened == 0:
+                self.close()
+
+    @abstractmethod
+    def _open(self) -> None:
         raise NotImplementedError
 
+    @abstractmethod
+    def _close(self) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
     def write_chunk(self, chunk: bytes) -> None:
         raise NotImplementedError
 
+    @abstractmethod
     def read_chunk(self, timeout: float | None = None) -> bytes:
         raise NotImplementedError
 
-    def ping(self) -> bool:
+    @abstractmethod
+    def is_ready(self) -> bool:
         raise NotImplementedError
 
 

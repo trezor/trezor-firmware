@@ -21,8 +21,8 @@ import pytest
 
 from trezorlib import btc, device, exceptions, messages, misc, models
 from trezorlib.debuglink import LayoutType
-from trezorlib.debuglink import SessionDebugWrapper as Session
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import DebugSession as Session
+from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.tools import parse_path
 
 from ..input_flows import (
@@ -37,7 +37,7 @@ HERE = Path(__file__).parent.resolve()
 EXPECTED_RESPONSES_NOPIN = [
     messages.ButtonRequest(),
     messages.Success,
-    # messages.Features,
+    messages.Features,
 ]
 EXPECTED_RESPONSES_PIN_T1 = [messages.PinMatrixRequest()] + EXPECTED_RESPONSES_NOPIN
 EXPECTED_RESPONSES_PIN_TT = [messages.ButtonRequest()] + EXPECTED_RESPONSES_NOPIN
@@ -45,7 +45,7 @@ EXPECTED_RESPONSES_PIN_TT = [messages.ButtonRequest()] + EXPECTED_RESPONSES_NOPI
 EXPECTED_RESPONSES_EXPERIMENTAL_FEATURES = [
     messages.ButtonRequest,
     messages.Success,
-    # messages.Features,
+    messages.Features,
 ]
 
 PIN4 = "1234"
@@ -66,7 +66,7 @@ def _set_expected_responses(client: Client, homescreen: bytes | None = None):
         client.set_expected_responses(
             [messages.ButtonRequest]
             + n_chunks * [messages.DataChunkRequest]
-            + [messages.ButtonRequest, messages.Success]
+            + [messages.ButtonRequest, messages.Success, messages.Features]
         )
     else:
         client.set_expected_responses(EXPECTED_RESPONSES_PIN_TT)
@@ -75,7 +75,7 @@ def _set_expected_responses(client: Client, homescreen: bytes | None = None):
 def test_apply_settings(session: Session):
     assert session.features.label == "test"
 
-    with session.client as client:
+    with session.test_ctx as client:
         _set_expected_responses(client)
         device.apply_settings(session, label="new label")
 
@@ -86,7 +86,7 @@ def test_apply_settings(session: Session):
 def test_apply_settings_rotation(session: Session):
     assert session.features.display_rotation is None
 
-    with session.client as client:
+    with session.test_ctx as client:
         _set_expected_responses(client)
         device.apply_settings(session, display_rotation=messages.DisplayRotation.West)
 
@@ -95,20 +95,19 @@ def test_apply_settings_rotation(session: Session):
 
 @pytest.mark.setup_client(pin=PIN4, passphrase=False)
 def test_apply_settings_passphrase(session: Session):
-    client = session.client
-    with client:
+    with session.test_ctx as client:
         _set_expected_responses(client)
         device.apply_settings(session, use_passphrase=True)
 
     assert session.features.passphrase_protection is True
 
-    with client:
+    with session.test_ctx as client:
         client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
         device.apply_settings(session, use_passphrase=False)
 
     assert session.features.passphrase_protection is False
 
-    with client:
+    with session.test_ctx as client:
         client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
         device.apply_settings(session, use_passphrase=True)
 
@@ -118,16 +117,15 @@ def test_apply_settings_passphrase(session: Session):
 @pytest.mark.setup_client(passphrase=False)
 @pytest.mark.models("core")
 def test_apply_settings_passphrase_on_device(session: Session):
-    client = session.client
     # enable passphrase
-    with client:
+    with session.test_ctx as client:
         client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
         device.apply_settings(session, use_passphrase=True)
 
     assert session.features.passphrase_protection is True
 
     # enable force on device
-    with client:
+    with session.test_ctx as client:
         client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
         device.apply_settings(session, passphrase_always_on_device=True)
 
@@ -135,7 +133,7 @@ def test_apply_settings_passphrase_on_device(session: Session):
     assert session.features.passphrase_always_on_device is True
 
     # turning off the passphrase should also clear the always_on_device setting
-    with client:
+    with session.test_ctx as client:
         client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
         device.apply_settings(session, use_passphrase=False)
 
@@ -143,7 +141,7 @@ def test_apply_settings_passphrase_on_device(session: Session):
     assert session.features.passphrase_always_on_device is False
 
     # and turning it back on does not modify always_on_device
-    with client:
+    with session.test_ctx as client:
         client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
         device.apply_settings(session, use_passphrase=True)
 
@@ -153,7 +151,7 @@ def test_apply_settings_passphrase_on_device(session: Session):
 
 @pytest.mark.models("safe3")
 def test_apply_homescreen_tr_toif_good(session: Session):
-    with session.client as client:
+    with session.test_ctx as client:
         _set_expected_responses(client, homescreen=TR_HOMESCREEN)
         device.apply_settings(session, homescreen=TR_HOMESCREEN)
 
@@ -164,7 +162,7 @@ def test_apply_homescreen_tr_toif_good(session: Session):
 
 @pytest.mark.models("safe3")
 def test_apply_homescreen_tr_toif_single_message(session: Session):
-    with session.client as client:
+    with session.test_ctx as client:
         _set_expected_responses(client)
         session.call(messages.ApplySettings(homescreen=TR_HOMESCREEN))
         session.refresh_features()
@@ -178,22 +176,22 @@ def test_apply_homescreen_tr_toif_single_message(session: Session):
 @pytest.mark.models("safe3")
 @pytest.mark.setup_client(pin=None)  # so that "PIN NOT SET" is shown in the header
 def test_apply_homescreen_tr_toif_with_notification(session: Session):
-    with session.client:
+    with session.test_ctx:
         device.apply_settings(session, homescreen=TR_HOMESCREEN)
 
 
 @pytest.mark.models("safe3")
 def test_apply_homescreen_tr_toif_with_long_label(session: Session):
-    with session.client as client:
+    with session.test_ctx as client:
         _set_expected_responses(client, homescreen=TR_HOMESCREEN)
         device.apply_settings(session, homescreen=TR_HOMESCREEN)
 
     # Showing longer label
-    with session.client:
+    with session.test_ctx:
         device.apply_settings(session, label="My long label")
 
     # Showing label that will not fit on the line
-    with session.client:
+    with session.test_ctx:
         device.apply_settings(session, label="My even longer label")
 
 
@@ -201,7 +199,7 @@ def test_apply_homescreen_tr_toif_with_long_label(session: Session):
 def test_apply_homescreen_tr_toif_wrong_size(session: Session):
     # 64x64 img
     img = b"TOIG@\x00@\x009\x02\x00\x00}R\xdb\x81$A\x08\"\x03\xf3\xcf\xd2\x0c<\x01-{\xefc\xe6\xd5\xbbU\xa2\x08T\xd6\xcfw\xf4\xe7\xc7\xb7X\xf1\xe3\x1bl\xf0\xf7\x1b\xf8\x1f\xcf\xe7}\xe1\x83\xcf|>\x8d%\x14\xa5\xb3\xe9p5\xa1;~4:\xcd\xe0&\x11\x1d\xe9\xf6\xa1\x1fw\xf54\x95eWx\xda\xd0u\x91\x86\xb8\xbc\xdf\xdc\x008f\x15\xc6\xf6\x7f\xf0T\xb8\xc1\xa3\xc5_A\xc0G\x930\xe7\xdc=\xd5\xa7\xc1\xbcI\x16\xb8s\x9c&\xaa\x06\xc1}\x8b\x19\x9d'c\xc3\xe3^\xc3m\xb6n\xb0(\x16\xf6\xdeg\xb3\x96:i\xe5\x9c\x02\x93\x9fF\x9f-\xa7\"w\xf3X\x9f\x87\x08\x84\"v,\xab!9:<j+\xcb\xf3_\xc7\xd6^<\xce\xc1\xb8!\xec\x8f/\xb1\xc1\x8f\xbd\xcc\x06\x90\x0e\x98)[\xdb\x15\x99\xaf\xf2~\x8e\xd0\xdb\xcd\xfd\x90\x12\xb6\xdd\xc3\xdd|\x96$\x01P\x86H\xbc\xc0}\xa2\x08\xe5\x82\x06\xd2\xeb\x07[\r\xe4\xdeP\xf4\x86;\xa5\x14c\x12\xe3\xb16x\xad\xc7\x1d\x02\xef\x86<\xc6\x95\xd3/\xc4 \xa1\xf5V\xe2\t\xb2\x8a\xd6`\xf2\xcf\xb7\xd6\x07\xdf8X\xa7\x18\x03\x96\x82\xa4 \xeb.*kP\xceu\x9d~}H\xe9\xb8\x04<4\xff\xf8\xcf\xf6\xa0\xf2\xfcM\xe3/?k\xff\x18\x1d\xb1\xee\xc5\xf5\x1f\x01\x14\x03;\x1bU\x1f~\xcf\xb3\xf7w\xe5\nMfd/\xb93\x9fq\x9bQ\xb7'\xbfvq\x1d\xce\r\xbaDo\x90\xbc\xc5:?;\x84y\x8a\x1e\xad\xe9\xb7\x14\x10~\x9b@\xf8\x82\xdc\x89\xe7\xf0\xe0k4o\x9a\xa0\xc4\xb9\xba\xc56\x01i\x85EO'e6\xb7\x15\xb4G\x05\xe1\xe7%\xd3&\x93\x91\xc9CTQ\xeb\xcc\xd0\xd7E9\xa9JK\xcc\x00\x95(\xdc.\xd2#7:Yo}y_*\x1a\xae6)\x97\x9d\xc0\x80vl\x02\\M\xfe\xc9sW\xa8\xfbD\x99\xb8\xb0:\xbc\x80\xfd\xef\xd3\x94\xbe\x18j9z\x12S\xa1\xec$\x1c\xe3\xd1\xd0\xf4\xdd\xbfI\xf1rBj\x0f\x1cz\x1d\xf7\xa5tR\xb3\xfc\xa4\xd0\xfah\xc3Mj\xbe\x14r\x9d\x84z\xd2\x7f\x13\xb4w\xce\xa0\xaeW\xa4\x18\x0b\xe4\x8f\xe6\xc3\xbeQ\x93\xb0L<J\xe3g9\xb5W#f\xd1\x0b\x96|\xd6z1;\x85\x7f\xe3\xe6[\x02A\xdc\xa4\x02\x1b\x91\x88\x7f"
-    with pytest.raises(exceptions.TrezorFailure), session.client as client:
+    with pytest.raises(exceptions.TrezorFailure), session.test_ctx as client:
         _set_expected_responses(client)
         device.apply_settings(session, homescreen=img)
 
@@ -210,14 +208,14 @@ def test_apply_homescreen_tr_toif_wrong_size(session: Session):
 def test_apply_homescreen_tr_upload_jpeg_fail(session: Session):
     with open(HERE / "test_bg.jpg", "rb") as f:
         img = f.read()
-        with pytest.raises(exceptions.TrezorFailure), session.client as client:
+        with pytest.raises(exceptions.TrezorFailure), session.test_ctx as client:
             _set_expected_responses(client)
             device.apply_settings(session, homescreen=img)
 
 
 @pytest.mark.models("safe3")
 def test_apply_homescreen_tr_upload_t1_fail(session: Session):
-    with pytest.raises(exceptions.TrezorFailure), session.client as client:
+    with pytest.raises(exceptions.TrezorFailure), session.test_ctx as client:
         _set_expected_responses(client)
         device.apply_settings(session, homescreen=T1_HOMESCREEN)
 
@@ -226,7 +224,7 @@ def test_apply_homescreen_tr_upload_t1_fail(session: Session):
 def test_apply_homescreen_toif(session: Session):
     img = b"TOIf\x90\x00\x90\x00~\x00\x00\x00\xed\xd2\xcb\r\x83@\x10D\xc1^.\xde#!\xac31\x99\x10\x8aC%\x14~\x16\x92Y9\x02WI3\x01<\xf5cI2d\x1es(\xe1[\xdbn\xba\xca\xe8s7\xa4\xd5\xd4\xb3\x13\xbdw\xf6:\xf3\xd1\xe7%\xc7]\xdd_\xb3\x9e\x9f\x9e\x9fN\xed\xaaE\xef\xdc\xcf$D\xa7\xa4X\r\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf0OV"
 
-    with pytest.raises(exceptions.TrezorFailure), session.client as client:
+    with pytest.raises(exceptions.TrezorFailure), session.test_ctx as client:
         _set_expected_responses(client, homescreen=img)
         device.apply_settings(session, homescreen=img)
 
@@ -235,16 +233,18 @@ def test_apply_homescreen_toif(session: Session):
 def test_apply_homescreen_jpeg(session: Session):
     file_name = (
         "test_bg_eckhart.jpg"
-        if session.client.debug.layout_type is LayoutType.Eckhart
+        if session.debug.layout_type is LayoutType.Eckhart
         else "test_bg.jpg"
     )
     with open(HERE / file_name, "rb") as f:
         img = f.read()
-        with session.client as client:
+        with session.test_ctx as client:
             _set_expected_responses(client, homescreen=img)
             device.apply_settings(session, homescreen=img)
 
-            client.set_expected_responses([messages.ButtonRequest, messages.Success])
+            client.set_expected_responses(
+                [messages.ButtonRequest, messages.Success, messages.Features]
+            )
             device.apply_settings(session, homescreen=b"")
 
 
@@ -252,13 +252,13 @@ def test_apply_homescreen_jpeg(session: Session):
 def test_apply_homescreen_jpeg_single_message(session: Session):
     file_name = (
         "test_bg_eckhart.jpg"
-        if session.client.layout_type is LayoutType.Eckhart
+        if session.layout_type is LayoutType.Eckhart
         else "test_bg.jpg"
     )
 
     with open(HERE / file_name, "rb") as f:
         img = f.read()
-        with session.client as client:
+        with session.test_ctx as client:
             _set_expected_responses(client)
             session.call(messages.ApplySettings(homescreen=img))
             session.refresh_features()
@@ -323,7 +323,7 @@ def test_apply_homescreen_jpeg_progressive(session: Session):
         b"\x00\x00\x00\x00\x90\xff\xda\x00\x08\x01\x01\x00\x01?\x10a?\xff\xd9"
     )
 
-    with pytest.raises(exceptions.TrezorFailure), session.client as client:
+    with pytest.raises(exceptions.TrezorFailure), session.test_ctx as client:
         _set_expected_responses(client, homescreen=img)
         device.apply_settings(session, homescreen=img)
 
@@ -369,22 +369,20 @@ def test_apply_homescreen_jpeg_wrong_size(session: Session):
         b"\x00\x00\x1f\xff\xd9"
     )
 
-    with pytest.raises(exceptions.TrezorFailure), session.client as client:
+    with pytest.raises(exceptions.TrezorFailure), session.test_ctx as client:
         _set_expected_responses(client, homescreen=img)
         device.apply_settings(session, homescreen=img)
 
 
 @pytest.mark.models("legacy")
 def test_apply_homescreen(session: Session):
-    with session.client as client:
+    with session.test_ctx as client:
         _set_expected_responses(client)
         device.apply_settings(session, homescreen=T1_HOMESCREEN)
 
 
 @pytest.mark.setup_client(pin=None)
 def test_safety_checks(session: Session):
-    client = session.client
-
     def get_bad_address():
         btc.get_address(session, "Bitcoin", parse_path("m/44h"), show_display=True)
 
@@ -392,7 +390,7 @@ def test_safety_checks(session: Session):
 
     with (
         pytest.raises(exceptions.TrezorFailure, match="Forbidden key path"),
-        session.client as client,
+        session.test_ctx as client,
     ):
         client.set_expected_responses([messages.Failure])
         get_bad_address()
@@ -406,7 +404,7 @@ def test_safety_checks(session: Session):
 
         assert session.features.safety_checks == messages.SafetyCheckLevel.PromptAlways
 
-        with session.client as client:
+        with session.test_ctx as client:
             client.set_expected_responses(
                 [messages.ButtonRequest, messages.ButtonRequest, messages.Address]
             )
@@ -422,12 +420,12 @@ def test_safety_checks(session: Session):
 
     with (
         pytest.raises(exceptions.TrezorFailure, match="Forbidden key path"),
-        session.client as client,
+        session.test_ctx as client,
     ):
         client.set_expected_responses([messages.Failure])
         get_bad_address()
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
         device.apply_settings(
             session, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
@@ -435,12 +433,12 @@ def test_safety_checks(session: Session):
 
     assert session.features.safety_checks == messages.SafetyCheckLevel.PromptTemporarily
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [messages.ButtonRequest, messages.ButtonRequest, messages.Address]
         )
         if client.model is not models.T1B1:
-            IF = InputFlowConfirmAllWarnings(session.client)
+            IF = InputFlowConfirmAllWarnings(session)
             client.set_input_flow(IF.get())
         get_bad_address()
 
@@ -450,15 +448,13 @@ def test_safety_checks(session: Session):
     reason="GetNonce was removed from experimental features. Currently, there is no replacement."
 )
 def test_experimental_features(session: Session):
-    client = session.client
-
     def experimental_call():
         misc.get_nonce(session)
 
     assert session.features.experimental_features is None
 
     # unlock
-    with session.client:
+    with session.test_ctx as client:
         _set_expected_responses(client)
         device.apply_settings(session, label="new label")
 
@@ -466,32 +462,32 @@ def test_experimental_features(session: Session):
 
     with (
         pytest.raises(exceptions.TrezorFailure, match="DataError"),
-        session.client as client,
+        session.test_ctx as client,
     ):
         client.set_expected_responses([messages.Failure])
         experimental_call()
 
-    with client:
+    with session.test_ctx as client:
         client.set_expected_responses(EXPECTED_RESPONSES_EXPERIMENTAL_FEATURES)
         device.apply_settings(session, experimental_features=True)
 
     assert session.features.experimental_features
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses([messages.Nonce])
         experimental_call()
 
     # relock and try again
     session.lock()
-    with client:
-        session.client.use_pin_sequence([PIN4])
+    with session.test_ctx as client:
+        client.use_pin_sequence([PIN4])
         client.set_expected_responses([messages.ButtonRequest, messages.Nonce])
         experimental_call()
 
 
 @pytest.mark.setup_client(pin=None)
 def test_label_too_long(session: Session):
-    with pytest.raises(exceptions.TrezorFailure), session.client as client:
+    with pytest.raises(exceptions.TrezorFailure), session.test_ctx as client:
         client.set_expected_responses([messages.Failure])
         device.apply_settings(session, label="A" * 33)
 
@@ -503,7 +499,7 @@ def test_label_too_long(session: Session):
     ids=["empty", "max_len"],
 )
 def test_set_label(session: Session, label: str):
-    with session.client:
+    with session.test_ctx:
         device.apply_settings(session, label=label)
 
 
@@ -528,8 +524,8 @@ U8_MAX = 0xFF  # 255
     ],
 )
 def test_set_brightness(session: Session, value: int | None, should_raise: bool):
-    with session.client as client:
-        IF = InputFlowSetBrightness(client)
+    with session.test_ctx as client:
+        IF = InputFlowSetBrightness(session)
         client.set_input_flow(IF.get())
 
         with pytest.raises(exceptions.TrezorFailure) if should_raise else nullcontext():
@@ -544,7 +540,7 @@ def test_set_brightness(session: Session, value: int | None, should_raise: bool)
 @pytest.mark.setup_client(pin=None)
 def test_set_brightness_negative(session: Session):
     # Negative brightness value should raise ValueError
-    with session.client, pytest.raises(ValueError):
+    with session.test_ctx, pytest.raises(ValueError):
         device.set_brightness(session, -1)
 
 
@@ -555,7 +551,7 @@ def test_set_brightness_negative(session: Session):
 )
 @pytest.mark.setup_client(pin=None)
 def test_set_brightness_cancel(session: Session):
-    with pytest.raises(exceptions.Cancelled), session.client as client:
-        IF = InputFlowCancelBrightness(client)
+    with pytest.raises(exceptions.Cancelled), session.test_ctx as client:
+        IF = InputFlowCancelBrightness(session)
         client.set_input_flow(IF.get())
         device.set_brightness(session, None)

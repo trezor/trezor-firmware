@@ -33,7 +33,7 @@ from typing import TYPE_CHECKING, Sequence
 
 import trezorlib
 import trezorlib.misc
-from trezorlib.client import TrezorClient
+from trezorlib.client import get_default_client, get_default_session
 from trezorlib.tools import Address
 from trezorlib.transport import enumerate_devices
 
@@ -72,18 +72,15 @@ def choose_device(devices: Sequence["Transport"]) -> "Transport":
     sys.stderr.write("Available devices:\n")
     for d in devices:
         try:
-            d.open()
-            client = TrezorClient(d)
-        except IOError:
-            sys.stderr.write("[-] <device is currently in use>\n")
+            client = get_default_client("encfs_aes_getpass", d)
+        except Exception:
+            sys.stderr.write("[-] <failed to create client>\n")
             continue
         else:
             if client.features.label:
                 sys.stderr.write(f"[{i}] {client.features.label}\n")
             else:
                 sys.stderr.write(f"[{i}] <no label>\n")
-        finally:
-            d.close()
         i += 1
 
     sys.stderr.write("----------------------------\n")
@@ -109,9 +106,8 @@ def main() -> None:
 
     devices = wait_for_devices()
     transport = choose_device(devices)
-    transport.open()
-    client = TrezorClient(transport)
-    session = client.get_seedless_session()
+    client = get_default_client("encfs_aes_getpass", transport, credentials=())  # TODO
+    session = get_default_session(client)
 
     rootdir = os.environ["encfs_root"]  # Read "man encfs" for more
     passw_file = os.path.join(rootdir, "password.dat")
@@ -156,7 +152,6 @@ def main() -> None:
         False,
         True,
     )
-    transport.close()
 
     print(passw)
 

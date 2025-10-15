@@ -19,7 +19,7 @@ import time
 import pytest
 
 from trezorlib import device, messages, models
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 
 from ..common import TEST_ADDRESS_N, get_test_address
@@ -38,30 +38,30 @@ def pin_request(session: Session):
 
 
 def set_autolock_delay(session: Session, delay):
-    with session.client as client:
+    with session.test_ctx as client:
         client.use_pin_sequence([PIN4])
         client.set_expected_responses(
             [
                 pin_request(session),
                 messages.ButtonRequest,
                 messages.Success,
+                messages.Features,
             ]
         )
         device.apply_settings(session, auto_lock_delay_ms=delay)
 
 
 def test_apply_auto_lock_delay(session: Session):
-    client = session.client
     set_autolock_delay(session, 10 * 1000)
 
     time.sleep(0.1)  # sleep less than auto-lock delay
-    with client:
+    with session.test_ctx as client:
         # No PIN protection is required.
         client.set_expected_responses([messages.Address])
         get_test_address(session)
 
     time.sleep(10.5)  # sleep more than auto-lock delay
-    with client:
+    with session.test_ctx as client:
         client.use_pin_sequence([PIN4])
         client.set_expected_responses([pin_request(session), messages.Address])
         get_test_address(session)
@@ -85,7 +85,7 @@ def test_apply_auto_lock_delay_valid(session: Session, seconds):
 
 def test_autolock_default_value(session: Session):
     assert session.features.auto_lock_delay_ms is None
-    with session.client as client:
+    with session.test_ctx as client:
         client.use_pin_sequence([PIN4])
         device.apply_settings(session, label="pls unlock")
         session.refresh_features()
@@ -98,8 +98,8 @@ def test_autolock_default_value(session: Session):
 )
 def test_apply_auto_lock_delay_out_of_range(session: Session, seconds):
 
-    with session.client as client:
-        session.client.use_pin_sequence([PIN4])
+    with session.test_ctx as client:
+        client.use_pin_sequence([PIN4])
         client.set_expected_responses(
             [
                 pin_request(session),
@@ -127,7 +127,7 @@ def test_autolock_cancels_ui(session: Session):
     assert isinstance(resp, messages.ButtonRequest)
 
     # send an ack, do not read response
-    session._write(messages.ButtonAck())
+    session.write(messages.ButtonAck())
     # sleep more than auto-lock delay
     time.sleep(10.5)
 
@@ -135,14 +135,14 @@ def test_autolock_cancels_ui(session: Session):
         # T3W1 device will suspend - wake it up using a DebugLink message
         session.debug_client.debug.state(messages.DebugWaitType.IMMEDIATE)
 
-    resp = session._read()
+    resp = session.read()
 
     assert isinstance(resp, messages.Failure)
     assert resp.code == messages.FailureType.ActionCancelled
 
     # Unlock the device
-    with session.client as client:
-        client.use_pin_sequence([PIN4])
+    with session.test_ctx:
+        session.test_ctx.use_pin_sequence([PIN4])
         session.ensure_unlocked()
 
     # re-trigger auto-lock
@@ -159,6 +159,7 @@ def test_autolock_cancels_ui(session: Session):
     assert resp.code == messages.ButtonRequestType.PinEntry
 
 
+@pytest.mark.protocol("v1")
 def test_autolock_ignores_initialize(session: Session):
     set_autolock_delay(session, 10 * 1000)
 
@@ -167,7 +168,7 @@ def test_autolock_ignores_initialize(session: Session):
     start = time.monotonic()
     while time.monotonic() - start < 11:
         # init_device should always work even if locked
-        session.resume()
+        session.call(messages.Initialize())
         time.sleep(0.1)
 
     # after 11 seconds we are definitely locked
