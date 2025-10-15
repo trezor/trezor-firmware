@@ -170,6 +170,7 @@ def store_mnemonic_secret(
     if not utils.BITCOIN_ONLY:
         _store_mnemonic_secret_bits(secret, backup_type, allow_derivation_fail)
 
+
 if not utils.BITCOIN_ONLY:
 
     def get_mnemonic_secret_bits() -> bytes | None:
