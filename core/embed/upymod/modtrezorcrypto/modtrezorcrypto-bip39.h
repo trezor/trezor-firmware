@@ -100,7 +100,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip39_mnemonic_to_bits(mp_obj_t mnemonic) {
   mp_buffer_info_t text = {0};
   mp_get_buffer_raise(mnemonic, &text, MP_BUFFER_READ);
 
-  uint8_t bits[64] = {0};
+  uint8_t bits[33] = {0};
   int bits_len = mnemonic_to_bits((const char *)text.buf, bits);
   if (bits_len <= 0) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid mnemonic"));
