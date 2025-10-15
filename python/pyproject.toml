@@ -1,6 +1,6 @@
 [project]
 name = "trezor"
-version = "0.20.0-dev0"
+version = "0.20.0"
 description = "Python library for communicating with Trezor Hardware Wallet"
 readme = "README.md"
 license = "LGPL-3.0-only"
