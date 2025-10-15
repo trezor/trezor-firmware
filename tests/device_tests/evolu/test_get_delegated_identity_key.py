@@ -1,6 +1,6 @@
 import pytest
 
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import TrezorTestContext as Client
 
 from .common import get_delegated_identity_key
 

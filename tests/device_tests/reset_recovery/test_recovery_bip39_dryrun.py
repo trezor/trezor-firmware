@@ -19,7 +19,8 @@ from typing import Any
 import pytest
 
 from trezorlib import device, exceptions, messages, models
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.protobuf import MessageType
+from trezorlib.debuglink import DebugSession as Session
 
 from ...common import MNEMONIC12
 from ...input_flows import (
@@ -28,9 +29,9 @@ from ...input_flows import (
 )
 
 
-def do_recover_legacy(session: Session, mnemonic: list[str]):
+def do_recover_legacy(session: Session, mnemonic: list[str]) -> None:
     def input_callback(_):
-        word, pos = session.client.debug.read_recovery_word()
+        word, pos = session.debug.read_recovery_word()
         if pos != 0 and pos is not None:
             word = mnemonic[pos - 1]
             mnemonic[pos - 1] = None
@@ -38,7 +39,7 @@ def do_recover_legacy(session: Session, mnemonic: list[str]):
 
         return word
 
-    ret = device.recover(
+    device.recover(
         session,
         type=messages.RecoveryType.DryRun,
         word_count=len(mnemonic),
@@ -47,18 +48,16 @@ def do_recover_legacy(session: Session, mnemonic: list[str]):
     )
     # if the call succeeded, check that all words have been used
     assert all(m is None for m in mnemonic)
-    return ret
 
-
-def do_recover_core(session: Session, mnemonic: list[str], mismatch: bool = False):
-    with session.client as client:
-        session.client.watch_layout()
-        IF = InputFlowBip39RecoveryDryRun(session.client, mnemonic, mismatch=mismatch)
+def do_recover_core(session: Session, mnemonic: list[str], mismatch: bool = False) -> None:
+    with session.test_ctx as client:
+        client.watch_layout()
+        IF = InputFlowBip39RecoveryDryRun(session, mnemonic, mismatch=mismatch)
         client.set_input_flow(IF.get())
         return device.recover(session, type=messages.RecoveryType.DryRun)
 
 
-def do_recover(session: Session, mnemonic: list[str], mismatch: bool = False):
+def do_recover(session: Session, mnemonic: list[str], mismatch: bool = False) -> None:
     if session.model is models.T1B1:
         return do_recover_legacy(session, mnemonic)
     else:
@@ -67,8 +66,7 @@ def do_recover(session: Session, mnemonic: list[str], mismatch: bool = False):
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_dry_run(session: Session):
-    ret = do_recover(session, MNEMONIC12.split(" "))
-    assert isinstance(ret, messages.Success)
+    do_recover(session, MNEMONIC12.split(" "))
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
@@ -87,8 +85,8 @@ def test_invalid_seed_t1(session: Session):
 
 @pytest.mark.models("core")
 def test_invalid_seed_core(session: Session):
-    with session.client as client:
-        session.client.watch_layout()
+    with session.test_ctx as client:
+        client.watch_layout()
         IF = InputFlowBip39RecoveryDryRunInvalid(session)
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
@@ -99,7 +97,6 @@ def test_invalid_seed_core(session: Session):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.uninitialized_session
 def test_uninitialized(session: Session):
     with pytest.raises(exceptions.TrezorFailure, match="not initialized"):
         do_recover(session, ["all"] * 12)

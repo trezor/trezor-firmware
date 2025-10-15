@@ -16,11 +16,18 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import typing as t
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from .messages import Failure
     from .protobuf import MessageType
+
+
+OUTDATED_FIRMWARE_ERROR = """
+Your Trezor firmware is out of date. Update it with the following command:
+  trezorctl firmware update
+Or visit https://suite.trezor.io/
+""".strip()
 
 
 class TrezorException(Exception):
@@ -65,21 +72,48 @@ class Cancelled(TrezorException):
     """Action was cancelled.
 
     Cancellation can be either received from Trezor or caused by the library, typically
-    in response to user action."""
+    in response to user action.
+    """
+
+    def __init__(self, message: str = "Action was cancelled") -> None:
+        self.message = message
+        super().__init__(self.message)
+
+
+class DeviceLockedError(TrezorException):
+    """Device is locked.
+
+    Raised when an action cannot proceed because the device is locked.
+
+    Typically, an action will trigger an unlock prompt on device. In specific
+    cases, that is not the appropriate action (e.g., when establishing a THP channel).
+    In such cases, this exception will be raised for the caller to handle,
+    by, e.g., explicitly triggering the unlock prompt.
+    """
+
+    def __init__(self, message: str = "Device is locked") -> None:
+        self.message = message
+        super().__init__(self.message)
 
 
 class OutdatedFirmwareError(TrezorException):
     """Trezor firmware is too old.
 
     Raised when interfacing with a Trezor whose firmware version is no longer supported
-    by current library version."""
+    by current library version.
+    """
+
+    def __init__(self, message: str = OUTDATED_FIRMWARE_ERROR) -> None:
+        self.message = message
+        super().__init__(self.message)
 
 
 class UnexpectedMessageError(TrezorException):
     """Unexpected message received from Trezor.
 
     Raised when the library receives a response from Trezor that does not match the
-    previous request."""
+    previous request.
+    """
 
     def __init__(self, expected: type[MessageType], actual: MessageType) -> None:
         self.expected = expected
@@ -87,43 +121,41 @@ class UnexpectedMessageError(TrezorException):
         super().__init__(f"Expected {expected.__name__} but Trezor sent {actual}")
 
 
-class FailedSessionResumption(TrezorException):
-    """Provided session_id is not valid / session cannot be resumed.
-
-    Raised when `trezorctl -s <sesssion_id>` is used or `TREZOR_SESSION_ID = <session_id>`
-    is set and resumption of session with the `session_id` fails."""
-
-    def __init__(self, received_session_id: bytes | None = None) -> None:
-        # We keep the session id that was received from Trezor for test purposes
-        self.received_session_id = received_session_id
-        super().__init__("Failed to resume session")
-
-
 class InvalidSessionError(TrezorException):
-    """Session expired and is no longer valid.
+    """Session is invalid or expired."""
 
-    Raised when Trezor returns unexpected PassphraseRequest"""
-
-
-class ThpError(TrezorException):
-    pass
-
-
-class TransportBusy(ThpError):
-    pass
+    def __init__(
+        self, session_id: t.Any, *, from_message: MessageType | None = None
+    ) -> None:
+        self.session_id = session_id
+        self.from_message = from_message
+        super().__init__(session_id)
 
 
-class UnallocatedChannel(ThpError):
-    pass
+class ProtocolError(TrezorException):
+    """Response from Trezor could not be understood.
+
+    This could indicate invalid magic bytes or another kind of error in the
+    low-level message encoding.
+    """
 
 
-class DecryptionFailed(ThpError):
-    pass
+class PassphraseError(TrezorException):
+    """Unable to create a passphrase session because passphrase is disabled on device."""
 
 
-class DeviceLocked(ThpError):
-    pass
+class NotPairedError(TrezorException):
+    """Pairing is required before this client can be used."""
+
+    def __init__(self, message: str | None = None) -> None:
+        if message is None:
+            message = self.__doc__
+        super().__init__(message)
 
 
-class ThpUnknownError(ThpError):
-    pass
+class StateMismatchError(TrezorException):
+    """Expected state mismatch.
+
+    Raised when the caller invokes a function that does not match the current
+    state of a flow.
+    """

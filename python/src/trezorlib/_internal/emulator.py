@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import atexit
 import logging
 import os
@@ -23,7 +25,7 @@ import time
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, TextIO, Union, cast
 
-from ..debuglink import DebugLinkNotFound, TrezorClientDebugLink
+from ..debuglink import DebugLinkNotFound, TrezorTestContext
 from ..transport import Transport
 from ..transport.udp import UdpTransport
 
@@ -176,8 +178,8 @@ class Emulator:
             self.logfile = self.profile_dir / "trezor.log"
 
         # Using `client` property instead to assert `not None`
-        self._client: Optional[TrezorClientDebugLink] = None
-        self.process: Optional[subprocess.Popen] = None
+        self._client: TrezorTestContext | None = None
+        self.process: subprocess.Popen | None = None
 
         self.port = 21324
         self.headless = headless
@@ -195,15 +197,13 @@ class Emulator:
         pass
 
     @property
-    def client(self) -> TrezorClientDebugLink:
+    def client(self) -> TrezorTestContext:
         """So that type-checkers do not see `client` as `Optional`.
 
         (it is not None between `start()` and `stop()` calls)
         """
         if self._client is None:
             raise RuntimeError
-        if self._client.is_invalidated:
-            self._client = self._client.get_new_client()
         return self._client
 
     def make_args(self) -> List[str]:
@@ -222,7 +222,7 @@ class Emulator:
         start = time.monotonic()
         try:
             while True:
-                if self.transport.ping():
+                if self.transport.is_ready():
                     break
                 if self.process.poll() is not None:
                     raise RuntimeError("Emulator process died")
@@ -295,10 +295,9 @@ class Emulator:
         (self.profile_dir / "trezor.port").write_text(str(self.port) + "\n")
 
         try:
-            self._client = TrezorClientDebugLink(
-                self.transport,
+            self._client = TrezorTestContext(
+                transport=self.transport,
                 auto_interact=self.auto_interact,
-                open_transport=True,
                 debug_transport=debug_transport,
             )
         except DebugLinkNotFound as e:
@@ -307,7 +306,7 @@ class Emulator:
 
     def stop(self) -> None:
         if self._client:
-            self._client.close_transport()
+            self._client.transport.close()
         self._client = None
 
         if self.process:

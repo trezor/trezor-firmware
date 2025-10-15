@@ -4,7 +4,7 @@ from hashlib import sha256
 from ecdsa import NIST256p, SigningKey
 
 from trezorlib import messages
-from trezorlib.transport.session import Session
+from trezorlib.client import Session
 
 from ..common import compact_size
 

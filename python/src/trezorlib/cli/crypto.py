@@ -22,7 +22,7 @@ from .. import misc, tools
 from . import ChoiceType, with_session
 
 if TYPE_CHECKING:
-    from ..transport.session import Session
+    from ..client import Session
 
 
 PROMPT_TYPE = ChoiceType(
@@ -42,7 +42,7 @@ def cli() -> None:
 
 @cli.command()
 @click.argument("size", type=int)
-@with_session(empty_passphrase=True)
+@with_session
 def get_entropy(session: "Session", size: int) -> str:
     """Get random bytes from device."""
     return misc.get_entropy(session, size).hex()
@@ -55,7 +55,7 @@ def get_entropy(session: "Session", size: int) -> str:
 )
 @click.argument("key")
 @click.argument("value")
-@with_session(empty_passphrase=True)
+@with_session
 def encrypt_keyvalue(
     session: "Session",
     address: str,
@@ -91,7 +91,7 @@ def encrypt_keyvalue(
 )
 @click.argument("key")
 @click.argument("value")
-@with_session(empty_passphrase=True)
+@with_session
 def decrypt_keyvalue(
     session: "Session",
     address: str,
