@@ -360,11 +360,11 @@ def get_session(obj: TrezorConnection, derive_cardano: bool = False) -> str:
                 "Upgrade your firmware to enable session support."
             )
 
-    session = obj.get_session(derive_cardano=derive_cardano)
-    if session.id is None:
-        raise click.ClickException("Passphrase not enabled or firmware too old.")
-    else:
-        return session.id.hex()
+        session = client.get_session(derive_cardano=derive_cardano)
+        if session.id is None:
+            raise click.ClickException("Passphrase not enabled or firmware too old.")
+        else:
+            return session.id.hex()
 
 
 @cli.command()
