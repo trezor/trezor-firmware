@@ -60,7 +60,7 @@ void flash_init(void) {
       .subarea[1] =
           {
               .first_sector = KERNEL_SECTOR_START,
-              .num_sectors = FIRMWARE_SECTOR_END - KERNEL_SECTOR_START - 1,
+              .num_sectors = FIRMWARE_SECTOR_END - KERNEL_SECTOR_START + 1,
           },
   };
 #endif
