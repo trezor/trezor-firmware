@@ -82,11 +82,6 @@ static uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
 static uint8_t *FLASH_BUFFER = NULL;
 static uint32_t FLASH_SIZE;
 
-static void flash_exit(void) {
-  int r = munmap(FLASH_BUFFER, FLASH_SIZE);
-  ensure(sectrue * (r == 0), "munmap failed");
-}
-
 void flash_init(void) {
   if (FLASH_BUFFER) return;
 
@@ -126,8 +121,11 @@ void flash_init(void) {
   ensure(sectrue * (map != MAP_FAILED), "mmap failed");
 
   FLASH_BUFFER = (uint8_t *)map;
+}
 
-  atexit(flash_exit);
+void flash_deinit(void) {
+  int r = munmap(FLASH_BUFFER, FLASH_SIZE);
+  ensure(sectrue * (r == 0), "munmap failed");
 }
 
 secbool flash_unlock_write(void) { return sectrue; }
