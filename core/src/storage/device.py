@@ -202,6 +202,22 @@ if not utils.BITCOIN_ONLY:
                 mnemonic_bits,
             )
 
+    def update_mnemonic_bits() -> bytes | None:
+        from trezorcrypto import bip39
+
+        secret = get_mnemonic_secret()
+        if secret is None:
+            return None
+
+        try:
+            secret_str = secret.decode()
+            mnemonic_bits = bip39.mnemonic_to_bits(secret_str)
+        except UnicodeError:
+            raise RuntimeError("Mnemonic to bits derivation called for SLIP39.")
+
+        common.set(_NAMESPACE, _MNEMONIC_SECRET_BITS, mnemonic_bits)
+        return mnemonic_bits
+
 
 def get_backup_type() -> BackupType:
     from trezor.enums import BackupType
@@ -241,26 +257,6 @@ def set_homescreen(homescreen: AnyBytes) -> None:
     if len(homescreen) > utils.HOMESCREEN_MAXSIZE:
         raise ValueError  # homescreen too large
     common.set(_NAMESPACE, _HOMESCREEN, homescreen, public=True)
-
-
-def update_mnemonic_bits() -> bytes | None:
-    from trezorcrypto import bip39
-
-    if utils.BITCOIN_ONLY:
-        return None
-
-    secret = get_mnemonic_secret()
-    if secret is None:
-        return None
-
-    try:
-        secret_str = secret.decode()
-        mnemonic_bits = bip39.mnemonic_to_bits(secret_str)
-    except UnicodeError:
-        raise RuntimeError("Mnemonic to bits derivation called for SLIP39.")
-
-    common.set(_NAMESPACE, _MNEMONIC_SECRET_BITS, mnemonic_bits)
-    return mnemonic_bits
 
 
 def needs_backup() -> bool:
