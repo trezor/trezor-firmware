@@ -25,16 +25,18 @@ async def show_share_words(
     br_code = ButtonRequestType.ResetDevice
 
     if share_index is None:
-        title = TR.reset__share_words_title
-        check_title = TR.reset__check_backup_title
+        title = TR.reset__recovery_wallet_backup_title
+        check_title = TR.reset__check_wallet_backup_title
     elif group_index is None:
-        title = f"{TR.words__title_share} #{share_index + 1}"
-        check_title = (
-            f"{TR.words__title_check} {TR.words__title_share} #{share_index + 1}"
-        )
+        title = TR.reset__recovery_share_title_template.format(share_index + 1)
+        check_title = TR.reset__check_share_title_template.format(share_index + 1)
     else:
-        title = f"{TR.words__title_group} {group_index + 1} - {TR.words__title_share} {share_index + 1}"
-        check_title = f"{TR.words__title_group} {group_index + 1} - {TR.words__title_share} {share_index + 1}"
+        title = TR.reset__group_share_title_template.format(
+            group_index + 1, share_index + 1
+        )
+        check_title = TR.reset__check_group_share_title_template.format(
+            group_index + 1, share_index + 1
+        )
 
     # We want the option to go back from words to the previous screen
     # (by sending CANCELLED)
@@ -111,7 +113,7 @@ def slip39_show_checklist(
         (
             TR.reset__slip39_checklist_num_shares,
             TR.reset__slip39_checklist_set_threshold,
-            TR.reset__slip39_checklist_write_down,
+            TR.reset__slip39_checklist_write_down_recovery,
         )
         if not advanced
         else (
@@ -200,7 +202,7 @@ async def slip39_prompt_number_of_shares(
 ) -> int:
     await confirm_action(
         "slip39_shares",
-        TR.reset__title_number_of_shares,
+        TR.reset__title_set_number_of_shares,
         description=TR.reset__number_of_shares_info,
         verb=TR.buttons__continue,
         verb_cancel=None,
@@ -230,7 +232,7 @@ def slip39_advanced_prompt_number_of_groups() -> Awaitable[int]:
     max_count = 16
 
     return _prompt_number(
-        TR.reset__title_number_of_groups,
+        TR.reset__title_set_number_of_groups,
         count,
         min_count,
         max_count,
@@ -244,7 +246,7 @@ def slip39_advanced_prompt_group_threshold(num_of_groups: int) -> Awaitable[int]
     max_count = num_of_groups
 
     return _prompt_number(
-        TR.reset__title_group_threshold,
+        TR.reset__title_set_group_threshold,
         count,
         min_count,
         max_count,

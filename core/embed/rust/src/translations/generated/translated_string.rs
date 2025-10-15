@@ -807,8 +807,6 @@ pub enum TranslatedString {
     reset__group_share_checked_successfully_template = 551,  // "Group {0} - Share {1} checked successfully."
     reset__group_share_title_template = 552,  // {"Bolt": "Group {0} - share {1}", "Caesar": "Group {0} - share {1}", "Delizia": "Group {0} - share {1}", "Eckhart": "Group #{0} - Share #{1}"}
     reset__more_info_at = 553,  // "More info at"
-    reset__need_all_share_template = 554,  // "For recovery you need all {0} of the shares."
-    reset__need_any_share_template = 555,  // "For recovery you need any {0} of the shares."
     reset__never_make_digital_copy = 558,  // "Never put your backup anywhere digital."
     reset__num_of_share_holders_template = 559,  // "{0} people or locations will each hold one share."
     reset__num_of_shares_advanced_info_template = 560,  // "Each recovery share is a sequence of {0} words. Next you will choose the threshold number of shares needed to form Group {1}."
@@ -822,7 +820,6 @@ pub enum TranslatedString {
     reset__select_word_template = 570,  // {"Bolt": "Select {0} word", "Caesar": "Select {0} word", "Delizia": "Select {0} word", "Eckhart": "Select word #{0} from your wallet backup"}
     reset__select_word_x_of_y_template = 571,  // "Select word {0} of {1}:"
     reset__share_checked_successfully_template = 573,  // "Share #{0} checked successfully."
-    reset__share_words_title = 574,  // "Standard backup"
     reset__slip39_checklist_num_groups = 575,  // "Number of groups"
     reset__slip39_checklist_num_shares = 576,  // "Number of shares"
     reset__slip39_checklist_set_num_groups = 577,  // "Set number of groups"
@@ -847,7 +844,6 @@ pub enum TranslatedString {
     reset__use_your_backup = 600,  // "Use your backup when you need to recover your wallet."
     reset__write_down_words_template = 601,  // "Write the following {0} words in order on your wallet backup card."
     reset__wrong_word_selected = 602,  // "Wrong word selected!"
-    reset__you_need_one_share = 603,  // "For recovery you need 1 share."
     reset__your_backup_is_done = 604,  // "Your backup is done."
     #[cfg(feature = "universal_fw")]
     ripple__confirm_tag = 605,  // "Confirm tag"
@@ -3517,8 +3513,6 @@ impl TranslatedString {
             #[cfg(feature = "layout_eckhart")]
             (Self::reset__group_share_title_template, "Group #{0} - Share #{1}"),
             (Self::reset__more_info_at, "More info at"),
-            (Self::reset__need_all_share_template, "For recovery you need all {0} of the shares."),
-            (Self::reset__need_any_share_template, "For recovery you need any {0} of the shares."),
             (Self::reset__never_make_digital_copy, "Never put your backup anywhere digital."),
             (Self::reset__num_of_share_holders_template, "{0} people or locations will each hold one share."),
             (Self::reset__num_of_shares_advanced_info_template, "Each recovery share is a sequence of {0} words. Next you will choose the threshold number of shares needed to form Group {1}."),
@@ -3539,7 +3533,6 @@ impl TranslatedString {
             (Self::reset__select_word_template, "Select word #{0} from your wallet backup"),
             (Self::reset__select_word_x_of_y_template, "Select word {0} of {1}:"),
             (Self::reset__share_checked_successfully_template, "Share #{0} checked successfully."),
-            (Self::reset__share_words_title, "Standard backup"),
             (Self::reset__slip39_checklist_num_groups, "Number of groups"),
             (Self::reset__slip39_checklist_num_shares, "Number of shares"),
             (Self::reset__slip39_checklist_set_num_groups, "Set number of groups"),
@@ -3585,7 +3578,6 @@ impl TranslatedString {
             (Self::reset__use_your_backup, "Use your backup when you need to recover your wallet."),
             (Self::reset__write_down_words_template, "Write the following {0} words in order on your wallet backup card."),
             (Self::reset__wrong_word_selected, "Wrong word selected!"),
-            (Self::reset__you_need_one_share, "For recovery you need 1 share."),
             (Self::reset__your_backup_is_done, "Your backup is done."),
             #[cfg(feature = "universal_fw")]
             (Self::ripple__confirm_tag, "Confirm tag"),
@@ -5979,8 +5971,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_reset__incorrect_word_selected, Self::reset__incorrect_word_selected),
         (Qstr::MP_QSTR_reset__more_at, Self::reset__more_at),
         (Qstr::MP_QSTR_reset__more_info_at, Self::reset__more_info_at),
-        (Qstr::MP_QSTR_reset__need_all_share_template, Self::reset__need_all_share_template),
-        (Qstr::MP_QSTR_reset__need_any_share_template, Self::reset__need_any_share_template),
         (Qstr::MP_QSTR_reset__never_make_digital_copy, Self::reset__never_make_digital_copy),
         (Qstr::MP_QSTR_reset__num_of_share_holders_template, Self::reset__num_of_share_holders_template),
         (Qstr::MP_QSTR_reset__num_of_shares_advanced_info_template, Self::reset__num_of_shares_advanced_info_template),
@@ -6003,7 +5993,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_reset__share_checked_successfully_template, Self::reset__share_checked_successfully_template),
         (Qstr::MP_QSTR_reset__share_completed_template, Self::reset__share_completed_template),
         (Qstr::MP_QSTR_reset__share_words_first, Self::reset__share_words_first),
-        (Qstr::MP_QSTR_reset__share_words_title, Self::reset__share_words_title),
         (Qstr::MP_QSTR_reset__slip39_checklist_more_info_threshold, Self::reset__slip39_checklist_more_info_threshold),
         (Qstr::MP_QSTR_reset__slip39_checklist_more_info_threshold_example_template, Self::reset__slip39_checklist_more_info_threshold_example_template),
         (Qstr::MP_QSTR_reset__slip39_checklist_num_groups, Self::reset__slip39_checklist_num_groups),
@@ -6039,7 +6028,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_reset__words_written_down_template, Self::reset__words_written_down_template),
         (Qstr::MP_QSTR_reset__write_down_words_template, Self::reset__write_down_words_template),
         (Qstr::MP_QSTR_reset__wrong_word_selected, Self::reset__wrong_word_selected),
-        (Qstr::MP_QSTR_reset__you_need_one_share, Self::reset__you_need_one_share),
         (Qstr::MP_QSTR_reset__your_backup_is_done, Self::reset__your_backup_is_done),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ripple__confirm_tag, Self::ripple__confirm_tag),
