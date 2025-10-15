@@ -643,8 +643,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_request_slip39;
   MP_QSTR_request_string;
   MP_QSTR_reset__advanced_group_threshold_info;
-  MP_QSTR_reset__all_x_of_y_template;
-  MP_QSTR_reset__any_x_of_y_template;
   MP_QSTR_reset__button_create;
   MP_QSTR_reset__button_recover;
   MP_QSTR_reset__by_continuing;
@@ -670,17 +668,13 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__more_info_at;
   MP_QSTR_reset__need_all_share_template;
   MP_QSTR_reset__need_any_share_template;
-  MP_QSTR_reset__needed_to_form_a_group;
-  MP_QSTR_reset__needed_to_recover_your_wallet;
   MP_QSTR_reset__never_make_digital_copy;
   MP_QSTR_reset__num_of_share_holders_template;
   MP_QSTR_reset__num_of_shares_advanced_info_template;
-  MP_QSTR_reset__num_of_shares_basic_info_template;
   MP_QSTR_reset__num_of_shares_how_many;
   MP_QSTR_reset__num_of_shares_long_info_template;
   MP_QSTR_reset__num_shares_for_group_template;
   MP_QSTR_reset__number_of_shares_info;
-  MP_QSTR_reset__one_share;
   MP_QSTR_reset__only_one_share_will_be_created;
   MP_QSTR_reset__recovery_share_description;
   MP_QSTR_reset__recovery_share_number;
@@ -693,7 +687,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__select_word_from_share_template;
   MP_QSTR_reset__select_word_template;
   MP_QSTR_reset__select_word_x_of_y_template;
-  MP_QSTR_reset__set_it_to_count_template;
   MP_QSTR_reset__share_checked_successfully_template;
   MP_QSTR_reset__share_completed_template;
   MP_QSTR_reset__share_words_first;
@@ -711,10 +704,10 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__slip39_checklist_set_threshold;
   MP_QSTR_reset__slip39_checklist_threshold_x_template;
   MP_QSTR_reset__slip39_checklist_title;
-  MP_QSTR_reset__slip39_checklist_write_down;
   MP_QSTR_reset__slip39_checklist_write_down_recovery;
-  MP_QSTR_reset__the_threshold_sets_the_number_of_shares;
   MP_QSTR_reset__the_word_is_repeated;
+  MP_QSTR_reset__threshold_desc_group_template;
+  MP_QSTR_reset__threshold_desc_template;
   MP_QSTR_reset__threshold_info;
   MP_QSTR_reset__title_backup_is_done;
   MP_QSTR_reset__title_create_wallet;
@@ -726,7 +719,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__title_set_number_of_shares;
   MP_QSTR_reset__title_set_threshold;
   MP_QSTR_reset__title_shamir_backup;
-  MP_QSTR_reset__to_form_group_template;
   MP_QSTR_reset__tos_link;
   MP_QSTR_reset__total_number_of_shares_in_group_template;
   MP_QSTR_reset__use_your_backup;
