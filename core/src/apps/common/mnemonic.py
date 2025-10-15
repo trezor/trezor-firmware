@@ -18,13 +18,6 @@ def get_secret() -> bytes | None:
     return storage_device.get_mnemonic_secret()
 
 
-def _get_secret_bits() -> bytes | None:
-    secret_bits = storage_device.get_mnemonic_secret_bits()
-    if secret_bits is None:
-        secret_bits = storage_device.update_mnemonic_bits()
-    return secret_bits
-
-
 def get_type() -> BackupType:
     return storage_device.get_backup_type()
 
@@ -80,6 +73,12 @@ def get_seed(
 
 
 if not utils.BITCOIN_ONLY:
+
+    def _get_secret_bits() -> bytes | None:
+        secret_bits = storage_device.get_mnemonic_secret_bits()
+        if secret_bits is None:
+            secret_bits = storage_device.update_mnemonic_bits()
+        return secret_bits
 
     def derive_cardano_icarus(
         passphrase: str = "",

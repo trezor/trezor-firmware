@@ -153,8 +153,54 @@ def get_mnemonic_secret() -> bytes | None:
     return common.get(_NAMESPACE, _MNEMONIC_SECRET)
 
 
-def get_mnemonic_secret_bits() -> bytes | None:
-    return common.get(_NAMESPACE, _MNEMONIC_SECRET_BITS)
+def store_mnemonic_secret(
+    secret: bytes,
+    backup_type: BackupType,
+    needs_backup: bool = False,
+    no_backup: bool = False,
+    allow_derivation_fail: bool = False,
+) -> None:
+    set_version(common.STORAGE_VERSION_CURRENT)
+    common.set(_NAMESPACE, _MNEMONIC_SECRET, secret)
+    common.set_true_or_delete(_NAMESPACE, _NO_BACKUP, no_backup)
+    common.set_bool(_NAMESPACE, INITIALIZED, True, public=True)
+    if not no_backup:
+        common.set_true_or_delete(_NAMESPACE, _NEEDS_BACKUP, needs_backup)
+
+    if not utils.BITCOIN_ONLY:
+        _store_mnemonic_secret_bits(secret, backup_type, allow_derivation_fail)
+
+if not utils.BITCOIN_ONLY:
+
+    def get_mnemonic_secret_bits() -> bytes | None:
+        return common.get(_NAMESPACE, _MNEMONIC_SECRET_BITS)
+
+    def _store_mnemonic_secret_bits(
+        secret: bytes, backup_type: BackupType, allow_derivation_fail: bool
+    ) -> None:
+        """
+        Store mnemonic bits for Cardano Icarus derivation. Works only for BIP-39.
+
+        If `allow_derivation_fail` is True, exception during derivation is ignored.
+        """
+        from trezorcrypto import bip39
+
+        from trezor.enums import BackupType
+
+        if backup_type == BackupType.Bip39:
+            try:
+                mnemonic_bits = bip39.mnemonic_to_bits(secret.decode())
+            except ValueError:
+                if not allow_derivation_fail:
+                    raise
+                else:
+                    return
+
+            common.set(
+                _NAMESPACE,
+                _MNEMONIC_SECRET_BITS,
+                mnemonic_bits,
+            )
 
 
 def get_backup_type() -> BackupType:
@@ -195,52 +241,6 @@ def set_homescreen(homescreen: AnyBytes) -> None:
     if len(homescreen) > utils.HOMESCREEN_MAXSIZE:
         raise ValueError  # homescreen too large
     common.set(_NAMESPACE, _HOMESCREEN, homescreen, public=True)
-
-
-def store_mnemonic_secret(
-    secret: bytes,
-    backup_type: BackupType,
-    needs_backup: bool = False,
-    no_backup: bool = False,
-    allow_derivation_fail: bool = False,
-) -> None:
-    set_version(common.STORAGE_VERSION_CURRENT)
-    common.set(_NAMESPACE, _MNEMONIC_SECRET, secret)
-    common.set_true_or_delete(_NAMESPACE, _NO_BACKUP, no_backup)
-    common.set_bool(_NAMESPACE, INITIALIZED, True, public=True)
-    if not no_backup:
-        common.set_true_or_delete(_NAMESPACE, _NEEDS_BACKUP, needs_backup)
-
-    if not utils.BITCOIN_ONLY:
-        _store_mnemonic_secret_bits(secret, backup_type, allow_derivation_fail)
-
-
-def _store_mnemonic_secret_bits(
-    secret: bytes, backup_type: BackupType, allow_derivation_fail: bool
-) -> None:
-    """
-    Store mnemonic bits for Cardano Icarus derivation. Works only for BIP-39.
-
-    If `allow_derivation_fail` is True, exception during derivation is ignored.
-    """
-    from trezorcrypto import bip39
-
-    from trezor.enums import BackupType
-
-    if backup_type == BackupType.Bip39:
-        try:
-            mnemonic_bits = bip39.mnemonic_to_bits(secret.decode())
-        except ValueError:
-            if not allow_derivation_fail:
-                raise
-            else:
-                return
-
-        common.set(
-            _NAMESPACE,
-            _MNEMONIC_SECRET_BITS,
-            mnemonic_bits,
-        )
 
 
 def update_mnemonic_bits() -> bytes | None:
