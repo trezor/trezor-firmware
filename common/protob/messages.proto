@@ -343,6 +343,10 @@ enum MessageType {
     // Evolu
     MessageType_EvoluGetNode = 2100 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_EvoluNode = 2101 [(bitcoin_only) = true, (wire_out) = true];
+    MessageType_EvoluSignRegistrationRequest = 2102 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_EvoluRegistrationRequest = 2103 [(bitcoin_only) = true, (wire_out) = true];
+    MessageType_EvoluGetDelegatedIdentityKey = 2104 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_EvoluDelegatedIdentityKey = 2105 [(bitcoin_only) = true, (wire_out) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

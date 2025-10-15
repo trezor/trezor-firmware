@@ -1166,5 +1166,9 @@
   "1164": "ble__apps_connected",
   "1165": "sn__action",
   "1166": "sn__title",
-  "1167": "ble__must_be_enabled"
+  "1167": "ble__must_be_enabled",
+  "1168": "secure_sync__delegated_identity_key_no_thp",
+  "1169": "secure_sync__delegated_identity_key_thp",
+  "1170": "secure_sync__evolu_node_no_optiga",
+  "1171": "secure_sync__header"
 }

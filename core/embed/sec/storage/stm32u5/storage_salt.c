@@ -31,6 +31,7 @@
 #include "stm32u5xx_ll_utils.h"
 
 #include "../storage_salt.h"
+#include "memzero.h"
 
 #ifdef SECRET_PRIVILEGED_MASTER_KEY_SLOT
 
@@ -54,7 +55,7 @@ void storage_salt_get(storage_salt_t* salt) {
   salt->size = SECRET_KEY_STORAGE_SALT_SIZE;
 }
 
-#else
+#else   // SECRET_PRIVILEGED_MASTER_KEY_SLOT
 
 // Legacy entropy generated from CPUID & radnom data in OTP
 void storage_salt_get(storage_salt_t* salt) {
@@ -86,6 +87,6 @@ void storage_salt_get(storage_salt_t* salt) {
   salt->size = 12 + FLASH_OTP_BLOCK_SIZE;
 }
 
-#endif
+#endif  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
 
 #endif  // SECURE_MODE

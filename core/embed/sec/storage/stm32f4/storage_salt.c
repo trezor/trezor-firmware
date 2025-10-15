@@ -29,6 +29,7 @@
 #include "stm32f4xx_ll_utils.h"
 
 #include "../storage_salt.h"
+#include "memzero.h"
 
 void storage_salt_get(storage_salt_t* salt) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_OTP);
