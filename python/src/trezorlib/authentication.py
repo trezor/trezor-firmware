@@ -27,7 +27,8 @@ from cryptography.hazmat.primitives.asymmetric import ec, ed25519, utils
 from cryptography.x509.oid import NameOID, ObjectIdentifier, SignatureAlgorithmOID
 
 from . import device
-from .transport.session import Session
+from .client import Session
+from .tools import workflow
 
 LOG = logging.getLogger(__name__)
 
@@ -476,6 +477,7 @@ def verify_authentication_response(
     return root
 
 
+@workflow()
 def authenticate_device(
     session: Session,
     challenge: bytes | None = None,

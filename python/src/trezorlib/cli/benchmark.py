@@ -24,7 +24,7 @@ from . import with_session
 
 if TYPE_CHECKING:
 
-    from ..transport.session import Session
+    from ..client import Session
 
 
 def list_names_patern(session: "Session", pattern: Optional[str] = None) -> List[str]:
@@ -41,7 +41,7 @@ def cli() -> None:
 
 @cli.command()
 @click.argument("pattern", required=False)
-@with_session(empty_passphrase=True)
+@with_session(passphrase=False)
 def list_names(session: "Session", pattern: Optional[str] = None) -> None:
     """List names of all supported benchmarks"""
     names = list_names_patern(session, pattern)
@@ -54,7 +54,7 @@ def list_names(session: "Session", pattern: Optional[str] = None) -> None:
 
 @cli.command()
 @click.argument("pattern", required=False)
-@with_session(empty_passphrase=True)
+@with_session(passphrase=False)
 def run(session: "Session", pattern: Optional[str]) -> None:
     """Run benchmark"""
     names = list_names_patern(session, pattern)

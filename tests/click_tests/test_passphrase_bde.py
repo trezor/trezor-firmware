@@ -23,7 +23,7 @@ import pytest
 from trezorlib import messages
 from trezorlib.client import PASSPHRASE_ON_DEVICE
 from trezorlib.debuglink import LayoutType
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 
 from ..common import TEST_ADDRESS_N
 from .common import (  # KEYBOARD_CATEGORY,

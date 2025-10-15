@@ -123,7 +123,7 @@ def test_recovery_single_reset(core_emulator: Emulator):
 
 
 @core_only
-@pytest.mark.protocol("protocol_v1")
+@pytest.mark.protocol("v1")
 def test_recovery_on_old_wallet(core_emulator: Emulator):
     """Check that the recovery workflow started on a disconnected device can survive
     handling by the old Wallet.

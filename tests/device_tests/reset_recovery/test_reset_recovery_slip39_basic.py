@@ -20,8 +20,8 @@ import typing as t
 import pytest
 
 from trezorlib import btc, device, messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import DebugSession as Session
+from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.messages import BackupType
 from trezorlib.tools import parse_path
 
@@ -45,7 +45,6 @@ def test_reset_recovery(client: Client):
         session = client.get_seedless_session()
         lang = client.features.language or "en"
         device.wipe(session)
-        client = client.get_new_client()
         session = client.get_seedless_session()
         set_language(session, lang[:2])
         selected_mnemonics = share_subset
@@ -58,8 +57,8 @@ def test_reset_recovery(client: Client):
 
 
 def reset(session: Session, strength: int = 128) -> list[str]:
-    with session.client as client:
-        IF = InputFlowSlip39BasicResetRecovery(session.client)
+    with session.test_ctx as client:
+        IF = InputFlowSlip39BasicResetRecovery(session)
         client.set_input_flow(IF.get())
 
         # No PIN, no passphrase, don't display random
@@ -87,8 +86,8 @@ def reset(session: Session, strength: int = 128) -> list[str]:
 
 
 def recover(session: Session, shares: t.Sequence[str]):
-    with session.client as client:
-        IF = InputFlowSlip39BasicRecovery(session.client, shares)
+    with session.test_ctx as client:
+        IF = InputFlowSlip39BasicRecovery(session, shares)
         client.set_input_flow(IF.get())
         device.recover(session, pin_protection=False, label="label")
 

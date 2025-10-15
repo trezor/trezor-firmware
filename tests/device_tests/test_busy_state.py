@@ -20,7 +20,7 @@ import pytest
 
 from trezorlib import btc, device
 from trezorlib.debuglink import LayoutType
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
 
 PIN = "1234"
@@ -28,14 +28,14 @@ PIN = "1234"
 
 def _assert_busy(session: Session, should_be_busy: bool, screen: str = "Homescreen"):
     assert session.features.busy is should_be_busy
-    if session.client.layout_type is not LayoutType.T1:
+    if session.layout_type is not LayoutType.T1:
         if should_be_busy:
             assert (
                 "CoinJoinProgress"
-                in session.client.debug.read_layout().all_components()
+                in session.debug.read_layout().all_components()
             )
         else:
-            assert session.client.debug.read_layout().main_component() == screen
+            assert session.debug.read_layout().main_component() == screen
 
 
 @pytest.mark.setup_client(pin=PIN)
@@ -43,7 +43,7 @@ def test_busy_state(session: Session):
 
     screen = (
         "Homescreen"
-        if session.client.layout_type is LayoutType.Eckhart
+        if session.layout_type is LayoutType.Eckhart
         else "Lockscreen"
     )
     _assert_busy(session, False, screen)
@@ -54,7 +54,7 @@ def test_busy_state(session: Session):
     _assert_busy(session, True)
     assert session.features.unlocked is False
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.use_pin_sequence([PIN])
         btc.get_address(
             session, "Bitcoin", parse_path("m/44h/0h/0h/0/0"), show_display=True
@@ -85,7 +85,7 @@ def test_busy_expiry_core(session: Session):
 
     # Wait until the layout changes
     time.sleep(0.1)  # Improves stability of the test for devices with THP
-    session.client.debug.wait_layout()
+    session.debug.wait_layout()
     end = time.monotonic()
 
     # Check that the busy dialog was shown for at least WAIT_TIME_MS.

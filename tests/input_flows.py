@@ -15,9 +15,10 @@ import time
 from typing import Callable, Generator, Sequence
 
 from trezorlib import messages
+from trezorlib.client import Session
 from trezorlib.debuglink import DebugLink, LayoutContent, LayoutType
-from trezorlib.debuglink import SessionDebugWrapper as Session
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import DebugSession
+from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.debuglink import multipage_content
 
 from . import translations as TR
@@ -37,13 +38,16 @@ B = messages.ButtonRequestType
 
 
 class InputFlowBase:
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
+        if isinstance(client, Session):
+            client = client.test_ctx
         self.client = client
         self.debug: DebugLink = client.debug
         self.PIN = PinFlow(self.client)
         self.REC = RecoveryFlow(self.client)
         self.BAK = BackupFlow(self.client)
         self.ETH = EthereumFlow(self.client)
+        self.layout_type = client.layout_type
 
     def get(self) -> Callable[[], BRGeneratorType]:
         self.client.watch_layout(True)
@@ -51,13 +55,13 @@ class InputFlowBase:
         # There could be one common input flow for all models
         if hasattr(self, "input_flow_common"):
             return getattr(self, "input_flow_common")
-        if self.client.layout_type is LayoutType.Bolt:
+        if self.layout_type is LayoutType.Bolt:
             return self.input_flow_bolt
-        if self.client.layout_type is LayoutType.Caesar:
+        if self.layout_type is LayoutType.Caesar:
             return self.input_flow_caesar
-        if self.client.layout_type is LayoutType.Delizia:
+        if self.layout_type is LayoutType.Delizia:
             return self.input_flow_delizia
-        if self.client.layout_type is LayoutType.Eckhart:
+        if self.layout_type is LayoutType.Eckhart:
             return self.input_flow_eckhart
 
         raise ValueError("Unknown model")
@@ -131,7 +135,7 @@ class InputFlowNewWipeCodeCancel(InputFlowBase):
 class InputFlowNewCodeMismatch(InputFlowBase):
     def __init__(
         self,
-        client: Client,
+        client: Client | DebugSession,
         first_code: str,
         second_code: str,
         what: str,
@@ -152,7 +156,7 @@ class InputFlowNewCodeMismatch(InputFlowBase):
             assert "PinKeyboard" in self.debug.read_layout().all_components()
             self.debug.input(self.pin)
 
-        if self.client.layout_type is LayoutType.Caesar:
+        if self.layout_type is LayoutType.Caesar:
             layout = self.debug.read_layout()
             if "PinKeyboard" not in layout.all_components():
                 yield from swipe_if_necessary(self.debug)  # code info
@@ -181,9 +185,9 @@ class InputFlowNewCodeMismatch(InputFlowBase):
 class InputFlowCodeChangeFail(InputFlowBase):
 
     def __init__(
-        self, session: Session, current_pin: str, new_pin_1: str, new_pin_2: str
+        self, session: DebugSession, current_pin: str, new_pin_1: str, new_pin_2: str
     ):
-        super().__init__(session.client)
+        super().__init__(session)
         self.current_pin = current_pin
         self.new_pin_1 = new_pin_1
         self.new_pin_2 = new_pin_2
@@ -206,7 +210,7 @@ class InputFlowCodeChangeFail(InputFlowBase):
 
 
 class InputFlowWrongPIN(InputFlowBase):
-    def __init__(self, client: Client, wrong_pin: str):
+    def __init__(self, client: Client | DebugSession, wrong_pin: str):
         super().__init__(client)
         self.wrong_pin = wrong_pin
 
@@ -220,7 +224,7 @@ class InputFlowWrongPIN(InputFlowBase):
 
 
 class InputFlowPINBackoff(InputFlowBase):
-    def __init__(self, client: Client, wrong_pin: str, good_pin: str):
+    def __init__(self, client: Client | DebugSession, wrong_pin: str, good_pin: str):
         super().__init__(client)
         self.wrong_pin = wrong_pin
         self.good_pin = good_pin
@@ -237,7 +241,7 @@ class InputFlowPINBackoff(InputFlowBase):
 
 
 class InputFlowSignMessagePagination(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
         self.message_read = ""
 
@@ -327,7 +331,7 @@ class InputFlowSignMessagePagination(InputFlowBase):
 
 
 class InputFlowSignVerifyMessageLong(InputFlowBase):
-    def __init__(self, client: Client, verify=False):
+    def __init__(self, client: Client | DebugSession, verify=False):
         super().__init__(client)
         self.message_read = ""
         self.verify = verify
@@ -659,7 +663,9 @@ class InputFlowShowAddressQRCodeCancel(InputFlowBase):
 
 
 class InputFlowShowMultisigXPUBs(InputFlowBase):
-    def __init__(self, client: Client, address: str, xpubs: list[str], index: int):
+    def __init__(
+        self, client: Client | DebugSession, address: str, xpubs: list[str], index: int
+    ):
         super().__init__(client)
         self.address = address
         self.xpubs = xpubs
@@ -846,7 +852,9 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
 
 class InputFlowShowXpubQRCode(InputFlowBase):
 
-    def __init__(self, client: Client, passphrase_request_expected: bool = False):
+    def __init__(
+        self, client: Client | DebugSession, passphrase_request_expected: bool = False
+    ):
         super().__init__(client)
         self.passphrase_request_expected = passphrase_request_expected
 
@@ -1489,7 +1497,7 @@ def lock_time_input_flow_eckhart(
 
 
 class InputFlowLockTimeBlockHeight(InputFlowBase):
-    def __init__(self, client: Client, block_height: str):
+    def __init__(self, client: Client | DebugSession, block_height: str):
         super().__init__(client)
         self.block_height = block_height
 
@@ -1516,7 +1524,7 @@ class InputFlowLockTimeBlockHeight(InputFlowBase):
 
 
 class InputFlowLockTimeDatetime(InputFlowBase):
-    def __init__(self, client: Client, lock_time_str: str):
+    def __init__(self, client: Client | DebugSession, lock_time_str: str):
         super().__init__(client)
         self.lock_time_str = lock_time_str
 
@@ -1541,17 +1549,17 @@ class InputFlowLockTimeDatetime(InputFlowBase):
 class InputFlowEIP712ShowMore(InputFlowBase):
     SHOW_MORE = (143, 167)
 
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
         self.same_for_all_models = True
 
     def _confirm_show_more(self) -> None:
         """Model-specific, either clicks a screen or presses a button."""
-        if self.client.layout_type is LayoutType.Bolt:
+        if self.layout_type is LayoutType.Bolt:
             self.debug.click(self.SHOW_MORE)
-        elif self.client.layout_type is LayoutType.Caesar:
+        elif self.layout_type is LayoutType.Caesar:
             self.debug.press_right()
-        elif self.client.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
+        elif self.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
             self.debug.click(self.debug.screen_buttons.menu())
             self.debug.button_actions.navigate_to_menu_item(0)
         else:
@@ -1601,7 +1609,7 @@ class InputFlowEIP712ShowMore(InputFlowBase):
 
 
 class InputFlowEIP712Cancel(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
 
     def input_flow_common(self) -> BRGeneratorType:
@@ -1614,7 +1622,7 @@ class InputFlowEIP712Cancel(InputFlowBase):
 
 
 class InputFlowEthereumSignTxShowFeeInfo(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
 
     def input_flow_common(self) -> BRGeneratorType:
@@ -1622,7 +1630,7 @@ class InputFlowEthereumSignTxShowFeeInfo(InputFlowBase):
 
 
 class InputFlowEthereumSignTxGoBackFromSummary(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
 
     def input_flow_common(self) -> BRGeneratorType:
@@ -1630,7 +1638,7 @@ class InputFlowEthereumSignTxGoBackFromSummary(InputFlowBase):
 
 
 class InputFlowEthereumSignTxDataSkip(InputFlowBase):
-    def __init__(self, client: Client, cancel: bool = False):
+    def __init__(self, client: Client | DebugSession, cancel: bool = False):
         super().__init__(client)
         self.cancel = cancel
 
@@ -1640,7 +1648,7 @@ class InputFlowEthereumSignTxDataSkip(InputFlowBase):
 
 
 class InputFlowEthereumSignTxDataScrollDown(InputFlowBase):
-    def __init__(self, client: Client, cancel: bool = False):
+    def __init__(self, client: Client | DebugSession, cancel: bool = False):
         super().__init__(client)
         self.cancel = cancel
 
@@ -1657,7 +1665,7 @@ class InputFlowEthereumSignTxDataScrollDown(InputFlowBase):
 
 
 class InputFlowEthereumSignTxDataGoBack(InputFlowBase):
-    def __init__(self, client: Client, cancel: bool = False):
+    def __init__(self, client: Client | DebugSession, cancel: bool = False):
         super().__init__(client)
         self.cancel = cancel
 
@@ -1672,7 +1680,7 @@ class InputFlowEthereumSignTxDataGoBack(InputFlowBase):
 
 
 class InputFlowEthereumSignTxStaking(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
 
     def input_flow_common(self) -> BRGeneratorType:
@@ -1718,7 +1726,7 @@ class InputFlowBip39Backup(InputFlowBase):
 
 
 class InputFlowBip39ResetBackup(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
         self.mnemonic = None
 
@@ -1767,7 +1775,7 @@ class InputFlowBip39ResetBackup(InputFlowBase):
 
 
 class InputFlowBip39ResetPIN(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
         self.mnemonic = None
 
@@ -1808,7 +1816,7 @@ class InputFlowBip39ResetPIN(InputFlowBase):
 
 
 class InputFlowBip39ResetFailedCheck(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
         self.mnemonic = None
 
@@ -1866,7 +1874,7 @@ def load_N_shares(
 
 
 class InputFlowSlip39BasicBackup(InputFlowBase):
-    def __init__(self, client: Client, click_info: bool, repeated: bool = False):
+    def __init__(self, client: Client | DebugSession, click_info: bool, repeated: bool = False):
         super().__init__(client)
         self.mnemonics: list[str] = []
         self.click_info = click_info
@@ -2003,7 +2011,7 @@ class InputFlowSlip39BasicBackup(InputFlowBase):
 
 
 class InputFlowSlip39BasicResetRecovery(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
         self.mnemonics: list[str] = []
 
@@ -2099,7 +2107,7 @@ class InputFlowSlip39BasicResetRecovery(InputFlowBase):
 
 
 class InputFlowSlip39CustomBackup(InputFlowBase):
-    def __init__(self, client: Client, share_count: int, repeated: bool = False):
+    def __init__(self, client: Client | DebugSession, share_count: int, repeated: bool = False):
         super().__init__(client)
         self.mnemonics: list[str] = []
         self.share_count = share_count
@@ -2213,7 +2221,7 @@ def load_5_groups_5_shares(
 
 
 class InputFlowSlip39AdvancedBackup(InputFlowBase):
-    def __init__(self, client: Client, click_info: bool):
+    def __init__(self, client: Client | DebugSession, click_info: bool):
         super().__init__(client)
         self.mnemonics: list[str] = []
         self.click_info = click_info
@@ -2364,7 +2372,7 @@ class InputFlowSlip39AdvancedBackup(InputFlowBase):
 
 
 class InputFlowSlip39AdvancedResetRecovery(InputFlowBase):
-    def __init__(self, client: Client, click_info: bool):
+    def __init__(self, client: Client | DebugSession, click_info: bool):
         super().__init__(client)
         self.mnemonics: list[str] = []
         self.click_info = click_info
@@ -2475,7 +2483,7 @@ class InputFlowSlip39AdvancedResetRecovery(InputFlowBase):
 
 
 class InputFlowBip39RecoveryDryRun(InputFlowBase):
-    def __init__(self, client: Client, mnemonic: list[str], mismatch: bool = False):
+    def __init__(self, client: Client | DebugSession, mnemonic: list[str], mismatch: bool = False):
         super().__init__(client)
         self.mnemonic = mnemonic
         self.mismatch = mismatch
@@ -2492,8 +2500,8 @@ class InputFlowBip39RecoveryDryRun(InputFlowBase):
 
 class InputFlowBip39RecoveryDryRunInvalid(InputFlowBase):
 
-    def __init__(self, session: Session):
-        super().__init__(session.client)
+    def __init__(self, session: DebugSession):
+        super().__init__(session)
         self.invalid_mnemonic = ["stick"] * 12
         self.session = session
 
@@ -2508,7 +2516,7 @@ class InputFlowBip39RecoveryDryRunInvalid(InputFlowBase):
 
 
 class InputFlowBip39Recovery(InputFlowBase):
-    def __init__(self, client: Client, mnemonic: list[str], pin: str | None = None):
+    def __init__(self, client: Client | DebugSession, mnemonic: list[str], pin: str | None = None):
         super().__init__(client)
         self.mnemonic = mnemonic
         self.pin = pin
@@ -2523,7 +2531,7 @@ class InputFlowBip39Recovery(InputFlowBase):
 
 
 class InputFlowSlip39AdvancedRecoveryDryRun(InputFlowBase):
-    def __init__(self, client: Client, shares: list[str], mismatch: bool = False):
+    def __init__(self, client: Client | DebugSession, shares: list[str], mismatch: bool = False):
         super().__init__(client)
         self.shares = shares
         self.mismatch = mismatch
@@ -2540,7 +2548,7 @@ class InputFlowSlip39AdvancedRecoveryDryRun(InputFlowBase):
 
 
 class InputFlowSlip39AdvancedRecovery(InputFlowBase):
-    def __init__(self, client: Client, shares: list[str], click_info: bool):
+    def __init__(self, client: Client | DebugSession, shares: list[str], click_info: bool):
         super().__init__(client)
         self.shares = shares
         self.click_info = click_info
@@ -2556,12 +2564,12 @@ class InputFlowSlip39AdvancedRecovery(InputFlowBase):
 
 
 class InputFlowSlip39AdvancedRecoveryAbort(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.client.layout_type in (
+        if self.layout_type in (
             LayoutType.Bolt,
             LayoutType.Delizia,
             LayoutType.Eckhart,
@@ -2571,14 +2579,14 @@ class InputFlowSlip39AdvancedRecoveryAbort(InputFlowBase):
 
 
 class InputFlowSlip39AdvancedRecoveryNoAbort(InputFlowBase):
-    def __init__(self, client: Client, shares: list[str]):
+    def __init__(self, client: Client | DebugSession, shares: list[str]):
         super().__init__(client)
         self.shares = shares
         self.word_count = len(shares[0].split(" "))
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.client.layout_type in (
+        if self.layout_type in (
             LayoutType.Bolt,
             LayoutType.Delizia,
             LayoutType.Eckhart,
@@ -2598,11 +2606,11 @@ class InputFlowSlip39AdvancedRecoveryThresholdReached(InputFlowBase):
 
     def __init__(
         self,
-        session: Session,
+        session: DebugSession,
         first_share: list[str],
         second_share: list[str],
     ):
-        super().__init__(session.client)
+        super().__init__(session)
         self.first_share = first_share
         self.second_share = second_share
         self.session = session
@@ -2624,11 +2632,11 @@ class InputFlowSlip39AdvancedRecoveryShareAlreadyEntered(InputFlowBase):
 
     def __init__(
         self,
-        session: Session,
+        session: DebugSession,
         first_share: list[str],
         second_share: list[str],
     ):
-        super().__init__(session.client)
+        super().__init__(session)
         self.first_share = first_share
         self.second_share = second_share
         self.session = session
@@ -2649,7 +2657,7 @@ class InputFlowSlip39AdvancedRecoveryShareAlreadyEntered(InputFlowBase):
 class InputFlowSlip39BasicRecoveryDryRun(InputFlowBase):
     def __init__(
         self,
-        client: Client,
+        client: Client | DebugSession,
         shares: list[str],
         mismatch: bool = False,
         unlock_repeated_backup=False,
@@ -2674,7 +2682,7 @@ class InputFlowSlip39BasicRecoveryDryRun(InputFlowBase):
 
 
 class InputFlowSlip39BasicRecovery(InputFlowBase):
-    def __init__(self, client: Client, shares: Sequence[str], pin: str | None = None):
+    def __init__(self, client: Client | DebugSession, shares: Sequence[str], pin: str | None = None):
         super().__init__(client)
         self.shares = shares
         self.pin = pin
@@ -2690,12 +2698,12 @@ class InputFlowSlip39BasicRecovery(InputFlowBase):
 
 
 class InputFlowSlip39BasicRecoveryAbortOnNumberOfWords(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.client.layout_type in (
+        if self.layout_type in (
             LayoutType.Bolt,
             LayoutType.Delizia,
             LayoutType.Eckhart,
@@ -2704,12 +2712,12 @@ class InputFlowSlip39BasicRecoveryAbortOnNumberOfWords(InputFlowBase):
 
 
 class InputFlowSlip39BasicRecoveryAbort(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.client.layout_type in (
+        if self.layout_type in (
             LayoutType.Bolt,
             LayoutType.Delizia,
             LayoutType.Eckhart,
@@ -2719,14 +2727,14 @@ class InputFlowSlip39BasicRecoveryAbort(InputFlowBase):
 
 
 class InputFlowSlip39BasicRecoveryAbortBetweenShares(InputFlowBase):
-    def __init__(self, client: Client, shares: list[str]):
+    def __init__(self, client: Client | DebugSession, shares: list[str]):
         super().__init__(client)
         self.first_share = shares[0].split(" ")
         self.word_count = len(self.first_share)
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.client.layout_type in (
+        if self.layout_type in (
             LayoutType.Bolt,
             LayoutType.Delizia,
             LayoutType.Eckhart,
@@ -2742,7 +2750,7 @@ class InputFlowSlip39BasicRecoveryAbortBetweenShares(InputFlowBase):
 
 
 class InputFlowSlip39BasicRecoveryAbortOnMnemonic(InputFlowBase):
-    def __init__(self, client: Client, shares: list[str], cancel_first: bool):
+    def __init__(self, client: Client | DebugSession, shares: list[str], cancel_first: bool):
         super().__init__(client)
         self.first_share = shares[0].split(" ")
         self.word_count = len(self.first_share)
@@ -2765,15 +2773,15 @@ class InputFlowSlip39BasicRecoveryAbortOnMnemonic(InputFlowBase):
 
 class InputFlowSlip39BasicRecoveryShareInfoBetweenShares(InputFlowBase):
 
-    def __init__(self, session: Session, shares: list[str]):
-        super().__init__(session.client)
+    def __init__(self, session: DebugSession, shares: list[str]):
+        super().__init__(session)
         self.first_share = shares[0].split(" ")
         self.word_count = len(self.first_share)
         self.session = session
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.client.layout_type in (
+        if self.layout_type in (
             LayoutType.Bolt,
             LayoutType.Delizia,
             LayoutType.Eckhart,
@@ -2792,7 +2800,7 @@ class InputFlowSlip39BasicRecoveryShareInfoBetweenShares(InputFlowBase):
 
 
 class InputFlowSlip39BasicRecoveryNoAbort(InputFlowBase):
-    def __init__(self, client: Client, shares: list[str]):
+    def __init__(self, client: Client | DebugSession, shares: list[str]):
         super().__init__(client)
         self.shares = shares
         self.word_count = len(shares[0].split(" "))
@@ -2800,7 +2808,7 @@ class InputFlowSlip39BasicRecoveryNoAbort(InputFlowBase):
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
 
-        if self.client.layout_type in (
+        if self.layout_type in (
             LayoutType.Bolt,
             LayoutType.Delizia,
             LayoutType.Eckhart,
@@ -2819,8 +2827,8 @@ class InputFlowSlip39BasicRecoveryNoAbort(InputFlowBase):
 
 class InputFlowSlip39BasicRecoveryInvalidFirstShare(InputFlowBase):
 
-    def __init__(self, session: Session):
-        super().__init__(session.client)
+    def __init__(self, session: DebugSession):
+        super().__init__(session)
         self.first_invalid = ["slush"] * 20
         self.second_invalid = ["slush"] * 33
         self.session = session
@@ -2840,8 +2848,8 @@ class InputFlowSlip39BasicRecoveryInvalidFirstShare(InputFlowBase):
 
 class InputFlowSlip39BasicRecoveryInvalidSecondShare(InputFlowBase):
 
-    def __init__(self, session: Session, shares: list[str]):
-        super().__init__(session.client)
+    def __init__(self, session: DebugSession, shares: list[str]):
+        super().__init__(session)
         self.shares = shares
         self.first_share = shares[0].split(" ")
         self.invalid_share = self.first_share[:3] + ["slush"] * 17
@@ -2864,8 +2872,8 @@ class InputFlowSlip39BasicRecoveryInvalidSecondShare(InputFlowBase):
 
 class InputFlowSlip39BasicRecoveryWrongNthWord(InputFlowBase):
 
-    def __init__(self, session: Session, share: list[str], nth_word: int):
-        super().__init__(session.client)
+    def __init__(self, session: DebugSession, share: list[str], nth_word: int):
+        super().__init__(session)
         self.share = share
         self.nth_word = nth_word
         # Invalid share - just enough words to trigger the warning
@@ -2886,8 +2894,8 @@ class InputFlowSlip39BasicRecoveryWrongNthWord(InputFlowBase):
 
 class InputFlowSlip39BasicRecoverySameShare(InputFlowBase):
 
-    def __init__(self, session: Session, share: list[str]):
-        super().__init__(session.client)
+    def __init__(self, session: DebugSession, share: list[str]):
+        super().__init__(session)
         self.share = share
         # Second duplicate share - only 4 words are needed to verify it
         self.duplicate_share = self.share[:4]
@@ -2906,7 +2914,7 @@ class InputFlowSlip39BasicRecoverySameShare(InputFlowBase):
 
 
 class InputFlowResetSkipBackup(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client | DebugSession):
         super().__init__(client)
 
     def input_flow_bolt(self) -> BRGeneratorType:
@@ -2954,9 +2962,6 @@ class InputFlowResetSkipBackup(InputFlowBase):
 
 
 class InputFlowConfirmAllWarnings(InputFlowBase):
-    def __init__(self, client: Client):
-        super().__init__(client)
-
     def input_flow_bolt(self) -> BRGeneratorType:
         return self.client.ui.default_input_flow()
 
@@ -3018,7 +3023,7 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
 
 
 class InputFlowFidoConfirm(InputFlowBase):
-    def __init__(self, client: Client, cancel: bool = False):
+    def __init__(self, client: Client | DebugSession, cancel: bool = False):
         super().__init__(client)
         self.cancel = cancel
 

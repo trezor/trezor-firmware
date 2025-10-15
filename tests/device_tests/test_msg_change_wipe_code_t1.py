@@ -18,9 +18,8 @@ import pytest
 
 from trezorlib import device, exceptions, messages
 from trezorlib.client import MAX_PIN_LENGTH
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
-from trezorlib.transport.session import SessionV1
 
 PinType = messages.PinMatrixRequestType
 
@@ -35,7 +34,7 @@ pytestmark = pytest.mark.models("legacy")
 
 def _set_wipe_code(session: Session, pin, wipe_code):
     # Set/change wipe code.
-    with session.client as client:
+    with session.test_ctx as client:
         if session.features.pin_protection:
             pins = [pin, wipe_code, wipe_code]
             pin_matrices = [
@@ -59,7 +58,7 @@ def _set_wipe_code(session: Session, pin, wipe_code):
 
 def _change_pin(session: Session, old_pin, new_pin):
     assert session.features.pin_protection is True
-    with session.client as client:
+    with session.test_ctx as client:
         client.use_pin_sequence([old_pin, new_pin, new_pin])
         try:
             return device.change_pin(session)
@@ -97,7 +96,7 @@ def test_set_remove_wipe_code(session: Session):
     _check_wipe_code(session, PIN4, WIPE_CODE6)
 
     # Test remove wipe code.
-    with session.client as client:
+    with session.test_ctx as client:
         client.use_pin_sequence([PIN4])
         device.change_wipe_code(session, remove=True)
 
@@ -112,7 +111,7 @@ def test_set_wipe_code_mismatch(session: Session):
     assert session.features.wipe_code_protection is False
 
     # Let's set a new wipe code.
-    with session.client as client:
+    with session.test_ctx as client:
         client.use_pin_sequence([WIPE_CODE4, WIPE_CODE6])
         client.set_expected_responses(
             [
@@ -136,7 +135,7 @@ def test_set_wipe_code_to_pin(session: Session):
     assert session.features.wipe_code_protection is None
 
     # Let's try setting the wipe code to the curent PIN value.
-    with session.client as client:
+    with session.test_ctx as client:
         client.use_pin_sequence([PIN4, PIN4])
         client.set_expected_responses(
             [
@@ -160,7 +159,7 @@ def test_set_pin_to_wipe_code(session: Session):
     _set_wipe_code(session, None, WIPE_CODE4)
 
     # Try to set the PIN to the current wipe code value.
-    with session.client as client:
+    with session.test_ctx as client:
         client.use_pin_sequence([WIPE_CODE4, WIPE_CODE4])
         client.set_expected_responses(
             [
@@ -188,7 +187,7 @@ def test_set_wipe_code_invalid(session: Session, invalid_wipe_code: str):
     assert isinstance(ret, messages.ButtonRequest)
 
     # Confirm
-    session.client.debug.press_yes()
+    session.debug.press_yes()
     ret = session.call_raw(messages.ButtonAck())
 
     # Enter a wipe code containing an invalid digit
@@ -200,6 +199,5 @@ def test_set_wipe_code_invalid(session: Session, invalid_wipe_code: str):
     assert isinstance(ret, messages.Failure)
 
     # Check that there's still no wipe code protection.
-    session = Session(SessionV1.new(session.client))
     session.ensure_unlocked()
     assert session.features.wipe_code_protection is False

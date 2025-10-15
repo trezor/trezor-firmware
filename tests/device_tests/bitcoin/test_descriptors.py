@@ -18,7 +18,7 @@ import pytest
 
 from trezorlib import btc, messages, models
 from trezorlib.cli import btc as btc_cli
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import H_
 
 from ...input_flows import InputFlowShowXpubQRCode
@@ -167,9 +167,9 @@ def _address_n(purpose, coin, account, script_type):
 def test_descriptors(
     session: Session, coin, account, purpose, script_type, descriptors
 ):
-    with session.client as client:
-        if session.client.model != models.T1B1:
-            IF = InputFlowShowXpubQRCode(session.client)
+    with session.test_ctx as client:
+        if client.model != models.T1B1:
+            IF = InputFlowShowXpubQRCode(session)
             client.set_input_flow(IF.get())
 
         address_n = _address_n(purpose, coin, account, script_type)
@@ -191,9 +191,9 @@ def test_descriptors(
 def test_descriptors_trezorlib(
     session: Session, coin, account, purpose, script_type, descriptors
 ):
-    with session.client as client:
-        if session.client.model != models.T1B1:
-            IF = InputFlowShowXpubQRCode(session.client)
+    with session.test_ctx as client:
+        if session.model != models.T1B1:
+            IF = InputFlowShowXpubQRCode(session)
             client.set_input_flow(IF.get())
         res = btc_cli._get_descriptor(
             session, coin, account, purpose, script_type, show_display=True

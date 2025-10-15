@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages, models
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
 
@@ -80,7 +80,7 @@ def test_send_p2tr(session: Session, chunkify: bool):
         amount=4_450,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -134,7 +134,7 @@ def test_send_two_with_change(session: Session):
         script_type=messages.OutputScriptType.PAYTOTAPROOT,
         amount=6_800 + 13_000 - 200 - 15_000,
     )
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -223,7 +223,7 @@ def test_send_mixed(session: Session):
         script_type=messages.OutputScriptType.PAYTOTAPROOT,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         if is_core(client):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())
@@ -357,7 +357,7 @@ def test_attack_script_type(session: Session):
 
         return msg
 
-    with session.client as client:
+    with session.test_ctx as client:
         if is_core(client):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())
@@ -413,7 +413,7 @@ def test_send_invalid_address(session: Session, address: str):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client, pytest.raises(TrezorFailure):
+    with session.test_ctx as client, pytest.raises(TrezorFailure):
         client.set_expected_responses(
             [
                 request_input(0),

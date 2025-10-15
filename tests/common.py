@@ -26,14 +26,14 @@ from unittest import mock
 import pytest
 
 from trezorlib import btc, messages, models, tools
-from trezorlib.debuglink import LayoutType
+from trezorlib.debuglink import LayoutType, TrezorTestContext as Client
 
 if TYPE_CHECKING:
     from _pytest.mark.structures import MarkDecorator
 
+    from trezorlib.client import Session
     from trezorlib.debuglink import DebugLink
     from trezorlib.messages import ButtonRequest
-    from trezorlib.transport.session import Session
 
 PRIVATE_KEYS_DEV = [byte * 32 for byte in (b"\xdd", b"\xde", b"\xdf")]
 
@@ -424,5 +424,5 @@ def swipe_till_the_end(debug: "DebugLink", br: messages.ButtonRequest) -> None:
             debug.swipe_up()
 
 
-def is_core(session: "Session") -> bool:
+def is_core(session: Client | Session) -> bool:
     return session.model is not models.T1B1

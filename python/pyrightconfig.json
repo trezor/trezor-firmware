@@ -5,7 +5,7 @@
         "helper-scripts"
     ],
     "stubPath": "./stubs",
-    "pythonVersion": "3.8",
+    "pythonVersion": "3.9",
     "typeCheckingMode": "basic",
     "reportMissingImports": false,
     "reportUntypedFunctionDecorator": true,

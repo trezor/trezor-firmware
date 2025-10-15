@@ -164,7 +164,7 @@ class BridgeTransport(Transport):
 
     @classmethod
     def enumerate(
-        cls, _models: t.Iterable[TrezorModel] | None = None
+        cls, models: t.Iterable[TrezorModel] | None = None
     ) -> t.Iterable["BridgeTransport"]:
         try:
             legacy = is_legacy_bridge()
@@ -174,7 +174,7 @@ class BridgeTransport(Transport):
         except Exception:
             return []
 
-    def open(self) -> None:
+    def _open(self) -> None:
         try:
             data = self._call("acquire/" + self.device["path"])
         except BridgeException as e:
@@ -183,7 +183,7 @@ class BridgeTransport(Transport):
             raise
         self.session = data.json()["session"]
 
-    def close(self) -> None:
+    def _close(self) -> None:
         if not self.session:
             return
         self._call("release")
@@ -195,5 +195,5 @@ class BridgeTransport(Transport):
     def read_chunk(self, timeout: float | None = None) -> bytes:
         return self.handle.read_buf(timeout=timeout)
 
-    def ping(self) -> bool:
+    def is_ready(self) -> bool:
         return self.session is not None

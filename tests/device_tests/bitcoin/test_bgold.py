@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path, tx_hash
 
@@ -71,7 +71,7 @@ def test_send_bitcoin_gold_change(session: Session):
         amount=1_252_382_934 - 1_896_050 - 1_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -124,7 +124,7 @@ def test_send_bitcoin_gold_nochange(session: Session):
         amount=1_252_382_934 + 38_448_607 - 1_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -193,7 +193,7 @@ def test_attack_change_input(session: Session):
 
         return msg
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_filter(messages.TxAck, attack_processor)
         client.set_expected_responses(
             [
@@ -254,7 +254,7 @@ def test_send_btg_multisig_change(session: Session):
         script_type=messages.OutputScriptType.PAYTOMULTISIG,
         amount=1_252_382_934 - 24_000 - 1_000,
     )
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -293,7 +293,7 @@ def test_send_btg_multisig_change(session: Session):
     )
     out2.address_n[2] = H_(1)
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -347,7 +347,7 @@ def test_send_p2sh(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
         amount=1_252_382_934 - 11_000 - 12_300_000,
     )
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -400,7 +400,7 @@ def test_send_p2sh_witness_change(session: Session):
         script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
         amount=1_252_382_934 - 11_000 - 12_300_000,
     )
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -460,7 +460,7 @@ def test_send_multisig_1(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -537,7 +537,7 @@ def test_send_mixed_inputs(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client:
+    with session.test_ctx:
         _, serialized_tx = btc.sign_tx(
             session, "Bgold", [inp1, inp2], [out1], prev_txes=TX_API
         )
@@ -577,7 +577,7 @@ def test_send_btg_external_presigned(session: Session):
         amount=1_252_382_934 + 58_456 - 1_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),

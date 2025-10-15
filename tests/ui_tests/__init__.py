@@ -9,7 +9,7 @@ import pytest
 from _pytest.nodes import Node
 from _pytest.outcomes import Failed
 
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import TrezorTestContext as Client
 
 LOG = logging.getLogger(__name__)
 

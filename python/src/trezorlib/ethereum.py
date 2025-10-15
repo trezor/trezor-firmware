@@ -18,11 +18,11 @@ import re
 from typing import TYPE_CHECKING, Any, AnyStr, Dict, List, Optional, Tuple
 
 from . import exceptions, messages
-from .tools import prepare_message_bytes
+from .tools import prepare_message_bytes, workflow
 
 if TYPE_CHECKING:
+    from .client import Session
     from .tools import Address
-    from .transport.session import Session
 
 
 def int_to_big_endian(value: int) -> bytes:
@@ -149,6 +149,7 @@ def get_address(*args: Any, **kwargs: Any) -> str:
     return resp.address
 
 
+@workflow(capability=messages.Capability.Ethereum)
 def get_authenticated_address(
     session: "Session",
     n: "Address",
@@ -168,6 +169,7 @@ def get_authenticated_address(
     return resp
 
 
+@workflow(capability=messages.Capability.Ethereum)
 def get_public_node(
     session: "Session", n: "Address", show_display: bool = False
 ) -> messages.EthereumPublicKey:
@@ -177,6 +179,7 @@ def get_public_node(
     )
 
 
+@workflow(capability=messages.Capability.Ethereum)
 def sign_tx(
     session: "Session",
     n: "Address",
@@ -237,6 +240,7 @@ def sign_tx(
     return response.signature_v, response.signature_r, response.signature_s
 
 
+@workflow(capability=messages.Capability.Ethereum)
 def sign_tx_eip1559(
     session: "Session",
     n: "Address",
@@ -288,6 +292,7 @@ def sign_tx_eip1559(
     return response.signature_v, response.signature_r, response.signature_s
 
 
+@workflow(capability=messages.Capability.Ethereum)
 def sign_message(
     session: "Session",
     n: "Address",
@@ -306,6 +311,7 @@ def sign_message(
     )
 
 
+@workflow(capability=messages.Capability.Ethereum)
 def sign_typed_data(
     session: "Session",
     n: "Address",
@@ -383,6 +389,7 @@ def sign_typed_data(
     return messages.EthereumTypedDataSignature.ensure_isinstance(response)
 
 
+@workflow(capability=messages.Capability.Ethereum)
 def verify_message(
     session: "Session",
     address: str,
@@ -405,6 +412,7 @@ def verify_message(
         return False
 
 
+@workflow(capability=messages.Capability.Ethereum)
 def sign_typed_data_hash(
     session: "Session",
     n: "Address",

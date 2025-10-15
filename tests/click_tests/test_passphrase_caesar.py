@@ -20,8 +20,8 @@ from typing import TYPE_CHECKING, Generator, Optional
 import pytest
 
 from trezorlib import exceptions, messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
-from trezorlib.transport.session import SessionV1
+from trezorlib.client import SessionV1
+from trezorlib.debuglink import DebugSession as Session
 
 from ..common import TEST_ADDRESS_N
 from .common import (

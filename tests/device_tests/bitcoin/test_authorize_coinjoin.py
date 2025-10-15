@@ -19,8 +19,8 @@ import time
 import pytest
 
 from trezorlib import btc, device, messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import DebugSession as Session
+from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -65,8 +65,8 @@ def test_sign_tx(session: Session, chunkify: bool):
     assert session.features.unlocked is False
     commitment_data = b"\x0fwww.example.com" + (1).to_bytes(ROUND_ID_LEN, "big")
 
-    with session.client as client:
-        session.client.use_pin_sequence([PIN])
+    with session.test_ctx as client:
+        client.use_pin_sequence([PIN])
         btc.authorize_coinjoin(
             session,
             coordinator="www.example.com",
@@ -80,7 +80,7 @@ def test_sign_tx(session: Session, chunkify: bool):
 
     session.call(messages.LockDevice())
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [messages.PreauthorizedRequest, messages.OwnershipProof]
         )
@@ -94,7 +94,7 @@ def test_sign_tx(session: Session, chunkify: bool):
             preauthorized=True,
         )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [messages.PreauthorizedRequest, messages.OwnershipProof]
         )
@@ -120,7 +120,7 @@ def test_sign_tx(session: Session, chunkify: bool):
             script_pubkey=bytes.fromhex(
                 "5120b3a2750e21facec36b2a56d76cca6019bf517a5c45e2ea8e5b4ed191090f3003"
             ),
-            ownership_proof=bytearray.fromhex(
+            ownership_proof=bytes.fromhex(
                 "534c001901019cf1b0ad730100bd7a69e987d55348bb798e2b2096a6a5713e9517655bd2021300014052d479f48d34f1ca6872d4571413660040c3e98841ab23a2c5c1f37399b71bfa6f56364b79717ee90552076a872da68129694e1b4fb0e0651373dcf56db123c5"
             ),
             commitment_data=commitment_data,
@@ -207,7 +207,7 @@ def test_sign_tx(session: Session, chunkify: bool):
         no_fee_indices=[],
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 messages.PreauthorizedRequest(),
@@ -303,7 +303,7 @@ def test_sign_tx_large(session: Session):
         script_pubkey=bytes.fromhex(
             "5120b3a2750e21facec36b2a56d76cca6019bf517a5c45e2ea8e5b4ed191090f3003"
         ),
-        ownership_proof=bytearray.fromhex(
+        ownership_proof=bytes.fromhex(
             "534c001901019cf1b0ad730100bd7a69e987d55348bb798e2b2096a6a5713e9517655bd2021300014052d479f48d34f1ca6872d4571413660040c3e98841ab23a2c5c1f37399b71bfa6f56364b79717ee90552076a872da68129694e1b4fb0e0651373dcf56db123c5"
         ),
         commitment_data=commitment_data,
@@ -452,7 +452,7 @@ def test_sign_tx_spend(session: Session):
             prev_txes=TX_CACHE_TESTNET,
         )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.Other),
@@ -526,7 +526,7 @@ def test_sign_tx_migration(session: Session):
             prev_txes=TX_CACHE_TESTNET,
         )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.Other),
@@ -666,7 +666,7 @@ def test_get_public_key(session: Session):
         )
 
     # Get unlock path MAC.
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.Other),
@@ -689,7 +689,7 @@ def test_get_public_key(session: Session):
         )
 
     # Ensure that user does not need to confirm access when path unlock is requested with MAC.
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 messages.UnlockedPathRequest,
@@ -720,7 +720,7 @@ def test_get_address(session: Session):
         )
 
     # Unlock CoinJoin path.
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.Other),
@@ -849,8 +849,6 @@ def test_multisession_authorization(client: Client):
         == "534c0019010169d0c751442f4c9adacbd42987121d75b36e3932db217e5bb3784f368f5a4c5d00014097bb2f1f87aea1e809756a6f2ef84109613ccf1bf9b96ffb9305b6193b3942510a8650693ca8af74f0f63401baa384d0c0f7188f1d2df56b91362646c82223a8"
     )
 
-    # Switch back to the first session.
-    session1.resume()
     # Requesting a preauthorized ownership proof for www.example1.com should succeed in session 1.
     ownership_proof, _ = btc.get_ownership_proof(
         session1,
@@ -894,8 +892,6 @@ def test_multisession_authorization(client: Client):
             preauthorized=True,
         )
 
-    # Switch to the second session.
-    session2.resume()
     # Requesting a preauthorized ownership proof for www.example2.com should still succeed in session 2.
     ownership_proof, _ = btc.get_ownership_proof(
         session2,

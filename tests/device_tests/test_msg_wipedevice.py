@@ -19,8 +19,8 @@ import time
 import pytest
 
 from trezorlib import device, messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import DebugSession as Session
+from trezorlib.debuglink import TrezorTestContext as Client
 
 from ..common import get_test_address
 
@@ -35,7 +35,6 @@ def test_wipe_device(client: Client):
     device_id = client.features.device_id
 
     device.wipe(client.get_session())
-    client = client.get_new_client()
     assert client.features.initialized is False
     assert client.features.label is None
     assert client.features.passphrase_protection is False
@@ -44,19 +43,17 @@ def test_wipe_device(client: Client):
 
 @pytest.mark.setup_client(pin=PIN4)
 def test_autolock_not_retained(session: Session):
-    client = session.client
-    client.use_pin_sequence([PIN4])
+    session.test_ctx.use_pin_sequence([PIN4])
     device.apply_settings(session, auto_lock_delay_ms=10_000)
 
     assert session.features.auto_lock_delay_ms == 10_000
 
     device.wipe(session)
-    client = client.get_new_client()
-    session = client.get_seedless_session()
+    session = session.test_ctx.get_seedless_session()
 
-    assert client.features.auto_lock_delay_ms > 10_000
+    assert session.features.auto_lock_delay_ms > 10_000
 
-    client.use_pin_sequence([PIN4, PIN4])
+    session.test_ctx.use_pin_sequence([PIN4, PIN4])
     device.setup(
         session,
         skip_backup=True,
@@ -67,9 +64,9 @@ def test_autolock_not_retained(session: Session):
     )
 
     time.sleep(10.5)
-    session = client.get_session()
+    session = session.test_ctx.get_session()
 
-    with session.client as client:
+    with session.test_ctx as client:
         # after sleeping for the pre-wipe autolock amount, Trezor must still be unlocked
         client.set_expected_responses([messages.Address])
         get_test_address(session)

@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages, tools
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import Cancelled, TrezorFailure
 
 from ...common import is_core
@@ -59,11 +59,11 @@ def test_show_t1(
 ):
     def input_flow_t1():
         yield
-        session.client.debug.press_no()
+        session.debug.press_no()
         yield
-        session.client.debug.press_yes()
+        session.debug.press_yes()
 
-    with session.client as client:
+    with session.test_ctx as client:
         # This is the only place where even T1 is using input flow
         client.set_input_flow(input_flow_t1)
         assert (
@@ -88,8 +88,8 @@ def test_show_tt(
     script_type: messages.InputScriptType,
     address: str,
 ):
-    with session.client as client:
-        IF = InputFlowShowAddressQRCode(session.client)
+    with session.test_ctx as client:
+        IF = InputFlowShowAddressQRCode(session)
         client.set_input_flow(IF.get())
         assert (
             btc.get_address(
@@ -109,8 +109,8 @@ def test_show_tt(
 def test_show_cancel(
     session: Session, path: str, script_type: messages.InputScriptType, address: str
 ):
-    with session.client as client, pytest.raises(Cancelled):
-        IF = InputFlowShowAddressQRCodeCancel(session.client)
+    with session.test_ctx as client, pytest.raises(Cancelled):
+        IF = InputFlowShowAddressQRCodeCancel(session)
         client.set_input_flow(IF.get())
         btc.get_address(
             session,
@@ -157,9 +157,9 @@ def test_show_multisig_3(session: Session):
 
     for multisig in (multisig1, multisig2):
         for i in [1, 2, 3]:
-            with session.client as client:
+            with session.test_ctx as client:
                 if is_core(session):
-                    IF = InputFlowConfirmAllWarnings(session.client)
+                    IF = InputFlowConfirmAllWarnings(session)
                     client.set_input_flow(IF.get())
                 assert (
                     btc.get_address(
@@ -273,11 +273,11 @@ def test_show_multisig_xpubs(
     )
 
     for i in range(3):
-        with session.client as client:
-            IF = InputFlowShowMultisigXPUBs(session.client, address, xpubs, i)
+        with session.test_ctx as client:
+            IF = InputFlowShowMultisigXPUBs(session, address, xpubs, i)
             client.set_input_flow(IF.get())
-            session.client.debug.synchronize_at("Homescreen")
-            session.client.watch_layout()
+            session.debug.synchronize_at("Homescreen")
+            client.watch_layout()
             btc.get_address(
                 session,
                 "Bitcoin",
@@ -314,9 +314,9 @@ def test_show_multisig_15(session: Session):
 
     for multisig in [multisig1, multisig2]:
         for i in range(15):
-            with session.client as client:
+            with session.test_ctx as client:
                 if is_core(session):
-                    IF = InputFlowConfirmAllWarnings(session.client)
+                    IF = InputFlowConfirmAllWarnings(session)
                     client.set_input_flow(IF.get())
                 assert (
                     btc.get_address(

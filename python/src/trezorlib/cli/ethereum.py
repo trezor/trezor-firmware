@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from eth_typing import ChecksumAddress  # noqa: I900
     from web3.types import Wei
 
-    from ..transport.session import Session
+    from ..client import Session
 
 PATH_HELP = "BIP-32 path, e.g. m/44h/60h/0h/0/0"
 

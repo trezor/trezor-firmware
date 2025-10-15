@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -95,7 +95,7 @@ def test_spend_v4_input(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -143,7 +143,7 @@ def test_send_to_multisig(session: Session):
         script_type=messages.OutputScriptType.PAYTOSCRIPTHASH,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -190,7 +190,7 @@ def test_spend_v5_input(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -243,7 +243,7 @@ def test_one_two(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -301,7 +301,7 @@ def test_unified_address(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -365,7 +365,7 @@ def test_external_presigned(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -489,7 +489,7 @@ def test_spend_multisig(session: Session):
         request_finished(),
     ]
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(expected_responses)
         signatures1, _ = btc.sign_tx(
             session,
@@ -529,7 +529,7 @@ def test_spend_multisig(session: Session):
         multisig=multisig,
     )
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(expected_responses)
         signatures2, serialized_tx = btc.sign_tx(
             session,

@@ -5,15 +5,14 @@ from concurrent.futures import ThreadPoolExecutor
 
 import typing_extensions as tx
 
-from trezorlib.client import PASSPHRASE_ON_DEVICE
 from trezorlib.messages import DebugWaitType
 from trezorlib.transport import udp
 
 if t.TYPE_CHECKING:
     from trezorlib._internal.emulator import Emulator
     from trezorlib.debuglink import DebugLink
-    from trezorlib.debuglink import SessionDebugWrapper as Session
-    from trezorlib.debuglink import TrezorClientDebugLink as Client
+    from trezorlib.client import Session
+    from trezorlib.debuglink import TrezorTestContext as Client
     from trezorlib.messages import Features
 
     P = tx.ParamSpec("P")
@@ -34,13 +33,6 @@ class NullUI:
     @staticmethod
     def get_pin(code=None):
         raise NotImplementedError("NullUI should not be used with T1")
-
-    @staticmethod
-    def get_passphrase(available_on_device: bool = False):
-        if available_on_device:
-            return PASSPHRASE_ON_DEVICE
-        else:
-            raise NotImplementedError("NullUI should not be used with T1")
 
 
 class BackgroundDeviceHandler:

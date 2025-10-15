@@ -27,7 +27,7 @@ from .. import device, messages, toif
 from . import AliasedGroup, ChoiceType, with_session
 
 if TYPE_CHECKING:
-    from ..transport.session import Session
+    from ..client import Session
 
 try:
     from PIL import Image

@@ -18,7 +18,7 @@ import pytest
 from mnemonic import Mnemonic
 
 from trezorlib import messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 
 from ...common import EXTERNAL_ENTROPY, generate_entropy
 
@@ -28,9 +28,8 @@ STRENGTH = 128
 
 
 @pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.uninitialized_session
 def test_reset_device_skip_backup(session: Session):
-    debug = session.client.debug
+    debug = session.debug
     ret = session.call_raw(
         messages.ResetDevice(
             strength=STRENGTH,
@@ -97,9 +96,8 @@ def test_reset_device_skip_backup(session: Session):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.uninitialized_session
 def test_reset_device_skip_backup_break(session: Session):
-    debug = session.client.debug
+    debug = session.debug
     ret = session.call_raw(
         messages.ResetDevice(
             strength=STRENGTH,

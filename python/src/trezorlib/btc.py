@@ -25,11 +25,11 @@ from typing import TYPE_CHECKING, Any, AnyStr, List, Optional, Sequence, Tuple
 from typing_extensions import Protocol, TypedDict
 
 from . import exceptions, messages
-from .tools import _return_success, prepare_message_bytes
+from .tools import prepare_message_bytes, workflow
 
 if TYPE_CHECKING:
+    from .client import Session
     from .tools import Address
-    from .transport.session import Session
 
     class ScriptSig(TypedDict):
         asm: str
@@ -104,6 +104,7 @@ def from_json(json_dict: "Transaction") -> messages.TransactionType:
     )
 
 
+@workflow(capability=messages.Capability.Bitcoin)
 def get_public_node(
     session: "Session",
     n: "Address",
@@ -138,6 +139,7 @@ def get_address(*args: Any, **kwargs: Any) -> str:
     return get_authenticated_address(*args, **kwargs).address
 
 
+@workflow(capability=messages.Capability.Bitcoin)
 def get_authenticated_address(
     session: "Session",
     coin_name: str,
@@ -170,6 +172,7 @@ def get_authenticated_address(
     )
 
 
+@workflow(capability=messages.Capability.Bitcoin)
 def get_ownership_id(
     session: "Session",
     coin_name: str,
@@ -188,6 +191,7 @@ def get_ownership_id(
     ).ownership_id
 
 
+@workflow(capability=messages.Capability.Bitcoin)
 def get_ownership_proof(
     session: "Session",
     coin_name: str,
@@ -218,6 +222,7 @@ def get_ownership_proof(
     return res.ownership_proof, res.signature
 
 
+@workflow(capability=messages.Capability.Bitcoin)
 def sign_message(
     session: "Session",
     coin_name: str,
@@ -264,6 +269,7 @@ def verify_message(
         return False
 
 
+@workflow(capability=messages.Capability.Bitcoin)
 def sign_tx(
     session: "Session",
     coin_name: str,
@@ -418,6 +424,7 @@ def sign_tx(
     return signatures, serialized_tx
 
 
+@workflow(capability=messages.Capability.Bitcoin)
 def authorize_coinjoin(
     session: "Session",
     coordinator: str,
@@ -427,8 +434,8 @@ def authorize_coinjoin(
     n: "Address",
     coin_name: str,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
-) -> str | None:
-    resp = session.call(
+) -> None:
+    session.call(
         messages.AuthorizeCoinJoin(
             coordinator=coordinator,
             max_rounds=max_rounds,
@@ -440,4 +447,3 @@ def authorize_coinjoin(
         ),
         expect=messages.Success,
     )
-    return _return_success(resp)

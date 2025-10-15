@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import fido
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 
 
 @pytest.mark.altcoin

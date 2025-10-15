@@ -185,7 +185,6 @@ def test_backup_failed(
     debug.synchronize_at("Homescreen")
 
     # Refresh features and check wiped state
-    device_handler.client = device_handler.client.get_new_client()
     features = device_handler.features()
     assert features.initialized is False
     assert features.pin_protection is False

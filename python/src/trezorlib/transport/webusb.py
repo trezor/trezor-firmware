@@ -109,7 +109,7 @@ class WebUsbTransport(Transport):
     def get_path(self) -> str:
         return f"{self.PATH_PREFIX}:{dev_to_str(self.device)}"
 
-    def open(self) -> None:
+    def _open(self) -> None:
         self.handle = self.device.open()
         if self.handle is None:
             if sys.platform.startswith("linux"):
@@ -124,7 +124,7 @@ class WebUsbTransport(Transport):
         except usb1.USBErrorBusy as e:
             raise DeviceIsBusy(self.device) from e
 
-    def close(self) -> None:
+    def _close(self) -> None:
         if self.handle is not None:
             try:
                 self.handle.releaseInterface(self.interface)
@@ -179,7 +179,7 @@ class WebUsbTransport(Transport):
         # For v1 protocol, find debug USB interface for the same serial number
         return self.__class__(self.device, debug=True)
 
-    def ping(self) -> bool:
+    def is_ready(self) -> bool:
         return self.handle is not None
 
 
