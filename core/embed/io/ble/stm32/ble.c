@@ -989,10 +989,6 @@ static void ble_event_flush(void) {
 }
 
 bool ble_enter_pairing_mode(const uint8_t *name, size_t name_len) {
-  if (name == NULL || name_len == 0 || name_len > BLE_ADV_NAME_LEN) {
-    return false;
-  }
-
   ble_driver_t *drv = &g_ble_driver;
 
   if (!drv->initialized || !drv->enabled) {
@@ -1001,8 +997,13 @@ bool ble_enter_pairing_mode(const uint8_t *name, size_t name_len) {
 
   irq_key_t key = irq_lock();
 
-  memset(drv->adv_name, 0, sizeof(drv->adv_name));
-  memcpy(drv->adv_name, name, name_len);
+  if (name != NULL && name_len > 0 && name_len <= BLE_ADV_NAME_LEN) {
+    memset(drv->adv_name, 0, sizeof(drv->adv_name));
+    memcpy(drv->adv_name, name, name_len);
+  } else if (name != NULL && name_len > BLE_ADV_NAME_LEN) {
+    return false;
+  }
+
   drv->restart_adv_on_disconnect = true;
   bool connected = drv->connected;
 
