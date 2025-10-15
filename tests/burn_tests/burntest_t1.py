@@ -21,7 +21,7 @@ import random
 import string
 
 from trezorlib import device
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.transport import enumerate_devices, get_transport
 
 

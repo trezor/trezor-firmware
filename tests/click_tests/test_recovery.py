@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Generator
 import pytest
 
 from trezorlib import device, exceptions, messages
-from trezorlib.transport.session import SessionV1
+from trezorlib.client import SessionV1
 
 from ..common import MNEMONIC12, LayoutType, MNEMONIC_SLIP39_BASIC_20_3of6
 from . import recovery
@@ -166,7 +166,7 @@ def test_recovery_bip39_previous_word(device_handler: "BackgroundDeviceHandler")
         recovery.finalize(debug)
 
 
-@pytest.mark.protocol("protocol_v1")
+@pytest.mark.protocol("v1")
 def test_recovery_cancel_issue4613(device_handler: "BackgroundDeviceHandler"):
     """Test for issue fixed in PR #4613: After aborting the recovery flow from host
     side, it was impossible to exit recovery until device was restarted."""

@@ -5,7 +5,7 @@ from typing import Callable
 import pytest
 
 from trezorlib import ethereum
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -135,9 +135,9 @@ def test_external_token(session: Session) -> None:
 
 
 def test_external_chain_without_token(session: Session) -> None:
-    with session.client as client:
-        if not session.client.debug.legacy_debug:
-            client.set_input_flow(InputFlowConfirmAllWarnings(session.client).get())
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(session).get())
         # when using an external chains, unknown tokens are allowed
         network = definitions.encode_eth_network(chain_id=66666, slip44=60)
         params = DEFAULT_ERC20_PARAMS.copy()
@@ -163,9 +163,9 @@ def test_external_chain_token_ok(session: Session) -> None:
 
 
 def test_external_chain_token_mismatch(session: Session) -> None:
-    with session.client as client:
-        if not session.client.debug.legacy_debug:
-            client.set_input_flow(InputFlowConfirmAllWarnings(session.client).get())
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(session).get())
         # when providing external defs, we explicitly allow, but not use, tokens
         # from other chains
         network = definitions.encode_eth_network(chain_id=66666, slip44=60)
@@ -220,7 +220,7 @@ def _call_sign_typed_data_hash(
     )
 
 
-MethodType = Callable[[Session, int, "bytes | None"], None]
+MethodType = Callable[["Session", int, "bytes | None"], None]
 
 
 METHODS = (

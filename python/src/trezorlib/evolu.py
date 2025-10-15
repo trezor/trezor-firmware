@@ -19,11 +19,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
 
 from . import messages
+from .tools import workflow
 
 if TYPE_CHECKING:
-    from .transport.session import Session
+    from .client import Session
 
 
+@workflow()
 def get_node(session: Session, proof: bytes) -> bytes:
     return session.call(
         messages.EvoluGetNode(proof_of_delegated_identity=proof),

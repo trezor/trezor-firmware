@@ -21,7 +21,7 @@ from shamir_mnemonic import MnemonicError, shamir
 
 from trezorlib import device
 from trezorlib.btc import get_public_node
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import BackupAvailability, BackupType
 
@@ -34,8 +34,8 @@ pytestmark = pytest.mark.models("core")
 def reset_device(session: Session, strength: int):
     member_threshold = 3
 
-    with session.client as client:
-        IF = InputFlowSlip39BasicResetRecovery(session.client)
+    with session.test_ctx as client:
+        IF = InputFlowSlip39BasicResetRecovery(session)
         client.set_input_flow(IF.get())
 
         # No PIN, no passphrase, don't display random
@@ -51,13 +51,13 @@ def reset_device(session: Session, strength: int):
         )
 
     # generate secret locally
-    internal_entropy = session.client.debug.state().reset_entropy
+    internal_entropy = session.debug.state().reset_entropy
     assert internal_entropy is not None
     secret = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
 
     # validate that all combinations will result in the correct master secret
     validate_mnemonics(IF.mnemonics, member_threshold, secret)
-    session = session.client.get_session()
+    session.refresh_features()
     # Check if device is properly initialized
     assert session.features.initialized is True
     assert session.features.backup_availability == BackupAvailability.NotAvailable
@@ -71,26 +71,23 @@ def reset_device(session: Session, strength: int):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.uninitialized_session
 def test_reset_device_slip39_basic(session: Session):
     reset_device(session, 128)
 
 
 @pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.uninitialized_session
 def test_reset_device_slip39_basic_256(session: Session):
     reset_device(session, 256)
 
 
 @pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.uninitialized_session
 def test_reset_entropy_check(session: Session):
     member_threshold = 3
 
     strength = 128  # 20 words
 
-    with session.client as client:
-        IF = InputFlowSlip39BasicResetRecovery(session.client)
+    with session.test_ctx as client:
+        IF = InputFlowSlip39BasicResetRecovery(session)
         client.set_input_flow(IF.get())
 
         # No PIN, no passphrase.
@@ -105,7 +102,7 @@ def test_reset_entropy_check(session: Session):
             _get_entropy=MOCK_GET_ENTROPY,
         )
     # Generate the master secret locally.
-    internal_entropy = session.client.debug.state().reset_entropy
+    internal_entropy = session.debug.state().reset_entropy
     assert internal_entropy is not None
     secret = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
 
@@ -113,7 +110,7 @@ def test_reset_entropy_check(session: Session):
     validate_mnemonics(IF.mnemonics, member_threshold, secret)
 
     # Create a session with cache backing
-    session = session.client.get_session()
+    session = session.test_ctx.get_session()
 
     # Check that the device is properly initialized.
     assert session.features.initialized is True

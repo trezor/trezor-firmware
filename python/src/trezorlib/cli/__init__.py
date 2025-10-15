@@ -16,7 +16,6 @@
 
 from __future__ import annotations
 
-import atexit
 import functools
 import logging
 import os
@@ -24,18 +23,24 @@ import re
 import sys
 import typing as t
 from contextlib import contextmanager
+from enum import Enum
 
 import click
 
-from .. import exceptions, transport, ui
-from ..client import PASSPHRASE_ON_DEVICE, ProtocolVersion, TrezorClient
-from ..messages import Capability
+from .. import exceptions, protocol_v1, transport, ui
+from ..client import (
+    AppManifest,
+    PassphraseSetting,
+    Session,
+    TrezorClient,
+    get_client,
+    get_default_session,
+)
+from ..thp import client as thp_client
 from ..transport import Transport
-from ..transport.session import Session, SessionV1, SessionV2
+from . import credentials
 
 LOG = logging.getLogger(__name__)
-
-_TRANSPORT: Transport | None = None
 
 if t.TYPE_CHECKING:
     # Needed to enforce a return value from decorators
@@ -60,7 +65,7 @@ class ChoiceType(click.Choice):
         else:
             self.typemap = {k.lower(): v for k, v in typemap.items()}
 
-    def convert(self, value: t.Any, param: t.Any, ctx: click.Context) -> t.Any:
+    def convert(self, value: t.Any, param: t.Any, ctx: click.Context | None) -> t.Any:
         if value in self.typemap.values():
             return value
         value = super().convert(value, param, ctx)
@@ -69,12 +74,17 @@ class ChoiceType(click.Choice):
         return self.typemap[value]
 
 
-def get_passphrase(
-    available_on_device: bool, passphrase_on_host: bool
-) -> t.Union[str, object]:
-    if available_on_device and not passphrase_on_host:
-        return PASSPHRASE_ON_DEVICE
+class PassphraseSource(Enum):
+    AUTO = "auto"
+    PROMPT = "prompt"
+    EMPTY = "empty"
+    DEVICE = "device"
 
+    def ok_if_disabled(self) -> bool:
+        return self in (self.AUTO, self.EMPTY)
+
+
+def get_passphrase() -> str:
     env_passphrase = os.getenv("PASSPHRASE")
     if env_passphrase is not None:
         ui.echo("Passphrase required. Using PASSPHRASE environment variable.")
@@ -105,7 +115,7 @@ def get_passphrase(
             raise exceptions.Cancelled from None
 
 
-def get_code_entry_code() -> int:
+def get_code_entry_code() -> str:
     while True:
         try:
             code_input = ui.prompt(
@@ -121,137 +131,128 @@ def get_code_entry_code() -> int:
             if len(code_str) != 6:
                 ui.echo("Code must be 6-digits long.")
                 continue
-            code = int(code_str)
-            return code
+            return code_str
         except click.Abort:
             raise exceptions.Cancelled from None
 
 
-def get_client(transport: Transport) -> TrezorClient:
-    return TrezorClient(transport)
-
-
 class TrezorConnection:
-
     def __init__(
         self,
         path: str,
-        session_id: bytes | None,
-        passphrase_on_host: bool,
+        session_id: str | None,
+        passphrase_source: PassphraseSource,
         script: bool,
+        *,
+        app_name: str = "trezorctl",
     ) -> None:
         self.path = path
         self.session_id = session_id
-        self.passphrase_on_host = passphrase_on_host
+        self.passphrase_source = passphrase_source
         self.script = script
+        self.credentials = credentials.CredentialStore(app_name)
+        self.app = AppManifest(app_name=app_name, credentials=self.credentials.list)
+        if self.script:
+            self.app.button_callback = ui.ScriptUI.button_request
+            self.app.pin_callback = ui.ScriptUI.get_pin
+        else:
+            click_ui = ui.ClickUI()
+            self.app.button_callback = click_ui.button_request
+            self.app.pin_callback = click_ui.get_pin
 
     def get_session(
         self,
+        use_passphrase: bool = True,
+        seedless: bool = False,
         derive_cardano: bool = False,
-        empty_passphrase: bool = False,
-        must_resume: bool = False,
     ) -> Session:
         client = self.get_client()
-        if must_resume and self.session_id is None:
-            click.echo("Failed to resume session - no session id provided")
-            raise RuntimeError("Failed to resume session - no session id provided")
+        client.ensure_unlocked()
+        if (
+            not client.features.passphrase_protection
+            and not self.passphrase_source.ok_if_disabled()
+        ):
+            raise click.ClickException("Passphrase protection is not enabled")
+
+        # if empty passphrase is requested, do not try to resume and instead
+        # create a new session
+        if not use_passphrase or self.passphrase_source == PassphraseSource.EMPTY:
+            return client.get_session(passphrase=PassphraseSetting.STANDARD_WALLET)
+        if seedless:
+            return client.get_session(passphrase=None)
 
         # Try resume session from id
         if self.session_id is not None:
-            if client.protocol_version is ProtocolVersion.V1:
-                session = SessionV1.resume_from_id(
-                    client=client, session_id=self.session_id
-                )
-            elif client.protocol_version is ProtocolVersion.V2:
-                session = SessionV2(client, self.session_id)
-                # TODO fix resumption on THP
-            else:
-                raise Exception("Unsupported client protocol", client.protocol_version)
-            if must_resume:
-                if session.id != self.session_id or session.id is None:
-                    click.echo("Failed to resume session")
-                    env_var = os.environ.get("TREZOR_SESSION_ID")
-                    if env_var and bytes.fromhex(env_var) == self.session_id:
-                        click.echo(
-                            "Session-id stored in TREZOR_SESSION_ID is no longer valid. Call 'unset TREZOR_SESSION_ID' to clear it."
-                        )
-                    raise exceptions.FailedSessionResumption(
-                        received_session_id=session.id
-                    )
-            return session
-
-        features = client.features
-
-        passphrase_protection = features.passphrase_protection
-        if passphrase_protection is None:
-            raise RuntimeError("Device is locked")
-
-        if not passphrase_protection:
-            return client.get_session(derive_cardano=derive_cardano)
-
-        if empty_passphrase:
-            passphrase = ""
-        elif self.script:
-            passphrase = None
-        else:
-            available_on_device = Capability.PassphraseEntry in features.capabilities
-            passphrase = get_passphrase(available_on_device, self.passphrase_on_host)
-        session = client.get_session(
-            passphrase=passphrase, derive_cardano=derive_cardano
-        )
-        return session
-
-    def get_transport(self, _clear_cache: bool = False) -> "Transport":
-        global _TRANSPORT
-        if _TRANSPORT is not None:
-            if not _clear_cache:
-                return _TRANSPORT
-
-            # remove previously cached transport
             try:
-                atexit.unregister(_TRANSPORT.close)
-                _TRANSPORT.close()
-            except Exception as e:
-                self._print_exception(e, "Failed to close transport")
-            finally:
-                _TRANSPORT = None
+                if isinstance(client, protocol_v1.TrezorClientV1):
+                    session = protocol_v1.SessionV1(
+                        client, id=bytes.fromhex(self.session_id)
+                    )
+                    session.initialize()
+                elif isinstance(client, thp_client.TrezorClientThp):
+                    session = thp_client.ThpSession(client, id=int(self.session_id))
+                    # TODO what here?
+                else:
+                    raise click.ClickException(
+                        f"Unsupported client type: {type(client).__name__}"
+                    )
+            except exceptions.InvalidSessionError:
+                LOG.error("Failed to resume session", exc_info=True)
+                env_var = os.environ.get("TREZOR_SESSION_ID")
+                if env_var != self.session_id:
+                    click.echo(
+                        "Session-id stored in TREZOR_SESSION_ID is no longer valid. Call\n"
+                        "  unset TREZOR_SESSION_ID\n"
+                        "to clear it."
+                    )
+                raise
+            else:
+                return session
+
+        if self.passphrase_source == PassphraseSource.PROMPT:
+            passphrase = get_passphrase()
+            return client.get_session(passphrase=passphrase)
+        if self.passphrase_source == PassphraseSource.DEVICE:
+            return client.get_session(passphrase=PassphraseSetting.ON_DEVICE)
+        if self.passphrase_source == PassphraseSource.AUTO:
+            return get_default_session(client, derive_cardano=derive_cardano)
+        raise NotImplementedError(
+            f"Passphrase source {self.passphrase_source} not implemented"
+        )
+
+    def get_transport(self) -> Transport:
         try:
             # look for transport without prefix search
-            _TRANSPORT = transport.get_transport(self.path, prefix_search=False)
+            return transport.get_transport(self.path, prefix_search=False)
         except Exception:
             # most likely not found. try again below.
             pass
 
         # look for transport with prefix search
         # if this fails, we want the exception to bubble up to the caller
-        if not _TRANSPORT:
-            _TRANSPORT = transport.get_transport(self.path, prefix_search=True)
-
-        _TRANSPORT.open()
-        atexit.register(_TRANSPORT.close)
-        return _TRANSPORT
+        return transport.get_transport(self.path, prefix_search=True)
 
     def get_client(self) -> TrezorClient:
-        client = get_client(self.get_transport())
-        if self.script:
-            client.button_callback = ui.ScriptUI.button_request
-            client.pin_callback = ui.ScriptUI.get_pin
-        else:
-            click_ui = ui.ClickUI()
-            client.button_callback = click_ui.button_request
-            client.pin_callback = click_ui.get_pin
+        client = get_client(self.app, self.get_transport())
+        if not client.pairing.is_paired():
+            from ..thp import pairing
+
+            credential = pairing.default_pairing_flow(
+                client.pairing, code_entry_callback=get_code_entry_code
+            )
+            if credential is not None:
+                self.credentials.add(credential)
+
         return client
 
-    def get_seedless_session(self) -> Session:
-        client = self.get_client()
-        seedless_session = client.get_seedless_session()
-        return seedless_session
-
     def _connection_context(
-        self, connect_fn: t.Callable[[], R]
+        self,
+        connect_fn: t.Callable[P, R],
+        *args: P.args,
+        **kwargs: P.kwargs,
     ) -> t.Generator[R, None, None]:
         try:
-            conn = connect_fn()
+            conn = connect_fn(*args, **kwargs)
         except Exception as e:
             self._print_exception(e, "Failed to connect")
             sys.exit(1)
@@ -281,19 +282,16 @@ class TrezorConnection:
     @contextmanager
     def session_context(
         self,
-        empty_passphrase: bool = False,
+        *,
+        use_passphrase: bool = True,
         derive_cardano: bool = False,
         seedless: bool = False,
-        must_resume: bool = False,
     ) -> t.Generator[Session, None, None]:
         yield from self._connection_context(
-            self.get_seedless_session
-            if seedless
-            else lambda: self.get_session(
-                derive_cardano=derive_cardano,
-                empty_passphrase=empty_passphrase,
-                must_resume=must_resume,
-            )
+            self.get_session,
+            use_passphrase=use_passphrase,
+            derive_cardano=derive_cardano,
+            seedless=seedless,
         )
 
     def _print_exception(self, exc: Exception, message: str) -> None:
@@ -307,16 +305,32 @@ class TrezorConnection:
             click.echo(f"Using path: {self.path}")
 
 
+@t.overload
+def with_session(func: t.Callable[Concatenate[Session, P], R]) -> t.Callable[P, R]: ...
+
+
+@t.overload
 def with_session(
-    func: "t.Callable[Concatenate[Session, P], R]|None" = None,
     *,
-    empty_passphrase: bool = False,
-    derive_cardano: bool = False,
+    passphrase: bool = True,
+    cardano: bool = False,
     seedless: bool = False,
-    must_resume: bool = False,
-) -> t.Callable[[FuncWithSession], t.Callable[P, R]]:
+) -> t.Callable[[FuncWithSession[P, R]], t.Callable[P, R]]: ...
+
+
+def with_session(
+    func: t.Callable[Concatenate[Session, P], R] | None = None,
+    *,
+    passphrase: bool = True,
+    cardano: bool = False,
+    seedless: bool = False,
+) -> t.Callable[[FuncWithSession[P, R]], t.Callable[P, R]] | t.Callable[P, R]:
     """Provides a Click command with parameter `session=obj.get_session(...)`
-    based on the parameters provided.
+    based on the parameters provided:
+
+    * if `passphrase` is set to False, a standard wallet is always used for this session
+    * if `cardano` is set to True, Cardano-specific operations are enabled for this session
+    * if `seedless` is set to True, a seedless session is used for this session
 
     If default parameters are ok, this decorator can be used without parentheses.
     """
@@ -330,32 +344,37 @@ def with_session(
         def function_with_session(
             obj: TrezorConnection, *args: "P.args", **kwargs: "P.kwargs"
         ) -> "R":
-            is_resume_mandatory = must_resume or obj.session_id is not None
-
             with obj.session_context(
-                empty_passphrase=empty_passphrase,
-                derive_cardano=derive_cardano,
+                use_passphrase=passphrase,
+                derive_cardano=cardano,
                 seedless=seedless,
-                must_resume=is_resume_mandatory,
             ) as session:
                 try:
                     return func(session, *args, **kwargs)
 
                 finally:
-                    if (
-                        not is_resume_mandatory
-                        and not session.features.bootloader_mode
-                        and not session.client.is_invalidated
-                    ):
-                        session.end()
+                    if obj.session_id is None and not session.features.bootloader_mode:
+                        session.close()
 
         return function_with_session
 
     # If the decorator @get_session is used without parentheses
     if func and callable(func):
-        return decorator(func)  # type: ignore [Function return type]
+        return decorator(func)
 
     return decorator
+
+
+def with_client(func: t.Callable[Concatenate[TrezorClient, P], R]) -> t.Callable[P, R]:
+    @click.pass_obj
+    @functools.wraps(func)
+    def function_with_client(
+        obj: TrezorConnection, *args: P.args, **kwargs: P.kwargs
+    ) -> R:
+        with obj.client_context() as client:
+            return func(client, *args, **kwargs)
+
+    return function_with_client
 
 
 class AliasedGroup(click.Group):

@@ -14,13 +14,15 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 from itertools import product
 
 import pytest
 
 from trezorlib import ethereum, exceptions, messages, models
-from trezorlib.debuglink import SessionDebugWrapper as Session
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import DebugSession as Session
+from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.debuglink import message_filters
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path, unharden
@@ -68,8 +70,8 @@ def make_defs(parameters: dict) -> messages.EthereumDefinitions:
 @pytest.mark.parametrize("chunkify", (True, False))
 def test_signtx(session: Session, chunkify: bool, parameters: dict, result: dict):
     input_flow = (
-        InputFlowConfirmAllWarnings(session.client).get()
-        if not session.client.debug.legacy_debug
+        InputFlowConfirmAllWarnings(session).get()
+        if not session.debug.legacy_debug
         else None
     )
     _do_test_signtx(session, parameters, result, input_flow, chunkify=chunkify)
@@ -82,7 +84,7 @@ def _do_test_signtx(
     input_flow=None,
     chunkify: bool = False,
 ):
-    with session.client as client:
+    with session.test_ctx as client:
         if input_flow:
             client.watch_layout()
             client.set_input_flow(input_flow)
@@ -171,7 +173,7 @@ example_input_data_too_long_value = {
 
 @pytest.mark.models("core", reason="T1 does not support input flows")
 def test_signtx_fee_info(session: Session):
-    input_flow = InputFlowEthereumSignTxShowFeeInfo(session.client).get()
+    input_flow = InputFlowEthereumSignTxShowFeeInfo(session).get()
     _do_test_signtx(
         session,
         example_input_data["parameters"],
@@ -182,7 +184,7 @@ def test_signtx_fee_info(session: Session):
 
 @pytest.mark.models("core")
 def test_signtx_go_back_from_summary(session: Session):
-    input_flow = InputFlowEthereumSignTxGoBackFromSummary(session.client).get()
+    input_flow = InputFlowEthereumSignTxGoBackFromSummary(session).get()
     _do_test_signtx(
         session,
         example_input_data["parameters"],
@@ -196,9 +198,9 @@ def test_signtx_go_back_from_summary(session: Session):
 def test_signtx_eip1559(
     session: Session, chunkify: bool, parameters: dict, result: dict
 ):
-    with session.client as client:
-        if not session.client.debug.legacy_debug:
-            client.set_input_flow(InputFlowConfirmAllWarnings(session.client).get())
+    with session.test_ctx as client:
+        if not session.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(session).get())
         sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
             session,
             n=parse_path(parameters["path"]),
@@ -267,7 +269,7 @@ def test_data_streaming(session: Session):
     """Only verifying the expected responses, the signatures are
     checked in vectorized function above.
     """
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
@@ -396,7 +398,7 @@ def test_signtx_eip1559_access_list(
     access_list,
     expected_sig: tuple[int, str, str] | None,
 ):
-    with session.client:
+    with session.test_ctx:
         sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
             session,
             n=parse_path("m/44h/60h/0h/0/100"),
@@ -475,15 +477,15 @@ def test_sanity_checks_eip1559(session: Session):
         )
 
 
-def input_flow_data_skip(client: Client, cancel: bool = False):
+def input_flow_data_skip(client: Client | Session, cancel: bool = False):
     return InputFlowEthereumSignTxDataSkip(client, cancel).get()
 
 
-def input_flow_data_scroll_down(client: Client, cancel: bool = False):
+def input_flow_data_scroll_down(client: Client | Session, cancel: bool = False):
     return InputFlowEthereumSignTxDataScrollDown(client, cancel).get()
 
 
-def input_flow_data_go_back(client: Client, cancel: bool = False):
+def input_flow_data_go_back(client: Client | Session, cancel: bool = False):
     return InputFlowEthereumSignTxDataGoBack(client, cancel).get()
 
 
@@ -495,8 +497,6 @@ HEXDATA = "0123456789abcd000023456789abcd010003456789abcd020000456789abcd0300000
 )
 @pytest.mark.models("core")
 def test_signtx_data_pagination(session: Session, flow):
-    client = session.client
-
     def _sign_tx_call():
         ethereum.sign_tx(
             session,
@@ -511,15 +511,15 @@ def test_signtx_data_pagination(session: Session, flow):
             data=bytes.fromhex(HEXDATA),
         )
 
-    with client:
+    with session.test_ctx as client:
         client.watch_layout()
-        client.set_input_flow(flow(session.client))
+        client.set_input_flow(flow(client))
         _sign_tx_call()
 
     if flow is not input_flow_data_scroll_down:
         with client, pytest.raises(exceptions.Cancelled):
             client.watch_layout()
-            client.set_input_flow(flow(session.client, cancel=True))
+            client.set_input_flow(flow(session, cancel=True))
             _sign_tx_call()
 
 
@@ -530,7 +530,7 @@ def test_signtx_staking(
 ):
     input_flow = None
     if session.model is not models.T1B1:
-        input_flow = InputFlowEthereumSignTxStaking(session.client).get()
+        input_flow = InputFlowEthereumSignTxStaking(session).get()
     _do_test_signtx(
         session, parameters, result, input_flow=input_flow, chunkify=chunkify
     )
@@ -558,7 +558,7 @@ def test_signtx_staking_bad_inputs(session: Session, parameters: dict, result: d
 
 @parametrize_using_common_fixtures("ethereum/sign_tx_staking_eip1559.json")
 def test_signtx_staking_eip1559(session: Session, parameters: dict, result: dict):
-    with session.client:
+    with session.test_ctx:
         sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
             session,
             n=parse_path(parameters["path"]),

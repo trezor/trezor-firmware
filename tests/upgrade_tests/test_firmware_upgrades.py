@@ -42,8 +42,8 @@ from ..input_flows import InputFlowSlip39BasicBackup
 from . import for_all, for_tags, recovery_old, version_from_tag
 
 if TYPE_CHECKING:
-    from trezorlib.debuglink import TrezorClientDebugLink as Client
-    from trezorlib.transport.session import Session
+    from trezorlib.client import Session
+    from trezorlib.debuglink import TrezorTestContext as Client
 
 # **** COMMON DEFINITIONS ****
 
@@ -88,7 +88,7 @@ def _get_session(client: "Client", passphrase: str | object = "") -> "Session":
     if client.version >= (2, 3, 0):
         return client.get_session(passphrase=passphrase)
 
-    from trezorlib.transport.session import SessionV1
+    from trezorlib.client import SessionV1
 
     from ..common import TEST_ADDRESS_N
 

@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import TrezorTestContext as Client
 
 from ..common import (
     MNEMONIC_SLIP39_BASIC_20_3of6,

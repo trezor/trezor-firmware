@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
 
@@ -72,7 +72,7 @@ def test_send_bch_change(session: Session):
         amount=73_452,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -124,7 +124,7 @@ def test_send_bch_nochange(session: Session):
         amount=1_934_960,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -182,7 +182,7 @@ def test_send_bch_oldaddr(session: Session):
         amount=1_934_960,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -252,7 +252,7 @@ def test_attack_change_input(session: Session):
 
         return msg
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_filter(messages.TxAck, attack_processor)
         client.set_expected_responses(
             [
@@ -327,7 +327,7 @@ def test_send_bch_multisig_wrongchange(session: Session):
         script_type=messages.OutputScriptType.PAYTOMULTISIG,
         amount=23_000,
     )
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -395,7 +395,7 @@ def test_send_bch_multisig_change(session: Session):
         script_type=messages.OutputScriptType.PAYTOMULTISIG,
         amount=24_000,
     )
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -434,7 +434,7 @@ def test_send_bch_multisig_change(session: Session):
     )
     out2.address_n[2] = H_(1)
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -496,7 +496,7 @@ def test_send_bch_external_presigned(session: Session):
         amount=1_934_960,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),

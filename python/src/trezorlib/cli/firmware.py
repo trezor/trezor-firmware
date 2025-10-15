@@ -40,8 +40,7 @@ from ..models import TrezorModel
 from . import ChoiceType, with_session
 
 if TYPE_CHECKING:
-    from ..client import TrezorClient
-    from ..transport.session import Session
+    from ..client import Session, TrezorClient
     from . import TrezorConnection
 
 MODEL_CHOICE = ChoiceType(
@@ -644,7 +643,7 @@ def update(
     against data.trezor.io information, if available.
     """
     with obj.client_context() as client:
-        seedless_session = client.get_seedless_session()
+        seedless_session = client.get_session(passphrase=None)
         if sum(bool(x) for x in (filename, url, version)) > 1:
             click.echo("You can use only one of: filename, url, version.")
             sys.exit(1)
@@ -716,8 +715,7 @@ def update(
             while True:
                 time.sleep(0.5)
                 try:
-                    # uncache previous transport to force re-connection attempt
-                    obj.get_transport(_clear_cache=True)
+                    obj.get_transport()
                     break
                 except Exception:
                     pass
@@ -728,7 +726,7 @@ def update(
             sys.exit(1)
 
         upload_firmware_into_device(
-            session=client.get_seedless_session(), firmware_data=firmware_data
+            session=client.get_session(passphrase=None), firmware_data=firmware_data
         )
 
 

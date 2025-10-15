@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.tools import parse_path
 
 from ...common import is_core
@@ -57,7 +57,7 @@ def test_send_dash(session: Session):
         amount=999_999_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),
@@ -106,7 +106,7 @@ def test_send_dash_dip2_input(session: Session):
         amount=95_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 request_input(0),

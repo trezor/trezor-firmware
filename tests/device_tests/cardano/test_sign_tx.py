@@ -18,8 +18,8 @@ import pytest
 
 from trezorlib import btc, cardano, device, messages, misc
 from trezorlib.debuglink import LayoutType
-from trezorlib.debuglink import SessionDebugWrapper as Session
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import DebugSession as Session
+from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -66,7 +66,7 @@ def test_cardano_sign_tx(session: Session, parameters, result):
     response = call_sign_tx(
         session,
         parameters,
-        input_flow=lambda client: InputFlowConfirmAllWarnings(session.client).get(),
+        input_flow=lambda client: InputFlowConfirmAllWarnings(session).get(),
     )
     assert response == _transform_expected_result(result)
 
@@ -160,10 +160,10 @@ def call_sign_tx(session: Session, parameters, input_flow=None, chunkify: bool =
     else:
         payment_request = None
 
-    with session.client as client:
+    with session.test_ctx as client:
         if input_flow is not None:
-            session.client.watch_layout()
-            client.set_input_flow(input_flow(session.client))
+            client.watch_layout()
+            client.set_input_flow(input_flow(client))
 
         return cardano.sign_tx(
             session=session,

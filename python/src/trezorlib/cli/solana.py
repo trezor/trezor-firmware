@@ -26,7 +26,7 @@ from .. import definitions, messages, solana, tools
 from . import with_session
 
 if TYPE_CHECKING:
-    from ..transport.session import Session
+    from ..client import Session
 
 PATH_HELP = "BIP-32 path to key, e.g. m/44h/501h/0h/0h"
 DEFAULT_PATH = "m/44h/501h/0h/0h"

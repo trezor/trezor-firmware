@@ -65,14 +65,30 @@ def watch_emulator(emulator: CoreEmulator) -> int:
     return 0
 
 
-def run_debugger(emulator: CoreEmulator, gdb_script_file: str | Path | None, valgrind: bool = False, run_command: list[str] = []) -> None:
+def run_debugger(
+    emulator: CoreEmulator,
+    gdb_script_file: str | Path | None,
+    valgrind: bool = False,
+    run_command: list[str] = [],
+) -> None:
     os.chdir(emulator.workdir)
     env = emulator.make_env()
     if valgrind:
-        dbg_command = ["valgrind", "-v", "--tool=callgrind", "--read-inline-info=yes", str(emulator.executable)] + emulator.make_args()
+        dbg_command = [
+            "valgrind",
+            "-v",
+            "--tool=callgrind",
+            "--read-inline-info=yes",
+            str(emulator.executable),
+        ] + emulator.make_args()
     elif platform.system() == "Darwin":
         env["PATH"] = "/usr/bin"
-        dbg_command = ["lldb", "-f", str(emulator.executable), "--"] + emulator.make_args()
+        dbg_command = [
+            "lldb",
+            "-f",
+            str(emulator.executable),
+            "--",
+        ] + emulator.make_args()
     else:
         # Optionally run a gdb script from a file
         if gdb_script_file is None:
@@ -286,10 +302,9 @@ def cli(
             label = "Emulator"
 
         assert emulator.client is not None
-        trezorlib.device.wipe(emulator.client.get_seedless_session())
-
+        emulator.client.wipe_device()
         trezorlib.debuglink.load_device(
-            emulator.client.get_seedless_session(),
+            emulator.client.get_session(passphrase=None),
             mnemonics,
             pin=None,
             passphrase_protection=False,

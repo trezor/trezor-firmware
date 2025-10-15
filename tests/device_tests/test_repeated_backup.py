@@ -18,7 +18,7 @@
 import pytest
 
 from trezorlib import device, exceptions, messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import Cancelled, TrezorFailure
 
 from .. import translations as TR
@@ -34,14 +34,13 @@ pytestmark = pytest.mark.models("core")
 
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
 def test_repeated_backup_via_host(session: Session):
-    client = session.client
     assert session.features.backup_availability == messages.BackupAvailability.Required
     assert session.features.recovery_status == messages.RecoveryStatus.Nothing
 
     # initial device backup
     mnemonics = []
-    with client:
-        IF = InputFlowSlip39BasicBackup(client, False)
+    with session.test_ctx as client:
+        IF = InputFlowSlip39BasicBackup(session, False)
         client.set_input_flow(IF.get())
         device.backup(session)
         mnemonics = IF.mnemonics
@@ -57,9 +56,9 @@ def test_repeated_backup_via_host(session: Session):
         device.backup(session)
 
     # unlock repeated backup by entering 3 of the 5 shares we have got
-    with client:
+    with session.test_ctx as client:
         IF = InputFlowSlip39BasicRecoveryDryRun(
-            client, mnemonics[:3], unlock_repeated_backup=True
+            session, mnemonics[:3], unlock_repeated_backup=True
         )
         client.set_input_flow(IF.get())
         device.recover(session, type=messages.RecoveryType.UnlockRepeatedBackup)
@@ -70,8 +69,8 @@ def test_repeated_backup_via_host(session: Session):
         assert session.features.recovery_status == messages.RecoveryStatus.Backup
 
     # we can now perform another backup
-    with client:
-        IF = InputFlowSlip39BasicBackup(client, False, repeated=True)
+    with session.test_ctx as client:
+        IF = InputFlowSlip39BasicBackup(session, False, repeated=True)
         client.set_input_flow(IF.get())
         device.backup(session)
 
@@ -86,7 +85,6 @@ def test_repeated_backup_via_host(session: Session):
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_SINGLE_EXT_20)
 def test_repeated_backup_via_host_upgrade_single(session: Session):
-    client = session.client
     assert (
         session.features.backup_availability == messages.BackupAvailability.NotAvailable
     )
@@ -94,9 +92,9 @@ def test_repeated_backup_via_host_upgrade_single(session: Session):
     assert session.features.backup_type == messages.BackupType.Slip39_Single_Extendable
 
     # unlock repeated backup by entering the single share
-    with client:
+    with session.test_ctx as client:
         IF = InputFlowSlip39BasicRecoveryDryRun(
-            client, MNEMONIC_SLIP39_SINGLE_EXT_20, unlock_repeated_backup=True
+            session, MNEMONIC_SLIP39_SINGLE_EXT_20, unlock_repeated_backup=True
         )
         client.set_input_flow(IF.get())
         device.recover(session, type=messages.RecoveryType.UnlockRepeatedBackup)
@@ -107,8 +105,8 @@ def test_repeated_backup_via_host_upgrade_single(session: Session):
         assert session.features.recovery_status == messages.RecoveryStatus.Backup
 
     # we can now perform another backup
-    with client:
-        IF = InputFlowSlip39BasicBackup(client, False, repeated=True)
+    with session.test_ctx as client:
+        IF = InputFlowSlip39BasicBackup(session, False, repeated=True)
         client.set_input_flow(IF.get())
         device.backup(session)
 
@@ -125,14 +123,13 @@ def test_repeated_backup_via_host_upgrade_single(session: Session):
 
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
 def test_repeated_backup_via_host_cancel(session: Session):
-    client = session.client
     assert session.features.backup_availability == messages.BackupAvailability.Required
     assert session.features.recovery_status == messages.RecoveryStatus.Nothing
 
     # initial device backup
     mnemonics = []
-    with client:
-        IF = InputFlowSlip39BasicBackup(client, False)
+    with session.test_ctx as client:
+        IF = InputFlowSlip39BasicBackup(session, False)
         client.set_input_flow(IF.get())
         device.backup(session)
         mnemonics = IF.mnemonics
@@ -148,9 +145,9 @@ def test_repeated_backup_via_host_cancel(session: Session):
         device.backup(session)
 
     # unlock repeated backup by entering 3 of the 5 shares we have got
-    with client:
+    with session.test_ctx as client:
         IF = InputFlowSlip39BasicRecoveryDryRun(
-            client, mnemonics[:3], unlock_repeated_backup=True
+            session, mnemonics[:3], unlock_repeated_backup=True
         )
         client.set_input_flow(IF.get())
         device.recover(session, type=messages.RecoveryType.UnlockRepeatedBackup)
@@ -181,14 +178,13 @@ def test_repeated_backup_via_host_cancel(session: Session):
 
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
 def test_repeated_backup_via_host_send_disallowed_message(session: Session):
-    client = session.client
     assert session.features.backup_availability == messages.BackupAvailability.Required
     assert session.features.recovery_status == messages.RecoveryStatus.Nothing
 
     # initial device backup
     mnemonics = []
-    with client:
-        IF = InputFlowSlip39BasicBackup(client, False)
+    with session.test_ctx as client:
+        IF = InputFlowSlip39BasicBackup(session, False)
         client.set_input_flow(IF.get())
         device.backup(session)
         mnemonics = IF.mnemonics
@@ -204,9 +200,9 @@ def test_repeated_backup_via_host_send_disallowed_message(session: Session):
         device.backup(session)
 
     # unlock repeated backup by entering 3 of the 5 shares we have got
-    with client:
+    with session.test_ctx as client:
         IF = InputFlowSlip39BasicRecoveryDryRun(
-            client, mnemonics[:3], unlock_repeated_backup=True
+            session, mnemonics[:3], unlock_repeated_backup=True
         )
         client.set_input_flow(IF.get())
         device.recover(session, type=messages.RecoveryType.UnlockRepeatedBackup)

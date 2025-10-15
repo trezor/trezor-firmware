@@ -22,7 +22,7 @@ from .. import fido
 from . import with_session
 
 if TYPE_CHECKING:
-    from ..transport.session import Session
+    from ..client import Session
 
 ALGORITHM_NAME = {-7: "ES256 (ECDSA w/ SHA-256)", -8: "EdDSA"}
 
@@ -40,7 +40,7 @@ def credentials() -> None:
 
 
 @credentials.command(name="list")
-@with_session(empty_passphrase=True)
+@with_session(passphrase=False)
 def credentials_list(session: "Session") -> None:
     """List all resident credentials on the device."""
     creds = fido.list_credentials(session)
@@ -79,7 +79,7 @@ def credentials_list(session: "Session") -> None:
 
 @credentials.command(name="add")
 @click.argument("hex_credential_id")
-@with_session(empty_passphrase=True)
+@with_session(passphrase=False)
 def credentials_add(session: "Session", hex_credential_id: str) -> None:
     """Add the credential with the given ID as a resident credential.
 
@@ -92,7 +92,7 @@ def credentials_add(session: "Session", hex_credential_id: str) -> None:
 @click.option(
     "-i", "--index", required=True, type=click.IntRange(0, 99), help="Credential index."
 )
-@with_session(empty_passphrase=True)
+@with_session(passphrase=False)
 def credentials_remove(session: "Session", index: int) -> None:
     """Remove the resident credential at the given index."""
     fido.remove_credential(session, index)
@@ -110,14 +110,14 @@ def counter() -> None:
 
 @counter.command(name="set")
 @click.argument("counter", type=int)
-@with_session(empty_passphrase=True)
+@with_session(passphrase=False)
 def counter_set(session: "Session", counter: int) -> None:
     """Set FIDO/U2F counter value."""
     fido.set_counter(session, counter)
 
 
 @counter.command(name="get-next")
-@with_session(empty_passphrase=True)
+@with_session(passphrase=False)
 def counter_get_next(session: "Session") -> int:
     """Get-and-increase value of FIDO/U2F counter.
 

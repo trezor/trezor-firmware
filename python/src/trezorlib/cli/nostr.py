@@ -25,7 +25,7 @@ from .. import messages, nostr, tools
 from . import with_session
 
 if t.TYPE_CHECKING:
-    from ..transport.session import Session
+    from ..client import Session
 
 
 PATH_TEMPLATE = "m/44h/1237h/{}h/0/0"

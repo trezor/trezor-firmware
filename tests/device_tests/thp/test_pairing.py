@@ -1,16 +1,16 @@
-import os
+import secrets
 import time
 import typing as t
 from hashlib import sha256
 from unittest.mock import patch
 
 import pytest
+from trezorlib.thp.credentials import StaticCredential
 import typing_extensions as tx
 
 from tests.common import get_test_address
 from trezorlib import exceptions, protobuf
-from trezorlib.client import ProtocolV2Channel
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.messages import (
     ButtonAck,
     ButtonRequest,
@@ -19,31 +19,22 @@ from trezorlib.messages import (
     FailureType,
     ThpCodeEntryChallenge,
     ThpCodeEntryCommitment,
-    ThpCodeEntryCpaceHostTag,
     ThpCodeEntryCpaceTrezor,
-    ThpCodeEntrySecret,
     ThpCredentialRequest,
     ThpCredentialResponse,
     ThpEndRequest,
     ThpEndResponse,
-    ThpNfcTagHost,
-    ThpNfcTagTrezor,
     ThpPairingMethod,
-    ThpPairingPreparationsFinished,
     ThpPairingRequest,
-    ThpQrCodeSecret,
-    ThpQrCodeTag,
     ThpSelectMethod,
 )
 from trezorlib.models import T2T1
-from trezorlib.transport.thp import curve25519
-from trezorlib.transport.thp.cpace import Cpace
+from trezorlib.thp import pairing, curve25519, channel
 
 from .connect import (
-    get_encrypted_transport_protocol,
-    handle_pairing_request,
-    prepare_protocol_for_handshake,
-    prepare_protocol_for_pairing,
+    prepare_channel_for_handshake,
+    prepare_channel_for_pairing,
+    break_channel,
 )
 
 if t.TYPE_CHECKING:
@@ -51,7 +42,7 @@ if t.TYPE_CHECKING:
 
 MT = t.TypeVar("MT", bound=protobuf.MessageType)
 
-pytestmark = [pytest.mark.protocol("protocol_v2")]
+pytestmark = [pytest.mark.protocol("thp")]
 
 
 @pytest.fixture
@@ -66,438 +57,261 @@ def deterministic_urandom() -> t.Generator[None, None, None]:
 def test_pairing_qr_code(client: Client) -> None:
     if client.model != T2T1:
         pytest.xfail(reason="UI is implemented only for T2T1")
-    protocol = prepare_protocol_for_pairing(client)
-    handle_pairing_request(client, protocol, "TestTrezor QrCode")
-    protocol._send_message(
-        ThpSelectMethod(selected_pairing_method=ThpPairingMethod.QrCode)
-    )
-    protocol._read_message(ThpPairingPreparationsFinished)
+
+    prepare_channel_for_pairing(client)
+    method = pairing.QrCode(client.pairing)
 
     # QR Code shown
 
     # Read code from "Trezor's display" using debuglink
 
     pairing_info = client.debug.pairing_info(
-        thp_channel_id=protocol.channel_id.to_bytes(2, "big")
+        thp_channel_id=client.channel.channel_id.to_bytes(2, "big")
     )
     code = pairing_info.code_qr_code
 
     # Compute tag for response
-    sha_ctx = sha256(protocol.handshake_hash)
+    sha_ctx = sha256(client.channel.handshake_hash)
+    assert code is not None
     sha_ctx.update(code)
     tag = sha_ctx.digest()
 
-    protocol._send_message(ThpQrCodeTag(tag=tag))
-
-    secret_msg = protocol._read_message(ThpQrCodeSecret)
-
-    # Check that the `code` was derived from the revealed secret
-    sha_ctx = sha256(ThpPairingMethod.QrCode.to_bytes(1, "big"))
-    sha_ctx.update(protocol.handshake_hash)
-    sha_ctx.update(secret_msg.secret)
-    computed_code = sha_ctx.digest()[:16]
-    assert code == computed_code
-
-    protocol._send_message(ThpEndRequest())
-    protocol._read_message(ThpEndResponse)
-
-    protocol._is_paired = True
+    method.send_qr_code(tag)
+    client.pairing.finish()
 
 
 @pytest.mark.filterwarnings(
     "ignore:One of ephemeral keypairs is already set. This is OK for testing, but should NEVER happen in production!"
 )
-def test_pairing_code_entry(
-    client: Client, deterministic_urandom: None  # noqa:F811
-) -> None:
-    # start from a clean slate:
-    protocol = prepare_protocol_for_pairing(
-        client,
-        host_static_randomness=os.urandom(32),
-        host_ephemeral_randomness=os.urandom(64)[-32:],
-    )
-
-    handle_pairing_request(client, protocol, "TestTrezor CodeEntry")
-
-    protocol._send_message(
-        ThpSelectMethod(selected_pairing_method=ThpPairingMethod.CodeEntry)
-    )
-
-    commitment_msg = protocol._read_message(ThpCodeEntryCommitment)
-    commitment = commitment_msg.commitment
-
-    challenge = os.urandom(16)
-    protocol._send_message(ThpCodeEntryChallenge(challenge=challenge))
-
-    cpace_trezor = protocol._read_message(ThpCodeEntryCpaceTrezor)
-    cpace_trezor_public_key = cpace_trezor.cpace_trezor_public_key
+def test_pairing_code_entry(client: Client) -> None:
+    prepare_channel_for_pairing(client)
+    method = pairing.CodeEntry(client.pairing)
 
     # Code Entry code shown
-
     pairing_info = client.debug.pairing_info(
-        thp_channel_id=protocol.channel_id.to_bytes(2, "big")
+        thp_channel_id=client.channel.channel_id.to_bytes(2, "big")
     )
     code = pairing_info.code_entry_code
+    assert code is not None
+    method.send_code(f"{code:06}")
 
-    cpace = Cpace(handshake_hash=protocol.handshake_hash)
-    cpace.random_bytes = os.urandom
-    cpace.generate_keys_and_secret(
-        f"{code:06}".encode("ascii"), cpace_trezor_public_key
-    )
-    sha_ctx = sha256(cpace.shared_secret)
-    tag = sha_ctx.digest()
-
-    protocol._send_message(
-        ThpCodeEntryCpaceHostTag(
-            cpace_host_public_key=cpace.host_public_key,
-            tag=tag,
-        )
-    )
-
-    secret_msg = protocol._read_message(ThpCodeEntrySecret)
-
-    # Check `commitment` and `code`
-    sha_ctx = sha256(secret_msg.secret)
-    computed_commitment = sha_ctx.digest()
-    assert commitment == computed_commitment
-
-    sha_ctx = sha256(ThpPairingMethod.CodeEntry.to_bytes(1, "big"))
-    sha_ctx.update(protocol.handshake_hash)
-    sha_ctx.update(secret_msg.secret)
-    sha_ctx.update(challenge)
-    code_hash = sha_ctx.digest()
-    computed_code = int.from_bytes(code_hash, "big") % 1000000
-    assert code == computed_code
-
-    protocol._send_message(ThpEndRequest())
-    protocol._read_message(ThpEndResponse)
-
-    protocol._is_paired = True
+    client.pairing.finish()
 
 
 @pytest.mark.filterwarnings(
     "ignore:One of ephemeral keypairs is already set. This is OK for testing, but should NEVER happen in production!"
 )
-def test_pairing_code_entry_cancel(
-    client: Client, deterministic_urandom: None  # noqa:F811
-) -> None:
-    protocol = prepare_protocol_for_pairing(
-        client,
-        host_static_randomness=os.urandom(32),
-        host_ephemeral_randomness=os.urandom(64)[-32:],
+def test_pairing_code_entry_cancel(client: Client) -> None:
+    prepare_channel_for_pairing(client)
+    client.pairing.start()
+    session = client.pairing.session
+    session.call(
+        ThpSelectMethod(selected_pairing_method=ThpPairingMethod.CodeEntry),
+        expect=ThpCodeEntryCommitment,
     )
-    handle_pairing_request(client, protocol, "TestTrezor CodeEntry")
-
-    protocol._send_message(
-        ThpSelectMethod(selected_pairing_method=ThpPairingMethod.CodeEntry)
+    session.call(
+        ThpCodeEntryChallenge(challenge=secrets.token_bytes(16)),
+        expect=ThpCodeEntryCpaceTrezor,
     )
-
-    _ = protocol._read_message(ThpCodeEntryCommitment)
-
-    challenge = os.urandom(16)
-    protocol._send_message(ThpCodeEntryChallenge(challenge=challenge))
-    protocol._read_message(ThpCodeEntryCpaceTrezor)
 
     # Code Entry code shown
 
     # Press Cancel button
     client.debug.press_yes()
-    failure = protocol._read_message(Failure)
+    failure = Failure.ensure_isinstance(session.read())
     assert failure.code is FailureType.ActionCancelled
 
 
 def test_pairing_cancel_1(client: Client) -> None:
-    protocol = prepare_protocol_for_pairing(client)
+    prepare_channel_for_pairing(client)
 
-    protocol._send_message(
+    session = client.pairing.session
+    session.write(
         ThpPairingRequest(host_name="localhost", app_name="TestTrezor Cancel 1")
     )
-    button_req = protocol._read_message(ButtonRequest)
+    button_req = ButtonRequest.ensure_isinstance(session.read())
     assert button_req.name == "thp_pairing_request"
-
-    protocol._send_message(ButtonAck())
+    session.write(ButtonAck())
     time.sleep(1)
-    protocol._send_message(Cancel())
-
-    resp = protocol._read_message(Failure)
-    assert resp.code == FailureType.ActionCancelled
+    session.write(Cancel())
+    failure = Failure.ensure_isinstance(session.read())
+    assert failure.code == FailureType.ActionCancelled
 
 
 def test_pairing_cancel_2(client: Client) -> None:
-    protocol = prepare_protocol_for_pairing(client)
+    prepare_channel_for_pairing(client)
 
-    protocol._send_message(
+    session = client.pairing.session
+    session.write(
         ThpPairingRequest(host_name="localhost", app_name="TestTrezor Cancel 2")
     )
-    button_req = protocol._read_message(ButtonRequest)
+    button_req = ButtonRequest.ensure_isinstance(session.read())
     assert button_req.name == "thp_pairing_request"
-
-    protocol._send_message(ButtonAck())
+    session.write(ButtonAck())
     client.debug.press_no()
-    resp = protocol._read_message(Failure)
-    assert resp.code == FailureType.ActionCancelled
+    failure = Failure.ensure_isinstance(session.read())
+    assert failure.code == FailureType.ActionCancelled
 
 
 def test_pairing_nfc(client: Client) -> None:
-    protocol = prepare_protocol_for_pairing(client)
-
-    nfc_pairing(client, protocol)
-
-    protocol._send_message(ThpEndRequest())
-    protocol._read_message(ThpEndResponse)
-    protocol._is_paired = True
+    prepare_channel_for_pairing(client)
+    _nfc_pairing(client)
+    client.pairing.finish()
 
 
-def nfc_pairing(client: Client, protocol: ProtocolV2Channel) -> None:
-
-    handle_pairing_request(client, protocol, "TestTrezor NfcPairing")
-
-    protocol._send_message(
-        ThpSelectMethod(selected_pairing_method=ThpPairingMethod.NFC)
-    )
-    protocol._read_message(ThpPairingPreparationsFinished)
+def _nfc_pairing(client: Client) -> None:
+    assert isinstance(client.pairing, pairing.PairingController)
+    method = pairing.Nfc(client.pairing)
 
     # NFC screen shown
 
-    nfc_secret_host = os.urandom(16)
     # Read `nfc_secret` and `handshake_hash` from Trezor using debuglink
     pairing_info = client.debug.pairing_info(
-        thp_channel_id=protocol.channel_id.to_bytes(2, "big"),
-        handshake_hash=protocol.handshake_hash,
-        nfc_secret_host=nfc_secret_host,
+        thp_channel_id=client.channel.channel_id.to_bytes(2, "big"),
+        handshake_hash=client.channel.handshake_hash,
+        nfc_secret_host=method.nfc_host_secret,
     )
-    handshake_hash_trezor = pairing_info.handshake_hash
-    nfc_secret_trezor = pairing_info.nfc_secret_trezor
+    assert pairing_info.handshake_hash is not None
+    assert pairing_info.nfc_secret_trezor is not None
+    assert pairing_info.handshake_hash[:16] == client.channel.handshake_hash[:16]
 
-    assert handshake_hash_trezor[:16] == protocol.handshake_hash[:16]
-
-    # Compute tag for response
-    sha_ctx = sha256(ThpPairingMethod.NFC.to_bytes(1, "big"))
-    sha_ctx.update(protocol.handshake_hash)
-    sha_ctx.update(nfc_secret_trezor)
-    tag_host = sha_ctx.digest()
-
-    protocol._send_message(ThpNfcTagHost(tag=tag_host))
-
-    tag_trezor_msg = protocol._read_message(ThpNfcTagTrezor)
-
-    # Check that the `code` was derived from the revealed secret
-    sha_ctx = sha256(ThpPairingMethod.NFC.to_bytes(1, "big"))
-    sha_ctx.update(protocol.handshake_hash)
-    sha_ctx.update(nfc_secret_host)
-    computed_tag = sha_ctx.digest()
-    assert tag_trezor_msg.tag == computed_tag
+    method.send_nfc_tag(pairing_info.nfc_secret_trezor)
 
 
 def test_connection_confirmation_cancel(client: Client) -> None:
-    protocol = prepare_protocol_for_pairing(client)
-    nfc_pairing(client, protocol)
+    prepare_channel_for_pairing(client)
+    _nfc_pairing(client)
 
     # Request credential with confirmation after pairing
-    randomness_static = os.urandom(32)
-    host_static_private_key = curve25519.get_private_key(randomness_static)
-    host_static_public_key = curve25519.get_public_key(host_static_private_key)
-    protocol._send_message(
-        ThpCredentialRequest(
-            host_static_public_key=host_static_public_key, autoconnect=False
-        )
-    )
-    credential_response = protocol._read_message(ThpCredentialResponse)
+    credential = client.pairing.request_credential()
+    client.pairing.finish()
 
-    assert credential_response.credential is not None
-    credential = credential_response.credential
-    protocol._send_message(ThpEndRequest())
-    protocol._read_message(ThpEndResponse)
+    break_channel(client)
 
     # Connect using credential with confirmation
-    protocol = prepare_protocol_for_pairing(
-        client=client, host_static_randomness=randomness_static, credential=credential
-    )
-    protocol._send_message(ThpEndRequest())
-    button_req = protocol._read_message(ButtonRequest)
-    assert button_req.name == "thp_connection_request"
-    protocol._send_message(Cancel())
-    failure = protocol._read_message(Failure)
+    prepare_channel_for_handshake(client)
+    client.channel.open([credential])
 
+    session = client.pairing.session
+    session.write(ThpEndRequest())
+    button_req = ButtonRequest.ensure_isinstance(session.read())
+    assert button_req.name == "thp_connection_request"
+    session.write(Cancel())
+    failure = Failure.ensure_isinstance(session.read())
     assert failure.code == FailureType.ActionCancelled
 
     time.sleep(0.2)  # TODO fix this behavior
-    protocol = prepare_protocol_for_pairing(
-        client=client, host_static_randomness=randomness_static, credential=credential
-    )
-    protocol._send_message(ThpEndRequest())
-    button_req = protocol._read_message(ButtonRequest)
-    assert button_req.name == "thp_connection_request"
-    protocol._send_message(ButtonAck())
-    client.debug.press_yes()
-    protocol._read_message(ThpEndResponse)
+    prepare_channel_for_handshake(client)
+    client.channel.open([credential])
+    assert client.pairing.is_paired()
+    client.pairing.finish()
 
 
 def test_autoconnect_credential_request_cancel(client: Client) -> None:
-    protocol = prepare_protocol_for_pairing(client)
-    nfc_pairing(client, protocol)
+    prepare_channel_for_pairing(client)
+    _nfc_pairing(client)
 
     # Request credential with confirmation after pairing
-    randomness_static = os.urandom(32)
-    host_static_private_key = curve25519.get_private_key(randomness_static)
-    host_static_public_key = curve25519.get_public_key(host_static_private_key)
-    protocol._send_message(
-        ThpCredentialRequest(
-            host_static_public_key=host_static_public_key, autoconnect=False
-        )
-    )
-    credential_response = protocol._read_message(ThpCredentialResponse)
-
-    assert credential_response.credential is not None
-    credential = credential_response.credential
-    protocol._send_message(ThpEndRequest())
-    protocol._read_message(ThpEndResponse)
-
+    credential = client.pairing.request_credential()
+    client.pairing.finish()
+    break_channel(client)
     # Connect using credential with confirmation and request autoconnect
-    protocol = prepare_protocol_for_pairing(
-        client=client, host_static_randomness=randomness_static, credential=credential
-    )
-    protocol._send_message(
+    prepare_channel_for_pairing(client, credential=credential)
+    session = client.pairing.session
+    session.write(
         ThpCredentialRequest(
-            host_static_public_key=host_static_public_key, autoconnect=True
+            host_static_public_key=client.channel.get_host_static_pubkey(),
+            autoconnect=True,
         )
     )
-    button_req = protocol._read_message(ButtonRequest)
+    button_req = ButtonRequest.ensure_isinstance(session.read())
     assert button_req.name == "thp_connection_request"
-    protocol._send_message(ButtonAck())
+    session.write(ButtonAck())
     client.debug.press_yes()
-    button_req = protocol._read_message(ButtonRequest)
+    button_req = ButtonRequest.ensure_isinstance(session.read())
     assert button_req.name == "thp_autoconnect_credential_request"
-    protocol._send_message(Cancel())
-    failure = protocol._read_message(Failure)
-
+    session.write(Cancel())
+    failure = Failure.ensure_isinstance(session.read())
     assert failure.code == FailureType.ActionCancelled
 
 
 def test_credential_phase(client: Client) -> None:
-    protocol = prepare_protocol_for_pairing(client)
-    nfc_pairing(client, protocol)
+    prepare_channel_for_pairing(client)
+    _nfc_pairing(client)
 
     # Request credential with confirmation after pairing
-    randomness_static = os.urandom(32)
-    host_static_private_key = curve25519.get_private_key(randomness_static)
-    host_static_public_key = curve25519.get_public_key(host_static_private_key)
-    protocol._send_message(
-        ThpCredentialRequest(
-            host_static_public_key=host_static_public_key, autoconnect=False
-        )
-    )
-    credential_response = protocol._read_message(ThpCredentialResponse)
+    credential = client.pairing.request_credential(autoconnect=False)
+    client.pairing.finish()
 
-    assert credential_response.credential is not None
-    credential = credential_response.credential
-    protocol._send_message(ThpEndRequest())
-    protocol._read_message(ThpEndResponse)
+    break_channel(client)
 
     # Connect using credential with confirmation
-    protocol = prepare_protocol_for_handshake(client)
-    protocol._do_channel_allocation()
-    protocol._do_handshake(credential, randomness_static)
-    protocol._send_message(ThpEndRequest())
-    button_req = protocol._read_message(ButtonRequest)
-    assert button_req.name == "thp_connection_request"
-    protocol._send_message(ButtonAck())
-    client.debug.press_yes()
-    protocol._read_message(ThpEndResponse)
+    prepare_channel_for_handshake(client)
+    client.channel.open([credential])
+    assert client.pairing.is_paired()
+    with client:
+        client.set_expected_responses(
+            [ButtonRequest(name="thp_connection_request"), ThpEndResponse]
+        )
+        client.pairing.finish()
 
     # Delete channel from the device by sending badly encrypted message
     # This is done to prevent channel replacement and trigerring of autoconnect false -> true
-    protocol._noise.noise_protocol.cipher_state_encrypt.n = 250
-
-    protocol._send_message(ButtonAck())
-    with pytest.raises(exceptions.DecryptionFailed):
-        protocol.read(1)
+    break_channel(client)
 
     # Connect using credential with confirmation and ask for autoconnect credential.
-    protocol = prepare_protocol_for_handshake(client)
-    protocol._do_channel_allocation()
-    protocol._do_handshake(credential, randomness_static)
-    protocol._send_message(
-        ThpCredentialRequest(
-            host_static_public_key=host_static_public_key, autoconnect=True
+    prepare_channel_for_pairing(client, credential=credential)
+    with client:
+        client.set_expected_responses(
+            [
+                ButtonRequest(name="thp_connection_request"),
+                ButtonRequest(name="thp_autoconnect_credential_request"),
+                ThpCredentialResponse,
+                ThpEndResponse,
+            ]
         )
-    )
-    # Connection confirmation dialog is shown. (Channel replacement is not triggered.)
-    button_req = protocol._read_message(ButtonRequest)
-    assert button_req.name == "thp_connection_request"
-    protocol._send_message(ButtonAck())
-    client.debug.press_yes()
-    # Autoconnect issuance confirmation dialog is shown.
-    button_req = protocol._read_message(ButtonRequest)
-    assert button_req.name == "thp_autoconnect_credential_request"
-    protocol._send_message(ButtonAck())
-    client.debug.press_yes()
-    # Autoconnect credential is received
-    credential_response_2 = protocol._read_message(ThpCredentialResponse)
-    assert credential_response_2.credential is not None
-    credential_auto = credential_response_2.credential
-    protocol._send_message(ThpEndRequest())
-    protocol._read_message(ThpEndResponse)
+        credential_auto = client.pairing.request_credential(autoconnect=True)
+        client.pairing.finish()
 
     # Connect using credential with confirmation
-    protocol = prepare_protocol_for_handshake(client)
-    protocol._do_channel_allocation()
-    protocol._do_handshake(credential, randomness_static)
-    # Confirmation dialog is not shown as channel in ENCRYPTED TRANSPORT state with the same
-    # host static public key is still available in Trezor's cache. (Channel replacement is triggered.)
-    protocol._send_message(ThpEndRequest())
-    protocol._read_message(ThpEndResponse)
+    prepare_channel_for_pairing(client, credential=credential)
+    with client:
+        # Confirmation dialog is not shown as channel in ENCRYPTED TRANSPORT state with the same
+        # host static public key is still available in Trezor's cache. (Channel replacement is triggered.)
+        client.set_expected_responses([ThpEndResponse])
+        client.pairing.finish()
 
     # Connect using autoconnect credential
-    protocol = prepare_protocol_for_handshake(client)
-    protocol._do_channel_allocation()
-    protocol._do_handshake(credential_auto, randomness_static)
-    protocol._send_message(ThpEndRequest())
-    protocol._read_message(ThpEndResponse)
+    prepare_channel_for_pairing(client, credential=credential_auto)
+    with client:
+        client.set_expected_responses([ThpEndResponse])
+        client.pairing.finish()
 
     # Delete channel from the device by sending badly encrypted message
     # This is done to prevent channel replacement and trigerring of autoconnect false -> true
-    protocol._noise.noise_protocol.cipher_state_encrypt.n = 100
-
-    protocol._send_message(ButtonAck())
-    with pytest.raises(exceptions.DecryptionFailed):
-        protocol.read(1)
+    break_channel(client)
 
     # Connect using autoconnect credential - should work the same as above
-    protocol = prepare_protocol_for_handshake(client)
-    protocol._do_channel_allocation()
-    protocol._do_handshake(credential_auto, randomness_static)
-    protocol._send_message(ThpEndRequest())
-    protocol._read_message(ThpEndResponse)
+    prepare_channel_for_pairing(client, credential=credential_auto)
+    with client:
+        client.set_expected_responses([ThpEndResponse])
+        client.pairing.finish()
 
 
 def test_credential_request_in_encrypted_transport_phase(client: Client) -> None:
-    randomness_static = os.urandom(32)
-    protocol = prepare_protocol_for_pairing(client, randomness_static)
-    nfc_pairing(client, protocol)
+    prepare_channel_for_pairing(client)
+    _nfc_pairing(client)
 
     # Request credential with confirmation after pairing
-    host_static_private_key = curve25519.get_private_key(randomness_static)
-    host_static_public_key = curve25519.get_public_key(host_static_private_key)
-    protocol._send_message(
-        ThpCredentialRequest(
-            host_static_public_key=host_static_public_key, autoconnect=False
-        )
-    )
-    credential_response = protocol._read_message(ThpCredentialResponse)
-
-    assert credential_response.credential is not None
-    credential = credential_response.credential
-    protocol._send_message(ThpEndRequest())
-    protocol._read_message(ThpEndResponse)
-    protocol._is_paired = True  # pairing has been done above
+    credential = client.pairing.request_credential()
+    client.pairing.finish()
 
     session = client.get_seedless_session()
     session.call(
         ThpCredentialRequest(
-            host_static_public_key=host_static_public_key,
+            host_static_public_key=client.channel.get_host_static_pubkey(),
             autoconnect=True,
-            credential=credential,
+            credential=credential.credential,
         ),
         expect=ThpCredentialResponse,
     )
@@ -507,15 +321,6 @@ def test_credential_request_in_encrypted_transport_phase(client: Client) -> None
 def test_channel_replacement(client: Client) -> None:
     assert client.features.passphrase_protection is True
 
-    host_static_randomness = os.urandom(32)
-    host_static_randomness_2 = os.urandom(32)
-    host_static_private_key = curve25519.get_private_key(host_static_randomness)
-    host_static_private_key_2 = curve25519.get_private_key(host_static_randomness_2)
-
-    assert host_static_private_key != host_static_private_key_2
-
-    client.protocol = get_encrypted_transport_protocol(client, host_static_randomness)
-
     session = client.get_session(passphrase="TREZOR")
     address = get_test_address(session)
 
@@ -524,7 +329,11 @@ def test_channel_replacement(client: Client) -> None:
     assert address != address_2
 
     # create new channel using the same host_static_private_key
-    client.protocol = get_encrypted_transport_protocol(client, host_static_randomness)
+    prepare_channel_for_pairing(
+        client, host_static_privkey=client.channel.host_static_privkey
+    )
+    client.pairing.skip()
+
     session_3 = client.get_session(passphrase="OKIDOKI")
     address_3 = get_test_address(session_3)
     assert address_3 != address_2
@@ -535,16 +344,52 @@ def test_channel_replacement(client: Client) -> None:
     new_address_3 = get_test_address(session_3)
     assert address_3 == new_address_3
 
+    host_static_privkey_orig = client.channel.host_static_privkey
     # create new channel using different host_static_private_key
-    client.protocol = get_encrypted_transport_protocol(client, host_static_randomness_2)
-    with pytest.raises(exceptions.TrezorFailure) as e_1:
-        _ = get_test_address(session)
-    assert str(e_1.value.message) == "Invalid session"
+    prepare_channel_for_pairing(client)
+    assert client.channel.host_static_privkey != host_static_privkey_orig
+    client.pairing.skip()
 
-    with pytest.raises(exceptions.TrezorFailure) as e_2:
+    with pytest.raises(exceptions.InvalidSessionError):
+        _ = get_test_address(session)
+
+    with pytest.raises(exceptions.InvalidSessionError):
         _ = get_test_address(session_3)
-    assert str(e_2.value.message) == "Invalid session"
 
     session_4 = client.get_session(passphrase="TREZOR")
     super_new_address = get_test_address(session_4)
     assert address == super_new_address
+
+
+def test_credential_for_different_key(client: Client) -> None:
+    prepare_channel_for_pairing(client)
+    _nfc_pairing(client)
+
+    assert client.pairing.state is pairing.ControllerLifecycle.PAIRING_COMPLETED
+    assert client.channel.state is channel.ChannelState.CREDENTIAL_PHASE
+
+    host_secret = secrets.token_bytes(32)
+    host_privkey = curve25519.get_private_key(host_secret)
+    host_pubkey = curve25519.get_public_key(host_privkey)
+
+    assert host_privkey != client.channel.host_static_privkey
+
+    credential_response = client.pairing._call(
+        ThpCredentialRequest(
+            host_static_public_key=host_pubkey,
+            autoconnect=False,
+        ),
+        expect=ThpCredentialResponse,
+    )
+    client.pairing.finish()
+
+    credential = StaticCredential(
+        trezor_pubkey=credential_response.trezor_static_public_key,
+        host_privkey=host_privkey,
+        credential=credential_response.credential,
+    )
+
+    # try to connect using the new credential
+    prepare_channel_for_pairing(client, credential=credential)
+    assert client.channel.state is channel.ChannelState.CREDENTIAL_PHASE
+    client.pairing.finish()

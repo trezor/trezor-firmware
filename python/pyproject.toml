@@ -31,6 +31,8 @@ dependencies = [
     "construct-classes>=0.1.2",
     "cryptography>=41",
     "noiseprotocol>=0.3.1,<0.4.0",
+    "platformdirs>=4.4.0",
+    "keyring>=25.7.0",
 ]
 
 [project.optional-dependencies]

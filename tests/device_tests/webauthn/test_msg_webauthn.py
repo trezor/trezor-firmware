@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import fido
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import Cancelled, TrezorFailure
 
 from ...common import MNEMONIC12
@@ -31,8 +31,8 @@ RK_CAPACITY = 100
 @pytest.mark.altcoin
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_add_remove(session: Session):
-    with session.client as client:
-        IF = InputFlowFidoConfirm(session.client)
+    with session.test_ctx as client:
+        IF = InputFlowFidoConfirm(session)
         client.set_input_flow(IF.get())
 
         # Remove index 0 should fail.

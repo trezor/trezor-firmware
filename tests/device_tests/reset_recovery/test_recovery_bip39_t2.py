@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import device, exceptions, messages
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 
 from ...common import MNEMONIC12
 from ...input_flows import InputFlowBip39Recovery
@@ -26,10 +26,9 @@ pytestmark = pytest.mark.models("core")
 
 
 @pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.uninitialized_session
 def test_tt_pin_passphrase(session: Session):
-    with session.client as client:
-        IF = InputFlowBip39Recovery(session.client, MNEMONIC12.split(" "), pin="654")
+    with session.test_ctx as client:
+        IF = InputFlowBip39Recovery(session, MNEMONIC12.split(" "), pin="654")
         client.set_input_flow(IF.get())
         device.recover(
             session,
@@ -38,7 +37,7 @@ def test_tt_pin_passphrase(session: Session):
             label="hello",
         )
 
-    assert session.client.debug.state().mnemonic_secret.decode() == MNEMONIC12
+    assert session.debug.state().mnemonic_secret.decode() == MNEMONIC12
 
     assert session.features.pin_protection is True
     assert session.features.passphrase_protection is True
@@ -47,10 +46,9 @@ def test_tt_pin_passphrase(session: Session):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.uninitialized_session
 def test_tt_nopin_nopassphrase(session: Session):
-    with session.client as client:
-        IF = InputFlowBip39Recovery(session.client, MNEMONIC12.split(" "))
+    with session.test_ctx as client:
+        IF = InputFlowBip39Recovery(session, MNEMONIC12.split(" "))
         client.set_input_flow(IF.get())
         device.recover(
             session,
@@ -59,7 +57,7 @@ def test_tt_nopin_nopassphrase(session: Session):
             label="hello",
         )
 
-    assert session.client.debug.state().mnemonic_secret.decode() == MNEMONIC12
+    assert session.debug.state().mnemonic_secret.decode() == MNEMONIC12
     assert session.features.pin_protection is False
     assert session.features.passphrase_protection is False
     assert session.features.backup_type is messages.BackupType.Bip39

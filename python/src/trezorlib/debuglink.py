@@ -32,15 +32,14 @@ from pathlib import Path
 
 from mnemonic import Mnemonic
 
-from . import btc, mapping, messages, models, protobuf
-from .client import ProtocolVersion, TrezorClient
-from .exceptions import Cancelled, TrezorFailure, UnexpectedMessageError
+from . import client, mapping, messages, models, protobuf, protocol_v1
+from .exceptions import DeviceLockedError, TrezorFailure
 from .log import DUMP_BYTES
 from .messages import DebugTouchEventType, DebugWaitType
+from .thp.channel import Channel
+from .thp.client import TrezorClientThp
 from .tools import parse_path
 from .transport import Timeout
-from .transport.session import ProtocolV2Channel, Session
-from .transport.thp.protocol_v1 import ProtocolV1Channel
 
 if t.TYPE_CHECKING:
     from typing_extensions import Protocol
@@ -48,8 +47,11 @@ if t.TYPE_CHECKING:
     from .transport import Transport
 
     ExpectedMessage = t.Union[
-        protobuf.MessageType, t.Type[protobuf.MessageType], "MessageFilter"
+        protobuf.MessageType, type[protobuf.MessageType], "MessageFilter"
     ]
+
+    ExpectedResponse = t.Union[ExpectedMessage, tuple[bool, ExpectedMessage]]
+    ExpectedResponses = t.Sequence[ExpectedResponse]
 
     AnyDict = t.Dict[str, t.Any]
     Coords = t.Tuple[int, int]
@@ -63,6 +65,9 @@ if t.TYPE_CHECKING:
 
     InputFlowType = t.Generator[None, messages.ButtonRequest, None]
 
+T = t.TypeVar("T")
+S = t.TypeVar("S", bound=client.Session)
+MT = t.TypeVar("MT", bound=protobuf.MessageType)
 
 EXPECTED_RESPONSES_CONTEXT_LINES = 3
 PASSPHRASE_TEST_PATH = parse_path("44h/1h/0h/0/0")
@@ -96,6 +101,11 @@ class LayoutType(Enum):
 
     def __repr__(self) -> str:
         return f"LayoutType.{self.name}"
+
+
+class ProtocolVersion(Enum):
+    V1 = "v1"
+    THP = "thp"
 
 
 class UnstructuredJSONReader:
@@ -501,11 +511,16 @@ def _make_input_func(
 
 class DebugLink:
     def __init__(self, transport: "Transport", auto_interact: bool = True) -> None:
+        try:
+            self.transport.close()
+        except Exception:
+            pass
+        transport.open()
+
         self.transport = transport
         self.allow_interactions = auto_interact
         self.mapping = mapping.DEFAULT_MAPPING
 
-        self.protocol = ProtocolV1Channel(self.transport, self.mapping)
         # To be set by TrezorClientDebugLink (is not known during creation time)
         self.model: models.TrezorModel | None = None
         self.version: tuple[int, int, int] = (0, 0, 0)
@@ -581,25 +596,29 @@ class DebugLink:
             DUMP_BYTES,
             f"encoded as type {msg_type} ({len(msg_bytes)} bytes): {msg_bytes.hex()}",
         )
-        self.protocol.write(msg)
+        protocol_v1.write(self.transport, msg_type, msg_bytes)
 
     def _read(self, timeout: float | None = None) -> protobuf.MessageType:
-        msg = self.protocol.read(timeout=timeout)
+        msg_type, msg_bytes = protocol_v1.read(self.transport, timeout=timeout)
+        msg = self.mapping.decode(msg_type, msg_bytes)
 
         # Collapse tokens to make log use less lines.
-        msg_for_log = msg
         if isinstance(msg, (messages.DebugLinkState, messages.DebugLinkLayout)):
-            msg_for_log = deepcopy(msg)
-            msg_for_log.tokens = ["".join(msg_for_log.tokens)]
+            msg.tokens = ["".join(msg.tokens)]
 
         return msg
 
-    def _call(self, msg: protobuf.MessageType, timeout: float | None = None) -> t.Any:
+    def _call(
+        self,
+        msg: protobuf.MessageType,
+        timeout: float | None = None,
+        expect: type[MT] = protobuf.MessageType,
+    ) -> MT:
         self._write(msg)
         result = self._read(timeout=timeout)
         if isinstance(result, messages.Failure):
             raise TrezorFailure(result)
-        return result
+        return expect.ensure_isinstance(result)
 
     def state(self, wait_type: DebugWaitType | None = None) -> messages.DebugLinkState:
         if wait_type is None:
@@ -609,10 +628,8 @@ class DebugLink:
                 else DebugWaitType.IMMEDIATE
             )
         result = self._call(messages.DebugLinkGetState(wait_layout=wait_type))
-        while not isinstance(result, (messages.Failure, messages.DebugLinkState)):
+        while not isinstance(result, messages.DebugLinkState):
             result = self._read()
-        if isinstance(result, messages.Failure):
-            raise TrezorFailure(result)
         return result
 
     def pairing_info(
@@ -628,10 +645,8 @@ class DebugLink:
                 nfc_secret_host=nfc_secret_host,
             )
         )
-        while not isinstance(result, (messages.Failure, messages.DebugLinkPairingInfo)):
+        while not isinstance(result, messages.DebugLinkPairingInfo):
             result = self._read()
-        if isinstance(result, messages.Failure):
-            raise TrezorFailure(result)
         return result
 
     def read_layout(self, wait: bool | None = None) -> LayoutContent:
@@ -658,7 +673,8 @@ class DebugLink:
             self.reset_debug_events()
 
         obj = self._call(
-            messages.DebugLinkGetState(wait_layout=DebugWaitType.NEXT_LAYOUT)
+            messages.DebugLinkGetState(wait_layout=DebugWaitType.NEXT_LAYOUT),
+            expect=messages.DebugLinkState,
         )
         return LayoutContent(obj.tokens)
 
@@ -678,8 +694,7 @@ class DebugLink:
             self.waiting_for_layout_change = False
 
         # wait for the reply
-        resp = self._read()
-        assert isinstance(resp, messages.DebugLinkState)
+        messages.DebugLinkState.ensure_isinstance(self._read())
 
     @contextmanager
     def hold_touch(self, pos: tuple[int, int]) -> t.Iterator[None]:
@@ -707,8 +722,7 @@ class DebugLink:
     def reset_debug_events(self) -> None:
         # Only supported on TT and above certain version
         if (self.model is not models.T1B1) and not self.legacy_debug:
-            return self._call(messages.DebugLinkResetDebugEvents())
-        return None
+            self._call(messages.DebugLinkResetDebugEvents(), expect=messages.Success)
 
     def synchronize_at(
         self, layout_text: str | list[str], timeout: float = 5
@@ -731,7 +745,7 @@ class DebugLink:
         The message is missing on T1. Use `TrezorClientDebugLink.watch_layout` for
         cross-version compatibility.
         """
-        self._call(messages.DebugLinkWatchLayout(watch=watch))
+        self._call(messages.DebugLinkWatchLayout(watch=watch), expect=messages.Success)
 
     def encode_pin(self, pin: str, matrix: str | None = None) -> str:
         """Transform correct PIN according to the displayed matrix."""
@@ -748,7 +762,8 @@ class DebugLink:
         return (state.recovery_fake_word, state.recovery_word_pos)
 
     def read_reset_word(self) -> str:
-        state = self._call(messages.DebugLinkGetState(wait_word_list=True))
+        state = self.state()
+        assert state.reset_word is not None
         return state.reset_word
 
     def _decision(
@@ -847,8 +862,8 @@ class DebugLink:
     def stop(self) -> None:
         self._write(messages.DebugLinkStop())
 
-    def reseed(self, value: int) -> protobuf.MessageType:
-        return self._call(messages.DebugLinkReseedRandom(value=value))
+    def reseed(self, value: int) -> None:
+        self._call(messages.DebugLinkReseedRandom(value=value), expect=messages.Success)
 
     def start_recording(self, directory: str, refresh_index: int | None = None) -> None:
         self.screenshot_recording_dir = directory
@@ -857,7 +872,8 @@ class DebugLink:
             self._call(
                 messages.DebugLinkRecordScreen(
                     target_directory=directory, refresh_index=refresh_index
-                )
+                ),
+                expect=messages.Success,
             )
         else:
             self.t1_screenshot_directory = Path(directory)
@@ -885,11 +901,10 @@ class DebugLink:
     def flash_erase(self, sector: int) -> None:
         self._write(messages.DebugLinkFlashErase(sector=sector))
 
-    def erase_sd_card(self, format: bool = True) -> messages.Success:
-        res = self._call(messages.DebugLinkEraseSdCard(format=format))
-        if not isinstance(res, messages.Success):
-            raise UnexpectedMessageError(messages.Success, res)
-        return res
+    def erase_sd_card(self, format: bool = True) -> None:
+        self._call(
+            messages.DebugLinkEraseSdCard(format=format), expect=messages.Success
+        )
 
     def snapshot_legacy(self) -> None:
         """Snapshot the current state of the device."""
@@ -932,10 +947,9 @@ class DebugLink:
         if not self.has_gc_info:
             return
 
-        resp = self._call(messages.DebugLinkGetGcInfo())
-        while not isinstance(resp, messages.DebugLinkGcInfo):
-            resp = self._read()
-
+        resp = self._call(
+            messages.DebugLinkGetGcInfo(), expect=messages.DebugLinkGcInfo
+        )
         info = dict(sorted((item.name, item.value) for item in resp.items))
         if info["total"]:
             LOG.debug(
@@ -972,16 +986,19 @@ class NullDebugLink(DebugLink):
     def close(self) -> None:
         pass
 
-    def _call(
-        self, msg: protobuf.MessageType, nowait: bool = False
-    ) -> messages.DebugLinkState | None:
-        if not nowait:
-            if isinstance(msg, messages.DebugLinkGetState):
-                return messages.DebugLinkState()
-            else:
-                raise RuntimeError("unexpected call to a fake debuglink")
+    def _write(self, msg: protobuf.MessageType) -> None:
+        pass
 
-        return None
+    def _call(
+        self,
+        msg: protobuf.MessageType,
+        timeout: float | None = None,
+        expect: type[MT] = protobuf.MessageType,
+    ) -> protobuf.MessageType:
+        if isinstance(msg, messages.DebugLinkGetState):
+            return messages.DebugLinkState()
+        else:
+            raise RuntimeError("unexpected call to a fake debuglink")
 
 
 class UnexpectedMenuError(Exception):
@@ -1147,7 +1164,7 @@ class DebugUI:
             except StopIteration:
                 self.input_flow = self.INPUT_FLOW_DONE
 
-    def get_pin(self) -> str:
+    def get_pin(self, _request: messages.PinMatrixRequest | None = None) -> str:
         self.debuglink.snapshot_legacy()
 
         if self.pins is None:
@@ -1158,16 +1175,8 @@ class DebugUI:
         except StopIteration:
             raise AssertionError("PIN sequence ended prematurely")
 
-    def get_passphrase(self, available_on_device: bool) -> str | None | object:
-        self.debuglink.snapshot_legacy()
-        return self.passphrase
-
-    def confirm_screen(self) -> None:
-        self.debuglink.press_yes()
-
 
 class MessageFilter:
-
     def __init__(
         self, message_type: t.Type[protobuf.MessageType], **fields: t.Any
     ) -> None:
@@ -1261,105 +1270,41 @@ class MessageFilterGenerator:
 message_filters = MessageFilterGenerator()
 
 
-class SessionDebugWrapper(Session):
-    def __init__(self, session: Session) -> None:
-        if isinstance(session, SessionDebugWrapper):
-            raise Exception("Cannot wrap already wrapped session!")
-        self.__dict__["_session"] = session
+if t.TYPE_CHECKING:
 
-    def __getattr__(self, name: str) -> t.Any:
-        return getattr(self._session, name)
+    class DebugSession(client.Session[client.TrezorClient, t.Any]):
+        test_ctx: "TrezorTestContext"
+        debug: DebugLink
+        layout_type: LayoutType
 
-    def __setattr__(self, name: str, value: t.Any) -> None:
-        if hasattr(self._session, name):
-            setattr(self._session, name, value)
-        else:
-            self.__dict__[name] = value
-
-    @property
-    def protocol_version(self) -> int:
-        return self.client.protocol_version
-
-    @property
-    def debug_client(self) -> TrezorClientDebugLink:
-        if not isinstance(self.client, TrezorClientDebugLink):
-            raise Exception("Debug client not available")
-        return self.client
-
-    def _write(self, msg: t.Any) -> None:
-        if isinstance(self.client, TrezorClientDebugLink):
-            msg = self.client._filter_message(msg)
-        self._session._write(msg)
-
-    def _read(self, timeout: float | None = None) -> t.Any:
-        msg = self._session._read(timeout)
-        if isinstance(self.client, TrezorClientDebugLink):
-            msg = self.client._filter_message(msg)
-        return msg
-
-    def resume(self) -> None:
-        self._session.resume()
-
-    def lock(self) -> None:
-        """Lock the device.
-
-        If the device does not have a PIN configured, this will do nothing.
-        Otherwise, a lock screen will be shown and the device will prompt for PIN
-        before further actions.
-
-        This call does _not_ invalidate passphrase cache. If passphrase is in use,
-        the device will not prompt for it after unlocking.
-
-        To invalidate passphrase cache, use `session.end()`. To lock _and_ invalidate
-        passphrase cache, use `session.lock()` followed by `session.end()`.
-        """
-        self.call(messages.LockDevice())
-        self.refresh_features()
-
-    def ensure_unlocked(self) -> None:
-        btc.get_address(self, "Testnet", PASSPHRASE_TEST_PATH)
-        self.refresh_features()
+else:
+    DebugSession = "do not use this type at runtime"
 
 
 class DebugLinkNotFound(Exception):
     pass
 
 
-class TrezorClientDebugLink(TrezorClient):
-    # This class implements automatic responses
-    # and other functionality for unit tests
-    # for various callbacks, created in order
-    # to automatically pass unit tests.
-    #
-    # This mixing should be used only for purposes
-    # of unit testing, because it will fail to work
-    # without special DebugLink interface provided
-    # by the device.
-
-    protocol: ProtocolV1Channel | ProtocolV2Channel
-    actual_responses: list[protobuf.MessageType] | None = None
-    filters: t.Dict[
-        t.Type[protobuf.MessageType],
-        t.Callable[[protobuf.MessageType], protobuf.MessageType] | None,
-    ] = {}
+class TrezorTestContext:
+    # This class implements automatic responses and other functionality for unit
+    # tests for various callbacks, created in order to automatically pass unit
+    # tests.
 
     def __init__(
         self,
         transport: Transport,
+        *,
         auto_interact: bool = True,
-        open_transport: bool = True,
         debug_transport: Transport | None = None,
-        app_name: str = "trezorlib-debug",
-        host_name: str = "testhost",
+        force_wipe: bool = False,
+        host_name: str | None = "debughost",
     ) -> None:
         try:
             debug_transport = debug_transport or transport.find_debug()
+            with debug_transport:
+                if not debug_transport.is_ready():
+                    raise DebugLinkNotFound(debug_transport.get_path())
             self.debug = DebugLink(debug_transport, auto_interact)
-            if open_transport:
-                self.debug.open()
-                # try to open debuglink, see if it works
-                if not self.debug.transport.ping():
-                    raise DebugLinkNotFound(self.debug.transport.get_path())
 
         except Exception:
             if not auto_interact:
@@ -1367,85 +1312,169 @@ class TrezorClientDebugLink(TrezorClient):
             else:
                 raise
 
-        if open_transport:
-            transport.open()
-
-        # set transport explicitly so that sync_responses can work
         self.transport = transport
-        self.ui: DebugUI = DebugUI(self.debug)
+        self.app = client.AppManifest(app_name="debuglink", host_name=host_name)
 
-        def get_pin(_msg: messages.PinMatrixRequest) -> str:
-            try:
-                pin = self.ui.get_pin()
-            except Cancelled:
+        if protocol_v1.probe(self.transport):
+            self.protocol_version = ProtocolVersion.V1
+        else:
+            self.protocol_version = ProtocolVersion.THP
+
+        try:
+            self.reset_instance()
+            # peek at features to maybe trigger the DeviceLockedError
+            _ = self.client.features
+        except DeviceLockedError:
+            if force_wipe:
+                self.debug._call(messages.WipeDevice(), expect=messages.Success)
+                self.reset_instance()
+            else:
                 raise
-            return pin
 
-        self.pin_callback = get_pin
-        self.button_callback = self.ui.button_request
+        self.capabilities = self.client.features.capabilities
+        self.sd_card_present = self.client.features.sd_card_present
+        self.debug.version = self.version = self.client.version
+        self.debug.model = self.model = self.client.model
+        self.layout_type = self.debug.layout_type
 
-        super().__init__(transport, app_name=app_name, host_name=host_name)
-        self.sync_responses()
+    def _get_client(self) -> client.TrezorClient:
+        if self.protocol_version is ProtocolVersion.V1:
+            cls = protocol_v1.TrezorClientV1
+        else:
+            cls = TrezorClientThp
+        client = cls(self.app, self.transport, model=None, mapping=None)
+        client._write = self._wrap_write(client._write)  # type: ignore [Missing keyword parameter;;"SessionV1" is not assignable to "ThpSession"]
+        client._read = self._wrap_read(client._read)  # type: ignore [Missing keyword parameter;;"SessionV1" is not assignable to "ThpSession"]
+        client._invalidate = self._wrap_invalidate(client._invalidate)
+        return client
 
-        # So that we can choose right screenshotting logic (T1 vs TT)
-        # and know the supported debug capabilities
-        if self.protocol_version is ProtocolVersion.V2:
-            assert isinstance(self.protocol, ProtocolV2Channel)
-            self.do_pairing(pairing_method=messages.ThpPairingMethod.SkipPairing)
-        self.debug.model = self.model
-        self.debug.version = self.version
+    def reset_instance(self) -> None:
+        try:
+            height = self.transport._opened
+            self.transport.close()
+        except Exception:
+            pass
+        self.transport.open()
+        self.transport._opened = height
 
+        # debug-specific initialization
+        self.ui: DebugUI = DebugUI(self.debug)
+        self.app.pin_callback = self.ui.get_pin
+        self.app.button_callback = self.ui.button_request
         self.reset_debug_features()
 
+        self.client = self._get_client()
+
+        self.pairing = self.client.pairing
+        if self.client.is_connected():
+            self.pairing.skip()
+        self.sync_responses()
+
+    def reset_debug_features(self) -> None:
+        """Prepare the debugging session for a new testcase.
+
+        Clears all debugging state that might have been modified by a testcase.
+        """
+        self.ui.clear()
+        self.in_with_statement = False
+        self.expected_responses: list[MessageFilter] | None = None
+        self.actual_responses: list[protobuf.MessageType] = []
+        self.filters: dict[
+            type[protobuf.MessageType],
+            t.Callable[[protobuf.MessageType], protobuf.MessageType],
+        ] = {}
+
+    # === required overrides for the base class ===
+
+    def _wrap_write(
+        self, write_fn: t.Callable[[S, protobuf.MessageType], None]
+    ) -> t.Callable[[S, protobuf.MessageType], None]:
+        def wrapped_write(session: S, msg: protobuf.MessageType) -> None:
+            __tracebackhide__ = True  # for pytest # pylint: disable=W0612
+            filtered_msg = self._filter_message(msg)
+            write_fn(session, filtered_msg)
+
+        return wrapped_write
+
+    def _wrap_read(
+        self, read_fn: t.Callable[[S, float | None], protobuf.MessageType]
+    ) -> t.Callable[[S, float | None], protobuf.MessageType]:
+        def wrapped_read(
+            session: S, timeout: float | None = None
+        ) -> protobuf.MessageType:
+            __tracebackhide__ = True  # for pytest # pylint: disable=W0612
+            inner_resp = read_fn(session, timeout)
+            resp = self._filter_message(inner_resp)
+            self.actual_responses.append(resp)
+            return resp
+
+        return wrapped_read
+
+    def _wrap_invalidate(
+        self, invalidate_fn: t.Callable[[], None]
+    ) -> t.Callable[[], None]:
+        def wrapped_invalidate() -> None:
+            __tracebackhide__ = True  # for pytest # pylint: disable=W0612
+            invalidate_fn()
+            self.reset_instance()
+
+        return wrapped_invalidate
+
     @property
-    def layout_type(self) -> LayoutType:
-        return self.debug.layout_type
+    def features(self) -> messages.Features:
+        return self.client.features
 
-    def get_new_client(self) -> TrezorClientDebugLink:
-        new_client = TrezorClientDebugLink(
-            self.transport,
-            self.debug.allow_interactions,
-            open_transport=False,
-            debug_transport=self.debug.transport,
-        )
-        new_client.debug.screenshot_recording_dir = self.debug.screenshot_recording_dir
-        new_client.debug.t1_screenshot_directory = self.debug.t1_screenshot_directory
-        new_client.debug.t1_screenshot_counter = self.debug.t1_screenshot_counter
-        new_client.debug.t1_take_screenshots = self.debug.t1_take_screenshots
-        new_client.debug.prev_gc_info = self.debug.prev_gc_info
-        return new_client
+    def refresh_features(self) -> messages.Features:
+        return self.client.refresh_features()
 
-    def close_transport(self) -> None:
-        self.transport.close()
-        self.debug.close()
+    @property
+    def channel(self) -> Channel:
+        if self.is_thp():
+            assert isinstance(self.client, TrezorClientThp)
+            return self.client.channel
+        raise AttributeError("Channel is not available for this protocol")
 
-    def lock(self) -> None:
-        s = self.get_seedless_session()
-        s.lock()
+    @channel.setter
+    def channel(self, channel: Channel) -> None:
+        if self.is_thp():
+            assert isinstance(self.client, TrezorClientThp)
+            self.client.channel = channel
+            return
+        raise AttributeError("Channel is not available for this protocol")
+
+    def is_protocol_v1(self) -> bool:
+        return self.protocol_version is ProtocolVersion.V1
+
+    def is_thp(self) -> bool:
+        return self.protocol_version is ProtocolVersion.THP
+
+    def _wrap_session(self, session: client.Session) -> DebugSession:
+        dbg_session = t.cast(DebugSession, session)
+        dbg_session.debug = self.debug
+        dbg_session.test_ctx = self
+        dbg_session.layout_type = self.layout_type
+        return dbg_session
 
     def get_session(
         self,
-        passphrase: str | object = "",
+        passphrase: (
+            str | client.PassphraseSetting | None
+        ) = client.PassphraseSetting.STANDARD_WALLET,
         derive_cardano: bool = False,
-    ) -> SessionDebugWrapper:
-        if isinstance(passphrase, str):
-            passphrase = Mnemonic.normalize_string(passphrase)
-        session = SessionDebugWrapper(
-            super().get_session(
-                passphrase,
-                derive_cardano,
-            )
+    ) -> DebugSession:
+        session = self.client.get_session(
+            passphrase=passphrase, derive_cardano=derive_cardano
         )
-        return session
+        return self._wrap_session(session)
 
-    # FIXME: can be deleted
-    def get_seedless_session(
-        self, *args: t.Any, **kwargs: t.Any
-    ) -> SessionDebugWrapper:
-        session = super().get_seedless_session(*args, **kwargs)
-        if not isinstance(session, SessionDebugWrapper):
-            session = SessionDebugWrapper(session)
-        return session
+    def get_seedless_session(self) -> DebugSession:
+        return self.get_session(passphrase=None)
+
+    def lock(self) -> None:
+        self.client.lock()
+
+    def ping(self, message: str) -> str:
+        return self.client.ping(message)
 
     def watch_layout(self, watch: bool = True) -> None:
         """Enable or disable watching layout changes.
@@ -1483,26 +1512,25 @@ class TrezorClientDebugLink(TrezorClient):
         """
         import secrets
 
-        if self.protocol_version is ProtocolVersion.V1:
-            assert isinstance(self.protocol, ProtocolV1Channel)
-            if self.model is models.T1B1:
-                # Start by canceling whatever is on screen. This will work to cancel T1 PIN
-                # prompt, which is in TINY mode and does not respond to `Ping`.
-                self.protocol.write(messages.Cancel())
+        if isinstance(self, protocol_v1.TrezorClientV1):
+            with self._get_any_session() as session:
+                if self.model is models.T1B1:
+                    # Start by canceling whatever is on screen. This will work to cancel T1 PIN
+                    # prompt, which is in TINY mode and does not respond to `Ping`.
+                    session.write(messages.Cancel())
 
-            message = "SYNC" + secrets.token_hex(8)
-            self.protocol.write(messages.Ping(message=message))
-            success = messages.Success(message=message)
-            while True:
-                try:
-                    if self.protocol.read() == success:
-                        return
-                except Exception:
-                    pass
+                message = "SYNC" + secrets.token_hex(8)
+                session.write(messages.Ping(message=message))
+                success = messages.Success(message=message)
+                while True:
+                    try:
+                        if session.read() == success:
+                            return
+                    except Exception:
+                        pass
 
-        if self.protocol_version is ProtocolVersion.V2:
-            assert isinstance(self.protocol, ProtocolV2Channel)
-            self.protocol.sync_responses()
+        elif isinstance(self, TrezorClientThp):
+            self.channel.sync_responses()
 
     def mnemonic_callback(self, _: t.Any) -> str:
         word, pos = self.debug.read_recovery_word()
@@ -1513,10 +1541,7 @@ class TrezorClientDebugLink(TrezorClient):
 
         raise RuntimeError("Unexpected call")
 
-    def set_expected_responses(
-        self,
-        expected: list["ExpectedMessage" | t.Tuple[bool, "ExpectedMessage"]],
-    ) -> None:
+    def set_expected_responses(self, expected: ExpectedResponses) -> None:
         """Set a sequence of expected responses to session calls.
 
         Within a given with-block, the list of received responses from device must
@@ -1571,7 +1596,10 @@ class TrezorClientDebugLink(TrezorClient):
         if not self.in_with_statement:
             raise RuntimeError("Must be called inside 'with' statement")
 
-        self.filters[message_type] = callback
+        if callback is None:
+            del self.filters[message_type]
+        else:
+            self.filters[message_type] = callback
 
     def _filter_message(self, msg: protobuf.MessageType) -> protobuf.MessageType:
         message_type = msg.__class__
@@ -1581,21 +1609,7 @@ class TrezorClientDebugLink(TrezorClient):
         else:
             return msg
 
-    def reset_debug_features(self) -> None:
-        """Prepare the debugging session for a new testcase.
-
-        Clears all debugging state that might have been modified by a testcase.
-        """
-        self.ui.clear()
-        self.in_with_statement = False
-        self.expected_responses: list[MessageFilter] | None = None
-        self.actual_responses: list[protobuf.MessageType] | None = None
-        self.filters: t.Dict[
-            t.Type[protobuf.MessageType],
-            t.Callable[[protobuf.MessageType], protobuf.MessageType] | None,
-        ] = {}
-
-    def __enter__(self) -> "TrezorClientDebugLink":
+    def __enter__(self) -> "TrezorTestContext":
         # For usage in with/expected_responses
         if self.in_with_statement:
             raise RuntimeError("Do not nest!")
@@ -1625,21 +1639,18 @@ class TrezorClientDebugLink(TrezorClient):
             # Propagate the exception through the input flow, so that we see in
             # traceback where it is stuck.
             input_flow.throw(value)
-        self.actual_responses = None
+        self.actual_responses = []
 
     @classmethod
     def _verify_responses(
         cls,
         expected: list[MessageFilter] | None,
-        actual: list[protobuf.MessageType] | None,
+        actual: list[protobuf.MessageType],
     ) -> None:
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
 
-        if expected is None and actual is None:
+        if expected is None:
             return
-
-        assert expected is not None
-        assert actual is not None
 
         for i, (exp, act) in enumerate(zip_longest(expected, actual)):
             if exp is None:
@@ -1720,16 +1731,27 @@ class TrezorClientDebugLink(TrezorClient):
 
         next(input_flow)  # start the generator
 
-    def notify_read(self, msg: protobuf.MessageType) -> None:
-        try:
-            if self.actual_responses is not None:
-                self.actual_responses.append(msg)
-        except Exception as e:
-            print(e)
+    def wipe_device(self, reseed: bool = True) -> None:
+        """Wipe device storage.
+
+        Unless disabled via `reseed=False`, reseed the device before wiping,
+        so that we get consistent storage contents (specifically device id)
+        after the wipe.
+        """
+        if reseed:
+            self.debug.reseed(0)
+        if self.model is models.T1B1:
+            self.client._get_any_session().call(
+                messages.WipeDevice(),
+                expect=messages.Success,
+            )
+        else:
+            self.debug._call(messages.WipeDevice(), expect=messages.Success)
+        self.reset_instance()
 
 
 def load_device(
-    session: "Session",
+    session: client.Session,
     mnemonic: str | t.Iterable[str],
     pin: str | None,
     passphrase_protection: bool,
@@ -1769,7 +1791,7 @@ def load_device(
 load_device_by_mnemonic = load_device
 
 
-def prodtest_t1(session: "Session") -> None:
+def prodtest_t1(session: client.Session) -> None:
     if session.features.bootloader_mode is not True:
         raise RuntimeError("Device must be in bootloader mode")
 
@@ -1782,7 +1804,7 @@ def prodtest_t1(session: "Session") -> None:
 
 
 def record_screen(
-    debug_client: "TrezorClientDebugLink",
+    debug_client: "TrezorTestContext",
     directory: str | None,
     report_func: t.Callable[[str], None] | None = None,
 ) -> None:
@@ -1807,7 +1829,8 @@ def record_screen(
         raise RuntimeError("Recording is only supported on emulator.")
 
     if directory is None:
-        debug_client.debug.stop_recording()
+        with debug_client.debug.transport:
+            debug_client.debug.stop_recording()
         if report_func is not None:
             report_func("Recording stopped.")
     else:
@@ -1819,17 +1842,18 @@ def record_screen(
             abs_directory.mkdir(parents=True, exist_ok=True)
         # Getting a new screenshot dir for the current session
         current_session_dir = get_session_screenshot_dir(abs_directory)
-        debug_client.debug.start_recording(str(current_session_dir))
+        with debug_client.debug.transport:
+            debug_client.debug.start_recording(str(current_session_dir))
         if report_func is not None:
             report_func(f"Recording started into {current_session_dir}.")
 
 
-def _is_emulator(debug_client: "TrezorClientDebugLink") -> bool:
+def _is_emulator(debug_client: "TrezorTestContext") -> bool:
     """Check if we are connected to emulator, in contrast to hardware device."""
     return debug_client.features.fw_vendor == "EMULATOR"
 
 
-def optiga_set_sec_max(session: "Session") -> None:
+def optiga_set_sec_max(session: client.Session) -> None:
     session.call(messages.DebugLinkOptigaSetSecMax(), expect=messages.Success)
 
 

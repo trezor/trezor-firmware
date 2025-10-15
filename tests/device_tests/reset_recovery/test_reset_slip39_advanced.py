@@ -18,7 +18,7 @@ import pytest
 from shamir_mnemonic import shamir
 
 from trezorlib import device
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import BackupAvailability, BackupType
 
@@ -35,7 +35,7 @@ def test_reset_device_slip39_advanced(client: Client):
     member_threshold = 3
 
     session = client.get_seedless_session()
-    with session.client as client:
+    with session.test_ctx as client:
         IF = InputFlowSlip39AdvancedResetRecovery(client, False)
         client.set_input_flow(IF.get())
         # No PIN, no passphrase, don't display random

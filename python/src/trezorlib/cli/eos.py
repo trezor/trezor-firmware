@@ -24,7 +24,7 @@ from . import with_session
 
 if TYPE_CHECKING:
     from .. import messages
-    from ..transport.session import Session
+    from ..client import Session
 
 PATH_HELP = "BIP-32 path, e.g. m/44h/194h/0h/0/0"
 

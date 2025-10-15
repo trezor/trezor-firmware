@@ -19,7 +19,7 @@ import base64
 import pytest
 
 from trezorlib import btc
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 
 from ...input_flows import InputFlowSignVerifyMessageLong
 
@@ -40,8 +40,8 @@ def test_message_long_legacy(session: Session):
 
 @pytest.mark.models("core")
 def test_message_long_core(session: Session):
-    with session.client as client:
-        IF = InputFlowSignVerifyMessageLong(session.client, verify=True)
+    with session.test_ctx as client:
+        IF = InputFlowSignVerifyMessageLong(session, verify=True)
         client.set_input_flow(IF.get())
         ret = btc.verify_message(
             session,

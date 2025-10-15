@@ -16,12 +16,15 @@
 
 from __future__ import annotations
 
+import logging
 import struct
+import time
+import typing as t
 
-from ...exceptions import ThpError
-from .. import Transport
-from ..thp import checksum
-from .message_header import MessageHeader
+from .. import client, exceptions
+from ..transport import Timeout, Transport
+from . import control_byte
+from .message import FORMAT_STR_CONT, FORMAT_STR_INIT, ChecksumError, Message
 
 INIT_HEADER_LENGTH = 5
 CONT_HEADER_LENGTH = 3
@@ -30,43 +33,51 @@ MESSAGE_TYPE_LENGTH = 2
 
 CONTINUATION_PACKET = 0x80
 
+DEFAULT_MAX_RETRIES = 10
 
-def write_payload_to_wire_and_add_checksum(
-    transport: Transport, header: MessageHeader, payload: bytes
-) -> None:
-    chksum = checksum.compute(header.to_bytes_init() + payload)
-    data = payload + chksum
-    if len(data) > MAX_PAYLOAD_LEN:
-        raise RuntimeError("Message too large")
-    write_payload_to_wire(transport, header, data)
+LOG = logging.getLogger(__name__)
 
 
-def write_payload_to_wire(
-    transport: Transport, header: MessageHeader, payload: bytes
-) -> None:
+class FirstPacket(t.NamedTuple):
+    ctrl_byte: int
+    cid: int
+    data_length: int
+    data: bytes
+
+
+def write_payload_to_wire(transport: Transport, message: Message) -> None:
     if transport.CHUNK_SIZE is None:
-        transport.write_chunk(payload)
+        transport.write_chunk(message.to_bytes())
         return
 
-    chunk = (
-        header.to_bytes_init() + payload[: transport.CHUNK_SIZE - INIT_HEADER_LENGTH]
-    )
-    chunk = chunk.ljust(transport.CHUNK_SIZE, b"\x00")
-    transport.write_chunk(chunk)
-
-    buffer = payload[transport.CHUNK_SIZE - INIT_HEADER_LENGTH :]
-    while buffer:
-        chunk = (
-            header.to_bytes_cont() + buffer[: transport.CHUNK_SIZE - CONT_HEADER_LENGTH]
-        )
-        chunk = chunk.ljust(transport.CHUNK_SIZE, b"\x00")
+    for chunk in message.chunks(transport.CHUNK_SIZE):
         transport.write_chunk(chunk)
-        buffer = buffer[transport.CHUNK_SIZE - CONT_HEADER_LENGTH :]
 
 
 def read(
-    transport: Transport, timeout: float | None = None
-) -> tuple[MessageHeader, bytes, bytes]:
+    transport: Transport,
+    timeout: float | None = None,
+    max_retries: int = DEFAULT_MAX_RETRIES,
+) -> Message:
+    if timeout is None:
+        timeout = client._DEFAULT_READ_TIMEOUT
+    start = time.monotonic()
+    for _ in range(1 + max_retries):
+        try:
+            return read_and_assemble(transport, timeout)
+        except ChecksumError as e:
+            LOG.warning(
+                "Received message with invalid checksum: %s (expected %s, actual %s)",
+                e.message,
+                e.message.checksum().hex(),
+                e.received_checksum.hex(),
+            )
+        if timeout is not None and time.monotonic() - start > timeout:
+            raise Timeout("Timeout while reading message")
+    raise Timeout("Max retries exceeded waiting for a message with a valid checksum")
+
+
+def read_and_assemble(transport: Transport, timeout: float | None = None) -> Message:
     """
     Reads from the given wire transport.
 
@@ -79,43 +90,38 @@ def read(
     buffer = bytearray()
 
     # Read header with first part of message data
-    header, first_chunk = read_first(transport, timeout)
-    buffer.extend(first_chunk)
+    head = read_first(transport, timeout)
+    buffer.extend(head.data)
 
     # Read the rest of the message
-    while len(buffer) < header.data_length:
-        buffer.extend(read_next(transport, header.cid, timeout))
+    while len(buffer) < head.data_length:
+        buffer.extend(read_next(transport, head.cid, timeout))
 
-    data_len = header.data_length - checksum.CHECKSUM_LENGTH
-    msg_data = buffer[:data_len]
-    chksum = buffer[data_len : data_len + checksum.CHECKSUM_LENGTH]
-
-    return (header, bytes(msg_data), bytes(chksum))
+    msg = Message.parse(head.ctrl_byte, head.cid, bytes(buffer[: head.data_length]))
+    return msg
 
 
-def read_first(
-    transport: Transport, timeout: float | None = None
-) -> tuple[MessageHeader, bytes]:
-    chunk = transport.read_chunk(timeout)
+def read_first(transport: Transport, timeout: float | None = None) -> FirstPacket:
+    chunk = transport.read_chunk(timeout=timeout)
     try:
         ctrl_byte, cid, data_length = struct.unpack(
-            MessageHeader.format_str_init, chunk[:INIT_HEADER_LENGTH]
+            FORMAT_STR_INIT, chunk[:INIT_HEADER_LENGTH]
         )
-    except Exception:
-        raise RuntimeError("Cannot parse header")
+    except struct.error:
+        raise exceptions.ProtocolError("Invalid header")
 
     data = chunk[INIT_HEADER_LENGTH:]
-    return MessageHeader(ctrl_byte, cid, data_length), data
+    return FirstPacket(ctrl_byte, cid, data_length, data)
 
 
 def read_next(transport: Transport, cid: int, timeout: float | None = None) -> bytes:
-    chunk = transport.read_chunk(timeout)
-    ctrl_byte, read_cid = struct.unpack(
-        MessageHeader.format_str_cont, chunk[:CONT_HEADER_LENGTH]
-    )
-    if ctrl_byte != CONTINUATION_PACKET:
-        raise ThpError("Continuation packet with incorrect control byte")
+    chunk = transport.read_chunk(timeout=timeout)
+    ctrl_byte, read_cid = struct.unpack(FORMAT_STR_CONT, chunk[:CONT_HEADER_LENGTH])
     if read_cid != cid:
-        raise ThpError("Continuation packet for different channel")
-
+        LOG.warning("Ignoring packet for channel %s (wanted %s)", read_cid, cid)
+        return b""
+    if ctrl_byte != CONTINUATION_PACKET:
+        raise exceptions.ProtocolError(
+            f"Expected continuation, got: {control_byte.to_string(ctrl_byte)}"
+        )
     return chunk[CONT_HEADER_LENGTH:]

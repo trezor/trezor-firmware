@@ -87,7 +87,7 @@ class HidTransport(Transport):
                 return debug
         raise TransportException("Debug HID device not found")
 
-    def open(self) -> None:
+    def _open(self) -> None:
         self.handle = hid.device()
         try:
             self.handle.open_path(self.device_path)
@@ -113,7 +113,7 @@ class HidTransport(Transport):
         if self.hid_version is None:
             self.hid_version = self.probe_hid_version()
 
-    def close(self) -> None:
+    def _close(self) -> None:
         if self.handle is not None:
             # reload serial, because device.wipe() can reset it
             self.device_serial_number = self.handle.get_serial_number_string()
@@ -156,7 +156,7 @@ class HidTransport(Transport):
             return 1
         raise TransportException("Unknown HID version")
 
-    def ping(self) -> bool:
+    def is_ready(self) -> bool:
         return self.handle is not None
 
 

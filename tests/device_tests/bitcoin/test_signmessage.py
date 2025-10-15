@@ -20,7 +20,7 @@ import pytest
 
 from trezorlib import btc, messages
 from trezorlib.debuglink import LayoutType
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.debuglink import message_filters
 from trezorlib.exceptions import Cancelled
 from trezorlib.tools import parse_path
@@ -327,8 +327,8 @@ def test_signmessage_long(
     message: str,
     signature: str,
 ):
-    with session.client as client:
-        IF = InputFlowSignVerifyMessageLong(session.client)
+    with session.test_ctx as client:
+        IF = InputFlowSignVerifyMessageLong(session)
         client.set_input_flow(IF.get())
         sig = btc.sign_message(
             session,
@@ -356,8 +356,8 @@ def test_signmessage_info(
     message: str,
     signature: str,
 ):
-    with session.client as client, pytest.raises(Cancelled):
-        IF = InputFlowSignMessageInfo(session.client)
+    with session.test_ctx as client, pytest.raises(Cancelled):
+        IF = InputFlowSignMessageInfo(session)
         client.set_input_flow(IF.get())
         sig = btc.sign_message(
             session,
@@ -405,12 +405,12 @@ MESSAGE_LENGTHS_ECKHART = (
 
 def _pagination_test(session: Session, message: str, is_long: bool):
 
-    with session.client as client:
+    with session.test_ctx as client:
         IF = (
             InputFlowSignVerifyMessageLong
             if is_long
             else InputFlowSignMessagePagination
-        )(session.client)
+        )(session)
         client.set_input_flow(IF.get())
         btc.sign_message(
             session,
@@ -422,7 +422,7 @@ def _pagination_test(session: Session, message: str, is_long: bool):
     message_read = IF.message_read.replace(" ", "").replace("...", "")
     signed_message = message.replace("\n", "").replace(" ", "")
 
-    if session.client.layout_type in (
+    if session.layout_type in (
         LayoutType.Bolt,
         LayoutType.Delizia,
         LayoutType.Eckhart,
@@ -451,7 +451,7 @@ def test_signmessage_pagination_trailing_newline(session: Session):
     message = "THIS\nMUST\nNOT\nBE\nPAGINATED\n"
     # The trailing newline must not cause a new paginated screen to appear.
     # The UI must be a single dialog without pagination.
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 # expect address confirmation
@@ -472,7 +472,7 @@ def test_signmessage_pagination_trailing_newline(session: Session):
 def test_signmessage_path_warning(session: Session):
     message = "This is an example of a signed message."
 
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses(
             [
                 # expect a path warning
@@ -485,7 +485,7 @@ def test_signmessage_path_warning(session: Session):
             ]
         )
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(session.client)
+            IF = InputFlowConfirmAllWarnings(session)
             client.set_input_flow(IF.get())
         btc.sign_message(
             session,

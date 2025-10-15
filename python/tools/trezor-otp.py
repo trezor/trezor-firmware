@@ -23,33 +23,29 @@ import sys
 
 import pyotp
 
-from trezorlib.client import TrezorClient
+from trezorlib.client import Session, get_default_client, get_default_session
 from trezorlib.misc import decrypt_keyvalue, encrypt_keyvalue
 from trezorlib.tools import parse_path
-from trezorlib.transport import get_transport
 
 BIP32_PATH = parse_path("10016h/0")
 
 
+def get_session() -> Session:
+    client = get_default_client("trezor-otp")
+    return get_default_session(client)
+
+
 def encrypt(type: str, domain: str, secret: str) -> str:
-    transport = get_transport()
-    transport.open()
-    client = TrezorClient(transport)
-    session = client.get_seedless_session()
+    session = get_session()
     dom = type.upper() + ": " + domain
     enc = encrypt_keyvalue(session, BIP32_PATH, dom, secret.encode(), False, True)
-    transport.close()
     return enc.hex()
 
 
 def decrypt(type: str, domain: str, secret: bytes) -> bytes:
-    transport = get_transport()
-    transport.open()
-    client = TrezorClient(transport)
-    session = client.get_seedless_session()
+    session = get_session()
     dom = type.upper() + ": " + domain
     dec = decrypt_keyvalue(session, BIP32_PATH, dom, secret, False, True)
-    transport.close()
     return dec
 
 

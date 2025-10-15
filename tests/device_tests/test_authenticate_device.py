@@ -5,7 +5,7 @@ from cryptography.hazmat.primitives.asymmetric import ec, ed25519
 from cryptography.x509 import extensions as ext
 
 from trezorlib import device, models
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 
 from ..common import compact_size
 
