@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import device
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import Cancelled
 
 pytestmark = [
@@ -35,6 +35,6 @@ def test_cancel(session: Session):
         yield
         session.cancel()
 
-    with pytest.raises(Cancelled), session.client as client:
+    with pytest.raises(Cancelled), session.test_ctx as client:
         client.set_input_flow(input_flow)
         device.get_serial_number(session)

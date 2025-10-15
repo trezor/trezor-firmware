@@ -2,7 +2,7 @@ import pytest
 from ecdsa import NIST256p, SigningKey, VerifyingKey
 
 from trezorlib import evolu
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import TrezorTestContext as Client
 from trezorlib.exceptions import TrezorFailure
 
 from ...common import compact_size

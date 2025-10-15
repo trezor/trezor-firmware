@@ -17,11 +17,13 @@
 from typing import TYPE_CHECKING, Any, List, Optional
 
 from . import messages
+from .tools import workflow
 
 if TYPE_CHECKING:
-    from .transport.session import Session
+    from .client import Session
 
 
+@workflow(capability=messages.Capability.Solana)
 def get_public_key(
     session: "Session",
     address_n: List[int],
@@ -37,6 +39,7 @@ def get_address(*args: Any, **kwargs: Any) -> str:
     return get_authenticated_address(*args, **kwargs).address
 
 
+@workflow(capability=messages.Capability.Solana)
 def get_authenticated_address(
     session: "Session",
     address_n: List[int],
@@ -53,6 +56,7 @@ def get_authenticated_address(
     )
 
 
+@workflow(capability=messages.Capability.Solana)
 def sign_tx(
     session: "Session",
     address_n: List[int],

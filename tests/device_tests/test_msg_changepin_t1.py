@@ -18,7 +18,7 @@ import pytest
 
 from trezorlib import device, messages
 from trezorlib.client import MAX_PIN_LENGTH
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 
 from ..common import get_test_address
@@ -33,7 +33,7 @@ pytestmark = pytest.mark.models("legacy")
 
 def _check_pin(session: Session, pin):
     session.lock()
-    with session.client as client:
+    with session.test_ctx as client:
         client.use_pin_sequence([pin])
         client.set_expected_responses([messages.PinMatrixRequest, messages.Address])
         get_test_address(session)
@@ -41,7 +41,7 @@ def _check_pin(session: Session, pin):
 
 def _check_no_pin(session: Session):
     session.lock()
-    with session.client as client:
+    with session.test_ctx as client:
         client.set_expected_responses([messages.Address])
         get_test_address(session)
 
@@ -53,7 +53,7 @@ def test_set_pin(session: Session):
     _check_no_pin(session)
 
     # Let's set new PIN
-    with session.client as client:
+    with session.test_ctx as client:
         client.use_pin_sequence([PIN_MAX, PIN_MAX])
         client.set_expected_responses(
             [
@@ -78,7 +78,7 @@ def test_change_pin(session: Session):
     _check_pin(session, PIN4)
 
     # Let's change PIN
-    with session.client as client:
+    with session.test_ctx as client:
         client.use_pin_sequence([PIN4, PIN_MAX, PIN_MAX])
         client.set_expected_responses(
             [
@@ -104,7 +104,7 @@ def test_remove_pin(session: Session):
     _check_pin(session, PIN4)
 
     # Let's remove PIN
-    with session.client as client:
+    with session.test_ctx as client:
         client.use_pin_sequence([PIN4])
         client.set_expected_responses(
             [
@@ -126,7 +126,7 @@ def test_set_mismatch(session: Session):
     _check_no_pin(session)
 
     # Let's set new PIN
-    with session.client as client, pytest.raises(TrezorFailure, match="PIN mismatch"):
+    with session.test_ctx as client, pytest.raises(TrezorFailure, match="PIN mismatch"):
         # use different PINs for first and second attempt. This will fail.
         client.use_pin_sequence([PIN4, PIN_MAX])
         client.set_expected_responses(
@@ -150,7 +150,7 @@ def test_change_mismatch(session: Session):
     assert session.features.pin_protection is True
 
     # Let's set new PIN
-    with session.client as client, pytest.raises(TrezorFailure, match="PIN mismatch"):
+    with session.test_ctx as client, pytest.raises(TrezorFailure, match="PIN mismatch"):
         client.use_pin_sequence([PIN4, PIN6, PIN6 + "3"])
         client.set_expected_responses(
             [
@@ -178,7 +178,7 @@ def test_set_invalid(session: Session, invalid_pin):
     assert isinstance(ret, messages.ButtonRequest)
 
     # Press button
-    session.client.debug.press_yes()
+    session.debug.press_yes()
     ret = session.call_raw(messages.ButtonAck())
 
     # Send a PIN containing an invalid digit
@@ -189,7 +189,7 @@ def test_set_invalid(session: Session, invalid_pin):
     assert isinstance(ret, messages.Failure)
 
     # Check that there's still no PIN protection now
-    session = session.client.get_session()
+    session.refresh_features()
     assert session.features.pin_protection is False
     _check_no_pin(session)
 

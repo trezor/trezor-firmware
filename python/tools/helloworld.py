@@ -17,25 +17,23 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from trezorlib import btc
-from trezorlib.client import get_default_client
+from trezorlib.client import get_default_client, get_default_session
 from trezorlib.tools import parse_path
 
 
 def main() -> None:
-    # Use first connected device
-    client = get_default_client()
-    session = client.get_session()
+    # Open a session with the default passphrase on the first connected device
+    client = get_default_client("helloworld")
+    session = get_default_session(client)
 
-    # Print out Trezor's features and settings
-    print(session.features)
+    with session:
+        # Print out Trezor's features and settings
+        print(session.features)
 
-    # Get the first address of first BIP44 account
-    bip32_path = parse_path("44h/0h/0h/0/0")
-    address = btc.get_address(session, "Bitcoin", bip32_path, True)
-    print("Bitcoin address:", address)
-
-    # Release underlying transport (USB/BLE/UDP)
-    client.transport.close()
+        # Get the first address of first BIP44 account
+        bip32_path = parse_path("44h/0h/0h/0/0")
+        address = btc.get_address(session, "Bitcoin", bip32_path, True)
+        print("Bitcoin address:", address)
 
 
 if __name__ == "__main__":

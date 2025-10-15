@@ -1,7 +1,7 @@
 import pytest
 
 from trezorlib import cardano, messages, tools
-from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugSession as Session
 from trezorlib.exceptions import TrezorFailure
 
 from ...common import parametrize_using_common_fixtures
@@ -29,7 +29,7 @@ def call_sign_message(
     session: Session,
     parameters,
 ) -> messages.CardanoMessageSignature:
-    with session.client:
+    with session.test_ctx:
         return cardano.sign_message(
             session=session,
             payload=bytes.fromhex(parameters["payload"]),

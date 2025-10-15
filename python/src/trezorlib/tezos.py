@@ -17,16 +17,18 @@
 from typing import TYPE_CHECKING, Any
 
 from . import messages
+from .tools import workflow
 
 if TYPE_CHECKING:
+    from .client import Session
     from .tools import Address
-    from .transport.session import Session
 
 
 def get_address(*args: Any, **kwargs: Any) -> str:
     return get_authenticated_address(*args, **kwargs).address
 
 
+@workflow(capability=messages.Capability.Tezos)
 def get_authenticated_address(
     session: "Session",
     address_n: "Address",
@@ -41,6 +43,7 @@ def get_authenticated_address(
     )
 
 
+@workflow(capability=messages.Capability.Tezos)
 def get_public_key(
     session: "Session",
     address_n: "Address",
@@ -55,6 +58,7 @@ def get_public_key(
     ).public_key
 
 
+@workflow(capability=messages.Capability.Tezos)
 def sign_tx(
     session: "Session",
     address_n: "Address",

@@ -15,8 +15,8 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from trezorlib import device, messages, models
-from trezorlib.debuglink import SessionDebugWrapper as Session
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import DebugSession as Session
+from trezorlib.debuglink import TrezorTestContext as Client
 
 
 def test_capabilities(session: Session):
@@ -34,21 +34,15 @@ def test_ping(session: Session):
 
 
 def test_device_id_same(client: Client):
-    session1 = client.get_session()
-    session2 = client.get_session()
-    id1 = session1.features.device_id
-    session2.refresh_features()
-    id2 = session2.features.device_id
-    client = client.get_new_client()
-    session3 = client.get_session()
-    id3 = session3.features.device_id
+    id1 = client.features.device_id
+    client.refresh_features()
+    id2 = client.features.device_id
 
     # ID must be at least 12 characters
     assert len(id1) >= 12
 
     # Every result of UUID must be the same
     assert id1 == id2
-    assert id2 == id3
 
 
 def test_device_id_different(client: Client):
@@ -58,17 +52,9 @@ def test_device_id_different(client: Client):
     #
     # To avoid the problem, this test and similar that depend on device id
     # must explicitly wipe at start.
-    session = client.get_seedless_session()
-    device.wipe(session)
-
-    client = client.get_new_client()
-    session = client.get_seedless_session()
+    client.wipe_device(reseed=True)
     id1 = client.features.device_id
-    device.wipe(session)
-
-    client = client.get_new_client()
-    session = client.get_seedless_session()
-
+    client.wipe_device(reseed=False)
     id2 = client.features.device_id
 
     # Device ID must be fresh after every reset
