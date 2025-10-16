@@ -45,7 +45,6 @@ async def require_confirm_memo(memo_type: StellarMemoType, memo_text: str) -> No
         return await layouts.show_warning(
             br_name="confirm_memo",
             content=TR.stellar__exchanges_require_memo,
-            br_code=ButtonRequestType.ConfirmOutput,
         )
 
     await layouts.confirm_text(
