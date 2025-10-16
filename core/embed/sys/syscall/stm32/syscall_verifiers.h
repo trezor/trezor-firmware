@@ -54,7 +54,23 @@ ssize_t dbg_console_read__verified(void *buffer, size_t buffer_size);
 
 void dbg_console_write__verified(const void *data, size_t data_size);
 
-#endif
+#endif  // USE_DBG_CONSOLE
+
+// ---------------------------------------------------------------------
+
+#ifdef USE_IPC
+
+#include <sys/ipc.h>
+
+bool ipc_register__verified(systask_id_t origin, void *buffer, size_t size);
+
+bool ipc_try_receive__verified(ipc_message_t *msg);
+
+void ipc_message_free__verified(ipc_message_t *msg);
+
+bool ipc_send__verified(const ipc_message_t *msg);
+
+#endif  // USE_IPC
 
 // ---------------------------------------------------------------------
 #include <sys/bootutils.h>

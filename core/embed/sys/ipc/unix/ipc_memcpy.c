@@ -17,16 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
+#include <trezor_rtl.h>
 
-#include <sys/dbg_console.h>
+#include "../ipc_memcpy.h"
 
-void dbg_console_init(void) {}
-
-ssize_t dbg_console_read(void *buffer, size_t buffer_size) { return 0; }
-
-void dbg_console_write(const void *data, size_t data_size) {
-  int result = fwrite(data, 1, data_size, stdout);
-  fflush(stdout);
-  (void)result;
+void ipc_memcpy(void *dst, const void *src, size_t size) {
+  memcpy(dst, src, size);
 }
