@@ -74,6 +74,16 @@ def get_seed(
 
 if not utils.BITCOIN_ONLY:
 
+    def _get_secret_bits() -> bytes | None:
+        secret_bits = storage_device.get_mnemonic_secret_bits()
+        if secret_bits is None:
+            secret_bits = storage_device.update_mnemonic_bits()
+        return secret_bits
+
+    def _get_mnemonic_bits_len() -> int | None:
+        mnemonic = storage_device.get_mnemonic_secret()
+        return len(mnemonic.decode().split(" ")) * 11 if mnemonic else None
+
     def derive_cardano_icarus(
         passphrase: str = "",
         trezor_derivation: bool = True,
@@ -82,9 +92,12 @@ if not utils.BITCOIN_ONLY:
         if not is_bip39():
             raise ValueError  # should not be called for SLIP-39
 
-        mnemonic_secret = get_secret()
-        if mnemonic_secret is None:
-            raise ValueError("Mnemonic not set")
+        mnemonic_secret_bits = _get_secret_bits()
+        if mnemonic_secret_bits is None:
+            raise RuntimeError("Failed to get mnemonic bits")
+        mnemonic_bits_len = _get_mnemonic_bits_len()
+        if mnemonic_bits_len is None:
+            raise RuntimeError("Failed to get mnemonic bits length")
 
         render_func = None
         if progress_bar and not utils.DISABLE_ANIMATION:
@@ -94,7 +107,11 @@ if not utils.BITCOIN_ONLY:
         from trezor.crypto import cardano
 
         seed = cardano.derive_icarus(
-            mnemonic_secret.decode(), passphrase, trezor_derivation, render_func
+            mnemonic_secret_bits,
+            mnemonic_bits_len,
+            passphrase,
+            trezor_derivation,
+            render_func,
         )
         _finish_progress()
         return seed

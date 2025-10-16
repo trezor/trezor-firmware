@@ -2,7 +2,7 @@
 from common import *  # isort:skip
 
 from trezor import wire
-from trezor.crypto import cardano, slip39
+from trezor.crypto import bip39, cardano, slip39
 from trezor.enums import CardanoAddressType
 from trezor.messages import CardanoAddressParametersType, CardanoBlockchainPointerType
 
@@ -23,8 +23,9 @@ if not utils.BITCOIN_ONLY:
 class TestCardanoAddress(unittest.TestCase):
     def setUp(self):
         mnemonic = "all all all all all all all all all all all all"
+        mnemonic_bits = bip39.mnemonic_to_bits(mnemonic)
         passphrase = ""
-        secret = cardano.derive_icarus(mnemonic, passphrase, False)
+        secret = cardano.derive_icarus(mnemonic_bits, passphrase, False)
         node = cardano.from_secret(secret)
         self.keychain = Keychain(node)
 

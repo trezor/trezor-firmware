@@ -61,9 +61,11 @@ async def load_device(msg: LoadDevice) -> Success:
         storage_device.set_slip39_iteration_exponent(iteration_exponent)
 
     storage_device.store_mnemonic_secret(
-        secret,
+        secret=secret,
+        backup_type=backup_type,
         needs_backup=msg.needs_backup is True,
         no_backup=msg.no_backup is True,
+        allow_derivation_fail=msg.skip_checksum is True,
     )
     storage_device.set_backup_type(backup_type)
     storage_device.set_passphrase_enabled(bool(msg.passphrase_protection))
