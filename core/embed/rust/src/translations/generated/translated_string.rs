@@ -1477,7 +1477,7 @@ pub enum TranslatedString {
     cardano__sign_message_path_template = 1087,  // "Sign message with {0}"
     ble__manage_paired = 1088,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Manage paired devices"}
     ble__pair_new = 1089,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Pair new device"}
-    ble__pair_title = 1090,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Pair & connect"}
+    ble__pair_title = 1090,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Pair & Connect"}
     ble__version = 1091,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Bluetooth version"}
     homescreen__firmware_type = 1092,  // "Firmware type"
     homescreen__firmware_version = 1093,  // "Firmware version"
@@ -4605,7 +4605,7 @@ impl TranslatedString {
             #[cfg(feature = "layout_delizia")]
             (Self::ble__pair_title, ""),
             #[cfg(feature = "layout_eckhart")]
-            (Self::ble__pair_title, "Pair & connect"),
+            (Self::ble__pair_title, "Pair & Connect"),
             #[cfg(feature = "layout_bolt")]
             (Self::ble__version, ""),
             #[cfg(feature = "layout_caesar")]
