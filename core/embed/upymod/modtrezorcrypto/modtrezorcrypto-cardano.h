@@ -33,16 +33,16 @@
 /// from trezorcrypto.bip32 import HDNode
 
 /// def derive_icarus(
-///     mnemonic: bytes,
+///     binary_mnemonic: bytes,
 ///     passphrase: str,
 ///     trezor_derivation: bool,
 ///     callback: Callable[[int, int], None] | None = None,
 /// ) -> bytes:
 ///     """
 ///     Derives a Cardano master secret from a mnemonic representation in bits
-///     and a passphrase using the Icarus derivation scheme. If
-///     `trezor_derivation` is True, the Icarus-Trezor variant is used (see
-///     CIP-3).
+///     (including checksum) and a passphrase using the Icarus derivation
+///     scheme. If `trezor_derivation` is True, the Icarus-Trezor variant is
+///     used (see CIP-3).
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_cardano_derive_icarus(size_t n_args,
                                                        const mp_obj_t *args) {
