@@ -47,6 +47,13 @@ def _is_coin_swap(payment_request: PaymentRequest) -> bool:
     return has_coin_purchase and has_refund
 
 
+def _is_sell(payment_request: PaymentRequest) -> bool:
+    has_text = any(m.text_memo for m in payment_request.memos)
+    has_refund = any(m.refund_memo for m in payment_request.memos)
+
+    return has_text and has_refund
+
+
 class PaymentRequestVerifier:
     PUBLIC_KEY = b"\x02\xaa\x9b\x94\xb3\x06\xf1\xb5\x0c\x19\xb4\xb9\x53\xb6\xac\xdf\x2d\x3a\xc0\x9e\xca\x5e\x53\x44\xa2\xbb\x2f\xbf\x19\x49\x5d\x55\x0c"
 
@@ -56,8 +63,8 @@ class PaymentRequestVerifier:
         if not payment_request.memos:
             raise DataError("Payment request must contain at least one memo.")
 
-        if not _is_coin_swap(payment_request):
-            raise DataError("Only COIN SWAP payment requests are supported.")
+        if not _is_sell(payment_request) and not _is_coin_swap(payment_request):
+            raise DataError("Supported payment requests are SELL and SWAP.")
 
     def get_expected_nonce(self) -> bytes | None:
         from storage.cache_common import APP_COMMON_NONCE
