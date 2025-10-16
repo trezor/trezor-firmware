@@ -45,7 +45,7 @@ if utils.USE_THP:
 _DISABLE_HAPTIC_FEEDBACK   = const(0x20)  # bool (0x01 or empty)
 _DISABLE_RGB_LED           = const(0x21)  # bool (0x01 or empty)
 if utils.USE_THP:
-    _THP_PAIRED_CACHE    = const(0x22)  # bytes
+    THP_PAIRED_NAMES       = const(0x22)  # bytes
 if utils.USE_POWER_MANAGER:
     _AUTOLOCK_DELAY_BATT_MS    = const(0x23)  # int
 _DISABLE_BLUETOOTH        = const(0x24)  # bool (0x01 or empty)
@@ -472,14 +472,17 @@ def get_rgb_led() -> bool:
 
 if utils.USE_THP:
 
-    def set_thp_paired_cache(blob: AnyBytes) -> None:
+    def set_thp_paired_names(blob: AnyBytes) -> None:
         """
         Set THP paired entries' cache (using protobuf serialization).
         """
-        common.set(_NAMESPACE, _THP_PAIRED_CACHE, blob)
+        common.set(_NAMESPACE, THP_PAIRED_NAMES, blob)
 
-    def get_thp_paired_cache() -> bytes | None:
+    def get_thp_paired_names() -> bytes | None:
         """
         Get THP paired entries' cache (using protobuf serialization).
+
+        Please note that while THP calls this a cache, it is persisted
+        across reboots, unlike storage.cache.
         """
-        return common.get(_NAMESPACE, _THP_PAIRED_CACHE)
+        return common.get(_NAMESPACE, THP_PAIRED_NAMES)
