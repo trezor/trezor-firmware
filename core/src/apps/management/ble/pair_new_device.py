@@ -8,7 +8,7 @@ from trezor.wire import ActionCancelled
 
 
 def _default_ble_name() -> str:
-    """Return model name and three random letters.
+    """Return model name and three random characters.
 
     >>> n1 = _default_ble_name()
     >>> n1.startswith(utils.MODE_FULL_NAME)
@@ -19,8 +19,16 @@ def _default_ble_name() -> str:
     >>> n1 == n2
     False
     """
-    charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-    random_chars = "".join(charset[random.uniform(len(charset))] for _ in range(3))
+    digits = "0123456789"
+    uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    random_chars = "".join(
+        [
+            digits[random.uniform(len(digits))],
+            uppercase[random.uniform(len(uppercase))],
+            digits[random.uniform(len(digits))],
+        ]
+    )
+
     return f"{utils.MODEL_FULL_NAME} ({random_chars})"
 
 
