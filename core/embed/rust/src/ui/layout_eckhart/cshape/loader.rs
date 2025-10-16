@@ -37,9 +37,12 @@ pub fn render_loader_indeterminate<'s>(
 ) {
     let progress = if animation_disabled() { 0 } else { progress };
     let progress_ratio = progress_to_ratio(progress);
-    let clip = get_clip_indeterminate(progress_ratio);
+    let (clip, clip_opposite) = get_clips_indeterminate(progress_ratio);
     // Draw the border in clip
     target.in_clip(clip, &|target| {
+        border.render(u8::MAX, target);
+    });
+    target.in_clip(clip_opposite, &|target| {
         border.render(u8::MAX, target);
     });
 }
@@ -49,7 +52,7 @@ fn progress_to_ratio(progress: u16) -> f32 {
     (progress as f32 / 1000.0).clamp(0.0, 1.0)
 }
 
-fn get_clip_indeterminate(progress_ratio: f32) -> Rect {
+fn get_clips_indeterminate(progress_ratio: f32) -> (Rect, Rect) {
     const CLIP_SIZE: i16 = 190;
 
     // Define 8 points (+1 duplicate) for an octagonal path around the display
@@ -105,14 +108,22 @@ fn get_clip_indeterminate(progress_ratio: f32) -> Rect {
     // Fractional part gives us the position within the segment
     let segment_ratio = segment_position - segment as f32;
 
-    // Get the current point and the next point
+    // Current point on the path
     let current = PATH_POINTS[segment];
     let next = PATH_POINTS[segment + 1];
-
-    // Linearly interpolate between the current and next points
     let center = Point::lerp(current, next, segment_ratio);
 
-    Rect::snap(center, Offset::uniform(CLIP_SIZE), Alignment2D::CENTER)
+    // Opposite point on the path: shift by half the number of segments
+    let half = path_length / 2; // assumes even path_length (it is 8 here)
+    let opp_segment = (segment + half) % path_length;
+    let opp_current = PATH_POINTS[opp_segment];
+    let opp_next = PATH_POINTS[opp_segment + 1];
+    let center_opp = Point::lerp(opp_current, opp_next, segment_ratio);
+
+    (
+        Rect::snap(center, Offset::uniform(CLIP_SIZE), Alignment2D::CENTER),
+        Rect::snap(center_opp, Offset::uniform(CLIP_SIZE), Alignment2D::CENTER),
+    )
 }
 
 fn get_progress_covers(progress_ratio: f32) -> impl Iterator<Item = Rect> {
