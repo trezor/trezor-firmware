@@ -404,7 +404,7 @@ def request_payment_req(tx_req: TxRequest, i: int) -> Awaitable[PaymentRequest]:
     tx_req.details.request_index = i
     ack = yield PaymentRequest, tx_req  # type: ignore [awaitable-return-type]
     _clear_tx_request(tx_req)
-    return _sanitize_payment_req(ack)
+    return ack
 
 
 def request_tx_finish(tx_req: TxRequest) -> Awaitable[None]:  # type: ignore [awaitable-return-type]
@@ -580,18 +580,3 @@ def _sanitize_tx_output(txo: TxOutput, coin: CoinInfo) -> TxOutput:
         raise DataError("Missing orig_index field.")
 
     return txo
-
-
-def _sanitize_payment_req(payment_req: PaymentRequest) -> PaymentRequest:
-    for memo in payment_req.memos:
-        if (
-            memo.text_memo,
-            memo.text_details_memo,
-            memo.refund_memo,
-            memo.coin_purchase_memo,
-        ).count(None) != 3:
-            raise DataError(
-                "Exactly one memo type must be specified in each PaymentRequestMemo."
-            )
-
-    return payment_req
