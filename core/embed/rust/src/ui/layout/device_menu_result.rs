@@ -44,6 +44,7 @@ pub static DEMO_CREATE_WALLET: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_R
 pub static DEMO_RESTORE_WALLET: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static DEMO_RECEIVE_BITCOIN: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static DEMO_SEND_BITCOIN: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static DEMO_SWAP_ASSETS: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 
 // Create a DeviceMenuResult class that contains all result types
 static DEVICE_MENU_RESULT_TYPE: Type = obj_type! {
@@ -75,6 +76,7 @@ static DEVICE_MENU_RESULT_TYPE: Type = obj_type! {
         Qstr::MP_QSTR_DemoRestoreWallet => DEMO_RESTORE_WALLET.as_obj(),
         Qstr::MP_QSTR_DemoReceiveBitcoin => DEMO_RECEIVE_BITCOIN.as_obj(),
         Qstr::MP_QSTR_DemoSendBitcoin => DEMO_SEND_BITCOIN.as_obj(),
+        Qstr::MP_QSTR_DemoSwapAssets => DEMO_SWAP_ASSETS.as_obj(),
     } },
 };
 

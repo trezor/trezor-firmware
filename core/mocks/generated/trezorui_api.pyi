@@ -899,3 +899,4 @@ class DeviceMenuResult:
     DemoRestoreWallet: ClassVar[DeviceMenuResult]
     DemoReceiveBitcoin: ClassVar[DeviceMenuResult]
     DemoSendBitcoin: ClassVar[DeviceMenuResult]
+    DemoSwapAssets: ClassVar[DeviceMenuResult]

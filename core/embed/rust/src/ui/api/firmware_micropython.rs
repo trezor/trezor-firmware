@@ -2212,5 +2212,6 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     DemoRestoreWallet: ClassVar[DeviceMenuResult]
     ///     DemoReceiveBitcoin: ClassVar[DeviceMenuResult]
     ///     DemoSendBitcoin: ClassVar[DeviceMenuResult]
+    ///     DemoSwapAssets: ClassVar[DeviceMenuResult]
     Qstr::MP_QSTR_DeviceMenuResult => DEVICE_MENU_RESULT.as_obj(),
 };

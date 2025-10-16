@@ -30,6 +30,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_DemoReceiveBitcoin;
   MP_QSTR_DemoRestoreWallet;
   MP_QSTR_DemoSendBitcoin;
+  MP_QSTR_DemoSwapAssets;
   MP_QSTR_DeviceMenuResult;
   MP_QSTR_DisconnectDevice;
   MP_QSTR_INFO;

@@ -198,6 +198,7 @@ impl ComponentMsgObj for DeviceMenuScreen {
             DeviceMenuMsg::DemoRestoreWallet => Ok(DEMO_RESTORE_WALLET.as_obj()),
             DeviceMenuMsg::DemoReceiveBitcoin => Ok(DEMO_RECEIVE_BITCOIN.as_obj()),
             DeviceMenuMsg::DemoSendBitcoin => Ok(DEMO_SEND_BITCOIN.as_obj()),
+            DeviceMenuMsg::DemoSwapAssets => Ok(DEMO_SWAP_ASSETS.as_obj()),
         }
     }
 }

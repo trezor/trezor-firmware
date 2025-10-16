@@ -1,6 +1,12 @@
+from micropython import const
+from typing import TYPE_CHECKING
+
 from trezor import TR, loop
 from trezor.ui.layouts import show_success
 from trezor.ui.layouts.progress import bitcoin_progress, progress
+
+if TYPE_CHECKING:
+    from trezor.ui import ProgressLayout
 
 
 async def demo_create_wallet() -> None:
@@ -39,12 +45,11 @@ async def demo_create_wallet() -> None:
 
     await confirm_reset_device()
 
-    progress_layout = progress(
-        description="Creating demo wallet...", title="Please wait"
+    await simulate_progress(
+        layout=progress(description="Creating demo wallet...", title="Please wait"),
+        step=250,
+        delay_ms=200,
     )
-    for i in range(0, 1000, 250):
-        progress_layout.report(i)
-        await loop.sleep(200)
 
     await show_wallet_created_success()
 
@@ -133,7 +138,7 @@ async def demo_receive_bitcoin() -> None:
 async def demo_send_bitcoin() -> None:
 
     from trezor.enums import ButtonRequestType as B
-    from trezor.ui.layouts import confirm_output, confirm_total, show_success
+    from trezor.ui.layouts import confirm_output, confirm_total
 
     amount_str = "0.05000000 BTC"
     amount_fee_str = "0.00000555 BTC"
@@ -161,10 +166,58 @@ async def demo_send_bitcoin() -> None:
         source_account_path=source_account_path,
     )
 
-    progress_layout = bitcoin_progress(TR.progress__signing_transaction)
-    for i in range(0, 1000, 350):
-        progress_layout.report(i)
-        await loop.sleep(400)
+    await simulate_signature()
+
+
+async def demo_swap_assets() -> None:
+
+    from trezor.ui.layouts import confirm_payment_request
+
+    DEMO_TRADE = (
+        "- 9.84 ETH",
+        "+ 200 SOL",
+        "CqPFGxxzrE2bgLGC98x9rYix7Nq17mh8L7pWseJt3c9N",
+        None,
+        None,
+    )
+
+    await confirm_payment_request(
+        recipient_name="Trezor.io",
+        recipient="0x1ec5C1854e3E9F1674c34D6C2Be1bf13DFc0Fd8F",
+        texts=[],
+        refunds=[],
+        trades=[DEMO_TRADE],
+        account_items=[
+            ("Wallet", "Standard", False),
+            ("Account", "ETH", False),
+            ("Derivation path", "m/44'/60'/0'/0/0", False),
+        ],
+        transaction_fee="0.01214 ETH",
+        fee_info_items=[("Fee rate", "1 gWei", False)],
+        token_address=None,
+    )
+
+    await simulate_signature()
+
+
+_PROGRESS_END = const(1000)
+
+
+async def simulate_progress(layout: ProgressLayout, step: int, delay_ms: int) -> None:
+    for i in range(0, _PROGRESS_END, step):
+        layout.report(i)
+        await loop.sleep(delay_ms)
+
+    layout.report(_PROGRESS_END)
+    await loop.sleep(delay_ms)
+
+
+async def simulate_signature() -> None:
+    await simulate_progress(
+        layout=bitcoin_progress(TR.progress__signing_transaction),
+        step=350,
+        delay_ms=400,
+    )
 
     # Show success screen
     await show_success(
