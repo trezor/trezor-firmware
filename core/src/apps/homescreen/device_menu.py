@@ -475,5 +475,9 @@ async def handle_device_menu() -> None:
             from apps.demo import demo_swap_assets
 
             await demo_swap_assets()
+        elif menu_result is DeviceMenuResult.DemoApproveContract:
+            from apps.demo import demo_approve_contract
+
+            await demo_approve_contract()
         else:
             raise RuntimeError(f"Unknown menu {menu_result}")

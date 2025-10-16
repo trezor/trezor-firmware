@@ -147,6 +147,7 @@ pub enum DeviceMenuMsg {
     DemoReceiveBitcoin,
     DemoSendBitcoin,
     DemoSwapAssets,
+    DemoApproveContract,
 
     // Misc
     RefreshMenu(DeviceMenuId),
@@ -562,6 +563,10 @@ impl DeviceMenuScreen {
         items.add(MenuItem::return_msg(
             "Swap assets".into(),
             DeviceMenuMsg::DemoSwapAssets,
+        ));
+        items.add(MenuItem::return_msg(
+            "Approve contract".into(),
+            DeviceMenuMsg::DemoApproveContract,
         ));
 
         self.register_submenu(DeviceMenuId::Demo, Submenu::new(items));

@@ -193,8 +193,37 @@ async def demo_swap_assets() -> None:
             ("Derivation path", "m/44'/60'/0'/0/0", False),
         ],
         transaction_fee="0.01214 ETH",
-        fee_info_items=[("Fee rate", "1 gWei", False)],
+        fee_info_items=[("Fee rate", "1 Gwei", False)],
         token_address=None,
+    )
+
+    await simulate_signature()
+
+
+async def demo_approve_contract() -> None:
+
+    from trezor.ui.layouts import confirm_ethereum_approve
+
+    await confirm_ethereum_approve(
+        recipient_addr="0xe592427a0aece92de3edee1f18e0157c05861564",
+        recipient_str="Uniswap v3",
+        is_unknown_token=False,
+        token_address="",
+        token_symbol="USDT",
+        is_unknown_network=False,
+        chain_id="",
+        network_name="Ethereum",
+        is_revoke=False,
+        total_amount="32.4321 USDT",
+        account="ETH",
+        account_path="m/44'/60'/0'/0/0",
+        maximum_fee="0.0000721 USDT",
+        fee_info_items=[
+            ("Gas limit", "21000 units", True),
+            ("Max fee per gas", "3.28 Gwei", False),
+            ("Gas limit", "1.70 Gwei", None),
+        ],
+        chunkify=True,
     )
 
     await simulate_signature()
