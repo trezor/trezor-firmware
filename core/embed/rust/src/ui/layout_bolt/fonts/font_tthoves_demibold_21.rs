@@ -403,4 +403,5 @@ pub const Font_TTHoves_DemiBold_21_info: FontInfo = FontInfo {
     baseline: 4,
     glyph_data: &Font_TTHoves_DemiBold_21,
     glyph_nonprintable: &Font_TTHoves_DemiBold_21_glyph_nonprintable,
+    kernings: None,
 };
