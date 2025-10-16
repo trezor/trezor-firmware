@@ -46,6 +46,8 @@ def reset(excluded: tuple[AnyBytes, AnyBytes] | None) -> None:
     if utils.USE_THP:
         device_secret = device.get_device_secret()
         credential_counter = device.get_cred_auth_key_counter()
+        # keep the name cache since we're keeping BLE bonds as well as THP credentials
+        paired_names = device.get_thp_paired_names()
     wipe(clear_cache=False)
     wipe_cache(excluded)
     common.set(common.APP_DEVICE, device.DEVICE_ID, device_id.encode(), public=True)
@@ -56,6 +58,8 @@ def reset(excluded: tuple[AnyBytes, AnyBytes] | None) -> None:
             device.CRED_AUTH_KEY_COUNTER,
             credential_counter,
         )
+        if paired_names:
+            common.set(common.APP_DEVICE, device.THP_PAIRED_NAMES, paired_names)
 
 
 def _migrate_from_version_01() -> None:
