@@ -17,7 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// #pragma GCC optimize("O0")
+#if 0
+#pragma GCC optimize("O0")
+#endif
 
 #ifdef KERNEL_MODE
 
@@ -27,6 +29,12 @@
 #include <trezor_rtl.h>
 
 #include <io/backlight.h>
+
+#ifdef USE_DBG_CONSOLE
+#include <sys/dbg_console.h>
+#else
+#define dbg_printf(...) ((void)0)
+#endif
 
 #define BACKLIGHT_CONTROL_T_UP_US 30     // may be in range 1-75
 #define BACKLIGHT_CONTROL_T_DOWN_US 198  // may be in range 180-300
@@ -115,10 +123,12 @@ static void backlight_control_down(uint16_t *data, int steps);
 static void backlight_shutdown(void);
 
 static void DMA_XferCpltCallback(DMA_HandleTypeDef *hdma);
-// static void DMA_XferHalfCpltCallback(DMA_HandleTypeDef *hdma);
-// static void DMA_XferErrorCallback(DMA_HandleTypeDef *hdma);
-// static void DMA_XferAbortCallback(DMA_HandleTypeDef *hdma);
-// static void DMA_XferSuspendCallback(DMA_HandleTypeDef *hdma);
+#if 0
+static void DMA_XferHalfCpltCallback(DMA_HandleTypeDef *hdma);
+static void DMA_XferErrorCallback(DMA_HandleTypeDef *hdma);
+static void DMA_XferAbortCallback(DMA_HandleTypeDef *hdma);
+static void DMA_XferSuspendCallback(DMA_HandleTypeDef *hdma);
+#endif
 
 bool backlight_init(backlight_action_t action) {
   backlight_driver_t *drv = &g_backlight_driver;
@@ -159,11 +169,11 @@ bool backlight_init(backlight_action_t action) {
   ret |= HAL_TIM_PWM_Init(&drv->tim);
 
   TIM_OC_InitTypeDef TIM_OC_InitStructure = {0};
-  TIM_OC_InitStructure.Pulse =
-      TIMER_PERIOD;  // Make ILED to log 1 (by TIM.CCR1 value >= TIM.ARR) =>
-                     // when EN gets activated, TPS will be IDLE (we don't risk
-                     // it going into programming switched off state and
-                     // maximizing its output current)
+  // Make ILED to log 1 (by TIM.CCR1 value >= TIM.ARR) =>
+  // when EN gets activated, TPS will be IDLE (we don't risk
+  // it going into programming switched off state and
+  // maximizing its output current)
+  TIM_OC_InitStructure.Pulse = UINT16_MAX;
   TIM_OC_InitStructure.OCMode = TIM_OCMODE_PWM1;
   TIM_OC_InitStructure.OCPolarity = TIM_OCPOLARITY_HIGH;
   TIM_OC_InitStructure.OCFastMode = TIM_OCFAST_DISABLE;
@@ -194,9 +204,11 @@ bool backlight_init(backlight_action_t action) {
   drv->dma.InitLinkedList.TransferEventMode = DMA_TCEM_BLOCK_TRANSFER;
   drv->dma.InitLinkedList.LinkedListMode = DMA_LINKEDLIST_CIRCULAR;
   ret |= HAL_DMAEx_List_Init(&drv->dma);
+#if defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
   ret |= HAL_DMA_ConfigChannelAttributes(
       &drv->dma, DMA_CHANNEL_PRIV | DMA_CHANNEL_SEC | DMA_CHANNEL_SRC_SEC |
                      DMA_CHANNEL_DEST_SEC);
+#endif  // defined (__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
 
   DMA_NodeConfTypeDef pNodeConfig;
 
@@ -223,11 +235,11 @@ bool backlight_init(backlight_action_t action) {
 #if defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
   pNodeConfig.SrcSecure = DMA_CHANNEL_SRC_SEC;
   pNodeConfig.DestSecure = DMA_CHANNEL_DEST_SEC;
-#endif /* defined (__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U) */
+#endif  // defined (__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
 
   // Build dma_node Node
   ret |= HAL_DMAEx_List_BuildNode(&pNodeConfig, &drv->dma_node[0]);
-  memset(drv->pwm_data[0], 0xFF, sizeof(drv->pwm_data[0]));
+  memset(drv->pwm_data[0], UINT8_MAX, sizeof(drv->pwm_data[0]));
 
   // Insert dma_node to Queue
   ret |= HAL_DMAEx_List_InsertNode_Tail(&drv->dma_queue, &drv->dma_node[0]);
@@ -238,7 +250,7 @@ bool backlight_init(backlight_action_t action) {
 
   // Build dma_node Node
   ret |= HAL_DMAEx_List_BuildNode(&pNodeConfig, &drv->dma_node[1]);
-  memset(drv->pwm_data[1], 0xFF, sizeof(drv->pwm_data[1]));
+  memset(drv->pwm_data[1], UINT8_MAX, sizeof(drv->pwm_data[1]));
 
   // Insert dma_node to Queue
   ret |= HAL_DMAEx_List_InsertNode_Tail(&drv->dma_queue, &drv->dma_node[1]);
@@ -259,19 +271,21 @@ bool backlight_init(backlight_action_t action) {
   // Register DMA callbacks
   ret |= HAL_DMA_RegisterCallback(&drv->dma, HAL_DMA_XFER_CPLT_CB_ID,
                                   &DMA_XferCpltCallback);
-  // ret |= HAL_DMA_RegisterCallback(&drv->dma, HAL_DMA_XFER_HALFCPLT_CB_ID,
-  // &DMA_XferHalfCpltCallback);
-  // ret |= HAL_DMA_RegisterCallback(&drv->dma, HAL_DMA_XFER_ERROR_CB_ID,
-  // &DMA_XferErrorCallback);
-  // ret |= HAL_DMA_RegisterCallback(&drv->dma, HAL_DMA_XFER_ABORT_CB_ID,
-  // &DMA_XferAbortCallback);
-  // ret |= HAL_DMA_RegisterCallback(&drv->dma, HAL_DMA_XFER_SUSPEND_CB_ID,
-  // &DMA_XferSuspendCallback);
+#if 0
+  ret |= HAL_DMA_RegisterCallback(&drv->dma, HAL_DMA_XFER_HALFCPLT_CB_ID,
+  &DMA_XferHalfCpltCallback);
+  ret |= HAL_DMA_RegisterCallback(&drv->dma, HAL_DMA_XFER_ERROR_CB_ID,
+  &DMA_XferErrorCallback);
+  ret |= HAL_DMA_RegisterCallback(&drv->dma, HAL_DMA_XFER_ABORT_CB_ID,
+  &DMA_XferAbortCallback);
+  ret |= HAL_DMA_RegisterCallback(&drv->dma, HAL_DMA_XFER_SUSPEND_CB_ID,
+  &DMA_XferSuspendCallback);
+#endif
 
   if (HAL_OK != ret) {
     // Failure
-    // TODO: low level deinit function not requiring drv->initialized to be set
-    // true as the backlight_deinint() function does.
+    // TODO: ++low level deinit function not requiring drv->initialized == true
+    // as the backlight_deinit() function does.
     return false;
   }
 
@@ -288,6 +302,9 @@ bool backlight_init(backlight_action_t action) {
   drv->requested_level = BACKLIGHT_MIN_LEVEL;
 
   drv->initialized = true;
+
+  dbg_printf("%s:%d\n", __FILE_NAME__, __LINE__);
+  dbg_printf("%s:%s(..) executed\n", __FILE_NAME__, __func__);
 
   return true;
 }
@@ -306,7 +323,7 @@ void backlight_deinit(backlight_action_t action) {
 
     // Abort the DMA. It's unclear what last data is transferred to TIM_CCR
     // register and in what state the respective GPIO pin will be left in. CCR
-    // register is set to TIMER_PERIOD value inside "backlight_shutdown()"
+    // register is set to UINT16_MAX value inside "backlight_shutdown()"
     // function.
     if (drv->dma.State == HAL_DMA_STATE_BUSY) {
       ret |= HAL_DMA_Abort(
@@ -320,11 +337,12 @@ void backlight_deinit(backlight_action_t action) {
     NVIC_DisableIRQ(GPDMA1_Channel3_IRQn);
 
     ret |= HAL_DMA_UnRegisterCallback(&drv->dma, HAL_DMA_XFER_CPLT_CB_ID);
-    // ret |= HAL_DMA_UnRegisterCallback(&drv->dma,
-    // HAL_DMA_XFER_HALFCPLT_CB_ID); ret |=
-    // HAL_DMA_UnRegisterCallback(&drv->dma, HAL_DMA_XFER_ERROR_CB_ID); ret |=
-    // HAL_DMA_UnRegisterCallback(&drv->dma, HAL_DMA_XFER_ABORT_CB_ID); ret |=
-    // HAL_DMA_UnRegisterCallback(&drv->dma, HAL_DMA_XFER_SUSPEND_CB_ID);
+#if 0
+    ret |= HAL_DMA_UnRegisterCallback(&drv->dma, HAL_DMA_XFER_HALFCPLT_CB_ID);
+    ret |= HAL_DMA_UnRegisterCallback(&drv->dma, HAL_DMA_XFER_ERROR_CB_ID);
+    ret |= HAL_DMA_UnRegisterCallback(&drv->dma, HAL_DMA_XFER_ABORT_CB_ID);
+    ret |= HAL_DMA_UnRegisterCallback(&drv->dma, HAL_DMA_XFER_SUSPEND_CB_ID);
+#endif
 
     ret |= HAL_DMAEx_List_UnLinkQ(&drv->dma);
     ret |= HAL_DMAEx_List_DeInit(&drv->dma);
@@ -367,6 +385,9 @@ bool backlight_set(uint8_t val) {
     return true;
   }
 
+  dbg_printf("%s:%d:: val = %d, level, : %d\n", __FILE_NAME__, __LINE__, val,
+             drv->requested_level);
+
   irq_key_t key = irq_lock();
 
   // Save the new value into the shared variable so that it can be used inside
@@ -378,7 +399,7 @@ bool backlight_set(uint8_t val) {
       (MAX(drv->requested_level_limited, LEVEL_OFFSET) - LEVEL_OFFSET) /
       LEVEL_STEPS_RATIO;
 
-  // Calculate the mapping of requested level to steps (remaineder => duty cycle
+  // Calculate the mapping of requested level to steps (remainder => duty cycle
   // of PWM regulation of the step)
   drv->requested_step_duty_cycle =
       (MAX(drv->requested_level_limited, LEVEL_OFFSET) - LEVEL_OFFSET) %
@@ -403,7 +424,7 @@ bool backlight_set(uint8_t val) {
     backlight_shutdown();
 
     // Clearing buffer, preparation for the next time
-    memset(drv->pwm_data, 0xFF, sizeof(drv->pwm_data));
+    memset(drv->pwm_data, UINT8_MAX, sizeof(drv->pwm_data));
 
     // Clear the control data
     for (int i = 0; i < DMA_BUF_COUNT; i++) {
@@ -438,19 +459,15 @@ bool backlight_set(uint8_t val) {
       // shall be activated at the end of this scope, the TPS sets itself to
       // default state = DEFAULT_STEP) and the wanted one
       if (drv->requested_step > DEFAULT_STEP) {
-        backlight_control_up(
-            &drv->pwm_data[drv->prepare_buf_idx][1],
-            drv->requested_step -
-                DEFAULT_STEP);  // Start from index 1, index 0 is already set
-                                // (with buffer clear to make TIM not generate
-                                // any pulse)
+        // Start from index 1, index 0 is already set (with buffer clear to make
+        // TIM not generate any pulse)
+        backlight_control_up(&drv->pwm_data[drv->prepare_buf_idx][1],
+                             drv->requested_step - DEFAULT_STEP);
       } else {
-        backlight_control_down(
-            &drv->pwm_data[drv->prepare_buf_idx][1],
-            DEFAULT_STEP -
-                drv->requested_step);  // Start from index 1, index 0 is already
-                                       // set (with buffer clear to make TIM not
-                                       // generate any pulse)
+        // Start from index 1, index 0 is already set (with buffer clear to make
+        // TIM not generate any pulse)
+        backlight_control_down(&drv->pwm_data[drv->prepare_buf_idx][1],
+                               DEFAULT_STEP - drv->requested_step);
       }
 
       // If the requested level can't exactly be mapped to steps, we need to
@@ -461,9 +478,9 @@ bool backlight_set(uint8_t val) {
         drv->pwm_data[drv->locked_buf_idx][0] =
             TIM_PULSE(BACKLIGHT_CONTROL_T_UP_US);
 
-        // "drv->requested_step_duty_cycle + 1" sample returns to the original
+        // "drv->requested_step_duty_cycle" sample returns to the original
         // steps' value (2nd half of PWM period)
-        drv->pwm_data[drv->locked_buf_idx][drv->requested_step_duty_cycle + 1] =
+        drv->pwm_data[drv->locked_buf_idx][drv->requested_step_duty_cycle] =
             TIM_PULSE(BACKLIGHT_CONTROL_T_DOWN_US);
       }
 
@@ -507,7 +524,7 @@ bool backlight_set(uint8_t val) {
     }
   }
 
-  (void)ret;
+  UNUSED(ret);
 
   return true;
 }
@@ -519,9 +536,9 @@ uint8_t backlight_get(void) {
     return 0;
   }
 
-  return drv
-      ->requested_level_limited;  // Returning the limited requested value as
-                                  // the current value is slightly delayed
+  // Returning the limited requested value as the current value
+  // is slightly delayed
+  return drv->requested_level_limited;
 }
 
 // Set maximal backlight level
@@ -534,9 +551,9 @@ bool backlight_set_max_level(uint8_t max_level) {
 
   drv->max_level = max_level;
 
-  return backlight_set(
-      drv->requested_level);  // The maximum values has been changed, so we need
-                              // to reapply the requested value
+  // The maximum value has been changed, so we need to reapply
+  // the requested value
+  return backlight_set(drv->requested_level);
 }
 
 static void backlight_control_up(uint16_t *data, int steps) {
@@ -554,15 +571,52 @@ static void backlight_control_down(uint16_t *data, int steps) {
 static void backlight_shutdown(void) {
   backlight_driver_t *drv = &g_backlight_driver;
 
-  drv->tim.Instance->CCR1 = TIMER_PERIOD;
+  drv->tim.Instance->CCR1 = UINT16_MAX;
   HAL_GPIO_WritePin(TPS61062_EN_PORT, TPS61062_EN_PIN, GPIO_PIN_RESET);
 }
 
 // Transfer complete callback
 static void DMA_XferCpltCallback(DMA_HandleTypeDef *hdma) {
   backlight_driver_t *drv = &g_backlight_driver;
+  uint32_t dma_CSAR_tmp, dma_BNDT_tmp;
 
-  // Update the current values with the latched ones as the programming sequence
+  uint64_t tdiff;
+  static uint64_t tmax = 0;
+
+  tdiff = systick_us();
+
+#if 0
+  dbg_printf("%s:%d:: dma_CSAR_tmp = %08x", __FILE_NAME__, __LINE__, dma_CSAR_tmp);
+  dbg_printf(", &pwm_data[drv->locked_buf_idx][0] = %08x", (uint32_t)&drv->pwm_data[drv->locked_buf_idx][0]);
+  dbg_printf(", &pwm_data[drv->locked_buf_idx][49] = %08x\n", (uint32_t)&drv->pwm_data[drv->locked_buf_idx][DMA_BUF_COUNT - 1]);
+#endif
+
+  // There is a possibility of entering the ISR late e.g. just before
+  // DMA finishes another transfer. Such case needs to be handled properly.
+  dma_BNDT_tmp = __HAL_DMA_GET_COUNTER(&drv->dma);
+
+  if (dma_BNDT_tmp < sizeof(drv->pwm_data[0]) / 5) {
+    // The DMA is about to finish another transfer => skip this interrupt
+    // "sizeof(drv->pwm_data[0]) / 5" means 20% of the buffer left => 2ms
+    return;
+  }
+
+  // Back up the CSAR register so that it doesn't have to be accessed again
+  dma_CSAR_tmp = drv->dma.Instance->CSAR;
+
+  // Compare whether the CSAR points to the right buffer (in case the interrupts
+  // have been switched off for too long and the DMA buffers' track has been
+  // lost)
+  if ((uint32_t)&drv->pwm_data[drv->locked_buf_idx][0] <= dma_CSAR_tmp &&
+      (uint32_t)&drv->pwm_data[drv->locked_buf_idx][DMA_BUF_COUNT - 1] >=
+          dma_CSAR_tmp) {
+    // The CSAR points to the wrong buffer => we need to switch the buffers
+    // Locked buffer is the one which has just been transferred
+    drv->locked_buf_idx = drv->prepare_buf_idx;
+    drv->prepare_buf_idx = (drv->prepare_buf_idx + 1) % DMA_BUF_COUNT;
+  }
+
+  // Update the current values with the latched ones as the data transfer
   // has finished.
   drv->current_level = drv->latched_level[drv->locked_buf_idx];
   drv->current_step = drv->latched_step[drv->locked_buf_idx];
@@ -574,13 +628,13 @@ static void DMA_XferCpltCallback(DMA_HandleTypeDef *hdma) {
   drv->locked_buf_idx = drv->prepare_buf_idx;
   drv->prepare_buf_idx = (drv->prepare_buf_idx + 1) % DMA_BUF_COUNT;
 
-  // Clear the buffer
-  memset(drv->pwm_data[drv->prepare_buf_idx], 0xFF,
-         sizeof(drv->pwm_data[drv->prepare_buf_idx]));  // TODO: optimize
-
   // Check if we need to change the step value
   if (drv->requested_step != drv->latched_step[drv->locked_buf_idx]) {
-    // Calculate the difference between the latched state and the wanted one
+    // Clear the buffer
+    memset(drv->pwm_data[drv->prepare_buf_idx], UINT8_MAX,
+           sizeof(drv->pwm_data[drv->prepare_buf_idx]));
+
+    // Calculate the difference between the latched state and the requested one
     if (drv->requested_step > drv->latched_step[drv->locked_buf_idx]) {
       backlight_control_up(
           &drv->pwm_data[drv->prepare_buf_idx][0],
@@ -592,28 +646,39 @@ static void DMA_XferCpltCallback(DMA_HandleTypeDef *hdma) {
     }
 
     // The buffer has been precalculated to reach the drv->requested_step value
-    // => update the drv->latched_step value
+    // => update the latched values
     drv->latched_level[drv->prepare_buf_idx] = drv->requested_level_limited;
     drv->latched_step[drv->prepare_buf_idx] = drv->requested_step;
-    drv->latched_step_duty_cycle[drv->prepare_buf_idx] =
-        0;  // 0 - pulse set sequence ongoing
+    // Set the latched duty cycle to 0 - steps' set sequence ongoing, no
+    // regulation.
+    drv->latched_step_duty_cycle[drv->prepare_buf_idx] = 0;
   } else {
-    // If the requested level can't exactly be mapped to steps, we need to
-    // prepare the PWM regulation of the step. No need to clear the buffer,
-    // it's already cleared (the backlight was switched off).
-    if (drv->requested_step_duty_cycle > 0) {
-      // First sample increases the steps by 1 (start of PWM period)
-      drv->pwm_data[drv->prepare_buf_idx][0] =
-          TIM_PULSE(BACKLIGHT_CONTROL_T_UP_US);
+    // Check if the duty cycle needs to be changed for the prepare buffer OR
+    // if the buffer content is not initialized (not cleared) e.g. from previous
+    // transfer
+    if (drv->requested_step_duty_cycle !=
+            drv->latched_step_duty_cycle[drv->prepare_buf_idx] ||
+        drv->pwm_data[drv->prepare_buf_idx][0] != UINT16_MAX) {
+      // Clear the buffer
+      memset(drv->pwm_data[drv->prepare_buf_idx], UINT8_MAX,
+             sizeof(drv->pwm_data[drv->prepare_buf_idx]));
 
-      // "drv->requested_step_duty_cycle + 1" sample returns to the original
-      // steps' value (2nd half of PWM period)
-      drv->pwm_data[drv->prepare_buf_idx][drv->requested_step_duty_cycle + 1] =
-          TIM_PULSE(BACKLIGHT_CONTROL_T_DOWN_US);
+      // If the requested level can't exactly be mapped to steps, we need to
+      // prepare the PWM regulation of the step.
+      if (drv->requested_step_duty_cycle > 0) {
+        // First sample increases the steps by 1 (start of PWM period)
+        drv->pwm_data[drv->prepare_buf_idx][0] =
+            TIM_PULSE(BACKLIGHT_CONTROL_T_UP_US);
+
+        // "drv->requested_step_duty_cycle" sample returns to the original
+        // steps' value (2nd half of PWM period)
+        drv->pwm_data[drv->prepare_buf_idx][drv->requested_step_duty_cycle] =
+            TIM_PULSE(BACKLIGHT_CONTROL_T_DOWN_US);
+      }
     }
 
-    // The buffer has been precalculated to reach the drv->requested_step value
-    // => update the drv->latched_step value
+    // The buffer has been precalculated with the respective PWM duty cycle data
+    // => update the latched values
     drv->latched_level[drv->prepare_buf_idx] = drv->requested_level_limited;
     drv->latched_step[drv->prepare_buf_idx] = drv->requested_step;
     // The to be used duty cycle is set to the requested one.
@@ -621,34 +686,39 @@ static void DMA_XferCpltCallback(DMA_HandleTypeDef *hdma) {
         drv->requested_step_duty_cycle;
   }
 
-  (void)hdma;
+  tdiff = systick_us() - tdiff;
+  tmax = MAX(tmax, tdiff);
+  dbg_printf("execution time = %d us, max execution time = %d us\n",
+             (uint32_t)tdiff, (uint32_t)tmax);
+
+  UNUSED(hdma);
 }
 
-// // Half transfer complete callback
-// static void DMA_XferHalfCpltCallback(DMA_HandleTypeDef *hdma)
-// {
-//   // HAL_GPIO_WritePin(TPS61062_EN_PORT, TPS61062_EN_PIN, GPIO_PIN_RESET);
+#if 0
+// Half transfer complete callback
+static void DMA_XferHalfCpltCallback(DMA_HandleTypeDef *hdma)
+{
+  UNUSED(hdma);
+}
 
-//   (void)hdma;
-// }
+// Error callback
+static void DMA_XferErrorCallback(DMA_HandleTypeDef *hdma)
+{
+  UNUSED(hdma);
+}
 
-// // Error callback
-// static void DMA_XferErrorCallback(DMA_HandleTypeDef *hdma)
-// {
-//   (void)hdma;
-// }
+// Abort callback
+static void DMA_XferAbortCallback(DMA_HandleTypeDef *hdma)
+{
+  UNUSED(hdma);
+}
 
-// // Abort callback
-// static void DMA_XferAbortCallback(DMA_HandleTypeDef *hdma)
-// {
-//   (void)hdma;
-// }
-
-// // Suspend callback
-// static void DMA_XferSuspendCallback(DMA_HandleTypeDef *hdma)
-// {
-//   (void)hdma;
-// }
+// Suspend callback
+static void DMA_XferSuspendCallback(DMA_HandleTypeDef *hdma)
+{
+  UNUSED(hdma);
+}
+#endif
 
 void GPDMA1_Channel3_IRQHandler(void) {
   IRQ_LOG_ENTER();
