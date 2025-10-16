@@ -53,11 +53,13 @@ class TropicModel:
     def __init__(
         self,
         workdir: Path,
+        profile_dir: Path,
         port: int,
         configfile: str,
         logfile: Union[TextIO, str, Path],
     ) -> None:
         self.workdir = workdir
+        self.profile_dir = profile_dir
         self.port = port
         self.configfile = configfile
         self.logfile = logfile
@@ -106,6 +108,8 @@ class TropicModel:
                 self.configfile,
                 "-p",
                 str(self.port),
+                "-o",
+                str(self.profile_dir / "tropic_model_config_output.yml"),
             ],
             cwd=self.workdir,
             stdout=cast(TextIO, output),
@@ -383,6 +387,7 @@ class CoreEmulator(Emulator):
             assert tropic_model_configfile
             self.tropic_model = TropicModel(
                 workdir=self.workdir,
+                profile_dir=self.profile_dir,
                 port=tropic_model_port,
                 configfile=tropic_model_configfile,
                 logfile=(
