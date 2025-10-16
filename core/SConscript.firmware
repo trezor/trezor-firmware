@@ -432,7 +432,7 @@ env = Environment(
     ENV=os.environ,
     CFLAGS=(
         f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DPYOPT={PYOPT} "
-        f"-DBOOTLOADER_QA={int(BOOTLOADER_QA)} -DBITCOIN_ONLY={BITCOIN_ONLY} {DEBUG_FLAGS}"
+        f"-DBOOTLOADER_QA={int(BOOTLOADER_QA)} -DBOOTLOADER_DEVEL={int(BOOTLOADER_DEVEL)} -DBITCOIN_ONLY={BITCOIN_ONLY} {DEBUG_FLAGS}"
     ),
     CPPDEFINES_IMPLICIT=[],
     CPPDEFPREFIX="-D'",
@@ -894,11 +894,11 @@ env.Depends(rust, protobuf_blobs)
 env.Depends(rust, TRANSLATION_DATA)
 
 BOOTLOADER_SUFFIX = TREZOR_MODEL
-if BOOTLOADER_QA or BOOTLOADER_DEVEL:
+if BOOTLOADER_DEVEL:
     BOOTLOADER_SUFFIX += '_qa'
 
 # select vendor header
-if BOOTLOADER_QA or BOOTLOADER_DEVEL:
+if BOOTLOADER_DEVEL:
     if UNSAFE_FW:
         vendor = "unsafe_signed_dev"
     else:
@@ -997,14 +997,14 @@ if 'STM32F427xx' in CPPDEFINES_HAL or 'STM32F429xx' in CPPDEFINES_HAL:
         '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .confidential --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
         '$OBJCOPY -O binary -j .flash2 $SOURCE ${TARGET}.p2',
         '$CAT ${TARGET}.p1 ${TARGET}.p2 > $TARGET',
-        '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
+        '$HEADERTOOL -h $TARGET ' + ('-D' if not (BOOTLOADER_DEVEL or not PRODUCTION) else ''),
         '$DD if=$TARGET of=${TARGET}.p1 skip=0 bs=128k count=6',
         '$CP $TARGET ' + BINARY_NAME,
     ]
 elif 'STM32U5G9xx' in CPPDEFINES_HAL or 'STM32U585xx' in CPPDEFINES_HAL:
     action_bin=[
         '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .confidential $SOURCE ${TARGET}',
-        '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
+        '$HEADERTOOL -h $TARGET ' + ('-D' if not (BOOTLOADER_DEVEL or not PRODUCTION) else ''),
         '$CP $TARGET ' + BINARY_NAME,
         ]
 else:

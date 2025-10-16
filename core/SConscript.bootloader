@@ -7,6 +7,7 @@ import tools, models, ui
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
+BOOTLOADER_DEVEL = ARGUMENTS.get('BOOTLOADER_DEVEL', '0') == '1'
 PRODUCTION = 0 if BOOTLOADER_QA else ARGUMENTS.get('PRODUCTION', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 UI_PERFORMANCE_OVERLAY = ARGUMENTS.get('UI_PERFORMANCE_OVERLAY', '0') == '1'
@@ -49,7 +50,7 @@ if DBG_CONSOLE != "":
 
 env = Environment(
     ENV=os.environ,
-    CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DBOOTLOADER_QA={int(BOOTLOADER_QA)}",
+    CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DBOOTLOADER_QA={int(BOOTLOADER_QA)} -DBOOTLOADER_DEVEL={int(BOOTLOADER_DEVEL)}",
     CPPDEFINES_IMPLICIT=[],
     CPPDEFPREFIX="-D'",
     CPPDEFSUFFIX="'",
@@ -310,6 +311,6 @@ program_bin = env.Command(
     source=program_elf,
     action=[
         '$OBJCOPY -O binary -j .header -j .flash -j .data -j .confidential $SOURCE $TARGET',
-        '$HEADERTOOL $TARGET ' + ('-D' if not PRODUCTION else ''),
+        '$HEADERTOOL $TARGET ' + ('-D' if BOOTLOADER_DEVEL else ''),
         '$CP $TARGET ' + BINARY_NAME,
     ], )
