@@ -151,11 +151,14 @@ void ble_iface_end_pairing(void) {
   }
 }
 
-char get_random_char(void) {
-  static const char charset[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  const size_t max_index = sizeof(charset) - 1;  // exclude terminating '\0'
-  uint32_t key = rng_get() % max_index;
-  return charset[key];
+static char get_random_from_charset(const char* charset) {
+  const size_t max_index = strlen(charset);
+
+  if (max_index == 0) {
+    return '\0';
+  }
+
+  return charset[rng_get() % max_index];
 }
 
 bool ble_iface_start_pairing(void) {
@@ -165,9 +168,15 @@ bool ble_iface_start_pairing(void) {
 
   uint16_t retry_cnt = 0;
 
+  static const char DIGITS[] = "0123456789";
+  static const char UPPERCASE[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
   char adv_name[BLE_ADV_NAME_LEN];
   mini_snprintf(adv_name, sizeof(adv_name), "%s (%c%c%c)", MODEL_FULL_NAME,
-                get_random_char(), get_random_char(), get_random_char());
+                get_random_from_charset(DIGITS),
+                get_random_from_charset(UPPERCASE),
+                get_random_from_charset(DIGITS));
+
   if (!ble_enter_pairing_mode((const uint8_t*)adv_name,
                               strnlen(adv_name, BLE_ADV_NAME_LEN))) {
     return false;
