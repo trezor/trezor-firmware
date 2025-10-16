@@ -34,6 +34,7 @@
 
 /// def derive_icarus(
 ///     binary_mnemonic: bytes,
+///     mnemonic_bits_len: int,
 ///     passphrase: str,
 ///     trezor_derivation: bool,
 ///     callback: Callable[[int, int], None] | None = None,
@@ -46,13 +47,17 @@
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_cardano_derive_icarus(size_t n_args,
                                                        const mp_obj_t *args) {
-  mp_buffer_info_t mnemonic_bits = {0}, phrase = {0};
+  mp_buffer_info_t mnemonic_bits = {0};
   mp_get_buffer_raise(args[0], &mnemonic_bits, MP_BUFFER_READ);
-  mp_get_buffer_raise(args[1], &phrase, MP_BUFFER_READ);
+
+  mp_int_t mnemonic_bits_len = mp_obj_get_int(args[1]);
+
+  mp_buffer_info_t phrase = {0};
+  mp_get_buffer_raise(args[2], &phrase, MP_BUFFER_READ);
   const char *ppassphrase = phrase.len > 0 ? phrase.buf : "";
 
-  bool trezor_derivation = mp_obj_is_true(args[2]);
-  if (mnemonic_bits.len == 0 || mnemonic_bits.len % 33 != 0) {
+  bool trezor_derivation = mp_obj_is_true(args[3]);
+  if (mnemonic_bits_len == 0 || mnemonic_bits_len % 33 != 0) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid mnemonic bits length"));
   }
 
@@ -60,13 +65,13 @@ STATIC mp_obj_t mod_trezorcrypto_cardano_derive_icarus(size_t n_args,
   vstr_init_len(&vstr, CARDANO_SECRET_LENGTH);
 
   void (*callback)(uint32_t current, uint32_t total) = NULL;
-  if (n_args > 3) {
+  if (n_args > 4) {
     // generate with a progress callback
-    ui_wait_callback = args[3];
+    ui_wait_callback = args[4];
     callback = wrapped_ui_wait_callback;
   }
 
-  int entropy_len = mnemonic_bits.len - mnemonic_bits.len / 33;
+  int entropy_len = mnemonic_bits_len - mnemonic_bits_len / 33;
   int mnemonic_bytes_used = 0;
   if (!trezor_derivation) {
     // Exclude checksum (original Icarus spec)
@@ -74,7 +79,7 @@ STATIC mp_obj_t mod_trezorcrypto_cardano_derive_icarus(size_t n_args,
   } else {
     // Include checksum if it is a full byte (Trezor bug)
     // see also https://github.com/trezor/trezor-firmware/issues/1387 and CIP-3
-    mnemonic_bytes_used = mnemonic_bits.len / 8;
+    mnemonic_bytes_used = mnemonic_bits_len / 8;
   }
   const int res = secret_from_entropy_cardano_icarus(
       (const uint8_t *)ppassphrase, phrase.len,
@@ -92,7 +97,7 @@ STATIC mp_obj_t mod_trezorcrypto_cardano_derive_icarus(size_t n_args,
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
-    mod_trezorcrypto_cardano_derive_icarus_obj, 3, 4,
+    mod_trezorcrypto_cardano_derive_icarus_obj, 4, 5,
     mod_trezorcrypto_cardano_derive_icarus);
 
 /// def from_secret(secret: AnyBytes) -> HDNode:

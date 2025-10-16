@@ -6,6 +6,7 @@ from trezorcrypto.bip32 import HDNode
 # upymod/modtrezorcrypto/modtrezorcrypto-cardano.h
 def derive_icarus(
     binary_mnemonic: bytes,
+    mnemonic_bits_len: int,
     passphrase: str,
     trezor_derivation: bool,
     callback: Callable[[int, int], None] | None = None,
