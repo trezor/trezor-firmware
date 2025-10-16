@@ -30,6 +30,8 @@
 
 #include <io/backlight.h>
 
+#include <math.h>
+
 #ifdef USE_DBG_CONSOLE
 #include <sys/dbg_console.h>
 #else
@@ -50,6 +52,12 @@
 #define TIM_PULSE(width) \
   (TIMER_PERIOD - (width) * TIMER_PERIOD / MAX_PULSE_WIDTH_US)
 
+#define REG_LOOP_PERIOD_US 10000  // 10ms
+#define DMA_BUF_LENGTH \
+  (REG_LOOP_PERIOD_US / MAX_PULSE_WIDTH_US)  // number of samples per period
+
+#define DMA_BUF_COUNT 2  // 2 buffers for double buffering
+
 // TPS DAC steps (0-31) where 0 means ~15.6mV at Rs and 31 means ~500mV at
 // Rs (1 steps ~15.6mV)
 #define MAX_STEPS 31
@@ -61,14 +69,10 @@
 #define DEFAULT_LEVEL ((DEFAULT_STEP) * (BACKLIGHT_MAX_LEVEL) / (MAX_STEPS))
 
 // API level range 0-255 is mapped to DAC steps 0-31
-#define LEVEL_STEPS_RATIO 8
-#define LEVEL_OFFSET 7
-
-#define REG_LOOP_PERIOD_US 10000  // 10ms
-#define DMA_BUF_LENGTH \
-  (REG_LOOP_PERIOD_US / MAX_PULSE_WIDTH_US)  // number of samples per period
-
-#define DMA_BUF_COUNT 2  // 2 buffers for double buffering
+#define INPUT_OFFSET 1
+#define GAMMA_CORRECTION 2.2f
+#define USTEPS_PER_STEP DMA_BUF_LENGTH
+#define USTEPS_COUNT (MAX_STEPS * USTEPS_PER_STEP)
 
 typedef enum { BACKLIGHT_OFF = 0, BACKLIGHT_ON = 1 } backlight_state_t;
 
@@ -82,6 +86,7 @@ typedef struct {
 
   // Requested values (via API)
   uint8_t requested_level;
+  uint32_t requested_level_corrected;
   volatile uint8_t requested_level_limited;
   volatile uint8_t requested_step;
   volatile uint8_t requested_step_duty_cycle;
@@ -129,6 +134,20 @@ static void DMA_XferErrorCallback(DMA_HandleTypeDef *hdma);
 static void DMA_XferAbortCallback(DMA_HandleTypeDef *hdma);
 static void DMA_XferSuspendCallback(DMA_HandleTypeDef *hdma);
 #endif
+
+// Brightness level gamma correction - eq: OUT = ( ( (IN - k) / d ) ^ GAMMA) * q
+static inline uint32_t gamma_correction(uint8_t in, uint8_t in_offset,
+                                        uint8_t in_max, float gamma,
+                                        uint32_t out_max) {
+  float out;
+
+  out = (float)(MAX(in, in_offset) - in_offset) /
+        (in_max - in_offset);  // Input normalization to <0;1>
+  out = powf(out, gamma);      // Gamma correction
+  out = out * out_max;         // Output denormalization to <0;out_max>
+
+  return (uint32_t)out;
+}
 
 bool backlight_init(backlight_action_t action) {
   backlight_driver_t *drv = &g_backlight_driver;
@@ -385,30 +404,33 @@ bool backlight_set(uint8_t val) {
     return true;
   }
 
-  dbg_printf("%s:%d:: val = %d, level, : %d\n", __FILE_NAME__, __LINE__, val,
-             drv->requested_level);
-
   irq_key_t key = irq_lock();
 
   // Save the new value into the shared variable so that it can be used inside
   // DMA callback
   drv->requested_level_limited = requested_level_limited;
 
+  // Perform gamma correction of the requested level
+  drv->requested_level_corrected =
+      gamma_correction(drv->requested_level_limited, INPUT_OFFSET,
+                       BACKLIGHT_MAX_LEVEL, GAMMA_CORRECTION, USTEPS_COUNT);
+
   // Calculate the mapping of requested level to steps (quotient)
   drv->requested_step =
-      (MAX(drv->requested_level_limited, LEVEL_OFFSET) - LEVEL_OFFSET) /
-      LEVEL_STEPS_RATIO;
+      (uint8_t)(drv->requested_level_corrected / USTEPS_PER_STEP);
 
   // Calculate the mapping of requested level to steps (remainder => duty cycle
   // of PWM regulation of the step)
   drv->requested_step_duty_cycle =
-      (MAX(drv->requested_level_limited, LEVEL_OFFSET) - LEVEL_OFFSET) %
-      LEVEL_STEPS_RATIO;
-  drv->requested_step_duty_cycle =
-      (drv->requested_step_duty_cycle * DMA_BUF_LENGTH) / LEVEL_STEPS_RATIO;
+      (uint8_t)(drv->requested_level_corrected % USTEPS_PER_STEP);
 
-  // Requested level is below LEVEL_OFFSET => shutdown backlight
-  if (drv->requested_level_limited < LEVEL_OFFSET) {
+  dbg_printf("%s:%s(): level=%d, level_gamma=%d, step=%d, step_dc=%d\n",
+    __FILE_NAME__, __func__,
+    drv->requested_level_limited, drv->requested_level_corrected,
+    drv->requested_step, drv->requested_step_duty_cycle);
+
+  // Requested level is below INPUT_OFFSET => shutdown backlight
+  if (drv->requested_level_limited < INPUT_OFFSET) {
     if (drv->dma.State == HAL_DMA_STATE_BUSY) {
       ret |= HAL_DMA_Abort(
           &drv->dma);  // TODO: could be replaced with interrupt based variant
@@ -580,10 +602,12 @@ static void DMA_XferCpltCallback(DMA_HandleTypeDef *hdma) {
   backlight_driver_t *drv = &g_backlight_driver;
   uint32_t dma_CSAR_tmp, dma_BNDT_tmp;
 
+#if 0
   uint64_t tdiff;
   static uint64_t tmax = 0;
 
   tdiff = systick_us();
+#endif
 
 #if 0
   dbg_printf("%s:%d:: dma_CSAR_tmp = %08x", __FILE_NAME__, __LINE__, dma_CSAR_tmp);
@@ -686,10 +710,12 @@ static void DMA_XferCpltCallback(DMA_HandleTypeDef *hdma) {
         drv->requested_step_duty_cycle;
   }
 
+#if 0
   tdiff = systick_us() - tdiff;
   tmax = MAX(tmax, tdiff);
   dbg_printf("execution time = %d us, max execution time = %d us\n",
              (uint32_t)tdiff, (uint32_t)tmax);
+#endif
 
   UNUSED(hdma);
 }
