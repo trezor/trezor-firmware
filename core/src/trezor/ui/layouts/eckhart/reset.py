@@ -19,7 +19,7 @@ def show_share_words(
     if share_index is None:
         subtitle = None
     elif group_index is None:
-        subtitle = TR.recovery__share_num_template.format(share_index + 1)
+        subtitle = TR.reset__recovery_share_title_template.format(share_index + 1)
     else:
         subtitle = TR.reset__group_share_title_template.format(
             group_index + 1, share_index + 1
@@ -83,7 +83,7 @@ async def select_word(
         title: str = TR.reset__check_wallet_backup_title
         description = TR.reset__select_word_template.format(checked_index + 1)
     elif group_index is None:
-        title: str = TR.reset__check_wallet_backup_title
+        title: str = TR.reset__check_share_title_template.format(share_index + 1)
         description = TR.reset__select_word_from_share_template.format(
             checked_index + 1, share_index + 1
         )
@@ -229,7 +229,7 @@ def slip39_prompt_threshold(
         )
 
     return _prompt_number(
-        TR.reset__slip39_checklist_set_threshold,
+        TR.reset__title_set_threshold,
         description,
         info,
         count,

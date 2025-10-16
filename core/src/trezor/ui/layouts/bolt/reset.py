@@ -82,7 +82,7 @@ def slip39_show_checklist(
         (
             TR.reset__slip39_checklist_set_num_shares,
             TR.reset__slip39_checklist_set_threshold,
-            TR.reset__slip39_checklist_write_down,
+            TR.reset__slip39_checklist_write_down_recovery,
         )
         if not advanced
         else (
@@ -91,10 +91,9 @@ def slip39_show_checklist(
             TR.reset__slip39_checklist_set_sizes_longer,
         )
     )
-
     return raise_if_cancelled(
         trezorui_api.show_checklist(
-            title=TR.reset__slip39_checklist_title,
+            title=TR.reset__slip39_checklist_title,  # unchanged
             button=TR.buttons__continue,
             active=step,
             items=items,
@@ -155,46 +154,25 @@ def slip39_prompt_threshold(
     num_of_shares: int, group_id: int | None = None
 ) -> Awaitable[int]:
     count = num_of_shares // 2 + 1
-    # min value of share threshold is 2 unless the number of shares is 1
-    # number of shares 1 is possible in advanced slip39
     min_count = min(2, num_of_shares)
     max_count = num_of_shares
 
-    def description(count: int) -> str:
+    def description(i: int) -> str:
         if group_id is None:
-            if count == 1:
-                return TR.reset__you_need_one_share
-            elif count == max_count:
-                return TR.reset__need_all_share_template.format(count)
-            else:
-                return TR.reset__need_any_share_template.format(count)
+            return TR.reset__threshold_desc_template.format(i, num_of_shares)
         else:
-            return TR.reset__num_shares_for_group_template.format(group_id + 1)
+            return TR.reset__threshold_desc_group_template.format(
+                i, num_of_shares, group_id + 1
+            )
 
-    def info(count: int) -> str:
-        # TODO: this is madness...
-        text = TR.reset__the_threshold_sets_the_number_of_shares
-        if group_id is None:
-            text += TR.reset__needed_to_recover_your_wallet
-            text += TR.reset__set_it_to_count_template.format(count)
-            if num_of_shares == 1:
-                text += TR.reset__one_share
-            elif num_of_shares == count:
-                text += TR.reset__all_x_of_y_template.format(count, num_of_shares)
-            else:
-                text += TR.reset__any_x_of_y_template.format(count, num_of_shares)
-            text += "."
-        else:
-            text += TR.reset__needed_to_form_a_group
-            text += TR.reset__set_it_to_count_template.format(count)
-            if num_of_shares == 1:
-                text += TR.reset__one_share + " "
-            elif num_of_shares == count:
-                text += TR.reset__all_x_of_y_template.format(count, num_of_shares)
-            else:
-                text += TR.reset__any_x_of_y_template.format(count, num_of_shares)
-            text += " " + TR.reset__to_form_group_template.format(group_id + 1)
-        return text
+    def info(i: int) -> str:
+        return (
+            TR.reset__slip39_checklist_more_info_threshold
+            + "\n"
+            + TR.reset__slip39_checklist_more_info_threshold_example_template.format(
+                i, num_of_shares, i
+            )
+        )
 
     return _prompt_number(
         TR.reset__title_set_threshold,
@@ -226,7 +204,7 @@ def slip39_prompt_number_of_shares(
             )
 
     if group_id is None:
-        info = TR.reset__num_of_shares_basic_info_template.format(num_words)
+        info = TR.reset__num_of_shares_long_info_template.format(num_words)
     else:
         info = TR.reset__num_of_shares_advanced_info_template.format(
             num_words, group_id + 1

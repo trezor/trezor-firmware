@@ -1166,5 +1166,7 @@
   "1164": "ble__apps_connected",
   "1165": "sn__action",
   "1166": "sn__title",
-  "1167": "ble__must_be_enabled"
+  "1167": "ble__must_be_enabled",
+  "1168": "reset__threshold_desc_group_template",
+  "1169": "reset__threshold_desc_template"
 }

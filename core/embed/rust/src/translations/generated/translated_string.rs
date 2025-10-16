@@ -790,8 +790,6 @@ pub enum TranslatedString {
     recovery__x_of_y_entered_template = 532,  // {"Bolt": "{0} of {1} shares entered", "Caesar": "{0} of {1} shares entered", "Delizia": "{0} of {1} shares entered", "Eckhart": "{0} of {1} shares entered."}
     recovery__you_have_entered = 533,  // "You have entered"
     reset__advanced_group_threshold_info = 534,  // "The group threshold specifies the number of groups required to recover your wallet."
-    reset__all_x_of_y_template = 535,  // "all {0} of {1} shares"
-    reset__any_x_of_y_template = 536,  // "any {0} of {1} shares"
     reset__button_create = 537,  // "Create wallet"
     reset__button_recover = 538,  // "Recover wallet"
     reset__by_continuing = 539,  // {"Bolt": "By continuing you agree to Trezor Company's terms and conditions.", "Caesar": "By continuing you agree to Trezor Company's terms and conditions.", "Delizia": "By continuing you agree to Trezor Company's terms and conditions.", "Eckhart": "By continuing, you agree to Trezor Company's Terms of Use."}
@@ -809,17 +807,11 @@ pub enum TranslatedString {
     reset__group_share_checked_successfully_template = 551,  // "Group {0} - Share {1} checked successfully."
     reset__group_share_title_template = 552,  // {"Bolt": "Group {0} - share {1}", "Caesar": "Group {0} - share {1}", "Delizia": "Group {0} - share {1}", "Eckhart": "Group #{0} - Share #{1}"}
     reset__more_info_at = 553,  // "More info at"
-    reset__need_all_share_template = 554,  // "For recovery you need all {0} of the shares."
-    reset__need_any_share_template = 555,  // "For recovery you need any {0} of the shares."
-    reset__needed_to_form_a_group = 556,  // "needed to form a group. "
-    reset__needed_to_recover_your_wallet = 557,  // "needed to recover your wallet. "
     reset__never_make_digital_copy = 558,  // "Never put your backup anywhere digital."
     reset__num_of_share_holders_template = 559,  // "{0} people or locations will each hold one share."
     reset__num_of_shares_advanced_info_template = 560,  // "Each recovery share is a sequence of {0} words. Next you will choose the threshold number of shares needed to form Group {1}."
-    reset__num_of_shares_basic_info_template = 561,  // "Each recovery share is a sequence of {0} words. Next you will choose how many shares you need to recover your wallet."
     reset__num_shares_for_group_template = 562,  // "The required number of shares to form Group {0}."
     reset__number_of_shares_info = 563,  // "= total number of unique word lists used for wallet backup."
-    reset__one_share = 564,  // "1 share"
     reset__only_one_share_will_be_created = 565,  // "Only one share will be created."
     reset__recovery_wallet_backup_title = 566,  // "Wallet backup"
     reset__recovery_share_title_template = 567,  // "Recovery share #{0}"
@@ -827,9 +819,7 @@ pub enum TranslatedString {
     reset__select_correct_word = 569,  // "Select the correct word for each position."
     reset__select_word_template = 570,  // {"Bolt": "Select {0} word", "Caesar": "Select {0} word", "Delizia": "Select {0} word", "Eckhart": "Select word #{0} from your wallet backup"}
     reset__select_word_x_of_y_template = 571,  // "Select word {0} of {1}:"
-    reset__set_it_to_count_template = 572,  // "Set it to {0} and you will need "
     reset__share_checked_successfully_template = 573,  // "Share #{0} checked successfully."
-    reset__share_words_title = 574,  // "Standard backup"
     reset__slip39_checklist_num_groups = 575,  // "Number of groups"
     reset__slip39_checklist_num_shares = 576,  // "Number of shares"
     reset__slip39_checklist_set_num_groups = 577,  // "Set number of groups"
@@ -838,9 +828,7 @@ pub enum TranslatedString {
     reset__slip39_checklist_set_sizes_longer = 580,  // "Set size and threshold for each group"
     reset__slip39_checklist_set_threshold = 581,  // {"Bolt": "Set threshold", "Caesar": "Set threshold", "Delizia": "Set threshold", "Eckhart": "Set recovery threshold"}
     reset__slip39_checklist_title = 582,  // "Backup checklist"
-    reset__slip39_checklist_write_down = 583,  // "Write down and check all shares"
-    reset__slip39_checklist_write_down_recovery = 584,  // "Write down & check all wallet backup shares"
-    reset__the_threshold_sets_the_number_of_shares = 585,  // "The threshold sets the number of shares "
+    reset__slip39_checklist_write_down_recovery = 584,  // {"Bolt": "Write down and check all shares", "Caesar": "Write down and check all shares", "Delizia": "Write down & check all wallet backup shares", "Eckhart": "Write down & check all wallet backup shares"}
     reset__threshold_info = 586,  // "= minimum number of unique word lists used for recovery."
     reset__title_backup_is_done = 587,  // "Backup is done"
     reset__title_create_wallet = 588,  // "Create wallet"
@@ -851,13 +839,11 @@ pub enum TranslatedString {
     reset__title_set_number_of_groups = 594,  // "Set number of groups"
     reset__title_set_number_of_shares = 595,  // "Set number of shares"
     reset__title_set_threshold = 596,  // "Set threshold"
-    reset__to_form_group_template = 597,  // "to form Group {0}."
     reset__tos_link = 598,  // {"Bolt": "trezor.io/tos", "Caesar": "trezor.io/tos", "Delizia": "trezor.io/tos", "Eckhart": "More at trezor.io/tos"}
     reset__total_number_of_shares_in_group_template = 599,  // "Set the total number of shares in Group {0}."
     reset__use_your_backup = 600,  // "Use your backup when you need to recover your wallet."
     reset__write_down_words_template = 601,  // "Write the following {0} words in order on your wallet backup card."
     reset__wrong_word_selected = 602,  // "Wrong word selected!"
-    reset__you_need_one_share = 603,  // "For recovery you need 1 share."
     reset__your_backup_is_done = 604,  // "Your backup is done."
     #[cfg(feature = "universal_fw")]
     ripple__confirm_tag = 605,  // "Confirm tag"
@@ -1254,7 +1240,7 @@ pub enum TranslatedString {
     reset__incorrect_word_selected = 907,  // {"Bolt": "Incorrect word selected", "Caesar": "Incorrect word selected", "Delizia": "Incorrect word selected", "Eckhart": "Incorrect word selected."}
     reset__more_at = 908,  // "More at"
     reset__num_of_shares_how_many = 909,  // "How many wallet backup shares do you want to create?"
-    reset__num_of_shares_long_info_template = 910,  // {"Bolt": "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet.", "Caesar": "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet.", "Delizia": "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet.", "Eckhart": "Each backup share is a sequence of {0} words.\nStore each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet."}
+    reset__num_of_shares_long_info_template = 910,  // {"Bolt": "Each recovery share is a sequence of {0} words. Next you will choose how many shares you need to recover your wallet.", "Caesar": "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet.", "Delizia": "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet.", "Eckhart": "Each backup share is a sequence of {0} words.\nStore each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet."}
     reset__select_threshold = 911,  // "Select the minimum shares required to recover your wallet."
     reset__share_completed_template = 912,  // "Share #{0} completed"
     reset__slip39_checklist_num_shares_x_template = 913,  // "Number of shares: {0}"
@@ -1554,6 +1540,8 @@ pub enum TranslatedString {
     sn__action = 1165,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Allow connected device to get serial number of your Trezor Safe 7?"}
     sn__title = 1166,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Serial number"}
     ble__must_be_enabled = 1167,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "The Bluetooth must be turned on to pair with a new device."}
+    reset__threshold_desc_group_template = 1168,  // "You will need {0} of {1} shares to form Group #{2}."
+    reset__threshold_desc_template = 1169,  // "You will need {0} of {1} shares to recover your wallet."
 }
 
 impl TranslatedString {
@@ -3494,8 +3482,6 @@ impl TranslatedString {
             (Self::recovery__x_of_y_entered_template, "{0} of {1} shares entered."),
             (Self::recovery__you_have_entered, "You have entered"),
             (Self::reset__advanced_group_threshold_info, "The group threshold specifies the number of groups required to recover your wallet."),
-            (Self::reset__all_x_of_y_template, "all {0} of {1} shares"),
-            (Self::reset__any_x_of_y_template, "any {0} of {1} shares"),
             (Self::reset__button_create, "Create wallet"),
             (Self::reset__button_recover, "Recover wallet"),
             #[cfg(feature = "layout_bolt")]
@@ -3527,17 +3513,11 @@ impl TranslatedString {
             #[cfg(feature = "layout_eckhart")]
             (Self::reset__group_share_title_template, "Group #{0} - Share #{1}"),
             (Self::reset__more_info_at, "More info at"),
-            (Self::reset__need_all_share_template, "For recovery you need all {0} of the shares."),
-            (Self::reset__need_any_share_template, "For recovery you need any {0} of the shares."),
-            (Self::reset__needed_to_form_a_group, "needed to form a group. "),
-            (Self::reset__needed_to_recover_your_wallet, "needed to recover your wallet. "),
             (Self::reset__never_make_digital_copy, "Never put your backup anywhere digital."),
             (Self::reset__num_of_share_holders_template, "{0} people or locations will each hold one share."),
             (Self::reset__num_of_shares_advanced_info_template, "Each recovery share is a sequence of {0} words. Next you will choose the threshold number of shares needed to form Group {1}."),
-            (Self::reset__num_of_shares_basic_info_template, "Each recovery share is a sequence of {0} words. Next you will choose how many shares you need to recover your wallet."),
             (Self::reset__num_shares_for_group_template, "The required number of shares to form Group {0}."),
             (Self::reset__number_of_shares_info, "= total number of unique word lists used for wallet backup."),
-            (Self::reset__one_share, "1 share"),
             (Self::reset__only_one_share_will_be_created, "Only one share will be created."),
             (Self::reset__recovery_wallet_backup_title, "Wallet backup"),
             (Self::reset__recovery_share_title_template, "Recovery share #{0}"),
@@ -3552,9 +3532,7 @@ impl TranslatedString {
             #[cfg(feature = "layout_eckhart")]
             (Self::reset__select_word_template, "Select word #{0} from your wallet backup"),
             (Self::reset__select_word_x_of_y_template, "Select word {0} of {1}:"),
-            (Self::reset__set_it_to_count_template, "Set it to {0} and you will need "),
             (Self::reset__share_checked_successfully_template, "Share #{0} checked successfully."),
-            (Self::reset__share_words_title, "Standard backup"),
             (Self::reset__slip39_checklist_num_groups, "Number of groups"),
             (Self::reset__slip39_checklist_num_shares, "Number of shares"),
             (Self::reset__slip39_checklist_set_num_groups, "Set number of groups"),
@@ -3570,9 +3548,14 @@ impl TranslatedString {
             #[cfg(feature = "layout_eckhart")]
             (Self::reset__slip39_checklist_set_threshold, "Set recovery threshold"),
             (Self::reset__slip39_checklist_title, "Backup checklist"),
-            (Self::reset__slip39_checklist_write_down, "Write down and check all shares"),
+            #[cfg(feature = "layout_bolt")]
+            (Self::reset__slip39_checklist_write_down_recovery, "Write down and check all shares"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::reset__slip39_checklist_write_down_recovery, "Write down and check all shares"),
+            #[cfg(feature = "layout_delizia")]
             (Self::reset__slip39_checklist_write_down_recovery, "Write down & check all wallet backup shares"),
-            (Self::reset__the_threshold_sets_the_number_of_shares, "The threshold sets the number of shares "),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::reset__slip39_checklist_write_down_recovery, "Write down & check all wallet backup shares"),
             (Self::reset__threshold_info, "= minimum number of unique word lists used for recovery."),
             (Self::reset__title_backup_is_done, "Backup is done"),
             (Self::reset__title_create_wallet, "Create wallet"),
@@ -3583,7 +3566,6 @@ impl TranslatedString {
             (Self::reset__title_set_number_of_groups, "Set number of groups"),
             (Self::reset__title_set_number_of_shares, "Set number of shares"),
             (Self::reset__title_set_threshold, "Set threshold"),
-            (Self::reset__to_form_group_template, "to form Group {0}."),
             #[cfg(feature = "layout_bolt")]
             (Self::reset__tos_link, "trezor.io/tos"),
             #[cfg(feature = "layout_caesar")]
@@ -3596,7 +3578,6 @@ impl TranslatedString {
             (Self::reset__use_your_backup, "Use your backup when you need to recover your wallet."),
             (Self::reset__write_down_words_template, "Write the following {0} words in order on your wallet backup card."),
             (Self::reset__wrong_word_selected, "Wrong word selected!"),
-            (Self::reset__you_need_one_share, "For recovery you need 1 share."),
             (Self::reset__your_backup_is_done, "Your backup is done."),
             #[cfg(feature = "universal_fw")]
             (Self::ripple__confirm_tag, "Confirm tag"),
@@ -4232,7 +4213,7 @@ impl TranslatedString {
             (Self::reset__more_at, "More at"),
             (Self::reset__num_of_shares_how_many, "How many wallet backup shares do you want to create?"),
             #[cfg(feature = "layout_bolt")]
-            (Self::reset__num_of_shares_long_info_template, "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet."),
+            (Self::reset__num_of_shares_long_info_template, "Each recovery share is a sequence of {0} words. Next you will choose how many shares you need to recover your wallet."),
             #[cfg(feature = "layout_caesar")]
             (Self::reset__num_of_shares_long_info_template, "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet."),
             #[cfg(feature = "layout_delizia")]
@@ -4974,6 +4955,8 @@ impl TranslatedString {
             (Self::ble__must_be_enabled, ""),
             #[cfg(feature = "layout_eckhart")]
             (Self::ble__must_be_enabled, "The Bluetooth must be turned on to pair with a new device."),
+            (Self::reset__threshold_desc_group_template, "You will need {0} of {1} shares to form Group #{2}."),
+            (Self::reset__threshold_desc_template, "You will need {0} of {1} shares to recover your wallet."),
     ];
 
     #[cfg(feature = "micropython")]
@@ -5965,8 +5948,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_recovery__you_have_entered, Self::recovery__you_have_entered),
         (Qstr::MP_QSTR_regulatory_certification__title, Self::regulatory_certification__title),
         (Qstr::MP_QSTR_reset__advanced_group_threshold_info, Self::reset__advanced_group_threshold_info),
-        (Qstr::MP_QSTR_reset__all_x_of_y_template, Self::reset__all_x_of_y_template),
-        (Qstr::MP_QSTR_reset__any_x_of_y_template, Self::reset__any_x_of_y_template),
         (Qstr::MP_QSTR_reset__button_create, Self::reset__button_create),
         (Qstr::MP_QSTR_reset__button_recover, Self::reset__button_recover),
         (Qstr::MP_QSTR_reset__by_continuing, Self::reset__by_continuing),
@@ -5990,19 +5971,13 @@ impl TranslatedString {
         (Qstr::MP_QSTR_reset__incorrect_word_selected, Self::reset__incorrect_word_selected),
         (Qstr::MP_QSTR_reset__more_at, Self::reset__more_at),
         (Qstr::MP_QSTR_reset__more_info_at, Self::reset__more_info_at),
-        (Qstr::MP_QSTR_reset__need_all_share_template, Self::reset__need_all_share_template),
-        (Qstr::MP_QSTR_reset__need_any_share_template, Self::reset__need_any_share_template),
-        (Qstr::MP_QSTR_reset__needed_to_form_a_group, Self::reset__needed_to_form_a_group),
-        (Qstr::MP_QSTR_reset__needed_to_recover_your_wallet, Self::reset__needed_to_recover_your_wallet),
         (Qstr::MP_QSTR_reset__never_make_digital_copy, Self::reset__never_make_digital_copy),
         (Qstr::MP_QSTR_reset__num_of_share_holders_template, Self::reset__num_of_share_holders_template),
         (Qstr::MP_QSTR_reset__num_of_shares_advanced_info_template, Self::reset__num_of_shares_advanced_info_template),
-        (Qstr::MP_QSTR_reset__num_of_shares_basic_info_template, Self::reset__num_of_shares_basic_info_template),
         (Qstr::MP_QSTR_reset__num_of_shares_how_many, Self::reset__num_of_shares_how_many),
         (Qstr::MP_QSTR_reset__num_of_shares_long_info_template, Self::reset__num_of_shares_long_info_template),
         (Qstr::MP_QSTR_reset__num_shares_for_group_template, Self::reset__num_shares_for_group_template),
         (Qstr::MP_QSTR_reset__number_of_shares_info, Self::reset__number_of_shares_info),
-        (Qstr::MP_QSTR_reset__one_share, Self::reset__one_share),
         (Qstr::MP_QSTR_reset__only_one_share_will_be_created, Self::reset__only_one_share_will_be_created),
         (Qstr::MP_QSTR_reset__recovery_share_description, Self::reset__recovery_share_description),
         (Qstr::MP_QSTR_reset__recovery_share_number, Self::reset__recovery_share_number),
@@ -6015,11 +5990,9 @@ impl TranslatedString {
         (Qstr::MP_QSTR_reset__select_word_from_share_template, Self::reset__select_word_from_share_template),
         (Qstr::MP_QSTR_reset__select_word_template, Self::reset__select_word_template),
         (Qstr::MP_QSTR_reset__select_word_x_of_y_template, Self::reset__select_word_x_of_y_template),
-        (Qstr::MP_QSTR_reset__set_it_to_count_template, Self::reset__set_it_to_count_template),
         (Qstr::MP_QSTR_reset__share_checked_successfully_template, Self::reset__share_checked_successfully_template),
         (Qstr::MP_QSTR_reset__share_completed_template, Self::reset__share_completed_template),
         (Qstr::MP_QSTR_reset__share_words_first, Self::reset__share_words_first),
-        (Qstr::MP_QSTR_reset__share_words_title, Self::reset__share_words_title),
         (Qstr::MP_QSTR_reset__slip39_checklist_more_info_threshold, Self::reset__slip39_checklist_more_info_threshold),
         (Qstr::MP_QSTR_reset__slip39_checklist_more_info_threshold_example_template, Self::reset__slip39_checklist_more_info_threshold_example_template),
         (Qstr::MP_QSTR_reset__slip39_checklist_num_groups, Self::reset__slip39_checklist_num_groups),
@@ -6033,10 +6006,10 @@ impl TranslatedString {
         (Qstr::MP_QSTR_reset__slip39_checklist_set_threshold, Self::reset__slip39_checklist_set_threshold),
         (Qstr::MP_QSTR_reset__slip39_checklist_threshold_x_template, Self::reset__slip39_checklist_threshold_x_template),
         (Qstr::MP_QSTR_reset__slip39_checklist_title, Self::reset__slip39_checklist_title),
-        (Qstr::MP_QSTR_reset__slip39_checklist_write_down, Self::reset__slip39_checklist_write_down),
         (Qstr::MP_QSTR_reset__slip39_checklist_write_down_recovery, Self::reset__slip39_checklist_write_down_recovery),
-        (Qstr::MP_QSTR_reset__the_threshold_sets_the_number_of_shares, Self::reset__the_threshold_sets_the_number_of_shares),
         (Qstr::MP_QSTR_reset__the_word_is_repeated, Self::reset__the_word_is_repeated),
+        (Qstr::MP_QSTR_reset__threshold_desc_group_template, Self::reset__threshold_desc_group_template),
+        (Qstr::MP_QSTR_reset__threshold_desc_template, Self::reset__threshold_desc_template),
         (Qstr::MP_QSTR_reset__threshold_info, Self::reset__threshold_info),
         (Qstr::MP_QSTR_reset__title_backup_is_done, Self::reset__title_backup_is_done),
         (Qstr::MP_QSTR_reset__title_create_wallet, Self::reset__title_create_wallet),
@@ -6048,7 +6021,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_reset__title_set_number_of_shares, Self::reset__title_set_number_of_shares),
         (Qstr::MP_QSTR_reset__title_set_threshold, Self::reset__title_set_threshold),
         (Qstr::MP_QSTR_reset__title_shamir_backup, Self::reset__title_shamir_backup),
-        (Qstr::MP_QSTR_reset__to_form_group_template, Self::reset__to_form_group_template),
         (Qstr::MP_QSTR_reset__tos_link, Self::reset__tos_link),
         (Qstr::MP_QSTR_reset__total_number_of_shares_in_group_template, Self::reset__total_number_of_shares_in_group_template),
         (Qstr::MP_QSTR_reset__use_your_backup, Self::reset__use_your_backup),
@@ -6056,7 +6028,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_reset__words_written_down_template, Self::reset__words_written_down_template),
         (Qstr::MP_QSTR_reset__write_down_words_template, Self::reset__write_down_words_template),
         (Qstr::MP_QSTR_reset__wrong_word_selected, Self::reset__wrong_word_selected),
-        (Qstr::MP_QSTR_reset__you_need_one_share, Self::reset__you_need_one_share),
         (Qstr::MP_QSTR_reset__your_backup_is_done, Self::reset__your_backup_is_done),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ripple__confirm_tag, Self::ripple__confirm_tag),

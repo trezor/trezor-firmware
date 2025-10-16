@@ -115,12 +115,9 @@ def test_reset_slip39_basic(
         # page overflows, text_content is not complete
         pass
     else:
-        assert any(
-            needle in debug.read_layout().text_content()
-            for needle in [
-                TR.reset__slip39_checklist_write_down,
-                TR.reset__slip39_checklist_write_down_recovery,
-            ]
+        assert (
+            TR.reset__slip39_checklist_write_down_recovery
+            in debug.read_layout().text_content()
         )
     reset.confirm_read(debug)
 
