@@ -105,7 +105,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip39_mnemonic_to_bits(mp_obj_t mnemonic) {
   if (bits_len <= 0) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid mnemonic"));
   }
-  return mp_obj_new_bytes(bits, bits_len);
+  return mp_obj_new_bytes(bits, sizeof(bits));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_bip39_mnemonic_to_bits_obj,
                                  mod_trezorcrypto_bip39_mnemonic_to_bits);
