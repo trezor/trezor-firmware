@@ -93,7 +93,7 @@ class TR:
     ble__manage_paired: str = "Manage paired devices"
     ble__must_be_enabled: str = "The Bluetooth must be turned on to pair with a new device."
     ble__pair_new: str = "Pair new device"
-    ble__pair_title: str = "Pair & connect"
+    ble__pair_title: str = "Pair & Connect"
     ble__pairing_match: str = "Pairing code match?"
     ble__pairing_title: str = "Bluetooth pairing"
     ble__unpair_all: str = "Unpair all bluetooth devices"
