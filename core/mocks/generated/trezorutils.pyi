@@ -158,11 +158,18 @@ if __debug__:
 
 # upymod/modtrezorutils/modtrezorutils.c
 def reboot_to_bootloader(
-    boot_command : int = 0,
+    boot_command : int,
     boot_args : AnyBytes | None = None,
 ) -> None:
     """
     Reboots to bootloader.
+    """
+
+
+# upymod/modtrezorutils/modtrezorutils.c
+def reboot() -> None:
+    """
+    Reboots the device.
     """
 VersionTuple = Tuple[int, int, int, int]
 
