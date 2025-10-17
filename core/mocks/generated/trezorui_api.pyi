@@ -639,8 +639,8 @@ def show_device_menu(
     haptics_enabled: bool | None,
     led_enabled: bool | None,
     about_items: Sequence[tuple[str | None, StrOrBytes | None, bool | None]],
-) -> LayoutObj[UiResult | DeviceMenuResult | tuple[DeviceMenuResult, int]]:
-    """Show the device menu."""
+) -> LayoutObj[UiResult | tuple[DeviceMenuResult, int | None, int]]:
+    """Show the device menu. Results are tuples (action, arg, parent_menu)."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
