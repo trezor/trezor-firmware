@@ -5,8 +5,6 @@ use crate::micropython::{
     typ::Type,
 };
 
-static DEVICE_MENU_RESULT_BASE_TYPE: Type = obj_type! { name: Qstr::MP_QSTR_DeviceMenuResult, };
-
 // Root menu
 pub static REVIEW_FAILED_BACKUP: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static BACKUP_DEVICE: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
@@ -41,7 +39,7 @@ pub static REBOOT_TO_BOOTLOADER: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU
 pub static REFRESH_MENU: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 
 // Create a DeviceMenuResult class that contains all result types
-static DEVICE_MENU_RESULT_TYPE: Type = obj_type! {
+static DEVICE_MENU_RESULT_BASE_TYPE: Type = obj_type! {
     name: Qstr::MP_QSTR_DeviceMenuResult,
     locals: &obj_dict! { obj_map! {
         Qstr::MP_QSTR_ReviewFailedBackup => REVIEW_FAILED_BACKUP.as_obj(),
@@ -67,6 +65,7 @@ static DEVICE_MENU_RESULT_TYPE: Type = obj_type! {
         Qstr::MP_QSTR_RebootToBootloader => REBOOT_TO_BOOTLOADER.as_obj(),
         Qstr::MP_QSTR_RefreshMenu => REFRESH_MENU.as_obj(),
     } },
+    unary_op_fn: ffi::mp_generic_unary_op,
 };
 
-pub static DEVICE_MENU_RESULT: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_TYPE);
+pub static DEVICE_MENU_RESULT: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
