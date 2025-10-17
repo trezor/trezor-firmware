@@ -71,6 +71,12 @@
 // The throttling delay when the security event counter is at its maximum.
 #define OPTIGA_T_MAX_MS 5000
 
+// Initial value of the counter which limits the total number of PIN stretching
+// operations. The limit is 600000 stretching operations, which equates to
+// 300000 / PIN_STRETCH_ITERATIONS unlock operations over the lifetime of the
+// device.
+#define PIN_TOTAL_CTR_LIMIT 600000
+
 // Stretched PINs
 // The first stretched PIN is OPTIGA_OID_DATA + 4 to preserve compatiblity with
 // Trezors without Tropics.
@@ -84,12 +90,6 @@ static const uint16_t OID_STRETCHED_PINS[] = {
 _Static_assert(sizeof(OID_STRETCHED_PINS) / sizeof(OID_STRETCHED_PINS[0]) >=
                    STRETCHED_PIN_COUNT,
                "STRETCHED_PIN_COUNT too large");
-
-// Initial value of the counter which limits the total number of PIN stretching
-// operations. The limit is 600000 stretching operations, which equates to
-// 300000 / PIN_STRETCH_ITERATIONS unlock operations over the lifetime of the
-// device.
-static const uint8_t PIN_TOTAL_CTR_INIT[] = {0, 0, 0, 0, 0, 0x09, 0x27, 0xC0};
 
 static const optiga_metadata_item TYPE_AUTOREF =
     OPTIGA_META_VALUE(OPTIGA_DATA_TYPE_AUTOREF);
@@ -499,8 +499,7 @@ static bool optiga_pin_init_metadata() {
   metadata.change = OPTIGA_META_ACCESS_ALWAYS;
   if (write_metadata(OID_PIN_TOTAL_CTR, &metadata)) {
     optiga_result res =
-        optiga_set_data_object(OID_PIN_TOTAL_CTR, false, PIN_TOTAL_CTR_INIT,
-                               sizeof(PIN_TOTAL_CTR_INIT));
+        optiga_reset_counter(OID_PIN_TOTAL_CTR, PIN_TOTAL_CTR_LIMIT);
     if (res != OPTIGA_SUCCESS) {
       return false;
     }
