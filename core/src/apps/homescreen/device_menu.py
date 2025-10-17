@@ -232,6 +232,7 @@ async def handle_PairDevice() -> None:
     paired_devices = [_get_hostinfo(bond, hostname_map) for bond in ble.get_bonds()]
     if len(paired_devices) < ble.MAX_BONDS:
         await pair_new_device()
+        raise ExitDeviceMenu  # return to homescreen
     else:
         await show_warning(
             "device_pair",
