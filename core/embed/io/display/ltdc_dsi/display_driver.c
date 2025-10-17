@@ -353,7 +353,13 @@ bool display_init(display_content_mode_t mode) {
 #endif
 
 #ifdef USE_BACKLIGHT
-  backlight_init(BACKLIGHT_RESET);
+
+#ifdef GAMMA_EXP
+  backlight_init(BACKLIGHT_RESET, GAMMA_EXP);
+#else
+  backlight_init(BACKLIGHT_RESET, 1.0f);
+#endif
+
 #endif
 
   uint32_t fb_addr = display_fb_init();
