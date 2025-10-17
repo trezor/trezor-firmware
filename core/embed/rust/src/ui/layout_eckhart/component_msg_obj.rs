@@ -1,3 +1,5 @@
+use num_traits::ToPrimitive;
+
 #[cfg(not(feature = "clippy"))]
 use crate::ui::component::{
     text::paragraphs::{ParagraphSource, Paragraphs},
@@ -156,43 +158,48 @@ impl ComponentMsgObj for SetBrightnessScreen {
 
 impl ComponentMsgObj for DeviceMenuScreen {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        match msg {
+        let mut result: Option<u8> = None;
+        let obj = match msg {
             // Root menu
-            DeviceMenuMsg::ReviewFailedBackup => Ok(REVIEW_FAILED_BACKUP.as_obj()),
+            DeviceMenuMsg::ReviewFailedBackup => REVIEW_FAILED_BACKUP.as_obj(),
             // "Pair & Connect"
-            DeviceMenuMsg::PairDevice => Ok(PAIR_DEVICE.as_obj()),
-            DeviceMenuMsg::DisconnectDevice => Ok(DISCONNECT_DEVICE.as_obj()),
+            DeviceMenuMsg::PairDevice => PAIR_DEVICE.as_obj(),
+            DeviceMenuMsg::DisconnectDevice => DISCONNECT_DEVICE.as_obj(),
             DeviceMenuMsg::UnpairDevice(index) => {
-                Ok(new_tuple(&[UNPAIR_DEVICE.as_obj(), index.into()])?)
+                result = index.into();
+                UNPAIR_DEVICE.as_obj()
             }
-            DeviceMenuMsg::UnpairAllDevices => Ok(UNPAIR_ALL_DEVICES.as_obj()),
+            DeviceMenuMsg::UnpairAllDevices => UNPAIR_ALL_DEVICES.as_obj(),
             // Settings
-            DeviceMenuMsg::ToggleBluetooth => Ok(TOGGLE_BLUETOOTH.as_obj()),
+            DeviceMenuMsg::ToggleBluetooth => TOGGLE_BLUETOOTH.as_obj(),
 
             // Security menu
-            DeviceMenuMsg::SetOrChangePin => Ok(SET_OR_CHANGE_PIN.as_obj()),
-            DeviceMenuMsg::RemovePin => Ok(REMOVE_PIN.as_obj()),
-            DeviceMenuMsg::SetAutoLockBattery => Ok(SET_AUTO_LOCK_BATTERY.as_obj()),
-            DeviceMenuMsg::SetAutoLockUSB => Ok(SET_AUTO_LOCK_USB.as_obj()),
-            DeviceMenuMsg::SetOrChangeWipeCode => Ok(SET_OR_CHANGE_WIPE_CODE.as_obj()),
-            DeviceMenuMsg::RemoveWipeCode => Ok(REMOVE_WIPE_CODE.as_obj()),
-            DeviceMenuMsg::CheckBackup => Ok(CHECK_BACKUP.as_obj()),
+            DeviceMenuMsg::SetOrChangePin => SET_OR_CHANGE_PIN.as_obj(),
+            DeviceMenuMsg::RemovePin => REMOVE_PIN.as_obj(),
+            DeviceMenuMsg::SetAutoLockBattery => SET_AUTO_LOCK_BATTERY.as_obj(),
+            DeviceMenuMsg::SetAutoLockUSB => SET_AUTO_LOCK_USB.as_obj(),
+            DeviceMenuMsg::SetOrChangeWipeCode => SET_OR_CHANGE_WIPE_CODE.as_obj(),
+            DeviceMenuMsg::RemoveWipeCode => REMOVE_WIPE_CODE.as_obj(),
+            DeviceMenuMsg::CheckBackup => CHECK_BACKUP.as_obj(),
             // Device menu
-            DeviceMenuMsg::SetDeviceName => Ok(SET_DEVICE_NAME.as_obj()),
-            DeviceMenuMsg::SetBrightness => Ok(SET_BRIGHTNESS.as_obj()),
-            DeviceMenuMsg::ToggleHaptics => Ok(TOGGLE_HAPTICS.as_obj()),
-            DeviceMenuMsg::ToggleLed => Ok(TOGGLE_LED.as_obj()),
-            DeviceMenuMsg::WipeDevice => Ok(WIPE_DEVICE.as_obj()),
+            DeviceMenuMsg::SetDeviceName => SET_DEVICE_NAME.as_obj(),
+            DeviceMenuMsg::SetBrightness => SET_BRIGHTNESS.as_obj(),
+            DeviceMenuMsg::ToggleHaptics => TOGGLE_HAPTICS.as_obj(),
+            DeviceMenuMsg::ToggleLed => TOGGLE_LED.as_obj(),
+            DeviceMenuMsg::WipeDevice => WIPE_DEVICE.as_obj(),
             // Power settings
-            DeviceMenuMsg::TurnOff => Ok(TURN_OFF.as_obj()),
-            DeviceMenuMsg::Reboot => Ok(REBOOT.as_obj()),
-            DeviceMenuMsg::RebootToBootloader => Ok(REBOOT_TO_BOOTLOADER.as_obj()),
+            DeviceMenuMsg::TurnOff => TURN_OFF.as_obj(),
+            DeviceMenuMsg::Reboot => REBOOT.as_obj(),
+            DeviceMenuMsg::RebootToBootloader => REBOOT_TO_BOOTLOADER.as_obj(),
             // Misc
             DeviceMenuMsg::RefreshMenu(submenu_id) => {
-                let submenu_idx: u8 = submenu_id.into();
-                Ok(new_tuple(&[REFRESH_MENU.as_obj(), submenu_idx.into()])?)
+                result = submenu_id.to_u8();
+                REFRESH_MENU.as_obj()
             }
-            DeviceMenuMsg::Close => Ok(CANCELLED.as_obj()),
-        }
+            DeviceMenuMsg::Close => return Ok(CANCELLED.as_obj()),
+        };
+        let result_obj = result.into();
+        let parent_idx_obj = msg.go_back().to_u8().into();
+        new_tuple(&[obj, result_obj, parent_idx_obj])
     }
 }

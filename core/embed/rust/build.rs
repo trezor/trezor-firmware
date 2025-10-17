@@ -295,6 +295,7 @@ fn generate_micropython_bindings() {
         .allowlist_var("mp_plat_print")
         // typ
         .allowlist_var("mp_type_type")
+        .allowlist_function("mp_generic_unary_op")
         // module
         .allowlist_type("mp_obj_module_t")
         .allowlist_var("mp_type_module")
