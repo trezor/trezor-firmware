@@ -157,12 +157,25 @@ if __debug__:
 
 
 # upymod/modtrezorutils/modtrezorutils.c
-def reboot_to_bootloader(
-    boot_command : int = 0,
-    boot_args : AnyBytes | None = None,
+def reboot_and_upgrade(
+    hash : AnyBytes,
 ) -> None:
     """
-    Reboots to bootloader.
+    Reboots to perform upgrade to FW with specified hash.
+    """
+
+
+# upymod/modtrezorutils/modtrezorutils.c
+def reboot_to_bootloader() -> None:
+    """
+    Reboots the device and stay in bootloader.
+    """
+
+
+# upymod/modtrezorutils/modtrezorutils.c
+def reboot() -> None:
+    """
+    Reboots the device.
     """
 VersionTuple = Tuple[int, int, int, int]
 
