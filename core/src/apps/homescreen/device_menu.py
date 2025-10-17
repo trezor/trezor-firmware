@@ -15,8 +15,6 @@ if TYPE_CHECKING:
 
     from trezor.messages import ThpPairedCacheEntry
 
-BLE_MAX_BONDS = 8
-
 
 # Must be in sync with the DeviceMenuId in device_menu.ui
 class SubmenuId:

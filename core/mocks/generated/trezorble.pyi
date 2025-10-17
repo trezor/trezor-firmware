@@ -1,5 +1,6 @@
 from typing import *
 from buffer_types import *
+MAX_BONDS: int
 
 
 # rust/src/trezorhal/ble/micropython.rs

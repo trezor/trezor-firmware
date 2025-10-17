@@ -282,6 +282,9 @@ static BLE_INTERFACE_OBJ: SimpleTypeObj = SimpleTypeObj::new(&BLE_INTERFACE_TYPE
 pub static mp_module_trezorble: Module = obj_module! {
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorble.to_obj(),
 
+    /// MAX_BONDS: int
+    Qstr::MP_QSTR_MAX_BONDS => Obj::small_int(BLE_MAX_BONDS as u16),
+
     /// class BLEIF:
     ///     """
     ///     BLE interface wrapper.
