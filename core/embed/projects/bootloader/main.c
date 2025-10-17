@@ -80,6 +80,9 @@
 #ifdef USE_IWDG
 #include <sec/iwdg.h>
 #endif
+#ifdef USE_NRF
+#include <io/nrf.h>
+#endif
 
 #ifdef USE_BLE
 #include "wire/wire_iface_ble.h"
@@ -733,10 +736,16 @@ int bootloader_main(void) {
     }
 
     switch (result) {
-      case WF_OK_FIRMWARE_INSTALLED:
       case WF_OK_REBOOT_SELECTED:
+#ifdef USE_BLE
+        ble_switch_off();
+#endif
+#ifdef USE_NRF
+        nrf_reboot();
+#endif
         reboot_with_fade();
         break;
+      case WF_OK_FIRMWARE_INSTALLED:
       case WF_OK_DEVICE_WIPED:
       case WF_OK_BOOTLOADER_UNLOCKED:
         reboot_with_fade();
