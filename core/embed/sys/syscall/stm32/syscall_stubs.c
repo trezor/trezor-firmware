@@ -694,6 +694,8 @@ bool nrf_authenticate(void) {
   return (bool)syscall_invoke0(SYSCALL_NRF_AUTHENTICATE);
 }
 
+void nrf_reboot(void) { syscall_invoke0(SYSCALL_NRF_REBOOT); }
+
 #endif
 
 // =============================================================================
