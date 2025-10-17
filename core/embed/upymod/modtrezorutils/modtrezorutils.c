@@ -43,6 +43,9 @@
 #include "blake2s.h"
 #include "memzero.h"
 
+#ifdef USE_BLE
+#include <io/ble.h>
+#endif
 #ifdef USE_NRF
 #include <io/nrf.h>
 #endif
@@ -523,6 +526,13 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_reboot_to_bootloader_obj,
 ///     Reboots the device.
 ///     """
 STATIC mp_obj_t mod_trezorutils_reboot(void) {
+#ifdef USE_BLE
+  ble_switch_off();
+#endif
+#ifdef USE_NRF
+  nrf_reboot();
+#endif
+
   // Just reboot and go through the normal boot sequence
   reboot_device();
 
