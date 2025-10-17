@@ -32,53 +32,12 @@
 
 #ifdef KERNEL
 
-void applet_init(applet_t* applet, applet_header_t* header,
-                 applet_layout_t* layout, applet_privileges_t* privileges) {
+void applet_init(applet_t* applet, const applet_layout_t* layout,
+                 const applet_privileges_t* privileges) {
   memset(applet, 0, sizeof(applet_t));
 
-  applet->header = header;
   applet->layout = *layout;
   applet->privileges = *privileges;
-}
-
-static void applet_clear_memory(applet_t* applet) {
-  mpu_set_active_applet(&applet->layout);
-
-  if (applet->layout.data1.size > 0) {
-    memset((void*)applet->layout.data1.start, 0, applet->layout.data1.size);
-  }
-  if (applet->layout.data2.size > 0) {
-    memset((void*)applet->layout.data2.start, 0, applet->layout.data2.size);
-  }
-}
-
-bool applet_reset(applet_t* applet, uint32_t cmd, const void* arg,
-                  size_t arg_size) {
-  // Clear all memory the applet is allowed to use
-  applet_clear_memory(applet);
-
-  // Reset the applet task (stack pointer, etc.)
-  if (!systask_init(&applet->task, applet->header->stack.start,
-                    applet->header->stack.size, applet)) {
-    return false;
-  }
-
-  // Copy the arguments onto the applet stack
-  void* arg_copy = NULL;
-  if (arg != NULL && arg_size > 0) {
-    arg_copy = systask_push_data(&applet->task, arg, arg_size);
-    if (arg_copy == NULL) {
-      return false;
-    }
-  }
-
-  // Schedule the applet task run
-  uint32_t arg1 = cmd;
-  uint32_t arg2 = (uint32_t)arg_copy;
-  uint32_t arg3 = rng_get();
-
-  return systask_push_call(&applet->task, applet->header->startup, arg1, arg2,
-                           arg3);
 }
 
 #ifdef USE_TRUSTZONE
