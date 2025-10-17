@@ -36,7 +36,7 @@ OPENOCD  := openocd -f interface/stlink.cfg -c "transport select hla_swd" -f tar
 
 GDB      := $(PREFIX)gdb --nx -ex 'set remotetimeout unlimited' -ex 'set confirm off' -ex 'target remote 127.0.0.1:3333' -ex 'monitor reset halt'
 
-CONFFLAG ?= -DCONFIDENTIAL='__attribute__((section("confidential")))' -fstack-protector-all
+CONFFLAG ?= -DCONFIDENTIAL='__attribute__((section("confidential")))' -DLOCAL_CONFIDENTIAL='static CONFIDENTIAL' -fstack-protector-all
 OPTFLAGS ?= -O3
 DBGFLAGS ?= -g -DNDEBUG
 CPUFLAGS ?= -mcpu=cortex-m3 -mthumb

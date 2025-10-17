@@ -8,7 +8,6 @@ def stm32f4_common_files(env, features_wanted, defines, sources, paths):
         ("STM32_HAL_H", "<stm32f4xx.h>"),
         ("FLASH_BLOCK_WORDS", "1"),
         ("FLASH_BIT_ACCESS", "1"),
-        ("CONFIDENTIAL", ""),
     ]
 
     paths += [

@@ -994,7 +994,7 @@ BINARY_NAME += ".bin"
 
 if 'STM32F427xx' in CPPDEFINES_HAL or 'STM32F429xx' in CPPDEFINES_HAL:
     action_bin=[
-        '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .confidential --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
+        '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
         '$OBJCOPY -O binary -j .flash2 $SOURCE ${TARGET}.p2',
         '$CAT ${TARGET}.p1 ${TARGET}.p2 > $TARGET',
         '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
@@ -1003,7 +1003,7 @@ if 'STM32F427xx' in CPPDEFINES_HAL or 'STM32F429xx' in CPPDEFINES_HAL:
     ]
 elif 'STM32U5G9xx' in CPPDEFINES_HAL or 'STM32U585xx' in CPPDEFINES_HAL:
     action_bin=[
-        '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data -j .confidential $SOURCE ${TARGET}',
+        '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data $SOURCE ${TARGET}',
         '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
         '$CP $TARGET ' + BINARY_NAME,
         ]
