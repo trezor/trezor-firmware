@@ -37,8 +37,10 @@ typedef enum {
 // is set to zero level. If the action is set to `BACKLIGHT_RETAIN`,
 // the backlight level is not changed (if possible).
 //
+// The `gamma_exp` parameter specifies the gamma_exp correction factor.
+//
 // Returns `true` if the initialization was successful.
-bool backlight_init(backlight_action_t action);
+bool backlight_init(backlight_action_t action, float gamma_exp);
 
 // Deinitialize the backlight driver
 //

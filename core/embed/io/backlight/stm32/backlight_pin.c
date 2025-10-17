@@ -52,8 +52,10 @@ static void backlight_off(void) {
   HAL_GPIO_Init(BACKLIGHT_PIN_PORT, &GPIO_InitStructure);
 }
 
-bool backlight_init(backlight_action_t action) {
+bool backlight_init(backlight_action_t action, float gamma_exp) {
   backlight_driver_t *drv = &g_backlight_driver;
+
+  UNUSED(gamma_exp);
 
   if (drv->initialized) {
     return true;
