@@ -450,7 +450,7 @@ bool display_set_backlight(uint8_t level) {
   }
 
 #ifdef USE_BACKLIGHT
-  if (level > backlight_get()) {
+  if (level > 0 && backlight_get() == 0) {
     display_ensure_refreshed();
   }
 
