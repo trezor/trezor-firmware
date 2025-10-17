@@ -14,10 +14,10 @@ _ENABLE_EXPERIMENTAL = const(False)
 
 def load() -> list[ThpPairedCacheEntry]:
     """Load THP paired entries from flash."""
-    from storage.device import get_thp_paired_cache
+    from storage.device import get_thp_paired_names
     from trezor.protobuf import decode
 
-    if (blob := get_thp_paired_cache()) is None:
+    if (blob := get_thp_paired_names()) is None:
         return []  # an empty cache
 
     cache = decode(blob, ThpPairedCache, _ENABLE_EXPERIMENTAL)
@@ -29,7 +29,7 @@ def load() -> list[ThpPairedCacheEntry]:
 
 def store(entries: list[ThpPairedCacheEntry], _bonds: set[bytes] | None = None) -> None:
     """Store THP paired entries to flash."""
-    from storage.device import set_thp_paired_cache
+    from storage.device import set_thp_paired_names
     from trezor.protobuf import dump_message_buffer
 
     if _bonds is None:
@@ -44,7 +44,7 @@ def store(entries: list[ThpPairedCacheEntry], _bonds: set[bytes] | None = None) 
     if __debug__:
         log.debug(__name__, "storing THP cache:\n%s", utils.dump_protobuf(cache))
 
-    set_thp_paired_cache(dump_message_buffer(cache))
+    set_thp_paired_names(dump_message_buffer(cache))
 
 
 def cache_host_info(mac_addr: AnyBytes | None, host_name: str, app_name: str) -> None:

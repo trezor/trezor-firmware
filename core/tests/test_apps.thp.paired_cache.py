@@ -3,7 +3,7 @@ from common import *  # isort: skip
 from trezor import config, utils
 
 if utils.USE_THP:
-    from storage.device import get_thp_paired_cache
+    from storage.device import get_thp_paired_names
     from trezor.messages import ThpPairedCacheEntry
     from trezor.wire.thp import paired_cache
 
@@ -88,7 +88,7 @@ class TestTrezorHostProtocolPairedCache(unittest.TestCase):
         self.assertListEqual(paired_cache.load(), [])
 
     def test_max_size(self):
-        self.assertIsNone(get_thp_paired_cache())
+        self.assertIsNone(get_thp_paired_names())
         # serialize longest `host_name` and `app_name` and maximal number of bonds
         entries = [
             ThpPairedCacheEntry(
@@ -100,7 +100,7 @@ class TestTrezorHostProtocolPairedCache(unittest.TestCase):
         paired_cache.store(entries=entries, _bonds=bonds)
         self.assertListEqual(paired_cache.load(), entries)
 
-        cache_blob = get_thp_paired_cache()
+        cache_blob = get_thp_paired_names()
         self.assertIsNotNone(cache_blob)
         # Check that serialized size is not too large:
         # 8 entries x (32 bytes [host name] + 32 bytes [app name] + 6 bytes [addr]) = 560 bytes
