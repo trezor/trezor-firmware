@@ -912,6 +912,12 @@ static void init_wiped_storage(void) {
   ensure(set_wipe_code(WIPE_CODE_EMPTY, WIPE_CODE_EMPTY_LEN),
          "set_wipe_code failed");
 
+#if USE_TROPIC
+  // Initialize Tropic  before the progress bar starts. This is a temporary fix
+  // to prevent the progress bar from freezing.
+  tropic_session_start();
+#endif
+
   ui_progress_init(STORAGE_PIN_OP_SET);
   if (ui_message == NO_MSG) {
     ui_message = STARTING_MSG;
@@ -1277,6 +1283,12 @@ secbool storage_unlock(const uint8_t *pin, size_t pin_len,
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
 
+#if USE_TROPIC
+  // Initialize Tropic  before the progress bar starts. This is a temporary fix
+  // to prevent the progress bar from freezing.
+  tropic_session_start();
+#endif
+
   ui_progress_init(STORAGE_PIN_OP_VERIFY);
   if (pin_len == 0) {
     if (ui_message == NO_MSG) {
@@ -1619,6 +1631,12 @@ secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
 
+#if USE_TROPIC
+  // Initialize Tropic  before the progress bar starts. This is a temporary fix
+  // to prevent the progress bar from freezing.
+  tropic_session_start();
+#endif
+
   ui_progress_init(STORAGE_PIN_OP_CHANGE);
   ui_message =
       (oldpin_len != 0 && newpin_len == 0) ? VERIFYING_PIN_MSG : PROCESSING_MSG;
@@ -1685,6 +1703,12 @@ secbool storage_change_wipe_code(const uint8_t *pin, size_t pin_len,
   }
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_STORAGE);
+
+#if USE_TROPIC
+  // Initialize Tropic  before the progress bar starts. This is a temporary fix
+  // to prevent the progress bar from freezing.
+  tropic_session_start();
+#endif
 
   ui_progress_init(STORAGE_PIN_OP_VERIFY);
   ui_message =
@@ -1884,6 +1908,12 @@ static secbool storage_upgrade(void) {
     if (sectrue == found && *(const uint32_t *)val != V0_PIN_EMPTY) {
       pin_len = int_to_pin(*(const uint32_t *)val, pin);
     }
+
+#if USE_TROPIC
+    // Initialize Tropic  before the progress bar starts. This is a temporary
+    // fix to prevent the progress bar from freezing.
+    tropic_session_start();
+#endif
 
     ui_progress_init(STORAGE_PIN_OP_SET);
     ui_message = PROCESSING_MSG;

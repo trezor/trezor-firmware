@@ -105,6 +105,8 @@ bool tropic_data_multi_read(uint16_t first_slot, uint16_t slot_count,
 bool tropic_random_buffer(void* buffer, size_t length);
 
 #ifdef USE_STORAGE
+bool tropic_session_start(void);
+
 bool tropic_pin_stretch(tropic_ui_progress_t ui_progress, uint16_t pin_index,
                         uint8_t stretched_pin[TROPIC_MAC_AND_DESTROY_SIZE]);
 
