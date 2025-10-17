@@ -2,7 +2,7 @@ use crate::{
     time::{Duration, Stopwatch},
     translations::TR,
     ui::{
-        component::{swipe_detect::SwipeConfig, Component, Event, EventCtx, Label, Timeout},
+        component::{swipe_detect::SwipeConfig, Component, Event, EventCtx, Label},
         display::{toif::Toif, Color},
         flow::Swipable,
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
@@ -38,11 +38,6 @@ pub enum TutorialWelcomeScreenMsg {
 pub struct TutorialWelcomeScreen {
     text: Label<'static>,
     action_bar: ActionBar,
-    /// Timer for the led color change
-    #[cfg(feature = "rgb_led")]
-    timer: Timeout,
-    #[cfg(feature = "rgb_led")]
-    led_color: Color,
     /// Stopwatch for the loader animation
     stopwatch: Stopwatch,
     border: ScreenBorder,
@@ -58,14 +53,6 @@ impl TutorialWelcomeScreen {
             )
             .top_aligned(),
             action_bar: ActionBar::new_timeout(Button::empty(), TOTAL_DURATION),
-            #[cfg(feature = "rgb_led")]
-            timer: Timeout::new(if animation_disabled() {
-                0
-            } else {
-                LOADER_DURATION.to_millis()
-            }),
-            #[cfg(feature = "rgb_led")]
-            led_color: Color::black(),
             stopwatch: Stopwatch::new_started(),
             border: ScreenBorder::new(theme::GREEN_LIME),
         }
@@ -92,12 +79,6 @@ impl Component for TutorialWelcomeScreen {
             return Some(TutorialWelcomeScreenMsg::Confirmed);
         }
 
-        #[cfg(feature = "rgb_led")]
-        if self.timer.event(ctx, event).is_some() {
-            self.led_color = LED_COLOR;
-            return None;
-        }
-
         // TutorialWelcomeScreen reacts to ANIM_FRAME_TIMER
         match event {
             _ if animation_disabled() => {
@@ -122,8 +103,12 @@ impl Component for TutorialWelcomeScreen {
             .bottom_center()
             .ofs(Offset::new(0, -theme::ACTION_BAR_HEIGHT / 2));
 
-        if !self.stopwatch.is_running_within(LOADER_DURATION) {
+        let loader_running = self.stopwatch.is_running_within(LOADER_DURATION);
+
+        #[cfg(feature = "rgb_led")]
+        if !loader_running {
             ScreenBackground::new(Some(LED_COLOR), None).render(target);
+            target.set_led_color(LED_COLOR);
         }
 
         self.text.render(target);
@@ -145,14 +130,11 @@ impl Component for TutorialWelcomeScreen {
         .with_fg(theme::GREY_EXTRA_LIGHT)
         .render(target);
 
-        if self.stopwatch.is_running_within(LOADER_DURATION) {
+        if loader_running {
             let progress = self.stopwatch.elapsed() / LOADER_DURATION;
             let loader_val = (progress * LOADER_MAX_VAL as f32) as u16;
             render_loader_indeterminate(loader_val, &self.border, target);
         }
-
-        #[cfg(feature = "rgb_led")]
-        target.set_led_color(self.led_color);
     }
 }
 
