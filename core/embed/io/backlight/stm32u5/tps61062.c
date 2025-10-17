@@ -430,9 +430,9 @@ bool backlight_set(uint8_t val) {
       (uint8_t)(drv->requested_level_corrected % USTEPS_PER_STEP);
 
   dbg_printf("%s:%s(): level=%d, level_gamma=%d, step=%d, step_dc=%d\n",
-    __FILE_NAME__, __func__,
-    drv->requested_level_limited, drv->requested_level_corrected,
-    drv->requested_step, drv->requested_step_duty_cycle);
+             __FILE_NAME__, __func__, drv->requested_level_limited,
+             drv->requested_level_corrected, drv->requested_step,
+             drv->requested_step_duty_cycle);
 
   // Requested level is below INPUT_OFFSET => shutdown backlight
   if (drv->requested_level_limited < INPUT_OFFSET) {

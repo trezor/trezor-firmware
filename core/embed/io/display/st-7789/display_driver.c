@@ -86,7 +86,7 @@ bool display_init(display_content_mode_t mode) {
     display_panel_reinit();
 #ifdef GAMMA_EXP
     backlight_init(BACKLIGHT_RETAIN, GAMMA_EXP);
-#else    
+#else
     backlight_init(BACKLIGHT_RETAIN, 1.0f);
 #endif
   }
