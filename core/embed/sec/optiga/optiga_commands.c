@@ -999,8 +999,12 @@ optiga_result optiga_clear_all_auto_states(void) {
   return OPTIGA_SUCCESS;
 }
 
-optiga_result optiga_reset_counter(uint16_t oid, uint8_t limit) {
-  uint8_t value_array[8] = {0, 0, 0, 0, 0, 0, 0, limit};
+optiga_result optiga_reset_counter(uint16_t oid, uint32_t limit) {
+  uint8_t value_array[8] = {0};
+  for (int i = 7; i >= 4; i--) {
+    value_array[i] = limit & 0xff;
+    limit >>= 8;
+  }
   return optiga_set_data_object(oid, false, value_array, sizeof(value_array));
 }
 
