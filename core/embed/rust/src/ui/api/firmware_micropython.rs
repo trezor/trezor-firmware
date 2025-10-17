@@ -2208,6 +2208,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     RebootToBootloader: ClassVar[DeviceMenuResult]
     ///     TurnOff: ClassVar[DeviceMenuResult]
     ///     RefreshMenu: ClassVar[DeviceMenuResult]
+    ///     DemoStartTutorial: ClassVar[DeviceMenuResult]
     ///     DemoCreateWallet: ClassVar[DeviceMenuResult]
     ///     DemoRestoreWallet: ClassVar[DeviceMenuResult]
     ///     DemoReceiveBitcoin: ClassVar[DeviceMenuResult]

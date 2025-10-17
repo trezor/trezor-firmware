@@ -455,6 +455,10 @@ async def handle_device_menu() -> None:
             raise RuntimeError
         elif menu_result is CANCELLED:
             return
+        elif menu_result is DeviceMenuResult.DemoStartTutorial:
+            from trezor.ui.layouts import tutorial
+
+            await tutorial()
         elif menu_result is DeviceMenuResult.DemoCreateWallet:
             from apps.demo import demo_create_wallet
 

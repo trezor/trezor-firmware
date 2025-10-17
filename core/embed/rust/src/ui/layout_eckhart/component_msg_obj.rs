@@ -194,6 +194,7 @@ impl ComponentMsgObj for DeviceMenuScreen {
             }
             DeviceMenuMsg::Close => Ok(CANCELLED.as_obj()),
             // Demo
+            DeviceMenuMsg::DemoStartTutorial => Ok(DEMO_START_TUTORIAL.as_obj()),
             DeviceMenuMsg::DemoCreateWallet => Ok(DEMO_CREATE_WALLET.as_obj()),
             DeviceMenuMsg::DemoRestoreWallet => Ok(DEMO_RESTORE_WALLET.as_obj()),
             DeviceMenuMsg::DemoReceiveBitcoin => Ok(DEMO_RECEIVE_BITCOIN.as_obj()),

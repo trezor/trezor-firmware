@@ -142,6 +142,7 @@ pub enum DeviceMenuMsg {
     WipeDevice,
 
     // Demo
+    DemoStartTutorial,
     DemoCreateWallet,
     DemoRestoreWallet,
     DemoReceiveBitcoin,
@@ -544,6 +545,10 @@ impl DeviceMenuScreen {
 
     fn register_demo_menu(&mut self) {
         let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
+        items.add(MenuItem::return_msg(
+            "Start tutorial".into(),
+            DeviceMenuMsg::DemoStartTutorial,
+        ));
         items.add(MenuItem::return_msg(
             "Create wallet".into(),
             DeviceMenuMsg::DemoCreateWallet,

@@ -40,6 +40,7 @@ pub static REBOOT_TO_BOOTLOADER: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU
 // Misc
 pub static REFRESH_MENU: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 
+pub static DEMO_START_TUTORIAL: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static DEMO_CREATE_WALLET: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static DEMO_RESTORE_WALLET: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 pub static DEMO_RECEIVE_BITCOIN: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
@@ -73,6 +74,7 @@ static DEVICE_MENU_RESULT_TYPE: Type = obj_type! {
         Qstr::MP_QSTR_Reboot => REBOOT.as_obj(),
         Qstr::MP_QSTR_RebootToBootloader => REBOOT_TO_BOOTLOADER.as_obj(),
         Qstr::MP_QSTR_RefreshMenu => REFRESH_MENU.as_obj(),
+        Qstr::MP_QSTR_DemoStartTutorial => DEMO_START_TUTORIAL.as_obj(),
         Qstr::MP_QSTR_DemoCreateWallet => DEMO_CREATE_WALLET.as_obj(),
         Qstr::MP_QSTR_DemoRestoreWallet => DEMO_RESTORE_WALLET.as_obj(),
         Qstr::MP_QSTR_DemoReceiveBitcoin => DEMO_RECEIVE_BITCOIN.as_obj(),
