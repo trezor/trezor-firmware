@@ -45,6 +45,8 @@
 #define PANEL_DSI_LANES DSI_TWO_DATA_LANES
 #define PANEL_LTDC_PIXEL_FORMAT LTDC_PIXEL_FORMAT_ARGB8888
 
+#define GAMMA_EXP 2.2f
+
 // Size of the physical frame buffer in bytes
 //
 // It's smaller than size of the virtual frame buffer

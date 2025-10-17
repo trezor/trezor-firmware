@@ -33,6 +33,12 @@
 #include "panels/stm32u5a9j-dk/stm32u5a9j-dk.h"
 #endif
 
+#define GAMMA_EXP_DEFAULT 1.0f
+
+#ifndef GAMMA_EXP
+#define GAMMA_EXP GAMMA_EXP_DEFAULT
+#endif
+
 // Hardware requires physical frame buffer alignment
 #ifdef USE_TRUSTZONE
 #define PHYSICAL_FRAME_BUFFER_ALIGNMENT TZ_SRAM_ALIGNMENT

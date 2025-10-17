@@ -45,8 +45,10 @@ static backlight_driver_t g_backlight_driver = {
     .initialized = false,
 };
 
-bool backlight_init(backlight_action_t action) {
+bool backlight_init(backlight_action_t action, float gamma_exp) {
   backlight_driver_t *drv = &g_backlight_driver;
+
+  UNUSED(gamma_exp);
 
   if (drv->initialized) {
     return true;

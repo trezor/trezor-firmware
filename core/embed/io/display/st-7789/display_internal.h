@@ -10,6 +10,12 @@
 
 #endif  // FRAMEBUFFER
 
+#define GAMMA_EXP_DEFAULT 1.0f
+
+#ifndef GAMMA_EXP
+#define GAMMA_EXP GAMMA_EXP_DEFAULT
+#endif
+
 // Display driver state
 typedef struct {
   // Set if the driver is initialized
