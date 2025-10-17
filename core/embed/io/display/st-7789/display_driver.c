@@ -71,7 +71,7 @@ bool display_init(display_content_mode_t mode) {
     display_io_init_fmc();
     display_panel_init();
     display_panel_set_little_endian();
-    backlight_init(BACKLIGHT_RESET);
+    backlight_init(BACKLIGHT_RESET, GAMMA_EXP);
   } else {
     // Reinitialize FMC to set correct timing
     // We have to do this in reinit because boardloader is fixed.
@@ -80,7 +80,7 @@ bool display_init(display_content_mode_t mode) {
     // Important for model T as this is not set in boardloader
     display_panel_set_little_endian();
     display_panel_reinit();
-    backlight_init(BACKLIGHT_RETAIN);
+    backlight_init(BACKLIGHT_RETAIN, GAMMA_EXP);
   }
 
 #ifdef FRAMEBUFFER
