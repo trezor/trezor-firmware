@@ -286,9 +286,9 @@ pub const fn button_actionbar_danger() -> ButtonStyleSheet {
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
-            text_color: ORANGE,
+            text_color: ORANGE_DIMMED,
             button_color: ORANGE_DARK,
-            icon_color: ORANGE,
+            icon_color: ORANGE_DIMMED,
         },
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
