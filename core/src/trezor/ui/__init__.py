@@ -277,12 +277,9 @@ class Layout(Generic[T]):
                 # Otherwise, THP channel may become desynced (due to two consecutive writes).
                 if __debug__:
                     log.debug(__name__, "waiting for %s", self.button_request_task)
-                try:
-                    self.button_request_box.put(None, replace=True)
-                    await is_done
-                except Exception as e:
-                    if __debug__:
-                        log.exception(__name__, e)
+                warning = loop.spawn(_unresponsive_warning())
+                self.button_request_box.put(None, replace=True)
+                await loop.race(is_done, warning)
 
             return result
         finally:
@@ -636,3 +633,30 @@ class ProgressLayout:
         self.layout.request_complete_repaint()
         self.layout.paint()
         backlight_fade(BacklightLevels.NORMAL)
+
+
+_UNRESPONSIVE_WARNING_TIMEOUT_MS = const(100)
+
+
+async def _unresponsive_warning() -> None:
+    """Allow the user to abort the workflow."""
+
+    import trezorui_api
+    from trezor import TR, ui
+    from trezor.wire.errors import ActionCancelled
+
+    await loop.sleep(_UNRESPONSIVE_WARNING_TIMEOUT_MS)
+
+    layout_obj = trezorui_api.show_warning(
+        title=TR.words__important,
+        button=TR.buttons__abort,
+        description=TR.ble__waiting_for_host,
+        allow_cancel=False,
+    )
+
+    # start the layout
+    layout = ui.Layout(layout_obj)
+    layout.start()
+
+    await layout.get_result()
+    raise ActionCancelled

@@ -308,10 +308,11 @@ class race(Syscall[T]):
     `race.__iter__` for explanation.  Always use `await`.
     """
 
-    def __init__(self, *children: AwaitableTask[T]) -> None:
+    def __init__(self, *children: AwaitableTask[T], no_schedule: bool = False) -> None:
         self.children = children
         self.finished = False
         self.scheduled: list[Task] = []  # scheduled wrapper tasks
+        self._finish_fn = _step if no_schedule else schedule
 
     def handle(self, task: Task) -> None:
         """
@@ -348,7 +349,7 @@ class race(Syscall[T]):
         if not self.finished:
             self.finished = True
             self.exit(task)
-            _step(self.callback, result)
+            self._finish_fn(self.callback, result)
 
     def __iter__(self) -> Task:
         try:
