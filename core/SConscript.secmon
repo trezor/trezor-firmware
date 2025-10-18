@@ -415,12 +415,12 @@ BINARY_NAME += ".bin"
 
 if TREZOR_MODEL in ('T3B1', 'T3T1'):
     action_bin=[
-        '$OBJCOPY -O binary -j .secmon_header -j .flash -j .data -j .confidential -j .gnu.sgstubs $SOURCE ${TARGET}',
+        '$OBJCOPY -O binary -j .secmon_header -j .flash -j .data -j .gnu.sgstubs $SOURCE ${TARGET}',
         '$CP $TARGET ' + BINARY_NAME,
     ]
 else:
     action_bin=[
-        '$OBJCOPY -O binary -j .secmon_header -j .flash -j .data -j .confidential -j .gnu.sgstubs $SOURCE ${TARGET}',
+        '$OBJCOPY -O binary -j .secmon_header -j .flash -j .data -j .gnu.sgstubs $SOURCE ${TARGET}',
         '$HEADERTOOL -h $TARGET ' + ('-D' if not PRODUCTION else ''),
         '$CP $TARGET ' + BINARY_NAME,
     ]

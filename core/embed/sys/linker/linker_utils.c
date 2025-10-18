@@ -27,9 +27,6 @@ void init_linker_sections(void) {
   extern uint32_t _data_section_start;
   extern uint32_t _data_section_end;
   extern uint32_t _data_section_loadaddr;
-  extern uint32_t _confidential_section_start;
-  extern uint32_t _confidential_section_end;
-  extern uint32_t _confidential_section_loadaddr;
 
   // Pointer are intentionally volatile to prevent optimization
   // (otherwise the compiler may optimize loops to memset/memcpy)
@@ -44,12 +41,6 @@ void init_linker_sections(void) {
   dst = &_data_section_start;
   src = &_data_section_loadaddr;
   while (dst < &_data_section_end) {
-    *dst++ = *src++;
-  }
-
-  dst = &_confidential_section_start;
-  src = &_confidential_section_loadaddr;
-  while (dst < &_confidential_section_end) {
     *dst++ = *src++;
   }
 }
