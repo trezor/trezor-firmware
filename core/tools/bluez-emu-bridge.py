@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pyright: reportAttributeAccessIssue=false, reportGeneralTypeIssues=false, reportReturnType=false
 """
 The purpose of this script is to create a mock D-Bus API of BlueZ, the Linux Bluetooth protocol
 stack. Using environment variables you can trick programs to use this API instead of the system
@@ -41,7 +42,7 @@ LOG = logging.getLogger(__name__)
 
 class TrezorUDP(asyncio.DatagramProtocol):
     @classmethod
-    async def create(cls, ip, port) -> Self:
+    async def create(cls, ip: str, port: int) -> Self:
         loop = asyncio.get_running_loop()
         addr = (ip, port)
         return await loop.create_datagram_endpoint(
@@ -49,7 +50,7 @@ class TrezorUDP(asyncio.DatagramProtocol):
             remote_addr=addr,
         )
 
-    def __init__(self, addr):
+    def __init__(self, addr: tuple[str, int]) -> None:
         self.addr = addr
         self.transport = None
         self.queue = asyncio.Queue()
@@ -57,27 +58,27 @@ class TrezorUDP(asyncio.DatagramProtocol):
     def ipport(self) -> str:
         return f"{self.addr[0]}:{self.addr[1]}"
 
-    def connection_made(self, transport: asyncio.DatagramTransport):
+    def connection_made(self, transport: asyncio.DatagramTransport) -> None:
         self.transport = transport
 
-    def connection_lost(self, exc: Exception | None):
+    def connection_lost(self, exc: Exception | None) -> None:
         # Does this ever happen?
         LOG.error(f"{self.ipport()} Connection lost", exc_info=exc)
 
-    def datagram_received(self, data: bytes, addr):
+    def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
         if addr != self.addr:
             LOG.error(f"{self.ipport()} Stray datagram from {addr}?")
             return
         self.queue.put_nowait(data)
 
-    def error_received(self, exc: Exception | None):
+    def error_received(self, exc: Exception | None) -> None:
         LOG.error(f"{self.ipport()} UDP error", exc_info=exc)
 
-    def write(self, value: bytes):
+    def write(self, value: bytes) -> None:
         assert self.transport
         self.transport.sendto(value)
 
-    def close(self):
+    def close(self) -> None:
         if self.transport:
             self.transport.close()
             self.transport = None
@@ -85,15 +86,16 @@ class TrezorUDP(asyncio.DatagramProtocol):
 
 
 class TrezorEmulator:
+
     def __init__(
         self,
-        data_transport,
-        data_protocol,
-        data_read_task,
-        event_transport,
-        event_protocol,
-        event_read_task,
-    ):
+        data_transport: asyncio.DatagramTransport,
+        data_protocol: TrezorUDP,
+        data_read_task: asyncio.Task,
+        event_transport: asyncio.DatagramTransport,
+        event_protocol: TrezorUDP,
+        event_read_task: asyncio.Task,
+    ) -> None:
         self._data_transport = data_transport
         self.data_protocol = data_protocol
         self.data_read_task = data_read_task
@@ -101,7 +103,7 @@ class TrezorEmulator:
         self.event_protocol = event_protocol
         self.event_read_task = event_read_task
 
-    def close(self):
+    def close(self) -> None:
         self.data_transport.close()
         self.event_transport.close()
 
@@ -142,7 +144,7 @@ class TrezorEmulator:
         return obj
 
 
-async def emulator_main(bus_address: str, emulator_port: int):
+async def emulator_main(bus_address: str, emulator_port: int) -> None:
     bus = await MessageBus(bus_address=bus_address).connect()
 
     hci0 = Adapter1(bus, "hci0")
@@ -185,11 +187,12 @@ def start_bus() -> str:
         encoding="utf-8",
     )
 
-    def callback():
+    def callback() -> None:
         daemon.terminate()
         daemon.kill()
 
     atexit.register(callback)
+    assert daemon.stdout is not None
     address = daemon.stdout.readline().strip()
     LOG.info(f"dbus-daemon listening at {address}")
     parts = address.split(",")
@@ -211,7 +214,7 @@ def start_bus() -> str:
     default=21328,
     help="Trezor emulated BLE port to connect to.",
 )
-def cli(verbose: bool, emulator_port: int, bus_address: str | None):
+def cli(verbose: bool, emulator_port: int, bus_address: str | None) -> None:
     if verbose:
         logging.getLogger().setLevel(logging.DEBUG)
     if not bus_address:

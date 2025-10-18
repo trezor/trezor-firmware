@@ -1,31 +1,34 @@
+# pyright: reportMissingImports=false
+from __future__ import annotations
+
 import os
 
 import logger
 import uhid
 
 
-def random_bytes(length):
+def random_bytes(length: int) -> bytes:
     return os.urandom(length)
 
 
 class HIDInterface:
     uhid_device = "/dev/uhid"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.file_descriptor = os.open(HIDInterface.uhid_device, os.O_RDWR)
         self.create_device()
 
-    def __uhid_read(self, length):
+    def __uhid_read(self, length: int) -> bytes:
         data = os.read(self.file_descriptor, length)
         logger.log_raw(f"{HIDInterface.uhid_device} >", data.hex())
         return data
 
-    def __uhid_write(self, data):
+    def __uhid_write(self, data: bytes) -> None:
         bytes_written = os.write(self.file_descriptor, data)
         assert bytes_written == len(data)
         logger.log_raw(f"{HIDInterface.uhid_device} <", data.hex())
 
-    def create_device(self):
+    def create_device(self) -> None:
         name = b"Virtual Trezor"
         phys = b""
         uniq = random_bytes(64)
@@ -73,13 +76,13 @@ class HIDInterface:
             f"rd_data=0x{rd_data.hex()}",
         )
 
-    def write_data(self, data):
+    def write_data(self, data: bytes) -> None:
         buf = uhid.create_input2_event(data)
         self.__uhid_write(buf)
         logger.log_uhid_event("UHID_INPUT2", f"data=0x{data.hex()} size={len(data)}")
         logger.log_hid_packet("DEVICE_OUTPUT", f"0x{data.hex()}")
 
-    def process_event(self):
+    def process_event(self) -> bytes | None:
         ev_type, request = uhid.parse_event(self.__uhid_read(uhid.EVENT_LENGTH))
         if ev_type == uhid.EVENT_TYPE_START:
             (dev_flags,) = request

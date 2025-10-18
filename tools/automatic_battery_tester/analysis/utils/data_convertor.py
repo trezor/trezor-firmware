@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -26,7 +28,7 @@ class BatteryAnalysisData:
 
 
 def load_measured_data(
-    data_file_path: Path, extern_temp_file_path: Path = None
+    data_file_path: Path, extern_temp_file_path: Path | None = None
 ) -> BatteryAnalysisData:
 
     profile_data = pd.read_csv(data_file_path)

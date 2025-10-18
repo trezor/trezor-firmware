@@ -1,6 +1,7 @@
 # flake8: noqa: F722, F821
 
-from dbus_fast.service import PropertyAccess, ServiceInterface, dbus_property
+from dbus_fast.constants import PropertyAccess
+from dbus_fast.service import ServiceInterface, dbus_property
 
 
 class GattService1(ServiceInterface):

@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
+from typing import Any, BinaryIO
+
 import click
 
 from trezorlib._internal import firmware_headers
 
 
-def no_echo(*args, **kwargs):
+def no_echo(*args: Any, **kwargs: Any) -> None:
     """A no-op function to replace click.echo when quiet mode is enabled."""
     pass
 
@@ -32,14 +36,14 @@ def no_echo(*args, **kwargs):
 @click.option("-q", "--quiet", is_flag=True, help="Do not print anything.")
 @click.argument("firmware_file", type=click.File("rb+"))
 def cli(
-    firmware_file,
-    verbose,
-    dry_run,
-    sign_dev_keys,
-    merkle_proof,
-    print_merkle_root,
-    quiet,
-):
+    firmware_file: BinaryIO,
+    verbose: bool,
+    dry_run: bool,
+    sign_dev_keys: bool,
+    merkle_proof: list[str],
+    print_merkle_root: bool,
+    quiet: bool,
+) -> None:
     """Manage firmware headers.
 
     This tool supports new bootloader header (TRZQ) with PQC signature. Other

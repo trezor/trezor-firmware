@@ -21,7 +21,7 @@ from typing import Dict, List
 import requests
 
 from trezorlib import btc, messages
-from trezorlib.client import get_default_client
+from trezorlib.client import PASSPHRASE_ON_DEVICE, get_default_client
 from trezorlib.debuglink import TrezorClientDebugLink
 from trezorlib.tools import parse_path
 from trezorlib.transport import enumerate_devices
@@ -119,7 +119,11 @@ if __name__ == "__main__":
         raise RuntimeError("all outputs must be TxOutputType")
 
     _, serialized_tx = btc.sign_tx(
-        CLIENT, COIN, INPUTS, OUTPUTS, prev_txes=get_prev_txes(INPUTS)
+        CLIENT.get_session(passphrase=PASSPHRASE_ON_DEVICE),
+        COIN,
+        INPUTS,
+        OUTPUTS,
+        prev_txes=get_prev_txes(INPUTS),
     )
     print(80 * "-")
     print(serialized_tx.hex())

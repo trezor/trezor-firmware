@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pyright: reportMissingImports=false
 import json
 import sys
 from enum import Enum, auto
@@ -41,7 +42,7 @@ def process_file(lang_file: Path, check_only: bool) -> FileStatus:
         return FileStatus.OK
 
 
-def main():
+def main() -> None:
     mode = sys.argv[1] if len(sys.argv) > 1 else "format"
     check_only = mode == "check"
 

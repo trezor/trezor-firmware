@@ -33,7 +33,7 @@ EXTRA_FILES = [
 
 @click.command()
 @click.option("--check", is_flag=True)
-def generate_config(check):
+def generate_config(check: bool) -> None:
     tropic_key = serialization.load_pem_private_key(
         TROPIC_KEY.read_bytes(), password=None
     )
@@ -67,7 +67,7 @@ def generate_config(check):
 
     # certificate chain with the length prefix
     all_cert_bytes = (
-        (len(tropic_cert_der_bytes) + len(root_cert_der_bytes)).to_bytes(2)
+        (len(tropic_cert_der_bytes) + len(root_cert_der_bytes)).to_bytes(2, "big")
         + tropic_cert_der_bytes
         + root_cert_der_bytes
     )

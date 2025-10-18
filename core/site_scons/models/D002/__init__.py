@@ -6,9 +6,9 @@ from .discovery2 import configure
 
 
 def configure_board(
-    revision: Optional[int | str],
+    revision: Optional[str],
     features_wanted: list[str],
-    env: dict,  # type: ignore
+    env: dict,
     defines: list[str | tuple[str, str]],
     sources: list[str],
     paths: list[str],

@@ -63,7 +63,7 @@ def print_result(filenames: Iterable[str]) -> None:
         sys.exit(1)
 
 
-def main():
+def main() -> None:
     re_md_link = re.compile(RE_MARKDOWN_LINK)
 
     md_files_in_docs_dir = Path(DOCS_DIR).rglob("*.md")

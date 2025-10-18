@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import enum
 import logging
 import random
@@ -26,7 +28,7 @@ class ScenarioPhase(enum.Enum):
 
 class RandomWonderScenario(TestScenario):
 
-    def __init__(self, core_test_time=60, relaxation_time_min=60):
+    def __init__(self, core_test_time: int = 60, relaxation_time_min: int = 60) -> None:
 
         self.relaxation_time_min = relaxation_time_min
         self.phase_start = time.time()
@@ -40,7 +42,7 @@ class RandomWonderScenario(TestScenario):
         self.time_id = "0000000000"
         self.previous_phase = ScenarioPhase.NOT_STARTED
 
-    def setup(self, dut_controller: DutController):
+    def setup(self, dut_controller: DutController) -> None:
 
         # Start with charging phase first, so connect the charger with relay
         # and enable the charging.
@@ -59,7 +61,7 @@ class RandomWonderScenario(TestScenario):
         self.phase_start = time.time()
         self.test_time_id = f"{time.strftime('%y%m%d%H%M')}"
 
-    def run(self, dut_controller):
+    def run(self, dut_controller: DutController) -> bool:
 
         if self.previous_phase != self.scenario_phase:
             logging.info(f"Random Wonder scenario entered {self.scenario_phase} phase.")
@@ -222,7 +224,9 @@ class RandomWonderScenario(TestScenario):
         # Relax
         return False
 
-    def log_data(self, dut_controller, output_directory: Path, temp):
+    def log_data(
+        self, dut_controller: DutController, output_directory: Path, temp: float | int
+    ) -> None:
 
         dut_controller.log_data(
             output_directory,
@@ -232,5 +236,5 @@ class RandomWonderScenario(TestScenario):
             temp,
         )
 
-    def teardown(self, dut_controller):
+    def teardown(self, dut_controller: DutController) -> None:
         pass
