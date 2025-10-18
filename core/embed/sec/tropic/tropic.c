@@ -354,6 +354,11 @@ bool tropic_random_buffer(void *buffer, size_t length) {
   return true;
 }
 
+void tropic_random_buffer_time(uint32_t *time) {
+  // Assuming the data size is 32 bytes
+  *time += 50;
+}
+
 #ifdef USE_STORAGE
 
 static mac_and_destroy_slot_t get_first_mac_and_destroy_slot(
@@ -369,10 +374,22 @@ static uint16_t get_kek_masks_slot(tropic_driver_t *drv) {
              : TROPIC_KEK_MASKS_PRIVILEGED_SLOT;
 }
 
+static void lt_mac_and_destroy_time(uint32_t *time) { *time += 51; }
+
+static void lt_r_mem_data_read_time(uint32_t *time) {
+  // Assuming the data size is 320 bytes
+  *time += 100;
+}
+
+static void lt_r_mem_data_write_time(uint32_t *time) {
+  // Assuming the data size is 320 bytes
+  *time += 77;
+}
+
+static void lt_r_mem_data_erase_time(uint32_t *time) { *time += 55; }
+
 bool tropic_pin_stretch(tropic_ui_progress_t ui_progress, uint16_t pin_index,
                         uint8_t stretched_pin[TROPIC_MAC_AND_DESTROY_SIZE]) {
-  // Time: 50 ms
-
   if (pin_index >= PIN_MAX_TRIES) {
     return false;
   }
@@ -403,11 +420,11 @@ bool tropic_pin_stretch(tropic_ui_progress_t ui_progress, uint16_t pin_index,
   return res == LT_OK;
 }
 
+void tropic_pin_stretch_time(uint32_t *time) { lt_mac_and_destroy_time(time); }
+
 bool tropic_pin_reset_slots(
     tropic_ui_progress_t ui_progress, uint16_t pin_index,
     const uint8_t reset_key[TROPIC_MAC_AND_DESTROY_SIZE]) {
-  // Time: (pin_index + 1) * 50 ms
-
   if (pin_index >= PIN_MAX_TRIES) {
     return false;
   }
@@ -441,12 +458,16 @@ cleanup:
   return res == LT_OK;
 }
 
+void tropic_pin_reset_slots_time(uint32_t *time, uint16_t pin_index) {
+  for (int i = 0; i <= pin_index; i++) {
+    lt_mac_and_destroy_time(time);
+  }
+}
+
 bool tropic_pin_set(
     tropic_ui_progress_t ui_progress,
     uint8_t stretched_pins[PIN_MAX_TRIES][TROPIC_MAC_AND_DESTROY_SIZE],
     uint8_t reset_key[TROPIC_MAC_AND_DESTROY_SIZE]) {
-  // Time: 65 ms + PIN_MAX_TRIES * 155 ms
-
   tropic_driver_t *drv = &g_tropic_driver;
 
   if (!tropic_session_start()) {
@@ -504,12 +525,19 @@ cleanup:
   return res == LT_OK;
 }
 
+void tropic_pin_set_time(uint32_t *time) {
+  rng_fill_buffer_strong_time(time);
+  for (int i = 0; i < PIN_MAX_TRIES; i++) {
+    lt_mac_and_destroy_time(time);
+    lt_mac_and_destroy_time(time);
+    lt_mac_and_destroy_time(time);
+  }
+}
+
 bool tropic_pin_set_kek_masks(
     tropic_ui_progress_t ui_progress,
     const uint8_t kek[TROPIC_MAC_AND_DESTROY_SIZE],
     const uint8_t stretched_pins[PIN_MAX_TRIES][TROPIC_MAC_AND_DESTROY_SIZE]) {
-  // Time: 130 ms
-
   tropic_driver_t *drv = &g_tropic_driver;
 
   if (!tropic_session_start()) {
@@ -551,12 +579,15 @@ cleanup:
   return ret == LT_OK;
 }
 
+void tropic_pin_set_kek_masks_time(uint32_t *time) {
+  lt_r_mem_data_erase_time(time);
+  lt_r_mem_data_write_time(time);
+}
+
 bool tropic_pin_unmask_kek(
     tropic_ui_progress_t ui_progress, uint16_t pin_index,
     const uint8_t stretched_pin[TROPIC_MAC_AND_DESTROY_SIZE],
     uint8_t kek[TROPIC_MAC_AND_DESTROY_SIZE]) {
-  // Time: 100 ms
-
   tropic_driver_t *drv = &g_tropic_driver;
 
   if (!tropic_session_start()) {
@@ -591,26 +622,8 @@ bool tropic_pin_unmask_kek(
   return true;
 }
 
-uint32_t tropic_estimate_time_ms(storage_pin_op_t op, uint16_t pin_index) {
-  const int set_time = 65 + PIN_MAX_TRIES * 155;
-  const int set_kek_masks_time = 130;
-  const int stretch_time = 50;
-  const int unmask_kek_time = 100;
-  const int reset_slots_time = (pin_index + 1) * 50;
-
-  const int pin_verify_time = stretch_time + unmask_kek_time + reset_slots_time;
-  const int pin_set_time = set_time + set_kek_masks_time;
-
-  switch (op) {
-    case STORAGE_PIN_OP_SET:
-      return pin_set_time;
-    case STORAGE_PIN_OP_VERIFY:
-      return pin_verify_time;
-    case STORAGE_PIN_OP_CHANGE:
-      return pin_set_time + pin_verify_time;
-    default:
-      return 0;
-  }
+void tropic_pin_unmask_kek_time(uint32_t *time) {
+  lt_r_mem_data_read_time(time);
 }
 
 #endif  // USE_STORAGE

@@ -70,4 +70,12 @@ bool rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
   return true;
 }
 
+void rng_fill_buffer_strong_time(uint32_t* time) {
+  // Assuming the buffer size is 32 bytes
+  optiga_random_buffer_time(time);
+#ifdef USE_TROPIC
+  tropic_random_buffer_time(time);
+#endif
+}
+
 #endif  // SECURE_MODE
