@@ -19,7 +19,7 @@ external thermocouple sensor connected to the GDM8351 multimeter.
 """
 
 
-def main():
+def main() -> None:
 
     print("**********************************************************")
     print("  DUT port selection ")

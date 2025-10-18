@@ -10,7 +10,7 @@ def get_hw_model_as_number(hw_model: str) -> int:
 
 def configure_board(
     model: str,
-    revision: Optional[str | int],
+    revision: Optional[int | str],
     features_wanted: list[str],
     env: dict,  # type: ignore
     defines: list[str | tuple[str, str]],
@@ -37,7 +37,7 @@ def _configure_common_modules(
     defines: list[str | tuple[str, str]],
     sources: list[str],
     paths: list[str],
-) -> list[str]:
+) -> None:
 
     if "kernel_mode" in features_wanted:
         defines += [("KERNEL_MODE", "1")]

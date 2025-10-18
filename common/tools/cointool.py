@@ -96,7 +96,7 @@ def c_str_filter(b: Any) -> str:
         return rf"\x{c:02x}"
 
     if isinstance(b, bytes):
-        return '"' + "".join(map(hexescape, b)) + '"'
+        return '"' + "".join(map(hexescape, b)) + '"'  # type: ignore ["Iterable[_T1@__new__]" in function "__new__"]
     else:
         return json.dumps(b)
 

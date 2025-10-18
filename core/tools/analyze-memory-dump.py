@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import json
 import sys
+from typing import Any, Iterator, Optional
+
+from typing_extensions import TypeGuard
 
 if len(sys.argv) < 2:
     print(
@@ -40,15 +45,15 @@ MEMMAP = [m for m in MEMMAP if isinstance(m, dict)]
 MEMORY = {}
 
 
-def is_ptr(maybe_ptr):
+def is_ptr(maybe_ptr: Any) -> TypeGuard[str]:
     return isinstance(maybe_ptr, str) and maybe_ptr.startswith("0x")
 
 
-def is_gc_ptr(maybe_ptr):
+def is_gc_ptr(maybe_ptr: Any) -> bool:
     return is_ptr(maybe_ptr) and maybe_ptr.startswith("0x7f")
 
 
-def ptr_or_shortval(maybe_ptr):
+def ptr_or_shortval(maybe_ptr: Any) -> str:
     if is_ptr(maybe_ptr):
         return maybe_ptr
     else:
@@ -57,7 +62,7 @@ def ptr_or_shortval(maybe_ptr):
         return maybe_ptr["shortval"]
 
 
-def is_ignored_ptr(ptr):
+def is_ignored_ptr(ptr: Any) -> bool:
     if ptr == "(nil)":
         return True
 
@@ -67,7 +72,7 @@ def is_ignored_ptr(ptr):
     return not min_ptr <= ptr < max_ptr
 
 
-def deref_or_shortval(maybe_ptr):
+def deref_or_shortval(maybe_ptr: Any) -> Any:
     if is_ptr(maybe_ptr) and maybe_ptr in MEMORY:
         return MEMORY[maybe_ptr]
     else:
@@ -75,7 +80,8 @@ def deref_or_shortval(maybe_ptr):
 
 
 class Item:
-    def __init__(self, item):
+
+    def __init__(self, item: Any) -> None:
         self.item = item
         self.backlinks = []
         self.dict = {}
@@ -83,7 +89,7 @@ class Item:
         self.type = item["type"]
         self.ptr = item["ptr"]
 
-    def backlinkify(self):
+    def backlinkify(self) -> None:
         if "children" in self.item:
             for child in self.item["children"]:
                 key_str = ptr_or_shortval(child["key"])
@@ -95,7 +101,7 @@ class Item:
                 continue
             MEMORY[ptr].backlinks.append(self)
 
-    def find_pointers(self):
+    def find_pointers(self) -> Iterator[str]:
         if "children" in self.item:
             for child in self.item["children"]:
                 if is_ptr(child["key"]):
@@ -111,17 +117,17 @@ class Item:
             if isinstance(v, list):
                 yield from (p for p in v if is_ptr(p))
             if is_ptr(v):
-                yield v
+                yield v  #
 
-    def __getattr__(self, key):
+    def __getattr__(self, key: str) -> Any:
         if key not in self.item:
             raise AttributeError
         return self.item[key]
 
-    def find_modules(self):
+    def find_modules(self) -> list["Item"]:
         return [it for it in self.backlinks if it.type == "module"]
 
-    def name(self):
+    def name(self) -> Optional[str]:
         if "__name__" in self.dict:
             return self.dict["__name__"]
 
@@ -148,7 +154,7 @@ class Item:
 
         return None
 
-    def ptrval(self):
+    def ptrval(self) -> int:
         return int(self.ptr[2:], 16)
 
 
@@ -207,7 +213,7 @@ maxline = ((max_ptr - min_ptr) & ~(bytes_per_line - 1)) + (bytes_per_line * 2)
 pixelmap = [None] * 2 * (maxline // pixelsize)
 
 
-def pixel_index(ptrval):
+def pixel_index(ptrval: int) -> int:
     ptridx = ptrval - min_ptr
     # assert ptridx >= 0
     return ptridx // pixelsize
@@ -257,7 +263,7 @@ import dominate
 import dominate.tags as t
 
 doc = dominate.document(title="memory map")
-with doc.head:
+with doc.head:  # type: ignore [Cannot access attribute "head", cannot be used with "with"]
     t.meta(charset="utf-8")
     t.style(
         """\
@@ -296,37 +302,37 @@ ctr = 0
 newline = True
 previtem = None
 container = t.div(id="memorymap")
-doc.add(container)
+doc.add(container)  # type: ignore [Cannot access attribute "add"]
 line = t.div()
 for pixel in pixelmap:
     if ctr % pixels_per_line == 0:
-        container.add(line)
+        container.add(line)  # type: ignore [Cannot access attribute "add"]
         line = t.div()
-        line.add(t.span(f"{ctr * pixelsize:05x}: ", cls="leadin"))
+        line.add(t.span(f"{ctr * pixelsize:05x}: ", cls="leadin"))  # type: ignore [Cannot access attribute "add"]
     if pixel is None:
-        line.add(t.span("."))
+        line.add(t.span("."))  # type: ignore [Cannot access attribute "add"]
     elif pixel is previtem:
-        line.add(t.a("=", href=f"#{pixel.ptr}"))
+        line.add(t.a("=", href=f"#{pixel.ptr}"))  # type: ignore [Cannot access attribute "add"]
     else:
         c = types[pixel.type]
-        line.add(t.a(c, href=f"#{pixel.ptr}", name=f"mapentry-{pixel.ptr}"))
+        line.add(t.a(c, href=f"#{pixel.ptr}", name=f"mapentry-{pixel.ptr}"))  # type: ignore [Cannot access attribute "add"]
     ctr += 1
     previtem = pixel
 
 
-def text_or_ptr(s):
+def text_or_ptr(s: str) -> Any:
     if s.startswith("0x7"):
         sp = t.span()
-        sp.add(t.a(s, href=f"#{s}"))
-        sp.add(" (")
-        sp.add(t.a("M", href=f"#mapentry-{s}"))
-        sp.add(")")
+        sp.add(t.a(s, href=f"#{s}"))  # type: ignore [Cannot access attribute "add"]
+        sp.add(" (")  # type: ignore [Cannot access attribute "add"]
+        sp.add(t.a("M", href=f"#mapentry-{s}"))  # type: ignore [Cannot access attribute "add"]
+        sp.add(")")  # type: ignore [Cannot access attribute "add"]
         return sp
     else:
         return t.span(s)
 
 
-def dump_single_val(value):
+def dump_single_val(value: Any) -> Any:
     if isinstance(value, str):
         return text_or_ptr(value)
     elif isinstance(value, dict):
@@ -340,13 +346,13 @@ def dump_single_val(value):
     elif isinstance(value, list):
         ul = t.ul()
         for subval in value:
-            ul.add(t.li(dump_single_val(subval)))
+            ul.add(t.li(dump_single_val(subval)))  # type: ignore [Cannot access attribute "add"]
         return ul
     else:
         return str(value)
 
 
-def dump_dict(dl, d):
+def dump_dict(dl: Any, d: dict[str, Any]) -> None:
     for key, value in d.items():
         dl.add(t.dt(key))
         dl.add(t.dd(dump_single_val(value)))
@@ -354,21 +360,21 @@ def dump_dict(dl, d):
 
 for item in allobjs:
     div = t.div(cls="entry")
-    div.add(t.a("{", name=item.ptr))
+    div.add(t.a("{", name=item.ptr))  # type: ignore [Cannot access attribute "add"]
     dl = t.dl()
-    dl.add(t.dt("Inferred name:"))
-    dl.add(t.dd(str(item.name())))
-    dl.add(t.dt("Backrefs:"))
+    dl.add(t.dt("Inferred name:"))  # type: ignore [Cannot access attribute "add"]
+    dl.add(t.dd(str(item.name())))  # type: ignore [Cannot access attribute "add"]
+    dl.add(t.dt("Backrefs:"))  # type: ignore [Cannot access attribute "add"]
     refs = t.dd()
     for backref in item.backlinks:
-        refs.add(text_or_ptr(backref.ptr))
-        refs.add(", ")
-    dl.add(refs)
+        refs.add(text_or_ptr(backref.ptr))  # type: ignore [Cannot access attribute "add"]
+        refs.add(", ")  # type: ignore [Cannot access attribute "add"]
+    dl.add(refs)  # type: ignore [Cannot access attribute "add"]
     dump_dict(dl, item.item)
-    div.add(dl)
-    doc.add(div)
+    div.add(dl)  # type: ignore [Cannot access attribute "add"]
+    doc.add(div)  # type: ignore [Cannot access attribute "add"]
 
 fname = "memorymap.html" if len(sys.argv) < 3 else sys.argv[2]
 print(f"Writing to {fname}...")
 with open(fname, "w") as f:
-    f.write(doc.render(pretty=False))
+    f.write(doc.render(pretty=False))  # type: ignore [Cannot access attribute "render"]

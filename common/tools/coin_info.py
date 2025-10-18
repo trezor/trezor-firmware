@@ -8,7 +8,7 @@ from collections import OrderedDict, defaultdict
 from pathlib import Path
 from typing import Dict  # for python38 support, must be used in type aliases
 from typing import List  # for python38 support, must be used in type aliases
-from typing import Any, Callable, Iterable, Iterator, cast
+from typing import Any, Callable, Iterable, Iterator, Union, cast
 
 from typing_extensions import (  # for python37 support, is not present in typing there
     Literal,
@@ -32,7 +32,7 @@ class SupportItemVersion(TypedDict):
 
 
 SupportData = Dict[str, SupportItemVersion]
-SupportInfoItem = Dict[str, Literal[False] | str]
+SupportInfoItem = Dict[str, Union[Literal[False], str]]
 SupportInfo = Dict[str, SupportInfoItem]
 
 

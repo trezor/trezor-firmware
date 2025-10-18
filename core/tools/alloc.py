@@ -52,7 +52,7 @@ def parse_alloc_data(
 @click.pass_context
 @click.option("-a", "--alloc-data", type=click.File(), default="src/alloc_data.txt")
 @click.option("-t", "--type", type=click.Choice(("total", "avg")), default="avg")
-def cli(ctx: click.Context, alloc_data: TextIO, type: str):
+def cli(ctx: click.Context, alloc_data: TextIO, type: str) -> None:
     shared_obj: SharedObject = SimpleNamespace()  # type: ignore
     shared_obj.data = parse_alloc_data(alloc_data)
     shared_obj.type = type
@@ -68,7 +68,7 @@ def _normalize_filename(filename: str) -> str:
 @cli.command()
 @click.pass_obj
 @click.argument("filename")
-def annotate(obj: SharedObject, filename: str):
+def annotate(obj: SharedObject, filename: str) -> None:
     filename = _normalize_filename(filename)
 
     if obj.type == "total":
@@ -113,7 +113,7 @@ def _list(
 @cli.command(name="list")
 @click.pass_obj
 @click.option("-r", "--reverse", is_flag=True)
-def list_function(obj: SharedObject, reverse: bool):
+def list_function(obj: SharedObject, reverse: bool) -> None:
     if obj.type == "total":
         field = "total_allocs"
 
@@ -161,7 +161,7 @@ def get_biggest_n_lines_for_each_file(
 @cli.command()
 @click.pass_obj
 @click.argument("htmldir")
-def html(obj: SharedObject, htmldir: str):
+def html(obj: SharedObject, htmldir: str) -> None:
     file_sums = _list(obj, "total_allocs", reverse=True)
     style_grey = "color: grey"
     style_red = "color: red;"
@@ -179,20 +179,20 @@ def html(obj: SharedObject, htmldir: str):
 
     # Create index.html - two tables
     doc = document(title="Firmware allocations")
-    with doc.head:
+    with doc.head:  # type: ignore [cannot be used with "with"]
         meta(charset="utf-8")
         style(css_smaller_mono)
-    with doc:
+    with doc:  # type: ignore [cannot be used with "with"]
         h3(f"{n_biggest} biggest allocations")
-        with table():
-            with thead():
-                with tr():
+        with table():  # type: ignore [cannot be used with "with"]
+            with thead():  # type: ignore [cannot be used with "with"]
+                with tr():  # type: ignore [cannot be used with "with"]
                     th("alloc", style=style_right)
                     th("file:line")
-            with tbody():
+            with tbody():  # type: ignore [cannot be used with "with"]
                 for location, avg_alloc in biggest_lines:
                     filename, lineno = location.split(":")
-                    with tr():
+                    with tr():  # type: ignore [cannot be used with "with"]
                         td(f"{avg_alloc:.2f}", style=style_right)
                         td(
                             a(
@@ -202,15 +202,15 @@ def html(obj: SharedObject, htmldir: str):
                             )
                         )
         h3(f"Total allocations: {sum(total_sum for _, _, total_sum in file_sums)}")
-        with table():
-            with thead():
-                with tr():
+        with table():  # type: ignore [cannot be used with "with"]
+            with thead():  # type: ignore [cannot be used with "with"]
+                with tr():  # type: ignore [cannot be used with "with"]
                     th("avg", style=style_right)
                     th("total", style=style_right)
                     th("file")
-            with tbody():
+            with tbody():  # type: ignore [cannot be used with "with"]
                 for filename, avg_sum, total_sum in file_sums:
-                    with tr():
+                    with tr():  # type: ignore [cannot be used with "with"]
                         td(f"{avg_sum:.2f}", style=style_right)
                         td(total_sum, style=style_right)
                         td(
@@ -221,7 +221,7 @@ def html(obj: SharedObject, htmldir: str):
                             )
                         )
     with open(f"{htmldir}/index.html", "w") as f:
-        f.write(doc.render())
+        f.write(doc.render())  # type: ignore [Cannot access attribute "render"]
 
     # So we can highlight biggest allocations in each file
     biggest_n_lines_for_each_file = get_biggest_n_lines_for_each_file(obj, 5)
@@ -233,18 +233,18 @@ def html(obj: SharedObject, htmldir: str):
         htmlfile.parent.mkdir(parents=True, exist_ok=True)
 
         doc = document(title=filename)
-        with doc.head:
+        with doc.head:  # type: ignore [cannot be used with "with"]
             meta(charset="utf-8")
             style(css_smaller_mono)
-        with doc:
-            with table():
-                with thead():
-                    with tr():
+        with doc:  # type: ignore [cannot be used with "with"]
+            with table():  # type: ignore [cannot be used with "with"]
+                with thead():  # type: ignore [cannot be used with "with"]
+                    with tr():  # type: ignore [cannot be used with "with"]
                         th("#", style=style_grey)
                         th("avg", style=style_right)
                         th("total", style=style_right)
                         th("")
-                with tbody():
+                with tbody():  # type: ignore [cannot be used with "with"]
                     lineno = 0
                     for line in open(HERE.parent / "src" / filename):
                         lineno += 1
@@ -259,7 +259,9 @@ def html(obj: SharedObject, htmldir: str):
                         else:
                             row_style = None
 
-                        with tr(style=row_style, id=lineno):
+                        with tr(  # type: ignore [cannot be used with "with"]
+                            style=row_style, id=lineno
+                        ):
                             td(lineno, style=style_grey)
                             td(f"{avg:.2f}", style=style_right)
                             td(total, style=style_right)
@@ -267,7 +269,7 @@ def html(obj: SharedObject, htmldir: str):
                             # whitespace is stripped
                             td(raw(line.rstrip("\n").replace(" ", "&nbsp;")))
         with open(str(htmlfile) + ".html", "w") as f:
-            f.write(doc.render())
+            f.write(doc.render())  # type: ignore [Cannot access attribute "render"]
 
 
 if __name__ == "__main__":
