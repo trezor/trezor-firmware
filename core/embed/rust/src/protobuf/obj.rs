@@ -49,7 +49,7 @@ impl MsgObj {
     }
 
     pub fn def(&self) -> MsgDef {
-        unsafe { get_msg(self.msg_offset) }
+        get_msg(self.msg_offset)
     }
 
     fn obj_type() -> &'static Type {
