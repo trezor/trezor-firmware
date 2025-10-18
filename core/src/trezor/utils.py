@@ -45,6 +45,7 @@ from trezorutils import (  # noqa: F401
     memzero,
     notify_send,
     presize_module,
+    reboot,
     reboot_to_bootloader,
     sd_hotswap_enabled,
     unit_btconly,
