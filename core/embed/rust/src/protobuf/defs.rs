@@ -8,10 +8,10 @@ macro_rules! proto_def_path {
     };
 }
 
-static ENUM_DEFS: &'static [u8] = include_aligned!(u16, proto_def_path!("proto_enums.data"));
-static MSG_DEFS: &'static [u8] = include_aligned!(u16, proto_def_path!("proto_msgs.data"));
-static NAME_DEFS: &'static [u8] = include_aligned!(NameDef, proto_def_path!("proto_names.data"));
-static WIRE_DEFS: &'static [u8] = include_aligned!(WireDef, proto_def_path!("proto_wire.data"));
+static ENUM_DEFS: &[u8] = include_aligned!(u16, proto_def_path!("proto_enums.data"));
+static MSG_DEFS: &[u8] = include_aligned!(u16, proto_def_path!("proto_msgs.data"));
+static NAME_DEFS: &[u8] = include_aligned!(NameDef, proto_def_path!("proto_names.data"));
+static WIRE_DEFS: &[u8] = include_aligned!(WireDef, proto_def_path!("proto_wire.data"));
 
 pub struct MsgDef {
     pub fields: &'static [FieldDef],
