@@ -6,7 +6,6 @@ help: ## show this help
 ## style commands:
 
 PY_FILES = $(shell find . -type f -name '*.py'   | sed 'sO^\./OO' | grep -f ./tools/style.py.include | grep -v -f ./tools/style.py.exclude ) common/protob/pb2py
-PY_FILES_LIMITED = $(shell find . -type f -name '*.py'   | sed 'sO^\./OO' | grep -f ./tools/style.py.include | grep -v -f ./tools/style.py.exclude | grep -v -f ./tools/style.py.typecheck.exclude ) common/protob/pb2py
 C_FILES =  $(shell find . -type f -name '*.[ch]' | grep -f ./tools/style.c.include  | grep -v -f ./tools/style.c.exclude )
 
 
@@ -23,9 +22,7 @@ pystyle_check: ## run code style check on application sources and tests
 	@echo [TYPECHECK]
 	@make -C core typecheck
 	@echo [FLAKE8]
-	@flake8 $(PY_FILES_LIMITED)
-	@echo [FLAKE8 - limited]
-	@flake8 --extend-ignore=ANN $(PY_FILES)
+	@flake8 $(PY_FILES)
 	@echo [ISORT]
 	@isort --check-only $(PY_FILES)
 	@echo [BLACK]
@@ -48,9 +45,7 @@ pystyle: ## apply code style on application sources and tests
 	@echo [TYPECHECK]
 	@make -C core typecheck
 	@echo [FLAKE8]
-	@flake8 $(PY_FILES_LIMITED)
-	@echo [FLAKE8 - limited]
-	@flake8 --extend-ignore=ANN $(PY_FILES)
+	@flake8 $(PY_FILES)
 	@echo [PYLINT]
 	@pylint $(PY_FILES)
 	@echo [PYTHON]
