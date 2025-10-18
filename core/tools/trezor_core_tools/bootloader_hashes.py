@@ -97,7 +97,7 @@ def bootloader_str(file: Path, model: str) -> str:
 
 @click.command()
 @click.option("-c", "--check", is_flag=True, help="Do not write, only check.")
-def main(check):
+def main(check: bool) -> None:
 
     models = list(MODELS_DIR.iterdir())
 

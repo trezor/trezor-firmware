@@ -3,7 +3,6 @@ from __future__ import annotations
 import ast
 import json
 from pathlib import Path
-from typing import Any
 
 HERE = Path(__file__).parent
 CORE = HERE.parent.parent
@@ -28,10 +27,11 @@ def find_all_strings(filename: str | Path) -> list[str]:
     strings: list[str] = []
 
     class StringVisitor(ast.NodeVisitor):
-        def visit_Str(self, node: ast.Str):
+
+        def visit_Str(self, node: ast.Str) -> None:
             strings.append(node.s)
 
-        def visit_JoinedStr(self, node: ast.JoinedStr):
+        def visit_JoinedStr(self, node: ast.JoinedStr) -> None:
             for value in node.values:
                 if isinstance(value, ast.Str):
                     strings.append(value.s)
@@ -100,7 +100,8 @@ def find_strings_to_ignore(filename: str | Path) -> list[str]:
                     strings.append(expr_as_str)
 
     class IgnoreStringVisitor(ast.NodeVisitor):
-        def visit_Call(self, node: ast.Call):
+
+        def visit_Call(self, node: ast.Call) -> None:
             func_name = get_final_attribute_name(node.func)
             if ignore_func(func_name):
                 for arg in node.args + [kw.value for kw in node.keywords]:
@@ -108,13 +109,13 @@ def find_strings_to_ignore(filename: str | Path) -> list[str]:
             # Continue visiting the children of this node (!!!Necessary!!!)
             self.generic_visit(node)
 
-        def visit_Assert(self, node: ast.Assert):
+        def visit_Assert(self, node: ast.Assert) -> None:
             error_message = node.msg
             if error_message:
                 include_all_strings(error_message)
             self.generic_visit(node)
 
-        def visit_Assign(self, node: ast.Assign):
+        def visit_Assign(self, node: ast.Assign) -> None:
             ignore_variables = [
                 "msg_wire",
                 "msg_type",
@@ -125,7 +126,7 @@ def find_strings_to_ignore(filename: str | Path) -> list[str]:
                     include_all_strings(value)
             self.generic_visit(node)
 
-        def visit_FunctionDef(self, node: ast.FunctionDef):
+        def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
             for arg in node.args.args:
                 annotation = arg.annotation
                 if annotation:
@@ -135,7 +136,7 @@ def find_strings_to_ignore(filename: str | Path) -> list[str]:
                 include_all_strings(return_annotation)
             self.generic_visit(node)
 
-        def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> Any:
+        def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
             for arg in node.args.args:
                 annotation = arg.annotation
                 if annotation:
@@ -145,7 +146,7 @@ def find_strings_to_ignore(filename: str | Path) -> list[str]:
                 include_all_strings(return_annotation)
             self.generic_visit(node)
 
-        def visit_AnnAssign(self, node: ast.AnnAssign):
+        def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
             annotation = node.annotation
             include_all_strings(annotation)
             self.generic_visit(node)

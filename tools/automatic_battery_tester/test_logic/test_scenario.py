@@ -5,17 +5,17 @@ class TestScenario(ABC):
     """Parent class for test scenarios."""
 
     @abstractmethod
-    def setup(self):
+    def setup(self) -> None:
         pass
 
     @abstractmethod
-    def run(self):
+    def run(self) -> bool:
         pass
 
     @abstractmethod
-    def teardown(self):
+    def teardown(self) -> None:
         pass
 
     @abstractmethod
-    def log_data(self):
+    def log_data(self) -> None:
         pass

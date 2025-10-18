@@ -15,7 +15,7 @@ unsigned int {name}_jpg_len = {length};
 
 @click.command()
 @click.argument("infile", type=click.File("rb"))
-def convert(infile):
+def convert(infile: click.File) -> None:
 
     path = pathlib.Path(infile.name)
 
