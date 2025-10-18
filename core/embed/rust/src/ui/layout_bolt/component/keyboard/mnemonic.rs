@@ -124,7 +124,17 @@ where
         let input_area = grid.row_col(0, 1).union(grid.row_col(0, 3));
 
         let prompt_center = grid.row_col(0, 0).union(grid.row_col(0, 3)).center();
-        let prompt_size = self.prompt.inner().inner().max_size();
+        let prompt_size = self.prompt.inner().inner().text().map(|t| {
+            Offset::new(
+                self.prompt.inner().inner().style().text_font.text_width(t),
+                self.prompt
+                    .inner()
+                    .inner()
+                    .style()
+                    .text_font
+                    .text_max_height(),
+            )
+        });
         let prompt_area = Rect::snap(prompt_center, prompt_size, Alignment2D::CENTER);
 
         self.swipe.place(bounds);
