@@ -53,7 +53,7 @@ static mp_obj_t parse_ble_event_data(const ble_event_t *event) {
     return mp_const_none;
   }
   // Parse pairing code
-  _Static_assert(sizeof(event->data) <= 6);
+  _Static_assert(sizeof(event->data) <= 6, "pairing code is too long");
   uint32_t code = 0;
   for (int i = 0; i < event->data_len; ++i) {
     uint8_t byte = event->data[i];
