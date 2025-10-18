@@ -41,7 +41,7 @@ payment_req_signer = SigningKey.from_string(
 )
 
 
-def hash_bytes_prefixed(hasher, data):
+def hash_bytes_prefixed(hasher, data) -> None:
     hasher.update(compact_size(len(data)))
     hasher.update(data)
 
@@ -55,7 +55,7 @@ def make_payment_request(
     memos=None,
     nonce=None,
     amount_size_bytes=8,
-):
+) -> messages.PaymentRequest:
     h_pr = sha256(b"SL\x00\x24")
 
     if nonce:

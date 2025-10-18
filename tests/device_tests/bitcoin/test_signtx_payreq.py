@@ -214,6 +214,10 @@ SERIALIZED_TX = "01000000000101e29305e85821ea86f2bca1fcfe45e7cb0c8de87b612479ee6
             (PaymentRequestParams([0, 1], memos3, get_nonce=True),),
         ),
         case(
+            "connect-e2e",
+            (PaymentRequestParams([0, 1, 2], [], get_nonce=False),),
+        ),
+        case(
             "out012",
             (PaymentRequestParams([0, 1, 2], [], get_nonce=True),),
         ),
@@ -227,7 +231,7 @@ def test_payment_request(session: Session, payment_request_params):
     for txo in outputs:
         txo.payment_req_index = None
 
-    payment_reqs = []
+    payment_reqs: list[messages.PaymentRequest] = []
     for i, params in enumerate(payment_request_params):
         request_outputs = []
         for txo_index in params.txo_indices:
@@ -267,16 +271,20 @@ def test_payment_request(session: Session, payment_request_params):
 
     assert serialized_tx.hex() == SERIALIZED_TX
 
-    # Ensure that the nonce has been invalidated.
-    with pytest.raises(TrezorFailure, match="Invalid nonce in payment request"):
-        btc.sign_tx(
-            session,
-            "Testnet",
-            inputs,
-            outputs,
-            prev_txes=PREV_TXES,
-            payment_reqs=payment_reqs,
-        )
+    # Payment requests without both `memos` and `nonce` will not raise
+    should_raise = any(pr.memos or pr.nonce for pr in payment_reqs)
+
+    if should_raise:
+        # Ensure that the nonce has been invalidated.
+        with pytest.raises(TrezorFailure, match="Invalid nonce in payment request"):
+            btc.sign_tx(
+                session,
+                "Testnet",
+                inputs,
+                outputs,
+                prev_txes=PREV_TXES,
+                payment_reqs=payment_reqs,
+            )
 
 
 def test_payment_req_wrong_amount(session: Session):
