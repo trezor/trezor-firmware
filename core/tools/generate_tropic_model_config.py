@@ -33,7 +33,7 @@ EXTRA_FILES = [
 
 @click.command()
 @click.option("--check", is_flag=True)
-def generate_config(check):
+def generate_config(check: bool) -> None:
     tropic_key = serialization.load_pem_private_key(
         TROPIC_KEY.read_bytes(), password=None
     )

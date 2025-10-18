@@ -1,11 +1,12 @@
 import time
+from pathlib import Path
 
 import pyvisa
 
 
 class GDM8351:
 
-    def __init__(self):
+    def __init__(self) -> None:
 
         self.rm = pyvisa.ResourceManager()
 
@@ -52,13 +53,15 @@ class GDM8351:
 
                     break
 
-    def get_id(self):
+    def get_id(self) -> str:
         if self.device is None or not self.device_connected:
             raise Exception("Device not connected.")
 
         return self.device.query("*IDN?")
 
-    def configure_temperature_sensing(self, sensor_type="K", junction_temp_deg=29.0):
+    def configure_temperature_sensing(
+        self, sensor_type: str = "K", junction_temp_deg: float = 29.0
+    ) -> None:
 
         if sensor_type not in ["K", "J", "T"]:
             raise ValueError("Invalid sensor type. Use 'K', 'J', or 'T'.")
@@ -81,7 +84,7 @@ class GDM8351:
 
         return
 
-    def read_temperature(self):
+    def read_temperature(self) -> float:
 
         if self.device is None or not self.device_connected:
             raise Exception("Device not connected.")
@@ -91,7 +94,9 @@ class GDM8351:
         except Exception as e:
             raise Exception(f"Failed to read temperature: {e}")
 
-    def log_temperature(self, output_directory, test_time_id, verbose=False):
+    def log_temperature(
+        self, output_directory: Path, test_time_id: str, verbose: bool = False
+    ) -> None:
 
         # Log file name format:
         # > external_temp.<time_identifier>.csv
@@ -116,7 +121,7 @@ class GDM8351:
         if verbose:
             print(f"GDM8351 temperature: {temp}°C")
 
-    def close(self):
+    def close(self) -> None:
         if self.device is not None and self.device_connected:
             try:
                 self.device.close()

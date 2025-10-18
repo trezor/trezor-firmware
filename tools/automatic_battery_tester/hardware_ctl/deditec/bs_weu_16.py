@@ -12,7 +12,9 @@ PIN_COUNT = 16  # Total number of pins on the Deditec BS-WEU-16 board
 
 class DeditecBsWeu16:
 
-    def __init__(self, ip: str = IP, port: int = PORT, timeout_seconds: int = 3):
+    def __init__(
+        self, ip: str = IP, port: int = PORT, timeout_seconds: int = 3
+    ) -> None:
 
         self.ip = ip
         self.port = port
@@ -49,7 +51,7 @@ class DeditecBsWeu16:
             self.socket = None
             return False
 
-    def send_command(self, command: bytes):
+    def send_command(self, command: bytes) -> None:
 
         if self.socket is None:
             logging.error("DeditecBsWeu16: send_command called but not connected.")

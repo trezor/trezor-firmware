@@ -40,7 +40,7 @@ def _make_dev_keys(*key_bytes: bytes) -> Sequence[bytes]:
     is_flag=True,
     help="Print out sigmask",
 )
-def main(digest, getsig0, getsig1, getmask):
+def main(digest: str | None, getsig0: bool, getsig1: bool, getmask: bool) -> None:
 
     DEV_KEYS = _make_dev_keys(b"\x44", b"\x45")
 

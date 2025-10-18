@@ -23,7 +23,9 @@ class ScenarioPhase(enum.Enum):
 
 class LinearScenario(TestScenario):
 
-    def __init__(self, discharge_load=100, relaxation_time_min=60):
+    def __init__(
+        self, discharge_load: int = 100, relaxation_time_min: int = 60
+    ) -> None:
 
         # DUT use display backlight intensity to change its load (discharge
         # current). Backlight intensity could be set in range of 0-255, but
@@ -38,7 +40,7 @@ class LinearScenario(TestScenario):
         self.time_id = "0000000000"
         self.previous_phase = ScenarioPhase.NOT_STARTED
 
-    def setup(self, dut_controller: DutController):
+    def setup(self, dut_controller: DutController) -> None:
 
         # Start with charging phase first, so connect the charger with relay
         # and enable the charging.
@@ -56,7 +58,7 @@ class LinearScenario(TestScenario):
         self.phase_start = time.time()
         self.test_time_id = f"{time.strftime('%y%m%d%H%M')}"
 
-    def run(self, dut_controller):
+    def run(self, dut_controller: DutController) -> bool:
 
         if self.previous_phase != self.scenario_phase:
             logging.info(f"Linear scenario entered {self.scenario_phase} phase.")
@@ -126,7 +128,9 @@ class LinearScenario(TestScenario):
         # Relax
         return False
 
-    def log_data(self, dut_controller, output_directory: Path, temp):
+    def log_data(
+        self, dut_controller: DutController, output_directory: Path, temp: float
+    ) -> None:
 
         dut_controller.log_data(
             output_directory,
@@ -136,5 +140,5 @@ class LinearScenario(TestScenario):
             temp,
         )
 
-    def teardown(self, dut_controller):
+    def teardown(self, dut_controller: DutController) -> None:
         pass

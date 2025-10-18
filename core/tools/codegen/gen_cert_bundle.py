@@ -8,7 +8,7 @@ import requests
 REPO = "certifi/python-certifi"
 
 
-def fetch_certdata():
+def fetch_certdata() -> tuple[str, str]:
     r = requests.get(f"https://api.github.com/repos/{REPO}/git/refs/heads/master")
     assert r.status_code == 200
     commithash = r.json()["object"]["sha"]
@@ -22,7 +22,7 @@ def fetch_certdata():
     return commithash, certdata
 
 
-def process_certdata(data):
+def process_certdata(data: str) -> dict[str, bytes]:
     certs = {}
     lines = [x.strip() for x in data.split("\n")]
     label = None
@@ -48,7 +48,7 @@ def process_certdata(data):
     return certs
 
 
-def main():
+def main() -> None:
     commithash, certdata = fetch_certdata()
 
     print(f"# fetched from https://github.com/{REPO}")

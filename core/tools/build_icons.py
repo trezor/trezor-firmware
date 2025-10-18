@@ -33,14 +33,14 @@ import coin_info
 @click.command()
 @click.option("-c", "--check", is_flag=True, help="Do not write, only check.")
 @click.option("-r", "--remove", is_flag=True, help="Remove unrecognized files.")
-def build_icons(check: bool, remove: bool):
+def build_icons(check: bool, remove: bool) -> None:
     """Build FIDO app icons in the source tree."""
 
     for path, size in DESTINATIONS.items():
         build_icons_size(path, size, check, remove)
 
 
-def build_icons_size(destination: Path, size: int, check: bool, remove: bool):
+def build_icons_size(destination: Path, size: int, check: bool, remove: bool) -> None:
     icon_size = (size, size)
     checks_ok = True
     apps = coin_info.fido_info()
