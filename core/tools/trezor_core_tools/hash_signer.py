@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 from typing import Sequence
 
 import click
@@ -18,6 +20,7 @@ def _make_dev_keys(*key_bytes: bytes) -> Sequence[bytes]:
     "--digest",
     "digest",
     help="Digest to be signed.",
+    required=True,
 )
 @click.option(
     "-s0",
@@ -40,7 +43,7 @@ def _make_dev_keys(*key_bytes: bytes) -> Sequence[bytes]:
     is_flag=True,
     help="Print out sigmask",
 )
-def main(digest, getsig0, getsig1, getmask):
+def main(digest: str, getsig0: bool, getsig1: bool, getmask: bool) -> None:
 
     DEV_KEYS = _make_dev_keys(b"\x44", b"\x45")
 

@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 from dbus_fast import aio
 from dbus_fast.message import Message
@@ -12,7 +13,12 @@ class MessageBus(aio.MessageBus):
         if self._disconnected:
             return
 
-        def get_properties_callback(interface, result, user_data, e):
+        def get_properties_callback(
+            interface: ServiceInterface,
+            result: Any,
+            user_data: Any,
+            e: Exception | None,
+        ) -> None:
             if e is not None:
                 try:
                     raise e

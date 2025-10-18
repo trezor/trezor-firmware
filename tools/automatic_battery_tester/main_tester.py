@@ -1,4 +1,5 @@
 # main_tester.py
+from __future__ import annotations
 
 import logging
 import sys
@@ -41,7 +42,7 @@ console_handler.setLevel(logging.INFO)
 logger.addHandler(console_handler)
 
 
-def load_config(config_path="test_config.toml") -> Optional[Dict[str, Any]]:
+def load_config(config_path: str = "test_config.toml") -> Optional[Dict[str, Any]]:
     """Load test configuration from TOML config file ."""
     config_file = config_path
     logging.info(f"Loading configuration file: {config_file}")
@@ -74,7 +75,7 @@ def load_config(config_path="test_config.toml") -> Optional[Dict[str, Any]]:
 
 
 def run_test_cycle(
-    config: dict,
+    config: dict[str, Any],
     temp_c: float,
     cycle_num: int,
     test_mode: str,
@@ -141,7 +142,7 @@ def run_test_cycle(
     return True
 
 
-def main():
+def main() -> None:
 
     logging.info("==============================================")
     logging.info("   Starting Automated Battery Cycle Tester    ")

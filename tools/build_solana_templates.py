@@ -4,6 +4,7 @@ import os
 import subprocess
 import tempfile
 from pathlib import Path
+from typing import Any
 
 import click
 from mako.template import Template
@@ -22,11 +23,11 @@ TEMPLATES = (
 PROGRAMS_JSON = ROOT / "common" / "defs" / "solana" / "programs.json"
 
 
-def _silent_call(*args):
+def _silent_call(*args: Any) -> None:
     subprocess.check_call(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
-def format(file: Path):
+def format(file: Path) -> None:
     _silent_call("isort", file)
     _silent_call("black", file)
     _silent_call("flake8", file, "--config", ROOT / "setup.cfg")
@@ -51,8 +52,9 @@ def render_single(template_path: Path, programs: Munch) -> str:
 @click.option(
     "-c", "--check", is_flag=True, help="Check if the templates are up to date"
 )
-def build_templates(check: bool):
+def build_templates(check: bool) -> None:
     programs = munchify(json.loads(PROGRAMS_JSON.read_text()))
+    assert isinstance(programs, Munch)
     prog_stat = PROGRAMS_JSON.stat()
 
     all_ok = True

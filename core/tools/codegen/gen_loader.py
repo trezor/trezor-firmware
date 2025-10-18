@@ -5,7 +5,7 @@
 import math
 
 
-def gen_loader(model, outer, inner):
+def gen_loader(model: str, outer: int, inner: int) -> None:
     with open(f"loader_{model}.h", "wt") as f:
         f.write("// clang-format off\n")
         f.write(f"static const int img_loader_size = {outer};\n" % outer)

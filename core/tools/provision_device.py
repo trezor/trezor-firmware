@@ -156,7 +156,7 @@ def cli() -> None:
 
 @cli.command()
 @click.option("-d", "--device", default="/dev/ttyACM0", help="Device path")
-def identify(device) -> None:
+def identify(device: str) -> None:
     connection = Connection(device)
     connection.command("ping")
     DeviceInfo.read(connection)
@@ -165,7 +165,7 @@ def identify(device) -> None:
 @cli.command()
 @click.option("-d", "--device", default="/dev/ttyACM0", help="Device path")
 @click.option("--wipe", is_flag=True, help="Wipe the device")
-def lock(device, wipe) -> None:
+def lock(device: str, wipe: bool) -> None:
     connection = Connection(device)
     connection.command("ping")
     connection.command("optiga-lock")
@@ -183,7 +183,7 @@ def lock(device, wipe) -> None:
 @click.option(
     "--lock/--no-lock", default=True, help="Lock the device after provisioning"
 )
-def provision(url, device, model, no_verify, lock) -> None:
+def provision(url: str, device: str, model: str, no_verify: bool, lock: bool) -> None:
     global SERVER_TOKEN
 
     SERVER_TOKEN = os.environ.get("SERVER_TOKEN")
@@ -195,9 +195,9 @@ def provision(url, device, model, no_verify, lock) -> None:
     connection.command("ping")
 
     # grab CPUID, OPTIGAID and device certificate
-    device = DeviceInfo.read(connection)
+    device_info = DeviceInfo.read(connection)
     # call the provisioning server
-    result = provision_request(device, url, model, not no_verify)
+    result = provision_request(device_info, url, model, not no_verify)
     # write provisioning result to the device
     result.write(connection)
 

@@ -33,13 +33,14 @@ def configure(
         env, features_wanted, defines, sources, paths
     )
 
-    env.get("ENV")[
-        "CPU_ASFLAGS"
-    ] = "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 "
-    env.get("ENV")[
-        "CPU_CCFLAGS"
-    ] = "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -mtune=cortex-m33 -mcmse "
-    env.get("ENV")["RUST_TARGET"] = "thumbv8m.main-none-eabihf"
+    ENV = env.get("ENV")
+    assert ENV
+
+    ENV["CPU_ASFLAGS"] = "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 "
+    ENV["CPU_CCFLAGS"] = (
+        "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -mtune=cortex-m33 -mcmse "
+    )
+    ENV["RUST_TARGET"] = "thumbv8m.main-none-eabihf"
 
     defines += [
         mcu,
@@ -101,9 +102,9 @@ def configure(
         ("USE_PVD", "1"),
     ]
 
-    env.get("ENV")["TREZOR_BOARD"] = board
-    env.get("ENV")["MCU_TYPE"] = mcu
-    env.get("ENV")["LINKER_SCRIPT"] = linker_script
-    env.get("ENV")["MEMORY_LAYOUT"] = memory_layout
+    ENV["TREZOR_BOARD"] = board
+    ENV["MCU_TYPE"] = mcu
+    ENV["LINKER_SCRIPT"] = linker_script
+    ENV["MEMORY_LAYOUT"] = memory_layout
 
     return features_available

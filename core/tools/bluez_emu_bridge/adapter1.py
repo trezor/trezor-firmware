@@ -4,7 +4,8 @@ import asyncio
 import logging
 import random
 
-from dbus_fast.service import PropertyAccess, ServiceInterface, dbus_property, method
+from dbus_fast.constants import PropertyAccess
+from dbus_fast.service import ServiceInterface, dbus_property, method
 
 LOG = logging.getLogger(__name__)
 

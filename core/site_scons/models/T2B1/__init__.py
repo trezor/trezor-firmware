@@ -1,14 +1,15 @@
 from __future__ import annotations
 
+from types import ModuleType
 from typing import Optional
 
 from . import emulator, trezor_r_v10
 
 
 def configure_board(
-    revision: Optional[int | str],
+    revision: Optional[str],
     features_wanted: list[str],
-    env: dict,  # type: ignore
+    env: dict,
     defines: list[str | tuple[str, str]],
     sources: list[str],
     paths: list[str],
@@ -17,12 +18,12 @@ def configure_board(
     defines += (("VERSIONS_HEADER", '"T2B1/versions.h"'),)
 
     # Set default revision if None
-    revision = revision or 10
+    revision = revision or "10"
 
     # Mapping of revisions to their respective configurations
-    revision_map = {
+    revision_map: dict[str, ModuleType] = {
         "emulator": emulator,
-        10: trezor_r_v10,
+        "10": trezor_r_v10,
     }
 
     module = revision_map.get(revision)

@@ -15,13 +15,13 @@ UPDATE_TYPES = {
 }
 
 
-def exit_interactive_mode(ser):
+def exit_interactive_mode(ser: serial.Serial) -> None:
     ser.write(("." + "\r\n").encode())
     time.sleep(0.1)
     ser.reset_input_buffer()
 
 
-def send_cmd(ser, cmd, expect_ok=True):
+def send_cmd(ser: serial.Serial, cmd: str, expect_ok: bool = True) -> str:
     """Send a line, read response, and abort on non-OK."""
     ser.write((cmd + "\r\n").encode())
     # Give the device a moment to process
@@ -38,7 +38,7 @@ def send_cmd(ser, cmd, expect_ok=True):
     return resp
 
 
-def upload_binary(port, bin_path, chunk_size, update_type):
+def upload_binary(port: str, bin_path: str, chunk_size: int, update_type: str) -> None:
     if update_type not in UPDATE_TYPES:
         raise ValueError(
             f"Invalid update type. Must be one of: {', '.join(UPDATE_TYPES.keys())}"
@@ -93,7 +93,7 @@ def upload_binary(port, bin_path, chunk_size, update_type):
     required=True,
     help="Type of update to perform",
 )
-def main(port, binary, chunk_size, type):
+def main(port: str, binary: str, chunk_size: int, type: str) -> None:
     """
     Upload a firmware image via USB-VCP CLI.
 

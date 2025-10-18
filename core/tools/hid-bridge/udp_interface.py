@@ -1,10 +1,12 @@
+# pyright: reportMissingImports=false
 import socket
 
 import logger
 
 
 class UDPInterface:
-    def __init__(self, destination_port):
+
+    def __init__(self, destination_port: int) -> None:
         self.bind_ip = "127.0.0.1"
         self.bind_port = 21423
 
@@ -16,7 +18,7 @@ class UDPInterface:
 
         self.file_descriptor = self.socket.fileno()
 
-    def write(self, data):
+    def write(self, data: bytes) -> None:
         bytes_sent = self.socket.sendto(
             data, ((self.destination_ip, self.destination_port))
         )
@@ -26,7 +28,7 @@ class UDPInterface:
             data.hex(),
         )
 
-    def read(self, length):
+    def read(self, length: int) -> bytes:
         data, address = self.socket.recvfrom(length)
         logger.log_raw(
             f"{self.bind_ip}:{self.bind_port} < {address[0]}:{address[1]}",

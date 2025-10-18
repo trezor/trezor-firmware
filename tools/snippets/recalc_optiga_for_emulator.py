@@ -9,15 +9,15 @@ from pyasn1.type.univ import BitString
 from pyasn1_modules import rfc2459
 
 
-def load_certificate(data: bytes):
+def load_certificate(data: bytes) -> rfc2459.Certificate:
     return decode(data, asn1Spec=rfc2459.Certificate())[0]
 
 
-def save_certificate(certificate) -> bytes:
+def save_certificate(certificate: rfc2459.Certificate) -> bytes:
     return encode(certificate)
 
 
-def calculate_ecdsa_public_key():
+def calculate_ecdsa_public_key() -> ec.EllipticCurvePublicKey:
     privkey_bytes = b"\x01" + b"\x00" * 31
     private_key = ec.derive_private_key(
         int.from_bytes(privkey_bytes, "big"), ec.SECP256R1()
@@ -26,7 +26,9 @@ def calculate_ecdsa_public_key():
     return private_key.public_key()
 
 
-def replace_public_key(certificate, public_key):
+def replace_public_key(
+    certificate: rfc2459.Certificate, public_key: ec.EllipticCurvePublicKey
+) -> None:
     public_key_bytes = public_key.public_bytes(
         encoding=serialization.Encoding.X962,
         format=serialization.PublicFormat.UncompressedPoint,
@@ -36,7 +38,7 @@ def replace_public_key(certificate, public_key):
     )
 
 
-def main():
+def main() -> None:
     in_cert = Path(sys.argv[1])
     certificate = load_certificate(in_cert.read_bytes())
     public_key = calculate_ecdsa_public_key()

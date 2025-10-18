@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-from typing import List, Tuple
+from __future__ import annotations
+
+from typing import Any, BinaryIO, List, Tuple
 
 import click
 
@@ -29,6 +31,7 @@ def do_rehash(fw: firmware_headers.SignableImageProto) -> None:
     if isinstance(fw, firmware.FirmwareImage):
         fw.header.hashes = fw.code_hashes()
     if isinstance(fw, firmware.SecmonImage):
+        assert isinstance(fw.header, firmware.SecmonHeader)
         fw.header.hash = fw.code_hash()
     elif isinstance(fw, firmware_headers.VendorFirmware):
         fw.firmware.header.hashes = fw.firmware.code_hashes()
@@ -38,7 +41,9 @@ def do_rehash(fw: firmware_headers.SignableImageProto) -> None:
 # ===================== CLI actions =========================
 
 
-def do_replace_vendorheader(fw, vh_file) -> None:
+def do_replace_vendorheader(
+    fw: firmware_headers.SignableImageProto, vh_file: BinaryIO
+) -> None:
     if not isinstance(fw, firmware_headers.VendorFirmware):
         raise click.ClickException("Invalid image type (must be firmware).")
 
@@ -49,7 +54,7 @@ def do_replace_vendorheader(fw, vh_file) -> None:
     fw.vendor_header = vh
 
 
-def no_echo(*args, **kwargs):
+def no_echo(*args: Any, **kwargs: Any) -> None:
     """A no-op function to replace click.echo when quiet mode is enabled."""
     pass
 
@@ -88,17 +93,17 @@ def no_echo(*args, **kwargs):
 @click.option("-q", "--quiet", is_flag=True, help="Do not print anything.")
 @click.argument("firmware_file", type=click.File("rb+"))
 def cli(
-    firmware_file,
-    verbose,
-    rehash,
-    dry_run,
-    privkey_data,
-    sign_dev_keys,
-    insert_signature,
-    replace_vendor_header,
-    print_digest,
-    quiet,
-):
+    firmware_file: BinaryIO,
+    verbose: bool,
+    rehash: bool,
+    dry_run: bool,
+    privkey_data: list[str],
+    sign_dev_keys: bool,
+    insert_signature: tuple[str, str] | None,
+    replace_vendor_header: BinaryIO | None,
+    print_digest: bool,
+    quiet: bool,
+) -> None:
     """Manage firmware headers.
 
     This tool supports three types of files: raw vendor headers (TRZV), bootloader

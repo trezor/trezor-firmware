@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.checkers.utils import check_messages
 from pylint.interfaces import IAstroidChecker
+from pylint.lint import PyLinter
 
 
 class AsyncAwaitableChecker(BaseChecker):
@@ -18,7 +21,7 @@ class AsyncAwaitableChecker(BaseChecker):
     }
 
     @check_messages("async-awaitable-return")
-    def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef):
+    def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None:
         # Check if the return type is explicitly an Awaitable
         if node.returns and "Awaitable" in node.returns.as_string():
             self.add_message("async-awaitable-return", node=node, args=(node.name,))
@@ -48,7 +51,7 @@ class InternalModelComparisonChecker(BaseChecker):
     }
 
     @staticmethod
-    def _is_internal_model(node):
+    def _is_internal_model(node: nodes.NodeNG | None) -> bool:
         return (
             isinstance(node, nodes.Attribute)
             and node.attrname == "INTERNAL_MODEL"
@@ -57,7 +60,7 @@ class InternalModelComparisonChecker(BaseChecker):
         )
 
     @check_messages("internal-model-tuple-comparison")
-    def visit_compare(self, node: nodes.Compare):
+    def visit_compare(self, node: nodes.Compare) -> None:
         if not self._is_internal_model(node.left):
             return
         if len(node.ops) != 1:
@@ -67,7 +70,7 @@ class InternalModelComparisonChecker(BaseChecker):
             self.add_message("internal-model-tuple-comparison", node=node)
 
 
-def register(linter):
+def register(linter: PyLinter) -> None:
     """Required method to auto register this checker."""
     linter.register_checker(AsyncAwaitableChecker(linter))
     linter.register_checker(InternalModelComparisonChecker(linter))

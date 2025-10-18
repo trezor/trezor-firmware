@@ -1,9 +1,10 @@
+# pyright: reportAttributeAccessIssue=false, reportArgumentType=false
+
 from __future__ import annotations
 
 import ast
 import json
 from pathlib import Path
-from typing import Any
 
 HERE = Path(__file__).parent
 CORE = HERE.parent.parent
@@ -17,7 +18,7 @@ if IGNORE_FILE.exists():
     content = json.loads(IGNORE_FILE.read_text())
     IGNORE_SET: set[str] = set(content.keys())
 else:
-    IGNORE_SET = set()  # type: ignore
+    IGNORE_SET = set()
 
 
 def find_all_strings(filename: str | Path) -> list[str]:
@@ -28,13 +29,15 @@ def find_all_strings(filename: str | Path) -> list[str]:
     strings: list[str] = []
 
     class StringVisitor(ast.NodeVisitor):
-        def visit_Str(self, node: ast.Str):
-            strings.append(node.s)
 
-        def visit_JoinedStr(self, node: ast.JoinedStr):
+        def visit_Constant(self, node: ast.Constant) -> None:
+            if isinstance(node.value, str):
+                strings.append(node.value)
+
+        def visit_JoinedStr(self, node: ast.JoinedStr) -> None:
             for value in node.values:
-                if isinstance(value, ast.Str):
-                    strings.append(value.s)
+                if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                    strings.append(value.value)
 
     visitor = StringVisitor()
     visitor.visit(tree)
@@ -88,19 +91,20 @@ def find_strings_to_ignore(filename: str | Path) -> list[str]:
         return ""
 
     def include_all_strings(arg: ast.expr) -> None:
-        if isinstance(arg, ast.Str):
-            strings.append(arg.s)
+        if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+            strings.append(arg.value)
         elif isinstance(arg, ast.JoinedStr):
             for value in arg.values:
-                if isinstance(value, ast.Str):
-                    strings.append(value.s)
+                if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                    strings.append(value.value)
                 elif isinstance(value, ast.FormattedValue):
                     # This part is an expression inside an f-string
                     expr_as_str = ast.dump(value.value, annotate_fields=False)
                     strings.append(expr_as_str)
 
     class IgnoreStringVisitor(ast.NodeVisitor):
-        def visit_Call(self, node: ast.Call):
+
+        def visit_Call(self, node: ast.Call) -> None:
             func_name = get_final_attribute_name(node.func)
             if ignore_func(func_name):
                 for arg in node.args + [kw.value for kw in node.keywords]:
@@ -108,13 +112,13 @@ def find_strings_to_ignore(filename: str | Path) -> list[str]:
             # Continue visiting the children of this node (!!!Necessary!!!)
             self.generic_visit(node)
 
-        def visit_Assert(self, node: ast.Assert):
+        def visit_Assert(self, node: ast.Assert) -> None:
             error_message = node.msg
             if error_message:
                 include_all_strings(error_message)
             self.generic_visit(node)
 
-        def visit_Assign(self, node: ast.Assign):
+        def visit_Assign(self, node: ast.Assign) -> None:
             ignore_variables = [
                 "msg_wire",
                 "msg_type",
@@ -125,7 +129,7 @@ def find_strings_to_ignore(filename: str | Path) -> list[str]:
                     include_all_strings(value)
             self.generic_visit(node)
 
-        def visit_FunctionDef(self, node: ast.FunctionDef):
+        def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
             for arg in node.args.args:
                 annotation = arg.annotation
                 if annotation:
@@ -135,7 +139,7 @@ def find_strings_to_ignore(filename: str | Path) -> list[str]:
                 include_all_strings(return_annotation)
             self.generic_visit(node)
 
-        def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> Any:
+        def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
             for arg in node.args.args:
                 annotation = arg.annotation
                 if annotation:
@@ -145,7 +149,7 @@ def find_strings_to_ignore(filename: str | Path) -> list[str]:
                 include_all_strings(return_annotation)
             self.generic_visit(node)
 
-        def visit_AnnAssign(self, node: ast.AnnAssign):
+        def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
             annotation = node.annotation
             include_all_strings(annotation)
             self.generic_visit(node)
@@ -158,7 +162,7 @@ def find_strings_to_ignore(filename: str | Path) -> list[str]:
         if isinstance(node, ast.Expr) and isinstance(
             node.value, (ast.Str, ast.JoinedStr)
         ):
-            strings.append(node.value.s)  # type: ignore
+            strings.append(node.value.s)
 
     return strings
 
@@ -268,5 +272,5 @@ if __name__ == "__main__":
     check_folder_resursive_report(folder, ignore_files=ignore_files)
 
     # file = CORE_SRC / "trezor/ui/layouts/tt_v2/reset.py"
-    # KEY_PREFIX = "TR.reset"  # type: ignore
+    # KEY_PREFIX = "TR.reset"
     # check_file_report(file)

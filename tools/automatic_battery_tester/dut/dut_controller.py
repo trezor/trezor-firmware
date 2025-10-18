@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import sys
 from dataclasses import dataclass
@@ -27,7 +29,7 @@ class ProdtestPmReport:
     system_voltage: float = 0.0
 
     @classmethod
-    def from_string_list(cls, data):
+    def from_string_list(cls, data: list[str]) -> "ProdtestPmReport":
         """Parse a list of strings into a ProdtestPmReport instance."""
         try:
             return cls(
@@ -56,7 +58,9 @@ class DutController:
     provides direct simultaneous control of configured DUTs
     """
 
-    def __init__(self, duts, relay_ctl: RelayController, verbose: bool = False):
+    def __init__(
+        self, duts: list[dict], relay_ctl: RelayController, verbose: bool = False
+    ) -> None:
 
         self.duts = []
         self.relay_ctl = relay_ctl
@@ -91,17 +95,17 @@ class DutController:
             logging.error("No DUTs initialized. Cannot proceed.")
             raise RuntimeError("No DUTs initialized. Check port configuration.")
 
-    def power_up_all(self):
+    def power_up_all(self) -> None:
 
         for d in self.duts:
             d.power_up()
 
-    def power_down_all(self):
+    def power_down_all(self) -> None:
 
         for d in self.duts:
             d.power_down()
 
-    def enable_charging(self):
+    def enable_charging(self) -> None:
         """
         Enable charging on all DUTs.
         """
@@ -111,7 +115,7 @@ class DutController:
             except Exception as e:
                 logging.error(f"Failed to enable charging on {d.name}: {e}")
 
-    def disable_charging(self):
+    def disable_charging(self) -> None:
         """
         Disable charging on all DUTs.
         """
@@ -121,7 +125,7 @@ class DutController:
             except Exception as e:
                 logging.error(f"Failed to disable charging on {d.name}: {e}")
 
-    def set_soc_limit(self, soc_limit: int):
+    def set_soc_limit(self, soc_limit: int) -> None:
         """
         Set the state of charge (SoC) limit for all DUTs.
         :param soc_limit: The SoC limit to set (0-100).
@@ -132,7 +136,7 @@ class DutController:
             except Exception as e:
                 logging.error(f"Failed to set SoC limit on {d.name}: {e}")
 
-    def all_duts_charged(self):
+    def all_duts_charged(self) -> bool:
 
         all_dut_charged = True
 
@@ -149,7 +153,7 @@ class DutController:
 
         return all_dut_charged
 
-    def all_duts_discharged(self):
+    def all_duts_discharged(self) -> bool:
 
         all_dut_dischargerd = True
 
@@ -174,7 +178,7 @@ class DutController:
 
         return all_dut_dischargerd
 
-    def any_dut_charged(self):
+    def any_dut_charged(self) -> bool:
 
         for d in self.duts:
             # Read power report
@@ -186,7 +190,7 @@ class DutController:
 
         return False
 
-    def any_dut_discharged(self):
+    def any_dut_discharged(self) -> bool:
 
         for d in self.duts:
             # Read power report
@@ -203,7 +207,7 @@ class DutController:
 
         return False
 
-    def set_backlight(self, value):
+    def set_backlight(self, value: int) -> None:
 
         for d in self.duts:
             try:
@@ -212,8 +216,13 @@ class DutController:
                 logging.error(f"Failed to set backlight on {d.name}: {e}")
 
     def log_data(
-        self, output_directory: Path, test_time_id, test_scenario, test_phase, temp
-    ):
+        self,
+        output_directory: Path,
+        test_time_id: str,
+        test_scenario: str,
+        test_phase: str,
+        temp: float | int,
+    ) -> None:
 
         # Log file name format:
         # > <device_id_hash>.<time_identifier>.<test_scenario>.<temperarture>.csv
@@ -222,12 +231,12 @@ class DutController:
         for d in self.duts:
             d.log_data(output_directory, test_time_id, test_scenario, test_phase, temp)
 
-    def close(self):
+    def close(self) -> None:
         for d in self.duts:
             try:
                 d.close()
             except Exception as e:
                 logging.error(f"Failed to close DUT {d.name}: {e}")
 
-    def __del__(self):
+    def __del__(self) -> None:
         self.close()

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+# pyright: reportMissingImports=false
 # script used to generate FontInfo in `rust/src/ui/layout_*/fonts/font_*_*.rs`
 
 from __future__ import annotations
@@ -237,6 +237,7 @@ class Glyph:
 
 
 class FaceProcessor:
+
     def __init__(
         self,
         name: str,
@@ -249,7 +250,7 @@ class FaceProcessor:
         gen_upper: bool = False,  # generate font with only upper-cased letters
         font_idx: int | None = None,  # idx to UTF-8 foreign chars data
         font_idx_upper: int | None = None,  # idx to UTF-8 upper-cased foreign chars
-    ):
+    ) -> None:
         if gen_normal is False and gen_upper is False:
             raise ValueError(
                 "At least one must be selected from normal glyphs or only uppercased glyphs."
@@ -267,7 +268,7 @@ class FaceProcessor:
         self.gen_upper = gen_upper
 
         self.face = freetype.Face(str(FONTS_DIR / f"{name}-{style}.{ext}"))
-        self.face.set_pixel_sizes(0, size)  # type: ignore
+        self.face.set_pixel_sizes(0, size)
         self.fontname = f"{name.lower()}_{style.lower()}_{size}"
         self.font_ymin = 0
         self.font_ymax = 0
@@ -298,7 +299,7 @@ class FaceProcessor:
             self.write_char_widths_files()
         self.write_rust_file()
 
-    def write_foreign_json(self, upper_cased=False) -> None:
+    def write_foreign_json(self, upper_cased: bool = False) -> None:
         for lang, language_chars in all_languages.items():
             fontdata = {}
             for item in language_chars:
@@ -358,7 +359,7 @@ class FaceProcessor:
         return self.face.get_char_index(ord(c)) != 0
 
     def _load_char(self, c: str) -> None:
-        self.face.load_char(c, freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_NORMAL)  # type: ignore
+        self.face.load_char(c, freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_NORMAL)
 
     # --------------------------------------------------------------------
     # Rust code generation
@@ -483,10 +484,10 @@ class FaceProcessor:
 
         # Write the rendered template into the Rust file.
         with open(self._rs_file_name, "wt") as f:
-            f.write(rendered)
+            f.write(rendered)  # type: ignore [Argument of type "bytes | str" cannot be assigned to parameter "s" of type "str" in function "write"]
 
 
-def gen_layout_bolt():
+def gen_layout_bolt() -> None:
     global LAYOUT_NAME
     LAYOUT_NAME = "Bolt"
     FaceProcessor("TTHoves", "Regular", 21, ext="otf", font_idx=1).write_files()
@@ -503,7 +504,7 @@ def gen_layout_bolt():
     FaceProcessor("RobotoMono", "Medium", 20, font_idx=3).write_files()
 
 
-def gen_layout_caesar():
+def gen_layout_caesar() -> None:
     global LAYOUT_NAME
     LAYOUT_NAME = "Caesar"
     FaceProcessor(
@@ -540,7 +541,7 @@ def gen_layout_caesar():
     ).write_files()
 
 
-def gen_layout_delizia():
+def gen_layout_delizia() -> None:
     global LAYOUT_NAME
     LAYOUT_NAME = "Delizia"
     # FIXME: BIG font idx not needed
@@ -559,7 +560,7 @@ def gen_layout_delizia():
     ).write_files()
 
 
-def gen_layout_eckhart():
+def gen_layout_eckhart() -> None:
     global LAYOUT_NAME
     LAYOUT_NAME = "eckhart"
     # FIXME: BIG font idx not needed
@@ -594,7 +595,7 @@ LAYOUTS = {
     default=False,
     help="Generate character width files",
 )
-def main(layout: str | None, write_widths: bool):
+def main(layout: str | None, write_widths: bool) -> None:
     """Generate font files for Trezor firmware."""
     global WRITE_WIDTHS
     WRITE_WIDTHS = write_widths
