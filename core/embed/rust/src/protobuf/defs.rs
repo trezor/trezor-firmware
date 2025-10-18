@@ -193,12 +193,16 @@ pub fn get_msg(msg_offset: u16) -> MsgDef {
     let fields_end = fields_start + fields_size_in_bytes;
     let fields_byteslice = &msg_def_start[fields_start..fields_end];
 
+    // PREREQUISITES:
+    // * MSG_DEFS is aligned to u16 (per `include_aligned!` macro)
+    // * FieldDef has the same alignment
+    debug_assert!(mem::align_of::<FieldDef>() == mem::align_of::<u16>());
+    // * both msg_offset and fields_start added together keep the alignment:
+    debug_assert!(fields_byteslice.as_ptr().addr() % mem::align_of::<FieldDef>() == 0);
+
     // SAFETY: FieldDef is a packed struct of ints, so all bit patterns are valid.
     let (_pre, fields, _post) = unsafe { fields_byteslice.align_to::<FieldDef>() };
-    // Alignment of FieldDef is expected to be 2 ...
-    debug_assert!(mem::align_of::<FieldDef>() == 2);
-    // Per `include_aligned!` macro, MSG_DEFS is aligned to u16, and we're at offset
-    // 4, so `fields` array should be cleanly aligned.
+    // Given the prerequisites, `fields` array must be cleanly aligned.
     debug_assert!(_pre.is_empty());
     debug_assert!(_post.is_empty());
 
@@ -222,6 +226,7 @@ fn get_enum(enum_offset: u16) -> EnumDef {
     //     count: u16,
     //     vals: [u16],
     // }
+    const SIZE: u16 = mem::size_of::<u16>() as u16;
 
     // SAFETY: enum_defs is an array of u16, so all bit patterns are valid.
     let (_pre, enum_defs, _post) = unsafe { ENUM_DEFS.align_to::<u16>() };
@@ -229,9 +234,9 @@ fn get_enum(enum_offset: u16) -> EnumDef {
     debug_assert!(_pre.is_empty());
     debug_assert!(_post.is_empty());
 
-    // enum_offset is a raw byte offset, so it must be even
-    assert!(enum_offset % 2 == 0);
-    let offset: usize = (enum_offset / 2).into();
+    // enum_offset is a raw byte offset, we check that it is also a valid index of an u16
+    assert!(enum_offset % SIZE == 0);
+    let offset: usize = (enum_offset / SIZE).into();
     let count: usize = enum_defs[offset].into();
     EnumDef {
         values: &enum_defs[offset + 1..offset + 1 + count],
