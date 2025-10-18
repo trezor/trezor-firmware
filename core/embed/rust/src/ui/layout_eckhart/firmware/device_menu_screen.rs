@@ -53,6 +53,7 @@ pub enum DeviceMenuId {
     WipeCode,
     Device,
     Power,
+    Demo,
 }
 
 impl TryFrom<u8> for DeviceMenuId {
@@ -68,6 +69,7 @@ impl TryFrom<u8> for DeviceMenuId {
             6 => Ok(DeviceMenuId::WipeCode),
             7 => Ok(DeviceMenuId::Device),
             8 => Ok(DeviceMenuId::Power),
+            9 => Ok(DeviceMenuId::Demo),
             _ => Err(()),
         }
     }
@@ -88,7 +90,7 @@ impl From<DeviceMenuId> for usize {
 }
 
 // FIXME: use mem::variant_count when it becomes stable
-const MAX_SUBMENUS: usize = 9;
+const MAX_SUBMENUS: usize = 10;
 // submenus, device + hostinfo screen couples, regulatory and about screens
 const MAX_SUBSCREENS: usize = MAX_SUBMENUS + 2 * MAX_PAIRED_DEVICES + 2;
 
@@ -138,6 +140,15 @@ pub enum DeviceMenuMsg {
     ToggleHaptics,
     ToggleLed,
     WipeDevice,
+
+    // Demo
+    DemoStartTutorial,
+    DemoCreateWallet,
+    DemoRestoreWallet,
+    DemoReceiveBitcoin,
+    DemoSendBitcoin,
+    DemoSwapAssets,
+    DemoApproveContract,
 
     // Misc
     RefreshMenu(DeviceMenuId),
@@ -360,6 +371,7 @@ impl DeviceMenuScreen {
         screen.register_device_menu(device_name, brightness, haptics_enabled, led_enabled);
         screen.register_settings_menu(ble_enabled);
         screen.register_power_menu();
+        screen.register_demo_menu();
 
         let is_connected = connected_idx.is_some_and(|idx| usize::from(idx) < paired_devices.len());
         let connected_subtext: Option<TString<'static>> =
@@ -529,6 +541,40 @@ impl DeviceMenuScreen {
         ));
 
         self.register_submenu(DeviceMenuId::Power, Submenu::new(items));
+    }
+
+    fn register_demo_menu(&mut self) {
+        let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
+        items.add(MenuItem::return_msg(
+            "Start tutorial".into(),
+            DeviceMenuMsg::DemoStartTutorial,
+        ));
+        items.add(MenuItem::return_msg(
+            "Create wallet".into(),
+            DeviceMenuMsg::DemoCreateWallet,
+        ));
+        items.add(MenuItem::return_msg(
+            "Restore wallet".into(),
+            DeviceMenuMsg::DemoRestoreWallet,
+        ));
+        items.add(MenuItem::return_msg(
+            "Receive bitcoin".into(),
+            DeviceMenuMsg::DemoReceiveBitcoin,
+        ));
+        items.add(MenuItem::return_msg(
+            "Send bitcoin".into(),
+            DeviceMenuMsg::DemoSendBitcoin,
+        ));
+        items.add(MenuItem::return_msg(
+            "Swap assets".into(),
+            DeviceMenuMsg::DemoSwapAssets,
+        ));
+        items.add(MenuItem::return_msg(
+            "Approve contract".into(),
+            DeviceMenuMsg::DemoApproveContract,
+        ));
+
+        self.register_submenu(DeviceMenuId::Demo, Submenu::new(items));
     }
 
     fn register_code_menu(&mut self, wipe_code: bool) {
@@ -720,6 +766,9 @@ impl DeviceMenuScreen {
         connected_subtext: Option<TString<'static>>,
     ) {
         let mut items: Vec<MenuItem, MEDIUM_MENU_ITEMS> = Vec::new();
+
+        // Demo
+        items.add(MenuItem::go_to_submenu("Demo".into(), DeviceMenuId::Demo).light_warn());
 
         if backup_failed {
             let item = MenuItem::return_msg(
@@ -987,6 +1036,7 @@ impl DeviceMenuScreen {
                 DeviceMenuId::WipeCode => DeviceMenuId::Security,
                 DeviceMenuId::Device => DeviceMenuId::Settings,
                 DeviceMenuId::Power => DeviceMenuId::Root,
+                DeviceMenuId::Demo => DeviceMenuId::Root,
             },
             Subscreen::DeviceScreen(..) => DeviceMenuId::PairAndConnect,
             Subscreen::AboutScreen | Subscreen::RegulatoryScreen => DeviceMenuId::Device,

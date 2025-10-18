@@ -40,6 +40,14 @@ pub static REBOOT_TO_BOOTLOADER: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU
 // Misc
 pub static REFRESH_MENU: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
 
+pub static DEMO_START_TUTORIAL: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static DEMO_CREATE_WALLET: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static DEMO_RESTORE_WALLET: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static DEMO_RECEIVE_BITCOIN: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static DEMO_SEND_BITCOIN: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static DEMO_SWAP_ASSETS: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+pub static DEMO_APPROVE_CONTRACT: SimpleTypeObj = SimpleTypeObj::new(&DEVICE_MENU_RESULT_BASE_TYPE);
+
 // Create a DeviceMenuResult class that contains all result types
 static DEVICE_MENU_RESULT_TYPE: Type = obj_type! {
     name: Qstr::MP_QSTR_DeviceMenuResult,
@@ -66,6 +74,13 @@ static DEVICE_MENU_RESULT_TYPE: Type = obj_type! {
         Qstr::MP_QSTR_Reboot => REBOOT.as_obj(),
         Qstr::MP_QSTR_RebootToBootloader => REBOOT_TO_BOOTLOADER.as_obj(),
         Qstr::MP_QSTR_RefreshMenu => REFRESH_MENU.as_obj(),
+        Qstr::MP_QSTR_DemoStartTutorial => DEMO_START_TUTORIAL.as_obj(),
+        Qstr::MP_QSTR_DemoCreateWallet => DEMO_CREATE_WALLET.as_obj(),
+        Qstr::MP_QSTR_DemoRestoreWallet => DEMO_RESTORE_WALLET.as_obj(),
+        Qstr::MP_QSTR_DemoReceiveBitcoin => DEMO_RECEIVE_BITCOIN.as_obj(),
+        Qstr::MP_QSTR_DemoSendBitcoin => DEMO_SEND_BITCOIN.as_obj(),
+        Qstr::MP_QSTR_DemoSwapAssets => DEMO_SWAP_ASSETS.as_obj(),
+        Qstr::MP_QSTR_DemoApproveContract => DEMO_APPROVE_CONTRACT.as_obj(),
     } },
 };
 

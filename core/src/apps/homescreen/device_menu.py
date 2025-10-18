@@ -455,5 +455,33 @@ async def handle_device_menu() -> None:
             raise RuntimeError
         elif menu_result is CANCELLED:
             return
+        elif menu_result is DeviceMenuResult.DemoStartTutorial:
+            from trezor.ui.layouts import tutorial
+
+            await tutorial()
+        elif menu_result is DeviceMenuResult.DemoCreateWallet:
+            from apps.demo import demo_create_wallet
+
+            await demo_create_wallet()
+        elif menu_result is DeviceMenuResult.DemoRestoreWallet:
+            from apps.demo import demo_restore_wallet
+
+            await demo_restore_wallet()
+        elif menu_result is DeviceMenuResult.DemoReceiveBitcoin:
+            from apps.demo import demo_receive_bitcoin
+
+            await demo_receive_bitcoin()
+        elif menu_result is DeviceMenuResult.DemoSendBitcoin:
+            from apps.demo import demo_send_bitcoin
+
+            await demo_send_bitcoin()
+        elif menu_result is DeviceMenuResult.DemoSwapAssets:
+            from apps.demo import demo_swap_assets
+
+            await demo_swap_assets()
+        elif menu_result is DeviceMenuResult.DemoApproveContract:
+            from apps.demo import demo_approve_contract
+
+            await demo_approve_contract()
         else:
             raise RuntimeError(f"Unknown menu {menu_result}")
