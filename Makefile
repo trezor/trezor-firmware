@@ -98,9 +98,6 @@ ruststyle_check:
 	@cd core/embed/rust ; cargo fmt -- --check
 	@cd rust/trezor-client ; cargo fmt -- --check
 
-python_support_check:
-	./tests/test_python_support.py
-
 ## code generation commands:
 
 mocks: ## generate mock python headers from C modules
