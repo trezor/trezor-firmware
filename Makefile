@@ -99,6 +99,7 @@ ruststyle_check:
 	@cd rust/trezor-client ; cargo fmt -- --check
 
 python_support_check:
+	pyright --version
 	./tests/test_python_support.py
 
 ## code generation commands:

@@ -22,6 +22,7 @@ versions_to_check = [
     "3.7",
     "3.8",
     "3.9",
+    "3.10",
 ]
 
 dirs_to_check = [
@@ -34,28 +35,37 @@ dirs_to_check = [
 signs_of_issues = [
     "is unknown import symbol",  # we need to import some stuff from typing_extensions instead of typing
     "will generate runtime exception",  # happens when using `dict` or `list` as a type alias
+    "error: ",
 ]
 
 
-def check_directory(path: str, python_version: str) -> None:
+def check_directory(path: str, python_version: str, verbose: bool = False) -> None:
     global EXIT_CODE
     cmd = (
         "pyright",
         "--pythonversion",
         python_version,
+        "--project",
+        "./tests/test_python_support_pyrightconfig.json",
         path,
     )
-
     result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
     for line in result.stdout.splitlines():
+
         if any(sign in line for sign in signs_of_issues):
-            print(line)
+            if not verbose:
+                print(line)
             EXIT_CODE = 1
+        if "errors, " in line:
+            print(f"--> Result for {path}: {line}")
+        elif verbose:
+            print(line)
 
 
 for version in versions_to_check:
-    print(f"Checking python version {version}")
+    print(f"\nChecking python version {version}")
     for dir_to_check in dirs_to_check:
+        print(f"--> Path: {dir_to_check}")
         check_directory(dir_to_check, version)
 
 sys.exit(EXIT_CODE)
