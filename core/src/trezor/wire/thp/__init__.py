@@ -174,9 +174,8 @@ class PacketHeader:
 
 
 _DEFAULT_ENABLED_PAIRING_METHODS = [
-    ThpPairingMethod.CodeEntry,
-    ThpPairingMethod.QrCode,
-    ThpPairingMethod.NFC,
+    # TODO: Add pairing methods https://github.com/trezor/trezor-firmware/issues/6036
+    ThpPairingMethod.CodeEntry
 ]
 
 
@@ -190,6 +189,13 @@ def get_enabled_pairing_methods(
     methods = _DEFAULT_ENABLED_PAIRING_METHODS.copy()
     if __debug__:
         methods.append(ThpPairingMethod.SkipPairing)
+        methods.append(  # Used only in tests, TODO: https://github.com/trezor/trezor-firmware/issues/6037
+            ThpPairingMethod.NFC
+        )
+        methods.append(  # Used only in tests, TODO: https://github.com/trezor/trezor-firmware/issues/6038
+            ThpPairingMethod.QrCode
+        )
+
     return methods
 
 
