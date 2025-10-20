@@ -172,11 +172,10 @@ async def handle_device_menu() -> None:
             break
         except (ActionCancelled, PinCancelled):
             # return to the submenu if flow was cancelled
-            init_submenu_idx = parent_submenu_idx
             continue
-
-        # return to submenu on success
-        init_submenu_idx = parent_submenu_idx
+        finally:
+            # return to submenu on success or cancellation
+            init_submenu_idx = parent_submenu_idx
 
 
 async def handle_ReviewFailedBackup() -> None:

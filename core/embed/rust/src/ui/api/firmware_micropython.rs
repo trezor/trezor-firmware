@@ -1975,7 +1975,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     led_enabled: bool | None,
     ///     about_items: Sequence[tuple[str | None, StrOrBytes | None, bool | None]],
     /// ) -> LayoutObj[UiResult | tuple[int, int | None, int]]:
-    ///     """Show the device menu. Results are tuples (action, arg, parent_menu)."""
+    ///     """Show the device menu. Result is either CANCELLED or a tuple (action, action_arg, parent_menu_id)."""
     Qstr::MP_QSTR_show_device_menu => obj_fn_kw!(0, new_show_device_menu).as_obj(),
 
     /// def show_pairing_device_name(
