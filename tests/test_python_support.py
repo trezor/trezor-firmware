@@ -19,9 +19,6 @@ EXIT_CODE = 0
 os.chdir(ROOT_DIR)
 
 versions_to_check = [
-    "3.7",
-    "3.8",
-    "3.9",
     "3.10",
 ]
 

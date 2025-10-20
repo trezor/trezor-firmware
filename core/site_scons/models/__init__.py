@@ -12,7 +12,7 @@ def configure_board(
     model: str,
     revision: Optional[int | str],
     features_wanted: list[str],
-    env: dict,  # type: ignore
+    env: dict,
     defines: list[str | tuple[str, str]],
     sources: list[str],
     paths: list[str],

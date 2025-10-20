@@ -27,7 +27,7 @@ EXCLUDE = {"icon_webauthn"}
 COMMON_TOOLS_PATH = ROOT / "common" / "tools"
 sys.path.insert(0, str(COMMON_TOOLS_PATH))
 
-import coin_info
+import coin_info  # type: ignore [Import "coin_info" could not be resolved]
 
 
 @click.command()

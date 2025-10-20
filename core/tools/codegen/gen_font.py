@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+# pyright: reportMissingImports=false
 # script used to generate FontInfo in `rust/src/ui/layout_*/fonts/font_*_*.rs`
 
 from __future__ import annotations
@@ -268,7 +268,7 @@ class FaceProcessor:
         self.gen_upper = gen_upper
 
         self.face = freetype.Face(str(FONTS_DIR / f"{name}-{style}.{ext}"))
-        self.face.set_pixel_sizes(0, size)  # type: ignore
+        self.face.set_pixel_sizes(0, size)
         self.fontname = f"{name.lower()}_{style.lower()}_{size}"
         self.font_ymin = 0
         self.font_ymax = 0
@@ -359,7 +359,7 @@ class FaceProcessor:
         return self.face.get_char_index(ord(c)) != 0
 
     def _load_char(self, c: str) -> None:
-        self.face.load_char(c, freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_NORMAL)  # type: ignore
+        self.face.load_char(c, freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_NORMAL)
 
     # --------------------------------------------------------------------
     # Rust code generation

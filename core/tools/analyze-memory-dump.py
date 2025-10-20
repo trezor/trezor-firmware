@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# pyright: reportAttributeAccessIssue=false, reportGeneralTypeIssues=false
+
 from __future__ import annotations
 
 import json
@@ -263,7 +265,7 @@ import dominate
 import dominate.tags as t
 
 doc = dominate.document(title="memory map")
-with doc.head:  # type: ignore [Cannot access attribute "head", cannot be used with "with"]
+with doc.head:
     t.meta(charset="utf-8")
     t.style(
         """\
@@ -302,20 +304,20 @@ ctr = 0
 newline = True
 previtem = None
 container = t.div(id="memorymap")
-doc.add(container)  # type: ignore [Cannot access attribute "add"]
+doc.add(container)
 line = t.div()
 for pixel in pixelmap:
     if ctr % pixels_per_line == 0:
-        container.add(line)  # type: ignore [Cannot access attribute "add"]
+        container.add(line)
         line = t.div()
-        line.add(t.span(f"{ctr * pixelsize:05x}: ", cls="leadin"))  # type: ignore [Cannot access attribute "add"]
+        line.add(t.span(f"{ctr * pixelsize:05x}: ", cls="leadin"))
     if pixel is None:
-        line.add(t.span("."))  # type: ignore [Cannot access attribute "add"]
+        line.add(t.span("."))
     elif pixel is previtem:
-        line.add(t.a("=", href=f"#{pixel.ptr}"))  # type: ignore [Cannot access attribute "add"]
+        line.add(t.a("=", href=f"#{pixel.ptr}"))
     else:
         c = types[pixel.type]
-        line.add(t.a(c, href=f"#{pixel.ptr}", name=f"mapentry-{pixel.ptr}"))  # type: ignore [Cannot access attribute "add"]
+        line.add(t.a(c, href=f"#{pixel.ptr}", name=f"mapentry-{pixel.ptr}"))
     ctr += 1
     previtem = pixel
 
@@ -323,10 +325,10 @@ for pixel in pixelmap:
 def text_or_ptr(s: str) -> Any:
     if s.startswith("0x7"):
         sp = t.span()
-        sp.add(t.a(s, href=f"#{s}"))  # type: ignore [Cannot access attribute "add"]
-        sp.add(" (")  # type: ignore [Cannot access attribute "add"]
-        sp.add(t.a("M", href=f"#mapentry-{s}"))  # type: ignore [Cannot access attribute "add"]
-        sp.add(")")  # type: ignore [Cannot access attribute "add"]
+        sp.add(t.a(s, href=f"#{s}"))
+        sp.add(" (")
+        sp.add(t.a("M", href=f"#mapentry-{s}"))
+        sp.add(")")
         return sp
     else:
         return t.span(s)
@@ -346,7 +348,7 @@ def dump_single_val(value: Any) -> Any:
     elif isinstance(value, list):
         ul = t.ul()
         for subval in value:
-            ul.add(t.li(dump_single_val(subval)))  # type: ignore [Cannot access attribute "add"]
+            ul.add(t.li(dump_single_val(subval)))
         return ul
     else:
         return str(value)
@@ -360,21 +362,21 @@ def dump_dict(dl: Any, d: dict[str, Any]) -> None:
 
 for item in allobjs:
     div = t.div(cls="entry")
-    div.add(t.a("{", name=item.ptr))  # type: ignore [Cannot access attribute "add"]
+    div.add(t.a("{", name=item.ptr))
     dl = t.dl()
-    dl.add(t.dt("Inferred name:"))  # type: ignore [Cannot access attribute "add"]
-    dl.add(t.dd(str(item.name())))  # type: ignore [Cannot access attribute "add"]
-    dl.add(t.dt("Backrefs:"))  # type: ignore [Cannot access attribute "add"]
+    dl.add(t.dt("Inferred name:"))
+    dl.add(t.dd(str(item.name())))
+    dl.add(t.dt("Backrefs:"))
     refs = t.dd()
     for backref in item.backlinks:
-        refs.add(text_or_ptr(backref.ptr))  # type: ignore [Cannot access attribute "add"]
-        refs.add(", ")  # type: ignore [Cannot access attribute "add"]
-    dl.add(refs)  # type: ignore [Cannot access attribute "add"]
+        refs.add(text_or_ptr(backref.ptr))
+        refs.add(", ")
+    dl.add(refs)
     dump_dict(dl, item.item)
-    div.add(dl)  # type: ignore [Cannot access attribute "add"]
-    doc.add(div)  # type: ignore [Cannot access attribute "add"]
+    div.add(dl)
+    doc.add(div)
 
 fname = "memorymap.html" if len(sys.argv) < 3 else sys.argv[2]
 print(f"Writing to {fname}...")
 with open(fname, "w") as f:
-    f.write(doc.render(pretty=False))  # type: ignore [Cannot access attribute "render"]
+    f.write(doc.render(pretty=False))

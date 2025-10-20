@@ -9,7 +9,7 @@ from . import emulator, trezor_t3t1_revE
 def configure_board(
     revision: Optional[int | str],
     features_wanted: list[str],
-    env: dict,  # type: ignore
+    env: dict,
     defines: list[str | tuple[str, str]],
     sources: list[str],
     paths: list[str],

@@ -18,7 +18,7 @@ CORE_DIR = HERE.parent.parent
 if len(sys.argv) > 1:
     BIN_TO_ANALYZE = sys.argv[1]
 else:
-    BIN_TO_ANALYZE = CORE_DIR / "build/firmware/firmware.elf"  # type: ignore
+    BIN_TO_ANALYZE = CORE_DIR / "build/firmware/firmware.elf"
 
 # Comes from `core/embed/projects/firmware/memory_T.ld`
 FLASH_SIZE_KB = 768
@@ -40,7 +40,7 @@ def report_section(name: str, size: int, max_size: int) -> None:
         print(
             f"Less free space in {name} ({free}K) than expected ({MIN_KB_FREE_TO_SUCCEED}K). Failing"
         )
-        EXIT_CODE = 1  # type: ignore
+        EXIT_CODE = 1
 
 
 if __name__ == "__main__":

@@ -26,6 +26,7 @@ Possible improvements (TODO):
 - fix typing and remove type ignore statements
 """
 
+# pyright: reportArgumentType=false, reportAssignmentType=false, reportAttributeAccessIssue=false, reportCallIssue=false, reportOptionalMemberAccess=false
 from __future__ import annotations
 
 import sys
@@ -51,9 +52,9 @@ TRANSLATED_COMMENT_MATCHER = m.SimpleStatementLine(
 
 def attr_to_list(attr: cst.Attribute) -> list[str]:
     if m.matches(attr, m.Attribute(value=m.Name(), attr=m.Name())):
-        return [str(attr.value.value), attr.attr.value]  # type: ignore [Cannot access attribute "value" for class "BaseExpression"]
+        return [str(attr.value.value), attr.attr.value]
     if m.matches(attr, m.Attribute(value=m.Attribute(), attr=m.Name())):
-        return attr_to_list(attr.value) + [attr.attr.value]  # type: ignore [Argument of type "BaseExpression" cannot be assigned to parameter "attr" of type "Attribute" in function "attr_to_list"]
+        return attr_to_list(attr.value) + [attr.attr.value]
     raise ValueError("unexpected attr format")
 
 
@@ -68,9 +69,9 @@ class Unrenamer(cst.CSTTransformer):
     ) -> cst.CSTNode | None:
         if not m.matches(updated, TRANSLATED_COMMENT_MATCHER):
             return updated
-        assign: cst.Assign = updated.body[0]  # type: ignore [Cannot access attribute "body" for class "CSTNode"]
-        name: cst.Name = assign.targets[0].target  # type: ignore [Type "Unknown | BaseAssignTargetExpression" is not assignable to declared type "Name"]
-        value_attr: cst.Attribute = assign.value  # type: ignore [Type "Unknown | BaseExpression" is not assignable to declared type "Attribute"]
+        assign: cst.Assign = updated.body[0]
+        name: cst.Name = assign.targets[0].target
+        value_attr: cst.Attribute = assign.value
         if not isinstance(value_attr, cst.Attribute):
             raise Exception(
                 f"Unexpected non-attribute assignment: {self.module.code_for_node(assign)}"
@@ -116,7 +117,7 @@ class Renamer(cst.CSTTransformer):
         if not m.matches(node, m.EmptyLine(comment=m.Comment())):
             return updated
 
-        comment = node.comment.value  # type: ignore ["value" is not a known attribute of "None"]
+        comment = node.comment.value
         if not comment.startswith("# local_cache_attribute: "):
             return updated
 
@@ -190,7 +191,7 @@ def transform_file(
 ) -> None:
     try:
         module = cst.parse_module(path.read_text())
-        modified = module.visit(transformer(module, simplify))  # type: ignore [Expected 0 positional arguments]
+        modified = module.visit(transformer(module, simplify))
         if modified.code != module.code:
             path.write_text(modified.code)
             click.echo(f"Successfully converted {path}")

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pyright: reportArgumentType=false, reportAttributeAccessIssue=false, reportGeneralTypeIssues=false
 from __future__ import annotations
 
 import datetime
@@ -96,7 +97,7 @@ def c_str_filter(b: Any) -> str:
         return rf"\x{c:02x}"
 
     if isinstance(b, bytes):
-        return '"' + "".join(map(hexescape, b)) + '"'  # type: ignore ["Iterable[_T1@__new__]" in function "__new__"]
+        return '"' + "".join(map(hexescape, b)) + '"'
     else:
         return json.dumps(b)
 

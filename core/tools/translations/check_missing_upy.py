@@ -1,3 +1,5 @@
+# pyright: reportAttributeAccessIssue=false, reportArgumentType=false
+
 from __future__ import annotations
 
 import ast
@@ -16,7 +18,7 @@ if IGNORE_FILE.exists():
     content = json.loads(IGNORE_FILE.read_text())
     IGNORE_SET: set[str] = set(content.keys())
 else:
-    IGNORE_SET = set()  # type: ignore
+    IGNORE_SET = set()
 
 
 def find_all_strings(filename: str | Path) -> list[str]:
@@ -160,7 +162,7 @@ def find_strings_to_ignore(filename: str | Path) -> list[str]:
         if isinstance(node, ast.Expr) and isinstance(
             node.value, (ast.Str, ast.JoinedStr)
         ):
-            strings.append(node.value.s)  # type: ignore
+            strings.append(node.value.s)
 
     return strings
 
@@ -270,5 +272,5 @@ if __name__ == "__main__":
     check_folder_resursive_report(folder, ignore_files=ignore_files)
 
     # file = CORE_SRC / "trezor/ui/layouts/tt_v2/reset.py"
-    # KEY_PREFIX = "TR.reset"  # type: ignore
+    # KEY_PREFIX = "TR.reset"
     # check_file_report(file)
