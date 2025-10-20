@@ -549,6 +549,8 @@ if TYPE_CHECKING:
     class ComputeBudgetProgramSetComputeUnitLimitInstruction(Instruction):
         units: int
 
+        program_ref: Account | None
+
     class ComputeBudgetProgramSetComputeUnitPriceInstruction(Instruction):
         lamports: int
 
@@ -2363,7 +2365,7 @@ def get_instruction(
                     ),
                 ),
                 0,
-                (),
+                ("program_ref",),
                 (
                     UIProperty(
                         "units",

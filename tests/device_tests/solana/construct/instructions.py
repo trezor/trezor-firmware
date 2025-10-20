@@ -549,7 +549,10 @@ ComputeBudgetProgram_RequestHeapFrame = Struct(
 
 ComputeBudgetProgram_SetComputeUnitLimit = Struct(
     "program_index" / Byte,
-    "accounts" / CompactStruct(),
+    "accounts"
+    / CompactStruct(
+        "program_ref" / Optional(Byte),
+    ),
     "data"
     / CompactStruct(
         "instruction_id" / Const(2, Byte),
