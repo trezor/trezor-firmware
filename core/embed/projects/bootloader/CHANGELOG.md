@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2.1.14 [21st October 2025]
+
+### Changed
+- Minor UX improvements.
+
+## 2.1.13 [(internal release)]
+
+### Added
+- Signal FW corrupted to host via features message.  [#5857]
+
+## 2.1.12 [(internal release)]
+
+### Changed
+- Minor bug fixes.
+
+## 2.1.11 [(internal release)]
+
+### Added
+- Add cancel button to Connect to host screen.  [#4833]
+
+### Changed
+- Major code clean-up and refactoring.  [#4572]
+- Always allow reboot from bootloader menu.  [#5155]
+- Erase storage when bootloader is unlocked.  [#5345]
+
+### Fixed
+- Allow running firmware on locked bootloader device based on allow_run_with_secret flag.  [#4649]
+- [T2B1,T3B1] Fix screen title when confirming installation.  [#5057]
+- Fixed progress bar delay when installing firmware.  [#5484]
+
 ## 2.1.10 [19th February 2025]
 
 ### Fixed
@@ -177,3 +207,11 @@ Internal only release for Model R prototypes.
 [#4140]: https://github.com/trezor/trezor-firmware/pull/4140
 [#4195]: https://github.com/trezor/trezor-firmware/pull/4195
 [#4492]: https://github.com/trezor/trezor-firmware/pull/4492
+[#4572]: https://github.com/trezor/trezor-firmware/pull/4572
+[#4649]: https://github.com/trezor/trezor-firmware/pull/4649
+[#4833]: https://github.com/trezor/trezor-firmware/pull/4833
+[#5057]: https://github.com/trezor/trezor-firmware/pull/5057
+[#5155]: https://github.com/trezor/trezor-firmware/pull/5155
+[#5345]: https://github.com/trezor/trezor-firmware/pull/5345
+[#5484]: https://github.com/trezor/trezor-firmware/pull/5484
+[#5857]: https://github.com/trezor/trezor-firmware/pull/5857
