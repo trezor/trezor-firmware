@@ -94,18 +94,18 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_bip39_seed_obj, 2,
 #if !BITCOIN_ONLY
 /// def mnemonic_to_bits(mnemonic: str) -> bytes:
 ///     """
-///     Convert the mnemonic to its underlying entropy bits.
+///     Convert the mnemonic to its binary representation (inclding checksum).
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_bip39_mnemonic_to_bits(mp_obj_t mnemonic) {
   mp_buffer_info_t text = {0};
   mp_get_buffer_raise(mnemonic, &text, MP_BUFFER_READ);
 
   uint8_t bits[33] = {0};
-  int bits_len = mnemonic_to_bits((const char *)text.buf, bits);
-  if (bits_len <= 0) {
+  int binary_mnemonics_len = mnemonic_to_bits((const char *)text.buf, bits);
+  if (binary_mnemonics_len <= 0) {
     mp_raise_ValueError(MP_ERROR_TEXT("Invalid mnemonic"));
   }
-  return mp_obj_new_bytes(bits, sizeof(bits));
+  return mp_obj_new_bytes(bits, (binary_mnemonics_len + 7) / 8);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_bip39_mnemonic_to_bits_obj,
                                  mod_trezorcrypto_bip39_mnemonic_to_bits);
