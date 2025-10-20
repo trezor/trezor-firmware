@@ -38,6 +38,13 @@ you install HIDAPI support (see below).
 
 ### Installation options
 
+* **Bluetooth**: To support connecting to T3W1 or later models via Bluetooth,
+  additional dependencies are needed. Install with:
+
+  ```sh
+  pip3 install trezor[ble]
+  ```
+
 * **Ethereum**: To support Ethereum signing from command line, additional packages are
   needed. Install with:
 
@@ -64,7 +71,7 @@ you install HIDAPI support (see below).
   pip3 install trezor[hidapi]
   ```
 
-To install all four, use `pip3 install trezor[hidapi,ethereum,stellar]`.
+To install all four, use `pip3 install trezor[ble,hidapi,ethereum,stellar]`.
 
 ### Distro packages
 
