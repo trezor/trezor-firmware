@@ -1,5 +1,6 @@
 use core::ops::{Deref, DerefMut};
 
+pub use crate::ui::layout::device_menu_result::DeviceMenuMsg;
 use crate::{
     error::Error,
     micropython::{gc::GcBox, obj::Obj},
@@ -68,55 +69,13 @@ enum Action {
     Return(DeviceMenuMsg),
 }
 
-#[derive(Copy, Clone)]
-pub enum DeviceMenuMsg {
-    // Root menu
-    ReviewFailedBackup,
-
-    // "Pair & Connect"
-    PairDevice,       // pair a new device
-    DisconnectDevice, // disconnect a device
-    UnpairDevice(
-        u8, /* which device to unpair, index in the list of devices */
-    ),
-    UnpairAllDevices,
-
-    // Power
-    TurnOff,
-    Reboot,
-    RebootToBootloader,
-
-    // Settings menu
-    ToggleBluetooth,
-
-    // Security menu
-    SetOrChangePin,
-    RemovePin,
-    SetAutoLockBattery,
-    SetAutoLockUSB,
-    SetOrChangeWipeCode,
-    RemoveWipeCode,
-    CheckBackup,
-
-    // Device menu
-    SetDeviceName,
-    SetBrightness,
-    ToggleHaptics,
-    ToggleLed,
-    WipeDevice,
-
-    // Misc
-    RefreshMenu(DeviceMenuId),
-    Close,
-}
-
-impl DeviceMenuMsg {
-    pub fn go_back(&self) -> DeviceMenuId {
-        match self {
+impl DeviceMenuScreen {
+    pub fn parent(msg: DeviceMenuMsg) -> DeviceMenuId {
+        match msg {
             DeviceMenuMsg::ReviewFailedBackup => DeviceMenuId::Root,
             DeviceMenuMsg::PairDevice => DeviceMenuId::PairAndConnect,
             DeviceMenuMsg::DisconnectDevice => DeviceMenuId::PairAndConnect,
-            DeviceMenuMsg::UnpairDevice(_) => DeviceMenuId::PairAndConnect,
+            DeviceMenuMsg::UnpairDevice => DeviceMenuId::PairAndConnect,
             DeviceMenuMsg::UnpairAllDevices => DeviceMenuId::PairAndConnect,
             DeviceMenuMsg::TurnOff => DeviceMenuId::Power,
             DeviceMenuMsg::Reboot => DeviceMenuId::Power,
@@ -134,7 +93,7 @@ impl DeviceMenuMsg {
             DeviceMenuMsg::ToggleHaptics => DeviceMenuId::Device,
             DeviceMenuMsg::ToggleLed => DeviceMenuId::Device,
             DeviceMenuMsg::WipeDevice => DeviceMenuId::Device,
-            DeviceMenuMsg::RefreshMenu(menu_id) => *menu_id,
+            DeviceMenuMsg::RefreshMenu => DeviceMenuId::Root,
             DeviceMenuMsg::Close => DeviceMenuId::Root,
         }
     }
@@ -310,6 +269,9 @@ pub struct DeviceMenuScreen {
 
     // index of the current subscreen in the list of subscreens
     active_subscreen: u8,
+
+    // Integer argument for DeviceMenuMsg::RefreshMenu and DeviceMenuMsg::UnpairDevice
+    pub result_arg: Option<u8>,
 }
 
 impl DeviceMenuScreen {
@@ -339,6 +301,7 @@ impl DeviceMenuScreen {
             submenus: GcBox::new(Vec::new())?,
             subscreens: Vec::new(),
             submenu_index: [None; MAX_SUBMENUS],
+            result_arg: None,
         };
 
         if pin_enabled.is_some()
@@ -1044,7 +1007,8 @@ impl Component for DeviceMenuScreen {
                 ActiveScreen::HostInfo(_) => DeviceMenuId::PairAndConnect,
             };
 
-            return Some(DeviceMenuMsg::RefreshMenu(submenu_idx));
+            self.result_arg = submenu_idx.to_u8();
+            return Some(DeviceMenuMsg::RefreshMenu);
         }
 
         // Handle the event for the active menu
@@ -1076,9 +1040,8 @@ impl Component for DeviceMenuScreen {
                                 return None;
                             }
                             (1, false) | (2, true) => {
-                                return Some(DeviceMenuMsg::UnpairDevice(
-                                    device_screen.device_index,
-                                ));
+                                self.result_arg = Some(device_screen.device_index);
+                                return Some(DeviceMenuMsg::UnpairDevice);
                             }
                             _ => {}
                         }
