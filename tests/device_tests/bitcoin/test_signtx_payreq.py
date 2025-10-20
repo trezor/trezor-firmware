@@ -39,7 +39,7 @@ PREV_HASH, PREV_TX = forge_prevtx([(INPUT_ADDRESS, 12_300_000)], network="testne
 PREV_TXES = {PREV_HASH: PREV_TX}
 
 
-pytestmark = [pytest.mark.models("core"), pytest.mark.experimental]
+pytestmark = [pytest.mark.models("core")]
 
 
 @pytest.mark.altcoin
