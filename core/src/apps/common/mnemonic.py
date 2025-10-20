@@ -74,12 +74,6 @@ def get_seed(
 
 if not utils.BITCOIN_ONLY:
 
-    def _get_binary_mnemonic() -> bytes | None:
-        binary_mnemonic = storage_device.get_binary_mnemonic()
-        if binary_mnemonic is None:
-            binary_mnemonic = storage_device.update_binary_mnemonic()
-        return binary_mnemonic
-
     def derive_cardano_icarus(
         passphrase: str = "",
         trezor_derivation: bool = True,
@@ -88,7 +82,7 @@ if not utils.BITCOIN_ONLY:
         if not is_bip39():
             raise ValueError  # should not be called for SLIP-39
 
-        binary_mnemonic = _get_binary_mnemonic()
+        binary_mnemonic = storage_device.get_binary_mnemonic()
         if binary_mnemonic is None:
             raise RuntimeError("Failed to get binary mnemonic.")
 
