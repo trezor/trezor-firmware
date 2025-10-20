@@ -10,14 +10,16 @@ use crate::{
             },
             Component, Event, EventCtx, FormattedText, Label, Paginate, TextLayout,
         },
+        constant::SCREEN,
         flow::Swipable,
-        geometry::{Offset, Rect},
-        shape::Renderer,
+        geometry::{Insets, Offset, Rect},
+        shape::{self, Renderer},
         util::Pager,
     },
 };
 
 use super::{
+    attach_anim::{AttachAnimation, BasicAttachAnimation},
     theme::{self, ScreenBackground, CONTENT_INSETS_NO_HEADER, SIDE_INSETS},
     ActionBar, ActionBarMsg, FidoAccountName, FidoCredential, Header, HeaderMsg, Hint,
 };
@@ -41,17 +43,15 @@ pub struct TextScreen<T> {
     action_bar: Option<ActionBar>,
     page_limit: Option<u16>,
     background: Option<ScreenBackground>,
-
     // runtime visibility flags
     show_action_bar: bool,
     show_page_counter: bool,
-
+    // attach animation
+    attach_anim: BasicAttachAnimation,
     #[cfg(feature = "ui_debug")]
     external_menu: bool,
     #[cfg(feature = "ui_debug")]
     has_flow_menu: bool,
-    // TODO: swipe handling
-    // TODO: animations
 }
 
 pub enum TextScreenMsg {
@@ -77,6 +77,7 @@ where
             background: None,
             show_action_bar: false,
             show_page_counter: false,
+            attach_anim: BasicAttachAnimation::default(),
             #[cfg(feature = "ui_debug")]
             external_menu: false,
             #[cfg(feature = "ui_debug")]
@@ -189,6 +190,10 @@ where
         ctx.set_page_count(self.content_pager().total());
 
         self.content.event(ctx, event);
+
+        // do not block events for sub-components
+        let _ = self.attach_anim.process_events(ctx, event);
+
         if let Some(msg) = self.header.event(ctx, event) {
             match msg {
                 HeaderMsg::Cancelled => return Some(TextScreenMsg::Cancelled),
@@ -217,9 +222,14 @@ where
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        let t = self.attach_anim.eval();
+        let content_offset = self.attach_anim.get_content_offset(t);
+        let content_mask_alpha = self.attach_anim.get_content_alpha(t);
+
         if let Some(background) = &self.background {
             background.render(target);
         }
+
         self.header.render(target);
         self.subtitle.render(target);
 
@@ -238,7 +248,15 @@ where
             }
         }
 
-        self.content.render(target);
+        target.with_translate(content_offset, &|target| {
+            self.content.render(target);
+        });
+        // TODO: rect
+        shape::Bar::new(SCREEN.inset(Insets::bottom(theme::ACTION_BAR_HEIGHT)))
+            .with_fg(theme::BLACK)
+            .with_bg(theme::BLACK)
+            .with_alpha(u8::MAX - content_mask_alpha)
+            .render(target);
     }
 }
 
