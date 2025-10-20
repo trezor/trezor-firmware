@@ -1,9 +1,0 @@
-{
-  "typeCheckingMode": "basic",
-  "reportMissingImports": "warning",
-  "_comment":"Ignoring legacy (not working) files",
-  "exclude": [
-    "../core/tools/codegen/get_trezor_keys.py"
-  ]
-}
-
