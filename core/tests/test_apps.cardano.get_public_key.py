@@ -11,8 +11,8 @@ from apps.cardano.seed import Keychain
 class TestCardanoGetPublicKey(unittest.TestCase):
     @staticmethod
     def make_keychain_bip39(mnemonic, passphrase):
-        mnemonic_bits = bip39.mnemonic_to_bits(mnemonic)
-        secret = cardano.derive_icarus(mnemonic_bits, passphrase, True)
+        binary_mnemonic = bip39.mnemonic_to_bits(mnemonic)
+        secret = cardano.derive_icarus(binary_mnemonic, passphrase, True)
         node = cardano.from_secret(secret)
         return Keychain(node)
 

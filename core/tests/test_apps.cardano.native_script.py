@@ -298,9 +298,9 @@ INVALID_SCRIPTS = [
 class TestCardanoNativeScript(unittest.TestCase):
     def test_get_native_script_hash(self):
         mnemonic = "all all all all all all all all all all all all"
-        mnemonic_bits = bip39.mnemonic_to_bits(mnemonic)
+        binary_mnemonic = bip39.mnemonic_to_bits(mnemonic)
         passphrase = ""
-        secret = cardano.derive_icarus(mnemonic_bits, passphrase, False)
+        secret = cardano.derive_icarus(binary_mnemonic, passphrase, False)
         node = cardano.from_secret(secret)
         keychain = Keychain(node)
 

@@ -23,9 +23,9 @@ if not utils.BITCOIN_ONLY:
 class TestCardanoAddress(unittest.TestCase):
     def setUp(self):
         mnemonic = "all all all all all all all all all all all all"
-        mnemonic_bits = bip39.mnemonic_to_bits(mnemonic)
+        binary_mnemonic = bip39.mnemonic_to_bits(mnemonic)
         passphrase = ""
-        secret = cardano.derive_icarus(mnemonic_bits, passphrase, False)
+        secret = cardano.derive_icarus(binary_mnemonic, passphrase, False)
         node = cardano.from_secret(secret)
         self.keychain = Keychain(node)
 

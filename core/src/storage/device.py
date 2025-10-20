@@ -50,7 +50,7 @@ if utils.USE_POWER_MANAGER:
     _AUTOLOCK_DELAY_BATT_MS    = const(0x23)  # int
 _DISABLE_BLUETOOTH        = const(0x24)  # bool (0x01 or empty)
 if not utils.BITCOIN_ONLY:
-    _MNEMONIC_SECRET_BITS = const(0x25)  # bytes
+    _BINARY_MNEMONIC = const(0x25)  # bytes
 
 
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
@@ -167,19 +167,21 @@ def store_mnemonic_secret(
         common.set_true_or_delete(_NAMESPACE, _NEEDS_BACKUP, needs_backup)
 
     if not utils.BITCOIN_ONLY:
-        _store_mnemonic_secret_bits(secret, backup_type, allow_derivation_fail)
+        _store_binary_mnemonic(secret, allow_derivation_fail)
 
 
 if not utils.BITCOIN_ONLY:
 
-    def get_mnemonic_secret_bits() -> bytes | None:
-        return common.get(_NAMESPACE, _MNEMONIC_SECRET_BITS)
-
-    def _store_mnemonic_secret_bits(
-        secret: bytes, backup_type: BackupType, allow_derivation_fail: bool
-    ) -> None:
+    def get_binary_mnemonic() -> bytes | None:
         """
-        Store mnemonic bits for Cardano Icarus derivation. Works only for BIP-39.
+        Get the binary representation of mnemonic (including checksum).
+        """
+        return common.get(_NAMESPACE, _BINARY_MNEMONIC)
+
+    def _store_binary_mnemonic(secret: bytes, allow_derivation_fail: bool) -> None:
+        """
+        Store the bianry representation of mnemonic (including checksum) for Cardano
+        Icarus derivation. Works only for BIP-39.
 
         If `allow_derivation_fail` is True, exception during derivation is ignored.
         """
@@ -189,7 +191,7 @@ if not utils.BITCOIN_ONLY:
 
         if get_backup_type() == BackupType.Bip39:
             try:
-                mnemonic_bits = bip39.mnemonic_to_bits(secret.decode())
+                binary_mnemonic = bip39.mnemonic_to_bits(secret.decode())
             except ValueError:
                 if not allow_derivation_fail:
                     raise
@@ -198,11 +200,11 @@ if not utils.BITCOIN_ONLY:
 
             common.set(
                 _NAMESPACE,
-                _MNEMONIC_SECRET_BITS,
-                mnemonic_bits,
+                _BINARY_MNEMONIC,
+                binary_mnemonic,
             )
 
-    def update_mnemonic_bits() -> bytes | None:
+    def update_binary_mnemonic() -> bytes | None:
         from trezorcrypto import bip39
 
         secret = get_mnemonic_secret()
@@ -211,12 +213,12 @@ if not utils.BITCOIN_ONLY:
 
         try:
             secret_str = secret.decode()
-            mnemonic_bits = bip39.mnemonic_to_bits(secret_str)
+            binary_mnemonic = bip39.mnemonic_to_bits(secret_str)
         except UnicodeError:
             raise RuntimeError("Mnemonic to bits derivation called for SLIP39.")
 
-        common.set(_NAMESPACE, _MNEMONIC_SECRET_BITS, mnemonic_bits)
-        return mnemonic_bits
+        common.set(_NAMESPACE, _BINARY_MNEMONIC, binary_mnemonic)
+        return binary_mnemonic
 
 
 def get_backup_type() -> BackupType:
