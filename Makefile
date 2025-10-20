@@ -21,6 +21,8 @@ pystyle_check: ## run code style check on application sources and tests
 	pyright --version
 	@echo [TYPECHECK]
 	@make -C core typecheck
+	@echo [TYPECHECK - COMMON and TOOLS]
+	@make typecheck
 	@echo [FLAKE8]
 	@flake8 $(PY_FILES)
 	@echo [ISORT]
@@ -44,6 +46,8 @@ pystyle: ## apply code style on application sources and tests
 	@black $(PY_FILES)
 	@echo [TYPECHECK]
 	@make -C core typecheck
+	@echo [TYPECHECK - COMMON and TOOLS]
+	@make typecheck
 	@echo [FLAKE8]
 	@flake8 $(PY_FILES)
 	@echo [PYLINT]
@@ -101,6 +105,11 @@ ruststyle_check:
 python_support_check:
 	pyright --version
 	./tests/test_python_support.py
+
+typecheck: pyright
+
+pyright:
+	python ./tools/pyright_tool.py
 
 ## code generation commands:
 

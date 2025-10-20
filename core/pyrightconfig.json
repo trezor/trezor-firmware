@@ -1,10 +1,13 @@
 {
     "include": [
-        "src"
+        "src",
+        "tools",
+        "site_scons"
     ],
     "exclude": [
         "src/apps/monero",
-        "src/typing.py"
+        "src/typing.py",
+        "tools/codegen/get_trezor_keys.py"
     ],
     "stubPath": "mocks/generated",
     "typeCheckingMode": "basic",
