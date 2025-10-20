@@ -120,8 +120,8 @@ impl NameDef {
         let (_pre, name_defs, _post) = unsafe { NAME_DEFS.align_to::<NameDef>() };
         // per `include_aligned!` macro, NAME_DEFS is aligned to NameDef, so `name_defs`
         // array should be cleanly aligned.
-        debug_assert!(_pre.is_empty());
-        debug_assert!(_post.is_empty());
+        assert!(_pre.is_empty());
+        assert!(_post.is_empty());
         name_defs
     }
 }
@@ -139,8 +139,8 @@ impl WireDef {
         let (_pre, wire_defs, _post) = unsafe { WIRE_DEFS.align_to::<WireDef>() };
         // per `include_aligned!` macro, WIRE_DEFS is aligned to WireDef, so `wire_defs`
         // array should be cleanly aligned.
-        debug_assert!(_pre.is_empty());
-        debug_assert!(_post.is_empty());
+        assert!(_pre.is_empty());
+        assert!(_post.is_empty());
         wire_defs
     }
 }
@@ -196,15 +196,15 @@ pub fn get_msg(msg_offset: u16) -> MsgDef {
     // PREREQUISITES:
     // * MSG_DEFS is aligned to u16 (per `include_aligned!` macro)
     // * FieldDef has the same alignment
-    debug_assert!(mem::align_of::<FieldDef>() == mem::align_of::<u16>());
+    assert!(mem::align_of::<FieldDef>() == mem::align_of::<u16>());
     // * both msg_offset and fields_start added together keep the alignment:
-    debug_assert!(fields_byteslice.as_ptr().addr() % mem::align_of::<FieldDef>() == 0);
+    assert!(fields_byteslice.as_ptr().addr() % mem::align_of::<FieldDef>() == 0);
 
     // SAFETY: FieldDef is a packed struct of ints, so all bit patterns are valid.
     let (_pre, fields, _post) = unsafe { fields_byteslice.align_to::<FieldDef>() };
     // Given the prerequisites, `fields` array must be cleanly aligned.
-    debug_assert!(_pre.is_empty());
-    debug_assert!(_post.is_empty());
+    assert!(_pre.is_empty());
+    assert!(_post.is_empty());
 
     let defaults_start = fields_end;
     let defaults_end = defaults_start + defaults_size;
@@ -231,8 +231,8 @@ fn get_enum(enum_offset: u16) -> EnumDef {
     // SAFETY: enum_defs is an array of u16, so all bit patterns are valid.
     let (_pre, enum_defs, _post) = unsafe { ENUM_DEFS.align_to::<u16>() };
     // ENUM_DEFS is aligned to u16 per `include_aligned!` macro
-    debug_assert!(_pre.is_empty());
-    debug_assert!(_post.is_empty());
+    assert!(_pre.is_empty());
+    assert!(_post.is_empty());
 
     // enum_offset is a raw byte offset, we check that it is also a valid index of
     // an u16
