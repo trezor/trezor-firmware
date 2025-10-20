@@ -75,9 +75,9 @@ STATIC mp_obj_t mod_trezorcrypto_cardano_derive_icarus(size_t n_args,
     mnemonic_bytes_used = entropy_bytes + (binary_mnemonic.len / 33);
   }
   const int res = secret_from_entropy_cardano_icarus(
-      (const uint8_t*)ppassphrase, phrase.len,
-      (const uint8_t*)binary_mnemonic.buf, mnemonic_bytes_used,
-      (uint8_t*)vstr.buf, callback);
+      (const uint8_t *)ppassphrase, phrase.len,
+      (const uint8_t *)binary_mnemonic.buf, mnemonic_bytes_used,
+      (uint8_t *)vstr.buf, callback);
 
   ui_wait_callback = mp_const_none;
 
