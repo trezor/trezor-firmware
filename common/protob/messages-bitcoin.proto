@@ -354,7 +354,7 @@ message TxAck {
             // optional uint32 block_height_bip115 = 9;     // BIP-115 support dropped
             optional bytes orig_hash = 10;                  // tx_hash of the original transaction where this output was present (used when creating a replacement transaction)
             optional uint32 orig_index = 11;                // index of the output in the original transaction (used when creating a replacement transaction)
-            optional uint32 payment_req_index = 12 [(experimental_field)=true]; // index of the PaymentRequest containing this output
+            optional uint32 payment_req_index = 12;         // index of the PaymentRequest containing this output
         }
     }
 }
@@ -399,7 +399,7 @@ message TxOutput {
     reserved 7, 8, 9;                               // fields which are in use, or have been in the past, in TxOutputType
     optional bytes orig_hash = 10;                  // tx_hash of the original transaction where this output was present (used when creating a replacement transaction)
     optional uint32 orig_index = 11;                // index of the output in the original transaction (used when creating a replacement transaction)
-    optional uint32 payment_req_index = 12 [(experimental_field)=true]; // index of the PaymentRequest containing this output
+    optional uint32 payment_req_index = 12;         // index of the PaymentRequest containing this output
 }
 
 /** Data type for metadata about previous transaction which contains the UTXO being spent.

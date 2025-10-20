@@ -228,7 +228,6 @@ def _transform_expected_result(result):
 
 
 @pytest.mark.altcoin
-@pytest.mark.experimental
 @parametrize_using_common_fixtures(
     "cardano/sign_tx.slip24.json",
 )
@@ -237,7 +236,6 @@ def test_signtx_payment_req(session: Session, parameters, result):
 
 
 @pytest.mark.altcoin
-@pytest.mark.experimental
 @parametrize_using_common_fixtures(
     "cardano/sign_tx.slip24.failed.json",
 )
