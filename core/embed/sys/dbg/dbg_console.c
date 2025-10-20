@@ -23,7 +23,7 @@
 #include <sys/dbg_console.h>
 
 void dbg_console_vprintf(const char *fmt, va_list args) {
-  char temp[80];
+  char temp[160];
   mini_vsnprintf(temp, sizeof(temp), fmt, args);
   dbg_console_write(temp, strnlen(temp, sizeof(temp)));
 }
