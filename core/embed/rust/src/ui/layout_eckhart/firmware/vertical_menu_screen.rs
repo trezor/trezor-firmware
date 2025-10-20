@@ -2,6 +2,7 @@ use crate::{
     strutil::TString,
     ui::{
         component::{
+            base::AttachType,
             swipe_detect::{SwipeConfig, SwipeSettings},
             text::{layout::LayoutFit, TextStyle},
             Component, Event, EventCtx, Label, LineBreaking, SwipeDetect, TextLayout,
@@ -87,21 +88,16 @@ impl<T: MenuItems> VerticalMenuScreen<T> {
         if animation_disabled() {
             self.swipe = Some(SwipeDetect::new());
             ctx.enable_swipe();
-            // Set default position for the sliding window
-            self.menu.set_offset(0);
-            // Update the menu buttons state
-            self.menu.update_button_states(ctx);
-            return;
-        }
-
-        // Switch swiping on/off based on the menu fit
-        self.swipe = if !self.menu.fits_area() {
-            ctx.enable_swipe();
-            Some(SwipeDetect::new())
         } else {
-            ctx.disable_swipe();
-            None
-        };
+            // Switch swiping on/off based on the menu fit
+            self.swipe = if !self.menu.fits_area() {
+                ctx.enable_swipe();
+                Some(SwipeDetect::new())
+            } else {
+                ctx.disable_swipe();
+                None
+            };
+        }
 
         // Set default position for the sliding window
         self.menu.set_offset(0);
