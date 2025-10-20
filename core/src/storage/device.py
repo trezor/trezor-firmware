@@ -205,6 +205,17 @@ if not utils.BITCOIN_ONLY:
             )
 
     def update_binary_mnemonic() -> bytes | None:
+        """
+        Sets the binary representation of mnemonic (including checksum) in storage.
+
+        Works only for BIP-39.
+
+        Returns:
+            `bytes | None`: The derived binary mnemonic.
+        Raises:
+            `RuntimeError`: If the stored mnemonic cannot be decoded as UTF-8, which
+            indicates the backup type is SLIP-39.
+        """
         from trezorcrypto import bip39
 
         secret = get_mnemonic_secret()
