@@ -155,7 +155,6 @@ def get_mnemonic_secret() -> bytes | None:
 
 def store_mnemonic_secret(
     secret: bytes,
-    backup_type: BackupType,
     needs_backup: bool = False,
     no_backup: bool = False,
     allow_derivation_fail: bool = False,
@@ -188,7 +187,7 @@ if not utils.BITCOIN_ONLY:
 
         from trezor.enums import BackupType
 
-        if backup_type == BackupType.Bip39:
+        if get_backup_type() == BackupType.Bip39:
             try:
                 mnemonic_bits = bip39.mnemonic_to_bits(secret.decode())
             except ValueError:
