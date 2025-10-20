@@ -115,7 +115,6 @@ macro_rules! obj_type {
      $(make_new_fn: $make_new_fn:path,)?
      $(attr_fn: $attr_fn:path,)?
      $(call_fn: $call_fn:path,)?
-     $(unary_op_fn: $unary_op_fn:path,)?
     ) => {{
         #[allow(unused_unsafe)]
         unsafe {
@@ -143,11 +142,6 @@ macro_rules! obj_type {
             let mut make_new: ffi::mp_make_new_fun_t = None;
             $(make_new = Some($make_new_fn);)?
 
-            #[allow(unused_mut)]
-            #[allow(unused_assignments)]
-            let mut unary_op: ffi::mp_unary_op_fun_t = None;
-            $(unary_op = Some($unary_op_fn);)?
-
             // TODO: This is safe only if we pass in `Dict` with fixed `Map` (created by
             // `Map::fixed()`, usually through `obj_map!`), because only then will
             // MicroPython treat `locals_dict` as immutable, and make the mutable cast safe.
@@ -165,7 +159,7 @@ macro_rules! obj_type {
                 print: None,
                 make_new,
                 call,
-                unary_op,
+                unary_op: None,
                 binary_op: None,
                 attr,
                 subscr: None,
