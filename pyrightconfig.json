@@ -1,0 +1,15 @@
+{
+    "include": [
+        "tools",
+        "common"
+    ],
+    "exclude": [
+        "tools/pyright_tool.py",
+        "tools/snippets"
+    ],
+    "stubPath": "mocks/generated",
+    "typeCheckingMode": "basic",
+    "pythonVersion": "3.10",
+    "reportMissingModuleSource": false,
+    "reportMissingImports": false
+}
