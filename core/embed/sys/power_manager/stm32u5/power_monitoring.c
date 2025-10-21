@@ -186,10 +186,12 @@ void pm_charging_controller(pm_driver_t* drv) {
              20.0f) {
     // Translate SoC target to charging voltage via battery model
     float target_ocv_voltage_v =
-        battery_ocv(drv->soc_target / 100.0f, drv->pmic_data.ntc_temp, false);
+        battery_ocv(&drv->fuel_gauge.model, drv->soc_target / 100.0f,
+                    drv->pmic_data.ntc_temp, false);
 
-    float battery_ocv_v = battery_meas_to_ocv(
-        drv->pmic_data.vbat, drv->pmic_data.ibat, drv->pmic_data.ntc_temp);
+    float battery_ocv_v =
+        battery_meas_to_ocv(&drv->fuel_gauge.model, drv->pmic_data.vbat,
+                            drv->pmic_data.ibat, drv->pmic_data.ntc_temp);
 
     drv->target_battery_ocv_v_tau =
         (drv->target_battery_ocv_v_tau * 0.95f) +

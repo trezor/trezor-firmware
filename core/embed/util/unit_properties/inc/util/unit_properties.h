@@ -83,6 +83,16 @@ typedef struct {
    */
   bool sd_hotswap_enabled;
 
+  /**
+   * Type of the battery used in this unit
+   *
+   * Interpretation is model-specific.
+   */
+  uint8_t battery_type;
+  /** Validity flag for the battery_type field - set to true when battery_type
+   * contains a valid value */
+  bool battery_type_is_valid;
+
 } unit_properties_t;
 
 /**
