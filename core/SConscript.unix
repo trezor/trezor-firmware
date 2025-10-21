@@ -902,7 +902,7 @@ env.Depends(protobuf_blobs, qstr_generated)
 # Rust library
 #
 env.get("ENV")["RUST_TARGET"] = os.popen("rustc -vV | sed -n 's/host: //p'").read().strip()
-if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', '0') == '1':
+if PYOPT == '0' or ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', '0') == '1':
     profile = 'dev'
 else:
     profile = 'release'
