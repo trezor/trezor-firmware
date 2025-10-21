@@ -35,13 +35,26 @@ impl MsgDef {
     }
 }
 
-#[repr(C, packed)]
+#[repr(C)]
 pub struct FieldDef {
     pub tag: u8,
     flags_and_type: u8,
     enum_or_msg_offset: u16,
     pub name: u16,
 }
+
+const STATIC_ASSERT_FIELD_DEF_ALIGNMENT: () = {
+    // alignment must be that of u16 aka the largest element
+    debug_assert!(mem::align_of::<FieldDef>() == mem::align_of::<u16>());
+    // the total size must be the same as the sum of the sizes of all the elements
+    debug_assert!(
+        mem::size_of::<FieldDef>()
+            == mem::size_of::<u8>()
+                + mem::size_of::<u8>()
+                + mem::size_of::<u16>()
+                + mem::size_of::<u16>()
+    );
+};
 
 impl FieldDef {
     pub fn get_type(&self) -> FieldType {
@@ -108,11 +121,18 @@ pub struct EnumDef {
     pub values: &'static [u16],
 }
 
-#[repr(C, packed)]
+#[repr(C)]
 struct NameDef {
     msg_name: u16,
     msg_offset: u16,
 }
+
+const STATIC_ASSERT_NAME_DEF_ALIGNMENT: () = {
+    // alignment must be that of u16 aka the largest element
+    debug_assert!(mem::align_of::<NameDef>() == mem::align_of::<u16>());
+    // the total size must be the same as two u16s
+    debug_assert!(mem::size_of::<NameDef>() == 2 * mem::size_of::<u16>());
+};
 
 impl NameDef {
     pub fn defs() -> &'static [NameDef] {
@@ -126,12 +146,19 @@ impl NameDef {
     }
 }
 
-#[repr(C, packed)]
+#[repr(C)]
 struct WireDef {
     enum_name: u16,
     wire_id: u16,
     msg_offset: u16,
 }
+
+const STATIC_ASSERT_WIRE_DEF_ALIGNMENT: () = {
+    // alignment must be that of u16 aka the largest element
+    debug_assert!(mem::align_of::<WireDef>() == mem::align_of::<u16>());
+    // the total size must be the same as three u16s
+    debug_assert!(mem::size_of::<WireDef>() == 3 * mem::size_of::<u16>());
+};
 
 impl WireDef {
     pub fn defs() -> &'static [WireDef] {
@@ -221,7 +248,7 @@ pub fn get_msg(msg_offset: u16) -> MsgDef {
 }
 
 fn get_enum(enum_offset: u16) -> EnumDef {
-    // #[repr(C, packed)]
+    // #[repr(C)]
     // struct EnumDef {
     //     count: u16,
     //     vals: [u16],
