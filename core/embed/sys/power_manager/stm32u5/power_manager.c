@@ -697,10 +697,17 @@ bool pm_driver_is_suspended(void) {
 
 void pm_compensate_fuel_gauge(float* soc, uint32_t elapsed_s,
                               float battery_current_ma, float bat_temp_c) {
+  pm_driver_t* drv = &g_pm;
+
+  if (!drv->initialized) {
+    return;
+  }
+
   float compensation_mah = ((battery_current_ma)*elapsed_s) / 3600.0f;
   bool discharging_mode = battery_current_ma >= 0.0f;
   *soc -=
-      (compensation_mah / battery_total_capacity(bat_temp_c, discharging_mode));
+      (compensation_mah / battery_total_capacity(&drv->fuel_gauge.model,
+                                                 bat_temp_c, discharging_mode));
 }
 
 static pm_status_t pm_wait_to_stabilize(pm_driver_t* drv, uint32_t timeout_ms) {

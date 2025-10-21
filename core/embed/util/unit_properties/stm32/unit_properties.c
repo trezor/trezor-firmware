@@ -125,6 +125,8 @@ static bool detect_properties(unit_properties_t* props) {
       props->btconly_is_valid = true;
       props->packaging = otp_data[3];
       props->packaging_is_valid = true;
+      props->battery_type = otp_data[4];
+      props->battery_type_is_valid = true;
       break;
 
     default:
