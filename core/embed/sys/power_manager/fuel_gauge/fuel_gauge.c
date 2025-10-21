@@ -20,6 +20,8 @@
 
 #include <math.h>
 
+#include <util/unit_properties.h>
+
 #include "battery_model.h"
 #include "fuel_gauge.h"
 
