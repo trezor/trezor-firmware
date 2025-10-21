@@ -42,7 +42,7 @@ void suspend_cpu(void);
 typedef struct {
 #ifdef USE_BACKLIGHT
   /** Backlight level */
-  int backlight_level;
+  uint8_t backlight_level;
 #endif
 #ifdef USE_BLE
   /** State of the ble driver */
