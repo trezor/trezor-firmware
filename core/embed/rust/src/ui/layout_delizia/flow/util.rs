@@ -24,7 +24,7 @@ use heapless::Vec;
 
 use super::{
     super::{
-        component::{Frame, PromptMsg, SwipeContent, VerticalMenuChoiceMsg},
+        component::{Frame, PromptMsg, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg},
         flow, theme,
     },
     ConfirmActionExtra, ConfirmActionMenuStrings, ConfirmActionStrings,
@@ -521,4 +521,8 @@ where
     let mut flow = SwipeFlow::new(&SinglePage::Show)?;
     flow.add_page(&SinglePage::Show, layout)?;
     Ok(flow)
+}
+
+pub fn dummy_page() -> impl Component<Msg = FlowMsg> + Swipable + MaybeTrace {
+    Frame::left_aligned(TString::empty(), VerticalMenu::empty()).map(|_| Some(FlowMsg::Cancelled))
 }

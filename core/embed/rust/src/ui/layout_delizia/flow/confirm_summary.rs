@@ -1,15 +1,14 @@
 use heapless::Vec;
 
 use crate::{
-    error::{self},
-    maybe_trace::MaybeTrace,
+    error,
     strutil::TString,
     translations::TR,
     ui::{
-        component::{swipe_detect::SwipeSettings, Component, ComponentExt},
+        component::{swipe_detect::SwipeSettings, ComponentExt},
         flow::{
             base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, Swipable, SwipeFlow,
+            FlowController, FlowMsg, SwipeFlow,
         },
         geometry::Direction,
     },
@@ -20,7 +19,7 @@ use super::{
         component::{Frame, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg},
         theme,
     },
-    util::ShowInfoParams,
+    util::{dummy_page, ShowInfoParams},
 };
 
 const MENU_ITEM_CANCEL: usize = 0;
@@ -64,10 +63,6 @@ impl FlowController for ConfirmSummary {
             _ => self.do_nothing(),
         }
     }
-}
-
-fn dummy_page() -> impl Component<Msg = FlowMsg> + Swipable + MaybeTrace {
-    Frame::left_aligned(TString::empty(), VerticalMenu::empty()).map(|_| Some(FlowMsg::Cancelled))
 }
 
 pub fn new_confirm_summary(
