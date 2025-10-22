@@ -156,7 +156,6 @@ async def handle_device_menu() -> None:
         handler = _MENU_HANDLERS.get(action)
         if not handler:
             raise RuntimeError(f"Unknown menu {menu_result}")
-        # (menu leaf, optional integer, parent submenu)
 
         # special handling
         if action == DeviceMenuResult.RefreshMenu:

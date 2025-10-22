@@ -158,9 +158,11 @@ impl ComponentMsgObj for SetBrightnessScreen {
 
 impl ComponentMsgObj for DeviceMenuScreen {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        if matches!(msg, DeviceMenuMsg::Close) {
+            return Ok(CANCELLED.as_obj());
+        }
         let action_obj = msg.to_u8().into();
         let result: Option<u8> = match msg {
-            DeviceMenuMsg::Close => return Ok(CANCELLED.as_obj()),
             DeviceMenuMsg::UnpairDevice | DeviceMenuMsg::RefreshMenu => self.result_arg,
             _ => None,
         };
