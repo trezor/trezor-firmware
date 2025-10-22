@@ -27,6 +27,7 @@ from trezorlib.messages import (
     ApplySettings,
     BackupAvailability,
     BackupType,
+    CardanoDerivationType,
     RecoveryStatus,
     Success,
 )
@@ -515,6 +516,44 @@ def test_upgrade_u2f(gen: str, tag: str):
         session = emu.client.get_seedless_session()
         counter = fido.get_next_counter(session)
         assert counter == 12
+
+
+@for_all("core", core_minimum_version=(2, 9, 1))
+@pytest.mark.parametrize(
+    "backup_type", [BackupType.Bip39, BackupType.Slip39_Single_Extendable]
+)
+@pytest.mark.parametrize("derivation_type", CardanoDerivationType)
+def test_cardano_address_does_not_change_by_upgrade(
+    gen: str,
+    tag: Optional[str],
+    derivation_type: CardanoDerivationType,
+    backup_type: BackupType,
+):
+    """
+    Check that the Cardano address does not change after upgrading storage from v2 to v3
+    """
+    from trezorlib.cardano import get_public_key
+    from trezorlib.tools import parse_path
+
+    ADDRESS_N = parse_path("m/1852'/1815'/0'")
+
+    with EmulatorWrapper(gen, tag) as emu:
+        device.setup(
+            emu.client.get_seedless_session(),
+            pin_protection=False,
+            skip_backup=True,
+            backup_type=backup_type,
+            entropy_check_count=0,
+        )
+        session = emu.client.get_session(derive_cardano=True)
+        key = get_public_key(session, ADDRESS_N, derivation_type, show_display=True)
+        storage = emu.get_storage()
+
+    with EmulatorWrapper(gen, storage=storage) as emu:
+        session = emu.client.get_session(derive_cardano=True)
+        assert key == get_public_key(
+            session, ADDRESS_N, derivation_type, show_display=True
+        )
 
 
 if __name__ == "__main__":
