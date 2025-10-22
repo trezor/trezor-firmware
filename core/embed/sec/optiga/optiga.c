@@ -346,12 +346,12 @@ bool optiga_set_metadata(uint16_t oid, const optiga_metadata *metadata) {
 
 void optiga_set_metadata_time(uint32_t *time, bool is_configured) {
   optiga_get_data_object_time(time, true);
-  if (is_configured) {
+  if (!is_configured) {
     optiga_set_data_object_time(time, true);
     optiga_get_data_object_time(time, true);
   }
 #if PRODUCTION
-  if (is_configured) {
+  if (!is_configured) {
     optiga_set_data_object_time(time, true);
     optiga_get_data_object_time(time, true);
   }
@@ -378,7 +378,7 @@ static bool optiga_is_configured() {
     return false;
   }
 
-  return !optiga_compare_metadata(&metadata, &metadata_stored);
+  return optiga_compare_metadata(&metadata, &metadata_stored);
 }
 
 static bool optiga_pin_init_metadata() {
