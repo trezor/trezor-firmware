@@ -76,7 +76,7 @@
 // operations. The limit is 600000 stretching operations, which equates to
 // 300000 / PIN_STRETCH_ITERATIONS unlock operations over the lifetime of the
 // device.
-#define PIN_TOTAL_CTR_VALUE 600000
+#define PIN_TOTAL_CTR_LIMIT 600000
 
 // Stretched PINs
 // The first stretched PIN is OPTIGA_OID_DATA + 4 to preserve compatiblity with
@@ -477,7 +477,7 @@ static bool optiga_pin_init_metadata() {
   metadata.change = OPTIGA_META_ACCESS_ALWAYS;
   if (write_metadata(OID_PIN_TOTAL_CTR, &metadata)) {
     optiga_result res =
-        optiga_reset_counter(OID_PIN_TOTAL_CTR, PIN_TOTAL_CTR_VALUE);
+        optiga_reset_counter(OID_PIN_TOTAL_CTR, PIN_TOTAL_CTR_LIMIT);
     if (res != OPTIGA_SUCCESS) {
       return false;
     }
