@@ -59,6 +59,8 @@
 
 #define TROPIC_MAC_AND_DESTROY_SIZE 32
 
+typedef secbool (*tropic_ui_progress_t)(void);
+
 #ifdef KERNEL_MODE
 
 #ifdef TREZOR_EMULATOR
@@ -73,17 +75,16 @@ void tropic_deinit(void);
 #include "libtropic.h"
 lt_handle_t* tropic_get_handle(void);
 
-lt_ret_t tropic_start_custom_session(const uint8_t* stpub,
+lt_ret_t tropic_start_custom_session(tropic_ui_progress_t ui_progress,
+                                     const uint8_t* stpub,
                                      const pkey_index_t pkey_index,
                                      const uint8_t* shipriv,
                                      const uint8_t* shipub);
 
-bool tropic_wait_for_ready(void);
+bool tropic_wait_for_ready(tropic_ui_progress_t ui_progress);
 #endif
 
 #endif
-
-typedef secbool (*tropic_ui_progress_t)(void);
 
 void tropic_get_factory_privkey(curve25519_key privkey);
 

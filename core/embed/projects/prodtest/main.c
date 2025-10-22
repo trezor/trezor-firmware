@@ -196,7 +196,7 @@ static void drivers_init(void) {
 #else
   tropic_init();
 #endif
-  tropic_wait_for_ready();
+  tropic_wait_for_ready(NULL);
 #endif
 #ifdef USE_HW_REVISION
   hw_revision_init();
