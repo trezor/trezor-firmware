@@ -1,13 +1,7 @@
 use crate::{
     error::Error,
     micropython::{
-        ffi,
-        macros::{obj_dict, obj_map, obj_type},
-        obj::Obj,
-        qstr::Qstr,
-        simple_type::SimpleTypeObj,
-        typ::Type,
-        util,
+        ffi, macros::obj_type, obj::Obj, qstr::Qstr, simple_type::SimpleTypeObj, typ::Type, util,
     },
 };
 
@@ -101,7 +95,7 @@ unsafe extern "C" fn device_menu_result_attr(_self_in: Obj, attr: ffi::qstr, des
             Qstr::MP_QSTR_RefreshMenu => DeviceMenuMsg::RefreshMenu.as_obj(),
             _ => return Err(Error::AttributeError(attr)),
         };
-        unsafe { dest.write(value.into()) };
+        unsafe { dest.write(value) };
         Ok(())
     };
     unsafe { util::try_or_raise(block) }

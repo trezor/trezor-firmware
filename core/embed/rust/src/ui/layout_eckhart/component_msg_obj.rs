@@ -9,7 +9,6 @@ use crate::{
     error::Error,
     micropython::{obj::Obj, util::new_tuple},
     ui::layout::{
-        device_menu_result::*,
         obj::ComponentMsgObj,
         result::{CANCELLED, CONFIRMED, INFO},
     },
