@@ -479,6 +479,10 @@ impl ActionBar {
         };
         None
     }
+
+    pub fn is_paginate_only(&self) -> bool {
+        self.mode == Mode::PaginateOnly
+    }
 }
 
 impl Component for ActionBar {
