@@ -253,7 +253,7 @@ optiga_result optiga_derive_key(optiga_key_derivation deriv, uint16_t oid,
 optiga_result optiga_set_trust_anchor(void);
 optiga_result optiga_set_priv_key(uint16_t oid, const uint8_t priv_key[32]);
 optiga_result optiga_clear_all_auto_states(void);
-optiga_result optiga_reset_counter(uint16_t oid, uint64_t limit);
+optiga_result optiga_reset_counter(uint16_t oid, uint32_t limit);
 void optiga_reset_counter_time(uint32_t *time);
 
 #if !PRODUCTION
