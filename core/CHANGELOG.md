@@ -85,7 +85,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - [T3T1] Upgrade bundled bootloader to 2.1.10.  [#4665]
 
 ### Changed
-- Changed "swipe to continue" to "tap to continue". Screens still respond to swipe-up, but the preferred interaction method is now tapping the lower part of the screen.  [#4571]
+- [T3T1] Changed "swipe to continue" to "tap to continue". Screens still respond to swipe-up, but the preferred interaction method is now tapping the lower part of the screen.  [#4571]
 
 ### Fixed
 - Cancelling device recovery after aborting from Suite.  [#3503]
@@ -93,7 +93,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [2.8.8] (19th February 2025)
 
 ### Fixed
-- [T2B1, T3B1] Fix "PIN attempts exceeded" screen.  [#3324]
+- [T2B1,T3B1] Fix "PIN attempts exceeded" screen.  [#3324]
 - [T3B1] Fix behavior of a button press during "hold to confirm".  [#3772]
 - [T2T1] Fix wrong RSOD color on some older Model T devices.  [#4491]
 - [T3T1] Fixed flashing old content when fading.  [#4492]
