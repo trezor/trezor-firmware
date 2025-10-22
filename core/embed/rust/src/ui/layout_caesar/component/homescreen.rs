@@ -150,7 +150,7 @@ impl Homescreen {
 
     fn render_label<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // paint black background to place the label
-        let mut outset = Insets::uniform(LABEL_OUTSET);
+        let outset = Insets::uniform(LABEL_OUTSET);
 
         let text_size = self.label.text().map(|t| {
             Offset::new(
