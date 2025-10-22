@@ -434,6 +434,12 @@
       "Delizia": "",
       "Eckhart": "Version Bluetooth"
     },
+    "ble__waiting_for_host": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "",
+      "Eckhart": "En attente de connexion..."
+    },
     "brightness__change_title": "Ajuster la luminosité de l'écran",
     "brightness__changed_title": "Luminosité de l'écran ajustée",
     "brightness__title": "Luminosité de l'écran",
@@ -2695,7 +2701,6 @@
       "Delizia": "Déverrouillé",
       "Eckhart": "Déverrouillé(e)(s)"
     },
-    "words__waiting_for_host": "En attente de connexion...",
     "words__wallet": "Portefeuille",
     "words__warning": "Avertissement",
     "words__wipe": {

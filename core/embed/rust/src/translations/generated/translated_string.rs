@@ -1549,7 +1549,7 @@ pub enum TranslatedString {
     homescreen__backup_needed_info = 1160,  // "Open Trezor Suite and create a wallet backup. This is the only way to recover access to your assets."
     ble__host_info = 1161,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Connection info"}
     ble__mac_address = 1162,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "MAC address"}
-    words__waiting_for_host = 1163,  // "Waiting for connection..."
+    ble__waiting_for_host = 1163,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Waiting for connection..."}
     ble__apps_connected = 1164,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Apps connected"}
     sn__action = 1165,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Allow connected device to get serial number of your Trezor Safe 7?"}
     sn__title = 1166,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "Serial number"}
@@ -4936,7 +4936,14 @@ impl TranslatedString {
             (Self::ble__mac_address, ""),
             #[cfg(feature = "layout_eckhart")]
             (Self::ble__mac_address, "MAC address"),
-            (Self::words__waiting_for_host, "Waiting for connection..."),
+            #[cfg(feature = "layout_bolt")]
+            (Self::ble__waiting_for_host, ""),
+            #[cfg(feature = "layout_caesar")]
+            (Self::ble__waiting_for_host, ""),
+            #[cfg(feature = "layout_delizia")]
+            (Self::ble__waiting_for_host, ""),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::ble__waiting_for_host, "Waiting for connection..."),
             #[cfg(feature = "layout_bolt")]
             (Self::ble__apps_connected, ""),
             #[cfg(feature = "layout_caesar")]
@@ -5073,6 +5080,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_ble__unpair_current, Self::ble__unpair_current),
         (Qstr::MP_QSTR_ble__unpair_title, Self::ble__unpair_title),
         (Qstr::MP_QSTR_ble__version, Self::ble__version),
+        (Qstr::MP_QSTR_ble__waiting_for_host, Self::ble__waiting_for_host),
         (Qstr::MP_QSTR_brightness__change_title, Self::brightness__change_title),
         (Qstr::MP_QSTR_brightness__changed_title, Self::brightness__changed_title),
         (Qstr::MP_QSTR_brightness__title, Self::brightness__title),
@@ -6513,7 +6521,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__unknown, Self::words__unknown),
         (Qstr::MP_QSTR_words__unlimited, Self::words__unlimited),
         (Qstr::MP_QSTR_words__unlocked, Self::words__unlocked),
-        (Qstr::MP_QSTR_words__waiting_for_host, Self::words__waiting_for_host),
         (Qstr::MP_QSTR_words__wallet, Self::words__wallet),
         (Qstr::MP_QSTR_words__warning, Self::words__warning),
         (Qstr::MP_QSTR_words__wipe, Self::words__wipe),
