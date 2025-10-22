@@ -23,7 +23,7 @@ use super::{
         },
         theme,
     },
-    util::{ConfirmValue, ShowInfoParams},
+    util::{dummy_page, ConfirmValue, ShowInfoParams},
 };
 
 const MENU_ITEM_CANCEL: usize = 0;
@@ -331,11 +331,7 @@ pub fn new_confirm_output(
         } else {
             // dummy page - this will never be shown since there is no menu item pointing to
             // it, but the page has to exist in the flow
-            flow.add_page(
-                &ConfirmOutputWithSummary::AddressInfo,
-                Frame::left_aligned(TString::empty(), VerticalMenu::empty())
-                    .map(|_| Some(FlowMsg::Cancelled)),
-            )?;
+            flow.add_page(&ConfirmOutputWithSummary::AddressInfo, dummy_page())?;
         }
         flow.add_page(&ConfirmOutputWithSummary::Summary, content_summary)?
             .add_page(&ConfirmOutputWithSummary::SummaryMenu, content_summary_menu)?
