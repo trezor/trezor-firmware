@@ -1297,7 +1297,7 @@ impl FirmwareUI for UIEckhart {
     fn wait_ble_host_confirmation() -> Result<impl LayoutMaybeTrace, Error> {
         let screen = BLEHandler::new(
             TextScreen::new(
-                Paragraph::new(&theme::TEXT_REGULAR, TR::words__waiting_for_host)
+                Paragraph::new(&theme::TEXT_REGULAR, TR::ble__waiting_for_host)
                     .into_paragraphs()
                     .with_placement(LinearPlacement::vertical()),
             )
