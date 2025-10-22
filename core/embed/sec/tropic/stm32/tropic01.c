@@ -34,6 +34,10 @@ typedef struct {
 
 static tropic01_hal_driver_t g_tropic01_hal_driver = {.initialized = false};
 
+static tropic_ui_progress_t ui_progress = NULL;
+
+void tropic_set_ui_progress(tropic_ui_progress_t f) { ui_progress = f; }
+
 void tropic01_reset(void) {
   HAL_GPIO_WritePin(TROPIC01_PWR_PORT, TROPIC01_PWR_PIN, GPIO_PIN_SET);
   systick_delay_ms(10);
@@ -181,6 +185,10 @@ lt_ret_t lt_port_delay(lt_l2_state_t *s2, uint32_t ms) {
   UNUSED(s2);
 
   systick_delay_ms(ms);
+
+  if (ui_progress != NULL) {
+    ui_progress();
+  }
 
   return LT_OK;
 }
