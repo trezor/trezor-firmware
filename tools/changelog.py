@@ -15,8 +15,11 @@ VERSION_HEADER_RE = re.compile(r"## \[([.0-9]+)\]")
 DIFF_LINK = "[{new}]: https://github.com/trezor/trezor-firmware/compare/{tag_prefix}{old}...{tag_prefix}{new}\n"
 
 MODELS_RE = re.compile(r"\[([A-Z0-9]{4})(,[A-Z0-9]{4})*\][ ]?")
-INTERNAL_MODELS = ("T2T1", "T2B1", "T3B1", "T3T1", "D001")
+INTERNAL_MODELS = ("T2T1", "T2B1", "T3B1", "T3T1", "T3W1", "D001")
 INTERNAL_MODELS_SKIP = ("D001",)
+MODELS_MIN_VERSION = {
+    "T3W1": "2.9.3",
+}
 
 ROOT = Path(__file__).parent.parent.resolve()
 
@@ -131,14 +134,24 @@ def filter_changelog(changelog_file: Path, internal_name: str):
             return None
 
     destination_file = changelog_file.with_suffix(f".{internal_name}.md")
+    min_version = MODELS_MIN_VERSION.get(internal_name)
     with (
         open(changelog_file, "r") as changelog,
         open(destination_file, "w") as destination,
     ):
+        reached_min = False
         for line in changelog:
+            version = VERSION_HEADER_RE.match(line)
+            if version:
+                if reached_min:
+                    break
+                if min_version and version.group(1) == min_version:
+                    reached_min = True
             res = filter_line(line)
             if res is not None:
                 destination.write(res)
+    # Ensure issue links are present even if we truncated before the link block
+    linkify_changelog(destination_file)
 
 
 def _iter_fragments(project: Path) -> Iterator[Path]:
