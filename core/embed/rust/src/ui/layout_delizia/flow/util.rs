@@ -18,6 +18,7 @@ use crate::{
         },
         geometry::Direction,
         layout::util::{ConfirmValueParams, StrOrBytes},
+        layout_delizia::component::VerticalMenu,
     },
 };
 use heapless::Vec;
@@ -523,4 +524,8 @@ where
     let mut flow = SwipeFlow::new(&SinglePage::Show)?;
     flow.add_page(&SinglePage::Show, layout)?;
     Ok(flow)
+}
+
+pub fn dummy_page() -> impl Component<Msg = FlowMsg> + Swipable + MaybeTrace {
+    Frame::left_aligned(TString::empty(), VerticalMenu::empty()).map(|_| Some(FlowMsg::Cancelled))
 }

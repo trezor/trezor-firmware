@@ -16,6 +16,7 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow, SwipePage,
         },
         geometry::Direction,
+        layout_delizia::flow::util::dummy_page,
     },
 };
 
@@ -317,7 +318,13 @@ fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
 
     let mut flow = flow?;
     flow.add_page(page, content)?;
-    create_menu(&mut flow, &extra, prompt_screen)?;
+
+    let state: &'static dyn FlowController = if prompt_screen.is_some() {
+        &ConfirmActionWithMenuAndConfirmation::Menu
+    } else {
+        &ConfirmActionWithMenu::Menu
+    };
+    create_menu(&mut flow, &extra, state)?;
     create_confirm(&mut flow, &extra, strings.subtitle, hold, prompt_screen)?;
 
     Ok(flow)
@@ -358,7 +365,7 @@ fn create_flow(
 fn create_menu(
     flow: &mut SwipeFlow,
     extra: &ConfirmActionExtra,
-    prompt_screen: Option<TString<'static>>,
+    state: &'static dyn FlowController,
 ) -> Result<(), Error> {
     if let ConfirmActionExtra::Menu(menu_strings) = extra {
         let mut menu = VerticalMenu::empty();
@@ -381,11 +388,9 @@ fn create_menu(
             }
         });
 
-        if prompt_screen.is_some() {
-            flow.add_page(&ConfirmActionWithMenuAndConfirmation::Menu, content_menu)?;
-        } else {
-            flow.add_page(&ConfirmActionWithMenu::Menu, content_menu)?;
-        }
+        flow.add_page(state, content_menu)?;
+    } else {
+        flow.add_page(state, dummy_page())?;
     }
     Ok(())
 }
