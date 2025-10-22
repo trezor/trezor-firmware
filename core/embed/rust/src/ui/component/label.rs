@@ -15,6 +15,7 @@ pub struct Label<'a> {
     text: TString<'a>,
     layout: TextLayout,
     vertical: Alignment,
+    must_fit: bool,
 }
 
 impl<'a> Label<'a> {
@@ -23,6 +24,7 @@ impl<'a> Label<'a> {
             text,
             layout: TextLayout::new(style).with_align(align),
             vertical: Alignment::Start,
+            must_fit: true,
         }
     }
 
@@ -55,6 +57,11 @@ impl<'a> Label<'a> {
 
     pub const fn styled(mut self, style: TextStyle) -> Self {
         self.layout.style = style;
+        self
+    }
+
+    pub const fn must_fit(mut self, must_fit: bool) -> Self {
+        self.must_fit = must_fit;
         self
     }
 
@@ -96,8 +103,10 @@ impl<'a> Label<'a> {
     }
 
     pub fn render_with_alpha<'s>(&self, target: &mut impl Renderer<'s>, alpha: u8) {
-        self.text
-            .map(|c| self.layout.render_text_with_alpha(c, target, alpha, true));
+        self.text.map(|c| {
+            self.layout
+                .render_text_with_alpha(c, target, alpha, self.must_fit)
+        });
     }
 }
 
