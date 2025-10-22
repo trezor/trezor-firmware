@@ -20,8 +20,16 @@
 
 #include <trezor_rtl.h>
 
+#include <sec/tropic.h>
+
 bool tropic_hal_init(void) { return true; }
 
 void tropic_hal_deinit(void) {}
+
+void tropic_set_ui_progress(tropic_ui_progress_t ui_progress) {
+  if (ui_progress != NULL) {
+    ui_progress();
+  }
+}
 
 #endif
