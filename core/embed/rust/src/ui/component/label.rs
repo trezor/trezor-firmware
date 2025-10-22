@@ -133,7 +133,8 @@ impl Component for Label<'_> {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.text.map(|c| self.layout.render_text(c, target, true));
+        self.text
+            .map(|c| self.layout.render_text(c, target, self.must_fit));
     }
 }
 
