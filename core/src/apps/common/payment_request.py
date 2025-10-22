@@ -24,12 +24,47 @@ def parse_amount(payment_request: PaymentRequest) -> int:
     return int.from_bytes(payment_request.amount, "little")
 
 
+def _sanitize_payment_request(payment_request: PaymentRequest) -> PaymentRequest:
+    for memo in payment_request.memos:
+        if (
+            memo.text_memo,
+            memo.text_details_memo,
+            memo.refund_memo,
+            memo.coin_purchase_memo,
+        ).count(None) != 3:
+            raise DataError(
+                "Exactly one memo type must be specified in each PaymentRequestMemo."
+            )
+    return payment_request
+
+
+def _is_coin_swap(payment_request: PaymentRequest) -> bool:
+    has_coin_purchase = any(m.coin_purchase_memo for m in payment_request.memos)
+    has_refund = any(m.refund_memo for m in payment_request.memos)
+
+    return has_coin_purchase and has_refund
+
+
 class PaymentRequestVerifier:
+    PUBLIC_KEY = b""
+
+    def verify_payment_request_is_supported(
+        self, payment_request: PaymentRequest
+    ) -> None:
+        if not payment_request.memos:
+            raise DataError("Payment request must contain at least one memo.")
+
+        if not _is_coin_swap(payment_request):
+            raise DataError("Only COIN SWAP payment requests are supported.")
+
     if __debug__:
-        # nist256p1 public key of m/0h for "all all ... all" seed.
-        PUBLIC_KEY = b"\x03\xd9\xd9\x3f\x89\xc6\x96\x3b\x94\xbb\xd7\xa5\x11\x88\x28\xe4\x4c\x1c\x39\x59\x15\xac\xe8\x48\x88\x71\x7f\x56\x8c\xb0\x19\x74\xc3"
-    else:
-        PUBLIC_KEY = b""
+
+        def _use_debug_key(self) -> None:
+            # nist256p1 public key of m/0h for "all all ... all" seed.
+            self.PUBLIC_KEY = b"\x03\xd9\xd9\x3f\x89\xc6\x96\x3b\x94\xbb\xd7\xa5\x11\x88\x28\xe4\x4c\x1c\x39\x59\x15\xac\xe8\x48\x88\x71\x7f\x56\x8c\xb0\x19\x74\xc3"
+
+        def _use_debug_verification(self) -> None:
+            self.verify_payment_request_is_supported = lambda payment_request: None
 
     def __init__(
         self,
@@ -47,6 +82,13 @@ class PaymentRequestVerifier:
         from apps.common.address_mac import check_address_mac
 
         from . import writers  # pylint: disable=import-outside-toplevel
+
+        if __debug__:
+            self._use_debug_key()
+            self._use_debug_verification()
+
+        payment_request = _sanitize_payment_request(payment_request)
+        self.verify_payment_request_is_supported(payment_request)
 
         self.h_outputs = HashWriter(sha256())
         self.amount = 0
