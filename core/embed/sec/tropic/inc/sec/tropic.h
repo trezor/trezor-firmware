@@ -36,16 +36,6 @@
 #define TROPIC_DEVICE_CERT_SLOT_COUNT 3
 #define TROPIC_DEVICE_KEY_SLOT 0  // ECC_SLOT_0
 
-#ifdef USE_STORAGE
-// KEK masks used in PIN verification
-#define TROPIC_KEK_MASKS_PRIVILEGED_SLOT 128
-#define TROPIC_KEK_MASKS_UNPRIVILEGED_SLOT 256
-
-// Mac-and-destroy slots used in PIN verification
-#define TROPIC_FIRST_MAC_AND_DESTROY_SLOT_PRIVILEGED 0
-#define TROPIC_FIRST_MAC_AND_DESTROY_SLOT_UNPRIVILEGED 64
-#endif
-
 // Pairing key used by prodtest to inject the privileged and unprivileged
 // pairing keys.
 #define TROPIC_FACTORY_PAIRING_KEY_SLOT 0  // PAIRING_KEY_SLOT_INDEX_0
