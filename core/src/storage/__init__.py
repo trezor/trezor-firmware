@@ -80,12 +80,14 @@ def _migrate_from_version_02() -> None:
 
     # This update concerns Cardano derivation. There is no need for update for Bitcoin-only builds
     if not utils.BITCOIN_ONLY:
-        from storage.device import get_backup_type, update_binary_mnemonic
+        from storage.device import get_backup_type, store_binary_mnemonic
         from trezor.enums import BackupType
 
         if get_backup_type() == BackupType.Bip39:
             # Ensure binary mnemonic is stored
-            update_binary_mnemonic()
+            secret = device.get_mnemonic_secret()
+            if secret is not None:
+                store_binary_mnemonic(secret)
 
     # set_current_version
     device.set_version(common.STORAGE_VERSION_CURRENT)

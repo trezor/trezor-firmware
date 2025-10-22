@@ -167,7 +167,7 @@ def store_mnemonic_secret(
         common.set_true_or_delete(_NAMESPACE, _NEEDS_BACKUP, needs_backup)
 
     if not utils.BITCOIN_ONLY:
-        _store_binary_mnemonic(secret, allow_derivation_fail)
+        store_binary_mnemonic(secret, allow_derivation_fail)
 
 
 if not utils.BITCOIN_ONLY:
@@ -178,7 +178,10 @@ if not utils.BITCOIN_ONLY:
         """
         return common.get(_NAMESPACE, _BINARY_MNEMONIC)
 
-    def _store_binary_mnemonic(secret: bytes, allow_derivation_fail: bool) -> None:
+    def store_binary_mnemonic(
+        secret: bytes,
+        allow_derivation_fail: bool = False,
+    ) -> None:
         """
         Store the bianry representation of mnemonic (including checksum) for Cardano
         Icarus derivation. Works only for BIP-39.
@@ -196,6 +199,12 @@ if not utils.BITCOIN_ONLY:
                 if not allow_derivation_fail:
                     raise
                 else:
+                    # There is a possibility to load device with mnemonics that cannot
+                    # be used for Caradno derivation. These mnemonics are not generated
+                    # by Trezor and user must actively choose them. For exmample, see
+                    # `tests/device_tests/test_msg_loaddevice.py::test_load_device_utf`.
+                    # We do not want to raise an exception for them. But we cannot
+                    # derive Cardano secrets either.
                     return
 
             common.set(
@@ -203,33 +212,6 @@ if not utils.BITCOIN_ONLY:
                 _BINARY_MNEMONIC,
                 binary_mnemonic,
             )
-
-    def update_binary_mnemonic() -> bytes | None:
-        """
-        Sets the binary representation of mnemonic (including checksum) in storage.
-
-        Works only for BIP-39.
-
-        Returns:
-            `bytes | None`: The derived binary mnemonic.
-        Raises:
-            `RuntimeError`: If the stored mnemonic cannot be decoded as UTF-8, which
-            indicates the backup type is SLIP-39.
-        """
-        from trezorcrypto import bip39
-
-        secret = get_mnemonic_secret()
-        if secret is None:
-            return None
-
-        try:
-            secret_str = secret.decode()
-            binary_mnemonic = bip39.mnemonic_to_bits(secret_str)
-        except UnicodeError:
-            raise RuntimeError("Mnemonic to bits derivation called for SLIP39.")
-
-        common.set(_NAMESPACE, _BINARY_MNEMONIC, binary_mnemonic)
-        return binary_mnemonic
 
 
 def get_backup_type() -> BackupType:
