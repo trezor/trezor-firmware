@@ -317,9 +317,33 @@ fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
 
     let mut flow = flow?;
     flow.add_page(page, content)?;
-    create_menu(&mut flow, &extra, prompt_screen)?;
-    create_confirm(&mut flow, &extra, strings.subtitle, hold, prompt_screen)?;
 
+    let menu = match &extra {
+        ConfirmActionExtra::Menu(menu) => Some(menu),
+        _ => None,
+    };
+    let prompt_state: &'static dyn FlowController = match menu {
+        Some(_) => &ConfirmActionWithMenuAndConfirmation::Confirmation,
+        None => &ConfirmActionWithConfirmation::Confirmation,
+    };
+    let menu_state: &'static dyn FlowController = match prompt_screen {
+        Some(_) => &ConfirmActionWithMenuAndConfirmation::Menu,
+        None => &ConfirmActionWithMenu::Menu,
+    };
+
+    if let Some(menu_strings) = menu {
+        create_menu(&mut flow, menu_strings, menu_state)?;
+    }
+    if let Some(prompt_title) = prompt_screen {
+        create_confirm(
+            &mut flow,
+            &extra,
+            strings.subtitle,
+            hold,
+            prompt_title,
+            prompt_state,
+        )?;
+    }
     Ok(flow)
 }
 
@@ -357,36 +381,30 @@ fn create_flow(
 
 fn create_menu(
     flow: &mut SwipeFlow,
-    extra: &ConfirmActionExtra,
-    prompt_screen: Option<TString<'static>>,
+    menu_strings: &ConfirmActionMenuStrings,
+    menu_state: &'static dyn FlowController,
 ) -> Result<(), Error> {
-    if let ConfirmActionExtra::Menu(menu_strings) = extra {
-        let mut menu = VerticalMenu::empty();
-        let mut menu_items = Vec::<usize, 2>::new();
+    let mut menu = VerticalMenu::empty();
+    let mut menu_items = Vec::<usize, 2>::new();
 
-        if let Some(verb_info) = menu_strings.verb_info {
-            menu = menu.item(theme::ICON_CHEVRON_RIGHT, verb_info);
-            unwrap!(menu_items.push(MENU_ITEM_INFO));
-        }
-
-        menu = menu.danger(theme::ICON_CANCEL, menu_strings.verb_cancel);
-        unwrap!(menu_items.push(MENU_ITEM_CANCEL));
-
-        let content_menu = Frame::left_aligned("".into(), menu).with_cancel_button();
-
-        let content_menu = content_menu.map(move |msg| match msg {
-            VerticalMenuChoiceMsg::Selected(i) => {
-                let selected_item = menu_items[i];
-                Some(FlowMsg::Choice(selected_item))
-            }
-        });
-
-        if prompt_screen.is_some() {
-            flow.add_page(&ConfirmActionWithMenuAndConfirmation::Menu, content_menu)?;
-        } else {
-            flow.add_page(&ConfirmActionWithMenu::Menu, content_menu)?;
-        }
+    if let Some(verb_info) = menu_strings.verb_info {
+        menu = menu.item(theme::ICON_CHEVRON_RIGHT, verb_info);
+        unwrap!(menu_items.push(MENU_ITEM_INFO));
     }
+
+    menu = menu.danger(theme::ICON_CANCEL, menu_strings.verb_cancel);
+    unwrap!(menu_items.push(MENU_ITEM_CANCEL));
+
+    let content_menu = Frame::left_aligned("".into(), menu).with_cancel_button();
+
+    let content_menu = content_menu.map(move |msg| match msg {
+        VerticalMenuChoiceMsg::Selected(i) => {
+            let selected_item = menu_items[i];
+            Some(FlowMsg::Choice(selected_item))
+        }
+    });
+
+    flow.add_page(menu_state, content_menu)?;
     Ok(())
 }
 
@@ -396,40 +414,37 @@ fn create_confirm(
     extra: &ConfirmActionExtra,
     subtitle: Option<TString<'static>>,
     hold: bool,
-    prompt_screen: Option<TString<'static>>,
+    prompt_title: TString<'static>,
+    prompt_state: &'static dyn FlowController,
 ) -> Result<(), Error> {
-    if let Some(prompt_title) = prompt_screen {
-        let (prompt, prompt_action) = if hold {
-            (
-                PromptScreen::new_hold_to_confirm(),
-                TR::instructions__hold_to_confirm.into(),
-            )
-        } else {
-            (
-                PromptScreen::new_tap_to_confirm(),
-                TR::instructions__tap_to_confirm.into(),
-            )
-        };
+    let (prompt, prompt_action) = if hold {
+        (
+            PromptScreen::new_hold_to_confirm(),
+            TR::instructions__hold_to_confirm.into(),
+        )
+    } else {
+        (
+            PromptScreen::new_tap_to_confirm(),
+            TR::instructions__tap_to_confirm.into(),
+        )
+    };
 
-        let mut content_confirm = Frame::left_aligned(prompt_title, SwipeContent::new(prompt))
-            .with_footer(prompt_action, None)
-            .with_swipe(Direction::Down, SwipeSettings::Default);
+    let mut content_confirm = Frame::left_aligned(prompt_title, SwipeContent::new(prompt))
+        .with_footer(prompt_action, None)
+        .with_swipe(Direction::Down, SwipeSettings::Default);
 
-        if matches!(extra, ConfirmActionExtra::Menu(_)) {
-            content_confirm = content_confirm.with_menu_button();
-        }
-
-        if let Some(subtitle) = subtitle {
-            content_confirm = content_confirm.with_subtitle(subtitle);
-        }
-
-        let content_confirm = content_confirm.map(super::util::map_to_confirm);
-
-        flow.add_page(
-            &ConfirmActionWithMenuAndConfirmation::Confirmation,
-            content_confirm,
-        )?;
+    if matches!(extra, ConfirmActionExtra::Menu(_)) {
+        content_confirm = content_confirm.with_menu_button();
     }
+
+    if let Some(subtitle) = subtitle {
+        content_confirm = content_confirm.with_subtitle(subtitle);
+    }
+
+    flow.add_page(
+        prompt_state,
+        content_confirm.map(super::util::map_to_confirm),
+    )?;
     Ok(())
 }
 
