@@ -151,14 +151,11 @@ impl Homescreen {
     fn render_label<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // paint black background to place the label
         let mut outset = Insets::uniform(LABEL_OUTSET);
-        // the margin at top is bigger (caused by text-height vs line-height?)
-        // compensate by shrinking the outset
-        outset.top -= 5;
 
         let text_size = self.label.text().map(|t| {
             Offset::new(
-                theme::TEXT_BIG.text_font.text_width(t),
-                self.label.style().text_font.text_max_height(),
+                self.label.style().text_font.text_width(t),
+                self.label.style().text_font.visible_text_height(t),
             )
         });
         let text_area =
@@ -255,7 +252,7 @@ impl<'a> Lockscreen<'a> {
             TR::homescreen__click_to_unlock
         };
         Self {
-            label: Child::new(Label::centered(label, theme::TEXT_BIG)),
+            label: Child::new(Label::centered(label, theme::TEXT_BIG).must_fit(false)),
             instruction: Child::new(Label::centered(instruction_str.into(), theme::TEXT_NORMAL)),
             invisible_buttons: Child::new(ButtonController::new(invisible_btn_layout)),
             coinjoin_icon: coinjoin_authorized.then_some(theme::ICON_COINJOIN),
