@@ -79,6 +79,12 @@ pub const HEADER_HEIGHT: i16 = 96; // [px]
 pub const SIDE_INSETS: Insets = Insets::sides(PADDING);
 pub const ACTION_BAR_HEIGHT: i16 = 90; // [px]
 pub const TEXT_VERTICAL_SPACING: i16 = 24; // [px]
+/// Where to place main content if no Header is used on the Screen
+pub const CONTENT_INSETS_NO_HEADER: Insets = Insets::new(38, PADDING, ACTION_BAR_HEIGHT, PADDING);
+/// Where to place main text of progress screens of bootloader and firmware
+pub const PROGRESS_TEXT_ORIGIN: Point = super::constant::SCREEN
+    .top_left()
+    .ofs(Offset::new(PADDING, CONTENT_INSETS_NO_HEADER.top));
 
 // checklist settings
 pub const CHECKLIST_CHECK_WIDTH: i16 = 32; // [px]
@@ -212,10 +218,3 @@ pub const TEXT_SMALL_GREY_EXTRA_LIGHT: TextStyle = TextStyle {
     text_color: GREY_EXTRA_LIGHT,
     ..TEXT_SMALL
 };
-
-/// Where to place main content if no Header is used on the Screen
-pub const CONTENT_INSETS_NO_HEADER: Insets = Insets::new(38, PADDING, ACTION_BAR_HEIGHT, PADDING);
-/// Where to place main text of progress screens of bootloader and firmware
-pub const PROGRESS_TEXT_ORIGIN: Point = super::constant::SCREEN
-    .top_left()
-    .ofs(Offset::new(PADDING, CONTENT_INSETS_NO_HEADER.top));
