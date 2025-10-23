@@ -45,6 +45,16 @@
 #define PANEL_DSI_LANES DSI_TWO_DATA_LANES
 #define PANEL_LTDC_PIXEL_FORMAT LTDC_PIXEL_FORMAT_ARGB8888
 
+// IMPORTANT:
+//
+// Changing this value affects constants in backlight.rs and bootui.h
+// (for example: BACKLIGHT_NORMAL, BACKLIGHT_LOW, BACKLIGHT_DIM,
+// BACKLIGHT_NONE, BACKLIGHT_MIN, and BACKLIGHT_MAX). Ensure these
+// values remain consistent.
+// Additionally, changing this value can affect CI tests, production-
+// line tests, and backlight settings on devices in the field.
+//
+// See issue #6028 for details.
 #define GAMMA_EXP 2.2f
 
 // Size of the physical frame buffer in bytes
