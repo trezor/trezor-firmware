@@ -25,15 +25,15 @@
 // The number of CPU cycles required to execute hash_to_curve_optiga()
 #define HASH_TO_CURVE_CYCLES_PER_ITER 9450000
 
-uint32_t clock_cycles_to_ms(uint32_t cycles) {
+uint32_t time_estimate_clock_cycles_ms(uint32_t cycles) {
   extern uint32_t SystemCoreClock;
   return cycles / (SystemCoreClock / 1000);
 }
 
 uint32_t time_estimate_pbkdf2_ms(uint32_t iterations) {
-  return clock_cycles_to_ms(PIN_PBKDF2_CYCLES_PER_ITER * iterations);
+  return time_estimate_clock_cycles_ms(PIN_PBKDF2_CYCLES_PER_ITER * iterations);
 }
 
 uint32_t time_estimate_hash_to_curve_ms() {
-  return clock_cycles_to_ms(HASH_TO_CURVE_CYCLES_PER_ITER);
+  return time_estimate_clock_cycles_ms(HASH_TO_CURVE_CYCLES_PER_ITER);
 }

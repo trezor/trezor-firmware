@@ -69,9 +69,6 @@
 #define PIN_STRETCH_ITERATIONS 2
 #endif
 
-// The throttling delay when the security event counter is at its maximum.
-#define OPTIGA_T_MAX_MS 5000
-
 // Initial value of the counter which limits the total number of PIN stretching
 // operations. The limit is 600000 stretching operations, which equates to
 // 300000 / PIN_STRETCH_ITERATIONS unlock operations over the lifetime of the
@@ -1130,7 +1127,9 @@ void optiga_pin_verify_time(uint32_t *time, uint8_t *optiga_sec,
   optiga_pin_stretch_hmac_time(time, optiga_sec, optiga_last_time);
   // OID_STRETCHED_PINS[pin_index]
   optiga_set_auto_state_time(time, optiga_sec, optiga_last_time);
-  optiga_reset_counter_time(time);  // OID_PIN_HMAC_CTR
+  if (pin_index == 0) {
+    optiga_reset_counter_time(time);  // OID_PIN_HMAC_CTR
+  }
   for (int i = pin_index + 1; i < STRETCHED_PIN_COUNT; i++) {
     optiga_get_data_object_time(time, false);  // OID_STRETCHED_PINS[i]
     optiga_clear_auto_state_time(time);        // OID_STRETCHED_PINS[i - 1]

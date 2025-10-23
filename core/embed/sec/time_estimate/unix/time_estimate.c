@@ -24,4 +24,4 @@ uint32_t time_estimate_pbkdf2_ms(uint32_t iterations) {
   return 500;
 }
 
-uint32_t clock_cycles_to_ms(uint32_t cycles) { return 0; }
+uint32_t time_estimate_clock_cycles_ms(uint32_t cycles) { return 0; }

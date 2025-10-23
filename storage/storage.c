@@ -925,7 +925,7 @@ void set_pin_time(uint32_t *time, uint8_t *optiga_sec,
 
   // The value was obtained as the difference between the estimated and measured
   // time on T3W1
-  *time += clock_cycles_to_ms(2250000);
+  *time += time_estimate_clock_cycles_ms(2250000);
 }
 
 /*
@@ -1349,7 +1349,7 @@ void unlock_time(uint32_t *time, uint8_t *optiga_sec,
 
   // The value was obtained as the difference between the estimated and measured
   // time on T3W1
-  *time += clock_cycles_to_ms(13500000);
+  *time += time_estimate_clock_cycles_ms(13500000);
 }
 
 secbool storage_unlock(const uint8_t *pin, size_t pin_len,
