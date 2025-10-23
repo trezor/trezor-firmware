@@ -49,12 +49,12 @@ impl<T: Component> Component for SendButtonRequest<T> {
             match self.policy {
                 SendButtonRequestPolicy::OnAttachOnce => {
                     if let Some(br) = self.button_request.take() {
-                        ctx.send_button_request(br.code, br.name)
+                        ctx.send_button_request(br)
                     }
                 }
                 SendButtonRequestPolicy::OnAttachAlways => {
                     if let Some(br) = self.button_request {
-                        ctx.send_button_request(br.code, br.name);
+                        ctx.send_button_request(br);
                     }
                 }
             }

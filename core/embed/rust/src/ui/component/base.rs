@@ -5,7 +5,7 @@ use crate::{
     strutil::{ShortString, TString},
     time::Duration,
     ui::{
-        button_request::{ButtonRequest, ButtonRequestCode},
+        button_request::ButtonRequest,
         component::{MsgMap, PageMap},
         geometry::{Offset, Rect},
         shape::Renderer,
@@ -560,9 +560,9 @@ impl EventCtx {
         self.page_count
     }
 
-    pub fn send_button_request(&mut self, code: ButtonRequestCode, name: TString<'static>) {
+    pub fn send_button_request(&mut self, br: ButtonRequest) {
         debug_assert!(self.button_request.is_none());
-        self.button_request = Some(ButtonRequest::new(code, name));
+        self.button_request = Some(br);
     }
 
     pub fn button_request(&mut self) -> Option<ButtonRequest> {
