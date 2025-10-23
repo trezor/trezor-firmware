@@ -493,7 +493,7 @@ mod tests {
                 TouchEvent::TouchMove(p)
             };
             component.event(&mut ctx, Event::Touch(ev));
-            ctx.clear();
+            ctx.clear().unwrap();
             first = false;
         }
     }

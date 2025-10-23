@@ -1,7 +1,7 @@
 use heapless::Vec;
 
 use crate::{
-    error::Error,
+    error::{value_error, Error},
     strutil::{ShortString, TString},
     time::Duration,
     ui::{
@@ -589,10 +589,13 @@ impl EventCtx {
         self.swipe_enable_req
     }
 
-    pub fn clear(&mut self) {
-        debug_assert!(self.button_request.is_none());
+    pub fn clear(&mut self) -> Result<(), Error> {
+        if self.button_request.is_some() {
+            return Err(value_error!(c"ButtonRequest drop"));
+        }
         // replace self with a new instance, keeping only the fields we care about
         *self = Self::new();
+        Ok(())
     }
 
     fn register_timer(&mut self, token: TimerToken, duration: Duration) {

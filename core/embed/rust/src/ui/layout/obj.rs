@@ -275,7 +275,7 @@ impl LayoutObjInner {
         let root = unwrap!(self.root.as_mut());
 
         // Get the event context ready for a new event
-        self.event_ctx.clear();
+        self.event_ctx.clear()?;
 
         // Send the event down the component tree.
         let msg = root.event(&mut self.event_ctx, event);
