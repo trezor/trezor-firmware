@@ -4,7 +4,8 @@
         "common"
     ],
     "exclude": [
-        "tools/pyright_tool.py"
+        "tools/pyright_tool.py",
+        "tools/snippets"
     ],
     "stubPath": "mocks/generated",
     "typeCheckingMode": "basic",

@@ -7,7 +7,8 @@
     "exclude": [
         "src/apps/monero",
         "src/typing.py",
-        "tools/codegen/get_trezor_keys.py"
+        "tools/codegen/get_trezor_keys.py",
+        "tools/snippets"
     ],
     "stubPath": "mocks/generated",
     "typeCheckingMode": "basic",
