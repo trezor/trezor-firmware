@@ -526,12 +526,12 @@ def test_upgrade_u2f(gen: str, tag: str):
 def test_cardano_address_does_not_change_by_upgrade(
     gen: str,
     tags: List[str],
-    derivation_type: CardanoDerivationType,
     backup_type: BackupType,
+    derivation_type: CardanoDerivationType,
 ):
     """
     Check that the Cardano address does not change after upgrading app storage from v2
-    to current version.
+    to the current version.
     """
     from trezorlib.cardano import get_public_key
     from trezorlib.tools import parse_path
