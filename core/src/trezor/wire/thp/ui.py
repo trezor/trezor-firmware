@@ -15,7 +15,7 @@ def confirm_pairing(
     long_text: str,
 ) -> Awaitable[None]:
     from trezor.ui.layouts.common import raise_if_not_confirmed
-    from trezorui_api import confirm_thp_pairing
+    from trezorui_api import confirm_action
 
     if app_name and host_name:
         args = (app_name, host_name)
@@ -24,8 +24,10 @@ def confirm_pairing(
         args = (app_name or host_name or "(unknown)",)
         description = short_text
 
+    text = description.format(*args)
+
     return raise_if_not_confirmed(
-        confirm_thp_pairing(title=title, description=description, args=args),
+        confirm_action(title=title, action=None, description=text),
         br_name=br_name,
     )
 
@@ -34,15 +36,14 @@ def show_autoconnect_credential_confirmation_screen(
     host_name: str | None,
     app_name: str | None,
 ) -> Awaitable[None]:
-    from trezor import TR
 
     return confirm_pairing(
         br_name="thp_autoconnect_credential_request",
-        title=TR.thp__autoconnect_title,
+        title="Autoconnect credential",
         app_name=app_name,
         host_name=host_name,
-        short_text=TR.thp__autoconnect,
-        long_text=TR.thp__autoconnect_app,
+        short_text="Allow {0} to connect automatically to this Trezor?",
+        long_text="Allow {0} on {1} to connect automatically to this Trezor?",
     )
 
 
@@ -51,41 +52,40 @@ def show_pairing_dialog(host_name: str, app_name: str) -> Awaitable[None]:
 
     return confirm_pairing(
         br_name="thp_pairing_request",
-        title=TR.thp__pair_title,
+        title="Before you continue",
         app_name=app_name,
         host_name=host_name,
-        short_text=TR.thp__pair,
-        long_text=TR.thp__pair_app,
+        short_text="Allow {0} to pair with this Trezor?",
+        long_text="Allow {0} on {1} to pair with this Trezor?",
     )
 
 
 def show_connection_dialog(
     host_name: str | None, app_name: str | None
 ) -> Awaitable[None]:
-    from trezor import TR
 
     return confirm_pairing(
         br_name="thp_connection_request",
-        title=TR.thp__connect_title,
+        title="Connection dialog",
         app_name=app_name,
         host_name=host_name,
-        short_text=TR.thp__connect,
-        long_text=TR.thp__connect_app,
+        short_text="Allow {0} to connect with this Trezor?",
+        long_text="Allow {0} on {1} to connect with this Trezor?",
     )
 
 
 async def show_code_entry_screen(
     code_entry_str: str, host_name: str | None
 ) -> UiResult:
-    from trezor import TR
     from trezor.ui.layouts.common import interact
-    from trezorui_api import show_thp_pairing_code
+    from trezorui_api import show_simple
 
     return await interact(
-        show_thp_pairing_code(
-            title=TR.thp__code_title,
-            description=TR.thp__code_entry.format(host_name),
-            code=code_entry_str,
+        show_simple(
+            text="Enter this one-time security code on {0}".format(host_name)
+            + "\ncode: "
+            + code_entry_str,
+            title="One more step",
         ),
         br_name=None,
     )
