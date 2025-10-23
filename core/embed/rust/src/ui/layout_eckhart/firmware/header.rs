@@ -1,15 +1,16 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Label},
+        component::{base::EventPropagation, text::TextStyle, Component, Event, EventCtx, Label},
         display::{Color, Icon},
-        geometry::{Alignment2D, Insets, Rect},
+        geometry::{Alignment2D, Direction, Insets, Offset, Rect},
         shape::{self, Renderer},
     },
 };
 
 use super::{
     super::component::{Button, ButtonContent, ButtonMsg, FuelGauge},
+    attach_anim::{AttachAnimation, HeaderAttachAnimation},
     constant, theme,
 };
 
@@ -30,6 +31,8 @@ pub struct Header {
     icon_area: Rect,
     /// Battery status indicator
     fuel_gauge: Option<FuelGauge>,
+    /// Animation
+    attach_anim: HeaderAttachAnimation,
 }
 
 #[derive(Copy, Clone)]
@@ -43,7 +46,7 @@ impl Header {
     pub const HEADER_HEIGHT: i16 = theme::HEADER_HEIGHT; // [px]
     const BUTTON_TOUCH_EXPAND: Insets = Insets::sides(32); // [px]
 
-    pub const fn new(title: TString<'static>) -> Self {
+    pub fn new(title: TString<'static>) -> Self {
         Self {
             title: Label::left_aligned(title, theme::label_title_main()).vertically_centered(),
             right_button: None,
@@ -54,6 +57,7 @@ impl Header {
             icon_color: None,
             icon_area: Rect::zero(),
             fuel_gauge: Some(FuelGauge::on_charging_change()),
+            attach_anim: HeaderAttachAnimation::default(),
         }
     }
 
@@ -197,6 +201,9 @@ impl Component for Header {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.fuel_gauge.event(ctx, event);
 
+        if let EventPropagation::Stop = self.attach_anim.process_events(ctx, event) {
+            return None;
+        }
         if let Some(ButtonMsg::Clicked) = self.left_button.event(ctx, event) {
             return Some(self.left_button_msg);
         };
@@ -208,6 +215,10 @@ impl Component for Header {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        let t = self.attach_anim.eval();
+        let content_offset = self.attach_anim.get_content_offset(t);
+        let content_alpha = self.attach_anim.get_content_alpha(t);
+
         self.right_button.render(target);
         if self
             .fuel_gauge
@@ -223,7 +234,14 @@ impl Component for Header {
                     .with_align(Alignment2D::CENTER_LEFT)
                     .render(target);
             }
-            self.title.render(target);
+
+            let content_offset = match self.attach_anim.data().dir {
+                Direction::Left | Direction::Right => content_offset,
+                _ => Offset::zero(),
+            };
+            target.with_translate(content_offset, &|target| {
+                self.title.render_with_alpha(target, content_alpha);
+            });
         }
     }
 }
