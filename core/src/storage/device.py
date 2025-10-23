@@ -183,7 +183,7 @@ if not utils.BITCOIN_ONLY:
         allow_derivation_fail: bool = False,
     ) -> None:
         """
-        Store the bianry representation of mnemonic (including checksum) for Cardano
+        Store the binary representation of mnemonic (including checksum) for Cardano
         Icarus derivation. Works only for BIP-39.
 
         If `allow_derivation_fail` is True, exception during derivation is ignored.
@@ -196,9 +196,7 @@ if not utils.BITCOIN_ONLY:
             try:
                 binary_mnemonic = bip39.mnemonic_to_bits(secret.decode())
             except ValueError:
-                if not allow_derivation_fail:
-                    raise
-                else:
+                if __debug__ and allow_derivation_fail:
                     # There is a possibility to load device with mnemonics that cannot
                     # be used for Caradno derivation. These mnemonics are not generated
                     # by Trezor and user must actively choose them. For exmample, see
@@ -206,6 +204,8 @@ if not utils.BITCOIN_ONLY:
                     # We do not want to raise an exception for them. But we cannot
                     # derive Cardano secrets either.
                     return
+                else:
+                    raise
 
             common.set(
                 _NAMESPACE,
