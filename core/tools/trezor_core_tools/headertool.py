@@ -42,7 +42,7 @@ def do_rehash(fw: firmware_headers.SignableImageProto) -> None:
 
 
 def do_replace_vendorheader(
-    fw: firmware_headers.VendorFirmware | Any, vh_file: BinaryIO
+    fw: firmware_headers.SignableImageProto, vh_file: BinaryIO
 ) -> None:
     if not isinstance(fw, firmware_headers.VendorFirmware):
         raise click.ClickException("Invalid image type (must be firmware).")

@@ -38,8 +38,6 @@ Usage:
 - call the script with possible flags - see `python unify_test_files.py --help`
 """
 
-from __future__ import annotations
-
 import json
 import os
 import re
@@ -192,8 +190,7 @@ class FileUnifier:
 
     def path_to_uniform_format(self) -> None:
         """Unifies all paths to the same format."""
-        path_match = re.search(self.PATH_REGEX, self.line)
-        if path_match:
+        if path_match := re.search(self.PATH_REGEX, self.line):
             # Only interested in parse_path() function arguments
             if "parse_path" not in self.line:
                 return
@@ -215,10 +212,8 @@ class FileUnifier:
 
     def path_to_address_translation(self) -> None:
         """Translate path to address according to translations file."""
-        path_match = re.search(self.PATH_REGEX, self.line)
-        if path_match:
-            address = self.translations.get(path_match.group())
-            if address:
+        if path_match := re.search(self.PATH_REGEX, self.line):
+            if address := self.translations.get(path_match.group()):
                 # Address might be there from previous run
                 if address not in self.line:
                     new_line = f"{self.line.rstrip()}  # {address}\n"
@@ -231,10 +226,8 @@ class FileUnifier:
     def address_to_path_translation(self) -> None:
         """Translate address to path according to translations file."""
         address_regex = r"\b\w{33,35}\b"
-        address_match = re.search(address_regex, self.line)
-        if address_match:
-            path = self.translations.get(address_match.group())
-            if path:
+        if address_match := re.search(address_regex, self.line):
+            if path := self.translations.get(address_match.group()):
                 # Path might be there from previous run
                 if path not in self.line:
                     new_line = f"{self.line.rstrip()}  # {path}\n"
@@ -247,8 +240,7 @@ class FileUnifier:
     def format_long_numbers(self) -> None:
         """Uses underscore delimiters in long integers."""
         long_number_regex = r"\d{4,}"
-        number_match = re.search(long_number_regex, self.line)
-        if number_match:
+        if number_match := re.search(long_number_regex, self.line):
             # Do it for all the number-keyword-arguments
             if re.search(r"\w=[\d \+\*-/]+,", self.line):
 
@@ -269,8 +261,7 @@ class FileUnifier:
     def add_client_type_to_function(self) -> None:
         """Includes the data type."""
         client_in_definition = r"(?:\bdef\b.*)\bclient\b"
-        client_match = re.search(client_in_definition, self.line)
-        if client_match:
+        if client_match := re.search(client_in_definition, self.line):
             # Might be already typed
             if "client: Client" in self.line:
                 return

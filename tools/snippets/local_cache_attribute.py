@@ -23,10 +23,8 @@ Possible improvements (TODO):
 - do not rename two caches with the same name
     slice_view = aprime.slice_view  # local_cache_attribute
     slice_view = bprime.slice_view  # local_cache_attribute
-- fix typing and remove type ignore statements
 """
 
-# pyright: reportArgumentType=false, reportAssignmentType=false, reportAttributeAccessIssue=false, reportCallIssue=false, reportOptionalMemberAccess=false
 from __future__ import annotations
 
 import sys
@@ -52,7 +50,7 @@ TRANSLATED_COMMENT_MATCHER = m.SimpleStatementLine(
 
 def attr_to_list(attr: cst.Attribute) -> list[str]:
     if m.matches(attr, m.Attribute(value=m.Name(), attr=m.Name())):
-        return [str(attr.value.value), attr.attr.value]
+        return [attr.value.value, attr.attr.value]
     if m.matches(attr, m.Attribute(value=m.Attribute(), attr=m.Name())):
         return attr_to_list(attr.value) + [attr.attr.value]
     raise ValueError("unexpected attr format")

@@ -20,7 +20,7 @@ def _make_dev_keys(*key_bytes: bytes) -> Sequence[bytes]:
     "--digest",
     "digest",
     help="Digest to be signed.",
-    default="",
+    required=True,
 )
 @click.option(
     "-s0",

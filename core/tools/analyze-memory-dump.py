@@ -119,7 +119,7 @@ class Item:
             if isinstance(v, list):
                 yield from (p for p in v if is_ptr(p))
             if is_ptr(v):
-                yield v  #
+                yield v
 
     def __getattr__(self, key: str) -> Any:
         if key not in self.item:
