@@ -104,7 +104,7 @@ void ui_click(void) {
   }
 #endif
 
-#ifdef USE_BLE
+#ifdef USE_BUTTON
   button_event_t event = {0};
   while (button_get_event(&event)) {
   };
