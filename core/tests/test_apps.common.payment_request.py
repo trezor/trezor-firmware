@@ -105,11 +105,11 @@ def _get_request_with_coin_purchase_memo() -> PaymentRequest:
 
 def _get_sell_payment_request() -> PaymentRequest:
     text_memo = TextMemo(text="text memo text")
-    mac = "f2a0d3ab5c4f5958cd875f28e564e6e824871c220b1cdb267e8c43ec2c4fb949"
-    refund_memo = RefundMemo(address="m/SLIP-0024/Address MAC key", mac=unhexlify(mac))
+    mac = "a7594205d318491c7335d460acfebadc3c862b803abfd5a0fcf7ea6082bff1dc"
+    refund_memo = RefundMemo(address="ADDRESS", mac=unhexlify(mac))
     debug_signature = (
-        "1f31e592e2c73ea88b4cbe3d7d2626c6648aa458e53fb5c7effcbde00cd1e3306"
-        "242c13fc3792f58c6b0dcc24a70cf53d6a01200745ca2ba4eb6cce9d083fc9637"
+        "20b638bff2341f526ee99faa7afb28f72c54c535db69b25451ce7471dd8866fd1"
+        "8644a89effcc7dfb07a281bd5c516045180341c813536563ff50725f4221df5f8"
     )
     return PaymentRequest(
         recipient_name="TEST Recipient",
