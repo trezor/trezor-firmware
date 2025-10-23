@@ -102,12 +102,10 @@ void ui_click(void) {
   // flush touch events if any
   while (touch_get_event() != 0) {
   }
-#endif
-
-#ifdef USE_BUTTON
+#elif defined USE_BUTTON
   button_event_t event = {0};
   while (button_get_event(&event)) {
-  };
+  }
 #endif
 
 #ifdef USE_POWER_MANAGER
