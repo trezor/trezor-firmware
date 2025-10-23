@@ -174,9 +174,8 @@ async def confirm_tx_data(
     if await handle_staking(msg, defs.network, address_bytes, maximum_fee, fee_items):
         return
 
-    # Handle ERC-20 known functions
-    token, token_address, func_sig, recipient, value = await _handle_erc20(
-        msg, defs, address_bytes
+    token, token_address, func_sig, recipient, value = (
+        await _handle_known_contract_calls(msg, defs, address_bytes)
     )
 
     if token is tokens.UNKNOWN_TOKEN:
@@ -220,7 +219,6 @@ async def confirm_tx_data(
             chunkify=bool(msg.chunkify),
         )
     else:
-        assert func_sig == constants.SC_FUNC_SIG_TRANSFER or func_sig is None
         assert value is not None
 
         recipient_str = (
@@ -309,7 +307,7 @@ async def handle_staking(
     return False
 
 
-async def _handle_erc20(
+async def _handle_known_contract_calls(
     msg: MsgInSignTx,
     definitions: Definitions,
     address_bytes: bytes,
@@ -326,41 +324,40 @@ async def _handle_erc20(
 
     token = None
     token_address = None
-    func_sig = None
     recipient = address_bytes
     value = int.from_bytes(msg.value, "big")
+
+    data_reader = BufferReader(data_initial_chunk)
+    if data_reader.remaining_count() < SC_FUNC_SIG_BYTES:
+        return token, token_address, None, recipient, value
+    func_sig = data_reader.read_memoryview(SC_FUNC_SIG_BYTES)
+
     if (
         len(msg.to) in (40, 42)
         and len(msg.value) == 0
         and msg.data_length == 68
         and len(data_initial_chunk) == 68
+        and func_sig in (SC_FUNC_SIG_TRANSFER, SC_FUNC_SIG_APPROVE)
     ):
-        data_reader = BufferReader(data_initial_chunk)
-        if data_reader.remaining_count() < SC_FUNC_SIG_BYTES:
-            return token, token_address, func_sig, recipient, value
+        # The two functions happen to have the exact same parameters, so we treat them together.
+        # This will need to be made into a more generic solution eventually.
+        # arg0: address, Address, 20 bytes (left padded with zeroes)
+        # arg1: value, uint256, 32 bytes
 
-        func_sig = data_reader.read_memoryview(SC_FUNC_SIG_BYTES)
-        if func_sig in (SC_FUNC_SIG_TRANSFER, SC_FUNC_SIG_APPROVE):
-            # The two functions happen to have the exact same parameters, so we treat them together.
-            # This will need to be made into a more generic solution eventually.
-
-            # arg0: address, Address, 20 bytes (left padded with zeroes)
-            # arg1: value, uint256, 32 bytes
-            if data_reader.remaining_count() < SC_ARGUMENT_BYTES * 2:
-                return token, token_address, None, recipient, value
-            arg0 = data_reader.read_memoryview(SC_ARGUMENT_BYTES)
-            assert all(
-                byte == 0
-                for byte in arg0[: SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES]
-            )
-            recipient = bytes(arg0[SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES :])
-            arg1 = data_reader.read_memoryview(SC_ARGUMENT_BYTES)
-            if func_sig == SC_FUNC_SIG_APPROVE and all(byte == 255 for byte in arg1):
-                # "Unlimited" approval (all bits set) is a special case
-                # which we encode as value=None internally.
-                value = None
-            else:
-                value = int.from_bytes(arg1, "big")
+        if data_reader.remaining_count() < SC_ARGUMENT_BYTES * 2:
+            return token, token_address, None, recipient, value
+        arg0 = data_reader.read_memoryview(SC_ARGUMENT_BYTES)
+        assert all(
+            byte == 0 for byte in arg0[: SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES]
+        )
+        recipient = bytes(arg0[SC_ARGUMENT_BYTES - SC_ARGUMENT_ADDRESS_BYTES :])
+        arg1 = data_reader.read_memoryview(SC_ARGUMENT_BYTES)
+        if func_sig == SC_FUNC_SIG_APPROVE and all(byte == 255 for byte in arg1):
+            # "Unlimited" approval (all bits set) is a special case
+            # which we encode as value=None internally.
+            value = None
+        else:
+            value = int.from_bytes(arg1, "big")
 
         token = definitions.get_token(address_bytes)
         token_address = address_bytes
