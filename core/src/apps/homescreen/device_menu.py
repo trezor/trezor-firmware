@@ -447,10 +447,9 @@ async def handle_device_menu() -> None:
             reboot()
             raise RuntimeError
         elif menu_result is DeviceMenuResult.RebootToBootloader:
-            from trezor.enums import BootCommand
             from trezor.utils import reboot_to_bootloader
 
-            reboot_to_bootloader(BootCommand.STOP_AND_WAIT)
+            reboot_to_bootloader()
             raise RuntimeError
         elif menu_result is CANCELLED:
             return

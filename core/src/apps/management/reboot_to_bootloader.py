@@ -6,7 +6,6 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from typing import NoReturn
 
-    from trezor.enums import BootCommand
     from trezor.messages import RebootToBootloader
 
 
@@ -15,11 +14,10 @@ _REBOOT_SUCCESS_TIMEOUT_MS = const(500)
 
 async def install_upgrade(
     firmware_header: AnyBytes, language_data_length: int
-) -> tuple[BootCommand, AnyBytes]:
+) -> AnyBytes:
     from ubinascii import hexlify
 
     from trezor import TR, utils, wire
-    from trezor.enums import BootCommand
     from trezor.ui.layouts import confirm_firmware_update, show_wait_text
 
     from apps.management.change_language import do_change_language
@@ -61,7 +59,7 @@ async def install_upgrade(
             # Continue firmware upgrade even if language change failed
             pass
 
-    return BootCommand.INSTALL_UPGRADE, hdr.hash
+    return hdr.hash
 
 
 async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
@@ -83,9 +81,7 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
         and msg.firmware_header is not None
         and is_official
     ):
-        boot_command, boot_args = await install_upgrade(
-            msg.firmware_header, msg.language_data_length
-        )
+        fw_hash = await install_upgrade(msg.firmware_header, msg.language_data_length)
 
     else:
         await confirm_action(
@@ -95,8 +91,7 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
             verb=TR.buttons__restart,
             prompt_screen=True,
         )
-        boot_command = BootCommand.STOP_AND_WAIT
-        boot_args = None
+        fw_hash = None
 
     ctx = get_context()
     # After ACK-ing the `Success` message (over THP), the host may already be waiting for the bootloader to start.
@@ -110,5 +105,8 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
 
     utime.sleep_ms(10)
     # reboot to the bootloader, pass the firmware header hash if any
-    utils.reboot_to_bootloader(boot_command, boot_args)
+    if fw_hash is not None:
+        utils.reboot_and_upgrade(fw_hash)
+    else:
+        utils.reboot_to_bootloader()
     raise RuntimeError

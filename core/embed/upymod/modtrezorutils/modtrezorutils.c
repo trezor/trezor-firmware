@@ -484,51 +484,42 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_check_heap_fragmentation_obj,
                                  mod_trezorutils_check_heap_fragmentation);
 #endif  // !PYOPT
 
-/// def reboot_to_bootloader(
-///     boot_command : int,
-///     boot_args : AnyBytes | None = None,
+/// def reboot_and_upgrade(
+///     hash : AnyBytes,
 /// ) -> None:
 ///     """
-///     Reboots to bootloader.
+///     Reboots to perform upgrade to FW with specified hash.
 ///     """
-STATIC mp_obj_t mod_trezorutils_reboot_to_bootloader(size_t n_args,
-                                                     const mp_obj_t *args) {
-  if (n_args == 0 || args[0] == mp_const_none) {
-    mp_raise_ValueError(MP_ERROR_TEXT("Missing boot command."));
+STATIC mp_obj_t mod_trezorutils_reboot_and_upgrade(mp_obj_t hash_obj) {
+  // Reboot and continue with the firmware upgrade
+  mp_buffer_info_t hash = {0};
+
+  mp_get_buffer_raise(hash_obj, &hash, MP_BUFFER_READ);
+
+  if (hash.len != 32) {
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid value."));
   }
 
-  mp_int_t value = mp_obj_get_int(args[0]);
+  reboot_and_upgrade((uint8_t *)hash.buf);
+  return mp_const_none;
+}
 
-  switch (value) {
-    case 0:
-      // Reboot and stay in bootloader
-      reboot_to_bootloader();
-      break;
-    case 1:
-      // Reboot and continue with the firmware upgrade
-      mp_buffer_info_t hash = {0};
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_reboot_and_upgrade_obj,
+                                 mod_trezorutils_reboot_and_upgrade);
 
-      if (n_args > 1 && args[1] != mp_const_none) {
-        mp_get_buffer_raise(args[1], &hash, MP_BUFFER_READ);
-      }
-
-      if (hash.len != 32) {
-        mp_raise_ValueError(MP_ERROR_TEXT("Invalid value."));
-      }
-
-      reboot_and_upgrade((uint8_t *)hash.buf);
-      break;
-    default:
-      mp_raise_ValueError(MP_ERROR_TEXT("Invalid value."));
-      break;
-  }
+/// def reboot_to_bootloader() -> None:
+///     """
+///     Reboots the device and stay in bootloader.
+///     """
+STATIC mp_obj_t mod_trezorutils_reboot_to_bootloader(void) {
+  // Reboot and stay in bootloader
+  reboot_to_bootloader();
 
   return mp_const_none;
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
-    mod_trezorutils_reboot_to_bootloader_obj, 0, 2,
-    mod_trezorutils_reboot_to_bootloader);
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_reboot_to_bootloader_obj,
+                                 mod_trezorutils_reboot_to_bootloader);
 
 /// def reboot() -> None:
 ///     """
@@ -762,6 +753,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
      MP_ROM_PTR(&mod_trezorutils_firmware_hash_obj)},
     {MP_ROM_QSTR(MP_QSTR_firmware_vendor),
      MP_ROM_PTR(&mod_trezorutils_firmware_vendor_obj)},
+    {MP_ROM_QSTR(MP_QSTR_reboot_and_upgrade),
+     MP_ROM_PTR(&mod_trezorutils_reboot_and_upgrade_obj)},
     {MP_ROM_QSTR(MP_QSTR_reboot_to_bootloader),
      MP_ROM_PTR(&mod_trezorutils_reboot_to_bootloader_obj)},
     {MP_ROM_QSTR(MP_QSTR_reboot), MP_ROM_PTR(&mod_trezorutils_reboot_obj)},
