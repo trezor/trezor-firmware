@@ -197,7 +197,7 @@ pub fn new_continue_recovery_homepage(
     .with_header(header)
     .with_action_bar(ActionBar::new_single(Button::with_text(verb.into())))
     .with_page_limit(1)
-    .repeated_button_request(ButtonRequest::new(
+    .one_button_request(ButtonRequest::new(
         ButtonRequestCode::RecoveryHomepage,
         "recovery".into(),
     ))
@@ -225,7 +225,7 @@ pub fn new_continue_recovery_homepage(
             TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
             _ => None,
         })
-        .repeated_button_request(ButtonRequest::new(
+        .one_button_request(ButtonRequest::new(
             ButtonRequestCode::ProtectCall,
             "abort_recovery".into(),
         ));
@@ -305,7 +305,7 @@ fn flow_between_shares_simple(
     let content_recovery_share = TextScreen::new(paragraphs_recovery_share)
         .with_header(Header::new(TR::words__recovery_share.into()).with_close_button())
         .map(|_| Some(FlowMsg::Cancelled))
-        .repeated_button_request(ButtonRequest::new(
+        .one_button_request(ButtonRequest::new(
             ButtonRequestCode::Other,
             "recovery_share".into(),
         ));
@@ -357,7 +357,7 @@ fn flow_between_shares_advanced(
     let content_remaining_shares = TextScreen::new(FormattedText::new(pages))
         .with_header(Header::new(TR::recovery__title_remaining_shares.into()).with_close_button())
         .map(|_| Some(FlowMsg::Cancelled))
-        .repeated_button_request(ButtonRequest::new(
+        .one_button_request(ButtonRequest::new(
             ButtonRequestCode::Other,
             "show_shares".into(),
         ))
