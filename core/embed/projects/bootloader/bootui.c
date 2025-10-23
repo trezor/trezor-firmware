@@ -22,20 +22,12 @@
 #include <io/display.h>
 #include <io/display_utils.h>
 #include <rtl/mini_printf.h>
-#include <sys/sysevent.h>
-#include <sys/systick.h>
-
-#ifdef USE_POWER_MANAGER
-#include <sys/power_manager.h>
-#endif
 
 #include "bootui.h"
 #include "rust_ui_bootloader.h"
 #include "version.h"
 
 #define TOIF_LENGTH(ptr) ((*(uint32_t *)((ptr) + 8)) + 12)
-
-#define TIME_TO_HIBERNATE_MS 40000
 
 // common shared functions
 
@@ -54,121 +46,6 @@ static bool initial_setup = true;
 void ui_set_initial_setup(bool initial) { initial_setup = initial; }
 
 bool ui_get_initial_setup(void) { return initial_setup; }
-
-#if defined USE_TOUCH
-#include <io/touch.h>
-
-void ui_click(void) {
-  sysevents_t awaited = {0};
-  sysevents_t signalled = {0};
-
-  awaited.read_ready = 1 << SYSHANDLE_TOUCH;
-
-  // flush touch events if any
-  while (true) {
-    sysevents_poll(&awaited, &signalled, ticks_timeout(10));
-    if (signalled.read_ready == 0) {
-      break;
-    }
-  }
-
-#ifdef USE_POWER_MANAGER
-  uint32_t deadline = ticks_timeout(TIME_TO_HIBERNATE_MS);
-#endif
-
-  // wait for TOUCH_START
-  while (true) {
-    sysevents_poll(&awaited, &signalled, ticks_timeout(100));
-    if (signalled.read_ready == 1 << SYSHANDLE_TOUCH) {
-      if (touch_get_event() & TOUCH_START) {
-        break;
-      }
-
-#ifdef USE_POWER_MANAGER
-      deadline = ticks_timeout(TIME_TO_HIBERNATE_MS);
-#endif
-    }
-#ifdef USE_POWER_MANAGER
-    if (ticks_expired(deadline)) {
-      pm_hibernate();
-    }
-#endif
-  }
-
-  // wait for TOUCH_END
-  while (true) {
-    sysevents_poll(&awaited, &signalled, ticks_timeout(100));
-    if (signalled.read_ready == 1 << SYSHANDLE_TOUCH) {
-      if (touch_get_event() & TOUCH_END) {
-        break;
-      }
-#ifdef USE_POWER_MANAGER
-      deadline = ticks_timeout(TIME_TO_HIBERNATE_MS);
-#endif
-    }
-#ifdef USE_POWER_MANAGER
-    if (ticks_expired(deadline)) {
-      pm_hibernate();
-    }
-#endif
-  }
-}
-
-#elif defined USE_BUTTON
-#include <io/button.h>
-
-void ui_click(void) {
-  button_event_t event = {0};
-
-  sysevents_t awaited = {0};
-  sysevents_t signalled = {0};
-
-  awaited.read_ready = 1 << SYSHANDLE_BUTTON;
-
-#ifdef USE_POWER_MANAGER
-  uint32_t deadline = ticks_timeout(TIME_TO_HIBERNATE_MS);
-#endif
-
-  while (true) {
-    sysevents_poll(&awaited, &signalled, ticks_timeout(100));
-    if (signalled.read_ready == 1 << SYSHANDLE_BUTTON) {
-      if (button_get_event(&event) && button_is_down(BTN_LEFT) &&
-          button_is_down(BTN_RIGHT)) {
-        break;
-      }
-#ifdef USE_POWER_MANAGER
-      deadline = ticks_timeout(TIME_TO_HIBERNATE_MS);
-#endif
-    }
-#ifdef USE_POWER_MANAGER
-    if (ticks_expired(deadline)) {
-      pm_hibernate();
-    }
-#endif
-  }
-
-  while (true) {
-    sysevents_poll(&awaited, &signalled, ticks_timeout(100));
-    if (signalled.read_ready == 1 << SYSHANDLE_BUTTON) {
-      if (button_get_event(&event) && !button_is_down(BTN_LEFT) &&
-          !button_is_down(BTN_RIGHT)) {
-        break;
-      }
-#ifdef USE_POWER_MANAGER
-      deadline = ticks_timeout(TIME_TO_HIBERNATE_MS);
-#endif
-    }
-#ifdef USE_POWER_MANAGER
-    if (ticks_expired(deadline)) {
-      pm_hibernate();
-    }
-#endif
-  }
-}
-
-#else
-#error "No input method defined"
-#endif
 
 void ui_screen_boot(const vendor_header *const vhdr,
                     const image_header *const hdr, int wait) {
