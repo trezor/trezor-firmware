@@ -130,7 +130,24 @@ static void backlight_deinit_ll(void);
 
 static void DMA_XferCpltCallback(DMA_HandleTypeDef *hdma);
 
-// Brightness level gamma correction - eq: OUT = ( ( (IN - k) / d ) ^ GAMMA) * q
+// Applies gamma correction to a brightness input value.
+//
+// eq: OUT = ( ( (IN - k) / d ) ^ GAMMA) * q
+//
+// Parameters:
+//   in        - Input brightness value (e.g., 0-255).
+//   in_offset - Minimum input value (k in the equation),
+//               below which input is clamped.
+//   in_max    - Maximum input value (d + k in the equation).
+//   gamma_exp - Gamma exponent (GAMMA in the equation).
+//   out_max   - Maximum output value (q in the equation).
+//
+// The transformation performed is:
+//   OUT = ( ( (max(IN, in_offset) - in_offset) / (in_max - in_offset) ) ^
+//         gamma_exp) * out_max
+//
+// This normalizes the input, applies gamma correction, and scales to the output
+// range.
 static inline uint32_t gamma_correction(uint8_t in, uint8_t in_offset,
                                         uint8_t in_max, float gamma_exp,
                                         uint32_t out_max) {
