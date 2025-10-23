@@ -1,4 +1,5 @@
 mod action_bar;
+mod attach_anim;
 mod brightness_screen;
 mod confirm_homescreen;
 mod device_menu_screen;
@@ -23,6 +24,7 @@ mod vertical_menu;
 mod vertical_menu_screen;
 
 pub use action_bar::{ActionBar, ActionBarMsg};
+pub use attach_anim::{AttachAnimationData, BasicAttachAnimation, MenuAttachAnimation};
 pub use brightness_screen::SetBrightnessScreen;
 pub use confirm_homescreen::{ConfirmHomescreen, ConfirmHomescreenMsg};
 pub use device_menu_screen::{DeviceMenuMsg, DeviceMenuScreen};
