@@ -518,26 +518,27 @@ def test_upgrade_u2f(gen: str, tag: str):
         assert counter == 12
 
 
-@for_all("core", core_minimum_version=(2, 9, 1))
+@for_tags(("core", ["v2.9.1"]))
 @pytest.mark.parametrize(
     "backup_type", [BackupType.Bip39, BackupType.Slip39_Single_Extendable]
 )
 @pytest.mark.parametrize("derivation_type", CardanoDerivationType)
 def test_cardano_address_does_not_change_by_upgrade(
     gen: str,
-    tag: Optional[str],
+    tags: List[str],
     derivation_type: CardanoDerivationType,
     backup_type: BackupType,
 ):
     """
-    Check that the Cardano address does not change after upgrading storage from v2 to v3
+    Check that the Cardano address does not change after upgrading app storage from v2
+    to current version.
     """
     from trezorlib.cardano import get_public_key
     from trezorlib.tools import parse_path
 
     ADDRESS_N = parse_path("m/1852'/1815'/0'")
 
-    with EmulatorWrapper(gen, tag) as emu:
+    with EmulatorWrapper(gen, tags[0]) as emu:
         device.setup(
             emu.client.get_seedless_session(),
             pin_protection=False,
