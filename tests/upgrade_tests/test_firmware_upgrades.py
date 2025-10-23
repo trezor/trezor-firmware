@@ -38,7 +38,7 @@ from ..common import MNEMONIC_SLIP39_BASIC_20_3of6, MNEMONIC_SLIP39_BASIC_20_3of
 from ..device_handler import BackgroundDeviceHandler
 from ..emulators import ALL_TAGS, EmulatorWrapper
 from ..input_flows import InputFlowSlip39BasicBackup
-from . import for_all, for_tags, recovery_old, version_from_tag
+from . import for_all, for_tags, for_single_tag, recovery_old, version_from_tag
 
 if TYPE_CHECKING:
     from trezorlib.debuglink import TrezorClientDebugLink as Client
@@ -518,14 +518,14 @@ def test_upgrade_u2f(gen: str, tag: str):
         assert counter == 12
 
 
-@for_tags(("core", ["v2.9.1"]))
+@for_single_tag("core", "v2.9.1")
 @pytest.mark.parametrize(
     "backup_type", [BackupType.Bip39, BackupType.Slip39_Single_Extendable]
 )
 @pytest.mark.parametrize("derivation_type", CardanoDerivationType)
 def test_cardano_address_does_not_change_by_upgrade(
     gen: str,
-    tags: List[str],
+    tag: str,
     derivation_type: CardanoDerivationType,
     backup_type: BackupType,
 ):
@@ -538,7 +538,7 @@ def test_cardano_address_does_not_change_by_upgrade(
 
     ADDRESS_N = parse_path("m/1852'/1815'/0'")
 
-    with EmulatorWrapper(gen, tags[0]) as emu:
+    with EmulatorWrapper(gen, tag) as emu:
         device.setup(
             emu.client.get_seedless_session(),
             pin_protection=False,

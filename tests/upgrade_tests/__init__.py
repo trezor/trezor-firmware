@@ -116,3 +116,11 @@ def for_tags(*args: Tuple[str, List[str]]) -> "MarkDecorator":
     return pytest.mark.parametrize(
         "gen, tags", [(gen, tags) for gen, tags in args if gen in enabled_gens]
     )
+
+
+def for_single_tag(gen: str, tag: str) -> "MarkDecorator":
+    enabled_gens = SELECTED_GENS or ("core", "legacy")
+    parameters = []
+    if gen in enabled_gens:
+        parameters = [(gen, tag)]
+    return pytest.mark.parametrize("gen, tag", parameters)
