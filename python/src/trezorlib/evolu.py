@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional
 
@@ -23,7 +24,7 @@ if TYPE_CHECKING:
     from .transport.session import Session
 
 
-def get_evolu_node(session: "Session", proof: Optional[bytes]) -> bytes:
+def get_evolu_node(session: Session, proof: Optional[bytes]) -> bytes:
     return session.call(
         messages.EvoluGetNode(proof_of_delegated_identity=proof),
         expect=messages.EvoluNode,
@@ -31,7 +32,7 @@ def get_evolu_node(session: "Session", proof: Optional[bytes]) -> bytes:
 
 
 def evolu_sign_registration_request(
-    session: "Session", challenge: bytes, size: int, proof: bytes
+    session: Session, challenge: bytes, size: int, proof: bytes
 ) -> messages.EvoluRegistrationRequest:
     return session.call(
         messages.EvoluSignRegistrationRequest(
@@ -44,7 +45,7 @@ def evolu_sign_registration_request(
 
 
 def get_delegated_identity_key(
-    session: "Session",
+    session: Session,
     thp_credential: Optional[bytes] = None,
     host_static_public_key: Optional[bytes] = None,
 ) -> bytes:

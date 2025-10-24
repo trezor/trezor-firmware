@@ -36,7 +36,7 @@ def cli() -> None:
 @click.option("--proof", "-p", type=str)
 @with_session
 def get_node(
-    session: "Session",
+    session: Session,
     proof: Optional[str] = None,
 ) -> str:
     """Return the SLIP-21 node for Evolu."""
@@ -50,7 +50,7 @@ def get_node(
 @click.option("--size", "-s", type=int, default=10)
 @with_session
 def evolu_sign_registration_request(
-    session: "Session",
+    session: Session,
     proof: str,
     challenge: str,
     size: int,
@@ -74,7 +74,7 @@ def evolu_sign_registration_request(
 @cli.command()
 @with_session
 def get_delegated_identity_key(
-    session: "Session",
+    session: Session,
     credential: Optional[str] = None,
     pubkey: Optional[str] = None,
 ) -> str:
