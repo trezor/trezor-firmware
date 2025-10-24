@@ -201,7 +201,7 @@ __attribute((no_stack_protector)) void smcall_handler(uint32_t *args,
 
     case SMCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY: {
       uint8_t *dest = (uint8_t *)args[0];
-      args[0] = secret_key_delegated_identity__verified(dest);
+      args[0] = secret_keys_delegated_identity__verified(dest);
     } break;
 
     case SMCALL_STORAGE_SETUP: {
