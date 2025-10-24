@@ -58,13 +58,11 @@ class TestCheckDelegatedIdentityKey(unittest.TestCase):
             _check_data(sign_request_challenge, sign_request_size)
 
     def test_sign_registration_request_invalid_challenge(self):
-        from ubinascii import unhexlify
-
         from trezor.wire import DataError
 
         from apps.evolu.evolu_sign_registration_request import _check_data
 
-        sign_request_challenge = unhexlify("")  # invalid length
+        sign_request_challenge = b""  # invalid length
         sign_request_size: int = 10
 
         with self.assertRaises(DataError):
