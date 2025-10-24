@@ -2,8 +2,6 @@
 from common import *  # isort:skip
 from trezor import utils
 
-# make -C core test TESTOPTS=test_apps.evolu.check_evolu.py
-
 
 @unittest.skipUnless(utils.USE_OPTIGA, "only needed with Optiga")
 class TestCheckDelegatedIdentityKey(unittest.TestCase):
