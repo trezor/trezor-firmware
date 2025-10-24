@@ -73,13 +73,12 @@ static result_t process_event(bool* layout_state, sysevents_t* signalled) {
     return RES_NONE;
   }
 
-  if (*layout_state && event.button == BTN_LEFT &&
-      event.event_type == BTN_EVENT_UP) {
+  if (*layout_state && !button_is_down(BTN_LEFT) &&
+      !button_is_down(BTN_RIGHT)) {
     return RES_CLICKED;
   }
 
-  if (!*layout_state && event.button == BTN_LEFT &&
-      event.event_type == BTN_EVENT_DOWN) {
+  if (!*layout_state && button_is_down(BTN_LEFT) && button_is_down(BTN_RIGHT)) {
     *layout_state = true;
     return RES_NONE;
   }
