@@ -513,6 +513,8 @@ static uint32_t ui_estimate_time_ms(storage_pin_op_t op) {
       unlock_time(&time_ms, &optiga_sec, &optiga_last_time_decreased,
                   pin_index);
       break;
+    default:
+      assert(false);
   }
 
   return time_ms;
@@ -522,8 +524,6 @@ static void ui_progress_init(storage_pin_op_t op) {
   ui_total = ui_estimate_time_ms(op);
   ui_next_update = 0;
 }
-
-static void ui_progress_add(uint32_t added_ms) { ui_total += added_ms; }
 
 static secbool ui_progress(void) {
   uint32_t now = hal_ticks_ms();
@@ -1165,6 +1165,11 @@ static void ensure_not_wipe_code(const uint8_t *pin, size_t pin_len) {
   }
 }
 
+static uint32_t get_backoff_time_ms(uint32_t fail_ctr) {
+  // 2 ^ fail_ctr - 1 seconds
+  return 1000 * ((1 << fail_ctr) - 1);
+}
+
 static secbool unlock(const uint8_t *pin, size_t pin_len,
                       const uint8_t *ext_salt) {
   const uint8_t *unlock_pin = pin;
@@ -1178,14 +1183,6 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
     legacy_pin = pin_to_int(pin, pin_len);
     unlock_pin = (const uint8_t *)&legacy_pin;
     unlock_pin_len = sizeof(legacy_pin);
-  }
-#endif
-
-#if NORCOW_MIN_VERSION <= 5
-  // In case of an upgrade from version 5 or earlier bump the total time of UI
-  // progress to account for the set_pin() call in storage_upgrade_unlocked().
-  if (get_lock_version() <= 5) {
-    ui_progress_add(ui_estimate_time_ms(STORAGE_PIN_OP_SET));
   }
 #endif
 
@@ -1207,13 +1204,11 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
     return secfalse;
   }
 
-  // Sleep for 2^ctr - 1 seconds before checking the PIN.
-  uint32_t wait_ms = 1000 * ((1 << ctr) - 1);
-  ui_progress_add(wait_ms);
   ui_progress();
 
+  // Sleep before checking the PIN.
   uint32_t begin = hal_ticks_ms();
-  while (hal_ticks_ms() - begin < wait_ms) {
+  while (hal_ticks_ms() - begin < get_backoff_time_ms(ctr)) {
     if (sectrue == ui_progress()) {
       memzero(&legacy_pin, sizeof(legacy_pin));
       return secfalse;
@@ -1319,6 +1314,18 @@ void unlock_time(uint32_t *time, uint8_t *optiga_sec,
   (void)optiga_sec;
   (void)optiga_last_time_decreased;
   (void)pin_index;
+
+#if NORCOW_MIN_VERSION <= 5
+  // In case of an upgrade from version 5 or earlier bump the total time of UI
+  // progress to account for the set_pin() call in storage_upgrade_unlocked().
+  if (get_lock_version() <= 5) {
+    set_pin_time(time, optiga_sec, optiga_last_time_decreased);
+  }
+#endif
+
+  uint32_t fail_ctr = 0;
+  (void)pin_get_fails(&fail_ctr);
+  *time += get_backoff_time_ms(fail_ctr);
 
   *time += time_estimate_pbkdf2_ms(PIN_ITER_COUNT);
 #if USE_OPTIGA

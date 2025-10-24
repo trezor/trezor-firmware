@@ -94,7 +94,7 @@ static void operation_add_time(uint32_t *total_time_ms, uint8_t *optiga_sec,
     // interval.
     int decrease =
         (*total_time_ms - *optiga_last_time_decreased) / OPTIGA_T_MAX_MS;
-    *optiga_last_time_decreased = *total_time_ms + decrease * OPTIGA_T_MAX_MS;
+    *optiga_last_time_decreased += decrease * OPTIGA_T_MAX_MS;
     if (decrease > *optiga_sec) {
       *optiga_sec = 0;
     } else {
@@ -555,6 +555,7 @@ void optiga_encrypt_sym_time(uint32_t *time, uint8_t *optiga_sec,
       operation_add_time(time, optiga_sec, optiga_last_time_decreased, 122);
       break;
     default:
+      assert(false);
       break;
   }
 }
