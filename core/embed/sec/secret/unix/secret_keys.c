@@ -74,7 +74,7 @@ secbool secret_key_tropic_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
 #endif  // USE_TROPIC
 
 secbool secret_keys_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
-  return secret_key_derive_nist256p1(0, 1, dest);
+  return secret_key_derive_nist256p1(0, KEY_INDEX_DELEGATED_IDENTITY, dest);
 }
 
 secbool master_key_get(master_key_t* salt) {
