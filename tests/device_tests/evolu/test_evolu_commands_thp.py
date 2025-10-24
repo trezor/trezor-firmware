@@ -53,7 +53,7 @@ def pair_and_get_credential(client: Client) -> ThpPairingResult:
     return ThpPairingResult(session, credential_response)
 
 
-def test_evolu_get_delegated_identity_is_constant_ts7(client: Client):
+def test_evolu_get_delegated_identity_is_constant(client: Client):
     pairing_data = pair_and_get_credential(client)
     credential_data = pairing_data.credential
     session = pairing_data.session
@@ -79,7 +79,7 @@ def test_evolu_get_delegated_identity_is_constant_ts7(client: Client):
     assert response_2.private_key == private_key
 
 
-def test_evolu_get_delegated_identity_test_vector_ts7(client: Client):
+def test_evolu_get_delegated_identity_test_vector(client: Client):
     # on emulator, the master key is all zeroes. So the delegated identity key is constant.
 
     pairing_data = pair_and_get_credential(client)
