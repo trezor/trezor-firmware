@@ -502,7 +502,7 @@ def test_upgrade_u2f(gen: str, tag: str):
             emu.client.get_seedless_session(),
             mnemonic=MNEMONIC,
             pin="",
-            passphrase_protection=False,
+            passphrase_protection=True,
             label=LABEL,
         )
         session = emu.client.get_seedless_session()
@@ -547,12 +547,12 @@ def test_cardano_address_does_not_change_by_upgrade(
             backup_type=BackupType.Bip39,
             entropy_check_count=0,
         )
-        session = emu.client.get_session(derive_cardano=True)
+        session = emu.client.get_session(passphrase="PASS", derive_cardano=True)
         old_key = get_public_key(session, ADDRESS_N, derivation_type, show_display=True)
         storage = emu.get_storage()
 
     with EmulatorWrapper(gen, storage=storage) as emu:
-        session = emu.client.get_session(derive_cardano=True)
+        session = emu.client.get_session(passphrase="PASS", derive_cardano=True)
         new_key = get_public_key(session, ADDRESS_N, derivation_type, show_display=True)
 
         assert old_key.xpub == new_key.xpub
