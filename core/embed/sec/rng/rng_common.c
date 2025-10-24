@@ -70,13 +70,13 @@ bool rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
   return true;
 }
 
-void rng_fill_buffer_strong_time(uint32_t* time) {
+void rng_fill_buffer_strong_time(uint32_t* time_ms) {
   // Assuming the buffer size is 32 bytes
 #ifdef USE_OPTIGA
-  optiga_random_buffer_time(time);
+  optiga_random_buffer_time(time_ms);
 #endif
 #ifdef USE_TROPIC
-  tropic_random_buffer_time(time);
+  tropic_random_buffer_time(time_ms);
 #endif
 }
 

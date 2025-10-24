@@ -269,9 +269,9 @@ bool optiga_random_buffer(uint8_t *dest, size_t size) {
   return optiga_get_random(dest, size) == OPTIGA_SUCCESS;
 }
 
-void optiga_random_buffer_time(uint32_t *time) {
+void optiga_random_buffer_time(uint32_t *time_ms) {
   // Assuming the data size is 32 bytes
-  return optiga_get_random_time(time);
+  return optiga_get_random_time(time_ms);
 }
 
 static bool read_metadata(uint16_t oid, optiga_metadata *metadata) {
@@ -341,16 +341,16 @@ bool optiga_set_metadata(uint16_t oid, const optiga_metadata *metadata) {
   return true;
 }
 
-void optiga_set_metadata_time(uint32_t *time, bool is_configured) {
-  optiga_get_data_object_time(time, true);
+void optiga_set_metadata_time(bool is_configured, uint32_t *time_ms) {
+  optiga_get_data_object_time(true, time_ms);
   if (!is_configured) {
-    optiga_set_data_object_time(time, true);
-    optiga_get_data_object_time(time, true);
+    optiga_set_data_object_time(true, time_ms);
+    optiga_get_data_object_time(true, time_ms);
   }
 #if PRODUCTION
   if (!is_configured) {
-    optiga_set_data_object_time(time, true);
-    optiga_get_data_object_time(time, true);
+    optiga_set_data_object_time(true, time_ms);
+    optiga_get_data_object_time(true, time_ms);
   }
 #endif
 }
@@ -513,32 +513,31 @@ static bool optiga_pin_init_metadata() {
   return true;
 }
 
-static void optiga_pin_init_metadata_time(uint32_t *time) {
+static void optiga_pin_init_metadata_time(uint32_t *time_ms) {
   bool is_configured = optiga_is_configured();
-
-  optiga_set_metadata_time(time, is_configured);  // OID_PIN_SECRET
+  optiga_set_metadata_time(is_configured, time_ms);  // OID_PIN_SECRET
 
 #if STRETCHED_PIN_COUNT == 1
-  optiga_set_metadata_time(time, is_configured);  // OID_STRETCHED_PINS[0]
+  optiga_set_metadata_time(is_configured, time_ms);  // OID_STRETCHED_PINS[0]
 #else
-  optiga_set_metadata_time(time, is_configured);  // OID_STRETCHED_PINS[0]
+  optiga_set_metadata_time(is_configured, time_ms);  // OID_STRETCHED_PINS[0]
   for (int i = 1; i < STRETCHED_PIN_COUNT - 1; i++) {
     // OID_STRETCHED_PINS[i]
-    optiga_set_metadata_time(time, is_configured);
+    optiga_set_metadata_time(is_configured, time_ms);
   }
   // OID_STRETCHED_PINS[STRETCHED_PIN_COUNT - 1]
-  optiga_set_metadata_time(time, is_configured);
+  optiga_set_metadata_time(is_configured, time_ms);
 #endif
-  optiga_set_metadata_time(time, is_configured);  // OID_PIN_HMAC
-  optiga_set_metadata_time(time, is_configured);  // OID_STRETCHED_PIN_CTR
-  optiga_set_metadata_time(time, is_configured);  // OID_PIN_HMAC_CTR
-  optiga_set_data_object_time(time, true);        // OID_PIN_TOTAL_CTR
+  optiga_set_metadata_time(is_configured, time_ms);  // OID_PIN_HMAC
+  optiga_set_metadata_time(is_configured, time_ms);  // OID_STRETCHED_PIN_CTR
+  optiga_set_metadata_time(is_configured, time_ms);  // OID_PIN_HMAC_CTR
+  optiga_set_data_object_time(true, time_ms);        // OID_PIN_TOTAL_CTR
   if (is_configured) {
-    optiga_reset_counter_time(time);  // OID_PIN_TOTAL_CTR
+    optiga_reset_counter_time(time_ms);  // OID_PIN_TOTAL_CTR
   }
-  optiga_set_metadata_time(time, is_configured);  // OID_PIN_TOTAL_CTR
-  optiga_set_metadata_time(time, is_configured);  // OID_PIN_CMAC
-  optiga_set_metadata_time(time, is_configured);  // OID_PIN_ECDH
+  optiga_set_metadata_time(is_configured, time_ms);  // OID_PIN_TOTAL_CTR
+  optiga_set_metadata_time(is_configured, time_ms);  // OID_PIN_CMAC
+  optiga_set_metadata_time(is_configured, time_ms);  // OID_PIN_ECDH
 }
 
 static bool optiga_pin_init_stretch() {
@@ -558,9 +557,9 @@ static bool optiga_pin_init_stretch() {
   return res == OPTIGA_SUCCESS;
 }
 
-static void optiga_pin_init_stretch_time(uint32_t *time) {
-  optiga_gen_sym_key_time(time);
-  optiga_gen_key_pair_time(time);
+static void optiga_pin_init_stretch_time(uint32_t *time_ms) {
+  optiga_gen_sym_key_time(time_ms);
+  optiga_gen_key_pair_time(time_ms);
 }
 
 static bool optiga_pin_stretch_common(
@@ -696,13 +695,14 @@ end:
   return ret;
 }
 
-void optiga_pin_stretch_cmac_ecdh_time(uint32_t *time, uint8_t *optiga_sec,
-                                       uint32_t *optiga_last_time_decreased) {
+void optiga_pin_stretch_cmac_ecdh_time(
+    uint32_t *time_ms, uint8_t *optiga_sec,
+    uint32_t *optiga_last_time_decreased_ms) {
   for (int i = 0; i < PIN_STRETCH_ITERATIONS; ++i) {
-    optiga_encrypt_sym_time(time, optiga_sec, optiga_last_time_decreased,
-                            OPTIGA_SYM_MODE_CMAC);
-    *time += time_estimate_hash_to_curve_ms();
-    optiga_calc_ssec_time(time, optiga_sec, optiga_last_time_decreased);
+    optiga_encrypt_sym_time(OPTIGA_SYM_MODE_CMAC, time_ms, optiga_sec,
+                            optiga_last_time_decreased_ms);
+    *time_ms += time_estimate_hash_to_curve_ms();
+    optiga_calc_ssec_time(time_ms, optiga_sec, optiga_last_time_decreased_ms);
   }
 }
 
@@ -713,9 +713,9 @@ bool optiga_pin_init(optiga_ui_progress_t ui_progress) {
   return ret;
 }
 
-void optiga_pin_init_time(uint32_t *time) {
-  optiga_pin_init_metadata_time(time);
-  optiga_pin_init_stretch_time(time);
+void optiga_pin_init_time(uint32_t *time_ms) {
+  optiga_pin_init_metadata_time(time_ms);
+  optiga_pin_init_stretch_time(time_ms);
 }
 
 static void optiga_pin_stretch_hmac_offline(
@@ -857,25 +857,27 @@ end:
   return ret;
 }
 
-void optiga_pin_set_time(uint32_t *time, uint8_t *optiga_sec,
-                         uint32_t *optiga_last_time_decreased) {
-  rng_fill_buffer_strong_time(time);         // hmac_stretching_secret
-  rng_fill_buffer_strong_time(time);         // pin_secret
-  optiga_set_data_object_time(time, false);  // OID_PIN_SECRET
+void optiga_pin_set_time(uint32_t *time_ms, uint8_t *optiga_sec,
+                         uint32_t *optiga_last_time_decreased_ms) {
+  rng_fill_buffer_strong_time(time_ms);         // hmac_stretching_secret
+  rng_fill_buffer_strong_time(time_ms);         // pin_secret
+  optiga_set_data_object_time(false, time_ms);  // OID_PIN_SECRET
   // OID_PIN_SECRET
-  optiga_set_auto_state_time(time, optiga_sec, optiga_last_time_decreased);
-  optiga_reset_counter_time(time);  // OID_STRETCHED_PIN_CTR
+  optiga_set_auto_state_time(time_ms, optiga_sec,
+                             optiga_last_time_decreased_ms);
+  optiga_reset_counter_time(time_ms);  // OID_STRETCHED_PIN_CTR
   for (int i = STRETCHED_PIN_COUNT - 1; i >= 0; i--) {
-    optiga_set_data_object_time(time, false);  // OID_STRETCHED_PINS[i]
+    optiga_set_data_object_time(false, time_ms);  // OID_STRETCHED_PINS[i]
     // OID_STRETCHED_PINS[i - 1] or OID_PIN_SECRET
-    optiga_clear_auto_state_time(time);
+    optiga_clear_auto_state_time(time_ms);
     // OID_STRETCHED_PINS[i]
-    optiga_set_auto_state_time(time, optiga_sec, optiga_last_time_decreased);
+    optiga_set_auto_state_time(time_ms, optiga_sec,
+                               optiga_last_time_decreased_ms);
   }
-  optiga_set_data_object_time(time, false);  // OID_PIN_HMAC
-  optiga_reset_counter_time(time);           // OID_PIN_HMAC_CTR
+  optiga_set_data_object_time(false, time_ms);  // OID_PIN_HMAC
+  optiga_reset_counter_time(time_ms);           // OID_PIN_HMAC_CTR
   // OID_STRETCHED_PINS[STRETCHED_PIN_COUNT - 1]
-  optiga_clear_auto_state_time(time);
+  optiga_clear_auto_state_time(time_ms);
 }
 
 optiga_pin_result optiga_pin_verify_v4(
@@ -999,10 +1001,11 @@ end:
   return ret;
 }
 
-static void optiga_pin_stretch_hmac_time(uint32_t *time, uint8_t *optiga_sec,
-                                         uint32_t *optiga_last_time_decreased) {
-  optiga_encrypt_sym_time(time, optiga_sec, optiga_last_time_decreased,
-                          OPTIGA_SYM_MODE_HMAC_SHA256);
+static void optiga_pin_stretch_hmac_time(
+    uint32_t *time_ms, uint8_t *optiga_sec,
+    uint32_t *optiga_last_time_decreased_ms) {
+  optiga_encrypt_sym_time(OPTIGA_SYM_MODE_HMAC_SHA256, time_ms, optiga_sec,
+                          optiga_last_time_decreased_ms);
 }
 
 optiga_pin_result optiga_pin_verify(
@@ -1122,27 +1125,27 @@ end:
   return ret;
 }
 
-void optiga_pin_verify_time(uint32_t *time, uint8_t *optiga_sec,
-                            uint32_t *optiga_last_time, uint8_t pin_index) {
-  optiga_pin_stretch_hmac_time(time, optiga_sec, optiga_last_time);
+void optiga_pin_verify_time(uint8_t pin_index, uint32_t *time_ms,
+                            uint8_t *optiga_sec, uint32_t *optiga_last_time) {
+  optiga_pin_stretch_hmac_time(time_ms, optiga_sec, optiga_last_time);
   // OID_STRETCHED_PINS[pin_index]
-  optiga_set_auto_state_time(time, optiga_sec, optiga_last_time);
+  optiga_set_auto_state_time(time_ms, optiga_sec, optiga_last_time);
   if (pin_index == 0) {
-    optiga_reset_counter_time(time);  // OID_PIN_HMAC_CTR
+    optiga_reset_counter_time(time_ms);  // OID_PIN_HMAC_CTR
   }
   for (int i = pin_index + 1; i < STRETCHED_PIN_COUNT; i++) {
-    optiga_get_data_object_time(time, false);  // OID_STRETCHED_PINS[i]
-    optiga_clear_auto_state_time(time);        // OID_STRETCHED_PINS[i - 1]
+    optiga_get_data_object_time(false, time_ms);  // OID_STRETCHED_PINS[i]
+    optiga_clear_auto_state_time(time_ms);        // OID_STRETCHED_PINS[i - 1]
     // OID_STRETCHED_PINS[i]
-    optiga_set_auto_state_time(time, optiga_sec, optiga_last_time);
+    optiga_set_auto_state_time(time_ms, optiga_sec, optiga_last_time);
   }
-  optiga_get_data_object_time(time, false);  // OID_PIN_SECRET
+  optiga_get_data_object_time(false, time_ms);  // OID_PIN_SECRET
   // OID_STRETCHED_PIN_CTR[STRETCHED_PIN_COUNT - 1]
-  optiga_clear_auto_state_time(time);
+  optiga_clear_auto_state_time(time_ms);
   // OID_PIN_SECRET
-  optiga_set_auto_state_time(time, optiga_sec, optiga_last_time);
-  optiga_reset_counter_time(time);     // OID_STRETCHED_PIN_CTR
-  optiga_clear_auto_state_time(time);  // OID_PIN_SECRET
+  optiga_set_auto_state_time(time_ms, optiga_sec, optiga_last_time);
+  optiga_reset_counter_time(time_ms);     // OID_STRETCHED_PIN_CTR
+  optiga_clear_auto_state_time(time_ms);  // OID_PIN_SECRET
 }
 
 bool optiga_pin_reset_hmac_counter(
@@ -1172,12 +1175,14 @@ cleanup:
   return res;
 }
 
-void optiga_pin_reset_hmac_counter_time(uint32_t *time, uint8_t *optiga_sec,
-                                        uint32_t *optiga_last_time_decreased) {
+void optiga_pin_reset_hmac_counter_time(
+    uint32_t *time_ms, uint8_t *optiga_sec,
+    uint32_t *optiga_last_time_decreased_ms) {
   optiga_set_auto_state_time(
-      time, optiga_sec, optiga_last_time_decreased);  // OID_STRETCHED_PINS[0]
-  optiga_reset_counter_time(time);                    // OID_PIN_HMAC_CTR
-  optiga_clear_auto_state_time(time);                 // OID_STRETCHED_PINS[0]
+      time_ms, optiga_sec,
+      optiga_last_time_decreased_ms);     // OID_STRETCHED_PINS[0]
+  optiga_reset_counter_time(time_ms);     // OID_PIN_HMAC_CTR
+  optiga_clear_auto_state_time(time_ms);  // OID_STRETCHED_PINS[0]
 }
 
 static uint32_t uint32_from_be(uint8_t buf[4]) {

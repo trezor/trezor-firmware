@@ -101,7 +101,7 @@ void optiga_set_sec_max(void) {}
 
 bool optiga_pin_init(optiga_ui_progress_t ui_progress) { return true; }
 
-void optiga_pin_init_time(uint32_t *time) {}
+void optiga_pin_init_time(uint32_t *time_ms) {}
 
 bool optiga_is_initialized() { return false; }
 
@@ -111,8 +111,9 @@ bool optiga_pin_stretch_cmac_ecdh(
   return true;
 }
 
-void optiga_pin_stretch_cmac_ecdh_time(uint32_t *time, uint8_t *optiga_sec,
-                                       uint32_t *optiga_last_time_decreased) {}
+void optiga_pin_stretch_cmac_ecdh_time(
+    uint32_t *time_ms, uint8_t *optiga_sec,
+    uint32_t *optiga_last_time_decreased_ms) {}
 
 uint32_t optiga_estimate_time_ms(storage_pin_op_t op, uint8_t slot_index) {
   return 0;
@@ -123,7 +124,7 @@ bool optiga_random_buffer(uint8_t *dest, size_t size) {
   return true;
 }
 
-void optiga_random_buffer_time(uint32_t *time) {}
+void optiga_random_buffer_time(uint32_t *time_ms) {}
 
 bool optiga_pin_set(
     optiga_ui_progress_t ui_progress,
@@ -132,8 +133,8 @@ bool optiga_pin_set(
   return true;
 }
 
-void optiga_pin_set_time(uint32_t *time, uint8_t *optiga_sec,
-                         uint32_t *optiga_last_time_decreased) {}
+void optiga_pin_set_time(uint32_t *time_ms, uint8_t *optiga_sec,
+                         uint32_t *optiga_last_time_decreased_ms) {}
 
 optiga_pin_result optiga_pin_verify_v4(
     optiga_ui_progress_t ui_progress,
@@ -149,8 +150,8 @@ optiga_pin_result optiga_pin_verify(
   return OPTIGA_PIN_SUCCESS;
 }
 
-void optiga_pin_verify_time(uint32_t *time, uint8_t *optiga_sec,
-                            uint32_t *optiga_last_time, uint8_t pin_index) {}
+void optiga_pin_verify_time(uint8_t pin_index, uint32_t *time_ms,
+                            uint8_t *optiga_sec, uint32_t *optiga_last_time) {}
 
 bool optiga_pin_reset_hmac_counter(
     optiga_ui_progress_t ui_progress,
@@ -158,8 +159,9 @@ bool optiga_pin_reset_hmac_counter(
   return true;
 }
 
-void optiga_pin_reset_hmac_counter_time(uint32_t *time, uint8_t *optiga_sec,
-                                        uint32_t *optiga_last_time_decreased) {}
+void optiga_pin_reset_hmac_counter_time(
+    uint32_t *time_ms, uint8_t *optiga_sec,
+    uint32_t *optiga_last_time_decreased_ms) {}
 
 bool optiga_pin_get_rem_v4(uint32_t *ctr) {
   *ctr = PIN_MAX_TRIES;

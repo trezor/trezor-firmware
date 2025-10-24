@@ -473,10 +473,10 @@ static secbool is_not_wipe_code(const uint8_t *pin, size_t pin_len) {
   return sectrue;
 }
 
-void set_pin_time(uint32_t *time, uint8_t *optiga_sec,
-                  uint32_t *optiga_last_time_decreased);
-void unlock_time(uint32_t *time, uint8_t *optiga_sec,
-                 uint32_t *optiga_last_time_decreased, uint16_t pin_index);
+void set_pin_time(uint32_t *time_ms, uint8_t *optiga_sec,
+                  uint32_t *optiga_last_time_decreased_ms);
+void unlock_time(uint16_t pin_index, uint32_t *time_ms, uint8_t *optiga_sec,
+                 uint32_t *optiga_last_time_decreased_ms);
 
 static uint32_t ui_estimate_time_ms(storage_pin_op_t op) {
   uint32_t time_ms = 0;
@@ -489,7 +489,7 @@ static uint32_t ui_estimate_time_ms(storage_pin_op_t op) {
 #endif
 
   uint8_t optiga_sec = 0;
-  uint32_t optiga_last_time_decreased = 0;
+  uint32_t optiga_last_time_decreased_ms = 0;
 #if USE_OPTIGA
   if (!optiga_read_sec(&optiga_sec)) {
     return 0;
@@ -502,16 +502,16 @@ static uint32_t ui_estimate_time_ms(storage_pin_op_t op) {
 
   switch (op) {
     case STORAGE_PIN_OP_SET:
-      set_pin_time(&time_ms, &optiga_sec, &optiga_last_time_decreased);
+      set_pin_time(&time_ms, &optiga_sec, &optiga_last_time_decreased_ms);
       break;
     case STORAGE_PIN_OP_VERIFY:
-      unlock_time(&time_ms, &optiga_sec, &optiga_last_time_decreased,
-                  pin_index);
+      unlock_time(pin_index, &time_ms, &optiga_sec,
+                  &optiga_last_time_decreased_ms);
       break;
     case STORAGE_PIN_OP_CHANGE:
-      set_pin_time(&time_ms, &optiga_sec, &optiga_last_time_decreased);
-      unlock_time(&time_ms, &optiga_sec, &optiga_last_time_decreased,
-                  pin_index);
+      set_pin_time(&time_ms, &optiga_sec, &optiga_last_time_decreased_ms);
+      unlock_time(pin_index, &time_ms, &optiga_sec,
+                  &optiga_last_time_decreased_ms);
       break;
     default:
       assert(false);
@@ -896,36 +896,36 @@ static secbool set_pin(const uint8_t *pin, size_t pin_len,
   return ret;
 }
 
-void set_pin_time(uint32_t *time, uint8_t *optiga_sec,
-                  uint32_t *optiga_last_time_decreased) {
+void set_pin_time(uint32_t *time_ms, uint8_t *optiga_sec,
+                  uint32_t *optiga_last_time_decreased_ms) {
   // Suppress unused parameter warnings if USE_OPTIGA is not defined
   (void)optiga_sec;
-  (void)optiga_last_time_decreased;
+  (void)optiga_last_time_decreased_ms;
 
-  rng_fill_buffer_strong_time(time);  // rand_salt
+  rng_fill_buffer_strong_time(time_ms);  // rand_salt
 
   {  // From derive_kek_set()
-    *time += time_estimate_pbkdf2_ms(PIN_ITER_COUNT);
+    *time_ms += time_estimate_pbkdf2_ms(PIN_ITER_COUNT);
 #if USE_OPTIGA
-    optiga_pin_init_time(time);
-    optiga_pin_stretch_cmac_ecdh_time(time, optiga_sec,
-                                      optiga_last_time_decreased);
+    optiga_pin_init_time(time_ms);
+    optiga_pin_stretch_cmac_ecdh_time(time_ms, optiga_sec,
+                                      optiga_last_time_decreased_ms);
 #endif
 #if USE_TROPIC
-    tropic_pin_set_time(time);
+    tropic_pin_set_time(time_ms);
 #endif
 #if USE_OPTIGA
-    optiga_pin_set_time(time, optiga_sec, optiga_last_time_decreased);
+    optiga_pin_set_time(time_ms, optiga_sec, optiga_last_time_decreased_ms);
 #endif
 #if USE_TROPIC
-    rng_fill_buffer_strong_time(time);  // kek
-    tropic_pin_set_kek_masks_time(time);
+    rng_fill_buffer_strong_time(time_ms);  // kek
+    tropic_pin_set_kek_masks_time(time_ms);
 #endif
   }
 
   // The value was obtained as the difference between the estimated and measured
   // time on T3W1
-  *time += time_estimate_clock_cycles_ms(2250000);
+  *time_ms += time_estimate_clock_cycles_ms(2250000);
 }
 
 /*
@@ -1308,55 +1308,55 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
   return pin_fails_reset();
 }
 
-void unlock_time(uint32_t *time, uint8_t *optiga_sec,
-                 uint32_t *optiga_last_time_decreased, uint16_t pin_index) {
+void unlock_time(uint16_t pin_index, uint32_t *time_ms, uint8_t *optiga_sec,
+                 uint32_t *optiga_last_time_decreased_ms) {
   // Suppress unused parameter warnings if USE_OPTIGA is not defined
   (void)optiga_sec;
-  (void)optiga_last_time_decreased;
+  (void)optiga_last_time_decreased_ms;
   (void)pin_index;
 
 #if NORCOW_MIN_VERSION <= 5
   // In case of an upgrade from version 5 or earlier bump the total time of UI
   // progress to account for the set_pin() call in storage_upgrade_unlocked().
   if (get_lock_version() <= 5) {
-    set_pin_time(time, optiga_sec, optiga_last_time_decreased);
+    set_pin_time(time_ms, optiga_sec, optiga_last_time_decreased_ms);
   }
 #endif
 
   uint32_t fail_ctr = 0;
   (void)pin_get_fails(&fail_ctr);
-  *time += get_backoff_time_ms(fail_ctr);
+  *time_ms += get_backoff_time_ms(fail_ctr);
 
-  *time += time_estimate_pbkdf2_ms(PIN_ITER_COUNT);
+  *time_ms += time_estimate_pbkdf2_ms(PIN_ITER_COUNT);
 #if USE_OPTIGA
-  optiga_pin_stretch_cmac_ecdh_time(time, optiga_sec,
-                                    optiga_last_time_decreased);
+  optiga_pin_stretch_cmac_ecdh_time(time_ms, optiga_sec,
+                                    optiga_last_time_decreased_ms);
 #endif
 #if USE_TROPIC
-  tropic_pin_stretch_time(time);
+  tropic_pin_stretch_time(time_ms);
 #endif
 #if USE_OPTIGA
-  optiga_pin_verify_time(time, optiga_sec, optiga_last_time_decreased,
-                         pin_index);
+  optiga_pin_verify_time(pin_index, time_ms, optiga_sec,
+                         optiga_last_time_decreased_ms);
 #endif
 #if USE_TROPIC
-  tropic_pin_unmask_kek_time(time);
+  tropic_pin_unmask_kek_time(time_ms);
 #endif
 
 #if USE_OPTIGA && STRETCHED_PIN_COUNT > 1
   if (pin_index != 0) {
-    optiga_pin_reset_hmac_counter_time(time, optiga_sec,
-                                       optiga_last_time_decreased);
+    optiga_pin_reset_hmac_counter_time(time_ms, optiga_sec,
+                                       optiga_last_time_decreased_ms);
   }
 #endif
 
 #if USE_TROPIC
-  tropic_pin_reset_slots_time(time, pin_index);
+  tropic_pin_reset_slots_time(time_ms, pin_index);
 #endif
 
   // The value was obtained as the difference between the estimated and measured
   // time on T3W1
-  *time += time_estimate_clock_cycles_ms(13500000);
+  *time_ms += time_estimate_clock_cycles_ms(13500000);
 }
 
 secbool storage_unlock(const uint8_t *pin, size_t pin_len,
