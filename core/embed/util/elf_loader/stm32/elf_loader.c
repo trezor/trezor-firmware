@@ -30,6 +30,9 @@
 
 #include "elf.h"
 
+// Alignment required for MPU regions
+#define MPU_ALIGNMENT 32
+
 #define GCC_PIC_SUPPORT
 #define CLANG_RWPI_SUPPORT
 
@@ -183,14 +186,42 @@ static Elf32_Addr map_va(elf_ctx_t* elf, Elf32_Addr va) {
   return 0;
 }
 
+static void applet_layout_set_unpriv(applet_layout_t* layout, bool unpriv) {
+  // Align sizes to GTZC requirements
+  // TODO: this need to be revisited with proper implementation of app loading
+  // in the future
+  uint32_t code_start_aligned =
+      ALIGN_DOWN(layout->code1.start, TZ_FLASH_ALIGNMENT);
+  uint32_t code_size_aligned = ALIGN_UP(layout->code1.size, TZ_FLASH_ALIGNMENT);
+  uint32_t data_size_aligned = ALIGN_UP(layout->data1.size, TZ_SRAM_ALIGNMENT);
+
+  // Only code1 and data1 area are private to the applet
+  // (code2 eventually data2 may be shared with coreapp)
+
+  tz_set_flash_unpriv(code_start_aligned, code_size_aligned, unpriv);
+  tz_set_sram_unpriv(layout->data1.start, data_size_aligned, unpriv);
+}
+
+static void elf_unload_cb(applet_t* applet) {
+  // Clear applet data segment
+  mpu_set_active_applet(&applet->layout);
+  memset((void*)applet->layout.data1.start, 0, applet->layout.data1.size);
+  mpu_set_active_applet(NULL);
+
+  // Disable unprivileged access to applet memory regions
+  applet_layout_set_unpriv(&applet->layout, false);
+}
+
 bool elf_load(const void* elf_ptr, size_t elf_size, void* ram_ptr,
               size_t ram_size, applet_t* applet) {
+  applet_init(applet, NULL, NULL);
+
   elf_ctx_t elf = {0};
 
   // Read and validate ELF header
   elf.ehdr = elf_read_header(elf_ptr, elf_size);
   if (elf.ehdr == NULL) {
-    return false;
+    goto cleanup;
   }
 
   // Parse program headers, find RO, RW and DYN segments
@@ -198,17 +229,17 @@ bool elf_load(const void* elf_ptr, size_t elf_size, void* ram_ptr,
     const Elf32_Phdr* phdr = elf_get_phdr(elf.ehdr, i);
     if (IS_RO_SEGMENT(phdr)) {
       if (elf.ro_phdr != NULL || !IS_IN_FILE_LIMIT(phdr, elf_size)) {
-        return false;
+        goto cleanup;
       }
       elf.ro_phdr = phdr;
     } else if (IS_RW_SEGMENT(phdr)) {
       if (elf.rw_phdr != NULL || !IS_IN_FILE_LIMIT(phdr, elf_size)) {
-        return false;
+        goto cleanup;
       }
       elf.rw_phdr = phdr;
     } else if (IS_DYN_SEGMENT(phdr)) {
       if (elf.dyn_phdr != NULL || !IS_IN_FILE_LIMIT(phdr, elf_size)) {
-        return false;
+        goto cleanup;
       }
       elf.dyn_phdr = phdr;
     }
@@ -217,12 +248,12 @@ bool elf_load(const void* elf_ptr, size_t elf_size, void* ram_ptr,
   // Check if all required segments are present
   // (elf.dyn_phdr required only from GCC PIC)
   if (elf.ro_phdr == NULL || elf.rw_phdr == NULL /*|| elf.dyn_phdr == NULL*/) {
-    return false;
+    goto cleanup;
   }
 
   // Check if RO segment size is within elf file
   if (elf.ro_phdr->p_memsz < elf.ro_phdr->p_filesz) {
-    return false;
+    goto cleanup;
   }
 
   // Check if RO segment is properly aligned
@@ -230,14 +261,14 @@ bool elf_load(const void* elf_ptr, size_t elf_size, void* ram_ptr,
 
   // Check if RW segment fits available RAM
   if (elf.rw_phdr->p_memsz > ram_size) {
-    return false;
+    goto cleanup;
   }
 
   // Prepare applet memory layout
   elf.layout.code1.start = (uintptr_t)elf.ehdr + elf.ro_phdr->p_offset;
-  elf.layout.code1.size = ALIGN_UP(elf.ro_phdr->p_filesz, TZ_FLASH_ALIGNMENT);
+  elf.layout.code1.size = ALIGN_UP(elf.ro_phdr->p_filesz, MPU_ALIGNMENT);
   elf.layout.data1.start = (uintptr_t)ram_ptr;
-  elf.layout.data1.size = ALIGN_UP(elf.rw_phdr->p_memsz, TZ_SRAM_ALIGNMENT);
+  elf.layout.data1.size = ALIGN_UP(elf.rw_phdr->p_memsz, MPU_ALIGNMENT);
 
   // It's intended to call coreapp functions directly so we have to make
   // coreapp code and TLS areas accessible when the applet is running.
@@ -279,7 +310,12 @@ bool elf_load(const void* elf_ptr, size_t elf_size, void* ram_ptr,
 
   applet_privileges_t app_privileges = {0};
 
-  applet_init(applet, &elf.layout, &app_privileges);
+  applet_init(applet, &app_privileges, elf_unload_cb);
+
+  applet->layout = elf.layout;
+
+  // Enable unprivileged access to applet memory regions
+  applet_layout_set_unpriv(&applet->layout, true);
 
   // Initialize RW segment
   memset((void*)elf.layout.data1.start, 0, elf.rw_phdr->p_memsz);
@@ -300,7 +336,7 @@ bool elf_load(const void* elf_ptr, size_t elf_size, void* ram_ptr,
 
       if (relent != sizeof(Elf32_Rel)) {
         // Unexpected relocation entry size
-        return false;
+        goto cleanup;
       }
 
       rel = (Elf32_Rel*)(map_va(&elf, relva));
@@ -308,7 +344,7 @@ bool elf_load(const void* elf_ptr, size_t elf_size, void* ram_ptr,
 
       if (rel == NULL || rel_end == NULL) {
         // Relocation table is outside of mapped segments
-        return false;
+        goto cleanup;
       }
     }
   }
@@ -329,18 +365,18 @@ bool elf_load(const void* elf_ptr, size_t elf_size, void* ram_ptr,
     if (ELF32_R_TYPE(rel->r_info) != R_ARM_ABS32 &&
         rel->r_info != R_ARM_RELATIVE) {
       // Unsupported relocation type
-      return false;
+      goto cleanup;
     }
 
     // Get pointer to the relocated 32-bit word
     uint32_t* mem_ptr = (uint32_t*)map_va(&elf, rel->r_offset);
     if (mem_ptr == NULL) {
-      return false;
+      goto cleanup;
     }
 
     // Check if the pointer is within RW segment
     if (mem_ptr < rw_start || mem_ptr + 1 > rw_end) {
-      return false;
+      goto cleanup;
     }
 
     // Relocate the 32-bit word
@@ -354,7 +390,7 @@ bool elf_load(const void* elf_ptr, size_t elf_size, void* ram_ptr,
 
   // Initialize the applet task
   if (!systask_init(&applet->task, stack_base, stack_size, sb_addr, applet)) {
-    return false;
+    goto cleanup;
   }
 
   // Enable coreapp TLS area swapping
@@ -364,7 +400,15 @@ bool elf_load(const void* elf_ptr, size_t elf_size, void* ram_ptr,
 
   // Prepare the applet to run - push exception frame on the stack
   // with the entrypoint address
-  return systask_push_call(&applet->task, (void*)entrypoint, api_getter, 0, 0);
+  if (!systask_push_call(&applet->task, (void*)entrypoint, api_getter, 0, 0)) {
+    goto cleanup;
+  }
+
+  return true;
+
+cleanup:
+  applet_unload(applet);
+  return false;
 }
 
 #endif  // KERNEL_MODE

@@ -28,6 +28,11 @@
 #include <sys/systask.h>
 #include <util/image.h>
 
+#ifdef USE_TRUSTZONE
+#include <io/display.h>
+#include <sys/trustzone.h>
+#endif
+
 static mpu_area_t coreapp_code_area;
 static mpu_area_t coreapp_tls_area;
 static void* coreapp_api_getter = NULL;
@@ -43,6 +48,34 @@ static void coreapp_clear_memory(applet_t* applet) {
   if (applet->layout.data2.size > 0) {
     memset((void*)applet->layout.data2.start, 0, applet->layout.data2.size);
   }
+}
+
+#ifdef USE_TRUSTZONE
+// Sets unprivileged access to the applet memory regions
+// and allows applet to use some specific peripherals.
+static void applet_set_unpriv(applet_t* applet, bool unpriv) {
+  applet_layout_t* layout = &applet->layout;
+
+  tz_set_sram_unpriv(layout->data1.start, layout->data1.size, unpriv);
+  tz_set_sram_unpriv(layout->data2.start, layout->data2.size, unpriv);
+  tz_set_flash_unpriv(layout->code1.start, layout->code1.size, unpriv);
+  tz_set_flash_unpriv(layout->code2.start, layout->code2.size, unpriv);
+
+  tz_set_flash_unpriv(ASSETS_START, ASSETS_MAXSIZE, unpriv);
+
+  display_set_unpriv_access(unpriv);
+}
+#endif  // USE_TRUSTZONE
+
+static void coreapp_unload_cb(applet_t* applet) {
+  // Clear all memory the applet was allowed to use
+  mpu_set_active_applet(&applet->layout);
+  coreapp_clear_memory(applet);
+  mpu_set_active_applet(NULL);
+#ifdef USE_TRUSTZONE
+  // Disable unprivileged access to the coreapp memory regions
+  applet_set_unpriv(applet, false);
+#endif
 }
 
 bool coreapp_init(applet_t* applet, uint32_t cmd, const void* arg,
@@ -74,13 +107,20 @@ bool coreapp_init(applet_t* applet, uint32_t cmd, const void* arg,
       .assets_area_access = true,
   };
 
-  applet_init(applet, &coreapp_layout, &coreapp_privileges);
+  applet_init(applet, &coreapp_privileges, coreapp_unload_cb);
+
+  applet->layout = coreapp_layout;
 
   // Enable access to coreapp memory regions
   mpu_set_active_applet(&applet->layout);
 
   // Clear all memory the applet is allowed to use
   coreapp_clear_memory(applet);
+
+#ifdef USE_TRUSTZONE
+  // Enable unprivileged access to the coreapp memory regions
+  applet_set_unpriv(applet, true);
+#endif
 
   const coreapp_header_t* header =
       (coreapp_header_t*)applet->layout.code1.start;
