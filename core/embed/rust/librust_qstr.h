@@ -205,6 +205,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ble__unpair_current;
   MP_QSTR_ble__unpair_title;
   MP_QSTR_ble__version;
+  MP_QSTR_ble__waiting_for_host;
   MP_QSTR_ble_enabled;
   MP_QSTR_ble_event;
   MP_QSTR_bootscreen;
@@ -982,6 +983,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__cancel_and_exit;
   MP_QSTR_words__cancel_question;
   MP_QSTR_words__chain;
+  MP_QSTR_words__comm_trouble;
   MP_QSTR_words__confirm;
   MP_QSTR_words__confirm_fee;
   MP_QSTR_words__connect;
@@ -1047,7 +1049,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__unknown;
   MP_QSTR_words__unlimited;
   MP_QSTR_words__unlocked;
-  MP_QSTR_words__waiting_for_host;
   MP_QSTR_words__wallet;
   MP_QSTR_words__warning;
   MP_QSTR_words__wipe;
