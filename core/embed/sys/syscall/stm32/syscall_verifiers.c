@@ -488,6 +488,7 @@ secbool secret_key_delegated_identity__verified(
   }
 
   return secret_key_delegated_identity(dest);
+
 access_violation:
   apptask_access_violation();
   return secfalse;
