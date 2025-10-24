@@ -516,7 +516,7 @@ impl FirmwareUI for UIEckhart {
             .with_subtitle(subtitle.unwrap_or(TString::empty()))
             .with_action_bar(action_bar);
         if page_counter {
-            screen = screen.with_pagination_hint();
+            screen = screen.with_hint(Hint::new_page_counter())
         } else if let Some(warning_footer) = warning_footer {
             screen = screen.with_hint(Hint::new_warning_caution(warning_footer));
         }

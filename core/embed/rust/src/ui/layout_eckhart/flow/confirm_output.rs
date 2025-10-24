@@ -23,7 +23,7 @@ use crate::{
 use super::super::{
     component::Button,
     firmware::{
-        ActionBar, Header, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
+        ActionBar, Header, Hint, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
         VerticalMenuScreen, VerticalMenuScreenMsg,
     },
     flow::util::content_menu_info,
@@ -288,7 +288,7 @@ pub fn new_confirm_output(
         ))
         .with_header(Header::new(title.unwrap_or(TString::empty())).with_menu_button())
         .with_subtitle(subtitle.unwrap_or(TString::empty()))
-        .with_pagination_hint()
+        .with_hint(Hint::new_page_counter())
         .with_action_bar(ActionBar::new_single(Button::with_text(
             TR::buttons__continue.into(),
         )))
