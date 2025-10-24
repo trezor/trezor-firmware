@@ -35,6 +35,7 @@
 #include "embed/upymod/trezorobj.h"
 
 #include <io/usb.h>
+#include <sec/secret_keys.h>
 #include <sys/bootutils.h>
 #include <sys/notify.h>
 #include <util/fwutils.h>
@@ -54,7 +55,6 @@
 #if !PYOPT && LOG_STACK_USAGE
 #include <sys/stack_utils.h>
 #endif
-#include <sec/secret_keys.h>
 
 /// from trezor import utils
 
