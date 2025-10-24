@@ -24,11 +24,17 @@
 
 #include <dlfcn.h>
 
+static void elf_applet_unload(applet_t *applet) {
+  if (applet->handle != NULL) {
+    // Unload dynamic library
+    dlclose(applet->handle);
+  }
+}
+
 bool elf_load(applet_t *applet, const char *filename) {
-  applet_layout_t layout = {0};
   applet_privileges_t privileges = {0};
 
-  applet_init(applet, &layout, &privileges);
+  applet_init(applet, &privileges, elf_applet_unload);
 
   applet->handle = dlopen(filename, RTLD_NOW);
 
@@ -41,25 +47,22 @@ bool elf_load(applet_t *applet, const char *filename) {
 
   if (entrypoint == NULL) {
     // Applet entry point not found
-    dlclose(applet->handle);
-    applet->handle = NULL;
-    return false;
+    goto cleanup;
   }
 
   if (!systask_init(&applet->task, 0, 0, 0, applet)) {
-    return false;
+    goto cleanup;
   }
 
   uintptr_t api_getter = (uintptr_t)coreapp_get_api_getter();
 
   if (!systask_push_call(&applet->task, entrypoint, api_getter, 0, 0)) {
-    return false;
+    goto cleanup;
   }
 
   return true;
-}
 
-void applet_unload(applet_t *applet) {
-  // Unload the applet
-  dlclose(applet->handle);
+cleanup:
+  applet_unload(applet);
+  return false;
 }
