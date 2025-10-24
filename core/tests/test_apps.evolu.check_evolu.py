@@ -37,7 +37,7 @@ class TestCheckDelegatedIdentityKey(unittest.TestCase):
             h.get_digest(),
         )
 
-        self.assertEqual(check_delegated_identity_proof(proof, header, arguments), True)
+        self.assertTrue(check_delegated_identity_proof(proof, header, arguments))
 
     def test_sign_registration_request_invalid_size(self):
         from ubinascii import unhexlify
@@ -93,10 +93,10 @@ class TestCheckDelegatedIdentityKey(unittest.TestCase):
             h.get_digest(),
         )
 
-        self.assertEqual(
-            check_delegated_identity_proof(proof, header, arguments=[]), True
+        self.assertTrue(
+            check_delegated_identity_proof(proof, header, arguments=[])
         )
-        self.assertEqual(check_delegated_identity_proof(proof, header), True)
+        self.assertTrue(check_delegated_identity_proof(proof, header))
 
 
 if __name__ == "__main__":
