@@ -30,6 +30,10 @@ static inline bool rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
   return true;
 }
 
+static inline void rng_fill_buffer_strong_time(uint32_t* time) {
+  (void)time;  // Suppress unused parameter warning
+}
+
 static inline bool rng_fill_buffer(void* buffer, size_t buffer_size) {
   random_buffer((uint8_t*)buffer, buffer_size);
   return true;
