@@ -37,7 +37,7 @@ def cli() -> None:
 @with_session
 def get_node(
     session: "Session",
-    proof: str,
+    proof: Optional[str] = None,
 ) -> str:
     """Return the SLIP-21 node for Evolu."""
     proof_bytes = bytes.fromhex(proof) if proof else None
