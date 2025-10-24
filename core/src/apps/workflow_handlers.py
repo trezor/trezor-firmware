@@ -108,6 +108,8 @@ def _find_message_handler_module(msg_type: int) -> str:
         return "apps.misc.get_firmware_hash"
     if msg_type == MessageType.EvoluGetNode:
         return "apps.misc.get_evolu_node"
+    if msg_type == MessageType.PaymentNotification:
+        return "apps.misc.payment_notification"
 
     if not utils.BITCOIN_ONLY:
         # When promoting the Nostr app to production-level
