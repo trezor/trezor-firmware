@@ -9,7 +9,6 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            connect::Connect,
             swipe_detect::SwipeSettings,
             text::{
                 op::OpTextLayout,
@@ -1301,13 +1300,9 @@ impl FirmwareUI for UIDelizia {
     }
 
     fn show_wait_text(text: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
-        let layout = RootComponent::new(Connect::new(
-            text,
-            fonts::FONT_DEMIBOLD,
-            theme::FG,
-            theme::BG,
-        ));
-        Ok(layout)
+        Ok(RootComponent::new(
+            Paragraph::new(&theme::TEXT_DEMIBOLD, text).into_paragraphs(),
+        ))
     }
 
     fn show_warning(
