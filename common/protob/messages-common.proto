@@ -179,8 +179,6 @@ message HDNodeType {
  * @embed
  */
 message PaymentRequest {
-    option (experimental_message) = true;
-
     optional bytes nonce = 1;              // the nonce used in the signature computation
     required string recipient_name = 2;    // merchant's name
     repeated PaymentRequestMemo memos = 3; // any memos that were signed as part of the request
