@@ -2,10 +2,13 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes
+    from typing import Sequence
 
 
 def check_delegated_identity_proof(
-    provided_proof: AnyBytes, header: AnyBytes, arguments: list[AnyBytes] | None = None
+    provided_proof: AnyBytes,
+    header: AnyBytes,
+    arguments: Sequence[AnyBytes] | None = None,
 ) -> bool:
     from trezorutils import delegated_identity
 
@@ -34,7 +37,7 @@ def check_delegated_identity_proof(
     )
 
 
-def get_public_key_from_private_key(private_key: bytes) -> bytes:
+def get_public_key_from_private_key(private_key: AnyBytes) -> bytes:
     from trezor.crypto.curve import nist256p1
 
     public_key = nist256p1.publickey(private_key, False)
