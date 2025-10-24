@@ -60,7 +60,9 @@ def version_from_tag(tag: str | None) -> tuple | None:
 def for_all(
     *args: str,
     legacy_minimum_version: Tuple[int, int, int] = (1, 0, 0),
+    legacy_maximium_version: Tuple[int, int, int] = (999, 0, 0),
     core_minimum_version: Tuple[int, int, int] = (2, 0, 0),
+    core_maximium_version: Tuple[int, int, int] = (999, 0, 0),
 ) -> "MarkDecorator":
     """Parametrizing decorator for test cases.
 
@@ -70,8 +72,8 @@ def for_all(
     >>> def test_runs_for_all_old_versions(gen, tag):
     >>>     assert True
 
-    Arguments can be "core" and "legacy", and you can specify core_minimum_version and
-    legacy_minimum_version as triplets.
+    Arguments can be "core" and "legacy", and you can specify minimum and maximum
+    versions as triplets.
 
     The test function should have arguments `gen` ("core" or "legacy") and `tag`
     (version tag usable in EmulatorWrapper call)
@@ -86,8 +88,10 @@ def for_all(
     for gen in args:
         if gen == "legacy":
             minimum_version = legacy_minimum_version
+            maximum_varsion = legacy_maximium_version
         elif gen == "core":
             minimum_version = core_minimum_version
+            maximum_varsion = core_maximium_version
         else:
             raise ValueError
 
@@ -96,8 +100,9 @@ def for_all(
         try:
             for tag in ALL_TAGS[gen]:
                 tag_version = version_from_tag(tag)
-                if tag_version is not None and tag_version < minimum_version:
-                    continue
+                if tag_version is not None:
+                    if not minimum_version <= tag_version <= maximum_varsion:
+                        continue
                 all_params.append((gen, tag))
 
             # at end, add None tag, which is the current master
@@ -116,11 +121,3 @@ def for_tags(*args: Tuple[str, List[str]]) -> "MarkDecorator":
     return pytest.mark.parametrize(
         "gen, tags", [(gen, tags) for gen, tags in args if gen in enabled_gens]
     )
-
-
-def for_single_tag(gen: str, tag: str) -> "MarkDecorator":
-    enabled_gens = SELECTED_GENS or ("core", "legacy")
-    parameters = []
-    if gen in enabled_gens:
-        parameters = [(gen, tag)]
-    return pytest.mark.parametrize("gen, tag", parameters)
