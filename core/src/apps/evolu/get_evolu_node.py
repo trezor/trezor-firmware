@@ -12,19 +12,18 @@ async def get_evolu_node(msg: EvoluGetNode) -> EvoluNode:
 
     This function does not work if the bootloader is unlocked or if the device is not initialized.
 
-    On device with Optiga, this function requires a proof of delegated identity. Obtain the private_key
-    using `get_delegated_identity_key` and construct the proof as described in `core/src/apps/evolu/common.py`.
+    On devices with Optiga, this function requires a proof of delegated identity.
 
-    On devices without Optiga, user is promptetd to confirm the issuance of the node every time.
+    On devices without Optiga, the user is prompted to confirm the issuance of the node every time.
 
     Args:
         msg (EvoluGetNode): The message containing parameters and optional proof of delegated identity.
     Returns:
-        EvoluNode: The derived SLIP-21 node containing the necessary data for futher key generation.
+        EvoluNode: The derived SLIP-21 node containing the necessary data for further key generation.
     Raises:
-        wire.ProcessError: If the bootloader is unlocked.
+        ProcessError: If the bootloader is unlocked.
         NotInitialized: If the device is not initialized.
-        ValueError: If proof of delegated identity is missing or invalid when Optiga is enabled.
+        ValueError: If Optiga is available but the proof of delegated identity is missing or invalid.
     """
     from storage.device import is_initialized
     from trezor import TR, utils

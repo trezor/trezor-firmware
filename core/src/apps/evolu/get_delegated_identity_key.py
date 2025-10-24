@@ -11,19 +11,18 @@ async def get_delegated_identity_key(
     Retrieves the delegated identity private key for this device.
     This key is used
 
-    a) to provide identity of this devicee to the Gate server
-
-    and b) as a token of user's trust in this Trezor - Suite communication. Subsequent Secure Sync requests
-    to this Trezor will be authenticated using this key so we can skip more user confirmations.
+    1. to provide the identity of this device to the Gate server.
+    2. to authenticate the Suite to the Gate server in future Secure Sync requests.
+    3. as a token of the user's trust in this Trezor - Suite communication. Subsequent Secure Sync requests
+    to this Trezor will be authenticated using this key, so we can skip more user confirmations.
 
     This function does not work if the bootloader is unlocked.
 
-    On devices with THP, we require valid THP credential to be provided in the `msg`. The metadata from the credential
-    are then displayed to the user during the confirmation. On devices without THP a generinc confirmation dialog is shown.
+    On devices with THP, we require a valid THP credential to be provided in the `msg`. The metadata from the credential
+    is then displayed to the user during the confirmation. On devices without THP a generic confirmation dialog is shown.
 
     Args:
         msg (EvoluGetDelegatedIdentityKey): The incoming request message containing parameters for the operation.
-        THP credential is required if THP is available on the device.
     Returns:
         EvoluDelegatedIdentityKey: The response message containing the delegated identity private key.
     Raises:

@@ -10,23 +10,21 @@ async def evolu_sign_registration_request(
     msg: EvoluSignRegistrationRequest,
 ) -> EvoluRegistrationRequest:
     """
-    Signs a registration request for this device to register `msg.size_to_acquire` megabytes of data on the Gate server.
-    The request is signed using the device's delegated identity key. The Gate server will receive the corresponding public key
-    alongside this request and store it as an identifier for this device.
+    Signs a registration request for this device to register `msg.size_to_acquire` megabytes of space on the Gate server.
+    The request is signed using the device's Optiga certificate.
 
-    This function only works if the bootloader is locked.
+    This function only works if the bootloader is locked and if the device has Optiga available.
 
-    On devices with Optiga, we require a proof of delegated identity to be provided. It proves that the `delegated_identity_key`
-    has already been issued to this Suite. For instructions how to construct the proof, inspect `core/src/apps/evolu/common.py`.
-    For devices without Optiga, this function does not make sense, as they are not allowed any space at the Gate server anyway.
+    We require a proof of delegated identity to be provided. It proves that the `delegated_identity_key`
+    has already been issued to this Suite.
 
-    Returns the signature and the device certificate chain which are to be sent to the Gate server alongside the registration request.
+    Returns the signature and the Optiga's certificate chain which are to be sent to the Gate server during the registration request.
 
     Args:
         msg (EvoluSignRegistrationRequest): The protobuf message containing the proof of delegated identity,
             the challenge from the Gate server, and the size to acquire.
     Returns:
-        EvoluRegistrationRequest: The signature of the registration request and the device certificate chain.
+        EvoluRegistrationRequest: The signature of the registration request and the Optiga's certificate chain.
     Raises:
         wire.ProcessError: If the bootloader is unlocked or signing is inaccessible.
         RuntimeError: If Optiga is not available.
