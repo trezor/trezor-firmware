@@ -58,6 +58,7 @@ typedef struct {
   systask_t* waiting_task;
   // Bitmap of used task IDs
   uint32_t task_id_map;
+
 } systask_scheduler_t;
 
 // Global task manager state
@@ -102,6 +103,12 @@ void systask_scheduler_init(systask_error_handler_t error_handler) {
 #endif
 }
 
+void systask_enable_tls(systask_t* task, mpu_area_t tls) {
+  ensure((tls.size <= sizeof(task->tls_copy)) * sectrue, "TLS area too large");
+  task->tls_addr = (void*)tls.start;
+  task->tls_size = tls.size;
+}
+
 systask_t* systask_active(void) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;
 
@@ -141,9 +148,11 @@ void systask_yield_to(systask_t* task) {
 }
 
 static systask_id_t systask_get_unused_id(void) {
+  systask_scheduler_t* scheduler = &g_systask_scheduler;
   systask_id_t id = 0;
   while (++id < SYSTASK_MAX_TASKS) {
-    if ((g_systask_scheduler.task_id_map & (1 << id)) == 0) {
+    if ((scheduler->task_id_map & (1 << id)) == 0) {
+      scheduler->task_id_map |= (1 << id);
       break;
     }
   }
@@ -151,7 +160,7 @@ static systask_id_t systask_get_unused_id(void) {
 }
 
 bool systask_init(systask_t* task, uint32_t stack_base, uint32_t stack_size,
-                  void* applet) {
+                  uint32_t sb_addr, void* applet) {
   systask_id_t id = systask_get_unused_id();
   if (id >= SYSTASK_MAX_TASKS) {
     return false;
@@ -170,6 +179,7 @@ bool systask_init(systask_t* task, uint32_t stack_base, uint32_t stack_size,
   task->stack_base = stack_base;
   task->stack_end = stack_base + stack_size;
   task->applet = applet;
+  task->sb_addr = sb_addr;
 
   // Notify all event sources about the task creation
   sysevents_notify_task_created(task);
@@ -207,6 +217,13 @@ void systask_pop_data(systask_t* task, size_t size) { task->sp += size; }
 
 bool systask_push_call(systask_t* task, void* entrypoint, uint32_t arg1,
                        uint32_t arg2, uint32_t arg3) {
+#ifdef KERNEL
+  if (task->applet != NULL) {
+    applet_t* applet = (applet_t*)task->applet;
+    mpu_set_active_applet(&applet->layout);
+  }
+#endif
+
   uint32_t original_sp = task->sp;
 
   // Align stack pointer to 8 bytes
@@ -224,9 +241,12 @@ bool systask_push_call(systask_t* task, void* entrypoint, uint32_t arg1,
   }
 
   // Registers r4-r11
-  if (systask_push_data(task, NULL, 0x20) == NULL) {
+  uint32_t regs[8] = {0};
+  regs[9 - 4] = task->sb_addr;  // r9 = Static base address
+  if (systask_push_data(task, regs, 0x20) == NULL) {
     goto cleanup;
   }
+
   // Registers s16-s31
   if (systask_push_data(task, NULL, 0x40) == NULL) {
     goto cleanup;
@@ -292,6 +312,13 @@ void systask_set_r0r1(systask_t* task, uint32_t r0, uint32_t r1) {
     stack += 16;  // Skip the FP context S16-S32
     stack += 8;   // Skip R4-R11
   }
+
+#ifdef KERNEL
+  if (task->applet != NULL) {
+    applet_t* applet = (applet_t*)task->applet;
+    mpu_set_active_applet(&applet->layout);
+  }
+#endif
 
   stack[STK_FRAME_R0] = r0;
   stack[STK_FRAME_R1] = r1;
@@ -541,6 +568,18 @@ __attribute((no_stack_protector, used)) static uint32_t scheduler_pendsv(
   prev_task->exc_return = exc_return;
   prev_task->mpu_mode = mpu_get_mode();
 
+  if (prev_task->tls_size != 0) {
+#ifdef KERNEL
+    if (prev_task->applet != NULL) {
+      applet_t* applet = (applet_t*)prev_task->applet;
+      mpu_set_active_applet(&applet->layout);
+    }
+#endif
+
+    // Save the TLS of the previous task
+    memcpy(prev_task->tls_copy, prev_task->tls_addr, prev_task->tls_size);
+  }
+
   // Switch to the next task
   scheduler->active_task = scheduler->waiting_task;
 
@@ -563,6 +602,11 @@ __attribute((no_stack_protector, used)) static uint32_t scheduler_pendsv(
   if (next_task->applet != NULL) {
     applet_t* applet = (applet_t*)next_task->applet;
     mpu_set_active_applet(&applet->layout);
+  }
+
+  if (next_task->tls_size != 0) {
+    // Restore the TLS of the next task
+    memcpy(next_task->tls_addr, next_task->tls_copy, next_task->tls_size);
   }
 #endif
 
