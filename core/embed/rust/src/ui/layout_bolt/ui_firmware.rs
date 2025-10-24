@@ -9,7 +9,6 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            connect::Connect,
             image::BlendedImage,
             text::{
                 op::OpTextLayout,
@@ -1270,9 +1269,9 @@ impl FirmwareUI for UIBolt {
     }
 
     fn show_wait_text(text: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
-        let layout =
-            RootComponent::new(Connect::new(text, fonts::FONT_NORMAL, theme::FG, theme::BG));
-        Ok(layout)
+        Ok(RootComponent::new(
+            Paragraph::new(&theme::TEXT_NORMAL, text).into_paragraphs(),
+        ))
     }
 
     fn show_warning(

@@ -9,7 +9,6 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            connect::Connect,
             text::{
                 op::OpTextLayout,
                 paragraphs::{
@@ -1383,9 +1382,9 @@ impl FirmwareUI for UICaesar {
     }
 
     fn show_wait_text(text: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
-        let layout =
-            RootComponent::new(Connect::new(text, fonts::FONT_NORMAL, theme::FG, theme::BG));
-        Ok(layout)
+        Ok(RootComponent::new(
+            Paragraph::new(&theme::TEXT_NORMAL, text).into_paragraphs(),
+        ))
     }
 
     fn show_warning(
