@@ -518,15 +518,15 @@ def test_upgrade_u2f(gen: str, tag: str):
         assert counter == 12
 
 
-@for_tags(("core", ["v2.9.1"]))
+@for_all("core")
+@lower_models_minimum_version
 @pytest.mark.parametrize(
-    "backup_type", [BackupType.Bip39, BackupType.Slip39_Single_Extendable]
+    "derivation_type",
+    [CardanoDerivationType.ICARUS, CardanoDerivationType.ICARUS_TREZOR],
 )
-@pytest.mark.parametrize("derivation_type", CardanoDerivationType)
 def test_cardano_address_does_not_change_by_upgrade(
     gen: str,
-    tags: List[str],
-    backup_type: BackupType,
+    tag: Optional[str],
     derivation_type: CardanoDerivationType,
 ):
     """
@@ -536,25 +536,28 @@ def test_cardano_address_does_not_change_by_upgrade(
     from trezorlib.cardano import get_public_key
     from trezorlib.tools import parse_path
 
-    ADDRESS_N = parse_path("m/1852'/1815'/0'")
+    ADDRESS_N = parse_path("m/44h/1815h/0h/0/0")
 
-    with EmulatorWrapper(gen, tags[0]) as emu:
+    with EmulatorWrapper(gen, tag) as emu:
         device.setup(
             emu.client.get_seedless_session(),
             pin_protection=False,
+            passphrase_protection=False,
             skip_backup=True,
-            backup_type=backup_type,
+            backup_type=BackupType.Bip39,
             entropy_check_count=0,
         )
         session = emu.client.get_session(derive_cardano=True)
-        key = get_public_key(session, ADDRESS_N, derivation_type, show_display=True)
+        old_key = get_public_key(session, ADDRESS_N, derivation_type, show_display=True)
         storage = emu.get_storage()
 
     with EmulatorWrapper(gen, storage=storage) as emu:
         session = emu.client.get_session(derive_cardano=True)
-        assert key == get_public_key(
-            session, ADDRESS_N, derivation_type, show_display=True
-        )
+        new_key = get_public_key(session, ADDRESS_N, derivation_type, show_display=True)
+
+        assert old_key.xpub == new_key.xpub
+        assert old_key.node.public_key == new_key.node.public_key
+        assert old_key.node.chain_code == new_key.node.chain_code
 
 
 if __name__ == "__main__":
