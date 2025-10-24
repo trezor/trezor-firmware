@@ -52,7 +52,7 @@ def get_git_modified() -> bool:
 def get_defs_for_cmake(defs: list[str | tuple[str, str]]) -> list[str]:
     result: list[str] = []
     for d in defs:
-        if type(d) is tuple:
+        if isinstance(d, tuple):
             val = d[1].replace('"', '\\"').replace("(", "\\(").replace(")", "\\)")
             result.append(f'{d[0]}="{val}"')
         else:

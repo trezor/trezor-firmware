@@ -95,7 +95,7 @@ def _index_to_point(index: int, width: int) -> Point:
     return x, y
 
 
-def print_from_bits(width: int, height: int, bit_data: list[Bit]):
+def print_from_bits(width: int, height: int, bit_data: list[Bit]) -> None:
     """Print the glyph into terminal from bit data."""
     for line_id in range(height):
         line = bit_data[line_id * width : (line_id + 1) * width]
@@ -104,7 +104,7 @@ def print_from_bits(width: int, height: int, bit_data: list[Bit]):
     print()
 
 
-def print_from_bytes(width: int, height: int, bytes_data: list[int]):
+def print_from_bytes(width: int, height: int, bytes_data: list[int]) -> None:
     """Print the glyph into terminal from byte data."""
     bits_data = _bytes_to_bits(bytes_data, height * width)
     print_from_bits(width, height, bits_data)
@@ -125,7 +125,7 @@ M_WIDTH = 7
 # fmt: on
 
 
-def test_bits_to_bytes_and_back():
+def test_bits_to_bytes_and_back() -> None:
     vectors = (  # height, width, bytes_data
         (HEIGHT, K_WIDTH, K_GLYPH),
         (HEIGHT, M_WIDTH, M_GLYPH),
@@ -136,11 +136,11 @@ def test_bits_to_bytes_and_back():
         assert _bits_to_bytes(bits_data) == bytes_data
 
 
-def test_bit_to_bytes():
+def test_bit_to_bytes() -> None:
     assert _bytes_to_bits(K_GLYPH, HEIGHT * K_WIDTH) == K_BITS
 
 
-def test_overall_magnify():
+def test_overall_magnify() -> None:
     assert magnify_glyph_by_two(K_WIDTH, HEIGHT, K_GLYPH) == K_MAGNIFIED
 
 

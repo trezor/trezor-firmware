@@ -5,7 +5,7 @@ import binascii
 from trezorlib import _ed25519
 
 
-def hex_to_c(s):
+def hex_to_c(s: str) -> str:
     return '"\\x' + "\\x".join([s[i : i + 2] for i in range(0, len(s), 2)]) + '"'
 
 

@@ -3,6 +3,7 @@ Creates a header file containing image data.
 """
 
 import pathlib
+from typing import BinaryIO
 
 import click
 
@@ -15,7 +16,7 @@ unsigned int {name}_jpg_len = {length};
 
 @click.command()
 @click.argument("infile", type=click.File("rb"))
-def convert(infile):
+def convert(infile: BinaryIO) -> None:
 
     path = pathlib.Path(infile.name)
 

@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 
 import re
 import subprocess
 from pathlib import Path
+from typing import Any
 
 import click
 
@@ -11,7 +13,7 @@ HEADER_LINE_RE = re.compile(r"^#define ([A-Z_]+) \S+$")
 VERSION_FILE_LINE_RE = re.compile(r"^([A-Z_]+) = \S+$")
 
 
-def bump_header(filename: Path, **kwargs):
+def bump_header(filename: Path, **kwargs: Any) -> None:
     result_lines = []
 
     with open(filename, "r+") as fh:
@@ -29,7 +31,7 @@ def bump_header(filename: Path, **kwargs):
             fh.write(line)
 
 
-def bump_version_file(filename: Path, **kwargs):
+def bump_version_file(filename: Path, **kwargs: Any) -> None:
     result_lines = []
 
     with open(filename, "r+") as fh:
@@ -47,11 +49,11 @@ def bump_version_file(filename: Path, **kwargs):
             fh.write(line)
 
 
-def bump_python(subdir: Path, new_version: str):
+def bump_python(subdir: Path, new_version: str) -> None:
     subprocess.check_call(["uv", "version", new_version], cwd=subdir)
 
 
-def hex_lit(version):
+def hex_lit(version: Any) -> str:
     return rf'"\x{int(version):02X}"'
 
 
@@ -64,7 +66,7 @@ def hex_lit(version):
     "version",
     type=str,
 )
-def cli(project, version):
+def cli(project: str | Path, version: str) -> None:
     """Bump version for given project (core, python, legacy/firmware,
     legacy/bootloader, core/embed/projects/prodtest, nordic/trezor/trezor-ble).
     """

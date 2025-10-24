@@ -6,7 +6,8 @@ from pathlib import Path
 import click
 import construct as c
 
-from trezorlib.firmware.core import BootableImage, FirmwareImage, Model
+from trezorlib.firmware.core import BootableImage, FirmwareImage
+from trezorlib.firmware.models import Model
 
 from .common import MODELS_DIR
 from .layout_parser import find_value
@@ -97,7 +98,7 @@ def bootloader_str(file: Path, model: str) -> str:
 
 @click.command()
 @click.option("-c", "--check", is_flag=True, help="Do not write, only check.")
-def main(check):
+def main(check: bool) -> None:
 
     models = list(MODELS_DIR.iterdir())
 
