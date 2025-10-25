@@ -2,11 +2,11 @@
 use crate::storage;
 
 // Typical backlight values.
-const BACKLIGHT_NORMAL: u8 = 85;
-const BACKLIGHT_LOW: u8 = 45;
-const BACKLIGHT_DIM: u8 = 5;
+const BACKLIGHT_NORMAL: u8 = 155;
+const BACKLIGHT_LOW: u8 = 116;
+const BACKLIGHT_DIM: u8 = 43;
 const BACKLIGHT_NONE: u8 = 0;
-const BACKLIGHT_MIN: u8 = 10;
+const BACKLIGHT_MIN: u8 = 59;
 const BACKLIGHT_MAX: u8 = 255;
 
 #[cfg(not(feature = "storage"))]
