@@ -639,8 +639,8 @@ def show_device_menu(
     haptics_enabled: bool | None,
     led_enabled: bool | None,
     about_items: Sequence[tuple[str | None, StrOrBytes | None, bool | None]],
-) -> LayoutObj[UiResult | DeviceMenuResult | tuple[DeviceMenuResult, int]]:
-    """Show the device menu."""
+) -> LayoutObj[UiResult | tuple[int, int | None, int]]:
+    """Show the device menu. Result is either CANCELLED or a tuple (action, action_arg, parent_menu_id)."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
@@ -873,25 +873,25 @@ class LayoutState:
 # rust/src/ui/api/firmware_micropython.rs
 class DeviceMenuResult:
     """Result of a device menu operation."""
-    ReviewFailedBackup: ClassVar[DeviceMenuResult]
-    DisconnectDevice: ClassVar[DeviceMenuResult]
-    PairDevice: ClassVar[DeviceMenuResult]
-    UnpairDevice: ClassVar[DeviceMenuResult]
-    UnpairAllDevices: ClassVar[DeviceMenuResult]
-    ToggleBluetooth: ClassVar[DeviceMenuResult]
-    SetOrChangePin: ClassVar[DeviceMenuResult]
-    RemovePin: ClassVar[DeviceMenuResult]
-    SetAutoLockBattery: ClassVar[DeviceMenuResult]
-    SetAutoLockUSB: ClassVar[DeviceMenuResult]
-    SetOrChangeWipeCode: ClassVar[DeviceMenuResult]
-    RemoveWipeCode: ClassVar[DeviceMenuResult]
-    CheckBackup: ClassVar[DeviceMenuResult]
-    SetDeviceName: ClassVar[DeviceMenuResult]
-    SetBrightness: ClassVar[DeviceMenuResult]
-    ToggleHaptics: ClassVar[DeviceMenuResult]
-    ToggleLed: ClassVar[DeviceMenuResult]
-    WipeDevice: ClassVar[DeviceMenuResult]
-    Reboot: ClassVar[DeviceMenuResult]
-    RebootToBootloader: ClassVar[DeviceMenuResult]
-    TurnOff: ClassVar[DeviceMenuResult]
-    RefreshMenu: ClassVar[DeviceMenuResult]
+    ReviewFailedBackup: ClassVar[int]
+    DisconnectDevice: ClassVar[int]
+    PairDevice: ClassVar[int]
+    UnpairDevice: ClassVar[int]
+    UnpairAllDevices: ClassVar[int]
+    ToggleBluetooth: ClassVar[int]
+    SetOrChangePin: ClassVar[int]
+    RemovePin: ClassVar[int]
+    SetAutoLockBattery: ClassVar[int]
+    SetAutoLockUSB: ClassVar[int]
+    SetOrChangeWipeCode: ClassVar[int]
+    RemoveWipeCode: ClassVar[int]
+    CheckBackup: ClassVar[int]
+    SetDeviceName: ClassVar[int]
+    SetBrightness: ClassVar[int]
+    ToggleHaptics: ClassVar[int]
+    ToggleLed: ClassVar[int]
+    WipeDevice: ClassVar[int]
+    Reboot: ClassVar[int]
+    RebootToBootloader: ClassVar[int]
+    TurnOff: ClassVar[int]
+    RefreshMenu: ClassVar[int]

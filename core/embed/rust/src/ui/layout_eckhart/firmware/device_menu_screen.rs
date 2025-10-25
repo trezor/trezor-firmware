@@ -1,8 +1,6 @@
-use core::{
-    convert::TryFrom,
-    ops::{Deref, DerefMut},
-};
+use core::ops::{Deref, DerefMut};
 
+pub use crate::ui::layout::device_menu_result::DeviceMenuMsg;
 use crate::{
     error::Error,
     micropython::{gc::GcBox, obj::Obj},
@@ -38,9 +36,10 @@ use super::{
     theme, MediumMenuVec, ShortMenuVec,
 };
 use heapless::Vec;
+use num_traits::{FromPrimitive, ToPrimitive};
 
 #[repr(u8)]
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, FromPrimitive, ToPrimitive)]
 #[cfg_attr(test, derive(Debug))]
 pub enum DeviceMenuId {
     #[default]
@@ -53,38 +52,6 @@ pub enum DeviceMenuId {
     WipeCode,
     Device,
     Power,
-}
-
-impl TryFrom<u8> for DeviceMenuId {
-    type Error = ();
-    fn try_from(v: u8) -> Result<Self, Self::Error> {
-        match v {
-            0 => Ok(DeviceMenuId::Root),
-            1 => Ok(DeviceMenuId::PairAndConnect),
-            2 => Ok(DeviceMenuId::Settings),
-            3 => Ok(DeviceMenuId::Security),
-            4 => Ok(DeviceMenuId::PinCode),
-            5 => Ok(DeviceMenuId::AutoLock),
-            6 => Ok(DeviceMenuId::WipeCode),
-            7 => Ok(DeviceMenuId::Device),
-            8 => Ok(DeviceMenuId::Power),
-            _ => Err(()),
-        }
-    }
-}
-
-impl From<DeviceMenuId> for u8 {
-    #[inline]
-    fn from(id: DeviceMenuId) -> Self {
-        id as u8
-    }
-}
-
-impl From<DeviceMenuId> for usize {
-    #[inline]
-    fn from(id: DeviceMenuId) -> Self {
-        usize::from(id as u8)
-    }
 }
 
 // FIXME: use mem::variant_count when it becomes stable
@@ -102,46 +69,34 @@ enum Action {
     Return(DeviceMenuMsg),
 }
 
-#[derive(Copy, Clone)]
-pub enum DeviceMenuMsg {
-    // Root menu
-    ReviewFailedBackup,
-
-    // "Pair & Connect"
-    PairDevice,       // pair a new device
-    DisconnectDevice, // disconnect a device
-    UnpairDevice(
-        u8, /* which device to unpair, index in the list of devices */
-    ),
-    UnpairAllDevices,
-
-    // Power
-    TurnOff,
-    Reboot,
-    RebootToBootloader,
-
-    // Settings menu
-    ToggleBluetooth,
-
-    // Security menu
-    SetOrChangePin,
-    RemovePin,
-    SetAutoLockBattery,
-    SetAutoLockUSB,
-    SetOrChangeWipeCode,
-    RemoveWipeCode,
-    CheckBackup,
-
-    // Device menu
-    SetDeviceName,
-    SetBrightness,
-    ToggleHaptics,
-    ToggleLed,
-    WipeDevice,
-
-    // Misc
-    RefreshMenu(DeviceMenuId),
-    Close,
+impl DeviceMenuScreen {
+    pub fn parent(msg: DeviceMenuMsg) -> DeviceMenuId {
+        match msg {
+            DeviceMenuMsg::ReviewFailedBackup => DeviceMenuId::Root,
+            DeviceMenuMsg::PairDevice => DeviceMenuId::PairAndConnect,
+            DeviceMenuMsg::DisconnectDevice => DeviceMenuId::PairAndConnect,
+            DeviceMenuMsg::UnpairDevice => DeviceMenuId::PairAndConnect,
+            DeviceMenuMsg::UnpairAllDevices => DeviceMenuId::PairAndConnect,
+            DeviceMenuMsg::TurnOff => DeviceMenuId::Power,
+            DeviceMenuMsg::Reboot => DeviceMenuId::Power,
+            DeviceMenuMsg::RebootToBootloader => DeviceMenuId::Power,
+            DeviceMenuMsg::ToggleBluetooth => DeviceMenuId::Settings,
+            DeviceMenuMsg::SetOrChangePin => DeviceMenuId::Security,
+            DeviceMenuMsg::RemovePin => DeviceMenuId::Security,
+            DeviceMenuMsg::SetAutoLockBattery => DeviceMenuId::Security,
+            DeviceMenuMsg::SetAutoLockUSB => DeviceMenuId::Security,
+            DeviceMenuMsg::SetOrChangeWipeCode => DeviceMenuId::Security,
+            DeviceMenuMsg::RemoveWipeCode => DeviceMenuId::Security,
+            DeviceMenuMsg::CheckBackup => DeviceMenuId::Security,
+            DeviceMenuMsg::SetDeviceName => DeviceMenuId::Device,
+            DeviceMenuMsg::SetBrightness => DeviceMenuId::Device,
+            DeviceMenuMsg::ToggleHaptics => DeviceMenuId::Device,
+            DeviceMenuMsg::ToggleLed => DeviceMenuId::Device,
+            DeviceMenuMsg::WipeDevice => DeviceMenuId::Device,
+            DeviceMenuMsg::RefreshMenu => DeviceMenuId::Root,
+            DeviceMenuMsg::Close => DeviceMenuId::Root,
+        }
+    }
 }
 
 trait MenuVecExt {
@@ -314,6 +269,9 @@ pub struct DeviceMenuScreen {
 
     // index of the current subscreen in the list of subscreens
     active_subscreen: u8,
+
+    // Integer argument for DeviceMenuMsg::RefreshMenu and DeviceMenuMsg::UnpairDevice
+    pub result_arg: Option<u8>,
 }
 
 impl DeviceMenuScreen {
@@ -343,6 +301,7 @@ impl DeviceMenuScreen {
             submenus: GcBox::new(Vec::new())?,
             subscreens: Vec::new(),
             submenu_index: [None; MAX_SUBMENUS],
+            result_arg: None,
         };
 
         if pin_enabled.is_some()
@@ -416,7 +375,7 @@ impl DeviceMenuScreen {
 
         // Activate the init submenu
         let init_submenu_id = init_submenu_idx
-            .and_then(|v| DeviceMenuId::try_from(v).ok())
+            .and_then(DeviceMenuId::from_u8)
             .unwrap_or_default();
 
         let init_subscreen = unwrap!(screen.try_resolve_submenu(init_submenu_id));
@@ -429,12 +388,12 @@ impl DeviceMenuScreen {
     fn register_submenu(&mut self, id: DeviceMenuId, submenu: Submenu) {
         let idx_in_submenus = self.add_submenu(submenu);
         let subscreen_idx = self.add_subscreen(Subscreen::Submenu(idx_in_submenus, id));
-        self.submenu_index[usize::from(id)] = Some(subscreen_idx);
+        self.submenu_index[unwrap!(id.to_usize())] = Some(subscreen_idx);
     }
 
     #[inline]
     fn try_resolve_submenu(&self, id: DeviceMenuId) -> Option<u8> {
-        self.submenu_index[usize::from(id)]
+        self.submenu_index[unwrap!(id.to_usize())]
     }
 
     #[inline]
@@ -1048,7 +1007,8 @@ impl Component for DeviceMenuScreen {
                 ActiveScreen::HostInfo(_) => DeviceMenuId::PairAndConnect,
             };
 
-            return Some(DeviceMenuMsg::RefreshMenu(submenu_idx));
+            self.result_arg = submenu_idx.to_u8();
+            return Some(DeviceMenuMsg::RefreshMenu);
         }
 
         // Handle the event for the active menu
@@ -1080,9 +1040,8 @@ impl Component for DeviceMenuScreen {
                                 return None;
                             }
                             (1, false) | (2, true) => {
-                                return Some(DeviceMenuMsg::UnpairDevice(
-                                    device_screen.device_index,
-                                ));
+                                self.result_arg = Some(device_screen.device_index);
+                                return Some(DeviceMenuMsg::UnpairDevice);
                             }
                             _ => {}
                         }
@@ -1146,7 +1105,7 @@ impl crate::trace::Trace for DeviceMenuScreen {
                 if let Subscreen::Submenu(_, id) =
                     self.subscreens[usize::from(self.active_subscreen)]
                 {
-                    t.int("MenuId", u8::from(id).into());
+                    t.int("MenuId", unwrap!(id.to_i64()));
                 }
             }
             ActiveScreen::Device(ref screen) => {
