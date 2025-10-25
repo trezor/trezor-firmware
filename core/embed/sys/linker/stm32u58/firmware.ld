@@ -17,11 +17,7 @@ _data_section_end = ADDR(.data) + SIZEOF(.data);
 _bss_section_start = ADDR(.bss);
 _bss_section_end = ADDR(.bss) + SIZEOF(.bss);
 
-_confidential_section_loadaddr = LOADADDR(.confidential);
-_confidential_section_start = ADDR(.confidential);
-_confidential_section_end = ADDR(.confidential) + SIZEOF(.confidential);
-
-_codelen = SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
+_codelen = SIZEOF(.flash) + SIZEOF(.data);
 
 _heap_start = ADDR(.heap);
 _heap_end = ADDR(.heap) + SIZEOF(.heap);
@@ -68,11 +64,6 @@ SECTIONS {
   .stack : ALIGN(8) {
     . = 32K; /* Overflow causes UsageFault */
   } >AUX2_RAM
-
-  .confidential : ALIGN(512) {
-    *(.confidential*);
-    . = ALIGN(512);
-  } >AUX2_RAM AT>FLASH
 
   .buf : ALIGN(4) {
     *(.buf*);

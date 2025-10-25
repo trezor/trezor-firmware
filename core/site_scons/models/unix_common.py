@@ -7,7 +7,6 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
     defines += [
         ("FLASH_BLOCK_WORDS", "1"),
         ("FLASH_BIT_ACCESS", "1"),
-        ("CONFIDENTIAL", ""),
     ]
 
     paths += [

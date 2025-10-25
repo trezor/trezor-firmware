@@ -16,11 +16,8 @@ _data_section_end = ADDR(.data) + SIZEOF(.data);
 _bss_section_start = ADDR(.bss);
 _bss_section_end = ADDR(.bss) + SIZEOF(.bss);
 
-_confidential_section_loadaddr = LOADADDR(.confidential);
-_confidential_section_start = ADDR(.confidential);
-_confidential_section_end = ADDR(.confidential) + SIZEOF(.confidential);
+_codelen = SIZEOF(.padding) + SIZEOF(.flash) + SIZEOF(.data);
 
-_codelen = SIZEOF(.padding) + SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
 _heap_start = ADDR(.heap);
 _heap_end = ADDR(.heap) + SIZEOF(.heap);
 
@@ -73,11 +70,6 @@ SECTIONS {
     *(.bss*);
     . = ALIGN(4);
   } >AUX1_RAM
-
-  .confidential : ALIGN(512) {
-    *(.confidential*);
-    . = ALIGN(512);
-  } >AUX1_RAM AT>FLASH
 
   .buf : ALIGN(4) {
     *(.buf*);
