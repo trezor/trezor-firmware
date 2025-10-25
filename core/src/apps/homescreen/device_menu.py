@@ -442,16 +442,14 @@ async def handle_device_menu() -> None:
             io.pm.hibernate()
             raise RuntimeError
         elif menu_result is DeviceMenuResult.Reboot:
-            from trezor.utils import reboot_to_bootloader
+            from trezor.utils import reboot
 
-            # Empty boot command results to a normal reboot
-            reboot_to_bootloader()
+            reboot()
             raise RuntimeError
         elif menu_result is DeviceMenuResult.RebootToBootloader:
-            from trezor.enums import BootCommand
             from trezor.utils import reboot_to_bootloader
 
-            reboot_to_bootloader(BootCommand.STOP_AND_WAIT)
+            reboot_to_bootloader()
             raise RuntimeError
         elif menu_result is CANCELLED:
             return
