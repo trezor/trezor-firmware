@@ -203,6 +203,11 @@ void SystemInit(void) {
   while (HAL_IS_BIT_CLR(PWR->SVMSR, PWR_SVMSR_ACTVOSRDY))
     ;
 
+  RCC->CR |= RCC_CR_HSION;
+  // wait until the HSI is on
+  while ((RCC->CR & RCC_CR_HSIRDY) != RCC_CR_HSIRDY)
+    ;
+
 #ifndef HSI_ONLY
   __HAL_RCC_HSE_CONFIG(RCC_HSE_ON);
   while (READ_BIT(RCC->CR, RCC_CR_HSERDY) == 0U)
@@ -210,10 +215,6 @@ void SystemInit(void) {
   __HAL_RCC_PLL_CONFIG(RCC_PLLSOURCE_HSE, RCC_PLLMBOOST_DIV1, DEFAULT_PLLM,
                        DEFAULT_PLLN, DEFAULT_PLLP, DEFAULT_PLLQ, DEFAULT_PLLR);
 #else
-  RCC->CR |= RCC_CR_HSION;
-  // wait until the HSI is on
-  while ((RCC->CR & RCC_CR_HSION) != RCC_CR_HSION)
-    ;
 
   __HAL_RCC_PLL_CONFIG(RCC_PLLSOURCE_HSI, RCC_PLLMBOOST_DIV1, DEFAULT_PLLM,
                        DEFAULT_PLLN, DEFAULT_PLLP, DEFAULT_PLLQ, DEFAULT_PLLR);
@@ -283,13 +284,6 @@ void SystemInit(void) {
 #ifndef HSI_ONLY
   // enable clock security system
   RCC->CR |= RCC_CR_CSSON;
-
-  // turn off the HSI as it is now unused (it will be turned on again
-  // automatically if a clock security failure occurs)
-  RCC->CR &= ~RCC_CR_HSION;
-  // wait until the HSI is off
-  while ((RCC->CR & RCC_CR_HSION) == RCC_CR_HSION)
-    ;
 #endif
 
   // TODO turn off MSI?
