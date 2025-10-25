@@ -48,6 +48,7 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/notify/notify.c",
         "embed/sys/startup/unix/bootutils.c",
         "embed/sys/task/sysevent.c",
+        "embed/sys/task/system.c",
         "embed/sys/task/unix/sdl_event.c",
         "embed/sys/task/unix/system.c",
         "embed/sys/task/unix/systask.c",
@@ -78,5 +79,22 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
             defines += [("USE_USB_IFACE_WEBAUTHN", "1")]
         if "usb_iface_vcp" in features_wanted:
             defines += [("USE_USB_IFACE_VCP", "1")]
+
+    if "ipc" in features_wanted:
+        sources += [
+            "embed/sys/ipc/ipc.c",
+            "embed/sys/ipc/unix/ipc_memcpy.c",
+        ]
+        defines += [("USE_IPC", "1")]
+        paths += ["embed/sys/ipc/inc"]
+
+    if "applet" in features_wanted:
+        sources += ["embed/sys/task/unix/applet.c"]
+        sources += ["embed/sys/task/unix/coreapp.c"]
+
+    if "app_loading" in features_wanted:
+        sources += ["embed/util/elf_loader/unix/elf_loader.c"]
+        defines += [("USE_APP_LOADING", "1")]
+        paths += ["embed/util/elf_loader/inc"]
 
     return features_available
