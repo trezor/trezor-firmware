@@ -32,15 +32,16 @@ static float linear_interpolate(float x, float x1, float y1, float x2,
 }
 
 // Calculate OCV for specific parameters and SOC
-static float calc_ocv(const float* params, float soc) {
-  if (soc < BATTERY_SOC_BREAKPOINT_1) {
+static float calc_ocv(const battery_model_t* model, const float* params,
+                      float soc) {
+  if (soc < model->soc_breakpoint_1) {
     // First segment (rational function): (a1 + b1*x)/(c1 + d1*x)
     float a1 = params[2];
     float b1 = params[3];
     float c1 = params[4];
     float d1 = params[5];
     return (a1 + b1 * soc) / (c1 + d1 * soc);
-  } else if (soc <= BATTERY_SOC_BREAKPOINT_2) {
+  } else if (soc <= model->soc_breakpoint_2) {
     // Middle segment (linear function): m*x + b
     float m = params[0];
     float b = params[1];
@@ -56,8 +57,9 @@ static float calc_ocv(const float* params, float soc) {
 }
 
 // Calculate OCV slope for specific parameters and SOC
-static float calc_ocv_slope(const float* params, float soc) {
-  if (soc < BATTERY_SOC_BREAKPOINT_1) {
+static float calc_ocv_slope(const battery_model_t* model, const float* params,
+                            float soc) {
+  if (soc < model->soc_breakpoint_1) {
     // First segment (rational function derivative)
     float a1 = params[2];
     float b1 = params[3];
@@ -65,7 +67,7 @@ static float calc_ocv_slope(const float* params, float soc) {
     float d1 = params[5];
     float denominator = c1 + d1 * soc;
     return (b1 * c1 - a1 * d1) / (denominator * denominator);
-  } else if (soc <= BATTERY_SOC_BREAKPOINT_2) {
+  } else if (soc <= model->soc_breakpoint_2) {
     // Middle segment (linear function derivative)
     float m = params[0];
     return m;
@@ -81,10 +83,11 @@ static float calc_ocv_slope(const float* params, float soc) {
 }
 
 // Calculate SOC from OCV for specific parameters
-static float calc_soc_from_ocv(const float* params, float ocv) {
+static float calc_soc_from_ocv(const battery_model_t* model,
+                               const float* params, float ocv) {
   // Calculate breakpoint voltages
-  float ocv_breakpoint_1 = calc_ocv(params, BATTERY_SOC_BREAKPOINT_1);
-  float ocv_breakpoint_2 = calc_ocv(params, BATTERY_SOC_BREAKPOINT_2);
+  float ocv_breakpoint_1 = calc_ocv(model, params, model->soc_breakpoint_1);
+  float ocv_breakpoint_2 = calc_ocv(model, params, model->soc_breakpoint_2);
 
   // Extract parameters
   float m = params[0];
@@ -110,90 +113,92 @@ static float calc_soc_from_ocv(const float* params, float ocv) {
   }
 }
 
-float battery_rint(float temperature) {
+float battery_rint(const battery_model_t* model, float temperature) {
   // Calculate R_int using rational function: (a + b*t)/(c + d*t)
-  float a = BATTERY_R_INT_PARAMS[0];
-  float b = BATTERY_R_INT_PARAMS[1];
-  float c = BATTERY_R_INT_PARAMS[2];
-  float d = BATTERY_R_INT_PARAMS[3];
+  float a = model->r_int_params[0];
+  float b = model->r_int_params[1];
+  float c = model->r_int_params[2];
+  float d = model->r_int_params[3];
 
   return (a + b * temperature) / (c + d * temperature);
 }
 
-float battery_total_capacity(float temperature, bool discharging_mode) {
+float battery_total_capacity(const battery_model_t* model, float temperature,
+                             bool discharging_mode) {
   // Select appropriate temperature array based on mode
-  const float* temp_points =
-      discharging_mode ? BATTERY_TEMP_POINTS_DISCHG : BATTERY_TEMP_POINTS_CHG;
+  const float* temp_points = discharging_mode ? model->temp_points_discharge
+                                              : model->temp_points_charge;
 
   // Handle out-of-bounds temperatures
   if (temperature <= temp_points[0]) {
-    return BATTERY_CAPACITY[0][discharging_mode ? 0 : 1];
+    return model->capacity[0][discharging_mode ? 0 : 1];
   }
 
-  if (temperature >= temp_points[BATTERY_NUM_TEMP_POINTS - 1]) {
-    return BATTERY_CAPACITY[BATTERY_NUM_TEMP_POINTS - 1]
-                           [discharging_mode ? 0 : 1];
+  if (temperature >= temp_points[model->num_temp_points - 1]) {
+    return model
+        ->capacity[model->num_temp_points - 1][discharging_mode ? 0 : 1];
   }
 
   // Find temperature bracket
-  for (int i = 0; i < BATTERY_NUM_TEMP_POINTS - 1; i++) {
+  for (int i = 0; i < model->num_temp_points - 1; i++) {
     if (temperature < temp_points[i + 1]) {
       return linear_interpolate(
           temperature, temp_points[i],
-          BATTERY_CAPACITY[i][discharging_mode ? 0 : 1], temp_points[i + 1],
-          BATTERY_CAPACITY[i + 1][discharging_mode ? 0 : 1]);
+          model->capacity[i][discharging_mode ? 0 : 1], temp_points[i + 1],
+          model->capacity[i + 1][discharging_mode ? 0 : 1]);
     }
   }
 
   // Should never reach here
-  return BATTERY_CAPACITY[0][discharging_mode ? 0 : 1];
+  return model->capacity[0][discharging_mode ? 0 : 1];
 }
 
-float battery_meas_to_ocv(float voltage_V, float current_mA,
-                          float temperature) {
+float battery_meas_to_ocv(const battery_model_t* model, float voltage_V,
+                          float current_mA, float temperature) {
   // Convert mA to A by dividing by 1000
   float current_A = current_mA / 1000.0f;
 
   // Calculate OCV: V_OC = V_term + I * R_int
-  return voltage_V + (current_A * battery_rint(temperature));
+  return voltage_V + (current_A * battery_rint(model, temperature));
 }
 
-float battery_ocv(float soc, float temperature, bool discharging_mode) {
+float battery_ocv(const battery_model_t* model, float soc, float temperature,
+                  bool discharging_mode) {
   // Clamp SOC to valid range
   soc = (soc < 0.0f) ? 0.0f : ((soc > 1.0f) ? 1.0f : soc);
 
   // Select appropriate temperature array based on mode
-  const float* temp_points =
-      discharging_mode ? BATTERY_TEMP_POINTS_DISCHG : BATTERY_TEMP_POINTS_CHG;
+  const float* temp_points = discharging_mode ? model->temp_points_discharge
+                                              : model->temp_points_charge;
 
   // Handle out-of-bounds temperatures
   if (temperature <= temp_points[0]) {
-    const float* params = discharging_mode ? BATTERY_OCV_DISCHARGE_PARAMS[0]
-                                           : BATTERY_OCV_CHARGE_PARAMS[0];
-    return calc_ocv(params, soc);
+    const float* params = discharging_mode ? model->ocv_discharge_params[0]
+                                           : model->ocv_charge_params[0];
+    return calc_ocv(model, params, soc);
   }
 
-  if (temperature >= temp_points[BATTERY_NUM_TEMP_POINTS - 1]) {
+  if (temperature >= temp_points[model->num_temp_points - 1]) {
     const float* params =
         discharging_mode
-            ? BATTERY_OCV_DISCHARGE_PARAMS[BATTERY_NUM_TEMP_POINTS - 1]
-            : BATTERY_OCV_CHARGE_PARAMS[BATTERY_NUM_TEMP_POINTS - 1];
-    return calc_ocv(params, soc);
+            ? model->ocv_discharge_params[model->num_temp_points - 1]
+            : model->ocv_charge_params[model->num_temp_points - 1];
+    return calc_ocv(model, params, soc);
   }
 
   // Find temperature bracket and interpolate
-  for (int i = 0; i < BATTERY_NUM_TEMP_POINTS - 1; i++) {
+  for (int i = 0; i < model->num_temp_points - 1; i++) {
     if (temperature < temp_points[i + 1]) {
       const float* params_low = discharging_mode
-                                    ? BATTERY_OCV_DISCHARGE_PARAMS[i]
-                                    : BATTERY_OCV_CHARGE_PARAMS[i];
+                                    ? model->ocv_discharge_params[i]
+                                    : model->ocv_charge_params[i];
 
       const float* params_high = discharging_mode
-                                     ? BATTERY_OCV_DISCHARGE_PARAMS[i + 1]
-                                     : BATTERY_OCV_CHARGE_PARAMS[i + 1];
+                                     ? model->ocv_discharge_params[i + 1]
+                                     : model->ocv_charge_params[i + 1];
 
-      float ocv_low = calc_ocv(params_low, soc);
-      float ocv_high = calc_ocv(params_high, soc);
+      float ocv_low = calc_ocv(model, params_low, soc);
+      float ocv_high = calc_ocv(model, params_high, soc);
 
       return linear_interpolate(temperature, temp_points[i], ocv_low,
                                 temp_points[i + 1], ocv_high);
@@ -201,47 +206,48 @@ float battery_ocv(float soc, float temperature, bool discharging_mode) {
   }
 
   // Should never reach here
-  const float* params = discharging_mode ? BATTERY_OCV_DISCHARGE_PARAMS[0]
-                                         : BATTERY_OCV_CHARGE_PARAMS[0];
-  return calc_ocv(params, soc);
+  const float* params = discharging_mode ? model->ocv_discharge_params[0]
+                                         : model->ocv_charge_params[0];
+  return calc_ocv(model, params, soc);
 }
 
-float battery_ocv_slope(float soc, float temperature, bool discharging_mode) {
+float battery_ocv_slope(const battery_model_t* model, float soc,
+                        float temperature, bool discharging_mode) {
   // Clamp SOC to valid range
   soc = (soc < 0.0f) ? 0.0f : ((soc > 1.0f) ? 1.0f : soc);
 
   // Select appropriate temperature array based on mode
-  const float* temp_points =
-      discharging_mode ? BATTERY_TEMP_POINTS_DISCHG : BATTERY_TEMP_POINTS_CHG;
+  const float* temp_points = discharging_mode ? model->temp_points_discharge
+                                              : model->temp_points_charge;
 
   // Handle out-of-bounds temperatures
   if (temperature <= temp_points[0]) {
-    const float* params = discharging_mode ? BATTERY_OCV_DISCHARGE_PARAMS[0]
-                                           : BATTERY_OCV_CHARGE_PARAMS[0];
-    return calc_ocv_slope(params, soc);
+    const float* params = discharging_mode ? model->ocv_discharge_params[0]
+                                           : model->ocv_charge_params[0];
+    return calc_ocv_slope(model, params, soc);
   }
 
-  if (temperature >= temp_points[BATTERY_NUM_TEMP_POINTS - 1]) {
+  if (temperature >= temp_points[model->num_temp_points - 1]) {
     const float* params =
         discharging_mode
-            ? BATTERY_OCV_DISCHARGE_PARAMS[BATTERY_NUM_TEMP_POINTS - 1]
-            : BATTERY_OCV_CHARGE_PARAMS[BATTERY_NUM_TEMP_POINTS - 1];
-    return calc_ocv_slope(params, soc);
+            ? model->ocv_discharge_params[model->num_temp_points - 1]
+            : model->ocv_charge_params[model->num_temp_points - 1];
+    return calc_ocv_slope(model, params, soc);
   }
 
   // Find temperature bracket and interpolate
-  for (int i = 0; i < BATTERY_NUM_TEMP_POINTS - 1; i++) {
+  for (int i = 0; i < model->num_temp_points - 1; i++) {
     if (temperature < temp_points[i + 1]) {
       const float* params_low = discharging_mode
-                                    ? BATTERY_OCV_DISCHARGE_PARAMS[i]
-                                    : BATTERY_OCV_CHARGE_PARAMS[i];
+                                    ? model->ocv_discharge_params[i]
+                                    : model->ocv_charge_params[i];
 
       const float* params_high = discharging_mode
-                                     ? BATTERY_OCV_DISCHARGE_PARAMS[i + 1]
-                                     : BATTERY_OCV_CHARGE_PARAMS[i + 1];
+                                     ? model->ocv_discharge_params[i + 1]
+                                     : model->ocv_charge_params[i + 1];
 
-      float slope_low = calc_ocv_slope(params_low, soc);
-      float slope_high = calc_ocv_slope(params_high, soc);
+      float slope_low = calc_ocv_slope(model, params_low, soc);
+      float slope_high = calc_ocv_slope(model, params_high, soc);
 
       return linear_interpolate(temperature, temp_points[i], slope_low,
                                 temp_points[i + 1], slope_high);
@@ -249,44 +255,45 @@ float battery_ocv_slope(float soc, float temperature, bool discharging_mode) {
   }
 
   // Should never reach here
-  const float* params = discharging_mode ? BATTERY_OCV_DISCHARGE_PARAMS[0]
-                                         : BATTERY_OCV_CHARGE_PARAMS[0];
-  return calc_ocv_slope(params, soc);
+  const float* params = discharging_mode ? model->ocv_discharge_params[0]
+                                         : model->ocv_charge_params[0];
+  return calc_ocv_slope(model, params, soc);
 }
 
-float battery_soc(float ocv, float temperature, bool discharging_mode) {
+float battery_soc(const battery_model_t* model, float ocv, float temperature,
+                  bool discharging_mode) {
   // Select appropriate temperature array based on mode
-  const float* temp_points =
-      discharging_mode ? BATTERY_TEMP_POINTS_DISCHG : BATTERY_TEMP_POINTS_CHG;
+  const float* temp_points = discharging_mode ? model->temp_points_discharge
+                                              : model->temp_points_charge;
 
   // Handle out-of-bounds temperatures
   if (temperature <= temp_points[0]) {
-    const float* params = discharging_mode ? BATTERY_OCV_DISCHARGE_PARAMS[0]
-                                           : BATTERY_OCV_CHARGE_PARAMS[0];
-    return calc_soc_from_ocv(params, ocv);
+    const float* params = discharging_mode ? model->ocv_discharge_params[0]
+                                           : model->ocv_charge_params[0];
+    return calc_soc_from_ocv(model, params, ocv);
   }
 
-  if (temperature >= temp_points[BATTERY_NUM_TEMP_POINTS - 1]) {
+  if (temperature >= temp_points[model->num_temp_points - 1]) {
     const float* params =
         discharging_mode
-            ? BATTERY_OCV_DISCHARGE_PARAMS[BATTERY_NUM_TEMP_POINTS - 1]
-            : BATTERY_OCV_CHARGE_PARAMS[BATTERY_NUM_TEMP_POINTS - 1];
-    return calc_soc_from_ocv(params, ocv);
+            ? model->ocv_discharge_params[model->num_temp_points - 1]
+            : model->ocv_charge_params[model->num_temp_points - 1];
+    return calc_soc_from_ocv(model, params, ocv);
   }
 
   // Find temperature bracket and interpolate
-  for (int i = 0; i < BATTERY_NUM_TEMP_POINTS - 1; i++) {
+  for (int i = 0; i < model->num_temp_points - 1; i++) {
     if (temperature < temp_points[i + 1]) {
       const float* params_low = discharging_mode
-                                    ? BATTERY_OCV_DISCHARGE_PARAMS[i]
-                                    : BATTERY_OCV_CHARGE_PARAMS[i];
+                                    ? model->ocv_discharge_params[i]
+                                    : model->ocv_charge_params[i];
 
       const float* params_high = discharging_mode
-                                     ? BATTERY_OCV_DISCHARGE_PARAMS[i + 1]
-                                     : BATTERY_OCV_CHARGE_PARAMS[i + 1];
+                                     ? model->ocv_discharge_params[i + 1]
+                                     : model->ocv_charge_params[i + 1];
 
-      float soc_low = calc_soc_from_ocv(params_low, ocv);
-      float soc_high = calc_soc_from_ocv(params_high, ocv);
+      float soc_low = calc_soc_from_ocv(model, params_low, ocv);
+      float soc_high = calc_soc_from_ocv(model, params_high, ocv);
 
       return linear_interpolate(temperature, temp_points[i], soc_low,
                                 temp_points[i + 1], soc_high);
@@ -294,9 +301,9 @@ float battery_soc(float ocv, float temperature, bool discharging_mode) {
   }
 
   // Should never reach here
-  const float* params = discharging_mode ? BATTERY_OCV_DISCHARGE_PARAMS[0]
-                                         : BATTERY_OCV_CHARGE_PARAMS[0];
-  return calc_soc_from_ocv(params, ocv);
+  const float* params = discharging_mode ? model->ocv_discharge_params[0]
+                                         : model->ocv_charge_params[0];
+  return calc_soc_from_ocv(model, params, ocv);
 }
 
 #endif

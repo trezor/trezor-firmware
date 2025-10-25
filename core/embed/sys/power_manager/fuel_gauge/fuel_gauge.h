@@ -21,8 +21,12 @@
 
 #include <trezor_types.h>
 
+#include "battery_model.h"
+
 // fuel gauge state structure
 typedef struct {
+  battery_model_t model;
+
   // State estimate (SOC)
   float soc;
   // Latched SOC (the one that gets reported)
