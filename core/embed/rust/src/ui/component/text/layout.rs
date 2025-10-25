@@ -208,6 +208,16 @@ impl TextLayout {
         }
     }
 
+    pub const fn with_top_padding(mut self, top_padding: i16) -> Self {
+        self.padding_top = top_padding;
+        self
+    }
+
+    pub const fn with_bottom_padding(mut self, bottom_padding: i16) -> Self {
+        self.padding_bottom = bottom_padding;
+        self
+    }
+
     pub const fn with_bounds(mut self, bounds: Rect) -> Self {
         self.bounds = bounds;
         self
