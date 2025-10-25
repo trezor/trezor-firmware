@@ -45,12 +45,6 @@
 void ui_screen_boot(const vendor_header* const vhdr,
                     const image_header* const hdr, int wait);
 
-// Waits until the user confirms the untrusted firmware
-//
-// Implementation is device specific - it wait's until
-// the user presses a button, touches the display
-void ui_click(void);
-
 uint32_t ui_screen_intro(const vendor_header* const vhdr,
                          const image_header* const hdr, bool fw_ok);
 
