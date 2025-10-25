@@ -20,7 +20,6 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = [
-    "ecdsa>=0.9",
     "mnemonic>=0.20",
     "shamir-mnemonic>=0.3.0",
     "slip10>=1.0.1",
