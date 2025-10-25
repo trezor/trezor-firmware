@@ -195,6 +195,7 @@ static void drivers_init(void) {
   tropic_init(28992);
 #else
   tropic_init();
+  tropic_wait_for_ready();
 #endif
   tropic_wait_for_ready();
 #endif
