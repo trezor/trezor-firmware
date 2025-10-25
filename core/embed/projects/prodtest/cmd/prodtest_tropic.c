@@ -650,7 +650,7 @@ tropic_locked_status get_tropic_locked_status(cli_t* cli) {
   curve25519_key privileged_public = {0};
   curve25519_scalarmult_basepoint(privileged_public, privileged_private);
 
-  ret = tropic_start_custom_session(tropic_public,
+  ret = tropic_start_custom_session(NULL, tropic_public,
                                     TROPIC_PRIVILEGED_PAIRING_KEY_SLOT,
                                     privileged_private, privileged_public);
   if (ret != LT_OK) {
@@ -747,7 +747,7 @@ static bool tropic_is_paired(cli_t* cli) {
   }
   curve25519_key unprivileged_public = {0};
   curve25519_scalarmult_basepoint(unprivileged_public, unprivileged_private);
-  ret = tropic_start_custom_session(tropic_public,
+  ret = tropic_start_custom_session(NULL, tropic_public,
                                     TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT,
                                     unprivileged_private, unprivileged_public);
   if (ret != LT_OK) {
@@ -772,7 +772,7 @@ static bool tropic_is_paired(cli_t* cli) {
   curve25519_key privileged_public = {0};
   curve25519_scalarmult_basepoint(privileged_public, privileged_private);
 
-  ret = tropic_start_custom_session(tropic_public,
+  ret = tropic_start_custom_session(NULL, tropic_public,
                                     TROPIC_PRIVILEGED_PAIRING_KEY_SLOT,
                                     privileged_private, privileged_public);
   if (ret != LT_OK) {
@@ -834,7 +834,7 @@ bool prodtest_tropic_factory_session_start(lt_handle_t* tropic_handle) {
   }
 
   // Try to establish a session using the factory pairing key.
-  return LT_OK == tropic_start_custom_session(*tropic_public,
+  return LT_OK == tropic_start_custom_session(NULL, *tropic_public,
                                               TROPIC_FACTORY_PAIRING_KEY_SLOT,
                                               factory_private, factory_public);
 }
@@ -1273,7 +1273,7 @@ static void prodtest_tropic_lock(cli_t* cli) {
   curve25519_key privileged_public = {0};
   curve25519_scalarmult_basepoint(privileged_public, privileged_private);
 
-  ret = tropic_start_custom_session(tropic_public,
+  ret = tropic_start_custom_session(NULL, tropic_public,
                                     TROPIC_PRIVILEGED_PAIRING_KEY_SLOT,
                                     privileged_private, privileged_public);
   if (ret != LT_OK) {
@@ -1494,7 +1494,7 @@ static void cert_write(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
   curve25519_key privileged_public = {0};
   curve25519_scalarmult_basepoint(privileged_public, privileged_private);
 
-  ret = tropic_start_custom_session(tropic_public,
+  ret = tropic_start_custom_session(NULL, tropic_public,
                                     TROPIC_PRIVILEGED_PAIRING_KEY_SLOT,
                                     privileged_private, privileged_public);
   if (ret != LT_OK) {
@@ -1563,7 +1563,7 @@ static void cert_read(cli_t* cli, uint16_t first_slot, uint16_t slots_count) {
   curve25519_key privileged_public = {0};
   curve25519_scalarmult_basepoint(privileged_public, privileged_private);
 
-  ret = tropic_start_custom_session(tropic_public,
+  ret = tropic_start_custom_session(NULL, tropic_public,
                                     TROPIC_PRIVILEGED_PAIRING_KEY_SLOT,
                                     privileged_private, privileged_public);
   if (ret != LT_OK) {

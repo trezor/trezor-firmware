@@ -28,6 +28,8 @@
 #include "hmac.h"
 
 #include <libtropic.h>
+#include "lt_l2.h"
+#include "lt_l3.h"
 
 #ifdef TREZOR_EMULATOR
 #include <arpa/inet.h>
@@ -61,7 +63,7 @@ static bool tropic_get_tropic_pubkey(lt_handle_t *handle,
                                      curve25519_key pubkey);
 #endif
 
-bool tropic_wait_for_ready(void) {
+bool tropic_wait_for_ready(tropic_ui_progress_t ui_progress) {
   tropic_driver_t *drv = &g_tropic_driver;
 
   if (!drv->initialized) {
@@ -75,6 +77,9 @@ bool tropic_wait_for_ready(void) {
   // Wait for Tropic to boot before issuing any session commands.
   uint32_t boot_start_ms = hal_ticks_ms();
   while (hal_ticks_ms() - boot_start_ms < TROPIC_BOOT_TIMEOUT_MS) {
+    if (ui_progress) {
+      ui_progress();
+    }
     uint8_t ver[LT_L2_GET_INFO_RISCV_FW_SIZE] = {0};
     if (lt_get_info_riscv_fw_ver(&drv->handle, ver) != LT_L1_CHIP_BUSY) {
       drv->chip_ready = true;
@@ -85,7 +90,8 @@ bool tropic_wait_for_ready(void) {
   return false;
 }
 
-lt_ret_t tropic_start_custom_session(const uint8_t *stpub,
+lt_ret_t tropic_start_custom_session(tropic_ui_progress_t ui_progress,
+                                     const uint8_t *stpub,
                                      const pkey_index_t pkey_index,
                                      const uint8_t *shipriv,
                                      const uint8_t *shipub) {
@@ -95,18 +101,52 @@ lt_ret_t tropic_start_custom_session(const uint8_t *stpub,
     return LT_FAIL;
   }
 
-  tropic_wait_for_ready();
+  if (!stpub || (pkey_index > PAIRING_KEY_SLOT_INDEX_3) || !shipriv ||
+      !shipub) {
+    return LT_PARAM_ERR;
+  }
 
-  lt_ret_t ret =
-      lt_session_start(&drv->handle, stpub, pkey_index, shipriv, shipub);
+  tropic_wait_for_ready(ui_progress);
+
+  session_state_t state = {0};
+
+  lt_ret_t ret = lt_out__session_start(&drv->handle, pkey_index, &state);
+  if (ret != LT_OK) {
+    goto cleanup;
+  }
+
+  ret = lt_l2_send(&drv->handle.l2);
+  if (ret != LT_OK) {
+    goto cleanup;
+  }
+
+  // Tropic takes 150 ms to process the handshake request.
+  for (int i = 0; i < 15; i++) {
+    hal_delay(10);
+    if (ui_progress) {
+      ui_progress();
+    }
+  }
+
+  ret = lt_l2_receive(&drv->handle.l2);
+  if (ret != LT_OK) {
+    goto cleanup;
+  }
+
+  ret = lt_in__session_start(&drv->handle, stpub, pkey_index, shipriv, shipub,
+                             &state);
 
   drv->pairing_key_index = pkey_index;
   drv->session_started = (ret == LT_OK);
+
+cleanup:
+  memzero(&state, sizeof(state));
 
   return ret;
 }
 
 static bool session_start(tropic_driver_t *drv,
+                          tropic_ui_progress_t ui_progress,
                           pkey_index_t pairing_key_index) {
   bool ret = false;
 
@@ -142,7 +182,7 @@ static bool session_start(tropic_driver_t *drv,
     }
   }
 
-  if (tropic_start_custom_session(tropic_public, pairing_key_index,
+  if (tropic_start_custom_session(ui_progress, tropic_public, pairing_key_index,
                                   trezor_private, trezor_public) != LT_OK) {
     goto cleanup;
   }
@@ -155,7 +195,7 @@ cleanup:
   return ret;
 }
 
-bool tropic_session_start(void) {
+bool tropic_session_start(tropic_ui_progress_t ui_progress) {
   tropic_driver_t *drv = &g_tropic_driver;
 
   if (!drv->initialized) {
@@ -166,18 +206,18 @@ bool tropic_session_start(void) {
     return true;
   }
 
-  tropic_wait_for_ready();
+  tropic_wait_for_ready(ui_progress);
 
 #ifndef TREZOR_EMULATOR
-  if (session_start(drv, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT)) {
+  if (session_start(drv, ui_progress, TROPIC_PRIVILEGED_PAIRING_KEY_SLOT)) {
     return true;
   }
-  if (session_start(drv, TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT)) {
+  if (session_start(drv, ui_progress, TROPIC_UNPRIVILEGED_PAIRING_KEY_SLOT)) {
     return true;
   }
 #endif
 #if !PRODUCTION
-  if (session_start(drv, TROPIC_FACTORY_PAIRING_KEY_SLOT)) {
+  if (session_start(drv, ui_progress, TROPIC_FACTORY_PAIRING_KEY_SLOT)) {
     return true;
   }
 #endif
@@ -229,7 +269,7 @@ lt_handle_t *tropic_get_handle(void) {
 bool tropic_ping(const uint8_t *msg_out, uint8_t *msg_in, uint16_t msg_len) {
   tropic_driver_t *drv = &g_tropic_driver;
 
-  if (!tropic_session_start()) {
+  if (!tropic_session_start(NULL)) {
     return false;
   }
 
@@ -240,7 +280,7 @@ bool tropic_ping(const uint8_t *msg_out, uint8_t *msg_in, uint16_t msg_len) {
 bool tropic_ecc_key_generate(uint16_t slot_index) {
   tropic_driver_t *drv = &g_tropic_driver;
 
-  if (!tropic_session_start()) {
+  if (!tropic_session_start(NULL)) {
     return false;
   }
 
@@ -256,7 +296,7 @@ bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
                      uint16_t dig_len, uint8_t *sig) {
   tropic_driver_t *drv = &g_tropic_driver;
 
-  if (!tropic_session_start()) {
+  if (!tropic_session_start(NULL)) {
     return false;
   }
 
@@ -277,7 +317,7 @@ bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
 bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
   tropic_driver_t *drv = &g_tropic_driver;
 
-  if (!tropic_session_start()) {
+  if (!tropic_session_start(NULL)) {
     return false;
   }
 
@@ -343,7 +383,7 @@ void tropic_get_factory_privkey(curve25519_key privkey) {
 bool tropic_random_buffer(void *buffer, size_t length) {
   tropic_driver_t *drv = &g_tropic_driver;
 
-  if (!tropic_session_start()) {
+  if (!tropic_session_start(NULL)) {
     return false;
   }
 
@@ -379,7 +419,7 @@ bool tropic_pin_stretch(tropic_ui_progress_t ui_progress, uint16_t pin_index,
 
   tropic_driver_t *drv = &g_tropic_driver;
 
-  if (!tropic_session_start()) {
+  if (!tropic_session_start(ui_progress)) {
     return false;
   }
 
@@ -414,7 +454,7 @@ bool tropic_pin_reset_slots(
 
   tropic_driver_t *drv = &g_tropic_driver;
 
-  if (!tropic_session_start()) {
+  if (!tropic_session_start(ui_progress)) {
     return false;
   }
 
@@ -449,7 +489,7 @@ bool tropic_pin_set(
 
   tropic_driver_t *drv = &g_tropic_driver;
 
-  if (!tropic_session_start()) {
+  if (!tropic_session_start(ui_progress)) {
     return false;
   }
 
@@ -512,7 +552,7 @@ bool tropic_pin_set_kek_masks(
 
   tropic_driver_t *drv = &g_tropic_driver;
 
-  if (!tropic_session_start()) {
+  if (!tropic_session_start(ui_progress)) {
     return false;
   }
 
@@ -559,7 +599,7 @@ bool tropic_pin_unmask_kek(
 
   tropic_driver_t *drv = &g_tropic_driver;
 
-  if (!tropic_session_start()) {
+  if (!tropic_session_start(ui_progress)) {
     return false;
   }
 
