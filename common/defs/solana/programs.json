@@ -1056,7 +1056,7 @@
               "optional": false
             }
           ],
-          "references": [],
+          "references": ["program_ref"],
           "references_required": 0,
           "ui_properties": [
             {
