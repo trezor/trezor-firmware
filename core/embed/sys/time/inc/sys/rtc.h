@@ -61,24 +61,39 @@ bool rtc_get_timestamp(uint32_t* timestamp);
 typedef void (*rtc_wakeup_callback_t)(void* context);
 
 /**
- * @brief Schedule a wakeup event after a specified number of seconds
+ * @brief Schedule a wakeup event at specified timestamp
  *
- * Configures the RTC to wake up the system from STOP mode after the specified
- * number of seconds. After waking up, callback is called if not NULL otherwise
- * the WAKEUP_FLAG_RTC flag is set.
+ * Configures the RTC to wake up the system from STOP mode at the specified
+ * timestamp. After waking up, callback is called if not NULL otherwise
+ * the WAKEUP_FLAG_RTC flag is set. Multiple wakeup events may be scheduled,
+ * they will be executed in order of their timestamps and call the specific
+ * callbacks.
  *
- * @param seconds Number of seconds (1 to 65536) to wait before waking up.
+ * @param timestamp RTC timestamp to wake up at.
+ * @param wakeup_event_id pointer to varible where the new event id will be
+ * stored
  * @param callback Callback function to be called when the wakeup event occurs.
  * @param context Context pointer to be passed to the callback function.
  * @return true if the wakeup was successfully scheduled, false otherwise
  */
-bool rtc_wakeup_timer_start(uint32_t seconds, rtc_wakeup_callback_t callback,
-                            void* context);
+bool rtc_schedule_wakeup_event(uint32_t wakeup_timestamp,
+                               uint32_t* wakeup_event_id,
+                               rtc_wakeup_callback_t callback, void* context);
 
 /**
- * @brief Stop the RTC wakeup timer
+ * @brief Deschedule the wakeup event from the rtc schedule
+ *
+ * @param wakeup_event_id descheduled wakup event id
+ * @return true if the event successfully descheduled from the queue
  */
-void rtc_wakeup_timer_stop(void);
+bool rtc_deschedule_wakeup_event(uint32_t wakeup_event_id);
+
+/**
+ * @brief Deschedule all events from rtc schedule and stop rtc timer
+ *
+ * @return true if all events successfully descheduled
+ */
+bool rtc_deschedule_all_wakup_events(void);
 
 /**
  * @brief Set the RTC using discrete time values
