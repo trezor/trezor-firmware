@@ -1,7 +1,7 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from trezor.crypto import cardano, slip39
+from trezor.crypto import bip39, cardano, slip39
 
 from apps.cardano.get_public_key import _get_public_key
 from apps.cardano.seed import Keychain
@@ -11,7 +11,8 @@ from apps.cardano.seed import Keychain
 class TestCardanoGetPublicKey(unittest.TestCase):
     @staticmethod
     def make_keychain_bip39(mnemonic, passphrase):
-        secret = cardano.derive_icarus(mnemonic, passphrase, True)
+        binary_mnemonic = bip39.mnemonic_to_bits(mnemonic)
+        secret = cardano.derive_icarus(binary_mnemonic, passphrase, True)
         node = cardano.from_secret(secret)
         return Keychain(node)
 
