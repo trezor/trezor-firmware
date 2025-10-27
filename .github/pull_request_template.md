@@ -5,6 +5,7 @@ For core developers:
 - Add the PR to the current sprint.
 - If it's a draft PR, mark it as "In Progress."
 - If it's a final PR, mark it as "Needs Review."
+- If needed, add a `Notes for QA` section.
 
 For external contributors:
 - Please open an issue before submitting a PR so we can discuss whether we want to proceed with it.
