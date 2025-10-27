@@ -7,7 +7,7 @@ from trezorlib.exceptions import TrezorFailure
 pytestmark = pytest.mark.models("t2t1")
 
 
-def test_evolu_get_delegated_identity_is_constant(session: "Session"):
+def test_evolu_get_delegated_identity_is_constant(session: Session):
     private_key = evolu.get_delegated_identity_key(session)
     assert len(private_key) == 32
 
@@ -15,7 +15,15 @@ def test_evolu_get_delegated_identity_is_constant(session: "Session"):
     assert private_key_2 == private_key
 
 
-def test_evolu_get_node(session: "Session"):
+def test_evolu_get_delegated_identity_test_vector(session: Session):
+    # on emulator, the master key is all zeroes. So the delegated identity key is constant.
+    private_key = evolu.get_delegated_identity_key(session)
+    assert private_key == bytes.fromhex(
+        "10e39ed3a40dd63a47a14608d4bccd4501170cf9f2188223208084d39c37b369"
+    )
+
+
+def test_evolu_get_node(session: Session):
     response = evolu.get_evolu_node(session, proof=None)
 
     check_value = bytes.fromhex(
@@ -24,7 +32,7 @@ def test_evolu_get_node(session: "Session"):
     assert response == check_value
 
 
-def test_evolu_sign_request(session: "Session"):
+def test_evolu_sign_request(session: Session):
     challenge = "1234"
     size = 10
     proposed_value = bytes.fromhex(

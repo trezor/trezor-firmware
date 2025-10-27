@@ -8,7 +8,7 @@ pytestmark = pytest.mark.models("safe")
 
 
 @pytest.mark.protocol("protocol_v1")
-def test_evolu_get_delegated_identity_is_constant(session: "Session"):
+def test_evolu_get_delegated_identity_is_constant(session: Session):
     private_key = evolu.get_delegated_identity_key(session)
     assert len(private_key) == 32
 
@@ -17,7 +17,7 @@ def test_evolu_get_delegated_identity_is_constant(session: "Session"):
 
 
 @pytest.mark.protocol("protocol_v1")
-def test_evolu_get_delegated_identity_test_vector(session: "Session"):
+def test_evolu_get_delegated_identity_test_vector(session: Session):
     # on emulator, the master key is all zeroes. So the delegated identity key is constant.
     private_key = evolu.get_delegated_identity_key(session)
     assert private_key == bytes.fromhex(
@@ -25,7 +25,7 @@ def test_evolu_get_delegated_identity_test_vector(session: "Session"):
     )
 
 
-def test_evolu_get_node(session: "Session"):
+def test_evolu_get_node(session: Session):
     proof = bytes.fromhex(
         "1f354fbb47b4679c1cb0c2c6b96a27f9a147c61ec5ef6f6c42491c839f4b7a95792d099be0f138274e5ef7896058b4de4f383f497792bb157b925e2644a79a0d84"
     )
@@ -37,7 +37,7 @@ def test_evolu_get_node(session: "Session"):
     assert node == check_value
 
 
-def test_evolu_get_node_invalid_proof(session: "Session"):
+def test_evolu_get_node_invalid_proof(session: Session):
     proof = bytes.fromhex(
         "1f354fbb47b4679c1cb0c2c6b96a27f9a147c61ec5ef6f6c42491c839f4b7a95792d099be0f138274e5ef7896058b4de4f383f497792bb157b925e2644a79a0000"  # altered last 2 bytes
     )
@@ -49,7 +49,7 @@ def test_evolu_get_node_invalid_proof(session: "Session"):
         evolu.get_evolu_node(session, proof=proof)
 
 
-def test_evolu_sign_request(session: "Session"):
+def test_evolu_sign_request(session: Session):
     challenge = "1234"
     size = 10
     proposed_value = bytes.fromhex(
@@ -69,7 +69,7 @@ def test_evolu_sign_request(session: "Session"):
     assert response.signature == check_signature
 
 
-def test_evolu_sign_request_invalid_proof(session: "Session"):
+def test_evolu_sign_request_invalid_proof(session: Session):
     challenge = "1234"
     size = 10
     proposed_value = bytes.fromhex(
@@ -88,7 +88,7 @@ def test_evolu_sign_request_invalid_proof(session: "Session"):
         )
 
 
-def test_evolu_sign_request_challenge_too_long(session: "Session"):
+def test_evolu_sign_request_challenge_too_long(session: Session):
     challenge = "01" * 300  # 300 bytes, max is 255
     size = 10
     proposed_value = bytes.fromhex(
@@ -107,7 +107,7 @@ def test_evolu_sign_request_challenge_too_long(session: "Session"):
         )
 
 
-def test_evolu_sign_request_challenge_too_short(session: "Session"):
+def test_evolu_sign_request_challenge_too_short(session: Session):
     challenge = ""  # 0 bytes, min is 1
     size = 10
     proposed_value = bytes.fromhex(
@@ -126,7 +126,7 @@ def test_evolu_sign_request_challenge_too_short(session: "Session"):
         )
 
 
-def test_evolu_sign_request_size_too_small(session: "Session"):
+def test_evolu_sign_request_size_too_small(session: Session):
     challenge = "1234"
     size = -10
     proposed_value = bytes.fromhex(
@@ -145,7 +145,7 @@ def test_evolu_sign_request_size_too_small(session: "Session"):
         )
 
 
-def test_evolu_sign_request_size_too_large(session: "Session"):
+def test_evolu_sign_request_size_too_large(session: Session):
     challenge = "1234"
     size = 0xFFFFFFFF + 1
     proposed_value = bytes.fromhex(
@@ -164,7 +164,7 @@ def test_evolu_sign_request_size_too_large(session: "Session"):
         )
 
 
-def test_evolu_sign_request_data_higher_bound(session: "Session"):
+def test_evolu_sign_request_data_higher_bound(session: Session):
     challenge = "12" * 255
     size = 0xFFFFFFFF
     proposed_value = bytes.fromhex(
