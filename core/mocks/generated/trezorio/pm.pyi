@@ -46,3 +46,11 @@ def is_usb_connected() -> bool:
     Returns True if USB is connected, False otherwise. Raises RuntimeError
     on failure.
     """
+
+
+# upymod/modtrezorio/modtrezorio-pm.h
+def is_wireless_connected() -> bool:
+    """
+    Returns True if Wireless power source is connected, False otherwise.
+    Raises RuntimeError on failure.
+    """

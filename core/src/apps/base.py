@@ -180,6 +180,8 @@ def get_features() -> Features:
         from trezorio import pm
 
         f.soc = pm.soc()
+        f.wireless_connected = pm.is_wireless_connected()
+        f.usb_connected = pm.is_usb_connected()
 
     # private fields:
     if config.is_unlocked():

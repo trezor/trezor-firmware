@@ -74,6 +74,8 @@ message Features {
     optional uint32 unit_packaging = 51;      // unit/device packaging version
     optional uint32 soc = 55;                   // Battery state of charge (0 - 100%)
     optional bool firmware_corrupted = 56;     // is firmware corrupted?
+    optional bool usb_connected = 59;           // USB connected
+    optional bool wireless_connected = 60;      // Wireless charger connected
 }
 
 /**

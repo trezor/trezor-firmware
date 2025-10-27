@@ -20,6 +20,7 @@
 
 #include <sys/backup_ram.h>
 #include <sys/irq.h>
+#include <sys/notify.h>
 #include <sys/pmic.h>
 #include <sys/systick.h>
 #include <trezor_rtl.h>
@@ -291,10 +292,12 @@ static void pm_parse_power_source_state(pm_driver_t* drv) {
   if (drv->pmic_data.usb_status != 0x0) {
     if (!drv->usb_connected) {
       drv->usb_connected = true;
+      notify_send(NOTIFY_POWER_STATUS_CHANGE);
     }
   } else {
     if (drv->usb_connected) {
       drv->usb_connected = false;
+      notify_send(NOTIFY_POWER_STATUS_CHANGE);
     }
   }
 
@@ -302,10 +305,12 @@ static void pm_parse_power_source_state(pm_driver_t* drv) {
   if (drv->wireless_data.vout_ready) {
     if (!drv->wireless_connected) {
       drv->wireless_connected = true;
+      notify_send(NOTIFY_POWER_STATUS_CHANGE);
     }
   } else {
     if (drv->wireless_connected) {
       drv->wireless_connected = false;
+      notify_send(NOTIFY_POWER_STATUS_CHANGE);
     }
   }
 

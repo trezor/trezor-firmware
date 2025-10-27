@@ -2089,6 +2089,8 @@ if TYPE_CHECKING:
         firmware_corrupted: "bool | None"
         auto_lock_delay_battery_ms: "int | None"
         led: "bool | None"
+        usb_connected: "bool | None"
+        wireless_connected: "bool | None"
 
         def __init__(
             self,
@@ -2148,6 +2150,8 @@ if TYPE_CHECKING:
             firmware_corrupted: "bool | None" = None,
             auto_lock_delay_battery_ms: "int | None" = None,
             led: "bool | None" = None,
+            usb_connected: "bool | None" = None,
+            wireless_connected: "bool | None" = None,
         ) -> None:
             pass
 
