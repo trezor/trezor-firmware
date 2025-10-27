@@ -23,6 +23,9 @@ use super::{
     ActionBar, ActionBarMsg, Hint,
 };
 
+#[cfg(feature = "rgb_led")]
+use crate::ui::led::LedState;
+
 /// Full-screen component for the homescreen and lockscreen.
 pub struct Homescreen {
     /// Device name with shadow
@@ -209,7 +212,9 @@ impl Component for Homescreen {
         }
 
         #[cfg(feature = "rgb_led")]
-        target.set_led_color(self.led_color.unwrap_or_else(Color::black));
+        target.set_led_state(LedState::Static(
+            self.led_color.unwrap_or_else(Color::black),
+        ));
     }
 }
 
