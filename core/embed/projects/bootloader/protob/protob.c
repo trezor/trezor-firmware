@@ -144,6 +144,8 @@ secbool send_msg_features(protob_io_t *iface, const fw_info_t *fw) {
   pm_state_t state = {0};
   if (PM_OK == pm_get_state(&state)) {
     MSG_SEND_ASSIGN_VALUE(soc, state.soc);
+    MSG_SEND_ASSIGN_VALUE(usb_connected, state.usb_connected);
+    MSG_SEND_ASSIGN_VALUE(wireless_connected, state.wireless_connected);
   }
 #endif
 

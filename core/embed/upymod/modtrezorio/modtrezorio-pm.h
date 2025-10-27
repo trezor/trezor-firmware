@@ -100,6 +100,23 @@ STATIC mp_obj_t mod_trezorio_pm_is_usb_connected() {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_pm_is_usb_connected_obj,
                                  mod_trezorio_pm_is_usb_connected);
 
+/// def is_wireless_connected() -> bool:
+///     """
+///     Returns True if Wireless power source is connected, False otherwise.
+///     Raises RuntimeError on failure.
+///     """
+STATIC mp_obj_t mod_trezorio_pm_is_wireless_connected() {
+  pm_state_t state;
+  pm_status_t res = pm_get_state(&state);
+  if (res != PM_OK) {
+    mp_raise_msg(&mp_type_RuntimeError,
+                 MP_ERROR_TEXT("Failed to get power manager report"));
+  }
+  return mp_obj_new_bool(state.wireless_connected);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_pm_is_wireless_connected_obj,
+                                 mod_trezorio_pm_is_wireless_connected);
+
 STATIC const mp_rom_map_elem_t mod_trezorio_pm_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_pm)},
     {MP_ROM_QSTR(MP_QSTR_soc), MP_ROM_PTR(&mod_trezorio_pm_soc_obj)},
@@ -108,6 +125,8 @@ STATIC const mp_rom_map_elem_t mod_trezorio_pm_globals_table[] = {
      MP_ROM_PTR(&mod_trezorio_pm_hibernate_obj)},
     {MP_ROM_QSTR(MP_QSTR_is_usb_connected),
      MP_ROM_PTR(&mod_trezorio_pm_is_usb_connected_obj)},
+    {MP_ROM_QSTR(MP_QSTR_is_wireless_connected),
+     MP_ROM_PTR(&mod_trezorio_pm_is_wireless_connected_obj)},
 
     // Wakeup flag constants
     {MP_ROM_QSTR(MP_QSTR_WAKEUP_FLAG_BUTTON), MP_ROM_INT(WAKEUP_FLAG_BUTTON)},

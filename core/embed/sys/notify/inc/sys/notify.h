@@ -50,7 +50,9 @@ typedef enum {
       6, /**< Device soft-unlocked (e.g., after successful pin entry) */
   NOTIFY_PIN_CHANGE = 7, /**< Pin changed on the device */
   NOTIFY_WIPE = 8,       /**< Factory reset (wipe) invoked */
-  NOTIFY_UNPAIR = 9      /**< BLE bonding for current connection deleted */
+  NOTIFY_UNPAIR = 9,     /**< BLE bonding for current connection deleted */
+  NOTIFY_POWER_STATUS_CHANGE =
+      10, /**< Power status changed, i.e. charging started */
   // Additional notification types can be added here as needed
 } notification_event_t;
 
