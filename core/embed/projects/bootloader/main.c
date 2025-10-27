@@ -539,6 +539,10 @@ int bootloader_main(void) {
     wipe_bonds(NULL);
 #endif
 
+#ifdef USE_BACKUP_RAM
+    backup_ram_erase_protected();
+#endif
+
     // wipe info was left in bootargs
     boot_args_t args;
     bootargs_get_args(&args);
