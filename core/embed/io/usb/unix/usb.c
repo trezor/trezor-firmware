@@ -28,6 +28,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <io/unix/sock.h>
 #include <io/usb.h>
 #include <io/usb_hid.h>
 #include <io/usb_vcp.h>
@@ -50,9 +51,7 @@ typedef struct {
   syshandle_t handle;
   usb_iface_type_t type;
   uint16_t port;
-  int sock;
-  struct sockaddr_in si_me, si_other;
-  socklen_t slen;
+  emu_sock_t sock;
   uint8_t msg[64];
   int msg_len;
 } usb_iface_t;
@@ -69,11 +68,8 @@ secbool usb_init(const usb_dev_info_t *dev_info) {
     iface->handle = 0;
     iface->type = USB_IFACE_TYPE_DISABLED;
     iface->port = 0;
-    iface->sock = -1;
-    memzero(&iface->si_me, sizeof(struct sockaddr_in));
-    memzero(&iface->si_other, sizeof(struct sockaddr_in));
+    sock_init(&iface->sock);
     memzero(&iface->msg, sizeof(usb_ifaces[i].msg));
-    iface->slen = 0;
     iface->msg_len = 0;
   }
   return sectrue;
@@ -94,22 +90,7 @@ secbool usb_start(const usb_start_params_t *params) {
       continue;
     }
 
-    iface->sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    ensure(sectrue * (iface->sock >= 0), NULL);
-
-    fcntl(iface->sock, F_SETFL, O_NONBLOCK);
-
-    iface->si_me.sin_family = AF_INET;
-    if (ip) {
-      iface->si_me.sin_addr.s_addr = inet_addr(ip);
-    } else {
-      iface->si_me.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    }
-    iface->si_me.sin_port = htons(iface->port);
-
-    ensure(sectrue * (0 == bind(iface->sock, (struct sockaddr *)&iface->si_me,
-                                sizeof(struct sockaddr_in))),
-           NULL);
+    sock_start(&iface->sock, ip, iface->port);
 
     ensure(sectrue *
                syshandle_register(iface->handle, &usb_iface_handle_vmt, iface),
@@ -122,11 +103,8 @@ secbool usb_start(const usb_start_params_t *params) {
 void usb_stop(void) {
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
     usb_iface_t *iface = &usb_ifaces[i];
-    if (iface->sock >= 0) {
-      close(iface->sock);
-      iface->sock = -1;
-      syshandle_unregister(iface->handle);
-    }
+    sock_stop(&iface->sock);
+    syshandle_unregister(iface->handle);
   }
 }
 
@@ -174,48 +152,31 @@ static secbool usb_emulated_poll_read(usb_iface_t *iface) {
     return sectrue;
   }
 
-  struct pollfd fds[] = {
-      {iface->sock, POLLIN, 0},
-  };
-  int res = poll(fds, 1, 0);
-
-  if (res <= 0) {
+  if (!sock_can_recv(&iface->sock)) {
     return secfalse;
   }
 
-  struct sockaddr_in si;
-  socklen_t sl = sizeof(si);
-  ssize_t r = recvfrom(iface->sock, iface->msg, sizeof(iface->msg),
-                       MSG_DONTWAIT, (struct sockaddr *)&si, &sl);
-  if (r <= 0) {
+  size_t len = sock_recvfrom(&iface->sock, iface->msg, sizeof(iface->msg));
+  if (!len) {
     return secfalse;
   }
 
-  iface->si_other = si;
-  iface->slen = sl;
   static const char *ping_req = "PINGPING";
   static const char *ping_resp = "PONGPONG";
-  if (r == strlen(ping_req) &&
+  if (len == strlen(ping_req) &&
       0 == memcmp(ping_req, iface->msg, strlen(ping_req))) {
-    if (iface->slen > 0) {
-      sendto(iface->sock, ping_resp, strlen(ping_resp), MSG_DONTWAIT,
-             (const struct sockaddr *)&iface->si_other, iface->slen);
-    }
+    sock_sendto(&iface->sock, (const uint8_t *)ping_resp, strlen(ping_resp));
     memzero(iface->msg, sizeof(iface->msg));
     return secfalse;
   }
 
-  iface->msg_len = r;
+  iface->msg_len = len;
 
   return sectrue;
 }
 
 static secbool usb_emulated_poll_write(usb_iface_t *iface) {
-  struct pollfd fds[] = {
-      {iface->sock, POLLOUT, 0},
-  };
-  int r = poll(fds, 1, 0);
-  return sectrue * (r > 0);
+  return sectrue * sock_can_send(&iface->sock);
 }
 
 static int usb_emulated_read(usb_iface_t *iface, uint8_t *buf, uint32_t len) {
@@ -238,14 +199,9 @@ static int usb_emulated_read(usb_iface_t *iface, uint8_t *buf, uint32_t len) {
   return 0;
 }
 
-static int usb_emulated_write(usb_iface_t *iface, const uint8_t *buf,
-                              uint32_t len) {
-  ssize_t r = len;
-  if (iface->slen > 0) {
-    r = sendto(iface->sock, buf, len, MSG_DONTWAIT,
-               (const struct sockaddr *)&iface->si_other, iface->slen);
-  }
-  return r;
+static ssize_t usb_emulated_write(usb_iface_t *iface, const uint8_t *buf,
+                                  uint32_t len) {
+  return sock_sendto(&iface->sock, buf, len);
 }
 
 secbool usb_configured(void) {

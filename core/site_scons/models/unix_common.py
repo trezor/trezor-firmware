@@ -33,6 +33,7 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
 
     sources += [
         "embed/io/display/unix/display_driver.c",
+        "embed/io/usb/unix/sock.c",
         "embed/sec/random_delays/unix/random_delays.c",
         "embed/sec/secret/unix/secret.c",
         "embed/sec/secret/unix/secret_keys.c",
