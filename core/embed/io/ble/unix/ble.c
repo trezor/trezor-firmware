@@ -1,4 +1,5 @@
 #include <io/ble.h>
+#include <io/unix/sock.h>
 #include <sys/sysevent_source.h>
 #include <trezor_rtl.h>
 
@@ -22,16 +23,8 @@ typedef struct {
   bt_le_addr_t connected_addr;
   bt_le_addr_t bonds[BLE_MAX_BONDS];
   size_t bonds_len;
-
-  uint16_t data_port;
-  int data_sock;
-  struct sockaddr_in data_si_me, data_si_other;
-  socklen_t data_slen;
-
-  uint16_t event_port;
-  int event_sock;
-  struct sockaddr_in event_si_me, event_si_other;
-  socklen_t event_slen;
+  emu_sock_t data_sock;
+  emu_sock_t event_sock;
 } ble_driver_t;
 
 typedef struct {
@@ -93,6 +86,8 @@ static bool is_enabled(const ble_driver_t *drv) {
 
 bool ble_init(void) {
   ble_driver_t *drv = &g_ble_driver;
+  sock_init(&drv->data_sock);
+  sock_init(&drv->event_sock);
   if (!syshandle_register(SYSHANDLE_BLE, &ble_handle_vmt, drv)) {
     goto cleanup;
   }
@@ -116,35 +111,13 @@ void ble_deinit(void) {
 void ble_start(void) {
   ble_driver_t *drv = &g_ble_driver;
   memset(drv, 0, sizeof(*drv));
-  drv->data_sock = -1;
-  drv->event_sock = -1;
 
   const char *ip = getenv("TREZOR_UDP_IP");
   const char *port_base_str = getenv("TREZOR_UDP_PORT");
   uint16_t port_base = port_base_str ? atoi(port_base_str) : 21324;
 
-  drv->data_port = port_base + DATA_PORT_OFFSET;
-  drv->event_port = port_base + EVENT_PORT_OFFSET;
-  drv->data_sock = socket(AF_INET, SOCK_DGRAM | SOCK_NONBLOCK, IPPROTO_UDP);
-  drv->event_sock = socket(AF_INET, SOCK_DGRAM | SOCK_NONBLOCK, IPPROTO_UDP);
-
-  ensure(sectrue * (drv->data_sock >= 0), NULL);
-  ensure(sectrue * (drv->event_sock >= 0), NULL);
-
-  drv->data_si_me.sin_family = drv->event_si_me.sin_family = AF_INET;
-  drv->data_si_me.sin_addr.s_addr = ip ? inet_addr(ip) : htonl(INADDR_LOOPBACK);
-  drv->event_si_me.sin_addr.s_addr =
-      ip ? inet_addr(ip) : htonl(INADDR_LOOPBACK);
-  drv->data_si_me.sin_port = htons(drv->data_port);
-  drv->event_si_me.sin_port = htons(drv->event_port);
-
-  int ret = -1;
-  ret = bind(drv->data_sock, (struct sockaddr *)&(drv->data_si_me),
-             sizeof(struct sockaddr_in));
-  ensure(sectrue * (ret == 0), NULL);
-  ret = bind(drv->event_sock, (struct sockaddr *)&(drv->event_si_me),
-             sizeof(struct sockaddr_in));
-  ensure(sectrue * (ret == 0), NULL);
+  sock_start(&drv->data_sock, ip, port_base + DATA_PORT_OFFSET);
+  sock_start(&drv->event_sock, ip, port_base + EVENT_PORT_OFFSET);
 
   drv->initialized = true;
 }
@@ -155,14 +128,8 @@ void ble_stop(void) {
     return;
   }
 
-  if (drv->data_sock >= 0) {
-    close(drv->data_sock);
-    drv->data_sock = -1;
-  }
-  if (drv->event_sock >= 0) {
-    close(drv->event_sock);
-    drv->event_sock = -1;
-  }
+  sock_stop(&drv->data_sock);
+  sock_stop(&drv->event_sock);
   drv->initialized = false;
 }
 
@@ -179,14 +146,9 @@ static bool send_to_emu(char cmdtype) {
   }
   memcpy(&command.adv_name, drv->adv_name, BLE_ADV_NAME_LEN);
 
-  ssize_t r = -2;
-  if (drv->event_slen > 0) {
-    r = sendto(drv->event_sock, &command, sizeof(command), MSG_DONTWAIT,
-               (const struct sockaddr *)&(drv->event_si_other),
-               drv->event_slen);
-  }
+  ssize_t r = sock_sendto(&drv->event_sock, &command, sizeof(command));
   if (r != sizeof(command)) {
-    printf("unix/ble: failed to write command %c: %d\n", cmdtype, (int)r);
+    printf("unix/ble: failed to write command %c: %zd\n", cmdtype, r);
   }
 
   return true;
@@ -284,20 +246,15 @@ bool ble_get_event(ble_event_t *event) {
   if (!is_enabled(drv)) {
     return false;
   }
-  struct sockaddr_in si;
-  socklen_t sl = sizeof(si);
+
   uint8_t buf[sizeof(ble_event_t)] = {0};
-  ssize_t r = recvfrom(drv->event_sock, buf, sizeof(buf), MSG_DONTWAIT,
-                       (struct sockaddr *)&si, &sl);
+  ssize_t r = sock_recvfrom(&drv->event_sock, buf, sizeof(buf));
   if (r <= 0) {
     return false;
   } else if (r > sizeof(ble_event_t)) {
     printf("unix/ble: event packet too long: %zd\n", r);
     return false;
   }
-
-  drv->event_si_other = si;
-  drv->event_slen = sl;
 
   const ble_event_t *e = (ble_event_t *)buf;
 
@@ -398,11 +355,7 @@ bool ble_can_write(void) {
     return false;
   }
 
-  struct pollfd fds[] = {
-      {drv->data_sock, POLLOUT, 0},
-  };
-  int r = poll(fds, 1, 0);
-  return (r > 0);
+  return sock_can_send(&drv->data_sock);
 }
 
 bool ble_write(const uint8_t *data, uint16_t len) {
@@ -416,12 +369,8 @@ bool ble_write(const uint8_t *data, uint16_t len) {
     return false;
   }
 
-  ssize_t r = len;
-  if (drv->data_slen > 0) {
-    r = sendto(drv->data_sock, data, len, MSG_DONTWAIT,
-               (const struct sockaddr *)&(drv->data_si_other), drv->data_slen);
-  }
-  return r;
+  ssize_t r = sock_sendto(&drv->data_sock, data, len);
+  return r == len;
 }
 
 bool ble_can_read(void) {
@@ -430,11 +379,7 @@ bool ble_can_read(void) {
     return false;
   }
 
-  struct pollfd fds[] = {
-      {drv->data_sock, POLLIN, 0},
-  };
-  int r = poll(fds, 1, 0);
-  return (r > 0);
+  return sock_can_recv(&drv->data_sock);
 }
 
 uint32_t ble_read(uint8_t *data, uint16_t max_len) {
@@ -448,18 +393,12 @@ uint32_t ble_read(uint8_t *data, uint16_t max_len) {
     return false;
   }
 
-  struct sockaddr_in si;
-  socklen_t sl = sizeof(si);
-  uint8_t buf[max_len];
-  memset(buf, 0, max_len);
-  ssize_t r = recvfrom(drv->data_sock, buf, sizeof(buf), MSG_DONTWAIT,
-                       (struct sockaddr *)&si, &sl);
+  uint8_t buf[max_len] = {};
+  ssize_t r = sock_recvfrom(&drv->data_sock, buf, sizeof(buf));
   if (r <= 0) {
     return 0;
   }
 
-  drv->data_si_other = si;
-  drv->data_slen = sl;
   memcpy(data, buf, r);
   return r;
 }
@@ -539,11 +478,7 @@ static void on_ble_poll(void *context, bool read_awaited, bool write_awaited) {
     // check if you can read from event socket
 
     if (is_enabled(drv)) {
-      struct pollfd fds[] = {
-          {drv->event_sock, POLLIN, 0},
-      };
-      int r = poll(fds, 1, 0);
-      ready = (r > 0);
+      ready = sock_can_recv(&drv->event_sock);
     }
 
     syshandle_signal_read_ready(SYSHANDLE_BLE, &ready);
