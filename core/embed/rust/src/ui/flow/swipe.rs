@@ -1,5 +1,3 @@
-#[cfg(feature = "rgb_led")]
-use crate::trezorhal::rgb_led;
 use crate::{
     error::{self, Error},
     maybe_trace::MaybeTrace,
@@ -317,7 +315,7 @@ impl Layout<Result<Obj, Error>> for SwipeFlow {
             self.current_page().render(target);
 
             #[cfg(feature = "rgb_led")]
-            rgb_led::set(target.led_color());
+            target.led_state().set();
 
             #[cfg(feature = "ui_debug")]
             if target.should_raise_overflow_exception() {

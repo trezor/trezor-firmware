@@ -1,3 +1,5 @@
+#[cfg(feature = "rgb_led")]
+use crate::ui::led::LedState;
 use crate::{
     strutil::TString,
     ui::{
@@ -85,6 +87,6 @@ impl<'a> Component for ErrorScreen<'a> {
         self.wait_for_restart.render(target);
         self.screen_border.render(u8::MAX, target);
         #[cfg(feature = "rgb_led")]
-        target.set_led_color(LED_RED);
+        target.set_led_state(LedState::Static(LED_RED));
     }
 }

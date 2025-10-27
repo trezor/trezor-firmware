@@ -14,8 +14,6 @@ use num_traits::ToPrimitive;
 #[cfg(feature = "ble")]
 use crate::ui::event::BLEEvent;
 
-#[cfg(feature = "rgb_led")]
-use crate::trezorhal::rgb_led;
 #[cfg(feature = "button")]
 use crate::{
     trezorhal::button::{PhysicalButton, PhysicalButtonEvent},
@@ -161,7 +159,7 @@ where
             self.inner.render(target);
 
             #[cfg(feature = "rgb_led")]
-            rgb_led::set(target.led_color());
+            target.led_state().set();
 
             #[cfg(feature = "ui_debug")]
             if target.should_raise_overflow_exception() {

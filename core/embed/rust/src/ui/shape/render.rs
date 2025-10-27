@@ -1,3 +1,5 @@
+#[cfg(feature = "rgb_led")]
+use crate::ui::led::LedState;
 use crate::ui::{
     display::Color,
     geometry::{Offset, Rect},
@@ -60,10 +62,10 @@ pub trait Renderer<'a> {
     }
 
     #[cfg(feature = "rgb_led")]
-    fn set_led_color(&mut self, color: Color);
+    fn set_led_state(&mut self, led: LedState);
 
     #[cfg(feature = "rgb_led")]
-    fn led_color(&self) -> Color;
+    fn led_state(&self) -> LedState;
 
     #[cfg(feature = "ui_debug")]
     fn raise_overflow_exception(&mut self);
@@ -87,7 +89,7 @@ where
     cache: &'a DrawingCache<'alloc>,
 
     #[cfg(feature = "rgb_led")]
-    led_color: Option<Color>,
+    led_state: Option<LedState>,
 
     #[cfg(feature = "ui_debug")]
     overflow: bool,
@@ -114,7 +116,7 @@ where
             canvas,
             cache,
             #[cfg(feature = "rgb_led")]
-            led_color: None,
+            led_state: None,
             #[cfg(feature = "ui_debug")]
             overflow: false,
         }
@@ -144,15 +146,15 @@ where
     }
 
     #[cfg(feature = "rgb_led")]
-    fn set_led_color(&mut self, color: Color) {
+    fn set_led_state(&mut self, led_state: LedState) {
         // LED color should be set once per rendered frame.
-        debug_assert!(self.led_color.is_none_or(|current| current == color));
-        self.led_color = Some(color);
+        debug_assert!(self.led_state.is_none_or(|current| current == led_state));
+        self.led_state = Some(led_state);
     }
 
     #[cfg(feature = "rgb_led")]
-    fn led_color(&self) -> Color {
-        self.led_color.unwrap_or_else(Color::black)
+    fn led_state(&self) -> LedState {
+        self.led_state.unwrap_or_default()
     }
 
     #[cfg(feature = "ui_debug")]
@@ -213,13 +215,13 @@ where
     }
 
     #[cfg(feature = "rgb_led")]
-    fn set_led_color(&mut self, color: Color) {
-        self.renderer.set_led_color(color);
+    fn set_led_state(&mut self, led_state: LedState) {
+        self.renderer.set_led_state(led_state);
     }
 
     #[cfg(feature = "rgb_led")]
-    fn led_color(&self) -> Color {
-        self.renderer.led_color()
+    fn led_state(&self) -> LedState {
+        self.renderer.led_state()
     }
 
     #[cfg(feature = "ui_debug")]

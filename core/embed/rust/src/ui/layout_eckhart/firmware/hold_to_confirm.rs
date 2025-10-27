@@ -21,6 +21,9 @@ use pareen;
 #[cfg(feature = "haptic")]
 use crate::trezorhal::haptic;
 
+#[cfg(feature = "rgb_led")]
+use crate::ui::led::LedState;
+
 /// A component that displays a border that grows from the bottom of the screen
 /// to the top. The animation is parametrizable by color and duration.
 pub struct HoldToConfirmAnim {
@@ -213,7 +216,7 @@ impl Component for HoldToConfirmAnim {
             }
         }
         #[cfg(feature = "rgb_led")]
-        target.set_led_color(self.led_color);
+        target.set_led_state(LedState::Static(self.led_color));
     }
 }
 

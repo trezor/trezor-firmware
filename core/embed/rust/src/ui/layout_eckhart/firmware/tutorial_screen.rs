@@ -21,6 +21,9 @@ use super::{
     ActionBar, ActionBarMsg,
 };
 
+#[cfg(feature = "rgb_led")]
+use crate::ui::led::LedState;
+
 // Duration of the loader animation
 const LOADER_DURATION: Duration = Duration::from_secs(3);
 // Loader animation + gradient duration
@@ -108,7 +111,7 @@ impl Component for TutorialWelcomeScreen {
         #[cfg(feature = "rgb_led")]
         if !loader_running {
             ScreenBackground::new(Some(LED_COLOR), None).render(target);
-            target.set_led_color(LED_COLOR);
+            target.set_led_state(LedState::Static(LED_COLOR));
         }
 
         self.text.render(target);

@@ -2,6 +2,7 @@ use crate::ui::{
     component::{Component, Event, EventCtx},
     event::BLEEvent,
     geometry::Rect,
+    led::{Effect, LedState},
     shape::Renderer,
 };
 
@@ -65,7 +66,9 @@ where
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.inner.render(target)
+        self.inner.render(target);
+        #[cfg(feature = "rgb_led")]
+        target.set_led_state(LedState::Effect(Effect::Pairing));
     }
 }
 

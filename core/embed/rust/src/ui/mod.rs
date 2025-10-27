@@ -17,6 +17,9 @@ pub mod layout;
 
 mod api;
 
+#[cfg(feature = "rgb_led")]
+mod led;
+
 #[cfg(feature = "layout_bolt")]
 pub mod layout_bolt;
 #[cfg(feature = "layout_caesar")]
