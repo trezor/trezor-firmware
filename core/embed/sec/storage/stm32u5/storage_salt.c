@@ -55,7 +55,7 @@ void storage_salt_get(storage_salt_t* salt) {
   salt->size = SECRET_KEY_STORAGE_SALT_SIZE;
 }
 
-#else   // SECRET_PRIVILEGED_MASTER_KEY_SLOT
+#else  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
 
 // Legacy entropy generated from CPUID & radnom data in OTP
 void storage_salt_get(storage_salt_t* salt) {

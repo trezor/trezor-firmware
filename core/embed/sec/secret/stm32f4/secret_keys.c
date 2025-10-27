@@ -40,7 +40,8 @@ secbool secret_key_optiga_pairing(uint8_t dest[OPTIGA_PAIRING_SECRET_SIZE]) {
 #endif  // USE_OPTIGA
 
 secbool secret_keys_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
-  secret_key_derive_nist256p1(0, KEY_INDEX_DELEGATED_IDENTITY, dest);
+  secret_key_derive_nist256p1(UNUSED_KEY_SLOT, KEY_INDEX_DELEGATED_IDENTITY,
+                              dest);
   return sectrue;
 }
 

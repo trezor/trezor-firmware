@@ -31,17 +31,6 @@
 
 #ifdef SECRET_PRIVILEGED_MASTER_KEY_SLOT
 
-// Key derivation indices
-#define KEY_INDEX_MCU_DEVICE_AUTH 0
-#define KEY_INDEX_OPTIGA_PAIRING 1
-#define KEY_INDEX_OPTIGA_MASKING 2
-#define KEY_INDEX_TROPIC_PAIRING_UNPRIVILEGED 3
-#define KEY_INDEX_TROPIC_PAIRING_PRIVILEGED 4
-#define KEY_INDEX_TROPIC_MASKING 5
-#define KEY_INDEX_NRF_PAIRING 6
-#define KEY_INDEX_STORAGE_SALT 7
-#define KEY_INDEX_DELEGATED_IDENTITY 8
-
 secbool secret_key_mcu_device_auth(uint8_t dest[MLDSA_SEEDBYTES]) {
   _Static_assert(MLDSA_SEEDBYTES == SHA256_DIGEST_LENGTH);
   return secret_key_derive_sym(SECRET_PRIVILEGED_MASTER_KEY_SLOT,
@@ -105,9 +94,9 @@ secbool secret_key_tropic_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
 
 #ifdef USE_NRF_AUTH
 
-static secbool secequal(const void *ptr1, const void *ptr2, size_t n) {
-  const uint8_t *p1 = ptr1;
-  const uint8_t *p2 = ptr2;
+static secbool secequal(const void* ptr1, const void* ptr2, size_t n) {
+  const uint8_t* p1 = ptr1;
+  const uint8_t* p2 = ptr2;
   uint8_t diff = 0;
   size_t i = 0;
   for (i = 0; i < n; ++i) {
@@ -129,8 +118,8 @@ secbool secret_key_nrf_pairing(uint8_t dest[NRF_PAIRING_SECRET_SIZE]) {
                                KEY_INDEX_NRF_PAIRING, 0, dest);
 }
 
-secbool secret_validate_nrf_pairing(const uint8_t *message, size_t msg_len,
-                                    const uint8_t *mac, size_t mac_len) {
+secbool secret_validate_nrf_pairing(const uint8_t* message, size_t msg_len,
+                                    const uint8_t* mac, size_t mac_len) {
   secbool result = secfalse;
 
   uint8_t key[NRF_PAIRING_SECRET_SIZE] = {0};
@@ -198,7 +187,8 @@ secbool master_key_get(master_key_t* master_key) {
 }
 
 secbool secret_keys_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
-  return secret_key_derive_nist256p1(0, KEY_INDEX_DELEGATED_IDENTITY, dest);
+  return secret_key_derive_nist256p1(UNUSED_KEY_SLOT,
+                                     KEY_INDEX_DELEGATED_IDENTITY, dest);
 }
 
 #endif  // SECRET_PRIVILEGED_MASTER_KEY_SLOT

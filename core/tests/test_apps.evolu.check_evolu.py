@@ -91,9 +91,7 @@ class TestCheckDelegatedIdentityKey(unittest.TestCase):
             h.get_digest(),
         )
 
-        self.assertTrue(
-            check_delegated_identity_proof(proof, header, arguments=[])
-        )
+        self.assertTrue(check_delegated_identity_proof(proof, header, arguments=[]))
         self.assertTrue(check_delegated_identity_proof(proof, header))
 
 

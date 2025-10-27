@@ -26,10 +26,20 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+// Key derivation indices
+#define KEY_INDEX_MCU_DEVICE_AUTH 0
+#define KEY_INDEX_OPTIGA_PAIRING 1
+#define KEY_INDEX_OPTIGA_MASKING 2
+#define KEY_INDEX_TROPIC_PAIRING_UNPRIVILEGED 3
+#define KEY_INDEX_TROPIC_PAIRING_PRIVILEGED 4
+#define KEY_INDEX_TROPIC_MASKING 5
+#define KEY_INDEX_NRF_PAIRING 6
+#define KEY_INDEX_STORAGE_SALT 7
+#define KEY_INDEX_DELEGATED_IDENTITY 8
+
 #ifndef SECRET_PRIVILEGED_MASTER_KEY_SLOT
-
-#define KEY_INDEX_DELEGATED_IDENTITY 1
-
+#define UNUSED_KEY_SLOT 0
+// This is a dummy value used instead of SECRET_PRIVILEGED_MASTER_KEY_SLOT
 #endif  // SECRET_PRIVILEGED_MASTER_KEY_SLOT
 
 secbool secret_key_derive_sym(uint8_t slot, uint16_t index, uint16_t subindex,

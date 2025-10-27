@@ -96,5 +96,5 @@ def test_evolu_get_delegated_identity_test_vector(client: Client):
 
     private_key = response.private_key
     assert private_key == bytes.fromhex(
-        "c6389a1a662218ce2ff8db74dd2e2e428a23e9388ae3279466fedfcbd82efb34"
+        "10e39ed3a40dd63a47a14608d4bccd4501170cf9f2188223208084d39c37b369"
     )
