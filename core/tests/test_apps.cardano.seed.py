@@ -1,7 +1,7 @@
 # flake8: noqa: F403,F405
 from common import *  # isort:skip
 
-from trezor.crypto import cardano
+from trezor.crypto import bip39, cardano
 
 from apps.common.paths import HARDENED
 
@@ -16,8 +16,9 @@ class TestCardanoKeychain(unittest.TestCase):
         mnemonic = (
             "test walk nut penalty hip pave soap entry language right filter choice"
         )
+        binary_mnemonic = bip39.mnemonic_to_bits(mnemonic)
         passphrase = ""
-        secret = cardano.derive_icarus(mnemonic, passphrase, True)
+        secret = cardano.derive_icarus(binary_mnemonic, passphrase, True)
         node = cardano.from_secret(secret)
         keychain = Keychain(node)
 
@@ -71,25 +72,26 @@ class TestCardanoDerivation(unittest.TestCase):
         # vectors from:
         # https://github.com/cardano-foundation/CIPs/blob/master/CIP-0003/Icarus.md
         mnemonic = "eight country switch draw meat scout mystery blade tip drift useless good keep usage title"
+        binary_mnemonic = bip39.mnemonic_to_bits(mnemonic)
 
-        secret = cardano.derive_icarus(mnemonic, "", False)
+        secret = cardano.derive_icarus(binary_mnemonic, "", False)
         self.assertEqual(
             hexlify(secret).decode(),
             "c065afd2832cd8b087c4d9ab7011f481ee1e0721e78ea5dd609f3ab3f156d245"
             "d176bd8fd4ec60b4731c3918a2a72a0226c0cd119ec35b47e4d55884667f552a"
             "23f7fdcd4a10c6cd2c7393ac61d877873e248f417634aa3d812af327ffe9d620",
         )
-        secret_trezor = cardano.derive_icarus(mnemonic, "", True)
+        secret_trezor = cardano.derive_icarus(binary_mnemonic, "", True)
         self.assertEqual(secret, secret_trezor)
 
-        secret = cardano.derive_icarus(mnemonic, "foo", False)
+        secret = cardano.derive_icarus(binary_mnemonic, "foo", False)
         self.assertEqual(
             hexlify(secret).decode(),
             "70531039904019351e1afb361cd1b312a4d0565d4ff9f8062d38acf4b15cce41"
             "d7b5738d9c893feea55512a3004acb0d222c35d3e3d5cde943a15a9824cbac59"
             "443cf67e589614076ba01e354b1a432e0e6db3b59e37fc56b5fb0222970a010e",
         )
-        secret_trezor = cardano.derive_icarus(mnemonic, "foo", True)
+        secret_trezor = cardano.derive_icarus(binary_mnemonic, "foo", True)
         self.assertEqual(secret, secret_trezor)
 
     def test_icarus_trezor(self):
@@ -98,25 +100,26 @@ class TestCardanoDerivation(unittest.TestCase):
             "shoot primary clutch crush open amazing screen patrol "
             "group space point ten exist slush involve unfold"
         )
-        secret = cardano.derive_icarus(mnemonic, "", True)
+        binary_mnemonic = bip39.mnemonic_to_bits(mnemonic)
+        secret = cardano.derive_icarus(binary_mnemonic, "", True)
         self.assertEqual(
             hexlify(secret).decode(),
             "409bb7a2998ec48029c8d2956fabd043a368ccc9b5120e42dd8a5c7145d08f45"
             "e8e8664d06f62b4fc3bab0134778af27ddf059a4ad1eb0efefeedd8189bbfe00"
             "deb289c5cdc2cf8ccfa19aea63b28424a4b0045b4b762292d46b73aa1c5cc99a",
         )
-        secret_icarus = cardano.derive_icarus(mnemonic, "", False)
+        secret_icarus = cardano.derive_icarus(binary_mnemonic, "", False)
         self.assertNotEqual(secret, secret_icarus)
 
         PASSPHRASE = "foo"
-        secret = cardano.derive_icarus(mnemonic, PASSPHRASE, True)
+        secret = cardano.derive_icarus(binary_mnemonic, PASSPHRASE, True)
         self.assertEqual(
             hexlify(secret).decode(),
             "c8ab7a160a66bfa7a118f553c4eebfe7444e36e449dac7d6eeae21f3bbaa9551"
             "8593025160068776a4d61c0efc4f698585bb59f1aebe93c58e1eaf557ab59502"
             "d9f68fbea3049bc2255d15fc63803e9c3dbb78abff2d53f8356794807d402568",
         )
-        secret_icarus = cardano.derive_icarus(mnemonic, PASSPHRASE, False)
+        secret_icarus = cardano.derive_icarus(binary_mnemonic, PASSPHRASE, False)
         self.assertNotEqual(secret, secret_icarus)
 
 
