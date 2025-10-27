@@ -2,6 +2,7 @@ mod api;
 mod base64;
 mod crc16;
 mod echo;
+mod image_info;
 mod reset;
 mod upload;
 
@@ -24,6 +25,7 @@ pub const SMP_GROUP_IMAGE: u16 = 1;
 
 pub const SMP_CMD_ID_ECHO: u8 = 0;
 pub const SMP_CMD_ID_RESET: u8 = 5;
+pub const SMP_CMD_ID_IMAGE_STATE: u8 = 0;
 pub const SMP_CMD_ID_IMAGE_UPLOAD: u8 = 1;
 
 pub const SMP_OP_READ: u8 = 0;
@@ -226,6 +228,7 @@ impl<'a> Write for SmpBuffer<'a> {
 #[derive(Copy, Clone, PartialEq)]
 pub enum MsgType {
     Echo,
+    ImageStateResponse,
     ImageUploadResponse,
     Unknown,
 }
@@ -343,6 +346,9 @@ impl SmpReceiver {
         match (group, cmd_id) {
             (SMP_GROUP_OS, SMP_CMD_ID_ECHO) => {
                 self.msg_type = Some(MsgType::Echo);
+            }
+            (SMP_GROUP_IMAGE, SMP_CMD_ID_IMAGE_STATE) => {
+                self.msg_type = Some(MsgType::ImageStateResponse);
             }
             (SMP_GROUP_IMAGE, SMP_CMD_ID_IMAGE_UPLOAD) => {
                 self.msg_type = Some(MsgType::ImageUploadResponse);
