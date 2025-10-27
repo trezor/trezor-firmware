@@ -46,7 +46,7 @@ def _is_coin_swap(payment_request: PaymentRequest) -> bool:
 
 
 class PaymentRequestVerifier:
-    PUBLIC_KEY = b""
+    PUBLIC_KEY = b"\x02\xaa\x9b\x94\xb3\x06\xf1\xb5\x0c\x19\xb4\xb9\x53\xb6\xac\xdf\x2d\x3a\xc0\x9e\xca\x5e\x53\x44\xa2\xbb\x2f\xbf\x19\x49\x5d\x55\x0c"
 
     def verify_payment_request_is_supported(
         self, payment_request: PaymentRequest
