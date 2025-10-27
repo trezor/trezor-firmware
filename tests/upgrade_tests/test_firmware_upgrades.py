@@ -22,15 +22,17 @@ import pytest
 from shamir_mnemonic import shamir
 
 from trezorlib import btc, debuglink, device, exceptions, fido, messages, models
+from trezorlib.cardano import get_public_key
 from trezorlib.client import ProtocolVersion
 from trezorlib.messages import (
     ApplySettings,
     BackupAvailability,
     BackupType,
+    CardanoDerivationType,
     RecoveryStatus,
     Success,
 )
-from trezorlib.tools import H_
+from trezorlib.tools import H_, parse_path
 
 from ..click_tests import recovery
 from ..common import MNEMONIC_SLIP39_BASIC_20_3of6, MNEMONIC_SLIP39_BASIC_20_3of6_SECRET
@@ -515,6 +517,56 @@ def test_upgrade_u2f(gen: str, tag: str):
         session = emu.client.get_seedless_session()
         counter = fido.get_next_counter(session)
         assert counter == 12
+
+
+@for_all("core")
+@lower_models_minimum_version
+@pytest.mark.parametrize("backup_type", [BackupType.Bip39, BackupType.Slip39_Basic])
+@pytest.mark.parametrize(
+    "derivation_type",
+    [CardanoDerivationType.ICARUS, CardanoDerivationType.ICARUS_TREZOR],
+)
+def test_cardano_address_does_not_change_by_upgrade(
+    gen: str,
+    tag: Optional[str],
+    backup_type: BackupType,
+    derivation_type: CardanoDerivationType,
+):
+    """
+    Check that the Cardano address does not change after upgrading app storage from v2
+    to the current version.
+    """
+    ADDRESS_N = parse_path("m/44h/1815h/0h")
+
+    version_tag = version_from_tag(tag)
+    if (
+        version_tag is not None
+        and version_tag == (2, 1, 2)
+        and backup_type == BackupType.Slip39_Basic
+    ):
+        # SLIP-39 was not implemented for Cardano in v2.1.2
+        return
+
+    with EmulatorWrapper(gen, tag) as emu:
+        device.setup(
+            emu.client.get_seedless_session(),
+            pin_protection=False,
+            passphrase_protection=False,
+            skip_backup=True,
+            backup_type=backup_type,
+            entropy_check_count=0,
+        )
+        session = emu.client.get_session(derive_cardano=True)
+        old_key = get_public_key(session, ADDRESS_N, derivation_type, show_display=True)
+        storage = emu.get_storage()
+
+    with EmulatorWrapper(gen, storage=storage) as emu:
+        session = emu.client.get_session(derive_cardano=True)
+        new_key = get_public_key(session, ADDRESS_N, derivation_type, show_display=True)
+
+        assert old_key.xpub == new_key.xpub
+        assert old_key.node.public_key == new_key.node.public_key
+        assert old_key.node.chain_code == new_key.node.chain_code
 
 
 if __name__ == "__main__":
