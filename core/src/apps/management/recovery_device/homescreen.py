@@ -235,8 +235,12 @@ async def _finish_recovery(secret: bytes, backup_type: BackupType) -> Success:
     if backup_type is None:
         raise RuntimeError
 
-    storage_device.store_mnemonic_secret(secret, needs_backup=False, no_backup=False)
     storage_device.set_backup_type(backup_type)
+    storage_device.store_mnemonic_secret(
+        secret=secret,
+        needs_backup=False,
+        no_backup=False,
+    )
     if backup_types.is_slip39_backup_type(backup_type):
         if not backup_types.is_extendable_backup_type(backup_type):
             identifier = storage_recovery.get_slip39_identifier()

@@ -82,9 +82,9 @@ if not utils.BITCOIN_ONLY:
         if not is_bip39():
             raise ValueError  # should not be called for SLIP-39
 
-        mnemonic_secret = get_secret()
-        if mnemonic_secret is None:
-            raise ValueError("Mnemonic not set")
+        binary_mnemonic = storage_device.get_binary_mnemonic()
+        if binary_mnemonic is None:
+            raise RuntimeError("Failed to get binary mnemonic.")
 
         render_func = None
         if progress_bar and not utils.DISABLE_ANIMATION:
@@ -94,7 +94,10 @@ if not utils.BITCOIN_ONLY:
         from trezor.crypto import cardano
 
         seed = cardano.derive_icarus(
-            mnemonic_secret.decode(), passphrase, trezor_derivation, render_func
+            binary_mnemonic,
+            passphrase,
+            trezor_derivation,
+            render_func,
         )
         _finish_progress()
         return seed

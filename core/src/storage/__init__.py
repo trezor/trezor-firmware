@@ -29,6 +29,8 @@ def init_unlocked() -> None:
     version = device.get_version()
     if version == common.STORAGE_VERSION_01:
         _migrate_from_version_01()
+    elif version == common.STORAGE_VERSION_02:
+        _migrate_from_version_02()
 
     # In FWs <= 2.3.1 'version' denoted whether the device is initialized or not.
     # In 2.3.2 we have introduced a new field 'initialized' for that.
@@ -70,5 +72,26 @@ def _migrate_from_version_01() -> None:
         device.set_u2f_counter(int.from_bytes(counter, "big"))
         # Delete the old, non-public U2F_COUNTER.
         common.delete(common.APP_DEVICE, device.U2F_COUNTER)
+    # the device is now at version 2
+    device.set_version(common.STORAGE_VERSION_02)
+
+    # update from version 2 to version 3
+    _migrate_from_version_02()
+
+
+def _migrate_from_version_02() -> None:
+    from trezor import utils
+
+    # This update concerns Cardano derivation. There is no need for update for Bitcoin-only builds
+    if not utils.BITCOIN_ONLY:
+        from storage.device import get_backup_type, store_binary_mnemonic
+        from trezor.enums import BackupType
+
+        if get_backup_type() == BackupType.Bip39:
+            # Ensure binary mnemonic is stored
+            secret = device.get_mnemonic_secret()
+            if secret is not None:
+                store_binary_mnemonic(secret)
+
     # set_current_version
     device.set_version(common.STORAGE_VERSION_CURRENT)

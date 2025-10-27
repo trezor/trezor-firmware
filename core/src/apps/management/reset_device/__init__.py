@@ -132,7 +132,7 @@ async def reset_device(msg: ResetDevice) -> Success:
         storage_device.set_label(msg.label)
     storage_device.set_passphrase_enabled(bool(msg.passphrase_protection))
     storage_device.store_mnemonic_secret(
-        secret,  # for SLIP-39, this is the EMS
+        secret=secret,  # for SLIP-39, this is the EMS
         needs_backup=not perform_backup,
         no_backup=bool(msg.no_backup),
     )
