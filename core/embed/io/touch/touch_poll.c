@@ -79,8 +79,8 @@ void trace_event(uint32_t event) {
 
   systask_id_t task_id = systask_id(systask_active());
 
-  printf("%04ld [task=%d, event=%c, x=%3d, y=%3d]\r\n", time, task_id,
-         event_type, x, y);
+  dbg_printf("%d [task=%d, event=%c, x=%d, y=%d]\r\n", time, task_id,
+             event_type, x, y);
 }
 #endif
 
@@ -136,6 +136,10 @@ uint32_t touch_fsm_get_event(touch_fsm_t* fsm, uint32_t touch_state) {
         // This suggests that the previous touch was very short,
         // or/and the driver is not called very frequently.
         event = TOUCH_START | xy;
+
+        // We have to remember "false" touch state to convince
+        // the state machine to signal the TOUCH_END event next.
+        touch_state = event;
       } else {
         // Either the driver is starving or the coordinates
         // have not changed, which would suggest that the TOUCH_END
