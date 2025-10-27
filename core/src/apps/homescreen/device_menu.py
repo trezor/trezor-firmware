@@ -261,6 +261,8 @@ async def handle_UnpairDevice(index: int) -> None:
 
 async def handle_ToggleBluetooth() -> None:
     ble_enable(not ble.get_enabled())
+    if ble.get_enabled() and ble.peer_count() > 0:
+        ble.start_advertising(True, storage_device.get_label())
 
 
 async def handle_SetOrChangePin() -> None:
