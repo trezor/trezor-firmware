@@ -9,7 +9,7 @@ from ..common import draw_simple, interact, raise_if_not_confirmed
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes, StrOrBytes
-    from typing import Awaitable, Callable, Iterable, List, NoReturn, Sequence
+    from typing import Awaitable, Callable, Iterable, NoReturn, Sequence
 
     from trezor.messages import StellarAsset
 
@@ -555,17 +555,17 @@ async def confirm_payment_request(
     recipient: str,
     texts: Iterable[tuple[str | None, str]],
     refunds: Iterable[tuple[str, str | None, str | None]],
-    trades: List[tuple[str, str, str, str | None, str | None]],
-    account_items: List[PropertyType],
+    trades: list[tuple[str | None, str, str, str | None, str | None]],
+    account_items: list[PropertyType],
     transaction_fee: str | None,
     fee_info_items: Iterable[PropertyType] | None,
     token_address: str | None,
 ) -> None:
     from trezor.ui.layouts.menu import Menu, confirm_with_menu
 
-    # Note: we don't support "sales" (swap to fiat) yet,
-    # so if there is any trade, we assume it must be a swap
-    is_swap = len(trades) != 0
+    is_swap = len(trades) != 0 and all(
+        sell_amount is not None for sell_amount, _, _, _, _ in trades
+    )
 
     for title, text in texts:
         await raise_if_not_confirmed(
@@ -1153,7 +1153,7 @@ if not utils.BITCOIN_ONLY:
 
     async def confirm_trade(
         title: str,
-        sell_amount: str,
+        sell_amount: str | None,
         buy_amount: str,
         address: str,
         account: str | None,
@@ -1162,9 +1162,13 @@ if not utils.BITCOIN_ONLY:
     ) -> None:
         from trezor.ui.layouts.menu import Menu, confirm_with_menu
 
+        items = []
+        if sell_amount is not None:
+            items.append(("", sell_amount, True))
+        items.append(("", buy_amount, True))
         trade_layout = trezorui_api.confirm_properties(
             title=title,
-            items=[("", sell_amount, True), ("", buy_amount, True)],
+            items=items,
             verb=TR.buttons__continue,
             external_menu=True,
         )
