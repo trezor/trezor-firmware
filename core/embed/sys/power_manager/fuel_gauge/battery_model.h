@@ -23,6 +23,7 @@
 
 // Include the battery data header - this will be selected at compile time
 // based on which battery is being used
+#include "battery_data_hcf343837ncz.h"
 #include "battery_data_jyhpfl333838.h"
 
 typedef struct {

@@ -328,6 +328,18 @@ void battery_model_init(battery_model_t* model) {
       model->ocv_charge_params = BATTERY_JYHPFL333838_OCV_CHARGE_PARAMS;
       model->ocv_discharge_params = BATTERY_JYHPFL333838_OCV_DISCHARGE_PARAMS;
       model->capacity = BATTERY_JYHPFL333838_CAPACITY;
+      break;
+    case 1:
+      model->soc_breakpoint_1 = BATTERY_HCF343837NCZ_SOC_BREAKPOINT_1;
+      model->soc_breakpoint_2 = BATTERY_HCF343837NCZ_SOC_BREAKPOINT_2;
+      model->num_temp_points = BATTERY_HCF343837NCZ_NUM_TEMP_POINTS;
+      model->temp_points_charge = BATTERY_HCF343837NCZ_TEMP_POINTS_CHG;
+      model->temp_points_discharge = BATTERY_HCF343837NCZ_TEMP_POINTS_DISCHG;
+      model->r_int_params = BATTERY_HCF343837NCZ_R_INT_PARAMS;
+      model->ocv_charge_params = BATTERY_HCF343837NCZ_OCV_CHARGE_PARAMS;
+      model->ocv_discharge_params = BATTERY_HCF343837NCZ_OCV_DISCHARGE_PARAMS;
+      model->capacity = BATTERY_HCF343837NCZ_CAPACITY;
+      break;
   }
 }
 
