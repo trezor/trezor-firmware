@@ -89,13 +89,6 @@ bool rtc_schedule_wakeup_event(uint32_t wakeup_timestamp,
 bool rtc_deschedule_wakeup_event(uint32_t wakeup_event_id);
 
 /**
- * @brief Deschedule all events from rtc schedule and stop rtc timer
- *
- * @return true if all events successfully descheduled
- */
-bool rtc_deschedule_all_wakup_events(void);
-
-/**
  * @brief Set the RTC using discrete time values
  *
  * Sets the RTC date and time using individual components: year, month, day,

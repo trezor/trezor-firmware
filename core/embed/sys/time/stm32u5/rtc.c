@@ -68,7 +68,6 @@ static uint32_t rtc_calendar_to_timestamp(const RTC_DateTypeDef* date,
 static bool rtc_schedule_push(rtc_wakeup_event_t* event);
 static bool rtc_schedule_pop(rtc_wakeup_event_t* event);
 static bool rtc_schedule_remove(uint32_t event_id);
-static bool rtc_schedule_clear(void);
 static void rtc_wakeup_timer_stop(void);
 static bool rtc_wakeup_timer_start(rtc_wakeup_event_t* event);
 
@@ -195,7 +194,7 @@ static bool rtc_schedule_remove(uint32_t event_id) {
   uint8_t next_idx;
   uint8_t item_found = false;
 
-  while (idx == drv->schedule.write_idx) {
+  while (idx != drv->schedule.write_idx) {
     if (drv->schedule.events[idx].id == event_id) {
       item_found = true;
     }
@@ -218,16 +217,11 @@ static bool rtc_schedule_remove(uint32_t event_id) {
   }
 }
 
-static bool rtc_schedule_clear(void) {
-  rtc_driver_t* drv = &g_rtc_driver;
-  drv->schedule.write_idx = drv->schedule.read_idx;
-  return true;
-}
-
 bool rtc_schedule_wakeup_event(uint32_t wakeup_timestamp,
                                uint32_t* wakeup_event_id,
                                rtc_wakeup_callback_t callback, void* context) {
   rtc_driver_t* drv = &g_rtc_driver;
+  bool ret = true;
 
   if (!drv->initialized) {
     return false;
@@ -237,7 +231,10 @@ bool rtc_schedule_wakeup_event(uint32_t wakeup_timestamp,
 
   if (drv->event_is_staged) {
     // Put the staged event back into the schedule and stop the RTC timer
-    rtc_schedule_push(&drv->staged_event);
+    if (!rtc_schedule_push(&drv->staged_event)) {
+      irq_unlock(irq_key);
+      return false;
+    }
     rtc_wakeup_timer_stop();
   }
 
@@ -246,24 +243,27 @@ bool rtc_schedule_wakeup_event(uint32_t wakeup_timestamp,
                               .callback = callback,
                               .callback_context = context};
 
+  // Return event ID
   if (wakeup_event_id != NULL) {
     *wakeup_event_id = event.id;
   }
 
   if (!rtc_schedule_push(&event)) {
     // Queue is full
-    irq_unlock(irq_key);
-    return false;
+    ret = false;
   }
 
   // Put upcoming event on stage
   rtc_wakeup_event_t new_staged_event;
-  rtc_schedule_pop(&new_staged_event);
-  rtc_wakeup_timer_start(&new_staged_event);
+  if (rtc_schedule_pop(&new_staged_event)) {
+    rtc_wakeup_timer_start(&new_staged_event);
+  } else {
+    ret = false;
+  }
 
   irq_unlock(irq_key);
 
-  return true;
+  return ret;
 }
 
 bool rtc_deschedule_wakeup_event(uint32_t wakeup_event_id) {
@@ -293,23 +293,6 @@ bool rtc_deschedule_wakeup_event(uint32_t wakeup_event_id) {
 
   irq_unlock(key);
   return ret;
-}
-
-bool rtc_deschedule_all_wakup_events(void) {
-  rtc_driver_t* drv = &g_rtc_driver;
-
-  if (!drv->initialized) {
-    return false;
-  }
-
-  irq_key_t irq_key = irq_lock();
-
-  rtc_wakeup_timer_stop();
-  rtc_schedule_clear();
-
-  irq_unlock(irq_key);
-
-  return false;
 }
 
 static bool rtc_wakeup_timer_start(rtc_wakeup_event_t* e) {
@@ -384,8 +367,6 @@ void RTC_IRQHandler(void) {
 
     if (callback != NULL) {
       callback(callback_context);
-    } else {
-      wakeup_flags_set(WAKEUP_FLAG_RTC);
     }
 
     rtc_wakeup_event_t event;
