@@ -8,13 +8,14 @@ use crate::{
     translations::TR,
     ui::{
         component::{
+            base::AttachType,
             text::{
                 paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
                 TextStyle,
             },
             Component, Event, EventCtx,
         },
-        geometry::{LinearPlacement, Rect},
+        geometry::{Direction, LinearPlacement, Rect},
         layout::util::PropsList,
         shape::Renderer,
         ui_firmware::MAX_PAIRED_DEVICES,
@@ -752,14 +753,10 @@ impl DeviceMenuScreen {
         self.build_active_subscreen();
     }
 
-    fn activate_subscreen(&mut self, idx: u8, ctx: &mut EventCtx) {
+    fn activate_subscreen(&mut self, idx: u8, ctx: &mut EventCtx, attach_type: AttachType) {
         self.set_active_subscreen(idx);
         self.place(self.bounds);
-        if let ActiveScreen::Menu(screen, ..) = self.active_screen.deref_mut() {
-            screen.initialize_screen(ctx);
-        } else if let ActiveScreen::Device(screen) = self.active_screen.deref_mut() {
-            screen.initialize_screen(ctx);
-        }
+        self.event(ctx, Event::Attach(attach_type));
     }
 
     fn build_active_subscreen(&mut self) {
@@ -908,12 +905,12 @@ impl DeviceMenuScreen {
                 match self.submenus[usize::from(submenu_index)].items[usize::from(idx)].action {
                     Some(Action::GoToSubmenu(id_new)) => {
                         if let Some(menu) = self.try_resolve_submenu(id_new) {
-                            self.activate_subscreen(menu, ctx);
+                            self.activate_subscreen(menu, ctx, AttachType::Swipe(Direction::Left));
                         }
                         return None;
                     }
                     Some(Action::GoTo(menu)) => {
-                        self.activate_subscreen(menu, ctx);
+                        self.activate_subscreen(menu, ctx, AttachType::Initial);
                         return None;
                     }
                     Some(Action::Return(msg)) => return Some(msg),
@@ -932,7 +929,11 @@ impl DeviceMenuScreen {
         let active_subscreen = &self.subscreens[usize::from(self.active_subscreen)];
         if let Subscreen::HostInfoScreen(ref host_info) = active_subscreen {
             // Handle going back from the HostInfoScreen
-            self.activate_subscreen(host_info.parent_screen, ctx);
+            self.activate_subscreen(
+                host_info.parent_screen,
+                ctx,
+                AttachType::Swipe(Direction::Right),
+            );
             return None;
         }
 
@@ -954,7 +955,11 @@ impl DeviceMenuScreen {
             Subscreen::HostInfoScreen(..) => unreachable!(),
         };
 
-        self.activate_subscreen(unwrap!(self.try_resolve_submenu(parent)), ctx);
+        self.activate_subscreen(
+            unwrap!(self.try_resolve_submenu(parent)),
+            ctx,
+            AttachType::Swipe(Direction::Right),
+        );
         None
     }
 }
@@ -1037,7 +1042,11 @@ impl Component for DeviceMenuScreen {
                                 return Some(DeviceMenuMsg::DisconnectDevice);
                             }
                             (0, false) | (1, true) => {
-                                self.activate_subscreen(device_screen.host_info_screen, ctx);
+                                self.activate_subscreen(
+                                    device_screen.host_info_screen,
+                                    ctx,
+                                    AttachType::Swipe(Direction::Left),
+                                );
                                 return None;
                             }
                             (1, false) | (2, true) => {

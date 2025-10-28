@@ -2,7 +2,6 @@ use crate::{
     strutil::TString,
     ui::{
         component::{
-            base::AttachType,
             swipe_detect::{SwipeConfig, SwipeSettings},
             text::{layout::LayoutFit, TextStyle},
             Component, Event, EventCtx, Label, LineBreaking, SwipeDetect, TextLayout,
@@ -84,7 +83,7 @@ impl<T: MenuItems> VerticalMenuScreen<T> {
     }
 
     /// Update swipe detection and buttons state based on menu size
-    pub fn initialize_screen(&mut self, ctx: &mut EventCtx) {
+    fn initialize_screen(&mut self, ctx: &mut EventCtx) {
         if animation_disabled() {
             self.swipe = Some(SwipeDetect::new());
             ctx.enable_swipe();
