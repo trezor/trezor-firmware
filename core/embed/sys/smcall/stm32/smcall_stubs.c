@@ -195,6 +195,13 @@ bool optiga_read_sec(uint8_t *sec) {
   return (bool)smcall_invoke1((uint32_t)sec, SMCALL_OPTIGA_READ_SEC);
 }
 
+bool optiga_get_sec_clr_time(uint32_t *sec_clr_time) {
+  return (bool)smcall_invoke1((uint32_t)sec_clr_time,
+                              SMCALL_OPTIGA_GET_SEC_CLR_TIME);
+}
+
+void optiga_power_down(void) { smcall_invoke0(SMCALL_OPTIGA_POWER_DOWN); }
+
 #if PYOPT == 0
 void optiga_set_sec_max(void) { smcall_invoke0(SMCALL_OPTIGA_SET_SEC_MAX); }
 

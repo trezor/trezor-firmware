@@ -1234,3 +1234,76 @@ bool optiga_pin_decrease_rem(uint32_t count) {
 }
 
 #endif  // SECURE_MODE
+
+#ifdef KERNEL_MODE
+
+#include <sec/optiga.h>
+#include <sys/irq.h>
+
+#ifdef USE_RTC
+
+#include <sys/rtc.h>
+
+bool pwr_down_scheduled = false;
+uint32_t rtc_wakeup_event_id = 0;
+
+void optiga_rtc_wakeup_callback(void *context) {
+  optiga_power_down();
+  pwr_down_scheduled = false;
+}
+
+static void optiga_schedule_power_down(uint32_t power_down_time_s) {
+  // Optiga SEC is too high, pospone the optiga deinit/power down using RTC
+  // wakeup timer to make sure the SEC has enought time to decrease.
+  irq_key_t irq_key = irq_lock();
+
+  uint32_t current_timestamp;
+  rtc_get_timestamp(&current_timestamp);
+
+  if (rtc_schedule_wakeup_event(current_timestamp + power_down_time_s,
+                                &rtc_wakeup_event_id,
+                                optiga_rtc_wakeup_callback, NULL)) {
+    pwr_down_scheduled = true;
+  } else {
+    // Failed to schedule RTC event, deinit optiga right away
+    optiga_power_down();
+  }
+
+  irq_unlock(irq_key);
+}
+
+#endif
+
+void optiga_suspend() {
+#ifdef USE_RTC
+
+  uint32_t sec_clr_time;
+  optiga_get_sec_clr_time(&sec_clr_time);
+
+  if (sec_clr_time > 0) {
+    optiga_schedule_power_down(sec_clr_time);
+    return;
+  }
+#else
+
+  optiga_power_down();
+
+#endif  // USE_RTC
+}
+
+void optiga_resume() {
+#ifdef USE_RTC
+
+  irq_key_t irq_key = irq_lock();
+
+  if (pwr_down_scheduled) {
+    rtc_deschedule_wakeup_event(rtc_wakeup_event_id);
+    optiga_power_down();
+  }
+
+  irq_unlock(irq_key);
+
+#endif
+}
+
+#endif  // KERNEL_MODE

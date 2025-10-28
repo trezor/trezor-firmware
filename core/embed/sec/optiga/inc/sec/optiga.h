@@ -156,4 +156,25 @@ bool __wur optiga_pin_decrease_rem_v4(uint32_t count);
 
 bool __wur optiga_pin_decrease_rem(uint32_t count);
 
+/* *****************************************************************************
+ *  KERNEL PART
+ * ****************************************************************************/
+
+/**
+ * @brief Suspends optiga driver
+ *
+ * @note This is part of driver is used in KERNEL_MODE since it schedules RTC
+ * event to power down the optiga chip when its left powered up due to high
+ * SEC counter value.
+ */
+void optiga_suspend();
+
+/**
+ * @brief Resumes optiga driver
+ *
+ * @note This part of driver is used in KERNEL_MODE since it handles/cancel
+ * active RTC power down event when resuming from suspend.
+ */
+void optiga_resume();
+
 #endif
