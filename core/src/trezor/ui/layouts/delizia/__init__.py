@@ -925,6 +925,38 @@ def _confirm_summary(
     )
 
 
+async def confirm_trade(
+    title: str,
+    subtitle: str,
+    sell_amount: str | None,
+    buy_amount: str,
+    address: str,
+    account: str | None,
+    account_path: str | None,
+    extra_menu_items: list[tuple[str, str]],
+) -> None:
+    from trezor.ui.layouts.menu import Menu, confirm_with_menu
+
+    trade_layout = trezorui_api.confirm_trade(
+        title=title,
+        subtitle=subtitle,
+        sell_amount=sell_amount,
+        buy_amount=buy_amount,
+    )
+
+    account_items: list[PropertyType] = [("", address, None)]
+    if account:
+        account_items.append((TR.words__account, account, None))
+    if account_path:
+        account_items.append((TR.address_details__derivation_path, account_path, None))
+    menu_items = [create_details(TR.address__title_receive_address, account_items)]
+    for k, v in extra_menu_items:
+        menu_items.append(create_details(k, v))
+    menu = Menu.root(menu_items, TR.send__cancel_sign)
+
+    await confirm_with_menu(trade_layout, menu, "confirm_trade")
+
+
 if not utils.BITCOIN_ONLY:
 
     def confirm_ethereum_unknown_contract_warning(
@@ -1115,37 +1147,6 @@ if not utils.BITCOIN_ONLY:
             fee_info_items,
             TR.confirm_total__title_fee,
         )
-
-    async def confirm_trade(
-        title: str,
-        subtitle: str,
-        sell_amount: str | None,
-        buy_amount: str,
-        address: str,
-        account: str | None,
-        account_path: str | None,
-        extra_menu_items: list[tuple[str, str]],
-    ) -> None:
-        from trezor.ui.layouts.menu import Menu, confirm_with_menu
-
-        trade_layout = trezorui_api.confirm_trade(
-            title=title,
-            subtitle=subtitle,
-            sell_amount=sell_amount,
-            buy_amount=buy_amount,
-        )
-
-        account_items: list[PropertyType] = [("", address, None)]
-        if account:
-            account_items.append((TR.words__account, account, None))
-        if account_path:
-            account_items.append((TR.address_details__derivation_path, account_path, None))
-        menu_items = [create_details(TR.address__title_receive_address, account_items)]
-        for k, v in extra_menu_items:
-            menu_items.append(create_details(k, v))
-        menu = Menu.root(menu_items, TR.send__cancel_sign)
-
-        await confirm_with_menu(trade_layout, menu, "confirm_trade")
 
     async def confirm_ethereum_staking_tx(
         title: str,
