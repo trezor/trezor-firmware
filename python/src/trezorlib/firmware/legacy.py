@@ -21,8 +21,10 @@ import typing as t
 from dataclasses import field
 
 import construct as c
-import ecdsa
 from construct_classes import Struct, subcon
+from cryptography import exceptions as crypto_exceptions
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import ec, utils
 
 from . import consts, models, util
 from .core import FirmwareImage
@@ -68,14 +70,28 @@ def check_sig_v1(
             # unknown pubkey
             raise util.InvalidSignatureError(f"Unknown key in slot {i}")
 
-        verify = ecdsa.VerifyingKey.from_string(
-            public_keys[key_idx],
-            curve=ecdsa.curves.SECP256k1,
-            hashfunc=hashlib.sha256,
+        try:
+            verify = ec.EllipticCurvePublicKey.from_encoded_point(
+                ec.SECP256K1(),
+                public_keys[key_idx],
+            )
+        except ValueError as e:
+            raise util.InvalidSignatureError(f"Invalid public key in slot {i}") from e
+
+        if len(signature) != 64:
+            raise util.InvalidSignatureError(f"Invalid signature length in slot {i}")
+
+        der_signature = utils.encode_dss_signature(
+            int.from_bytes(signature[:32], "big"),
+            int.from_bytes(signature[32:], "big"),
         )
         try:
-            verify.verify_digest(signature, digest)
-        except ecdsa.BadSignatureError as e:
+            verify.verify(
+                der_signature,
+                digest,
+                ec.ECDSA(utils.Prehashed(hashes.SHA256())),
+            )
+        except crypto_exceptions.InvalidSignature as e:
             raise util.InvalidSignatureError(f"Invalid signature in slot {i}") from e
 
 
