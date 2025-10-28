@@ -583,7 +583,7 @@ impl Insets {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum Alignment {
     Start,
     Center,

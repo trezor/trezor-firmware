@@ -39,7 +39,7 @@ where
         content: T,
     ) -> Self {
         Self {
-            title: Child::new(Label::new(title, alignment, style)),
+            title: Child::new(Label::new(title, alignment, style).cropped()),
             subtitle: None,
             border: theme::borders(),
             button: None,
@@ -66,11 +66,9 @@ where
     }
 
     pub fn with_subtitle(mut self, style: TextStyle, subtitle: TString<'static>) -> Self {
-        self.subtitle = Some(Child::new(Label::new(
-            subtitle,
-            self.title.inner().alignment(),
-            style,
-        )));
+        self.subtitle = Some(Child::new(
+            Label::new(subtitle, self.title.inner().alignment(), style).cropped(),
+        ));
         self
     }
 

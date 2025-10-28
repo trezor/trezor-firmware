@@ -16,6 +16,7 @@ pub struct Label<'a> {
     layout: TextLayout,
     vertical: Alignment,
     must_fit: bool,
+    crop_area: bool,
 }
 
 impl<'a> Label<'a> {
@@ -25,6 +26,7 @@ impl<'a> Label<'a> {
             layout: TextLayout::new(style).with_align(align),
             vertical: Alignment::Start,
             must_fit: true,
+            crop_area: false,
         }
     }
 
@@ -42,6 +44,12 @@ impl<'a> Label<'a> {
 
     pub const fn top_aligned(mut self) -> Self {
         self.vertical = Alignment::Start;
+        self
+    }
+
+    pub const fn cropped(mut self) -> Self {
+        self.vertical = Alignment::Start;
+        self.crop_area = true;
         self
     }
 
@@ -119,12 +127,21 @@ impl Component for Label<'_> {
             .map(|c| self.layout.with_bounds(bounds).fit_text(c));
         debug_assert!(matches!(layout_fit, LayoutFit::Fitting { .. }));
         let diff = (bounds.height() - layout_fit.height()).max(0);
-        let insets = match self.vertical {
-            Alignment::Start => Insets::bottom(diff),
-            Alignment::Center => Insets::new(diff / 2, 0, diff / 2 + diff % 2, 0),
-            Alignment::End => Insets::top(diff),
+
+        if self.crop_area {
+            debug_assert_eq!(self.vertical, Alignment::Start);
+            let insets = Insets::bottom(diff);
+            self.layout.bounds = bounds.inset(insets);
+        } else {
+            let (padding_top, padding_bottom) = match self.vertical {
+                Alignment::Start => (diff, 0),
+                Alignment::Center => (diff / 2, diff / 2 + diff % 2),
+                Alignment::End => (0, diff),
+            };
+            self.layout.padding_top = padding_top;
+            self.layout.padding_bottom = padding_bottom;
+            self.layout.bounds = bounds;
         };
-        self.layout.bounds = bounds.inset(insets);
         self.layout.bounds
     }
 
