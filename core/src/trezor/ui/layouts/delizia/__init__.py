@@ -485,7 +485,7 @@ def show_continue_in_app(content: str) -> None:
 
 async def confirm_payment_request(
     recipient_name: str,
-    recipient: str,
+    recipient_address: str | None,
     texts: Iterable[tuple[str | None, str]],
     refunds: Iterable[tuple[str, str | None, str | None]],
     trades: list[tuple[str | None, str, str, str | None, str | None]],
@@ -522,7 +522,11 @@ async def confirm_payment_request(
         external_menu=True,
     )
 
-    menu_items = [create_details(TR.address__title_provider_address, recipient)]
+    menu_items = []
+    if recipient_address is not None:
+        menu_items.append(
+            create_details(TR.address__title_provider_address, recipient_address)
+        )
     for r_address, r_account, r_account_path in refunds:
         refund_account_items: list[PropertyType] = [("", r_address, None)]
         if r_account:
@@ -1135,9 +1139,7 @@ if not utils.BITCOIN_ONLY:
         if account:
             account_items.append((TR.words__account, account, None))
         if account_path:
-            account_items.append(
-                (TR.address_details__derivation_path, account_path, None)
-            )
+            account_items.append((TR.address_details__derivation_path, account_path, None))
         menu_items = [create_details(TR.address__title_receive_address, account_items)]
         for k, v in extra_menu_items:
             menu_items.append(create_details(k, v))
