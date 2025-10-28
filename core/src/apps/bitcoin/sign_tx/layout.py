@@ -221,7 +221,6 @@ async def show_payment_request_details(
         account_items,
         None,
         None,
-        None,
     )
 
 

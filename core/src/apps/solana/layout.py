@@ -586,5 +586,4 @@ async def confirm_payment_request(
         account_items,
         fee_str,
         fee_items,
-        None,
     )

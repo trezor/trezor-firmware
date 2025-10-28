@@ -494,7 +494,7 @@ async def confirm_payment_request(
     account_items: list[PropertyType] | None,
     transaction_fee: str | None,
     fee_info_items: Iterable[PropertyType] | None,
-    token_address: str | None,
+    extra_menu_items: list[tuple[str, str]] | None = None,
 ) -> None:
     is_swap = len(trades) != 0 and all(
         sell_amount is not None for sell_amount, _, _, _, _ in trades
@@ -551,7 +551,7 @@ async def confirm_payment_request(
             t_address,
             t_account,
             t_account_path,
-            token_address,
+            extra_menu_items or [],
         )
 
     if transaction_fee is not None:
@@ -1177,7 +1177,7 @@ if not utils.BITCOIN_ONLY:
         address: str,
         account: str | None,
         account_path: str | None,
-        token_address: str | None,
+        extra_menu_items: list[tuple[str, str]],
     ) -> None:
         menu_items: list[PropertyType] = [
             (TR.address__title_receive_address, address, None)
@@ -1186,8 +1186,8 @@ if not utils.BITCOIN_ONLY:
             menu_items.append((TR.words__account, account, None))
         if account_path:
             menu_items.append((TR.address_details__derivation_path, account_path, None))
-        if token_address is not None:
-            menu_items.append((TR.ethereum__token_contract, token_address, None))
+        for k, v in extra_menu_items:
+            menu_items.append((k, v, None))
 
         items = []
         if sell_amount is not None:

@@ -181,7 +181,7 @@ async def require_confirm_payment_request(
         account_items,
         maximum_fee,
         fee_info_items,
-        token_address,
+        [(TR.ethereum__token_contract, token_address)],
     )
 
 
