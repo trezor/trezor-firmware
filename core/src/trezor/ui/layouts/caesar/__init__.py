@@ -552,7 +552,7 @@ def show_continue_in_app(content: str) -> None:
 
 async def confirm_payment_request(
     recipient_name: str,
-    recipient: str,
+    recipient_address: str | None,
     texts: Iterable[tuple[str | None, str]],
     refunds: Iterable[tuple[str, str | None, str | None]],
     trades: list[tuple[str | None, str, str, str | None, str | None]],
@@ -577,15 +577,11 @@ async def confirm_payment_request(
             "confirm_payment_request",
         )
 
-    main_layout = trezorui_api.confirm_with_info(
-        title=(TR.words__swap if is_swap else TR.words__confirm),
-        items=[(TR.words__provider, True), (recipient_name, False)],
-        verb=TR.buttons__continue,
-        verb_info=TR.buttons__info,
-        external_menu=True,
-    )
-
-    menu_items = [create_details(TR.address__title_provider_address, recipient)]
+    menu_items = []
+    if recipient_address is not None:
+        menu_items.append(
+            create_details(TR.address__title_provider_address, recipient_address)
+        )
     for r_address, r_account, r_account_path in refunds:
         refund_account_items: list[PropertyType] = [("", r_address, None)]
         if r_account:
@@ -600,9 +596,24 @@ async def confirm_payment_request(
                 refund_account_items,
             )
         )
-    menu = Menu.root(menu_items)
+    if menu_items:
+        menu = Menu.root(menu_items)
 
-    await confirm_with_menu(main_layout, menu, "confirm_payment_request")
+        main_layout = trezorui_api.confirm_with_info(
+            title=(TR.words__swap if is_swap else TR.words__confirm),
+            items=[(TR.words__provider, True), (recipient_name, False)],
+            verb=TR.buttons__continue,
+            verb_info=TR.buttons__info,
+            external_menu=True,
+        )
+
+        await confirm_with_menu(main_layout, menu, "confirm_payment_request")
+    else:
+        await confirm_properties(
+            "confirm_payment_request",
+            (TR.words__swap if is_swap else TR.words__confirm),
+            [(TR.words__provider, recipient_name, True)],
+        )
 
     for sell_amount, buy_amount, t_address, t_account, t_account_path in trades:
         await confirm_trade(
@@ -1177,9 +1188,7 @@ if not utils.BITCOIN_ONLY:
         if account:
             account_items.append((TR.words__account, account, None))
         if account_path:
-            account_items.append(
-                (TR.address_details__derivation_path, account_path, None)
-            )
+            account_items.append((TR.address_details__derivation_path, account_path, None))
         menu_items = [create_details(TR.address__title_receive_address, account_items)]
         for k, v in extra_menu_items:
             menu_items.append(create_details(k, v))
