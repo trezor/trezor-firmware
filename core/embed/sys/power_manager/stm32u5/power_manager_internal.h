@@ -49,7 +49,7 @@
 
 // Timeout after which the device automatically transit from suspend to
 // hibernation
-#define PM_AUTO_HIBERNATE_TIMEOUT_S (30)  // 2 hours
+#define PM_AUTO_HIBERNATE_TIMEOUT_S (60 * 60 * 2)  // 2 hours
 
 #define PM_STABILIZATION_TIMEOUT_MS 2000
 
