@@ -682,8 +682,8 @@ class MessageType(IntEnum):
     EvoluRegistrationRequest = 2103
     EvoluGetDelegatedIdentityKey = 2104
     EvoluDelegatedIdentityKey = 2105
-    TronGetAddress = 3000
-    TronAddress = 3001
+    TronGetAddress = 2200
+    TronAddress = 2201
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102
@@ -8556,6 +8556,43 @@ class ThpPairedCacheEntry(protobuf.MessageType):
         self.mac_addr = mac_addr
         self.host_name = host_name
         self.app_name = app_name
+
+
+class TronGetAddress(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2200
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        2: protobuf.Field("show_display", "bool", repeated=False, required=False, default=None),
+        3: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        address_n: Optional[Sequence["int"]] = None,
+        show_display: Optional["bool"] = None,
+        chunkify: Optional["bool"] = None,
+    ) -> None:
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.show_display = show_display
+        self.chunkify = chunkify
+
+
+class TronAddress(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2201
+    FIELDS = {
+        1: protobuf.Field("address", "string", repeated=False, required=True),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: "str",
+        mac: Optional["bytes"] = None,
+    ) -> None:
+        self.address = address
+        self.mac = mac
 
 
 class WebAuthnListResidentCredentials(protobuf.MessageType):

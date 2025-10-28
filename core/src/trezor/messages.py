@@ -6777,6 +6777,40 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["ThpPairedCacheEntry"]:
             return isinstance(msg, cls)
 
+    class TronGetAddress(protobuf.MessageType):
+        address_n: "list[int]"
+        show_display: "bool | None"
+        chunkify: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            address_n: "list[int] | None" = None,
+            show_display: "bool | None" = None,
+            chunkify: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TronGetAddress"]:
+            return isinstance(msg, cls)
+
+    class TronAddress(protobuf.MessageType):
+        address: "str"
+        mac: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            address: "str",
+            mac: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TronAddress"]:
+            return isinstance(msg, cls)
+
     class WebAuthnListResidentCredentials(protobuf.MessageType):
 
         @classmethod

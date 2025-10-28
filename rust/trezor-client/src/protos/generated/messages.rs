@@ -544,9 +544,9 @@ pub enum MessageType {
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_EvoluDelegatedIdentityKey)
     MessageType_EvoluDelegatedIdentityKey = 2105,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TronGetAddress)
-    MessageType_TronGetAddress = 3000,
+    MessageType_TronGetAddress = 2200,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TronAddress)
-    MessageType_TronAddress = 3001,
+    MessageType_TronAddress = 2201,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkListNames)
     MessageType_BenchmarkListNames = 9100,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkNames)
@@ -824,8 +824,8 @@ impl ::protobuf::Enum for MessageType {
             2103 => ::std::option::Option::Some(MessageType::MessageType_EvoluRegistrationRequest),
             2104 => ::std::option::Option::Some(MessageType::MessageType_EvoluGetDelegatedIdentityKey),
             2105 => ::std::option::Option::Some(MessageType::MessageType_EvoluDelegatedIdentityKey),
-            3000 => ::std::option::Option::Some(MessageType::MessageType_TronGetAddress),
-            3001 => ::std::option::Option::Some(MessageType::MessageType_TronAddress),
+            2200 => ::std::option::Option::Some(MessageType::MessageType_TronGetAddress),
+            2201 => ::std::option::Option::Some(MessageType::MessageType_TronAddress),
             9100 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             9101 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             9102 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1638,10 +1638,12 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_EvoluRegistrationRequest => 255,
             MessageType::MessageType_EvoluGetDelegatedIdentityKey => 256,
             MessageType::MessageType_EvoluDelegatedIdentityKey => 257,
-            MessageType::MessageType_BenchmarkListNames => 258,
-            MessageType::MessageType_BenchmarkNames => 259,
-            MessageType::MessageType_BenchmarkRun => 260,
-            MessageType::MessageType_BenchmarkResult => 261,
+            MessageType::MessageType_TronGetAddress => 258,
+            MessageType::MessageType_TronAddress => 259,
+            MessageType::MessageType_BenchmarkListNames => 260,
+            MessageType::MessageType_BenchmarkNames => 261,
+            MessageType::MessageType_BenchmarkRun => 262,
+            MessageType::MessageType_BenchmarkResult => 263,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1660,7 +1662,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xdc[\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xa7\\\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\x80\xa6\
     \x1d\x01\xb0\xb5\x18\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -1956,7 +1958,9 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     istrationRequest\x10\xb7\x10\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12\
     7\n(MessageType_EvoluGetDelegatedIdentityKey\x10\xb8\x10\x1a\x08\x80\xa6\
     \x1d\x01\x90\xb5\x18\x01\x124\n%MessageType_EvoluDelegatedIdentityKey\
-    \x10\xb9\x10\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12)\n\x1eMessageTy\
+    \x10\xb9\x10\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12%\n\x1aMessageTy\
+    pe_TronGetAddress\x10\x98\x11\x1a\x04\x90\xb5\x18\x01\x12\"\n\x17Message\
+    Type_TronAddress\x10\x99\x11\x1a\x04\x98\xb5\x18\x01\x12)\n\x1eMessageTy\
     pe_BenchmarkListNames\x10\x8cG\x1a\x04\x80\xa6\x1d\x01\x12%\n\x1aMessage\
     Type_BenchmarkNames\x10\x8dG\x1a\x04\x80\xa6\x1d\x01\x12#\n\x18MessageTy\
     pe_BenchmarkRun\x10\x8eG\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bMessageType_B\

@@ -22,13 +22,13 @@ async def get_address(msg: TronGetAddress, keychain: Keychain) -> TronAddress:
     from apps.common import paths
     from apps.common.address_mac import get_address_mac
 
-    from . import helpers
+    from .helpers import address_from_public_key
 
     address_n = msg.address_n
     await paths.validate_path(keychain, address_n)
-    node = keychain.derive(msg.address_n)
+    node = keychain.derive(address_n)
     public_key = secp256k1.publickey(node.private_key(), False)
-    address = helpers.address_from_public_key(public_key)
+    address = address_from_public_key(public_key)
     mac = get_address_mac(address, SLIP44_ID, address_n, keychain)
 
     if msg.show_display:
@@ -37,7 +37,7 @@ async def get_address(msg: TronGetAddress, keychain: Keychain) -> TronAddress:
             address,
             subtitle=TR.address__coin_address_template.format(coin),
             path=paths.address_n_to_str(address_n),
-            account=paths.get_account_name(coin, msg.address_n, PATTERN, SLIP44_ID),
+            account=paths.get_account_name(coin, address_n, PATTERN, SLIP44_ID),
             chunkify=bool(msg.chunkify),
         )
 

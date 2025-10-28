@@ -349,8 +349,8 @@ enum MessageType {
     MessageType_EvoluDelegatedIdentityKey = 2105 [(bitcoin_only) = true, (wire_out) = true];
 
     // Tron
-    MessageType_TronGetAddress = 3000 [(wire_in) = true];
-    MessageType_TronAddress = 3001 [(wire_out) = true];
+    MessageType_TronGetAddress = 2200 [(wire_in) = true];
+    MessageType_TronAddress = 2201 [(wire_out) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];

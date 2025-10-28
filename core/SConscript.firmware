@@ -772,6 +772,8 @@ if FROZEN:
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nostr/*.py'))
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nostr/*/*.py'))
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Nostr*.py'))
+            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/tron/*.py'))
+            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Tron*.py'))
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/ripple/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Ripple*.py'))
@@ -786,9 +788,6 @@ if FROZEN:
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/tezos/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Tezos*.py'))
-
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/tron/*.py'))
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Tron*.py'))
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/zcash/*.py'))
 
