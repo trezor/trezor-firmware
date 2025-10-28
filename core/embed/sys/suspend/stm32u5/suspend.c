@@ -24,14 +24,13 @@
 #include <sys/irq.h>
 #include <sys/suspend.h>
 #include <sys/suspend_io.h>
+#include <sys/systick.h>
 
 #include <../../power_manager/stwlc38/stwlc38.h>
 #include <sys/pmic.h>
 #include <sys/power_manager.h>
 
-#ifdef USE_RGB_LED
-#include <io/rgb_led.h>
-#endif
+#include <sys/rtc.h>
 
 static wakeup_flags_t g_wakeup_flags = 0;
 

@@ -38,9 +38,10 @@
 #endif
 
 #ifdef USE_OPTIGA
+#include <sec/optiga.h>
+#include <sec/optiga_commands.h>
 #include <sec/optiga_config.h>
 #include <sec/optiga_hal.h>
-#include <sec/optiga_transport.h>
 #endif
 
 #ifdef USE_RGB_LED
@@ -97,7 +98,9 @@ void suspend_secure_drivers() {
   tropic_deinit();
 #endif
 #ifdef USE_OPTIGA
-  optiga_deinit();
+  // Optiga will deinitialize but keep the power up if the SEC counter is
+  // non zero
+  optiga_soft_deinit();
 #endif
 }
 
@@ -117,6 +120,11 @@ void resume_secure_drivers() {
 
 void suspend_drivers_phase1(power_save_wakeup_params_t *wakeup_params) {
   suspend_secure_drivers();
+
+#ifdef USE_OPTIGA
+  // Optiga kernel part of suspend routine
+  optiga_suspend();
+#endif
 
 #ifdef USE_HAPTIC
   haptic_deinit();
@@ -169,6 +177,11 @@ void resume_drivers(const power_save_wakeup_params_t *wakeup_params) {
 #ifdef USE_BLE
   ble_resume(&wakeup_params->ble);
 #endif
+#ifdef USE_OPTIGA
+  // Optiga kernel part of resume routine
+  optiga_resume();
+#endif
+
   resume_secure_drivers();
 }
 
