@@ -97,5 +97,4 @@ async def require_confirm_payment_request(
         account_items,
         None,
         None,
-        None,
     )
