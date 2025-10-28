@@ -487,7 +487,7 @@ def show_continue_in_app(content: str) -> None:
 
 async def confirm_payment_request(
     recipient_name: str,
-    recipient: str,
+    recipient_address: str | None,
     texts: Iterable[tuple[str | None, str]],
     refunds: Iterable[tuple[str, str | None, str | None]],
     trades: list[tuple[str | None, str, str, str | None, str | None]],
@@ -511,9 +511,9 @@ async def confirm_payment_request(
             "confirm_payment_request",
         )
 
-    menu_items: list[PropertyType] = [
-        (TR.address__title_provider_address, recipient, None)
-    ]
+    menu_items: list[PropertyType] = []
+    if recipient_address is not None:
+        menu_items.append((TR.address__title_provider_address, recipient_address, None))
     for r_address, r_account, r_account_path in refunds:
         menu_items.append((TR.address__title_refund_address, r_address, None))
         if r_account:
