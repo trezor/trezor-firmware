@@ -99,11 +99,31 @@
     },
     "auto_lock__title": "Prodleva auto zámku",
     "auto_lock__turned_on": "Automatické uzamčení zapnuto",
-    "backup__can_back_up_anytime": "Svůj Trezor můžete kdykoli zálohovat.",
+    "backup__can_back_up_anytime": {
+      "Bolt": "Svůj Trezor můžete kdykoli zálohovat.",
+      "Caesar": "Svůj Trezor můžete kdykoli zálohovat.",
+      "Delizia": "Svůj Trezor můžete kdykoli zálohovat.",
+      "Eckhart": "Svůj Trezor můžete zálohovat kdykoliv."
+    },
     "backup__create_backup_to_prevent_loss": "Vytvořte si zálohu, abyste neztratili přístup ke svým prostředkům.",
-    "backup__info_multi_share_backup": "Záloha peněženky obsahuje několik seznamů slov v určitém pořadí (části).",
-    "backup__info_single_share_backup": "Záloha peněženky obsahuje slova ({0}) v určitém pořadí.",
-    "backup__it_should_be_backed_up": "Novou peněženku byste si měli ihned zálohovat.",
+    "backup__info_multi_share_backup": {
+      "Bolt": "Záloha peněženky obsahuje několik seznamů slov v určitém pořadí (části).",
+      "Caesar": "Záloha peněženky obsahuje několik seznamů slov v určitém pořadí (části).",
+      "Delizia": "Záloha peněženky obsahuje několik seznamů slov v určitém pořadí (části).",
+      "Eckhart": "Vaše záloha peněženky obsahuje několik seznamů slov v určitém pořadí (podílů)."
+    },
+    "backup__info_single_share_backup": {
+      "Bolt": "Záloha peněženky obsahuje slova ({0}) v určitém pořadí.",
+      "Caesar": "Záloha peněženky obsahuje slova ({0}) v určitém pořadí.",
+      "Delizia": "Záloha peněženky obsahuje slova ({0}) v určitém pořadí.",
+      "Eckhart": "Vaše záloha peněženky obsahuje {0} slov v určitém pořadí."
+    },
+    "backup__it_should_be_backed_up": {
+      "Bolt": "Novou peněženku byste si měli ihned zálohovat.",
+      "Caesar": "Novou peněženku byste si měli ihned zálohovat.",
+      "Delizia": "Novou peněženku byste si měli ihned zálohovat.",
+      "Eckhart": "Novou peněženku byste měli ihned zálohovat."
+    },
     "backup__it_should_be_backed_up_now": "Měli byste ji hned zálohovat!",
     "backup__new_wallet_created": "Peněženka byla vytvořena.\n",
     "backup__new_wallet_successfully_created": "Peněženka byla vytvořena.",
@@ -818,12 +838,7 @@
       "Delizia": "Haptická zpětná vazba",
       "Eckhart": "Haptická zpětná vazba"
     },
-    "homescreen__backup_needed_info": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Otevřete Trezor Suite a vytvořte si zálohu peněženky. Toto je jediný způsob jak obnovit přístup k vašemu kryptu."
-    },
+    "homescreen__backup_needed_info": "Otevřete Trezor Suite a vytvořte si zálohu peněženky. Toto je jediný způsob jak obnovit přístup k vašemu kryptu.",
     "homescreen__click_to_connect": "Kliknutím se připojíte",
     "homescreen__click_to_unlock": "Kliknutím odemknete",
     "homescreen__firmware_type": "Typ firmwaru",
@@ -883,7 +898,7 @@
     },
     "inputs__space": {
       "Bolt": "",
-      "Caesar": "ROZDĚLENÍ",
+      "Caesar": "MEZERA",
       "Delizia": "",
       "Eckhart": ""
     },
@@ -945,12 +960,7 @@
     "lockscreen__tap_to_unlock": "Klepnutím odemknete",
     "lockscreen__title_locked": "Uzamčeno",
     "lockscreen__title_not_connected": "Nepřipojeno",
-    "lockscreen__unlock": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Odemknout"
-    },
+    "lockscreen__unlock": "Odemknout",
     "misc__decrypt_value": "Dešifrovat hodnotu",
     "misc__enable_labeling": "Povolit popisky?",
     "misc__encrypt_value": "Zašifrovat hodnotu",
@@ -1335,7 +1345,12 @@
     "passphrase__access_wallet": "Otev. passphrase pen.?",
     "passphrase__always_on_device": "Vždy zadávat passphrase na Trezoru?",
     "passphrase__continue_with_empty_passphrase": "Pokračovat s prázdnou passphrase?",
-    "passphrase__from_host_not_shown": "Použije se passphrase zadaná hostitelem, ale vzhledem k nastavení zařízení se nezobrazí.",
+    "passphrase__from_host_not_shown": {
+      "Bolt": "Použije se passphrase zadaná aplikací, ale vzhledem k nastavení zařízení se nezobrazí.",
+      "Caesar": "Použije se passphrase zadaná hostitelem, ale vzhledem k nastavení zařízení se nezobrazí.",
+      "Delizia": "Použije se passphrase zadaná aplikací, ale vzhledem k nastavení zařízení se nezobrazí.",
+      "Eckhart": "Použije se passphrase zadaná aplikací, ale vzhledem k nastavení zařízení se nezobrazí."
+    },
     "passphrase__hidden_wallet": "Skrytá peněženka",
     "passphrase__hide": "Skrýt passphrase z aplikace?",
     "passphrase__next_screen_will_show_passphrase": "Na další obrazovce se zobrazí vaše passphrase.",
@@ -1383,38 +1398,18 @@
     "pin__reenter": "Znovu zadejte PIN",
     "pin__reenter_new": "Zopakujte PIN",
     "pin__reenter_to_confirm": "Znovu zadejte PIN pro potvrzení.",
-    "pin__remove": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Odstranit PIN kód"
-    },
+    "pin__remove": "Odstranit PIN kód",
     "pin__setup_completed": "Nastavení PIN dokončeno.",
     "pin__should_be_long": "PIN musí mít 4-50 číslic.",
-    "pin__title": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "PIN kód"
-    },
+    "pin__title": "PIN kód",
     "pin__title_check_pin": "Zkontrolovat PIN",
     "pin__title_settings": "Nastavení PIN kódu",
     "pin__title_wrong_pin": "Nesprávný PIN kód",
     "pin__tries_left": "pok.",
     "pin__turn_off": "Opravdu chcete vypnout ochranu PIN kódem?",
     "pin__turn_on": "Zapnout ochranu PIN kódem?",
-    "pin__wipe_code_exists_description": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Před vypnutím PINu je nutné vypnout kód pro vymazání."
-    },
-    "pin__wipe_code_exists_title": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Kód pro vymazání nastaven"
-    },
+    "pin__wipe_code_exists_description": "Před vypnutím PINu je nutné vypnout kód pro vymazání.",
+    "pin__wipe_code_exists_title": "Kód pro vymazání nastaven",
     "pin__wrong_pin": "Nesprávný PIN",
     "plurals__contains_x_keys": "klíč|klíčů",
     "plurals__lock_after_x_days": "den|dny",
@@ -1506,12 +1501,7 @@
       "Delizia": "Část {0}",
       "Eckhart": "Podíl #{0}"
     },
-    "recovery__start_entering": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Začněte zadávat"
-    },
+    "recovery__start_entering": "Začněte zadávat",
     "recovery__title": "Obnovit peněženku",
     "recovery__title_cancel_dry_run": "Zruš. kontr. zálohy",
     "recovery__title_cancel_recovery": "Zrušit obnovení",
@@ -1657,6 +1647,7 @@
     "reset__you_need_one_share": "Pro obnovení potřebujete 1 část.",
     "reset__your_backup_is_done": "Záloha je dokončena.",
     "ripple__confirm_tag": "Potvrdit značku",
+    "ripple__destination_tag_missing": "",
     "ripple__destination_tag_template": "Cílová značka:\n{0}",
     "rotation__change_template": "Změnit orientaci displeje na {0}?",
     "rotation__east": "východ",
@@ -2139,12 +2130,7 @@
     "u2f__title_get": "Získat čítač U2F",
     "u2f__title_set": "Nastavit čítač U2F",
     "wipe__info": "Všechna data budou smazána.",
-    "wipe__start_again": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Vymazejte celý Trezor a začněte proces nastavení znovu."
-    },
+    "wipe__start_again": "Vymazejte celý Trezor a začněte proces nastavení znovu.",
     "wipe__title": "Vymazat zařízení",
     "wipe__want_to_wipe": "Opravdu chcete vymazat zařízení?\n",
     "wipe_code__cancel_setup": {
@@ -2163,26 +2149,11 @@
     "wipe_code__info": "Kód pro vymazání lze použít k vymazání všech dat ze zařízení.",
     "wipe_code__invalid": "Chybný kód vymazání",
     "wipe_code__mismatch": "Zadané kódy pro vymazání se neshodují.",
-    "wipe_code__pin_not_set_description": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Před aktivací kódu pro vymazání je nutné nastavit PIN."
-    },
+    "wipe_code__pin_not_set_description": "Před aktivací kódu pro vymazání je nutné nastavit PIN.",
     "wipe_code__reenter": "Zopakujte kód vymaz.",
     "wipe_code__reenter_to_confirm": "Potvrďte dalším zadáním kódu vymazání.",
-    "wipe_code__remove": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Odstranit kód pro vymazání"
-    },
-    "wipe_code__title": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Kód pro vymazání"
-    },
+    "wipe_code__remove": "Odstranit kód pro vymazání",
+    "wipe_code__title": "Kód pro vymazání",
     "wipe_code__title_check": "Zkont. kód vymazání",
     "wipe_code__title_invalid": "Nesprávný kód pro vymazání",
     "wipe_code__title_settings": "Nast. kódu vymazání",
@@ -2201,57 +2172,27 @@
     "words__assets": "Portfolia",
     "words__authenticate": "Ověřit",
     "words__blockhash": "Blockhash",
-    "words__bluetooth": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Bluetooth"
-    },
+    "words__bluetooth": "Bluetooth",
     "words__buying": "Nákup",
     "words__cancel_and_exit": "Zrušit a ukončit",
     "words__cancel_question": "Zrušit?",
     "words__chain": "Řetězec",
     "words__confirm": "Potvrdit",
     "words__confirm_fee": "Potvrdit poplatek",
-    "words__connect": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Připojit"
-    },
+    "words__connect": "Připojit",
     "words__connected": "Připojeno",
     "words__contains": "Obsahuje",
     "words__continue_anyway": "Přesto pokračovat",
     "words__continue_anyway_question": "Přesto pokračovat?",
     "words__continue_with": "Pokračovat s",
     "words__device": "Zařízení",
-    "words__disabled": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Vypnuto"
-    },
+    "words__disabled": "Vypnuto",
     "words__disconnect": "Odpojit",
-    "words__disconnected": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Odpojen"
-    },
-    "words__enabled": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Zapnuto"
-    },
+    "words__disconnected": "Odpojen",
+    "words__enabled": "Zapnuto",
     "words__error": "Chyba",
     "words__fee": "Poplatek",
-    "words__forget": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Zapomenout"
-    },
+    "words__forget": "Zapomenout",
     "words__from": "od",
     "words__good_to_know": "Dobré vědět",
     "words__important": "Důležité",
@@ -2271,12 +2212,7 @@
     "words__pay_attention": "Pozor",
     "words__please_check_again": "Zkontrolujte to znovu",
     "words__please_try_again": "Zkuste to znovu",
-    "words__power": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Napájení"
-    },
+    "words__power": "Napájení",
     "words__provider": "Poskytovatel",
     "words__really_wanna": "Opravdu chcete",
     "words__receive": "Přijmout",
@@ -2285,12 +2221,7 @@
     "words__review": "Zkontrolovat",
     "words__security": "Zabezpečení",
     "words__send": "Odeslat",
-    "words__set": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Nastavit"
-    },
+    "words__set": "Nastavit",
     "words__settings": "Nastavení",
     "words__sign": "Podepsat",
     "words__signer": "Podepisující osoba",
@@ -2313,12 +2244,7 @@
     "words__unlocked": "Odemčeno",
     "words__wallet": "Peněženka",
     "words__warning": "Varování",
-    "words__wipe": {
-      "Bolt": "",
-      "Caesar": "",
-      "Delizia": "",
-      "Eckhart": "Vymazat"
-    },
+    "words__wipe": "Vymazat",
     "words__writable": "Zapisovatelné",
     "words__yes": "Ano"
   }
