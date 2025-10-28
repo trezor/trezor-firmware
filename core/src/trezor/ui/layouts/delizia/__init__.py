@@ -492,7 +492,7 @@ async def confirm_payment_request(
     account_items: list[PropertyType] | None,
     transaction_fee: str | None,
     fee_info_items: Iterable[PropertyType] | None,
-    token_address: str | None,
+    extra_menu_items: list[tuple[str, str]] | None = None,
 ) -> None:
     from trezor.ui.layouts.menu import Menu, confirm_with_menu
 
@@ -550,7 +550,7 @@ async def confirm_payment_request(
             t_address,
             t_account,
             t_account_path,
-            token_address,
+            extra_menu_items or [],
         )
 
     if transaction_fee is not None:
@@ -1120,7 +1120,7 @@ if not utils.BITCOIN_ONLY:
         address: str,
         account: str | None,
         account_path: str | None,
-        token_address: str | None,
+        extra_menu_items: list[tuple[str, str]],
     ) -> None:
         from trezor.ui.layouts.menu import Menu, confirm_with_menu
 
@@ -1139,10 +1139,8 @@ if not utils.BITCOIN_ONLY:
                 (TR.address_details__derivation_path, account_path, None)
             )
         menu_items = [create_details(TR.address__title_receive_address, account_items)]
-        if token_address is not None:
-            menu_items.append(
-                create_details(TR.ethereum__token_contract, token_address)
-            )
+        for k, v in extra_menu_items:
+            menu_items.append(create_details(k, v))
         menu = Menu.root(menu_items, TR.send__cancel_sign)
 
         await confirm_with_menu(trade_layout, menu, "confirm_trade")
