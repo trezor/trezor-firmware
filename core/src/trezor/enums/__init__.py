@@ -629,8 +629,8 @@ if TYPE_CHECKING:
         EvoluRegistrationRequest = 2103
         EvoluGetDelegatedIdentityKey = 2104
         EvoluDelegatedIdentityKey = 2105
-        TronGetAddress = 3000
-        TronAddress = 3001
+        TronGetAddress = 2200
+        TronAddress = 2201
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102

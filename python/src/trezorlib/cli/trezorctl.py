@@ -52,8 +52,8 @@ from . import (
     solana,
     stellar,
     tezos,
-    with_session,
     tron,
+    with_session,
 )
 
 F = TypeVar("F", bound=Callable)
