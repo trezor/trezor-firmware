@@ -185,7 +185,8 @@ message PaymentRequest {
     required string recipient_name = 2;    // merchant's name
     repeated PaymentRequestMemo memos = 3; // any memos that were signed as part of the request
     reserved 4;                            // this existed briefly. obsoleted by this change: https://github.com/satoshilabs/slips/commit/08d36aa61722275a21617ac6a713e31ec23fdec4
-    optional bytes amount = 6;             // the sum of the external output amounts requested, required for non-CoinJoin, encoded in little endian on either 8 or 32 bytes
+    optional bytes amount = 6;             // the sum of the external output amounts requested, encoded in little endian on either 8 or 32 bytes
+                                           // required for non-CoinJoin transactions; do not set this for fiat amounts (BUY crypto with fiat)
     required bytes signature = 5;          // the trusted party's signature of the paymentRequestDigest
 
     message PaymentRequestMemo {
