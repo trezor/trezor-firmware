@@ -159,7 +159,7 @@ bool rtc_schedule_wakeup_event(uint32_t wakeup_timestamp,
   return ret;
 }
 
-bool rtc_deschedule_wakeup_event(uint32_t wakeup_event_id) {
+bool rtc_cancel_wakeup_event(uint32_t wakeup_event_id) {
   rtc_driver_t* drv = &g_rtc_driver;
 
   if (!drv->initialized) {

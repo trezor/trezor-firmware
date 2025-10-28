@@ -1297,7 +1297,7 @@ void optiga_resume() {
   irq_key_t irq_key = irq_lock();
 
   if (pwr_down_scheduled) {
-    rtc_deschedule_wakeup_event(rtc_wakeup_event_id);
+    rtc_cancel_wakeup_event(rtc_wakeup_event_id);
     optiga_power_down();
   }
 

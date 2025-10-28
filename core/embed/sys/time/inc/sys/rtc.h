@@ -81,12 +81,12 @@ bool rtc_schedule_wakeup_event(uint32_t wakeup_timestamp,
                                rtc_wakeup_callback_t callback, void* context);
 
 /**
- * @brief Deschedule the wakeup event from the rtc schedule
+ * @brief Cancel the wakeup event and remove it from the rtc schedule
  *
- * @param wakeup_event_id descheduled wakup event id
- * @return true if the event successfully descheduled from the queue
+ * @param wakeup_event_id cancelled wakup event id
+ * @return true if the event successfully cancelled and removed from schedule
  */
-bool rtc_deschedule_wakeup_event(uint32_t wakeup_event_id);
+bool rtc_cancel_wakeup_event(uint32_t wakeup_event_id);
 
 /**
  * @brief Set the RTC using discrete time values
