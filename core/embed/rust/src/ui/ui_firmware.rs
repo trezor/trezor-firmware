@@ -47,7 +47,7 @@ pub trait FirmwareUI {
     fn confirm_trade(
         title: TString<'static>,
         subtitle: TString<'static>,
-        sell_amount: TString<'static>,
+        sell_amount: Option<TString<'static>>,
         buy_amount: TString<'static>,
         back_button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;

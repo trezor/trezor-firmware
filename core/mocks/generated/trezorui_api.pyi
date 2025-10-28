@@ -142,7 +142,7 @@ def confirm_trade(
     *,
     title: str,
     subtitle: str,
-    sell_amount: str,
+    sell_amount: str | None,
     buy_amount: str,
     back_button: bool = False,
 ) -> LayoutObj[UiResult]:
