@@ -367,11 +367,11 @@ def extract_soc_and_rint_curves(
             _, ax = plt.subplots(2, 1)
             ax[0].plot(ocv_profiles_charge[0], ocv_profiles_charge[1], "*")
             ax[0].plot(soc_axis, estimate_ocv_curve(soc_axis, chg_ocv_params), "*")
-            ax[0].set_title("fitted_charging {temp}°C")
+            ax[0].set_title(f"fitted_charging {temp}°C")
 
             ax[1].plot(ocv_profiles_discharge[0], ocv_profiles_discharge[1], "*")
             ax[1].plot(soc_axis, estimate_ocv_curve(soc_axis, dsg_ocv_params), "*")
-            ax[1].set_title("fitted discharging {temp}°C")
+            ax[1].set_title(f"fitted discharging {temp}°C")
 
     if debug or trace:
 
