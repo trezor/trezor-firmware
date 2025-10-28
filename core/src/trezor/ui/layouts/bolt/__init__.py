@@ -980,6 +980,43 @@ def _confirm_summary(
     return with_info(total_layout, info_layout, br_name, br_code)
 
 
+async def confirm_trade(
+    title: str,
+    sell_amount: str | None,
+    buy_amount: str,
+    address: str,
+    account: str | None,
+    account_path: str | None,
+    extra_menu_items: list[tuple[str, str]],
+) -> None:
+    menu_items: list[PropertyType] = [
+        (TR.address__title_receive_address, address, None)
+    ]
+    if account:
+        menu_items.append((TR.words__account, account, None))
+    if account_path:
+        menu_items.append((TR.address_details__derivation_path, account_path, None))
+    for k, v in extra_menu_items:
+        menu_items.append((k, v, None))
+
+    items = []
+    if sell_amount is not None:
+        items.append(("", sell_amount, None))
+    items.append(("", buy_amount, None))
+    await with_info(
+        trezorui_api.confirm_properties(
+            title=title,
+            items=items,
+            external_menu=True,
+        ),
+        trezorui_api.confirm_properties(
+            title="", items=menu_items, verb=TR.buttons__close
+        ),
+        "confirm_trade",
+        ButtonRequestType.SignTx,
+    )
+
+
 if not utils.BITCOIN_ONLY:
 
     def confirm_ethereum_unknown_contract_warning(
@@ -1168,42 +1205,6 @@ if not utils.BITCOIN_ONLY:
             None,
             fee_info_items,
             TR.confirm_total__title_fee,
-        )
-
-    async def confirm_trade(
-        title: str,
-        sell_amount: str | None,
-        buy_amount: str,
-        address: str,
-        account: str | None,
-        account_path: str | None,
-        extra_menu_items: list[tuple[str, str]],
-    ) -> None:
-        menu_items: list[PropertyType] = [
-            (TR.address__title_receive_address, address, None)
-        ]
-        if account:
-            menu_items.append((TR.words__account, account, None))
-        if account_path:
-            menu_items.append((TR.address_details__derivation_path, account_path, None))
-        for k, v in extra_menu_items:
-            menu_items.append((k, v, None))
-
-        items = []
-        if sell_amount is not None:
-            items.append(("", sell_amount, None))
-        items.append(("", buy_amount, None))
-        await with_info(
-            trezorui_api.confirm_properties(
-                title=title,
-                items=items,
-                external_menu=True,
-            ),
-            trezorui_api.confirm_properties(
-                title="", items=menu_items, verb=TR.buttons__close
-            ),
-            "confirm_trade",
-            ButtonRequestType.SignTx,
         )
 
     async def confirm_ethereum_staking_tx(
