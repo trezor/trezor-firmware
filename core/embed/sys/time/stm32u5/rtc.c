@@ -27,23 +27,7 @@
 #include <sys/rtc.h>
 #include <sys/suspend.h>
 
-#define MAX_SCHEDULE_LEN 16
-
-_Static_assert((MAX_SCHEDULE_LEN & (MAX_SCHEDULE_LEN - 1)) == 0,
-               "MAX_SCHEDULE_LEN must be a power of 2");
-
-typedef struct {
-  uint32_t id;
-  uint32_t timestamp;
-  rtc_wakeup_callback_t callback;
-  void* callback_context;
-} rtc_wakeup_event_t;
-
-typedef struct {
-  uint8_t write_idx;
-  uint8_t read_idx;
-  rtc_wakeup_event_t events[MAX_SCHEDULE_LEN];
-} rtc_wakeup_schedule_t;
+#include "rtc_scheduler.h"
 
 // RTC driver structure
 typedef struct {
@@ -64,10 +48,6 @@ static rtc_driver_t g_rtc_driver = {
 
 static uint32_t rtc_calendar_to_timestamp(const RTC_DateTypeDef* date,
                                           const RTC_TimeTypeDef* time);
-
-static bool rtc_schedule_push(rtc_wakeup_event_t* event);
-static bool rtc_schedule_pop(rtc_wakeup_event_t* event);
-static bool rtc_schedule_remove(uint32_t event_id);
 static void rtc_wakeup_timer_stop(void);
 static bool rtc_wakeup_timer_start(rtc_wakeup_event_t* event);
 
@@ -130,93 +110,6 @@ bool rtc_get_timestamp(uint32_t* timestamp) {
   return true;
 }
 
-static bool rtc_schedule_push(rtc_wakeup_event_t* event) {
-  rtc_driver_t* drv = &g_rtc_driver;
-
-  uint8_t next_write_idx = (drv->schedule.write_idx + 1) % MAX_SCHEDULE_LEN;
-  if (next_write_idx == drv->schedule.read_idx) {
-    // Queue is full
-    return false;
-  }
-
-  // Sweep the queue backwards and find the correct position for the new event
-  uint8_t idx = drv->schedule.write_idx;
-
-  while (true) {
-    if (idx == drv->schedule.read_idx) {
-      // Reached the beginning of the queue
-      drv->schedule.events[idx] = *event;
-      break;
-    }
-
-    uint8_t prev_idx = (idx + MAX_SCHEDULE_LEN - 1) % MAX_SCHEDULE_LEN;
-
-    if (drv->schedule.events[prev_idx].timestamp >= event->timestamp) {
-      // Move the already present event forward
-      drv->schedule.events[idx] = drv->schedule.events[prev_idx];
-    } else {
-      drv->schedule.events[idx] = *event;
-      break;
-    }
-
-    idx = prev_idx;
-  }
-
-  drv->schedule.write_idx = next_write_idx;
-
-  return true;
-}
-
-static bool rtc_schedule_pop(rtc_wakeup_event_t* event) {
-  rtc_driver_t* drv = &g_rtc_driver;
-
-  if (drv->schedule.write_idx == drv->schedule.read_idx) {
-    // Queue is empty
-    return false;
-  }
-
-  *event = drv->schedule.events[drv->schedule.read_idx];
-  drv->schedule.read_idx = (drv->schedule.read_idx + 1) % MAX_SCHEDULE_LEN;
-
-  return true;
-}
-
-static bool rtc_schedule_remove(uint32_t event_id) {
-  rtc_driver_t* drv = &g_rtc_driver;
-
-  if (drv->schedule.write_idx == drv->schedule.read_idx) {
-    return false;
-  }
-
-  // Sweep the queue, if you hit the id, remove the event and shift
-  // remainings items forward
-  uint8_t idx = drv->schedule.read_idx;
-  uint8_t next_idx;
-  uint8_t item_found = false;
-
-  while (idx != drv->schedule.write_idx) {
-    if (drv->schedule.events[idx].id == event_id) {
-      item_found = true;
-    }
-
-    next_idx = (idx + 1) % MAX_SCHEDULE_LEN;
-
-    if (item_found) {
-      drv->schedule.events[idx] = drv->schedule.events[next_idx];
-    }
-
-    idx = next_idx;
-  }
-
-  if (item_found) {
-    drv->schedule.write_idx =
-        (drv->schedule.write_idx + MAX_SCHEDULE_LEN - 1) % MAX_SCHEDULE_LEN;
-    return true;
-  } else {
-    return false;
-  }
-}
-
 bool rtc_schedule_wakeup_event(uint32_t wakeup_timestamp,
                                uint32_t* wakeup_event_id,
                                rtc_wakeup_callback_t callback, void* context) {
@@ -231,7 +124,7 @@ bool rtc_schedule_wakeup_event(uint32_t wakeup_timestamp,
 
   if (drv->event_is_staged) {
     // Put the staged event back into the schedule and stop the RTC timer
-    if (!rtc_schedule_push(&drv->staged_event)) {
+    if (!rtc_schedule_push(&drv->schedule, &drv->staged_event)) {
       irq_unlock(irq_key);
       return false;
     }
@@ -248,14 +141,14 @@ bool rtc_schedule_wakeup_event(uint32_t wakeup_timestamp,
     *wakeup_event_id = event.id;
   }
 
-  if (!rtc_schedule_push(&event)) {
+  if (!rtc_schedule_push(&drv->schedule, &event)) {
     // Queue is full
     ret = false;
   }
 
   // Put upcoming event on stage
   rtc_wakeup_event_t new_staged_event;
-  if (rtc_schedule_pop(&new_staged_event)) {
+  if (rtc_schedule_pop(&drv->schedule, &new_staged_event)) {
     rtc_wakeup_timer_start(&new_staged_event);
   } else {
     ret = false;
@@ -280,13 +173,13 @@ bool rtc_deschedule_wakeup_event(uint32_t wakeup_event_id) {
     rtc_wakeup_timer_stop();
 
     rtc_wakeup_event_t event;
-    if (rtc_schedule_pop(&event)) {
+    if (rtc_schedule_pop(&drv->schedule, &event)) {
       rtc_wakeup_timer_start(&event);
     }
 
   } else {
     // Remove the task from the schedule
-    if (!rtc_schedule_remove(wakeup_event_id)) {
+    if (!rtc_schedule_remove(&drv->schedule, wakeup_event_id)) {
       ret = false;
     }
   }
@@ -370,7 +263,7 @@ void RTC_IRQHandler(void) {
     }
 
     rtc_wakeup_event_t event;
-    if (rtc_schedule_pop(&event)) {
+    if (rtc_schedule_pop(&drv->schedule, &event)) {
       rtc_wakeup_timer_start(&event);
     }
   }
