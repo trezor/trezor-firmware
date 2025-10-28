@@ -115,6 +115,47 @@ static const optiga_metadata_item ACCESS_PIN_HMAC_CTR =
 // Size of the CMAC/HMAC prefix returned by Optiga.
 #define ENCRYPT_SYM_PREFIX_SIZE 3
 
+static uint32_t sec_clr_time_s = 0;  // Estimated time needed to clear SEC
+
+optiga_result optiga_init() {
+  sec_clr_time_s = 0;
+  return optiga_transport_init();
+}
+
+void optiga_deinit() {
+  sec_clr_time_s = 0;
+  optiga_transport_deinit(false);
+}
+
+void optiga_soft_deinit() {
+  uint8_t sec;
+  bool status = optiga_read_sec(&sec);
+
+  // if SEC counter is above the threshold, deinitialize the transport layer,
+  // but do not power down the chip yet, so the SEC counter could decrement
+  if (status && sec > OPTIGA_SEC_SUSPEND_THR) {
+    optiga_transport_deinit(true);
+    sec_clr_time_s = sec * (OPTIGA_T_MAX_MS / 1000);
+  } else {
+    optiga_transport_deinit(false);
+    sec_clr_time_s = 0;
+  }
+}
+
+void optiga_power_down() {
+  sec_clr_time_s = 0;
+  optiga_transport_power_down();
+}
+
+bool optiga_get_sec_clr_time(uint32_t *sec_clr_time) {
+  if (sec_clr_time == NULL) {
+    return false;
+  }
+
+  *sec_clr_time = sec_clr_time_s;
+  return true;
+}
+
 optiga_sign_result optiga_sign(uint8_t index, const uint8_t *digest,
                                size_t digest_size, uint8_t *der_signature,
                                size_t max_der_signature_size,
