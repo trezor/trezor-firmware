@@ -9,7 +9,7 @@ from ..common import draw_simple, interact, raise_if_not_confirmed, with_info
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes, StrOrBytes
-    from typing import Awaitable, Iterable, List, NoReturn, Sequence
+    from typing import Awaitable, Iterable, NoReturn, Sequence
 
     from trezor.messages import StellarAsset
 
@@ -490,15 +490,15 @@ async def confirm_payment_request(
     recipient: str,
     texts: Iterable[tuple[str | None, str]],
     refunds: Iterable[tuple[str, str | None, str | None]],
-    trades: list[tuple[str, str, str, str | None, str | None]],
-    account_items: List[PropertyType] | None,
+    trades: list[tuple[str | None, str, str, str | None, str | None]],
+    account_items: list[PropertyType] | None,
     transaction_fee: str | None,
     fee_info_items: Iterable[PropertyType] | None,
     token_address: str | None,
 ) -> None:
-    # Note: we don't support "sales" (swap to fiat) yet,
-    # so if there is any trade, we assume it must be a swap
-    is_swap = len(trades) != 0
+    is_swap = len(trades) != 0 and all(
+        sell_amount is not None for sell_amount, _, _, _, _ in trades
+    )
 
     for title, text in texts:
         await raise_if_not_confirmed(
@@ -545,7 +545,7 @@ async def confirm_payment_request(
 
     for sell_amount, buy_amount, t_address, t_account, t_account_path in trades:
         await confirm_trade(
-            TR.words__swap,
+            TR.words__swap if is_swap else TR.words__confirm,
             sell_amount,
             buy_amount,
             t_address,
@@ -1172,7 +1172,7 @@ if not utils.BITCOIN_ONLY:
 
     async def confirm_trade(
         title: str,
-        sell_amount: str,
+        sell_amount: str | None,
         buy_amount: str,
         address: str,
         account: str | None,
@@ -1189,10 +1189,14 @@ if not utils.BITCOIN_ONLY:
         if token_address is not None:
             menu_items.append((TR.ethereum__token_contract, token_address, None))
 
+        items = []
+        if sell_amount is not None:
+            items.append(("", sell_amount, None))
+        items.append(("", buy_amount, None))
         await with_info(
             trezorui_api.confirm_properties(
                 title=title,
-                items=[("", sell_amount, None), ("", buy_amount, None)],
+                items=items,
                 external_menu=True,
             ),
             trezorui_api.confirm_properties(

@@ -137,7 +137,7 @@ impl FirmwareUI for UICaesar {
     fn confirm_trade(
         _title: TString<'static>,
         _subtitle: TString<'static>,
-        _sell_amount: TString<'static>,
+        _sell_amount: Option<TString<'static>>,
         _buy_amount: TString<'static>,
         _back_button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {

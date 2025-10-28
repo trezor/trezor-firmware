@@ -1223,7 +1223,7 @@ async def require_confirm_payment_request(
 
     texts: list[tuple[str | None, str]] = []
     refunds: list[tuple[str, str | None, str | None]] = []
-    trades: list[tuple[str, str, str, str | None, str | None]] = []
+    trades: list[tuple[str | None, str, str, str | None, str | None]] = []
     for memo in verified_payment_request.memos:
         if memo.text_memo is not None:
             texts.append((None, memo.text_memo.text))

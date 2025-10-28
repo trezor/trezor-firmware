@@ -402,7 +402,7 @@ impl FirmwareUI for UIEckhart {
     fn confirm_trade(
         title: TString<'static>,
         subtitle: TString<'static>,
-        sell_amount: TString<'static>,
+        sell_amount: Option<TString<'static>>,
         buy_amount: TString<'static>,
         back_button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
@@ -410,7 +410,7 @@ impl FirmwareUI for UIEckhart {
         let mut ops = OpTextLayout::new(theme::firmware::TEXT_REGULAR);
         ops.add_offset(Offset::y(16))
             .add_color(theme::RED)
-            .add_text_with_font(sell_amount, font)
+            .add_text_with_font(sell_amount.unwrap_or(TString::empty()), font)
             .add_offset(Offset::y(44))
             .add_newline()
             .add_color(theme::GREEN_LIME)

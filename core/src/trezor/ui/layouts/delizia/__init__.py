@@ -9,16 +9,7 @@ from ..common import draw_simple, interact, raise_if_not_confirmed, with_info
 
 if TYPE_CHECKING:
     from buffer_types import AnyBytes, StrOrBytes
-    from typing import (
-        Any,
-        Awaitable,
-        Coroutine,
-        Iterable,
-        List,
-        NoReturn,
-        Sequence,
-        TypeVar,
-    )
+    from typing import Any, Awaitable, Coroutine, Iterable, NoReturn, Sequence, TypeVar
 
     from trezor.messages import StellarAsset
 
@@ -497,17 +488,17 @@ async def confirm_payment_request(
     recipient: str,
     texts: Iterable[tuple[str | None, str]],
     refunds: Iterable[tuple[str, str | None, str | None]],
-    trades: List[tuple[str, str, str, str | None, str | None]],
-    account_items: List[PropertyType] | None,
+    trades: list[tuple[str | None, str, str, str | None, str | None]],
+    account_items: list[PropertyType] | None,
     transaction_fee: str | None,
     fee_info_items: Iterable[PropertyType] | None,
     token_address: str | None,
 ) -> None:
     from trezor.ui.layouts.menu import Menu, confirm_with_menu
 
-    # Note: we don't support "sales" (swap to fiat) yet,
-    # so if there is any trade, we assume it must be a swap
-    is_swap = len(trades) != 0
+    is_swap = len(trades) != 0 and all(
+        sell_amount is not None for sell_amount, _, _, _, _ in trades
+    )
 
     for title, text in texts:
         await raise_if_not_confirmed(
@@ -552,7 +543,7 @@ async def confirm_payment_request(
 
     for sell_amount, buy_amount, t_address, t_account, t_account_path in trades:
         await confirm_trade(
-            TR.words__swap,
+            TR.words__swap if is_swap else TR.words__confirm,
             TR.words__assets,
             sell_amount,
             buy_amount,
@@ -1124,7 +1115,7 @@ if not utils.BITCOIN_ONLY:
     async def confirm_trade(
         title: str,
         subtitle: str,
-        sell_amount: str,
+        sell_amount: str | None,
         buy_amount: str,
         address: str,
         account: str | None,
