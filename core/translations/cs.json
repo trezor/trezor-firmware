@@ -1409,7 +1409,12 @@
     "pin__turn_off": "Opravdu chcete vypnout ochranu PIN kódem?",
     "pin__turn_on": "Zapnout ochranu PIN kódem?",
     "pin__wipe_code_exists_description": "Před vypnutím PINu je nutné vypnout kód pro vymazání.",
-    "pin__wipe_code_exists_title": "Kód pro vymazání nastaven",
+    "pin__wipe_code_exists_title": {
+      "Bolt": "Kód pro vymazání",
+      "Caesar": "Kód pro vymazání nastaven",
+      "Delizia": "Kód pro vymazání nastaven",
+      "Eckhart": "Kód pro vymazání nastaven"
+    },
     "pin__wrong_pin": "Nesprávný PIN",
     "plurals__contains_x_keys": "klíč|klíčů",
     "plurals__lock_after_x_days": "den|dny",
