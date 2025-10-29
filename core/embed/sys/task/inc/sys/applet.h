@@ -30,10 +30,12 @@ typedef void (*applet_startup_t)(const char* args, uint32_t random);
 
 // Applet header found at the beginning of the applet binary
 typedef struct {
-  // Stack area
-  mpu_area_t stack;
   // Applet entry point
   applet_startup_t startup;
+  // Stack area
+  mpu_area_t stack;
+  // TLS area
+  mpu_area_t tls;
   // Coreapp specific data
   struct {
     // Unprivileged SAES input buffer

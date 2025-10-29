@@ -16,6 +16,9 @@ _data_section_end = ADDR(.data) + SIZEOF(.data);
 _bss_section_start = ADDR(.bss);
 _bss_section_end = ADDR(.bss) + SIZEOF(.bss);
 
+_tls_section_start = ADDR(.tls);
+_tls_section_size = SIZEOF(.tls);
+
 _codelen = SIZEOF(.padding) + SIZEOF(.flash) + SIZEOF(.data);
 
 _heap_start = ADDR(.heap);
@@ -64,6 +67,11 @@ SECTIONS {
   /DISCARD/ : {
     *(.ARM.exidx*);
   }
+
+  .tls : ALIGN(32) {
+    *(.tls*);  /* 32-byte alignment required by MPU */
+    . = ALIGN(32);
+  } > AUX1_RAM
 
   .bss : ALIGN(4) {
     *(.no_dma_buffers*);
