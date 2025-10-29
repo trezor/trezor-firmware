@@ -134,7 +134,7 @@ where
     type Msg = TextScreenMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let (show_ab, show_pc) = layout_text_screen_place(
+        (self.show_action_bar, self.show_page_counter) = layout_text_screen_place(
             bounds,
             self.header.as_mut(),
             self.subtitle.as_mut(),
@@ -143,8 +143,6 @@ where
             &mut self.content,
             self.page_limit,
         );
-        self.show_action_bar = show_ab;
-        self.show_page_counter = show_pc;
 
         // Reset to first page and refresh dependent UI
         self.update_page(0);
