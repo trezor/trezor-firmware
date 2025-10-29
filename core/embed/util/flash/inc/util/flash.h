@@ -30,6 +30,8 @@
 
 void flash_init(void);
 
+void flash_deinit(void);
+
 extern const flash_area_t BOARDLOADER_AREA;
 extern const flash_area_t SECRET_AREA;
 extern const flash_area_t BHK_AREA;
