@@ -31,25 +31,22 @@
 
 void system_exit(int exit_code) {
   syscall_invoke1(exit_code, SYSCALL_SYSTEM_EXIT);
-  while (1)
-    ;
+  while (1);
 }
 
-void system_exit_error_ex(const char *title, size_t title_len,
-                          const char *message, size_t message_len,
-                          const char *footer, size_t footer_len) {
+void system_exit_error_ex(const char* title, size_t title_len,
+                          const char* message, size_t message_len,
+                          const char* footer, size_t footer_len) {
   syscall_invoke6((uint32_t)title, title_len, (uint32_t)message, message_len,
                   (uint32_t)footer, footer_len, SYSCALL_SYSTEM_EXIT_ERROR);
-  while (1)
-    ;
+  while (1);
 }
 
-void system_exit_fatal_ex(const char *message, size_t message_len,
-                          const char *file, size_t file_len, int line) {
+void system_exit_fatal_ex(const char* message, size_t message_len,
+                          const char* file, size_t file_len, int line) {
   syscall_invoke5((uint32_t)message, message_len, (uint32_t)file, file_len,
                   line, SYSCALL_SYSTEM_EXIT_FATAL);
-  while (1)
-    ;
+  while (1);
 }
 
 // =============================================================================
@@ -78,18 +75,18 @@ uint64_t systick_us_to_cycles(uint64_t us) {
 
 #include <sys/sysevent.h>
 
-void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
+void sysevents_poll(const sysevents_t* awaited, sysevents_t* signalled,
                     uint32_t deadline) {
   syscall_invoke3((uint32_t)awaited, (uint32_t)signalled, deadline,
                   SYSCALL_SYSEVENTS_POLL);
 }
 
-ssize_t syshandle_read(syshandle_t handle, void *buffer, size_t buffer_size) {
+ssize_t syshandle_read(syshandle_t handle, void* buffer, size_t buffer_size) {
   return syscall_invoke3((uint32_t)handle, (uint32_t)buffer, buffer_size,
                          SYSCALL_SYSHANDLE_READ);
 }
 
-ssize_t syshandle_write(syshandle_t handle, const void *data,
+ssize_t syshandle_write(syshandle_t handle, const void* data,
                         size_t data_size) {
   return syscall_invoke3((uint32_t)handle, (uint32_t)data, data_size,
                          SYSCALL_SYSHANDLE_WRITE);
@@ -101,12 +98,12 @@ ssize_t syshandle_write(syshandle_t handle, const void *data,
 
 #ifdef USE_DBG_CONSOLE
 
-ssize_t dbg_console_read(void *buffer, size_t buffer_size) {
+ssize_t dbg_console_read(void* buffer, size_t buffer_size) {
   return syscall_invoke2((uint32_t)buffer, buffer_size,
                          SYSCALL_DBG_CONSOLE_READ);
 }
 
-void dbg_console_write(const void *data, size_t data_size) {
+void dbg_console_write(const void* data, size_t data_size) {
   syscall_invoke2((uint32_t)data, data_size, SYSCALL_DBG_CONSOLE_WRITE);
 }
 
@@ -118,11 +115,11 @@ void dbg_console_write(const void *data, size_t data_size) {
 
 #include <util/boot_image.h>
 
-bool boot_image_check(const boot_image_t *image) {
+bool boot_image_check(const boot_image_t* image) {
   return (bool)syscall_invoke1((uint32_t)image, SYSCALL_BOOT_IMAGE_CHECK);
 }
 
-void boot_image_replace(const boot_image_t *image) {
+void boot_image_replace(const boot_image_t* image) {
   syscall_invoke1((uint32_t)image, SYSCALL_BOOT_IMAGE_REPLACE);
 }
 
@@ -134,20 +131,17 @@ void boot_image_replace(const boot_image_t *image) {
 
 void reboot_to_bootloader(void) {
   syscall_invoke0(SYSCALL_REBOOT_TO_BOOTLOADER);
-  while (1)
-    ;
+  while (1);
 }
 
 void reboot_and_upgrade(const uint8_t hash[32]) {
   syscall_invoke1((uint32_t)hash, SYSCALL_REBOOT_AND_UPGRADE);
-  while (1)
-    ;
+  while (1);
 }
 
 void reboot_device(void) {
   syscall_invoke0(SYSCALL_REBOOT_DEVICE);
-  while (1)
-    ;
+  while (1);
 }
 
 // =============================================================================
@@ -184,7 +178,7 @@ int display_get_orientation(void) {
 
 #ifdef FRAMEBUFFER
 
-bool display_get_frame_buffer(display_fb_info_t *fb) {
+bool display_get_frame_buffer(display_fb_info_t* fb) {
   return (bool)syscall_invoke1((uint32_t)fb, SYSCALL_DISPLAY_GET_FB_INFO);
 }
 
@@ -196,11 +190,11 @@ void display_wait_for_sync(void) {
 
 #endif
 
-void display_fill(const gfx_bitblt_t *bb) {
+void display_fill(const gfx_bitblt_t* bb) {
   syscall_invoke1((uint32_t)bb, SYSCALL_DISPLAY_FILL);
 }
 
-void display_copy_rgb565(const gfx_bitblt_t *bb) {
+void display_copy_rgb565(const gfx_bitblt_t* bb) {
   syscall_invoke1((uint32_t)bb, SYSCALL_DISPLAY_COPY_RGB565);
 }
 
@@ -212,7 +206,7 @@ void display_refresh(void) { syscall_invoke0(SYSCALL_DISPLAY_REFRESH); }
 
 #include <io/usb.h>
 
-secbool usb_start(const usb_start_params_t *params) {
+secbool usb_start(const usb_start_params_t* params) {
   return (secbool)syscall_invoke1((uint32_t)params, SYSCALL_USB_START);
 }
 
@@ -222,7 +216,7 @@ usb_event_t usb_get_event(void) {
   return (usb_event_t)syscall_invoke0(SYSCALL_USB_GET_EVENT);
 }
 
-void usb_get_state(usb_state_t *state) {
+void usb_get_state(usb_state_t* state) {
   syscall_invoke1((uint32_t)state, SYSCALL_USB_GET_STATE);
 }
 
@@ -248,13 +242,13 @@ uint64_t sdcard_get_capacity_in_bytes(void) {
   return syscall_invoke0_ret64(SYSCALL_SDCARD_GET_CAPACITY);
 }
 
-secbool __wur sdcard_read_blocks(uint32_t *dest, uint32_t block_num,
+secbool __wur sdcard_read_blocks(uint32_t* dest, uint32_t block_num,
                                  uint32_t num_blocks) {
   return (secbool)syscall_invoke3((uint32_t)dest, block_num, num_blocks,
                                   SYSCALL_SDCARD_READ_BLOCKS);
 }
 
-secbool __wur sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
+secbool __wur sdcard_write_blocks(const uint32_t* src, uint32_t block_num,
                                   uint32_t num_blocks) {
   return (secbool)syscall_invoke3((uint32_t)src, block_num, num_blocks,
                                   SYSCALL_SDCARD_WRITE_BLOCKS);
@@ -268,12 +262,12 @@ secbool __wur sdcard_write_blocks(const uint32_t *src, uint32_t block_num,
 
 #include <util/unit_properties.h>
 
-void unit_properties_get(unit_properties_t *props) {
+void unit_properties_get(unit_properties_t* props) {
   syscall_invoke1((uint32_t)props, SYSCALL_UNIT_PROPERTIES_GET);
 }
 
-bool unit_properties_get_sn(uint8_t *device_sn, size_t max_device_sn_size,
-                            size_t *device_sn_size) {
+bool unit_properties_get_sn(uint8_t* device_sn, size_t max_device_sn_size,
+                            size_t* device_sn_size) {
   return (bool)syscall_invoke3((uint32_t)device_sn, max_device_sn_size,
                                (uint32_t)device_sn_size,
                                SYSCALL_UNIT_PROPERTIES_GET_SN);
@@ -299,7 +293,7 @@ secbool secret_bootloader_locked(void) {
 
 #include <io/button.h>
 
-bool button_get_event(button_event_t *event) {
+bool button_get_event(button_event_t* event) {
   return (bool)syscall_invoke1((uint32_t)event, SYSCALL_BUTTON_GET_EVENT);
 }
 
@@ -397,26 +391,26 @@ bool haptic_play_custom(int8_t amplitude_pct, uint16_t duration_ms) {
 
 #include <sec/optiga.h>
 
-optiga_sign_result optiga_sign(uint8_t index, const uint8_t *digest,
-                               size_t digest_size, uint8_t *signature,
-                               size_t max_sig_size, size_t *sig_size) {
+optiga_sign_result optiga_sign(uint8_t index, const uint8_t* digest,
+                               size_t digest_size, uint8_t* signature,
+                               size_t max_sig_size, size_t* sig_size) {
   return (optiga_sign_result)syscall_invoke6(
       index, (uint32_t)digest, digest_size, (uint32_t)signature, max_sig_size,
       (uint32_t)sig_size, SYSCALL_OPTIGA_SIGN);
 }
 
-bool optiga_cert_size(uint8_t index, size_t *cert_size) {
+bool optiga_cert_size(uint8_t index, size_t* cert_size) {
   return (bool)syscall_invoke2(index, (uint32_t)cert_size,
                                SYSCALL_OPTIGA_CERT_SIZE);
 }
 
-bool optiga_read_cert(uint8_t index, uint8_t *cert, size_t max_cert_size,
-                      size_t *cert_size) {
+bool optiga_read_cert(uint8_t index, uint8_t* cert, size_t max_cert_size,
+                      size_t* cert_size) {
   return (bool)syscall_invoke4(index, (uint32_t)cert, max_cert_size,
                                (uint32_t)cert_size, SYSCALL_OPTIGA_READ_CERT);
 }
 
-bool optiga_read_sec(uint8_t *sec) {
+bool optiga_read_sec(uint8_t* sec) {
   return (bool)syscall_invoke1((uint32_t)sec, SYSCALL_OPTIGA_READ_SEC);
 }
 
@@ -433,7 +427,7 @@ void optiga_set_sec_max(void) { syscall_invoke0(SYSCALL_OPTIGA_SET_SEC_MAX); }
 
 #include <sec/secret_keys.h>
 
-secbool secret_keys_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   return (secbool)syscall_invoke1(
       (uint32_t)dest, SYSCALL_SECRET_KEYS_GET_DELEGATED_IDENTITY_KEY);
 }
@@ -465,8 +459,8 @@ secbool storage_is_unlocked(void) {
 
 void storage_lock(void) { syscall_invoke0(SYSCALL_STORAGE_LOCK); }
 
-secbool storage_unlock(const uint8_t *pin, size_t pin_len,
-                       const uint8_t *ext_salt) {
+secbool storage_unlock(const uint8_t* pin, size_t pin_len,
+                       const uint8_t* ext_salt) {
   return (secbool)syscall_invoke3((uint32_t)pin, pin_len, (uint32_t)ext_salt,
                                   SYSCALL_STORAGE_UNLOCK);
 }
@@ -482,17 +476,17 @@ uint32_t storage_get_pin_rem(void) {
   return syscall_invoke0(SYSCALL_STORAGE_GET_PIN_REM);
 }
 
-secbool storage_change_pin(const uint8_t *oldpin, size_t oldpin_len,
-                           const uint8_t *newpin, size_t newpin_len,
-                           const uint8_t *old_ext_salt,
-                           const uint8_t *new_ext_salt) {
+secbool storage_change_pin(const uint8_t* oldpin, size_t oldpin_len,
+                           const uint8_t* newpin, size_t newpin_len,
+                           const uint8_t* old_ext_salt,
+                           const uint8_t* new_ext_salt) {
   return (secbool)syscall_invoke6(
       (uint32_t)oldpin, oldpin_len, (uint32_t)newpin, newpin_len,
       (uint32_t)old_ext_salt, (uint32_t)new_ext_salt,
       SYSCALL_STORAGE_CHANGE_PIN);
 }
 
-void storage_ensure_not_wipe_code(const uint8_t *pin, size_t pin_len) {
+void storage_ensure_not_wipe_code(const uint8_t* pin, size_t pin_len) {
   syscall_invoke2((uint32_t)pin, pin_len, SYSCALL_STORAGE_ENSURE_NOT_WIPE_CODE);
 }
 
@@ -500,9 +494,9 @@ secbool storage_has_wipe_code(void) {
   return (secbool)syscall_invoke0(SYSCALL_STORAGE_HAS_WIPE_CODE);
 }
 
-secbool storage_change_wipe_code(const uint8_t *pin, size_t pin_len,
-                                 const uint8_t *ext_salt,
-                                 const uint8_t *wipe_code,
+secbool storage_change_wipe_code(const uint8_t* pin, size_t pin_len,
+                                 const uint8_t* ext_salt,
+                                 const uint8_t* wipe_code,
                                  size_t wipe_code_len) {
   return (secbool)syscall_invoke5((uint32_t)pin, pin_len, (uint32_t)ext_salt,
                                   (uint32_t)wipe_code, wipe_code_len,
@@ -513,13 +507,13 @@ secbool storage_has(const uint16_t key) {
   return (secbool)syscall_invoke1(key, SYSCALL_STORAGE_HAS);
 }
 
-secbool storage_get(const uint16_t key, void *val, const uint16_t max_len,
-                    uint16_t *len) {
+secbool storage_get(const uint16_t key, void* val, const uint16_t max_len,
+                    uint16_t* len) {
   return (secbool)syscall_invoke4(key, (uint32_t)val, max_len, (uint32_t)len,
                                   SYSCALL_STORAGE_GET);
 }
 
-secbool storage_set(const uint16_t key, const void *val, const uint16_t len) {
+secbool storage_set(const uint16_t key, const void* val, const uint16_t len) {
   return (secbool)syscall_invoke3(key, (uint32_t)val, len, SYSCALL_STORAGE_SET);
 }
 
@@ -531,7 +525,7 @@ secbool storage_set_counter(const uint16_t key, const uint32_t count) {
   return (secbool)syscall_invoke2(key, count, SYSCALL_STORAGE_SET_COUNTER);
 }
 
-secbool storage_next_counter(const uint16_t key, uint32_t *count) {
+secbool storage_next_counter(const uint16_t key, uint32_t* count) {
   return (secbool)syscall_invoke2(key, (uint32_t)count,
                                   SYSCALL_STORAGE_NEXT_COUNTER);
 }
@@ -542,14 +536,14 @@ secbool storage_next_counter(const uint16_t key, uint32_t *count) {
 
 #include <util/translations.h>
 
-bool translations_write(const uint8_t *data, uint32_t offset, uint32_t len) {
+bool translations_write(const uint8_t* data, uint32_t offset, uint32_t len) {
   return (bool)syscall_invoke3((uint32_t)data, offset, len,
                                SYSCALL_TRANSLATIONS_WRITE);
 }
 
-const uint8_t *translations_read(uint32_t *len, uint32_t offset) {
-  return (const uint8_t *)syscall_invoke2((uint32_t)len, offset,
-                                          SYSCALL_TRANSLATIONS_READ);
+const uint8_t* translations_read(uint32_t* len, uint32_t offset) {
+  return (const uint8_t*)syscall_invoke2((uint32_t)len, offset,
+                                         SYSCALL_TRANSLATIONS_READ);
 }
 
 void translations_erase(void) { syscall_invoke0(SYSCALL_TRANSLATIONS_ERASE); }
@@ -564,11 +558,11 @@ uint32_t translations_area_bytesize(void) {
 
 #include <sec/rng.h>
 
-void rng_fill_buffer(void *buffer, size_t buffer_size) {
+void rng_fill_buffer(void* buffer, size_t buffer_size) {
   syscall_invoke2((uint32_t)buffer, buffer_size, SYSCALL_RNG_FILL_BUFFER);
 }
 
-bool rng_fill_buffer_strong(void *buffer, size_t buffer_size) {
+bool rng_fill_buffer_strong(void* buffer, size_t buffer_size) {
   return (bool)syscall_invoke2((uint32_t)buffer, buffer_size,
                                SYSCALL_RNG_FILL_BUFFER_STRONG);
 }
@@ -579,17 +573,17 @@ bool rng_fill_buffer_strong(void *buffer, size_t buffer_size) {
 
 #include <util/fwutils.h>
 
-secbool firmware_get_vendor(char *buff, size_t buff_size) {
+secbool firmware_get_vendor(char* buff, size_t buff_size) {
   return syscall_invoke2((uint32_t)buff, buff_size,
                          SYSCALL_FIRMWARE_GET_VENDOR);
 }
 
-int firmware_hash_start(const uint8_t *challenge, size_t challenge_len) {
+int firmware_hash_start(const uint8_t* challenge, size_t challenge_len) {
   return (int)syscall_invoke2((uint32_t)challenge, challenge_len,
                               SYSCALL_FIRMWARE_HASH_START);
 }
 
-int firmware_hash_continue(uint8_t *hash, size_t hash_len) {
+int firmware_hash_continue(uint8_t* hash, size_t hash_len) {
   return (int)syscall_invoke2((uint32_t)hash, hash_len,
                               SYSCALL_FIRMWARE_HASH_CONTINUE);
 }
@@ -612,7 +606,7 @@ bool ble_switch_on(void) {
   return (bool)syscall_invoke0(SYSCALL_BLE_SWITCH_ON);
 }
 
-bool ble_enter_pairing_mode(const uint8_t *name, size_t name_len) {
+bool ble_enter_pairing_mode(const uint8_t* name, size_t name_len) {
   return (bool)syscall_invoke2((uint32_t)name, name_len,
                                SYSCALL_BLE_ENTER_PAIRING_MODE);
 }
@@ -625,7 +619,7 @@ bool ble_erase_bonds(void) {
   return (bool)syscall_invoke0(SYSCALL_BLE_ERASE_BONDS);
 }
 
-bool ble_allow_pairing(const uint8_t *pairing_code) {
+bool ble_allow_pairing(const uint8_t* pairing_code) {
   return (bool)syscall_invoke1((uint32_t)pairing_code,
                                SYSCALL_BLE_ALLOW_PAIRING);
 }
@@ -634,35 +628,35 @@ bool ble_reject_pairing(void) {
   return (bool)syscall_invoke0(SYSCALL_BLE_REJECT_PAIRING);
 }
 
-bool ble_get_event(ble_event_t *event) {
+bool ble_get_event(ble_event_t* event) {
   return (bool)syscall_invoke1((uint32_t)event, SYSCALL_BLE_GET_EVENT);
 }
 
-void ble_get_state(ble_state_t *state) {
+void ble_get_state(ble_state_t* state) {
   syscall_invoke1((uint32_t)state, SYSCALL_BLE_GET_STATE);
 }
 
 bool ble_can_write(void) { return syscall_invoke0(SYSCALL_BLE_CAN_WRITE); }
 
-bool ble_write(const uint8_t *data, uint16_t len) {
+bool ble_write(const uint8_t* data, uint16_t len) {
   return syscall_invoke2((uint32_t)data, len, SYSCALL_BLE_WRITE);
 }
 
 bool ble_can_read(void) { return syscall_invoke0(SYSCALL_BLE_CAN_READ); }
 
-uint32_t ble_read(uint8_t *data, uint16_t len) {
+uint32_t ble_read(uint8_t* data, uint16_t len) {
   return (uint32_t)syscall_invoke2((uint32_t)data, len, SYSCALL_BLE_READ);
 }
 
-void ble_set_name(const uint8_t *name, size_t len) {
+void ble_set_name(const uint8_t* name, size_t len) {
   syscall_invoke2((uint32_t)name, len, SYSCALL_BLE_SET_NAME);
 }
 
-bool ble_unpair(const bt_le_addr_t *addr) {
+bool ble_unpair(const bt_le_addr_t* addr) {
   return (bool)syscall_invoke1((uint32_t)addr, SYSCALL_BLE_UNPAIR);
 }
 
-uint8_t ble_get_bond_list(bt_le_addr_t *bonds, size_t count) {
+uint8_t ble_get_bond_list(bt_le_addr_t* bonds, size_t count) {
   return (uint8_t)syscall_invoke2((uint32_t)bonds, count,
                                   SYSCALL_BLE_GET_BOND_LIST);
 }
@@ -687,12 +681,12 @@ bool ble_get_enabled(void) {
 // nrf.h
 // =============================================================================
 
-bool nrf_update_required(const uint8_t *data, size_t len) {
+bool nrf_update_required(const uint8_t* data, size_t len) {
   return (bool)syscall_invoke2((uint32_t)data, (uint32_t)len,
                                SYSCALL_NRF_UPDATE_REQUIRED);
 }
 
-bool nrf_update(const uint8_t *data, size_t len) {
+bool nrf_update(const uint8_t* data, size_t len) {
   return (bool)syscall_invoke2((uint32_t)data, (uint32_t)len,
                                SYSCALL_NRF_UPDATE);
 }
@@ -715,7 +709,7 @@ bool nrf_authenticate(void) {
 
 #include <sys/power_manager.h>
 
-pm_status_t pm_suspend(wakeup_flags_t *wakeup_reason) {
+pm_status_t pm_suspend(wakeup_flags_t* wakeup_reason) {
   return (pm_status_t)syscall_invoke1((uint32_t)wakeup_reason,
                                       SYSCALL_POWER_MANAGER_SUSPEND);
 }
@@ -724,12 +718,12 @@ pm_status_t pm_hibernate(void) {
   return (pm_status_t)syscall_invoke0(SYSCALL_POWER_MANAGER_HIBERNATE);
 }
 
-pm_status_t pm_get_state(pm_state_t *state) {
+pm_status_t pm_get_state(pm_state_t* state) {
   return (pm_status_t)syscall_invoke1((uint32_t)state,
                                       SYSCALL_POWER_MANAGER_GET_STATE);
 }
 
-bool pm_get_events(pm_event_t *events) {
+bool pm_get_events(pm_event_t* events) {
   return (bool)syscall_invoke1((uint32_t)events,
                                SYSCALL_POWER_MANAGER_GET_EVENTS);
 }
@@ -748,21 +742,21 @@ bool jpegdec_open(void) { return (bool)syscall_invoke0(SYSCALL_JPEGDEC_OPEN); }
 
 void jpegdec_close(void) { syscall_invoke0(SYSCALL_JPEGDEC_CLOSE); }
 
-jpegdec_state_t jpegdec_process(jpegdec_input_t *input) {
+jpegdec_state_t jpegdec_process(jpegdec_input_t* input) {
   return (jpegdec_state_t)syscall_invoke1((uint32_t)input,
                                           SYSCALL_JPEGDEC_PROCESS);
 }
 
-bool jpegdec_get_info(jpegdec_image_t *info) {
+bool jpegdec_get_info(jpegdec_image_t* info) {
   return (bool)syscall_invoke1((uint32_t)info, SYSCALL_JPEGDEC_GET_INFO);
 }
 
-bool jpegdec_get_slice_rgba8888(uint32_t *rgba8888, jpegdec_slice_t *slice) {
+bool jpegdec_get_slice_rgba8888(uint32_t* rgba8888, jpegdec_slice_t* slice) {
   return (bool)syscall_invoke2((uint32_t)rgba8888, (uint32_t)slice,
                                SYSCALL_JPEGDEC_GET_SLICE_RGBA8888);
 }
 
-bool jpegdec_get_slice_mono8(uint32_t *mono8, jpegdec_slice_t *slice) {
+bool jpegdec_get_slice_mono8(uint32_t* mono8, jpegdec_slice_t* slice) {
   return (bool)syscall_invoke2((uint32_t)mono8, (uint32_t)slice,
                                SYSCALL_JPEGDEC_GET_SLICE_MONO8);
 }
@@ -779,50 +773,50 @@ bool jpegdec_get_slice_mono8(uint32_t *mono8, jpegdec_slice_t *slice) {
 
 void dma2d_wait(void) { syscall_invoke0(SYSCALL_DMA2D_WAIT); }
 
-bool dma2d_rgb565_fill(const gfx_bitblt_t *bb) {
+bool dma2d_rgb565_fill(const gfx_bitblt_t* bb) {
   return (bool)syscall_invoke1((uint32_t)bb, SYSCALL_DMA2D_RGB565_FILL);
 }
 
-bool dma2d_rgb565_copy_mono4(const gfx_bitblt_t *bb) {
+bool dma2d_rgb565_copy_mono4(const gfx_bitblt_t* bb) {
   return (bool)syscall_invoke1((uint32_t)bb, SYSCALL_DMA2D_RGB565_COPY_MONO4);
 }
 
-bool dma2d_rgb565_copy_rgb565(const gfx_bitblt_t *bb) {
+bool dma2d_rgb565_copy_rgb565(const gfx_bitblt_t* bb) {
   return (bool)syscall_invoke1((uint32_t)bb, SYSCALL_DMA2D_RGB565_COPY_RGB565);
 }
 
-bool dma2d_rgb565_blend_mono4(const gfx_bitblt_t *bb) {
+bool dma2d_rgb565_blend_mono4(const gfx_bitblt_t* bb) {
   return (bool)syscall_invoke1((uint32_t)bb, SYSCALL_DMA2D_RGB565_BLEND_MONO4);
 }
 
-bool dma2d_rgb565_blend_mono8(const gfx_bitblt_t *bb) {
+bool dma2d_rgb565_blend_mono8(const gfx_bitblt_t* bb) {
   return (bool)syscall_invoke1((uint32_t)bb, SYSCALL_DMA2D_RGB565_BLEND_MONO8);
 }
 
-bool dma2d_rgba8888_fill(const gfx_bitblt_t *bb) {
+bool dma2d_rgba8888_fill(const gfx_bitblt_t* bb) {
   return (bool)syscall_invoke1((uint32_t)bb, SYSCALL_DMA2D_RGBA8888_FILL);
 }
 
-bool dma2d_rgba8888_copy_mono4(const gfx_bitblt_t *bb) {
+bool dma2d_rgba8888_copy_mono4(const gfx_bitblt_t* bb) {
   return (bool)syscall_invoke1((uint32_t)bb, SYSCALL_DMA2D_RGBA8888_COPY_MONO4);
 }
 
-bool dma2d_rgba8888_copy_rgb565(const gfx_bitblt_t *bb) {
+bool dma2d_rgba8888_copy_rgb565(const gfx_bitblt_t* bb) {
   return (bool)syscall_invoke1((uint32_t)bb,
                                SYSCALL_DMA2D_RGBA8888_COPY_RGB565);
 }
 
-bool dma2d_rgba8888_copy_rgba8888(const gfx_bitblt_t *bb) {
+bool dma2d_rgba8888_copy_rgba8888(const gfx_bitblt_t* bb) {
   return (bool)syscall_invoke1((uint32_t)bb,
                                SYSCALL_DMA2D_RGBA8888_COPY_RGBA8888);
 }
 
-bool dma2d_rgba8888_blend_mono4(const gfx_bitblt_t *bb) {
+bool dma2d_rgba8888_blend_mono4(const gfx_bitblt_t* bb) {
   return (bool)syscall_invoke1((uint32_t)bb,
                                SYSCALL_DMA2D_RGBA8888_BLEND_MONO4);
 }
 
-bool dma2d_rgba8888_blend_mono8(const gfx_bitblt_t *bb) {
+bool dma2d_rgba8888_blend_mono8(const gfx_bitblt_t* bb) {
   return (bool)syscall_invoke1((uint32_t)bb,
                                SYSCALL_DMA2D_RGBA8888_BLEND_MONO8);
 }
@@ -831,7 +825,7 @@ bool dma2d_rgba8888_blend_mono8(const gfx_bitblt_t *bb) {
 
 #ifdef USE_TROPIC
 
-bool tropic_ping(const uint8_t *msg_in, uint8_t *msg_out, uint16_t msg_len) {
+bool tropic_ping(const uint8_t* msg_in, uint8_t* msg_out, uint16_t msg_len) {
   return (bool)syscall_invoke3((uint32_t)msg_in, (uint32_t)msg_out, msg_len,
                                SYSCALL_TROPIC_PING);
 }
@@ -841,13 +835,13 @@ bool tropic_ecc_key_generate(uint16_t slot_index) {
                                SYSCALL_TROPIC_ECC_KEY_GENERATE);
 }
 
-bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
-                     uint16_t dig_len, uint8_t *sig) {
+bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t* dig,
+                     uint16_t dig_len, uint8_t* sig) {
   return (bool)syscall_invoke4((uint32_t)key_slot_index, (uint32_t)dig, dig_len,
                                (uint32_t)sig, SYSCALL_TROPIC_ECC_SIGN);
 }
 
-bool tropic_data_read(uint16_t udata_slot, uint8_t *data, uint16_t *size) {
+bool tropic_data_read(uint16_t udata_slot, uint8_t* data, uint16_t* size) {
   return (bool)syscall_invoke3((uint32_t)udata_slot, (uint32_t)data,
                                (uint32_t)size, SYSCALL_TROPIC_DATA_READ);
 }

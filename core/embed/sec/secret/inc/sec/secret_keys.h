@@ -73,12 +73,12 @@ secbool secret_key_storage_salt(uint16_t fw_type,
 #ifndef ECDSA_PRIVATE_KEY_SIZE
 #include <ecdsa.h>
 #endif
-secbool secret_keys_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
+secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
 
 #ifdef KERNEL_MODE
 #ifdef USE_NRF_AUTH
-secbool secret_validate_nrf_pairing(const uint8_t *message, size_t msg_len,
-                                    const uint8_t *mac, size_t mac_len);
+secbool secret_validate_nrf_pairing(const uint8_t* message, size_t msg_len,
+                                    const uint8_t* mac, size_t mac_len);
 
 #endif
 #endif

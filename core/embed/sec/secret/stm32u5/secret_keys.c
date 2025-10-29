@@ -49,7 +49,7 @@ secbool secret_key_optiga_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
                                      KEY_INDEX_OPTIGA_MASKING, dest);
 }
 
-secbool secret_keys_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   return secret_key_derive_nist256p1(SECRET_UNPRIVILEGED_MASTER_KEY_SLOT,
                                      KEY_INDEX_DELEGATED_IDENTITY, dest);
 }
@@ -186,7 +186,7 @@ secbool master_key_get(master_key_t* master_key) {
   return sectrue;
 }
 
-secbool secret_keys_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
+secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
   return secret_key_derive_nist256p1(UNUSED_KEY_SLOT,
                                      KEY_INDEX_DELEGATED_IDENTITY, dest);
 }
