@@ -81,10 +81,10 @@ static void tz_configure_sau(void) {
   SET_REGION(1, NONSECURE_CODE_START,  NONSECURE_CODE_SIZE, 0);
   SET_REGION(2, ASSETS_START,          ASSETS_MAXSIZE,      0);
   SET_REGION(3, SGSTUBS_START,         SGSTUBS_SIZE,        1);
-  SET_REGION(4, NONSECURE_RAM_START,   NONSECURE_RAM_SIZE,  0);
-  SET_REGION(5, PERIPH_BASE_NS,        SIZE_256M,           0);
-  SET_REGION(6, GFXMMU_VIRTUAL_BUFFERS_BASE_NS, SIZE_16M,   0);
-  DIS_REGION(7);
+  SET_REGION(4, NONSECURE_RAM1_START,  NONSECURE_RAM1_SIZE, 0);
+  SET_REGION(5, NONSECURE_RAM2_START,  NONSECURE_RAM2_SIZE, 0);
+  SET_REGION(6, PERIPH_BASE_NS,        SIZE_256M,           0);
+  SET_REGION(7, GFXMMU_VIRTUAL_BUFFERS_BASE_NS, SIZE_16M,   0);
   // clang-format on
 
   SAU->CTRL = SAU_CTRL_ENABLE_Msk;
@@ -504,7 +504,8 @@ void tz_init(void) {
 
   // Make part of the FLASH and SRAM regions non-secure
   // so the kernel can access them
-  tz_set_sram_unsecure(NONSECURE_RAM_START, NONSECURE_RAM_SIZE, true);
+  tz_set_sram_unsecure(NONSECURE_RAM1_START, NONSECURE_RAM1_SIZE, true);
+  tz_set_sram_unsecure(NONSECURE_RAM2_START, NONSECURE_RAM2_SIZE, true);
   tz_set_flash_unsecure(NONSECURE_CODE_START, NONSECURE_CODE_SIZE, true);
   tz_set_flash_unsecure(ASSETS_START, ASSETS_MAXSIZE, true);
 
