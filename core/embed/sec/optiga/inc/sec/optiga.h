@@ -100,6 +100,9 @@ void optiga_power_down(void);
  * @note This function should be called after optiga_soft_deinit() when the
  * OPTIGA chip remains powered due to elevated SEC counter. The returned time
  * represents the minimum wait period before calling optiga_power_down().
+ * Returned `sec_clr_time` value is a not a actual counter value, but the
+ * snapshot of the SOC counter value done during the `optiga_soft_deinit()`
+ * call.
  *
  * @param sec_clr_time Pointer to store the estimated clear time in seconds.
  *

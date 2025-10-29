@@ -115,7 +115,10 @@ static const optiga_metadata_item ACCESS_PIN_HMAC_CTR =
 // Size of the CMAC/HMAC prefix returned by Optiga.
 #define ENCRYPT_SYM_PREFIX_SIZE 3
 
-static uint32_t sec_clr_time_s = 0;  // Estimated time needed to clear SEC
+// Estimated time needed to clear SEC assigned during 'optiga_soft_deinit()'
+// this number do not decrement automatically, is just a snapshot of the value
+// during the soft deinit function call.
+static uint32_t sec_clr_time_s = 0;
 
 optiga_result optiga_init() {
   sec_clr_time_s = 0;
@@ -135,7 +138,7 @@ void optiga_soft_deinit() {
   // but do not power down the chip yet, so the SEC counter could decrement
   if (status && sec > OPTIGA_SEC_SUSPEND_THR) {
     optiga_transport_deinit(true);
-    sec_clr_time_s = sec * (OPTIGA_T_MAX_MS / 1000);
+    sec_clr_time_s = (sec * OPTIGA_T_MAX_MS) / 1000;
   } else {
     optiga_transport_deinit(false);
     sec_clr_time_s = 0;
