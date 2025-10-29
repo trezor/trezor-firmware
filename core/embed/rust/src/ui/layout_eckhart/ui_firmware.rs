@@ -410,7 +410,7 @@ impl FirmwareUI for UIEckhart {
         let mut ops = OpTextLayout::new(theme::firmware::TEXT_REGULAR);
         ops.add_offset(Offset::y(16))
             .add_color(theme::RED)
-            .add_text_with_font(sell_amount.unwrap_or(TString::Str("")), font)
+            .add_text_with_font(sell_amount.unwrap_or(TString::empty()), font)
             .add_offset(Offset::y(44))
             .add_newline()
             .add_color(theme::GREEN_LIME)
