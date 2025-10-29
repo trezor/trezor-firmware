@@ -43,7 +43,7 @@ SECTIONS {
   .data : ALIGN(4) {
     *(.data*);
     . = ALIGN(8);
-  } >AUX1_RAM AT>FLASH
+  } >MAIN_RAM AT>FLASH
 
   /DISCARD/ : {
     *(.ARM.exidx*);
@@ -52,7 +52,7 @@ SECTIONS {
   .bss : ALIGN(4) {
     *(.bss*);
     . = ALIGN(4);
-  } >AUX1_RAM
+  } >MAIN_RAM
 
   .buf : ALIGN(4) {
     *(.buf*);
