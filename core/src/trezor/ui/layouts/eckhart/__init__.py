@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from trezor.ui.layouts.menu import Details
 
     from ..common import ExceptionType, PropertyType
+    from ..slip24 import Refund, Trade
 
     T = TypeVar("T")
 
@@ -448,8 +449,8 @@ async def confirm_payment_request(
     recipient_name: str,
     recipient_address: str | None,
     texts: Iterable[tuple[str | None, str]],
-    refunds: Iterable[tuple[str, str | None, str | None]],
-    trades: list[tuple[str | None, str, str, str | None, str | None]],
+    refunds: Iterable[Refund],
+    trades: list[Trade],
     account_items: list[PropertyType],
     transaction_fee: str | None,
     fee_info_items: Iterable[PropertyType] | None,
@@ -457,14 +458,18 @@ async def confirm_payment_request(
 ) -> None:
     from trezor.ui.layouts.menu import Menu, confirm_with_menu
 
-    is_swap = len(trades) != 0 and all(
-        sell_amount is not None for sell_amount, _, _, _, _ in trades
+    from ..slip24 import is_swap
+
+    (title, summary_title) = (
+        (TR.words__swap, TR.words__swap)
+        if is_swap(trades)
+        else (TR.words__confirm, TR.words__title_summary)
     )
 
-    for title, text in texts:
+    for t, text in texts:
         await raise_if_not_confirmed(
             trezorui_api.confirm_value(
-                title=(title or (TR.words__swap if is_swap else TR.words__confirm)),
+                title=t or title,
                 value=text,
                 description=None,
                 verb=TR.buttons__confirm,
@@ -473,7 +478,7 @@ async def confirm_payment_request(
         )
 
     main_layout = trezorui_api.confirm_value(
-        title=(TR.words__swap if is_swap else TR.words__confirm),
+        title=title,
         subtitle=TR.words__provider,
         value=recipient_name,
         description=None,
@@ -488,13 +493,13 @@ async def confirm_payment_request(
         menu_items.append(
             create_details(TR.address__title_provider_address, recipient_address)
         )
-    for r_address, r_account, r_account_path in refunds:
-        refund_account_info: list[PropertyType] = [(str(""), r_address, True)]
-        if r_account:
-            refund_account_info.append((TR.words__account, r_account, True))
-        if r_account_path:
+    for refund in refunds:
+        refund_account_info: list[PropertyType] = [(str(""), refund.address, True)]
+        if refund.account:
+            refund_account_info.append((TR.words__account, refund.account, True))
+        if refund.account_path:
             refund_account_info.append(
-                (TR.address_details__derivation_path, r_account_path, True)
+                (TR.address_details__derivation_path, refund.account_path, True)
             )
         menu_items.append(
             create_details(
@@ -517,21 +522,11 @@ async def confirm_payment_request(
             # but in theory it can (since SLIP-24 supports multiple CoinPurchaseMemos...)
             can_go_back_from_trade = len(trades) == 1
 
-            for (
-                sell_amount,
-                buy_amount,
-                t_address,
-                t_account,
-                t_account_path,
-            ) in trades:
+            for trade in trades:
                 res = await confirm_trade(
-                    TR.words__swap if is_swap else TR.words__confirm,
+                    title,
                     TR.words__assets,
-                    sell_amount,
-                    buy_amount,
-                    t_address,
-                    t_account,
-                    t_account_path,
+                    trade,
                     extra_menu_items or [],
                     can_go_back_from_trade,
                 )
@@ -548,7 +543,7 @@ async def confirm_payment_request(
                     amount_label=None,
                     fee=transaction_fee,
                     fee_label=TR.words__transaction_fee,
-                    title=TR.words__swap if is_swap else TR.words__title_summary,
+                    title=summary_title,
                     account_items=account_items,
                     extra_items=fee_info_items,
                     extra_title=TR.confirm_total__title_fee,
@@ -931,11 +926,7 @@ def _confirm_summary(
 def confirm_trade(
     title: str,
     subtitle: str,
-    sell_amount: str | None,
-    buy_amount: str,
-    address: str,
-    account: str | None,
-    account_path: str | None,
+    trade: Trade,
     extra_menu_items: list[tuple[str, str]],
     back_button: bool,
 ) -> Awaitable[ui.UiResult]:
@@ -944,16 +935,18 @@ def confirm_trade(
     trade_layout = trezorui_api.confirm_trade(
         title=title,
         subtitle=subtitle,
-        sell_amount=sell_amount,
-        buy_amount=buy_amount,
+        sell_amount=trade.sell_amount,
+        buy_amount=trade.buy_amount,
         back_button=back_button,
     )
 
-    account_info: list[PropertyType] = [("", address, True)]
-    if account:
-        account_info.append((TR.words__account, account, True))
-    if account_path:
-        account_info.append((TR.address_details__derivation_path, account_path, True))
+    account_info: list[PropertyType] = [("", trade.address, True)]
+    if trade.account:
+        account_info.append((TR.words__account, trade.account, True))
+    if trade.account_path:
+        account_info.append(
+            (TR.address_details__derivation_path, trade.account_path, True)
+        )
     menu_items = [create_details(TR.address__title_receive_address, account_info)]
     for k, v in extra_menu_items:
         menu_items.append(create_details(k, v))
