@@ -11,7 +11,7 @@ from apps.common.paths import PATTERN_SEP5, address_n_to_str
 # this module implements SLIP-0024 payment requests for crypto purchases using fiat
 
 
-@with_slip44_keychain(*[PATTERN_SEP5], slip44_id=0, slip21_namespaces=[[b"SLIP-0024"]])
+@with_slip44_keychain(PATTERN_SEP5, slip44_id=0, slip21_namespaces=[[b"SLIP-0024"]])
 async def payment_notification(msg: PaymentNotification, keychain: Keychain) -> Success:
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_payment_request
