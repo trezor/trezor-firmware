@@ -5,7 +5,7 @@ use crate::{
     translations::TR,
     trezorhal::usb::usb_configured,
     ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Pad, Timer},
+        component::{text::TextStyle, Component, Event, EventCtx, Label, Pad, Timer},
         display::{
             image::{ImageInfo, ToifFormat},
             toif::Icon,
@@ -28,6 +28,10 @@ use super::{
 const AREA: Rect = constant::screen();
 const TOP_CENTER: Point = AREA.top_center();
 const LABEL_Y: i16 = HEIGHT - 18;
+const LABEL_AREA: Rect = Rect::new(
+    Point::new(6, LABEL_Y - 24),
+    Point::new(WIDTH - 6, LABEL_Y + 11),
+);
 const LOCKED_Y: i16 = HEIGHT / 2 - 13;
 const TAP_Y: i16 = HEIGHT / 2 + 14;
 const HOLD_Y: i16 = 200;
@@ -55,7 +59,7 @@ pub struct HomescreenNotification {
 }
 
 pub struct Homescreen {
-    label: TString<'static>,
+    label: Label<'static>,
     notification: Option<(TString<'static>, u8)>,
     image: BinaryData<'static>,
     hold_to_lock: bool,
@@ -77,7 +81,7 @@ impl Homescreen {
         hold_to_lock: bool,
     ) -> Self {
         Self {
-            label,
+            label: Label::centered(label, theme::TEXT_DEMIBOLD).vertically_centered(),
             notification,
             image: get_homescreen_image(),
             hold_to_lock,
@@ -187,6 +191,7 @@ impl Component for Homescreen {
     fn place(&mut self, bounds: Rect) -> Rect {
         self.pad.place(AREA);
         self.loader.place(AREA.translate(LOADER_OFFSET));
+        self.label.place(LABEL_AREA);
         bounds
     }
 
@@ -218,24 +223,13 @@ impl Component for Homescreen {
                 _ => {}
             }
 
-            self.label.map(|t| {
-                let r = Rect::new(
-                    Point::new(6, LABEL_Y - 24),
-                    Point::new(WIDTH - 6, LABEL_Y + 11),
-                );
-                shape::Bar::new(r)
-                    .with_bg(Color::black())
-                    .with_alpha(89)
-                    .with_radius(3)
-                    .render(target);
+            shape::Bar::new(self.label.area())
+                .with_bg(Color::black())
+                .with_alpha(89)
+                .with_radius(3)
+                .render(target);
 
-                let style = theme::TEXT_DEMIBOLD;
-                let pos = Point::new(self.pad.area.center().x, LABEL_Y);
-                shape::Text::new(pos, t, style.text_font)
-                    .with_align(Alignment::Center)
-                    .with_fg(theme::FG)
-                    .render(target);
-            });
+            self.label.render(target);
 
             if let Some(notif) = self.get_notification() {
                 const NOTIFICATION_HEIGHT: i16 = 36;
@@ -284,12 +278,12 @@ impl Component for Homescreen {
 impl crate::trace::Trace for Homescreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Homescreen");
-        t.string("label", self.label);
+        t.string("label", *self.label.text());
     }
 }
 
 pub struct Lockscreen<'a> {
-    label: TString<'a>,
+    label: Label<'a>,
     image: BinaryData<'a>,
     bootscreen: bool,
     coinjoin_authorized: bool,
@@ -297,8 +291,10 @@ pub struct Lockscreen<'a> {
 
 impl<'a> Lockscreen<'a> {
     pub fn new(label: TString<'a>, bootscreen: bool, coinjoin_authorized: bool) -> Self {
+        let mut label_style = theme::TEXT_DEMIBOLD;
+        label_style.text_color = theme::GREY_LIGHT;
         Lockscreen {
-            label,
+            label: Label::centered(label, label_style).vertically_centered(),
             image: get_homescreen_image(),
             bootscreen,
             coinjoin_authorized,
@@ -310,6 +306,7 @@ impl Component for Lockscreen<'_> {
     type Msg = HomescreenMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
+        self.label.place(LABEL_AREA);
         bounds
     }
 
@@ -345,9 +342,6 @@ impl Component for Lockscreen<'_> {
             (TR::lockscreen__title_locked, TR::lockscreen__tap_to_unlock)
         };
 
-        let mut label_style = theme::TEXT_DEMIBOLD;
-        label_style.text_color = theme::GREY_LIGHT;
-
         let mut texts: &[HomescreenText] = &[
             HomescreenText {
                 text: "".into(),
@@ -365,12 +359,6 @@ impl Component for Lockscreen<'_> {
                 text: tap.into(),
                 style: theme::TEXT_NORMAL,
                 offset: Offset::y(TAP_Y),
-                icon: None,
-            },
-            HomescreenText {
-                text: self.label,
-                style: label_style,
-                offset: Offset::y(LABEL_Y),
                 icon: None,
             },
         ];
@@ -410,6 +398,8 @@ impl Component for Lockscreen<'_> {
                 }
             });
         }
+
+        self.label.render(target);
     }
 }
 

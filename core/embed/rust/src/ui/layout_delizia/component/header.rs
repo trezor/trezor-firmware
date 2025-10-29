@@ -93,7 +93,7 @@ impl Header {
     pub const fn new(alignment: Alignment, title: TString<'static>) -> Self {
         Self {
             area: Rect::zero(),
-            title: Label::new(title, alignment, theme::label_title_main()),
+            title: Label::new(title, alignment, theme::label_title_main()).cropped(),
             subtitle: None,
             button: None,
             anim: None,
@@ -107,7 +107,7 @@ impl Header {
     pub fn with_subtitle(mut self, subtitle: TString<'static>) -> Self {
         let style = theme::TEXT_SUB_GREY;
         self.title = self.title.top_aligned();
-        self.subtitle = Some(Label::new(subtitle, self.title.alignment(), style));
+        self.subtitle = Some(Label::new(subtitle, self.title.alignment(), style).cropped());
         self
     }
     #[inline(never)]
@@ -142,7 +142,8 @@ impl Header {
                 subtitle.set_text(new_subtitle);
             }
             None => {
-                self.subtitle = Some(Label::new(new_subtitle, self.title.alignment(), style));
+                self.subtitle =
+                    Some(Label::new(new_subtitle, self.title.alignment(), style).cropped());
             }
         }
         ctx.request_paint();
@@ -197,6 +198,11 @@ impl Component for Header {
         if self.subtitle.is_some() {
             let title_area = self.title.place(header_area);
             let remaining = header_area.inset(Insets::top(title_area.height()));
+            dbg_println!(
+                "Header::place: title height {}, remaining height {}",
+                title_area.height(),
+                remaining.height()
+            );
             let subtitle_area = self.subtitle.place(remaining);
             self.area = title_area.outset(Insets::top(subtitle_area.height()));
         } else {

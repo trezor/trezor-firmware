@@ -84,7 +84,7 @@ impl Homescreen {
             loader_description.map(|desc| Child::new(ProgressLoader::new(desc, HOLD_TO_LOCK_MS)));
 
         Self {
-            label: Label::centered(label, theme::TEXT_BIG),
+            label: Label::centered(label, theme::TEXT_BIG).cropped(),
             notification,
             custom_image: get_homescreen_image(),
             invisible_buttons: Child::new(ButtonController::new(invisible_btn_layout)),
@@ -150,13 +150,17 @@ impl Homescreen {
 
     fn render_label<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // paint black background to place the label
-        let mut outset = Insets::uniform(LABEL_OUTSET);
-        // the margin at top is bigger (caused by text-height vs line-height?)
-        // compensate by shrinking the outset
-        outset.top -= 5;
-        shape::Bar::new(self.label.text_area().outset(outset))
-            .with_bg(theme::BG)
-            .render(target);
+        let outset = Insets::uniform(LABEL_OUTSET);
+
+        let text_size = self.label.text().map(|t| {
+            Offset::new(
+                self.label.style().text_font.text_width(t),
+                self.label.style().text_font.text_height() - 5,
+            )
+        });
+        let text_area =
+            Rect::snap(self.label.area().center(), text_size, Alignment2D::CENTER).outset(outset);
+        shape::Bar::new(text_area).with_bg(theme::BG).render(target);
 
         self.label.render(target);
     }
@@ -248,7 +252,7 @@ impl<'a> Lockscreen<'a> {
             TR::homescreen__click_to_unlock
         };
         Self {
-            label: Child::new(Label::centered(label, theme::TEXT_BIG)),
+            label: Child::new(Label::centered(label, theme::TEXT_BIG).must_fit(false)),
             instruction: Child::new(Label::centered(instruction_str.into(), theme::TEXT_NORMAL)),
             invisible_buttons: Child::new(ButtonController::new(invisible_btn_layout)),
             coinjoin_icon: coinjoin_authorized.then_some(theme::ICON_COINJOIN),
@@ -309,7 +313,7 @@ impl ConfirmHomescreen {
     pub fn new(title: TString<'static>, image: BinaryData<'static>) -> Self {
         let btn_layout = ButtonLayout::cancel_none_text(TR::buttons__change.into());
         ConfirmHomescreen {
-            title: Child::new(Label::left_aligned(title, theme::TEXT_BOLD_UPPER)),
+            title: Child::new(Label::left_aligned(title, theme::TEXT_BOLD_UPPER).cropped()),
             image,
             buttons: Child::new(ButtonController::new(btn_layout)),
         }

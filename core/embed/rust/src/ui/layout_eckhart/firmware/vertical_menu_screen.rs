@@ -3,8 +3,7 @@ use crate::{
     ui::{
         component::{
             swipe_detect::{SwipeConfig, SwipeSettings},
-            text::{layout::LayoutFit, TextStyle},
-            Component, Event, EventCtx, Label, LineBreaking, SwipeDetect, TextLayout,
+            Component, Event, EventCtx, Label, LineBreaking, SwipeDetect,
         },
         display::Icon,
         event::SwipeEvent,
@@ -46,8 +45,6 @@ pub enum VerticalMenuScreenMsg {
 
 impl<T: MenuItems> VerticalMenuScreen<T> {
     const TOUCH_SENSITIVITY_DIVIDER: i16 = 12;
-    const SUBTITLE_STYLE: TextStyle =
-        theme::TEXT_MEDIUM_GREY.with_line_breaking(LineBreaking::BreakAtWhitespace);
     const SUBTITLE_HEIGHT: i16 = 68;
     const SUBTITLE_DOUBLE_HEIGHT: i16 = 100;
     const SUBTITLE_PADDING: i16 = 20;
@@ -74,8 +71,10 @@ impl<T: MenuItems> VerticalMenuScreen<T> {
 
     pub fn with_subtitle(mut self, subtitle: TString<'static>) -> Self {
         if !subtitle.is_empty() {
-            self.subtitle =
-                Some(Label::left_aligned(subtitle, Self::SUBTITLE_STYLE).vertically_centered());
+            self.subtitle = Some(Label::left_aligned(
+                subtitle,
+                theme::TEXT_MEDIUM_GREY.with_line_breaking(LineBreaking::BreakAtWhitespace),
+            ));
             // The menu shouldn't overlap the subtitle area
             self.menu.no_top_component_overlap();
         }
@@ -205,27 +204,22 @@ impl<T: MenuItems> Component for VerticalMenuScreen<T> {
 
         let menu_area = if let Some(subtitle) = &mut self.subtitle {
             // Choose appropriate height for the subtitle
-            let subtitle_height = if let LayoutFit::OutOfBounds { .. } =
-                subtitle.text().map(|text| {
-                    TextLayout::new(Self::SUBTITLE_STYLE)
-                        .with_bounds(
-                            Rect::from_size(Offset::new(bounds.width(), Self::SUBTITLE_HEIGHT))
-                                .inset(Insets::new(
-                                    Self::SUBTITLE_PADDING,
-                                    theme::PADDING,
-                                    Self::SUBTITLE_PADDING,
-                                    theme::PADDING,
-                                )),
-                        )
-                        .fit_text(text)
-                }) {
+            let subtitle_width = SCREEN.width() - 2 * theme::PADDING;
+            let subtitle_height = if subtitle.text_height(subtitle_width)
+                > subtitle.style().text_font.text_max_height()
+            {
                 Self::SUBTITLE_DOUBLE_HEIGHT
             } else {
                 Self::SUBTITLE_HEIGHT
             };
 
             let (subtitle_area, rest) = rest.split_top(subtitle_height);
-            subtitle.place(subtitle_area.inset(theme::SIDE_INSETS));
+            subtitle.place(subtitle_area.inset(Insets::new(
+                theme::PADDING,
+                theme::PADDING,
+                0,
+                theme::PADDING,
+            )));
             rest
         } else {
             rest.outset(Insets::top(VerticalMenu::<ShortMenuVec>::BUTTON_TOP_SHRINK))

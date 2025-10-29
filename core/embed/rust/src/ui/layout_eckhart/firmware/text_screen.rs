@@ -3,21 +3,18 @@ use crate::{
     ui::{
         component::{
             swipe_detect::SwipeConfig,
-            text::{
-                layout::LayoutFit,
-                paragraphs::{Checklist, ParagraphSource, Paragraphs},
-                TextStyle,
-            },
-            Component, Event, EventCtx, FormattedText, Label, Paginate, TextLayout,
+            text::paragraphs::{Checklist, ParagraphSource, Paragraphs},
+            Component, Event, EventCtx, FormattedText, Label, Paginate,
         },
         flow::Swipable,
-        geometry::{Insets, Offset, Rect},
+        geometry::{Insets, Rect},
         shape::Renderer,
         util::Pager,
     },
 };
 
 use super::{
+    constant::SCREEN,
     theme::{self, ScreenBackground, CONTENT_INSETS_NO_HEADER, SIDE_INSETS},
     ActionBar, ActionBarMsg, FidoAccountName, FidoCredential, Header, HeaderMsg, Hint,
 };
@@ -55,7 +52,6 @@ where
 {
     const SUBTITLE_HEIGHT: i16 = 44;
     const SUBTITLE_DOUBLE_HEIGHT: i16 = 76;
-    const SUBTITLE_STYLE: TextStyle = theme::TEXT_MEDIUM_EXTRA_LIGHT;
 
     pub fn new(content: T) -> Self {
         Self {
@@ -77,7 +73,10 @@ where
 
     pub fn with_subtitle(mut self, subtitle: TString<'static>) -> Self {
         if !subtitle.is_empty() {
-            self.subtitle = Some(Label::left_aligned(subtitle, Self::SUBTITLE_STYLE).top_aligned());
+            self.subtitle = Some(Label::left_aligned(
+                subtitle,
+                theme::TEXT_MEDIUM_EXTRA_LIGHT,
+            ));
         }
         self
     }
@@ -153,15 +152,10 @@ where
 
         let rest = if let Some(subtitle) = &mut self.subtitle {
             // Choose appropriate height for the subtitle
-            let subtitle_height = if let LayoutFit::OutOfBounds { .. } =
-                subtitle.text().map(|text| {
-                    TextLayout::new(Self::SUBTITLE_STYLE)
-                        .with_bounds(
-                            Rect::from_size(Offset::new(bounds.width(), Self::SUBTITLE_HEIGHT))
-                                .inset(SIDE_INSETS),
-                        )
-                        .fit_text(text)
-                }) {
+            let subtitle_width = SCREEN.width() - 2 * theme::PADDING;
+            let subtitle_height = if subtitle.text_height(subtitle_width)
+                > subtitle.style().text_font.text_max_height()
+            {
                 Self::SUBTITLE_DOUBLE_HEIGHT
             } else {
                 Self::SUBTITLE_HEIGHT

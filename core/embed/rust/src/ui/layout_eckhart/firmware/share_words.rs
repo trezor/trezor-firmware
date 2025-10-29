@@ -81,7 +81,7 @@ impl<'a> ShareWordsScreen<'a> {
 
     pub fn with_subtitle(mut self, subtitle: TString<'static>) -> Self {
         if !subtitle.is_empty() {
-            self.subtitle = Some(Label::left_aligned(subtitle, Self::SUBTITLE_STYLE).top_aligned());
+            self.subtitle = Some(Label::left_aligned(subtitle, Self::SUBTITLE_STYLE));
         }
         self
     }
@@ -117,23 +117,10 @@ impl<'a> ShareWordsScreen<'a> {
         }
 
         // use place function because the hint height is floating based on its content
-        self.place(self.area);
+        self.place_components(self.area, true);
     }
-}
 
-impl<'a> Swipable for ShareWordsScreen<'a> {
-    fn get_pager(&self) -> Pager {
-        self.content.pager()
-    }
-    fn get_swipe_config(&self) -> SwipeConfig {
-        SwipeConfig::default()
-    }
-}
-
-impl<'a> Component for ShareWordsScreen<'a> {
-    type Msg = ShareWordsScreenMsg;
-
-    fn place(&mut self, bounds: Rect) -> Rect {
+    fn place_components(&mut self, bounds: Rect, hint_only: bool) -> Rect {
         // assert full screen
         debug_assert_eq!(bounds.height(), SCREEN.height());
         debug_assert_eq!(bounds.width(), SCREEN.width());
@@ -150,14 +137,33 @@ impl<'a> Component for ShareWordsScreen<'a> {
             .inset(theme::SIDE_INSETS)
             .with_height(Self::WORD_AREA_HEIGHT);
 
-        self.page_swipe.place(bounds);
-        self.header.place(header_area);
-        self.subtitle.place(subtitle_area.inset(theme::SIDE_INSETS));
-        self.content.place(content_area);
+        if !hint_only {
+            self.page_swipe.place(bounds);
+            self.header.place(header_area);
+            self.subtitle.place(subtitle_area.inset(theme::SIDE_INSETS));
+            self.content.place(content_area);
+            self.action_bar.place(action_bar_area);
+        }
         self.hint.place(hint_area);
-        self.action_bar.place(action_bar_area);
 
         bounds
+    }
+}
+
+impl<'a> Swipable for ShareWordsScreen<'a> {
+    fn get_pager(&self) -> Pager {
+        self.content.pager()
+    }
+    fn get_swipe_config(&self) -> SwipeConfig {
+        SwipeConfig::default()
+    }
+}
+
+impl<'a> Component for ShareWordsScreen<'a> {
+    type Msg = ShareWordsScreenMsg;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        self.place_components(bounds, false)
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
