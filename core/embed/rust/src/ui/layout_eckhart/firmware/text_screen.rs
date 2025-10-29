@@ -11,7 +11,7 @@ use crate::{
             Component, Event, EventCtx, FormattedText, Label, Paginate, TextLayout,
         },
         flow::Swipable,
-        geometry::{Insets, Offset, Rect},
+        geometry::{Offset, Rect},
         shape::Renderer,
         util::Pager,
     },
@@ -246,14 +246,6 @@ where
     }
 }
 
-fn compute_content_area(area: Rect, has_header: bool) -> Rect {
-    let mut area = area.inset(SIDE_INSETS);
-    if !has_header {
-        area = area.inset(Insets::top(CONTENT_INSETS_NO_HEADER.top));
-    }
-    area
-}
-
 // Lay out the whole screen and decide which optional elements to show.
 // Returns (show_action_bar, show_page_counter).
 fn layout_text_screen_place(
@@ -265,20 +257,17 @@ fn layout_text_screen_place(
     content: &mut dyn ContentOps,
     page_limit: Option<u16>,
 ) -> (bool, bool) {
+    // 1) Header
     let has_header = header.is_some();
-
-    // Header
-    let mut rest = if let Some(h) = header.as_mut() {
-        let (header_area, rest) = bounds.split_top(Header::HEADER_HEIGHT);
+    let mut rest = bounds;
+    if let Some(h) = header.as_mut() {
+        let (header_area, rest2) = rest.split_top(Header::HEADER_HEIGHT);
         h.place(header_area);
-        rest
-    } else {
-        bounds
-    };
+        rest = rest2;
+    }
 
-    // Subtitle
-    rest = if let Some(s) = subtitle.as_mut() {
-        // Choose appropriate height for the subtitle
+    // 2) Subtitle
+    let mut content_footer_area = if let Some(s) = subtitle.as_mut() {
         let subtitle_height = if let LayoutFit::OutOfBounds { .. } = s.text().map(|text| {
             TextLayout::new(theme::TEXT_MEDIUM_EXTRA_LIGHT)
                 .with_bounds(
@@ -291,59 +280,56 @@ fn layout_text_screen_place(
         } else {
             SUBTITLE_HEIGHT
         };
-        let (subtitle_area, rest) = rest.split_top(subtitle_height);
+        let (subtitle_area, rest2) = rest.split_top(subtitle_height);
         s.place(subtitle_area.inset(SIDE_INSETS));
-        rest
+        rest2
     } else {
         rest
     };
 
-    // Phase 1: try without ActionBar and without page-counter hint.
-    let mut content_footer_area = rest;
-    let mut content_area = compute_content_area(content_footer_area, has_header);
-    content.place(content_area);
-
-    let mut pager = content.pager();
-    if let Some(limit) = page_limit {
-        pager = pager.with_limit(limit);
+    // Insets applied to content only
+    let mut content_insets = SIDE_INSETS;
+    if !has_header {
+        content_insets.top += CONTENT_INSETS_NO_HEADER.top;
     }
-    let single_page_without_ab = pager.total() <= 1;
 
-    // Decide ActionBar visibility based on whether it's PaginateOnly
-    let ab_is_paginate_only = action_bar.as_ref().is_some_and(|ab| ab.is_paginate_only());
-
-    let show_action_bar = if ab_is_paginate_only {
-        // Show AB only when content does not fit without it.
-        !single_page_without_ab
-    } else {
-        // Non-paginate-only action bars are always shown if present.
-        action_bar.is_some()
+    // Helper to place content in area and get pager with optional limit
+    let mut place_and_pager = |area: Rect| -> Pager {
+        let content_area = area.inset(content_insets);
+        content.place(content_area);
+        let mut pager = content.pager();
+        if let Some(limit) = page_limit {
+            pager = pager.with_limit(limit);
+        }
+        pager
     };
 
-    // Reserve ActionBar if shown
+    // 4) Compute pagination without AB/hint
+    let single_page_without_ab = place_and_pager(content_footer_area).total() <= 1;
+
+    // 5) Decide ActionBar visibility
+    let show_action_bar = match action_bar.as_ref() {
+        Some(ab) if !ab.is_paginate_only() => true,
+        Some(_) => !single_page_without_ab,
+        None => false,
+    };
+
     if show_action_bar {
         if let Some(ab) = action_bar.as_mut() {
-            let (rest, action_bar_area) =
-                content_footer_area.split_bottom(ActionBar::ACTION_BAR_HEIGHT);
-            ab.place(action_bar_area);
-            content_footer_area = rest;
+            let (rest2, ab_area) = content_footer_area.split_bottom(ActionBar::ACTION_BAR_HEIGHT);
+            ab.place(ab_area);
+            content_footer_area = rest2;
         }
     }
 
-    // Phase 2: decide if we show a page-counter hint after AB decision.
-    content_area = compute_content_area(content_footer_area, has_header);
-    content.place(content_area);
+    // 6) Recompute pagination after AB
+    let is_paginated_after_ab = place_and_pager(content_footer_area).total() > 1;
 
-    let mut pager = content.pager();
-    if let Some(limit) = page_limit {
-        pager = pager.with_limit(limit);
-    }
-    let is_paginated_after_ab = pager.total() > 1;
-
-    let hint_is_page_counter = hint.as_ref().map(|h| h.is_page_counter()).unwrap_or(false);
+    // 7) Page-counter hint decision
+    let hint_is_page_counter = matches!(hint, Some(ref h) if h.is_page_counter());
     let mut show_page_counter = hint_is_page_counter && is_paginated_after_ab;
 
-    // Phase 3: place hint (if needed) and final content.
+    // 8) Place hint (if any) and final content
     if let Some(h) = hint.as_mut() {
         let show_hint_now = if hint_is_page_counter {
             show_page_counter
@@ -353,17 +339,10 @@ fn layout_text_screen_place(
         if show_hint_now {
             let (content_top_area, hint_area) = content_footer_area.split_bottom(h.height());
             h.place(hint_area);
-            content_area = compute_content_area(content_top_area, has_header);
-            content.place(content_area);
+            let _ = place_and_pager(content_top_area);
         } else {
-            // If we don't show the page counter, ensure we don't render it later
             show_page_counter = false;
-            content_area = compute_content_area(content_footer_area, has_header);
-            content.place(content_area);
         }
-    } else {
-        content_area = compute_content_area(content_footer_area, has_header);
-        content.place(content_area);
     }
 
     (show_action_bar, show_page_counter)
