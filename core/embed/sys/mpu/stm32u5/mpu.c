@@ -200,6 +200,9 @@ mpu_driver_t g_mpu_driver = {
     .mode = MPU_MODE_DISABLED,
 };
 
+// forward declaration
+static void mpu_update_region7(mpu_mode_t mode);
+
 static inline void mpu_disable(void) {
   __DMB();
   SCB->SHCSR &= ~SCB_SHCSR_MEMFAULTENA_Msk;
@@ -323,6 +326,8 @@ void mpu_set_active_applet(applet_layout_t* layout) {
 
   mpu_disable();
 
+  drv->app_tls = layout->tls;
+
   if (layout != NULL) {
     // clang-format off
     if (layout->code1.start != 0 && layout->code1.size != 0) {
@@ -344,27 +349,19 @@ void mpu_set_active_applet(applet_layout_t* layout) {
     } else {
       DIS_REGION( 4 );
     }
-
-    drv->app_tls = layout->tls;
-    if (drv->mode == MPU_MODE_APP) {
-      if (layout->tls.start != 0 && layout->tls.size != 0) {
-        SET_REGRUN( 7, layout->tls.start, layout->tls.size, SRAM, YES, YES );
-      } else {
-        DIS_REGION( 7);
-      }
-    }
     // clang-format on
 
   } else {
     DIS_REGION(2);
     DIS_REGION(3);
     DIS_REGION(4);
-
-    drv->app_tls = (mpu_area_t){0, 0};
-    if (drv->mode == MPU_MODE_APP) {
-      DIS_REGION(7);
-    }
   }
+
+  // Remember the TLS area of the active applet
+  // (used in region #7 in MPU_APP mode)
+  drv->app_tls = layout->tls;
+
+  mpu_update_region7(drv->mode);
 
   if (drv->mode != MPU_MODE_DISABLED) {
     mpu_enable();
@@ -507,6 +504,26 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
 
   // Region #7 is banked
 
+  mpu_update_region7(mode);
+
+  if (mode != MPU_MODE_DISABLED) {
+    mpu_enable();
+  }
+
+  mpu_mode_t prev_mode = drv->mode;
+  drv->mode = mode;
+
+  irq_unlock(irq_key);
+
+  return prev_mode;
+}
+
+// Must be called with IRQs disabled and MPU disabled
+static void mpu_update_region7(mpu_mode_t mode) {
+#ifdef KERNEL
+  mpu_driver_t* drv = &g_mpu_driver;
+#endif
+
   // clang-format off
   switch (mode) {
       //      REGION   ADDRESS                 SIZE                TYPE       WRITE   UNPRIV
@@ -524,24 +541,13 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
         DIS_REGION( 7 );
       }
       break;
-  #endif
+#endif
     default:
       // All peripherals (Privileged, Read-Write, Non-Executable)
       SET_REGION( 7, PERIPH_BASE_NS,           PERIPH_SIZE,        PERIPHERAL,  YES,    NO );
       break;
   }
   // clang-format on
-
-  if (mode != MPU_MODE_DISABLED) {
-    mpu_enable();
-  }
-
-  mpu_mode_t prev_mode = drv->mode;
-  drv->mode = mode;
-
-  irq_unlock(irq_key);
-
-  return prev_mode;
 }
 
 void mpu_restore(mpu_mode_t mode) { mpu_reconfig(mode); }
