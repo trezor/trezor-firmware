@@ -23,6 +23,10 @@
 
 #include <sys/mpu.h>
 
+#ifdef TREZOR_EMULATOR
+#include <pthread.h>
+#endif
+
 // Termination reason for the task
 typedef enum {
   TASK_TERM_REASON_EXIT = 0,
@@ -112,9 +116,18 @@ typedef uint8_t systask_id_t;
 
 #ifdef KERNEL_MODE
 
+// Function call pushed onto the stack of the task
+typedef struct {
+  uintptr_t (*fn)(uintptr_t, uintptr_t, uintptr_t);
+  uintptr_t arg1;
+  uintptr_t arg2;
+  uintptr_t arg3;
+} systask_fn_call_t;
+
 // Task context used by the kernel to save the state of each task
 // when switching between them
 typedef struct {
+#ifndef TREZOR_EMULATOR
   //  `sp`, `sp_lim`, `exc_return` and `killed` should at the beginning
   //  and in this order to be compatible with the PendSV_Handler
   // Stack pointer value
@@ -123,18 +136,20 @@ typedef struct {
   uint32_t sp_lim;
   // Exception return value
   uint32_t exc_return;
+#endif
   // Set to nonzero, if the task is killed
   volatile uint32_t killed;
 
   // Task id
   systask_id_t id;
-  // MPU mode the task is running in
-  mpu_mode_t mpu_mode;
   // Task post-mortem information
   systask_postmortem_t pminfo;
   // Applet bound to the task
   void* applet;
 
+#ifndef TREZOR_EMULATOR
+  // MPU mode the task is running in
+  mpu_mode_t mpu_mode;
   // Original stack base
   uint32_t stack_base;
   // Original stack end
@@ -153,6 +168,16 @@ typedef struct {
 
   // Set if the task is processing the kernel callback
   bool in_callback;
+#else
+  // System thread handle
+  pthread_t pthread;
+  // Condition variable used to signal the task
+  // is ready to run
+  pthread_cond_t cv;
+
+  // Emulation of the call pushed onto the stack
+  systask_fn_call_t pushed_fn_call;
+#endif
 
 } systask_t;
 
@@ -167,11 +192,13 @@ systask_t* systask_active(void);
 // Returns the kernel task
 systask_t* systask_kernel(void);
 
+#ifndef TREZOR_EMULATOR
 // Enables automatics restoring of TLS area
 //
 // When task is deactivated, the tls area is automatically stored in the
 // `task->tls_copy` array and restored when the task is activated again.
 void systask_enable_tls(systask_t* task, mpu_area_t tls);
+#endif
 
 // Makes the given task the currently running task.
 void systask_yield_to(systask_t* task);
@@ -199,19 +226,22 @@ void systask_pop_data(systask_t* task, size_t size);
 //
 // The task must be not be running when the function is called
 // Return `true` in case of success, `false` otherwise
-bool systask_push_call(systask_t* task, void* fn, uint32_t arg1, uint32_t arg2,
-                       uint32_t arg3);
+bool systask_push_call(systask_t* task, void* fn, uintptr_t arg1,
+                       uintptr_t arg2, uintptr_t arg3);
 
 // Invokes the callback function in the context of the given task
 //   uint32_t callback(uint32_t arg1, uint32_t arg2, uint32_t arg3);
-uint32_t systask_invoke_callback(systask_t* task, uint32_t arg1, uint32_t arg2,
-                                 uint32_t arg3, void* callback);
+uint32_t systask_invoke_callback(systask_t* task, uintptr_t arg1,
+                                 uintptr_t arg2, uintptr_t arg3,
+                                 void* callback);
 
+#ifndef TREZOR_EMULATOR
 // Sets R0 and R1 registers of the suspended task
 void systask_set_r0r1(systask_t* task, uint32_t r0, uint32_t r1);
 
 // Gets R0 register value of the suspended task
 uint32_t systask_get_r0(systask_t* task);
+#endif
 
 // Gets the ID (zero-based index up SYSTASK_MAX_TASKS - 1) of the given task.
 systask_id_t systask_id(const systask_t* task);
@@ -241,5 +271,8 @@ void systask_exit_error(systask_t* task, const char* title, size_t title_len,
 void systask_exit_fatal(systask_t* task, const char* message,
                         size_t message_len, const char* file, size_t file_len,
                         int line);
+
+// Prints the post-mortem information about the task to the debug output
+void systask_print_pminfo(systask_t* task);
 
 #endif  // KERNEL_MODE

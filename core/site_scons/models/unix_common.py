@@ -47,6 +47,7 @@ def unix_common_files(env, features_wanted, defines, sources, paths):
         "embed/sys/notify/notify.c",
         "embed/sys/startup/unix/bootutils.c",
         "embed/sys/task/sysevent.c",
+        "embed/sys/task/system.c",
         "embed/sys/task/unix/sdl_event.c",
         "embed/sys/task/unix/system.c",
         "embed/sys/task/unix/systask.c",
