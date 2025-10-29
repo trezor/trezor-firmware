@@ -37,6 +37,10 @@
 #include <sys/dbg_console.h>
 #endif
 
+#ifdef USE_IPC
+#include <sys/ipc.h>
+#endif
+
 #ifdef USE_SDRAM
 #include <sys/sdram.h>
 #endif
@@ -69,6 +73,9 @@ void system_init(systask_error_handler_t error_handler) {
   systick_init();
   systimer_init();
 #ifdef KERNEL
+#ifdef USE_IPC
+  ipc_init();
+#endif
   syscall_ipc_init();
 #endif
 #ifdef USE_DBG_CONSOLE

@@ -28,6 +28,7 @@ FEATURES_WANTED = [
     "display",
     "dma2d",
     "input",
+    "ipc",
     "kernel_mode",
     "optiga",
     "powerctl",
