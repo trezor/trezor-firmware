@@ -134,7 +134,7 @@ where
     type Msg = TextScreenMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        (self.show_action_bar, self.show_page_counter) = layout_text_screen_place(
+        (self.show_action_bar, self.show_page_counter) = place_textscreen(
             bounds,
             self.header.as_mut(),
             self.subtitle.as_mut(),
@@ -248,7 +248,7 @@ where
 
 // Lay out the whole screen and decide which optional elements to show.
 // Returns (show_action_bar, show_page_counter).
-fn layout_text_screen_place(
+fn place_textscreen(
     bounds: Rect,
     mut header: Option<&mut Header>,
     mut subtitle: Option<&mut Label<'static>>,
