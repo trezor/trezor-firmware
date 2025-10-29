@@ -102,6 +102,9 @@ lt_ret_t tropic_custom_session_start(pkey_index_t pairing_key_index) {
     return LT_FAIL;
   }
 
+  if (drv->session_started && drv->pairing_key_index == pairing_key_index) {
+    return LT_OK;
+  }
 
   lt_ret_t ret = LT_FAIL;
 
