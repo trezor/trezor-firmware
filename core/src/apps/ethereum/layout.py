@@ -123,6 +123,7 @@ async def require_confirm_payment_request(
 ) -> None:
     from trezor import wire
     from trezor.ui.layouts import confirm_payment_request
+    from trezor.ui.layouts.slip24 import Refund, Trade
 
     from apps.common.payment_request import parse_amount
 
@@ -143,14 +144,14 @@ async def require_confirm_payment_request(
                 memo.refund_memo.address_n
             )
             refunds.append(
-                (memo.refund_memo.address, refund_account, refund_account_path)
+                Refund(memo.refund_memo.address, refund_account, refund_account_path)
             )
         elif memo.coin_purchase_memo:
             coin_purchase_account, coin_purchase_account_path = get_account_and_path(
                 memo.coin_purchase_memo.address_n
             )
             trades.append(
-                (
+                Trade(
                     f"- {total_amount}",
                     f"+ {memo.coin_purchase_memo.amount}",
                     memo.coin_purchase_memo.address,

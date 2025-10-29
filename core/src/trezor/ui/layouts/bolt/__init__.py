@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from trezor.messages import StellarAsset
 
     from ..common import ExceptionType, PropertyType
+    from ..slip24 import Refund, Trade
 
 
 BR_CODE_OTHER = ButtonRequestType.Other  # global_import_cache
@@ -489,21 +490,21 @@ async def confirm_payment_request(
     recipient_name: str,
     recipient_address: str | None,
     texts: Iterable[tuple[str | None, str]],
-    refunds: Iterable[tuple[str, str | None, str | None]],
-    trades: list[tuple[str | None, str, str, str | None, str | None]],
+    refunds: Iterable[Refund],
+    trades: list[Trade],
     account_items: list[PropertyType] | None,
     transaction_fee: str | None,
     fee_info_items: Iterable[PropertyType] | None,
     extra_menu_items: list[tuple[str, str]] | None = None,
 ) -> None:
-    is_swap = len(trades) != 0 and all(
-        sell_amount is not None for sell_amount, _, _, _, _ in trades
-    )
+    from ..slip24 import is_swap
 
-    for title, text in texts:
+    title = TR.words__swap if is_swap(trades) else TR.words__confirm
+
+    for t, text in texts:
         await raise_if_not_confirmed(
             trezorui_api.confirm_value(
-                title=(title or (TR.words__swap if is_swap else TR.words__confirm)),
+                title=t or title,
                 value=text,
                 is_data=False,
                 description=None,
@@ -514,18 +515,18 @@ async def confirm_payment_request(
     menu_items: list[PropertyType] = []
     if recipient_address is not None:
         menu_items.append((TR.address__title_provider_address, recipient_address, None))
-    for r_address, r_account, r_account_path in refunds:
-        menu_items.append((TR.address__title_refund_address, r_address, None))
-        if r_account:
-            menu_items.append((TR.words__account, r_account, None))
-        if r_account_path:
+    for refund in refunds:
+        menu_items.append((TR.address__title_refund_address, refund.address, None))
+        if refund.account:
+            menu_items.append((TR.words__account, refund.account, None))
+        if refund.account_path:
             menu_items.append(
-                (TR.address_details__derivation_path, r_account_path, None)
+                (TR.address_details__derivation_path, refund.account_path, None)
             )
 
     await with_info(
         trezorui_api.confirm_value(
-            title=(TR.words__swap if is_swap else TR.words__confirm),
+            title=title,
             subtitle=TR.words__provider,
             value=recipient_name,
             description=None,
@@ -543,14 +544,10 @@ async def confirm_payment_request(
         ButtonRequestType.SignTx,
     )
 
-    for sell_amount, buy_amount, t_address, t_account, t_account_path in trades:
+    for trade in trades:
         await confirm_trade(
-            TR.words__swap if is_swap else TR.words__confirm,
-            sell_amount,
-            buy_amount,
-            t_address,
-            t_account,
-            t_account_path,
+            title,
+            trade,
             extra_menu_items or [],
         )
 
@@ -982,27 +979,25 @@ def _confirm_summary(
 
 async def confirm_trade(
     title: str,
-    sell_amount: str | None,
-    buy_amount: str,
-    address: str,
-    account: str | None,
-    account_path: str | None,
+    trade: Trade,
     extra_menu_items: list[tuple[str, str]],
 ) -> None:
     menu_items: list[PropertyType] = [
-        (TR.address__title_receive_address, address, None)
+        (TR.address__title_receive_address, trade.address, None)
     ]
-    if account:
-        menu_items.append((TR.words__account, account, None))
-    if account_path:
-        menu_items.append((TR.address_details__derivation_path, account_path, None))
+    if trade.account:
+        menu_items.append((TR.words__account, trade.account, None))
+    if trade.account_path:
+        menu_items.append(
+            (TR.address_details__derivation_path, trade.account_path, None)
+        )
     for k, v in extra_menu_items:
         menu_items.append((k, v, None))
 
     items = []
-    if sell_amount is not None:
-        items.append(("", sell_amount, None))
-    items.append(("", buy_amount, None))
+    if trade.sell_amount is not None:
+        items.append(("", trade.sell_amount, None))
+    items.append(("", trade.buy_amount, None))
     await with_info(
         trezorui_api.confirm_properties(
             title=title,

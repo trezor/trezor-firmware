@@ -162,6 +162,7 @@ async def show_payment_request_details(
     address_n: Bip32Path | None,
 ) -> None:
     from trezor import wire
+    from trezor.ui.layouts.slip24 import Refund, Trade
 
     from apps.common.payment_request import parse_amount
 
@@ -182,7 +183,7 @@ async def show_payment_request_details(
                 address_n_to_str(refund_address_n) if refund_address_n else None
             )
             refunds.append(
-                (memo.refund_memo.address, refund_account, refund_account_path)
+                Refund(memo.refund_memo.address, refund_account, refund_account_path)
             )
         elif memo.coin_purchase_memo:
             coin_purchase_address_n = memo.coin_purchase_memo.address_n
@@ -193,7 +194,7 @@ async def show_payment_request_details(
                 else None
             )
             trades.append(
-                (
+                Trade(
                     f"-\u00a0{total_amount}",
                     f"+\u00a0{memo.coin_purchase_memo.amount}",
                     memo.coin_purchase_memo.address,
