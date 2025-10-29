@@ -138,7 +138,7 @@ void optiga_soft_deinit() {
   // but do not power down the chip yet, so the SEC counter could decrement
   if (status && sec > OPTIGA_SEC_SUSPEND_THR) {
     optiga_transport_deinit(true);
-    sec_clr_time_s = (sec * OPTIGA_T_MAX_MS) / 1000;
+    sec_clr_time_s = ((sec - OPTIGA_SEC_SUSPEND_THR) * OPTIGA_T_MAX_MS) / 1000;
   } else {
     optiga_transport_deinit(false);
     sec_clr_time_s = 0;
