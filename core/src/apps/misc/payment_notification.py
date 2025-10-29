@@ -11,6 +11,7 @@ from apps.common.paths import address_n_to_str
 async def payment_notification(msg: PaymentNotification) -> Success:
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_payment_request
+    from trezor.ui.layouts.slip24 import Trade
     from trezor.wire import DataError
 
     from apps.common.keychain import get_keychain
@@ -28,7 +29,7 @@ async def payment_notification(msg: PaymentNotification) -> Success:
     verified_payment_request = msg.payment_req
 
     texts: list[tuple[str | None, str]] = []
-    trades: list[tuple[str | None, str, str, str | None, str | None]] = []
+    trades = []
     for memo in verified_payment_request.memos:
         # Note: we do not process RefundMemo here:
         # if the swap fails, the fiat amount just remains in your custodial account, it does not get refunded anywhere
@@ -41,7 +42,7 @@ async def payment_notification(msg: PaymentNotification) -> Success:
                 memo.coin_purchase_memo.address_n
             )
             trades.append(
-                (
+                Trade(
                     None,  # if we later decide to somehow pass the fiat amount (and currency!) as part of the payment request in a more structured fashion,
                     # we should include it here so it gets shown on the trade screen, but for now we just have the fiat amount ad-hoc as part of a text memo.
                     f"+\u00a0{memo.coin_purchase_memo.amount}",  # amount of crypto purchased
