@@ -30,6 +30,7 @@
 #include <sec/rng.h>
 #include <sys/mpu.h>
 #include <util/flash_otp.h>
+#include "memzero.h"
 
 #ifdef USE_OPTIGA
 

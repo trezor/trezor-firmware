@@ -239,7 +239,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_firmware_vendor_obj,
 ///     """
 STATIC mp_obj_t mod_trezorutils_delegated_identity(void) {
   uint8_t private_key[32] = {0};
-  if (secret_keys_delegated_identity(private_key) != sectrue) {
+  if (secret_key_delegated_identity(private_key) != sectrue) {
     mp_raise_msg(&mp_type_RuntimeError,
                  MP_ERROR_TEXT("Failed to read delegated identity."));
   }
