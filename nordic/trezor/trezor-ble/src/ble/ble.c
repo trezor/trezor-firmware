@@ -115,6 +115,8 @@ bool ble_init(void) {
 
   ble_management_send_status_event();
 
+  ble_management_send_battery_request();
+
   return true;
 }
 
