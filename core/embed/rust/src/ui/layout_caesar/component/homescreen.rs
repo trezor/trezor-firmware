@@ -84,7 +84,7 @@ impl Homescreen {
             loader_description.map(|desc| Child::new(ProgressLoader::new(desc, HOLD_TO_LOCK_MS)));
 
         Self {
-            label: Label::centered(label, theme::TEXT_BIG),
+            label: Label::centered(label, theme::TEXT_BIG).cropped(),
             notification,
             custom_image: get_homescreen_image(),
             invisible_buttons: Child::new(ButtonController::new(invisible_btn_layout)),
@@ -155,7 +155,7 @@ impl Homescreen {
         let text_size = self.label.text().map(|t| {
             Offset::new(
                 self.label.style().text_font.text_width(t),
-                self.label.style().text_font.visible_text_height(t),
+                self.label.style().text_font.text_height() - 5,
             )
         });
         let text_area =
@@ -313,7 +313,7 @@ impl ConfirmHomescreen {
     pub fn new(title: TString<'static>, image: BinaryData<'static>) -> Self {
         let btn_layout = ButtonLayout::cancel_none_text(TR::buttons__change.into());
         ConfirmHomescreen {
-            title: Child::new(Label::left_aligned(title, theme::TEXT_BOLD_UPPER)),
+            title: Child::new(Label::left_aligned(title, theme::TEXT_BOLD_UPPER).cropped()),
             image,
             buttons: Child::new(ButtonController::new(btn_layout)),
         }
