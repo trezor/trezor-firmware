@@ -78,9 +78,9 @@ secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]) {
                                      KEY_INDEX_DELEGATED_IDENTITY, dest);
 }
 
-secbool master_key_get(master_key_t* salt) {
-  memset(salt, 0, sizeof(*salt));
-  salt->size = 32;
+secbool master_key_get(master_key_t* master_key) {
+  memset(master_key, 0, sizeof(*master_key));
+  master_key->size = 32;
   return sectrue;
 }
 
