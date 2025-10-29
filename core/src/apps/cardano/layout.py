@@ -1214,6 +1214,7 @@ async def require_confirm_payment_request(
     network_id: int,
 ) -> None:
     from trezor.ui.layouts import confirm_payment_request
+    from trezor.ui.layouts.slip24 import Refund, Trade
 
     from apps.common.payment_request import parse_amount
 
@@ -1222,8 +1223,8 @@ async def require_confirm_payment_request(
     )
 
     texts: list[tuple[str | None, str]] = []
-    refunds: list[tuple[str, str | None, str | None]] = []
-    trades: list[tuple[str | None, str, str, str | None, str | None]] = []
+    refunds = []
+    trades = []
     for memo in verified_payment_request.memos:
         if memo.text_memo is not None:
             texts.append((None, memo.text_memo.text))
@@ -1231,13 +1232,13 @@ async def require_confirm_payment_request(
             texts.append((memo.text_details_memo.title, memo.text_details_memo.text))
         elif memo.refund_memo:
             refund_account_path = address_n_to_str(memo.refund_memo.address_n)
-            refunds.append((memo.refund_memo.address, None, refund_account_path))
+            refunds.append(Refund(memo.refund_memo.address, None, refund_account_path))
         elif memo.coin_purchase_memo:
             coin_purchase_account_path = address_n_to_str(
                 memo.coin_purchase_memo.address_n
             )
             trades.append(
-                (
+                Trade(
                     f"-\u00a0{total_amount}",
                     f"+\u00a0{memo.coin_purchase_memo.amount}",
                     memo.coin_purchase_memo.address,

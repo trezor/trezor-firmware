@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 
     from ..common import ExceptionType, PropertyType
     from ..menu import Details
+    from ..slip24 import Refund, Trade
 
     T = TypeVar("T")
 
@@ -487,8 +488,8 @@ async def confirm_payment_request(
     recipient_name: str,
     recipient_address: str | None,
     texts: Iterable[tuple[str | None, str]],
-    refunds: Iterable[tuple[str, str | None, str | None]],
-    trades: list[tuple[str | None, str, str, str | None, str | None]],
+    refunds: Iterable[Refund],
+    trades: list[Trade],
     account_items: list[PropertyType] | None,
     transaction_fee: str | None,
     fee_info_items: Iterable[PropertyType] | None,
@@ -496,14 +497,14 @@ async def confirm_payment_request(
 ) -> None:
     from trezor.ui.layouts.menu import Menu, confirm_with_menu
 
-    is_swap = len(trades) != 0 and all(
-        sell_amount is not None for sell_amount, _, _, _, _ in trades
-    )
+    from ..slip24 import is_swap
 
-    for title, text in texts:
+    title = TR.words__swap if is_swap(trades) else TR.words__confirm
+
+    for t, text in texts:
         await raise_if_not_confirmed(
             trezorui_api.confirm_value(
-                title=(title or (TR.words__swap if is_swap else TR.words__confirm)),
+                title=t or title,
                 value=text,
                 is_data=False,
                 description=None,
@@ -512,7 +513,7 @@ async def confirm_payment_request(
         )
 
     main_layout = trezorui_api.confirm_value(
-        title=(TR.words__swap if is_swap else TR.words__confirm),
+        title=title,
         subtitle=TR.words__provider,
         value=recipient_name,
         description=None,
@@ -527,13 +528,13 @@ async def confirm_payment_request(
         menu_items.append(
             create_details(TR.address__title_provider_address, recipient_address)
         )
-    for r_address, r_account, r_account_path in refunds:
-        refund_account_items: list[PropertyType] = [("", r_address, None)]
-        if r_account:
-            refund_account_items.append((TR.words__account, r_account, None))
-        if r_account_path:
+    for refund in refunds:
+        refund_account_items: list[PropertyType] = [("", refund.address, None)]
+        if refund.account:
+            refund_account_items.append((TR.words__account, refund.account, None))
+        if refund.account_path:
             refund_account_items.append(
-                (TR.address_details__derivation_path, r_account_path, None)
+                (TR.address_details__derivation_path, refund.account_path, None)
             )
         menu_items.append(
             create_details(
@@ -545,15 +546,11 @@ async def confirm_payment_request(
 
     await confirm_with_menu(main_layout, menu, "confirm_payment_request")
 
-    for sell_amount, buy_amount, t_address, t_account, t_account_path in trades:
+    for trade in trades:
         await confirm_trade(
-            TR.words__swap if is_swap else TR.words__confirm,
+            title,
             TR.words__assets,
-            sell_amount,
-            buy_amount,
-            t_address,
-            t_account,
-            t_account_path,
+            trade,
             extra_menu_items or [],
         )
 
@@ -928,11 +925,7 @@ def _confirm_summary(
 async def confirm_trade(
     title: str,
     subtitle: str,
-    sell_amount: str | None,
-    buy_amount: str,
-    address: str,
-    account: str | None,
-    account_path: str | None,
+    trade: Trade,
     extra_menu_items: list[tuple[str, str]],
 ) -> None:
     from trezor.ui.layouts.menu import Menu, confirm_with_menu
@@ -940,15 +933,17 @@ async def confirm_trade(
     trade_layout = trezorui_api.confirm_trade(
         title=title,
         subtitle=subtitle,
-        sell_amount=sell_amount,
-        buy_amount=buy_amount,
+        sell_amount=trade.sell_amount,
+        buy_amount=trade.buy_amount,
     )
 
-    account_items: list[PropertyType] = [("", address, None)]
-    if account:
-        account_items.append((TR.words__account, account, None))
-    if account_path:
-        account_items.append((TR.address_details__derivation_path, account_path, None))
+    account_items: list[PropertyType] = [("", trade.address, None)]
+    if trade.account:
+        account_items.append((TR.words__account, trade.account, None))
+    if trade.account_path:
+        account_items.append(
+            (TR.address_details__derivation_path, trade.account_path, None)
+        )
     menu_items = [create_details(TR.address__title_receive_address, account_items)]
     for k, v in extra_menu_items:
         menu_items.append(create_details(k, v))
