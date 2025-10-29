@@ -98,7 +98,6 @@
 
 #ifdef USE_BLE
 #include <io/ble.h>
-#include <util/unit_properties.h>
 #include "cmd/prodtest_ble.h"
 #endif
 
@@ -146,6 +145,8 @@ void prodtest_disable_rgbled_control(void) { g_rgbled_control_disabled = true; }
 
 static void drivers_init(void) {
   parse_boardloader_capabilities();
+  unit_properties_init();
+
 #ifdef USE_RTC
   rtc_init();
 #endif
@@ -187,7 +188,6 @@ static void drivers_init(void) {
   rgb_led_init();
 #endif
 #ifdef USE_BLE
-  unit_properties_init();
   ble_init();
 #endif
 #ifdef USE_TROPIC
