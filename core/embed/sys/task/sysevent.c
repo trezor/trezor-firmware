@@ -29,6 +29,10 @@
 #include <sys/systask.h>
 #include <trezor_bsp.h>
 
+#ifdef KERNEL
+#include <sys/applet.h>
+#endif
+
 #ifdef TREZOR_EMULATOR
 #include <sys/unix/sdl_event.h>
 #endif
@@ -262,9 +266,10 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
                    (poller->signalled.write_ready != 0);
       if (ready || timed_out) {
         systask_t *task = poller->task;
-#ifdef KERNEL
+#if defined(KERNEL) && !defined(TREZOR_EMULATOR)
         if (task->applet != NULL) {
-          mpu_set_active_applet(task->applet);
+          applet_t *applet = (applet_t *)task->applet;
+          mpu_set_active_applet(&applet->layout);
         }
 #endif
         *poller->signalled_arg = poller->signalled;
