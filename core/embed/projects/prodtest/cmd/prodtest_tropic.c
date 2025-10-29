@@ -1474,11 +1474,22 @@ static void pubkey_read(cli_t* cli, ecc_slot_t slot,
     return;
   }
 
+  lt_ret_t ret = LT_FAIL;
+
+  ret = tropic_custom_session_start(TROPIC_PRIVILEGED_PAIRING_KEY_SLOT);
+  if (ret != LT_OK) {
+    cli_error(cli, CLI_ERROR,
+              "`tropic_custom_session_start()` for privileged key failed with "
+              "error %d",
+              ret);
+    return;
+  }
+
   uint8_t public_key[ECDSA_PUBLIC_KEY_SIZE] = {0x04};
   lt_ecc_curve_type_t curve_type = 0;
   ecc_key_origin_t origin = 0;
-  lt_ret_t ret = lt_ecc_key_read(tropic_get_handle(), slot, &public_key[1],
-                                 &curve_type, &origin);
+  ret = lt_ecc_key_read(tropic_get_handle(), slot, &public_key[1], &curve_type,
+                        &origin);
   if (ret != LT_OK || curve_type != CURVE_P256) {
     cli_error(cli, CLI_ERROR, "lt_ecc_key_read error %d.", ret);
     return;
