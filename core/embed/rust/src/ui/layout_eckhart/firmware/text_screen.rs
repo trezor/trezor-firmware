@@ -250,29 +250,27 @@ where
 // Returns (show_action_bar, show_page_counter).
 fn place_textscreen(
     bounds: Rect,
-    mut header: Option<&mut Header>,
-    mut subtitle: Option<&mut Label<'static>>,
-    mut hint: Option<&mut Hint<'static>>,
-    mut action_bar: Option<&mut ActionBar>,
+    header: Option<&mut Header>,
+    subtitle: Option<&mut Label<'static>>,
+    hint: Option<&mut Hint<'static>>,
+    action_bar: Option<&mut ActionBar>,
     content: &mut dyn ContentOps,
     page_limit: Option<u16>,
 ) -> (bool, bool) {
     // 1) Header
     let has_header = header.is_some();
-    let mut rest = bounds;
-    if let Some(h) = header.as_mut() {
-        let (header_area, rest2) = rest.split_top(Header::HEADER_HEIGHT);
+    let rest = header.map_or(bounds, |h| {
+        let (header_area, rest) = bounds.split_top(Header::HEADER_HEIGHT);
         h.place(header_area);
-        rest = rest2;
-    }
+        rest
+    });
 
     // 2) Subtitle
-    let mut content_footer_area = if let Some(s) = subtitle.as_mut() {
+    let mut content_footer_area = subtitle.map_or(rest, |s| {
         let subtitle_height = if let LayoutFit::OutOfBounds { .. } = s.text().map(|text| {
             TextLayout::new(theme::TEXT_MEDIUM_EXTRA_LIGHT)
                 .with_bounds(
-                    Rect::from_size(Offset::new(bounds.width(), SUBTITLE_HEIGHT))
-                        .inset(SIDE_INSETS),
+                    Rect::from_size(Offset::new(rest.width(), SUBTITLE_HEIGHT)).inset(SIDE_INSETS),
                 )
                 .fit_text(text)
         }) {
@@ -280,12 +278,10 @@ fn place_textscreen(
         } else {
             SUBTITLE_HEIGHT
         };
-        let (subtitle_area, rest2) = rest.split_top(subtitle_height);
+        let (subtitle_area, rest) = rest.split_top(subtitle_height);
         s.place(subtitle_area.inset(SIDE_INSETS));
-        rest2
-    } else {
         rest
-    };
+    });
 
     // Insets applied to content only
     let mut content_insets = SIDE_INSETS;
@@ -315,10 +311,10 @@ fn place_textscreen(
     };
 
     if show_action_bar {
-        if let Some(ab) = action_bar.as_mut() {
-            let (rest2, ab_area) = content_footer_area.split_bottom(ActionBar::ACTION_BAR_HEIGHT);
+        if let Some(ab) = action_bar {
+            let (rest, ab_area) = content_footer_area.split_bottom(ActionBar::ACTION_BAR_HEIGHT);
             ab.place(ab_area);
-            content_footer_area = rest2;
+            content_footer_area = rest;
         }
     }
 
@@ -330,7 +326,7 @@ fn place_textscreen(
     let mut show_page_counter = hint_is_page_counter && is_paginated_after_ab;
 
     // 8) Place hint (if any) and final content
-    if let Some(h) = hint.as_mut() {
+    if let Some(h) = hint {
         let show_hint_now = if hint_is_page_counter {
             show_page_counter
         } else {
