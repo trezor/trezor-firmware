@@ -57,14 +57,14 @@ async def payment_notification(msg: PaymentNotification, keychain: Keychain) -> 
             raise DataError("Unrecognized memo type in payment request memo.")
 
     await confirm_payment_request(
-        verified_payment_request.recipient_name,
-        None,  # no address for the fiat being spent
-        texts,
-        [],
-        trades,
-        [],
-        None,
-        None,
+        recipient_name=verified_payment_request.recipient_name,
+        recipient_address=None,  # no address for the fiat being spent
+        texts=texts,
+        refunds=[],
+        trades=trades,
+        account_items=[],
+        transaction_fee=None,
+        fee_info_items=None,
     )
 
     return Success()
