@@ -2,6 +2,40 @@ from typing import *
 from buffer_types import *
 
 
+# upymod/modtrezorio/modtrezorio-ipc.h
+def ipc_send(remote: int, fn: int, data: AnyBytes) -> None:
+    """
+    Sends an IPC message to the specified remote task.
+    """
+
+
+# upymod/modtrezorio/modtrezorio-ipc.h
+class IpcMessage:
+    """
+    IPC message structure.
+    """
+
+    def fn(self) -> int:
+        """
+        Returns the function number.
+        """
+
+    def remote(self) -> int:
+        """
+        Returns the remote task ID.
+        """
+
+    def free(self) -> None:
+        """
+        Frees the IPC message resources.
+        """
+
+    def data(self) -> bytes:
+        """
+        Returns the IPC message data as bytes.
+        """
+
+
 # upymod/modtrezorio/modtrezorio-poll.h
 def poll(ifaces: Iterable[int], list_ref: list, timeout_ms: int) -> bool:
     """
@@ -79,7 +113,7 @@ class USB:
         """
         Cleans up the USB stack.
         """
-from . import fatfs, haptic, sdcard, ble, pm, rgb_led
+from . import fatfs, haptic, sdcard, ble, pm, rgb_led, ipc
 POLL_READ: int  # wait until interface is readable and return read data
 POLL_WRITE: int  # wait until interface is writable
 
@@ -87,6 +121,8 @@ BLE: int  # interface id of the BLE events
 BLE_EVENT: int # interface id for BLE events
 
 PM_EVENT: int  # interface id for power manager events
+
+IPC2_EVENT: int  # interface id for IPC2 events
 
 TOUCH: int  # interface id of the touch events
 TOUCH_START: int  # event id of touch start event
