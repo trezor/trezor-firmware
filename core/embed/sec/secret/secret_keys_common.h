@@ -48,11 +48,11 @@ secbool secret_key_derive_sym(uint8_t slot, uint16_t index, uint16_t subindex,
 secbool secret_key_derive_nist256p1(uint8_t slot, uint16_t index,
                                     uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
 
-#define MASTER_KEY_MAX_SIZE 32
+#define SECRET_KEY_MASTER_KEY_SIZE 32
 
 typedef struct {
   size_t size;
-  uint8_t bytes[MASTER_KEY_MAX_SIZE];
+  uint8_t bytes[SECRET_KEY_MASTER_KEY_SIZE];
 } master_key_t;
 
 /**

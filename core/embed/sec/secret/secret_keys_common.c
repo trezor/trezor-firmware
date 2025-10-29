@@ -52,7 +52,7 @@ secbool secret_key_derive_sym(uint8_t slot, uint16_t index, uint16_t subindex,
                               uint8_t dest[SHA256_DIGEST_LENGTH]) {
   secbool ret = sectrue;
 
-  master_key_t master_key = {.bytes = {0}, .size = MASTER_KEY_MAX_SIZE};
+  master_key_t master_key = {.bytes = {0}, .size = SECRET_KEY_MASTER_KEY_SIZE};
 
 #ifdef SECRET_PRIVILEGED_MASTER_KEY_SLOT
   ret = secret_key_get(slot, master_key.bytes, master_key.size);
