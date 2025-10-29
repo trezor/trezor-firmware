@@ -134,9 +134,9 @@ impl Component for Label<'_> {
             self.layout.bounds = bounds.inset(insets);
         } else {
             let (padding_top, padding_bottom) = match self.vertical {
-                Alignment::Start => (diff, 0),
+                Alignment::Start => (0, diff),
                 Alignment::Center => (diff / 2, diff / 2 + diff % 2),
-                Alignment::End => (0, diff),
+                Alignment::End => (diff, 0),
             };
             self.layout.padding_top = padding_top;
             self.layout.padding_bottom = padding_bottom;
