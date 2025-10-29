@@ -20,14 +20,10 @@ _data_section_end = ADDR(.data) + SIZEOF(.data);
 _bss_section_start = ADDR(.bss);
 _bss_section_end = ADDR(.bss) + SIZEOF(.bss);
 
-_confidential_section_loadaddr = LOADADDR(.confidential);
-_confidential_section_start = ADDR(.confidential);
-_confidential_section_end = ADDR(.confidential) + SIZEOF(.confidential);
-
 _bootargs_ram_start = BOOTARGS_START;
 _bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
 
-_codelen = SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
+_codelen = SIZEOF(.flash) + SIZEOF(.data);
 
 SECTIONS {
   .header : ALIGN(4) {
@@ -67,11 +63,6 @@ SECTIONS {
   .stack : ALIGN(8) {
     . = 16K; /* Overflow causes UsageFault */
   } >MAIN_RAM
-
-  .confidential : ALIGN(512) {
-    *(.confidential*);
-    . = ALIGN(512);
-  } >MAIN_RAM AT>FLASH
 
   .fb1 : ALIGN(4) {
     *(.fb1*);
