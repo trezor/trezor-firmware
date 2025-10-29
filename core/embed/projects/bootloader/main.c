@@ -101,8 +101,8 @@
 
 void failed_jump_to_firmware(void);
 
-CONFIDENTIAL volatile secbool dont_optimize_out_true = sectrue;
-CONFIDENTIAL void (*volatile firmware_jump_fn)(void) = failed_jump_to_firmware;
+volatile secbool dont_optimize_out_true = sectrue;
+void (*volatile firmware_jump_fn)(void) = failed_jump_to_firmware;
 
 static secbool is_manufacturing_mode(vendor_header *vhdr) {
   unit_properties_init();

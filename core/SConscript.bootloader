@@ -310,7 +310,7 @@ program_bin = env.Command(
     target='bootloader.bin',
     source=program_elf,
     action=[
-        '$OBJCOPY -O binary -j .header -j .flash -j .data -j .confidential $SOURCE $TARGET',
+        '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
         '$HEADERTOOL $TARGET ' + ('-D' if not PRODUCTION else ''),
         '$CP $TARGET ' + BINARY_NAME,
     ], )

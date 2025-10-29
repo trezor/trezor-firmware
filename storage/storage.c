@@ -30,6 +30,7 @@
 #include "hmac.h"
 #include "memzero.h"
 #include "norcow.h"
+#include "options.h"
 #include "pbkdf2.h"
 #include "rand.h"
 #include "random_delays.h"
@@ -169,7 +170,7 @@ static enum storage_ui_message_t ui_message = NO_MSG;
 CONFIDENTIAL static uint8_t cached_keys[KEYS_SIZE] = {0};
 CONFIDENTIAL static uint8_t *const cached_dek = cached_keys;
 CONFIDENTIAL static uint8_t *const cached_sak = cached_keys + DEK_SIZE;
-CONFIDENTIAL uint8_t authentication_sum[SHA256_DIGEST_LENGTH] = {0};
+CONFIDENTIAL static uint8_t authentication_sum[SHA256_DIGEST_LENGTH] = {0};
 CONFIDENTIAL static uint8_t hardware_salt[HARDWARE_SALT_SIZE] = {0};
 CONFIDENTIAL static uint32_t norcow_active_version = 0;
 static const uint8_t TRUE_BYTE = 0x01;

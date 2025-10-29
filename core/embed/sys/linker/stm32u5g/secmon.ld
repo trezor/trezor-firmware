@@ -21,10 +21,6 @@ _data_section_end = ADDR(.data) + SIZEOF(.data);
 _bss_section_start = ADDR(.bss);
 _bss_section_end = ADDR(.bss) + SIZEOF(.bss);
 
-_confidential_section_loadaddr = LOADADDR(.confidential);
-_confidential_section_start = ADDR(.confidential);
-_confidential_section_end = ADDR(.confidential) + SIZEOF(.confidential);
-
 _bootargs_ram_start = BOOTARGS_START;
 _bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
 
@@ -75,11 +71,6 @@ SECTIONS {
   .data : ALIGN(4) {
     *(.data*);
     . = ALIGN(512);
-  } >RAM AT>FLASH
-
-  .confidential : ALIGN(512) {
-    *(.confidential*);
-    . = ALIGN(4);
   } >RAM AT>FLASH
 
   .bss : ALIGN(4) {

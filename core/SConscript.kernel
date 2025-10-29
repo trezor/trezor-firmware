@@ -461,7 +461,7 @@ BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
 BINARY_NAME += ".bin"
 
 action_bin=[
-    '$OBJCOPY -O binary -j .flash -j .data -j .confidential $SOURCE ${TARGET}',
+    '$OBJCOPY -O binary -j .flash -j .data $SOURCE ${TARGET}',
     '$CP $TARGET ' + BINARY_NAME,
 ]
 

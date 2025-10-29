@@ -19,10 +19,6 @@ _data_section_end = ADDR(.data) + SIZEOF(.data);
 _bss_section_start = ADDR(.bss);
 _bss_section_end = ADDR(.bss) + SIZEOF(.bss);
 
-_confidential_section_loadaddr = 0;
-_confidential_section_start = 0;
-_confidential_section_end = 0;
-
 _bootargs_ram_start = BOOTARGS_START;
 _bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
 
