@@ -21,6 +21,10 @@
 
 #include <trezor_types.h>
 
+#include <ecdsa.h>
+
+secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
+
 #ifdef SECURE_MODE
 
 #ifdef SECRET_MASTER_KEY_SLOT_SIZE
@@ -35,8 +39,6 @@ secbool secret_key_mcu_device_auth(uint8_t dest[MLDSA_SEEDBYTES]);
 
 #ifdef USE_OPTIGA
 
-#include <ecdsa.h>
-
 #define OPTIGA_PAIRING_SECRET_SIZE 32
 secbool secret_key_optiga_pairing(uint8_t dest[OPTIGA_PAIRING_SECRET_SIZE]);
 secbool secret_key_optiga_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
@@ -45,7 +47,6 @@ secbool secret_key_optiga_masking(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
 
 #ifdef USE_TROPIC
 
-#include <ecdsa.h>
 #include <ed25519-donna/ed25519.h>
 
 secbool secret_key_tropic_public(curve25519_key dest);
@@ -69,11 +70,6 @@ secbool secret_key_storage_salt(uint16_t fw_type,
                                 uint8_t dest[SECRET_KEY_STORAGE_SALT_SIZE]);
 
 #endif  // SECURE_MODE
-
-#ifndef ECDSA_PRIVATE_KEY_SIZE
-#include <ecdsa.h>
-#endif
-secbool secret_key_delegated_identity(uint8_t dest[ECDSA_PRIVATE_KEY_SIZE]);
 
 #ifdef KERNEL_MODE
 #ifdef USE_NRF_AUTH
