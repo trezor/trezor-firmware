@@ -55,7 +55,7 @@ secbool master_key_get(master_key_t* master_key) {
     }
     ensure(flash_otp_write(FLASH_OTP_BLOCK_MASTER_KEY, 0, rnd_bytes,
                            SECRET_KEY_MASTER_KEY_SIZE),
-           "cannot write master key to OTP");
+           NULL);
     ensure(flash_otp_lock(FLASH_OTP_BLOCK_MASTER_KEY), NULL);
   }
   ensure(flash_otp_read(FLASH_OTP_BLOCK_MASTER_KEY, 0, &master_key->bytes[0],
