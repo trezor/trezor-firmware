@@ -20,6 +20,7 @@
 #include <trezor_rtl.h>
 
 #include <sys/applet.h>
+#include <sys/sysevent_source.h>
 #include <sys/systask.h>
 
 #ifdef KERNEL
@@ -35,7 +36,9 @@ void applet_init(applet_t* applet, const applet_privileges_t* privileges,
   }
 }
 
-void applet_run(applet_t* applet) { systask_yield_to(&applet->task); }
+void applet_run(applet_t* applet) {
+  sysevents_yield_and_reschedule(&applet->task);
+}
 
 void applet_unload(applet_t* applet) {
   if (applet->task.id > 0) {
