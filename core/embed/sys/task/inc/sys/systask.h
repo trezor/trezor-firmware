@@ -116,7 +116,7 @@ typedef void (*systask_error_handler_t)(const systask_postmortem_t* pminfo);
  * 2. coreapp
  * 3. user app
  */
-#define SYSTASK_MAX_TASKS 2
+#define SYSTASK_MAX_TASKS 3
 
 /** Zero-based task ID (up SYSTASK_MAX_TASKS - 1) */
 typedef uint8_t systask_id_t;
