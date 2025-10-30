@@ -1102,6 +1102,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_cardano__confirming_pool_registration;
   MP_QSTR_cardano__confirming_transaction;
   MP_QSTR_cardano__cost;
+  MP_QSTR_cardano__credential_intro_template;
   MP_QSTR_cardano__credential_mismatch;
   MP_QSTR_cardano__datum_hash;
   MP_QSTR_cardano__delegating_to;
@@ -1119,8 +1120,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_cardano__intro_text_owned_by_device;
   MP_QSTR_cardano__intro_text_registration_payment;
   MP_QSTR_cardano__key_hash;
+  MP_QSTR_cardano__key_path;
   MP_QSTR_cardano__margin;
-  MP_QSTR_cardano__message_hash;
   MP_QSTR_cardano__message_hex;
   MP_QSTR_cardano__message_text;
   MP_QSTR_cardano__multisig_path;
@@ -1157,7 +1158,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_cardano__script_reward;
   MP_QSTR_cardano__sending;
   MP_QSTR_cardano__show_simple;
-  MP_QSTR_cardano__sign_message_hash_path_template;
   MP_QSTR_cardano__sign_message_path_template;
   MP_QSTR_cardano__sign_tx_path_template;
   MP_QSTR_cardano__stake_delegation;

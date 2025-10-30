@@ -1205,5 +1205,7 @@
   "1203": "ethereum__withdraw",
   "1204": "ethereum__withdraw_from",
   "1205": "ethereum__withdraw_intro",
-  "1206": "ethereum__your_address"
+  "1206": "ethereum__your_address",
+  "1207": "cardano__credential_intro_template",
+  "1208": "cardano__key_path"
 }
