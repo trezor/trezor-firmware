@@ -499,7 +499,9 @@ fn generate_trezorhal_bindings() {
         // c_layout
         .allowlist_type("c_layout_t")
         .allowlist_function("bootloader_process_ble")
-        .allowlist_function("bootloader_process_usb");
+        .allowlist_function("bootloader_process_usb")
+        .allowlist_function("debuglink_process")
+        .allowlist_function("debuglink_notify_layout_change");
 
     // Write the bindings to a file in the OUR_DIR.
     bindings
