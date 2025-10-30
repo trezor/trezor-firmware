@@ -654,7 +654,7 @@ impl DeviceMenuScreen {
 
         let regulatory_index = self.add_subscreen(Subscreen::RegulatoryScreen);
         items.add(MenuItem::go_to_subscreen(
-            TR::regulatory_certification__title.into(),
+            TR::regulatory__title.into(),
             regulatory_index,
         ));
 

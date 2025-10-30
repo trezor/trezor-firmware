@@ -1546,7 +1546,7 @@
     },
     "recovery__x_of_y_entered_template": "{0} de {1} recursos introducidos",
     "recovery__you_have_entered": "Has introducido",
-    "regulatory_certification__title": "Certificación regulatoria",
+    "regulatory__title": "Regulación",
     "reset__advanced_group_threshold_info": "El umbral de grupo determina el nro.de grupos necesarios para recuperar el monedero.",
     "reset__all_x_of_y_template": "{0} de {1} rec. comp.",
     "reset__any_x_of_y_template": "{0} de {1} rec. comp.",

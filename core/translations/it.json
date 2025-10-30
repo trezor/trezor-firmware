@@ -1305,7 +1305,7 @@
     },
     "recovery__x_of_y_entered_template": "{0} di {1} azioni immesse OK.",
     "recovery__you_have_entered": "Hai immesso",
-    "regulatory_certification__title": "",
+    "regulatory__title": "",
     "reset__advanced_group_threshold_info": "La soglia di gruppo specifica numero gruppi necessari per recuperare il wallet.",
     "reset__all_x_of_y_template": "tutte e {0} di {1} az.",
     "reset__any_x_of_y_template": "qualsiasi {0} di {1} az.",

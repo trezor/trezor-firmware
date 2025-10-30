@@ -1546,7 +1546,7 @@
     },
     "recovery__x_of_y_entered_template": "Zadali jste {0} z {1} částí",
     "recovery__you_have_entered": "Zadali jste",
-    "regulatory_certification__title": "Regulační certifikace",
+    "regulatory__title": "Regulace",
     "reset__advanced_group_threshold_info": "Počet částí zálohy skupiny určuje počet skupin potřebných k obnovení peněženky.",
     "reset__all_x_of_y_template": "všech {0} z {1} částí",
     "reset__any_x_of_y_template": "lib. {0} z {1} částí",

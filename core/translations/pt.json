@@ -1526,7 +1526,7 @@
     },
     "recovery__x_of_y_entered_template": "{0} de {1} cotas inseridas com sucesso.",
     "recovery__you_have_entered": "Você inseriu",
-    "regulatory_certification__title": "Certificação regulatória",
+    "regulatory__title": "Regulamento",
     "reset__advanced_group_threshold_info": "O limite especifica o número de grupos para recuperar sua carteira.",
     "reset__all_x_of_y_template": "todas {0} de {1} cotas",
     "reset__any_x_of_y_template": "{0} de {1} cotas",

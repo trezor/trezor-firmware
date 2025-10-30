@@ -682,7 +682,7 @@ class TR:
     recovery__x_more_shares_needed_template_plural: str = "{count} more {plural} needed"
     recovery__x_of_y_entered_template: str = "{0} of {1} shares entered"
     recovery__you_have_entered: str = "You have entered"
-    regulatory_certification__title: str = "Regulatory certification"
+    regulatory__title: str = "Regulatory"
     reset__advanced_group_threshold_info: str = "The group threshold specifies the number of groups required to recover your wallet."
     reset__all_x_of_y_template: str = "all {0} of {1} shares"
     reset__any_x_of_y_template: str = "any {0} of {1} shares"

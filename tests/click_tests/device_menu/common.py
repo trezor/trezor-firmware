@@ -213,9 +213,7 @@ class Menu(Enum):
                 if features.haptic_feedback is not None:
                     content.append(TR.haptic_feedback__title)
                 content.append(TR.led__title)
-            content.extend(
-                [TR.regulatory_certification__title, TR.words__about, TR.wipe__title]
-            )
+            content.extend([TR.regulatory__title, TR.words__about, TR.wipe__title])
             return content
 
         lookup: dict["Menu", Callable[[], list[str] | None]] = {
@@ -395,11 +393,11 @@ class Menu(Enum):
                 menu = child_1.navigate_to(debug, features)
 
                 # Regulatory screen
-                regulatory_idx = menu.index(TR.regulatory_certification__title)
+                regulatory_idx = menu.index(TR.regulatory__title)
                 debug.button_actions.navigate_to_menu_item(regulatory_idx)
                 debug.synchronize_at("RegulatoryScreen")
                 layout = debug.read_layout()
-                assert TR.regulatory_certification__title in layout.title()
+                assert TR.regulatory__title in layout.title()
                 assert layout.page_count() == len(REGULATORY_AREAS)
                 # Scroll through all regulatory areas
                 assert REGULATORY_AREAS[0] in debug.read_layout().subtitle()

@@ -1856,7 +1856,7 @@
     },
     "recovery__x_of_y_entered_template": "{0} sur {1} fragments saisi(s)",
     "recovery__you_have_entered": "Vous avez saisi",
-    "regulatory_certification__title": "Certification réglementaire",
+    "regulatory__title": "Régulation",
     "reset__advanced_group_threshold_info": "Le seuil de groupe spécifie le nombre de groupes requis pour récupérer votre portefeuille.",
     "reset__all_x_of_y_template": "tous {0} fragm. sur {1}",
     "reset__any_x_of_y_template": "de {0} fragm. sur {1}",

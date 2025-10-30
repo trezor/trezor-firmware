@@ -1766,7 +1766,7 @@
     },
     "recovery__x_of_y_entered_template": "{0} von {1} Shares eingegeben",
     "recovery__you_have_entered": "Du hast eingegeben",
-    "regulatory_certification__title": "Regulatorische Zertifizierung",
+    "regulatory__title": "Regulierung",
     "reset__advanced_group_threshold_info": "Die Gruppenschwelle zeigt die nötige Anzahl der Gruppen zur Wallet-Wiederherstell.",
     "reset__all_x_of_y_template": "alle {0} der {1} Shares",
     "reset__any_x_of_y_template": "{0} der {1} Shares",

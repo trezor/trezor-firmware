@@ -49,7 +49,7 @@ impl RegulatoryScreen {
         action_bar.update(content.pager());
 
         Self {
-            header: Header::new(TR::regulatory_certification__title.into()).with_close_button(),
+            header: Header::new(TR::regulatory__title.into()).with_close_button(),
             content,
             action_bar,
         }
