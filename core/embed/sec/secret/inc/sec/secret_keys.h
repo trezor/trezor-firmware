@@ -69,6 +69,25 @@ secbool secret_key_nrf_pairing(uint8_t dest[NRF_PAIRING_SECRET_SIZE]);
 secbool secret_key_storage_salt(uint16_t fw_type,
                                 uint8_t dest[SECRET_KEY_STORAGE_SALT_SIZE]);
 
+#define SECRET_KEY_MASTER_KEY_SIZE 32
+
+typedef struct {
+  size_t size;
+  uint8_t bytes[SECRET_KEY_MASTER_KEY_SIZE];
+} secret_key_master_key_t;
+
+/**
+ * Retrieves the generated buffer with the master key.
+ *
+ * If master key has not yet been generated for the device,
+ * it is generated now.
+ *
+ * This key is used to derive additional credential keys (e.g. Evolu).
+ *
+ * @param master_key structure filled with the generated data.
+ */
+secbool secret_key_master_key_get(secret_key_master_key_t* master_key);
+
 #endif  // SECURE_MODE
 
 #ifdef KERNEL_MODE

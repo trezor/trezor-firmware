@@ -167,7 +167,7 @@ secbool secret_key_optiga_pairing(uint8_t dest[OPTIGA_PAIRING_SECRET_SIZE]) {
 }
 #endif  // USE_OPTIGA
 
-secbool master_key_get(master_key_t* master_key) {
+secbool secret_key_master_key_get(secret_key_master_key_t* master_key) {
   if (secfalse == flash_otp_is_locked(FLASH_OTP_BLOCK_MASTER_KEY)) {
     uint8_t rnd_bytes[SECRET_KEY_MASTER_KEY_SIZE];
     if (!rng_fill_buffer_strong(rnd_bytes, SECRET_KEY_MASTER_KEY_SIZE)) {
