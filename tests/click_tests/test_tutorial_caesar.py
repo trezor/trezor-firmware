@@ -52,26 +52,12 @@ def prepare_tutorial_and_cancel_after_it(
 
 
 def go_through_tutorial_tr(debug: "DebugLink") -> None:
-    layout = debug.read_layout()
-    for _ in range(layout.page_count() - 1):
-        debug.press_right()
     debug.press_right()
-
-    layout = debug.read_layout()
-    for _ in range(layout.page_count() - 1):
-        debug.press_right()
     debug.press_right()
-
     debug.press_right(hold_ms=1000)
-
-    layout = debug.read_layout()
-    for _ in range(layout.page_count() - 1):
-        debug.press_right()
-
     debug.press_right()
-
+    debug.press_right()
     debug.press_middle()
-
     layout = debug.read_layout()
     assert layout.title() == TR.tutorial__title_tutorial_complete
 
