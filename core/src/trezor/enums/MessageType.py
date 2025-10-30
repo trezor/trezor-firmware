@@ -263,5 +263,5 @@ if not utils.BITCOIN_ONLY:
     NostrPubkey = 2002
     NostrSignEvent = 2003
     NostrEventSignature = 2004
-    TronGetAddress = 3001
-    TronAddress = 3002
+    TronGetAddress = 3000
+    TronAddress = 3001

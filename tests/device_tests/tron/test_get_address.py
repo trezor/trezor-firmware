@@ -9,6 +9,7 @@ from ...input_flows import InputFlowShowAddressQRCode
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.tron, pytest.mark.models("core")]
 
+# TODO: refer to other tests and possibly bundle these together.
 
 @parametrize_using_common_fixtures("tron/get_address.json")
 def test_get_address(client: Client, parameters, result):
