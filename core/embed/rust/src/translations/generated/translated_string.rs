@@ -1556,7 +1556,9 @@ pub enum TranslatedString {
     ble__must_be_enabled = 1167,  // {"Bolt": "", "Caesar": "", "Delizia": "", "Eckhart": "The Bluetooth must be turned on to pair with a new device."}
     #[cfg(feature = "universal_fw")]
     ripple__destination_tag_missing = 1168,  // "Destination tag is not set. Typically needed when sending to exchanges."
-    words__comm_trouble = 1169,  // "Your Trezor is having trouble communicating with your connected device."
+    #[cfg(feature = "universal_fw")]
+    cardano__credential_intro_template = 1169,  // "{0} credential is a {1}"
+    words__comm_trouble = 1170,  // "Your Trezor is having trouble communicating with your connected device."
 }
 
 impl TranslatedString {
@@ -4986,6 +4988,8 @@ impl TranslatedString {
             (Self::ble__must_be_enabled, "The Bluetooth must be turned on to pair with a new device."),
             #[cfg(feature = "universal_fw")]
             (Self::ripple__destination_tag_missing, "Destination tag is not set. Typically needed when sending to exchanges."),
+            #[cfg(feature = "universal_fw")]
+            (Self::cardano__credential_intro_template, "{0} credential is a {1}"),
             (Self::words__comm_trouble, "Your Trezor is having trouble communicating with your connected device."),
     ];
 
@@ -5198,6 +5202,8 @@ impl TranslatedString {
         (Qstr::MP_QSTR_cardano__confirming_transaction, Self::cardano__confirming_transaction),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__cost, Self::cardano__cost),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__credential_intro_template, Self::cardano__credential_intro_template),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_cardano__credential_mismatch, Self::cardano__credential_mismatch),
         #[cfg(feature = "universal_fw")]

@@ -381,6 +381,7 @@
     "cardano__confirming_pool_registration": "Potvrzení registrace poolu jako vlastník.",
     "cardano__confirming_transaction": "Potvrzování transakce.",
     "cardano__cost": "Náklady",
+    "cardano__credential_intro_template": "{0} pověření je {1}",
     "cardano__credential_mismatch": "Údaje neodpovídají platebním údajům.",
     "cardano__datum_hash": "Hash dat:",
     "cardano__delegating_to": "Delegování:",

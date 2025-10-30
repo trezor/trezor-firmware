@@ -1168,5 +1168,6 @@
   "1166": "sn__title",
   "1167": "ble__must_be_enabled",
   "1168": "ripple__destination_tag_missing",
-  "1169": "words__comm_trouble"
+  "1169": "cardano__credential_intro_template",
+  "1170": "words__comm_trouble"
 }

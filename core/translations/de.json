@@ -471,6 +471,7 @@
       "Eckhart": "Transakt. bestät."
     },
     "cardano__cost": "Kosten",
+    "cardano__credential_intro_template": "{0} Anmeldeinfo ist ein {1}",
     "cardano__credential_mismatch": "Daten stimmen nicht mit Zahlungsdaten überein.",
     "cardano__datum_hash": {
       "Bolt": "Datum-Hash:",
