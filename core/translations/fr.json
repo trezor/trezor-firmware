@@ -515,6 +515,7 @@
     "cardano__confirming_pool_registration": "Confirmation de l'enregistrement du pool en tant que propriétaire.",
     "cardano__confirming_transaction": "Confirmation d'une transaction.",
     "cardano__cost": "Coût",
+    "cardano__credential_intro_template": "{0} identifiant est un {1}",
     "cardano__credential_mismatch": "L'identifiant ne correspond pas à l'identifiant de paiement.",
     "cardano__datum_hash": "Hash du datum :",
     "cardano__delegating_to": "Délégation à :",

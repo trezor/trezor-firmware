@@ -370,6 +370,7 @@
     "cardano__confirming_pool_registration": "Confirmando o registro da pool como proprietário.",
     "cardano__confirming_transaction": "Confirmando uma transação.",
     "cardano__cost": "Custo",
+    "cardano__credential_intro_template": "{0} credencial é um {1}",
     "cardano__credential_mismatch": "A credencial não coincide com a credencial de pagamento.",
     "cardano__datum_hash": "Hash do datum:",
     "cardano__delegating_to": "Delegando a:",
