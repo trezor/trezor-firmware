@@ -67,10 +67,13 @@ uint32_t last_touch_sample_time = 0;
 #ifdef USE_IPC
 #include "modtrezorio-ipc.h"
 #endif
+#ifdef USE_APP_LOADING
+#include "modtrezorio-app_cache.h"
+#endif
 #include "modtrezorio-poll.h"
 
 /// package: trezorio.__init__
-/// from . import fatfs, haptic, sdcard, ble, pm, rgb_led, ipc
+/// from . import fatfs, haptic, sdcard, ble, pm, rgb_led, ipc, app_cache
 
 /// POLL_READ: int  # wait until interface is readable and return read data
 /// POLL_WRITE: int  # wait until interface is writable
@@ -139,6 +142,10 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
 #ifdef USE_IPC
     {MP_ROM_QSTR(MP_QSTR_IPC2_EVENT), MP_ROM_INT(SYSHANDLE_IPC2)},
     {MP_ROM_QSTR(MP_QSTR_ipc_send), MP_ROM_PTR(&mod_trezorio_ipc_send_obj)},
+#endif
+#ifdef USE_APP_LOADING
+    {MP_ROM_QSTR(MP_QSTR_app_cache),
+     MP_ROM_PTR(&mod_trezorio_app_cache_module)},
 #endif
 
     {MP_ROM_QSTR(MP_QSTR_USB), MP_ROM_PTR(&mod_trezorio_USB_type)},
