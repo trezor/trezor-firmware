@@ -18,6 +18,12 @@ enum MessageType {
     MessageType_ButtonAck = 27;
     MessageType_GetFeatures = 55;
     MessageType_UnlockBootloader = 96;
+
+    // Debug
+    MessageType_DebugLinkDecision = 100;
+    MessageType_DebugLinkGetState = 101;
+    MessageType_DebugLinkState = 102;
+    MessageType_DebugLinkRecordScreen = 9003;
 }
 
 /**
