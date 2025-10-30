@@ -109,9 +109,9 @@ def _find_message_handler_module(msg_type: int) -> str:
 
     # evolu
     if msg_type == MessageType.EvoluGetNode:
-        return "apps.evolu.get_evolu_node"
+        return "apps.evolu.get_node"
     if msg_type == MessageType.EvoluSignRegistrationRequest:
-        return "apps.evolu.evolu_sign_registration_request"
+        return "apps.evolu.sign_registration_request"
     if msg_type == MessageType.EvoluGetDelegatedIdentityKey:
         return "apps.evolu.get_delegated_identity_key"
 

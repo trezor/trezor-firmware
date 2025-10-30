@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from trezor.messages import EvoluRegistrationRequest, EvoluSignRegistrationRequest
 
 
-async def evolu_sign_registration_request(
+async def sign_registration_request(
     msg: EvoluSignRegistrationRequest,
 ) -> EvoluRegistrationRequest:
     """

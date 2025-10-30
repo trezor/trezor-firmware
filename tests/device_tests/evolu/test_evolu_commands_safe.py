@@ -29,7 +29,7 @@ def test_evolu_get_node(session: Session):
     proof = bytes.fromhex(
         "1fb521e8a4e4580377d530a9d6eb0a394ec8340fa42094d9f2e822bb944ce6a2074b81241b3b65dfa15d66e052f2504aba3ad1644844d695b181b3cdc9666cb66b"
     )
-    node = evolu.get_evolu_node(session, proof=proof)
+    node = evolu.get_node(session, proof=proof)
 
     check_value = bytes.fromhex(
         "a81aaf51997b6ddfa33d11c038d6aba5f711754a2c823823ff8b777825cdbb32b0e71c301fa381c75081bd3bcc134b63306aa6fc9a9f52d835ad4df8cd507be6"
@@ -46,7 +46,7 @@ def test_evolu_get_node_invalid_proof(session: Session):
         TrezorFailure,
         match="Invalid proof",
     ):
-        evolu.get_evolu_node(session, proof=proof)
+        evolu.get_node(session, proof=proof)
 
 
 def test_evolu_sign_request(session: Session):
@@ -55,7 +55,7 @@ def test_evolu_sign_request(session: Session):
     proposed_value = bytes.fromhex(
         "1fb4ca7b8d956cc50ac652e383691af8e59b200adedde3a898b86795fd94d49241559a1699de1110617a91c44c70c4b9509fdb36f5057a52c0ef28fce7afa10734"
     )
-    response = evolu.evolu_sign_registration_request(
+    response = evolu.sign_registration_request(
         session,
         challenge=bytes.fromhex(challenge),
         size=size,
@@ -80,7 +80,7 @@ def test_evolu_sign_request_invalid_proof(session: Session):
         TrezorFailure,
         match="Invalid proof",
     ):
-        evolu.evolu_sign_registration_request(
+        evolu.sign_registration_request(
             session,
             challenge=bytes.fromhex(challenge),
             size=size,
@@ -99,7 +99,7 @@ def test_evolu_sign_request_challenge_too_long(session: Session):
         TrezorFailure,
         match="Invalid challenge length",
     ):
-        evolu.evolu_sign_registration_request(
+        evolu.sign_registration_request(
             session,
             challenge=bytes.fromhex(challenge),
             size=size,
@@ -118,7 +118,7 @@ def test_evolu_sign_request_challenge_too_short(session: Session):
         TrezorFailure,
         match="Invalid challenge length",
     ):
-        evolu.evolu_sign_registration_request(
+        evolu.sign_registration_request(
             session,
             challenge=bytes.fromhex(challenge),
             size=size,
@@ -137,7 +137,7 @@ def test_evolu_sign_request_size_too_small(session: Session):
         ValueError,
         match=f"Value {size} in field size_to_acquire does not fit into uint32",
     ):
-        evolu.evolu_sign_registration_request(
+        evolu.sign_registration_request(
             session,
             challenge=bytes.fromhex(challenge),
             size=size,
@@ -156,7 +156,7 @@ def test_evolu_sign_request_size_too_large(session: Session):
         ValueError,
         match=f"Value {size} in field size_to_acquire does not fit into uint32",
     ):
-        evolu.evolu_sign_registration_request(
+        evolu.sign_registration_request(
             session,
             challenge=bytes.fromhex(challenge),
             size=size,
@@ -171,7 +171,7 @@ def test_evolu_sign_request_data_higher_bound(session: Session):
         "1f1971f6ce302562e737520c0de2338cdaaac4e676fa02ff857b3b6081ebde794545f25905128ae9c9e7861e2358fe2e94821dd9e902564ec11478e5c6b60527c8"
     )
 
-    response = evolu.evolu_sign_registration_request(
+    response = evolu.sign_registration_request(
         session,
         challenge=bytes.fromhex(challenge),
         size=size,

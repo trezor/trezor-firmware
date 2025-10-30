@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 _EVOLU_KEY_PATH_PREFIX = [b"TREZOR", b"Evolu"]
 
 
-async def get_evolu_node(msg: EvoluGetNode) -> EvoluNode:
+async def get_node(msg: EvoluGetNode) -> EvoluNode:
     """
     Returns the SLIP-21 node to generate Evolu keys for this passphrase.
 

@@ -24,7 +24,7 @@ def test_evolu_get_delegated_identity_test_vector(session: Session):
 
 
 def test_evolu_get_node(session: Session):
-    response = evolu.get_evolu_node(session, proof=None)
+    response = evolu.get_node(session, proof=None)
 
     check_value = bytes.fromhex(
         "a81aaf51997b6ddfa33d11c038d6aba5f711754a2c823823ff8b777825cdbb32b0e71c301fa381c75081bd3bcc134b63306aa6fc9a9f52d835ad4df8cd507be6"
@@ -43,7 +43,7 @@ def test_evolu_sign_request(session: Session):
         TrezorFailure,
         match="Optiga is not available",
     ):
-        evolu.evolu_sign_registration_request(
+        evolu.sign_registration_request(
             session,
             challenge=bytes.fromhex(challenge),
             size=size,

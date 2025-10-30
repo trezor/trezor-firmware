@@ -41,7 +41,7 @@ def get_node(
 ) -> str:
     """Return the SLIP-21 node for Evolu."""
     proof_bytes = bytes.fromhex(proof) if proof else None
-    return evolu.get_evolu_node(session, proof=proof_bytes).hex()
+    return evolu.get_node(session, proof=proof_bytes).hex()
 
 
 @cli.command()
@@ -49,7 +49,7 @@ def get_node(
 @click.argument("challenge", type=str)
 @click.option("--size", "-s", type=int, default=10)
 @with_session
-def evolu_sign_registration_request(
+def sign_registration_request(
     session: Session,
     proof: str,
     challenge: str,
@@ -57,7 +57,7 @@ def evolu_sign_registration_request(
 ) -> dict[str, str]:
     """Sign a registration request for this device to be registred at the Gate server."""
 
-    response = evolu.evolu_sign_registration_request(
+    response = evolu.sign_registration_request(
         session=session,
         challenge=bytes.fromhex(challenge),
         size=size,
